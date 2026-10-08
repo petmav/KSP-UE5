@@ -13,6 +13,8 @@
 #include "ksp/dotnet/math.hpp"
 #include "ksp/dotnet/text.hpp"
 #include "ksp/orbit/orbit.hpp"
+#include "ksp/orbit/orbit_snapshot.hpp"
+#include "ksp/orbit/orbit_util.hpp"
 #include "ksp/orbit/targeting.hpp"
 #include "ksp/unity/quaternion_native.hpp"
 #include "nlohmann/json.hpp"
@@ -642,4 +644,94 @@ TEST_CASE("Orbit::FindClosestPoints (Targeting.Intercepts) finds the true minimu
         }
         CHECK(std::min(CD, CCD) == doctest::Approx(std::sqrt(best)).epsilon(1e-6));
     }
+}
+
+TEST_CASE("OrbitSnapshot: save-file ORBIT block round trip, body snapshot, REF resolution") {
+    FramesGuard guard;
+    CelestialBodyRef sun = MakeBody("Sun", 261600000.0, 1.7468465610013681);
+    CelestialBodyRef kerbin = MakeKerbin();
+    sun.flightGlobalsIndex = 0;
+    kerbin.flightGlobalsIndex = 1;
+    const std::vector<CelestialBodyRef*> bodies = {&sun, &kerbin};
+    const Orbit o(28.5, 0.123456789, 712345.6789, 77.7, 123.4, -2.5, 98765.4321, &kerbin);
+    const OrbitSnapshot snap(o, bodies);
+    CHECK(snap.ReferenceBodyIndex == 1);
+    ConfigNode node("ORBIT");
+    snap.Save(node);
+    REQUIRE(node.values().Count() == 8);
+    const char* order[] = {"SMA", "ECC", "INC", "LPE", "LAN", "MNA", "EPH", "REF"};
+    for (int i = 0; i < 8; ++i) CHECK(node.values()[i].name == order[i]);
+    CHECK(node.values()[0].value == "712345.67890000006");  // G17
+    CHECK(node.values()[7].value == "1");
+    const OrbitSnapshot back(node);
+    CHECK(back.semiMajorAxis == o.semiMajorAxis);
+    CHECK(back.eccentricity == o.eccentricity);
+    CHECK(back.inclination == o.inclination);
+    CHECK(back.argOfPeriapsis == o.argumentOfPeriapsis);
+    CHECK(back.LAN == o.LAN);
+    CHECK(back.meanAnomalyAtEpoch == o.meanAnomalyAtEpoch);
+    CHECK(back.epoch == o.epoch);
+    const Orbit loaded = back.Load(bodies);
+    CHECK(loaded.referenceBody == &kerbin);
+    CHECK(loaded.meanMotion == o.meanMotion);
+    CHECK(loaded.getRelativePositionAtUT(1.0e6).Equals(o.getRelativePositionAtUT(1.0e6)));
+    // body snapshot: circular at 1.25 radii, inclination 1e-4, REF = flightGlobalsIndex
+    const OrbitSnapshot low(kerbin);
+    CHECK(low.semiMajorAxis == 600000.0 + 600000.0 * 0.25);
+    CHECK(low.inclination == 0.0001);
+    CHECK(low.ReferenceBodyIndex == 1);
+    // unknown keys are ignored; bad numbers throw like double.Parse; bad REF throws like the C# indexer
+    ConfigNode bad("ORBIT");
+    bad.AddValue("FOO", "bar");
+    bad.AddValue("REF", "5");
+    const OrbitSnapshot b(bad);
+    CHECK(b.ReferenceBodyIndex == 5);
+    CHECK_THROWS_AS(b.Load(bodies), std::out_of_range);
+    ConfigNode worse("ORBIT");
+    worse.AddValue("SMA", "abc");
+    CHECK_THROWS(OrbitSnapshot{worse});
+    // a body not in the list gives REF = -1 (List.IndexOf)
+    CelestialBodyRef other = MakeKerbin();
+    CHECK(OrbitSnapshot(Orbit(0, 0, 7e5, 0, 0, 0, 0, &other), bodies).ReferenceBodyIndex == -1);
+}
+
+TEST_CASE("OrbitUtil: hierarchy queries, phase and ejection angles, SMA distance quirk") {
+    FramesGuard guard;
+    CelestialBodyRef sun = MakeBody("Sun", 261600000.0, 1.7468465610013681);
+    CelestialBodyRef kerbin = MakeKerbin();
+    CelestialBodyRef mun = MakeBody("Mun", 200000.0, 0.1660567000983534);
+    CelestialBodyRef minmus = MakeBody("Minmus", 60000.0, 0.05001708099187999);
+    Orbit kerbinOrbit(0, 0, 13599840256.0, 0, 0, 3.14000010490417, 0, &sun);
+    Orbit munOrbit(0, 0, 12000000.0, 0, 0, 1.70000004768372, 0, &kerbin);
+    Orbit minmusOrbit(6, 0, 47000000.0, 78, 38, 0.899999976158142, 0, &kerbin);
+    kerbin.orbit = &kerbinOrbit;
+    mun.orbit = &munOrbit;
+    minmus.orbit = &minmusOrbit;
+    sun.orbitingBodies = {&kerbin};
+    kerbin.orbitingBodies = {&mun, &minmus};
+
+    CHECK(OrbitUtil::FindPlanet(&mun) == &kerbin);
+    CHECK(OrbitUtil::FindPlanet(&kerbin) == &kerbin);
+    CHECK(OrbitUtil::FindPlanet(&sun) == &sun);
+    const Orbit aroundMun(0, 0.1, 400000, 0, 0, 0, 0, &mun);
+    CHECK(OrbitUtil::FindCommonAncestor(aroundMun, &minmus) == &kerbin);
+    CHECK(OrbitUtil::FindCommonAncestor(aroundMun, &sun) == &sun);
+    CHECK(OrbitUtil::FindCommonAncestor(aroundMun, &mun) == &mun);
+    // KSP quirk: GetSmaDistanceToSun passes the running sum down and adds it again
+    const double inner = 12000000.0 + 13599840256.0;
+    CHECK(OrbitUtil::GetSmaDistanceToSun(&munOrbit) == 12000000.0 + (inner + inner));
+    CHECK(OrbitUtil::GetSmaDistance(&munOrbit, &munOrbit) == 0.0);
+    // phase angle between two circular coplanar orbits 30 degrees apart (counter-clockwise from the origin)
+    Orbit a(0, 0, 700000, 0, 0, 0, 0, &kerbin);
+    Orbit b(0, 0, 900000, 0, 0, 30.0 * kPI / 180.0, 0, &kerbin);
+    a.UpdateFromUT(0.0);
+    b.UpdateFromUT(0.0);
+    CHECK(OrbitUtil::CurrentPhaseAngle(a, b) == doctest::Approx(30.0).epsilon(1e-9));
+    CHECK(OrbitUtil::CurrentPhaseAngle(b, a) == doctest::Approx(-30.0).epsilon(1e-9));
+    CHECK(OrbitUtil::CurrentEjectionAngle(a, 0.0, Vector3d(0, 1, 0)) == doctest::Approx(90.0).epsilon(1e-12));
+    CHECK(OrbitUtil::CurrentEjectionAngle(a, 0.0, Vector3d(0, -1, 0)) == doctest::Approx(-90.0).epsilon(1e-12));
+    // Hohmann helpers on the current radii
+    const double tt = OrbitUtil::GetTransferTime(a, b);
+    CHECK(tt == doctest::Approx(kPI * std::sqrt(std::pow(1.6e6, 3) / (8.0 * kerbin.gravParameter))).epsilon(1e-14));
+    CHECK(OrbitUtil::GetTransferPhaseAngle(a, b, tt) == doctest::Approx(kPI - std::sqrt(kerbin.gravParameter / std::pow(9e5, 3)) * tt).epsilon(1e-14));
 }

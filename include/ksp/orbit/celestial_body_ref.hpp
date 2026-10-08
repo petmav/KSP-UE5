@@ -19,6 +19,7 @@
 //   orbit, orbitDriverEnabled, orbitingBodies
 //                        UpdateFromOrbitAtUT (HasChild, toBody.orbit), GetFrameVel(AtUT), getTruePositionAtUT
 //   bodyName             logging only
+//   flightGlobalsIndex   OrbitSnapshot(CelestialBody) (save-file REF)
 //
 // Units as in KSP: metres, seconds, m^3/s^2, degrees for rotation angles.
 #pragma once
@@ -56,6 +57,8 @@ struct CelestialBodyRef {
     bool orbitDriverEnabled = true;
     // CelestialBody.orbitingBodies (CelestialBody.cs:251; children in spawn order), used by HasChild.
     std::vector<CelestialBodyRef*> orbitingBodies;
+    // CelestialBody.flightGlobalsIndex (CelestialBody.cs:302): index in FlightGlobals.Bodies (OrbitSnapshot's REF).
+    int flightGlobalsIndex = 0;
 
     CelestialBodyRef() = default;
     CelestialBodyRef(const CelestialBodyRef&) = default;

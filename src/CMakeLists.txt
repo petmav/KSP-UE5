@@ -23,6 +23,8 @@ add_library(kspcore STATIC
     orbit/planetarium_frames.cpp
     orbit/orbit.cpp
     orbit/targeting.cpp
+    orbit/orbit_snapshot.cpp
+    orbit/orbit_util.cpp
     capi/kspcore_c.cpp
 )
 add_library(ksp::core ALIAS kspcore)
