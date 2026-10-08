@@ -1,0 +1,1364 @@
+﻿Running AutomationTool...
+Using bundled DotNet SDK version: 10.0 win-x64
+Starting AutomationTool...
+Parsing command line: BuildCookRun -project=C:\Projects\KSP-UE5\ue5\KspUe5.uproject -noP4 -platform=Win64 -clientconfig=Development -cook -stage -pak -skipbuild -nocompileeditor -utf8output -unattended
+Initializing script modules...
+Total script module initialization time: 0.50 s.
+Using C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe
+Executing commands...
+Setting up ProjectParams for C:\Projects\KSP-UE5\ue5\KspUe5.uproject
+********** COOK COMMAND STARTED **********
+Running UnrealEditor Cook for project C:\Projects\KSP-UE5\ue5\KspUe5.uproject
+Commandlet log file is C:\Program Files\Epic Games\UE_5.8\Engine\Programs\AutomationTool\Saved\Cook-2026.10.09-01.45.18.txt
+Running: C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe "C:\Projects\KSP-UE5\ue5\KspUe5.uproject" -run=Cook  -TargetPlatform=Windows  -unversioned -fileopenlog -abslog="C:\Program Files\Epic Games\UE_5.8\Engine\Programs\AutomationTool\Saved\Cook-2026.10.09-01.45.18.txt" -stdout -CrashForUAT -unattended -NoLogTimes
+LogInit: Display: Running engine for game: KspUe5
+LogCore: Display: Requested channels: 'cpu,gpu,frame,log,bookmark,screenshot,region'
+LogTrace: Display: Control listening on port 1985
+LogCsvProfiler: Display: Metadata set : platform="Windows"
+LogCsvProfiler: Display: Metadata set : config="Development"
+LogCsvProfiler: Display: Metadata set : buildversion="++UE5+Release-5.8-CL-58210709"
+LogCsvProfiler: Display: Metadata set : engineversion="5.8.3-58210709+++UE5+Release-5.8"
+LogCsvProfiler: Display: Metadata set : enginereleaseversion="5.8.3"
+LogCsvProfiler: Display: Metadata set : os="Windows 11 (25H2) [10.0.26200.9457] "
+LogCsvProfiler: Display: Metadata set : cpu="AuthenticAMD|AMD Ryzen AI 7 350 w/ Radeon 860M"
+LogCsvProfiler: Display: Metadata set : pgoenabled="0"
+LogCsvProfiler: Display: Metadata set : pgoprofilingenabled="0"
+LogCsvProfiler: Display: Metadata set : ltoenabled="0"
+LogCsvProfiler: Display: Metadata set : asan="0"
+LogCsvProfiler: Display: Metadata set : mergedmodules="0"
+LogCsvProfiler: Display: Metadata set : compacttset="0"
+LogCsvProfiler: Display: Metadata set : commandline="" C:\Projects\KSP-UE5\ue5\KspUe5.uproject -run=Cook -TargetPlatform=Windows -unversioned -fileopenlog -abslog="C:\Program Files\Epic Games\UE_5.8\Engine\Programs\AutomationTool\Saved\Cook-2026.10.09-01.45.18.txt" -stdout -CrashForUAT -unattended -NoLogTimes""
+LogCsvProfiler: Display: Metadata set : loginid="c28736f3471ebed03894b9895a1b84d6"
+LogCsvProfiler: Display: Metadata set : llm="0"
+LogCsvProfiler: Display: Metadata set : zenstreaming="0"
+LogCsvProfiler: Display: Metadata set : systemresolution.resx="1280"
+LogCsvProfiler: Display: Metadata set : systemresolution.resy="720"
+LogAudio: Display: Audio Device Manager not initializing due to all audio being disabled. If this is not intentional, please check command line arguments for "-nosound".
+LogAssetRegistry: Display: FindShardedCacheFiles: 1 via .ref, 0 via migration fallback, 1 total
+LogAssetRegistry: Display: CleanupOrphanedCacheFiles (PreLoad): 1 .ref files found, 1 referenced binaries
+LogAssetRegistry: Display: CleanupOrphanedCacheFiles: 1 total binaries, 1 referenced (kept), 0 old-style pre-migration (kept), 0 orphans deleted, 0 orphans locked (kept)
+LogAssetRegistry: Display: LoadCacheFiles: loading 1 cache files, memory-mapping=enabled
+LogConfig: Display: Loading VulkanPC ini files took 0.05 seconds
+LogConfig: Display: Loading Mac ini files took 0.05 seconds
+LogConfig: Display: Loading IOS ini files took 0.05 seconds
+LogConfig: Display: Loading Android ini files took 0.05 seconds
+LogConfig: Display: Loading Unix ini files took 0.06 seconds
+LogConfig: Display: Loading VisionOS ini files took 0.06 seconds
+LogConfig: Display: Loading Windows ini files took 0.06 seconds
+LogConfig: Display: Loading TVOS ini files took 0.06 seconds
+Running UnrealBuildTool: dotnet "..\..\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.dll" -Mode=ValidatePlatforms -OutputSDKs  -AllPlatforms  -project="C:/Projects/KSP-UE5/ue5/KspUe5.uproject" -log="C:/Projects/KSP-UE5/ue5/Saved/Logs/AutoSDKInfo.txt" -verbose -timestamps
+LogConfig: Display: Loading Linux ini files took 0.07 seconds
+LogAssetRegistry: Display: Asset registry cache read as 118.5 MiB from ../../../../../../Projects/KSP-UE5/ue5/Intermediate/CachedAssetRegistry/CachedAssetRegistry_0_92EEC92340A39A54B610A9BBBD825F33.bin (memory-mapped=yes)
+Log file: C:\Projects\KSP-UE5\ue5\Saved\Logs\AutoSDKInfo.txt
+RenderDocPlugin: Display: RenderDoc plugin will not be loaded. Use '-AttachRenderDoc' on the cmd line or enable 'renderdoc.AutoAttach' in the plugin settings.
+LogAsyncCompilation: Display: MemorySharingInfo: UsedMemory=323MiB, MaxMemoryAvailable=79271MiB
+LogAnalytics: Display: Provider StudioTelemetry.Provider.Log is disabled for this application
+LogAnalytics: Display: Provider StudioTelemetry.Provider.CSV is disabled for this application
+LogAnalytics: Display: Provider StudioTelemetry.Provider.Horde is disabled for this application
+LogAnalytics: Display: Provider StudioTelemetry.Provider.Log is disabled for this application
+LogAnalytics: Display: Provider StudioTelemetry.Provider.CSV is disabled for this application
+LogAnalytics: Display: Provider StudioTelemetry.Provider.Horde is disabled for this application
+##PlatformValidate: Win64 VALID 10.0.22621.0
+##PlatformValidate: Mac INVALID 26.1.1
+##PlatformValidate: IOS INVALID 26.1.1
+##PlatformValidate: Android INVALID r27c
+##PlatformValidate: Linux INVALID v26_clang-20.1.8-rockylinux8
+##PlatformValidate: LinuxArm64 INVALID <UNKNOWN>
+##PlatformValidate: TVOS INVALID 26.1.1
+##PlatformValidate: VisionOS INVALID <UNKNOWN>
+Unable to find required SDK version 'MainVersion' for platform LinuxArm64. Check your SDK.json files
+Unable to find required SDK version 'MainVersion' for platform VisionOS. Check your SDK.json files
+Trace written to file C:\Users\pmavr\AppData\Local\UnrealBuildTool\Trace.uba with size 321b
+LogStreaming: Display: AsyncLoading2 - Created: Async Loading Thread: false, Async Post Load: false, Multithreaded: false
+LogHAL: Display: Platform has ~ 24 GB [25545781248 / 34359738368 / 24], which maps to Larger [LargestMinGB=32, LargerMinGB=12, DefaultMinGB=8, SmallerMinGB=6, SmallestMinGB=0)
+LogVirtualTexturing: Display: Recreating virtual texture pools.
+LogCsvProfiler: Display: Metadata set : extradevelopmentmemorymb="0"
+LogObj: Display: Attempting to load config data for Default__DownlinkBandwidthManagerConfig before the Class has been constructed/registered/linked (likely during module loading or early startup). This will result in the load silently failing and should be fixed.
+LogTextureFormatASTC: Display: ASTCEnc version 5.0.1 library loaded
+LogTextureFormatManager: Display: Loaded Base TextureFormat: TextureFormatASTC
+LogTextureFormatManager: Display: Loaded Base TextureFormat: TextureFormatDXT
+LogTextureFormatManager: Display: Loaded Base TextureFormat: TextureFormatETC2
+LogTextureFormatManager: Display: Loaded Base TextureFormat: TextureFormatIntelISPCTexComp
+LogTextureFormatOodle: Display: Oodle Texture TFO init; latest sdk version = 2.9.16
+LogTextureFormatOodle: Display: Oodle Texture loading DLL: oo2tex_win64_2.9.16.dll
+LogTextureFormatManager: Display: Loaded Base TextureFormat: TextureFormatOodle
+LogTextureFormatManager: Display: Loaded Base TextureFormat: TextureFormatUncompressed
+LogTargetPlatformManager: Display: Failed to SetupSDK for platform 'Android'
+LogTargetPlatformManager: Display: Failed to SetupSDK for platform 'IOS'
+LogTargetPlatformManager: Display: Failed to SetupSDK for platform 'Linux'
+LogTargetPlatformManager: Display: Failed to SetupSDK for platform 'Mac'
+LogTargetPlatformManager: Display: Failed to SetupSDK for platform 'TVOS'
+LogTargetPlatformManager: Display: Loaded TargetPlatform 'Windows'
+LogTargetPlatformManager: Display: Loaded TargetPlatform 'WindowsEditor'
+LogTargetPlatformManager: Display: Loaded TargetPlatform 'WindowsServer'
+LogTargetPlatformManager: Display: Loaded TargetPlatform 'WindowsClient'
+LogTargetPlatformManager: Display: Building Assets For Windows
+LogAudioDebug: Display: Lib vorbis DLL was dynamically loaded.
+LogObj: Display: Attempting to load config data for Default__SlateThemeManager before the Class has been constructed/registered/linked (likely during module loading or early startup). This will result in the load silently failing and should be fixed.
+LogCsvProfiler: Display: Metadata set : verbatimrhiname="Null"
+LogCsvProfiler: Display: Metadata set : rhiname="Null"
+LogCsvProfiler: Display: Metadata set : rhifeaturelevel="SM6"
+LogCsvProfiler: Display: Metadata set : shaderplatform="PCD3D_SM6"
+LogCsvProfiler: Display: Metadata set : gpu=""
+LogCsvProfiler: Display: Metadata set : gpudriver=""
+LogDerivedDataCache: Display: ../../../Engine/DerivedDataCache/Compressed.ddp: Opened pak cache for reading. (1670 MiB)
+LogZenServiceInstance: Display: Launching zen utility 'C:/Program Files/Epic Games/UE_5.8/Engine/Binaries/Win64/zen.exe service status'.
+LogZenServiceInstance: Display: Writing plugin version info to 'C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install/zen_plugin_versions.json'
+LogZenServiceInstance: Display: Read zen version cache file from 'C:/Users/pmavr/AppData/Local/UnrealEngine/5.8/Saved/Zen/zen.version', version: '5.8.13-202605190912-windows-x64-release-094f62c2'
+LogZenServiceInstance: Display: Read zen version cache file from 'C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install/zen.version', version: '5.8.13-202605190912-windows-x64-release-094f62c2'
+LogZenServiceInstance: Display: Installed service at 'C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe' is up to date
+LogZenServiceInstance: Display: Launching executable 'C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe', working dir 'C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install', data dir 'C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Data', args '--port 8558 --data-dir C:\Users\pmavr\AppData\Local\UnrealEngine\Common\Zen\Data --http asio --gc-cache-duration-seconds 1209600 --gc-interval-seconds 21600 --gc-low-diskspace-threshold 2147483648 --cache-bucket-limit-overwrites --quiet --restrict-content-types --allow-external-oidctoken-exe=false --plugins-config "C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install/zen_plugins_v1.json" --security-config-path "C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install/security-config.json" --owner-pid 36724  --child-id Zen_36724_Startup'
+LogZenServiceInstance: Display: Unreal Zen Storage Server HTTP service at http://[::1]:8558 status: OK!.
+LogDerivedDataCache: Display: ZenLocal: Using ZenServer HTTP service at [::1] with namespace ue.ddc. Status: OK!.
+LogDerivedDataCache: Display: C:/Users/pmavr/AppData/Local/UnrealEngine/Common/DerivedDataCache: Performance: Latency=0.03ms. RandomReadSpeed=299.60MBs, RandomWriteSpeed=212.67MBs. Assigned SpeedClass 'Local'
+LogUbaHorde: Display: UBA/Horde Configuration [Uba.Provider.Horde]: Not Enabled
+LogShaderCompilers: Display: No distributed shader compiler controller found
+LogShaderCompilers: Display: Using 13 local workers for shader compilation
+LogShaderCompilers: Display: Compiling shader autogen file: ../../../../../../Projects/KSP-UE5/ue5/Intermediate/ShaderAutogen/PCD3D_SM6/AutogenShaderHeaders.ush
+LogShaderCompilers: Display: Autogen file is unchanged, skipping write.
+LogEditorDomain: Display: EditorDomain is Disabled
+LogAssetRegistry: Display: AssetDataGatherer spent 0.000s loading caches from ../../../../../../Projects/KSP-UE5/ue5/Intermediate/CachedAssetRegistry.
+LogDeviceProfileManager: Display: Deviceprofile LinuxArm64Editor not found.
+LogDeviceProfileManager: Display: Deviceprofile LinuxArm64 not found.
+LogCsvProfiler: Display: Metadata set : deviceprofile="WindowsEditor"
+LogStreaming: Display: FlushAsyncLoading(1): 1 QueuedPackages, 0 AsyncPackages
+LogTextureEncodingSettings: Display: Texture Encode Speed: Final (cook).
+LogTextureEncodingSettings: Display: Oodle Texture Encode Speed settings: Fast: RDO Off Lambda=0, Effort=Normal Final: RDO Off Lambda=0, Effort=Normal
+LogTextureEncodingSettings: Display: Shared linear texture encoding: Disabled
+LogMeshReduction: Display: Using QuadricMeshReduction for automatic static mesh reduction
+LogMeshReduction: Display: Using SkeletalMeshReduction for automatic skeletal mesh reduction
+LogMeshReduction: Display: Using ProxyLODMeshReduction for automatic mesh merging
+LogMeshReduction: Display: No distributed automatic mesh merging module available
+LogShaderCompilers: Display: Compiling shader autogen file: ../../../../../../Projects/KSP-UE5/ue5/Intermediate/ShaderAutogen/PCD3D_SM5/AutogenShaderHeaders.ush
+LogShaderCompilers: Display: Autogen file is unchanged, skipping write.
+LogVirtualization: Display: VirtualizationSystem name found in ini file: None
+LogVirtualization: Display: FNullVirtualizationSystem mounted, virtualization will be disabled
+LogWorldPartition: Display: FWorldPartitionClassDescRegistry::Initialize started...
+LogWorldPartition: Display: FWorldPartitionClassDescRegistry::Initialize took 1.960 ms
+LogMetaSound: Display: MetaSound Page Target Initialized to 'Default'
+LogAudio: Display: Registering Engine Module Parameter Interfaces...
+LogAudioCaptureCore: Display: No Audio Capture implementations found. Audio input will be silent.
+LogAudioCaptureCore: Display: No Audio Capture implementations found. Audio input will be silent.
+LogCsvProfiler: Display: Metadata set : largeworldcoordinates="1"
+LogCsvProfiler: Display: Metadata set : raytracing="0"
+LogCook: Display: CookProcessCount=1. CookMultiprocess is disabled and the cooker is running as a single process.
+LogCook: Display: CookSettings for Memory:
+	MemoryMaxUsedVirtual 0MiB
+	MemoryMaxUsedPhysical 0MiB
+	MemoryMinFreeVirtual 2048MiB
+	MemoryMinFreePhysical 2048MiB
+	MemoryTriggerGCAtPressureLevel None
+	SoftGCMemoryUseTrigger disabled
+	SoftGCTimeBudgetTrigger enabled (0.05 budget, 30s min period)
+LogCook: Display: SkipOnlyEditorOnly is enabled, unsolicited packages will not be cooked unless they are referenced from the cooked version of the instigator package.
+LogCook: Display: ---- Pre Content Initialisation: End ----
+LogCook: Display: ---- Post Content Initialisation: Start ----
+LogEditorDomain: Display: Cycle detected in parents of class /Script/RigVMDeveloper.RigVMUnitNode. Allow flags for editordomain and incremental cooking will be invalid.
+LogZenStore: Display: Establishing oplog 'KspUe5.1805580e/EditorDomain'
+LogZenStore: Display: Zen project 'KspUe5.1805580e' created
+LogZenStore: Display: Zen oplog 'KspUe5.1805580e/EditorDomain' created
+LogCook: Display: Waiting for Asset Registry
+LogAssetRegistry: Display: Starting OnFilesLoaded.Broadcast
+LogAssetRegistry: Display: Completed OnFilesLoaded.Broadcast: 0.018s
+LogAssetRegistry: Display: Asset registry cache written as 118.5 MiB to ../../../../../../Projects/KSP-UE5/ue5/Intermediate/CachedAssetRegistry/CachedAssetRegistry_*.ref
+LogAssetRegistry: Display: CleanupOrphanedCacheFiles (PostWrite): 1 .ref files found, 1 referenced binaries
+LogAssetRegistry: Display:   CachedAssetRegistry_0_92EEC92340A39A54B610A9BBBD825F33.bin: deleted (orphaned, unreferenced by any .ref)
+LogAssetRegistry: Display: CleanupOrphanedCacheFiles: 2 total binaries, 1 referenced (kept), 0 old-style pre-migration (kept), 1 orphans deleted, 0 orphans locked (kept)
+LogAssetRegistry: Display: CleanupOrphanedCacheFiles (PostWrite): 1 .ref files found, 1 referenced binaries
+LogAssetRegistry: Display: CleanupOrphanedCacheFiles: 1 total binaries, 1 referenced (kept), 0 old-style pre-migration (kept), 0 orphans deleted, 0 orphans locked (kept)
+LogCook: Display: INCREMENTAL COOK DEPENDENCIES: Enabled. Incremental Cook Dependencies are enabled in Editor.ini:[CookSettings]:LegacyIterative=false.
+LogZenStore: Display: Establishing oplog 'KspUe5.1805580e/Windows'
+LogZenStore: Display: Zen project 'KspUe5.1805580e' already exists
+LogStorageServerPlatformFile: Display: Found 'C:/Projects/KSP-UE5/ue5/Saved/Cooked/Windows/ue.projectstore'
+LogStorageServerPlatformFile: Display: Using connection settings from ue.projectstore: HostAddrs='[::1]+192.168.0.124+172.28.16.1' and HostPort='8558'
+LogStorageServerPlatformFile: Display: Found 'C:/Projects/KSP-UE5/ue5/Saved/Cooked/Windows/ue.projectstore'
+LogStorageServerPlatformFile: Display: Using password authentication from ue.projectstore
+LogStorageServerPlatformFile: Display: Using settings from ue.projectstore: ServerProject='KspUe5.1805580e' and ServerPlatform='Windows'
+LogStorageServerConnection: Display: Creating zen store connection to [::1]:8558 ("::1").
+LogStorageServerConnection: Display: Storage server returned HTTP 404 for /prj/KspUe5.1805580e/oplog/Windows: oplog Windows not found in project KspUe5.1805580e
+LogStorageServerConnection: Display: Creating zen store connection to 192.168.0.124:8558 ("192.168.0.124").
+LogStorageServerConnection: Display: Storage server returned HTTP 404 for /prj/KspUe5.1805580e/oplog/Windows: oplog Windows not found in project KspUe5.1805580e
+LogStorageServerConnection: Display: Creating zen store connection to 172.28.16.1:8558 ("172.28.16.1").
+LogStorageServerConnection: Display: Storage server returned HTTP 404 for /prj/KspUe5.1805580e/oplog/Windows: oplog Windows not found in project KspUe5.1805580e
+LogSockets: Warning: GetAddressInfo failed to resolve host with error SE_HOST_NOT_FOUND [11001]
+LogStorageServerConnection: Display: Creating zen store connection to hostname://petmav-laptop.gateway:8558 ("hostname://petmav-laptop.gateway").
+LogStorageServerConnection: Display: Send to storage server failed (peer likely closed the connection): GET /prj/KspUe5.1805580e/oplog/Windows
+LogStorageServerConnection: Display: Send to storage server failed (peer likely closed the connection): GET /prj/KspUe5.1805580e/oplog/Windows
+LogStorageServerConnection: Display: Send to storage server failed (peer likely closed the connection): GET /prj/KspUe5.1805580e/oplog/Windows
+LogStorageServerConnection: Display: Send to storage server failed (peer likely closed the connection): GET /prj/KspUe5.1805580e/oplog/Windows
+LogStorageServerConnection: Display: Send to storage server failed (peer likely closed the connection): GET /prj/KspUe5.1805580e/oplog/Windows
+LogStorageServerConnection: Display: Send to storage server failed (peer likely closed the connection): GET /prj/KspUe5.1805580e/oplog/Windows
+LogStorageServerConnection: Display: Send to storage server failed (peer likely closed the connection): GET /prj/KspUe5.1805580e/oplog/Windows
+LogStorageServerConnection: Display: Send to storage server failed (peer likely closed the connection): GET /prj/KspUe5.1805580e/oplog/Windows
+LogStorageServerConnection: Display: Send to storage server failed (peer likely closed the connection): GET /prj/KspUe5.1805580e/oplog/Windows
+LogStorageServerConnection: Display: Send to storage server failed (peer likely closed the connection): GET /prj/KspUe5.1805580e/oplog/Windows
+LogStorageServerPlatformFile: Display: Failed to initialize connection to any of [ [::1], 192.168.0.124, 172.28.16.1, hostname://petmav-laptop.gateway ]
+LogCook: Display: CalculateGlobalDependenciesHash(Windows):
+LogCook: Display: 	FGuid CookIncrementalVersion = ffa12fdc-c822-1fe2-7757-627a12f1d3a7
+LogCook: Display: 	[Editor]:CookSettings.ProjectCookIncrementalVersion = 00000000-0000-0000-0000-000000000000
+LogCook: Display: 	[Engine]:Core.System.CanStripEditorOnlyExportsAndImports = True
+LogCook: Display: 	[Engine]:Core.System.CanSkipEditorReferencedPackagesWhenCooking = False
+LogCook: Display: 	CanUseUnversionedPropertySerialization = True
+LogCook: Display: 	[Editor]:CookSettings.AutomaticOptionalInclusionAssetType = /Script/Niagara.NiagaraScript, /Script/Niagara.NiagaraEmitter, /Script/Niagara.NiagaraSystem, /Script/NiagaraEditor.NiagaraParameterDefinitions, /Script/Niagara.NiagaraEffectType, /Script/Niagara.NiagaraValidationRuleSet, /Script/OptimusCore.OptimusDeformer
+LogCook: Display: 	IsCookFlagSet(ECookInitializationFlags::Unversioned) = True
+LogCook: Display: 	FCoreRedirects::AppendHashOfGlobalRedirects = 02c9fd35aac3c00095df0219fc925d7070b41f449d3b97578d818a4016ee6805
+LogCook: Display: 	GlobalDependenciesHash(Windows) = 2de5b37f143f8e25d634acd39f60ca4c07ed1761ed763f60105e89ce30e27192
+LogCook: Display: FULL COOK: Incremental Cooks are disabled by default in Editor.ini:[CookSettings]:CookIncrementalDefaultIncremental=false, and commandline did not specify -forcerecook=false. Deleting previously cooked packages for platform Windows and recooking all packages discovered in the current cook.
+LogZenStore: Display: Deleting oplog 'KspUe5.1805580e/Windows' if it exists
+LogZenStoreWriter: Display: Deleting C:/Projects/KSP-UE5/ue5/Saved/Cooked/Windows/...
+LogZenStore: Display: Zen oplog 'KspUe5.1805580e/Windows' created
+LogCook: Display: Sandbox cleanup took 0.015 seconds for platforms Windows
+LogCook: Display: Compiling global changed shaders for platform 'Windows'
+LogShaderLibrary: Display:
+LogShaderLibrary: Display: Shader Library 'Global' (PCD3D_SM6-PCD3D_SM6) Stats:
+LogShaderLibrary: Display: =================
+LogShaderLibrary: Display: Assets: 1, Unique Shadermaps: 461 (46100.00%)
+LogShaderLibrary: Display: Total Shaders: 8100, Unique Shaders: 8098 (99.98%)
+LogShaderLibrary: Display: Total Shader Size: 96.38mb, Unique Shaders Size: 96.38mb (100.00%)
+LogShaderLibrary: Display: === Extended info:
+LogShaderLibrary: Display: Minimum number of shaders in shadermap: 1
+LogShaderLibrary: Display: Median number of shaders in shadermap: 3
+LogShaderLibrary: Display: Maximum number of shaders in shadermap: 530
+LogShaderLibrary: Display: Number of shadermaps referencing top 10 most shared shaders:
+LogShaderLibrary: Display:     2, 2, 1, 1, 1, 1, 1, 1, 1, 1
+LogShaderLibrary: Display: Unique shaders itemization (sorted by compressed size):
+LogShaderLibrary: Display: SF_Compute: 5925 shaders (73.17%), compressed size: 74.10 MB (12.81 KB avg per shader), uncompressed size: 98.09 MB (16.95 KB avg per shader)
+LogShaderLibrary: Display: SF_Pixel: 2034 shaders (25.12%), compressed size: 21.92 MB (11.03 KB avg per shader), uncompressed size: 28.81 MB (14.50 KB avg per shader)
+LogShaderLibrary: Display: SF_Vertex: 135 shaders (1.67%), compressed size: 0.35 MB (2.69 KB avg per shader), uncompressed size: 0.44 MB (3.35 KB avg per shader)
+LogShaderLibrary: Display: SF_Geometry: 3 shaders (0.04%), compressed size: 0.01 MB (2.15 KB avg per shader), uncompressed size: 0.01 MB (3.31 KB avg per shader)
+LogShaderLibrary: Display: SF_WorkGraphComputeNode: 1 shaders (0.01%), compressed size: 0.00 MB (2.75 KB avg per shader), uncompressed size: 0.00 MB (3.35 KB avg per shader)
+LogShaderLibrary: Display: Textual dump saved to '../../../../../../Projects/KSP-UE5/ue5/Saved/Shaders/PCD3D_SM6-PCD3D_SM6/ShaderDebug-Global-PCD3D_SM6-PCD3D_SM6/Dump.txt'
+LogShaderLibrary: Display: =================
+LogShaderLibrary: Display:
+LogShaderLibrary: Display: Shader Library 'Global' (PCD3D_SM5-PCD3D_SM5) Stats:
+LogShaderLibrary: Display: =================
+LogShaderLibrary: Display: Assets: 1, Unique Shadermaps: 345 (34500.00%)
+LogShaderLibrary: Display: Total Shaders: 3943, Unique Shaders: 3929 (99.64%)
+LogShaderLibrary: Display: Total Shader Size: 11.54mb, Unique Shaders Size: 11.54mb (99.96%)
+LogShaderLibrary: Display: === Extended info:
+LogShaderLibrary: Display: Minimum number of shaders in shadermap: 1
+LogShaderLibrary: Display: Median number of shaders in shadermap: 3
+LogShaderLibrary: Display: Maximum number of shaders in shadermap: 309
+LogShaderLibrary: Display: Number of shadermaps referencing top 10 most shared shaders:
+LogShaderLibrary: Display:     3, 3, 3, 2, 2, 2, 2, 2, 2, 2
+LogShaderLibrary: Display: Unique shaders itemization (sorted by compressed size):
+LogShaderLibrary: Display: SF_Pixel: 1760 shaders (44.80%), compressed size: 6.64 MB (3.86 KB avg per shader), uncompressed size: 31.28 MB (18.20 KB avg per shader)
+LogShaderLibrary: Display: SF_Compute: 2052 shaders (52.23%), compressed size: 4.83 MB (2.41 KB avg per shader), uncompressed size: 19.47 MB (9.71 KB avg per shader)
+LogShaderLibrary: Display: SF_Vertex: 115 shaders (2.93%), compressed size: 0.07 MB (0.61 KB avg per shader), uncompressed size: 0.15 MB (1.32 KB avg per shader)
+LogShaderLibrary: Display: SF_Geometry: 2 shaders (0.05%), compressed size: 0.00 MB (0.49 KB avg per shader), uncompressed size: 0.00 MB (1.55 KB avg per shader)
+LogShaderLibrary: Display: Textual dump saved to '../../../../../../Projects/KSP-UE5/ue5/Saved/Shaders/PCD3D_SM5-PCD3D_SM5/ShaderDebug-Global-PCD3D_SM5-PCD3D_SM5/Dump.txt'
+LogShaderLibrary: Display: =================
+LogCook: Display: Discovering localized assets for cultures: en
+LogCook: Display: Found 0 localized assets
+LogCook: Display: ---- Post Content Initialisation: End ----
+LogCook: Display: Cooked packages 0 Packages Remain 494 Total 494
+LogCook: Display: Cook Diagnostics: OpenFileHandles=274, VirtualMemory=1564MiB, VirtualMemoryAvailable=41807MiB
+LogMaterial: Display: Missing cached shadermap for /Landmass/Landscape/BlueprintBrushes/Materials/Internal/BrushBounds.BrushBounds in PCD3D_SM6, Default, SM6, Game (DDC key hash: 321d2268cbe1e8391564d82ff1d7ad3f5c312a9a), compiling.
+LogMaterial: Display: Missing cached shadermap for /SpeedTreeImporter/SpeedTree9/SpeedTreeMaster.SpeedTreeMaster in PCD3D_SM6, Default, SM6, Game (DDC key hash: 1cbb57842b3de785b315db9de0156a7d029a017a), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/Widget3DPassThrough_Translucent_OneSided.Widget3DPassThrough_Translucent_OneSided in PCD3D_SM6, Default, SM6, Game (DDC key hash: 36b5be21331d7fb6c90dbf132526b8c37ba46041), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/Widget3DPassThrough_Opaque_OneSided.Widget3DPassThrough_Opaque_OneSided in PCD3D_SM6, Default, SM6, Game (DDC key hash: 033229e2dfff124aff231a1c7246062fcd7aad59), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/Widget3DPassThrough_Masked_OneSided.Widget3DPassThrough_Masked_OneSided in PCD3D_SM6, Default, SM6, Game (DDC key hash: 6c27bc70d8daf0ec43814168d8aec106c00c0086), compiling.
+LogMaterial: Display: Missing cached shadermap for /SpeedTreeImporter/SpeedTree9/SpeedTreeMaster.SpeedTreeMaster in PCD3D_SM5, Default, SM5, Game (DDC key hash: 6701aa085678564bfd144efbc765e20ef7030cf5), compiling.
+LogMaterial: Display: Missing cached shadermap for /SpeedTreeImporter/SpeedTree9/SpeedTreeBillboardMaster.SpeedTreeBillboardMaster in PCD3D_SM6, Default, SM6, Game (DDC key hash: 5b63da78e326012b203b5146bee3d13f4c69ce8f), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/Dataflow/DataflowSelection.DataflowSelection in PCD3D_SM6, Default, SM6, Game (DDC key hash: 5c7dfa178dc0e72ebb59ca4c31955c72cb8cf10f), compiling.
+LogMaterial: Display: Missing cached shadermap for /Landmass/Landscape/BlueprintBrushes/Materials/Internal/BrushBounds.BrushBounds in PCD3D_SM5, Default, SM5, Game (DDC key hash: 6f54c254425071632a7521b06af9b79e9dd06766), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorLandscapeResources/LandscapeLayerUsageMaterial.LandscapeLayerUsageMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 0ba3a69a01ce12557320471c0d12bf4d4a75a74b), compiling.
+LogCook: Display: Garbage collection triggered (Soft). Triggered by conditions:
+  CookSettings.SoftGCTimeTrigger: Periodic triggering of SoftGC: No duration data.
+LogCookCommandlet: Display: GarbageCollection... (Periodic GC)
+LogMaterial: Display: Missing cached shadermap for /SpeedTreeImporter/SpeedTree9/SpeedTreeBillboardMaster.SpeedTreeBillboardMaster in PCD3D_SM5, Default, SM5, Game (DDC key hash: e0addce0ad5e3debed7a8698f55d6ab50f7d76f2), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/M_ClearCoat.M_ClearCoat in PCD3D_SM6, Default, SM6, Game (DDC key hash: 1be7ad3b137aaf137271125ad89c71a4aa770d43), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_ClearCoat_Mask.MI_ClearCoat_Mask in PCD3D_SM6, Default, SM6, Game (DDC key hash: 3be62e865a62d156ed8f4f746835c2b8dc654ca6), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/M_ClearCoat.M_ClearCoat in PCD3D_SM5, Default, SM5, Game (DDC key hash: 424f4b18b933cf3dbee30cc5146ff3ed34f3f3a0), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_ClearCoat_Mask.MI_ClearCoat_Mask in PCD3D_SM5, Default, SM5, Game (DDC key hash: 96757b7bbb2de572ef850e958cd05f7d5a1f1f6a), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Sheen_Mask_DS.MI_Sheen_Mask_DS in PCD3D_SM6, Default, SM6, Game (DDC key hash: dd985e3b039d3c281872c30a00ff3c8f27d506ae), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Transmission_DS.MI_Transmission_DS in PCD3D_SM6, Default, SM6, Game (DDC key hash: 27eea40649371addd9bd43657b222b32f3acd84a), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/M_Transmission.M_Transmission in PCD3D_SM6, Default, SM6, Game (DDC key hash: 9cf69dd88a93ef7285abda4d521f2cb5c6ad6004), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Sheen_Blend_DS.MI_Sheen_Blend_DS in PCD3D_SM6, Default, SM6, Game (DDC key hash: a9fb363672d129b8fd31a0c88fa7f40a46594256), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Sheen_Opaque_DS.MI_Sheen_Opaque_DS in PCD3D_SM6, Default, SM6, Game (DDC key hash: 1a273d936a002d41b2277288e59e5b0bc35de0c3), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Sheen_Blend.MI_Sheen_Blend in PCD3D_SM6, Default, SM6, Game (DDC key hash: 1feb274103c3888cec9a57dcef5153e804f1c8f7), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/M_Sheen.M_Sheen in PCD3D_SM6, Default, SM6, Game (DDC key hash: 36538c3d66445109326d881e5aa7623a760e4f6a), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Default_Blend_DS.MI_Default_Blend_DS in PCD3D_SM6, Default, SM6, Game (DDC key hash: 97dcf33807e5f395387caed0b9146bc35a950c55), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Default_Opaque_DS.MI_Default_Opaque_DS in PCD3D_SM6, Default, SM6, Game (DDC key hash: a9a13a14432648b4ef5c282b96a6f46b01c4cd27), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Transmission_DS.MI_Transmission_DS in PCD3D_SM5, Default, SM5, Game (DDC key hash: 93b5895945b38b3a7f568e6b8fbb6294f96a8eb0), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/M_Transmission.M_Transmission in PCD3D_SM5, Default, SM5, Game (DDC key hash: 937caf340c6f9c54929a258d0f4878b8bcb8291f), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Sheen_Blend_DS.MI_Sheen_Blend_DS in PCD3D_SM5, Default, SM5, Game (DDC key hash: e773fbd7f9bb56d41919a314ee9f84a921b38241), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Sheen_Mask_DS.MI_Sheen_Mask_DS in PCD3D_SM5, Default, SM5, Game (DDC key hash: d81ced522bdb40e75ae4ae2b0c6c7f173bbe463a), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Sheen_Opaque_DS.MI_Sheen_Opaque_DS in PCD3D_SM5, Default, SM5, Game (DDC key hash: 388a23d592542cd8a1fcd747cafed824fb3a7868), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Sheen_Blend.MI_Sheen_Blend in PCD3D_SM5, Default, SM5, Game (DDC key hash: d14e706b09a931fa481fc5cba9362061a5fcefc7), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/M_Sheen.M_Sheen in PCD3D_SM5, Default, SM5, Game (DDC key hash: 217a394502c0ec84601a786f8f9b4b00b1e37733), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Default_Blend_DS.MI_Default_Blend_DS in PCD3D_SM5, Default, SM5, Game (DDC key hash: 8a0ee11dcbb0320a258793c63396fb22f279aba5), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Default_Mask_DS.MI_Default_Mask_DS in PCD3D_SM6, Default, SM6, Game (DDC key hash: 5cb06460537930b13b06e5b616c7ebc4231ad384), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Sheen_Mask.MI_Sheen_Mask in PCD3D_SM6, Default, SM6, Game (DDC key hash: eba1bf66d08b1bddae80cb252daadcacab12a0af), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Default_Opaque_DS.MI_Default_Opaque_DS in PCD3D_SM5, Default, SM5, Game (DDC key hash: 2893a20b30737ee427a9927d0e7d76b1296b2200), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_ClearCoat_Opaque_DS.MI_ClearCoat_Opaque_DS in PCD3D_SM6, Default, SM6, Game (DDC key hash: 1719ac4487b5fd25aceadd8361e321fe355735a2), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_ClearCoat_Blend.MI_ClearCoat_Blend in PCD3D_SM6, Default, SM6, Game (DDC key hash: d4192991cdfc123dcc861557545185a8d0d9ca1c), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/Widget3DPassThrough_Translucent.Widget3DPassThrough_Translucent in PCD3D_SM6, Default, SM6, Game (DDC key hash: d695b3273af5f388a9bd42b9da03054a55615063), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/Widget3DPassThrough_Opaque.Widget3DPassThrough_Opaque in PCD3D_SM6, Default, SM6, Game (DDC key hash: a3fa880018e35cb5072fbc84ca06267bb9c436b5), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/Widget3DPassThrough_Masked.Widget3DPassThrough_Masked in PCD3D_SM6, Default, SM6, Game (DDC key hash: fa789e509d5f4ff9102a8e318b21c4cb285af38d), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Unlit_Mask_DS.MI_Unlit_Mask_DS in PCD3D_SM6, Default, SM6, Game (DDC key hash: 02bf4488de6c73c67deeed67b197b117a801a4d7), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Default_Blend.MI_Default_Blend in PCD3D_SM6, Default, SM6, Game (DDC key hash: 9ad2debc7d92486859203f59454ad26357d7c57e), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Default_Mask.MI_Default_Mask in PCD3D_SM6, Default, SM6, Game (DDC key hash: bd821bb0dfd11340ce1ebc10f7490c2e1be60969), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/M_Default.M_Default in PCD3D_SM6, Default, SM6, Game (DDC key hash: 401a1d2f67b885812b8b45edd6450dc888724e20), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_ClearCoat_Blend_DS.MI_ClearCoat_Blend_DS in PCD3D_SM6, Default, SM6, Game (DDC key hash: a574bbfd6eb1fdd96af288bb0f6f9c92581e9674), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_ClearCoat_Mask_DS.MI_ClearCoat_Mask_DS in PCD3D_SM6, Default, SM6, Game (DDC key hash: 4e4048aaee3cc7457fa1162b808e4d12f555497c), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/Substrate/M_GLTF.M_GLTF in PCD3D_SM6, Default, SM6, Game (DDC key hash: 873177a0ec97d6f18b0f970c5ee30733eef80383), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Unlit_Blend_DS.MI_Unlit_Blend_DS in PCD3D_SM6, Default, SM6, Game (DDC key hash: 7464b5946103384204bdae697223771aed0bde8a), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Sheen_Mask.MI_Sheen_Mask in PCD3D_SM5, Default, SM5, Game (DDC key hash: bd52fb642d2181ef6806fb862f3713dfe6d12b87), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_ClearCoat_Opaque_DS.MI_ClearCoat_Opaque_DS in PCD3D_SM5, Default, SM5, Game (DDC key hash: b9514c4f6642f2813cd1739e13f48c80db7480e7), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_ClearCoat_Blend.MI_ClearCoat_Blend in PCD3D_SM5, Default, SM5, Game (DDC key hash: a5a8cf28d22be016950e278ab5e51b5a86f733ee), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Default_Mask_DS.MI_Default_Mask_DS in PCD3D_SM5, Default, SM5, Game (DDC key hash: 1d7bfddda871fd030d8d09fc8b34c84d14cc2f1d), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Unlit_Mask_DS.MI_Unlit_Mask_DS in PCD3D_SM5, Default, SM5, Game (DDC key hash: b1bdbd573c306c48bc83ace9d94d61f6b6750149), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Default_Blend.MI_Default_Blend in PCD3D_SM5, Default, SM5, Game (DDC key hash: 8864145f3754d4c49a68670c64ded36022ae33f0), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Default_Mask.MI_Default_Mask in PCD3D_SM5, Default, SM5, Game (DDC key hash: 24ce77d18fd280c3dccf48d39258eb64a9afb59f), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/M_Default.M_Default in PCD3D_SM5, Default, SM5, Game (DDC key hash: 0168cb4c12c312641502a548b1ed313364158729), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_ClearCoat_Blend_DS.MI_ClearCoat_Blend_DS in PCD3D_SM5, Default, SM5, Game (DDC key hash: 3bf90e7656aee197a284621d78532a84469d7aa2), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_ClearCoat_Mask_DS.MI_ClearCoat_Mask_DS in PCD3D_SM5, Default, SM5, Game (DDC key hash: d45c209d223787bc19f15a858d8ed98e14e70b6f), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Unlit_Blend.MI_Unlit_Blend in PCD3D_SM6, Default, SM6, Game (DDC key hash: 604bba97843d9f9a996d9d829e63e9fa2f532cc0), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_SpecularGlossiness_Blend_DS.MI_SpecularGlossiness_Blend_DS in PCD3D_SM6, Default, SM6, Game (DDC key hash: 04aed734a000d82abe8b2a93b24975adad8358ec), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_SpecularGlossiness_Mask_DS.MI_SpecularGlossiness_Mask_DS in PCD3D_SM6, Default, SM6, Game (DDC key hash: 47fbc068d28a27504a9bcb9c6a32f384fdcd976e), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_SpecularGlossiness_Opaque_DS.MI_SpecularGlossiness_Opaque_DS in PCD3D_SM6, Default, SM6, Game (DDC key hash: 2440e23763404179abf4ec0dd903196639291a41), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_SpecularGlossiness_Blend.MI_SpecularGlossiness_Blend in PCD3D_SM6, Default, SM6, Game (DDC key hash: a295d42dad8b10ebaf41cde322b81560abe09887), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_SpecularGlossiness_Mask.MI_SpecularGlossiness_Mask in PCD3D_SM6, Default, SM6, Game (DDC key hash: 7b9fcf9974fb3e744bf759a6122d0544f62a3e6c), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Unlit_Mask.MI_Unlit_Mask in PCD3D_SM6, Default, SM6, Game (DDC key hash: 0843f6fc988a6c8f5a3f3fd6bf5f63f6625af007), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/M_Unlit.M_Unlit in PCD3D_SM6, Default, SM6, Game (DDC key hash: dc12c30eda235017521d70830adc669596687201), compiling.
+LogCook: Display: Cooked packages 50 Packages Remain 506 Total 556
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/Substrate/M_GLTF.M_GLTF in PCD3D_SM5, Default, SM5, Game (DDC key hash: 0c195b8bd59e326ad9575a1834a99f57f8da968c), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Unlit_Blend_DS.MI_Unlit_Blend_DS in PCD3D_SM5, Default, SM5, Game (DDC key hash: 6b75ef7ae243fb1593d33966cb4078f298f9da34), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_SpecularGlossiness_Blend_DS.MI_SpecularGlossiness_Blend_DS in PCD3D_SM5, Default, SM5, Game (DDC key hash: 6781d2a307d8ae6209c2b142908a354114bb4908), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_SpecularGlossiness_Mask_DS.MI_SpecularGlossiness_Mask_DS in PCD3D_SM5, Default, SM5, Game (DDC key hash: 378cbfee568590475c7e837d72b3969d323134d3), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Unlit_Opaque_DS.MI_Unlit_Opaque_DS in PCD3D_SM6, Default, SM6, Game (DDC key hash: a3419d7289133062ab4fc19c385ed6a61150ae99), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Unlit_Blend.MI_Unlit_Blend in PCD3D_SM5, Default, SM5, Game (DDC key hash: 73d2c2df65d80730efc8511d07159d8b1b927b86), compiling.
+LogStaticMesh: Display: Waiting for static meshes to be ready 37/51 (/ControlRig/Controls/ControlRig_Sphere_1mm) ...
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Unlit_Mask.MI_Unlit_Mask in PCD3D_SM5, Default, SM5, Game (DDC key hash: a66535929544acd8a1c07a3e08d4809dedeb09f6), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/M_Unlit.M_Unlit in PCD3D_SM5, Default, SM5, Game (DDC key hash: 6196835ce4b02a7142bcb262e0dcd9190319d162), compiling.
+LogMaterial: Display: Missing cached shadermap for /MeshModelingToolsetExp/Materials/LineSetOverlaidComponentMaterial.LineSetOverlaidComponentMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 07cd053f72bd82bd45ee9e4a19e5341539260722), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorLandscapeResources/MaskBrushMaterial_MaskedRegion.MaskBrushMaterial_MaskedRegion in PCD3D_SM6, Default, SM6, Game (DDC key hash: eab11a91988909e42fd1a3b354000aa2e9e4bcda), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/VREditor/SnapGrid/SnapGridMaterial.SnapGridMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 9cf32330851094f6a55e058f7d3b1cc4520e9477), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_SpecularGlossiness_Opaque_DS.MI_SpecularGlossiness_Opaque_DS in PCD3D_SM5, Default, SM5, Game (DDC key hash: f29dd6c13c31b9917a844f2487816614cce619f4), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_SpecularGlossiness_Blend.MI_SpecularGlossiness_Blend in PCD3D_SM5, Default, SM5, Game (DDC key hash: 04e18d5d0e03fd125140985d9802dd5a75476249), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_SpecularGlossiness_Mask.MI_SpecularGlossiness_Mask in PCD3D_SM5, Default, SM5, Game (DDC key hash: da29415a7884443d3a8294e71fb1516e6cb02107), compiling.
+LogMaterial: Display: Missing cached shadermap for /Paper2D/OpaqueUnlitSpriteMaterial.OpaqueUnlitSpriteMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 2a04cbc37b7afffb9bbb97618e544c04b5a89d51), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorLandscapeResources/SelectBrushMaterial_SelectedRegion.SelectBrushMaterial_SelectedRegion in PCD3D_SM6, Default, SM6, Game (DDC key hash: 96e83059005ab3a9462e81109fc765b740d36b62), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/BasicShapes/M_Cube_WorldGridMaterial_8D67460644F5AEE976EC80B26230FFEB.M_M_Cube_WorldGridMaterial_8D67460644F5AEE976EC80B26230FFEB in PCD3D_SM6, Default, SM6, Game (DDC key hash: 1cb6cbdb908bd07142f53dd290752d8d713fa2bc), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/TextureColorViewMode.TextureColorViewMode in PCD3D_SM6, Default, SM6, Game (DDC key hash: fce38b26a2d582cda55d6ce479a4f4453c43065f), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/M_GeoInsp_Clay.M_GeoInsp_Clay in PCD3D_SM6, Default, SM6, Game (DDC key hash: 57d678f5dde7a5e9b6cb5c62991c91cea3177997), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/M_SpecularGlossiness.M_SpecularGlossiness in PCD3D_SM6, Default, SM6, Game (DDC key hash: 333b8fbad48c7247914082571ef47c58be676b97), compiling.
+LogMaterial: Display: Missing cached shadermap for /Landmass/Landscape/BlueprintBrushes/Materials/Sprite/M_BrushSprite_01.M_BrushSprite_01 in PCD3D_SM6, Default, SM6, Game (DDC key hash: 2a12edd3a7f48f33629af0ea52877641bfb05a58), compiling.
+LogMaterial: Display: Missing cached shadermap for /MeshModelingToolsetExp/Materials/PointSetOverlaidComponentMaterial.PointSetOverlaidComponentMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 6b5e251db9aea43fee25f71dce78ff798f5ef225), compiling.
+LogMaterial: Display: Missing cached shadermap for /MeshModelingToolsetExp/Materials/LineSetOverlaidComponentMaterial.LineSetOverlaidComponentMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: cc140a184cad562c94318c253c6f70a8af3c144e), compiling.
+LogMaterial: Display: Missing cached shadermap for /Paper2D/OpaqueUnlitSpriteMaterial.OpaqueUnlitSpriteMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: fce89bfe51fac1b3b2a3af892ee04f7466ac90b4), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/MaterialInstances/MI_Unlit_Opaque_DS.MI_Unlit_Opaque_DS in PCD3D_SM5, Default, SM5, Game (DDC key hash: afe89b209c25ce9ec9b8b151a2b5d76c25cb94d8), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/ShadedLevelColorationLitMaterial.ShadedLevelColorationLitMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 2f4cff946a0fc5ea93d3b8e7a0af42768aaf128f), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/MaterialError_Mat.MaterialError_Mat in PCD3D_SM6, Default, SM6, Game (DDC key hash: 09665100acee8fd9ef72e8804a9fa294d9810f64), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/LevelColorationLitMaterial.LevelColorationLitMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 571f61781baa30cb4f97222ced421a285b7e8a90), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/PreviewShadowIndicatorMaterial.PreviewShadowIndicatorMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 51b92579fe00e07ead1b75657e9cc1e30bf34795), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/VertexPaint_2Tex_Color.VertexPaint_2Tex_Color in PCD3D_SM6, Default, SM6, Game (DDC key hash: b7073de1e449cc1561d0b0ab411e6a347ad67e16), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/TexturePaint_2Tex_Color.TexturePaint_2Tex_Color in PCD3D_SM6, Default, SM6, Game (DDC key hash: 9a6621c95632270ef69bc77c0b5004b52d5ad88c), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/TexturePaintingMaskMaterial.TexturePaintingMaskMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: da22b287ebd637222e02bf2216b8eb78fa8ed04f), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/LightingModels/M_TextureDefinedSpecularReflecti.M_TextureDefinedSpecularReflecti in PCD3D_SM6, Default, SM6, Game (DDC key hash: 54717fc617c9aeded8f6dc18fb022a5ef9ca4315), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/LightmapResolutionMaterial.LightmapResolutionMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 4c566bbc8d7769f6f339b6392940f1c37bcc57f0), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/VertexPaint_4Tex.VertexPaint_4Tex in PCD3D_SM6, Default, SM6, Game (DDC key hash: de4d695d412184a728f68b5d7d68170f9e3006f3), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/M_GeoInsp_BackFace.M_GeoInsp_BackFace in PCD3D_SM6, Default, SM6, Game (DDC key hash: d3ebc97f8f507d130a9de6282e466396454d2073), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/VertexColorMaterial.VertexColorMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 786ef55c860b9dfc18bce75f3fcab001ec18855c), compiling.
+LogMaterial: Display: Missing cached shadermap for /InterchangeAssets/gltf/M_SpecularGlossiness.M_SpecularGlossiness in PCD3D_SM5, Default, SM5, Game (DDC key hash: 6d4a12019cb375afde93badb34ff71d9db4a4efc), compiling.
+LogMaterial: Display: Missing cached shadermap for /Landmass/Landscape/BlueprintBrushes/Materials/Sprite/M_BrushSprite_01.M_BrushSprite_01 in PCD3D_SM5, Default, SM5, Game (DDC key hash: fe1d5f1dbff5261f4b1dce912ae4125f7f455fe5), compiling.
+LogMaterial: Display: Missing cached shadermap for /MeshModelingToolsetExp/Materials/PointSetOverlaidComponentMaterial.PointSetOverlaidComponentMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: ac457eee81a98b947faa1735d5f97f580faeb125), compiling.
+LogCook: Display: Cooked packages 199 Packages Remain 357 Total 556
+LogTextureFormatOodle: Display: Oodle Texture loading DLL: oo2tex_win64_2.9.11.dll
+LogTextureFormatOodle: Display: Oodle Texture loading DLL: oo2tex_win64_2.9.12.dll
+LogTextureFormatOodle: Display: Oodle Texture loading DLL: oo2tex_win64_2.9.15.dll
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/Widget3DPassThrough_Translucent_OneSided.Widget3DPassThrough_Translucent_OneSided in PCD3D_SM5, Default, SM5, Game (DDC key hash: c663faf2ec468b3c2579edf237df4feadec44012), compiling.
+LogCook: Display: Cooked packages 276 Packages Remain 280 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/Widget3DPassThrough_Opaque_OneSided.Widget3DPassThrough_Opaque_OneSided in PCD3D_SM5, Default, SM5, Game (DDC key hash: 161a8775cbafe2931500f7724a16bf99a3d6d319), compiling.
+LogCook: Display: Cooked packages 298 Packages Remain 258 Total 556
+LogTextureFormatOodle: Display: Oodle Texture loading DLL: oo2tex_win64_2.9.13.dll
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/PhysicalMaterialMaskMaterial.PhysicalMaterialMaskMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: f69df38ef255c05ef30361ec6f02467f08bd5124), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/LevelColorationUnlitMaterial.LevelColorationUnlitMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 7fbb15fa02fcaf27ece7a1169b5a539ce054b5b8), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/ShadedLevelColorationUnlitMateri.ShadedLevelColorationUnlitMateri in PCD3D_SM6, Default, SM6, Game (DDC key hash: bb8fc155defa7faf2ecb084f1e9be7553f93c473), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/M_SimpleOpaque.M_SimpleOpaque in PCD3D_SM6, Default, SM6, Game (DDC key hash: fcaccde573e2aae4fbf3aa794db3af3d5defff24), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/M_GeoInsp_Zebra.M_GeoInsp_Zebra in PCD3D_SM6, Default, SM6, Game (DDC key hash: 371be2e70170fb61f4af8c876d7079c398e8baf1), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/TangentColorMaterial.TangentColorMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 71910c6167a60efc30d9e65001464f2b928ead2d), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/GeomMaterial.GeomMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 45c17f0c7783eee6cbe10a1867e159ff38a60241), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/DebugMeshMaterialFakeLight.DebugMeshMaterialFakeLight in PCD3D_SM6, Default, SM6, Game (DDC key hash: de401a6076554fd246be9e21fec768d721c0c9ba), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/ClothOpaqueMaterial_WF.ClothOpaqueMaterial_WF in PCD3D_SM6, Default, SM6, Game (DDC key hash: 55de98cbef97fc31ff4e79e2b5961c9c83a810af), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/ClothOpaqueMaterial.ClothOpaqueMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 00034531bbfa8e8528ef031c7036589febe4745b), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/ClothMaterial_WF.ClothMaterial_WF in PCD3D_SM6, Default, SM6, Game (DDC key hash: c8add8287f90b4c4ca253b9cfd18b3e7068dd75a), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/BlackUnlitMaterial.BlackUnlitMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 90defa33fb4e821f0be7637adf7006a56040fcdd), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/TerrainCollisionMaterial.TerrainCollisionMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 1d13c13d462534dd05f64c369a5cdbf2ee2a955a), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/PPM_DefaultCalibrationGrayscale.PPM_DefaultCalibrationGrayscale in PCD3D_SM6, Default, SM6, Game (DDC key hash: b6299119b556d47e09ec544158c6c6744f8433e4), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/M_SimpleTranslucent.M_SimpleTranslucent in PCD3D_SM6, Default, SM6, Game (DDC key hash: d7e1f29acc09ac041f957c77f7105753738f9ea1), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/WireframeMaterial.WireframeMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 64f23ba68128223bc968a799d112d955eb05997c), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/VertexColorViewMode_RedOnly.VertexColorViewMode_RedOnly in PCD3D_SM6, Default, SM6, Game (DDC key hash: 7ba47c895c70acb3822202df94b23b9dd009948c), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/VertexColorViewMode_GreenOnly.VertexColorViewMode_GreenOnly in PCD3D_SM6, Default, SM6, Game (DDC key hash: 5ed313d438ca5087a4b3edfb25d47327f46a3272), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/VertexColorViewMode_ColorOnly.VertexColorViewMode_ColorOnly in PCD3D_SM6, Default, SM6, Game (DDC key hash: 6e9da19be4193a8f3d1642ae59d54f76fa1f9db6), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/VertexColorViewMode_BlueOnly.VertexColorViewMode_BlueOnly in PCD3D_SM6, Default, SM6, Game (DDC key hash: 3d92523513e39abc1074aa69cd56bc61439d10d0), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/VertexColorViewMode_AlphaAsColor.VertexColorViewMode_AlphaAsColor in PCD3D_SM6, Default, SM6, Game (DDC key hash: 198f6c225c6a7f48d74ceccbf0b712fe1fd4696b), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/PPM_DefaultCalibrationColor.PPM_DefaultCalibrationColor in PCD3D_SM6, Default, SM6, Game (DDC key hash: b2efa80e86ddd4902bc927e8cfaae2e81a44fc8a), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/HeatmapMaterial.HeatmapMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: e993e45d95714a4e7be85ae86d9bdaf31ade14e6), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/BoneWeightMaterial.BoneWeightMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: c2afd950da0267b49b2b474dec7f315d30c9f916), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/MAT_LevelColorationLitLightmapUV.MAT_LevelColorationLitLightmapUV in PCD3D_SM6, Default, SM6, Game (DDC key hash: 1ed038fb0b4468f4a9e2e49d36b301e9e64171da), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/ClothMaterial.ClothMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 750ed2dfd3eed3b4099491d4945a23c73383b8a8), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/DefaultTextMaterialOpaque.DefaultTextMaterialOpaque in PCD3D_SM6, Default, SM6, Game (DDC key hash: 1c933106ea8b5ec55becceb0f4e560c0debab86d), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/WorldGridMaterial.WorldGridMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 20d52aec03b9bfa2152c90ecf3b760fdaf1fe213), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/DefaultMaterial.DefaultMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 6ff2e37ee2294ab7e10960e610059df6942840cf), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/DefaultDeferredDecalMaterial.DefaultDeferredDecalMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 66f287c33ec6e35333288418b8a2b6ad23d126a5), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/DefaultPostProcessMaterial.DefaultPostProcessMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: d616f4bb9f9710dba63226415aa46f4b940354b8), compiling.
+LogCook: Display: Cooked packages 308 Packages Remain 248 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/M_VolumeRenderSphereTracePP.M_VolumeRenderSphereTracePP in PCD3D_SM6, Default, SM6, Game (DDC key hash: 5468be88bece80681506e73d01d5c2ade61152bf), compiling.
+LogMaterial: Display: Missing cached shadermap for /HairStrands/Materials/HairDebugMaterial.HairDebugMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 3015f0d590d9e043dc8ac17373de2e22c07b5e77), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/VREditor/TransformGizmo/TransformGizmoMaterial.TransformGizmoMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: aeb9ffcce92884d4e59573d31faafd88293ad7f3), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/Dataflow/M_Dataflow_CheckerBoard.M_Dataflow_CheckerBoard in PCD3D_SM6, Default, SM6, Game (DDC key hash: 32bd6564bcc8e98538eea27449bda3497d643377), compiling.
+LogMaterial: Display: Missing cached shadermap for /Paper2D/DefaultSpriteMaterial.DefaultSpriteMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 211c10256b6a8f8959ce3e0e8315904257fc296c), compiling.
+LogMaterial: Display: Missing cached shadermap for /ControlRig/M_Manip.M_Manip in PCD3D_SM6, Default, SM6, Game (DDC key hash: 1eaef4eb17541074109878d328905a1a030e6bf4), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/PhAT_JointLimitMaterial.PhAT_JointLimitMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: e1454a68ee9d143968287920f714ee5684b5fef7), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorLandscapeResources/LayerVisMaterial.LayerVisMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 32f2a1877349baa6b971a8c2d2f56bdf41e5cac9), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorLandscapeResources/SelectBrushMaterial.SelectBrushMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 15fbe1d76d08439faa963938d94c298ef7192df3), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorLandscapeResources/ColorMaskBrushMaterial.ColorMaskBrushMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: e15f36aaa9c20a3cb3c26a97eac815affa59413c), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorLandscapeResources/LandscapeDirtyMaterial.LandscapeDirtyMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: d77b37f280e5fd53c83cbf4e7c4f0b1f3d0233a8), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/EmissiveMeshMaterial.EmissiveMeshMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: e11f3c20dfd831821dc0b465f9457e3562995386), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/M_InvalidLightmapSettings.M_InvalidLightmapSettings in PCD3D_SM6, Default, SM6, Game (DDC key hash: 869834a0f574e775c81ccfb03477d242b44ebaff), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/FlattenMaterial.FlattenMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 6b981df869f5ee876fde92d4a82ff011559c1ae6), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/FlattenMaterial_VT.FlattenMaterial_VT in PCD3D_SM6, Default, SM6, Game (DDC key hash: 99e9c6ec0d658be7cd3211c51e6563495ec746ba), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/FlattenMaterial_WS_Normal_VT.FlattenMaterial_WS_Normal_VT in PCD3D_SM6, Default, SM6, Game (DDC key hash: 8d76e6232b31646b41323e86b56df2a3ca175f5e), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/Widget3DPassThrough_Masked_OneSided.Widget3DPassThrough_Masked_OneSided in PCD3D_SM5, Default, SM5, Game (DDC key hash: a81b7c71e64507148d04a7700deac44dedabdd7a), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/DefaultLightFunctionMaterial.DefaultLightFunctionMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 9437777428f1c7def251e3da56edccf1841bac45), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/WidgetVertexColorMaterial.WidgetVertexColorMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 7d9b230f275c3c5e86df0154538e590994476c55), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/Camera/CineMat.CineMat in PCD3D_SM6, Default, SM6, Game (DDC key hash: e23306a3fb36416f95abb4806376ccf1a33dff92), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorLandscapeResources/SplineEditorMeshMat.SplineEditorMeshMat in PCD3D_SM6, Default, SM6, Game (DDC key hash: ce315539bfdd7b6ec1bffdf87e0a5f5a93006b48), compiling.
+LogMaterial: Display: Missing cached shadermap for /HairStrands/Materials/HairDefaultMaterial.HairDefaultMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 3f9c72b3581e3b81d101f5dcd86d060b13ede133), compiling.
+LogMaterial: Display: Missing cached shadermap for /HairStrands/Materials/HairCardsDefaultMaterial.HairCardsDefaultMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: e6e330aaa3b2a6d2cf5922e0e34f105b10b46157), compiling.
+LogMaterial: Display: Missing cached shadermap for /HairStrands/Materials/HairMeshesDefaultMaterial.HairMeshesDefaultMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 07c57d569ce07df09a5f3f1c680babd6b6dac9f7), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/VREditor/TransformGizmo/TranslucentTransformGizmoMaterial.TranslucentTransformGizmoMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: e07df4cc09516ce54c0336b55f5c942811f19166), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/M_SimpleUnlitTranslucent.M_SimpleUnlitTranslucent in PCD3D_SM6, Default, SM6, Game (DDC key hash: 5c35b9ef14be6720a47ce915fad4eed8785e24c6), compiling.
+LogMaterial: Display: Missing cached shadermap for /ControlRig/Controls/ControlRigXRayMaterial.ControlRigXRayMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: cf11b249f1533a1c3126001009cb13d0017b4967), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/VREditor/TransformGizmo/Main.Main in PCD3D_SM6, Default, SM6, Game (DDC key hash: f88906d444ddd36ec755bdb24fbebed8f49907ee), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/VREditor/TransformGizmo/Xray.Xray in PCD3D_SM6, Default, SM6, Game (DDC key hash: bb3c9ee0217ee0b03033ee1f51ff2d274a7c5769), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: f71b5581477f38595ab2cfb8b5f20b5ef7b06179), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/Dataflow/DataflowVertexMaterial.DataflowVertexMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 7820940bd2b05109857133c264a2cfa13d531a42), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/Dataflow/DataflowTwoSidedVertexMaterial.DataflowTwoSidedVertexMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: f25247d8737deb772034fb610957707d6808212d), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/Dataflow/DataflowTwoSidedVertexMaterial.SculptMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 09c6b737fe8568bf52e32a8e5902ca810e533422), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/NaniteHiddenSectionMaterial.NaniteHiddenSectionMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 1553b93128353e1b423f1a3abebfe9dc9f94f402), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/RemoveSurfaceMaterial.RemoveSurfaceMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 40c3f1bce0717af56cbbdf280e7440c80649b4e1), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/DebugMeshMaterial.DebugMeshMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: a2b038c4a1b011d04538d3771061a908fb505736), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/GizmoMaterial.GizmoMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: fdbe42da8b778980a21e2ff580e77e4ad0563acf), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/PhAT_UnselectedMaterial.PhAT_UnselectedMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 5b258fdf125af2b26d274157be6f9da1b827fee6), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/PhAT_NoCollisionMaterial.PhAT_NoCollisionMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: cedc3937869739c8c4cefedd297be5a61647231c), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/M_SimpleOpaque.M_SimpleOpaque in PCD3D_SM5, Default, SM5, Game (DDC key hash: f02a451517636dcfaae1fdcade16b4f69d95af74), compiling.
+LogCook: Display: Cooked packages 454 Packages Remain 102 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/DefaultLightFunctionMaterial.DefaultLightFunctionMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 792dd3b7a9d28c21fd718eb6b337588a63944909), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/BlackUnlitMaterial.BlackUnlitMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 4dcb0266fb5c6ac962a942ce1c74c6b6f06205af), compiling.
+LogCook: Display: Cooked packages 457 Packages Remain 99 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/WorldGridMaterial.WorldGridMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: e546416184f072a51dcedc4108b1d7ccb194ce94), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/DefaultDeferredDecalMaterial.DefaultDeferredDecalMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 9734db9aefdfd7be8ce9c0dd7b534e51eb9f2551), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/DefaultPostProcessMaterial.DefaultPostProcessMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 579fd1865bae32cfde764a55949c22cae84f1598), compiling.
+LogMaterial: Display: Missing cached shadermap for /HairStrands/Materials/HairDebugMaterial.HairDebugMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 9a3f9a349b1f53ea2740d8181c2e2bb202a5fcf3), compiling.
+LogMaterial: Display: Missing cached shadermap for /Paper2D/DefaultSpriteMaterial.DefaultSpriteMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: c37ae3f515aed49ba65aebabfa678a49225fa17f), compiling.
+LogMaterial: Display: Missing cached shadermap for /ControlRig/M_Manip.M_Manip in PCD3D_SM5, Default, SM5, Game (DDC key hash: ddbdd31a101f71dc69c212a87509a7888e0fbc1f), compiling.
+LogMaterial: Display: Missing cached shadermap for /HairStrands/Materials/HairDefaultMaterial.HairDefaultMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 15ba0496c1eaa2632f92368bc411beacdef04433), compiling.
+LogMaterial: Display: Missing cached shadermap for /HairStrands/Materials/HairCardsDefaultMaterial.HairCardsDefaultMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: c02a1dabdc9c987260060593da513e5acacd2645), compiling.
+LogMaterial: Display: Missing cached shadermap for /HairStrands/Materials/HairMeshesDefaultMaterial.HairMeshesDefaultMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 703d8bb5963d731cb334db165361dc95bc5613c2), compiling.
+LogMaterial: Display: Missing cached shadermap for /ControlRig/Controls/ControlRigXRayMaterial.ControlRigXRayMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: b8f230669c30ee5822db0ab8e03387d67c0f704a), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/VREditor/TransformGizmo/Xray.Xray in PCD3D_SM5, Default, SM5, Game (DDC key hash: c56011e9399ebc137a2673264c9ab3c163621398), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/RemoveSurfaceMaterial.RemoveSurfaceMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 18d466851a8e082082f756bbbf3cc3ee9f14362a), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/DebugEditorMaterial.DebugEditorMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: 5877d63df67f6086b2340c9fd0ddbb249f462950), compiling.
+LogCook: Display: Cooked packages 459 Packages Remain 97 Total 556
+LogMaterial: Display: Missing cached shadermap for /ControlRig/Controls/ControlRigGizmoMaterial.ControlRigGizmoMaterial in PCD3D_SM6, Default, SM6, Game (DDC key hash: b65bbfd0f18b625fb36a09f93198af1b499f04f2), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorLandscapeResources/MaskBrushMaterial_MaskedRegion.MaskBrushMaterial_MaskedRegion in PCD3D_SM5, Default, SM5, Game (DDC key hash: f886d237856c1db4682035fc3dad687634b767fa), compiling.
+LogMaterial: Display: Missing cached shadermap for /ControlRig/Controls/ControlRigGizmoMaterial.ControlRigGizmoMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 3f68f76edb941bd36f11fb772f5476a292522634), compiling.
+LogCook: Display: Cooked packages 469 Packages Remain 87 Total 556
+LogCook: Display: Cooked packages 470 Packages Remain 86 Total 556
+LogCook: Display: Cooked packages 471 Packages Remain 85 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorLandscapeResources/LandscapeLayerUsageMaterial.LandscapeLayerUsageMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 531e251610a8e4ca41bc2bbdd934bbafe048c0b0), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/Dataflow/DataflowSelection.DataflowSelection in PCD3D_SM5, Default, SM5, Game (DDC key hash: 47ccf15d1d4b4ce825ce5ee88280c782ee68790a), compiling.
+LogCook: Display: Cooked packages 473 Packages Remain 83 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/Widget3DPassThrough_Translucent.Widget3DPassThrough_Translucent in PCD3D_SM5, Default, SM5, Game (DDC key hash: e38a64d7f4ec07addc7ef17d6abc656b6a1b61ff), compiling.
+LogCook: Display: Cooked packages 474 Packages Remain 82 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/DebugEditorMaterial.DebugEditorMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: c3759c7e2f3d691267e8708896e2ea539d63a16a), compiling.
+LogCook: Display: Garbage collection triggered (Full). Triggered by conditions:
+  CookSettings.MemoryMinFreePhysical: Available physical memory 2046MiB is less than 2048MiB.
+LogCookCommandlet: Display: GarbageCollection... (Exceeded Max Memory)
+LogCook: Display: GarbageCollection Results:
+	Type: Full
+	Duration: 0.261s
+	NumObjects:
+		Capacity:           25231360
+		Before GC:             72251
+		After GC:              54648
+		Freed by GC:            24.4%
+	NumPackages:
+		Before GC:              4183
+		After GC:                858
+		Freed by GC:            79.5%
+	Virtual Memory:
+		Before GC:              3115 MB
+		After GC:               2901 MB
+		Freed by GC:             6.9%
+LogCook: Display: Garbage collection triggers ignored: Out of memory condition has been detected, but is only 0s after the last GC. It will be prevented until 60 seconds have passed and we may run out of memory.
+Garbage collection triggered by conditions:
+  CookSettings.MemoryMinFreePhysical: Available physical memory 1943MiB is less than 2048MiB.
+LogCook: Display: Cooked packages 475 Packages Remain 81 Total 556
+LogCook: Display: Cook Diagnostics: OpenFileHandles=1268, VirtualMemory=2767MiB, VirtualMemoryAvailable=36949MiB
+LogCook: Display: Cooked packages 475 Packages Remain 81 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/Widget3DPassThrough_Opaque.Widget3DPassThrough_Opaque in PCD3D_SM5, Default, SM5, Game (DDC key hash: 56ab7912d11faa5c6f686089174a33c689111a6b), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/Widget3DPassThrough_Masked.Widget3DPassThrough_Masked in PCD3D_SM5, Default, SM5, Game (DDC key hash: 89d6738d2f3dfe3bc68fa644d03511d9668fb074), compiling.
+LogCook: Display: Cooked packages 476 Packages Remain 80 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/VREditor/SnapGrid/SnapGridMaterial.SnapGridMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 4d6dbf3eb84220f8d5f2075d74cba0e0b9c1d4d3), compiling.
+LogCook: Display: Cooked packages 478 Packages Remain 78 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorLandscapeResources/SelectBrushMaterial_SelectedRegion.SelectBrushMaterial_SelectedRegion in PCD3D_SM5, Default, SM5, Game (DDC key hash: 48590d5d2833aa5b375a74c973dfcdca75a3ca8a), compiling.
+LogCook: Display: Cooked packages 479 Packages Remain 77 Total 556
+LogCook: Display: Cooked packages 481 Packages Remain 75 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/TextureColorViewMode.TextureColorViewMode in PCD3D_SM5, Default, SM5, Game (DDC key hash: 21c535ce54f88d642a1e556d2217d3f52b6c64d7), compiling.
+LogCook: Display: Cooked packages 482 Packages Remain 74 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/BasicShapes/M_Cube_WorldGridMaterial_8D67460644F5AEE976EC80B26230FFEB.M_M_Cube_WorldGridMaterial_8D67460644F5AEE976EC80B26230FFEB in PCD3D_SM5, Default, SM5, Game (DDC key hash: 292b191cb8c3a642a1be0a66700018828a50a1b0), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/VREditor/TransformGizmo/Main.Main in PCD3D_SM5, Default, SM5, Game (DDC key hash: ac94acb2cebe97616a89aea94122dc1a7528647e), compiling.
+LogCook: Display: Cooked packages 483 Packages Remain 73 Total 556
+LogCook: Display: Cooked packages 484 Packages Remain 72 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/PhAT_NoCollisionMaterial.PhAT_NoCollisionMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: b73fbd8414c8f03ae72522449caa69ca987b6f46), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorLandscapeResources/SelectBrushMaterial.SelectBrushMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: e4fd840cb3d1b30af970c178f92b80a42d64133e), compiling.
+LogCook: Display: Cooked packages 485 Packages Remain 71 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/DebugMeshMaterial.DebugMeshMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: db1f24c75a8f42eca81982389deae481c841f88b), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/GizmoMaterial.GizmoMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: aee58fcf7d620dfc4a9e6bdce1f29877dc10700b), compiling.
+LogCook: Display: Garbage collection triggered (Soft). Triggered by conditions:
+  CookSettings.SoftGCTimeTrigger: Periodic triggering of SoftGC: SoftGCTimeFractionBudget == 0.050. TimeSinceLastGCSeconds == 30.001. CurrentTimeBudget == 1.579. ExpectedDuration == 0.150.
+LogCookCommandlet: Display: GarbageCollection... (Periodic GC)
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/PhAT_JointLimitMaterial.PhAT_JointLimitMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 8df0a723c4b0350ffc221a170b9aadc5451be948), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorLandscapeResources/ColorMaskBrushMaterial.ColorMaskBrushMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 112f5943303161a745f866fe8491863620c0dd7a), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/VREditor/TransformGizmo/TranslucentTransformGizmoMaterial.TranslucentTransformGizmoMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 5ea9c8b8021c08a6679ec733ab1777219e6ea54e), compiling.
+LogCook: Display: Cooked packages 489 Packages Remain 67 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/DebugMeshMaterialFakeLight.DebugMeshMaterialFakeLight in PCD3D_SM5, Default, SM5, Game (DDC key hash: 8029eab50440eff2c140b140f3da340fdf31fea3), compiling.
+LogCook: Display: Cook Diagnostics: OpenFileHandles=1294, VirtualMemory=2765MiB, VirtualMemoryAvailable=38550MiB
+LogCook: Display: Cooked packages 490 Packages Remain 66 Total 556
+LogCook: Display: Cooked packages 491 Packages Remain 65 Total 556
+LogCook: Display: Cooked packages 492 Packages Remain 64 Total 556
+LogCook: Display: Cooked packages 497 Packages Remain 59 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/Dataflow/DataflowTwoSidedVertexMaterial.SculptMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 51a411fd0eb1267a13717f221775ccef3e0fb544), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/PhAT_UnselectedMaterial.PhAT_UnselectedMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: e05485386cfc32bfc8e0827b2a7508b6ab26ecdc), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorLandscapeResources/LayerVisMaterial.LayerVisMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 5080882094acff4d1a020a07904a6e4ba59b17dc), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/ClothMaterial.ClothMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: db6ea3bd6466feecb0ee47dc448fda92b3533f68), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/EmissiveMeshMaterial.EmissiveMeshMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 14a7b003c88dcaf06e31d3b233727dc74016819a), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/M_InvalidLightmapSettings.M_InvalidLightmapSettings in PCD3D_SM5, Default, SM5, Game (DDC key hash: 1658dd4a9763275262b3bd554ba642f4f349de5f), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/NaniteHiddenSectionMaterial.NaniteHiddenSectionMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 5c6f05d777076ab0da09169ce4fa5fbab9755e0b), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/ClothOpaqueMaterial_WF.ClothOpaqueMaterial_WF in PCD3D_SM5, Default, SM5, Game (DDC key hash: bc2b607797e954b6e416754fe6ae9fb1185bb009), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/ClothMaterial_WF.ClothMaterial_WF in PCD3D_SM5, Default, SM5, Game (DDC key hash: a01349e5908727534a70eb065c8f955f0d0d2feb), compiling.
+LogCook: Display: Cooked packages 497 Packages Remain 59 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/VREditor/TransformGizmo/TransformGizmoMaterial.TransformGizmoMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: b5fd7000b26ba8297d33196f2a3e7067188e746d), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/FlattenMaterial_VT.FlattenMaterial_VT in PCD3D_SM5, Default, SM5, Game (DDC key hash: a928c63f219f2ee60c172b2d205b865215c8f5f5), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/FlattenMaterial_WS_Normal_VT.FlattenMaterial_WS_Normal_VT in PCD3D_SM5, Default, SM5, Game (DDC key hash: 3c1724b82763f86cd358f3d186c67b2d0f896454), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/WidgetVertexColorMaterial.WidgetVertexColorMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: df87fd984ea2081c977a66e1ab3d7512e7e0acbf), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/Camera/CineMat.CineMat in PCD3D_SM5, Default, SM5, Game (DDC key hash: 085dc8d4e5dc3ffcefdeddd0234a2549d6584c1d), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorLandscapeResources/SplineEditorMeshMat.SplineEditorMeshMat in PCD3D_SM5, Default, SM5, Game (DDC key hash: 80b35781eaf5747dabd36474553a86fd36d21514), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 8f33b00c5ad012b0354d776eaa9ff964afa93ab3), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/Dataflow/DataflowTwoSidedVertexMaterial.DataflowTwoSidedVertexMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: e9f2e78c3dac5817f7e3cb68ba27fc7d7f63e586), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/ClothOpaqueMaterial.ClothOpaqueMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 4f3449355eb0e4bc0e5e194292bfdfe2b2961281), compiling.
+LogCook: Display: Cooked packages 498 Packages Remain 58 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/DefaultTextMaterialOpaque.DefaultTextMaterialOpaque in PCD3D_SM5, Default, SM5, Game (DDC key hash: aeb4e348882640a765da2840321264e476cabe2b), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/M_VolumeRenderSphereTracePP.M_VolumeRenderSphereTracePP in PCD3D_SM5, Default, SM5, Game (DDC key hash: 9fd6a56b625e3f386b47fd5340171fc91a06187c), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/Dataflow/M_Dataflow_CheckerBoard.M_Dataflow_CheckerBoard in PCD3D_SM5, Default, SM5, Game (DDC key hash: a4b56be2c9571b1d1f8047375b0c2fa24cc434e9), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorLandscapeResources/LandscapeDirtyMaterial.LandscapeDirtyMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: f2e4a34f20b958f8f9feca8da6b778a0a18b931b), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/M_SimpleUnlitTranslucent.M_SimpleUnlitTranslucent in PCD3D_SM5, Default, SM5, Game (DDC key hash: 6cd05e27136a2bc3b11d5b38b9fe1fd02e4a7352), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/GeomMaterial.GeomMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: f2cac13b0c0662f0bcd25888088e4ba3580366aa), compiling.
+LogCook: Display: Cooked packages 499 Packages Remain 57 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/DefaultMaterial.DefaultMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 823a620aad934a6b33d0b0eae5c3f1f0d262fb25), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/FlattenMaterial.FlattenMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: e88ed9c707e17b967c6b4eb3f64f713520f16f84), compiling.
+LogCook: Display: Cooked packages 501 Packages Remain 55 Total 556
+LogCook: Display: Cooked packages 502 Packages Remain 54 Total 556
+LogCook: Display: Cooked packages 503 Packages Remain 53 Total 556
+LogCook: Display: Cooked packages 510 Packages Remain 46 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/PPM_DefaultCalibrationColor.PPM_DefaultCalibrationColor in PCD3D_SM5, Default, SM5, Game (DDC key hash: 1d9eaef4ad2472d051a3d043bf14d88d11025ecb), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/BoneWeightMaterial.BoneWeightMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 37f85cb801260847d28e6512dbf24c9c1d49ac50), compiling.
+LogCook: Display: Garbage collection triggered (Soft). Triggered by conditions:
+  CookSettings.SoftGCTimeTrigger: Periodic triggering of SoftGC: SoftGCTimeFractionBudget == 0.050. TimeSinceLastGCSeconds == 30.005. CurrentTimeBudget == 1.579. ExpectedDuration == 0.113.
+LogCookCommandlet: Display: GarbageCollection... (Periodic GC)
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/M_SimpleTranslucent.M_SimpleTranslucent in PCD3D_SM5, Default, SM5, Game (DDC key hash: b5fb1b5fe20e533da5cf15b047cc26b225178b76), compiling.
+LogCook: Display: Cooked packages 515 Packages Remain 41 Total 556
+LogCook: Display: Cooked packages 519 Packages Remain 37 Total 556
+LogCook: Display: Cook Diagnostics: OpenFileHandles=1348, VirtualMemory=2762MiB, VirtualMemoryAvailable=38163MiB
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/HeatmapMaterial.HeatmapMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: a30eb04b3ccf499163e81d5829ee7e9f603006b9), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/MAT_LevelColorationLitLightmapUV.MAT_LevelColorationLitLightmapUV in PCD3D_SM5, Default, SM5, Game (DDC key hash: 83b1537c004d2dba1e696c805c5013a9e1ac04bb), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineMaterials/PPM_DefaultCalibrationGrayscale.PPM_DefaultCalibrationGrayscale in PCD3D_SM5, Default, SM5, Game (DDC key hash: 165dce60513557f32f8d591926ab9cc099526df5), compiling.
+LogCook: Display: Cooked packages 524 Packages Remain 32 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/TangentColorMaterial.TangentColorMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 6c7c41fcc352daf6d9ab0047d8ac87b1969bd312), compiling.
+LogCook: Display: Cooked packages 525 Packages Remain 31 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/TerrainCollisionMaterial.TerrainCollisionMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: fb5d90b7cdca00aa6882a04fd609c6718158cb58), compiling. Is special engine material.
+LogCook: Display: Cooked packages 527 Packages Remain 29 Total 556
+LogCook: Display: Cooked packages 528 Packages Remain 28 Total 556
+LogCook: Display: Cooked packages 529 Packages Remain 27 Total 556
+LogCook: Display: Cooked packages 529 Packages Remain 27 Total 556
+LogCook: Display: Cooked packages 529 Packages Remain 27 Total 556
+LogCook: Display: Cooked packages 529 Packages Remain 27 Total 556
+LogCook: Display: Garbage collection triggered (Soft). Triggered by conditions:
+  CookSettings.SoftGCTimeTrigger: Periodic triggering of SoftGC: SoftGCTimeFractionBudget == 0.050. TimeSinceLastGCSeconds == 30.006. CurrentTimeBudget == 1.579. ExpectedDuration == 0.092.
+LogCookCommandlet: Display: GarbageCollection... (Periodic GC)
+LogCook: Display: Cooked packages 530 Packages Remain 26 Total 556
+LogCook: Display: Cook Diagnostics: OpenFileHandles=1360, VirtualMemory=2751MiB, VirtualMemoryAvailable=38636MiB
+LogCook: Display: Cooked packages 531 Packages Remain 25 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/Dataflow/DataflowVertexMaterial.DataflowVertexMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 028926aa97df0c68b06dae3e9acf12986cf1f0c4), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/M_GeoInsp_Zebra.M_GeoInsp_Zebra in PCD3D_SM5, Default, SM5, Game (DDC key hash: 737c4f8050cd24884943bbd382af5e6d8bdd16a7), compiling. Is special engine material.
+LogCook: Display: Cooked packages 532 Packages Remain 24 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/M_GeoInsp_Clay.M_GeoInsp_Clay in PCD3D_SM5, Default, SM5, Game (DDC key hash: d03f0615470fa77b80c0276f5d4c4b2f39519894), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EditorMaterials/PreviewShadowIndicatorMaterial.PreviewShadowIndicatorMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 04610bfa45026b4bc05553cd7875690d35ade9e6), compiling.
+LogCook: Display: Cooked packages 532 Packages Remain 24 Total 556
+LogCook: Display: Cooked packages 533 Packages Remain 23 Total 556
+LogCook: Display: Garbage collection triggered (Full). Triggered by conditions:
+  CookSettings.MemoryMinFreePhysical: Available physical memory 2038MiB is less than 2048MiB.
+LogCookCommandlet: Display: GarbageCollection... (Exceeded Max Memory)
+LogCook: Display: GarbageCollection Results: Garbage Collection was not very impactful.
+LogCook: Display: 	MemoryAnalysis: General:
+		Type: Full
+	Duration: 0.026s
+LogCook: Display: 	MemoryAnalysis: NumObjects:
+		Capacity:           25231360
+		Process Min:           53877
+		Process Max:           72251
+		Before GC:             54412
+		After GC:              54363
+		Freed by GC:             0.1%
+LogCook: Display: 	MemoryAnalysis: NumPackages:
+		Process Min:             814
+		Process Max:            4183
+		Before GC:               840
+		After GC:                834
+		Freed by GC:             0.7%
+LogCook: Display: 	MemoryAnalysis: Virtual Memory:
+		Process Min:            1369 MB
+		Process Max:            3115 MB
+		Before GC:              2875 MB
+		After GC:               2874 MB
+		Freed by GC:             0.0%
+LogCook: Display: 	MemoryAnalysis: Allocator Stats Before:
+		Item Malloc calls 0
+		Item Realloc calls 0
+		Item Free calls 0
+		Item Total Allocator calls 0
+LogCook: Display: 	MemoryAnalysis: Allocator Stats After:
+		Item Malloc calls 0
+		Item Realloc calls 0
+		Item Free calls 0
+		Item Total Allocator calls 0
+LogCook: Display: Extended memory diagnostics are disabled. Run with -llm or -trace=memtag or -CookMemoryAnalysis for more diagnostics.
+LogCook: Display: Garbage collection triggers ignored: Out of memory condition has been detected, but is only 0s after the last GC. It will be prevented until 60 seconds have passed and we may run out of memory.
+Garbage collection triggered by conditions:
+  CookSettings.MemoryMinFreePhysical: Available physical memory 2037MiB is less than 2048MiB.
+LogCook: Display: Cooked packages 533 Packages Remain 23 Total 556
+LogCook: Display: Cooked packages 533 Packages Remain 23 Total 556
+LogCook: Display: Cooked packages 533 Packages Remain 23 Total 556
+LogCook: Display: Cook Diagnostics: OpenFileHandles=1360, VirtualMemory=2741MiB, VirtualMemoryAvailable=37354MiB
+LogCook: Display: Cooked packages 534 Packages Remain 22 Total 556
+LogCook: Display: Cooked packages 534 Packages Remain 22 Total 556
+LogCook: Display: Cooked packages 535 Packages Remain 21 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/PhysicalMaterialMaskMaterial.PhysicalMaterialMaskMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: d59b6475132a3b7fc56013930028223e3c58e149), compiling.
+LogCook: Display: Cooked packages 536 Packages Remain 20 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/VertexColorViewMode_RedOnly.VertexColorViewMode_RedOnly in PCD3D_SM5, Default, SM5, Game (DDC key hash: a2e54f854906da8cb7165c2265f398fd2d38859f), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/VertexColorViewMode_GreenOnly.VertexColorViewMode_GreenOnly in PCD3D_SM5, Default, SM5, Game (DDC key hash: a16d8c4a3d809c26f41bc19ee08ebe03d5aeda83), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/VertexColorViewMode_ColorOnly.VertexColorViewMode_ColorOnly in PCD3D_SM5, Default, SM5, Game (DDC key hash: fc935ecbed2b7ac9d039d930fe978776cf044796), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/VertexColorViewMode_BlueOnly.VertexColorViewMode_BlueOnly in PCD3D_SM5, Default, SM5, Game (DDC key hash: 4f018f9afd110153d5ae88cbe3d62ea0a53955e3), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/VertexColorViewMode_AlphaAsColor.VertexColorViewMode_AlphaAsColor in PCD3D_SM5, Default, SM5, Game (DDC key hash: ee75ff127578db8dd60893dd766e3ef31f9ab254), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/VertexColorMaterial.VertexColorMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 370ba461b714a02257bade46b1e63f8113a80411), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/TexturePaint_2Tex_Color.TexturePaint_2Tex_Color in PCD3D_SM5, Default, SM5, Game (DDC key hash: 806bc66e0813299ab5eb926dec6461dff1608944), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/TexturePaintingMaskMaterial.TexturePaintingMaskMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 6c16c257b75ceaf87eea018bb92748b8eab52025), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/LightingModels/M_TextureDefinedSpecularReflecti.M_TextureDefinedSpecularReflecti in PCD3D_SM5, Default, SM5, Game (DDC key hash: a4d78fad282240addf92fec4505dbcdb79b16bd5), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/LightmapResolutionMaterial.LightmapResolutionMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 8271a7b4feffec8a663ef959116aa4e654bea566), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/VertexPaint_4Tex.VertexPaint_4Tex in PCD3D_SM5, Default, SM5, Game (DDC key hash: ab5a8b1c3e9d4e52e9daa2e7c717d127eb6d988a), compiling.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/VertexPaint_2Tex_Color.VertexPaint_2Tex_Color in PCD3D_SM5, Default, SM5, Game (DDC key hash: 2d5d3d38e313862ee66bf7fe319a47f0c7f66537), compiling.
+LogCook: Display: Garbage collection triggered (Soft). Triggered by conditions:
+  CookSettings.SoftGCTimeTrigger: Periodic triggering of SoftGC: SoftGCTimeFractionBudget == 0.050. TimeSinceLastGCSeconds == 30.004. CurrentTimeBudget == 1.579. ExpectedDuration == 0.075.
+LogCookCommandlet: Display: GarbageCollection... (Periodic GC)
+LogCook: Display: Cooked packages 536 Packages Remain 20 Total 556
+LogCook: Display: Cooked packages 537 Packages Remain 19 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/M_GeoInsp_BackFace.M_GeoInsp_BackFace in PCD3D_SM5, Default, SM5, Game (DDC key hash: 0723ecbcf0f57f85e2e0c58a86ff6e666c72bee5), compiling. Is special engine material.
+LogCook: Display: Cooked packages 539 Packages Remain 17 Total 556
+LogCook: Display: Cooked packages 542 Packages Remain 14 Total 556
+LogCook: Display: Cooked packages 544 Packages Remain 12 Total 556
+LogShaderCompilers: Display: ================================================
+LogShaderCompilers: Display: === FShaderJobCache stats ===
+LogShaderCompilers: Display: Total job queries 11,954, among them cache hits 2,163 (18.09%), DDC hits 5,349 (44.75%), Duplicates 692 (5.79%)
+LogShaderCompilers: Display: Tracking 9,099 distinct input hashes that result in 3,494 distinct outputs (38.40%)
+LogShaderCompilers: Display: RAM used: 26.53 MiB of 1.20 GiB budget. Usage: 2.16%
+LogShaderCompilers: Display: === Shader Compilation stats ===
+LogShaderCompilers: Display: Shaders Compiled: 3,357
+LogShaderCompilers: Display: Jobs assigned 3,487, completed 3,357 (96.27%)
+LogShaderCompilers: Display: Average time worker was idle: 0.00 s
+LogShaderCompilers: Display: Time job spent in pending queue: average 53.55 s, longest 175.91 s
+LogShaderCompilers: Display: Job execution time: average 6.56 s, max 17.24 s
+LogShaderCompilers: Display: Job life time (pending + execution): average 61.14 s, max 176.07
+LogShaderCompilers: Display: Shader code size: total 28.324 MiB, numShaders 3,876, average 7.482 KiB, min 284 B, max 33.562 KiB
+LogShaderCompilers: Display: Time at least one job was in flight (either pending or executed): 179.59 s
+LogShaderCompilers: Display: Jobs were issued in 368 batches (only local compilation was used), average 9.48 jobs/batch
+LogShaderCompilers: Display: Average processing rate: 18.69 jobs/sec
+LogShaderCompilers: Display: Total thread time: 2,234.656 s
+LogShaderCompilers: Display: Total thread preprocess time: 182.661 s
+LogShaderCompilers: Display: Percentage time preprocessing: 8.17%
+LogShaderCompilers: Display: Effective parallelization: 12.44 (times faster than compiling all shaders on one thread). Compare with number of workers: 12 - 1.036935
+LogShaderCompilers: Display: Top 5 most expensive shader types by average time:
+LogShaderCompilers: Display:                     TVirtualTexturePSBaseColorNormalSpecular (compiled    2 times, average 3.10 sec, max 5.21 sec, min 1.00 sec)
+LogShaderCompilers: Display:                                 TBasePassCSFNoLightMapPolicy (compiled   18 times, average 1.58 sec, max 11.49 sec, min 0.80 sec)
+LogShaderCompilers: Display:                                TVirtualTexturePSDisplacement (compiled    2 times, average 1.50 sec, max 1.66 sec, min 1.35 sec)
+LogShaderCompilers: Display:                   TBasePassPSFSelfShadowedTranslucencyPolicy (compiled    5 times, average 1.18 sec, max 1.56 sec, min 0.52 sec)
+LogShaderCompilers: Display:                   TBasePassVSFSelfShadowedTranslucencyPolicy (compiled    1 times, average 1.10 sec, max 1.10 sec, min 1.10 sec)
+LogShaderCompilers: Display: Top 5 shader types by total compile time:
+LogShaderCompilers: Display:                                 TBasePassPSFNoLightMapPolicy - 18.74% of total time (compiled  612 times, average 0.68 sec, max 10.60 sec, min 0.18 sec)
+LogShaderCompilers: Display:            TVelocityPS<EVelocityPassMode::Velocity_Standard> - 18.07% of total time (compiled  484 times, average 0.83 sec, max 7.36 sec, min 0.28 sec)
+LogShaderCompilers: Display:                                 TBasePassVSFNoLightMapPolicy - 13.22% of total time (compiled  478 times, average 0.62 sec, max 9.79 sec, min 0.12 sec)
+LogShaderCompilers: Display:            TVelocityVS<EVelocityPassMode::Velocity_Standard> - 12.05% of total time (compiled  484 times, average 0.56 sec, max 3.34 sec, min 0.20 sec)
+LogShaderCompilers: Display:                                                  FHitProxyVS - 8.05% of total time (compiled  378 times, average 0.48 sec, max 9.72 sec, min 0.12 sec)
+LogShaderCompilers: Display: === Material stats ===
+LogShaderCompilers: Display: Materials Cooked:        140
+LogShaderCompilers: Display: Materials Translated:    268
+LogShaderCompilers: Display: Material Total Translate Time: 0.78 s
+LogShaderCompilers: Display: Material Translation Only: 0.50 s (64%)
+LogShaderCompilers: Display: Material DDC Serialization Only: 0.00 s (0%)
+LogShaderCompilers: Display: Material Cache Hits: 0 (0%)
+LogShaderCompilers: Display: ================================================
+LogCook: Display: Cooked packages 547 Packages Remain 9 Total 556
+LogCook: Display: Cook Diagnostics: OpenFileHandles=1386, VirtualMemory=2708MiB, VirtualMemoryAvailable=38093MiB
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/ShadedLevelColorationUnlitMateri.ShadedLevelColorationUnlitMateri in PCD3D_SM5, Default, SM5, Game (DDC key hash: 6866f425dfb8d6cbecf606b59c46eee26c0bdf39), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/WireframeMaterial.WireframeMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 9e37552a6f94493c31c09b05ca0cabb9fafac98f), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/ShadedLevelColorationLitMaterial.ShadedLevelColorationLitMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: 825e2bd331561d033a230f4bc95f034a46a973b8), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/LevelColorationLitMaterial.LevelColorationLitMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: d0d7fdced70ce181e5397da41556787ed2fdaa0b), compiling. Is special engine material.
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/LevelColorationUnlitMaterial.LevelColorationUnlitMaterial in PCD3D_SM5, Default, SM5, Game (DDC key hash: fb7c5cff722ba7af0be573f2c35c13083e921365), compiling. Is special engine material.
+LogCook: Display: Cooked packages 547 Packages Remain 9 Total 556
+LogCook: Display: Garbage collection triggers ignored: Out of memory condition has been detected, but is only 49s after the last GC. It will be prevented until 60 seconds have passed and we may run out of memory.
+Garbage collection triggered by conditions:
+  CookSettings.MemoryMinFreePhysical: Available physical memory 2043MiB is less than 2048MiB.
+LogCook: Display: Cooked packages 547 Packages Remain 9 Total 556
+LogCook: Display: Cooked packages 547 Packages Remain 9 Total 556
+LogCook: Display: Garbage collection triggered (Soft). Triggered by conditions:
+  CookSettings.SoftGCTimeTrigger: Periodic triggering of SoftGC: SoftGCTimeFractionBudget == 0.050. TimeSinceLastGCSeconds == 30.002. CurrentTimeBudget == 1.579. ExpectedDuration == 0.027.
+LogCookCommandlet: Display: GarbageCollection... (Periodic GC)
+LogCook: Display: Cooked packages 547 Packages Remain 9 Total 556
+LogCook: Display: Cooked packages 547 Packages Remain 9 Total 556
+LogCook: Display: Cook Diagnostics: OpenFileHandles=1370, VirtualMemory=2604MiB, VirtualMemoryAvailable=38007MiB
+LogCook: Display: Cooked packages 547 Packages Remain 9 Total 556
+LogCook: Display: Cooked packages 547 Packages Remain 9 Total 556
+LogMaterial: Display: Missing cached shadermap for /Engine/EngineDebugMaterials/MaterialError_Mat.MaterialError_Mat in PCD3D_SM5, Default, SM5, Game (DDC key hash: cfaf13f8612adfe5178d58bf26105d7ac32f6921), compiling. Is special engine material.
+LogCook: Display: Cooked packages 548 Packages Remain 8 Total 556
+LogCook: Display: Cooked packages 548 Packages Remain 8 Total 556
+LogCook: Display: Garbage collection triggered (Soft). Triggered by conditions:
+  CookSettings.SoftGCTimeTrigger: Periodic triggering of SoftGC: SoftGCTimeFractionBudget == 0.050. TimeSinceLastGCSeconds == 30.007. CurrentTimeBudget == 1.579. ExpectedDuration == 0.023.
+LogCookCommandlet: Display: GarbageCollection... (Periodic GC)
+LogCook: Display: Cooked packages 548 Packages Remain 8 Total 556
+LogCook: Display: Cooked packages 548 Packages Remain 8 Total 556
+LogCook: Display: Cooked packages 548 Packages Remain 8 Total 556
+LogCook: Display: Cook Diagnostics: OpenFileHandles=1371, VirtualMemory=2574MiB, VirtualMemoryAvailable=38145MiB
+LogCook: Display: Cooked packages 548 Packages Remain 8 Total 556
+LogCook: Display: Cooked packages 548 Packages Remain 8 Total 556
+LogCook: Display: Cooked packages 549 Packages Remain 7 Total 556
+LogCook: Display: Cooked packages 550 Packages Remain 6 Total 556
+LogCook: Display: Garbage collection triggered (Soft). Triggered by conditions:
+  CookSettings.SoftGCTimeTrigger: Periodic triggering of SoftGC: SoftGCTimeFractionBudget == 0.050. TimeSinceLastGCSeconds == 30.005. CurrentTimeBudget == 1.579. ExpectedDuration == 0.023.
+LogCookCommandlet: Display: GarbageCollection... (Periodic GC)
+LogCook: Display: Cooked packages 553 Packages Remain 3 Total 556
+LogCook: Display: Cooked packages 556 Packages Remain 0 Total 556
+LogCook: Display: Cook Diagnostics: OpenFileHandles=1383, VirtualMemory=2570MiB, VirtualMemoryAvailable=39010MiB
+LogCook: Display: ---- Finalisation: Start ----
+LogShaderCompilers: Display: ================================================
+LogShaderCompilers: Display: === FShaderJobCache stats ===
+LogShaderCompilers: Display: Total job queries 13,983, among them cache hits 2,611 (18.67%), DDC hits 5,759 (41.19%), Duplicates 1,160 (8.30%)
+LogShaderCompilers: Display: Tracking 10,212 distinct input hashes that result in 3,760 distinct outputs (36.82%)
+LogShaderCompilers: Display: RAM used: 27.38 MiB of 1.20 GiB budget. Usage: 2.23%
+LogShaderCompilers: Display: === Shader Compilation stats ===
+LogShaderCompilers: Display: Shaders Compiled: 4,453
+LogShaderCompilers: Display: Jobs assigned 4,453, completed 4,453 (100%)
+LogShaderCompilers: Display: Average time worker was idle: 0.00 s
+LogShaderCompilers: Display: Time job spent in pending queue: average 49.81 s, longest 202.27 s
+LogShaderCompilers: Display: Job execution time: average 7.23 s, max 17.24 s
+LogShaderCompilers: Display: Job life time (pending + execution): average 57.05 s, max 214.96
+LogShaderCompilers: Display: Shader code size: total 36.318 MiB, numShaders 5,197, average 7.155 KiB, min 284 B, max 33.562 KiB
+LogShaderCompilers: Display: Time at least one job was in flight (either pending or executed): 258.71 s
+LogShaderCompilers: Display: Jobs were issued in 487 batches (only local compilation was used), average 9.14 jobs/batch
+LogShaderCompilers: Display: Average processing rate: 17.21 jobs/sec
+LogShaderCompilers: Display: Total thread time: 3,283.107 s
+LogShaderCompilers: Display: Total thread preprocess time: 217.619 s
+LogShaderCompilers: Display: Percentage time preprocessing: 6.63%
+LogShaderCompilers: Display: Effective parallelization: 12.69 (times faster than compiling all shaders on one thread). Compare with number of workers: 12 - 1.057508
+LogShaderCompilers: Display: Top 5 most expensive shader types by average time:
+LogShaderCompilers: Display:                     TVirtualTexturePSBaseColorNormalSpecular (compiled    2 times, average 3.10 sec, max 5.21 sec, min 1.00 sec)
+LogShaderCompilers: Display:                                 TBasePassCSFNoLightMapPolicy (compiled   19 times, average 1.56 sec, max 11.49 sec, min 0.80 sec)
+LogShaderCompilers: Display:                                TVirtualTexturePSDisplacement (compiled    2 times, average 1.50 sec, max 1.66 sec, min 1.35 sec)
+LogShaderCompilers: Display:                   TBasePassPSFSelfShadowedTranslucencyPolicy (compiled    5 times, average 1.18 sec, max 1.56 sec, min 0.52 sec)
+LogShaderCompilers: Display:                   TBasePassVSFSelfShadowedTranslucencyPolicy (compiled    1 times, average 1.10 sec, max 1.10 sec, min 1.10 sec)
+LogShaderCompilers: Display: Top 5 shader types by total compile time:
+LogShaderCompilers: Display:            TVelocityPS<EVelocityPassMode::Velocity_Standard> - 19.44% of total time (compiled  684 times, average 0.93 sec, max 7.36 sec, min 0.28 sec)
+LogShaderCompilers: Display:                                 TBasePassPSFNoLightMapPolicy - 17.24% of total time (compiled  786 times, average 0.72 sec, max 10.60 sec, min 0.18 sec)
+LogShaderCompilers: Display:            TVelocityVS<EVelocityPassMode::Velocity_Standard> - 13.45% of total time (compiled  684 times, average 0.65 sec, max 3.51 sec, min 0.20 sec)
+LogShaderCompilers: Display:                                 TBasePassVSFNoLightMapPolicy - 11.00% of total time (compiled  576 times, average 0.63 sec, max 9.79 sec, min 0.12 sec)
+LogShaderCompilers: Display:                                                  FHitProxyVS - 7.49% of total time (compiled  475 times, average 0.52 sec, max 9.72 sec, min 0.12 sec)
+LogShaderCompilers: Display: === Material stats ===
+LogShaderCompilers: Display: Materials Cooked:        152
+LogShaderCompilers: Display: Materials Translated:    274
+LogShaderCompilers: Display: Material Total Translate Time: 0.79 s
+LogShaderCompilers: Display: Material Translation Only: 0.50 s (64%)
+LogShaderCompilers: Display: Material DDC Serialization Only: 0.00 s (0%)
+LogShaderCompilers: Display: Material Cache Hits: 0 (0%)
+LogShaderCompilers: Display: ================================================
+LogCook: Display: CookArtifact 'C:/Projects/KSP-UE5/ue5/Saved/Cooked/Windows/KspUe5/Metadata/ValidationCookArtifact.json' saved.
+LogAssetRegistryGenerator: Display: Saving asset registry v24.
+LogAssetRegistryGenerator: Display: Generated development asset registry C:/Projects/KSP-UE5/ue5/Saved/Cooked/Windows/KspUe5/Metadata/DevelopmentAssetRegistry.bin num assets 559, size is 433.30kb, XxHash64[LE] = 0x6F4AAC930ACABE5, waited on hash 0.00 seconds
+LogAssetRegistryGenerator: Display: Generated asset registry num assets 552, size is 153.91kb
+LogShaderLibrary: Display:
+LogShaderLibrary: Display: Shader Library 'KspUe5' (PCD3D_SM6-PCD3D_SM6) Stats:
+LogShaderLibrary: Display: =================
+LogShaderLibrary: Display: Assets: 138, Unique Shadermaps: 137 (99.28%)
+LogShaderLibrary: Display: Total Shaders: 5677, Unique Shaders: 2368 (41.71%)
+LogShaderLibrary: Display: Total Shader Size: 41.40mb, Unique Shaders Size: 19.85mb (47.96%)
+LogShaderLibrary: Display: === Extended info:
+LogShaderLibrary: Display: Minimum number of shaders in shadermap: 1
+LogShaderLibrary: Display: Median number of shaders in shadermap: 11
+LogShaderLibrary: Display: Maximum number of shaders in shadermap: 853
+LogShaderLibrary: Display: Number of shadermaps referencing top 10 most shared shaders:
+LogShaderLibrary: Display:     38, 28, 28, 26, 23, 21, 20, 19, 19, 19
+LogShaderLibrary: Display: Unique shaders itemization (sorted by compressed size):
+LogShaderLibrary: Display: SF_Pixel: 1098 shaders (46.37%), compressed size: 7.32 MB (6.83 KB avg per shader), uncompressed size: 9.35 MB (8.72 KB avg per shader)
+LogShaderLibrary: Display: SF_Compute: 410 shaders (17.31%), compressed size: 6.05 MB (15.11 KB avg per shader), uncompressed size: 8.11 MB (20.26 KB avg per shader)
+LogShaderLibrary: Display: SF_Vertex: 739 shaders (31.21%), compressed size: 5.35 MB (7.41 KB avg per shader), uncompressed size: 7.07 MB (9.80 KB avg per shader)
+LogShaderLibrary: Display: SF_Mesh: 121 shaders (5.11%), compressed size: 1.14 MB (9.64 KB avg per shader), uncompressed size: 1.38 MB (11.66 KB avg per shader)
+LogShaderLibrary: Display: Textual dump saved to '../../../../../../Projects/KSP-UE5/ue5/Saved/Shaders/PCD3D_SM6-PCD3D_SM6/ShaderDebug-KspUe5-PCD3D_SM6-PCD3D_SM6/Dump.txt'
+LogShaderLibrary: Display: =================
+LogShaderLibrary: Display:
+LogShaderLibrary: Display: Shader Library 'KspUe5' (PCD3D_SM5-PCD3D_SM5) Stats:
+LogShaderLibrary: Display: =================
+LogShaderLibrary: Display: Assets: 138, Unique Shadermaps: 136 (98.55%)
+LogShaderLibrary: Display: Total Shaders: 4410, Unique Shaders: 1427 (32.36%)
+LogShaderLibrary: Display: Total Shader Size: 9.82mb, Unique Shaders Size: 3.26mb (33.25%)
+LogShaderLibrary: Display: === Extended info:
+LogShaderLibrary: Display: Minimum number of shaders in shadermap: 1
+LogShaderLibrary: Display: Median number of shaders in shadermap: 8
+LogShaderLibrary: Display: Maximum number of shaders in shadermap: 361
+LogShaderLibrary: Display: Number of shadermaps referencing top 10 most shared shaders:
+LogShaderLibrary: Display:     34, 32, 28, 27, 21, 19, 19, 16, 16, 16
+LogShaderLibrary: Display: Unique shaders itemization (sorted by compressed size):
+LogShaderLibrary: Display: SF_Vertex: 636 shaders (44.57%), compressed size: 1.64 MB (2.64 KB avg per shader), uncompressed size: 5.12 MB (8.24 KB avg per shader)
+LogShaderLibrary: Display: SF_Pixel: 742 shaders (52.00%), compressed size: 1.53 MB (2.11 KB avg per shader), uncompressed size: 5.61 MB (7.75 KB avg per shader)
+LogShaderLibrary: Display: SF_Compute: 49 shaders (3.43%), compressed size: 0.10 MB (2.06 KB avg per shader), uncompressed size: 0.36 MB (7.47 KB avg per shader)
+LogShaderLibrary: Display: Textual dump saved to '../../../../../../Projects/KSP-UE5/ue5/Saved/Shaders/PCD3D_SM5-PCD3D_SM5/ShaderDebug-KspUe5-PCD3D_SM5-PCD3D_SM5/Dump.txt'
+LogShaderLibrary: Display: =================
+LogCook: Display: Dependent plugin "SteamShared" referenced by "EOS Shared" wasn't found in enabled plugins list when creating cook metadata file... skipping
+LogCook: Display: Dependent plugin "UAF" referenced by "IK Rig" wasn't found in enabled plugins list when creating cook metadata file... skipping
+LogCook: Display: Dependent plugin "UAFAnimGraph" referenced by "IK Rig" wasn't found in enabled plugins list when creating cook metadata file... skipping
+LogCook: Display: Finalize package store(s)...
+LogZenStoreWriter: Display: Flushing...
+LogZenStoreWriter: Display: Saving Zen filesystem manifest 'C:/Projects/KSP-UE5/ue5/Saved/Cooked/Windows/KspUe5/Metadata/zenfs.manifest'
+LogZenStoreWriter: Display: Output:	48715 Public runtime script objects
+LogCook: Display: Cook by the book total time in tick 259.697499s total time 268.106384
+LogCook: Display: Peak Used virtual 2999 MiB Peak Used physical 3176 MiB
+LogCook: Display: Packages Cooked: 549, Packages Incrementally Skipped: 0, Packages Skipped by Platform: 7, Total Packages: 556
+LogCookStats: Display: Hierarchy Timer Information:
+LogCookStats: Display:   Root: 0.000s (0)
+LogCookStats: Display:     CleanSandbox: 0.015s (1)
+LogCookStats: Display:     CollectFilesToCook: 0.005s (1)
+LogCookStats: Display:       CookModificationDelegate: 0.000s (1)
+LogCookStats: Display:     GenerateLongPackageName: 0.001s (1)
+LogCookStats: Display:     TickMainCookLoop: 259.697s (11)
+LogCookStats: Display:       PumpPollables: 0.095s (150)
+LogCookStats: Display:       PumpRequests: 0.019s (18)
+LogCookStats: Display:       LoadPackageForCooking: 1.933s (3664)
+LogCookStats: Display:       ValidateSourcePackage: 0.000s (556)
+LogCookStats: Display:       SavingPackages: 12.358s (24506)
+LogCookStats: Display:         PollPendingCookedPlatformDatas: 5.923s (867660)
+LogCookStats: Display:         PrepareSave: 1.303s (867304)
+LogCookStats: Display:         PrecachePlatformDataForNextPackage: 0.900s (555)
+LogCookStats: Display:           PrepareSave: 0.899s (880)
+LogCookStats: Display:         SaveCookedPackage: 3.018s (556)
+LogCookStats: Display:           GEditorSavePackage: 2.722s (556)
+LogCookStats: Display:             VerifyCanCookPackage: 0.005s (549)
+LogCookStats: Display:           TargetDomainDependencies: 0.173s (556)
+LogCookStats: Display:         ClearAllCachedCookedPlatformData: 0.026s (556)
+LogCookStats: Display:       PostLoadPackageFixup: 0.000s (2)
+LogCookStats: Display:       WaitForAsync: 239.473s (3118360)
+LogCookStats: Display:     CookByTheBookFinished: 0.388s (1)
+LogCookStats: Display:       SavingCurrentIniSettings: 0.028s (1)
+LogCookStats: Display:         ProcessingAccessedStrings: 0.003s (1)
+LogCookStats: Display:       ChunkGeneration: 0.009s (1)
+LogCookStats: Display:       FinishPopulateShaderLibrary: 0.001s (1)
+LogCookStats: Display:       CalculateReferencedSet: 0.000s (1)
+LogCookStats: Display:       CookArtifacts.UpdateOplogPackages: 0.006s (1)
+LogCookStats: Display:       PruneShaderLibrary: 0.001s (1)
+LogCookStats: Display:       GeneratorPreSave: 0.000s (1)
+LogCookStats: Display:       BuildChunkManifest: 0.010s (1)
+LogCookStats: Display:         FixupPackageDependenciesForChunks: 0.005s (1)
+LogCookStats: Display:       SaveManifests: 0.000s (1)
+LogCookStats: Display:       SaveAssetRegistry: 0.025s (1)
+LogCookStats: Display:       WriteCookerOpenOrder: 0.003s (1)
+LogCookStats: Display:       WriteCookMetadata: 0.002s (1)
+LogCookStats: Display:       WriteReferencedSet: 0.001s (1)
+LogCookStats: Display:       FinalizePackageStore: 0.189s (1)
+LogCookStats: Display: Misc Cook Stats
+LogCookStats: Display: ===============
+LogCookStats: Display: Niagara
+LogCookStats: Display:     NiagaraScriptTranslationCount=0
+LogCookStats: Display:     NiagaraCpuScriptCompileCount=0
+LogCookStats: Display:     NiagaraCpuScriptDdcCacheHitCount=0
+LogCookStats: Display:     NiagaraCpuScriptDdcCacheMissCount=0
+LogCookStats: Display:     NiagaraGpuScriptCompileCount=0
+LogCookStats: Display:     NiagaraGpuScriptDdcCacheHitCount=0
+LogCookStats: Display:     NiagaraGpuScriptDdcCacheMissCount=0
+LogCookStats: Display:     NiagaraSystemWaitForCompilationCompleteTime=0.000000
+LogCookStats: Display: Validation
+LogCookStats: Display:     Stats=[]
+LogCookStats: Display: ComputeKernelShader.Misc
+LogCookStats: Display:     ShadersCompiled=0
+LogCookStats: Display: NiagaraShader.Misc
+LogCookStats: Display:     ShadersCompiled=0
+LogCookStats: Display: ShaderCompiler
+LogCookStats: Display:     BlockingTimeSec=0.000184
+LogCookStats: Display:     AsyncCompileTimeSec=3352.169565
+LogCookStats: Display:     GlobalBeginCompileShaderTimeSec=1.372038
+LogCookStats: Display:     GlobalBeginCompileShaderCalls=14971
+LogCookStats: Display:     ProcessAsyncResultsTimeSec=2.884514
+LogCookStats: Display: GlobalShader.Misc
+LogCookStats: Display:     ShadersCompiled=0
+LogCookStats: Display: Material
+LogCookStats: Display:     FinishCacheShadersSec=3.041103
+LogCookStats: Display: Cook.Profile.Params
+LogCookStats: Display:     CookProject=KspUe5
+LogCookStats: Display:     CookCultures=
+LogCookStats: Display:     CookLabel=
+LogCookStats: Display:     TargetPlatforms=Windows
+LogCookStats: Display:     IsCookAll=false
+LogCookStats: Display:     IsCookOnTheFly=false
+LogCookStats: Display:     IsIncrementalCook=false
+LogCookStats: Display:     IsIterativeCook=false
+LogCookStats: Display:     IsFastCook=false
+LogCookStats: Display:     IsUnversioned=true
+LogCookStats: Display: CookOnTheFlyServer.Package.Load
+LogCookStats: Display:     NumRequestedLoads=3321
+LogCookStats: Display:     NumPackagesLoaded=3369
+LogCookStats: Display:     NumInlineLoads=48
+LogCookStats: Display: CookOnTheFlyServer.Package.Save
+LogCookStats: Display:     NumPackagesIncrementallySkipped=0
+LogCookStats: Display: CookOnTheFlyServer.QueueSize
+LogCookStats: Display:     PeakRequest=555
+LogCookStats: Display:     PeakLoad=116
+LogCookStats: Display:     PeakSave=226
+LogCookStats: Display: Package.Load
+LogCookStats: Display:     LoadPackageTimeSec=2.508217
+LogCookStats: Display: Package.Save
+LogCookStats: Display:     NumPackagesSaved=556
+LogCookStats: Display:     SavePackageTimeSec=2.686453
+LogCookStats: Display:     TagPackageExportsPresaveTimeSec=0.000000
+LogCookStats: Display:     TagPackageExportsTimeSec=0.000000
+LogCookStats: Display:     FullyLoadLoadersTimeSec=0.000000
+LogCookStats: Display:     ResetLoadersTimeSec=0.000000
+LogCookStats: Display:     TagPackageExportsGetObjectsWithOuter=0.000000
+LogCookStats: Display:     TagPackageExportsGetObjectsWithMarks=0.000000
+LogCookStats: Display:     SerializeImportsTimeSec=0.000000
+LogCookStats: Display:     SortExportsSeekfreeInnerTimeSec=0.000000
+LogCookStats: Display:     SerializeExportsTimeSec=0.000000
+LogCookStats: Display:     SerializeBulkDataTimeSec=0.005848
+LogCookStats: Display:     AsyncWriteTimeSec=0.000000
+LogCookStats: Display:     MBWritten=0.000000
+LogCookStats: Display: Package.DifferentPackagesSizeMBPerAsset
+LogCookStats: Display: Package.NumberOfDifferencesInPackagesPerAsset
+LogCookStats: Display: Package.PackageDifferencesSizeMBPerAsset
+LogCookStats: Display: Package.DiffTotal
+LogCookStats: Display:     NumberOfDifferentPackages=0
+LogCookStats: Display:     DifferentPackagesSizeMB=0.000000
+LogCookStats: Display:     NumberOfDifferencesInPackages=0
+LogCookStats: Display:     PackageDifferencesSizeMB=0.000000
+LogCookStats: Display: UnversionedProperties
+LogCookStats: Display:     SavedStructs=0
+LogCookStats: Display:     SavedMB=0
+LogCookStats: Display:     EquivalentTaggedMB=0
+LogCookStats: Display:     CompressionRatio=-nan(ind)
+LogCookStats: Display:     BitfieldWasteKB=0
+LogCookStats: Display:
+LogCookStats: Display: Cook Profile
+LogCookStats: Display: ============
+LogCookStats: Display:  0.CookWallTimeSec=279.837216
+LogCookStats: Display:  0. 0.StartupWallTimeSec=11.038136
+LogCookStats: Display:  0. 1.CookProcessingTime=268.799080
+LogCookStats: Display:  0. 1. 1.StartCookByTheBookTimeSec=8.131809
+LogCookStats: Display:  0. 1. 1. 0.BlockOnAssetRegistryTimeSec=0.661363
+LogCookStats: Display:  0. 1. 1. 1.GameCookModificationDelegateTimeSec=0.000389
+LogCookStats: Display:  0. 1. 2.TickCookOnTheSideTimeSec=257.553875
+LogCookStats: Display:  0. 1. 2. 0.TickCookOnTheSideLoadPackagesTimeSec=1.934273
+LogCookStats: Display:  0. 1. 2. 1.TickCookOnTheSideSaveCookedPackageTimeSec=3.017735
+LogCookStats: Display:  0. 1. 2. 1. 0.TickCookOnTheSideResolveRedirectorsTimeSec=0.000000
+LogCookStats: Display:  0. 1. 2. 2.TickCookOnTheSidePrepareSaveTimeSec=2.260970
+LogCookStats: Display:  0. 1. 3.TickLoopGCTimeSec=0.567790
+LogCookStats: Display:  0. 1. 4.TickLoopRecompileShaderRequestsTimeSec=0.000000
+LogCookStats: Display:  0. 1. 5.TickLoopShaderProcessAsyncResultsTimeSec=0.053922
+LogCookStats: Display:  0. 1. 6.TickLoopProcessDeferredCommandsTimeSec=0.000179
+LogCookStats: Display:  0. 1. 7.TickLoopTickCommandletStatsTimeSec=0.000055
+LogCookStats: Display:  0. 1. 8.TickLoopFlushRenderingCommandsTimeSec=0.038709
+LogCookStats: Display:  0. 1. 9.ShaderFlushTimeSec=0.000000
+LogCookStats: Display:  0. 1. 10.ValidationTimeSec=0.000403
+LogCookStats: Display:
+LogCookStats: Display: DDC Summary Stats
+LogCookStats: Display: =================
+LogCookStats: Display: BackEnd         = Installed
+LogCookStats: Display: HasLocalCache   =      true
+LogCookStats: Display: HasSharedCache  =     false
+LogCookStats: Display: HasCloudCache   =     false
+LogCookStats: Display: HasZenCache     =      true
+LogCookStats: Display: TotalGetHits    =      7053
+LogCookStats: Display: TotalGetMisses  =      7967
+LogCookStats: Display: TotalGets       =     15020
+LogCookStats: Display: TotalGetHitPct  =  0.469574
+LogCookStats: Display: GetMissPct      =  0.530426
+LogCookStats: Display: TotalPutHits    =      7965
+LogCookStats: Display: TotalPutMisses  =         0
+LogCookStats: Display: TotalPuts       =      7965
+LogCookStats: Display: TotalPutHitPct  =  1.000000
+LogCookStats: Display: PutMissPct      =  0.000000
+LogCookStats: Display: LocalGetHits    =       233
+LogCookStats: Display: LocalGetMisses  =      7962
+LogCookStats: Display: LocalGetTotal   =      8195
+LogCookStats: Display: LocalGetHitPct  =  0.028432
+LogCookStats: Display: SharedGetHits   =         0
+LogCookStats: Display: SharedGetTotal  =         0
+LogCookStats: Display: SharedGetHitPct =  0.000000
+LogCookStats: Display: ZenLocalGetHits =       233
+LogCookStats: Display: ZenLocalGetTotal=      8195
+LogCookStats: Display: ZenLocalGetHitPct=  0.028432
+LogCookStats: Display: ZenRemoteGetHits=         0
+LogCookStats: Display: ZenRemoteGetTotal=         0
+LogCookStats: Display: ZenRemoteGetHitPct=  0.000000
+LogCookStats: Display: ZenRemoteReadSpeed=  0.000000
+LogCookStats: Display: ZenRemoteWriteSpeed=  0.000000
+LogCookStats: Display: ZenRemoteLatency=  0.000000
+LogCookStats: Display: CloudGetHits    =         0
+LogCookStats: Display: CloudGetTotal   =         0
+LogCookStats: Display: CloudGetHitPct  =  0.000000
+LogCookStats: Display: LocalLatency    =  0.243472
+LogCookStats: Display: LocalReadSpeed  =  2.653119
+LogCookStats: Display: LocalWriteSpeed = 48.271108
+LogCookStats: Display: SharedLatency   =  0.000000
+LogCookStats: Display: SharedReadSpeed =  0.000000
+LogCookStats: Display: SharedWriteSpeed=  0.000000
+LogCookStats: Display: CloudLatency    =  0.000000
+LogCookStats: Display: CloudReadSpeed  =  0.000000
+LogCookStats: Display: CloudWriteSpeed =  0.000000
+LogCookStats: Display:
+LogCookStats: Display: DDC Resource Stats
+LogCookStats: Display: =======================================================================================================
+LogCookStats: Display: Asset Type                          Total Time (Sec)  GameThread Time (Sec)  Assets Built  MB Processed
+LogCookStats: Display: ----------------------------------  ----------------  ---------------------  ------------  ------------
+LogCookStats: Display: Shader                                         21.42                   0.00          4453         34.07
+LogCookStats: Display: BulkDataList                                   15.61                   0.00          3116          0.00
+LogCookStats: Display: MaterialShader                                  6.30                   1.34           274          0.00
+LogCookStats: Display: GlobalShader                                    1.91                   1.91             0        107.44
+LogCookStats: Display: Texture                                         0.73                   0.00             0         10.12
+LogCookStats: Display: MaterialTranslation                             0.64                   0.00           122          0.00
+LogCookStats: Display: StaticMesh                                      0.09                   0.00             0          0.85
+LogCookStats: Display: CardRepresentation                              0.07                   0.00             0          0.02
+LogCookStats: Display: STREAMEDAUDIO                                   0.07                   0.00             0          0.09
+LogCookStats: Display: NavCollision                                    0.06                   0.00             0          0.04
+LogCookStats: Display: CKERSM                                          0.00                   0.00             0          0.16
+LogCookStats: Display: Audio                                           0.00                   0.00             0          0.08
+LogCookStats: Display: BodySetup                                       0.00                   0.00             0          0.31
+LogCookStats: Display:
+LogCookStats: Display: Accumulated DDC Resource Stats Per Asset Type
+LogCookStats: Display: =======================================================================================================
+LogCookStats: Display: AnimationSequence                               0.00                   0.00             0          0.00
+LogCookStats: Display: Audio                                           0.00                   0.00             0          0.08
+LogCookStats: Display: CardRepresentation                              0.07                   0.00             0          0.02
+LogCookStats: Display: DistanceField                                   0.00                   0.00             0          0.00
+LogCookStats: Display: MaterialShader                                  6.30                   1.34           274          0.00
+LogCookStats: Display: MaterialTranslation                             0.64                   0.00           122          0.00
+LogCookStats: Display: NiagaraScript                                   0.00                   0.00             0          0.00
+LogCookStats: Display: SkeletalMesh                                    0.00                   0.00             0          0.00
+LogCookStats: Display: StaticMesh                                      0.09                   0.00             0          0.85
+LogCookStats: Display: Texture                                         0.73                   0.00             0         10.12
+LogCookStats: Display: Other                                          39.07                   1.91          7569        142.10
+LogPackageBuildDependencyTracker: Display: Package Accesses (102 referencing packages with a total of 484 unique accesses)
+LogConfigBuildDependencyTracker: Display: Config Accesses (345 referencing packages with a total of 772 unique accesses). 1886 unique accesses that were not associated with a package.
+LogCook: Display: ---- Finalisation: End ----
+LogCook: Display: Done!
+LogSavePackage: Display: Took 0.000446s to verify the EDL loading graph.
+LogInit: Display:
+LogInit: Display: Warning/Error Summary (Unique only)
+LogInit: Display: -----------------------------------
+LogInit: Display: LogSockets: Warning: GetAddressInfo failed to resolve host with error SE_HOST_NOT_FOUND [11001]
+LogInit: Display:
+LogInit: Display: Success - 0 error(s), 1 warning(s)
+LogInit: Display:
+
+Execution of commandlet took:  4m 28s (268.81 seconds), PeakPhysMemoryMB=3176 MB, PeakVirtMemoryMB=2999 MB
+LogAssetRegistry: Display: CleanupOrphanedCacheFiles (PostWrite): 1 .ref files found, 1 referenced binaries
+LogAssetRegistry: Display: CleanupOrphanedCacheFiles: 1 total binaries, 1 referenced (kept), 0 old-style pre-migration (kept), 0 orphans deleted, 0 orphans locked (kept)
+LogStreaming: Display: ============ Loader Stats ============
+LogStreaming: Display: Unique Partial Flushes: 0
+LogStreaming: Display: ============ Loader Stats End ============
+LogShaderCompilers: Display: Exiting ShaderCompilingThread
+Took 283.48s to run UnrealEditor-Cmd.exe, ExitCode=0
+Cook command time: 283.55 s
+********** COOK COMMAND COMPLETED **********
+********** STAGE COMMAND STARTED **********
+Creating Staging Manifest...
+Patching bootstrap executable; C:\Projects\KSP-UE5\ue5\Intermediate\Staging\KspUe5.exe
+Begin update resource 'C:\Projects\KSP-UE5\ue5\Intermediate\Staging\KspUe5.exe' (0)
+Add resource 101, length 104 (True)
+Add resource 1, length 1996 (True)
+Add resource 2, length 2447 (True)
+Add resource 3, length 2535 (True)
+Add resource 4, length 3037 (True)
+Add resource 5, length 3244 (True)
+Add resource 6, length 3531 (True)
+Add resource 7, length 6931 (True)
+Add resource 201, length 66 (True)
+Add resource 202, length 14 (True)
+Add resource 205, length 2 (True)
+End update resource (True/0)
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Localization\Category.ini
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Localization\Editor.ini
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\BasePakFileRules.ini
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Localization\PortableObjectImport.ini
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\BaseSourceControlSettings.ini
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\BaseUnrealInsightsSettings.ini
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Windows\WindowsEditorPerProjectUserSettings.ini
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Localization\ToolTips.ini
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Localization\WordCount.ini
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\BaseEditor.ini
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Localization\PropertyNames.ini
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Localization\RepairData.ini
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\BaseEditorSettings.ini
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Localization\Engine.ini
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Localization\Keywords.ini
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Localization\PortableObjectExport.ini
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\BaseLightmass.ini
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\BaseEditorKeyBindings.ini
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Windows\WindowsEditorSettings.ini
+Excluding config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\BaseEditorPerProjectUserSettings.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Layouts\DefaultLayout.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\PluginBase.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\ConsoleVariables.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\BaseGame.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\BaseEngine.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Windows\DataDrivenPlatformInfo.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Windows\BaseWindowsInput.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Windows\BaseWindowsGame.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Windows\BaseWindowsEngine.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Windows\WindowsInput.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Windows\WindowsGame.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\VulkanPC\DataDrivenPlatformInfo.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\ConfigRedirects.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\BaseScalability.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\BaseRuntimeOptions.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\BaseDeviceProfiles.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\BaseCompat.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Base.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\BaseInput.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\BaseHardware.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\BaseGameUserSettings.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\BaseMaterialExpressions.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\BaseInstallBundle.ini
+Including config file C:\Program Files\Epic Games\UE_5.8\Engine\Config\Layouts\UE4ClassicLayout.ini
+Excluding config file C:\Projects\KSP-UE5\ue5\Config\DefaultEditor.ini
+Excluding config file C:\Projects\KSP-UE5\ue5\Config\DefaultEditorPerProjectUserSettings.ini
+Including config file C:\Projects\KSP-UE5\ue5\Config\DefaultInput.ini
+Including config file C:\Projects\KSP-UE5\ue5\Config\DefaultEngine.ini
+Including config file C:\Projects\KSP-UE5\ue5\Config\DefaultGame.ini
+Reading oplog from Zen...
+Running UnrealPak with arguments: "C:\Projects\KSP-UE5\ue5\KspUe5.uproject" IoStore -StartZenServerForStage -SponsorProcessID=37188 -ProjectStore="C:\Projects\KSP-UE5\ue5\Saved\Cooked\Windows\ue.projectstore" -unattended
+Running: C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealPak.exe "C:\Projects\KSP-UE5\ue5\KspUe5.uproject" IoStore -StartZenServerForStage -SponsorProcessID=37188 -ProjectStore="C:\Projects\KSP-UE5\ue5\Saved\Cooked\Windows\ue.projectstore" -unattended
+LogStreaming: Display: AsyncLoading2 - Created: Async Loading Thread: false, Async Post Load: false, Multithreaded: false
+LogPakFile: Display: ProjectDir: ../../../../../../Projects/KSP-UE5/ue5/
+LogIoStore: Display: ==================== IoStore Utils ====================
+LogIoStore: Display: Using command line for crypto configuration
+LogZenServiceInstance: Display: Launching zen utility 'C:/Program Files/Epic Games/UE_5.8/Engine/Binaries/Win64/zen.exe service status'.
+LogZenServiceInstance: Display: Writing plugin version info to 'C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install/zen_plugin_versions.json'
+LogZenServiceInstance: Display: Read zen version cache file from 'C:/Users/pmavr/AppData/Local/UnrealEngine/5.8/Saved/Zen/zen.version', version: '5.8.13-202605190912-windows-x64-release-094f62c2'
+LogZenServiceInstance: Display: Read zen version cache file from 'C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install/zen.version', version: '5.8.13-202605190912-windows-x64-release-094f62c2'
+LogZenServiceInstance: Display: Installed service at 'C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe' is up to date
+LogZenServiceInstance: Display: Launching executable 'C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe', working dir 'C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install', data dir 'C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Data', args '--port 8558 --data-dir C:\Users\pmavr\AppData\Local\UnrealEngine\Common\Zen\Data --http asio --gc-cache-duration-seconds 1209600 --gc-interval-seconds 21600 --gc-low-diskspace-threshold 2147483648 --cache-bucket-limit-overwrites --quiet --restrict-content-types --allow-external-oidctoken-exe=false --plugins-config "C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install/zen_plugins_v1.json" --security-config-path "C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install/security-config.json" --owner-pid 13328  --child-id Zen_13328_Startup'
+LogZenServiceInstance: Display: Unreal Zen Storage Server HTTP service at http://[::1]:8558 status: OK!.
+LogZenServiceInstance: Display: Unreal Zen Storage Server HTTP service at http://[::1]:8558 status: OK!.
+LogPakFile: Display: UnrealPak executed in 3.570898 seconds
+Took 4.00s to run UnrealPak.exe, ExitCode=0
+Reading oplog from http://[::1]:8558/prj/KspUe5.1805580e/oplog/Windows/entries?trim_by_referencedset=true
+Parsed 551 package entries from oplog.
+Cleaning Stage Directory: C:\Projects\KSP-UE5\ue5\Saved\StagedBuilds\Windows
+Creating pak using staging manifest.
+DumpManifest: C:\Users\pmavr\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.8\PrePak_Windows_NonUFSFiles.txt, NumItems: 34
+DumpManifest: C:\Users\pmavr\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.8\PrePak_Windows_NonUFSFilesDebug.txt, NumItems: 6
+DumpManifest: C:\Users\pmavr\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.8\PrePak_Windows_UFSFiles.txt, NumItems: 2334
+No matching platform for PakFileRules for Section ExcludeContentForMobile : Windows
+Using 0 pak order files:
+Running UnrealPak with arguments: "C:\Projects\KSP-UE5\ue5\KspUe5.uproject"  -cryptokeys="C:\Projects\KSP-UE5\ue5\Saved\Cooked\Windows\KspUe5\Metadata\Crypto.json" -unattended -patchpaddingalign=2048 -compressionformats=Oodle -compresslevel=4 -compressmethod=Kraken  -ProjectStore="C:\Projects\KSP-UE5\ue5\Saved\Cooked\Windows\ue.projectstore" -platform=Windows  -CreateMultiple="C:\Users\pmavr\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.8\PakCommands.txt"
+Running: C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealPak.exe "C:\Projects\KSP-UE5\ue5\KspUe5.uproject"  -cryptokeys="C:\Projects\KSP-UE5\ue5\Saved\Cooked\Windows\KspUe5\Metadata\Crypto.json" -unattended -patchpaddingalign=2048 -compressionformats=Oodle -compresslevel=4 -compressmethod=Kraken  -ProjectStore="C:\Projects\KSP-UE5\ue5\Saved\Cooked\Windows\ue.projectstore" -platform=Windows  -CreateMultiple="C:\Users\pmavr\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.8\PakCommands.txt"
+OodleDataCompression: Display: Oodle v2.9.16 format for pak/iostore with method=Kraken, level=4=Normal
+LogStreaming: Display: AsyncLoading2 - Created: Async Loading Thread: false, Async Post Load: false, Multithreaded: false
+LogPakFile: Display: ProjectDir: ../../../../../../Projects/KSP-UE5/ue5/
+LogPakFile: Display: Parsing crypto keys from a crypto key cache file
+LogPakFile: Display: CompressionFormats in priority order: Oodle, Zlib
+LogZenServiceInstance: Display: Launching zen utility 'C:/Program Files/Epic Games/UE_5.8/Engine/Binaries/Win64/zen.exe service status'.
+LogZenServiceInstance: Display: Writing plugin version info to 'C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install/zen_plugin_versions.json'
+LogZenServiceInstance: Display: Read zen version cache file from 'C:/Users/pmavr/AppData/Local/UnrealEngine/5.8/Saved/Zen/zen.version', version: '5.8.13-202605190912-windows-x64-release-094f62c2'
+LogZenServiceInstance: Display: Read zen version cache file from 'C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install/zen.version', version: '5.8.13-202605190912-windows-x64-release-094f62c2'
+LogZenServiceInstance: Display: Installed service at 'C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe' is up to date
+LogZenServiceInstance: Display: Unreal Zen Storage Server HTTP service at http://[::1]:8558 status: OK!.
+LogZenStore: Display: Opening oplog KspUe5.1805580e / Windows
+LogIoStore: Display: Fetched 552 oplog items from Zen in 1.45 seconds
+LogIoStore: Display: Parsed 552 oplog items 0.00 seconds, 3456 chunks
+LogIoStore: Display: Loaded 589 chunk hashes from Zen in 0.00 seconds, 589 hashes updated in 0.00 seconds
+LogPakFile: Display: Oodle enabled on 'NoPluginCompression' files
+LogPakFile: Display: Loading response file C:\Program Files\Epic Games\UE_5.8\Engine\Programs\AutomationTool\Saved\ResponseFiles\PakList_KspUe5-Windows.txt
+LogPakFile: Display: Added 1741 entries to add to pak file.
+LogPakFile: Display: Collecting files to add to pak file...
+LogPakFile: Display: Collected 1741 files in 0.00s.
+LogPakFile: Display: Creating pak C:/Projects/KSP-UE5/ue5/Saved/StagedBuilds/Windows/KspUe5/Content/Paks/KspUe5-Windows.pak.
+LogPakFile: Display: Created pak file: C:/Projects/KSP-UE5/ue5/Saved/StagedBuilds/Windows/KspUe5/Content/Paks/KspUe5-Windows.pak
+LogPakFile: Display: CompressionFormat 0 [Oodle] : 401 files, 27474293 -> 9695669 bytes
+LogPakFile: Display: CompressionFormat 2 [None] : 1340 files, 786170 -> 786170 bytes
+LogPakFile: Display: Added 1741 files, 11157648 bytes total
+LogPakFile: Display: PrimaryIndex size: 24198 bytes
+LogPakFile: Display: PathHashIndex size: 54659 bytes
+LogPakFile: Display: FullDirectoryIndex size: 57859 bytes
+LogPakFile: Display: Compression summary: 35.29% of original size. Compressed Size 9695669 bytes, Original Size 27474293 bytes.
+LogPakFile: Display: Encryption - DISABLED
+LogPakFile: Display:
+LogPakFile: Display: Writer and Compression Threads exited.
+LogPakFile: Display: UnrealPak executed in 1.967889 seconds
+Took 2.17s to run UnrealPak.exe, ExitCode=0
+Running UnrealPak with arguments: "C:\Projects\KSP-UE5\ue5\KspUe5.uproject" C:\Projects\KSP-UE5\ue5\KspUe5.uproject -CreateGlobalContainer="C:\Projects\KSP-UE5\ue5\Saved\StagedBuilds\Windows\KspUe5\Content\Paks\global.utoc" -ProjectStore="C:\Projects\KSP-UE5\ue5\Saved\Cooked\Windows\ue.projectstore" -CookedDirectory="C:\Projects\KSP-UE5\ue5\Saved\Cooked\Windows" -Commands="C:\Users\pmavr\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.8\IoStoreCommands.txt" -patchpaddingalign=2048 -compressionformats=Oodle -compresslevel=4 -compressmethod=Kraken   -cryptokeys="C:\Projects\KSP-UE5\ue5\Saved\Cooked\Windows\KspUe5\Metadata\Crypto.json" -compressionMinBytesSaved=1024 -compressionMinPercentSaved=5 -WriteBackMetadataToAssetRegistry=Disabled -platform=Windows  -unattended
+Running: C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealPak.exe "C:\Projects\KSP-UE5\ue5\KspUe5.uproject" C:\Projects\KSP-UE5\ue5\KspUe5.uproject -CreateGlobalContainer="C:\Projects\KSP-UE5\ue5\Saved\StagedBuilds\Windows\KspUe5\Content\Paks\global.utoc" -ProjectStore="C:\Projects\KSP-UE5\ue5\Saved\Cooked\Windows\ue.projectstore" -CookedDirectory="C:\Projects\KSP-UE5\ue5\Saved\Cooked\Windows" -Commands="C:\Users\pmavr\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.8\IoStoreCommands.txt" -patchpaddingalign=2048 -compressionformats=Oodle -compresslevel=4 -compressmethod=Kraken   -cryptokeys="C:\Projects\KSP-UE5\ue5\Saved\Cooked\Windows\KspUe5\Metadata\Crypto.json" -compressionMinBytesSaved=1024 -compressionMinPercentSaved=5 -WriteBackMetadataToAssetRegistry=Disabled -platform=Windows  -unattended
+OodleDataCompression: Display: Oodle v2.9.16 format for pak/iostore with method=Kraken, level=4=Normal
+LogStreaming: Display: AsyncLoading2 - Created: Async Loading Thread: false, Async Post Load: false, Multithreaded: false
+LogPakFile: Display: ProjectDir: ../../../../../../Projects/KSP-UE5/ue5/
+LogIoStore: Display: ==================== IoStore Utils ====================
+LogIoStore: Display: Parsing crypto keys from a crypto key cache file 'C:\Projects\KSP-UE5\ue5\Saved\Cooked\Windows\KspUe5\Metadata\Crypto.json'
+LogIoStore: Display: Container signing - DISABLED
+LogIoStore: Display: Directory index - ENABLED
+LogIoStore: Display: Using compression format 'Oodle'
+LogConfig: Display: Read in platform Windows ini files took 0.02 seconds
+LogIoStore: Display: Using memory mapping alignment '16384'
+LogIoStore: Display: Using compression block size '65536'
+LogIoStore: Display: Using compression block alignment '2048'
+LogIoStore: Display: Using compression min bytes saved '1024'
+LogIoStore: Display: Using compression min percent saved '5'
+LogIoStore: Display: Using max partition size '0'
+LogIoStore: Display: Not using DDC for compression
+LogIoStore: Display: Container metadata disabled
+LogIoStore: Display: Using command list file: 'C:\Users\pmavr\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.8\IoStoreCommands.txt'
+LogIoStore: Display: Selected Oodle level 4 (Normal) from command line for shaders
+LogZenServiceInstance: Display: Launching zen utility 'C:/Program Files/Epic Games/UE_5.8/Engine/Binaries/Win64/zen.exe service status'.
+LogZenServiceInstance: Display: Writing plugin version info to 'C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install/zen_plugin_versions.json'
+LogZenServiceInstance: Display: Read zen version cache file from 'C:/Users/pmavr/AppData/Local/UnrealEngine/5.8/Saved/Zen/zen.version', version: '5.8.13-202605190912-windows-x64-release-094f62c2'
+LogZenServiceInstance: Display: Read zen version cache file from 'C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install/zen.version', version: '5.8.13-202605190912-windows-x64-release-094f62c2'
+LogZenServiceInstance: Display: Installed service at 'C:/Users/pmavr/AppData/Local/UnrealEngine/Common/Zen/Install/zenserver.exe' is up to date
+LogZenServiceInstance: Display: Unreal Zen Storage Server HTTP service at http://[::1]:8558 status: OK!.
+LogZenStore: Display: Opening oplog KspUe5.1805580e / Windows
+LogIoStore: Display: Fetched 552 oplog items from Zen in 1.23 seconds
+LogIoStore: Display: Parsed 552 oplog items 0.00 seconds, 3456 chunks
+LogIoStore: Display: Loaded 589 chunk hashes from Zen in 0.00 seconds, 589 hashes updated in 0.00 seconds
+LogIoStore: Display: Searching for cooked assets in folder 'C:\Projects\KSP-UE5\ue5\Saved\Cooked\Windows'
+LogIoStore: Display: Found '8' files
+LogIoStore: Display: Creating container targets...
+LogIoStore: Display: Processing shader libraries, compressing with Oodle Mermaid, level 4 (Normal)
+LogIoStore: Display: Shader library chunk override is disabled
+LogShaderLibrary: Display: Created IoStoreShaderArchive header: shaders grouped in 235 groups (138 of them didn't need new indices), average uncompressed size 49492 bytes, min 325 bytes, max 825383 bytes (r.ShaderCodeLibrary.MaxShaderGroupSize=1048576)
+LogIoStore: Display: KspUe5-PCD3D_SM5(PCD3D_SM5): Recompressed 1427 shaders as 235 groups. Library size changed from 3341 KB (3.40 : 1 ratio) to 1535 KB (7.40 : 1 ratio), 45.94% of previous.
+LogIoStore: Display: Save IoStoreShaderCodeArchive 'KspUe5-PCD3D_SM5-PCD3D_SM5' with ChunkId 'dabeb8e61efb6ce400000008' for target file 'C:/Projects/KSP-UE5/ue5/Saved/Cooked/Windows/KspUe5/Content/ShaderArchive-KspUe5-PCD3D_SM5-PCD3D_SM5.ushaderbytecode'
+LogShaderLibrary: Display: Created IoStoreShaderArchive header: shaders grouped in 267 groups (86 of them didn't need new indices), average uncompressed size 101760 bytes, min 1863 bytes, max 1031701 bytes (r.ShaderCodeLibrary.MaxShaderGroupSize=1048576)
+LogIoStore: Display: KspUe5-PCD3D_SM6(PCD3D_SM6): Recompressed 2368 shaders as 267 groups. Library size changed from 20331 KB (1.31 : 1 ratio) to 12592 KB (2.11 : 1 ratio), 61.93% of previous.
+LogIoStore: Display: Save IoStoreShaderCodeArchive 'KspUe5-PCD3D_SM6-PCD3D_SM6' with ChunkId '015e9e8039f4628700000008' for target file 'C:/Projects/KSP-UE5/ue5/Saved/Cooked/Windows/KspUe5/Content/ShaderArchive-KspUe5-PCD3D_SM6-PCD3D_SM6.ushaderbytecode'
+LogShaderLibrary: Display: Created IoStoreShaderArchive header: shaders grouped in 553 groups (182 of them didn't need new indices), average uncompressed size 241481 bytes, min 1249 bytes, max 1042314 bytes (r.ShaderCodeLibrary.MaxShaderGroupSize=1048576)
+LogIoStore: Display: Global-PCD3D_SM6(PCD3D_SM6): Recompressed 8098 shaders as 553 groups. Library size changed from 98690 KB (1.32 : 1 ratio) to 58602 KB (2.23 : 1 ratio), 59.38% of previous.
+LogIoStore: Display: Save IoStoreShaderCodeArchive 'Global-PCD3D_SM6-PCD3D_SM6' with ChunkId '1680bae1ae38d5b900000008' for target file 'C:/Projects/KSP-UE5/ue5/Saved/Cooked/Windows/KspUe5/Content/ShaderArchive-Global-PCD3D_SM6-PCD3D_SM6.ushaderbytecode'
+LogShaderLibrary: Display: Created IoStoreShaderArchive header: shaders grouped in 382 groups (158 of them didn't need new indices), average uncompressed size 139725 bytes, min 249 bytes, max 1033651 bytes (r.ShaderCodeLibrary.MaxShaderGroupSize=1048576)
+LogIoStore: Display: Global-PCD3D_SM5(PCD3D_SM5): Recompressed 3929 shaders as 382 groups. Library size changed from 11814 KB (4.41 : 1 ratio) to 5259 KB (9.91 : 1 ratio), 44.52% of previous.
+LogIoStore: Display: Save IoStoreShaderCodeArchive 'Global-PCD3D_SM5-PCD3D_SM5' with ChunkId 'c3fad98e7ca0cc3100000008' for target file 'C:/Projects/KSP-UE5/ue5/Saved/Cooked/Windows/KspUe5/Content/ShaderArchive-Global-PCD3D_SM5-PCD3D_SM5.ushaderbytecode'
+LogIoStore: Display: Shaders processed in 0.68 seconds
+LogIoStore: Display: Initialized WriteRequestManager with MaxConcurrentSourceReads=8 (16 cores), MaxSourceBufferMemory=3072MiB
+LogIoStore: Display: Processing redirects...
+LogIoStore: Display: Creating disk layout...
+LogIoStore: Display: Ordered 549 packages using fallback bundle order
+LogIoStore: Display: Disabled WriteRequestManager memory throttling, MaxConcurrentSourceReads=8 (16 cores)
+LogIoStore: Display: Writing container(s)...
+LogIoStore: Display: Writing and compressing took 0.24 seconds, writes to disk took 0.17 seconds for 202,857,408 bytes @ 1,188,778,295 bytes per second.
+LogIoStore: Display: global: Found perfect hashmap for 1 items.
+LogIoStore: Display: KspUe5-Windows: Found perfect hashmap for 2031 items.
+LogIoStore: Display: Finalize took 0.0 seconds for 2 writers to write 194,019 bytes, 71,837,651 bytes per second
+LogIoStore: Display: Writing tocs... [Physical: 704 MiB, Virtual: 3392 MiB]
+LogIoStore: Display: 589 / 2,032 hashes were loaded from the hash database, by type:
+LogIoStore: Display:     ExportBundleData           549
+LogIoStore: Display:     BulkData                   40
+LogIoStore: Display: 589 / 2,032 chunks attempted to compress, by type:
+LogIoStore: Display:     ExportBundleData           549 / 549
+LogIoStore: Display:     BulkData                   40 / 40
+LogIoStore: Display:     ScriptObjects              0 / 1
+LogIoStore: Display:     ContainerHeader            0 / 1
+LogIoStore: Display:     ShaderCodeLibrary          0 / 4
+LogIoStore: Display:     ShaderCode                 0 / 1,437
+LogIoStore: Display: Source bytes read:
+LogIoStore: Display:     Zen:                        169,518,301
+LogIoStore: Display:         ExportBundleData        159,994,521 bytes over 549 reads
+LogIoStore: Display:         BulkData                  9,523,780 bytes over 40 reads
+LogIoStore: Display:     Loose File:                           0
+LogIoStore: Display:     Memory:                     160,641,524
+LogIoStore: Display:         ShaderCodeLibrary           919,704 bytes over 8 reads
+LogIoStore: Display:         ShaderCode              159,721,820 bytes over 2,874 reads
+LogIoStore: Display: Calculating stats...
+LogIoStore: Display:
+LogIoStore: Display: Container Summary
+LogIoStore: Display: ==================
+LogIoStore: Display:
+LogIoStore: Display:            Container      Flags      Chunk(s) #       TOC (KiB)       Raw Size (MiB)           Size (MiB)
+LogIoStore: Display: ---------------------------------------------------------------------------------------------------------
+LogIoStore: Display:               global  -/-/-/-/-               1            0.76                 3.06                 3.06 -
+LogIoStore: Display:       KspUe5-Windows  C/-/-/I/-            2031          188.71               239.78               190.40 (20.59% Oodle)
+LogIoStore: Display: ---------------------------------------------------------------------------------------------------------
+LogIoStore: Display:                Total                       2032          189.47               242.84               193.46
+LogIoStore: Display:
+LogIoStore: Display: ** Flags: (C)ompressed / (E)ncrypted / (S)igned) / (I)ndexed) / (O)nDemand **
+LogIoStore: Display:
+LogIoStore: Display: Compression block padding:     1.49 MiB
+LogIoStore: Display:
+LogIoStore: Display: Container Directory Index
+LogIoStore: Display: ==========================
+LogIoStore: Display:
+LogIoStore: Display:            Container      Size (KiB)
+LogIoStore: Display: ------------------------------------
+LogIoStore: Display:               global            0.00
+LogIoStore: Display:       KspUe5-Windows           29.46
+LogIoStore: Display:
+LogIoStore: Display: Container Patch Report
+LogIoStore: Display: ========================
+LogIoStore: Display:
+LogIoStore: Display:            Container          Total #       Modified #          Added #   Modified (MiB)      Added (MiB)
+LogIoStore: Display: ---------------------------------------------------------------------------------------------------------
+LogIoStore: Display:               global                1                0                0             0.00             0.00
+LogIoStore: Display:       KspUe5-Windows             2031                0             2031             0.00           188.91
+LogIoStore: Display: ---------------------------------------------------------------------------------------------------------
+LogIoStore: Display:
+LogIoStore: Display: PackageStore
+LogIoStore: Display: =============
+LogIoStore: Display:
+LogIoStore: Display:            Container      Size (KiB)      Packages #     Localized #
+LogIoStore: Display: --------------------------------------------------------------------
+LogIoStore: Display:       KspUe5-Windows              15             549               0
+LogIoStore: Display: --------------------------------------------------------------------
+LogIoStore: Display:                Total              15             549               0
+LogIoStore: Display:
+LogIoStore: Display:
+LogIoStore: Display: Input:       549 Packages
+LogIoStore: Display: Input:         0   B UExp
+LogIoStore: Display: Input:    152.58 MiB UAsset
+LogIoStore: Display: Input:      9.08 MiB UBulk
+LogIoStore: Display: Input:     62.37 MiB for 935 Global shaders
+LogIoStore: Display: Input:      3.02 MiB for 245 Shared shaders
+LogIoStore: Display: Input:         0   B for 0 Unique shaders
+LogIoStore: Display: Input:     10.78 MiB for 257 Inline shaders
+LogIoStore: Display:
+LogIoStore: Display: Output:      544 Imported package entries
+LogIoStore: Display: Output:      346 Packages without imports
+LogIoStore: Display: Output:        0 Public runtime script objects
+LogIoStore: Display: Output:     3.06 MiB InitialLoadData
+LogIoStore: Display:
+LogIoStore: Display: Success
+LogPakFile: Display: UnrealPak executed in 2.253047 seconds
+Took 2.49s to run UnrealPak.exe, ExitCode=0
+DumpManifest: C:\Users\pmavr\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.8\FinalCopyWin64_UFSFiles.txt, NumItems: 2335
+DumpManifest: C:\Users\pmavr\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.8\FinalCopyWin64_NonUFSFiles.txt, NumItems: 34
+DumpManifest: C:\Users\pmavr\AppData\Roaming\Unreal Engine\AutomationTool\Logs\C+Program+Files+Epic+Games+UE_5.8\FinalCopyWin64_NonUFSFilesDebug.txt, NumItems: 6
+Copying NonUFSFiles to staging directory: C:\Projects\KSP-UE5\ue5\Saved\StagedBuilds\Windows
+Copying DebugFiles to staging directory: C:\Projects\KSP-UE5\ue5\Saved\StagedBuilds\Windows
+Stage command time: 37.06 s
+********** STAGE COMMAND COMPLETED **********
+BuildCookRun time: 321.49 s
+BUILD SUCCESSFUL
+AutomationTool executed for 0h 5m 22s
+AutomationTool exiting with ExitCode=0 (Success)
+TIMING 2026-10-09 01:50:38  cook + stage + pak (BuildCookRun, Development Win64)     322.9 s  rc=0

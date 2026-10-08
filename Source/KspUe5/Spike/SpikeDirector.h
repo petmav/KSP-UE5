@@ -185,6 +185,7 @@ private:
 	double StepFpx = 640.0;
 	double StepHalfW = 640.0, StepHalfH = 360.0;
 	bool bKspPhysicsDisabled = false;
+	bool bCsvProfiling = false;
 	double StepDist[NumTargets] = { 314.0, 314.0, 1.0 };
 	double ShiftValidErrMax = 0.0;
 	TArray<double> DescentShotAltsKm;

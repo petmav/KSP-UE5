@@ -1,0 +1,16 @@
+﻿-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- Configuring done (0.2s)
+-- Generating done (0.1s)
+-- Build files have been written to: C:/Projects/KSP-UE5/ue5/Stub/build
+MSBuild version 17.14.40+3e7442088 for .NET Framework
+
+  1>Checking Build System
+  Building Custom Rule C:/Projects/KSP-UE5/ue5/Stub/CMakeLists.txt
+  kspcore.vcxproj -> C:\Projects\KSP-UE5\ue5\Stub\lib\kspcore.lib
+  Building Custom Rule C:/Projects/KSP-UE5/ue5/Stub/CMakeLists.txt
+
+FullName                                     Length LastWriteTime        
+--------                                     ------ -------------        
+C:\Projects\KSP-UE5\ue5\Stub\lib\kspcore.lib 257056 9/10/2026 12:53:28 AM
+
+

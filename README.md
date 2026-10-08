@@ -22,13 +22,15 @@ run from anywhere (scripts resolve paths themselves). Do not run more than one e
 |---|---|---|
 | Build the stub core lib (only if `Stub/` changed) | `.\Scripts\build_stub.ps1` | 6 s |
 | Generate VS solution (`UnrealBuildTool -projectfiles` via Build.bat) | `.\Scripts\genproj.ps1` | 14 s |
-| Build editor (Development Editor Win64) | `.\Scripts\build.ps1` | see STATUS.md |
-| Build game (Development Win64) | `.\Scripts\build.ps1 -Target KspUe5` | see STATUS.md |
-| Rebuild only the bridge plugin module | `.\Scripts\build.ps1 -Module KspCoreBridge` | see STATUS.md |
-| (Re)generate the ScaleSpike map | `.\Scripts\create_map.ps1` | see STATUS.md |
-| Run automation tests headless | `.\Scripts\test.ps1` | see STATUS.md |
-| Run the full scale spike | `.\Scripts\spike.ps1 -Tag full` | see STATUS.md |
-| Quick spike smoke run | `.\Scripts\spike.ps1 -Tag smoke -Quick -Variants None,UE10k -Stress 0` | |
+| Build editor (Development Editor Win64) | `.\Scripts\build.ps1` | 64 s clean, 10 s after one .cpp, 1 s no-op |
+| Build game (Development Win64) | `.\Scripts\build.ps1 -Target KspUe5` | 52 s first build |
+| Cook + stage + pak the game (after building it) | `.\Scripts\cook.ps1` | 323 s |
+| Rebuild only the bridge plugin module | `.\Scripts\build.ps1 -Module KspCoreBridge` | 2.5 s |
+| (Re)generate the ScaleSpike map | `.\Scripts\create_map.ps1` | 29 s |
+| Run automation tests headless | `.\Scripts\test.ps1` | 16 s warm (42 s first ever) |
+| Run the full scale spike | `.\Scripts\spike.ps1 -Tag full2` | 3.5 min |
+| Quick spike smoke run | `.\Scripts\spike.ps1 -Tag smoke -Quick -Variants None,UE10k -Stress 0` | 46 s |
+| Spike CSVs to Markdown tables | `python -I spike\analyze.py full2` | 1 s |
 
 Raw equivalents (what the scripts run):
 
@@ -48,8 +50,11 @@ Notes:
   engine-bundled copy (`Engine\Binaries\ThirdParty\DotNet\10.0`). `Build.bat` uses that copy, so all scripts go through it.
 - Live Coding is disabled for the project (`Config/DefaultEditorPerProjectUserSettings.ini`): command-line UBT builds are the loop.
   UBT refuses to build while an editor with Live Coding holds the DLLs.
-- The spike runs uncooked with editor binaries (`UnrealEditor.exe -game`). The Development game exe builds, but running it
-  needs a cook (`RunUAT BuildCookRun`), which was not part of this pass.
+- `spike.ps1` runs uncooked with editor binaries (`UnrealEditor.exe -game`). For a packaged run, use `.\Scripts\cook.ps1`
+  (`RunUAT BuildCookRun -cook -stage -pak -skipbuild`, about 5.5 min) after building the game target, then
+  `Saved\StagedBuilds\Windows\KspUe5.exe /Game/Maps/ScaleSpike -windowed -ResX=1280 -ResY=720 -SpikeTag=cooked`. Its spike
+  output lands under `Saved\StagedBuilds\Windows\KspUe5\spike\`. Engine assets that are loaded by path must be listed in
+  `DirectoriesToAlwaysCook` (`Config/DefaultGame.ini`).
 
 ## Tests
 

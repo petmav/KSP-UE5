@@ -41,12 +41,30 @@ Rules: write only under ue5\. No subagents. One UE instance at a time. Low scala
       (only ~6 GB RAM free; 1.5 GB/action).
 - [x] D1 automation tests: 3/3 pass. Headless run cold 41.8 s, warm 15.7 s; touch+build+test loop 27.2 s.
 - [x] commit 8c15f5a
-- [x] D2 spike code (compiles); smoke1 quick run in progress
+- [x] D2 spike code (compiles, runs end to end: 55 steps, ~210 s per full run incl. startup)
+- [x] smoke1/2/3 + full + full2 (canonical) done. CsvProfiler cross-check agrees within 0.02 ms.
+- [x] cold-DDC shader compile: 351.7 s to BeginPlay, 371.6 s to all shaders ready (warm: 11.0 s)
+- [x] RESULTS.md, STATUS.md, README.md written; game target rebuilt clean (22.3 s); kspcore.lib change -> bridge relink 1.6 s
+- [x] cook + stage + pak 322.9 s (549 pkgs, staged 972 MB); staged exe ran full spike (tag cooked): jitter identical,
+      2.0 GB working set, 1.7 s to BeginPlay. A/B (quick, alternating twice): cooked ~= editor on render/GPU, ~20% faster on
+      shift cost (4.7 vs 5.9 ms). Disk: ue5 7.8 GB after cook.
+- [x] all docs updated; final commit pending
 - [ ] D2 runs + RESULTS.md
 - [ ] README / STATUS
 
 ## Timings (wall clock)
 (fill in)
+
+## Findings so far (full run, tag full)
+- A (small primitive-local coords): image jitter 0.000 px static/co-moving, <=0.048 px f2f under 1 mm/frame strafe, in ALL
+  variants incl. no rebasing at 700 km and at 12,000 km (Mun). Forced origin shift pop 0.000 px. => jitter-free with LWC alone.
+- B (vertices relative to body centre): 7-11 px max dev, 10-19 px f2f; pop 8.6 px on shift. Rebasing does not fix it.
+- Emulator (op-for-op DF path) validated vs GPU on B: 12.9 vs 10.5 px (orbit), 15.2 vs 13.4 (strafe None), 21.4 vs 19.4 (UE strafe).
+- Float32 world (UE4/Unity) emulation: 13 px orbit, 16.5 px ground strafe, 207 px at Mun; with rebasing 0.2 px / 0.0003 px.
+- Shift cost (10 s every tick, KSP-like 457 bodies + 1325 colliders): UE SetNewWorldOrigin 5.93 ms/shift (+8.9 ms game),
+  MoveWorld 9.13 ms (+13.0). No physics: 1.19 / 1.60 ms. Bare: 0.23 / 0.39 ms. KSP: 3.3 ms script + ~2.25 ms PhysX.
+- Chaos does not support origin shifting (SupportsOriginShifting()=false) -> per-body teleport; drift check 0.0000 cm.
+- Frame times at 1280x720 low scalability: 2.9-4.8 ms (non-readback phases), GPU 1.7-2.5 ms. Memory ~2.5-3.2 GB working set.
 
 ## Decisions
 - Spike runs uncooked via `UnrealEditor.exe KspUe5.uproject /Game/Maps/ScaleSpike -game` (no cook needed); game target built but
@@ -68,7 +86,8 @@ Rules: write only under ue5\. No subagents. One UE instance at a time. Low scala
 genproj.ps1, build.ps1 [-Target -Module -Label], build_stub.ps1, create_map.ps1, test.ps1, spike.ps1 [-Tag -Variants -Quick -Stress].
 All append wall-clock timings to ue5/timings.log.
 
-## Next steps
-1. Finish first editor build; fix compile errors. 2. create_map.ps1 (commandlet). 3. test.ps1 (headless tests, time).
-4. Incremental build after touching one .cpp; plugin-only build (-Module=KspCoreBridge); game target build.
-5. Quick spike run (-Quick, Variants=None,UE10k) -> check screenshots (winding, exposure, colours). 6. Full spike run.
+## Next steps (for a future session)
+- Switch KspCoreBridge to the real core once core/ ships include/kspcore/kspcore_c.h + build/RelWithDebInfo/kspcore.lib (/MD).
+- Terrain: replace per-patch ProceduralMeshComponents (dynamic path, render-thread bound at ~1,800 patches) with a static or
+  instanced patch path or RealtimeMesh; keep patch-centred primitive origins.
+- Untested at scale: shadows/TSR, Niagara, planet rotation (rotating frame < 100 km), Chaos joints far from origin.

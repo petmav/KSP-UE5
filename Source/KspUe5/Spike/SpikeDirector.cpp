@@ -214,7 +214,8 @@ void ASpikeDirector::BeginPlay()
 
 	LitVertexColorMat = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/EngineDebugMaterials/VertexColorMaterial.VertexColorMaterial"));
 	UnlitVertexColorMat = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/EngineDebugMaterials/VertexColorViewMode_ColorOnly.VertexColorViewMode_ColorOnly"));
-	UE_LOG(LogKspUe5, Log, TEXT("SPIKE_INIT tag=%s variants=%s stress=%d quick=%d lit=%s unlit=%s orbit_v=%.1f m/s"), *Tag,
+	UE_LOG(LogKspUe5, Log, TEXT("SPIKE_INIT since_process_start_s=%.1f tag=%s variants=%s stress=%d quick=%d lit=%s unlit=%s orbit_v=%.1f m/s"),
+		FPlatformTime::Seconds() - GStartTime, *Tag,
 		*FString::Join(VariantNames, TEXT(",")), bStress ? 1 : 0, bQuick ? 1 : 0, LitVertexColorMat ? TEXT("ok") : TEXT("MISSING"),
 		UnlitVertexColorMat ? TEXT("ok") : TEXT("MISSING"), OrbitSpeedCmS / 100.0);
 
@@ -502,9 +503,14 @@ void ASpikeDirector::ComputePose(const FStep& S, int32 Frame, FVector3d& OutCam,
 		OutRot = GroundRot;
 		break;
 	case EPhase::MunFromOrbit:
-		OutCam = OrbitPos(OrbitTheta0);
-		OutRot = MakeRot((MunCentreU - OutCam).GetSafeNormal(), FVector3d(0, 0, 1));
+	{
+		// Camera flies along the 100 km orbit at 50x (112 km/s) with a fixed attitude aimed at the Mun from the start
+		// point: the Mun drifts smoothly by parallax; any non-smooth component is precision jitter.
+		const double Theta = OrbitTheta0 + OrbitSpeedCmS * 50.0 * SimDt60 * Frame / OrbitRadiusCm;
+		OutCam = OrbitPos(Theta);
+		OutRot = MakeRot((MunCentreU - OrbitPos(OrbitTheta0)).GetSafeNormal(), FVector3d(0, 0, 1));
 		break;
+	}
 	case EPhase::MunNear:
 		OutCam = MunNearStart + MunMotionDir * (5.0e4 * SimDt60 * Frame); // 500 m/s tangential
 		OutRot = MunNearRot;
@@ -879,6 +885,11 @@ void ASpikeDirector::BeginStep()
 
 	DescentShotAltsKm = { 100.0, 30.0, 10.0, 1.0, 0.1, 0.0101 };
 	PrevAltKm = 1.0e9;
+	if (S.Label == TEXT("None/OrbitTiming") || S.Label == TEXT("StressKsp/UEOrigin-every-tick"))
+	{
+		GEngine->Exec(GetWorld(), TEXT("CsvProfile START"));
+		bCsvProfiling = true;
+	}
 	UE_LOG(LogKspUe5, Log, TEXT("SPIKE_STEP_BEGIN %d %s mode=%s thr_km=%.1f frames=%d secs=%.1f"), StepIndex, *S.Label, ModeName(S.Mode),
 		S.ThresholdCm / 1.0e5, S.Frames, S.Seconds);
 }
@@ -1017,6 +1028,12 @@ void ASpikeDirector::TickStep()
 void ASpikeDirector::EndStep()
 {
 	const FStep& S = Steps[StepIndex];
+	if (bCsvProfiling)
+	{
+		GEngine->Exec(GetWorld(), TEXT("CsvProfile STOP"));
+		bCsvProfiling = false;
+		UE_LOG(LogKspUe5, Log, TEXT("SPIKE_CSVPROFILE step=%d %s (see Saved/Profiling/CSV)"), StepIndex, *S.Label);
+	}
 	const double RealS = FPlatformTime::Seconds() - StepStartTime;
 	TArray<double> Frame, Game, Render, Rhi, Gpu, ShiftMs;
 	double LodTotal = 0.0, LodMax = 0.0, CamOriginMax = 0.0;
@@ -1049,7 +1066,7 @@ void ASpikeDirector::EndStep()
 	}
 
 	// ---- image metrics ----
-	const bool bStrafe = S.Phase == EPhase::GroundStrafe;
+	const bool bStrafe = S.Phase == EPhase::GroundStrafe || S.Phase == EPhase::MunFromOrbit; // moving: fit, then residual
 	double Fpx = 640.0;
 	if (GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport)
 	{
