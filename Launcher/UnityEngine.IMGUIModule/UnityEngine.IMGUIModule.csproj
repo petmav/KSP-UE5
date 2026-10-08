@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{FE715F0D-B9D6-4070-B7CA-0D5454051FAB}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>11.0</LangVersion>
+    <AssemblyName>UnityEngine.IMGUIModule</AssemblyName>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="UnityEngine.SharedInternalsModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.SharedInternalsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="System">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\System.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\System.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnityEngine\Event.cs" />
+    <Compile Include="UnityEngine\EventCommandNames.cs" />
+    <Compile Include="UnityEngine\EventInterests.cs" />
+    <Compile Include="UnityEngine\EventModifiers.cs" />
+    <Compile Include="UnityEngine\EventType.cs" />
+    <Compile Include="UnityEngine\ExitGUIException.cs" />
+    <Compile Include="UnityEngine\FocusType.cs" />
+    <Compile Include="UnityEngine\GUI.cs" />
+    <Compile Include="UnityEngine\GUIAspectSizer.cs" />
+    <Compile Include="UnityEngine\GUIClip.cs" />
+    <Compile Include="UnityEngine\GUIContent.cs" />
+    <Compile Include="UnityEngine\GUIDebugger.cs" />
+    <Compile Include="UnityEngine\GUIElement.cs" />
+    <Compile Include="UnityEngine\GUIGridSizer.cs" />
+    <Compile Include="UnityEngine\GUILayer.cs" />
+    <Compile Include="UnityEngine\GUILayout.cs" />
+    <Compile Include="UnityEngine\GUILayoutEntry.cs" />
+    <Compile Include="UnityEngine\GUILayoutGroup.cs" />
+    <Compile Include="UnityEngine\GUILayoutOption.cs" />
+    <Compile Include="UnityEngine\GUILayoutUtility.cs" />
+    <Compile Include="UnityEngine\GUIScrollGroup.cs" />
+    <Compile Include="UnityEngine\GUISettings.cs" />
+    <Compile Include="UnityEngine\GUISkin.cs" />
+    <Compile Include="UnityEngine\GUIStateObjects.cs" />
+    <Compile Include="UnityEngine\GUIStyle.cs" />
+    <Compile Include="UnityEngine\GUIStyleState.cs" />
+    <Compile Include="UnityEngine\GUITargetAttribute.cs" />
+    <Compile Include="UnityEngine\GUITexture.cs" />
+    <Compile Include="UnityEngine\GUIUtility.cs" />
+    <Compile Include="UnityEngine\GUIWordWrapSizer.cs" />
+    <Compile Include="UnityEngine\ImagePosition.cs" />
+    <Compile Include="UnityEngine\ObjectGUIState.cs" />
+    <Compile Include="UnityEngine\PlatformSelection.cs" />
+    <Compile Include="UnityEngine\PointerType.cs" />
+    <Compile Include="UnityEngine\ScaleMode.cs" />
+    <Compile Include="UnityEngine\ScrollViewState.cs" />
+    <Compile Include="UnityEngine\SliderHandler.cs" />
+    <Compile Include="UnityEngine\SliderState.cs" />
+    <Compile Include="UnityEngine\TextClipping.cs" />
+    <Compile Include="UnityEngine\TextEditor.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

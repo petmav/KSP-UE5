@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{38717E4E-3FD0-4DC8-8410-313D08B9DF72}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>11.0</LangVersion>
+    <AssemblyName>I18N.Other</AssemblyName>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="I18N">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\KSP_x64_Data\Managed\I18N.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Consts.cs" />
+    <Compile Include="I18N\Other\CP1251.cs" />
+    <Compile Include="I18N\Other\CP1257.cs" />
+    <Compile Include="I18N\Other\CP1258.cs" />
+    <Compile Include="I18N\Other\CP20866.cs" />
+    <Compile Include="I18N\Other\CP21866.cs" />
+    <Compile Include="I18N\Other\CP28594.cs" />
+    <Compile Include="I18N\Other\CP28595.cs" />
+    <Compile Include="I18N\Other\CP57002.cs" />
+    <Compile Include="I18N\Other\CP57003.cs" />
+    <Compile Include="I18N\Other\CP57004.cs" />
+    <Compile Include="I18N\Other\CP57005.cs" />
+    <Compile Include="I18N\Other\CP57006.cs" />
+    <Compile Include="I18N\Other\CP57007.cs" />
+    <Compile Include="I18N\Other\CP57008.cs" />
+    <Compile Include="I18N\Other\CP57009.cs" />
+    <Compile Include="I18N\Other\CP57010.cs" />
+    <Compile Include="I18N\Other\CP57011.cs" />
+    <Compile Include="I18N\Other\CP874.cs" />
+    <Compile Include="I18N\Other\ENCiso_8859_4.cs" />
+    <Compile Include="I18N\Other\ENCiso_8859_5.cs" />
+    <Compile Include="I18N\Other\ENCkoi8_r.cs" />
+    <Compile Include="I18N\Other\ENCkoi8_u.cs" />
+    <Compile Include="I18N\Other\ENCwindows_1251.cs" />
+    <Compile Include="I18N\Other\ENCwindows_1257.cs" />
+    <Compile Include="I18N\Other\ENCwindows_1258.cs" />
+    <Compile Include="I18N\Other\ENCwindows_874.cs" />
+    <Compile Include="I18N\Other\ENCx_iscii_as.cs" />
+    <Compile Include="I18N\Other\ENCx_iscii_be.cs" />
+    <Compile Include="I18N\Other\ENCx_iscii_de.cs" />
+    <Compile Include="I18N\Other\ENCx_iscii_gu.cs" />
+    <Compile Include="I18N\Other\ENCx_iscii_ka.cs" />
+    <Compile Include="I18N\Other\ENCx_iscii_ma.cs" />
+    <Compile Include="I18N\Other\ENCx_iscii_or.cs" />
+    <Compile Include="I18N\Other\ENCx_iscii_pa.cs" />
+    <Compile Include="I18N\Other\ENCx_iscii_ta.cs" />
+    <Compile Include="I18N\Other\ENCx_iscii_te.cs" />
+    <Compile Include="I18N\Other\ISCIIEncoding.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

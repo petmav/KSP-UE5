@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{6BB77CA1-3739-4D09-85B2-AAD159FFC524}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>11.0</LangVersion>
+    <AssemblyName>Unity.Timeline</AssemblyName>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\KSP_x64_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.DirectorModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\KSP_x64_Data\Managed\UnityEngine.DirectorModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\KSP_x64_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\KSP_x64_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ParticleSystemModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\KSP_x64_Data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="UnityEngine.SharedInternalsModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\KSP_x64_Data\Managed\UnityEngine.SharedInternalsModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnityEngine\Timeline\ActivationControlPlayable.cs" />
+    <Compile Include="UnityEngine\Timeline\ActivationMixerPlayable.cs" />
+    <Compile Include="UnityEngine\Timeline\ActivationPlayableAsset.cs" />
+    <Compile Include="UnityEngine\Timeline\ActivationTrack.cs" />
+    <Compile Include="UnityEngine\Timeline\AnimationOutputWeightProcessor.cs" />
+    <Compile Include="UnityEngine\Timeline\AnimationPlayableAsset.cs" />
+    <Compile Include="UnityEngine\Timeline\AnimationPreviewUpdateCallback.cs" />
+    <Compile Include="UnityEngine\Timeline\AnimationTrack.cs" />
+    <Compile Include="UnityEngine\Timeline\AppliedOffsetMode.cs" />
+    <Compile Include="UnityEngine\Timeline\AudioClipProperties.cs" />
+    <Compile Include="UnityEngine\Timeline\AudioMixerProperties.cs" />
+    <Compile Include="UnityEngine\Timeline\AudioPlayableAsset.cs" />
+    <Compile Include="UnityEngine\Timeline\AudioTrack.cs" />
+    <Compile Include="UnityEngine\Timeline\BasicPlayableBehaviour.cs" />
+    <Compile Include="UnityEngine\Timeline\ClipCaps.cs" />
+    <Compile Include="UnityEngine\Timeline\ControlPlayableAsset.cs" />
+    <Compile Include="UnityEngine\Timeline\ControlTrack.cs" />
+    <Compile Include="UnityEngine\Timeline\CustomSignalEventDrawer.cs" />
+    <Compile Include="UnityEngine\Timeline\CustomStyleAttribute.cs" />
+    <Compile Include="UnityEngine\Timeline\DirectorControlPlayable.cs" />
+    <Compile Include="UnityEngine\Timeline\DiscreteTime.cs" />
+    <Compile Include="UnityEngine\Timeline\Extrapolation.cs" />
+    <Compile Include="UnityEngine\Timeline\GroupTrack.cs" />
+    <Compile Include="UnityEngine\Timeline\HashUtility.cs" />
+    <Compile Include="UnityEngine\Timeline\HideInMenuAttribute.cs" />
+    <Compile Include="UnityEngine\Timeline\ICurvesOwner.cs" />
+    <Compile Include="UnityEngine\Timeline\IgnoreOnPlayableTrackAttribute.cs" />
+    <Compile Include="UnityEngine\Timeline\IInterval.cs" />
+    <Compile Include="UnityEngine\Timeline\ILayerable.cs" />
+    <Compile Include="UnityEngine\Timeline\IMarker.cs" />
+    <Compile Include="UnityEngine\Timeline\InfiniteRuntimeClip.cs" />
+    <Compile Include="UnityEngine\Timeline\INotificationOptionProvider.cs" />
+    <Compile Include="UnityEngine\Timeline\IntervalTree.cs" />
+    <Compile Include="UnityEngine\Timeline\IntervalTreeNode.cs" />
+    <Compile Include="UnityEngine\Timeline\IPropertyCollector.cs" />
+    <Compile Include="UnityEngine\Timeline\IPropertyPreview.cs" />
+    <Compile Include="UnityEngine\Timeline\ITimeControl.cs" />
+    <Compile Include="UnityEngine\Timeline\ITimelineClipAsset.cs" />
+    <Compile Include="UnityEngine\Timeline\ITimelineEvaluateCallback.cs" />
+    <Compile Include="UnityEngine\Timeline\Marker.cs" />
+    <Compile Include="UnityEngine\Timeline\MarkerList.cs" />
+    <Compile Include="UnityEngine\Timeline\MarkerTrack.cs" />
+    <Compile Include="UnityEngine\Timeline\MatchTargetFieldConstants.cs" />
+    <Compile Include="UnityEngine\Timeline\MatchTargetFields.cs" />
+    <Compile Include="UnityEngine\Timeline\MenuCategoryAttribute.cs" />
+    <Compile Include="UnityEngine\Timeline\NotificationFlags.cs" />
+    <Compile Include="UnityEngine\Timeline\NotificationUtilities.cs" />
+    <Compile Include="UnityEngine\Timeline\NotKeyableAttribute.cs" />
+    <Compile Include="UnityEngine\Timeline\ParticleControlPlayable.cs" />
+    <Compile Include="UnityEngine\Timeline\PlayableTrack.cs" />
+    <Compile Include="UnityEngine\Timeline\PrefabControlPlayable.cs" />
+    <Compile Include="UnityEngine\Timeline\RuntimeClip.cs" />
+    <Compile Include="UnityEngine\Timeline\RuntimeClipBase.cs" />
+    <Compile Include="UnityEngine\Timeline\RuntimeElement.cs" />
+    <Compile Include="UnityEngine\Timeline\ScheduleRuntimeClip.cs" />
+    <Compile Include="UnityEngine\Timeline\SignalAsset.cs" />
+    <Compile Include="UnityEngine\Timeline\SignalEmitter.cs" />
+    <Compile Include="UnityEngine\Timeline\SignalReceiver.cs" />
+    <Compile Include="UnityEngine\Timeline\SignalTrack.cs" />
+    <Compile Include="UnityEngine\Timeline\SupportsChildTracksAttribute.cs" />
+    <Compile Include="UnityEngine\Timeline\TimeControlPlayable.cs" />
+    <Compile Include="UnityEngine\Timeline\TimeFieldAttribute.cs" />
+    <Compile Include="UnityEngine\Timeline\TimelineAsset.cs" />
+    <Compile Include="UnityEngine\Timeline\TimelineClip.cs" />
+    <Compile Include="UnityEngine\Timeline\TimelineClipCapsExtensions.cs" />
+    <Compile Include="UnityEngine\Timeline\TimelineCreateUtilities.cs" />
+    <Compile Include="UnityEngine\Timeline\TimelinePlayable.cs" />
+    <Compile Include="UnityEngine\Timeline\TimelineUndo.cs" />
+    <Compile Include="UnityEngine\Timeline\TimeNotificationBehaviour.cs" />
+    <Compile Include="UnityEngine\Timeline\TimeUtility.cs" />
+    <Compile Include="UnityEngine\Timeline\TrackAsset.cs" />
+    <Compile Include="UnityEngine\Timeline\TrackAssetExtensions.cs" />
+    <Compile Include="UnityEngine\Timeline\TrackBindingFlags.cs" />
+    <Compile Include="UnityEngine\Timeline\TrackBindingTypeAttribute.cs" />
+    <Compile Include="UnityEngine\Timeline\TrackClipTypeAttribute.cs" />
+    <Compile Include="UnityEngine\Timeline\TrackColorAttribute.cs" />
+    <Compile Include="UnityEngine\Timeline\TrackMediaType.cs" />
+    <Compile Include="UnityEngine\Timeline\TrackOffset.cs" />
+    <Compile Include="UnityEngine\Timeline\WeightUtility.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

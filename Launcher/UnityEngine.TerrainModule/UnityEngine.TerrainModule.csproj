@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{372BC993-6953-4145-8564-3335C522CA49}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>11.0</LangVersion>
+    <AssemblyName>UnityEngine.TerrainModule</AssemblyName>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Core">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\System.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.SharedInternalsModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.SharedInternalsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="System">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\System.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnityEngine\DetailPrototype.cs" />
+    <Compile Include="UnityEngine\DetailRenderMode.cs" />
+    <Compile Include="UnityEngine\Experimental\TerrainAPI\BrushTransform.cs" />
+    <Compile Include="UnityEngine\Experimental\TerrainAPI\PaintContext.cs" />
+    <Compile Include="UnityEngine\Experimental\TerrainAPI\TerrainCallbacks.cs" />
+    <Compile Include="UnityEngine\Experimental\TerrainAPI\TerrainPaintUtility.cs" />
+    <Compile Include="UnityEngine\Experimental\TerrainAPI\TerrainUtility.cs" />
+    <Compile Include="UnityEngine\PatchExtents.cs" />
+    <Compile Include="UnityEngine\SpeedTreeWindAsset.cs" />
+    <Compile Include="UnityEngine\SplatPrototype.cs" />
+    <Compile Include="UnityEngine\Terrain.cs" />
+    <Compile Include="UnityEngine\TerrainChangedFlags.cs" />
+    <Compile Include="UnityEngine\TerrainData.cs" />
+    <Compile Include="UnityEngine\TerrainExtensions.cs" />
+    <Compile Include="UnityEngine\TerrainHeightmapSyncControl.cs" />
+    <Compile Include="UnityEngine\TerrainLayer.cs" />
+    <Compile Include="UnityEngine\TerrainRenderFlags.cs" />
+    <Compile Include="UnityEngine\Tree.cs" />
+    <Compile Include="UnityEngine\TreeInstance.cs" />
+    <Compile Include="UnityEngine\TreePrototype.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

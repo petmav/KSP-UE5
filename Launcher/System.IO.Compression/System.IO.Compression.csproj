@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{D3166AB8-AA58-4CEF-A696-416C1689FAA1}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>11.0</LangVersion>
+    <AssemblyName>System.IO.Compression</AssemblyName>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\System.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Consts.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SR.cs" />
+    <Compile Include="System\IO\Compression\BlockType.cs" />
+    <Compile Include="System\IO\Compression\CheckSumAndSizeWriteStream.cs" />
+    <Compile Include="System\IO\Compression\CopyEncoder.cs" />
+    <Compile Include="System\IO\Compression\Crc32Helper.cs" />
+    <Compile Include="System\IO\Compression\DeflateInput.cs" />
+    <Compile Include="System\IO\Compression\DeflateManagedStream.cs" />
+    <Compile Include="System\IO\Compression\DeflaterManaged.cs" />
+    <Compile Include="System\IO\Compression\FastEncoder.cs" />
+    <Compile Include="System\IO\Compression\FastEncoderStatics.cs" />
+    <Compile Include="System\IO\Compression\FastEncoderWindow.cs" />
+    <Compile Include="System\IO\Compression\HuffmanTree.cs" />
+    <Compile Include="System\IO\Compression\IFileFormatReader.cs" />
+    <Compile Include="System\IO\Compression\IFileFormatWriter.cs" />
+    <Compile Include="System\IO\Compression\InflaterManaged.cs" />
+    <Compile Include="System\IO\Compression\InflaterState.cs" />
+    <Compile Include="System\IO\Compression\InputBuffer.cs" />
+    <Compile Include="System\IO\Compression\Match.cs" />
+    <Compile Include="System\IO\Compression\MatchState.cs" />
+    <Compile Include="System\IO\Compression\OutputBuffer.cs" />
+    <Compile Include="System\IO\Compression\OutputWindow.cs" />
+    <Compile Include="System\IO\Compression\PositionPreservingWriteOnlyStreamWrapper.cs" />
+    <Compile Include="System\IO\Compression\SubReadStream.cs" />
+    <Compile Include="System\IO\Compression\WrappedStream.cs" />
+    <Compile Include="System\IO\Compression\Zip64EndOfCentralDirectoryLocator.cs" />
+    <Compile Include="System\IO\Compression\Zip64EndOfCentralDirectoryRecord.cs" />
+    <Compile Include="System\IO\Compression\Zip64ExtraField.cs" />
+    <Compile Include="System\IO\Compression\ZipArchive.cs" />
+    <Compile Include="System\IO\Compression\ZipArchiveEntry.cs" />
+    <Compile Include="System\IO\Compression\ZipArchiveMode.cs" />
+    <Compile Include="System\IO\Compression\ZipCentralDirectoryFileHeader.cs" />
+    <Compile Include="System\IO\Compression\ZipEndOfCentralDirectoryBlock.cs" />
+    <Compile Include="System\IO\Compression\ZipGenericExtraField.cs" />
+    <Compile Include="System\IO\Compression\ZipHelper.cs" />
+    <Compile Include="System\IO\Compression\ZipLocalFileHeader.cs" />
+    <Compile Include="System\IO\Compression\ZipVersionMadeByPlatform.cs" />
+    <Compile Include="System\IO\Compression\ZipVersionNeededValues.cs" />
+    <Compile Include="System\Runtime\CompilerServices\FriendAccessAllowedAttribute.cs" />
+    <Compile Include="System\Threading\Tasks\TaskToApm.cs" />
+    <Compile Include="Unity\ThrowStub.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

@@ -1,0 +1,49 @@
+using System.Security.Permissions;
+using Unity;
+
+namespace System.Diagnostics.Eventing.Reader;
+
+[HostProtection(SecurityAction.LinkDemand, MayLeakOnAbort = true)]
+public sealed class EventTask
+{
+	public string DisplayName
+	{
+		get
+		{
+			Unity.ThrowStub.ThrowNotSupportedException();
+			return null;
+		}
+	}
+
+	public Guid EventGuid
+	{
+		get
+		{
+			Unity.ThrowStub.ThrowNotSupportedException();
+			return default(Guid);
+		}
+	}
+
+	public string Name
+	{
+		get
+		{
+			Unity.ThrowStub.ThrowNotSupportedException();
+			return null;
+		}
+	}
+
+	public int Value
+	{
+		get
+		{
+			Unity.ThrowStub.ThrowNotSupportedException();
+			return default(int);
+		}
+	}
+
+	internal EventTask()
+	{
+		Unity.ThrowStub.ThrowNotSupportedException();
+	}
+}

@@ -1,0 +1,11 @@
+public enum KSPSiteType
+{
+	KSPSTORE,
+	SPACEPORT,
+	FACEBOOK,
+	TWITTER,
+	YOUTUBE,
+	REDDIT,
+	TWITCH,
+	FORUMS
+}

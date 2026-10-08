@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{B2EEC623-1C72-4882-8922-F00456DEEE0E}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>11.0</LangVersion>
+    <AssemblyName>System.ServiceModel.Internals</AssemblyName>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\System.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\System.Xml.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyRef.cs" />
+    <Compile Include="Consts.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SR.cs" />
+    <Compile Include="System\Diagnostics\EventLogEntryType.cs" />
+    <Compile Include="System\Runtime\ActionItem.cs" />
+    <Compile Include="System\Runtime\AssertHelper.cs" />
+    <Compile Include="System\Runtime\AsyncCompletionResult.cs" />
+    <Compile Include="System\Runtime\AsyncEventArgs.cs" />
+    <Compile Include="System\Runtime\AsyncEventArgsCallback.cs" />
+    <Compile Include="System\Runtime\AsyncResult.cs" />
+    <Compile Include="System\Runtime\AsyncWaitHandle.cs" />
+    <Compile Include="System\Runtime\BackoffTimeoutHelper.cs" />
+    <Compile Include="System\Runtime\BufferedOutputStream.cs" />
+    <Compile Include="System\Runtime\CallbackException.cs" />
+    <Compile Include="System\Runtime\Collections\HopperCache.cs" />
+    <Compile Include="System\Runtime\Collections\NullableKeyDictionary.cs" />
+    <Compile Include="System\Runtime\Collections\ObjectCache.cs" />
+    <Compile Include="System\Runtime\Collections\ObjectCacheItem.cs" />
+    <Compile Include="System\Runtime\Collections\ObjectCacheSettings.cs" />
+    <Compile Include="System\Runtime\Collections\OrderedDictionary.cs" />
+    <Compile Include="System\Runtime\Collections\ValidatingCollection.cs" />
+    <Compile Include="System\Runtime\CompilerServices\FriendAccessAllowedAttribute.cs" />
+    <Compile Include="System\Runtime\CompletedAsyncResult.cs" />
+    <Compile Include="System\Runtime\ComputerNameFormat.cs" />
+    <Compile Include="System\Runtime\DiagnosticStrings.cs" />
+    <Compile Include="System\Runtime\Diagnostics\ActivityControl.cs" />
+    <Compile Include="System\Runtime\Diagnostics\DiagnosticsEventProvider.cs" />
+    <Compile Include="System\Runtime\Diagnostics\DiagnosticTraceBase.cs" />
+    <Compile Include="System\Runtime\Diagnostics\DiagnosticTraceSource.cs" />
+    <Compile Include="System\Runtime\Diagnostics\DictionaryTraceRecord.cs" />
+    <Compile Include="System\Runtime\Diagnostics\EtwDiagnosticTrace.cs" />
+    <Compile Include="System\Runtime\Diagnostics\EtwProvider.cs" />
+    <Compile Include="System\Runtime\Diagnostics\EventDescriptor.cs" />
+    <Compile Include="System\Runtime\Diagnostics\EventFacility.cs" />
+    <Compile Include="System\Runtime\Diagnostics\EventLogCategory.cs" />
+    <Compile Include="System\Runtime\Diagnostics\EventLogEventId.cs" />
+    <Compile Include="System\Runtime\Diagnostics\EventLogger.cs" />
+    <Compile Include="System\Runtime\Diagnostics\EventSeverity.cs" />
+    <Compile Include="System\Runtime\Diagnostics\EventTraceActivity.cs" />
+    <Compile Include="System\Runtime\Diagnostics\ITraceSourceStringProvider.cs" />
+    <Compile Include="System\Runtime\Diagnostics\PerformanceCounterNameAttribute.cs" />
+    <Compile Include="System\Runtime\Diagnostics\StringTraceRecord.cs" />
+    <Compile Include="System\Runtime\Diagnostics\TraceRecord.cs" />
+    <Compile Include="System\Runtime\DuplicateDetector.cs" />
+    <Compile Include="System\Runtime\ExceptionTrace.cs" />
+    <Compile Include="System\Runtime\FastAsyncCallback.cs" />
+    <Compile Include="System\Runtime\FatalException.cs" />
+    <Compile Include="System\Runtime\Fx.cs" />
+    <Compile Include="System\Runtime\FxCop.cs" />
+    <Compile Include="System\Runtime\HashHelper.cs" />
+    <Compile Include="System\Runtime\IAsyncEventArgs.cs" />
+    <Compile Include="System\Runtime\InputQueue.cs" />
+    <Compile Include="System\Runtime\InternalBufferManager.cs" />
+    <Compile Include="System\Runtime\InternalSR.cs" />
+    <Compile Include="System\Runtime\Interop\SafeEventLogWriteHandle.cs" />
+    <Compile Include="System\Runtime\Interop\UnsafeNativeMethods.cs" />
+    <Compile Include="System\Runtime\IOThreadCancellationTokenSource.cs" />
+    <Compile Include="System\Runtime\IOThreadScheduler.cs" />
+    <Compile Include="System\Runtime\IOThreadTimer.cs" />
+    <Compile Include="System\Runtime\MruCache.cs" />
+    <Compile Include="System\Runtime\NameGenerator.cs" />
+    <Compile Include="System\Runtime\PartialTrustHelpers.cs" />
+    <Compile Include="System\Runtime\ReadOnlyDictionaryInternal.cs" />
+    <Compile Include="System\Runtime\ReadOnlyKeyedCollection.cs" />
+    <Compile Include="System\Runtime\ScheduleActionItemAsyncResult.cs" />
+    <Compile Include="System\Runtime\SignalGate.cs" />
+    <Compile Include="System\Runtime\SynchronizedPool.cs" />
+    <Compile Include="System\Runtime\TaskExtensions.cs" />
+    <Compile Include="System\Runtime\ThreadNeutralSemaphore.cs" />
+    <Compile Include="System\Runtime\Ticks.cs" />
+    <Compile Include="System\Runtime\TimeoutHelper.cs" />
+    <Compile Include="System\Runtime\TraceChannel.cs" />
+    <Compile Include="System\Runtime\TraceCore.cs" />
+    <Compile Include="System\Runtime\TraceEventLevel.cs" />
+    <Compile Include="System\Runtime\TraceEventOpcode.cs" />
+    <Compile Include="System\Runtime\TraceLevelHelper.cs" />
+    <Compile Include="System\Runtime\TracePayload.cs" />
+    <Compile Include="System\Runtime\TypedAsyncResult.cs" />
+    <Compile Include="System\Runtime\TypeHelper.cs" />
+    <Compile Include="System\Runtime\UrlUtility.cs" />
+    <Compile Include="System\Runtime\WaitCallbackActionItem.cs" />
+    <Compile Include="System\ServiceModel\Internals\LocalAppContextSwitches.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

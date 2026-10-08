@@ -1,0 +1,89 @@
+using System;
+using System.IO;
+using System.Reflection;
+
+namespace Mono.Cecil.Cil
+{
+	internal static class SymbolProvider
+	{
+		private static readonly string symbol_kind = (((object)Type.GetType("Mono.Runtime") != null) ? "Mdb" : "Pdb");
+
+		private static ISymbolReaderProvider reader_provider;
+
+		private static ISymbolWriterProvider writer_provider;
+
+		private static AssemblyName GetPlatformSymbolAssemblyName()
+		{
+			AssemblyName name = typeof(SymbolProvider).Assembly.GetName();
+			AssemblyName assemblyName = new AssemblyName();
+			assemblyName.Name = "Mono.Cecil." + symbol_kind;
+			assemblyName.Version = name.Version;
+			AssemblyName assemblyName2 = assemblyName;
+			assemblyName2.SetPublicKeyToken(name.GetPublicKeyToken());
+			return assemblyName2;
+		}
+
+		private static Type GetPlatformType(string fullname)
+		{
+			Type type = Type.GetType(fullname);
+			if ((object)type != null)
+			{
+				return type;
+			}
+			AssemblyName platformSymbolAssemblyName = GetPlatformSymbolAssemblyName();
+			type = Type.GetType(fullname + ", " + platformSymbolAssemblyName.FullName);
+			if ((object)type != null)
+			{
+				return type;
+			}
+			try
+			{
+				Assembly assembly = Assembly.Load(platformSymbolAssemblyName);
+				if ((object)assembly != null)
+				{
+					return assembly.GetType(fullname);
+				}
+			}
+			catch (FileNotFoundException)
+			{
+			}
+			catch (FileLoadException)
+			{
+			}
+			return null;
+		}
+
+		public static ISymbolReaderProvider GetPlatformReaderProvider()
+		{
+			if (reader_provider != null)
+			{
+				return reader_provider;
+			}
+			Type platformType = GetPlatformType(GetProviderTypeName("ReaderProvider"));
+			if ((object)platformType == null)
+			{
+				return null;
+			}
+			return reader_provider = (ISymbolReaderProvider)Activator.CreateInstance(platformType);
+		}
+
+		private static string GetProviderTypeName(string name)
+		{
+			return "Mono.Cecil." + symbol_kind + "." + symbol_kind + name;
+		}
+
+		public static ISymbolWriterProvider GetPlatformWriterProvider()
+		{
+			if (writer_provider != null)
+			{
+				return writer_provider;
+			}
+			Type platformType = GetPlatformType(GetProviderTypeName("WriterProvider"));
+			if ((object)platformType == null)
+			{
+				return null;
+			}
+			return writer_provider = (ISymbolWriterProvider)Activator.CreateInstance(platformType);
+		}
+	}
+}

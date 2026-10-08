@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{3DE41194-4831-4E43-A182-403EA9DF4414}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>11.0</LangVersion>
+    <AssemblyName>Unity.Analytics.StandardEvents</AssemblyName>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="UnityEngine">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnityEngine\Analytics\AchievementStep.cs" />
+    <Compile Include="UnityEngine\Analytics\AchievementUnlocked.cs" />
+    <Compile Include="UnityEngine\Analytics\AcquisitionSource.cs" />
+    <Compile Include="UnityEngine\Analytics\AcquisitionType.cs" />
+    <Compile Include="UnityEngine\Analytics\AdComplete.cs" />
+    <Compile Include="UnityEngine\Analytics\AdOffer.cs" />
+    <Compile Include="UnityEngine\Analytics\AdSkip.cs" />
+    <Compile Include="UnityEngine\Analytics\AdStart.cs" />
+    <Compile Include="UnityEngine\Analytics\AdvertisingNetwork.cs" />
+    <Compile Include="UnityEngine\Analytics\AnalyticsEvent.cs" />
+    <Compile Include="UnityEngine\Analytics\AnalyticsEventAttribute.cs" />
+    <Compile Include="UnityEngine\Analytics\AnalyticsEventParameter.cs" />
+    <Compile Include="UnityEngine\Analytics\AuthorizationNetwork.cs" />
+    <Compile Include="UnityEngine\Analytics\ChatMessageSent.cs" />
+    <Compile Include="UnityEngine\Analytics\CustomEvent.cs" />
+    <Compile Include="UnityEngine\Analytics\CustomizableEnum.cs" />
+    <Compile Include="UnityEngine\Analytics\CutsceneSkip.cs" />
+    <Compile Include="UnityEngine\Analytics\CutsceneStart.cs" />
+    <Compile Include="UnityEngine\Analytics\EnumCase.cs" />
+    <Compile Include="UnityEngine\Analytics\FirstInteraction.cs" />
+    <Compile Include="UnityEngine\Analytics\GameOver.cs" />
+    <Compile Include="UnityEngine\Analytics\GameStart.cs" />
+    <Compile Include="UnityEngine\Analytics\IAPTransaction.cs" />
+    <Compile Include="UnityEngine\Analytics\ItemAcquired.cs" />
+    <Compile Include="UnityEngine\Analytics\ItemSpent.cs" />
+    <Compile Include="UnityEngine\Analytics\LevelComplete.cs" />
+    <Compile Include="UnityEngine\Analytics\LevelFail.cs" />
+    <Compile Include="UnityEngine\Analytics\LevelQuit.cs" />
+    <Compile Include="UnityEngine\Analytics\LevelSkip.cs" />
+    <Compile Include="UnityEngine\Analytics\LevelStart.cs" />
+    <Compile Include="UnityEngine\Analytics\LevelUp.cs" />
+    <Compile Include="UnityEngine\Analytics\OptionalParameter.cs" />
+    <Compile Include="UnityEngine\Analytics\PostAdAction.cs" />
+    <Compile Include="UnityEngine\Analytics\PushNotificationClick.cs" />
+    <Compile Include="UnityEngine\Analytics\PushNotificationEnable.cs" />
+    <Compile Include="UnityEngine\Analytics\RequiredParameter.cs" />
+    <Compile Include="UnityEngine\Analytics\ScreenName.cs" />
+    <Compile Include="UnityEngine\Analytics\ScreenVisit.cs" />
+    <Compile Include="UnityEngine\Analytics\ShareType.cs" />
+    <Compile Include="UnityEngine\Analytics\SocialNetwork.cs" />
+    <Compile Include="UnityEngine\Analytics\SocialShare.cs" />
+    <Compile Include="UnityEngine\Analytics\SocialShareAccept.cs" />
+    <Compile Include="UnityEngine\Analytics\StandardEventName.cs" />
+    <Compile Include="UnityEngine\Analytics\StoreItemClick.cs" />
+    <Compile Include="UnityEngine\Analytics\StoreOpened.cs" />
+    <Compile Include="UnityEngine\Analytics\StoreType.cs" />
+    <Compile Include="UnityEngine\Analytics\TutorialComplete.cs" />
+    <Compile Include="UnityEngine\Analytics\TutorialSkip.cs" />
+    <Compile Include="UnityEngine\Analytics\TutorialStart.cs" />
+    <Compile Include="UnityEngine\Analytics\TutorialStep.cs" />
+    <Compile Include="UnityEngine\Analytics\UserSignup.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

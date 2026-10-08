@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{FC66CA18-B563-464D-AF20-84346768FDC5}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>11.0</LangVersion>
+    <AssemblyName>UnityEngine.ParticleSystemModule</AssemblyName>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Core">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\System.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.SharedInternalsModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.SharedInternalsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnityEngine\ParticleCollisionEvent.cs" />
+    <Compile Include="UnityEngine\ParticlePhysicsExtensions.cs" />
+    <Compile Include="UnityEngine\ParticleSystem.cs" />
+    <Compile Include="UnityEngine\ParticleSystemAnimationMode.cs" />
+    <Compile Include="UnityEngine\ParticleSystemAnimationRowMode.cs" />
+    <Compile Include="UnityEngine\ParticleSystemAnimationTimeMode.cs" />
+    <Compile Include="UnityEngine\ParticleSystemAnimationType.cs" />
+    <Compile Include="UnityEngine\ParticleSystemCollisionMode.cs" />
+    <Compile Include="UnityEngine\ParticleSystemCollisionQuality.cs" />
+    <Compile Include="UnityEngine\ParticleSystemCollisionType.cs" />
+    <Compile Include="UnityEngine\ParticleSystemCullingMode.cs" />
+    <Compile Include="UnityEngine\ParticleSystemCurveMode.cs" />
+    <Compile Include="UnityEngine\ParticleSystemCustomData.cs" />
+    <Compile Include="UnityEngine\ParticleSystemCustomDataMode.cs" />
+    <Compile Include="UnityEngine\ParticleSystemEmissionType.cs" />
+    <Compile Include="UnityEngine\ParticleSystemEmitterVelocityMode.cs" />
+    <Compile Include="UnityEngine\ParticleSystemExtensionsImpl.cs" />
+    <Compile Include="UnityEngine\ParticleSystemForceField.cs" />
+    <Compile Include="UnityEngine\ParticleSystemForceFieldShape.cs" />
+    <Compile Include="UnityEngine\ParticleSystemGameObjectFilter.cs" />
+    <Compile Include="UnityEngine\ParticleSystemGradientMode.cs" />
+    <Compile Include="UnityEngine\ParticleSystemInheritVelocityMode.cs" />
+    <Compile Include="UnityEngine\ParticleSystemJobs\IJobParticleSystem.cs" />
+    <Compile Include="UnityEngine\ParticleSystemJobs\IJobParticleSystemParallelFor.cs" />
+    <Compile Include="UnityEngine\ParticleSystemJobs\IJobParticleSystemParallelForBatch.cs" />
+    <Compile Include="UnityEngine\ParticleSystemJobs\IParticleSystemJobExtensions.cs" />
+    <Compile Include="UnityEngine\ParticleSystemJobs\NativeListData.cs" />
+    <Compile Include="UnityEngine\ParticleSystemJobs\NativeParticleData.cs" />
+    <Compile Include="UnityEngine\ParticleSystemJobs\ParticleSystemJobData.cs" />
+    <Compile Include="UnityEngine\ParticleSystemJobs\ParticleSystemJobStruct.cs" />
+    <Compile Include="UnityEngine\ParticleSystemJobs\ParticleSystemNativeArray3.cs" />
+    <Compile Include="UnityEngine\ParticleSystemJobs\ParticleSystemNativeArray4.cs" />
+    <Compile Include="UnityEngine\ParticleSystemJobs\ParticleSystemParallelForBatchJobStruct.cs" />
+    <Compile Include="UnityEngine\ParticleSystemJobs\ParticleSystemParallelForJobStruct.cs" />
+    <Compile Include="UnityEngine\ParticleSystemMeshShapeType.cs" />
+    <Compile Include="UnityEngine\ParticleSystemNoiseQuality.cs" />
+    <Compile Include="UnityEngine\ParticleSystemOverlapAction.cs" />
+    <Compile Include="UnityEngine\ParticleSystemRenderer.cs" />
+    <Compile Include="UnityEngine\ParticleSystemRenderMode.cs" />
+    <Compile Include="UnityEngine\ParticleSystemRenderSpace.cs" />
+    <Compile Include="UnityEngine\ParticleSystemRingBufferMode.cs" />
+    <Compile Include="UnityEngine\ParticleSystemScalingMode.cs" />
+    <Compile Include="UnityEngine\ParticleSystemShapeMultiModeValue.cs" />
+    <Compile Include="UnityEngine\ParticleSystemShapeTextureChannel.cs" />
+    <Compile Include="UnityEngine\ParticleSystemShapeType.cs" />
+    <Compile Include="UnityEngine\ParticleSystemSimulationSpace.cs" />
+    <Compile Include="UnityEngine\ParticleSystemSortMode.cs" />
+    <Compile Include="UnityEngine\ParticleSystemStopAction.cs" />
+    <Compile Include="UnityEngine\ParticleSystemStopBehavior.cs" />
+    <Compile Include="UnityEngine\ParticleSystemSubEmitterProperties.cs" />
+    <Compile Include="UnityEngine\ParticleSystemSubEmitterType.cs" />
+    <Compile Include="UnityEngine\ParticleSystemTrailMode.cs" />
+    <Compile Include="UnityEngine\ParticleSystemTrailTextureMode.cs" />
+    <Compile Include="UnityEngine\ParticleSystemTriggerEventType.cs" />
+    <Compile Include="UnityEngine\ParticleSystemVertexStream.cs" />
+    <Compile Include="UnityEngine\ParticleSystemVertexStreams.cs" />
+    <Compile Include="UnityEngine\Rendering\UVChannelFlags.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

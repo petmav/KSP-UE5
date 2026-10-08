@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{08EC332E-4409-447A-B42A-C169ADDC22D9}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>7.3</LangVersion>
+    <AssemblyName>Ionic.Zip</AssemblyName>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\KSP_x64_Data\Managed\System.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Ionic\AttributesCriterion.cs" />
+    <Compile Include="Ionic\BZip2\BitWriter.cs" />
+    <Compile Include="Ionic\BZip2\BZip2.cs" />
+    <Compile Include="Ionic\BZip2\BZip2Compressor.cs" />
+    <Compile Include="Ionic\BZip2\BZip2InputStream.cs" />
+    <Compile Include="Ionic\BZip2\BZip2OutputStream.cs" />
+    <Compile Include="Ionic\BZip2\ParallelBZip2OutputStream.cs" />
+    <Compile Include="Ionic\BZip2\Rand.cs" />
+    <Compile Include="Ionic\BZip2\WorkItem.cs" />
+    <Compile Include="Ionic\ComparisonOperator.cs" />
+    <Compile Include="Ionic\CompoundCriterion.cs" />
+    <Compile Include="Ionic\Crc\CRC32.cs" />
+    <Compile Include="Ionic\Crc\CrcCalculatorStream.cs" />
+    <Compile Include="Ionic\EnumUtil.cs" />
+    <Compile Include="Ionic\FileSelector.cs" />
+    <Compile Include="Ionic\LogicalConjunction.cs" />
+    <Compile Include="Ionic\NameCriterion.cs" />
+    <Compile Include="Ionic\SelectionCriterion.cs" />
+    <Compile Include="Ionic\SizeCriterion.cs" />
+    <Compile Include="Ionic\TimeCriterion.cs" />
+    <Compile Include="Ionic\TypeCriterion.cs" />
+    <Compile Include="Ionic\WhichTime.cs" />
+    <Compile Include="Ionic\Zip\AddOrUpdateAction.cs" />
+    <Compile Include="Ionic\Zip\AddProgressEventArgs.cs" />
+    <Compile Include="Ionic\Zip\BadCrcException.cs" />
+    <Compile Include="Ionic\Zip\BadPasswordException.cs" />
+    <Compile Include="Ionic\Zip\BadReadException.cs" />
+    <Compile Include="Ionic\Zip\BadStateException.cs" />
+    <Compile Include="Ionic\Zip\CloseDelegate.cs" />
+    <Compile Include="Ionic\Zip\ComHelper.cs" />
+    <Compile Include="Ionic\Zip\CompressionMethod.cs" />
+    <Compile Include="Ionic\Zip\CountingStream.cs" />
+    <Compile Include="Ionic\Zip\CryptoMode.cs" />
+    <Compile Include="Ionic\Zip\EncryptionAlgorithm.cs" />
+    <Compile Include="Ionic\Zip\ExtractExistingFileAction.cs" />
+    <Compile Include="Ionic\Zip\ExtractProgressEventArgs.cs" />
+    <Compile Include="Ionic\Zip\OffsetStream.cs" />
+    <Compile Include="Ionic\Zip\OpenDelegate.cs" />
+    <Compile Include="Ionic\Zip\ReadOptions.cs" />
+    <Compile Include="Ionic\Zip\ReadProgressEventArgs.cs" />
+    <Compile Include="Ionic\Zip\SaveProgressEventArgs.cs" />
+    <Compile Include="Ionic\Zip\SelfExtractorFlavor.cs" />
+    <Compile Include="Ionic\Zip\SelfExtractorSaveOptions.cs" />
+    <Compile Include="Ionic\Zip\SetCompressionCallback.cs" />
+    <Compile Include="Ionic\Zip\SfxGenerationException.cs" />
+    <Compile Include="Ionic\Zip\SharedUtilities.cs" />
+    <Compile Include="Ionic\Zip\WinZipAesCipherStream.cs" />
+    <Compile Include="Ionic\Zip\WinZipAesCrypto.cs" />
+    <Compile Include="Ionic\Zip\WriteDelegate.cs" />
+    <Compile Include="Ionic\Zip\Zip64Option.cs" />
+    <Compile Include="Ionic\Zip\ZipCipherStream.cs" />
+    <Compile Include="Ionic\Zip\ZipConstants.cs" />
+    <Compile Include="Ionic\Zip\ZipContainer.cs" />
+    <Compile Include="Ionic\Zip\ZipCrypto.cs" />
+    <Compile Include="Ionic\Zip\ZipEntry.cs" />
+    <Compile Include="Ionic\Zip\ZipEntrySource.cs" />
+    <Compile Include="Ionic\Zip\ZipEntryTimestamp.cs" />
+    <Compile Include="Ionic\Zip\ZipErrorAction.cs" />
+    <Compile Include="Ionic\Zip\ZipErrorEventArgs.cs" />
+    <Compile Include="Ionic\Zip\ZipException.cs" />
+    <Compile Include="Ionic\Zip\ZipFile.cs" />
+    <Compile Include="Ionic\Zip\ZipInputStream.cs" />
+    <Compile Include="Ionic\Zip\ZipOption.cs" />
+    <Compile Include="Ionic\Zip\ZipOutput.cs" />
+    <Compile Include="Ionic\Zip\ZipOutputStream.cs" />
+    <Compile Include="Ionic\Zip\ZipProgressEventArgs.cs" />
+    <Compile Include="Ionic\Zip\ZipProgressEventType.cs" />
+    <Compile Include="Ionic\Zip\ZipSegmentedStream.cs" />
+    <Compile Include="Ionic\Zlib\Adler.cs" />
+    <Compile Include="Ionic\Zlib\BlockState.cs" />
+    <Compile Include="Ionic\Zlib\CompressionLevel.cs" />
+    <Compile Include="Ionic\Zlib\CompressionMode.cs" />
+    <Compile Include="Ionic\Zlib\CompressionStrategy.cs" />
+    <Compile Include="Ionic\Zlib\DeflateFlavor.cs" />
+    <Compile Include="Ionic\Zlib\DeflateManager.cs" />
+    <Compile Include="Ionic\Zlib\DeflateStream.cs" />
+    <Compile Include="Ionic\Zlib\FlushType.cs" />
+    <Compile Include="Ionic\Zlib\GZipStream.cs" />
+    <Compile Include="Ionic\Zlib\InflateBlocks.cs" />
+    <Compile Include="Ionic\Zlib\InflateCodes.cs" />
+    <Compile Include="Ionic\Zlib\InflateManager.cs" />
+    <Compile Include="Ionic\Zlib\InfTree.cs" />
+    <Compile Include="Ionic\Zlib\InternalConstants.cs" />
+    <Compile Include="Ionic\Zlib\InternalInflateConstants.cs" />
+    <Compile Include="Ionic\Zlib\ParallelDeflateOutputStream.cs" />
+    <Compile Include="Ionic\Zlib\SharedUtils.cs" />
+    <Compile Include="Ionic\Zlib\StaticTree.cs" />
+    <Compile Include="Ionic\Zlib\Tree.cs" />
+    <Compile Include="Ionic\Zlib\WorkItem.cs" />
+    <Compile Include="Ionic\Zlib\ZlibBaseStream.cs" />
+    <Compile Include="Ionic\Zlib\ZlibCodec.cs" />
+    <Compile Include="Ionic\Zlib\ZlibConstants.cs" />
+    <Compile Include="Ionic\Zlib\ZlibException.cs" />
+    <Compile Include="Ionic\Zlib\ZlibStream.cs" />
+    <Compile Include="Ionic\Zlib\ZlibStreamFlavor.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Ionic.Zip.Forms.PasswordDialog.resx" LogicalName="Ionic.Zip.Forms.PasswordDialog.resources" />
+    <EmbeddedResource Include="Ionic.Zip.Resources.ZippedResources.zip" LogicalName="Ionic.Zip.Resources.ZippedResources.zip" />
+    <EmbeddedResource Include="Ionic.Zip.WinFormsSelfExtractorStub.resx" LogicalName="Ionic.Zip.WinFormsSelfExtractorStub.resources" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

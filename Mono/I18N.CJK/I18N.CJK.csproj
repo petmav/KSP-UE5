@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{5247AFEE-94D3-42EF-A4AC-BF71E4C9BED1}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>11.0</LangVersion>
+    <AssemblyName>I18N.CJK</AssemblyName>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="I18N">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\KSP_x64_Data\Managed\I18N.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Consts.cs" />
+    <Compile Include="I18N\CJK\CodeTable.cs" />
+    <Compile Include="I18N\CJK\CP50220.cs" />
+    <Compile Include="I18N\CJK\CP50221.cs" />
+    <Compile Include="I18N\CJK\CP50222.cs" />
+    <Compile Include="I18N\CJK\CP51932.cs" />
+    <Compile Include="I18N\CJK\CP51932Decoder.cs" />
+    <Compile Include="I18N\CJK\CP51932Encoder.cs" />
+    <Compile Include="I18N\CJK\CP51949.cs" />
+    <Compile Include="I18N\CJK\CP54936.cs" />
+    <Compile Include="I18N\CJK\CP932.cs" />
+    <Compile Include="I18N\CJK\CP932Decoder.cs" />
+    <Compile Include="I18N\CJK\CP936.cs" />
+    <Compile Include="I18N\CJK\CP936Decoder.cs" />
+    <Compile Include="I18N\CJK\CP949.cs" />
+    <Compile Include="I18N\CJK\CP950.cs" />
+    <Compile Include="I18N\CJK\DbcsConvert.cs" />
+    <Compile Include="I18N\CJK\DbcsEncoding.cs" />
+    <Compile Include="I18N\CJK\ENCbig5.cs" />
+    <Compile Include="I18N\CJK\ENCeuc_jp.cs" />
+    <Compile Include="I18N\CJK\ENCeuc_kr.cs" />
+    <Compile Include="I18N\CJK\ENCgb18030.cs" />
+    <Compile Include="I18N\CJK\ENCgb2312.cs" />
+    <Compile Include="I18N\CJK\ENCiso_2022_jp.cs" />
+    <Compile Include="I18N\CJK\ENCshift_jis.cs" />
+    <Compile Include="I18N\CJK\ENCuhc.cs" />
+    <Compile Include="I18N\CJK\GB18030Decoder.cs" />
+    <Compile Include="I18N\CJK\GB18030Encoder.cs" />
+    <Compile Include="I18N\CJK\GB18030Encoding.cs" />
+    <Compile Include="I18N\CJK\GB18030Source.cs" />
+    <Compile Include="I18N\CJK\ISO2022JPDecoder.cs" />
+    <Compile Include="I18N\CJK\ISO2022JPEncoder.cs" />
+    <Compile Include="I18N\CJK\ISO2022JPEncoding.cs" />
+    <Compile Include="I18N\CJK\ISO2022JPMode.cs" />
+    <Compile Include="I18N\CJK\JISConvert.cs" />
+    <Compile Include="I18N\CJK\KoreanEncoding.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="big5.table" LogicalName="big5.table" />
+    <EmbeddedResource Include="gb18030.table" LogicalName="gb18030.table" />
+    <EmbeddedResource Include="gb2312.table" LogicalName="gb2312.table" />
+    <EmbeddedResource Include="jis.table" LogicalName="jis.table" />
+    <EmbeddedResource Include="ks.table" LogicalName="ks.table" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

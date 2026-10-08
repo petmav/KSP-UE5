@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{2C3AFCDB-D397-421B-9107-8E886B310CB9}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>7.3</LangVersion>
+    <AssemblyName>Assembly-CSharp-firstpass</AssemblyName>
+    <TargetFrameworkIdentifier>.NETStandard</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="netstandard" />
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AnimatePosition.cs" />
+    <Compile Include="AnimateRotation.cs" />
+    <Compile Include="AnimateRotationEuler.cs" />
+    <Compile Include="AnimateScale.cs" />
+    <Compile Include="AnimateScreenPosition.cs" />
+    <Compile Include="AnimParams.cs" />
+    <Compile Include="ASCSEInfo.cs" />
+    <Compile Include="AssetLoaderDelegate.cs" />
+    <Compile Include="AutoSprite.cs" />
+    <Compile Include="AutoSpriteBase.cs" />
+    <Compile Include="AutoSpriteControlBase.cs" />
+    <Compile Include="AutoSpriteControlBaseMirror.cs" />
+    <Compile Include="ControlBase.cs" />
+    <Compile Include="ControlBaseMirror.cs" />
+    <Compile Include="ControlCopyFlags.cs" />
+    <Compile Include="Crash.cs" />
+    <Compile Include="CrashRotation.cs" />
+    <Compile Include="CSpriteFrame.cs" />
+    <Compile Include="EZAnimation.cs" />
+    <Compile Include="EZAnimator.cs" />
+    <Compile Include="EZCameraSettings.cs" />
+    <Compile Include="EZDragDropDelegate.cs" />
+    <Compile Include="EZDragDropEvent.cs" />
+    <Compile Include="EZDragDropHelper.cs" />
+    <Compile Include="EZDragDropParams.cs" />
+    <Compile Include="EZInputDelegate.cs" />
+    <Compile Include="EZKeyboardCommitDelegate.cs" />
+    <Compile Include="EZLinkedList.cs" />
+    <Compile Include="EZLinkedListIterator.cs" />
+    <Compile Include="EZLinkedListNode.cs" />
+    <Compile Include="EZScreenPlacement.cs" />
+    <Compile Include="EZScreenPlacementMirror.cs" />
+    <Compile Include="EZTransition.cs" />
+    <Compile Include="EZTransitionList.cs" />
+    <Compile Include="EZValueChangedDelegate.cs" />
+    <Compile Include="FadeAudio.cs" />
+    <Compile Include="FadeMaterial.cs" />
+    <Compile Include="FadeSprite.cs" />
+    <Compile Include="FadeSpriteAlpha.cs" />
+    <Compile Include="FadeText.cs" />
+    <Compile Include="FadeTextAlpha.cs" />
+    <Compile Include="FontStore.cs" />
+    <Compile Include="GetAssetPathDelegate.cs" />
+    <Compile Include="GUIDFromPathDelegate.cs" />
+    <Compile Include="IControl.cs" />
+    <Compile Include="IEZDragDrop.cs" />
+    <Compile Include="IEZLinkedListItem.cs" />
+    <Compile Include="IGUIHelper.cs" />
+    <Compile Include="IGUIScriptSelector.cs" />
+    <Compile Include="IKeyFocusable.cs" />
+    <Compile Include="IPackableControl.cs" />
+    <Compile Include="IRadioButton.cs" />
+    <Compile Include="ISpriteAggregator.cs" />
+    <Compile Include="ISpriteAnimatable.cs" />
+    <Compile Include="ISpriteMesh.cs" />
+    <Compile Include="ISpritePackable.cs" />
+    <Compile Include="IUIContainer.cs" />
+    <Compile Include="IUIListObject.cs" />
+    <Compile Include="IUIObject.cs" />
+    <Compile Include="IUseCamera.cs" />
+    <Compile Include="KEYBOARD_INFO.cs" />
+    <Compile Include="LoadAssetDelegate.cs" />
+    <Compile Include="PackableStub.cs" />
+    <Compile Include="PathFromGUIDDelegate.cs" />
+    <Compile Include="POINTER_INFO.cs" />
+    <Compile Include="PrefabListItem.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PunchPosition.cs" />
+    <Compile Include="PunchRotation.cs" />
+    <Compile Include="PunchScale.cs" />
+    <Compile Include="RadioBtnGroup.cs" />
+    <Compile Include="Rect3D.cs" />
+    <Compile Include="RunAnimClip.cs" />
+    <Compile Include="Shake.cs" />
+    <Compile Include="ShakeRotation.cs" />
+    <Compile Include="SimpleSprite.cs" />
+    <Compile Include="SimpleSpriteMirror.cs" />
+    <Compile Include="SmoothCrash.cs" />
+    <Compile Include="SpriteAnimationPump.cs" />
+    <Compile Include="SpriteBase.cs" />
+    <Compile Include="SpriteChar.cs" />
+    <Compile Include="SpriteDrawLayerComparer.cs" />
+    <Compile Include="SpriteFont.cs" />
+    <Compile Include="SpriteManager.cs" />
+    <Compile Include="SpriteMesh.cs" />
+    <Compile Include="SpriteMesh_Managed.cs" />
+    <Compile Include="SpriteRoot.cs" />
+    <Compile Include="SpriteRootMirror.cs" />
+    <Compile Include="SpriteState.cs" />
+    <Compile Include="SpriteText.cs" />
+    <Compile Include="SpriteTextMirror.cs" />
+    <Compile Include="SPRITE_FRAME.cs" />
+    <Compile Include="TextureAnim.cs" />
+    <Compile Include="TuneAudio.cs" />
+    <Compile Include="UIActionBtn.cs" />
+    <Compile Include="UIBistateInteractivePanel.cs" />
+    <Compile Include="UIBtnChangePanel.cs" />
+    <Compile Include="UIBtnLoadScene.cs" />
+    <Compile Include="UIBtnWWW.cs" />
+    <Compile Include="UIButton.cs" />
+    <Compile Include="UIButton3D.cs" />
+    <Compile Include="UIInteractivePanel.cs" />
+    <Compile Include="UIListButton.cs" />
+    <Compile Include="UIListItem.cs" />
+    <Compile Include="UIListItemContainer.cs" />
+    <Compile Include="UIManager.cs" />
+    <Compile Include="UIPanel.cs" />
+    <Compile Include="UIPanelBase.cs" />
+    <Compile Include="UIPanelManager.cs" />
+    <Compile Include="UIPanelTab.cs" />
+    <Compile Include="UIProgressBar.cs" />
+    <Compile Include="UIRadioBtn.cs" />
+    <Compile Include="UIRadioBtn3D.cs" />
+    <Compile Include="UIScrollKnob.cs" />
+    <Compile Include="UIScrollList.cs" />
+    <Compile Include="UISlider.cs" />
+    <Compile Include="UIStateToggleBtn.cs" />
+    <Compile Include="UIStateToggleBtn3D.cs" />
+    <Compile Include="UITextField.cs" />
+    <Compile Include="UITextFieldMirror.cs" />
+    <Compile Include="UIVirtualScreen.cs" />
+    <Compile Include="UVAnimation.cs" />
+    <Compile Include="UVAnimation_Auto.cs" />
+    <Compile Include="UVAnimation_Multi.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

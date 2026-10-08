@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{DBA4EC5F-1655-460A-8FEA-7962A05B8FAB}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>11.0</LangVersion>
+    <AssemblyName>UnityEngine.TextCoreModule</AssemblyName>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="UnityEngine.SharedInternalsModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\KSP_x64_Data\Managed\UnityEngine.SharedInternalsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\KSP_x64_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\KSP_x64_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\KSP_x64_Data\Managed\System.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnityEngine\TextCore\Character.cs" />
+    <Compile Include="UnityEngine\TextCore\ColorMode.cs" />
+    <Compile Include="UnityEngine\TextCore\ColorUtilities.cs" />
+    <Compile Include="UnityEngine\TextCore\Extents.cs" />
+    <Compile Include="UnityEngine\TextCore\FaceInfo.cs" />
+    <Compile Include="UnityEngine\TextCore\FontAsset.cs" />
+    <Compile Include="UnityEngine\TextCore\FontAssetCreationSettings.cs" />
+    <Compile Include="UnityEngine\TextCore\FontStyles.cs" />
+    <Compile Include="UnityEngine\TextCore\FontStyleStack.cs" />
+    <Compile Include="UnityEngine\TextCore\FontUtilities.cs" />
+    <Compile Include="UnityEngine\TextCore\FontWeight.cs" />
+    <Compile Include="UnityEngine\TextCore\FontWeights.cs" />
+    <Compile Include="UnityEngine\TextCore\Glyph.cs" />
+    <Compile Include="UnityEngine\TextCore\GlyphMetrics.cs" />
+    <Compile Include="UnityEngine\TextCore\GlyphRect.cs" />
+    <Compile Include="UnityEngine\TextCore\HorizontalAlignment.cs" />
+    <Compile Include="UnityEngine\TextCore\KerningPair.cs" />
+    <Compile Include="UnityEngine\TextCore\KerningPairKey.cs" />
+    <Compile Include="UnityEngine\TextCore\KerningTable.cs" />
+    <Compile Include="UnityEngine\TextCore\LineInfo.cs" />
+    <Compile Include="UnityEngine\TextCore\LinkInfo.cs" />
+    <Compile Include="UnityEngine\TextCore\LowLevel\FontEngine.cs" />
+    <Compile Include="UnityEngine\TextCore\LowLevel\FontEngineError.cs" />
+    <Compile Include="UnityEngine\TextCore\LowLevel\FontEngineUtilities.cs" />
+    <Compile Include="UnityEngine\TextCore\LowLevel\FontFeatureLookupFlags.cs" />
+    <Compile Include="UnityEngine\TextCore\LowLevel\GlyphAdjustmentRecord.cs" />
+    <Compile Include="UnityEngine\TextCore\LowLevel\GlyphLoadFlags.cs" />
+    <Compile Include="UnityEngine\TextCore\LowLevel\GlyphMarshallingStruct.cs" />
+    <Compile Include="UnityEngine\TextCore\LowLevel\GlyphPackingMode.cs" />
+    <Compile Include="UnityEngine\TextCore\LowLevel\GlyphPairAdjustmentRecord.cs" />
+    <Compile Include="UnityEngine\TextCore\LowLevel\GlyphRasterModes.cs" />
+    <Compile Include="UnityEngine\TextCore\LowLevel\GlyphRenderMode.cs" />
+    <Compile Include="UnityEngine\TextCore\LowLevel\GlyphValueRecord.cs" />
+    <Compile Include="UnityEngine\TextCore\LowLevel\OTFLayoutTableType.cs" />
+    <Compile Include="UnityEngine\TextCore\LowLevel\OTFLookupTableType.cs" />
+    <Compile Include="UnityEngine\TextCore\MaterialManager.cs" />
+    <Compile Include="UnityEngine\TextCore\MaterialReference.cs" />
+    <Compile Include="UnityEngine\TextCore\MaterialReferenceManager.cs" />
+    <Compile Include="UnityEngine\TextCore\MeshExtents.cs" />
+    <Compile Include="UnityEngine\TextCore\MeshInfo.cs" />
+    <Compile Include="UnityEngine\TextCore\PageInfo.cs" />
+    <Compile Include="UnityEngine\TextCore\RichTextTagAttribute.cs" />
+    <Compile Include="UnityEngine\TextCore\RichTextTagStack.cs" />
+    <Compile Include="UnityEngine\TextCore\ShaderUtilities.cs" />
+    <Compile Include="UnityEngine\TextCore\SpriteCharacter.cs" />
+    <Compile Include="UnityEngine\TextCore\SpriteGlyph.cs" />
+    <Compile Include="UnityEngine\TextCore\TagHashCode.cs" />
+    <Compile Include="UnityEngine\TextCore\TagUnitType.cs" />
+    <Compile Include="UnityEngine\TextCore\TagValueType.cs" />
+    <Compile Include="UnityEngine\TextCore\TextAlignment.cs" />
+    <Compile Include="UnityEngine\TextCore\TextElement.cs" />
+    <Compile Include="UnityEngine\TextCore\TextElementInfo.cs" />
+    <Compile Include="UnityEngine\TextCore\TextElementType.cs" />
+    <Compile Include="UnityEngine\TextCore\TextGenerationSettings.cs" />
+    <Compile Include="UnityEngine\TextCore\TextGenerator.cs" />
+    <Compile Include="UnityEngine\TextCore\TextGeneratorUtilities.cs" />
+    <Compile Include="UnityEngine\TextCore\TextGradientPreset.cs" />
+    <Compile Include="UnityEngine\TextCore\TextInfo.cs" />
+    <Compile Include="UnityEngine\TextCore\TextOverflowMode.cs" />
+    <Compile Include="UnityEngine\TextCore\TextSettings.cs" />
+    <Compile Include="UnityEngine\TextCore\TextSpriteAsset.cs" />
+    <Compile Include="UnityEngine\TextCore\TextStyle.cs" />
+    <Compile Include="UnityEngine\TextCore\TextStyleSheet.cs" />
+    <Compile Include="UnityEngine\TextCore\TextureMapping.cs" />
+    <Compile Include="UnityEngine\TextCore\TextUtilities.cs" />
+    <Compile Include="UnityEngine\TextCore\TextVertex.cs" />
+    <Compile Include="UnityEngine\TextCore\Unicode.cs" />
+    <Compile Include="UnityEngine\TextCore\VertexSortingOrder.cs" />
+    <Compile Include="UnityEngine\TextCore\VerticalAlignment.cs" />
+    <Compile Include="UnityEngine\TextCore\WordInfo.cs" />
+    <Compile Include="UnityEngine\TextCore\WordWrapState.cs" />
+    <Compile Include="UnityEngine\TextCore\XmlTagAttribute.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

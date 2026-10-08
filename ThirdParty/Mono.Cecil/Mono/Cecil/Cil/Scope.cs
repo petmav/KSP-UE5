@@ -1,0 +1,67 @@
+using Mono.Collections.Generic;
+
+namespace Mono.Cecil.Cil
+{
+	public sealed class Scope : IVariableDefinitionProvider
+	{
+		private Instruction start;
+
+		private Instruction end;
+
+		private Collection<Scope> scopes;
+
+		private Collection<VariableDefinition> variables;
+
+		public Instruction Start
+		{
+			get
+			{
+				return start;
+			}
+			set
+			{
+				start = value;
+			}
+		}
+
+		public Instruction End
+		{
+			get
+			{
+				return end;
+			}
+			set
+			{
+				end = value;
+			}
+		}
+
+		public bool HasScopes => !scopes.IsNullOrEmpty();
+
+		public Collection<Scope> Scopes
+		{
+			get
+			{
+				if (scopes == null)
+				{
+					scopes = new Collection<Scope>();
+				}
+				return scopes;
+			}
+		}
+
+		public bool HasVariables => !variables.IsNullOrEmpty();
+
+		public Collection<VariableDefinition> Variables
+		{
+			get
+			{
+				if (variables == null)
+				{
+					variables = new Collection<VariableDefinition>();
+				}
+				return variables;
+			}
+		}
+	}
+}

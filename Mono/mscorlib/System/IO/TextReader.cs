@@ -1,0 +1,359 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Security.Permissions;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace System.IO;
+
+[Serializable]
+[ComVisible(true)]
+public abstract class TextReader : MarshalByRefObject, IDisposable
+{
+	[Serializable]
+	private sealed class NullTextReader : TextReader
+	{
+		public override int Read(char[] buffer, int index, int count)
+		{
+			return 0;
+		}
+
+		public override string ReadLine()
+		{
+			return null;
+		}
+	}
+
+	[Serializable]
+	internal sealed class SyncTextReader : TextReader
+	{
+		internal TextReader _in;
+
+		internal SyncTextReader(TextReader t)
+		{
+			_in = t;
+		}
+
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		public override void Close()
+		{
+			_in.Close();
+		}
+
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				((IDisposable)_in).Dispose();
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		public override int Peek()
+		{
+			return _in.Peek();
+		}
+
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		public override int Read()
+		{
+			return _in.Read();
+		}
+
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		public override int Read([In][Out] char[] buffer, int index, int count)
+		{
+			return _in.Read(buffer, index, count);
+		}
+
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		public override int ReadBlock([In][Out] char[] buffer, int index, int count)
+		{
+			return _in.ReadBlock(buffer, index, count);
+		}
+
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		public override string ReadLine()
+		{
+			return _in.ReadLine();
+		}
+
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		public override string ReadToEnd()
+		{
+			return _in.ReadToEnd();
+		}
+
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		[ComVisible(false)]
+		public override Task<string> ReadLineAsync()
+		{
+			return Task.FromResult(ReadLine());
+		}
+
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		[ComVisible(false)]
+		public override Task<string> ReadToEndAsync()
+		{
+			return Task.FromResult(ReadToEnd());
+		}
+
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		[ComVisible(false)]
+		public override Task<int> ReadBlockAsync(char[] buffer, int index, int count)
+		{
+			if (buffer == null)
+			{
+				throw new ArgumentNullException("buffer", Environment.GetResourceString("Buffer cannot be null."));
+			}
+			if (index < 0 || count < 0)
+			{
+				throw new ArgumentOutOfRangeException((index < 0) ? "index" : "count", Environment.GetResourceString("Non-negative number required."));
+			}
+			if (buffer.Length - index < count)
+			{
+				throw new ArgumentException(Environment.GetResourceString("Offset and length were out of bounds for the array or count is greater than the number of elements from index to the end of the source collection."));
+			}
+			return Task.FromResult(ReadBlock(buffer, index, count));
+		}
+
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		[ComVisible(false)]
+		public override Task<int> ReadAsync(char[] buffer, int index, int count)
+		{
+			if (buffer == null)
+			{
+				throw new ArgumentNullException("buffer", Environment.GetResourceString("Buffer cannot be null."));
+			}
+			if (index < 0 || count < 0)
+			{
+				throw new ArgumentOutOfRangeException((index < 0) ? "index" : "count", Environment.GetResourceString("Non-negative number required."));
+			}
+			if (buffer.Length - index < count)
+			{
+				throw new ArgumentException(Environment.GetResourceString("Offset and length were out of bounds for the array or count is greater than the number of elements from index to the end of the source collection."));
+			}
+			return Task.FromResult(Read(buffer, index, count));
+		}
+	}
+
+	[NonSerialized]
+	private static Func<object, string> _ReadLineDelegate = (object state) => ((TextReader)state).ReadLine();
+
+	[NonSerialized]
+	private static Func<object, int> _ReadDelegate = delegate(object state)
+	{
+		Tuple<TextReader, char[], int, int> tuple = (Tuple<TextReader, char[], int, int>)state;
+		return tuple.Item1.Read(tuple.Item2, tuple.Item3, tuple.Item4);
+	};
+
+	public static readonly TextReader Null = new NullTextReader();
+
+	public virtual void Close()
+	{
+		Dispose(disposing: true);
+		GC.SuppressFinalize(this);
+	}
+
+	public void Dispose()
+	{
+		Dispose(disposing: true);
+		GC.SuppressFinalize(this);
+	}
+
+	protected virtual void Dispose(bool disposing)
+	{
+	}
+
+	public virtual int Peek()
+	{
+		return -1;
+	}
+
+	public virtual int Read()
+	{
+		return -1;
+	}
+
+	public virtual int Read([In][Out] char[] buffer, int index, int count)
+	{
+		if (buffer == null)
+		{
+			throw new ArgumentNullException("buffer", Environment.GetResourceString("Buffer cannot be null."));
+		}
+		if (index < 0)
+		{
+			throw new ArgumentOutOfRangeException("index", Environment.GetResourceString("Non-negative number required."));
+		}
+		if (count < 0)
+		{
+			throw new ArgumentOutOfRangeException("count", Environment.GetResourceString("Non-negative number required."));
+		}
+		if (buffer.Length - index < count)
+		{
+			throw new ArgumentException(Environment.GetResourceString("Offset and length were out of bounds for the array or count is greater than the number of elements from index to the end of the source collection."));
+		}
+		int num = 0;
+		do
+		{
+			int num2 = Read();
+			if (num2 == -1)
+			{
+				break;
+			}
+			buffer[index + num++] = (char)num2;
+		}
+		while (num < count);
+		return num;
+	}
+
+	public virtual string ReadToEnd()
+	{
+		char[] array = new char[4096];
+		StringBuilder stringBuilder = new StringBuilder(4096);
+		int charCount;
+		while ((charCount = Read(array, 0, array.Length)) != 0)
+		{
+			stringBuilder.Append(array, 0, charCount);
+		}
+		return stringBuilder.ToString();
+	}
+
+	public virtual int ReadBlock([In][Out] char[] buffer, int index, int count)
+	{
+		int num = 0;
+		int num2;
+		do
+		{
+			num += (num2 = Read(buffer, index + num, count - num));
+		}
+		while (num2 > 0 && num < count);
+		return num;
+	}
+
+	public virtual string ReadLine()
+	{
+		StringBuilder stringBuilder = new StringBuilder();
+		while (true)
+		{
+			int num = Read();
+			switch (num)
+			{
+			case 10:
+			case 13:
+				if (num == 13 && Peek() == 10)
+				{
+					Read();
+				}
+				return stringBuilder.ToString();
+			case -1:
+				if (stringBuilder.Length > 0)
+				{
+					return stringBuilder.ToString();
+				}
+				return null;
+			}
+			stringBuilder.Append((char)num);
+		}
+	}
+
+	[ComVisible(false)]
+	[HostProtection(SecurityAction.LinkDemand, ExternalThreading = true)]
+	public virtual Task<string> ReadLineAsync()
+	{
+		return Task<string>.Factory.StartNew(_ReadLineDelegate, this, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
+	}
+
+	[ComVisible(false)]
+	[HostProtection(SecurityAction.LinkDemand, ExternalThreading = true)]
+	public virtual async Task<string> ReadToEndAsync()
+	{
+		char[] chars = new char[4096];
+		StringBuilder sb = new StringBuilder(4096);
+		while (true)
+		{
+			int num;
+			int len = (num = await ReadAsyncInternal(chars, 0, chars.Length).ConfigureAwait(continueOnCapturedContext: false));
+			if (num == 0)
+			{
+				break;
+			}
+			sb.Append(chars, 0, len);
+		}
+		return sb.ToString();
+	}
+
+	[ComVisible(false)]
+	[HostProtection(SecurityAction.LinkDemand, ExternalThreading = true)]
+	public virtual Task<int> ReadAsync(char[] buffer, int index, int count)
+	{
+		if (buffer == null)
+		{
+			throw new ArgumentNullException("buffer", Environment.GetResourceString("Buffer cannot be null."));
+		}
+		if (index < 0 || count < 0)
+		{
+			throw new ArgumentOutOfRangeException((index < 0) ? "index" : "count", Environment.GetResourceString("Non-negative number required."));
+		}
+		if (buffer.Length - index < count)
+		{
+			throw new ArgumentException(Environment.GetResourceString("Offset and length were out of bounds for the array or count is greater than the number of elements from index to the end of the source collection."));
+		}
+		return ReadAsyncInternal(buffer, index, count);
+	}
+
+	internal virtual Task<int> ReadAsyncInternal(char[] buffer, int index, int count)
+	{
+		Tuple<TextReader, char[], int, int> state = new Tuple<TextReader, char[], int, int>(this, buffer, index, count);
+		return Task<int>.Factory.StartNew(_ReadDelegate, state, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
+	}
+
+	[ComVisible(false)]
+	[HostProtection(SecurityAction.LinkDemand, ExternalThreading = true)]
+	public virtual Task<int> ReadBlockAsync(char[] buffer, int index, int count)
+	{
+		if (buffer == null)
+		{
+			throw new ArgumentNullException("buffer", Environment.GetResourceString("Buffer cannot be null."));
+		}
+		if (index < 0 || count < 0)
+		{
+			throw new ArgumentOutOfRangeException((index < 0) ? "index" : "count", Environment.GetResourceString("Non-negative number required."));
+		}
+		if (buffer.Length - index < count)
+		{
+			throw new ArgumentException(Environment.GetResourceString("Offset and length were out of bounds for the array or count is greater than the number of elements from index to the end of the source collection."));
+		}
+		return ReadBlockAsyncInternal(buffer, index, count);
+	}
+
+	[HostProtection(SecurityAction.LinkDemand, ExternalThreading = true)]
+	private async Task<int> ReadBlockAsyncInternal(char[] buffer, int index, int count)
+	{
+		int i = 0;
+		int num;
+		do
+		{
+			num = await ReadAsyncInternal(buffer, index + i, count - i).ConfigureAwait(continueOnCapturedContext: false);
+			i += num;
+		}
+		while (num > 0 && i < count);
+		return i;
+	}
+
+	[HostProtection(SecurityAction.LinkDemand, Synchronization = true)]
+	public static TextReader Synchronized(TextReader reader)
+	{
+		if (reader == null)
+		{
+			throw new ArgumentNullException("reader");
+		}
+		if (reader is SyncTextReader)
+		{
+			return reader;
+		}
+		return new SyncTextReader(reader);
+	}
+}
