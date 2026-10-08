@@ -10,9 +10,26 @@ add_executable(kspcore_tests
     test_netfx_reference.cpp
 )
 target_link_libraries(kspcore_tests PRIVATE kspcore)
+ksp_set_build_flags(kspcore_tests)
 target_include_directories(kspcore_tests PRIVATE ${PROJECT_SOURCE_DIR}/third_party)
 target_compile_definitions(kspcore_tests PRIVATE KSPCORE_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")
 add_test(NAME unit COMMAND kspcore_tests)
+
+# ---- C ABI consumers: a pure C program, and a C++ program built with Unreal's flags (/GR-, _HAS_EXCEPTIONS=0,
+# /fp:fast) against include/kspcore/kspcore_c.h only. They prove the header is C, the lib links under UE's settings and
+# the consumer's flags do not change kspcore's results.
+add_executable(capi_c capi/capi_c_test.c)
+target_include_directories(capi_c PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(capi_c PRIVATE kspcore)
+add_executable(capi_ue_like capi/capi_ue_like.cpp)
+target_include_directories(capi_ue_like PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(capi_ue_like PRIVATE kspcore)
+if(MSVC)
+    target_compile_options(capi_ue_like PRIVATE /GR- /EHs-c- /fp:fast /W4)
+    target_compile_definitions(capi_ue_like PRIVATE _HAS_EXCEPTIONS=0)
+endif()
+add_test(NAME capi.c COMMAND capi_c ${KSP_HARNESS_DIR}/inputs/Physics.cfg)
+add_test(NAME capi.ue_like COMMAND capi_ue_like ${KSP_HARNESS_DIR}/inputs/Physics.cfg)
 
 # ---- golden gates: golden_runner writes candidates, harness/compare/compare.py judges them -----------------------------
 # ksp_golden_gate(<test name> <runner dataset> [GOLDEN <file>] [TOL <file>] [TABLES <t1,t2>] [DROP_HEX])

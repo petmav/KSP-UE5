@@ -39,12 +39,15 @@ ctest --preset relwithdebinfo
 | Python | 3.12.10 on PATH (`python -I` runs `harness\compare\compare.py`; found by CMake's `find_package(Python3)`) |
 | Windows PowerShell | 5.1 on .NET Framework 4.8: only needed to regenerate `tests/data/netfx_reference.tsv` |
 
-Presets (`CMakePresets.json`): `debug`, `relwithdebinfo` (x64, Ninja, cl.exe). Build trees: `build/<preset>/`.
+Presets (`CMakePresets.json`): `debug`, `relwithdebinfo` (x64, Ninja, cl.exe). Build trees: `build/Debug/` and
+`build/RelWithDebInfo/`; the static library lands at `build/RelWithDebInfo/kspcore.lib` (the path the Unreal bridge
+links).
 
 ## What the tests are
 
 | ctest name | what it checks | reference |
 |---|---|---|
+| `capi.c`, `capi.ue_like` | the C ABI (`include/kspcore/kspcore_c.h`) from a pure C program and from a C++ program built with Unreal's flags (`/GR- /EHs-c- _HAS_EXCEPTIONS=0 /fp:fast`); checks `crt=MD`/`idl=0` and bit-exact FloatCurve results through the ABI | golden values |
 | `unit` | doctest unit tests (`tests/`), including `test_netfx_reference.cpp`: 29,028 bit-exact reference results from the .NET Framework 4.8 runtime (parsing, formatting, Math.Sin/Cos/Tan/Ceiling/Round) | `tests/data/netfx_reference.tsv` |
 | `golden.math_shim.f64` | WP-01 KSP double maths: Vector3d, QuaternionD, UtilMath, CelestialFrame (runtime-independent) | `harness/golden/math_shim` (table f64) |
 | `capture.math_shim.f32` | WP-01 Unity managed float maths (Mathf, Vector3, Quaternion) under Mono's float32 rule | in-game `harness/captures/out/math_shim_mono.json` (table f32) |
@@ -70,7 +73,7 @@ everywhere); the harness's `compare/tolerances.json` is used unchanged for harne
 
 `ctest` runs `cmake -P cmake/RunGolden.cmake` per gate:
 
-1. `build/<preset>/tools/golden_runner/golden_runner.exe <dataset> --harness ..\harness --out build/<preset>/candidate`
+1. `build/<Config>/tools/golden_runner/golden_runner.exe <dataset> --harness ..\harness --out build/<Config>/candidate`
    recomputes the dataset with kspcore and writes `candidate/<dataset>/<dataset>.json` in the harness's
    `ksp-golden/1` schema (same tables, keys and number text format as the golden file). Dataset-specific exact checks
    that are not tables (ConfigNode's saved bytes and parse trees) run inside the runner; any mismatch is a non-zero exit.
@@ -84,6 +87,46 @@ The runner never reads golden *outputs* as inputs: inputs come from the same sou
 `synthetic_inputs/` files, `harness/captures/in/*.tsv`, and the generators' literal input lists mirrored from
 `harness/src/KspGolden/Generators/` and the capture code).
 
+## Linking into Unreal (C ABI)
+
+The UE 5.8 shell (`..\ue5\Plugins\KspCoreBridge`) links `build\RelWithDebInfo\kspcore.lib` and compiles against
+`include\kspcore\kspcore_c.h` only (switch: `bUseRealCore = true` in `KspCoreBridge.Build.cs`; env `KSPCORE_ROOT` /
+`KSPCORE_LIB` override the paths). Build it with `run_tests.ps1` (or `-BuildOnly`); the RelWithDebInfo preset writes the
+library to exactly that path.
+
+**C ABI** (`include/kspcore/kspcore_c.h`, `KSPCORE_ABI_VERSION 1`, implementation `src/capi/kspcore_c.cpp`): only C types
+cross the boundary; every entry point catches all C++ exceptions and reports failures through return values plus
+`kspcore_last_error()` (thread-local). Contents: `kspcore_build_info()` (contains `crt=MD ` and `idl=0`, which the
+bridge's automation test checks), version/ABI queries, a simulation context (`kspcore_sim_create/destroy`), a log
+callback, ConfigNode (load, parse, create, query values/children, typed getters, add/set, save, ToString) and FloatCurve
+(create, load from a node, add keys, evaluate). Handles are opaque and owned by the caller; a ConfigNode handle keeps its
+whole tree alive. Extend the ABI by appending functions and bumping `KSPCORE_ABI_VERSION` when anything changes
+incompatibly (the bridge static_asserts the version).
+
+**Build settings required by Unreal** (top-level `CMakeLists.txt`, every configuration):
+
+| setting | value | why |
+|---|---|---|
+| CRT | `/MD` (`CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL`), also in Debug | UE always uses the release CRT DLL; `/MDd` or `/MT` fails with LNK2038 |
+| iterator debug level | `_ITERATOR_DEBUG_LEVEL=0` (explicit define) | LNK2038 otherwise |
+| debug info | `/Z7` embedded (`CMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded`) | no PDB has to travel with the lib (LNK4099) |
+| whole-program optimisation | off (no `/GL`, no LTCG) | `/GL` objects are toolset-version locked |
+| language / toolset | C++20, MSVC 14.44 x64 | same family as UE 5.8 |
+| floating point | `/fp:precise` on kspcore's own objects | bit-exact float32 and the Mono float rule |
+
+The lib's linker directives confirm it: `/FAILIFMISMATCH:"RuntimeLibrary=MD_DynamicRelease"`,
+`"_ITERATOR_DEBUG_LEVEL=0"`, no LTCG objects.
+
+**Floating point and flag isolation.** kspcore's compiler options are attached to its own targets with
+`ksp_set_build_flags()` as PRIVATE options, so they never propagate to consumers, and a consumer's options (UE's Game
+target uses `/fp:fast`) never reach kspcore's objects: the numerics are compiled once, inside kspcore.lib. The C header
+has no inline code, so including it from a `/fp:fast` translation unit cannot change any result (`capi.ue_like` proves it
+bit-exactly). Do not let Unreal translation units include `include/ksp/**` C++ headers: they contain inline float code
+(Mathf, Vector3f operators) that would be recompiled with UE's flags, and inline functions compiled under different
+flags in different translation units violate the one-definition rule. `/fp:strict` is not needed: `/fp:precise` on
+MSVC x64 already performs float32 operations in float32, double in double, honours every `(float)` store and does not
+contract into FMA.
+
 ## Layout
 
 | path | contents |
@@ -94,7 +137,10 @@ The runner never reads golden *outputs* as inputs: inputs come from the same sou
 | `include/ksp/curves/` | `float_curve.hpp` (FloatCurve) |
 | `include/ksp/config/` | `config_node.hpp` (ConfigNode, Guid), `parse_extensions.hpp` (ParseExtensions, ColorUtility.TryParseHtmlString) |
 | `include/ksp/core/` | `log.hpp` (Debug.Log replacement with an installable sink) |
+| `include/kspcore/kspcore_c.h` | the C ABI used by the Unreal shell (implementation `src/capi/kspcore_c.cpp`) |
+| `include/ksp/curves/double_curve.hpp`, `include/ksp/math/{matrix4x4d,mathfx}.hpp` | DoubleCurve, Vector3/4Curve, Matrix4x4D, Mathfx, VectorExtensions, QuaternionExtensions, MinMaxFloat, Vect, PIDclamp |
 | `src/` | implementations, same tree |
+| `tests/capi/` | C ABI consumers (pure C; C++ with Unreal's flags) |
 | `tests/` | doctest unit tests; `tests/data/netfx_reference.tsv` reference data; `tests/tolerances_capture.json` tolerances for in-game capture gates; `tests/CMakeLists.txt` declares every gate (`ksp_golden_gate`) |
 | `tools/golden_runner/` | the golden runner (one `ds_<dataset>.cpp` per harness dataset) |
 | `tools/netfx_reference/` | `gen_netfx_reference.ps1`, regenerates `tests/data/netfx_reference.tsv` |
@@ -153,7 +199,7 @@ The runner never reads golden *outputs* as inputs: inputs come from the same sou
    `ksp_golden_gate(golden.<dataset> <dataset>)` for a harness golden, or
    `ksp_golden_gate(capture.<dataset> <dataset> GOLDEN ${KSP_CAPTURES_DIR}/<file>.json DROP_HEX TOL ${KSP_CAPTURE_TOL}
    [TABLES t1,t2])` for an in-game capture. Float32 managed paths are judged against captures where they exist.
-5. Run `run_tests.ps1`; inspect `build/<preset>/candidate/<dataset>/compare_report_<gate>.json` for per-column
+5. Run `run_tests.ps1`; inspect `build/<Config>/candidate/<dataset>/compare_report_<gate>.json` for per-column
    max abs/rel/ULP.
 6. Unit-test API behaviour the golden does not cover in `tests/test_<area>.cpp`.
 7. Commit the package on its own (`git commit` in `core/` only; local repository, never pushed) and update STATUS.md.

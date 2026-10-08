@@ -12,4 +12,5 @@ add_executable(golden_runner
     ds_libm_mono.cpp
 )
 target_link_libraries(golden_runner PRIVATE kspcore)
+ksp_set_build_flags(golden_runner)
 target_include_directories(golden_runner PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/third_party)
