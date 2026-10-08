@@ -106,7 +106,7 @@ void ASpikeGameMode::StartPlay()
 {
 	Super::StartPlay();
 	UWorld* World = GetWorld();
-	if (World && !TActorRange<ASpikeDirector>(World).begin())
+	if (World && !TActorIterator<ASpikeDirector>(World))
 	{
 		World->SpawnActor<ASpikeDirector>();
 	}

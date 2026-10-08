@@ -1,0 +1,15 @@
+﻿2026-10-09 01:10:48  generate project files                             0.0 s  rc=-2147450730
+2026-10-09 01:11:14  generate project files                            14.1 s  rc=0
+2026-10-09 01:12:39  first full build KspUe5Editor Development         80.3 s  rc=6
+2026-10-09 01:13:12  editor build after fix (partial)                  21.6 s  rc=0
+2026-10-09 01:14:24  clean full build KspUe5Editor Development         64.4 s  rc=0
+2026-10-09 01:14:33  no-op build KspUe5Editor (nothing changed)         1.2 s  rc=0
+2026-10-09 01:14:43  incremental build after touching SpikeMath.cpp      10.1 s  rc=0
+2026-10-09 01:14:45  plugin-only rebuild -Module=KspCoreBridge (touched .cpp)       2.5 s  rc=0
+2026-10-09 01:15:45  first full build KspUe5 (game) Development        51.7 s  rc=0
+2026-10-09 01:16:21  commandlet KspCreateSpikeMap                      29.0 s  rc=0
+2026-10-09 01:17:07  headless tests (first run)                        41.8 s  rc=0
+2026-10-09 01:17:30  headless tests (warm)                             15.7 s  rc=0
+2026-10-09 01:17:42  loop: incremental build (touched test .cpp)       11.6 s  rc=0
+2026-10-09 01:17:58  loop: headless tests                              15.6 s  rc=0
+2026-10-09 01:17:58  loop total: touch .cpp + build + headless tests      27.2 s  

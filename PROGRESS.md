@@ -33,10 +33,10 @@ Rules: write only under ue5\. No subagents. One UE instance at a time. Low scala
   /Engine/EngineDebugMaterials/VertexColorViewMode_ColorOnly (Unlit, vertex colour).
 
 ## Status
-- [ ] D1 project shell files
-- [ ] D1 stub lib (CMake, /MD) + bridge plugin
-- [ ] D1 git init + commit
-- [ ] D1 builds + timings
+- [x] D1 project shell files (uproject, targets, Config, game module KspUe5, editor module KspUe5Editor w/ commandlet)
+- [x] D1 stub lib (CMake, /MD, /Z7) + bridge plugin (one-line switch bUseRealCore in KspCoreBridge.Build.cs)
+- [x] D1 git init + first commit (1229344)
+- [ ] D1 builds + timings (genproj done 14.1 s; first editor build running)
 - [ ] D1 automation test + headless timing
 - [ ] D2 spike code
 - [ ] D2 runs + RESULTS.md
@@ -53,5 +53,19 @@ Rules: write only under ue5\. No subagents. One UE instance at a time. Low scala
   (2) image proxy = per-frame ReadPixels centroid of an unlit red 1 m cube that is static in camera space (or moving linearly).
 - TAA/TSR, motion blur, auto exposure off for measurement (TAA jitter is intentional sub-pixel jitter and would pollute the proxy).
 
+## Gotchas hit
+- UnrealBuildTool.exe direct call fails (needs .NET 10 runtime, not installed system-wide). Build.bat uses the
+  engine-bundled dotnet (Engine/Binaries/ThirdParty/DotNet/10.0). genproj.ps1 therefore calls Build.bat -projectfiles.
+- UE front-face winding: cross(B-A, C-A) points AWAY from viewer (verified from KismetProceduralMeshLibrary GenerateBoxMesh).
+- An axis-aligned test site hides float32 jitter (moving coordinate stays small). Site = normalize(1,1,1), orbit start
+  theta 45 deg, Mun dir normalize(0.35,0.85,0.40), Mun motion tangential with X/Y components.
+- Bash tool: heredocs > ~30 KB fail (ENAMETOOLONG); use the Write tool for big files.
+
+## Scripts (ue5/Scripts)
+genproj.ps1, build.ps1 [-Target -Module -Label], build_stub.ps1, create_map.ps1, test.ps1, spike.ps1 [-Tag -Variants -Quick -Stress].
+All append wall-clock timings to ue5/timings.log.
+
 ## Next steps
-1. Write project files, plugin, stub. 2. git init + commit. 3. Generate project files + build editor (time it).
+1. Finish first editor build; fix compile errors. 2. create_map.ps1 (commandlet). 3. test.ps1 (headless tests, time).
+4. Incremental build after touching one .cpp; plugin-only build (-Module=KspCoreBridge); game target build.
+5. Quick spike run (-Quick, Variants=None,UE10k) -> check screenshots (winding, exposure, colours). 6. Full spike run.
