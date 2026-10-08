@@ -7,6 +7,7 @@
 #include "ksp/core/log.hpp"
 #include "ksp/dotnet/number.hpp"
 #include "ksp/dotnet/text.hpp"
+#include "ksp/dotnet/mono_float.hpp"
 #include "ksp/unity/mathf.hpp"
 
 namespace ksp {
@@ -88,9 +89,9 @@ void FloatCurve::FindMinMaxValue(float& min, float& max) const {
         if (k.time < num) num = k.time;
         if (k.time > num2) num2 = k.time;
     }
-    const float num3 = (num2 - num) / static_cast<float>(kFindCurveMinMaxIterations);
+    const float num3 = f32store((fx(num2) - fx(num)) / static_cast<double>(kFindCurveMinMaxIterations));
     for (int j = 0; j < kFindCurveMinMaxIterations; ++j) {
-        const float num4 = fCurve_.Evaluate(num + static_cast<float>(j) * num3);
+        const float num4 = fCurve_.Evaluate(f32store(fx(num) + static_cast<double>(j) * fx(num3)));
         if (num4 < min) min = num4;
         if (num4 > max) max = num4;
     }
@@ -108,9 +109,9 @@ void FloatCurve::FindMinMaxValue(float& min, float& max, float& tMin, float& tMa
         if (k.time < num) num = k.time;
         if (k.time > num2) num2 = k.time;
     }
-    const float num3 = (num2 - num) / static_cast<float>(kFindCurveMinMaxIterations);
+    const float num3 = f32store((fx(num2) - fx(num)) / static_cast<double>(kFindCurveMinMaxIterations));
     for (int j = 0; j < kFindCurveMinMaxIterations; ++j) {
-        const float num4 = num + static_cast<float>(j) * num3;
+        const float num4 = f32store(fx(num) + static_cast<double>(j) * fx(num3));
         const float num5 = fCurve_.Evaluate(num4);
         if (num5 < min) {
             min = num5;

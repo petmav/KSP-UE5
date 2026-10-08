@@ -5,6 +5,7 @@
 #include <limits>
 
 #include "doctest/doctest.h"
+#include "ksp/dotnet/math.hpp"
 #include "ksp/dotnet/number.hpp"
 
 using namespace ksp::dotnet;
@@ -124,4 +125,15 @@ TEST_CASE("G9 / G17 / G formatting (.NET Framework rules)") {
     CHECK(FormatDoubleG(123456789012345680.0) == "1.23456789012346E+17");
     CHECK(FormatDoubleG(std::nan(""), 17) == "NaN");
     CHECK(FormatDoubleG(-1.5, 17) == "-1.5");
+}
+
+TEST_CASE("Mono formatting rounds 17 digits half-up (CAPTURE-SPEC C7)") {
+    REQUIRE(GetRuntime() == Runtime::Mono);
+    CHECK(FormatDoubleG(5.997450259893145) == "5.99745025989315");
+    CHECK(FormatDoubleG(5.997450259893145, 0, Runtime::NetFramework) == "5.99745025989314");
+    CHECK(FormatDoubleG(0.1, 17) == "0.10000000000000001");
+    CHECK(FormatDoubleF(2.5, 0) == "3");
+    CHECK(FormatDoubleF(-1.25, 6) == "-1.250000");
+    CHECK(FormatDoubleR(0.1) == "0.1");
+    CHECK(FormatSingleR(0.1f) == "0.1");
 }

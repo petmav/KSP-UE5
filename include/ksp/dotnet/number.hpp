@@ -6,15 +6,17 @@
 // using the power-of-ten tables read from the shipped mono-2.0-bdwgc.dll. This is deliberately NOT correctly rounded:
 // it reproduces the runtime's 64-bit-mantissa algorithm so that double values parsed from cfg/sfs files match KSP.
 //
-// Formatting ("G9"/"G17"/default "G") follows .NET Framework's number formatting (correctly rounded digits, 'G' layout:
-// scientific when the decimal exponent is >= precision or < -4, "E+XX"/"E-XX" with at least two exponent digits,
-// trailing zeros removed, negative zero printed as "0"). See the note in number.cpp about Mono's formatter.
+// Formatting ("G<n>", default "G", "F<n>", "R") reproduces the selected runtime's number formatter (Mono by default,
+// .NET Framework optional): 'G' layout is scientific when the decimal exponent is >= precision or < -4, "E+XX"/"E-XX"
+// with at least two exponent digits, trailing zeros removed, negative zero printed as "0". See number.cpp.
 #pragma once
 
 #include <cstdint>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+
+#include "ksp/dotnet/math.hpp"
 
 namespace ksp::dotnet {
 
@@ -71,10 +73,24 @@ bool TryParseBool(std::string_view s, bool& result);
 bool NumberBufferToDouble(std::string_view digits, int scale, bool negative, double& value);
 
 // ---- formatting ----
+// Formatting follows the selected runtime (ksp::dotnet::GetRuntime(); Mono by default), see number.cpp.
 // value.ToString("G<precision>", CultureInfo.InvariantCulture). precision 0 = default ("G": 15 for double).
 std::string FormatDoubleG(double value, int precision = 0);
 // float.ToString("G<precision>"). precision 0 = default ("G": 7 for float).
 std::string FormatSingleG(float value, int precision = 0);
+// "F<decimals>" fixed-point
+std::string FormatDoubleF(double value, int decimals);
+std::string FormatSingleF(float value, int decimals);
+// "R" round-trip
+std::string FormatDoubleR(double value);
+std::string FormatSingleR(float value);
+// Same, with an explicit runtime (e.g. to reproduce the harness's .NET-formatted text regardless of GetRuntime()).
+std::string FormatDoubleG(double value, int precision, Runtime rt);
+std::string FormatSingleG(float value, int precision, Runtime rt);
+std::string FormatDoubleF(double value, int decimals, Runtime rt);
+std::string FormatSingleF(float value, int decimals, Runtime rt);
+std::string FormatDoubleR(double value, Runtime rt);
+std::string FormatSingleR(float value, Runtime rt);
 // int.ToString(), etc.
 std::string FormatInt64(int64_t v);
 std::string FormatUInt64(uint64_t v);

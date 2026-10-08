@@ -1,6 +1,8 @@
 // math_shim candidate: mirrors harness/src/KspGolden/Generators/MathGen.cs input-for-input (same loops, same row
-// numbering), evaluated with kspcore's Mathf / Vector3f / Quaternionf / Vector3d / QuaternionD / UtilMath /
-// CelestialFrame.
+// numbering; the in-game replica HarnessCapture.cs MathShimReplica is the same code), evaluated with kspcore's Mathf /
+// Vector3f / Quaternionf / Vector3d / QuaternionD / UtilMath / CelestialFrame. Float inputs computed by the generator
+// itself (x / 3f, x + 1e-6f) follow Mono's float rule like everything else. Gates: f32 table vs the in-game capture
+// harness/captures/out/math_shim_mono.json, f64 table vs harness/golden/math_shim (runtime-independent).
 #include <cmath>
 #include <map>
 #include <string>
@@ -8,6 +10,7 @@
 
 #include "datasets.hpp"
 #include "golden_json.hpp"
+#include "ksp/dotnet/mono_float.hpp"
 #include "ksp/math/util_math.hpp"
 #include "ksp/unity/mathf.hpp"
 #include "ksp/unity/quaternion.hpp"
@@ -73,17 +76,17 @@ static int RunMathShim(const RunnerOptions& opt) {
         b32.Add<float>("Mathf.Repeat", {x, 360.0f}, {Mathf::Repeat(x, 360.0f)});
         b32.Add<float>("Mathf.PingPong", {x, 3.0f}, {Mathf::PingPong(x, 3.0f)});
         b32.Add<float>("Mathf.DeltaAngle", {x, 10.0f}, {Mathf::DeltaAngle(x, 10.0f)});
-        const float xe = x + 1e-6f;
+        const float xe = f32store(fx(x) + fx(1e-6f));
         b32.Add<float>("Mathf.Approximately", {x, xe}, {B(Mathf::Approximately(x, xe))});
         for (float y : {0.25f, 2.0f, -3.0f}) {
             b32.Add<float>("Mathf.Pow", {x, y}, {Mathf::Pow(x, y)});
             b32.Add<float>("Mathf.Atan2", {x, y}, {Mathf::Atan2(x, y)});
-            const float x3 = x / 3.0f;
+            const float x3 = f32store(fx(x) / 3.0);
             b32.Add<float>("Mathf.Lerp", {2.0f, 7.0f, x3}, {Mathf::Lerp(2.0f, 7.0f, x3)});
             b32.Add<float>("Mathf.LerpUnclamped", {2.0f, 7.0f, x3}, {Mathf::LerpUnclamped(2.0f, 7.0f, x3)});
             b32.Add<float>("Mathf.InverseLerp", {y, 7.0f, x}, {Mathf::InverseLerp(y, 7.0f, x)});
             b32.Add<float>("Mathf.MoveTowards", {x, y, 0.75f}, {Mathf::MoveTowards(x, y, 0.75f)});
-            const float x5 = x / 5.0f;
+            const float x5 = f32store(fx(x) / 5.0);
             b32.Add<float>("Mathf.SmoothStep", {y, 7.0f, x5}, {Mathf::SmoothStep(y, 7.0f, x5)});
             b32.Add<float>("Mathf.Clamp", {x, y, 5.0f}, {Mathf::Clamp(x, y, 5.0f)});
         }

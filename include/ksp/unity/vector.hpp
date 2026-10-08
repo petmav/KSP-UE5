@@ -5,10 +5,13 @@
 //  * operator== is Unity's approximate comparison (squared distance < 9.9999994E-11f for Vector3); use Equals() for the
 //    exact component comparison (Vector3.Equals).
 //  * Native-only functions (Slerp, RotateTowards, OrthoNormalize) are not provided; they need CAPTURE-SPEC C3.
+//  * Managed float arithmetic follows Mono's rule (ksp/dotnet/mono_float.hpp): double expressions, rounded where the
+//    C# source stores, passes or returns a float (constructor arguments included).
 #pragma once
 
 #include <cmath>
 
+#include "ksp/dotnet/mono_float.hpp"
 #include "ksp/unity/mathf.hpp"
 
 namespace ksp {
@@ -36,8 +39,9 @@ struct Vector3f {
     float& operator[](int i) { return i == 0 ? x : (i == 1 ? y : z); }
 
     // Vector3.cs: magnitude = (float)Math.Sqrt(x*x + y*y + z*z)
-    float magnitude() const { return static_cast<float>(std::sqrt(static_cast<double>(x * x + y * y + z * z))); }
-    float sqrMagnitude() const { return x * x + y * y + z * z; }
+    // Vector3.cs: (float)Math.Sqrt(x * x + y * y + z * z) -- the sum is a double expression, never rounded to float
+    float magnitude() const { return f32store(std::sqrt(fx(x) * fx(x) + fx(y) * fx(y) + fx(z) * fx(z))); }
+    float sqrMagnitude() const { return f32store(fx(x) * fx(x) + fx(y) * fx(y) + fx(z) * fx(z)); }
     Vector3f normalized() const;
 
     bool Equals(const Vector3f& o) const { return x == o.x && y == o.y && z == o.z; }
@@ -45,11 +49,16 @@ struct Vector3f {
     static float Magnitude(const Vector3f& v) { return v.magnitude(); }
     static float SqrMagnitude(const Vector3f& v) { return v.sqrMagnitude(); }
     static Vector3f Normalize(const Vector3f& v);
-    static float Dot(const Vector3f& a, const Vector3f& b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
-    static Vector3f Cross(const Vector3f& l, const Vector3f& r) {
-        return {l.y * r.z - l.z * r.y, l.z * r.x - l.x * r.z, l.x * r.y - l.y * r.x};
+    static float Dot(const Vector3f& a, const Vector3f& b) {
+        return f32store(fx(a.x) * fx(b.x) + fx(a.y) * fx(b.y) + fx(a.z) * fx(b.z));
     }
-    static Vector3f Scale(const Vector3f& a, const Vector3f& b) { return {a.x * b.x, a.y * b.y, a.z * b.z}; }
+    static Vector3f Cross(const Vector3f& l, const Vector3f& r) {
+        return {f32store(fx(l.y) * fx(r.z) - fx(l.z) * fx(r.y)), f32store(fx(l.z) * fx(r.x) - fx(l.x) * fx(r.z)),
+                f32store(fx(l.x) * fx(r.y) - fx(l.y) * fx(r.x))};
+    }
+    static Vector3f Scale(const Vector3f& a, const Vector3f& b) {
+        return {f32store(fx(a.x) * fx(b.x)), f32store(fx(a.y) * fx(b.y)), f32store(fx(a.z) * fx(b.z))};
+    }
     static Vector3f Lerp(const Vector3f& a, const Vector3f& b, float t);
     static Vector3f LerpUnclamped(const Vector3f& a, const Vector3f& b, float t);
     static Vector3f MoveTowards(const Vector3f& current, const Vector3f& target, float maxDistanceDelta);
@@ -68,20 +77,30 @@ struct Vector3f {
                                float maxSpeed, float deltaTime);
 };
 
-inline Vector3f operator+(const Vector3f& a, const Vector3f& b) { return {a.x + b.x, a.y + b.y, a.z + b.z}; }
-inline Vector3f operator-(const Vector3f& a, const Vector3f& b) { return {a.x - b.x, a.y - b.y, a.z - b.z}; }
+// Vector3.cs operators: each component is a float constructor argument (one rounding of the double result)
+inline Vector3f operator+(const Vector3f& a, const Vector3f& b) {
+    return {f32store(fx(a.x) + fx(b.x)), f32store(fx(a.y) + fx(b.y)), f32store(fx(a.z) + fx(b.z))};
+}
+inline Vector3f operator-(const Vector3f& a, const Vector3f& b) {
+    return {f32store(fx(a.x) - fx(b.x)), f32store(fx(a.y) - fx(b.y)), f32store(fx(a.z) - fx(b.z))};
+}
 inline Vector3f operator-(const Vector3f& a) { return {0.0f - a.x, 0.0f - a.y, 0.0f - a.z}; }
-inline Vector3f operator*(const Vector3f& a, float d) { return {a.x * d, a.y * d, a.z * d}; }
-inline Vector3f operator*(float d, const Vector3f& a) { return {a.x * d, a.y * d, a.z * d}; }
-inline Vector3f operator/(const Vector3f& a, float d) { return {a.x / d, a.y / d, a.z / d}; }
+inline Vector3f operator*(const Vector3f& a, float d) {
+    return {f32store(fx(a.x) * fx(d)), f32store(fx(a.y) * fx(d)), f32store(fx(a.z) * fx(d))};
+}
+inline Vector3f operator*(float d, const Vector3f& a) { return a * d; }
+inline Vector3f operator/(const Vector3f& a, float d) {
+    return {f32store(fx(a.x) / fx(d)), f32store(fx(a.y) / fx(d)), f32store(fx(a.z) / fx(d))};
+}
 inline Vector3f& operator+=(Vector3f& a, const Vector3f& b) { return a = a + b; }
 inline Vector3f& operator-=(Vector3f& a, const Vector3f& b) { return a = a - b; }
 inline Vector3f& operator*=(Vector3f& a, float d) { return a = a * d; }
 inline Vector3f& operator/=(Vector3f& a, float d) { return a = a / d; }
 // Vector3.cs operator== (approximate)
 inline bool operator==(const Vector3f& l, const Vector3f& r) {
-    const float n = l.x - r.x, n2 = l.y - r.y, n3 = l.z - r.z;
-    return n * n + n2 * n2 + n3 * n3 < 9.9999994E-11f;
+    const float n = f32store(fx(l.x) - fx(r.x)), n2 = f32store(fx(l.y) - fx(r.y)), n3 = f32store(fx(l.z) - fx(r.z));
+    const float n4 = f32store(fx(n) * fx(n) + fx(n2) * fx(n2) + fx(n3) * fx(n3));
+    return n4 < 9.9999994E-11f;
 }
 inline bool operator!=(const Vector3f& l, const Vector3f& r) { return !(l == r); }
 
@@ -90,18 +109,18 @@ struct Vector2f {
     constexpr Vector2f() = default;
     constexpr Vector2f(float x_, float y_) : x(x_), y(y_) {}
     static constexpr Vector2f zero() { return {0.0f, 0.0f}; }
-    float magnitude() const { return static_cast<float>(std::sqrt(static_cast<double>(x * x + y * y))); }
-    float sqrMagnitude() const { return x * x + y * y; }
+    float magnitude() const { return f32store(std::sqrt(fx(x) * fx(x) + fx(y) * fx(y))); }
+    float sqrMagnitude() const { return f32store(fx(x) * fx(x) + fx(y) * fx(y)); }
     bool Equals(const Vector2f& o) const { return x == o.x && y == o.y; }
 };
-inline Vector2f operator+(const Vector2f& a, const Vector2f& b) { return {a.x + b.x, a.y + b.y}; }
-inline Vector2f operator-(const Vector2f& a, const Vector2f& b) { return {a.x - b.x, a.y - b.y}; }
-inline Vector2f operator*(const Vector2f& a, float d) { return {a.x * d, a.y * d}; }
-inline Vector2f operator/(const Vector2f& a, float d) { return {a.x / d, a.y / d}; }
-// Vector2.cs operator== (approximate)
+inline Vector2f operator+(const Vector2f& a, const Vector2f& b) { return {f32store(fx(a.x) + fx(b.x)), f32store(fx(a.y) + fx(b.y))}; }
+inline Vector2f operator-(const Vector2f& a, const Vector2f& b) { return {f32store(fx(a.x) - fx(b.x)), f32store(fx(a.y) - fx(b.y))}; }
+inline Vector2f operator*(const Vector2f& a, float d) { return {f32store(fx(a.x) * fx(d)), f32store(fx(a.y) * fx(d))}; }
+inline Vector2f operator/(const Vector2f& a, float d) { return {f32store(fx(a.x) / fx(d)), f32store(fx(a.y) / fx(d))}; }
+// Vector2.cs operator== (approximate): return num * num + num2 * num2 < 9.9999994E-11f (compare in double)
 inline bool operator==(const Vector2f& l, const Vector2f& r) {
-    const float n = l.x - r.x, n2 = l.y - r.y;
-    return n * n + n2 * n2 < 9.9999994E-11f;
+    const float n = f32store(fx(l.x) - fx(r.x)), n2 = f32store(fx(l.y) - fx(r.y));
+    return fx(n) * fx(n) + fx(n2) * fx(n2) < fx(9.9999994E-11f);
 }
 inline bool operator!=(const Vector2f& l, const Vector2f& r) { return !(l == r); }
 
@@ -110,18 +129,29 @@ struct Vector4f {
     constexpr Vector4f() = default;
     constexpr Vector4f(float x_, float y_, float z_, float w_) : x(x_), y(y_), z(z_), w(w_) {}
     static constexpr Vector4f zero() { return {0.0f, 0.0f, 0.0f, 0.0f}; }
-    float sqrMagnitude() const { return x * x + y * y + z * z + w * w; }
-    float magnitude() const { return static_cast<float>(std::sqrt(static_cast<double>(x * x + y * y + z * z + w * w))); }
+    // Vector4.cs: Dot(a, a) (float return) / (float)Math.Sqrt(Dot(a, a))
+    float sqrMagnitude() const { return f32store(fx(x) * fx(x) + fx(y) * fx(y) + fx(z) * fx(z) + fx(w) * fx(w)); }
+    float magnitude() const { return f32store(std::sqrt(fx(sqrMagnitude()))); }
     bool Equals(const Vector4f& o) const { return x == o.x && y == o.y && z == o.z && w == o.w; }
 };
-inline Vector4f operator+(const Vector4f& a, const Vector4f& b) { return {a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w}; }
-inline Vector4f operator-(const Vector4f& a, const Vector4f& b) { return {a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w}; }
-inline Vector4f operator*(const Vector4f& a, float d) { return {a.x * d, a.y * d, a.z * d, a.w * d}; }
-inline Vector4f operator/(const Vector4f& a, float d) { return {a.x / d, a.y / d, a.z / d, a.w / d}; }
+inline Vector4f operator+(const Vector4f& a, const Vector4f& b) {
+    return {f32store(fx(a.x) + fx(b.x)), f32store(fx(a.y) + fx(b.y)), f32store(fx(a.z) + fx(b.z)), f32store(fx(a.w) + fx(b.w))};
+}
+inline Vector4f operator-(const Vector4f& a, const Vector4f& b) {
+    return {f32store(fx(a.x) - fx(b.x)), f32store(fx(a.y) - fx(b.y)), f32store(fx(a.z) - fx(b.z)), f32store(fx(a.w) - fx(b.w))};
+}
+inline Vector4f operator*(const Vector4f& a, float d) {
+    return {f32store(fx(a.x) * fx(d)), f32store(fx(a.y) * fx(d)), f32store(fx(a.z) * fx(d)), f32store(fx(a.w) * fx(d))};
+}
+inline Vector4f operator/(const Vector4f& a, float d) {
+    return {f32store(fx(a.x) / fx(d)), f32store(fx(a.y) / fx(d)), f32store(fx(a.z) / fx(d)), f32store(fx(a.w) / fx(d))};
+}
 // Vector4.cs operator== (approximate)
 inline bool operator==(const Vector4f& l, const Vector4f& r) {
-    const float n = l.x - r.x, n2 = l.y - r.y, n3 = l.z - r.z, n4 = l.w - r.w;
-    return n * n + n2 * n2 + n3 * n3 + n4 * n4 < 9.9999994E-11f;
+    const float n = f32store(fx(l.x) - fx(r.x)), n2 = f32store(fx(l.y) - fx(r.y)), n3 = f32store(fx(l.z) - fx(r.z)),
+                n4 = f32store(fx(l.w) - fx(r.w));
+    const float n5 = f32store(fx(n) * fx(n) + fx(n2) * fx(n2) + fx(n3) * fx(n3) + fx(n4) * fx(n4));
+    return n5 < 9.9999994E-11f;
 }
 inline bool operator!=(const Vector4f& l, const Vector4f& r) { return !(l == r); }
 

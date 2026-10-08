@@ -1,5 +1,6 @@
 #include "ksp/dotnet/number.hpp"
 
+#include <algorithm>
 #include <charconv>
 #include <cmath>
 #include <limits>
@@ -7,6 +8,7 @@
 #include <cstring>
 #include <string>
 
+#include "ksp/dotnet/math.hpp"
 #include "ksp/dotnet/text.hpp"
 
 namespace ksp::dotnet {
@@ -596,12 +598,14 @@ bool TryParseBool(std::string_view s, bool& result) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
-// Formatting. .NET Framework semantics (COMNumber::FormatDouble/FormatSingle -> DoubleToNumber (_ecvt: correctly
-// rounded) -> RoundNumber -> FormatGeneral). NOTE: Unity's Mono uses the managed System/NumberFormatter.cs, whose
-// double path builds 17 digits from a 64-bit approximation (MantissaBitsTable); its last digit can differ from the
-// correctly rounded one. Which one KSP actually writes is CAPTURE-SPEC C7 territory; the harness goldens were produced
-// on .NET Framework, so that is what is implemented here.
-// ---------------------------------------------------------------------------------------------------------------------
+// Formatting.
+//  .NET Framework (COMNumber::FormatDouble/FormatSingle): DoubleToNumber(value, 15|17 or 7|9 digits; the CRT's _ecvt,
+//      correctly rounded, exact decimal ties away from zero) -> RoundNumber (half up) -> FormatGeneral / FormatFixed.
+//  Mono (managed System/NumberFormatter.cs): Init() always produces 17 significant digits first and rounds them half up
+//      to the format's initial precision (InitialFloatingPrecision: 15 or 7 for "G"/"F"/default, 17 or 9 for "R" and
+//      "G16+"/"G8+"), so 15-digit output is rounded twice: (5.997450259893145).ToString() is "5.99745025989315" on Mono
+//      and "5.99745025989314" on .NET (CAPTURE-SPEC C7). Mono's 17-digit generation uses a 64-bit approximation
+//      (MantissaBitsTable); here the correctly rounded 17 digits are used, which matched every captured value.
 namespace {
 
 struct DecDigits {
@@ -732,30 +736,131 @@ std::string FormatGeneral(const DecDigits& number, int nMaxDigits) {
 
 }  // namespace
 
-std::string FormatDoubleG(double value, int precision) {
-    if (std::isnan(value)) return "NaN";
-    if (std::isinf(value)) return value > 0 ? "Infinity" : "-Infinity";
-    int digits = precision;
-    int prec = 15;
-    if (digits > 15) prec = 17;
-    DecDigits n = DoubleToNumber(value, prec);
-    int nMax = digits;
-    if (nMax < 1) nMax = prec;  // default 'G' pads to the number's precision
+namespace {
+
+// Significant digits produced by the runtime's number formatter before format-specific rounding.
+DecDigits RuntimeDigits(Runtime rt, double value, int netPrecision, int monoInitialPrecision) {
+    if (rt == Runtime::NetFramework) return DoubleToNumber(value, netPrecision);
+    DecDigits n = DoubleToNumber(value, 17);
+    RoundNumber(n, monoInitialPrecision);
+    return n;
+}
+
+// Number.FormatFixed ('F'): integer digits, then `decimals` decimals (digits already rounded to scale + decimals)
+std::string FormatFixedDigits(const DecDigits& number, int decimals) {
+    std::string sb;
+    if (number.sign) sb.push_back('-');
+    int digPos = number.scale;
+    const char* dig = number.dig;
+    if (digPos > 0) {
+        do {
+            sb.push_back((*dig != '\0') ? *dig++ : '0');
+        } while (--digPos > 0);
+    } else {
+        sb.push_back('0');
+    }
+    if (decimals > 0) {
+        sb.push_back('.');
+        if (digPos < 0) {
+            const int zeroes = std::min(-digPos, decimals);
+            sb.append(static_cast<size_t>(zeroes), '0');
+            digPos += zeroes;
+            decimals -= zeroes;
+        }
+        while (decimals > 0) {
+            sb.push_back((*dig != '\0') ? *dig++ : '0');
+            --decimals;
+        }
+    }
+    return sb;
+}
+
+std::string NonFinite(double v) {
+    if (std::isnan(v)) return "NaN";
+    return v > 0 ? "Infinity" : "-Infinity";
+}
+
+}  // namespace
+
+std::string FormatDoubleG(double value, int precision) { return FormatDoubleG(value, precision, GetRuntime()); }
+std::string FormatDoubleG(double value, int precision, Runtime rt) {
+    if (!std::isfinite(value)) return NonFinite(value);
+    const int net = precision > 15 ? 17 : 15;
+    const int mono = precision < 15 ? 15 : std::min(17, precision);
+    DecDigits n = RuntimeDigits(rt, value, net, mono);
+    const int nMax = precision < 1 ? 15 : precision;
     RoundNumber(n, nMax);
     return FormatGeneral(n, nMax);
 }
 
-std::string FormatSingleG(float value, int precision) {
-    if (std::isnan(value)) return "NaN";
-    if (std::isinf(value)) return value > 0 ? "Infinity" : "-Infinity";
-    int digits = precision;
-    int prec = 7;
-    if (digits > 7) prec = 9;
-    DecDigits n = DoubleToNumber(static_cast<double>(value), prec);
-    int nMax = digits;
-    if (nMax < 1) nMax = prec;
+std::string FormatSingleG(float value, int precision) { return FormatSingleG(value, precision, GetRuntime()); }
+std::string FormatSingleG(float value, int precision, Runtime rt) {
+    if (!std::isfinite(value)) return NonFinite(value);
+    const int net = precision > 7 ? 9 : 7;
+    const int mono = precision < 7 ? 7 : std::min(9, precision);
+    DecDigits n = RuntimeDigits(rt, static_cast<double>(value), net, mono);
+    const int nMax = precision < 1 ? 7 : precision;
     RoundNumber(n, nMax);
     return FormatGeneral(n, nMax);
+}
+
+std::string FormatDoubleF(double value, int decimals) { return FormatDoubleF(value, decimals, GetRuntime()); }
+std::string FormatDoubleF(double value, int decimals, Runtime rt) {
+    if (!std::isfinite(value)) return NonFinite(value);
+    DecDigits n = RuntimeDigits(rt, value, 15, 15);
+    RoundNumber(n, n.scale + decimals);
+    return FormatFixedDigits(n, decimals);
+}
+
+std::string FormatSingleF(float value, int decimals) { return FormatSingleF(value, decimals, GetRuntime()); }
+std::string FormatSingleF(float value, int decimals, Runtime rt) {
+    if (!std::isfinite(value)) return NonFinite(value);
+    DecDigits n = RuntimeDigits(rt, static_cast<double>(value), 7, 7);
+    RoundNumber(n, n.scale + decimals);
+    return FormatFixedDigits(n, decimals);
+}
+
+// "R": shortest of 15 / 17 digits (double) or 7 / 9 digits (float) that parses back to the same value.
+std::string FormatDoubleR(double value) { return FormatDoubleR(value, GetRuntime()); }
+std::string FormatDoubleR(double value, Runtime rt) {
+    if (!std::isfinite(value)) return NonFinite(value);
+    if (rt == Runtime::NetFramework) {
+        DecDigits n = DoubleToNumber(value, 15);
+        double back = 0.0;
+        // COMNumber::FormatDouble 'R': NumberToDouble of the 15-digit buffer must give the value back
+        if (NumberBufferToDouble(std::string_view(n.dig), n.scale, n.sign, back) && back == value)
+            return FormatGeneral(n, 15);
+        n = DoubleToNumber(value, 17);
+        return FormatGeneral(n, 17);
+    }
+    DecDigits n = DoubleToNumber(value, 17);  // Mono: InitialFloatingPrecision('R') = 17
+    DecDigits n15 = n;
+    RoundNumber(n15, 15);
+    const std::string text = FormatGeneral(n15, 15);
+    double back = 0.0;
+    if (TryParseDouble(text, back) && back == value) return text;
+    return FormatGeneral(n, 17);
+}
+
+std::string FormatSingleR(float value) { return FormatSingleR(value, GetRuntime()); }
+std::string FormatSingleR(float value, Runtime rt) {
+    if (!std::isfinite(value)) return NonFinite(value);
+    if (rt == Runtime::NetFramework) {
+        DecDigits n = DoubleToNumber(static_cast<double>(value), 7);
+        double back = 0.0;
+        if (NumberBufferToDouble(std::string_view(n.dig), n.scale, n.sign, back) && static_cast<float>(back) == value)
+            return FormatGeneral(n, 7);
+        n = DoubleToNumber(static_cast<double>(value), 9);
+        return FormatGeneral(n, 9);
+    }
+    DecDigits n = DoubleToNumber(static_cast<double>(value), 17);
+    RoundNumber(n, 9);  // Mono: InitialFloatingPrecision('R') = 9
+    DecDigits n7 = n;
+    RoundNumber(n7, 7);
+    const std::string text = FormatGeneral(n7, 7);
+    float back = 0.0f;
+    if (TryParseSingle(text, back) && back == value) return text;
+    return FormatGeneral(n, 9);
 }
 
 std::string FormatInt64(int64_t v) {

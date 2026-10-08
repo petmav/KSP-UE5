@@ -38,19 +38,19 @@ std::string JsonEscape(const std::string& s) {
     return o;
 }
 
-// Same text as the harness writer (ExactNumber.FormatFloat/FormatDouble): the shortest of .NET's "G6".."G9"
+// Same text as the harness writer (ExactNumber.FormatFloat/FormatDouble, .NET Framework formatting): the shortest of "G6".."G9"
 // ("G15".."G17" for doubles) that round-trips, zero as "0.0"/"-0.0", non-finite values as strings.
 std::string ShortestFloat(float f) {
     if (std::isnan(f)) return "\"NaN\"";
     if (std::isinf(f)) return f > 0 ? "\"Infinity\"" : "\"-Infinity\"";
     if (f == 0.0f) return std::signbit(f) ? "-0.0" : "0.0";
     for (int p = 6; p <= 9; ++p) {
-        const std::string s = ksp::dotnet::FormatSingleG(f, p);
+        const std::string s = ksp::dotnet::FormatSingleG(f, p, ksp::dotnet::Runtime::NetFramework);
         float back = 0.0f;
         const auto r = std::from_chars(s.data(), s.data() + s.size(), back);
         if (r.ec == std::errc() && back == f) return s;
     }
-    return ksp::dotnet::FormatSingleG(f, 9);
+    return ksp::dotnet::FormatSingleG(f, 9, ksp::dotnet::Runtime::NetFramework);
 }
 
 std::string ShortestDouble(double d) {
@@ -58,12 +58,12 @@ std::string ShortestDouble(double d) {
     if (std::isinf(d)) return d > 0 ? "\"Infinity\"" : "\"-Infinity\"";
     if (d == 0.0) return std::signbit(d) ? "-0.0" : "0.0";
     for (int p = 15; p <= 17; ++p) {
-        const std::string s = ksp::dotnet::FormatDoubleG(d, p);
+        const std::string s = ksp::dotnet::FormatDoubleG(d, p, ksp::dotnet::Runtime::NetFramework);
         double back = 0.0;
         const auto r = std::from_chars(s.data(), s.data() + s.size(), back);
         if (r.ec == std::errc() && back == d) return s;
     }
-    return ksp::dotnet::FormatDoubleG(d, 17);
+    return ksp::dotnet::FormatDoubleG(d, 17, ksp::dotnet::Runtime::NetFramework);
 }
 
 static const char* TypeName(ColType t) {

@@ -47,25 +47,43 @@ TEST_CASE("QuaternionD and UtilMath") {
 
 static bool SameBits(double a, double b) { return std::memcmp(&a, &b, sizeof a) == 0; }
 
-// Reference values printed by PowerShell 5.1 on .NET Framework 4.8 x64 ("R" format) on this machine.
-TEST_CASE("System.Math NetFramework semantics (x87 trig, Ceiling)") {
+// .NET Framework reference values printed by PowerShell 5.1 (.NET Framework 4.8 x64, "R" format) on this machine;
+// Mono values from harness/captures/out/libm_mono.json (CAPTURE-SPEC C7).
+TEST_CASE("System.Math runtime semantics (x87 Sin/Cos on both; Tan, Ceiling, Atan2, Pow differ)") {
     using namespace ksp::dotnet;
-    REQUIRE(GetLibm() == Libm::NetFramework);
+    REQUIRE(GetRuntime() == Runtime::Mono);
     const double pi = 3.141592653589793;
+    // both runtimes
     CHECK(SameBits(Math::Cos(pi / 2), 6.1230317691118863E-17));
     CHECK(SameBits(Math::Sin(pi), 1.2246063538223773E-16));
-    CHECK(SameBits(Math::Tan(pi / 2), 16331778728383844.0));
     CHECK(SameBits(Math::Sin(1e20), 1e20));
     CHECK(SameBits(Math::Cos(1e20), 1e20));
-    CHECK(std::isnan(Math::Tan(1e20)));
     CHECK(SameBits(Math::Sin(1e10), -0.48750602507627));
     CHECK(SameBits(Math::Sin(-0.0), -0.0));
+    CHECK(SameBits(Math::Round(-0.4), -0.0));
+    // Mono
+    CHECK(SameBits(Math::Tan(pi), -1.2246467991473532e-16));
+    CHECK(SameBits(Math::Tan(pi / 2), 1.633123935319537e+16));
+    CHECK(SameBits(Math::Ceiling(-0.5), -0.0));
+    CHECK(SameBits(Math::Atan2(-0.0, 0.7), 0.0));
+    CHECK(SameBits(Math::Pow(-0.0, -3.0), std::numeric_limits<double>::infinity()));
+    CHECK(ConvToUInt64(std::nan("")) == 0x8000000000000000ull);
+    CHECK(ConvUInt64ToDouble(9223372036854776833ull) == 9223372036854777856.0);
+    // .NET Framework
+    SetRuntime(Runtime::NetFramework);
+    CHECK(SameBits(Math::Tan(pi / 2), 16331778728383844.0));
+    CHECK(std::isnan(Math::Tan(1e20)));
     CHECK(SameBits(Math::Tan(-0.0), -0.0));
     CHECK(SameBits(Math::Ceiling(-0.5), 0.0));
     CHECK(SameBits(Math::Ceiling(-0.0), -0.0));
-    CHECK(SameBits(Math::Round(-0.4), -0.0));
-    SetLibm(Libm::Ucrt);
-    CHECK(SameBits(Math::Cos(pi / 2), 6.123233995736766E-17));
-    CHECK(SameBits(Math::Ceiling(-0.5), -0.0));
-    SetLibm(Libm::NetFramework);
+    CHECK(SameBits(Math::Atan2(-0.0, 0.7), -0.0));
+    CHECK(SameBits(Math::Pow(-0.0, -3.0), -std::numeric_limits<double>::infinity()));
+    CHECK(ConvToUInt64(std::nan("")) == 0ull);
+    CHECK(ConvUInt64ToDouble(9223372036854776833ull) == 9223372036854775808.0);
+    SetRuntime(Runtime::Mono);
+    CHECK(ConvertToInt32(2.5) == 2);
+    CHECK(ConvertToInt32(3.5) == 4);
+    CHECK_THROWS(ConvertToInt32(2147483647.5));
+    CHECK(Math::Round(2.5, MidpointRounding::AwayFromZero) == 3.0);
+    CHECK(Math::Round(-2.5, MidpointRounding::AwayFromZero) == -3.0);
 }

@@ -6,6 +6,7 @@
 
 #include "ksp/math/quaterniond.hpp"
 #include "ksp/math/vector3d.hpp"
+#include "ksp/dotnet/mono_float.hpp"
 
 namespace ksp {
 
@@ -49,9 +50,9 @@ inline double Sech(double x) { return 1.0 / std::cosh(x); }
 inline double Csch(double x) { return 1.0 / std::sinh(x); }
 inline double Coth(double x) { return std::cosh(x) / std::sinh(x); }
 // UtilMath.cs:44-55 (C# % on floating point == fmod)
-inline float WrapAround(float value, float min, float max) {
-    if (value < min) value += max;
-    return std::fmod(value, max);
+inline float WrapAround(float value, float min, float max) {  // Mono float rule (dotnet/mono_float.hpp)
+    if (value < min) value = f32store(fx(value) + fx(max));
+    return f32store(std::fmod(fx(value), fx(max)));
 }
 inline double WrapAround(double value, double min, double max) {
     if (value < min) value += max;

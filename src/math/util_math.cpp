@@ -15,8 +15,9 @@ double Flatten(double z, double midPoint, double easing) {
 
 // UtilMath.cs:193
 float RoundToPlaces(float value, int decimalPlaces) {
-    const float num = static_cast<float>(std::pow(10.0, decimalPlaces));
-    return static_cast<float>(dotnet::Math::Round(static_cast<double>(value * num)) / static_cast<double>(num));
+    const float num = f32store(dotnet::Math::Pow(10.0, decimalPlaces));
+    // Mono: value * num is evaluated in double (exact product), not rounded to float before Math.Round
+    return f32store(dotnet::Math::Round(fx(value) * fx(num)) / fx(num));
 }
 
 // UtilMath.cs:196
@@ -55,17 +56,17 @@ int BSPSolver(float& v0, float dv, const std::function<float(float)>& solveFor, 
     if (v0 > vMax) return 0;
     int num = 0;
     float num2 = solveFor(v0);
-    while (!(dv <= epsilon) && num < maxIterations) {
-        float value = solveFor(v0 + dv);
-        float value2 = solveFor(v0 - dv);
-        if (v0 - dv < vMin) value2 = FLT_MAX;
-        if (v0 + dv > vMax) value = FLT_MAX;
+    while (!(dv <= epsilon) && num < maxIterations) {  // Mono float rule (dotnet/mono_float.hpp)
+        float value = solveFor(f32store(fx(v0) + fx(dv)));
+        float value2 = solveFor(f32store(fx(v0) - fx(dv)));
+        if (fx(v0) - fx(dv) < fx(vMin)) value2 = FLT_MAX;
+        if (fx(v0) + fx(dv) > fx(vMax)) value = FLT_MAX;
         value = std::fabs(value);
         value2 = std::fabs(value2);
         num2 = std::min(num2, std::min(value, value2));
-        if (num2 == value2) v0 -= dv;
-        else if (num2 == value) v0 += dv;
-        dv /= 2.0f;
+        if (num2 == value2) v0 = f32store(fx(v0) - fx(dv));
+        else if (num2 == value) v0 = f32store(fx(v0) + fx(dv));
+        dv = f32store(fx(dv) / 2.0);
         ++num;
     }
     return num;

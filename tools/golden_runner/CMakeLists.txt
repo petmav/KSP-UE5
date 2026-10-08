@@ -8,6 +8,8 @@ add_executable(golden_runner
     confignode_tree.cpp
     ds_confignode.cpp
     ds_gamedata.cpp
+    ds_unity_random.cpp
+    ds_libm_mono.cpp
 )
 target_link_libraries(golden_runner PRIVATE kspcore)
 target_include_directories(golden_runner PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/third_party)

@@ -27,13 +27,13 @@ struct Color32 {
 
     // Color32.cs:72 implicit operator Color32(Color)
     static Color32 FromColor(const Color& c) {
-        auto ch = [](float v) { return static_cast<uint8_t>(static_cast<int>(Mathf::Round(Mathf::Clamp01(v) * 255.0f))); };
+        auto ch = [](float v) { return dotnet::ConvToByte(fx(Mathf::Round(f32store(fx(Mathf::Clamp01(v)) * 255.0)))); };
         return {ch(c.r), ch(c.g), ch(c.b), ch(c.a)};
     }
     // Color32.cs:77 implicit operator Color(Color32)
     Color ToColor() const {
-        return {static_cast<float>(r) / 255.0f, static_cast<float>(g) / 255.0f, static_cast<float>(b) / 255.0f,
-                static_cast<float>(a) / 255.0f};
+        return {f32store(double(r) / 255.0), f32store(double(g) / 255.0), f32store(double(b) / 255.0),
+                f32store(double(a) / 255.0)};
     }
 };
 

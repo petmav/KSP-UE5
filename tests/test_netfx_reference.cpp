@@ -45,6 +45,11 @@ TEST_CASE("kspcore .NET layer matches .NET Framework 4.8 reference data bit for 
     const std::string path = std::string(KSPCORE_TEST_DATA_DIR) + "/netfx_reference.tsv";
     auto text = ReadAllText(path);
     REQUIRE_MESSAGE(text.has_value(), "missing " << path);
+    // the reference data comes from the .NET Framework runtime
+    struct RuntimeScope {
+        RuntimeScope() { SetRuntime(Runtime::NetFramework); }
+        ~RuntimeScope() { SetRuntime(Runtime::Mono); }
+    } scope;
     std::map<std::string, int> total, bad;
     int shown = 0;
     for (const std::string& line : SplitLinesLikeReadLine(*text)) {

@@ -3,9 +3,11 @@ add_library(kspcore STATIC
     core/log.cpp
     dotnet/math.cpp
     dotnet/number.cpp
+    dotnet/random.cpp
     dotnet/text.cpp
     unity/vector.cpp
     unity/animation_curve.cpp
+    unity/random.cpp
     math/vector3d.cpp
     math/quaterniond.cpp
     math/util_math.cpp

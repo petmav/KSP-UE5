@@ -1,13 +1,28 @@
 # Golden gate for one dataset (invoked by ctest with cmake -P):
 #   1. golden_runner <DATASET> writes ${OUT}/<DATASET>/<DATASET>.json (ksp-golden/1 candidate) and runs any
 #      dataset-specific exact checks (e.g. byte-identical ConfigNode.Save output); non-zero exit = failure.
-#   2. python -I harness/compare/compare.py golden candidate --tol tolerances.json; any out-of-tolerance column,
-#      missing row/column or table fails the test.
+#   2. Optional: tools/filter_golden.py writes a copy of the golden file restricted to TABLES and/or without the
+#      `_hex` columns of in-game capture files (DROP_HEX) into the build tree (the harness itself is never modified).
+#   3. python -I harness/compare/compare.py golden candidate --tol TOL; any out-of-tolerance column, missing
+#      row/column or table fails the test.
+#
+# Parameters: RUNNER DATASET HARNESS OUT PYTHON (required); NAME (report name, default DATASET);
+#             GOLDEN (default ${HARNESS}/golden/<DATASET>/<DATASET>.json); TOL (default harness tolerances.json);
+#             TABLES (comma-separated); DROP_HEX (ON/OFF); FILTER (path of tools/filter_golden.py).
 foreach(v RUNNER DATASET HARNESS OUT PYTHON)
     if(NOT DEFINED ${v})
         message(FATAL_ERROR "RunGolden.cmake: ${v} not set")
     endif()
 endforeach()
+if(NOT DEFINED NAME OR NAME STREQUAL "")
+    set(NAME "${DATASET}")
+endif()
+if(NOT DEFINED GOLDEN OR GOLDEN STREQUAL "")
+    set(GOLDEN "${HARNESS}/golden/${DATASET}/${DATASET}.json")
+endif()
+if(NOT DEFINED TOL OR TOL STREQUAL "")
+    set(TOL "${HARNESS}/compare/tolerances.json")
+endif()
 
 execute_process(
     COMMAND "${RUNNER}" "${DATASET}" --harness "${HARNESS}" --out "${OUT}"
@@ -16,14 +31,29 @@ if(NOT runner_rc EQUAL 0)
     message(FATAL_ERROR "golden_runner ${DATASET} failed (exit ${runner_rc})")
 endif()
 
-set(golden_file "${HARNESS}/golden/${DATASET}/${DATASET}.json")
+set(golden_file "${GOLDEN}")
+if((DEFINED TABLES AND NOT TABLES STREQUAL "") OR DROP_HEX)
+    set(golden_file "${OUT}/${DATASET}/golden_${NAME}.json")
+    set(filter_args "${GOLDEN}" "${golden_file}")
+    if(DEFINED TABLES AND NOT TABLES STREQUAL "")
+        list(APPEND filter_args --tables "${TABLES}")
+    endif()
+    if(DROP_HEX)
+        list(APPEND filter_args --drop-hex)
+    endif()
+    execute_process(COMMAND "${PYTHON}" -I "${FILTER}" ${filter_args} RESULT_VARIABLE filter_rc)
+    if(NOT filter_rc EQUAL 0)
+        message(FATAL_ERROR "filter_golden.py failed for ${NAME} (exit ${filter_rc})")
+    endif()
+endif()
+
 set(candidate_file "${OUT}/${DATASET}/${DATASET}.json")
-set(report_file "${OUT}/${DATASET}/compare_report.json")
+set(report_file "${OUT}/${DATASET}/compare_report_${NAME}.json")
 execute_process(
     COMMAND "${PYTHON}" -I "${HARNESS}/compare/compare.py" "${golden_file}" "${candidate_file}"
-            --tol "${HARNESS}/compare/tolerances.json" --report "${report_file}"
+            --tol "${TOL}" --report "${report_file}"
     RESULT_VARIABLE compare_rc)
 if(NOT compare_rc EQUAL 0)
-    message(FATAL_ERROR "compare.py: ${DATASET} out of tolerance (exit ${compare_rc}); report: ${report_file}")
+    message(FATAL_ERROR "compare.py: ${NAME} out of tolerance (exit ${compare_rc}); report: ${report_file}")
 endif()
-message(STATUS "golden ${DATASET}: PASS")
+message(STATUS "golden ${NAME}: PASS")

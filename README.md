@@ -43,43 +43,62 @@ Presets (`CMakePresets.json`): `debug`, `relwithdebinfo` (x64, Ninja, cl.exe). B
 
 ## What the tests are
 
-| ctest name | what it checks |
-|---|---|
-| `unit` | doctest unit tests (`tests/`), including `test_netfx_reference.cpp`: 29,028 bit-exact reference results from the .NET Framework 4.8 runtime (number parsing and formatting, Math.Sin/Cos/Tan/Ceiling/Round) |
-| `golden.math_shim` | WP-01: Unity Mathf/Vector3/Quaternion and KSP Vector3d/QuaternionD/UtilMath/CelestialFrame vs `harness/golden/math_shim` |
-| `golden.confignode_roundtrip` | WP-02: ConfigNode Load/Save/ToString/Parse vs `harness/golden/confignode_roundtrip`, plus byte-exact `saved/*.cfg` and tree-exact `trees/*.json` |
-| `golden.curves_eval` | WP-01: FloatCurve / Unity AnimationCurve vs `harness/golden/curves_eval` (366 curves, 28,484 evaluations) |
-| `corpus.gamedata` | every `.cfg` under `harness/inputs/GameData` and every `.craft` under `harness/inputs/Ships`: load, Save->Load->Save byte-identical, Parse == Load, every `key` node loads as a FloatCurve |
+| ctest name | what it checks | reference |
+|---|---|---|
+| `unit` | doctest unit tests (`tests/`), including `test_netfx_reference.cpp`: 29,028 bit-exact reference results from the .NET Framework 4.8 runtime (parsing, formatting, Math.Sin/Cos/Tan/Ceiling/Round) | `tests/data/netfx_reference.tsv` |
+| `golden.math_shim.f64` | WP-01 KSP double maths: Vector3d, QuaternionD, UtilMath, CelestialFrame (runtime-independent) | `harness/golden/math_shim` (table f64) |
+| `capture.math_shim.f32` | WP-01 Unity managed float maths (Mathf, Vector3, Quaternion) under Mono's float32 rule | in-game `harness/captures/out/math_shim_mono.json` (table f32) |
+| `capture.libm_mono` | runtime layer: System.Math (25 functions x 3,093 inputs), float32 expression evaluation probes, numeric conversions, number formatting and parsing, System.Random (~312k rows) | in-game `harness/captures/out/libm_mono.json` |
+| `capture.unity_random` | WP-01 UnityEngine.Random (xorshift128, value/Range/vector functions/ColorHSV, traced states) and KSPRandom | in-game `harness/captures/out/unity_random.json` |
+| `golden.confignode_roundtrip` | WP-02 ConfigNode Load/Save/ToString/Parse; the runner also checks byte-exact `saved/*.cfg` and tree-exact `trees/*.json` | `harness/golden/confignode_roundtrip` |
+| `golden.curves_eval` | WP-01 FloatCurve / Unity AnimationCurve: 366 curves, 28,484 evaluations | `harness/golden/curves_eval` (== native Unity, CAPTURE-SPEC C1) |
+| `corpus.gamedata` | every `.cfg` under `harness/inputs/GameData` and `.craft` under `harness/inputs/Ships`: load, Save->Load->Save byte-identical, Parse == Load, every `key` node loads as a FloatCurve | self-consistency |
+
+All of them are bit-exact today (every numeric column max ULP 0, max abs 0).
+
+### Which reference is truth
+
+KSP runs on Unity's **Mono** (5.11, x64); the golden harness ran KSP's IL on **.NET Framework 4.8**. The in-game captures
+(CAPTURE-SPEC C1/C2/C7, `harness/captures/README.md`) showed where they differ: Mono evaluates C# `float` expressions in
+double and rounds only at stores, Mono's `Math.Tan`, `Ceiling(-0.5)`, `Atan2` zero sign, `Pow(-0, -3)`,
+`(ulong)NaN` and `double.ToString()` differ from .NET. kspcore implements Mono (the game) by default; float32 columns
+are therefore gated against the in-game capture files, double-precision datasets against the harness goldens
+(runtime-independent). Tolerances for capture comparisons live in `tests/tolerances_capture.json` (currently 0 ULP
+everywhere); the harness's `compare/tolerances.json` is used unchanged for harness goldens.
 
 ### The golden gate
 
-`ctest` runs `cmake -P cmake/RunGolden.cmake` per dataset:
+`ctest` runs `cmake -P cmake/RunGolden.cmake` per gate:
 
 1. `build/<preset>/tools/golden_runner/golden_runner.exe <dataset> --harness ..\harness --out build/<preset>/candidate`
    recomputes the dataset with kspcore and writes `candidate/<dataset>/<dataset>.json` in the harness's
    `ksp-golden/1` schema (same tables, keys and number text format as the golden file). Dataset-specific exact checks
    that are not tables (ConfigNode's saved bytes and parse trees) run inside the runner; any mismatch is a non-zero exit.
-2. `python -I ..\harness\compare\compare.py <golden> <candidate> --tol ..\harness\compare\tolerances.json --report
-   candidate/<dataset>/compare_report.json`; any out-of-tolerance column, missing row/column or table fails the test.
+2. For gates that use only some tables of a golden file, or an in-game capture file (which carries `<col>_hex`
+   companion columns), `python -I tools/filter_golden.py` writes a filtered copy of the golden file into the build tree.
+3. `python -I ..\harness\compare\compare.py <golden> <candidate> --tol <tolerances> --report
+   candidate/<dataset>/compare_report_<gate>.json`; any out-of-tolerance column, missing row/column or table fails.
 
 The runner never reads golden *outputs* as inputs: inputs come from the same sources the harness used
 (`harness/inputs/**`, `harness/golden/serialized/*.serialized.json` for Unity-serialized prefab data, the
-`synthetic_inputs/` files, and the generator's literal input lists mirrored from `harness/src/KspGolden/Generators/`).
+`synthetic_inputs/` files, `harness/captures/in/*.tsv`, and the generators' literal input lists mirrored from
+`harness/src/KspGolden/Generators/` and the capture code).
 
 ## Layout
 
 | path | contents |
 |---|---|
-| `include/ksp/dotnet/` | .NET runtime semantics KSP depends on: `number.hpp` (Mono/CLR number parsing incl. the runtime's NumberToDouble, .NET `G`/`G9`/`G17` formatting), `math.hpp` (System.Math Round/Ceiling/Sin/Cos/Tan with selectable runtime flavour), `text.hpp` (Trim/Split, UTF-8, File.ReadAllLines decoding) |
-| `include/ksp/unity/` | Unity value types and maths: `mathf.hpp`, `vector.hpp` (Vector2f/3f/4f), `quaternion.hpp` (Quaternionf), `color.hpp` (Color, Color32, Rect, Matrix4x4f), `animation_curve.hpp` (Keyframe, AnimationCurve: port of the native AnimationCurveTpl<float>) |
+| `include/ksp/dotnet/` | .NET/Mono runtime semantics KSP depends on: `number.hpp` (Mono/CLR number parsing incl. the runtime's NumberToDouble; `G`/`F`/`R` formatting per runtime), `math.hpp` (System.Math with x87 Sin/Cos, VS2013-CRT-backed functions, Mono/.NET differences, C# numeric conversions), `mono_float.hpp` (Mono's float32 evaluation rule: `fx()` / `f32store()`), `random.hpp` (System.Random, KSPRandom), `text.hpp` (Trim/Split, UTF-8, File.ReadAllLines decoding) |
+| `include/ksp/unity/` | Unity value types and maths: `mathf.hpp`, `vector.hpp` (Vector2f/3f/4f), `quaternion.hpp` (Quaternionf), `color.hpp` (Color, Color32, Rect, Matrix4x4f), `animation_curve.hpp` (Keyframe, AnimationCurve: port of the native AnimationCurveTpl<float>), `random.hpp` (UnityEngine.Random, Color.HSVToRGB) |
 | `include/ksp/math/` | KSP double maths: `vector3d.hpp` (Vector2d/3d/4d), `quaterniond.hpp`, `util_math.hpp` (UtilMath, Planetarium.CelestialFrame) |
 | `include/ksp/curves/` | `float_curve.hpp` (FloatCurve) |
 | `include/ksp/config/` | `config_node.hpp` (ConfigNode, Guid), `parse_extensions.hpp` (ParseExtensions, ColorUtility.TryParseHtmlString) |
 | `include/ksp/core/` | `log.hpp` (Debug.Log replacement with an installable sink) |
 | `src/` | implementations, same tree |
-| `tests/` | doctest unit tests; `tests/data/netfx_reference.tsv` reference data |
+| `tests/` | doctest unit tests; `tests/data/netfx_reference.tsv` reference data; `tests/tolerances_capture.json` tolerances for in-game capture gates; `tests/CMakeLists.txt` declares every gate (`ksp_golden_gate`) |
 | `tools/golden_runner/` | the golden runner (one `ds_<dataset>.cpp` per harness dataset) |
 | `tools/netfx_reference/` | `gen_netfx_reference.ps1`, regenerates `tests/data/netfx_reference.tsv` |
+| `tools/filter_golden.py` | writes a table-filtered / `_hex`-stripped copy of a golden or capture file for compare.py |
 | `cmake/RunGolden.cmake` | the per-dataset gate |
 | `third_party/` | doctest 2.4.12, nlohmann/json 3.12.0 (pinned, see `third_party/VERSIONS.md`); used by tests/tools only |
 
@@ -90,14 +109,22 @@ The runner never reads golden *outputs* as inputs: inputs come from the same sou
   `// ConfigNode.cs:3884 PreFormatConfig`; paths are relative to `decompiled/KSP-Decompiled/Assembly-CSharp/` unless
   they start with `Unity/`, `Mono/` or `harness/`. Performance work comes later and must keep the goldens green.
 - **Precision.** `double` for world/orbital state (KSP's `Vector3d`, `QuaternionD`, `Orbit`...). `float` exactly where
-  KSP/Unity use `float` (`Mathf`, `Vector3f`, `Quaternionf`, `FloatCurve`, most part/aero maths). Keep C#'s evaluation
-  order and parenthesisation; C# `(float)Math.F(x)` becomes `static_cast<float>(dotnet::Math::F(double(x)))`.
+  KSP/Unity use `float` (`Mathf`, `Vector3f`, `Quaternionf`, `FloatCurve`, most part/aero maths).
   Compiler flags: `/fp:precise`, x64 SSE2, no FMA contraction (never `/fp:fast` or `/arch:AVX2` on kspcore).
+- **Mono float32 rule (managed float code).** Unity's Mono evaluates C# `float` expressions in double and rounds to
+  float only where the source stores, passes, returns or casts (`include/ksp/dotnet/mono_float.hpp`). Port every managed
+  float path as `f32store(<C# expression written in double with fx(operand)>)` at exactly those points, e.g.
+  `return a + (b - a) * Clamp01(t);` -> `return f32store(fx(a) + (fx(b) - fx(a)) * fx(Clamp01(t)));`. Comparisons of
+  float expressions happen in double. Native Unity code (AnimationCurve, Random, native Quaternion functions) is plain
+  per-operation float32 and must not use the pattern. Double code is unaffected.
 - **Runtime semantics live in `ksp::dotnet`.** Use `dotnet::ParseSingle/TryParseDouble/...` instead of `strtod`,
-  `dotnet::FormatSingleG/FormatDoubleG` instead of `printf`, `dotnet::Math::Round/Ceiling/Sin/Cos/Tan` instead of the
-  CRT where C# calls System.Math, `dotnet::Trim/Split` for string ops, `dotnet::ConvToInt32` for `(int)double` casts.
-- **Libm flavour.** `dotnet::SetLibm(Libm::NetFramework | Libm::Ucrt)`. Default `NetFramework` reproduces the harness
-  oracle (x87 FSIN/FCOS/FPTAN semantics, `Ceiling(-0.5) == +0`). Which flavour KSP's Mono matches is CAPTURE-SPEC C7.
+  `dotnet::FormatSingleG/FormatDoubleG/...F/...R` instead of `printf`, `dotnet::Math::*` instead of `<cmath>` wherever C#
+  calls System.Math (Sin/Cos are x87-emulated, Tan/Exp/Pow/... come from the VS2013 CRT), `dotnet::Trim/Split` for
+  string ops, `dotnet::ConvToInt32/ConvToUInt64/...` for C# numeric casts.
+- **Runtime selection.** `dotnet::SetRuntime(Runtime::Mono | Runtime::NetFramework)`; Mono (the game) is the default,
+  NetFramework reproduces the harness oracle (used by the .NET reference unit test). `dotnet::LibmBackend()` reports
+  whether the VS2013 CRT (`msvcr120_clr0400.dll`, shipped with .NET Framework 4.x on every Windows 10/11, or
+  `msvcr120.dll`) was loaded; without it kspcore falls back to `<cmath>` and can differ in the last bit.
 - **Unity value-type equality**: `operator==` on `Vector3f`/`Vector2f`/`Vector4f`/`Quaternionf` is Unity's approximate
   test; use `.Equals()` for exact comparison.
 - **Errors**: where C# throws, kspcore throws (`dotnet::FormatException`, `OverflowException`, `ksp::NullReferenceException`,
@@ -107,27 +134,33 @@ The runner never reads golden *outputs* as inputs: inputs come from the same sou
 - **Reference semantics**: `ConfigNode` children are `std::shared_ptr<ConfigNode>`; `GetNode` returns a non-owning
   pointer into the tree; `ConfigNode` itself is move-only (use `CreateCopy()` for a deep copy).
 - **Thread safety**: everything is single-threaded like KSP unless stated. `AnimationCurve::Evaluate` is const and
-  stateless (thread-safe) for strictly increasing key times; `dotnet::SetLibm` and `log::SetSink` are process-wide.
+  stateless (thread-safe) for strictly increasing key times; `dotnet::SetRuntime`, `log::SetSink` and
+  `UnityRandom::Global()` are process-wide.
 - Namespaces: `ksp` (game types), `ksp::Mathf`, `ksp::UtilMath`, `ksp::ParseExtensions`, `ksp::dotnet`. Types keep their
   KSP names; Unity float types get an `f` suffix (`Vector3f`, `Quaternionf`) to sit next to KSP's `Vector3d`.
 
 ## Adding a work package with a golden gate
 
-1. Port the C# into `include/ksp/<area>/` + `src/<area>/` and add the `.cpp` files to `src/CMakeLists.txt`.
-2. Read the dataset's generator in `harness/src/KspGolden/Generators/` and its `harness/golden/<dataset>/README.md`.
-3. Add `tools/golden_runner/ds_<dataset>.cpp`: rebuild the generator's inputs (from `harness/inputs`, the serialized
-   prefab JSON or the generator's literal lists, never from the golden outputs), compute every column with kspcore and
-   write the tables with `golden::File`/`golden::Table` (`golden_json.hpp`), then
+1. Port the C# into `include/ksp/<area>/` + `src/<area>/` and add the `.cpp` files to `src/CMakeLists.txt`. Follow the
+   Mono float rule for managed float code and use `ksp::dotnet` for every runtime call.
+2. Read the dataset's generator in `harness/src/KspGolden/Generators/` (or the capture code for in-game data) and its
+   `README.md`.
+3. Add `tools/golden_runner/ds_<dataset>.cpp`: rebuild the generator's inputs (never from the golden outputs), compute
+   every column with kspcore and write the tables with `golden::File`/`golden::Table` (`golden_json.hpp`), then
    `return WriteCandidate(opt, g, "<dataset>/<dataset>.json");`. Register it at the end of the file with
    `KSP_GOLDEN_DATASET("<dataset>", <order>, RunMyDataset);` and add the file to `tools/golden_runner/CMakeLists.txt`.
-4. Add `<dataset>` to `KSP_GOLDEN_DATASETS` in `tests/CMakeLists.txt`. `ctest` now fails until `compare.py` passes.
-5. Run `run_tests.ps1`; inspect `build/<preset>/candidate/<dataset>/compare_report.json` for per-column max abs/rel/ULP.
+4. Declare the gate in `tests/CMakeLists.txt`:
+   `ksp_golden_gate(golden.<dataset> <dataset>)` for a harness golden, or
+   `ksp_golden_gate(capture.<dataset> <dataset> GOLDEN ${KSP_CAPTURES_DIR}/<file>.json DROP_HEX TOL ${KSP_CAPTURE_TOL}
+   [TABLES t1,t2])` for an in-game capture. Float32 managed paths are judged against captures where they exist.
+5. Run `run_tests.ps1`; inspect `build/<preset>/candidate/<dataset>/compare_report_<gate>.json` for per-column
+   max abs/rel/ULP.
 6. Unit-test API behaviour the golden does not cover in `tests/test_<area>.cpp`.
 7. Commit the package on its own (`git commit` in `core/` only; local repository, never pushed) and update STATUS.md.
 
-Tolerances are owned by the harness (`harness/compare/tolerances.json`); do not loosen them from here. If a gate cannot
-pass because the oracle runtime differs from the game (as with the x87 trig), reproduce the oracle in `ksp::dotnet`
-behind a documented switch and record it in STATUS.md.
+Tolerances for harness goldens are owned by the harness (`harness/compare/tolerances.json`); never loosen them from
+here. Capture tolerances are in `tests/tolerances_capture.json`: float32 columns may go up to 64 ULP / rel 5e-6 if
+bit-exactness is out of reach, and every such relaxation must be listed in STATUS.md.
 
 ## Regenerating the .NET reference data
 

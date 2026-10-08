@@ -1,4 +1,5 @@
 // UnityEngine.Vector3 managed functions. Spec: decompiled/KSP-Decompiled/Unity/UnityEngine.CoreModule/UnityEngine/Vector3.cs
+// Mono float32 rule (ksp/dotnet/mono_float.hpp): double expressions, f32store() at every C# store/argument/return.
 #include "ksp/unity/vector.hpp"
 
 namespace ksp {
@@ -15,30 +16,34 @@ Vector3f Vector3f::normalized() const { return Normalize(*this); }
 // Vector3.cs: Lerp
 Vector3f Vector3f::Lerp(const Vector3f& a, const Vector3f& b, float t) {
     t = Mathf::Clamp01(t);
-    return {a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t};
+    return {f32store(fx(a.x) + (fx(b.x) - fx(a.x)) * fx(t)), f32store(fx(a.y) + (fx(b.y) - fx(a.y)) * fx(t)),
+            f32store(fx(a.z) + (fx(b.z) - fx(a.z)) * fx(t))};
 }
 
 // Vector3.cs: LerpUnclamped
 Vector3f Vector3f::LerpUnclamped(const Vector3f& a, const Vector3f& b, float t) {
-    return {a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t};
+    return {f32store(fx(a.x) + (fx(b.x) - fx(a.x)) * fx(t)), f32store(fx(a.y) + (fx(b.y) - fx(a.y)) * fx(t)),
+            f32store(fx(a.z) + (fx(b.z) - fx(a.z)) * fx(t))};
 }
 
 // Vector3.cs: MoveTowards
 Vector3f Vector3f::MoveTowards(const Vector3f& current, const Vector3f& target, float maxDistanceDelta) {
-    const float num = target.x - current.x;
-    const float num2 = target.y - current.y;
-    const float num3 = target.z - current.z;
-    const float num4 = num * num + num2 * num2 + num3 * num3;
-    if (num4 == 0.0f || (maxDistanceDelta >= 0.0f && num4 <= maxDistanceDelta * maxDistanceDelta)) return target;
-    const float num5 = static_cast<float>(std::sqrt(static_cast<double>(num4)));
-    return {current.x + num / num5 * maxDistanceDelta, current.y + num2 / num5 * maxDistanceDelta,
-            current.z + num3 / num5 * maxDistanceDelta};
+    const float num = f32store(fx(target.x) - fx(current.x));
+    const float num2 = f32store(fx(target.y) - fx(current.y));
+    const float num3 = f32store(fx(target.z) - fx(current.z));
+    const float num4 = f32store(fx(num) * fx(num) + fx(num2) * fx(num2) + fx(num3) * fx(num3));
+    if (num4 == 0.0f || (maxDistanceDelta >= 0.0f && fx(num4) <= fx(maxDistanceDelta) * fx(maxDistanceDelta))) return target;
+    const float num5 = f32store(std::sqrt(fx(num4)));
+    return {f32store(fx(current.x) + fx(num) / fx(num5) * fx(maxDistanceDelta)),
+            f32store(fx(current.y) + fx(num2) / fx(num5) * fx(maxDistanceDelta)),
+            f32store(fx(current.z) + fx(num3) / fx(num5) * fx(maxDistanceDelta))};
 }
 
 // Vector3.cs: Reflect
 Vector3f Vector3f::Reflect(const Vector3f& inDirection, const Vector3f& inNormal) {
-    const float num = -2.0f * Dot(inNormal, inDirection);
-    return {num * inNormal.x + inDirection.x, num * inNormal.y + inDirection.y, num * inNormal.z + inDirection.z};
+    const float num = f32store(-2.0 * fx(Dot(inNormal, inDirection)));
+    return {f32store(fx(num) * fx(inNormal.x) + fx(inDirection.x)), f32store(fx(num) * fx(inNormal.y) + fx(inDirection.y)),
+            f32store(fx(num) * fx(inNormal.z) + fx(inDirection.z))};
 }
 
 // Vector3.cs: Project
@@ -46,7 +51,8 @@ Vector3f Vector3f::Project(const Vector3f& vector, const Vector3f& onNormal) {
     const float num = Dot(onNormal, onNormal);
     if (num < Mathf::Epsilon) return zero();
     const float num2 = Dot(vector, onNormal);
-    return {onNormal.x * num2 / num, onNormal.y * num2 / num, onNormal.z * num2 / num};
+    return {f32store(fx(onNormal.x) * fx(num2) / fx(num)), f32store(fx(onNormal.y) * fx(num2) / fx(num)),
+            f32store(fx(onNormal.z) * fx(num2) / fx(num))};
 }
 
 // Vector3.cs: ProjectOnPlane
@@ -54,49 +60,49 @@ Vector3f Vector3f::ProjectOnPlane(const Vector3f& vector, const Vector3f& planeN
     const float num = Dot(planeNormal, planeNormal);
     if (num < Mathf::Epsilon) return vector;
     const float num2 = Dot(vector, planeNormal);
-    return {vector.x - planeNormal.x * num2 / num, vector.y - planeNormal.y * num2 / num,
-            vector.z - planeNormal.z * num2 / num};
+    return {f32store(fx(vector.x) - fx(planeNormal.x) * fx(num2) / fx(num)),
+            f32store(fx(vector.y) - fx(planeNormal.y) * fx(num2) / fx(num)),
+            f32store(fx(vector.z) - fx(planeNormal.z) * fx(num2) / fx(num))};
 }
 
 // Vector3.cs: Angle
 float Vector3f::Angle(const Vector3f& from, const Vector3f& to) {
-    const float num = static_cast<float>(std::sqrt(static_cast<double>(from.sqrMagnitude() * to.sqrMagnitude())));
+    const float num = f32store(std::sqrt(fx(from.sqrMagnitude()) * fx(to.sqrMagnitude())));
     if (num < 1E-15f) return 0.0f;
-    const float num2 = Mathf::Clamp(Dot(from, to) / num, -1.0f, 1.0f);
-    return static_cast<float>(std::acos(static_cast<double>(num2))) * 57.29578f;
+    const float num2 = Mathf::Clamp(f32store(fx(Dot(from, to)) / fx(num)), -1.0f, 1.0f);
+    return f32store(fx(f32store(dotnet::Math::Acos(fx(num2)))) * fx(57.29578f));
 }
 
 // Vector3.cs: SignedAngle
 float Vector3f::SignedAngle(const Vector3f& from, const Vector3f& to, const Vector3f& axis) {
     const float num = Angle(from, to);
-    const float num2 = from.y * to.z - from.z * to.y;
-    const float num3 = from.z * to.x - from.x * to.z;
-    const float num4 = from.x * to.y - from.y * to.x;
-    const float num5 = Mathf::Sign(axis.x * num2 + axis.y * num3 + axis.z * num4);
-    return num * num5;
+    const float num2 = f32store(fx(from.y) * fx(to.z) - fx(from.z) * fx(to.y));
+    const float num3 = f32store(fx(from.z) * fx(to.x) - fx(from.x) * fx(to.z));
+    const float num4 = f32store(fx(from.x) * fx(to.y) - fx(from.y) * fx(to.x));
+    const float num5 = Mathf::Sign(f32store(fx(axis.x) * fx(num2) + fx(axis.y) * fx(num3) + fx(axis.z) * fx(num4)));
+    return f32store(fx(num) * fx(num5));
 }
 
 // Vector3.cs: AngleBetween (obsolete, radians)
 float Vector3f::AngleBetween(const Vector3f& from, const Vector3f& to) {
-    return static_cast<float>(
-        std::acos(static_cast<double>(Mathf::Clamp(Dot(from.normalized(), to.normalized()), -1.0f, 1.0f))));
+    return f32store(dotnet::Math::Acos(fx(Mathf::Clamp(Dot(from.normalized(), to.normalized()), -1.0f, 1.0f))));
 }
 
 // Vector3.cs: Distance
 float Vector3f::Distance(const Vector3f& a, const Vector3f& b) {
-    const float num = a.x - b.x, num2 = a.y - b.y, num3 = a.z - b.z;
-    return static_cast<float>(std::sqrt(static_cast<double>(num * num + num2 * num2 + num3 * num3)));
+    const float num = f32store(fx(a.x) - fx(b.x)), num2 = f32store(fx(a.y) - fx(b.y)), num3 = f32store(fx(a.z) - fx(b.z));
+    return f32store(std::sqrt(fx(num) * fx(num) + fx(num2) * fx(num2) + fx(num3) * fx(num3)));
 }
 
 // Vector3.cs: ClampMagnitude
 Vector3f Vector3f::ClampMagnitude(const Vector3f& vector, float maxLength) {
     const float num = vector.sqrMagnitude();
-    if (num > maxLength * maxLength) {
-        const float num2 = static_cast<float>(std::sqrt(static_cast<double>(num)));
-        const float num3 = vector.x / num2;
-        const float num4 = vector.y / num2;
-        const float num5 = vector.z / num2;
-        return {num3 * maxLength, num4 * maxLength, num5 * maxLength};
+    if (fx(num) > fx(maxLength) * fx(maxLength)) {
+        const float num2 = f32store(std::sqrt(fx(num)));
+        const float num3 = f32store(fx(vector.x) / fx(num2));
+        const float num4 = f32store(fx(vector.y) / fx(num2));
+        const float num5 = f32store(fx(vector.z) / fx(num2));
+        return {f32store(fx(num3) * fx(maxLength)), f32store(fx(num4) * fx(maxLength)), f32store(fx(num5) * fx(maxLength))};
     }
     return vector;
 }
@@ -106,47 +112,48 @@ Vector3f Vector3f::SmoothDamp(const Vector3f& current, Vector3f target, Vector3f
                               float maxSpeed, float deltaTime) {
     float num = 0.0f, num2 = 0.0f, num3 = 0.0f;
     smoothTime = Mathf::Max(0.0001f, smoothTime);
-    const float num4 = 2.0f / smoothTime;
-    const float num5 = num4 * deltaTime;
-    const float num6 = 1.0f / (1.0f + num5 + 0.48f * num5 * num5 + 0.235f * num5 * num5 * num5);
-    float num7 = current.x - target.x;
-    float num8 = current.y - target.y;
-    float num9 = current.z - target.z;
+    const float num4 = f32store(2.0 / fx(smoothTime));
+    const float num5 = f32store(fx(num4) * fx(deltaTime));
+    const float num6 = f32store(1.0 / (1.0 + fx(num5) + fx(0.48f) * fx(num5) * fx(num5) +
+                                       fx(0.235f) * fx(num5) * fx(num5) * fx(num5)));
+    float num7 = f32store(fx(current.x) - fx(target.x));
+    float num8 = f32store(fx(current.y) - fx(target.y));
+    float num9 = f32store(fx(current.z) - fx(target.z));
     const Vector3f vector = target;
-    const float num10 = maxSpeed * smoothTime;
-    const float num11 = num10 * num10;
-    const float num12 = num7 * num7 + num8 * num8 + num9 * num9;
+    const float num10 = f32store(fx(maxSpeed) * fx(smoothTime));
+    const float num11 = f32store(fx(num10) * fx(num10));
+    const float num12 = f32store(fx(num7) * fx(num7) + fx(num8) * fx(num8) + fx(num9) * fx(num9));
     if (num12 > num11) {
-        const float num13 = static_cast<float>(std::sqrt(static_cast<double>(num12)));
-        num7 = num7 / num13 * num10;
-        num8 = num8 / num13 * num10;
-        num9 = num9 / num13 * num10;
+        const float num13 = f32store(std::sqrt(fx(num12)));
+        num7 = f32store(fx(num7) / fx(num13) * fx(num10));
+        num8 = f32store(fx(num8) / fx(num13) * fx(num10));
+        num9 = f32store(fx(num9) / fx(num13) * fx(num10));
     }
-    target.x = current.x - num7;
-    target.y = current.y - num8;
-    target.z = current.z - num9;
-    const float num14 = (currentVelocity.x + num4 * num7) * deltaTime;
-    const float num15 = (currentVelocity.y + num4 * num8) * deltaTime;
-    const float num16 = (currentVelocity.z + num4 * num9) * deltaTime;
-    currentVelocity.x = (currentVelocity.x - num4 * num14) * num6;
-    currentVelocity.y = (currentVelocity.y - num4 * num15) * num6;
-    currentVelocity.z = (currentVelocity.z - num4 * num16) * num6;
-    num = target.x + (num7 + num14) * num6;
-    num2 = target.y + (num8 + num15) * num6;
-    num3 = target.z + (num9 + num16) * num6;
-    const float num17 = vector.x - current.x;
-    const float num18 = vector.y - current.y;
-    const float num19 = vector.z - current.z;
-    const float num20 = num - vector.x;
-    const float num21 = num2 - vector.y;
-    const float num22 = num3 - vector.z;
-    if (num17 * num20 + num18 * num21 + num19 * num22 > 0.0f) {
+    target.x = f32store(fx(current.x) - fx(num7));
+    target.y = f32store(fx(current.y) - fx(num8));
+    target.z = f32store(fx(current.z) - fx(num9));
+    const float num14 = f32store((fx(currentVelocity.x) + fx(num4) * fx(num7)) * fx(deltaTime));
+    const float num15 = f32store((fx(currentVelocity.y) + fx(num4) * fx(num8)) * fx(deltaTime));
+    const float num16 = f32store((fx(currentVelocity.z) + fx(num4) * fx(num9)) * fx(deltaTime));
+    currentVelocity.x = f32store((fx(currentVelocity.x) - fx(num4) * fx(num14)) * fx(num6));
+    currentVelocity.y = f32store((fx(currentVelocity.y) - fx(num4) * fx(num15)) * fx(num6));
+    currentVelocity.z = f32store((fx(currentVelocity.z) - fx(num4) * fx(num16)) * fx(num6));
+    num = f32store(fx(target.x) + (fx(num7) + fx(num14)) * fx(num6));
+    num2 = f32store(fx(target.y) + (fx(num8) + fx(num15)) * fx(num6));
+    num3 = f32store(fx(target.z) + (fx(num9) + fx(num16)) * fx(num6));
+    const float num17 = f32store(fx(vector.x) - fx(current.x));
+    const float num18 = f32store(fx(vector.y) - fx(current.y));
+    const float num19 = f32store(fx(vector.z) - fx(current.z));
+    const float num20 = f32store(fx(num) - fx(vector.x));
+    const float num21 = f32store(fx(num2) - fx(vector.y));
+    const float num22 = f32store(fx(num3) - fx(vector.z));
+    if (fx(num17) * fx(num20) + fx(num18) * fx(num21) + fx(num19) * fx(num22) > 0.0) {
         num = vector.x;
         num2 = vector.y;
         num3 = vector.z;
-        currentVelocity.x = (num - vector.x) / deltaTime;
-        currentVelocity.y = (num2 - vector.y) / deltaTime;
-        currentVelocity.z = (num3 - vector.z) / deltaTime;
+        currentVelocity.x = f32store((fx(num) - fx(vector.x)) / fx(deltaTime));
+        currentVelocity.y = f32store((fx(num2) - fx(vector.y)) / fx(deltaTime));
+        currentVelocity.z = f32store((fx(num3) - fx(vector.z)) / fx(deltaTime));
     }
     return {num, num2, num3};
 }
