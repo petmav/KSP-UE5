@@ -4,8 +4,10 @@ add_executable(golden_runner
     golden_json.cpp
     sha256.cpp
     ds_math_shim.cpp
+    ds_curves_eval.cpp
     confignode_tree.cpp
     ds_confignode.cpp
+    ds_gamedata.cpp
 )
 target_link_libraries(golden_runner PRIVATE kspcore)
 target_include_directories(golden_runner PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/third_party)

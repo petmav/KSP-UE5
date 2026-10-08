@@ -5,9 +5,11 @@ add_library(kspcore STATIC
     dotnet/number.cpp
     dotnet/text.cpp
     unity/vector.cpp
+    unity/animation_curve.cpp
     math/vector3d.cpp
     math/quaterniond.cpp
     math/util_math.cpp
+    curves/float_curve.cpp
     config/config_node.cpp
     config/parse_extensions.cpp
 )

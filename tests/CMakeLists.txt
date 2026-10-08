@@ -4,6 +4,7 @@ add_executable(kspcore_tests
     test_dotnet_number.cpp
     test_dotnet_text.cpp
     test_math.cpp
+    test_curves.cpp
     test_config_node.cpp
     test_netfx_reference.cpp
 )
@@ -17,6 +18,7 @@ add_test(NAME unit COMMAND kspcore_tests)
 set(KSP_GOLDEN_DATASETS
     math_shim               # WP-01 maths / Unity value types
     confignode_roundtrip    # WP-02 ConfigNode
+    curves_eval             # WP-01 FloatCurve / AnimationCurve
 )
 find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
 set(KSP_CANDIDATE_DIR "${CMAKE_BINARY_DIR}/candidate")
@@ -31,3 +33,8 @@ foreach(ds IN LISTS KSP_GOLDEN_DATASETS)
             -P ${PROJECT_SOURCE_DIR}/cmake/RunGolden.cmake)
     set_tests_properties(golden.${ds} PROPERTIES LABELS golden TIMEOUT 600)
 endforeach()
+
+# GameData corpus: parse + round-trip every cfg/craft in harness/inputs (no golden; self-consistency + no errors)
+add_test(NAME corpus.gamedata
+    COMMAND golden_runner gamedata --harness ${KSP_HARNESS_DIR} --out ${KSP_CANDIDATE_DIR})
+set_tests_properties(corpus.gamedata PROPERTIES LABELS corpus TIMEOUT 600)
