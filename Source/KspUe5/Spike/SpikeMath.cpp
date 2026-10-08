@@ -18,11 +18,20 @@ FVector3d CamSpaceF32World(const FVector3d& V, const FVector3d& C, const FVector
 
 FVector3d CamSpaceLwc(const FVector3d& V, const FVector3d& P, const FVector3d& C, const FQuat4d& CamRot)
 {
-	const FVector3f Lf(V - P); // vertex buffer: float, primitive-local
-	const FVector3f Tf(P - C); // DF (PrimitiveOrigin + PreViewTranslation) demoted to float
-	const FVector3f D = Lf + Tf;
+	// Mirrors the UE 5.8 fast-math DF path (Shaders/Private/DoubleFloat.ush DFTransformLocalToTranslatedWorld and
+	// DoubleFloatOperations.ush DFFastLocalSubtractDemote; CPU split in Core/Public/Math/DoubleFloat.h and
+	// PrimitiveUniformShaderParametersBuilder.h: PositionHigh = float(P), LocalToRelativeWorld.T = float(P - High)).
+	const FVector3f L(V - P);                  // vertex buffer (ProceduralMesh stores positions relative to the component)
+	const FVector3f PH(P);                     // Primitive.PositionHigh
+	const FVector3f PL(P - FVector3d(PH));     // LocalToRelativeWorld translation
+	const FVector3f CH(C);                     // -PreViewTranslation, DF high
+	const FVector3f CL(C - FVector3d(CH));     // -PreViewTranslation, DF low
+	const FVector3f High = PH - CH;            // exact only if PH and CH are within 2x of each other (Sterbenz)
+	const FVector3f Sum = High + (FVector3f::ZeroVector - CL);
+	const FVector3f OriginTW = Sum + PL;
+	const FVector3f TW = L + OriginTW;         // identity primitive rotation in this spike
 	const FQuat4f Rf(CamRot);
-	return FVector3d(Rf.UnrotateVector(D));
+	return FVector3d(Rf.UnrotateVector(TW));
 }
 
 double FJitterTracker::Add(const FVector3d& Emulated, const FVector3d& Exact)

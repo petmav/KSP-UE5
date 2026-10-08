@@ -156,7 +156,7 @@ void ASpikeDirector::ParseOptions()
 {
 	const TCHAR* Cmd = FCommandLine::Get();
 	FString Str;
-	if (FParse::Value(Cmd, TEXT("SpikeVariants="), Str))
+	if (FParse::Value(Cmd, TEXT("SpikeVariants="), Str, false))
 	{
 		Str.ParseIntoArray(VariantNames, TEXT(","), true);
 	}
@@ -383,12 +383,14 @@ void ASpikeDirector::BuildProgram()
 	if (bStress)
 	{
 		const ESpikeRebase Modes[] = { ESpikeRebase::None, ESpikeRebase::UEOrigin, ESpikeRebase::MoveWorld };
-		for (int32 Ksp = 0; Ksp < 2; ++Ksp)
+		static const TCHAR* GroupNames[] = { TEXT("StressBare"), TEXT("StressKsp"), TEXT("StressKspNoPhys") };
+		for (int32 Ksp = 0; Ksp < 3; ++Ksp)
 		{
 			for (ESpikeRebase Mode : Modes)
 			{
 				FStep S;
-				S.Variant = FString::Printf(TEXT("Stress%s"), Ksp ? TEXT("Ksp") : TEXT("Bare"));
+				S.Variant = GroupNames[Ksp];
+				S.bKspNoPhysics = Ksp == 2;
 				S.Phase = EPhase::Stress;
 				S.Mode = Mode;
 				S.ThresholdCm = 0.0; // shift every tick
@@ -515,10 +517,11 @@ double ASpikeDirector::ShiftOriginTo(const FVector3d& NewOriginU, ESpikeRebase M
 	const double T0 = FPlatformTime::Seconds();
 	if (Mode == ESpikeRebase::UEOrigin)
 	{
-		const FIntVector NewO(FMath::RoundToInt32(NewOriginU.X), FMath::RoundToInt32(NewOriginU.Y), FMath::RoundToInt32(NewOriginU.Z));
+		const FVector3d Want = NewOriginU - MwOffset;
+		const FIntVector NewO(FMath::RoundToInt32(Want.X), FMath::RoundToInt32(Want.Y), FMath::RoundToInt32(Want.Z));
 		if (GetWorld()->SetNewWorldOrigin(NewO))
 		{
-			Origin = FVector3d(NewO.X, NewO.Y, NewO.Z);
+			Origin = FVector3d(NewO.X, NewO.Y, NewO.Z) + MwOffset;
 		}
 		else
 		{
@@ -529,15 +532,22 @@ double ASpikeDirector::ShiftOriginTo(const FVector3d& NewOriginU, ESpikeRebase M
 	{
 		const FVector3d Delta = NewOriginU - Origin;
 		MoveWorldBy(FVector(-Delta));
-		Origin = NewOriginU;
+		MwOffset += Delta;
+		Origin += Delta;
 	}
 	const double Ms = (FPlatformTime::Seconds() - T0) * 1000.0;
-	// Validate: Kerbin's centre is U=0, so it must sit at W = -Origin.
-	if (Kerbin)
+	ValidateOrigin();
+	return Ms;
+}
+
+void ASpikeDirector::ValidateOrigin()
+{
+	// Kerbin's centre is U = 0, so it must sit at W = -Origin; the Mun at MunCentreU - Origin.
+	if (Kerbin && Mun)
 	{
 		ShiftValidErrMax = FMath::Max(ShiftValidErrMax, (FVector3d(Kerbin->GetActorLocation()) + Origin).Length());
+		ShiftValidErrMax = FMath::Max(ShiftValidErrMax, (FVector3d(Mun->GetActorLocation()) + Origin - MunCentreU).Length());
 	}
-	return Ms;
 }
 
 void ASpikeDirector::MoveWorldBy(const FVector& Offset)
@@ -558,15 +568,21 @@ void ASpikeDirector::MoveWorldBy(const FVector& Offset)
 	}
 }
 
-void ASpikeDirector::ResetOrigin(ESpikeRebase /*Mode*/)
+void ASpikeDirector::ResetOrigin()
 {
-	if (Origin.IsNearlyZero())
+	// Undo each part with the mechanism that created it: first MoveWorld, then UE's origin.
+	if (!MwOffset.IsZero())
 	{
-		return;
+		MoveWorldBy(FVector(MwOffset));
+		Origin -= MwOffset;
+		MwOffset = FVector3d::ZeroVector;
 	}
-	// Undo with the same mechanism that created the offset.
-	const bool bUE = GetWorld()->OriginLocation != FIntVector::ZeroValue;
-	ShiftOriginTo(FVector3d::ZeroVector, bUE ? ESpikeRebase::UEOrigin : ESpikeRebase::MoveWorld);
+	if (GetWorld()->OriginLocation != FIntVector::ZeroValue)
+	{
+		GetWorld()->SetNewWorldOrigin(FIntVector::ZeroValue);
+	}
+	Origin = FVector3d::ZeroVector;
+	ValidateOrigin();
 }
 
 void ASpikeDirector::SetupCubesForStep(const FStep& S, const FVector3d& Cam, const FQuat4d& Rot)
@@ -780,15 +796,24 @@ void ASpikeDirector::BeginStep()
 	StepFirstRow = Rows.Num();
 	ShiftValidErrMax = 0.0;
 	WarmupQuietFrames = 0;
-	for (KspSpike::FJitterTracker& T : Trackers)
+	for (int32 R = 0; R < NumRefs; ++R)
 	{
-		T.Reset();
+		Trackers[R].Reset();
+		PxTrackers[R].Reset();
+	}
+	if (GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport)
+	{
+		const FIntPoint Size = GEngine->GameViewport->Viewport->GetSizeXY();
+		StepFpx = Size.X * 0.5 / FMath::Tan(FMath::DegreesToRadians(FovDeg * 0.5));
+		StepHalfW = Size.X * 0.5;
+		StepHalfH = Size.Y * 0.5;
 	}
 
 	const bool bVariantStart = StepIndex == 0 || Steps[StepIndex - 1].Variant != S.Variant;
-	if (bVariantStart)
+	const bool bModeChange = StepIndex > 0 && Steps[StepIndex - 1].Mode != S.Mode;
+	if (bVariantStart || bModeChange || S.Phase == EPhase::Stress)
 	{
-		ResetOrigin(S.Mode);
+		ResetOrigin();
 		OrbitTheta = OrbitTheta0;
 	}
 	// UE logs two lines per SetNewWorldOrigin; silence them for the every-tick stress so I/O is not measured.
@@ -806,12 +831,29 @@ void ASpikeDirector::BeginStep()
 	{
 		SpawnKspScene();
 	}
+	if (S.bKspNoPhysics && !bKspPhysicsDisabled)
+	{
+		// Same 1,782 actors, no physics state: separates transform/render cost from Chaos teleport cost.
+		for (int32 I = 0; I < KspBoxes.Num(); ++I)
+		{
+			if (KspBoxes[I])
+			{
+				KspBoxes[I]->Box->SetSimulatePhysics(false);
+				KspBoxes[I]->Box->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+				KspBoxesU[I] = FVector3d(KspBoxes[I]->GetActorLocation()) + Origin;
+			}
+		}
+		bKspPhysicsDisabled = true;
+	}
 	if (WarmupBox)
 	{
 		WarmupBox->SetActorHiddenInGame(S.Phase != EPhase::Warmup);
 		WarmupBox->SetActorLocation(ToWorld(StepCam + StepRot.GetForwardVector() * 600.0));
 	}
 	SetupCubesForStep(S, StepCam, StepRot);
+	StepDist[0] = (CubeCentreA - StepCam).Length();
+	StepDist[1] = (CubeCentreB - StepCam).Length();
+	StepDist[2] = (MunCentreU - StepCam).Length();
 
 	// Static ground reference vertex and a nearby "patch origin" (leaf patches are ~57 m across).
 	const bool bMun = S.Phase == EPhase::MunFromOrbit || S.Phase == EPhase::MunNear;
@@ -886,22 +928,47 @@ void ASpikeDirector::TickStep()
 	Row.CamFromOriginKm = (Cam - Origin).Length() / 1.0e5;
 	Row.OriginKm = Origin / 1.0e5;
 
-	// ---- numeric jitter proxy ----
+	// ---- numeric jitter proxy (emulated in UE world coordinates W = U - Origin) ----
 	{
 		const FVector3d Corner = (-CubeAxes[0] - CubeAxes[1] + CubeAxes[2]) * 50.0;
-		const FVector3d VA = CubeCentreA + Corner;
-		const FVector3d VB = CubeCentreB + Corner;
-		const FVector3d PA = CubeCentreA;
-		const FVector3d PB = BodyCentreForB + (CubeCentreB - CubeStartB);
-		const FVector3d EA = KspSpike::CamSpaceExact(VA, Cam, Rot);
-		const FVector3d EB = KspSpike::CamSpaceExact(VB, Cam, Rot);
-		const FVector3d EG = KspSpike::CamSpaceExact(GroundRef, Cam, Rot);
-		Row.Jit[0] = Trackers[0].Add(KspSpike::CamSpaceLwc(VA, PA, Cam, Rot), EA);
-		Row.Jit[1] = Trackers[1].Add(KspSpike::CamSpaceLwc(VB, PB, Cam, Rot), EB);
-		Row.Jit[2] = Trackers[2].Add(KspSpike::CamSpaceLwc(GroundRef, GroundPatchOrigin, Cam, Rot), EG);
-		Row.Jit[3] = Trackers[3].Add(KspSpike::CamSpaceLwc(GroundRef, GroundBody, Cam, Rot), EG);
-		Row.Jit[4] = Trackers[4].Add(KspSpike::CamSpaceF32World(VA, Cam, Origin, Rot), EA);
-		Row.Jit[5] = Trackers[5].Add(KspSpike::CamSpaceF32World(VA, Cam, FVector3d::ZeroVector, Rot), EA);
+		const FVector3d VA = CubeCentreA + Corner - Origin;
+		const FVector3d VB = CubeCentreB + Corner - Origin;
+		const FVector3d PA = CubeCentreA - Origin;
+		const FVector3d PB = BodyCentreForB + (CubeCentreB - CubeStartB) - Origin;
+		const FVector3d CW = Cam - Origin;
+		const FVector3d GW = GroundRef - Origin;
+		const FVector3d EA = KspSpike::CamSpaceExact(VA, CW, Rot);
+		const FVector3d EB = KspSpike::CamSpaceExact(VB, CW, Rot);
+		const FVector3d EG = KspSpike::CamSpaceExact(GW, CW, Rot);
+		const FVector3d Emu[NumRefs] = {
+			KspSpike::CamSpaceLwc(VA, PA, CW, Rot),
+			KspSpike::CamSpaceLwc(VB, PB, CW, Rot),
+			KspSpike::CamSpaceLwc(GW, GroundPatchOrigin - Origin, CW, Rot),
+			KspSpike::CamSpaceLwc(GW, GroundBody - Origin, CW, Rot),
+			KspSpike::CamSpaceF32World(CubeCentreA + Corner, Cam, Origin, Rot),
+			KspSpike::CamSpaceF32World(CubeCentreA + Corner, Cam, FVector3d::ZeroVector, Rot) };
+		const FVector3d Ex[NumRefs] = { EA, EB, EG, EG, EA, EA };
+		auto Proj = [this](const FVector3d& Cs, bool& bOnScreen)
+		{
+			const FVector3d Px = Cs.X > 1.0 ? FVector3d(StepFpx * Cs.Y / Cs.X, -StepFpx * Cs.Z / Cs.X, 0.0) : FVector3d::ZeroVector;
+			bOnScreen = Cs.X > 1.0 && FMath::Abs(Px.X) <= StepHalfW && FMath::Abs(Px.Y) <= StepHalfH;
+			return Px;
+		};
+		for (int32 R = 0; R < NumRefs; ++R)
+		{
+			Row.Jit[R] = Trackers[R].Add(Emu[R], Ex[R]);
+			bool bOnEmu = false, bOnExact = false;
+			const FVector3d PxEmu = Proj(Emu[R], bOnEmu);
+			const FVector3d PxExact = Proj(Ex[R], bOnExact);
+			if (bOnExact)
+			{
+				Row.JitPx[R] = PxTrackers[R].Add(PxEmu, PxExact); // pixel jitter only for points that are on screen
+			}
+			else
+			{
+				PxTrackers[R].Break();
+			}
+		}
 	}
 
 	// ---- captures ----
@@ -918,7 +985,7 @@ void ASpikeDirector::TickStep()
 		{
 			for (int32 I = 0; I < DescentShotAltsKm.Num(); ++I)
 			{
-				if (PrevAltKm > DescentShotAltsKm[I] && Row.AltKm <= DescentShotAltsKm[I] * 1.0001)
+				if (PrevAltKm > DescentShotAltsKm[I] * 1.0001 && Row.AltKm <= DescentShotAltsKm[I] * 1.0001)
 				{
 					Save = ShotPath(FString::Printf(TEXT("%s_alt%skm"), *Base, *FString::SanitizeFloat(DescentShotAltsKm[I] < 0.02 ? 0.01 : DescentShotAltsKm[I])));
 				}
@@ -1044,8 +1111,7 @@ void ASpikeDirector::EndStep()
 			}
 			Rms = FMath::Sqrt(Rms / FMath::Max(1, Rx.Num()));
 		}
-		const double Dist = T == 0 ? (CubeCentreA - StepCam).Length() : (T == 1 ? (CubeCentreB - StepCam).Length() : (MunCentreU - StepCam).Length());
-		const double CmPerPx = Dist / Fpx;
+		const double CmPerPx = StepDist[T] / Fpx;
 		const double CntAvg = N.Num() ? CountSum / N.Num() : 0.0;
 		ImgCsv += FString::Printf(TEXT(",%d,%.0f,%d,%d,%.4f,%.4f,%.4f,%.4f,%.5f"), N.Num(), CntAvg, N.Num() ? CountMin : 0, CountMax, MaxDev, Rms, F2F, Pop, CmPerPx);
 		if (N.Num() > 0)
@@ -1078,8 +1144,9 @@ void ASpikeDirector::EndStep()
 	static const TCHAR* RefNames[NumRefs] = { TEXT("A_lwc"), TEXT("B_lwc"), TEXT("G_patch"), TEXT("G_planet"), TEXT("A_f32_rebased"), TEXT("A_f32_norebase") };
 	for (int32 R = 0; R < NumRefs; ++R)
 	{
-		JitCsv += FString::Printf(TEXT(",%.5f,%.5f,%.5f"), Trackers[R].MaxJitter, Trackers[R].Rms(), Trackers[R].MaxAbsErr);
-		JitLog += FString::Printf(TEXT(" %s=%.4f"), RefNames[R], Trackers[R].MaxJitter);
+		JitCsv += FString::Printf(TEXT(",%.5f,%.5f,%.5f,%.5f,%.5f"), Trackers[R].MaxJitter, Trackers[R].Rms(), Trackers[R].MaxAbsErr,
+			PxTrackers[R].MaxJitter, PxTrackers[R].Rms());
+		JitLog += FString::Printf(TEXT(" %s=%.4fcm/%.4fpx"), RefNames[R], Trackers[R].MaxJitter, PxTrackers[R].MaxJitter);
 	}
 
 	if (!bHeaderWritten)
@@ -1087,7 +1154,7 @@ void ASpikeDirector::EndStep()
 		FString H = TEXT("tag,step,label,variant,mode,threshold_km,phase,frames,real_s,frame_ms_avg,frame_ms_p50,frame_ms_p95,frame_ms_max,game_ms_avg,game_ms_p95,render_ms_avg,render_ms_p95,rhi_ms_avg,gpu_ms_avg,gpu_ms_p95,shifts,shift_ms_avg,shift_ms_p50,shift_ms_max,shift_valid_err_cm,lod_ms_total,lod_ms_max,patches_max,cam_from_origin_km_max,mem_used_mb,mem_peak_mb,tex_mb,phys_drift_cm");
 		for (const TCHAR* RN : RefNames)
 		{
-			H += FString::Printf(TEXT(",%s_jit_max_cm,%s_jit_rms_cm,%s_err_max_cm"), RN, RN, RN);
+			H += FString::Printf(TEXT(",%s_jit_max_cm,%s_jit_rms_cm,%s_err_max_cm,%s_jit_max_px,%s_jit_rms_px"), RN, RN, RN, RN, RN);
 		}
 		static const TCHAR* ImgNames[NumTargets] = { TEXT("imgA"), TEXT("imgB"), TEXT("imgMun") };
 		for (const TCHAR* TN : ImgNames)
@@ -1095,7 +1162,7 @@ void ASpikeDirector::EndStep()
 			H += FString::Printf(TEXT(",%s_n,%s_px_avg,%s_px_min,%s_px_max,%s_maxdev_px,%s_rms_px,%s_f2f_px,%s_pop_px,%s_cm_per_px"), TN, TN, TN, TN, TN, TN, TN, TN, TN);
 		}
 		AppendText(Tag + TEXT("_summary.csv"), H + TEXT("\n"));
-		AppendText(Tag + TEXT("_frames.csv"), TEXT("step,label,frame,sim_t,real_dt_ms,game_ms,render_ms,rhi_ms,gpu_ms,shift,shift_ms,lod_ms,patches,alt_km,cam_from_origin_km,origin_x_km,origin_y_km,origin_z_km,j_A_lwc,j_B_lwc,j_G_patch,j_G_planet,j_A_f32_rebased,j_A_f32_norebase,img,ax,ay,an,bx,by,bn,mx,my,mn\n"));
+		AppendText(Tag + TEXT("_frames.csv"), TEXT("step,label,frame,sim_t,real_dt_ms,game_ms,render_ms,rhi_ms,gpu_ms,shift,shift_ms,lod_ms,patches,alt_km,cam_from_origin_km,origin_x_km,origin_y_km,origin_z_km,j_A_lwc,j_B_lwc,j_G_patch,j_G_planet,j_A_f32_rebased,j_A_f32_norebase,px_A_lwc,px_B_lwc,px_G_patch,px_G_planet,px_A_f32_rebased,px_A_f32_norebase,img,ax,ay,an,bx,by,bn,mx,my,mn\n"));
 		bHeaderWritten = true;
 	}
 	FString Line = FString::Printf(TEXT("%s,%d,%s,%s,%s,%.1f,%s,%d,%.2f,"), *Tag, StepIndex, *S.Label, *S.Variant, ModeName(S.Mode), S.ThresholdCm / 1.0e5,
@@ -1114,8 +1181,9 @@ void ASpikeDirector::EndStep()
 		FramesCsv += FString::Printf(TEXT("%d,%s,%d,%.4f,%.3f,%.3f,%.3f,%.3f,%.3f,%d,%.4f,%.3f,%d,%.5f,%.3f,%.3f,%.3f,%.3f,"), R.Step, *S.Label, R.Frame, R.SimT,
 			R.RealDtMs, R.GameMs, R.RenderMs, R.RhiMs, R.GpuMs, R.bShift ? 1 : 0, R.ShiftMs, R.LodMs, R.Patches, R.AltKm, R.CamFromOriginKm, R.OriginKm.X,
 			R.OriginKm.Y, R.OriginKm.Z);
-		FramesCsv += FString::Printf(TEXT("%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%d,%.3f,%.3f,%d,%.3f,%.3f,%d,%.3f,%.3f,%d\n"), R.Jit[0], R.Jit[1], R.Jit[2], R.Jit[3],
-			R.Jit[4], R.Jit[5], R.bImg ? 1 : 0, R.Cx[0], R.Cy[0], R.Cn[0], R.Cx[1], R.Cy[1], R.Cn[1], R.Cx[2], R.Cy[2], R.Cn[2]);
+		FramesCsv += FString::Printf(TEXT("%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,"), R.Jit[0], R.Jit[1], R.Jit[2], R.Jit[3],
+			R.Jit[4], R.Jit[5], R.JitPx[0], R.JitPx[1], R.JitPx[2], R.JitPx[3], R.JitPx[4], R.JitPx[5]);
+		FramesCsv += FString::Printf(TEXT("%d,%.3f,%.3f,%d,%.3f,%.3f,%d,%.3f,%.3f,%d\n"), R.bImg ? 1 : 0, R.Cx[0], R.Cy[0], R.Cn[0], R.Cx[1], R.Cy[1], R.Cn[1], R.Cx[2], R.Cy[2], R.Cn[2]);
 	}
 	AppendText(Tag + TEXT("_frames.csv"), FramesCsv);
 

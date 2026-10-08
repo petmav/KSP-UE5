@@ -22,9 +22,10 @@ namespace KspSpike
 	KSPUE5_API FVector3d CamSpaceF32World(const FVector3d& V, const FVector3d& C, const FVector3d& O, const FQuat4d& CamRot);
 
 	/**
-	 * UE5 LWC pipeline: vertex stored as float relative to its primitive origin P (vertex buffer), the
-	 * LocalToTranslatedWorld translation is computed in double-float and demoted to float
-	 * (Shaders/Private/DoubleFloat.ush DFMultiplyTranslationDemote), then float add and float view rotation.
+	 * UE5 LWC pipeline, emulated op for op: vertex stored as float relative to its primitive origin P; primitive
+	 * origin and camera position reach the GPU as double-float (high, low) pairs and are subtracted with
+	 * DFFastLocalSubtractDemote; then float add of the local position and float view rotation.
+	 * V, P, C must be UE *world* coordinates (after any origin rebasing): the rounding depends on their magnitude.
 	 */
 	KSPUE5_API FVector3d CamSpaceLwc(const FVector3d& V, const FVector3d& P, const FVector3d& C, const FQuat4d& CamRot);
 

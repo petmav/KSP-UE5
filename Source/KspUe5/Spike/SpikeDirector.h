@@ -57,6 +57,7 @@ private:
 		int32 Frames = 0;
 		double Seconds = 0.0;
 		bool bKspScene = false;
+		bool bKspNoPhysics = false;
 		bool bFullShots = false;
 	};
 
@@ -74,6 +75,7 @@ private:
 		double CamFromOriginKm = 0.0;
 		FVector3d OriginKm = FVector3d::ZeroVector;
 		double Jit[NumRefs] = {};
+		double JitPx[NumRefs] = {};
 		bool bImg = false;
 		double Cx[NumTargets] = {}, Cy[NumTargets] = {};
 		int32 Cn[NumTargets] = {};
@@ -103,7 +105,8 @@ private:
 
 	double ShiftOriginTo(const FVector3d& NewOriginU, ESpikeRebase Mode);
 	void MoveWorldBy(const FVector& Offset);
-	void ResetOrigin(ESpikeRebase Mode);
+	void ResetOrigin();
+	void ValidateOrigin();
 	FVector ToWorld(const FVector3d& U) const { return FVector(U - Origin); }
 
 	void SetupCubesForStep(const FStep& S, const FVector3d& Cam, const FQuat4d& Rot);
@@ -142,7 +145,8 @@ private:
 	TArray<FVector3d> KspBoxesU;
 
 	// ---- universe frame: Kerbin centre at U = 0; UE world W = U - Origin ----
-	FVector3d Origin = FVector3d::ZeroVector;
+	FVector3d Origin = FVector3d::ZeroVector;   // = UWorld::OriginLocation + MwOffset
+	FVector3d MwOffset = FVector3d::ZeroVector; // part of Origin created by MoveWorld shifts
 	// Generic directions on purpose: every axis carries a large coordinate, so float32 precision loss shows up
 	// for motion in any direction (an axis-aligned site would hide it). Set in BeginPlay.
 	FVector3d SiteDir = FVector3d::XAxisVector, East = FVector3d::YAxisVector, North = FVector3d::ZAxisVector;
@@ -177,6 +181,11 @@ private:
 	FVector3d CubeAxes[3] = { FVector3d::XAxisVector, FVector3d::YAxisVector, FVector3d::ZAxisVector };
 	FVector3d GroundRef = FVector3d::ZeroVector, GroundPatchOrigin = FVector3d::ZeroVector, GroundBody = FVector3d::ZeroVector;
 	KspSpike::FJitterTracker Trackers[NumRefs];
+	KspSpike::FJitterTracker PxTrackers[NumRefs];
+	double StepFpx = 640.0;
+	double StepHalfW = 640.0, StepHalfH = 360.0;
+	bool bKspPhysicsDisabled = false;
+	double StepDist[NumTargets] = { 314.0, 314.0, 1.0 };
 	double ShiftValidErrMax = 0.0;
 	TArray<double> DescentShotAltsKm;
 	double PrevAltKm = 0.0;

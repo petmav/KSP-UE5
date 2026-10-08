@@ -13,3 +13,9 @@
 2026-10-09 01:17:42  loop: incremental build (touched test .cpp)       11.6 s  rc=0
 2026-10-09 01:17:58  loop: headless tests                              15.6 s  rc=0
 2026-10-09 01:17:58  loop total: touch .cpp + build + headless tests      27.2 s  
+2026-10-09 01:18:56  spike run smoke1                                  46.2 s  exit=0
+2026-10-09 01:23:48  incremental build (DF emulation patch)            21.6 s  rc=0
+2026-10-09 01:24:11  headless tests (after DF patch)                   22.8 s  rc=0
+2026-10-09 01:25:03  spike run smoke2                                  45.9 s  exit=0
+2026-10-09 01:27:02  incremental build (origin bookkeeping patch)      10.6 s  rc=0
+2026-10-09 01:27:50  spike run smoke3                                  47.6 s  exit=0

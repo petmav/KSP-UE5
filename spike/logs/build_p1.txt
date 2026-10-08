@@ -1,0 +1,39 @@
+﻿Using bundled DotNet SDK version: 10.0 win-x64
+Running UnrealBuildTool: dotnet "..\..\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.dll" KspUe5Editor Win64 Development -Project=C:\Projects\KSP-UE5\ue5\KspUe5.uproject -WaitMutex -NoHotReloadFromIDE
+Log file: C:\Users\pmavr\AppData\Local\UnrealBuildTool\Log.txt
+Determining max actions to execute in parallel (8 physical cores, 16 logical cores)
+  Executing up to 8 processes, one per physical core
+  Requested 1.5 GB memory per action, 6.9 GB available: limiting max parallel actions to 4
+Using 'git status' to determine working set for adaptive non-unity build (C:\Projects\KSP-UE5\ue5).
+UbaServer - Listening on 0.0.0.0:1345
+Invalidating makefile for KspUe5Editor (working set of source files changed)
+UHT compiled-in object format Default
+UHT processed KspUe5Editor in 7.176794 seconds (0 generated files written)
+Building KspUe5Editor...
+===== Toolchain Information =====
+Using ISPC compiler (C:\Program Files\Epic Games\UE_5.8\Engine\Source\ThirdParty\Intel\ISPC\bin\Windows\ispc.exe)
+  Intel(r) Implicit SPMD Program Compiler (Intel(r) ISPC), 1.24.0 (build commit  @ 20250404, LLVM 18.1.2) 
+Using Visual Studio 14.44.35227 toolchain (C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207) and Windows 10.0.22621.0 SDK (C:\Program Files (x86)\Windows Kits\10).
+[Adaptive Build] Excluded from KspUe5 unity file: SpikeActors.cpp, SpikeDirector.cpp, SpikeMath.cpp
+=================================
+Using Unreal Build Accelerator local executor to run 9 action(s)
+  CPU 8 physical cores, 16 logical cores
+  Memory 23.79 GB physical, 38.51 GB/77.41 GB committed
+  UBA Storage capacity 40 GB
+[1/9] Compile [x64] Module.KspUe5.gen.cpp
+[2/9] Compile [x64] KspUe5Tests.cpp
+[3/9] Compile [x64] SpikeActors.cpp
+[4/9] Compile [x64] SpikeDirector.cpp
+[5/9] Compile [x64] SpikeMath.cpp
+[6/9] Compile [x64] SpikePlanet.cpp
+[7/9] Link [x64] UnrealEditor-KspUe5.lib
+[8/9] Link [x64] UnrealEditor-KspUe5.dll
+[9/9] WriteMetadata KspUe5Editor.target [NoUba]
+
+Total time in Unreal Build Accelerator local executor: 12.29 seconds
+Output binary: C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe
+
+Result: Succeeded
+Total execution time: 21.28 seconds
+Trace written to file C:\Users\pmavr\AppData\Local\UnrealBuildTool\Trace.uba with size 8.2kb
+TIMING 2026-10-09 01:23:48  incremental build (DF emulation patch)            21.6 s  rc=0

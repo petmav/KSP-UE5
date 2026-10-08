@@ -23,7 +23,7 @@ ASpikeCameraPawn::ASpikeCameraPawn()
 	PP.bOverride_AutoExposureMethod = true;
 	PP.AutoExposureMethod = EAutoExposureMethod::AEM_Manual;
 	PP.bOverride_AutoExposureBias = true;
-	PP.AutoExposureBias = 0.0f;
+	PP.AutoExposureBias = -1.0f; // fixed exposure; -1 EV keeps the lit ground from washing out
 	PP.bOverride_AutoExposureApplyPhysicalCameraExposure = true;
 	PP.AutoExposureApplyPhysicalCameraExposure = 0;
 	PP.bOverride_BloomIntensity = true;

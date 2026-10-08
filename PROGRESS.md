@@ -36,9 +36,12 @@ Rules: write only under ue5\. No subagents. One UE instance at a time. Low scala
 - [x] D1 project shell files (uproject, targets, Config, game module KspUe5, editor module KspUe5Editor w/ commandlet)
 - [x] D1 stub lib (CMake, /MD, /Z7) + bridge plugin (one-line switch bUseRealCore in KspCoreBridge.Build.cs)
 - [x] D1 git init + first commit (1229344)
-- [ ] D1 builds + timings (genproj done 14.1 s; first editor build running)
-- [ ] D1 automation test + headless timing
-- [ ] D2 spike code
+- [x] D1 builds + timings (see timings.log): genproj 14.1 s; clean full editor 64.4 s; no-op 1.2 s; incremental (1 cpp)
+      10.1 s; plugin-only 2.5 s; game Development 51.7 s; commandlet map 29.0 s. UBT limited to 3-4 parallel actions
+      (only ~6 GB RAM free; 1.5 GB/action).
+- [x] D1 automation tests: 3/3 pass. Headless run cold 41.8 s, warm 15.7 s; touch+build+test loop 27.2 s.
+- [x] commit 8c15f5a
+- [x] D2 spike code (compiles); smoke1 quick run in progress
 - [ ] D2 runs + RESULTS.md
 - [ ] README / STATUS
 
