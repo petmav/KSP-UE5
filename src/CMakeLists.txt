@@ -22,6 +22,7 @@ add_library(kspcore STATIC
     orbit/celestial_body_ref.cpp
     orbit/planetarium_frames.cpp
     orbit/orbit.cpp
+    orbit/targeting.cpp
     capi/kspcore_c.cpp
 )
 add_library(ksp::core ALIAS kspcore)

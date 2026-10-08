@@ -27,9 +27,8 @@
 //   * GetRadiusAtPhaseAngle / PhaseAngle use the float Deg2Rad (0.01745329238474369).
 //   * Init() does not set timeToPe / timeToAp / radius / pos / vel (only UpdateFromUT / UpdateFromFixedVectors do).
 //
-// Not ported: DrawOrbit (Unity Debug.DrawLine gizmos), State.DumpData (empty in KSP). Targeting-based
-// FindClosestPoints (Orbit.cs:1385, needs Targeting.cs) is reached through Orbit::FindClosestPoints, which defaults to
-// FindClosestPointsDefault (see there).
+// Not ported: DrawOrbit (Unity Debug.DrawLine gizmos), State.DumpData (empty in KSP). The closest-approach geometry
+// behind FindClosestPoints is Targeting (ksp/orbit/targeting.hpp).
 #pragma once
 
 #include <string>
@@ -301,9 +300,8 @@ public:
     // Orbit.cs:1365 (pos/vel in Unity world coordinates)
     static Orbit OrbitFromStateVectors(const Vector3d& pos, const Vector3d& vel, CelestialBodyRef* body, double UT);
     static bool PeApIntersects(const Orbit& primary, const Orbit& secondary, double threshold);  // Orbit.cs:1372
-    // Orbit.cs:1385 _FindClosestPoints. With LegacyOrbitTargeting it runs FindClosestPoints_old and returns 2 (as KSP).
-    // The default path (Targeting.Conic / Targeting.Intercepts, Targeting.cs) is not ported yet: it throws
-    // std::logic_error. Install another implementation through Orbit::FindClosestPoints if needed.
+    // Orbit.cs:1385 _FindClosestPoints: Targeting.Intercepts with 24 samples (returns the number of minima found,
+    // 0..2); with LegacyOrbitTargeting it runs FindClosestPoints_old and returns 2, as KSP does.
     static int FindClosestPointsDefault(const Orbit& p, const Orbit& s, double& CD, double& CCD, double& FFp,
                                         double& FFs, double& SFp, double& SFs, double epsilon, int maxIterations,
                                         int& iterationCount);

@@ -13,6 +13,7 @@
 #include "ksp/dotnet/math.hpp"
 #include "ksp/dotnet/text.hpp"
 #include "ksp/orbit/orbit.hpp"
+#include "ksp/orbit/targeting.hpp"
 #include "ksp/unity/quaternion_native.hpp"
 #include "nlohmann/json.hpp"
 
@@ -519,10 +520,123 @@ TEST_CASE("Orbit: copies, enum names, delegates") {
     double CD = 0, CCD = 0, FFp = 0, FFs = 0, SFp = 0, SFs = 0;
     int it = 0;
     const Orbit s(30, 0.1, 3.5e6, 40, 0, 0, 0, &kerbin);
-    CHECK_THROWS_AS(Orbit::FindClosestPoints(o, s, CD, CCD, FFp, FFs, SFp, SFs, 0.0001, 20, it), std::logic_error);
+    const int found = Orbit::FindClosestPoints(o, s, CD, CCD, FFp, FFs, SFp, SFs, 0.0001, 20, it);
+    CHECK(found >= 0);
+    CHECK(found <= 2);
     Orbit::LegacyOrbitTargeting = true;
     CHECK(Orbit::FindClosestPoints(o, s, CD, CCD, FFp, FFs, SFp, SFs, 0.0001, 20, it) == 2);
     Orbit::LegacyOrbitTargeting = false;
     CHECK(CD >= 0.0);
     CHECK(CCD >= 0.0);
+}
+
+TEST_CASE("Targeting::Conic: geometry matches Orbit, line intercepts, inside/real tests") {
+    FramesGuard guard;
+    CelestialBodyRef kerbin = MakeKerbin();
+    const Orbit o(20, 0.3, 2.0e6, 40, 60, 0, 0, &kerbin);
+    const Targeting::Conic c = Targeting::Conic::Borrow(o);
+    CHECK(c.e == 0.3);
+    CHECK(c.l == o.semiLatusRectum());
+    CHECK(c.a == doctest::Approx(2.0e6).epsilon(1e-12));
+    CHECK(c.pe == doctest::Approx(o.PeR()).epsilon(1e-12));
+    CHECK(c.ap == doctest::Approx(o.ApR()).epsilon(1e-12));
+    CHECK(c.max_v == kPI);
+    CHECK(c.min_v == -kPI);
+    for (double v : {0.0, 1.0, 2.5, -2.0}) {
+        CHECK(c.Point(v).Equals(o.getPositionFromTrueAnomaly(v, false)));  // same expression, world-like frame
+        CHECK(c.Radius(v) == doctest::Approx(o.RadiusAtTrueAnomaly(v)).epsilon(1e-14));
+        CHECK(c.TrueAnomaly(c.Point(v)) == doctest::Approx(v).epsilon(1e-12));
+        // the frame's tangent is along the velocity, the normal is perpendicular to it
+        const Targeting::Frame f = c.GetFrame(c.Point(v));
+        const Vector3d vel = o.getOrbitalVelocityAtTrueAnomaly(v, false);
+        CHECK(Vector3d::Dot(f.t.normalized(), vel.normalized()) == doctest::Approx(1.0).epsilon(1e-12));
+        CHECK(std::fabs(Vector3d::Dot(f.t, f.n)) <= 1e-12 * f.t.sqrMagnitude());
+    }
+    CHECK(c.point_inside(c.center));
+    CHECK_FALSE(c.point_inside(c.Point(1.0) * 1.01));
+    CHECK(c.point_inside(c.Point(1.0) * 0.99));
+    CHECK(c.point_is_real(c.Point(1.0)));
+    // a line through the centre along X meets the ellipse at the periapsis and apoapsis points
+    Vector3d i1, i2;
+    REQUIRE(c.Intercepts(Targeting::Ray(c.center, c.X), i1, i2) == 2);
+    CHECK((i1 - c.pe_point).magnitude() <= 1e-6);
+    CHECK((i2 - c.ap_point).magnitude() <= 1e-6);
+    // a line outside the ellipse misses it
+    CHECK(c.Intercepts(Targeting::Ray(c.center + c.Y * (3.0 * c.b), c.X), i1, i2) == 0);
+    // hyperbola: asymptote limits, only the near branch is real
+    const Orbit h(0, 1.5, -1.0e6, 0, 0, 0, 0, &kerbin);
+    const Targeting::Conic ch = Targeting::Conic::Borrow(h);
+    CHECK(ch.max_v == dotnet::Math::Acos(-1.0 / 1.5));
+    CHECK(ch.ap == kInf);
+    CHECK(ch.point_is_real(ch.Point(0.5)));
+    CHECK_FALSE(ch.point_is_real(ch.center + ch.X * 1.0e9));
+    // rays and planes
+    const Targeting::Ray r({0, 0, 0}, {1, 0, 0});
+    CHECK(r.ClosestPoint(Vector3d(5, 3, 0)).Equals(Vector3d(5, 0, 0)));
+    CHECK(r.ClosestPoint(Vector3d(-5, 3, 0), true).Equals(Vector3d(0, 0, 0)));
+    CHECK(Targeting::Plane({0, 0, 2}, {0, 0, 1}).Intersept(Targeting::Ray({1, 1, 0}, {0, 0, 1})).Equals(Vector3d(1, 1, 2)));
+    CHECK(r.ClosestPoint(Targeting::Ray({3, 1, 5}, {0, 0, 1})).Equals(Vector3d(3, 0, 0)));
+}
+
+TEST_CASE("Orbit::FindClosestPoints (Targeting.Intercepts) finds the true minimum distance between two conics") {
+    FramesGuard guard;
+    CelestialBodyRef kerbin = MakeKerbin();
+    struct Pair {
+        Orbit p, s;
+    };
+    const Pair pairs[] = {
+        {Orbit(0, 0.6, 7.0e6, 0, 30, 0, 0, &kerbin), Orbit(0, 0, 1.2e7, 0, 0, 1.7, 0, &kerbin)},     // Mun-like crossing
+        {Orbit(10, 0.2, 3.0e6, 20, 40, 0, 0, &kerbin), Orbit(35, 0.1, 3.6e6, 80, 10, 0, 0, &kerbin)},  // inclined
+        {Orbit(4, 0.95, 4.0e7, 70, 10, 0, 0, &kerbin), Orbit(6, 0, 4.7e7, 78, 38, 0.9, 0, &kerbin)},  // Minmus-like
+        {Orbit(2, 1.6, -2.0e6, 40, 75, 0, 0, &kerbin), Orbit(0, 0, 1.2e7, 0, 0, 1.7, 0, &kerbin)},   // escape
+    };
+    for (const Pair& pr : pairs) {
+        double CD = 0, CCD = 0, FFp = 0, FFs = 0, SFp = 0, SFs = 0;
+        int it = 0;
+        const int n = Orbit::FindClosestPoints(pr.p, pr.s, CD, CCD, FFp, FFs, SFp, SFs, 0.0001, 20, it);
+        REQUIRE(n >= 1);
+        // the reported anomalies reproduce the reported distances
+        const double dFirst = (pr.p.getPositionFromTrueAnomaly(FFp, false) - pr.s.getPositionFromTrueAnomaly(FFs, false)).magnitude();
+        CHECK(dFirst == doctest::Approx(CD).epsilon(1e-6));
+        const double dSecond = (pr.p.getPositionFromTrueAnomaly(SFp, false) - pr.s.getPositionFromTrueAnomaly(SFs, false)).magnitude();
+        CHECK(dSecond == doctest::Approx(CCD).epsilon(1e-6));
+        // brute force over both anomalies (2,000 x 2,000 grid, then zoomed grids) agrees with the best minimum
+        const Targeting::Conic cp = Targeting::Conic::Borrow(pr.p), cs = Targeting::Conic::Borrow(pr.s);
+        double best = std::numeric_limits<double>::max(), bv1 = 0, bv2 = 0;
+        const int N = 2000;
+        for (int a = 0; a < N; ++a) {
+            const double v1 = cp.min_v + (cp.max_v - cp.min_v) * (a + 0.5) / N;
+            const Vector3d P = cp.Point(v1);
+            for (int b = 0; b < N; ++b) {
+                const double v2 = cs.min_v + (cs.max_v - cs.min_v) * (b + 0.5) / N;
+                const double d = (P - cs.Point(v2)).sqrMagnitude();
+                if (d < best) {
+                    best = d;
+                    bv1 = v1;
+                    bv2 = v2;
+                }
+            }
+        }
+        // zoom: 200 x 200 grids over +-2 cells of the previous level, six levels
+        double h1 = (cp.max_v - cp.min_v) / N, h2 = (cs.max_v - cs.min_v) / N;
+        for (int level = 0; level < 6; ++level) {
+            const double c1 = bv1, c2 = bv2;
+            for (int a = -100; a <= 100; ++a) {
+                const double v1 = c1 + h1 * 2.0 * a / 100.0;
+                const Vector3d P = cp.Point(v1);
+                for (int b = -100; b <= 100; ++b) {
+                    const double v2 = c2 + h2 * 2.0 * b / 100.0;
+                    const double d = (P - cs.Point(v2)).sqrMagnitude();
+                    if (d < best) {
+                        best = d;
+                        bv1 = v1;
+                        bv2 = v2;
+                    }
+                }
+            }
+            h1 *= 2.0 / 100.0;
+            h2 *= 2.0 / 100.0;
+        }
+        CHECK(std::min(CD, CCD) == doctest::Approx(std::sqrt(best)).epsilon(1e-6));
+    }
 }

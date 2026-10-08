@@ -13,6 +13,7 @@
 #include "ksp/dotnet/math.hpp"
 #include "ksp/dotnet/mono_float.hpp"
 #include "ksp/dotnet/number.hpp"
+#include "ksp/orbit/targeting.hpp"
 #include "ksp/unity/quaternion.hpp"
 #include "ksp/unity/quaternion_native.hpp"
 #include "ksp/unity/random.hpp"
@@ -912,15 +913,42 @@ bool Orbit::PeApIntersects(const Orbit& primary, const Orbit& secondary, double 
     return M::Max(primary.PeR(), secondary.PeR()) - M::Min(primary.ApR(), secondary.ApR()) <= threshold;
 }
 
-// Orbit.cs:1385 _FindClosestPoints
+// Orbit.cs:1423 process_intercept
+static void process_intercept(const Targeting::Sample& cept, double& Vp, double& Vs, double& D) {
+    Vp = cept.v;
+    Vs = cept.orbit2->TrueAnomaly(cept.tgt().p);
+    D = cept.info().d.magnitude();
+}
+
+// Orbit.cs:1385 _FindClosestPoints: up to two local minima of the distance between the conics (Targeting.Intercepts,
+// 24 samples), scanned from the end of the list; true anomalies on p (FFp, SFp) and s (FFs, SFs), distances CD, CCD.
 int Orbit::FindClosestPointsDefault(const Orbit& p, const Orbit& s, double& CD, double& CCD, double& FFp, double& FFs,
                                     double& SFp, double& SFs, double epsilon, int maxIterations, int& iterationCount) {
     if (LegacyOrbitTargeting) {
         FindClosestPoints_old(p, s, CD, CCD, FFp, FFs, SFp, SFs, epsilon, maxIterations, iterationCount);
         return 2;
     }
-    throw std::logic_error(
-        "Orbit::FindClosestPoints: the Targeting.Intercepts path (Orbit.cs:1385, Targeting.cs) is not ported yet");
+    const Targeting::Conic conic = Targeting::Conic::Borrow(p);
+    const Targeting::Conic conic2 = Targeting::Conic::Borrow(s);
+    Targeting::Workspace ws;
+    const std::vector<Targeting::Sample*> list = Targeting::Intercepts(conic, conic2, 24, ws);
+    int num = 0;
+    int index = -1;
+    for (int num2 = static_cast<int>(list.size()) - 1; num2 >= 0; num2--) {
+        const Targeting::Sample& smp = *list[static_cast<size_t>(num2)];
+        if (!(Vector3d::Dot(smp.tgt().p, smp.src.p) <= 0.0) && smp.minimum) {
+            if (num != 0) {
+                num++;
+                process_intercept(smp, SFp, SFs, CCD);
+                break;
+            }
+            num++;
+            process_intercept(smp, FFp, FFs, CD);
+            index = num2;
+        }
+    }
+    if (num == 1) process_intercept(*list[static_cast<size_t>(index)], SFp, SFs, CCD);
+    return num;
 }
 
 // Orbit.cs:1430 (Debug.DrawRay/DrawLine calls omitted)
