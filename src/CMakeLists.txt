@@ -1,6 +1,7 @@
 # kspcore: engine-agnostic static library (no Unity / Unreal dependencies).
 add_library(kspcore STATIC
     core/log.cpp
+    core/delegate.cpp
     dotnet/math.cpp
     dotnet/number.cpp
     dotnet/random.cpp
@@ -18,6 +19,8 @@ add_library(kspcore STATIC
     config/config_node.cpp
     config/parse_extensions.cpp
     config/kspparseable.cpp
+    events/base_game_event.cpp
+    events/game_events.cpp
     capi/kspcore_c.cpp
 )
 add_library(ksp::core ALIAS kspcore)

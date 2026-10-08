@@ -24,8 +24,18 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
 set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "Embedded")
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION OFF)
 
-# Location of the sibling directories (harness/, decompiled/) of the KSP-UE5 project.
-set(KSP_PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/.." CACHE PATH "KSP-UE5 project root")
+# Location of the sibling directories (harness/, decompiled/) of the KSP-UE5 project. Default: the nearest ancestor of
+# the source tree that contains harness/ (core/ itself, or a git worktree under core/.worktrees/<name>/).
+set(_ksp_root_guess "${CMAKE_CURRENT_SOURCE_DIR}/..")
+set(_ksp_dir "${CMAKE_CURRENT_SOURCE_DIR}")
+foreach(_i RANGE 4)
+    cmake_path(GET _ksp_dir PARENT_PATH _ksp_dir)
+    if(EXISTS "${_ksp_dir}/harness/compare/compare.py")
+        set(_ksp_root_guess "${_ksp_dir}")
+        break()
+    endif()
+endforeach()
+set(KSP_PROJECT_ROOT "${_ksp_root_guess}" CACHE PATH "KSP-UE5 project root")
 cmake_path(NORMAL_PATH KSP_PROJECT_ROOT)
 set(KSP_HARNESS_DIR "${KSP_PROJECT_ROOT}/harness" CACHE PATH "Golden-output harness directory (read-only)")
 
