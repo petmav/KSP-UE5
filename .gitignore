@@ -26,3 +26,6 @@ Stub/build/
 
 # Big raw spike logs (summaries and CSVs are committed)
 spike/logs/*.log
+
+# Cook-generated file open order logs
+Build/*/FileOpenOrder/
