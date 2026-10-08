@@ -114,6 +114,19 @@ inline double Log(double a, double newBase) noexcept {
 // Math.IEEERemainder (mscorlib Math.cs)
 double IEEERemainder(double x, double y) noexcept;
 
+// Math.Max(double, double) / Math.Min(double, double) (mscorlib Math.cs; Mono's corlib agrees): NaN in either argument
+// gives NaN (std::max/std::min do not); ties return val2, so Max(-0.0, +0.0) = +0.0 and Max(+0.0, -0.0) = -0.0.
+inline double Max(double val1, double val2) noexcept {
+    if (val1 > val2) return val1;
+    if (std::isnan(val1)) return val1;
+    return val2;
+}
+inline double Min(double val1, double val2) noexcept {
+    if (val1 < val2) return val1;
+    if (std::isnan(val1)) return val1;
+    return val2;
+}
+
 // Math.Sign(double): throws ArithmeticException on NaN in .NET; here NaN returns 0 (callers never pass NaN).
 inline int Sign(double v) noexcept { return v < 0 ? -1 : (v > 0 ? 1 : 0); }
 inline int Sign(float v) noexcept { return v < 0 ? -1 : (v > 0 ? 1 : 0); }

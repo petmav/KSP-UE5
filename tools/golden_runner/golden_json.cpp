@@ -40,6 +40,16 @@ std::string JsonEscape(const std::string& s) {
 
 // Same text as the harness writer (ExactNumber.FormatFloat/FormatDouble, .NET Framework formatting): the shortest of "G6".."G9"
 // ("G15".."G17" for doubles) that round-trips, zero as "0.0"/"-0.0", non-finite values as strings.
+// ExactNumber.Normalize: "1E+15" -> "1e+15"; append ".0" when there is neither '.' nor an exponent, so JSON readers see a
+// float (compare.py matches key columns by json.dumps of the parsed value: -3 and -3.0 are different keys).
+static std::string NormalizeNumber(std::string s) {
+    for (char& ch : s) {
+        if (ch == 'E') ch = 'e';
+    }
+    if (s.find('.') == std::string::npos && s.find('e') == std::string::npos) s += ".0";
+    return s;
+}
+
 std::string ShortestFloat(float f) {
     if (std::isnan(f)) return "\"NaN\"";
     if (std::isinf(f)) return f > 0 ? "\"Infinity\"" : "\"-Infinity\"";
@@ -48,9 +58,9 @@ std::string ShortestFloat(float f) {
         const std::string s = ksp::dotnet::FormatSingleG(f, p, ksp::dotnet::Runtime::NetFramework);
         float back = 0.0f;
         const auto r = std::from_chars(s.data(), s.data() + s.size(), back);
-        if (r.ec == std::errc() && back == f) return s;
+        if (r.ec == std::errc() && back == f) return NormalizeNumber(s);
     }
-    return ksp::dotnet::FormatSingleG(f, 9, ksp::dotnet::Runtime::NetFramework);
+    return NormalizeNumber(ksp::dotnet::FormatSingleG(f, 9, ksp::dotnet::Runtime::NetFramework));
 }
 
 std::string ShortestDouble(double d) {
@@ -61,9 +71,9 @@ std::string ShortestDouble(double d) {
         const std::string s = ksp::dotnet::FormatDoubleG(d, p, ksp::dotnet::Runtime::NetFramework);
         double back = 0.0;
         const auto r = std::from_chars(s.data(), s.data() + s.size(), back);
-        if (r.ec == std::errc() && back == d) return s;
+        if (r.ec == std::errc() && back == d) return NormalizeNumber(s);
     }
-    return ksp::dotnet::FormatDoubleG(d, 17, ksp::dotnet::Runtime::NetFramework);
+    return NormalizeNumber(ksp::dotnet::FormatDoubleG(d, 17, ksp::dotnet::Runtime::NetFramework));
 }
 
 static const char* TypeName(ColType t) {
