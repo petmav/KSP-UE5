@@ -226,5 +226,5 @@ textures are in the JSON index only (terrain package). Nothing is decoded yet an
 | hash | content |
 |---|---|
 | `663d4c2` | WP-09 code, generated data, asset index, 4 gates, worktree-safe CMake root |
-| next commit | unit tests `tests/test_celestial.cpp`, STATUS/README |
+| `13f4d07` | unit tests `tests/test_celestial.cpp`, STATUS/README |
 
