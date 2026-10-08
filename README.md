@@ -56,6 +56,10 @@ links).
 | `golden.confignode_roundtrip` | WP-02 ConfigNode Load/Save/ToString/Parse; the runner also checks byte-exact `saved/*.cfg` and tree-exact `trees/*.json` | `harness/golden/confignode_roundtrip` |
 | `golden.curves_eval` | WP-01 FloatCurve / Unity AnimationCurve: 366 curves, 28,484 evaluations | `harness/golden/curves_eval` (== native Unity, CAPTURE-SPEC C1) |
 | `corpus.gamedata` | every `.cfg` under `harness/inputs/GameData` and `.craft` under `harness/inputs/Ships`: load, Save->Load->Save byte-identical, Parse == Load, every `key` node loads as a FloatCurve | self-consistency |
+| `golden.physics_constants` | WP-09 PhysicsGlobals: all 213 field rows (value text, numeric value, source layer) after level0 prefab + Physics.cfg | `harness/golden/physics_constants` |
+| `capture.physics_drag_curve` | WP-09 PhysicsGlobals.DragCurveValue (managed float code, Mono rule) | in-game `harness/captures/out/aero_forces_mono.json` (table drag_curve_value) |
+| `golden.body_catalog` | WP-09 Kerbol system at UT 0: bodies (all columns), orbits (serialized elements only; propagated columns wait for WP-07's Orbit), 1 km atmosphere profiles, every body FloatCurve key | `harness/golden/body_catalog` |
+| `golden.atmosphere_curves` | WP-09 CelestialBody atmosphere + FlightIntegrator atmosphere helpers (pressure, temperature, density, speed of sound, Mach, solar attenuation, shock temperature, convection, pseudo-Reynolds) | `harness/golden/atmosphere_curves` |
 
 All of them are bit-exact today (every numeric column max ULP 0, max abs 0).
 
@@ -139,12 +143,18 @@ contract into FMA.
 | `include/ksp/core/` | `log.hpp` (Debug.Log replacement with an installable sink) |
 | `include/kspcore/kspcore_c.h` | the C ABI used by the Unreal shell (implementation `src/capi/kspcore_c.cpp`) |
 | `include/ksp/curves/double_curve.hpp`, `include/ksp/math/{matrix4x4d,mathfx}.hpp` | DoubleCurve, Vector3/4Curve, Matrix4x4D, Mathfx, VectorExtensions, QuaternionExtensions, MinMaxFloat, Vect, PIDclamp |
+| `include/ksp/physics/` | WP-09 `physics_globals.hpp` (PhysicsGlobals: fields, static properties, LoadDatabase/SaveDatabase, lifting-surface curves, DragCurveValue; the `*.inc` files are generated), `vessel_ranges.hpp` (VesselRanges, Vessel.Situations) |
+| `include/ksp/celestial/` | WP-09 `celestial_body.hpp` (CelestialBody, CBAttributeMapSO, MiniBiome, GameAssetRef, orbit elements + `ICelestialBodyOrbit` hook for ksp::Orbit), `planetarium.hpp` (Planetarium), `celestial_system.hpp` (PSystem prefab, `KerbolSystemPrefab()`, spawn, FlightGlobals body list), `flight_atmosphere.hpp` (FlightIntegrator atmosphere helpers) |
+| `include/ksp/curves/serialized_float_curve.hpp` | FloatCurves built from Unity-serialized keyframes (prefab data) |
+| `data/kerbol_body_assets.json` | index of the game's own body assets (biome maps with attribute tables, mini-biomes, PQS height/colour maps, scaled-space meshes/materials/textures) by asset file + PathID, from `decompiled/KSP-dev/KSP_x64_Data` (`tools/extract_body_assets.py`) |
+| `tools/gen_wp09_data.py` | generates `physics_globals_*.inc` and `src/celestial/kerbol_system_data.cpp` from the decompiled C# (field lists, LoadDatabase/SaveDatabase order) and the game's serialized prefab data; regenerate, never hand-edit |
+| `tools/extract_body_assets.py` | read-only UnityPy indexer of the body assets (run with `harness/tools-cache/venv`) |
 | `src/` | implementations, same tree |
 | `tests/capi/` | C ABI consumers (pure C; C++ with Unreal's flags) |
 | `tests/` | doctest unit tests; `tests/data/netfx_reference.tsv` reference data; `tests/tolerances_capture.json` tolerances for in-game capture gates; `tests/CMakeLists.txt` declares every gate (`ksp_golden_gate`) |
 | `tools/golden_runner/` | the golden runner (one `ds_<dataset>.cpp` per harness dataset) |
 | `tools/netfx_reference/` | `gen_netfx_reference.ps1`, regenerates `tests/data/netfx_reference.tsv` |
-| `tools/filter_golden.py` | writes a table-filtered / `_hex`-stripped copy of a golden or capture file for compare.py |
+| `tools/filter_golden.py` | writes a table/column-filtered / `_hex`-stripped copy of a golden or capture file for compare.py |
 | `cmake/RunGolden.cmake` | the per-dataset gate |
 | `third_party/` | doctest 2.4.12, nlohmann/json 3.12.0 (pinned, see `third_party/VERSIONS.md`); used by tests/tools only |
 
@@ -199,6 +209,10 @@ contract into FMA.
    `ksp_golden_gate(golden.<dataset> <dataset>)` for a harness golden, or
    `ksp_golden_gate(capture.<dataset> <dataset> GOLDEN ${KSP_CAPTURES_DIR}/<file>.json DROP_HEX TOL ${KSP_CAPTURE_TOL}
    [TABLES t1,t2])` for an in-game capture. Float32 managed paths are judged against captures where they exist.
+   `COLUMNS t:c1,c2/t2:c3` keeps only the listed columns of a table: only for columns that need another package's code
+   (document each exclusion in tests/CMakeLists.txt and STATUS.md), never to hide a mismatch.
+   Candidate numbers are written like the harness (`.0` on integral values): compare.py matches row keys by their JSON
+   text, so a key column written as `100` would not match the golden's `100.0`.
 5. Run `run_tests.ps1`; inspect `build/<Config>/candidate/<dataset>/compare_report_<gate>.json` for per-column
    max abs/rel/ULP.
 6. Unit-test API behaviour the golden does not cover in `tests/test_<area>.cpp`.
