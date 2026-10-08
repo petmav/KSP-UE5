@@ -1,0 +1,4 @@
+* text=auto eol=lf
+# reference data must stay byte-exact
+tests/data/** -text
+third_party/** -text
