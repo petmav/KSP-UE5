@@ -6,6 +6,7 @@ add_executable(kspcore_tests
     test_math.cpp
     test_curves.cpp
     test_config_node.cpp
+    test_wp01_misc.cpp
     test_netfx_reference.cpp
 )
 target_link_libraries(kspcore_tests PRIVATE kspcore)

@@ -11,7 +11,10 @@ add_library(kspcore STATIC
     math/vector3d.cpp
     math/quaterniond.cpp
     math/util_math.cpp
+    math/matrix4x4d.cpp
+    math/mathfx.cpp
     curves/float_curve.cpp
+    curves/double_curve.cpp
     config/config_node.cpp
     config/parse_extensions.cpp
 )
