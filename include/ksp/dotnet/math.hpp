@@ -114,6 +114,32 @@ inline double Log(double a, double newBase) noexcept {
 // Math.IEEERemainder (mscorlib Math.cs)
 double IEEERemainder(double x, double y) noexcept;
 
+// Math.Max / Math.Min (Mono mscorlib Math.cs:405-548): a NaN FIRST argument is returned; otherwise
+// (val1 > val2) ? val1 : val2 -- so Max(x, NaN) = NaN, Min(0.0, -0.0) = -0.0, Max(-0.0, 0.0) = 0.0 (the second argument
+// wins ties). Differs from std::max/std::min for NaN in the second argument and for signed zeros.
+inline double Max(double val1, double val2) noexcept {
+    if (val1 > val2) return val1;
+    if (std::isnan(val1)) return val1;
+    return val2;
+}
+inline double Min(double val1, double val2) noexcept {
+    if (val1 < val2) return val1;
+    if (std::isnan(val1)) return val1;
+    return val2;
+}
+inline float Max(float val1, float val2) noexcept {
+    if (val1 > val2) return val1;
+    if (std::isnan(val1)) return val1;
+    return val2;
+}
+inline float Min(float val1, float val2) noexcept {
+    if (val1 < val2) return val1;
+    if (std::isnan(val1)) return val1;
+    return val2;
+}
+inline int Max(int val1, int val2) noexcept { return val1 >= val2 ? val1 : val2; }
+inline int Min(int val1, int val2) noexcept { return val1 <= val2 ? val1 : val2; }
+
 // Math.Sign(double): throws ArithmeticException on NaN in .NET; here NaN returns 0 (callers never pass NaN).
 inline int Sign(double v) noexcept { return v < 0 ? -1 : (v > 0 ? 1 : 0); }
 inline int Sign(float v) noexcept { return v < 0 ? -1 : (v > 0 ? 1 : 0); }

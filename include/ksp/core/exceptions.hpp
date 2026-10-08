@@ -31,6 +31,12 @@ public:
     using std::runtime_error::runtime_error;
 };
 
+// System.ArithmeticException (e.g. Math.Sign(NaN))
+class ArithmeticException : public std::runtime_error {
+public:
+    using std::runtime_error::runtime_error;
+};
+
 // System.DivideByZeroException (integer division / remainder by zero)
 class DivideByZeroException : public std::runtime_error {
 public:

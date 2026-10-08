@@ -50,3 +50,20 @@ IntersectInformation. Brief extra: finish UtilMath (WP-01 file; missing Max/Min/
 
 ## Step 2 DONE: KerbalFSM (include/ksp/fsm/kerbal_fsm.hpp, src/fsm/kerbal_fsm.cpp, include/ksp/core/unity_time.hpp)
 - 4 FSM test cases in tests/test_events.cpp (green). Committed.
+
+## Step 3 DONE: utilities (all ctest 10/10 green; unit 69 cases)
+- Localizer port (include/ksp/localization/localizer.hpp, src/localization/localizer.cpp) incl. Lingoona managed fallback.
+- KSPUtil (include/ksp/util/ksp_util.hpp, src/util/ksp_util.cpp): DefaultDateTimeFormatter + statics; GameSettings
+  KERBIN_TIME + Versioning shims live in ksp_util.hpp.
+- dotnet: collections.hpp (ListSort = ArraySortHelper introsort, Dictionary with .NET order), enum.hpp, utf16.hpp,
+  math.hpp Math.Min/Max; core/exceptions.hpp ArithmeticException.
+- util: collections.hpp (ArrayExtensions, ListExtension, BiDictionary, DictionaryValueList, ListDictionary),
+  enum_extensions.hpp, misc_util (StringExtensions, StringBuilderCache.Format, MinMaxColor, IntersectInformation,
+  Clear no-ops), simplex (Simplex, SimplexNoise).
+- UtilMath completed: Max/Min(params), MaxFrom/MinFrom x8, WrapAround(int) exceptions, dotnet::Math in
+  ASinh..Coth/Flatten/RoundToPlaces/AngleBetween, .NET Math.Min in BSPSolver; citations fixed to the real line numbers.
+- Found: BSPSolver's initial value is not abs'd -> a negative start never moves (sic).
+## Next
+- .NET reference tool (tools/wp03_reference): csc.exe (Framework64 v4.0.30319) + KSP IL from harness/build/KspGolden
+  (read-only copy into build/wp03_reference) -> tests/data/wp03_reference.tsv + tests/test_wp03_reference.cpp.
+- STATUS.md WP-03 section, README updates, final commit.

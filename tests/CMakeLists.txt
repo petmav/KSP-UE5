@@ -9,6 +9,7 @@ add_executable(kspcore_tests
     test_wp01_misc.cpp
     test_netfx_reference.cpp
     test_events.cpp
+    test_util.cpp
 )
 target_link_libraries(kspcore_tests PRIVATE kspcore)
 ksp_set_build_flags(kspcore_tests)

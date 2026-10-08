@@ -22,6 +22,10 @@ add_library(kspcore STATIC
     events/base_game_event.cpp
     events/game_events.cpp
     fsm/kerbal_fsm.cpp
+    localization/localizer.cpp
+    util/ksp_util.cpp
+    util/misc_util.cpp
+    util/simplex.cpp
     capi/kspcore_c.cpp
 )
 add_library(ksp::core ALIAS kspcore)
