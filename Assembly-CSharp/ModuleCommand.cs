@@ -705,10 +705,4 @@ public class ModuleCommand : PartModule, ICommNetControlSource, IResourceConsume
 		cacheAutoLOC_217517 = Localizer.Format("#autoLOC_217517");
 		cacheAutoLOC_6003031 = Localizer.Format("#autoLoc_6003031");
 	}
-
-	[SpecialName]
-	string ICommNetControlSource.get_name()
-	{
-		return base.name;
-	}
 }

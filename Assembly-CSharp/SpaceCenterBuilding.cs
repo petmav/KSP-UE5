@@ -908,16 +908,4 @@ public class SpaceCenterBuilding : MonoBehaviour, ITooltipController
 			UIMasterController.Instance.DespawnTooltip(this);
 		}
 	}
-
-	[SpecialName]
-	string ITooltipController.get_name()
-	{
-		return base.name;
-	}
-
-	[SpecialName]
-	void ITooltipController.set_name(string value)
-	{
-		base.name = value;
-	}
 }

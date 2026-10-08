@@ -28,92 +28,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.UI.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.AnimationModule">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="UnityEngine.AudioModule">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ParticleSystemModule">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
-    </Reference>
-    <Reference Include="KSPTrackIR">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\KSPTrackIR.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.IMGUIModule">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UnityWebRequestModule">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Core" />
-    <Reference Include="KSPAssets">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\KSPAssets.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Xml" />
-    <Reference Include="UnityEngine.AssetBundleModule">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UIModule">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.UIModule.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\Mono.Cecil.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.VehiclesModule">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.VehiclesModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.InputLegacyModule">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ImageConversionModule">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UnityWebRequestTextureModule">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UnityWebRequestAudioModule">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UnityWebRequestAssetBundleModule">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ScreenCaptureModule">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.ScreenCaptureModule.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.Analytics.StandardEvents">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\Unity.Analytics.StandardEvents.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UnityAnalyticsModule">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.UnityAnalyticsModule.dll</HintPath>
-    </Reference>
-    <Reference Include="Ionic.Zip">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\Ionic.Zip.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.Analytics.DataPrivacy">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\Unity.Analytics.DataPrivacy.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.VRModule">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\UnityEngine.VRModule.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+  <!-- ItemGroup References was removed entirely here (guide 3.2) -->
   <ItemGroup>
     <Compile Include="AbundanceRequest.cs" />
     <Compile Include="ActionGroupList.cs" />
@@ -3416,4 +3331,33 @@
     <Compile Include="XSelectable.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- Everything below this was added (guide 3.2) -->
+  <!-- Current KSPBuildTools (1.1.1) submodule import line from its docs; resolves to the same file as the guide's $(SolutionDir)KSPBuildTools\KSPCommon.targets -->
+  <Import Project="$(MSBuildThisFileDirectory)../KSPBuildTools/KSPCommon.targets" />
+  <ItemGroup>
+    <!-- KSPBuildTools adds $(KSPBT_ManagedPath)/Assembly-CSharp.dll; we are building that assembly, so remove it -->
+    <Reference Remove="$(KSPBT_ManagedPath)/Assembly-CSharp.dll" />
+    <Reference Include="KSPTrackIR">
+      <HintPath>$(KSPBT_ManagedPath)\KSPTrackIR.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(KSPBT_ManagedPath)\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="KSPAssets">
+      <HintPath>$(KSPBT_ManagedPath)\KSPAssets.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Cecil">
+      <HintPath>$(KSPBT_ManagedPath)\Mono.Cecil.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Analytics.StandardEvents">
+      <HintPath>$(KSPBT_ManagedPath)\Unity.Analytics.StandardEvents.dll</HintPath>
+    </Reference>
+    <Reference Include="Ionic.Zip">
+      <HintPath>$(KSPBT_ManagedPath)\Ionic.Zip.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Analytics.DataPrivacy">
+      <HintPath>$(KSPBT_ManagedPath)\Unity.Analytics.DataPrivacy.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>

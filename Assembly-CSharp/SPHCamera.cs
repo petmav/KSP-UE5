@@ -312,10 +312,4 @@ public class SPHCamera : MonoBehaviour, IKSPCamera
 	{
 		return InputLockManager.IsUnlocked(ControlTypes.CAMERACONTROLS);
 	}
-
-	[SpecialName]
-	bool IKSPCamera.get_enabled()
-	{
-		return base.enabled;
-	}
 }

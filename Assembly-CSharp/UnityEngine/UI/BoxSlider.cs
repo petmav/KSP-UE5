@@ -406,11 +406,5 @@ namespace UnityEngine.UI
 		{
 			eventData.useDragThreshold = false;
 		}
-
-		[SpecialName]
-		Transform ICanvasElement.get_transform()
-		{
-			return base.transform;
-		}
 	}
 }

@@ -10,7 +10,7 @@ namespace PreFlightTests
 
 		public event Callback<bool> TestResultChanged;
 
-		private event Callback<bool> _0003
+		event Callback<bool> IDesignConcern.testResultChanged
 		{
 			add
 			{

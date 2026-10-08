@@ -401,10 +401,4 @@ public class ModuleGroundExpControl : ModuleGroundCommsPart, ICommNetControlSour
 		cacheAutoLOC_7001411 = Localizer.Format("#autoLOC_7001411");
 		cacheAutoLOC_8002233 = Localizer.Format("#autoLOC_8002233");
 	}
-
-	[SpecialName]
-	string ICommNetControlSource.get_name()
-	{
-		return base.name;
-	}
 }

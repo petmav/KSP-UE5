@@ -310,10 +310,4 @@ public class KerbalSeat : PartModule, ICommNetControlSource, IConstruction
 	{
 		return occupant == null;
 	}
-
-	[SpecialName]
-	string ICommNetControlSource.get_name()
-	{
-		return base.name;
-	}
 }

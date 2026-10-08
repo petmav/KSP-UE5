@@ -111,17 +111,5 @@ namespace KSP.UI
 		{
 			return true;
 		}
-
-		[SpecialName]
-		string ITooltipController.get_name()
-		{
-			return base.name;
-		}
-
-		[SpecialName]
-		void ITooltipController.set_name(string value)
-		{
-			base.name = value;
-		}
 	}
 }

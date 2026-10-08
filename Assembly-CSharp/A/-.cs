@@ -21,10 +21,6 @@ namespace A
 			_001E = Assembly.Load(assemblyString);
 		}
 
-		internal static void _0003()
-		{
-		}
-
 		private static Assembly _000D(object _001E, ResolveEventArgs _0003)
 		{
 			Assembly executingAssembly = Assembly.GetExecutingAssembly();

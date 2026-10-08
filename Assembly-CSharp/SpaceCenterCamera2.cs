@@ -437,10 +437,4 @@ public class SpaceCenterCamera2 : MonoBehaviour, IKSPCamera
 		}
 		return false;
 	}
-
-	[SpecialName]
-	bool IKSPCamera.get_enabled()
-	{
-		return base.enabled;
-	}
 }

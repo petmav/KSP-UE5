@@ -582,10 +582,4 @@ public class PlanetariumCamera : MonoBehaviour, IKSPCamera
 		}
 		return nearestBody;
 	}
-
-	[SpecialName]
-	bool IKSPCamera.get_enabled()
-	{
-		return base.enabled;
-	}
 }

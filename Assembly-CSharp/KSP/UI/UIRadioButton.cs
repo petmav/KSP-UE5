@@ -291,17 +291,5 @@ namespace KSP.UI
 				PopOtherButtonsInGroup();
 			}
 		}
-
-		[SpecialName]
-		string IRadioButton.get_name()
-		{
-			return base.name;
-		}
-
-		[SpecialName]
-		void IRadioButton.set_name(string value)
-		{
-			base.name = value;
-		}
 	}
 }

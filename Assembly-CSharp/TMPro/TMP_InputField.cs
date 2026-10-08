@@ -3183,11 +3183,5 @@ namespace TMPro
 			}
 			textComponent.font = fontAsset;
 		}
-
-		[SpecialName]
-		Transform ICanvasElement.get_transform()
-		{
-			return base.transform;
-		}
 	}
 }

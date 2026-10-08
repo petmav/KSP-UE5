@@ -1179,10 +1179,4 @@ public class FlightCamera : MonoBehaviour, IKSPCamera
 			}
 		}
 	}
-
-	[SpecialName]
-	bool IKSPCamera.get_enabled()
-	{
-		return base.enabled;
-	}
 }

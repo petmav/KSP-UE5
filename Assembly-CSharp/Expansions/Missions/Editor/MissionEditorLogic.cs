@@ -1853,7 +1853,7 @@ namespace Expansions.Missions.Editor
 			goto IL_020e;
 			IL_0206:
 			bool num3;
-			if (num3 != 0)
+			if (num3 != false)
 			{
 				OnRedo();
 			}
