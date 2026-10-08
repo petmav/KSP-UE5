@@ -1,0 +1,23 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "5.8",
+	"Category": "",
+	"Description": "KSP-UE5 thin Unreal shell over the engine-agnostic kspcore library. Private, local-only.",
+	"Modules": [
+		{
+			"Name": "KspUe5",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [ "Engine", "CoreUObject" ]
+		},
+		{
+			"Name": "KspUe5Editor",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{ "Name": "KspCoreBridge", "Enabled": true },
+		{ "Name": "ProceduralMeshComponent", "Enabled": true }
+	]
+}

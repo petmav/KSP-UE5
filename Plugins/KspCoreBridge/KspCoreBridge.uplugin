@@ -1,0 +1,19 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.1",
+	"FriendlyName": "KSP Core Bridge",
+	"Description": "Links the engine-agnostic kspcore static library (C ABI) into Unreal. Stub configuration until core/ ships kspcore.lib.",
+	"Category": "KspUe5",
+	"CreatedBy": "KSP-UE5 (private)",
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "KspCoreBridge",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
