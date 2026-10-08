@@ -56,7 +56,7 @@ embedded).
 | `bf43535` | WP-01 remaining files: DoubleCurve, Vector3/4Curve, Matrix4x4D, Mathfx, extensions, PIDclamp |
 | `8992c77` | scaffold: Unreal link settings + C ABI |
 | `854766d` | WP-02 KSPParseable, KSPUtil vector helpers, type parsers |
-| (next) | docs: STATUS.md, PROGRESS.md |
+| `d229056` | docs: STATUS.md, PROGRESS.md |
 
 The first four commits were each built and tested in a clean worktree (each passes the gates it contains).
 
