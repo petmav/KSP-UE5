@@ -31,7 +31,7 @@
   <ItemGroup>
     <Reference Include="System.Xml" />
     <Reference Include="KSPAssets">
-      <HintPath>C:\Projects\KSP-UE5\decompile\KSP-dev\KSP_x64_Data\Managed\KSPAssets.dll</HintPath>
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\KSP_x64_Data\Managed\KSPAssets.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

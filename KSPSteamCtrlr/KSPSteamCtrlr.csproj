@@ -30,16 +30,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System.Core">
-      <HintPath>C:/Projects/KSP-UE5/decompile/KSP-dev/KSP_x64_Data/Managed\System.Core.dll</HintPath>
+      <HintPath>C:/Projects/KSP-UE5/decompiled/KSP-dev/KSP_x64_Data/Managed\System.Core.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>C:/Projects/KSP-UE5/decompile/KSP-dev/KSP_x64_Data/Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>C:/Projects/KSP-UE5/decompiled/KSP-dev/KSP_x64_Data/Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>C:/Projects/KSP-UE5/decompile/KSP-dev/KSP_x64_Data/Managed\UnityEngine.dll</HintPath>
+      <HintPath>C:/Projects/KSP-UE5/decompiled/KSP-dev/KSP_x64_Data/Managed\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>C:/Projects/KSP-UE5/decompile/KSP-dev/KSP_x64_Data/Managed\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>C:/Projects/KSP-UE5/decompiled/KSP-dev/KSP_x64_Data/Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
