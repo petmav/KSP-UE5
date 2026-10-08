@@ -14,7 +14,7 @@ public class KspCoreBridge : ModuleRules
 	// ONE-LINE SWITCH. false = link the placeholder ue5/Stub/lib/kspcore.lib (one function).
 	//                  true  = link the real core: <KSPCORE_ROOT or C:\Projects\KSP-UE5\core>\build\RelWithDebInfo\kspcore.lib
 	//                          with headers from <root>\include. Override the lib path with env KSPCORE_LIB.
-	private static readonly bool bUseRealCore = false;
+	private static readonly bool bUseRealCore = true;
 	// ------------------------------------------------------------------------------------------------
 
 	public KspCoreBridge(ReadOnlyTargetRules Target) : base(Target)
