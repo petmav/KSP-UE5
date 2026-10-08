@@ -3,6 +3,7 @@ add_executable(kspcore_tests
     test_main.cpp
     test_dotnet_number.cpp
     test_dotnet_text.cpp
+    test_math.cpp
     test_netfx_reference.cpp
 )
 target_link_libraries(kspcore_tests PRIVATE kspcore)
@@ -13,6 +14,7 @@ add_test(NAME unit COMMAND kspcore_tests)
 # ---- golden gate: golden_runner writes candidates, harness/compare/compare.py judges them --------------------------
 # One ctest per harness dataset. A work package adds its dataset name here (and a ds_<name>.cpp to the runner).
 set(KSP_GOLDEN_DATASETS
+    math_shim               # WP-01 maths / Unity value types
 )
 find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
 set(KSP_CANDIDATE_DIR "${CMAKE_BINARY_DIR}/candidate")

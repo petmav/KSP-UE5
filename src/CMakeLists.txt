@@ -4,6 +4,10 @@ add_library(kspcore STATIC
     dotnet/math.cpp
     dotnet/number.cpp
     dotnet/text.cpp
+    unity/vector.cpp
+    math/vector3d.cpp
+    math/quaterniond.cpp
+    math/util_math.cpp
 )
 add_library(ksp::core ALIAS kspcore)
 target_include_directories(kspcore PUBLIC ${PROJECT_SOURCE_DIR}/include)
