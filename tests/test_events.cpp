@@ -2,6 +2,7 @@
 // EventValueComparison / EventValueOperation / EventValueWrapper, BaseGameEvent.FindEvent, the GameEvents registry.
 // Expected behaviour derived from the C# (EventData.cs, EventVoid.cs, ...); the call-order scenarios marked
 // "netfx" are also checked against KSP's own IL in test_wp03_reference.cpp (tests/data/wp03_reference.tsv).
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
@@ -410,4 +411,146 @@ TEST_CASE("GameEvents registry: names, nesting, duplicate names, modifiers") {
     // the registry is process-wide: remove what this test added
     ev.Remove(listener);
     CHECK(ev.Count() == 0);
+}
+
+// ---- KerbalFSM (KerbalFSM.cs, KFSM*.cs) -------------------------------------------------------------------------
+#include "ksp/core/unity_time.hpp"
+#include "ksp/fsm/kerbal_fsm.hpp"
+
+namespace {
+struct FsmFixture {
+    std::vector<std::string> trace;
+    KerbalFSM fsm;
+    KFSMState A{"A"}, B{"B"}, C{"C"};
+    FsmFixture() {
+        Time::time = 10.0f;
+        Time::frameCount = 100;
+        for (KFSMState* s : {&A, &B, &C}) {
+            fsm.AddState(s);
+            s->OnEnter = KFSMStateChange::Lambda(s, [this, s](KFSMState* from) {
+                trace.push_back("enter " + s->name + " from " + (from ? from->name : std::string("null")) +
+                                " t=" + std::to_string(s->TimeAtStateEnter));
+            });
+            s->OnLeave = KFSMStateChange::Lambda(s, [this, s](KFSMState* to) { trace.push_back("leave " + s->name + " to " + to->name); });
+        }
+        fsm.OnEventCalled = Callback<KFSMEvent*>::Lambda(&fsm, [this](KFSMEvent* e) { trace.push_back("called " + e->name); });
+        fsm.OnStateChange = Callback<KFSMState*, KFSMState*, KFSMEvent*>::Lambda(
+            &fsm, [this](KFSMState* f, KFSMState* t, KFSMEvent* e) { trace.push_back("change " + f->name + "->" + t->name + " by " + e->name); });
+    }
+    ~FsmFixture() {
+        Time::time = 0.0f;
+        Time::frameCount = 0;
+    }
+};
+}  // namespace
+
+TEST_CASE("KerbalFSM: start, transition callback order, time stamps") {
+    LogCapture logs;
+    FsmFixture f;
+    KFSMEvent go("go");
+    go.GoToStateOnEvent = &f.B;
+    go.OnEvent = KFSMCallback::Lambda(&go, [&] { f.trace.push_back("onevent go"); });
+    f.fsm.AddEvent(&go, {&f.A});
+    CHECK_THROWS_AS(f.fsm.RunEvent(&go), Exception);  // before StartFSM
+    f.A.TimeAtStateEnter = 1.5;
+    f.fsm.StartFSM("A");
+    // OnEnter(null) runs before the time stamp is written (t still 1.5)
+    CHECK(f.trace == std::vector<std::string>{"enter A from null t=1.500000"});
+    CHECK(f.A.TimeAtStateEnter == 10.0);
+    CHECK(f.fsm.currentStateName == "A");
+    CHECK(f.fsm.Started());
+    f.trace.clear();
+    Time::time = 12.25f;
+    Time::frameCount = 107;
+    CHECK(f.fsm.TimeAtCurrentState() == 2.25);
+    CHECK(f.fsm.FramesInCurrentState() == 7);
+    f.fsm.RunEvent(&go);
+    CHECK(f.trace == std::vector<std::string>{"called go", "onevent go", "leave A to B", "change A->B by go",
+                                              "enter B from A t=12.250000"});
+    CHECK(f.fsm.CurrentState() == &f.B);
+    CHECK(f.fsm.LastState() == &f.A);
+    CHECK(f.fsm.LastEvent() == &go);
+    CHECK(f.fsm.lastEventName == "go");
+    CHECK(f.B.FrameCountAtStateEnter == 107);
+    // event not assigned to the current state: logged, nothing else
+    f.trace.clear();
+    f.fsm.RunEvent(&go);
+    CHECK(f.trace.empty());
+    REQUIRE(!logs.lines.empty());
+    CHECK(logs.lines.back().second == "Event go not assigned to state B");
+    CHECK_THROWS_AS(f.fsm.StartFSM("nope"), Exception);
+}
+
+TEST_CASE("KerbalFSM: AddEvent order and errors, AddEventExcluding") {
+    FsmFixture f;
+    KFSMState stray("stray");
+    KFSMEvent e("e");
+    try {
+        f.fsm.AddEvent(&e, {&f.A, &stray, &f.C});
+        FAIL("expected an exception");
+    } catch (const Exception& ex) {
+        CHECK(std::string(ex.what()) == "FSM Error: Cannot add events to state stray. It is not registered in this FSM (or is null)");
+    }
+    // states are processed from the last: C got the event before the failure, A did not
+    CHECK(f.C.IsValid(&e));
+    CHECK_FALSE(f.A.IsValid(&e));
+    KFSMEvent x("x");
+    f.fsm.AddEventExcluding(&x, {&f.B});
+    CHECK(f.A.IsValid(&x));
+    CHECK_FALSE(f.B.IsValid(&x));
+    CHECK(f.C.IsValid(&x));
+    CHECK(x.IsValid(&f.A));
+    // a state registered twice gets the event twice
+    f.fsm.AddState(&f.A);
+    KFSMEvent twice("twice");
+    f.fsm.AddEvent(&twice, {&f.A});
+    CHECK(std::count(f.A.StateEvents().begin(), f.A.StateEvents().end(), &twice) == 2);
+}
+
+TEST_CASE("KerbalFSM: updateFSM keeps its index across a transition (sic), update modes, timed events") {
+    FsmFixture f;
+    KFSMEvent aToB("aToB"), aToC("aToC"), bNever("bNever"), bToC("bToC");
+    for (KFSMEvent* e : {&aToB, &aToC, &bNever, &bToC}) e->updateMode = KFSMUpdateMode::FIXEDUPDATE;
+    aToB.GoToStateOnEvent = &f.B;
+    aToC.GoToStateOnEvent = &f.C;
+    bToC.GoToStateOnEvent = &f.C;
+    auto yes = KFSMEventCondition::Lambda(&f, [](KFSMState*) { return true; });
+    aToB.OnCheckCondition = yes;
+    aToC.OnCheckCondition = yes;
+    bToC.OnCheckCondition = yes;
+    f.A.AddEvent(&aToB);
+    f.A.AddEvent(&aToC);
+    f.B.AddEvent(&bNever);
+    f.B.AddEvent(&bToC);
+    f.fsm.StartFSM(&f.A);
+    f.fsm.UpdateFSM();  // wrong mode: nothing
+    CHECK(f.fsm.CurrentState() == &f.A);
+    f.fsm.FixedUpdateFSM();
+    // i=0: aToB -> B; i=1 now indexes B's list: bToC -> C. aToC is never evaluated.
+    CHECK(f.fsm.CurrentState() == &f.C);
+    CHECK(f.fsm.LastEvent() == &bToC);
+
+    // KFSMTimedEvent: (double)Time.time - TimeAtStateEnter > TimerDuration
+    KFSMTimedEvent timer("timer", 1.0);
+    timer.GoToStateOnEvent = &f.A;
+    f.C.AddEvent(&timer);
+    Time::time = 11.0f;  // C was entered at t=10 -> 1.0 > 1.0 is false
+    f.fsm.UpdateFSM();
+    CHECK(f.fsm.CurrentState() == &f.C);
+    Time::time = 11.0625f;
+    f.fsm.UpdateFSM();
+    CHECK(f.fsm.CurrentState() == &f.A);
+}
+
+TEST_CASE("KerbalFSM: an event without a target state throws after recording lastEvent") {
+    FsmFixture f;
+    KFSMEvent dead("dead");
+    f.A.AddEvent(&dead);
+    f.fsm.StartFSM(&f.A);
+    f.trace.clear();
+    CHECK_THROWS_AS(f.fsm.RunEvent(&dead), NullReferenceException);
+    CHECK(f.fsm.LastEvent() == &dead);
+    CHECK(f.fsm.lastEventName == "dead");
+    CHECK(f.fsm.CurrentState() == &f.A);
+    CHECK(f.trace == std::vector<std::string>{"called dead"});
 }

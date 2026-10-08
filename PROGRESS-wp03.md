@@ -47,3 +47,6 @@ IntersectInformation. Brief extra: finish UtilMath (WP-01 file; missing Max/Min/
 - FSM (KerbalFSM + KFSM*, Time shim), util (Localizer shim, GameSettings shim, KSPUtil, collections, enums, Simplex,
   strings), UtilMath completion (+ dotnet Math.Min/Max), .NET reference tool (tools/wp03_reference, KSP IL via
   harness/build/KspGolden DLLs, read-only) -> tests/data/wp03_reference.tsv.
+
+## Step 2 DONE: KerbalFSM (include/ksp/fsm/kerbal_fsm.hpp, src/fsm/kerbal_fsm.cpp, include/ksp/core/unity_time.hpp)
+- 4 FSM test cases in tests/test_events.cpp (green). Committed.

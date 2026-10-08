@@ -21,6 +21,7 @@ add_library(kspcore STATIC
     config/kspparseable.cpp
     events/base_game_event.cpp
     events/game_events.cpp
+    fsm/kerbal_fsm.cpp
     capi/kspcore_c.cpp
 )
 add_library(ksp::core ALIAS kspcore)
