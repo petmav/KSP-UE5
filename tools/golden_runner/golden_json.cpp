@@ -38,6 +38,15 @@ std::string JsonEscape(const std::string& s) {
     return o;
 }
 
+// ExactNumber.Normalize: "E" -> "e" and ".0" appended to integral text, so that JSON readers see a float (compare.py
+// matches row keys by json.dumps of the parsed value: 100 and 100.0 are different keys).
+static std::string Normalize(std::string s) {
+    for (char& c : s)
+        if (c == 'E') c = 'e';
+    if (s.find('.') == std::string::npos && s.find('e') == std::string::npos) s += ".0";
+    return s;
+}
+
 // Same text as the harness writer (ExactNumber.FormatFloat/FormatDouble, .NET Framework formatting): the shortest of "G6".."G9"
 // ("G15".."G17" for doubles) that round-trips, zero as "0.0"/"-0.0", non-finite values as strings.
 std::string ShortestFloat(float f) {
@@ -48,9 +57,9 @@ std::string ShortestFloat(float f) {
         const std::string s = ksp::dotnet::FormatSingleG(f, p, ksp::dotnet::Runtime::NetFramework);
         float back = 0.0f;
         const auto r = std::from_chars(s.data(), s.data() + s.size(), back);
-        if (r.ec == std::errc() && back == f) return s;
+        if (r.ec == std::errc() && back == f) return Normalize(s);
     }
-    return ksp::dotnet::FormatSingleG(f, 9, ksp::dotnet::Runtime::NetFramework);
+    return Normalize(ksp::dotnet::FormatSingleG(f, 9, ksp::dotnet::Runtime::NetFramework));
 }
 
 std::string ShortestDouble(double d) {
@@ -61,9 +70,9 @@ std::string ShortestDouble(double d) {
         const std::string s = ksp::dotnet::FormatDoubleG(d, p, ksp::dotnet::Runtime::NetFramework);
         double back = 0.0;
         const auto r = std::from_chars(s.data(), s.data() + s.size(), back);
-        if (r.ec == std::errc() && back == d) return s;
+        if (r.ec == std::errc() && back == d) return Normalize(s);
     }
-    return ksp::dotnet::FormatDoubleG(d, 17, ksp::dotnet::Runtime::NetFramework);
+    return Normalize(ksp::dotnet::FormatDoubleG(d, 17, ksp::dotnet::Runtime::NetFramework));
 }
 
 static const char* TypeName(ColType t) {

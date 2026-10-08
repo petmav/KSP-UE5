@@ -15,9 +15,17 @@ add_library(kspcore STATIC
     math/mathfx.cpp
     curves/float_curve.cpp
     curves/double_curve.cpp
+    curves/serialized_float_curve.cpp
     config/config_node.cpp
     config/parse_extensions.cpp
     config/kspparseable.cpp
+    physics/physics_globals.cpp
+    physics/vessel_ranges.cpp
+    celestial/celestial_body.cpp
+    celestial/planetarium.cpp
+    celestial/celestial_system.cpp
+    celestial/kerbol_system_data.cpp
+    celestial/flight_atmosphere.cpp
     capi/kspcore_c.cpp
 )
 add_library(ksp::core ALIAS kspcore)

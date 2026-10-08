@@ -8,7 +8,8 @@
 #
 # Parameters: RUNNER DATASET HARNESS OUT PYTHON (required); NAME (report name, default DATASET);
 #             GOLDEN (default ${HARNESS}/golden/<DATASET>/<DATASET>.json); TOL (default harness tolerances.json);
-#             TABLES (comma-separated); DROP_HEX (ON/OFF); FILTER (path of tools/filter_golden.py).
+#             TABLES (comma-separated); COLUMNS (t:c1,c2/t2:c3: per-table kept columns); DROP_HEX (ON/OFF);
+#             FILTER (path of tools/filter_golden.py).
 foreach(v RUNNER DATASET HARNESS OUT PYTHON)
     if(NOT DEFINED ${v})
         message(FATAL_ERROR "RunGolden.cmake: ${v} not set")
@@ -32,11 +33,14 @@ if(NOT runner_rc EQUAL 0)
 endif()
 
 set(golden_file "${GOLDEN}")
-if((DEFINED TABLES AND NOT TABLES STREQUAL "") OR DROP_HEX)
+if((DEFINED TABLES AND NOT TABLES STREQUAL "") OR (DEFINED COLUMNS AND NOT COLUMNS STREQUAL "") OR DROP_HEX)
     set(golden_file "${OUT}/${DATASET}/golden_${NAME}.json")
     set(filter_args "${GOLDEN}" "${golden_file}")
     if(DEFINED TABLES AND NOT TABLES STREQUAL "")
         list(APPEND filter_args --tables "${TABLES}")
+    endif()
+    if(DEFINED COLUMNS AND NOT COLUMNS STREQUAL "")
+        list(APPEND filter_args --keep-columns "${COLUMNS}")
     endif()
     if(DROP_HEX)
         list(APPEND filter_args --drop-hex)
