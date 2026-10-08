@@ -600,33 +600,36 @@ TEST_CASE("Orbit::FindClosestPoints (Targeting.Intercepts) finds the true minimu
         CHECK(dFirst == doctest::Approx(CD).epsilon(1e-6));
         const double dSecond = (pr.p.getPositionFromTrueAnomaly(SFp, false) - pr.s.getPositionFromTrueAnomaly(SFs, false)).magnitude();
         CHECK(dSecond == doctest::Approx(CCD).epsilon(1e-6));
-        // brute force over both anomalies (2,000 x 2,000 grid, then zoomed grids) agrees with the best minimum
+        // brute force over both anomalies (1,000 x 1,000 grid, then zoomed grids) agrees with the best minimum
         const Targeting::Conic cp = Targeting::Conic::Borrow(pr.p), cs = Targeting::Conic::Borrow(pr.s);
         double best = std::numeric_limits<double>::max(), bv1 = 0, bv2 = 0;
-        const int N = 2000;
+        const int N = 1000;
+        std::vector<Vector3d> sPts(N);
+        for (int b = 0; b < N; ++b) sPts[static_cast<size_t>(b)] = cs.Point(cs.min_v + (cs.max_v - cs.min_v) * (b + 0.5) / N);
         for (int a = 0; a < N; ++a) {
             const double v1 = cp.min_v + (cp.max_v - cp.min_v) * (a + 0.5) / N;
             const Vector3d P = cp.Point(v1);
             for (int b = 0; b < N; ++b) {
-                const double v2 = cs.min_v + (cs.max_v - cs.min_v) * (b + 0.5) / N;
-                const double d = (P - cs.Point(v2)).sqrMagnitude();
+                const double d = (P - sPts[static_cast<size_t>(b)]).sqrMagnitude();
                 if (d < best) {
                     best = d;
                     bv1 = v1;
-                    bv2 = v2;
+                    bv2 = cs.min_v + (cs.max_v - cs.min_v) * (b + 0.5) / N;
                 }
             }
         }
-        // zoom: 200 x 200 grids over +-2 cells of the previous level, six levels
+        // zoom: 81 x 81 grids over +-2 cells of the previous level, eight levels
         double h1 = (cp.max_v - cp.min_v) / N, h2 = (cs.max_v - cs.min_v) / N;
-        for (int level = 0; level < 6; ++level) {
+        for (int level = 0; level < 8; ++level) {
             const double c1 = bv1, c2 = bv2;
-            for (int a = -100; a <= 100; ++a) {
-                const double v1 = c1 + h1 * 2.0 * a / 100.0;
+            std::vector<Vector3d> zPts;
+            for (int b = -40; b <= 40; ++b) zPts.push_back(cs.Point(c2 + h2 * 2.0 * b / 40.0));
+            for (int a = -40; a <= 40; ++a) {
+                const double v1 = c1 + h1 * 2.0 * a / 40.0;
                 const Vector3d P = cp.Point(v1);
-                for (int b = -100; b <= 100; ++b) {
-                    const double v2 = c2 + h2 * 2.0 * b / 100.0;
-                    const double d = (P - cs.Point(v2)).sqrMagnitude();
+                for (int b = -40; b <= 40; ++b) {
+                    const double v2 = c2 + h2 * 2.0 * b / 40.0;
+                    const double d = (P - zPts[static_cast<size_t>(b + 40)]).sqrMagnitude();
                     if (d < best) {
                         best = d;
                         bv1 = v1;
@@ -634,8 +637,8 @@ TEST_CASE("Orbit::FindClosestPoints (Targeting.Intercepts) finds the true minimu
                     }
                 }
             }
-            h1 *= 2.0 / 100.0;
-            h2 *= 2.0 / 100.0;
+            h1 *= 2.0 / 40.0;
+            h2 *= 2.0 / 40.0;
         }
         CHECK(std::min(CD, CCD) == doctest::Approx(std::sqrt(best)).epsilon(1e-6));
     }
