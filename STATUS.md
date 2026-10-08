@@ -79,7 +79,7 @@ defines `ksp::CelestialBody` (same member names as above, `orbit()` returning `I
 `ZupAtT(UT, const CelestialBody&, CelestialFrame&)`) and leaves `body_catalog/orbits` derived columns ungated pending
 WP-07. The names do not collide (`CelestialBodyRef`, `PlanetariumFrames` vs `CelestialBody`, `Planetarium`), so the
 merge compiles side by side; the follow-up glue is small: (1) `Orbit::referenceBody` and the helpers take
-`CelestialBody*` (delete `CelestialBodyRef`); (2) `BodyOrbit()` (the single access point to a body's own orbit, 6 call
+`CelestialBody*` (delete `CelestialBodyRef`); (2) `BodyOrbit()` (the single access point to a body's own orbit, 5 call
 sites) returns the `ksp::Orbit` behind the body's `ICelestialBodyOrbit` link; (3) an `ICelestialBodyOrbit` adapter
 owning a `ksp::Orbit` (Orbit's fields `period`, `radius`, `vel`, `trueAnomaly` clash with the interface's method names,
 so Orbit cannot implement it directly), passed as WP-09's `orbitFactory`; (4) `PlanetariumFrames` forwards to
