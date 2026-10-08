@@ -73,6 +73,20 @@ frame statics are `PlanetariumFrames` (`Zup()`, `Rotation()`, `InverseRotAngle()
 `ZupAtT()`, `Awake()`, `SetInverseRotAngle()` for CBUpdate's inverse-rotation branch); WP-09's Planetarium should
 forward to them.
 
+Integration with WP-09 as merged on main (`29b71f6`, which landed after this branch started from `c051578`): WP-09
+defines `ksp::CelestialBody` (same member names as above, `orbit()` returning `ICelestialBodyOrbit*`,
+`orbitDriver->enabled`), `ksp::Planetarium` (static `Zup`, `Rotation()`/`up()`/`right()` through `fetch`,
+`ZupAtT(UT, const CelestialBody&, CelestialFrame&)`) and leaves `body_catalog/orbits` derived columns ungated pending
+WP-07. The names do not collide (`CelestialBodyRef`, `PlanetariumFrames` vs `CelestialBody`, `Planetarium`), so the
+merge compiles side by side; the follow-up glue is small: (1) `Orbit::referenceBody` and the helpers take
+`CelestialBody*` (delete `CelestialBodyRef`); (2) `BodyOrbit()` (the single access point to a body's own orbit, 6 call
+sites) returns the `ksp::Orbit` behind the body's `ICelestialBodyOrbit` link; (3) an `ICelestialBodyOrbit` adapter
+owning a `ksp::Orbit` (Orbit's fields `period`, `radius`, `vel`, `trueAnomaly` clash with the interface's method names,
+so Orbit cannot implement it directly), passed as WP-09's `orbitFactory`; (4) `PlanetariumFrames` forwards to
+`Planetarium::Zup` / `Rotation()` / `ZupAtT` (6 call sites; keep the Awake(0) default when `Planetarium::fetch` is
+null); (5) re-gate `body_catalog/orbits` in full and drop the runner's `StandInOrbitPeriod`; (6) on the merge keep
+main's `golden_json.cpp` (WP-09 made the same Normalize fix under another name).
+
 Shared fixes made for WP-07 (WP-01/runner files): `dotnet::Math::Min/Max` (NaN-propagating like .NET); `UtilMath.AngleBetween`
 and `Vector3d/Vector2d.Angle/AngleBetween` now call `dotnet::Math` (were `std::atan2/std::acos`, which is the UCRT, not
 the VS2013 CRT KSP uses); the golden writer normalises number text like the harness (`ExactNumber.Normalize`: ".0"
@@ -135,7 +149,7 @@ The first four commits were each built and tested in a clean worktree (each pass
 Branch `wp07` (from `c051578`, not merged): `431b44d` WP-01 fixes needed by Orbit (Math.Min/Max, System.Math in Angle
 helpers, golden number text); `03e2310` Orbit + CelestialBodyRef/PlanetariumFrames + orbit_propagation gate;
 `6073a3f` Orbit unit tests, native AngleAxis bit-exact; `d982b62` Targeting; `7e5a33a` test speed-up; `10d3aea`
-OrbitSnapshot, OrbitUtil, enums; plus the STATUS commit.
+OrbitSnapshot, OrbitUtil, enums; `1804b39` STATUS; `304729a` README; plus the BodyOrbit/integration-notes commit.
 
 ## Incomplete, and why
 

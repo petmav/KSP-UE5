@@ -167,14 +167,14 @@ void Orbit::UpdateFromOrbitAtUT(const Orbit& orbit, double UT, CelestialBodyRef*
     State state2;
     if (orbit.referenceBody->HasChild(toBody)) {
         if (!std::isnan(orbit.GetOrbitalStateVectorsAtUT(UT, state)) &&
-            !std::isnan(toBody->orbit->GetOrbitalStateVectorsAtUT(UT, state2))) {
+            !std::isnan(BodyOrbit(toBody)->GetOrbitalStateVectorsAtUT(UT, state2))) {
             pos = state.pos - state2.pos;
             vel = state.vel - state2.vel;
             UpdateFromFixedVectors(pos, vel, toBody, UT);
         }
     } else if (toBody->HasChild(orbit.referenceBody)) {
         if (!std::isnan(orbit.GetOrbitalStateVectorsAtUT(UT, state)) &&
-            !std::isnan(orbit.referenceBody->orbit->GetOrbitalStateVectorsAtUT(UT, state2))) {
+            !std::isnan(BodyOrbit(orbit.referenceBody)->GetOrbitalStateVectorsAtUT(UT, state2))) {
             pos = state.pos + state2.pos;
             vel = state.vel + state2.vel;
             UpdateFromFixedVectors(pos, vel, toBody, UT);
@@ -1268,8 +1268,9 @@ Orbit Orbit::CreateRandomOrbitFlyBy(const CelestialBodyRef& tgtBody, double days
     const double periapsis =
         M::Max(tgtBody.Radius * 3.0, tgtBody.sphereOfInfluence * static_cast<double>(rnd.Range(0.0f, 1.1f)));
     const double deltaVatPeriapsis = rnd.Range(100.0f, 500.0f);
-    if (tgtBody.orbit == nullptr) throw NullReferenceException("Orbit::CreateRandomOrbitFlyBy: target body has no orbit");
-    return CreateRandomOrbitFlyBy(*tgtBody.orbit, daysToClosestApproach * 24.0 * 60.0 * 60.0, periapsis, deltaVatPeriapsis,
+    const Orbit* tgtOrbit = BodyOrbit(&tgtBody);
+    if (tgtOrbit == nullptr) throw NullReferenceException("Orbit::CreateRandomOrbitFlyBy: target body has no orbit");
+    return CreateRandomOrbitFlyBy(*tgtOrbit, daysToClosestApproach * 24.0 * 60.0 * 60.0, periapsis, deltaVatPeriapsis,
                                   universalTime);
 }
 

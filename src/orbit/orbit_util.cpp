@@ -36,7 +36,8 @@ double OrbitUtil::CurrentPhaseAngle(const Orbit& origin, const Orbit& destinatio
 // OrbitUtil.cs:29
 double OrbitUtil::CurrentEjectionAngle(const Orbit& origin, double UT) {
     const CelestialBodyRef* referenceBody = origin.referenceBody;
-    const Vector3d prograde = (referenceBody->orbit != nullptr) ? referenceBody->orbit->getOrbitalVelocityAtUT(UT) : Vector3d::zero();
+    const Orbit* bodyOrbit = BodyOrbit(referenceBody);
+    const Vector3d prograde = (bodyOrbit != nullptr) ? bodyOrbit->getOrbitalVelocityAtUT(UT) : Vector3d::zero();
     return CurrentEjectionAngle(origin, UT, prograde);
 }
 
@@ -98,7 +99,7 @@ double OrbitUtil::GetSmaDistance(const Orbit* o1, const Orbit* o2) { return GetS
 double OrbitUtil::GetSmaDistanceToSun(const Orbit* obt, double d) {
     if (obt != nullptr) {
         d += obt->semiMajorAxis;
-        if (obt->referenceBody != nullptr) d += GetSmaDistanceToSun(obt->referenceBody->orbit, d);
+        if (obt->referenceBody != nullptr) d += GetSmaDistanceToSun(BodyOrbit(obt->referenceBody), d);
     }
     return d;
 }

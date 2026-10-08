@@ -84,4 +84,9 @@ struct CelestialBodyRef {
     bool HasChild(const CelestialBodyRef* body) const;
 };
 
+// `body.orbit` as Orbit/OrbitUtil read it (the body's run-time ksp::Orbit, nullptr without an OrbitDriver). Every
+// Orbit-side access to a body's own orbit goes through this function, so switching the body type (WP-09's
+// CelestialBody exposes orbit() as an ICelestialBodyOrbit*) only changes this one line.
+inline Orbit* BodyOrbit(const CelestialBodyRef* body) { return body->orbit; }
+
 }  // namespace ksp
