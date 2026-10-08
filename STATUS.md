@@ -10,9 +10,10 @@ Updated 2026-10-09. One command: `powershell -NoProfile -ExecutionPolicy Bypass 
 | 1. Scaffold | done: CMake 3.28+/C++20/MSVC 14.44 presets (Debug, RelWithDebInfo; Ninja), `run_tests.ps1`, vendored doctest 2.4.12 + nlohmann/json 3.12.0 (sha256 in `third_party/VERSIONS.md`), golden gate (`golden_runner` + `harness/compare/compare.py`) as ctest tests, Unreal link settings (/MD, IDL 0, /Z7, no /GL) with `build/RelWithDebInfo/kspcore.lib`, C ABI `include/kspcore/kspcore_c.h` |
 | 2. WP-01 maths + Unity shims + FloatCurve | done, all 19 package files (except the native-only Unity functions listed below); every gate bit-exact |
 | 3. WP-02 ConfigNode | done: Load/Parse/Save/ToString, value/node API, typed getters/setters, ParseExtensions, Guid, KSPParseable, type parsers; byte-exact on the whole corpus. UrlDir (GameData tree) deferred, see below |
+| 4. WP-07 Orbit (branch `wp07`) | done: Orbit.cs (everything but DrawOrbit), Targeting.cs (closest-approach intercept search behind `Orbit.FindClosestPoints`), OrbitSnapshot, OrbitUtil (but CalculateIntersections), FoRModes/VesselTargetModes; `CelestialBodyRef` / `PlanetariumFrames` interfaces for WP-09; golden `orbit_propagation` bit-exact (all 5 tables). TransferMath, DirectionTarget, ITargetable deferred (see "WP-07 Orbit") |
 | extra | in-game (Mono) runtime semantics from the CAPTURE-SPEC C2/C7 captures: System.Math, float32 evaluation rule, conversions, formatting, System.Random, UnityEngine.Random, KSPRandom |
 
-## Test results (all 10 ctest tests pass in RelWithDebInfo and in Debug)
+## Test results (all 11 ctest tests pass in RelWithDebInfo and in Debug)
 
 Every numeric column of every gate: **max ULP 0, max abs 0** (bit-exact, and the same decimal text). Tolerance files:
 harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture gates use `tests/tolerances_capture.json`
@@ -26,13 +27,81 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `capture.unity_random` | in-game `captures/out/unity_random.json`: seeds, states, value, range_f, range_i, vec, edge, trace, trace_int, trace_vec, ksp_random | 8,676 | 0 ULP, all ints identical |
 | `golden.confignode_roundtrip` | harness golden: corpus (47) + save_text (21); runner: 47/47 saved files byte-identical, 45/45 parse trees identical | 68 + 47 files + 45 trees | exact |
 | `golden.curves_eval` | harness golden (== native Unity per C1): curves 366, keys 1,055, samples 28,484 | 29,905 | 0 ULP |
+| `golden.orbit_propagation` | WP-07 harness golden `orbit_propagation` (KSP's Orbit on .NET 4.8): cases 92, state_at_ut 1,020, from_state_vectors 1,020, state_vector_cases 9, kepler 281; every row matched, 46,977 f64 values | 2,422 rows | 0 ULP |
 | `corpus.gamedata` | self-consistency: 368 GameData `.cfg` + 86 `.craft` (8.55 MB, 241,219 values, 77,117 nodes): all load, Save->Load->Save byte-identical, Parse == Load, 226 FloatCurve nodes load | 454 files | 0 failures |
 | `capi.c`, `capi.ue_like` | C ABI from pure C and from C++ with UE flags (/GR- /EHs-c- _HAS_EXCEPTIONS=0 /fp:fast); FloatCurve values bit-exact vs golden through the ABI | - | pass |
-| `unit` | 38 doctest cases, 477 assertions, incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
+| `unit` | 56 doctest cases, 819 assertions (WP-07: 18 cases in `tests/test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
 differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 6 ULP (Vector3.Project/ProjectOnPlane) and
 `Mathf.Repeat(1e20f, 360f)` = 360 (Mono) vs 0 (.NET); kspcore equals the in-game capture in all 903 rows.
+
+## WP-07 Orbit (branch `wp07`)
+
+Files: `include/ksp/orbit/{orbit,celestial_body_ref,planetarium_frames,targeting,orbit_snapshot,orbit_util,targeting_modes}.hpp`,
+`src/orbit/*.cpp`, `include/ksp/unity/quaternion_native.hpp` + `src/unity/quaternion_native.cpp` (native
+Quaternion.AngleAxis), `tools/golden_runner/ds_orbit_propagation.cpp`, `tests/test_orbit.cpp`.
+
+| golden table (`golden.orbit_propagation`) | rows | f64 values | max abs | max rel | max ULP |
+|---|---|---|---|---|---|
+| `cases` (elements, Init outputs: meanMotion, period, ObTAtEpoch, h, eccVec, an, body mu) | 92 | 1,840 | 0 | 0 | 0 |
+| `state_at_ut` (ObT, M, E, tA, pos/vel, GetOrbitalStateVectorsAtUT, UpdateFromUT fields, GetTimeToPeriapsis x2, next Pe/Ap) | 1,020 | 28,560 | 0 | 0 | 0 |
+| `from_state_vectors` (UpdateFromStateVectors of the propagated state) | 1,020 | 15,300 | 0 | 0 | 0 |
+| `state_vector_cases` (hand-made vectors incl. zero/radial velocity, exact escape) | 9 | 153 | 0 | 0 | 0 |
+| `kepler` (solveEccentricAnomaly in all three regimes, anomaly conversions) | 281 | 1,124 | 0 | 0 | 0 |
+
+Bit-exact in RelWithDebInfo and Debug, under kspcore's default runtime (Mono); harness tolerances unchanged. Nothing
+excluded: the `patched_conics` file written by the same generator is a separate golden and WP-08's gate.
+
+What is ported: all of Orbit.cs except `DrawOrbit` (Debug.DrawLine gizmos), including the patched-conic fields as data,
+the static closest-approach / SOI solvers (`_SolveClosestApproach`, `_SolveSOI`, `_SolveSOI_BSP`,
+`FindClosestPoints_old`, `RelativeStateAtUT`, `CASolutionState`) behind settable delegates, `CreateRandomOrbit*`
+(UnityRandom), node and inclination helpers; Targeting.cs in full (`Orbit::FindClosestPoints` defaults to KSP's
+Targeting.Intercepts path, `Orbit::LegacyOrbitTargeting` selects `FindClosestPoints_old`); OrbitSnapshot (save-file
+ORBIT block); OrbitUtil minus `CalculateIntersections`. Calls that read global game state take it as a parameter:
+`GetVel/GetWorldSpaceVel(activeVesselReferenceBody)` (FlightGlobals.ActiveVessel), `CreateRandomOrbitFlyBy(...,
+universalTime)` (Planetarium.GetUniversalTime), `OrbitSnapshot(..., bodies)` / `Load(bodies)` (FlightGlobals.Bodies).
+
+Interface for WP-09 (`include/ksp/orbit/celestial_body_ref.hpp`): `struct CelestialBodyRef` carries exactly what
+Orbit/Targeting/OrbitSnapshot/OrbitUtil read, named as in KSP: `bodyName, Radius, gravParameter, sphereOfInfluence,
+atmosphereDepth, rotates, rotationPeriod, rotPeriodRecip, initialRotation, directRotAngle, angularVelocity,
+zUpAngularVelocity, inverseRotation, position, orbit (Orbit*, nullptr = no OrbitDriver), orbitDriverEnabled,
+orbitingBodies, flightGlobalsIndex`, plus the CelestialBody.cs methods Orbit calls (`referenceBody()`, `GetFrameVel`,
+`GetFrameVelAtUT`, `getRFrmVel`, `getRFrmVelOrbit`, `getTruePositionAtUT`, `getPositionAtUT`, `HasChild`). WP-09's
+`ksp::CelestialBody` should derive publicly from it; `Orbit::referenceBody` is a `CelestialBodyRef*`. Planetarium's
+frame statics are `PlanetariumFrames` (`Zup()`, `Rotation()`, `InverseRotAngle()`, `up/right/forward()`,
+`ZupAtT()`, `Awake()`, `SetInverseRotAngle()` for CBUpdate's inverse-rotation branch); WP-09's Planetarium should
+forward to them.
+
+Shared fixes made for WP-07 (WP-01/runner files): `dotnet::Math::Min/Max` (NaN-propagating like .NET); `UtilMath.AngleBetween`
+and `Vector3d/Vector2d.Angle/AngleBetween` now call `dotnet::Math` (were `std::atan2/std::acos`, which is the UCRT, not
+the VS2013 CRT KSP uses); the golden writer normalises number text like the harness (`ExactNumber.Normalize`: ".0"
+on integral values, lower-case "e"), without which float key columns (`kepler` e/M, `UT`) did not match.
+Still using `<cmath>` in WP-01 code that Orbit does not call (noted, not changed): `UtilMath.Flatten/RoundToPlaces`
+(std::pow), `UtilMath.ASinh/ACosh/ATanh/Sech/Csch/Coth` (std::log/cosh/sinh), `QuaternionD.Angle` (std::acos).
+
+Not done in WP-07, and why:
+- **TransferMath.cs** (1,870 lines; Lambert solvers, Hohmann/ejection/correction burns): most entry points take
+  `TransferDataSimple` (WP-43, tier C UI) and `SafeAbortBackgroundWorker` (WP-03); the pure-maths part (LambertSolver,
+  LambertRHG/LamGXL/LamGTL, Root/Bisect, DV helpers) can be ported on its own later. No golden exists.
+- **OrbitUtil.CalculateIntersections**: returns `IntersectInformation`, a WP-03 type (being ported in parallel); a
+  short wrapper around FindClosestPoints/GetDTforTrueAnomaly once it lands.
+- **DirectionTarget, ITargetable**: need PositionTarget (WP-10), Vessel and FlightGlobals.
+- **C ABI for orbits**: not added. A useful ABI hands out orbits that reference body handles of the simulation context;
+  that needs WP-09/WP-10. A standalone mu/radius stopgap would have to be deprecated, so ABI v1 is unchanged.
+
+Known deviations and risks (WP-07):
+- Targeting's object pools: KSP's Interval pool is process-wide; an interval list of 2 or 3 entries makes KSP release an
+  interval twice, so two later borrows can alias. kspcore reproduces that inside one search (per-search LIFO pool)
+  but not across searches (a double release in one search could alias two intervals in the next one in KSP). Other
+  pooled state (stale Sample info, Interval min/max flags) is never read on any path.
+- Targeting.Interval.FindRoot / find_region_edge loop forever in KSP when a NaN reaches the bisection; kspcore throws
+  `std::runtime_error` after 10,000 iterations instead.
+- Targeting and OrbitUtil have no golden: they are covered by unit tests (FindClosestPoints agrees with a brute-force
+  minimum distance within 1e-6 on four conic pairs) and will be exercised by WP-08's `patched_conics` golden.
+- Native `Quaternion.AngleAxis` (two rare Orbit paths) is bit-exact on the 84 captured rows (MSVC CRT sinf/cosf).
+- Debug.Log / Console.WriteLine in Orbit go to `ksp::log::Info` without the C# stack traces; KSP's
+  `!Thread.CurrentThread.IsBackground` guards are treated as "main thread" (always log).
 
 ## Build and test times on this machine (laptop, MSVC 14.44, Ninja)
 
@@ -40,6 +109,9 @@ differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 
 |---|---|---|---|
 | RelWithDebInfo | 2.0 s | 12.6 s | 12.9 s (capture.libm_mono 8.8 s, corpus 2.4 s) |
 | Debug | 1.9 s | 6.4 s | 33.2 s (capture.libm_mono 20.1 s, corpus 9.8 s) |
+
+With WP-07 (branch `wp07`, 11 tests): RelWithDebInfo ctest 13.0 s (golden.orbit_propagation 0.4 s, unit 0.2 s), Debug
+33.9 s (golden.orbit_propagation 0.9 s, unit 0.5 s).
 
 Incremental rebuild after a one-file change: ~1-2 s. `build/RelWithDebInfo/kspcore.lib` is 9.6 MB (/Z7 debug info
 embedded).
@@ -59,6 +131,11 @@ embedded).
 | `d229056` | docs: STATUS.md, PROGRESS.md |
 
 The first four commits were each built and tested in a clean worktree (each passes the gates it contains).
+
+Branch `wp07` (from `c051578`, not merged): `431b44d` WP-01 fixes needed by Orbit (Math.Min/Max, System.Math in Angle
+helpers, golden number text); `03e2310` Orbit + CelestialBodyRef/PlanetariumFrames + orbit_propagation gate;
+`6073a3f` Orbit unit tests, native AngleAxis bit-exact; `d982b62` Targeting; `7e5a33a` test speed-up; `10d3aea`
+OrbitSnapshot, OrbitUtil, enums; plus the STATUS commit.
 
 ## Incomplete, and why
 
@@ -101,6 +178,30 @@ The first four commits were each built and tested in a clean worktree (each pass
   is stateless except for curves with duplicate key times (faithful per-curve cache, not thread-safe).
 
 ## Surprises a later implementer must know
+
+WP-07 (Orbit):
+- `solveEccentricAnomaly(M, ecc)` ignores `ecc`: the branch (Newton below 0.8, eight fixed Laguerre-type iterations
+  0.8..1, hyperbolic Newton above) and the value the solvers use are the `eccentricity` field. The 0.8..1 solver calls
+  Math.Sign, which throws on NaN; KSP catches it and returns NaN. The Newton loops are unbounded (|dE| <= 1e-7).
+- `GetTimeToPeriapsis()` returns `timeToPe - period` whenever e < 1, the patch is not FINAL and
+  `StartUT + timeToPe > EndUT`, i.e. always for a fresh Orbit (StartUT = EndUT = 0).
+- `Init()` sets eccVec and h in the zup frame but `an` in the world-like frame; `UpdateFromFixedVectors` leaves eccVec
+  world-like. pos/vel/h end up zup-local. Zup is the identity only up to ~6e-17 cross terms, so the frames differ in
+  the last bits.
+- `GetOrbitalStateVectorsAtUT` and `UpdateFromUT` use `Planetarium.ZupAtT(UT, referenceBody)`: for a body with
+  `inverseRotation` set they return vectors in that body's ROTATING frame (getRelativePositionAtUT does not). The Mun
+  and Minmus prefabs ship with `inverseRotation = 1` and the harness never cleared it, so the golden's sv_*/u_* columns
+  for Mun/Minmus orbits are rotated; the runner rebuilds rotPeriodRecip (Mun tidally locked: 1/orbit.period).
+- `UpdateFromStateVectors`' NaN-argPe fallback (Quaternion.AngleAxis, native) stores Acos(...) in radians into the
+  degrees field; it only runs on overflowing input (an infinite eccentricity vector).
+- `TrueAnomalyAtRadius` clamps R to [PeR, ApR] and can return NaN at the ends (the acos argument rounds past -1/1).
+- `GetRadiusAtPhaseAngle` / `PhaseAngle` use the float Deg2Rad 0.01745329238474369.
+- `OrbitUtil.GetSmaDistanceToSun` double-counts: the running sum is passed down and added again.
+- Unity's native `Deg2Rad` is `deg / 360 * 2 * kPI`, not `deg * (pi/180)` (18 of 84 AngleAxis rows differ otherwise).
+- `Targeting.Sample.get_normal_intercept_frames` reports the intercept count even when it zeroed the frames because the
+  points were not real (hyperbola far branch): such samples are "valid" with zero frames.
+- A worktree build (`core/.worktrees/<wp>`) must be configured with `-DKSP_PROJECT_ROOT=C:/Projects/KSP-UE5` (the
+  default `<source>/..` points at `.worktrees/`); the value stays in the CMake cache for later `run_tests.ps1` runs.
 
 1. **The harness's float32 goldens are .NET, not the game.** Mono evaluates C# float expressions in double and rounds
    only at stores/arguments/returns/casts. Port managed float code with `f32store(<double expression with fx()>)` at
