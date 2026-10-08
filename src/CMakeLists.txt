@@ -8,6 +8,7 @@ add_library(kspcore STATIC
     unity/vector.cpp
     unity/animation_curve.cpp
     unity/random.cpp
+    unity/quaternion_native.cpp
     math/vector3d.cpp
     math/quaterniond.cpp
     math/util_math.cpp
@@ -26,6 +27,12 @@ add_library(kspcore STATIC
     celestial/celestial_system.cpp
     celestial/kerbol_system_data.cpp
     celestial/flight_atmosphere.cpp
+    orbit/celestial_body_ref.cpp
+    orbit/planetarium_frames.cpp
+    orbit/orbit.cpp
+    orbit/targeting.cpp
+    orbit/orbit_snapshot.cpp
+    orbit/orbit_util.cpp
     capi/kspcore_c.cpp
 )
 add_library(ksp::core ALIAS kspcore)

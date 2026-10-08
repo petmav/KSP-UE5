@@ -119,7 +119,7 @@ bool SphereIntersection(double radius, const Vector3d& position, const Vector3d&
 double AngleBetween(const Vector3d& v, const Vector3d& w) {
     const Vector3d a = v * w.magnitude();
     const Vector3d b = w * v.magnitude();
-    return 2.0 * std::atan2((a - b).magnitude(), (a + b).magnitude());
+    return 2.0 * dotnet::Math::Atan2((a - b).magnitude(), (a + b).magnitude());  // System.Math (VS2013 CRT)
 }
 
 }  // namespace UtilMath

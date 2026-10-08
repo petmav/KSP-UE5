@@ -20,6 +20,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run
 (`VC\Auxiliary\Build\vcvars64.bat`), then runs `cmake --preset <p>`, `cmake --build --preset <p>` and
 `ctest --preset <p>`. Exit code 0 means every unit test and every golden gate passed.
 
+Building from a git worktree (`core\.worktrees\<name>`) needs no flags: the top-level `CMakeLists.txt` walks up from the
+source directory until it finds `harness/compare/compare.py` and uses that directory as `KSP_PROJECT_ROOT` (a cache
+variable; `-DKSP_PROJECT_ROOT=<dir>` still overrides it). `run_tests.ps1 -Fresh` works in the main checkout and in
+worktrees alike.
+
 Manual equivalent from a "x64 Native Tools Command Prompt for VS 2022":
 
 ```bat
@@ -55,6 +60,7 @@ links).
 | `capture.unity_random` | WP-01 UnityEngine.Random (xorshift128, value/Range/vector functions/ColorHSV, traced states) and KSPRandom | in-game `harness/captures/out/unity_random.json` |
 | `golden.confignode_roundtrip` | WP-02 ConfigNode Load/Save/ToString/Parse; the runner also checks byte-exact `saved/*.cfg` and tree-exact `trees/*.json` | `harness/golden/confignode_roundtrip` |
 | `golden.curves_eval` | WP-01 FloatCurve / Unity AnimationCurve: 366 curves, 28,484 evaluations | `harness/golden/curves_eval` (== native Unity, CAPTURE-SPEC C1) |
+| `golden.orbit_propagation` | WP-07 Orbit: Init, propagation (positions, velocities, anomalies, UpdateFromUT, time to Pe/Ap), UpdateFromStateVectors, Kepler solvers in all three regimes (2,422 rows) | `harness/golden/orbit_propagation` |
 | `corpus.gamedata` | every `.cfg` under `harness/inputs/GameData` and `.craft` under `harness/inputs/Ships`: load, Save->Load->Save byte-identical, Parse == Load, every `key` node loads as a FloatCurve | self-consistency |
 | `golden.physics_constants` | WP-09 PhysicsGlobals: all 213 field rows (value text, numeric value, source layer) after level0 prefab + Physics.cfg | `harness/golden/physics_constants` |
 | `capture.physics_drag_curve` | WP-09 PhysicsGlobals.DragCurveValue (managed float code, Mono rule) | in-game `harness/captures/out/aero_forces_mono.json` (table drag_curve_value) |
@@ -141,6 +147,8 @@ contract into FMA.
 | `include/ksp/curves/` | `float_curve.hpp` (FloatCurve) |
 | `include/ksp/config/` | `config_node.hpp` (ConfigNode, Guid), `parse_extensions.hpp` (ParseExtensions, ColorUtility.TryParseHtmlString) |
 | `include/ksp/core/` | `log.hpp` (Debug.Log replacement with an installable sink) |
+| `include/ksp/orbit/` | WP-07: `orbit.hpp` (Orbit), `targeting.hpp` (Targeting: closest-approach search), `orbit_snapshot.hpp`, `orbit_util.hpp`, `targeting_modes.hpp`; `celestial_body_ref.hpp` (the CelestialBody members Orbit reads; WP-09 derives from it) and `planetarium_frames.hpp` (Planetarium.Zup / Rotation / ZupAtT) |
+| `include/ksp/unity/quaternion_native.hpp` | native Unity functions ported bit-exact against in-game captures (Quaternion.AngleAxis) |
 | `include/kspcore/kspcore_c.h` | the C ABI used by the Unreal shell (implementation `src/capi/kspcore_c.cpp`) |
 | `include/ksp/curves/double_curve.hpp`, `include/ksp/math/{matrix4x4d,mathfx}.hpp` | DoubleCurve, Vector3/4Curve, Matrix4x4D, Mathfx, VectorExtensions, QuaternionExtensions, MinMaxFloat, Vect, PIDclamp |
 | `include/ksp/physics/` | WP-09 `physics_globals.hpp` (PhysicsGlobals: fields, static properties, LoadDatabase/SaveDatabase, lifting-surface curves, DragCurveValue; the `*.inc` files are generated), `vessel_ranges.hpp` (VesselRanges, Vessel.Situations) |

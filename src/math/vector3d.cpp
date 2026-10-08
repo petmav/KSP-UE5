@@ -1,4 +1,5 @@
 #include "ksp/math/vector3d.hpp"
+#include "ksp/dotnet/math.hpp"
 
 namespace ksp {
 
@@ -34,12 +35,12 @@ Vector3d Vector3d::Exclude(const Vector3d& excludeThis, const Vector3d& fromThat
 
 // Vector3d.cs: Angle (degrees)
 double Vector3d::Angle(const Vector3d& from, const Vector3d& to) {
-    return std::acos(std::min(std::max(Dot(from.normalized(), to.normalized()), -1.0), 1.0)) * (180.0 / 3.141592653589793);
+    return dotnet::Math::Acos(dotnet::Math::Min(dotnet::Math::Max(Dot(from.normalized(), to.normalized()), -1.0), 1.0)) * (180.0 / 3.141592653589793);
 }
 
 // Vector3d.cs: AngleBetween (radians, obsolete)
 double Vector3d::AngleBetween(const Vector3d& from, const Vector3d& to) {
-    return std::acos(std::min(std::max(Dot(from.normalized(), to.normalized()), -1.0), 1.0));
+    return dotnet::Math::Acos(dotnet::Math::Min(dotnet::Math::Max(Dot(from.normalized(), to.normalized()), -1.0), 1.0));
 }
 
 // Vector3d.cs: Distance
@@ -74,7 +75,7 @@ Vector2d Vector2d::MoveTowards(const Vector2d& current, const Vector2d& target, 
 
 // Vector2d.cs: Angle
 double Vector2d::Angle(const Vector2d& from, const Vector2d& to) {
-    return std::acos(std::min(std::max(Dot(from.normalized(), to.normalized()), -1.0), 1.0)) * (180.0 / 3.141592653589793);
+    return dotnet::Math::Acos(dotnet::Math::Min(dotnet::Math::Max(Dot(from.normalized(), to.normalized()), -1.0), 1.0)) * (180.0 / 3.141592653589793);
 }
 
 // Vector2d.cs: ClampMagnitude
