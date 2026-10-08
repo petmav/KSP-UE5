@@ -20,6 +20,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run
 (`VC\Auxiliary\Build\vcvars64.bat`), then runs `cmake --preset <p>`, `cmake --build --preset <p>` and
 `ctest --preset <p>`. Exit code 0 means every unit test and every golden gate passed.
 
+Building from a git worktree (`core\.worktrees\<name>`): configure once with
+`cmake --preset relwithdebinfo -DKSP_PROJECT_ROOT=C:/Projects/KSP-UE5` (the default `<source>/..` would point at
+`core\.worktrees\`); the cache keeps the value, so `run_tests.ps1` works afterwards (do not pass `-Fresh`).
+
 Manual equivalent from a "x64 Native Tools Command Prompt for VS 2022":
 
 ```bat
@@ -55,6 +59,7 @@ links).
 | `capture.unity_random` | WP-01 UnityEngine.Random (xorshift128, value/Range/vector functions/ColorHSV, traced states) and KSPRandom | in-game `harness/captures/out/unity_random.json` |
 | `golden.confignode_roundtrip` | WP-02 ConfigNode Load/Save/ToString/Parse; the runner also checks byte-exact `saved/*.cfg` and tree-exact `trees/*.json` | `harness/golden/confignode_roundtrip` |
 | `golden.curves_eval` | WP-01 FloatCurve / Unity AnimationCurve: 366 curves, 28,484 evaluations | `harness/golden/curves_eval` (== native Unity, CAPTURE-SPEC C1) |
+| `golden.orbit_propagation` | WP-07 Orbit: Init, propagation (positions, velocities, anomalies, UpdateFromUT, time to Pe/Ap), UpdateFromStateVectors, Kepler solvers in all three regimes (2,422 rows) | `harness/golden/orbit_propagation` |
 | `corpus.gamedata` | every `.cfg` under `harness/inputs/GameData` and `.craft` under `harness/inputs/Ships`: load, Save->Load->Save byte-identical, Parse == Load, every `key` node loads as a FloatCurve | self-consistency |
 
 All of them are bit-exact today (every numeric column max ULP 0, max abs 0).
@@ -137,6 +142,8 @@ contract into FMA.
 | `include/ksp/curves/` | `float_curve.hpp` (FloatCurve) |
 | `include/ksp/config/` | `config_node.hpp` (ConfigNode, Guid), `parse_extensions.hpp` (ParseExtensions, ColorUtility.TryParseHtmlString) |
 | `include/ksp/core/` | `log.hpp` (Debug.Log replacement with an installable sink) |
+| `include/ksp/orbit/` | WP-07: `orbit.hpp` (Orbit), `targeting.hpp` (Targeting: closest-approach search), `orbit_snapshot.hpp`, `orbit_util.hpp`, `targeting_modes.hpp`; `celestial_body_ref.hpp` (the CelestialBody members Orbit reads; WP-09 derives from it) and `planetarium_frames.hpp` (Planetarium.Zup / Rotation / ZupAtT) |
+| `include/ksp/unity/quaternion_native.hpp` | native Unity functions ported bit-exact against in-game captures (Quaternion.AngleAxis) |
 | `include/kspcore/kspcore_c.h` | the C ABI used by the Unreal shell (implementation `src/capi/kspcore_c.cpp`) |
 | `include/ksp/curves/double_curve.hpp`, `include/ksp/math/{matrix4x4d,mathfx}.hpp` | DoubleCurve, Vector3/4Curve, Matrix4x4D, Mathfx, VectorExtensions, QuaternionExtensions, MinMaxFloat, Vect, PIDclamp |
 | `src/` | implementations, same tree |
