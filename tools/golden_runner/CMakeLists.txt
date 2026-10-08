@@ -10,6 +10,10 @@ add_executable(golden_runner
     ds_gamedata.cpp
     ds_unity_random.cpp
     ds_libm_mono.cpp
+    celestial_env.cpp
+    ds_physics_constants.cpp
+    ds_body_catalog.cpp
+    ds_atmosphere_curves.cpp
 )
 target_link_libraries(golden_runner PRIVATE kspcore)
 ksp_set_build_flags(golden_runner)
