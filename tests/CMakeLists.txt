@@ -78,6 +78,9 @@ ksp_golden_gate(capture.unity_random unity_random GOLDEN ${KSP_CAPTURES_DIR}/uni
 ksp_golden_gate(golden.confignode_roundtrip confignode_roundtrip)
 # WP-01 FloatCurve / AnimationCurve (harness golden == native Unity, CAPTURE-SPEC C1: 0 ULP)
 ksp_golden_gate(golden.curves_eval curves_eval)
+# WP-07 Orbit: every table of the orbit_propagation golden (cases, state_at_ut, from_state_vectors, state_vector_cases,
+# kepler); harness tolerances unchanged. patched_conics (same generator, separate file) is the WP-08 gate.
+ksp_golden_gate(golden.orbit_propagation orbit_propagation)
 
 # GameData corpus: parse + round-trip every cfg/craft in harness/inputs (no golden; self-consistency + no errors)
 add_test(NAME corpus.gamedata
