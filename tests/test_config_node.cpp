@@ -182,3 +182,31 @@ TEST_CASE("ParseMatrix4x4 keeps KSP's index bug") {
     CHECK(m.m13 == 0.0f);
     CHECK(m.m33 == 16.0f);
 }
+
+#include "ksp/config/kspparseable.hpp"
+
+TEST_CASE("KSPParseable and the type parsers") {
+    KSPParseable p("1.5, FLOAT");
+    CHECK(p.type == KSPParseable::Type::FLOAT);
+    CHECK(p.value == "1.5");
+    CHECK(p.value_float() == 1.5f);
+    CHECK(p.value_int() == 0);  // wrong type -> default
+    CHECK(p.Save() == "1.5, FLOAT");
+    KSPParseable v("1,2,3, VECTOR3");  // value = first field only (KSP splits on every comma)
+    CHECK(v.value == "1");
+    KSPParseable u("abc, NOPE");
+    CHECK(u.value == "abc");
+    CHECK(u.type == KSPParseable::Type::UNKNOWN);
+    CHECK(KSPParseable("7, 3").type == KSPParseable::Type::INT);
+    CHECK(KSPParseable::FromVector3(Vector3f(1, 0.5f, -2)).Save() == "1,0.5,-2, VECTOR3");
+    CHECK(KSPParseable::FromBool(true).value_bool());
+    CHECK(KSPUtil::ParseVector3("1,2,3,4").Equals(Vector3f(1, 2, 3)));
+    CHECK(KSPUtil::ParseVector3("1,2").Equals(Vector3f::zero()));
+
+    CHECK(std::get<int32_t>(TypeParsers::ParseInt("99999999999")) == INT32_MAX);
+    CHECK(std::get<int32_t>(TypeParsers::ParseInt("-99999999999")) == INT32_MIN);
+    CHECK(std::get<int32_t>(TypeParsers::ParseInt("x")) == 0);
+    CHECK(std::holds_alternative<int32_t>(TypeParsers::ParseDouble("x")));  // KSP boxes an int 0
+    CHECK(std::get<double>(TypeParsers::ParseDouble("2.5")) == 2.5);
+    CHECK(TypeParsers::Convert(TypeParsers::ParseFloat("0.1")) == "0.1");
+}

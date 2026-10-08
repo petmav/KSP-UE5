@@ -17,6 +17,7 @@ add_library(kspcore STATIC
     curves/double_curve.cpp
     config/config_node.cpp
     config/parse_extensions.cpp
+    config/kspparseable.cpp
     capi/kspcore_c.cpp
 )
 add_library(ksp::core ALIAS kspcore)
