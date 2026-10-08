@@ -8,6 +8,8 @@ add_library(kspcore STATIC
     math/vector3d.cpp
     math/quaterniond.cpp
     math/util_math.cpp
+    config/config_node.cpp
+    config/parse_extensions.cpp
 )
 add_library(ksp::core ALIAS kspcore)
 target_include_directories(kspcore PUBLIC ${PROJECT_SOURCE_DIR}/include)
