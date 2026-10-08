@@ -9,7 +9,8 @@
 
 namespace ksp::UnityNative {
 
-// UnityEngine.Quaternion.AngleAxis(float angle /*degrees*/, Vector3 axis): identity when |axis| <= 1e-6.
+// UnityEngine.Quaternion.AngleAxis(float angle /*degrees*/, Vector3 axis): identity when |axis| <= 1e-6. Unity's
+// Deg2Rad is `deg / 360 * 2 * kPI` (not deg * kDeg2Rad); with deg * (pi/180) 18 of the 84 captured rows differ.
 Quaternionf AngleAxis(float angle, const Vector3f& axis);
 
 }  // namespace ksp::UnityNative
