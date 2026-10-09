@@ -41,17 +41,20 @@ add_test(NAME capi.ue_like COMMAND capi_ue_like ${KSP_HARNESS_DIR}/inputs/Physic
 
 # ---- golden gates: golden_runner writes candidates, harness/compare/compare.py judges them -----------------------------
 # ksp_golden_gate(<test name> <runner dataset> [GOLDEN <file>] [TOL <file>] [TABLES <t1,t2>]
-#                 [COLUMNS <t:c1,c2/t2:c3>] [DROP_HEX])
+#                 [COLUMNS <t:c1,c2/t2:c3>] [DROP_HEX] [ROWS <t:col^prefix/...>] [KEYS <t:c1,c2/...>])
 #   COLUMNS keeps only the listed columns of the named tables (columns that need another package's code; documented).
 #   GOLDEN defaults to harness/golden/<dataset>/<dataset>.json and TOL to harness/compare/tolerances.json.
-#   In-game capture files (harness/captures/out) carry `<col>_hex` columns: use DROP_HEX.
+#   In-game capture files (harness/captures/out, out2) carry `<col>_hex` columns: use DROP_HEX.
+#   ROWS keeps only the rows of a table whose string column starts with a prefix (objects outside the experiment's
+#   inputs; documented); KEYS gives a keyless capture table its key columns.
 find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
 set(KSP_CANDIDATE_DIR "${CMAKE_BINARY_DIR}/candidate")
 set(KSP_CAPTURES_DIR "${KSP_HARNESS_DIR}/captures/out")
+set(KSP_CAPTURES2_DIR "${KSP_HARNESS_DIR}/captures/out2")  # batch 2 (C4, C5, C6, C8, C9, C10, terrain)
 set(KSP_CAPTURE_TOL "${CMAKE_CURRENT_SOURCE_DIR}/tolerances_capture.json")
 
 function(ksp_golden_gate name dataset)
-    cmake_parse_arguments(G "DROP_HEX" "GOLDEN;TOL;TABLES;COLUMNS" "" ${ARGN})
+    cmake_parse_arguments(G "DROP_HEX" "GOLDEN;TOL;TABLES;COLUMNS;ROWS;KEYS" "" ${ARGN})
     if(G_DROP_HEX)
         set(drop ON)
     else()
@@ -70,6 +73,8 @@ function(ksp_golden_gate name dataset)
             -DTABLES=${G_TABLES}
             "-DCOLUMNS=${G_COLUMNS}"
             -DDROP_HEX=${drop}
+            "-DROWS=${G_ROWS}"
+            "-DKEYS=${G_KEYS}"
             -DFILTER=${PROJECT_SOURCE_DIR}/tools/filter_golden.py
             -P ${PROJECT_SOURCE_DIR}/cmake/RunGolden.cmake)
     set_tests_properties(${name} PROPERTIES LABELS golden TIMEOUT 900 RUN_SERIAL TRUE)
@@ -103,6 +108,18 @@ ksp_golden_gate(capture.physics_drag_curve physics_drag_curve GOLDEN ${KSP_CAPTU
 ksp_golden_gate(golden.body_catalog body_catalog)
 # WP-09 atmosphere: CelestialBody pressure/temperature/density/speed of sound + FlightIntegrator atmosphere helpers
 ksp_golden_gate(golden.atmosphere_curves atmosphere_curves)
+# WP-08 patched conics: PatchedConics.CalculatePatch chains (encounter, escape, SOI transitions) on the harness's static
+# bodies (the runner freezes every body position at the origin, as the harness never moved them); harness tolerances
+# unchanged.
+ksp_golden_gate(golden.patched_conics patched_conics)
+# WP-08 on-rails propagation vs the in-game capture C8 (moving bodies, rotating Planetarium frame, warp 1x-100,000x,
+# on-rails SOI transitions). Exclusions (STATUS.md WP-08): samples world_rel_* (floating-origin world positions and the
+# vessel transform / localCoM: WP-14/WP-20) and packed/loaded (Vessel state: WP-14/WP-19); initial.note (free text) and
+# the inputs the runner reads (initial.req_*, segments.requested_rate); soi_events rows of the two asteroids (spawned
+# by the game's discovery scenario, not capture inputs): only the "HC8 " probes, keyed by (vessel, UT).
+ksp_golden_gate(capture.orbit_rails orbit_rails GOLDEN ${KSP_CAPTURES2_DIR}/orbit_rails_ingame.json DROP_HEX
+                TOL ${KSP_CAPTURE_TOL} ROWS "soi_events:vessel^HC8" KEYS "soi_events:vessel,UT"
+                COLUMNS "initial:id,body,inclination,eccentricity,semiMajorAxis,LAN,argumentOfPeriapsis,meanAnomalyAtEpoch,epoch,meanMotion,period,ObTAtEpoch,mu,spawned/samples:id,frame,segment,UT,warp_rate,ref_body,updateUT,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z,relpos_at_UT_x,relpos_at_UT_y,relpos_at_UT_z,semiMajorAxis,eccentricity,inclination,LAN,argumentOfPeriapsis,meanAnomalyAtEpoch,epoch,ObT,meanAnomaly,trueAnomaly,update_mode/segments:segment,rate_index,achieved_rate,frames,UT_start,UT_end,Time_fixedDeltaTime,TimeWarp_fixedDeltaTime,timeScale")
 
 # GameData corpus: parse + round-trip every cfg/craft in harness/inputs (no golden; self-consistency + no errors)
 add_test(NAME corpus.gamedata

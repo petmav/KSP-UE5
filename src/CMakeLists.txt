@@ -29,10 +29,16 @@ add_library(kspcore STATIC
     celestial/kerbol_system_data.cpp
     celestial/flight_atmosphere.cpp
     celestial/celestial_body_orbit.cpp
+    celestial/flight_globals.cpp
     orbit/orbit.cpp
     orbit/targeting.cpp
     orbit/orbit_snapshot.cpp
     orbit/orbit_util.cpp
+    orbit/orbit_driver.cpp
+    orbit/time_warp.cpp
+    orbit/patched_conics.cpp
+    orbit/patched_conic_solver.cpp
+    orbit/maneuver_node.cpp
     events/base_game_event.cpp
     events/game_events.cpp
     fsm/kerbal_fsm.cpp

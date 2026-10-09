@@ -12,6 +12,8 @@
 // standalone (unit tests). The setters still need an instance (NullReferenceException, as in KSP).
 #pragma once
 
+#include <vector>
+
 #include "ksp/math/quaterniond.hpp"
 #include "ksp/math/util_math.hpp"
 #include "ksp/math/vector3d.hpp"
@@ -19,6 +21,7 @@
 namespace ksp {
 
 class CelestialBody;
+class OrbitDriver;
 
 class Planetarium {
 public:
@@ -32,6 +35,9 @@ public:
     CelestialBody* Home = nullptr;
     CelestialBody* CurrentMainBody = nullptr;
     double fixedDeltaTime = 0.02;
+    // Planetarium.cs:60 `public List<OrbitDriver> orbits` (serialized empty): OrbitDriver.Start adds itself,
+    // OrbitDriver.OnDestroy removes itself; PatchedConics.CalculatePatch iterates it (spawn order for the bodies).
+    std::vector<OrbitDriver*> orbits;
 
     static inline Planetarium* fetch = nullptr;
     static CelestialFrame Zup;  // Planetarium.cs:74; starts as AwakeZup(0.0) (see the deviation note above)
@@ -48,6 +54,7 @@ public:
     void UpdateCBsRecursive(CelestialBody* cb);            // Planetarium.cs:268
 
     // statics (Planetarium.cs:85-180, 286-314)
+    static std::vector<OrbitDriver*>* Orbits() { return fetch == nullptr ? nullptr : &fetch->orbits; }  // :84
     static double TimeScale() { return fetch == nullptr ? 1.0 : fetch->timeScale; }
     static bool Pause() { return fetch != nullptr && fetch->pause; }
     static QuaternionD Rotation();                // fetch.rotation (no fetch: Awake(0)'s rotation)

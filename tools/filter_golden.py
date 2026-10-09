@@ -1,11 +1,16 @@
 """Write a filtered copy of a ksp-golden/1 file for compare.py (run with `python -I`).
 
     python -I filter_golden.py SRC DST [--tables t1,t2,...] [--keep-columns t:c1,c2/t2:c3,...] [--drop-hex]
+                                       [--rows t:col^prefix/...] [--key t:c1,c2/...]
 
 --tables        keep only these tables (default: all)
 --keep-columns  per table, keep only the listed columns (key columns must be listed); tables not named keep all
                 columns. Used when some columns need code another package provides (documented in tests/CMakeLists.txt
                 and STATUS.md); never to hide a mismatch.
+--rows      per table, keep only the rows whose column `col` (a string) starts with `prefix`. Used when a capture
+            table holds rows of objects that are not part of the experiment's inputs (documented in tests/CMakeLists.txt
+            and STATUS.md); never to hide a mismatch.
+--key       per table, set the key columns (capture tables written without a key; compare.py needs one).
 --drop-hex  drop the `<col>_hex` companion columns of the in-game capture files (harness/captures/out/*.json). The
             decimals in those files are rewritten from the hex bits in the harness's exact number format, so comparing
             the decimals with compare.py's ULP metric is equivalent; the candidate does not need to emit hex columns.
@@ -20,6 +25,8 @@ def main(argv):
     args = [a for a in argv if not a.startswith("--")]
     tables = None
     keep_cols = {}
+    row_filters = {}
+    keys = {}
     drop_hex = "--drop-hex" in argv
     for i, a in enumerate(argv):
         if a == "--tables":
@@ -29,6 +36,17 @@ def main(argv):
             for spec in argv[i + 1].split("/"):
                 t, cols = spec.split(":", 1)
                 keep_cols[t] = [c for c in cols.split(",") if c]
+            args.remove(argv[i + 1])
+        if a == "--rows":
+            for spec in argv[i + 1].split("/"):
+                t, cond = spec.split(":", 1)
+                col, prefix = cond.split("^", 1)
+                row_filters[t] = (col, prefix)
+            args.remove(argv[i + 1])
+        if a == "--key":
+            for spec in argv[i + 1].split("/"):
+                t, cols = spec.split(":", 1)
+                keys[t] = [c for c in cols.split(",") if c]
             args.remove(argv[i + 1])
     if len(args) != 2:
         print(__doc__)
@@ -49,6 +67,16 @@ def main(argv):
                 return 1
             keep = [i for i in keep if t["columns"][i]["name"] in wanted]
         t = dict(t)
+        if t["name"] in row_filters:
+            col, prefix = row_filters[t["name"]]
+            names = [c["name"] for c in t["columns"]]
+            if col not in names:
+                print("filter_golden: row filter column not found in", t["name"], col)
+                return 1
+            ci = names.index(col)
+            t["rows"] = [r for r in t["rows"] if isinstance(r[ci], str) and r[ci].startswith(prefix)]
+        if t["name"] in keys:
+            t["key"] = keys[t["name"]]
         t["columns"] = [t["columns"][i] for i in keep]
         t["rows"] = [[r[i] for i in keep] for r in t["rows"]]
         t["row_count"] = len(t["rows"])

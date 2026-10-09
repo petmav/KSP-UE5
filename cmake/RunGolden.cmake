@@ -9,6 +9,7 @@
 # Parameters: RUNNER DATASET HARNESS OUT PYTHON (required); NAME (report name, default DATASET);
 #             GOLDEN (default ${HARNESS}/golden/<DATASET>/<DATASET>.json); TOL (default harness tolerances.json);
 #             TABLES (comma-separated); COLUMNS (t:c1,c2/t2:c3: per-table kept columns); DROP_HEX (ON/OFF);
+#             ROWS (t:col^prefix/...: per-table row filter); KEYS (t:c1,c2/...: key columns for keyless tables);
 #             FILTER (path of tools/filter_golden.py).
 foreach(v RUNNER DATASET HARNESS OUT PYTHON)
     if(NOT DEFINED ${v})
@@ -33,7 +34,8 @@ if(NOT runner_rc EQUAL 0)
 endif()
 
 set(golden_file "${GOLDEN}")
-if((DEFINED TABLES AND NOT TABLES STREQUAL "") OR (DEFINED COLUMNS AND NOT COLUMNS STREQUAL "") OR DROP_HEX)
+if((DEFINED TABLES AND NOT TABLES STREQUAL "") OR (DEFINED COLUMNS AND NOT COLUMNS STREQUAL "") OR DROP_HEX OR
+   (DEFINED ROWS AND NOT ROWS STREQUAL "") OR (DEFINED KEYS AND NOT KEYS STREQUAL ""))
     set(golden_file "${OUT}/${DATASET}/golden_${NAME}.json")
     set(filter_args "${GOLDEN}" "${golden_file}")
     if(DEFINED TABLES AND NOT TABLES STREQUAL "")
@@ -44,6 +46,12 @@ if((DEFINED TABLES AND NOT TABLES STREQUAL "") OR (DEFINED COLUMNS AND NOT COLUM
     endif()
     if(DROP_HEX)
         list(APPEND filter_args --drop-hex)
+    endif()
+    if(DEFINED ROWS AND NOT ROWS STREQUAL "")
+        list(APPEND filter_args --rows "${ROWS}")
+    endif()
+    if(DEFINED KEYS AND NOT KEYS STREQUAL "")
+        list(APPEND filter_args --key "${KEYS}")
     endif()
     execute_process(COMMAND "${PYTHON}" -I "${FILTER}" ${filter_args} RESULT_VARIABLE filter_rc)
     if(NOT filter_rc EQUAL 0)
