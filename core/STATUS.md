@@ -1412,7 +1412,7 @@ ScenarioRunner / unit tests; docs).
 State: done for the engine-agnostic part. `Part` is now a real object (data model, part tree, attach nodes, module list, resources, mass/cost,
 crew, copy semantics, states, live proto snapshots) and the WP-05 loader builds it. Gates unchanged and green: `capture.part_database`
 max ULP 0 (same columns as after WP-06, `parts:partSize` and `variants:materials` still dropped, reasons below), `corpus.gamedata` (86 crafts)
-and `corpus.saves` untouched. Every ported function cites `File.cs:line` of `decompiled/KSP-Decompiled/Assembly-CSharp/`; the line numbers were
+and the saves corpus tests inside `unit` unchanged and green. Every ported function cites `File.cs:line` of `decompiled/KSP-Decompiled/Assembly-CSharp/`; the line numbers were
 checked by script against the decompile (a function name must appear within three lines of the cited line).
 
 ### What is ported (by C# file)
@@ -1445,11 +1445,11 @@ were removed; `PartModule` gained the virtual hooks `OnStartBeforePartAttachJoin
 |---|---|---|---|---|---|
 | `capture.part_database` | same as after WP-06 (353 parts, 32,894 `module_fields`, 357 module_mass / module_cost) | 0 | 0 | 0 | now produced by the `Part` objects of the loader (`ds_part_database.cpp` reads `Part&`); row set and values unchanged |
 | `corpus.gamedata` | 86 crafts | unchanged | | | untouched |
-| `corpus.saves` | unchanged | unchanged | | | untouched |
+| `unit` (includes the saves corpus tests) | all cases | | | | green |
 
 Excluded columns of `capture.part_database` (unchanged, `DROP_COLUMNS` in `tests/CMakeLists.txt`):
 - `parts:partSize` is `PartGeometryUtil.MergeBounds(GetRendererBounds()).size.magnitude` over the renderer bounds of the instantiated prefab. The
-  formula is ported (`PartGeometryUtil::PartSize`, unit-tested on hand-checked bounds in `tests/test_part.cpp`) but the bounds come from the `.mu`
+  formula is ported (`PartGeometryUtil::PartSize`, unit-tested over given bounds in `tests/test_part.cpp`) but the bounds come from the `.mu`
   meshes (`KSP_x64_Data` / GameData models), which no package reads yet. It cannot be computed without mesh data, so it stays dropped.
 - `variants:materials` is the `Material.name` list of the variant renderers (shader/texture names after `Renderer.material` instancing), again
   mesh/renderer data.
@@ -1461,8 +1461,7 @@ Excluded columns of `capture.part_database` (unchanged, `DROP_COLUMNS` in `tests
 - `physprofile` save: 458 parts / 1337 modules / 623 resources build through `ProtoVessel.LoadObjects` and write back byte-identically
   (`ProtoPartSnapshot(Part)`), except the hand-built asteroid part (skipped for srfN / rTrf / modMass).
 - 33 of the 86 corpus crafts (stock parts only; 53 contain modded parts or an old format and are refused by `LoadShip`, as in the game) become
-  consistent trees: 1,967 parts, one root each, parent/child links equal the `parent` indices, attach-node pairs mutual (except 3 pairs of one old craft),
-  symmetry lists equal. `modCost` / `modMass` written by the game equal `GetModuleCosts` / `GetModuleMass(partInfo.cost)` for 1,061 of 1,063 checked
+  consistent trees: 1,967 parts, one root each, parent/child links equal the `parent` indices, attach-node pairs mutual (except 3 pairs of one old craft). `modCost` / `modMass` written by the game equal `GetModuleCosts` / `GetModuleMass(partInfo.cost)` for 1,061 of 1,063 checked
   parts; the two differences are the fairings (`fairingSize1`, `fairingSize2`: their mass and cost come from built fairing panels, state of
   ModuleProceduralFairing not in the prefab).
 
@@ -1483,7 +1482,6 @@ crafts; no number is invented.
 - `ModulePartVariants.useVariantMass` is set persistently in the EDITOR scene.
 - A clone's private `variantIndex` resets to 0 (Object.Instantiate does not copy private fields): call `SetVariant(partInfo.variant.Name)` after `Instantiate`.
 - The `OnEditorAttach/Detach/Destroy` and `OnJustAboutToDie/BeDestroyed` Callbacks start as empty delegates, never null.
-- `FindPartThroughNodes` skips the surface node for surface-attached parts (see test).
 
 ### Deviations
 
@@ -1502,3 +1500,9 @@ crafts; no number is invented.
 - `Part.Start` thermal values in flight (`skinTemperature`, `thermalMass`, `skinThermalMass`, `skinInternalConductionMult`) and the `FixedUpdate` temperature step: needs an in-flight capture.
 - Fairing mass / cost (ModuleProceduralFairing panel state) for the two craft rows above.
 - `module_persistence` (Part.Save of an instantiated, started part in flight).
+
+Fresh run (`./run_tests.sh -f`, Linux release): 21/21 ctest tests passed, including `unit`, `corpus.gamedata` and `capture.part_database`.
+
+### Commits (branch `wp13`)
+
+see `git log --oneline wp06..wp13`.

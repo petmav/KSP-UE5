@@ -20,3 +20,9 @@ Branch wp13 (from wp06 e27bc88b). Notes written after every major step.
   FlagNameManager, AvailableVariantTheme, live ProtoPartSnapshot/ModuleSnapshot/ResourceSnapshot (src/save/proto_part_live.cpp)
 - tests/test_part.cpp: enums/records, flag/theme, bounds, C9 cross-check of all 353 prefabs (counts, resource mass, module mass/cost), Instantiate + UpdateMass of all prefabs
 - TODO: tests for modules/attach/tree/resources/crew/variants/copy, physprofile snapshot round trip, craft trees; citations check pass; STATUS/README
+
+## Step 3 (done): tests, state machine, citations, docs
+- tests: 17 cases / 100,738 assertions in tests/test_part.cpp; activation/detach/delete state machine added (Callback delegates now start as empty delegates, as in C#)
+- citation pass: script-checked every `File.cs:N` above a function in the WP-13 sources; corrected AttachNode.cs, Part.cs, PartGeometryUtil.cs, AttachRules.cs lines
+- STATUS.md WP-13 section and README rows written; fresh `./run_tests.sh -f` result recorded below
+- fresh ./run_tests.sh -f: 21/21 passed
