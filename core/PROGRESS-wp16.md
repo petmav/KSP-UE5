@@ -24,3 +24,4 @@ Branch wp16 (from wp14 7bc606d6). Notes after every major step.
 - chunk 06 flight/decouple/couple/undock/DockedVesselInfo passing (14 WP-16 cases). Next: more tests (module OnDecouple omni, ToggleStaging, Vessel staging misc), full ctest, STATUS/README, commit
 - README rows written; STATUS section next; then fresh run (clang + gcc), final commit
 - committed tests+docs; fresh clang run started (/tmp/claude-0/wp16/fresh_clang.log); then gcc preset
+- FINAL: clang fresh 24/24, gcc fresh 24/24; unit 255 cases / 190,650 assertions (WP-16 19 / 12,213). STATUS fresh-run paragraph written. Remaining: final commit, handback.
