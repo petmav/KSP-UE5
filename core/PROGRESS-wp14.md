@@ -16,3 +16,4 @@ Branch wp14 (from wp13 688c5711). Notes written after every major step.
 - merged wp13 (ae3e81fa) into wp14; check class/struct fwd decl matches
 - written: vessel_types, flight_ctrl_state, action_group_list, discovery_info, vessel_values, vessel.hpp, vessel.cpp, vessel_motion.cpp; TODO vessel_transitions/proto, trip logger, flight logger, com tracker, axis groups module, CMake, build, tests, gate
 - lib builds (all vessel sources); baseline wp13 tests: see /tmp/claude-0/wp14/baseline_test.log
+- gate capture.vessel_state passes (structure 631 rows, states 20 rows, 0 ULP); next: tests/test_vessel.cpp, STATUS, README, fresh run

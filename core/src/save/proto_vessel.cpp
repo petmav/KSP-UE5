@@ -8,6 +8,7 @@
 #include "ksp/dotnet/text.hpp"
 #include "ksp/events/game_events.hpp"
 #include "ksp/localization/localizer.hpp"
+#include "ksp/resources/part_resource_library.hpp"
 #include "ksp/save/game.hpp"
 #include "ksp/save/save_environment.hpp"
 #include "ksp/util/ksp_util.hpp"
@@ -146,6 +147,11 @@ ProtoPartResourceSnapshot::ProtoPartResourceSnapshot(const ConfigNode& node) {
     if (const std::string* t = node.GetValuePtr("amount")) amount = ParseDouble(*t);
     if (const std::string* t = node.GetValuePtr("maxAmount")) maxAmount = ParseDouble(*t);
     if (const std::string* t = node.GetValuePtr("flowState")) flowState = ParseBool(*t);
+    // ProtoPartResourceSnapshot.cs:51 (WP-14: Vessel.GetUnloadedVesselMass reads definition.density)
+    if (resourceName && !resourceName->empty()) {
+        const PartResourceLibrary* lib = PartResourceLibrary::Instance();
+        definition = lib ? lib->GetDefinition(*resourceName) : nullptr;
+    }
 }
 
 // ProtoPartResourceSnapshot.cs:55
