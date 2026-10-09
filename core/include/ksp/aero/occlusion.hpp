@@ -40,7 +40,7 @@ public:
     Vector2f extents{};
     Vector2f offset{};
     double cylNoseDot = 0.0;
-    void Setup(OcclusionData& part);  // OcclusionCylinder.cs:18
+    void Setup(OcclusionData& part);  // OcclusionCylinder.cs:17
 };
 
 // OcclusionCone.cs
@@ -59,7 +59,7 @@ public:
     double occludeConvectionTempMult = 0.0;
     double occludeConvectionCoeffMult = 0.0;
     double occludeConvectionAreaMult = 0.0;
-    // OcclusionCone.cs:31-59 statics
+    // OcclusionCone.cs:32-58 statics
     static inline double detachedShockHeatMult = 0.5;
     static inline double detachedShockCoeffMult = 1.0;
     static inline double detachedBehindShockHeatMult = 0.4;
@@ -75,8 +75,8 @@ public:
     static inline double obliqueShockCylHeatMult = 0.55;
     static inline double obliqueShockCylCoeffMult = 1.0;
 
-    void Setup(OcclusionData& part, double sqrtMach, double sqrtMachAngle, double detachAngle);  // OcclusionCone.cs:61
-    double GetShockRadius(double dot) const;                                                    // OcclusionCone.cs:115
+    void Setup(OcclusionData& part, double sqrtMach, double sqrtMachAngle, double detachAngle);  // OcclusionCone.cs:60
+    double GetShockRadius(double dot) const;                                                    // OcclusionCone.cs:116
 };
 
 // OcclusionData.cs
@@ -104,22 +104,22 @@ public:
     OcclusionCylinder sunCyl;
     OcclusionCylinder bodyCyl;
 
-    explicit OcclusionData(OcclusionThermalRef& data);  // OcclusionData.cs:57
-    // OcclusionData.cs:73 Update; localToWorldMatrix = part.partTransform.localToWorldMatrix (null part -> no-op)
+    explicit OcclusionData(OcclusionThermalRef& data);  // OcclusionData.cs:48
+    // OcclusionData.cs:71 Update; localToWorldMatrix = part.partTransform.localToWorldMatrix (null part -> no-op)
     void Update(const Vector3f& velocity, const Matrix4x4f& localToWorldMatrix, bool useDragArea = true);
-    double GetConvectionMultVerts(const OcclusionCone& cone) const;                                  // :127
-    double GetShockStats(const OcclusionCone& cone, double& newTempMult, double& newCoeffMult) const;  // :152
-    double GetCylinderOcclusion(const OcclusionCylinder& cyl) const;                                // :180
-    double GetCylinderOcclusionVerts(const OcclusionCylinder& cyl) const;                           // :197
-    int CompareTo(const OcclusionData& b) const;                                                    // :303 (by maximumDot)
+    double GetConvectionMultVerts(const OcclusionCone& cone) const;                                  // :124
+    double GetShockStats(const OcclusionCone& cone, double& newTempMult, double& newCoeffMult) const;  // :149
+    double GetCylinderOcclusion(const OcclusionCylinder& cyl) const;                                // :179
+    double GetCylinderOcclusionVerts(const OcclusionCylinder& cyl) const;                           // :195
+    int CompareTo(const OcclusionData& b) const;                                                    // :307 (by maximumDot)
     // protected statics, public for tests
-    static double sA(double r, double x, double y);                                                 // :213
+    static double sA(double r, double x, double y);                                                 // :211
     static double RectRectIntersection(double centralExtentX, double centralExtentY, double minX, double maxX, double minY,
-                                       double maxY);                                                // :238
-    static double AreaOfIntersection(double existingConeRadius, double potentialConeRadius, double sqrDistance);  // :248
+                                       double maxY);                                                // :237
+    static double AreaOfIntersection(double existingConeRadius, double potentialConeRadius, double sqrDistance);  // :247
 
 protected:
-    void CreateCornerArray();  // OcclusionData.cs:62
+    void CreateCornerArray();  // OcclusionData.cs:57
 };
 
 }  // namespace ksp

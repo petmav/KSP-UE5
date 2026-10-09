@@ -6,13 +6,15 @@
 // Unity transforms (baseTransform, ctrlSurface, the vessel ReferenceTransform) and rigidbody point velocities are inputs
 // (LiftingSurfaceFrame / ControlSurfaceFrame).
 //
-// Not ported: ModuleLiftingSurface.cs:256-358 UpdateAeroDisplay / DestroyLiftAndDragArrows (ArrowPointer rendering),
-// :366-383 module adjusters (Missions adjusters: ApplyLiftForceAdjustments is the identity without them), GetInfo /
-// display name localisation; ModuleControlSurface.cs:142-238 editor / PAW / variant events, :447-453 blade info display,
-// :454-505 GetPotentialLift / GetPotentialTorque (ITorqueProvider for SAS: WP-24), :563-702 RotatingCtrlSurfaceUpdate and
-// :962-993 CalculateCoM (robotic rotor blades: the Serenity robotics package), :747-787 CtrlSurfaceEditorUpdate (EditorLogic),
-// :789-873 KSPActions (they only flip the bool fields), adjusters; ModuleAeroSurface.cs:38-41 Start (action activity),
-// :124-159 inventory callbacks, :207-226 CtrlSurfaceEditorUpdate.
+// Not ported: ModuleLiftingSurface.cs:280-362 UpdateAeroDisplay / DestroyLiftAndDragArrows (ArrowPointer rendering),
+// :364-367 GetInfo, :392-426 module adjusters (Missions adjusters: ApplyLiftForceAdjustments is the identity without them) and
+// display-name localisation; ModuleControlSurface.cs:198-253 OnDestroy / editor / PAW / variant events, :360-364
+// onVesselReferenceTransformSwitch, :382-393 and :451-462 the displaceVelocity (rotor blade) branches and blade info display,
+// :464-467 CalcAngleOfAttack, :469-524 GetPotentialLift / GetPotentialTorque (ITorqueProvider for SAS: WP-24), :526-532
+// LateUpdate, :544-702 RotatingCtrlSurfaceUpdate and :971-993 CalculateCoM (robotic rotor blades: the Serenity robotics
+// package), :757-801 CtrlSurfaceEditorUpdate (EditorLogic), :802-889 KSPActions (they only flip the bool fields), :933-962
+// adjusters / GetInfo / display names; ModuleAeroSurface.cs:40-43 Start (action activity), :112-151 inventory callbacks,
+// :153-163 ActionToggleBrakes, :165-173 GetInfo, :205-234 CtrlSurfaceEditorUpdate / display name.
 #pragma once
 
 #include <functional>
@@ -60,7 +62,7 @@ LiftingSurfaceCoefficients SetupCoefficients(const Vector3f& pointVelocity, cons
 template <class P = MonoFloat>
 Vector3f GetLiftVector(const LiftingSurfaceParams& m, const Vector3f& liftVector, float liftDot, float absDot, double Q,
                        float mach, float& liftScalar);
-// ModuleLiftingSurface.cs:259 GetDragVector(nVel, absDot, Q, mach); writes the module's dragScalar
+// ModuleLiftingSurface.cs:262 GetDragVector(nVel, absDot, Q, mach); writes the module's dragScalar
 template <class P = MonoFloat>
 Vector3f GetDragVector(const LiftingSurfaceParams& m, const Vector3f& nVel, float absDot, double Q, float mach,
                        float& dragScalar);
@@ -91,23 +93,23 @@ public:
     enum class TransformDir : int32_t { X = 0, Y = 1, Z = 2 };  // :8
     explicit ModuleLiftingSurface(const ModuleClassInfo& cls) : PartModule(cls) {}
 
-    // non-KSPField state (:66-110)
+    // non-KSPField state (:68-111)
     Vector3f liftForce{}, dragForce{};
     float liftDot = 0.0f;
     Vector3f nVel{}, liftVector{}, pointVelocity{};
     float absDot = 0.0f;
     double Qlift = 0.0, Qdrag = 0.0;
 
-    void OnStart(StartState state) override;  // :129 (curves of a non-"Custom" liftingSurfaceCurve from PhysicsGlobals)
-    // :169 FixedUpdate (flight scene); returns the forces instead of Part.AddForceAtPosition
+    void OnStart(StartState state) override;  // :128 (curves of a non-"Custom" liftingSurfaceCurve from PhysicsGlobals)
+    // :170 FixedUpdate (flight scene); returns the forces instead of Part.AddForceAtPosition
     SurfaceForces FixedUpdateAero(const LiftingSurfaceFrame& frame);
     // :205 SetupCoefficients (writes nVel / liftVector / liftDot / absDot through the out parameters like C#)
     void SetupCoefficients(const Vector3f& pointVelocity, const LiftingSurfaceFrame& frame, Vector3f& nVel, Vector3f& liftVector,
                            float& liftDot, float& absDot);
     Vector3f GetLiftVector(const Vector3f& liftVector, float liftDot, float absDot, double Q, float mach);  // :232
-    Vector3f GetDragVector(const Vector3f& nVel, float absDot, double Q);              // :254 (mach = part.machNumber)
-    Vector3f GetDragVector(const Vector3f& nVel, float absDot, double Q, float mach);  // :259
-    // ILiftProvider (:30-32, :303). speedOfSound = mainBody.GetSpeedOfSound(qry.refStaticPressure, qry.refAirDensity)
+    Vector3f GetDragVector(const Vector3f& nVel, float absDot, double Q);              // :257 (mach = part.machNumber)
+    Vector3f GetDragVector(const Vector3f& nVel, float absDot, double Q, float mach);  // :262
+    // ILiftProvider (:117-119, :369). speedOfSound = mainBody.GetSpeedOfSound(qry.refStaticPressure, qry.refAirDensity)
     bool DisableBodyLift() const override { return Get<bool>("disableBodyLift"); }
     bool IsLifting() const override { return Get<float>("liftScalar") != 0.0f; }
     void OnCenterOfLiftQuery(CenterOfLiftQuery& qry) override;
@@ -146,40 +148,40 @@ public:
     float maxAuthority = 150.0f;          // :88
     Vector3f inputVector{};
     Vector3f baseLiftForce{};
-    float action = 0.0f, deflection = 0.0f, roll = 0.0f, deflectionDirection = 1.0f;  // :96-104
-    Quaternionf neutral = Quaternionf::identity();      // :114 ctrlSurface's neutral localRotation
+    float action = 0.0f, deflection = 0.0f, roll = 0.0f, deflectionDirection = 1.0f;  // :98-104
+    Quaternionf neutral = Quaternionf::identity();      // :111 ctrlSurface's neutral localRotation
     Quaternionf ctrlSurfaceLocalRotation = Quaternionf::identity();  // ctrlSurface.localRotation (the output)
     Quaternionf airflowIncidence = Quaternionf::identity();
     float currentDeployAngle = 0.0f;
-    Vector2f deployAngleLimits{std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::quiet_NaN()};  // :82
+    Vector2f deployAngleLimits{std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::quiet_NaN()};  // :79
 
-    void OnAwake() override;                   // :178 (originalActuatorSpeed)
-    void OnStart(StartState state) override;   // :256 (NaN defaults, ModifyAuthorityLimiter)
-    void ModifyAuthorityLimiter();             // :234
-    void ModifyAuthorityLimiterUI();           // :246
+    void OnAwake() override;                   // :170 (originalActuatorSpeed)
+    void OnStart(StartState state) override;   // :273 (NaN defaults, ModifyAuthorityLimiter)
+    void ModifyAuthorityLimiter();             // :255
+    void ModifyAuthorityLimiterUI();           // :268
     // :366 FixedUpdate (the force part and the cube weights; transforms in `frame`)
     SurfaceForces FixedUpdateAero(const ControlSurfaceFrame& frame);
     // :704 FixedCtrlSurfaceUpdate (deflection maths; ctrlSurfaceLocalRotation = AngleAxis(deflection, right) * neutral)
-    virtual void CtrlSurfaceUpdate(const ControlSurfaceFrame& frame);  // :743 (displaceVelocity -> rotating update: not ported)
+    virtual void CtrlSurfaceUpdate(const ControlSurfaceFrame& frame);  // :745 (displaceVelocity -> rotating update: not ported)
     void FixedCtrlSurfaceUpdate(const ControlSurfaceFrame& frame);
-    // IMultipleDragCube (:875-934)
+    // IMultipleDragCube (:891-931)
     bool IsMultipleCubesActive() const override { return true; }
     std::vector<std::string> GetDragCubeNames() const override { return {"neutral", "fullDeflectionPos", "fullDeflectionNeg"}; }
-    void AssumeDragCubePosition(const std::string& name) override;  // :880 (the ctrlSurface localRotation it would set)
+    void AssumeDragCubePosition(const std::string& name) override;  // :896 (the ctrlSurface localRotation it would set)
     bool UsesProceduralDragCubes() const override { return false; }
-    static float ActionSign(float action, float epsilon);  // :563 (sic: `action < epsilon`, not `< -epsilon`)
+    static float ActionSign(float action, float epsilon);  // :539 (sic: `action < epsilon`, not `< -epsilon`)
 };
 
 // ModuleAeroSurface.cs (airbrakes)
 class ModuleAeroSurface : public ModuleControlSurface {
 public:
     explicit ModuleAeroSurface(const ModuleClassInfo& cls) : ModuleControlSurface(cls) {}
-    Vector2f aeroDeployAngleLimits{std::numeric_limits<float>::quiet_NaN(), 0.0f};  // :28
-    void OnAwake() override;                   // :32
-    void OnStart(StartState state) override;   // :56
-    void ModifyAeroAuthorityLimiter();         // :43
-    void ModifyAeroAuthorityLimiterUI();       // :51
-    void CtrlSurfaceUpdate(const ControlSurfaceFrame& frame) override;  // :177 (skinMaxTemp switch included)
+    Vector2f aeroDeployAngleLimits{std::numeric_limits<float>::quiet_NaN(), 0.0f};  // :30
+    void OnAwake() override;                   // :34
+    void OnStart(StartState state) override;   // :63
+    void ModifyAeroAuthorityLimiter();         // :45
+    void ModifyAeroAuthorityLimiterUI();       // :58
+    void CtrlSurfaceUpdate(const ControlSurfaceFrame& frame) override;  // :175 (skinMaxTemp switch included)
 };
 
 // Registers ModuleLiftingSurface, ModuleControlSurface, ModuleAeroSurface with the ModuleFactory (called by the built-in

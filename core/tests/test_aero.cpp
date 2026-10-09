@@ -196,18 +196,18 @@ TEST_CASE("WP-21 DragCubeList: weights, update flags, cube lookups, copies, proc
     const float a2[6] = {2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f}, d2[6] = {0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f}, p2[6] = {2, 2, 2, 2, 2, 2};
     auto part = CubePart({Cube("A", a1, d1, p1), Cube("B", a2, d2, p2)});
     DragCubeList& dcl = part->DragCubes;
-    // LoadCubes reads the values last to first (DragCubeList.cs:906)
+    // LoadCubes reads the values last to first (DragCubeList.cs:898-912)
     REQUIRE(dcl.Cubes().size() == 2);
     CHECK(dcl.Cubes()[0].Name() == "B");
     CHECK(dcl.WeightsRequireUpdate());
     dcl.SetDragWeights();
     CHECK_FALSE(dcl.WeightsRequireUpdate());
-    // SetDragWeights_List (:241): cubes from the last index down, weights 1 + 1, then * (1/2)
+    // SetDragWeights_List (:234): cubes from the last index down, weights 1 + 1, then * (1/2)
     for (int f = 0; f < 6; f++) {
         const float sum = (0.0f + a1[f] * 1.0f) + a2[f] * 1.0f;  // index 1 (A) first, then index 0 (B)
         CHECK(Bits(dcl.WeightedArea()[f]) == Bits(sum * 0.5f));
     }
-    // a cube weight set to its current value does not request an update (:805)
+    // a cube weight set to its current value does not request an update (:806)
     dcl.SetCubeWeight("A", 1.0f);
     CHECK_FALSE(dcl.WeightsRequireUpdate());
     dcl.SetCubeWeight("A", 0.0f);
@@ -286,7 +286,7 @@ TEST_CASE("WP-21 DragCubeList: weights, update flags, cube lookups, copies, proc
     proc->DragCubes.SetDragWeights();
     CHECK(renders == 2);
     DragCubeList::hooks = DragCubeList::Hooks{};
-    // faces and per-direction queries (:437-505)
+    // faces and per-direction queries (:421-492)
     CHECK(DragCubeList::GetFaceDirection(DragCube::DragFace::ZN).Equals(Vector3f::back()));
     CHECK(DragCubeList::FaceDirections()[3].Equals(Vector3f::down()));
     dcl.ResetCubeWeights(1.0f);
@@ -298,7 +298,7 @@ TEST_CASE("WP-21 DragCubeList: weights, update flags, cube lookups, copies, proc
     CHECK(std::isnan(dcl.GetCubeCoeffDir(Vector3f::zero())));  // 0 / 0 (no face faces the direction)
 }
 
-TEST_CASE("WP-21 DragCubeList.SetPartOcclusion over attach nodes (DragCubeList.cs:299, :752, :763)") {
+TEST_CASE("WP-21 DragCubeList.SetPartOcclusion over attach nodes (DragCubeList.cs:301, :739, :750)") {
     AeroWorld w;
     const float aTop[6] = {2.0f, 2.0f, 1.5f, 1.25f, 2.0f, 2.0f}, dTop[6] = {0.7f, 0.7f, 0.9f, 0.8f, 0.7f, 0.7f}, p[6] = {1, 1, 1, 1, 1, 1};
     const float aBot[6] = {3.0f, 3.0f, 1.0f, 1.0f, 3.0f, 3.0f}, dBot[6] = {0.6f, 0.6f, 0.95f, 0.95f, 0.6f, 0.6f};
@@ -359,7 +359,7 @@ TEST_CASE("WP-21 DragCubeList.SetPartOcclusion over attach nodes (DragCubeList.c
         facing = f32store(fx(facing) + fx(aBot[f]) * fx(Mathf::Clamp01(Vector3f::Dot(-vInBot, DragCubeList::FaceDirections()[f]))));
     CHECK(Bits(top->attachNodes[0].contactArea) == Bits(facing));
     CHECK(facing > 2.9f);  // mostly the bottom's XP face (3.0)
-    // surface attachment: the srfAttach node's contact area is the part's own facing area along the node (:345)
+    // surface attachment: the srfAttach node's contact area is the part's own facing area along the node (:344)
     top->srfAttachNode = std::make_shared<AttachNode>();
     top->srfAttachNode->orientation = Vector3f(1.0f, 0.0f, 0.0f);
     top->srfAttachNode->attachedPart = bot.get();
@@ -368,7 +368,7 @@ TEST_CASE("WP-21 DragCubeList.SetPartOcclusion over attach nodes (DragCubeList.c
     CHECK(top->srfAttachNode->contactArea == aTop[0]);
 }
 
-TEST_CASE("WP-21 DragCubeList.SetDrag / AddSurfaceDragDirection branches (DragCubeList.cs:356-435)") {
+TEST_CASE("WP-21 DragCubeList.SetDrag / AddSurfaceDragDirection branches (DragCubeList.cs:352-419)") {
     AeroWorld w;
     const float a[6] = {1.0f, 1.0f, 2.0f, 2.0f, 1.0f, 1.0f}, d[6] = {1.2f, 1.2f, 0.9f, 1.5f, 1.2f, 1.2f}, p[6] = {0.5f, 0.5f, 1.0f, 3.0f, 0.5f, 0.5f};
     auto part = CubePart({Cube("Default", a, d, p)});
@@ -388,7 +388,7 @@ TEST_CASE("WP-21 DragCubeList.SetDrag / AddSurfaceDragDirection branches (DragCu
     blunt->DragCubes.SetPartOcclusion();
     blunt->DragCubes.SetDrag(Vector3f(0.0f, -1.0f, 0.0f), 0.3f);
     CHECK(blunt->DragCubes.TaperDot() == 1.0f);
-    // zero areas: dragCoeff = areaDrag = 0 (:425)
+    // zero areas: dragCoeff = areaDrag = 0 (:413)
     const float z[6] = {0, 0, 0, 0, 0, 0};
     auto empty = CubePart({Cube("Default", z, d, p)});
     empty->DragCubes.SetDragWeights();
@@ -397,7 +397,7 @@ TEST_CASE("WP-21 DragCubeList.SetDrag / AddSurfaceDragDirection branches (DragCu
     CHECK(empty->DragCubes.Area() == 0.0f);
     CHECK(empty->DragCubes.AreaDrag() == 0.0f);
     CHECK(empty->DragCubes.DragCoeff() == 0.0f);
-    // the drag-vector rotation (SetDragVectorRotation, :822) turns -vector before the face loop
+    // the drag-vector rotation (SetDragVectorRotation, :824) turns -vector before the face loop
     const Quaternionf rot = UnityNative::AngleAxis(90.0f, Vector3f::right());
     dcl.SetDragVectorRotation(rot);
     CHECK(dcl.RotateDragVector());
@@ -602,7 +602,7 @@ TEST_CASE("WP-21 ModuleLiftingSurface: OnStart curves, lift / drag vectors, Fixe
     CHECK(Bits(ls->Get<float>("liftScalar")) == Bits(s3));
     CHECK(Same(lift, -liftVector * s3));
     CHECK(ls->IsLifting());
-    // GetDragVector (:259)
+    // GetDragVector (:262)
     const Vector3f nVel = Vector3f(0.0f, 0.98f, -0.2f).normalized();
     const Vector3f drag = ls->GetDragVector(nVel, absDot, 5000.0, 0.5f);
     const float ds = static_cast<float>(
@@ -640,7 +640,7 @@ TEST_CASE("WP-21 ModuleLiftingSurface: OnStart curves, lift / drag vectors, Fixe
     ls->SetupCoefficients(Vector3f(0.0f, 50.0f, -10.0f), frame, nv, lv, ld, ad);
     CHECK(ad == 0.0f);
     ls->Set<bool>("omnidirectional", true);
-    // FixedUpdate (:169): Q in Pa from the part's dynamic pressure, forces at CoL / CoP
+    // FixedUpdate (:170): Q in Pa from the part's dynamic pressure, forces at CoL / CoP
     part.fields.dynamicPressurekPa = 2.0;
     part.fields.machNumber = 0.4;
     frame.pointVelocity = Vector3f(0.0f, 100.0f, -17.0f);
@@ -658,7 +658,7 @@ TEST_CASE("WP-21 ModuleLiftingSurface: OnStart curves, lift / drag vectors, Fixe
     CHECK_FALSE(sh.applied);
     CHECK(ls->Qlift == 0.0);
     part.set_ShieldedFromAirstream(false);
-    // OnCenterOfLiftQuery (:303)
+    // OnCenterOfLiftQuery (:369)
     CenterOfLiftQuery q;
     q.refVector = Vector3f(0.0f, 100.0f, -17.0f);
     q.refAirDensity = 1.2;
@@ -691,10 +691,10 @@ TEST_CASE("WP-21 ModuleControlSurface / ModuleAeroSurface: deflection maths, cub
     auto* cs = dynamic_cast<ModuleControlSurface*>(m.get());
     REQUIRE(cs != nullptr);
     cs->OnStart(StartState::Flying);
-    CHECK(cs->Get<float>("deployAngle") == 15.0f);  // NaN -> ctrlSurfaceRange (:263)
+    CHECK(cs->Get<float>("deployAngle") == 15.0f);  // NaN -> ctrlSurfaceRange (:276)
     CHECK(cs->deployAngleLimits.x == -22.5f);
     CHECK(cs->deployAngleLimits.y == 22.5f);
-    CHECK(cs->Get<float>("authorityLimiterUI") == f32store(15.0 * 100.0 * fx(0.01f)));  // ModifyAuthorityLimiter (:234)
+    CHECK(cs->Get<float>("authorityLimiterUI") == f32store(15.0 * 100.0 * fx(0.01f)));  // ModifyAuthorityLimiter (:255)
     cs->Set<float>("authorityLimiterUI", 7.5f);
     cs->ModifyAuthorityLimiterUI();
     CHECK(cs->Get<float>("authorityLimiter") == 50.0f);
@@ -719,7 +719,7 @@ TEST_CASE("WP-21 ModuleControlSurface / ModuleAeroSurface: deflection maths, cub
     CHECK(cs->currentDeployAngle == 15.0f);  // -( 1 * 1 * -1) * 15
     CHECK(cs->action == 0.0f);               // -15 + 15
     cs->Set<bool>("deploy", false);
-    // ActionSign quirk (:563): the negative test is `action < epsilon`
+    // ActionSign quirk (:539): the negative test is `action < epsilon`
     CHECK(ModuleControlSurface::ActionSign(0.005f, 0.01f) == -1.0f);
     CHECK(ModuleControlSurface::ActionSign(0.01f, 0.01f) == 0.0f);
     CHECK(ModuleControlSurface::ActionSign(0.02f, 0.01f) == 1.0f);
@@ -735,7 +735,7 @@ TEST_CASE("WP-21 ModuleControlSurface / ModuleAeroSurface: deflection maths, cub
     CHECK(part->DragCubes.GetCube("fullDeflectionPos")->Weight() == Mathf::Clamp01(num5));
     CHECK(part->DragCubes.GetCube("fullDeflectionNeg")->Weight() == Mathf::Clamp01(-num5));
     CHECK(part->DragCubes.WeightsRequireUpdate());
-    // AssumeDragCubePosition (:880)
+    // AssumeDragCubePosition (:896)
     cs->AssumeDragCubePosition("fullDeflectionPos");
     CHECK(cs->action == 1.5f);
     CHECK(Same(cs->ctrlSurfaceLocalRotation, UnityNative::AngleAxis(22.5f, Vector3f::right()) * cs->neutral));
@@ -754,7 +754,7 @@ TEST_CASE("WP-21 ModuleControlSurface / ModuleAeroSurface: deflection maths, cub
     CHECK(as->Get<bool>("ignoreRoll"));
     CHECK(as->Get<float>("authorityLimiter") == 100.0f);
     CHECK(as->Get<float>("aeroDeployAngle") == as->Get<float>("ctrlSurfaceRange"));
-    // sic: the initialiser is Vector2(NaN, 0f) (ModuleAeroSurface.cs:28), so the IsNaN(y) branch of OnStart never fires
+    // sic: the initialiser is Vector2(NaN, 0f) (ModuleAeroSurface.cs:30), so the IsNaN(y) branch of OnStart never fires
     CHECK(as->aeroDeployAngleLimits.x == 0.0f);
     CHECK(as->aeroDeployAngleLimits.y == 0.0f);
     as->Set<bool>("deploy", true);
@@ -776,7 +776,7 @@ TEST_CASE("WP-21 ModuleControlSurface / ModuleAeroSurface: deflection maths, cub
 TEST_CASE("WP-21 OcclusionData / OcclusionCone / OcclusionCylinder geometry (OcclusionData.cs, OcclusionCone.cs)") {
     AeroWorld w;
     const double kPi = 3.141592653589793;
-    // sA (:213), RectRectIntersection (:238), AreaOfIntersection (:248)
+    // sA (:211), RectRectIntersection (:237), AreaOfIntersection (:247)
     CHECK(OcclusionData::sA(1.0, 0.5, 0.5) == 0.25);
     CHECK(OcclusionData::sA(1.0, -0.5, 0.5) == -0.25);
     CHECK(OcclusionData::sA(1.0, 2.0, 2.0) == doctest::Approx(kPi / 4.0).epsilon(1e-15));
@@ -792,7 +792,7 @@ TEST_CASE("WP-21 OcclusionData / OcclusionCone / OcclusionCylinder geometry (Occ
     // two unit circles at distance 1: lens area 2*acos(1/2) - sqrt(3)/2, as a share of the potential circle
     const double lens = 2.0 * std::acos(0.5) - std::sqrt(3.0) / 2.0;
     CHECK(OcclusionData::AreaOfIntersection(1.0, 1.0, 1.0) == doctest::Approx(lens / kPi).epsilon(1e-12));
-    // Update (:73) on a 2 m cube at the origin, flow along +Y
+    // Update (:71) on a 2 m cube at the origin, flow along +Y
     const float a[6] = {4, 4, 4, 4, 4, 4}, d[6] = {0.8f, 0.8f, 0.8f, 0.8f, 0.8f, 0.8f}, p[6] = {2, 2, 2, 2, 2, 2};
     auto part = CubePart({Cube("Default", a, d, p)});
     part->DragCubes.SetDragWeights();
@@ -818,7 +818,7 @@ TEST_CASE("WP-21 OcclusionData / OcclusionCone / OcclusionCylinder geometry (Occ
     CHECK(MultiplyPoint3x4(tr, Vector3f(1.0f, 2.0f, 3.0f)).Equals(Vector3f(1.0f, 7.0f, 3.0f)));
     od.Update(Vector3f::up(), tr);
     CHECK(od.centroidDot == 5.0);
-    // cylinder (:18) and cone (:61)
+    // cylinder (:17) and cone (:60)
     OcclusionCylinder cyl;
     cyl.Setup(od);
     CHECK(cyl.radius == od.projectedRadius);

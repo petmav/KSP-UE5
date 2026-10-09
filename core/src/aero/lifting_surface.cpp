@@ -56,7 +56,7 @@ Vector3f GetLiftVector(const LiftingSurfaceParams& m, const Vector3f& liftVector
     return Vector3f::zero();
 }
 
-// ModuleLiftingSurface.cs:259
+// ModuleLiftingSurface.cs:262
 template <class P>
 Vector3f GetDragVector(const LiftingSurfaceParams& m, const Vector3f& nVel, float absDot, double Q, float mach,
                        float& dragScalar) {
@@ -128,7 +128,7 @@ aero::LiftingSurfaceParams ModuleLiftingSurface::Params() const {
     return m;
 }
 
-// ModuleLiftingSurface.cs:129 OnStart (the Localizer / FindModelTransform parts are the shell's: baseTransform is the frame input)
+// ModuleLiftingSurface.cs:128 OnStart (the Localizer / FindModelTransform parts are the shell's: baseTransform is the frame input)
 void ModuleLiftingSurface::OnStart(StartState) {
     Set<float>("liftScalar", 0.0f);
     if (Get<bool>("nodeEnabled") && !Get<std::string>("attachNodeName").empty()) {
@@ -165,14 +165,14 @@ Vector3f ModuleLiftingSurface::GetLiftVector(const Vector3f& lv, float ld, float
     return r;
 }
 
-// ModuleLiftingSurface.cs:254
+// ModuleLiftingSurface.cs:257
 Vector3f ModuleLiftingSurface::GetDragVector(const Vector3f& nv, float ad, double Q) {
     const Part* p = PartOf(*this);
     if (p == nullptr) throw NullReferenceException();
     return GetDragVector(nv, ad, Q, static_cast<float>(p->fields.machNumber));
 }
 
-// ModuleLiftingSurface.cs:259
+// ModuleLiftingSurface.cs:262
 Vector3f ModuleLiftingSurface::GetDragVector(const Vector3f& nv, float ad, double Q, float mach) {
     float dragScalar = Get<float>("dragScalar");
     const Vector3f r = aero::GetDragVector<MonoFloat>(Params(), nv, ad, Q, mach, dragScalar);
@@ -180,7 +180,7 @@ Vector3f ModuleLiftingSurface::GetDragVector(const Vector3f& nv, float ad, doubl
     return r;
 }
 
-// ModuleLiftingSurface.cs:169 FixedUpdate
+// ModuleLiftingSurface.cs:170 FixedUpdate
 SurfaceForces ModuleLiftingSurface::FixedUpdateAero(const LiftingSurfaceFrame& frame) {
     SurfaceForces out;
     Part* p = PartOf(*this);
@@ -213,7 +213,7 @@ SurfaceForces ModuleLiftingSurface::FixedUpdateAero(const LiftingSurfaceFrame& f
     return out;
 }
 
-// ModuleLiftingSurface.cs:303
+// ModuleLiftingSurface.cs:369
 void ModuleLiftingSurface::OnCenterOfLiftQuery(CenterOfLiftQuery& qry, const LiftingSurfaceFrame& frame, double speedOfSound,
                                                const Vector3f& colWorldFromBase) {
     const Part* p = PartOf(*this);
@@ -245,23 +245,23 @@ void ModuleLiftingSurface::OnCenterOfLiftQuery(CenterOfLiftQuery& qry) {
 
 // ---- ModuleControlSurface ------------------------------------------------------------------------------------------------
 
-// ModuleControlSurface.cs:178 OnAwake (ctrlSurface / editor / PAW event hooks are the shell's)
+// ModuleControlSurface.cs:170 OnAwake (ctrlSurface / editor / PAW event hooks are the shell's)
 void ModuleControlSurface::OnAwake() {
     ModuleLiftingSurface::OnAwake();
     originalActuatorSpeed = Get<float>("actuatorSpeed");
 }
 
-// ModuleControlSurface.cs:234
+// ModuleControlSurface.cs:255
 void ModuleControlSurface::ModifyAuthorityLimiter() {
     Set<float>("authorityLimiterUI", S(E(Get<float>("ctrlSurfaceRange")) * E(Get<float>("authorityLimiter")) * E(0.01f)));
 }
 
-// ModuleControlSurface.cs:246
+// ModuleControlSurface.cs:268
 void ModuleControlSurface::ModifyAuthorityLimiterUI() {
     Set<float>("authorityLimiter", S(E(100.0f) * E(Get<float>("authorityLimiterUI")) / E(Get<float>("ctrlSurfaceRange"))));
 }
 
-// ModuleControlSurface.cs:256 OnStart
+// ModuleControlSurface.cs:273 OnStart
 void ModuleControlSurface::OnStart(StartState state) {
     ModuleLiftingSurface::OnStart(state);
     const float ctrlSurfaceRange = Get<float>("ctrlSurfaceRange");
@@ -274,12 +274,12 @@ void ModuleControlSurface::OnStart(StartState state) {
     }
 }
 
-// ModuleControlSurface.cs:563 (sic: the second test is `action < epsilon`)
+// ModuleControlSurface.cs:539 (sic: the second test is `action < epsilon`)
 float ModuleControlSurface::ActionSign(float action, float epsilon) {
     return (action > epsilon) ? 1.0f : ((action < epsilon) ? -1.0f : 0.0f);
 }
 
-// ModuleControlSurface.cs:743
+// ModuleControlSurface.cs:745
 void ModuleControlSurface::CtrlSurfaceUpdate(const ControlSurfaceFrame& frame) {
     // displaceVelocity: RotatingCtrlSurfaceUpdate (robotic rotor blades) is not ported; the fixed-surface update is used
     FixedCtrlSurfaceUpdate(frame);
@@ -384,7 +384,7 @@ SurfaceForces ModuleControlSurface::FixedUpdateAero(const ControlSurfaceFrame& f
     return out;
 }
 
-// ModuleControlSurface.cs:880
+// ModuleControlSurface.cs:896
 void ModuleControlSurface::AssumeDragCubePosition(const std::string& name) {
     if (name == "fullDeflectionNeg") action = S(-E(maxAuthority) * E(0.01f));
     else if (name == "fullDeflectionPos") action = S(E(maxAuthority) * E(0.01f));
@@ -395,25 +395,25 @@ void ModuleControlSurface::AssumeDragCubePosition(const std::string& name) {
 
 // ---- ModuleAeroSurface ---------------------------------------------------------------------------------------------------
 
-// ModuleAeroSurface.cs:32
+// ModuleAeroSurface.cs:34
 void ModuleAeroSurface::OnAwake() {
     ModuleControlSurface::OnAwake();
     Set<bool>("deployInvert", Get<bool>("brakeDeployInvert"));
 }
 
-// ModuleAeroSurface.cs:43
+// ModuleAeroSurface.cs:45
 void ModuleAeroSurface::ModifyAeroAuthorityLimiter() {
     Set<float>("aeroAuthorityLimiterUI",
                S(E(Get<float>("ctrlSurfaceRange")) * E(Get<float>("aeroAuthorityLimiter")) * E(0.01f)));
 }
 
-// ModuleAeroSurface.cs:51
+// ModuleAeroSurface.cs:58
 void ModuleAeroSurface::ModifyAeroAuthorityLimiterUI() {
     Set<float>("aeroAuthorityLimiter",
                S(E(100.0f) * E(Get<float>("aeroAuthorityLimiterUI")) / E(Get<float>("ctrlSurfaceRange"))));
 }
 
-// ModuleAeroSurface.cs:56 (field GUI flags are the shell's)
+// ModuleAeroSurface.cs:63 (field GUI flags are the shell's)
 void ModuleAeroSurface::OnStart(StartState state) {
     ModuleControlSurface::OnStart(state);
     const float ctrlSurfaceRange = Get<float>("ctrlSurfaceRange");
@@ -426,7 +426,7 @@ void ModuleAeroSurface::OnStart(StartState state) {
     ModifyAeroAuthorityLimiter();
 }
 
-// ModuleAeroSurface.cs:177
+// ModuleAeroSurface.cs:175
 void ModuleAeroSurface::CtrlSurfaceUpdate(const ControlSurfaceFrame& frame) {
     const Vector3f up = frame.referenceUp;
     const Vector3f vector = frame.currentCoM - frame.basePosition;

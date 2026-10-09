@@ -2,10 +2,9 @@
 // WP-05's src/parts/part_data.cpp. Every float expression follows the evaluation policy P (ksp/aero/float_eval.hpp):
 // MonoFloat (the game) is the default, NetFloat reproduces the .NET golden harness. Both are instantiated at the end.
 //
-// Not ported: DragCubeList.cs:509-559 SetFacedDotProducts / SetFacedDotProductsNormalized / AddFacedDotProducts and
-// :577-603 DivideCubeArray(float[], float[]) / MultiplyCubeArray(float[], float[]), :652-750 CreateVectorFromArray /
-// AddVectorToArray / SubtractVectorFromArray(Clamp): private static helpers nothing in DragCubeList calls;
-// :993-1009 DrawDragGizmos (Unity Gizmos); the Debug.Log lines of debugDragCube.
+// Not ported: DragCubeList.cs:494-559 SetFacedDotProducts (x2) / SetFacedDotProductsNormalized / AddFacedDotProducts,
+// :579-622 DivideCubeArray (x2) / MultiplyCubeArray(float[], float[]), :650-737 CreateVectorFromArray / AddVectorToArray /
+// SubtractVectorFromArray(Clamp): private static helpers nothing in DragCubeList calls; :996-1010 DrawDragGizmos (Unity Gizmos); the Debug.Log lines of debugDragCube.
 #include <cmath>
 
 #include "ksp/aero/flight_integrator_aero.hpp"
@@ -21,21 +20,21 @@ using aero::FE;
 using aero::MonoFloat;
 using aero::NetFloat;
 
-// DragCubeList.cs:46 CubeData.Reset
+// DragCubeList.cs:41 CubeData.Reset
 void DragCubeList::CubeData::Reset() {
     dragVector = liftForce = Vector3f::zero();
     taperDot = dragCoeff = exposedArea = crossSectionalArea = depth = areaDrag = area = 0.0f;
 }
 
 void DragCubeList::CopySerializedFrom(const DragCubeList& original) {
-    // [SerializeField] members (DragCubeList.cs:66-84)
+    // [SerializeField] members (DragCubeList.cs:65-83)
     cubes_ = original.cubes_;
     postOcclusionArea_ = original.postOcclusionArea_;
     none_ = original.none_;
     procedural_ = original.procedural_;
     cubeData_ = original.cubeData_;
     debugDragCube_ = original.debugDragCube_;
-    // everything else: the C# field initialisers (DragCubeList.cs:76-125)
+    // everything else: the C# field initialisers (DragCubeList.cs:75-126)
     part_ = nullptr;
     weightsRequireUpdate_ = true;
     occlusionRequireUpdate_ = true;
@@ -56,14 +55,14 @@ void DragCubeList::CopySerializedFrom(const DragCubeList& original) {
     SurfaceCurves = PhysicsGlobals::SurfaceCurvesList{};
 }
 
-// DragCubeList.cs:127 faceDirections = {right, left, up, down, forward, back}
+// DragCubeList.cs:128 faceDirections = {right, left, up, down, forward, back}
 const std::array<Vector3f, 6>& DragCubeList::FaceDirections() {
     static const std::array<Vector3f, 6> kFaces = {Vector3f::right(), Vector3f::left(), Vector3f::up(),
                                                    Vector3f::down(),  Vector3f::forward(), Vector3f::back()};
     return kFaces;
 }
 
-// DragCubeList.cs:211
+// DragCubeList.cs:204
 void DragCubeList::SetPart(Part* part) {
     part_ = part;
     // KSP's PhysicsGlobals always exists; kspcore hosts that load parts without one (data-only tools) keep null curve
@@ -81,7 +80,7 @@ void DragCubeList::SetPart(Part* part) {
     SurfaceCurves = PhysicsGlobals::SurfaceCurves;
 }
 
-// DragCubeList.cs:221
+// DragCubeList.cs:214
 template <class P>
 void DragCubeList::SetDragWeights() {
     if (!weightsRequireUpdate_ || none_) return;
@@ -94,29 +93,29 @@ void DragCubeList::SetDragWeights() {
 }
 
 namespace {
-// DragCubeList.cs:560 ResetCubeArray
+// DragCubeList.cs:561 ResetCubeArray
 void ResetCubeArray(std::array<float, 6>& arr) { arr.fill(0.0f); }
-// DragCubeList.cs:604 MultiplyCubeArray(float[], float): arr[i] *= multiply (one operation per element)
+// DragCubeList.cs:608 MultiplyCubeArray(float[], float): arr[i] *= multiply (one operation per element)
 void MultiplyCubeArray(std::array<float, 6>& arr, float multiply) {
     for (float& a : arr) a = static_cast<float>(static_cast<double>(a) * static_cast<double>(multiply));
 }
-// DragCubeList.cs:620 AddCubeArray: outputArray[i] += inputArray[i] * multiply
+// DragCubeList.cs:624 AddCubeArray: outputArray[i] += inputArray[i] * multiply
 template <class P>
 void AddCubeArray(std::array<float, 6>& out, const std::array<float, 6>& in, float multiply) {
     using E = FE<P>;
     for (int i = 0; i < 6; i++) out[i] = aero::S(E(out[i]) + E(in[i]) * E(multiply));
 }
-// DragCubeList.cs:628 SetCubeArray: outputArray[i] = inputArray[i] * multiply (multiply = 1f: exact)
+// DragCubeList.cs:632 SetCubeArray: outputArray[i] = inputArray[i] * multiply (multiply = 1f: exact)
 void SetCubeArray(std::array<float, 6>& out, const std::array<float, 6>& in, float multiply = 1.0f) {
     for (int i = 0; i < 6; i++) out[i] = static_cast<float>(static_cast<double>(in[i]) * static_cast<double>(multiply));
 }
-// DragCubeList.cs:636 SumCubeArray: num += arr[i] (a float local: one rounding per addition)
+// DragCubeList.cs:640 SumCubeArray: num += arr[i] (a float local: one rounding per addition)
 float SumCubeArray(const std::array<float, 6>& arr) {
     float num = 0.0f;
     for (float a : arr) num = static_cast<float>(static_cast<double>(num) + static_cast<double>(a));
     return num;
 }
-// DragCubeList.cs:752 GetFacingAreaSum
+// DragCubeList.cs:739 GetFacingAreaSum
 template <class P>
 float GetFacingAreaSum(const Vector3f& direction, const std::array<float, 6>& faceAreaArray) {
     using E = FE<P>;
@@ -129,7 +128,7 @@ float GetFacingAreaSum(const Vector3f& direction, const std::array<float, 6>& fa
 }
 }  // namespace
 
-// DragCubeList.cs:241
+// DragCubeList.cs:234
 template <class P>
 void DragCubeList::SetDragWeights_List() {
     using E = FE<P>;
@@ -173,7 +172,7 @@ void DragCubeList::SetDragWeights_List() {
     }
 }
 
-// DragCubeList.cs:283
+// DragCubeList.cs:284
 bool DragCubeList::SetDragWeights_Procedural() {
     if (!hooks.realtimeSinceStartup || !hooks.renderProceduralDragCube) return false;
     const float now = hooks.realtimeSinceStartup();
@@ -193,7 +192,7 @@ bool DragCubeList::SetDragWeights_Procedural() {
     return false;
 }
 
-// DragCubeList.cs:299
+// DragCubeList.cs:301
 template <class P>
 void DragCubeList::SetPartOcclusion() {
     using E = FE<P>;
@@ -226,7 +225,7 @@ void DragCubeList::SetPartOcclusion() {
     }
 }
 
-// DragCubeList.cs:763 AreaToCubeOperation with SetPartOcclusion's operation (fArea, cArea) => Mathf.Max(0f, cArea - fArea)
+// DragCubeList.cs:750 AreaToCubeOperation with SetPartOcclusion's operation (fArea, cArea) => Mathf.Max(0f, cArea - fArea)
 template <class P>
 void DragCubeList::AreaToCubeOperation(const Vector3f& direction, float area) {
     using E = FE<P>;
@@ -244,7 +243,7 @@ void DragCubeList::AreaToCubeOperation(const Vector3f& direction, float area) {
     }
 }
 
-// DragCubeList.cs:356
+// DragCubeList.cs:352
 template <class P>
 void DragCubeList::SetDrag(const Vector3f& vector, float machNumber) {
     if (none_) return;
@@ -276,7 +275,7 @@ float aero::DragCurveValue(const PhysicsGlobals::SurfaceCurvesList& curves, floa
     return DragCurveValueP<P>(curves, dotNormalized, mach);
 }
 
-// DragCubeList.cs:371
+// DragCubeList.cs:367
 template <class P>
 void DragCubeList::AddSurfaceDragDirection(const Vector3f& direction, float machNumber, CubeData& retData) const {
     using E = FE<P>;
@@ -326,7 +325,7 @@ void DragCubeList::AddSurfaceDragDirection(const Vector3f& direction, float mach
     }
 }
 
-// DragCubeList.cs:437
+// DragCubeList.cs:421
 template <class P>
 float DragCubeList::GetCubeAreaDir(const Vector3f& dir, const std::array<float, 6>& areas) const {
     using E = FE<P>;
@@ -338,7 +337,7 @@ float DragCubeList::GetCubeAreaDir(const Vector3f& dir, const std::array<float, 
     return num;
 }
 
-// DragCubeList.cs:456
+// DragCubeList.cs:441
 template <class P>
 float DragCubeList::GetCubeCoeffDir(const Vector3f& dir) const {
     using E = FE<P>;
@@ -353,7 +352,7 @@ float DragCubeList::GetCubeCoeffDir(const Vector3f& dir) const {
     return aero::S(E(num) / E(num2));
 }
 
-// DragCubeList.cs:473
+// DragCubeList.cs:458
 template <class P>
 float DragCubeList::GetCubeDepthDir(const Vector3f& dir) const {
     using E = FE<P>;
@@ -368,7 +367,7 @@ float DragCubeList::GetCubeDepthDir(const Vector3f& dir) const {
     return aero::S(E(num) / E(num2));
 }
 
-// DragCubeList.cs:490
+// DragCubeList.cs:475
 Vector3f DragCubeList::GetFaceDirection(DragCube::DragFace direction) {
     switch (direction) {
         case DragCube::DragFace::XP: return Vector3f::right();
@@ -395,7 +394,7 @@ DragCube* DragCubeList::GetCube(std::string_view name) {
     return &cubes_[static_cast<size_t>(count)];
 }
 
-// DragCubeList.cs:805
+// DragCubeList.cs:806
 void DragCubeList::SetCubeWeight(std::string_view name, float weight) {
     bool flag = false;
     int count = static_cast<int>(cubes_.size());
@@ -409,16 +408,16 @@ void DragCubeList::SetCubeWeight(std::string_view name, float weight) {
     if (flag) ForceUpdate(true, true);
 }
 
-// DragCubeList.cs:822
+// DragCubeList.cs:824
 void DragCubeList::SetDragVectorRotation(const Quaternionf& rotation) {
     rotateDragVector_ = true;
     dragVectorRotation_ = rotation;
 }
 
-// DragCubeList.cs:828
+// DragCubeList.cs:830
 void DragCubeList::SetDragVectorRotation(bool rotateDragVector) { rotateDragVector_ = rotateDragVector; }
 
-// DragCubeList.cs:833
+// DragCubeList.cs:835
 void DragCubeList::ResetCubeWeights(float newWeight) {
     bool flag = false;
     int count = static_cast<int>(cubes_.size());
@@ -432,7 +431,7 @@ void DragCubeList::ResetCubeWeights(float newWeight) {
     if (flag) ForceUpdate(true, true);
 }
 
-// DragCubeList.cs:936
+// DragCubeList.cs:939
 bool DragCubeList::LoadCube(const DragCubeList& cubes, std::string_view whichOne) {
     bool result = false;
     const bool flag = procedural_;

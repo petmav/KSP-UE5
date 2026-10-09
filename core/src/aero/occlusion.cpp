@@ -29,7 +29,7 @@ Vector3f MultiplyPoint3x4(const Matrix4x4f& m, const Vector3f& p) {
     return r;
 }
 
-// OcclusionCylinder.cs:18
+// OcclusionCylinder.cs:17
 void OcclusionCylinder::Setup(OcclusionData& p) {
     part = &p;
     center = p.projectedCenter;
@@ -39,7 +39,7 @@ void OcclusionCylinder::Setup(OcclusionData& p) {
     cylNoseDot = p.maximumDot - p.maxWidthDepth;
 }
 
-// OcclusionCone.cs:61
+// OcclusionCone.cs:60
 void OcclusionCone::Setup(OcclusionData& p, double sqrtMach, double sqrtMachAngle, double detachAngle) {
     part = &p;
     center = p.projectedCenter;
@@ -87,16 +87,16 @@ void OcclusionCone::Setup(OcclusionData& p, double sqrtMach, double sqrtMachAngl
     p.ptd->convectionCoeffMultiplier = num2;
 }
 
-// OcclusionCone.cs:115
+// OcclusionCone.cs:116
 double OcclusionCone::GetShockRadius(double dot) const {
     const double num = shockNoseDot - dot;
     return radius + num * dotnet::Math::Tan(shockAngle);
 }
 
-// OcclusionData.cs:57
+// OcclusionData.cs:48
 OcclusionData::OcclusionData(OcclusionThermalRef& data) : part(data.part), ptd(&data) {}
 
-// OcclusionData.cs:62
+// OcclusionData.cs:57
 void OcclusionData::CreateCornerArray() {
     const Bounds bounds(part->DragCubes.WeightedCenter(), part->DragCubes.WeightedSize());
     boundsCenter = bounds.center();
@@ -111,7 +111,7 @@ void OcclusionData::CreateCornerArray() {
     boundsVertices[7] = Vector3f(mx.x, mx.y, mn.z);
 }
 
-// OcclusionData.cs:73
+// OcclusionData.cs:71
 void OcclusionData::Update(const Vector3f& velocity, const Matrix4x4f& localToWorldMatrix, bool useDragArea) {
     if (part == nullptr) return;
     CreateCornerArray();
@@ -150,7 +150,7 @@ void OcclusionData::Update(const Vector3f& velocity, const Matrix4x4f& localToWo
     projectedRadius = dotnet::Math::Sqrt(projectedArea / kPI);
 }
 
-// OcclusionData.cs:127
+// OcclusionData.cs:124
 double OcclusionData::GetConvectionMultVerts(const OcclusionCone& cone) const {
     double num = 0.0, num2 = 0.0;
     double radius = cone.radius;
@@ -170,7 +170,7 @@ double OcclusionData::GetConvectionMultVerts(const OcclusionCone& cone) const {
     return 1.0 - num2 + (num2 - num) * cone.shockConvectionTempMult + num * cone.occludeConvectionTempMult;
 }
 
-// OcclusionData.cs:152
+// OcclusionData.cs:149
 double OcclusionData::GetShockStats(const OcclusionCone& cone, double& newTempMult, double& newCoeffMult) const {
     const Vector2f vector = cone.offset + minExtents;
     const Vector2f vector2 = cone.offset + maxExtents;
@@ -187,7 +187,7 @@ double OcclusionData::GetShockStats(const OcclusionCone& cone, double& newTempMu
     return 1.0 - num2 + num2 * cone.occludeConvectionAreaMult;
 }
 
-// OcclusionData.cs:180
+// OcclusionData.cs:179
 double OcclusionData::GetCylinderOcclusion(const OcclusionCylinder& cyl) const {
     const Vector2f vector = cyl.offset + minExtents;
     const Vector2f vector2 = cyl.offset + maxExtents;
@@ -196,7 +196,7 @@ double OcclusionData::GetCylinderOcclusion(const OcclusionCylinder& cyl) const {
     return num;
 }
 
-// OcclusionData.cs:197
+// OcclusionData.cs:195
 double OcclusionData::GetCylinderOcclusionVerts(const OcclusionCylinder& cyl) const {
     double num = 0.0;
     double radius = cyl.radius;
@@ -208,7 +208,7 @@ double OcclusionData::GetCylinderOcclusionVerts(const OcclusionCylinder& cyl) co
     return num;
 }
 
-// OcclusionData.cs:213
+// OcclusionData.cs:211
 double OcclusionData::sA(double r, double x, double y) {
     if (x < 0.0) return -sA(r, -x, y);
     if (y < 0.0) return -sA(r, x, -y);
@@ -222,7 +222,7 @@ double OcclusionData::sA(double r, double x, double y) {
     return x * y;
 }
 
-// OcclusionData.cs:238
+// OcclusionData.cs:237
 double OcclusionData::RectRectIntersection(double centralExtentX, double centralExtentY, double minX, double maxX, double minY,
                                            double maxY) {
     const double num = (maxX - minX) * (maxY - minY);
@@ -235,7 +235,7 @@ double OcclusionData::RectRectIntersection(double centralExtentX, double central
     return 0.0;
 }
 
-// OcclusionData.cs:248
+// OcclusionData.cs:247
 double OcclusionData::AreaOfIntersection(double existingConeRadius, double potentialConeRadius, double sqrDistance) {
     const double num = existingConeRadius + potentialConeRadius;
     if (sqrDistance >= num * num) return 0.0;
@@ -260,7 +260,7 @@ double OcclusionData::AreaOfIntersection(double existingConeRadius, double poten
     return 0.0;
 }
 
-// OcclusionData.cs:303
+// OcclusionData.cs:307
 int OcclusionData::CompareTo(const OcclusionData& b) const {
     if (b.maximumDot < maximumDot) return 1;
     if (b.maximumDot == maximumDot) return 0;

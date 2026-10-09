@@ -213,7 +213,8 @@ endif()
 # the drag-cube pipeline (WP-21). Dropped columns (each documented in STATUS.md "WP-14"):
 #   structure.cube_names        cube weights are set by module OnStart logic / DragCubeList.ForceUpdate (WP-21 and the module packages);
 #                               the cube NAMES are checked by tests/test_vessel.cpp
-#   structure.node_contact_areas  AttachNode.contactArea is written by DragCubeList.SetPartOcclusion (WP-21)
+#   structure.node_contact_areas  AttachNode.contactArea is written by DragCubeList.SetPartOcclusion (WP-21): gated by
+#                               capture.aero_forces_vessel (below), not here
 #   states.spd                  input: Vessel.speed is the FlightIntegrator spd copied through ApplyFlightIntegratorAtmosphere, and the
 #                               runner feeds it the captured spd, so the column would only compare the capture with itself
 #   states.frame, UT, altitude, aoa_deg, srf_velocity_*, ref_up_*  inputs of the experiment or rigid-body state. srf_velocity_* feed

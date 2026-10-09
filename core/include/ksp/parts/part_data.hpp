@@ -149,7 +149,7 @@ struct AttachNode {
 // ---- DragCube.cs -----------------------------------------------------------------------------------------------------
 class DragCube {
 public:
-    // DragCube.cs:7 DragFace (WP-21)
+    // DragCube.cs:6 DragFace (WP-21)
     enum class DragFace : int32_t { XP = 0, XN = 1, YP = 2, YN = 3, ZP = 4, ZN = 5 };
     DragCube() = default;
     explicit DragCube(std::string name) : name_(std::move(name)) {}
@@ -202,7 +202,7 @@ public:
         float exposedArea = 0.0f;
         float dragCoeff = 0.0f;
         float taperDot = 0.0f;
-        void Reset();  // DragCubeList.cs:46
+        void Reset();  // DragCubeList.cs:41
     };
     // What DragCubeList reads from Unity / DragCubeSystem (procedural cubes are rendered from the model; unset = no
     // procedural cube is ever rendered, SetDragWeights_Procedural returns false)
@@ -220,7 +220,7 @@ public:
     // the [NonSerialized] curve references null).
     void CopySerializedFrom(const DragCubeList& original);
 
-    // ---- properties (DragCubeList.cs:139-209) ----
+    // ---- properties (DragCubeList.cs:138-202) ----
     float AreaDrag() const { return cubeData_.areaDrag; }
     float Area() const { return cubeData_.area; }
     float Depth() const { return cubeData_.depth; }
@@ -250,33 +250,33 @@ public:
     bool OcclusionRequireUpdate() const { return occlusionRequireUpdate_; }
 
     // ---- aerodynamics (WP-21) ----
-    void SetPart(Part* part);  // DragCubeList.cs:211
+    void SetPart(Part* part);  // DragCubeList.cs:204
     template <class P = aero::MonoFloat>
-    void SetDragWeights();  // DragCubeList.cs:221
+    void SetDragWeights();  // DragCubeList.cs:214
     template <class P = aero::MonoFloat>
-    void SetPartOcclusion();  // DragCubeList.cs:299
+    void SetPartOcclusion();  // DragCubeList.cs:301
     template <class P = aero::MonoFloat>
-    void SetDrag(const Vector3f& vector, float machNumber);  // DragCubeList.cs:356
+    void SetDrag(const Vector3f& vector, float machNumber);  // DragCubeList.cs:352
     template <class P = aero::MonoFloat>
-    void AddSurfaceDragDirection(const Vector3f& direction, float machNumber, CubeData& retData) const;  // DragCubeList.cs:371
+    void AddSurfaceDragDirection(const Vector3f& direction, float machNumber, CubeData& retData) const;  // DragCubeList.cs:367
     template <class P = aero::MonoFloat>
-    float GetCubeAreaDir(const Vector3f& dir, const std::array<float, 6>& areas) const;  // DragCubeList.cs:437
+    float GetCubeAreaDir(const Vector3f& dir, const std::array<float, 6>& areas) const;  // DragCubeList.cs:421
     template <class P = aero::MonoFloat>
-    float GetCubeAreaDir(const Vector3f& dir) const { return GetCubeAreaDir<P>(dir, areaOccluded_); }  // :451
+    float GetCubeAreaDir(const Vector3f& dir) const { return GetCubeAreaDir<P>(dir, areaOccluded_); }  // :436
     template <class P = aero::MonoFloat>
-    float GetCubeCoeffDir(const Vector3f& dir) const;  // DragCubeList.cs:456
+    float GetCubeCoeffDir(const Vector3f& dir) const;  // DragCubeList.cs:441
     template <class P = aero::MonoFloat>
-    float GetCubeDepthDir(const Vector3f& dir) const;  // DragCubeList.cs:473
-    static Vector3f GetFaceDirection(DragCube::DragFace direction);  // DragCubeList.cs:490
-    static const std::array<Vector3f, 6>& FaceDirections();          // DragCubeList.cs:127 faceDirections
+    float GetCubeDepthDir(const Vector3f& dir) const;  // DragCubeList.cs:458
+    static Vector3f GetFaceDirection(DragCube::DragFace direction);  // DragCubeList.cs:475
+    static const std::array<Vector3f, 6>& FaceDirections();          // DragCubeList.cs:128 faceDirections
     void SetOcclusionMultiplier(float multiplier);   // DragCubeList.cs:786
     DragCube* GetCube(std::string_view name);         // DragCubeList.cs:792 (last match)
-    void SetCubeWeight(std::string_view name, float weight);  // DragCubeList.cs:805
-    void SetDragVectorRotation(const Quaternionf& rotation);  // DragCubeList.cs:822
-    void SetDragVectorRotation(bool rotateDragVector);        // DragCubeList.cs:828
-    void ResetCubeWeights(float newWeight);           // DragCubeList.cs:833
-    void ResetCubeWeights() { ResetCubeWeights(1.0f); }  // DragCubeList.cs:851
-    bool LoadCube(const DragCubeList& cubes, std::string_view whichOne);  // DragCubeList.cs:936
+    void SetCubeWeight(std::string_view name, float weight);  // DragCubeList.cs:806
+    void SetDragVectorRotation(const Quaternionf& rotation);  // DragCubeList.cs:824
+    void SetDragVectorRotation(bool rotateDragVector);        // DragCubeList.cs:830
+    void ResetCubeWeights(float newWeight);           // DragCubeList.cs:835
+    void ResetCubeWeights() { ResetCubeWeights(1.0f); }  // DragCubeList.cs:853
+    bool LoadCube(const DragCubeList& cubes, std::string_view whichOne);  // DragCubeList.cs:939
     void RequestOcclusionUpdate() { occlusionRequireUpdate_ = true; }     // DragCubeList.cs:962
     void ForceUpdate(bool weights, bool occlusion, bool resetProcTiming = false);  // DragCubeList.cs:967
     bool DebugDragCube() const { return debugDragCube_; }
@@ -304,7 +304,7 @@ private:
     std::vector<DragCube> cubes_;
     bool none_ = false;
     bool procedural_ = false;
-    // ---- WP-21 (DragCubeList.cs:66-125)
+    // ---- WP-21 (DragCubeList.cs:66-126)
     float postOcclusionArea_ = 0.0f;
     Part* part_ = nullptr;
     CubeData cubeData_{};
@@ -325,10 +325,10 @@ private:
     Quaternionf dragVectorRotation_ = Quaternionf::identity();
 
     template <class P>
-    void SetDragWeights_List();      // DragCubeList.cs:241
-    bool SetDragWeights_Procedural();  // DragCubeList.cs:283
+    void SetDragWeights_List();      // DragCubeList.cs:234
+    bool SetDragWeights_Procedural();  // DragCubeList.cs:284
     template <class P>
-    void AreaToCubeOperation(const Vector3f& direction, float area);  // DragCubeList.cs:763 (the only operation: Max(0, c - f))
+    void AreaToCubeOperation(const Vector3f& direction, float area);  // DragCubeList.cs:750 (the only operation: Max(0, c - f))
 };
 
 class PartResourceDefinition;

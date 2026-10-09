@@ -86,7 +86,7 @@ inline Vector3f operator-(const Vector3f& a, const Vector3f& b) {
 }
 // Vector3.cs:425 shows `new Vector3(0f - a.x, ...)`, which is how ILSpy prints the IL `neg` instruction: the operator is an IEEE
 // negation (-(+0) = -0). Evidence (WP-21): harness/golden/aero_forces lifting_surface writes lift_x = -0.0 for
-// `-liftVector * liftScalar` with liftVector.x = +0 (ModuleLiftingSurface.cs:248).
+// `-liftVector * liftScalar` with liftVector.x = +0 (ModuleLiftingSurface.cs:251).
 inline Vector3f operator-(const Vector3f& a) { return {-a.x, -a.y, -a.z}; }
 inline Vector3f operator*(const Vector3f& a, float d) {
     return {f32store(fx(a.x) * fx(d)), f32store(fx(a.y) * fx(d)), f32store(fx(a.z) * fx(d))};

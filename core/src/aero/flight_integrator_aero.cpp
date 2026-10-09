@@ -20,7 +20,7 @@ namespace {
 enum DragModel : int32_t { DEFAULT = 0, CONIC = 1, CYLINDRICAL = 2, SPHERICAL = 3, CUBE = 4, NONE = 5 };
 }  // namespace
 
-// FlightIntegrator.cs:565-585 (aero subset of FixedUpdate's cache block)
+// FlightIntegrator.cs:573-593 (aero subset of FixedUpdate's cache block)
 void FlightIntegratorAero::CacheGlobals() {
     cacheDragCubeMultiplier = PhysicsGlobals::DragCubeMultiplier();
     cacheDragCubesUseSpherical = PhysicsGlobals::DragCubesUseSpherical();

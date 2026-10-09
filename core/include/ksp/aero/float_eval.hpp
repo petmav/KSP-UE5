@@ -27,6 +27,7 @@
 #include <cmath>
 
 #include "ksp/dotnet/math.hpp"
+#include "ksp/math/mathfx.hpp"
 #include "ksp/unity/mathf.hpp"
 #include "ksp/unity/quaternion.hpp"
 #include "ksp/unity/vector.hpp"
@@ -141,9 +142,9 @@ struct U {
         result.z = S((E(num8) - E(num11)) * E(p.x) + (E(num9) + E(num10)) * E(p.y) + (one - (E(num4) + E(num5))) * E(p.z));
         return result;
     }
-    // Quaternion.Inverse is native (UnityPlayer: Inverse(q) = Conjugate(q), no division by the squared norm); checked
-    // against the 60 captured rows of harness/captures/out/math_shim_native.json in tests/test_aero.cpp
-    static Quaternionf Inverse(const Quaternionf& q) { return {-q.x, -q.y, -q.z, q.w}; }
+    // Quaternion.Inverse is native and policy-independent: WP-01's QuaternionExtensions::Inverse (the conjugate, no division by
+    // the squared norm); checked against the 60 captured rows of harness/captures/out/math_shim_native.json in tests/test_aero.cpp
+    static Quaternionf Inverse(const Quaternionf& q) { return QuaternionExtensions::Inverse(q); }
     // Vector3.cs:352 Angle (degrees)
     static float Angle(const Vector3f& from, const Vector3f& to) {
         const float num = static_cast<float>(dotnet::Math::Sqrt(D(E(SqrMagnitude(from)) * E(SqrMagnitude(to)))));

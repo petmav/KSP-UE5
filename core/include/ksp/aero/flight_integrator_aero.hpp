@@ -3,7 +3,7 @@
 // pseudo-Reynolds) is WP-09's FlightIntegratorAtmosphere (ksp/celestial/flight_atmosphere.hpp): not duplicated here.
 //
 // Ported (FlightIntegrator.cs):
-//   :544-588   FixedUpdate's cache block, aero subset                  -> FlightIntegratorAero::CacheGlobals
+//   :573-593   FixedUpdate's cache block, aero subset                  -> FlightIntegratorAero::CacheGlobals
 //   :2243-2247 ApplyAeroDrag (force, position, mode: returned, not applied)  -> AeroForces::drag*
 //   :2249-2258 ApplyAeroLift (bodyLiftLocalPosition / Vector set on the part; force returned)  -> AeroForces::lift*
 //   :2260-2389 UpdateAerodynamics (every statement; the Rigidbody is the AeroRigidbody input, its AddForceAtPosition
@@ -11,10 +11,10 @@
 //   :2391-2510 CalculateDragValue (+ _Spherical, _Cylindrical, _Conic, _Cube), CalculateAerodynamicArea,
 //              CalculateAreaExposed, CalculateAreaRadiative
 //   :2512-2543 DragCubeSetupAndPartAeroStats (altitude of a part's position through a hook: FlightGlobals.getAltitudeAtPos)
-// Not ported here (and who owns it): :1-543 fields / Setup / events / UpdateMassStats / SmoothVelocity and :589-713
-// the rest of FixedUpdate / Update / ThermoPrecalculate (the physics tick: WP-20, with the drag-cube root-part reload of
-// Setup :281-348 left to it); :715-783 Integrate / IntegratePhysicalObjects (rigidbody forces, Krakensbane: WP-20);
-// :784-985 atmosphere helpers (WP-09, flight_atmosphere.hpp); :974-2242 thermal model (WP-22); :2545-2770 thermal
+// Not ported here (and who owns it): :1-543 fields / Setup / events / UpdateMassStats / SmoothVelocity and :544-572,
+// :594-713 the rest of FixedUpdate / Update / ThermoPrecalculate (the physics tick: WP-20, with the drag-cube root-part reload of
+// Setup :277-348 left to it); :715-783 Integrate / IntegratePhysicalObjects (rigidbody forces, Krakensbane: WP-20);
+// :784-962 atmosphere helpers (WP-09, flight_atmosphere.hpp); :963-2242 thermal model (WP-22); :2545-2770 thermal
 // occlusion passes UpdateOcclusion* (WP-22; their geometry, OcclusionData/Cone/Cylinder, is ported in occlusion.hpp);
 // :2771 OnDrawGizmosSelected.
 #pragma once
@@ -70,7 +70,7 @@ struct AeroForces {
 
 // FlightIntegrator's aero state: the PhysicsGlobals caches and the atmosphere values UpdateAerodynamics reads.
 struct FlightIntegratorAero {
-    // FixedUpdate cache block (FlightIntegrator.cs:565-585), aero subset
+    // FixedUpdate cache block (FlightIntegrator.cs:573-593), aero subset
     float cacheDragCubeMultiplier = 0.0f;
     bool cacheDragCubesUseSpherical = false;
     bool cacheApplyDrag = false;
@@ -86,7 +86,7 @@ struct FlightIntegratorAero {
     double density = 0.0;
     double pseudoReDragMult = 1.0;
 
-    void CacheGlobals();  // FlightIntegrator.cs:565-585 (reads PhysicsGlobals)
+    void CacheGlobals();  // FlightIntegrator.cs:573-593 (reads PhysicsGlobals)
 
     // FlightIntegrator.cs:2391 CalculateDragValue and the per-model helpers (:2414-2432)
     template <class P = aero::MonoFloat>
