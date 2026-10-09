@@ -54,7 +54,7 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `capture.vessel_state` | WP-14: in-game `captures/out2/aero_forces_vessel.json` (C10): structure 631 (part tree of the three PhysProf crafts assembled into a `Vessel`), states 20 (surface speed and the FlightIntegrator atmosphere mirror); cube_names, node_contact_areas and engine/input columns excluded (see WP-14; node_contact_areas is gated by capture.aero_forces_vessel since WP-21) | 651 | 0 ULP, strings/ints identical |
 | `golden.aero_forces` | WP-21: harness golden `aero_forces` (KSP's IL on .NET 4.8), every table, computed with the `aero::NetFloat` policy: drag_curve_value 2,870, cube_inputs 34, cube_weighted 204, cube_drag 18,122, drag_chain_kerbin 2,304, lifting_surface 2,160 | 25,694 | 0 ULP (signed zeros included) |
 | `capture.aero_forces_mono` | WP-21: in-game `captures/out/aero_forces_mono.json`, the AeroGen drag-cube tables under Mono (`aero::MonoFloat`, the production policy): cube_inputs 34, cube_weighted 204, cube_drag 18,122 | 18,360 | 0 ULP |
-| `capture.aero_forces_vessel` | WP-21: in-game `captures/out2/aero_forces_vessel.json` (C10): structure 631 (node_contact_areas), parts 4,224 x 49 columns, aoa_sweep 25,344 x 12 columns on the three assembled PhysProf vessels; inputs dropped as listed in "WP-21" | 30,199 | 0 ULP |
+| `capture.aero_forces_vessel` | WP-21: in-game `captures/out2/aero_forces_vessel.json` (C10): structure 631 (node_contact_areas), parts 4,224 x 46 columns, aoa_sweep 25,344 x 12 columns on the three assembled PhysProf vessels; inputs dropped as listed in "WP-21" | 30,199 | 0 ULP |
 | `unit` | 247 doctest cases, 398,741 assertions (WP-21: 11 cases, 220,304 assertions in `test_aero.cpp`; WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
@@ -1925,7 +1925,7 @@ in-game capture: drag_chain_kerbin and lifting_surface), and the in-game capture
 | C# file | C++ | ported | not ported (line ranges) |
 |---|---|---|---|
 | DragCube.cs (214) | WP-05 `parts/part_data.hpp` (Load / SaveToString unchanged) | `DragFace` enum (:6) added | - |
-| DragCubeList.cs (1,010) | `parts/part_data.hpp` (the class, additive: aero members), `src/aero/drag_cube_list.cpp` | CubeData + Reset (:8-63), every field (:65-126), properties (:138-202), SetPart (:204), SetDragWeights / _List / _Procedural (:214-299; the procedural cube renderer and clock are `DragCubeList::hooks`), SetPartOcclusion (:301-350), SetDrag (:352), AddSurfaceDragDirection (:367-419), GetCubeAreaDir x2 / GetCubeCoeffDir / GetCubeDepthDir (:421-473), GetFaceDirection (:475), the array helpers used (:561-648), GetFacingAreaSum (:739), AreaToCubeOperation (:750, with its only operation `Max(0, c - f)`), SetOcclusionMultiplier, GetCube, SetCubeWeight, SetDragVectorRotation x2, ResetCubeWeights x2 (:786-856), LoadCube (:939), RequestOcclusionUpdate (:962), ForceUpdate (:967). LoadCubes / SaveCubes / ClearCubes stay WP-05's (reconciled: same class) | :494-559, :579-622, :650-737 private static helpers nothing calls (SetFacedDotProducts*, AddFacedDotProducts, DivideCubeArray, MultiplyCubeArray(float[], float[]), CreateVectorFromArray, Add/SubtractVectorToArray*); :996-1010 DrawDragGizmos; the debugDragCube Debug.Log lines |
+| DragCubeList.cs (1,010) | `parts/part_data.hpp` (the class, additive: aero members), `src/aero/drag_cube_list.cpp` | CubeData + Reset (:8-63), every field (:65-126), properties (:138-202), SetPart (:204), SetDragWeights / _List / _Procedural (:214-299; the procedural cube renderer and clock are `DragCubeList::hooks`), SetPartOcclusion (:301-350), SetDrag (:352), AddSurfaceDragDirection (:367-419), GetCubeAreaDir x2 / GetCubeCoeffDir / GetCubeDepthDir (:421-473), GetFaceDirection (:475), the array helpers used (:561-648), GetFacingAreaSum (:739), AreaToCubeOperation (:750, with its only operation `Max(0, c - f)`), SetOcclusionMultiplier, GetCube, SetCubeWeight, SetDragVectorRotation x2, ResetCubeWeights x2 (:786-856), LoadCube (:939), RequestOcclusionUpdate (:962), ForceUpdate (:967). LoadCubes / SaveCubes / ClearCubes stay WP-05's (reconciled: same class) | :494-559, :579-606, :616-622, :650-737 private static helpers nothing calls (SetFacedDotProducts*, AddFacedDotProducts, DivideCubeArray x2, MultiplyCubeArray(float[], float[]) (the ported MultiplyCubeArray(float[], float) is :608), CreateVectorFromArray, Add/SubtractVectorToArray*); :996-1010 DrawDragGizmos; the debugDragCube Debug.Log lines |
 | FlightIntegrator.cs (2,776) | `aero/flight_integrator_aero.hpp`, `src/aero/flight_integrator_aero.cpp` (`FlightIntegratorAero`) | the aero subset of FixedUpdate's cache block (:573-593), ApplyAeroDrag (:2243) and ApplyAeroLift (:2249) as returned `AeroForces`, UpdateAerodynamics (:2260-2389, every statement incl. ocean / submerged, angular drag, body lift), CalculateDragValue + _Spherical / _Cylindrical / _Conic / _Cube (:2391-2432), CalculateAerodynamicArea / CalculateAreaExposed / CalculateAreaRadiative (:2434-2510), DragCubeSetupAndPartAeroStats (:2512-2543). The atmosphere helpers (CalculatePressure, CalculateConstantsAtmosphere: density, q, speed of sound, Mach, pseudo-Reynolds) are WP-09's `FlightIntegratorAtmosphere` (shared, not duplicated) | :1-543 fields / Setup (incl. the zeroed root-part cube reload :277-348) / events / UpdateMassStats / SmoothVelocity, :544-572 and :594-713 the rest of FixedUpdate / Update (the tick: WP-20), :715-783 Integrate / IntegratePhysicalObjects (rigidbody forces, Krakensbane: WP-20), :784-962 atmosphere (WP-09), :963-2242 thermal (WP-22), :2545-2770 UpdateOcclusion* passes (WP-22; their geometry is ported, below), :2771 gizmos |
 | ModuleLiftingSurface.cs (426) | `aero/lifting_surface.hpp`, `src/aero/lifting_surface.cpp` (pure `aero::SetupCoefficients / GetLiftVector / GetDragVector` over `LiftingSurfaceParams`, and the registered `ModuleLiftingSurface` PartModule) | fields, OnStart (:128, curves of a non-"Custom" set from PhysicsGlobals), FixedUpdate (:170, forces returned), SetupCoefficients (:205), GetLiftVector (:232, incl. perpendicularOnly and nodeEnabled), GetDragVector x2 (:257, :262), ILiftProvider (:117-119), OnCenterOfLiftQuery (:369) | :280-362 arrows, :364 GetInfo, :392-426 mission adjusters (identity without them) and localisation |
 | ModuleControlSurface.cs (994) | same files (`ModuleControlSurface`, registered) | OnAwake (:170), ModifyAuthorityLimiter(UI) (:255, :268), OnStart NaN defaults (:273), FixedUpdate (:366-450: base + deflected lift / drag, magnitudes, the three cube weights), ActionSign (:539, quirk kept), FixedCtrlSurfaceUpdate (:704, the deflection over FlightCtrlState pitch / yaw / roll; the transform values are `ControlSurfaceFrame` inputs, the output is `ctrlSurfaceLocalRotation`), CtrlSurfaceUpdate (:745), IMultipleDragCube (:891-931) incl. AssumeDragCubePosition (:896) | :198-253 editor / PAW / variant events, :360 reference-transform event, :382-393 / :451-467 the displaceVelocity rotor-blade branches and display, :469-524 GetPotentialLift / GetPotentialTorque (ITorqueProvider: WP-24), :526 LateUpdate, :544-702 RotatingCtrlSurfaceUpdate and :971-993 CalculateCoM (robotics rotors), :757-801 CtrlSurfaceEditorUpdate (EditorLogic), :802-889 KSPActions, :933-962 adjusters / GetInfo |
@@ -1938,11 +1938,17 @@ Also changed in earlier packages' files (additive or a documented fix): `parts/p
 `physics/physics_globals.hpp` and `aero/float_eval.hpp`), `parts/part.hpp` (`bodyLiftOnlyProvider`, `airstreamShields`: Object-typed
 Part fields PartFields has no storage for), `src/parts/part.cpp` (Part.Awake calls `DragCubes.SetPart(this)`, Part.cs:1633),
 `src/parts/part_modules.cpp` (Instantiate copies the drag cubes with `CopySerializedFrom`: only the [SerializeField] members, like
-Unity), `src/modules/module_behaviours.cpp` (registers the three surface modules), `unity/vector.hpp` and `math/vector3d.hpp`
-(unary minus, below), `tools/golden_runner/ds_vessel_state.cpp` (its craft assembly and atmosphere recovery moved to the shared
+Unity), `src/modules/module_behaviours.cpp` (registers the three surface modules), `unity/vector.hpp`
+(Vector3 unary minus, below), `tools/golden_runner/ds_vessel_state.cpp` (its craft assembly and atmosphere recovery moved to the shared
 `vessel_capture.{hpp,cpp}`; tables unchanged).
 
 ### Gate results (Linux release, clang 18; harness tolerances unchanged, `tests/tolerances_capture.json` 0 ULP)
+
+What is gated and what is not: the gates exercise DragCubeList (weights, occlusion, SetDrag), CalculateDragValue, the areas,
+DragCubeSetupAndPartAeroStats, the lifting-surface vector functions and the DragScalar / BodyLiftScalar helpers. `UpdateAerodynamics`
+itself (dragVector from the rigidbody velocity, q, angular drag, returned forces, ocean branch) is covered by unit tests only: the vessel
+gate calls the scalar helpers with the captured q. The thermal-occlusion geometry (OcclusionData / OcclusionCone / OcclusionCylinder) and
+the control / aero surface modules have no reference-data gate yet (unit tests only).
 
 | gate / table | rows | reference | policy | max ULP | notes |
 |---|---|---|---|---|---|
@@ -1956,13 +1962,15 @@ Unity), `src/modules/module_behaviours.cpp` (registers the three surface modules
 | `capture.aero_forces_mono` / cube_weighted | 204 | same | MonoFloat | 0 | |
 | `capture.aero_forces_mono` / cube_drag | 18,122 | same (flow / Mach inputs from `captures/in/aero_in.tsv`, the capture's own input file) | MonoFloat | 0 | CalculateDragValue = the exact double product (Mono widening) |
 | `capture.aero_forces_vessel` / structure | 631 | in-game `captures/out2/aero_forces_vessel.json` (C10) | MonoFloat | 0 | `node_contact_areas` (AttachNode.contactArea from SetPartOcclusion, the capture's G4 text) and `part`; the tree columns are capture.vessel_state's |
-| `capture.aero_forces_vessel` / parts | 4,224 x 49 cols | same | MonoFloat | 0 | AreaOccluded / WeightedArea / WeightedDrag / WeightedDepth x 6 faces, OcclusionMultiplier, PostOcclusionArea, AreaDrag, Area, ExposedArea, CrossSectionalArea, Depth, DragCoeff, TaperDot, LiftForce, DragVector, dragScalar, bodyLiftScalar, aerodynamicArea, radiativeArea, CalculateDragValue, machNumber, atmDensity, ShieldedFromAirstream, dragcubes_none |
+| `capture.aero_forces_vessel` / parts | 4,224 x 46 cols | same | MonoFloat | 0 | AreaOccluded / WeightedArea / WeightedDrag / WeightedDepth x 6 faces, OcclusionMultiplier, PostOcclusionArea, AreaDrag, Area, ExposedArea, CrossSectionalArea, Depth, DragCoeff, TaperDot, LiftForce, dragScalar, bodyLiftScalar, aerodynamicArea, radiativeArea, CalculateDragValue, machNumber, atmDensity, ShieldedFromAirstream, dragcubes_none |
 | `capture.aero_forces_vessel` / aoa_sweep | 25,344 x 12 cols | same | MonoFloat | 0 | SetDrag on the live occluded cubes + CalculateDragValue + mach |
 
 Exclusions (`tests/CMakeLists.txt` next to the gate; no row is filtered anywhere):
 - `aero_forces_vessel` inputs: `parts:dragVectorDirLocal_xyz, dragVectorMag, dynamicPressurekPa` (the part's rigidbody velocity in
   part space and `atmDensity * 0.0005 * |v|^2`: the runner feeds them from the capture, comparing them would compare the capture with
-  itself), `aoa_sweep:flow_local_xyz` (R(aoa) * dragVectorDirLocal, rotated natively in game: an input).
+  itself), `parts:DragVector_xyz` (negated input: cubeData.dragVector = -dragVectorDirLocal while rotateDragVector is false, as on
+  every captured part), `aoa_sweep:flow_local_xyz` (R(aoa) * dragVectorDirLocal, rotated natively in game: an input). The runner
+  writes none of the dropped columns, so a later un-drop cannot pass on a copied value.
 - `parts:staticPressureAtm`: DragCubeSetupAndPartAeroStats evaluates `GetPressure(getAltitudeAtPos(partTransform.position))` per part;
   the part's world position on the pad / in flight is not captured (WP-19/20: floating origin, rigidbody positions).
 - `parts:exposedArea`: UpdateAerodynamics assigns `part.exposedArea = CalculateAreaExposed(part)` BEFORE this frame's SetDrag, i.e. it is
@@ -1975,12 +1983,15 @@ Exclusions (`tests/CMakeLists.txt` next to the gate; no row is filtered anywhere
 
 ### Quirks reproduced (a later implementer must keep them)
 
-- Unity's `Vector3` unary minus (and KSP's `Vector3d` / `Vector2d` one) is the IL `neg`, which ILSpy prints as `0f - a.x`: -(+0) is -0.
-  The .NET golden's lifting_surface rows (`lift_x = -0.0` for `-liftVector * liftScalar`, ModuleLiftingSurface.cs:251) prove it, and
-  `Quaternion.Inverse(0,0,0,1) = (-0,-0,-0,1)` in the C3 capture agrees. ksp/unity's `operator-(Vector3f)` and ksp's Vector3d / Vector2d
-  ones were `0 - x` (WP-01) and are now negations; all 26 gates unchanged. Every `0f - x` in the decompiled C# should be read as `-x`
-  (the WP-14 `QInverse` helpers in `src/vessel/*.cpp` and `vessel_assembly.cpp` still use `0 - x`: harmless for every gated value,
-  for their owners to align).
+- UnityEngine.CoreModule's `Vector3` unary minus is the IL `neg` although the decompile prints `0f - a.x` (Vector3.cs:425): -(+0) is
+  -0. Evidence: the harness golden, which ran the real Unity DLL, writes `lift_x = -0.0` for `-liftVector * liftScalar`
+  (ModuleLiftingSurface.cs:251) in 945 lifting_surface rows, and the in-game captures stay at 0 ULP with the negation. ksp/unity's
+  `operator-(Vector3f)` (WP-01: `0 - x`) is now a negation; the Vector2 unary minus that OcclusionCone / OcclusionCylinder Setup use
+  (`offset = -part.center`, same Unity assembly) is ported the same way (no reference data observes it). Assembly-CSharp code (KSP's
+  own: Vector3d, Vector2d, QuaternionD, every `0f - x` / `0.0 - x` in DragCubeList, FlightIntegrator, the surface modules, the
+  occlusion files) is ported exactly as printed: the repository's goldens and captures ran on the rebuilt Assembly-CSharp
+  (CAPTURE-SPEC.md:9), and the math_shim f64 golden's QuaternionD.Inverse((0,0,0,1)) = (+0,+0,+0,1) agrees with literal subtraction.
+  A WP-21 revision that also negated Vector3d / Vector2d was reverted; every gate was 0 ULP with and without it.
 - `CalculateDragValue_Cube` returns `AreaDrag * cacheDragCubeMultiplier` as an exact double product under Mono (a float product under .NET).
 - `ModuleAeroSurface.aeroDeployAngleLimits` starts as `Vector2(NaN, 0f)`: the `IsNaN(y)` branch of OnStart never fires, y stays 0.
 - `ModuleControlSurface.ActionSign` tests `action < epsilon` for -1 (not `< -epsilon`): values in [-eps, eps) give -1, eps gives 0.
@@ -2021,6 +2032,10 @@ cylinder / cone Setup in both shock regimes, GetShockRadius, GetShockStats, Comp
 
 ### Needs a new (local) capture or data
 
+- Sign of zero in the SHIPPED Assembly-CSharp: `harness/golden/CROSSCHECK-shipped-il.json` shows a sign-of-zero difference between
+  the rebuilt and the shipped DLL in math_shim f64 r0..r2, i.e. the shipped IL may negate where the rebuilt one subtracts from 0. A
+  capture on the shipped DLL is needed (local) to decide whether it negates and in which functions; until then KSP code follows the
+  decompile text.
 - An in-game capture of `drag_chain_kerbin` and `lifting_surface` under Mono (only the .NET golden exists: the MonoFloat instantiation of
   those statements is verified through the same template, not against game bits), and of a control surface's FixedUpdate (deflection,
   cube weights, forces) on a winged craft.

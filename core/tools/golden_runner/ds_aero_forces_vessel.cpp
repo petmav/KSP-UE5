@@ -14,14 +14,16 @@
 // parts      per part and state. INPUTS from the capture row: dragVectorDirLocal_xyz (rigidbody velocity in part space),
 //            dynamicPressurekPa (part.atmDensity * 0.0005 * |rigidbody velocity|^2). OUTPUTS: machNumber / atmDensity (the
 //            FlightIntegrator mirror of the state, WP-14's recovery), AreaOccluded / WeightedArea / WeightedDrag / WeightedDepth per
-//            face, OcclusionMultiplier, PostOcclusionArea, the SetDrag outputs (AreaDrag ... LiftForce, DragVector),
-//            CalculateDragValue, dragScalar and bodyLiftScalar (UpdateAerodynamics' statements with the part's q), aerodynamicArea
+//            face, OcclusionMultiplier, PostOcclusionArea, the SetDrag outputs (AreaDrag ... LiftForce),
+//            CalculateDragValue, dragScalar and bodyLiftScalar (UpdateAerodynamics' scalar statements through the DragScalar /
+//            BodyLiftScalar helpers with the part's q), aerodynamicArea
 //            (CalculateAerodynamicArea), radiativeArea (CalculateAreaRadiative), ShieldedFromAirstream, dragcubes_none.
-//            Written but not gated (tests/CMakeLists.txt DROP_COLUMNS): the inputs, dragVectorMag (input), staticPressureAtm (needs the
-//            part's world altitude: getAltitudeAtPos(partTransform.position), WP-19/20), exposedArea (UpdateAerodynamics reads it
-//            BEFORE this frame's SetDrag: the previous physics frame's ExposedArea).
+//            Not written (and dropped by tests/CMakeLists.txt DROP_COLUMNS): the inputs, dragVectorMag (input), DragVector_xyz (=
+//            -dragVectorDirLocal, the negated input), staticPressureAtm (needs the part's world altitude:
+//            getAltitudeAtPos(partTransform.position), WP-19/20), exposedArea (UpdateAerodynamics reads it BEFORE this frame's SetDrag:
+//            the previous physics frame's ExposedArea).
 // aoa_sweep  SetDrag(flow_local, (float)fi.mach) on the same occluded cubes; INPUT flow_local_xyz (R(aoa) * dragVectorDirLocal, a
-//            native rotation in game), OUTPUTS mach and every SetDrag / CalculateDragValue column.
+//            native rotation in game; not written), OUTPUTS mach and every SetDrag / CalculateDragValue column.
 #include <cmath>
 #include <cstring>
 #include <map>
@@ -132,20 +134,20 @@ int RunAeroForcesVessel(const RunnerOptions& opt) {
     const nlohmann::json& pt = vc.Table("parts");
     auto pc = [&](const char* c) { return VesselCapture::Col(pt, c); };
     const size_t cCraft = pc("craft"), cState = pc("state"), cIdx = pc("part_index"), cDx = pc("dragVectorDirLocal_x_hex"),
-                 cDy = pc("dragVectorDirLocal_y_hex"), cDz = pc("dragVectorDirLocal_z_hex"), cMag = pc("dragVectorMag_hex"),
-                 cQ = pc("dynamicPressurekPa_hex"), cPatm = pc("staticPressureAtm_hex"), cExp = pc("exposedArea_hex");
+                 cDy = pc("dragVectorDirLocal_y_hex"), cDz = pc("dragVectorDirLocal_z_hex"),
+                 cQ = pc("dynamicPressurekPa_hex");
     golden::Table tp("parts", "Per part and snapshot (faces XP,XN,YP,YN,ZP,ZN).");
     tp.Col("craft", ColType::Str).Col("state", ColType::Str).Col("part_index", ColType::I64).Col("part", ColType::Str);
     tp.Col("ShieldedFromAirstream", ColType::Bool).Col("dragcubes_none", ColType::Bool);
-    for (const char* c : {"dragVectorDirLocal_x", "dragVectorDirLocal_y", "dragVectorDirLocal_z", "dragVectorMag"}) tp.Col(c, ColType::F32);
-    for (const char* c : {"machNumber", "dynamicPressurekPa", "staticPressureAtm", "atmDensity"}) tp.Col(c, ColType::F64);
+    // the dropped columns (captured inputs and values that need data the capture lacks) are not written at all: a future un-drop
+    // must come with a computation, it cannot pass on a copied value
+    for (const char* c : {"machNumber", "atmDensity"}) tp.Col(c, ColType::F64);
     for (const char* arr : {"AreaOccluded_", "WeightedArea_", "WeightedDrag_", "WeightedDepth_"})
         for (int f = 0; f < 6; f++) tp.Col(arr + std::to_string(f), ColType::F32);
     for (const char* c : {"OcclusionMultiplier", "PostOcclusionArea", "AreaDrag", "Area", "ExposedArea", "CrossSectionalArea", "Depth",
-                          "DragCoeff", "TaperDot", "LiftForce_x", "LiftForce_y", "LiftForce_z", "DragVector_x", "DragVector_y",
-                          "DragVector_z", "dragScalar", "bodyLiftScalar"})
+                          "DragCoeff", "TaperDot", "LiftForce_x", "LiftForce_y", "LiftForce_z", "dragScalar", "bodyLiftScalar"})
         tp.Col(c, ColType::F32);
-    for (const char* c : {"aerodynamicArea", "exposedArea", "radiativeArea", "CalculateDragValue"}) tp.Col(c, ColType::F64);
+    for (const char* c : {"aerodynamicArea", "radiativeArea", "CalculateDragValue"}) tp.Col(c, ColType::F64);
     tp.key = {"craft", "state", "part_index"};
     for (const auto& row : pt.at("rows")) {
         const std::string craft = row[cCraft], state = row[cState];
@@ -173,15 +175,13 @@ int RunAeroForcesVessel(const RunnerOptions& opt) {
         }
         const DragCubeList& d = part.DragCubes;
         std::vector<Cell> out = {craft, state, row[cIdx].get<int64_t>(), part.partInfo->name, part.ShieldedFromAirstream(), d.None(),
-                                 f.dragVectorDirLocal.x, f.dragVectorDirLocal.y, f.dragVectorDirLocal.z, HexF(row, cMag),
-                                 f.machNumber, f.dynamicPressurekPa, HexD(row, cPatm), f.atmDensity};
+                                 f.machNumber, f.atmDensity};
         for (const std::array<float, 6>* arr : {&d.AreaOccluded(), &d.WeightedArea(), &d.WeightedDrag(), &d.WeightedDepth()})
             for (float x : *arr) out.emplace_back(x);
         for (float x : {d.OcclusionMultiplier(), d.PostOcclusionArea(), d.AreaDrag(), d.Area(), d.ExposedArea(), d.CrossSectionalArea(),
-                        d.Depth(), d.DragCoeff(), d.TaperDot(), d.LiftForce().x, d.LiftForce().y, d.LiftForce().z, d.DragVector().x,
-                        d.DragVector().y, d.DragVector().z, f.dragScalar, f.bodyLiftScalar})
+                        d.Depth(), d.DragCoeff(), d.TaperDot(), d.LiftForce().x, d.LiftForce().y, d.LiftForce().z, f.dragScalar, f.bodyLiftScalar})
             out.emplace_back(x);
-        for (double x : {f.aerodynamicArea, HexD(row, cExp), fi.CalculateAreaRadiative(part), fi.CalculateDragValue<P>(part)})
+        for (double x : {f.aerodynamicArea, fi.CalculateAreaRadiative(part), fi.CalculateDragValue<P>(part)})
             out.emplace_back(x);
         tp.Add(std::move(out));
     }
@@ -194,7 +194,7 @@ int RunAeroForcesVessel(const RunnerOptions& opt) {
                  wFy = wc("flow_local_y_hex"), wFz = wc("flow_local_z_hex");
     golden::Table ta("aoa_sweep", "Synthetic angle-of-attack sweep on the live cubes.");
     ta.Col("craft", ColType::Str).Col("state", ColType::Str).Col("part_index", ColType::I64);
-    for (const char* c : {"aoa_deg", "flow_local_x", "flow_local_y", "flow_local_z", "mach", "AreaDrag", "Area", "ExposedArea",
+    for (const char* c : {"aoa_deg", "mach", "AreaDrag", "Area", "ExposedArea",
                           "CrossSectionalArea", "Depth", "DragCoeff", "TaperDot", "LiftForce_x", "LiftForce_y", "LiftForce_z"})
         ta.Col(c, ColType::F32);
     ta.Col("CalculateDragValue", ColType::F64);
@@ -207,7 +207,7 @@ int RunAeroForcesVessel(const RunnerOptions& opt) {
         const Vector3f flow(HexF(row, wFx), HexF(row, wFy), HexF(row, wFz));
         part.DragCubes.SetDrag<P>(flow, mach);
         const DragCubeList& d = part.DragCubes;
-        ta.Add({craft, state, row[wIdx].get<int64_t>(), HexF(row, wAoa), flow.x, flow.y, flow.z, mach, d.AreaDrag(), d.Area(),
+        ta.Add({craft, state, row[wIdx].get<int64_t>(), HexF(row, wAoa), mach, d.AreaDrag(), d.Area(),
                 d.ExposedArea(), d.CrossSectionalArea(), d.Depth(), d.DragCoeff(), d.TaperDot(), d.LiftForce().x, d.LiftForce().y,
                 d.LiftForce().z, fis.at(craft).CalculateDragValue<P>(part)});
     }

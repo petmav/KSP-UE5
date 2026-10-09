@@ -34,7 +34,7 @@ void OcclusionCylinder::Setup(OcclusionData& p) {
     part = &p;
     center = p.projectedCenter;
     radius = p.projectedRadius;
-    offset = Vector2f(-p.center.x, -p.center.y);  // -part.center (Vector2 unary minus)
+    offset = Vector2f(-p.center.x, -p.center.y);  // -part.center: UnityEngine Vector2 unary minus, taken as IL neg like Vector3's
     extents = p.extents;
     cylNoseDot = p.maximumDot - p.maxWidthDepth;
 }
@@ -210,8 +210,8 @@ double OcclusionData::GetCylinderOcclusionVerts(const OcclusionCylinder& cyl) co
 
 // OcclusionData.cs:211
 double OcclusionData::sA(double r, double x, double y) {
-    if (x < 0.0) return -sA(r, -x, y);
-    if (y < 0.0) return -sA(r, x, -y);
+    if (x < 0.0) return 0.0 - sA(r, 0.0 - x, y);
+    if (y < 0.0) return 0.0 - sA(r, x, 0.0 - y);
     if (x > r) x = r;
     if (y > r) y = r;
     if (x * x + y * y > r * r) {
@@ -226,10 +226,10 @@ double OcclusionData::sA(double r, double x, double y) {
 double OcclusionData::RectRectIntersection(double centralExtentX, double centralExtentY, double minX, double maxX, double minY,
                                            double maxY) {
     const double num = (maxX - minX) * (maxY - minY);
-    if (!(maxX < -centralExtentX) && !(minX > centralExtentX) && !(maxY < -centralExtentY) && !(minY > centralExtentY) &&
+    if (!(maxX < 0.0 - centralExtentX) && !(minX > centralExtentX) && !(maxY < 0.0 - centralExtentY) && !(minY > centralExtentY) &&
         num != 0.0) {
-        return dotnet::Math::Max(0.0, dotnet::Math::Min(centralExtentX, maxX) - dotnet::Math::Max(-centralExtentX, minX)) *
-               dotnet::Math::Max(0.0, dotnet::Math::Min(centralExtentY, maxY) - dotnet::Math::Max(-centralExtentY, minY)) /
+        return dotnet::Math::Max(0.0, dotnet::Math::Min(centralExtentX, maxX) - dotnet::Math::Max(0.0 - centralExtentX, minX)) *
+               dotnet::Math::Max(0.0, dotnet::Math::Min(centralExtentY, maxY) - dotnet::Math::Max(0.0 - centralExtentY, minY)) /
                ((maxX - minX) * (maxY - minY));
     }
     return 0.0;
@@ -255,7 +255,7 @@ double OcclusionData::AreaOfIntersection(double existingConeRadius, double poten
     const double num7 = num5 * num5;
     const double num8 = num6 * dotnet::Math::Acos((sqrDistance + num6 - num7) / (2.0 * num2 * num4));
     const double num9 = num7 * dotnet::Math::Acos((sqrDistance + num7 - num6) / (2.0 * num2 * num5));
-    const double num10 = 0.5 * dotnet::Math::Sqrt((-num2 + num) * (num2 + num4 - num5) * (num2 - num4 + num5) * (num2 + num));
+    const double num10 = 0.5 * dotnet::Math::Sqrt((0.0 - num2 + num) * (num2 + num4 - num5) * (num2 - num4 + num5) * (num2 + num));
     if (!std::isnan(num8) && !std::isnan(num9) && !std::isnan(num10)) return (num8 + num9 - num10) / (kPI * num3);
     return 0.0;
 }

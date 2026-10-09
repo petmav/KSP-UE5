@@ -68,8 +68,7 @@ struct Vector3d {
 
 inline Vector3d operator+(const Vector3d& a, const Vector3d& b) { return {a.x + b.x, a.y + b.y, a.z + b.z}; }
 inline Vector3d operator-(const Vector3d& a, const Vector3d& b) { return {a.x - b.x, a.y - b.y, a.z - b.z}; }
-// Vector3d.cs `0.0 - a.x` is ILSpy's rendering of the IL `neg` (see Vector3f's unary minus, WP-21): an IEEE negation
-inline Vector3d operator-(const Vector3d& a) { return {-a.x, -a.y, -a.z}; }
+inline Vector3d operator-(const Vector3d& a) { return {0.0 - a.x, 0.0 - a.y, 0.0 - a.z}; }
 inline Vector3d operator*(const Vector3d& a, double d) { return {a.x * d, a.y * d, a.z * d}; }
 inline Vector3d operator*(double d, const Vector3d& a) { return {a.x * d, a.y * d, a.z * d}; }
 inline Vector3d operator/(const Vector3d& a, double d) { return {a.x / d, a.y / d, a.z / d}; }
@@ -113,7 +112,7 @@ struct Vector2d {
 };
 inline Vector2d operator+(const Vector2d& a, const Vector2d& b) { return {a.x + b.x, a.y + b.y}; }
 inline Vector2d operator-(const Vector2d& a, const Vector2d& b) { return {a.x - b.x, a.y - b.y}; }
-inline Vector2d operator-(const Vector2d& a) { return {-a.x, -a.y}; }  // IL neg (see Vector3d)
+inline Vector2d operator-(const Vector2d& a) { return {0.0 - a.x, 0.0 - a.y}; }
 inline Vector2d operator*(const Vector2d& a, double d) { return {a.x * d, a.y * d}; }
 inline Vector2d operator*(double d, const Vector2d& a) { return {a.x * d, a.y * d}; }
 inline Vector2d operator/(const Vector2d& a, double d) { return {a.x / d, a.y / d}; }

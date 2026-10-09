@@ -3,7 +3,7 @@
 // MonoFloat (the game) is the default, NetFloat reproduces the .NET golden harness. Both are instantiated at the end.
 //
 // Not ported: DragCubeList.cs:494-559 SetFacedDotProducts (x2) / SetFacedDotProductsNormalized / AddFacedDotProducts,
-// :579-622 DivideCubeArray (x2) / MultiplyCubeArray(float[], float[]), :650-737 CreateVectorFromArray / AddVectorToArray /
+// :579-606 DivideCubeArray (x2), :616-622 MultiplyCubeArray(float[], float[]), :650-737 CreateVectorFromArray / AddVectorToArray /
 // SubtractVectorFromArray(Clamp): private static helpers nothing in DragCubeList calls; :996-1010 DrawDragGizmos (Unity Gizmos); the Debug.Log lines of debugDragCube.
 #include <cmath>
 

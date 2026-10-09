@@ -273,7 +273,7 @@ void FlightIntegratorAero::DragCubeSetupAndPartAeroStats(const std::vector<Part*
         part.fields.staticPressureAtm = currentMainBody->GetPressure(altitudeAtPos_);
         part.fields.atmDensity = density;
         if (currentMainBody->ocean && altitudeAtPos_ < 0.0)
-            part.fields.staticPressureAtm += magnitude * (-altitudeAtPos_) * currentMainBody->oceanDensity;
+            part.fields.staticPressureAtm += magnitude * (0.0 - altitudeAtPos_) * currentMainBody->oceanDensity;
         part.fields.staticPressureAtm *= 0.009869232667160128;
         part.fields.machNumber = mach;
     }

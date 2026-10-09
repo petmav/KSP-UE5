@@ -25,13 +25,15 @@
 - [x] 3 FlightIntegratorAero (src/aero/flight_integrator_aero.cpp)
 - [x] 4 lifting / control / aero surface modules (registered), occlusion.cpp, aero_interfaces.hpp
 - [x] gates golden.aero_forces (6 tables, 0 ULP incl. signed zeros) and capture.aero_forces_mono (3 tables, 0 ULP)
-- [x] gate capture.aero_forces_vessel (parts 4,224 x 49, aoa_sweep 25,344 x 12, structure.node_contact_areas 631): 0 ULP
+- [x] gate capture.aero_forces_vessel (parts 4,224 x 46, aoa_sweep 25,344 x 12, structure.node_contact_areas 631): 0 ULP
 - [x] unit tests tests/test_aero.cpp (11 cases, 220,304 assertions)
 - [x] STATUS "WP-21 (numeric part)", README rows; citations checked against the decompile by script
 - [x] fresh ./run_tests.sh -f (clang 18) and -p linux-gcc-rel -f (GCC 13): 26/26 each, every gate 0 ULP
 
 ## Step log
 - Signed-zero finding: the .NET golden's lifting_surface lift_x = -0.0 proves Vector3 unary minus is IL `neg` (ILSpy prints it
-  as `0f - a.x`). Fixed ksp::unity Vector3f and ksp::Vector3d/Vector2d unary minus (were `0 - x`); full suite 25/25 green after.
+  as `0f - a.x`). Fixed ksp::unity Vector3f unary minus. Gatekeeper review: Vector3d / Vector2d (KSP Assembly-CSharp) reverted to
+  the printed `0.0 - a.x`, and every Assembly-CSharp `0f - x` site in src/aero follows the decompile text; all gates still 0 ULP.
+- Gatekeeper F2/F3: the vessel runner no longer writes dropped columns; DragVector_xyz (negated input) dropped: parts 46 columns.
 - vessel_capture.{hpp,cpp}: moved WP-14's craft assembly + atmosphere recovery out of ds_vessel_state.cpp for sharing.
 

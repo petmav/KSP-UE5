@@ -246,11 +246,12 @@ ksp_golden_gate(capture.aero_forces_mono aero_forces_mono GOLDEN ${KSP_CAPTURES_
 #   structure  only node_contact_areas (AttachNode.contactArea from SetPartOcclusion; the capture writes it with 4 significant digits)
 #              and the part name; the tree columns are capture.vessel_state's; cube_names is an INPUT here (ModuleJettison WP-26 + the
 #              model's jettison transform, ModulePartVariants WP-13 set the weights at flight start)
-#   parts      inputs dropped: dragVectorDirLocal_*, dragVectorMag, dynamicPressurekPa (rigidbody velocity); staticPressureAtm (needs
+#   parts      inputs dropped: dragVectorDirLocal_*, dragVectorMag, dynamicPressurekPa (rigidbody velocity); DragVector_* (negated
+#              input: -dragVectorDirLocal while rotateDragVector is false); staticPressureAtm (needs
 #              the part's world altitude, WP-19/20); exposedArea (the previous physics frame's ExposedArea: UpdateAerodynamics reads it
-#              before this frame's SetDrag). No row is filtered.
+#              before this frame's SetDrag). The runner does not write any dropped column. 46 gated columns. No row is filtered.
 #   aoa_sweep  input dropped: flow_local_* (R(aoa) * dragVectorDirLocal, rotated in game). No row is filtered.
 ksp_golden_gate(capture.aero_forces_vessel aero_forces_vessel GOLDEN ${KSP_CAPTURES2_DIR}/aero_forces_vessel.json DROP_HEX
                 TOL ${KSP_CAPTURE_TOL} TABLES structure,parts,aoa_sweep
                 COLUMNS "structure:craft,part_index,part,node_contact_areas"
-                DROP_COLUMNS "parts:dragVectorDirLocal_x,dragVectorDirLocal_y,dragVectorDirLocal_z,dragVectorMag,dynamicPressurekPa,staticPressureAtm,exposedArea/aoa_sweep:flow_local_x,flow_local_y,flow_local_z")
+                DROP_COLUMNS "parts:dragVectorDirLocal_x,dragVectorDirLocal_y,dragVectorDirLocal_z,dragVectorMag,dynamicPressurekPa,staticPressureAtm,exposedArea,DragVector_x,DragVector_y,DragVector_z/aoa_sweep:flow_local_x,flow_local_y,flow_local_z")

@@ -266,7 +266,7 @@ void ModuleControlSurface::OnStart(StartState state) {
     ModuleLiftingSurface::OnStart(state);
     const float ctrlSurfaceRange = Get<float>("ctrlSurfaceRange");
     if (std::isnan(Get<float>("deployAngle"))) Set<float>("deployAngle", ctrlSurfaceRange);
-    if (std::isnan(deployAngleLimits.x)) deployAngleLimits.x = S(-E(ctrlSurfaceRange) * E(1.5f));
+    if (std::isnan(deployAngleLimits.x)) deployAngleLimits.x = S((E(0.0f) - E(ctrlSurfaceRange)) * E(1.5f));
     if (std::isnan(deployAngleLimits.y)) deployAngleLimits.y = S(E(ctrlSurfaceRange) * E(1.5f));
     if (SceneIsGame()) {
         // ctrlSurface = FindModelTransform(transformName); neutral = its localRotation: set by the model reader (`neutral`)
@@ -303,7 +303,7 @@ void ModuleControlSurface::FixedCtrlSurfaceUpdate(const ControlSurfaceFrame& fra
         const float c = Mathf::Sign(Vector3f::Dot(frame.surface.baseUp, frame.referenceUp));
         roll = S(E(a) * (E(1.0f) - (E(b) * E(0.5f) + E(0.5f))) * E(c) * E(frame.roll) * E(Mathf::Sign(ctrlSurfaceRange)));
     }
-    if (vector.y < 0.0f) action = -action;
+    if (vector.y < 0.0f) action = 0.0f - action;
     action = S(E(deflectionDirection) * E(Mathf::Clamp(S(E(action) - E(roll)), -1.0f, 1.0f)));
     action = S(E(ctrlSurfaceRange) * E(action) * E(Get<float>("authorityLimiter")) * E(0.01f));
     if (Get<bool>("deploy")) {
@@ -315,7 +315,7 @@ void ModuleControlSurface::FixedCtrlSurfaceUpdate(const ControlSurfaceFrame& fra
             const Vector3f rel = aero::U<MonoFloat>::Inverse(frame.referenceRotation) * (frame.basePosition - currentCoM);
             num = S(E(invertA) * E(Mathf::Sign(rel.x)));
         }
-        currentDeployAngle = S(-E(num) * E(Get<float>("deployAngle")));
+        currentDeployAngle = S((E(0.0f) - E(num)) * E(Get<float>("deployAngle")));
         action = S(E(action) + E(currentDeployAngle));
     }
     action = Mathf::Clamp(action, S(E(-1.5f) * E(ctrlSurfaceRange)), S(E(1.5f) * E(ctrlSurfaceRange)));
@@ -376,7 +376,7 @@ SurfaceForces ModuleControlSurface::FixedUpdateAero(const ControlSurfaceFrame& f
         const float num5 = S(E(deflection) / E(Get<float>("ctrlSurfaceRange")));
         p->DragCubes.SetCubeWeight("neutral", S(E(maxAuthority) * E(0.01f) - E(Mathf::Abs(num5))));
         p->DragCubes.SetCubeWeight("fullDeflectionPos", Mathf::Clamp01(num5));
-        p->DragCubes.SetCubeWeight("fullDeflectionNeg", Mathf::Clamp01(-num5));
+        p->DragCubes.SetCubeWeight("fullDeflectionNeg", Mathf::Clamp01(0.0f - num5));
     } else {
         Qdrag = Qlift = 0.0;
         nVel = Vector3f::zero();
@@ -386,7 +386,7 @@ SurfaceForces ModuleControlSurface::FixedUpdateAero(const ControlSurfaceFrame& f
 
 // ModuleControlSurface.cs:896
 void ModuleControlSurface::AssumeDragCubePosition(const std::string& name) {
-    if (name == "fullDeflectionNeg") action = S(-E(maxAuthority) * E(0.01f));
+    if (name == "fullDeflectionNeg") action = S((E(0.0f) - E(maxAuthority)) * E(0.01f));
     else if (name == "fullDeflectionPos") action = S(E(maxAuthority) * E(0.01f));
     else action = 0.0f;
     ctrlSurfaceLocalRotation =
@@ -438,7 +438,7 @@ void ModuleAeroSurface::CtrlSurfaceUpdate(const ControlSurfaceFrame& frame) {
                E(0.01f));
     if (Get<bool>("deploy")) action = S(E(action) + E(Get<bool>("deployInvert") ? -1.0f : 1.0f) * E(Get<float>("aeroDeployAngle")));
     const float num = S(E(1.5f) * E(ctrlSurfaceRange));
-    action = Mathf::Clamp(action, -num, num);
+    action = Mathf::Clamp(action, 0.0f - num, num);
     const float uncasedTemp = Get<float>("uncasedTemp"), casedTemp = Get<float>("casedTemp");
     if (uncasedTemp > 0.0f && casedTemp > 0.0f) {
         Part* p = PartOf(*this);
