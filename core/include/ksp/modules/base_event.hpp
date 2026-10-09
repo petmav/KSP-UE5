@@ -141,13 +141,28 @@ private:
     BaseEvent* defaultEvent_ = nullptr;
 };
 
-// KSPActionParam (KSPActionParam.cs) is the delegate argument of an action; only its group matters to the registry
+// KSPActionType.cs
+enum class KSPActionType : int { Activate, Deactivate, Toggle };
+
+// KSPActionParam.cs:3 (WP-16 completed it): the delegate argument of an action. `group` (a KSPActionGroup value) and `type`
+// (a KSPActionType value) are plain fields here (the C# has private setters); `Cooldown` only ever grows (Mathf.Max).
 struct KSPActionParam {
     int64_t group = 0;
     int type = 0;  // KSPActionType.Activate
+    KSPActionParam() = default;
+    // KSPActionParam.cs:21
+    KSPActionParam(int64_t actionGroup, KSPActionType actionType) : group(actionGroup), type(static_cast<int>(actionType)) {}
+    // KSPActionParam.cs:17 get / set (`_cooldown = Mathf.Max(_cooldown, value)`)
+    float Cooldown() const { return cooldown_; }
+    void SetCooldown(float value) { cooldown_ = value > cooldown_ ? value : cooldown_; }
+    KSPActionType Type() const { return static_cast<KSPActionType>(type); }
+
+private:
+    float cooldown_ = 0.0f;
 };
 
 class BaseActionList;
+class Part;
 
 // BaseAction.cs
 class BaseAction {
@@ -164,6 +179,16 @@ public:
     void SetGuiName(const std::string& v);
     Handler onEvent;
     static int ActionGroupsLength();                 // :37 Enum.GetNames(KSPActionGroup).Length - 2
+    // ---- WP-16 (BaseAction.cs statics over a part list; Part.Actions (the Part's own [KSPAction]s) is not modelled by WP-13, so
+    // only the modules' actions are listed; GameSettings.ADVANCED_TWEAKABLES is vessel.hpp's GameSettings namespace) ----
+    static int GetGroupIndex(int64_t group);         // :394 (0 when `group` is not a single flag below ActionGroupsLength)
+    static std::vector<BaseAction*> CreateActionList(const std::vector<Part*>& parts, int64_t group, int overrideGroup, bool overrideDefault, bool include);  // :205
+    static std::vector<BaseAction*> CreateActionList(Part& p, int64_t group, int overrideGroup, bool overrideDefault, bool include);  // :236
+    static std::vector<bool> CreateGroupList(Part& p, int overrideGroup = 0);      // :267
+    static std::vector<bool> CreateGroupList(const std::vector<Part*>& parts, int groupOverride = 0);  // :308
+    static bool ContainsNonDefaultActions(Part& p);                                 // :346
+    // :379 (InputLockManager.IsLocked(TWEAKABLES_FULLONLY) = `fullOnlyLocked`, HighLogic.LoadedSceneIsEditor = `editorScene`)
+    static void FireAction(const std::vector<Part*>& parts, int64_t group, int overrideGroup, KSPActionType type, bool fullOnlyLocked = false, bool editorScene = false);
     int64_t GetActionGroup(int groupOverride) const;  // :73
     void CopyAction(const BaseAction& a);             // :82
     bool ContainsNonDefaultActions() const;           // :93

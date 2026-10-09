@@ -22,6 +22,7 @@
 #include "ksp/modules/part_structural_modules.hpp"
 #include "ksp/modules/part_module.hpp"
 #include "ksp/modules/resource_modules.hpp"
+#include "ksp/modules/module_decouplers.hpp"
 #include "ksp/parts/available_part.hpp"
 #include "ksp/parts/cs_parse.hpp"
 #include "ksp/parts/part_loader.hpp"
@@ -434,6 +435,7 @@ void RegCurves(std::initializer_list<const char*> names, std::vector<std::string
 
 namespace detail {
 void RegisterBuiltinModules() {
+    detail::RegisterDecouplerModules();  // ModuleDecouplerBase / ModuleDecouple / ModuleAnchoredDecoupler (+ LaunchClamp, ModuleDockingNode staging stand-ins) (WP-16)
     detail::RegisterResourceModules();  // ModuleToggleCrossfeed, ModuleResourceAutoShiftState, CModuleFuelLine, EVAResourceContainer (WP-15)
     Reg<ModuleCargoPart>({"ModuleCargoPart"});
     Reg<ModuleAnimationSetter>({"ModuleAnimationSetter"});

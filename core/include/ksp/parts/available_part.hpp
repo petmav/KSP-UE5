@@ -152,7 +152,7 @@ struct AvailablePart {
     float minimumMass = 0.0001f;
     float minimumRBMass = 0.001f;
     float minimumCost = 0.0f;
-    int32_t preferredStage = 0;           // PreferredInitialStage
+    int32_t preferredStage = 3;           // PreferredInitialStage (AvailablePart.cs:114: DEFAULT = 3; WP-16 corrected the default, it was FIRST = 0)
     ConfigNode::NodePtr internalConfig = ConfigNode::Create();
     ConfigNode::NodePtr partConfig;       // the PART node, as left by ParsePart (persistent keys removed)
     std::string configFileFullName;

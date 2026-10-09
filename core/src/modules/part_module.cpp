@@ -41,6 +41,7 @@ void PartModule::ModularSetup() {
 // PartModule.cs:743
 void PartModule::Awake() {
     ModularSetup();
+    events_->Bind("ToggleStaging", BaseEvent::Handler([this] { ToggleStaging(); }));  // PartModule.cs:303 (WP-16)
     resHandler.SetPartModule(this);  // PartModule.cs:748
     resHandler.OnAwake();
     OnAwake();

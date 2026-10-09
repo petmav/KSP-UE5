@@ -114,6 +114,13 @@ add_library(kspcore STATIC
     save/upgrade_pipeline.cpp
     save/ship_construct.cpp
     save/game_persistence.cpp
+    # WP-16 staging, action groups, decouplers, decouple / couple tree operations
+    staging/stage_manager.cpp
+    modules/module_staging.cpp
+    modules/base_action_lists.cpp
+    modules/module_decouplers.cpp
+    parts/part_decouple.cpp
+    vessel/vessel_staging.cpp
     capi/kspcore_c.cpp
 )
 add_library(ksp::core ALIAS kspcore)

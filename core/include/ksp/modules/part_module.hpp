@@ -128,7 +128,10 @@ public:
 
     virtual void OnAwake() {}
     virtual void OnIconCreate() {}
-    virtual void OnStart(StartState) {}
+    // PartModule.OnStart is empty in C#; kspcore's also applies the `stagingIcon` default that the OnStart of the stageable modules
+    // other packages own (ModuleEngines, ModuleParachute, LaunchClamp, ...) would set (module_staging.cpp). A subclass that overrides
+    // OnStart and calls ModuleX::OnStart is unaffected: the table only names classes without a ported implementation.
+    virtual void OnStart(StartState);
     virtual void OnStartFinished(StartState) {}
     virtual void OnStartBeforePartAttachJoint(StartState) {}      // PartModule.cs:873 (WP-13)
     virtual void OnInitialize() {}
@@ -152,12 +155,17 @@ public:
     virtual std::string GetInfo() { return ""; }                   // PartModule.cs:905
     virtual std::string GetModuleDisplayName() { return ""; }      // PartModule.cs:910
     virtual void LoadUpgrades(const ConfigNode& node);             // PartModule.cs:422 (no PartUpgradeManager: see FindUpgrades)
-    virtual bool IsStageable() { return isStageable; }             // :272
-    virtual bool StagingEnabled() { return Get<bool>("stagingEnabled"); }
+    // PartModule.cs:272-345. WP-16 (src/modules/module_staging.cpp): the base implementations also answer for the per-class
+    // overrides of the stageable modules whose own package has not ported the class yet (ModuleEngines, ModuleRCS, ModuleGimbal,
+    // ModuleJettison, ModuleDockingNode, ModuleScienceExperiment, ModuleTestSubject, ModuleEvaChute); a ported subclass overrides.
+    virtual bool IsStageable();                                    // :272
+    virtual bool StagingEnabled();                                 // :277
     virtual void UpdateStagingToggle();                            // :282
     virtual void SetStaging(bool newValue);                        // :296
-    virtual bool StagingToggleEnabledEditor() { return Get<bool>("stagingToggleEnabledEditor"); }
-    virtual bool StagingToggleEnabledFlight() { return Get<bool>("stagingToggleEnabledFlight"); }
+    void ToggleStaging();                                          // :303 [KSPEvent] (WP-16; bound in Awake)
+    void SetStagingState(bool newState);                           // :326
+    virtual bool StagingToggleEnabledEditor();                     // :333
+    virtual bool StagingToggleEnabledFlight();                     // :338
     virtual std::string GetStagingEnableText();                    // :343
     virtual std::string GetStagingDisableText();                   // :352
 
