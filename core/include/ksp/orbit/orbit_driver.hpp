@@ -7,7 +7,8 @@
 //   RecalculateOrbit SOI change: OnRailsSOITransition (UtilMath.BSPSolver on the last frame's interval) in UPDATE mode,
 //                    TrackRigidbody otherwise; OnReferenceBodyChange, GameEvents.onVesselSOIChanged, frameShift lock
 //                    released by Invoke("unlockFrameSwitch", 1f)
-// Not ported: OrbitRendererBase Renderer and orbit.DrawOrbit() (rendering), Targetable (ITargetable is WP-10/14).
+// Not ported: OrbitRendererBase Renderer and orbit.DrawOrbit() (rendering). Targetable() is there (ITargetable is
+// ksp/orbit/targetable.hpp); CelestialBody is not an ITargetable in kspcore, the host supplies `celestialBodyTargetable`.
 //
 // C# reference semantics: `orbit` is a shared_ptr (KSP code replaces `orbitDriver.orbit` objects, and the patched-conic
 // solver keeps the same object as its patches[0]). The GameObject components KSP reaches through GetComponent are
@@ -24,6 +25,7 @@
 #include "ksp/core/delegate.hpp"
 #include "ksp/math/vector3d.hpp"
 #include "ksp/orbit/orbit.hpp"
+#include "ksp/orbit/targetable.hpp"
 #include "ksp/unity/vector.hpp"
 
 namespace ksp {
@@ -56,6 +58,8 @@ public:
     virtual Vector3d velocityD() const = 0;
     // RecalculateOrbit: ModuleTripLogger.ForceVesselLog(vessel, FlightLog.EntryType.Flyby, newReferenceBody)
     virtual void ForceVesselLogFlyby(CelestialBody* body) = 0;
+    // The vessel as an ITargetable (OrbitDriver.Targetable, OrbitDriver.cs:75); null for hosts that are not targetable.
+    virtual ITargetable* AsTargetable() { return nullptr; }
 };
 
 class OrbitDriver {
@@ -76,6 +80,9 @@ public:
     IOrbitDriverVessel* vessel = nullptr;  // GetComponent<Vessel>() (Awake)
     CelestialBody* celestialBody = nullptr;  // GetComponent<CelestialBody>() (Awake)
     Vector3f driverTransformPosition;        // driverTransform.position when there is neither vessel nor body
+    // The CelestialBody component as an ITargetable (CelestialBody : ITargetable needs bodyTransform, an engine object;
+    // the host supplies it for Targetable()).
+    ITargetable* celestialBodyTargetable = nullptr;
     std::string name;                        // base.name (log text only)
     CelestialBodyDelegate OnReferenceBodyChange;
     double lastTrackUT = 0.0;
@@ -87,6 +94,12 @@ public:
     ~OrbitDriver();  // OnDestroy (OrbitDriver.cs:123): Planetarium.Orbits.Remove(this)
 
     bool Ready() const { return ready_; }                // OrbitDriver.cs:89
+    // OrbitDriver.cs:75 Targetable: the vessel, else the celestial body, else null
+    ITargetable* Targetable() const {
+        if (vessel != nullptr) return vessel->AsTargetable();
+        if (celestialBody != nullptr) return celestialBodyTargetable;
+        return nullptr;
+    }
     double UpdateUT() const { return updateUT_; }        // private updateUT (the C8 capture reads it by reflection)
     CelestialBody* referenceBody() const { return orbit->referenceBody; }  // OrbitDriver.cs:91 (=> orbit.referenceBody)
     void setReferenceBody(CelestialBody* body) { orbit->referenceBody = body; }
