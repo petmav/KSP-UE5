@@ -1,8 +1,8 @@
 """Write a filtered copy of a ksp-golden/1 file for compare.py (run with `python -I`).
 
     python -I filter_golden.py SRC DST [--tables t1,t2,...] [--keep-columns t:c1,c2/t2:c3,...] [--drop-hex]
-                               [--drop-rows t:col=v1|v2;col2=v3/t2:...] [--keep-rows-file FILE]
-                               [--renumber t:col:groupcol/...] [--drop-keys-file FILE]
+                               [--drop-rows t:col=v1|v2+col2=v3/t2:...] [--keep-rows-file FILE]
+                               [--renumber t:col:groupcol/...] [--drop-keys-file FILE] [--drop-columns t:c1,c2/...]
 
 --tables        keep only these tables (default: all)
 --keep-columns  per table, keep only the listed columns (key columns must be listed); tables not named keep all
@@ -13,6 +13,8 @@
              of the golden row itself (e.g. assets source=unity_asset), documented in tests/CMakeLists.txt + STATUS.md.
 --keep-rows-file  JSON {table: [[key values...], ...]}: keep only the rows whose key values are listed (a scope list
              the runner derives from its INPUTS, e.g. the module fields a part cfg sets; never from the comparison).
+--drop-columns  per table, drop the listed columns (the complement of --keep-columns; same rule: only columns that
+             need another package's code, documented).
 --drop-keys-file  JSON {table: [{"key": [key values...], "reason": "..."}, ...]}: drop individually listed rows, each
              with its documented reason (module behaviour another package ports, ...).
 --renumber  after the row filters, rewrite an index key column as 0, 1, 2... within each value of a group column (row
@@ -36,6 +38,7 @@ def main(argv):
     keep_rows_file = None
     renumber = []
     drop_keys_file = None
+    drop_cols = {}
     for i, a in enumerate(argv):
         if a == "--tables":
             tables = [t for t in argv[i + 1].split(",") if t]
@@ -43,12 +46,17 @@ def main(argv):
         if a == "--drop-rows":
             for spec in argv[i + 1].split("/"):
                 t, conds = spec.split(":", 1)
-                for cond in conds.split(";"):
+                for cond in conds.split("+"):
                     c, vals = cond.split("=", 1)
                     drop_rows.setdefault(t, []).append((c, set(vals.split("|"))))
             args.remove(argv[i + 1])
         if a == "--keep-rows-file":
             keep_rows_file = argv[i + 1]
+            args.remove(argv[i + 1])
+        if a == "--drop-columns":
+            for spec in argv[i + 1].split("/"):
+                t, cols = spec.split(":", 1)
+                drop_cols[t] = [c for c in cols.split(",") if c]
             args.remove(argv[i + 1])
         if a == "--drop-keys-file":
             drop_keys_file = argv[i + 1]
@@ -121,6 +129,13 @@ def main(argv):
                 print("filter_golden: columns not found in", t["name"], sorted(missing_cols))
                 return 1
             keep = [i for i in keep if t["columns"][i]["name"] in wanted]
+        if t["name"] in drop_cols:
+            unknown = set(drop_cols[t["name"]]) - {c["name"] for c in t["columns"]}
+            if unknown:
+                print("filter_golden: columns not found in", t["name"], sorted(unknown))
+                return 1
+            gone = set(drop_cols[t["name"]]) | {c + "_hex" for c in drop_cols[t["name"]]}
+            keep = [i for i in keep if t["columns"][i]["name"] not in gone]
         t = dict(t)
         t["columns"] = [t["columns"][i] for i in keep]
         t["rows"] = [[r[i] for i in keep] for r in t["rows"]]

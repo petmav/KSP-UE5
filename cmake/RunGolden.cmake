@@ -9,7 +9,10 @@
 # Parameters: RUNNER DATASET HARNESS OUT PYTHON (required); NAME (report name, default DATASET);
 #             GOLDEN (default ${HARNESS}/golden/<DATASET>/<DATASET>.json); TOL (default harness tolerances.json);
 #             TABLES (comma-separated); COLUMNS (t:c1,c2/t2:c3: per-table kept columns); DROP_HEX (ON/OFF);
-#             FILTER (path of tools/filter_golden.py).
+#             FILTER (path of tools/filter_golden.py); row/column filters passed through to filter_golden.py:
+#             DROP_COLUMNS (t:c1,c2/...), DROP_ROWS (t:col=v1|v2+col2=v3/...), KEEP_ROWS_FILE (JSON scope list the
+#             runner writes; <OUT> is replaced by OUT), DROP_KEYS_FILE (JSON of individually excluded rows with reasons),
+#             RENUMBER (t:col:groupcol/...).
 foreach(v RUNNER DATASET HARNESS OUT PYTHON)
     if(NOT DEFINED ${v})
         message(FATAL_ERROR "RunGolden.cmake: ${v} not set")
@@ -33,7 +36,13 @@ if(NOT runner_rc EQUAL 0)
 endif()
 
 set(golden_file "${GOLDEN}")
-if((DEFINED TABLES AND NOT TABLES STREQUAL "") OR (DEFINED COLUMNS AND NOT COLUMNS STREQUAL "") OR DROP_HEX)
+set(row_filter OFF)
+foreach(v DROP_COLUMNS DROP_ROWS KEEP_ROWS_FILE DROP_KEYS_FILE RENUMBER)
+    if(DEFINED ${v} AND NOT ${v} STREQUAL "")
+        set(row_filter ON)
+    endif()
+endforeach()
+if((DEFINED TABLES AND NOT TABLES STREQUAL "") OR (DEFINED COLUMNS AND NOT COLUMNS STREQUAL "") OR DROP_HEX OR row_filter)
     set(golden_file "${OUT}/${DATASET}/golden_${NAME}.json")
     set(filter_args "${GOLDEN}" "${golden_file}")
     if(DEFINED TABLES AND NOT TABLES STREQUAL "")
@@ -44,6 +53,22 @@ if((DEFINED TABLES AND NOT TABLES STREQUAL "") OR (DEFINED COLUMNS AND NOT COLUM
     endif()
     if(DROP_HEX)
         list(APPEND filter_args --drop-hex)
+    endif()
+    if(DEFINED DROP_COLUMNS AND NOT DROP_COLUMNS STREQUAL "")
+        list(APPEND filter_args --drop-columns "${DROP_COLUMNS}")
+    endif()
+    if(DEFINED DROP_ROWS AND NOT DROP_ROWS STREQUAL "")
+        list(APPEND filter_args --drop-rows "${DROP_ROWS}")
+    endif()
+    if(DEFINED KEEP_ROWS_FILE AND NOT KEEP_ROWS_FILE STREQUAL "")
+        string(REPLACE "<OUT>" "${OUT}" keep_rows_file "${KEEP_ROWS_FILE}")
+        list(APPEND filter_args --keep-rows-file "${keep_rows_file}")
+    endif()
+    if(DEFINED DROP_KEYS_FILE AND NOT DROP_KEYS_FILE STREQUAL "")
+        list(APPEND filter_args --drop-keys-file "${DROP_KEYS_FILE}")
+    endif()
+    if(DEFINED RENUMBER AND NOT RENUMBER STREQUAL "")
+        list(APPEND filter_args --renumber "${RENUMBER}")
     endif()
     execute_process(COMMAND "${PYTHON}" -I "${FILTER}" ${filter_args} RESULT_VARIABLE filter_rc)
     if(NOT filter_rc EQUAL 0)
