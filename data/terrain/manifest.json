@@ -1,0 +1,379 @@
+{
+ "provenance": {
+  "unity_version": "2019.4.18f1",
+  "tool": "core/tools/wp11/extract_terrain.py, UnityPy 1.25.4",
+  "game_root": "decompiled/KSP-dev",
+  "files_loaded": [
+   "globalgamemanagers.assets",
+   "sharedassets9.assets",
+   "resources.assets",
+   "sharedassets0.assets",
+   "sharedassets2.assets",
+   "sharedassets7.assets"
+  ],
+  "asset_files": {
+   "globalgamemanagers.assets": "837580b967537e9c4bd179b7068b24221b956930c25c6fc25fab0361df33450a",
+   "sharedassets9.assets": "09e9525ab0fa6aa359fce06be20735bfbdb4e4339cc597da019ed2b7d5d81c3c",
+   "resources.assets": "06ca1ada1de92ac4be5974a225bf87ecfdf9a18d0b42d4b02816347e18a53570",
+   "sharedassets0.assets": "a202a2d90cbfe1baf840d5f1437f856c116bca3fe5d0c64c4ee7e5f5188ce168",
+   "sharedassets2.assets": "dadf6e0f5ff27d9b65cc6a901c8b1f25b233386f63f86a84c27f87b548ca7d76",
+   "sharedassets7.assets": "ef22a0e6dc52a56283e5816c79d777033c5e8505bcfff6824bba7f0c49334430"
+  }
+ },
+ "maps": [
+  {
+   "key": "decal_spaceport_0_height.19927",
+   "class": "MapSO",
+   "file": "KSP_x64_Data/sharedassets9.assets",
+   "pathID": 19927,
+   "name": "decal_spaceport_0_height",
+   "MapName": "decal_spaceport_0_height",
+   "width": 1024,
+   "height": 1024,
+   "bpp": 2,
+   "rowWidth": 2048,
+   "isCompiled": 1,
+   "consumers": [
+    "Kerbin:Kerbin/KSC2:PQSMod_MapDecal.heightMap"
+   ],
+   "bin": "maps/decal_spaceport_0_height.19927.bin",
+   "bytes": 2097152,
+   "expectedBytes": 2097152,
+   "format": "MapSO._data, 2 byte(s) per pixel, row-major from y=0, PixelIndex = x*bpp + y*rowWidth",
+   "sha256": "30b924a5d6e48547b568b0b895a43f2e18b9f33033f5e730bb4bb2cfa1a932de"
+  },
+  {
+   "key": "desertplanet_height.19917",
+   "class": "MapSO",
+   "file": "KSP_x64_Data/sharedassets9.assets",
+   "pathID": 19917,
+   "name": "desertplanet_height",
+   "MapName": "desertplanet_height2",
+   "width": 4096,
+   "height": 2048,
+   "bpp": 1,
+   "rowWidth": 4096,
+   "isCompiled": 1,
+   "consumers": [
+    "Duna:Duna/_Height:PQSMod_VertexHeightMap.heightMap",
+    "Duna:Duna/_LandClass:PQSLandControl.heightMap"
+   ],
+   "bin": "maps/desertplanet_height.19917.bin",
+   "bytes": 8388608,
+   "expectedBytes": 8388608,
+   "format": "MapSO._data, 1 byte(s) per pixel, row-major from y=0, PixelIndex = x*bpp + y*rowWidth",
+   "sha256": "735347e40a22bc9a715cce803f057b857c9962874fd632b013a0360280cbc948"
+  },
+  {
+   "key": "dwarfplanet1_height.19916",
+   "class": "MapSO",
+   "file": "KSP_x64_Data/sharedassets9.assets",
+   "pathID": 19916,
+   "name": "dwarfplanet1_height",
+   "MapName": "dwarfplanet1_height",
+   "width": 2048,
+   "height": 1024,
+   "bpp": 1,
+   "rowWidth": 2048,
+   "isCompiled": 1,
+   "consumers": [
+    "Dres:Dres/_HeightNoise:PQSMod_VertexHeightMap.heightMap"
+   ],
+   "bin": "maps/dwarfplanet1_height.19916.bin",
+   "bytes": 2097152,
+   "expectedBytes": 2097152,
+   "format": "MapSO._data, 1 byte(s) per pixel, row-major from y=0, PixelIndex = x*bpp + y*rowWidth",
+   "sha256": "fcd450d09cb698b3a12bdd22a90961f8415b58ddbe671568d24686b16ba40116"
+  },
+  {
+   "key": "eve_height_new.19923",
+   "class": "MapSO",
+   "file": "KSP_x64_Data/sharedassets9.assets",
+   "pathID": 19923,
+   "name": "eve_height_new",
+   "MapName": "eve_height_new",
+   "width": 4096,
+   "height": 2048,
+   "bpp": 1,
+   "rowWidth": 4096,
+   "isCompiled": 1,
+   "consumers": [
+    "Eve:Eve/_HeightNoise:PQSMod_VertexHeightMap.heightMap",
+    "Eve:Eve/_LandClass:PQSLandControl.heightMap"
+   ],
+   "bin": "maps/eve_height_new.19923.bin",
+   "bytes": 8388608,
+   "expectedBytes": 8388608,
+   "format": "MapSO._data, 1 byte(s) per pixel, row-major from y=0, PixelIndex = x*bpp + y*rowWidth",
+   "sha256": "bd1b77e6bfb8fa7f9916eb32b6abf2570a14e1552918538487fd4e8332b27130"
+  },
+  {
+   "key": "genericoffset.19987",
+   "class": "MapSO",
+   "file": "KSP_x64_Data/sharedassets9.assets",
+   "pathID": 19987,
+   "name": "genericoffset",
+   "MapName": "genericoffset",
+   "width": 256,
+   "height": 128,
+   "bpp": 1,
+   "rowWidth": 256,
+   "isCompiled": 1,
+   "consumers": [
+    "Vall:Vall/_Height:PQSMod_VertexHeightMap.heightMap"
+   ],
+   "bin": "maps/genericoffset.19987.bin",
+   "bytes": 32768,
+   "expectedBytes": 32768,
+   "format": "MapSO._data, 1 byte(s) per pixel, row-major from y=0, PixelIndex = x*bpp + y*rowWidth",
+   "sha256": "2d864c0b789a43214eee8524d3182075125e5ca2cd527f3582ec87ffd94076bc"
+  },
+  {
+   "key": "icemoon_mountains.19988",
+   "class": "MapSO",
+   "file": "KSP_x64_Data/sharedassets9.assets",
+   "pathID": 19988,
+   "name": "icemoon_mountains",
+   "MapName": "icemoon_mountains",
+   "width": 1024,
+   "height": 512,
+   "bpp": 1,
+   "rowWidth": 1024,
+   "isCompiled": 1,
+   "consumers": [
+    "Vall:Vall/_Height:PQSMod_VertexHeightMap.heightMap",
+    "Vall:Vall/Scatter:PQSLandControl.heightMap"
+   ],
+   "bin": "maps/icemoon_mountains.19988.bin",
+   "bytes": 524288,
+   "expectedBytes": 524288,
+   "format": "MapSO._data, 1 byte(s) per pixel, row-major from y=0, PixelIndex = x*bpp + y*rowWidth",
+   "sha256": "7e103ebfc2fe63fb01e5a4bc6579b38f47b1e92ff475665f107def36fe56b14a"
+  },
+  {
+   "key": "island_runway_decal_heightmap.19928",
+   "class": "MapSO",
+   "file": "KSP_x64_Data/sharedassets9.assets",
+   "pathID": 19928,
+   "name": "island_runway_decal_heightmap",
+   "MapName": "island_runway_decal",
+   "width": 256,
+   "height": 256,
+   "bpp": 2,
+   "rowWidth": 512,
+   "isCompiled": 1,
+   "consumers": [
+    "Kerbin:Kerbin/IslandAirfield:PQSMod_MapDecalTangent.heightMap"
+   ],
+   "bin": "maps/island_runway_decal_heightmap.19928.bin",
+   "bytes": 131072,
+   "expectedBytes": 131072,
+   "format": "MapSO._data, 2 byte(s) per pixel, row-major from y=0, PixelIndex = x*bpp + y*rowWidth",
+   "sha256": "c9afd11a9c0968f791a90173f38172a7ea360057a8469454495afbaab6b31365"
+  },
+  {
+   "key": "kerbin_height_new.19929",
+   "class": "MapSO",
+   "file": "KSP_x64_Data/sharedassets9.assets",
+   "pathID": 19929,
+   "name": "kerbin_height_new",
+   "MapName": "kerbin_height_new",
+   "width": 4096,
+   "height": 2048,
+   "bpp": 1,
+   "rowWidth": 4096,
+   "isCompiled": 1,
+   "consumers": [
+    "Kerbin:Kerbin/_LandClassOcean:PQSLandControl.heightMap",
+    "Kerbin:Kerbin/_Height:PQSMod_VertexHeightMap.heightMap"
+   ],
+   "bin": "maps/kerbin_height_new.19929.bin",
+   "bytes": 8388608,
+   "expectedBytes": 8388608,
+   "format": "MapSO._data, 1 byte(s) per pixel, row-major from y=0, PixelIndex = x*bpp + y*rowWidth",
+   "sha256": "894494c6c346ef00375a38e9e14ac1062d6aeb84a48a382fc7d737813bb7220a"
+  },
+  {
+   "key": "ksc_decal_heightMap.19930",
+   "class": "MapSO",
+   "file": "KSP_x64_Data/sharedassets9.assets",
+   "pathID": 19930,
+   "name": "ksc_decal_heightMap",
+   "MapName": "ksc_decal_heightMap",
+   "width": 1024,
+   "height": 1024,
+   "bpp": 2,
+   "rowWidth": 2048,
+   "isCompiled": 1,
+   "consumers": [
+    "Kerbin:Kerbin/KSC:PQSMod_MapDecalTangent.heightMap"
+   ],
+   "bin": "maps/ksc_decal_heightMap.19930.bin",
+   "bytes": 2097152,
+   "expectedBytes": 2097152,
+   "format": "MapSO._data, 2 byte(s) per pixel, row-major from y=0, PixelIndex = x*bpp + y*rowWidth",
+   "sha256": "44f20cb8c20d841d8277e72ec4024c78ad84b31fd04178f89290d798c3ddf82e"
+  },
+  {
+   "key": "moho_height.19981",
+   "class": "MapSO",
+   "file": "KSP_x64_Data/sharedassets9.assets",
+   "pathID": 19981,
+   "name": "moho_height",
+   "MapName": "moho_height",
+   "width": 2048,
+   "height": 1024,
+   "bpp": 1,
+   "rowWidth": 2048,
+   "isCompiled": 1,
+   "consumers": [
+    "Moho:Moho/_HeightNoise:PQSMod_VertexHeightMap.heightMap"
+   ],
+   "bin": "maps/moho_height.19981.bin",
+   "bytes": 2097152,
+   "expectedBytes": 2097152,
+   "format": "MapSO._data, 1 byte(s) per pixel, row-major from y=0, PixelIndex = x*bpp + y*rowWidth",
+   "sha256": "5d786bd54e987239370803cd4d3851fdebb541514aec7c441283a88c1b56d4b9"
+  },
+  {
+   "key": "munHeightMap2.19983",
+   "class": "MapSO",
+   "file": "KSP_x64_Data/sharedassets9.assets",
+   "pathID": 19983,
+   "name": "munHeightMap2",
+   "MapName": "munHeightMap2",
+   "width": 4096,
+   "height": 2048,
+   "bpp": 1,
+   "rowWidth": 4096,
+   "isCompiled": 1,
+   "consumers": [
+    "Mun:Mun/_Height:PQSMod_VertexHeightMap.heightMap"
+   ],
+   "bin": "maps/munHeightMap2.19983.bin",
+   "bytes": 8388608,
+   "expectedBytes": 8388608,
+   "format": "MapSO._data, 1 byte(s) per pixel, row-major from y=0, PixelIndex = x*bpp + y*rowWidth",
+   "sha256": "228d351bf038418c2effa7e267af8112b880012660794470755723938378c306"
+  },
+  {
+   "key": "oceanmoon_height.19931",
+   "class": "MapSO",
+   "file": "KSP_x64_Data/sharedassets9.assets",
+   "pathID": 19931,
+   "name": "oceanmoon_height",
+   "MapName": "oceanmoon_height",
+   "width": 4096,
+   "height": 2048,
+   "bpp": 1,
+   "rowWidth": 4096,
+   "isCompiled": 1,
+   "consumers": [
+    "Laythe:Laythe/_LandClass:PQSLandControl.heightMap",
+    "Laythe:Laythe/_HeightNoise:PQSMod_VertexSimplexHeightMap.heightMap",
+    "Laythe:Laythe/_Height:PQSMod_VertexHeightMap.heightMap"
+   ],
+   "bin": "maps/oceanmoon_height.19931.bin",
+   "bytes": 8388608,
+   "expectedBytes": 8388608,
+   "format": "MapSO._data, 1 byte(s) per pixel, row-major from y=0, PixelIndex = x*bpp + y*rowWidth",
+   "sha256": "c9cf604b435985b3ee7fdeebea0ca4344546803cc23fb6e4b55db438fa96c363"
+  },
+  {
+   "key": "pyramid.19919",
+   "class": "MapSO",
+   "file": "KSP_x64_Data/sharedassets9.assets",
+   "pathID": 19919,
+   "name": "pyramid",
+   "MapName": "pyramid",
+   "width": 1024,
+   "height": 1024,
+   "bpp": 1,
+   "rowWidth": 1024,
+   "isCompiled": 1,
+   "consumers": [
+    "Duna:Duna/Pyramid:PQSMod_MapDecal.heightMap"
+   ],
+   "bin": "maps/pyramid.19919.bin",
+   "bytes": 1048576,
+   "expectedBytes": 1048576,
+   "format": "MapSO._data, 1 byte(s) per pixel, row-major from y=0, PixelIndex = x*bpp + y*rowWidth",
+   "sha256": "5598e9d39b78b85053b51ed7276bfd3e9ac531b771e5dadb4f247a42b53d7a41"
+  },
+  {
+   "key": "rockymoon_height.19985",
+   "class": "MapSO",
+   "file": "KSP_x64_Data/sharedassets9.assets",
+   "pathID": 19985,
+   "name": "rockymoon_height",
+   "MapName": "rockymoon_height",
+   "width": 2048,
+   "height": 1024,
+   "bpp": 1,
+   "rowWidth": 2048,
+   "isCompiled": 1,
+   "consumers": [
+    "Tylo:Tylo/_Height:PQSMod_VertexHeightMap.heightMap"
+   ],
+   "bin": "maps/rockymoon_height.19985.bin",
+   "bytes": 2097152,
+   "expectedBytes": 2097152,
+   "format": "MapSO._data, 1 byte(s) per pixel, row-major from y=0, PixelIndex = x*bpp + y*rowWidth",
+   "sha256": "cf014b849803b8f095116e2333ddccfbbea136ed46d843f79ca66cff5fa59019"
+  },
+  {
+   "key": "saganface.19986",
+   "class": "MapSO",
+   "file": "KSP_x64_Data/sharedassets9.assets",
+   "pathID": 19986,
+   "name": "saganface",
+   "MapName": "saganface",
+   "width": 512,
+   "height": 512,
+   "bpp": 2,
+   "rowWidth": 1024,
+   "isCompiled": 1,
+   "consumers": [
+    "Tylo:Tylo/Sagan:PQSMod_MapDecal.heightMap"
+   ],
+   "bin": "maps/saganface.19986.bin",
+   "bytes": 524288,
+   "expectedBytes": 524288,
+   "format": "MapSO._data, 2 byte(s) per pixel, row-major from y=0, PixelIndex = x*bpp + y*rowWidth",
+   "sha256": "93cffe03160ba06e6bf0b5629c11913dde350e4b402b782e69efed4f17195885"
+  },
+  {
+   "key": "snowydwarfplanet_height.19921",
+   "class": "MapSO",
+   "file": "KSP_x64_Data/sharedassets9.assets",
+   "pathID": 19921,
+   "name": "snowydwarfplanet_height",
+   "MapName": "snowydwarfplanet_height",
+   "width": 2048,
+   "height": 1024,
+   "bpp": 1,
+   "rowWidth": 2048,
+   "isCompiled": 1,
+   "consumers": [
+    "Eeloo:Eeloo/_LandClass:PQSLandControl.heightMap",
+    "Eeloo:Eeloo/_HeightNoise/_Height:PQSMod_VertexHeightMap.heightMap"
+   ],
+   "bin": "maps/snowydwarfplanet_height.19921.bin",
+   "bytes": 2097152,
+   "expectedBytes": 2097152,
+   "format": "MapSO._data, 1 byte(s) per pixel, row-major from y=0, PixelIndex = x*bpp + y*rowWidth",
+   "sha256": "d49eddaf125fbbd5d4da77089b7a36b07e4e4fedb9048c80b163d507af117f36"
+  }
+ ],
+ "referenced_not_extracted": [
+  "KerbinTextureAtlasMap.19926",
+  "bigcrater.19915",
+  "desertplanetmoon_coloroverlay.19925",
+  "duna_coloraddition.19918",
+  "eve_coloraddition.19922",
+  "gilly_coloraddition.19924",
+  "munColorMap2.19982",
+  "pyramidcolor.19920",
+  "rockymoon_color.19984"
+ ]
+}

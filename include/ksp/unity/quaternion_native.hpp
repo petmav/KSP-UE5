@@ -14,3 +14,15 @@ namespace ksp::UnityNative {
 Quaternionf AngleAxis(float angle, const Vector3f& axis);
 
 }  // namespace ksp::UnityNative
+
+namespace ksp::UnityNative {
+
+// UnityEngine.Quaternion.FromToRotation(Vector3 from, Vector3 to) (WP-11, used by PQSMod_MapDecal/MapDecalTangent):
+// FromToQuaternionSafe (identity if either |v| < 1e-5; both normalised by per-component division), the Moller-Hughes
+// Matrix3x3f::SetFromToRotation (identity when dot > 1 - 1e-6, the antiparallel basis construction when dot < -1 + 1e-6,
+// otherwise h = (1 - e) / |v|^2 with v = from x to), then MatrixToQuaternion (Shoemake) and Normalize. Float32 per
+// operation. Bit-exact against all 49 captured rows (math_shim_native.json fn = "Quaternion.FromToRotation",
+// tests/test_terrain.cpp).
+Quaternionf FromToRotation(const Vector3f& fromDirection, const Vector3f& toDirection);
+
+}  // namespace ksp::UnityNative

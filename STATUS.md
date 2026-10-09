@@ -16,8 +16,9 @@ Updated 2026-10-09. One command: `powershell -NoProfile -ExecutionPolicy Bypass 
 | 6. Integration WP-07/WP-09 (main) | done: Orbit on `ksp::CelestialBody` (CelestialBodyRef deleted), one Planetarium (PlanetariumFrames deleted), `CelestialBodyOrbitAdapter` (OrbitDriver for bodies over ksp::Orbit) attached by `CelestialSystem::Spawn` by default, `body_catalog/orbits` gated in full, integration unit test. See "Integration WP-07/WP-09" below |
 | 8. WP-08 patched conics, SOI transitions, maneuver nodes (branch `wp08`) | done: PatchedConics, PatchedConicSolver, ManeuverNode, Trajectory, OrbitDriver (minus rendering; vessel through `IOrbitDriverVessel`), Planetarium.Orbits; TimeWarp/FlightGlobals/GameSettings subsets; `golden.patched_conics` and the in-game C8 capture `capture.orbit_rails` bit-exact. See "WP-08" below |
 | 7. WP-03 event bus, FSM, utilities (branch `wp03`, merged) | done: typed event bus + full GameEvents registry (469 events), KerbalFSM, KSPUtil engine-independent parts, Localizer + Lingoona fallback, UtilMath completed, .NET collection/enum semantics, Simplex; gated by unit tests incl. 6,437 values from KSP's IL (no golden dataset), see below |
+| 8. WP-11 terrain height maths (branch `wp11`) | done: PQS height evaluation (SetupMods/List.Sort, radii, GetSurfaceHeight both variants), all 28 height PQSMods, MapSO, KSP's LibNoise subset, native Quaternion.FromToRotation, stock mod stacks for all 15 PQS bodies generated from the game's prefabs, the game's 16 height maps/decals extracted with a manifest; capture gate bit-exact on 140,522 Kerbin/Mun samples. See "WP-11" below |
 
-## Test results (all 17 ctest tests pass in RelWithDebInfo and in Debug)
+## Test results (all 18 ctest tests pass in RelWithDebInfo and in Debug)
 
 Every numeric column of every gate: **max ULP 0, max abs 0** (bit-exact, and the same decimal text). Tolerance files:
 harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture gates use `tests/tolerances_capture.json`
@@ -40,7 +41,8 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `golden.atmosphere_curves` | harness golden `atmosphere_curves` (WP-09): profile_100m 2,704, flight_state 2,176 x 19 cols, solar_effects 320 | 5,200 | 0 ULP |
 | `golden.patched_conics` | WP-08 harness golden `patched_conics` (PatchedConics.CalculatePatch chains, 5 cases) | 11 | 0 ULP |
 | `capture.orbit_rails` | WP-08 in-game `captures/out2/orbit_rails_ingame.json` (C8): initial 6, samples 3,465, frames 450, segments 5, soi_events 4 (probes); world_rel/packed/loaded/inputs excluded (see WP-08) | 3,930 | 0 ULP |
-| `unit` | 107 doctest cases, 19,561 assertions (WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
+| `capture.terrain_height` | in-game `captures/out2/terrain_height.json` (WP-11): samples 140,522 x (h_surface, h_override, terrain_alt), bodies 2 (radii), scene_probe 4 | 140,528 | 0 ULP, no exclusions |
+| `unit` | 120 doctest cases, 39,642 assertions (WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
 differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 6 ULP (Vector3.Project/ProjectOnPlane) and
@@ -166,6 +168,169 @@ WP-07 (Orbit):
    copying a tree with an anonymous child throws (NullReferenceException in KSP).
 7. **Unreal**: link only through `kspcore_c.h`; never include `include/ksp/**` from UE code (inline float code would be
    recompiled with UE's /fp:fast and break the one-definition rule). The lib is built /MD, IDL 0, /Z7, no /GL.
+
+## WP-11: terrain height maths (branch `wp11`)
+
+Spec: `PQS.cs` (height path only: SetupMods :2109, GetChildMods :2161, SetupBuildDelegates :2177, Mod_OnSetup :1827,
+Mod_GetVertexMax/MinHeight :1892/:1902, Mod_OnVertexBuildHeight :1956, BuildVertexMapCoords :2294, GetSurfaceHeight
+:3088/:3093, VertexBuildData :77), `PQSMod.cs`, every class that overrides OnVertexBuildHeight (28: `PQSLandControl.cs`
+and `PQSMod_{FlattenArea, FlattenAreaTangential, FlattenOcean, MapDecal, MapDecalTangent, SmoothLatitudeRange,
+VertexDefineCoastLine, VertexHeightMap, VertexHeightMapStep, VertexHeightNoise, VertexHeightNoiseHeightMap,
+VertexHeightNoiseVertHeight, VertexHeightNoiseVertHeightCurve, -Curve2, -Curve3, VertexHeightOblate, VertexHeightOffset,
+VertexNoise, VertexPlanet, VertexRidgedAltitudeCurve, VertexSimplexHeight, VertexSimplexHeightAbsolute,
+VertexSimplexHeightFlatten, VertexSimplexHeightMap, VertexVoronoi, VoronoiCraters, VoronoiCraters2}.cs`), `MapSO.cs`,
+the reachable LibNoise subset (`LibNoise/{Math, GradientNoiseBasis, ValueNoiseBasis, Perlin, Billow, RidgedMultifractal,
+Voronoi, IModule, NoiseQuality, Modifiers/ScaleBiasOutput, Modifiers/Select}.cs`), `CelestialBody.cs:656/:831`
+(GetRelSurfaceNVector, TerrainAltitude), native `Quaternion.FromToRotation` (Unity 2019.4). WP-03's Simplex is reused.
+Every ported function cites its line.
+
+### Gate (RelWithDebInfo and Debug, fresh; `tests/tolerances_capture.json` unchanged: 0 ULP)
+
+| gate / table | rows | columns | max abs | max ULP | notes |
+|---|---|---|---|---|---|
+| `capture.terrain_height` / samples | 140,522 | h_surface, h_override, terrain_alt (f64) | 0 | 0 | Kerbin + Mun 1-degree grids (65,160 each), Kerbin 0.01-degree KSC patch (10,201), the pad; **no exclusions** |
+| `capture.terrain_height` / bodies | 2 | Radius, pqs_radius, radiusMin, radiusMax, ocean, pqs_name | 0 | 0 | Kerbin 598015 / 608735, Mun 199600 / 208300 |
+| `capture.terrain_height` / scene_probe | 4 | h_ksc, h_override_ksc, h_override_0_0 (MAINMENU and FLIGHT) | 0 | 0 | |
+
+Golden = the in-game capture `harness/captures/out2/terrain_height.json` (FLIGHT, Mono). Both the public
+`GetSurfaceHeight` (h_surface) and the `overrideQuadBuildCheck` variant (h_override) are bit-exact. The 3 Mun points
+where the game's two variants differ ((-82, 102), (-82, 103), (-82, 104): FlattenArea "Monolith01/02" with no quad
+built) are reproduced, not excluded: the runner emulates the capture's scene state (Kerbin's sphere active with quads
+built = `PQS::Mod_OnQuadBuilt`, the Mun's never built). KSC pad: `TerrainAltitude` at the active vessel's lat/lon =
+**64.78470540174749 m** (capture 64.7847). Columns not compared (kept list in tests/CMakeLists.txt): the capture's
+bodies.mod_count/isStarted/isActive and scene_probe.has_pqs/isStarted/isActive/mod_count/ut/go_active are scene state
+(Kerbin's runtime stack holds 9 PQSCity2 set-dressing objects spawned by space-centre code, not by the PQS prefab);
+the mods/mod_params/map_assets tables are covered by unit tests. Gate time 4.5 s RelWithDebInfo, 14 s Debug.
+
+### Unit tests (`tests/test_terrain.cpp`: 13 cases, 20,081 assertions)
+
+- Stock prefab data equals `data/terrain/pqs_prefab.json` bit for bit: 15 bodies, every mod's class/GameObject/
+  activeSelf/height flag and 3,653 serialized values (doubles, floats, ints, bools, strings, Vector3, Color, curves
+  key by key, map keys).
+- Extracted maps: size and sha256 against the manifest, origin asset file present in `decompiled/KSP-dev`.
+- Evaluated stack vs the capture's `mods` table: Mun identical (23 mods incl. List.Sort's permutation of the
+  order-100 group); Kerbin height mods identical as multisets per `order` (see quirk 5), plus a commutation test that
+  evaluates the game's and kspcore's order-99999 permutation at 6 x 41 x 41 points around each decal/flatten centre
+  and antipode: bit-identical.
+- KSC pad 64.78470540174749 m, scene-probe h(KSC) `0x4122500191C4E878`, radii; TerrainAltitude clamp/allowNegative/no
+  PQS, the override variant; the Mun FlattenArea quad dependency; every stock body evaluates finite heights.
+- MapSO: Byte2Float, u = 1.0 and negative wrap, exact-integer coordinates, maxX/maxY wrap, double vs float bilinear
+  overloads (different bits), HeightAlpha channels and lerp, channel averaging on 3-byte maps, the GetPixelByte
+  negative-x bug, bad sizes.
+- LibNoise: IntValueNoise/ValueNoise, GradientCoherentNoise (Low/Standard/High, lattice points, the (int)0 - 1 quirk),
+  Perlin, Billow, RidgedMultifractal (seed wrap, spectral weights), Voronoi (distance on/off), Select/ScaleBiasOutput:
+  expectations from `tools/wp11/libnoise_reference.py`, an independent Python transcription of the C# (IEEE doubles in
+  source order; two values also derived by hand).
+- Native `Quaternion.FromToRotation` vs all 49 rows of the C3 capture (`captures/out/math_shim_native.json`): bit-exact.
+- FlattenAreaTangential quad state; VertexHeightMapStep throws without a Texture2D sampler.
+
+### Game assets (CLAUDE.md "Original game assets")
+
+`tools/wp11/extract_terrain.py` (run with `harness/tools-cache/venv`, read-only on `decompiled/KSP-dev/KSP_x64_Data`,
+same UnityPy 1.25.4 + IL type-tree method as WP-09's `extract_body_assets.py`; sharedassets9.assets sha256
+`09e9525a...81c3c`) walks every body's PQS GameObject like `PQS.GetChildMods`, dumps every PQSMod's serialized fields to
+`data/terrain/pqs_prefab.json` (436 KB) and copies `MapSO._data` verbatim for every MapSO a height mod references
+(colour-map fields excepted) to `data/terrain/maps/<name>.<PathID>.bin`, with `data/terrain/manifest.json` (origin
+file + PathID, Unity object name, MapSO header, byte size, sha256, consumers). No texture is decoded: MapSO stores its
+pixel bytes in the asset itself. 16 maps, 56,786,944 bytes, all from `KSP_x64_Data/sharedassets9.assets`:
+
+| map key | origin | size, depth | bytes | consumers |
+|---|---|---|---|---|
+| `decal_spaceport_0_height.19927` | sharedassets9.assets PathID 19927 | 1024x1024, 2 B/px | 2,097,152 | Kerbin MapDecal |
+| `desertplanet_height.19917` | sharedassets9.assets PathID 19917 | 4096x2048, 1 B/px | 8,388,608 | Duna PQSLandControl, Duna VertexHeightMap |
+| `dwarfplanet1_height.19916` | sharedassets9.assets PathID 19916 | 2048x1024, 1 B/px | 2,097,152 | Dres VertexHeightMap |
+| `eve_height_new.19923` | sharedassets9.assets PathID 19923 | 4096x2048, 1 B/px | 8,388,608 | Eve PQSLandControl, Eve VertexHeightMap |
+| `genericoffset.19987` | sharedassets9.assets PathID 19987 | 256x128, 1 B/px | 32,768 | Vall VertexHeightMap |
+| `icemoon_mountains.19988` | sharedassets9.assets PathID 19988 | 1024x512, 1 B/px | 524,288 | Vall PQSLandControl, Vall VertexHeightMap |
+| `island_runway_decal_heightmap.19928` | sharedassets9.assets PathID 19928 | 256x256, 2 B/px | 131,072 | Kerbin MapDecalTangent |
+| `kerbin_height_new.19929` | sharedassets9.assets PathID 19929 | 4096x2048, 1 B/px | 8,388,608 | Kerbin PQSLandControl, Kerbin VertexHeightMap |
+| `ksc_decal_heightMap.19930` | sharedassets9.assets PathID 19930 | 1024x1024, 2 B/px | 2,097,152 | Kerbin MapDecalTangent |
+| `moho_height.19981` | sharedassets9.assets PathID 19981 | 2048x1024, 1 B/px | 2,097,152 | Moho VertexHeightMap |
+| `munHeightMap2.19983` | sharedassets9.assets PathID 19983 | 4096x2048, 1 B/px | 8,388,608 | Mun VertexHeightMap |
+| `oceanmoon_height.19931` | sharedassets9.assets PathID 19931 | 4096x2048, 1 B/px | 8,388,608 | Laythe PQSLandControl, VertexHeightMap, VertexSimplexHeightMap |
+| `pyramid.19919` | sharedassets9.assets PathID 19919 | 1024x1024, 1 B/px | 1,048,576 | Duna MapDecal |
+| `rockymoon_height.19985` | sharedassets9.assets PathID 19985 | 2048x1024, 1 B/px | 2,097,152 | Tylo VertexHeightMap |
+| `saganface.19986` | sharedassets9.assets PathID 19986 | 512x512, 2 B/px | 524,288 | Tylo MapDecal |
+| `snowydwarfplanet_height.19921` | sharedassets9.assets PathID 19921 | 2048x1024, 1 B/px | 2,097,152 | Eeloo PQSLandControl, Eeloo VertexHeightMap |
+
+Referenced but not extracted (colour data, later packages): KerbinTextureAtlasMap (8192x4096x3, 100 MB),
+munColorMap2, rockymoon_color, duna/eve/gilly_coloraddition, desertplanetmoon_coloroverlay, pyramidcolor, bigcrater
+(Bop's two MapDecals use it as colorMap only and have no heightMap). `MapSO::GetOrigin()` carries file + PathID + name +
+key next to every loaded map. The C++ mod stacks are generated: `tools/wp11/gen_wp11_terrain.py` ->
+`src/terrain/pqs_prefab_data.cpp` (15 factories, 225 KB) and `src/terrain/libnoise_random_vectors.inc` (the 1024
+RandomVectors literals copied from `GradientNoiseBasis.cs`); the generator fails if any prefab field of a height mod is
+neither consumed nor listed as ignored (sphere back-reference, Gradient colour ramps, FlattenArea.body,
+PQSLandControl.scatters and per-class scatter objects) and cross-checks the passive mods' OnSetup requirements against
+the capture (0 differences).
+
+### API (for WP-12/19/20)
+
+`include/ksp/terrain/pqs_prefab.hpp`: `terrain::MapLibrary(dataDir)`, `terrain::LoadStockPQS(body, maps)` (all 15
+bodies with a PQS), `PQS::GetSurfaceHeight(dir[, overrideQuadBuildCheck])`, `PQS::radius/radiusMin/radiusMax/
+radiusDelta`, `terrain::GetRelSurfaceNVector(lat, lon)`, `terrain::TerrainAltitude(pqs, lat, lon, allowNegative)`
+(CelestialBody.TerrainAltitude: pqs.radius, ignores `ocean`, which `StockPQSInfo::ocean` carries for callers),
+`terrain::SurfaceHeightOverride(pqs, lat, lon, bodyRadius)` (Vessel.cs:2717 form), `PQS::Mod_OnQuadPreBuild/
+Mod_OnQuadBuilt(PQ)` for quad state. Custom/modded stacks: fill `PQS::childMods` with `PQSMod_*` objects and call
+`SetupForHeight()`.
+
+### Not done in this package (and why)
+
+- Quads, meshes, normals, UVs, colliders, the vertex build delegates and PQ (WP-12). The `PQ` struct here is a stub
+  with the two fields the height mods read in OnQuadPreBuild.
+- Colour output: every mod's OnVertexBuild, MapSO.GetPixelColor*/Color32 sampling, Gradient ramps, the texture atlas,
+  biome colour and CBAttributeMapSO lookup; scatter (LandClassScatter, PQSLandControl scatter setup and quads).
+- `PQSMod_VertexHeightMapStep` and `PQSMod_VertexHeightNoiseHeightMap` (no stock body uses them) read a Texture2D
+  through Unity's native `GetPixelBilinear(...).grayscale`; not ported: they throw `std::logic_error` unless the caller
+  sets `heightMapSampler`.
+- Bodies other than Kerbin and Mun: the port and data are generic and every stock body evaluates, but the capture has
+  no golden for them (recommend a capture run over all 15 bodies; the runner and gate extend by adding body names).
+- `CelestialBody.pqsController` is not wired into WP-09's `CelestialBody` (the helpers take a `PQS*`): integration step.
+- PQSCity/PQSCity2 (positioning, KSC set dressing), PQS lifecycle beyond setup (OnSphereStart/Active, PostSetup),
+  QuadEnhanceCoast and other non-height mods (kept as `PQSModPassive`).
+
+### Surprises for later implementers
+
+1. Height maps are `MapSO` ScriptableObjects whose `_data` byte array is in the asset: no texture decode. The "16-bit"
+   decals are 2 bytes per pixel = (height, alpha) as two 8-bit channels; there is no 16-bit height decode in 1.12.5.
+   Byte -> float is `0.003921569f * b` (not /255; 255 still rounds to 1.0f).
+2. MapSO bilinear: the double overload (VertexHeightMap, PQSLandControl) and the float overload (MapDecal*) round
+   differently (different bits for the same u, v); u = 1.0 samples texel 0; the upper texel wraps only when it equals
+   the width; `GetPixelByte(x < 0)` reads `Width - x` (sic, a texel of the next row).
+3. MapDecal/MapDecalTangent have no hemisphere test: outside quad building, `GetSurfaceHeight` applies a decal at the
+   antipode of its centre as well (unit-tested on Kerbin's KSC decal).
+4. Quad state decides the public `GetSurfaceHeight`: MapDecal* apply until a quad build starts (quadActive and
+   buildHeight both start false), FlattenArea applies only with overrideQuadBuildCheck or after OnQuadBuilt,
+   FlattenAreaTangential never until a quad was built. The 3 differing Mun points of the capture are this.
+5. `PQS.SetupMods` uses List.Sort (unstable): the permutation of equal-`order` mods depends on the whole list. The
+   game's Kerbin list has 9 more PQSCity2 (runtime set dressing), so kspcore's order-99999 permutation differs from the
+   game's; those three mods commute (tested), heights are bit-exact. A future mod that overlaps another equal-order
+   mod would need the runtime list.
+6. Building a PQS constructs many `Simplex` objects; each reseeds `UnityEngine.Random` and rewrites Simplex's static
+   table (also in KSP): anything drawing from UnityEngine.Random afterwards sees a different state (the terrain tests
+   restore it so WP-03's tests stay order-independent).
+7. Without Breaking Ground, `PQSROCControl.Awake` sets modExpansionDisabled and SetupMods drops it; Kerbin's
+   AltitudeAlpha is modEnabled = false in the prefab.
+8. `PQSMod_VertexHeightMap.OnVertexBuildHeight` uses `heightMapDeformity`, while GetVertexMaxHeight uses the
+   radius-scaled `heightDeformity` (sic). `VertexRidgedAltitudeCurve`, `-Curve2/3` and `VertexHeightNoiseVertHeight`
+   read `sphere.radiusMin`/`radiusDelta`, so every mod's GetVertexMin/MaxHeight feeds the terrain.
+9. MapDecal's `rot = AngleAxis(angle, up) * FromToRotation(posNorm, up)` mixes native (AngleAxis, FromToRotation) and
+   managed (Quaternion * Quaternion) code; `rot * vbData.directionFromCenter` resolves to Unity's float
+   `Quaternion * Vector3` (Vector3d -> Vector3 implicit). FromToRotation is Moller-Hughes + Shoemake in float32,
+   `h = (1 - e) / |v|^2` (the `1 / (1 + e)` variant misses 2 of 49 captured rows).
+10. Managed float code in height mods (VoronoiCraters, MapDecal smoothing, MapSO) follows the Mono rule: e.g.
+    `(double)(heightEnd - heightStart)` and `1f / x` passed to a double are not rounded to float.
+11. `TerrainAltitude` subtracts `pqs.radius` and ignores `ocean`; the vessel-positioning calls subtract
+    `CelestialBody.Radius` and use overrideQuadBuildCheck. MAINMENU and FLIGHT give identical heights except for
+    quad state, so the headless port needs no scene.
+12. PQSMod_TextureAtlas assigns MeshUV3 only under `CanTextureAtlasModBeUsed()` (graphics settings); the generator
+    ignores conditional requirement assignments (matches the capture).
+
+### Commits (branch `wp11`)
+
+| hash | content |
+|---|---|
+| `9ed17fb` | WP-11 code, generated stack data, extracted terrain data (data/terrain), extraction/generator tools, capture gate, unit tests, README/STATUS |
+| (this commit) | STATUS: commit hash, PROGRESS-wp11.md final notes |
 
 ## WP-09: celestial bodies, atmospheres, PhysicsGlobals (branch `wp09`, merged in `29b71f6`)
 

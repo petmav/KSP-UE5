@@ -15,12 +15,15 @@ add_executable(kspcore_tests
     test_util.cpp
     test_wp03_reference.cpp
     test_patched_conics.cpp
+    test_terrain.cpp
+    ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
 )
 target_link_libraries(kspcore_tests PRIVATE kspcore)
 ksp_set_build_flags(kspcore_tests)
-target_include_directories(kspcore_tests PRIVATE ${PROJECT_SOURCE_DIR}/third_party)
+target_include_directories(kspcore_tests PRIVATE ${PROJECT_SOURCE_DIR}/third_party ${PROJECT_SOURCE_DIR}/tools/golden_runner)
 target_compile_definitions(kspcore_tests PRIVATE KSPCORE_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
                            KSPCORE_HARNESS_DIR="${KSP_HARNESS_DIR}" KSPCORE_PROJECT_ROOT="${KSP_PROJECT_ROOT}"
+                           KSPCORE_DATA_DIR="${PROJECT_SOURCE_DIR}/data"
                            KSP_DICTIONARY_CFG="${KSP_PROJECT_ROOT}/decompiled/KSP-dev/GameData/Squad/Localization/dictionary.cfg")
 add_test(NAME unit COMMAND kspcore_tests)
 
@@ -121,6 +124,16 @@ ksp_golden_gate(golden.patched_conics patched_conics)
 ksp_golden_gate(capture.orbit_rails orbit_rails GOLDEN ${KSP_CAPTURES2_DIR}/orbit_rails_ingame.json DROP_HEX
                 TOL ${KSP_CAPTURE_TOL} ROWS "soi_events:vessel^HC8" KEYS "soi_events:vessel,UT"
                 COLUMNS "initial:id,body,inclination,eccentricity,semiMajorAxis,LAN,argumentOfPeriapsis,meanAnomalyAtEpoch,epoch,meanMotion,period,ObTAtEpoch,mu,spawned/samples:id,frame,segment,UT,warp_rate,ref_body,updateUT,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z,relpos_at_UT_x,relpos_at_UT_y,relpos_at_UT_z,semiMajorAxis,eccentricity,inclination,LAN,argumentOfPeriapsis,meanAnomalyAtEpoch,epoch,ObT,meanAnomaly,trueAnomaly,update_mode/segments:segment,rate_index,achieved_rate,frames,UT_start,UT_end,Time_fixedDeltaTime,TimeWarp_fixedDeltaTime,timeScale")
+
+# WP-11 terrain: PQS.GetSurfaceHeight for Kerbin and Mun (140,522 samples: 1-degree grids, the 0.01-degree KSC patch,
+# the pad) vs the in-game batch-2 capture, plus the per-scene probe heights and the PQS radii. Kept columns: the
+# capture's bodies.mod_count/isStarted/isActive and scene_probe.has_pqs/isStarted/isActive/mod_count/ut/go_active are
+# scene state of the running game (Kerbin's runtime stack also holds 9 PQSCity2 set-dressing objects spawned by the
+# space-centre scene code, not by the PQS prefab), and the mods/mod_params/map_assets tables are checked by
+# tests/test_terrain.cpp (stack order, prefab fields) instead.
+ksp_golden_gate(capture.terrain_height terrain_height GOLDEN ${KSP_CAPTURES2_DIR}/terrain_height.json DROP_HEX
+                TOL ${KSP_CAPTURE_TOL} TABLES bodies,scene_probe,samples
+                COLUMNS "bodies:body,Radius,pqs_radius,radiusMin,radiusMax,ocean,pqs_name/scene_probe:scene,body,h_ksc,h_override_ksc,h_override_0_0")
 
 # GameData corpus: parse + round-trip every cfg/craft in harness/inputs (no golden; self-consistency + no errors)
 add_test(NAME corpus.gamedata
