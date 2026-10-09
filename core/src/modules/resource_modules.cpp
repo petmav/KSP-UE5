@@ -1,5 +1,6 @@
 // WP-15 resource part modules: see ksp/modules/resource_modules.hpp.
 #include "ksp/modules/resource_modules.hpp"
+#include "ksp/dotnet/mono_float.hpp"
 
 #include "ksp/core/exceptions.hpp"
 #include "ksp/core/log.hpp"
@@ -92,31 +93,31 @@ void ModuleResourceAutoShiftState::OnStart(StartState state) {
     }
 }
 
-// ModuleResourceAutoShiftState.cs:163 (float stores: `resourceShutOffPercent + 1f` is a single float operation)
+// ModuleResourceAutoShiftState.cs:163 (Mono float rule: `resourceShutOffPercent + 1f` is evaluated in double and stored as float)
 void ModuleResourceAutoShiftState::ModifyStartUpPercent() {
     if (Get<float>("resourceStartUpPercent") <= Get<float>("resourceShutOffPercent"))
-        Set<float>("resourceStartUpPercent", Get<float>("resourceShutOffPercent") + 1.0f);
+        Set<float>("resourceStartUpPercent", f32store(fx(Get<float>("resourceShutOffPercent")) + fx(1.0f)));
     if (resource != nullptr) resource->startUpPercent = Get<float>("resourceStartUpPercent");
 }
 
 // ModuleResourceAutoShiftState.cs:175
 void ModuleResourceAutoShiftState::ModifyShutOffAmount() {
     if (Get<float>("resourceShutOffAmount") >= Get<float>("resourceStartUpAmount"))
-        Set<float>("resourceShutOffAmount", Get<float>("resourceStartUpAmount") - 1.0f);
+        Set<float>("resourceShutOffAmount", f32store(fx(Get<float>("resourceStartUpAmount")) - fx(1.0f)));
     if (resource != nullptr) resource->shutOffAmount = Get<float>("resourceShutOffAmount");
 }
 
 // ModuleResourceAutoShiftState.cs:187
 void ModuleResourceAutoShiftState::ModifyStartUpAmount() {
     if (Get<float>("resourceStartUpAmount") <= Get<float>("resourceShutOffAmount"))
-        Set<float>("resourceStartUpAmount", Get<float>("resourceShutOffAmount") + 1.0f);
+        Set<float>("resourceStartUpAmount", f32store(fx(Get<float>("resourceShutOffAmount")) + fx(1.0f)));
     if (resource != nullptr) resource->startUpAmount = Get<float>("resourceStartUpAmount");
 }
 
 // ModuleResourceAutoShiftState.cs:199
 void ModuleResourceAutoShiftState::ModifyShutOffPercent() {
     if (Get<float>("resourceShutOffPercent") >= Get<float>("resourceStartUpPercent"))
-        Set<float>("resourceShutOffPercent", Get<float>("resourceStartUpPercent") - 1.0f);
+        Set<float>("resourceShutOffPercent", f32store(fx(Get<float>("resourceStartUpPercent")) - fx(1.0f)));
     if (resource != nullptr) resource->shutOffPercent = Get<float>("resourceShutOffPercent");
 }
 

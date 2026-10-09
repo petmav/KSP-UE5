@@ -219,7 +219,7 @@ struct PartResource {
 
     PartResource() = default;
     explicit PartResource(Part* p) : part(p) {}                                          // PartResource.cs:70
-    PartResource(Part* p, bool simulate) : part(p), simulationResource(simulate) {}      // :75
+    PartResource(Part* p, bool simulate) : simulationResource(simulate), part(p) {}      // :75
     PartResource(const PartResource& res) = default;                                     // :81 (part = res.part; Copy(res))
     PartResource(const PartResource& res, bool simulate) : PartResource(res) { simulationResource = simulate; }  // :87
     PartResource& operator=(const PartResource&) = default;
