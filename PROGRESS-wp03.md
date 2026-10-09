@@ -67,3 +67,14 @@ IntersectInformation. Brief extra: finish UtilMath (WP-01 file; missing Max/Min/
 - .NET reference tool (tools/wp03_reference): csc.exe (Framework64 v4.0.30319) + KSP IL from harness/build/KspGolden
   (read-only copy into build/wp03_reference) -> tests/data/wp03_reference.tsv + tests/test_wp03_reference.cpp.
 - STATUS.md WP-03 section, README updates, final commit.
+
+## Step 4 DONE: KSP-IL reference + docs
+- tools/wp03_reference (csc.exe C# 5 + harness KspGolden DLLs copied to build/wp03_reference) -> tests/data/wp03_reference.tsv;
+  tests/test_wp03_reference.cpp: 6,437 values, 0 mismatches (mutation check: 20/20 corrupted cells caught).
+- GameEventsRegistry() listing (generated) checked against KSP IL: 469/469 member paths, names, types.
+- Added KSPUtil double vector helpers; README + STATUS.md WP-03 section.
+- Final: ctest 10/10 in RelWithDebInfo (12.4 s) and Debug (26.0 s); unit = 70 cases / 12,156 assertions.
+## Open / follow-ups (for the orchestrator)
+- Mono NumberFormatter port (custom/N/E/P formats) for LocalizeNumber callers.
+- In-game capture for the Mono-rule float32 paths listed in STATUS.md.
+- CallbackUtil coroutines / SafeAbortBackgroundWorker belong with the game-loop scheduler (tier B).
