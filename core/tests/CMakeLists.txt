@@ -28,6 +28,7 @@ target_include_directories(kspcore_tests PRIVATE ${PROJECT_SOURCE_DIR}/third_par
 target_compile_definitions(kspcore_tests PRIVATE KSPCORE_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
                            KSPCORE_HARNESS_DIR="${KSP_HARNESS_DIR}" KSPCORE_PROJECT_ROOT="${KSP_PROJECT_ROOT}"
                            KSPCORE_DATA_DIR="${PROJECT_SOURCE_DIR}/data"
+                           KSPCORE_TESTDATA_DIR="${PROJECT_SOURCE_DIR}/testdata"
                            KSPCORE_DEFAULT_GAME_ROOT="${KSP_GAMEDATA_ROOT}")
 add_test(NAME unit COMMAND kspcore_tests)
 

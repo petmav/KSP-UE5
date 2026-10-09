@@ -29,7 +29,9 @@ namespace fs = std::filesystem;
 namespace {
 
 const std::string kProjectRoot = KSPCORE_PROJECT_ROOT;
-const std::string kSaves = kProjectRoot + "/decompiled/KSP-dev/saves";
+// Original KSP 1.12.5 save data vendored into the repo (byte-identical copy of decompiled/KSP-dev/saves/physprofile),
+// so the test runs without the game install (CI, cloud sessions).
+const std::string kSaves = std::string(KSPCORE_TESTDATA_DIR) + "/saves";
 
 void FreshEnvironment() {
     SaveEnvironment::Reset();
