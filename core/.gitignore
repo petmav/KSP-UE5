@@ -1,0 +1,7 @@
+# build trees (CMake presets put them under build/<preset>)
+/build/
+/out/
+.vs/
+*.user
+.worktrees/
+__pycache__/
