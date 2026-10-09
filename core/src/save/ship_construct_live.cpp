@@ -141,7 +141,22 @@ bool ShipConstruct::InstantiateParts(bool returnErrors, std::string& errorString
     auto lookup = [&env](const std::string& n) -> const AvailablePart* { return env.getPartInfoByName ? env.getPartInfoByName(n) : nullptr; };
     liveParts.clear();
     ownedParts.clear();
-    CraftParts cp = BuildCraftParts(*this, lookup, this);
+    // ShipConstruct.cs:630-640: part.persistentId = FlightGlobals.CheckPartpersistentId(part.persistentId, part, false, true, persistentID),
+    // in file order; the ids it re-issued are tracked for the IShipConstructIDChanges modules
+    auto checkId = [this, &env](Part& part, size_t k) {
+        if (partIdCheckDone_) return;   // LoadShip (file side) ran it
+        const uint32_t num2 = part.fields.persistentId;
+        part.fields.persistentId = env.persistentIds.CheckPartpersistentId(part.fields.persistentId, &part, false, true, loadPersistentID_);
+        parts[k].persistentId = part.fields.persistentId;
+        if (part.fields.persistentId != num2 && num2 != 0) {
+            if (changedPersistentIds_.count(num2) != 0)
+                log::Warning("[ShipConstruct]: The same persistentID existed on two parts in this ship - cannot track all part changes for " +
+                             parts[k].partInfoName + "(" + dotnet::FormatUInt64(num2) + ")");
+            else
+                changedPersistentIds_.emplace(num2, part.fields.persistentId);
+        }
+    };
+    CraftParts cp = BuildCraftParts(*this, lookup, this, checkId);
     if (!cp.ok) {
         // :455-466 "case part": the part has no AvailablePart / prefab
         const std::string msg = Localizer::Format("#autoLOC_6002427", {cp.missing});
@@ -169,7 +184,10 @@ bool ShipConstruct::InstantiateParts(bool returnErrors, std::string& errorString
 
 // ShipConstruct.cs:301 (the whole of LoadShip in a scene with a part database)
 bool ShipConstruct::LoadShipWithParts(const ConfigNode& root, uint32_t persistentID, bool returnErrors, std::string& errorString) {
-    if (!LoadShip(root, persistentID, returnErrors, errorString)) return false;
+    deferPartIdCheck_ = true;
+    const bool loaded = LoadShip(root, persistentID, returnErrors, errorString);
+    deferPartIdCheck_ = false;
+    if (!loaded) return false;
     return InstantiateParts(returnErrors, errorString);
 }
 

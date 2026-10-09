@@ -9,7 +9,7 @@ namespace ksp {
 
 // ShipConstruct.cs:378-640 (the part creation of LoadShip)
 CraftParts BuildCraftParts(const ShipConstruct& ship, const std::function<const AvailablePart*(const std::string&)>& partInfoByName,
-                           ShipConstruct* shipOwner) {
+                           ShipConstruct* shipOwner, const std::function<void(Part&, size_t)>& onPartLoaded) {
     CraftParts out;
     for (const auto& d : ship.parts) {
         const AvailablePart* ap = partInfoByName(d.partInfoName);
@@ -18,6 +18,7 @@ CraftParts BuildCraftParts(const ShipConstruct& ship, const std::function<const 
             return out;
         }
     }
+    size_t partIndex = 0;
     for (const auto& d : ship.parts) {
         const AvailablePart* ap = partInfoByName(d.partInfoName);
         auto part = Part::Instantiate(*ap->partPrefab);
@@ -70,6 +71,8 @@ CraftParts BuildCraftParts(const ShipConstruct& ship, const std::function<const 
         if (d.events) part->partEventsNode = d.events->CreateCopy();
         if (d.effects) part->LoadEffects(*d.effects);
         if (d.vesselNaming) part->vesselNaming = std::make_shared<VesselNaming>(*d.vesselNaming);
+        if (onPartLoaded) onPartLoaded(*part, partIndex);
+        partIndex++;
         out.parts.push_back(std::move(part));
     }
     std::vector<Part*> all;

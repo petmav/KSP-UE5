@@ -67,6 +67,8 @@ bool ShipConstruct::LoadShip(const ConfigNode& root, uint32_t persistentID, bool
     std::string partName, craftID, nodeID, attnPartID, attachMeshName;
     Vector3f attnPos, attnRot, attnActualPos, attnActualRot;
     persistentId = persistentID;
+    loadPersistentID_ = persistentID;
+    partIdCheckDone_ = !deferPartIdCheck_;
     shipFacility = EditorFacility::None;
     for (int i = 0; i < root.values().Count(); ++i) {
         const ConfigNode::Value& value = root.values()[i];
@@ -257,17 +259,21 @@ bool ShipConstruct::LoadShip(const ConfigNode& root, uint32_t persistentID, bool
             else if (n == "EVENTS") part->events = child->CreateCopy();
             else if (n == "EFFECTS") part->effects = child->CreateCopy();
         }
-        const uint32_t num2 = part->persistentId;
-        part->persistentId = env.persistentIds.CheckPartpersistentId(part->persistentId,
-                                                                     reinterpret_cast<const void*>(static_cast<uintptr_t>(k + 1)),
-                                                                     false, true, persistentID);
-        // ShipConstruct.cs:630-640 the ids CheckPartpersistentId re-issued (UpdatePersistentIDs of IShipConstructIDChanges modules)
-        if (part->persistentId != num2 && num2 != 0) {
-            if (changedPersistentIds_.count(num2) != 0)
-                log::Warning("[ShipConstruct]: The same persistentID existed on two parts in this ship - cannot track all part changes for " +
-                             part->partInfoName + "(" + dotnet::FormatUInt64(num2) + ")");
-            else
-                changedPersistentIds_.emplace(num2, part->persistentId);
+        // ShipConstruct.cs:630-640 CheckPartpersistentId and the ids it re-issued (UpdatePersistentIDs of IShipConstructIDChanges
+        // modules). The file side has no Part to pass: LoadShipWithParts defers the check to InstantiateParts, which has the real parts
+        // (the registry compares the part object); here a stand-in key is registered.
+        if (!deferPartIdCheck_) {
+            const uint32_t num2 = part->persistentId;
+            part->persistentId = env.persistentIds.CheckPartpersistentId(part->persistentId,
+                                                                         reinterpret_cast<const void*>(static_cast<uintptr_t>(k + 1)),
+                                                                         false, true, persistentID);
+            if (part->persistentId != num2 && num2 != 0) {
+                if (changedPersistentIds_.count(num2) != 0)
+                    log::Warning("[ShipConstruct]: The same persistentID existed on two parts in this ship - cannot track all part changes for " +
+                                 part->partInfoName + "(" + dotnet::FormatUInt64(num2) + ")");
+                else
+                    changedPersistentIds_.emplace(num2, part->persistentId);
+            }
         }
         parts.push_back(std::move(data));
         craftIds.push_back(parts.back().craftID);

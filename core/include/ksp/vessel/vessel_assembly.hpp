@@ -27,8 +27,10 @@ struct CraftParts {
 // ShipConstruct.LoadShip part creation: Instantiate(prefab), PART values, MODULE / RESOURCE / PARTDATA nodes, then
 // parent / children / symmetry / attach-node links and InitializeModules. WP-18 additions: `shipOwner` becomes `Part.ship` of every part
 // (ShipConstruct.cs:443), and the EVENTS / ACTIONS / EFFECTS / VESSELNAMING nodes of the PART are loaded (:600-620).
+// `onPartLoaded(part, index)` runs after the PART's nodes are loaded and before the next part is created (ShipConstruct.cs:630,
+// CheckPartpersistentId).
 CraftParts BuildCraftParts(const ShipConstruct& ship, const std::function<const AvailablePart*(const std::string&)>& partInfoByName,
-                           ShipConstruct* shipOwner = nullptr);
+                           ShipConstruct* shipOwner = nullptr, const std::function<void(Part&, size_t)>& onPartLoaded = nullptr);
 
 struct AssembleOptions {
     // WP-18 (ShipConstruction.AssembleForLaunch parameters)

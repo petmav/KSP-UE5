@@ -235,7 +235,7 @@ public:
     }
     // IResourceVessel (the host WP-15's Part.RequestResource reaches through `Part.ship`)
     const std::vector<Part*>& ResourceParts() const override { return liveParts; }
-    void GetConnectedResourceTotals(int id, bool simulate, double& amount, double& maxAmount, bool pulling) override;
+    void GetConnectedResourceTotals(int id, bool simulate, double& amount, double& maxAmount, bool pulling = true) override;  // :916
     void GetConnectedResourceTotals(int id, bool simulate, double& amount, double& maxAmount, double threshold, bool pulling) override;
 
     // Hooks for the editor / UI side of LoadShip (unset = the answer for "no such system")
@@ -249,6 +249,11 @@ public:
 private:
     // ShipConstruct.cs:376 the `dictionary` of persistentIds LoadShip re-issued (old id -> new id); filled by the file-side LoadShip
     std::map<uint32_t, uint32_t> changedPersistentIds_;
+    // LoadShipWithParts: the CheckPartpersistentId of each PART is made by InstantiateParts with the real Part (the argument of the
+    // `persistentID` parameter of LoadShip is kept for it)
+    bool deferPartIdCheck_ = false;
+    bool partIdCheckDone_ = false;  // the file-side LoadShip already ran CheckPartpersistentId (with stand-in keys)
+    uint32_t loadPersistentID_ = 0;
     friend class ShipConstruction;
 };
 
