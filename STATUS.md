@@ -326,6 +326,8 @@ Mod_OnQuadBuilt(PQ)` for quad state. Custom/modded stacks: fill `PQS::childMods`
 
 | hash | content |
 |---|---|
+| `9ed17fb` | WP-11 code, generated stack data, extracted terrain data (data/terrain), extraction/generator tools, capture gate, unit tests, README/STATUS |
+| (this commit) | STATUS: commit hash, PROGRESS-wp11.md final notes |
 
 ## WP-09: celestial bodies, atmospheres, PhysicsGlobals (branch `wp09`, merged in `29b71f6`)
 

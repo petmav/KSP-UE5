@@ -65,3 +65,5 @@ tests/test_terrain.cpp; STATUS.md WP-11 section; commit on wp11.
   game, Kerbin 99999 group permuted vs game but commutes (6x41x41 pts both orders bit-equal), KSC pad 64.78470540174749,
   MapSO, LibNoise (tools/wp11/libnoise_reference.py), FromToRotation 49 rows, antipode decal quirk).
 - NEXT: full ctest RelWithDebInfo + Debug; README + STATUS WP-11; commit.
+- COMMITTED 9ed17fb on wp11 (45 files; maps marked `binary` in .gitattributes). Full suite 16/16 pass RelWithDebInfo
+  (18.6 s) and Debug (45.6 s). Docs commit follows. DONE except final report.
