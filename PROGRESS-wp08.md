@@ -41,3 +41,4 @@
 - [next] full suite; STATUS.md WP-08 section; README rows; commit; report
 - [done] full suite 17/17 RelWithDebInfo + Debug; unit 107 cases / 19,561 assertions; STATUS WP-08 section + README rows
 - [next] final commit + report
+- [done] commits 04d00cd, 3028ccb (+ docs hash commit); report sent
