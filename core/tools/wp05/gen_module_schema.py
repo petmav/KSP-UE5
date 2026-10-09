@@ -192,7 +192,7 @@ def scan(root):
                         ns = ".".join(n for n, _ in ns_stack)
                         full = ".".join([x for x in [ns] + outer + [name] if x])
                         cls = {"name": name, "full": full, "base": base, "kind": kind,
-                               "abstract": " abstract " in " " + s + " ", "file": rel, "line": ln, "members": []}
+                               "abstract": " abstract " in " " + s + " ", "file": rel, "line": ln, "members": [], "methods": []}
                         if kind in ("class", "enum"):
                             classes.append(cls)
                         stack.append([cls, depth + 1, False])
@@ -209,6 +209,10 @@ def scan(root):
                             else:
                                 pending_decl = [s, ln]
                                 continue
+                        pending_attrs = []
+                    elif body_owner is not None and pending_attrs and re.match(r"^[A-Za-z_]", s) and "(" in s:
+                        # WP-06: attributed methods ([KSPEvent] / [KSPAction]) for tools/wp06/gen_module_members.py
+                        body_owner["methods"].append((s, list(pending_attrs), ln))
                         pending_attrs = []
                     else:
                         pending_attrs = []
@@ -254,20 +258,20 @@ def main(core):
     for c in classes:
         by_name.setdefault(c["name"], []).append(c)
 
-    def derives_from_partmodule(c, seen=None):
+    def derives_from(c, rootName, seen=None):
         seen = seen or set()
-        if c["name"] == "PartModule" and c["full"] == "PartModule":
+        if c["name"] == rootName and c["full"] == rootName:
             return True
         b = c["base"]
         if not b or b in seen:
             return False
         seen.add(b)
         for bc in by_name.get(b, []):
-            if derives_from_partmodule(bc, seen):
+            if derives_from(bc, rootName, seen):
                 return True
         return False
 
-    mods = [c for c in classes if derives_from_partmodule(c)]
+    mods = [c for c in classes if derives_from(c, "PartModule")]
     raw_cache = {}
 
     def raw_line(rel, ln):
@@ -363,34 +367,51 @@ def main(core):
             enum_out.append("KSP_MODULE_ENUM_END(%s)" % eid)
         return "&" + eid
 
-    for c in mods:
-        cid = re.sub(r"\W", "_", c["full"])
-        if cid in ids:
-            cid += "_%d" % c["line"]
-        ids[cid] = 1
-        out.append('KSP_MODULE_CLASS(%s, "%s", "%s", "%s", %s, "%s", %d)' % (
-            cid, c["name"], c["full"], c["base"] or "", "true" if c["abstract"] else "false", c["file"], c["line"]))
-        for (access, modsx, typ, name, init, is_prop), attrs, ln in c["members"]:
-            if "static" in modsx or "const" in modsx:
-                continue
-            if not any(is_ksp_field_attr(a) for a in attrs):
-                continue
-            if init:
-                rl = raw_line(c["file"], ln)
-                mm = re.search(r"\b%s\s*=\s*(.*?);\s*(//.*)?$" % re.escape(name), rl)
-                if mm:
-                    init = mm.group(1).strip()
-            out.append('KSP_MODULE_FIELD(%s, "%s", "%s", "%s", %s, %s, %s, "%s", %d, %s)' % (
-                cid, name, esc(typ), cs_type_name(typ), "true" if persistant(attrs) else "false",
-                "true" if is_prop else "false", "true" if access == "private" else "false", esc(init), ln,
-                enum_id_for(typ, c)))
-            nf += 1
-        out.append("KSP_MODULE_CLASS_END(%s)" % cid)
+    def emit_classes(mods, out, cls_macro="KSP_MODULE_CLASS", fld_macro="KSP_MODULE_FIELD", end_macro="KSP_MODULE_CLASS_END"):
+        nonlocal nf
+        for c in mods:
+            cid = re.sub(r"\W", "_", c["full"])
+            if cid in ids:
+                cid += "_%d" % c["line"]
+            ids[cid] = 1
+            out.append(cls_macro + '(%s, "%s", "%s", "%s", %s, "%s", %d)' % (
+                cid, c["name"], c["full"], c["base"] or "", "true" if c["abstract"] else "false", c["file"], c["line"]))
+            for (access, modsx, typ, name, init, is_prop), attrs, ln in c["members"]:
+                if "static" in modsx or "const" in modsx:
+                    continue
+                if not any(is_ksp_field_attr(a) for a in attrs):
+                    continue
+                if init:
+                    rl = raw_line(c["file"], ln)
+                    mm = re.search(r"\b%s\s*=\s*(.*?);\s*(//.*)?$" % re.escape(name), rl)
+                    if mm:
+                        init = mm.group(1).strip()
+                out.append(fld_macro + '(%s, "%s", "%s", "%s", %s, %s, %s, "%s", %d, %s)' % (
+                    cid, name, esc(typ), cs_type_name(typ), "true" if persistant(attrs) else "false",
+                    "true" if is_prop else "false", "true" if access == "private" else "false", esc(init), ln,
+                    enum_id_for(typ, c)))
+                nf += 1
+            out.append(end_macro + "(%s)" % cid)
+    emit_classes(mods, out)
     out = out[:6] + enum_out + out[6:]
     inc = os.path.join(core, "include", "ksp", "parts")
     with open(os.path.join(inc, "module_schema.inc"), "w", newline="\n", encoding="utf-8") as f:
         f.write("\n".join(out) + "\n")
     print("module classes:", len(mods), "KSPField members:", nf)
+
+    # WP-06: the same schema for the ScenarioModule and VesselModule class trees (host_schema.inc). Enum tables already
+    # emitted for module_schema.inc are referenced, not redefined (both files are included in one translation unit).
+    hosts = [c for c in classes if derives_from(c, "ScenarioModule") or derives_from(c, "VesselModule")]
+    hout = ["// Generated by tools/wp05/gen_module_schema.py from decompiled/KSP-Decompiled/Assembly-CSharp. Do not edit.",
+            "// ScenarioModule and VesselModule class trees (WP-06). Same macros as module_schema.inc but KSP_HOST_*;",
+            "// host root classes (ScenarioModule, VesselModule) are included (the roots have no [KSPField])."]
+    enum_out.clear()
+    nf = 0
+    emit_classes(hosts, hout, "KSP_HOST_CLASS", "KSP_HOST_FIELD", "KSP_HOST_CLASS_END")
+    hout = hout[:3] + enum_out + hout[3:]
+    with open(os.path.join(inc, "host_schema.inc"), "w", newline="\n", encoding="utf-8") as f:
+        f.write("\n".join(hout) + "\n")
+    print("host classes:", len(hosts), "KSPField members:", nf)
 
 
 if __name__ == "__main__":

@@ -7,6 +7,9 @@
 #include "ksp/dotnet/random.hpp"
 #include "ksp/dotnet/text.hpp"
 #include "ksp/events/game_events.hpp"
+#include "ksp/modules/base_event.hpp"
+#include "ksp/modules/base_field.hpp"
+#include "ksp/resources/part_resource_library.hpp"
 #include "ksp/save/save_environment.hpp"
 #include "ksp/util/ksp_util.hpp"
 #include "save_util.hpp"
@@ -44,6 +47,29 @@ std::string ScenesText(const std::vector<GameScenes>& scenes) {
 }  // namespace
 
 // ================================================= ScenarioModule ==================================================
+
+ScenarioModule::ScenarioModule(std::string className) : className_(std::move(className)) {
+    classID_ = MonoStringHash(className_);
+}
+ScenarioModule::~ScenarioModule() = default;
+
+// ScenarioModule.cs:41 Awake + :35 ModularSetup (className/classID are set by the constructor here)
+void ScenarioModule::Awake() {
+    targetScenes.clear();
+    if (const ModuleClassInfo* cls = GetScenarioModuleClass(className_)) {
+        events_ = std::make_unique<BaseEventList>(*cls);
+        store_ = std::make_unique<FieldStore>(*cls);
+        fields_ = std::make_unique<BaseFieldList>(*store_);
+    }
+    OnAwake();
+}
+
+void ScenarioModule::SaveFields(ConfigNode& node) {
+    if (fields_) fields_->Save(node);
+}
+void ScenarioModule::LoadFields(ConfigNode& node) {
+    if (fields_) fields_->Load(node);
+}
 
 // ScenarioModule.cs:55
 void ScenarioModule::Save(ConfigNode& node) {

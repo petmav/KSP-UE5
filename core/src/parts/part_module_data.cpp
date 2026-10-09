@@ -7,6 +7,7 @@
 #include "ksp/dotnet/number.hpp"
 #include "ksp/dotnet/text.hpp"
 #include "ksp/dotnet/utf16.hpp"
+#include "ksp/modules/part_module.hpp"
 #include "ksp/parts/cs_parse.hpp"
 #include "ksp/resources/part_resource_library.hpp"
 
@@ -20,6 +21,13 @@ namespace ksp {
 #define KSP_MODULE_FIELD(id, field, cstype, tname, pers, prop, priv, init, line, enumId)
 #define KSP_MODULE_CLASS_END(id)
 #include "ksp/parts/module_schema.inc"
+#define KSP_HOST_CLASS(id, name, full, base, isAbstract, file, line)
+#define KSP_HOST_FIELD(id, field, cstype, tname, pers, prop, priv, init, line, enumId)
+#define KSP_HOST_CLASS_END(id)
+#include "ksp/parts/host_schema.inc"
+#undef KSP_HOST_CLASS
+#undef KSP_HOST_FIELD
+#undef KSP_HOST_CLASS_END
 #undef KSP_MODULE_ENUM_BEGIN
 #undef KSP_MODULE_ENUM_MEMBER
 #undef KSP_MODULE_ENUM_END
@@ -28,6 +36,70 @@ namespace ksp {
 #undef KSP_MODULE_CLASS_END
 
 namespace {
+
+// Every enum table of the schemas, by Type.Name and full name (FindModuleEnum).
+const std::map<std::string, const EnumTable*, std::less<>>& EnumIndex() {
+    static const std::map<std::string, const EnumTable*, std::less<>> idx = [] {
+        std::map<std::string, const EnumTable*, std::less<>> m;
+#define KSP_MODULE_ENUM_BEGIN(eid, name, full, isFlags, file, line) \
+    m.emplace(name, &eid);                                          \
+    m.emplace(full, &eid);
+#define KSP_MODULE_ENUM_MEMBER(eid, name, value)
+#define KSP_MODULE_ENUM_END(eid)
+#define KSP_MODULE_CLASS(id, name, full, base, isAbstract, file, line)
+#define KSP_MODULE_FIELD(id, field, cstype, tname, pers, prop, priv, init, line, enumId)
+#define KSP_MODULE_CLASS_END(id)
+#include "ksp/parts/module_schema.inc"
+#define KSP_HOST_CLASS(id, name, full, base, isAbstract, file, line)
+#define KSP_HOST_FIELD(id, field, cstype, tname, pers, prop, priv, init, line, enumId)
+#define KSP_HOST_CLASS_END(id)
+#include "ksp/parts/host_schema.inc"
+#undef KSP_HOST_CLASS
+#undef KSP_HOST_FIELD
+#undef KSP_HOST_CLASS_END
+#undef KSP_MODULE_ENUM_BEGIN
+#undef KSP_MODULE_ENUM_MEMBER
+#undef KSP_MODULE_ENUM_END
+#undef KSP_MODULE_CLASS
+#undef KSP_MODULE_FIELD
+#undef KSP_MODULE_CLASS_END
+        return m;
+    }();
+    return idx;
+}
+
+void LinkClasses(std::vector<ModuleClassInfo>& v) {
+    // link bases by Type.Name (the last class of a name, like AssemblyLoader's dictionary)
+    std::map<std::string, const ModuleClassInfo*, std::less<>> byName;
+    for (const ModuleClassInfo& c : v) byName[c.name] = &c;
+    for (ModuleClassInfo& c : v) {
+        auto it = byName.find(c.baseName);
+        c.base = (it != byName.end() && it->second != &c) ? it->second : nullptr;
+    }
+}
+
+std::vector<ModuleClassInfo> BuildHostClasses() {
+    std::vector<ModuleClassInfo> v;
+#define KSP_MODULE_ENUM_BEGIN(eid, name, full, isFlags, file, line)
+#define KSP_MODULE_ENUM_MEMBER(eid, name, value)
+#define KSP_MODULE_ENUM_END(eid)
+#define KSP_HOST_CLASS(id, name, full, base, isAbstract, file, line) \
+    v.push_back(ModuleClassInfo{name, full, base, isAbstract, file, line, {}, nullptr});
+#define KSP_HOST_FIELD(id, field, cstype, tname, pers, prop, priv, init, line, enumId) \
+    v.back().ownFields.push_back(ModuleFieldInfo{field, cstype, tname, pers, prop, priv, init, line, enumId});
+#define KSP_HOST_CLASS_END(id)
+#include "ksp/parts/host_schema.inc"
+#undef KSP_HOST_CLASS
+#undef KSP_HOST_FIELD
+#undef KSP_HOST_CLASS_END
+#undef KSP_MODULE_ENUM_BEGIN
+#undef KSP_MODULE_ENUM_MEMBER
+#undef KSP_MODULE_ENUM_END
+    LinkClasses(v);
+    for (ModuleClassInfo& c : v)
+        for (ModuleFieldInfo& f : c.ownFields) f.owner = &c;
+    return v;
+}
 
 std::vector<ModuleClassInfo> BuildClasses() {
     std::vector<ModuleClassInfo> v;
@@ -46,13 +118,9 @@ std::vector<ModuleClassInfo> BuildClasses() {
 #undef KSP_MODULE_CLASS
 #undef KSP_MODULE_FIELD
 #undef KSP_MODULE_CLASS_END
-    // link bases by Type.Name (the last class of a name, like AssemblyLoader's dictionary)
-    std::map<std::string, const ModuleClassInfo*, std::less<>> byName;
-    for (const ModuleClassInfo& c : v) byName[c.name] = &c;
-    for (ModuleClassInfo& c : v) {
-        auto it = byName.find(c.baseName);
-        c.base = (it != byName.end() && it->second != &c) ? it->second : nullptr;
-    }
+    LinkClasses(v);
+    for (ModuleClassInfo& c : v)
+        for (ModuleFieldInfo& f : c.ownFields) f.owner = &c;
     return v;
 }
 
@@ -73,6 +141,29 @@ std::vector<std::string> SplitVector(std::string_view s) { return dotnet::Split(
 const std::vector<ModuleClassInfo>& ModuleClasses() {
     static const std::vector<ModuleClassInfo> classes = BuildClasses();
     return classes;
+}
+
+const std::vector<ModuleClassInfo>& HostClasses() {
+    static const std::vector<ModuleClassInfo> classes = BuildHostClasses();
+    return classes;
+}
+
+namespace {
+const ModuleClassInfo* GetHostClassDerivedFrom(std::string_view name, std::string_view root) {
+    const ModuleClassInfo* r = nullptr;  // the last class of a name
+    for (const ModuleClassInfo& c : HostClasses())
+        if (name == c.name) r = &c;
+    return r && r->Is(root) ? r : nullptr;
+}
+}  // namespace
+
+const ModuleClassInfo* GetScenarioModuleClass(std::string_view name) { return GetHostClassDerivedFrom(name, "ScenarioModule"); }
+const ModuleClassInfo* GetVesselModuleClass(std::string_view name) { return GetHostClassDerivedFrom(name, "VesselModule"); }
+
+const EnumTable* FindModuleEnum(std::string_view name) {
+    const auto& idx = EnumIndex();
+    auto it = idx.find(name);
+    return it == idx.end() ? nullptr : it->second;
 }
 
 const ModuleClassInfo* GetPartModuleClass(std::string_view name) {
@@ -288,53 +379,26 @@ std::string DefaultString(const ModuleClassInfo& cls, std::string_view field) {
 
 }  // namespace
 
-// PartModule.cs:787 Load (data steps) + BaseFieldList.cs Load + the propellant parts of ModuleEngines/ModuleRCS OnLoad
-void LoadModuleData(PartModuleData& m, ConfigNode& node) {
+// PartModule.cs:787 Load + BaseFieldList.cs Load (WP-06 host) + the propellant parts of ModuleEngines/ModuleRCS OnLoad
+void LoadModuleData(PartModuleData& m, ConfigNode& node, PartPrefab* part) {
     struct CopyOnExit {
         PartModuleData& m;
         ConfigNode& n;
         ~CopyOnExit() { m.config = n.CreateCopy(); }
     } copyOnExit{m, node};
-    if (node.HasValue("isEnabled"))
-        m.isEnabled = cs::BoolParse(*node.GetValue("isEnabled"));
-    else
-        m.isEnabled = true;
-    if (!m.moduleClass) return;
-    // BaseFieldList.Load: values first (non-interface fields), then nodes (interface fields)
-    for (const auto& v : node.values()) {
-        const ModuleFieldInfo* f = m.moduleClass->FindField(v.name);
-        if (!f || IsConfigNodeFieldType(*f)) continue;
-        ModuleFieldValue fv;
-        fv.field = f;
-        fv.raw = v.value;
-        fv.parsed = ReadModuleFieldValue(*f, v.value, fv.value);
-        if (!fv.parsed && f->enumTable == nullptr)
-            log::Error(std::string("Invalid ") + f->typeName + " value! Field " + f->name + ", value " + v.value);
-        m.cfgFields.push_back(std::move(fv));
+    if (!m.moduleClass) {
+        m.isEnabled = node.HasValue("isEnabled") ? cs::BoolParse(*node.GetValue("isEnabled")) : true;
+        return;
     }
-    for (const ConfigNode::NodePtr& child : [&] {
-             std::vector<ConfigNode::NodePtr> c;
-             for (int i = 0; i < node.nodes().Count(); i++) c.push_back(node.nodes().Shared(i));
-             return c;
-         }()) {
-        const ModuleFieldInfo* f = m.moduleClass->FindField(child->name);
-        if (!f || !IsConfigNodeFieldType(*f)) continue;
-        ModuleFieldValue fv;
-        fv.field = f;
-        fv.fromNode = true;
-        fv.node = child;
-        if (std::string_view(f->typeName) == "FloatCurve") {
-            FloatCurve c;
-            c.Load(*child);
-            fv.value = std::move(c);
-        } else {
-            DoubleCurve c;
-            c.Load(*child);
-            fv.value = std::move(c);
-        }
-        fv.parsed = true;
-        m.cfgFields.push_back(std::move(fv));
+    if (!m.module) {  // prefab-overlay modules come with the Unity prefab: AddComponent + Awake
+        m.module = ModuleFactory::Create(*m.moduleClass);
+        m.module->Awake();
     }
+    if (part) m.module->part = part;
+    m.cfgFields.clear();
+    m.module->Load(node);
+    m.isEnabled = m.module->isEnabled;
+    m.cfgFields = m.module->LastLoadTrace();
     // Propellants (ModuleEngines.OnLoad; ModuleRCS.OnLoad synthesises one PROPELLANT from resourceName /
     // resourceFlowMode when the module has none)
     if (m.moduleClass->Is("ModuleEngines")) {

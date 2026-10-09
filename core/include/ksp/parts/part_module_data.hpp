@@ -12,6 +12,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -27,6 +28,9 @@
 
 namespace ksp {
 
+class PartModule;
+struct ModuleClassInfo;
+
 // One [KSPField] / [KSPAxisField] member (BaseFieldList.ReflectedData entry).
 struct ModuleFieldInfo {
     const char* name;
@@ -38,6 +42,7 @@ struct ModuleFieldInfo {
     const char* initializer;  // C# initializer expression text ("" when none)
     int line;
     const EnumTable* enumTable;  // enum-typed fields
+    const ModuleClassInfo* owner = nullptr;  // the class declaring the member (set when the class table is built)
 };
 
 struct ModuleClassInfo {
@@ -59,6 +64,14 @@ struct ModuleClassInfo {
 
 // Every PartModule class of Assembly-CSharp (PartModule itself first), file order.
 const std::vector<ModuleClassInfo>& ModuleClasses();
+// WP-06: the ScenarioModule and VesselModule class trees (host_schema.inc), same record as the PartModule classes.
+const std::vector<ModuleClassInfo>& HostClasses();
+// AssemblyLoader.GetClassByName(typeof(ScenarioModule) / typeof(VesselModule), name)
+const ModuleClassInfo* GetScenarioModuleClass(std::string_view name);
+const ModuleClassInfo* GetVesselModuleClass(std::string_view name);
+// Member table of an enum the module schemas reference, by Type.Name or namespace-qualified name ("KSPActionGroup",
+// "ModuleDeployablePart.DeployState"); nullptr when unknown.
+const EnumTable* FindModuleEnum(std::string_view name);
 // AssemblyLoader.GetClassByName(typeof(PartModule), name): Type.Name match among PartModule and its subclasses
 // (the typesDictionary keeps the last type of a name; kspcore takes the last in file order).
 const ModuleClassInfo* GetPartModuleClass(std::string_view name);
@@ -106,6 +119,7 @@ struct PartModuleData {
     bool addedInCode = false;                   // e.g. ModuleTripLogger (Part.AddModule(string), no Load)
     std::vector<ModuleFieldValue> cfgFields;    // values BaseFieldList.Load assigns, node order (values, then nodes)
     std::vector<Propellant> propellants;        // ModuleEngines / ModuleRCS (and subclasses)
+    std::shared_ptr<PartModule> module;         // WP-06: the module object (Awake'd; Load'ed for MODULE-node modules)
     const ModuleFieldValue* FindCfgField(std::string_view name) const;  // last assignment wins (as in C#)
 };
 
@@ -114,8 +128,12 @@ bool ReadModuleFieldValue(const ModuleFieldInfo& info, std::string_view value, M
 // True for the IConfigNode field types BaseFieldList.Load fills from child nodes.
 bool IsConfigNodeFieldType(const ModuleFieldInfo& info);
 
-// Load a MODULE node into a PartModuleData (PartModule.Load data steps: isEnabled, Fields.Load, propellants). Like the
-// game, ModuleRCS without PROPELLANT nodes adds one to `node` itself; `module.config` is a copy taken afterwards.
-void LoadModuleData(PartModuleData& module, ConfigNode& node);
+struct PartPrefab;
+
+// Load a MODULE node into a PartModuleData: PartModule.Load on the module object (WP-06 host: creates and Awakes it when the
+// record has none), then the record's view of it (isEnabled, cfgFields = the Fields.Load assignments) and the
+// ModuleEngines / ModuleRCS propellants. Like the game, ModuleRCS without PROPELLANT nodes adds one to `node` itself;
+// `module.config` is a copy taken afterwards. `part` is the Part the module belongs to (PartModule.part).
+void LoadModuleData(PartModuleData& module, ConfigNode& node, PartPrefab* part = nullptr);
 
 }  // namespace ksp

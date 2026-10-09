@@ -45,9 +45,9 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `golden.patched_conics` | WP-08 harness golden `patched_conics` (PatchedConics.CalculatePatch chains, 5 cases) | 11 | 0 ULP |
 | `capture.orbit_rails` | WP-08 in-game `captures/out2/orbit_rails_ingame.json` (C8): initial 6, samples 3,465, frames 450, segments 5, soi_events 4 (probes); world_rel/packed/loaded/inputs excluded (see WP-08) | 3,930 | 0 ULP |
 | `capture.terrain_height` | in-game `captures/out2/terrain_height.json` (WP-11): samples 140,522 x (h_surface, h_override, terrain_alt), bodies 2 (radii), scene_probe 4 | 140,528 | 0 ULP, no exclusions |
-| `capture.part_database` | WP-05: in-game `captures/out2/part_database.json` (C9), scope in "WP-05" below: parts 357, part_cfg_values 6,235, modules 1,312, module_fields 5,401, module_propellants 77, resources 166, attach_nodes 822, drag_cubes 531, variants 228, assets 743 | 15,872 | 0 ULP, all strings identical |
+| `capture.part_database` | WP-05 + WP-06: in-game `captures/out2/part_database.json` (C9), scope in "WP-05" and "WP-06" below: parts 357 (module_mass / module_cost included), part_cfg_values 6,235, modules 1,312, module_fields 32,894, module_propellants 77, resources 166, attach_nodes 822, drag_cubes 531, variants 228, assets 743 | 43,365 | 0 ULP, all strings identical |
 | `capture.gamedatabase_load_order` | WP-05: every `Load(Audio/Texture/Model): url` and `Config(TYPE) url` line of the capture run's KSP.log, in order | 2,836 lines | identical |
-| `unit` | 125 doctest cases, 39,849 assertions (WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
+| `unit` | 156 doctest cases, 40,277 assertions (WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
 differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 6 ULP (Vector3.Project/ProjectOnPlane) and
@@ -361,10 +361,10 @@ compound_part_fields,part_enums}.inc`; `tools/wp05/gen_module_schema.py` writes 
 
 | table | C9 rows | gated | result | not gated, and why |
 |---|---|---|---|---|
-| parts | 362 | 357 x 54 cols | 0 ULP, strings identical | 5 prefab parts (kerbalEVA, kerbalEVAfemale, flag, kerbalEVASlimSuit(+Female)): base values are Unity-serialized prefab data, not GameData. The 4 DLC-suit error rows ARE gated (name + "NullReferenceException: ..."). Columns partSize (renderer bounds of the model), module_mass / module_cost (IPartMassModifier / IPartCostModifier modules: 7 parts non-zero, WP-06) |
+| parts | 362 | 357 x 54 cols | 0 ULP, strings identical | 5 prefab parts (kerbalEVA, kerbalEVAfemale, flag, kerbalEVASlimSuit(+Female)): base values are Unity-serialized prefab data, not GameData. The 4 DLC-suit error rows ARE gated (name + "NullReferenceException: ..."). Column partSize (renderer bounds of the model). module_mass / module_cost: gated since WP-06 |
 | part_cfg_values | 6,235 | 6,235 | identical (incl. 219 float-parsed doubles) | - |
 | modules | 1,378 | 1,312 | identical (moduleName, class, field_count, isEnabled) | 66 rows of the 5 prefab parts |
-| module_fields | 34,801 | 5,401 | identical (value text, value_num, Type.Name, isPersistant) | rows the part cfg does not set (KSPField defaults and module OnAwake/OnLoad results, WP-06; `tools/wp05/estimate_module_defaults.py`: 27,391 of those rows equal the field's literal C# initializer); 1 row listed in `tests/data/part_database_exclusions.json` (sepMotor1 stackableQuantity: ModuleCargoPart.OnLoad clamps it to 1 because the part has resources) |
+| module_fields | 34,801 | 32,894 (WP-06; WP-05 gated 5,401) | identical (value text, value_num, Type.Name, isPersistant) | 1,889 rows of the 5 prefab parts, 18 solar panel pivot rotations (WP-06 section) |
 | module_propellants | 77 | 77 | identical | - |
 | resources | 166 | 166 | identical | - |
 | attach_nodes | 827 | 822 | identical | 5 prefab parts |
@@ -373,8 +373,8 @@ compound_part_fields,part_enums}.inc`; `tools/wp05/gen_module_schema.py` writes 
 | assets | 3,978 | 743 (cfg 353, model 359, texture_replacement 15, internal 16) | identical; `idx` renumbered per part | 3,230 renderer texture-slot rows (2,497 GameData + 733 Unity assets: need the .mu contents / Unity assets), 5 prefab-part cfg rows |
 
 Scope mechanics (all in `tests/CMakeLists.txt`, filters in `tools/filter_golden.py`): DROP_ROWS (prefab parts,
-texture rows), KEEP_ROWS_FILE (`<candidate>/part_database/scope.json`, written by the runner from the inputs: the
-module fields each MODULE node sets), DROP_KEYS_FILE (individual rows with reasons), RENUMBER (assets.idx),
+texture rows), KEEP_ROWS_FILE (WP-05 only: `<candidate>/part_database/scope.json`, the module fields each MODULE node sets;
+removed by WP-06), DROP_KEYS_FILE (individual rows with reasons), RENUMBER (assets.idx),
 DROP_COLUMNS. Investigation record: the first gate run differed in 3 places, all explained and resolved without
 relaxation: srfAttachNode on parts without node_attach (Unity's serializer instantiates [Serializable] class fields of
 a new component: now modelled), fuelCrossFeed on 8 parts (ModuleToggleCrossfeed.OnLoad writes part.fuelCrossFeed:
@@ -488,7 +488,7 @@ Observation (unchanged by the merge): compare.py does not fail on extra candidat
 report lists 641 candidate rows absent from the filtered golden (parts 5, modules 66, module_fields 565, assets 5:
 all but one are rows of the 5 prefab parts the gate drops from the golden; the other is the excluded
 sepMotor1 `stackableQuantity` row, which the runner writes as the cfg value 2 while the game holds 1); every golden row
-matched.
+matched. (Historical: with WP-06 the runner writes every module field and the sepMotor1 row matches; see the WP-06 section.)
 ## WP-04: save model and upgrade pipeline (branch `wp04`, data side)
 
 Spec: `Game.cs`, `GameParameters.cs` (+ `CommNet/CommNetParams.cs`, `Expansions/Missions/MissionParams{General,Extras,Facilities}.cs`),
@@ -1278,3 +1278,131 @@ still returns the FMA3 results (the capture's truth). Not tested: macOS; non-x86
 `std::fma` is software-emulated where there is no FMA instruction, which is slow but exact). Large files in the repo:
 `harness/captures/out/libm_mono.json` and `libm_dotnet.json` (45 MB each) and `data/terrain/maps/*.bin` (55 MB total); no LFS is
 enabled (CLOUD-TASKS.md "LFS").
+
+## WP-06: module host (PartModule / VesselModule / ScenarioModule, KSPField / KSPEvent / KSPAction registry) (branch `wp06`)
+
+State: done. `capture.part_database` now gates **every KSPField of every module instance** (32,894 `module_fields` rows, was 5,401)
+and the `parts.module_mass` / `parts.module_cost` columns (357 rows), all at max ULP 0 / identical strings. Every other gate is
+unchanged and green. Every ported function cites `File.cs:line` of `decompiled/KSP-Decompiled/Assembly-CSharp/`.
+
+### What is ported
+
+| area | C++ | verification |
+|---|---|---|
+| KSPField reflection (BaseFieldList.ReflectedData, FieldAttribute/KSPField/KSPAxisField, UI_Control tree) | schema `parts/module_schema.inc` (PartModule classes, WP-05) and `parts/host_schema.inc` (ScenarioModule / VesselModule classes); attribute data `modules/module_members.inc` (generated by `tools/wp06/gen_module_members.py`): per field the `[KSPField(...)]` argument text, the `[UI_*(...)]` attributes, per class the `[KSPEvent]` / `[KSPAction]` methods; 18 UI_* class definitions | gate (names, types, isPersistant, values), unit |
+| C# constant evaluator | `modules/cs_expr.{hpp,cpp}`: field initialisers (`1f / 17f`, `new Vector2(..)`, `Vector3.up`, `double.NaN`, `string.Empty`, `Localizer.Format("#autoLOC_..")`, enum members, `new FloatCurve()`) and attribute argument lists (named + positional); float arithmetic follows the Mono rule | gate (27,254 initialiser rows), unit |
+| FieldStore / BaseField / BaseAxisField / BaseFieldList (BaseField.cs, BaseFieldList.cs, BaseAxisField.cs, BasePAWGroup.cs) | `modules/base_field.{hpp,cpp}`: per-instance typed storage indexed like the BaseFieldList; `Read` = ReadPvt (WP-05's `ReadModuleFieldValue`), SetValue type check, `GetStringValue` (G9 / G17 / vector forms / gui forms), `Load` (values then IConfigNode nodes, `_UIFlight` / `_UIEditor` nodes, SetOriginalValue), `Save`, UI control setup (Flight / Editor slot rules, UI_Label default) | gate, unit |
+| BaseEvent / BaseEventList / BaseEventDetails / BaseAction / BaseActionList (KSPEvent.cs, KSPAction.cs) | `modules/base_event.{hpp,cpp}`: attribute instances with the C# constructor defaults, `Localizer.Format` of guiName, name hash ids (Mono `GetHashCode`), `Send` / `SendDefault` (disabled module rule), `OnLoad` / `OnSave` including the C# quirk that BaseEvent.OnSave writes `category` from `guiIcon`, `ContainsNonDefaultActions`, override groups; handlers are bound by the owning module (`Events().Bind`, `Actions().Bind`) like the delegates | unit |
+| PartModule (PartModule.cs) | `modules/part_module.{hpp,cpp}`: constructor chain = FieldStore (initialisers), `Awake` (ModularSetup, OnAwake), `Load` (isEnabled, persistentId, UPGRADES, Fields.Load, EVENTS, ACTIONS, AXISGROUPS, OnLoad, UpdateStagingToggle), `Save`, `Copy`, staging toggle, the virtual hooks (OnStart ... GetInfo) | gate, unit |
+| PartModuleList, ScalarModuleSetHandler, IScalarModule / IModuleInfo / IPartMassModifier / IPartCostModifier | `modules/part_module.{hpp,cpp}` (`PartGetModuleMass` / `PartGetModuleCosts` = Part.GetModuleMass / GetModuleCosts with the Mono float rule) | gate (module_mass / module_cost), unit |
+| ModuleFactory (AssemblyLoader.GetClassByName + AddComponent) | `ModuleFactory::Register(className, creator)`; unregistered classes are the generic PartModule; `module_behaviours.cpp` registers the stock behaviours below | gate, unit |
+| PartLoader integration (Part.AddModule, PartLoader.ParsePart) | `PartLoader::AddModule`: AddComponent (constructor chain) -> `Awake()` -> `Load(node)`; `PartModuleData::module` holds the object, `cfgFields` is the Fields.Load trace (unchanged contents, WP-05's tests untouched) | gate |
+| VesselModule, VesselModuleManager (VesselModule.cs, VesselModuleManager.cs) | `modules/vessel_module.{hpp,cpp}`: lifecycle, Load/Save through the BaseFieldList, Activation flags and `ShouldBeActive`, wrapper list built from the 5 VesselModule classes of the schema (AxisGroupsModule, CometVessel, FlightIntegrator, SuspensionLoadBalancer, CommNetVessel) (order from a temporary instance: FlightIntegrator 0, default 999), `AddModulesToVessel` | unit |
+| ScenarioModule host fields, ScenarioRunner, ProtoScenarioModule.Load (ScenarioModule.cs, ScenarioRunner.cs, ProtoScenarioModule.cs) | `save/game.hpp` ScenarioModule gained `Awake` / `Fields()` / `Events()` / `Store()` (default `SaveFields`/`LoadFields` = BaseFieldList); `modules/scenario_runner.{hpp,cpp}`: ScenarioRunner (Instance, scene events, `AddModule`, proto-module loading in scene order with MissionSystem first, `GetUpdatedProtoModules` wired into `Game.Updated()` through `SaveEnvironment::getUpdatedProtoModules`), ScenarioModuleFactory | unit |
+
+Generators (regenerate, never hand-edit): `tools/wp05/gen_module_schema.py` (extended: also writes `host_schema.inc`; the
+`module_schema.inc` it writes is byte-identical to WP-05's), `tools/wp06/gen_module_members.py` (`module_members.inc`).
+
+### Gate `capture.part_database` after WP-06 (Linux release 1.7 s; bit-exact, no tolerance)
+
+| table | capture rows | gated | excluded, and why | max ULP |
+|---|---|---|---|---|
+| parts | 362 | 357 x 55 cols (+ module_mass, module_cost) | 5 prefab parts (WP-05); column partSize (model bounds), variants.materials (model) stay dropped | 0 |
+| part_cfg_values | 6,235 | 6,235 | - | 0 |
+| modules | 1,378 | 1,312 | 66 rows of the 5 prefab parts | 0 |
+| module_fields | 34,801 | **32,894** | 1,889 rows of the 5 prefab parts (their modules are Unity-serialized prefab data); 18 rows: `originalRotation` / `currentRotation` of 9 solar panels (ModuleDeployablePart.cs:542 OnAwake reads the pivot transform's localRotation from the .mu model); the exclusion file lists them by module class with the decompiled line | 0 |
+| module_propellants | 77 | 77 | - | 0 |
+| resources, attach_nodes, drag_cubes, variants, assets | 166, 827, 535, 228, 3,978 | 166, 822, 531, 228, 743 | unchanged from WP-05 | 0 |
+
+`module_fields` provenance of the 32,912 compiled-part rows (printed by the runner): **5,402** are set by the part's MODULE node,
+**256** are results of the ported OnAwake/OnLoad logic below, **27,254** equal the C# initialiser (WP-05's estimate was 27,391
+against the whole capture, before the cfg-set rows were separated). The first run with only initialisers and the loader's
+`Load` differed in 403 rows (58 module-class/field groups): the host bugs found and fixed on the way were SetValue rejecting a string
+into a null string field, `new`-hidden duplicate field names and the FloatCurve null/empty default; the rest are the ported behaviours.
+
+`module_mass` / `module_cost`: the 7 non-zero parts are fairingSize1..3 (Mathf.Epsilon clamp), PotatoComet, PotatoRoid
+(-149 = asteroidMass 1 - part mass 150), fireworksLauncherBig / Small; all other parts are 0. Un-dropped at 0 ULP.
+
+### Module behaviours ported (`src/modules/module_behaviours.cpp`)
+
+Rule: only what changes a [KSPField] (or Part prefab data) between `AddComponent` and the end of `Load` while a prefab compiles
+is ported, and only that part of OnAwake / OnLoad. Classes with the same behaviour through inheritance are registered under each name.
+
+| class (decompiled line) | effect |
+|---|---|
+| ModuleToggleCrossfeed (:116 OnAwake, :127 OnLoad, :155 UpdateCrossfeed) | `part.fuelCrossFeed = crossfeedStatus` (moved here from WP-05's PartLoader special case), toggle event/action gui names |
+| ModuleCargoPart (:96) | `stackableQuantity = 1` when the part has resources (was the single WP-05 exclusion) |
+| ModuleAnimationSetter (:40), ModuleAnimateHeat (:22) | default `animStateCurve`; `ThermalAnim` -> `animName` |
+| BaseConverter (:460, :342) for BaseDrill, ModuleAsteroidDrill, ModuleCometDrill, ModuleResourceConverter, ModuleResourceHarvester, ModuleScienceConverter | default ThermalEfficiency / TemperatureModifier curves; `status` text |
+| ModuleDeployablePart (:732) and Antenna / Radiator / SolarPanel | `subPartName` / `partType` localisation, `stateString` -> deployState, `sunTracking`, SolarPanel default curves and `type` -> panelType |
+| ModuleDataTransmitter (:107, :133) | default range/science DoubleCurves, `powerText` (KSPUtil.PrintSI), event gui name |
+| ModuleGimbal (:296) | gimbalRange{XP,YP,XN,YN} fallbacks |
+| ModuleCoreHeat (:416), ModuleResourceIntake (:75, :134), MultiModeEngine (:283), FlagDecalBackground (:57, :563), ModulePartVariants (:380, via WP-05's variant loader) | default curves, `autoSwitch`, `sizeLocked`, `displayingPortrait`, `variantIndex` |
+| ModuleColorChanger, ModuleEngines(FX), ModuleRCS(FX), ModuleWheelSteering, ModuleWheelMotor(+Steering) | `if (curve == null) curve = new FloatCurve()` in OnAwake (BaseFieldList.Load skips null IConfigNode fields, so the node can only fill a curve OnAwake created) |
+| IPartMassModifier / IPartCostModifier: ModuleComet, ModuleAsteroid, ModulePartFirework, ModuleProceduralFairing, ModuleJettison, ModuleInventoryPart, ModulePartVariants, FlagDecalBackground, PartStatsUpgradeModule | `GetModuleMass` / `GetModuleCost` (+ ChangeWhen); private state (cometMass, panelMass, ...) is a C++ member |
+
+### Module behaviours not ported (left to the owning packages)
+
+Everything else a module does: OnStart ... OnFixedUpdate, the bodies of [KSPEvent] / [KSPAction] methods (events and actions exist
+with their attribute data and are bindable, but have no handlers), GetInfo / GetModuleDisplayName, ModuleResourceHandler (WP-15),
+resource-ratio lists of converters (WP-28), propellant gauges, GameEvents subscriptions, FX / animation / transform lookups from the
+model (ModuleDeployablePart.OnAwake pivot rotations, ModuleDataTransmitter DeployFxModules, ...), AdjusterPartModuleBase lists
+(`ADJUSTERS` nodes), PartUpgradeManager (`ApplyUpgradeNode`, `FindUpgrades`, `LoadUpgradesDel`: WP-32), BaseServo mass/cost (Serenity
+robotics: no stock part in the capture has a non-zero value), ModuleInventoryPart stored-part mass/cost (prefabs have none),
+ModuleProceduralFairing area/mass of built fairings, `PartModuleUtil.PrintResourceRequirements` (needs ModuleResource, WP-15),
+`BaseAxisField.CreateAxisList` / `AddAxis` and `BaseAction.CreateActionList` (Part-level collections, WP-13/16), UI_Control
+subclass Load/Save (UI), KSPModule / PartInfo attributes (no stock class uses them), `ReflectedAttributes.isStageable`
+(`PartModule::isStageable` is set by the registrant: a class overriding OnActive).
+
+### Surprises a later implementer must know
+
+1. **FloatCurve, DoubleCurve and string KSPFields are null after AddComponent** (no Unity-serializer instantiation for the
+   runtime-added component; the capture proves it: OnAwake bodies guarded by `if (curve == null)` produce their defaults).
+   `BaseFieldList.Load` skips null IConfigNode fields, so a MODULE `curve { key = ... }` node only loads into a curve OnAwake created.
+   A module package that forgets the OnAwake creation silently drops the cfg curve (the gate catches it for stock parts).
+2. A `new`-hidden field (ModuleControlSurface.transformName shadows ModuleLiftingSurface's) appears twice in the BaseFieldList; Load
+   and the C9 table take the first (own class first, then bases: reflection order); kspcore keeps both fields and the runner
+   writes the first.
+3. Awake order: constructor chain -> Awake (ModularSetup builds Fields/Events/Actions, then OnAwake) -> Load. OnAwake therefore sees
+   initialiser values only; a module reading cfg values must do it in OnLoad.
+4. `Localizer.Format` runs in field initialisers, attribute guiName/guiUnits and module code: the Localizer must be initialised before
+   any module is created (GameData::Load does; unit tests use `InitWithBuiltInEnglish`). Without an instance Format returns "".
+5. BaseEvent.OnSave writes `category` = guiIcon; BaseAxisField.CopyField copies overrideIncremental from the source's overrideInverted;
+   PartModule's own [KSPField]s (stagingEnabled ... showUpgradesInModuleInfo) and its `ToggleStaging` event / action exist on every
+   module, so `Fields().Count()` is 10 + the class's own.
+6. Event ids are Mono `string.GetHashCode()` (`MonoStringHash`), the same hash the resource library uses.
+7. `ModulePartVariants.variantIndex` is a private [KSPField]: reflection with FlattenHierarchy returns the module's own private
+   fields, so it is in the list (private fields of base classes are not: `ModuleFieldInfo::isPrivate`, WP-05 rule).
+8. `ModuleFactory` registers the built-in behaviours lazily on first use (no static-initialiser registration: a static library would
+   drop the translation unit).
+
+### How a module package plugs in
+
+Subclass `PartModule` (or a ported base), override `OnAwake` / `OnLoad` / `OnStart` ..., read and write fields with
+`Get<T>(name)` / `Set<T>(name, v)` (T is the C# field type: float -> float, double, int -> int32_t, bool, std::string, Vector3f,
+FloatCurve, `EnumValue` via `SetEnumByName`), bind `[KSPEvent]` / `[KSPAction]` bodies in OnAwake
+(`Events().Bind("Activate", handler)`), implement `AsMassModifier()` / `AsScalarModule()` for the C# interfaces, and register with
+`ModuleFactory::Register("ModuleXyz", creator)`. VesselModules and ScenarioModules register with `VesselModuleFactory` /
+`ScenarioModuleFactory`. WP-13 (Part) should turn `PartModule::part` (a `PartPrefab*` today) into the real Part and let
+`PartModuleList` live on it; `PartModuleData::module` is the bridge.
+
+### Deviations, approximations
+
+- `PartModule::GetPersistentId` uses a counter hash instead of `Guid.NewGuid().GetHashCode()` (ids are random in the game).
+- GameEvents the C# fires inside OnLoad (`onPartCrossfeedStateChange`) are not fired while a prefab compiles (no listener exists).
+- `UI_Control` subclasses keep the attribute fields as evaluated constants (`Param("maxValue")`); only the base class
+  `Load` / `Save` (controlEnabled) are ported.
+- Reflection order of events / actions / fields is "own class first, then bases, declaration order"; Mono's `GetMethods` order is
+  unspecified, only the field order is verified by the capture (`field_count`, names; WP-05).
+- Windows: not built here (cloud VM, Clang 18 and GCC 13 only); the code uses no platform headers, but `run_tests.ps1` was not run.
+
+### Not done / open
+
+- The 5 code-built prefab parts' modules (1,889 `module_fields` rows) need the Unity-serialized prefab data.
+- Pivot `localRotation` of solar panels (18 rows) needs the .mu model reader (UE import).
+- compare.py still ignores extra candidate rows (NEXT-STEPS follow-up); the gate's `missing_rows` is 0 for every table.
+
+### Commits (branch `wp06`, from main `f50d6121`)
+
+See `git log --oneline wp06` (module host skeleton and generators; instantiation through PartLoader + gate widening; VesselModule /
+ScenarioRunner / unit tests; docs).

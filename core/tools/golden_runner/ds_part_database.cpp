@@ -4,9 +4,9 @@
 // read-only; the game root (Physics.cfg, PartDatabase.cfg) is its parent directory.
 //
 // Tables are written with the capture's columns and C9's value formatting (Fmt: float/double "R", bool True/False,
-// Vector3 "x,y,z", enums by name, FloatCurve "curve[t v in out; ...]"). Next to the candidate the runner writes
-//   part_database/scope.json         -- the module_fields rows in WP-05 scope: fields the part's MODULE node sets
-//                                       (the rest are KSPField defaults or module OnLoad results: WP-06)
+// Vector3 "x,y,z", enums by name, FloatCurve "curve[t v in out; ...]"). module_fields lists every KSPField of every
+// module instance (WP-06 module host: initialisers, MODULE-node values and the module's OnAwake/OnLoad results).
+// Next to the candidate the runner writes
 //   part_database/gamedatabase_load.log -- the GameDatabase load order ("Load(Texture): url", "Config(PART) url", ...)
 #include <filesystem>
 #include <fstream>
@@ -19,6 +19,8 @@
 #include "ksp/database/game_data.hpp"
 #include "ksp/dotnet/number.hpp"
 #include "ksp/dotnet/utf16.hpp"
+#include "ksp/modules/cs_expr.hpp"
+#include "ksp/modules/part_module.hpp"
 #include "ksp/physics/physics_globals.hpp"
 
 namespace {
@@ -163,7 +165,7 @@ int RunPartDatabase(const RunnerOptions& opt) {
     tm.key = {"part", "module_index"};
     tm.Col("part", ColType::Str).Col("module_index", ColType::I64).Col("moduleName", ColType::Str).Col("class", ColType::Str)
         .Col("field_count", ColType::I64).Col("isEnabled", ColType::Bool);
-    golden::Table tf("module_fields", "KSPField values set by the MODULE node (WP-05 scope).");
+    golden::Table tf("module_fields", "Every KSPField of every PartModule on the prefab (BaseFieldList order).");
     tf.key = {"part", "module_index", "field"};
     tf.Col("part", ColType::Str).Col("module_index", ColType::I64).Col("field", ColType::Str).Col("type", ColType::Str)
         .Col("value", ColType::Str).Col("value_num", ColType::F64).Col("isPersistant", ColType::Bool);
@@ -205,9 +207,7 @@ int RunPartDatabase(const RunnerOptions& opt) {
 
     const PartResourceLibrary& lib = data.resources;
     const std::string gameRoot = go.gameRoot;
-    std::string scope = "{\"module_fields\": [";
-    bool firstScope = true;
-    size_t nScope = 0;
+    size_t nFields = 0, nCfgSet = 0, nLogic = 0, nInit = 0;
     for (const auto& apPtr : loader.loadedParts) {
         const AvailablePart& ap = *apPtr;
         const std::string& pn = ap.name;
@@ -240,20 +240,41 @@ int RunPartDatabase(const RunnerOptions& opt) {
             PartModuleData& m = p.Modules[mi];
             tm.Add({Cell(pn), Cell(mi), Cell(m.moduleName), Cell(m.moduleClass ? m.moduleClass->name : ""),
                     Cell(m.moduleClass ? m.moduleClass->Fields().size() : 0), Cell(m.isEnabled)});
-            std::set<std::string> done;
-            for (size_t k = m.cfgFields.size(); k-- > 0;) {  // last assignment wins
-                const ModuleFieldValue& fv = m.cfgFields[k];
-                if (!fv.parsed || !done.insert(fv.field->name).second) continue;
-                std::string s;
-                Cell num;
-                FmtModuleValue(fv.value, s, num);
-                tf.Add({Cell(pn), Cell(mi), Cell(fv.field->name), Cell(fv.field->typeName), Cell(s), num,
-                        Cell(fv.field->isPersistant)});
-                if (!ap.codeBuilt) {
-                    scope += std::string(firstScope ? "" : ",") + "[" + golden::JsonEscape(pn) + "," +
-                             std::to_string(mi) + "," + golden::JsonEscape(fv.field->name) + "]";
-                    firstScope = false;
-                    nScope++;
+            // every KSPField of the module instance, in BaseFieldList order: cfg-set values and defaults alike
+            if (m.module) {
+                BaseFieldList& fields = m.module->Fields();
+                std::set<std::string> seen;  // C9 lists a field name once (a `new` field hides the base class's: first wins)
+                for (size_t k = 0; k < fields.Count(); k++) {
+                    const BaseField& bf = *fields[k];
+                    if (!seen.insert(bf.name()).second) continue;
+                    std::string vs;
+                    Cell num;
+                    FmtModuleValue(bf.GetValue(), vs, num);
+                    if (std::holds_alternative<std::monostate>(bf.GetValue())) {  // C9's Fmt of a null IConfigNode field
+                        const std::string_view ft = bf.FieldInfo().typeName;
+                        if (ft == "FloatCurve") vs = "curve[]";
+                        else if (ft == "DoubleCurve") vs = "DoubleCurve";
+                    }
+                    tf.Add({Cell(pn), Cell(mi), Cell(bf.name()), Cell(bf.FieldInfo().typeName), Cell(vs), num,
+                            Cell(bf.isPersistant)});
+                    nFields++;
+                    // provenance counts (stdout): MODULE-node value, ported OnAwake/OnLoad result, or the C# initialiser
+                    bool cfgSet = false;
+                    for (const ModuleFieldValue& tv : m.module->LastLoadTrace())
+                        if (tv.parsed && tv.field == &bf.FieldInfo()) cfgSet = true;
+                    if (!ap.codeBuilt) {
+                        std::string is;
+                        Cell inum;
+                        FmtModuleValue(cs::FieldInitialValue(bf.FieldInfo()), is, inum);
+                        if (std::holds_alternative<std::monostate>(cs::FieldInitialValue(bf.FieldInfo()))) {
+                            const std::string_view ft = bf.FieldInfo().typeName;
+                            if (ft == "FloatCurve") is = "curve[]";
+                            else if (ft == "DoubleCurve") is = "DoubleCurve";
+                        }
+                        if (cfgSet) nCfgSet++;
+                        else if (is != vs) nLogic++;
+                        else nInit++;
+                    }
                 }
             }
             for (size_t k = 0; k < m.propellants.size(); k++) {
@@ -322,6 +343,12 @@ int RunPartDatabase(const RunnerOptions& opt) {
         }
         // parts row
         const PartFields& f = p.fields;
+        // Part.GetModuleMass / GetModuleCosts over the prefab's IPartMassModifier / IPartCostModifier modules (CURRENT)
+        PartModuleList moduleList;
+        for (const PartModuleData& md : p.Modules)
+            if (md.module) moduleList.Add(md.module);
+        const float moduleMass = PartGetModuleMass(moduleList, f.mass);
+        const float moduleCost = PartGetModuleCosts(moduleList, ap.cost);
         const auto internalName = ap.internalConfig ? ap.internalConfig->GetValue("name") : std::nullopt;
         std::string cfgRel;
         for (const PartAssetRef& a : ap.assets)
@@ -340,15 +367,14 @@ int RunPartDatabase(const RunnerOptions& opt) {
                 ap.bulkheadProfiles ? Cell(*ap.bulkheadProfiles) : Cell(nullptr), Cell(ap.partSize), Cell(f.scaleFactor),
                 Cell(f.rescaleFactor), Cell(f.stackSymmetry), Cell(f.CrewCapacity), Cell(p.Modules.size()),
                 Cell(p.Resources.size()), Cell(p.attachNodes.size()), Cell(p.DragCubes.None()),
-                Cell(p.DragCubes.Procedural()), Cell(cubes.size()), Cell(resMass), Cell(resCost), Cell(0.0f), Cell(0.0f),
+                Cell(p.DragCubes.Procedural()), Cell(cubes.size()), Cell(resMass), Cell(resCost), Cell(moduleMass), Cell(moduleCost),
                 internalName ? Cell(*internalName) : Cell(nullptr), Cell(nullptr)});
     }
-    scope += "]}\n";
-    golden::WriteTextFile(outDir + "/scope.json", scope);
     for (golden::Table* t : {&tp, &tv, &tm, &tf, &tpr, &tr, &ta, &tc, &tvar, &tas}) g.tables.push_back(std::move(*t));
     std::cout << "part_database: " << loader.loadedParts.size() << " parts, " << db.databaseTexture.size()
               << " textures, " << db.databaseModel.size() << " models, " << db.databaseAudio.size() << " audio, "
-              << db.root()->AllConfigs().size() << " configs, " << nScope << " module fields in scope, "
+              << db.root()->AllConfigs().size() << " configs, " << nFields << " module fields (compiled parts: " << nCfgSet << " set by a MODULE node, " << nLogic
+              << " changed by a ported OnAwake/OnLoad, " << nInit << " C# initialiser values), "
               << loader.cubesNeedRendering.size() << " parts without cubes\n";
     return WriteCandidate(opt, g, "part_database/part_database.json");
 }

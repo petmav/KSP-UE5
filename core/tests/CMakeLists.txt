@@ -19,6 +19,7 @@ add_executable(kspcore_tests
     test_patched_conics.cpp
     test_terrain.cpp
     test_partloader.cpp
+    test_modules.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
 )
@@ -157,26 +158,25 @@ add_test(NAME corpus.gamedata
     COMMAND golden_runner gamedata --harness ${KSP_HARNESS_DIR} --out ${KSP_CANDIDATE_DIR})
 set_tests_properties(corpus.gamedata PROPERTIES LABELS corpus TIMEOUT 900)
 
-# WP-05 part database: GameDatabase + PartLoader (data side) on the real GameData (decompiled/KSP-dev/GameData, read
-# by golden_runner's default --gamedata) vs the in-game capture C9 (captures/out2/part_database.json). Bit-exact, with
-# these documented scope limits (STATUS.md WP-05):
-#   DROP_ROWS  the 5 parts PartLoader builds in code from Unity prefabs (EVA kerbals, flag): their base values are
+# WP-05 part database + WP-06 module host: GameDatabase + PartLoader on the GameData mirror (testdata/GameData-mirror, or the
+# real GameData via KSP_GAMEDATA_ROOT / golden_runner --gamedata) vs the in-game capture C9 (captures/out2/part_database.json).
+# Bit-exact. Every module of every compiled part is instantiated through the WP-06 module host (AddComponent -> Awake -> Load),
+# so module_fields covers EVERY KSPField (cfg-set values, C# initialisers, ported OnAwake/OnLoad results) and the parts table
+# gates module_mass / module_cost (IPartMassModifier / IPartCostModifier). Documented scope limits (STATUS.md WP-05, WP-06):
+#   DROP_ROWS  the 5 parts PartLoader builds in code from Unity prefabs (EVA kerbals, flag): their base values and modules are
 #              Unity-serialized prefab data, not GameData (the 4 DLC-suit error rows ARE gated); assets rows of kind
 #              `texture` (renderer/material texture slots: they need the .mu model contents)
-#   KEEP_ROWS_FILE  module_fields: only the fields the part's MODULE node sets (runner-written scope list); the other
-#              rows are KSPField defaults / module OnLoad results (WP-06 module instantiation)
-#   DROP_KEYS_FILE  individually excluded rows with reasons (tests/data/part_database_exclusions.json)
+#   DROP_KEYS_FILE  individually excluded rows with reasons (tests/data/part_database_exclusions.json): the 18 module_fields
+#              rows holding a solar panel pivot's localRotation (a transform inside the .mu model)
 #   RENUMBER   assets.idx renumbered per part after dropping the texture rows
-#   DROP_COLUMNS  parts.partSize (renderer bounds of the model), parts.module_mass/module_cost (IPartMassModifier /
-#              IPartCostModifier modules, WP-06), variants.materials (model materials)
+#   DROP_COLUMNS  parts.partSize (renderer bounds of the model), variants.materials (model materials)
 set(KSP_PREFAB_PARTS "kerbalEVA|kerbalEVAfemale|flag|kerbalEVASlimSuit|kerbalEVASlimSuitFemale")
 ksp_golden_gate(capture.part_database part_database GOLDEN ${KSP_CAPTURES2_DIR}/part_database.json DROP_HEX
     TOL ${KSP_CAPTURE_TOL}
     DROP_ROWS "parts:name=${KSP_PREFAB_PARTS}/part_cfg_values:part=${KSP_PREFAB_PARTS}/modules:part=${KSP_PREFAB_PARTS}/module_fields:part=${KSP_PREFAB_PARTS}/module_propellants:part=${KSP_PREFAB_PARTS}/resources:part=${KSP_PREFAB_PARTS}/attach_nodes:part=${KSP_PREFAB_PARTS}/drag_cubes:part=${KSP_PREFAB_PARTS}/variants:part=${KSP_PREFAB_PARTS}/assets:part=${KSP_PREFAB_PARTS}+kind=texture"
-    KEEP_ROWS_FILE "<OUT>/part_database/scope.json"
     DROP_KEYS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/data/part_database_exclusions.json
     RENUMBER "assets:idx:part"
-    DROP_COLUMNS "parts:partSize,module_mass,module_cost/variants:materials")
+    DROP_COLUMNS "parts:partSize/variants:materials")
 set_tests_properties(capture.part_database PROPERTIES FIXTURES_SETUP partdb)
 # GameDatabase load order vs the game's own log of the capture run (every "Load(Audio|Texture|Model): url" and
 # "Config(TYPE) url" line, in order). Skipped (exit 0 with a note) when the log is not present.

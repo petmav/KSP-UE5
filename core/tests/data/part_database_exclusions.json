@@ -1,7 +1,185 @@
 {
-  "_comment": "Rows of harness/captures/out2/part_database.json excluded from the capture.part_database gate, one by one, each with its reason. Only module behaviour (WP-06) belongs here; see STATUS.md WP-05.",
-  "module_fields": [
-    {"key": ["sepMotor1", 2, "stackableQuantity"],
-     "reason": "ModuleCargoPart.cs:96 OnLoad sets stackableQuantity = 1 when the part has resources (cfg says 2): module behaviour, WP-06"}
-  ]
+ "_comment": "Rows of harness/captures/out2/part_database.json excluded from the capture.part_database gate, one by one, each with its reason (README \"Golden gate options\", STATUS.md WP-06). Only data that a package other than the module host produces belongs here. Grouped by module class: ModuleDeployableSolarPanel x 9 parts x (originalRotation, currentRotation) = 18 rows. Besides this list the gate drops the 5 code-built prefab parts (tests/CMakeLists.txt DROP_ROWS).",
+ "module_fields": [
+  {
+   "key": [
+    "largeSolarPanel",
+    0,
+    "currentRotation"
+   ],
+   "reason": "the pivot transform's rotation lives in the part's .mu model hierarchy (UE import pipeline / PartTools reader), not in GameData cfg data; parts whose pivot is absent keep the Quaternion default (0,0,0,0) and ARE gated",
+   "class": "ModuleDeployableSolarPanel",
+   "decompiled": "ModuleDeployablePart.cs:542-552 (OnAwake: panelRotationTransform = part.FindModelTransform(pivotName); originalRotation = currentRotation = localRotation)"
+  },
+  {
+   "key": [
+    "largeSolarPanel",
+    0,
+    "originalRotation"
+   ],
+   "reason": "the pivot transform's rotation lives in the part's .mu model hierarchy (UE import pipeline / PartTools reader), not in GameData cfg data; parts whose pivot is absent keep the Quaternion default (0,0,0,0) and ARE gated",
+   "class": "ModuleDeployableSolarPanel",
+   "decompiled": "ModuleDeployablePart.cs:542-552 (OnAwake: panelRotationTransform = part.FindModelTransform(pivotName); originalRotation = currentRotation = localRotation)"
+  },
+  {
+   "key": [
+    "solarPanelOX10C",
+    0,
+    "currentRotation"
+   ],
+   "reason": "the pivot transform's rotation lives in the part's .mu model hierarchy (UE import pipeline / PartTools reader), not in GameData cfg data; parts whose pivot is absent keep the Quaternion default (0,0,0,0) and ARE gated",
+   "class": "ModuleDeployableSolarPanel",
+   "decompiled": "ModuleDeployablePart.cs:542-552 (OnAwake: panelRotationTransform = part.FindModelTransform(pivotName); originalRotation = currentRotation = localRotation)"
+  },
+  {
+   "key": [
+    "solarPanelOX10C",
+    0,
+    "originalRotation"
+   ],
+   "reason": "the pivot transform's rotation lives in the part's .mu model hierarchy (UE import pipeline / PartTools reader), not in GameData cfg data; parts whose pivot is absent keep the Quaternion default (0,0,0,0) and ARE gated",
+   "class": "ModuleDeployableSolarPanel",
+   "decompiled": "ModuleDeployablePart.cs:542-552 (OnAwake: panelRotationTransform = part.FindModelTransform(pivotName); originalRotation = currentRotation = localRotation)"
+  },
+  {
+   "key": [
+    "solarPanelOX10L",
+    0,
+    "currentRotation"
+   ],
+   "reason": "the pivot transform's rotation lives in the part's .mu model hierarchy (UE import pipeline / PartTools reader), not in GameData cfg data; parts whose pivot is absent keep the Quaternion default (0,0,0,0) and ARE gated",
+   "class": "ModuleDeployableSolarPanel",
+   "decompiled": "ModuleDeployablePart.cs:542-552 (OnAwake: panelRotationTransform = part.FindModelTransform(pivotName); originalRotation = currentRotation = localRotation)"
+  },
+  {
+   "key": [
+    "solarPanelOX10L",
+    0,
+    "originalRotation"
+   ],
+   "reason": "the pivot transform's rotation lives in the part's .mu model hierarchy (UE import pipeline / PartTools reader), not in GameData cfg data; parts whose pivot is absent keep the Quaternion default (0,0,0,0) and ARE gated",
+   "class": "ModuleDeployableSolarPanel",
+   "decompiled": "ModuleDeployablePart.cs:542-552 (OnAwake: panelRotationTransform = part.FindModelTransform(pivotName); originalRotation = currentRotation = localRotation)"
+  },
+  {
+   "key": [
+    "solarPanelSP10C",
+    0,
+    "currentRotation"
+   ],
+   "reason": "the pivot transform's rotation lives in the part's .mu model hierarchy (UE import pipeline / PartTools reader), not in GameData cfg data; parts whose pivot is absent keep the Quaternion default (0,0,0,0) and ARE gated",
+   "class": "ModuleDeployableSolarPanel",
+   "decompiled": "ModuleDeployablePart.cs:542-552 (OnAwake: panelRotationTransform = part.FindModelTransform(pivotName); originalRotation = currentRotation = localRotation)"
+  },
+  {
+   "key": [
+    "solarPanelSP10C",
+    0,
+    "originalRotation"
+   ],
+   "reason": "the pivot transform's rotation lives in the part's .mu model hierarchy (UE import pipeline / PartTools reader), not in GameData cfg data; parts whose pivot is absent keep the Quaternion default (0,0,0,0) and ARE gated",
+   "class": "ModuleDeployableSolarPanel",
+   "decompiled": "ModuleDeployablePart.cs:542-552 (OnAwake: panelRotationTransform = part.FindModelTransform(pivotName); originalRotation = currentRotation = localRotation)"
+  },
+  {
+   "key": [
+    "solarPanelSP10L",
+    0,
+    "currentRotation"
+   ],
+   "reason": "the pivot transform's rotation lives in the part's .mu model hierarchy (UE import pipeline / PartTools reader), not in GameData cfg data; parts whose pivot is absent keep the Quaternion default (0,0,0,0) and ARE gated",
+   "class": "ModuleDeployableSolarPanel",
+   "decompiled": "ModuleDeployablePart.cs:542-552 (OnAwake: panelRotationTransform = part.FindModelTransform(pivotName); originalRotation = currentRotation = localRotation)"
+  },
+  {
+   "key": [
+    "solarPanelSP10L",
+    0,
+    "originalRotation"
+   ],
+   "reason": "the pivot transform's rotation lives in the part's .mu model hierarchy (UE import pipeline / PartTools reader), not in GameData cfg data; parts whose pivot is absent keep the Quaternion default (0,0,0,0) and ARE gated",
+   "class": "ModuleDeployableSolarPanel",
+   "decompiled": "ModuleDeployablePart.cs:542-552 (OnAwake: panelRotationTransform = part.FindModelTransform(pivotName); originalRotation = currentRotation = localRotation)"
+  },
+  {
+   "key": [
+    "solarPanels1",
+    0,
+    "currentRotation"
+   ],
+   "reason": "the pivot transform's rotation lives in the part's .mu model hierarchy (UE import pipeline / PartTools reader), not in GameData cfg data; parts whose pivot is absent keep the Quaternion default (0,0,0,0) and ARE gated",
+   "class": "ModuleDeployableSolarPanel",
+   "decompiled": "ModuleDeployablePart.cs:542-552 (OnAwake: panelRotationTransform = part.FindModelTransform(pivotName); originalRotation = currentRotation = localRotation)"
+  },
+  {
+   "key": [
+    "solarPanels1",
+    0,
+    "originalRotation"
+   ],
+   "reason": "the pivot transform's rotation lives in the part's .mu model hierarchy (UE import pipeline / PartTools reader), not in GameData cfg data; parts whose pivot is absent keep the Quaternion default (0,0,0,0) and ARE gated",
+   "class": "ModuleDeployableSolarPanel",
+   "decompiled": "ModuleDeployablePart.cs:542-552 (OnAwake: panelRotationTransform = part.FindModelTransform(pivotName); originalRotation = currentRotation = localRotation)"
+  },
+  {
+   "key": [
+    "solarPanels2",
+    0,
+    "currentRotation"
+   ],
+   "reason": "the pivot transform's rotation lives in the part's .mu model hierarchy (UE import pipeline / PartTools reader), not in GameData cfg data; parts whose pivot is absent keep the Quaternion default (0,0,0,0) and ARE gated",
+   "class": "ModuleDeployableSolarPanel",
+   "decompiled": "ModuleDeployablePart.cs:542-552 (OnAwake: panelRotationTransform = part.FindModelTransform(pivotName); originalRotation = currentRotation = localRotation)"
+  },
+  {
+   "key": [
+    "solarPanels2",
+    0,
+    "originalRotation"
+   ],
+   "reason": "the pivot transform's rotation lives in the part's .mu model hierarchy (UE import pipeline / PartTools reader), not in GameData cfg data; parts whose pivot is absent keep the Quaternion default (0,0,0,0) and ARE gated",
+   "class": "ModuleDeployableSolarPanel",
+   "decompiled": "ModuleDeployablePart.cs:542-552 (OnAwake: panelRotationTransform = part.FindModelTransform(pivotName); originalRotation = currentRotation = localRotation)"
+  },
+  {
+   "key": [
+    "solarPanels3",
+    0,
+    "currentRotation"
+   ],
+   "reason": "the pivot transform's rotation lives in the part's .mu model hierarchy (UE import pipeline / PartTools reader), not in GameData cfg data; parts whose pivot is absent keep the Quaternion default (0,0,0,0) and ARE gated",
+   "class": "ModuleDeployableSolarPanel",
+   "decompiled": "ModuleDeployablePart.cs:542-552 (OnAwake: panelRotationTransform = part.FindModelTransform(pivotName); originalRotation = currentRotation = localRotation)"
+  },
+  {
+   "key": [
+    "solarPanels3",
+    0,
+    "originalRotation"
+   ],
+   "reason": "the pivot transform's rotation lives in the part's .mu model hierarchy (UE import pipeline / PartTools reader), not in GameData cfg data; parts whose pivot is absent keep the Quaternion default (0,0,0,0) and ARE gated",
+   "class": "ModuleDeployableSolarPanel",
+   "decompiled": "ModuleDeployablePart.cs:542-552 (OnAwake: panelRotationTransform = part.FindModelTransform(pivotName); originalRotation = currentRotation = localRotation)"
+  },
+  {
+   "key": [
+    "solarPanels4",
+    0,
+    "currentRotation"
+   ],
+   "reason": "the pivot transform's rotation lives in the part's .mu model hierarchy (UE import pipeline / PartTools reader), not in GameData cfg data; parts whose pivot is absent keep the Quaternion default (0,0,0,0) and ARE gated",
+   "class": "ModuleDeployableSolarPanel",
+   "decompiled": "ModuleDeployablePart.cs:542-552 (OnAwake: panelRotationTransform = part.FindModelTransform(pivotName); originalRotation = currentRotation = localRotation)"
+  },
+  {
+   "key": [
+    "solarPanels4",
+    0,
+    "originalRotation"
+   ],
+   "reason": "the pivot transform's rotation lives in the part's .mu model hierarchy (UE import pipeline / PartTools reader), not in GameData cfg data; parts whose pivot is absent keep the Quaternion default (0,0,0,0) and ARE gated",
+   "class": "ModuleDeployableSolarPanel",
+   "decompiled": "ModuleDeployablePart.cs:542-552 (OnAwake: panelRotationTransform = part.FindModelTransform(pivotName); originalRotation = currentRotation = localRotation)"
+  }
+ ]
 }
