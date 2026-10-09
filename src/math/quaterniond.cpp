@@ -121,7 +121,7 @@ QuaternionD QuaternionD::LookRotation(Vector3d forward, Vector3d up) {
 
 // QuaternionD.cs:203 Angle
 double QuaternionD::Angle(const QuaternionD& a, const QuaternionD& b) {
-    return std::acos(std::min(std::fabs(Dot(a, b)), 1.0)) * 2.0 * (180.0 / kPI);
+    return dotnet::Math::Acos(std::min(std::fabs(Dot(a, b)), 1.0)) * 2.0 * (180.0 / kPI);
 }
 
 // QuaternionD.cs:273 operator*(QuaternionD, QuaternionD)

@@ -1,3 +1,5 @@
+set(KSP_LOAD_LOG "${PROJECT_SOURCE_DIR}/testdata/logs/ksp-capture-capture2-final2-KSP.log")
+
 # ---- unit tests (doctest) -------------------------------------------------------------------------------------------
 add_executable(kspcore_tests
     test_main.cpp
@@ -26,8 +28,12 @@ target_include_directories(kspcore_tests PRIVATE ${PROJECT_SOURCE_DIR}/third_par
 target_compile_definitions(kspcore_tests PRIVATE KSPCORE_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
                            KSPCORE_HARNESS_DIR="${KSP_HARNESS_DIR}" KSPCORE_PROJECT_ROOT="${KSP_PROJECT_ROOT}"
                            KSPCORE_DATA_DIR="${PROJECT_SOURCE_DIR}/data"
-                           KSP_DICTIONARY_CFG="${KSP_PROJECT_ROOT}/decompiled/KSP-dev/GameData/Squad/Localization/dictionary.cfg")
+                           KSPCORE_DEFAULT_GAME_ROOT="${KSP_GAMEDATA_ROOT}")
 add_test(NAME unit COMMAND kspcore_tests)
+
+# ---- portable libm vs the real VS2013 / UCRT DLLs (Windows only; skips elsewhere): 300k inputs per function
+add_test(NAME libm.portable_vs_dll COMMAND libm_check 300000)
+set_tests_properties(libm.portable_vs_dll PROPERTIES LABELS libm TIMEOUT 300)
 
 # ---- C ABI consumers: a pure C program, and a C++ program built with Unreal's flags (/GR-, _HAS_EXCEPTIONS=0,
 # /fp:fast) against include/kspcore/kspcore_c.h only. They prove the header is C, the lib links under UE's settings and
@@ -176,7 +182,7 @@ set_tests_properties(capture.part_database PROPERTIES FIXTURES_SETUP partdb)
 add_test(NAME capture.gamedatabase_load_order
     COMMAND ${Python3_EXECUTABLE} -I ${PROJECT_SOURCE_DIR}/tools/wp05/check_load_log.py
             ${KSP_CANDIDATE_DIR}/part_database/gamedatabase_load.log
-            ${KSP_PROJECT_ROOT}/decompiled/logs/ksp-capture-capture2-final2-KSP.log)
+            ${KSP_LOAD_LOG})
 set_tests_properties(capture.gamedatabase_load_order PROPERTIES LABELS golden FIXTURES_REQUIRED partdb TIMEOUT 300)
 # WP-04 save model: Load -> Save round trip of every original save (decompiled/KSP-dev/saves/**/*.sfs, *.craft) and
 # stock craft (decompiled/KSP-dev/Ships/**/*.craft); R2 idempotent, R1 byte-identical or every difference documented

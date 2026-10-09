@@ -8,6 +8,7 @@
 #include <random>
 #include <string>
 
+#include "game_root.hpp"
 #include "doctest/doctest.h"
 #include "ksp/database/game_data.hpp"
 #include "ksp/database/game_database.hpp"
@@ -347,10 +348,10 @@ TEST_CASE("DragCube: load / save round trip and the 24-value quirk") {
     CHECK_THROWS_AS(l.LoadCubes(bad), std::out_of_range);
 }
 
-TEST_CASE("PartLoader on the real GameData (decompiled/KSP-dev)") {
-    const fs::path root = fs::path(KSPCORE_PROJECT_ROOT) / "decompiled" / "KSP-dev";
+TEST_CASE("PartLoader on the GameData mirror (or the real install via KSP_GAMEDATA_ROOT)") {
+    const fs::path root = ksp::testing::GameRoot();  // testdata/GameData-mirror, or env KSP_GAMEDATA_ROOT
     if (!fs::exists(root / "GameData" / "Squad")) {
-        MESSAGE("decompiled/KSP-dev/GameData not present: skipped");
+        MESSAGE(root.string() << "/GameData not present: skipped");
         return;
     }
     GameData data;

@@ -21,7 +21,7 @@ Updated 2026-10-09 (WP-05). One command: `powershell -NoProfile -ExecutionPolicy
 
 | 10. WP-05 UrlDir, GameDatabase (data), PartLoader (data), resource library (branch `wp05`, merged in `bfb732f`) | done for the data side: UrlDir + GameDatabase load order identical to KSP.log (2,836 lines), PartLoader compiles all 353 GameData parts + the 9 prefab-part slots; `capture.part_database` gate bit-exact on every in-scope C9 row (parts, cfg values, modules, cfg-set module fields, propellants, resources, attach nodes, drag cubes, variants, asset paths). Module instantiation is WP-06, model contents the UE import. See "WP-05" below |
 
-## Test results (all 20 ctest tests pass in RelWithDebInfo and in Debug)
+## Test results (all 21 ctest tests pass in RelWithDebInfo and in Debug on Windows; and on Linux; WP-00L added libm.portable_vs_dll)
 
 Every numeric column of every gate: **max ULP 0, max abs 0** (bit-exact, and the same decimal text). Tolerance files:
 harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture gates use `tests/tolerances_capture.json`
@@ -106,11 +106,10 @@ OrbitSnapshot, OrbitUtil, enums; `1804b39` STATUS; `304729a` README; plus the Bo
 
 ## Known approximations and risks
 
-- **VS2013 CRT dependency**: Mono and .NET Framework 4.8 use the Visual Studio 2013 CRT libm. kspcore loads it at run
-  time from `msvcr120_clr0400.dll` (installed with .NET Framework 4.x on every Windows 10/11) or `msvcr120.dll`
-  (`dotnet::LibmBackend()` reports which; it is part of `kspcore_build_info()`). Without it (non-Windows), kspcore
-  falls back to `<cmath>`, which differs in the last bit for cosh (130/3,093 inputs), sinh (40), pow (17), tanh (8),
-  asin (3), atan (2), exp (1), atan2 (1). A portable bit-exact port of those VS2013 routines is future work.
+- **VS2013 CRT dependency**: Mono and .NET Framework 4.8 use the Visual Studio 2013 CRT libm. On Windows kspcore loads it at
+  run time from `msvcr120_clr0400.dll` (or `msvcr120.dll`); everywhere else (and with `KSP_LIBM_PORTABLE=ON`) it runs the
+  bit-exact software lift of that DLL's own code (WP-00L: `src/dotnet/vs2013_libm_gen.cpp`; `dotnet::LibmBackend()` reports
+  which backend is active and is part of `kspcore_build_info()`). The `<cmath>` fallback is gone.
 - **Mono number formatting**: Mono builds 17 digits from a 64-bit approximation (MantissaBitsTable) before rounding;
   kspcore uses the correctly rounded 17 digits, then Mono's half-up rounding. This matched all 4,200 captured strings
   (including the known Mono/.NET G15 difference), but the approximation itself is not ported.
@@ -1190,3 +1189,92 @@ Trajectory sampling (closed FINAL, non-final with faded ends, hyperbola) and the
 |---|---|
 | `04d00cd` | OrbitDriver, Planetarium.Orbits, PatchedConics, PatchedConicSolver, ManeuverNode, TimeWarp/FlightGlobals/GameSettings subsets, both gates, filter ROWS/KEYS |
 | `3028ccb` | Trajectory, `tests/test_patched_conics.cpp`, STATUS/README |
+
+## WP-00L: Linux build, portable bit-exact libm, game-copy-free tests, CI (branch `wp00l`)
+
+Goal: a Claude Code cloud session (Linux container, no KSP install, no Unreal, no Windows) clones the repo, builds kspcore
+and runs every gate. State: **done**; every gate is bit-exact (0 ULP) on Windows and on Linux with no dependency on the
+game copy. Cloud-session instructions: `../CLOUD-TASKS.md`. Generator and research tools: `tools/libm/`,
+`tools/mk_gamedata_mirror.py`.
+
+**Results (2026-10-09)**
+
+| platform / configuration | ctest | notes |
+|---|---|---|
+| Windows MSVC 14.44 RelWithDebInfo (`run_tests.ps1 -Fresh`), default: libm from `msvcr120_clr0400.dll`, mirror | 21/21 | the new test is `libm.portable_vs_dll` |
+| Windows, `KSP_GAMEDATA_ROOT=decompiled/KSP-dev` (real install instead of the mirror) | 21/21 | |
+| Windows, `-DKSP_LIBM_PORTABLE=ON` (software libm forced; `build/portable`) | 21/21 | every capture gate 0 ULP with the software path |
+| WSL Ubuntu 24.04, Clang 18 (`run_tests.sh -f`, preset `linux-rel`) | 21/21 | `libm.portable_vs_dll` prints "skipped" (no DLL) |
+| WSL Ubuntu 24.04, GCC 13 (`run_tests.sh -p linux-gcc-rel -f`) | 21/21 | |
+| Windows Debug (`run_tests.ps1 -Preset debug -Fresh`) | 21/21 | |
+| WSL Clang 18 Debug (`run_tests.sh -p linux-dbg -f`) | 21/21 | |
+
+**1. Linux build.** Presets `linux-rel`, `linux-dbg` (Clang if installed, else the default compiler) and `linux-gcc-rel`;
+`run_tests.sh` mirrors `run_tests.ps1` (`-f` fresh, `-t <regex>`, `-b` build only, `-p <preset>`). Same C++20 and warnings
+(`-Wall -Wextra -ffp-contract=off -fno-fast-math`); MSVC flags untouched. Portability fixes: `CMAKE_CXX_SCAN_FOR_MODULES OFF`
+(no clang-scan-deps needed); Clang rejects a nested type's default member initializers while the enclosing class is still
+incomplete (`PhysicsGlobals::SurfaceCurvesList` lost its `= nullptr`, always value-initialised; the `MapSO::Origin origin = {}`
+default arguments became overloads); paths: KSP and the harness build backslash-separated Windows paths, so every filesystem
+entry goes through `dotnet::PathFromUtf8` (identity on Windows, backslash to slash elsewhere) and `Utf8ToWide` is a real UTF-8
+decoder off Windows; `crt=host` in `kspcore_build_info()` off MSVC (the C ABI tests check `crt=MD` only under MSVC);
+`unsigned __int128` / `__builtin_*` replaced by `MulWide` / `std::popcount` / `std::countl_zero` in portable code. ConfigNode
+output stays CRLF on all platforms (the ConfigNode tests pass unchanged on Linux). Two fidelity fixes found on the way:
+`QuaternionD.Angle` and `Math.Log(a, base)` used `std::acos` / `std::log` instead of the CRT path; Unity's native
+`sinf/cosf/powf` (Random.onUnitSphere / insideUnitCircle, Quaternion.AngleAxis) went through `std::sin(float)` (host libm,
+which differs from UCRT for about 0.1% of inputs) and now use `dotnet::NativeSinf/NativeCosf/NativePowf`.
+
+**2. Portable bit-exact libm.** Instead of hand-porting algorithms, `tools/libm/gen_main.py` *lifts the CRT's own x64 machine
+code*: capstone decodes the functions reachable from the 12 exports of `msvcr120_clr0400.dll` (acos asin atan atan2 cosh exp log
+log10 pow sinh tan tanh; WP-01's note named 8 that visibly differ from UCRT, but tan, acos and log10 differ from glibc too, so
+all 12 are lifted) and from `ucrtbase.dll` (sinf, cosf, powf, used by Unity's native code): 4,024 + 1,733 instructions. The
+generator emits one C++ statement block per instruction over an emulated register file, flags and stack
+(`src/dotnet/vs2013_lift.hpp`; generated `vs2013_libm_gen.cpp`, `ucrt_libm_gen.cpp` and their `_data.inc`, 63 KB and 14 KB of
+read-only data the code reads). CRT infrastructure that cannot change a result (FP status word, errno, `_matherr` hook) is
+stubbed; `_handle_error` returns its retval argument. The CRT picks FMA3 or SSE2 code at start-up (`_set_FMA3_enable`); the
+portable path defaults to FMA3 (what the capture machine and this one use; `vs2013::SetFma3(false)` exists and demonstrably
+differs for exp, tan and pow). `ucrtbase` needs `__isa_available` >= 2 (patched in the data image). Selection: Windows loads the
+DLL unless `KSP_LIBM_PORTABLE=ON` / env `KSPCORE_LIBM_PORTABLE=1`; everywhere else the software path;
+`LibmBackend()` / `kspcore_build_info()` name the backend.
+
+| function | portable vs the DLL on Windows (`libm_check`: random bit patterns, per-domain ranges, near-integer, specials) | capture.libm_mono on Linux |
+|---|---|---|
+| acos asin atan atan2 cosh sinh tanh exp log log10 pow tan | 0 mismatches in 2,000,000 inputs each | 0 ULP |
+| sinf cosf powf (UCRT) | 0 mismatches in 1,000,000 inputs each | via capture.unity_random, 0 ULP |
+
+glibc against the capture before this package (of 3,093 inputs each): sinh 540, cosh 407, log10 246, tanh 183, tan 130, atan 115,
+asin 21, exp 19, acos 18, atan2 10+5, pow 3-8, log 0; the software path is what makes the gate pass off Windows.
+Regenerate (needs the Windows `System32` DLLs and `harness/tools-cache/venv` for capstone):
+`python tools/libm/gen_main.py msvcr120 C:/Windows/System32/msvcr120_clr0400.dll <out>` and
+`python tools/libm/gen_main.py ucrt C:/Windows/System32/ucrtbase.dll <out>`; copy the four generated files to `src/dotnet/`.
+`msvcr120.dll` (the non-CLR copy, second in the Windows load order) is a different build and was not lifted; the lift tracks the
+`_clr0400` copy that the gate used. `tools/libm/pe_tool.py`, `callgraph.py`, `census.py` are the research helpers.
+
+**3. No dependency on the game copy.** Inputs outside the repo, before: `KSP_DICTIONARY_CFG`
+(`decompiled/KSP-dev/GameData/Squad/Localization/dictionary.cfg`), the `golden_runner --gamedata` default (`capture.part_database`;
+also the Physics.cfg / PartDatabase.cfg root), `test_partloader.cpp` (real GameData), `test_celestial.cpp` and `test_terrain.cpp`
+(existence of the `KSP_x64_Data/*.assets|.resS` files the asset indexes name), `capture.gamedatabase_load_order`
+(`decompiled/logs/ksp-capture-capture2-final2-KSP.log`). Already in the repo, no change: `corpus.gamedata`
+(`harness/inputs/GameData` 368 cfg and `harness/inputs/Ships` 86 craft), the WP-11 maps (`data/terrain`). No test reads the
+game's `saves` or `Ships`. After: `testdata/GameData-mirror/` (built by `tools/mk_gamedata_mirror.py`, `MANIFEST.json`) and
+`testdata/logs/ksp-capture-capture2-final2-KSP.log`; the tests take the game root from env `KSP_GAMEDATA_ROOT`, else the mirror
+(`tools/golden_runner/game_root.hpp`; CMake cache variable `KSP_GAMEDATA_ROOT`).
+Mirror: 2,804 files under `GameData/` (533 cfg byte-identical with SHA-256 per file in the manifest; 2,271 placeholders), plus
+`Physics.cfg` and `PartDatabase.cfg` verbatim, plus 10 zero-byte `KSP_x64_Data/*.assets|.resS` placeholders. By extension: .dds 895,
+.mu 551, .cfg 533, .png 430, .ksp 196, .loadmeta 54, .craft 52, .wav 50, .truecolor 27, no extension 3, .mission 3, .txt 3, ._cfg 2,
+.mbm 2, .bac 1, .dll 1, .ogg 1. Total 6.4 MB. One deliberate deviation from "zero bytes for every non-cfg file": **.dds and .mbm
+placeholders keep their original header bytes** (128 bytes; length-prefixed name plus 16 bytes). `GameDatabase` reads exactly those
+headers to decide whether a texture loads and whether it is a normal map (`ReadDdsHeader` / `ReadMbmHeader`); with empty files 14
+asset rows of `capture.part_database` became "unresolved". The stock `.craft` files the tests use are `harness/inputs/Ships` (in the
+repo); the 52 `.craft` under `GameData` are empty placeholders. `physics_constants` records `physicsDatabaseFilename` as the
+author's absolute path; the runner re-roots that one string to `C:\Projects\KSP-UE5\harness\inputs\Physics.cfg` (the golden's text),
+so the gate is location independent.
+
+**4. CI** `../.github/workflows/ci.yml` (ubuntu: Clang and GCC via `run_tests.sh -f`; windows-latest: `run_tests.ps1 -Fresh`).
+**5. Root files** `../.gitignore`, `../.gitattributes` (LFS lines present but commented out). **6.** `../CLOUD-TASKS.md`.
+
+**Not achieved / limits.** The CI workflow itself was not run (no GitHub access from here). The portable libm reproduces the
+FMA3 code path; on a CPU without FMA3 the DLL takes the SSE2 path and gives different bits for exp, tan and pow, the software path
+still returns the FMA3 results (the capture's truth). Not tested: macOS; non-x86 hosts (the lift is host independent C++, but
+`std::fma` is software-emulated where there is no FMA instruction, which is slow but exact). Large files in the repo:
+`harness/captures/out/libm_mono.json` and `libm_dotnet.json` (45 MB each) and `data/terrain/maps/*.bin` (55 MB total); no LFS is
+enabled (CLOUD-TASKS.md "LFS").

@@ -108,7 +108,7 @@ inline double Log(double a, double newBase) noexcept {
     if (std::isnan(newBase)) return newBase;
     if (newBase == 1.0) return std::numeric_limits<double>::quiet_NaN();
     if (a != 1.0 && (newBase == 0.0 || std::isinf(newBase))) return std::numeric_limits<double>::quiet_NaN();
-    return std::log(a) / std::log(newBase);
+    return Log(a) / Log(newBase);  // both through the CRT log (VS2013 CRT semantics)
 }
 
 // Math.IEEERemainder (mscorlib Math.cs)

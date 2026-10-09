@@ -22,7 +22,9 @@ static unsigned bits_of(float f) {
 int main(int argc, char** argv) {
     const char* info = kspcore_build_info();
     printf("%s\n", info);
+#ifdef _MSC_VER
     CHECK(strstr(info, "crt=MD ") != NULL);
+#endif
     CHECK(strstr(info, "idl=0") != NULL);
     CHECK(kspcore_abi_version() == KSPCORE_ABI_VERSION);
 

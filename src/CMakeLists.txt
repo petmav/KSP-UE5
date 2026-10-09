@@ -3,6 +3,8 @@ add_library(kspcore STATIC
     core/log.cpp
     core/delegate.cpp
     dotnet/math.cpp
+    dotnet/vs2013_libm_gen.cpp
+    dotnet/ucrt_libm_gen.cpp
     dotnet/number.cpp
     dotnet/random.cpp
     dotnet/text.cpp
@@ -78,5 +80,8 @@ add_library(ksp::core ALIAS kspcore)
 target_include_directories(kspcore PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_compile_features(kspcore PUBLIC cxx_std_20)
 ksp_set_build_flags(kspcore)
+if(KSP_LIBM_PORTABLE)
+    target_compile_definitions(kspcore PRIVATE KSP_LIBM_PORTABLE=1)
+endif()
 # The Unreal bridge links <core>/build/RelWithDebInfo/kspcore.lib: put the archive at the top of the build tree.
 set_target_properties(kspcore PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")

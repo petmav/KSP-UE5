@@ -61,12 +61,12 @@ struct Gradient {
 
 class PhysicsGlobals {
 public:
-    // PhysicsGlobals.cs:8 SurfaceCurvesList: references to the instance's drag curves (shared, as in C#).
+    // PhysicsGlobals.cs:8 SurfaceCurvesList: references to the instance's drag curves (shared, as in C#). (no default member initializers: Clang rejects a static inline member of this type otherwise; always value-initialise)
     struct SurfaceCurvesList {
-        FloatCurve* dragCurveTail = nullptr;
-        FloatCurve* dragCurveSurface = nullptr;
-        FloatCurve* dragCurveMultiplier = nullptr;
-        FloatCurve* dragCurveTip = nullptr;
+        FloatCurve* dragCurveTail;
+        FloatCurve* dragCurveSurface;
+        FloatCurve* dragCurveMultiplier;
+        FloatCurve* dragCurveTip;
     };
 
     // PhysicsGlobals.cs:19 LiftingSurfaceCurve (a reference type in C#: held by std::shared_ptr)

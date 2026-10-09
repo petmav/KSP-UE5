@@ -3,6 +3,8 @@
 
 #include <cmath>
 
+#include "ksp/dotnet/ucrt_libm.hpp"
+
 namespace ksp::UnityNative {
 
 // QuaternionScripting::AngleAxis -> AxisAngleToQuaternionSafe(axis, Deg2Rad(angle)) (Runtime/Math/Quaternion.h)
@@ -13,8 +15,8 @@ Quaternionf AngleAxis(float angle, const Vector3f& axis) {
     if (mag > 0.000001f) {
         const float halfAngle = rad * 0.5f;
         Quaternionf q;
-        q.w = std::cos(halfAngle);
-        const float s = std::sin(halfAngle) / mag;
+        q.w = ksp::dotnet::NativeCosf(halfAngle);
+        const float s = ksp::dotnet::NativeSinf(halfAngle) / mag;
         q.x = s * axis.x;
         q.y = s * axis.y;
         q.z = s * axis.z;

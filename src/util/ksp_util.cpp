@@ -1,4 +1,5 @@
 // Port of the engine-independent parts of Assembly-CSharp/KSPUtil.cs and IDateFormatterExtensions.cs.
+#include "ksp/dotnet/text.hpp"
 #include "ksp/util/ksp_util.hpp"
 
 #include <algorithm>
@@ -750,7 +751,7 @@ std::string PrintSpacedStringFromCamelcase(std::string_view sv) {
 std::string GetOrCreatePath(std::string_view relPath) {
     const std::string path = ApplicationRootPath() + std::string(relPath);
     std::error_code ec;
-    const std::filesystem::path p(dotnet::Utf8ToWide(path));
+    const std::filesystem::path p = dotnet::PathFromUtf8(path);
     if (!std::filesystem::is_directory(p, ec)) std::filesystem::create_directories(p, ec);
     return path;
 }
@@ -776,7 +777,7 @@ std::string GenerateFilePathWithDate(std::string_view filePath) {
 // KSPUtil.cs:1411
 bool MoveFile(const std::string& filePath, const std::string& destinationPath, bool overwrite) {
     namespace fs = std::filesystem;
-    const fs::path src(dotnet::Utf8ToWide(filePath)), dst(dotnet::Utf8ToWide(destinationPath));
+    const fs::path src = dotnet::PathFromUtf8(filePath), dst = dotnet::PathFromUtf8(destinationPath);
     std::error_code ec;
     std::string message;
     if (overwrite && fs::is_regular_file(dst, ec)) fs::remove(dst, ec);
@@ -866,7 +867,7 @@ float CalculateFolderSizeImpl(const std::filesystem::path& root, int& totalFiles
 }  // namespace
 
 float CalculateFolderSize(const std::string& folderPath, int& totalFiles) {
-    return CalculateFolderSizeImpl(std::filesystem::path(dotnet::Utf8ToWide(folderPath)), totalFiles);
+    return CalculateFolderSizeImpl(dotnet::PathFromUtf8(folderPath), totalFiles);
 }
 
 // KSPUtil.cs:1608

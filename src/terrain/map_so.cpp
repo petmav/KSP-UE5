@@ -2,6 +2,8 @@
 // (ksp/dotnet/mono_float.hpp): every float local/field/argument/return is an f32store of a double expression.
 #include "ksp/terrain/map_so.hpp"
 
+#include "ksp/dotnet/text.hpp"
+
 #include <cmath>
 #include <fstream>
 #include <iterator>
@@ -45,6 +47,15 @@ void MapSO::CreateMap(MapDepth depth, const std::string& name, int width, int he
 }
 
 MapSO MapSO::FromSerialized(const std::string& name, int width, int height, int bpp, int rowWidth,
+                            std::vector<uint8_t> data) {
+    return FromSerialized(name, width, height, bpp, rowWidth, std::move(data), Origin{});
+}
+
+MapSO MapSO::LoadRaw(const std::string& path, const std::string& name, int width, int height, int bpp) {
+    return LoadRaw(path, name, width, height, bpp, Origin{});
+}
+
+MapSO MapSO::FromSerialized(const std::string& name, int width, int height, int bpp, int rowWidth,
                             std::vector<uint8_t> data, Origin origin) {
     if (width <= 0 || height <= 0 || bpp <= 0 || rowWidth != width * bpp ||
         data.size() != static_cast<size_t>(width) * static_cast<size_t>(height) * static_cast<size_t>(bpp))
@@ -63,7 +74,7 @@ MapSO MapSO::FromSerialized(const std::string& name, int width, int height, int 
 }
 
 MapSO MapSO::LoadRaw(const std::string& path, const std::string& name, int width, int height, int bpp, Origin origin) {
-    std::ifstream f(path, std::ios::binary);
+    std::ifstream f(dotnet::PathFromUtf8(path), std::ios::binary);
     if (!f) throw std::runtime_error("MapSO '" + name + "': cannot open " + path);
     std::vector<uint8_t> data((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
     return FromSerialized(name, width, height, bpp, width * bpp, std::move(data), std::move(origin));

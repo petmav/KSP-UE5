@@ -10,6 +10,7 @@
 #pragma once
 
 #include <cstdint>
+#include <filesystem>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -62,7 +63,10 @@ std::vector<std::string> SplitLinesLikeReadLine(std::string_view text);
 bool WriteAllBytes(const std::string& path, std::string_view bytes);
 
 // Convert UTF-8 file paths for the Windows API.
-std::wstring Utf8ToWide(std::string_view s);
+std::wstring Utf8ToWide(std::string_view s);  // Windows: MultiByteToWideChar(CP_UTF8); elsewhere: UTF-8 -> UTF-32 decode
+// A std::filesystem::path from a UTF-8 string that may use '\' separators (KSP and the harness build Windows paths).
+// Windows: the string as is (wide path). Elsewhere: '\' becomes '/'.
+std::filesystem::path PathFromUtf8(std::string_view s);
 
 // Iterate code points: decodes one UTF-8 scalar at s[i], advancing i. Invalid -> U+FFFD (one byte consumed).
 char32_t NextCodePoint(std::string_view s, size_t& i) noexcept;

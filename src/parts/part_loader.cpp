@@ -536,7 +536,7 @@ void PartLoader::InitializePartDatabase() {
         partDatabase->AddNode("PART_DATABASE")->AddValue("version", options_.versionString);
     };
     if (!options_.partDatabasePath.empty() &&
-        std::filesystem::exists(std::filesystem::path(std::u8string(options_.partDatabasePath.begin(), options_.partDatabasePath.end())))) {
+        std::filesystem::exists(dotnet::PathFromUtf8(options_.partDatabasePath))) {
         partDatabase = ConfigNode::Load(options_.partDatabasePath);
         if (partDatabase) {
             ConfigNode* node = partDatabase->GetNode("PART_DATABASE");

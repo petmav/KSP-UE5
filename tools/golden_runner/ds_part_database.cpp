@@ -14,6 +14,7 @@
 #include <map>
 #include <set>
 
+#include "ksp/dotnet/text.hpp"
 #include "datasets.hpp"
 #include "ksp/database/game_data.hpp"
 #include "ksp/dotnet/number.hpp"
@@ -103,7 +104,7 @@ void FmtPartField(const PartFieldInfo& f, PartPrefab& p, std::string& s, Cell& n
 
 std::string GameRootOf(const std::string& gamedata) {
     namespace fs = std::filesystem;
-    const fs::path gd = fs::absolute(fs::path(std::u8string(gamedata.begin(), gamedata.end()))).lexically_normal();
+    const fs::path gd = fs::absolute(dotnet::PathFromUtf8(gamedata)).lexically_normal();
     fs::path p = gd;
     if (!p.has_filename()) p = p.parent_path();
     const std::u8string s = p.parent_path().u8string();
@@ -115,7 +116,7 @@ int RunPartDatabase(const RunnerOptions& opt) {
     GameData data;
     GameData::Options go;
     go.gameRoot = GameRootOf(opt.gamedata);
-    go.gameDataDir = fs::absolute(fs::path(std::u8string(opt.gamedata.begin(), opt.gamedata.end()))).lexically_normal().string();
+    go.gameDataDir = fs::absolute(dotnet::PathFromUtf8(opt.gamedata)).lexically_normal().string();
     data.Load(go);
     const GameDatabase& db = data.database;
     const PartLoader& loader = data.parts;
@@ -314,8 +315,8 @@ int RunPartDatabase(const RunnerOptions& opt) {
         for (size_t k = 0; k < ap.assets.size(); k++) {
             const PartAssetRef& a = ap.assets[k];
             const bool exists = !a.file.empty() && a.source == "GameData" &&
-                                fs::exists(fs::path(std::u8string(gameRoot.begin(), gameRoot.end())) /
-                                           fs::path(std::u8string(a.file.begin(), a.file.end())));
+                                fs::exists(dotnet::PathFromUtf8(gameRoot) /
+                                           dotnet::PathFromUtf8(a.file));
             tas.Add({Cell(pn), Cell(k), Cell(a.kind), Cell(a.slot), Cell(a.url),
                      a.file.empty() ? Cell(nullptr) : Cell(a.file), Cell(exists), Cell(a.source)});
         }

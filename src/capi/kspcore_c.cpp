@@ -74,7 +74,9 @@ std::string MakeBuildInfo() {
     const long lang = static_cast<long>(__cplusplus);
     const int idl = 0;
 #endif
-#if defined(_DLL) && defined(_DEBUG)
+#if !defined(_MSC_VER)
+    const char* crt = "host";  // glibc/libc++ etc.: only MSVC builds have the MD/MT distinction the Unreal link requires
+#elif defined(_DLL) && defined(_DEBUG)
     const char* crt = "MDd";
 #elif defined(_DLL)
     const char* crt = "MD";
