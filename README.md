@@ -69,6 +69,8 @@ links).
 | `capture.orbit_rails` | WP-08 on-rails propagation through OrbitDriver in the rotating Planetarium frame, warp 1x-100,000x, 4 on-rails SOI transitions (BSP), TimeWarp.fixedDeltaTime | in-game `harness/captures/out2/orbit_rails_ingame.json` (C8) |
 | `golden.atmosphere_curves` | WP-09 CelestialBody atmosphere + FlightIntegrator atmosphere helpers (pressure, temperature, density, speed of sound, Mach, solar attenuation, shock temperature, convection, pseudo-Reynolds) | `harness/golden/atmosphere_curves` |
 | `capture.terrain_height` | WP-11 PQS.GetSurfaceHeight for Kerbin and Mun with the stock mod stacks (prefab data + the game's own height maps): 140,522 samples (1-degree grids, 0.01-degree KSC patch, the pad), public and overrideQuadBuildCheck variants, terrain altitude, per-scene probe heights, PQS radius/radiusMin/radiusMax | in-game `harness/captures/out2/terrain_height.json` |
+| `capture.part_database` | WP-05 GameDatabase + PartLoader (data side) on the real GameData (`decompiled/KSP-dev/GameData`, runner option `--gamedata`): parts, cfg values, modules, cfg-set module fields, propellants, resources, attach nodes, drag cubes, variants, asset paths; scope limits declared in `tests/CMakeLists.txt` | in-game `harness/captures/out2/part_database.json` (C9) |
+| `capture.gamedatabase_load_order` | WP-05 GameDatabase load order: every `Load(Audio/Texture/Model): url` and `Config(TYPE) url` line | KSP.log of the C9 capture run (`decompiled/logs/`) |
 
 All of them are bit-exact today (every numeric column max ULP 0, max abs 0).
 
@@ -90,8 +92,8 @@ everywhere); the harness's `compare/tolerances.json` is used unchanged for harne
    recomputes the dataset with kspcore and writes `candidate/<dataset>/<dataset>.json` in the harness's
    `ksp-golden/1` schema (same tables, keys and number text format as the golden file). Dataset-specific exact checks
    that are not tables (ConfigNode's saved bytes and parse trees) run inside the runner; any mismatch is a non-zero exit.
-2. For gates that use only some tables of a golden file, or an in-game capture file (which carries `<col>_hex`
-   companion columns), `python -I tools/filter_golden.py` writes a filtered copy of the golden file into the build tree.
+2. When a gate sets any filter option (below), `python -I tools/filter_golden.py` writes a filtered copy of the
+   golden file into the build tree (`candidate/<dataset>/golden_<gate>.json`; harness/ is never modified).
 3. `python -I ..\harness\compare\compare.py <golden> <candidate> --tol <tolerances> --report
    candidate/<dataset>/compare_report_<gate>.json`; any out-of-tolerance column, missing row/column or table fails.
 
@@ -99,6 +101,39 @@ The runner never reads golden *outputs* as inputs: inputs come from the same sou
 (`harness/inputs/**`, `harness/golden/serialized/*.serialized.json` for Unity-serialized prefab data, the
 `synthetic_inputs/` files, `harness/captures/in/*.tsv`, and the generators' literal input lists mirrored from
 `harness/src/KspGolden/Generators/` and the capture code).
+
+### Golden gate options
+
+`ksp_golden_gate(<test name> <runner dataset> [options])` in `tests/CMakeLists.txt`; `cmake/RunGolden.cmake` passes
+each filter option to the `tools/filter_golden.py` flag in brackets. One option set for every gate (WP-08's `ROWS`
+became `KEEP_ROWS` when WP-05 was merged). Filters that remove golden data are allowed only for data outside the
+package's scope (another package's code, objects that are not the experiment's inputs), each documented next to its
+gate and in STATUS.md; never to hide a mismatch. A table or column named by a filter but absent from the golden file
+fails the gate.
+
+| option | meaning | gates using it |
+|---|---|---|
+| `GOLDEN <file>` | reference file (default `harness/golden/<dataset>/<dataset>.json`); captures: `${KSP_CAPTURES_DIR}` (`harness/captures/out`), `${KSP_CAPTURES2_DIR}` (`harness/captures/out2`) | all `capture.*`: math_shim.f32, libm_mono, unity_random, physics_drag_curve, orbit_rails, terrain_height, part_database |
+| `TOL <file>` | tolerance file (default `harness/compare/tolerances.json`; captures use `${KSP_CAPTURE_TOL}` = `tests/tolerances_capture.json`, 0 ULP) | all `capture.*` (as above) |
+| `TABLES t1,t2` [`--tables`] | compare only these tables | golden.math_shim.f64, capture.math_shim.f32, capture.unity_random, capture.physics_drag_curve, capture.terrain_height |
+| `KEYS t:c1,c2/...` [`--key`] | set a table's key columns (capture tables written without a key; compare.py matches rows by key) | capture.orbit_rails (`soi_events:vessel,UT`) |
+| `KEEP_ROWS rowspec` [`--keep-rows`] | keep only the rows matching rowspec (objects that are the experiment's inputs) | capture.orbit_rails (`soi_events:vessel^HC8`: the probes, not the asteroids) |
+| `DROP_ROWS rowspec` [`--drop-rows`] | drop the rows matching rowspec (subject out of scope by a property of the golden row) | capture.part_database (the 5 prefab parts in every table; assets `kind=texture`) |
+| `KEEP_ROWS_FILE <json>` [`--keep-rows-file`] | `{table: [[key values...], ...]}`: keep only the listed keys; a scope list the runner derives from its inputs (`<OUT>` = candidate dir) | capture.part_database (`<OUT>/part_database/scope.json`: the module fields each MODULE node sets) |
+| `DROP_KEYS_FILE <json>` [`--drop-keys-file`] | `{table: [{"key": [...], "reason": "..."}, ...]}`: drop individually listed rows, each with its reason (`<OUT>` substituted too) | capture.part_database (`tests/data/part_database_exclusions.json`) |
+| `RENUMBER t:col:group/...` [`--renumber`] | after the row filters, rewrite index column `col` as 0, 1, 2... within each value of `group` | capture.part_database (`assets:idx:part`) |
+| `DROP_HEX` [`--drop-hex`] | drop the `<col>_hex` companion columns of in-game capture files (decimals are exact, so ULP compare is equivalent) | all `capture.*` (as above) |
+| `COLUMNS t:c1,c2/...` [`--keep-columns`] | keep only the listed columns of the named tables (key columns must be listed) | capture.orbit_rails, capture.terrain_height |
+| `DROP_COLUMNS t:c1,c2/...` [`--drop-columns`] | drop the listed columns (and their `_hex` companions) of the named tables | capture.part_database |
+
+`rowspec` = `table:cond[+cond...][/table2:...]`; conditions on one table are OR'd. `col=v1|v2` matches when the
+cell's text equals one of the values (strings as-is, null reads `null`, numbers/booleans as JSON text); `col^p1|p2`
+matches when the cell is a string starting with one of the prefixes. Values cannot contain `/`, `+` or `|`.
+
+Order inside `filter_golden.py`, per table: TABLES, KEYS, KEEP_ROWS then DROP_ROWS, KEEP_ROWS_FILE, DROP_KEYS_FILE
+(both by the key after KEYS), RENUMBER, then the column filters DROP_HEX, COLUMNS, DROP_COLUMNS. Gates with no
+filter option (golden.confignode_roundtrip, curves_eval, orbit_propagation, physics_constants, body_catalog,
+atmosphere_curves, patched_conics) compare the harness file as is.
 
 ## Linking into Unreal (C ABI)
 
@@ -160,6 +195,10 @@ contract into FMA.
 | `include/ksp/curves/double_curve.hpp`, `include/ksp/math/{matrix4x4d,mathfx}.hpp` | DoubleCurve, Vector3/4Curve, Matrix4x4D, Mathfx, VectorExtensions, QuaternionExtensions, MinMaxFloat, Vect, PIDclamp |
 | `include/ksp/physics/` | WP-09 `physics_globals.hpp` (PhysicsGlobals: fields, static properties, LoadDatabase/SaveDatabase, lifting-surface curves, DragCurveValue; the `*.inc` files are generated), `vessel_ranges.hpp` (VesselRanges, Vessel.Situations) |
 | `include/ksp/celestial/` | WP-09 `celestial_body.hpp` (CelestialBody, CBAttributeMapSO, MiniBiome, GameAssetRef, orbit elements + `ICelestialBodyOrbit` link to the run-time Orbit), `celestial_body_orbit.hpp` (`CelestialBodyOrbitAdapter`: OrbitDriver for bodies over ksp::Orbit), `planetarium.hpp` (Planetarium, the only one: also Orbit's Zup/up/right/ZupAtT), `celestial_system.hpp` (PSystem prefab, `KerbolSystemPrefab()`, spawn, FlightGlobals body list), `flight_globals.hpp` (WP-08: FlightGlobals.getMainBody/overrideOrbit subset), `flight_atmosphere.hpp` (FlightIntegrator atmosphere helpers) |
+| `include/ksp/io/` | WP-05 `url_dir.hpp` (UrlDir, UrlFile, UrlConfig, UrlIdentifier: the GameData tree) |
+| `include/ksp/database/` | WP-05 `game_database.hpp` (GameDatabase data side: configs, texture/model/audio metadata tables), `game_data.hpp` (`ksp::GameData`: the whole loading sequence on a KSP install; GameData root = `<gameRoot>/GameData`, plus `<gameRoot>/Physics.cfg` and `<gameRoot>/PartDatabase.cfg`) |
+| `include/ksp/parts/` | WP-05 `part_loader.hpp` (PartLoader data side), `available_part.hpp` (AvailablePart, PartPrefab, PartVariant, model/asset refs), `part_data.hpp` (AttachRules, Part field table, AttachNode, DragCube/List, PartResource), `part_module_data.hpp` (PartModule class table, MODULE records, Propellant), `ksp_enums.hpp`; generated `part_fields.inc`, `compound_part_fields.inc`, `part_enums.inc`, `module_schema.inc` |
+| `include/ksp/resources/` | WP-05 `part_resource_library.hpp` (PartResourceDefinition/List/Library), `physic_material_library.hpp` |
 | `include/ksp/curves/serialized_float_curve.hpp` | FloatCurves built from Unity-serialized keyframes (prefab data) |
 | `include/ksp/terrain/` | WP-11 terrain height: `pqs.hpp` (PQS height path: SetupMods, SetupBuildDelegates radii, GetSurfaceHeight, VertexBuildData, PQSMod base), `pqs_mods.hpp` (all 28 PQSMods that change height + PQSModPassive), `map_so.hpp` (MapSO sampling/decoding), `libnoise.hpp` (KSP's LibNoise subset), `pqs_prefab.hpp` (stock PQS factory, MapLibrary, `GetRelSurfaceNVector`, `TerrainAltitude`, `SurfaceHeightOverride`) |
 | `data/terrain/` | WP-11 original terrain data from `decompiled/KSP-dev/KSP_x64_Data`: `maps/<name>.<PathID>.bin` (16 MapSO._data arrays, 55 MB: every height map/decal a height mod references), `manifest.json` (origin asset file + PathID, header, sha256 per map), `pqs_prefab.json` (every PQSMod of every body in GetChildMods order with all serialized fields) |
@@ -175,6 +214,7 @@ contract into FMA.
 | `tools/wp03_reference/` | `gen_wp03_reference.ps1` + `Wp03Ref.cs`, regenerates `tests/data/wp03_reference.tsv` from KSP's IL |
 | `tools/wp03/` | `gen_game_events.py` (+ `cs_types.py`): regenerates the GameEvents registry from `GameEvents.cs` |
 | `tools/filter_golden.py` | writes a table/column-filtered / `_hex`-stripped copy of a golden or capture file for compare.py |
+| `tools/wp05/` | `gen_part_fields.py` and `gen_module_schema.py` (regenerate the `include/ksp/parts/*.inc` tables from the decompiled C#; never hand-edit), `check_load_log.py` (load-order gate), `estimate_module_defaults.py` (WP-06 diagnostic) |
 | `cmake/RunGolden.cmake` | the per-dataset gate |
 | `third_party/` | doctest 2.4.12, nlohmann/json 3.12.0 (pinned, see `third_party/VERSIONS.md`); used by tests/tools only |
 
@@ -254,11 +294,11 @@ contract into FMA.
 4. Declare the gate in `tests/CMakeLists.txt`:
    `ksp_golden_gate(golden.<dataset> <dataset>)` for a harness golden, or
    `ksp_golden_gate(capture.<dataset> <dataset> GOLDEN ${KSP_CAPTURES_DIR}/<file>.json DROP_HEX TOL ${KSP_CAPTURE_TOL}
-   [TABLES t1,t2])` for an in-game capture (batch 2 files: `${KSP_CAPTURES2_DIR}`). `ROWS t:col^prefix` keeps only rows
-   of objects that belong to the experiment's inputs and `KEYS t:c1,c2` gives a keyless capture table its key (both
-   documented per gate). Float32 managed paths are judged against captures where they exist.
-   `COLUMNS t:c1,c2/t2:c3` keeps only the listed columns of a table: only for columns that need another package's code
-   (document each exclusion in tests/CMakeLists.txt and STATUS.md), never to hide a mismatch.
+   [TABLES t1,t2])` for an in-game capture (batch 2 files: `${KSP_CAPTURES2_DIR}`). Float32 managed paths are judged
+   against captures where they exist. Row/column scope filters (KEYS, KEEP_ROWS, DROP_ROWS, KEEP_ROWS_FILE,
+   DROP_KEYS_FILE, RENUMBER, COLUMNS, DROP_COLUMNS): see "Golden gate options"; only for data another package's code
+   produces or objects outside the experiment's inputs (document each in tests/CMakeLists.txt and STATUS.md), never to
+   hide a mismatch.
    Candidate numbers are written like the harness (`.0` on integral values): compare.py matches row keys by their JSON
    text, so a key column written as `100` would not match the golden's `100.0`.
 5. Run `run_tests.ps1`; inspect `build/<Config>/candidate/<dataset>/compare_report_<gate>.json` for per-column

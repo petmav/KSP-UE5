@@ -16,6 +16,7 @@ add_executable(kspcore_tests
     test_wp03_reference.cpp
     test_patched_conics.cpp
     test_terrain.cpp
+    test_partloader.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
 )
 target_link_libraries(kspcore_tests PRIVATE kspcore)
@@ -44,13 +45,15 @@ add_test(NAME capi.c COMMAND capi_c ${KSP_HARNESS_DIR}/inputs/Physics.cfg)
 add_test(NAME capi.ue_like COMMAND capi_ue_like ${KSP_HARNESS_DIR}/inputs/Physics.cfg)
 
 # ---- golden gates: golden_runner writes candidates, harness/compare/compare.py judges them -----------------------------
-# ksp_golden_gate(<test name> <runner dataset> [GOLDEN <file>] [TOL <file>] [TABLES <t1,t2>]
-#                 [COLUMNS <t:c1,c2/t2:c3>] [DROP_HEX] [ROWS <t:col^prefix/...>] [KEYS <t:c1,c2/...>])
-#   COLUMNS keeps only the listed columns of the named tables (columns that need another package's code; documented).
+# ksp_golden_gate(<test name> <runner dataset> [GOLDEN <file>] [TOL <file>] [TABLES <t1,t2>] [KEYS <t:c1,c2/...>]
+#                 [KEEP_ROWS <rowspec>] [DROP_ROWS <rowspec>] [KEEP_ROWS_FILE <json>] [DROP_KEYS_FILE <json>]
+#                 [RENUMBER <t:col:groupcol/...>] [DROP_HEX] [COLUMNS <t:c1,c2/...>] [DROP_COLUMNS <t:c1,c2/...>])
 #   GOLDEN defaults to harness/golden/<dataset>/<dataset>.json and TOL to harness/compare/tolerances.json.
 #   In-game capture files (harness/captures/out, out2) carry `<col>_hex` columns: use DROP_HEX.
-#   ROWS keeps only the rows of a table whose string column starts with a prefix (objects outside the experiment's
-#   inputs; documented); KEYS gives a keyless capture table its key columns.
+#   The filter options (one coherent set, applied by tools/filter_golden.py in a fixed order; grammar, order and the
+#   gates using each option: README.md "Golden gate options") restrict the golden copy to the package's scope. Every
+#   use must say why next to the gate and in STATUS.md (another package's code, objects that are not the experiment's
+#   inputs); never to hide a mismatch. rowspec = t:col=v1|v2+col2^prefix/t2:... (conditions OR'd per table).
 find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
 set(KSP_CANDIDATE_DIR "${CMAKE_BINARY_DIR}/candidate")
 set(KSP_CAPTURES_DIR "${KSP_HARNESS_DIR}/captures/out")
@@ -58,7 +61,8 @@ set(KSP_CAPTURES2_DIR "${KSP_HARNESS_DIR}/captures/out2")  # batch 2 (C4, C5, C6
 set(KSP_CAPTURE_TOL "${CMAKE_CURRENT_SOURCE_DIR}/tolerances_capture.json")
 
 function(ksp_golden_gate name dataset)
-    cmake_parse_arguments(G "DROP_HEX" "GOLDEN;TOL;TABLES;COLUMNS;ROWS;KEYS" "" ${ARGN})
+    cmake_parse_arguments(G "DROP_HEX"
+        "GOLDEN;TOL;TABLES;KEYS;KEEP_ROWS;DROP_ROWS;KEEP_ROWS_FILE;DROP_KEYS_FILE;RENUMBER;COLUMNS;DROP_COLUMNS" "" ${ARGN})
     if(G_DROP_HEX)
         set(drop ON)
     else()
@@ -77,8 +81,13 @@ function(ksp_golden_gate name dataset)
             -DTABLES=${G_TABLES}
             "-DCOLUMNS=${G_COLUMNS}"
             -DDROP_HEX=${drop}
-            "-DROWS=${G_ROWS}"
             "-DKEYS=${G_KEYS}"
+            "-DKEEP_ROWS=${G_KEEP_ROWS}"
+            "-DDROP_ROWS=${G_DROP_ROWS}"
+            "-DKEEP_ROWS_FILE=${G_KEEP_ROWS_FILE}"
+            "-DDROP_KEYS_FILE=${G_DROP_KEYS_FILE}"
+            "-DRENUMBER=${G_RENUMBER}"
+            "-DDROP_COLUMNS=${G_DROP_COLUMNS}"
             -DFILTER=${PROJECT_SOURCE_DIR}/tools/filter_golden.py
             -P ${PROJECT_SOURCE_DIR}/cmake/RunGolden.cmake)
     set_tests_properties(${name} PROPERTIES LABELS golden TIMEOUT 900 RUN_SERIAL TRUE)
@@ -122,7 +131,7 @@ ksp_golden_gate(golden.patched_conics patched_conics)
 # the inputs the runner reads (initial.req_*, segments.requested_rate); soi_events rows of the two asteroids (spawned
 # by the game's discovery scenario, not capture inputs): only the "HC8 " probes, keyed by (vessel, UT).
 ksp_golden_gate(capture.orbit_rails orbit_rails GOLDEN ${KSP_CAPTURES2_DIR}/orbit_rails_ingame.json DROP_HEX
-                TOL ${KSP_CAPTURE_TOL} ROWS "soi_events:vessel^HC8" KEYS "soi_events:vessel,UT"
+                TOL ${KSP_CAPTURE_TOL} KEEP_ROWS "soi_events:vessel^HC8" KEYS "soi_events:vessel,UT"
                 COLUMNS "initial:id,body,inclination,eccentricity,semiMajorAxis,LAN,argumentOfPeriapsis,meanAnomalyAtEpoch,epoch,meanMotion,period,ObTAtEpoch,mu,spawned/samples:id,frame,segment,UT,warp_rate,ref_body,updateUT,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z,relpos_at_UT_x,relpos_at_UT_y,relpos_at_UT_z,semiMajorAxis,eccentricity,inclination,LAN,argumentOfPeriapsis,meanAnomalyAtEpoch,epoch,ObT,meanAnomaly,trueAnomaly,update_mode/segments:segment,rate_index,achieved_rate,frames,UT_start,UT_end,Time_fixedDeltaTime,TimeWarp_fixedDeltaTime,timeScale")
 
 # WP-11 terrain: PQS.GetSurfaceHeight for Kerbin and Mun (140,522 samples: 1-degree grids, the 0.01-degree KSC patch,
@@ -139,3 +148,32 @@ ksp_golden_gate(capture.terrain_height terrain_height GOLDEN ${KSP_CAPTURES2_DIR
 add_test(NAME corpus.gamedata
     COMMAND golden_runner gamedata --harness ${KSP_HARNESS_DIR} --out ${KSP_CANDIDATE_DIR})
 set_tests_properties(corpus.gamedata PROPERTIES LABELS corpus TIMEOUT 900)
+
+# WP-05 part database: GameDatabase + PartLoader (data side) on the real GameData (decompiled/KSP-dev/GameData, read
+# by golden_runner's default --gamedata) vs the in-game capture C9 (captures/out2/part_database.json). Bit-exact, with
+# these documented scope limits (STATUS.md WP-05):
+#   DROP_ROWS  the 5 parts PartLoader builds in code from Unity prefabs (EVA kerbals, flag): their base values are
+#              Unity-serialized prefab data, not GameData (the 4 DLC-suit error rows ARE gated); assets rows of kind
+#              `texture` (renderer/material texture slots: they need the .mu model contents)
+#   KEEP_ROWS_FILE  module_fields: only the fields the part's MODULE node sets (runner-written scope list); the other
+#              rows are KSPField defaults / module OnLoad results (WP-06 module instantiation)
+#   DROP_KEYS_FILE  individually excluded rows with reasons (tests/data/part_database_exclusions.json)
+#   RENUMBER   assets.idx renumbered per part after dropping the texture rows
+#   DROP_COLUMNS  parts.partSize (renderer bounds of the model), parts.module_mass/module_cost (IPartMassModifier /
+#              IPartCostModifier modules, WP-06), variants.materials (model materials)
+set(KSP_PREFAB_PARTS "kerbalEVA|kerbalEVAfemale|flag|kerbalEVASlimSuit|kerbalEVASlimSuitFemale")
+ksp_golden_gate(capture.part_database part_database GOLDEN ${KSP_CAPTURES2_DIR}/part_database.json DROP_HEX
+    TOL ${KSP_CAPTURE_TOL}
+    DROP_ROWS "parts:name=${KSP_PREFAB_PARTS}/part_cfg_values:part=${KSP_PREFAB_PARTS}/modules:part=${KSP_PREFAB_PARTS}/module_fields:part=${KSP_PREFAB_PARTS}/module_propellants:part=${KSP_PREFAB_PARTS}/resources:part=${KSP_PREFAB_PARTS}/attach_nodes:part=${KSP_PREFAB_PARTS}/drag_cubes:part=${KSP_PREFAB_PARTS}/variants:part=${KSP_PREFAB_PARTS}/assets:part=${KSP_PREFAB_PARTS}+kind=texture"
+    KEEP_ROWS_FILE "<OUT>/part_database/scope.json"
+    DROP_KEYS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/data/part_database_exclusions.json
+    RENUMBER "assets:idx:part"
+    DROP_COLUMNS "parts:partSize,module_mass,module_cost/variants:materials")
+set_tests_properties(capture.part_database PROPERTIES FIXTURES_SETUP partdb)
+# GameDatabase load order vs the game's own log of the capture run (every "Load(Audio|Texture|Model): url" and
+# "Config(TYPE) url" line, in order). Skipped (exit 0 with a note) when the log is not present.
+add_test(NAME capture.gamedatabase_load_order
+    COMMAND ${Python3_EXECUTABLE} -I ${PROJECT_SOURCE_DIR}/tools/wp05/check_load_log.py
+            ${KSP_CANDIDATE_DIR}/part_database/gamedatabase_load.log
+            ${KSP_PROJECT_ROOT}/decompiled/logs/ksp-capture-capture2-final2-KSP.log)
+set_tests_properties(capture.gamedatabase_load_order PROPERTIES LABELS golden FIXTURES_REQUIRED partdb TIMEOUT 300)
