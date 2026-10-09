@@ -6,12 +6,16 @@
 
 #include "ksp/core/exceptions.hpp"
 #include "ksp/core/log.hpp"
+#include "ksp/dotnet/collections.hpp"
 #include "ksp/events/game_events.hpp"
 #include "ksp/modules/part_module.hpp"
 #include "ksp/parts/part.hpp"
 #include "ksp/physics/physics_globals.hpp"
 #include "ksp/vessel/flight_logger.hpp"
 #include "ksp/vessel/vessel.hpp"
+
+// int.CompareTo(int): -1 / 0 / 1
+static inline int IntCompareTo(int a, int b) { return a < b ? -1 : (a > b ? 1 : 0); }
 
 namespace ksp {
 
@@ -122,7 +126,7 @@ void StageIcon::SetInStageIndexOFGroupedIcons(bool /*setSiblingIndex*/) {
     while (count-- > 0) groupedIcons[static_cast<size_t>(count)]->SetInStageIndex(InStageIndex());
 }
 
-// StageIcon.cs:857 (List.Sort is unstable; the keys are distinct child indices)
+// StageIcon.cs:857 (List.Sort is the unstable introsort, ported as dotnet::ListSort; the keys are distinct child indices)
 void StageIcon::SortGroupedIcons() {
     StageGroup* stageGroup = groupLead != nullptr ? groupLead->stage : stage;
     if (stageGroup == nullptr) return;
@@ -130,7 +134,8 @@ void StageIcon::SortGroupedIcons() {
         const auto& ch = a->part->parent->children;
         return static_cast<int>(std::find(ch.begin(), ch.end(), a->part) - ch.begin());
     };
-    std::stable_sort(groupedIcons.begin(), groupedIcons.end(), [&](StageIcon* a, StageIcon* b) { return idx(a) < idx(b); });
+    // StageIcon.cs:863: a.Part.parent.children.IndexOf(a.Part).CompareTo(b...)
+    dotnet::ListSort(groupedIcons, [&](StageIcon* a, StageIcon* b) { return IntCompareTo(idx(a), idx(b)); });
     int count = static_cast<int>(groupedIcons.size());
     while (count-- > 0) groupedIcons[static_cast<size_t>(count)]->SetInStageIndex(InStageIndex());
 }
@@ -1099,8 +1104,9 @@ std::vector<Part*> StageManager::FindPartsWithModuleSeparatingBeforeOtherPartsWi
                                                                                          const std::function<bool(Part&)>& isAfter) {
     std::vector<Part*> list;
     std::vector<Part*> list2(parts);
-    // List.Sort (unstable introsort, keyed by separationIndex): ties are not ordered by the key; a stable sort keeps the input order
-    std::stable_sort(list2.begin(), list2.end(), [](Part* a, Part* b) { return a->fields.separationIndex < b->fields.separationIndex; });
+    // StageManager.cs:1067: List.Sort is the unstable introsort and the keys tie on separationIndex, so the tie order is
+    // the introsort's, reproduced bit-for-bit by dotnet::ListSort
+    dotnet::ListSort(list2, [](Part* a, Part* b) { return IntCompareTo(a->fields.separationIndex, b->fields.separationIndex); });
     Part* part = nullptr;
     int num = 0;
     bool flag = false;

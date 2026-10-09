@@ -103,7 +103,6 @@ public:
     bool upgradesLoaded = false;                // upgrades != null
     std::vector<std::string> upgradesApplied;
     ModuleResourceHandler resHandler;  // PartModule.cs:175 (WP-15)
-    bool isStageable = false;        // ReflectedAttributes.isStageable: the class overrides OnActive (set by the registrant)
 
     const std::string& ClassName() const { return className_; }
     int ClassID() const { return classID_; }
@@ -159,6 +158,9 @@ public:
     // overrides of the stageable modules whose own package has not ported the class yet (ModuleEngines, ModuleRCS, ModuleGimbal,
     // ModuleJettison, ModuleDockingNode, ModuleScienceExperiment, ModuleTestSubject, ModuleEvaChute); a ported subclass overrides.
     virtual bool IsStageable();                                    // :272
+    // `ModuleAttributes.isStageable = value` (PartModule.cs:25): ModuleAttributes is the per-TYPE ReflectedAttributes (PartModule.cs:746
+    // GetReflectedAttributes(GetType())), so this writes the flag shared by every instance of this module class.
+    void SetModuleAttributesIsStageable(bool value);
     virtual bool StagingEnabled();                                 // :277
     virtual void UpdateStagingToggle();                            // :282
     virtual void SetStaging(bool newValue);                        // :296

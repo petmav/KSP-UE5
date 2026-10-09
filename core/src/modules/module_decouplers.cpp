@@ -109,7 +109,7 @@ void ModuleDecouplerBase::OnActive() {}
 void ModuleDecouplerBase::LateUpdate() {
     if (refreshStaging) {
         Set<bool>("stagingEnabled", false);
-        isStageable = false;  // base.ModuleAttributes.isStageable = false (this IsStageable() override answers `staged` anyway)
+        SetModuleAttributesIsStageable(false);  // base.ModuleAttributes.isStageable = false (per class; this IsStageable() override answers `staged` anyway)
         if (Part* p = PartOf()) p->UpdateStageability(false, true);
         refreshStaging = false;
     }

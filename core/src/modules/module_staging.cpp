@@ -7,6 +7,10 @@
 #include "ksp/core/exceptions.hpp"
 #include "ksp/parts/part.hpp"
 
+#include <string>
+#include <string_view>
+#include <unordered_map>
+
 namespace ksp {
 
 namespace {
@@ -24,6 +28,20 @@ bool ReflectedIsStageable(const ModuleClassInfo& cls) {
             if (std::string_view(n) == c->name) return true;
     }
     return false;
+}
+
+// PartModule.cs:746 GetReflectedAttributes(GetType()): one ReflectedAttributes per module type, built at the first query (the
+// constructor evaluates the OnActive rule above) and shared by every instance; ModuleDecouplerBase.LateUpdate overwrites its
+// `isStageable`. Keyed by the module class name, like C#'s per-Type cache.
+std::unordered_map<std::string, bool>& ReflectedAttributesIsStageable() {
+    static std::unordered_map<std::string, bool> cache;
+    return cache;
+}
+bool& ModuleAttributesIsStageable(const ModuleClassInfo& cls) {
+    auto& cache = ReflectedAttributesIsStageable();
+    auto it = cache.find(cls.name);
+    if (it == cache.end()) it = cache.emplace(cls.name, ReflectedIsStageable(cls)).first;
+    return it->second;
 }
 }  // namespace
 
@@ -44,7 +62,7 @@ void PartModule::OnStart(StartState) {
         if (p->fields.stagingIcon && p->fields.stagingIcon->empty() && Get<bool>("overrideStagingIconIfBlank")) p->fields.stagingIcon = std::string(icon);
 }
 
-// PartModule.cs:272 (`ModuleAttributes.isStageable`); `isStageable` caches the reflected answer, set at the first query
+// PartModule.cs:272 `return ModuleAttributes.isStageable` (the per-class ReflectedAttributes flag, evaluated at the class's first query)
 bool PartModule::IsStageable() {
     const ModuleClassInfo& cls = Class();
     // ModuleRCS.cs:746 and ModuleJettison.cs:641: `if (!stagingEnabled && !stagingToggleEnabledEditor) return stagingToggleEnabledFlight; return true;`
@@ -56,8 +74,11 @@ bool PartModule::IsStageable() {
     if (cls.Is("ModuleGimbal") || cls.Is("ModuleTestSubject") || cls.Is("ModuleEvaChute")) return false;  // ModuleGimbal.cs:326, ModuleTestSubject.cs:200, ModuleEvaChute.cs:136
     if (cls.Is("ModuleDockingNode")) return Get<bool>("staged");               // ModuleDockingNode.cs:1949
     if (cls.Is("ModuleScienceExperiment")) return Get<bool>("useStaging");      // ModuleScienceExperiment.cs:1183
-    return isStageable || ReflectedIsStageable(cls);
+    return ModuleAttributesIsStageable(cls);
 }
+
+// ModuleDecouplerBase.cs:116 `base.ModuleAttributes.isStageable = value`
+void PartModule::SetModuleAttributesIsStageable(bool value) { ModuleAttributesIsStageable(Class()) = value; }
 
 // PartModule.cs:277
 bool PartModule::StagingEnabled() {

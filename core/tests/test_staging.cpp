@@ -1720,7 +1720,10 @@ TEST_CASE("WP-16 Kerbal X flown stage by stage: every ModuleDecouple / ModuleAnc
         decouplers += p->FindModuleOfClass("ModuleDecouple") != nullptr || p->FindModuleOfClass("ModuleAnchoredDecoupler") != nullptr;
         clamps += p->isLaunchClamp();
     }
-    CHECK(decouplers > 0);
+    // 9 = the craft's parts whose module is a decoupler: 2 x Decoupler.2 (stack), 6 x radialDecoupler1-2 (3 boosters x 2 side
+    // decouplers) and the Mk1 command pod's HeatShield2 (ModuleDecouple). This equals the number of `isDecoupler == true` rows of
+    // craft_Kerbal_X in the C5 capture parts table (harness/captures/out2/deltav_readout.json), checked below.
+    CHECK(decouplers == 9);
     CHECK(clamps == 3);
     FlightStagingHost host;
     StageManager sm(&host);
@@ -1731,6 +1734,21 @@ TEST_CASE("WP-16 Kerbal X flown stage by stage: every ModuleDecouple / ModuleAnc
     sm.FlushSort();
     const int stages = StageManager::StageCount();
     CHECK(stages == 8);  // C5: stage_count of craft_Kerbal_X
+    // 8 = the decouplers a staging pass can reach: the ones in stages 0..7 (inverseStage >= 0). The ninth, HeatShield2, has
+    // istg = -1 in the craft file (ModuleDecouple.stagingEnabled = False, HeatShield2.cfg:64): it is not in the stage list, so no
+    // ActivateStage fires it; it is only jettisoned from its right-click "Jettison Heat Shield" event. The capture's inverseStage
+    // for it is -1 as well.
+    size_t reachable = 0;
+    Part* heatShield = nullptr;
+    for (Part* p : v->parts)
+        if (p->FindModuleOfClass("ModuleDecouple") != nullptr || p->FindModuleOfClass("ModuleAnchoredDecoupler") != nullptr) {
+            if (p->fields.inverseStage >= 0 && p->fields.inverseStage < stages) reachable++;
+            else heatShield = p;
+        }
+    CHECK(reachable == 8);
+    REQUIRE(heatShield != nullptr);
+    CHECK(heatShield->partInfo->name == "HeatShield2");
+    CHECK(heatShield->fields.inverseStage == -1);
     CHECK(StageManager::CurrentStage() == 8);
     // the control-from part switches to the vessel that keeps the pod (WaitAndSwitchFocus -> FlightGlobals.ForceSetActiveVessel)
     std::vector<Vessel*> switched;
@@ -1797,9 +1815,33 @@ TEST_CASE("WP-16 Kerbal X flown stage by stage: every ModuleDecouple / ModuleAnc
         if (m == nullptr) m = p->FindModuleOfClass("ModuleAnchoredDecoupler");
         if (m != nullptr && m->Get<bool>("isDecoupled")) decoupled++;
     }
-    CHECK(decoupled > 0);
-    CHECK(Vessel::SpawnedVessels().size() >= decoupled);  // at least one new vessel per decoupler that fired (an omni decoupler makes several)
-    MESSAGE("Kerbal X: " << decouplers << " decoupler parts, " << decoupled << " fired, " << Vessel::SpawnedVessels().size() << " new vessels, " << switched.size() << " focus switches");
+    // every reachable decoupler fired (isDecoupled), the unstaged heat shield did not
+    CHECK(decoupled == reachable);
+    CHECK(decoupled == 8);
+    CHECK_FALSE(heatShield->FindModuleOfClass("ModuleDecouple")->Get<bool>("isDecoupled"));
+    // 8 new vessels = one per fired decoupler: each of the 8 decouplers separates a subtree from its parent through its explosive
+    // node (Decoupler.2 / radialDecoupler1-2 are not omni), so Part.decouple -> Vessel.SpawnVessel runs once per decoupler
+    CHECK(Vessel::SpawnedVessels().size() == 8);
+    CHECK(Vessel::SpawnedVessels().size() == decoupled);
+    // the capture agrees on the count of decoupler parts of this craft
+    {
+        std::ifstream cap(kHarness16 + "/captures/out2/deltav_readout.json", std::ios::binary);
+        REQUIRE(cap.good());
+        const nlohmann::json j = nlohmann::json::parse(cap);
+        for (const auto& t : j["tables"]) {
+            if (t["name"] != "parts") continue;
+            const auto& cols = t["columns"];
+            size_t ci = 0, di = 0;
+            for (size_t c = 0; c < cols.size(); c++) {
+                if (cols[c]["name"] == "craft_id") ci = c;
+                if (cols[c]["name"] == "isDecoupler") di = c;
+            }
+            size_t capDecouplers = 0;
+            for (const auto& r : t["rows"])
+                if (r[ci] == "craft_Kerbal_X" && r[di].is_boolean() && r[di].get<bool>()) capDecouplers++;
+            CHECK(capDecouplers == decouplers);
+        }
+    }
     ModuleDecouplerBase::forceSetActiveVessel = nullptr;
     Vessel::SpawnedVessels().clear();
     FlightRegistry::ActiveVessel = nullptr;
