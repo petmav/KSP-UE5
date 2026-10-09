@@ -19,3 +19,5 @@ Branch wp14 (from wp13 688c5711). Notes written after every major step.
 - gate capture.vessel_state passes (structure 631 rows, states 20 rows, 0 ULP); next: tests/test_vessel.cpp, STATUS, README, fresh run
 - tests so far: types, ctrl state, action groups, discovery, craft vs C10 structure, physprofile round trip (1335/1337 MODULE nodes; 2 unported OnSave). TODO tests: situations, kinematics, mass/CoM, crew/control, rails/load/unload, naming, trip logger, flight logger, tracker, axis groups, target info, values; then STATUS/README, merge-check, fresh run
 - tests: situations, mass/CoM, kinematics, accel, atmosphere, crew/control, overrides, naming, transitions, reference transform, positioning (18 cases). TODO tests: trip logger, flight logger, tracker, axis groups, target info, values, FlightRegistry; then STATUS/README, fresh run
+- tests complete (24 cases); citation pass done (/tmp/claude-0/wp14/tools/cite_check*.py); TODO: STATUS.md section, README rows, fresh full run, final report
+- STATUS.md WP-14 section, README rows written; fresh run 22/22 passed (197 unit cases / 147,884 assertions). Remaining: final commit, handback.

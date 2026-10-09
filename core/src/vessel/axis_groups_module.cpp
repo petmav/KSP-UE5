@@ -13,7 +13,6 @@ namespace ksp {
 using GE = events::GameEvents;
 
 namespace {
-bool Has(KSPAxisGroup g, KSPAxisGroup bit) { return (static_cast<int>(g) & static_cast<int>(bit)) != 0; }
 constexpr float kAxisIncrementalSpeedMultiplierDefault = 0.2f;  // GameSettings.cs:1369
 }  // namespace
 

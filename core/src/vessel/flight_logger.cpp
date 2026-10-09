@@ -268,7 +268,7 @@ bool FlightLogger::checkMissionEnd(Part* p, FlightEndModes endMode) {
     return false;
 }
 
-// Invoke("ResumeGForceReading"), Invoke("AttemptVesselSwitch") and the waitAndEndFlight coroutine (:497-:521)
+// Invoke("ResumeGForceReading"), Invoke("AttemptVesselSwitch") and the waitAndEndFlight coroutine (FlightLogger.cs:367, :376-:401)
 void FlightLogger::RunDelayedCalls(float time, float /*realtimeSinceStartup*/, bool anyInput) {
     if (resumeGeeAt >= 0.0f && time >= resumeGeeAt) {
         resumeGeeAt = -1.0f;
@@ -276,7 +276,7 @@ void FlightLogger::RunDelayedCalls(float time, float /*realtimeSinceStartup*/, b
     }
     if (switchPending_ && time >= switchAt_) {
         switchPending_ = false;
-        if (host.attemptVesselSwitch && host.attemptVesselSwitch()) missionEnd_ = false;  // FlightLogger.cs:485
+        if (host.attemptVesselSwitch && host.attemptVesselSwitch()) missionEnd_ = false;  // FlightLogger.cs:367
     }
     for (size_t i = 0; i < endWaits_.size();) {
         EndWait w = endWaits_[i];
