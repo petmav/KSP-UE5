@@ -65,6 +65,8 @@ add_library(kspcore STATIC
     resources/flow_graph.cpp
     resources/part_set.cpp
     resources/resource_flow_host.cpp
+    resources/resource_broker.cpp
+    resources/planetary_resources.cpp
     parts/ksp_enums.cpp
     parts/part_data.cpp
     parts/part_module_data.cpp

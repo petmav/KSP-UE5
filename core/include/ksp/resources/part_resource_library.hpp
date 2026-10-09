@@ -23,6 +23,10 @@ int32_t MonoStringHash(std::string_view s);
 // PartResourceDrainDefinition.cs
 class PartResourceDrainDefinition {
 public:
+    PartResourceDrainDefinition() = default;  // PartResourceDrainDefinition.cs:34
+    // PartResourceDrainDefinition.cs:38 (drainable, showFX, priority, drainISP, fxName)
+    PartResourceDrainDefinition(bool drainable, bool showFX, int32_t priority, float drainISP, std::string fxName)
+        : isDrainable_(drainable), showDrainFX_(showFX), drainFXPriority_(priority), drainForceISP_(drainISP), drainFXDefinition_(std::move(fxName)) {}
     bool isDrainable() const { return isDrainable_; }
     bool showDrainFX() const { return showDrainFX_; }
     int32_t drainFXPriority() const { return drainFXPriority_; }

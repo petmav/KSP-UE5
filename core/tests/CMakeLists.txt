@@ -21,12 +21,15 @@ add_executable(kspcore_tests
     test_partloader.cpp
     test_modules.cpp
     test_part.cpp
+    test_resource_flow.cpp
+    test_resource_modules.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
 )
 target_link_libraries(kspcore_tests PRIVATE kspcore)
 ksp_set_build_flags(kspcore_tests)
-target_include_directories(kspcore_tests PRIVATE ${PROJECT_SOURCE_DIR}/third_party ${PROJECT_SOURCE_DIR}/tools/golden_runner)
+target_include_directories(kspcore_tests PRIVATE ${PROJECT_SOURCE_DIR}/third_party ${PROJECT_SOURCE_DIR}/tools/golden_runner
+                           ${PROJECT_SOURCE_DIR}/tools/support)
 target_compile_definitions(kspcore_tests PRIVATE KSPCORE_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
                            KSPCORE_HARNESS_DIR="${KSP_HARNESS_DIR}" KSPCORE_PROJECT_ROOT="${KSP_PROJECT_ROOT}"
                            KSPCORE_DATA_DIR="${PROJECT_SOURCE_DIR}/data"
