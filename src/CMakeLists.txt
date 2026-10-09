@@ -44,6 +44,10 @@ add_library(kspcore STATIC
     database/game_database.cpp
     resources/part_resource_library.cpp
     parts/ksp_enums.cpp
+    parts/part_data.cpp
+    parts/part_module_data.cpp
+    parts/part_loader.cpp
+    database/game_data.cpp
     capi/kspcore_c.cpp
 )
 add_library(ksp::core ALIAS kspcore)

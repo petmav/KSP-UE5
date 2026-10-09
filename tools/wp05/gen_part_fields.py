@@ -115,7 +115,7 @@ def cpp_default(t, init, enum_members):
 def main(core):
     root = None
     p = os.path.abspath(core)
-    for _ in range(6):
+    for _ in range(10):
         cand = os.path.join(p, "decompiled", "KSP-Decompiled", "Assembly-CSharp")
         if os.path.isdir(cand):
             root = cand
@@ -148,11 +148,11 @@ def main(core):
                 kind, cpp = KIND[t]
                 cs = TYPE_NAME.get(t, "List`1")
                 d = cpp_default(t, init, None)
-                lines.append('%s(%s, %s, %s, "%s", nullptr, %s, %d)' % (macro, name, kind, cpp, cs, d, i + 1))
+                lines.append('%s(%s, %s, %s, "%s", nullptr, (%s), %d)' % (macro, name, kind, cpp, cs, d, i + 1))
             elif t in ENUM_BY_CS:
                 e = ENUM_BY_CS[t]
                 d = cpp_default(t, init, enums[e])
-                lines.append('%s(%s, Enum, int32_t, "%s", &kEnum_%s, %s, %d)' % (macro, name, t.split(".")[-1], e, d, i + 1))
+                lines.append('%s(%s, Enum, int32_t, "%s", &kEnum_%s, (%s), %d)' % (macro, name, t.split(".")[-1], e, d, i + 1))
             else:
                 cs = t.split("<")[0].split(".")[-1]
                 if "<" in t:

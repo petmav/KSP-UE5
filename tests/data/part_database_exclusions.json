@@ -1,0 +1,7 @@
+{
+  "_comment": "Rows of harness/captures/out2/part_database.json excluded from the capture.part_database gate, one by one, each with its reason. Only module behaviour (WP-06) belongs here; see STATUS.md WP-05.",
+  "module_fields": [
+    {"key": ["sepMotor1", 2, "stackableQuantity"],
+     "reason": "ModuleCargoPart.cs:96 OnLoad sets stackableQuantity = 1 when the part has resources (cfg says 2): module behaviour, WP-06"}
+  ]
+}

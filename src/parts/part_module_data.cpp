@@ -1,0 +1,359 @@
+#include "ksp/parts/part_module_data.hpp"
+
+#include <map>
+#include <memory>
+
+#include "ksp/core/log.hpp"
+#include "ksp/dotnet/number.hpp"
+#include "ksp/dotnet/text.hpp"
+#include "ksp/dotnet/utf16.hpp"
+#include "ksp/parts/cs_parse.hpp"
+#include "ksp/resources/part_resource_library.hpp"
+
+namespace ksp {
+
+// ---- generated class table ---------------------------------------------------------------------------------------------
+#define KSP_MODULE_ENUM_BEGIN(eid, name, full, isFlags, file, line) const EnumTable eid{name, isFlags, file, line, {
+#define KSP_MODULE_ENUM_MEMBER(eid, name, value) {name, value},
+#define KSP_MODULE_ENUM_END(eid) }};
+#define KSP_MODULE_CLASS(id, name, full, base, isAbstract, file, line)
+#define KSP_MODULE_FIELD(id, field, cstype, tname, pers, prop, priv, init, line, enumId)
+#define KSP_MODULE_CLASS_END(id)
+#include "ksp/parts/module_schema.inc"
+#undef KSP_MODULE_ENUM_BEGIN
+#undef KSP_MODULE_ENUM_MEMBER
+#undef KSP_MODULE_ENUM_END
+#undef KSP_MODULE_CLASS
+#undef KSP_MODULE_FIELD
+#undef KSP_MODULE_CLASS_END
+
+namespace {
+
+std::vector<ModuleClassInfo> BuildClasses() {
+    std::vector<ModuleClassInfo> v;
+#define KSP_MODULE_ENUM_BEGIN(eid, name, full, isFlags, file, line)
+#define KSP_MODULE_ENUM_MEMBER(eid, name, value)
+#define KSP_MODULE_ENUM_END(eid)
+#define KSP_MODULE_CLASS(id, name, full, base, isAbstract, file, line) \
+    v.push_back(ModuleClassInfo{name, full, base, isAbstract, file, line, {}, nullptr});
+#define KSP_MODULE_FIELD(id, field, cstype, tname, pers, prop, priv, init, line, enumId) \
+    v.back().ownFields.push_back(ModuleFieldInfo{field, cstype, tname, pers, prop, priv, init, line, enumId});
+#define KSP_MODULE_CLASS_END(id)
+#include "ksp/parts/module_schema.inc"
+#undef KSP_MODULE_ENUM_BEGIN
+#undef KSP_MODULE_ENUM_MEMBER
+#undef KSP_MODULE_ENUM_END
+#undef KSP_MODULE_CLASS
+#undef KSP_MODULE_FIELD
+#undef KSP_MODULE_CLASS_END
+    // link bases by Type.Name (the last class of a name, like AssemblyLoader's dictionary)
+    std::map<std::string, const ModuleClassInfo*, std::less<>> byName;
+    for (const ModuleClassInfo& c : v) byName[c.name] = &c;
+    for (ModuleClassInfo& c : v) {
+        auto it = byName.find(c.baseName);
+        c.base = (it != byName.end() && it->second != &c) ? it->second : nullptr;
+    }
+    return v;
+}
+
+const std::map<std::string, const ModuleClassInfo*, std::less<>>& ClassIndex() {
+    static const std::map<std::string, const ModuleClassInfo*, std::less<>> idx = [] {
+        std::map<std::string, const ModuleClassInfo*, std::less<>> m;
+        for (const ModuleClassInfo& c : ModuleClasses()) m[c.name] = &c;
+        return m;
+    }();
+    return idx;
+}
+
+// BaseField.ReadPvt's vector/quaternion split
+std::vector<std::string> SplitVector(std::string_view s) { return dotnet::Split(s, "(, )", true); }
+
+}  // namespace
+
+const std::vector<ModuleClassInfo>& ModuleClasses() {
+    static const std::vector<ModuleClassInfo> classes = BuildClasses();
+    return classes;
+}
+
+const ModuleClassInfo* GetPartModuleClass(std::string_view name) {
+    const auto& idx = ClassIndex();
+    auto it = idx.find(name);
+    return it == idx.end() ? nullptr : it->second;
+}
+
+bool ModuleClassInfo::Is(std::string_view className) const {
+    for (const ModuleClassInfo* c = this; c; c = c->base)
+        if (className == c->name) return true;
+    return false;
+}
+
+std::vector<const ModuleFieldInfo*> ModuleClassInfo::Fields() const {
+    std::vector<const ModuleFieldInfo*> out;
+    for (const ModuleFieldInfo& f : ownFields) out.push_back(&f);
+    for (const ModuleClassInfo* c = base; c; c = c->base)
+        for (const ModuleFieldInfo& f : c->ownFields)
+            if (!f.isPrivate) out.push_back(&f);
+    return out;
+}
+
+const ModuleFieldInfo* ModuleClassInfo::FindField(std::string_view name) const {
+    for (const ModuleFieldInfo* f : Fields())
+        if (name == f->name) return f;
+    return nullptr;
+}
+
+const ModuleFieldValue* PartModuleData::FindCfgField(std::string_view name) const {
+    const ModuleFieldValue* r = nullptr;
+    for (const ModuleFieldValue& v : cfgFields)
+        if (name == v.field->name) r = &v;
+    return r;
+}
+
+bool IsConfigNodeFieldType(const ModuleFieldInfo& info) {
+    const std::string_view t = info.typeName;
+    return t == "FloatCurve" || t == "DoubleCurve";
+}
+
+// BaseField.cs:712 ReadPvt
+bool ReadModuleFieldValue(const ModuleFieldInfo& info, std::string_view value, ModuleValue& out) {
+    const std::string_view t = info.typeName;
+    out = std::monostate{};
+    if (t == "Boolean") {
+        bool r;
+        if (!cs::BoolTryParse(value, r)) return false;
+        out = r;
+        return true;
+    }
+    if (t == "Byte") {
+        uint8_t r;
+        if (!dotnet::TryParseByte(value, r)) return false;
+        out = r;
+        return true;
+    }
+    if (t == "UInt16") {
+        uint16_t r;
+        if (!dotnet::TryParseUInt16(value, r)) return false;
+        out = r;
+        return true;
+    }
+    if (t == "Char") {  // char.TryParse: exactly one UTF-16 unit
+        const std::u16string u = dotnet::ToUtf16(value);
+        if (u.size() != 1) return false;
+        out = u[0];
+        return true;
+    }
+    if (t == "UInt64") {
+        uint64_t r;
+        if (!dotnet::TryParseUInt64(value, r)) return false;
+        out = r;
+        return true;
+    }
+    if (t == "Int32") {
+        int32_t r;
+        if (!dotnet::TryParseInt32(value, r)) return false;
+        out = r;
+        return true;
+    }
+    if (t == "Int64") {
+        int64_t r;
+        if (!dotnet::TryParseInt64(value, r)) return false;
+        out = r;
+        return true;
+    }
+    if (t == "Single") {
+        float r;
+        if (!dotnet::TryParseSingle(value, r)) return false;
+        out = r;
+        return true;
+    }
+    if (t == "UInt32") {
+        uint32_t r;
+        if (!dotnet::TryParseUInt32(value, r)) return false;
+        out = r;
+        return true;
+    }
+    if (t == "Int16") {
+        int16_t r;
+        if (!dotnet::TryParseInt16(value, r)) return false;
+        out = r;
+        return true;
+    }
+    if (t == "Double") {
+        double r;
+        if (!dotnet::TryParseDouble(value, r)) return false;
+        out = r;
+        return true;
+    }
+    try {
+        if (t == "Vector2") {
+            const auto a = SplitVector(value);
+            if (a.size() != 2) return false;
+            out = Vector2f{cs::FloatParse(a[0]), cs::FloatParse(a[1])};
+            return true;
+        }
+        if (t == "Vector3") {
+            const auto a = SplitVector(value);
+            if (a.size() != 3) return false;
+            out = Vector3f{cs::FloatParse(a[0]), cs::FloatParse(a[1]), cs::FloatParse(a[2])};
+            return true;
+        }
+        if (t == "Vector4") {
+            const auto a = SplitVector(value);
+            if (a.size() != 4) return false;
+            out = Vector4f{cs::FloatParse(a[0]), cs::FloatParse(a[1]), cs::FloatParse(a[2]), cs::FloatParse(a[3])};
+            return true;
+        }
+        if (t == "Quaternion") {
+            const auto a = SplitVector(value);
+            if (a.size() != 4) return false;
+            out = Quaternionf{cs::FloatParse(a[0]), cs::FloatParse(a[1]), cs::FloatParse(a[2]), cs::FloatParse(a[3])};
+            return true;
+        }
+        if (info.enumTable) {
+            out = EnumValue{info.enumTable->Parse(value), info.enumTable};
+            return true;
+        }
+    } catch (const std::exception& e) {
+        log::Error(std::string("Cannot parse ") + info.typeName + " value. Field " + info.name + ", value " +
+                   std::string(value) + ": " + e.what());
+        return false;
+    }
+    if (t == "String") {
+        out = std::string(value);
+        return true;
+    }
+    return false;  // other types (Color, reference types) are not read by ReadPvt
+}
+
+// Propellant.cs:62
+void Propellant::Load(const ConfigNode& node) {
+    const auto n = node.GetValue("name");
+    if (!n) throw NullReferenceException("Object reference not set to an instance of an object");
+    name = *n;
+    id = MonoStringHash(name);
+    const PartResourceLibrary* lib = PartResourceLibrary::Instance();
+    if (const PartResourceDefinition* def = lib ? lib->GetDefinition(id) : nullptr) {
+        if (dotnet::ToUtf16(def->displayName()).size() > 14 && def->displayName() != "Electric Charge")
+            displayName = def->abbreviation();
+        else
+            displayName = def->displayName();
+    }
+    if (displayName.empty()) displayName = name;
+    node.TryGetValue("ratio", ratio);
+    node.TryGetValue("minResToLeave", minResToLeave);
+    node.TryGetValue("ignoreForIsp", ignoreForIsp);
+    node.TryGetValue("ignoreForThrustCurve", ignoreForThrustCurve);
+    node.TryGetValue("DrawGauge", drawStackGauge);
+    if (node.HasValue("resourceFlowMode")) {
+        flowMode = static_cast<int32_t>(kEnum_ResourceFlowMode.Parse(*node.GetValue("resourceFlowMode")));
+        fMode = flowMode;
+    }
+}
+
+// Propellant.cs:114
+int32_t Propellant::GetFlowMode() {
+    if (flowMode == 8) flowMode = PartResourceLibrary::GetDefaultFlowMode(id);
+    return flowMode;
+}
+
+namespace {
+
+// ModuleEngines.cs:598 OnLoad / ModuleRCS.cs:615 SetupPropellant (PROPELLANT nodes)
+void LoadPropellants(PartModuleData& m, const ConfigNode& node) {
+    if (node.HasNode("PROPELLANT")) m.propellants.clear();
+    for (ConfigNode* n : node.nodes().GetNodes()) {
+        if (n->name != "PROPELLANT") continue;
+        if (!n->HasValue("name")) {
+            log::Info("Propellant must have value 'name'");
+            continue;
+        }
+        Propellant p;
+        p.Load(*n);
+        m.propellants.push_back(std::move(p));
+    }
+    // ModuleEngines.SetupPropellant / ModuleRCS.SetupPropellant call GetFlowMode on every propellant whose resource is
+    // defined (it caches the default flow mode).
+    const PartResourceLibrary* lib = PartResourceLibrary::Instance();
+    for (Propellant& p : m.propellants)
+        if (lib && lib->GetDefinition(MonoStringHash(p.name))) p.GetFlowMode();
+}
+
+std::string DefaultString(const ModuleClassInfo& cls, std::string_view field) {
+    const ModuleFieldInfo* f = cls.FindField(field);
+    if (!f) return {};
+    std::string init = f->initializer;
+    if (init.size() >= 2 && init.front() == '"' && init.back() == '"') return init.substr(1, init.size() - 2);
+    return {};
+}
+
+}  // namespace
+
+// PartModule.cs:787 Load (data steps) + BaseFieldList.cs Load + the propellant parts of ModuleEngines/ModuleRCS OnLoad
+void LoadModuleData(PartModuleData& m, ConfigNode& node) {
+    struct CopyOnExit {
+        PartModuleData& m;
+        ConfigNode& n;
+        ~CopyOnExit() { m.config = n.CreateCopy(); }
+    } copyOnExit{m, node};
+    if (node.HasValue("isEnabled"))
+        m.isEnabled = cs::BoolParse(*node.GetValue("isEnabled"));
+    else
+        m.isEnabled = true;
+    if (!m.moduleClass) return;
+    // BaseFieldList.Load: values first (non-interface fields), then nodes (interface fields)
+    for (const auto& v : node.values()) {
+        const ModuleFieldInfo* f = m.moduleClass->FindField(v.name);
+        if (!f || IsConfigNodeFieldType(*f)) continue;
+        ModuleFieldValue fv;
+        fv.field = f;
+        fv.raw = v.value;
+        fv.parsed = ReadModuleFieldValue(*f, v.value, fv.value);
+        if (!fv.parsed && f->enumTable == nullptr)
+            log::Error(std::string("Invalid ") + f->typeName + " value! Field " + f->name + ", value " + v.value);
+        m.cfgFields.push_back(std::move(fv));
+    }
+    for (const ConfigNode::NodePtr& child : [&] {
+             std::vector<ConfigNode::NodePtr> c;
+             for (int i = 0; i < node.nodes().Count(); i++) c.push_back(node.nodes().Shared(i));
+             return c;
+         }()) {
+        const ModuleFieldInfo* f = m.moduleClass->FindField(child->name);
+        if (!f || !IsConfigNodeFieldType(*f)) continue;
+        ModuleFieldValue fv;
+        fv.field = f;
+        fv.fromNode = true;
+        fv.node = child;
+        if (std::string_view(f->typeName) == "FloatCurve") {
+            FloatCurve c;
+            c.Load(*child);
+            fv.value = std::move(c);
+        } else {
+            DoubleCurve c;
+            c.Load(*child);
+            fv.value = std::move(c);
+        }
+        fv.parsed = true;
+        m.cfgFields.push_back(std::move(fv));
+    }
+    // Propellants (ModuleEngines.OnLoad; ModuleRCS.OnLoad synthesises one PROPELLANT from resourceName /
+    // resourceFlowMode when the module has none)
+    if (m.moduleClass->Is("ModuleEngines")) {
+        LoadPropellants(m, node);
+    } else if (m.moduleClass->Is("ModuleRCS")) {
+        if (!node.HasNode("PROPELLANT") && m.propellants.empty()) {
+            std::string resourceName = DefaultString(*m.moduleClass, "resourceName");
+            std::string resourceFlowMode = DefaultString(*m.moduleClass, "resourceFlowMode");
+            if (const ModuleFieldValue* fv = m.FindCfgField("resourceName"))
+                if (auto* s = std::get_if<std::string>(&fv->value)) resourceName = *s;
+            if (const ModuleFieldValue* fv = m.FindCfgField("resourceFlowMode"))
+                if (auto* s = std::get_if<std::string>(&fv->value)) resourceFlowMode = *s;
+            ConfigNode* p = node.AddNode("PROPELLANT");
+            p->AddValue("name", resourceName);
+            p->AddValue("ratio", "1.0");
+            p->AddValue("resourceFlowMode", resourceFlowMode);
+        }
+        LoadPropellants(m, node);
+    }
+}
+
+}  // namespace ksp

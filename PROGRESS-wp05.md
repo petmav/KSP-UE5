@@ -43,9 +43,16 @@ Worktree: core/.worktrees/wp05, branch wp05 from main f964447. Commit only here.
    tools/wp05/gen_module_schema.py -> include/ksp/parts/module_schema.inc (151 PartModule classes, 1595 KSPField members;
    VERIFIED vs capture modules: 1378/1378 field sets, field_count, Type.Name, isPersistant all equal; checker
    build/scratch/check_schema.py). src/parts/ksp_enums.cpp (EnumTable Parse/ToString).
-3. PartLoader data: Part fields table (gen from Part.cs), ApplyPartValue, attach nodes, drag cubes, resources, modules (raw +
-   typed cfg fields via generated KSPField schema), variants, internal, assets [ ]
-4. golden runner ds_part_database + gate (out2 capture) + filter for documented out-of-scope rows [ ]
+3. PartLoader data [done: include/ksp/parts/{part_data,part_module_data,available_part,part_loader}.hpp,
+   include/ksp/database/game_data.hpp (orchestrator), src/parts/*.cpp]. Module OnLoad effect ported: ModuleToggleCrossfeed
+   -> part.fuelCrossFeed. Unity serializer default instances: srfAttachNode, attachRules.
+4. ds_part_database.cpp + filter_golden.py (--drop-rows, --keep-rows-file, --drop-keys-file, --renumber) +
+   tests/data/part_database_exclusions.json (1 row: sepMotor1 stackableQuantity, ModuleCargoPart.OnLoad).
+   SCRATCH GATE (build/scratch/gate.sh) ALL GREEN: parts 357, part_cfg_values 6235, modules 1312, module_fields 5401
+   (scope = cfg-set fields), propellants 77, resources 166, attach_nodes 822, drag_cubes 531, variants 228, assets 743
+   (non-texture rows renumbered). Excluded: 5 code-built parts' rows (Unity prefab), texture slot rows (.mu), parts
+   columns partSize (.mu bounds) + module_mass/module_cost (WP-06), variants.materials (.mu). 4 DLC error rows gated.
+   NEXT: register ctest gate (CMake opts), load-order ctest vs KSP.log, unit tests, then stretch (.mu reader)
 5. tests/test_partloader.cpp [ ]
 6. stretch: .mu metadata reader (texture slots, partSize, variant materials) [ ]
 7. STATUS/README, commit [ ]
