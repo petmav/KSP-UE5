@@ -96,6 +96,7 @@ add_library(kspcore STATIC
     vessel/flight_logger.cpp
     vessel/module_trip_logger.cpp
     vessel/vessel.cpp
+    vessel/vessel_assembly.cpp
     vessel/vessel_motion.cpp
     vessel/vessel_transitions.cpp
     vessel/vessel_values.cpp

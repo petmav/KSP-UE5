@@ -195,3 +195,15 @@ if(EXISTS "${KSP_DEV_DIR}/saves")
         COMMAND save_corpus --saves "${KSP_DEV_DIR}/saves" --ships "${KSP_DEV_DIR}/Ships")
     set_tests_properties(corpus.saves PROPERTIES LABELS corpus TIMEOUT 1800)
 endif()
+
+# WP-14 vessel model: the assembled-vessel capture C10 (captures/out2/aero_forces_vessel.json). structure: the part tree of the three
+# PhysProf crafts assembled into a Vessel; states: the vessel-level atmosphere values + srfSpeed. The parts and aoa_sweep tables are
+# the drag-cube pipeline (WP-21). Dropped columns (each documented in STATUS.md "WP-14"):
+#   structure.cube_names        cube weights are set by module OnStart logic / DragCubeList.ForceUpdate (WP-21 and the module packages);
+#                               the cube NAMES are checked by tests/test_vessel.cpp
+#   structure.node_contact_areas  AttachNode.contactArea is written by DragCubeList.SetPartOcclusion (WP-21)
+#   states.frame, UT, altitude, aoa_deg, srf_velocity_*, ref_up_*  inputs of the experiment or rigid-body state (the runner reads
+#                               altitude / srf_velocity from the capture; atmosphericTemperature's sun offset is recovered, see ds_vessel_state.cpp)
+ksp_golden_gate(capture.vessel_state vessel_state GOLDEN ${KSP_CAPTURES2_DIR}/aero_forces_vessel.json DROP_HEX
+                TOL ${KSP_CAPTURE_TOL} TABLES structure,states
+                DROP_COLUMNS "structure:cube_names,node_contact_areas/states:frame,UT,altitude,aoa_deg,srf_velocity_x,srf_velocity_y,srf_velocity_z,ref_up_x,ref_up_y,ref_up_z")

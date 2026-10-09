@@ -19,6 +19,7 @@ add_executable(golden_runner
     ds_orbit_rails.cpp
     ds_terrain_height.cpp
     ds_part_database.cpp
+    ds_vessel_state.cpp
 )
 target_link_libraries(golden_runner PRIVATE kspcore)
 ksp_set_build_flags(golden_runner)
