@@ -502,6 +502,55 @@ void Part::onAttach(Part* parent_, bool first) {
     for (size_t i = 0; i < children.size(); i++) children[i]->onAttach(this, false);
 }
 
+// Part.cs:2639 (ReleaseAutoStruts: the joint package's)
+void Part::onDetach(bool /*first*/) {
+    onPartDetach();
+    OnEditorDetach();
+    connected_ = false;
+    for (size_t i = 0; i < children.size(); i++) children[i]->onDetach(false);
+}
+
+// Part.cs:2712
+void Part::OnDelete() {
+    SaveEnvironment& env = SaveEnvironment::Current();
+    if (env.persistentIds.fetch) env.persistentIds.persistentLoadedPartIds.Remove(fields.persistentId);
+    onPartDelete();
+    OnEditorDestroy();
+}
+
+// Part.cs:2728
+void Part::force_activate(bool /*playFX*/) {
+    state_ = PartStates::ACTIVE;
+    if (!onPartActivate()) {
+        state_ = PartStates::IDLE;
+        log::Info("[" + gameObjectName + "]: Did not activate");
+        return;
+    }
+    ModulesOnActivate();
+}
+
+// Part.cs:2748
+bool Part::activate(int currentStage, const Vessel* activeVessel) {
+    if (state_ == PartStates::DEAD) return false;
+    if (currentStage != fields.inverseStage) return false;
+    if (vessel != activeVessel && !fields.ActivatesEvenIfDisconnected) return false;
+    state_ = PartStates::ACTIVE;
+    if (!onPartActivate()) {
+        state_ = PartStates::IDLE;
+        log::Info("[" + gameObjectName + "]: Did not activate");
+        return false;
+    }
+    ModulesOnActivate();
+    return true;
+}
+
+// Part.cs:2785
+void Part::deactivate() {
+    state_ = PartStates::DEACTIVATED;
+    onPartDeactivate();
+    ModulesOnDeactivate();
+}
+
 // Part.cs:2888
 void Part::FindNonPhysicslessChildren(std::vector<Part*>& parts) {
     for (size_t i = 0; i < children.size(); i++) {

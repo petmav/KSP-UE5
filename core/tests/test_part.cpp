@@ -1895,3 +1895,68 @@ TEST_CASE("WP-13 craft trees: every stock-part craft of harness/inputs/Ships bec
     CHECK(costMismatchByClass.count("fairingSize2") == 1);
     CHECK(massMismatchByClass == costMismatchByClass);
 }
+
+TEST_CASE("WP-13 Part activation, detach and delete state machine") {
+    if (!GameAvailable()) return;
+    Game13 g;
+    LogCapture log;
+    LifecycleRegistration reg;
+    std::vector<std::string> trace;
+    LifecycleModule::trace = &trace;
+    struct TestPart : Part {
+        bool allow = true;
+        int detached = 0, deleted = 0;
+        bool onPartActivate() override { return allow; }
+        void onPartDetach() override { detached++; }
+        void onPartDelete() override { deleted++; }
+    };
+    TestPart p;
+    p.gameObjectName = "t";
+    p.Awake();
+    p.fields.inverseStage = 2;
+    p.AddModule(kLifecycleClass);
+    Vessel* v = reinterpret_cast<Vessel*>(&p);
+    // activate(stage, vessel): the stage must match; a part of another vessel needs ActivatesEvenIfDisconnected
+    CHECK_FALSE(p.activate(1, nullptr));
+    CHECK(p.State() == PartStates::IDLE);
+    p.vessel = v;
+    p.fields.ActivatesEvenIfDisconnected = false;
+    CHECK_FALSE(p.activate(2, nullptr));  // another vessel is active
+    CHECK(p.activate(2, v));
+    CHECK(p.State() == PartStates::ACTIVE);
+    CHECK(trace.back() == "OnActive");
+    p.deactivate();
+    CHECK(p.State() == PartStates::DEACTIVATED);
+    CHECK(trace.back() == "OnInactive");
+    // a refusing part falls back to IDLE and says so
+    p.allow = false;
+    CHECK_FALSE(p.activate(2, v));
+    CHECK(p.State() == PartStates::IDLE);
+    p.force_activate();
+    CHECK(p.State() == PartStates::IDLE);
+    CHECK(log.Has(log::Level::Info, "Did not activate"));
+    p.allow = true;
+    p.force_activate(false);
+    CHECK(p.State() == PartStates::ACTIVE);
+    p.set_State(PartStates::DEAD);
+    CHECK_FALSE(p.activate(2, v));  // a dead part never activates
+    // onDetach walks the children and clears `connected`; OnDelete forgets the persistent id
+    TestPart child;
+    p.addChild(&child);
+    int editorDetach = 0;
+    struct Counter {
+        int* n;
+        void Inc() { (*n)++; }
+    } c{&editorDetach};
+    child.OnEditorDetach = Delegate<void()>::Bind(&c, &Counter::Inc);
+    p.onDetach();
+    CHECK(p.detached == 1);
+    CHECK(child.detached == 1);
+    CHECK(editorDetach == 1);
+    SaveEnvironment::Current().persistentIds.persistentLoadedPartIds.Add(777, &p);
+    p.fields.persistentId = 777;
+    p.OnDelete();
+    CHECK(p.deleted == 1);
+    CHECK_FALSE(SaveEnvironment::Current().persistentIds.persistentLoadedPartIds.Contains(777));
+    LifecycleModule::trace = nullptr;
+}

@@ -120,7 +120,13 @@ public:
     std::vector<Part_ForceHolder> forces;          // :839 (force / torque are PartFields)
     std::vector<std::string> fxGroupNames;         // fxGroups (FXGroup names: prelaunch, activate, active, deactivate, ...)
     // Part.cs:555-563 Callback fields
-    Delegate<void()> OnJustAboutToDie, OnJustAboutToBeDestroyed, OnEditorAttach, OnEditorDetach, OnEditorDestroy;
+    // C# initialises each to an empty `delegate { }`, so invoking one is never a NullReferenceException
+    static void NoCallback() {}
+    Delegate<void()> OnJustAboutToDie = Delegate<void()>::Static(&Part::NoCallback);
+    Delegate<void()> OnJustAboutToBeDestroyed = Delegate<void()>::Static(&Part::NoCallback);
+    Delegate<void()> OnEditorAttach = Delegate<void()>::Static(&Part::NoCallback);
+    Delegate<void()> OnEditorDetach = Delegate<void()>::Static(&Part::NoCallback);
+    Delegate<void()> OnEditorDestroy = Delegate<void()>::Static(&Part::NoCallback);
     bool hasRigidbody = false;                     // `rb != null` (the Rigidbody itself is the physics engine's)
     // renderers of the model (PartGeometryUtil input); empty without a model reader
     std::vector<PartModelRenderer> modelRenderers;
@@ -229,6 +235,12 @@ public:
     bool hasIndirectChild(const Part* tgtPart) const;   // :2484
     bool hasIndirectParent(const Part* tgtPart) const;  // :2508 (sic: recurses with its own parent)
     void onAttach(Part* parent, bool first = true);     // :2521 (data part)
+    void onDetach(bool first = true);                   // :2639 (data part)
+    void OnDelete();                                    // :2712
+    // activation (stage / action-group trigger): the state machine (FX bursts are the FX package's)
+    void force_activate(bool playFX = true);            // :2723 / :2728
+    bool activate(int currentStage, const Vessel* activeVessel);  // :2748
+    void deactivate();                                  // :2785
     void FindNonPhysicslessChildren(std::vector<Part*>& parts);  // :2888
     Part* FindNonPhysicslessParent();              // :2907
     void PromoteToPhysicalPart();                  // :2920 (state change; Rigidbody / joints are the physics engine's)
@@ -344,6 +356,10 @@ public:
     virtual void onWillBeCopied(bool) {}                     // :4557
     virtual void onWasCopied(Part*, bool) {}                 // :4561
     virtual void onPartAttach(Part*) {}                      // :4569
+    virtual void onPartDetach() {}                           // :4573
+    virtual bool onPartActivate() { return true; }           // :4621
+    virtual void onPartDeactivate() {}                       // :4658
+    virtual void onPartDelete() {}                           // :4666
 
     // ---- ids -----------------------------------------------------------------------------------------------------------------
     uint32_t instanceID = 0;                       // Object.GetInstanceID() (craftID = (uint)GetInstanceID())
