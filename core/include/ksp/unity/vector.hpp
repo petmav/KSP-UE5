@@ -84,7 +84,11 @@ inline Vector3f operator+(const Vector3f& a, const Vector3f& b) {
 inline Vector3f operator-(const Vector3f& a, const Vector3f& b) {
     return {f32store(fx(a.x) - fx(b.x)), f32store(fx(a.y) - fx(b.y)), f32store(fx(a.z) - fx(b.z))};
 }
-inline Vector3f operator-(const Vector3f& a) { return {0.0f - a.x, 0.0f - a.y, 0.0f - a.z}; }
+// Vector3.cs:425 prints `new Vector3(0f - a.x, ...)`, but UnityEngine.CoreModule's IL is `neg`: an IEEE negation (-(+0) = -0).
+// Evidence (WP-21): harness/golden/aero_forces (the real Unity DLL) writes lift_x = -0.0 for `-liftVector * liftScalar` with
+// liftVector.x = +0 (ModuleLiftingSurface.cs:251), and the in-game captures stay 0 ULP with it. KSP's own Assembly-CSharp code
+// (Vector3d, QuaternionD, ...) is ported as printed.
+inline Vector3f operator-(const Vector3f& a) { return {-a.x, -a.y, -a.z}; }
 inline Vector3f operator*(const Vector3f& a, float d) {
     return {f32store(fx(a.x) * fx(d)), f32store(fx(a.y) * fx(d)), f32store(fx(a.z) * fx(d))};
 }

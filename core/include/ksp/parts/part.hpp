@@ -46,6 +46,8 @@
 namespace ksp {
 
 class ModulePartVariants;
+class ILiftProvider;  // WP-21 ksp/aero/aero_interfaces.hpp
+class IAirstreamShield;
 class PartSet;
 class ShipConstruct;
 class DockedVesselInfo;
@@ -137,6 +139,9 @@ public:
     // renderers of the model (PartGeometryUtil input); empty without a model reader
     std::vector<PartModelRenderer> modelRenderers;
     std::vector<Bounds> colliderBounds;            // FindModelComponents<Collider> bounds
+    // ---- WP-21 (aero): Object-typed public fields of Part.cs that PartFields has no storage for
+    ILiftProvider* bodyLiftOnlyProvider = nullptr;  // :491
+    std::vector<IAirstreamShield*> airstreamShields;  // :791 (AddShield / RemoveShield: the fairing / cargo-bay packages)
 
     // ---- private / protected / internal members of Part.cs --------------------------------------------------------------
     float moduleMass = 0.0f;                       // :306 internal

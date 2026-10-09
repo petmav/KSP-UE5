@@ -9,14 +9,18 @@
 
 #include <array>
 #include <cstdint>
+#include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
 
 #include "ksp/config/config_node.hpp"
+#include "ksp/aero/float_eval.hpp"  // WP-21: aero float evaluation policies
 #include "ksp/math/vector3d.hpp"
 #include "ksp/parts/ksp_enums.hpp"
+#include "ksp/physics/physics_globals.hpp"  // WP-21: the curves DragCubeList.SetPart takes
 #include "ksp/unity/color.hpp"
 #include "ksp/unity/quaternion.hpp"
 #include "ksp/unity/vector.hpp"
@@ -145,6 +149,8 @@ struct AttachNode {
 // ---- DragCube.cs -----------------------------------------------------------------------------------------------------
 class DragCube {
 public:
+    // DragCube.cs:6 DragFace (WP-21)
+    enum class DragFace : int32_t { XP = 0, XN = 1, YP = 2, YN = 3, ZP = 4, ZN = 5 };
     DragCube() = default;
     explicit DragCube(std::string name) : name_(std::move(name)) {}
     std::array<float, 6>& Area() { return area_; }
@@ -179,9 +185,110 @@ private:
     float weight_ = 1.0f;
 };
 
-// DragCubeList.cs, the data side (cube weighting/occlusion is aero, WP-21).
+// DragCubeList.cs: the data side (WP-05: LoadCubes / SaveCubes / ClearCubes) and the aerodynamics (WP-21: SetPart, cube
+// weights, SetDragWeights, SetPartOcclusion, SetDrag / AddSurfaceDragDirection, the per-direction queries, ForceUpdate).
+// The float maths is templated over the evaluation policy (ksp/aero/float_eval.hpp): the default MonoFloat is the game,
+// NetFloat reproduces the .NET harness golden; both are explicitly instantiated in src/aero/drag_cube_list.cpp.
 class DragCubeList {
 public:
+    // DragCubeList.cs:8 CubeData (a struct: copied by value)
+    struct CubeData {
+        Vector3f dragVector{};
+        Vector3f liftForce{};
+        float area = 0.0f;
+        float areaDrag = 0.0f;
+        float depth = 0.0f;
+        float crossSectionalArea = 0.0f;
+        float exposedArea = 0.0f;
+        float dragCoeff = 0.0f;
+        float taperDot = 0.0f;
+        void Reset();  // DragCubeList.cs:41
+    };
+    // What DragCubeList reads from Unity / DragCubeSystem (procedural cubes are rendered from the model; unset = no
+    // procedural cube is ever rendered, SetDragWeights_Procedural returns false)
+    struct Hooks {
+        std::function<float()> realtimeSinceStartup;          // Time.realtimeSinceStartup
+        std::function<float()> proceduralDragUpdateInterval;  // DragCubeSystem.Instance.ProceduralDragUpdateInterval
+        std::function<DragCube(Part&)> renderProceduralDragCube;  // DragCubeSystem.Instance.RenderProceduralDragCube(part)
+    };
+    static inline Hooks hooks;
+
+    DragCubeList() = default;
+    // UnityEngine.Object.Instantiate of the owning Part: the [SerializeField] members are copied (cubes deep-copied,
+    // postOcclusionArea, none, procedural, cubeData, debugDragCube), every other member gets its C# initialiser
+    // (part = null, both update flags true, the weighted arrays zeroed, occlusionMultiplier 1, no drag-vector rotation,
+    // the [NonSerialized] curve references null).
+    void CopySerializedFrom(const DragCubeList& original);
+
+    // ---- properties (DragCubeList.cs:138-202) ----
+    float AreaDrag() const { return cubeData_.areaDrag; }
+    float Area() const { return cubeData_.area; }
+    float Depth() const { return cubeData_.depth; }
+    float CrossSectionalArea() const { return cubeData_.crossSectionalArea; }
+    float ExposedArea() const { return cubeData_.exposedArea; }
+    float PostOcclusionArea() const { return postOcclusionArea_; }
+    const Vector3f& LiftForce() const { return cubeData_.liftForce; }
+    float DragCoeff() const { return cubeData_.dragCoeff; }
+    float TaperDot() const { return cubeData_.taperDot; }
+    const Vector3f& DragVector() const { return cubeData_.dragVector; }
+    Part* GetPart() const { return part_; }
+    float OcclusionMultiplier() const { return occlusionMultiplier_; }
+    std::array<float, 6>& WeightedArea() { return weightedArea_; }
+    std::array<float, 6>& WeightedDrag() { return weightedDrag_; }
+    std::array<float, 6>& WeightedDepth() { return weightedDepth_; }
+    std::array<float, 6>& AreaOccluded() { return areaOccluded_; }
+    const std::array<float, 6>& WeightedArea() const { return weightedArea_; }
+    const std::array<float, 6>& WeightedDrag() const { return weightedDrag_; }
+    const std::array<float, 6>& WeightedDepth() const { return weightedDepth_; }
+    const std::array<float, 6>& AreaOccluded() const { return areaOccluded_; }
+    const Vector3f& WeightedCenter() const { return weightedCenter_; }
+    const Vector3f& WeightedSize() const { return weightedSize_; }
+    bool RotateDragVector() const { return rotateDragVector_; }
+    const Quaternionf& DragVectorRotation() const { return dragVectorRotation_; }
+    const CubeData& GetCubeData() const { return cubeData_; }
+    bool WeightsRequireUpdate() const { return weightsRequireUpdate_; }
+    bool OcclusionRequireUpdate() const { return occlusionRequireUpdate_; }
+
+    // ---- aerodynamics (WP-21) ----
+    void SetPart(Part* part);  // DragCubeList.cs:204
+    template <class P = aero::MonoFloat>
+    void SetDragWeights();  // DragCubeList.cs:214
+    template <class P = aero::MonoFloat>
+    void SetPartOcclusion();  // DragCubeList.cs:301
+    template <class P = aero::MonoFloat>
+    void SetDrag(const Vector3f& vector, float machNumber);  // DragCubeList.cs:352
+    template <class P = aero::MonoFloat>
+    void AddSurfaceDragDirection(const Vector3f& direction, float machNumber, CubeData& retData) const;  // DragCubeList.cs:367
+    template <class P = aero::MonoFloat>
+    float GetCubeAreaDir(const Vector3f& dir, const std::array<float, 6>& areas) const;  // DragCubeList.cs:421
+    template <class P = aero::MonoFloat>
+    float GetCubeAreaDir(const Vector3f& dir) const { return GetCubeAreaDir<P>(dir, areaOccluded_); }  // :436
+    template <class P = aero::MonoFloat>
+    float GetCubeCoeffDir(const Vector3f& dir) const;  // DragCubeList.cs:441
+    template <class P = aero::MonoFloat>
+    float GetCubeDepthDir(const Vector3f& dir) const;  // DragCubeList.cs:458
+    static Vector3f GetFaceDirection(DragCube::DragFace direction);  // DragCubeList.cs:475
+    static const std::array<Vector3f, 6>& FaceDirections();          // DragCubeList.cs:128 faceDirections
+    void SetOcclusionMultiplier(float multiplier);   // DragCubeList.cs:786
+    DragCube* GetCube(std::string_view name);         // DragCubeList.cs:792 (last match)
+    void SetCubeWeight(std::string_view name, float weight);  // DragCubeList.cs:806
+    void SetDragVectorRotation(const Quaternionf& rotation);  // DragCubeList.cs:824
+    void SetDragVectorRotation(bool rotateDragVector);        // DragCubeList.cs:830
+    void ResetCubeWeights(float newWeight);           // DragCubeList.cs:835
+    void ResetCubeWeights() { ResetCubeWeights(1.0f); }  // DragCubeList.cs:853
+    bool LoadCube(const DragCubeList& cubes, std::string_view whichOne);  // DragCubeList.cs:939
+    void RequestOcclusionUpdate() { occlusionRequireUpdate_ = true; }     // DragCubeList.cs:962
+    void ForceUpdate(bool weights, bool occlusion, bool resetProcTiming = false);  // DragCubeList.cs:967
+    bool DebugDragCube() const { return debugDragCube_; }
+    void SetDebugDragCube(bool v) { debugDragCube_ = v; }
+
+    // [NonSerialized] public fields set by SetPart (references to PhysicsGlobals' curves)
+    const FloatCurve* DragCurveCd = nullptr;
+    const FloatCurve* DragCurveCdPower = nullptr;
+    const FloatCurve* DragCurveMultiplier = nullptr;
+    std::shared_ptr<PhysicsGlobals::LiftingSurfaceCurve> BodyLiftCurve;
+    PhysicsGlobals::SurfaceCurvesList SurfaceCurves{};
+
     std::vector<DragCube>& Cubes() { return cubes_; }
     const std::vector<DragCube>& Cubes() const { return cubes_; }
     bool None() const { return none_; }
@@ -197,6 +304,31 @@ private:
     std::vector<DragCube> cubes_;
     bool none_ = false;
     bool procedural_ = false;
+    // ---- WP-21 (DragCubeList.cs:66-126)
+    float postOcclusionArea_ = 0.0f;
+    Part* part_ = nullptr;
+    CubeData cubeData_{};
+    bool debugDragCube_ = false;
+    bool weightsRequireUpdate_ = true;
+    bool occlusionRequireUpdate_ = true;
+    std::optional<DragCube> proceduralDragCube_;  // null until the first procedural render
+    float proceduralDragNextUpdate_ = 0.0f;
+    float occlusionMultiplier_ = 1.0f;
+    std::array<float, 6> weightedArea_{};
+    std::array<float, 6> weightedDrag_{};
+    std::array<float, 6> weightedDragOrig_{};
+    std::array<float, 6> weightedDepth_{};
+    std::array<float, 6> areaOccluded_{};
+    Vector3f weightedCenter_{};
+    Vector3f weightedSize_{};
+    bool rotateDragVector_ = false;
+    Quaternionf dragVectorRotation_ = Quaternionf::identity();
+
+    template <class P>
+    void SetDragWeights_List();      // DragCubeList.cs:234
+    bool SetDragWeights_Procedural();  // DragCubeList.cs:284
+    template <class P>
+    void AreaToCubeOperation(const Vector3f& direction, float area);  // DragCubeList.cs:750 (the only operation: Max(0, c - f))
 };
 
 class PartResourceDefinition;

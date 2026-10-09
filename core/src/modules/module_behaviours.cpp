@@ -30,6 +30,7 @@
 
 namespace ksp {
 void RegisterTripLoggerModule();  // vessel/module_trip_logger.cpp (WP-14)
+void RegisterAeroModules();       // aero/lifting_surface.cpp (WP-21)
 namespace {
 
 // Mathf.Clamp(float, min, max) (UnityEngine Mathf.cs)
@@ -455,6 +456,7 @@ void RegisterBuiltinModules() {
     RegisterModulePartVariants();  // WP-13: modules/module_part_variants.cpp
     RegisterStructuralModules();   // WP-13: ModuleMirrorPlacement, ModuleDisplaceTweak
     RegisterTripLoggerModule();    // WP-14: ModuleTripLogger (vessel/module_trip_logger.cpp)
+    RegisterAeroModules();         // WP-21: ModuleLiftingSurface, ModuleControlSurface, ModuleAeroSurface
     Reg<ModuleComet>({"ModuleComet"});
     Reg<ModuleAsteroid>({"ModuleAsteroid"});
     Reg<ModulePartFirework>({"ModulePartFirework"});

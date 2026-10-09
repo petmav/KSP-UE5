@@ -333,6 +333,7 @@ void Part::Awake() {
     fields.partName = className;
     SetupResources();
     SetupSimulationResources();
+    DragCubes.SetPart(this);  // :1633 (WP-21)
     onPartAwake();
     connected_ = true;
     attached_ = true;

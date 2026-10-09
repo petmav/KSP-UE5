@@ -117,6 +117,10 @@ add_library(kspcore STATIC
     ship/ship_construction.cpp
     ship/ship_template.cpp
     save/game_persistence.cpp
+    aero/drag_cube_list.cpp
+    aero/flight_integrator_aero.cpp
+    aero/lifting_surface.cpp
+    aero/occlusion.cpp
     # WP-16 staging, action groups, decouplers, decouple / couple tree operations
     staging/stage_manager.cpp
     modules/module_staging.cpp

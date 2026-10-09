@@ -319,7 +319,7 @@ std::unique_ptr<Part> Part::Instantiate(const Part& original) {
     p->gameObjectName = original.gameObjectName;
     p->fields = original.fields;
     p->compoundFields = original.compoundFields;
-    p->DragCubes = original.DragCubes;
+    p->DragCubes.CopySerializedFrom(original.DragCubes);  // WP-21: Instantiate copies the serialized members only
     p->partInfo = original.partInfo;
     p->vessel = original.vessel;
     p->fxGroupNames = original.fxGroupNames;
