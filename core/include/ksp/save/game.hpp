@@ -33,15 +33,33 @@ namespace ksp {
 class Game;
 class ProtoScenarioModule;
 
-// ScenarioModule.cs (data side: the MonoBehaviour host and the KSPField reflection of BaseFieldList are WP-06; a
-// subclass overrides SaveFields/LoadFields for its [KSPField]s and OnSave/OnLoad as in KSP)
+class FieldStore;
+class BaseFieldList;
+class BaseEventList;
+class ScenarioRunner;
+
+// ScenarioModule.cs. WP-04 holds the data side (Save/Load/targetScenes); WP-06 adds the MonoBehaviour host: Awake builds the
+// BaseFieldList / BaseEventList of the module class from the generated host schema (host_schema.inc), so a module that does
+// not override SaveFields / LoadFields saves and loads its [KSPField]s exactly as KSP does (Fields.Save / Fields.Load). A
+// subclass with C++ members for its fields overrides SaveFields/LoadFields (or reads the typed store: Store()).
 class ScenarioModule {
 public:
-    explicit ScenarioModule(std::string className) : className_(std::move(className)) {}  // ModularSetup
-    virtual ~ScenarioModule() = default;
+    explicit ScenarioModule(std::string className);  // the C# constructor: className = GetType().Name
+    virtual ~ScenarioModule();
+    ScenarioModule(const ScenarioModule&) = delete;
+    ScenarioModule& operator=(const ScenarioModule&) = delete;
     ProtoScenarioModule* snapshot = nullptr;
+    ScenarioRunner* runner = nullptr;
     std::vector<GameScenes> targetScenes;
     const std::string& ClassName() const { return className_; }
+    int ClassID() const { return classID_; }
+
+    // ScenarioModule.cs:41 Awake: targetScenes = new List; ModularSetup (events, fields); OnAwake()
+    void Awake();
+    // null until Awake / for a class outside the generated schema
+    FieldStore* Store() { return store_.get(); }
+    BaseFieldList* Fields() { return fields_.get(); }
+    BaseEventList* Events() { return events_.get(); }
 
     // ScenarioModule.cs:55 (name, "scene" = (int)scenes joined with ", ", Fields.Save, OnSave)
     void Save(ConfigNode& node);
@@ -50,11 +68,15 @@ public:
     virtual void OnAwake() {}
     virtual void OnSave(ConfigNode& node) { (void)node; }
     virtual void OnLoad(ConfigNode& node) { (void)node; }
-    virtual void SaveFields(ConfigNode& node) { (void)node; }  // BaseFieldList.Save
-    virtual void LoadFields(ConfigNode& node) { (void)node; }  // BaseFieldList.Load
+    virtual void SaveFields(ConfigNode& node);  // BaseFieldList.Save (default: the generic field list)
+    virtual void LoadFields(ConfigNode& node);  // BaseFieldList.Load
 
 private:
     std::string className_;
+    int classID_ = 0;
+    std::unique_ptr<FieldStore> store_;
+    std::unique_ptr<BaseFieldList> fields_;
+    std::unique_ptr<BaseEventList> events_;
 };
 
 // ProtoScenarioModule.cs
@@ -72,6 +94,8 @@ public:
     void SetTargetScenes(const std::vector<GameScenes>& scenes);
     // ProtoScenarioModule.cs:73
     void Save(ConfigNode& node) const;
+    // ProtoScenarioModule.cs:66 (WP-06: defined with the runner, modules/scenario_runner.cpp)
+    ScenarioModule* Load(ScenarioRunner& host);
     // ProtoScenarioModule.cs:91
     ConfigNode& GetData() { return *moduleValues_; }
     const ConfigNode& GetData() const { return *moduleValues_; }

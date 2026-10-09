@@ -71,6 +71,8 @@ add_library(kspcore STATIC
     modules/base_event.cpp
     modules/part_module.cpp
     modules/module_behaviours.cpp
+    modules/vessel_module.cpp
+    modules/scenario_runner.cpp
     database/game_data.cpp
     save/save_environment.cpp
     save/game_parameters.cpp
