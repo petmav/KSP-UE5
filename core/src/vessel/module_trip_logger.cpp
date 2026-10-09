@@ -47,13 +47,13 @@ void ModuleTripLogger::LoadDeprecated(const std::string& oldName, FlightLog::Ent
     for (const std::string& v : values) Log.AddEntry(newName, v);
 }
 
-// ModuleTripLogger.cs:59
+// ModuleTripLogger.cs:53
 void ModuleTripLogger::OnSave(ConfigNode& node) {
     PartModule::OnSave(node);
     Log.Save(*node.AddNode("Log"));
 }
 
-// ModuleTripLogger.cs:64
+// ModuleTripLogger.cs:58
 void ModuleTripLogger::OnStart(StartState state) {
     PartModule::OnStart(state);
     GE::onVesselSituationChange.Add(this, &ModuleTripLogger::OnVesselSituationChanged);
@@ -61,17 +61,17 @@ void ModuleTripLogger::OnStart(StartState state) {
     subscribed_ = true;
 }
 
-// ModuleTripLogger.cs:84
+// ModuleTripLogger.cs:74
 void ModuleTripLogger::OnVesselSituationChanged(GE::HostedFromToAction<Vessel*, Vessel_Situations> vs) {
     if (!(vs.host != VesselOf(*this))) InvokeLogVessel(0.2f);
 }
 
-// ModuleTripLogger.cs:93
+// ModuleTripLogger.cs:82
 void ModuleTripLogger::OnVesselSOIChanged(GE::HostedFromToAction<Vessel*, CelestialBody*> vc) {
     if (!(vc.host != VesselOf(*this))) InvokeLogVessel(0.2f);
 }
 
-// ModuleTripLogger.cs:101 (IsInvoking / CancelInvoke / Invoke)
+// ModuleTripLogger.cs:90 (IsInvoking / CancelInvoke / Invoke)
 void ModuleTripLogger::InvokeLogVessel(float delay) {
     invokePending_ = true;
     invokeAt_ = Time::time + delay;
@@ -84,14 +84,14 @@ void ModuleTripLogger::RunDelayedCalls() {
     }
 }
 
-// ModuleTripLogger.cs:112
+// ModuleTripLogger.cs:99
 void ModuleTripLogger::LogVesselSituation() {
     Vessel* v = VesselOf(*this);
     if (v == nullptr) throw NullReferenceException();
     LogNewSituation(v->situation, v->mainBody());
 }
 
-// ModuleTripLogger.cs:117
+// ModuleTripLogger.cs:104
 void ModuleTripLogger::LogNewSituation(Vessel_Situations sit, CelestialBody* where) {
     switch (sit) {
         case Vessel_Situations::FLYING: LogSituation(FlightLog::EntryType::Flight, where->bodyName); break;
@@ -104,7 +104,7 @@ void ModuleTripLogger::LogNewSituation(Vessel_Situations sit, CelestialBody* whe
     }
 }
 
-// ModuleTripLogger.cs:145
+// ModuleTripLogger.cs:127
 void ModuleTripLogger::LogSituation(FlightLog::EntryType type, const std::string& target) {
     Log.AddEntryUnique(type, target);
     Part* p = static_cast<Part*>(part);
@@ -115,7 +115,7 @@ void ModuleTripLogger::LogSituation(FlightLog::EntryType type, const std::string
     GE::OnFlightLogRecorded.Fire(VesselOf(*this));
 }
 
-// ModuleTripLogger.cs:144
+// ModuleTripLogger.cs:139
 void ModuleTripLogger::ForceVesselLog(Vessel* v, FlightLog::EntryType type, CelestialBody* body) {
     if (v == nullptr || body == nullptr) return;
     if (v->loaded) ForceLogEntry(v, type, body);
@@ -123,7 +123,7 @@ void ModuleTripLogger::ForceVesselLog(Vessel* v, FlightLog::EntryType type, Cele
     GE::OnFlightLogRecorded.Fire(v);
 }
 
-// ModuleTripLogger.cs:160
+// ModuleTripLogger.cs:155
 void ModuleTripLogger::ForceLogEntry(Vessel* v, FlightLog::EntryType type, CelestialBody* body) {
     int count = static_cast<int>(v->Parts().size());
     while (count-- > 0) {

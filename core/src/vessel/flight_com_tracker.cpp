@@ -11,7 +11,7 @@ namespace {
 Vessel* VesselOf(PartModule* host) { return host->part != nullptr ? static_cast<Part*>(host->part)->vessel : nullptr; }
 }  // namespace
 
-// FlightCoMTracker.cs:14
+// FlightCoMTracker.cs:13
 std::unique_ptr<FlightCoMTracker> FlightCoMTracker::Create(PartModule* host, bool activeTargetable) {
     auto t = std::make_unique<FlightCoMTracker>();
     t->host_ = host;
@@ -20,10 +20,10 @@ std::unique_ptr<FlightCoMTracker> FlightCoMTracker::Create(PartModule* host, boo
     return t;
 }
 
-// FlightCoMTracker.cs:23
+// FlightCoMTracker.cs:22
 void FlightCoMTracker::FixedUpdate() { position_ = VesselOf(host_)->CurrentCoM(); }
 
-// FlightCoMTracker.cs:28
+// FlightCoMTracker.cs:27
 void FlightCoMTracker::MakeTarget() {
     if (!Vessel::env.LoadedSceneIsFlight) return;
     if (FlightRegistry::ready) {
@@ -33,7 +33,7 @@ void FlightCoMTracker::MakeTarget() {
     }
 }
 
-// FlightCoMTracker.cs:41
+// FlightCoMTracker.cs:42
 void FlightCoMTracker::RunPending() {
     if (pending_ && FlightRegistry::ready) {
         pending_ = false;

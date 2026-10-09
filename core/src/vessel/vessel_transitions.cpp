@@ -514,7 +514,7 @@ std::unique_ptr<Vessel> ProtoVessel::Load(FlightState* st, Vessel* vessel) {
 
 // ============================================================ ProtoTargetInfo (ITargetable side)
 
-// ProtoTargetInfo.cs:44 (Part and CelestialBody are not ITargetable objects in kspcore: they have no target branch here)
+// ProtoTargetInfo.cs:35 (Part and CelestialBody are not ITargetable objects in kspcore: they have no target branch here)
 ProtoTargetInfo::ProtoTargetInfo(ITargetable* tgt) {
     if (auto* pm = dynamic_cast<PartModule*>(tgt)) {
         targetType = Type::PartModule;
@@ -533,7 +533,7 @@ ProtoTargetInfo::ProtoTargetInfo(ITargetable* tgt) {
     }
 }
 
-// ProtoTargetInfo.cs:143
+// ProtoTargetInfo.cs:134
 ITargetable* ProtoTargetInfo::FindTarget() const {
     switch (targetType) {
         default: return nullptr;

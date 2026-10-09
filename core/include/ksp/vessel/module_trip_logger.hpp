@@ -19,31 +19,31 @@ class CelestialBody;
 class ModuleTripLogger : public PartModule {
 public:
     using PartModule::PartModule;
-    ~ModuleTripLogger() override;  // OnDestroy (ModuleTripLogger.cs:69)
+    ~ModuleTripLogger() override;  // OnDestroy (ModuleTripLogger.cs:64)
 
     FlightLog Log;  // ModuleTripLogger.cs:5
 
-    void OnAwake() override;                       // :17
-    void OnLoad(const ConfigNode& node) override;  // :22
-    void OnSave(ConfigNode& node) override;        // :59
-    void OnStart(StartState state) override;       // :64
-    std::string GetModuleDisplayName() override;   // :208
+    void OnAwake() override;                       // :13
+    void OnLoad(const ConfigNode& node) override;  // :18
+    void OnSave(ConfigNode& node) override;        // :53
+    void OnStart(StartState state) override;       // :58
+    std::string GetModuleDisplayName() override;   // :207
 
     // Unity Invoke / IsInvoking / CancelInvoke for the one delayed call this module schedules
     void RunDelayedCalls();
     bool IsInvoking() const { return invokePending_; }
 
-    // ModuleTripLogger.cs:144 ForceVesselLog (+ the two ForceLogEntry overloads, :160 and :183)
+    // ModuleTripLogger.cs:139 ForceVesselLog (+ the two ForceLogEntry overloads, :155 and :179)
     static void ForceVesselLog(Vessel* v, FlightLog::EntryType type, CelestialBody* body);
 
 private:
-    void LoadDeprecated(const std::string& oldName, FlightLog::EntryType newName, const ConfigNode& node);  // :40
-    void OnVesselSituationChanged(events::GameEvents::HostedFromToAction<Vessel*, Vessel_Situations> vs);  // :84
-    void OnVesselSOIChanged(events::GameEvents::HostedFromToAction<Vessel*, CelestialBody*> vc);           // :93
-    void InvokeLogVessel(float delay);                                                                      // :101
-    void LogVesselSituation();                                                                              // :112
-    void LogNewSituation(Vessel_Situations sit, CelestialBody* where);                                      // :117
-    void LogSituation(FlightLog::EntryType type, const std::string& target);                                // :145
+    void LoadDeprecated(const std::string& oldName, FlightLog::EntryType newName, const ConfigNode& node);  // :43
+    void OnVesselSituationChanged(events::GameEvents::HostedFromToAction<Vessel*, Vessel_Situations> vs);  // :74
+    void OnVesselSOIChanged(events::GameEvents::HostedFromToAction<Vessel*, CelestialBody*> vc);           // :82
+    void InvokeLogVessel(float delay);                                                                      // :90
+    void LogVesselSituation();                                                                              // :99
+    void LogNewSituation(Vessel_Situations sit, CelestialBody* where);                                      // :104
+    void LogSituation(FlightLog::EntryType type, const std::string& target);                                // :127
     static void ForceLogEntry(Vessel* v, FlightLog::EntryType type, CelestialBody* body);
     static void ForceLogEntry(ProtoVessel* pv, FlightLog::EntryType type, CelestialBody* body);
     bool subscribed_ = false;
@@ -55,7 +55,7 @@ private:
 class VesselTripLog {
 public:
     FlightLog Log;                                       // :5
-    VesselTripLog() = default;                           // :7
+    VesselTripLog() = default;                           // :5
     static VesselTripLog FromVessel(Vessel& v);          // :12
     static VesselTripLog FromProtoVessel(ProtoVessel& pv);  // :26
 };

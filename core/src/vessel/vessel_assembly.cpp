@@ -103,14 +103,14 @@ Guid RandomGuid() {
     g.bytes[8] = static_cast<uint8_t>((g.bytes[8] & 0x3F) | 0x80);
     return g;
 }
-// ShipConstruction.cs:463 findFirstCrewablePart
+// ShipConstruction.cs:447 findFirstCrewablePart
 Part* FindFirstCrewablePart(Part* part) {
     if (part->fields.CrewCapacity > 0 && !part->protoModuleCrew.empty() && part->fields.isControlSource > 0) return part;
     for (Part* c : part->children)
         if (Part* p = FindFirstCrewablePart(c)) return p;
     return nullptr;
 }
-// ShipConstruction.cs:482 findFirstControlSource
+// ShipConstruction.cs:499 findFirstControlSource
 Part* FindFirstControlSource(Vessel& v) {
     for (Part* p : v.parts)
         if (p->fields.isControlSource > 0) return p;

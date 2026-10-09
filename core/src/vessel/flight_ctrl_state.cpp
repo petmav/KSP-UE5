@@ -11,13 +11,13 @@ namespace {
 bool Has(KSPAxisGroup mask, KSPAxisGroup bit) { return (static_cast<int>(mask) & static_cast<int>(bit)) != 0; }
 }  // namespace
 
-// FlightCtrlState.cs:81
+// FlightCtrlState.cs:68
 FlightCtrlState::FlightCtrlState() : custom_axes(std::make_shared<std::vector<float>>(static_cast<size_t>(kCustomAxes), 0.0f)) {}
 
-// FlightCtrlState.cs:86
+// FlightCtrlState.cs:73
 FlightCtrlState::FlightCtrlState(std::shared_ptr<std::vector<float>> axes) : custom_axes(std::move(axes)) {}
 
-// FlightCtrlState.cs:41
+// FlightCtrlState.cs:44
 bool FlightCtrlState::isIdle() const {
     if (static_cast<double>(roll) == 0.0 && static_cast<double>(pitch) == 0.0 && static_cast<double>(yaw) == 0.0 &&
         static_cast<double>(X) == 0.0 && static_cast<double>(Y) == 0.0 && static_cast<double>(Z) == 0.0)
@@ -25,7 +25,7 @@ bool FlightCtrlState::isIdle() const {
     return false;
 }
 
-// FlightCtrlState.cs:55
+// FlightCtrlState.cs:56
 bool FlightCtrlState::isNeutral() const {
     if (static_cast<double>(mainThrottle) == 0.0 && static_cast<double>(roll) == 0.0 && static_cast<double>(pitch) == 0.0 &&
         static_cast<double>(yaw) == 0.0 && static_cast<double>(rollTrim) == 0.0 && static_cast<double>(pitchTrim) == 0.0 &&
@@ -36,7 +36,7 @@ bool FlightCtrlState::isNeutral() const {
     return false;
 }
 
-// FlightCtrlState.cs:91
+// FlightCtrlState.cs:78
 void FlightCtrlState::CopyFrom(const FlightCtrlState& st) {
     mainThrottle = st.mainThrottle;
     roll = st.roll;
@@ -62,7 +62,7 @@ void FlightCtrlState::CopyFrom(const FlightCtrlState& st) {
     }
 }
 
-// FlightCtrlState.cs:114 (sic: the Y component is copied under TranslateZ, TranslateY is never tested)
+// FlightCtrlState.cs:108 (sic: the Y component is copied under TranslateZ, TranslateY is never tested)
 void FlightCtrlState::MaskedCopyFrom(const FlightCtrlState& st, KSPAxisGroup mask) {
     if (Has(mask, KSPAxisGroup::MainThrottle)) mainThrottle = st.mainThrottle;
     if (Has(mask, KSPAxisGroup::Roll)) {
@@ -90,7 +90,7 @@ void FlightCtrlState::MaskedCopyFrom(const FlightCtrlState& st, KSPAxisGroup mas
     if (Has(mask, KSPAxisGroup::TranslateZ)) Z = st.Z;
 }
 
-// FlightCtrlState.cs:158
+// FlightCtrlState.cs:153
 void FlightCtrlState::Neutralize() {
     mainThrottle = 0.0f;
     roll = 0.0f;
@@ -130,7 +130,7 @@ void FlightCtrlState::NeutralizeAll() {
     ResetTrim();
 }
 
-// FlightCtrlState.cs:196
+// FlightCtrlState.cs:193
 void FlightCtrlState::Load(const ConfigNode& node) {
     auto f = [&](const char* key, float& dst) {
         if (node.HasValue(key)) dst = dotnet::ParseSingle(*node.GetValue(key));
@@ -144,7 +144,7 @@ void FlightCtrlState::Load(const ConfigNode& node) {
     f("mainThrottle", mainThrottle);
 }
 
-// FlightCtrlState.cs:227
+// FlightCtrlState.cs:225
 void FlightCtrlState::Save(ConfigNode& node) const {
     node.AddValue("pitch", pitch);
     node.AddValue("yaw", yaw);

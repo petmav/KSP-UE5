@@ -33,7 +33,7 @@ std::string N0(double v) {
 }
 }  // namespace
 
-// FlightLogger.cs:99
+// FlightLogger.cs:111 OnDestroy
 FlightLogger::~FlightLogger() {
     if (subscribed_) {
         GE::onJointBreak.Remove(this, &FlightLogger::onJointBreak);
@@ -55,7 +55,7 @@ FlightLogger::~FlightLogger() {
     if (fetch == this) fetch = nullptr;
 }
 
-// FlightLogger.cs:54
+// FlightLogger.cs:73
 void FlightLogger::Start() {
     if (fetch != nullptr) {
         destroyed_ = true;  // UnityEngine.Object.Destroy(this)
@@ -93,10 +93,10 @@ void FlightLogger::Start() {
     subscribed_ = true;
 }
 
-// FlightLogger.cs:50 (KSPUtil.PrintTimeStamp(missionTime))
+// FlightLogger.cs:69 (KSPUtil.PrintTimeStamp(missionTime))
 std::string FlightLogger::missionTimestamp() const { return KSPUtil::PrintTimeStamp(missionTime); }
 
-// FlightLogger.cs:132
+// FlightLogger.cs:153
 void FlightLogger::LateUpdate() {
     Vessel* activeVessel = FlightRegistry::ActiveVessel;
     if (activeVessel == nullptr || activeVessel->state == VesselState::DEAD || Planetarium::Pause() || !FlightRegistry::ready) return;
@@ -111,7 +111,7 @@ void FlightLogger::LateUpdate() {
     groundDistance_ += activeVessel->horizontalSrfSpeed * static_cast<double>(TimeWarp::fixedDeltaTime());
 }
 
-// FlightLogger.cs:148
+// FlightLogger.cs:171
 void FlightLogger::FixedUpdate() {
     const bool flag = okToSetSpeed_;
     okToSetSpeed_ = false;
@@ -125,14 +125,14 @@ void FlightLogger::FixedUpdate() {
     else highestSpeedOverLand_ = dotnet::Math::Max(activeVessel->horizontalSrfSpeed, highestSpeedOverLand_);
 }
 
-// FlightLogger.cs:172 (IsInvoking / CancelInvoke / Invoke are one pending time)
+// FlightLogger.cs:193 (IsInvoking / CancelInvoke / Invoke are one pending time)
 void FlightLogger::IgnoreGeeForces(float duration) {
     if (fetch == nullptr) return;
     LogGees = false;
     resumeGeeAt = Time::time + (duration > 0.01f ? duration : 0.01f);
 }
 
-// FlightLogger.cs:190
+// FlightLogger.cs:211
 std::string FlightLogger::getMissionStats() {
     std::string s;
     s += L("#autoLOC_135285", {KSPUtil::PrintTimeLong(fetch->missionTime)});
@@ -240,10 +240,10 @@ void FlightLogger::onUndock(EventReport* report) { LogEvent(L("#autoLOC_135389",
 // FlightLogger.cs:314
 void FlightLogger::onSplashDamage(EventReport* report) { LogEvent(L("#autoLOC_135394", {report->sender, report->other}), report); }
 
-// FlightLogger.cs:357 (the verbose Debug.Log line is log output only)
+// FlightLogger.cs:335 (the verbose Debug.Log line is log output only)
 void FlightLogger::LogEvent(const std::string& message, const EventReport* /*report*/) { LogEvent(message); }
 
-// FlightLogger.cs:372
+// FlightLogger.cs:335
 void FlightLogger::LogEvent(const std::string& message) {
     const std::string text = "[" + missionTimestamp() + "]: " + message;
     if (!(text == lastReport_)) {
@@ -252,7 +252,7 @@ void FlightLogger::LogEvent(const std::string& message) {
     }
 }
 
-// FlightLogger.cs:383
+// FlightLogger.cs:349
 bool FlightLogger::checkMissionEnd(Part* p, FlightEndModes endMode) {
     if (FlightRegistry::ActiveVessel != nullptr && p == FlightRegistry::ActiveVessel->rootPart) {
         if (!switchPending_) {

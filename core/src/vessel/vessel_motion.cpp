@@ -104,7 +104,7 @@ float FIGetPhysicslessChildMass(Part& part) {
 }
 }  // namespace
 
-// FlightIntegrator.cs:445 UpdateMassStats (mass half)
+// FlightIntegrator.cs:452 UpdateMassStats (mass half)
 void Vessel::UpdateMassStats() {
     int index = static_cast<int>(parts.size());
     while (index-- > 0) {

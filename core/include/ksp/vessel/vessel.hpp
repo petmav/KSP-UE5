@@ -172,11 +172,11 @@ public:
     // ---- statics ------------------------------------------------------------------------------------------------------
     static inline VesselEnvironment env;                      // see VesselEnvironment
     static inline int NumOverrideGroups = 4;                  // Vessel.cs:468 (mirrors ProtoVessel::NumOverrideGroups)
-    static inline bool PartialControlHasSASRCS = true;        // Vessel.cs:318
-    static inline std::vector<std::string> VesselAnchorExceptions;  // Vessel.cs:136 (filled by Awake)
-    static inline double HeightFromPartOffsetGlobal = 0.5;    // Vessel.cs:392
-    static inline double warningThresholdG = 0.8;             // Vessel.cs:410
-    static inline double warningThresholdPres = 0.8;          // Vessel.cs:412
+    static inline bool PartialControlHasSASRCS = true;        // Vessel.cs:326
+    static inline std::vector<std::string> VesselAnchorExceptions;  // Vessel.cs:148 (filled by Awake)
+    static inline double HeightFromPartOffsetGlobal = 0.5;    // Vessel.cs:394
+    static inline double warningThresholdG = 0.8;             // Vessel.cs:428
+    static inline double warningThresholdPres = 0.8;          // Vessel.cs:430
 
     // ---- fields (Vessel.cs:53-475, same names; Unity-only fields omitted) -------------------------------------------------
     Guid id;
@@ -309,38 +309,38 @@ public:
     Vessel(const Vessel&) = delete;
     Vessel& operator=(const Vessel&) = delete;
 
-    // ---- indexers and properties (Vessel.cs:474-905) ------------------------------------------------------------------------
-    Part* byFlightID(uint32_t flightID);      // this[uint flightID]  (Vessel.cs:474; searches from the end)
-    Part* byIndex(int index);                 // this[int index]      (Vessel.cs:494)
-    std::vector<Part*>& Parts() { return parts; }                     // Vessel.cs:507
-    PartTransform& ReferenceTransform();      // Vessel.cs:509 (the reference part's transform, else vesselTransform)
-    Orbit& orbit() const { return *orbitDriver->orbit; }              // Vessel.cs:521 orbitDriver.orbit
-    CelestialBody* mainBody() const { return orbitDriver->orbit->referenceBody; }  // Vessel.cs:523
-    float GroundLevelAngle() const { return groundLevelAngle_; }      // Vessel.cs:525
-    bool LandedOrSplashed() const { return Landed || Splashed; }      // Vessel.cs:527
-    bool LandedInKSC() const;                 // Vessel.cs:540
-    bool HoldPhysics() const { return physicsHoldLock_; }  // Vessel.cs:575
-    bool isCommandable() const { return static_cast<int>(vesselType) > static_cast<int>(VesselType::Debris); }  // Vessel.cs:577
-    bool isPersistent();                      // Vessel.cs:579
+    // ---- indexers and properties (Vessel.cs:538-905) ------------------------------------------------------------------------
+    Part* byFlightID(uint32_t flightID);      // this[uint flightID]  (Vessel.cs:538; searches from the end)
+    Part* byIndex(int index);                 // this[int index]      (Vessel.cs:558)
+    std::vector<Part*>& Parts() { return parts; }                     // Vessel.cs:570
+    PartTransform& ReferenceTransform();      // Vessel.cs:572 (the reference part's transform, else vesselTransform)
+    Orbit& orbit() const { return *orbitDriver->orbit; }              // Vessel.cs:584 orbitDriver.orbit
+    CelestialBody* mainBody() const { return orbitDriver->orbit->referenceBody; }  // Vessel.cs:586
+    float GroundLevelAngle() const { return groundLevelAngle_; }      // Vessel.cs:588
+    bool LandedOrSplashed() const { return Landed || Splashed; }      // Vessel.cs:590
+    bool LandedInKSC() const;                 // Vessel.cs:604
+    bool HoldPhysics() const { return physicsHoldLock_; }  // Vessel.cs:640
+    bool isCommandable() const { return static_cast<int>(vesselType) > static_cast<int>(VesselType::Debris); }  // Vessel.cs:642
+    bool isPersistent();                      // Vessel.cs:644
     void set_isPersistent(bool v) { persistent_ = v; }
-    bool isActiveVessel() const { return FlightRegistry::ActiveVessel == this; }  // Vessel.cs:611
-    bool IsRecoverable();                     // Vessel.cs:613
-    Situations BestSituation() const;         // Vessel.cs:626
-    bool IgnoreSpeedActive() const { return ignoreSpeedFrames_ > 0; }  // Vessel.cs:695
+    bool isActiveVessel() const { return FlightRegistry::ActiveVessel == this; }  // Vessel.cs:677
+    bool IsRecoverable();                     // Vessel.cs:679
+    Situations BestSituation() const;         // Vessel.cs:691
+    bool IgnoreSpeedActive() const { return ignoreSpeedFrames_ > 0; }  // Vessel.cs:731
     int IgnoreCollisionsFrames() const { return ignoreCollisionsFrames; }
-    const Vector3f& CurrentCoM() const { return CoM; }                 // Vessel.cs:699
-    bool isEVA() const { return vesselType == VesselType::EVA; }       // Vessel.cs:701
-    Vessel* EVALadderVessel();                // Vessel.cs:703
-    ControlLevel CurrentControlLevel() const { return controlLevel_; }  // Vessel.cs:729
-    bool IsControllable() const { return isControllable_; }            // Vessel.cs:731
-    VesselValues& GetVesselValues() { return *vesselValues_; }         // Vessel.cs:733 VesselValues
-    bool PatchedConicsAttached() const { return patchedConicsAttached_; }  // Vessel.cs:769
+    const Vector3f& CurrentCoM() const { return CoM; }                 // Vessel.cs:735
+    bool isEVA() const { return vesselType == VesselType::EVA; }       // Vessel.cs:737
+    Vessel* EVALadderVessel();                // Vessel.cs:739
+    ControlLevel CurrentControlLevel() const { return controlLevel_; }  // Vessel.cs:753
+    bool IsControllable() const { return isControllable_; }            // Vessel.cs:755
+    VesselValues& GetVesselValues() { return *vesselValues_; }         // Vessel.cs:757 VesselValues
+    bool PatchedConicsAttached() const { return patchedConicsAttached_; }  // Vessel.cs:795
     void set_PatchedConicsAttached(bool v) { patchedConicsAttached_ = v; }
-    ActionGroupList& ActionGroups() { return *actionGroups_; }         // Vessel.cs:777
-    DiscoveryInfo& GetDiscoveryInfo() override { return *discoveryInfo_; }      // Vessel.cs:900 DiscoveryInfo
-    bool AutoClean() const { return autoClean_; }                      // Vessel.cs:902
-    const std::string& AutoCleanReason() const { return autoCleanReason_; }  // Vessel.cs:904
-    // Obsolete range accessors (Vessel.cs:779-868)
+    ActionGroupList& ActionGroups() { return *actionGroups_; }         // Vessel.cs:801
+    DiscoveryInfo& GetDiscoveryInfo() override { return *discoveryInfo_; }      // Vessel.cs:903 DiscoveryInfo
+    bool AutoClean() const { return autoClean_; }                      // Vessel.cs:905
+    const std::string& AutoCleanReason() const { return autoCleanReason_; }  // Vessel.cs:907
+    // Obsolete range accessors (Vessel.cs:804-868)
     float distancePackThreshold() const { return vesselRanges.orbit.pack; }
     void set_distancePackThreshold(float v);
     float distanceUnpackThreshold() const { return vesselRanges.orbit.unpack; }
@@ -405,7 +405,7 @@ public:
     PartModule* FindPartModuleImplementingClass(const std::string& className);  // FindPartModuleImplementing<ModuleX>() (:3851)
     std::vector<PartModule*> FindPartModulesImplementing(const std::function<bool(PartModule&)>& is);  // :3831
 
-    // ---- lifecycle and transitions (Vessel.cs:1520-2000, 2356-2490) ------------------------------------------------------------
+    // ---- lifecycle and transitions (Vessel.cs:1583-2000, 2356-2490) ------------------------------------------------------------
     void SetStaticPressureAndExternalTemp();                       // :1583
     void Start();                                                  // :1597
     bool PhysicsHoldExpired();                                     // :1634
@@ -446,7 +446,7 @@ public:
 
     // ---- mass properties ------------------------------------------------------------------------------------------------------------
     float GetTotalMass();                                          // :3422
-    // FlightIntegrator.UpdateMassStats, the mass part (FlightIntegrator.cs:445-491, 700-713): Part.resourceMass, physicsMass with the
+    // FlightIntegrator.UpdateMassStats, the mass part (FlightIntegrator.cs:452-491, 700-713): Part.resourceMass, physicsMass with the
     // massless children's mass folded into the part that carries them. The thermal-mass half is WP-22's, rb.mass is the engine's.
     void UpdateMassStats();
     double GetUnloadedVesselMass();                                // :3441

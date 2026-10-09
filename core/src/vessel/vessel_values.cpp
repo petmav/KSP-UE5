@@ -13,7 +13,7 @@ bool Lt(float a, float b) { return a < b; }
 bool GtI(int a, int b) { return a > b; }
 }  // namespace
 
-// VesselValues.cs:115
+// VesselValues.cs:128
 VesselValues::VesselValues(Vessel& host)
     : MaxThrottle([&host]() -> std::vector<Part*>& { return host.parts; }, [] { return Vessel::env.frameCount; }, 1.0f, Gt,
                   [](Part& p) { return p.partValues.MaxThrottle.value(); }),

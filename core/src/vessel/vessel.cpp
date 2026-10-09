@@ -241,7 +241,7 @@ void Vessel::SetPhysicsHoldExpiryOverride(int newHoldCountValue) {
 
 // ============================================================ indexers and properties
 
-// Vessel.cs:474
+// Vessel.cs:538
 Part* Vessel::byFlightID(uint32_t flightID) {
     int count = static_cast<int>(parts.size());
     while (count-- > 0)
@@ -249,26 +249,26 @@ Part* Vessel::byFlightID(uint32_t flightID) {
     return nullptr;
 }
 
-// Vessel.cs:494
+// Vessel.cs:558
 Part* Vessel::byIndex(int index) {
     if (index >= 0 && static_cast<int>(parts.size()) > index) return parts[static_cast<size_t>(index)];
     return nullptr;
 }
 
-// Vessel.cs:509 (Part.GetReferenceTransform is the part's transform; the model reference transform is the model reader's)
+// Vessel.cs:572 (Part.GetReferenceTransform is the part's transform; the model reference transform is the model reader's)
 PartTransform& Vessel::ReferenceTransform() {
     if (referenceTransformPart_ == nullptr) return vesselTransform;
     return referenceTransformPart_->partTransform;
 }
 
-// Vessel.cs:540
+// Vessel.cs:604
 bool Vessel::LandedInKSC() const {
     const std::string& text = loaded ? landedAt : protoVessel->landedAt;
     return text.find("KSC") != std::string::npos || text.find("LaunchPad") != std::string::npos ||
            text.find("Runway") != std::string::npos;
 }
 
-// Vessel.cs:579
+// Vessel.cs:644
 bool Vessel::isPersistent() {
     if (loaded) {
         for (Part* p : parts)
@@ -282,26 +282,26 @@ bool Vessel::isPersistent() {
     return persistent_;
 }
 
-// Vessel.cs:613
+// Vessel.cs:679
 bool Vessel::IsRecoverable() {
     if (LandedOrSplashed()) return mainBody()->isHomeWorld;
     return false;
 }
 
-// Vessel.cs:626
+// Vessel.cs:691
 Vessel::Situations Vessel::BestSituation() const {
     if (lastSituation_ == Situations::FLYING) return lastSituation_;
     return situation;
 }
 
-// Vessel.cs:703
+// Vessel.cs:739
 Vessel* Vessel::EVALadderVessel() {
     if (isEVA() && evaController != nullptr && evaController->LadderPart() != nullptr && evaController->LadderPart()->vessel != nullptr)
         return evaController->LadderPart()->vessel;
     return this;
 }
 
-// Vessel.cs:779-868 (obsolete range accessors)
+// Vessel.cs:804-868 (obsolete range accessors)
 void Vessel::set_distancePackThreshold(float v) {
     vesselRanges.orbit.pack = v;
     vesselRanges.subOrbital.pack = v;
@@ -375,7 +375,7 @@ Part* Vessel::FindReferenceTransform(uint32_t refId) {
 }
 
 namespace {
-// ShipConstruction.cs:463 findFirstCrewablePart
+// ShipConstruction.cs:447 findFirstCrewablePart
 Part* FindFirstCrewablePart(Part* part) {
     if (part->fields.CrewCapacity > 0 && !part->protoModuleCrew.empty() && part->fields.isControlSource > 0) return part;
     for (Part* child : part->children) {
@@ -1045,11 +1045,11 @@ std::string Vessel::AutoRename(Vessel& v, const std::string& baseName) {
 // ============================================================ ITargetable / IDiscoverable
 
 std::string Vessel::GetTransformName() { return gameObjectName; }
-Vector3f Vessel::GetTransformPosition() { return ReferenceTransform().position; }  // Vessel.cs:3761 (ReferenceTransform)
-Vector3f Vessel::GetFwdVector() { return ReferenceTransform().forward(); }          // Vessel.cs:3776
+Vector3f Vessel::GetTransformPosition() { return ReferenceTransform().position; }  // Vessel.cs:572 (ReferenceTransform)
+Vector3f Vessel::GetFwdVector() { return ReferenceTransform().forward(); }          // Vessel.cs:572
 std::string Vessel::GetDisplayName() { return Localizer::Format(vesselName); }       // Vessel.cs:3791
 std::string Vessel::RevealDisplayName() { return Localizer::Format(vesselName); }    // Vessel.cs:4378
-double Vessel::RevealSpeed() { return LandedOrSplashed() ? horizontalSrfSpeed : obt_speed; }  // Vessel.cs:4383
+double Vessel::RevealSpeed() { return LandedOrSplashed() ? horizontalSrfSpeed : obt_speed; }  // Vessel.cs:590
 std::string Vessel::RevealSituationString() { return GetSituationString(*this); }  // Vessel.cs:4397
 std::string Vessel::RevealType() { return KSPUtil::PrintSpacedStringFromCamelcase(dotnet::EnumToString(vesselType)); }  // Vessel.cs:4402
 

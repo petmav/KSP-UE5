@@ -37,22 +37,22 @@ public:
     // float[] custom_axes: a reference array, shared by the states of one vessel (Vessel.Awake: new FlightCtrlState(ctrlState.custom_axes))
     std::shared_ptr<std::vector<float>> custom_axes;
 
-    FlightCtrlState();                                                      // FlightCtrlState.cs:81
-    explicit FlightCtrlState(std::shared_ptr<std::vector<float>> axes);     // FlightCtrlState.cs:86
+    FlightCtrlState();                                                      // FlightCtrlState.cs:68
+    explicit FlightCtrlState(std::shared_ptr<std::vector<float>> axes);     // FlightCtrlState.cs:73
 
-    bool isIdle() const;     // FlightCtrlState.cs:41
-    bool isNeutral() const;  // FlightCtrlState.cs:55
+    bool isIdle() const;     // FlightCtrlState.cs:44
+    bool isNeutral() const;  // FlightCtrlState.cs:56
 
-    void CopyFrom(const FlightCtrlState& st);                           // FlightCtrlState.cs:91
-    void MaskedCopyFrom(const FlightCtrlState& st, KSPAxisGroup mask);  // FlightCtrlState.cs:114
-    void Neutralize();                                                  // FlightCtrlState.cs:158
-    void NeutralizeStick();                                             // FlightCtrlState.cs:173
-    void ResetTrim();                                                   // FlightCtrlState.cs:181
-    void NeutralizeAll();                                               // FlightCtrlState.cs:190
-    void Load(const ConfigNode& node);                                  // FlightCtrlState.cs:196
-    void Save(ConfigNode& node) const;                                  // FlightCtrlState.cs:227
-    Vector3f GetPYR() const { return Vector3f(pitch, roll, yaw); }      // FlightCtrlState.cs:238
-    Vector3f GetXYZ() const { return Vector3f(X, Y, Z); }               // FlightCtrlState.cs:243
+    void CopyFrom(const FlightCtrlState& st);                           // FlightCtrlState.cs:78
+    void MaskedCopyFrom(const FlightCtrlState& st, KSPAxisGroup mask);  // FlightCtrlState.cs:78
+    void Neutralize();                                                  // FlightCtrlState.cs:153
+    void NeutralizeStick();                                             // FlightCtrlState.cs:170
+    void ResetTrim();                                                   // FlightCtrlState.cs:178
+    void NeutralizeAll();                                               // FlightCtrlState.cs:187
+    void Load(const ConfigNode& node);                                  // FlightCtrlState.cs:193
+    void Save(ConfigNode& node) const;                                  // FlightCtrlState.cs:225
+    Vector3f GetPYR() const { return Vector3f(pitch, roll, yaw); }      // FlightCtrlState.cs:236
+    Vector3f GetXYZ() const { return Vector3f(X, Y, Z); }               // FlightCtrlState.cs:241
 };
 
 }  // namespace ksp
