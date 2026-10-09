@@ -58,7 +58,7 @@ public:
     virtual Vector3d velocityD() const = 0;
     // RecalculateOrbit: ModuleTripLogger.ForceVesselLog(vessel, FlightLog.EntryType.Flyby, newReferenceBody)
     virtual void ForceVesselLogFlyby(CelestialBody* body) = 0;
-    // The vessel as an ITargetable (OrbitDriver.Targetable, OrbitDriver.cs:70); null for hosts that are not targetable.
+    // The vessel as an ITargetable (OrbitDriver.Targetable, OrbitDriver.cs:75); null for hosts that are not targetable.
     virtual ITargetable* AsTargetable() { return nullptr; }
 };
 
@@ -94,7 +94,7 @@ public:
     ~OrbitDriver();  // OnDestroy (OrbitDriver.cs:123): Planetarium.Orbits.Remove(this)
 
     bool Ready() const { return ready_; }                // OrbitDriver.cs:89
-    // OrbitDriver.cs:70 Targetable: the vessel, else the celestial body, else null
+    // OrbitDriver.cs:75 Targetable: the vessel, else the celestial body, else null
     ITargetable* Targetable() const {
         if (vessel != nullptr) return vessel->AsTargetable();
         if (celestialBody != nullptr) return celestialBodyTargetable;

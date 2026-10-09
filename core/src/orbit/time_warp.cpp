@@ -36,7 +36,7 @@ namespace M = dotnet::Math;
 //   analysis/physics/raw/run{1,2,3,4,5}/*_summary.csv rows rt_TimeWarp.{warpRates,physicsWarpRates,altitudeLimits,
 //   maxPhysicsRate_index,maxModeSwitchRate_index}
 // Cross-checked by the in-game C8 capture (segments.requested_rate for rate indices 0, 4, 5, 6, 7 = 1, 100, 1000, 10000,
-// 100000) and by the 16 body prefabs (timeWarpAltitudeLimits = altitudeLimits * Radius, CelestialBody.resetTimeWarpLimits).
+// 100000) and by the 17 body prefabs (timeWarpAltitudeLimits = altitudeLimits * Radius, CelestialBody.resetTimeWarpLimits).
 constexpr float kWarpRates[8] = {1.0f, 5.0f, 10.0f, 50.0f, 100.0f, 1000.0f, 10000.0f, 100000.0f};
 constexpr float kPhysicsWarpRates[4] = {1.0f, 2.0f, 3.0f, 4.0f};
 constexpr float kAltitudeLimits[8] = {0.0f, 0.05f, 0.05f, 0.1f, 0.2f, 0.4f, 0.8f, 1.0f};

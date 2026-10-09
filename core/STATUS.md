@@ -1302,7 +1302,7 @@ Prefab data: `TimeWarp::LoadStockPrefab()` = the scene object's serialized array
 1 5 10 50 100 1000 10000 100000, physicsWarpRates 1 2 3 4, altitudeLimits 0 0.05 0.05 0.1 0.2 0.4 0.8 1 (fractions of the body
 radius), maxPhysicsRate_index 0, maxModeSwitchRate_index 0): `analysis/physics/raw/run*/*_summary.csv` rows `rt_TimeWarp.*`,
 19 runs, all identical (not in any harness golden: the flight-scene TimeWarp is not in the level9 singleton dump). Checked by the unit test
-against all 19 runs and, for `warpRates`, against the C8 capture (`segments.requested_rate` for rate indices 0,4,5,6,7 bit for bit).
+against all 19 runs and, for `warpRates`, against the C8 capture (`segments.requested_rate` for rate indices 0,4,5,6,7 bit for bit). `Mode = HIGH` and `textDuration = 3f` are not in the dump; they are the C# field initialisers (TimeWarp.cs:30, :32).
 
 Additive subsets other packages will replace: `FlightGlobals` (`IFlightVessel` seam = the Vessel members TimeWarp reads,
 `ActiveVessel`, `VesselsLoaded`, `ready`, `currentMainBody`, `ship_srfVelocity`, `getAltitudeAtPos` (double and the float
