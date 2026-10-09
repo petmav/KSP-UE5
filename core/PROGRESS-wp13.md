@@ -14,3 +14,9 @@ Branch wp13 (from wp06 e27bc88b). Notes written after every major step.
 - capture.part_database still 0 ULP, unit/corpus green (build linux-rel, ~1 min incremental)
 - TODO next: PartGeometryUtil, AxisGroupsManager, small modules (MirrorPlacement, DisplaceTweak, CompoundPartModule), FlagNameManager,
   AvailableVariantTheme, ProtoPartSnapshot<->Part, tests/test_part.cpp, craft trees, STATUS/README
+
+## Step 2 (done): remaining ports + first tests
+- PartGeometryUtil (+unity/bounds.hpp), AxisGroupsManager (PartModule Save/Load now call it), ModuleMirrorPlacement, ModuleDisplaceTweak, CompoundPartModule,
+  FlagNameManager, AvailableVariantTheme, live ProtoPartSnapshot/ModuleSnapshot/ResourceSnapshot (src/save/proto_part_live.cpp)
+- tests/test_part.cpp: enums/records, flag/theme, bounds, C9 cross-check of all 353 prefabs (counts, resource mass, module mass/cost), Instantiate + UpdateMass of all prefabs
+- TODO: tests for modules/attach/tree/resources/crew/variants/copy, physprofile snapshot round trip, craft trees; citations check pass; STATUS/README

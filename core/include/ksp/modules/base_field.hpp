@@ -206,6 +206,7 @@ public:
     void Load(const ConfigNode& node, std::vector<ModuleFieldValue>* trace = nullptr);
     void Save(ConfigNode& node) const;  // BaseFieldList.cs:366
     void Add(std::shared_ptr<BaseField> f) { fields_.push_back(std::move(f)); }
+    void Set(size_t index, std::shared_ptr<BaseField> f) { fields_[index] = std::move(f); }  // `Fields[i] = value` (WP-13)
     void AddBaseFieldList(const BaseFieldList& add);
     void RemoveBaseFieldList(const BaseFieldList& remove);
     auto begin() const { return fields_.begin(); }

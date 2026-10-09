@@ -43,6 +43,8 @@ class Vessel;
 class Part;
 class PartModule;
 class PartResource;
+class PartResourceDefinition;
+class AvailablePart;
 
 // Dictionary<string, KSPParseable> (insertion order; Add of a duplicate key throws ArgumentException)
 using KSPParseableDictionary = dotnet::Dictionary<std::string, KSPParseable>;
@@ -112,6 +114,9 @@ public:
     PartResource* resourceRef = nullptr;
 
     explicit ProtoPartResourceSnapshot(const ConfigNode& node);  // ProtoPartResourceSnapshot.cs:30
+    explicit ProtoPartResourceSnapshot(PartResource& resource);  // :14 (WP-13: from a live resource)
+    void Load(Part& hostPart);                                   // :73 (WP-13: hostPart.SetResource)
+    const PartResourceDefinition* definition = nullptr;          // :11 (PartResourceLibrary.GetDefinition(resourceName))
     void Save(ConfigNode& node) const;                           // :55
     void UpdateConfigNodeAmounts();                              // :63
     const ConfigNode& resourceValues() const { return *resourceValues_; }
@@ -129,12 +134,15 @@ public:
     PartModule* moduleRef = nullptr;
 
     explicit ProtoPartModuleSnapshot(const ConfigNode& node);  // ProtoPartModuleSnapshot.cs:34
+    explicit ProtoPartModuleSnapshot(PartModule& module);      // :14 (WP-13: from a live module)
+    PartModule* Load(Part& hostPart, int& moduleIndex);        // :55 (WP-13: hostPart.LoadModule)
     void Save(ConfigNode& node);                               // :48
     // ProtoPartModuleSnapshot.cs:156 / 197 (MakingHistory adjuster bookkeeping on the module node)
     void RemovePartModuleAdjuster(const Guid& removeAdjusterID);
     void ProtoPartModuleRepair();
 
 private:
+    void EnsureModuleValuesIsInitialized();  // :67
     bool hasSaved_ = false;
 };
 
@@ -156,6 +164,9 @@ public:
     Vector3f mirror;
     SymmetryMethod symMethod = SymmetryMethod::Radial;
     bool partInfoFound = false;  // PartLoader.getPartInfoByName(partName) != null (SaveEnvironment::partExists)
+    const AvailablePart* partInfo = nullptr;  // PartLoader.getPartInfoByName(partName) (SaveEnvironment::getPartInfoByName; WP-13)
+    Part* partRef = nullptr;                  // ProtoPartSnapshot.partRef (WP-13)
+    std::vector<ProtoPartSnapshot*> symLinks; // :46 (WP-13)
     ProtoPartSnapshot* parent = nullptr;
     int parentIdx = 0;
     std::vector<int> symLinkIdxs;
@@ -207,6 +218,12 @@ public:
     ProtoPartSnapshot& operator=(const ProtoPartSnapshot&) = delete;
     // ProtoPartSnapshot.cs:525
     void Save(ConfigNode& node);
+
+    // ---- WP-13: the live-Part paths (ProtoPartSnapshot.cs:144, 499, 651, 761); the Vessel-level Load / Init are WP-14 / WP-19
+    ProtoPartSnapshot(Part& partRef, ProtoVessel* protoVessel, bool preCreate = false);  // :144 / :149
+    void storePartRefs();                       // :499 (parent / symLinks / attach node snapshots from the part tree)
+    std::unique_ptr<Part> CreatePart();         // :761 (Instantiate the prefab, then ConfigurePart; nullptr without partInfo)
+    void ConfigurePart(Vessel* vesselRef, Part& partToConfigure, const AvailablePart& PartInfo, bool setPosition);  // :651
 
     bool HasCrew(const std::string& name) const;   // :1131
     PCM GetCrew(const std::string& name) const;    // :1151

@@ -215,7 +215,8 @@ struct PartResource {
     PartResourceFlowMode flowMode = PartResourceFlowMode::None;  // _flowMode
     Part* part = nullptr;               // PartResource.part (WP-13)
     void Load(const ConfigNode& node);  // PartResource.cs:108
-    void Copy(const PartResource& res); // PartResource.cs:96
+    void Copy(const PartResource& res); // PartResource.cs:94
+    void Save(ConfigNode& node) const;  // PartResource.cs:160 (name, amount, maxAmount, flowState, isTweakable, hideFlow, isVisible, flowMode)
 };
 
 // The node_* attach node grammar shared by PartLoader.ParsePart (PartLoader.cs:740) and PartVariant.ParseNode

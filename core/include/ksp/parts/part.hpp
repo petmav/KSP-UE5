@@ -68,6 +68,7 @@ struct PartTransform {
 struct PartModelRenderer {
     std::string name;
     bool skinned = false;
+    bool particleSystem = false;  // ParticleSystemRenderer (GetRendererBoundsWithoutParticles skips it)
     Bounds bounds{};
 };
 
@@ -89,6 +90,8 @@ public:
         std::function<int(const Vessel&)> partCount;                                        // vessel.parts.Count
         std::function<void(Vessel&, const std::shared_ptr<ProtoCrewMember>&)> removeCrew;   // vessel.RemoveCrew
         std::function<void(Vessel&)> crewListSetDirty;                                      // vessel.CrewListSetDirty
+        // !vessel.loaded || vessel.isUnloading || vessel.isBackingUp (ProtoPartModuleSnapshot saves its module at once)
+        std::function<bool(const Vessel&)> snapshotSavesModules;
     };
     static inline VesselHooks vesselHooks;
     // PartLoader.getPartInfoByName (RelinkPrefab); unset: the partInfo link is kept
@@ -151,8 +154,15 @@ public:
     std::vector<PartResource>& ResourceList() { return Resources; }  // :1155 Resources (PartResourceList is WP-15)
     std::vector<PartResource>& SimulationResources() { return simulationResources_; }  // :1157
     Part* RigidBodyPart();                         // :1236
-    bool Landed() const;                           // :1112 vessel.Landed
-    Part* RigidBodyPartOrNull();
+    bool ShieldedFromAirstream() const { return partIsShielded_; }  // :1171
+    void set_ShieldedFromAirstream(bool v);        // :1171 (also updates isShieldedDisplay)
+    // GetReferenceTransform().name / SetReferenceTransform (:1547, :1567): the model transform is the model reader's; the
+    // part's own transform is named like the GameObject
+    const std::string& GetReferenceTransformName() const { return referenceTransformName_.empty() ? gameObjectName : referenceTransformName_; }
+    void SetReferenceTransformName(const std::string& name) { referenceTransformName_ = name; }
+    // The part's own EVENTS / ACTIONS / EFFECTS nodes as ConfigurePart loaded them (Part.Events / Actions are not modelled as
+    // BaseEventLists: their node is kept and written back as loaded)
+    ConfigNode::NodePtr partEventsNode, partActionsNode;
 
     // ---- symmetry and type queries (:1227-1522) ---------------------------------------------------------------------------
     Part* getSymmetryCounterPart(int index);       // :1227
@@ -280,6 +290,12 @@ public:
     AttachNode* TopNode() { return FindAttachNode("top"); }                // topNode (:671; SetupAttachNodes / Start)
     void SetMirror(const Vector3f& mirrorVector);  // :7001
 
+    // ---- model component lists (:5353-5426): copies of the renderer lists the model reader supplied (the C# cache returns
+    // `new List<>(cache)`, so callers may mutate their copy)
+    std::vector<PartModelRenderer> FindModelMeshRenderersCached() const;           // :5353 (MeshRenderers: not skinned)
+    std::vector<PartModelRenderer> FindModelSkinnedMeshRenderersCached() const;    // :5378
+    std::vector<PartModelRenderer> FindModelRenderersCached() const;               // :5403 (every renderer)
+
     // ---- effects, events (:6162-6300) --------------------------------------------------------------------------------------
     void LoadEffects(const ConfigNode& node);      // :6175 (EFFECTS nodes are kept: EffectList is Unity FX)
     void SaveEffects(ConfigNode& node) const;      // :6180
@@ -345,6 +361,8 @@ private:
     PartModuleList modules_;                       // :640 (PartModuleList)
     std::vector<PartResource> simulationResources_;
     bool awoken_ = false;
+    bool partIsShielded_ = false;                  // :682 private
+    std::string referenceTransformName_;
     bool resourcesSetUp_ = false;
     bool simulationSetUp_ = false;
     bool stageIconCreated_ = false;  // stackIcon.StageIcon != null (the icon itself is UI)

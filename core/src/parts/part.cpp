@@ -236,6 +236,12 @@ void Part::set_CanFail(bool v) {
     if (SaveEnvironment::Current().IsExpansionInstalled("MakingHistory")) canFail_ = v;
 }
 
+// Part.cs:1171 (isShieldedDisplay = Localizer.Format(partIsShielded ? cacheAutoLOC_439839 : cacheAutoLOC_439840))
+void Part::set_ShieldedFromAirstream(bool v) {
+    partIsShielded_ = v;
+    fields.isShieldedDisplay = Localizer::Format(partIsShielded_ ? "#autoLOC_439839" : "#autoLOC_439840");
+}
+
 // Part.cs:1119 PartAttributes.classID = className.GetHashCode()
 int Part::ClassID() const { return MonoStringHash(className); }
 

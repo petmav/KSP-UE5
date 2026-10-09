@@ -20,6 +20,7 @@ add_executable(kspcore_tests
     test_terrain.cpp
     test_partloader.cpp
     test_modules.cpp
+    test_part.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
 )

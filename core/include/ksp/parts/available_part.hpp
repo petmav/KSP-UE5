@@ -160,6 +160,7 @@ struct AvailablePart {
     float partSize = 0.0f;                // renderer-bounds magnitude: needs the model (not computed, see STATUS)
     bool costsFunds = true;
     std::unique_ptr<Part> partPrefab;     // WP-13: a Part (derives from PartPrefab)
+    std::shared_ptr<PartVariant> variant; // AvailablePart.variant (AvailablePart.cs:89): the prefab's base variant, set by CompilePartInfo
 
     // kspcore additions
     bool codeBuilt = false;               // one of PartLoader's prefab parts (EVA kerbals, flag): Unity prefab base
@@ -169,6 +170,8 @@ struct AvailablePart {
 
     // AvailablePart.Variants: partPrefab.variants.variantList (null when the prefab has no variants module)
     const std::vector<std::shared_ptr<PartVariant>>* Variants() const;
+    // AvailablePart.cs:259 GetVariant: the variant of that name; nullptr when absent or the part has no variants
+    PartVariant* GetVariant(const std::string& variantName) const;
     float MinimumMass() const { return minimumMass; }
     void SetMinimumMass(float v);         // Mathf.Max(0.0001f, v)
     void SetMinimumRBMass(float v);       // Mathf.Max(0.001f, v)

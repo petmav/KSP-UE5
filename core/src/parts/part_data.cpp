@@ -232,7 +232,19 @@ void PartResource::Load(const ConfigNode& node) {
     }
 }
 
-// PartResource.cs:96 Copy (the `part` link is not copied: the copy constructors set it from the source before Copy)
+// PartResource.cs:160
+void PartResource::Save(ConfigNode& node) const {
+    node.AddValue("name", info->name());
+    node.AddValue("amount", amount);
+    node.AddValue("maxAmount", maxAmount);
+    node.AddValue("flowState", flowState);
+    node.AddValue("isTweakable", isTweakable);
+    node.AddValue("hideFlow", hideFlow);
+    node.AddValue("isVisible", isVisible);
+    node.AddValue("flowMode", kEnum_PartResource_FlowMode.ToString(static_cast<int64_t>(flowMode)));
+}
+
+// PartResource.cs:94 Copy (the `part` link is not copied: the copy constructors set it from the source before Copy)
 void PartResource::Copy(const PartResource& res) {
     info = res.info;
     resourceName = res.resourceName;

@@ -25,6 +25,7 @@ class Game;
 class ProtoPartSnapshot;
 class Vessel;
 class Part;
+class AvailablePart;
 class CelestialBody;
 class FlightState;
 class ProtoScenarioModule;
@@ -127,6 +128,8 @@ struct SaveEnvironment {
     // ---- PartLoader queries (PartLoader.getPartInfoByName(...).partPrefab ...) -----------------------------------------
     // partInfo != null for a part name (ProtoPartSnapshot.partInfo); default: unknown
     std::function<bool(std::string_view partName)> partExists;
+    // PartLoader.getPartInfoByName (WP-13: ProtoPartSnapshot.partInfo); when set it also decides ProtoPartSnapshot::partInfoFound
+    std::function<const AvailablePart*(std::string_view partName)> getPartInfoByName;
     // partPrefab.CrewCapacity (ProtoVessel.RebuildCrewCounts); called only when partExists says true
     std::function<int(std::string_view partName)> partCrewCapacity;
     // a float field of the prefab's first module of a class (v180 upgrade scripts: ModuleControlSurface /

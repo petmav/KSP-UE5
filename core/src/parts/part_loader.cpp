@@ -219,6 +219,15 @@ void SanitizePartCosts(AvailablePart& ap, const ConfigNode& partNode) {
 AvailablePart::AvailablePart() = default;
 AvailablePart::~AvailablePart() = default;
 
+// AvailablePart.cs:259
+PartVariant* AvailablePart::GetVariant(const std::string& variantName) const {
+    const auto* v = Variants();
+    if (v == nullptr) return nullptr;
+    for (const auto& pv : *v)
+        if (pv->name == variantName) return pv.get();
+    return nullptr;
+}
+
 // AvailablePart.Variants: partPrefab.variants.variantList (null when the prefab has no variants module)
 const std::vector<std::shared_ptr<PartVariant>>* AvailablePart::Variants() const {
     if (partPrefab && partPrefab->variants) return &partPrefab->variants->variantList;
@@ -759,7 +768,10 @@ void PartLoader::CompilePartInfo(AvailablePart& ap) {
         if (!m.moduleClass) continue;
         // GetModuleTitle() == ModulePartVariants.GetTitle() (IModuleInfo): part.variants = the module (PartLoader.cs:1249)
         if (m.module && m.module->AsModuleInfo() && m.module->AsModuleInfo()->GetModuleTitle() == ModulePartVariants::GetTitle())
+        {
             part.variants = dynamic_cast<ModulePartVariants*>(m.module.get());
+            ap.variant = part.baseVariant;  // PartLoader.cs:1252 newPartInfo.variant = part.baseVariant
+        }
         if (m.moduleClass->Is("ModuleCommand")) flag = true;
     }
     if (part.fields.applyKerbalMassModification && part.fields.CrewCapacity > 0) {

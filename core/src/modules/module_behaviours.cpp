@@ -19,6 +19,7 @@
 #include "ksp/dotnet/number.hpp"
 #include "ksp/localization/localizer.hpp"
 #include "ksp/modules/module_part_variants.hpp"
+#include "ksp/modules/part_structural_modules.hpp"
 #include "ksp/modules/part_module.hpp"
 #include "ksp/parts/available_part.hpp"
 #include "ksp/parts/cs_parse.hpp"
@@ -471,6 +472,7 @@ void RegisterBuiltinModules() {
     Reg<MultiModeEngine>({"MultiModeEngine"});
     Reg<FlagDecalBackground>({"FlagDecalBackground"});
     RegisterModulePartVariants();  // WP-13: modules/module_part_variants.cpp
+    RegisterStructuralModules();   // WP-13: ModuleMirrorPlacement, ModuleDisplaceTweak
     Reg<ModuleComet>({"ModuleComet"});
     Reg<ModuleAsteroid>({"ModuleAsteroid"});
     Reg<ModulePartFirework>({"ModulePartFirework"});

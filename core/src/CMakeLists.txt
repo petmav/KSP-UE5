@@ -68,13 +68,17 @@ add_library(kspcore STATIC
     parts/part.cpp
     parts/part_modules.cpp
     parts/part_variant.cpp
+    parts/part_geometry_util.cpp
+    parts/part_misc.cpp
     modules/cs_expr.cpp
     modules/module_members.cpp
     modules/base_field.cpp
     modules/base_event.cpp
     modules/part_module.cpp
+    modules/axis_groups_manager.cpp
     modules/module_behaviours.cpp
     modules/module_part_variants.cpp
+    modules/part_structural_modules.cpp
     modules/vessel_module.cpp
     modules/scenario_runner.cpp
     database/game_data.cpp
@@ -82,6 +86,7 @@ add_library(kspcore STATIC
     save/game_parameters.cpp
     save/crew.cpp
     save/proto_vessel.cpp
+    save/proto_part_live.cpp
     save/game.cpp
     save/upgrade_pipeline.cpp
     save/ship_construct.cpp
