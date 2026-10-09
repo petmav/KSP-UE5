@@ -387,3 +387,56 @@ TEST_CASE("WP-06 ScenarioRunner: modules from proto modules, generic fields, sna
     CHECK(ScenarioRunner::Instance() == nullptr);
     env.loadedScene = saved;
 }
+
+namespace {
+class FakeScalarModule : public PartModule, public IScalarModule {
+public:
+    FakeScalarModule(const ModuleClassInfo& c, std::string id) : PartModule(c), id_(std::move(id)) {}
+    IScalarModule* AsScalarModule() override { return this; }
+    std::string ScalarModuleID() const override { return id_; }
+    float GetScalar() const override { return scalar; }
+    bool CanMove() const override { return true; }
+    void SetScalar(float t) override { scalar = t; }
+    void SetUIRead(bool) override {}
+    void SetUIWrite(bool) override {}
+    bool IsMoving() override { return false; }
+    float scalar = 0.0f;
+
+private:
+    std::string id_;
+};
+}  // namespace
+
+TEST_CASE("WP-06 ScalarModuleSetHandler / BaseEventDetails") {
+    EnglishLocalizer loc;
+    PartModuleList list;
+    const ModuleClassInfo* c = GetPartModuleClass("PartModule");
+    REQUIRE(c != nullptr);
+    auto a = std::make_shared<FakeScalarModule>(*c, "fxA");
+    auto b = std::make_shared<FakeScalarModule>(*c, "fxB");
+    a->Awake();
+    b->Awake();
+    list.Add(a);
+    list.Add(b);
+    CHECK(list.GetScalarModule("fxB") == b.get());
+    ScalarModuleSetHandler h;
+    CHECK_THROWS_AS(h.Save(*ConfigNode::Create()), NullReferenceException);  // fxModuleNames is null until Load
+    auto node = MakeNode("MODULE\n{\n scalarModules = fxA \n scalarModules = fxB\n}\n");
+    h.Load(*node);
+    h.Initialize(list);
+    CHECK(h.fxModules.size() == 2);
+    h.SetFXModules(0.25f);
+    CHECK(a->scalar == 0.25f);
+    CHECK(b->scalar == 0.25f);
+    ConfigNode out("X");
+    h.Save(out);
+    CHECK(out.GetValues("moduleID").size() == 2);
+
+    BaseEventDetails d(BaseEventDetails::Sender::GUI);
+    d.Set("amount", 3);
+    d.Set("label", std::string("hi"));
+    CHECK(d.GetInt("amount") == 3);
+    CHECK(d.GetString("label") == "hi");
+    CHECK(d.GetString("missing").empty());  // logs "Invalid key: missing"
+    CHECK_THROWS(d.Set("amount", 4));       // Hashtable.Add on a duplicate key
+}

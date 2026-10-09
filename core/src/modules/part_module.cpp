@@ -5,7 +5,9 @@
 
 #include "ksp/core/log.hpp"
 #include "ksp/dotnet/mono_float.hpp"
+#include "ksp/core/exceptions.hpp"
 #include "ksp/dotnet/number.hpp"
+#include "ksp/dotnet/text.hpp"
 #include "ksp/localization/localizer.hpp"
 #include "ksp/parts/cs_parse.hpp"
 #include "ksp/parts/available_part.hpp"
@@ -276,6 +278,31 @@ bool PartModuleList::SendDefault(BaseEventDetails* data) {
     for (const auto& m : modules_)
         if (m->Events().SendDefault(data)) result = true;
     return result;
+}
+
+// ---- ScalarModuleSetHandler ---------------------------------------------------------------------------------------------
+
+void ScalarModuleSetHandler::Load(const ConfigNode& node) {
+    std::vector<std::string> values = node.GetValues(nodeName);
+    if (!values.empty()) fxModuleNames = std::move(values);
+}
+
+void ScalarModuleSetHandler::Save(ConfigNode& node) const {
+    if (!fxModuleNames) throw NullReferenceException("Object reference not set to an instance of an object");
+    for (const std::string& n : *fxModuleNames) node.AddValue("moduleID", n);
+}
+
+void ScalarModuleSetHandler::Initialize(const PartModuleList& modules) {
+    fxModules.clear();
+    if (!fxModuleNames) throw NullReferenceException("Object reference not set to an instance of an object");
+    for (const std::string& n : *fxModuleNames) {
+        const auto found = modules.GetScalarModules(dotnet::Trim(n));
+        fxModules.insert(fxModules.end(), found.begin(), found.end());
+    }
+}
+
+void ScalarModuleSetHandler::SetFXModules(float scalar) {
+    for (IScalarModule* m : fxModules) m->SetScalar(scalar);
 }
 
 // ---- ModuleFactory ------------------------------------------------------------------------------------------------------

@@ -19,6 +19,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -193,6 +194,21 @@ public:
 
 private:
     std::vector<std::shared_ptr<PartModule>> modules_;
+};
+
+// ScalarModuleSetHandler.cs: the `scalarModules = id` values of a MODULE node resolved to the part's IScalarModules
+class ScalarModuleSetHandler {
+public:
+    std::string nodeName = "scalarModules";
+    std::optional<std::vector<std::string>> fxModuleNames;  // null until Load finds values
+    std::vector<IScalarModule*> fxModules;
+    ScalarModuleSetHandler() = default;                                              // :9
+    explicit ScalarModuleSetHandler(std::string configValueName) : nodeName(std::move(configValueName)) {}  // :13
+    virtual ~ScalarModuleSetHandler() = default;
+    virtual void Load(const ConfigNode& node);                      // :18
+    virtual void Save(ConfigNode& node) const;                      // :27 (NullReferenceException while fxModuleNames is null)
+    virtual void Initialize(const PartModuleList& modules);         // :36 (Part.Modules.GetScalarModules(name.Trim()))
+    virtual void SetFXModules(float scalar);                        // :46
 };
 
 // AssemblyLoader.GetClassByName(typeof(PartModule), name) + AddComponent: creates the module object of a class.

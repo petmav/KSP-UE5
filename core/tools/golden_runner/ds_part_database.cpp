@@ -19,6 +19,7 @@
 #include "ksp/database/game_data.hpp"
 #include "ksp/dotnet/number.hpp"
 #include "ksp/dotnet/utf16.hpp"
+#include "ksp/modules/cs_expr.hpp"
 #include "ksp/modules/part_module.hpp"
 #include "ksp/physics/physics_globals.hpp"
 
@@ -206,7 +207,7 @@ int RunPartDatabase(const RunnerOptions& opt) {
 
     const PartResourceLibrary& lib = data.resources;
     const std::string gameRoot = go.gameRoot;
-    size_t nFields = 0;
+    size_t nFields = 0, nCfgSet = 0, nLogic = 0, nInit = 0;
     for (const auto& apPtr : loader.loadedParts) {
         const AvailablePart& ap = *apPtr;
         const std::string& pn = ap.name;
@@ -257,6 +258,23 @@ int RunPartDatabase(const RunnerOptions& opt) {
                     tf.Add({Cell(pn), Cell(mi), Cell(bf.name()), Cell(bf.FieldInfo().typeName), Cell(vs), num,
                             Cell(bf.isPersistant)});
                     nFields++;
+                    // provenance counts (stdout): MODULE-node value, ported OnAwake/OnLoad result, or the C# initialiser
+                    bool cfgSet = false;
+                    for (const ModuleFieldValue& tv : m.module->LastLoadTrace())
+                        if (tv.parsed && tv.field == &bf.FieldInfo()) cfgSet = true;
+                    if (!ap.codeBuilt) {
+                        std::string is;
+                        Cell inum;
+                        FmtModuleValue(cs::FieldInitialValue(bf.FieldInfo()), is, inum);
+                        if (std::holds_alternative<std::monostate>(cs::FieldInitialValue(bf.FieldInfo()))) {
+                            const std::string_view ft = bf.FieldInfo().typeName;
+                            if (ft == "FloatCurve") is = "curve[]";
+                            else if (ft == "DoubleCurve") is = "DoubleCurve";
+                        }
+                        if (cfgSet) nCfgSet++;
+                        else if (is != vs) nLogic++;
+                        else nInit++;
+                    }
                 }
             }
             for (size_t k = 0; k < m.propellants.size(); k++) {
@@ -355,7 +373,8 @@ int RunPartDatabase(const RunnerOptions& opt) {
     for (golden::Table* t : {&tp, &tv, &tm, &tf, &tpr, &tr, &ta, &tc, &tvar, &tas}) g.tables.push_back(std::move(*t));
     std::cout << "part_database: " << loader.loadedParts.size() << " parts, " << db.databaseTexture.size()
               << " textures, " << db.databaseModel.size() << " models, " << db.databaseAudio.size() << " audio, "
-              << db.root()->AllConfigs().size() << " configs, " << nFields << " module fields, "
+              << db.root()->AllConfigs().size() << " configs, " << nFields << " module fields (compiled parts: " << nCfgSet << " set by a MODULE node, " << nLogic
+              << " changed by a ported OnAwake/OnLoad, " << nInit << " C# initialiser values), "
               << loader.cubesNeedRendering.size() << " parts without cubes\n";
     return WriteCandidate(opt, g, "part_database/part_database.json");
 }

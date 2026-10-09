@@ -32,7 +32,7 @@ public:
     void* vessel = nullptr;           // VesselModule.vessel (WP-14's Vessel)
     bool enabled = true;              // Behaviour.enabled
     BaseFieldList& Fields() { return *fields_; }
-    const std::string& ClassName() const { return Class().name; }
+    std::string ClassName() const { return Class().name; }
 
     virtual int GetOrder() { return 999; }                        // VesselModule.cs:44
     virtual Activation GetActivation() { return Always; }         // VesselModule.cs:49
