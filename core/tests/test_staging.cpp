@@ -95,11 +95,9 @@ struct World16 {
     }
     // A vessel assembled from one of the game's own craft files (analysis/physics/craft, harness/inputs/Ships)
     std::unique_ptr<Vessel> Craft(const std::string& path) {
-        ConfigNode::NodePtr root = ConfigNode::Load(path);
-        REQUIRE(root);
         ShipConstruct ship;
         std::string err;
-        REQUIRE_MESSAGE(ship.LoadShip(*root, 0, true, err), err);
+        REQUIRE_MESSAGE(support::LoadCraftFile(path, ship, err), err);  // through the upgrade pipeline like the game's loader
         AssembleOptions ao;
         ao.rootPosition = PlaceKerbinAtPad();
         auto v = AssembleVesselFromCraft(ship, Lookup(), ao);
@@ -659,7 +657,7 @@ TEST_CASE("WP-16 staging sequence of the 51 stock-part crafts of harness/inputs/
     // 51 crafts load with stock parts only; 48 were written by the game's editor, 3 (PhysProf-S/M/L) by this project's tools: their
     // stage fields are not editor output (they are gated by capture.staging_sequence instead)
     size_t crafts = 0, written = 0, parts = 0, iconParts = 0, plainParts = 0, separators = 0, sepOk = 0;
-    size_t dstgParts = 0;
+    size_t dstgParts = 0, iconPartsWritten = 0;
     std::vector<std::string> sepExceptions, dstgCrafts;
     for (const fs::path& f : StockCraftFiles()) {
         ShipConstruct ship;
@@ -682,7 +680,10 @@ TEST_CASE("WP-16 staging sequence of the 51 stock-part crafts of harness/inputs/
                 if (HasIcon(p)) {
                     iconParts++;
                     // the part's own stage (istg) is what the editor wrote: SortIcons put the icon back into the stage group of its inverseStage
-                    if (editorWritten) CHECK_MESSAGE(p.fields.inverseStage == d.inverseStage, "part " << i << " " << p.gameObjectName);
+                    if (editorWritten) {
+                        iconPartsWritten++;
+                        CHECK_MESSAGE(p.fields.inverseStage == d.inverseStage, "part " << i << " " << p.gameObjectName);
+                    }
                 } else {
                     plainParts++;
                     // StageManager.cs:1550: no icon -> the carried stage of the nearest ancestor icon (-1 above the first)
@@ -726,7 +727,7 @@ TEST_CASE("WP-16 staging sequence of the 51 stock-part crafts of harness/inputs/
         }
     }
     MESSAGE("crafts " << crafts << " (editor-written " << written << "), parts " << parts << ", icon parts " << iconParts << ", plain parts " << plainParts
-                      << ", separators " << separators << " (sepI equal: " << sepOk << "), dstg parts compared " << dstgParts);
+                      << ", separators " << separators << " (sepI equal: " << sepOk << "), dstg parts compared " << dstgParts << ", icon parts of the editor-written crafts " << iconPartsWritten);
     CHECK(crafts == 51);
     CHECK(written == 48);
     // dstg of every part of 47 of the 48 editor-written crafts equals FindStageIndices' defaultInverseStage. The exception is
@@ -1699,5 +1700,344 @@ TEST_CASE("WP-16 Part.decouple: breakForce, omni decoupler, decoupler facing awa
     CHECK(nb2->rootPart == d12);
     CHECK(sm.IconOf(d12) == nullptr);
     Vessel::SpawnedVessels().clear();
+    FlightRegistry::ActiveVessel = nullptr;
+}
+
+TEST_CASE("WP-16 Kerbal X flown stage by stage: every ModuleDecouple / ModuleAnchoredDecoupler splits the vessel, parts and ownership are conserved") {
+    if (!GameAvailable()) return;
+    World16 w;
+    LogCapture quiet;
+    ResourceSetsHook rs;
+    EventTrace ev;
+    auto v = w.Craft(kHarness16 + "/inputs/Ships/VAB/Kerbal X.craft");
+    const size_t total = v->parts.size();
+    REQUIRE(total == 73);  // C5 craft table
+    FlightRegistry::ActiveVessel = v.get();
+    v->UpdateResourceSets();
+    // decouplers in the tree (ModuleDecouple: stack decouplers and the omni separators, ModuleAnchoredDecoupler: radial)
+    size_t decouplers = 0, clamps = 0;
+    for (Part* p : v->parts) {
+        decouplers += p->FindModuleOfClass("ModuleDecouple") != nullptr || p->FindModuleOfClass("ModuleAnchoredDecoupler") != nullptr;
+        clamps += p->isLaunchClamp();
+    }
+    CHECK(decouplers > 0);
+    CHECK(clamps == 3);
+    FlightStagingHost host;
+    StageManager sm(&host);
+    REQUIRE(sm.Awake());
+    for (Part* p : v->parts) p->ModulesOnStart(StartState::Flying);
+    v->ResumeStaging();
+    StageManager::BeginFlight();
+    sm.FlushSort();
+    const int stages = StageManager::StageCount();
+    CHECK(stages == 8);  // C5: stage_count of craft_Kerbal_X
+    CHECK(StageManager::CurrentStage() == 8);
+    // the control-from part switches to the vessel that keeps the pod (WaitAndSwitchFocus -> FlightGlobals.ForceSetActiveVessel)
+    std::vector<Vessel*> switched;
+    ModuleDecouplerBase::forceSetActiveVessel = [&](Vessel* nv) { switched.push_back(nv); };
+    auto check = [&](const char* when) {
+        size_t sum = 0;
+        std::set<Part*> seen;
+        std::vector<Vessel*> all{v.get()};
+        for (auto& sp : Vessel::SpawnedVessels()) all.push_back(sp.get());
+        for (Vessel* x : all) {
+            sum += x->parts.size();
+            REQUIRE_MESSAGE(x->rootPart != nullptr, when);
+            CHECK_MESSAGE(x->rootPart->parent == nullptr, when);
+            CHECK_MESSAGE(x->parts[0] == x->rootPart, when);
+            CHECK_MESSAGE(x->OwnedPartCount() == x->parts.size(), when);
+            for (Part* p : x->parts) {
+                CHECK_MESSAGE(p->vessel == x, when);
+                CHECK_MESSAGE(seen.insert(p).second, when << ": a part in two vessels");
+                // every non-root part's parent is in the same vessel
+                if (p != x->rootPart) {
+                    REQUIRE(p->parent != nullptr);
+                    CHECK_MESSAGE(p->parent->vessel == x, when);
+                }
+            }
+            // findVesselParts order: the DFS from the root visits exactly the parts list
+            std::vector<Part*> dfs;
+            std::function<void(Part*)> walk = [&](Part* p) {
+                dfs.push_back(p);
+                for (Part* c : p->children) walk(c);
+            };
+            walk(x->rootPart);
+            CHECK_MESSAGE(dfs.size() == x->parts.size(), when);
+        }
+        CHECK_MESSAGE(sum == total, when << ": parts lost or duplicated");
+    };
+    check("before staging");
+    int activated = 0;
+    for (int s = stages - 1; s >= 0; s--) {
+        const size_t vesselsBefore = 1 + Vessel::SpawnedVessels().size();
+        ev.log.clear();
+        sm.Tick(10.0);  // past the staging cooldown
+        StageManager::ActivateNextStage();
+        activated++;
+        REQUIRE(ev.log.size() >= 1);
+        CHECK(ev.log[0] == "activate:" + std::to_string(s));
+        CHECK(StageManager::CurrentStage() == s);
+        CHECK(v->currentStage == s);
+        const std::string when = "after stage " + std::to_string(s);
+        check(when.c_str());
+        // each decouple event created exactly one new vessel
+        CHECK(1 + Vessel::SpawnedVessels().size() == vesselsBefore + static_cast<size_t>(ev.Count("newVessel")));
+        ModuleDecouplerBase::TickAll();
+        ModuleDecouplerBase::TickAll();
+    }
+    CHECK(activated == stages);
+    // every activated decoupler that had a part on its explosive node separated something
+    size_t decoupled = 0;
+    for (Part* p : [&] {
+             std::vector<Part*> all = v->parts;
+             for (auto& sp : Vessel::SpawnedVessels()) all.insert(all.end(), sp->parts.begin(), sp->parts.end());
+             return all;
+         }()) {
+        PartModule* m = p->FindModuleOfClass("ModuleDecouple");
+        if (m == nullptr) m = p->FindModuleOfClass("ModuleAnchoredDecoupler");
+        if (m != nullptr && m->Get<bool>("isDecoupled")) decoupled++;
+    }
+    CHECK(decoupled > 0);
+    CHECK(Vessel::SpawnedVessels().size() >= decoupled);  // at least one new vessel per decoupler that fired (an omni decoupler makes several)
+    MESSAGE("Kerbal X: " << decouplers << " decoupler parts, " << decoupled << " fired, " << Vessel::SpawnedVessels().size() << " new vessels, " << switched.size() << " focus switches");
+    ModuleDecouplerBase::forceSetActiveVessel = nullptr;
+    Vessel::SpawnedVessels().clear();
+    FlightRegistry::ActiveVessel = nullptr;
+}
+
+TEST_CASE("WP-16 ModuleDecouple.OnDecouple: explosive node on the parent, omni decoupler, focus switch to the vessel that holds the control-from part") {
+    if (!GameAvailable()) return;
+    World16 w;
+    LogCapture quiet;
+    ResourceSetsHook rs;
+    EventTrace ev;
+    auto v = w.Craft(kHarness16 + "/inputs/Ships/VAB/Kerbal X.craft");
+    FlightRegistry::ActiveVessel = v.get();
+    v->UpdateResourceSets();
+    for (Part* p : v->parts) p->ModulesOnStart(StartState::Flying);
+    // A plain stack decoupler: its explosive node holds its parent, so decouple() splits the decoupler and everything below it off
+    ModuleDecouple* stack = nullptr;
+    ModuleDecouple* omni = nullptr;
+    for (Part* p : v->parts) {
+        auto* d = dynamic_cast<ModuleDecouple*>(p->FindModuleOfClass("ModuleDecouple"));
+        if (d == nullptr) continue;
+        if (d->Get<bool>("isOmniDecoupler")) {
+            if (omni == nullptr) omni = d;
+        } else if (stack == nullptr && d->ExplosiveNode() != nullptr && d->ExplosiveNode()->attachedPart == p->parent && p->parent != nullptr && p->children.size() == 1) {
+            stack = d;
+        }
+    }
+    REQUIRE(stack != nullptr);
+    Part* sp = dynamic_cast<Part*>(stack->part);
+    Part* below = sp->children[0];
+    // the control-from part is below the decoupler: it leaves with the lower stage
+    v->SetReferenceTransform(below);
+    v->ctrlState.mainThrottle = 0.75f;
+    v->ActionGroups().Set(KSPActionGroup::Light, true);
+    v->currentStage = 5;
+    const size_t belowSize = SubtreeSize(sp);
+    const size_t before = v->parts.size();
+    std::vector<Vessel*> switched;
+    ModuleDecouplerBase::forceSetActiveVessel = [&](Vessel* nv) { switched.push_back(nv); };
+    stack->OnDecouple();
+    REQUIRE(Vessel::SpawnedVessels().size() == 1);
+    Vessel* lower = Vessel::SpawnedVessels()[0].get();
+    CHECK(lower->rootPart == sp);
+    CHECK(lower->parts.size() == belowSize);
+    CHECK(v->parts.size() == before - belowSize);
+    CHECK(stack->Get<bool>("isDecoupled"));
+    CHECK_FALSE(stack->Events()["Decouple"]->active);
+    CHECK(ev.Count("separation:") == 1);
+    // Part.decouple already copied the control state and the action groups (Part.cs:2820) and gave the new vessel the stage of its own
+    // highest inverseStage; WaitAndSwitchFocus (one frame later) overwrites the stage with the old vessel's and switches focus
+    CHECK(lower->ctrlState.mainThrottle == 0.75f);
+    CHECK(lower->ActionGroups()[KSPActionGroup::Light]);
+    CHECK(lower->currentStage == StageManager::RecalculateVesselStaging(lower));
+    CHECK(switched.empty());
+    ModuleDecouplerBase::TickAll();
+    CHECK(switched.size() == 1);
+    CHECK(switched[0] == lower);
+    CHECK(lower->currentStage == 5);                        // currentStage = oldVessel.currentStage
+    CHECK(lower->GetReferenceTransformPart() == below);     // SetReferenceTransform(p)
+    // the old vessel is now debris-or-default by its remaining parts (FindDefaultVesselType) and got a name
+    CHECK(v->vesselType == v->FindDefaultVesselType());
+    ModuleDecouplerBase::forceSetActiveVessel = nullptr;
+    Vessel::SpawnedVessels().clear();
+    FlightRegistry::ActiveVessel = nullptr;
+}
+
+TEST_CASE("WP-16 omni decoupler (Separator.x): every child leaves, then the separator itself; the ejection force is split") {
+    if (!GameAvailable()) return;
+    World16 w;
+    LogCapture quiet;
+    ResourceSetsHook rs;
+    EventTrace ev;
+    auto v = w.Craft(kHarness16 + "/inputs/Ships/SPH/Satellite Launcher.craft");
+    FlightRegistry::ActiveVessel = v.get();
+    v->UpdateResourceSets();
+    for (Part* p : v->parts) p->ModulesOnStart(StartState::Flying);
+    ModuleDecouple* omni = nullptr;
+    for (Part* p : v->parts) {
+        auto* d = dynamic_cast<ModuleDecouple*>(p->FindModuleOfClass("ModuleDecouple"));
+        if (d != nullptr && d->Get<bool>("isOmniDecoupler")) {
+            omni = d;
+            break;
+        }
+    }
+    REQUIRE(omni != nullptr);
+    Part* op = dynamic_cast<Part*>(omni->part);
+    const size_t total = v->parts.size();
+    std::vector<size_t> childSizes;
+    const std::vector<Part*> childParts(op->children);
+    for (Part* c : op->children) childSizes.push_back(SubtreeSize(c));
+    const bool hasParent = op->parent != nullptr;
+    const size_t kids = childSizes.size();
+    REQUIRE(kids >= 1);
+    const float ej = omni->Get<float>("ejectionForce");
+    omni->OnDecouple();
+    // ModuleDecouple.cs:74-97: `list2 = new List<Part>(children)`, each child.decouple(); then, with a parent, part.decouple()
+    CHECK(Vessel::SpawnedVessels().size() == kids + (hasParent ? 1u : 0u));
+    size_t sum = v->parts.size();
+    for (auto& sp : Vessel::SpawnedVessels()) sum += sp->parts.size();
+    CHECK(sum == total);
+    for (size_t i = 0; i < kids; i++) CHECK(Vessel::SpawnedVessels()[i]->parts.size() == childSizes[i]);
+    if (hasParent) {
+        CHECK(Vessel::SpawnedVessels().back()->rootPart == op);
+        CHECK(Vessel::SpawnedVessels().back()->parts.size() == 1);  // the separator alone: its children left first
+    }
+    CHECK(op->children.empty());
+    CHECK(omni->Get<bool>("isDecoupled"));
+    // the ejection list: a pair per child (child gets -v, the separator +v, v = dir * ejectionForce * percent * 0.01 / (children + 1)),
+    // then a pair for the parent with the force halved (ejectionForce * percent * 0.01 * 0.5)
+    const auto& e = omni->LastEjections();
+    REQUIRE(e.size() == 2 * kids + (hasParent ? 2u : 0u));
+    const float percent = omni->Get<float>("ejectionForcePercent");
+    const float perChild = f32store(fx(ej) * (fx(percent) * fx(0.01f)) / fx(static_cast<float>(kids + 1)));
+    for (size_t i = 0; i < kids; i++) {
+        CHECK(e[2 * i].part == childParts[i]);
+        CHECK(e[2 * i + 1].part == op);
+        // automaticDir: Normalize(separator.position - child.position) * perChild; opposite signs on the pair
+        CHECK(e[2 * i].ejectionVector.x == doctest::Approx(-e[2 * i + 1].ejectionVector.x));
+        CHECK(e[2 * i].ejectionVector.y == doctest::Approx(-e[2 * i + 1].ejectionVector.y));
+        CHECK(e[2 * i + 1].ejectionVector.magnitude() <= perChild * 1.0001f);
+    }
+    ModuleDecouplerBase::TickAll();
+    Vessel::SpawnedVessels().clear();
+    FlightRegistry::ActiveVessel = nullptr;
+}
+
+// ======================================================== ToggleStaging, ClearStaging / ResumeStaging, manager life cycle
+
+TEST_CASE("WP-16 PartModule.ToggleStaging / SetStagingState: staging switched off and on again for a symmetry pair") {
+    if (!GameAvailable()) return;
+    Game15 g;
+    LogCapture quiet;
+    Ship s(g);
+    EditorSession ed(s.tree);
+    StageManager& sm = *ed.sm;
+    EditorSession::StartParts(s.tree);
+    ed.Load();
+    REQUIRE(StageManager::StageCount() == 3);
+    PartModule* m1 = s.rad1->FindModuleOfClass("ModuleAnchoredDecoupler");
+    PartModule* m2 = s.rad2->FindModuleOfClass("ModuleAnchoredDecoupler");
+    REQUIRE(m1 != nullptr);
+    REQUIRE(m2 != nullptr);
+    CHECK(m1->Get<bool>("stagingEnabled"));
+    CHECK(m1->GetStagingDisableText() == KSP::Localization::Localizer::Format("#autoLOC_240329"));
+    // the [KSPEvent] ToggleStaging (PartModule.cs:303) is bound on every module
+    BaseEvent* ev = m1->Events()["ToggleStaging"];
+    REQUIRE(ev != nullptr);
+    ev->Invoke();
+    // :303 + :326: m1 and the ModuleDecouplerBase of every symmetry counterpart switch; each part's stageability follows (Part.cs:7777),
+    // the icons leave the stack, OnPartUpdateStageability re-sorts
+    CHECK_FALSE(m1->Get<bool>("stagingEnabled"));
+    CHECK_FALSE(m2->Get<bool>("stagingEnabled"));
+    CHECK_FALSE(s.rad1->fields.stagingOn);
+    CHECK_FALSE(s.rad2->fields.stagingOn);
+    CHECK(sm.IconOf(s.rad1) == nullptr);
+    CHECK(sm.IconOf(s.rad2) == nullptr);
+    CHECK(m1->Events()["ToggleStaging"]->guiName() == m1->GetStagingEnableText());  // UpdateStagingToggle
+    // the emptied top stage was auto-created (defaultStage != -1) and is deleted by DeleteEmptyStages
+    CHECK(StageManager::StageCount() == 2);
+    // no icon: the decoupler's inverseStage is the carried stage of the root (-1) and its GetStageIndex is the parent's (stagingEnabled
+    // is false) -> separationIndex -1
+    CHECK(s.rad1->fields.inverseStage == -1);
+    CHECK(s.rad1->fields.separationIndex == -1);
+    CHECK(dynamic_cast<IStageSeparator*>(m1)->GetStageIndex(7) == -1);
+    // on again: the icons return and are placed at max(0, inverseStage) = stage 0 (OnPartUpdateStageability / AddHeldIconsToStages clamp)
+    ev->Invoke();
+    CHECK(m1->Get<bool>("stagingEnabled"));
+    CHECK(m2->Get<bool>("stagingEnabled"));
+    CHECK(s.rad1->fields.stagingOn);
+    CHECK(s.rad2->fields.stagingOn);
+    CHECK(sm.IconOf(s.rad1) != nullptr);
+    CHECK(sm.IconOf(s.rad2) != nullptr);
+    CHECK(s.rad1->fields.inverseStage == 0);
+    CHECK(s.rad2->fields.inverseStage == 0);
+    // the two icons form one symmetry group in stage 0
+    StageIcon* a = sm.IconOf(s.rad1);
+    StageIcon* b = sm.IconOf(s.rad2);
+    CHECK(((a->groupLead == a && b->groupLead == a) || (b->groupLead == b && a->groupLead == b)));
+}
+
+TEST_CASE("WP-16 StageManager life cycle: Instance, a second manager is refused, hooks, Vessel.ClearStaging / ResumeStaging") {
+    if (!GameAvailable()) return;
+    Game15 g;
+    LogCapture quiet;
+    // without an Instance: the C# statics dereference null
+    CHECK(StageManager::Instance == nullptr);
+    CHECK_THROWS_AS(StageManager::StageCount(), NullReferenceException);
+    CHECK_THROWS_AS(StageManager::CurrentStage(), NullReferenceException);
+    CHECK(StageManager::Selection().empty());  // a fresh list, not a throw (:162)
+    CHECK_FALSE(Part::stagingHooks.stageCount != nullptr);
+    {
+        EditorStagingHost host;
+        StageManager sm(&host);
+        REQUIRE(sm.Awake());
+        CHECK(StageManager::Instance == &sm);
+        CHECK(Part::stagingHooks.stageCount != nullptr);
+        StageManager other(&host);
+        CHECK_FALSE(other.Awake());  // "Only one instance of this class may exist per scene"
+        CHECK(quiet.Has(log::Level::Error, "Only one instance"));
+        CHECK(StageManager::Instance == &sm);
+        CHECK(StageManager::StageCount() == 0);
+        CHECK(StageManager::LastStage() == 0);   // :146 `Count - 1 < 0 ? 0`
+        CHECK(StageManager::CurrentStage() == 0);
+    }
+    CHECK(StageManager::Instance == nullptr);
+    CHECK(Part::stagingHooks.stageCount == nullptr);  // OnDestroy: the part hooks are gone
+
+    // Vessel.ClearStaging / ResumeStaging (Vessel.cs:2130-2153) on a vessel in flight
+    World16 w;
+    auto v = w.PhysProf("PhysProf-S");
+    FlightRegistry::ActiveVessel = v.get();
+    FlightStagingHost host;
+    StageManager sm(&host);
+    REQUIRE(sm.Awake());
+    for (Part* p : v->parts) p->ModulesOnStart(StartState::Flying);
+    int cleared = 0, resumed = 0;
+    struct Counter {
+        int* c;
+        int* r;
+        void Clear(Vessel*) { (*c)++; }
+        void Resume(Vessel*) { (*r)++; }
+    } cnt{&cleared, &resumed};
+    GameEvents::onVesselClearStaging.Add(&cnt, &Counter::Clear);
+    GameEvents::onVesselResumeStaging.Add(&cnt, &Counter::Resume);
+    v->ResumeStaging();  // creates the icons of the five staging parts; fires onVesselResumeStaging
+    CHECK(resumed == 1);
+    size_t icons = 0;
+    for (Part* p : v->parts) icons += sm.IconOf(p) != nullptr;
+    CHECK(icons == 5);
+    sm.FlushSort();
+    v->ClearStaging();   // every stack icon removed, event fired, the manager schedules a sort
+    CHECK(cleared == 1);
+    icons = 0;
+    for (Part* p : v->parts) icons += sm.IconOf(p) != nullptr;
+    CHECK(icons == 0);
+    CHECK(sm.SortPending());
+    sm.FlushSort();
+    GameEvents::onVesselClearStaging.Remove(&cnt, &Counter::Clear);
+    GameEvents::onVesselResumeStaging.Remove(&cnt, &Counter::Resume);
     FlightRegistry::ActiveVessel = nullptr;
 }

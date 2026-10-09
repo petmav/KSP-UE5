@@ -22,6 +22,7 @@ Updated 2026-10-09 (WP-05). One command: `powershell -NoProfile -ExecutionPolicy
 | 10. WP-05 UrlDir, GameDatabase (data), PartLoader (data), resource library (branch `wp05`, merged in `bfb732f`) | done for the data side: UrlDir + GameDatabase load order identical to KSP.log (2,836 lines), PartLoader compiles all 353 GameData parts + the 9 prefab-part slots; `capture.part_database` gate bit-exact on every in-scope C9 row (parts, cfg values, modules, cfg-set module fields, propellants, resources, attach nodes, drag cubes, variants, asset paths). Module instantiation is WP-06, model contents the UE import. See "WP-05" below |
 
 | 12. WP-10 time warp, rails propagation, orbit driver (branch `wp10`) | done: TimeWarp (whole class incl. rate limits, mode switching, autoWarpTo), WarpTransition(Calculator), PositionTarget + ITargetable, OrbitDriver finished (Targetable, TRACK_Phys/IDLE/UPDATE tests), CelestialBody.resetTimeWarpLimits/TerrainAltitude; `capture.orbit_rails` bit-exact incl. the newly gated `segments.requested_rate`; 17 unit cases (2,009 assertions); numerics beyond C8 need new captures (listed in "WP-10") |
+| 13. WP-16 staging, action groups, decouplers, decouple / couple tree ops (branch `wp16`, from `wp14`) | done (model side): StageManager.cs staging model with StageGroup / StageIcon / ProtoStageIcon as data records (FindStageIndices, SetSeparationIndices, the SortIcons pipeline, ActivateStage), ModuleDecouplerBase / ModuleDecouple / ModuleAnchoredDecoupler, ActionGroupList.ToggleGroup / SetGroup + the BaseAction statics, KSPActionParam, Part.decouple / Couple / Undock, DockedVesselInfo, Vessel.ClearStaging / ResumeStaging; `capture.staging_sequence` bit-exact (stage_count, inverseStage, isDecoupler of the C5 crafts); 19 unit cases (12,211 assertions); the vessel-split golden needs an in-flight capture (listed in "WP-16") |
 
 ## Test results (all 21 ctest tests pass in RelWithDebInfo and in Debug on Windows; and on Linux; WP-00L added libm.portable_vs_dll)
 
@@ -51,7 +52,8 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `capture.resource_mass` | WP-15: in-game `captures/out2/deltav_readout.json` (C5) table `parts`, column `resource_mass` (`Part.GetResourceMass()`): 1,225 parts of 17 crafts; scope in "WP-15" | 1,225 | 0 ULP |
 | `capture.gamedatabase_load_order` | WP-05: every `Load(Audio/Texture/Model): url` and `Config(TYPE) url` line of the capture run's KSP.log, in order | 2,836 lines | identical |
 | `capture.vessel_state` | WP-14: in-game `captures/out2/aero_forces_vessel.json` (C10): structure 631 (part tree of the three PhysProf crafts assembled into a `Vessel`), states 20 (surface speed and the FlightIntegrator atmosphere mirror); cube_names, node_contact_areas and engine/input columns excluded (see WP-14) | 651 | 0 ULP, strings/ints identical |
-| `unit` | 236 doctest cases, 178,437 assertions (WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
+| `capture.staging_sequence` | WP-16: in-game `captures/out2/deltav_readout.json` (C5) tables `craft` (`stage_count`, 17) and `parts` (`inverseStage`, `isDecoupler`, 1,225 parts of 17 crafts) produced by the StageManager model + decoupler modules; scope in "WP-16" | 1,242 | 0 ULP (ints and bools identical) |
+| `unit` | 255 doctest cases, 190,648 assertions (WP-16: 19 cases, 12,211 assertions in `test_staging.cpp`; WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
 differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 6 ULP (Vector3.Project/ProjectOnPlane) and
@@ -1892,3 +1894,135 @@ After merging `wp13` (with main: WP-06, WP-10) and unifying ITargetable: `./run_
 ### Commits (branch `wp14`)
 
 see `git log --oneline wp13..wp14`.
+
+## WP-16: staging, action groups, decouplers, decouple / couple tree ops (branch `wp16`, from `wp14` 7bc606d6)
+
+State: done for the engine-agnostic model. The staging sequence of KSP (`StageManager.cs`) runs on the real `Part` tree: part start (stack icons),
+the SortIcons pipeline (stage groups, symmetry groups, empty-stage deletion), `FindStageIndices` / `SetSeparationIndices` (inverse stages and
+separation indices), stage activation in flight (`ActivateStage` -> `Part.force_activate` -> the decoupler modules -> `Part.decouple` -> a new
+`Vessel` with its own part ownership, staging and PartSets), `Couple` and `Undock`. Every ported function cites `File.cs:line` of
+`decompiled/KSP-Decompiled/Assembly-CSharp/` (line numbers checked by script against the decompile). All earlier gates are unchanged and green.
+Gate `capture.staging_sequence` (new): max ULP 0 / identical ints and bools.
+
+### What is ported (by C# file)
+
+| C# file | C++ | ported | not ported (and why) |
+|---|---|---|---|
+| KSP/UI/Screens/StageManager.cs (1,801 lines) | `staging/stage_manager.hpp`, `src/staging/stage_manager.cpp` | `Instance`, `Stages`, `StageCount`, `CurrentStage`, `LastStage`, `CanSeparate`, `Selection`, the GameEvents subscriptions and handlers (:184-358), `AddNewStageGroupsIfNeeded`, `AddHeldIconsToStages` (flight and editor branches, the PreferredInitialStage placement), `GetParachuteStageIndex`, `HoldIcon` / `UnHoldIcon` / `CreateIcon` / `RemoveIcon` / `DisableIcon`, `AddStageAt` / `InsertStageAt` / `DeleteStage` / `DeleteEmptyStages` / `RemoveStage`, `GetStageCount` / `SetStageCount`, `FindPartsWithModuleSeparatingBeforeOtherPartsWithModule`, `SetManualStageOffset`, `SortIcons` (+ the 3-frame coroutine as `Tick` / `FlushSort`), `UpdateStageGroups`, `BeginFlight` / `ResumeFlight`, `ActivateNextStage` / `ActivateStage`, `Increment/DecrementCurrentStage`, `StepBackCurrentStage`, `GenerateStagingSequence`, `FindStageIndices`, `RecalculateVesselStaging`, `SetSeparationIndices` (both), `setSeparationIndices`, `Reset`, `CheckNullrefsInStageIconList` | Unity UI: `DVUsageStats`, layout / drag-and-drop / hover (:358-372, :700-821), tweening, sounds (`nextStageClip`), ScreenMessages, `ResourceDisplay`, the delta-v headings and panels (:1649-1780), `ShowHideStageStack` (input lock). `IEnumerator cooldownSeparation` is `canSeparate` re-enabled by `Tick(dt)` after `StagingCooldownTimer` |
+| KSP/UI/Screens/StageGroup.cs, StageIcon.cs, ProtoStageIcon.cs (WP-43's UI classes) | the same header: `StageGroup`, `StageIcon` | the data side only, because StageManager's model needs it: icon lists, `AddIcon` / `AddIconAt` / `RemoveIcon`, symmetry groups (`AddToGroup`, `RemoveFromGroup(AndReshuffle)`, `HoldGroupedIcons`, `CollapseGroup`, `DisableGroup`, `ConsolidateMembers`), `MoveAllIconsInto` / `MoveIconsInto`, `SetInverseSequenceIndex` (writes `Part.inverseStage` / `manualStageOffset` / `inStageIndex` and re-runs `SetSeparationIndices` for decouplers and engines), `Reset`, `FindSymmetryGroupleader`, `Delete` / `AddStageAfter`; `ProtoStageIcon.CreateIcon` / `RemoveIcon` as `Part::CreateStageIcon` / `RemoveStageIcon` through `Part::stagingHooks` | textures, colours, radio buttons, info boxes, transform parenting (WP-43) |
+| ModuleDecouplerBase.cs, ModuleDecouple.cs, ModuleAnchoredDecoupler.cs | `modules/module_decouplers.hpp`, `src/modules/module_decouplers.cpp` | all fields (generated schema), `OnAwake` / `OnStart` / `OnActive` / `LateUpdate` / `OnDestroy`, `Decouple` / `DecoupleAction` / `OnDecouple` (stack, omni and anchored), `ejectionForce` maths (Mono float rule), `isDecoupled` / `staged` / `stagingEnabled` persistence, `ExplosiveNode`, `IStageSeparator`, `IStageSeparatorChild`, `IAirstreamShield`, the staging queries, `WaitAndSwitchFocus`, the engine-plate shroud (`SetAirstream`, `CheckShielded`, `OnJettison`) | FX (`fx.Burst`, `setActive`: only whether the group exists is kept), the anchor Transform reparenting, `Part.AddForce` (installed as the `addForce` hook and applied two frames later), `AdjusterDecoupleBase` (Missions), `Part.AddShield` / `RemoveShield` |
+| ActionGroupList.cs, KSPActionGroup.cs, KSPActionParam.cs, KSPActionType.cs | `vessel/action_group_list.*`, `modules/base_event.hpp`, `save/save_enums.hpp` | `ToggleGroup`, `SetGroup` (cooldown, ADDITIONAL_ACTION_GROUPS override groups), the complete `KSPActionParam` (Cooldown keeps the maximum), `KSPActionType`; `BaseAction.CreateActionList` (both), `CreateGroupList` (both), `ContainsNonDefaultActions`, `FireAction`, `GetGroupIndex` (`src/modules/base_action_lists.cpp`) | `Part.Actions` (the Part's own three [KSPAction]s are not modelled by WP-13, so only module actions are listed); `GetActionGroupsLength` / `GetActionGroups` (GameVariables, UI) |
+| PreferredInitialStage.cs, ModifierStagingSituation.cs, IStageSeparator.cs, IStageSeparatorChild.cs, IActivateOnDecouple.cs, IAirstreamShield.cs | `staging/staging_types.hpp`, `modules/part_module.hpp` (ModifierStagingSituation, WP-06's) | all | - |
+| Part.cs tree operations | `parts/part.hpp`, `src/parts/part_decouple.cpp` | `decouple` (:2804) with `Decoupling` (:2840), `disconnect` (:3084), `Couple` (:3171), `Undock` (:3274), `SetVessel` (:3263), `CheckBodyLiftAttachment` (:1964, the ILiftProvider lookup is the aero package's), the staging block of `Start` (`Part::StartStaging`, :1727-1747), `UpdateStageability` now drives the StageManager through `stagingHooks` | `attachJoint.DestroyJoint` / `CreateAttachJoint` / `ResetJoints`, `SetCollisionIgnores`, `CreateRendererLists`, `ReleaseAutoStruts`, the map object (physics / render packages) |
+| Vessel.cs staging members (not in WP-14) | `vessel/vessel.hpp`, `src/vessel/vessel_staging.cpp`, `vessel.cpp` | `ClearStaging`, `ResumeStaging` (:2130-2153); `OnVesselPartCountChanged`, `UpdateCrossfeedResourceSetFL`, `UpdateResourceSetsEventCheckPart` and their subscriptions (:1573-1577, :3343-3347, :3892, :3943, :3951) which WP-14 had left out: they rebuild the PartSets of the vessel that lost or gained parts; lifetime helpers `SpawnVessel` / `DestroyImmediate` / `ReleaseOwnedParts` / `AcceptOwnedParts` (AddComponent<Vessel>, DestroyImmediate and the Unity ownership of parts that move between vessels), `delayedFrameCalls` | - |
+| DockedVesselInfo.cs (WP-25's file, needed by `Undock`) | `parts/docked_vessel_info.hpp` | whole class (Load incl. the pre-1.2 numeric VesselType, Save) | - |
+
+Names in the work-package brief that do not exist in the 1.12.5 source: `GenerateProceduralStages`, `StagingLocked`, `ValidateStageCounts`, `MoveStage`
+(grep over Assembly-CSharp finds none); the model has `MoveAllIconsInto` / `MoveIconsInto` (drag and drop of icons between stages) instead.
+
+Support added for the staging queries (not in the 13 files, needed by `Part.UpdateStageability` for the stock parts):
+- `PartModule::IsStageable` / `StagingEnabled` / `StagingToggleEnabledEditor/Flight` (`src/modules/module_staging.cpp`): PartModule.cs:272-345 plus the per-class
+  overrides of the stageable modules whose own package is not ported (ModuleEngines :2137, ModuleRCS :746, ModuleJettison :641, ModuleGimbal :326,
+  ModuleDockingNode :1949-1970, ModuleScienceExperiment :1183-1195, ModuleTestSubject :200, ModuleEvaChute :136). The base case is
+  `ReflectedAttributes.isStageable` (PartModule.cs:27-50: the class or a base declares a public `OnActive`), generated into
+  `include/ksp/modules/stageable_classes.inc` by `tools/wp16/gen_stageable.py` (16 classes). A ported subclass overrides the virtuals.
+- `PartModule::OnStart` applies the `stagingIcon` default that those modules' own OnStart sets (`if (part.stagingIcon == string.Empty && overrideStagingIconIfBlank)`:
+  ModuleEngines.cs:1653 LIQUID_ENGINE, ModuleParachute.cs:310 PARACHUTES, LaunchClamp.cs:159 STRUT, ModuleServiceModule.cs:174 and ModuleProceduralFairing.cs:402
+  FUEL_TANK, ModuleScienceExperiment.cs:263 SCIENCE_GENERIC). Without it no engine has a stack icon.
+- `PartModule::ToggleStaging` / `SetStagingState` (:303, :326), bound to the `ToggleStaging` [KSPEvent] in `PartModule::Awake`.
+- IStageSeparator stand-ins registered under `LaunchClamp` (`GetStageIndex` = inverseStage, LaunchClamp.cs:369) and `ModuleDockingNode` (`fallback + 1`,
+  ModuleDockingNode.cs:1944): the full classes belong to WP-26 (LaunchClamp) / WP-25 (ModuleDockingNode) and only have to keep implementing `IStageSeparator` (ModuleServiceModule, WP-26, implements `IStageSeparator` + `IStageSeparatorChild`).
+- `AvailablePart::preferredStage` defaulted to 0 (FIRST) in WP-05's struct; AvailablePart.cs:114 is `DEFAULT` (3). Fixed (it decides where a newly placed part goes).
+
+### Gate `capture.staging_sequence` (Linux release; bit-exact, no tolerance)
+
+Dataset `staging_sequence` (`tools/golden_runner/ds_staging_sequence.cpp`) against `harness/captures/out2/deltav_readout.json` (C5). Inputs are the capture's own: the
+17 craft files (14 stock crafts of `harness/inputs/Ships` and the three PhysProf crafts of `analysis/physics/craft`, through the upgrade pipeline and
+`LoadShip`, `craft_tree.hpp`). The run replays what the editor does (`tools/support/editor_staging.hpp`): `Part.Start`'s staging half for every part
+(modules' OnStart, `StartStaging`: stagingIcon check, `UpdateStageability`, stack icon held by the StageManager), then `onEditorLoad` and the deferred `SortIcons`.
+
+| table | rows | gated columns | max abs | max ULP | notes |
+|---|---|---|---|---|---|
+| `craft` | 17 | `stage_count` (= `StageManager.StageCount`) | 0 | 0 | |
+| `parts` | 1,225 | `inverseStage` (`Part.inverseStage` after the staging sequence was rebuilt), `isDecoupler` (ModuleDecouple or ModuleAnchoredDecoupler), `part` (name) | 0 | 0 | 15 launch-clamp rows have `isDecoupler = null` in the capture (VesselDeltaV.cs:636 builds no DeltaVPartInfo for clamps); the candidate writes null there too |
+
+The gate is not circular: **595 of the 1,225 `inverseStage` values differ from the craft files' `istg`** (the three PhysProf crafts 462 of 631, plus Aeris 3A/4A, Gull, Mallard
+133 of 140): the editor rewrites the stage of every part without a stack icon to the carried stage of its nearest icon ancestor (`setSeparationIndices`, StageManager.cs:1542-1550) when it
+loads the craft, and the capture holds the rewritten values. Not gated here: `decoupleStage` / `activationStage` / `mass*` / `isEngine` of `parts` and the `totals`, `stages`,
+`engines` tables (VesselDeltaV, WP-17, WP-23; `mass` is WP-13's, `resource_mass` WP-15's, both gated elsewhere). The capture's `separationIndex` is not a column; the
+test below ties it to `decoupleStage`.
+
+### Unit tests (`tests/test_staging.cpp`, 19 cases, 12,211 assertions)
+
+Expected values come from the decompiled control flow (derivation in comments), the craft files, the C5 capture and the part cfgs; no number is invented.
+- small records, BaseAction statics, `ActionGroupList.ToggleGroup` / `SetGroup`: flags 1 ... 0x10000, `GetGroupIndex` (0 for non-flags), Activate / Deactivate order, the cooldown (refused until
+  `UT >= cooldownTimes[i]`), disabled modules, inactive and `advancedTweakable` actions, override groups (`groupStates`, `OverrideDefault`, `OverrideActionControl`), `FireAction` filters.
+- module staging queries on 5 + 5 stock classes and the per-class rules (truth tables of the ModuleRCS / ModuleJettison rule, docking node, science experiment);
+  `Part.StartStaging` on 10 stock parts (icon default, `stagingOn`, invalid icon name); the stand-in separators.
+- decoupler modules on `Decoupler.1` (ModuleDecouple, cfg: ejectionForce 100, explosiveNodeID top) and `radialDecoupler1-2` (anchored, cfg: 450, srf, DECOUPLER_HOR): cfg fields,
+  initialisers, OnStart (explosive node, stagingIcon default), PartDetaches, GetStageIndex with staging disabled, stageable / enabled queries, texts, titles, Save / Load round trip
+  (`isDecoupled`, `ejectionForcePercent`, `stagingEnabled` persistent; `ejectionForce`, `staged` not), missing explosive node.
+- `FindStageIndices` on a hand-built stack (offsets, stageBefore / stageAfter, childStageOffset, manualStageOffset, carry-over, event counts), `SetSeparationIndices` incl. a decoupler whose
+  `partDecoupled` is false (explosive node on a child vs. on the parent), `GenerateStagingSequence`, `RecalculateVesselStaging`, `GetStageCount`, `FindPartsWithModuleSeparatingBefore...`.
+- the SortIcons pipeline on a ship with a symmetry pair: 3-frame coroutine timing and re-request, stage group creation, group lead choice (first child of the parent), grouped icons
+  (`groupLead`, `manualStageOffset`, `inStageIndex`), carried stages, separation indices, `AddStageAt` / `DeleteEmptyStages` (manual stages survive), `OnPartUpdateStageability` clamp,
+  `MoveAllIconsInto`, `ResetAvailable` / `Reset`, preferredStage LAST and PARACHUTESTAGE placement (`GetParachuteStageIndex` opens and shifts a stage).
+- **the staging sequence of the 51 stock-part crafts of `harness/inputs/Ships`** (48 written by the game's editor, 3 PhysProf): 3,020 parts. For the 48 editor-written crafts the craft files
+  hold the game's own staging: `istg` equals the pipeline's `inverseStage` for all 335 parts with a stack icon; `dstg` equals `FindStageIndices`' `defaultInverseStage` for 2,384 of
+  2,403 parts (the 19 others are all of `Prospector Rover.craft`, whose root is a stack decoupler: its file holds dstg 1 for the root and 0 for the others, presumably from before the decoupler became the root; the game does not recompute dstg on load); `sepI` equals
+  `separationIndex` for 120 of 122 separators (decouplers and launch clamps; the two exceptions are the staging-disabled `smallHardpoint`s of Osprey.craft, whose file keeps the value from before
+  staging was switched off); parts without an icon take the carried stage (all 2,550); re-running the sort changes nothing. Not asserted, observed: `sidx` (`inStageIndex`) differs for
+  36 icon parts and `sqor` (`manualStageOffset`) for 15 (icon order within a stage depends on the editor's part start order; sqor is user history); `sepI` of 38 of the 202 engines differs (the file holds
+  the engine's own stage where the pipeline gives the ancestors' separator stage: the game recomputes the tree on load, the capture's `decoupleStage` of the PhysProf engines proves it), so
+  engine `sepI` is not used as a golden.
+- **`separationIndex` against the capture**: for the 1,001 parts of the 17 C5 crafts that are neither engine, decoupler nor launch clamp, `decoupleStage` and `activationStage` recomputed with the
+  DeltaVPartInfo.cs:231-258 formula from the port's `separationIndex` / `inverseStage` (and S = the decouplers' separationIndex, VesselDeltaV.cs:557) equal the capture's values (1,001 / 1,001).
+- flight, PhysProf-S: BeginFlight (currentStage 2, two stage groups), ActivateNextStage: `onStageActivate(1)`, `onLaunch`, engines ACTIVE, cooldown refusal and `Tick`, stage 0: both radial decouplers fire
+  (reverse part order), three vessels (3 + 9 + 9 parts, roots, `currentStage` = highest inverseStage of the subtree, ownership, ids, registry), `onStageSeparation` carries `CurrentStage` (1), LateUpdate
+  switches staging off, the ejection forces (4) two frames later, the PartSets of the old vessel no longer contain booster parts (rebuilt by `onVesselPartCountChanged` through `VesselResourceSets`),
+  `Couple` (parts, children, ownership, `currentStage` = max inverseStage + 1, vessel destroyed, `onVesselPersistentIdChanged`), `Undock` (new vessel, `ResumeStaging` one frame later), `Undock`
+  with a `DockedVesselInfo` (`SetHierarchyRoot`, name, type).
+- Kerbal X flown stage by stage (8 `ActivateNextStage`, 9 decoupler parts, 8 fired, 8 new vessels): after every stage the 73 parts are in exactly one vessel, every vessel's DFS equals its part list,
+  roots are parentless, `OwnedPartCount == parts.size()`, `part.vessel` consistent, one new vessel per `onPartDeCoupleNewVesselComplete`.
+- `ModuleDecouple.OnDecouple` on a stack decoupler (explosive node on the parent, focus switch: `WaitAndSwitchFocus` copies stage / control state / action groups and sets the reference transform, calls the
+  `forceSetActiveVessel` hook), the omni separator of Satellite Launcher.craft (every child leaves, then the separator; 2 ejection entries per child, the force split by children + 1), `DockedVesselInfo` Load / Save.
+- ToggleStaging for a symmetry pair (events, stage deletion, `GetStageIndex` of a disabled decoupler, re-grouping), StageManager life cycle (second manager refused, null Instance behaviour, hooks removed),
+  `Vessel.ClearStaging` / `ResumeStaging`.
+
+### Deviations, approximations, seams
+
+- `IStagingHost` (staging/stage_manager.hpp): the scene the manager works in (`LoadedSceneIsFlight` / `IsEditor`, `RootPart` = `EditorLogic.RootPart` / the active vessel's root, `ActiveVessel`,
+  `SelectedPart`). `FlightStagingHost` reads `FlightRegistry::ActiveVessel`, `EditorStagingHost` is set by whoever owns the construct; WP-18's ShipConstruct implements the interface
+  (ShipConstruct.cs is not ported here).
+- `StageGroup` / `StageIcon` are plain data records (WP-43 owns the UI classes and should derive or wrap them). `Part.stackIcon.StageIcon != null` is `StageManager::IconOf(part)`, reached through
+  `Part::stagingHooks` (`createIcon`, `removeIcon`, `hasIcon`, `stageCount`); without a manager `Part` keeps the WP-13 boolean. `Part.stackIconGrouping` is not a Part field here: `StageIcon::IconGroupingRule()`
+  answers SYM_COUNTERPARTS (Part.cs:195) and SAME_TYPE for parts with a ModuleRCS (ModuleRCS.cs:436).
+- Unity coroutines are state advanced by the host: `StageManager::Tick(dt)` (3-frame SortIcons wait, staging cooldown), `ModuleDecouplerBase::TickAll()` (LateUpdate, the 2-frame ejection and the 1-frame focus switch),
+  `Vessel::RunDelayedFrameCalls()` (Undock's `ResumeStaging`). `FlightGlobals.ForceSetActiveVessel` (WP-19) is the hook `ModuleDecouplerBase::forceSetActiveVessel`; `Part.AddForce` the hooks `addForce` / `addForceAtPosition`.
+- `Part::decouple` and `Undock` return the new `Vessel*` (C# void). The new Vessel is owned by `Vessel::SpawnedVessels()` (Unity: a component on the part's GameObject); `Couple` frees the source vessel (a vessel owned by
+  the caller stays valid but empty). `Part` ownership moves with the tree (`ReleaseOwnedParts` / `AcceptOwnedParts`).
+- `FX`: `fx` of the decouplers is only "the FX group exists"; no error is logged when it does not (the group list is model data). `EventReport` passes empty strings where the C# passes null for `name` / `otherName`.
+- `PartModule::ToggleStaging` on a module without a part skips the part-dependent half (C# throws NullReferenceException); WP-06's tests send events to part-less modules.
+- `ModuleDecouple.OnStart` etc. work on `Part::fields.stagingIcon` (`NullableString`): a null icon is "not empty" as in C# (`stagingIcon == string.Empty`).
+- Implementers of `IActivateOnDecouple` (ModuleJettison, ModuleProceduralFairing, ModuleStructuralNode: WP-26) and of `IStageSeparator` / `IStageSeparatorChild` other than the decouplers, the two stand-ins and
+  ModuleServiceModule (its `PartDetaches` builds the jettison list) are other packages': `Part.Decoupling` calls the interface on whatever implements it. The generic module classes of those packages implement
+  neither, so for parts with them `separationIndex` ignores ModuleServiceModule (no stock part of the 51 crafts has one).
+- The C# `Part.decouple` also runs `CreateRendererLists`, `SetCollisionIgnores` and destroys the attach joint; the joint code is WP-20. `Vessel.Initialize` of the new vessel runs the WP-14 port (naming, situation, orbit driver).
+- Windows (MSVC) and the Debug preset were not run (cloud VM); forward declarations of the new classes match their definitions (`class DockedVesselInfo`, `class StageGroup`, `class StageIcon`, `class StageManager`, `struct AttachNode`).
+
+### Needs a new (local) capture or data
+
+- `staging_sequence` (TIERING's acceptance): an in-flight capture that launches the C5 crafts (or the PhysProf ones) and, after each `StageManager.ActivateStage`, writes the vessel list (part count, root part
+  name, `currentStage`, per-part `inverseStage` / `separationIndex`, `Vessel.parts` order) plus the editor's `separationIndex` per part. The first would gate `Part.decouple` / `Initialize` ordering and the
+  renumbering; the second would gate `setSeparationIndices` directly instead of through `decoupleStage`.
+- the editor's part start order and the resulting `inStageIndex` of grouped and single icons (36 of the 335 icon parts' file `sidx` differ), and `StageManager.Stages[i].Icons` order after a load.
+- the stock modules' own staging overrides once their packages are ported (engines and RCS: WP-23, jettison: WP-26, docking node: WP-25, science experiments: WP-35): until then `module_staging.cpp` stands in.
+
+### Fresh run
+
+See the last paragraph of this section (filled in after the final run).
+
+### Commits (branch `wp16`)
+
+see `git log --oneline wp14..wp16`.
+
