@@ -1,6 +1,6 @@
 # kspcore status
 
-Updated 2026-10-09. One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
+Updated 2026-10-09 (WP-05). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
 (details in README.md). Local git repository in `core/` only, never pushed.
 
 ## Summary
@@ -15,8 +15,9 @@ Updated 2026-10-09. One command: `powershell -NoProfile -ExecutionPolicy Bypass 
 | 5. WP-07 Orbit (branch `wp07`, merged) | done: Orbit.cs (everything but DrawOrbit), Targeting.cs (closest-approach intercept search behind `Orbit.FindClosestPoints`), OrbitSnapshot, OrbitUtil (but CalculateIntersections), FoRModes/VesselTargetModes; `CelestialBodyRef` / `PlanetariumFrames` interfaces for WP-09; golden `orbit_propagation` bit-exact (all 5 tables). TransferMath, DirectionTarget, ITargetable deferred (see "WP-07 Orbit") |
 | 6. Integration WP-07/WP-09 (main) | done: Orbit on `ksp::CelestialBody` (CelestialBodyRef deleted), one Planetarium (PlanetariumFrames deleted), `CelestialBodyOrbitAdapter` (OrbitDriver for bodies over ksp::Orbit) attached by `CelestialSystem::Spawn` by default, `body_catalog/orbits` gated in full, integration unit test. See "Integration WP-07/WP-09" below |
 | 7. WP-03 event bus, FSM, utilities (branch `wp03`, merged) | done: typed event bus + full GameEvents registry (469 events), KerbalFSM, KSPUtil engine-independent parts, Localizer + Lingoona fallback, UtilMath completed, .NET collection/enum semantics, Simplex; gated by unit tests incl. 6,437 values from KSP's IL (no golden dataset), see below |
+| 8. WP-05 UrlDir, GameDatabase (data), PartLoader (data), resource library (branch `wp05`) | done for the data side: UrlDir + GameDatabase load order identical to KSP.log (2,836 lines), PartLoader compiles all 353 GameData parts + the 9 prefab-part slots; `capture.part_database` gate bit-exact on every in-scope C9 row (parts, cfg values, modules, cfg-set module fields, propellants, resources, attach nodes, drag cubes, variants, asset paths). Module instantiation is WP-06, model contents the UE import. See "WP-05" below |
 
-## Test results (all 15 ctest tests pass in RelWithDebInfo and in Debug)
+## Test results (all 17 ctest tests pass in RelWithDebInfo and in Debug)
 
 Every numeric column of every gate: **max ULP 0, max abs 0** (bit-exact, and the same decimal text). Tolerance files:
 harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture gates use `tests/tolerances_capture.json`
@@ -37,7 +38,9 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `capture.physics_drag_curve` | in-game `captures/out/aero_forces_mono.json` table drag_curve_value: PhysicsGlobals.DragCurveValue under Mono | 2,870 | 0 ULP |
 | `golden.body_catalog` | harness golden `body_catalog` (WP-09 + WP-07 Orbit): bodies 17 x 51 cols, orbits 16 x 26 cols (all: elements, Init outputs, state at UT 0), atmosphere_profile_1km 1,072, body_curves 265 | 1,370 | 0 ULP |
 | `golden.atmosphere_curves` | harness golden `atmosphere_curves` (WP-09): profile_100m 2,704, flight_state 2,176 x 19 cols, solar_effects 320 | 5,200 | 0 ULP |
-| `unit` | 98 doctest cases, 19,187 assertions (WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
+| `capture.part_database` | WP-05: in-game `captures/out2/part_database.json` (C9), scope in "WP-05" below: parts 357, part_cfg_values 6,235, modules 1,312, module_fields 5,401, module_propellants 77, resources 166, attach_nodes 822, drag_cubes 531, variants 228, assets 743 | 15,872 | 0 ULP, all strings identical |
+| `capture.gamedatabase_load_order` | WP-05: every `Load(Audio/Texture/Model): url` and `Config(TYPE) url` line of the capture run's KSP.log, in order | 2,836 lines | identical |
+| `unit` | 103 doctest cases, 19,394 assertions (WP-05: 5 cases / 207 assertions in `test_partloader.cpp`) (WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
 differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 6 ULP (Vector3.Project/ProjectOnPlane) and
@@ -80,10 +83,7 @@ OrbitSnapshot, OrbitUtil, enums; `1804b39` STATUS; `304729a` README; plus the Bo
 
 ## Incomplete, and why
 
-- **WP-02 UrlDir/UrlFile/UrlConfig (GameData tree, UrlDir.cs, 927 lines)**: not ported. It crawls GameData with
-  selective-expansion / limited-parts options, file-type tables and Localizer hooks that belong with GameDatabase
-  (WP-05), and there is no golden for it yet; the `part_database` golden of WP-05 is the natural gate. ConfigNode,
-  which it uses, is complete.
+- **WP-02 UrlDir/UrlFile/UrlConfig**: done in WP-05 (`include/ksp/io/url_dir.hpp`), see "WP-05".
 - **ConfigNode reflection mapping** (CreateConfigFromObject, LoadObjectFromConfig, [Persistent], links): WP-06 by plan.
   `ConfigNode.Load(path, bypassLocalization: false)` would call `Localizer.TranslateBranch` (not ported; `Load(path)`
   bypasses it, as in KSP). `TryGetEnum` takes an explicit member table (no reflection in C++).
@@ -566,3 +566,135 @@ the WP-03 KSP-IL reference test (11,032 assertions); all 41 compared golden/capt
 - `GetAtmoThermalStats` now has its Orbit and native AngleAxis inputs; it still needs scaled-space transforms.
 - Scene setup (`PSystemSetup.OnSceneChange` / `SetSpaceCentre` / `SetFlight`: clear inverseRotation/reverse, home body
   inverse rotation) is not ported; until then a spawned system keeps the prefab's Mun/Minmus inverse-rotation state.
+
+## WP-05 UrlDir, GameDatabase (data side), PartLoader (data side), resource library (branch `wp05`)
+
+State: done for the data side. Every ported function cites `File.cs:line` (Assembly-CSharp). Input is the game's own
+GameData, read in place and never written.
+
+**GameData root convention.** `ksp::GameData::Load({.gameRoot = <KSP install>})` reads `<gameRoot>/GameData` (the
+GameDatabase urlConfig: urlRoot "", type GameData), `<gameRoot>/Physics.cfg` (only when no PhysicsGlobals instance
+exists) and `<gameRoot>/PartDatabase.cfg`. `gameDataDir` overrides the GameData directory. The golden runner takes
+`--gamedata <dir>` (default `<harness>/../decompiled/KSP-dev/GameData`, the dev copy) and uses its parent as the game
+root. Unit tests write a synthetic GameData tree to the temp directory and also check the dev copy when present.
+
+| area | ported (C++ location) | verification |
+|---|---|---|
+| UrlDir (UrlDir.cs, all) | `ksp::io::UrlDir/UrlFile/UrlConfig/UrlIdentifier` (`io/url_dir.hpp`): directory walk in NTFS order (explicit sort: upper-cased UTF-16 ordinal), `.svn`/`PluginData`/`zDeprecated` skipped, case-sensitive extensions, cfg parsing, Parts-type whole-file PARTs, url construction, all lookups | load order == KSP.log (2,836 lines); unit |
+| GameDatabase (data) | `ksp::GameDatabase` (`database/game_database.hpp`): LoadObjects (UrlDir with the loaders' extension table, Localizer tags of the language + TranslateBranch on every config, audio/texture/model tables with the OUT-OF-DATE replacement rule, DDS/MBM header metadata for the loader flags and DDS format failures), CompileConfig, every config/texture/model/audio lookup, ToString | `capture.gamedatabase_load_order`; unit |
+| Orchestration | `ksp::GameData` (`database/game_data.hpp`): CreateDatabase order (GameDatabase, PhysicsGlobals, PartResourceLibrary, PhysicMaterialLibrary, PartLoader) | runner, unit |
+| Resources | `PartResourceDefinition/List/Library`, `PartResourceDrainDefinition` (`resources/part_resource_library.hpp`); `PhysicMaterialDefinition/Library` (`resources/physic_material_library.hpp`) | gate (density/unitCost/flowMode columns), unit |
+| PartLoader (data) | `ksp::PartLoader` (`parts/part_loader.hpp`): CompileAll/CompileParts (9 prefab-part slots, Prebuilt overlays, ParsePart, cubes from cfg or PartDatabase.cfg incl. version and timestamp checks, CompilePartInfo seat reduction), ApplyPartValue (generated reflection table of all 257 Part + 9 CompoundPart public fields), LoadObjectFromConfig for AvailablePart, SanitizePartCosts, node_* parsing, CompileModel resolution (MODEL nodes, texture replacements, first model of the directory), AddModule (class lookup, Cargo/Inventory exclusivity, ModuleTripLogger), AddResource, ModulePartVariants base/variant list, GeneratePartAutoTags, InferBulkheadProfiles (dead code in KSP) | gate, unit |
+| Module data | `PartModuleData` / module class table (`parts/part_module_data.hpp`, generated `module_schema.inc`: 151 PartModule classes, 1,595 [KSPField]/[KSPAxisField] members with C# type, Type.Name, isPersistant, initializer text, 13 enum tables): class resolution, BaseFieldList.Load of the MODULE node with BaseField.ReadPvt typing, FloatCurve/DoubleCurve nodes, Propellant (ModuleEngines/ModuleRCS incl. RCS's synthesised PROPELLANT) | schema == C9 for all 1,378 captured modules (field names, field_count, Type.Name, isPersistant); gate |
+| Data records | `AvailablePart`, `PartPrefab`, `PartFields` (generated), `AttachRules`, `AttachNode`, `DragCube`, `DragCubeList`, `PartResource`, `PartVariant`, `PartModelRef`, `PartAssetRef` (`parts/available_part.hpp`, `parts/part_data.hpp`) | gate |
+
+Generators (regenerate, never hand-edit): `tools/wp05/gen_part_fields.py` writes `include/ksp/parts/{part_fields,
+compound_part_fields,part_enums}.inc`; `tools/wp05/gen_module_schema.py` writes `include/ksp/parts/module_schema.inc`.
+
+### Gate `capture.part_database` (RelWithDebInfo 0.8 s, Debug 1.4 s; bit-exact, no tolerance)
+
+| table | C9 rows | gated | result | not gated, and why |
+|---|---|---|---|---|
+| parts | 362 | 357 x 54 cols | 0 ULP, strings identical | 5 prefab parts (kerbalEVA, kerbalEVAfemale, flag, kerbalEVASlimSuit(+Female)): base values are Unity-serialized prefab data, not GameData. The 4 DLC-suit error rows ARE gated (name + "NullReferenceException: ..."). Columns partSize (renderer bounds of the model), module_mass / module_cost (IPartMassModifier / IPartCostModifier modules: 7 parts non-zero, WP-06) |
+| part_cfg_values | 6,235 | 6,235 | identical (incl. 219 float-parsed doubles) | - |
+| modules | 1,378 | 1,312 | identical (moduleName, class, field_count, isEnabled) | 66 rows of the 5 prefab parts |
+| module_fields | 34,801 | 5,401 | identical (value text, value_num, Type.Name, isPersistant) | rows the part cfg does not set (KSPField defaults and module OnAwake/OnLoad results, WP-06; `tools/wp05/estimate_module_defaults.py`: 27,391 of those rows equal the field's literal C# initializer); 1 row listed in `tests/data/part_database_exclusions.json` (sepMotor1 stackableQuantity: ModuleCargoPart.OnLoad clamps it to 1 because the part has resources) |
+| module_propellants | 77 | 77 | identical | - |
+| resources | 166 | 166 | identical | - |
+| attach_nodes | 827 | 822 | identical | 5 prefab parts |
+| drag_cubes | 535 | 531 | identical incl. SaveToString | 4 EVA cubes built in code |
+| variants | 228 | 228 | identical (name, displayName, cost, mass) | column materials (the model's materials) |
+| assets | 3,978 | 743 (cfg 353, model 359, texture_replacement 15, internal 16) | identical; `idx` renumbered per part | 3,230 renderer texture-slot rows (2,497 GameData + 733 Unity assets: need the .mu contents / Unity assets), 5 prefab-part cfg rows |
+
+Scope mechanics (all in `tests/CMakeLists.txt`, filters in `tools/filter_golden.py`): DROP_ROWS (prefab parts,
+texture rows), KEEP_ROWS_FILE (`<candidate>/part_database/scope.json`, written by the runner from the inputs: the
+module fields each MODULE node sets), DROP_KEYS_FILE (individual rows with reasons), RENUMBER (assets.idx),
+DROP_COLUMNS. Investigation record: the first gate run differed in 3 places, all explained and resolved without
+relaxation: srfAttachNode on parts without node_attach (Unity's serializer instantiates [Serializable] class fields of
+a new component: now modelled), fuelCrossFeed on 8 parts (ModuleToggleCrossfeed.OnLoad writes part.fuelCrossFeed:
+ported, the only module effect on Part prefab data the gate found), sepMotor1 stackableQuantity (module-internal,
+excluded with reason).
+
+### Public shape (how WP-06 and the UE importer consume it)
+
+- `GameData gd; gd.Load({.gameRoot = ...});` then `gd.parts.loadedParts` (LoadedPartsList order),
+  `gd.parts.getPartInfoByName(name)`, `gd.database` (configs, `databaseTexture` / `databaseModel` / `databaseAudio`
+  metadata with `UrlFile::fullPath()`), `gd.resources.GetDefinition(name)`.
+- `AvailablePart`: KSP's fields (title, category, cost, entryCost, TechRequired, tags, bulkheadProfiles, partUrl,
+  partConfig after ParsePart, internalConfig, fileTimes, ...), `partPrefab`, `assets` (GameData-relative
+  cfg / model / texture_replacement / internal paths), `codeBuilt` / `prefabCompiled` / `loadError`.
+- `PartPrefab`: `fields` (every public Part field by its C# name and default; `PartFieldTable()` / `FindPartField()`
+  give reflection), `compoundFields`, `attachNodes`, `srfAttachNode`, `DragCubes`, `Resources`, `Modules`,
+  `effects` (EFFECTS nodes), `fxDefinitions` / `soundDefinitions` (fx_* / sound_* values), `models` (`PartModelRef`:
+  url, `.mu` UrlFile, MODEL parent/name/scale/position/rotation/iconHidden, accepted texture replacements),
+  `materialOverrides` (texture/normalmap/alphaCutoff/specPower/rimFalloff values), `baseVariant` / `variantList`.
+- WP-06: `PartModuleData` = `moduleClass` (`ModuleClassInfo`: name, base chain, `Fields()` in BaseFieldList order with
+  types, persistence and initializer text), `config` (the MODULE node as loaded), `cfgFields` (typed values
+  BaseFieldList.Load assigned), `isEnabled`, `propellants`. Instantiate the module class, apply the defaults, then
+  `cfgFields`, then run the module's OnAwake/OnLoad.
+- UE importer: `PartPrefab::models[i].file->fullPath()` (.mu), `GameDatabase::databaseTexture` (url to file, normal-map
+  flag), `PartAssetRef::file`, MODEL transforms, texture replacements and material overrides; the importer reads the
+  .mu itself (renderers, materials, texture slots, bounds).
+
+### Not done in this package (and why)
+
+- Module instantiation: KSPField defaults, OnAwake/OnLoad behaviour, GetInfo/moduleInfos/resourceInfo texts,
+  IPartMassModifier/IPartCostModifier, UPGRADES/ADJUSTERS/EVENTS/ACTIONS nodes: WP-06.
+- Model contents (.mu): renderer texture slots, partSize, variant materials, NODE{} attach nodes (position from a model
+  transform: recorded with the transform name and a warning; no stock part uses NODE), icons: UE import pipeline.
+- The 9 prefab parts' Unity-serialized base data (EVA kerbals, flag): UE import / Unity asset extraction (the
+  harness's `tools/extract_assets.py` approach). PartLoader models the slots, applies the Prebuilt cfg overlays and
+  reproduces the DLC-suit error state.
+- Asset bundles (`*.ksp`) are not read (their models/textures/shaders are not part of any stock part's resolution).
+  FX prefabs (`Resources.Load("Effects/...")`) and sounds are recorded as definitions only.
+- Not compiled: PROP and INTERNAL spaces, VARIANTTHEME, part upgrades (C9 did not capture them), ExpansionsLoader; their
+  configs stay queryable through GameDatabase.
+- Texture loads other than DDS headers are assumed to succeed (KSP.log of the capture run shows no load errors).
+- Resource ids use Mono's String.GetHashCode (h * 31 + c); not verified against a capture (ids are never saved).
+
+### Surprises for later implementers
+
+1. `ApplyPartValue` tests `typeof(double)` twice; the first branch uses `float.Parse`, so every double Part field from a
+   cfg holds a float32 value (`emissiveConstant = 0.7` gives 0.699999988079071). float fields go through the generic
+   `Parse(string)` reflection tail (no `typeof(float)` case).
+2. Crew mass: CompilePartInfo subtracts `PerCommandSeatReduction` (any module that `is ModuleCommand`) or
+   `PerSeatReduction` per seat from `mass` (Mono float rule: one rounding), only for compiled parts (prefab parts never
+   go through CompilePartInfo). mk1pod.v2: 0.8 to 0x3F34BC6B (0.70600003).
+3. `LoadObjectFromConfig(AvailablePart, removeAfterUse)` strips name/title/manufacturer/author/description/category/
+   TechRequired/cost/tags/bulkheadProfiles/... from `partConfig`; `entryCost` is removed explicitly; an invalid
+   `category` (Enum.Parse) or a RESOURCE with `amount` but no `maxAmount` (SanitizePartCosts) drops the part.
+4. Drag cubes: the part cfg's DRAG_CUBE wins (and replaces the in-memory PartDatabase entry); otherwise only TOP-LEVEL
+   `PART{url=}` nodes of PartDatabase.cfg count (Size5Flag contains a nested MpoProbe PART: ignored); the file's
+   `PART_DATABASE.version` must equal "1.12.5.3190 (WindowsPlayer x64)" or the whole file is discarded; `LoadCubes`
+   reads cube lines last to first and `SaveCubes` writes them back last to first; `ClearCubes` resets `procedural` but
+   not `none`; a 24-value cube line throws IndexOutOfRange.
+5. `node_*` values are scaled by rescaleFactor x `scale`, in VALUE ORDER: a `scale` after a node does not affect it;
+   orientation is scaled too; a name without '_' throws; 7th value size, 8th method, 9th crossfeed, 10th rigid, 11th
+   one-way crossfeed.
+6. Every compiled part has a `srfAttachNode` (default AttachNode: id "", Stack, radius 0.4) and non-null `attachRules`
+   even when its cfg defines none: Unity's serializer instantiates [Serializable] class fields of a new component.
+7. The GameData UrlDir is named "" (urlRoot): `UrlDir.GetDirectory/GetFile` from the root never descend into it (only
+   `GetConfig` handles unnamed directories), so `GameDatabase.GetConfigNodes(baseUrl, type)` finds nothing for GameData
+   paths; `GetFile` treats the last url element as a config name.
+8. Texture lookups are OrdinalIgnoreCase with 7 hard-coded flag-url swaps; model lookups are ordinal; the legacy
+   `mesh =` rule takes the FIRST model (load order) of the part's directory; a second file with the same url (e.g.
+   `a.png` + `a.dds`) replaces the first at the end of the table on the first load.
+9. Module OnLoad effects on Part prefab data exist: ModuleToggleCrossfeed sets `part.fuelCrossFeed = crossfeedStatus`
+   (KSPField, default false) on 8 stock parts. ModuleRCS without PROPELLANT adds one to the live MODULE node.
+10. AddModule: ModuleCargoPart is refused after ModuleInventoryPart; ModuleInventoryPart removes an earlier
+    ModuleCargoPart whose packedVolume >= 0. vesselType > Unknown appends ModuleTripLogger.
+11. The 9 prefab parts come first in LoadedPartsList; a PART cfg with their name is applied onto the prefab
+    (`__OVERLOAD = True` modules reload the prefab's module). The DLC suits have no cfg without the DLC: their prefab is
+    never Awake'd and reading it throws NullReferenceException (C9 error rows).
+12. `InferBulkheadProfiles` is never called: parts without `bulkheadProfiles` have null.
+13. CompileConfig logs the literal "CloneURL: System.String[]".
+
+### Commits (branch `wp05`, from main `f964447`)
+
+`987cae2` UrlDir, GameDatabase, resource library, schema generators; `f0c53e1` PartLoader data side, part_database
+candidate, golden row filters; `32f8f60` capture.part_database gate + load-order check; `da22d65` unit tests;
+`c0dc966` PhysicMaterialLibrary; then the docs commit (STATUS.md, README.md, PROGRESS-wp05.md).
+
+Shared files touched (merge notes): `src/CMakeLists.txt`, `tests/CMakeLists.txt` (gate options DROP_COLUMNS, DROP_ROWS,
+KEEP_ROWS_FILE, DROP_KEYS_FILE, RENUMBER), `cmake/RunGolden.cmake`, `tools/filter_golden.py` (row/column filters),
+`tools/golden_runner/{main.cpp,datasets.hpp,CMakeLists.txt}` (`--gamedata`), README.md, STATUS.md.

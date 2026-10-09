@@ -66,6 +66,8 @@ links).
 | `capture.physics_drag_curve` | WP-09 PhysicsGlobals.DragCurveValue (managed float code, Mono rule) | in-game `harness/captures/out/aero_forces_mono.json` (table drag_curve_value) |
 | `golden.body_catalog` | WP-09 Kerbol system at UT 0 with WP-07's run-time Orbit: bodies (all columns), orbits (all columns: elements, Init outputs, state at UT 0), 1 km atmosphere profiles, every body FloatCurve key | `harness/golden/body_catalog` |
 | `golden.atmosphere_curves` | WP-09 CelestialBody atmosphere + FlightIntegrator atmosphere helpers (pressure, temperature, density, speed of sound, Mach, solar attenuation, shock temperature, convection, pseudo-Reynolds) | `harness/golden/atmosphere_curves` |
+| `capture.part_database` | WP-05 GameDatabase + PartLoader (data side) on the real GameData (`decompiled/KSP-dev/GameData`, runner option `--gamedata`): parts, cfg values, modules, cfg-set module fields, propellants, resources, attach nodes, drag cubes, variants, asset paths; scope limits declared in `tests/CMakeLists.txt` | in-game `harness/captures/out2/part_database.json` (C9) |
+| `capture.gamedatabase_load_order` | WP-05 GameDatabase load order: every `Load(Audio/Texture/Model): url` and `Config(TYPE) url` line | KSP.log of the C9 capture run (`decompiled/logs/`) |
 
 All of them are bit-exact today (every numeric column max ULP 0, max abs 0).
 
@@ -157,6 +159,10 @@ contract into FMA.
 | `include/ksp/curves/double_curve.hpp`, `include/ksp/math/{matrix4x4d,mathfx}.hpp` | DoubleCurve, Vector3/4Curve, Matrix4x4D, Mathfx, VectorExtensions, QuaternionExtensions, MinMaxFloat, Vect, PIDclamp |
 | `include/ksp/physics/` | WP-09 `physics_globals.hpp` (PhysicsGlobals: fields, static properties, LoadDatabase/SaveDatabase, lifting-surface curves, DragCurveValue; the `*.inc` files are generated), `vessel_ranges.hpp` (VesselRanges, Vessel.Situations) |
 | `include/ksp/celestial/` | WP-09 `celestial_body.hpp` (CelestialBody, CBAttributeMapSO, MiniBiome, GameAssetRef, orbit elements + `ICelestialBodyOrbit` link to the run-time Orbit), `celestial_body_orbit.hpp` (`CelestialBodyOrbitAdapter`: OrbitDriver for bodies over ksp::Orbit), `planetarium.hpp` (Planetarium, the only one: also Orbit's Zup/up/right/ZupAtT), `celestial_system.hpp` (PSystem prefab, `KerbolSystemPrefab()`, spawn, FlightGlobals body list), `flight_atmosphere.hpp` (FlightIntegrator atmosphere helpers) |
+| `include/ksp/io/` | WP-05 `url_dir.hpp` (UrlDir, UrlFile, UrlConfig, UrlIdentifier: the GameData tree) |
+| `include/ksp/database/` | WP-05 `game_database.hpp` (GameDatabase data side: configs, texture/model/audio metadata tables), `game_data.hpp` (`ksp::GameData`: the whole loading sequence on a KSP install; GameData root = `<gameRoot>/GameData`, plus `<gameRoot>/Physics.cfg` and `<gameRoot>/PartDatabase.cfg`) |
+| `include/ksp/parts/` | WP-05 `part_loader.hpp` (PartLoader data side), `available_part.hpp` (AvailablePart, PartPrefab, PartVariant, model/asset refs), `part_data.hpp` (AttachRules, Part field table, AttachNode, DragCube/List, PartResource), `part_module_data.hpp` (PartModule class table, MODULE records, Propellant), `ksp_enums.hpp`; generated `part_fields.inc`, `compound_part_fields.inc`, `part_enums.inc`, `module_schema.inc` |
+| `include/ksp/resources/` | WP-05 `part_resource_library.hpp` (PartResourceDefinition/List/Library), `physic_material_library.hpp` |
 | `include/ksp/curves/serialized_float_curve.hpp` | FloatCurves built from Unity-serialized keyframes (prefab data) |
 | `data/kerbol_body_assets.json` | index of the game's own body assets (biome maps with attribute tables, mini-biomes, PQS height/colour maps, scaled-space meshes/materials/textures) by asset file + PathID, from `decompiled/KSP-dev/KSP_x64_Data` (`tools/extract_body_assets.py`) |
 | `tools/gen_wp09_data.py` | generates `physics_globals_*.inc` and `src/celestial/kerbol_system_data.cpp` from the decompiled C# (field lists, LoadDatabase/SaveDatabase order) and the game's serialized prefab data; regenerate, never hand-edit |
@@ -169,6 +175,7 @@ contract into FMA.
 | `tools/wp03_reference/` | `gen_wp03_reference.ps1` + `Wp03Ref.cs`, regenerates `tests/data/wp03_reference.tsv` from KSP's IL |
 | `tools/wp03/` | `gen_game_events.py` (+ `cs_types.py`): regenerates the GameEvents registry from `GameEvents.cs` |
 | `tools/filter_golden.py` | writes a table/column-filtered / `_hex`-stripped copy of a golden or capture file for compare.py |
+| `tools/wp05/` | `gen_part_fields.py` and `gen_module_schema.py` (regenerate the `include/ksp/parts/*.inc` tables from the decompiled C#; never hand-edit), `check_load_log.py` (load-order gate), `estimate_module_defaults.py` (WP-06 diagnostic) |
 | `cmake/RunGolden.cmake` | the per-dataset gate |
 | `third_party/` | doctest 2.4.12, nlohmann/json 3.12.0 (pinned, see `third_party/VERSIONS.md`); used by tests/tools only |
 
@@ -242,7 +249,10 @@ contract into FMA.
    `ksp_golden_gate(capture.<dataset> <dataset> GOLDEN ${KSP_CAPTURES_DIR}/<file>.json DROP_HEX TOL ${KSP_CAPTURE_TOL}
    [TABLES t1,t2])` for an in-game capture. Float32 managed paths are judged against captures where they exist.
    `COLUMNS t:c1,c2/t2:c3` keeps only the listed columns of a table: only for columns that need another package's code
-   (document each exclusion in tests/CMakeLists.txt and STATUS.md), never to hide a mismatch.
+   (document each exclusion in tests/CMakeLists.txt and STATUS.md), never to hide a mismatch. Row-level scope options
+   (WP-05): `DROP_COLUMNS`, `DROP_ROWS t:col=v1|v2+col2=v3` (rows whose subject is out of scope by a property of the
+   golden row), `KEEP_ROWS_FILE` (a scope list the runner derives from its inputs, `<OUT>` = candidate dir),
+   `DROP_KEYS_FILE` (individually listed rows, each with a reason) and `RENUMBER t:col:group`.
    Candidate numbers are written like the harness (`.0` on integral values): compare.py matches row keys by their JSON
    text, so a key column written as `100` would not match the golden's `100.0`.
 5. Run `run_tests.ps1`; inspect `build/<Config>/candidate/<dataset>/compare_report_<gate>.json` for per-column

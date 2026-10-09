@@ -55,7 +55,10 @@ Worktree: core/.worktrees/wp05, branch wp05 from main f964447. Commit only here.
    DONE: ctest capture.part_database + capture.gamedatabase_load_order (tests/CMakeLists.txt), commit 32f8f60.
 5. tests/test_partloader.cpp DONE (5 cases, 202 assertions; synthetic GameData in temp dir + real KSP-dev check).
    Full suite 17/17 green (RelWithDebInfo). Quirk found: root.GetDirectory/GetFile never enter the "" GameData dir.
-   NEXT: evaluate module_fields defaults coverage (literal initializers) as stretch; then STATUS/README; Debug run.
+6. Stretch evaluated: module_fields defaults = WP-06 (diagnostic tools/wp05/estimate_module_defaults.py: 27,391 default
+   rows equal literal initializers, 513 differ, 1,495 unevaluated). .mu reader / EVA prefab data deferred (UE import).
+   PhysicMaterialLibrary added (c0dc966). Debug suite 17/17 green (34 s); RelWithDebInfo 17/17 (14.8 s).
+7. STATUS.md WP-05 section + README rows written; docs commit. DONE -> final report.
 5. tests/test_partloader.cpp [ ]
 6. stretch: .mu metadata reader (texture slots, partSize, variant materials) [ ]
 7. STATUS/README, commit [ ]
