@@ -23,8 +23,8 @@ $root = $PSScriptRoot
 # ---- locate Visual Studio 2022 Community (prefer it; fall back to any VS 2022 with the C++ tools)
 $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
 if (-not (Test-Path $vswhere)) { throw "vswhere.exe not found at $vswhere" }
-$vs = & $vswhere -products Microsoft.VisualStudio.Product.Community -version '[17.0,18.0)' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath | Select-Object -First 1
-if (-not $vs) { $vs = & $vswhere -products * -version '[17.0,18.0)' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath | Select-Object -First 1 }
+$vs = & $vswhere -products Microsoft.VisualStudio.Product.Community -version '[17.0,19.0)' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath | Select-Object -First 1
+if (-not $vs) { $vs = & $vswhere -products * -version '[17.0,19.0)' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath | Select-Object -First 1 }
 if (-not $vs) { throw 'No Visual Studio 2022 installation with the x64 C++ tools found' }
 $vcvars = Join-Path $vs 'VC\Auxiliary\Build\vcvars64.bat'
 
