@@ -173,7 +173,6 @@ set(KSP_PREFAB_PARTS "kerbalEVA|kerbalEVAfemale|flag|kerbalEVASlimSuit|kerbalEVA
 ksp_golden_gate(capture.part_database part_database GOLDEN ${KSP_CAPTURES2_DIR}/part_database.json DROP_HEX
     TOL ${KSP_CAPTURE_TOL}
     DROP_ROWS "parts:name=${KSP_PREFAB_PARTS}/part_cfg_values:part=${KSP_PREFAB_PARTS}/modules:part=${KSP_PREFAB_PARTS}/module_fields:part=${KSP_PREFAB_PARTS}/module_propellants:part=${KSP_PREFAB_PARTS}/resources:part=${KSP_PREFAB_PARTS}/attach_nodes:part=${KSP_PREFAB_PARTS}/drag_cubes:part=${KSP_PREFAB_PARTS}/variants:part=${KSP_PREFAB_PARTS}/assets:part=${KSP_PREFAB_PARTS}+kind=texture"
-    KEEP_ROWS_FILE "<OUT>/part_database/scope.json"
     DROP_KEYS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/data/part_database_exclusions.json
     RENUMBER "assets:idx:part"
     DROP_COLUMNS "parts:partSize,module_mass,module_cost/variants:materials")

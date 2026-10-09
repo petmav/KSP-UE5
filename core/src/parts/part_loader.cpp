@@ -1,4 +1,5 @@
 #include "ksp/parts/part_loader.hpp"
+#include "ksp/modules/part_module.hpp"
 
 #include <algorithm>
 #include <filesystem>
@@ -625,9 +626,9 @@ PartModuleData* PartLoader::AddModule(PartPrefab& part, std::string_view moduleN
         for (size_t i = 0; i < part.Modules.size(); i++) {
             PartModuleData& m = part.Modules[i];
             if (!m.moduleClass || !m.moduleClass->Is("ModuleCargoPart")) continue;
-            float packedVolume = 0.0f;  // KSPField default (no initializer)
-            if (const ModuleFieldValue* fv = m.FindCfgField("packedVolume"))
-                if (auto* f = std::get_if<float>(&fv->value)) packedVolume = *f;
+            // FindModuleImplementing<ModuleCargoPart>().packedVolume (KSPField, default 0 or the cfg value)
+            float packedVolume = 0.0f;
+            if (m.module) packedVolume = m.module->Get<float>("packedVolume");
             if (packedVolume >= 0.0f) part.Modules.erase(part.Modules.begin() + static_cast<std::ptrdiff_t>(i));
             break;
         }
@@ -637,6 +638,11 @@ PartModuleData* PartLoader::AddModule(PartPrefab& part, std::string_view moduleN
     PartModuleData m;
     m.moduleName = cls->name;  // PartModule.moduleName = ClassName
     m.moduleClass = cls;
+    // gameObject.AddComponent(type): the constructor chain (KSPField initialisers) and Awake (the object is active while
+    // the prefab compiles; PartLoader.cs:511 / :551 force Awake on the inactive prefab parts)
+    m.module = ModuleFactory::Create(*cls);
+    m.module->part = &part;
+    m.module->Awake();
     part.Modules.push_back(std::move(m));
     return &part.Modules.back();
 }
@@ -651,16 +657,8 @@ void PartLoader::AddModule(PartPrefab& part, ConfigNode& node, bool /*forceAwake
     PartModuleData* m = AddModule(part, *name);
     if (!m) return;
     m->moduleName = *name;
-    LoadModuleData(*m, node);
+    LoadModuleData(*m, node, &part);  // PartModule.Load: Fields.Load ... OnLoad (ModuleToggleCrossfeed, ModuleCargoPart, ...)
     if (m->moduleClass->Is("ModulePartVariants")) LoadVariants(part, node);
-    // ModuleToggleCrossfeed.cs:132 OnLoad -> UpdateCrossfeed: part.fuelCrossFeed = crossfeedStatus (a module OnLoad
-    // effect on the Part prefab's own data; crossfeedStatus is a KSPField, default false)
-    if (m->moduleClass->Is("ModuleToggleCrossfeed")) {
-        bool crossfeedStatus = false;
-        if (const ModuleFieldValue* fv = m->FindCfgField("crossfeedStatus"))
-            if (const bool* b = std::get_if<bool>(&fv->value)) crossfeedStatus = *b;
-        part.fields.fuelCrossFeed = crossfeedStatus;
-    }
 }
 
 // ---- CompileModel (PartLoader.cs:1765), data side ----------------------------------------------------------------------
@@ -919,7 +917,7 @@ void PartLoader::ApplyPrefabOverlay(const GameDatabase& /*db*/, AvailablePart& a
                     m = &part.Modules.back();
                 }
                 m->cfgFields.clear();
-                LoadModuleData(*m, cn);
+                LoadModuleData(*m, cn, &part);
             } else {
                 AddModule(part, cn, true);
             }
