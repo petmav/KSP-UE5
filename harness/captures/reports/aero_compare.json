@@ -1,0 +1,353 @@
+{
+ "ok": false,
+ "results": [
+  {
+   "dataset": "aero_forces",
+   "table": "drag_curve_value",
+   "rows": 2870,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "value": {
+     "type": "f32",
+     "n": 2870,
+     "max_abs": 3.9999999978945766e-07,
+     "max_rel": 3.9733700262782785e-06,
+     "max_ulp": 61,
+     "fail": 835,
+     "worst": [
+      [
+       "0.5",
+       "1.0"
+      ],
+      0.007147585,
+      0.0071475566
+     ]
+    }
+   }
+  },
+  {
+   "dataset": "aero_forces",
+   "table": "cube_inputs",
+   "rows": 34,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "url": {
+     "type": "str",
+     "n": 34,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "cubes": {
+     "type": "str",
+     "n": 34,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "weights": {
+     "type": "str",
+     "n": 34,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "postOcclusionArea": {
+     "type": "f32",
+     "n": 34,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "aero_forces",
+   "table": "cube_weighted",
+   "rows": 204,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "weightedArea": {
+     "type": "f32",
+     "n": 204,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "weightedDrag": {
+     "type": "f32",
+     "n": 204,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "weightedDepth": {
+     "type": "f32",
+     "n": 204,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "areaOccluded": {
+     "type": "f32",
+     "n": 204,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "aero_forces",
+   "table": "cube_drag",
+   "rows": 18122,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "flow_x": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "flow_y": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "flow_z": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "Area": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 3.000000003794412e-05,
+     "max_rel": 5.305839808215063e-07,
+     "max_ulp": 8,
+     "fail": 3165,
+     "worst": [
+      [
+       "\"parachuteSingle@SEMIDEPLOYED\"",
+       "\"-Y\"",
+       "1.0"
+      ],
+      1.6962442,
+      1.6962433
+     ]
+    },
+    "AreaDrag": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 0.0005000000001018634,
+     "max_rel": 3.1682996234393977e-06,
+     "max_ulp": 37,
+     "fail": 6777,
+     "worst": [
+      [
+       "\"airbrake1@neutral\"",
+       "\"+Y\"",
+       "1.0"
+      ],
+      0.02209387,
+      0.0220938
+     ]
+    },
+    "DragCoeff": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 2.000000000279556e-06,
+     "max_rel": 2.6376217846771827e-06,
+     "max_ulp": 33,
+     "fail": 6926,
+     "worst": [
+      [
+       "\"airbrake1@neutral\"",
+       "\"+Y\"",
+       "1.0"
+      ],
+      0.067864165,
+      0.067863986
+     ]
+    },
+    "CrossSectionalArea": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 1.0000000003174137e-05,
+     "max_rel": 1.6229806647048598e-07,
+     "max_ulp": 1,
+     "fail": 2769,
+     "worst": [
+      [
+       "\"liquidEngineMainsail_v2@1\"",
+       "\"aoa89\"",
+       "0.0"
+      ],
+      4.313052,
+      4.3130527
+     ]
+    },
+    "ExposedArea": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 7.000000005064066e-05,
+     "max_rel": 1.441746675939469e-06,
+     "max_ulp": 14,
+     "fail": 7298,
+     "worst": [
+      [
+       "\"parachuteSingle@SEMIDEPLOYED\"",
+       "\"+Y\"",
+       "1.0"
+      ],
+      2.21953,
+      2.2195268
+     ]
+    },
+    "Depth": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 5.999999999062311e-07,
+     "max_rel": 1.8955552820190927e-07,
+     "max_ulp": 2,
+     "fail": 2522,
+     "worst": [
+      [
+       "\"liquidEngine2_v2\"",
+       "\"xyz+1-1+1\"",
+       "0.0"
+      ],
+      1.0550998,
+      1.0551
+     ]
+    },
+    "TaperDot": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 4.000000000559112e-06,
+     "max_rel": 2.4548021818373076e-07,
+     "max_ulp": 3,
+     "fail": 2041,
+     "worst": [
+      [
+       "\"Rockomax32_BW\"",
+       "\"xyz+1+1+1\"",
+       "0.0"
+      ],
+      1.2220944,
+      1.2220947
+     ]
+    },
+    "LiftForce_x": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 1.0000000003174137e-05,
+     "max_rel": 1.592305725344496e-07,
+     "max_ulp": 1,
+     "fail": 2470,
+     "worst": [
+      [
+       "\"HeatShield1\"",
+       "\"odd2\"",
+       "0.0"
+      ],
+      0.12560402,
+      0.125604
+     ]
+    },
+    "LiftForce_y": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 3.000000003794412e-05,
+     "max_rel": 1.9075887707571739e-07,
+     "max_ulp": 2,
+     "fail": 4251,
+     "worst": [
+      [
+       "\"mk2FuselageShortLFO\"",
+       "\"aoa60\"",
+       "0.0"
+      ],
+      -1.048444,
+      -1.0484442
+     ]
+    },
+    "LiftForce_z": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 5.000000001587068e-06,
+     "max_rel": 1.5950169959274073e-07,
+     "max_ulp": 2,
+     "fail": 3965,
+     "worst": [
+      [
+       "\"structuralPanel1\"",
+       "\"yz+1-1\"",
+       "0.0"
+      ],
+      0.037617154,
+      0.03761716
+     ]
+    },
+    "CalculateDragValue": {
+     "type": "f64",
+     "n": 18122,
+     "max_abs": 6.223407763172872e-05,
+     "max_rel": 3.125496251250936e-06,
+     "max_ulp": 26388341184,
+     "fail": 18122,
+     "worst": [
+      [
+       "\"airbrake1@neutral\"",
+       "\"+Y\"",
+       "1.0"
+      ],
+      0.002209387021139264,
+      0.002209380115708412
+     ]
+    }
+   }
+  },
+  {
+   "dataset": "aero_forces",
+   "table": "drag_chain_kerbin",
+   "error": "table missing in candidate"
+  },
+  {
+   "dataset": "aero_forces",
+   "table": "lifting_surface",
+   "error": "table missing in candidate"
+  }
+ ]
+}

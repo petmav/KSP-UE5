@@ -1,0 +1,33 @@
+{
+  "comment": "First matching rule wins. match = fnmatch pattern on 'dataset/table/column'; optional type = f32|f64. A value passes if abs<=abs OR rel<=rel OR ulp<=ulp. Rationale per rule in harness/README.md (Tolerances).",
+  "rules": [
+    {"match": "curves_eval/*", "abs": 0.0, "rel": 0.0, "ulp": 0, "why": "FloatCurve/AnimationCurve: bit-exact target (pure float32 +,*,/ in a fixed order; no libm)"},
+    {"match": "physics_constants/*", "abs": 0.0, "rel": 0.0, "ulp": 0, "why": "loaded constants: exact"},
+    {"match": "confignode_roundtrip/*", "abs": 0.0, "rel": 0.0, "ulp": 0, "why": "byte/structure identical"},
+    {"match": "body_catalog/body_curves/*", "abs": 0.0, "rel": 0.0, "ulp": 0, "why": "serialized keys: exact"},
+    {"match": "body_catalog/bodies/*", "rel": 1e-14, "ulp": 4, "why": "products/quotients and one pow per value"},
+    {"match": "body_catalog/orbits/*", "abs": 1e-9, "rel": 1e-12, "why": "Kepler propagation via sin/cos/atan2"},
+    {"match": "body_catalog/atmosphere_profile_1km/*", "rel": 1e-12, "ulp": 2, "why": "FloatCurve (exact) + pow/sqrt"},
+    {"match": "aero_forces/drag_curve_value/*", "ulp": 0, "why": "float32 curves + lerp: bit-exact target"},
+    {"match": "aero_forces/cube_weighted/*", "ulp": 0, "why": "float32 sums/products: bit-exact target"},
+    {"match": "aero_forces/cube_drag/*", "type": "f32", "ulp": 2, "abs": 1e-9, "why": "float32; Mathf.Pow (double pow) in Cd^power"},
+    {"match": "aero_forces/*", "type": "f32", "ulp": 4, "abs": 1e-9, "why": "float32 chains with double atmosphere inputs"},
+    {"match": "aero_forces/*", "type": "f64", "rel": 1e-9, "abs": 1e-12, "why": "double chains through float32 casts"},
+    {"match": "orbit_propagation/kepler/E*", "abs": 1e-9, "why": "iterative solvers stop at |dE|<=1e-7; a 1-ulp difference can change the final iterate"},
+    {"match": "orbit_propagation/kepler/*", "abs": 1e-9, "rel": 1e-12},
+    {"match": "orbit_propagation/state_at_ut/*_x", "abs": 1e-6, "rel": 1e-11, "why": "positions (m) / velocities (m/s)"},
+    {"match": "orbit_propagation/state_at_ut/*_y", "abs": 1e-6, "rel": 1e-11},
+    {"match": "orbit_propagation/state_at_ut/*_z", "abs": 1e-6, "rel": 1e-11},
+    {"match": "orbit_propagation/state_at_ut/*", "abs": 1e-7, "rel": 1e-11, "why": "anomalies (rad), times (s)"},
+    {"match": "orbit_propagation/from_state_vectors/*", "abs": 1e-7, "rel": 1e-10, "why": "inverse is ill-conditioned for e~0 and i~0/180 (argPe/LAN)"},
+    {"match": "orbit_propagation/*", "abs": 1e-7, "rel": 1e-11},
+    {"match": "patched_conics/*", "abs": 1e-3, "rel": 1e-8, "why": "iterative SOI/closest-approach solvers with epsilon 1e-4"},
+    {"match": "atmosphere_curves/*", "type": "f32", "ulp": 2},
+    {"match": "atmosphere_curves/*", "type": "f64", "rel": 1e-12, "abs": 1e-15},
+    {"match": "engine_thrust/*", "type": "f32", "ulp": 2},
+    {"match": "engine_thrust/*", "type": "f64", "rel": 1e-12},
+    {"match": "math_shim/f32/r*", "ulp": 1, "why": "Mathf wraps System.Math: libm may differ by 1 ulp after the float cast"},
+    {"match": "math_shim/f64/r*", "ulp": 4, "abs": 1e-15},
+    {"match": "*", "abs": 0.0, "rel": 0.0, "ulp": 0}
+  ]
+}

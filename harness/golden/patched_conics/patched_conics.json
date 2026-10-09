@@ -1,0 +1,65 @@
+{
+ "schema": "ksp-golden/1",
+ "dataset": "patched_conics",
+ "trust": "direct+rehosted",
+ "description": "Patched-conic sequences computed by the real PatchedConics.CalculatePatch (CheckEncounter/EncountersBody/Orbit.FindClosestPoints/SolveClosestApproach/SolveSOI/UpdateFromOrbitAtUT) with the patch loop of PatchedConicSolver.Update re-hosted (patchLimit 6), on the stock body set at the given start UT. Planetarium.Orbits holds the 16 body OrbitDrivers in spawn order.",
+ "oracles": [
+  "PatchedConics.CalculatePatch",
+  "rehosted: PatchedConicSolver.Update patch loop (PatchedConicSolver.cs:141-179)"
+ ],
+ "provenance": {
+  "ksp_version": "1.12.5 build 03190 (Unity 2019.4.18f1)",
+  "ksp_il": "rebuilt-from-decompile",
+  "assembly_csharp_input_sha256": "6c9b58c682e781e8e96981ae0ccbb44bfca5a065cf7f96a021ac2adc0097e36d",
+  "assembly_csharp_patched_sha256": "b6e95b24d7bdb76e91364622461db1b01813d7c02628aa5a9ddf29a2f1265020",
+  "kspunityshim_sha256": "304c77465bbc5efa73306944df12bcf54dbd67deb9f2624985a13dd8a38d240b",
+  "runtime": ".NET Framework CLR 4.0.30319.42000 x64",
+  "float_semantics": "IEEE-754 binary32/binary64, SSE2 (RyuJIT x64); libm from the .NET Framework CLR, not Unity's Mono",
+  "culture": "en-US",
+  "patched_conics_swallowed_exceptions": 0
+ },
+ "tables": [
+  {
+   "name": "patches",
+   "description": "Patch sequences from PatchedConics.CalculatePatch (real), iterated as PatchedConicSolver.Update does (patchLimit 6).",
+   "key": ["case_id","patch"],
+   "columns": [
+    {"name":"case_id","type":"str","unit":""},
+    {"name":"patch","type":"i64","unit":""},
+    {"name":"referenceBody","type":"str","unit":""},
+    {"name":"patchStartTransition","type":"str","unit":""},
+    {"name":"patchEndTransition","type":"str","unit":""},
+    {"name":"StartUT","type":"f64","unit":"s"},
+    {"name":"EndUT","type":"f64","unit":"s"},
+    {"name":"UTsoi","type":"f64","unit":"s"},
+    {"name":"inclination","type":"f64","unit":"deg"},
+    {"name":"eccentricity","type":"f64","unit":""},
+    {"name":"semiMajorAxis","type":"f64","unit":"m"},
+    {"name":"LAN","type":"f64","unit":"deg"},
+    {"name":"argumentOfPeriapsis","type":"f64","unit":"deg"},
+    {"name":"meanAnomalyAtEpoch","type":"f64","unit":"rad"},
+    {"name":"epoch","type":"f64","unit":"s"},
+    {"name":"PeR","type":"f64","unit":"m"},
+    {"name":"ApR","type":"f64","unit":"m"},
+    {"name":"closestEncounterLevel","type":"str","unit":""},
+    {"name":"closestEncounterBody","type":"str","unit":""},
+    {"name":"ClAppr","type":"f64","unit":"m"},
+    {"name":"UTappr","type":"f64","unit":"s"}
+   ],
+   "row_count": 11,
+   "rows": [
+    ["kerbin_leo",0,"Kerbin","INITIAL","FINAL",0.0,1958.1284360312443,-1.0,0.0,0.0,700000.0,0.0,0.0,0.0,0.0,700000.0,700000.0,"NONE","",0.0,0.0],
+    ["kerbin_to_mun",0,"Kerbin","INITIAL","ENCOUNTER",0.0,21613.6800943523,21613.6800943523,0.0,0.889763779527559,6350000.0,0.0,349.5561271558447,0.0,0.0,700000.0000000001,12000000.0,"SOI_INTERSECT_1","Mun",29835.532702063454,28398.961448462018],
+    ["kerbin_to_mun",1,"Mun","ENCOUNTER","ESCAPE",21613.6800943523,32358.700211378764,32358.700211378764,0.0,1.0001757623997427,-978297.5721058368,0.0,74.60403397465933,-1.4170634900524586,21613.6800943523,171.94792893578594,-1956767.0921406096,"NONE","",0.0,0.0],
+    ["kerbin_to_mun",2,"Kerbin","ESCAPE","ESCAPE",32358.700211378764,162855.0721240809,162855.0721240809,0.0,1.778945806827467,-15501497.609896183,0.0,164.76798152712237,0.2017134844954343,32358.700211378764,12074826.562774634,-43077821.782567,"SOI_INTERSECT_1","Minmus",34587206.46142193,32760.647052864657],
+    ["kerbin_to_mun",3,"Sun","ESCAPE","FINAL",162855.0721240809,11346701.348043017,-1.0,0.0,0.12176460255867806,15486663137.861483,0.0,189.4174866313798,6.245420080562936,162855.0721240809,13600935755.91965,17372390519.803314,"SOI_INTERSECT_1","Kerbin",3562557946.4978576,51576271.39138868],
+    ["kerbin_escape",0,"Kerbin","INITIAL","ESCAPE",0.0,31133.878371757928,31133.878371757928,2.0,2.38,-507246.3768115942,40.0,75.0,0.0,0.0,699999.9999999999,-1714492.7536231882,"SOI_INTERSECT_1","Mun",11335099.219292045,17132.617764001512],
+    ["kerbin_escape",1,"Sun","ESCAPE","FINAL",31133.878371757928,27676580.242644705,-1.0,0.08021782068521884,0.5350133583883423,28312581104.307133,359.9964174332217,155.12896226505566,0.12023875989300309,31133.878371757928,13164972003.049452,43460190205.56481,"SOI_INTERSECT_1","Kerbin",32154354201.441765,7413651.329173973],
+    ["mun_escape",0,"Mun","INITIAL","ESCAPE",5000.0,9050.855642843217,9050.855642843217,10.0,1.8800000000000003,-261363.63636363624,0.0,120.0,0.0,5000.0,229999.99999999997,-752727.2727272725,"NONE","",0.0,0.0],
+    ["mun_escape",1,"Kerbin","ESCAPE","ESCAPE",9050.855642843217,114946.98905573486,114946.98905573486,5.007599876163334,2.5477370444551135,-7309531.710500535,292.47833873509603,205.01130512449268,-0.09274503557553646,9050.855642843217,11313233.005961027,-25932296.426962096,"SOI_INTERSECT_1","Mun",2429559.116564747,65070.920753859114],
+    ["mun_escape",2,"Sun","ESCAPE","FINAL",114946.98905573486,12100358.02647604,-1.0,0.25463204438432613,0.16236665583156798,16218064162.060226,359.1328907064219,170.75126906096426,0.18436672090595127,114946.98905573486,13584791320.004707,18851337004.115746,"SOI_INTERSECT_1","Kerbin",22113600409.899136,12180674.305557227],
+    ["kerbin_crossing",0,"Kerbin","INITIAL","FINAL",0.0,845831.9798959218,-1.0,4.0,0.95,40000000.0,70.0,10.0,0.0,0.0,2000000.0000000019,78000000.0,"SOI_INTERSECT_1","Mun",21786312.285182722,227467.52505813356]
+   ]
+  }
+ ]
+}

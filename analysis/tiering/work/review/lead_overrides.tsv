@@ -1,0 +1,3 @@
+path	tier	subsystem	ue5_counterpart	rationale
+Assembly-CSharp/ModuleEnginesFX.cs	B	PartModules-Engines	core + Niagara	Engine module most stock engines instantiate (MODULE name in cfgs); gameplay inherited from ModuleEngines, adds FX-group driven power/running effects; core must register the type, FX -> Niagara.
+Assembly-CSharp/ModuleRCSFX.cs	B	PartModules-Engines	core + Niagara	RCS module most stock RCS blocks instantiate (MODULE name in cfgs); thrust logic inherited from ModuleRCS, adds FX handling; core must register the type.

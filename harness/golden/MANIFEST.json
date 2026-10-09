@@ -1,0 +1,16 @@
+{
+ "schema": "ksp-golden-manifest/1",
+ "partial_run": false,
+ "files": [
+  {"group":"curves_eval","file":"curves_eval/curves_eval.json","dataset":"curves_eval","trust":"direct+rehosted-native","rows":29905,"tables":["curves:366","keys:1055","samples:28484"]},
+  {"group":"body_catalog","file":"body_catalog/body_catalog.json","dataset":"body_catalog","trust":"direct+rehosted","rows":1370,"tables":["bodies:17","orbits:16","atmosphere_profile_1km:1072","body_curves:265"]},
+  {"group":"orbit_propagation","file":"orbit_propagation/orbit_propagation.json","dataset":"orbit_propagation","trust":"direct","rows":2422,"tables":["cases:92","state_at_ut:1020","from_state_vectors:1020","state_vector_cases:9","kepler:281"]},
+  {"group":"orbit_propagation","file":"patched_conics/patched_conics.json","dataset":"patched_conics","trust":"direct+rehosted","rows":11,"tables":["patches:11"]},
+  {"group":"atmosphere_curves","file":"atmosphere_curves/atmosphere_curves.json","dataset":"atmosphere_curves","trust":"direct","rows":5200,"tables":["profile_100m:2704","flight_state:2176","solar_effects:320"]},
+  {"group":"aero_forces","file":"aero_forces/aero_forces.json","dataset":"aero_forces","trust":"direct+rehosted","rows":25694,"tables":["drag_curve_value:2870","cube_inputs:34","cube_weighted:204","cube_drag:18122","drag_chain_kerbin:2304","lifting_surface:2160"]},
+  {"group":"physics_constants","file":"physics_constants/physics_constants.json","dataset":"physics_constants","trust":"direct","rows":213,"tables":["physicsglobals:213"]},
+  {"group":"confignode_roundtrip","file":"confignode_roundtrip/confignode_roundtrip.json","dataset":"confignode_roundtrip","trust":"direct","rows":68,"tables":["corpus:47","save_text:21"]},
+  {"group":"engine_thrust","file":"engine_thrust/engine_thrust.json","dataset":"engine_thrust","trust":"direct+rehosted","rows":5248,"tables":["engines:41","isp_thrust_vs_pressure:738","kerbin_flight:4059","rocket_equation:410"]},
+  {"group":"math_shim","file":"math_shim/math_shim.json","dataset":"math_shim","trust":"direct","rows":1435,"tables":["f32:903","f64:532"]}
+ ]
+}

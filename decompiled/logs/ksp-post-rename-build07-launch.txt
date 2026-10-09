@@ -1,0 +1,26 @@
+﻿Started PID 6708 at 2026-10-08T19:49:28.1362671+11:00
+MAINMENU reached after 30s: [LOG 19:49:56.627] [HighLogic]: =========================== Scene Change : From LOADING to MAINMENU =====================
+Process alive at kill time; WorkingSet=2662 MB, Responding=True
+Killed PID 6708 after 45s
+--- C:\Projects\KSP-UE5\decompiled\logs\ksp-post-rename-build07-KSP.log : 3641 lines
+   Exception                      0
+   MissingMethodException         0
+   TypeLoadException              0
+   MissingFieldException          0
+   BadImageFormat                 0
+   ReflectionTypeLoadException    0
+   Crash!!!                       0
+   \[AddonLoader\]                2
+   Assembly-CSharp                1
+   MAINMENU                       1
+--- C:\Projects\KSP-UE5\decompiled\logs\ksp-post-rename-build07-player.log : 10941 lines
+   Exception                      0
+   MissingMethodException         0
+   TypeLoadException              0
+   MissingFieldException          0
+   BadImageFormat                 0
+   ReflectionTypeLoadException    0
+   Crash!!!                       0
+   \[AddonLoader\]                2
+   Assembly-CSharp                1
+   MAINMENU                       2

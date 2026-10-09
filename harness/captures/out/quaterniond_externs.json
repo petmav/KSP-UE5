@@ -1,0 +1,58 @@
+{
+ "schema": "ksp-golden/1",
+ "dataset": "quaterniond_externs",
+ "trust": "capture",
+ "description": "CAPTURE-SPEC C3 addendum: KSP's QuaternionD methods that route to extern INTERNAL_CALL_* declarations inside Assembly-CSharp (QuaternionD.cs). Each is called once in try/catch; threw=true means the method is dead in game.",
+ "oracles": [],
+ "provenance": {
+  "ksp_version": "1.12.5 build 03190",
+  "unity_version": "2019.4.18f1",
+  "runtime": "Mono 5.11.0 (Visual Studio built mono) (Environment.Version 4.0.30319.42000)",
+  "pointer_size": 8,
+  "os": "Windows 10  (10.0.0) 64bit",
+  "cpu": "AMD Ryzen AI 7 350 w/ Radeon 860M ",
+  "culture": "en-US",
+  "assembly_csharp_path": "C:\\Projects\\KSP-UE5\\decompiled\\KSP-dev\\KSP_x64_Data\\Managed\\Assembly-CSharp.dll",
+  "assembly_csharp_sha256": "d87eee7bb2ef28def638ec10e466ce2dfaacaa60ec44307eca628c47ce13dbd6",
+  "assembly_csharp_mvid": "222862c6-bdec-4981-837d-874e15d8ed7a",
+  "assembly_csharp_jit": "IsJITOptimizerDisabled=False",
+  "profiling_branch_commit": "5fedcfab058e8228f800de4c3d4a16c65fd6229a",
+  "scene": "MAINMENU",
+  "ut": "0",
+  "frame": 13781,
+  "utc": "2026-10-08T14:22:20.0805459Z",
+  "capture_code": "decompiled/KSP-Decompiled (branch profiling) Assembly-CSharp/PhysProf/HarnessCapture*.cs",
+  "capture_seconds": 0.0030275999999999996,
+  "decimal_format": "normalized from _hex by harness/captures/tools/normalize.py (harness ExactNumber.FormatFloat/FormatDouble on .NET Framework ToString G6..G9 / G15..G17)"
+ },
+ "tables": [
+  {
+   "name": "calls",
+   "description": "One row per QuaternionD method.",
+   "key": ["fn"],
+   "columns": [
+    {"name": "fn", "type": "str", "unit": ""},
+    {"name": "threw", "type": "bool", "unit": ""},
+    {"name": "exception", "type": "str", "unit": ""},
+    {"name": "message", "type": "str", "unit": ""},
+    {"name": "result", "type": "str", "unit": ""}
+   ],
+   "row_count": 13,
+   "rows": [
+    ["QuaternionD.Euler(x,y,z)", true, "System.MissingMethodException", "Attempted to access a missing method.", null],
+    ["QuaternionD.FromToRotation", true, "System.MissingMethodException", "Attempted to access a missing method.", null],
+    ["QuaternionD.Slerp", true, "System.MissingMethodException", "Attempted to access a missing method.", null],
+    ["QuaternionD.Lerp", true, "System.MissingMethodException", "Attempted to access a missing method.", null],
+    ["QuaternionD.RotateTowards", true, "System.MissingMethodException", "Attempted to access a missing method.", null],
+    ["QuaternionD.Inverse", false, null, null, "(0.0, -0.3, 0.0, 1.0)"],
+    ["QuaternionD.eulerAngles", true, "System.MissingMethodException", "Attempted to access a missing method.", null],
+    ["QuaternionD.ToAngleAxis", true, "System.MissingMethodException", "Attempted to access a missing method.", null],
+    ["QuaternionD.EulerRotation(x,y,z)", true, "System.MissingMethodException", "Attempted to access a missing method.", null],
+    ["QuaternionD.EulerAngles(x,y,z)", true, "System.MissingMethodException", "Attempted to access a missing method.", null],
+    ["QuaternionD.ToEulerAngles", true, "System.MissingMethodException", "Attempted to access a missing method.", null],
+    ["QuaternionD.AxisAngle", true, "System.MissingMethodException", "Attempted to access a missing method.", null],
+    ["QuaternionD.LookRotation(fwd,up) (managed, control)", false, null, null, "(0.1, 0.3, 0.9, 0.2)"]
+   ]
+  }
+ ]
+}

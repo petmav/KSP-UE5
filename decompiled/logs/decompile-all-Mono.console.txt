@@ -1,0 +1,16 @@
+﻿[Mono] 14 managed assemblies
+[Mono] I18N.CJK                                                ok           37 files      3653 lines     0.5s     52MB
+[Mono] I18N                                                    ok            8 files       991 lines     0.4s     50MB
+[Mono] I18N.MidEast                                            ok           16 files      2968 lines     0.7s     67MB
+[Mono] I18N.Other                                              ok           39 files      2949 lines     0.7s     62MB
+[Mono] I18N.Rare                                               ok           76 files     29213 lines     0.9s     88MB
+[Mono] I18N.West                                               ok           32 files      8108 lines     0.9s     74MB
+[Mono] Mono.Posix                                              ok          158 files     16952 lines     0.9s     91MB
+[Mono] Mono.Security                                           ok          175 files     27284 lines     1.3s    101MB
+[Mono] mscorlib                                                ok         2292 files    310085 lines    10.8s    197MB
+[Mono] System.Configuration                                    ok          139 files      9793 lines     0.9s     87MB
+[Mono] System.Core                                             ok          587 files     72829 lines     3.1s    145MB
+[Mono] System                                                  ok         1566 files    191144 lines     7.3s    174MB
+[Mono] System.Security                                         ok          137 files     13626 lines     0.9s     91MB
+[Mono] System.Xml                                              ok         1080 files    244097 lines     8.7s    219MB
+[Mono] done: 14/14 assemblies decompiled, 6342 .cs files, 933692 lines; not ok: 

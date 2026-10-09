@@ -1,0 +1,369 @@
+{
+ "golden": "harness/golden/math_shim/math_shim.json",
+ "candidate": "C:/Projects/KSP-UE5/harness/captures/out/math_shim_mono.json",
+ "bit_mismatches": 119,
+ "tables": [
+  {
+   "table": "f32",
+   "rows": 903,
+   "missing": 0,
+   "extra": 0,
+   "columns": {
+    "a0": {
+     "type": "f32",
+     "n": 903,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "a1": {
+     "type": "f32",
+     "n": 903,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "a2": {
+     "type": "f32",
+     "n": 903,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "a3": {
+     "type": "f32",
+     "n": 903,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "a4": {
+     "type": "f32",
+     "n": 903,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "a5": {
+     "type": "f32",
+     "n": 903,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "r0": {
+     "type": "f32",
+     "n": 903,
+     "mismatch": 53,
+     "max_ulp": 1135869952,
+     "max_abs": 360.0,
+     "examples": [
+      {
+       "key": [
+        "Mathf.Atan2",
+        3
+       ],
+       "golden": "-0.0",
+       "candidate": "0.0",
+       "ulp": 0
+      },
+      {
+       "key": [
+        "Mathf.Atan2",
+        4
+       ],
+       "golden": "-0.0",
+       "candidate": "0.0",
+       "ulp": 0
+      },
+      {
+       "key": [
+        "Mathf.Pow",
+        5
+       ],
+       "golden": "-inf",
+       "candidate": "inf",
+       "ulp": "special"
+      },
+      {
+       "key": [
+        "Mathf.Lerp",
+        6
+       ],
+       "golden": "2.8333334922790527",
+       "candidate": "2.8333332538604736",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "Mathf.LerpUnclamped",
+        6
+       ],
+       "golden": "2.8333334922790527",
+       "candidate": "2.8333332538604736",
+       "ulp": 1
+      }
+     ]
+    },
+    "r1": {
+     "type": "f32",
+     "n": 903,
+     "mismatch": 32,
+     "max_ulp": 6,
+     "max_abs": 0.125,
+     "examples": [
+      {
+       "key": [
+        "Vector3.Project",
+        12
+       ],
+       "golden": "-0.23539787530899048",
+       "candidate": "-0.2353978455066681",
+       "ulp": 2
+      },
+      {
+       "key": [
+        "Vector3.ProjectOnPlane",
+        12
+       ],
+       "golden": "0.23539787530899048",
+       "candidate": "0.2353978455066681",
+       "ulp": 2
+      },
+      {
+       "key": [
+        "Vector3.Cross",
+        17
+       ],
+       "golden": "-3.0",
+       "candidate": "-3.000000238418579",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "Vector3.Project",
+        17
+       ],
+       "golden": "0.28723376989364624",
+       "candidate": "0.2872338891029358",
+       "ulp": 4
+      },
+      {
+       "key": [
+        "Vector3.Cross",
+        18
+       ],
+       "golden": "1.500000053056283e-05",
+       "candidate": "1.4999999621068127e-05",
+       "ulp": 1
+      }
+     ]
+    },
+    "r2": {
+     "type": "f32",
+     "n": 903,
+     "mismatch": 29,
+     "max_ulp": 4,
+     "max_abs": 6.103515625e-05,
+     "examples": [
+      {
+       "key": [
+        "Vector3.Project",
+        10
+       ],
+       "golden": "0.06382978707551956",
+       "candidate": "0.06382979452610016",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "Vector3.ProjectOnPlane",
+        10
+       ],
+       "golden": "-0.06382978707551956",
+       "candidate": "-0.06382979452610016",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "Vector3.Project",
+        12
+       ],
+       "golden": "0.00011758135951822624",
+       "candidate": "0.00011758134496631101",
+       "ulp": 2
+      },
+      {
+       "key": [
+        "Vector3.ProjectOnPlane",
+        12
+       ],
+       "golden": "-0.00011758135951822624",
+       "candidate": "-0.00011758134496631101",
+       "ulp": 2
+      },
+      {
+       "key": [
+        "Vector3.Cross",
+        17
+       ],
+       "golden": "3.8999998569488525",
+       "candidate": "3.9000000953674316",
+       "ulp": 1
+      }
+     ]
+    },
+    "r3": {
+     "type": "f32",
+     "n": 903,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    }
+   }
+  },
+  {
+   "table": "f64",
+   "rows": 532,
+   "missing": 0,
+   "extra": 0,
+   "columns": {
+    "a0": {
+     "type": "f64",
+     "n": 532,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "a1": {
+     "type": "f64",
+     "n": 532,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "a2": {
+     "type": "f64",
+     "n": 532,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "a3": {
+     "type": "f64",
+     "n": 532,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "a4": {
+     "type": "f64",
+     "n": 532,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "a5": {
+     "type": "f64",
+     "n": 532,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "r0": {
+     "type": "f64",
+     "n": 532,
+     "mismatch": 2,
+     "max_ulp": 9211147354424219167,
+     "max_abs": 1.6427876096865397,
+     "examples": [
+      {
+       "key": [
+        "Planetarium.Zup(after Awake)",
+        0
+       ],
+       "golden": "1.0",
+       "candidate": "-0.6427876096865396",
+       "ulp": 9211147354424219167
+      },
+      {
+       "key": [
+        "Planetarium.Zup(after Awake).Y",
+        0
+       ],
+       "golden": "0.0",
+       "candidate": "0.7660444431189778",
+       "ulp": 4605075134482436151
+      }
+     ]
+    },
+    "r1": {
+     "type": "f64",
+     "n": 532,
+     "mismatch": 2,
+     "max_ulp": 9211147354424219167,
+     "max_abs": 1.6427876096865397,
+     "examples": [
+      {
+       "key": [
+        "Planetarium.Zup(after Awake)",
+        0
+       ],
+       "golden": "0.0",
+       "candidate": "-0.7660444431189778",
+       "ulp": 4605075134482436151
+      },
+      {
+       "key": [
+        "Planetarium.Zup(after Awake).Y",
+        0
+       ],
+       "golden": "1.0",
+       "candidate": "-0.6427876096865396",
+       "ulp": 9211147354424219167
+      }
+     ]
+    },
+    "r2": {
+     "type": "f64",
+     "n": 532,
+     "mismatch": 1,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": [
+      {
+       "key": [
+        "Planetarium.Zup(after Awake)",
+        0
+       ],
+       "golden": "0.0",
+       "candidate": "-0.0",
+       "ulp": 0
+      }
+     ]
+    },
+    "r3": {
+     "type": "f64",
+     "n": 532,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    }
+   }
+  }
+ ]
+}

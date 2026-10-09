@@ -1,0 +1,381 @@
+CommNet/CommLink.cs|107|class|Link<CommNetwork,CommNode,CommLink,CommPath>|||GetBestSignal,GetSignalStrength,Set,SetSignalStrength,ToString,Update,ZeroSignalStrength
+CommNet/CommNetBody.cs|44|MonoBehaviour|MonoBehaviour|Lifecycle=2 Transform=1 MonoBehaviour=1|HighLogic GameEvents CelestialBody|CreateOccluder,OnDestroy,OnNetworkInitialized,OnNetworkPreUpdate,Start
+CommNet/CommNetHome.cs|106|MonoBehaviour|MonoBehaviour|Transform=4 Lifecycle=3 MonoBehaviour=1|HighLogic GameEvents CelestialBody|CreateNode,OnDestroy,OnNetworkInitialized,OnNetworkPreUpdate,Start,Update
+CommNet/CommNetNetwork.cs|167|MonoBehaviour|MonoBehaviour|Lifecycle=3 Time.=1 MonoBehaviour=1|GameEvents FlightGlobals Vessel HighLogic|Add,Awake,DebugInfo,OnDestroy,OnMapFocusChange,QueueRebuild,Remove,Reset,ResetNetwork,Update
+CommNet/CommNetNode.cs|64|MonoBehaviour|MonoBehaviour|Lifecycle=2 Transform=1 MonoBehaviour=1|GameEvents|OnDestroy,OnNetworkInitialized,OnNetworkPostUpdate,OnNetworkPreUpdate,Start
+CommNet/CommNetParams.cs|74|class|GameParameters.CustomParameterNode||Localizer|Interactible,SetDifficultyPreset
+CommNet/CommNetwork.cs|459|class|Net<CommNetwork,CommNode,CommLink,CommPath>|Raycast/Query=1|Vector3d|Add,CreateDebug,CreateShortestPathTree,FindClosestControlSource,FindClosestWhere,FindHome,FindPath,IsControlSource,IsHome,Rebuild,Remove,SetNodeConnection,TestOcclusion,TryConnect
+CommNet/CommNode.cs|147|class|Node<CommNetwork,CommNode,CommLink,CommPath>|Transform=9|Vector3d|GetSignalStrengthMultiplier,NetworkPostUpdate,NetworkPreUpdate,ToString,Update
+CommNet/CommPath.cs|71|class|Path<CommNetwork,CommNode,CommLink,CommPath>|||Clear,IsLastHopHome,ToString,UpdateFromPath
+CommNet/CommRangeModel.cs|27|class|IRangeModel|||GetMaximumRange,GetNormalizedRange,InRange
+CommNet/HopType.cs|9|enum||||
+CommNet/ICommNetControlSource.cs|13|interface||||
+CommNet/IRangeModel.cs|11|interface||||
+CommNet/IRelayEnabler.cs|9|interface|||ProtoPartModuleSnapshot|
+CommNet/Network/Link.cs|83|class||Lifecycle=1|Localizer|Contains,GetPoints,OnDestroy,OtherEnd,Set,ToString,Update
+CommNet/Network/Node.cs|132|class|Dictionary<_Data,_Link>||Vector3d Localizer|GetLinkPoints,NetworkPostUpdate,NetworkPreUpdate,SetNet,SetOccluder,ToString
+CommNet/Network/Path.cs|185|class|List<_Link>,IConfigNode||ConfigNode|CopyTo,Equals,GetHashCode,GetPoints,IsEmpty,Load,Save,UpdateFromPath
+CommNet/NodeUtilities.cs|26|static class||||ConvertSignalStrength
+CommNet/SignalStrength.cs|11|enum||||
+CommNet/VesselControlState.cs|17|enum||||
+Contracts/Agents/AgentMentality.cs|202|class|||Contract|AddMentality,CanProcessContract,FactorDeadline,FactorExpiry,FactorFundsAdvance,FactorFundsCompletion,FactorFundsFailure,FactorReputationCompletion,FactorReputationFailure,FactorScienceCompletion,GenerateMentalityTypes,GetDescription,GetDisplayName,GetMentalityType
+Contracts/Agents/AgentStanding.cs|44|class||||Link
+Contracts/Agents/KeywordScore.cs|12|enum||||
+Contracts/Agents/Mentalities/Commercial.cs|40|class|AgentMentality||Localizer Contract|CanProcessContract,GetDescription,GetDisplayName,ProcessContract,ScoreKeyword
+Contracts/Agents/Mentalities/Competitive.cs|37|class|AgentMentality||Contract Localizer|CanProcessContract,GetDescription,GetDisplayName,ProcessContract,ScoreKeyword
+Contracts/Agents/Mentalities/Conglomerate.cs|41|class|AgentMentality||Localizer Contract|CanProcessContract,GetDescription,GetDisplayName,ProcessContract,ScoreKeyword
+Contracts/Agents/Mentalities/Cooperative.cs|37|class|AgentMentality||Contract Localizer|CanProcessContract,GetDescription,GetDisplayName,ProcessContract,ScoreKeyword
+Contracts/Agents/Mentalities/EasyGoing.cs|39|class|AgentMentality||Localizer Contract|CanProcessContract,GetDescription,GetDisplayName,ProcessContract,ScoreKeyword
+Contracts/Agents/Mentalities/Ecomental.cs|37|class|AgentMentality||Localizer Contract|CanProcessContract,GetDescription,GetDisplayName,ProcessContract,ScoreKeyword
+Contracts/Agents/Mentalities/Economic.cs|41|class|AgentMentality||Localizer Contract|CanProcessContract,GetDescription,GetDisplayName,ProcessContract,ScoreKeyword
+Contracts/Agents/Mentalities/Hasty.cs|40|class|AgentMentality||Localizer Contract|CanProcessContract,GetDescription,GetDisplayName,ProcessContract,ScoreKeyword
+Contracts/Agents/Mentalities/Industrial.cs|37|class|AgentMentality||Localizer Contract|CanProcessContract,GetDescription,GetDisplayName,ProcessContract,ScoreKeyword
+Contracts/Agents/Mentalities/Kerbalminded.cs|37|class|AgentMentality||Localizer Contract|CanProcessContract,GetDescription,GetDisplayName,ProcessContract,ScoreKeyword
+Contracts/Agents/Mentalities/Moral.cs|31|class|AgentMentality||Localizer Contract|CanProcessContract,GetDescription,GetDisplayName,ProcessContract
+Contracts/Agents/Mentalities/NoRandomContractMentality.cs|37|class|AgentMentality||Localizer Contract|CanProcessContract,GetDisplayName,OnAdded,ScoreKeyword
+Contracts/Agents/Mentalities/Patient.cs|41|class|AgentMentality||Localizer Contract|CanProcessContract,GetDescription,GetDisplayName,ProcessContract,ScoreKeyword
+Contracts/Agents/Mentalities/Perfectionist.cs|37|class|AgentMentality||Localizer Contract|CanProcessContract,GetDescription,GetDisplayName,ProcessContract,ScoreKeyword
+Contracts/Agents/Mentalities/Pioneer.cs|37|class|AgentMentality||Localizer Contract|CanProcessContract,GetDescription,GetDisplayName,ProcessContract,ScoreKeyword
+Contracts/Agents/Mentalities/Record.cs|46|class|AgentMentality||Localizer Contract|CanProcessContract,GetDescription,GetDisplayName,ProcessContract,ScoreKeyword
+Contracts/Agents/Mentalities/Scientific.cs|37|class|AgentMentality||Localizer Contract|CanProcessContract,GetDescription,GetDisplayName,ProcessContract,ScoreKeyword
+Contracts/Agents/Mentalities/Startup.cs|41|class|AgentMentality||Localizer Contract|CanProcessContract,GetDescription,GetDisplayName,ProcessContract,ScoreKeyword
+Contracts/Agents/Mentalities/Stern.cs|39|class|AgentMentality||Localizer Contract|CanProcessContract,GetDescription,GetDisplayName,ProcessContract,ScoreKeyword
+Contracts/BodyLocation.cs|8|enum||||
+Contracts/ContractPredicate.cs|73|class||Lifecycle=1|ConfigNode Vessel ProtoVessel Localizer|GetAllowMultiple,GetDescription,Load,OnLoad,OnSave,OnUpdate,Save,Test,Update
+Contracts/IContractParameterHost.cs|41|interface|||ContractParameter Contract|
+Contracts/Parameters/AcquireCrew.cs|197|ContractParameter|ContractParameter||GameEvents Part ConfigNode Vessel|AddKerbal,CheckNewKerbal,GetTitle,KillKerbal,OnCouple,OnCrewBoardVessel,OnCrewKilled,OnCrewTransferred,OnLoad,OnPartDied,OnRegister,OnReset,OnSave,OnUnregister
+Contracts/Parameters/AcquirePart.cs|167|ContractParameter|ContractParameter||GameEvents Part ConfigNode Vessel|AddPart,CheckNewPart,DestroyPart,GetTitle,OnCouple,OnLoad,OnPartDied,OnRegister,OnReset,OnSave,OnUnregister,RemovePart,ScanVessel,SetTitle
+Contracts/Parameters/CollectScience.cs|109|ContractParameter|ContractParameter||Vessel GameEvents CelestialBody Localizer|GetHashString,GetTitle,OnLoad,OnRegister,OnSave,OnScience,OnTriggeredScience,OnUnregister
+Contracts/Parameters/EnterOrbit.cs|63|ContractParameter|ContractParameter||CelestialBody GameEvents ConfigNode Vessel|GetHashString,GetTitle,OnEnterOrbit,OnLoad,OnRegister,OnSave,OnUnregister
+Contracts/Parameters/EnterSOI.cs|63|ContractParameter|ContractParameter||CelestialBody GameEvents ConfigNode Vessel|GetHashString,GetTitle,OnEnterSOI,OnLoad,OnRegister,OnSave,OnUnregister
+Contracts/Parameters/KerbalDeaths.cs|82|ContractParameter|ContractParameter||Localizer GameEvents ConfigNode ContractParameter|GetHashString,GetTitle,OnCrewKilled,OnLoad,OnRegister,OnSave,OnUnregister
+Contracts/Parameters/LandOnBody.cs|63|ContractParameter|ContractParameter||CelestialBody GameEvents ConfigNode Vessel|GetHashString,GetTitle,OnLoad,OnRegister,OnSave,OnUnregister,OnVesselLand
+Contracts/Parameters/OR.cs|32|ContractParameter|ContractParameter||ContractParameter|GetHashString,OnParameterStateChange
+Contracts/Parameters/PartTest.cs|336|ContractParameter|ContractParameter||GameEvents FlightGlobals Vessel Contract|GetHashString,GetNotes,GetTitle,OnDock,OnLoad,OnPartRunTest,OnRegister,OnReset,OnSave,OnTestPartDestroyed,OnUnregister,OnUpdate,OnVesselChanged,PartModified
+Contracts/Parameters/PlantFlag.cs|63|ContractParameter|ContractParameter||CelestialBody GameEvents ConfigNode Vessel|GetHashString,GetTitle,OnLoad,OnPlantFlag,OnRegister,OnSave,OnUnregister
+Contracts/Parameters/ReachAltitudeEnvelope.cs|72|ContractParameter|ContractParameter||FlightGlobals ConfigNode Localizer HighLogic|GetTitle,OnLoad,OnReset,OnSave,OnUpdate
+Contracts/Parameters/ReachBiome.cs|110|ContractParameter|ContractParameter||FlightGlobals ConfigNode Vessel HighLogic|GetTitle,GetTitleStringShort,OnLoad,OnReset,OnSave,OnUpdate,bodyHasBiome,checkVesselWithinBiome
+Contracts/Parameters/ReachDestination.cs|99|ContractParameter|ContractParameter||FlightGlobals CelestialBody Vessel GameEvents|GetTitle,GetTitleStringShort,OnLoad,OnRegister,OnReset,OnSave,OnUnregister,OnVesselSOIChange,TrackVessel,checkVesselDestination
+Contracts/Parameters/ReachFlightEnvelope.cs|287|ContractParameter|ContractParameter|Coroutine=4|Vessel Localizer GameEvents FlightGlobals|GetSituationStringShort,GetTitle,OnFlightReady,OnLoad,OnRegister,OnSave,OnUnregister,OnVesselChange,OnVesselSituationChange,TrackVessel,checkVesselWithinBiome,checkVesselWithinFlightEnvelope
+Contracts/Parameters/ReachSituation.cs|141|ContractParameter|ContractParameter||Vessel Localizer GameEvents FlightGlobals|GetTitle,GetTitleStringShort,OnLoad,OnRegister,OnReset,OnSave,OnUnregister,OnVesselSituationChange,TrackVessel,checkVesselSituation
+Contracts/Parameters/ReachSpeedEnvelope.cs|90|ContractParameter|ContractParameter||Vessel FlightGlobals ConfigNode Localizer|GetTitle,OnLoad,OnReset,OnSave,OnUpdate,checkVesselWithinEnvelope
+Contracts/Parameters/RecoverKerbal.cs|262|ContractParameter|ContractParameter||GameEvents ProtoCrewMember FlightGlobals ConfigNode|AddKerbal,GetTitle,OnCrewKilled,OnFlightReady,OnLoad,OnPartDied,OnRegister,OnSave,OnUnregister,OnVesselLoad,OnVesselRecovered,RemoveKerbal,SetTitle
+Contracts/Parameters/RecoverPart.cs|189|ContractParameter|ContractParameter||GameEvents FlightGlobals ConfigNode Vessel|AddPartToRecover,GetTitle,OnFlightReady,OnLoad,OnPartDie,OnRegister,OnSave,OnUnregister,OnVesselLoad,OnVesselRecovered,RemovePartToRecover
+Contracts/Parameters/XOR.cs|41|ContractParameter|ContractParameter||ContractParameter|GetHashString,OnParameterStateChange
+Contracts/ParameterState.cs|14|enum||||
+Contracts/Predicates/AgentFlag.cs|88|class|ContractPredicate||ConfigNode Vessel ProtoVessel Localizer|GetDescription,OnLoad,OnSave,Test
+Contracts/Predicates/AgentParts.cs|112|class|ContractPredicate||Localizer ConfigNode Vessel ProtoVessel|GetDescription,OnLoad,OnSave,Test
+Contracts/Predicates/IsActiveVessel.cs|23|class|ContractPredicate||Vessel ProtoVessel FlightGlobals|Test
+Contracts/Predicates/IsControllable.cs|28|class|ContractPredicate||Vessel ProtoVessel|GetDescription,Test
+Contracts/Predicates/LaunchID.cs|111|class|ContractPredicate||Vessel ProtoVessel HighLogic Contract|ContainsLaunchID_GreaterThanOrEqualTo,GetDescription,OnContractStateChange,OnLoad,OnSave,Test
+Contracts/Templates/CollectScience.cs|177|ContractParameter|Contract||CelestialBody Localizer Planetarium Reputation|Generate,GenerateContract_Orbit,GenerateContract_Surface,GetDescription,GetSynopsys,GetTitle,GetWeightBodies,MeetRequirements,MessageCompleted,OnLoad,OnSave
+Contracts/Templates/GrandTour.cs|552|Contract|Contract||CelestialBody Localizer Vessel Planetarium|AttemptFinalDestination,AttemptFocusedTour,AttemptRandomTour,Generate,GetDescription,GetFocusedChallenges,GetHashString,GetNotes,GetSynopsys,GetTitle,GetWeightBodies,MeetRequirements,MessageCompleted,OnAccepted
+Contracts/Templates/OrbitalConstructionContract.cs|414|Contract|Contract,IUpdateWaypoints||Reputation GameEvents FlightGlobals Localizer|CanBeCancelled,CanBeDeclined,CleanupRenderer,CreateVesselName,Generate,GetDescription,GetHashString,GetSynopsys,GetTitle,MeetRequirements,MessageCompleted,OnAccepted,OnContractPreBuiltVesselSpawned,OnLoad
+Contracts/Templates/PlantFlag.cs|137|ContractParameter|Contract||CelestialBody Vessel Planetarium Localizer|Generate,GetDescription,GetHashString,GetSynopsys,GetTitle,GetWeightBodies,MeetRequirements,MessageCompleted,OnLoad,OnSave
+Contracts/Templates/RoverConstructionContract.cs|337|Contract|Contract,IUpdateWaypoints||Reputation GameEvents FlightGlobals CelestialBody|CalculateWaypoint,CanBeCancelled,CanBeDeclined,CreateVesselName,Generate,GetDescription,GetHashString,GetSynopsys,GetTitle,MeetRequirements,MessageCompleted,OnAccepted,OnContractPreBuiltVesselSpawned,OnLoad
+Contracts/Templates/VesselRepairContract.cs|602|Contract|Contract||FlightGlobals Reputation GameEvents Localizer|CanBeCancelled,CanBeDeclined,CleanupRenderer,CreateVesselName,Generate,GetDescription,GetHashString,GetSynopsys,GetTitle,MeetRequirements,MessageCompleted,OnAccepted,OnContractPreBuiltVesselSpawned,OnLoad
+Contracts/TextGen.cs|180|static class|||ConfigNode Localizer GameDatabase|GenerateBackStories,GetSentence,ProcessTextReplacements,ReplaceCharAt,Setup
+Expansions/Missions/ActionNumberOperator.cs|11|enum||||
+Expansions/Missions/Adjusters/AdjusterActiveRadiatorBase.cs|31|class|AdjusterPartModuleBase|||ApplyMaxEnergyTransferAdjustment,GetTargetPartModule,IsBlockingCooling
+Expansions/Missions/Adjusters/AdjusterActiveRadiatorMaxEnergyTransfer.cs|60|class|AdjusterActiveRadiatorBase||Localizer ConfigNode|Activate,ApplyMaxEnergyTransferAdjustment,GetNodeBodyParameterString,Load,Save
+Expansions/Missions/Adjusters/AdjusterAlternatorBase.cs|26|class|AdjusterPartModuleBase|||ApplyOutputAdjustment,GetTargetPartModule
+Expansions/Missions/Adjusters/AdjusterAlternatorOutput.cs|60|class|AdjusterAlternatorBase||Localizer ConfigNode|Activate,ApplyOutputAdjustment,GetNodeBodyParameterString,Load,Save
+Expansions/Missions/Adjusters/AdjusterAnchoredDecouplerBase.cs|26|class|AdjusterPartModuleBase|||GetTargetPartModule,IsBlockingDecouple
+Expansions/Missions/Adjusters/AdjusterCargoBayBase.cs|26|class|AdjusterPartModuleBase|||GetTargetPartModule,IsCargoBayStuck
+Expansions/Missions/Adjusters/AdjusterControlSurfaceActuatorSpeed.cs|60|class|AdjusterControlSurfaceBase||Localizer ConfigNode|Activate,ApplyActuatorSpeedAdjustment,GetNodeBodyParameterString,Load,Save
+Expansions/Missions/Adjusters/AdjusterControlSurfaceBase.cs|26|class|AdjusterPartModuleBase|||ApplyActuatorSpeedAdjustment,GetTargetPartModule
+Expansions/Missions/Adjusters/AdjusterDataTransmitterBase.cs|31|class|AdjusterPartModuleBase|||ApplyPowerAdjustment,GetTargetPartModule,IsDataTransmitterBroken
+Expansions/Missions/Adjusters/AdjusterDataTransmitterPower.cs|75|class|AdjusterDataTransmitterBase||Localizer ConfigNode|Activate,ApplyPowerAdjustment,GetNodeBodyParameterString,Load,PowerValueChanged,Save,UpdatePowerValueDisplay
+Expansions/Missions/Adjusters/AdjusterDecoupleBase.cs|26|class|AdjusterPartModuleBase|||GetTargetPartModule,IsBlockingDecouple
+Expansions/Missions/Adjusters/AdjusterDeployablePartBase.cs|26|class|AdjusterPartModuleBase|||GetTargetPartModule,IsDeployablePartStuck
+Expansions/Missions/Adjusters/AdjusterDeployableSolarPanelBase.cs|26|class|AdjusterPartModuleBase|||ApplyEfficiencyAdjustment,GetTargetPartModule
+Expansions/Missions/Adjusters/AdjusterDeployableSolarPanelEfficiency.cs|60|class|AdjusterDeployableSolarPanelBase||Localizer ConfigNode|Activate,ApplyEfficiencyAdjustment,GetNodeBodyParameterString,Load,Save
+Expansions/Missions/Adjusters/AdjusterDockingNodeBase.cs|26|class|AdjusterPartModuleBase|||GetTargetPartModule,IsBlockingUndock
+Expansions/Missions/Adjusters/AdjusterEnginesBase.cs|31|class|AdjusterPartModuleBase|||ApplyThrottleAdjustment,GetTargetPartModule,IsEngineDead
+Expansions/Missions/Adjusters/AdjusterEnginesThrottle.cs|60|class|AdjusterEnginesBase||Localizer ConfigNode|Activate,ApplyThrottleAdjustment,GetNodeBodyParameterString,Load,Save
+Expansions/Missions/Adjusters/AdjusterFuelLineBase.cs|22|class|AdjusterPartModuleBase|||GetTargetPartModule
+Expansions/Missions/Adjusters/AdjusterGeneratorBase.cs|26|class|AdjusterPartModuleBase|||ApplyEfficiencyAdjustment,GetTargetPartModule
+Expansions/Missions/Adjusters/AdjusterGeneratorEfficiency.cs|60|class|AdjusterGeneratorBase||Localizer ConfigNode|Activate,ApplyEfficiencyAdjustment,GetNodeBodyParameterString,Load,Save
+Expansions/Missions/Adjusters/AdjusterGimbalBase.cs|27|class|AdjusterPartModuleBase|||ApplyControlAdjustment,GetTargetPartModule
+Expansions/Missions/Adjusters/AdjusterGimbalLimitControl.cs|91|class|AdjusterGimbalBase||Localizer ConfigNode|Activate,ApplyControlAdjustment,GetNodeBodyParameterString,Load,Save
+Expansions/Missions/Adjusters/AdjusterGPSBase.cs|21|class|AdjusterPartModuleBase|||GetTargetPartModule
+Expansions/Missions/Adjusters/AdjusterGrappleNodeBase.cs|31|class|AdjusterPartModuleBase|||GetTargetPartModule,IsBlockingGrappleGrab,IsBlockingGrappleRelease
+Expansions/Missions/Adjusters/AdjusterKerbNetAccessBase.cs|21|class|AdjusterPartModuleBase|||GetTargetPartModule
+Expansions/Missions/Adjusters/AdjusterKerbNetAccessDisabled.cs|38|class|AdjusterKerbNetAccessBase||Localizer|Activate
+Expansions/Missions/Adjusters/AdjusterLiftingSurfaceBase.cs|27|class|AdjusterPartModuleBase|||ApplyLiftForceAdjustment,GetTargetPartModule
+Expansions/Missions/Adjusters/AdjusterLiftingSurfaceLiftForce.cs|60|class|AdjusterLiftingSurfaceBase||Localizer ConfigNode|Activate,ApplyLiftForceAdjustment,GetNodeBodyParameterString,Load,Save
+Expansions/Missions/Adjusters/AdjusterLightBase.cs|26|class|AdjusterPartModuleBase|||ApplyIntensityAdjustment,GetTargetPartModule
+Expansions/Missions/Adjusters/AdjusterLightIntensity.cs|60|class|AdjusterLightBase||Localizer ConfigNode|Activate,ApplyIntensityAdjustment,GetNodeBodyParameterString,Load,Save
+Expansions/Missions/Adjusters/AdjusterProbeControlPointBase.cs|27|class|AdjusterPartModuleBase|||GetTargetPartModule,IsProbeControlPointBroken
+Expansions/Missions/Adjusters/AdjusterRCSBase.cs|37|class|AdjusterPartModuleBase|||ApplyInputLinearAdjustment,ApplyInputRotationAdjustment,GetTargetPartModule,IsRCSBroken
+Expansions/Missions/Adjusters/AdjusterReactionWheelBase.cs|32|class|AdjusterPartModuleBase|||ApplyTorqueAdjustment,GetTargetPartModule,IsReactionWheelBroken
+Expansions/Missions/Adjusters/AdjusterReactionWheelTorque.cs|91|class|AdjusterReactionWheelBase||Localizer ConfigNode|Activate,ApplyTorqueAdjustment,GetNodeBodyParameterString,Load,Save
+Expansions/Missions/Adjusters/AdjusterResourceIntakeBase.cs|21|class|AdjusterPartModuleBase|||GetTargetPartModule
+Expansions/Missions/Adjusters/AdjusterSASBase.cs|26|class|AdjusterPartModuleBase|||ApplySASServiceLevelAdjustment,GetTargetPartModule
+Expansions/Missions/Adjusters/AdjusterSASServiceLevel.cs|54|class|AdjusterSASBase||Localizer ConfigNode|Activate,ApplySASServiceLevelAdjustment,GetNodeBodyParameterString,Load,Save
+Expansions/Missions/Adjusters/AdjusterScienceExperimentBase.cs|21|class|AdjusterPartModuleBase|||GetTargetPartModule
+Expansions/Missions/Adjusters/AdjusterToggleCrossfeedBase.cs|21|class|AdjusterPartModuleBase|||GetTargetPartModule
+Expansions/Missions/Adjusters/AdjusterWheelBrakesBase.cs|27|class|AdjusterPartModuleBase|||ApplyTorqueAdjustment,GetTargetPartModule
+Expansions/Missions/Adjusters/AdjusterWheelBrakesTorque.cs|60|class|AdjusterWheelBrakesBase||Localizer ConfigNode|Activate,ApplyTorqueAdjustment,GetNodeBodyParameterString,Load,Save
+Expansions/Missions/Adjusters/AdjusterWheelDeploymentBase.cs|22|class|AdjusterPartModuleBase|||GetTargetPartModule
+Expansions/Missions/Adjusters/AdjusterWheelMotorBase.cs|27|class|AdjusterPartModuleBase|||ApplyTorqueAdjustment,GetTargetPartModule
+Expansions/Missions/Adjusters/AdjusterWheelMotorTorque.cs|60|class|AdjusterWheelMotorBase||Localizer ConfigNode|Activate,ApplyTorqueAdjustment,GetNodeBodyParameterString,Load,Save
+Expansions/Missions/Adjusters/FailureActiveRadiatorStuck.cs|79|class|AdjusterActiveRadiatorBase||ConfigNode Localizer|Activate,IsBlockingCooling,Load,Save
+Expansions/Missions/Adjusters/FailureAnchoredDecouplerCantDecouple.cs|37|class|AdjusterAnchoredDecouplerBase||Localizer|Activate,IsBlockingDecouple
+Expansions/Missions/Adjusters/FailureCargoBayStuck.cs|72|class|AdjusterCargoBayBase||ConfigNode Localizer|Activate,Deactivate,IsCargoBayStuck,Load,Save
+Expansions/Missions/Adjusters/FailureControlSurfaceDisableControl.cs|37|class|AdjusterControlSurfaceBase||Localizer|Activate,ApplyActuatorSpeedAdjustment
+Expansions/Missions/Adjusters/FailureCrossfeedStuck.cs|64|class|AdjusterToggleCrossfeedBase||ConfigNode Localizer|Activate,Load,Save
+Expansions/Missions/Adjusters/FailureDataTransmitterBroken.cs|42|class|AdjusterDataTransmitterBase||Localizer|Activate,IsDataTransmitterBroken
+Expansions/Missions/Adjusters/FailureDecoupleCantDecouple.cs|37|class|AdjusterDecoupleBase||Localizer|Activate,IsBlockingDecouple
+Expansions/Missions/Adjusters/FailureDeployablePartStuck.cs|69|class|AdjusterDeployablePartBase||ConfigNode Localizer|Activate,IsDeployablePartStuck,Load,Save
+Expansions/Missions/Adjusters/FailureDockingNodeCantUndock.cs|31|class|AdjusterDockingNodeBase||Localizer|Activate,IsBlockingUndock
+Expansions/Missions/Adjusters/FailureEnginesDeadEngine.cs|45|class|AdjusterEnginesBase||Localizer|Activate,IsEngineDead
+Expansions/Missions/Adjusters/FailureFuelLineBlocked.cs|48|class|AdjusterFuelLineBase||Localizer|Activate,Deactivate
+Expansions/Missions/Adjusters/FailureGPSNoDisplay.cs|32|class|AdjusterGPSBase||Localizer|Activate
+Expansions/Missions/Adjusters/FailureGrappleNodeCantGrapple.cs|31|class|AdjusterGrappleNodeBase||Localizer|Activate,IsBlockingGrappleGrab
+Expansions/Missions/Adjusters/FailureGrappleNodeCantRelease.cs|46|class|AdjusterGrappleNodeBase||Localizer|Activate,Deactivate,IsBlockingGrappleRelease
+Expansions/Missions/Adjusters/FailureLightFlickering.cs|89|class|AdjusterLightBase|Time.=1|Localizer ConfigNode|Activate,ApplyIntensityAdjustment,GetNodeBodyParameterString,Load,Save,UpdateFlickeringData
+Expansions/Missions/Adjusters/FailureLightStuck.cs|64|class|AdjusterLightBase||ConfigNode Localizer|Activate,Load,Save
+Expansions/Missions/Adjusters/FailureProbeControlPointBroken.cs|29|class|AdjusterProbeControlPointBase|||IsProbeControlPointBroken
+Expansions/Missions/Adjusters/FailureRCSFireRandomly.cs|43|class|AdjusterRCSBase||Localizer|Activate,ApplyInputLinearAdjustment,ApplyInputRotationAdjustment
+Expansions/Missions/Adjusters/FailureRCSStopWorking.cs|37|class|AdjusterRCSBase||Localizer|Activate,IsRCSBroken
+Expansions/Missions/Adjusters/FailureReactionWheelBroken.cs|37|class|AdjusterReactionWheelBase||Localizer|Activate,IsReactionWheelBroken
+Expansions/Missions/Adjusters/FailureReactionWheelStuck.cs|63|class|AdjusterReactionWheelBase||ConfigNode Localizer|Activate,ApplyTorqueAdjustment,Load,Save
+Expansions/Missions/Adjusters/FailureResourceIntakeStuck.cs|64|class|AdjusterResourceIntakeBase||ConfigNode Localizer|Activate,Load,Save
+Expansions/Missions/Adjusters/FailureScienceExperimentDisable.cs|32|class|AdjusterScienceExperimentBase||Localizer|Activate
+Expansions/Missions/Adjusters/FailureWheelDeploymentStuck.cs|65|class|AdjusterWheelDeploymentBase||ConfigNode Localizer|Activate,Load,Save
+Expansions/Missions/Asteroid.cs|98|class|IConfigNode|GameObject=2 GetComponent=1|ConfigNode FlightGlobals|GetAsteroidSeed,Load,OnGAPPrefabInstantiated,Randomize,Save,SetGAPAsteroid
+Expansions/Missions/AwardModule.cs|98|class|DynamicModule||MissionSystem ConfigNode Localizer HighLogic|EvaluateAward,EvaluateCondition,GetDisplayName,Load,Save,StartTracking,StopTracking
+Expansions/Missions/AwardModule_Fuel.cs|148|class|AwardModule||Vessel ConfigNode GameEvents PartResourceDefinition|EvaluateCondition,GetCurrentResourceFromVessel,Load,OnVesselCreated,OnVesselWillDestroy,Save,SetResourceNames,StartTracking,StopTracking
+Expansions/Missions/AwardModule_KerbalsDied.cs|30|class|AwardModule||ProtoCrewMember KerbalRoster HighLogic|EvaluateCondition
+Expansions/Missions/AwardModule_KerbalsSurvived.cs|57|class|AwardModule||ConfigNode HighLogic GameEvents Game|EvaluateCondition,Load,OnCrewKilled,Save,StartTracking,StopTracking
+Expansions/Missions/AwardModule_LandedOn.cs|75|class|AwardModule||Vessel FlightGlobals ConfigNode CelestialBody|EvaluateCondition,GetVessel,Load,Save
+Expansions/Missions/AwardModule_MissionTime.cs|37|class|AwardModule||ConfigNode HighLogic|EvaluateCondition,Load,Save
+Expansions/Missions/AwardModule_PlanetsLanded.cs|73|class|AwardModule||ConfigNode Vessel GameEvents HighLogic|EvaluateCondition,Load,OnVesselSitutationChange,Save,StartTracking,StopTracking
+Expansions/Missions/AwardModule_Score.cs|38|class|AwardModule||ConfigNode|EvaluateCondition,Load,Save
+Expansions/Missions/AwardModule_TraveledLessThan.cs|68|class|AwardModule||ConfigNode HighLogic GameEvents FlightGlobals|EvaluateCondition,Load,OnVesselWillDestroy,Save,StartTracking,StopTracking
+Expansions/Missions/AwardModule_TraveledMoreThan.cs|68|class|AwardModule||ConfigNode HighLogic GameEvents FlightGlobals|EvaluateCondition,Load,OnVesselWillDestroy,Save,StartTracking,StopTracking
+Expansions/Missions/AwardModule_VesselsUsed.cs|75|class|AwardModule||ConfigNode HighLogic GameEvents Vessel|EvaluateCondition,Load,OnVesselChange,Save,StartTracking,StopTracking
+Expansions/Missions/CheckpointValidationType.cs|10|enum||||
+Expansions/Missions/Comet.cs|146|class|IConfigNode|GameObject=2 GetComponent=1|ConfigNode FlightGlobals|GetRandomCometSeed,Load,OnCometTypeChanged,OnGAPPrefabInstantiated,Randomize,Save,SetCometTypes,SetGAPComet
+Expansions/Missions/Crew.cs|66|class|IConfigNode||Localizer ConfigNode|Load,LocalizeCrewMember,Save
+Expansions/Missions/DynamicModule.cs|216|class|IConfigNode,IMENodeDisplay|Instantiate/Destroy=1|ConfigNode Localizer|AddParameterToNodeBody,AddParameterToNodeBodyAndUpdateUI,AddParameterToSAP,Clone,Destroy,Equals,GetDefaultPinnedParameters,GetDisplayName,GetDisplayToolTip,GetHashCode,GetInfo,GetInternalParametersToDisplay,GetModuleInstanceID,GetName
+Expansions/Missions/DynamicModuleList.cs|150|class|IConfigNode,ICloneable||ConfigNode|AddDynamicModule,Clone,ContainsModule,Equals,GetHashCode,GetInternalParameters,GetSupportedTypes,Load,Save,SetSupportedTypes
+Expansions/Missions/Editor/AreaState.cs|9|enum||||
+Expansions/Missions/Editor/BaseAPFieldList.cs|14|class|BaseFieldList<BaseAPField,MEGUI_Control>|||
+Expansions/Missions/Editor/Category.cs|6|class||||
+Expansions/Missions/Editor/GAPCelestialBodyState.cs|10|enum||||
+Expansions/Missions/Editor/HistoryType.cs|8|enum||||
+Expansions/Missions/Editor/IMEHistoryTarget.cs|7|interface|||ConfigNode|
+Expansions/Missions/Editor/MEGUI_Asteroid.cs|10|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_AsteroidSelect.cs|6|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_Button.cs|12|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_Category.cs|6|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_CelestialBody.cs|14|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_CelestialBody_Biomes.cs|6|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_CelestialBody_Orbit.cs|7|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_Checkbox.cs|7|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_ColorPicker.cs|6|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_Comet.cs|10|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_CometSelect.cs|6|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_Control.cs|109|attribute|FieldAttribute||Localizer|
+Expansions/Missions/Editor/MEGUI_CrewList.cs|6|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_Dropdown.cs|19|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_DynamicModule.cs|6|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_DynamicModuleList.cs|16|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_FlagSelect.cs|6|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_GameParameters.cs|6|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_InputField.cs|15|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_Label.cs|13|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_LaunchSiteSelect.cs|6|attribute|MEGUI_Dropdown|||
+Expansions/Missions/Editor/MEGUI_LaunchSiteSituation.cs|10|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_ListOrder.cs|12|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_MissionInstructor.cs|6|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_MissionKerbal.cs|11|attribute|MEGUI_Control||ProtoCrewMember|
+Expansions/Missions/Editor/MEGUI_NodeLabelNodeSelect.cs|6|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_NodeSelect.cs|6|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_NumberRange.cs|19|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_ParameterSwitchCompound.cs|12|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_ParameterSwitchCompound_KeyField.cs|10|attribute|MEGUI_Dropdown|||
+Expansions/Missions/Editor/MEGUI_PartPicker.cs|62|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_Quaternion.cs|10|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_ScoreRangeList.cs|31|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_ScrollViewSelector.cs|6|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_SurfaceArea.cs|6|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_SurfaceVolume.cs|6|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_TextArea.cs|15|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_Time.cs|6|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_VesselGroundLocation.cs|20|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_VesselLocation.cs|6|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_VesselPartSelect.cs|6|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_VesselSelect.cs|9|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUI_VesselSituation.cs|10|attribute|MEGUI_Control|||
+Expansions/Missions/Editor/MEGUIDropDownItem.cs|18|class||||
+Expansions/Missions/Editor/MEGUIDropDownItemListExtensions.cs|37|static class||||GetDisplayStrings,GetKeys,GetValues
+Expansions/Missions/Editor/MENodeConnectionType.cs|8|enum||||
+Expansions/Missions/Editor/OrbitGizmoMode.cs|9|enum||||
+Expansions/Missions/Editor/SurfaceLocation.cs|11|struct||||
+Expansions/Missions/Editor/ValidationStatus.cs|16|enum||||
+Expansions/Missions/Editor/ValidatorMode.cs|16|enum||||
+Expansions/Missions/Flow/IMEFlowBlock.cs|15|interface||||
+Expansions/Missions/Flow/MEFlowBlock.cs|166|class|IMEFlowBlock,IConfigNode||ConfigNode|AddBlock,Load,Save,UpdateMissionFlowUI
+Expansions/Missions/Flow/MEFlowConvergence.cs|15|class||||
+Expansions/Missions/Flow/MEFlowExtensions.cs|38|static class||||CountStartNodes,DistinctStartNodes,GetPathsStarting
+Expansions/Missions/Flow/MEFlowOrBlock.cs|20|class|MEFlowBlock|||UpdateMissionFlowUI
+Expansions/Missions/Flow/MEFlowThenBlock.cs|20|class|MEFlowBlock|||UpdateMissionFlowUI
+Expansions/Missions/Flow/MENodePathInfo.cs|66|class|IConfigNode||ConfigNode|AddPath,Load,Save
+Expansions/Missions/Flow/MEPath.cs|94|class|IConfigNode||ConfigNode|AddNodes,Clone,GetConvergence,Load,Save
+Expansions/Missions/Flow/MEPathGroup.cs|32|class||||
+Expansions/Missions/IActionModule.cs|21|interface|IConfigNode,IMENodeDisplay|||
+Expansions/Missions/IMENodeDisplay.cs|40|interface||||
+Expansions/Missions/IMissionKerbal.cs|17|interface|||ProtoCrewMember|
+Expansions/Missions/INodeBody.cs|9|interface|||CelestialBody|
+Expansions/Missions/INodeOrbit.cs|9|interface|||Orbit|
+Expansions/Missions/INodeWaypoint.cs|11|interface||||
+Expansions/Missions/IScoreableObjective.cs|9|interface||||
+Expansions/Missions/ITestModule.cs|21|interface|IConfigNode,IMENodeDisplay|||
+Expansions/Missions/ITestNodeLabel.cs|17|interface||||
+Expansions/Missions/MEScoreModule.cs|29|attribute|Attribute|||IsModuleAllowed
+Expansions/Missions/MissionAwards.cs|116|class|DynamicModuleList||MissionSystem HighLogic|ContainsDefinition,EvaluateAwards,FillAwardsList,GetSupportedTypes,StartTracking,StopTracking
+Expansions/Missions/MissionBlackListPreFlightCheck.cs|95|class|IPreFlightTest||AvailablePart Localizer MissionSystem ShipConstruct|GetAbortOption,GetProceedOption,GetWarningDescription,GetWarningTitle,Test
+Expansions/Missions/MissionCameraLockOptions.cs|16|enum||||
+Expansions/Missions/MissionCameraModeOptions.cs|14|enum||||
+Expansions/Missions/MissionCelestialBody.cs|120|class|||FlightGlobals CelestialBody Localizer ConfigNode|GetNodeBodyParameterString,IsValid,Load,Save,SetCelestialBodies
+Expansions/Missions/MissionCheckpointValidator.cs|193|class||||CheckCheckpointPathRecursive,CompareAnyLists,CompareObjectLists,CompareStructLists,IsCheckpointNodeDirty,ModulesAreEqual,ValidateCheckpoint
+Expansions/Missions/MissionCraft.cs|183|class|||ConfigNode FlightGlobals PartLoader|Clear,GetPartName,GetPartNameInVessel,GetPartPersistentId,checkPersistentIds
+Expansions/Missions/MissionDifficulty.cs|16|enum||||
+Expansions/Missions/MissionDifficultyWithColor.cs|16|enum||||
+Expansions/Missions/MissionEndOptions.cs|12|enum||||
+Expansions/Missions/MissionFlow.cs|42|class|IConfigNode||ConfigNode|Load,Save
+Expansions/Missions/MissionInstructor.cs|133|class|||Localizer ConfigNode|Equals,GetHashCode,GetNodeBodyParameterString,Load,Save,SetInstructors,UpdateNodeBodyUI
+Expansions/Missions/MissionKerbal.cs|367|class|||ProtoCrewMember Localizer ConfigNode|Equals,GetHashCode,GetNodeBodyParameterString,Initialize,IsValid,KerbalChanged,KerbalTypeChanged,Load,OnKerbalControlCreated,RebuildDropDownOnChange,Save,SetKerbalList,SetKerbalTypeList,UpdateNodeBodyUI
+Expansions/Missions/MissionLocalizer.cs|34|class|||ConfigNode|LoadMissionLocalizationFiles
+Expansions/Missions/MissionMappedVessel.cs|88|class|||ConfigNode FlightGlobals|Load,Save
+Expansions/Missions/MissionMappedVesselsExtension.cs|141|static class|||Localizer|ConvertMappedId,Exists,Find,IndexCurrentVesselId,IndexMappedVesselId,IndexPartId,MappedVesselName
+Expansions/Missions/MissionOrbit.cs|341|class|OrbitSnapshot||Orbit FlightGlobals ConfigNode CelestialBody|Equals,GetEditorMaxOrbitRadius,GetHashCode,GetNodeBodyParameterString,GetUTOrbitRotation,Load,RelativeOrbit,Reset,Save,SetCelestialBodies
+Expansions/Missions/MissionPack.cs|73|class|IConfigNode||Localizer ConfigNode|CompareDisplayName,CompareOrder,Load,Save
+Expansions/Missions/MissionParamsExtras.cs|90|class|GameParameters.CustomParameterNode|||Interactible,SetDifficultyPreset
+Expansions/Missions/MissionParamsFacilities.cs|98|class|GameParameters.CustomParameterNode|||SetDifficultyPreset
+Expansions/Missions/MissionParamsGeneral.cs|104|class|GameParameters.CustomParameterNode|||Interactible,SetDifficultyPreset
+Expansions/Missions/MissionPartFilter.cs|300|class|IConfigNode||Localizer AvailablePart ConfigNode PartLoader|ApplyPartsFilter,CheckPartExcludelist,GetExcludedParts,GetExcludedPartsFilterDictionary,Load,OnAvailablePartsCheckpointValidator,OnAvailablePartsParameterCreated,OnFilterValueChange,OnPartPickerNeedsToUpdateExcludedPartsFilter,OnUnavailablePartsCheckpointValidator,OnUnavailablePartsParameterCreated,RemovePartsFilter,Save,SetUpdatePartnerExcludedPartFilterCallback
+Expansions/Missions/MissionQuaternion.cs|83|class||||
+Expansions/Missions/MissionScore.cs|124|class|DynamicModuleList||Localizer|AddGlobalScoreModule,AwardScore,AwarededScoreDescription,GetSupportedTypes,ScoreDescription,SetDefaultGlobalScoreModules
+Expansions/Missions/MissionScoreInfo.cs|187|class|IConfigNode||ConfigNode HighLogic|AddScore,CompareScoreInfo,DeleteMissionScores,DeleteScore,GetMissionAwards,GetMissionScore,GetMissionScores,Load,LoadScores,Save,SaveScores
+Expansions/Missions/MissionTypes.cs|10|enum||||
+Expansions/Missions/ParamChoices_CelestialBodySurface.cs|149|class|IConfigNode||ConfigNode Localizer|GetExtraText,GetWaypoint,GetWorldPosition,HasNodeLabel,HasWaypoint,HasWorldPosition,Load,NodeBodyParameterString,Save
+Expansions/Missions/ParamChoices_VesselSimpleLocation.cs|65|class|IConfigNode||ConfigNode|GetNodeBodyParameterString,Load,Save
+Expansions/Missions/Runtime/MissionAppMode.cs|9|enum||||
+Expansions/Missions/ScoreInfo.cs|66|class|IConfigNode||ConfigNode|Load,Save
+Expansions/Missions/ScoreModifierType.cs|16|enum||||
+Expansions/Missions/ScoreModule.cs|65|class|DynamicModule||ConfigNode|AwardScore,AwarededScoreDescription,GetNodeBodyParameterString,Load,Save,ScoreDescription
+Expansions/Missions/ScoreModule_Accuracy.cs|123|class|ScoreModule||Localizer ConfigNode|AwardScore,Equals,GetDefaultPinnedParameters,GetDisplayName,GetHashCode,GetInfo,GetNodeBodyParameterString,Load,Save,ScoreDescription
+Expansions/Missions/ScoreModule_Completion.cs|85|class|ScoreModule||Localizer ConfigNode|AwardScore,Equals,GetDefaultPinnedParameters,GetDisplayName,GetDisplayToolTip,GetHashCode,GetInfo,Load,Save,ScoreDescription
+Expansions/Missions/ScoreModule_Modifier.cs|124|class|ScoreModule||Localizer ConfigNode|AwardScore,Equals,GetDefaultPinnedParameters,GetDisplayName,GetDisplayToolTip,GetHashCode,GetInfo,GetNodeBodyParameterString,Load,Save,ScoreDescription
+Expansions/Missions/ScoreModule_Resource.cs|145|class|ScoreModule||Localizer ConfigNode PartResourceDefinition Vessel|AwardScore,Equals,GetDefaultPinnedParameters,GetDisplayName,GetHashCode,GetInfo,GetNodeBodyParameterString,Load,Save,ScoreDescription,SetResourceNames
+Expansions/Missions/ScoreModule_Time.cs|126|class|ScoreModule||Localizer ConfigNode Planetarium|AwardScore,Equals,GetDefaultPinnedParameters,GetDisplayName,GetHashCode,GetInfo,GetNodeBodyParameterString,Load,Save,ScoreDescription
+Expansions/Missions/ScoreRange.cs|61|class|IConfigNode||ConfigNode|Equals,GetHashCode,Load,Save,isValueInRange
+Expansions/Missions/SurfaceArea.cs|177|class|IConfigNode||FlightGlobals Localizer ConfigNode CelestialBody|Equals,GetExtraText,GetHashCode,GetNodeBodyParameterString,GetWaypoint,GetWorldPosition,HasNodeLabel,HasWaypoint,HasWorldPosition,IsPointInCircle,Load,PointInCircleAccuracy,Save,SetCelestialBodies
+Expansions/Missions/SurfaceVolume.cs|295|class|IConfigNode||Localizer FlightGlobals CelestialBody ConfigNode|AjustToBody,Equals,GetExtraText,GetHashCode,GetNodeBodyParameterString,GetWaypoint,GetWorldPosition,HasNodeLabel,HasWaypoint,HasWorldPosition,IsInsideVolume,Load,ResetBodyToDefaultValues,Save
+Expansions/Missions/TestComparisonLessGreaterEqual.cs|14|enum||||
+Expansions/Missions/TestComparisonLessGreaterOnly.cs|12|enum||||
+Expansions/Missions/TestComparisonOperator.cs|18|enum||||
+Expansions/Missions/TestGroup.cs|159|class|IConfigNode|GetComponent=1 GameObject=1|ConfigNode GameEvents|AddTestModule,ClearGroup,ClearTestModules,Cleared,InitializeTestModules,Initialized,Load,OnCloned,RunValidation,RunValidationWrapper,Save,Test,initializeGroup
+Expansions/Missions/VesselGroundLocation.cs|243|class|IConfigNode||FlightGlobals Localizer ConfigNode CelestialBody|Equals,GetExtraText,GetHashCode,GetNodeBodyParameterString,GetWaypoint,GetWorldPosition,HasNodeLabel,HasWaypoint,Load,OnGizmoIconChangeDelegate,OnVesselIconChange,Save,SetAvailableGizmoIcons,SetCelestialBodies
+Expansions/Missions/VesselLocation.cs|130|class|IConfigNode||ConfigNode FlightGlobals ResearchAndDevelopment|Load,Save,SelectedlaunchSite_SetDropDownValues,createZeroOrbit
+Expansions/Missions/VesselPartIDPair.cs|88|class|IConfigNode||ConfigNode ShipConstruct Localizer|Equals,GetHashCode,Load,Save,ValidatePartAgainstCraft
+Expansions/Missions/VesselRestriction.cs|127|class|DynamicModule|Time.=1 TMPro=1 GetComponent=1|Localizer|AddAppUIReference,ClearAppUIREference,ClearEvents,GetDisplayName,GetPreflightCheck,GetStateMessage,IsComplete,SameComparator,SameComparatorWrapper,SuscribeToEvents,TestFloat,TestInt,UpdateAppEntry
+Expansions/Missions/VesselRestriction_Cost.cs|115|class|VesselRestriction||GameEvents Localizer ConfigNode ShipConstruct|Callback_PlacePart,Callback_ShipLoad,ClearEvents,GetDisplayName,GetShipCurrentCost,GetStateMessage,IsComplete,Load,SameComparator,Save,SuscribeToEvents
+Expansions/Missions/VesselRestriction_Crew.cs|168|class|VesselRestriction||Localizer GameEvents KerbalRoster ConfigNode|Callback_CrewChange,Callback_ShipLoad,ClearEvents,GetCrewCount,GetCrewTraitCount,GetDisplayName,GetStateMessage,IsComplete,Load,SameComparator,Save,SuscribeToEvents
+Expansions/Missions/VesselRestriction_Mass.cs|125|class|VesselRestriction||GameEvents Localizer ConfigNode ShipConstruct|Callback_CrewModified,Callback_PlacePart,Callback_ShipLoad,Callback_ShipModified,ClearEvents,GetCurrentMass,GetDisplayName,GetStateMessage,IsComplete,Load,SameComparator,Save,SuscribeToEvents
+Expansions/Missions/VesselRestriction_PartCount.cs|113|class|VesselRestriction||GameEvents Localizer ConfigNode ShipConstruct|Callback_PlacePart,Callback_ShipLoad,ClearEvents,GetCurrentParts,GetDisplayName,GetStateMessage,IsComplete,Load,SameComparator,Save,SuscribeToEvents
+Expansions/Missions/VesselRestriction_RequiredParts.cs|101|class|VesselRestriction||GameEvents ShipConstruct Localizer ConfigNode|Callback_PlacePart,Callback_ShipLoad,ClearEvents,GetDisplayName,GetStateMessage,IsComplete,Load,Save,SuscribeToEvents
+Expansions/Missions/VesselRestriction_Resource.cs|161|class|VesselRestriction||GameEvents PartResourceDefinition Localizer ConfigNode|Callback_CrewModified,Callback_PlacePart,Callback_ShipLoad,Callback_ShipModified,ClearEvents,GetCurrentResourceValue,GetDisplayName,GetStateMessage,IsComplete,Load,SameComparator,Save,SetResourceNames,SuscribeToEvents
+Expansions/Missions/VesselRestriction_Size.cs|153|class|VesselRestriction||Localizer GameEvents ConfigNode ShipConstruct|CallBack_ShipLoad,Callback_PlacePart,Check,ClearEvents,GetDisplayName,GetShipDimensionsString,GetShipSize,GetStateMessage,IsComplete,Load,SameComparator,Save,SuscribeToEvents
+Expansions/Missions/VesselRestriction_Stages.cs|127|class|VesselRestriction||GameEvents Localizer ConfigNode Part|Callback_AddStage,Callback_ModifyStage,Callback_PlacePart,Callback_RemoveStage,ClearEvents,GetCurrentStageCount,GetDisplayName,GetStateMessage,IsComplete,Load,SameComparator,Save,SuscribeToEvents
+Expansions/Missions/VesselRestrictionList.cs|73|class|DynamicModuleList|||ClearAppEvents,GetSupportedTypes,StartAppEvents
+Expansions/Missions/VesselRestrictionOptions.cs|9|attribute|Attribute|||
+Expansions/Missions/VesselSituation.cs|309|class|IConfigNode||ProtoCrewMember ConfigNode Localizer KerbalRoster|ClearEditorEvents,GetRequiredExcludedParts,Load,OnAutoGenerateCrewControlCreated,OnPartPickerNeedsToUpdateExcludedPartsFilter,OnRequieredPartsCheckpointValidator,OnRequiredPartsParameterCreated,Save,SetCrewAvailable,SetVesselCrew,StartEditorEvents,UpdateAutoGenerateCrewSettings,UpdateRequiredPartsDisplayedParts
+Expansions/Serenity/Contracts/CollectDeployedScience.cs|108|ContractParameter|ContractParameter||Contract GameEvents CelestialBody Localizer|GetHashString,GetTitle,OnLoad,OnRegister,OnSave,OnScience,OnUnregister
+Expansions/Serenity/Contracts/CollectROCScienceArm.cs|130|ContractParameter|ContractParameter||Contract GameEvents CelestialBody Localizer|GetHashString,GetTitle,OnLoad,OnRegister,OnSave,OnScience,OnUnregister
+Expansions/Serenity/Contracts/CollectROCScienceRetrieval.cs|138|ContractParameter|ContractParameter||Contract ConfigNode Localizer CelestialBody|GetHashString,GetTitle,OnLoad,OnRegister,OnSave,OnUnregister,OnVesselRecoveryProcessing
+Expansions/Serenity/Contracts/DeployedScienceContract.cs|222|Contract|Contract||CelestialBody ResearchAndDevelopment Localizer Reputation|Generate,GenerateContract_Surface,GetDescription,GetSynopsys,GetTitle,GetWeightBodies,MeetRequirements,MessageCompleted,OnLoad,OnSave,PotentialsContainBody
+Expansions/Serenity/Contracts/ROCScienceArmContract.cs|316|Contract|Contract||Localizer Reputation CelestialBody AvailablePart|Generate,GetDescription,GetSynopsys,GetTitle,GetWeightBodies,MeetRequirements,MessageCompleted,OnLoad,OnSave
+Expansions/Serenity/Contracts/ROCScienceRetrievalContract.cs|232|Contract|Contract||Localizer CelestialBody Reputation FlightGlobals|Generate,GetDescription,GetSynopsys,GetTitle,GetWeightBodies,MeetRequirements,MessageCompleted,OnLoad,OnSave
+FinePrint/Contracts/ARMContract.cs|235|Contract|Contract||Planetarium Localizer CelestialBody Vessel|CanBeCancelled,CanBeDeclined,Generate,GetDescription,GetHashString,GetSynopsys,GetTitle,GetWeightBodies,MeetRequirements,MessageCompleted,OnLoad,OnSave
+FinePrint/Contracts/BaseContract.cs|264|Contract|Contract,IUpdateWaypoints||Localizer Planetarium CelestialBody Vessel|AreFacilitiesUnlocked,CanBeCancelled,CanBeDeclined,Generate,GetDescription,GetHashString,GetSynopsys,GetTitle,GetWeightBodies,MeetRequirements,MessageCompleted,OnAccepted,OnFinished,OnLoad
+FinePrint/Contracts/CometSampleContract.cs|278|Contract|Contract||Localizer FlightGlobals GameEvents Reputation|CanBeCancelled,CanBeDeclined,Generate,GetDescription,GetHashString,GetSynopsys,GetTitle,MeetRequirements,MessageCompleted,OnDiscoverableObjectExpired,OnLoad,OnRegister,OnSave,OnUnregister
+FinePrint/Contracts/ISRUContract.cs|298|Contract|Contract||ConfigNode CelestialBody Localizer Planetarium|CanBeCancelled,CanBeDeclined,CelestialIsForbidden,Generate,GetDescription,GetHashString,GetSynopsys,GetTitle,GetWeightBodies,MeetRequirements,MessageCompleted,OnLoad,OnSave,PossibleResources
+FinePrint/Contracts/Parameters/AsteroidParameter.cs|231|ContractParameter|ContractParameter||FlightGlobals Localizer GameEvents Part|GetHashString,GetNotes,GetTitle,OnDock,OnLoad,OnRegister,OnReset,OnSave,OnUnregister,OnUpdate,PartModified,VesselModified,VesselTowingAsteroid
+FinePrint/Contracts/Parameters/CometDetectionParameter.cs|92|ContractParameter|ContractParameter||Localizer GameEvents ConfigNode Vessel|CometDetected,GetHashString,GetNotes,GetTitle,OnLoad,OnRegister,OnReset,OnSave,OnUnregister
+FinePrint/Contracts/Parameters/CometParameter.cs|231|ContractParameter|ContractParameter||FlightGlobals Localizer GameEvents Part|GetHashString,GetNotes,GetTitle,OnDock,OnLoad,OnRegister,OnReset,OnSave,OnUnregister,OnUpdate,PartModified,VesselModified,VesselTowingComet
+FinePrint/Contracts/Parameters/CometScienceParameter.cs|125|ContractParameter|ContractParameter||GameEvents Vessel ConfigNode ScienceSubject|GetHashString,GetTitle,OnExperimentDeployed,OnLoad,OnRegister,OnSave,OnScience,OnTriggeredScience,OnUnregister,OnVesselRename,VesselIdChanged
+FinePrint/Contracts/Parameters/ConstructionParameter.cs|128|ContractParameter|ContractParameter||GameEvents FlightGlobals CelestialBody Vessel|GetHashString,GetMessageComplete,GetTitle,OnConstructionPartAttached,OnLoad,OnRegister,OnSave,OnUnregister,UpdatePartInfo,VesselIdChanged
+FinePrint/Contracts/Parameters/CrewCapacityParameter.cs|167|ContractParameter|ContractParameter||FlightGlobals GameEvents Part Localizer|GetHashString,GetNotes,GetTitle,OnDock,OnLoad,OnRegister,OnReset,OnSave,OnUnregister,OnUpdate,PartModified,VesselModified
+FinePrint/Contracts/Parameters/CrewTraitParameter.cs|202|ContractParameter|ContractParameter||FlightGlobals GameEvents Localizer Part|CrewModified,GetHashString,GetNotes,GetTitle,OnDock,OnLoad,OnRegister,OnReset,OnSave,OnUnregister,OnUpdate,PartModified,VesselModified
+FinePrint/Contracts/Parameters/KerbalDestinationParameter.cs|143|ContractParameter|ContractParameter||Localizer ProtoCrewMember HighLogic Planetarium|CheckFlightLog,CheckFlightLogs,GetHashString,GetTitle,OnLoad,OnRegister,OnSave,OnUnregister
+FinePrint/Contracts/Parameters/KerbalGeeAdventureParameter.cs|93|ContractParameter|ContractParameter||GameEvents ProtoCrewMember ConfigNode Localizer|GetHashString,GetTitle,OnCrewKilled,OnKerbalPassedOut,OnLoad,OnRegister,OnSave,OnUnregister
+FinePrint/Contracts/Parameters/KerbalTourParameter.cs|134|ContractParameter|ContractParameter||ProtoCrewMember GameEvents Localizer HighLogic|GetHashString,GetMessageFailed,GetTitle,OnCrewKilled,OnKerbalInactiveChange,OnLoad,OnParameterStateChange,OnRegister,OnSave,OnUnregister,OnVesselRecovered
+FinePrint/Contracts/Parameters/LocationAndSituationParameter.cs|169|ContractParameter|ContractParameter||Vessel Localizer FlightGlobals GameEvents|ChangeBody,ChangeSituation,GetHashString,GetTitle,OnLoad,OnRegister,OnReset,OnSave,OnUnregister,OnUpdate
+FinePrint/Contracts/Parameters/MobileBaseParameter.cs|135|ContractParameter|ContractParameter||FlightGlobals GameEvents Vessel Part|ChangeSituation,GetHashString,GetTitle,OnDock,OnRegister,OnReset,OnUnregister,OnUpdate,PartModified,VesselModified
+FinePrint/Contracts/Parameters/PartRequestParameter.cs|340|ContractParameter|ContractParameter||GameEvents FlightGlobals Part Vessel|CheckLists,GetHashString,GetTitle,OnDock,OnLoad,OnRegister,OnReset,OnSave,OnUnregister,OnUpdate,PartModified,ScanVesselForExistingParts,VesselHasPartRequest,VesselModified
+FinePrint/Contracts/Parameters/ProgressTrackingParameter.cs|351|ContractParameter|ContractParameter||Localizer Planetarium GameEvents ConfigNode|GetHashString,GetMessageComplete,GetNotes,GetTitle,OnLoad,OnRegister,OnSave,OnUnregister,ProgressCheck
+FinePrint/Contracts/Parameters/RepairPartParameter.cs|148|ContractParameter|ContractParameter||GameEvents FlightGlobals CelestialBody PartLoader|GetHashString,GetMessageComplete,GetTitle,OnLoad,OnPartRepaired,OnRegister,OnSave,OnUnregister,PartIdChanged,UpdatePartInfo,VesselIdChanged
+FinePrint/Contracts/Parameters/ResourceExtractionParameter.cs|155|ContractParameter|ContractParameter||Localizer Planetarium GameEvents Contract|GetHashString,GetTitle,OnLoad,OnRegister,OnReset,OnSave,OnUnregister,OnUpdate,ResourcesHarvested
+FinePrint/Contracts/Parameters/ResourcePossessionParameter.cs|130|ContractParameter|ContractParameter||Localizer ConfigNode ContractParameter Contract|GetHashString,GetNotes,GetTitle,OnLoad,OnRegister,OnReset,OnSave,OnUpdate
+FinePrint/Contracts/Parameters/RoverWayPointParameter.cs|310|ContractParameter|WaypointParameter||Localizer Contract Vessel HighLogic|CleanupWaypoints,GetHashString,GetMessageComplete,GetNotes,GetTitle,OnLoad,OnRegister,OnReset,OnSave,OnUnregister,OnUpdate,UpdateRoverInfo,UpdateWaypoints,VesselIdChanged
+FinePrint/Contracts/Parameters/SpecificOrbitParameter.cs|303|ContractParameter|ContractParameter||Localizer Contract Planetarium Orbit|CleanupRenderer,GetHashString,GetNotes,GetTitle,OnLoad,OnRegister,OnReset,OnSave,OnUnregister,OnUpdate,SetupRenderer,ValidateOrbit
+FinePrint/Contracts/Parameters/SpecificVesselParameter.cs|361|ContractParameter|WaypointParameter|Coroutine=3|Vessel Localizer FlightGlobals Contract|CleanupWaypoints,GetHashString,GetMessageComplete,GetNotes,GetTitle,KillContract,OnLoad,OnRegister,OnReset,OnSave,OnUnregister,OnUpdate,SpecificVesselRename,SpecificVesselScan
+FinePrint/Contracts/Parameters/StabilityParameter.cs|98|ContractParameter|ContractParameter|Time.=1|Vessel ConfigNode Localizer FlightGlobals|GetHashString,GetTitle,OnLoad,OnRegister,OnReset,OnSave,OnUpdate
+FinePrint/Contracts/Parameters/StationaryPointParameter.cs|159|ContractParameter|ContractParameter||Contract Planetarium Localizer HighLogic|GetHashString,GetMessageComplete,GetTitle,OnLoad,OnRegister,OnReset,OnSave,OnUnregister,OnUpdate
+FinePrint/Contracts/Parameters/SurveyWaypointParameter.cs|557|ContractParameter|ContractParameter||Localizer Contract HighLogic CelestialBody|Bounce,CalculateAltitudes,CheckExperimentResults,GetHashString,GetMessageComplete,GetTitle,NextWaypointInCluster,OnLoad,OnRegister,OnSave,OnUnregister,OnUpdate,ProcessWaypoint,SiteString
+FinePrint/Contracts/Parameters/VesselDestinationParameter.cs|116|ContractParameter|ContractParameter||Localizer GameEvents Planetarium ConfigNode|CheckFlightLog,GetHashString,GetTitle,OnLoad,OnRegister,OnReset,OnSave,OnUnregister
+FinePrint/Contracts/Parameters/VesselSystemsParameter.cs|248|ContractParameter|ContractParameter||FlightGlobals Localizer GameEvents Part|GetHashString,GetNotes,GetTitle,OnDock,OnLoad,OnRegister,OnReset,OnSave,OnUnregister,OnUpdate,PartModified,VesselModified,isVesselValid
+FinePrint/Contracts/StationContract.cs|305|Contract|Contract,IUpdateWaypoints||Localizer Planetarium CelestialBody Vessel|AreAsteroidsUnlocked,AreFacilitiesUnlocked,CanBeCancelled,CanBeDeclined,Generate,GetDescription,GetHashString,GetSynopsys,GetTitle,GetWeightBodies,MeetRequirements,MessageCompleted,OnAccepted,OnFinished
+FinePrint/Contracts/TourismContract.cs|633|Contract|Contract||CelestialBody ProtoCrewMember Localizer HighLogic|BuildPossibleItineraries,CanBeCancelled,CanBeDeclined,ClearKerbalsHard,ClearKerbalsSoft,Generate,GetContractSubject,GetDescription,GetHashString,GetKerbal,GetNotes,GetSynopsys,GetTitle,GetWeightBodies
+FinePrint/Utilities/CelestialUtilities.cs|467|static class||Transform=1 GetComponent=1|CelestialBody Vector3d Vessel Planetarium|AddChildren,ApplicableSituation,CanBodyBeKolniya,CanBodyBeSynchronous,CanBodyBeTundra,ChildrenOf,GetAltitudeForDensity,GetHighestPeak,GetHostPlanet,GetMinimumOrbitalDistance,GetNeighbors,GetNextTimeWarp,GetPlanetarySystem,GetSolarExtents
+FinePrint/Utilities/ConstructionExtensions.cs|26|static class||||ContainsPart
+FinePrint/Utilities/ConstructionPart.cs|20|class|||AvailablePart|
+FinePrint/Utilities/ConstructionParts.cs|39|class||||PartsForContractType
+FinePrint/Utilities/FlightBand.cs|13|enum||||
+FinePrint/Utilities/GrammaticalGender.cs|9|enum||||
+FinePrint/Utilities/ICheckSpecificVessels.cs|6|interface||||
+FinePrint/Utilities/IUpdateWaypoints.cs|6|interface||||
+FinePrint/Utilities/LoadResult.cs|10|enum||||
+FinePrint/Utilities/MannedStatus.cs|9|enum||||
+FinePrint/Utilities/OrbitalProperties.cs|13|enum||||
+FinePrint/Utilities/OrbitType.cs|13|enum||||
+FinePrint/Utilities/PreBuiltCraft.cs|61|class||||CraftByURL,CraftForContractType
+FinePrint/Utilities/PreBuiltCraftDefinition.cs|38|class|||ConfigNode|
+FinePrint/Utilities/PreBuiltCraftPosition.cs|11|class||||
+FinePrint/Utilities/ProgressMilestone.cs|282|class|||CelestialBody Planetarium|CheckCompletion
+FinePrint/Utilities/ProgressRewardType.cs|8|enum||||
+FinePrint/Utilities/ProgressType.cs|35|enum||||
+FinePrint/Utilities/ProgressUtilities.cs|676|class|||CelestialBody Planetarium Contract FlightGlobals|AverageFacilityLevel,CelestialCrewCounts,CurrentTrackRecord,ExperimentPossibleAt,FindNextRecord,GetAnyBodyProgress,GetBodiesProgress,GetBodyProgress,GetNextUnreached,GetProgressLevel,HaveAnyTech,HaveModuleTech,HavePartTech,IntroWorldFirstContract
+FinePrint/Utilities/PronounCasing.cs|9|enum||||
+FinePrint/Utilities/RecordTrackType.cs|11|enum||||
+FinePrint/Utilities/StringUtilities.cs|569|class|||Localizer ProtoCrewMember ConfigNode Reputation|AlphaNumericDesignation,AppropriatePronoun,CacheLocalStrings,CalculateReadDuration,CardinalDirectionBetween,FillListWithElements,FormattedCurrencies,GenerateSiteName,GetSiteGeneratorInfoFileName,IntegerToGreek,IsVowel,KerbalGrammaticalGender,LoadSiteGenerationInfo,NamedSitePrefix
+FinePrint/Utilities/SurveyDefinition.cs|79|class|||Reputation ConfigNode|
+FinePrint/Utilities/SystemUtilities.cs|652|class||Texture=3 GameObject=1|ConfigNode FlightGlobals HighLogic Contract|CheckTouristRecoveryContractKerbals,CoinFlip,CondenseNodeList,ExpungeKerbal,ExpungeVessel,FlightIsReady,GetDeviationAsFraction,HashNumber,LoadNode,LoadNodeList,LoadNodePair,LoadTexture,MeasureDeviation,MeasureDeviationByValue
+FinePrint/Utilities/WaypointClusterState.cs|10|enum||||
+FinePrint/Utilities/WaypointParameter.cs|21|ContractParameter|ContractParameter||ContractParameter CelestialBody|CleanupWaypoints,SetupWaypoints,UpdateWaypoints
+KSP/IO/BinaryReader.cs|292|class|IDisposable||Vessel|Close,CreateForType,Dispose,PeekChar,Read,ReadBoolean,ReadByte,ReadBytes,ReadChar,ReadChars,ReadDecimal,ReadDouble,ReadInt16,ReadInt32
+KSP/IO/BinaryWriter.cs|299|class|IDisposable||Vessel|Close,CreateForType,Dispose,Flush,Seek,Write
+KSP/IO/File.cs|278|class|||Vessel|AppendAllText,AppendText,Create,CreateText,Delete,Exists,Open,OpenText,OpenWrite,ReadAllBytes,ReadAllLines,ReadAllText,WriteAllBytes,WriteAllLines
+KSP/IO/FileAccess.cs|15|enum||||
+KSP/IO/FileInfo.cs|281|class|||Vessel|AppendText,CopyTo,Create,CreateForType,CreateText,Decrypt,Delete,Encrypt,MoveTo,Open,OpenRead,OpenText,OpenWrite,Replace
+KSP/IO/FileMode.cs|15|enum||||
+KSP/IO/FileShare.cs|18|enum||||
+KSP/IO/FileStream.cs|200|class|IDisposable|||BeginRead,BeginWrite,Dispose,EndRead,EndWrite,Flush,Lock,Read,ReadByte,Seek,SetLength,Unlock,Write,WriteByte
+KSP/IO/IOException.cs|26|class|Exception|||
+KSP/IO/IOTools.cs|24|class||||DeserializeFromBinary,SerializeToBinary
+KSP/IO/IOUtils.cs|165|class||Application.=3|Vessel Part|Cleanup,ConvertAccess,ConvertMode,ConvertSeek,ConvertShare,DeserializeFromBinary,GetFilePathFor,GetFlightDirectories,GetPartPathFor,RemoveFlightData,SerializeToBinary,WrapException
+KSP/IO/MemoryStream.cs|165|class||||Flush,GetBuffer,Read,ReadByte,Seek,SetLength,ToArray,Write,WriteByte
+KSP/IO/PluginConfigNode.cs|359|class||KeyCode=3 MonoBehaviour=1|Vector3d|GetParent,GetValue,SetValue,StartNamedElement,deserializeXML,handleElement,serializeXML
+KSP/IO/PluginConfiguration.cs|98|class|||Vessel|CreateForType,GetValue,SetValue,load,save
+KSP/IO/SeekOrigin.cs|9|enum||||
+KSP/IO/TextReader.cs|129|class|IDisposable||Vessel|Close,CreateForType,DiscardBufferedData,Dispose,Peek,Read,ReadLine,ReadToEnd
+KSP/IO/TextWriter.cs|508|class|IDisposable||Vessel|Close,CreateForType,Dispose,Flush,Write,WriteLine
+SentinelMission/CometDetectionContract.cs|140|Contract|Contract,IUpdateWaypoints||Localizer Reputation ConfigNode Planetarium|CanBeCancelled,CanBeDeclined,Generate,GetDescription,GetHashString,GetSynopsys,GetTitle,MeetRequirements,MessageCompleted,OnLoad,OnSave
+SentinelMission/SentinelContract.cs|259|Contract|Contract,IUpdateWaypoints||Planetarium Localizer Reputation ConfigNode|CanBeCancelled,CanBeDeclined,Generate,GetDescription,GetHashString,GetSynopsys,GetTitle,MeetRequirements,MessageCompleted,OnLoad,OnSave,SetFocusBody
+SentinelMission/SentinelParameter.cs|138|ContractParameter|ContractParameter||Localizer Planetarium Orbit CelestialBody|DiscoverAsteroid,GetHashString,GetNotes,GetTitle,OnLoad,OnRegister,OnSave
+SentinelMission/SentinelScanType.cs|10|enum||||

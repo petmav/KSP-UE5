@@ -1,0 +1,46 @@
+repo branch=profiling commit=5fedcfab058e8228f800de4c3d4a16c65fd6229a dirty_files=2
+DLL sha256 0E5345C00EB29D26D9F91E3422A837319EF3EF62651A6EBCE643A28D2F0A077C  2026-10-09T10:41:40.2355798+11:00
+Started PID 25460 at 2026-10-09T10:44:41.8272595+11:00
+Exited by itself after 451s, exit code 0
+--- C:\Projects\KSP-UE5\decompiled\logs\ksp-capture-capture2-t3-player.log : 13792 lines
+  [PhysProf] t=0.0s capture mode: items=c8,c10 
+  [PhysProf] t=3.0s capture start: items=c8,c10 in=C:\Projects\KSP-UE5\harness\captures\in out=C:\Projects\KSP-UE5\harness\captures\out2 scene=MAINMENU bodies=17 
+  [PhysProf] t=3.0s batch2 start: scene=MAINMENU 
+  [PhysProf] t=3.0s batch2: creating sandbox game 'physprofile' 
+  [PhysProf] t=8.1s batch2: scene SPACECENTER UT=3.0200000000000022 
+  [PhysProf] t=8.1s launch: StartWithNewLaunch Ships/VAB/PhysProf-S.craft 
+  [PhysProf] t=12.9s launch: flight ready after 2 s, vessel=PhysProf-S parts=21; settling 5 s 
+  [PhysProf] t=17.9s c8: encounter candidate sign=1 tEntry-ut0=9986.9970816744262 Kerbin orbit sma=7531543.6506438768 e=0.8885587934002781 PeA=239324.311986228 sepNow=7446415.3071158454 
+  [PhysProf] t=28.0s c8: segment 0 rate 1 UT 9.6599999999998829 -> 19.65999999999967 samples=400 soi_events=0 
+  [PhysProf] t=48.0s c8: segment 1 rate 100 UT 21.65999999999967 -> 2021.6599999999996 samples=1200 soi_events=0 
+  [PhysProf] t=68.1s c8: segment 2 rate 1000 UT 2041.6599999999996 -> 22041.66 samples=2000 soi_events=2 
+  [PhysProf] t=98.1s c8: segment 3 rate 10000 UT 22241.66 -> 322241.66000000003 samples=3115 soi_events=4 
+  [PhysProf] t=108.1s c8: segment 4 rate 100000 UT 324241.66000000003 -> 1324241.6600000001 samples=3465 soi_events=4 
+  [PhysProf] t=113.8s capture orbit_rails_ingame wrote C:\Projects\KSP-UE5\harness\captures\out2\orbit_rails_ingame.json rows=3480 
+  [PhysProf] t=114.3s c10 PhysProf-S: ascent started, engines ignited=3 parts=21 
+  [PhysProf] t=204.3s c10 PhysProf-S: done at frame 4500 alt=79.3270352804102 mach=1.6643320984421079E-06 parts=21 states=1 
+  [PhysProf] t=209.5s launch: StartWithNewLaunch Ships/VAB/PhysProf-M2.craft 
+  [PhysProf] t=214.8s launch: flight ready after 2 s, vessel=PhysProf-M2 parts=153; settling 5 s 
+  [PhysProf] t=220.3s c10 PhysProf-M2: ascent started, engines ignited=17 parts=153 
+  [PhysProf] t=310.3s c10 PhysProf-M2: done at frame 4500 alt=36654.590231131064 mach=1.817362853466403 parts=153 states=10 
+  [PhysProf] t=315.2s launch: StartWithNewLaunch Ships/VAB/PhysProf-L2-AS.craft 
+  [PhysProf] t=327.9s launch: flight ready after 6 s, vessel=PhysProf-L2-AS parts=457; settling 5 s 
+  [PhysProf] t=333.5s c10 PhysProf-L2-AS: ascent started, engines ignited=49 parts=457 
+  [PhysProf] t=428.4s c10 PhysProf-L2-AS: done at frame 4500 alt=11417.520235342672 mach=0.099796135548371093 parts=457 states=16 
+  [PhysProf] t=428.6s capture aero_forces_vessel wrote C:\Projects\KSP-UE5\harness\captures\out2\aero_forces_vessel.json rows=29627 
+  [PhysProf] t=428.6s batch2 done 
+  [PhysProf] t=428.6s capture done 
+  [PhysProf] t=428.6s quitting 
+   Exception       97
+   NullReference   97
+   MissingMethod   0
+   Crash!!!        0
+   MAINMENU        5
+  out: aero_forces_vessel.json 17464871 bytes 2026-10-09T10:52:09.8895550+11:00
+  out: atmosphere_thermal_offsets.json 2797596 bytes 2026-10-09T10:43:18.6888908+11:00
+  out: deltav_readout.json 407953 bytes 2026-10-09T10:42:53.3486616+11:00
+  out: orbit_rails_ingame.json 3328078 bytes 2026-10-09T10:46:55.0784391+11:00
+  out: part_database.json 6024432 bytes 2026-10-09T10:30:01.6626862+11:00
+  out: terrain_height.json 28771242 bytes 2026-10-09T10:30:18.6846211+11:00
+  out: thermal_step.json 19478080 bytes 2026-10-09T10:44:16.3843545+11:00
+no KSP_x64 process running

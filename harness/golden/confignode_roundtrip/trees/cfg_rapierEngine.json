@@ -1,0 +1,774 @@
+{
+ "name": "root",
+ "id": "",
+ "comment": null,
+ "values": [],
+ "nodes": [
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["name","RAPIER",null],
+    ["module","Part",null],
+    ["author","C. Jenkins",null],
+    ["mesh","rapier.mu",null],
+    ["scale","1.0",null],
+    ["node_stack_top","0.0,0.741545,0.0 , 0.0, 1.0, 0.0",null],
+    ["node_stack_bottom","0.0,-0.2048244, 0.0, 0.0, -1.0, 0.0",null],
+    ["CoMOffset","0.0, 2.6, 0.0",null],
+    ["mass","2.0",null],
+    ["heatConductivity","0.06",null],
+    ["skinInternalConductionMult","4.0",null],
+    ["emissiveConstant","0.8",null],
+    ["dragModelType","default",null],
+    ["maximum_drag","0.2",null],
+    ["minimum_drag","0.2",null],
+    ["angularDrag","2",null],
+    ["crashTolerance","20",null],
+    ["maxTemp","2000",null],
+    ["TechRequired","aerospaceTech",null],
+    ["entryCost","35000",null],
+    ["cost","6000",null],
+    ["category","Engine",null],
+    ["subcategory","0",null],
+    ["title","#autoLOC_500469",null],
+    ["manufacturer","#autoLOC_501640",null],
+    ["description","#autoLOC_500470",null],
+    ["attachRules","1,0,1,1,0",null],
+    ["bulkheadProfiles","size1",null],
+    ["tags","#autoLOC_500471",null]
+   ],
+   "nodes": [
+    {
+     "name": "MODEL",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["model","Squad/Parts/Engine/rapierEngine/rapier",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "EFFECTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": [
+      {
+       "name": "running_closed",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "AUDIO",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["channel","Ship",null],
+          ["clip","sound_rocket_spurts",null],
+          ["volume","0.0 0.0",null],
+          ["volume","1.0 1.0",null],
+          ["pitch","0.0 0.2",null],
+          ["pitch","1.0 1.0",null],
+          ["loop","true",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "PREFAB_PARTICLE",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["prefabName","fx_smokeTrail_aeroSpike",null],
+          ["transformName","smokePoint",null],
+          ["emission","0.0 0.0",null],
+          ["emission","0.05 0.0",null],
+          ["emission","0.075 0.25",null],
+          ["emission","1.0 1.25",null],
+          ["speed","0.0 0.25",null],
+          ["speed","1.0 1.0",null],
+          ["localOffset","0, 0, 1",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "MODEL_MULTI_PARTICLE",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["modelName","Squad/FX/shockExhaust_blue_small",null],
+          ["transformName","thrustTransform",null],
+          ["emission","0.0 0.0",null],
+          ["emission","0.05 0.0",null],
+          ["emission","0.075 0.25",null],
+          ["emission","1.0 1.25",null],
+          ["speed","0.0 0.5",null],
+          ["speed","1.0 1.2",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "power_open",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "AUDIO",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["channel","Ship",null],
+          ["clip","sound_rocket_spurts",null],
+          ["volume","0.0 0.0",null],
+          ["volume","0.05 0.0",null],
+          ["volume","1.0 1.0",null],
+          ["pitch","0.0 0.2",null],
+          ["pitch","1.0 1.0",null],
+          ["loop","true",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "MODEL_MULTI_PARTICLE",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["modelName","Squad/FX/shockExhaust_red_small",null],
+          ["transformName","thrustTransform",null],
+          ["emission","0.0 0.0",null],
+          ["emission","0.05 0.0",null],
+          ["emission","0.075 0.25",null],
+          ["emission","1.0 1.25",null],
+          ["speed","0.0 0.5",null],
+          ["speed","1.0 1.2",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "running_open",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "AUDIO",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["channel","Ship",null],
+          ["clip","sound_jet_deep",null],
+          ["volume","0.0 0.0",null],
+          ["volume","0.05 0.6",null],
+          ["volume","1.0 1.0",null],
+          ["pitch","0.0 0.7",null],
+          ["pitch","1.0 1.4",null],
+          ["loop","true",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "PREFAB_PARTICLE",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["prefabName","fx_smokeTrail_aeroSpike",null],
+          ["transformName","smokePoint",null],
+          ["emission","0.0 0.0",null],
+          ["emission","0.05 0.0",null],
+          ["emission","0.075 0.25",null],
+          ["emission","1.0 1.25",null],
+          ["speed","0.0 0.25",null],
+          ["speed","1.0 1.0",null],
+          ["localOffset","0, 0, 1",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "engage",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "AUDIO",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["channel","Ship",null],
+          ["clip","sound_vent_soft",null],
+          ["volume","1.0",null],
+          ["pitch","2.0",null],
+          ["loop","false",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "flameout",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "PREFAB_PARTICLE",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["prefabName","fx_exhaustSparks_flameout_2",null],
+          ["transformName","smokePoint",null],
+          ["oneShot","true",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "AUDIO",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["channel","Ship",null],
+          ["clip","sound_explosion_low",null],
+          ["volume","1.0",null],
+          ["pitch","2.0",null],
+          ["loop","false",null]
+         ],
+         "nodes": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","MultiModeEngine",null],
+      ["primaryEngineID","AirBreathing",null],
+      ["primaryEngineModeDisplayName","#autoLOC_6001897",null],
+      ["secondaryEngineID","ClosedCycle",null],
+      ["secondaryEngineModeDisplayName","#autoLOC_6001898",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleEnginesFX",null],
+      ["engineID","AirBreathing",null],
+      ["powerEffectName","power_open",null],
+      ["thrustVectorTransformName","thrustTransform",null],
+      ["exhaustDamage","True",null],
+      ["ignitionThreshold","0.33",null],
+      ["minThrust","0",null],
+      ["maxThrust","105",null],
+      ["heatProduction","60",null],
+      ["useEngineResponseTime","True",null],
+      ["engineAccelerationSpeed","0.2",null],
+      ["engineDecelerationSpeed","0.35",null],
+      ["useVelocityCurve","False",null],
+      ["spoolEffectName","running_open",null],
+      ["engineSpoolIdle","0.05",null],
+      ["engineSpoolTime","2.0",null],
+      ["EngineType","Turbine",null],
+      ["exhaustDamageMultiplier","50",null],
+      ["exhaustDamageDistanceOffset","0.19",null],
+      ["clampPropReceived","True",null],
+      ["atmChangeFlow","True",null],
+      ["useVelCurve","True",null],
+      ["useAtmCurve","True",null],
+      ["flowMultCap","3.0",null]
+     ],
+     "nodes": [
+      {
+       "name": "PROPELLANT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["name","IntakeAir",null],
+        ["ignoreForIsp","True",null],
+        ["ratio","6",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "PROPELLANT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["name","LiquidFuel",null],
+        ["resourceFlowMode","STAGE_STACK_FLOW_BALANCE",null],
+        ["ratio","1",null],
+        ["DrawGauge","True",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "atmosphereCurve",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["key","0 3200 0 0",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "velCurve",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["key","0 1 0 0.08333334",null],
+        ["key","0.2 0.98 0.42074 0.42074",null],
+        ["key","0.7 1.8 2.290406 2.290406",null],
+        ["key","1.4 4.00 3.887193 3.887193",null],
+        ["key","3.75 8.5 0 0",null],
+        ["key","4.5 7.3 -2.831749 -2.831749",null],
+        ["key","5.5 3 -5.260566 -5.260566",null],
+        ["key","6 0 -0.02420209 0",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "atmCurve",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["key","0 0 0 0",null],
+        ["key","0.018 0.09 7.914787 7.914787",null],
+        ["key","0.08 0.3 1.051923 1.051923",null],
+        ["key","0.35 0.5 0.3927226 0.3927226",null],
+        ["key","1 1 1.055097 0",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleEnginesFX",null],
+      ["engineID","ClosedCycle",null],
+      ["runningEffectName","running_closed",null],
+      ["thrustVectorTransformName","thrustTransform",null],
+      ["exhaustDamage","True",null],
+      ["ignitionThreshold","0.1",null],
+      ["minThrust","0",null],
+      ["maxThrust","180",null],
+      ["heatProduction","133",null],
+      ["fxOffset","0, 0, 0.25",null],
+      ["EngineType","LiquidFuel",null],
+      ["exhaustDamageDistanceOffset","0.19",null]
+     ],
+     "nodes": [
+      {
+       "name": "PROPELLANT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["name","LiquidFuel",null],
+        ["resourceFlowMode","STAGE_STACK_FLOW_BALANCE",null],
+        ["ratio","0.9",null],
+        ["DrawGauge","True",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "PROPELLANT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["name","Oxidizer",null],
+        ["resourceFlowMode","STAGE_STACK_FLOW_BALANCE",null],
+        ["ratio","1.1",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "atmosphereCurve",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["key","0 305",null],
+        ["key","1 275",null],
+        ["key","9 0.001",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","FXModuleAnimateThrottle",null],
+      ["animationName","HeatAnimationEmissiveRapier",null],
+      ["responseSpeed","0.001",null],
+      ["dependOnEngineState","True",null],
+      ["dependOnThrottle","True",null],
+      ["preferMultiMode","True",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleGimbal",null],
+      ["gimbalTransformName","obj_gimbal",null],
+      ["gimbalRange","3",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleTestSubject",null],
+      ["useStaging","True",null],
+      ["useEvent","True",null],
+      ["situationMask","127",null]
+     ],
+     "nodes": [
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","REPEATABILITY",null],
+        ["value","ALWAYS",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","REPEATABILITY",null],
+        ["value","BODYANDSITUATION",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","REPEATABILITY",null],
+        ["value","ONCEPERPART",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDEENV",null],
+        ["test","GT",null],
+        ["value","4000",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDEENV",null],
+        ["test","LT",null],
+        ["value","8000",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDEENV",null],
+        ["test","GT",null],
+        ["value","2000",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDEENV",null],
+        ["test","LT",null],
+        ["value","4000",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDEENV",null],
+        ["test","GT",null],
+        ["value","1000",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDEENV",null],
+        ["test","LT",null],
+        ["value","2000",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDE",null],
+        ["test","GT",null],
+        ["value","0",null],
+        ["situationMask","8",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDE",null],
+        ["test","LT",null],
+        ["value","300000",null],
+        ["situationMask","16",null],
+        ["body","_NotSun",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDE",null],
+        ["test","LT",null],
+        ["value","600000",null],
+        ["situationMask","32",null],
+        ["body","_NotSun",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEED",null],
+        ["test","GT",null],
+        ["value","0",null],
+        ["situationMask","8",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEED",null],
+        ["test","LT",null],
+        ["value","600",null],
+        ["situationMask","8",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEED",null],
+        ["test","GT",null],
+        ["value","300",null],
+        ["situationMask","8",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEED",null],
+        ["test","LT",null],
+        ["value","1200",null],
+        ["situationMask","8",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEED",null],
+        ["test","GT",null],
+        ["value","600",null],
+        ["situationMask","8",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEED",null],
+        ["test","LT",null],
+        ["value","2500",null],
+        ["situationMask","8",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEEDENV",null],
+        ["test","LT",null],
+        ["value","200",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEEDENV",null],
+        ["test","GT",null],
+        ["value","100",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEEDENV",null],
+        ["test","LT",null],
+        ["value","100",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEEDENV",null],
+        ["test","GT",null],
+        ["value","50",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEEDENV",null],
+        ["test","LT",null],
+        ["value","50",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEEDENV",null],
+        ["test","GT",null],
+        ["value","20",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleSurfaceFX",null],
+      ["thrustProviderModuleIndex","1",null],
+      ["fxMax","0.5",null],
+      ["maxDistance","20",null],
+      ["falloff","2",null],
+      ["thrustTransformName","thrustTransform",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleSurfaceFX",null],
+      ["thrustProviderModuleIndex","2",null],
+      ["fxMax","0.6",null],
+      ["maxDistance","30",null],
+      ["falloff","1.6",null],
+      ["thrustTransformName","thrustTransform",null]
+     ],
+     "nodes": []
+    }
+   ]
+  }
+ ]
+}

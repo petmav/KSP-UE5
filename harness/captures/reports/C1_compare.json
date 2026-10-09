@@ -1,0 +1,140 @@
+{
+ "ok": true,
+ "results": [
+  {
+   "dataset": "curves_eval",
+   "table": "curves",
+   "rows": 366,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "origin": {
+     "type": "str",
+     "n": 366,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "path": {
+     "type": "str",
+     "n": 366,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "key_count": {
+     "type": "i64",
+     "n": 366,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "minTime": {
+     "type": "f32",
+     "n": 366,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "maxTime": {
+     "type": "f32",
+     "n": 366,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "cfg_keys": {
+     "type": "str",
+     "n": 366,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "curves_eval",
+   "table": "keys",
+   "rows": 1055,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "time": {
+     "type": "f32",
+     "n": 1055,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "value": {
+     "type": "f32",
+     "n": 1055,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "inTangent": {
+     "type": "f32",
+     "n": 1055,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "outTangent": {
+     "type": "f32",
+     "n": 1055,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "curves_eval",
+   "table": "samples",
+   "rows": 28484,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "t": {
+     "type": "f32",
+     "n": 28484,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "value": {
+     "type": "f32",
+     "n": 28484,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  }
+ ]
+}

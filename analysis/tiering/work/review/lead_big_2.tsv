@@ -1,0 +1,39 @@
+path	tier	subsystem	ue5_counterpart	rationale
+Assembly-CSharp/iT.cs	C	UI	drop	Embedded iTween argument-name constants (third-party tween library helper); no logic -> drop with iTween.
+Assembly-CSharp/iTween.cs	C	UI	UMG animations / Timeline	Embedded third-party iTween tweening library (move/rotate/scale/colour/audio tweens on GameObjects); presentation only.
+Assembly-CSharp/KerbalEVA.cs	B	Kerbals	core + Character Movement / Chaos	EVA kerbal controller: KFSM movement states (walk/run/swim/ladder/jetpack/ragdoll/seat), boarding, flags, helmet, construction; rigidbody/transform/collider heavy.
+Assembly-CSharp/KerbalRoster.cs	A	Kerbals	core	Crew roster: hiring/applicants, name generation, experience logs and level maths, respawn rules, persistence; pure data/rules.
+Assembly-CSharp/KSP/UI/Dialogs/KerbNetDialog.cs	C	CommNet	UMG widget + core query	KerbNet scan map dialog: renders terrain/biome/resource/anomaly maps into textures, modes, refresh; UI over PQS/biome queries.
+Assembly-CSharp/KSP/UI/Screens/CraftBrowserDialog.cs	C	Editor	UMG widget	Craft load browser (VAB/SPH/subassemblies/Steam workshop lists, delete, thumbnails); UI + Steam.
+Assembly-CSharp/KSP/UI/Screens/Editor/PartListTooltip.cs	C	Editor	UMG widget	Editor part tooltip: stats text from module GetInfo, upgrades, variants, purchase button; UI.
+Assembly-CSharp/KSP/UI/Screens/EditorActionGroups.cs	C	Editor	UMG widget + core query	Action group editor panel (assign part actions/axes to groups in editor and flight); UI over KSPActionGroup data.
+Assembly-CSharp/KSP/UI/Screens/EditorPartIcon.cs	C	Editor	UMG widget + Render Target	Editor part list icon (3D part thumbnail instance, materials, add/delete buttons); UI rendering.
+Assembly-CSharp/KSP/UI/Screens/Flight/KerbalPortraitGallery.cs	C	FlightUI	UMG widget + Scene Capture	Crew portrait strip in flight (spawn/despawn portraits, IVA overlay toggle); UI.
+Assembly-CSharp/KSP/UI/Screens/Mapview/MapNode.cs	C	MapView	UMG widget	Map view node icon/caption (apsides, AN/DN, encounters, vessels), hover/click, alarm button; UI.
+Assembly-CSharp/KSP/UI/Screens/MessageSystem.cs	C	UI	UMG widget	Message app (stack of notifications, read/discard, persistence of messages); UI.
+Assembly-CSharp/KSP/UI/Screens/PartCategorizer.cs	C	Editor	UMG widget + core query	Editor part categories/filters (function, tech tier, module, resource, custom categories, subassemblies); UI over AvailablePart data.
+Assembly-CSharp/KSP/UI/Screens/SpaceTracking.cs	C	MapView	UMG widget + core query	Tracking station screen (vessel list, fly/recover/terminate, focus); UI calling core vessel ops.
+Assembly-CSharp/KSP/UI/Screens/StageGroup.cs	C	FlightUI	UMG widget	Staging stack group widget (icons, drag-drop, delta-v info panels); UI; ordering rules live in StageManager.
+Assembly-CSharp/KSP/UI/Screens/StageIcon.cs	C	FlightUI	UMG widget	Stage icon widget (part grouping, highlight, drag, blink, info boxes); UI.
+Assembly-CSharp/KSP/UI/Screens/StageManager.cs	B	Vessel	core (staging) + UMG	Owns the staging sequence (GenerateStagingSequence, inverse stages, ActivateNextStage, separation indices) inside a UI singleton; extract staging rules to core, UI -> UMG.
+Assembly-CSharp/KSP/UI/Screens/VesselSpawnDialog.cs	C	Scene	UMG widget	Launch pad/runway craft selection dialog (craft lists, Steam items, launch/edit/delete); UI.
+Assembly-CSharp/KSPUtil.cs	A	Core	core	Static helpers: time/date formatting (Kerbin/Earth calendars), unit formatting, bearings, DeepCompare, path/version utils; mixed: transform search helpers are shell.
+Assembly-CSharp/LoadGameDialog.cs	C	Save	UMG widget	Load saved game dialog (save list, metadata, compatibility check, delete); UI over save metadata.
+Assembly-CSharp/MainMenu.cs	C	Scene	UMG widget	Main menu screen flow (new/load game, scenarios, mission builder, settings, DLC links); UI.
+Assembly-CSharp/ManeuverNodeEditorManager.cs	C	MapView	UMG widget	Maneuver node editor panel manager (tabs, node selection, burn vector edits); UI over ManeuverNode/patched conics.
+Assembly-CSharp/MapSO.cs	A	Terrain	core (+ texture ingest)	Map ScriptableObject: greyscale/RGB(A)/height-alpha map storage with bilinear sampling used by PQS height/colour mods; sampling maths A, texture ingest via shim.
+Assembly-CSharp/METutorialScenario.cs	C	Tutorials	UMG widget	Base for Making History mission-builder tutorials (page dialogs, node filters, button enabling); scripted UI flow.
+Assembly-CSharp/ModuleCargoBay.cs	B	PartModules-Structural	core + collision queries	Cargo bay shielding: finds enclosed parts via bay colliders/raycasts and attach nodes, toggles airstream shielding; collider-driven.
+Assembly-CSharp/ModuleComet.cs	B	Celestials	core + Niagara	Comet part module: mass model, naming/targeting, overheat explosion check, geyser/dust emitters; mixed: FX share is C.
+Assembly-CSharp/ModuleControlSurface.cs	B	Aero	core + physics shim	Control surface: deflection from pitch/yaw/roll input and AoA, torque potential, deploy, drag cube positions; transform/rigidbody driven.
+Assembly-CSharp/ModuleDataTransmitter.cs	A	CommNet	core	Antenna module: CommNet power/combinable, science transmission queue with packet timing and EC cost; logic (coroutines as timers). Needs PartModule host.
+Assembly-CSharp/ModuleDeployablePart.cs	B	Part	core + animation sampling	Deployable base (solar/antenna/radiator): extend/retract animation state, sun tracking and LOS raycasts, breakage by drag; animation/transform driven.
+Assembly-CSharp/ModuleDockingNode.cs	B	PartModules-Structural	core + Chaos/Jolt joints	Docking port FSM: acquire/capture by node alignment, dock/undock (vessel merge/split), joint creation, crossfeed; joints/transforms.
+Assembly-CSharp/ModuleEngines.cs	B	PartModules-Engines	core + Niagara	Engine: propellant draw, ISP/thrust curves, throttle response, flameout, heat, thrust applied at thrust transforms, exhaust damage raycasts, FX; maths A, application B.
+Assembly-CSharp/ModuleGrappleNode.cs	B	PartModules-Structural	core + Chaos/Jolt joints	Advanced grabbing unit: contact detection, grapple joint with pivot lock/free, release; joints/transforms.
+Assembly-CSharp/ModuleInventoryPart.cs	B	Kerbals	core + UMG	Part/EVA inventory: slots, stacking, mass/cost, part storage, deploying ground parts, spawning part objects; scene-object creation.
+Assembly-CSharp/ModuleLight.cs	C	Rendering	Point/Spot Light + Dynamic Material Instance	Part lights: colour/intensity/blink, emissive materials, animated lamps; EC draw is the only gameplay (small A slice).
+Assembly-CSharp/ModuleParachute.cs	B	PartModules-Structural	core + animation sampling	Parachute: arm/semi/full deploy by pressure and altitude, drag from canopy area, cut on overspeed, canopy orientation; drag/animation/transforms.
+Assembly-CSharp/ModuleProceduralFairing.cs	B	PartModules-Structural	core + Procedural Mesh	Procedural fairing: editor profile building, panel meshes/colliders, mass/cost, deploy with panel rigidbodies, interstage; mesh+physics.
+Assembly-CSharp/ModuleRCS.cs	B	PartModules-Engines	core + Niagara	RCS thrusters: per-transform thrust from translation/rotation input, ISP curves, propellant, torque potential, FX; thrust transforms.
+Assembly-CSharp/ModuleScienceExperiment.cs	A	Science	core + UMG	Science experiment: situation/biome checks, data collection/reset/transfer, results dialog; rules (dialog part C). Needs PartModule host.

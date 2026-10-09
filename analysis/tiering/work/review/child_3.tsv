@@ -1,0 +1,682 @@
+path	tier	subsystem	ue5_counterpart	rationale
+Assembly-CSharp/KSP/FX/Fireworks/FireworkEffectType.cs	C	Rendering	Niagara	Firework effect definition/list/particle component; cosmetic FX
+Assembly-CSharp/KSP/FX/Fireworks/FireworkFX.cs	C	Rendering	Niagara	Firework shell MonoBehaviour: Rigidbody ballistic trail, collision and audio; cosmetic effect
+Assembly-CSharp/KSP/FX/Fireworks/FireworkFXComponent.cs	C	Rendering	Niagara	Firework effect definition/list/particle component; cosmetic FX
+Assembly-CSharp/KSP/FX/Fireworks/FireworkFXDefinition.cs	C	Rendering	Niagara	Firework effect definition/list/particle component; cosmetic FX
+Assembly-CSharp/KSP/FX/Fireworks/FireworkFXList.cs	C	Rendering	Niagara	Firework effect definition/list/particle component; cosmetic FX
+Assembly-CSharp/KSP/IO/BinaryReader.cs	A	Save	core	KSP.IO wrapper over file/stream/text/binary IO for mod plugins; no Unity dependence; map to C++ stdlib streams
+Assembly-CSharp/KSP/IO/BinaryWriter.cs	A	Save	core	KSP.IO wrapper over file/stream/text/binary IO for mod plugins; no Unity dependence; map to C++ stdlib streams
+Assembly-CSharp/KSP/IO/File.cs	A	Save	core	KSP.IO wrapper over file/stream/text/binary IO for mod plugins; no Unity dependence; map to C++ stdlib streams
+Assembly-CSharp/KSP/IO/FileAccess.cs	A	Save	core	KSP.IO wrapper over file/stream/text/binary IO for mod plugins; no Unity dependence; map to C++ stdlib streams
+Assembly-CSharp/KSP/IO/FileInfo.cs	A	Save	core	KSP.IO wrapper over file/stream/text/binary IO for mod plugins; no Unity dependence; map to C++ stdlib streams
+Assembly-CSharp/KSP/IO/FileMode.cs	A	Save	core	KSP.IO wrapper over file/stream/text/binary IO for mod plugins; no Unity dependence; map to C++ stdlib streams
+Assembly-CSharp/KSP/IO/FileShare.cs	A	Save	core	KSP.IO wrapper over file/stream/text/binary IO for mod plugins; no Unity dependence; map to C++ stdlib streams
+Assembly-CSharp/KSP/IO/FileStream.cs	A	Save	core	KSP.IO wrapper over file/stream/text/binary IO for mod plugins; no Unity dependence; map to C++ stdlib streams
+Assembly-CSharp/KSP/IO/IOException.cs	A	Save	core	KSP.IO wrapper over file/stream/text/binary IO for mod plugins; no Unity dependence; map to C++ stdlib streams
+Assembly-CSharp/KSP/IO/IOTools.cs	A	Save	core	KSP.IO wrapper over file/stream/text/binary IO for mod plugins; no Unity dependence; map to C++ stdlib streams
+Assembly-CSharp/KSP/IO/IOUtils.cs	A	Save	core	KSP.IO wrapper over file/stream/text/binary IO for mod plugins; no Unity dependence; map to C++ stdlib streams
+Assembly-CSharp/KSP/IO/MemoryStream.cs	A	Save	core	KSP.IO wrapper over file/stream/text/binary IO for mod plugins; no Unity dependence; map to C++ stdlib streams
+Assembly-CSharp/KSP/IO/PluginConfigNode.cs	A	Save	core	KSP.IO wrapper over file/stream/text/binary IO for mod plugins; no Unity dependence; map to C++ stdlib streams
+Assembly-CSharp/KSP/IO/PluginConfiguration.cs	A	Save	core	KSP.IO wrapper over file/stream/text/binary IO for mod plugins; no Unity dependence; map to C++ stdlib streams
+Assembly-CSharp/KSP/IO/SeekOrigin.cs	A	Save	core	KSP.IO wrapper over file/stream/text/binary IO for mod plugins; no Unity dependence; map to C++ stdlib streams
+Assembly-CSharp/KSP/IO/TextReader.cs	A	Save	core	KSP.IO wrapper over file/stream/text/binary IO for mod plugins; no Unity dependence; map to C++ stdlib streams
+Assembly-CSharp/KSP/IO/TextWriter.cs	A	Save	core	KSP.IO wrapper over file/stream/text/binary IO for mod plugins; no Unity dependence; map to C++ stdlib streams
+Assembly-CSharp/KSP/Localization/FontLangSettings.cs	C	Localization	UE Localization (FText / String Table)	TMPro font fallback settings per language; localization plumbing
+Assembly-CSharp/KSP/Localization/FontSettings.cs	C	Localization	UE Localization (FText / String Table)	TMPro font fallback settings per language; localization plumbing
+Assembly-CSharp/KSP/Localization/Localizer.cs	C	Localization	UE Localization (FText / String Table)	Tag lookup, format-string and language loading plumbing (anchor); needs FText/StringTable plus format shim keeping KSP tags
+Assembly-CSharp/KSP/Testing/TestInfo.cs	C	Debug	Automation Tests	In-game unit test harness (test attribute/manager/results); test-only code
+Assembly-CSharp/KSP/Testing/TestManager.cs	C	Debug	Automation Tests	In-game unit test harness (test attribute/manager/results); test-only code
+Assembly-CSharp/KSP/Testing/TestResults.cs	C	Debug	Automation Tests	In-game unit test harness (test attribute/manager/results); test-only code
+Assembly-CSharp/KSP/Testing/TestState.cs	C	Debug	Automation Tests	In-game unit test harness (test attribute/manager/results); test-only code
+Assembly-CSharp/KSP/Testing/UnitTest.cs	C	Debug	Automation Tests	In-game unit test harness (test attribute/manager/results); test-only code
+Assembly-CSharp/KSP/UI/AlarmClockUIAddPane.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/AlarmClockUIFrame.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/AlarmUIDisplayMode.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/AnchoredDialog.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/AnchoredDialogHost.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/AppUI_Control.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/AppUI_Data.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/AppUI_Dropdown.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/AppUI_DropdownMultiLine.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/AppUI_Heading.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/AppUI_Input.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/AppUI_InputDateTime.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/AppUI_InputFloat.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/AppUI_Label.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/AppUI_LabelList.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/AppUI_RadioBool.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/AppUI_SliderFloat.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/AppUI_SliderFloatMultiLine.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/AppUI_ToggleBool.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/BaseCrewAssignmentDialog.cs	C	Kerbals	UMG + core query	Crew roster/assignment UI; roster and assignment rules live in KerbalRoster/ProtoCrewMember (core); UI -> UMG
+Assembly-CSharp/KSP/UI/ButtonColorState.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/ButtonSpritesMgr.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/ButtonState.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/ButtonStateTooltip.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/CanvasGroupEventLocker.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/CanvasGroupInputLock.cs	C	Input	Enhanced Input	UI helper applying InputLockManager locks or extra mouse buttons; input plumbing
+Assembly-CSharp/KSP/UI/ContentAspectController.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/CrewAssignmentDialog.cs	C	Kerbals	UMG + core query	Crew roster/assignment UI; roster and assignment rules live in KerbalRoster/ProtoCrewMember (core); UI -> UMG
+Assembly-CSharp/KSP/UI/CrewListItem.cs	C	Kerbals	UMG + core query	Crew roster/assignment UI; roster and assignment rules live in KerbalRoster/ProtoCrewMember (core); UI -> UMG
+Assembly-CSharp/KSP/UI/DialogMouseEnterControlLock.cs	C	Input	Enhanced Input	UI helper applying InputLockManager locks or extra mouse buttons; input plumbing
+Assembly-CSharp/KSP/UI/Dialogs/FlightResultsDialog.cs	C	Career	UMG + core query	Recovery/mission summary dialog displaying computed funds/science/rep results; calculation lives in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Dialogs/IAccessKerbNet.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/Dialogs/WaypointTarget.cs	C	MapView	UMG + core query	Map view / tracking station UI (context menu, options, markers, widgets) calling core queries; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/DialogUISelectFile.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/DialogUISelectFileItem.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/DragHandler.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/DropHandler.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/EventTriggerForwarder.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/ExperimentalVersionReadout.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/GenericAppFrame.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/GenericCascadingList.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/InteractableCtrlUIStates.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/IPinnableTooltipController.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/IRadioButton.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/ITooltipController.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/KSPGraphicRaycaster.cs	C	Input	UMG widget	GraphicRaycaster subclass honouring input lock mask; UI input plumbing
+Assembly-CSharp/KSP/UI/Language/DictionarySerializerHelper.cs	C	Localization	UE Localization (FText / String Table)	Language definition/text binding for localisation; plumbing
+Assembly-CSharp/KSP/UI/Language/ILanguageKey.cs	C	Localization	UE Localization (FText / String Table)	Language definition/text binding for localisation; plumbing
+Assembly-CSharp/KSP/UI/Language/Language.cs	C	Localization	UE Localization (FText / String Table)	Language manager loading language asset bundles and fonts; localization plumbing
+Assembly-CSharp/KSP/UI/Language/LanguageDefinition.cs	C	Localization	UE Localization (FText / String Table)	Language definition/text binding for localisation; plumbing
+Assembly-CSharp/KSP/UI/Language/LanguageText.cs	C	Localization	UE Localization (FText / String Table)	Language definition/text binding for localisation; plumbing
+Assembly-CSharp/KSP/UI/Language/StringExtensions.cs	C	Localization	UE Localization (FText / String Table)	Language definition/text binding for localisation; plumbing
+Assembly-CSharp/KSP/UI/ManeuverToolUIFrame.cs	C	MapView	UMG + core query	Maneuver gizmo tool window frame; presentation over maneuver node data
+Assembly-CSharp/KSP/UI/MessageSystemAppFrame.cs	C	FlightUI	UMG widget	Flight HUD panel frame/resizer; presentation only
+Assembly-CSharp/KSP/UI/PinnableTooltipController.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/PointerClickAndHoldHandler.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/PointerClickHandler.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/PointerEnterExitHandler.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/PrefabSpawner.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/ProgressBar.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/RadioButtonGroup.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/RectTransformQuadFitter.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/RendererSortOrder.cs	C	Rendering	Material / Material Instance	UI render helper (sort order, shader replacement, render-texture canvas); presentation
+Assembly-CSharp/KSP/UI/Rendering/CameraShaderReplacement.cs	C	Rendering	Material / Material Instance	UI render helper (sort order, shader replacement, render-texture canvas); presentation
+Assembly-CSharp/KSP/UI/Rendering/InvertSortOrder.cs	C	Rendering	Material / Material Instance	UI render helper (sort order, shader replacement, render-texture canvas); presentation
+Assembly-CSharp/KSP/UI/Rendering/RTCanvas.cs	C	Rendering	Material / Material Instance	UI render helper (sort order, shader replacement, render-texture canvas); presentation
+Assembly-CSharp/KSP/UI/ResizingLayoutElement.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/Screens/ACSceneDespawner.cs	C	UI	UMG widget	Space Center UI and scene (de)spawner for facility screens; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/ACSceneSpawner.cs	C	UI	UMG widget	Space Center UI and scene (de)spawner for facility screens; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/ActionGroupsApp.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/ActionGroupsPanel.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/ActiveStrategyListItem.cs	C	Career	UMG + core query	Administration/strategy/currency UI; strategy rules live in core Strategies; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Administration.cs	C	Career	UMG + core query	Administration/strategy/currency UI; strategy rules live in core Strategies; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/AdministrationSceneDespawner.cs	C	Career	UMG + core query	Administration/strategy/currency UI; strategy rules live in core Strategies; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/AdministrationSceneSpawner.cs	C	Career	UMG + core query	Administration/strategy/currency UI; strategy rules live in core Strategies; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/AlarmClockApp.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/AltimeterSliderButtons.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/ApplauncherLayout.cs	C	UI	UMG widget	App launcher / app framework plumbing for UI apps; UI only
+Assembly-CSharp/KSP/UI/Screens/ApplicationLauncher.cs	C	UI	UMG widget	App launcher / app framework plumbing for UI apps; UI only
+Assembly-CSharp/KSP/UI/Screens/ApplicationLauncherButton.cs	C	UI	UMG widget	App launcher / app framework plumbing for UI apps; UI only
+Assembly-CSharp/KSP/UI/Screens/AppUIInputPanel.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/Screens/AppUIMember.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/Screens/AppUIMemberDateTime.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/Screens/AppUIMemberDropdown.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/Screens/AppUIMemberDropdownMultiLine.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/Screens/AppUIMemberHeading.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/Screens/AppUIMemberInput.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/Screens/AppUIMemberInputFloat.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/Screens/AppUIMemberLabel.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/Screens/AppUIMemberLabelList.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/Screens/AppUIMemberRadioBool.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/Screens/AppUIMemberSliderFloat.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/Screens/AppUIMemberSliderFloatMultiLine.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/Screens/AppUIMemberToggleBool.cs	C	UI	UMG widget	Data-driven app panel control (attribute / member widget) for alarm clock style apps; UI only
+Assembly-CSharp/KSP/UI/Screens/AstronautComplex.cs	C	Kerbals	UMG + core query	Crew roster/assignment UI; roster and assignment rules live in KerbalRoster/ProtoCrewMember (core); UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/BasePartCategorizer.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/CargoApp.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/ConstructionApp.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/ContractsApp.cs	C	Contracts	UMG + core query	Mission Control/contracts list UI over ContractSystem; rules in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/CraftEntry.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/CraftProfileInfo.cs	A	Save	core	Craft file metadata (name, cost, crew, error flags, excluded parts) as IConfigNode; data logic, transpile
+Assembly-CSharp/KSP/UI/Screens/CraftSearch.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/CurrencyWidgetsApp.cs	C	Career	UMG + core query	Administration/strategy/currency UI; strategy rules live in core Strategies; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/AddDebugScreens.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/DebugScreen.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/DebugScreenCheats.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/DebugScreenConsole.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/DebugScreenInputLocks.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/DebugScreenScreenToggle.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/DebugScreenSpawner.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/ScreenDatabaseAssemblies.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/ScreenDatabaseAudio.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/ScreenDatabaseConfig.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/ScreenDatabaseList.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/ScreenDatabaseModels.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/ScreenDatabaseStrings.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/ScreenDatabaseTextures.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/AllowPartClipping.cs	C	Debug	Gameplay Debugger / console commands	Cheat toggle writing a CheatOptions flag that gameplay reads; debug UI only (flag itself belongs in core)
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/BiomesVisibleInMap.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/CheatsCareer.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/CheatsComets.cs	C	Debug	Gameplay Debugger / console commands	Comet cheat panel (collider/coma/dust toggles, spawning); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/CheatsObjectThrower.cs	C	Debug	drop	Cheat that throws physics objects with Rigidbody; debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/DestroyAfterTime.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/HackGravity.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/IgnoreEVAConstructionMassLimit.cs	C	Debug	Gameplay Debugger / console commands	Cheat toggle writing a CheatOptions flag that gameplay reads; debug UI only (flag itself belongs in core)
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/IgnoreKerbalInventoryLimits.cs	C	Debug	Gameplay Debugger / console commands	Cheat toggle writing a CheatOptions flag that gameplay reads; debug UI only (flag itself belongs in core)
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/IgnoreMaxTemperature.cs	C	Debug	Gameplay Debugger / console commands	Cheat toggle writing a CheatOptions flag that gameplay reads; debug UI only (flag itself belongs in core)
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/InfiniteElectricity.cs	C	Debug	Gameplay Debugger / console commands	Cheat toggle writing a CheatOptions flag that gameplay reads; debug UI only (flag itself belongs in core)
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/InfinitePropellant.cs	C	Debug	Gameplay Debugger / console commands	Cheat toggle writing a CheatOptions flag that gameplay reads; debug UI only (flag itself belongs in core)
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/MaxProgression.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/MiddleMouseClickSetPosition.cs	C	Debug	Gameplay Debugger / console commands	Cheat toggle writing a CheatOptions flag that gameplay reads; debug UI only (flag itself belongs in core)
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/NoCrashDamage.cs	C	Debug	Gameplay Debugger / console commands	Cheat toggle writing a CheatOptions flag that gameplay reads; debug UI only (flag itself belongs in core)
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/NonStrictPartAttachment.cs	C	Debug	Gameplay Debugger / console commands	Cheat toggle writing a CheatOptions flag that gameplay reads; debug UI only (flag itself belongs in core)
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/PauseOnVesselUnpack.cs	C	Debug	Gameplay Debugger / console commands	Cheat toggle writing a CheatOptions flag that gameplay reads; debug UI only (flag itself belongs in core)
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/SetOrbit.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/SetPosition.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/StringsMissingKeysToggle.cs	C	Debug	Gameplay Debugger / console commands	Cheat toggle writing a CheatOptions flag that gameplay reads; debug UI only (flag itself belongs in core)
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/StringsOverrideMELock.cs	C	Debug	Gameplay Debugger / console commands	Cheat toggle writing a CheatOptions flag that gameplay reads; debug UI only (flag itself belongs in core)
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/StringsShowKeysToggle.cs	C	Debug	Gameplay Debugger / console commands	Cheat toggle writing a CheatOptions flag that gameplay reads; debug UI only (flag itself belongs in core)
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Cheats/UnbreakableJoints.cs	C	Debug	Gameplay Debugger / console commands	Cheat toggle writing a CheatOptions flag that gameplay reads; debug UI only (flag itself belongs in core)
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Contract/ScreenAddContracts.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Contract/ScreenContractExistingItem.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Contract/ScreenContractList.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Contract/ScreenContractNewItem.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Contract/ScreenContractTools.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Database/ScreenDatabaseOverview.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Debug/CalcType.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Debug/DeltaVEngineInfoListExtensions.cs	C	Debug	drop	Extension helper finding a debug UI row for a DeltaV info object; debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Debug/DeltaVPropellantInfoListExtensions.cs	C	Debug	drop	Extension helper finding a debug UI row for a DeltaV info object; debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Debug/DeltaVStageInfoListExtensions.cs	C	Debug	drop	Extension helper finding a debug UI row for a DeltaV info object; debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Debug/GraphFPS.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Debug/Memory.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Debug/ScreenDeltaVEngineInfo.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Debug/ScreenDeltaVInfo.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Debug/ScreenDeltaVPartsListInfo.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Debug/ScreenDeltaVPropellantInfo.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Debug/ScreenDeltaVStageInfo.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Debug/ScreenFlightInfo.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Debug/ScreenVesselMassInfo.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Debug/ScreenVesselMassPartInfo.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Debug/ShowInputLocks.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Debug/VersionInfo.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Debug/VesselDebugDeltaVEngineInfo.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Debug/VesselDebugDeltaVInfo.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/DebugScreenInputDouble.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/DebugScreenSlider.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/DebugScreenToggle.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/GamePlay/Difficulty.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/GamePlay/KerbalScreen.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/GamePlay/KerbalScreenItem.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/GamePlay/ScreenKerbalCreate.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Mission/ScreenAddMissions.cs	C	DLC-MakingHistory	drop	Debug toolbar screen for Making History missions; debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Mission/ScreenMissionExistingItem.cs	C	DLC-MakingHistory	drop	Debug toolbar screen for Making History missions; debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Mission/ScreenMissionList.cs	C	DLC-MakingHistory	drop	Debug toolbar screen for Making History missions; debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Mission/ScreenMissionNewItem.cs	C	DLC-MakingHistory	drop	Debug toolbar screen for Making History missions; debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Mission/ScreenMissionTools.cs	C	DLC-MakingHistory	drop	Debug toolbar screen for Making History missions; debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Physics/ScreenAero.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Physics/ScreenDrag.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Physics/ScreenKerbalEVAMaterial.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Physics/ScreenPhysics.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Physics/ScreenThermal.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Resources/Debugging.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Resources/ScreenResources.cs	C	Debug	Gameplay Debugger / console commands	Debug toolbar screen/widget (cheats, physics tuning, database, DeltaV, profiling); debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Serenity/ScreenRobotics.cs	C	DLC-BreakingGround	drop	Debug toolbar screen for Breaking Ground (robotics/ROC) toggles; debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Serenity/ScreenROCs.cs	C	DLC-BreakingGround	drop	Debug toolbar screen for Breaking Ground (robotics/ROC) toggles; debug only
+Assembly-CSharp/KSP/UI/Screens/DebugToolbar/Screens/Serenity/ScreenSerenity.cs	C	DLC-BreakingGround	drop	Debug toolbar screen for Breaking Ground (robotics/ROC) toggles; debug only
+Assembly-CSharp/KSP/UI/Screens/DirectoryController.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Editor/InventoryPartListTooltip.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Editor/InventoryPartListTooltipController.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Editor/PartIcon.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Editor/PartListTooltipController.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Editor/PartListTooltipMasterController.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Editor/PartListTooltipWidget.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EditorActionController.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EditorActionControllerHeader.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EditorActionControllerOpenButton.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EditorActionGroup.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EditorActionGroup_Base.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EditorActionGroupType.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EditorActionOverrideGroup.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EditorActionOverrideToggle.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EditorActionPartItem.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EditorActionPartReset.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EditorActionPartSelector.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EditorActionTitleItem.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EditorInventoryOnlyIcon.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EditorLaunchPadItem.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EditorPanels.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EditorPartList.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EditorSaveFolderItem.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EditorSubassemblyItem.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EditorVariantItem.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/EngineersReport.cs	C	Editor	UMG + core query	Engineer report app running IDesignConcern tests and listing results; concern classes hold rules; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/ActionGroupToggleButton.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/AltitudeTumbler.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/Dialogs/CrewHatchDialog.cs	C	Kerbals	UMG + core query	Crew hatch dialog listing crew to EVA; UI over core crew queries
+Assembly-CSharp/KSP/UI/Screens/Flight/Dialogs/CrewHatchDialogWidget.cs	C	Kerbals	UMG + core query	Crew hatch dialog listing crew to EVA; UI over core crew queries
+Assembly-CSharp/KSP/UI/Screens/Flight/Dialogs/ExperimentsResultDialog.cs	C	Science	UMG + core query	R&D/science UI (tech tree nodes, archives, parts list, experiment results); science rules live in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/Dialogs/FlagPlaqueDialog.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/GeeGauge.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/IVAEVACollapseGroups.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/KerbalPortrait.cs	C	Kerbals	UMG + core query	Crew portrait UI with EVA/IVA buttons and portrait cameras; presentation over core crew state
+Assembly-CSharp/KSP/UI/Screens/Flight/LEDLin.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/LEDRot.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/LightDisplay.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/LinearAtmosphereGauge.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/LinearControlGauges.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/MapViewPanelTransition.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/METDisplay.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/NavBall.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/NavBallBurnVector.cs	B	FlightUI		Navball burn vector: burn time calc and auto-stepping maneuver nodes entangled with navball transforms; extract burn-time rule to core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/NavBallToggle.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/RCSDisplay.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/SASDisplay.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/SpeedDisplay.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/StageTumbler.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/StagingLED.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/TelemetryUpdate.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/TemperatureGauge.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/TemperatureGaugeSystem.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/ThrottleGauge.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Flight/VerticalSpeedGauge.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/HelixGauge.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KbApp.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KbApp_Null.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KbApp_PlanetInfo.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KbApp_PlanetParameters.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KbApp_PlanetResources.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KbApp_UnownedInfo.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KbApp_VesselCrew.cs	C	FlightUI	UMG + core query	Knowledge-base vessel crew info panel; UI over core data
+Assembly-CSharp/KSP/UI/Screens/KbApp_VesselInfo.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KbAppFrame.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KbAppUnowned.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KbAppVessel.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KbItem.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KbItem_flagImage.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KbItem_kerbalInfo.cs	C	FlightUI	UMG + core query	Knowledge-base vessel crew info panel; UI over core data
+Assembly-CSharp/KSP/UI/Screens/KbItem_resourceFooter.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KbItem_resourceHeader.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KbItem_resourceItem.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KbItem_unownedInfo.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KbItem_vesselInfo.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KerbalListItem.cs	C	Kerbals	UMG + core query	Crew roster/assignment UI; roster and assignment rules live in KerbalRoster/ProtoCrewMember (core); UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KnowledgeBase.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KSCFacilityContextMenu.cs	C	UI	UMG widget	Space Center UI and scene (de)spawner for facility screens; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KSCVesselMarker.cs	C	UI	UMG widget	Space Center UI and scene (de)spawner for facility screens; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KSCVesselMarkers.cs	C	UI	UMG widget	Space Center UI and scene (de)spawner for facility screens; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/KSPediaApp.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/LED.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/LinearGauge.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Mapview/MapContextMenu.cs	C	MapView	UMG + core query	Map view / tracking station UI (context menu, options, markers, widgets) calling core queries; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Mapview/MapContextMenuOptions/AddManeuver.cs	C	MapView	UMG + core query	Map view / tracking station UI (context menu, options, markers, widgets) calling core queries; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Mapview/MapContextMenuOptions/AutoWarpToUT.cs	C	MapView	UMG + core query	Map view / tracking station UI (context menu, options, markers, widgets) calling core queries; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Mapview/MapContextMenuOptions/DeleteCustomWaypoint.cs	C	MapView	UMG + core query	Map view / tracking station UI (context menu, options, markers, widgets) calling core queries; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Mapview/MapContextMenuOptions/FocusObject.cs	C	MapView	UMG + core query	Map view / tracking station UI (context menu, options, markers, widgets) calling core queries; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Mapview/MapContextMenuOptions/MapContextMenuOption.cs	C	MapView	UMG + core query	Map view / tracking station UI (context menu, options, markers, widgets) calling core queries; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Mapview/MapContextMenuOptions/SetAsTarget.cs	C	MapView	UMG + core query	Map view / tracking station UI (context menu, options, markers, widgets) calling core queries; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Mapview/MapContextMenuOptions/WaypointNavigation.cs	C	MapView	UMG + core query	Map view / tracking station UI (context menu, options, markers, widgets) calling core queries; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Mapview/MapViewCanvasUtil.cs	C	MapView	UMG + core query	Map view / tracking station UI (context menu, options, markers, widgets) calling core queries; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/MCListItem.cs	C	Contracts	UMG + core query	Mission Control/contracts list UI over ContractSystem; rules in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/MEPartCategoryButton.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/MessageSystemButton.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/MessageSystemPopup.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/MissionControl.cs	C	Contracts	UMG + core query	Mission Control/contracts list UI over ContractSystem; rules in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/MissionRecoveryDialog.cs	C	Career	UMG + core query	Recovery/mission summary dialog displaying computed funds/science/rep results; calculation lives in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/OnOpen.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/Screens/OnSelectItem.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/Screens/PartCategorizerButton.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/PartCategorizerPopup.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/PartCategorizerPopupAddPart.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/PartDropZone.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/PartListCategories/BulkheadProfile.cs	C	Editor	UMG + core query	Part list category/filter (profile, tech tier) using AvailablePart predicates; filtering rule is simple, UI wiring -> UMG
+Assembly-CSharp/KSP/UI/Screens/PartListCategories/PartCategory.cs	C	Editor	UMG + core query	Part list category/filter (profile, tech tier) using AvailablePart predicates; filtering rule is simple, UI wiring -> UMG
+Assembly-CSharp/KSP/UI/Screens/PartListCategories/TechTier.cs	C	Editor	UMG + core query	Part list category/filter (profile, tech tier) using AvailablePart predicates; filtering rule is simple, UI wiring -> UMG
+Assembly-CSharp/KSP/UI/Screens/PrereleaseWarningDialog.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/Screens/ProtoStageIcon.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/ProtoStageIconInfo.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RDArchivesController.cs	C	Science	UMG + core query	R&D/science UI (tech tree nodes, archives, parts list, experiment results); science rules live in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RDController.cs	C	Science	UMG + core query	R&D/science UI (tech tree nodes, archives, parts list, experiment results); science rules live in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RDDropDownList.cs	C	Science	UMG + core query	R&D/science UI (tech tree nodes, archives, parts list, experiment results); science rules live in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RDDropDownListContainer.cs	C	Science	UMG + core query	R&D/science UI (tech tree nodes, archives, parts list, experiment results); science rules live in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RDDropDownListItem.cs	C	Science	UMG + core query	R&D/science UI (tech tree nodes, archives, parts list, experiment results); science rules live in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RDEnvironmentAdapter.cs	C	Science	UMG + core query	Adapter routing R&D screen queries to ResearchAndDevelopment or test loader; thin UI plumbing (test scene support)
+Assembly-CSharp/KSP/UI/Screens/RDGridArea.cs	C	Science	UMG + core query	R&D/science UI (tech tree nodes, archives, parts list, experiment results); science rules live in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RDNode.cs	C	Science	UMG + core query	R&D/science UI (tech tree nodes, archives, parts list, experiment results); science rules live in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RDNodeList.cs	C	Science	UMG + core query	R&D/science UI (tech tree nodes, archives, parts list, experiment results); science rules live in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RDNodeListItem.cs	C	Science	UMG + core query	R&D/science UI (tech tree nodes, archives, parts list, experiment results); science rules live in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RDNodePrefab.cs	C	Science	UMG + core query	R&D/science UI (tech tree nodes, archives, parts list, experiment results); science rules live in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RDPartList.cs	C	Science	UMG + core query	R&D/science UI (tech tree nodes, archives, parts list, experiment results); science rules live in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RDPartListItem.cs	C	Science	UMG + core query	R&D/science UI (tech tree nodes, archives, parts list, experiment results); science rules live in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RDPlanetListItemContainer.cs	C	Science	UMG + core query	R&D/science UI (tech tree nodes, archives, parts list, experiment results); science rules live in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RDReportListItemContainer.cs	C	Science	UMG + core query	R&D/science UI (tech tree nodes, archives, parts list, experiment results); science rules live in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RDSceneDespawner.cs	C	Science	UMG + core query	R&D/science UI (tech tree nodes, archives, parts list, experiment results); science rules live in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RDSceneSpawner.cs	C	Science	UMG + core query	R&D/science UI (tech tree nodes, archives, parts list, experiment results); science rules live in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RDTechTree.cs	B	Science		Loads/saves tech tree cfg and answers cheapest/next-unavailable node queries inside a UI MonoBehaviour; extract tech tree logic to core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RDTechTreeSearchBar.cs	C	Science	UMG + core query	R&D/science UI (tech tree nodes, archives, parts list, experiment results); science rules live in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RDTestSceneLoader.cs	C	Debug	drop	Test scene loader feeding the R&D UI with fake experiments/subjects; test-only
+Assembly-CSharp/KSP/UI/Screens/ResourceDisplay.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/ResourceDisplayOptions.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/ResourceItem.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RotationalGauge.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/RotationalGaugeOffsetMarker.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/AccessorBase.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/FieldAccessor.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/PropertyAccessor.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/ReflectedSettingsWindowTab.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsAxisScale.cs	C	Input	UE GameUserSettings + Enhanced Input	Settings control for key/axis binding or keyboard layout; input configuration UI
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsBoolToggle.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsBoolToggleBitMask.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsBoolTogglePPFX.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsControlBase.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsControlReflection.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsFloatRange.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsGraphicsResolution.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsInput.cs	C	Input	UE GameUserSettings + Enhanced Input	Settings control for key/axis binding or keyboard layout; input configuration UI
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsInputAxis.cs	C	Input	UE GameUserSettings + Enhanced Input	Settings control for key/axis binding or keyboard layout; input configuration UI
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsInputBinding.cs	C	Input	UE GameUserSettings + Enhanced Input	Settings control for key/axis binding or keyboard layout; input configuration UI
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsInputBindingMode.cs	C	Input	UE GameUserSettings + Enhanced Input	Settings control for key/axis binding or keyboard layout; input configuration UI
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsInputGroupTitle.cs	C	Input	UE GameUserSettings + Enhanced Input	Settings control for key/axis binding or keyboard layout; input configuration UI
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsInputKey.cs	C	Input	UE GameUserSettings + Enhanced Input	Settings control for key/axis binding or keyboard layout; input configuration UI
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsIntArrayButtons.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsIntArrayRange.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsIntButtons.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsIntRange.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsIntToggle.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsKeyboardLayoutApply.cs	C	Input	UE GameUserSettings + Enhanced Input	Settings control for key/axis binding or keyboard layout; input configuration UI
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsKeyboardLayoutInput.cs	C	Input	UE GameUserSettings + Enhanced Input	Settings control for key/axis binding or keyboard layout; input configuration UI
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsKeyboardLayoutOs.cs	C	Input	UE GameUserSettings + Enhanced Input	Settings control for key/axis binding or keyboard layout; input configuration UI
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsLabel.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsLayoutConfig.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsScreenTab.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsTerrainDetail.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/SettingsTrackIRBool.cs	C	Input	UE GameUserSettings + Enhanced Input	Settings control for key/axis binding or keyboard layout; input configuration UI
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/Values/SettingsValueBoolTitleChange.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/Controls/Values/SettingsValueIntToString.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/ReflectedSettingsWindow.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/ReflectedSettingsWindow_6DOF.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/ReflectedSettingsWindow_Mouse.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/ReflectedSettingsWindow_TrackIR.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/SettingsExpansion.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/SettingsFieldWrapper.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/SettingsPlatform.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/SettingsScreen.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/SettingsScreenSetup.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/SettingsSetup.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/SettingsTemplate.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/SettingsTemplateDualLayouts.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/SettingsValue.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/Settings/SettingsWindow.cs	C	UI	UE GameUserSettings	Reflection-driven settings screen/control binding GameSettings fields; UI only
+Assembly-CSharp/KSP/UI/Screens/SimpleLayout.cs	C	UI	UMG widget	App launcher / app framework plumbing for UI apps; UI only
+Assembly-CSharp/KSP/UI/Screens/SpaceCenter/BuildingPicker.cs	C	UI	UMG widget	Space Center UI and scene (de)spawner for facility screens; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/SpaceCenter/BuildingPickerItem.cs	C	UI	UMG widget	Space Center UI and scene (de)spawner for facility screens; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/SpaceCenter/MissionSummaryDialog/CrewWidget.cs	C	Career	UMG + core query	Recovery/mission summary dialog displaying computed funds/science/rep results; calculation lives in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/SpaceCenter/MissionSummaryDialog/MissionSummaryWidget.cs	C	Career	UMG + core query	Recovery/mission summary dialog displaying computed funds/science/rep results; calculation lives in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/SpaceCenter/MissionSummaryDialog/PartWidget.cs	C	Career	UMG + core query	Recovery/mission summary dialog displaying computed funds/science/rep results; calculation lives in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/SpaceCenter/MissionSummaryDialog/ResourceWidget.cs	C	Career	UMG + core query	Recovery/mission summary dialog displaying computed funds/science/rep results; calculation lives in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/SpaceCenter/MissionSummaryDialog/ScienceSubjectWidget.cs	C	Career	UMG + core query	Recovery/mission summary dialog displaying computed funds/science/rep results; calculation lives in core; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/SpriteTumblerObject.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/StageIconInfoBox.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/SteamCraftInfo.cs	C	Steam	Online Subsystem Steam	Steam Workshop craft metadata and state; Steam integration
+Assembly-CSharp/KSP/UI/Screens/StrategyListItem.cs	C	Career	UMG + core query	Administration/strategy/currency UI; strategy rules live in core Strategies; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/SubassemblyDropZone.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/TrackingStationObjectButton.cs	C	MapView	UMG + core query	Map view / tracking station UI (context menu, options, markers, widgets) calling core queries; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/TrackingStationWidget.cs	C	MapView	UMG + core query	Map view / tracking station UI (context menu, options, markers, widgets) calling core queries; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/Tumbler.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/TypeButton.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/Screens/uGUITumblerObject.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/UIApp.cs	C	UI	UMG widget	App launcher / app framework plumbing for UI apps; UI only
+Assembly-CSharp/KSP/UI/Screens/UIAppSpawner.cs	C	UI	UMG widget	App launcher / app framework plumbing for UI apps; UI only
+Assembly-CSharp/KSP/UI/Screens/UIGridArea.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/Screens/UIScrollRectState.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/Screens/UISpaceCenter.cs	C	UI	UMG widget	Space Center UI and scene (de)spawner for facility screens; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/Screens/VesselIconSprite.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/Screens/VesselRenameDialog.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/Screens/VSDSceneSpawner.cs	C	UI	UMG widget	Space Center UI and scene (de)spawner for facility screens; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/SimpleAppFrame.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/SliderValueToText.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/StageManagerParentResizer.cs	C	FlightUI	UMG widget	Flight HUD panel frame/resizer; presentation only
+Assembly-CSharp/KSP/UI/Tooltip.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/TooltipController.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/TooltipTypes/Tooltip_Text.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/TooltipTypes/Tooltip_TitleAndText.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/TooltipTypes/TooltipController_CrewAC.cs	C	Kerbals	UMG + core query	Crew roster/assignment UI; roster and assignment rules live in KerbalRoster/ProtoCrewMember (core); UI -> UMG
+Assembly-CSharp/KSP/UI/TooltipTypes/TooltipController_Text.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/TooltipTypes/TooltipController_TitleAndText.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/TooltipTypes/UIRadioButtonTooltip.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/TooltipTypes/UIStateButtonTooltip.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/TweeningController.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/TweeningElement.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/U5Util.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIAvailability.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIButtonToggle.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UICameraBase.cs	C	Camera	Camera Component	UI camera component; presentation
+Assembly-CSharp/KSP/UI/UICanvasPrefab.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UICanvasPrefabSpawner.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UICascadingList.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UICraftSaveFlyoutController.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/UIDialogCamera.cs	C	Camera	Camera Component	UI camera component; presentation
+Assembly-CSharp/KSP/UI/UIDragAndDropController.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIDragPanel.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIExtensions.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIHoverPanel.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIHoverSlidePanel.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIHoverText.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIHoverToggler.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIInputExtraMouseButtons.cs	C	Input	Enhanced Input	UI helper applying InputLockManager locks or extra mouse buttons; input plumbing
+Assembly-CSharp/KSP/UI/UILaunchsiteController.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/UIList.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIListData.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIListDropArea.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIListItem.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIListItem_spacer.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIListMover.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIListSorter.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIListToggleController.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIMainCamera.cs	C	Camera	Camera Component	UI camera component; presentation
+Assembly-CSharp/KSP/UI/UIMasterController.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIOnClick.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIOnHover.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIPanelTransition.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIPanelTransitionManager.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIPanelTransitionRTScaler.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIPanelTransitionToggle.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIPanelTweener.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIPlanetariumDateTime.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/UIPrefabSpawner.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIRadioButton.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIRadioButtonColorChanger.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIRadioButtonStateChanger.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIRectScaler.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UISelectableGridLayoutGroup.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UISelectableGridLayoutGroupItem.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UISelectableList.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UISelectableListItem.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UISelectableListItem_ColorButton.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UISelectableListItem_StateButton.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIShipDescriptionHoverSlidePanel.cs	C	Editor	UMG widget	Editor UI (part list, categories, craft browser, action groups, inventory, tooltips); editor logic lives elsewhere; UI -> UMG
+Assembly-CSharp/KSP/UI/UIStateButton.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIStateImage.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIStatePanel.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIStateRawImage.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIStateText.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIStateToggleButton.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UITextButton.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UITimeWarpController.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/UITimeWarpHoverController.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/UITimeWarpScrubber.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/UITogglePanel.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UITransitionBase.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UITransparencyController.cs	C	Rendering	Material / Material Instance	Fades UI via shader properties on scene load; presentation
+Assembly-CSharp/KSP/UI/UITreeView.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UITreeViewItem.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIVectorCamera.cs	C	Camera	Camera Component	UI camera component; presentation
+Assembly-CSharp/KSP/UI/UIWarpToNextMorning.cs	C	FlightUI	UMG + core query	Flight HUD/app widget (gauges, readouts, apps, messages) displaying core state; presentation, UI -> UMG
+Assembly-CSharp/KSP/UI/UIWindow.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIWindowArea.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/UIWorldPointer.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/Util/CanvasTools.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/Util/ImgText.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/Util/RectContainmentDetector.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/Util/RectUtil.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/Util/UISkinDefSO.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/KSP/UI/VesselListItem.cs	C	UI	UMG widget	Generic UGUI framework component/widget (lists, buttons, tooltips, drag/drop, transitions, windows); presentation only
+Assembly-CSharp/CommNet/CommLink.cs	A	CommNet	core	CommNet graph logic (nodes, links, paths, signal/range model); pure data and maths, transpile
+Assembly-CSharp/CommNet/CommNetBody.cs	A	CommNet	core	CommNet MonoBehaviour wrapper registering body occluder/home/node with network; lifecycle hooks only; needs host
+Assembly-CSharp/CommNet/CommNetHome.cs	A	CommNet	core	CommNet MonoBehaviour wrapper registering body occluder/home/node with network; lifecycle hooks only; needs host
+Assembly-CSharp/CommNet/CommNetNetwork.cs	A	CommNet	core	CommNet MonoBehaviour wrapper registering body occluder/home/node with network; lifecycle hooks only; needs host
+Assembly-CSharp/CommNet/CommNetNode.cs	A	CommNet	core	CommNet MonoBehaviour wrapper registering body occluder/home/node with network; lifecycle hooks only; needs host
+Assembly-CSharp/CommNet/CommNetParams.cs	A	CommNet	core	CommNet graph logic (nodes, links, paths, signal/range model); pure data and maths, transpile
+Assembly-CSharp/CommNet/CommNetScenario.cs	A	CommNet	core	ScenarioModule creating the CommNetNetwork and UI GameObjects, persisting CommNetParams; needs ScenarioModule host; GameObject creation is shell side
+Assembly-CSharp/CommNet/CommNetUI.cs	C	CommNet	Line Batcher / Procedural Mesh lines	Draws CommNet links in map view with materials/line meshes and display modes; rendering, link data comes from core
+Assembly-CSharp/CommNet/CommNetUIModeButton.cs	C	CommNet	UMG widget	Map-view CommNet display mode button; pure UI
+Assembly-CSharp/CommNet/CommNetVessel.cs	A	CommNet	core	VesselModule computing control state, signal strength, plasma blackout and control path to home; needs VesselModule host; light Unity use
+Assembly-CSharp/CommNet/CommNetwork.cs	A	CommNet	core	CommNet graph logic (nodes, links, paths, signal/range model); pure data and maths, transpile
+Assembly-CSharp/CommNet/CommNode.cs	A	CommNet	core	CommNet graph logic (nodes, links, paths, signal/range model); pure data and maths, transpile
+Assembly-CSharp/CommNet/CommPath.cs	A	CommNet	core	CommNet graph logic (nodes, links, paths, signal/range model); pure data and maths, transpile
+Assembly-CSharp/CommNet/CommRangeModel.cs	A	CommNet	core	CommNet graph logic (nodes, links, paths, signal/range model); pure data and maths, transpile
+Assembly-CSharp/CommNet/HopType.cs	A	CommNet	core	CommNet graph logic (nodes, links, paths, signal/range model); pure data and maths, transpile
+Assembly-CSharp/CommNet/ICommNetControlSource.cs	A	CommNet	core	CommNet graph logic (nodes, links, paths, signal/range model); pure data and maths, transpile
+Assembly-CSharp/CommNet/IRangeModel.cs	A	CommNet	core	CommNet graph logic (nodes, links, paths, signal/range model); pure data and maths, transpile
+Assembly-CSharp/CommNet/IRelayEnabler.cs	A	CommNet	core	CommNet graph logic (nodes, links, paths, signal/range model); pure data and maths, transpile
+Assembly-CSharp/CommNet/ModuleProbeControlPoint.cs	A	CommNet	core	PartModule defining probe control point and minimum crew rules; needs PartModule host
+Assembly-CSharp/CommNet/ModuleRelayEnabler.cs	A	CommNet	core	PartModule enabling relay when powered (electric charge consumer); needs PartModule host
+Assembly-CSharp/CommNet/Network/Link.cs	A	CommNet	core	CommNet graph logic (nodes, links, paths, signal/range model); pure data and maths, transpile
+Assembly-CSharp/CommNet/Network/Net.cs	A	CommNet	core	CommNet graph logic (nodes, links, paths, signal/range model); pure data and maths, transpile
+Assembly-CSharp/CommNet/Network/Node.cs	A	CommNet	core	CommNet graph logic (nodes, links, paths, signal/range model); pure data and maths, transpile
+Assembly-CSharp/CommNet/Network/Path.cs	A	CommNet	core	CommNet graph logic (nodes, links, paths, signal/range model); pure data and maths, transpile
+Assembly-CSharp/CommNet/NodeUtilities.cs	A	CommNet	core	CommNet graph logic (nodes, links, paths, signal/range model); pure data and maths, transpile
+Assembly-CSharp/CommNet/Occluder.cs	A	CommNet	core	Abstract line-of-sight occluder base; Raycast is a logical test, not a physics query
+Assembly-CSharp/CommNet/Occluders/OccluderHorizonCulling.cs	A	CommNet	core	Horizon-culling occluder: sphere line-of-sight test using body position/radius; pure math with transform reads
+Assembly-CSharp/CommNet/SignalStrength.cs	A	CommNet	core	CommNet graph logic (nodes, links, paths, signal/range model); pure data and maths, transpile
+Assembly-CSharp/CommNet/SignalStrengthColor.cs	C	CommNet	UMG widget	Enum of signal strength colours for UI display
+Assembly-CSharp/CommNet/Tooltip_SignalStrength.cs	C	CommNet	UMG widget	Signal strength tooltip widget listing link hops; presentation only
+Assembly-CSharp/CommNet/Tooltip_SignalStrengthItem.cs	C	CommNet	UMG widget	Signal strength tooltip widget listing link hops; presentation only
+Assembly-CSharp/CommNet/TooltipController_SignalStrength.cs	C	CommNet	UMG widget	Signal strength tooltip widget listing link hops; presentation only
+Assembly-CSharp/CommNet/VesselControlState.cs	A	CommNet	core	CommNet graph logic (nodes, links, paths, signal/range model); pure data and maths, transpile
+Assembly-CSharp/Contracts/Agents/Agent.cs	A	Contracts	core	Contract agent definition (title, mentality, standing, keyword scores, logo path); data/rules, Texture only for logo; transpile
+Assembly-CSharp/Contracts/Agents/AgentList.cs	A	Contracts	core	Agent registry loaded from config with random pick; MonoBehaviour only for lifecycle; needs host
+Assembly-CSharp/Contracts/Agents/AgentMentality.cs	A	Contracts	core	Agent mentality/standing/keyword rules; pure data and scoring, transpile
+Assembly-CSharp/Contracts/Agents/AgentStanding.cs	A	Contracts	core	Agent mentality/standing/keyword rules; pure data and scoring, transpile
+Assembly-CSharp/Contracts/Agents/KeywordScore.cs	A	Contracts	core	Agent mentality/standing/keyword rules; pure data and scoring, transpile
+Assembly-CSharp/Contracts/Agents/Mentalities/Commercial.cs	A	Contracts	core	Agent mentality subclass scoring/modifying contracts (keyword score, deadline, reward factors); pure rules, transpile
+Assembly-CSharp/Contracts/Agents/Mentalities/Competitive.cs	A	Contracts	core	Agent mentality subclass scoring/modifying contracts (keyword score, deadline, reward factors); pure rules, transpile
+Assembly-CSharp/Contracts/Agents/Mentalities/Conglomerate.cs	A	Contracts	core	Agent mentality subclass scoring/modifying contracts (keyword score, deadline, reward factors); pure rules, transpile
+Assembly-CSharp/Contracts/Agents/Mentalities/Cooperative.cs	A	Contracts	core	Agent mentality subclass scoring/modifying contracts (keyword score, deadline, reward factors); pure rules, transpile
+Assembly-CSharp/Contracts/Agents/Mentalities/EasyGoing.cs	A	Contracts	core	Agent mentality subclass scoring/modifying contracts (keyword score, deadline, reward factors); pure rules, transpile
+Assembly-CSharp/Contracts/Agents/Mentalities/Ecomental.cs	A	Contracts	core	Agent mentality subclass scoring/modifying contracts (keyword score, deadline, reward factors); pure rules, transpile
+Assembly-CSharp/Contracts/Agents/Mentalities/Economic.cs	A	Contracts	core	Agent mentality subclass scoring/modifying contracts (keyword score, deadline, reward factors); pure rules, transpile
+Assembly-CSharp/Contracts/Agents/Mentalities/Hasty.cs	A	Contracts	core	Agent mentality subclass scoring/modifying contracts (keyword score, deadline, reward factors); pure rules, transpile
+Assembly-CSharp/Contracts/Agents/Mentalities/Industrial.cs	A	Contracts	core	Agent mentality subclass scoring/modifying contracts (keyword score, deadline, reward factors); pure rules, transpile
+Assembly-CSharp/Contracts/Agents/Mentalities/Kerbalminded.cs	A	Contracts	core	Agent mentality subclass scoring/modifying contracts (keyword score, deadline, reward factors); pure rules, transpile
+Assembly-CSharp/Contracts/Agents/Mentalities/Moral.cs	A	Contracts	core	Agent mentality subclass scoring/modifying contracts (keyword score, deadline, reward factors); pure rules, transpile
+Assembly-CSharp/Contracts/Agents/Mentalities/NoRandomContractMentality.cs	A	Contracts	core	Agent mentality subclass scoring/modifying contracts (keyword score, deadline, reward factors); pure rules, transpile
+Assembly-CSharp/Contracts/Agents/Mentalities/Patient.cs	A	Contracts	core	Agent mentality subclass scoring/modifying contracts (keyword score, deadline, reward factors); pure rules, transpile
+Assembly-CSharp/Contracts/Agents/Mentalities/Perfectionist.cs	A	Contracts	core	Agent mentality subclass scoring/modifying contracts (keyword score, deadline, reward factors); pure rules, transpile
+Assembly-CSharp/Contracts/Agents/Mentalities/Pioneer.cs	A	Contracts	core	Agent mentality subclass scoring/modifying contracts (keyword score, deadline, reward factors); pure rules, transpile
+Assembly-CSharp/Contracts/Agents/Mentalities/Record.cs	A	Contracts	core	Agent mentality subclass scoring/modifying contracts (keyword score, deadline, reward factors); pure rules, transpile
+Assembly-CSharp/Contracts/Agents/Mentalities/Scientific.cs	A	Contracts	core	Agent mentality subclass scoring/modifying contracts (keyword score, deadline, reward factors); pure rules, transpile
+Assembly-CSharp/Contracts/Agents/Mentalities/Startup.cs	A	Contracts	core	Agent mentality subclass scoring/modifying contracts (keyword score, deadline, reward factors); pure rules, transpile
+Assembly-CSharp/Contracts/Agents/Mentalities/Stern.cs	A	Contracts	core	Agent mentality subclass scoring/modifying contracts (keyword score, deadline, reward factors); pure rules, transpile
+Assembly-CSharp/Contracts/BodyLocation.cs	A	Contracts	core	Contract system support type (text generation, enum, interface, predicate base); pure logic, transpile
+Assembly-CSharp/Contracts/ContractPredicate.cs	A	Contracts	core	Contract system support type (text generation, enum, interface, predicate base); pure logic, transpile
+Assembly-CSharp/Contracts/IContractParameterHost.cs	A	Contracts	core	Contract system support type (text generation, enum, interface, predicate base); pure logic, transpile
+Assembly-CSharp/Contracts/Parameters/AcquireCrew.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/Contracts/Parameters/AcquirePart.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/Contracts/Parameters/CollectScience.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/Contracts/Parameters/EnterOrbit.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/Contracts/Parameters/EnterSOI.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/Contracts/Parameters/KerbalDeaths.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/Contracts/Parameters/LandOnBody.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/Contracts/Parameters/OR.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/Contracts/Parameters/PartTest.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/Contracts/Parameters/PlantFlag.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/Contracts/Parameters/ReachAltitudeEnvelope.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/Contracts/Parameters/ReachBiome.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/Contracts/Parameters/ReachDestination.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/Contracts/Parameters/ReachFlightEnvelope.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/Contracts/Parameters/ReachSituation.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/Contracts/Parameters/ReachSpeedEnvelope.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/Contracts/Parameters/RecoverKerbal.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/Contracts/Parameters/RecoverPart.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/Contracts/Parameters/XOR.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/Contracts/ParameterState.cs	A	Contracts	core	Contract system support type (text generation, enum, interface, predicate base); pure logic, transpile
+Assembly-CSharp/Contracts/Predicates/AgentFlag.cs	A	Contracts	core	Contract predicate tested against vessels/agents when generating contracts; pure rules, transpile
+Assembly-CSharp/Contracts/Predicates/AgentParts.cs	A	Contracts	core	Contract predicate tested against vessels/agents when generating contracts; pure rules, transpile
+Assembly-CSharp/Contracts/Predicates/IsActiveVessel.cs	A	Contracts	core	Contract predicate tested against vessels/agents when generating contracts; pure rules, transpile
+Assembly-CSharp/Contracts/Predicates/IsControllable.cs	A	Contracts	core	Contract predicate tested against vessels/agents when generating contracts; pure rules, transpile
+Assembly-CSharp/Contracts/Predicates/LaunchID.cs	A	Contracts	core	Contract predicate tested against vessels/agents when generating contracts; pure rules, transpile
+Assembly-CSharp/Contracts/Templates/CollectScience.cs	A	Contracts	core	Contract template: generation rules, targets, rewards and parameters; pure rules, transpile
+Assembly-CSharp/Contracts/Templates/GrandTour.cs	A	Contracts	core	Contract template: generation rules, targets, rewards and parameters; pure rules, transpile
+Assembly-CSharp/Contracts/Templates/OrbitalConstructionContract.cs	A	Contracts	core	Contract template generating rewards, parameters and a pre-built vessel via ProtoVessel; rules logic; vessel spawn hooks into scene loader; waypoints
+Assembly-CSharp/Contracts/Templates/PlantFlag.cs	A	Contracts	core	Contract template: generation rules, targets, rewards and parameters; pure rules, transpile
+Assembly-CSharp/Contracts/Templates/RoverConstructionContract.cs	A	Contracts	core	Contract template generating rewards, parameters and a pre-built vessel via ProtoVessel; rules logic; vessel spawn hooks into scene loader; waypoints
+Assembly-CSharp/Contracts/Templates/VesselRepairContract.cs	A	Contracts	core	Contract template generating rewards, parameters and a pre-built vessel via ProtoVessel; rules logic; vessel spawn hooks into scene loader; waypoints
+Assembly-CSharp/Contracts/TextGen.cs	A	Contracts	core	Contract system support type (text generation, enum, interface, predicate base); pure logic, transpile
+Assembly-CSharp/FinePrint/Contracts/ARMContract.cs	A	Contracts	core	Contract system support type (text generation, enum, interface, predicate base); pure logic, transpile
+Assembly-CSharp/FinePrint/Contracts/BaseContract.cs	A	Contracts	core	Contract system support type (text generation, enum, interface, predicate base); pure logic, transpile
+Assembly-CSharp/FinePrint/Contracts/CometSampleContract.cs	A	Contracts	core	Contract system support type (text generation, enum, interface, predicate base); pure logic, transpile
+Assembly-CSharp/FinePrint/Contracts/ISRUContract.cs	A	Contracts	core	Contract system support type (text generation, enum, interface, predicate base); pure logic, transpile
+Assembly-CSharp/FinePrint/Contracts/Parameters/AsteroidParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/CometDetectionParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/CometParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/CometScienceParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/ConstructionParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/CrewCapacityParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/CrewTraitParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/KerbalDestinationParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/KerbalGeeAdventureParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/KerbalTourParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/LocationAndSituationParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/MobileBaseParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/PartRequestParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/ProgressTrackingParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/RepairPartParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/ResourceExtractionParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/ResourcePossessionParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/RoverWayPointParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/SpecificOrbitParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/SpecificVesselParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/StabilityParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/StationaryPointParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/SurveyWaypointParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/VesselDestinationParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/Parameters/VesselSystemsParameter.cs	A	Contracts	core	Contract parameter: event-driven objective tracking with persistence; subscribes to GameEvents, state/rules only, transpile; needs Contract host
+Assembly-CSharp/FinePrint/Contracts/StationContract.cs	A	Contracts	core	Contract system support type (text generation, enum, interface, predicate base); pure logic, transpile
+Assembly-CSharp/FinePrint/Contracts/TourismContract.cs	A	Contracts	core	Contract system support type (text generation, enum, interface, predicate base); pure logic, transpile
+Assembly-CSharp/FinePrint/ScenarioContractEvents.cs	A	Contracts	core	ScenarioModule event hub dispatching contract specific-vessel checks; needs ScenarioModule host; SendMessage/coroutine used as timer
+Assembly-CSharp/FinePrint/Utilities/CelestialUtilities.cs	A	Contracts	core	FinePrint helper: celestial/progress/string/system queries and contract data tables; reads game state through public API, transpile
+Assembly-CSharp/FinePrint/Utilities/CompatibilityUtilities.cs	A	Contracts	core	Legacy save/contract compatibility fix-ups and survey definition lookup; data logic, transpile
+Assembly-CSharp/FinePrint/Utilities/ConstructionExtensions.cs	A	Contracts	core	FinePrint helper: celestial/progress/string/system queries and contract data tables; reads game state through public API, transpile
+Assembly-CSharp/FinePrint/Utilities/ConstructionPart.cs	A	Contracts	core	FinePrint helper: celestial/progress/string/system queries and contract data tables; reads game state through public API, transpile
+Assembly-CSharp/FinePrint/Utilities/ConstructionParts.cs	A	Contracts	core	FinePrint helper: celestial/progress/string/system queries and contract data tables; reads game state through public API, transpile
+Assembly-CSharp/FinePrint/Utilities/FlightBand.cs	A	Contracts	core	FinePrint enum/interface/data used by contract logic; pure, transpile
+Assembly-CSharp/FinePrint/Utilities/GrammaticalGender.cs	A	Contracts	core	FinePrint enum/interface/data used by contract logic; pure, transpile
+Assembly-CSharp/FinePrint/Utilities/ICheckSpecificVessels.cs	A	Contracts	core	FinePrint enum/interface/data used by contract logic; pure, transpile
+Assembly-CSharp/FinePrint/Utilities/IUpdateWaypoints.cs	A	Contracts	core	FinePrint enum/interface/data used by contract logic; pure, transpile
+Assembly-CSharp/FinePrint/Utilities/LoadResult.cs	A	Contracts	core	FinePrint enum/interface/data used by contract logic; pure, transpile
+Assembly-CSharp/FinePrint/Utilities/MannedStatus.cs	A	Contracts	core	FinePrint enum/interface/data used by contract logic; pure, transpile
+Assembly-CSharp/FinePrint/Utilities/OrbitalProperties.cs	A	Contracts	core	FinePrint enum/interface/data used by contract logic; pure, transpile
+Assembly-CSharp/FinePrint/Utilities/OrbitType.cs	A	Contracts	core	FinePrint enum/interface/data used by contract logic; pure, transpile
+Assembly-CSharp/FinePrint/Utilities/OrbitUtilities.cs	A	Contracts	core	Static orbit helper maths (nodes, apsides, random orbit generation) for contracts; pure double math -> transpile
+Assembly-CSharp/FinePrint/Utilities/PreBuiltCraft.cs	A	Contracts	core	FinePrint helper: celestial/progress/string/system queries and contract data tables; reads game state through public API, transpile
+Assembly-CSharp/FinePrint/Utilities/PreBuiltCraftDefinition.cs	A	Contracts	core	FinePrint helper: celestial/progress/string/system queries and contract data tables; reads game state through public API, transpile
+Assembly-CSharp/FinePrint/Utilities/PreBuiltCraftPosition.cs	A	Contracts	core	FinePrint helper: celestial/progress/string/system queries and contract data tables; reads game state through public API, transpile
+Assembly-CSharp/FinePrint/Utilities/ProgressMilestone.cs	A	Contracts	core	FinePrint helper: celestial/progress/string/system queries and contract data tables; reads game state through public API, transpile
+Assembly-CSharp/FinePrint/Utilities/ProgressRewardType.cs	A	Contracts	core	FinePrint enum/interface/data used by contract logic; pure, transpile
+Assembly-CSharp/FinePrint/Utilities/ProgressType.cs	A	Contracts	core	FinePrint enum/interface/data used by contract logic; pure, transpile
+Assembly-CSharp/FinePrint/Utilities/ProgressUtilities.cs	A	Contracts	core	FinePrint helper: celestial/progress/string/system queries and contract data tables; reads game state through public API, transpile
+Assembly-CSharp/FinePrint/Utilities/PronounCasing.cs	A	Contracts	core	FinePrint enum/interface/data used by contract logic; pure, transpile
+Assembly-CSharp/FinePrint/Utilities/RecordTrackType.cs	A	Contracts	core	FinePrint enum/interface/data used by contract logic; pure, transpile
+Assembly-CSharp/FinePrint/Utilities/SpriteMap.cs	C	Contracts	Asset Manager / Primary Data Asset	Texture/sprite lookup map for contract icons; presentation asset mapping
+Assembly-CSharp/FinePrint/Utilities/StringUtilities.cs	A	Contracts	core	FinePrint helper: celestial/progress/string/system queries and contract data tables; reads game state through public API, transpile
+Assembly-CSharp/FinePrint/Utilities/SurveyDefinition.cs	A	Contracts	core	FinePrint helper: celestial/progress/string/system queries and contract data tables; reads game state through public API, transpile
+Assembly-CSharp/FinePrint/Utilities/SurveyDefinitionParameter.cs	A	Contracts	core	Survey definition data (experiment, allowed situations); Texture is a string name; data, transpile
+Assembly-CSharp/FinePrint/Utilities/SystemUtilities.cs	A	Contracts	core	FinePrint helper: celestial/progress/string/system queries and contract data tables; reads game state through public API, transpile
+Assembly-CSharp/FinePrint/Utilities/WaypointClusterState.cs	A	Contracts	core	FinePrint enum/interface/data used by contract logic; pure, transpile
+Assembly-CSharp/FinePrint/Utilities/WaypointParameter.cs	A	Contracts	core	FinePrint enum/interface/data used by contract logic; pure, transpile
+Assembly-CSharp/FinePrint/Waypoint.cs	B	Contracts		Contract waypoint data (lat/lon/alt, body, id, persistence) mixed with camera occlusion, zoom and sprite icon logic; extract data to core; HUD marker -> shell
+Assembly-CSharp/FinePrint/WaypointCastHit.cs	C	Contracts	UMG + core query	Struct implementing IScreenCaster to project waypoint to screen space via Camera; pure presentation
+Assembly-CSharp/FinePrint/WaypointManager.cs	B	Contracts		Static waypoint registry, distance queries and random surface position picking tied to body transforms plus waypoint material; extract registry/queries to core; rendering -> shell
+Assembly-CSharp/KerbNet/KerbNetMode.cs	C	CommNet	UMG + Render Target	KerbNet display mode: builds colour/contour map texture and mode button sprites; sampling via core queries, rendering in shell
+Assembly-CSharp/KerbNet/KerbNetModeBiome.cs	C	CommNet	UMG + Render Target	KerbNet display mode: builds colour/contour map texture and mode button sprites; sampling via core queries, rendering in shell
+Assembly-CSharp/KerbNet/KerbNetModeResource.cs	C	CommNet	UMG + core query	KerbNet resource-map mode: colour ramp from abundance samples, scanned-body check; mixed: abundance sampling is A (core query); texture/colour -> Render Target
+Assembly-CSharp/KerbNet/KerbNetModeTerrain.cs	C	CommNet	UMG + Render Target	KerbNet display mode: builds colour/contour map texture and mode button sprites; sampling via core queries, rendering in shell
+Assembly-CSharp/SentinelMission/CometDetectionContract.cs	A	Contracts	core	Sentinel mission contract/parameter/enum; rules, transpile
+Assembly-CSharp/SentinelMission/SentinelContract.cs	A	Contracts	core	Sentinel mission contract/parameter/enum; rules, transpile
+Assembly-CSharp/SentinelMission/SentinelModule.cs	A	Contracts	core	Sentinel telescope PartModule: scanning state and messages; lifecycle hooks only; needs PartModule host
+Assembly-CSharp/SentinelMission/SentinelParameter.cs	A	Contracts	core	Sentinel mission contract/parameter/enum; rules, transpile
+Assembly-CSharp/SentinelMission/SentinelScanType.cs	A	Contracts	core	Sentinel mission contract/parameter/enum; rules, transpile
+Assembly-CSharp/SentinelMission/SentinelScenario.cs	A	Contracts	core	Sentinel scenario: persistent next-spawn timer, deployed sentinel tracking, scan coroutines spawning untracked objects; needs ScenarioModule host; timers only
+Assembly-CSharp/SentinelMission/SentinelUtilities.cs	A	Contracts	core	Sentinel scan helpers: view angle, read duration, orbit/asteroid selection; pure maths, transpile

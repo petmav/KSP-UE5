@@ -1,0 +1,4 @@
+ksp_il=rebuilt-from-decompile
+note: SetupConstants: final statement (minOrbitalDistance via CelestialUtilities.GetMinimumOrbitalDistance) not evaluated outside Unity (TypeInitializationException); all preceding statements executed.
+unity-log: Log: PhysicsGlobals: Loading database
+unity-log: Error: Error: Empty part config file

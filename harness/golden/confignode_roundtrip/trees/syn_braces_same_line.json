@@ -1,0 +1,35 @@
+{
+ "name": "root",
+ "id": "",
+ "comment": null,
+ "values": [],
+ "nodes": [
+  {
+   "name": "NODE",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["a","1",null]
+   ],
+   "nodes": []
+  },
+  {
+   "name": "N2",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["b","2",null]
+   ],
+   "nodes": []
+  },
+  {
+   "name": "N3",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["c","3",null]
+   ],
+   "nodes": []
+  }
+ ]
+}

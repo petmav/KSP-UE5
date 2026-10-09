@@ -1,0 +1,3443 @@
+{
+ "ok": true,
+ "results": [
+  {
+   "dataset": "aero_forces",
+   "table": "drag_curve_value",
+   "rows": 2870,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "value": {
+     "type": "f32",
+     "n": 2870,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "aero_forces",
+   "table": "cube_inputs",
+   "rows": 34,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "url": {
+     "type": "str",
+     "n": 34,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "cubes": {
+     "type": "str",
+     "n": 34,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "weights": {
+     "type": "str",
+     "n": 34,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "postOcclusionArea": {
+     "type": "f32",
+     "n": 34,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "aero_forces",
+   "table": "cube_weighted",
+   "rows": 204,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "weightedArea": {
+     "type": "f32",
+     "n": 204,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "weightedDrag": {
+     "type": "f32",
+     "n": 204,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "weightedDepth": {
+     "type": "f32",
+     "n": 204,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "areaOccluded": {
+     "type": "f32",
+     "n": 204,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "aero_forces",
+   "table": "cube_drag",
+   "rows": 18122,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "flow_x": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "flow_y": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "flow_z": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "Area": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "AreaDrag": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "DragCoeff": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "CrossSectionalArea": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "ExposedArea": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "Depth": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "TaperDot": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "LiftForce_x": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "LiftForce_y": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "LiftForce_z": {
+     "type": "f32",
+     "n": 18122,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "CalculateDragValue": {
+     "type": "f64",
+     "n": 18122,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "aero_forces",
+   "table": "drag_chain_kerbin",
+   "rows": 2304,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "mach": {
+     "type": "f64",
+     "n": 2304,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "dynamicPressurekPa": {
+     "type": "f64",
+     "n": 2304,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "pseudoReDragMult": {
+     "type": "f64",
+     "n": 2304,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "dragValue": {
+     "type": "f64",
+     "n": 2304,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "dragScalar": {
+     "type": "f32",
+     "n": 2304,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "bodyLiftScalar": {
+     "type": "f32",
+     "n": 2304,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "bodyLift_x": {
+     "type": "f32",
+     "n": 2304,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "bodyLift_y": {
+     "type": "f32",
+     "n": 2304,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "bodyLift_z": {
+     "type": "f32",
+     "n": 2304,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "aero_forces",
+   "table": "lifting_surface",
+   "rows": 2160,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "liftDot": {
+     "type": "f32",
+     "n": 2160,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "absDot": {
+     "type": "f32",
+     "n": 2160,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "liftScalar": {
+     "type": "f32",
+     "n": 2160,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "lift_x": {
+     "type": "f32",
+     "n": 2160,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "lift_y": {
+     "type": "f32",
+     "n": 2160,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "lift_z": {
+     "type": "f32",
+     "n": 2160,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "dragScalar": {
+     "type": "f32",
+     "n": 2160,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "drag_x": {
+     "type": "f32",
+     "n": 2160,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "drag_y": {
+     "type": "f32",
+     "n": 2160,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "drag_z": {
+     "type": "f32",
+     "n": 2160,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "atmosphere_curves",
+   "table": "profile_100m",
+   "rows": 2704,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "pressure_kPa": {
+     "type": "f64",
+     "n": 2704,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "pressure_atm": {
+     "type": "f64",
+     "n": 2704,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "temperature": {
+     "type": "f64",
+     "n": 2704,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "density": {
+     "type": "f64",
+     "n": 2704,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "speedOfSound": {
+     "type": "f64",
+     "n": 2704,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "tempSunMult": {
+     "type": "f32",
+     "n": 2704,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "fullTemperature_off20": {
+     "type": "f64",
+     "n": 2704,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "atmosphere_curves",
+   "table": "flight_state",
+   "rows": 2176,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "staticPressurekPa": {
+     "type": "f64",
+     "n": 2176,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "staticPressureAtm": {
+     "type": "f64",
+     "n": 2176,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "atmosphericTemperature": {
+     "type": "f64",
+     "n": 2176,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "density": {
+     "type": "f64",
+     "n": 2176,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "dynamicPressurekPa": {
+     "type": "f64",
+     "n": 2176,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "speedOfSound": {
+     "type": "f64",
+     "n": 2176,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "mach": {
+     "type": "f64",
+     "n": 2176,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "solarAirMass": {
+     "type": "f64",
+     "n": 2176,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "solarFluxMultiplier": {
+     "type": "f64",
+     "n": 2176,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "convectiveMachLerp": {
+     "type": "f64",
+     "n": 2176,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "shockTemperature": {
+     "type": "f64",
+     "n": 2176,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "externalTemperature": {
+     "type": "f64",
+     "n": 2176,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "convectiveCoefficient": {
+     "type": "f64",
+     "n": 2176,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "convNewtonian": {
+     "type": "f64",
+     "n": 2176,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "convMach": {
+     "type": "f64",
+     "n": 2176,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "pseudoReynolds": {
+     "type": "f64",
+     "n": 2176,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "pseudoReDragMult": {
+     "type": "f32",
+     "n": 2176,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "densityThermalLerp": {
+     "type": "f64",
+     "n": 2176,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "backgroundRadiationTemp": {
+     "type": "f64",
+     "n": 2176,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "atmosphere_curves",
+   "table": "solar_effects",
+   "rows": 320,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "solarAirMass": {
+     "type": "f64",
+     "n": 320,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "solarFluxMultiplier": {
+     "type": "f64",
+     "n": 320,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "solarPowerFactor": {
+     "type": "f64",
+     "n": 320,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "body_catalog",
+   "table": "bodies",
+   "rows": 17,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "flightGlobalsIndex": {
+     "type": "i64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "parent": {
+     "type": "str",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "spawnOrder": {
+     "type": "i64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "Radius": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "GeeASL": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "Mass": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "gravParameter": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "gMagnitudeAtCenter": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "Density": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "SurfaceArea": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "sphereOfInfluence": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "hillSphere": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "rotates": {
+     "type": "bool",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "tidallyLocked": {
+     "type": "bool",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "solarRotationPeriod": {
+     "type": "bool",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "rotationPeriod_serialized": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "rotationPeriod": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "rotPeriodRecip": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "angularV": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "initialRotation": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "rotationAngle_UT0": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "solarDayLength": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "inverseRotThresholdAltitude": {
+     "type": "f32",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "hasSolidSurface": {
+     "type": "bool",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "isStar": {
+     "type": "bool",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "isHomeWorld": {
+     "type": "bool",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "ocean": {
+     "type": "bool",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "oceanDensity": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "atmosphere": {
+     "type": "bool",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "atmosphereContainsOxygen": {
+     "type": "bool",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "atmosphereDepth": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "atmosphereTemperatureSeaLevel": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "atmospherePressureSeaLevel": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "atmosphereMolarMass": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "atmosphereAdiabaticIndex": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "atmosphereTemperatureLapseRate": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "atmosphereGasMassLapseRate": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "atmosphereUsePressureCurve": {
+     "type": "bool",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "atmospherePressureCurveIsNormalized": {
+     "type": "bool",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "atmosphereUseTemperatureCurve": {
+     "type": "bool",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "atmosphereTemperatureCurveIsNormalized": {
+     "type": "bool",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "radiusAtmoFactor": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "atmDensityASL": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "atmPressureASL": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "albedo": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "emissivity": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "coreTemperatureOffset": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "convectionMultiplier": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "shockTemperatureMultiplier": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "maxAxialDot": {
+     "type": "f64",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "timeWarpAltitudeLimits": {
+     "type": "str",
+     "n": 17,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "body_catalog",
+   "table": "orbits",
+   "rows": 16,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "parent": {
+     "type": "str",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "reverse": {
+     "type": "bool",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "inclination": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "eccentricity": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "semiMajorAxis": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "LAN": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "argumentOfPeriapsis": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "meanAnomalyAtEpoch": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "epoch": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "meanMotion": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "period": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "PeR": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "ApR": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "ObT_UT0": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "meanAnomaly_UT0": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "eccentricAnomaly_UT0": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "trueAnomaly_UT0": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "radius_UT0": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "orbitalSpeed_UT0": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "pos_x": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "pos_y": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "pos_z": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "vel_x": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "vel_y": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "vel_z": {
+     "type": "f64",
+     "n": 16,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "body_catalog",
+   "table": "atmosphere_profile_1km",
+   "rows": 1072,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "pressure_kPa": {
+     "type": "f64",
+     "n": 1072,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "pressure_atm": {
+     "type": "f64",
+     "n": 1072,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "temperature": {
+     "type": "f64",
+     "n": 1072,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "density": {
+     "type": "f64",
+     "n": 1072,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "speedOfSound": {
+     "type": "f64",
+     "n": 1072,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "body_catalog",
+   "table": "body_curves",
+   "rows": 265,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "time": {
+     "type": "f32",
+     "n": 265,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "value": {
+     "type": "f32",
+     "n": 265,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "inTangent": {
+     "type": "f32",
+     "n": 265,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "outTangent": {
+     "type": "f32",
+     "n": 265,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "weightedMode": {
+     "type": "i64",
+     "n": 265,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "preInfinity": {
+     "type": "i64",
+     "n": 265,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "postInfinity": {
+     "type": "i64",
+     "n": 265,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "confignode_roundtrip",
+   "table": "corpus",
+   "rows": 47,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "source": {
+     "type": "str",
+     "n": 47,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "input_sha256": {
+     "type": "str",
+     "n": 47,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "input_bytes": {
+     "type": "i64",
+     "n": 47,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "loaded": {
+     "type": "bool",
+     "n": 47,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "root_values": {
+     "type": "i64",
+     "n": 47,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "root_nodes": {
+     "type": "i64",
+     "n": 47,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "total_values": {
+     "type": "i64",
+     "n": 47,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "total_nodes": {
+     "type": "i64",
+     "n": 47,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "save_sha256": {
+     "type": "str",
+     "n": 47,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "save_bytes": {
+     "type": "i64",
+     "n": 47,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "tostring_sha256": {
+     "type": "str",
+     "n": 47,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "parse_tree_equals_load_tree": {
+     "type": "bool",
+     "n": 47,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "resave_identical": {
+     "type": "bool",
+     "n": 47,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "confignode_roundtrip",
+   "table": "save_text",
+   "rows": 21,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "save_text": {
+     "type": "str",
+     "n": 21,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "tostring_text": {
+     "type": "str",
+     "n": 21,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "curves_eval",
+   "table": "curves",
+   "rows": 366,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "origin": {
+     "type": "str",
+     "n": 366,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "path": {
+     "type": "str",
+     "n": 366,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "key_count": {
+     "type": "i64",
+     "n": 366,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "minTime": {
+     "type": "f32",
+     "n": 366,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "maxTime": {
+     "type": "f32",
+     "n": 366,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "cfg_keys": {
+     "type": "str",
+     "n": 366,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "curves_eval",
+   "table": "keys",
+   "rows": 1055,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "time": {
+     "type": "f32",
+     "n": 1055,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "value": {
+     "type": "f32",
+     "n": 1055,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "inTangent": {
+     "type": "f32",
+     "n": 1055,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "outTangent": {
+     "type": "f32",
+     "n": 1055,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "curves_eval",
+   "table": "samples",
+   "rows": 28484,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "t": {
+     "type": "f32",
+     "n": 28484,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "value": {
+     "type": "f32",
+     "n": 28484,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "engine_thrust",
+   "table": "engines",
+   "rows": 41,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "file": {
+     "type": "str",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "maxThrust": {
+     "type": "f32",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "minThrust": {
+     "type": "f32",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "g": {
+     "type": "f32",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "maxFuelFlow": {
+     "type": "f32",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "minFuelFlow": {
+     "type": "f32",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "throttleMin": {
+     "type": "f32",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "isp_vac": {
+     "type": "f32",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "isp_asl": {
+     "type": "f32",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "exhaustVelocity_vac": {
+     "type": "f32",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "MaxThrustOutputVac": {
+     "type": "f32",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "atmChangeFlow": {
+     "type": "bool",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "useAtmCurve": {
+     "type": "bool",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "useVelCurve": {
+     "type": "bool",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "useThrustCurve": {
+     "type": "bool",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "flowMultCap": {
+     "type": "f32",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "multIsp": {
+     "type": "f32",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "multFlow": {
+     "type": "f32",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "mixtureDensity": {
+     "type": "f32",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "ratioSum": {
+     "type": "f64",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "propellant_maxFuelFlow": {
+     "type": "str",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "atmosphereCurve_keys": {
+     "type": "str",
+     "n": 41,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "engine_thrust",
+   "table": "isp_thrust_vs_pressure",
+   "rows": 738,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "isp": {
+     "type": "f32",
+     "n": 738,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "MaxThrustOutputAtm": {
+     "type": "f32",
+     "n": 738,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "GetEngineThrust_full": {
+     "type": "f32",
+     "n": 738,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "GetEngineThrust_half": {
+     "type": "f32",
+     "n": 738,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "engine_thrust",
+   "table": "kerbin_flight",
+   "rows": 4059,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "pressure_atm": {
+     "type": "f32",
+     "n": 4059,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "density": {
+     "type": "f64",
+     "n": 4059,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "isp": {
+     "type": "f32",
+     "n": 4059,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "MaxThrustOutputAtm": {
+     "type": "f32",
+     "n": 4059,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "engine_thrust",
+   "table": "rocket_equation",
+   "rows": 410,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "thrust": {
+     "type": "f32",
+     "n": 410,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "isp": {
+     "type": "f64",
+     "n": 410,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "dV": {
+     "type": "f32",
+     "n": 410,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "burnTime_fullThrottle": {
+     "type": "f64",
+     "n": 410,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "math_shim",
+   "table": "f32",
+   "rows": 903,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "a0": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a1": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a2": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a3": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a4": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a5": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "r0": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "r1": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "r2": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "r3": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "math_shim",
+   "table": "f64",
+   "rows": 532,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "a0": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a1": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a2": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a3": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a4": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a5": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "r0": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 18446744073709551616,
+     "fail": 0,
+     "worst": null
+    },
+    "r1": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 18446744073709551616,
+     "fail": 0,
+     "worst": null
+    },
+    "r2": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 18446744073709551616,
+     "fail": 0,
+     "worst": null
+    },
+    "r3": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "orbit_propagation",
+   "table": "cases",
+   "rows": 92,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "body": {
+     "type": "str",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "mu": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "inclination": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "eccentricity": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "semiMajorAxis": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "LAN": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "argumentOfPeriapsis": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "meanAnomalyAtEpoch": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "epoch": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "meanMotion": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "period": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "ObTAtEpoch": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "h_x": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "h_y": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "h_z": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "eccVec_x": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "eccVec_y": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "eccVec_z": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "an_x": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "an_y": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "an_z": {
+     "type": "f64",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "note": {
+     "type": "str",
+     "n": 92,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "orbit_propagation",
+   "table": "state_at_ut",
+   "rows": 1020,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "ObT": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "meanAnomaly": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "eccentricAnomaly": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "trueAnomaly": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "pos_x": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "pos_y": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "pos_z": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "vel_x": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "vel_y": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "vel_z": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "sv_radius": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "sv_pos_x": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "sv_pos_y": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "sv_pos_z": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "sv_vel_x": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "sv_vel_y": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "sv_vel_z": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "u_radius": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "u_orbitalSpeed": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "u_altitude": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "u_orbitalEnergy": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "u_timeToPe": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 18446744073709551616,
+     "fail": 0,
+     "worst": null
+    },
+    "u_timeToAp": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "u_orbitPercent": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "GetTimeToPeriapsis_final": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 18446744073709551616,
+     "fail": 0,
+     "worst": null
+    },
+    "GetTimeToPeriapsis_default": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 18446744073709551616,
+     "fail": 0,
+     "worst": null
+    },
+    "nextPeTime": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "nextApTime": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "orbit_propagation",
+   "table": "from_state_vectors",
+   "rows": 1020,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "inclination": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "eccentricity": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "semiMajorAxis": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "LAN": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "argumentOfPeriapsis": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "meanAnomalyAtEpoch": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "epoch": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "trueAnomaly": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "eccentricAnomaly": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "meanAnomaly": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "period": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "ObT": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "timeToPe": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 18446744073709551616,
+     "fail": 0,
+     "worst": null
+    },
+    "timeToAp": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "orbitalEnergy": {
+     "type": "f64",
+     "n": 1020,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "orbit_propagation",
+   "table": "state_vector_cases",
+   "rows": 9,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "body": {
+     "type": "str",
+     "n": 9,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "UT": {
+     "type": "f64",
+     "n": 9,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "pos_x": {
+     "type": "f64",
+     "n": 9,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "pos_y": {
+     "type": "f64",
+     "n": 9,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "pos_z": {
+     "type": "f64",
+     "n": 9,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "vel_x": {
+     "type": "f64",
+     "n": 9,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "vel_y": {
+     "type": "f64",
+     "n": 9,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "vel_z": {
+     "type": "f64",
+     "n": 9,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "inclination": {
+     "type": "f64",
+     "n": 9,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "eccentricity": {
+     "type": "f64",
+     "n": 9,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "semiMajorAxis": {
+     "type": "f64",
+     "n": 9,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "LAN": {
+     "type": "f64",
+     "n": 9,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "argumentOfPeriapsis": {
+     "type": "f64",
+     "n": 9,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "meanAnomalyAtEpoch": {
+     "type": "f64",
+     "n": 9,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "trueAnomaly": {
+     "type": "f64",
+     "n": 9,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "period": {
+     "type": "f64",
+     "n": 9,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "timeToPe": {
+     "type": "f64",
+     "n": 9,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 18446744073709551616,
+     "fail": 0,
+     "worst": null
+    },
+    "timeToAp": {
+     "type": "f64",
+     "n": 9,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "orbit_propagation",
+   "table": "kepler",
+   "rows": 281,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "E": {
+     "type": "f64",
+     "n": 281,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "trueAnomaly_of_E": {
+     "type": "f64",
+     "n": 281,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "E_of_trueAnomaly": {
+     "type": "f64",
+     "n": 281,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "M_of_E": {
+     "type": "f64",
+     "n": 281,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "patched_conics",
+   "table": "patches",
+   "rows": 11,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "referenceBody": {
+     "type": "str",
+     "n": 11,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "patchStartTransition": {
+     "type": "str",
+     "n": 11,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "patchEndTransition": {
+     "type": "str",
+     "n": 11,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "StartUT": {
+     "type": "f64",
+     "n": 11,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "EndUT": {
+     "type": "f64",
+     "n": 11,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "UTsoi": {
+     "type": "f64",
+     "n": 11,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "inclination": {
+     "type": "f64",
+     "n": 11,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "eccentricity": {
+     "type": "f64",
+     "n": 11,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "semiMajorAxis": {
+     "type": "f64",
+     "n": 11,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "LAN": {
+     "type": "f64",
+     "n": 11,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "argumentOfPeriapsis": {
+     "type": "f64",
+     "n": 11,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "meanAnomalyAtEpoch": {
+     "type": "f64",
+     "n": 11,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "epoch": {
+     "type": "f64",
+     "n": 11,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "PeR": {
+     "type": "f64",
+     "n": 11,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "ApR": {
+     "type": "f64",
+     "n": 11,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "closestEncounterLevel": {
+     "type": "str",
+     "n": 11,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "closestEncounterBody": {
+     "type": "str",
+     "n": 11,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "ClAppr": {
+     "type": "f64",
+     "n": 11,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "UTappr": {
+     "type": "f64",
+     "n": 11,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "physics_constants",
+   "table": "physicsglobals",
+   "rows": 213,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "static": {
+     "type": "bool",
+     "n": 213,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "type": {
+     "type": "str",
+     "n": 213,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "value": {
+     "type": "str",
+     "n": 213,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "value_f64": {
+     "type": "f64",
+     "n": 213,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "source": {
+     "type": "str",
+     "n": 213,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  }
+ ]
+}

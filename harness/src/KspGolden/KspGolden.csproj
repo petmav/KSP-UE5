@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Golden-output generator. Runs KSP's own (patched-copy) Assembly-CSharp on .NET Framework 4.8 x64. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <Optimize>true</Optimize>
+    <AssemblyName>KspGolden</AssemblyName>
+    <OutputPath>..\..\build\KspGolden\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+    <NoWarn>CS0618;CS0649;CS0169</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Numerics" />
+    <Reference Include="Assembly-CSharp"><HintPath>..\..\build\patched\Assembly-CSharp.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="KspUnityShim"><HintPath>..\..\build\KspUnityShim\KspUnityShim.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="Assembly-CSharp-firstpass"><HintPath>..\..\lib\Assembly-CSharp-firstpass.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="UnityEngine"><HintPath>..\..\lib\UnityEngine.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>..\..\lib\UnityEngine.CoreModule.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="UnityEngine.PhysicsModule"><HintPath>..\..\lib\UnityEngine.PhysicsModule.dll</HintPath><Private>true</Private></Reference>
+    <Reference Include="UnityEngine.AnimationModule"><HintPath>..\..\lib\UnityEngine.AnimationModule.dll</HintPath><Private>true</Private></Reference>
+  </ItemGroup>
+  <!-- Every other game/Unity assembly is copied next to the exe so Assembly-CSharp's references resolve. -->
+  <ItemGroup>
+    <None Include="..\..\lib\*.dll" Exclude="..\..\lib\Assembly-CSharp.dll;..\..\lib\Assembly-CSharp.de4dot-original.dll" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+</Project>

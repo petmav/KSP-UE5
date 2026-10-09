@@ -1,0 +1,61 @@
+files scanned 2867 unity types used 265 shadowed ['Axis', 'BaseField', 'Behaviour', 'ColorTween', 'CommandType', 'Easing', 'EventType', 'Extents', 'FaceInfo', 'FloatTween', 'FontData', 'FontStyles', 'FontWeights', 'Gender', 'GlyphValueRecord', 'HorizontalAlignment', 'ITextElement', 'ITweenValue', 'Input', 'InputDevices', 'KerningPair', 'KerningPairKey', 'KerningTable', 'ListPool', 'Marker', 'MaterialReference', 'MaterialReferenceManager', 'MouseButton', 'MouseOverEvent', 'Page', 'Panel', 'Plane', 'Pool', 'Ray', 'Renderer', 'Resources', 'SetPropertyUtility', 'ShaderPropertyType', 'ShaderUtilities', 'State', 'TextureFormat', 'TweenRunner', 'Vertex', 'VertexSortingOrder', 'VerticalAlignment', 'WordWrapState', 'WrapMode']
+839 935 MonoBehaviour UnityEngine.CoreModule {'C': 700, 'B': 107, 'A': 32}
+618 5581 Vector3 UnityEngine.CoreModule {'B': 140, 'C': 345, 'A': 133}
+617 2488 Debug UnityEngine.CoreModule {'A': 203, 'B': 139, 'C': 275}
+513 1378 Object UnityEngine.CoreModule {'C': 373, 'A': 37, 'B': 103}
+433 2372 Mathf UnityEngine.CoreModule {'B': 81, 'C': 251, 'A': 101}
+407 2415 SerializeField UnityEngine.CoreModule {'C': 261, 'B': 73, 'A': 73}
+405 1421 GameObject UnityEngine.CoreModule {'C': 303, 'B': 84, 'A': 18}
+374 1089 Transform UnityEngine.CoreModule {'B': 117, 'C': 240, 'A': 17}
+342 3695 Color UnityEngine.CoreModule {'B': 55, 'C': 243, 'A': 44}
+292 1538 Vector2 UnityEngine.CoreModule {'C': 218, 'A': 32, 'B': 42}
+277 1321 Quaternion UnityEngine.CoreModule {'B': 84, 'C': 127, 'A': 66}
+236 728 Time UnityEngine.CoreModule {'C': 165, 'A': 20, 'B': 51}
+224 644 RectTransform UnityEngine.CoreModule {'C': 217, 'B': 6, 'A': 1}
+213 650 Button UnityEngine.UI {'C': 209, 'B': 4}
+150 526 PointerEventData UnityEngine.UI {'C': 145, 'B': 5}
+121 420 Random UnityEngine.CoreModule {'A': 40, 'C': 60, 'B': 21}
+114 285 Image UnityEngine.UI {'C': 113, 'B': 1}
+113 288 Camera UnityEngine.CoreModule {'C': 93, 'B': 19, 'A': 1}
+112 445 Texture2D UnityEngine.CoreModule {'A': 13, 'C': 87, 'B': 12}
+100 354 Material UnityEngine.CoreModule {'C': 82, 'B': 18}
+93 93 AddComponentMenu UnityEngine.CoreModule {'C': 33, 'B': 12, 'A': 48}
+81 239 Toggle UnityEngine.UI {'C': 81}
+79 86 RequireComponent UnityEngine.CoreModule {'C': 78, 'A': 1}
+76 204 Rect UnityEngine.CoreModule {'C': 56, 'A': 10, 'B': 10}
+76 133 ContextMenu UnityEngine.CoreModule {'C': 37, 'B': 31, 'A': 8}
+70 458 KeyCode UnityEngine.CoreModule {'C': 61, 'B': 8, 'A': 1}
+64 64 IEventSystemHandler UnityEngine.UI {'C': 63, 'B': 1}
+61 207 HideInInspector UnityEngine.CoreModule {'C': 31, 'B': 20, 'A': 10}
+61 172 Sprite UnityEngine.CoreModule {'A': 2, 'C': 58, 'B': 1}
+58 117 Slider UnityEngine.UI {'C': 58}
+57 129 Physics UnityEngine.PhysicsModule {'B': 36, 'C': 21}
+56 242 Collider UnityEngine.PhysicsModule {'B': 41, 'C': 15}
+56 137 MeshRenderer UnityEngine.CoreModule {'C': 32, 'B': 23, 'A': 1}
+54 243 Shader UnityEngine.CoreModule {'C': 40, 'B': 13, 'A': 1}
+54 203 Rigidbody UnityEngine.PhysicsModule {'B': 34, 'C': 18, 'A': 2}
+53 155 Screen UnityEngine.CoreModule {'C': 50, 'A': 1, 'B': 2}
+49 69 RawImage UnityEngine.UI {'C': 49}
+48 75 WaitForSeconds UnityEngine.CoreModule {'C': 24, 'A': 10, 'B': 14}
+46 131 Application UnityEngine.CoreModule {'C': 33, 'B': 8, 'A': 5}
+44 108 RaycastHit UnityEngine.PhysicsModule {'B': 25, 'C': 18, 'A': 1}
+42 139 AudioSource UnityEngine.AudioModule {'C': 32, 'B': 10}
+41 83 LayoutElement UnityEngine.UI {'C': 40, 'B': 1}
+41 77 LayerMask UnityEngine.CoreModule {'C': 27, 'B': 14}
+40 138 Selectable UnityEngine.UI {'C': 40}
+40 98 Texture UnityEngine.CoreModule {'C': 34, 'B': 4, 'A': 2}
+39 142 Vector4 UnityEngine.CoreModule {'C': 24, 'A': 11, 'B': 4}
+38 125 Mesh UnityEngine.CoreModule {'C': 21, 'B': 17}
+38 124 Animation UnityEngine.AnimationModule {'C': 21, 'B': 17}
+38 53 ScrollRect UnityEngine.UI {'C': 37, 'B': 1}
+37 40 Coroutine UnityEngine.CoreModule {'A': 3, 'C': 29, 'B': 5}
+37 40 IPointerExitHandler UnityEngine.UI {'C': 37}
+36 39 IPointerEnterHandler UnityEngine.UI {'C': 36}
+34 300 ParticleSystem UnityEngine.ParticleSystemModule {'C': 26, 'B': 8}
+34 211 Space UnityEngine.CoreModule {'B': 12, 'C': 19, 'A': 3}
+34 139 TextAnchor UnityEngine.TextRenderingModule {'C': 33, 'A': 1}
+32 88 Canvas UnityEngine.UIModule {'C': 30, 'B': 2}
+30 119 RectOffset UnityEngine.CoreModule {'C': 29, 'A': 1}
+30 108 AnimationCurve UnityEngine.CoreModule {'C': 18, 'B': 1, 'A': 11}
+30 102 Light UnityEngine.CoreModule {'C': 23, 'B': 7}
+30 72 MeshFilter UnityEngine.CoreModule {'C': 21, 'B': 9}

@@ -1,0 +1,170 @@
+path	tier	subsystem	ue5_counterpart	rationale
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIDropDownItem.cs	C	DLC-MakingHistory	UMG widget	Mission-editor dropdown item (key/value/display string); editor UI data.
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIDropDownItemListExtensions.cs	C	DLC-MakingHistory	UMG widget	Helpers extracting keys/values/display strings from editor dropdown lists.
+Assembly-CSharp/Expansions/Missions/Editor/MENodeConnectionType.cs				Mission node connection type enum (also used by runtime flow); data.
+Assembly-CSharp/Expansions/Missions/Editor/OrbitGizmoMode.cs	C	DLC-MakingHistory	UMG widget	Mission-editor orbit gizmo mode enum.
+Assembly-CSharp/Expansions/Missions/Editor/SurfaceLocation.cs				Surface location struct (lat/lon/alt/body) used by mission parameters; data.
+Assembly-CSharp/Expansions/Missions/Editor/ValidationStatus.cs				Mission validation status enum (used by validator rules).
+Assembly-CSharp/Expansions/Missions/Editor/ValidatorMode.cs				Mission validator mode enum.
+Assembly-CSharp/Expansions/Missions/Flow/IMEFlowBlock.cs				Mission flow block interface (then/or blocks of the node graph).
+Assembly-CSharp/Expansions/Missions/Flow/MEFlowBlock.cs				Mission flow block: ordered child blocks with persistence; mixed: UI refresh hook is C.
+Assembly-CSharp/Expansions/Missions/Flow/MEFlowConvergence.cs				Flow convergence marker where mission paths merge.
+Assembly-CSharp/Expansions/Missions/Flow/MEFlowExtensions.cs				Flow graph helpers: count/distinct start nodes, paths starting from a node.
+Assembly-CSharp/Expansions/Missions/Flow/MEFlowOrBlock.cs				OR flow block (any branch).
+Assembly-CSharp/Expansions/Missions/Flow/MEFlowThenBlock.cs				THEN flow block (sequential branch).
+Assembly-CSharp/Expansions/Missions/Flow/MENodePathInfo.cs				Per-node path info for the mission flow with persistence.
+Assembly-CSharp/Expansions/Missions/Flow/MEPath.cs				Mission path: node sequence with convergence lookup, clone and persistence.
+Assembly-CSharp/Expansions/Missions/Flow/MEPathGroup.cs				Group of mission paths.
+Assembly-CSharp/Expansions/Missions/IActionModule.cs				Mission action module interface (fire, persistence, display).
+Assembly-CSharp/Expansions/Missions/IMENodeDisplay.cs				Interface for node parameter display strings (shared by runtime modules and editor).
+Assembly-CSharp/Expansions/Missions/IMissionKerbal.cs				Interface for mission kerbal references.
+Assembly-CSharp/Expansions/Missions/INodeBody.cs				Interface: mission node references a celestial body.
+Assembly-CSharp/Expansions/Missions/INodeOrbit.cs				Interface: mission node references an orbit.
+Assembly-CSharp/Expansions/Missions/INodeWaypoint.cs				Interface: mission node exposes a waypoint.
+Assembly-CSharp/Expansions/Missions/IScoreableObjective.cs				Interface: test node contributes a score modifier.
+Assembly-CSharp/Expansions/Missions/ITestModule.cs				Mission test module interface (Test(), persistence, display).
+Assembly-CSharp/Expansions/Missions/ITestNodeLabel.cs				Interface: test node exposes a label/waypoint for HUD markers.
+Assembly-CSharp/Expansions/Missions/MEScoreModule.cs				Attribute declaring which score modules a node type allows.
+Assembly-CSharp/Expansions/Missions/MissionAwards.cs				Mission awards list: evaluates award modules at mission end, tracking lifecycle.
+Assembly-CSharp/Expansions/Missions/MissionBlackListPreFlightCheck.cs				Pre-flight check rejecting craft that use mission-blacklisted parts.
+Assembly-CSharp/Expansions/Missions/MissionCameraLockOptions.cs				Mission camera lock option enum.
+Assembly-CSharp/Expansions/Missions/MissionCameraModeOptions.cs				Mission camera mode option enum.
+Assembly-CSharp/Expansions/Missions/MissionCelestialBody.cs				Mission parameter wrapping a celestial body choice with validation and persistence.
+Assembly-CSharp/Expansions/Missions/MissionCheckpointValidator.cs				Validates mission checkpoints by comparing node/module state recursively; pure comparison logic.
+Assembly-CSharp/Expansions/Missions/MissionCraft.cs				Mission craft record: craft file part names and persistent ids mapping.
+Assembly-CSharp/Expansions/Missions/MissionDifficulty.cs				Mission difficulty enum.
+Assembly-CSharp/Expansions/Missions/MissionDifficultyWithColor.cs				Mission difficulty enum with colour tags.
+Assembly-CSharp/Expansions/Missions/MissionEndOptions.cs				Mission end options enum.
+Assembly-CSharp/Expansions/Missions/MissionFlow.cs				Mission flow container (start paths) with persistence.
+Assembly-CSharp/Expansions/Missions/MissionInstructor.cs				Mission briefing instructor selection with persistence.
+Assembly-CSharp/Expansions/Missions/MissionKerbal.cs				Mission kerbal parameter (specific/any/type of kerbal) with validation and persistence; mixed: dropdown UI hooks are C.
+Assembly-CSharp/Expansions/Missions/MissionLocalizer.cs				Loads per-mission localization files into the string table.
+Assembly-CSharp/Expansions/Missions/MissionMappedVessel.cs				Mapping between mission craft and in-game vessel persistent ids.
+Assembly-CSharp/Expansions/Missions/MissionMappedVesselsExtension.cs				Lookup helpers over mapped vessel lists (by id, part id, name).
+Assembly-CSharp/Expansions/Missions/MissionOrbit.cs				Mission orbit parameter (OrbitSnapshot subclass) with relative orbits and validation; orbit maths.
+Assembly-CSharp/Expansions/Missions/MissionPack.cs				Mission pack metadata (name, order) with persistence.
+Assembly-CSharp/Expansions/Missions/MissionParamsExtras.cs				Mission game parameters (extras) custom node.
+Assembly-CSharp/Expansions/Missions/MissionParamsFacilities.cs				Mission game parameters (facility levels) custom node.
+Assembly-CSharp/Expansions/Missions/MissionParamsGeneral.cs				Mission game parameters (general) custom node.
+Assembly-CSharp/Expansions/Missions/MissionPartFilter.cs				Mission available/excluded parts filter applied to the editor part list; rules + persistence.
+Assembly-CSharp/Expansions/Missions/MissionQuaternion.cs				Serialisable quaternion for mission parameters.
+Assembly-CSharp/Expansions/Missions/MissionScore.cs				Mission score modules list: global score modules, awarding and descriptions.
+Assembly-CSharp/Expansions/Missions/MissionScoreInfo.cs				Persistent per-player mission score records (add/delete/compare, save to disk).
+Assembly-CSharp/Expansions/Missions/MissionTypes.cs				Mission type enum.
+Assembly-CSharp/Expansions/Missions/ParamChoices_CelestialBodySurface.cs				Mission parameter: surface point on a body (waypoint/world position).
+Assembly-CSharp/Expansions/Missions/ParamChoices_VesselSimpleLocation.cs				Mission parameter: simple vessel location choice.
+Assembly-CSharp/Expansions/Missions/Runtime/MissionAppMode.cs				Missions app mode enum.
+Assembly-CSharp/Expansions/Missions/ScoreInfo.cs				Single score record with persistence.
+Assembly-CSharp/Expansions/Missions/ScoreModifierType.cs				Score modifier type enum.
+Assembly-CSharp/Expansions/Missions/ScoreModule.cs				Score module base: awards points for a node outcome.
+Assembly-CSharp/Expansions/Missions/ScoreModule_Accuracy.cs				Score module: points by accuracy of a test result.
+Assembly-CSharp/Expansions/Missions/ScoreModule_Completion.cs				Score module: points for node completion.
+Assembly-CSharp/Expansions/Missions/ScoreModule_Modifier.cs				Score module: multiplicative/additive score modifier.
+Assembly-CSharp/Expansions/Missions/ScoreModule_Resource.cs				Score module: points by resource remaining on a vessel.
+Assembly-CSharp/Expansions/Missions/ScoreModule_Time.cs				Score module: points by elapsed time.
+Assembly-CSharp/Expansions/Missions/ScoreRange.cs				Score range bucket (min/max/score) with in-range test.
+Assembly-CSharp/Expansions/Missions/SurfaceArea.cs				Mission surface area (circle on a body): point-in-circle tests, waypoint; geometry maths.
+Assembly-CSharp/Expansions/Missions/SurfaceVolume.cs				Mission surface volume (cylinder/sphere): inside-volume tests, body adjust; geometry maths.
+Assembly-CSharp/Expansions/Missions/TestComparisonLessGreaterEqual.cs				Test comparison enum (<, >, =).
+Assembly-CSharp/Expansions/Missions/TestComparisonLessGreaterOnly.cs				Test comparison enum (<, >).
+Assembly-CSharp/Expansions/Missions/TestComparisonOperator.cs				Test comparison operator enum.
+Assembly-CSharp/Expansions/Missions/TestGroup.cs				Group of test modules on a node: initialise, run validation, evaluate Test() with persistence.
+Assembly-CSharp/Expansions/Missions/VesselGroundLocation.cs				Mission parameter: vessel ground placement (lat/lon/heading) with persistence; gizmo icon hooks are C.
+Assembly-CSharp/Expansions/Missions/VesselLocation.cs				Mission parameter: vessel start location (launch site or orbit).
+Assembly-CSharp/Expansions/Missions/VesselPartIDPair.cs				Vessel/part persistent id pair validated against a craft.
+Assembly-CSharp/Expansions/Missions/VesselRestriction.cs				Vessel restriction base: compares a craft metric to a limit in the editor, events and app entry; mixed: app UI refs are C.
+Assembly-CSharp/Expansions/Missions/VesselRestriction_Cost.cs				Vessel restriction: craft cost limit.
+Assembly-CSharp/Expansions/Missions/VesselRestriction_Crew.cs				Vessel restriction: crew count/trait limits.
+Assembly-CSharp/Expansions/Missions/VesselRestriction_Mass.cs				Vessel restriction: craft mass limit.
+Assembly-CSharp/Expansions/Missions/VesselRestriction_PartCount.cs				Vessel restriction: part count limit.
+Assembly-CSharp/Expansions/Missions/VesselRestriction_RequiredParts.cs				Vessel restriction: required parts present.
+Assembly-CSharp/Expansions/Missions/VesselRestriction_Resource.cs				Vessel restriction: resource amount limits.
+Assembly-CSharp/Expansions/Missions/VesselRestriction_Size.cs				Vessel restriction: craft size (bounding box) limits.
+Assembly-CSharp/Expansions/Missions/VesselRestriction_Stages.cs				Vessel restriction: stage count limit.
+Assembly-CSharp/Expansions/Missions/VesselRestrictionList.cs				List of vessel restrictions with app event wiring.
+Assembly-CSharp/Expansions/Missions/VesselRestrictionOptions.cs				Attribute declaring vessel restriction options.
+Assembly-CSharp/Expansions/Missions/VesselSituation.cs				Mission vessel situation: craft, crew assignment, required parts, location; rules + persistence; mixed: editor events are C.
+Assembly-CSharp/Expansions/Serenity/Contracts/CollectDeployedScience.cs				Breaking Ground contract parameter: collect science from deployed experiments on a body.
+Assembly-CSharp/Expansions/Serenity/Contracts/CollectROCScienceArm.cs				Breaking Ground contract parameter: scan a surface feature (ROC) with a robotic arm scanner.
+Assembly-CSharp/Expansions/Serenity/Contracts/CollectROCScienceRetrieval.cs				Breaking Ground contract parameter: recover a surface feature sample to KSC.
+Assembly-CSharp/Expansions/Serenity/Contracts/DeployedScienceContract.cs				Breaking Ground contract: deploy surface science on a body; generation and rewards.
+Assembly-CSharp/Expansions/Serenity/Contracts/ROCScienceArmContract.cs				Breaking Ground contract: arm-scan a surface feature type; generation and rewards.
+Assembly-CSharp/Expansions/Serenity/Contracts/ROCScienceRetrievalContract.cs				Breaking Ground contract: retrieve a surface feature sample; generation and rewards.
+Assembly-CSharp/FinePrint/Contracts/ARMContract.cs				FinePrint contract: capture/redirect an asteroid; generation and rewards.
+Assembly-CSharp/FinePrint/Contracts/BaseContract.cs				FinePrint contract: build a surface base with crew/part requirements; generation, waypoint, rewards.
+Assembly-CSharp/FinePrint/Contracts/CometSampleContract.cs				FinePrint contract: sample a comet; expiry when the comet is lost.
+Assembly-CSharp/FinePrint/Contracts/ISRUContract.cs				FinePrint contract: extract/deliver a resource from a body; resource selection and rewards.
+Assembly-CSharp/FinePrint/Contracts/Parameters/AsteroidParameter.cs				FinePrint parameter: vessel has an asteroid attached (towing check on dock/modify).
+Assembly-CSharp/FinePrint/Contracts/Parameters/CometDetectionParameter.cs				FinePrint parameter: detect a comet (discovery event).
+Assembly-CSharp/FinePrint/Contracts/Parameters/CometParameter.cs				FinePrint parameter: vessel has a comet attached.
+Assembly-CSharp/FinePrint/Contracts/Parameters/CometScienceParameter.cs				FinePrint parameter: collect comet science with a specific experiment.
+Assembly-CSharp/FinePrint/Contracts/Parameters/ConstructionParameter.cs				FinePrint parameter: attach a construction part via EVA construction.
+Assembly-CSharp/FinePrint/Contracts/Parameters/CrewCapacityParameter.cs				FinePrint parameter: vessel crew capacity at least N.
+Assembly-CSharp/FinePrint/Contracts/Parameters/CrewTraitParameter.cs				FinePrint parameter: crew with a given trait/level aboard.
+Assembly-CSharp/FinePrint/Contracts/Parameters/KerbalDestinationParameter.cs				FinePrint parameter: tourist reaches a destination per flight log.
+Assembly-CSharp/FinePrint/Contracts/Parameters/KerbalGeeAdventureParameter.cs				FinePrint parameter: tourist experiences high g without passing out.
+Assembly-CSharp/FinePrint/Contracts/Parameters/KerbalTourParameter.cs				FinePrint parameter: tourist itinerary completion and safe recovery.
+Assembly-CSharp/FinePrint/Contracts/Parameters/LocationAndSituationParameter.cs				FinePrint parameter: vessel at body+situation.
+Assembly-CSharp/FinePrint/Contracts/Parameters/MobileBaseParameter.cs				FinePrint parameter: base has wheels and is mobile.
+Assembly-CSharp/FinePrint/Contracts/Parameters/PartRequestParameter.cs				FinePrint parameter: vessel has requested parts/modules.
+Assembly-CSharp/FinePrint/Contracts/Parameters/ProgressTrackingParameter.cs				FinePrint parameter: achieve a progress-tracking milestone.
+Assembly-CSharp/FinePrint/Contracts/Parameters/RepairPartParameter.cs				FinePrint parameter: repair a specific part.
+Assembly-CSharp/FinePrint/Contracts/Parameters/ResourceExtractionParameter.cs				FinePrint parameter: harvest N units of a resource on a body.
+Assembly-CSharp/FinePrint/Contracts/Parameters/ResourcePossessionParameter.cs				FinePrint parameter: possess N units of a resource.
+Assembly-CSharp/FinePrint/Contracts/Parameters/RoverWayPointParameter.cs				FinePrint parameter: drive a rover through surface waypoints.
+Assembly-CSharp/FinePrint/Contracts/Parameters/SpecificOrbitParameter.cs				FinePrint parameter: match a specific orbit within deviation; mixed: orbit renderer hook is C.
+Assembly-CSharp/FinePrint/Contracts/Parameters/SpecificVesselParameter.cs				FinePrint parameter: use a specific vessel (rename/scan tracking).
+Assembly-CSharp/FinePrint/Contracts/Parameters/StabilityParameter.cs				FinePrint parameter: hold the vessel stable for a duration.
+Assembly-CSharp/FinePrint/Contracts/Parameters/StationaryPointParameter.cs				FinePrint parameter: hold a stationary orbital point (synchronous orbit).
+Assembly-CSharp/FinePrint/Contracts/Parameters/SurveyWaypointParameter.cs				FinePrint parameter: survey waypoint clusters with experiments at altitude bands.
+Assembly-CSharp/FinePrint/Contracts/Parameters/VesselDestinationParameter.cs				FinePrint parameter: vessel reached a destination per flight log.
+Assembly-CSharp/FinePrint/Contracts/Parameters/VesselSystemsParameter.cs				FinePrint parameter: vessel has required systems (antenna, power, docking...).
+Assembly-CSharp/FinePrint/Contracts/StationContract.cs				FinePrint contract: build an orbital station; generation, requirements and rewards.
+Assembly-CSharp/FinePrint/Contracts/TourismContract.cs				FinePrint contract: tourist itineraries (build itineraries, generate tourists, cleanup); rules.
+Assembly-CSharp/FinePrint/Utilities/CelestialUtilities.cs				FinePrint body helpers: planetary systems, synchronous/Kolniya/Tundra feasibility, highest peak, altitude for density; maths.
+Assembly-CSharp/FinePrint/Utilities/ConstructionExtensions.cs				Helper: construction part list contains a part.
+Assembly-CSharp/FinePrint/Utilities/ConstructionPart.cs				Construction contract part entry.
+Assembly-CSharp/FinePrint/Utilities/ConstructionParts.cs				Construction parts per contract type.
+Assembly-CSharp/FinePrint/Utilities/FlightBand.cs				Flight band enum (ground/low/high/space).
+Assembly-CSharp/FinePrint/Utilities/GrammaticalGender.cs				Grammatical gender enum for generated text.
+Assembly-CSharp/FinePrint/Utilities/ICheckSpecificVessels.cs				Interface: contract checks specific vessels.
+Assembly-CSharp/FinePrint/Utilities/IUpdateWaypoints.cs				Interface: contract updates its waypoints.
+Assembly-CSharp/FinePrint/Utilities/LoadResult.cs				Config load result enum.
+Assembly-CSharp/FinePrint/Utilities/MannedStatus.cs				Manned status enum.
+Assembly-CSharp/FinePrint/Utilities/OrbitalProperties.cs				Orbital property enum for orbit contracts.
+Assembly-CSharp/FinePrint/Utilities/OrbitType.cs				Orbit type enum (equatorial, polar, Kolniya, Tundra...).
+Assembly-CSharp/FinePrint/Utilities/PreBuiltCraft.cs				Pre-built craft lookup by URL/contract type.
+Assembly-CSharp/FinePrint/Utilities/PreBuiltCraftDefinition.cs				Pre-built craft definition from config.
+Assembly-CSharp/FinePrint/Utilities/PreBuiltCraftPosition.cs				Pre-built craft spawn position record.
+Assembly-CSharp/FinePrint/Utilities/ProgressMilestone.cs				Progress milestone (body + progress type) with completion check against ProgressTracking.
+Assembly-CSharp/FinePrint/Utilities/ProgressRewardType.cs				Progress reward type enum.
+Assembly-CSharp/FinePrint/Utilities/ProgressType.cs				Progress type enum (orbit, landing, flyby...).
+Assembly-CSharp/FinePrint/Utilities/ProgressUtilities.cs				Progress queries for contract generation: body progress levels, records, tech availability, world-first intro; rules.
+Assembly-CSharp/FinePrint/Utilities/PronounCasing.cs				Pronoun casing enum.
+Assembly-CSharp/FinePrint/Utilities/RecordTrackType.cs				Record track type enum.
+Assembly-CSharp/FinePrint/Utilities/StringUtilities.cs				FinePrint text helpers: site names, Greek designations, pronouns, currency formatting, read duration; string rules.
+Assembly-CSharp/FinePrint/Utilities/SurveyDefinition.cs				Survey contract definition from config (experiments, rewards).
+Assembly-CSharp/FinePrint/Utilities/SystemUtilities.cs				FinePrint system helpers: config node loading, hashing/seeding, deviation maths, kerbal/vessel expunging; mixed: texture load is C.
+Assembly-CSharp/FinePrint/Utilities/WaypointClusterState.cs				Waypoint cluster state enum.
+Assembly-CSharp/FinePrint/Utilities/WaypointParameter.cs				Base parameter owning contract waypoints (setup/update/cleanup).
+Assembly-CSharp/KSP/IO/BinaryReader.cs	C	Modding	drop (C++ std streams)	KSP.IO binary reader for mod plugins (per-type sandboxed paths); no gameplay use, C# plugin API is dropped.
+Assembly-CSharp/KSP/IO/BinaryWriter.cs	C	Modding	drop (C++ std streams)	KSP.IO binary writer for mod plugins; plugin API, dropped.
+Assembly-CSharp/KSP/IO/File.cs	C	Modding	drop (std::filesystem)	KSP.IO static file API for mod plugins (sandboxed PluginData paths); plugin API, dropped.
+Assembly-CSharp/KSP/IO/FileAccess.cs	C	Modding	drop	KSP.IO file access enum for the plugin API.
+Assembly-CSharp/KSP/IO/FileInfo.cs	C	Modding	drop (std::filesystem)	KSP.IO FileInfo wrapper for mod plugins; plugin API, dropped.
+Assembly-CSharp/KSP/IO/FileMode.cs	C	Modding	drop	KSP.IO file mode enum for the plugin API.
+Assembly-CSharp/KSP/IO/FileShare.cs	C	Modding	drop	KSP.IO file share enum for the plugin API.
+Assembly-CSharp/KSP/IO/FileStream.cs	C	Modding	drop (C++ std streams)	KSP.IO FileStream wrapper for mod plugins; plugin API, dropped.
+Assembly-CSharp/KSP/IO/IOException.cs	C	Modding	drop	KSP.IO exception type for the plugin API.
+Assembly-CSharp/KSP/IO/IOTools.cs	C	Modding	drop	KSP.IO binary (de)serialisation helpers for plugins.
+Assembly-CSharp/KSP/IO/IOUtils.cs	C	Modding	drop (std::filesystem)	KSP.IO path resolution (PluginData per assembly/vessel/part), mode conversion; plugin API, dropped.
+Assembly-CSharp/KSP/IO/MemoryStream.cs	C	Modding	drop	KSP.IO memory stream wrapper for plugins.
+Assembly-CSharp/KSP/IO/PluginConfigNode.cs	C	Modding	drop	XML-backed plugin configuration node for mods (PluginConfiguration); plugin API, dropped.
+Assembly-CSharp/KSP/IO/PluginConfiguration.cs	C	Modding	drop	Per-plugin config file get/set/load/save; plugin API, dropped.
+Assembly-CSharp/KSP/IO/SeekOrigin.cs	C	Modding	drop	KSP.IO seek origin enum.
+Assembly-CSharp/KSP/IO/TextReader.cs	C	Modding	drop (C++ std streams)	KSP.IO text reader for plugins.
+Assembly-CSharp/KSP/IO/TextWriter.cs	C	Modding	drop (C++ std streams)	KSP.IO text writer for plugins.
+Assembly-CSharp/SentinelMission/CometDetectionContract.cs				Sentinel contract: detect comets with the infrared telescope; generation and rewards.
+Assembly-CSharp/SentinelMission/SentinelContract.cs				Sentinel contract: scan for asteroids in a region around a focus body; generation and rewards.
+Assembly-CSharp/SentinelMission/SentinelParameter.cs				Sentinel parameter: discover N asteroids of a scan type in an orbit band.
+Assembly-CSharp/SentinelMission/SentinelScanType.cs				Sentinel scan type enum.

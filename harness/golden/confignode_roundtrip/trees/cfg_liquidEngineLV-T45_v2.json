@@ -1,0 +1,635 @@
+{
+ "name": "root",
+ "id": "",
+ "comment": null,
+ "values": [],
+ "nodes": [
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["name","liquidEngine2_v2",null],
+    ["module","Part",null],
+    ["author","Alex",null],
+    ["mesh","Swivel_v2.mu",null],
+    ["rescaleFactor","1",null],
+    ["node_stack_top","0.0, 0, 0.0, 0.0, 1.0, 0.0",null],
+    ["node_stack_bottom","0.0, -1.63, 0.0, 0.0, -1.0, 0.0",null],
+    ["fx_exhaustFlame_blue","0.0, -0.574338, 0.0, 0.0, 1.0, 0.0, running",null],
+    ["fx_exhaustLight_blue","0.0, -0.574338, 0.0, 0.0, 0.0, 1.0, running",null],
+    ["fx_smokeTrail_light","0.0, -0.574338, 0.0, 0.0, 1.0, 0.0, running",null],
+    ["fx_exhaustSparks_flameout","0.0, -0.574338, 0.0, 0.0, 1.0, 0.0, flameout",null],
+    ["sound_vent_medium","engage",null],
+    ["sound_rocket_hard","running",null],
+    ["sound_vent_soft","disengage",null],
+    ["sound_explosion_low","flameout",null],
+    ["TechRequired","basicRocketry",null],
+    ["entryCost","3500",null],
+    ["cost","1200",null],
+    ["category","Engine",null],
+    ["subcategory","0",null],
+    ["title","#autoLOC_500442",null],
+    ["manufacturer","#autoLOC_501627",null],
+    ["description","#autoLOC_500443",null],
+    ["attachRules","1,0,1,0,0",null],
+    ["mass","1.5",null],
+    ["heatConductivity","0.06",null],
+    ["skinInternalConductionMult","4.0",null],
+    ["emissiveConstant","0.8",null],
+    ["dragModelType","default",null],
+    ["maximum_drag","0.2",null],
+    ["minimum_drag","0.2",null],
+    ["angularDrag","2",null],
+    ["crashTolerance","7",null],
+    ["maxTemp","2000",null],
+    ["bulkheadProfiles","size1",null],
+    ["tags","#autoLOC_500444",null]
+   ],
+   "nodes": [
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","FXModuleLookAtConstraint",null]
+     ],
+     "nodes": [
+      {
+       "name": "CONSTRAINLOOKFX",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["targetName","HiCyl1",null],
+        ["rotatorsName","LoCyl1",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINLOOKFX",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["targetName","HiCyl2",null],
+        ["rotatorsName","LoCyl2",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINLOOKFX",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["targetName","LoCyl1",null],
+        ["rotatorsName","HiCyl1",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINLOOKFX",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["targetName","LoCyl2",null],
+        ["rotatorsName","HiCyl2",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModulePartVariants",null],
+      ["useMultipleDragCubes","false",null],
+      ["baseVariant","Shroud",null]
+     ],
+     "nodes": [
+      {
+       "name": "VARIANT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["name","Shroud",null],
+        ["displayName","#autoLOC_8007114",null],
+        ["primaryColor","#ffffff",null],
+        ["secondaryColor","#999999",null]
+       ],
+       "nodes": [
+        {
+         "name": "GAMEOBJECTS",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["Shroud","true",null],
+          ["Truss","false",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "VARIANT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["name","TrussMount",null],
+        ["displayName","#autoLOC_8007113",null],
+        ["primaryColor","#cccccc",null],
+        ["secondaryColor","#d96200",null]
+       ],
+       "nodes": [
+        {
+         "name": "GAMEOBJECTS",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["Shroud","false",null],
+          ["Truss","true",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "VARIANT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["name","Bare",null],
+        ["displayName","#autoLOC_8007115",null],
+        ["primaryColor","#d96200",null],
+        ["secondaryColor","#999999",null]
+       ],
+       "nodes": [
+        {
+         "name": "GAMEOBJECTS",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["Shroud","false",null],
+          ["Truss","false",null]
+         ],
+         "nodes": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleEngines",null],
+      ["thrustVectorTransformName","thrustTransform",null],
+      ["exhaustDamage","True",null],
+      ["ignitionThreshold","0.1",null],
+      ["minThrust","0",null],
+      ["maxThrust","215",null],
+      ["heatProduction","200",null],
+      ["fxOffset","0, 0, 0.574338",null],
+      ["EngineType","LiquidFuel",null],
+      ["exhaustDamageDistanceOffset","0.79",null]
+     ],
+     "nodes": [
+      {
+       "name": "PROPELLANT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["name","LiquidFuel",null],
+        ["ratio","0.9",null],
+        ["DrawGauge","True",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "PROPELLANT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["name","Oxidizer",null],
+        ["ratio","1.1",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "atmosphereCurve",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["key","0 320",null],
+        ["key","1 250",null],
+        ["key","6 0.001",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleJettison",null],
+      ["jettisonName","fairing",null],
+      ["bottomNodeName","bottom",null],
+      ["isFairing","True",null],
+      ["jettisonedObjectMass","0.1",null],
+      ["jettisonForce","5",null],
+      ["jettisonDirection","0 0 1",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleGimbal",null],
+      ["gimbalTransformName","Gimbal",null],
+      ["gimbalRange","3",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","FXModuleAnimateThrottle",null],
+      ["animationName","HeatAnimationEmissive",null],
+      ["responseSpeed","0.001",null],
+      ["dependOnEngineState","True",null],
+      ["dependOnThrottle","True",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleAlternator",null]
+     ],
+     "nodes": [
+      {
+       "name": "RESOURCE",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["name","ElectricCharge",null],
+        ["rate","6.0",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleSurfaceFX",null],
+      ["thrustProviderModuleIndex","2",null],
+      ["fxMax","0.5",null],
+      ["maxDistance","30",null],
+      ["falloff","1.7",null],
+      ["thrustTransformName","thrustTransform",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleTestSubject",null],
+      ["useStaging","True",null],
+      ["useEvent","True",null],
+      ["situationMask","127",null]
+     ],
+     "nodes": [
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","REPEATABILITY",null],
+        ["value","ALWAYS",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","REPEATABILITY",null],
+        ["value","BODYANDSITUATION",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","REPEATABILITY",null],
+        ["value","ONCEPERPART",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDEENV",null],
+        ["test","GT",null],
+        ["value","4000",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDEENV",null],
+        ["test","LT",null],
+        ["value","8000",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDEENV",null],
+        ["test","GT",null],
+        ["value","2000",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDEENV",null],
+        ["test","LT",null],
+        ["value","4000",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDEENV",null],
+        ["test","GT",null],
+        ["value","1000",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDEENV",null],
+        ["test","LT",null],
+        ["value","2000",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDE",null],
+        ["test","GT",null],
+        ["value","0",null],
+        ["situationMask","8",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDE",null],
+        ["test","LT",null],
+        ["value","300000",null],
+        ["situationMask","16",null],
+        ["body","_NotSun",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDE",null],
+        ["test","LT",null],
+        ["value","600000",null],
+        ["situationMask","32",null],
+        ["body","_NotSun",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEED",null],
+        ["test","GT",null],
+        ["value","0",null],
+        ["situationMask","8",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEED",null],
+        ["test","LT",null],
+        ["value","600",null],
+        ["situationMask","8",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEED",null],
+        ["test","GT",null],
+        ["value","300",null],
+        ["situationMask","8",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEED",null],
+        ["test","LT",null],
+        ["value","1200",null],
+        ["situationMask","8",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEED",null],
+        ["test","GT",null],
+        ["value","600",null],
+        ["situationMask","8",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEED",null],
+        ["test","LT",null],
+        ["value","2500",null],
+        ["situationMask","8",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEEDENV",null],
+        ["test","LT",null],
+        ["value","200",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEEDENV",null],
+        ["test","GT",null],
+        ["value","100",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEEDENV",null],
+        ["test","LT",null],
+        ["value","100",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEEDENV",null],
+        ["test","GT",null],
+        ["value","50",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEEDENV",null],
+        ["test","LT",null],
+        ["value","50",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEEDENV",null],
+        ["test","GT",null],
+        ["value","20",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleCargoPart",null],
+      ["stackableQuantity","1",null],
+      ["packedVolume","-1",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "DRAG_CUBE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["cube","Fairing, 2.111,0.7825,0.7082, 2.111,0.783,0.7082, 1.225,0.9363,0.2294, 1.225,0.8691,1.554, 2.111,0.7789,0.7082, 2.111,0.7791,0.7082, 0,0.05659,1.192E-07, 1.256,1.687,1.256",null],
+      ["cube","Clean, 0.9307,0.7168,1.029, 0.9307,0.7145,0.7278, 1.213,0.9359,0.1939, 1.213,0.8416,1.609, 1.142,0.7373,0.7222, 1.142,0.7378,0.7278, 0,0.08432,5.96E-08, 1.25,1.631,1.25",null]
+     ],
+     "nodes": []
+    }
+   ]
+  }
+ ]
+}

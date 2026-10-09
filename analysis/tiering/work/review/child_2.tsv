@@ -1,0 +1,616 @@
+path	tier	subsystem	ue5_counterpart	rationale
+Assembly-CSharp/LookAtObject.cs	C	Camera	Scene Component (billboard / look-at)	Cosmetic look-at transform follower per frame; no gameplay state.
+Assembly-CSharp/MainCanvasUtil.cs	C	UI	UMG	Finds/creates Unity UI main canvas; pure UGUI plumbing.
+Assembly-CSharp/MainMenuEnvLogic.cs	C	Scene	Level Sequence / Sequencer	Main menu environment stage switching and UI distance fade; transforms, materials, TMPro only.
+Assembly-CSharp/MainMenuExpressionManager.cs	C	Rendering	Animation Blueprint	Sets shader/animation expression on main-menu Kerbals; cosmetic.
+Assembly-CSharp/MainMenuTerrainSelector.cs	C	Scene	Level Blueprint	Toggles main menu terrain GameObjects per GameSettings; presentation only.
+Assembly-CSharp/MakingHistoryAboutDialog.cs	C	DLC-MakingHistory	UMG	Making History promo dialog with UGUI and dont-show-again toggle; presentation.
+Assembly-CSharp/ManeuverGizmo.cs	C	MapView	Widget Component + Enhanced Input	Map-view maneuver node gizmo mouse drag and orbit-patch paging; reads Orbit but only edits via UI. Delta-v edits go through core node API.
+Assembly-CSharp/ManeuverGizmoBase.cs	C	MapView	Widget Component	Gizmo handle container and mouse-over/mode switching; transforms and GameObject toggles.
+Assembly-CSharp/ManeuverGizmoHandle.cs	C	MapView	Widget Component + Enhanced Input	Draggable maneuver handle: material colours, mouse input, drag-to-dV; presentation and input.
+Assembly-CSharp/ManeuverNode.cs	A	Orbit	core	Maneuver node data: UT, delta-v vector, burn vector, config load/save; gizmo attach hooks are minor Unity coupling.
+Assembly-CSharp/ManeuverNodeEditorSlider.cs	C	MapView	UMG	Slider hover handler locking input; UGUI event system.
+Assembly-CSharp/ManeuverNodeEditorTab.cs	C	MapView	UMG	Base class for maneuver editor tabs; UGUI pointer handling.
+Assembly-CSharp/ManeuverNodeEditorTabButton.cs	C	MapView	UMG	Tab button setup; UGUI.
+Assembly-CSharp/ManeuverNodeEditorTabIntercept.cs	C	MapView	UMG + core query	Intercept/closest approach tab: queries FlightGlobals and orbit for display text; mixed: encounter lookup is A-like but UI-bound.
+Assembly-CSharp/ManeuverNodeEditorTabOrbitAdv.cs	C	MapView	UMG + core query	Advanced orbit readout tab with TMPro; display only.
+Assembly-CSharp/ManeuverNodeEditorTabOrbitBasic.cs	C	MapView	UMG + core query	Basic orbit readout tab with TMPro; display and unlock checks.
+Assembly-CSharp/ManeuverNodeEditorTabPosition.cs	C	MapView	UMG	Enum for editor tab positions; UI only.
+Assembly-CSharp/ManeuverNodeEditorTabVectorHandles.cs	C	MapView	UMG	Vector-handles tab: step buttons nudge node dV; UGUI heavy.
+Assembly-CSharp/ManeuverNodeEditorTabVectorInput.cs	C	MapView	UMG	Numeric vector input tab for node dV; UGUI/TMPro.
+Assembly-CSharp/ManeuverNodeEditorVectorHandle.cs	C	MapView	UMG + Enhanced Input	Draggable vector handle in editor UI via EventSystems; input and UGUI.
+Assembly-CSharp/ManeuverTool.cs	C	MapView	UMG + core query	Maneuver planner app window; creates/deletes nodes through the vessel patched conic solver; UI over core node API.
+Assembly-CSharp/ManeuverToolCBContainer.cs	C	MapView	UMG + Scene Capture	Celestial body picker with thumbnail cameras for intercept tab; rendering and UI.
+Assembly-CSharp/ManeuverToolVisualTextBox.cs	C	MapView	UMG	TMPro name/value text box widget.
+Assembly-CSharp/MapDisplayTypes.cs	C	MapView	UMG	Enum of map display modes; UI-only.
+Assembly-CSharp/MapObject.cs	C	MapView	Widget Component	Map-view object wrapper (vessel/body/maneuver) with scaled-space transform; used for targeting UI and camera focus.
+Assembly-CSharp/MapView.cs	C	MapView	Camera Component + Line Batcher	Map camera, orbit renderers and map nodes lifecycle; mixed: map-mode toggle state is minor B.
+Assembly-CSharp/MapViewFiltering.cs	C	MapView	UMG	Map vessel-type filter buttons and visibility toggles via events; UI.
+Assembly-CSharp/MaterialBasedOnGraphicsSetting.cs	C	Rendering	Material Instance + scalability	Swaps materials by graphics quality setting.
+Assembly-CSharp/MaterialColorUpdater.cs	C	Rendering	Dynamic Material Instance	Per-part renderer colour update; cosmetic.
+Assembly-CSharp/MaterialExtension.cs	C	Rendering	Material	Material keyword copy helper.
+Assembly-CSharp/MaterialPropertyExtensions.cs	C	Rendering	Dynamic Material Instance	Material property block application helpers.
+Assembly-CSharp/MaterialSetDirection.cs	C	Rendering	Dynamic Material Instance	Pushes transform direction into shader property; cosmetic.
+Assembly-CSharp/Mathfx.cs	A	Core	core	Easing, Hermite and interpolation helpers; pure float math.
+Assembly-CSharp/Matrix4x4D.cs	A	Core	core	Double 4x4 matrix with inverse, rotations, point transforms; pure math.
+Assembly-CSharp/MatrixArrayMaterialProperty.cs	C	Rendering	Dynamic Material Instance	Material property apply for matrix arrays.
+Assembly-CSharp/MatrixMaterialProperty.cs	C	Rendering	Dynamic Material Instance	Material property apply for matrices.
+Assembly-CSharp/MBMReader.cs	C	Rendering	Interchange / custom importer	Reads KSP .mbm texture format into Texture2D; asset loading.
+Assembly-CSharp/MCAvatarController.cs	C	DLC-MakingHistory	Animation Blueprint + UMG	Mission control avatar (instructor) animation and localized dialogue; cosmetic.
+Assembly-CSharp/MCDespawner.cs	C	Scene	UMG	Exit button despawn of mission control scene; UI.
+Assembly-CSharp/MCSceneSpawner.cs	C	Scene	Level Streaming	Spawns/despawns mission control scene objects on events; presentation.
+Assembly-CSharp/MEBannerBrowser.cs	C	DLC-MakingHistory	UMG	Mission editor banner browser dialog; UGUI.
+Assembly-CSharp/MEBannerEntry.cs	C	DLC-MakingHistory	Asset Manager	Banner texture entry with source file deletion; texture handling.
+Assembly-CSharp/MEBannerType.cs	C	DLC-MakingHistory	UMG	Enum of banner types for editor UI.
+Assembly-CSharp/MEBasicNodeListFilter.cs	C	DLC-MakingHistory	UMG	Mission editor node list filter helper; editor UI.
+Assembly-CSharp/MEBasicNodeListFilterList.cs	C	DLC-MakingHistory	UMG	Collection of mission editor node filters; editor UI.
+Assembly-CSharp/Mechanic.cs	C	Kerbals	Animation Blueprint	KSC mechanic crew idle animation; cosmetic.
+Assembly-CSharp/MechanicDriller.cs	C	Kerbals	Animation Blueprint	KSC driller crew animation; cosmetic.
+Assembly-CSharp/MechanicHammer.cs	C	Kerbals	Animation Blueprint	KSC hammer crew animation; cosmetic.
+Assembly-CSharp/MechanicLugWrench.cs	C	Kerbals	Animation Blueprint	KSC lug wrench crew animation; cosmetic.
+Assembly-CSharp/MechanicScrew.cs	C	Kerbals	Animation Blueprint	KSC screwdriver crew animation; cosmetic.
+Assembly-CSharp/MechanicWrench.cs	C	Kerbals	Animation Blueprint	KSC wrench crew animation; cosmetic.
+Assembly-CSharp/MechanicWrenchEnglish.cs	C	Kerbals	Animation Blueprint	KSC wrench crew animation variant (duplicate of MechanicWrench); cosmetic.
+Assembly-CSharp/MEGapCategoryScroll.cs	C	DLC-MakingHistory	UMG	Pointer-enter scroll handler for mission editor category list; UGUI.
+Assembly-CSharp/MemoryCache.cs	C	Rendering	Asset Manager	Byte/Color32 cache for texture loading; asset plumbing.
+Assembly-CSharp/MenuGravityOverride.cs	C	Scene	drop	Sets Physics.gravity for menu scene; menu-only.
+Assembly-CSharp/MenuMusic.cs	C	Audio	Audio Component / MetaSounds	Main menu music and ambience playback across scene loads.
+Assembly-CSharp/MenuNavigation.cs	C	UI	CommonUI	Keyboard focus navigation for dialogs using UGUI selectables.
+Assembly-CSharp/MenuNavInput.cs	C	Input	Enhanced Input	Enum of menu navigation inputs.
+Assembly-CSharp/MenuRandomKerbalAnims.cs	C	Kerbals	Animation Blueprint	Random idle animation player for menu Kerbals; cosmetic.
+Assembly-CSharp/MeshLocator.cs	C	Debug	drop	Empty editor-time data holder (output path strings); no runtime behaviour.
+Assembly-CSharp/MessageSystemAdvancedButton.cs	C	UI	UMG	Message system button widget with textures; UGUI.
+Assembly-CSharp/MiniBiome.cs	A	Celestials	core	ScriptableObject biome tag with landed-at and biome conversion for science situations; pure data and string logic.
+Assembly-CSharp/MiniKeyBindings.cs	C	UI	UMG	Mini key bindings popup window; UGUI.
+Assembly-CSharp/MiniSettings.cs	C	UI	UMG + UE GameUserSettings	In-flight mini settings dialog applying GameSettings; UI.
+Assembly-CSharp/MinMaxColor.cs	A	Core	core	Min/max colour with lerp; plain data.
+Assembly-CSharp/MinMaxFloat.cs	A	Core	core	Min/max float with lerp and inverse lerp; plain data.
+Assembly-CSharp/MissionBriefingTag.cs	C	DLC-MakingHistory	UMG	Mission briefing tag widget spawn/remove; UGUI.
+Assembly-CSharp/MissionControlBuilding.cs	C	Scene	UMG + Actor click handler	KSC Mission Control building click handler opening contracts UI; presentation.
+Assembly-CSharp/MissionScreenTutorial.cs	C	Tutorials	drop	Tutorial scenario pages for mission screen; tutorial UI scripting.
+Assembly-CSharp/ModalGUI.cs	C	Debug	drop	IMGUI modal window helper.
+Assembly-CSharp/ModelAnimationFX.cs	C	Rendering	Niagara / Animation	Part effect that plays model animation on events; FX.
+Assembly-CSharp/ModelMultiParticleFX.cs	C	Rendering	Niagara	Part effect driving multiple particle emitters on events; FX.
+Assembly-CSharp/ModelPartEvent.cs	C	Rendering	Niagara	Forwards part events to FX behaviours; FX plumbing.
+Assembly-CSharp/ModelParticleFX.cs	C	Rendering	Niagara	Part effect driving a particle system; FX.
+Assembly-CSharp/ModifierChangeWhen.cs	A	Part	core	Enum for when a PartModule modifier applies; used by gameplay modifiers.
+Assembly-CSharp/ModifierStagingSituation.cs	A	Part	core	Enum for staging situation of mass/cost modifiers; used by gameplay.
+Assembly-CSharp/ModuleAblator.cs	A	Thermal	core	Ablative shielding consuming ablator by heat flux; PartModule logic with lifecycle hooks only; needs PartModule host.
+Assembly-CSharp/ModuleActiveRadiator.cs	A	Thermal	core	Active radiator coolant/energy transfer rules; state and thermal maths; needs PartModule host.
+Assembly-CSharp/ModuleAeroSurface.cs	B	Aero		Airbrake control surface subclass rotating transform and drag cubes; deploys via animation/transform and aero forces.
+Assembly-CSharp/ModuleAlternator.cs	A	PartModules-Resources	core	Engine alternator resource output logic; needs PartModule host.
+Assembly-CSharp/ModuleAnalysisResource.cs	A	PartModules-Resources	core	Resource analysis display for space objects; state logic; needs PartModule host.
+Assembly-CSharp/ModuleAnchoredDecoupler.cs	B	PartModules-Structural		Decoupler applying ejection forces via transforms/rigidbodies with coroutine; physics-coupled.
+Assembly-CSharp/ModuleAnimateGeneric.cs	B	Part		Generic animation module whose animation state drives gameplay (drag cubes, scalar state); Unity Animation entangled.
+Assembly-CSharp/ModuleAnimateHeat.cs	C	Thermal	Animation Blueprint / Material Instance	Heat glow animation driven by part temperature; cosmetic.
+Assembly-CSharp/ModuleAnimationGroup.cs	B	Part		Grouped deployable animations with drag cube assumption and layer masks; animation drives gameplay state.
+Assembly-CSharp/ModuleAnimationSetter.cs	B	Part		Sets animation normalized time from a curve driven by game value; Unity Animation, scalar module.
+Assembly-CSharp/ModuleAnimatorLandingGear.cs	A	PartModules-Wheels	core	Tiny landing gear toggle storing extension state and event text; Animator itself is external. Needs PartModule host.
+Assembly-CSharp/ModuleAsteroid.cs	B	Celestials		Asteroid part module: size/mass/resources and vessel naming; spawns GameObjects and coroutines tied to space object. Analytics call is minor.
+Assembly-CSharp/ModuleAsteroidAnalysis.cs	A	PartModules-Resources	core	Asteroid resource analysis scanning; state logic; needs PartModule host.
+Assembly-CSharp/ModuleAsteroidDrill.cs	B	PartModules-Resources		Drill with raycast impact check to asteroid; Physics query.
+Assembly-CSharp/ModuleAsteroidInfo.cs	A	PartModules-Resources	core	Asteroid info display module with resource setup; needs PartModule host.
+Assembly-CSharp/ModuleAsteroidResource.cs	A	PartModules-Resources	core	Empty subclass marker of space object resource.
+Assembly-CSharp/ModuleBiomeScanner.cs	A	PartModules-Resources	core	Biome scanner analysis using vessel biome and body; needs PartModule host.
+Assembly-CSharp/ModuleCargoPart.cs	B	Kerbals		Inventory/cargo part packing, physics enable/disable of rigidbody, audio and coroutines; entangled with physics.
+Assembly-CSharp/ModuleColorChanger.cs	C	PartModules-Misc	Dynamic Material Instance	Colour animation via shader/material properties along curves; mostly rendering.
+Assembly-CSharp/ModuleCometAnalysis.cs	A	PartModules-Resources	core	Comet resource analysis (duplicate of asteroid analysis); needs PartModule host.
+Assembly-CSharp/ModuleCometDrill.cs	B	PartModules-Resources		Comet drill (duplicate of asteroid drill) with raycast impact check.
+Assembly-CSharp/ModuleCometInfo.cs	A	PartModules-Resources	core	Comet info display module (duplicate of asteroid info); needs PartModule host.
+Assembly-CSharp/ModuleCometResource.cs	A	PartModules-Resources	core	Empty subclass marker of space object resource.
+Assembly-CSharp/ModuleCommand.cs	B	PartModules-Control		Command pod: control-from-here transforms, crew-minimum rules, hibernation, CommNet control source; transforms and GameObject use.
+Assembly-CSharp/ModuleConductionMultiplier.cs	A	Thermal	core	Scales conduction factor of part; simple state; needs PartModule host.
+Assembly-CSharp/ModuleCoreHeat.cs	A	Thermal	core	Core heat generation, radiator flux and shutdown rules using PhysicsGlobals; lifecycle hooks only; needs PartModule host.
+Assembly-CSharp/ModuleDecouple.cs	B	PartModules-Structural		Decoupler with ejection forces, coroutines, transform use; anchor B.
+Assembly-CSharp/ModuleDecouplerBase.cs	B	PartModules-Structural		Decoupler base: shielding, attach node, decouple execution on vessel tree; entangled with part joints.
+Assembly-CSharp/ModuleDeployableAntenna.cs	B	PartModules-Structural		Deployable antenna subclass over ModuleDeployablePart animation; deployment state tied to animation.
+Assembly-CSharp/ModuleDeployableRadiator.cs	B	PartModules-Structural		Deployable radiator subclass over ModuleDeployablePart; animation-driven state.
+Assembly-CSharp/ModuleDeployableSolarPanel.cs	B	PartModules-Resources		Sun-tracking solar panel with raycast shadow check and transforms; animation and physics queries.
+Assembly-CSharp/ModuleDisplaceTweak.cs	B	Part		Moves part displacement through transforms and morph events; transform-based.
+Assembly-CSharp/ModuleDragAreaModifier.cs	A	Aero	core	Data-only drag area modifier fields; needs PartModule host.
+Assembly-CSharp/ModuleDragModifier.cs	A	Aero	core	Data-only drag modifier fields; needs PartModule host.
+Assembly-CSharp/ModuleDynamicNodes.cs	B	Part		Swaps attach node sets by moving node transforms; transform hierarchy has gameplay meaning.
+Assembly-CSharp/ModuleEffectTest.cs	C	Debug	drop	Test PartModule firing effects; test-only.
+Assembly-CSharp/ModuleEnginesFX.cs	C	PartModules-Engines	Niagara + MetaSounds	Engine subclass handling FX groups and power FX; mixed: CanStart override is B.
+Assembly-CSharp/ModuleEnviroSensor.cs	A	Science	core	Environment sensor reading (temp, pressure, grav, accel) with EC consumption; needs PartModule host.
+Assembly-CSharp/ModuleEvaChute.cs	B	PartModules-Structural		EVA parachute with deploy, transforms, renderers and shader switching; Kerbal-attached physics.
+Assembly-CSharp/ModuleExperienceManagement.cs	A	Kerbals	core	Experience transfer/finalize with funds cost; rules logic; needs PartModule host.
+Assembly-CSharp/ModuleFlightDisplay.cs	C	FlightUI	UMG	IMGUI flight display for CommNet signal and control path; display only.
+Assembly-CSharp/ModuleFuelJettison.cs	A	PartModules-Resources	core	Dumps resource from part; simple resource ops; needs PartModule host.
+Assembly-CSharp/ModuleGenerator.cs	A	PartModules-Resources	core	Resource generator rules with input/output rates; needs PartModule host.
+Assembly-CSharp/ModuleGimbal.cs	B	PartModules-Engines		Thrust transform gimbaling; anchor B.
+Assembly-CSharp/ModuleGPS.cs	A	PartModules-Misc	core	GPS module checking body/asteroid/comet connectivity for contracts; needs PartModule host.
+Assembly-CSharp/ModuleGroundCommsPart.cs	A	DLC-BreakingGround	core	Ground comms antenna state and comm power; implements ICommAntenna; needs PartModule host.
+Assembly-CSharp/ModuleGroundExpControl.cs	B	DLC-BreakingGround		Ground experiment control hub: comm/control source, coroutines, transforms, many events; entangled with scene.
+Assembly-CSharp/ModuleGroundExperiment.cs	A	DLC-BreakingGround	core	Deployed ground experiment science generation; needs PartModule host.
+Assembly-CSharp/ModuleGroundPart.cs	B	DLC-BreakingGround		Deployable ground part that detaches/attaches to terrain with rigidbody handling and coroutines; physics-coupled.
+Assembly-CSharp/ModuleGroundSciencePart.cs	B	DLC-BreakingGround		Ground science part with raycast tracking LOS, transforms and layer masks; physics queries.
+Assembly-CSharp/ModuleHeatEffects.cs	C	Thermal	Niagara / Material Instance	Heat FX driven by temperature; cosmetic.
+Assembly-CSharp/ModuleJettison.cs	B	PartModules-Structural		Shroud jettison with colliders, rigidbodies, transforms and drag cubes; heavy physics.
+Assembly-CSharp/ModuleJointMotor.cs	B	DLC-BreakingGround		Configurable joint motor control; physics joints.
+Assembly-CSharp/ModuleJointMotorTest.cs	C	DLC-BreakingGround	drop	Test joint motor PartModule; test-only.
+Assembly-CSharp/ModuleJointPivot.cs	A	DLC-BreakingGround	core	Small joint pivot data module saving/loading state; needs PartModule host.
+Assembly-CSharp/ModuleKerbNetAccess.cs	A	CommNet	core	KerbNet FoV/vessel situation access rules; needs PartModule host.
+Assembly-CSharp/ModuleLiftingSurface.cs	B	Aero		Lift/drag from transforms and PhysicsGlobals curves, applies forces; aero maths extractable A.
+Assembly-CSharp/ModuleMirrorPlacement.cs	A	Part	core	Handles mirrored placement node adjustments; needs PartModule host.
+Assembly-CSharp/ModuleOrbitalScanner.cs	A	PartModules-Resources	core	Orbital resource scanner: scan state and cutoff; shader use minor; needs PartModule host.
+Assembly-CSharp/ModuleOrbitalSurveyor.cs	A	PartModules-Resources	core	Orbital survey completion and science; needs PartModule host.
+Assembly-CSharp/ModuleOverheatDisplay.cs	C	Thermal	UMG	Aggregates heat/core temperature strings from overheat providers for PAW display only.
+Assembly-CSharp/ModulePartFirework.cs	B	PartModules-Misc		Firework part spawning rigidbody fragments and shaders; entangled with physics, mass modifier. Cosmetic-leaning.
+Assembly-CSharp/ModulePartVariants.cs	B	Part		Variant selection swapping meshes/materials, mass, cost and drag cube; transform and renderer coupled.
+Assembly-CSharp/ModulePhysicMaterial.cs	B	Physics		Part physic material config and runtime change on colliders; physics coupled.
+Assembly-CSharp/ModuleRCSFX.cs	C	PartModules-Engines	Niagara + MetaSounds	RCS subclass FX handling; cosmetic.
+Assembly-CSharp/ModuleReactionWheel.cs	A	PartModules-Control	core	Reaction wheel torque and EC consumption; torque provider; needs PartModule host.
+Assembly-CSharp/ModuleRemoteController.cs	A	PartModules-Control	core	Toggle remote control flag; needs PartModule host.
+Assembly-CSharp/ModuleResource.cs	A	Resources	core	Module resource definition with rate and deprivation; config data.
+Assembly-CSharp/ModuleResourceAutoShiftState.cs	A	Resources	core	Auto shift thresholds for resource flow state; needs PartModule host.
+Assembly-CSharp/ModuleResourceConverter.cs	A	PartModules-Resources	core	Converter recipes subclass; resource logic; needs PartModule host.
+Assembly-CSharp/ModuleResourceDrain.cs	B	PartModules-Resources		Resource drain with propulsion-style thrust from drained resource and FX groups; applies forces.
+Assembly-CSharp/ModuleResourceHandler.cs	A	Resources	core	Resource input/output processing helper; no Unity use.
+Assembly-CSharp/ModuleResourceHarvester.cs	B	PartModules-Resources		Surface harvester with raycast ground check and resource rules; physics query.
+Assembly-CSharp/ModuleResourceIntake.cs	B	PartModules-Engines		Air intake using intake transform direction and velocity; transform meaning.
+Assembly-CSharp/ModuleResourceScanner.cs	A	PartModules-Resources	core	Resource scanner abundance display and scanning state; needs PartModule host.
+Assembly-CSharp/ModuleRotatingJoint.cs	B	DLC-BreakingGround		Rotating servo joint drive; physics joints.
+Assembly-CSharp/ModuleSampleCollector.cs	C	PartModules-Misc	UMG	IMGUI transfer dialog dominates; mixed: planetary sample collection rule is A.
+Assembly-CSharp/ModuleSampleContainer.cs	A	Science	core	Sample container accepting transfers from collectors; trivial state; needs PartModule host.
+Assembly-CSharp/ModuleSAS.cs	A	PartModules-Control	core	SAS module with service-level adjustments and mode availability; state logic; needs PartModule host.
+Assembly-CSharp/ModuleScienceContainer.cs	A	Science	core	Science data container: store, collect, transfer and recover experiment data; rules logic; needs PartModule host.
+Assembly-CSharp/ModuleScienceConverter.cs	A	Science	core	Converts data to science by research time and crew skill; resource converter subclass; needs PartModule host.
+Assembly-CSharp/ModuleScienceLab.cs	A	Science	core	Science lab processing data into science; coroutines only used as timers; needs PartModule host.
+Assembly-CSharp/ModuleSeeThroughObject.cs	C	Rendering	Dynamic Material Instance	Fades mesh transparency near editor cursor; cosmetic shader work.
+Assembly-CSharp/ModuleServiceModule.cs	B	PartModules-Structural		Service module jettison: builds part list, toggles colliders and objects, stage separator; transform and collider coupled.
+Assembly-CSharp/ModuleSpaceObjectAnalysis.cs	A	PartModules-Resources	core	Base for space object analysers finding matching analyser; no Unity use.
+Assembly-CSharp/ModuleSpaceObjectInfo.cs	A	PartModules-Resources	core	Base for asteroid/comet info module setting resources; needs PartModule host.
+Assembly-CSharp/ModuleSpaceObjectResource.cs	A	PartModules-Resources	core	Space object resource definition loaded from config; needs PartModule host.
+Assembly-CSharp/ModuleStatusLight.cs	C	PartModules-Misc	Point/Spot Light + Dynamic Material Instance	Status light toggling Light and emissive material; cosmetic.
+Assembly-CSharp/ModuleStructuralNode.cs	B	PartModules-Structural		Structural attach node display and activation tied to GameObjects and node transforms.
+Assembly-CSharp/ModuleStructuralNodeToggle.cs	A	PartModules-Structural	core	Toggles structural nodes on field change; state logic; needs PartModule host.
+Assembly-CSharp/ModuleSurfaceFX.cs	C	Rendering	Niagara	Surface dust/splash FX from ground raycast under part; cosmetic.
+Assembly-CSharp/ModuleTestSubject.cs	A	Contracts	core	Part test subject for part-test contracts with stage and situation constraints; needs PartModule host.
+Assembly-CSharp/ModuleToggleCrossfeed.cs	A	PartModules-Structural	core	Crossfeed toggle with tech requirement; state logic; needs PartModule host.
+Assembly-CSharp/ModuleTripLogger.cs	A	Vessel	core	Logs vessel trip events into flight log via GameEvents; needs PartModule host.
+Assembly-CSharp/MonoUtilities.cs	C	FlightUI	UMG	Helper refreshing PAW context windows.
+Assembly-CSharp/Mouse.cs	C	Input	Enhanced Input + line traces	Mouse hover and click part picking in flight/editor via raycasts and input polling; selection UI.
+Assembly-CSharp/MouseEventsHandler.cs	C	Input	Enhanced Input	Empty concrete mouse events handler.
+Assembly-CSharp/MouseEventsHandlerBase.cs	C	Input	Enhanced Input	Forwards mouse events up transform hierarchy.
+Assembly-CSharp/MouseRayEventsHandler.cs	C	Input	Enhanced Input	Raycast driven mouse event dispatcher.
+Assembly-CSharp/MultiModeEngine.cs	A	PartModules-Engines	core	Switches between primary and secondary engine modes (e.g. RAPIER); toggles ModuleEngines state; needs PartModule host.
+Assembly-CSharp/MultiOptionDialog.cs	C	UI	UMG	Dialog descriptor with GUI layout elements; UI.
+Assembly-CSharp/MunOrBustLogic.cs	C	Debug	drop	Event promo scene texture/shader setup; one-off cosmetic.
+Assembly-CSharp/MusicLogic.cs	C	Audio	Audio Component / MetaSounds	Adaptive music playback across scenes with coroutines.
+Assembly-CSharp/NavBallVector.cs	C	FlightUI	UMG	Enum of navball vector markers.
+Assembly-CSharp/NavWaypoint.cs	C	FlightUI	Widget Component	Waypoint marker rendering and activation on navball/world; materials and transforms.
+Assembly-CSharp/NestedPrefabSpawner.cs	C	Rendering	Child Actor / Level Instance	Spawns nested prefabs and sets layers; scenery setup.
+Assembly-CSharp/NoiseEffect.cs	C	Rendering	Post Process Volume	Camera noise image effect; shader.
+Assembly-CSharp/NoiseGenerator.cs	A	Resources	core	Simplex-style noise used by planetary resource maps; pure math.
+Assembly-CSharp/OcclusionCone.cs	A	Aero	core	Cone occlusion shape for aero shielding; pure math.
+Assembly-CSharp/OcclusionCylinder.cs	A	Aero	core	Cylinder occlusion shape for aero shielding; pure math.
+Assembly-CSharp/OcclusionData.cs	A	Aero	core	Part occlusion intersection areas for shock/convection; Vector3d math.
+Assembly-CSharp/OrbitDriver.cs	B	Orbit		Binds Orbit to Vessel/Body transforms and rigidbody; rails/physics sync; anchor B.
+Assembly-CSharp/OrbitPhysicsManager.cs	B	Orbit		Orchestrates on-rails/off-rails transitions and reference frame changes on rigidbodies; scene/physics orchestration.
+Assembly-CSharp/OrbitRenderer.cs	C	MapView	Line Batcher / Procedural Mesh lines	Draws orbit lines, icons and node colours.
+Assembly-CSharp/OrbitRendererData.cs	C	MapView	Line Batcher	Orbit renderer colour/data holder.
+Assembly-CSharp/OrbitSnapshot.cs	A	Orbit	core	Orbit persistence snapshot load/save with body reference; no Unity.
+Assembly-CSharp/OrbitTargetRenderer.cs	C	MapView	Line Batcher / Widget Component	Target orbit rendering with AN/DN node icons and animation.
+Assembly-CSharp/OrbitUtil.cs	A	Orbit	core	Orbit intersections, phase and ejection angles; pure Vector3d maths; golden-test vs KSP.
+Assembly-CSharp/OverlayGenerator.cs	C	MapView	Render Target	Generates resource overlay textures for map from scan data.
+Assembly-CSharp/OverlaySetup.cs	C	MapView	Asset Manager	Loads overlay config and manages overlay generator lifetime.
+Assembly-CSharp/ParseExtensions.cs	A	Modding	core	String parsers for config types (vectors, colours, arrays); no Unity beyond value types.
+Assembly-CSharp/ParserMethod.cs	A	Modding	core	Delegate for config parse methods.
+Assembly-CSharp/PartBuoyancy.cs	B	Physics		Part buoyancy and water drag applying forces to rigidbody using PhysicsGlobals; buoyancy maths extractable A.
+Assembly-CSharp/PartCategories.cs	A	Part	core	Part category enum used by part list and loader.
+Assembly-CSharp/PartCrewManifest.cs	A	Kerbals	core	Per-part crew seat assignments; crew transfer rules; no Unity.
+Assembly-CSharp/PartGameObjectInfo.cs	A	Part	core	Serializable name/status pair describing part GameObject; plain data.
+Assembly-CSharp/PartGeometryUtil.cs	B	Part		Part bounds from renderers/colliders for placement and sizing; mesh-based geometry.
+Assembly-CSharp/PartHeightQuery.cs	A	Part	core	Plain data for part height queries.
+Assembly-CSharp/ParticleBillboardModifier.cs	C	Rendering	Niagara	Replaces particle billboards with meshes; editor/FX tool.
+Assembly-CSharp/ParticleColliderLaunchSequence.cs	C	Debug	drop	Particle collider test launch sequence; test scene scripting.
+Assembly-CSharp/ParticleConfigFX.cs	C	Rendering	Niagara	Config-driven particle system effect; FX.
+Assembly-CSharp/ParticleSystemExt.cs	C	Rendering	Niagara	ParticleSystem buffer extension.
+Assembly-CSharp/PartInfo.cs	A	Modding	core	Attribute marking part info for reflection discovery.
+Assembly-CSharp/PartItemTransfer.cs	C	Kerbals	UMG + Enhanced Input	Abstract part-pick mode for transferring items between parts: highlights, screen messages, dismiss; UI flow.
+Assembly-CSharp/PartJoint.cs	B	Part		Physics joints between parts; anchor B.
+Assembly-CSharp/PartMaterialInfo.cs	C	Rendering	Material Instance	Part material command config applying shader/texture changes.
+Assembly-CSharp/PartModuleFXSetter.cs	C	Rendering	Niagara	Connects part module state to FX modules; plumbing.
+Assembly-CSharp/PartModuleList.cs	A	Part	core	Typed PartModule collection with engine interface lookups; container logic.
+Assembly-CSharp/PartModuleUtil.cs	A	Part	core	Prints resource requirements; helper.
+Assembly-CSharp/PartPointer.cs	A	Part	core	Holds Part reference on a GameObject; trivial.
+Assembly-CSharp/PartRawInfo.cs	A	Part	core	Plain data raw part info.
+Assembly-CSharp/PartResource.cs	A	Resources	core	Part resource instance: amount, flow, config load/save; anchor A.
+Assembly-CSharp/PartResourceDefinition.cs	A	Resources	core	Resource definition loaded from config; anchor A.
+Assembly-CSharp/PartResourceDefinitionList.cs	A	Resources	core	Collection of resource definitions.
+Assembly-CSharp/PartResourceDrainDefinition.cs	A	Resources	core	Drain resource definition with config load/save.
+Assembly-CSharp/PartResourceLibrary.cs	A	Resources	core	Singleton library of resource definitions from GameDatabase; data holder.
+Assembly-CSharp/PartResourceList.cs	A	Resources	core	Part resource container with flow queries.
+Assembly-CSharp/PartSelector.cs	C	Kerbals	Outline / Custom Depth highlight	Highlight and hover on part for item transfer selection.
+Assembly-CSharp/PartSpaceMode.cs	A	Part	core	Enum for part space mode.
+Assembly-CSharp/PartStates.cs	A	Part	core	Enum of part lifecycle states.
+Assembly-CSharp/PartStatsUpgradeModule.cs	A	Part	core	Part stat upgrades with mass/cost modifier; config logic; needs PartModule host.
+Assembly-CSharp/PartTestConstraint.cs	A	Contracts	core	Part test contract constraints on body, situation, prestige; config logic.
+Assembly-CSharp/PartThermalData.cs	A	Thermal	core	Thermal data per part: skin temp, flux; core of thermal solve.
+Assembly-CSharp/PartThermalDataIntComparer.cs	A	Thermal	core	Comparer for thermal data internal temperature.
+Assembly-CSharp/PartThermalDataSkinComparer.cs	A	Thermal	core	Comparer for thermal data skin temperature.
+Assembly-CSharp/PartTools.cs	C	Debug	drop	Editor-time tool setting default shaders on part models.
+Assembly-CSharp/PartToolsLibrary.cs	C	Debug	drop	Editor-time part tools singleton.
+Assembly-CSharp/PartUpgradeHandler.cs	A	Modding	core	Part upgrade registry linked to R&D unlocks, config driven.
+Assembly-CSharp/PartUpgradeManager.cs	A	Modding	core	ScenarioModule persisting part upgrades; needs ScenarioModule host.
+Assembly-CSharp/PartValues.cs	A	Part	core	Event value wrapper of crew/engine modifiers for strategies and effects.
+Assembly-CSharp/PartVariant.cs	B	Part		Part variant data and application: materials, transforms, attach node changes; renderer coupled.
+Assembly-CSharp/PAsteroid.cs	B	Celestials		Asteroid space object part setup with colliders/renderers on GameObject.
+Assembly-CSharp/PatchedConicRenderer.cs	C	MapView	Line Batcher	Draws patched conic orbit lines and maneuver nodes in map.
+Assembly-CSharp/PatchedConics.cs	A	Orbit	core	Patch calculation, encounter checks, escape handling; anchor A; camera/raycast use is minor for map picking.
+Assembly-CSharp/PatchedConicSolver.cs	A	Orbit	core	Maneuver node management and patch solve; anchor A.
+Assembly-CSharp/PatchRendering.cs	C	MapView	Line Batcher	Per-patch map renderer: objects, nodes, labels; presentation.
+Assembly-CSharp/PauseAudioFadeHandler.cs	C	Audio	MetaSounds	Fades audio on pause via coroutine.
+Assembly-CSharp/PauseMenu.cs	C	Scene	UMG	Pause menu button list and exit flows; mixed: save/revert logic is minor B.
+Assembly-CSharp/PComet.cs	B	Celestials		Comet space object part setup (duplicate of PAsteroid).
+Assembly-CSharp/PDebug.cs	C	Debug	Unreal logging	Part-loader debug logging helper.
+Assembly-CSharp/Performance.cs	C	Debug	Unreal Insights	Frame-time and FPS recording.
+Assembly-CSharp/Persistent.cs	A	Save	core	Attribute marking persistent fields.
+Assembly-CSharp/PersistentLinkable.cs	A	Save	core	Attribute marking persistent link fields.
+Assembly-CSharp/PersistentRelation.cs	A	Save	core	Enum of persistent relations.
+Assembly-CSharp/physicalObject.cs	B	Physics		Converts scenery objects to rigidbody physical objects and manages rails; physics coupled.
+Assembly-CSharp/PhysicMaterialColor.cs	C	Debug	drop	Colour for physic material debug visualisation.
+Assembly-CSharp/PhysicMaterialDefinition.cs	B	Physics		Physic material config (friction, bounce combine) loaded from cfg; maps to Chaos physical material.
+Assembly-CSharp/PhysicMaterialLibrary.cs	B	Physics		Creates and registers physic materials from config; Unity PhysicMaterial objects.
+Assembly-CSharp/PhysicsUtil.cs	B	Physics		Raycast and capsule cast helpers ignoring self; Physics API wrappers.
+Assembly-CSharp/PIDclamp.cs	A	Core	core	PID controller with integral clamp; pure math.
+Assembly-CSharp/PieChart.cs	C	UI	UMG	Procedural mesh pie chart widget.
+Assembly-CSharp/PieChartSlice.cs	C	UI	UMG	Pie chart slice pointer events.
+Assembly-CSharp/Planetarium.cs	A	Celestials	core	Inertial frame rotation and universal time; anchor A.
+Assembly-CSharp/PlanetariumCamera.cs	C	Camera	Camera Component / Spring Arm	Map view camera orbit/zoom/targeting with input.
+Assembly-CSharp/PlanetaryResource.cs	A	Resources	core	Plain data for planetary resource.
+Assembly-CSharp/PlanetarySample.cs	A	Science	core	Plain data for planetary sample.
+Assembly-CSharp/PlanetScanData.cs	A	Resources	core	Plain data for planet scan.
+Assembly-CSharp/PopupDialog.cs	C	UI	UMG	Popup dialog builder via UGUI.
+Assembly-CSharp/PopupDialogController.cs	C	UI	UMG	Popup dialog lifetime component.
+Assembly-CSharp/PositionTarget.cs	B	Orbit		ITargetable proxy at body surface coordinates backed by hidden GameObject transform; used for waypoints and targeting.
+Assembly-CSharp/PQS_Collider.cs	B	Terrain		Terrain collider activation around target with GameObject toggling.
+Assembly-CSharp/PQS_ColliderAdvanced.cs	B	Terrain		Gravity and velocity colliders for terrain via Physics; heavy collider logic.
+Assembly-CSharp/PQS_ColliderRigidbodyTest.cs	C	Debug	drop	Test script moving rigidbody over collider; test only.
+Assembly-CSharp/PQS_GameBindings.cs	A	Terrain	core	Static dispatch of PQS city load events and POI range; no Unity.
+Assembly-CSharp/PQS_KSPBinder.cs	B	Terrain		Binds PQS to CelestialBody, game settings and load ranges.
+Assembly-CSharp/PQS_PartCollider.cs	B	Terrain		Part-vs-terrain colliders with velocity/gravity colliders; physics-coupled.
+Assembly-CSharp/PQSCache.cs	B	Terrain		PQ GameObject pooling and cache creation for terrain quads.
+Assembly-CSharp/PQSCity.cs	B	Terrain		Surface building/launch site placement with transforms, colliders, LOD; gameplay scenery.
+Assembly-CSharp/PQSCity2.cs	B	Terrain		KSC scenery v2 with floating origin adjustment, transforms and events.
+Assembly-CSharp/PQSGlobeDisplay.cs	C	Rendering	Procedural Mesh	Builds lat/long globe lines mesh for display.
+Assembly-CSharp/PQSMeshPlanet.cs	B	Terrain		Mesh-based planet construction (icosahedron/box) used for non-quad bodies; mesh build.
+Assembly-CSharp/PQSMeshWrapper.cs	B	Terrain		Wraps a mesh around a sphere with tangents; mesh generation.
+Assembly-CSharp/PQSMod.cs	B	Terrain		Base hook class for quad build callbacks; anchor B.
+Assembly-CSharp/PQSMod_AerialPerspectiveMaterial.cs	C	Terrain	Material Instance	Sets aerial perspective shader properties.
+Assembly-CSharp/PQSMod_AltitudeAlpha.cs	A	Terrain	core	Vertex alpha by altitude; pure vertex maths.
+Assembly-CSharp/PQSMod_AltitudeUV.cs	A	Terrain	core	Vertex UV by altitude; pure vertex maths.
+Assembly-CSharp/PQSMod_BillboardObject.cs	C	Rendering	Camera-facing mesh	Billboard following camera each frame.
+Assembly-CSharp/PQSMod_CelestialBodyTransform.cs	B	Terrain		Positions scaled-space body transforms, sphere fade and activation by distance; transform and flight globals coupled.
+Assembly-CSharp/PQSMod_CreateSphereCollider.cs	B	Terrain		Creates sphere collider for body; collider creation.
+Assembly-CSharp/PQSMod_FlattenArea.cs	A	Terrain	core	Flattens terrain area for KSC with Hermite blending; vertex height maths.
+Assembly-CSharp/PQSMod_FlattenAreaTangential.cs	A	Terrain	core	Tangential flatten area; vertex height maths.
+Assembly-CSharp/PQSMod_FlattenOcean.cs	A	Terrain	core	Clamps vertex height to ocean level; maths.
+Assembly-CSharp/PQSMod_GnomonicTest.cs	C	Debug	drop	Gnomonic mapping test with key input.
+Assembly-CSharp/PQSMod_HeightColorMap.cs	A	Terrain	core	Height-based colour map blending land classes; vertex maths.
+Assembly-CSharp/PQSMod_HeightColorMap2.cs	A	Terrain	core	Height colour map variant; vertex maths.
+Assembly-CSharp/PQSMod_HeightColorMapNoise.cs	A	Terrain	core	Height colour map with noise; vertex maths.
+Assembly-CSharp/PQSMod_LandClassController.cs	A	Terrain	core	Land class definitions and lerp for colours/scatter; data.
+Assembly-CSharp/PQSMod_LandClassScatterQuad.cs	C	Rendering	Instanced Static Mesh	Per-quad scatter mesh instance visibility handling; no colliders.
+Assembly-CSharp/PQSMod_MapDecal.cs	A	Terrain	core	Map-driven height/colour decal; vertex maths.
+Assembly-CSharp/PQSMod_MapDecalTangent.cs	A	Terrain	core	Tangent map decal; vertex maths.
+Assembly-CSharp/PQSMod_MaterialFadeAltitude.cs	C	Terrain	Material Instance	Fades material by altitude.
+Assembly-CSharp/PQSMod_MaterialFadeAltitudeDouble.cs	C	Terrain	Material Instance	Dual-altitude material fade.
+Assembly-CSharp/PQSMod_MaterialQuadRelative.cs	C	Terrain	Material Instance	Quad-relative shader properties.
+Assembly-CSharp/PQSMod_MaterialSetDirection.cs	C	Terrain	Material Instance	Sets sun direction shader property.
+Assembly-CSharp/PQSMod_MeshScatter.cs	C	Terrain	Instanced Static Mesh	Mesh scatter placement and meshes cache (no colliders).
+Assembly-CSharp/PQSMod_MeshScatter_QuadControl.cs	C	Terrain	Instanced Static Mesh	Scatter quad visibility control.
+Assembly-CSharp/PQSMod_OceanFX.cs	C	Terrain	Material Instance	Ocean shader and texture setup.
+Assembly-CSharp/PQSMod_QuadEnhanceCoast.cs	A	Terrain	core	Coast enhancement during quad build; mesh maths.
+Assembly-CSharp/PQSMod_QuadMeshColliders.cs	B	Terrain		Builds mesh colliders per quad with physic material; collider generation.
+Assembly-CSharp/PQSMod_RemoveQuadMap.cs	A	Terrain	core	Removes map regions from quad build; vertex maths.
+Assembly-CSharp/PQSMod_ROCScatterQuad.cs	C	DLC-BreakingGround	Instanced Static Mesh	ROC scatter per-quad visibility; no colliders. DLC hook in terrain.
+Assembly-CSharp/PQSMod_SmoothLatitudeRange.cs	A	Terrain	core	Smooth latitude range height blending; maths.
+Assembly-CSharp/PQSMod_SurfaceObjectQuads.cs	B	Terrain		Associates surface objects with quads; GameObject components.
+Assembly-CSharp/PQSMod_TangentTextureRanges.cs	A	Terrain	core	Tangent texture range smoothing; vertex maths.
+Assembly-CSharp/PQSMod_TextureAtlas.cs	C	Terrain	Material Instance	Texture atlas material setup per quad.
+Assembly-CSharp/PQSMod_UV_Quad.cs	A	Terrain	core	UV generation per quad; trivial.
+Assembly-CSharp/PQSMod_UV_Sphere.cs	A	Terrain	core	UV generation sphere; trivial.
+Assembly-CSharp/PQSMod_UVPlanetRelativePosition.cs	A	Terrain	core	UV from planet relative position; maths.
+Assembly-CSharp/PQSMod_VertexColorMap.cs	A	Terrain	core	Vertex colour from map; maths.
+Assembly-CSharp/PQSMod_VertexColorMapBlend.cs	A	Terrain	core	Vertex colour map blend; maths.
+Assembly-CSharp/PQSMod_VertexColorNoise.cs	A	Terrain	core	Vertex colour from noise; maths.
+Assembly-CSharp/PQSMod_VertexColorNoiseRGB.cs	A	Terrain	core	Vertex colour RGB noise; maths.
+Assembly-CSharp/PQSMod_VertexColorSolid.cs	A	Terrain	core	Solid vertex colour; trivial.
+Assembly-CSharp/PQSMod_VertexColorSolidBlend.cs	A	Terrain	core	Solid vertex colour blend; trivial.
+Assembly-CSharp/PQSMod_VertexDefineCoastLine.cs	A	Terrain	core	Coast line vertex height definition; pure vertex maths.
+Assembly-CSharp/PQSMod_VertexHeightMap.cs	A	Terrain	core	Height from heightmap with lerp; vertex maths.
+Assembly-CSharp/PQSMod_VertexHeightMapStep.cs	A	Terrain	core	Stepped heightmap height; vertex maths.
+Assembly-CSharp/PQSMod_VertexHeightNoise.cs	A	Terrain	core	Noise-based vertex height; maths.
+Assembly-CSharp/PQSMod_VertexHeightNoiseHeightMap.cs	A	Terrain	core	Noise height modulated by heightmap; maths.
+Assembly-CSharp/PQSMod_VertexHeightNoiseVertHeight.cs	A	Terrain	core	Noise height scaled by vertex height; maths.
+Assembly-CSharp/PQSMod_VertexHeightNoiseVertHeightCurve.cs	A	Terrain	core	Noise height by vertex height curve; AnimationCurve needs curve shim; golden vs KSP.
+Assembly-CSharp/PQSMod_VertexHeightNoiseVertHeightCurve2.cs	A	Terrain	core	Noise height curve variant; AnimationCurve needs curve shim.
+Assembly-CSharp/PQSMod_VertexHeightNoiseVertHeightCurve3.cs	A	Terrain	core	Noise height curve variant with custom noise; AnimationCurve shim.
+Assembly-CSharp/PQSMod_VertexHeightOblate.cs	A	Terrain	core	Oblate spheroid height adjustment; maths.
+Assembly-CSharp/PQSMod_VertexHeightOffset.cs	A	Terrain	core	Constant height offset; trivial.
+Assembly-CSharp/PQSMod_VertexNoise.cs	A	Terrain	core	Vertex noise height; maths.
+Assembly-CSharp/PQSMod_VertexPlanet.cs	A	Terrain	core	Main planet terrain generator with land classes and noise; big vertex maths, golden-test critical.
+Assembly-CSharp/PQSMod_VertexRidgedAltitudeCurve.cs	A	Terrain	core	Ridged noise altitude curve; AnimationCurve shim.
+Assembly-CSharp/PQSMod_VertexSimplexColorRGB.cs	A	Terrain	core	Simplex noise vertex colour; maths.
+Assembly-CSharp/PQSMod_VertexSimplexHeight.cs	A	Terrain	core	Simplex noise height; maths.
+Assembly-CSharp/PQSMod_VertexSimplexHeightAbsolute.cs	A	Terrain	core	Absolute simplex height; maths.
+Assembly-CSharp/PQSMod_VertexSimplexHeightFlatten.cs	A	Terrain	core	Flattening simplex height; maths.
+Assembly-CSharp/PQSMod_VertexSimplexHeightMap.cs	A	Terrain	core	Simplex height with map; maths.
+Assembly-CSharp/PQSMod_VertexSimplexMultiChromatic.cs	A	Terrain	core	Multi-channel simplex colour; maths.
+Assembly-CSharp/PQSMod_VertexSimplexNoiseColor.cs	A	Terrain	core	Simplex noise colour; maths.
+Assembly-CSharp/PQSMod_VertexVoronoi.cs	A	Terrain	core	Voronoi value noise height; maths.
+Assembly-CSharp/PQSMod_VoronoiCraters.cs	A	Terrain	core	Voronoi crater height and colour with curve; maths, AnimationCurve shim.
+Assembly-CSharp/PQSMod_VoronoiCraters2.cs	A	Terrain	core	Voronoi crater variant; maths, AnimationCurve shim.
+Assembly-CSharp/PQSROCControl.cs	B	DLC-BreakingGround		ROC placement hook per quad creating GameObjects/meshes; DLC terrain hook.
+Assembly-CSharp/PQSSurfaceObject.cs	B	Terrain		Base PQSMod for surface objects bound to transforms.
+Assembly-CSharp/PrefabAnimationFX.cs	C	Rendering	Niagara / Animation	Prefab animation effect behaviour; FX.
+Assembly-CSharp/PrefabMultiParticleFX.cs	C	Rendering	Niagara	Prefab multi-emitter particle effect; FX.
+Assembly-CSharp/PrefabParticleFX.cs	C	Rendering	Niagara	Prefab particle effect; FX.
+Assembly-CSharp/PrefabSpawner.cs	C	Rendering	Child Actor	Spawns prefab at awake; scenery.
+Assembly-CSharp/PrefabSpawnFX.cs	C	Rendering	Niagara	Spawns prefab as FX on event.
+Assembly-CSharp/PreferredInitialStage.cs	A	Vessel	core	Enum for preferred initial stage in vessel.
+Assembly-CSharp/PreFlightCheck.cs	A	Editor	core	Pre-flight check runner chain with abort/complete callbacks; logic over test list, minor GameSettings use.
+Assembly-CSharp/PreviewPanel.cs	C	UI	UMG	Preview panel hover handler.
+Assembly-CSharp/PreviewType.cs	C	UI	UMG	Preview data holder for UI.
+Assembly-CSharp/PrivacyDialog.cs	C	Analytics	drop	Privacy policy dialog; analytics-related.
+Assembly-CSharp/ProceduralAsteroid.cs	B	Celestials		Builds asteroid mesh/collider via procedural space object; gameplay-relevant collider generation.
+Assembly-CSharp/ProceduralAsteroidTest.cs	C	Debug	drop	Test harness for procedural asteroids; test-only.
+Assembly-CSharp/ProceduralComet.cs	B	Celestials		Builds comet mesh/collider; gameplay-relevant collider generation.
+Assembly-CSharp/ProceduralCometTest.cs	C	Debug	drop	Test harness for procedural comets; test-only.
+Assembly-CSharp/ProceduralCubemap.cs	C	Rendering	Scene Capture	Renders cubemap via cameras; rendering tool.
+Assembly-CSharp/ProceduralSpaceObject.cs	B	Celestials		Base for procedural asteroid/comet mesh and mesh collider creation with physic material.
+Assembly-CSharp/ProceduralStarfield.cs	C	Rendering	Niagara	Procedural starfield particles.
+Assembly-CSharp/ProfileTimer.cs	C	Debug	Unreal Insights	Simple profile timer stack.
+Assembly-CSharp/ProgressNode.cs	A	Career	core	Achievement node with reputation/science/funds awards and world-first messages; rules logic.
+Assembly-CSharp/ProgressTracking.cs	A	Career	core	ScenarioModule achievements tree and cheat progression; rules; needs ScenarioModule host.
+Assembly-CSharp/ProgressTree.cs	A	Career	core	Tree of progress nodes with load/save; rules.
+Assembly-CSharp/PropCollider.cs	C	Kerbals	drop	Editor-time prop collider marker; no logic.
+Assembly-CSharp/Propellant.cs	A	PartModules-Engines	core	Engine propellant definition with ratio and flow mode; data.
+Assembly-CSharp/PropertyIDs.cs	C	Rendering	Material Parameter Collection	Cached shader property IDs.
+Assembly-CSharp/PropObject.cs	C	Kerbals	Static Mesh Component	IVA prop proxy mesh creation tool.
+Assembly-CSharp/PropTools.cs	C	Kerbals	drop	IVA prop editor tools.
+Assembly-CSharp/ProtoPartModuleSnapshot.cs	A	Save	core	Module snapshot with adjusters and config; anchor A.
+Assembly-CSharp/ProtoPartResourceSnapshot.cs	A	Save	core	Resource snapshot; anchor A.
+Assembly-CSharp/ProtoRDNode.cs	A	Science	core	Persisted R&D node links.
+Assembly-CSharp/ProtoScenarioModule.cs	A	Save	core	Scenario module persistence data.
+Assembly-CSharp/ProtoTargetInfo.cs	B	Vessel		Target persistence resolving vessel/part/body via GameObject.Find and components; scene-graph lookup.
+Assembly-CSharp/ProtoTechNode.cs	A	Science	core	Persisted tech node state and parts unlocked.
+Assembly-CSharp/ProtoWaypointInfo.cs	A	Contracts	core	Persisted waypoint info.
+Assembly-CSharp/PSpaceObject.cs	B	Celestials		Space object mesh, convex collider and visual creation; collider generation.
+Assembly-CSharp/PSystem.cs	B	Celestials		Planetary system builder creating body GameObjects from config; load orchestration.
+Assembly-CSharp/PSystemBody.cs	B	Celestials		Body definition holder with PQS and OrbitDriver references.
+Assembly-CSharp/PSystemManager.cs	B	Celestials		System setup instantiating bodies, transforms and scaled space; orchestration.
+Assembly-CSharp/QuickSaveLoad.cs	B	Save		Quick save/load rules, file naming, hold-to-load, dialogs; extract save flow to core; UI -> UMG.
+Assembly-CSharp/RDArchivesAvatarController.cs	C	Science	Animation Blueprint	R&D archives avatar animation; cosmetic.
+Assembly-CSharp/RDPartCollisionHandler.cs	C	Science	drop	Part collision handler in R&D scene; cosmetic toy.
+Assembly-CSharp/RDTech.cs	C	Science	UMG	R&D tech node widget; mixed: purchase and auto-purchase logic call into ResearchAndDevelopment (rules live there).
+Assembly-CSharp/RecoverySituations.cs	A	Career	core	Enum for vessel recovery situations.
+Assembly-CSharp/ReentryFXParticleTrail.cs	C	Rendering	Niagara	Reentry particle trail FX.
+Assembly-CSharp/ReflectionUtil.cs	A	Modding	core	Finds attributed types in assemblies; reflection helper, replaced by registration.
+Assembly-CSharp/Reputation.cs	A	Career	core	Reputation scenario module: modifiers, curves and crew event hooks; anchor A.
+Assembly-CSharp/ReputationWidget.cs	C	Career	UMG + core query	Reputation display widget.
+Assembly-CSharp/ResetTransformOnSceneSwitch.cs	C	Scene	drop	Resets transform on scene switch; scenery.
+Assembly-CSharp/ResourceBroker.cs	A	Resources	core	Resource broker request/store/available through part; pure logic.
+Assembly-CSharp/ResourceCache.cs	A	Resources	core	Abundance cache loader and summary requests; data and queries.
+Assembly-CSharp/ResourceConverter.cs	A	Resources	core	Recipe processing for converters; pure logic.
+Assembly-CSharp/ResourceData.cs	A	Resources	core	Plain data for resources.
+Assembly-CSharp/ResourceFlowMode.cs	A	Resources	core	Flow mode enum; anchor A.
+Assembly-CSharp/ResourceGameSettings.cs	A	Resources	core	Resource generation seed and depletion settings from config; logic.
+Assembly-CSharp/ResourceMap.cs	A	Resources	core	Resource abundance map computation with noise per body and biome; anchor-like pure logic.
+Assembly-CSharp/ResourceRatio.cs	A	Resources	core	Resource input/output ratio struct.
+Assembly-CSharp/ResourceScenario.cs	A	Resources	core	Scenario module persisting resource data; needs ScenarioModule host.
+Assembly-CSharp/ResourceSetup.cs	A	Resources	core	Loads resource config definitions at start; minor lifecycle.
+Assembly-CSharp/ResourceTransferMode.cs	A	Resources	core	Enum of transfer modes.
+Assembly-CSharp/ResourceUtilities.cs	A	Resources	core	Config helpers, altitude, biome, difficulty queries; pure helpers.
+Assembly-CSharp/RetractableLadder.cs	B	Kerbals		Ladder animation with climb trigger transforms and drag cubes; EVA ladder gameplay.
+Assembly-CSharp/RichTextUtil.cs	C	UI	UE Localization (FText) + rich text	Rich text builder for contract/parameter strings.
+Assembly-CSharp/RnDBuilding.cs	C	Scene	UMG + Actor click handler	R&D building click and facility gating dialog; presentation.
+Assembly-CSharp/RnDCommsStream.cs	A	Science	core	Streams science data to R&D with coroutine timeout; timers only.
+Assembly-CSharp/RnDDebugUtil.cs	C	Debug	Gameplay Debugger	IMGUI R&D debug tool for nodes/parts/files; debug-only.
+Assembly-CSharp/ROC.cs	B	DLC-BreakingGround		Rover-operated object instance with GameObjects, collision checks and science; DLC scene object.
+Assembly-CSharp/RocCBDefinition.cs	A	DLC-BreakingGround	core	ROC per-body definition from config.
+Assembly-CSharp/ROCDefinition.cs	A	DLC-BreakingGround	core	ROC definition: biome, curves and config; data.
+Assembly-CSharp/ROCEmitter.cs	C	DLC-BreakingGround	Niagara	ROC particle emitter that applies forces to parts; mixed: AddForceTarget is minor B.
+Assembly-CSharp/ROCManager.cs	B	DLC-BreakingGround		Manages ROC spawning per quad with GameObjects and PQS hooks; scene orchestration.
+Assembly-CSharp/ROCScenario.cs	A	DLC-BreakingGround	core	ScenarioModule holding ROC lists; self-destructs when Serenity expansion not installed; DLC hook; needs ScenarioModule host.
+Assembly-CSharp/ROCsSFX.cs	C	DLC-BreakingGround	Audio Component / MetaSounds	ROC sound effects fade in/out.
+Assembly-CSharp/Rotato.cs	C	Rendering	Rotating Movement Component	Rotates object; cosmetic.
+Assembly-CSharp/RUIHoverController.cs	C	UI	UMG	Hover scheduling for UI.
+Assembly-CSharp/RUIutils.cs	C	UI	UMG	UI helper with collection and camera utilities.
+Assembly-CSharp/RunwayCollisionHandler.cs	B	Physics		Runway section colliders toggling and collision responses; collision handling.
+Assembly-CSharp/SafeAbortBackgroundWorker.cs	A	Core	core	Background worker with safe abort; threading helper.
+Assembly-CSharp/SandCastleLogic.cs	C	Debug	drop	Easter egg scenery logic.
+Assembly-CSharp/SaveMode.cs	A	Save	core	Enum of save modes.
+Assembly-CSharp/SavingBtnSoftLock.cs	C	UI	UMG	Hover soft lock for saving button.
+Assembly-CSharp/ScalarModuleSetHandler.cs	A	Part	core	Handler configuring scalar module sets with load/save.
+Assembly-CSharp/ScaledCamera.cs	C	Camera	Camera Component	Scaled space camera sync.
+Assembly-CSharp/ScaledFloatingOrigin.cs	B	Celestials		Keeps scaled space transform in sync with floating origin; transform coupled.
+Assembly-CSharp/ScaledMovement.cs	C	MapView	Widget Component	Scaled space map object following vessel/body.
+Assembly-CSharp/ScaledSpace.cs	B	Celestials		Scaled space management: registers objects, local to scaled conversion; transforms.
+Assembly-CSharp/ScaledSpaceFader.cs	C	Rendering	Material Instance	Fades scaled space bodies by distance.
+Assembly-CSharp/ScaledSun.cs	C	Rendering	Directional Light	Scaled sun scenery setup.
+Assembly-CSharp/ScenarioAchievements.cs	A	Career	core	Scenario module tracking achievements via events; coroutine timers; needs ScenarioModule host.
+Assembly-CSharp/ScenarioCreationOptions.cs	A	Modding	core	Enum of scenario creation options.
+Assembly-CSharp/ScenarioCustomWaypoints.cs	A	Contracts	core	Scenario module persisting custom waypoints; needs ScenarioModule host.
+Assembly-CSharp/ScenarioDestructibles.cs	A	Career	core	Scenario module persisting building destruction state; needs ScenarioModule host.
+Assembly-CSharp/ScenarioDiscoverableObjects.cs	B	Celestials		Spawns/expires discoverable asteroids and comets via coroutines and vessels; spawn orchestration.
+Assembly-CSharp/ScenarioLoadDialog.cs	C	UI	UMG	Scenario selection dialog with textures.
+Assembly-CSharp/ScenarioModule.cs	B	Modding		ScenarioModule base host; anchor B.
+Assembly-CSharp/ScenarioNewGameIntro.cs	C	Tutorials	drop	New game intro tutorial scenario.
+Assembly-CSharp/ScenarioRunner.cs	B	Modding		Instantiates and manages scenario module instances per game; lifecycle host.
+Assembly-CSharp/ScenarioUpgradeableFacilities.cs	A	Career	core	Facility upgrade levels, costs and persistence; Transform use is minor; needs ScenarioModule host.
+Assembly-CSharp/SceneTransitionMatrix.cs	A	Scene	core	Scene transition values table.
+Assembly-CSharp/ScienceData.cs	A	Science	core	Science data blob with load/save; anchor A.
+Assembly-CSharp/ScienceExperiment.cs	A	Science	core	Experiment definition with situation masks; config logic.
+Assembly-CSharp/ScienceLabSearch.cs	A	Science	core	Finds science labs on vessel for data processing; vessel queries.
+Assembly-CSharp/ScienceNodeTutorialStep.cs	C	Tutorials	drop	Science node tutorial page step.
+Assembly-CSharp/ScienceSubject.cs	A	Science	core	Science subject with value and caps; anchor A.
+Assembly-CSharp/ScienceUtil.cs	A	Science	core	Science helpers: biome names, situation strings, crew effects; mixed: localization formatting heavy.
+Assembly-CSharp/ScienceWidget.cs	C	Science	UMG + core query	Science currency display widget.
+Assembly-CSharp/Scientist.cs	C	Kerbals	Animation Blueprint	KSC scientist idle animation; cosmetic.
+Assembly-CSharp/ScreenMessage.cs	C	FlightUI	UMG	Screen message data holder.
+Assembly-CSharp/ScreenMessages.cs	C	FlightUI	UMG	On-screen message queue rendering.
+Assembly-CSharp/ScreenMessagesText.cs	C	FlightUI	UMG	TMPro text for screen messages.
+Assembly-CSharp/ScreenMessageStyle.cs	C	FlightUI	UMG	Enum of screen message positions.
+Assembly-CSharp/ScreenShot.cs	C	Rendering	Render Target / Scene Capture	Screenshot capture hiding UI.
+Assembly-CSharp/ScreenSpaceObjectScaling.cs	C	Rendering	Widget Component	Keeps object a fixed screen size.
+Assembly-CSharp/ScrollRectDragOverride.cs	C	UI	UMG	ScrollRect drag override.
+Assembly-CSharp/ScrollRectPixelPerfectHandler.cs	C	UI	UMG	ScrollRect pixel perfect fix.
+Assembly-CSharp/SerenityAboutDialog.cs	C	DLC-BreakingGround	UMG	Breaking Ground about dialog; UI.
+Assembly-CSharp/ShaderTimeOffset.cs	C	Rendering	Material Instance	Offsets shader time per renderer.
+Assembly-CSharp/ShipTemplate.cs	A	Save	core	Craft template data loading ship parts, size, controllability; anchor-like craft model; minor mission links.
+Assembly-CSharp/SimpleOrbitController.cs	C	Scene	drop	Simple orbit animation of scenery objects.
+Assembly-CSharp/Simplex.cs	A	Core	core	Simplex noise; pure math.
+Assembly-CSharp/SimplexNoise.cs	A	Core	core	Static simplex noise; pure math.
+Assembly-CSharp/SiteNode.cs	C	MapView	Widget Component	Map node for launch site; presentation.
+Assembly-CSharp/SkySphereControl.cs	C	Rendering	Sky Atmosphere	Sky sphere shader control.
+Assembly-CSharp/SliderFocusType.cs	C	UI	UMG	Enum for slider focus.
+Assembly-CSharp/SmokeTrailControl.cs	C	Rendering	Niagara	Smoke trail shader control.
+Assembly-CSharp/SmoothDisposer.cs	C	Rendering	drop	Delayed destroy helper for FX.
+Assembly-CSharp/SpaceCenter.cs	B	Scene		KSC location, great circle distance and scene hooks; transform/event coupled.
+Assembly-CSharp/SpaceCenterBuildingCollider.cs	C	Scene	Actor click handler	Mouse over collider for KSC buildings.
+Assembly-CSharp/SpaceCenterCamera.cs	C	Camera	Camera Component + Enhanced Input	Old KSC camera with input.
+Assembly-CSharp/SpaceCenterCamera2.cs	C	Camera	Camera Component + Enhanced Input	KSC camera with input and PQS height.
+Assembly-CSharp/SpaceCenterCrew.cs	C	Kerbals	Animation Blueprint	KSC crew movement; cosmetic.
+Assembly-CSharp/SpaceCenterFacility.cs	A	Career	core	Enum of KSC facilities.
+Assembly-CSharp/SpaceCenterMain.cs	B	Scene		KSC scene driver handling input locks and events.
+Assembly-CSharp/SpaceCenterSurfaceObject.cs	B	Terrain		Pops KSC surface object to scene root across scene switches; scene-graph coupled.
+Assembly-CSharp/SpaceNavigatorCamera.cs	C	Camera	Enhanced Input	3Dconnexion camera control.
+Assembly-CSharp/SpaceNavigatorFreeCamera.cs	C	Camera	Enhanced Input	3Dconnexion free camera.
+Assembly-CSharp/SpaceNavigatorLocalCamera.cs	C	Camera	Enhanced Input	3Dconnexion local camera.
+Assembly-CSharp/SpacePlaneHangarBuilding.cs	C	Scene	UMG + Actor click handler	SPH building click handler.
+Assembly-CSharp/SPHCamera.cs	C	Camera	Camera Component + Enhanced Input	SPH editor camera.
+Assembly-CSharp/SphereBaseSO.cs	B	Celestials		ScriptableObject mesh generator for spheres used by procedural objects; mesh build.
+Assembly-CSharp/SphereVolume.cs	C	Rendering	Material	Volumetric sphere shader control.
+Assembly-CSharp/Splashdown.cs	C	Rendering	Niagara	Splash FX spawn.
+Assembly-CSharp/StackIconGrouping.cs	C	FlightUI	UMG	Enum for staging icon grouping.
+Assembly-CSharp/StageGroupInfoItem.cs	C	FlightUI	UMG	Staging info item widget.
+Assembly-CSharp/StandaloneInputModuleCustom.cs	C	Input	Enhanced Input	Custom UGUI input module.
+Assembly-CSharp/SteamWorkshopExportDialog.cs	C	Steam	Online Subsystem Steam	Workshop export dialog.
+Assembly-CSharp/SteeringObject.cs	B	PartModules-Wheels		Steering pivot with neutral angle and axis alignment from transforms; transform-based.
+Assembly-CSharp/StoredPart.cs	A	Kerbals	core	Stored inventory part snapshot with config load/save.
+Assembly-CSharp/StringBuilderCache.cs	A	Core	core	StringBuilder cache helper.
+Assembly-CSharp/StringExtensions.cs	A	Core	core	String hash extension.
+Assembly-CSharp/StringTypeParser.cs	A	Modding	core	String type parser for config values.
+Assembly-CSharp/SuitButton.cs	C	Kerbals	UMG	Suit selection button.
+Assembly-CSharp/SuitCombo.cs	C	Kerbals	UMG	Suit combo data with textures.
+Assembly-CSharp/SuitCombos.cs	C	Kerbals	UMG	Suit picker window; mixed: helmet/suit config lookups.
+Assembly-CSharp/SuitLightColorPicker.cs	C	Kerbals	UMG	Suit light colour picker widget.
+Assembly-CSharp/Sun.cs	C	Celestials	Directional Light + Sky Atmosphere	Sun light, shadow cascades, brightness curve, flare; mixed: GetLocalTimeAtPosition and sunDirection are A-like queries the core needs.
+Assembly-CSharp/SunCoronas.cs	C	Rendering	Material Instance	Sun corona animation; cosmetic.
+Assembly-CSharp/SunFlare.cs	C	Rendering	Lens flare post process	Sun lens flare with occlusion checks; cosmetic.
+Assembly-CSharp/SunShaderController.cs	C	Rendering	Material Instance	Sun shader ramp and curves; cosmetic.
+Assembly-CSharp/SurfaceFX.cs	C	Rendering	Niagara	Surface dust/splash particle management with floating origin; cosmetic.
+Assembly-CSharp/SurfaceObject.cs	B	Terrain		Parents objects to surface/body transform and pops to scene root; transform hierarchy meaning.
+Assembly-CSharp/SuspensionLoadBalancer.cs	A	PartModules-Wheels	core	VesselModule balancing suspension load across wheel modules; logic with lifecycle hooks only; needs VesselModule host.
+Assembly-CSharp/SVBoxSlider.cs	C	UI	UMG	Colour picker saturation/value box.
+Assembly-CSharp/SymmetryMethod.cs	A	Editor	core	Enum of symmetry methods used by editor placement.
+Assembly-CSharp/SystemInformation.cs	C	Analytics	drop	Reads system info at awake.
+Assembly-CSharp/TechPerk.cs	A	Science	core	Tech perk state interface implementation.
+Assembly-CSharp/TemperatureModel.cs	A	Thermal	core	Piecewise temperature model steps for thermal prediction; pure math, no Unity.
+Assembly-CSharp/test_particles.cs	C	Debug	drop	Particle test script with input; test-only.
+Assembly-CSharp/TestVehicleController.cs	C	Debug	drop	Test vehicle controller with joints; test-only.
+Assembly-CSharp/TextButton3D.cs	C	UI	Widget Component	3D text button with mouse events and materials.
+Assembly-CSharp/TextMeshQueue.cs	C	UI	UMG	TextMesh line queue.
+Assembly-CSharp/TextProButton3D.cs	C	UI	Widget Component	3D TextMeshPro button.
+Assembly-CSharp/TextureMaterialProperty.cs	C	Rendering	Dynamic Material Instance	Texture material property apply.
+Assembly-CSharp/TextureScale.cs	C	Rendering	Render Target	Texture rescale helpers.
+Assembly-CSharp/TextureTools.cs	C	Rendering	Material	Texture ramp conversion tools via curves.
+Assembly-CSharp/TGAHeader.cs	C	Rendering	Interchange / importer	TGA header parsing.
+Assembly-CSharp/TGAImage.cs	C	Rendering	Interchange / importer	TGA reader producing Texture2D.
+Assembly-CSharp/TGAImageType.cs	C	Rendering	Interchange / importer	TGA type enum.
+Assembly-CSharp/ThermalLink.cs	A	Thermal	core	Thermal link data between parts and attach nodes.
+Assembly-CSharp/TiltWindow.cs	C	Rendering	Widget Component	Tilts menu window with mouse; cosmetic.
+Assembly-CSharp/TimedObjectDestructor.cs	C	Rendering	Actor Lifespan	Destroys object after timeout.
+Assembly-CSharp/TimeInputFieldHandler.cs	C	UI	UMG	Time text input parsing for UI (UT/duration).
+Assembly-CSharp/TimeOfDayAnimation.cs	C	Rendering	Material Instance	Time-of-day lighting colour changes; cosmetic.
+Assembly-CSharp/TimeSinceTutorialStep.cs	C	Tutorials	drop	Tutorial step highlighting time.
+Assembly-CSharp/Timing0.cs	B	Scene		Script execution order proxy forwarding Update/FixedUpdate to TimingManager; frame ordering to redesign as tick groups.
+Assembly-CSharp/Timing1.cs	B	Scene		Script execution order proxy; tick group.
+Assembly-CSharp/Timing2.cs	B	Scene		Script execution order proxy; tick group.
+Assembly-CSharp/Timing3.cs	B	Scene		Script execution order proxy; tick group.
+Assembly-CSharp/Timing4.cs	B	Scene		Script execution order proxy; tick group.
+Assembly-CSharp/Timing5.cs	B	Scene		Script execution order proxy; tick group.
+Assembly-CSharp/TimingFI.cs	B	Scene		Script execution order proxy for FlightIntegrator ordering; tick group.
+Assembly-CSharp/TimingManager.cs	B	Scene		Dispatches per-frame callbacks in ordered phases including FlightIntegrator; scheduler to rebuild as UE tick groups.
+Assembly-CSharp/TimingPre.cs	B	Scene		Script execution order proxy for pre-update; tick group.
+Assembly-CSharp/TMPProUtil.cs	C	UI	UMG	TMPro enum conversion helpers.
+Assembly-CSharp/TMProUtil.cs	C	UI	UMG	Empty TMPro utility class.
+Assembly-CSharp/TrackingStationBuilding.cs	C	Scene	UMG + Actor click handler	Tracking station building click handler.
+Assembly-CSharp/TrackingStationDishMovement.cs	C	Scene	Animation Blueprint	Dish animation tracking planet; cosmetic.
+Assembly-CSharp/TrackIR.cs	C	Camera	Enhanced Input	TrackIR head tracking config and axes.
+Assembly-CSharp/TrackRigObject.cs	C	Rendering	drop	Tracks rig object transforms; scenery.
+Assembly-CSharp/Trajectory.cs	A	Orbit	core	Trajectory prediction point conversion across bodies; Vector3d maths, no Unity.
+Assembly-CSharp/TransactionReasons.cs	A	Career	core	Enum of funds/science/rep transaction reasons.
+Assembly-CSharp/TransferDataBase.cs	C	FlightUI	UMG + core query	Transfer window app data base for alarm clock UI.
+Assembly-CSharp/TransferDataSimple.cs	C	FlightUI	UMG + core query	Simple transfer data with vector math for alarm clock; mixed: phase/ejection numbers lean on OrbitUtil.
+Assembly-CSharp/TransferDataSimpleTopData.cs	C	FlightUI	UMG	Transfer top data for UI.
+Assembly-CSharp/TransferDataTopDataBase.cs	C	FlightUI	UMG	Transfer top data base for UI.
+Assembly-CSharp/TransferTypeBase.cs	C	MapView	UMG + core query	Maneuver tool transfer type abstraction: node creation and prior/following maneuver checks; UI-bound, maths in core.
+Assembly-CSharp/TransformExtension.cs	C	Core	drop	Unity Transform helper extensions; engine-specific, replaced by UE scene component helpers.
+Assembly-CSharp/Tumbler.cs	C	UI	UMG	Numeric tumbler animation widget.
+Assembly-CSharp/Tumblers.cs	C	UI	UMG	Group of tumblers widget.
+Assembly-CSharp/TutorialAscent.cs	C	Tutorials	drop	Tutorial scenario: ascent; scripted steps.
+Assembly-CSharp/TutorialAsteroid1.cs	C	Tutorials	drop	Tutorial scenario: asteroid 1.
+Assembly-CSharp/TutorialAsteroid2.cs	C	Tutorials	drop	Tutorial scenario: asteroid 2.
+Assembly-CSharp/TutorialDemo.cs	C	Tutorials	drop	Tutorial demo with IMGUI; test-like.
+Assembly-CSharp/TutorialDocking.cs	C	Tutorials	drop	Tutorial scenario: docking.
+Assembly-CSharp/TutorialDuna.cs	C	Tutorials	drop	Tutorial scenario: Duna.
+Assembly-CSharp/TutorialEditor.cs	C	Tutorials	drop	Tutorial scenario: editor basics.
+Assembly-CSharp/TutorialEditorMid.cs	C	Tutorials	drop	Tutorial scenario: mid editor craft checks.
+Assembly-CSharp/TutorialFlightBasics.cs	C	Tutorials	drop	Tutorial scenario: flight basics.
+Assembly-CSharp/TutorialFlightSuborbital.cs	C	Tutorials	drop	Tutorial scenario: suborbital flight.
+Assembly-CSharp/TutorialFromMun.cs	C	Tutorials	drop	Tutorial scenario: return from Mun.
+Assembly-CSharp/TutorialMunDescent.cs	C	Tutorials	drop	Tutorial scenario: Mun descent.
+Assembly-CSharp/TutorialMunFlight1.cs	C	Tutorials	drop	Tutorial scenario: Mun flight.
+Assembly-CSharp/TutorialOrbit101.cs	C	Tutorials	drop	Tutorial scenario: orbits.
+Assembly-CSharp/TutorialPageConfig.cs	C	Tutorials	drop	Tutorial page config helpers.
+Assembly-CSharp/TutorialScenario.cs	C	Tutorials	drop	Tutorial scenario base with KFSM pages and UI; tutorial framework.
+Assembly-CSharp/TutorialScience.cs	C	Tutorials	drop	Tutorial scenario: science.
+Assembly-CSharp/UI_ChooseOption.cs	A	Part	core	PAW option chooser attribute holding persisted option data; part field metadata.
+Assembly-CSharp/UI_ColorPicker.cs	A	Part	core	Attribute marking colour picker field.
+Assembly-CSharp/UI_Control.cs	A	Part	core	Base field control attribute with scene visibility and config parse; part framework metadata.
+Assembly-CSharp/UI_Cycle.cs	A	Part	core	Cycle control attribute metadata.
+Assembly-CSharp/UI_EnumAttribute.cs	C	Debug	drop	Unity inspector property attribute for enum drawing.
+Assembly-CSharp/UI_FieldFloatRange.cs	A	Part	core	Float range field attribute metadata.
+Assembly-CSharp/UI_FloatEdit.cs	A	Part	core	Float edit control attribute metadata.
+Assembly-CSharp/UI_FloatRange.cs	A	Part	core	Float range control attribute metadata.
+Assembly-CSharp/UI_Grid.cs	A	Part	core	Grid control attribute metadata.
+Assembly-CSharp/UI_Group.cs	A	Part	core	Group control attribute metadata.
+Assembly-CSharp/UI_Label.cs	A	Part	core	Label control attribute metadata.
+Assembly-CSharp/UI_MinMaxRange.cs	A	Part	core	Min/max range control attribute metadata.
+Assembly-CSharp/UI_ProgressBar.cs	A	Part	core	Progress bar control attribute metadata.
+Assembly-CSharp/UI_Resources.cs	A	Part	core	Resource control attribute metadata.
+Assembly-CSharp/UI_ScaleEdit.cs	A	Part	core	Scale edit control attribute metadata.
+Assembly-CSharp/UI_Scene.cs	A	Part	core	Enum of scenes where field controls apply.
+Assembly-CSharp/UI_Toggle.cs	A	Part	core	Toggle control attribute metadata.
+Assembly-CSharp/UI_VariantSelector.cs	A	Part	core	Variant selector attribute metadata.
+Assembly-CSharp/UI_Vector2.cs	A	Part	core	Vector2 control attribute metadata.
+Assembly-CSharp/UIAutoContentSizer.cs	C	UI	UMG	Auto content size layout helper.
+Assembly-CSharp/UIButtonTextColor.cs	C	UI	UMG	Button text colour helper.
+Assembly-CSharp/UICameraController.cs	C	UI	UMG	UI camera resolution handling.
+Assembly-CSharp/UIConfirmDialog.cs	C	UI	UMG	Confirm dialog widget.
+Assembly-CSharp/UIConstructionPanelPart.cs	C	Editor	UMG	Construction panel collapse widget.
+Assembly-CSharp/UIFolderManagementDialog.cs	C	UI	UMG	Folder create/delete dialog.
+Assembly-CSharp/UIListClamper.cs	C	UI	UMG	List clamp layout helper.
+Assembly-CSharp/UIMarquee.cs	C	UI	UMG	Marquee scrolling text widget.
+Assembly-CSharp/UIMarquee_ActionField.cs	C	FlightUI	UMG	Marquee for PAW action field.
+Assembly-CSharp/UIMarquee_PAW.cs	C	FlightUI	UMG	Marquee for PAW title.
+Assembly-CSharp/UINavExplicit.cs	C	UI	CommonUI	Explicit UI navigation setup.
+Assembly-CSharp/UINavMouseChecker.cs	C	UI	CommonUI	Tracks mouse hover versus keyboard selection.
+Assembly-CSharp/UIPartActionAeroDisplay.cs	C	FlightUI	UMG + core query	PAW aero display item.
+Assembly-CSharp/UIPartActionButton.cs	C	FlightUI	UMG	PAW event button.
+Assembly-CSharp/UIPartActionChooseOption.cs	C	FlightUI	UMG	PAW option chooser.
+Assembly-CSharp/UIPartActionColorPicker.cs	C	FlightUI	UMG	PAW colour picker.
+Assembly-CSharp/UIPartActionControllerInventory.cs	C	FlightUI	UMG + core query	Inventory UI controller for part action windows; mixed: stack/slot rules for cargo inventory live partly here.
+Assembly-CSharp/UIPartActionControllerSpawner.cs	C	FlightUI	UMG	Spawns PAW controller at start.
+Assembly-CSharp/UIPartActionCycle.cs	C	FlightUI	UMG	PAW cycle control.
+Assembly-CSharp/UIPartActionEventItem.cs	C	FlightUI	UMG	PAW event item with range check and symmetry fire.
+Assembly-CSharp/UIPartActionFieldFloatRange.cs	C	FlightUI	UMG	PAW float range field.
+Assembly-CSharp/UIPartActionFieldItem.cs	C	FlightUI	UMG	PAW field item base: symmetry propagation and range check.
+Assembly-CSharp/UIPartActionFloatEdit.cs	C	FlightUI	UMG	PAW float edit field.
+Assembly-CSharp/UIPartActionFloatRange.cs	C	FlightUI	UMG	PAW float range slider.
+Assembly-CSharp/UIPartActionFuelFlowOverlay.cs	C	FlightUI	UMG	PAW fuel flow overlay toggle.
+Assembly-CSharp/UIPartActionGroup.cs	C	FlightUI	UMG	PAW group container.

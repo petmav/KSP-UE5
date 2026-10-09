@@ -1,0 +1,1710 @@
+{
+ "name": "root",
+ "id": "",
+ "comment": null,
+ "values": [
+  ["ship","#autoLOC_501224",null],
+  ["version","1.6.0",null],
+  ["description","#autoLOC_501225",null],
+  ["type","VAB",null],
+  ["size","2.05977368,3.10723305,1.80648184",null],
+  ["steamPublishedFileId","0",null],
+  ["persistentId","2905720181",null],
+  ["rot","0,0,0,1",null],
+  ["missionFlag","Squad/Flags/default",null],
+  ["vesselType","Debris",null]
+ ],
+ "nodes": [
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","mk1pod.v2_4294466236",null],
+    ["partName","Part",null],
+    ["persistentId","1682334687",null],
+    ["pos","0,15,0",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","0,15,0",null],
+    ["rot","0,0,0,1",null],
+    ["attRot","0,0,0,1",null],
+    ["attRot0","0,0,0,1",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Radial",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","0",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["link","parachuteSingle_4294458546",null],
+    ["link","GooExperiment_4294442852",null],
+    ["link","GooExperiment_4294442798",null],
+    ["link","solidBooster.sm.v2_4294392496",null],
+    ["attN","bottom,solidBooster.sm.v2_4294392496_0|-0.4050379|0",null],
+    ["attN","top,parachuteSingle_4294458546_0|0.6423756|0",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleCommand",null],
+      ["isEnabled","True",null],
+      ["hibernation","False",null],
+      ["hibernateOnWarp","False",null],
+      ["activeControlPointName","_default",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "MakeReferenceToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "HibernateToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["active","False",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleReactionWheel",null],
+      ["isEnabled","True",null],
+      ["actuatorModeCycle","0",null],
+      ["authorityLimiter","100",null],
+      ["stateString","Active",null],
+      ["stagingEnabled","True",null],
+      ["WheelState","Active",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "CycleAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "Activate",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "Deactivate",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "Toggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleColorChanger",null],
+      ["isEnabled","True",null],
+      ["animState","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ToggleAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","Light",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleScienceExperiment",null],
+      ["isEnabled","True",null],
+      ["Deployed","False",null],
+      ["Inoperable","False",null],
+      ["cooldownToGo","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "DeployAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "ResetAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleScienceContainer",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "CollectAllAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleConductionMultiplier",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleDataTransmitter",null],
+      ["isEnabled","True",null],
+      ["xmitIncomplete","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "StartTransmissionAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["active","False",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleLiftingSurface",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","FlagDecal",null],
+      ["isEnabled","True",null],
+      ["flagDisplayed","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModulePartVariants",null],
+      ["isEnabled","True",null],
+      ["useVariantMass","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleTripLogger",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "Log",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["flight","0",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RESOURCE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ElectricCharge",null],
+      ["amount","50",null],
+      ["maxAmount","50",null],
+      ["flowState","True",null],
+      ["isTweakable","True",null],
+      ["hideFlow","False",null],
+      ["isVisible","True",null],
+      ["flowMode","Both",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "RESOURCE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","MonoPropellant",null],
+      ["amount","10",null],
+      ["maxAmount","10",null],
+      ["flowState","True",null],
+      ["isTweakable","True",null],
+      ["hideFlow","False",null],
+      ["isVisible","True",null],
+      ["flowMode","Both",null]
+     ],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","parachuteSingle_4294458546",null],
+    ["partName","Part",null],
+    ["persistentId","1253190902",null],
+    ["pos","0,15.6574574,0",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","0,0.657457352,0",null],
+    ["rot","0,0,0,1",null],
+    ["attRot","0,0,0,1",null],
+    ["attRot0","0,0,0,1",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Radial",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","0",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","0",null],
+    ["sqor","0",null],
+    ["sepI","-1",null],
+    ["attm","0",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["attN","bottom,mk1pod.v2_4294466236_0|-0.01508113|0",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleParachute",null],
+      ["isEnabled","True",null],
+      ["persistentState","STOWED",null],
+      ["animTime","0",null],
+      ["minAirPressureToOpen","0.0399999991",null],
+      ["deployAltitude","1000",null],
+      ["spreadAngle","7",null],
+      ["automateSafeDeploy","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "DeployAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "CutAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleTestSubject",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleDragModifier",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleDragModifier",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","GooExperiment_4294442852",null],
+    ["partName","Part",null],
+    ["persistentId","3070843357",null],
+    ["pos","-0.313173443,15.3144655,1.00750199E-08",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","-0.313173443,0.314465523,1.00750199E-08",null],
+    ["rot","0.0988500565,0.700163364,-0.098850064,0.700163305",null],
+    ["attRot","0,0,0,1",null],
+    ["attRot0","0.0988500565,0.700163364,-0.098850064,0.700163305",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Radial",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","GooExperiment_4294442798",null],
+    ["srfN","srfAttach,mk1pod.v2_4294466236",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleAnimateGeneric",null],
+      ["isEnabled","True",null],
+      ["aniState","LOCKED",null],
+      ["animSwitch","True",null],
+      ["animTime","0",null],
+      ["animSpeed","1",null],
+      ["deployPercent","100",null],
+      ["animationIsDisabled","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ToggleAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleScienceExperiment",null],
+      ["isEnabled","True",null],
+      ["Deployed","False",null],
+      ["Inoperable","False",null],
+      ["cooldownToGo","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "DeployAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "ResetAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","GooExperiment_4294442798",null],
+    ["partName","Part",null],
+    ["persistentId","1270017894",null],
+    ["pos","0.313173443,15.3144655,-3.74535105E-08",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","0.313173443,0.314465523,-3.74535105E-08",null],
+    ["rot","-0.0988500714,0.700163245,-0.0988500491,-0.700163424",null],
+    ["attRot","0,0,0,1",null],
+    ["attRot0","-0.0988500714,0.700163245,-0.0988500491,-0.700163424",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Radial",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","GooExperiment_4294442852",null],
+    ["srfN","srfAttach,mk1pod.v2_4294466236",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleAnimateGeneric",null],
+      ["isEnabled","True",null],
+      ["aniState","LOCKED",null],
+      ["animSwitch","True",null],
+      ["animTime","0",null],
+      ["animSpeed","1",null],
+      ["deployPercent","100",null],
+      ["animationIsDisabled","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ToggleAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleScienceExperiment",null],
+      ["isEnabled","True",null],
+      ["Deployed","False",null],
+      ["Inoperable","False",null],
+      ["cooldownToGo","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "DeployAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "ResetAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","solidBooster.sm.v2_4294392496",null],
+    ["partName","Part",null],
+    ["persistentId","2264731800",null],
+    ["pos","0,13.8374624,0",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","0,-1.16253757,0",null],
+    ["rot","0,0,0,1",null],
+    ["attRot","0,0,0,1",null],
+    ["attRot0","0,0,0,1",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Radial",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","0",null],
+    ["sqor","1",null],
+    ["sepI","-1",null],
+    ["attm","0",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["link","basicFin_4294378632",null],
+    ["link","basicFin_4294377392",null],
+    ["link","basicFin_4294377352",null],
+    ["attN","top,mk1pod.v2_4294466236_0|0.7575|0",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleEngines",null],
+      ["isEnabled","True",null],
+      ["staged","False",null],
+      ["flameout","False",null],
+      ["EngineIgnited","False",null],
+      ["engineShutdown","False",null],
+      ["currentThrottle","0",null],
+      ["thrustPercentage","100",null],
+      ["manuallyOverridden","False",null],
+      ["includeinDVCalcs","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "OnAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "ShutdownAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "ActivateAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleTestSubject",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleSurfaceFX",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModulePartVariants",null],
+      ["isEnabled","True",null],
+      ["useVariantMass","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleJettison",null],
+      ["isEnabled","True",null],
+      ["activejettisonName","shroud",null],
+      ["isJettisoned","True",null],
+      ["shroudHideOverride","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "JettisonAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RESOURCE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","SolidFuel",null],
+      ["amount","140",null],
+      ["maxAmount","140",null],
+      ["flowState","True",null],
+      ["isTweakable","True",null],
+      ["hideFlow","False",null],
+      ["isVisible","True",null],
+      ["flowMode","Both",null]
+     ],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","basicFin_4294378632",null],
+    ["partName","Part",null],
+    ["persistentId","2577720380",null],
+    ["pos","0,13.7189207,0.622972488",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","0,-0.118541718,0.622972488",null],
+    ["rot","0,0.707106829,0,0.707106829",null],
+    ["attRot","0,0,0,1",null],
+    ["attRot0","0,0.707106829,0,0.707106829",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Radial",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","basicFin_4294377392",null],
+    ["sym","basicFin_4294377352",null],
+    ["srfN","srfAttach,solidBooster.sm.v2_4294392496",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleLiftingSurface",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","basicFin_4294377392",null],
+    ["partName","Part",null],
+    ["persistentId","655105718",null],
+    ["pos","0.539510012,13.7189207,-0.311486304",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","0.539510012,-0.118541718,-0.311486304",null],
+    ["rot","0,0.965925872,0,-0.258819103",null],
+    ["attRot","0,0,0,1",null],
+    ["attRot0","0,0.965925872,0,-0.258819103",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Radial",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","basicFin_4294377352",null],
+    ["sym","basicFin_4294378632",null],
+    ["srfN","srfAttach,solidBooster.sm.v2_4294392496",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleLiftingSurface",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","basicFin_4294377352",null],
+    ["partName","Part",null],
+    ["persistentId","253566102",null],
+    ["pos","-0.539510071,13.7189207,-0.311486244",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","-0.539510071,-0.118541718,-0.311486244",null],
+    ["rot","0,0.258819014,0,-0.965925872",null],
+    ["attRot","0,0,0,1",null],
+    ["attRot0","0,0.258819014,0,-0.965925872",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Radial",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","basicFin_4294378632",null],
+    ["sym","basicFin_4294377392",null],
+    ["srfN","srfAttach,solidBooster.sm.v2_4294392496",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleLiftingSurface",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

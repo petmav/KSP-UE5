@@ -1,0 +1,53 @@
+path	tier	subsystem	ue5_counterpart	rationale
+Assembly-CSharp-firstpass/DAE.cs	C	Rendering	Interchange / glTF importer	Collada (.dae) model reader building GameObjects/materials at runtime; asset import only -> use UE Interchange or drop.
+Assembly-CSharp-firstpass/OBJ.cs	C	Rendering	Interchange / glTF importer	Wavefront .obj runtime loader (meshes, materials, WWW texture fetch); asset import only.
+Assembly-CSharp/AdvancedTutorial.cs	C	Tutorials	UMG widget	Making History mission-editor tutorial script (dialog pages, highlight export/drag steps); scripted UI flow, rebuild as data-driven tutorial.
+Assembly-CSharp/AeroGUI.cs	C	Aero	Gameplay Debugger	IMGUI debug window printing aero/thermal stats (drag, lift, skin temps) from FlightIntegrator/PhysicsGlobals; debug display only.
+Assembly-CSharp/AnalyticsUtil.cs	C	Analytics	drop	Telemetry event logger (game start, contracts, vessel events, Steam ids, system info); no gameplay effect -> drop.
+Assembly-CSharp/AssemblyLoader.cs	C	Modding	drop	Loads mod C# DLLs, KSPAssembly dependency checks, type lookup by name; .NET plugin loading has no UE5 equivalent -> drop (future C++/script mod API).
+Assembly-CSharp/BaseField.cs	A	Part	core	Reflection wrapper for KSPField members: read/write/persist values, GUI strings, UI_Control hookup; pure data binding -> core field registry (UI part is C).
+Assembly-CSharp/BasicTutorial.cs	C	Tutorials	UMG widget	Making History basic mission-builder tutorial (dialogs, node/drag steps, save button hooks); scripted UI flow.
+Assembly-CSharp/CelestialBody.cs	B	Celestials	core + scene actor	Body MonoBehaviour: rotation, SOI, atmosphere pressure/temperature/density curves, lat/lon/alt maths, targeting; maths is A but tied to transforms and scaled/local frames.
+Assembly-CSharp/CometManager.cs	A	Celestials	core (+ Niagara for tails)	Comet definition generator: weighted comet types, spawn distances, tail colours from config; mixed: tail/coma visual hookup is C.
+Assembly-CSharp/CompoundPart.cs	B	PartModules-Structural	core + Procedural Mesh	Part subclass for struts/fuel lines: two-ended targeting via raycasts, link transforms, editor preview; geometry and joints -> re-architect.
+Assembly-CSharp/ConfigNode.cs	A	Save	core	cfg/sfs/craft parser and serialiser, typed value parsing, reflection object<->node mapping; GameObject refs only in reflection helpers. Golden: round-trip all GameData cfgs.
+Assembly-CSharp/Contracts/Contract.cs	A	Contracts	core	Contract base: state machine (offered/active/completed/failed), rewards/penalties, parameter tree, deadlines, body selection, save/load; pure rules.
+Assembly-CSharp/Contracts/ContractParameter.cs	A	Contracts	core	Contract parameter base: state, nested parameters, rewards, event registration, persistence; pure rules.
+Assembly-CSharp/Contracts/ContractSystem.cs	A	Contracts	core	ScenarioModule generating/weighting/updating contracts, mandatory contracts, prebuilt-ship spawning; mixed: ConstructShip spawning is B. Needs ScenarioModule host.
+Assembly-CSharp/Contracts/Templates/PartTest.cs	A	Contracts	core	Part test contract: situation selection, requirement checks against vessel state, R&D hooks; pure rules over vessel queries.
+Assembly-CSharp/Contracts/Templates/RecoverAsset.cs	A	Contracts	core	Rescue/recover contract: generates stranded kerbal/part orbits or landings, recovery checks; rules plus ProtoVessel generation (data).
+Assembly-CSharp/DatabaseLoaderModel_DAE.cs	C	Rendering	Interchange / glTF importer	GameDatabase loader for .dae models (meshes, materials, colliders); asset import -> UE import pipeline.
+Assembly-CSharp/DebugToolbar.cs	C	Debug	console commands / Gameplay Debugger	Alt+F12 IMGUI debug/cheat window (physics tweaks, contracts, database browser, curve editor); debug only.
+Assembly-CSharp/DeltaVStageInfo.cs	A	Vessel	core	Per-stage delta-v/TWR/ISP/burn-time computation over engines and fuel flow; pure maths over part data. Golden: KSP DeltaV app values.
+Assembly-CSharp/DragCubeList.cs	A	Aero	core	Per-part drag cube set: weighted blending, area/drag/depth per direction, occlusion bookkeeping, cfg load/save; pure maths.
+Assembly-CSharp/EditorLogic.cs	B	Editor	core + UMG	VAB/SPH state machine: pick/attach/offset/rotate, symmetry, root swap, undo, craft load/save, launch; heavy transform/raycast/input use.
+Assembly-CSharp/EVAConstructionModeEditor.cs	B	Editor	core + UMG	EVA construction editor: attach/detach parts on live vessels in flight via raycasts and transforms; physics-coupled editing.
+Assembly-CSharp/Expansions/Missions/Editor/MEGUINode.cs	C	DLC-MakingHistory	UMG widget	Mission editor node widget: docking, connectors, parameter display, selection highlighting; UI only.
+Assembly-CSharp/Expansions/Missions/Editor/MissionBriefingDialog.cs	C	DLC-MakingHistory	UMG widget	Mission briefing/export dialog (title, author, banners, tags, Steam workshop export); UI + Steam.
+Assembly-CSharp/Expansions/Missions/Editor/MissionEditorLogic.cs	C	DLC-MakingHistory	UMG widget + core	Mission editor controller: node graph canvas editing, connectors, copy/paste, history, test-mission launch; UI-driven; graph data ops extractable.
+Assembly-CSharp/Expansions/Missions/MENode.cs	A	DLC-MakingHistory	core	Mission graph node: test groups, action modules, activation/deactivation, persistence; component container only (test orbit uses OrbitDriver). Needs host.
+Assembly-CSharp/Expansions/Missions/Mission.cs	A	DLC-MakingHistory	core	Mission definition/runtime: node graph, flow evaluation, scoring, craft mapping, persistence; mixed: launch-site object creation is B.
+Assembly-CSharp/Expansions/Missions/MissionSituation.cs	A	DLC-MakingHistory	core	Mission start situation: vessels to build, crew roster, resource seeds, launch site; data + rules.
+Assembly-CSharp/Expansions/Missions/Runtime/MissionPlayDialog.cs	C	DLC-MakingHistory	UMG widget	Mission selection/play dialog (lists, Steam workshop items, restart/load); UI + Steam.
+Assembly-CSharp/Expansions/Missions/Runtime/MissionsApp.cs	C	DLC-MakingHistory	UMG widget	In-game missions app (objectives list, vessels to build, test-mode settings); UI.
+Assembly-CSharp/Expansions/Missions/Runtime/MissionSystem.cs	B	DLC-MakingHistory	core + scene	Mission runtime ScenarioModule: loads missions, spawns objects, checkpoints, camera locks, briefing; scene/coroutine orchestration.
+Assembly-CSharp/Expansions/Missions/Tests/TestDistance.cs	A	DLC-MakingHistory	core	Mission test node: distance between vessels/kerbals/bodies/locations vs threshold; logic, editor-parameter UI toggles are C.
+Assembly-CSharp/Expansions/Serenity/BaseServo.cs	B	DLC-BreakingGround	core + Chaos/Jolt joints	Robotic servo base: servo rigidbody, ConfigurableJoint drive, locks, power draw, movement; joint physics -> re-architect.
+Assembly-CSharp/Expansions/Serenity/CurvePanel.cs	C	DLC-BreakingGround	UMG widget	KAL-1000 controller curve editor widget (keyframe drag, draw lines); UI only.
+Assembly-CSharp/Expansions/Serenity/DeployedScience/Runtime/DeployedScienceExperiment.cs	A	DLC-BreakingGround	core	Deployed science experiment runtime: science accrual, seismic events, data transmission timing; logic in a GameObject container.
+Assembly-CSharp/Expansions/Serenity/ModuleRobotArmScanner.cs	B	DLC-BreakingGround	core + Chaos/Jolt	Robot arm surface scanner: IK-like arm extension to ROC targets, triggers/collisions, particle FX; transform/collider driven.
+Assembly-CSharp/Expansions/Serenity/ModuleRoboticController.cs	A	DLC-BreakingGround	core	KAL-1000 controller: per-axis curves over time driving servo fields/actions, play modes, power; pure sequencing logic. Needs PartModule host.
+Assembly-CSharp/Expansions/Serenity/RoboticControllerWindow.cs	C	DLC-BreakingGround	UMG widget	KAL-1000 controller editor window (rows, presets, copy/paste axes); UI only.
+Assembly-CSharp/FinePrint/ContractDefs.cs	A	Contracts	core	Loads Contracts.cfg definitions (rewards, weights, survey/part/crew requests, prebuilt craft lists); data loader (KSPAddon shell trivial).
+Assembly-CSharp/FinePrint/Contracts/ExplorationContract.cs	A	Contracts	core	World-firsts exploration contract: milestone selection by progress tree, rewards; pure rules.
+Assembly-CSharp/FinePrint/Contracts/SatelliteContract.cs	A	Contracts	core	Satellite deployment contract: orbit type picking by prestige, network checks; pure rules over orbit maths.
+Assembly-CSharp/FinePrint/Contracts/SurveyContract.cs	A	Contracts	core	Surface survey contract: waypoint generation near KSC/bodies, parameter ranges; rules.
+Assembly-CSharp/FinePrint/Utilities/VesselUtilities.cs	A	Contracts	core	Vessel query helpers for contracts (crew traits, part/module presence, orbit matching, classification); mixed: part size from renderer bounds.
+Assembly-CSharp/FlightCamera.cs	C	Camera	Camera Component / Spring Arm	Flight chase camera: modes (auto/free/orbital/chase/locked), zoom, pivot, FoR, TrackIR/3Dconnexion hooks; presentation.
+Assembly-CSharp/FlightGlobals.cs	B	Vessel	core	Flight-scene registry: vessels, bodies, active vessel switching, persistent ids, gravity/atmosphere queries, speed modes; scene orchestration.
+Assembly-CSharp/FlightIntegrator.cs	B	Aero	core (aero+thermal maths) + physics shim	Per-vessel aero drag/lift and full thermal model (conduction, convection, radiation, shock heating) applied via Rigidbody; maths A, integration B.
+Assembly-CSharp/GameDatabase.cs	B	Modding	core (configs) + Asset Manager	Loads GameData: config URL tree, models, textures, audio via loaders; config side core, asset side shell.
+Assembly-CSharp/GameEvents.cs	A	Core	core	Static registry of ~500 typed game events (EventData<T>) used everywhere; pure event bus.
+Assembly-CSharp/GameParameters.cs	A	Save	core	Difficulty/game parameters (presets, custom parameter nodes) with persistence; pure data.
+Assembly-CSharp/GameSettings.cs	C	Input	UE GameUserSettings + Enhanced Input	Global settings + all key/axis bindings, settings.cfg read/write, graphics/audio prefs; physics-relevant values (e.g. engine settings) to core config.
+Assembly-CSharp/InputSettings.cs	C	Input	UMG widget + Enhanced Input	Controls settings page: key/axis binding editor and listen dialogs; UI.

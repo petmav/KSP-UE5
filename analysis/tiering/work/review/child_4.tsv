@@ -1,0 +1,548 @@
+path	tier	subsystem	ue5_counterpart	rationale
+Assembly-CSharp/Expansions/BundleLoader.cs	C	Modding	Asset Manager / Primary Data Asset	Loads DLC AssetBundles, textures and scenes; Unity asset loading is platform plumbing
+Assembly-CSharp/Expansions/ExpansionsLoader.cs	B	Modding	core + Asset Manager	Detects installed DLC, verifies mission hashes/signatures, loads expansion configs via coroutine LoadingSystem; config side is core, bundle side shell
+Assembly-CSharp/Expansions/ExpansionSO.cs	A	Modding	core	ScriptableObject describing an expansion (bundle list, kerbal suits); essentially data
+Assembly-CSharp/Expansions/KSPExpansionsUtils.cs	A	Modding	core	Tiny static helper constants for expansions; no Unity use
+Assembly-CSharp/Expansions/Missions/ActionModule.cs	B	DLC-MakingHistory		Base MonoBehaviour for mission action nodes: lifecycle, persistent-id and docking event wiring, config load/save; host redesigned though subclasses are logic
+Assembly-CSharp/Expansions/Missions/ActionNumberOperator.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute ActionNumberOperator; data used by mission logic
+Assembly-CSharp/Expansions/Missions/Actions/ActionCreateAsteroid.cs	A	DLC-MakingHistory	core	Mission action node CreateAsteroid: executes via core vessel/game APIs on trigger; rule logic, needs ActionModule host
+Assembly-CSharp/Expansions/Missions/Actions/ActionCreateComet.cs	B	DLC-MakingHistory		Mission action spawning a comet vessel with orbit; touches transforms/GameObjects when instantiating
+Assembly-CSharp/Expansions/Missions/Actions/ActionCreateFlag.cs	A	DLC-MakingHistory	core	Mission action node CreateFlag: executes via core vessel/game APIs on trigger; rule logic, needs ActionModule host
+Assembly-CSharp/Expansions/Missions/Actions/ActionCreateKerbal.cs	A	DLC-MakingHistory	core	Mission action node CreateKerbal: executes via core vessel/game APIs on trigger; rule logic, needs ActionModule host
+Assembly-CSharp/Expansions/Missions/Actions/ActionCreateLaunchSite.cs	A	DLC-MakingHistory	core	Mission action node CreateLaunchSite: executes via core vessel/game APIs on trigger; rule logic, needs ActionModule host
+Assembly-CSharp/Expansions/Missions/Actions/ActionCreateVessel.cs	B	DLC-MakingHistory		Mission action spawning craft/vessel at orbit or surface via ProtoVessel; builds live objects and transforms
+Assembly-CSharp/Expansions/Missions/Actions/ActionDialogMessage.cs	C	DLC-MakingHistory	UMG widget	Mission action showing a dialog message to the player; UI dialog construction
+Assembly-CSharp/Expansions/Missions/Actions/ActionMessage.cs	A	DLC-MakingHistory	core	Mission action node Message: executes via core vessel/game APIs on trigger; rule logic, needs ActionModule host
+Assembly-CSharp/Expansions/Missions/Actions/ActionMissionScore.cs	A	DLC-MakingHistory	core	Mission action node MissionScore: executes via core vessel/game APIs on trigger; rule logic, needs ActionModule host
+Assembly-CSharp/Expansions/Missions/Actions/ActionModifierFunds.cs	A	DLC-MakingHistory	core	Mission action node ModifierFunds: executes via core vessel/game APIs on trigger; rule logic, needs ActionModule host
+Assembly-CSharp/Expansions/Missions/Actions/ActionModifierScore.cs	A	DLC-MakingHistory	core	Mission action node ModifierScore: executes via core vessel/game APIs on trigger; rule logic, needs ActionModule host
+Assembly-CSharp/Expansions/Missions/Actions/ActionPartExplode.cs	A	DLC-MakingHistory	core	Mission action node PartExplode: executes via core vessel/game APIs on trigger; rule logic, needs ActionModule host
+Assembly-CSharp/Expansions/Missions/Actions/ActionPartFailure.cs	A	DLC-MakingHistory	core	Mission action node PartFailure: executes via core vessel/game APIs on trigger; rule logic, needs ActionModule host
+Assembly-CSharp/Expansions/Missions/Actions/ActionPartRepair.cs	B	DLC-MakingHistory		Mission action repairing/replacing broken parts; manipulates part GameObjects and transforms
+Assembly-CSharp/Expansions/Missions/Actions/ActionPartResourceAmount.cs	A	DLC-MakingHistory	core	Mission action node PartResourceAmount: executes via core vessel/game APIs on trigger; rule logic, needs ActionModule host
+Assembly-CSharp/Expansions/Missions/Actions/ActionPartResourceDrain.cs	A	DLC-MakingHistory	core	Mission action node PartResourceDrain: executes via core vessel/game APIs on trigger; rule logic, needs ActionModule host
+Assembly-CSharp/Expansions/Missions/Actions/ActionSetCamera.cs	C	DLC-MakingHistory	Camera Component / Spring Arm	Mission action setting flight camera mode/lock; camera control is presentation
+Assembly-CSharp/Expansions/Missions/Actions/ActionVessel.cs	A	DLC-MakingHistory	core	Mission action node Vessel: executes via core vessel/game APIs on trigger; rule logic, needs ActionModule host
+Assembly-CSharp/Expansions/Missions/Actions/ActionVesselActionGroup.cs	A	DLC-MakingHistory	core	Mission action node VesselActionGroup: executes via core vessel/game APIs on trigger; rule logic, needs ActionModule host
+Assembly-CSharp/Expansions/Missions/Actions/ActionVesselExplode.cs	A	DLC-MakingHistory	core	Mission action node VesselExplode: executes via core vessel/game APIs on trigger; rule logic, needs ActionModule host
+Assembly-CSharp/Expansions/Missions/Actions/ActionVesselStage.cs	A	DLC-MakingHistory	core	Mission action node VesselStage: executes via core vessel/game APIs on trigger; rule logic, needs ActionModule host
+Assembly-CSharp/Expansions/Missions/Actions/FundsModifierType.cs	A	DLC-MakingHistory	core	Enum for mission action funds modification type
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterActiveRadiatorBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterActiveRadiatorMaxEnergyTransfer.cs	A	DLC-MakingHistory	core	Mission adjuster scaling a PartModule value (config-driven); logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterAlternatorBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterAlternatorOutput.cs	A	DLC-MakingHistory	core	Mission adjuster scaling a PartModule value (config-driven); logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterAnchoredDecouplerBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterCargoBayBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterControlSurfaceActuatorSpeed.cs	A	DLC-MakingHistory	core	Mission adjuster scaling a PartModule value (config-driven); logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterControlSurfaceBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterDataTransmitterBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterDataTransmitterPower.cs	A	DLC-MakingHistory	core	Mission adjuster scaling a PartModule value (config-driven); logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterDecoupleBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterDeployablePartBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterDeployableSolarPanelBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterDeployableSolarPanelEfficiency.cs	A	DLC-MakingHistory	core	Mission adjuster scaling a PartModule value (config-driven); logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterDockingNodeBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterEnginesBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterEnginesThrottle.cs	A	DLC-MakingHistory	core	Mission adjuster scaling a PartModule value (config-driven); logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterFuelLineBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterGeneratorBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterGeneratorEfficiency.cs	A	DLC-MakingHistory	core	Mission adjuster scaling a PartModule value (config-driven); logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterGimbalBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterGimbalLimitControl.cs	A	DLC-MakingHistory	core	Mission adjuster scaling a PartModule value (config-driven); logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterGPSBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterGrappleNodeBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterKerbNetAccessBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterKerbNetAccessDisabled.cs	A	DLC-MakingHistory	core	Mission adjuster scaling a PartModule value (config-driven); logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterLiftingSurfaceBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterLiftingSurfaceLiftForce.cs	A	DLC-MakingHistory	core	Mission adjuster scaling a PartModule value (config-driven); logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterLightBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterLightIntensity.cs	A	DLC-MakingHistory	core	Mission adjuster scaling a PartModule value (config-driven); logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterPartModuleBase.cs	A	DLC-MakingHistory	core	Base for mission part-module adjusters: config, apply/restore on module; logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterProbeControlPointBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterRCSBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterReactionWheelBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterReactionWheelTorque.cs	A	DLC-MakingHistory	core	Mission adjuster scaling a PartModule value (config-driven); logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterResourceIntakeBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterSASBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterSASServiceLevel.cs	A	DLC-MakingHistory	core	Mission adjuster scaling a PartModule value (config-driven); logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterScienceExperimentBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterToggleCrossfeedBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterWheelBrakesBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterWheelBrakesTorque.cs	A	DLC-MakingHistory	core	Mission adjuster scaling a PartModule value (config-driven); logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterWheelDeploymentBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterWheelMotorBase.cs	A	DLC-MakingHistory	core	Adjuster base specialised per PartModule type; tiny logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterWheelMotorTorque.cs	A	DLC-MakingHistory	core	Mission adjuster scaling a PartModule value (config-driven); logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureActiveRadiatorStuck.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureAnchoredDecouplerCantDecouple.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureCargoBayStuck.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureControlSurfaceDisableControl.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureCrossfeedStuck.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureDataTransmitterBroken.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureDecoupleCantDecouple.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureDeployablePartStuck.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureDockingNodeCantUndock.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureEnginesDeadEngine.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureFuelLineBlocked.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureGPSNoDisplay.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureGrappleNodeCantGrapple.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureGrappleNodeCantRelease.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureLightFlickering.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureLightStuck.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureProbeControlPointBroken.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureRCSFireRandomly.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureRCSStopWorking.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureReactionWheelBroken.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureReactionWheelStuck.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureResourceIntakeStuck.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureScienceExperimentDisable.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureWheelDeploymentStuck.cs	A	DLC-MakingHistory	core	Mission part failure adjuster: forces a failure state on a PartModule; state logic, needs PartModule host
+Assembly-CSharp/Expansions/Missions/Adjusters/IPartModuleAdjuster.cs	A	DLC-MakingHistory	core	Interface for part-module adjusters
+Assembly-CSharp/Expansions/Missions/Asteroid.cs	A	DLC-MakingHistory	core	Mission data/rule class Asteroid: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/AwardDefinition.cs	A	DLC-MakingHistory	core	Award id/title/icon data from config; mild Texture use only for icon; mixed: icon is C
+Assembly-CSharp/Expansions/Missions/AwardModule.cs	A	DLC-MakingHistory	core	Award criterion module evaluating mission outcome; pure rules
+Assembly-CSharp/Expansions/Missions/AwardModule_Fuel.cs	A	DLC-MakingHistory	core	Award criterion module evaluating mission outcome; pure rules
+Assembly-CSharp/Expansions/Missions/AwardModule_KerbalsDied.cs	A	DLC-MakingHistory	core	Award criterion module evaluating mission outcome; pure rules
+Assembly-CSharp/Expansions/Missions/AwardModule_KerbalsSurvived.cs	A	DLC-MakingHistory	core	Award criterion module evaluating mission outcome; pure rules
+Assembly-CSharp/Expansions/Missions/AwardModule_LandedOn.cs	A	DLC-MakingHistory	core	Award criterion module evaluating mission outcome; pure rules
+Assembly-CSharp/Expansions/Missions/AwardModule_MissionTime.cs	A	DLC-MakingHistory	core	Award criterion module evaluating mission outcome; pure rules
+Assembly-CSharp/Expansions/Missions/AwardModule_PlanetsLanded.cs	A	DLC-MakingHistory	core	Award criterion module evaluating mission outcome; pure rules
+Assembly-CSharp/Expansions/Missions/AwardModule_Score.cs	A	DLC-MakingHistory	core	Award criterion module evaluating mission outcome; pure rules
+Assembly-CSharp/Expansions/Missions/AwardModule_TraveledLessThan.cs	A	DLC-MakingHistory	core	Award criterion module evaluating mission outcome; pure rules
+Assembly-CSharp/Expansions/Missions/AwardModule_TraveledMoreThan.cs	A	DLC-MakingHistory	core	Award criterion module evaluating mission outcome; pure rules
+Assembly-CSharp/Expansions/Missions/AwardModule_VesselsUsed.cs	A	DLC-MakingHistory	core	Award criterion module evaluating mission outcome; pure rules
+Assembly-CSharp/Expansions/Missions/Awards.cs	B	DLC-MakingHistory		MonoBehaviour registry loading AwardDefinitions (icons) at Awake; thin, award data side is core
+Assembly-CSharp/Expansions/Missions/AwardWidget.cs	C	DLC-MakingHistory	UMG widget	UI widget rendering an award icon/title
+Assembly-CSharp/Expansions/Missions/CheckpointValidationType.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute CheckpointValidationType; data used by mission logic
+Assembly-CSharp/Expansions/Missions/Comet.cs	A	DLC-MakingHistory	core	Mission data/rule class Comet: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/Crew.cs	A	DLC-MakingHistory	core	Mission data/rule class Crew: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/DynamicModule.cs	A	DLC-MakingHistory	core	Mission data/rule class DynamicModule: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/DynamicModuleList.cs	A	DLC-MakingHistory	core	Mission data/rule class DynamicModuleList: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/Editor/ActionPaneDisplay.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget ActionPaneDisplay; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/ActionPaneDisplay_BiSelector.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget ActionPaneDisplay_BiSelector; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/ActionPaneDisplay_CelestialBody.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget ActionPaneDisplay_CelestialBody; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/AreaState.cs	A	DLC-MakingHistory	core	Small editor enum/interface/struct/helper AreaState; data only
+Assembly-CSharp/Expansions/Missions/Editor/BaseAPField.cs	A	DLC-MakingHistory	core	Reflection field wrapper binding node fields to editor controls; get/set values; pure reflection logic
+Assembly-CSharp/Expansions/Missions/Editor/BaseAPFieldList.cs	A	DLC-MakingHistory	core	Small editor enum/interface/struct/helper BaseAPFieldList; data only
+Assembly-CSharp/Expansions/Missions/Editor/Category.cs	A	DLC-MakingHistory	core	Small editor enum/interface/struct/helper Category; data only
+Assembly-CSharp/Expansions/Missions/Editor/CheckpointBrowserDialog.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget CheckpointBrowserDialog; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/CheckpointEntry.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget CheckpointEntry; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/CrewCreationDialog.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget CrewCreationDialog; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/DisplayParameter.cs	A	DLC-MakingHistory	core	Small struct describing a displayed parameter
+Assembly-CSharp/Expansions/Missions/Editor/GAPCelestialBody.cs	C	DLC-MakingHistory	Widget Component (3D UI)	Mission editor planet-view gizmo/state GAPCelestialBody: draggable surface areas/volumes/biomes; interaction presentation
+Assembly-CSharp/Expansions/Missions/Editor/GAPCelestialBody_InteractiveSurfaceGizmo.cs	C	DLC-MakingHistory	Widget Component (3D UI)	Mission editor planet-view gizmo/state GAPCelestialBody_InteractiveSurfaceGizmo: draggable surface areas/volumes/biomes; interaction presentation
+Assembly-CSharp/Expansions/Missions/Editor/GAPCelestialBody_SurfaceGizmo.cs	C	DLC-MakingHistory	Widget Component (3D UI)	Mission editor planet-view gizmo/state GAPCelestialBody_SurfaceGizmo: draggable surface areas/volumes/biomes; interaction presentation
+Assembly-CSharp/Expansions/Missions/Editor/GAPCelestialBody_SurfaceGizmo_Area.cs	C	DLC-MakingHistory	Widget Component (3D UI)	Mission editor planet-view gizmo/state GAPCelestialBody_SurfaceGizmo_Area: draggable surface areas/volumes/biomes; interaction presentation
+Assembly-CSharp/Expansions/Missions/Editor/GAPCelestialBody_SurfaceGizmo_Icon.cs	C	DLC-MakingHistory	Widget Component (3D UI)	Mission editor planet-view gizmo/state GAPCelestialBody_SurfaceGizmo_Icon: draggable surface areas/volumes/biomes; interaction presentation
+Assembly-CSharp/Expansions/Missions/Editor/GAPCelestialBody_SurfaceGizmo_PlaceVessel.cs	C	DLC-MakingHistory	Widget Component (3D UI)	Mission editor planet-view gizmo/state GAPCelestialBody_SurfaceGizmo_PlaceVessel: draggable surface areas/volumes/biomes; interaction presentation
+Assembly-CSharp/Expansions/Missions/Editor/GAPCelestialBody_SurfaceGizmo_Volume.cs	C	DLC-MakingHistory	Widget Component (3D UI)	Mission editor planet-view gizmo/state GAPCelestialBody_SurfaceGizmo_Volume: draggable surface areas/volumes/biomes; interaction presentation
+Assembly-CSharp/Expansions/Missions/Editor/GAPCelestialBodyGizmoHandle.cs	C	DLC-MakingHistory	Widget Component (3D UI)	Draggable gizmo handle UI element
+Assembly-CSharp/Expansions/Missions/Editor/GAPCelestialBodyState.cs	A	DLC-MakingHistory	core	Small editor enum/interface/struct/helper GAPCelestialBodyState; data only
+Assembly-CSharp/Expansions/Missions/Editor/GAPCelestialBodyState_Base.cs	C	DLC-MakingHistory	Widget Component (3D UI)	Mission editor planet-view gizmo/state GAPCelestialBodyState_Base: draggable surface areas/volumes/biomes; interaction presentation
+Assembly-CSharp/Expansions/Missions/Editor/GAPCelestialBodyState_Biomes.cs	C	DLC-MakingHistory	Widget Component (3D UI)	Mission editor planet-view gizmo/state GAPCelestialBodyState_Biomes: draggable surface areas/volumes/biomes; interaction presentation
+Assembly-CSharp/Expansions/Missions/Editor/GAPCelestialBodyState_Orbit.cs	C	DLC-MakingHistory	Widget Component (3D UI)	Mission editor planet-view gizmo/state GAPCelestialBodyState_Orbit: draggable surface areas/volumes/biomes; interaction presentation
+Assembly-CSharp/Expansions/Missions/Editor/GAPCelestialBodyState_SurfaceGizmo.cs	C	DLC-MakingHistory	Widget Component (3D UI)	Mission editor planet-view gizmo/state GAPCelestialBodyState_SurfaceGizmo: draggable surface areas/volumes/biomes; interaction presentation
+Assembly-CSharp/Expansions/Missions/Editor/GAPOrbitRenderer.cs	C	DLC-MakingHistory	Line Batcher / Procedural Mesh lines	Renders orbit line in mission editor planet panel
+Assembly-CSharp/Expansions/Missions/Editor/GAPPartPicker.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget GAPPartPicker; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/GAPPrefabDisplay.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget GAPPrefabDisplay; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/GAPSurfaceIcon.cs	C	DLC-MakingHistory	Widget Component (3D UI)	Surface location icon for mission editor body view; presentation
+Assembly-CSharp/Expansions/Missions/Editor/GAPUtil_CelestialBody.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget GAPUtil_CelestialBody; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/GAPUtil_VesselFrame.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget GAPUtil_VesselFrame; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/GAPVesselDisplay.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget GAPVesselDisplay; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/HistoryType.cs	A	DLC-MakingHistory	core	Small editor enum/interface/struct/helper HistoryType; data only
+Assembly-CSharp/Expansions/Missions/Editor/IMEHistoryTarget.cs	A	DLC-MakingHistory	core	Small editor enum/interface/struct/helper IMEHistoryTarget; data only
+Assembly-CSharp/Expansions/Missions/Editor/MEActionPane.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEActionPane; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEBasicNode.cs	A	DLC-MakingHistory	core	Basic node config data (id, position) for mission graph
+Assembly-CSharp/Expansions/Missions/Editor/MECrewAssignmentDialog.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MECrewAssignmentDialog; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_Asteroid.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_AsteroidSelect.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_Button.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_Category.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_CelestialBody.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_CelestialBody_Biomes.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_CelestialBody_Orbit.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_Checkbox.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_ColorPicker.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_Comet.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_CometSelect.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_Control.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_CrewList.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_Dropdown.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_DynamicModule.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_DynamicModuleList.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_FlagSelect.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_GameParameters.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_InputField.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_Label.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_LaunchSiteSelect.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_LaunchSiteSituation.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_ListOrder.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_MissionInstructor.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_MissionKerbal.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_NodeLabelNodeSelect.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_NodeSelect.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_NumberRange.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_ParameterSwitchCompound.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_ParameterSwitchCompound_KeyField.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_PartPicker.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_Quaternion.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_ScoreRangeList.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_ScrollViewSelector.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_SurfaceArea.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_SurfaceVolume.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_TextArea.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_Time.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_VesselGroundLocation.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_VesselLocation.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_VesselPartSelect.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_VesselSelect.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUI_VesselSituation.cs	A	DLC-MakingHistory	core	Attribute tagging mission node field with its editor control type; reflection metadata
+Assembly-CSharp/Expansions/Missions/Editor/MEGUICompoundParameter.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUICompoundParameter; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIConnector.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIConnector; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIConnectorDrag.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIConnectorDrag; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIDropDownItem.cs	A	DLC-MakingHistory	core	Small editor enum/interface/struct/helper MEGUIDropDownItem; data only
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIDropDownItemListExtensions.cs	A	DLC-MakingHistory	core	Small editor enum/interface/struct/helper MEGUIDropDownItemListExtensions; data only
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIFooterAdditionalButton.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIFooterAdditionalButton; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIListOrderItem.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIListOrderItem; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUINodeBodyParameter.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUINodeBodyParameter; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUINodeIcon.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUINodeIcon; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIPanel.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIPanel; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIPanelSeparator.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIPanelSeparator; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameter.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameter; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterAsteroid.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterAsteroid; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterAsteroidDropdownList.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterAsteroidDropdownList; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterAwardModule.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterAwardModule; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterButton.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterButton; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterCelestialBody.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterCelestialBody; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterCelestialBody_Area.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterCelestialBody_Area; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterCelestialBody_Biomes.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterCelestialBody_Biomes; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterCelestialBody_VesselGroundLocation.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterCelestialBody_VesselGroundLocation; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterCelestialBody_Volume.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterCelestialBody_Volume; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterCelestialBodyOrbit.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterCelestialBodyOrbit; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterCheckbox.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterCheckbox; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterColorPicker.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterColorPicker; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterComet.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterComet; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterCometDropdownList.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterCometDropdownList; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterCrewList.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterCrewList; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterDropdownList.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterDropdownList; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterDynamicModule.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterDynamicModule; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterDynamicModuleList.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterDynamicModuleList; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterFlagDropdownList.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterFlagDropdownList; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterGameParameters.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterGameParameters; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterGroup.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterGroup; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterGroupHeader.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterGroupHeader; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterInputField.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterInputField; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterLabel.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterLabel; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterLaunchSiteDropdownList.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterLaunchSiteDropdownList; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterLaunchSiteSituation.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterLaunchSiteSituation; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterListOrder.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterListOrder; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterMissionInstructor.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterMissionInstructor; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterMissionKerbal.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterMissionKerbal; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterNodeDropdownList.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterNodeDropdownList; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterNodeLabelNodeDropdownList.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterNodeLabelNodeDropdownList; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterNumberRange.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterNumberRange; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterPartPicker.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterPartPicker; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterQuaternion.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterQuaternion; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParametersController.cs	C	DLC-MakingHistory	UMG widget	Factory/registry creating editor parameter controls from attributes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterScoreRangeList.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterScoreRangeList; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterScrollViewSelector.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterScrollViewSelector; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterSwitchCompound.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterSwitchCompound; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterTextArea.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterTextArea; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterTime.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterTime; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterVessel.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterVessel; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterVesselDropdownList.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterVesselDropdownList; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterVesselLocation.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterVesselLocation; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterVesselPartSelector.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterVesselPartSelector; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIParameterVesselSituation.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIParameterVesselSituation; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIScoreRangeItem.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIScoreRangeItem; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUIScoreRangeTimeItem.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUIScoreRangeTimeItem; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEGUITimeControl.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEGUITimeControl; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MENodeCanvas.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MENodeCanvas; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MENodeCanvasBackground.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MENodeCanvasBackground; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MENodeCategorizer.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MENodeCategorizer; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MENodeCategoryButton.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MENodeCategoryButton; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MENodeCategoryColor.cs	C	DLC-MakingHistory	UMG widget	Colour palette entry for node categories; UI styling
+Assembly-CSharp/Expansions/Missions/Editor/MENodeColors.cs	C	DLC-MakingHistory	UMG widget	Colour set for node UI; styling
+Assembly-CSharp/Expansions/Missions/Editor/MENodeConnectionType.cs	A	DLC-MakingHistory	core	Small editor enum/interface/struct/helper MENodeConnectionType; data only
+Assembly-CSharp/Expansions/Missions/Editor/MEPartCategorizer.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEPartCategorizer; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEPartCategorizerButton.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEPartCategorizerButton; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEPartSelectorBrowser.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEPartSelectorBrowser; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEPartSelectorEntry.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MEPartSelectorEntry; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MEValidityHighlighColor.cs	C	DLC-MakingHistory	UMG widget	Validation highlight colour; UI styling
+Assembly-CSharp/Expansions/Missions/Editor/MissionBiome.cs	A	DLC-MakingHistory	core	Mission biome selection data
+Assembly-CSharp/Expansions/Missions/Editor/MissionEditorHistory.cs	B	DLC-MakingHistory		Undo/redo stack of config-node snapshots for mission editor; logic extractable to core, tied to MonoBehaviour destroy targets
+Assembly-CSharp/Expansions/Missions/Editor/MissionEditorMapView.cs	C	DLC-MakingHistory	UMG + core query	MapView subclass hosting mission editor planet view; scene/camera glue
+Assembly-CSharp/Expansions/Missions/Editor/MissionEditorValidator.cs	B	DLC-MakingHistory		Runs mission validation tests and collects pass/warn/fail per node; rule logic mixed with UI colour/mode state; extract rules to core
+Assembly-CSharp/Expansions/Missions/Editor/MissionsBrowserDialog.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MissionsBrowserDialog; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MissionValidationDialog.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MissionValidationDialog; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MissionValidationEntry.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget MissionValidationEntry; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/MissionValidationTestResult.cs	A	DLC-MakingHistory	core	Plain result record for mission validation
+Assembly-CSharp/Expansions/Missions/Editor/NodeListTooltip.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget NodeListTooltip; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/NodeListTooltipController.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget NodeListTooltipController; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/NodeListTooltipMasterController.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget NodeListTooltipMasterController; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/OrbitGizmo.cs	C	DLC-MakingHistory	Widget Component (3D UI)	Maneuver-gizmo subclass for editing mission orbits; interaction/rendering
+Assembly-CSharp/Expansions/Missions/Editor/OrbitGizmoMode.cs	A	DLC-MakingHistory	core	Small editor enum/interface/struct/helper OrbitGizmoMode; data only
+Assembly-CSharp/Expansions/Missions/Editor/SpriteButton.cs	C	DLC-MakingHistory	UMG widget	Sprite button reacting to mouse ray events
+Assembly-CSharp/Expansions/Missions/Editor/SurfaceLocation.cs	A	DLC-MakingHistory	core	Small editor enum/interface/struct/helper SurfaceLocation; data only
+Assembly-CSharp/Expansions/Missions/Editor/UICollapsibleSection.cs	C	DLC-MakingHistory	UMG widget	Mission editor UI widget UICollapsibleSection; Unity UI binding for editing mission nodes
+Assembly-CSharp/Expansions/Missions/Editor/ValidationColors.cs	C	DLC-MakingHistory	UMG widget	Validation status colours; UI styling
+Assembly-CSharp/Expansions/Missions/Editor/ValidationStatus.cs	A	DLC-MakingHistory	core	Small editor enum/interface/struct/helper ValidationStatus; data only
+Assembly-CSharp/Expansions/Missions/Editor/ValidatorMode.cs	A	DLC-MakingHistory	core	Small editor enum/interface/struct/helper ValidatorMode; data only
+Assembly-CSharp/Expansions/Missions/Flow/IMEFlowBlock.cs	A	DLC-MakingHistory	core	Mission flow graph element IMEFlowBlock: path/block structure for objective ordering; pure data
+Assembly-CSharp/Expansions/Missions/Flow/MEFlowBlock.cs	A	DLC-MakingHistory	core	Mission flow graph element MEFlowBlock: path/block structure for objective ordering; pure data
+Assembly-CSharp/Expansions/Missions/Flow/MEFlowConvergence.cs	A	DLC-MakingHistory	core	Mission flow graph element MEFlowConvergence: path/block structure for objective ordering; pure data
+Assembly-CSharp/Expansions/Missions/Flow/MEFlowExtensions.cs	A	DLC-MakingHistory	core	Mission flow graph element MEFlowExtensions: path/block structure for objective ordering; pure data
+Assembly-CSharp/Expansions/Missions/Flow/MEFlowOrBlock.cs	A	DLC-MakingHistory	core	Mission flow graph element MEFlowOrBlock: path/block structure for objective ordering; pure data
+Assembly-CSharp/Expansions/Missions/Flow/MEFlowParser.cs	B	DLC-MakingHistory		Parses mission node graph into then/or flow blocks via DFS (core logic) and builds flow UI; mixed: UI creation is C; extract graph parse
+Assembly-CSharp/Expansions/Missions/Flow/MEFlowThenBlock.cs	A	DLC-MakingHistory	core	Mission flow graph element MEFlowThenBlock: path/block structure for objective ordering; pure data
+Assembly-CSharp/Expansions/Missions/Flow/MEFlowUIGroup_Or.cs	C	DLC-MakingHistory	UMG widget	Flow diagram group widget for OR blocks
+Assembly-CSharp/Expansions/Missions/Flow/MEFlowUIGroup_Then.cs	C	DLC-MakingHistory	UMG widget	Flow diagram group widget for THEN blocks
+Assembly-CSharp/Expansions/Missions/Flow/MEFlowUINode.cs	C	DLC-MakingHistory	UMG widget	Flow diagram node widget
+Assembly-CSharp/Expansions/Missions/Flow/MEFlowUINodeLeader.cs	C	DLC-MakingHistory	UMG widget	Flow UI leader line colour data
+Assembly-CSharp/Expansions/Missions/Flow/MEFlowUIText.cs	C	DLC-MakingHistory	UMG widget	Flow diagram text label
+Assembly-CSharp/Expansions/Missions/Flow/MENodePathInfo.cs	A	DLC-MakingHistory	core	Mission flow graph element MENodePathInfo: path/block structure for objective ordering; pure data
+Assembly-CSharp/Expansions/Missions/Flow/MEPath.cs	A	DLC-MakingHistory	core	Mission flow graph element MEPath: path/block structure for objective ordering; pure data
+Assembly-CSharp/Expansions/Missions/Flow/MEPathGroup.cs	A	DLC-MakingHistory	core	Mission flow graph element MEPathGroup: path/block structure for objective ordering; pure data
+Assembly-CSharp/Expansions/Missions/IActionModule.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute IActionModule; data used by mission logic
+Assembly-CSharp/Expansions/Missions/IMENodeDisplay.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute IMENodeDisplay; data used by mission logic
+Assembly-CSharp/Expansions/Missions/IMissionKerbal.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute IMissionKerbal; data used by mission logic
+Assembly-CSharp/Expansions/Missions/INodeBody.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute INodeBody; data used by mission logic
+Assembly-CSharp/Expansions/Missions/INodeOrbit.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute INodeOrbit; data used by mission logic
+Assembly-CSharp/Expansions/Missions/INodeWaypoint.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute INodeWaypoint; data used by mission logic
+Assembly-CSharp/Expansions/Missions/IScoreableObjective.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute IScoreableObjective; data used by mission logic
+Assembly-CSharp/Expansions/Missions/ITestModule.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute ITestModule; data used by mission logic
+Assembly-CSharp/Expansions/Missions/ITestNodeLabel.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute ITestNodeLabel; data used by mission logic
+Assembly-CSharp/Expansions/Missions/LaunchSiteSituation.cs	B	DLC-MakingHistory		Mission launch-site and situation config; resolves placement via transforms/GameObjects of launch sites; extract data to core
+Assembly-CSharp/Expansions/Missions/MEGUINodeIconGroup.cs	C	DLC-MakingHistory	UMG widget	Node icon group widget
+Assembly-CSharp/Expansions/Missions/MEScoreModule.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute MEScoreModule; data used by mission logic
+Assembly-CSharp/Expansions/Missions/MissionAwards.cs	A	DLC-MakingHistory	core	Mission data/rule class MissionAwards: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/MissionBlackListPreFlightCheck.cs	A	DLC-MakingHistory	core	Mission data/rule class MissionBlackListPreFlightCheck: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/MissionCameraLockOptions.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute MissionCameraLockOptions; data used by mission logic
+Assembly-CSharp/Expansions/Missions/MissionCameraModeOptions.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute MissionCameraModeOptions; data used by mission logic
+Assembly-CSharp/Expansions/Missions/MissionCelestialBody.cs	A	DLC-MakingHistory	core	Mission data/rule class MissionCelestialBody: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/MissionCheckpointValidator.cs	A	DLC-MakingHistory	core	Mission data/rule class MissionCheckpointValidator: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/MissionCraft.cs	A	DLC-MakingHistory	core	Mission data/rule class MissionCraft: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/MissionDifficulty.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute MissionDifficulty; data used by mission logic
+Assembly-CSharp/Expansions/Missions/MissionDifficultyWithColor.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute MissionDifficultyWithColor; data used by mission logic
+Assembly-CSharp/Expansions/Missions/MissionEndOptions.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute MissionEndOptions; data used by mission logic
+Assembly-CSharp/Expansions/Missions/MissionFileInfo.cs	A	DLC-MakingHistory	core	Mission file metadata and loading from cfg; mild Texture for thumbnail; mixed: thumbnail is C
+Assembly-CSharp/Expansions/Missions/MissionFlow.cs	A	DLC-MakingHistory	core	Mission data/rule class MissionFlow: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/MissionImporting.cs	A	DLC-MakingHistory	core	Mission import/export of craft and pack files; mostly file IO and config nodes; mild Unity use
+Assembly-CSharp/Expansions/Missions/MissionInstructor.cs	A	DLC-MakingHistory	core	Mission data/rule class MissionInstructor: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/MissionKerbal.cs	A	DLC-MakingHistory	core	Mission data/rule class MissionKerbal: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/MissionListGroup.cs	C	DLC-MakingHistory	UMG widget	Mission list group UI widget
+Assembly-CSharp/Expansions/Missions/MissionLocalizer.cs	A	DLC-MakingHistory	core	Mission data/rule class MissionLocalizer: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/MissionMappedVessel.cs	A	DLC-MakingHistory	core	Mission data/rule class MissionMappedVessel: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/MissionMappedVesselsExtension.cs	A	DLC-MakingHistory	core	Mission data/rule class MissionMappedVesselsExtension: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/MissionOrbit.cs	A	DLC-MakingHistory	core	Mission data/rule class MissionOrbit: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/MissionOrbitRenderer.cs	C	DLC-MakingHistory	Line Batcher / Procedural Mesh lines	Renders mission orbit target line
+Assembly-CSharp/Expansions/Missions/MissionPack.cs	A	DLC-MakingHistory	core	Mission data/rule class MissionPack: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/MissionParamsExtras.cs	A	DLC-MakingHistory	core	Mission GameParameters node: config-bound settings; data
+Assembly-CSharp/Expansions/Missions/MissionParamsFacilities.cs	A	DLC-MakingHistory	core	Mission GameParameters node: config-bound settings; data
+Assembly-CSharp/Expansions/Missions/MissionParamsGeneral.cs	A	DLC-MakingHistory	core	Mission GameParameters node: config-bound settings; data
+Assembly-CSharp/Expansions/Missions/MissionPartFilter.cs	A	DLC-MakingHistory	core	Mission data/rule class MissionPartFilter: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/MissionPreflightCheck.cs	A	DLC-MakingHistory	core	Preflight test validating craft against mission rules; pure IPreFlightTest logic
+Assembly-CSharp/Expansions/Missions/MissionQuaternion.cs	A	DLC-MakingHistory	core	Mission data/rule class MissionQuaternion: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/MissionScore.cs	A	DLC-MakingHistory	core	Mission data/rule class MissionScore: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/MissionScoreInfo.cs	A	DLC-MakingHistory	core	Mission data/rule class MissionScoreInfo: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/MissionsUtils.cs	B	DLC-MakingHistory		Mission paths, file gathering, node graph BFS, adjuster/module type maps, prefab/texture/Steam helpers; mixed: Steam and prefab loading is C
+Assembly-CSharp/Expansions/Missions/MissionTypes.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute MissionTypes; data used by mission logic
+Assembly-CSharp/Expansions/Missions/NodeLabel.cs	C	DLC-MakingHistory	UMG widget	Map node label subclass; display
+Assembly-CSharp/Expansions/Missions/ParamChoices_CelestialBodySurface.cs	A	DLC-MakingHistory	core	Mission data/rule class ParamChoices_CelestialBodySurface: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/ParamChoices_VesselSimpleLocation.cs	A	DLC-MakingHistory	core	Mission data/rule class ParamChoices_VesselSimpleLocation: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/Runtime/MessageNodeDialog.cs	C	DLC-MakingHistory	UMG widget	Runtime in-mission message dialog UI
+Assembly-CSharp/Expansions/Missions/Runtime/MissionAppMode.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute MissionAppMode; data used by mission logic
+Assembly-CSharp/Expansions/Missions/Runtime/MissionEndDialog.cs	C	DLC-MakingHistory	UMG widget	Mission end results dialog UI
+Assembly-CSharp/Expansions/Missions/Runtime/MissionsAppObjectiveInfo.cs	C	DLC-MakingHistory	UMG widget	Objective row in Missions app panel
+Assembly-CSharp/Expansions/Missions/Runtime/MissionsAppVesselInfo.cs	C	DLC-MakingHistory	UMG widget	Vessel info row in Missions app panel
+Assembly-CSharp/Expansions/Missions/Runtime/MissionSteamItemWidget.cs	C	DLC-MakingHistory	Online Subsystem Steam	Steam workshop item widget in mission browser UI
+Assembly-CSharp/Expansions/Missions/Scenery/Scripts/PositionMobileLaunchPad.cs	B	DLC-MakingHistory		Positions/orients mobile launch pad model on terrain with ground checks; transform and terrain dependent scenery with gameplay placement
+Assembly-CSharp/Expansions/Missions/ScoreInfo.cs	A	DLC-MakingHistory	core	Mission data/rule class ScoreInfo: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/ScoreModifierType.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute ScoreModifierType; data used by mission logic
+Assembly-CSharp/Expansions/Missions/ScoreModule.cs	A	DLC-MakingHistory	core	Mission scoring module computing score from mission state; pure rules
+Assembly-CSharp/Expansions/Missions/ScoreModule_Accuracy.cs	A	DLC-MakingHistory	core	Mission scoring module computing score from mission state; pure rules
+Assembly-CSharp/Expansions/Missions/ScoreModule_Completion.cs	A	DLC-MakingHistory	core	Mission scoring module computing score from mission state; pure rules
+Assembly-CSharp/Expansions/Missions/ScoreModule_Modifier.cs	A	DLC-MakingHistory	core	Mission scoring module computing score from mission state; pure rules
+Assembly-CSharp/Expansions/Missions/ScoreModule_Resource.cs	A	DLC-MakingHistory	core	Mission scoring module computing score from mission state; pure rules
+Assembly-CSharp/Expansions/Missions/ScoreModule_Time.cs	A	DLC-MakingHistory	core	Mission scoring module computing score from mission state; pure rules
+Assembly-CSharp/Expansions/Missions/ScoreRange.cs	A	DLC-MakingHistory	core	Mission data/rule class ScoreRange: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/SteamMissionFileInfo.cs	C	DLC-MakingHistory	Online Subsystem Steam	Steam workshop mission file info wrapper
+Assembly-CSharp/Expansions/Missions/SurfaceArea.cs	A	DLC-MakingHistory	core	Mission data/rule class SurfaceArea: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/SurfaceVolume.cs	A	DLC-MakingHistory	core	Mission data/rule class SurfaceVolume: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/TestComparisonLessGreaterEqual.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute TestComparisonLessGreaterEqual; data used by mission logic
+Assembly-CSharp/Expansions/Missions/TestComparisonLessGreaterOnly.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute TestComparisonLessGreaterOnly; data used by mission logic
+Assembly-CSharp/Expansions/Missions/TestComparisonOperator.cs	A	DLC-MakingHistory	core	Mission enum/interface/attribute TestComparisonOperator; data used by mission logic
+Assembly-CSharp/Expansions/Missions/TestGroup.cs	A	DLC-MakingHistory	core	Mission data/rule class TestGroup: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/TestModule.cs	B	DLC-MakingHistory		Base MonoBehaviour for mission test nodes: lifecycle, vessel/part id-change events, Test(); host redesign, subclasses are condition logic
+Assembly-CSharp/Expansions/Missions/Tests/TestAccuracy.cs	A	DLC-MakingHistory	core	Mission test node Accuracy: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestCrewAssignment.cs	A	DLC-MakingHistory	core	Mission test node CrewAssignment: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestEmptyFalse.cs	A	DLC-MakingHistory	core	Mission test node EmptyFalse: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestEmptyTrue.cs	A	DLC-MakingHistory	core	Mission test node EmptyTrue: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestFlyThrough.cs	A	DLC-MakingHistory	core	Mission test node FlyThrough: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestFundsRecovery.cs	A	DLC-MakingHistory	core	Mission test node FundsRecovery: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestGameEvent.cs	A	DLC-MakingHistory	core	Mission test node GameEvent: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestGoTo.cs	A	DLC-MakingHistory	core	Mission test node GoTo: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestGrapple.cs	B	DLC-MakingHistory		Mission test tracking grapple attach state of parts; entangled with joint/part events
+Assembly-CSharp/Expansions/Missions/Tests/TestKerbalBoarded.cs	A	DLC-MakingHistory	core	Mission test node KerbalBoarded: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestKerbalEVA.cs	A	DLC-MakingHistory	core	Mission test node KerbalEVA: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestKerbalKilled.cs	A	DLC-MakingHistory	core	Mission test node KerbalKilled: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestKerbalRecovery.cs	A	DLC-MakingHistory	core	Mission test node KerbalRecovery: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestKerbalRescue.cs	A	DLC-MakingHistory	core	Mission test node KerbalRescue: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestMETTime.cs	A	DLC-MakingHistory	core	Mission test node METTime: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestMissionFunds.cs	A	DLC-MakingHistory	core	Mission test node MissionFunds: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestMissionScore.cs	A	DLC-MakingHistory	core	Mission test node MissionScore: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestMissionTime.cs	A	DLC-MakingHistory	core	Mission test node MissionTime: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestOrbit.cs	A	DLC-MakingHistory	core	Mission test node Orbit: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestOrbitParams.cs	A	DLC-MakingHistory	core	Mission test node OrbitParams: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestPartDocking.cs	B	DLC-MakingHistory		Mission test for docking between parts; entangled with docking node/vessel event handling
+Assembly-CSharp/Expansions/Missions/Tests/TestPlantFlag.cs	A	DLC-MakingHistory	core	Mission test node PlantFlag: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestResourcesRecovery.cs	A	DLC-MakingHistory	core	Mission test node ResourcesRecovery: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestScienceExperiment.cs	A	DLC-MakingHistory	core	Mission test node ScienceExperiment: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestSOILeft.cs	A	DLC-MakingHistory	core	Mission test node SOILeft: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestSOIReached.cs	A	DLC-MakingHistory	core	Mission test node SOIReached: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestTakeKerbal.cs	A	DLC-MakingHistory	core	Mission test node TakeKerbal: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestTimeSinceNode.cs	A	DLC-MakingHistory	core	Mission test node TimeSinceNode: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestVessel.cs	A	DLC-MakingHistory	core	Mission test node Vessel: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestVesselActive.cs	A	DLC-MakingHistory	core	Mission test node VesselActive: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestVesselActiveCount.cs	A	DLC-MakingHistory	core	Mission test node VesselActiveCount: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestVesselAltitude.cs	A	DLC-MakingHistory	core	Mission test node VesselAltitude: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestVesselCrewCount.cs	A	DLC-MakingHistory	core	Mission test node VesselCrewCount: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestVesselMass.cs	A	DLC-MakingHistory	core	Mission test node VesselMass: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestVesselPartCount.cs	A	DLC-MakingHistory	core	Mission test node VesselPartCount: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestVesselRecovery.cs	A	DLC-MakingHistory	core	Mission test node VesselRecovery: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestVesselResource.cs	A	DLC-MakingHistory	core	Mission test node VesselResource: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestVesselSituation.cs	A	DLC-MakingHistory	core	Mission test node VesselSituation: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestVesselSituationFlying.cs	A	DLC-MakingHistory	core	Mission test node VesselSituationFlying: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestVesselSituationLanded.cs	A	DLC-MakingHistory	core	Mission test node VesselSituationLanded: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestVesselSituationSplashed.cs	A	DLC-MakingHistory	core	Mission test node VesselSituationSplashed: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestVesselStage.cs	A	DLC-MakingHistory	core	Mission test node VesselStage: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestVesselStageActivated.cs	A	DLC-MakingHistory	core	Mission test node VesselStageActivated: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestVesselState.cs	A	DLC-MakingHistory	core	Mission test node VesselState: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestVesselStateCrashed.cs	A	DLC-MakingHistory	core	Mission test node VesselStateCrashed: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/Tests/TestVesselVelocity.cs	A	DLC-MakingHistory	core	Mission test node VesselVelocity: evaluates condition on vessel/game state each update; rule logic, needs TestModule host
+Assembly-CSharp/Expansions/Missions/VesselGroundLocation.cs	A	DLC-MakingHistory	core	Mission data/rule class VesselGroundLocation: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/VesselLocation.cs	A	DLC-MakingHistory	core	Mission data/rule class VesselLocation: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/VesselPartIDPair.cs	A	DLC-MakingHistory	core	Mission data/rule class VesselPartIDPair: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Missions/VesselRestriction.cs	A	DLC-MakingHistory	core	Mission vessel restriction rule checked in editor/preflight; pure logic
+Assembly-CSharp/Expansions/Missions/VesselRestriction_Cost.cs	A	DLC-MakingHistory	core	Mission vessel restriction rule checked in editor/preflight; pure logic
+Assembly-CSharp/Expansions/Missions/VesselRestriction_Crew.cs	A	DLC-MakingHistory	core	Mission vessel restriction rule checked in editor/preflight; pure logic
+Assembly-CSharp/Expansions/Missions/VesselRestriction_Mass.cs	A	DLC-MakingHistory	core	Mission vessel restriction rule checked in editor/preflight; pure logic
+Assembly-CSharp/Expansions/Missions/VesselRestriction_PartCount.cs	A	DLC-MakingHistory	core	Mission vessel restriction rule checked in editor/preflight; pure logic
+Assembly-CSharp/Expansions/Missions/VesselRestriction_RequiredParts.cs	A	DLC-MakingHistory	core	Mission vessel restriction rule checked in editor/preflight; pure logic
+Assembly-CSharp/Expansions/Missions/VesselRestriction_Resource.cs	A	DLC-MakingHistory	core	Mission vessel restriction rule checked in editor/preflight; pure logic
+Assembly-CSharp/Expansions/Missions/VesselRestriction_Size.cs	A	DLC-MakingHistory	core	Mission vessel restriction rule checked in editor/preflight; pure logic
+Assembly-CSharp/Expansions/Missions/VesselRestriction_Stages.cs	A	DLC-MakingHistory	core	Mission vessel restriction rule checked in editor/preflight; pure logic
+Assembly-CSharp/Expansions/Missions/VesselRestrictionList.cs	A	DLC-MakingHistory	core	Mission vessel restriction rule checked in editor/preflight; pure logic
+Assembly-CSharp/Expansions/Missions/VesselRestrictionOptions.cs	A	DLC-MakingHistory	core	Mission vessel restriction rule checked in editor/preflight; pure logic
+Assembly-CSharp/Expansions/Missions/VesselSituation.cs	A	DLC-MakingHistory	core	Mission data/rule class VesselSituation: config round trip and logic; little Unity use
+Assembly-CSharp/Expansions/Serenity/AxisLimitLine.cs	C	DLC-BreakingGround	UMG widget	Robotic controller curve editor limit line widget
+Assembly-CSharp/Expansions/Serenity/Contracts/CollectDeployedScience.cs	A	DLC-BreakingGround	core	Breaking Ground contract parameter checking science collection; contract rules; needs ContractParameter host
+Assembly-CSharp/Expansions/Serenity/Contracts/CollectROCScienceArm.cs	A	DLC-BreakingGround	core	Breaking Ground contract parameter checking science collection; contract rules; needs ContractParameter host
+Assembly-CSharp/Expansions/Serenity/Contracts/CollectROCScienceRetrieval.cs	A	DLC-BreakingGround	core	Breaking Ground contract parameter checking science collection; contract rules; needs ContractParameter host
+Assembly-CSharp/Expansions/Serenity/Contracts/DeployedScienceContract.cs	A	DLC-BreakingGround	core	Breaking Ground contract generator and rewards; rules engine; needs Contract host
+Assembly-CSharp/Expansions/Serenity/Contracts/ROCScienceArmContract.cs	A	DLC-BreakingGround	core	Breaking Ground contract generator and rewards; rules engine; needs Contract host
+Assembly-CSharp/Expansions/Serenity/Contracts/ROCScienceRetrievalContract.cs	A	DLC-BreakingGround	core	Breaking Ground contract generator and rewards; rules engine; needs Contract host
+Assembly-CSharp/Expansions/Serenity/ControlledAction.cs	A	DLC-BreakingGround	core	Robotic controller timed action sequence data and evaluation; pure logic
+Assembly-CSharp/Expansions/Serenity/ControlledAxis.cs	A	DLC-BreakingGround	core	Robotic controller axis keyframe curve evaluation and playback; curve maths, little Unity
+Assembly-CSharp/Expansions/Serenity/ControlledBase.cs	A	DLC-BreakingGround	core	Base of controlled action/axis config with load/save; pure data
+Assembly-CSharp/Expansions/Serenity/CurvePanelPoint.cs	C	DLC-BreakingGround	UMG widget	Draggable curve point widget in robotic axis curve editor
+Assembly-CSharp/Expansions/Serenity/CurvePanelPointHandle.cs	C	DLC-BreakingGround	UMG widget	Curve point tangent handle widget
+Assembly-CSharp/Expansions/Serenity/DeployedScience/Runtime/DeployedScience.cs	B	DLC-BreakingGround		ScenarioModule tracking deployed science clusters, connections and transmission; rule logic extractable but tied to part/vessel hosting
+Assembly-CSharp/Expansions/Serenity/DeployedScience/Runtime/DeployedScienceCluster.cs	B	DLC-BreakingGround		Cluster of deployed science parts: power/data/science totals; MonoBehaviour tied to vessel parts
+Assembly-CSharp/Expansions/Serenity/DeployedScience/Runtime/DeployedScienceExtensions.cs	A	DLC-BreakingGround	core	Extension helpers for deployed science queries; no Unity use
+Assembly-CSharp/Expansions/Serenity/DeployedScience/Runtime/DeployedSciencePart.cs	B	DLC-BreakingGround		Per-part deployed science state and experiment production; transforms/part hooks and lifecycle
+Assembly-CSharp/Expansions/Serenity/IRoboticServo.cs	A	DLC-BreakingGround	core	Interface for robotic servo targets/limits; Unity only via value types
+Assembly-CSharp/Expansions/Serenity/ModuleRoboticRotationServo.cs	B	DLC-BreakingGround	core + Chaos/Jolt shim	Rotation servo PartModule driving ConfigurableJoint/transform; physics-entangled
+Assembly-CSharp/Expansions/Serenity/ModuleRoboticServoHinge.cs	B	DLC-BreakingGround	core + Chaos/Jolt shim	Hinge servo PartModule driving joint; physics and transform entangled, drag cubes
+Assembly-CSharp/Expansions/Serenity/ModuleRoboticServoPiston.cs	B	DLC-BreakingGround	core + Chaos/Jolt shim	Piston servo PartModule moving attached parts via joint; physics-entangled
+Assembly-CSharp/Expansions/Serenity/ModuleRoboticServoRotor.cs	B	DLC-BreakingGround	core + Chaos/Jolt shim	Rotor servo PartModule motoring a joint; physics-entangled
+Assembly-CSharp/Expansions/Serenity/RobotArmFX/RobotArmFXDrill.cs	C	DLC-BreakingGround	Niagara	Robot arm drill scanner visual effect; particles and lights
+Assembly-CSharp/Expansions/Serenity/RobotArmFX/RobotArmFXLaser.cs	C	DLC-BreakingGround	Niagara	Robot arm laser scanner visual effect; particles and lights
+Assembly-CSharp/Expansions/Serenity/RobotArmFX/RobotArmFXSpectrometer.cs	C	DLC-BreakingGround	Niagara	Robot arm spectrometer scanner visual effect; particles and lights
+Assembly-CSharp/Expansions/Serenity/RobotArmFX/RobotArmScannerFX.cs	C	DLC-BreakingGround	Niagara	Base ScriptableObject for robot arm scanner FX; cosmetic
+Assembly-CSharp/Expansions/Serenity/RoboticCollisions.cs	B	DLC-BreakingGround	core + Chaos/Jolt shim	Collision/trigger callbacks to ignore or flag robotic part collisions; direct physics events
+Assembly-CSharp/Expansions/Serenity/RoboticControllerManager.cs	C	DLC-BreakingGround	UMG widget	Singleton managing robotic controller window instances per scene; UI lifecycle
+Assembly-CSharp/Expansions/Serenity/RoboticControllerWindowAction.cs	C	DLC-BreakingGround	UMG widget	Robotic controller window row UI
+Assembly-CSharp/Expansions/Serenity/RoboticControllerWindowAxis.cs	C	DLC-BreakingGround	UMG widget	Robotic controller window row UI
+Assembly-CSharp/Expansions/Serenity/RoboticControllerWindowBaseRow.cs	C	DLC-BreakingGround	UMG widget	Robotic controller window row UI
+Assembly-CSharp/Expansions/Serenity/SerenityUtils.cs	C	DLC-BreakingGround	Asset Manager / Primary Data Asset	Loads Serenity prefabs/textures from bundles; asset loading helper
+Assembly-CSharp/UIPartActionInventory.cs	C	FlightUI	UMG + core query	PAW inventory grid widget for cargo parts; slot drag UI, gameplay in inventory module
+Assembly-CSharp/UIPartActionInventorySlot.cs	C	FlightUI	UMG widget	Inventory slot widget with click/drag handling
+Assembly-CSharp/UIPartActionItem.cs	C	FlightUI	UMG widget	Base PAW item widget bound to part/module/field
+Assembly-CSharp/UIPartActionLabel.cs	C	FlightUI	UMG widget	PAW label item
+Assembly-CSharp/UIPartActionMinMaxRange.cs	C	FlightUI	UMG widget	PAW min-max slider item
+Assembly-CSharp/UIPartActionProgressBar.cs	C	FlightUI	UMG widget	PAW progress bar item
+Assembly-CSharp/UIPartActionResource.cs	C	FlightUI	UMG + core query	PAW resource amount row
+Assembly-CSharp/UIPartActionResourceDrain.cs	C	FlightUI	UMG + core query	PAW resource drain row; toggles/drain commands delegate to part resources
+Assembly-CSharp/UIPartActionResourceEditor.cs	C	FlightUI	UMG + core query	PAW editor-mode resource amount slider
+Assembly-CSharp/UIPartActionResourceItem.cs	C	FlightUI	UMG widget	Base class for PAW resource rows
+Assembly-CSharp/UIPartActionResourcePriority.cs	C	FlightUI	UMG widget	PAW resource flow priority control
+Assembly-CSharp/UIPartActionResourceToggle.cs	C	FlightUI	UMG widget	PAW resource flow toggle
+Assembly-CSharp/UIPartActionResourceTransfer.cs	C	FlightUI	UMG + core query	PAW resource transfer widget; transfer rate/flow rules live in resource transfer code
+Assembly-CSharp/UIPartActionRoboticJointDisplay.cs	C	FlightUI	UMG widget	PAW robotic joint readout widget
+Assembly-CSharp/UIPartActionScaleEdit.cs	C	FlightUI	UMG widget	PAW scale slider item
+Assembly-CSharp/UIPartActionThermalDisplay.cs	C	FlightUI	UMG widget	PAW thermal readout widget
+Assembly-CSharp/UIPartActionToggle.cs	C	FlightUI	UMG widget	PAW toggle item
+Assembly-CSharp/UIPartActionVariantButton.cs	C	FlightUI	UMG widget	PAW variant selection button
+Assembly-CSharp/UIPartActionVariantSelector.cs	C	FlightUI	UMG widget	PAW part variant selector widget
+Assembly-CSharp/UIPartActionVector2.cs	C	FlightUI	UMG widget	PAW 2D vector item
+Assembly-CSharp/UISkinDef.cs	C	UI	UMG widget	UI skin definition data (IMGUI skin); UMG style asset
+Assembly-CSharp/UISkinManager.cs	C	UI	UMG widget	Registers and applies UI skins
+Assembly-CSharp/UIStyle.cs	C	UI	UMG widget	UI style data
+Assembly-CSharp/UIStyleState.cs	C	UI	UMG widget	UI style state data
+Assembly-CSharp/UnderwaterFog.cs	C	Rendering	Post Process Volume	Underwater fog camera effect
+Assembly-CSharp/UnitTestingWindow.cs	C	Debug	drop	Debug window for running in-game unit tests
+Assembly-CSharp/UntrackedObjectClass.cs	A	Celestials	core	Enum of untracked object size classes used by asteroid/tracking logic
+Assembly-CSharp/UtilMath.cs	A	Core	core	Math helpers (clamp, lerp, angle wrap); anchor A
+Assembly-CSharp/VABCamera.cs	C	Camera	Camera Component / Spring Arm	VAB editor orbit camera
+Assembly-CSharp/ValueBox.cs	C	UI	UMG widget	UI value holder class
+Assembly-CSharp/ValueModifierQuery.cs	A	Career	core	Query object collecting modifiers applied to a value (Strategy effects); pure logic
+Assembly-CSharp/Vect.cs	A	Core	core	Static vector helpers (Vector3 math)
+Assembly-CSharp/Vector3Curve.cs	A	Core	core	Anchor: wraps three FloatCurves; needs Unity Hermite shim
+Assembly-CSharp/Vector3d.cs	A	Core	core	Anchor: double precision vector math
+Assembly-CSharp/Vector4Curve.cs	A	Core	core	Four FloatCurves as a Vector4 curve; same Hermite shim as FloatCurve
+Assembly-CSharp/VectorArrayMaterialProperty.cs	C	Rendering	Dynamic Material Instance	Material vector-array property setter
+Assembly-CSharp/VectorExtensions.cs	A	Core	core	Vector/Quaternion extension methods (swizzles, conversions); math
+Assembly-CSharp/VectorMaterialProperty.cs	C	Rendering	Dynamic Material Instance	Material vector property setter
+Assembly-CSharp/VehicleAssemblyBuilding.cs	B	Scene		KSC VAB building: open check with career facility state and click handler; extract facility gating, UI part is shell
+Assembly-CSharp/VersionCompareResult.cs	A	Save	core	Enum for version comparison results used by save versioning
+Assembly-CSharp/Versioning.cs	C	Save	drop	Version strings, MD5 helpers and online update check; platform plumbing
+Assembly-CSharp/VersioningBase.cs	C	Save	drop	Abstract MonoBehaviour base for Versioning
+Assembly-CSharp/VersionReadout.cs	C	UI	UMG widget	On-screen version label
+Assembly-CSharp/VesselActuatorMode.cs	A	Vessel	core	Enum of actuator modes for vessel control
+Assembly-CSharp/VesselAutopilotUI.cs	C	PartModules-Control	UMG widget	SAS autopilot mode button panel; UI over autopilot state
+Assembly-CSharp/VesselCrewManifest.cs	A	Kerbals	core	Crew assignment manifest for vessel parts; pure data and rules
+Assembly-CSharp/VesselEngiUtil.cs	A	Vessel	core	Tiny static engineering helper; no Unity
+Assembly-CSharp/VesselLabel.cs	C	MapView	UMG widget	Map vessel label subclass; display
+Assembly-CSharp/VesselLabels.cs	C	MapView	UMG widget	Manages vessel and body labels in map and flight; display
+Assembly-CSharp/VesselModule.cs	B	Vessel		Anchor: base VesselModule MonoBehaviour hosting per-vessel logic
+Assembly-CSharp/VesselModuleManager.cs	B	Vessel		Registry compiling VesselModule types and adding them to vessels via reflection/AddComponent; host-side
+Assembly-CSharp/VesselNaming.cs	A	Vessel	core	Vessel naming and type-prefix data; config round trip
+Assembly-CSharp/VesselPrecalculate.cs	B	Vessel		Computes CoM, inertia tensor, moments and physics-ready state per vessel using rigidbodies and transforms
+Assembly-CSharp/VesselRanges.cs	A	Vessel	core	Load/pack/unload distance ranges per situation; config data
+Assembly-CSharp/VesselRecovery.cs	A	Career	core	ScenarioModule handling vessel recovery funds/science/crew; rules, needs ScenarioModule host
+Assembly-CSharp/VesselRetrieval.cs	B	Vessel		Handles recovery requests after scene load, recovers vessels via events; scene lifecycle orchestration
+Assembly-CSharp/VesselSpawnSearch.cs	C	Vessel	UMG widget	Search filter box for the craft spawn list UI
+Assembly-CSharp/VesselSwitching.cs	B	Vessel		Update loop picking next/previous vessel to switch to; flight lifecycle orchestration
+Assembly-CSharp/VesselTargetModes.cs	A	Orbit	core	Enum of target modes (none, vessel, body)
+Assembly-CSharp/VesselTripLog.cs	A	Vessel	core	Flight log trip entries; plain data
+Assembly-CSharp/VesselTutorialStep.cs	C	Tutorials	UMG widget	Tutorial KFSM step for mission-builder vessel linking; presentation
+Assembly-CSharp/VesselType.cs	A	Vessel	core	Vessel type enum with helpers
+Assembly-CSharp/VesselValues.cs	A	Vessel	core	Vessel cost, mass, dry/wet value computation; simple data
+Assembly-CSharp/VFXSequencer.cs	C	Rendering	Niagara	Sequences visual effects timing
+Assembly-CSharp/VideoSettings.cs	C	UI	UE GameUserSettings	Video settings dialog and resolution/quality options
+Assembly-CSharp/VolumeController.cs	C	Audio	Audio Component / MetaSounds	Applies volume setting to an AudioSource
+Assembly-CSharp/VolumeNormalizer.cs	C	Audio	Audio Component / MetaSounds	Normalises audio volume across sources
+Assembly-CSharp/VolumetricObjectBase.cs	C	Rendering	Volumetric Clouds	Base for volumetric-rendered objects
+Assembly-CSharp/WarpTransition.cs	A	Orbit	core	Time warp transition data record; no Unity
+Assembly-CSharp/WarpTransitionCalculator.cs	A	Orbit	core	Computes time warp transition steps; pure math
+Assembly-CSharp/WeldFX.cs	C	Rendering	Niagara	Welding spark/light effect
+Assembly-CSharp/WhackAKerbal.cs	C	Misc	drop	Easter-egg minigame with rigidbody throws; cosmetic
+Assembly-CSharp/WhatsNewDialog.cs	C	UI	UMG widget	Whats-new popup dialog
+Assembly-CSharp/WhatsNewModes.cs	C	UI	UMG widget	Enum for whats-new dialog modes
+Assembly-CSharp/Wheel.cs	B	PartModules-Wheels		Per-wheel suspension raycast and WheelCollider state; physics-entangled
+Assembly-CSharp/WheelType.cs	A	PartModules-Wheels	core	Wheel type enum
+Assembly-CSharp/WindmillAnimScript.cs	C	Scene	Rotating Movement Component	KSC windmill rotation, pauses with game pause; cosmetic
+Assembly-CSharp/XButton.cs	C	UI	UMG widget	Button with custom behaviour
+Assembly-CSharp/XGraphic.cs	C	UI	UMG widget	Custom Graphic
+Assembly-CSharp/XHoverable.cs	C	UI	UMG widget	Hoverable UI helper
+Assembly-CSharp/XSelectable.cs	C	UI	UMG widget	Selectable UI helper

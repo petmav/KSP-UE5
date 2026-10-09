@@ -1,0 +1,4 @@
+﻿"group","assembly","origin","source","sha256","version","obfuscator","deobfuscated","lang","status","exitCode","seconds","peakMB","unresolvedRefs","files","lines","outDir"
+"ThirdParty","Ionic.Zip","third-party","KSP_x64_Data\Managed\Ionic.Zip.dll","3B3E541682E48F3FD2872F85A06278DA2F3E7877EE956DA89B90D732A1EAA0BD","1.9.1.8","none","n","7.3","ok","0","1.1","101","0","96","21445","ThirdParty\Ionic.Zip"
+"ThirdParty","Mono.Cecil","third-party","KSP_x64_Data\Managed\Mono.Cecil.dll","BBAD0E3A0BE79D9162411A1E716C94D5A016C293CCE28A04FE228555C6CF444A","0.9.6.0","none","n","7.3","ok","0","1.1","99","0","235","26649","ThirdParty\Mono.Cecil"
+"ThirdParty","TDx.TDxInput","third-party","KSP_x64_Data\Managed\TDx.TDxInput.dll","9837C26A5BBDF642B8E5FC3239E79B806BABADF59D6BC035B808DDB88CE17B4C","1.1.0.0","none","n","7.3","ok","0","0.7","65","0","35","1367","ThirdParty\TDx.TDxInput"

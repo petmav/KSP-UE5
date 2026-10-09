@@ -1,0 +1,7 @@
+{
+ "schema": "ksp-golden-manifest/1",
+ "partial_run": true,
+ "files": [
+  {"group":"confignode","file":"confignode_roundtrip/confignode_roundtrip.json","dataset":"confignode_roundtrip","trust":"direct","rows":67,"tables":["corpus:46","save_text:21"]}
+ ]
+}

@@ -1,0 +1,2103 @@
+{
+ "name": "root",
+ "id": "",
+ "comment": null,
+ "values": [],
+ "nodes": [
+  {
+   "name": "TechTree",
+   "id": "",
+   "comment": null,
+   "values": [],
+   "nodes": [
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","start",null],
+      ["title","#autoLOC_501020",null],
+      ["description","#autoLOC_501021",null],
+      ["cost","0",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node0_start",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_start",null],
+      ["pos","-2568,1199,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","basicRocketry",null],
+      ["title","#autoLOC_501022",null],
+      ["description","#autoLOC_501023",null],
+      ["cost","5",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node1_basicRocketry",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_rocketry-basic",null],
+      ["pos","-2385,1257,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","start",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","engineering101",null],
+      ["title","#autoLOC_501024",null],
+      ["description","#autoLOC_501025",null],
+      ["cost","5",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node1_engineering101",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_emgineering101",null],
+      ["pos","-2385,1142.3,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","start",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","survivability",null],
+      ["title","#autoLOC_501026",null],
+      ["description","#autoLOC_501027",null],
+      ["cost","15",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node2_survivability",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_survivability",null],
+      ["pos","-2209,975,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","engineering101",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","stability",null],
+      ["title","#autoLOC_501028",null],
+      ["description","#autoLOC_501029",null],
+      ["cost","18",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node2_stability",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_stability",null],
+      ["pos","-2170,1201,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","engineering101",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","basicRocketry",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","generalRocketry",null],
+      ["title","#autoLOC_501030",null],
+      ["description","#autoLOC_501031",null],
+      ["cost","20",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node2_generalRocketry",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_rocketry-general",null],
+      ["pos","-2128,1438,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","basicRocketry",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","aviation",null],
+      ["title","#autoLOC_501032",null],
+      ["description","#autoLOC_501033",null],
+      ["cost","45",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node3_aviation",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_aerospaceTech",null],
+      ["pos","-1946,1201,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","stability",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","basicScience",null],
+      ["title","#autoLOC_501034",null],
+      ["description","#autoLOC_501035",null],
+      ["cost","45",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node3_basicScience",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_scienceTech",null],
+      ["pos","-1946,846.9,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","survivability",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","flightControl",null],
+      ["title","#autoLOC_501036",null],
+      ["description","#autoLOC_501037",null],
+      ["cost","45",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node3_flightControl",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_control-flight-advanced",null],
+      ["pos","-1946,1051.4,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","survivability",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","stability",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","advRocketry",null],
+      ["title","#autoLOC_501038",null],
+      ["description","#autoLOC_501039",null],
+      ["cost","45",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node3_advRocketry",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_rocketry-advanced",null],
+      ["pos","-1946,1551,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","generalRocketry",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","generalConstruction",null],
+      ["title","#autoLOC_501040",null],
+      ["description","#autoLOC_501041",null],
+      ["cost","45",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node3_generalConstruction",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_construction-general",null],
+      ["pos","-1946,1355,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","stability",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","generalRocketry",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","propulsionSystems",null],
+      ["title","#autoLOC_501042",null],
+      ["description","#autoLOC_501043",null],
+      ["cost","90",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node4_propulsionSystems",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_propulsionSystems",null],
+      ["pos","-1723,1551,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advRocketry",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","spaceExploration",null],
+      ["title","#autoLOC_501044",null],
+      ["description","#autoLOC_501045",null],
+      ["cost","90",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node4_spaceExploration",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_evaTech",null],
+      ["pos","-1723,963.9,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","basicScience",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","advFlightControl",null],
+      ["title","#autoLOC_501046",null],
+      ["description","#autoLOC_501047",null],
+      ["cost","90",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node4_advFlightControl",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_control-flight",null],
+      ["pos","-1723,1051.4,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","flightControl",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","landing",null],
+      ["title","#autoLOC_501048",null],
+      ["description","#autoLOC_501049",null],
+      ["cost","90",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node4_landing",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_landing",null],
+      ["pos","-1723,1142.4,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","flightControl",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","aviation",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","aerodynamicSystems",null],
+      ["title","#autoLOC_501050",null],
+      ["description","#autoLOC_501051",null],
+      ["cost","90",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node4_aerodynamicSystems",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_aerodynamicSystems",null],
+      ["pos","-1723,1243,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","aviation",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","generalConstruction",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","electrics",null],
+      ["title","#autoLOC_501052",null],
+      ["description","#autoLOC_501053",null],
+      ["cost","90",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node4_electrics",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_electrics",null],
+      ["pos","-1723,711.1,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","basicScience",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","heavyRocketry",null],
+      ["title","#autoLOC_501054",null],
+      ["description","#autoLOC_501055",null],
+      ["cost","90",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node4_heavyRocketry",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_rocketry-heavy",null],
+      ["pos","-1723,1635,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advRocketry",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","fuelSystems",null],
+      ["title","#autoLOC_501056",null],
+      ["description","#autoLOC_501057",null],
+      ["cost","90",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node4_fuelSystems",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_fuelSystems",null],
+      ["pos","-1723,1470.2,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advRocketry",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","generalConstruction",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","advConstruction",null],
+      ["title","#autoLOC_501058",null],
+      ["description","#autoLOC_501059",null],
+      ["cost","90",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node4_advConstruction",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_construction-advanced",null],
+      ["pos","-1723,1355,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","generalConstruction",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","miniaturization",null],
+      ["title","#autoLOC_501060",null],
+      ["description","#autoLOC_501061",null],
+      ["cost","90",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node4_miniaturization",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_miniaturization",null],
+      ["pos","-1723,846.9,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","basicScience",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","actuators",null],
+      ["title","#autoLOC_501062",null],
+      ["description","#autoLOC_501063",null],
+      ["cost","160",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node5_actuators",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_construction-specialized",null],
+      ["pos","-1519,1355,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advConstruction",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","commandModules",null],
+      ["title","#autoLOC_501064",null],
+      ["description","#autoLOC_501065",null],
+      ["cost","160",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node5_commandModules",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_commandmodules",null],
+      ["pos","-1520,1020.4,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","spaceExploration",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advFlightControl",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","heavierRocketry",null],
+      ["title","#autoLOC_501066",null],
+      ["description","#autoLOC_501067",null],
+      ["cost","160",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node5_heavierRocketry",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_rocketry-heavier",null],
+      ["pos","-1519,1635,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","heavyRocketry",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","precisionEngineering",null],
+      ["title","#autoLOC_501068",null],
+      ["description","#autoLOC_501069",null],
+      ["cost","160",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node5_precisionEngineering",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_engineering-precision",null],
+      ["pos","-1519,846.9,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","miniaturization",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","electrics",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","advExploration",null],
+      ["title","#autoLOC_501070",null],
+      ["description","#autoLOC_501071",null],
+      ["cost","160",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node5_advExploration",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_exploration-advanced",null],
+      ["pos","-1519,963.9,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","spaceExploration",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","specializedControl",null],
+      ["title","#autoLOC_501072",null],
+      ["description","#autoLOC_501073",null],
+      ["cost","160",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node5_specializedControl",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_control-large",null],
+      ["pos","-1521,1082.2,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advFlightControl",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","advLanding",null],
+      ["title","#autoLOC_501074",null],
+      ["description","#autoLOC_501075",null],
+      ["cost","160",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node5_advLanding",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_landing-advanced",null],
+      ["pos","-1519,1142.4,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","landing",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","supersonicFlight",null],
+      ["title","#autoLOC_501076",null],
+      ["description","#autoLOC_501077",null],
+      ["cost","160",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node5_supersonicFlight",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_flight-supersonic",null],
+      ["pos","-1521,1278,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","aerodynamicSystems",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","advFuelSystems",null],
+      ["title","#autoLOC_501078",null],
+      ["description","#autoLOC_501079",null],
+      ["cost","160",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node5_advFuelSystems",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_fuelSystems-advanced",null],
+      ["pos","-1519,1470.2,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","propulsionSystems",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","fuelSystems",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","advElectrics",null],
+      ["title","#autoLOC_501080",null],
+      ["description","#autoLOC_501081",null],
+      ["cost","160",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node5_advElectrics",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_electrics-advanced",null],
+      ["pos","-1519,711.1,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","electrics",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","specializedConstruction",null],
+      ["title","#autoLOC_501082",null],
+      ["description","#autoLOC_501083",null],
+      ["cost","160",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node5_specializedConstruction",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_automation",null],
+      ["pos","-1519,1412,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advConstruction",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","precisionPropulsion",null],
+      ["title","#autoLOC_501084",null],
+      ["description","#autoLOC_501085",null],
+      ["cost","160",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node5_precisionPropulsion",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_propulsion-precision",null],
+      ["pos","-1520.1,1551,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","propulsionSystems",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","advAerodynamics",null],
+      ["title","#autoLOC_501086",null],
+      ["description","#autoLOC_501087",null],
+      ["cost","160",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node5_advAerodynamics",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_aerodynamics-advanced",null],
+      ["pos","-1519,1207,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","aerodynamicSystems",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","heavyLanding",null],
+      ["title","#autoLOC_501088",null],
+      ["description","#autoLOC_501089",null],
+      ["cost","300",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node6_heavyLanding",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_motors-experimental",null],
+      ["pos","-1309,1142.4,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advLanding",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","scienceTech",null],
+      ["title","#autoLOC_501090",null],
+      ["description","#autoLOC_501091",null],
+      ["cost","300",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node6_advScience",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_telescope",null],
+      ["pos","-1309,963.9,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advExploration",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","precisionEngineering",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","unmannedTech",null],
+      ["title","#autoLOC_501092",null],
+      ["description","#autoLOC_501093",null],
+      ["cost","300",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node6_unmannedTech",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_unmanned-advanced",null],
+      ["pos","-1309,846.9,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","precisionEngineering",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","nuclearPropulsion",null],
+      ["title","#autoLOC_501094",null],
+      ["description","#autoLOC_501095",null],
+      ["cost","300",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node6_nuclearPropulsion",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_propulsion-nuclear",null],
+      ["pos","-1309,1551,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advFuelSystems",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","heavierRocketry",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","advMetalworks",null],
+      ["title","#autoLOC_501096",null],
+      ["description","#autoLOC_501097",null],
+      ["cost","300",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node6_advMetalWorks",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_metalworks-advanced",null],
+      ["pos","-1309,1412,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","specializedConstruction",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","fieldScience",null],
+      ["title","#autoLOC_501098",null],
+      ["description","#autoLOC_501099",null],
+      ["cost","300",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node6_fieldScience",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_science-field",null],
+      ["pos","-1309,1067,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advLanding",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advExploration",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","highAltitudeFlight",null],
+      ["title","#autoLOC_501100",null],
+      ["description","#autoLOC_501101",null],
+      ["cost","300",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node6_highAltitudeFlight",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_flight-highAltitude",null],
+      ["pos","-1310,1278,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","supersonicFlight",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","largeVolumeContainment",null],
+      ["title","#autoLOC_501102",null],
+      ["description","#autoLOC_501103",null],
+      ["cost","300",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node6_largeVolumeContainment",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_largeVolumeContainment",null],
+      ["pos","-1309,1470.2,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advFuelSystems",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","specializedConstruction",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","composites",null],
+      ["title","#autoLOC_501104",null],
+      ["description","#autoLOC_501105",null],
+      ["cost","300",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node6_composites",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_composites",null],
+      ["pos","-1309,1355,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","specializedConstruction",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","electronics",null],
+      ["title","#autoLOC_501106",null],
+      ["description","#autoLOC_501107",null],
+      ["cost","300",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node6_electronics",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_electronics",null],
+      ["pos","-1309,777.6,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","precisionEngineering",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advElectrics",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","largeElectrics",null],
+      ["title","#autoLOC_501108",null],
+      ["description","#autoLOC_501109",null],
+      ["cost","300",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node6_largeElectrics",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_electrics-large",null],
+      ["pos","-1309,711.1,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advElectrics",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","heavyAerodynamics",null],
+      ["title","#autoLOC_501110",null],
+      ["description","#autoLOC_501111",null],
+      ["cost","300",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node6_heavyAerodynamics",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_aerospaceTech2",null],
+      ["pos","-1310,1207,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advAerodynamics",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","ionPropulsion",null],
+      ["title","#autoLOC_501112",null],
+      ["description","#autoLOC_501113",null],
+      ["cost","550",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node7_ionPropulsion",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_propulsion-ion",null],
+      ["pos","-1118,905.2,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","scienceTech",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","unmannedTech",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","hypersonicFlight",null],
+      ["title","#autoLOC_501114",null],
+      ["description","#autoLOC_501115",null],
+      ["cost","550",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node7_hypersonicFlight",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_flight-hypersonic",null],
+      ["pos","-1118,1278,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","highAltitudeFlight",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","nanolathing",null],
+      ["title","#autoLOC_501116",null],
+      ["description","#autoLOC_501117",null],
+      ["cost","550",null],
+      ["hideEmpty","True",null],
+      ["nodeName","node7_nanolathing",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_generic",null],
+      ["pos","-1118,1406,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advMetalworks",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","advUnmanned",null],
+      ["title","#autoLOC_501118",null],
+      ["description","#autoLOC_501119",null],
+      ["cost","550",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node7_advUnmanned",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_unmannedTech",null],
+      ["pos","-1118,846.9,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","unmannedTech",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","metaMaterials",null],
+      ["title","#autoLOC_501120",null],
+      ["description","#autoLOC_501121",null],
+      ["cost","550",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node7_metaMaterials",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_metamaterials",null],
+      ["pos","-1118,1355,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","composites",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","veryHeavyRocketry",null],
+      ["title","#autoLOC_501122",null],
+      ["description","#autoLOC_501123",null],
+      ["cost","550",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node7_veryHeavyRocketry",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_rocketry-veryHeavy",null],
+      ["pos","-1118,1635,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","largeVolumeContainment",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","heavierRocketry",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","advScienceTech",null],
+      ["title","#autoLOC_501124",null],
+      ["description","#autoLOC_501125",null],
+      ["cost","550",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node7_advScienceTech",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_scienceTech-advanced",null],
+      ["pos","-1118,963.9,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","scienceTech",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","fieldScience",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","advancedMotors",null],
+      ["title","#autoLOC_501126",null],
+      ["description","#autoLOC_501127",null],
+      ["cost","550",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node7_advancedMotors",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_motors-advanced",null],
+      ["pos","-1118,1067,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","fieldScience",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","specializedElectrics",null],
+      ["title","#autoLOC_501128",null],
+      ["description","#autoLOC_501129",null],
+      ["cost","550",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node7_specializedElectrics",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_electrics-specialized",null],
+      ["pos","-1118,711.1,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","largeElectrics",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","highPerformanceFuelSystems",null],
+      ["title","#autoLOC_501130",null],
+      ["description","#autoLOC_501131",null],
+      ["cost","550",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node7_highPerformanceFuelSystems",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_fuelSystems-highPerformance",null],
+      ["pos","-1118,1470.2,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","largeVolumeContainment",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","experimentalAerodynamics",null],
+      ["title","#autoLOC_501132",null],
+      ["description","#autoLOC_501133",null],
+      ["cost","550",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node7_experimentalAerodynamics",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_aerodynamics-heavy",null],
+      ["pos","-1120,1207,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","heavyAerodynamics",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","automation",null],
+      ["title","#autoLOC_501134",null],
+      ["description","#autoLOC_501135",null],
+      ["cost","550",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node7_automation",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_robotics",null],
+      ["pos","-1118,777.6,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","unmannedTech",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","electronics",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","aerospaceTech",null],
+      ["title","#autoLOC_501136",null],
+      ["description","#autoLOC_501137",null],
+      ["cost","1000",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node8_aerospaceTech",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_aerodynamics-experimental",null],
+      ["pos","-956,1278,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","hypersonicFlight",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","largeUnmanned",null],
+      ["title","#autoLOC_501138",null],
+      ["description","#autoLOC_501139",null],
+      ["cost","1000",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node8_largeUnmanned",null],
+      ["anyToUnlock","True",null],
+      ["icon","RDicon_probes-large",null],
+      ["pos","-952,846.9,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advUnmanned",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","automation",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","experimentalScience",null],
+      ["title","#autoLOC_501140",null],
+      ["description","#autoLOC_501141",null],
+      ["cost","1000",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node8_experimentalScience",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_science-experimental",null],
+      ["pos","-952,963.9,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advScienceTech",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","experimentalMotors",null],
+      ["title","#autoLOC_501142",null],
+      ["description","#autoLOC_501143",null],
+      ["cost","1000",null],
+      ["hideEmpty","True",null],
+      ["nodeName","node8_experimentalMotors",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_generic",null],
+      ["pos","-952,1067,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","advancedMotors",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RDNode",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["id","experimentalElectrics",null],
+      ["title","#autoLOC_501144",null],
+      ["description","#autoLOC_501145",null],
+      ["cost","1000",null],
+      ["hideEmpty","False",null],
+      ["nodeName","node8_experimentalElectrics",null],
+      ["anyToUnlock","False",null],
+      ["icon","RDicon_electrics-experimental",null],
+      ["pos","-952,711.1,0",null],
+      ["scale","0.6",null]
+     ],
+     "nodes": [
+      {
+       "name": "Parent",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["parentID","specializedElectrics",null],
+        ["lineFrom","RIGHT",null],
+        ["lineTo","LEFT",null]
+       ],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

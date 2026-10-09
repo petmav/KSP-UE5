@@ -1,0 +1,587 @@
+{
+ "golden": "out/libm_dotnet.json",
+ "candidate": "out/libm_mono.json",
+ "bit_mismatches": 52859,
+ "tables": [
+  {
+   "table": "f64",
+   "rows": 77325,
+   "missing": 0,
+   "extra": 0,
+   "columns": {
+    "x": {
+     "type": "f64",
+     "n": 77325,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "y": {
+     "type": "f64",
+     "n": 77325,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "r": {
+     "type": "f64",
+     "n": 77325,
+     "mismatch": 392,
+     "max_ulp": 269687594237,
+     "max_abs": 539375188474.0,
+     "examples": [
+      {
+       "key": [
+        "Math.Atan2(x,0.7)",
+        1
+       ],
+       "golden": "-0.0",
+       "candidate": "0.0",
+       "ulp": 0
+      },
+      {
+       "key": [
+        "Math.Ceiling",
+        5
+       ],
+       "golden": "0.0",
+       "candidate": "-0.0",
+       "ulp": 0
+      },
+      {
+       "key": [
+        "Math.Tan",
+        8
+       ],
+       "golden": "-1.2246063538223773e-16",
+       "candidate": "-1.2246467991473532e-16",
+       "ulp": 164065729543
+      },
+      {
+       "key": [
+        "Math.Tan",
+        9
+       ],
+       "golden": "1.6331778728383844e+16",
+       "candidate": "1.633123935319537e+16",
+       "ulp": 269687594237
+      },
+      {
+       "key": [
+        "Math.Tan",
+        11
+       ],
+       "golden": "-2.4492127076447545e-16",
+       "candidate": "-2.4492935982947064e-16",
+       "ulp": 164065729543
+      }
+     ]
+    },
+    "src": {
+     "type": "str",
+     "n": 77325,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    }
+   }
+  },
+  {
+   "table": "f32",
+   "rows": 46395,
+   "missing": 0,
+   "extra": 0,
+   "columns": {
+    "x": {
+     "type": "f32",
+     "n": 46395,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "r": {
+     "type": "f32",
+     "n": 46395,
+     "mismatch": 6,
+     "max_ulp": 287,
+     "max_abs": 0.0001163482666015625,
+     "examples": [
+      {
+       "key": [
+        "(float)Math.Atan2(f,0.7f)",
+        1
+       ],
+       "golden": "-0.0",
+       "candidate": "0.0",
+       "ulp": 0
+      },
+      {
+       "key": [
+        "(float)Math.Tan(f)",
+        24
+       ],
+       "golden": "9.438694953918457",
+       "candidate": "9.438578605651855",
+       "ulp": 122
+      },
+      {
+       "key": [
+        "(float)Math.Tan(f)",
+        25
+       ],
+       "golden": "-0.5720774531364441",
+       "candidate": "-0.5720945596694946",
+       "ulp": 287
+      },
+      {
+       "key": [
+        "(float)Math.Tan(f)",
+        26
+       ],
+       "golden": "nan",
+       "candidate": "-1.081023931503296",
+       "ulp": "special"
+      },
+      {
+       "key": [
+        "(float)Math.Tan(f)",
+        28
+       ],
+       "golden": "nan",
+       "candidate": "-0.6117979288101196",
+       "ulp": "special"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "table": "f32ops",
+   "rows": 100000,
+   "missing": 0,
+   "extra": 0,
+   "columns": {
+    "a": {
+     "type": "f32",
+     "n": 100000,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "b": {
+     "type": "f32",
+     "n": 100000,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "c": {
+     "type": "f32",
+     "n": 100000,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "d": {
+     "type": "f32",
+     "n": 100000,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "e": {
+     "type": "f32",
+     "n": 100000,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "x": {
+     "type": "f32",
+     "n": 100000,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "r": {
+     "type": "f32",
+     "n": 100000,
+     "mismatch": 32452,
+     "max_ulp": 1065353216,
+     "max_abs": 1.0,
+     "examples": [
+      {
+       "key": [
+        "acc_loop",
+        0
+       ],
+       "golden": "7827.5322265625",
+       "candidate": "7827.53125",
+       "ulp": 2
+      },
+      {
+       "key": [
+        "compare",
+        0
+       ],
+       "golden": "1.0",
+       "candidate": "0.0",
+       "ulp": 1065353216
+      },
+      {
+       "key": [
+        "acc_loop",
+        1
+       ],
+       "golden": "97935.859375",
+       "candidate": "97935.8515625",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "compare",
+        1
+       ],
+       "golden": "1.0",
+       "candidate": "0.0",
+       "ulp": 1065353216
+      },
+      {
+       "key": [
+        "dot2",
+        2
+       ],
+       "golden": "6942.140625",
+       "candidate": "6942.14013671875",
+       "ulp": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "table": "f32ops_wide",
+   "rows": 80000,
+   "missing": 0,
+   "extra": 0,
+   "columns": {
+    "a": {
+     "type": "f32",
+     "n": 80000,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "b": {
+     "type": "f32",
+     "n": 80000,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "c": {
+     "type": "f32",
+     "n": 80000,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "r": {
+     "type": "f64",
+     "n": 80000,
+     "mismatch": 20000,
+     "max_ulp": 46939209728,
+     "max_abs": 0.0009443604503758252,
+     "examples": [
+      {
+       "key": [
+        "mul_wide",
+        0
+       ],
+       "golden": "492.9002380371094",
+       "candidate": "492.90022755570317",
+       "ulp": 184390848
+      },
+      {
+       "key": [
+        "muladd_wide",
+        0
+       ],
+       "golden": "484.2783508300781",
+       "candidate": "484.2783441633692",
+       "ulp": 117281984
+      },
+      {
+       "key": [
+        "mul_wide",
+        1
+       ],
+       "golden": "6167.02783203125",
+       "candidate": "6167.027798763709",
+       "ulp": 36578048
+      },
+      {
+       "key": [
+        "muladd_wide",
+        1
+       ],
+       "golden": "6134.71435546875",
+       "candidate": "6134.714490047889",
+       "ulp": 147971328
+      },
+      {
+       "key": [
+        "mul_wide",
+        2
+       ],
+       "golden": "3758.365966796875",
+       "candidate": "3758.3658829831693",
+       "ulp": 184308288
+      }
+     ]
+    }
+   }
+  },
+  {
+   "table": "conv",
+   "rows": 390,
+   "missing": 0,
+   "extra": 0,
+   "columns": {
+    "x": {
+     "type": "f64",
+     "n": 390,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "r": {
+     "type": "i64",
+     "n": 390,
+     "mismatch": 7,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": [
+      {
+       "key": [
+        "(ulong)d",
+        0
+       ],
+       "golden": 0,
+       "candidate": -9223372036854775808
+      },
+      {
+       "key": [
+        "(ulong)d",
+        1
+       ],
+       "golden": 0,
+       "candidate": -9223372036854775808
+      },
+      {
+       "key": [
+        "(ulong)d",
+        32
+       ],
+       "golden": 0,
+       "candidate": -9223372036854775808
+      },
+      {
+       "key": [
+        "(ulong)d",
+        34
+       ],
+       "golden": 0,
+       "candidate": -9223372036854775808
+      },
+      {
+       "key": [
+        "(ulong)d",
+        36
+       ],
+       "golden": 0,
+       "candidate": -9223372036854775808
+      }
+     ]
+    },
+    "err": {
+     "type": "str",
+     "n": 390,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    }
+   }
+  },
+  {
+   "table": "iconv",
+   "rows": 72,
+   "missing": 0,
+   "extra": 0,
+   "columns": {
+    "v": {
+     "type": "str",
+     "n": 72,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "r": {
+     "type": "f64",
+     "n": 72,
+     "mismatch": 1,
+     "max_ulp": 1,
+     "max_abs": 2048.0,
+     "examples": [
+      {
+       "key": [
+        "(double)ulong",
+        6
+       ],
+       "golden": "9.223372036854776e+18",
+       "candidate": "9.223372036854778e+18",
+       "ulp": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "table": "tostring",
+   "rows": 4200,
+   "missing": 0,
+   "extra": 0,
+   "columns": {
+    "x": {
+     "type": "f64",
+     "n": 4200,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "s": {
+     "type": "str",
+     "n": 4200,
+     "mismatch": 1,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": [
+      {
+       "key": [
+        "d.ToString()",
+        287
+       ],
+       "golden": "5.99745025989314",
+       "candidate": "5.99745025989315"
+      }
+     ]
+    },
+    "rt": {
+     "type": "bool",
+     "n": 4200,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    }
+   }
+  },
+  {
+   "table": "parse",
+   "rows": 296,
+   "missing": 0,
+   "extra": 0,
+   "columns": {
+    "s": {
+     "type": "str",
+     "n": 296,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "f": {
+     "type": "f32",
+     "n": 296,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "d": {
+     "type": "f64",
+     "n": 296,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "err": {
+     "type": "str",
+     "n": 296,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    }
+   }
+  },
+  {
+   "table": "sysrand",
+   "rows": 288,
+   "missing": 0,
+   "extra": 0,
+   "columns": {
+    "next": {
+     "type": "i64",
+     "n": 288,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "nextDouble": {
+     "type": "f64",
+     "n": 288,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "next0_100": {
+     "type": "i64",
+     "n": 288,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "nextm1000_1000": {
+     "type": "i64",
+     "n": 288,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    }
+   }
+  }
+ ]
+}

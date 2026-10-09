@@ -1,0 +1,9 @@
+{
+ "name": "root",
+ "id": "",
+ "comment": null,
+ "values": [
+  ["key with spaces","value  with\ttabs",null]
+ ],
+ "nodes": []
+}

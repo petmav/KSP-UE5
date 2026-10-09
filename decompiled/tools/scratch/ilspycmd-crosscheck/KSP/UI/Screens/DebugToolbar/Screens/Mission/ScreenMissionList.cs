@@ -1,0 +1,140 @@
+using System.Collections.Generic;
+using Contracts;
+using Expansions.Missions;
+using Expansions.Missions.Runtime;
+using UnityEngine;
+
+namespace KSP.UI.Screens.DebugToolbar.Screens.Mission
+{
+	public class ScreenMissionList : MonoBehaviour
+	{
+		public enum ScreenContractListMode
+		{
+			Active,
+			Offered,
+			Archived
+		}
+
+		public ScreenMissionExistingItem itemPrefab;
+
+		public RectTransform listParent;
+
+		protected List<ScreenMissionExistingItem> items = new List<ScreenMissionExistingItem>();
+
+		public ScreenContractListMode mode;
+
+		private bool dirty;
+
+		private void Start()
+		{
+			GameEvents.onGameStateCreated.Add(OnGameStateCreated);
+			GameEvents.onGameStatePostLoad.Add(OnGameStateLoaded);
+			GameEvents.Contract.onOffered.Add(OnContractsModified);
+			GameEvents.Contract.onAccepted.Add(OnContractsModified);
+			GameEvents.Contract.onDeclined.Add(OnContractsModified);
+			GameEvents.Contract.onCompleted.Add(OnContractsModified);
+			GameEvents.Contract.onFailed.Add(OnContractsModified);
+			GameEvents.Contract.onCancelled.Add(OnContractsModified);
+			GameEvents.Contract.onFinished.Add(OnContractsModified);
+			GameEvents.Contract.onContractsLoaded.Add(OnContractsModified);
+			GameEvents.Contract.onContractsListChanged.Add(OnContractsModified);
+			RefreshItems();
+		}
+
+		private void OnDestroy()
+		{
+			GameEvents.onGameStateCreated.Remove(OnGameStateCreated);
+			GameEvents.onGameStatePostLoad.Remove(OnGameStateLoaded);
+			GameEvents.Contract.onOffered.Remove(OnContractsModified);
+			GameEvents.Contract.onAccepted.Remove(OnContractsModified);
+			GameEvents.Contract.onDeclined.Remove(OnContractsModified);
+			GameEvents.Contract.onCompleted.Remove(OnContractsModified);
+			GameEvents.Contract.onFailed.Remove(OnContractsModified);
+			GameEvents.Contract.onCancelled.Remove(OnContractsModified);
+			GameEvents.Contract.onFinished.Remove(OnContractsModified);
+			GameEvents.Contract.onContractsLoaded.Remove(OnContractsModified);
+			GameEvents.Contract.onContractsListChanged.Remove(OnContractsModified);
+		}
+
+		private void Update()
+		{
+			if (dirty)
+			{
+				RefreshItems();
+				dirty = false;
+			}
+		}
+
+		private void RefreshItems()
+		{
+			ClearItems();
+			if (MissionSystem.Instance == null)
+			{
+				CreateError("Mission system is not available at this time!");
+				return;
+			}
+			List<Expansions.Missions.Mission> missions = MissionSystem.missions;
+			int i = 0;
+			for (int count = missions.Count; i < count; i++)
+			{
+				Expansions.Missions.Mission mission = missions[i];
+				CreateItem(mission);
+			}
+			if (items.Count <= 0)
+			{
+				CreateError("There are no missions!");
+			}
+		}
+
+		private void ClearItems()
+		{
+			int i = 0;
+			for (int count = items.Count; i < count; i++)
+			{
+				Object.Destroy(items[i].gameObject);
+			}
+			items.Clear();
+		}
+
+		private void CreateItem(Expansions.Missions.Mission mission)
+		{
+			ScreenMissionExistingItem screenMissionExistingItem = Object.Instantiate(itemPrefab);
+			screenMissionExistingItem.transform.SetParent(listParent, worldPositionStays: false);
+			screenMissionExistingItem.Setup(mission);
+			items.Add(screenMissionExistingItem);
+		}
+
+		private void CreateError(string errorText)
+		{
+			ScreenMissionExistingItem screenMissionExistingItem = Object.Instantiate(itemPrefab);
+			screenMissionExistingItem.transform.SetParent(listParent, worldPositionStays: false);
+			screenMissionExistingItem.SetupError(errorText);
+			items.Add(screenMissionExistingItem);
+		}
+
+		private void OnGameStateCreated(Game game)
+		{
+			dirty = true;
+		}
+
+		private void OnGameStateLoaded(ConfigNode node)
+		{
+			dirty = true;
+		}
+
+		private void OnContractsModified()
+		{
+			dirty = true;
+		}
+
+		private void OnContractsModified(Contracts.Contract contract)
+		{
+			dirty = true;
+		}
+
+		public void SetDirty()
+		{
+			dirty = true;
+		}
+	}
+}

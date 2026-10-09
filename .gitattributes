@@ -1,3 +1,5 @@
+# Byte-exact repo: no line-ending conversion anywhere (goldens, cfg, craft, sfs must round-trip)
+* -text
 # KSP-UE5 root .gitattributes
 # Rule of thumb: nothing that is compared byte for byte may be touched by line-ending conversion.
 

@@ -1,0 +1,38 @@
+path	tier	subsystem	ue5_counterpart	rationale
+Assembly-CSharp/ModuleWheelBase.cs	B	PartModules-Wheels	core wheel model (port of VP subset)	Wheel host: KSPWheelController/VPWheelCollider setup, suspension enable, gee bias, substeps, same-vessel contact filtering, submodule dispatch; WheelCollider/rigidbody heavy.
+Assembly-CSharp/ModuleWheels/ModuleWheelDeployment.cs	B	PartModules-Wheels	core + animation sampling	Landing gear deploy/retract FSM driving animation and stand-in colliders, drag cube blending; animation drives gameplay state.
+Assembly-CSharp/Orbit.cs	A	Orbit	core	Keplerian elements and propagation: anomaly solvers, state vectors at UT, apsides, AN/DN, closest approach; pure double maths. Golden: orbit_propagation.
+Assembly-CSharp/OrbitRendererBase.cs	C	MapView	Line Batcher / Procedural Mesh lines + UMG	Map orbit line drawing (Vectrosity spline, colours, Ap/Pe/AN/DN node icons); presentation over Orbit maths.
+Assembly-CSharp/OrbitTargeter.cs	C	MapView	UMG widget + Line Batcher	Map target overlay: closest approach markers, separation captions, intercept lines; presentation over Orbit/patched conic data.
+Assembly-CSharp/Part.cs	B	Part	core part model + physics shim	The part: tree links, attach nodes/joints, rigidbody mass/CoM/forces, resources, crew, modules, thermal state, staging, decouple/couple, packing; Unity-entangled core object.
+Assembly-CSharp/PartLoader.cs	B	Part	core (part configs) + Asset Manager	Compiles PART configs into AvailablePart prefabs (modules, resources, models, icons, variants, internals); config side core, model side shell.
+Assembly-CSharp/PartModule.cs	B	Part	core module host	PartModule base: KSPField/Event/Action reflection, persistence, upgrades, adjusters, lifecycle hooks; host redesigned as core module interface.
+Assembly-CSharp/PartReader.cs	C	Rendering	custom .mu importer (shell)	.mu model binary reader (meshes, materials, colliders, animations, lights); needed only if loading user KSP assets -> shell importer.
+Assembly-CSharp/PartSet.cs	A	Resources	core	Resource flow sets: builds crossfeed part sets, priority grouping, request/distribute across sets, simulation sets for dV; pure graph logic. Golden: resource_flow.
+Assembly-CSharp/PhysicsGlobals.cs	A	Physics	core config	Physics.cfg constants and curves (drag, lift, thermal, buoyancy, joint params) as a MonoBehaviour singleton; data holder -> core config.
+Assembly-CSharp/PQ.cs	B	Terrain	core quadtree + Procedural Mesh	PQS quad node: subdivision/collapse, neighbours, edge states, mesh/collider assignment, visibility; quadtree logic plus Unity mesh objects.
+Assembly-CSharp/PQS.cs	B	Terrain	core terrain sampler + RealtimeMesh	Sphere quadtree manager: vertex build pipeline through PQSMods, normals/UVs/tangents, caches, surface height queries, LOD; height maths A, mesh/scene B.
+Assembly-CSharp/PQSLandControl.cs	B	Terrain	core + HISM scatter	Land class control: altitude/lat/lon/noise-based land classes colouring vertices and placing scatter meshes (some with colliders); mixed maths and scene objects.
+Assembly-CSharp/ProceduralFairings/FairingPanel.cs	B	PartModules-Structural	core + Procedural Mesh	Fairing panel geometry: mesh building, convex/compound colliders, panel area/barycentre, flags; mesh and collider generation.
+Assembly-CSharp/ProtoCrewMember.cs	A	Kerbals	core	Kerbal record: traits, experience, status/rostering, respawn, inventory mass, persistence, IVA/EVA model names; data with minor GameObject refs.
+Assembly-CSharp/ProtoPartSnapshot.cs	B	Save	core snapshot + spawn bridge	Unloaded part state (modules, resources, crew, attach nodes) and Load() that instantiates live Parts; snapshot data A, spawn path B.
+Assembly-CSharp/ProtoVessel.cs	B	Save	core snapshot + spawn bridge	Unloaded vessel state (orbit, parts, situation, crew) with Load/Save and live Vessel creation; data A, load/unload bridge B.
+Assembly-CSharp/PSystemSetup.cs	B	Celestials	core system builder + scene	Builds the planetary system scene: PQS init, launch sites, KSC facilities, spawn points; scene orchestration.
+Assembly-CSharp/ResearchAndDevelopment.cs	A	Science	core	R&D ScenarioModule: science points, subjects, experiment results, tech states, biome tags, recovery reverse-engineering; rules/data. Golden: science_values.
+Assembly-CSharp/ShipConstruct.cs	A	Save	core	Craft data model (part list, name, facility, costs/mass, resource totals, craft cfg save/load); minor transform use for part placement data.
+Assembly-CSharp/ShipConstruction.cs	B	Save	core + scene	Craft file IO, thumbnails, backups, assembling a ShipConstruct into a launched vessel at a launch site, launch site clearing; scene/GameObject heavy.
+Assembly-CSharp/SpaceCenterBuilding.cs	B	Scene	core (facility state) + actor	KSC building object: click/hover, enter, upgrade/demolish/repair costs, destruction state from colliders; career rules A, object handling B.
+Assembly-CSharp/SpaceObjectCollider.cs	B	Celestials	core + Procedural Mesh collision	Procedural asteroid/comet collider: marching surface chunks into composite collision meshes; gameplay collision geometry.
+Assembly-CSharp/SteamManager.cs	C	Steam	Online Subsystem Steam / drop	Steamworks wrapper: UGC workshop items, subscriptions, cloud quota, persona; platform only.
+Assembly-CSharp/Targeting.cs	A	Orbit	core	Orbit intercept geometry: conic sampling, interval subdivision, closest-approach root finding (uses Smooth pools); pure double maths.
+Assembly-CSharp/TimeWarp.cs	B	Orbit	core time controller + UMG	Warp rates (rails vs physics), altitude limits, auto-warp/warp-to, SOI clamping, Time.timeScale control; scene time orchestration.
+Assembly-CSharp/TransferMath.cs	A	Orbit	core	Transfer maths: Hohmann/Lambert, ejection angles, phase/alignment times, correction burns; pure double maths. Golden: transfer_planner.
+Assembly-CSharp/TransferTypeSimple.cs	C	FlightUI	UMG widget + core query	Transfer window planner app page (body selection, visualiser prefab, creates maneuver/alarm); UI around TransferMath.
+Assembly-CSharp/TutorialEditorAdvanced.cs	C	Tutorials	UMG widget	Advanced VAB tutorial: step-by-step checks of the player's rocket (tanks, engines, chutes, staging); scripted tutorial flow.
+Assembly-CSharp/UIPartActionController.cs	C	FlightUI	UMG widget	Part action window manager: click selection, window lifecycle, field/control prefab lookup; UI.
+Assembly-CSharp/UIPartActionWindow.cs	C	FlightUI	UMG widget + core query	Part action window (PAW): builds field/event/resource/thermal/aero/robotics controls from module metadata; UI over core field registry.
+Assembly-CSharp/UrlDir.cs	A	Modding	core	GameData virtual directory/file tree, URL resolution, config file registry; file-system data (coroutines only for loading).
+Assembly-CSharp/Vessel.cs	B	Vessel	core vessel model + physics shim	Vessel: part tree root, situation, orbit/rails switching, pack/unpack, control state, CoM, crew, crossfeed sets, ground contact, landed/splashed; Unity-entangled core object.
+Assembly-CSharp/VesselAutopilot.cs	A	PartModules-Control	core	SAS/autopilot: mode targets (prograde, target, maneuver...), PID-like attitude control producing FlightCtrlState from vessel angular state; control law, state read via API.
+Assembly-CSharp/VesselDeltaV.cs	A	Vessel	core	Per-vessel delta-v calculator: stage separation indices, engine/fuel simulation, situational dV, dirty-check scheduling (coroutines as timers).
+Assembly-CSharp/XKCDColors.cs	C	UI	UMG style data table	~950 named XKCD colour constants used for UI/highlight colours; static data, keep as a style table.

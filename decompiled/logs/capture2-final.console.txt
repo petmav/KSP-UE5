@@ -1,0 +1,133 @@
+repo branch=profiling commit=c23196a1a46e27af8dee0fae80754ea6853d095c dirty_files=0
+DLL sha256 8E9CF8208C2C2D16D740E87FC6DC042890C34F586A357BEEBE0BADFF603205AA  2026-10-09T10:53:55.5180515+11:00
+Started PID 656 at 2026-10-09T10:54:01.1583796+11:00
+Exited by itself after 497s, exit code 0
+--- C:\Projects\KSP-UE5\decompiled\logs\ksp-capture-capture2-final-player.log : 14374 lines
+  [PhysProf] t=0.0s capture mode: items=batch2 
+  [PhysProf] t=3.0s capture start: items=batch2 in=C:\Projects\KSP-UE5\harness\captures\in out=C:\Projects\KSP-UE5\harness\captures\out2 scene=MAINMENU bodies=17 
+  [PhysProf] t=3.0s batch2 start: scene=MAINMENU 
+  [PhysProf] t=3.0s capture c9 ... 
+  [PhysProf] t=3.0s c9: part kerbalEVAVintage failed: System.NullReferenceException: Object reference not set to an instance of an object
+  [PhysProf] t=3.0s c9: part kerbalEVAfemaleVintage failed: System.NullReferenceException: Object reference not set to an instance of an object
+  [PhysProf] t=3.0s c9: part kerbalEVAFuture failed: System.NullReferenceException: Object reference not set to an instance of an object
+  [PhysProf] t=3.0s c9: part kerbalEVAfemaleFuture failed: System.NullReferenceException: Object reference not set to an instance of an object
+  [PhysProf] t=3.3s capture part_database wrote C:\Projects\KSP-UE5\harness\captures\out2\part_database.json rows=48587 
+  [PhysProf] t=3.4s terrain probe MAINMENU Kerbin: pqs=True started=False active=False mods=46 h(KSC)=600064.78470541444 h_ovr(KSC)=600064.78470541444 
+  [PhysProf] t=3.4s terrain probe MAINMENU Mun: pqs=True started=False active=False mods=23 h(KSC)=204268.3037187357 h_ovr(KSC)=204268.3037187357 
+  [PhysProf] t=3.4s batch2: creating sandbox game 'physprofile' 
+  [PhysProf] t=8.5s batch2: scene SPACECENTER UT=3.0000000000000022 
+  [PhysProf] t=8.5s c5: loading Ships/VAB/PhysProf-S.craft 
+  [PhysProf] t=11.0s c5: PhysProf-S parts=21 stages=2 totalVac=3011.243408203125 
+  [PhysProf] t=11.0s c5: loading Ships/VAB/PhysProf-M2.craft 
+  [PhysProf] t=12.3s c5: PhysProf-M2 parts=153 stages=2 totalVac=6326.706298828125 
+  [PhysProf] t=12.3s c5: loading Ships/VAB/PhysProf-L2-AS.craft 
+  [PhysProf] t=13.7s c5: PhysProf-L2-AS parts=457 stages=2 totalVac=7041.1907348632813 
+  [PhysProf] t=13.7s c5: loading Ships/VAB/Kerbal X.craft 
+  [PhysProf] t=15.6s c5: craft_Kerbal_X parts=73 stages=8 totalVac=6662.4290771484375 
+  [PhysProf] t=15.6s c5: loading Ships/VAB/Jumping Flea.craft 
+  [PhysProf] t=16.5s c5: craft_Jumping_Flea parts=8 stages=2 totalVac=849.81763178561232 
+  [PhysProf] t=16.5s c5: loading Ships/VAB/Kerbal 1.craft 
+  [PhysProf] t=17.9s c5: craft_Kerbal_1 parts=33 stages=6 totalVac=4213.0208740234375 
+  [PhysProf] t=17.9s c5: loading Ships/VAB/Kerbal 2.craft 
+  [PhysProf] t=18.9s c5: craft_Kerbal_2 parts=17 stages=3 totalVac=923.1234130859375 
+  [PhysProf] t=18.9s c5: loading Ships/VAB/Learstar A1.craft 
+  [PhysProf] t=20.3s c5: craft_Learstar_A1 parts=87 stages=5 totalVac=4618.0843811035156 
+  [PhysProf] t=20.3s c5: loading Ships/VAB/Ion-Powered Space Probe.craft 
+  [PhysProf] t=21.1s c5: craft_Ion-Powered_Space_Probe parts=10 stages=1 totalVac=4301.77978515625 
+  [PhysProf] t=21.1s c5: loading Ships/VAB/Dynawing.craft 
+  [PhysProf] t=22.6s c5: craft_Dynawing parts=126 stages=5 totalVac=3533.8091125488281 
+  [PhysProf] t=22.6s c5: loading Ships/VAB/ComSat Lx.craft 
+  [PhysProf] t=23.9s c5: craft_ComSat_Lx parts=18 stages=4 totalVac=5418.320556640625 
+  [PhysProf] t=23.9s c5: loading Ships/SPH/Aeris 3A.craft 
+  [PhysProf] t=28.5s c5: craft_Aeris_3A parts=18 stages=1 totalVac=0 
+  [PhysProf] t=28.5s c5: loading Ships/SPH/Aeris 4A.craft 
+  [PhysProf] t=29.5s c5: craft_Aeris_4A parts=40 stages=2 totalVac=0 
+  [PhysProf] t=29.5s c5: loading Ships/SPH/Gull.craft 
+  [PhysProf] t=30.4s c5: craft_Gull parts=44 stages=1 totalVac=0 
+  [PhysProf] t=30.4s c5: loading Ships/SPH/Stearwing A300.craft 
+  [PhysProf] t=31.7s c5: craft_Stearwing_A300 parts=56 stages=1 totalVac=0 
+  [PhysProf] t=31.7s c5: loading Ships/SPH/Bug-E Buggy.craft 
+  [PhysProf] t=47.8s c5: craft_Bug-E_Buggy parts=26 stages=1 totalVac=0 
+  [PhysProf] t=47.8s c5: loading Ships/SPH/Mallard.craft 
+  [PhysProf] t=48.7s c5: craft_Mallard parts=38 stages=1 totalVac=0 
+  [PhysProf] t=48.7s capture deltav_readout wrote C:\Projects\KSP-UE5\harness\captures\out2\deltav_readout.json rows=1958 
+  [PhysProf] t=53.4s launch: StartWithNewLaunch Ships/VAB/PhysProf-S.craft 
+  [PhysProf] t=59.0s launch: flight ready after 2 s, vessel=PhysProf-S parts=21; settling 5 s 
+  [PhysProf] t=64.0s terrain probe FLIGHT Kerbin: pqs=True started=True active=True mods=46 h(KSC)=600064.78470541444 h_ovr(KSC)=600064.78470541444 
+  [PhysProf] t=64.0s terrain probe FLIGHT Mun: pqs=True started=False active=False mods=23 h(KSC)=204268.3037187357 h_ovr(KSC)=204268.3037187357 
+  [PhysProf] t=66.5s capture terrain_height wrote C:\Projects\KSP-UE5\harness\captures\out2\terrain_height.json rows=144035 
+  [PhysProf] t=66.5s c6 pad: recording 500 frames, alt=79.288404356688261 
+  [PhysProf] t=76.5s c6 pad: done, rows vessel=500 parts=2500 
+  [PhysProf] t=76.5s c4: epoch 0 UT=21.779999999999625 rows=672 
+  [PhysProf] t=76.5s c4: epoch 1 UT=5421.84 rows=1344 
+  [PhysProf] t=76.6s c4: epoch 2 UT=10821.839999999998 rows=2016 
+  [PhysProf] t=76.7s c4: epoch 3 UT=2300907.9743753532 rows=2688 
+  [PhysProf] t=76.7s capture atmosphere_thermal_offsets wrote C:\Projects\KSP-UE5\harness\captures\out2\atmosphere_thermal_offsets.json rows=2716 
+  [PhysProf] t=76.7s c8: encounter candidate sign=1 tEntry-ut0=9986.9970816746354 Kerbin orbit sma=7531543.6506439019 e=0.88855879340027955 PeA=239324.31198621984 sepNow=7446415.307115878 
+  [PhysProf] t=86.8s c8: segment 0 rate 1 UT 2300908.0943753533 -> 2300918.0943753626 samples=400 soi_events=0 
+  [PhysProf] t=106.9s c8: segment 1 rate 100 UT 2300920.0943753626 -> 2302920.0943753626 samples=1200 soi_events=0 
+  [PhysProf] t=126.9s c8: segment 2 rate 1000 UT 2302940.0943753626 -> 2322940.0943753626 samples=2000 soi_events=2 
+  [PhysProf] t=156.9s c8: segment 3 rate 10000 UT 2323140.0943753626 -> 2623140.0943753626 samples=3115 soi_events=4 
+  [PhysProf] t=166.9s c8: segment 4 rate 100000 UT 2625140.0943753626 -> 3625140.0943753626 samples=3465 soi_events=6 
+  [PhysProf] t=172.5s capture orbit_rails_ingame wrote C:\Projects\KSP-UE5\harness\captures\out2\orbit_rails_ingame.json rows=3932 
+  [PhysProf] t=173.0s c10 PhysProf-S: ascent started, engines ignited=3 parts=21 
+  [PhysProf] t=238.4s c10 PhysProf-S: vessel lost at frame 3272 
+  [PhysProf] t=238.4s c10 PhysProf-S: done at frame 3272 alt=65.606388957588933 mach=0.12582171804861811 parts=0 states=4 
+  [PhysProf] t=238.4s c6: SetShipOrbit orbit 100 km circular ecc=0 sma=700000 mna=0 
+  [PhysProf] t=240.8s c6: after SetShipOrbit orbit 100 km circular: alt=65.606388957588933 PeA=100000 ApA=100000 packed=False 
+  [PhysProf] t=242.8s c6 orbit: recording 1000 frames, alt=65.606388957588933 
+  [PhysProf] t=242.8s c6 orbit: vessel gone at frame 0 
+  [PhysProf] t=242.8s c6 orbit: done, rows vessel=500 parts=2500 
+  [PhysProf] t=242.8s c6: SetShipOrbit reentry PeA 25 km ApA 500 km at 80 km descending ecc=0.27536231884057971 sma=862500 mna=5.76497577275962 
+  [PhysProf] t=245.1s c6: after SetShipOrbit reentry PeA 25 km ApA 500 km at 80 km descending: alt=65.606388957588933 PeA=25000 ApA=500000 packed=False 
+  [PhysProf] t=245.1s c6 reentry: recording 1500 frames, alt=65.606388957588933 
+  [PhysProf] t=245.1s c6 reentry: vessel gone at frame 0 
+  [PhysProf] t=245.1s c6 reentry: done, rows vessel=500 parts=2500 
+  [PhysProf] t=245.2s capture thermal_step wrote C:\Projects\KSP-UE5\harness\captures\out2\thermal_step.json rows=3008 
+  [PhysProf] t=250.9s launch: StartWithNewLaunch Ships/VAB/PhysProf-M2.craft 
+  [PhysProf] t=257.1s launch: flight ready after 2 s, vessel=PhysProf-M2 parts=153; settling 5 s 
+  [PhysProf] t=262.6s c10 PhysProf-M2: ascent started, engines ignited=17 parts=153 
+  [PhysProf] t=353.1s c10 PhysProf-M2: done at frame 4500 alt=36658.69651171274 mach=1.8175236782124891 parts=153 states=13 
+  [PhysProf] t=358.6s launch: StartWithNewLaunch Ships/VAB/PhysProf-L2-AS.craft 
+  [PhysProf] t=365.4s launch: flight ready after 2.5 s, vessel=PhysProf-L2-AS parts=457; settling 5 s 
+  [PhysProf] t=371.0s c10 PhysProf-L2-AS: ascent started, engines ignited=49 parts=457 
+  [PhysProf] t=467.8s c10 PhysProf-L2-AS: done at frame 4500 alt=11414.546674935962 mach=0.10030662234020926 parts=457 states=19 
+  [PhysProf] t=468.1s capture aero_forces_vessel wrote C:\Projects\KSP-UE5\harness\captures\out2\aero_forces_vessel.json rows=30071 
+  [PhysProf] t=474.1s batch2 done 
+  [PhysProf] t=474.1s capture done 
+  [PhysProf] t=474.1s quitting 
+   Exception       4
+   NullReference   4
+   MissingMethod   0
+   Crash!!!        0
+   MAINMENU        7
+  out: aero_forces_vessel.json 17744584 bytes 2026-10-09T11:02:08.1533535+11:00
+  out: atmosphere_thermal_offsets.json 2797768 bytes 2026-10-09T10:55:36.7870980+11:00
+  out: deltav_readout.json 407947 bytes 2026-10-09T10:55:08.7815206+11:00
+  out: orbit_rails_ingame.json 3526109 bytes 2026-10-09T10:57:12.5153232+11:00
+  out: part_database.json 6074614 bytes 2026-10-09T10:54:23.4088359+11:00
+  out: terrain_height.json 28771243 bytes 2026-10-09T10:55:26.5751377+11:00
+  out: thermal_step.json 3494974 bytes 2026-10-09T10:58:25.2283313+11:00
+no KSP_x64 process running
+part_database.json: normalized 53412 float values
+part_database.json: 53412 float values, 0 decimal/hex mismatches 
+c9: 362 parts, cubes 482/531 bit-exact vs PartDatabase.cfg (4 without entry), cfg numeric 3069 ok / 235 transformed, assets 3978
+terrain_height.json: normalized 704125 float values
+terrain_height.json: 704125 float values, 0 decimal/hex mismatches 
+terrain: 140522 samples; MAINMENU==FLIGHT probe heights: True; h_surface!=h_override: Kerbin/active_vessel 0, Kerbin/global_1deg 0, Kerbin/ksc_0.01deg 0, Mun/global_1deg 3
+deltav_readout.json: normalized 10602 float values
+deltav_readout.json: 10602 float values, 0 decimal/hex mismatches 
+c5: 17 craft, 188 stage rows; rocket equation: 20/24 single-phase stages within rel 6.6e-07, 4 multi-phase
+thermal_step.json: normalized 89588 float values
+thermal_step.json: 89588 float values, 0 decimal/hex mismatches 
+c6: 500 vessel frames, 2500 part rows; cases pad
+atmosphere_thermal_offsets.json: normalized 73056 float values
+atmosphere_thermal_offsets.json: 73056 float values, 0 decimal/hex mismatches 
+c4: 2688 samples over 4 epochs; GetFullTemperature(pos) != FI-path offset in 2240 rows
+orbit_rails_ingame.json: normalized 91772 float values
+orbit_rails_ingame.json: 91772 float values, 0 decimal/hex mismatches 
+c8: 3465 samples, 6 SOI events (HC8 mun_encounter Kerbin->Mun; HC8 mun_encounter Mun->Kerbin; HC8 kerbin_hyp12_a Kerbin->Sun; HC8 mun_encounter Kerbin->Mun; Ast. QNQ-893 Sun->Kerbin; Ast. XHV-408 Sun->Kerbin), max kepler rel err 4.74e-13
+aero_forces_vessel.json: normalized 626627 float values
+aero_forces_vessel.json: 626627 float values, 0 decimal/hex mismatches 
+c10: 19 states (PhysProf-L2-AS,PhysProf-M2,PhysProf-S), 4203 part rows, 25218 aoa rows; aoa0==live 4203/4203
+exit 0

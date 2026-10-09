@@ -1,0 +1,80 @@
+{
+ "name": "root",
+ "id": "",
+ "comment": null,
+ "values": [],
+ "nodes": [
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["name","wingConnector",null],
+    ["module","Part",null],
+    ["author","Porkjet",null],
+    ["rescaleFactor","1",null],
+    ["node_attach","0.008, 0.0, 0.0, 1.0, 0.0, 0.0, 1",null],
+    ["CoMOffset","-0.9309626, 0.07127571, 0",null],
+    ["CoLOffset","-0.9309626, 0.07127571, 0",null],
+    ["CoPOffset","-0.9309626, 0.07127571, 0",null],
+    ["TechRequired","aerodynamicSystems",null],
+    ["entryCost","6400",null],
+    ["cost","500",null],
+    ["category","Aero",null],
+    ["subcategory","0",null],
+    ["title","#autoLOC_500229",null],
+    ["manufacturer","#autoLOC_501624",null],
+    ["description","#autoLOC_500230",null],
+    ["attachRules","0,1,0,1,1",null],
+    ["mass","0.2",null],
+    ["thermalMassModifier","8.0",null],
+    ["emissiveConstant","0.95",null],
+    ["dragModelType","none",null],
+    ["maximum_drag","0.02",null],
+    ["minimum_drag","0.02",null],
+    ["angularDrag","2",null],
+    ["crashTolerance","15",null],
+    ["maxTemp","2400",null],
+    ["explosionPotential","0.1",null],
+    ["fuelCrossFeed","True",null],
+    ["bulkheadProfiles","srf",null],
+    ["tags","#autoLOC_500231",null]
+   ],
+   "nodes": [
+    {
+     "name": "MODEL",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["model","Squad/Parts/Aero/wings/connector1",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleLiftingSurface",null],
+      ["useInternalDragModel","True",null],
+      ["deflectionLiftCoeff","2.0",null],
+      ["dragAtMaxAoA","0.5",null],
+      ["dragAtMinAoA","0.0",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleCargoPart",null],
+      ["stackableQuantity","1",null],
+      ["packedVolume","-1",null]
+     ],
+     "nodes": []
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,93 @@
+path	tier	subsystem	ue5_counterpart	rationale
+Assembly-CSharp/Expansions/Missions/ActionNumberOperator.cs				Mission action numeric operator enum (set/add/subtract...).
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterActiveRadiatorBase.cs				Mission adjuster base targeting ModuleActiveRadiator (energy-transfer scaling, cooling block hook).
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterActiveRadiatorMaxEnergyTransfer.cs				Mission adjuster scaling a radiator's max energy transfer by a configured factor.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterAlternatorBase.cs				Mission adjuster base targeting ModuleAlternator output.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterAlternatorOutput.cs				Mission adjuster scaling alternator resource output.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterAnchoredDecouplerBase.cs				Mission adjuster base targeting ModuleAnchoredDecoupler (decouple-block hook).
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterCargoBayBase.cs				Mission adjuster base targeting ModuleCargoBay (stuck-bay hook).
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterControlSurfaceActuatorSpeed.cs				Mission adjuster scaling control-surface actuator speed.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterControlSurfaceBase.cs				Mission adjuster base targeting ModuleControlSurface actuator speed.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterDataTransmitterBase.cs				Mission adjuster base targeting ModuleDataTransmitter (power scaling, broken flag).
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterDataTransmitterPower.cs				Mission adjuster scaling antenna power (CommNet range).
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterDecoupleBase.cs				Mission adjuster base targeting ModuleDecouple (decouple-block hook).
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterDeployablePartBase.cs				Mission adjuster base targeting ModuleDeployablePart (stuck hook).
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterDeployableSolarPanelBase.cs				Mission adjuster base targeting solar panel efficiency.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterDeployableSolarPanelEfficiency.cs				Mission adjuster scaling solar panel efficiency.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterDockingNodeBase.cs				Mission adjuster base targeting ModuleDockingNode (undock-block hook).
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterEnginesBase.cs				Mission adjuster base targeting ModuleEngines (throttle scaling, dead-engine hook).
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterEnginesThrottle.cs				Mission adjuster scaling engine throttle.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterFuelLineBase.cs				Mission adjuster base targeting fuel lines (CModuleFuelLine).
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterGeneratorBase.cs				Mission adjuster base targeting ModuleGenerator efficiency.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterGeneratorEfficiency.cs				Mission adjuster scaling generator efficiency.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterGimbalBase.cs				Mission adjuster base targeting ModuleGimbal control.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterGimbalLimitControl.cs				Mission adjuster limiting gimbal range/axes.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterGPSBase.cs				Mission adjuster base targeting ModuleGPS.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterGrappleNodeBase.cs				Mission adjuster base targeting ModuleGrappleNode (grab/release block hooks).
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterKerbNetAccessBase.cs				Mission adjuster base targeting ModuleKerbNetAccess.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterKerbNetAccessDisabled.cs				Mission adjuster disabling KerbNet access on a part.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterLiftingSurfaceBase.cs				Mission adjuster base targeting ModuleLiftingSurface lift force.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterLiftingSurfaceLiftForce.cs				Mission adjuster scaling wing lift force.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterLightBase.cs				Mission adjuster base targeting ModuleLight intensity.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterLightIntensity.cs				Mission adjuster scaling light intensity.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterProbeControlPointBase.cs				Mission adjuster base targeting probe control points (broken hook).
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterRCSBase.cs				Mission adjuster base targeting ModuleRCS input (linear/rotation scaling, broken hook).
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterReactionWheelBase.cs				Mission adjuster base targeting reaction wheel torque (broken hook).
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterReactionWheelTorque.cs				Mission adjuster scaling reaction wheel torque.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterResourceIntakeBase.cs				Mission adjuster base targeting ModuleResourceIntake.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterSASBase.cs				Mission adjuster base targeting ModuleSAS service level.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterSASServiceLevel.cs				Mission adjuster overriding SAS service level.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterScienceExperimentBase.cs				Mission adjuster base targeting ModuleScienceExperiment.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterToggleCrossfeedBase.cs				Mission adjuster base targeting ModuleToggleCrossfeed.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterWheelBrakesBase.cs				Mission adjuster base targeting wheel brake torque.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterWheelBrakesTorque.cs				Mission adjuster scaling wheel brake torque.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterWheelDeploymentBase.cs				Mission adjuster base targeting wheel deployment.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterWheelMotorBase.cs				Mission adjuster base targeting wheel motor torque.
+Assembly-CSharp/Expansions/Missions/Adjusters/AdjusterWheelMotorTorque.cs				Mission adjuster scaling wheel motor torque.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureActiveRadiatorStuck.cs				Mission failure: radiator stuck (blocks cooling), persisted state.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureAnchoredDecouplerCantDecouple.cs				Mission failure: radial decoupler cannot decouple.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureCargoBayStuck.cs				Mission failure: cargo bay stuck open/closed.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureControlSurfaceDisableControl.cs				Mission failure: control surface stops responding (actuator speed zero).
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureCrossfeedStuck.cs				Mission failure: crossfeed toggle stuck in a state.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureDataTransmitterBroken.cs				Mission failure: antenna broken.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureDecoupleCantDecouple.cs				Mission failure: stack decoupler cannot decouple.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureDeployablePartStuck.cs				Mission failure: deployable part stuck.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureDockingNodeCantUndock.cs				Mission failure: docking port cannot undock.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureEnginesDeadEngine.cs				Mission failure: engine dead.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureFuelLineBlocked.cs				Mission failure: fuel line blocked (flow disabled).
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureGPSNoDisplay.cs				Mission failure: GPS display disabled.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureGrappleNodeCantGrapple.cs				Mission failure: grapple cannot grab.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureGrappleNodeCantRelease.cs				Mission failure: grapple cannot release.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureLightFlickering.cs				Mission failure: light flickers (time-based intensity pattern).
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureLightStuck.cs				Mission failure: light stuck on/off.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureProbeControlPointBroken.cs				Mission failure: probe control point broken.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureRCSFireRandomly.cs				Mission failure: RCS fires randomly (input perturbation).
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureRCSStopWorking.cs				Mission failure: RCS stops working.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureReactionWheelBroken.cs				Mission failure: reaction wheel broken.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureReactionWheelStuck.cs				Mission failure: reaction wheel stuck at a torque.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureResourceIntakeStuck.cs				Mission failure: intake stuck open/closed.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureScienceExperimentDisable.cs				Mission failure: science experiment disabled.
+Assembly-CSharp/Expansions/Missions/Adjusters/FailureWheelDeploymentStuck.cs				Mission failure: landing gear deployment stuck.
+Assembly-CSharp/Expansions/Missions/Asteroid.cs				Mission asteroid definition (seed, size class, orbit) with randomisation and persistence; editor prefab hook is minor.
+Assembly-CSharp/Expansions/Missions/AwardModule.cs				Mission award base (DynamicModule): condition evaluation with tracking start/stop; rules.
+Assembly-CSharp/Expansions/Missions/AwardModule_Fuel.cs				Award: fuel remaining condition tracked per vessel.
+Assembly-CSharp/Expansions/Missions/AwardModule_KerbalsDied.cs				Award: kerbal-death count condition.
+Assembly-CSharp/Expansions/Missions/AwardModule_KerbalsSurvived.cs				Award: kerbals-survived condition.
+Assembly-CSharp/Expansions/Missions/AwardModule_LandedOn.cs				Award: vessel landed on a body.
+Assembly-CSharp/Expansions/Missions/AwardModule_MissionTime.cs				Award: mission completed within a time.
+Assembly-CSharp/Expansions/Missions/AwardModule_PlanetsLanded.cs				Award: number of bodies landed on.
+Assembly-CSharp/Expansions/Missions/AwardModule_Score.cs				Award: score threshold.
+Assembly-CSharp/Expansions/Missions/AwardModule_TraveledLessThan.cs				Award: distance travelled below a threshold.
+Assembly-CSharp/Expansions/Missions/AwardModule_TraveledMoreThan.cs				Award: distance travelled above a threshold.
+Assembly-CSharp/Expansions/Missions/AwardModule_VesselsUsed.cs				Award: number of vessels used.
+Assembly-CSharp/Expansions/Missions/CheckpointValidationType.cs				Mission checkpoint validation enum.
+Assembly-CSharp/Expansions/Missions/Comet.cs				Mission comet definition (seed, type, orbit) with randomisation and persistence; editor prefab hook is minor.
+Assembly-CSharp/Expansions/Missions/Crew.cs				Mission crew definition with localisation and persistence.
+Assembly-CSharp/Expansions/Missions/DynamicModule.cs				Base for mission node modules (tests/actions/awards/restrictions): parameters, display, clone, persistence.
+Assembly-CSharp/Expansions/Missions/DynamicModuleList.cs				List of dynamic modules with supported-type filtering, clone and persistence.
+Assembly-CSharp/Expansions/Missions/Editor/AreaState.cs	C	DLC-MakingHistory	UMG widget	Mission-editor area state enum; editor UI only.
+Assembly-CSharp/Expansions/Missions/Editor/BaseAPFieldList.cs	C	DLC-MakingHistory	UMG widget	List of mission-editor parameter fields (reflection over MEGUI attributes); editor UI only.
+Assembly-CSharp/Expansions/Missions/Editor/Category.cs	C	DLC-MakingHistory	UMG widget	Mission-editor node category marker; editor UI only.
+Assembly-CSharp/Expansions/Missions/Editor/GAPCelestialBodyState.cs	C	DLC-MakingHistory	UMG widget	Mission-editor GAP body view state enum.
+Assembly-CSharp/Expansions/Missions/Editor/HistoryType.cs	C	DLC-MakingHistory	UMG widget	Mission-editor undo history type enum.
+Assembly-CSharp/Expansions/Missions/Editor/IMEHistoryTarget.cs	C	DLC-MakingHistory	UMG widget	Mission-editor undo target interface.

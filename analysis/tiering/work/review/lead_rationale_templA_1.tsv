@@ -1,0 +1,78 @@
+path	tier	subsystem	ue5_counterpart	rationale
+Assembly-CSharp/CommNet/CommLink.cs				CommNet link between two nodes: per-direction signal strength, best-signal selection, relay flags; pure graph data.
+Assembly-CSharp/CommNet/CommNetBody.cs				Registers a celestial body as a CommNet occluder each network update; MonoBehaviour shell only, logic is a body->occluder hook.
+Assembly-CSharp/CommNet/CommNetHome.cs				Ground station node (KSC/DSN) positioned on a body, range from tracking-station level; reads transform position only.
+Assembly-CSharp/CommNet/CommNetNetwork.cs				CommNet network singleton: owns CommNetwork, queues rebuilds on vessel/scene events, per-frame update; scheduling shell around A logic.
+Assembly-CSharp/CommNet/CommNetNode.cs				Base MonoBehaviour adapter feeding a CommNode's position into network pre/post update; thin host glue.
+Assembly-CSharp/CommNet/CommNetParams.cs				CommNet difficulty parameters (range modifier, DSN modifier, occlusion, plasma blackout) as a GameParameters custom node; data.
+Assembly-CSharp/CommNet/CommNetwork.cs				CommNet graph: connection tests with range model and body occlusion, shortest-path tree, home/control-source search; pure graph maths.
+Assembly-CSharp/CommNet/CommNode.cs				CommNet node: antenna power, relay/control flags, position (read from transform), signal multiplier; data + simple maths.
+Assembly-CSharp/CommNet/CommPath.cs				Path from vessel to home: hop list, total signal strength, last-hop-home check; pure data.
+Assembly-CSharp/CommNet/CommRangeModel.cs				Standard range model: max range = sqrt(powerA*powerB), normalised range and in-range test; pure maths.
+Assembly-CSharp/CommNet/HopType.cs				CommNet hop type enum.
+Assembly-CSharp/CommNet/ICommNetControlSource.cs				Interface for parts/modules that provide CommNet control (probe cores, crewed pods).
+Assembly-CSharp/CommNet/IRangeModel.cs				Range model interface (max/normalised range, in-range) used by CommNetwork.
+Assembly-CSharp/CommNet/IRelayEnabler.cs				Interface for modules that enable relaying (relay antennas), incl. unloaded snapshot checks.
+Assembly-CSharp/CommNet/Network/Link.cs				Generic network link base (endpoints, points for drawing, update); generic graph data.
+Assembly-CSharp/CommNet/Network/Node.cs				Generic network node base (link dictionary, occluder, pre/post update); generic graph data.
+Assembly-CSharp/CommNet/Network/Path.cs				Generic network path (list of links) with ConfigNode persistence and equality; generic graph data.
+Assembly-CSharp/CommNet/NodeUtilities.cs				Converts numeric signal strength to the SignalStrength enum bands.
+Assembly-CSharp/CommNet/SignalStrength.cs				Signal strength band enum (none..green).
+Assembly-CSharp/CommNet/VesselControlState.cs				Vessel control state enum (none/partial/full, kerbal/probe) used by control checks.
+Assembly-CSharp/Contracts/Agents/AgentMentality.cs				Agent mentality base: keyword scoring and factors for deadline, expiry, funds, reputation and science rewards applied to contracts.
+Assembly-CSharp/Contracts/Agents/AgentStanding.cs				Agent standing/relationship value between agencies; data.
+Assembly-CSharp/Contracts/Agents/KeywordScore.cs				Contract keyword score enum used by agent mentalities.
+Assembly-CSharp/Contracts/Agents/Mentalities/Commercial.cs				Agent mentality Commercial: keyword scoring and contract reward/deadline modifiers for agencies with this trait.
+Assembly-CSharp/Contracts/Agents/Mentalities/Competitive.cs				Agent mentality Competitive: keyword scoring and contract modifiers for agencies with this trait.
+Assembly-CSharp/Contracts/Agents/Mentalities/Conglomerate.cs				Agent mentality Conglomerate: keyword scoring and contract modifiers.
+Assembly-CSharp/Contracts/Agents/Mentalities/Cooperative.cs				Agent mentality Cooperative: keyword scoring and contract modifiers.
+Assembly-CSharp/Contracts/Agents/Mentalities/EasyGoing.cs				Agent mentality EasyGoing: keyword scoring and deadline/penalty modifiers.
+Assembly-CSharp/Contracts/Agents/Mentalities/Ecomental.cs				Agent mentality Ecomental: keyword scoring and contract modifiers.
+Assembly-CSharp/Contracts/Agents/Mentalities/Economic.cs				Agent mentality Economic: keyword scoring and funds-reward modifiers.
+Assembly-CSharp/Contracts/Agents/Mentalities/Hasty.cs				Agent mentality Hasty: keyword scoring and shortened deadline modifiers.
+Assembly-CSharp/Contracts/Agents/Mentalities/Industrial.cs				Agent mentality Industrial: keyword scoring and contract modifiers.
+Assembly-CSharp/Contracts/Agents/Mentalities/Kerbalminded.cs				Agent mentality Kerbalminded: keyword scoring and crew-related contract modifiers.
+Assembly-CSharp/Contracts/Agents/Mentalities/Moral.cs				Agent mentality Moral: contract filtering/modifiers (no keyword scoring override).
+Assembly-CSharp/Contracts/Agents/Mentalities/NoRandomContractMentality.cs				Mentality marking an agent as never offering random contracts; filter rule.
+Assembly-CSharp/Contracts/Agents/Mentalities/Patient.cs				Agent mentality Patient: keyword scoring and extended deadline modifiers.
+Assembly-CSharp/Contracts/Agents/Mentalities/Perfectionist.cs				Agent mentality Perfectionist: keyword scoring and reward/penalty modifiers.
+Assembly-CSharp/Contracts/Agents/Mentalities/Pioneer.cs				Agent mentality Pioneer: keyword scoring favouring exploration contracts.
+Assembly-CSharp/Contracts/Agents/Mentalities/Record.cs				Agent mentality Record: keyword scoring for record-type contracts.
+Assembly-CSharp/Contracts/Agents/Mentalities/Scientific.cs				Agent mentality Scientific: keyword scoring and science-reward modifiers.
+Assembly-CSharp/Contracts/Agents/Mentalities/Startup.cs				Agent mentality Startup: keyword scoring and contract modifiers.
+Assembly-CSharp/Contracts/Agents/Mentalities/Stern.cs				Agent mentality Stern: keyword scoring and penalty modifiers.
+Assembly-CSharp/Contracts/BodyLocation.cs				Contract body location enum (surface/space).
+Assembly-CSharp/Contracts/ContractPredicate.cs				Contract predicate base: vessel/protovessel test with persistence, used to filter which vessels satisfy parameters.
+Assembly-CSharp/Contracts/IContractParameterHost.cs				Interface for objects hosting contract parameters (Contract and ContractParameter tree).
+Assembly-CSharp/Contracts/Parameters/AcquireCrew.cs				Parameter: get specific kerbals aboard a vessel; tracks boarding, transfer, coupling and deaths via GameEvents.
+Assembly-CSharp/Contracts/Parameters/AcquirePart.cs				Parameter: have specific parts on a vessel; scans vessels, tracks coupling and part death.
+Assembly-CSharp/Contracts/Parameters/CollectScience.cs				Parameter: return or transmit science from a body/situation; listens to science events.
+Assembly-CSharp/Contracts/Parameters/EnterOrbit.cs				Parameter: enter orbit around a target body (OnEnterOrbit event).
+Assembly-CSharp/Contracts/Parameters/EnterSOI.cs				Parameter: enter a target body's sphere of influence (SOI change event).
+Assembly-CSharp/Contracts/Parameters/KerbalDeaths.cs				Parameter: fail if more than N kerbals die; counts crew-killed events.
+Assembly-CSharp/Contracts/Parameters/LandOnBody.cs				Parameter: land on a target body (vessel landed event).
+Assembly-CSharp/Contracts/Parameters/OR.cs				Logical OR parameter: completes when any child parameter completes.
+Assembly-CSharp/Contracts/Parameters/PartTest.cs				Parameter for part-test contracts: run a test (activate/stage) under required situation; tracks docking and vessel changes.
+Assembly-CSharp/Contracts/Parameters/PlantFlag.cs				Parameter: plant a flag on a target body.
+Assembly-CSharp/Contracts/Parameters/ReachAltitudeEnvelope.cs				Parameter: hold altitude within a min/max envelope; checked on update.
+Assembly-CSharp/Contracts/Parameters/ReachBiome.cs				Parameter: reach a specific biome on a body; biome lookup on update.
+Assembly-CSharp/Contracts/Parameters/ReachDestination.cs				Parameter: reach a destination body; tracks SOI changes.
+Assembly-CSharp/Contracts/Parameters/ReachFlightEnvelope.cs				Parameter: hold altitude+speed envelope (optionally in a biome) on a tracked vessel; coroutines used as timers.
+Assembly-CSharp/Contracts/Parameters/ReachSituation.cs				Parameter: reach a vessel situation (landed/flying/orbiting...) at a body.
+Assembly-CSharp/Contracts/Parameters/ReachSpeedEnvelope.cs				Parameter: hold speed within a min/max envelope.
+Assembly-CSharp/Contracts/Parameters/RecoverKerbal.cs				Parameter: recover specific kerbals; tracks vessel recovery, deaths, part death.
+Assembly-CSharp/Contracts/Parameters/RecoverPart.cs				Parameter: recover specific parts; tracks vessel recovery and part death.
+Assembly-CSharp/Contracts/Parameters/XOR.cs				Logical XOR parameter over child parameters.
+Assembly-CSharp/Contracts/ParameterState.cs				Contract parameter state enum (incomplete/complete/failed).
+Assembly-CSharp/Contracts/Predicates/AgentFlag.cs				Predicate: vessel carries the contract agent's flag.
+Assembly-CSharp/Contracts/Predicates/AgentParts.cs				Predicate: vessel contains parts from the contract agent's manufacturer.
+Assembly-CSharp/Contracts/Predicates/IsActiveVessel.cs				Predicate: vessel is the active vessel.
+Assembly-CSharp/Contracts/Predicates/IsControllable.cs				Predicate: vessel is controllable.
+Assembly-CSharp/Contracts/Predicates/LaunchID.cs				Predicate: vessel launched at/after a given launch id (new vessel requirement).
+Assembly-CSharp/Contracts/Templates/CollectScience.cs				Contract template: collect science from orbit or surface of a weighted body; generation, rewards, requirements.
+Assembly-CSharp/Contracts/Templates/GrandTour.cs				Contract template: Grand Tour (focused/random multi-body itineraries, final destination); generation rules and rewards.
+Assembly-CSharp/Contracts/Templates/OrbitalConstructionContract.cs				Contract template: build/attach parts to a pre-built station; spawns prebuilt vessel (needs shell spawn) and orbit renderer cleanup.
+Assembly-CSharp/Contracts/Templates/PlantFlag.cs				Contract template: plant a flag on a weighted body; generation and rewards.
+Assembly-CSharp/Contracts/Templates/RoverConstructionContract.cs				Contract template: add parts to a pre-built rover at a surface waypoint; spawns prebuilt vessel, waypoint calc.
+Assembly-CSharp/Contracts/Templates/VesselRepairContract.cs				Contract template: repair parts on a pre-built damaged vessel; spawns vessel (shell), repair tracking rules.
+Assembly-CSharp/Contracts/TextGen.cs				Contract text generator: backstories and sentence templates from config with text replacements; pure string rules.

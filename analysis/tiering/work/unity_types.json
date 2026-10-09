@@ -1,0 +1,2883 @@
+{
+ "files_scanned": 2867,
+ "shadowed": [
+  "Axis",
+  "BaseField",
+  "Behaviour",
+  "ColorTween",
+  "CommandType",
+  "Easing",
+  "EventType",
+  "Extents",
+  "FaceInfo",
+  "FloatTween",
+  "FontData",
+  "FontStyles",
+  "FontWeights",
+  "Gender",
+  "GlyphValueRecord",
+  "HorizontalAlignment",
+  "ITextElement",
+  "ITweenValue",
+  "Input",
+  "InputDevices",
+  "KerningPair",
+  "KerningPairKey",
+  "KerningTable",
+  "ListPool",
+  "Marker",
+  "MaterialReference",
+  "MaterialReferenceManager",
+  "MouseButton",
+  "MouseOverEvent",
+  "Page",
+  "Panel",
+  "Plane",
+  "Pool",
+  "Ray",
+  "Renderer",
+  "Resources",
+  "SetPropertyUtility",
+  "ShaderPropertyType",
+  "ShaderUtilities",
+  "State",
+  "TextureFormat",
+  "TweenRunner",
+  "Vertex",
+  "VertexSortingOrder",
+  "VerticalAlignment",
+  "WordWrapState",
+  "WrapMode"
+ ],
+ "types": [
+  {
+   "type": "MonoBehaviour",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 839,
+   "refs": 935,
+   "tiers": {
+    "C": 700,
+    "B": 107,
+    "A": 32
+   }
+  },
+  {
+   "type": "Vector3",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 618,
+   "refs": 5581,
+   "tiers": {
+    "B": 140,
+    "C": 345,
+    "A": 133
+   }
+  },
+  {
+   "type": "Debug",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 617,
+   "refs": 2488,
+   "tiers": {
+    "A": 203,
+    "B": 139,
+    "C": 275
+   }
+  },
+  {
+   "type": "Object",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 513,
+   "refs": 1378,
+   "tiers": {
+    "C": 373,
+    "A": 37,
+    "B": 103
+   }
+  },
+  {
+   "type": "Mathf",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 433,
+   "refs": 2372,
+   "tiers": {
+    "B": 81,
+    "C": 251,
+    "A": 101
+   }
+  },
+  {
+   "type": "SerializeField",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 407,
+   "refs": 2415,
+   "tiers": {
+    "C": 261,
+    "B": 73,
+    "A": 73
+   }
+  },
+  {
+   "type": "GameObject",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 405,
+   "refs": 1421,
+   "tiers": {
+    "C": 303,
+    "B": 84,
+    "A": 18
+   }
+  },
+  {
+   "type": "Transform",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 374,
+   "refs": 1089,
+   "tiers": {
+    "B": 117,
+    "C": 240,
+    "A": 17
+   }
+  },
+  {
+   "type": "Color",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 342,
+   "refs": 3695,
+   "tiers": {
+    "B": 55,
+    "C": 243,
+    "A": 44
+   }
+  },
+  {
+   "type": "Vector2",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 292,
+   "refs": 1538,
+   "tiers": {
+    "C": 218,
+    "A": 32,
+    "B": 42
+   }
+  },
+  {
+   "type": "Quaternion",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 277,
+   "refs": 1321,
+   "tiers": {
+    "B": 84,
+    "C": 127,
+    "A": 66
+   }
+  },
+  {
+   "type": "Time",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 236,
+   "refs": 728,
+   "tiers": {
+    "C": 165,
+    "A": 20,
+    "B": 51
+   }
+  },
+  {
+   "type": "RectTransform",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 224,
+   "refs": 644,
+   "tiers": {
+    "C": 217,
+    "B": 6,
+    "A": 1
+   }
+  },
+  {
+   "type": "Button",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 213,
+   "refs": 650,
+   "tiers": {
+    "C": 209,
+    "B": 4
+   }
+  },
+  {
+   "type": "PointerEventData",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 150,
+   "refs": 526,
+   "tiers": {
+    "C": 145,
+    "B": 5
+   }
+  },
+  {
+   "type": "Random",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 121,
+   "refs": 420,
+   "tiers": {
+    "A": 40,
+    "C": 60,
+    "B": 21
+   }
+  },
+  {
+   "type": "Image",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 114,
+   "refs": 285,
+   "tiers": {
+    "C": 113,
+    "B": 1
+   }
+  },
+  {
+   "type": "Camera",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 113,
+   "refs": 288,
+   "tiers": {
+    "C": 93,
+    "B": 19,
+    "A": 1
+   }
+  },
+  {
+   "type": "Texture2D",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 112,
+   "refs": 445,
+   "tiers": {
+    "A": 13,
+    "C": 87,
+    "B": 12
+   }
+  },
+  {
+   "type": "Material",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 100,
+   "refs": 354,
+   "tiers": {
+    "C": 82,
+    "B": 18
+   }
+  },
+  {
+   "type": "AddComponentMenu",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 93,
+   "refs": 93,
+   "tiers": {
+    "C": 33,
+    "B": 12,
+    "A": 48
+   }
+  },
+  {
+   "type": "Toggle",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 81,
+   "refs": 239,
+   "tiers": {
+    "C": 81
+   }
+  },
+  {
+   "type": "RequireComponent",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 79,
+   "refs": 86,
+   "tiers": {
+    "C": 78,
+    "A": 1
+   }
+  },
+  {
+   "type": "Rect",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 76,
+   "refs": 204,
+   "tiers": {
+    "C": 56,
+    "A": 10,
+    "B": 10
+   }
+  },
+  {
+   "type": "ContextMenu",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 76,
+   "refs": 133,
+   "tiers": {
+    "C": 37,
+    "B": 31,
+    "A": 8
+   }
+  },
+  {
+   "type": "KeyCode",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 70,
+   "refs": 458,
+   "tiers": {
+    "C": 61,
+    "B": 8,
+    "A": 1
+   }
+  },
+  {
+   "type": "IEventSystemHandler",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 64,
+   "refs": 64,
+   "tiers": {
+    "C": 63,
+    "B": 1
+   }
+  },
+  {
+   "type": "HideInInspector",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 61,
+   "refs": 207,
+   "tiers": {
+    "C": 31,
+    "B": 20,
+    "A": 10
+   }
+  },
+  {
+   "type": "Sprite",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 61,
+   "refs": 172,
+   "tiers": {
+    "A": 2,
+    "C": 58,
+    "B": 1
+   }
+  },
+  {
+   "type": "Slider",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 58,
+   "refs": 117,
+   "tiers": {
+    "C": 58
+   }
+  },
+  {
+   "type": "Physics",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 57,
+   "refs": 129,
+   "tiers": {
+    "B": 36,
+    "C": 21
+   }
+  },
+  {
+   "type": "Collider",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 56,
+   "refs": 242,
+   "tiers": {
+    "B": 41,
+    "C": 15
+   }
+  },
+  {
+   "type": "MeshRenderer",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 56,
+   "refs": 137,
+   "tiers": {
+    "C": 32,
+    "B": 23,
+    "A": 1
+   }
+  },
+  {
+   "type": "Shader",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 54,
+   "refs": 243,
+   "tiers": {
+    "C": 40,
+    "B": 13,
+    "A": 1
+   }
+  },
+  {
+   "type": "Rigidbody",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 54,
+   "refs": 203,
+   "tiers": {
+    "B": 34,
+    "C": 18,
+    "A": 2
+   }
+  },
+  {
+   "type": "Screen",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 53,
+   "refs": 155,
+   "tiers": {
+    "C": 50,
+    "A": 1,
+    "B": 2
+   }
+  },
+  {
+   "type": "RawImage",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 49,
+   "refs": 69,
+   "tiers": {
+    "C": 49
+   }
+  },
+  {
+   "type": "WaitForSeconds",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 48,
+   "refs": 75,
+   "tiers": {
+    "C": 24,
+    "A": 10,
+    "B": 14
+   }
+  },
+  {
+   "type": "Application",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 46,
+   "refs": 131,
+   "tiers": {
+    "C": 33,
+    "B": 8,
+    "A": 5
+   }
+  },
+  {
+   "type": "RaycastHit",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 44,
+   "refs": 108,
+   "tiers": {
+    "B": 25,
+    "C": 18,
+    "A": 1
+   }
+  },
+  {
+   "type": "AudioSource",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.AudioModule",
+   "files": 42,
+   "refs": 139,
+   "tiers": {
+    "C": 32,
+    "B": 10
+   }
+  },
+  {
+   "type": "LayoutElement",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 41,
+   "refs": 83,
+   "tiers": {
+    "C": 40,
+    "B": 1
+   }
+  },
+  {
+   "type": "LayerMask",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 41,
+   "refs": 77,
+   "tiers": {
+    "C": 27,
+    "B": 14
+   }
+  },
+  {
+   "type": "Selectable",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 40,
+   "refs": 138,
+   "tiers": {
+    "C": 40
+   }
+  },
+  {
+   "type": "Texture",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 40,
+   "refs": 98,
+   "tiers": {
+    "C": 34,
+    "B": 4,
+    "A": 2
+   }
+  },
+  {
+   "type": "Vector4",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 39,
+   "refs": 142,
+   "tiers": {
+    "C": 24,
+    "A": 11,
+    "B": 4
+   }
+  },
+  {
+   "type": "Mesh",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 38,
+   "refs": 125,
+   "tiers": {
+    "C": 21,
+    "B": 17
+   }
+  },
+  {
+   "type": "Animation",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.AnimationModule",
+   "files": 38,
+   "refs": 124,
+   "tiers": {
+    "C": 21,
+    "B": 17
+   }
+  },
+  {
+   "type": "ScrollRect",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 38,
+   "refs": 53,
+   "tiers": {
+    "C": 37,
+    "B": 1
+   }
+  },
+  {
+   "type": "Coroutine",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 37,
+   "refs": 40,
+   "tiers": {
+    "A": 3,
+    "C": 29,
+    "B": 5
+   }
+  },
+  {
+   "type": "IPointerExitHandler",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 37,
+   "refs": 40,
+   "tiers": {
+    "C": 37
+   }
+  },
+  {
+   "type": "IPointerEnterHandler",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 36,
+   "refs": 39,
+   "tiers": {
+    "C": 36
+   }
+  },
+  {
+   "type": "ParticleSystem",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.ParticleSystemModule",
+   "files": 34,
+   "refs": 300,
+   "tiers": {
+    "C": 26,
+    "B": 8
+   }
+  },
+  {
+   "type": "Space",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 34,
+   "refs": 211,
+   "tiers": {
+    "B": 12,
+    "C": 19,
+    "A": 3
+   }
+  },
+  {
+   "type": "TextAnchor",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.TextRenderingModule",
+   "files": 34,
+   "refs": 139,
+   "tiers": {
+    "C": 33,
+    "A": 1
+   }
+  },
+  {
+   "type": "Canvas",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.UIModule",
+   "files": 32,
+   "refs": 88,
+   "tiers": {
+    "C": 30,
+    "B": 2
+   }
+  },
+  {
+   "type": "RectOffset",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 30,
+   "refs": 119,
+   "tiers": {
+    "C": 29,
+    "A": 1
+   }
+  },
+  {
+   "type": "AnimationCurve",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 30,
+   "refs": 108,
+   "tiers": {
+    "C": 18,
+    "B": 1,
+    "A": 11
+   }
+  },
+  {
+   "type": "Light",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 30,
+   "refs": 102,
+   "tiers": {
+    "C": 23,
+    "B": 7
+   }
+  },
+  {
+   "type": "MeshFilter",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 30,
+   "refs": 72,
+   "tiers": {
+    "C": 21,
+    "B": 9
+   }
+  },
+  {
+   "type": "AudioClip",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.AudioModule",
+   "files": 29,
+   "refs": 105,
+   "tiers": {
+    "C": 23,
+    "B": 6
+   }
+  },
+  {
+   "type": "EventSystem",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 29,
+   "refs": 92,
+   "tiers": {
+    "B": 6,
+    "C": 23
+   }
+  },
+  {
+   "type": "Display",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 29,
+   "refs": 75,
+   "tiers": {
+    "C": 26,
+    "A": 2,
+    "B": 1
+   }
+  },
+  {
+   "type": "ToggleGroup",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 29,
+   "refs": 36,
+   "tiers": {
+    "C": 28,
+    "B": 1
+   }
+  },
+  {
+   "type": "Bounds",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 28,
+   "refs": 115,
+   "tiers": {
+    "C": 11,
+    "B": 15,
+    "A": 2
+   }
+  },
+  {
+   "type": "SceneManager",
+   "namespace": "UnityEngine.SceneManagement",
+   "module": "UnityEngine.CoreModule",
+   "files": 28,
+   "refs": 66,
+   "tiers": {
+    "C": 22,
+    "B": 6
+   }
+  },
+  {
+   "type": "GUI",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.IMGUIModule",
+   "files": 27,
+   "refs": 113,
+   "tiers": {
+    "C": 22,
+    "A": 2,
+    "B": 3
+   }
+  },
+  {
+   "type": "CanvasGroup",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.UIModule",
+   "files": 27,
+   "refs": 61,
+   "tiers": {
+    "C": 27
+   }
+  },
+  {
+   "type": "IPointerClickHandler",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 25,
+   "refs": 28,
+   "tiers": {
+    "B": 1,
+    "C": 24
+   }
+  },
+  {
+   "type": "Color32",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 24,
+   "refs": 137,
+   "tiers": {
+    "C": 18,
+    "A": 4,
+    "B": 2
+   }
+  },
+  {
+   "type": "RenderTexture",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 24,
+   "refs": 65,
+   "tiers": {
+    "C": 20,
+    "B": 4
+   }
+  },
+  {
+   "type": "LoadSceneMode",
+   "namespace": "UnityEngine.SceneManagement",
+   "module": "UnityEngine.CoreModule",
+   "files": 24,
+   "refs": 35,
+   "tiers": {
+    "C": 19,
+    "B": 5
+   }
+  },
+  {
+   "type": "Matrix4x4",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 22,
+   "refs": 97,
+   "tiers": {
+    "C": 12,
+    "A": 5,
+    "B": 5
+   }
+  },
+  {
+   "type": "Navigation",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 21,
+   "refs": 124,
+   "tiers": {
+    "C": 19,
+    "B": 2
+   }
+  },
+  {
+   "type": "Scene",
+   "namespace": "UnityEngine.SceneManagement",
+   "module": "UnityEngine.CoreModule",
+   "files": 21,
+   "refs": 21,
+   "tiers": {
+    "C": 17,
+    "B": 4
+   }
+  },
+  {
+   "type": "BaseEventData",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 20,
+   "refs": 47,
+   "tiers": {
+    "C": 20
+   }
+  },
+  {
+   "type": "CameraClearFlags",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 20,
+   "refs": 29,
+   "tiers": {
+    "C": 16,
+    "B": 4
+   }
+  },
+  {
+   "type": "MaterialPropertyBlock",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 19,
+   "refs": 30,
+   "tiers": {
+    "C": 16,
+    "B": 3
+   }
+  },
+  {
+   "type": "GUILayout",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.IMGUIModule",
+   "files": 18,
+   "refs": 1072,
+   "tiers": {
+    "C": 18
+   }
+  },
+  {
+   "type": "MeshCollider",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 18,
+   "refs": 47,
+   "tiers": {
+    "C": 7,
+    "B": 11
+   }
+  },
+  {
+   "type": "Keyframe",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 17,
+   "refs": 225,
+   "tiers": {
+    "B": 2,
+    "A": 8,
+    "C": 7
+   }
+  },
+  {
+   "type": "Text",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 17,
+   "refs": 50,
+   "tiers": {
+    "C": 17
+   }
+  },
+  {
+   "type": "UnityAction",
+   "namespace": "UnityEngine.Events",
+   "module": "UnityEngine.CoreModule",
+   "files": 17,
+   "refs": 36,
+   "tiers": {
+    "C": 17
+   }
+  },
+  {
+   "type": "UnityEvent",
+   "namespace": "UnityEngine.Events",
+   "module": "UnityEngine.CoreModule",
+   "files": 17,
+   "refs": 27,
+   "tiers": {
+    "C": 17
+   }
+  },
+  {
+   "type": "ExecuteInEditMode",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 17,
+   "refs": 17,
+   "tiers": {
+    "C": 17
+   }
+  },
+  {
+   "type": "Gizmos",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 16,
+   "refs": 65,
+   "tiers": {
+    "B": 10,
+    "A": 2,
+    "C": 4
+   }
+  },
+  {
+   "type": "RectTransformUtility",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.UIModule",
+   "files": 16,
+   "refs": 31,
+   "tiers": {
+    "C": 15,
+    "B": 1
+   }
+  },
+  {
+   "type": "WaitForEndOfFrame",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 16,
+   "refs": 22,
+   "tiers": {
+    "B": 6,
+    "C": 8,
+    "A": 2
+   }
+  },
+  {
+   "type": "ContentSizeFitter",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 15,
+   "refs": 50,
+   "tiers": {
+    "C": 14,
+    "A": 1
+   }
+  },
+  {
+   "type": "AnimationState",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.AnimationModule",
+   "files": 15,
+   "refs": 30,
+   "tiers": {
+    "C": 9,
+    "B": 6
+   }
+  },
+  {
+   "type": "ColorUtility",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 15,
+   "refs": 26,
+   "tiers": {
+    "A": 3,
+    "C": 12
+   }
+  },
+  {
+   "type": "VerticalLayoutGroup",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 15,
+   "refs": 22,
+   "tiers": {
+    "C": 14,
+    "B": 1
+   }
+  },
+  {
+   "type": "RenderTextureFormat",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 15,
+   "refs": 21,
+   "tiers": {
+    "C": 12,
+    "B": 3
+   }
+  },
+  {
+   "type": "UnityWebRequest",
+   "namespace": "UnityEngine.Networking",
+   "module": "UnityEngine.UnityWebRequestModule",
+   "files": 15,
+   "refs": 20,
+   "tiers": {
+    "C": 13,
+    "B": 2
+   }
+  },
+  {
+   "type": "EventTrigger",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 14,
+   "refs": 83,
+   "tiers": {
+    "C": 14
+   }
+  },
+  {
+   "type": "Component",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 14,
+   "refs": 70,
+   "tiers": {
+    "A": 1,
+    "C": 7,
+    "B": 6
+   }
+  },
+  {
+   "type": "Collision",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 14,
+   "refs": 34,
+   "tiers": {
+    "C": 4,
+    "B": 10
+   }
+  },
+  {
+   "type": "ConfigurableJoint",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 14,
+   "refs": 32,
+   "tiers": {
+    "B": 13,
+    "C": 1
+   }
+  },
+  {
+   "type": "IDragHandler",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 14,
+   "refs": 14,
+   "tiers": {
+    "C": 14
+   }
+  },
+  {
+   "type": "SystemInfo",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 13,
+   "refs": 39,
+   "tiers": {
+    "C": 12,
+    "B": 1
+   }
+  },
+  {
+   "type": "RuntimePlatform",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 13,
+   "refs": 36,
+   "tiers": {
+    "C": 10,
+    "B": 1,
+    "A": 2
+   }
+  },
+  {
+   "type": "SkinnedMeshRenderer",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 13,
+   "refs": 31,
+   "tiers": {
+    "C": 4,
+    "B": 8,
+    "A": 1
+   }
+  },
+  {
+   "type": "EventTriggerType",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 12,
+   "refs": 36,
+   "tiers": {
+    "C": 12
+   }
+  },
+  {
+   "type": "ShadowCastingMode",
+   "namespace": "UnityEngine.Rendering",
+   "module": "UnityEngine.CoreModule",
+   "files": 12,
+   "refs": 20,
+   "tiers": {
+    "C": 6,
+    "B": 6
+   }
+  },
+  {
+   "type": "QueueMode",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.AnimationModule",
+   "files": 11,
+   "refs": 28,
+   "tiers": {
+    "C": 10,
+    "B": 1
+   }
+  },
+  {
+   "type": "Scrollbar",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 11,
+   "refs": 24,
+   "tiers": {
+    "C": 11
+   }
+  },
+  {
+   "type": "Event",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.IMGUIModule",
+   "files": 10,
+   "refs": 35,
+   "tiers": {
+    "C": 9,
+    "B": 1
+   }
+  },
+  {
+   "type": "SphereCollider",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 10,
+   "refs": 26,
+   "tiers": {
+    "C": 5,
+    "B": 5
+   }
+  },
+  {
+   "type": "SendMessageOptions",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 10,
+   "refs": 23,
+   "tiers": {
+    "C": 7,
+    "B": 3
+   }
+  },
+  {
+   "type": "QueryTriggerInteraction",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 10,
+   "refs": 19,
+   "tiers": {
+    "B": 8,
+    "C": 2
+   }
+  },
+  {
+   "type": "GUISkin",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.IMGUIModule",
+   "files": 10,
+   "refs": 15,
+   "tiers": {
+    "C": 7,
+    "B": 3
+   }
+  },
+  {
+   "type": "ScriptableObject",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 10,
+   "refs": 13,
+   "tiers": {
+    "C": 5,
+    "A": 4,
+    "B": 1
+   }
+  },
+  {
+   "type": "ConfigurableJointMotion",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 9,
+   "refs": 45,
+   "tiers": {
+    "B": 9
+   }
+  },
+  {
+   "type": "Animator",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.AnimationModule",
+   "files": 9,
+   "refs": 33,
+   "tiers": {
+    "C": 7,
+    "B": 2
+   }
+  },
+  {
+   "type": "ForceMode",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 9,
+   "refs": 29,
+   "tiers": {
+    "B": 7,
+    "C": 2
+   }
+  },
+  {
+   "type": "PhysicMaterial",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 9,
+   "refs": 26,
+   "tiers": {
+    "A": 2,
+    "B": 7
+   }
+  },
+  {
+   "type": "ParticleSystemRenderer",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.ParticleSystemModule",
+   "files": 9,
+   "refs": 18,
+   "tiers": {
+    "C": 5,
+    "B": 3,
+    "A": 1
+   }
+  },
+  {
+   "type": "SpriteState",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 9,
+   "refs": 16,
+   "tiers": {
+    "C": 9
+   }
+  },
+  {
+   "type": "WaitForFixedUpdate",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 9,
+   "refs": 14,
+   "tiers": {
+    "B": 5,
+    "A": 2,
+    "C": 2
+   }
+  },
+  {
+   "type": "DownloadHandlerTexture",
+   "namespace": "UnityEngine.Networking",
+   "module": "UnityEngine.UnityWebRequestTextureModule",
+   "files": 9,
+   "refs": 11,
+   "tiers": {
+    "C": 8,
+    "B": 1
+   }
+  },
+  {
+   "type": "UnityWebRequestTexture",
+   "namespace": "UnityEngine.Networking",
+   "module": "UnityEngine.UnityWebRequestTextureModule",
+   "files": 9,
+   "refs": 9,
+   "tiers": {
+    "C": 8,
+    "B": 1
+   }
+  },
+  {
+   "type": "IBeginDragHandler",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 9,
+   "refs": 9,
+   "tiers": {
+    "C": 9
+   }
+  },
+  {
+   "type": "BoxCollider",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 8,
+   "refs": 28,
+   "tiers": {
+    "B": 5,
+    "C": 3
+   }
+  },
+  {
+   "type": "WheelCollider",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.VehiclesModule",
+   "files": 8,
+   "refs": 18,
+   "tiers": {
+    "B": 7,
+    "C": 1
+   }
+  },
+  {
+   "type": "Gradient",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 8,
+   "refs": 16,
+   "tiers": {
+    "C": 5,
+    "A": 3
+   }
+  },
+  {
+   "type": "JointDrive",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 8,
+   "refs": 15,
+   "tiers": {
+    "B": 7,
+    "C": 1
+   }
+  },
+  {
+   "type": "IEndDragHandler",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 8,
+   "refs": 8,
+   "tiers": {
+    "C": 8
+   }
+  },
+  {
+   "type": "Joint",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 7,
+   "refs": 30,
+   "tiers": {
+    "B": 7
+   }
+  },
+  {
+   "type": "ParticleSystemCurveMode",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.ParticleSystemModule",
+   "files": 7,
+   "refs": 23,
+   "tiers": {
+    "C": 7
+   }
+  },
+  {
+   "type": "HideFlags",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 7,
+   "refs": 16,
+   "tiers": {
+    "C": 6,
+    "B": 1
+   }
+  },
+  {
+   "type": "SoftJointLimit",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 7,
+   "refs": 14,
+   "tiers": {
+    "B": 7
+   }
+  },
+  {
+   "type": "LayoutRebuilder",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 7,
+   "refs": 12,
+   "tiers": {
+    "C": 7
+   }
+  },
+  {
+   "type": "Cursor",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 7,
+   "refs": 10,
+   "tiers": {
+    "C": 5,
+    "B": 2
+   }
+  },
+  {
+   "type": "IPointerDownHandler",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 7,
+   "refs": 8,
+   "tiers": {
+    "C": 7
+   }
+  },
+  {
+   "type": "AudioRolloffMode",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.AudioModule",
+   "files": 7,
+   "refs": 7,
+   "tiers": {
+    "C": 2,
+    "B": 5
+   }
+  },
+  {
+   "type": "QualitySettings",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 6,
+   "refs": 55,
+   "tiers": {
+    "C": 6
+   }
+  },
+  {
+   "type": "PhysicMaterialCombine",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 6,
+   "refs": 38,
+   "tiers": {
+    "B": 4,
+    "A": 1,
+    "C": 1
+   }
+  },
+  {
+   "type": "GUIStyle",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.IMGUIModule",
+   "files": 6,
+   "refs": 30,
+   "tiers": {
+    "C": 6
+   }
+  },
+  {
+   "type": "GridLayoutGroup",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 6,
+   "refs": 24,
+   "tiers": {
+    "C": 6
+   }
+  },
+  {
+   "type": "ParticleSystemSimulationSpace",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.ParticleSystemModule",
+   "files": 6,
+   "refs": 14,
+   "tiers": {
+    "C": 5,
+    "B": 1
+   }
+  },
+  {
+   "type": "PrimitiveType",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 6,
+   "refs": 13,
+   "tiers": {
+    "C": 3,
+    "B": 3
+   }
+  },
+  {
+   "type": "Graphic",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 6,
+   "refs": 13,
+   "tiers": {
+    "C": 6
+   }
+  },
+  {
+   "type": "WaitForSecondsRealtime",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 6,
+   "refs": 10,
+   "tiers": {
+    "C": 6
+   }
+  },
+  {
+   "type": "LayoutGroup",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 6,
+   "refs": 10,
+   "tiers": {
+    "C": 6
+   }
+  },
+  {
+   "type": "SoftJointLimitSpring",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 6,
+   "refs": 9,
+   "tiers": {
+    "B": 6
+   }
+  },
+  {
+   "type": "FilterMode",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 6,
+   "refs": 8,
+   "tiers": {
+    "C": 5,
+    "A": 1
+   }
+  },
+  {
+   "type": "AssetBundle",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.AssetBundleModule",
+   "files": 5,
+   "refs": 19,
+   "tiers": {
+    "C": 3,
+    "A": 1,
+    "B": 1
+   }
+  },
+  {
+   "type": "AudioListener",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.AudioModule",
+   "files": 5,
+   "refs": 12,
+   "tiers": {
+    "C": 5
+   }
+  },
+  {
+   "type": "ParticleSystemRenderMode",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.ParticleSystemModule",
+   "files": 5,
+   "refs": 9,
+   "tiers": {
+    "C": 5
+   }
+  },
+  {
+   "type": "Cubemap",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 5,
+   "refs": 9,
+   "tiers": {
+    "C": 5
+   }
+  },
+  {
+   "type": "CursorLockMode",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 5,
+   "refs": 8,
+   "tiers": {
+    "C": 3,
+    "B": 2
+   }
+  },
+  {
+   "type": "LightType",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 5,
+   "refs": 6,
+   "tiers": {
+    "C": 5
+   }
+  },
+  {
+   "type": "HorizontalLayoutGroup",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 5,
+   "refs": 6,
+   "tiers": {
+    "C": 5
+   }
+  },
+  {
+   "type": "IPointerUpHandler",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 5,
+   "refs": 6,
+   "tiers": {
+    "C": 5
+   }
+  },
+  {
+   "type": "GradientColorKey",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 4,
+   "refs": 22,
+   "tiers": {
+    "C": 4
+   }
+  },
+  {
+   "type": "LineRenderer",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 4,
+   "refs": 19,
+   "tiers": {
+    "C": 4
+   }
+  },
+  {
+   "type": "GradientAlphaKey",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 4,
+   "refs": 19,
+   "tiers": {
+    "C": 4
+   }
+  },
+  {
+   "type": "Font",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.TextRenderingModule",
+   "files": 4,
+   "refs": 19,
+   "tiers": {
+    "C": 4
+   }
+  },
+  {
+   "type": "RigidbodyConstraints",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 4,
+   "refs": 14,
+   "tiers": {
+    "B": 4
+   }
+  },
+  {
+   "type": "WWW",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.UnityWebRequestWWWModule",
+   "files": 4,
+   "refs": 12,
+   "tiers": {
+    "C": 4
+   }
+  },
+  {
+   "type": "AnimationClip",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.AnimationModule",
+   "files": 4,
+   "refs": 9,
+   "tiers": {
+    "C": 3,
+    "B": 1
+   }
+  },
+  {
+   "type": "RenderTextureReadWrite",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 4,
+   "refs": 7,
+   "tiers": {
+    "C": 2,
+    "B": 2
+   }
+  },
+  {
+   "type": "Security",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 4,
+   "refs": 6,
+   "tiers": {
+    "C": 3,
+    "B": 1
+   }
+  },
+  {
+   "type": "PlayerPrefs",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 3,
+   "refs": 36,
+   "tiers": {
+    "C": 3
+   }
+  },
+  {
+   "type": "RenderSettings",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 3,
+   "refs": 33,
+   "tiers": {
+    "C": 2,
+    "B": 1
+   }
+  },
+  {
+   "type": "ExecuteEvents",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 3,
+   "refs": 9,
+   "tiers": {
+    "C": 3
+   }
+  },
+  {
+   "type": "FontStyle",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.TextRenderingModule",
+   "files": 3,
+   "refs": 8,
+   "tiers": {
+    "C": 3
+   }
+  },
+  {
+   "type": "CapsuleCollider",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 3,
+   "refs": 8,
+   "tiers": {
+    "B": 1,
+    "C": 2
+   }
+  },
+  {
+   "type": "FixedJoint",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 3,
+   "refs": 6,
+   "tiers": {
+    "B": 3
+   }
+  },
+  {
+   "type": "UIBehaviour",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 3,
+   "refs": 6,
+   "tiers": {
+    "C": 3
+   }
+  },
+  {
+   "type": "GUILayoutUtility",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.IMGUIModule",
+   "files": 3,
+   "refs": 5,
+   "tiers": {
+    "C": 3
+   }
+  },
+  {
+   "type": "DepthTextureMode",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 3,
+   "refs": 4,
+   "tiers": {
+    "C": 3
+   }
+  },
+  {
+   "type": "Graphics",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 3,
+   "refs": 4,
+   "tiers": {
+    "C": 3
+   }
+  },
+  {
+   "type": "RenderMode",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.UIModule",
+   "files": 3,
+   "refs": 4,
+   "tiers": {
+    "C": 3
+   }
+  },
+  {
+   "type": "ThreadPriority",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 3,
+   "refs": 4,
+   "tiers": {
+    "B": 1,
+    "C": 2
+   }
+  },
+  {
+   "type": "ContactPoint",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 3,
+   "refs": 4,
+   "tiers": {
+    "B": 3
+   }
+  },
+  {
+   "type": "WaitUntil",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 3,
+   "refs": 3,
+   "tiers": {
+    "A": 1,
+    "B": 2
+   }
+  },
+  {
+   "type": "ReflectionProbeUsage",
+   "namespace": "UnityEngine.Rendering",
+   "module": "UnityEngine.CoreModule",
+   "files": 3,
+   "refs": 3,
+   "tiers": {
+    "B": 3
+   }
+  },
+  {
+   "type": "Projector",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 3,
+   "refs": 3,
+   "tiers": {
+    "C": 3
+   }
+  },
+  {
+   "type": "IScrollHandler",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 3,
+   "refs": 3,
+   "tiers": {
+    "C": 3
+   }
+  },
+  {
+   "type": "ISubmitHandler",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 3,
+   "refs": 3,
+   "tiers": {
+    "C": 3
+   }
+  },
+  {
+   "type": "PlayMode",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.AnimationModule",
+   "files": 2,
+   "refs": 47,
+   "tiers": {
+    "B": 1,
+    "C": 1
+   }
+  },
+  {
+   "type": "GUIContent",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.IMGUIModule",
+   "files": 2,
+   "refs": 16,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "Profiler",
+   "namespace": "UnityEngine.Profiling",
+   "module": "UnityEngine.CoreModule",
+   "files": 2,
+   "refs": 12,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "HorizontalOrVerticalLayoutGroup",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 2,
+   "refs": 10,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "Resolution",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 2,
+   "refs": 8,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "GUILayoutOption",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.IMGUIModule",
+   "files": 2,
+   "refs": 7,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "WheelFrictionCurve",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 2,
+   "refs": 6,
+   "tiers": {
+    "C": 1,
+    "B": 1
+   }
+  },
+  {
+   "type": "ColorBlock",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 2,
+   "refs": 6,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "TextAsset",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 2,
+   "refs": 5,
+   "tiers": {
+    "A": 1,
+    "C": 1
+   }
+  },
+  {
+   "type": "CanvasRenderer",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.UIModule",
+   "files": 2,
+   "refs": 5,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "LayoutUtility",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 2,
+   "refs": 5,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "RectMask2D",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 2,
+   "refs": 5,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "AssetBundleRequest",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.AssetBundleModule",
+   "files": 2,
+   "refs": 4,
+   "tiers": {
+    "C": 1,
+    "B": 1
+   }
+  },
+  {
+   "type": "InputField",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 2,
+   "refs": 4,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "AxisEventData",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 2,
+   "refs": 4,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "CanvasUpdate",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 2,
+   "refs": 4,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "DefaultReflectionMode",
+   "namespace": "UnityEngine.Rendering",
+   "module": "UnityEngine.CoreModule",
+   "files": 2,
+   "refs": 3,
+   "tiers": {
+    "B": 1,
+    "C": 1
+   }
+  },
+  {
+   "type": "RotationDriveMode",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 2,
+   "refs": 3,
+   "tiers": {
+    "B": 2
+   }
+  },
+  {
+   "type": "Analytics",
+   "namespace": "UnityEngine.Analytics",
+   "module": "UnityEngine.UnityAnalyticsModule",
+   "files": 2,
+   "refs": 2,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "MeshTopology",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 2,
+   "refs": 2,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "AnimationBlendMode",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.AnimationModule",
+   "files": 2,
+   "refs": 2,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "UnityWebRequestAssetBundle",
+   "namespace": "UnityEngine.Networking",
+   "module": "UnityEngine.UnityWebRequestAssetBundleModule",
+   "files": 2,
+   "refs": 2,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "DownloadHandlerAssetBundle",
+   "namespace": "UnityEngine.Networking",
+   "module": "UnityEngine.UnityWebRequestAssetBundleModule",
+   "files": 2,
+   "refs": 2,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "TextureWrapMode",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 2,
+   "refs": 2,
+   "tiers": {
+    "B": 1,
+    "C": 1
+   }
+  },
+  {
+   "type": "LensFlare",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 2,
+   "refs": 2,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "ISelectHandler",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 2,
+   "refs": 2,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "DownloadHandlerBuffer",
+   "namespace": "UnityEngine.Networking",
+   "module": "UnityEngine.UnityWebRequestModule",
+   "files": 2,
+   "refs": 2,
+   "tiers": {
+    "C": 1,
+    "B": 1
+   }
+  },
+  {
+   "type": "SpriteRenderer",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 2,
+   "refs": 2,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "ILayoutController",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 2,
+   "refs": 2,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "ILayoutSelfController",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 2,
+   "refs": 2,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "IInitializePotentialDragHandler",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 2,
+   "refs": 2,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "IDropHandler",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 2,
+   "refs": 2,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "GraphicRaycaster",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 2,
+   "refs": 2,
+   "tiers": {
+    "C": 2
+   }
+  },
+  {
+   "type": "LogType",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 16,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "GUIUtility",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.IMGUIModule",
+   "files": 1,
+   "refs": 8,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "ShadowProjection",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 7,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "Flare",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 7,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "CharacterJoint",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 1,
+   "refs": 4,
+   "tiers": {
+    "B": 1
+   }
+  },
+  {
+   "type": "TextMesh",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.TextRenderingModule",
+   "files": 1,
+   "refs": 4,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "GL",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 3,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "ReflectionProbeTimeSlicingMode",
+   "namespace": "UnityEngine.Rendering",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 3,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "Texture2DArray",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 3,
+   "tiers": {
+    "A": 1
+   }
+  },
+  {
+   "type": "FocusType",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.IMGUIModule",
+   "files": 1,
+   "refs": 3,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "Terrain",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.TerrainModule",
+   "files": 1,
+   "refs": 3,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "BoneWeight",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 3,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "CubemapFace",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 3,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "LightShadows",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 2,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "ComputeBuffer",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 2,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "ReflectionProbe",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 2,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "AspectRatioFitter",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 1,
+   "refs": 2,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "AnimationEvent",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.AnimationModule",
+   "files": 1,
+   "refs": 2,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "CanvasScaler",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 1,
+   "refs": 2,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "CombineInstance",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 2,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "WWWForm",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.UnityWebRequestModule",
+   "files": 1,
+   "refs": 2,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "Texture3D",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 2,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "UnityWebRequestMultimedia",
+   "namespace": "UnityEngine.Networking",
+   "module": "UnityEngine.UnityWebRequestAudioModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "AudioType",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "DownloadHandlerAudioClip",
+   "namespace": "UnityEngine.Networking",
+   "module": "UnityEngine.UnityWebRequestAudioModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "JointProjectionMode",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "B": 1
+   }
+  },
+  {
+   "type": "ReflectionProbeMode",
+   "namespace": "UnityEngine.Rendering",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "ReflectionProbeRefreshMode",
+   "namespace": "UnityEngine.Rendering",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "ReflectionProbeClearFlags",
+   "namespace": "UnityEngine.Rendering",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "AsyncOperation",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "B": 1
+   }
+  },
+  {
+   "type": "JointSpring",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.PhysicsModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "SkinQuality",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "AnimatorCullingMode",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.AnimationModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "B": 1
+   }
+  },
+  {
+   "type": "ScreenCapture",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.ScreenCaptureModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "StandaloneInputModule",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "DisallowMultipleComponent",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "TouchScreenKeyboardType",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "TextClipping",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.IMGUIModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "PropertyAttribute",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "FogMode",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "WheelHit",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.VehiclesModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "B": 1
+   }
+  },
+  {
+   "type": "UIVertex",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.TextRenderingModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "IDeselectHandler",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "IMoveHandler",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "CursorMode",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "ICanvasRaycastFilter",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.UIModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "RaycastResult",
+   "namespace": "UnityEngine.EventSystems",
+   "module": "UnityEngine.UI",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "GraphicsDeviceType",
+   "namespace": "UnityEngine.Rendering",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "UnityException",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "ICanvasElement",
+   "namespace": "UnityEngine.UI",
+   "module": "UnityEngine.UI",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  },
+  {
+   "type": "ExecuteAlways",
+   "namespace": "UnityEngine",
+   "module": "UnityEngine.CoreModule",
+   "files": 1,
+   "refs": 1,
+   "tiers": {
+    "C": 1
+   }
+  }
+ ]
+}

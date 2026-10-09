@@ -1,0 +1,300 @@
+{
+ "rows": 3328,
+ "tier_files": {
+  "C": 1520,
+  "A": 1109,
+  "B": 238,
+  "third-party": 461
+ },
+ "tier_lines": {
+  "C": 254825,
+  "A": 171643,
+  "B": 134094,
+  "third-party": 73769
+ },
+ "subsystems": {
+  "Camera": {
+   "C": 54,
+   "C_lines": 6906
+  },
+  "Rendering": {
+   "C": 190,
+   "C_lines": 29258,
+   "third-party": 13,
+   "third-party_lines": 1931
+  },
+  "Localization": {
+   "C": 18,
+   "C_lines": 2047
+  },
+  "Misc": {
+   "C": 7,
+   "C_lines": 423
+  },
+  "Core": {
+   "A": 61,
+   "A_lines": 10643,
+   "C": 4,
+   "C_lines": 662,
+   "B": 1,
+   "B_lines": 140,
+   "third-party": 117,
+   "third-party_lines": 15510
+  },
+  "Input": {
+   "C": 38,
+   "C_lines": 7161,
+   "B": 2,
+   "B_lines": 769,
+   "A": 3,
+   "A_lines": 252
+  },
+  "Resources": {
+   "A": 39,
+   "A_lines": 5754
+  },
+  "Vessel": {
+   "A": 33,
+   "A_lines": 6722,
+   "B": 10,
+   "B_lines": 9853,
+   "C": 1,
+   "C_lines": 223
+  },
+  "FlightUI": {
+   "C": 160,
+   "C_lines": 27271,
+   "A": 11,
+   "A_lines": 2014,
+   "B": 1,
+   "B_lines": 645
+  },
+  "DLC-BreakingGround": {
+   "B": 21,
+   "B_lines": 11791,
+   "C": 22,
+   "C_lines": 5326,
+   "A": 21,
+   "A_lines": 5155
+  },
+  "Modding": {
+   "C": 27,
+   "C_lines": 4573,
+   "A": 19,
+   "A_lines": 2451,
+   "B": 5,
+   "B_lines": 2461
+  },
+  "Scene": {
+   "C": 30,
+   "C_lines": 5227,
+   "B": 20,
+   "B_lines": 5371,
+   "A": 4,
+   "A_lines": 79
+  },
+  "Kerbals": {
+   "C": 63,
+   "C_lines": 8501,
+   "A": 35,
+   "A_lines": 5424,
+   "B": 17,
+   "B_lines": 12812
+  },
+  "Tutorials": {
+   "C": 38,
+   "C_lines": 14611
+  },
+  "Aero": {
+   "C": 1,
+   "C_lines": 914,
+   "A": 12,
+   "A_lines": 1781,
+   "B": 5,
+   "B_lines": 5201
+  },
+  "Audio": {
+   "C": 17,
+   "C_lines": 2496
+  },
+  "MapView": {
+   "C": 53,
+   "C_lines": 14344
+  },
+  "Analytics": {
+   "C": 3,
+   "C_lines": 965
+  },
+  "CommNet": {
+   "A": 31,
+   "A_lines": 4534,
+   "C": 12,
+   "C_lines": 2747
+  },
+  "UI": {
+   "C": 321,
+   "C_lines": 42433,
+   "third-party": 143,
+   "third-party_lines": 29521
+  },
+  "Celestials": {
+   "B": 20,
+   "B_lines": 7338,
+   "A": 19,
+   "A_lines": 2698,
+   "C": 1,
+   "C_lines": 324
+  },
+  "Debug": {
+   "C": 121,
+   "C_lines": 13503
+  },
+  "Part": {
+   "A": 77,
+   "A_lines": 5572,
+   "B": 15,
+   "B_lines": 18202,
+   "C": 4,
+   "C_lines": 328
+  },
+  "PartModules-Resources": {
+   "A": 22,
+   "A_lines": 2753,
+   "B": 5,
+   "B_lines": 2158
+  },
+  "Save": {
+   "A": 76,
+   "A_lines": 12061,
+   "C": 4,
+   "C_lines": 1667,
+   "B": 4,
+   "B_lines": 4417
+  },
+  "Physics": {
+   "C": 2,
+   "C_lines": 46,
+   "B": 16,
+   "B_lines": 2710,
+   "A": 2,
+   "A_lines": 3883
+  },
+  "PartModules-Structural": {
+   "B": 21,
+   "B_lines": 12173,
+   "A": 14,
+   "A_lines": 678
+  },
+  "Editor": {
+   "A": 55,
+   "A_lines": 4045,
+   "C": 59,
+   "C_lines": 17895,
+   "B": 12,
+   "B_lines": 8573
+  },
+  "Contracts": {
+   "A": 142,
+   "A_lines": 34321,
+   "C": 5,
+   "C_lines": 1046,
+   "B": 2,
+   "B_lines": 825
+  },
+  "PartModules-Control": {
+   "B": 2,
+   "B_lines": 746,
+   "A": 6,
+   "A_lines": 1859,
+   "C": 1,
+   "C_lines": 246
+  },
+  "Career": {
+   "C": 18,
+   "C_lines": 2119,
+   "A": 59,
+   "A_lines": 8758,
+   "B": 1,
+   "B_lines": 196
+  },
+  "Orbit": {
+   "A": 15,
+   "A_lines": 6730,
+   "B": 4,
+   "B_lines": 1682
+  },
+  "PartModules-Wheels": {
+   "third-party": 143,
+   "third-party_lines": 24045,
+   "B": 9,
+   "B_lines": 3829,
+   "A": 13,
+   "A_lines": 1461
+  },
+  "PartModules-Engines": {
+   "A": 6,
+   "A_lines": 597,
+   "B": 6,
+   "B_lines": 4164
+  },
+  "DLC-MakingHistory": {
+   "B": 15,
+   "B_lines": 6960,
+   "A": 244,
+   "A_lines": 28150,
+   "C": 204,
+   "C_lines": 34005
+  },
+  "Science": {
+   "A": 24,
+   "A_lines": 5780,
+   "B": 2,
+   "B_lines": 445,
+   "C": 23,
+   "C_lines": 4205
+  },
+  "PartModules-Misc": {
+   "B": 2,
+   "B_lines": 1307,
+   "C": 3,
+   "C_lines": 711,
+   "A": 1,
+   "A_lines": 176
+  },
+  "Thermal": {
+   "A": 15,
+   "A_lines": 2210,
+   "C": 3,
+   "C_lines": 254
+  },
+  "Steam": {
+   "C": 4,
+   "C_lines": 1340
+  },
+  "Terrain": {
+   "third-party": 45,
+   "third-party_lines": 2762,
+   "A": 50,
+   "A_lines": 5102,
+   "B": 20,
+   "B_lines": 9326,
+   "C": 9,
+   "C_lines": 1048
+  }
+ },
+ "review_source": {
+  "script+lead-check": 114,
+  "hand:lead": 127,
+  "hand:sonnet-child_1": 608,
+  "script+group-template": 168,
+  "hand:sonnet-child_3": 196,
+  "hand:sonnet-child_3 (group rationale + script evidence)": 485,
+  "hand:sonnet-child_1 (group rationale + script evidence)": 7,
+  "third-party rule": 461,
+  "hand:sonnet-child_4": 448,
+  "hand:sonnet-child_4 (group rationale + script evidence)": 99,
+  "hand:sonnet-child_2": 608,
+  "hand:sonnet-child_2 (group rationale + script evidence)": 7
+ },
+ "problems": []
+}

@@ -1,0 +1,13 @@
+{
+ "name": "root",
+ "id": "",
+ "comment": null,
+ "values": [
+  ["f","1E-05",null],
+  ["g","-0.0",null],
+  ["h","1.0000001",null],
+  ["inf","Infinity",null],
+  ["nan","NaN",null]
+ ],
+ "nodes": []
+}

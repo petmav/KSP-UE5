@@ -1,0 +1,24 @@
+{
+ "name": "root",
+ "id": "",
+ "comment": null,
+ "values": [],
+ "nodes": [
+  {
+   "name": "PART",
+   "id": "myId",
+   "comment": null,
+   "values": [
+    ["name","x",null]
+   ],
+   "nodes": []
+  },
+  {
+   "name": "PART",
+   "id": "noSpace",
+   "comment": null,
+   "values": [],
+   "nodes": []
+  }
+ ]
+}

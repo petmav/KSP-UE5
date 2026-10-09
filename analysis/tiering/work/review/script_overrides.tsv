@@ -1,0 +1,115 @@
+path	tier	subsystem	ue5_counterpart	rationale
+Assembly-CSharp-firstpass/Controller.cs	C	Camera	drop	Sample mouse-orbit camera script from the model-viewer utilities in firstpass; unused by gameplay.
+Assembly-CSharp-firstpass/FaceIndices.cs	C	Rendering	drop	Face index struct for the bundled OBJ importer.
+Assembly-CSharp-firstpass/FileGUI.cs	C	Rendering	drop	IMGUI file browser for the bundled OBJ/DAE model-viewer utility; not gameplay.
+Assembly-CSharp-firstpass/FileIO.cs	C	Rendering	drop	Model-viewer project file IO (load/save meshes/textures); not gameplay.
+Assembly-CSharp-firstpass/FlyAround.cs	C	Camera	drop	Sample fly-around camera script; not gameplay.
+Assembly-CSharp-firstpass/GeometryBuffer.cs	C	Rendering	Interchange / glTF importer	OBJ importer geometry buffer building Unity meshes/materials.
+Assembly-CSharp-firstpass/Lingoona/Grammar.cs	C	Localization	UE Localization (FText / String Table)	P/Invoke wrapper over native Lingoona grammar engine (gendered/plural string formatting); replace with UE text formatting.
+Assembly-CSharp-firstpass/Lingoona/NativeMethods.cs	C	Localization	UE Localization (FText / String Table)	DllImport declarations for lingoona_grammar_kerbal.dll; native plumbing -> drop.
+Assembly-CSharp-firstpass/LingoonaGrammarFormatter.cs	C	Localization	UE Localization (FText / String Table)	MonoBehaviour bootstrapping the Lingoona formatter; plumbing.
+Assembly-CSharp-firstpass/MeshOp.cs	C	Rendering	drop	Model-viewer mesh operation helper (collider/mesh swaps).
+Assembly-CSharp-firstpass/MultiDim.cs	C	Rendering	drop	Jagged array helper for the progressive-mesh utility.
+Assembly-CSharp-firstpass/ParticleScaler.cs	C	Rendering	Niagara	Scales particle system sizes with transform scale; presentation.
+Assembly-CSharp-firstpass/ProgMesh.cs	C	Rendering	drop (UE LOD tools)	Progressive mesh simplification (LOD reduction) utility; replaced by UE mesh LOD generation.
+Assembly-CSharp-firstpass/ProgMeshControl.cs	C	Rendering	drop	IMGUI control for progressive mesh demo.
+Assembly-CSharp-firstpass/ProjectLoad.cs	C	Rendering	drop	Model-viewer project loader.
+Assembly-CSharp-firstpass/ProjectModelLoad.cs	C	Rendering	drop	Model-viewer model loader.
+Assembly-CSharp-firstpass/ProjectModelSave.cs	C	Rendering	drop	Model-viewer model saver.
+Assembly-CSharp-firstpass/ProjectSave.cs	C	Rendering	drop	Model-viewer project saver stub.
+Assembly-CSharp-firstpass/Properties/AssemblyInfo.cs	C	Misc	drop	Assembly attributes for firstpass.
+Assembly-CSharp-firstpass/QuaternionExtensions.cs	A	Core	core	Quaternion extension helpers (firstpass); trivial maths.
+Assembly-CSharp-firstpass/Resize.cs	C	Rendering	drop	Array resize helper for model-viewer utilities.
+Assembly-CSharp-firstpass/SmoothFollow2.cs	C	Camera	drop	Sample smooth-follow camera script.
+Assembly-CSharp-firstpass/SpaceNavigator.cs	C	Input	Enhanced Input (custom device) / drop	3Dconnexion SpaceNavigator device abstraction (sensitivity prefs, axis locks); input device support.
+Assembly-CSharp-firstpass/SpaceNavigatorNoDevice.cs	C	Input	drop	Null SpaceNavigator device implementation.
+Assembly-CSharp-firstpass/SpaceNavigatorWindows.cs	C	Input	Enhanced Input (custom device) / drop	Windows TDx COM SpaceNavigator device implementation.
+Assembly-CSharp-firstpass/Torus.cs	C	Rendering	drop	Procedural torus mesh demo component.
+Assembly-CSharp-firstpass/TriPoly.cs	C	Rendering	drop	Polygon triangulation for the OBJ importer.
+Assembly-CSharp/A/-.cs	C	Misc	drop	Crypto Obfuscator runtime stub (embedded assembly/resource resolver); obfuscation artefact.
+Assembly-CSharp/A/AssemblyInfoAttribute.cs	C	Misc	drop	Obfuscator marker attribute.
+Assembly-CSharp/Properties/AssemblyInfo.cs	C	Misc	drop	Assembly attributes.
+Assembly-CSharp/Assets/_UI5/Rendering/Scripts/ImgFX_ColorMultiply.cs	C	Rendering	Material / Material Instance	UI image colour-multiply shader effect component.
+Assembly-CSharp/CameraKeyFrameEvents/CameraKeyFrameEvent.cs	C	Camera	Cine Camera + Sequencer	Base for cutscene camera keyframe events.
+Assembly-CSharp/CameraKeyFrameEvents/Fade.cs	C	Camera	Cine Camera + Sequencer	Cutscene fade keyframe event.
+Assembly-CSharp/CameraKeyFrameEvents/SceneTransition.cs	C	Camera	Cine Camera + Sequencer	Cutscene scene-transition keyframe event.
+Assembly-CSharp/CameraKeyFrameEvents/TextHeaderFlip.cs	C	Camera	Cine Camera + Sequencer	Cutscene text header flip event.
+Assembly-CSharp/CompoundParts/CModuleFuelLine.cs	A	PartModules-Structural	core	Fuel line compound module: one-way crossfeed link between two parts for resource flow; rules.
+Assembly-CSharp/CompoundParts/CModuleLinkedMesh.cs	C	Rendering	Procedural Mesh	Stretches/orients the strut or fuel-line mesh between anchor and target; visual only.
+Assembly-CSharp/CompoundParts/CModuleStrut.cs	B	PartModules-Structural	core + Chaos/Jolt joints	Strut compound module: creates a joint between two parts' rigidbodies; joint physics.
+Assembly-CSharp/CompoundParts/CompoundPartModule.cs	A	PartModules-Structural	core	Base module for compound parts (target attach/detach callbacks).
+Assembly-CSharp/CompoundParts/ICompoundPartAnchorMethod.cs	A	PartModules-Structural	core	Interface for compound part anchoring strategies.
+Assembly-CSharp/Cursors/CursorController.cs	C	UI	UMG / Slate cursor	Custom mouse cursor manager per scene.
+Assembly-CSharp/Cursors/CursorItem.cs	C	UI	UMG / Slate cursor	Cursor definition data.
+Assembly-CSharp/Cursors/CustomCursor.cs	C	UI	UMG / Slate cursor	Cursor base type.
+Assembly-CSharp/Cursors/TextureCursor.cs	C	UI	UMG / Slate cursor	Texture-based cursor.
+Assembly-CSharp/EditorGizmos/GizmoHandle.cs	C	Editor	custom gizmo actor	Gizmo handle visual (materials, hover highlight).
+Assembly-CSharp/EditorGizmos/GizmoOffset.cs	B	Editor	core editor op + gizmo actor	Offset gizmo: constrained translation of parts in part/absolute space with snapping and attach-node limits; transform maths drives placement.
+Assembly-CSharp/EditorGizmos/GizmoOffsetHandle.cs	C	Editor	custom gizmo actor	Offset gizmo axis handle (drag input, visuals).
+Assembly-CSharp/EditorGizmos/GizmoRotate.cs	B	Editor	core editor op + gizmo actor	Rotate gizmo: constrained rotation with angle snapping in local/absolute frames; transform maths drives placement.
+Assembly-CSharp/EditorGizmos/GizmoRotateHandle.cs	C	Editor	custom gizmo actor	Rotate gizmo ring handle (raycast drag input, visuals).
+Assembly-CSharp/FlightUIModeControllerUtil/FlightUIModeControllerUtil.cs	C	FlightUI	UMG widget	Helpers for flight UI mode tab panels.
+Assembly-CSharp/FlightUIModeControllerUtil/TabAction.cs	C	FlightUI	UMG widget	Flight UI tab action enum.
+Assembly-CSharp/FlightUIModeControllerUtil/UIModeCheckCallback.cs	C	FlightUI	UMG widget	Flight UI mode check delegate.
+Assembly-CSharp/FlightUIModeControllerUtil/UIModePanelState.cs	C	FlightUI	UMG widget	Flight UI panel state record.
+Assembly-CSharp/FlightUIModeControllerUtil/UIModeSwitchCallback.cs	C	FlightUI	UMG widget	Flight UI mode switch delegate.
+Assembly-CSharp/KSPAchievements/TowerBuzz.cs	A	Career	core	Progress node for flying close past the KSC tower (trigger volume check feeds it); progress rule, detection is a scene query.
+Assembly-CSharp/KSPAssets/KSPedia/KSPedia.cs	C	UI	UMG widget	KSPedia in-game encyclopedia browser (asset-bundle pages, navigation); UI content.
+Assembly-CSharp/KSPAssets/KSPedia/KSPediaAspectController.cs	C	UI	UMG widget	KSPedia page aspect-ratio controller.
+Assembly-CSharp/KSPAssets/KSPedia/KSPediaContentItem.cs	C	UI	UMG widget	KSPedia content item widget.
+Assembly-CSharp/KSPAssets/KSPedia/KSPediaSpawner.cs	C	UI	UMG widget	KSPedia window spawner.
+Assembly-CSharp/ModuleWheels/ModuleWheelBogey.cs	B	PartModules-Wheels	core wheel model	Bogey (multi-wheel truck) orientation following ground contact; transform-driven wheel geometry.
+Assembly-CSharp/ModuleWheels/ModuleWheelBrakes.cs	A	PartModules-Wheels	core	Wheel brake torque, brake tweak, action groups; rules over wheel state.
+Assembly-CSharp/ModuleWheels/ModuleWheelDamage.cs	B	PartModules-Wheels	core + mesh swap	Wheel stress/impact damage and repair, swapping damaged meshes, disabling subsystems; physics-load driven.
+Assembly-CSharp/ModuleWheels/ModuleWheelLock.cs	A	PartModules-Wheels	core	Wheel lock submodule flag.
+Assembly-CSharp/ModuleWheels/ModuleWheelMotor.cs	A	PartModules-Wheels	core	Wheel motor: torque curve, EC draw, traction control, drive direction; rules feeding wheel model.
+Assembly-CSharp/ModuleWheels/ModuleWheelMotorSteering.cs	A	PartModules-Wheels	core	Differential/skid steering through motor torque.
+Assembly-CSharp/ModuleWheels/ModuleWheelSteering.cs	A	PartModules-Wheels	core	Steering angle response curves vs speed, steering input and limits; rules feeding wheel model.
+Assembly-CSharp/ModuleWheels/ModuleWheelSubmodule.cs	A	PartModules-Wheels	core	Base for wheel submodules (link to ModuleWheelBase, inop states).
+Assembly-CSharp/ModuleWheels/ModuleWheelSuspension.cs	B	PartModules-Wheels	core wheel model	Suspension spring/damper settings, auto-spring by load, suspension transform travel; feeds VP/WheelCollider suspension.
+Assembly-CSharp/ModuleWheels/WheelFrictionNode.cs	B	PartModules-Wheels	core wheel model	WheelFrictionCurve config node wrapper (PhysX friction curve parameters).
+Assembly-CSharp/ModuleWheels/WheelSubsystem.cs	A	PartModules-Wheels	core	Wheel subsystem inoperability record.
+Assembly-CSharp/ModuleWheels/WheelSubsystems.cs	A	PartModules-Wheels	core	Collection of wheel subsystem states.
+Assembly-CSharp/ModuleWheels/WheelUtil.cs	A	PartModules-Wheels	core	Wheel helper maths.
+Assembly-CSharp/PartToolsLib/AnimationType.cs	C	Rendering	drop	PartTools (.mu exporter) enum.
+Assembly-CSharp/PartToolsLib/EntryType.cs	C	Rendering	custom .mu importer (shell)	.mu file entry type enum (used by PartReader).
+Assembly-CSharp/PartToolsLib/FileType.cs	C	Rendering	custom .mu importer (shell)	.mu file type enum.
+Assembly-CSharp/PartToolsLib/ShaderType.cs	C	Rendering	custom .mu importer (shell)	.mu shader type enum.
+Assembly-CSharp/PartToolsLib/TextureType.cs	C	Rendering	custom .mu importer (shell)	.mu texture type enum.
+Assembly-CSharp/PreFlightTests/NonRootCmdMissaligned.cs	A	Editor	core	Pre-flight check: command part orientation differs from root; reads part orientations as data.
+Assembly-CSharp/ProceduralFairings/ColliderChunk.cs	B	PartModules-Structural	core + Procedural Mesh collision	Fairing collider chunk mesh generation.
+Assembly-CSharp/ProceduralFairings/ColliderSection.cs	B	PartModules-Structural	core + Procedural Mesh collision	Fairing collider section generation.
+Assembly-CSharp/ProceduralFairings/FairingPanelFlags.cs	A	PartModules-Structural	core	Fairing panel flag data.
+Assembly-CSharp/ProceduralFairings/FairingXSection.cs	B	PartModules-Structural	core + collision queries	Fairing cross-section profile with raycast payload detection.
+Assembly-CSharp/ProceduralFairings/MeshArc.cs	A	PartModules-Structural	core	Fairing mesh arc geometry data.
+Assembly-CSharp/ProceduralFairings/MeshPoint.cs	A	PartModules-Structural	core	Fairing mesh point geometry maths.
+Assembly-CSharp/Radiators/RadiatorData.cs	A	Thermal	core	Radiator per-part data struct.
+Assembly-CSharp/Radiators/RadiatorUtilities.cs	A	Thermal	core	Radiator helper maths (heat transfer bookkeeping).
+Assembly-CSharp/RUI/Algorithms/FlowGraph.cs	A	Resources	core	Graph container used by PartSet/DeltaVStageInfo for crossfeed flow ordering (not UI despite namespace).
+Assembly-CSharp/RUI/Algorithms/SCCFlowGraph.cs	A	Resources	core	Strongly-connected-component flow graph used for resource crossfeed priority (PartSet); pure graph algorithm.
+Assembly-CSharp/RUI/Algorithms/SCCFlowGraphUCFinder.cs	A	Resources	core	Finds unconnected/condensed SCC components for resource flow; pure graph algorithm.
+Assembly-CSharp/RUI/Algorithms/StackFlowGraph.cs	A	Resources	core	Stack-priority flow graph over parts (transform refs only for ordering); used by resource flow.
+Assembly-CSharp/RUI/Algorithms/StronglyConnectedComponentFinder.cs	A	Resources	core	Tarjan SCC finder; pure algorithm.
+Assembly-CSharp/RUI/Algorithms/Vertex.cs	A	Resources	core	Graph vertex for flow graph algorithms.
+Assembly-CSharp/RUI/Icons/Selectable/Icon.cs	C	UI	UMG widget	Selectable icon sprite definition.
+Assembly-CSharp/RUI/Icons/Selectable/IconLoader.cs	C	UI	UMG widget	Loads selectable icon sprites.
+Assembly-CSharp/RUI/Icons/Simple/Icon.cs	C	UI	UMG widget	Simple icon definition.
+Assembly-CSharp/RUI/Icons/Simple/IconLoader.cs	C	UI	UMG widget	Loads simple icons (part category icons).
+Assembly-CSharp/Strategies/DepartmentConfig.cs	A	Career	core	Administration department config (name, head, description; avatar asset ref is C).
+Assembly-CSharp/TestScripts/FacilitySceneryLoader.cs	C	Debug	drop	Test scene loader for facility scenery.
+Assembly-CSharp/TestScripts/HighLogicLoadedSceneSelector.cs	C	Debug	drop	Test helper selecting loaded scene.
+Assembly-CSharp/TestScripts/KerbalEVATestInitializer.cs	C	Debug	drop	EVA test scene initialiser.
+Assembly-CSharp/TestScripts/SceneryTestSceneLoader.cs	C	Debug	drop	Scenery test scene loader.
+Assembly-CSharp/UnityEngine/QuaternionD.cs	A	Core	core	Double-precision quaternion (KSP's own, in UnityEngine namespace); pure maths.
+Assembly-CSharp/UnityEngine/UI/BoxSlider.cs	C	UI	UMG widget	2D box slider UI control (colour picker).
+Assembly-CSharp/UnityEngine/Vector2d.cs	A	Core	core	Double-precision 2D vector; pure maths.
+Assembly-CSharp/UnityEngine/Vector4d.cs	A	Core	core	Double-precision 4D vector; pure maths.
+Assembly-CSharp/Upgradeables/KSCFacilityLevelText.cs	A	Career	core	Builds facility level capability text (limits per level from GameVariables); data/rules.
+Assembly-CSharp/Upgradeables/UpgradeableFacility.cs	B	Career	core (facility levels) + actor	Facility level state (level, cost, upgrade) bound to KSC scene objects and level swapping; logic A, scene B.
+Assembly-CSharp/Upgradeables/UpgradeableInterior.cs	C	Scene	Level/actor variants	Facility interior variant per level.
+Assembly-CSharp/Upgradeables/UpgradeableInteriorMaterial.cs	C	Rendering	Material Instance	Facility interior material per level.
+Assembly-CSharp/Upgradeables/UpgradeableInteriorScene.cs	C	Scene	Level streaming	Facility interior scene per level.
+Assembly-CSharp/Upgradeables/UpgradeableInteriorSprite.cs	C	UI	UMG widget	Facility interior sprite per level.
+Assembly-CSharp/Upgradeables/UpgradeableInteriorTexture.cs	C	UI	UMG widget	Facility interior texture per level.
+Assembly-CSharp/Upgradeables/UpgradeableObject.cs	B	Scene	actor variants + collision	Swaps KSC building models/colliders per facility level and destruction state; scene objects with gameplay collision.
+Assembly-CSharp/Upgradeables/UpgradeableSlave.cs	C	Scene	actor variants	Child object following master facility level.

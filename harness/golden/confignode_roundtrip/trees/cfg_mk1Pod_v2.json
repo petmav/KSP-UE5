@@ -1,0 +1,378 @@
+{
+ "name": "root",
+ "id": "",
+ "comment": null,
+ "values": [],
+ "nodes": [
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["name","mk1pod_v2",null],
+    ["module","Part",null],
+    ["author","RoverDude",null],
+    ["rescaleFactor","1",null],
+    ["node_stack_bottom","0.0, -0.4050379, 0.0, 0.0, -1.0, 0.0, 1",null],
+    ["node_stack_top","0.0, 0.6423756, 0.0, 0.0, 1.0, 0.0, 0",null],
+    ["bulkheadProfiles","size1, size0",null],
+    ["CoPOffset","0.0, 0.5, 0.0",null],
+    ["CoLOffset","0.0, -0.35, 0.0",null],
+    ["CenterOfBuoyancy","0.0, 0.5, 0.0",null],
+    ["CenterOfDisplacement","0.0, -0.3, 0.0",null],
+    ["buoyancy","1.5",null],
+    ["buoyancyUseSine","False",null],
+    ["TechRequired","start",null],
+    ["entryCost","0",null],
+    ["cost","600",null],
+    ["category","Pods",null],
+    ["subcategory","0",null],
+    ["title","#autoLOC_500319",null],
+    ["manufacturer","#autoLOC_501630",null],
+    ["description","#autoLOC_500320",null],
+    ["attachRules","1,0,1,1,0",null],
+    ["bodyLiftOnlyUnattachedLift","True",null],
+    ["bodyLiftOnlyAttachName","bottom",null],
+    ["mass","0.8",null],
+    ["dragModelType","default",null],
+    ["maximum_drag","0.2",null],
+    ["minimum_drag","0.15",null],
+    ["angularDrag","2",null],
+    ["crashTolerance","14",null],
+    ["maxTemp","1200",null],
+    ["skinMaxTemp","2200",null],
+    ["skinInternalConductionMult","0.625",null],
+    ["heatConductivity","0.1",null],
+    ["vesselType","Ship",null],
+    ["CrewCapacity","1",null],
+    ["tags","#autoLOC_500321",null]
+   ],
+   "nodes": [
+    {
+     "name": "MODEL",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["model","Squad/Parts/Command/mk1pod_v2/Mk1Pod_v2",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "INTERNAL",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","mk1pod_IVA",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleCommand",null],
+      ["minimumCrew","1",null],
+      ["defaultControlPointDisplayName","#autoLOC_6011003",null]
+     ],
+     "nodes": [
+      {
+       "name": "CONTROLPOINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["name","reverse",null],
+        ["displayName","#autoLOC_6011004",null],
+        ["orientation","0,0,180",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RESOURCE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ElectricCharge",null],
+      ["amount","50",null],
+      ["maxAmount","50",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleReactionWheel",null],
+      ["PitchTorque","5",null],
+      ["YawTorque","5",null],
+      ["RollTorque","5",null]
+     ],
+     "nodes": [
+      {
+       "name": "RESOURCE",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["name","ElectricCharge",null],
+        ["rate","0.24",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleColorChanger",null],
+      ["shaderProperty","_EmissiveColor",null],
+      ["animRate","0.8",null],
+      ["animState","false",null],
+      ["useRate","true",null],
+      ["toggleInEditor","true",null],
+      ["toggleInFlight","true",null],
+      ["toggleInFlight","true",null],
+      ["unfocusedRange","5",null],
+      ["toggleName","#autoLOC_502011",null],
+      ["eventOnName","#autoLOC_502012",null],
+      ["eventOffName","#autoLOC_502013",null],
+      ["toggleAction","True",null],
+      ["defaultActionGroup","Light",null]
+     ],
+     "nodes": [
+      {
+       "name": "redCurve",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["key","0 0 0 3",null],
+        ["key","1 1 0 0",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "greenCurve",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["key","0 0 0 1",null],
+        ["key","1 1 1 0",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "blueCurve",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["key","0 0 0 0",null],
+        ["key","1 0.7 1.5 0",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "alphaCurve",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["key","0 1",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleScienceExperiment",null],
+      ["experimentID","crewReport",null],
+      ["experimentActionName","#autoLOC_502009",null],
+      ["resetActionName","#autoLOC_502010",null],
+      ["reviewActionName","#autoLOC_502200",null],
+      ["useStaging","False",null],
+      ["useActionGroups","True",null],
+      ["hideUIwhenUnavailable","True",null],
+      ["rerunnable","True",null],
+      ["xmitDataScalar","1.0",null],
+      ["usageReqMaskInternal","5",null],
+      ["usageReqMaskExternal","-1",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleScienceContainer",null],
+      ["reviewActionName","#autoLOC_502201",null],
+      ["storeActionName","#autoLOC_502202",null],
+      ["evaOnlyStorage","True",null],
+      ["storageRange","1.3",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "RESOURCE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","MonoPropellant",null],
+      ["amount","10",null],
+      ["maxAmount","10",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleConductionMultiplier",null],
+      ["modifiedConductionFactor","0.003",null],
+      ["convectionFluxThreshold","3000",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleDataTransmitter",null],
+      ["antennaType","INTERNAL",null],
+      ["packetInterval","1.0",null],
+      ["packetSize","2",null],
+      ["packetResourceCost","12.0",null],
+      ["requiredResource","ElectricCharge",null],
+      ["antennaPower","5000",null],
+      ["optimumRange","2500",null],
+      ["packetFloor",".1",null],
+      ["packetCeiling","5",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleLiftingSurface",null],
+      ["useInternalDragModel","False",null],
+      ["deflectionLiftCoeff","0.35",null],
+      ["liftingSurfaceCurve","CapsuleBottom",null],
+      ["disableBodyLift","False",null],
+      ["omnidirectional","False",null],
+      ["perpendicularOnly","True",null],
+      ["transformDir","Y",null],
+      ["transformSign","-1",null],
+      ["nodeEnabled","True",null],
+      ["attachNodeName","bottom",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","FlagDecal",null],
+      ["textureQuadName","Flag",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModulePartVariants",null],
+      ["primaryColor","#000000",null],
+      ["secondaryColor","#000000",null],
+      ["baseDisplayName","#autoLOC_8007117",null],
+      ["baseThemeName","Dark",null],
+      ["useMultipleDragCubes","false",null]
+     ],
+     "nodes": [
+      {
+       "name": "VARIANT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["name","White",null],
+        ["displayName","#autoLOC_8007119",null],
+        ["themeName","White",null],
+        ["primaryColor","#ffffff",null],
+        ["secondaryColor","#ffffff",null]
+       ],
+       "nodes": [
+        {
+         "name": "TEXTURE",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["mainTextureURL","Squad/Parts/Command/mk1pod_v2/Mk1_v2_W",null],
+          ["_BumpMap","Squad/Parts/Command/mk1pod_v2/Mk1_v2_W_N",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "VARIANT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["name","GrayAndWhite",null],
+        ["displayName","#autoLOC_8003112",null],
+        ["themeName","GrayAndWhite",null],
+        ["primaryColor","#ffffff",null],
+        ["secondaryColor","#999999",null]
+       ],
+       "nodes": [
+        {
+         "name": "TEXTURE",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["mainTextureURL","Squad/Parts/Command/mk1pod_v2/Mk1_v2_GW",null],
+          ["_BumpMap","Squad/Parts/Command/mk1pod_v2/Mk1_v2_W_N",null]
+         ],
+         "nodes": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleCargoPart",null],
+      ["stackableQuantity","1",null],
+      ["packedVolume","-1",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleInventoryPart",null],
+      ["InventorySlots","1",null],
+      ["packedVolumeLimit","50",null]
+     ],
+     "nodes": []
+    }
+   ]
+  }
+ ]
+}

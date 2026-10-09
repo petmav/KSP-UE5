@@ -1,0 +1,830 @@
+{
+ "golden": "harness/golden/aero_forces/aero_forces.json",
+ "candidate": "C:/Projects/KSP-UE5/harness/captures/out/aero_forces_mono.json",
+ "bit_mismatches": 61141,
+ "tables": [
+  {
+   "table": "drag_curve_value",
+   "rows": 2870,
+   "missing": 0,
+   "extra": 0,
+   "columns": {
+    "value": {
+     "type": "f32",
+     "n": 2870,
+     "mismatch": 835,
+     "max_ulp": 61,
+     "max_abs": 2.384185791015625e-07,
+     "examples": [
+      {
+       "key": [
+        "0.05",
+        "0.95"
+       ],
+       "golden": "0.5189709663391113",
+       "candidate": "0.5189709067344666",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "0.05",
+        "15.0"
+       ],
+       "golden": "0.11617580056190491",
+       "candidate": "0.1161758154630661",
+       "ulp": 2
+      },
+      {
+       "key": [
+        "0.075",
+        "1.5"
+       ],
+       "golden": "0.19546915590763092",
+       "candidate": "0.19546914100646973",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "0.075",
+        "2.8"
+       ],
+       "golden": "0.09690061211585999",
+       "candidate": "0.09690060466527939",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "0.075",
+        "15.0"
+       ],
+       "golden": "0.10982788354158401",
+       "candidate": "0.10982789099216461",
+       "ulp": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "table": "cube_inputs",
+   "rows": 34,
+   "missing": 0,
+   "extra": 0,
+   "columns": {
+    "url": {
+     "type": "str",
+     "n": 34,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "cubes": {
+     "type": "str",
+     "n": 34,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "weights": {
+     "type": "str",
+     "n": 34,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "postOcclusionArea": {
+     "type": "f32",
+     "n": 34,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    }
+   }
+  },
+  {
+   "table": "cube_weighted",
+   "rows": 204,
+   "missing": 0,
+   "extra": 0,
+   "columns": {
+    "weightedArea": {
+     "type": "f32",
+     "n": 204,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "weightedDrag": {
+     "type": "f32",
+     "n": 204,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "weightedDepth": {
+     "type": "f32",
+     "n": 204,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "areaOccluded": {
+     "type": "f32",
+     "n": 204,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    }
+   }
+  },
+  {
+   "table": "cube_drag",
+   "rows": 18122,
+   "missing": 0,
+   "extra": 0,
+   "columns": {
+    "flow_x": {
+     "type": "f32",
+     "n": 18122,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "flow_y": {
+     "type": "f32",
+     "n": 18122,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "flow_z": {
+     "type": "f32",
+     "n": 18122,
+     "mismatch": 0,
+     "max_ulp": 0,
+     "max_abs": 0.0,
+     "examples": []
+    },
+    "Area": {
+     "type": "f32",
+     "n": 18122,
+     "mismatch": 3165,
+     "max_ulp": 8,
+     "max_abs": 3.0517578125e-05,
+     "examples": [
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.0"
+       ],
+       "golden": "0.5964778661727905",
+       "candidate": "0.5964779853820801",
+       "ulp": 2
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.3"
+       ],
+       "golden": "0.5983318090438843",
+       "candidate": "0.5983319282531738",
+       "ulp": 2
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.6"
+       ],
+       "golden": "0.6143333911895752",
+       "candidate": "0.6143335103988647",
+       "ulp": 2
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.85"
+       ],
+       "golden": "0.6497728824615479",
+       "candidate": "0.6497730016708374",
+       "ulp": 2
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "1.0"
+       ],
+       "golden": "1.6010222434997559",
+       "candidate": "1.6010220050811768",
+       "ulp": 2
+      }
+     ]
+    },
+    "AreaDrag": {
+     "type": "f32",
+     "n": 18122,
+     "mismatch": 6777,
+     "max_ulp": 37,
+     "max_abs": 0.00048828125,
+     "examples": [
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.0"
+       ],
+       "golden": "0.06548328697681427",
+       "candidate": "0.06548327952623367",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.85"
+       ],
+       "golden": "0.04445885121822357",
+       "candidate": "0.04445885494351387",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "1.0"
+       ],
+       "golden": "0.013259158469736576",
+       "candidate": "0.013259155675768852",
+       "ulp": 3
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "5.0"
+       ],
+       "golden": "0.0005638101720251143",
+       "candidate": "0.0005638102302327752",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "10.0"
+       ],
+       "golden": "0.0007682223804295063",
+       "candidate": "0.0007682224386371672",
+       "ulp": 1
+      }
+     ]
+    },
+    "DragCoeff": {
+     "type": "f32",
+     "n": 18122,
+     "mismatch": 6926,
+     "max_ulp": 33,
+     "max_abs": 1.9073486328125e-06,
+     "examples": [
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.0"
+       ],
+       "golden": "0.10978326201438904",
+       "candidate": "0.10978323221206665",
+       "ulp": 4
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.3"
+       ],
+       "golden": "0.10622598230838776",
+       "candidate": "0.10622595995664597",
+       "ulp": 3
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.6"
+       ],
+       "golden": "0.09102864563465118",
+       "candidate": "0.09102863073348999",
+       "ulp": 2
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.85"
+       ],
+       "golden": "0.06842213869094849",
+       "candidate": "0.06842213124036789",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "5.0"
+       ],
+       "golden": "0.0004015783197246492",
+       "candidate": "0.00040157834882847965",
+       "ulp": 1
+      }
+     ]
+    },
+    "CrossSectionalArea": {
+     "type": "f32",
+     "n": 18122,
+     "mismatch": 2769,
+     "max_ulp": 1,
+     "max_abs": 7.62939453125e-06,
+     "examples": [
+      {
+       "key": [
+        "noseCone",
+        "xz+1+1",
+        "0.0"
+       ],
+       "golden": "0.7933030128479004",
+       "candidate": "0.7933030724525452",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "xz+1+1",
+        "0.3"
+       ],
+       "golden": "0.7933030128479004",
+       "candidate": "0.7933030724525452",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "xz+1+1",
+        "0.6"
+       ],
+       "golden": "0.7933030128479004",
+       "candidate": "0.7933030724525452",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "xz+1+1",
+        "0.85"
+       ],
+       "golden": "0.7933030128479004",
+       "candidate": "0.7933030724525452",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "xz+1+1",
+        "0.95"
+       ],
+       "golden": "0.7933030128479004",
+       "candidate": "0.7933030724525452",
+       "ulp": 1
+      }
+     ]
+    },
+    "ExposedArea": {
+     "type": "f32",
+     "n": 18122,
+     "mismatch": 7298,
+     "max_ulp": 14,
+     "max_abs": 6.103515625e-05,
+     "examples": [
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.0"
+       ],
+       "golden": "15.614304542541504",
+       "candidate": "15.61430549621582",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.3"
+       ],
+       "golden": "15.704345703125",
+       "candidate": "15.704346656799316",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.6"
+       ],
+       "golden": "16.48149871826172",
+       "candidate": "16.48150062561035",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.85"
+       ],
+       "golden": "18.202695846557617",
+       "candidate": "18.20269775390625",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.95"
+       ],
+       "golden": "25.47211456298828",
+       "candidate": "25.47211265563965",
+       "ulp": 1
+      }
+     ]
+    },
+    "Depth": {
+     "type": "f32",
+     "n": 18122,
+     "mismatch": 2522,
+     "max_ulp": 2,
+     "max_abs": 4.76837158203125e-07,
+     "examples": [
+      {
+       "key": [
+        "noseCone",
+        "xyz+1-1+1",
+        "0.0"
+       ],
+       "golden": "0.561033308506012",
+       "candidate": "0.5610332489013672",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "xyz+1-1+1",
+        "0.3"
+       ],
+       "golden": "0.561033308506012",
+       "candidate": "0.5610332489013672",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "xyz+1-1+1",
+        "0.6"
+       ],
+       "golden": "0.561033308506012",
+       "candidate": "0.5610332489013672",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "xyz+1-1+1",
+        "0.85"
+       ],
+       "golden": "0.561033308506012",
+       "candidate": "0.5610332489013672",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "xyz+1-1+1",
+        "0.95"
+       ],
+       "golden": "0.561033308506012",
+       "candidate": "0.5610332489013672",
+       "ulp": 1
+      }
+     ]
+    },
+    "TaperDot": {
+     "type": "f32",
+     "n": 18122,
+     "mismatch": 2041,
+     "max_ulp": 3,
+     "max_abs": 3.814697265625e-06,
+     "examples": [
+      {
+       "key": [
+        "noseCone",
+        "xy+1-1",
+        "0.0"
+       ],
+       "golden": "24.01548194885254",
+       "candidate": "24.015478134155273",
+       "ulp": 2
+      },
+      {
+       "key": [
+        "noseCone",
+        "xy+1-1",
+        "0.3"
+       ],
+       "golden": "24.01548194885254",
+       "candidate": "24.015478134155273",
+       "ulp": 2
+      },
+      {
+       "key": [
+        "noseCone",
+        "xy+1-1",
+        "0.6"
+       ],
+       "golden": "24.01548194885254",
+       "candidate": "24.015478134155273",
+       "ulp": 2
+      },
+      {
+       "key": [
+        "noseCone",
+        "xy+1-1",
+        "0.85"
+       ],
+       "golden": "24.01548194885254",
+       "candidate": "24.015478134155273",
+       "ulp": 2
+      },
+      {
+       "key": [
+        "noseCone",
+        "xy+1-1",
+        "0.95"
+       ],
+       "golden": "24.01548194885254",
+       "candidate": "24.015478134155273",
+       "ulp": 2
+      }
+     ]
+    },
+    "LiftForce_x": {
+     "type": "f32",
+     "n": 18122,
+     "mismatch": 2470,
+     "max_ulp": 1,
+     "max_abs": 7.62939453125e-06,
+     "examples": [
+      {
+       "key": [
+        "mk1pod_v2",
+        "xyz+1+1+1",
+        "0.0"
+       ],
+       "golden": "-0.4128507375717163",
+       "candidate": "-0.4128507077693939",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "mk1pod_v2",
+        "xyz+1+1+1",
+        "0.3"
+       ],
+       "golden": "-0.4128507375717163",
+       "candidate": "-0.4128507077693939",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "mk1pod_v2",
+        "xyz+1+1+1",
+        "0.6"
+       ],
+       "golden": "-0.4128507375717163",
+       "candidate": "-0.4128507077693939",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "mk1pod_v2",
+        "xyz+1+1+1",
+        "0.85"
+       ],
+       "golden": "-0.4128507375717163",
+       "candidate": "-0.4128507077693939",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "mk1pod_v2",
+        "xyz+1+1+1",
+        "0.95"
+       ],
+       "golden": "-0.4128507375717163",
+       "candidate": "-0.4128507077693939",
+       "ulp": 1
+      }
+     ]
+    },
+    "LiftForce_y": {
+     "type": "f32",
+     "n": 18122,
+     "mismatch": 4251,
+     "max_ulp": 2,
+     "max_abs": 3.0517578125e-05,
+     "examples": [
+      {
+       "key": [
+        "noseCone",
+        "aoa5",
+        "0.0"
+       ],
+       "golden": "-0.016268379986286163",
+       "candidate": "-0.016268378123641014",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "aoa5",
+        "0.3"
+       ],
+       "golden": "-0.016268379986286163",
+       "candidate": "-0.016268378123641014",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "aoa5",
+        "0.6"
+       ],
+       "golden": "-0.016268379986286163",
+       "candidate": "-0.016268378123641014",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "aoa5",
+        "0.85"
+       ],
+       "golden": "-0.016268379986286163",
+       "candidate": "-0.016268378123641014",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "aoa5",
+        "0.95"
+       ],
+       "golden": "-0.016268379986286163",
+       "candidate": "-0.016268378123641014",
+       "ulp": 1
+      }
+     ]
+    },
+    "LiftForce_z": {
+     "type": "f32",
+     "n": 18122,
+     "mismatch": 3965,
+     "max_ulp": 2,
+     "max_abs": 7.62939453125e-06,
+     "examples": [
+      {
+       "key": [
+        "noseCone",
+        "xyz+1+1+1",
+        "0.0"
+       ],
+       "golden": "-0.012609569355845451",
+       "candidate": "-0.012609570287168026",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "xyz+1+1+1",
+        "0.3"
+       ],
+       "golden": "-0.012609569355845451",
+       "candidate": "-0.012609570287168026",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "xyz+1+1+1",
+        "0.6"
+       ],
+       "golden": "-0.012609569355845451",
+       "candidate": "-0.012609570287168026",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "xyz+1+1+1",
+        "0.85"
+       ],
+       "golden": "-0.012609569355845451",
+       "candidate": "-0.012609570287168026",
+       "ulp": 1
+      },
+      {
+       "key": [
+        "noseCone",
+        "xyz+1+1+1",
+        "0.95"
+       ],
+       "golden": "-0.012609569355845451",
+       "candidate": "-0.012609570287168026",
+       "ulp": 1
+      }
+     ]
+    },
+    "CalculateDragValue": {
+     "type": "f64",
+     "n": 18122,
+     "mismatch": 18122,
+     "max_ulp": 26388341184,
+     "max_abs": 6.223407763172872e-05,
+     "examples": [
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.0"
+       ],
+       "golden": "0.0065483287908136845",
+       "candidate": "0.006548328050201058",
+       "ulp": 853868224
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.3"
+       ],
+       "golden": "0.006355838384479284",
+       "candidate": "0.006355838572320915",
+       "ulp": 216566656
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.6"
+       ],
+       "golden": "0.0055921939201653",
+       "candidate": "0.0055921939103632246",
+       "ulp": 11301024
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.85"
+       ],
+       "golden": "0.004445885308086872",
+       "candidate": "0.004445885560600243",
+       "ulp": 291128096
+      },
+      {
+       "key": [
+        "noseCone",
+        "+X",
+        "0.95"
+       ],
+       "golden": "0.002509095473214984",
+       "candidate": "0.0025090955571695495",
+       "ulp": 193586048
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,238 @@
+{
+ "ok": false,
+ "results": [
+  {
+   "dataset": "math_shim",
+   "table": "f32",
+   "rows": 903,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "a0": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a1": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a2": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a3": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a4": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a5": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "r0": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 360.0,
+     "max_rel": 3.6e+302,
+     "max_ulp": 4294967296,
+     "fail": 22,
+     "worst": [
+      [
+       "\"Mathf.Repeat\"",
+       "14"
+      ],
+      0.0,
+      360.0
+     ]
+    },
+    "r1": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 0.09999999986030161,
+     "max_rel": 4.5259302200811866e-07,
+     "max_ulp": 6,
+     "fail": 14,
+     "worst": [
+      [
+       "\"Vector3.Project\"",
+       "17"
+      ],
+      0.28723377,
+      0.2872339
+     ]
+    },
+    "r2": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 5.99999999622014e-05,
+     "max_rel": 4.700004214037426e-07,
+     "max_ulp": 4,
+     "fail": 10,
+     "worst": [
+      [
+       "\"Vector3.Project\"",
+       "17"
+      ],
+      -0.06382973,
+      -0.06382976
+     ]
+    },
+    "r3": {
+     "type": "f32",
+     "n": 903,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  },
+  {
+   "dataset": "math_shim",
+   "table": "f64",
+   "rows": 532,
+   "missing_rows": 0,
+   "extra_rows": 0,
+   "columns": {
+    "a0": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a1": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a2": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a3": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a4": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "a5": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    },
+    "r0": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 1.6427876096865397,
+     "max_rel": 7.660444431189777e+299,
+     "max_ulp": 9235596719285332449,
+     "fail": 2,
+     "worst": [
+      [
+       "\"Planetarium.Zup(after Awake).Y\"",
+       "0"
+      ],
+      0.0,
+      0.7660444431189778
+     ]
+    },
+    "r1": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 1.6427876096865397,
+     "max_rel": 7.660444431189777e+299,
+     "max_ulp": 13841668939227115465,
+     "fail": 2,
+     "worst": [
+      [
+       "\"Planetarium.Zup(after Awake)\"",
+       "0"
+      ],
+      0.0,
+      -0.7660444431189778
+     ]
+    },
+    "r2": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 18446744073709551616,
+     "fail": 0,
+     "worst": null
+    },
+    "r3": {
+     "type": "f64",
+     "n": 532,
+     "max_abs": 0.0,
+     "max_rel": 0.0,
+     "max_ulp": 0,
+     "fail": 0,
+     "worst": null
+    }
+   }
+  }
+ ]
+}

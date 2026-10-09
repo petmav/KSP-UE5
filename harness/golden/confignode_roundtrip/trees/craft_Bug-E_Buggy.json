@@ -1,0 +1,5469 @@
+{
+ "name": "root",
+ "id": "",
+ "comment": null,
+ "values": [
+  ["ship","#autoLOC_501180",null],
+  ["version","1.6.0",null],
+  ["description","#autoLOC_501181",null],
+  ["type","SPH",null],
+  ["size","2.27936172,1.6662674,2.76605797",null],
+  ["steamPublishedFileId","0",null],
+  ["persistentId","2413942702",null],
+  ["rot","0,0,0,1",null],
+  ["missionFlag","Squad/Flags/default",null],
+  ["vesselType","Debris",null]
+ ],
+ "nodes": [
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","probeCoreSphere.v2_4294225728",null],
+    ["partName","Part",null],
+    ["persistentId","3970331232",null],
+    ["pos","-0.0218606479,10.0069818,0.40533644",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","-0.0218606479,10.0069818,0.40533644",null],
+    ["rot","0.707106829,0,0,0.707106829",null],
+    ["attRot","0,0,0,1",null],
+    ["attRot0","0.707106769,0,0,0.707106769",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","0",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["link","strutCube_4292655016",null],
+    ["link","spotLight1_4292573090",null],
+    ["link","spotLight1_4294207630",null],
+    ["link","longAntenna_4292599214",null],
+    ["link","longAntenna_4294207316",null],
+    ["attN","bottom,strutCube_4292655016_0|-0.27448|0",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleCommand",null],
+      ["isEnabled","True",null],
+      ["hibernation","False",null],
+      ["hibernateOnWarp","False",null],
+      ["activeControlPointName","_default",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "MakeReferenceToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "HibernateToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleKerbNetAccess",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "OpenKerbNetAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleDataTransmitter",null],
+      ["isEnabled","True",null],
+      ["xmitIncomplete","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "StartTransmissionAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["active","False",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleTripLogger",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "Log",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["flight","0",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RESOURCE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ElectricCharge",null],
+      ["amount","10",null],
+      ["maxAmount","10",null],
+      ["flowState","True",null],
+      ["isTweakable","True",null],
+      ["hideFlow","False",null],
+      ["isVisible","True",null],
+      ["flowMode","Both",null]
+     ],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","strutCube_4292655016",null],
+    ["partName","Part",null],
+    ["persistentId","2919575176",null],
+    ["pos","-0.0218606479,10.2069817,0.00533607602",null],
+    ["attPos","0,0.00321424007,-0.199999839",null],
+    ["attPos0","0,-0.403214455,5.96046448E-08",null],
+    ["rot","0.707106829,0,0,0.707106829",null],
+    ["attRot","0,0,0,1",null],
+    ["attRot0","0,0,0,1",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","0",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["link","structuralMiniNode_4292666114",null],
+    ["attN","top,probeCoreSphere.v2_4294225728_0|0.1287344|0",null],
+    ["attN","bottom,structuralMiniNode_4292666114_0|-0.1287344|0",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","structuralMiniNode_4292666114",null],
+    ["partName","Part",null],
+    ["persistentId","1940081504",null],
+    ["pos","-0.0218606479,10.2069817,-0.305725515",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","0.1279203,10.7411098,-0.189601094",null],
+    ["rot","0.707106829,0,0,0.707106829",null],
+    ["attRot","0,0,0,1",null],
+    ["attRot0","0.707106829,0,0,0.707106829",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","0",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["link","strutCube_4292434784",null],
+    ["link","stackDecouplerMini_4292445502",null],
+    ["link","roverBody_4292702166",null],
+    ["attN","back,roverBody_4292702166_0|0|0.1823258",null],
+    ["attN","front,stackDecouplerMini_4292445502_0|0|-0.1823258",null],
+    ["attN","top,strutCube_4292655016_0|0.1823258|0",null],
+    ["attN","bottom,strutCube_4292434784_0|-0.1823258|0",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","strutCube_4292434784",null],
+    ["partName","Part",null],
+    ["persistentId","1110578809",null],
+    ["pos","-0.0218606479,10.2069817,-0.61678654",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","0,-0.311060399,3.7424531E-08",null],
+    ["rot","0.707106829,0,0,0.707106829",null],
+    ["attRot","0,0,0,1",null],
+    ["attRot0","0,0,0,1",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","0",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["attN","top,structuralMiniNode_4292666114_0|0.1287344|0",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","stackDecouplerMini_4292445502",null],
+    ["partName","Part",null],
+    ["persistentId","894515698",null],
+    ["pos","-0.0218606479,10.4652224,-0.305725515",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","0.0982505381,11.2941904,-0.576389194",null],
+    ["rot","1.00000012,0,0,0",null],
+    ["attRot","0.707106709,0,0,0.707106709",null],
+    ["attRot0","0.707106829,0,0,0.707106829",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","0",null],
+    ["resPri","0",null],
+    ["dstg","1",null],
+    ["sidx","0",null],
+    ["sqor","0",null],
+    ["sepI","0",null],
+    ["attm","0",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["attN","top,structuralMiniNode_4292666114_0|0.07590994|0",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleDecouple",null],
+      ["isEnabled","True",null],
+      ["ejectionForcePercent","100",null],
+      ["isDecoupled","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "DecoupleAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleToggleCrossfeed",null],
+      ["isEnabled","True",null],
+      ["crossfeedStatus","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ToggleAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "EnableAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "DisableAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","roverBody_4292702166",null],
+    ["partName","Part",null],
+    ["persistentId","3447478586",null],
+    ["pos","-0.0218606479,9.80698204,-0.705726206",null],
+    ["attPos","0,-0.399999678,-0.00646862388",null],
+    ["attPos0","0,-1.78813934E-07,0.406467915",null],
+    ["rot","0,0,0,-1.00000012",null],
+    ["attRot","0.707106709,0,0,-0.707106709",null],
+    ["attRot0","0.707106829,0,0,-0.707106829",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","0",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["link","structuralIBeam3_4292668276",null],
+    ["link","structuralIBeam3_4292641116",null],
+    ["link","sensorGravimeter_4292504604",null],
+    ["link","sensorThermometer_4292498146",null],
+    ["attN","top,structuralMiniNode_4292666114_0|0.2241425|0",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleCommand",null],
+      ["isEnabled","True",null],
+      ["hibernation","False",null],
+      ["hibernateOnWarp","False",null],
+      ["activeControlPointName","_default",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "MakeReferenceToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "HibernateToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleSAS",null],
+      ["isEnabled","True",null],
+      ["standaloneToggle","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleKerbNetAccess",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "OpenKerbNetAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleDataTransmitter",null],
+      ["isEnabled","True",null],
+      ["xmitIncomplete","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "StartTransmissionAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["active","False",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleTripLogger",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "Log",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["flight","0",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "RESOURCE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ElectricCharge",null],
+      ["amount","120",null],
+      ["maxAmount","120",null],
+      ["flowState","True",null],
+      ["isTweakable","True",null],
+      ["hideFlow","False",null],
+      ["isVisible","True",null],
+      ["flowMode","Both",null]
+     ],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","structuralIBeam3_4292668276",null],
+    ["partName","Part",null],
+    ["persistentId","3477859317",null],
+    ["pos","-0.621860683,9.80698204,-0.705726206",null],
+    ["attPos","-0.0968167186,0.0701761395,-0.802465916",null],
+    ["attPos0","-0.503183305,-0.0701761395,0.802465796",null],
+    ["rot","4.21468513E-08,0.707106888,0.707106888,4.21468513E-08",null],
+    ["attRot","0.707106709,0.707106709,0,0",null],
+    ["attRot0","-4.21468407E-08,-0.707106829,-0.707106829,-4.21468407E-08",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["link","roverWheel2_4292645074",null],
+    ["link","roverWheel2_4292643558",null],
+    ["link","roverWheel2_4292644116",null],
+    ["link","roverWheel2_4292643798",null],
+    ["link","batteryBankMini_4292637912",null],
+    ["link","LgRadialSolarPanel_4292545402",null],
+    ["sym","structuralIBeam3_4292641116",null],
+    ["srfN","srfAttach,roverBody_4292702166",null],
+    ["attN","bottom,batteryBankMini_4292637912_0|-0.8024656|0",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","roverWheel2_4292645074",null],
+    ["partName","Part",null],
+    ["persistentId","946669009",null],
+    ["pos","-0.957185447,9.2821312,-0.0755392909",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","0.335323215,0.630182087,-0.524852097",null],
+    ["rot","-1.78813934E-07,0,5.96047798E-08,-1.00000024",null],
+    ["attRot","-0.707106709,0,0,0.707106709",null],
+    ["attRot0","-1.42108496E-14,0.707106888,0.707106709,2.44845411E-22",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","ForceHeaviest",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","roverWheel2_4292641088",null],
+    ["srfN","srfAttach,structuralIBeam3_4292668276",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelBase",null],
+      ["isEnabled","True",null],
+      ["wheelType","MOTORIZED",null],
+      ["isGrounded","False",null],
+      ["autoFriction","True",null],
+      ["frictionMultiplier","1",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ActAutoFrictionToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelSuspension",null],
+      ["isEnabled","True",null],
+      ["springTweakable","1",null],
+      ["damperTweakable","1",null],
+      ["autoSpringDamper","True",null],
+      ["suspensionPos","(-1, -1, -1)",null],
+      ["autoBoost","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelSteering",null],
+      ["isEnabled","True",null],
+      ["steeringEnabled","True",null],
+      ["steeringInvert","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "SteeringToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelMotor",null],
+      ["isEnabled","True",null],
+      ["autoTorque","True",null],
+      ["motorEnabled","False",null],
+      ["motorInverted","False",null],
+      ["driveLimiter","100",null],
+      ["tractionControlScale","1",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "MotorToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "ActAutoTorqueToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelBrakes",null],
+      ["isEnabled","True",null],
+      ["brakeTweakable","100",null],
+      ["brakeInput","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "BrakeAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","Brakes",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelDamage",null],
+      ["isEnabled","True",null],
+      ["isDamaged","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","FXModuleLookAtConstraint",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleTestSubject",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","roverWheel2_4292643558",null],
+    ["partName","Part",null],
+    ["persistentId","2473655942",null],
+    ["pos","-0.957185328,9.28213215,-0.494837224",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","0.335323095,0.210885793,-0.524851978",null],
+    ["rot","-1.78813934E-07,0,5.96047798E-08,-1.00000024",null],
+    ["attRot","-0.707106709,0,0,0.707106709",null],
+    ["attRot0","-1.42108496E-14,0.707106888,0.707106709,2.44845411E-22",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","ForceHeaviest",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","roverWheel2_4292640954",null],
+    ["srfN","srfAttach,structuralIBeam3_4292668276",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelBase",null],
+      ["isEnabled","True",null],
+      ["wheelType","MOTORIZED",null],
+      ["isGrounded","False",null],
+      ["autoFriction","True",null],
+      ["frictionMultiplier","1",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ActAutoFrictionToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelSuspension",null],
+      ["isEnabled","True",null],
+      ["springTweakable","1",null],
+      ["damperTweakable","1",null],
+      ["autoSpringDamper","True",null],
+      ["suspensionPos","(-1, -1, -1)",null],
+      ["autoBoost","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelSteering",null],
+      ["isEnabled","True",null],
+      ["steeringEnabled","True",null],
+      ["steeringInvert","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "SteeringToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelMotor",null],
+      ["isEnabled","True",null],
+      ["autoTorque","True",null],
+      ["motorEnabled","True",null],
+      ["motorInverted","False",null],
+      ["driveLimiter","100",null],
+      ["tractionControlScale","1",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "MotorToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "ActAutoTorqueToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelBrakes",null],
+      ["isEnabled","True",null],
+      ["brakeTweakable","100",null],
+      ["brakeInput","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "BrakeAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","Brakes",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelDamage",null],
+      ["isEnabled","True",null],
+      ["isDamaged","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","FXModuleLookAtConstraint",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleTestSubject",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","roverWheel2_4292644116",null],
+    ["partName","Part",null],
+    ["persistentId","327214342",null],
+    ["pos","-0.95706147,9.28213215,-1.33651066",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","0.335199088,-0.630783319,-0.524851918",null],
+    ["rot","-1.78813934E-07,0,5.96047798E-08,-1.00000024",null],
+    ["attRot","-0.707106709,0,0,0.707106709",null],
+    ["attRot0","-1.42108496E-14,0.707106888,0.707106709,2.44845411E-22",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","ForceHeaviest",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","roverWheel2_4292640820",null],
+    ["srfN","srfAttach,structuralIBeam3_4292668276",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelBase",null],
+      ["isEnabled","True",null],
+      ["wheelType","MOTORIZED",null],
+      ["isGrounded","False",null],
+      ["autoFriction","True",null],
+      ["frictionMultiplier","1",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ActAutoFrictionToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelSuspension",null],
+      ["isEnabled","True",null],
+      ["springTweakable","1",null],
+      ["damperTweakable","1",null],
+      ["autoSpringDamper","True",null],
+      ["suspensionPos","(-1, -1, -1)",null],
+      ["autoBoost","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelSteering",null],
+      ["isEnabled","True",null],
+      ["steeringEnabled","True",null],
+      ["steeringInvert","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "SteeringToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelMotor",null],
+      ["isEnabled","True",null],
+      ["autoTorque","True",null],
+      ["motorEnabled","True",null],
+      ["motorInverted","False",null],
+      ["driveLimiter","100",null],
+      ["tractionControlScale","1",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "MotorToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "ActAutoTorqueToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelBrakes",null],
+      ["isEnabled","True",null],
+      ["brakeTweakable","100",null],
+      ["brakeInput","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "BrakeAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","Brakes",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelDamage",null],
+      ["isEnabled","True",null],
+      ["isDamaged","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","FXModuleLookAtConstraint",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleTestSubject",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","roverWheel2_4292643798",null],
+    ["partName","Part",null],
+    ["persistentId","3686529800",null],
+    ["pos","-0.957073629,9.2821312,-0.913600743",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","0.335211396,-0.207874998,-0.524851978",null],
+    ["rot","-1.78813934E-07,0,5.96047798E-08,-1.00000024",null],
+    ["attRot","-0.707106709,0,0,0.707106709",null],
+    ["attRot0","-1.42108496E-14,0.707106888,0.707106709,2.44845411E-22",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","ForceHeaviest",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","roverWheel2_4292640686",null],
+    ["srfN","srfAttach,structuralIBeam3_4292668276",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelBase",null],
+      ["isEnabled","True",null],
+      ["wheelType","MOTORIZED",null],
+      ["isGrounded","False",null],
+      ["autoFriction","True",null],
+      ["frictionMultiplier","1",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ActAutoFrictionToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelSuspension",null],
+      ["isEnabled","True",null],
+      ["springTweakable","1",null],
+      ["damperTweakable","1",null],
+      ["autoSpringDamper","True",null],
+      ["suspensionPos","(-1, -1, -1)",null],
+      ["autoBoost","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelSteering",null],
+      ["isEnabled","True",null],
+      ["steeringEnabled","True",null],
+      ["steeringInvert","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "SteeringToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelMotor",null],
+      ["isEnabled","True",null],
+      ["autoTorque","True",null],
+      ["motorEnabled","True",null],
+      ["motorInverted","False",null],
+      ["driveLimiter","100",null],
+      ["tractionControlScale","1",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "MotorToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "ActAutoTorqueToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelBrakes",null],
+      ["isEnabled","True",null],
+      ["brakeTweakable","100",null],
+      ["brakeInput","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "BrakeAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","Brakes",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelDamage",null],
+      ["isEnabled","True",null],
+      ["isDamaged","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","FXModuleLookAtConstraint",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleTestSubject",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","batteryBankMini_4292637912",null],
+    ["partName","Part",null],
+    ["persistentId","204084947",null],
+    ["pos","-0.621860683,9.80698204,-1.60819936",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","2.16667195E-15,-0.902466416,1.25757694E-07",null],
+    ["rot","0.707106888,0,0,0.707106888",null],
+    ["attRot","0,0,0,1",null],
+    ["attRot0","0,-1,0,5.96046306E-08",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","0",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","batteryBankMini_4292618916",null],
+    ["attN","top,structuralIBeam3_4292668276_0|0.1|0",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "RESOURCE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ElectricCharge",null],
+      ["amount","200",null],
+      ["maxAmount","200",null],
+      ["flowState","True",null],
+      ["isTweakable","True",null],
+      ["hideFlow","False",null],
+      ["isVisible","True",null],
+      ["flowMode","Both",null]
+     ],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","LgRadialSolarPanel_4292545402",null],
+    ["partName","Part",null],
+    ["persistentId","3567317780",null],
+    ["pos","-0.686304152,9.90899277,-0.705834687",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","0.0644432008,-0.000107765198,0.102001198",null],
+    ["rot","-0.707106888,4.21468727E-08,-4.214683E-08,0.707106888",null],
+    ["attRot","0,0,-0.999999881,0",null],
+    ["attRot0","5.02429493E-15,8.0948029E-22,-1,2.51214793E-14",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","LgRadialSolarPanel_4292544846",null],
+    ["srfN","srfAttach,structuralIBeam3_4292668276",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleDeployableSolarPanel",null],
+      ["isEnabled","True",null],
+      ["efficiencyMult","1",null],
+      ["launchUT","-1",null],
+      ["currentRotation","(0, 0, 0, 1)",null],
+      ["storedAnimationTime","0",null],
+      ["storedAnimationSpeed","0",null],
+      ["deployState","EXTENDED",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ExtendPanelsAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["active","False",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "ExtendAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["active","False",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "RetractAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["active","False",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","structuralIBeam3_4292641116",null],
+    ["partName","Part",null],
+    ["persistentId","3388482581",null],
+    ["pos","0.578139246,9.80698204,-0.705726445",null],
+    ["attPos","0.0968167186,0.0701761395,-0.802466214",null],
+    ["attPos0","0.503183305,-0.0701761395,0.802465916",null],
+    ["rot","-4.21468478E-08,0.707107008,0.707106769,-4.21468052E-08",null],
+    ["attRot","0.707106709,0.707106709,0,0",null],
+    ["attRot0","4.21468407E-08,-0.707106888,-0.707106829,4.214683E-08",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["link","roverWheel2_4292641088",null],
+    ["link","roverWheel2_4292640954",null],
+    ["link","roverWheel2_4292640820",null],
+    ["link","roverWheel2_4292640686",null],
+    ["link","batteryBankMini_4292618916",null],
+    ["link","LgRadialSolarPanel_4292544846",null],
+    ["sym","structuralIBeam3_4292668276",null],
+    ["srfN","srfAttach,roverBody_4292702166",null],
+    ["attN","bottom,batteryBankMini_4292618916_0|-0.8024656|0",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","roverWheel2_4292641088",null],
+    ["partName","Part",null],
+    ["persistentId","3824052719",null],
+    ["pos","0.913464129,9.2821312,-0.075537622",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","0.335323215,0.630182087,-0.524852097",null],
+    ["rot","-5.9604794E-08,1.00000024,1.78813934E-07,-4.37115091E-08",null],
+    ["attRot","-0.707106709,0,0,0.707106709",null],
+    ["attRot0","-1.42108496E-14,0.707106888,0.707106709,2.44845411E-22",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","ForceHeaviest",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","roverWheel2_4292645074",null],
+    ["srfN","srfAttach,structuralIBeam3_4292641116",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelBase",null],
+      ["isEnabled","True",null],
+      ["wheelType","MOTORIZED",null],
+      ["isGrounded","False",null],
+      ["autoFriction","True",null],
+      ["frictionMultiplier","1",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ActAutoFrictionToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelSuspension",null],
+      ["isEnabled","True",null],
+      ["springTweakable","1",null],
+      ["damperTweakable","1",null],
+      ["autoSpringDamper","True",null],
+      ["suspensionPos","(-1, -1, -1)",null],
+      ["autoBoost","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelSteering",null],
+      ["isEnabled","True",null],
+      ["steeringEnabled","True",null],
+      ["steeringInvert","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "SteeringToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelMotor",null],
+      ["isEnabled","True",null],
+      ["autoTorque","True",null],
+      ["motorEnabled","False",null],
+      ["motorInverted","False",null],
+      ["driveLimiter","100",null],
+      ["tractionControlScale","1",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "MotorToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "ActAutoTorqueToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelBrakes",null],
+      ["isEnabled","True",null],
+      ["brakeTweakable","100",null],
+      ["brakeInput","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "BrakeAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","Brakes",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelDamage",null],
+      ["isEnabled","True",null],
+      ["isDamaged","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","FXModuleLookAtConstraint",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleTestSubject",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","roverWheel2_4292640954",null],
+    ["partName","Part",null],
+    ["persistentId","2798754180",null],
+    ["pos","0.913464129,9.2821312,-0.49483639",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","0.335323095,0.210885793,-0.524851978",null],
+    ["rot","-5.9604794E-08,1.00000024,1.78813934E-07,-4.37115091E-08",null],
+    ["attRot","-0.707106709,0,0,0.707106709",null],
+    ["attRot0","-1.42108496E-14,0.707106888,0.707106709,2.44845411E-22",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","ForceHeaviest",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","roverWheel2_4292643558",null],
+    ["srfN","srfAttach,structuralIBeam3_4292641116",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelBase",null],
+      ["isEnabled","True",null],
+      ["wheelType","MOTORIZED",null],
+      ["isGrounded","False",null],
+      ["autoFriction","True",null],
+      ["frictionMultiplier","1",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ActAutoFrictionToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelSuspension",null],
+      ["isEnabled","True",null],
+      ["springTweakable","1",null],
+      ["damperTweakable","1",null],
+      ["autoSpringDamper","True",null],
+      ["suspensionPos","(-1, -1, -1)",null],
+      ["autoBoost","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelSteering",null],
+      ["isEnabled","True",null],
+      ["steeringEnabled","True",null],
+      ["steeringInvert","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "SteeringToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelMotor",null],
+      ["isEnabled","True",null],
+      ["autoTorque","True",null],
+      ["motorEnabled","True",null],
+      ["motorInverted","False",null],
+      ["driveLimiter","100",null],
+      ["tractionControlScale","1",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "MotorToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "ActAutoTorqueToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelBrakes",null],
+      ["isEnabled","True",null],
+      ["brakeTweakable","100",null],
+      ["brakeInput","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "BrakeAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","Brakes",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelDamage",null],
+      ["isEnabled","True",null],
+      ["isDamaged","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","FXModuleLookAtConstraint",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleTestSubject",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","roverWheel2_4292640820",null],
+    ["partName","Part",null],
+    ["persistentId","715676780",null],
+    ["pos","0.913340151,9.28213215,-1.33651161",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","0.335199088,-0.630783319,-0.524851918",null],
+    ["rot","-5.9604794E-08,1.00000024,1.78813934E-07,-4.37115091E-08",null],
+    ["attRot","-0.707106709,0,0,0.707106709",null],
+    ["attRot0","-1.42108496E-14,0.707106888,0.707106709,2.44845411E-22",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","ForceHeaviest",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","roverWheel2_4292644116",null],
+    ["srfN","srfAttach,structuralIBeam3_4292641116",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelBase",null],
+      ["isEnabled","True",null],
+      ["wheelType","MOTORIZED",null],
+      ["isGrounded","False",null],
+      ["autoFriction","True",null],
+      ["frictionMultiplier","1",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ActAutoFrictionToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelSuspension",null],
+      ["isEnabled","True",null],
+      ["springTweakable","1",null],
+      ["damperTweakable","1",null],
+      ["autoSpringDamper","True",null],
+      ["suspensionPos","(-1, -1, -1)",null],
+      ["autoBoost","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelSteering",null],
+      ["isEnabled","True",null],
+      ["steeringEnabled","True",null],
+      ["steeringInvert","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "SteeringToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelMotor",null],
+      ["isEnabled","True",null],
+      ["autoTorque","True",null],
+      ["motorEnabled","True",null],
+      ["motorInverted","False",null],
+      ["driveLimiter","100",null],
+      ["tractionControlScale","1",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "MotorToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "ActAutoTorqueToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelBrakes",null],
+      ["isEnabled","True",null],
+      ["brakeTweakable","100",null],
+      ["brakeInput","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "BrakeAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","Brakes",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelDamage",null],
+      ["isEnabled","True",null],
+      ["isDamaged","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","FXModuleLookAtConstraint",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleTestSubject",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","roverWheel2_4292640686",null],
+    ["partName","Part",null],
+    ["persistentId","2609714077",null],
+    ["pos","0.913352191,9.28213215,-0.913600743",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","0.335211396,-0.207874998,-0.524851978",null],
+    ["rot","-5.9604794E-08,1.00000024,1.78813934E-07,-4.37115091E-08",null],
+    ["attRot","-0.707106709,0,0,0.707106709",null],
+    ["attRot0","-1.42108496E-14,0.707106888,0.707106709,2.44845411E-22",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","ForceHeaviest",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","roverWheel2_4292643798",null],
+    ["srfN","srfAttach,structuralIBeam3_4292641116",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelBase",null],
+      ["isEnabled","True",null],
+      ["wheelType","MOTORIZED",null],
+      ["isGrounded","False",null],
+      ["autoFriction","True",null],
+      ["frictionMultiplier","1",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ActAutoFrictionToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelSuspension",null],
+      ["isEnabled","True",null],
+      ["springTweakable","1",null],
+      ["damperTweakable","1",null],
+      ["autoSpringDamper","True",null],
+      ["suspensionPos","(-1, -1, -1)",null],
+      ["autoBoost","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelSteering",null],
+      ["isEnabled","True",null],
+      ["steeringEnabled","True",null],
+      ["steeringInvert","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "SteeringToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelMotor",null],
+      ["isEnabled","True",null],
+      ["autoTorque","True",null],
+      ["motorEnabled","True",null],
+      ["motorInverted","False",null],
+      ["driveLimiter","100",null],
+      ["tractionControlScale","1",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "MotorToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "ActAutoTorqueToggle",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelBrakes",null],
+      ["isEnabled","True",null],
+      ["brakeTweakable","100",null],
+      ["brakeInput","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "BrakeAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","Brakes",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleWheelDamage",null],
+      ["isEnabled","True",null],
+      ["isDamaged","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","FXModuleLookAtConstraint",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleTestSubject",null],
+      ["isEnabled","True",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","batteryBankMini_4292618916",null],
+    ["partName","Part",null],
+    ["persistentId","679826107",null],
+    ["pos","0.578139246,9.80698204,-1.6082027",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","3.63077793E-14,-0.902466416,4.48504807E-07",null],
+    ["rot","0.707107008,-3.5527141E-15,-3.5527141E-15,0.707106769",null],
+    ["attRot","0,0,0,1",null],
+    ["attRot0","2.76336198E-14,-1,2.52881108E-07,-5.96046199E-08",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","0",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","batteryBankMini_4292637912",null],
+    ["attN","top,structuralIBeam3_4292641116_0|0.1|0",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "RESOURCE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ElectricCharge",null],
+      ["amount","200",null],
+      ["maxAmount","200",null],
+      ["flowState","True",null],
+      ["isTweakable","True",null],
+      ["hideFlow","False",null],
+      ["isVisible","True",null],
+      ["flowMode","Both",null]
+     ],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","LgRadialSolarPanel_4292544846",null],
+    ["partName","Part",null],
+    ["persistentId","411644011",null],
+    ["pos","0.642583072,9.90899277,-0.705834925",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","-0.0644432008,-0.000107555999,0.102001198",null],
+    ["rot","-0.707106769,-4.21468513E-08,4.21468016E-08,0.707107008",null],
+    ["attRot","0,0,-0.999999881,0",null],
+    ["attRot0","-7.53644007E-15,-8.42936672E-08,-1,7.53644261E-15",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","LgRadialSolarPanel_4292545402",null],
+    ["srfN","srfAttach,structuralIBeam3_4292641116",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleDeployableSolarPanel",null],
+      ["isEnabled","True",null],
+      ["efficiencyMult","1",null],
+      ["launchUT","-1",null],
+      ["currentRotation","(0, 0, 0, 1)",null],
+      ["storedAnimationTime","0",null],
+      ["storedAnimationSpeed","0",null],
+      ["deployState","EXTENDED",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ExtendPanelsAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["active","False",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "ExtendAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["active","False",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "RetractAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["active","False",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","sensorGravimeter_4292504604",null],
+    ["partName","Part",null],
+    ["persistentId","2255550364",null],
+    ["pos","-0.221860662,9.80698204,-1.45149446",null],
+    ["attPos","-0.200000107,-0.0953932181,-0.00996994972",null],
+    ["attPos0","6.43252989E-08,0.0953932181,-0.735795975",null],
+    ["rot","0,0,0,-1.00000012",null],
+    ["attRot","0,0,0,1",null],
+    ["attRot0","0,0,0,1",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["srfN","srfAttach,roverBody_4292702166",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleEnviroSensor",null],
+      ["isEnabled","True",null],
+      ["sensorActive","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ToggleAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleScienceExperiment",null],
+      ["isEnabled","True",null],
+      ["Deployed","False",null],
+      ["Inoperable","False",null],
+      ["cooldownToGo","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "DeployAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "ResetAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","sensorThermometer_4292498146",null],
+    ["partName","Part",null],
+    ["persistentId","113526848",null],
+    ["pos","0.178139448,9.80698204,-1.43662858",null],
+    ["attPos","0.199999899,0.05971241,0.00482946588",null],
+    ["attPos0","6.43196074E-08,-0.0597124211,-0.735730886",null],
+    ["rot","0,0,0,-1.00000012",null],
+    ["attRot","0,0,0,1",null],
+    ["attRot0","0,0,0,1",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["srfN","srfAttach,roverBody_4292702166",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleEnviroSensor",null],
+      ["isEnabled","True",null],
+      ["sensorActive","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ToggleAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleScienceExperiment",null],
+      ["isEnabled","True",null],
+      ["Deployed","False",null],
+      ["Inoperable","False",null],
+      ["cooldownToGo","0",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "DeployAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "ResetAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","spotLight1_4292573090",null],
+    ["partName","Part",null],
+    ["persistentId","3905227778",null],
+    ["pos","-0.456331402,10.441453,0.632490337",null],
+    ["attPos","0.0289678872,-0.00948739052,0.0289678574",null],
+    ["attPos0","-0.46343863,0.236641198,-0.463439047",null],
+    ["rot","0.299572587,-0.72323215,0.574881434,-0.238123715",null],
+    ["attRot","0,0.1305262,-0.991444826,0",null],
+    ["attRot0","0.380208671,-0.104899779,0.917904854,0.0434509031",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","spotLight1_4294207630",null],
+    ["srfN","srfAttach,probeCoreSphere.v2_4294225728",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleLight",null],
+      ["isEnabled","True",null],
+      ["isOn","False",null],
+      ["uiWriteLock","False",null],
+      ["lightR","1",null],
+      ["lightG","1",null],
+      ["lightB","1",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ToggleLightAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","Light",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "LightOnAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "LightOffAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","spotLight1_4294207630",null],
+    ["partName","Part",null],
+    ["persistentId","3105192536",null],
+    ["pos","0.412610084,10.441453,0.632490337",null],
+    ["attPos","-0.0289678872,-0.00948733091,0.028967917",null],
+    ["attPos0","0.46343863,0.236641139,-0.463439107",null],
+    ["rot","0.299572587,0.72323215,-0.574881434,-0.2381237",null],
+    ["attRot","0,0.1305262,-0.991444826,0",null],
+    ["attRot0","0.380208671,0.104899779,-0.917904854,0.0434509329",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","spotLight1_4292573090",null],
+    ["srfN","srfAttach,probeCoreSphere.v2_4294225728",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleLight",null],
+      ["isEnabled","True",null],
+      ["isOn","False",null],
+      ["uiWriteLock","False",null],
+      ["lightR","1",null],
+      ["lightG","1",null],
+      ["lightB","1",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ToggleLightAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","Light",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "LightOnAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "LightOffAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","longAntenna_4292599214",null],
+    ["partName","Part",null],
+    ["persistentId","426621143",null],
+    ["pos","-0.29726392,10.2823849,0.3717435",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","-0.275403261,-0.0335929692,-0.275403053",null],
+    ["rot","-0.369594365,0.892279625,-0.239563197,0.0992303491",null],
+    ["attRot","0,0,0,1",null],
+    ["attRot0","-0.331509113,0.461540222,-0.800333738,-0.191176221",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","longAntenna_4294207316",null],
+    ["srfN","srfAttach,probeCoreSphere.v2_4294225728",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleDeployableAntenna",null],
+      ["isEnabled","True",null],
+      ["currentRotation","(-0.707106829, 0, 0, 0.707106829)",null],
+      ["storedAnimationTime","0",null],
+      ["storedAnimationSpeed","1",null],
+      ["deployState","RETRACTED",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ExtendPanelsAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "ExtendAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "RetractAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleDataTransmitter",null],
+      ["isEnabled","True",null],
+      ["xmitIncomplete","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "StartTransmissionAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["part","longAntenna_4294207316",null],
+    ["partName","Part",null],
+    ["persistentId","1995696042",null],
+    ["pos","0.253542602,10.2823849,0.37174347",null],
+    ["attPos","0,0,0",null],
+    ["attPos0","0.275403261,-0.033592999,-0.275403053",null],
+    ["rot","0.369594306,0.892279625,-0.239563197,-0.0992303789",null],
+    ["attRot","0,0,0,1",null],
+    ["attRot0","0.331509084,0.461540222,-0.800333679,0.191176161",null],
+    ["mir","1,1,1",null],
+    ["symMethod","Mirror",null],
+    ["autostrutMode","Off",null],
+    ["rigidAttachment","False",null],
+    ["istg","-1",null],
+    ["resPri","0",null],
+    ["dstg","0",null],
+    ["sidx","-1",null],
+    ["sqor","-1",null],
+    ["sepI","-1",null],
+    ["attm","1",null],
+    ["modCost","0",null],
+    ["modMass","0",null],
+    ["modSize","0,0,0",null],
+    ["sym","longAntenna_4292599214",null],
+    ["srfN","srfAttach,probeCoreSphere.v2_4294225728",null]
+   ],
+   "nodes": [
+    {
+     "name": "EVENTS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "ACTIONS",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "PARTDATA",
+     "id": "",
+     "comment": null,
+     "values": [],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleDeployableAntenna",null],
+      ["isEnabled","True",null],
+      ["currentRotation","(-0.707106829, 0, 0, 0.707106829)",null],
+      ["storedAnimationTime","0",null],
+      ["storedAnimationSpeed","1",null],
+      ["deployState","RETRACTED",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "ExtendPanelsAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "ExtendAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        },
+        {
+         "name": "RetractAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleDataTransmitter",null],
+      ["isEnabled","True",null],
+      ["xmitIncomplete","False",null],
+      ["stagingEnabled","True",null]
+     ],
+     "nodes": [
+      {
+       "name": "EVENTS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      },
+      {
+       "name": "ACTIONS",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": [
+        {
+         "name": "StartTransmissionAction",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["actionGroup","None",null],
+          ["wasActiveBeforePartWasAdjusted","False",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "UPGRADESAPPLIED",
+       "id": "",
+       "comment": null,
+       "values": [],
+       "nodes": []
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

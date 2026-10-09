@@ -1,0 +1,312 @@
+{
+ "name": "root",
+ "id": "",
+ "comment": null,
+ "values": [],
+ "nodes": [
+  {
+   "name": "RESOURCE_DEFINITION",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["name","LiquidFuel",null],
+    ["displayName","#autoLOC_500999",null],
+    ["abbreviation","#autoLOC_6002095",null],
+    ["density","0.005",null],
+    ["unitCost","0.8",null],
+    ["hsp","2010",null],
+    ["flowMode","STACK_PRIORITY_SEARCH",null],
+    ["transfer","PUMP",null],
+    ["isTweakable","true",null],
+    ["volume","5",null]
+   ],
+   "nodes": [
+    {
+     "name": "RESOURCE_DRAIN_DEFINITION",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["isDrainable","true",null],
+      ["showDrainFX","true",null],
+      ["drainFXPriority","7",null],
+      ["drainForceISP","5",null],
+      ["drainFXDefinition","gasDraining",null]
+     ],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "RESOURCE_DEFINITION",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["name","Oxidizer",null],
+    ["displayName","#autoLOC_501000",null],
+    ["abbreviation","#autoLOC_6002096",null],
+    ["density","0.005",null],
+    ["unitCost","0.18",null],
+    ["hsp","1551",null],
+    ["flowMode","STACK_PRIORITY_SEARCH",null],
+    ["transfer","PUMP",null],
+    ["isTweakable","true",null],
+    ["volume","5",null]
+   ],
+   "nodes": [
+    {
+     "name": "RESOURCE_DRAIN_DEFINITION",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["isDrainable","true",null],
+      ["showDrainFX","true",null],
+      ["drainFXPriority","7",null],
+      ["drainForceISP","5",null],
+      ["drainFXDefinition","gasDraining",null]
+     ],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "RESOURCE_DEFINITION",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["name","SolidFuel",null],
+    ["displayName","#autoLOC_501001",null],
+    ["abbreviation","#autoLOC_6002097",null],
+    ["density","0.0075",null],
+    ["unitCost","0.6",null],
+    ["hsp","920",null],
+    ["flowMode","NO_FLOW",null],
+    ["transfer","NONE",null],
+    ["isTweakable","true",null],
+    ["volume","5",null]
+   ],
+   "nodes": [
+    {
+     "name": "RESOURCE_DRAIN_DEFINITION",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["isDrainable","false",null],
+      ["showDrainFX","false",null]
+     ],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "RESOURCE_DEFINITION",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["name","MonoPropellant",null],
+    ["displayName","#autoLOC_501002",null],
+    ["abbreviation","#autoLOC_6002098",null],
+    ["density","0.004",null],
+    ["unitCost","1.2",null],
+    ["hsp","3000",null],
+    ["flowMode","STAGE_PRIORITY_FLOW",null],
+    ["transfer","PUMP",null],
+    ["isTweakable","true",null],
+    ["volume","5",null]
+   ],
+   "nodes": [
+    {
+     "name": "RESOURCE_DRAIN_DEFINITION",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["isDrainable","true",null],
+      ["showDrainFX","true",null],
+      ["drainFXPriority","5",null],
+      ["drainForceISP","5",null],
+      ["drainFXDefinition","gasDraining",null]
+     ],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "RESOURCE_DEFINITION",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["name","XenonGas",null],
+    ["displayName","#autoLOC_501003",null],
+    ["abbreviation","#autoLOC_6002099",null],
+    ["density","0.0001",null],
+    ["unitCost","4",null],
+    ["hsp","120",null],
+    ["flowMode","STAGE_PRIORITY_FLOW",null],
+    ["transfer","PUMP",null],
+    ["isTweakable","true",null],
+    ["volume","0.1",null]
+   ],
+   "nodes": [
+    {
+     "name": "RESOURCE_DRAIN_DEFINITION",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["isDrainable","true",null],
+      ["showDrainFX","true",null],
+      ["drainFXPriority","5",null],
+      ["drainForceISP","5",null],
+      ["drainFXDefinition","gasDraining",null]
+     ],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "RESOURCE_DEFINITION",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["name","ElectricCharge",null],
+    ["displayName","#autoLOC_501004",null],
+    ["abbreviation","#autoLOC_6002100",null],
+    ["density","0",null],
+    ["unitCost","0",null],
+    ["hsp","0",null],
+    ["flowMode","STAGE_PRIORITY_FLOW",null],
+    ["transfer","PUMP",null],
+    ["isTweakable","true",null]
+   ],
+   "nodes": [
+    {
+     "name": "RESOURCE_DRAIN_DEFINITION",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["isDrainable","false",null],
+      ["showDrainFX","false",null]
+     ],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "RESOURCE_DEFINITION",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["name","IntakeAir",null],
+    ["displayName","#autoLOC_501005",null],
+    ["abbreviation","#autoLOC_6002101",null],
+    ["density","0.005",null],
+    ["unitCost","0",null],
+    ["hsp","10",null],
+    ["flowMode","ALL_VESSEL",null],
+    ["transfer","PUMP",null],
+    ["isTweakable","false",null],
+    ["isVisible","false",null]
+   ],
+   "nodes": [
+    {
+     "name": "RESOURCE_DRAIN_DEFINITION",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["isDrainable","false",null],
+      ["showDrainFX","false",null]
+     ],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "RESOURCE_DEFINITION",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["name","EVA Propellant",null],
+    ["displayName","#autoLOC_501006",null],
+    ["abbreviation","#autoLOC_6002102",null],
+    ["density","0.005",null],
+    ["unitCost","0",null],
+    ["hsp","3000",null],
+    ["flowMode","NO_FLOW",null],
+    ["transfer","PUMP",null],
+    ["isTweakable","false",null]
+   ],
+   "nodes": [
+    {
+     "name": "RESOURCE_DRAIN_DEFINITION",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["isDrainable","false",null],
+      ["showDrainFX","false",null]
+     ],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "RESOURCE_DEFINITION",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["name","Ore",null],
+    ["displayName","#autoLOC_501007",null],
+    ["abbreviation","#autoLOC_6002103",null],
+    ["density","0.010",null],
+    ["unitCost","0.02",null],
+    ["flowMode","ALL_VESSEL",null],
+    ["transfer","PUMP",null],
+    ["hsp","1000",null],
+    ["isTweakable","true",null],
+    ["color","1,0,1",null],
+    ["volume","5",null]
+   ],
+   "nodes": [
+    {
+     "name": "RESOURCE_DRAIN_DEFINITION",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["isDrainable","true",null],
+      ["showDrainFX","true",null],
+      ["drainFXPriority","9",null],
+      ["drainForceISP","5",null],
+      ["drainFXDefinition","particlesDraining",null]
+     ],
+     "nodes": []
+    }
+   ]
+  },
+  {
+   "name": "RESOURCE_DEFINITION",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["name","Ablator",null],
+    ["displayName","#autoLOC_501008",null],
+    ["abbreviation","#autoLOC_6002104",null],
+    ["density","0.001",null],
+    ["hsp","400",null],
+    ["flowMode","NO_FLOW",null],
+    ["transfer","NONE",null],
+    ["isTweakable","True",null],
+    ["unitCost","0.5",null],
+    ["volume","1",null]
+   ],
+   "nodes": [
+    {
+     "name": "RESOURCE_DRAIN_DEFINITION",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["isDrainable","false",null],
+      ["showDrainFX","false",null]
+     ],
+     "nodes": []
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,185 @@
+{
+ "provenance": {
+  "unity_version": "2019.4.18f1",
+  "asset_files": {
+   "globalgamemanagers.assets": "837580b967537e9c4bd179b7068b24221b956930c25c6fc25fab0361df33450a",
+   "sharedassets9.assets": "09e9525ab0fa6aa359fce06be20735bfbdb4e4339cc597da019ed2b7d5d81c3c",
+   "level9": "b117217fbec579290983b5f5462753d5fd100bc4626e53bedf4e4183e93931f0",
+   "level0": "618fa755118c5d8b8991990c9ca37144910151f73d29547122d983839948912a"
+  },
+  "typetree_assemblies": [
+   "Assembly-CSharp-firstpass.dll",
+   "Assembly-CSharp.de4dot-original.dll",
+   "Ionic.Zip.dll",
+   "KSPAssets.dll",
+   "KSPTrackIR.dll",
+   "Mono.Cecil.dll",
+   "Unity.Analytics.DataPrivacy.dll",
+   "Unity.Analytics.StandardEvents.dll",
+   "Unity.Analytics.Tracker.dll",
+   "Unity.RenderPipelines.Core.Runtime.dll",
+   "Unity.RenderPipelines.Core.ShaderLibrary.dll",
+   "Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary.dll",
+   "Unity.Timeline.dll",
+   "UnityEngine.AIModule.dll",
+   "UnityEngine.ARModule.dll",
+   "UnityEngine.AccessibilityModule.dll",
+   "UnityEngine.AndroidJNIModule.dll",
+   "UnityEngine.AnimationModule.dll",
+   "UnityEngine.AssetBundleModule.dll",
+   "UnityEngine.AudioModule.dll",
+   "UnityEngine.ClothModule.dll",
+   "UnityEngine.ClusterInputModule.dll",
+   "UnityEngine.ClusterRendererModule.dll",
+   "UnityEngine.CoreModule.dll",
+   "UnityEngine.CrashReportingModule.dll",
+   "UnityEngine.DSPGraphModule.dll",
+   "UnityEngine.DirectorModule.dll",
+   "UnityEngine.GameCenterModule.dll",
+   "UnityEngine.GridModule.dll",
+   "UnityEngine.HotReloadModule.dll",
+   "UnityEngine.IMGUIModule.dll",
+   "UnityEngine.ImageConversionModule.dll",
+   "UnityEngine.InputLegacyModule.dll",
+   "UnityEngine.InputModule.dll",
+   "UnityEngine.JSONSerializeModule.dll",
+   "UnityEngine.LocalizationModule.dll",
+   "UnityEngine.ParticleSystemModule.dll",
+   "UnityEngine.PerformanceReportingModule.dll",
+   "UnityEngine.Physics2DModule.dll",
+   "UnityEngine.PhysicsModule.dll",
+   "UnityEngine.ProfilerModule.dll",
+   "UnityEngine.ScreenCaptureModule.dll",
+   "UnityEngine.SharedInternalsModule.dll",
+   "UnityEngine.SpriteMaskModule.dll",
+   "UnityEngine.SpriteShapeModule.dll",
+   "UnityEngine.StreamingModule.dll",
+   "UnityEngine.SubstanceModule.dll",
+   "UnityEngine.SubsystemsModule.dll",
+   "UnityEngine.TLSModule.dll",
+   "UnityEngine.TerrainModule.dll",
+   "UnityEngine.TerrainPhysicsModule.dll",
+   "UnityEngine.TextCoreModule.dll",
+   "UnityEngine.TextRenderingModule.dll",
+   "UnityEngine.TilemapModule.dll",
+   "UnityEngine.UI.dll",
+   "UnityEngine.UIElementsModule.dll",
+   "UnityEngine.UIModule.dll",
+   "UnityEngine.UNETModule.dll",
+   "UnityEngine.UmbraModule.dll",
+   "UnityEngine.UnityAnalyticsModule.dll",
+   "UnityEngine.UnityConnectModule.dll",
+   "UnityEngine.UnityTestProtocolModule.dll",
+   "UnityEngine.UnityWebRequestAssetBundleModule.dll",
+   "UnityEngine.UnityWebRequestAudioModule.dll",
+   "UnityEngine.UnityWebRequestModule.dll",
+   "UnityEngine.UnityWebRequestTextureModule.dll",
+   "UnityEngine.UnityWebRequestWWWModule.dll",
+   "UnityEngine.VFXModule.dll",
+   "UnityEngine.VRModule.dll",
+   "UnityEngine.VehiclesModule.dll",
+   "UnityEngine.VideoModule.dll",
+   "UnityEngine.WindModule.dll",
+   "UnityEngine.XRModule.dll",
+   "UnityEngine.dll",
+   "Managed/mscorlib.dll",
+   "Managed/System.dll",
+   "Managed/System.Core.dll",
+   "Managed/System.Xml.dll",
+   "Managed/Mono.Security.dll",
+   "Managed/System.Configuration.dll",
+   "Managed/System.Security.dll"
+  ],
+  "assembly_csharp_for_layout_sha256": "c533ce20cc90b0ae8c1394a0b922013980945a3c9be0123b4da9fed3c76d4537",
+  "tool": "UnityPy 1.25.4 + TypeTreeGeneratorAPI"
+ },
+ "Planetarium": {
+  "m_GameObject": {
+   "m_FileID": 0,
+   "m_PathID": 3
+  },
+  "m_Enabled": 1,
+  "m_Name": "",
+  "orbits": [],
+  "time": 0.0,
+  "timeScale": 1.0,
+  "pause": 0,
+  "inverseRotAngle": 0.0,
+  "Sun": {
+   "m_FileID": 0,
+   "m_PathID": 0
+  },
+  "Home": {
+   "m_FileID": 0,
+   "m_PathID": 0
+  },
+  "CurrentMainBody": {
+   "m_FileID": 0,
+   "m_PathID": 0
+  },
+  "fixedDeltaTime": 0.02
+ },
+ "FlightGlobals": {
+  "m_GameObject": {
+   "m_FileID": 0,
+   "m_PathID": 3
+  },
+  "m_Enabled": 1,
+  "m_Name": "",
+  "bodies": [],
+  "srfAttachStiffNess": 10.0,
+  "stackAttachStiffNess": 10.0,
+  "activeVessel": {
+   "m_FileID": 0,
+   "m_PathID": 0
+  },
+  "vessels": [],
+  "vesselsLoaded": [],
+  "vesselsUnloaded": [],
+  "mainCameraRef": {
+   "m_FileID": 0,
+   "m_PathID": 77
+  },
+  "vesselTargetTransform": {
+   "m_FileID": 0,
+   "m_PathID": 0
+  },
+  "vesselTargetDelta": {
+   "x": 0.0,
+   "y": 0.0,
+   "z": 0.0
+  },
+  "vesselTargetDirection": {
+   "x": 0.0,
+   "y": 0.0,
+   "z": 0.0
+  }
+ },
+ "PSystemManager": {
+  "m_GameObject": {
+   "m_FileID": 0,
+   "m_PathID": 9
+  },
+  "m_Enabled": 1,
+  "m_Name": "",
+  "localSpaceName": "localSpace",
+  "scaledSpaceName": "scaledSpace",
+  "scaledSpaceFactor": 6000.0,
+  "scaledSpaceCamera": {
+   "m_FileID": 0,
+   "m_PathID": 166
+  },
+  "sun": {
+   "m_FileID": 0,
+   "m_PathID": 167
+  },
+  "sunFlare": {
+   "m_FileID": 0,
+   "m_PathID": 168
+  },
+  "systemPrefab": {
+   "m_FileID": 2,
+   "m_PathID": 20680
+  }
+ }
+}

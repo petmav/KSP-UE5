@@ -1,0 +1,373 @@
+{
+ "name": "root",
+ "id": "",
+ "comment": null,
+ "values": [],
+ "nodes": [
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["name","parachuteSingle",null],
+    ["module","Part",null],
+    ["author","HarvesteR",null],
+    ["mesh","model.mu",null],
+    ["scale","0.1",null],
+    ["node_stack_bottom","0.0, -0.120649, 0.0, 0.0, -1.0, 0.0, 0",null],
+    ["node_attach","0.0, -0.120649, 0.0, 0.0, -1.0, 0.0",null],
+    ["buoyancyUseCubeNamed","PACKED",null],
+    ["sound_parachute_open","activate",null],
+    ["sound_parachute_single","deploy",null],
+    ["TechRequired","start",null],
+    ["entryCost","0",null],
+    ["cost","422",null],
+    ["category","Utility",null],
+    ["subcategory","0",null],
+    ["title","#autoLOC_500921",null],
+    ["description","#autoLOC_500922",null],
+    ["attachRules","1,0,0,1,0",null],
+    ["mass","0.1",null],
+    ["dragModelType","default",null],
+    ["angularDrag","3",null],
+    ["crashTolerance","12",null],
+    ["maxTemp","2500",null],
+    ["emissiveConstant","0.7",null],
+    ["stageOffset","-1",null],
+    ["preferredStage","PARACHUTESTAGE",null],
+    ["bulkheadProfiles","size0, srf",null],
+    ["bodyLiftMultiplier","0",null],
+    ["tags","#autoLOC_500923",null]
+   ],
+   "nodes": [
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleParachute",null],
+      ["semiDeployedAnimation","semiDeploySmall",null],
+      ["fullyDeployedAnimation","fullyDeploySmall",null],
+      ["invertCanopy","true",null],
+      ["autoCutSpeed","0.5",null],
+      ["capName","cap",null],
+      ["canopyName","canopy",null],
+      ["stowedDrag","0.22",null],
+      ["semiDeployedDrag","1",null],
+      ["fullyDeployedDrag","500",null],
+      ["minAirPressureToOpen","0.04",null],
+      ["clampMinAirPressure","0.04",null],
+      ["deployAltitude","1000",null],
+      ["deploymentSpeed","0.12",null],
+      ["semiDeploymentSpeed","0.5",null],
+      ["chuteMaxTemp","650",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleTestSubject",null],
+      ["useStaging","True",null],
+      ["useEvent","False",null],
+      ["situationMask","8",null]
+     ],
+     "nodes": [
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ATMOSPHERE",null],
+        ["value","True",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEEDENV",null],
+        ["test","LT",null],
+        ["value","200",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEEDENV",null],
+        ["test","GT",null],
+        ["value","100",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEEDENV",null],
+        ["test","LT",null],
+        ["value","100",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEEDENV",null],
+        ["test","GT",null],
+        ["value","50",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEEDENV",null],
+        ["test","LT",null],
+        ["value","50",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEEDENV",null],
+        ["test","GT",null],
+        ["value","20",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","DENSITY",null],
+        ["test","GT",null],
+        ["value","0.2",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","DENSITY",null],
+        ["test","GT",null],
+        ["value","0.1",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","DENSITY",null],
+        ["test","GT",null],
+        ["value","0.02",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDE",null],
+        ["test","GT",null],
+        ["value","1000",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDEENV",null],
+        ["test","GT",null],
+        ["value","4000",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDEENV",null],
+        ["test","LT",null],
+        ["value","8000",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDEENV",null],
+        ["test","GT",null],
+        ["value","2000",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDEENV",null],
+        ["test","LT",null],
+        ["value","4000",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDEENV",null],
+        ["test","GT",null],
+        ["value","1000",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","ALTITUDEENV",null],
+        ["test","LT",null],
+        ["value","2000",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEED",null],
+        ["test","LT",null],
+        ["value","300",null],
+        ["body","_Home",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","SPEED",null],
+        ["test","LT",null],
+        ["value","1000",null],
+        ["body","_NotHome",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","REPEATABILITY",null],
+        ["value","ALWAYS",null],
+        ["prestige","Trivial",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","REPEATABILITY",null],
+        ["value","BODYANDSITUATION",null],
+        ["prestige","Significant",null]
+       ],
+       "nodes": []
+      },
+      {
+       "name": "CONSTRAINT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["type","REPEATABILITY",null],
+        ["value","ONCEPERPART",null],
+        ["prestige","Exceptional",null]
+       ],
+       "nodes": []
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleDragModifier",null],
+      ["dragCubeName","SEMIDEPLOYED",null],
+      ["dragModifier","1.25",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleDragModifier",null],
+      ["dragCubeName","DEPLOYED",null],
+      ["dragModifier","12",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleCargoPart",null],
+      ["packedVolume","140",null]
+     ],
+     "nodes": []
+    }
+   ]
+  }
+ ]
+}

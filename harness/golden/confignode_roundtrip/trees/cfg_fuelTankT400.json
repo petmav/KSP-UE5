@@ -1,0 +1,174 @@
+{
+ "name": "root",
+ "id": "",
+ "comment": null,
+ "values": [],
+ "nodes": [
+  {
+   "name": "PART",
+   "id": "",
+   "comment": null,
+   "values": [
+    ["name","fuelTank",null],
+    ["module","Part",null],
+    ["author","RoverDude",null],
+    ["rescaleFactor","1.0",null],
+    ["node_stack_top","0.0, 0.981725, 0.0, 0.0, 1.0, 0.0",null],
+    ["node_stack_bottom","0.0, -0.9125, 0.0, 0.0, -1.0, 0.0",null],
+    ["node_attach","0.625, 0.0, 0.0, 1.0, 0.0, 0.0, 1",null],
+    ["TechRequired","advRocketry",null],
+    ["entryCost","1600",null],
+    ["cost","500",null],
+    ["category","FuelTank",null],
+    ["subcategory","0",null],
+    ["title","#autoLOC_500532",null],
+    ["manufacturer","#autoLOC_501627",null],
+    ["description","#autoLOC_500533",null],
+    ["attachRules","1,1,1,1,0",null],
+    ["mass","0.25",null],
+    ["dragModelType","default",null],
+    ["maximum_drag","0.2",null],
+    ["minimum_drag","0.3",null],
+    ["angularDrag","2",null],
+    ["crashTolerance","6",null],
+    ["breakingForce","50",null],
+    ["breakingTorque","50",null],
+    ["maxTemp","2000",null],
+    ["bulkheadProfiles","size1, srf",null],
+    ["tags","#autoLOC_500534",null]
+   ],
+   "nodes": [
+    {
+     "name": "MODEL",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["model","Squad/Parts/FuelTank/Size1_Tanks/Size1Tank_03",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "RESOURCE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","LiquidFuel",null],
+      ["amount","180",null],
+      ["maxAmount","180",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "RESOURCE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","Oxidizer",null],
+      ["amount","220",null],
+      ["maxAmount","220",null]
+     ],
+     "nodes": []
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModulePartVariants",null],
+      ["primaryColor","#000000",null],
+      ["secondaryColor","#000000",null],
+      ["baseDisplayName","#autoLOC_8007117",null],
+      ["baseThemeName","Dark",null],
+      ["useMultipleDragCubes","false",null]
+     ],
+     "nodes": [
+      {
+       "name": "VARIANT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["name","BlackAndWhite",null],
+        ["displayName","#autoLOC_8007122",null],
+        ["themeName","BlackAndWhite",null],
+        ["primaryColor","#ffffff",null],
+        ["secondaryColor","#000000",null]
+       ],
+       "nodes": [
+        {
+         "name": "TEXTURE",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["mainTextureURL","Squad/Parts/FuelTank/Size1_Tanks/125Tanks_BW",null],
+          ["_BumpMap","Squad/Parts/FuelTank/Size1_Tanks/125Tanks_N",null],
+          ["shader","KSP/Bumped Specular",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "VARIANT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["name","White",null],
+        ["displayName","#autoLOC_8007119",null],
+        ["themeName","White",null],
+        ["primaryColor","#ffffff",null],
+        ["secondaryColor","#ffffff",null]
+       ],
+       "nodes": [
+        {
+         "name": "TEXTURE",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["mainTextureURL","Squad/Parts/FuelTank/Size1_Tanks/125Tanks_W",null],
+          ["shader","KSP/Specular",null]
+         ],
+         "nodes": []
+        }
+       ]
+      },
+      {
+       "name": "VARIANT",
+       "id": "",
+       "comment": null,
+       "values": [
+        ["name","GrayAndOrange",null],
+        ["displayName","#autoLOC_8007121",null],
+        ["themeName","GrayAndOrange",null],
+        ["primaryColor","#4c4f47",null],
+        ["secondaryColor","#f49841",null]
+       ],
+       "nodes": [
+        {
+         "name": "TEXTURE",
+         "id": "",
+         "comment": null,
+         "values": [
+          ["mainTextureURL","Squad/Parts/FuelTank/Size1_Tanks/125Tanks_O",null],
+          ["shader","KSP/Specular",null]
+         ],
+         "nodes": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "MODULE",
+     "id": "",
+     "comment": null,
+     "values": [
+      ["name","ModuleCargoPart",null],
+      ["stackableQuantity","1",null],
+      ["packedVolume","-1",null]
+     ],
+     "nodes": []
+    }
+   ]
+  }
+ ]
+}
