@@ -28,6 +28,7 @@ namespace ksp {
 
 class CelestialBody;
 class Orbit;
+class PQS;
 
 // CelestialBodyType.cs
 enum class CelestialBodyType : int32_t { Generic = 0 };
@@ -228,6 +229,7 @@ public:
     FloatCurve atmospherePressureCurve;
     double radiusAtmoFactor = 1.0;
     bool hasSolidSurface = false;
+    PQS* pqsController = nullptr;  // CelestialBody.pqsController (non-owning; null = no terrain sphere attached)
     bool isStar = false;
     Vector3d transformRight;
     Vector3d transformUp;
@@ -296,6 +298,7 @@ public:
     void Awake();     // :455 Mass, gravParameter, gMagnitudeAtCenter; registers with the parent's orbitingBodies
     void Start();     // :477 SOI, Hill sphere, solar->sidereal rotation period, SetupConstants, ocean fog recip
     void CBUpdate();  // :535 per physics frame (Planetarium.UpdateCBsRecursive)
+    void resetTimeWarpLimits();  // :1013 (WP-10): timeWarpAltitudeLimits = TimeWarp.fetch.altitudeLimits * Radius * modifier
     void SetupConstants();  // :363 (minOrbitalDistance: see .cpp)
 
     // ---- atmosphere (CelestialBody.cs:387-453, 971-999) ----
@@ -322,6 +325,9 @@ public:
     Vector3d getTruePositionAtUT(double UT) const;
     Vector3d getPositionAtUT(double UT) const;
     Vector3d GetRelSurfaceNVector(double lat, double lon) const;
+    // CelestialBody.cs:831 (WP-10): 0 without a PQS; else pqsController.GetSurfaceHeight(n) - pqsController.radius,
+    // clamped at 0 unless allowNegative. The sphere is attached by the host (ksp::terrain::LoadStockPQS).
+    double TerrainAltitude(double latitude, double longitude, bool allowNegative = false) const;
     Vector3d GetSurfaceNVector(double lat, double lon) const;
     Vector3d GetRelSurfacePosition(double lat, double lon, double alt) const;
     Vector3d GetRelSurfacePosition(const Vector3d& worldPosition) const;

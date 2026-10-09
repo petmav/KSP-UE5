@@ -8,7 +8,8 @@
 //   * provenance.ut0: the in-game UT when the probes were spawned (game state after earlier capture items)
 //   * initial.req_* (exact bits from the _hex columns) and initial.body: the requested probe orbits (the capture code's
 //     literal list, plus the Mun-encounter orbit it constructed in game from the Mun's position)
-//   * segments.requested_rate: TimeWarp.warpRates[rateIdx] (TimeWarp prefab data, not extracted elsewhere)
+//   (segments.requested_rate is no longer an input since WP-10: it is TimeWarp.warpRates[rate_index] from the game's
+//   TimeWarp prefab data in kspcore, and gated)
 //   * Kerbin.directRotAngle: hidden game state (set when the flight scene switched Kerbin to the rotating frame, long
 //     before the capture). Recovered from the first frames row: (rotationAngle(UT) - inverseRotAngle) % 360; the runner
 //     checks that this reproduces that row's inverseRotAngle bit for bit, every other row is a prediction.
@@ -27,7 +28,7 @@
 // OrbitDriver in UPDATE mode (ProtoVessel.cs:713-714) -> OrbitDriver.Start.
 // Not reproduced (excluded in tests/CMakeLists.txt): world_rel_* (vessel.GetWorldPos3D() - mainBody.position: floating
 // origin offsets and the vessel's transform / localCoM, WP-14/WP-20), packed / loaded (Vessel state, WP-14/WP-19),
-// initial.note (free text) and the echoed inputs req_* / requested_rate; soi_events of the two asteroids (spawned by the
+// initial.note (free text) and the echoed inputs req_*; soi_events of the two asteroids (spawned by the
 // game's discovery scenario, not part of the capture's inputs).
 #include <cmath>
 #include <cstdint>
@@ -45,11 +46,13 @@
 #include "ksp/celestial/celestial_body_orbit.hpp"
 #include "ksp/celestial/planetarium.hpp"
 #include "ksp/config/config_node.hpp"
+#include "ksp/celestial/flight_globals.hpp"
 #include "ksp/core/unity_time.hpp"
 #include "ksp/orbit/orbit.hpp"
 #include "ksp/orbit/orbit_driver.hpp"
 #include "ksp/orbit/orbit_snapshot.hpp"
 #include "ksp/orbit/time_warp.hpp"
+#include "ksp/save/save_enums.hpp"
 #include "nlohmann/json.hpp"
 
 using namespace ksp;
@@ -58,17 +61,33 @@ using json = nlohmann::json;
 
 namespace {
 
+// The active vessel of the capture run (PhysProf-S landed on the KSC pad), seen through the members TimeWarp reads
+// (IFlightVessel). Stand-in for WP-14's Vessel: landed, no surface speed relative to the rotating frame, no
+// patched-conic solver attached (a landed vessel's orbit is not part of the experiment; the C8 capture's achieved
+// rates equal the requested ones for every segment, so no on-rails limit applied).
+class PadVessel : public IFlightVessel {
+public:
+    explicit PadVessel(CelestialBody* body) : body_(body) {}
+    bool LandedOrSplashed() const override { return true; }
+    CelestialBody* mainBody() const override { return body_; }
+    Vector3f TransformPosition() const override { return {static_cast<float>(body_->Radius), 0.0f, 0.0f}; }
+    Orbit* orbit() const override { return nullptr; }
+    double altitude() const override { return 0.0; }
+    double geeForce() const override { return 1.0; }
+    Vector3d srf_velocity() const override { return {0.0, 0.0, 0.0}; }
+    bool PatchedConicsAttached() const override { return false; }
+    bool isEVA() const override { return false; }
+    bool OnALadder() const override { return false; }
+
+private:
+    CelestialBody* body_;
+};
+
 double HexF64(const std::string& h) {
     const uint64_t u = std::stoull(h, nullptr, 16);
     double d;
     std::memcpy(&d, &u, sizeof d);
     return d;
-}
-float HexF32(const std::string& h) {
-    const uint32_t u = static_cast<uint32_t>(std::stoul(h, nullptr, 16));
-    float f;
-    std::memcpy(&f, &u, sizeof f);
-    return f;
 }
 
 struct CapTable {
@@ -165,12 +184,6 @@ static int RunOrbitRails(const RunnerOptions& opt) {
         if (cases.empty() || std::memcmp(&cases[0].epoch, &ut0, sizeof ut0) != 0)
             throw std::runtime_error("orbit_rails: provenance ut0 differs from the first case's requested epoch");
     }
-    std::vector<float> rates;
-    {
-        const CapTable ts = Table(doc, "segments");
-        const int c = ts.Col("requested_rate_hex");
-        for (const json& r : ts.Rows()) rates.push_back(HexF32(r[c].get<std::string>()));
-    }
     double frame0UT = 0.0, frame0IRA = 0.0;
     {
         const CapTable tf = Table(doc, "frames");
@@ -200,16 +213,27 @@ static int RunOrbitRails(const RunnerOptions& opt) {
         if (std::memcmp(&back, &frame0IRA, sizeof back) != 0)
             throw std::runtime_error("orbit_rails: Kerbin.directRotAngle does not reproduce the first frame's inverseRotAngle");
     }
+    // The flight scene's TimeWarp: the game's prefab data (TimeWarp::LoadStockPrefab), Start() as Unity ran it when the
+    // scene loaded (SetRate(0) -> tgt_rate = warpRates[0], curr_rate = 1, timeScale 1, fixedDeltaTime 0.02).
+    TimeWarpEnvironment twEnv;
+    twEnv.LoadedSceneValue = GameScenes::FLIGHT;
+    twEnv.flightStarted = true;
+    TimeWarp::environment = &twEnv;
+    PadVessel padVessel(kerbin);
+    FlightGlobals::ready = true;
+    FlightGlobals::ActiveVessel = &padVessel;
+    FlightGlobals::VesselsLoaded = {&padVessel};
+    FlightGlobals::currentMainBody = kerbin;
     TimeWarp timeWarp;
-    timeWarp.Mode = TimeWarp::Modes::HIGH;
-    timeWarp.warpRates = rates;  // indices 0..4 here = rateIdx {0,4,5,6,7} of the game's array
-    TimeWarp::fetch = &timeWarp;
+    timeWarp.LoadStockPrefab();
+    timeWarp.Awake();
     Time::timeScale = 1.0f;
     Time::fixedDeltaTime = 0.02f;
     Time::time = 0.0f;
     planetarium.fixedDeltaTime = 0.02;
     planetarium.timeScale = 1.0;
     planetarium.time = ut0;
+    timeWarp.Start();
     planetarium.UpdateCBs();  // the frame in which the capture read ut0: bodies and Zup at ut0
 
     // ---- probes (spawned in the ut0 frame) ----
@@ -245,6 +269,7 @@ static int RunOrbitRails(const RunnerOptions& opt) {
     }
 
     auto fixedFrame = [&]() {
+        timeWarp.FixedUpdate();  // TimeWarp.FixedUpdate (rate lerp; a no-op once SetRate(instant) has been applied)
         planetarium.FixedUpdate();
         for (auto& p : probes) {
             if (p->dead) continue;
@@ -307,10 +332,9 @@ static int RunOrbitRails(const RunnerOptions& opt) {
     const int segFrames[5] = {500, 1000, 1000, 1500, 500};
     int frame = 0;
     for (int s = 0; s < 5; ++s) {
-        // TimeWarp.SetRate(rateIdx[s], instant: true) -> setRate -> assumeWarpRate (TimeWarp.cs:666): curr_rate = rate;
-        // updateRate(curr_rate)
-        timeWarp.curr_rate = rates.at(static_cast<size_t>(s));
-        timeWarp.updateRate(timeWarp.curr_rate);
+        // TimeWarp.SetRate(rateIdx[s], instant: true) (HighLogic.CurrentGame: flight scene, HIGH mode): clamps the index,
+        // setRate -> getMaxOnRailsRateIdx (the landed pad vessel does not limit it) -> assumeWarpRate(instant) -> updateRate
+        TimeWarp::SetRate(rateIdx[s], true);
         fixedFrame();
         ++frame;
         const double utStart = Planetarium::GetUniversalTime();
@@ -339,13 +363,18 @@ static int RunOrbitRails(const RunnerOptions& opt) {
                 sample("body:" + b->bodyName, ad->orbit, ad->driver.UpdateUT(), ad->driver.updateMode);
             }
         }
-        tseg.Add({s, rateIdx[s], rates[static_cast<size_t>(s)], achieved, segFrames[s], utStart, Planetarium::GetUniversalTime(),
+        tseg.Add({s, rateIdx[s], timeWarp.warpRates.at(static_cast<size_t>(rateIdx[s])), achieved, segFrames[s], utStart, Planetarium::GetUniversalTime(),
                   Time::fixedDeltaTime, TimeWarp::fixedDeltaTime(), Time::timeScale});
     }
     for (const SoiEvent& e : events)
         tev.Add({e.vessel, e.UT, e.from, e.to, e.sma, e.e, e.inc, e.lan, e.argPe, e.mEp, e.epoch, e.rate});
 
     TimeWarp::fetch = nullptr;
+    TimeWarp::environment = nullptr;
+    FlightGlobals::ready = false;
+    FlightGlobals::ActiveVessel = nullptr;
+    FlightGlobals::VesselsLoaded.clear();
+    FlightGlobals::currentMainBody = nullptr;
     probes.clear();  // OrbitDriver.OnDestroy: out of Planetarium.Orbits
     return WriteCandidate(opt, g, "orbit_rails/orbit_rails.json");
 }

@@ -70,6 +70,8 @@ void PQS::SetupBuildDelegates(bool fakeBuild) {
     reqCustomNormals = (modRequirements & MeshCustomNormals) != 0;
     reqColorChannel = (modRequirements & MeshColorChannel) != 0;
     reqBuildTangents = (modRequirements & MeshBuildTangents) != 0 || buildTangents;
+    meshVertMin = std::numeric_limits<double>::max();     // PQS.cs:2201
+    meshVertMax = std::numeric_limits<double>::lowest();  // PQS.cs:2202 (double.MinValue)
     reqAssignTangents = (modRequirements & MeshAssignTangents) != 0 || reqBuildTangents;
     reqUV2 = (modRequirements & MeshUV2) != 0;
     reqUV3 = (modRequirements & MeshUV3) != 0;

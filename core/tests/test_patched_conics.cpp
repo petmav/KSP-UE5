@@ -481,6 +481,7 @@ TEST_CASE("OrbitDriver: on-rails SOI transition Kerbin -> Mun under time warp ma
     REQUIRE(predicted[0]->patchEndTransition == PT::ENCOUNTER);
 
     TimeWarp tw;
+    tw.LoadStockPrefab();  // updateRate reads MaxPhysicsRate = warpRates[maxPhysicsRate_index]
     TimeWarp::fetch = &tw;
     tw.curr_rate = 1000.0f;  // assumeWarpRate(instant) -> updateRate
     tw.updateRate(tw.curr_rate);
