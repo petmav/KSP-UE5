@@ -840,7 +840,7 @@ TEST_CASE("WP-14 mass properties of the PhysProf-S vessel: GetTotalMass, UpdateM
 
 // ======================================================== kinematics: UpdatePosVel, UpdateSurfaceSpeeds, UpdateAcceleration
 
-TEST_CASE("WP-14 surface speeds from srf_velocity (Vessel.cs:2848): srfSpeed, horizontalSrfSpeed, srf_vel_direction") {
+TEST_CASE("WP-14 surface speeds from srf_velocity (Vessel.cs:2845, the block of UpdatePosVel): srfSpeed, horizontalSrfSpeed, srf_vel_direction") {
     if (!GameAvailable14()) return;
     World14 w;
     auto v = Stack14(w, {"mk1pod.v2"}, false);

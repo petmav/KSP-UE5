@@ -8,14 +8,17 @@
 //            attachMode, dragModel. NOT gated here (documented in STATUS.md): cube_names (cube weights are set by module OnStart
 //            logic and DragCubeList.ForceUpdate: WP-21 / the module packages) and node_contact_areas (DragCubeList.SetPartOcclusion:
 //            WP-21); tests/test_vessel.cpp checks the cube NAMES of the cube_names column.
-// states     Vessel-level values of the 20 flight snapshots. Inputs read from the capture: altitude, spd, srf_velocity and the
-//            atmosphericTemperature (GetAtmoThermalStats / the sun direction are not ported, so FlightIntegrator's
-//            atmosphereTemperatureOffset is recovered from the captured temperature and must reproduce it bit for bit
-//            before it is used; the temperature column is therefore a consistency check, not an independent output).
-//            Outputs: srfSpeed (Vessel.UpdateSurfaceSpeeds), the vessel's mirrored FlightIntegrator values (speed, density,
-//            static / dynamic pressure, mach, pseudoReynolds, pseudoReDragMult) through FlightIntegratorAtmosphere, the cache
-//            of PhysicsGlobals.DragCubeMultiplier and vessel.parts.Count. Not gated: frame, UT, altitude, aoa_deg, srf_velocity_*,
-//            ref_up_* (inputs or engine state).
+// states     Vessel-level values of the 20 flight snapshots. Inputs read from the capture: spd, srf_velocity and the static
+//            pressure / atmosphericTemperature. The capture's `altitude` is the root part's, not FlightIntegrator's CoM altitude, so
+//            it is only the fallback when the inversion fails: the altitude is recovered by inverting the captured static pressure,
+//            and (GetAtmoThermalStats / the sun direction are not ported) FlightIntegrator's atmosphereTemperatureOffset by inverting
+//            the captured temperature; each must reproduce its capture value bit for bit before it is used.
+//            Outputs: srfSpeed (Vessel.UpdateSurfaceSpeeds); density, mach, dynamicPressurekPa, pseudoReynolds, pseudoReDragMult
+//            (functions of the captured P, T and spd, mirrored into the Vessel by FlightIntegratorAtmosphere); the cache of
+//            PhysicsGlobals.DragCubeMultiplier and vessel.parts.Count. staticPressurekPa, staticPressureAtm and
+//            atmosphericTemperature are consistency checks of the inversion, not independent gates (the altitude-to-pressure and
+//            altitude-to-temperature models are gated by golden.atmosphere_curves). `spd` is emitted but dropped by the gate (a
+//            pass-through of the input). Not gated: frame, UT, altitude, aoa_deg, srf_velocity_*, ref_up_* (inputs or engine state).
 #include <cmath>
 #include <cstring>
 #include <iostream>

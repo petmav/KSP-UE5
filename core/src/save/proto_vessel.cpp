@@ -676,7 +676,7 @@ void ProtoVessel::Save(ConfigNode& node) {
 // ProtoVessel.cs:597
 void ProtoVessel::SaveVesselModules() {
     if (!vesselModules) vesselModules = std::make_shared<ConfigNode>("VESSELMODULES");
-    SaveLiveVesselModules();  // WP-14: the vesselRef != null branch (vessel/vessel_proto.cpp)
+    SaveLiveVesselModules();  // WP-14: the vesselRef != null branch (vessel/vessel_transitions.cpp)
 }
 
 // ProtoVessel.cs:1061

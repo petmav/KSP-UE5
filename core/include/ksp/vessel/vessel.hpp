@@ -440,7 +440,7 @@ public:
     void Translate(const Vector3d& offset);                        // :3713
     void SetRotation(const Quaternionf& rotation);                 // :3718
     void SetRotation(const Quaternionf& rotation, bool setPos);    // :3723
-    // srfSpeed / horizontalSrfSpeed / srf_vel_direction from srf_velocity and verticalSpeed (the block of UpdatePosVel at :2848-2869)
+    // srfSpeed / horizontalSrfSpeed / srf_vel_direction from srf_velocity and verticalSpeed (the block of UpdatePosVel at :2845-2865)
     void UpdateSurfaceSpeeds();
     void UpdateCaches();                                           // :3104
 

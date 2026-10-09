@@ -21,3 +21,4 @@ Branch wp14 (from wp13 688c5711). Notes written after every major step.
 - tests: situations, mass/CoM, kinematics, accel, atmosphere, crew/control, overrides, naming, transitions, reference transform, positioning (18 cases). TODO tests: trip logger, flight logger, tracker, axis groups, target info, values, FlightRegistry; then STATUS/README, fresh run
 - tests complete (24 cases); citation pass done (/tmp/claude-0/wp14/tools/cite_check*.py); TODO: STATUS.md section, README rows, fresh full run, final report
 - STATUS.md WP-14 section, README rows written; fresh run 22/22 passed (197 unit cases / 147,884 assertions). Remaining: final commit, handback.
+- gatekeeper follow-ups: states.spd dropped (input), consistency docs, CalculatePhysicsStats deviations, VESSELMODULES note, stale comments, 2845 citation; 22/22

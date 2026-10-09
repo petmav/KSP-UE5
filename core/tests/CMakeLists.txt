@@ -203,8 +203,19 @@ endif()
 #   structure.cube_names        cube weights are set by module OnStart logic / DragCubeList.ForceUpdate (WP-21 and the module packages);
 #                               the cube NAMES are checked by tests/test_vessel.cpp
 #   structure.node_contact_areas  AttachNode.contactArea is written by DragCubeList.SetPartOcclusion (WP-21)
-#   states.frame, UT, altitude, aoa_deg, srf_velocity_*, ref_up_*  inputs of the experiment or rigid-body state (the runner reads
-#                               altitude / srf_velocity from the capture; atmosphericTemperature's sun offset is recovered, see ds_vessel_state.cpp)
+#   states.spd                  input: Vessel.speed is the FlightIntegrator spd copied through ApplyFlightIntegratorAtmosphere, and the
+#                               runner feeds it the captured spd, so the column would only compare the capture with itself
+#   states.frame, UT, altitude, aoa_deg, srf_velocity_*, ref_up_*  inputs of the experiment or rigid-body state. srf_velocity_* feed
+#                               UpdateSurfaceSpeeds; the captured `altitude` (the root part's, not the CoM altitude FlightIntegrator uses)
+#                               is only the FALLBACK altitude when the inversion below fails
+# What the remaining states columns are (see ds_vessel_state.cpp):
+#   staticPressurekPa, staticPressureAtm, atmosphericTemperature  consistency checks, NOT independent gates: they are reproduced from an
+#                               altitude recovered by inverting the captured static pressure and a temperature offset recovered by
+#                               inverting the captured temperature. The altitude-to-pressure and altitude-to-temperature models are
+#                               therefore not gated here (golden.atmosphere_curves gates them).
+#   srfSpeed                    output of UpdateSurfaceSpeeds from the captured srf_velocity
+#   density, mach, dynamicPressurekPa, pseudoReynolds, pseudoReDragMult  functions of the captured P, T and spd
+#   cacheDragCubeMultiplier, parts  PhysicsGlobals.DragCubeMultiplier and vessel.parts.Count of the assembled vessel
 ksp_golden_gate(capture.vessel_state vessel_state GOLDEN ${KSP_CAPTURES2_DIR}/aero_forces_vessel.json DROP_HEX
                 TOL ${KSP_CAPTURE_TOL} TABLES structure,states
-                DROP_COLUMNS "structure:cube_names,node_contact_areas/states:frame,UT,altitude,aoa_deg,srf_velocity_x,srf_velocity_y,srf_velocity_z,ref_up_x,ref_up_y,ref_up_z")
+                DROP_COLUMNS "structure:cube_names,node_contact_areas/states:frame,UT,altitude,spd,aoa_deg,srf_velocity_x,srf_velocity_y,srf_velocity_z,ref_up_x,ref_up_y,ref_up_z")

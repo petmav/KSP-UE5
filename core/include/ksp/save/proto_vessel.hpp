@@ -64,7 +64,7 @@ public:
 
     ProtoTargetInfo() = default;                     // ProtoTargetInfo.cs:68
     explicit ProtoTargetInfo(const ConfigNode& node);  // :73
-    explicit ProtoTargetInfo(ITargetable* tgt);        // :44 (WP-14: vessel / part module / generic targets; implemented in vessel/vessel_proto.cpp)
+    explicit ProtoTargetInfo(ITargetable* tgt);        // :44 (WP-14: vessel / part module / generic targets; implemented in vessel/vessel_transitions.cpp)
     ITargetable* FindTarget() const;                   // :143 (WP-14; vessels and part modules; bodies are not ITargetable in kspcore)
     void Load(const ConfigNode& node);               // :79
     void Save(ConfigNode& node) const;               // :103
@@ -314,7 +314,7 @@ public:
 
     // ProtoVessel.cs:254 (st = the Game, may be nullptr)
     ProtoVessel(const ConfigNode& node, Game* st);
-    // ProtoVessel.cs:149 / :153 (WP-14, vessel/vessel_proto.cpp): the snapshot of a live Vessel; sets vesselRef.protoVessel
+    // ProtoVessel.cs:149 / :153 (WP-14, vessel/vessel_transitions.cpp): the snapshot of a live Vessel; sets vesselRef.protoVessel
     explicit ProtoVessel(Vessel& VesselRef);
     ProtoVessel(Vessel& VesselRef, bool preCreate);
     // ProtoVessel.cs:633 / :638 (WP-14): creates the unloaded Vessel (vessel == nullptr: the caller owns the result) or fills `vessel`

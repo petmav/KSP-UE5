@@ -316,7 +316,7 @@ void Vessel::SyncVesselTransform() {
 
 // ================================================================== kinematics
 
-// Vessel.cs:2848-2869 (the srf_velocity block of UpdatePosVel)
+// Vessel.cs:2845-2865 (the srf_velocity block of UpdatePosVel)
 void Vessel::UpdateSurfaceSpeeds() {
     const double sqrMagnitude = srf_velocity.sqrMagnitude();
     if (sqrMagnitude > 0.0) {
