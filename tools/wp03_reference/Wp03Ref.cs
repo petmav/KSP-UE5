@@ -429,6 +429,33 @@ public static class Wp03Ref
         foreach (string g in guids)
             foreach (int seed in new[] { 0, 5, -1, 123456789, int.MinValue })
                 Row("STR", "SuperSeed", S(g), I(seed), I(KSPUtil.GenerateSuperSeed(new Guid(g), seed)));
+        // double-precision vector helpers
+        Vector3d[] v3 = { new Vector3d(1, 2, 3), new Vector3d(0.1, -1e-300, 1e300), new Vector3d(-0.0, double.NaN, double.PositiveInfinity) };
+        foreach (Vector3d v in v3)
+        {
+            Row("VEC", "WriteVector3d", D(v.x), D(v.y), D(v.z), S(KSPUtil.WriteVector(v)) + "|" + S(KSPUtil.WriteVector(v, " ; ")));
+            QuaternionD q = new QuaternionD(v.x, v.y, v.z, 0.5);
+            Row("VEC", "WriteQuaternionD", D(v.x), D(v.y), D(v.z), S(KSPUtil.WriteQuaternion(q)) + "|" + S(KSPUtil.WriteQuaternion(q, "/")));
+        }
+        string[] vstr = { "1,2,3", "1.5, -2e300 ,3", "1,2", "a,b,c", "1;2;3", "0.1,0.2,0.30000000000000004,4", "1e400,0,0", " 7 , 8 ,9,10" };
+        foreach (string s in vstr)
+        {
+            string r;
+            try { Vector3d v = KSPUtil.ParseVector3d(s); r = D(v.x) + "," + D(v.y) + "," + D(v.z); } catch (Exception e) { r = Exc(e); }
+            Row("VEC", "ParseVector3d", S(s), r);
+            try { Vector3d v = KSPUtil.ParseVector3d(s, ';'); r = D(v.x) + "," + D(v.y) + "," + D(v.z); } catch (Exception e) { r = Exc(e); }
+            Row("VEC", "ParseVector3dSemi", S(s), r);
+            try { QuaternionD q = KSPUtil.ParseQuaternionD(s); r = D(q.x) + "," + D(q.y) + "," + D(q.z) + "," + D(q.w); } catch (Exception e) { r = Exc(e); }
+            Row("VEC", "ParseQuaternionD", S(s), r);
+            string[] p = s.Split(',');
+            if (p.Length >= 3)
+            {
+                try { Vector3d v = KSPUtil.ParseVector3d(p[0], p[1], p[2]); r = D(v.x) + "," + D(v.y) + "," + D(v.z); } catch (Exception e) { r = Exc(e); }
+                Row("VEC", "ParseVector3dParts", S(s), r);
+                try { Vector3 v = KSPUtil.ParseVector3(p[0], p[1], p[2]); r = V3(v); } catch (Exception e) { r = Exc(e); }
+                Row("VEC", "ParseVector3Parts", S(s), r);
+            }
+        }
         Row("STR", "WriteArrayI", S(KSPUtil.WriteArray(new int[] { 1, -2, 3 })));
         Row("STR", "WriteArrayD", S(KSPUtil.WriteArray(new double[] { 0.1, 1e20, -0.0, double.NaN })));
         Row("STR", "WriteArrayF", S(KSPUtil.WriteArray(new float[] { 0.1f, 3e-7f })));

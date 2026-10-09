@@ -473,6 +473,33 @@ TEST_CASE("WP-03 vs KSP IL on .NET Framework 4.8 (tests/data/wp03_reference.tsv)
             const bool isExc = expected.rfind("EXC:", 0) == 0;
             st.Check(kind + "." + name, line, isExc ? expected : Unescape(expected), actual);
             continue;
+        } else if (kind == "VEC") {
+            if (name == "WriteVector3d" || name == "WriteQuaternionD") {
+                const Vector3d v(Dbl(c[2]), Dbl(c[3]), Dbl(c[4]));
+                if (name == "WriteVector3d") {
+                    actual = KSPUtil::WriteVector(v) + "|" + KSPUtil::WriteVector(v, " ; ");
+                } else {
+                    const QuaternionD q(v.x, v.y, v.z, 0.5);
+                    actual = KSPUtil::WriteQuaternion(q) + "|" + KSPUtil::WriteQuaternion(q, "/");
+                }
+                st.Check(kind, line, Unescape(expected), actual);
+                continue;
+            }
+            const std::string s = Unescape(c[2]);
+            auto d3 = [](const Vector3d& v) { return D(v.x) + "," + D(v.y) + "," + D(v.z); };
+            actual = Try([&]() -> std::string {
+                if (name == "ParseVector3d") return d3(KSPUtil::ParseVector3d(s));
+                if (name == "ParseVector3dSemi") return d3(KSPUtil::ParseVector3d(s, ';'));
+                if (name == "ParseQuaternionD") {
+                    const QuaternionD q = KSPUtil::ParseQuaternionD(s);
+                    return D(q.x) + "," + D(q.y) + "," + D(q.z) + "," + D(q.w);
+                }
+                std::vector<std::string> p;
+                std::stringstream ss(s);
+                for (std::string part; std::getline(ss, part, ',');) p.push_back(part);
+                if (name == "ParseVector3dParts") return d3(KSPUtil::ParseVector3d(p[0], p[1], p[2]));
+                return V3(KSPUtil::ParseVector3(p[0], p[1], p[2]));
+            });
         } else if (kind == "SIMPLEX") {
             const double x = Dbl(c[2]), y = Dbl(c[3]), z = Dbl(c[4]);
             if (name == "Static") actual = D(SimplexNoise::noise(x, y, z));

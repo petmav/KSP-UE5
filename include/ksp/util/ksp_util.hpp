@@ -36,6 +36,7 @@
 #include "ksp/config/kspparseable.hpp"
 #include "ksp/dotnet/number.hpp"
 #include "ksp/dotnet/text.hpp"
+#include "ksp/math/quaterniond.hpp"
 #include "ksp/math/vector3d.hpp"
 #include "ksp/unity/color.hpp"
 #include "ksp/unity/vector.hpp"
@@ -177,6 +178,20 @@ std::string LocalizeNumber(double value, std::string_view format);
 std::string LocalizeNumber(float value, std::string_view format);
 // KSPUtil.cs:872
 std::string PrintSI(double amount, std::string_view unitName, int sigFigs = 3, bool longPrefix = false);
+
+// KSPUtil.cs:920-1137, the double-precision and per-component overloads (the float string forms are in
+// ksp/config/kspparseable.hpp): "G17" components; double.Parse / float.Parse (FormatException / OverflowException);
+// fewer components: Debug.Log warning and zero / identity
+std::string WriteVector(const Vector3d& vector, std::string_view separator = ",");
+std::string WriteQuaternion(const QuaternionD& quaternion, std::string_view separator = ",");
+Vector3d ParseVector3d(std::string_view vectorString, char separator = ',');
+Vector3d ParseVector3d(std::string_view x, std::string_view y, std::string_view z);
+QuaternionD ParseQuaternionD(std::string_view quaternionString, char separator = ',');
+QuaternionD ParseQuaternionD(std::string_view x, std::string_view y, std::string_view z, std::string_view w);
+Vector2f ParseVector2(std::string_view x, std::string_view y);
+Vector3f ParseVector3(std::string_view x, std::string_view y, std::string_view z);
+Vector4f ParseVector4(std::string_view x, std::string_view y, std::string_view z, std::string_view w);
+Quaternionf ParseQuaternion(std::string_view x, std::string_view y, std::string_view z, std::string_view w);
 
 // KSPUtil.cs:1138 WriteArray<T>: elements joined with "; " (T.ToString())
 std::string WriteArray(std::span<const std::string> array);

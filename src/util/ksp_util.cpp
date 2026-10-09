@@ -564,6 +564,57 @@ std::string PrintSI(double amount, std::string_view unitName, int sigFigs, bool 
     return Localizer::Format("<<1>><<2>>", {dotnet::FormatDoubleG(amount), std::string(unitName)});
 }
 
+// KSPUtil.cs:920 / 925
+std::string WriteVector(const Vector3d& vector, std::string_view separator) {
+    const std::string s(separator);
+    return dotnet::FormatDoubleG(vector.x, 17) + s + dotnet::FormatDoubleG(vector.y, 17) + s + dotnet::FormatDoubleG(vector.z, 17);
+}
+// KSPUtil.cs:966 / 971
+std::string WriteQuaternion(const QuaternionD& q, std::string_view separator) {
+    const std::string s(separator);
+    return dotnet::FormatDoubleG(q.x, 17) + s + dotnet::FormatDoubleG(q.y, 17) + s + dotnet::FormatDoubleG(q.z, 17) + s +
+           dotnet::FormatDoubleG(q.w, 17);
+}
+// KSPUtil.cs:1030 / 1041 (the one-argument form's message is the separator form's with ',')
+Vector3d ParseVector3d(std::string_view vectorString, char separator) {
+    const auto a = SplitChar(vectorString, separator);
+    if (a.size() < 3) {
+        log::Info(std::string("WARNING: Vector3d entry is not formatted properly! proper format for Vector3s is x") + separator +
+                  "y" + separator + "z");
+        return Vector3d::zero();
+    }
+    return Vector3d(dotnet::ParseDouble(a[0]), dotnet::ParseDouble(a[1]), dotnet::ParseDouble(a[2]));
+}
+// KSPUtil.cs:1052
+Vector3d ParseVector3d(std::string_view x, std::string_view y, std::string_view z) {
+    return Vector3d(dotnet::ParseDouble(x), dotnet::ParseDouble(y), dotnet::ParseDouble(z));
+}
+// KSPUtil.cs:1111 / 1127
+QuaternionD ParseQuaternionD(std::string_view quaternionString, char separator) {
+    const auto a = SplitChar(quaternionString, separator);
+    if (a.size() < 4) {
+        log::Info(std::string("WARNING: QuaternionD entry is nor formatted properly! proper format for QuaternionD is x") +
+                  separator + "y" + separator + "z" + separator + "w");
+        return QuaternionD::identity();
+    }
+    return QuaternionD(dotnet::ParseDouble(a[0]), dotnet::ParseDouble(a[1]), dotnet::ParseDouble(a[2]), dotnet::ParseDouble(a[3]));
+}
+// KSPUtil.cs:1122
+QuaternionD ParseQuaternionD(std::string_view x, std::string_view y, std::string_view z, std::string_view w) {
+    return QuaternionD(dotnet::ParseDouble(x), dotnet::ParseDouble(y), dotnet::ParseDouble(z), dotnet::ParseDouble(w));
+}
+// KSPUtil.cs:1004 / 1025 / 1068 / 1106
+Vector2f ParseVector2(std::string_view x, std::string_view y) { return {dotnet::ParseSingle(x), dotnet::ParseSingle(y)}; }
+Vector3f ParseVector3(std::string_view x, std::string_view y, std::string_view z) {
+    return {dotnet::ParseSingle(x), dotnet::ParseSingle(y), dotnet::ParseSingle(z)};
+}
+Vector4f ParseVector4(std::string_view x, std::string_view y, std::string_view z, std::string_view w) {
+    return {dotnet::ParseSingle(x), dotnet::ParseSingle(y), dotnet::ParseSingle(z), dotnet::ParseSingle(w)};
+}
+Quaternionf ParseQuaternion(std::string_view x, std::string_view y, std::string_view z, std::string_view w) {
+    return {dotnet::ParseSingle(x), dotnet::ParseSingle(y), dotnet::ParseSingle(z), dotnet::ParseSingle(w)};
+}
+
 // KSPUtil.cs:1138 WriteArray<T>
 namespace {
 template <class T, class F>
