@@ -166,11 +166,7 @@ std::unique_ptr<Vessel> AssembleVesselFromParts(std::vector<std::unique_ptr<Part
     }
     const uint32_t hashCode = UniqueHash();
     for (Part* part : vessel->parts) {
-        // ShipConstruction.GetUniqueFlightID(sceneState.flightState)
-        uint32_t flightID;
-        do {
-            flightID = UniqueHash();
-        } while (options.flightState != nullptr && options.flightState->ContainsFlightID(flightID) && flightID != 0);
+        const uint32_t flightID = ShipConstruction::GetUniqueFlightID(options.flightState);  // ShipConstruction.cs:436
         part->fields.flightID = flightID;
         part->fields.missionID = hashCode;
         part->fields.launchID = options.launchID;

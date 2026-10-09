@@ -23,7 +23,7 @@ Updated 2026-10-09 (WP-05). One command: `powershell -NoProfile -ExecutionPolicy
 
 | 12. WP-10 time warp, rails propagation, orbit driver (branch `wp10`) | done: TimeWarp (whole class incl. rate limits, mode switching, autoWarpTo), WarpTransition(Calculator), PositionTarget + ITargetable, OrbitDriver finished (Targetable, TRACK_Phys/IDLE/UPDATE tests), CelestialBody.resetTimeWarpLimits/TerrainAltitude; `capture.orbit_rails` bit-exact incl. the newly gated `segments.requested_rate`; 17 unit cases (2,009 assertions); numerics beyond C8 need new captures (listed in "WP-10") |
 
-| 13. WP-18 craft files and ship construction (branch `wp18`) | done for the engine-agnostic part: ShipConstruct over live `Part`s (`LoadShipWithParts` / `SaveShip` from the parts, costs, masses, naming, ship PartSet), ShipTemplate (whole class), ShipConstruction (paths, backups, load / save, `AssembleForLaunch` over WP-14's assembly, templates through the upgrade pipeline, `GetPartCosts*`, launch-site queries, craft size); new gate `capture.ship_construct` (C5: `GetShipMass` and the per-part masses of 17 crafts, 0 ULP); 26 unit cases (273,930 assertions): round trip of 57 crafts, agreement with the original files, templates vs ships. See "WP-18" |
+| 13. WP-18 craft files and ship construction (branch `wp18`) | done for the engine-agnostic part: ShipConstruct over live `Part`s (`LoadShipWithParts` / `SaveShip` from the parts, costs, masses, naming, ship PartSet), ShipTemplate (whole class), ShipConstruction (paths, backups, load / save, `AssembleForLaunch` over WP-14's assembly, templates through the upgrade pipeline, `GetPartCosts*`, launch-site queries, craft size); new gate `capture.ship_construct` (C5: `GetShipMass` and the per-part masses of 17 crafts, 0 ULP); 26 unit cases (274,042 assertions): round trip of 57 crafts, agreement with the original files, templates vs ships. See "WP-18" |
 
 ## Test results (all 24 ctest tests pass on Linux (Clang, GCC); 21 of them are the Windows RelWithDebInfo / Debug set; WP-00L added libm.portable_vs_dll)
 
@@ -54,7 +54,7 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `capture.ship_construct` | WP-18: in-game `captures/out2/deltav_readout.json` (C5) tables `craft` (16 crafts: parts, dry_mass, fuel_mass of `ShipConstruct.GetShipMass`) and `parts` (1,224 parts: mass, module_mass); `craft_ComSat_Lx` (fairing panelMass, WP-26) excluded per `tests/data/ship_construct_exclusions.json`; `total_mass` (editor crew) checked in the unit test; scope in "WP-18" | 1,240 | 0 ULP |
 | `capture.gamedatabase_load_order` | WP-05: every `Load(Audio/Texture/Model): url` and `Config(TYPE) url` line of the capture run's KSP.log, in order | 2,836 lines | identical |
 | `capture.vessel_state` | WP-14: in-game `captures/out2/aero_forces_vessel.json` (C10): structure 631 (part tree of the three PhysProf crafts assembled into a `Vessel`), states 20 (surface speed and the FlightIntegrator atmosphere mirror); cube_names, node_contact_areas and engine/input columns excluded (see WP-14) | 651 | 0 ULP, strings/ints identical |
-| `unit` | 262 doctest cases, 452,367 assertions (WP-18: 26 cases, 273,930 assertions in `test_ship_construct.cpp`; WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
+| `unit` | 262 doctest cases, 452,479 assertions (WP-18: 26 cases, 274,042 assertions in `test_ship_construct.cpp`; WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
 differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 6 ULP (Vector3.Project/ProjectOnPlane) and
@@ -1949,13 +1949,16 @@ Excluded from the gate (and why):
   craft are not compared; compare.py reports its candidate rows as "extra", the known follow-up of NEXT-STEPS).
 - `craft.total_mass`: the capture's editor session adds the crew (VesselCrewManifest: `(float)CrewCount * KerbalCrewMass`, the crew's inventory
   mass, its resource mass; ShipConstruct.cs:841-849), which is the editor package's. `tests/test_ship_construct.cpp` checks the formula
-  instead: for each of the 16 crafts with a part-complete mass, exactly one crew count `n` makes `GetShipMass(manifest{n crew, n * 0.049 t of
-  inventory})` equal the captured total bit for bit (11 crewed crafts with 1-4 crew, 5 uncrewed); `0.049` is the per-kerbal inventory mass the
-  capture implies (editor kerbal = 0.045 + 0.049 = 0.094 t), not a number read from the game's data.
+  instead: for each of the 16 crafts with a part-complete mass, exactly one crew count `n` makes `GetShipMass(manifest{n crew, n x per-kerbal
+  inventory})` equal the captured total bit for bit (11 crewed crafts with 1-4 crew, 5 uncrewed). The per-kerbal inventory mass is computed from
+  the part database, not a literal: kerbalEVA.cfg's `ModuleInventoryPart` DEFAULTPARTS are `evaChute` (mass 0.004) and `evaJetpack` (mass 0.02 plus
+  its RESOURCE `EVA Propellant` 5 units at density 0.005), summed as `ModuleInventoryPart.GetModuleMass` does (ModuleInventoryPart.cs:1928-1959:
+  `num += snapshot.mass * (float)Math.Max(1, quantity)`, then the resources last to first, `density * (float)amount`, times the quantity) =
+  0.049 t (`ProtoCrewMember.InventoryMass`, ProtoCrewMember.cs:775), and the manifest adds it once per crew member (VesselCrewManifest.cs:131).
 - `craft.stage_count`, `loaded`, `error`; `parts.inverseStage` / `decoupleStage` / `activationStage` / `isEngine` / `isDecoupler`: staging
   (WP-16), VesselDeltaV (WP-17), engines (WP-23). `craft.parts` is gated.
 
-### Unit tests (`tests/test_ship_construct.cpp`: 26 cases, 273,930 assertions)
+### Unit tests (`tests/test_ship_construct.cpp`: 26 cases, 274,042 assertions)
 
 All expectations are derived from the decompiled control flow or are properties of original game data; no number is invented.
 - Live load: all 57 loadable crafts (51 of `harness/inputs/Ships` + the 6 `analysis/physics/craft` PhysProf crafts; the other 35 files contain FAR /
@@ -1975,8 +1978,10 @@ All expectations are derived from the decompiled control flow or are properties 
   experimental / mission-filter hooks, a node without `part`, the first `type` wins.
 - Costs and masses: `GetShipCosts` / `GetShipMass` equal the part sums in the C# order (dry and fuel accumulated separately from the last part to
   the first, Mono float rule); `GetTotalMass` with and without `ShipManifest`; `ShipTemplate` totals over the saved node agree with the ship's
-  within the accumulation rounding (relative 1e-4; 37 of 57 `totalCost` and 11 of 57 `totalMass` are bit-equal) and `GetPartCostsAndMass` per part
-  equals the live computation exactly; `GetPartCostsAndMass` / `SanitizePartCosts` on a hand-built PART node (expected values from the C# order of
+  exactly: the template's `totalCost` / `fuelCost` / `dryCost` / `totalMass` equal the forward float32 sum of the per-part values
+  (ShipTemplate.cs:129-143, Mono rule) bit for bit for all 57 crafts, and `GetPartCostsAndMass` per part equals the live computation exactly. The
+  ship's own sum (dry and fuel separately, last part to first) differs from the template's only by association order: bit-equal for 37 of 57
+  `totalCost` and 11 of 57 `totalMass`; `GetPartCostsAndMass` / `SanitizePartCosts` on a hand-built PART node (expected values from the C# order of
   operations and the stock resource definitions); `GetPartCosts(ProtoPartSnapshot)` on all 458 parts of the physprofile save (double arithmetic,
   dry / fuel split, `includeModuleCosts`, null `AvailablePart` = NullReferenceException, unknown resource).
 - Costs against the part database (TIERING's acceptance "costs match part_database"): for all 4,282 parts of the 57 crafts, `AvailablePart.cost` and
@@ -2052,6 +2057,9 @@ All expectations are derived from the decompiled control flow or are properties 
   `Transform.Translate` / `RotateAround` / `Quaternion.ToAngleAxis` are native Unity and plain float32 here, not verified against a capture.
 - `RecoverVesselFromFlight` / `CheckLaunchSiteClear` move the removed `ProtoVessel`s into a retained list (the Vessel's `protoVessel` pointer must not
   dangle; `Object.DestroyImmediate(vessel.gameObject)` is the host's hook `ShipConstruction::destroyVesselGameObject`).
+- `AssembleVesselFromParts` calls `ShipConstruction::GetUniqueFlightID` for the per-part flight ids; `findFirstCrewablePart` starts from the ship's
+  first part (`ship.parts[0]`, as the C# does) and `findFirstControlSource` scans `vessel.parts`; for the unchanged WP-14 route that first part is
+  the root of the DFS, i.e. the old `vessel->parts[0]`.
 - `ShipConstruct` is neither copyable nor movable (parts and PartSets point back at it); the GameEvents `onAboutToSaveShip` fires with the raw pointer.
 
 ### Needs a new (local) capture or scenario
@@ -2072,8 +2080,8 @@ All expectations are derived from the decompiled control flow or are properties 
 
 ### Fresh run
 
-`./run_tests.sh -f` (Linux release, clang 18): 24/24 ctest tests passed (the 22 of WP-14 plus `capture.ship_construct`; `corpus.saves` is registered only
-where `decompiled/KSP-dev/saves` exists, not on this VM); `unit` 262 cases / 452,367 assertions (26 cases / 273,930 assertions of them are
+`./run_tests.sh -f` (Linux release, clang 18): 24/24 ctest tests passed (the 23 of WP-14 plus `capture.ship_construct`; `corpus.saves` is registered only
+where `decompiled/KSP-dev/saves` exists, not on this VM); `unit` 262 cases / 452,479 assertions (26 cases / 274,042 assertions of them are
 `test_ship_construct.cpp`); ctest total 63 s. GCC 13 (`./run_tests.sh -p linux-gcc-rel -f`): 24/24 as well (build 437 s cold). Not run here: Windows (MSVC) and Debug presets; the
 class / struct forward-declaration rule was applied (`struct AvailablePart`, `struct PartHeightQuery`, `class VesselCrewManifest` is defined here, not
 forward-declared differently from `game_event_types.hpp`).

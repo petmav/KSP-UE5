@@ -139,14 +139,51 @@ std::vector<uint32_t> LinkIds(const ConfigNode& part, const char* key) {
 // A stand-in for the editor's VesselCrewManifest: a crew count and no inventory (ShipConstruct.GetShipMass reads these)
 struct StubManifest : VesselCrewManifest {
     int crew = 0;
-    float inventoryMass = 0.0f;   // VesselCrewManifest.GetCrewInventoryMass()
+    float inventoryPerKerbal = 0.0f;   // ProtoCrewMember.InventoryMass() of each crew member
     int assigned = 0;
     int CrewCount() const override { return crew; }
     float GetCrewInventoryCosts() override { return 0.0f; }
-    float GetCrewInventoryMass() override { return inventoryMass; }
+    // VesselCrewManifest.cs:131: num += allCrew[i].InventoryMass() per crew member (a float store each)
+    float GetCrewInventoryMass() override {
+        float num = 0.0f;
+        for (int i = 0; i < crew; i++) num = f32store(fx(num) + fx(inventoryPerKerbal));
+        return num;
+    }
     float GetCrewResourceMass() override { return 0.0f; }
     void AssignCrewToVessel(ShipConstruct&) override { assigned++; }
 };
+
+// ProtoCrewMember.InventoryMass() (ProtoCrewMember.cs:775) of an editor kerbal = kerbalEVA's ModuleInventoryPart.GetModuleMass(0, CURRENT)
+// (ModuleInventoryPart.cs:1928-1959) over the stored parts of its DEFAULTPARTS (kerbalEVA.cfg: evaChute, evaJetpack), one per slot, quantity 1:
+//   num += snapshot.mass * (float)Math.Max(1, quantity);
+//   num2 = sum over the snapshot's resources, last to first, of definition.density * (float)amount;  num += num2 * (float)Math.Max(1, quantity)
+// All inputs are the part database: the prefab mass of each default part and its RESOURCEs with the resource library's density.
+float KerbalInventoryMass(Game15& g) {
+    ConfigNode::NodePtr eva = ConfigNode::Load((fs::path(ksp::testing::GameRoot()) / "GameData" / "Squad" / "Parts" / "Prebuilt" / "kerbalEVA.cfg").string());
+    REQUIRE(eva);
+    ConfigNode* part = eva->GetNode("PART");
+    REQUIRE(part != nullptr);
+    ConfigNode* inv = nullptr;
+    for (ConfigNode* m : part->GetNodes("MODULE"))
+        if (m->GetValuePtr("name") && *m->GetValuePtr("name") == "ModuleInventoryPart") inv = m;
+    REQUIRE(inv != nullptr);
+    ConfigNode* defaults = inv->GetNode("DEFAULTPARTS");
+    REQUIRE(defaults != nullptr);
+    float num = 0.0f;
+    for (int i = 0; i < defaults->values().Count(); i++) {
+        const AvailablePart& ap = g.Info(defaults->values()[i].value.c_str());
+        const float quantity = 1.0f;   // StoredPart.quantity of a default part; Math.Max(1, quantity)
+        num = f32store(fx(num) + fx(ap.partPrefab->fields.mass) * fx(quantity));
+        float num2 = 0.0f;
+        PartResourceList& res = ap.partPrefab->Resources;
+        for (int r = res.Count(); r-- > 0;) {
+            const PartResource& pr = res[static_cast<size_t>(r)];
+            if (pr.info != nullptr) num2 = f32store(fx(num2) + fx(pr.info->density()) * fx(f32store(pr.amount)));
+        }
+        num = f32store(fx(num) + fx(num2) * fx(quantity));
+    }
+    return num;
+}
 
 // The stock game + PhysicsGlobals + Planetarium + the Kerbol system, as the flight scene has them (AssembleForLaunch builds a Vessel)
 struct World18 {
@@ -870,15 +907,7 @@ TEST_CASE("WP-18 GetShipCosts / GetShipMass: part sums in the C# order, dry + fu
         ConfigNode::NodePtr r1 = ship.SaveShip();
         ShipTemplate t;
         t.LoadShip(r1);
-        // the template sums part by part forward, the ship sums dry and fuel backwards: the two float accumulations (hundreds of terms of
-        // up to 1e5) differ by rounding only
-        auto near = [](float a, float b) { return std::fabs(static_cast<double>(a) - b) <= 1e-4 * std::max(1.0, std::fabs(static_cast<double>(b))); };
-        CHECK_MESSAGE(near(t.totalCost, total), t.totalCost << " vs " << total);
-        CHECK_MESSAGE(near(t.dryCost, dry), t.dryCost << " vs " << dry);
-        CHECK_MESSAGE(near(t.fuelCost, fuel), t.fuelCost << " vs " << fuel);
-        CHECK_MESSAGE(near(t.totalMass, mtotal), t.totalMass << " vs " << mtotal);
-        exactCost += (t.totalCost == total);
-        exactMass += (t.totalMass == mtotal);
+        float fTotalCost = 0, fFuelCost = 0, fDryCost = 0, fTotalMass = 0;
         // per part, GetPartCostsAndMass(PART node) equals the live computation exactly: same inputs (modCost / modMass / amounts)
         for (int i = 0; i < ship.LiveCount(); i++) {
             float dc, fc, dm, fm;
@@ -890,9 +919,23 @@ TEST_CASE("WP-18 GetShipCosts / GetShipMass: part sums in the C# order, dry + fu
             CHECK_MESSAGE(dm == lt.dryMass, cf.label << " part " << i);
             CHECK_MESSAGE(fm == lt.fuelMass, cf.label << " part " << i);
             CHECK(sum == f32store(fx(dc) + fx(fc)));
+            // ShipTemplate.cs:129-143: totalCost += num; fuelCost += num2; dryCost += num3; totalMass += dryMass + fuelMass, forward over the
+            // parts, each a float store (Mono rule); the ship adds dry and fuel separately from the last part to the first, so the two
+            // totals differ only by association order, and the template's must be reproduced exactly by this forward sum
+            fTotalCost = f32store(fx(fTotalCost) + fx(sum));
+            fFuelCost = f32store(fx(fFuelCost) + fx(fc));
+            fDryCost = f32store(fx(fDryCost) + fx(dc));
+            fTotalMass = f32store(fx(fTotalMass) + (fx(dm) + fx(fm)));
         }
+        CHECK_MESSAGE(t.totalCost == fTotalCost, cf.label << " " << t.totalCost << " vs " << fTotalCost);
+        CHECK_MESSAGE(t.fuelCost == fFuelCost, cf.label);
+        CHECK_MESSAGE(t.dryCost == fDryCost, cf.label);
+        CHECK_MESSAGE(t.totalMass == fTotalMass, cf.label << " " << t.totalMass << " vs " << fTotalMass);
+        // the ship's own association order gives (almost always) the same bits; count the exact ones for the record
+        exactCost += (t.totalCost == total);
+        exactMass += (t.totalMass == mtotal);
     }
-    MESSAGE("crafts " << crafts << " template totalCost bit-equal " << exactCost << " totalMass bit-equal " << exactMass);
+    MESSAGE("crafts " << crafts << " (ship backwards sum == template forward sum: totalCost " << exactCost << ", totalMass " << exactMass << ")");
     CHECK(crafts == 57);
 }
 
@@ -1435,8 +1478,10 @@ TEST_CASE("WP-18 the C5 capture's total_mass is the no-crew total plus an integr
         float dry, fuel;
         const float noCrew = ship.GetShipMass(dry, fuel);
         const float capture = r[cTotal].get<float>();
+        const float perKerbal = KerbalInventoryMass(w.g);   // evaChute 0.004 + evaJetpack (0.02 + 5 EVA Propellant * 0.005)
+        CHECK(perKerbal > 0.0f);
         // the editor crew adds (float)CrewCount * KerbalCrewMass (0.045), then the crew's inventory mass, then its resource mass to the no-crew
-        // total (ShipConstruct.GetShipMass); the capture's per-kerbal inventory is 0.049 t (0.045 + 0.049 = the 0.094 t of an editor kerbal),
+        // total (ShipConstruct.GetShipMass); the per-kerbal inventory mass is computed from the part database (KerbalInventoryMass: 0.049 t),
         // and every craft's total_mass is reproduced bit for bit by one crew count
         int n = -1;
         int capacity = 0;
@@ -1444,7 +1489,7 @@ TEST_CASE("WP-18 the C5 capture's total_mass is the no-crew total plus an integr
         for (int k = 0; k <= capacity; k++) {
             StubManifest m;
             m.crew = k;
-            m.inventoryMass = static_cast<float>(k) * 0.049f;
+            m.inventoryPerKerbal = perKerbal;
             float d2, f2;
             if (ship.GetShipMass(d2, f2, &m) == capture) {
                 n = k;

@@ -21,3 +21,4 @@ Branch wp18 (from wp14 7bc606d6). Notes after every major step.
 - Design notes: part persistentId check deferred to InstantiateParts with real Part* (BuildCraftParts onPartLoaded callback); ShipConstruct non-movable; AssembleForLaunch -> AssembleVesselFromParts (vessel_assembly refactor); retained removed ProtoVessels in ShipConstruction.cpp.
 - STATUS.md "WP-18" + README rows written. Remaining: GCC run (build/linux-gcc-rel, log /tmp/claude-0/wp18/gcc1.log), final commit, handback.
 - final: clang fresh 24/24, gcc fresh 24/24; unit 262 cases / 452,367 assertions (26 / 273,930 in test_ship_construct.cpp)
+- gatekeeper follow-ups done: kerbal inventory mass from part DB, exact template sums, doc fixes; unit 262 / 452,479
