@@ -1,0 +1,38 @@
+# This is an internal test for KSPBuildTools and not intended to be used by other projects
+name: Test Assetbundle
+
+on:
+  workflow_call:
+    secrets:
+      UNITY_LICENSE:
+      UNITY_EMAIL:
+      UNITY_PASSWORD:
+env:
+  TESTDIR: tests/plugin-mod
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: 'Tantares/Resurfaced'
+          ref: "v.1.3.1"
+          path: 'Resurfaced'
+          
+      - uses: ./.github/actions/build-assetbundles
+        with: 
+          assetbundle-name: foo.shab
+          asset-files: 'Resurfaced/Source/Shaders/*.shader Resurfaced/Source/Shaders/*.cginc'
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: 'Bundle'
+          name: assetbundle
+          if-no-files-found: 'warn'

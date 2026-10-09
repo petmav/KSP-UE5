@@ -1,0 +1,68 @@
+name: Assemble Release
+
+x-env:
+  RELEASE_STAGING:
+    description: The artifact files will be copied to this directory before being packaged in the zip file. If not set, `/tmp/release` is used instead
+
+inputs:
+  artifacts:
+    description: Space-separated list of file globs to include in the output artifact, relative to `working-directory`
+    default: GameData LICENSE* README* CHANGELOG*
+
+  artifacts-exclude:
+    description: Space-separated list of file globs remove from the staging directory before zipping
+    default: "**/*.pdb"
+
+  output-file-name:
+    description: Output artifact name used in the upload-artifact action WITHOUT ".zip" extension. a zip file with this name will be created in the github workspace so that it can be immediately consumed by other actions in the workflow without having to download the artifact.
+    default: ${{ github.event.repository.name || 'release'}}
+
+  working-directory:
+    default: ${{ github.workspace }}
+    description: The working directory to run in
+
+outputs:
+  artifact-id:
+    value: ${{ steps.upload-artifact.outputs.artifact-id }}
+    description: Artifact ID from the upload-artifact action
+
+  artifact-url:
+    value: ${{ steps.upload-artifact.outputs.artifact-url }}
+    description: Artifact URL from the upload-artifact action
+
+  artifact-zip-path:
+    value: ${{ steps.assemble-release.outputs.artifact-zip-path }}
+    description: Local path to the produced release zip file
+
+  artifact-dir-path:
+    value: ${{ steps.assemble-release.outputs.artifact-dir-path }}
+    description: Local path to the produced release directory
+
+runs:
+  using: composite
+  steps:
+    - name: Set RELEASE_STAGING
+      if: ${{ !env.RELEASE_STAGING}}
+      shell: bash
+      run: echo 'RELEASE_STAGING=/tmp/release/' >> "$GITHUB_ENV"
+
+    - name: Copy Files to Staging
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        shopt -s nocaseglob # so globs are case-insensitive
+        shopt -s globstar
+        shopt -s nullglob
+        mkdir -p ${{ env.RELEASE_STAGING  }}/${{ inputs.output-file-name}}
+        cp -r -v ${{ inputs.artifacts }} ${{ env.RELEASE_STAGING }}/${{ inputs.output-file-name}}
+        cd ${{ env.RELEASE_STAGING }}/${{ inputs.output-file-name}}
+        rm -f ${{ inputs.artifacts-exclude }}
+
+    - name: Assemble Release
+      id: assemble-release
+      shell: bash
+      working-directory: ${{ env.RELEASE_STAGING }}
+      run: |
+        zip -r ${{ inputs.output-file-name }}.zip ${{ inputs.output-file-name}}
+        echo 'artifact-zip-path=${{ env.RELEASE_STAGING }}/${{ inputs.output-file-name }}.zip' >> $GITHUB_OUTPUT
+        echo 'artifact-dir-path=${{ env.RELEASE_STAGING }}/${{ inputs.output-file-name}}' >> $GITHUB_OUTPUT

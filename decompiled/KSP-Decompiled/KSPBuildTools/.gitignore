@@ -1,0 +1,14 @@
+# dotnet artifacts
+bin
+obj
+*.nupkg
+packages
+
+# docs
+docs/_build
+
+# misc
+.DS_Store
+.idea
+*.user
+*.backup

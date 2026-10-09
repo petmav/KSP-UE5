@@ -1,0 +1,87 @@
+name: Setup CKAN
+description: Installs [CKAN](https://github.com/KSP-CKAN/CKAN) and sets up a KSP installation
+
+x-env:
+  KSP_ROOT:
+    description: The path to use as the root of a KSP instance for CKAN to set-up. If not set, `/tmp/ksp` is used instead.
+
+inputs:
+  ckan-install-method:
+    description: Method of installing CKAN. Can be set to 'apt' to install from the official .deb file, or 'skip' to skip installation if your runner already has CKAN installed.
+    default: 'apt'
+
+  ckan-version:
+    description: CKAN tag to install. set to an empty string to always install the most recent version. See [the CKAN releases page](https://github.com/KSP-CKAN/CKAN/tags) for a list of available tags
+    default: ''
+
+  ckan-repo:
+    description: HOST/OWNER/REPO of the CKAN github repository to pull from. Defaults to the mainline version
+    default: 'https://github.com/KSP-CKAN/CKAN'
+
+  ckan-compatible-versions:
+    description: KSP versions to mark as compatible. newline-separated.
+    default: |
+      1.12
+      1.11
+      1.10
+      1.9
+      1.8
+
+  ckan-filters:
+    description: File globs to ignore when installing mods. Newline-separated. Defaults to most large asset files included in mods. Set to an empty string if you need the entire mod installed for bundling.
+    default: |
+      .dds
+      .png
+      .bmp
+      .mu 
+      .mbm
+      .jpg
+      .wav
+
+runs:
+  using: composite
+  steps:
+    - name: Set KSP_ROOT
+      if: ${{ !env.KSP_ROOT }}
+      shell: bash
+      run: echo 'KSP_ROOT=${{ '/tmp/ksp' }}' >> "$GITHUB_ENV"
+
+    - name: Install CKAN via apt
+      if: ${{ inputs.ckan-install-method == 'apt' }}
+      shell: bash
+      run: |
+        sudo rm -f /var/lib/man-db/auto-update # skip updating man pages, which takes a long time and makes no sense in a CI job
+        sudo apt install libmono-system-componentmodel-composition4.0-cil
+        gh release download ${{ inputs.ckan-version }} --repo ${{ inputs.ckan-repo }} --pattern 'ckan*.deb' -O ckan.deb
+        ${{ env.ACT && 'sudo apt update --quiet' }}
+        sudo apt install --quiet --no-install-recommends --no-install-suggests ./ckan.deb  ${{ runner.debug && '--verbose-versions' }}
+        ckan version
+      env:
+        GH_TOKEN: ${{ github.token }}
+
+    - name: Setup fake KSP instance
+      shell: bash
+      run: |
+        ${{ runner.debug && 'echo "$PATH"' }}
+        ckan instance fake --set-default KSP ${{ env.KSP_ROOT }} 1.12.5 --game KSP --MakingHistory 1.9.1 --BreakingGround 1.7.1  ${{ runner.debug && '--verbose' }}
+        ckan update
+
+    - name: Setup CKAN compatible versions
+      shell: bash
+      if: inputs.ckan-compatible-versions != ''
+      run: |
+        for version in $VERSIONS; do
+        ckan compat add "$version" ${{ runner.debug && '--verbose' }}
+        done
+      env:
+        VERSIONS: ${{ inputs.ckan-compatible-versions }}
+
+    - name: Setup CKAN filter
+      shell: bash
+      if: inputs.ckan-filters != ''
+      run: |
+        for filter in $FILTERS; do
+        ckan filter add "$filter" ${{ runner.debug && '--verbose' }}
+        done
+      env:
+        FILTERS: ${{ inputs.ckan-filters }}

@@ -1,0 +1,129 @@
+# This is an internal workflow for KSPBuildTools and not intended to be used by other projects
+
+name: CI
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+    branches:
+      - '*'
+  pull_request:
+  workflow_dispatch:
+
+env:
+  NuGetDirectory: ${{ github.workspace}}/nuget
+
+jobs:
+  build:
+    env:
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+      DOTNET_NOLOGO: true
+    runs-on: ubuntu-24.04
+    outputs:
+      package-version: ${{ steps.get-version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # get full history, not shallow clone
+
+      - name: Check for workflows with outdated action pins
+        if: startsWith(github.ref, 'refs/tags')
+        run: |
+          ! grep -P -i 'uses: KSPModdingLibs/KSPBuildTools/\.github/actions/.*@(?!${{ github.ref_name }}$)' .github/workflows/*.yml
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Get Version
+        id: get-version
+        run: |
+          dotnet tool install --global minver-cli --version 5.0.0
+          minver 
+          echo "version=$(minver -v e)" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: dotnet build KSPBuildTools.csproj
+
+      - name: Package
+        run: dotnet pack KSPBuildTools.csproj --configuration Release --output ${{ env.NuGetDirectory }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          if-no-files-found: error
+          path: ${{ env.NuGetDirectory }}/*.nupkg
+
+  test-plugin:
+    uses: './.github/workflows/internal-test-plugin.yml'
+
+  test-plugin-nuget:
+    uses: './.github/workflows/internal-test-plugin-nuget.yml'
+    needs: [ build ]
+    with:
+      package-version: ${{ needs.build.outputs.package-version }}
+
+  test-plugin-legacy:
+    uses: './.github/workflows/internal-test-plugin-legacy.yml'
+
+  test-assetbundle:
+    uses: './.github/workflows/internal-test-assetbundle.yml'
+    if: github.event_name != 'pull_request'
+    secrets: inherit
+
+  deploy:
+    runs-on: ubuntu-22.04
+    needs: [ build, test-plugin, test-plugin-nuget, test-plugin-legacy, test-assetbundle ]
+    environment:
+      name: "NuGet"
+      url: "https://www.nuget.org/packages/KSPBuildTools"
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get Changelog Information
+        uses: drewcassidy/yaclog@1.5.0
+        id: yaclog-show
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: nuget-package
+          path: ${{ env.NuGetDirectory }}
+
+      - name: Publish Package to NuGet
+        run: >-
+          dotnet nuget push ${{ env.NuGetDirectory }}/*.nupkg
+          --api-key ${{ secrets.NUGET_API_KEY }}
+          --source https://api.nuget.org/v3/index.json
+
+      - name: Authenticate with Github
+        run: >-
+          dotnet nuget add source --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} 
+          --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+
+      - name: Publish Package to Github
+        run: |
+          dotnet nuget push --source "github" ${{ env.NuGetDirectory }}/*.nupkg
+
+      - name: Publish Package to Forgejo
+        run: >
+          dotnet nuget push ${{ env.NuGetDirectory }}/*.nupkg
+          --api-key ${{ secrets.FORGEJO_DEPLOY_TOKEN }} 
+          --source https://git.offworldcolonies.nexus/api/packages/KSPModdingLibs/nuget/index.json
+
+      - name: Publish to Github Releases
+        run: >
+          gh release create ${{ github.ref_name }}
+          --notes-file "${{ steps.yaclog-show.outputs.body-file }}"
+          --title "${{ needs.build.outputs.package-version }}"
+          ${{ env.NuGetDirectory }}/*.nupkg
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

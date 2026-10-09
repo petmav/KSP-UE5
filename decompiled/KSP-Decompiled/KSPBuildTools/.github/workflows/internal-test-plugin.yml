@@ -1,0 +1,40 @@
+# This is an internal test for KSPBuildTools and not intended to be used by other projects
+name: Test Plugin Mod
+
+on:
+  workflow_call:
+
+env:
+  TESTDIR: tests/plugin-mod
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+        
+      - uses: ./.github/actions/setup-ckan
+
+      - uses: ./.github/actions/compile
+        with:
+          ksp-zip-url: https://github.com/KSPModdingLibs/KSPLibs/raw/main/KSP-1.12.5.zip
+          working-directory: ${{ env.TESTDIR }}
+          solution-file-path: plugin-mod.csproj
+
+      - uses: ./.github/actions/assemble-release
+        id: assemble-release
+        with:
+          working-directory: ${{ env.TESTDIR }}
+          output-file-name: plugin-mod
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: ${{ steps.assemble-release.outputs.artifact-dir-path }}
+          name: plugin-mod
+          if-no-files-found: error
+          include-hidden-files: 'true' # behavior changed in 4.4.0. Include hidden for matching the behavior of `zip`
