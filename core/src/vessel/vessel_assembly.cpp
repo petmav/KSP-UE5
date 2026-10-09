@@ -3,6 +3,7 @@
 
 #include "ksp/save/game.hpp"
 #include "ksp/save/save_environment.hpp"
+#include "ksp/ship/ship_construction.hpp"
 
 namespace ksp {
 
@@ -111,19 +112,6 @@ Guid RandomGuid() {
     g.bytes[8] = static_cast<uint8_t>((g.bytes[8] & 0x3F) | 0x80);
     return g;
 }
-// ShipConstruction.cs:447 findFirstCrewablePart
-Part* FindFirstCrewablePart(Part* part) {
-    if (part->fields.CrewCapacity > 0 && !part->protoModuleCrew.empty() && part->fields.isControlSource > 0) return part;
-    for (Part* c : part->children)
-        if (Part* p = FindFirstCrewablePart(c)) return p;
-    return nullptr;
-}
-// ShipConstruction.cs:499 findFirstControlSource
-Part* FindFirstControlSource(Vessel& v) {
-    for (Part* p : v.parts)
-        if (p->fields.isControlSource > 0) return p;
-    return nullptr;
-}
 }  // namespace
 
 // ShipConstruction.cs:296 (AssembleForLaunch over the parts of a ship; the launch-site placement moves the whole ship)
@@ -199,8 +187,8 @@ std::unique_ptr<Vessel> AssembleVesselFromParts(std::vector<std::unique_ptr<Part
     }
     if (options.setActiveVessel) FlightRegistry::ActiveVessel = vessel.get();
     if (localRoot->fields.isControlSource == 0) {
-        Part* part2 = FindFirstCrewablePart(firstPart);
-        Part* ref = part2 != nullptr ? part2 : FindFirstControlSource(*vessel);
+        Part* part2 = ShipConstruction::findFirstCrewablePart(firstPart);
+        Part* ref = part2 != nullptr ? part2 : ShipConstruction::findFirstControlSource(*vessel);
         vessel->SetReferenceTransform(ref != nullptr ? ref : localRoot);
     } else {
         vessel->SetReferenceTransform(localRoot);

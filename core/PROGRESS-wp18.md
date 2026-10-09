@@ -15,3 +15,4 @@ Branch wp18 (from wp14 7bc606d6). Notes after every major step.
 ## Status
 - [x] read specs; baseline build started (/tmp/claude-0/wp18/baseline.log)
 - code written: ship_template, ship_construction, ship_construct_live, vessel_assembly refactor; builds. Next: dataset ds_ship_construct + gate, tests/test_ship_construct.cpp
+- gate capture.ship_construct passes (17 crafts dry/fuel mass + 1225 part mass/module_mass, 0 ULP; ComSat_Lx fairing excluded: panelMass WP-26). Next: tests/test_ship_construct.cpp full, STATUS, README
