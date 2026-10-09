@@ -12,7 +12,7 @@
 namespace ksp {
 
 // ---- AttachRules.cs --------------------------------------------------------------------------------------------------
-// AttachRules.cs:25
+// AttachRules.cs:34
 AttachRules AttachRules::Parse(std::string_view value) {
     const std::vector<std::string> a = dotnet::Split(value, ",", false);
     if (a.size() < 5) throw Exception("Attach rules are 8 ints, either ones or zeros, separated by commas!");
@@ -28,7 +28,7 @@ AttachRules AttachRules::Parse(std::string_view value) {
     return r;
 }
 
-// AttachRules.cs:66
+// AttachRules.cs:74
 std::string AttachRules::String() const {
     auto b = [](bool v) { return v ? "1" : "0"; };
     return std::string(b(stack)) + "," + b(srfAttach) + "," + b(allowStack) + "," + b(allowSrfAttach) + "," +

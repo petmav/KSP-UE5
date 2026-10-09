@@ -82,13 +82,13 @@ Vector3f ModuleDisplaceTweak::GetFinalPosition() const {
     return ((MDprev != nullptr) ? MDprev->GetFinalPosition() : p0_) + Vector3f::Lerp(pMin_, pMax_, Get<float>("scalar"));
 }
 
-// CompoundPartModule.cs:21 (CompoundPart.target is read through the CompoundPart implementation)
+// CompoundParts/CompoundPartModule.cs:21 (CompoundPart.target is read through the CompoundPart implementation)
 Part* CompoundPartModule::target() const {
     if (compoundPart == nullptr || !compoundTarget) throw NullReferenceException();
     return compoundTarget(*compoundPart);
 }
 
-// CompoundPartModule.cs:23
+// CompoundParts/CompoundPartModule.cs:23
 void CompoundPartModule::OnAwake() {
     Part* p = PartOf(*this);
     compoundPart = (p != nullptr && p->className == "CompoundPart") ? p : nullptr;

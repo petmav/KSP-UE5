@@ -41,7 +41,7 @@ Bounds GetRendererBounds(const std::vector<PartModelRenderer>& renderers) {
     return result;
 }
 
-// PartGeometryUtil.cs:54
+// PartGeometryUtil.cs:40
 Bounds GetRendererBoundsWithoutParticles(const std::vector<PartModelRenderer>& renderers) {
     Bounds result;
     bool flag = false;
@@ -57,7 +57,7 @@ Bounds GetRendererBoundsWithoutParticles(const std::vector<PartModelRenderer>& r
     return result;
 }
 
-// PartGeometryUtil.cs:85
+// PartGeometryUtil.cs:62
 Bounds GetColliderBounds(const std::vector<Bounds>& colliders) {
     Bounds result;
     bool flag = false;
@@ -78,11 +78,11 @@ Bounds GetPartRendererBound(Part& p) {
     return GetRendererBounds(list);
 }
 
-// PartGeometryUtil.cs:129 / 134
+// PartGeometryUtil.cs:100 / 105 (the Part overloads)
 std::vector<Bounds> GetRendererBounds(Part& p) { return GetPartRendererBounds(p); }
 std::vector<Bounds> GetColliderBounds(Part& p) { return GetPartColliderBounds(p); }
 
-// PartGeometryUtil.cs:139
+// PartGeometryUtil.cs:110
 std::vector<Bounds> GetPartRendererBounds(Part& p) {
     std::vector<std::string> disabledVariantGOs;
     if (p.variants != nullptr) {
@@ -109,10 +109,10 @@ std::vector<Bounds> GetPartRendererBounds(Part& p) {
     return array;
 }
 
-// PartGeometryUtil.cs:190
+// PartGeometryUtil.cs:170
 std::vector<Bounds> GetPartColliderBounds(Part& p) { return p.colliderBounds; }
 
-// PartGeometryUtil.cs:200
+// PartGeometryUtil.cs:181
 Bounds MergeBounds(const std::vector<Bounds>& bounds, const Vector3f& relativeToPosition) {
     Bounds result;
     result.set_center(relativeToPosition);
@@ -124,7 +124,7 @@ Bounds MergeBounds(const std::vector<Bounds>& bounds, const Vector3f& relativeTo
     return result;
 }
 
-// PartGeometryUtil.cs:214
+// PartGeometryUtil.cs:194
 Bounds MergeBounds(const std::vector<Bounds>& bounds) {
     Bounds result;
     if (!bounds.empty()) {
@@ -139,7 +139,7 @@ Bounds MergeBounds(const std::vector<Bounds>& bounds) {
     return result;
 }
 
-// PartGeometryUtil.cs:234
+// PartGeometryUtil.cs:211
 Bounds MergeBounds(const std::vector<std::pair<std::vector<Bounds>, PosRot>>& centeredBounds, const PosRot& relativeTo) {
     Bounds result;
     result.set_center(relativeTo.vector);
@@ -153,7 +153,7 @@ Bounds MergeBounds(const std::vector<std::pair<std::vector<Bounds>, PosRot>>& ce
     return result;
 }
 
-// PartGeometryUtil.cs:245
+// PartGeometryUtil.cs:230
 Vector3f FindBoundsCentroid(const std::vector<Bounds>& bounds, const PartTransform* localTo) {
     Vector3f zero = Vector3f::zero();
     float num = 0.0f;

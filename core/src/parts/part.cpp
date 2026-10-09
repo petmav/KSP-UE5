@@ -71,7 +71,7 @@ PartValues::PartValues()
 }
 
 // ---- AttachNode.cs (the parts that need a Part) ------------------------------------------------------------------------------
-// AttachNode.cs:78
+// AttachNode.cs:86
 AttachNode AttachNode::FromTransform(std::string id_, const Vector3f& transformPosition, const Vector3f& transformForward,
                                      int32_t size_, AttachNodeMethod attachMethod_, bool crossfeed, bool rigid_) {
     AttachNode n;
@@ -108,7 +108,7 @@ AttachNode* AttachNode::FindOpposingNode() const {
     return nullptr;
 }
 
-// AttachNode.cs:140
+// AttachNode.cs:132
 void AttachNode::ReverseSrfNodeDirection(AttachNode& fromNode) {
     if (owner == nullptr || fromNode.owner == nullptr) return;
     fromNode.attachedPart = nullptr;
@@ -117,7 +117,7 @@ void AttachNode::ReverseSrfNodeDirection(AttachNode& fromNode) {
     position = owner->partTransform.InverseTransformPoint(vector);
 }
 
-// AttachNode.cs:151 (the `num > 0` test is the source's, not `>= 0`)
+// AttachNode.cs:143 (the `num > 0` test is the source's, not `>= 0`)
 void AttachNode::ChangeSrfNodePosition() {
     if (attachedPart != nullptr || owner == nullptr) return;
     const int count = static_cast<int>(owner->attachNodes.size());
@@ -191,19 +191,19 @@ bool Part::AlreadyProcessedRequest(int requestID) {
     return false;
 }
 
-// Part.cs:903
+// Part.cs:873
 bool Part::isVesselEVA() const {
     if (vessel == nullptr) return false;
     return vesselHooks.isEVA ? vesselHooks.isEVA(*vessel) : false;
 }
 
-// Part.cs:930
+// Part.cs:897
 Part* Part::localRoot() {
     if (attached_ && parent != nullptr && parent->state_ != PartStates::DEAD) return parent->localRoot();
     return this;
 }
 
-// Part.cs:946
+// Part.cs:909
 void Part::set_State(PartStates value) {
     if (value == PartStates::FAILED) {
         if (CanFail()) {
@@ -216,10 +216,10 @@ void Part::set_State(PartStates value) {
     }
 }
 
-// Part.cs:967
+// Part.cs:939
 bool Part::hasStagingIcon() const { return fields.stagingIcon != std::string(); }
 
-// Part.cs:989
+// Part.cs:955
 bool Part::isAttachable() const {
     if (static_cast<AttachModes>(fields.attachMode) == AttachModes::SRF_ATTACH) return true;
     for (const AttachNode& n : attachNodes)
@@ -227,7 +227,7 @@ bool Part::isAttachable() const {
     return false;
 }
 
-// Part.cs:1056
+// Part.cs:1030
 bool Part::CanFail() const {
     if (SaveEnvironment::Current().IsExpansionInstalled("MakingHistory")) return canFail_;
     return false;
@@ -242,10 +242,10 @@ void Part::set_ShieldedFromAirstream(bool v) {
     fields.isShieldedDisplay = Localizer::Format(partIsShielded_ ? "#autoLOC_439839" : "#autoLOC_439840");
 }
 
-// Part.cs:1119 PartAttributes.classID = className.GetHashCode()
+// Part.cs:1091, classID = className.GetHashCode() at Part.cs:54
 int Part::ClassID() const { return MonoStringHash(className); }
 
-// Part.cs:1236
+// Part.cs:1184
 Part* Part::RigidBodyPart() {
     if (!hasRigidbody) {
         if (parent == nullptr) return nullptr;

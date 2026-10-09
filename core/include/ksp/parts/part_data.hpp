@@ -39,9 +39,9 @@ struct AttachRules {
     bool allowRotate = false;
     bool allowRoot = false;
     bool StackOrSurfaceAttachable() const { return srfAttach || stack; }
-    // AttachRules.cs:25: elements compared to "1" exactly (no trimming); fewer than 5 throws Exception
+    // AttachRules.cs:34: elements compared to "1" exactly (no trimming); fewer than 5 throws Exception
     static AttachRules Parse(std::string_view value);
-    // AttachRules.cs:66: the first 7 flags ("allowRoot" is not written)
+    // AttachRules.cs:74: the first 7 flags ("allowRoot" is not written)
     std::string String() const;
 };
 using NullableAttachRules = std::optional<AttachRules>;
@@ -126,7 +126,7 @@ struct AttachNode {
     Part* attachedPart = nullptr;  // AttachNode.attachedPart
     float nodeDistEpsilon = 0.001f;  // private, [SerializeField]
 
-    // AttachNode.cs:78 (the transform constructor: position = transform.position, orientation = transform.forward; the
+    // AttachNode.cs:86 (the transform constructor: position = transform.position, orientation = transform.forward; the
     // originals the same; secondaryAxis zero)
     static AttachNode FromTransform(std::string id, const Vector3f& transformPosition, const Vector3f& transformForward,
                                     int32_t size, AttachNodeMethod attachMethod, bool crossfeed, bool rigid);
@@ -136,9 +136,9 @@ struct AttachNode {
     AttachNode* FindOpposingNode() const;
     // AttachNode.cs:129 Clone (MemberwiseClone: a plain copy)
     static AttachNode Clone(const AttachNode& referenceNode) { return referenceNode; }
-    // AttachNode.cs:140 ReverseSrfNodeDirection
+    // AttachNode.cs:132 ReverseSrfNodeDirection
     void ReverseSrfNodeDirection(AttachNode& fromNode);
-    // AttachNode.cs:151 ChangeSrfNodePosition (internal)
+    // AttachNode.cs:143 ChangeSrfNodePosition (internal)
     void ChangeSrfNodePosition();
 };
 

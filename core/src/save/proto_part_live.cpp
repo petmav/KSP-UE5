@@ -19,7 +19,7 @@ namespace ksp {
 using GE = events::GameEvents;
 
 // ---- ProtoPartResourceSnapshot -------------------------------------------------------------------------------------------
-// ProtoPartResourceSnapshot.cs:14
+// ProtoPartResourceSnapshot.cs:19
 ProtoPartResourceSnapshot::ProtoPartResourceSnapshot(PartResource& resource) {
     resourceRef = &resource;
     resourceName = resource.info->name();
@@ -73,7 +73,7 @@ PartModule* ProtoPartModuleSnapshot::Load(Part& hostPart, int& moduleIndex) {
     return partModule;
 }
 
-// ProtoPartModuleSnapshot.cs:67
+// ProtoPartModuleSnapshot.cs:72
 void ProtoPartModuleSnapshot::EnsureModuleValuesIsInitialized() {
     if (!hasSaved_ && moduleRef != nullptr) {
         moduleRef->Save(*moduleValues);
