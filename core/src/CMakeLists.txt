@@ -117,6 +117,10 @@ add_library(kspcore STATIC
     ship/ship_construction.cpp
     ship/ship_template.cpp
     save/game_persistence.cpp
+    aero/drag_cube_list.cpp
+    aero/flight_integrator_aero.cpp
+    aero/lifting_surface.cpp
+    aero/occlusion.cpp
     capi/kspcore_c.cpp
 )
 add_library(ksp::core ALIAS kspcore)

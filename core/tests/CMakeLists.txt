@@ -26,6 +26,7 @@ add_executable(kspcore_tests
     test_resource_modules.cpp
     test_vessel.cpp
     test_ship_construct.cpp
+    test_aero.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
 )
@@ -223,7 +224,8 @@ endif()
 # the drag-cube pipeline (WP-21). Dropped columns (each documented in STATUS.md "WP-14"):
 #   structure.cube_names        cube weights are set by module OnStart logic / DragCubeList.ForceUpdate (WP-21 and the module packages);
 #                               the cube NAMES are checked by tests/test_vessel.cpp
-#   structure.node_contact_areas  AttachNode.contactArea is written by DragCubeList.SetPartOcclusion (WP-21)
+#   structure.node_contact_areas  AttachNode.contactArea is written by DragCubeList.SetPartOcclusion (WP-21): gated by
+#                               capture.aero_forces_vessel (below), not here
 #   states.spd                  input: Vessel.speed is the FlightIntegrator spd copied through ApplyFlightIntegratorAtmosphere, and the
 #                               runner feeds it the captured spd, so the column would only compare the capture with itself
 #   states.frame, UT, altitude, aoa_deg, srf_velocity_*, ref_up_*  inputs of the experiment or rigid-body state. srf_velocity_* feed
@@ -240,3 +242,27 @@ endif()
 ksp_golden_gate(capture.vessel_state vessel_state GOLDEN ${KSP_CAPTURES2_DIR}/aero_forces_vessel.json DROP_HEX
                 TOL ${KSP_CAPTURE_TOL} TABLES structure,states
                 DROP_COLUMNS "structure:cube_names,node_contact_areas/states:frame,UT,altitude,spd,aoa_deg,srf_velocity_x,srf_velocity_y,srf_velocity_z,ref_up_x,ref_up_y,ref_up_z")
+
+# WP-21 aerodynamics (numeric part). One templated port, two float policies (src/aero, ksp/aero/float_eval.hpp):
+#   golden.aero_forces       the .NET harness golden, every table (drag_curve_value, cube_inputs, cube_weighted, cube_drag,
+#                            drag_chain_kerbin, lifting_surface), computed with aero::NetFloat (per-operation float32 rounding as
+#                            RyuJIT does): it proves the operation order of the port against KSP's IL on the rows that have no
+#                            in-game capture (drag_chain_kerbin, lifting_surface). harness/compare/tolerances.json unchanged.
+#   capture.aero_forces_mono the in-game Mono capture of the drag-cube tables with aero::MonoFloat (the game's policy, production
+#                            code). drag_curve_value of the same file stays WP-09's capture.physics_drag_curve.
+ksp_golden_gate(golden.aero_forces aero_forces)
+ksp_golden_gate(capture.aero_forces_mono aero_forces_mono GOLDEN ${KSP_CAPTURES_DIR}/aero_forces_mono.json
+                TABLES cube_inputs,cube_weighted,cube_drag DROP_HEX TOL ${KSP_CAPTURE_TOL})
+# WP-21 drag-cube pipeline on the C10 assembled vessels (captures/out2/aero_forces_vessel.json; see ds_aero_forces_vessel.cpp).
+#   structure  only node_contact_areas (AttachNode.contactArea from SetPartOcclusion; the capture writes it with 4 significant digits)
+#              and the part name; the tree columns are capture.vessel_state's; cube_names is an INPUT here (ModuleJettison WP-26 + the
+#              model's jettison transform, ModulePartVariants WP-13 set the weights at flight start)
+#   parts      inputs dropped: dragVectorDirLocal_*, dragVectorMag, dynamicPressurekPa (rigidbody velocity); DragVector_* (negated
+#              input: -dragVectorDirLocal while rotateDragVector is false); staticPressureAtm (needs
+#              the part's world altitude, WP-19/20); exposedArea (the previous physics frame's ExposedArea: UpdateAerodynamics reads it
+#              before this frame's SetDrag). The runner does not write any dropped column. 46 gated columns. No row is filtered.
+#   aoa_sweep  input dropped: flow_local_* (R(aoa) * dragVectorDirLocal, rotated in game). No row is filtered.
+ksp_golden_gate(capture.aero_forces_vessel aero_forces_vessel GOLDEN ${KSP_CAPTURES2_DIR}/aero_forces_vessel.json DROP_HEX
+                TOL ${KSP_CAPTURE_TOL} TABLES structure,parts,aoa_sweep
+                COLUMNS "structure:craft,part_index,part,node_contact_areas"
+                DROP_COLUMNS "parts:dragVectorDirLocal_x,dragVectorDirLocal_y,dragVectorDirLocal_z,dragVectorMag,dynamicPressurekPa,staticPressureAtm,exposedArea,DragVector_x,DragVector_y,DragVector_z/aoa_sweep:flow_local_x,flow_local_y,flow_local_z")
