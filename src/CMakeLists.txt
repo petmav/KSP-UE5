@@ -48,6 +48,7 @@ add_library(kspcore STATIC
     save/game.cpp
     save/upgrade_pipeline.cpp
     save/ship_construct.cpp
+    save/game_persistence.cpp
     capi/kspcore_c.cpp
 )
 add_library(ksp::core ALIAS kspcore)

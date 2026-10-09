@@ -78,3 +78,26 @@
   dropping mod values, 4 srfN stale-mesh quirk, 129 older documented), R2 idempotent 314/314, 0 unexplained, 36 s.
   Next: unit tests (defaults/presets vs GameParameters.cs, synthetic upgrades, pipeline semantics, persistence naming),
   GamePersistence port, README/STATUS.
+- GamePersistence port (game_persistence.hpp/.cpp) + generated scenario table (tools/wp04/gen_scenario_types.ps1 ->
+  src/save/scenario_types_data.inc, 23 types, Cecil RID order). Builds. physprofile SCENARIO list == CreateNewGame
+  sandbox list (14, same order/scenes) -> use as unit test. GetDefaultParameters(SANDBOX, Normal) should == physprofile
+  PARAMETERS node. Next: tests/test_save.cpp.
+- tests/test_save.cpp: 17 cases / 261 assertions, all pass (incl. physprofile PARAMETERS == GetDefaultParameters
+  (SANDBOX, Normal) byte-exact, new sandbox scenario list == physprofile's). Full suite 16/16 ctest, unit 115 cases.
+  Mutation check: swapping two PART Save fields -> corpus.saves fails (458 unexplained in physprofile). Restored.
+  Next: commit 2, README/STATUS docs, final report.
+
+## STATE (compaction checkpoint)
+- DONE: save model (Game, GameParameters + 5 custom params, FlightState, ProtoVessel/Part/Module/Resource snapshots,
+  ProtoCrewMember, KerbalRoster, FlightLog, Experience configs, ProtoScenarioModule, ScenarioModule data side, GameBackup),
+  SaveEnvironment shims, upgrade pipeline (framework + 40 scripts, generated table), KSPUpgradePipeline, ShipConstruct
+  craft file form, GamePersistence + quicksave naming + scenario-type table, corpus.saves ctest, tests/test_save.cpp.
+- RESULTS: ctest 16/16 pass; unit 115 cases/19427 assertions; corpus: sfs 105 (61 KSP-1.12.5: 1 byte-identical + 60
+  byte-identical after removing mod-owned elements; 44 older: all diffs documented), craft 209 (49 byte-identical,
+  27 after mod-value removal, 4 srfN stale-mesh quirk, 129 older documented), R2 idempotent 314/314, 36 s.
+- REMAINING: README rows/layout, STATUS.md WP-04 section, final commit, final report.
+- DEFERRED (to list in STATUS): FlightAutoSave (coroutine timer), ClearToSaveStatus/FlightGlobals.ClearToSave (flight),
+  CraftProfileInfo/.loadmeta (UI metadata), Persistent attributes (WP-06 reflection), VesselCrewManifest/
+  DefaultCrewForVessel, CrewGenerator random names (GetNewKerbal/AddApplicant/Update), ProtoVessel.CreateVesselNode/
+  CreatePartNode (need part DB + live vessel), Load-into-live paths (WP-13/14), Mission (MISSIONTOSTART kept raw),
+  adjuster modules (MakingHistory), PartResourceLibrary definitions, ExperienceTrait objects/effects, GetSituationString.
