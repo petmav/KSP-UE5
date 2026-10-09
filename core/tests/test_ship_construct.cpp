@@ -6,6 +6,7 @@
 // others contain mod parts) and analysis/physics/craft, the C5 capture (total mass = no-crew total + n * KerbalCrewMass), the C10
 // structure table, the physprofile save, the stock part prefabs of the GameData mirror. No number is invented.
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -2231,4 +2232,55 @@ TEST_CASE("WP-18 LoadShip re-issues duplicate part persistentIds and tells IShip
         REQUIRE(tmp.LoadShipWithParts(*up, 0, true, err));
         CHECK(tmp.liveParts[0]->ship == &tmp);
     }
+}
+
+TEST_CASE("WP-18 ship costs equal the C9 part database: AvailablePart.cost, module cost and resource cost of every part of every loadable craft") {
+    if (!GameAvailable()) return;
+    Game15 g;
+    LogCapture quiet;
+    // harness/captures/out2/part_database.json (C9) table `parts`: cost, module_cost (IPartCostModifier sum of the prefab), resource_cost
+    const nlohmann::json cap = LoadJson(kHarness18 + "/captures/out2/part_database.json");
+    const nlohmann::json& pt = TableOf(cap, "parts");
+    const size_t cName = ColOf(pt, "name"), cCost = ColOf(pt, "cost"), cMod = ColOf(pt, "module_cost"), cRes = ColOf(pt, "resource_cost");
+    std::map<std::string, std::array<double, 3>> c9;
+    for (const auto& r : pt.at("rows"))
+        if (!r[cCost].is_null())
+            c9[r[cName].get<std::string>()] = {r[cCost].get<double>(), r[cMod].is_null() ? 0.0 : r[cMod].get<double>(), r[cRes].is_null() ? 0.0 : r[cRes].get<double>()};
+    PartResourceLibrary* lib = PartResourceLibrary::Instance();
+    size_t parts = 0, resourceCostMatches = 0, defaultFill = 0;
+    for (LoadedCraft& lc : LoadAllCrafts()) {
+        ShipConstruct& ship = *lc.ship;
+        CAPTURE(lc.file.label);
+        double expectedDry = 0.0, expectedFuel = 0.0;
+        for (Part* p : ship.liveParts) {
+            const auto it = c9.find(p->partInfo->name);
+            REQUIRE_MESSAGE(it != c9.end(), p->partInfo->name);
+            parts++;
+            // the loader's cost and the part's module cost are the capture's, bit for bit (float32 values; the JSON text is the shortest round trip)
+            CHECK_MESSAGE(p->partInfo->cost == static_cast<float>(it->second[0]), p->partInfo->name);
+            CHECK_MESSAGE(p->GetModuleCosts(p->partInfo->cost) == static_cast<float>(it->second[1]), p->partInfo->name);
+            // the capture's resource_cost is the prefab's sum of unitCost * maxAmount; the part's own resources give the same sum when the
+            // craft did not change the tank sizes (a tweaked max amount changes the dry cost, not the part's price)
+            double maxSum = 0.0, amountSum = 0.0;
+            for (int i = 0; i < p->Resources.Count(); i++) {
+                const PartResource& r = p->Resources[static_cast<size_t>(i)];
+                maxSum += static_cast<double>(r.info->unitCost()) * static_cast<float>(r.maxAmount);
+                amountSum += static_cast<double>(r.info->unitCost()) * static_cast<float>(r.amount);
+            }
+            if (std::fabs(maxSum - it->second[2]) <= 1e-4 * std::max(1.0, std::fabs(it->second[2]))) resourceCostMatches++;
+            if (std::fabs(maxSum - amountSum) < 1e-9) defaultFill++;
+            expectedDry += it->second[0] + it->second[1] - maxSum;
+            expectedFuel += amountSum;
+        }
+        float dry = 0, fuel = 0;
+        const float total = ship.GetShipCosts(dry, fuel);
+        auto near = [](double a, double b) { return std::fabs(a - b) <= 1e-4 * std::max(1.0, std::fabs(b)); };
+        CHECK_MESSAGE(near(dry, expectedDry), dry << " vs " << expectedDry);
+        CHECK_MESSAGE(near(fuel, expectedFuel), fuel << " vs " << expectedFuel);
+        CHECK_MESSAGE(near(total, expectedDry + expectedFuel), total << " vs " << expectedDry + expectedFuel);
+    }
+    MESSAGE("parts " << parts << " resource cost == C9 " << resourceCostMatches << " tanks at the default fill " << defaultFill);
+    CHECK(parts == 4282);
+    CHECK(resourceCostMatches == 4204);   // measured: the other 78 parts have a different resource set than the prefab (tank sizes changed in the craft)
+    CHECK(defaultFill > 0);
 }

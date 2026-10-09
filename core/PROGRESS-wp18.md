@@ -20,3 +20,4 @@ Branch wp18 (from wp14 7bc606d6). Notes after every major step.
 - 2026-10-09: all code + tests done. capture.ship_construct passes (16 craft rows + 1,224 part rows, 0 ULP; craft_ComSat_Lx fairing excluded via tests/data/ship_construct_exclusions.json). Unit: test_ship_construct.cpp 25 cases / 260,909 assertions. Fresh run (clang): 24/24 ctest, unit 261 cases / 439,346 assertions.
 - Design notes: part persistentId check deferred to InstantiateParts with real Part* (BuildCraftParts onPartLoaded callback); ShipConstruct non-movable; AssembleForLaunch -> AssembleVesselFromParts (vessel_assembly refactor); retained removed ProtoVessels in ShipConstruction.cpp.
 - STATUS.md "WP-18" + README rows written. Remaining: GCC run (build/linux-gcc-rel, log /tmp/claude-0/wp18/gcc1.log), final commit, handback.
+- final: clang fresh 24/24, gcc fresh 24/24; unit 262 cases / 452,367 assertions (26 / 273,930 in test_ship_construct.cpp)
