@@ -25,6 +25,7 @@
 
 #include "ksp/curves/float_curve.hpp"
 #include "ksp/curves/serialized_float_curve.hpp"
+#include "ksp/orbit/targeting_modes.hpp"
 #include "ksp/physics/vessel_ranges.hpp"
 #include "ksp/unity/color.hpp"
 
@@ -37,8 +38,7 @@ class CelestialBody;
 enum class PhysicMaterialCombine : int32_t { Average = 0, Multiply = 1, Minimum = 2, Maximum = 3 };
 // Part.ShowRigidAttachmentOption (Part.cs:83)
 enum class ShowRigidAttachmentOption : int32_t { Never = 0, Editor = 1, Always = 2 };
-// VesselTargetModes.cs
-enum class VesselTargetModes : int32_t { None = 0, Direction = 1, DirectionAndVelocity = 2, DirectionVelocityAndOrientation = 3 };
+// VesselTargetModes.cs: defined in ksp/orbit/targeting_modes.hpp
 
 // Enum.ToString() / Enum.Parse(typeof(E), s) for the enums above (Parse: trimmed, case-sensitive name or integer text;
 // throws std::invalid_argument like C#'s ArgumentException).

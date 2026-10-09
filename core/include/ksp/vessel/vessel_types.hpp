@@ -1,9 +1,10 @@
 // WP-14 small vessel-side types: FlightEvents.cs, FlightEndModes.cs, VesselActuatorMode.cs, VesselTargetModes.cs, EventReport.cs,
-// IVesselAutoRename.cs, VesselEngiUtil.cs, ITargetable.cs, and the Vessel.State / Vessel.ControlLevel enums (Vessel.cs:12, 45).
+// IVesselAutoRename.cs, VesselEngiUtil.cs, and the Vessel.State / Vessel.ControlLevel enums (Vessel.cs:12, 45).
 #pragma once
 
 #include <string>
 
+#include "ksp/orbit/targetable.hpp"
 #include "ksp/physics/physics_globals.hpp"  // VesselTargetModes
 #include "ksp/unity/quaternion.hpp"
 #include "ksp/unity/vector.hpp"
@@ -64,24 +65,7 @@ public:
     virtual std::string GetVesselName() = 0;
 };
 
-// ITargetable.cs. `GetTransform()` returns a Unity Transform in KSP; kspcore has no transform objects, so the members of it
-// the targeting code reads are exposed directly (name, position, forward is GetFwdVector).
-class ITargetable {
-public:
-    virtual ~ITargetable() = default;
-    virtual std::string GetTransformName() = 0;   // GetTransform().name
-    virtual Vector3f GetTransformPosition() = 0;  // GetTransform().position
-    virtual Vector3f GetObtVelocity() = 0;
-    virtual Vector3f GetSrfVelocity() = 0;
-    virtual Vector3f GetFwdVector() = 0;
-    virtual Vessel* GetVessel() = 0;
-    virtual std::string GetName() = 0;
-    virtual std::string GetDisplayName() = 0;
-    virtual Orbit* GetOrbit() = 0;
-    virtual OrbitDriver* GetOrbitDriver() = 0;
-    virtual VesselTargetModes GetTargetingMode() = 0;
-    virtual bool GetActiveTargetable() = 0;
-};
+// ITargetable.cs is ksp/orbit/targetable.hpp (WP-10; GetTransform() hands out the ksp/unity/transform.hpp stand-in).
 
 // VesselEngiUtil.cs:3 (extension method, returns 0)
 inline double VesselEngiUtil_GetDeltaV(const Vessel&) { return 0.0; }

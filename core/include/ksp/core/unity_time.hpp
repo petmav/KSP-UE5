@@ -11,6 +11,7 @@ struct Time {
     // TimeWarp.fixedDeltaTime read them; KSP's TimeWarp.updateRate writes them, TimeWarp.cs:419). Unity defaults.
     static inline float timeScale = 1.0f;
     static inline float fixedDeltaTime = 0.02f;
+    static inline float deltaTime = 0.02f;  // Time.deltaTime (WP-10: TimeWarp.deltaTime); the host sets it per frame
 };
 
 }  // namespace ksp

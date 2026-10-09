@@ -21,6 +21,8 @@ Updated 2026-10-09 (WP-05). One command: `powershell -NoProfile -ExecutionPolicy
 
 | 10. WP-05 UrlDir, GameDatabase (data), PartLoader (data), resource library (branch `wp05`, merged in `bfb732f`) | done for the data side: UrlDir + GameDatabase load order identical to KSP.log (2,836 lines), PartLoader compiles all 353 GameData parts + the 9 prefab-part slots; `capture.part_database` gate bit-exact on every in-scope C9 row (parts, cfg values, modules, cfg-set module fields, propellants, resources, attach nodes, drag cubes, variants, asset paths). Module instantiation is WP-06, model contents the UE import. See "WP-05" below |
 
+| 12. WP-10 time warp, rails propagation, orbit driver (branch `wp10`) | done: TimeWarp (whole class incl. rate limits, mode switching, autoWarpTo), WarpTransition(Calculator), PositionTarget + ITargetable, OrbitDriver finished (Targetable, TRACK_Phys/IDLE/UPDATE tests), CelestialBody.resetTimeWarpLimits/TerrainAltitude; `capture.orbit_rails` bit-exact incl. the newly gated `segments.requested_rate`; 17 unit cases (2,009 assertions); numerics beyond C8 need new captures (listed in "WP-10") |
+
 ## Test results (all 21 ctest tests pass in RelWithDebInfo and in Debug on Windows; and on Linux; WP-00L added libm.portable_vs_dll)
 
 Every numeric column of every gate: **max ULP 0, max abs 0** (bit-exact, and the same decimal text). Tolerance files:
@@ -48,7 +50,7 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `capture.part_database` | WP-05 + WP-06: in-game `captures/out2/part_database.json` (C9), scope in "WP-05" and "WP-06" below: parts 357 (module_mass / module_cost included), part_cfg_values 6,235, modules 1,312, module_fields 32,894, module_propellants 77, resources 166, attach_nodes 822, drag_cubes 531, variants 228, assets 743 | 43,365 | 0 ULP, all strings identical |
 | `capture.gamedatabase_load_order` | WP-05: every `Load(Audio/Texture/Model): url` and `Config(TYPE) url` line of the capture run's KSP.log, in order | 2,836 lines | identical |
 | `capture.vessel_state` | WP-14: in-game `captures/out2/aero_forces_vessel.json` (C10): structure 631 (part tree of the three PhysProf crafts assembled into a `Vessel`), states 20 (surface speed and the FlightIntegrator atmosphere mirror); cube_names, node_contact_areas and engine/input columns excluded (see WP-14) | 651 | 0 ULP, strings/ints identical |
-| `unit` | 156 doctest cases, 40,277 assertions (WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
+| `unit` | 214 doctest cases, 149,925 assertions (WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
 differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 6 ULP (Vector3.Project/ProjectOnPlane) and
@@ -1408,6 +1410,118 @@ FloatCurve, `EnumValue` via `SetEnumByName`), bind `[KSPEvent]` / `[KSPAction]` 
 See `git log --oneline wp06` (module host skeleton and generators; instantiation through PartLoader + gate widening; VesselModule /
 ScenarioRunner / unit tests; docs).
 
+## WP-10 time warp, rails propagation, orbit driver (branch `wp10`)
+
+Spec: `TimeWarp.cs` (all 865 lines), `WarpTransition.cs`, `WarpTransitionCalculator.cs`, `PositionTarget.cs`, `OrbitDriver.cs`
+(finished on top of WP-08), `ITargetable.cs`, `ClearToSaveStatus.cs`; consumers read for the integration: `Planetarium.cs:201`
+(`time += fixedDeltaTime * timeScale`), `FlightGlobals.cs:196/1406/1471`, `CelestialBody.cs:499/831/1013`, `GameSettings.cs:999-1011`.
+Every ported function cites its line.
+
+### What is ported
+
+| C# file | kspcore | notes |
+|---|---|---|
+| `TimeWarp.cs` | `include/ksp/orbit/time_warp.hpp`, `src/orbit/time_warp.cpp` | the whole MonoBehaviour: Awake/OnDestroy singleton, Start, Update (mode switching by pressure/surface speed, the TIME_WARP keys, the physics-warp warning flag), FixedUpdate (rails warp forced down inside atmosphere, `Mathf.Lerp` rate ramp), `updateRate`, `SetRate`/`setRate`/`assumeWarpRate`/`setMode`, `getMaxOnRailsRateIdx` (ladder, atmosphere, g-force, surface motion, altitude look-ahead in both `MaxRailsRateMode`s, SOI clamp), `GetMaxRateForAltitude`, `GetAltitudeLimit`, `ClampRateToOrbitTransitions`, `WarpTo`/`CancelAutoWarp`/`autoWarpTo` (coroutine as an explicit state machine), `getMaxWarpRateForTravel`, `getWarpAccel`, `getRateChangeTravel`, all static properties (`WarpMode`, `CurrentRate`, `CurrentRateIndex`, `CurrentRateIsTargetRate`, `MaxRate`, `MaxPhysicsRate`, `deltaTime`, `fixedDeltaTime`) |
+| `WarpTransition.cs`, `WarpTransitionCalculator.cs` | `warp_transition.hpp/.cpp` | whole classes |
+| `PositionTarget.cs` | `position_target.hpp/.cpp`, `targetable.hpp` (ITargetable), `unity/transform.hpp` | whole class; the GameObject is a `Transform` stand-in (float position) |
+| `OrbitDriver.cs` | `orbit_driver.hpp/.cpp` (WP-08) | `Targetable` getter added (vessel via `IOrbitDriverVessel::AsTargetable()`, body via `celestialBodyTargetable`); TRACK_Phys / IDLE / UPDATE transitions, `lastMode`, `lastTrackUT`, `fdtLast` back-dating and the SOI re-reference are unit-tested (they were only reachable through the UPDATE path before). `orbitColor`, `Renderer`, `DrawOrbit` are rendering: skipped |
+| `CelestialBody.cs` | `resetTimeWarpLimits()` (:1013), the limit-count check in `Start()` (:499), `TerrainAltitude()` (:831, over `pqsController`) | WP-09 deferrals that needed TimeWarp / PQS |
+
+Prefab data: `TimeWarp::LoadStockPrefab()` = the scene object's serialized arrays as the running game reports them (warpRates
+1 5 10 50 100 1000 10000 100000, physicsWarpRates 1 2 3 4, altitudeLimits 0 0.05 0.05 0.1 0.2 0.4 0.8 1 (fractions of the body
+radius), maxPhysicsRate_index 0, maxModeSwitchRate_index 0): `analysis/physics/raw/run*/*_summary.csv` rows `rt_TimeWarp.*`,
+19 runs, all identical (not in any harness golden: the flight-scene TimeWarp is not in the level9 singleton dump). Checked by the unit test
+against all 19 runs and, for `warpRates`, against the C8 capture (`segments.requested_rate` for rate indices 0,4,5,6,7 bit for bit). `Mode = HIGH` and `textDuration = 3f` are not in the dump; they are the C# field initialisers (TimeWarp.cs:30, :32).
+
+Additive subsets other packages will replace: `FlightGlobals` (`IFlightVessel` seam = the Vessel members TimeWarp reads,
+`ActiveVessel`, `VesselsLoaded`, `ready`, `currentMainBody`, `ship_srfVelocity`, `getAltitudeAtPos` (double and the float
+overload `getMaxOnRailsRateIdx` uses), `getStaticPressure(alt, body)`; WP-19), `GameSettings::ORBIT_WARP_*` / `SHOW_PWARP_WARNING`
+defaults (GameSettings.cs:1003-1011), `Time::deltaTime`, `PQS::meshVertMin/meshVertMax` (reset by SetupBuildDelegates; raised by
+quad builds, which are WP-12: they stay at the reset value, so `minPeAllowed`'s third term is inert until then),
+`CelestialBody::pqsController`. `VesselTargetModes` was defined twice (targeting_modes.hpp, physics_globals.hpp); there is one
+definition now (`int32_t`-based, in targeting_modes.hpp).
+
+`TimeWarpEnvironment` carries everything of TimeWarp.cs that is scene/UI/input state with no numerics: `HighLogic.LoadedScene`,
+`FlightDriver.flightStarted`, `Flight.CanTimeWarpHigh/Low`, `InputLockManager` (lock names), this frame's key presses and the
+modifier key, and the recorded outputs (screen-message texts, control locks, pause, `FlightLogger.IgnoreGeeForces`, the settings
+save). Host protocol per frame: `Update()` then `ResumeAfterUpdate()`; per physics step `FixedUpdate()` then
+`ResumeAfterFixedUpdate()` (the autoWarpTo coroutine's `WaitForFixedUpdate` / `yield return null` points).
+
+### Gate results (RelWithDebInfo-equivalent Linux build; all harness/capture tolerances unchanged, 0 ULP)
+
+| gate / table | rows | compared columns | max abs | max ULP | missing / extra |
+|---|---|---|---|---|---|
+| `capture.orbit_rails` / segments | 5 | 9 (rate_index, **requested_rate** (new: now `TimeWarp.warpRates[rate_index]` from the prefab table, was an echoed input), achieved_rate, frames, UT_start, UT_end, Time.fixedDeltaTime, TimeWarp.fixedDeltaTime, timeScale) | 0 | 0 | 0 / 0 |
+| `capture.orbit_rails` / samples, frames, initial, soi_events | 3,465 / 450 / 6 / 4 | unchanged from WP-08 | 0 | 0 | 0 / 0 |
+
+The C8 runner now drives the warp through the real code: `TimeWarp::LoadStockPrefab`, `Awake`, `Start` (flight scene, `SetRate(0)`),
+then `TimeWarp::SetRate(rateIdx, instant: true)` per segment (flight scene, HIGH mode: `setRate` -> `getMaxOnRailsRateIdx` ->
+`assumeWarpRate` -> `updateRate`), and `TimeWarp::FixedUpdate` every frame. The active vessel is the runner stand-in `PadVessel` (landed
+on the pad, no surface speed, no patched conic solver attached): its answers are not capture outputs, the capture's achieved rates equal
+the requested ones in all 5 segments, which is what `getMaxOnRailsRateIdx` must return for a landed still vessel. Columns still
+excluded and why: `samples.world_rel_*` (floating-origin world position, WP-14/WP-20), `samples.packed/loaded` (Vessel state: constants
+`true/false` for every unloaded probe, null for the bodies; computing them here would be gating a stand-in's constants; WP-14/WP-19),
+`initial.note` (free text) and `initial.req_*` (echoed inputs); `soi_events` of the two asteroids. Nothing else of C8 was computable
+without a Vessel; the capture carries no other TimeWarp columns (no physics-warp segment, no rate ramp, no warp-limit probe).
+
+### Unit tests (`tests/test_timewarp.cpp`: 17 cases, 2,009 assertions)
+
+Prefab tables vs 19 game runs and the C8 capture; `resetTimeWarpLimits` vs the 17 body prefabs (finding: only Kerbin, Minmus and
+Tylo have limits equal to `altitudeLimits * Radius`; the other 14 are hand-tuned per body, e.g. Mun 0/5000/5000/10000/25000/50000/100000/200000);
+`GetMaxRateForAltitude` boundaries on Kerbin and Mun and monotonicity on all bodies; `Start()` resetting limit arrays of the wrong
+length; singleton/properties/`updateRate` in HIGH and LOW mode with UT advance per tick = `TimeWarp.fixedDeltaTime`; `SetRate` over the
+C8 indices, control locks, clamping, the 1 s `Mathf.Lerp` ramp; `getMaxOnRailsRateIdx` (atmosphere with the real Kerbin PQS: `minPeAllowed`
+= 70 km atmosphere since `radiusMax - radius` = 8,735 m, g-force, ladder, surface motion, outside the flight scene), the altitude
+look-ahead in both `MaxRailsRateMode`s (100 km circular -> 7 / 3; 20x100 km orbit at apoapsis -> 3 with `ABOUT_TO_CRASH`), the SOI
+clamp boundary (75.5 s = 25.5 s ramp + 50 s), `FixedUpdate` dropping out of rails warp inside the atmosphere; `Update` mode switching
+(atmosphere / surface speed against `GThreshold`), keys, the physics-warp warning, difficulty parameters and the input lock;
+`getMaxWarpRateForTravel` (including WarpTo's swapped min/max argument order); a full `WarpTo` simulation (plan, ramp up, decelerate,
+UT error < 200 s, locks released) and `CancelAutoWarp` with the delayed lock release; `WarpTransitionCalculator` (stock rates:
+UTToRateDown/Up, UTTo1Times, UTToRateDown(from,to), SafeRateToUTPeriod, table-change detection); `PositionTarget` (including terrain
+altitude at the KSC from the real PQS = capture `h_ksc`); OrbitDriver TRACK_Phys / IDLE / UPDATE (back-dating by `fdtLast`, `offset=false`,
+kinematic rigidbody, no rigidbody, hand-over to rails at a later UT, SOI re-reference through `TrackRigidbody`, `overrideOrbit`);
+`OrbitDriver::Targetable`. The expected values are derived from the C# control flow and the game's tables, worked out in comments
+next to each case.
+
+### Quirks a later implementer must know
+
+1. `WarpTo`'s call `getMaxWarpRateForTravel(dt, warpToMaxWarping, warpToMinWarping, ...)` passes the max where the callee's signature
+   has `minTimeInWarp` (defaults 8.0 / 2.5): the argument order is swapped in the game; ported as is.
+2. `GetMaxRateForAltitude` / the SOI clamp / `setRate` clamp to `warpRates.Length` in the public `SetRate` (not `Length - 1`) and rely on
+   the later `Mathf.Clamp` in `setRate`.
+3. `getMaxOnRailsRateIdx` converts the vessel altitude through the *float* `getAltitudeAtPos(Vector3, body)` overload: the altitude has
+   float32 precision.
+4. Only 3 of 17 bodies have prefab warp limits equal to the `resetTimeWarpLimits` formula.
+5. `TimeWarp.CurrentRateIndex` is 1 (not 0) without an instance; `CurrentRateIsTargetRate` compares the float rate with the int index.
+6. The warp-down ramp is discretised by the physics tick: `autoWarpTo` ends within a tick-worth of UT of the target (`(rate + 1) / 2 * 0.02`
+   at most), not exactly on it.
+
+### Deferred / needs (local work)
+
+| needs | what for | how |
+|---|---|---|
+| **a warp-limit capture** (new C11, in flight, profiling build) | gate `getMaxOnRailsRateIdx` / `GetMaxRateForAltitude` / `minPeAllowed` / `ClampRateToOrbitTransitions` numerically | call `TimeWarp.fetch.getMaxOnRailsRateIdx(i, true, out reason)` by reflection for i = 1..7 in both `ORBIT_WARP_MAXRATE_MODE`s for a table of vessels (100 km circular, 20x100 km at Ap/Pe, 10 km flight, landed still/moving, ladder EVA, patch end in 30/60/90 s) recording altitude, orbit elements, `timeToPe`, the result index, reason, `minPeAllowed`, `pqsController.meshVertMax`, `Planetarium.TimeScale` |
+| a rate-ramp / physics-warp capture | gate `FixedUpdate`'s lerp and LOW mode numerics (`Time.timeScale`, `Time.fixedDeltaTime` = 0.02f * ts, `curr_rate` per frame under the real `Time.time`) and `autoWarpTo` end to end | per frame for 10 s after `SetRate(i, false)` in LOW and HIGH: Time.time, curr_rate, tgt_rate, Planetarium.TimeScale, Time.timeScale, Time.fixedDeltaTime, UT; and a `WarpTo(UT)` run recording the rate index sequence and the final UT error |
+| the flight-scene TimeWarp prefab as extracted asset | replace the runtime-dump provenance of `LoadStockPrefab` | UnityPy on the flight scene's TimeWarp MonoBehaviour (`tools/extract_*`) |
+| Vessel (WP-14/WP-19) | `samples.packed/loaded`, TRACK_Phys with a real rigidbody CoMD, `IFlightVessel`/`IOrbitDriverVessel` for the real Vessel (adapters `Vessel::FlightView()` / `OrbitDriverView()` exist since the wp14 merge; one registry: WP-19), packing at the physics-warp boundary | WP-14 / WP-19 / WP-20 |
+| WP-12 quad builder | `PQS.meshVertMax` raised by built quads (third term of `minPeAllowed`) | WP-12 |
+| UI | `UITimeWarpController`, the warp scrubber, screen-message widgets, the `PhysWarpWarning` dialog | Unreal side; `TimeWarpEnvironment::screenMessages` / `physWarpWarningShown` are the hooks |
+| `CelestialBody : ITargetable` | `OrbitDriver::Targetable()` for bodies without a host-supplied target | needs `bodyTransform` (engine) |
+
+Not in this assignment although in `work_packages.csv` for WP-10: nothing (all five WP-10 files are ported).
+
+### Test totals (fresh `./run_tests.sh -f`, Linux Clang 18, linux-rel)
+
+21/21 ctest tests pass (every gate max ULP 0); `unit`: 159 doctest cases, 42,082 assertions (WP-10: 17 cases, 2,009).
+
+### Commits (branch `wp10`)
+
+| hash | content |
+|---|---|
+| `e266c472` | TimeWarp full port, WarpTransition(Calculator), ITargetable/PositionTarget, FlightGlobals/GameSettings/Time/PQS/CelestialBody seams, OrbitDriver::Targetable |
+| `3b0529dd` | `tests/test_timewarp.cpp`, C8 runner drives `TimeWarp::SetRate` and gates `segments.requested_rate`, STATUS/README |
+| (docs) | test totals and commit table |
+
 ## WP-13: Part model and part tree (branch `wp13`, from `wp06` e27bc88b)
 
 State: done for the engine-agnostic part. `Part` is now a real object (data model, part tree, attach nodes, module list, resources, mass/cost,
@@ -1529,11 +1643,12 @@ function name appears within three lines of it). Gate `capture.vessel_state` (ne
 | ActionGroupList.cs | `vessel/action_group_list.hpp`, `src/vessel/action_group_list.cpp` | constructor shape, indexer, Load / Save, CopyFrom | `ToggleGroup` / part action dispatch (WP-16) |
 | DiscoveryInfo.cs, IDiscoverable | `vessel/discovery_info.hpp`, `src/vessel/discovery_info.cpp` | levels, lifetimes, signal strength, Load / Save, size classes | UI strings, the KSC discovery manager (assigned to WP-09, absent there, so ported here) |
 | VesselValues.cs | `vessel/vessel_values.hpp`, `src/vessel/vessel_values.cpp` | `PartValuesComparison<T>` / `PartValuesOperation<T>`, extremum over the parts' PartValues, default start value, per-frame cache | |
-| FlightEvents.cs, FlightEndModes.cs, VesselActuatorMode.cs, EventReport.cs, IVesselAutoRename.cs, VesselEngiUtil.cs, ITargetable.cs | `vessel/vessel_types.hpp` | all | `ITargetable.GetTransform()` is `GetTransformName()` / `GetTransformPosition()` (no Transform objects) |
+| FlightEvents.cs, FlightEndModes.cs, VesselActuatorMode.cs, EventReport.cs, IVesselAutoRename.cs, VesselEngiUtil.cs | `vessel/vessel_types.hpp` | all | |
+| ITargetable.cs (implemented here, defined by WP-10) | `orbit/targetable.hpp` (WP-10); `Vessel::GetTransform`, `FlightCoMTracker::GetTransform` | `Vessel` (Vessel.cs:3761-3815) and `FlightCoMTracker` implement the WP-10 interface; `GetTransform()` hands out the `ksp/unity/transform.hpp` stand-in (name, position, rotation) | |
 | ProtoTargetInfo.cs | `src/vessel/vessel_transitions.cpp` (extras of `ProtoTargetInfo` in `save/proto_vessel.hpp`) | `ProtoTargetInfo(ITargetable)`, `FindTarget` through the registry | |
 | FlightLogger.cs, FlightLog.cs | `vessel/flight_logger.hpp`, `src/vessel/flight_logger.cpp` | statistics, the event log, mission end, `Invoke` delayed calls as `RunDelayedCalls`, coroutines as pending state | UI, `FlightResultsDialog`; `FlightLog` / `FlightLog.Entry` already existed in `save/crew.hpp` (WP-04) and are reused |
 | ModuleTripLogger.cs, VesselTripLog.cs | `vessel/module_trip_logger.hpp`, `src/vessel/module_trip_logger.cpp` | Log / Save / Load of the FLIGHTLOG and LOG nodes, deprecated nodes, delayed situation logging, forced logs | |
-| FlightCoMTracker.cs | `vessel/flight_com_tracker.hpp`, `src/vessel/flight_com_tracker.cpp` | marker follows the vessel CoM, targets once FlightGlobals is ready | rendering |
+| FlightCoMTracker.cs | `vessel/flight_com_tracker.hpp`, `src/vessel/flight_com_tracker.cpp` | marker follows the vessel CoM (its own `UnityEngine::Transform trf`), targets once FlightGlobals is ready | rendering |
 | AxisGroupsModule.cs | `vessel/axis_groups_module.hpp`, `src/vessel/axis_groups_module.cpp` | axis groups built from the vessel's `[KSPAxisField]` floats, `BaseAxisField_IncrementAxis` / `UpdateAxis` | |
 | ShipConstruction.cs (part half only) | `vessel/vessel_assembly.hpp`, `src/vessel/vessel_assembly.cpp` | `BuildCraftParts`, `AssembleVesselFromCraft` (the part half of `LoadShip` / `AssembleForLaunch`: parts instantiated at the craft's `pos` / `rot`, tree linked, `Vessel.Initialize`) | launch-site placement, kerbal crew assignment, editor |
 
@@ -1565,7 +1680,7 @@ Dropped columns (`DROP_COLUMNS` in `tests/CMakeLists.txt`, each with its reason)
 - `states:frame`, `UT`: engine state. `altitude` (the root part's, only the inversion fallback), `aoa_deg`, `srf_velocity_*` (inputs of `srfSpeed`),
   `ref_up_*`: inputs of the dataset or values that need the Krakensbane / reference-transform frame state of WP-20 / WP-21. No row is filtered.
 
-### Unit tests (`tests/test_vessel.cpp`, 24 cases, 6,869 assertions)
+### Unit tests (`tests/test_vessel.cpp`, 24 cases, 6,901 assertions)
 
 small types; FlightCtrlState; ActionGroupList; DiscoveryInfo; vessels assembled from the three PhysProf crafts vs the C10 structure table
 (counts, order, tree, cube names); the `physprofile` save round trip (`ProtoVessel -> Vessel -> BackupVessel`); situation determination;
@@ -1610,8 +1725,27 @@ crafts; no number is invented.
   data comes through these hooks.
 - `FlightRegistry` (static): `Vessels`, `VesselsLoaded`, `VesselsUnloaded`, `ActiveVessel`, `ready`, Add / Remove / SortVessel, FindVessel,
   FindPartByID, Clear. Persistent-id dictionaries stay SaveEnvironment's. It is the FlightGlobals subset WP-14 needs; WP-19 / WP-10 own the
-  rest, and `Vessel` keeps the member names an `IFlightVessel` (WP-10, not merged) will need. `IOrbitDriverVessel` is implemented by the
-  adapter `VesselOrbitDriverView` (the interface's `CoMD()` / `velocityD()` clash with Vessel's fields).
+  rest. `IOrbitDriverVessel` is implemented by the adapter `VesselOrbitDriverView` (the interface's `CoMD()` / `velocityD()` clash with
+  Vessel's fields); its `AsTargetable()` returns the Vessel, so `OrbitDriver::Targetable()` (OrbitDriver.cs:75) is the vessel.
+- `IFlightVessel` (WP-10, `celestial/flight_globals.hpp`, the Vessel members TimeWarp.cs reads) is implemented by the adapter
+  `VesselFlightView` (`Vessel::FlightView()`), not by `Vessel` itself: the interface's `altitude()` / `geeForce()` / `srf_velocity()` clash
+  with Vessel's fields of those names and its `orbit()` returns `Orbit*` where `Vessel::orbit()` returns `Orbit&`. `OnALadder` is
+  `IEvaController::OnALadder` (KerbalEVA.cs:1205; default false, and false when the vessel has no KerbalEVA, where the C# would throw).
+  **Left for WP-19:** there are two registries. `FlightRegistry` (WP-14: `Vessels`, `VesselsLoaded`, `VesselsUnloaded`, `ActiveVessel`,
+  `ready`, typed `Vessel*`) and `FlightGlobals` (WP-08/WP-10: `bodies`, `ready`, `ActiveVessel` / `VesselsLoaded` typed `IFlightVessel*`,
+  `currentMainBody`). Nothing keeps them in step: a host that runs TimeWarp with real vessels must put `&v->FlightView()` into
+  `FlightGlobals::ActiveVessel` / `VesselsLoaded` and set both `ready` flags itself. WP-19 ports FlightGlobals.cs and makes it the one
+  registry (FlightRegistry's lists typed `Vessel*`, `IFlightVessel` / `IOrbitDriverVessel` then retired or kept only for test stubs).
+- `ITargetable` is WP-10's (`orbit/targetable.hpp`); WP-14's earlier copy (with `GetTransformName()` / `GetTransformPosition()`) was removed in
+  the wp13 merge. `Vessel::GetTransform()` (Vessel.cs:3761, `return ReferenceTransform`) returns a `UnityEngine::Transform` owned by the
+  Vessel and refreshed from `ReferenceTransform()` on every call: name = the Vessel's `gameObjectName` (vesselTransform) or the reference
+  part's `GetReferenceTransformName()`, position and rotation copied. Exact for a caller that reads it after the call; a caller that keeps
+  the pointer (KSP's `FlightGlobals.fetch.vesselTargetTransform`) sees the values of the last `GetTransform()` call, not the live transform,
+  and after `SetReferenceTransform` it re-targets on the next call where KSP would keep the old part's transform. Unifying `PartTransform`
+  with `UnityEngine::Transform` (so the pointer is the live reference transform) is WP-19 / WP-20. `ProtoTargetInfo(ITargetable)` for a
+  generic target reads `GetTransform()->name` (ProtoTargetInfo.cs:64; a null transform throws `NullReferenceException`); a
+  `PositionTarget`'s GameObject is now named "New Game Object" (Unity's name for `new GameObject()`), so a saved ground target writes
+  `tgtId = New Game Object` as in KSP.
 - `VesselPrecalculate` is a seam struct (isEasingGravity, mass maths of CalculatePhysicsStats): WP-19. `PartSet` / resource sets: WP-15 (hook).
   `ActionGroupList.ToggleGroup`: WP-16. `FlightCtrlState` ownership with the input handler: WP-24.
 - Part-side state that `Vessel` reads goes through `Part::vesselHooks` (WP-13) and `Part::vessel` stays the opaque `Vessel*`.
@@ -1643,9 +1777,13 @@ crafts; no number is invented.
 
 ### Fresh run
 
-`./run_tests.sh -f` (Linux release, clang 18): 22/22 ctest tests passed (21 earlier tests unchanged plus `capture.vessel_state`); `unit` 197 cases / 147,884 assertions
+Before the wp13 (main) merge: `./run_tests.sh -f` (Linux release, clang 18): 22/22 ctest tests passed (21 earlier tests unchanged plus `capture.vessel_state`); `unit` 197 cases / 147,884 assertions
 (24 cases / 6,869 assertions of them are `test_vessel.cpp`); ctest total 40 s. Not run here: Windows (MSVC) and Debug presets; the class/struct
 forward-declaration rule of wp13 ae3e81fa was applied (no `class PartVariant|PartResource|AvailablePart;` declaration exists).
+
+After merging `wp13` (with main: WP-06, WP-10) and unifying ITargetable: `./run_tests.sh -f` (linux-rel, clang 18) and
+`./run_tests.sh -p linux-gcc-rel -f` (GCC 13): 22/22 each, every gate column max ULP 0 (429 compared columns); `unit` 214 cases /
+149,925 assertions (24 cases / 6,901 of them in `test_vessel.cpp`). Not run here: Windows (MSVC).
 
 ### Commits (branch `wp14`)
 

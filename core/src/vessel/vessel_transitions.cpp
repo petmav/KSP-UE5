@@ -527,7 +527,10 @@ ProtoTargetInfo::ProtoTargetInfo(ITargetable* tgt) {
         vesselId = v->id;
     } else if (tgt != nullptr) {
         targetType = Type::Generic;
-        uniqueName = tgt->GetTransformName();
+        // ProtoTargetInfo.cs:64 tgt.GetTransform().name (a destroyed PositionTarget hands out null: NullReferenceException)
+        UnityEngine::Transform* transform = tgt->GetTransform();
+        if (transform == nullptr) throw NullReferenceException();
+        uniqueName = transform->name;
     } else {
         targetType = Type::Null;
     }

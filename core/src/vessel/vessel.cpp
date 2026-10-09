@@ -153,6 +153,32 @@ public:
     Vector3d velocityD() const override { return v_.velocityD; }
     // OrbitDriver.RecalculateOrbit: ModuleTripLogger.ForceVesselLog(vessel, Flyby, newReferenceBody)
     void ForceVesselLogFlyby(CelestialBody* body) override { ModuleTripLogger::ForceVesselLog(&v_, FlightLog::EntryType::Flyby, body); }
+    // OrbitDriver.cs:75 Targetable: `if (vessel != null) return vessel;` (the Vessel's ITargetable, Vessel.cs:3761-3815)
+    ITargetable* AsTargetable() override { return &v_; }
+
+private:
+    Vessel& v_;
+};
+
+// IFlightVessel over a Vessel: the Vessel members TimeWarp.cs reads through FlightGlobals.ActiveVessel / VesselsLoaded
+class VesselFlightView final : public IFlightVessel {
+public:
+    explicit VesselFlightView(Vessel& v) : v_(v) {}
+    bool LandedOrSplashed() const override { return v_.LandedOrSplashed(); }  // Vessel.cs:590
+    // Vessel.cs:586 orbitDriver.orbit.referenceBody (null while the Vessel has no orbit driver)
+    CelestialBody* mainBody() const override {
+        Orbit* o = v_.GetOrbit();
+        return o != nullptr ? o->referenceBody : nullptr;
+    }
+    Vector3f TransformPosition() const override { return v_.vesselTransform.position; }  // vessel.transform.position
+    Orbit* orbit() const override { return v_.GetOrbit(); }                              // Vessel.cs:584
+    double altitude() const override { return v_.altitude; }
+    double geeForce() const override { return v_.geeForce; }
+    Vector3d srf_velocity() const override { return v_.srf_velocity; }
+    bool PatchedConicsAttached() const override { return v_.PatchedConicsAttached(); }  // Vessel.cs:795
+    bool isEVA() const override { return v_.isEVA(); }                                  // Vessel.cs:737
+    // TimeWarp.cs:511 vessel.GetComponent<KerbalEVA>().OnALadder (KerbalEVA.cs:1205); no KerbalEVA component: false
+    bool OnALadder() const override { return v_.evaController != nullptr && v_.evaController->OnALadder(); }
 
 private:
     Vessel& v_;
@@ -188,6 +214,7 @@ Vessel::Vessel() {
     GE::onVesselWasModified.Add(this, &Vessel::OnVesselNamingVesselWasModified);
     VesselModuleManager::AddModulesToVessel(this, vesselModules);
     orbitDriverView_ = std::make_unique<VesselOrbitDriverView>(*this);
+    flightView_ = std::make_unique<VesselFlightView>(*this);
 }
 
 // Vessel.cs:3341 OnDestroy (event listeners; the registry entry)
@@ -1044,8 +1071,15 @@ std::string Vessel::AutoRename(Vessel& v, const std::string& baseName) {
 
 // ============================================================ ITargetable / IDiscoverable
 
-std::string Vessel::GetTransformName() { return gameObjectName; }
-Vector3f Vessel::GetTransformPosition() { return ReferenceTransform().position; }  // Vessel.cs:572 (ReferenceTransform)
+// Vessel.cs:3761 `return ReferenceTransform;` (Vessel.cs:572): vesselTransform (named like the Vessel's GameObject), else the
+// reference part's GetReferenceTransform() (Part.cs:1547 name)
+UnityEngine::Transform* Vessel::GetTransform() {
+    const PartTransform& rt = ReferenceTransform();
+    targetTransform_.name = referenceTransformPart_ == nullptr ? gameObjectName : referenceTransformPart_->GetReferenceTransformName();
+    targetTransform_.position = rt.position;
+    targetTransform_.rotation = rt.rotation;
+    return &targetTransform_;
+}
 Vector3f Vessel::GetFwdVector() { return ReferenceTransform().forward(); }          // Vessel.cs:572
 std::string Vessel::GetDisplayName() { return Localizer::Format(vesselName); }       // Vessel.cs:3791
 std::string Vessel::RevealDisplayName() { return Localizer::Format(vesselName); }    // Vessel.cs:4378

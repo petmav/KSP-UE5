@@ -15,13 +15,13 @@ Vessel* VesselOf(PartModule* host) { return host->part != nullptr ? static_cast<
 std::unique_ptr<FlightCoMTracker> FlightCoMTracker::Create(PartModule* host, bool activeTargetable) {
     auto t = std::make_unique<FlightCoMTracker>();
     t->host_ = host;
-    t->name_ = (host->part != nullptr ? host->part->gameObjectName : std::string()) + " Vessel CoM Marker";
+    t->trf_.name = (host->part != nullptr ? host->part->gameObjectName : std::string()) + " Vessel CoM Marker";
     t->activeTargetable_ = activeTargetable;
     return t;
 }
 
 // FlightCoMTracker.cs:22
-void FlightCoMTracker::FixedUpdate() { position_ = VesselOf(host_)->CurrentCoM(); }
+void FlightCoMTracker::FixedUpdate() { trf_.position = VesselOf(host_)->CurrentCoM(); }
 
 // FlightCoMTracker.cs:27
 void FlightCoMTracker::MakeTarget() {

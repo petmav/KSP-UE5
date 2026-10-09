@@ -22,3 +22,18 @@ Branch wp14 (from wp13 688c5711). Notes written after every major step.
 - tests complete (24 cases); citation pass done (/tmp/claude-0/wp14/tools/cite_check*.py); TODO: STATUS.md section, README rows, fresh full run, final report
 - STATUS.md WP-14 section, README rows written; fresh run 22/22 passed (197 unit cases / 147,884 assertions). Remaining: final commit, handback.
 - gatekeeper follow-ups: states.spd dropped (input), consistency docs, CalculatePhysicsStats deviations, VESSELMODULES note, stale comments, 2845 citation; 22/22
+
+## Integration: merge wp13 (with main: WP-06, WP-10) into wp14, unify ITargetable (2026-10-09)
+- Merge in progress; STATUS.md/README resolved by the orchestrator (kept). Tree did not compile: two ITargetable definitions.
+- Decision: keep WP-10's ITargetable (ksp/orbit/targetable.hpp, GetTransform() -> UnityEngine::Transform*). Drop the WP-14 copy in
+  vessel_types.hpp. UnityEngine::Transform gains `name` and `rotation` (GameObject name, Transform.rotation).
+- Vessel::GetTransform(): a Transform owned by the Vessel, refreshed from ReferenceTransform() (name/position/rotation) on each call.
+- FlightCoMTracker: owns its Transform (trf) directly; FixedUpdate writes trf.position.
+- IFlightVessel: Vessel cannot inherit it (fields altitude/geeForce/srf_velocity clash with the interface's functions, orbit()
+  returns Orbit& vs Orbit*), so an adapter VesselFlightView like VesselOrbitDriverView; Vessel::FlightView().
+- Done: ITargetable unified (vessel_types copy removed; Vessel/FlightCoMTracker/ProtoTargetInfo/TModule on GetTransform()); Transform
+  stand-in has name + rotation; PositionTarget's GameObject named "New Game Object"; VesselOrbitDriverView::AsTargetable -> Vessel;
+  VesselFlightView (IFlightVessel) + IEvaController::OnALadder; tests added in test_vessel.cpp.
+- Fresh runs: linux-rel (clang 18) 22/22, linux-gcc-rel (GCC 13) 22/22, all 429 gate columns max_ulp=0; unit 214 cases / 149,925
+  assertions (test_vessel.cpp 24 / 6,901). STATUS.md unit row, WP-14 section (deviations: two registries left for WP-19) and README updated.
+- Next: merge commit (no push).

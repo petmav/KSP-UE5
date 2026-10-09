@@ -28,6 +28,7 @@
 #include <string>
 #include <vector>
 
+#include "ksp/celestial/flight_globals.hpp"
 #include "ksp/config/config_node.hpp"
 #include "ksp/config/kspparseable.hpp"
 #include "ksp/core/delegate.hpp"
@@ -43,6 +44,7 @@
 #include "ksp/save/save_enums.hpp"
 #include "ksp/unity/color.hpp"
 #include "ksp/unity/quaternion.hpp"
+#include "ksp/unity/transform.hpp"
 #include "ksp/unity/vector.hpp"
 #include "ksp/vessel/action_group_list.hpp"
 #include "ksp/vessel/discovery_info.hpp"
@@ -65,11 +67,13 @@ class FlightState;
 class PatchedConicSolver;
 class Vessel;
 
-// KerbalEVA (WP-32), as far as Vessel.cs reads it: the part the kerbal holds on to (EVALadderVessel, updateSituation)
+// KerbalEVA (WP-32), as far as Vessel.cs reads it: the part the kerbal holds on to (EVALadderVessel, updateSituation), and
+// OnALadder for TimeWarp (TimeWarp.cs:511 through IFlightVessel)
 class IEvaController {
 public:
     virtual ~IEvaController() = default;
     virtual Part* LadderPart() = 0;  // KerbalEVA.LadderPart
+    virtual bool OnALadder() { return false; }  // KerbalEVA.cs:1205 (false while the FSM has not started)
 };
 
 // VesselPrecalculate.cs (WP-19): the two members the vessel model reads. CalculatePhysicsStats' mass maths is
@@ -479,8 +483,9 @@ public:
     void CheckAirstreamShields();                                  // :3604
 
     // ---- ITargetable (Vessel.cs:3761-3815) / IDiscoverable (Vessel.cs:4373-4410) -------------------------------------------------------
-    std::string GetTransformName() override;
-    Vector3f GetTransformPosition() override;
+    // Vessel.cs:3761 `return ReferenceTransform`: the Transform stand-in owned by the Vessel, refreshed from ReferenceTransform()
+    // (name, position, rotation) on every call; the pointer is stable for the Vessel's lifetime
+    UnityEngine::Transform* GetTransform() override;
     Vector3f GetObtVelocity() override { return obt_velocity.ToVector3f(); }
     Vector3f GetSrfVelocity() override { return srf_velocity.ToVector3f(); }
     Vector3f GetFwdVector() override;
@@ -501,6 +506,10 @@ public:
 
     // IOrbitDriverVessel for OrbitDriver (OrbitDriver.cs): the interface names CoMD() / velocityD() clash with the fields
     IOrbitDriverVessel& OrbitDriverView() { return *orbitDriverView_; }
+    // IFlightVessel for TimeWarp's FlightGlobals.ActiveVessel / VesselsLoaded (WP-10): the interface names altitude() / geeForce() /
+    // srf_velocity() clash with the fields and orbit() returns Orbit* there, so it is an adapter like OrbitDriverView. WP-19 merges
+    // FlightRegistry and FlightGlobals; until then the host registers FlightView() in FlightGlobals::ActiveVessel / VesselsLoaded.
+    IFlightVessel& FlightView() { return *flightView_; }
 
     // ---- bookkeeping the host needs ---------------------------------------------------------------------------------------------------
     // Part.vessel hooks (isEVA, partCount, removeCrew, crewListSetDirty, snapshotSavesModules) pointing at the Vessel
@@ -557,6 +566,8 @@ private:
     static inline int accelSmoothingLength_ = 20;
     double accelSmoothingLengthRecip_ = 0.0;
     std::unique_ptr<IOrbitDriverVessel> orbitDriverView_;
+    std::unique_ptr<IFlightVessel> flightView_;
+    UnityEngine::Transform targetTransform_;  // what GetTransform() hands out (the ReferenceTransform mirror)
     std::vector<std::unique_ptr<FlightCtrlState>> ownedControlStates_;
 };
 

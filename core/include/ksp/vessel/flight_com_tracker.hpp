@@ -1,5 +1,6 @@
 // FlightCoMTracker.cs (105 lines): the targetable marker at a vessel's centre of mass. Unity's GameObject / Transform become the
-// tracker's own position; FixedUpdate is an explicit call; MakeTarget goes through the host's SetVesselTarget.
+// tracker's own ksp::UnityEngine::Transform (trf: name, position, identity rotation); FixedUpdate is an explicit call; MakeTarget
+// goes through the host's SetVesselTarget.
 #pragma once
 
 #include <functional>
@@ -7,6 +8,7 @@
 #include <string>
 
 #include "ksp/modules/part_module.hpp"
+#include "ksp/unity/transform.hpp"
 #include "ksp/vessel/vessel_types.hpp"
 
 namespace ksp {
@@ -25,10 +27,9 @@ public:
     void MakeTarget();    // :27 (the coroutine makeTgtWhenReady: RunPending after FlightGlobals.ready)
     void RunPending();    // :42 makeTgtWhenReady, one frame step
     bool pending() const { return pending_; }
-    const std::string& name() const { return name_; }  // GameObject name: host.name + " Vessel CoM Marker"
+    const std::string& name() const { return trf_.name; }  // GameObject name: host.name + " Vessel CoM Marker"
 
-    std::string GetTransformName() override { return name_; }        // :51 GetTransform().name
-    Vector3f GetTransformPosition() override { return position_; }
+    UnityEngine::Transform* GetTransform() override { return &trf_; }  // :51
     Vector3f GetObtVelocity() override;                               // :56
     Vector3f GetSrfVelocity() override;                               // :61
     Vector3f GetFwdVector() override { return Vector3f(0.0f, 0.0f, 1.0f); }  // :66 trf.forward (identity rotation)
@@ -42,8 +43,7 @@ public:
 
 private:
     PartModule* host_ = nullptr;
-    std::string name_;
-    Vector3f position_;
+    UnityEngine::Transform trf_;  // trf = transform (:9); never rotated
     bool activeTargetable_ = false;
     bool pending_ = false;
 };

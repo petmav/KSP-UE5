@@ -27,6 +27,7 @@
 #include "ksp/events/game_events.hpp"
 #include "ksp/modules/part_module.hpp"
 #include "ksp/modules/vessel_module.hpp"
+#include "ksp/orbit/position_target.hpp"
 #include "ksp/orbit/time_warp.hpp"
 #include "ksp/parts/part.hpp"
 #include "ksp/parts/part_loader.hpp"
@@ -691,7 +692,9 @@ TEST_CASE("WP-14 situation determination: checkLanded / checkSplashed / updateSi
     // ladder: an EVA kerbal holding a ladder takes the situation of the vessel it hangs on
     struct Eva final : IEvaController {
         Part* ladder;
+        bool onLadder = false;
         Part* LadderPart() override { return ladder; }
+        bool OnALadder() override { return onLadder; }
     } eva;
     eva.ladder = v->rootPart;
     auto kerbal = Stack14(w, {"kerbalEVA"}, false);
@@ -703,6 +706,13 @@ TEST_CASE("WP-14 situation determination: checkLanded / checkSplashed / updateSi
     CHECK(kerbal->EVALadderVessel() == v.get());
     kerbal->updateSituation();
     CHECK(kerbal->situation == Vessel::Situations::ORBITING);
+    // TimeWarp.cs:511 reads vessel.isEVA && KerbalEVA.OnALadder through IFlightVessel (Vessel::FlightView)
+    CHECK(kerbal->FlightView().isEVA());
+    CHECK_FALSE(kerbal->FlightView().OnALadder());
+    eva.onLadder = true;
+    CHECK(kerbal->FlightView().OnALadder());
+    CHECK_FALSE(v->FlightView().isEVA());
+    CHECK_FALSE(v->FlightView().OnALadder());  // no KerbalEVA component
     // GetSituationString has a localised string per situation
     CHECK(Vessel::GetSituationString(Vessel::Situations::ORBITING) != Vessel::GetSituationString(Vessel::Situations::LANDED));
     CHECK(Vessel::GetLandedAtString("KSC_Pad_Launch") == "LaunchPad");
@@ -1390,6 +1400,36 @@ TEST_CASE("WP-14 reference transform, PartsContain, indexers, landed-in-KSC / re
     CHECK(v->GetReferenceTransformPart() == v->rootPart);  // no ModuleCommand state yet: isControlSource NONE -> localRoot
     CHECK(v->referenceTransformId == v->rootPart->fields.flightID);
     CHECK(&v->ReferenceTransform() == &v->rootPart->partTransform);
+    // ITargetable.GetTransform (Vessel.cs:3761) is the ReferenceTransform: the reference part's transform and its name
+    v->rootPart->partTransform.position = Vector3f(1.5f, -2.0f, 3.25f);
+    v->rootPart->partTransform.rotation = Quaternionf(0.0f, 0.70710678f, 0.0f, 0.70710678f);
+    UnityEngine::Transform* gt = v->GetTransform();
+    CHECK(gt->name == v->rootPart->GetReferenceTransformName());
+    CHECK(gt->position == v->rootPart->partTransform.position);
+    CHECK(gt->rotation.x == v->rootPart->partTransform.rotation.x);
+    CHECK(gt->rotation.y == v->rootPart->partTransform.rotation.y);
+    CHECK(gt->rotation.z == v->rootPart->partTransform.rotation.z);
+    CHECK(gt->rotation.w == v->rootPart->partTransform.rotation.w);
+    CHECK(v->GetFwdVector() == gt->rotation * Vector3f::forward());
+    CHECK(v->GetTransform() == gt);  // one Transform per Vessel, refreshed on each call
+    // OrbitDriver.Targetable (OrbitDriver.cs:75) through the Vessel's driver view is the Vessel itself
+    CHECK(v->OrbitDriverView().AsTargetable() == static_cast<ITargetable*>(v.get()));
+    REQUIRE(v->orbitDriver != nullptr);
+    CHECK(v->orbitDriver->vessel == &v->OrbitDriverView());
+    CHECK(v->orbitDriver->Targetable() == static_cast<ITargetable*>(v.get()));
+    // IFlightVessel (TimeWarp's FlightGlobals.ActiveVessel) over the same Vessel
+    IFlightVessel& fv = v->FlightView();
+    v->altitude = 1234.5;
+    v->geeForce = 0.25;
+    v->srf_velocity = Vector3d(1.0, 2.0, 3.0);
+    CHECK(fv.altitude() == 1234.5);
+    CHECK(fv.geeForce() == 0.25);
+    CHECK(fv.srf_velocity() == Vector3d(1.0, 2.0, 3.0));
+    CHECK(fv.orbit() == &v->orbit());
+    CHECK(fv.mainBody() == v->mainBody());
+    CHECK(fv.TransformPosition() == v->vesselTransform.position);
+    CHECK(fv.LandedOrSplashed() == v->LandedOrSplashed());
+    CHECK(fv.PatchedConicsAttached() == v->PatchedConicsAttached());
     v->parts[3]->fields.flightID = 4444;
     v->SetReferenceTransform(v->parts[3]);
     CHECK(v->referenceTransformId == 4444u);
@@ -1401,6 +1441,9 @@ TEST_CASE("WP-14 reference transform, PartsContain, indexers, landed-in-KSC / re
     v->SetReferenceTransform(nullptr);
     CHECK(v->referenceTransformId == 0u);
     CHECK(&v->ReferenceTransform() == &v->vesselTransform);
+    v->vesselTransform.position = Vector3f(7.0f, 8.0f, 9.0f);
+    CHECK(v->GetTransform()->name == v->gameObjectName);  // vesselTransform: the Vessel's GameObject
+    CHECK(v->GetTransform()->position == Vector3f(7.0f, 8.0f, 9.0f));
     v->referenceTransformId = 999999;  // no such part: FallBackReferenceTransform picks the first crewable part, else null
     v->FallBackReferenceTransform();
     CHECK(v->referenceTransformId == 0u);
@@ -1610,8 +1653,11 @@ TEST_CASE("WP-14 FlightRegistry and ProtoTargetInfo: registration, lookup by id,
     CHECK(none.FindTarget() == nullptr);
     // a part module target is saved as vessel + part flightID + module index and resolved back to the module (ITargetable modules)
     struct TModule : ITargetable {
-        std::string GetTransformName() override { return "tm"; }
-        Vector3f GetTransformPosition() override { return {}; }
+        UnityEngine::Transform trf;
+        UnityEngine::Transform* GetTransform() override {
+            trf.name = "tm";
+            return &trf;
+        }
         Vector3f GetObtVelocity() override { return {}; }
         Vector3f GetSrfVelocity() override { return {}; }
         Vector3f GetFwdVector() override { return {}; }
@@ -1629,6 +1675,11 @@ TEST_CASE("WP-14 FlightRegistry and ProtoTargetInfo: registration, lookup by id,
     ConfigNode gn("TARGET");
     gt.Save(gn);
     CHECK(*gn.GetValue("tgtId") == "tm");
+    // a PositionTarget is generic too: its `new GameObject()` is named "New Game Object" (ProtoTargetInfo.cs:64)
+    PositionTarget site("site");
+    ProtoTargetInfo st(static_cast<ITargetable*>(&site));
+    CHECK(st.targetType == ProtoTargetInfo::Type::Generic);
+    CHECK(st.uniqueName == "New Game Object");
     // the unloaded round trip of Vessel.Load: the target survives a snapshot
     a->targetObject = b.get();
     ProtoVessel* snap = a->BackupVessel();
@@ -1861,7 +1912,10 @@ TEST_CASE("WP-14 FlightCoMTracker: marker follows the vessel CoM and targets onc
     CHECK(t->GetVessel() == v.get());
     v->CoM = Vector3f(1.0f, 2.0f, 3.0f);
     t->FixedUpdate();
-    CHECK(t->GetTransformPosition() == Vector3f(1.0f, 2.0f, 3.0f));
+    CHECK(t->GetTransform()->position == Vector3f(1.0f, 2.0f, 3.0f));
+    CHECK(t->GetTransform()->name == "mk1pod.v2 Vessel CoM Marker");
+    CHECK(t->GetTransform()->rotation == Quaternionf::identity());
+    CHECK(t->GetFwdVector() == t->GetTransform()->rotation * Vector3f::forward());
     v->obt_velocity = Vector3d(4.0, 5.0, 6.0);
     v->srf_velocity = Vector3d(7.0, 8.0, 9.0);
     CHECK(t->GetObtVelocity() == Vector3f(4.0f, 5.0f, 6.0f));
