@@ -578,6 +578,16 @@ struct GameEvents : GameEventsBase {
     }
 };
 
+// kspcore addition (no KSP equivalent): every event object with its C# member path (Outer.member for nested
+// classes, Modifiers.member for GameEvents.Modifiers) and its C# type as System.Type.Name renders it. Used by tests
+// and tools to check registry coverage against KSP IL.
+struct GameEventsEntry {
+    const char* member;
+    BaseGameEvent* event;
+    const char* csType;
+};
+const std::vector<GameEventsEntry>& GameEventsRegistry();
+
 }  // namespace ksp::events
 
 namespace ksp {

@@ -108,6 +108,21 @@ def map_type(cs, inside=True):
     return nsq + '::' + name + ('*' if kind in ('class', 'interface') else '')
 
 
+CLR_NAMES = {'bool': 'Boolean', 'int': 'Int32', 'uint': 'UInt32', 'float': 'Single', 'double': 'Double',
+             'string': 'String', 'long': 'Int64', 'short': 'Int16', 'byte': 'Byte'}
+
+
+def norm_type(cs):
+    """C# type text as System.Type.Name renders it (generic args recursively, nested types by their own name)."""
+    cs = cs.strip()
+    m = re.match(r'^([\w\.]+)<(.*)>$', cs)
+    if m:
+        return m.group(1).split('.')[-1] + '<' + ', '.join(norm_type(a) for a in split_args(m.group(2))) + '>'
+    if cs in CLR_NAMES:
+        return CLR_NAMES[cs]
+    return cs.split('.')[-1]
+
+
 # ---- parse GameEvents.cs ---------------------------------------------------------------------------------------------
 lines = open(SRC, encoding='utf-8-sig').read().splitlines()
 decl = re.compile(r'^\s*(public|internal) (static )?([\w<>,\. \[\]]+?) (\w+) = new ([\w<>,\. \[\]]+?)\((.*)\);\s*$')
@@ -295,6 +310,16 @@ G.append('        return BaseGameEvent::FindEvent<T>(eventName);')
 G.append('    }')
 G.append('};')
 G.append('')
+G.append('// kspcore addition (no KSP equivalent): every event object with its C# member path (Outer.member for nested')
+G.append('// classes, Modifiers.member for GameEvents.Modifiers) and its C# type as System.Type.Name renders it. Used by tests')
+G.append('// and tools to check registry coverage against KSP IL.')
+G.append('struct GameEventsEntry {')
+G.append('    const char* member;')
+G.append('    BaseGameEvent* event;')
+G.append('    const char* csType;')
+G.append('};')
+G.append('const std::vector<GameEventsEntry>& GameEventsRegistry();')
+G.append('')
 G.append('}  // namespace ksp::events')
 G.append('')
 G.append('namespace ksp {')
@@ -319,6 +344,22 @@ for (ln, sc, static, cs_type, member, args) in order:
         C.append('%s %s;  // GameEvents.cs:%d' % (t, qual, ln))
     else:
         C.append('%s %s(%s);  // GameEvents.cs:%d' % (t, qual, ctor_args(args), ln))
+C.append('')
+C.append('const std::vector<GameEventsEntry>& GameEventsRegistry() {')
+C.append('    static const std::vector<GameEventsEntry> entries = {')
+for (ln, sc, static, cs_type, member, args) in order:
+    if cs_type == 'GameModifiers':
+        continue
+    path = '.'.join(list(sc) + [member])
+    if static:
+        ref = '&GameEvents::' + ''.join(x + '::' for x in sc) + member
+    else:
+        path = 'Modifiers.' + member
+        ref = '&GameEvents::Modifiers.' + member
+    C.append('        {"%s", %s, "%s"},' % (path, ref, norm_type(cs_type)))
+C.append('    };')
+C.append('    return entries;')
+C.append('}')
 C.append('')
 C.append('}  // namespace ksp::events')
 C.append('')
