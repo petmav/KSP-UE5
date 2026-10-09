@@ -175,7 +175,7 @@ ksp_golden_gate(capture.part_database part_database GOLDEN ${KSP_CAPTURES2_DIR}/
     DROP_ROWS "parts:name=${KSP_PREFAB_PARTS}/part_cfg_values:part=${KSP_PREFAB_PARTS}/modules:part=${KSP_PREFAB_PARTS}/module_fields:part=${KSP_PREFAB_PARTS}/module_propellants:part=${KSP_PREFAB_PARTS}/resources:part=${KSP_PREFAB_PARTS}/attach_nodes:part=${KSP_PREFAB_PARTS}/drag_cubes:part=${KSP_PREFAB_PARTS}/variants:part=${KSP_PREFAB_PARTS}/assets:part=${KSP_PREFAB_PARTS}+kind=texture"
     DROP_KEYS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/data/part_database_exclusions.json
     RENUMBER "assets:idx:part"
-    DROP_COLUMNS "parts:partSize,module_mass,module_cost/variants:materials")
+    DROP_COLUMNS "parts:partSize/variants:materials")
 set_tests_properties(capture.part_database PROPERTIES FIXTURES_SETUP partdb)
 # GameDatabase load order vs the game's own log of the capture run (every "Load(Audio|Texture|Model): url" and
 # "Config(TYPE) url" line, in order). Skipped (exit 0 with a note) when the log is not present.

@@ -47,8 +47,9 @@ bool ParseAttributeArguments(std::string_view text, std::vector<AttributeArg>& o
 // when the expression is not understood (the value is then the C# default).
 ModuleValue FieldInitialValue(const ModuleFieldInfo& info, bool* evaluated = nullptr);
 // default(T) for the field type as the Unity-created component holds it: numbers 0, bool false, string null,
-// vectors/quaternion zero (Quaternion is (0,0,0,0), not identity), enums 0, [Serializable] FloatCurve / DoubleCurve an
-// empty instance (the serializer instantiates them on AddComponent).
+// vectors/quaternion zero (Quaternion is (0,0,0,0), not identity), enums 0, string / FloatCurve / DoubleCurve null (the
+// capture shows module OnAwake bodies guarded by `if (curve == null)` creating their defaults, so AddComponent leaves them
+// null).
 ModuleValue DefaultFieldValue(const ModuleFieldInfo& info);
 // Convert a constant to the field type (C# implicit conversions of constants); false when incompatible.
 bool ConvertConstant(const CsValue& v, const ModuleFieldInfo& info, ModuleValue& out);

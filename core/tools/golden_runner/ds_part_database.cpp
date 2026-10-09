@@ -249,6 +249,11 @@ int RunPartDatabase(const RunnerOptions& opt) {
                     std::string vs;
                     Cell num;
                     FmtModuleValue(bf.GetValue(), vs, num);
+                    if (std::holds_alternative<std::monostate>(bf.GetValue())) {  // C9's Fmt of a null IConfigNode field
+                        const std::string_view ft = bf.FieldInfo().typeName;
+                        if (ft == "FloatCurve") vs = "curve[]";
+                        else if (ft == "DoubleCurve") vs = "DoubleCurve";
+                    }
                     tf.Add({Cell(pn), Cell(mi), Cell(bf.name()), Cell(bf.FieldInfo().typeName), Cell(vs), num,
                             Cell(bf.isPersistant)});
                     nFields++;
@@ -320,6 +325,12 @@ int RunPartDatabase(const RunnerOptions& opt) {
         }
         // parts row
         const PartFields& f = p.fields;
+        // Part.GetModuleMass / GetModuleCosts over the prefab's IPartMassModifier / IPartCostModifier modules (CURRENT)
+        PartModuleList moduleList;
+        for (const PartModuleData& md : p.Modules)
+            if (md.module) moduleList.Add(md.module);
+        const float moduleMass = PartGetModuleMass(moduleList, f.mass);
+        const float moduleCost = PartGetModuleCosts(moduleList, ap.cost);
         const auto internalName = ap.internalConfig ? ap.internalConfig->GetValue("name") : std::nullopt;
         std::string cfgRel;
         for (const PartAssetRef& a : ap.assets)
@@ -338,7 +349,7 @@ int RunPartDatabase(const RunnerOptions& opt) {
                 ap.bulkheadProfiles ? Cell(*ap.bulkheadProfiles) : Cell(nullptr), Cell(ap.partSize), Cell(f.scaleFactor),
                 Cell(f.rescaleFactor), Cell(f.stackSymmetry), Cell(f.CrewCapacity), Cell(p.Modules.size()),
                 Cell(p.Resources.size()), Cell(p.attachNodes.size()), Cell(p.DragCubes.None()),
-                Cell(p.DragCubes.Procedural()), Cell(cubes.size()), Cell(resMass), Cell(resCost), Cell(0.0f), Cell(0.0f),
+                Cell(p.DragCubes.Procedural()), Cell(cubes.size()), Cell(resMass), Cell(resCost), Cell(moduleMass), Cell(moduleCost),
                 internalName ? Cell(*internalName) : Cell(nullptr), Cell(nullptr)});
     }
     for (golden::Table* t : {&tp, &tv, &tm, &tf, &tpr, &tr, &ta, &tc, &tvar, &tas}) g.tables.push_back(std::move(*t));

@@ -246,20 +246,36 @@ void BaseField::SetupUIControls() {
 }
 
 namespace {
-bool SameAlternative(const ModuleValue& v, const ModuleValue& proto, const ModuleFieldInfo& info) {
-    if (v.index() == proto.index()) return true;
-    if (std::holds_alternative<std::monostate>(v)) {  // null of a reference type
-        const std::string_view t = info.typeName;
-        return t == "String" || t == "FloatCurve" || t == "DoubleCurve";
-    }
+// FieldInfo.SetValue accepts a value of the field's own C# type (or null for a reference type)
+bool ValueMatchesField(const ModuleValue& v, const ModuleFieldInfo& info) {
+    const std::string_view t = info.typeName;
+    if (info.enumTable) return std::holds_alternative<EnumValue>(v);
+    if (std::holds_alternative<std::monostate>(v)) return t == "String" || t == "FloatCurve" || t == "DoubleCurve";
+    if (t == "Boolean") return std::holds_alternative<bool>(v);
+    if (t == "Byte") return std::holds_alternative<uint8_t>(v);
+    if (t == "UInt16") return std::holds_alternative<uint16_t>(v);
+    if (t == "Char") return std::holds_alternative<char16_t>(v);
+    if (t == "UInt64") return std::holds_alternative<uint64_t>(v);
+    if (t == "Int32") return std::holds_alternative<int32_t>(v);
+    if (t == "Int64") return std::holds_alternative<int64_t>(v);
+    if (t == "Single") return std::holds_alternative<float>(v);
+    if (t == "UInt32") return std::holds_alternative<uint32_t>(v);
+    if (t == "Int16") return std::holds_alternative<int16_t>(v);
+    if (t == "Double") return std::holds_alternative<double>(v);
+    if (t == "String") return std::holds_alternative<std::string>(v);
+    if (t == "Vector2") return std::holds_alternative<Vector2f>(v);
+    if (t == "Vector3") return std::holds_alternative<Vector3f>(v);
+    if (t == "Vector4") return std::holds_alternative<Vector4f>(v);
+    if (t == "Quaternion") return std::holds_alternative<Quaternionf>(v);
+    if (t == "FloatCurve") return std::holds_alternative<FloatCurve>(v);
+    if (t == "DoubleCurve") return std::holds_alternative<DoubleCurve>(v);
     return false;
 }
 }  // namespace
 
 // BaseField.cs:140
 bool BaseField::SetValue(const ModuleValue& newValue) {
-    if (!SameAlternative(newValue, host_->ValueAt(index_), *info_) &&
-        !SameAlternative(newValue, cs::DefaultFieldValue(*info_), *info_)) {
+    if (!ValueMatchesField(newValue, *info_)) {
         log::Error("Value could not be set to field '" + name_ + "'");
         return false;
     }

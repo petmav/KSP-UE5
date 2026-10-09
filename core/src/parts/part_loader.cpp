@@ -233,8 +233,11 @@ void AddResource(PartPrefab& part, const ConfigNode& node) {
     part.Resources.push_back(std::move(r));
 }
 
-// ModulePartVariants.cs:348 OnAwake (base variant) + :380 OnLoad (variant list)
-void LoadVariants(PartPrefab& part, const ConfigNode& node) {
+}  // namespace
+
+// ModulePartVariants.cs:348 OnAwake (base variant) + :380 OnLoad (variant list). Returns the `variantIndex` the load sets
+// (the index of the cfg's baseVariant, then of `selectedVariant`), -1 when it leaves the field alone.
+int LoadModulePartVariants(PartPrefab& part, const ConfigNode& node) {
     PartVariant base;
     base.name = LocOr("#autoLOC_8007005", "Basic");
     base.displayName = base.name;
@@ -277,6 +280,7 @@ void LoadVariants(PartPrefab& part, const ConfigNode& node) {
         pv.Load(*vn);
         part.variantList.push_back(std::move(pv));
     }
+    int variantIndex = -1;
     std::string baseVariantName;
     if (node.TryGetValue("baseVariant", baseVariantName)) {
         int index = 0;  // GetVariantIndex: 0 when not found
@@ -286,12 +290,23 @@ void LoadVariants(PartPrefab& part, const ConfigNode& node) {
                 break;
             }
         part.baseVariant = part.variantList.at(static_cast<size_t>(index));
+        variantIndex = index;
     } else {
         part.variantList.insert(part.variantList.begin(), *part.baseVariant);
     }
+    // OnLoad: selectedVariant -> variantIndex = GetVariantIndex(name) (0 when not found)
+    std::string selected;
+    node.TryGetValue("selectedVariant", selected);
+    if (!selected.empty()) {
+        variantIndex = 0;
+        for (size_t i = 0; i < part.variantList.size(); i++)
+            if (part.variantList[i].name == selected) {
+                variantIndex = static_cast<int>(i);
+                break;
+            }
+    }
+    return variantIndex;
 }
-
-}  // namespace
 
 // PartVariant.cs:263
 void PartVariant::Load(const ConfigNode& node) {
@@ -658,7 +673,6 @@ void PartLoader::AddModule(PartPrefab& part, ConfigNode& node, bool /*forceAwake
     if (!m) return;
     m->moduleName = *name;
     LoadModuleData(*m, node, &part);  // PartModule.Load: Fields.Load ... OnLoad (ModuleToggleCrossfeed, ModuleCargoPart, ...)
-    if (m->moduleClass->Is("ModulePartVariants")) LoadVariants(part, node);
 }
 
 // ---- CompileModel (PartLoader.cs:1765), data side ----------------------------------------------------------------------

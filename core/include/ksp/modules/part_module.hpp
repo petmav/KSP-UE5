@@ -142,6 +142,11 @@ public:
     virtual std::string GetStagingEnableText();                    // :343
     virtual std::string GetStagingDisableText();                   // :352
 
+    // Typed helpers for module code (Enum.Parse over the field's enum table; null checks of reference-typed fields)
+    bool IsNull(std::string_view field) const;
+    void SetEnumByName(std::string_view field, std::string_view member);  // Enum.Parse(typeof(T), member)
+    std::string EnumName(std::string_view field) const;                   // enum value.ToString()
+
     // C# interface queries (`module is IPartMassModifier`): subclasses implementing the interface expose it here
     virtual IPartMassModifier* AsMassModifier() { return nullptr; }
     virtual IPartCostModifier* AsCostModifier() { return nullptr; }

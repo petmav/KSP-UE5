@@ -491,9 +491,8 @@ ModuleValue DefaultFieldValue(const ModuleFieldInfo& info) {
     if (t == "Vector3") return Vector3f{};
     if (t == "Vector4") return Vector4f{};
     if (t == "Quaternion") return Quaternionf{};
-    if (t == "FloatCurve") return FloatCurve{};
-    if (t == "DoubleCurve") return DoubleCurve{};
-    return std::monostate{};  // string / reference types: null
+    // string / reference types (FloatCurve, DoubleCurve included: the module's OnAwake creates them) are null
+    return std::monostate{};
 }
 
 bool ConvertConstant(const CsValue& v, const ModuleFieldInfo& info, ModuleValue& out) {

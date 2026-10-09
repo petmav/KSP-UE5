@@ -163,6 +163,26 @@ uint32_t PartModule::NewPersistentId() {
     return GetPersistentId();
 }
 
+bool PartModule::IsNull(std::string_view field) const {
+    const ModuleValue* v = Value(field);
+    return !v || std::holds_alternative<std::monostate>(*v);
+}
+
+void PartModule::SetEnumByName(std::string_view field, std::string_view member) {
+    ModuleValue* v = Value(field);
+    const int i = IndexOf(field);
+    if (!v || i < 0 || !FieldInfos()[static_cast<size_t>(i)]->enumTable) throw std::runtime_error("PartModule::SetEnumByName: " + std::string(field) + " is not an enum field");
+    const EnumTable* t = FieldInfos()[static_cast<size_t>(i)]->enumTable;
+    *v = EnumValue{t->Parse(member), t};
+}
+
+std::string PartModule::EnumName(std::string_view field) const {
+    const ModuleValue* v = Value(field);
+    const auto* e = v ? std::get_if<EnumValue>(v) : nullptr;
+    if (!e) throw std::runtime_error("PartModule::EnumName: " + std::string(field) + " is not an enum field");
+    return e->table->ToString(e->value);
+}
+
 // ---- PartModuleList -----------------------------------------------------------------------------------------------------
 
 // PartModuleList.cs:19
