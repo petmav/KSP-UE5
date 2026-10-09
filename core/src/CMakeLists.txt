@@ -113,6 +113,9 @@ add_library(kspcore STATIC
     vessel/vessel_values.cpp
     save/upgrade_pipeline.cpp
     save/ship_construct.cpp
+    save/ship_construct_live.cpp
+    ship/ship_construction.cpp
+    ship/ship_template.cpp
     save/game_persistence.cpp
     capi/kspcore_c.cpp
 )

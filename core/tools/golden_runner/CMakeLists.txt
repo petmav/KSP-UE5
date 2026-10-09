@@ -20,6 +20,7 @@ add_executable(golden_runner
     ds_terrain_height.cpp
     ds_part_database.cpp
     ds_resource_mass.cpp
+    ds_ship_construct.cpp
     ds_vessel_state.cpp
 )
 target_link_libraries(golden_runner PRIVATE kspcore)

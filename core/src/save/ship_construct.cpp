@@ -10,6 +10,7 @@
 #include "ksp/dotnet/text.hpp"
 #include "ksp/events/game_events.hpp"
 #include "ksp/localization/localizer.hpp"
+#include "ksp/parts/part.hpp"
 #include "ksp/save/save_environment.hpp"
 #include "ksp/util/ksp_util.hpp"
 #include "save_util.hpp"
@@ -31,6 +32,7 @@ bool IsPosInf(float x) { return x == std::numeric_limits<float>::infinity(); }
 
 // ShipConstruct.cs:76
 ShipConstruct::ShipConstruct() {
+    RegisterResourceHost();
     shipSize = Vector3f{0.0f, 0.0f, 0.0f};
     persistentId = SaveEnvironment::Current().persistentIds.GetUniquepersistentId();
     rotation = Quaternionf::identity();
@@ -59,11 +61,14 @@ bool ShipConstruct::LoadShip(const ConfigNode& root, uint32_t persistentID, bool
     SaveEnvironment& env = SaveEnvironment::Current();
     errorString = "";
     parts.clear();
+    changedPersistentIds_.clear();
     std::vector<std::vector<uint32_t>> list;   // links per part
     std::vector<std::vector<uint32_t>> list2;  // symmetry per part
     std::string partName, craftID, nodeID, attnPartID, attachMeshName;
     Vector3f attnPos, attnRot, attnActualPos, attnActualRot;
     persistentId = persistentID;
+    loadPersistentID_ = persistentID;
+    partIdCheckDone_ = !deferPartIdCheck_;
     shipFacility = EditorFacility::None;
     for (int i = 0; i < root.values().Count(); ++i) {
         const ConfigNode::Value& value = root.values()[i];
@@ -254,11 +259,22 @@ bool ShipConstruct::LoadShip(const ConfigNode& root, uint32_t persistentID, bool
             else if (n == "EVENTS") part->events = child->CreateCopy();
             else if (n == "EFFECTS") part->effects = child->CreateCopy();
         }
-        const uint32_t num2 = part->persistentId;
-        part->persistentId = env.persistentIds.CheckPartpersistentId(part->persistentId,
-                                                                     reinterpret_cast<const void*>(static_cast<uintptr_t>(k + 1)),
-                                                                     false, true, persistentID);
-        (void)num2;
+        // ShipConstruct.cs:630-640 CheckPartpersistentId and the ids it re-issued (UpdatePersistentIDs of IShipConstructIDChanges
+        // modules). The file side has no Part to pass: LoadShipWithParts defers the check to InstantiateParts, which has the real parts
+        // (the registry compares the part object); here a stand-in key is registered.
+        if (!deferPartIdCheck_) {
+            const uint32_t num2 = part->persistentId;
+            part->persistentId = env.persistentIds.CheckPartpersistentId(part->persistentId,
+                                                                         reinterpret_cast<const void*>(static_cast<uintptr_t>(k + 1)),
+                                                                         false, true, persistentID);
+            if (part->persistentId != num2 && num2 != 0) {
+                if (changedPersistentIds_.count(num2) != 0)
+                    log::Warning("[ShipConstruct]: The same persistentID existed on two parts in this ship - cannot track all part changes for " +
+                                 part->partInfoName + "(" + dotnet::FormatUInt64(num2) + ")");
+                else
+                    changedPersistentIds_.emplace(num2, part->persistentId);
+            }
+        }
         parts.push_back(std::move(data));
         craftIds.push_back(parts.back().craftID);
         list.push_back(list4);
@@ -290,6 +306,7 @@ bool ShipConstruct::LoadShip(const ConfigNode& root, uint32_t persistentID, bool
 
 // ShipConstruct.cs:153
 ConfigNode::NodePtr ShipConstruct::SaveShip() {
+    if (!liveParts.empty()) return SaveShipFromParts();  // WP-18: a ship with live parts saves them (ShipConstruct.cs:153 reads Part objects)
     GE::onAboutToSaveShip.Fire(this);
     auto configNode = std::make_shared<ConfigNode>();
     configNode->AddValue("ship", shipName);
