@@ -25,7 +25,7 @@ class Game;
 class ProtoPartSnapshot;
 class Vessel;
 class Part;
-class AvailablePart;
+struct AvailablePart;
 class CelestialBody;
 class FlightState;
 class ProtoScenarioModule;

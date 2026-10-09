@@ -42,10 +42,10 @@ class ProtoVessel;
 class Vessel;
 class Part;
 class PartModule;
-class PartResource;
+struct PartResource;
 class PartResourceDefinition;
 struct AttachNode;
-class AvailablePart;
+struct AvailablePart;
 
 // Dictionary<string, KSPParseable> (insertion order; Add of a duplicate key throws ArgumentException)
 using KSPParseableDictionary = dotnet::Dictionary<std::string, KSPParseable>;
