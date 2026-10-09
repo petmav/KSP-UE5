@@ -723,11 +723,9 @@ TEST_CASE("WP-15 flow graph and resource sets on every stock-part craft of harne
             if (e.path().extension() == ".craft") files.push_back(e.path());
         std::sort(files.begin(), files.end());
         for (const fs::path& f : files) {
-            ConfigNode::NodePtr root = ConfigNode::Load(f.string());
-            REQUIRE(root);
             ShipConstruct ship;
             std::string err;
-            if (!ship.LoadShip(*root, 0, true, err)) continue;  // modded parts or an old format (LoadShip refuses them as in the game)
+            if (!LoadCraftFile(f.string(), ship, err)) continue;  // modded parts or an old format (LoadShip refuses them as in the game)
             CraftTree tree = BuildCraftTree(g.data, ship);
             if (!tree.ok) continue;
             CAPTURE(f.filename().string());
@@ -910,8 +908,8 @@ TEST_CASE("WP-15 flow graph and resource sets on every stock-part craft of harne
     MESSAGE("crafts " << crafts << ", parts " << parts << ", request components " << sccTotal << ", fuel lines linked " << linesLinked << " in "
                       << cratfsWithLines << " crafts, ModuleToggleCrossfeed parts " << toggles << ", terminal non-crossfeed parts " << terminalDecouplers
                       << ", totals checked " << totalsChecked << ", draws checked " << drawsChecked);
-    CHECK(crafts == 33);
-    CHECK(parts == 1967);
+    CHECK(crafts == 51);  // of the 86 files; the rest need mod parts (FAR, Pwings, ...)
+    CHECK(parts == 3020);
     CHECK(linesLinked > 0);
     CHECK(toggles > 0);
     CHECK(drawsChecked > 0);

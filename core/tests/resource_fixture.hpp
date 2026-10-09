@@ -41,6 +41,7 @@ struct Game15 {
             s = s * 1664525u + 1013904223u;
             return static_cast<int32_t>(s);
         };
+        support::InstallUpgradeHooks(data);
         ResourceSetup::database = &data.database;
         ResourceSetup::ResetConfig();
         ResourceCache::getConfigNodes = [this](const std::string& t) { return data.database.GetConfigNodes(t); };

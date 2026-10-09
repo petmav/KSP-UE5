@@ -28,7 +28,7 @@ bool IsNullOrEmpty(const std::string& s) { return s.empty(); }
 
 ModuleResourceAutoShiftState::ModuleResourceAutoShiftState() : PartModule(*GetPartModuleClass("ModuleResourceAutoShiftState")) {}
 
-// ModuleResourceAutoShiftState.cs:50 (UI_FloatRange limits, guiNames and scene visibility are PAW state: not modelled)
+// ModuleResourceAutoShiftState.cs:56 (UI_FloatRange limits, guiNames and scene visibility are PAW state: not modelled)
 void ModuleResourceAutoShiftState::OnStart(StartState state) {
     PartModule::OnStart(state);
     const std::string affectedResourceName = Get<std::string>("affectedResourceName");
@@ -92,45 +92,45 @@ void ModuleResourceAutoShiftState::OnStart(StartState state) {
     }
 }
 
-// ModuleResourceAutoShiftState.cs:122 (float stores: `resourceShutOffPercent + 1f` is a single float operation)
+// ModuleResourceAutoShiftState.cs:163 (float stores: `resourceShutOffPercent + 1f` is a single float operation)
 void ModuleResourceAutoShiftState::ModifyStartUpPercent() {
     if (Get<float>("resourceStartUpPercent") <= Get<float>("resourceShutOffPercent"))
         Set<float>("resourceStartUpPercent", Get<float>("resourceShutOffPercent") + 1.0f);
     if (resource != nullptr) resource->startUpPercent = Get<float>("resourceStartUpPercent");
 }
 
-// ModuleResourceAutoShiftState.cs:132
+// ModuleResourceAutoShiftState.cs:175
 void ModuleResourceAutoShiftState::ModifyShutOffAmount() {
     if (Get<float>("resourceShutOffAmount") >= Get<float>("resourceStartUpAmount"))
         Set<float>("resourceShutOffAmount", Get<float>("resourceStartUpAmount") - 1.0f);
     if (resource != nullptr) resource->shutOffAmount = Get<float>("resourceShutOffAmount");
 }
 
-// ModuleResourceAutoShiftState.cs:142
+// ModuleResourceAutoShiftState.cs:187
 void ModuleResourceAutoShiftState::ModifyStartUpAmount() {
     if (Get<float>("resourceStartUpAmount") <= Get<float>("resourceShutOffAmount"))
         Set<float>("resourceStartUpAmount", Get<float>("resourceShutOffAmount") + 1.0f);
     if (resource != nullptr) resource->startUpAmount = Get<float>("resourceStartUpAmount");
 }
 
-// ModuleResourceAutoShiftState.cs:152
+// ModuleResourceAutoShiftState.cs:199
 void ModuleResourceAutoShiftState::ModifyShutOffPercent() {
     if (Get<float>("resourceShutOffPercent") >= Get<float>("resourceStartUpPercent"))
         Set<float>("resourceShutOffPercent", Get<float>("resourceStartUpPercent") - 1.0f);
     if (resource != nullptr) resource->shutOffPercent = Get<float>("resourceShutOffPercent");
 }
 
-// ModuleResourceAutoShiftState.cs:162 (the scene-dependent field visibility is UI)
+// ModuleResourceAutoShiftState.cs:211 (the scene-dependent field visibility is UI)
 void ModuleResourceAutoShiftState::ModifyAmountPercent() {
     if (resource != nullptr) resource->shutOffStartUpUsePercent = Get<bool>("resourceShutOffStartUpUsePercent");
 }
 
-// ModuleResourceAutoShiftState.cs:183 (moduleAutoShiftNameField.SetSceneVisibility(Flight, state))
+// ModuleResourceAutoShiftState.cs:233 (moduleAutoShiftNameField.SetSceneVisibility(Flight, state))
 void ModuleResourceAutoShiftState::ToggleWarningVisibility(bool state) { warningVisible = state; }
 
 // ---- ModuleToggleCrossfeed ------------------------------------------------------------------------------------------------
 
-// ModuleToggleCrossfeed.cs:31
+// ModuleToggleCrossfeed.cs:43
 void ModuleToggleCrossfeed::ToggleEvent() {
     Set<bool>("crossfeedStatus", !Get<bool>("crossfeedStatus"));
     Part* p = PartOf(*this);
@@ -153,7 +153,7 @@ void ModuleToggleCrossfeed::ToggleEvent() {
     UpdateCrossfeed(true);
 }
 
-// ModuleToggleCrossfeed.cs:53
+// ModuleToggleCrossfeed.cs:67
 void ModuleToggleCrossfeed::ToggleAction(KSPActionParam& /*param*/) {
     bool flag = Get<bool>("eventPropagatesInEditor");
     bool flag2 = Get<bool>("eventPropagatesInFlight");
@@ -164,34 +164,34 @@ void ModuleToggleCrossfeed::ToggleAction(KSPActionParam& /*param*/) {
     Set<bool>("eventPropagatesInFlight", flag2);
 }
 
-// ModuleToggleCrossfeed.cs:65
+// ModuleToggleCrossfeed.cs:78
 void ModuleToggleCrossfeed::ToggleAction(int actionType) {
     if (actionType == 1) Deactivate();
     else Activate();
 }
 
-// ModuleToggleCrossfeed.cs:75
+// ModuleToggleCrossfeed.cs:91
 void ModuleToggleCrossfeed::EnableAction(KSPActionParam&) { Activate(); }
 
-// ModuleToggleCrossfeed.cs:80
+// ModuleToggleCrossfeed.cs:96
 void ModuleToggleCrossfeed::Activate() {
     Set<bool>("crossfeedStatus", true);
     UpdateCrossfeed(true);
 }
 
-// ModuleToggleCrossfeed.cs:89
+// ModuleToggleCrossfeed.cs:103
 void ModuleToggleCrossfeed::DisableAction(KSPActionParam&) { Deactivate(); }
 
-// ModuleToggleCrossfeed.cs:94
+// ModuleToggleCrossfeed.cs:108
 void ModuleToggleCrossfeed::Deactivate() {
     Set<bool>("crossfeedStatus", false);
     UpdateCrossfeed(true);
 }
 
-// ModuleToggleCrossfeed.cs:107
+// ModuleToggleCrossfeed.cs:114
 void ModuleToggleCrossfeed::Start() { UpdateCrossfeed(false); }
 
-// ModuleToggleCrossfeed.cs:116 (while the prefab compiles part.partInfo is null; a Part without partInfo.partPrefab behaves the same)
+// ModuleToggleCrossfeed.cs:119 (while the prefab compiles part.partInfo is null; a Part without partInfo.partPrefab behaves the same)
 void ModuleToggleCrossfeed::OnAwake() {
     PartModule::OnAwake();
     toggleE = Events()["ToggleEvent"];
@@ -206,13 +206,13 @@ void ModuleToggleCrossfeed::OnAwake() {
     if (part != nullptr && (p == nullptr || p->partInfo == nullptr || p->partInfo->partPrefab == nullptr)) defaultCrossfeedStatus = part->fields.fuelCrossFeed;
 }
 
-// ModuleToggleCrossfeed.cs:127
+// ModuleToggleCrossfeed.cs:132
 void ModuleToggleCrossfeed::OnLoad(const ConfigNode& node) {
     PartModule::OnLoad(node);
     UpdateCrossfeed(false);
 }
 
-// ModuleToggleCrossfeed.cs:134
+// ModuleToggleCrossfeed.cs:138
 void ModuleToggleCrossfeed::OnStart(StartState state) {
     PartModule::OnStart(state);
     bool flag = true;
@@ -243,12 +243,12 @@ void ModuleToggleCrossfeed::UpdateCrossfeed(bool /*fireEvent*/) {
     disableA->SetGuiName(Get<std::string>("disableText"));
 }
 
-bool ModuleToggleCrossfeed::CrossfeedToggleableEditor() { return Get<bool>("toggleEditor"); }  // :178
-bool ModuleToggleCrossfeed::CrossfeedToggleableFlight() { return Get<bool>("toggleFlight"); }  // :183
-bool ModuleToggleCrossfeed::CrossfeedRequiresTech() { return !Get<std::string>("techRequired").empty(); }  // :188
-std::string ModuleToggleCrossfeed::CrossfeedTech() { return Get<std::string>("techRequired"); }  // :193
+bool ModuleToggleCrossfeed::CrossfeedToggleableEditor() { return Get<bool>("toggleEditor"); }  // :176
+bool ModuleToggleCrossfeed::CrossfeedToggleableFlight() { return Get<bool>("toggleFlight"); }  // :181
+bool ModuleToggleCrossfeed::CrossfeedRequiresTech() { return !Get<std::string>("techRequired").empty(); }  // :186
+std::string ModuleToggleCrossfeed::CrossfeedTech() { return Get<std::string>("techRequired"); }  // :191
 
-// ModuleToggleCrossfeed.cs:198
+// ModuleToggleCrossfeed.cs:196
 bool ModuleToggleCrossfeed::CrossfeedHasTech() {
     Game* g = SaveEnvironment::Current().currentGame;
     if (g != nullptr && (g->Mode == Game_Modes::CAREER || g->Mode == Game_Modes::SCIENCE_SANDBOX))
@@ -256,7 +256,7 @@ bool ModuleToggleCrossfeed::CrossfeedHasTech() {
     return true;
 }
 
-// ModuleToggleCrossfeed.cs:208
+// ModuleToggleCrossfeed.cs:205
 std::string ModuleToggleCrossfeed::GetModuleDisplayName() { return Localizer::Format("#autoLOC_236032"); }
 
 // Object.Instantiate copies the public field defaultCrossfeedStatus with the KSPFields
@@ -289,16 +289,16 @@ void CModuleFuelLine::CloseFuelLine() {
     }
 }
 
-// CModuleFuelLine.cs:46 (compoundPart.maxLength.ToString("0.0"))
+// CModuleFuelLine.cs:43 (compoundPart.maxLength.ToString("0.0"))
 std::string CModuleFuelLine::GetInfo() {
     if (compoundPart == nullptr) throw Nre();
     return Localizer::Format("#autoLOC_216749", {dotnet::FormatSingleF(compoundPart->compoundFields.maxLength, 1)}) + cacheAutoLOC_216750;
 }
 
-// CModuleFuelLine.cs:66
+// CModuleFuelLine.cs:63
 std::string CModuleFuelLine::GetModuleDisplayName() { return cacheAutoLOC_216757; }
 
-// CModuleFuelLine.cs:71
+// CModuleFuelLine.cs:68
 void CModuleFuelLine::CacheLocalStrings() {
     cacheAutoLOC_216750 = Localizer::Format("#autoLOC_216750");
     cacheAutoLOC_216757 = Localizer::Format("#autoLOC_216757");

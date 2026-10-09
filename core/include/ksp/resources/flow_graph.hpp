@@ -91,7 +91,7 @@ private:
     static void UpdatePartVertex(bool request, Part* part, dotnet::Dictionary<Part*, Vertex<Part*>*>& lookup);  // :33
 };
 
-// StronglyConnectedComponentFinder.cs:6 (static class; the recursion state is per call here)
+// StronglyConnectedComponentFinder.cs:16 (static class; the recursion state is per call here)
 class StronglyConnectedComponentFinder {
 public:
     static std::list<std::list<Part*>> DetectCycle(FlowGraph<Part*>& flowGraph);       // :16

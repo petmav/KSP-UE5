@@ -46,12 +46,12 @@ public:
     PartResourceList& operator=(PartResourceList&&) noexcept = default;
 
     Part* part = nullptr;          // :13 private Part part (serialized)
-    bool simulationSet = false;    // :20
+    bool simulationSet = false;    // :16
 
     bool IsValid() const { return valid_; }                                     // :18
     PartResource& At(int index) const { return *dict_.At(index); }              // :20 this[int]
     PartResource& operator[](size_t index) const { return *dict_.At(static_cast<int>(index)); }
-    PartResource* Get(std::string_view name) const { return Get(MonoStringHash(name)); }  // :22 this[string] / :115 Get(string)
+    PartResource* Get(std::string_view name) const { return Get(MonoStringHash(name)); }  // :115 / :120 Get(string)
     PartResource* Get(int id) const;                                            // :120
     int Count() const { return dict_.Count(); }                                 // :34
     size_t size() const { return static_cast<size_t>(dict_.Count()); }

@@ -6,6 +6,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -17,7 +18,9 @@
 #include "ksp/parts/part.hpp"
 #include "ksp/resources/part_set.hpp"
 #include "ksp/resources/resource_flow_host.hpp"
+#include "ksp/save/save_environment.hpp"
 #include "ksp/save/ship_construct.hpp"
+#include "ksp/save/upgrade_pipeline.hpp"
 
 namespace ksp::support {
 
@@ -31,6 +34,45 @@ struct CraftTree {
         return r;
     }
 };
+
+// The v180 upgrade scripts read the prefab module's float field (v180_ModuleControlSurface.cs:52 GetBaseModule: the last module of the
+// class in partPrefab.Modules); SaveEnvironment::prefabModuleFloat answers from the loaded parts.
+inline void InstallUpgradeHooks(GameData& data) {
+    SaveEnvironment::Current().prefabModuleFloat = [&data](std::string_view part, std::string_view moduleClass,
+                                                           std::string_view field) -> std::optional<float> {
+        const AvailablePart* ap = data.parts.getPartInfoByName(part);
+        if (ap == nullptr || !ap->partPrefab) return std::nullopt;
+        PartModuleList& mods = ap->partPrefab->Modules();
+        for (size_t i = mods.Count(); i-- > 0;) {
+            PartModule* m = mods.GetModule(i);
+            if (m->ClassName() != moduleClass) continue;
+            const ModuleValue v = m->Fields().GetValue(field);
+            if (const float* f = std::get_if<float>(&v)) return *f;
+            return std::nullopt;
+        }
+        return std::nullopt;
+    };
+}
+
+// ShipConstruction.CreateConstructFromTemplate (ShipConstruction.cs:1113): the craft file goes through the upgrade pipeline
+// (renamed parts such as liquidEngine1-2 -> liquidEngineMainsail.v2) and then ShipConstruct.LoadShip.
+inline bool LoadCraftFile(const std::string& path, ShipConstruct& ship, std::string& err) {
+    ConfigNode::NodePtr root = ConfigNode::Load(path);
+    if (!root) {
+        err = "cannot read " + path;
+        return false;
+    }
+    const std::string shipName = root->GetValue("ship") ? *root->GetValue("ship") : std::string();
+    ConfigNode::NodePtr upgraded;
+    KSPUpgradePipeline::Process(
+        root, shipName, SaveUpgradePipeline::LoadContext::Craft, [&](const ConfigNode::NodePtr& n) { upgraded = n; },
+        [&](KSPUpgradePipeline::UpgradeFailOption, const ConfigNode::NodePtr&) {});
+    if (!upgraded) {
+        err = "upgrade pipeline failed for " + path;
+        return false;
+    }
+    return ship.LoadShip(*upgraded, 0, true, err);
+}
 
 // ShipConstruct.cs:378-640 (part creation); false in `ok` when a part is missing from the stock database
 inline CraftTree BuildCraftTree(GameData& data, const ShipConstruct& ship) {

@@ -44,7 +44,7 @@ void ResourceSetup::ResetConfig() {
     resConfigLoaded_ = false;
 }
 
-// ResourceSetup.cs:24
+// ResourceSetup.cs:22
 ResourceSetup::ResourceConfig* ResourceSetup::ResConfig() {
     if (!resConfigLoaded_) {
         resConfig_.reset(LoadResourceConfig());
@@ -88,12 +88,12 @@ double ResourceBroker::AmountAvailable(Part* part, int resID, double deltaTime, 
     return amount;
 }
 
-// ResourceBroker.cs:25
+// ResourceBroker.cs:23
 double ResourceBroker::RequestResource(Part* part, const std::string& resName, double resAmount, double deltaTime, ResourceFlowMode flowMode) {
     return RequestResource(part, MonoStringHash(resName), resAmount, deltaTime, flowMode);
 }
 
-// ResourceBroker.cs:30
+// ResourceBroker.cs:28
 double ResourceBroker::RequestResource(Part* part, int resID, double resAmount, double deltaTime, ResourceFlowMode flowMode) {
     if (flowMode == ResourceFlowMode::NULL_) flowMode = DefaultFlowOf(resID);
     double num = resAmount;
@@ -104,12 +104,12 @@ double ResourceBroker::RequestResource(Part* part, int resID, double resAmount, 
     return part->RequestResource(resID, num, flowMode);
 }
 
-// ResourceBroker.cs:46
+// ResourceBroker.cs:43
 double ResourceBroker::StorageAvailable(Part* part, const std::string& resName, double deltaTime, ResourceFlowMode flowMode, double FillAmount) {
     return StorageAvailable(part, MonoStringHash(resName), deltaTime, flowMode, FillAmount);
 }
 
-// ResourceBroker.cs:51
+// ResourceBroker.cs:48
 double ResourceBroker::StorageAvailable(Part* part, int resID, double /*deltaTime*/, ResourceFlowMode flowMode, double FillAmount) {
     if (flowMode == ResourceFlowMode::NULL_) flowMode = DefaultFlowOf(resID);
     double amount = 0.0, maxAmount = 0.0;
@@ -117,12 +117,12 @@ double ResourceBroker::StorageAvailable(Part* part, int resID, double /*deltaTim
     return amount;
 }
 
-// ResourceBroker.cs:61
+// ResourceBroker.cs:58
 double ResourceBroker::StoreResource(Part* part, const std::string& resName, double resAmount, double deltaTime, ResourceFlowMode flowMode) {
     return StoreResource(part, MonoStringHash(resName), resAmount, deltaTime, flowMode);
 }
 
-// ResourceBroker.cs:66
+// ResourceBroker.cs:63
 double ResourceBroker::StoreResource(Part* part, int resID, double resAmount, double /*deltaTime*/, ResourceFlowMode flowMode) {
     if (flowMode == ResourceFlowMode::NULL_) flowMode = DefaultFlowOf(resID);
     return part->RequestResource(resID, 0.0 - resAmount, flowMode);
@@ -234,7 +234,7 @@ ConverterResults ResourceConverter::ProcessRecipe(double deltaTime, ConversionRe
     return result;
 }
 
-// ResourceConverter.cs:200
+// ResourceConverter.cs:163
 void ResourceConverter::CacheLocalStrings() {
     cacheAutoLOC_6002353 = Localizer::Format("#autoLOC_6002353");
     cacheAutoLOC_261274 = Localizer::Format("#autoLOC_261274");

@@ -53,8 +53,8 @@ public:
     virtual ~ModuleResource() = default;
     virtual void OnAwake();                             // :66
     void Load(const ConfigNode& node);                  // :74
-    void Save(ConfigNode& node) const;                  // :105
-    bool IsDeprived(float requestThreshold = 0.9f) const;  // :140
+    void Save(ConfigNode& node) const;                  // :112
+    bool IsDeprived(float requestThreshold = 0.9f) const;  // :143
 
 private:
     const PartResourceDefinition* cachedResourceDef_ = nullptr;
@@ -72,11 +72,11 @@ public:
     virtual ~ModuleResourceHandler() = default;
     virtual void OnAwake();                                        // :19
     virtual void OnLoad(const ConfigNode& node);                   // :30
-    void SetPartModule(PartModule* p) { partModule = p; }          // :80
+    void SetPartModule(PartModule* p) { partModule = p; }          // :73
 
-    // :85 / :104 (error: the C# `ref string error`)
-    virtual double GetAverageInput();                              // :133
-    // :150 / :155: returns the satisfied fraction (average = the mean over the inputs), `error` receives the missing resources
+    // (the C# `ref string error` is a std::string&)
+    virtual double GetAverageInput();                              // :121
+    // :137 / :142: returns the satisfied fraction (average = the mean over the inputs), `error` receives the missing resources
     virtual double UpdateModuleResourceInputs(std::string& error, double rateMultiplier, double threshold, bool returnOnFirstLack, bool average,
                                               bool stringOps);
     virtual double UpdateModuleResourceInputs(std::string& error, bool useFlowMode, double rateMultiplier, double threshold, bool returnOnFirstLack,
@@ -84,14 +84,14 @@ public:
     // (C# gives `stringOps` a default of true on every overload; with the bool-returning overloads below present a call that omits
     // it binds to those, so the double-returning ones take it explicitly here)
     virtual bool UpdateModuleResourceInputs(std::string& error, bool useFlowMode, double rateMultiplier, double threshold, bool returnOnFirstLack,
-                                            bool stringOps = true);                       // :296
-    virtual bool UpdateModuleResourceInputs(std::string& error, double rateMultiplier, double threshold, bool returnOnFirstLack, bool stringOps = true);  // :301
-    virtual double UpdateModuleResourceOutputs(double rateMultiplier = 1.0, double minAbsValue = 0.0);  // :306
-    bool HasEnoughResourcesToAutoStart();                          // :331
-    bool IsResourceBelowShutOffLimit(PartResource& partRes);  // :369
+                                            bool stringOps = true);                       // :269
+    virtual bool UpdateModuleResourceInputs(std::string& error, double rateMultiplier, double threshold, bool returnOnFirstLack, bool stringOps = true);  // :274
+    virtual double UpdateModuleResourceOutputs(double rateMultiplier = 1.0, double minAbsValue = 0.0);  // :279
+    bool HasEnoughResourcesToAutoStart();                          // :305
+    bool IsResourceBelowShutOffLimit(PartResource& partRes);  // :348
 
 protected:
-    void LoadResList(std::vector<std::shared_ptr<ModuleResource>>& list, const ConfigNode& node);  // :86
+    void LoadResList(std::vector<std::shared_ptr<ModuleResource>>& list, const ConfigNode& node);  // :78
 };
 
 }  // namespace ksp

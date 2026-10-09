@@ -129,7 +129,7 @@ public:
 struct DistributionData {
     float PresenceChance = 0, MinAbundance = 0, MaxAbundance = 0, Variance = 0, Dispersal = 0;
     float MinAltitude = 0, MaxAltitude = 0, MinRange = 0, MaxRange = 0;
-    bool HasVariableAltitude() const { return static_cast<double>(MinAltitude) > 1E-09 || static_cast<double>(MaxAltitude) > 1E-09; }  // :27
+    bool HasVariableAltitude() const { return static_cast<double>(MinAltitude) > 1E-09 || static_cast<double>(MaxAltitude) > 1E-09; }  // :21
 };
 
 // ResourceData.cs:1

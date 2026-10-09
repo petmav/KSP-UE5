@@ -29,7 +29,7 @@ public:
     };
     static ResourceSetup& Instance();                       // :20
     static void DestroyInstance();                          // OnDestroy (:26)
-    // :24 ResConfig: loaded once from GameDatabase.Instance (null when there is no RESOURCE_CONFIGURATION node)
+    // :22 ResConfig: loaded once from GameDatabase.Instance (null when there is no RESOURCE_CONFIGURATION node)
     ResourceConfig* ResConfig();
     // test/host hook: the GameDatabase to read (default GameDatabase::Instance())
     static inline const GameDatabase* database = nullptr;
@@ -47,12 +47,12 @@ class ResourceBroker : public IResourceBroker {
 public:
     double AmountAvailable(Part* part, const std::string& resName, double deltaTime, ResourceFlowMode flowMode) override;  // :3
     double AmountAvailable(Part* part, int resID, double deltaTime, ResourceFlowMode flowMode) override;                   // :8
-    double RequestResource(Part* part, const std::string& resName, double resAmount, double deltaTime, ResourceFlowMode flowMode) override;  // :25
-    double RequestResource(Part* part, int resID, double resAmount, double deltaTime, ResourceFlowMode flowMode) override;                   // :30
-    double StorageAvailable(Part* part, const std::string& resName, double deltaTime, ResourceFlowMode flowMode, double FillAmount) override;  // :46
-    double StorageAvailable(Part* part, int resID, double deltaTime, ResourceFlowMode flowMode, double FillAmount) override;                   // :51
-    double StoreResource(Part* part, const std::string& resName, double resAmount, double deltaTime, ResourceFlowMode flowMode) override;     // :61
-    double StoreResource(Part* part, int resID, double resAmount, double deltaTime, ResourceFlowMode flowMode) override;                       // :66
+    double RequestResource(Part* part, const std::string& resName, double resAmount, double deltaTime, ResourceFlowMode flowMode) override;  // :23
+    double RequestResource(Part* part, int resID, double resAmount, double deltaTime, ResourceFlowMode flowMode) override;                   // :28
+    double StorageAvailable(Part* part, const std::string& resName, double deltaTime, ResourceFlowMode flowMode, double FillAmount) override;  // :43
+    double StorageAvailable(Part* part, int resID, double deltaTime, ResourceFlowMode flowMode, double FillAmount) override;                   // :48
+    double StoreResource(Part* part, const std::string& resName, double resAmount, double deltaTime, ResourceFlowMode flowMode) override;     // :58
+    double StoreResource(Part* part, int resID, double resAmount, double deltaTime, ResourceFlowMode flowMode) override;                       // :63
 };
 
 // ResourceConverter.cs:5
@@ -62,7 +62,7 @@ public:
     ResourceConverter() : owned_(std::make_unique<ResourceBroker>()), broker_(owned_.get()) {}  // :18
     // :23 (resModule may be null; it is only passed to GameEvents.OnResourceConverterOutput)
     ConverterResults ProcessRecipe(double deltaTime, ConversionRecipe& recipe, Part* resPart, PartModule* resModule, float efficiencyBonus);
-    static void CacheLocalStrings();                                            // :200
+    static void CacheLocalStrings();                                            // :163
 
 private:
     std::unique_ptr<IResourceBroker> owned_;
