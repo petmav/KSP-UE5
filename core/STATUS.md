@@ -1605,7 +1605,7 @@ Expected values come from the decompiled control flow, the real stock configs, t
 - `ProtoPartResourceSnapshot.GetCurrentResourceInfo` needs `AvailablePart.ResourceInfo` (part-info panel records).
 - The WP-13 craft statistics ("33 of 86 craft load", 1,967 parts) in `tests/test_part.cpp` use `LoadShip` without the upgrade pipeline; with the pipeline 51 of the 86 files load.
 
-Fresh run (`./run_tests.sh -f`, Linux release): see the commit message of the final commit and "Fresh run" below.
+Fresh run (`./run_tests.sh -f`, Linux release): 22/22 ctest tests passed (`unit` 195 cases, `capture.resource_mass` new, `capture.part_database`, `corpus.gamedata`, all golden / capture gates); `corpus.saves` is registered only where `decompiled/KSP-dev/saves` exists (not on this VM, as before WP-15).
 
 ### Commits (branch `wp15`)
 
