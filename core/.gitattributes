@@ -3,3 +3,5 @@
 tests/data/** -text
 third_party/** -text
 data/terrain/maps/** binary
+# vendored original game data (saves, GameData mirror): byte-exact
+testdata/** -text
