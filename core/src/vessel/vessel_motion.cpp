@@ -90,6 +90,43 @@ float Vessel::GetTotalMass() {
     return static_cast<float>(totalMass);
 }
 
+namespace {
+// FlightIntegrator.cs:700 GetPhysicslessChildMass (a part without a rigid body adds its mass to its parent chain)
+float FIGetPhysicslessChildMass(Part& part) {
+    float num = 0.0f;
+    int count = static_cast<int>(part.children.size());
+    while (count-- > 0) {
+        Part* part2 = part.children[static_cast<size_t>(count)];
+        if (!part2->hasRigidbody)
+            num = f32store(fx(num) + (fx(part2->fields.mass) + fx(part2->fields.resourceMass) + fx(FIGetPhysicslessChildMass(*part2))));
+    }
+    return num;
+}
+}  // namespace
+
+// FlightIntegrator.cs:445 UpdateMassStats (mass half)
+void Vessel::UpdateMassStats() {
+    int index = static_cast<int>(parts.size());
+    while (index-- > 0) {
+        Part* part = parts[static_cast<size_t>(index)];
+        part->fields.resourceMass = part->GetResourceMass();
+    }
+    int index2 = static_cast<int>(parts.size());
+    while (index2-- > 0) {
+        Part* part = parts[static_cast<size_t>(index2)];
+        if (part->hasRigidbody) {
+            float num = f32store(fx(part->fields.mass) + fx(part->fields.resourceMass) + fx(FIGetPhysicslessChildMass(*part)));
+            const float minMass = part->partInfo->MinimumMass();
+            const float absNum = num < 0.0f ? 0.0f - num : num;  // Mathf.Abs
+            if (num < minMass) num = minMass;                     // Mathf.Clamp(num, MinimumMass, Abs(num))
+            else if (num > absNum) num = absNum;
+            part->fields.physicsMass = num;
+        } else {
+            part->fields.physicsMass = 0.0;
+        }
+    }
+}
+
 // Vessel.cs:3441
 double Vessel::GetUnloadedVesselMass() {
     double num = 0.0;

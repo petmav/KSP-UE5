@@ -283,8 +283,17 @@ void Vessel::GoOffRails() {
     skipGroundPositioningForDroppedPart = false;
     physicsHoldLock_ = false;  // RemovePhysicsHoldLock
     if (env.precalcGoOffRails) env.precalcGoOffRails(*this);
-    if (LandedOrSplashed() && !Planetarium::FrameIsRotating()) return;
+    // FlightGlobals.RefFrameIsRotating (FlightGlobals.cs:224): currentMainBody.rotates && currentMainBody.inverseRotation, with
+    // currentMainBody the active vessel's body (this vessel's when there is no active vessel)
+    const CelestialBody* frameBody = FlightRegistry::ActiveVessel != nullptr ? FlightRegistry::ActiveVessel->mainBody() : mainBody();
+    const bool refFrameIsRotating = frameBody->rotates && frameBody->inverseRotation;
+    if (LandedOrSplashed() && !refFrameIsRotating) return;
     for (auto& m : vesselModules) m->OnGoOffRails();
+    if (this == FlightRegistry::ActiveVessel && env.krakensbaneAddFrameVelocity) {
+        const Vector3d rot = orbit().referenceBody->inverseRotation ? orbit().referenceBody->getRFrmVel(Vector3d(vesselTransform.position)) : Vector3d();
+        env.krakensbaneAddFrameVelocity(orbit().GetVel(FlightRegistry::ActiveVessel->mainBody()) - rot -
+                                        (env.krakensbaneFrameVelocity ? env.krakensbaneFrameVelocity() : Vector3d()));
+    }
     packed = false;
     for (Part* p : parts) {
         if (env.unpackPart) env.unpackPart(*p);

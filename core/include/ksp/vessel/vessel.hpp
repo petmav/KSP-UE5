@@ -133,6 +133,8 @@ struct VesselEnvironment {
     std::function<double(CelestialBody&, const Vector3d&)> fullTemperatureAtPosition;
     // PhysicsGlobals / Krakensbane frame velocity added to rb velocity (Krakensbane.GetFrameVelocity): unset = zero
     std::function<Vector3d()> krakensbaneFrameVelocity;
+    // Krakensbane.AddFrameVelocity (GoOffRails of the active vessel): unset = nothing to do
+    std::function<void(const Vector3d&)> krakensbaneAddFrameVelocity;
     // ShipConstruction.CalculateCraftSize (Vessel.UpdateVesselSize): unset = vesselSize stays
     std::function<Vector3f(const std::vector<Part*>&, Part*)> calculateCraftSize;
 };
@@ -444,6 +446,9 @@ public:
 
     // ---- mass properties ------------------------------------------------------------------------------------------------------------
     float GetTotalMass();                                          // :3422
+    // FlightIntegrator.UpdateMassStats, the mass part (FlightIntegrator.cs:445-491, 700-713): Part.resourceMass, physicsMass with the
+    // massless children's mass folded into the part that carries them. The thermal-mass half is WP-22's, rb.mass is the engine's.
+    void UpdateMassStats();
     double GetUnloadedVesselMass();                                // :3441
     // VesselPrecalculate.CalculatePhysicsStats (VesselPrecalculate.cs:387-498) over per-part rigid-body data: total physics mass,
     // CoMD / CoM / localCoM, rb velocity, angular velocity, MOI and angular momentum. `rb(part)` is the engine's answer (default:

@@ -77,7 +77,16 @@ CraftParts BuildCraftParts(const ShipConstruct& ship, const std::function<const 
             an.FindAttachedPart(all);
         }
     }
-    for (auto& p : out.parts) p->InitializeModules();
+    // ShipConstruct.cs:670-678: orgPos / orgRot relative to the transform root (the root part), packed = true, then InitializeModules
+    Part* rootPart = out.parts.empty() ? nullptr : out.parts[0]->localRoot();
+    for (auto& p : out.parts) {
+        const PartTransform& rt = rootPart->partTransform;
+        p->fields.orgPos = rt.InverseTransformPoint(p->partTransform.position);
+        const Quaternionf rInv(0.0f - rt.rotation.x, 0.0f - rt.rotation.y, 0.0f - rt.rotation.z, rt.rotation.w);  // Quaternion.Inverse of a unit rotation
+        p->fields.orgRot = rInv * p->partTransform.rotation;
+        p->fields.packed = true;
+        p->InitializeModules();
+    }
     out.ok = true;
     return out;
 }
@@ -117,8 +126,11 @@ std::unique_ptr<Vessel> AssembleVesselFromCraft(const ShipConstruct& ship,
     if (!cp.ok) return nullptr;
     auto vessel = std::make_unique<Vessel>();
     Part* localRoot = cp.parts[0]->localRoot();
-    localRoot->partTransform.position = options.rootPosition;
-    localRoot->partTransform.rotation = options.rootRotation;
+    // the launch site placement moves the whole ship (the parts hang under the root transform)
+    for (auto& up : cp.parts) {
+        up->partTransform.position = options.rootPosition + options.rootRotation * up->fields.orgPos;
+        up->partTransform.rotation = options.rootRotation * up->fields.orgRot;
+    }
     vessel->vesselTransform.position = options.rootPosition;
     vessel->vesselTransform.rotation = options.rootRotation;
     std::vector<std::unique_ptr<Part>> owned = std::move(cp.parts);

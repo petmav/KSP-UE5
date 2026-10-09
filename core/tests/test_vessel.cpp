@@ -101,6 +101,15 @@ struct World14 {
         Vessel::env = VesselEnvironment{};
     }
     CelestialBody& Kerbin() { return *sys->GetBodyByName("Kerbin"); }
+    // Unity floats cannot hold a vessel at Kerbin's absolute world position (1.4e10 m): like the floating origin, put the pad at
+    // the origin (Kerbin.position is the body's world position, a plain field) and return the origin as the vessel position
+    Vector3f PlaceKerbinAtPad() {
+        CelestialBody& k = Kerbin();
+        k.position = Vector3d();
+        const Vector3d pad = k.GetWorldSurfacePosition(-0.0972077486779459, -74.5576813534722, 75.0);
+        k.position = Vector3d() - pad;
+        return Vector3f();
+    }
     const AvailablePart& Info(const char* name) {
         const AvailablePart* p = data.parts.getPartInfoByName(name);
         REQUIRE_MESSAGE(p != nullptr, name);
@@ -117,7 +126,7 @@ struct World14 {
         std::string err;
         REQUIRE_MESSAGE(ship.LoadShip(*root, 0, true, err), err);
         AssembleOptions ao;
-        ao.rootPosition = Kerbin().GetWorldSurfacePosition(-0.0972077486779459, -74.5576813534722, 75.0).ToVector3f();
+        ao.rootPosition = PlaceKerbinAtPad();
         ao.isLanded = landed;
         auto v = AssembleVesselFromCraft(ship, Lookup(), ao);
         REQUIRE(v != nullptr);
@@ -524,4 +533,980 @@ TEST_CASE("WP-14 physprofile save: ProtoVessel.Load -> Vessel.Load -> BackupVess
     CHECK(modulesDiffer.size() == 2);  // OnSave of ModuleReactionWheel (WheelState: WP-24) and ModuleDataTransmitter (WP-39)
     CHECK(modulesDiffer.count("ModuleReactionWheel") == 1);
     CHECK(modulesDiffer.count("ModuleDataTransmitter") == 1);
+}
+
+// ======================================================== helpers for hand-built vessels (stock part prefabs)
+
+namespace {
+
+// A vertical stack of stock parts (each the STACK child of the previous), assembled like AssembleForLaunch (fromShipAssembly)
+std::unique_ptr<Vessel> Stack14(World14& w, std::initializer_list<const char*> names, bool initialize = true) {
+    std::vector<std::unique_ptr<Part>> owned;
+    uint32_t id = 100;
+    for (const char* n : names) {
+        const AvailablePart& ap = w.Info(n);
+        auto p = Part::Instantiate(*ap.partPrefab);
+        p->partInfo = &ap;
+        p->gameObjectName = ap.name;
+        p->fields.flightID = id++;
+        p->fields.persistentId = id * 7;
+        p->UpdateMass();
+        if (!owned.empty()) p->setParent(owned.back().get());
+        owned.push_back(std::move(p));
+    }
+    auto v = std::make_unique<Vessel>();
+    Part* root = owned.front().get();
+    root->partTransform.position = w.PlaceKerbinAtPad();
+    v->vesselTransform = root->partTransform;
+    v->AdoptParts(std::move(owned), root);
+    v->vesselName = "Test vessel";
+    if (initialize) {
+        REQUIRE(v->Initialize(true, false, false, false));
+    } else {  // a bare vessel: the part list findVesselParts would build, no orbit driver, not loaded
+        for (Part* p = root; p != nullptr; p = p->children.empty() ? nullptr : p->children[0]) {
+            v->parts.push_back(p);
+            p->vessel = v.get();
+        }
+    }
+    return v;
+}
+
+}  // namespace
+
+// ======================================================== situations
+
+TEST_CASE("WP-14 situation determination: checkLanded / checkSplashed / updateSituation / SetLandedAt (Vessel.cs 1015, 1044, 1185, 3133)") {
+    if (!GameAvailable14()) return;
+    World14 w;
+    auto v = Stack14(w, {"mk1pod.v2", "fuelTankSmallFlat"});
+    std::vector<std::pair<Vessel::Situations, Vessel::Situations>> changes;
+    struct L {
+        std::vector<std::pair<Vessel::Situations, Vessel::Situations>>* out;
+        void Run(GE::HostedFromToAction<Vessel*, Vessel_Situations> d) { out->push_back({d.from, d.to}); }
+    } listener{&changes};
+    GE::onVesselSituationChange.Add(&listener, &L::Run);
+
+    // fromShipAssembly leaves the vessel packed and PRELAUNCH; checkLanded needs it unpacked and loaded
+    CHECK(v->situation == Vessel::Situations::PRELAUNCH);
+    CHECK_FALSE(v->checkLanded());  // packed: Landed is not recomputed (and was not set by the assembly)
+    v->packed = false;
+    v->parts[1]->fields.GroundContact = true;
+    CHECK(v->checkLanded());
+    v->parts[1]->fields.GroundContact = false;
+    v->parts[0]->fields.PermanentGroundContact = true;
+    CHECK(v->checkLanded());  // PermanentGroundContact counts
+    v->parts[0]->fields.PermanentGroundContact = false;
+    v->SetLandedAt("LaunchPad", "", "Launch Pad");
+    CHECK(v->landedAt == "LaunchPad");
+    CHECK(v->displaylandedAt == "Launch Pad");
+    CHECK(v->landedAtLast == "LaunchPad");
+    CHECK_FALSE(v->checkLanded());  // no contact: Landed false and landedAt cleared
+    CHECK(v->landedAt == "");
+    CHECK(v->displaylandedAt == "");
+    CHECK(v->landedAtLast == "LaunchPad");  // remembered
+    v->SetLandedAt("Untagged");              // ignored
+    CHECK(v->landedAt == "");
+    // the facility hook supplies the display name (PSystemSetup.IsFacilityOrLaunchSite)
+    Vessel::env.isFacilityOrLaunchSite = [](const std::string& n, bool& fac, std::string& disp) {
+        fac = n == "KSC";
+        if (n == "KSC" || n == "Runway") {
+            disp = n == "KSC" ? "Kerbal Space Center" : "Runway";
+            return true;
+        }
+        return false;
+    };
+    v->SetLandedAt("Runway");
+    CHECK(v->displaylandedAt == "Runway");
+    v->SetLandedAt("Mun_Craters");  // not a facility: the biome display name of ScienceUtil (hook unset: the converted tag)
+    CHECK(v->displaylandedAt == "Mun Craters");
+    Vessel::env.biomeDisplayName = [](CelestialBody&, const std::string& biome) { return "<" + biome + ">"; };
+    v->SetLandedAt("");
+    v->SetLandedAt("Mun_Craters");
+    CHECK(v->displaylandedAt == "<Mun Craters>");
+    Vessel::env.miniBiomeDisplayNameByUnityTag = [](const std::string& tag) { return "tag:" + tag; };
+    v->SetLandedAt("");
+    v->SetLandedAt("Mun_Craters", "MunTag");
+    CHECK(v->displaylandedAt == "tag:MunTag");  // a GameObject tag wins over the biome name
+    v->SetLandedAt("");
+
+    // checkSplashed
+    v->parts[0]->fields.WaterContact = true;
+    v->Landed = true;
+    CHECK(v->checkSplashed());
+    CHECK_FALSE(v->Landed);
+    v->parts[0]->fields.WaterContact = false;
+    CHECK_FALSE(v->checkSplashed());
+
+    // updateSituation: Landed / PRELAUNCH rules
+    v->Landed = true;
+    v->srfSpeed = 1.0;
+    v->updateSituation();
+    CHECK(v->situation == Vessel::Situations::PRELAUNCH);  // PRELAUNCH stays while slow
+    v->srfSpeed = 2.5;
+    v->updateSituation();
+    CHECK(v->situation == Vessel::Situations::PRELAUNCH);  // `srfSpeed > 2.5` is false at 2.5
+    v->precalc.isEasingGravity = false;
+    v->vesselSpawning = false;
+    v->srfSpeed = 2.6;
+    v->updateSituation();
+    CHECK(v->situation == Vessel::Situations::LANDED);
+    v->srfSpeed = 0.0;
+    v->updateSituation();
+    CHECK(v->situation == Vessel::Situations::LANDED);  // only PRELAUNCH is sticky
+    v->Landed = false;
+    v->Splashed = true;
+    v->updateSituation();
+    CHECK(v->situation == Vessel::Situations::SPLASHED);
+    v->Splashed = false;
+    v->staticPressurekPa = 1.0;
+    v->updateSituation();
+    CHECK(v->situation == Vessel::Situations::FLYING);
+    CHECK(v->BestSituation() == Vessel::Situations::FLYING);
+    // orbit classes from the vessel's orbit around Kerbin
+    CelestialBody& kerbin = w.Kerbin();
+    v->staticPressurekPa = 0.0;
+    auto setOrbit = [&](double e, double sma) {
+        v->orbit() = Orbit(0.0, e, sma, 0.0, 0.0, 0.0, 0.0, &kerbin);
+        v->orbit().Init();
+    };
+    setOrbit(0.0, kerbin.Radius + 100000.0);  // PeA 100 km > 70 km atmosphere
+    v->updateSituation();
+    CHECK(v->situation == Vessel::Situations::ORBITING);
+    CHECK(v->BestSituation() == Vessel::Situations::ORBITING);  // lastSituation is no longer FLYING
+    setOrbit(0.0, kerbin.Radius + 50000.0);
+    v->updateSituation();
+    CHECK(v->situation == Vessel::Situations::SUB_ORBITAL);  // PeA 50 km < atmosphereDepth
+    setOrbit(1.5, -2.0 * kerbin.Radius);
+    v->updateSituation();
+    CHECK(v->situation == Vessel::Situations::ESCAPING);     // eccentricity >= 1
+    setOrbit(0.9, 1.5 * kerbin.sphereOfInfluence);
+    v->updateSituation();
+    CHECK(v->situation == Vessel::Situations::ESCAPING);     // ApR beyond the sphere of influence
+    // onVesselSituationChange fired once per change with (from, to)
+    REQUIRE(changes.size() == 6);  // LANDED, SPLASHED, FLYING, ORBITING, SUB_ORBITAL, ESCAPING (the second ESCAPING is no change)
+    CHECK(changes[0] == std::make_pair(Vessel::Situations::PRELAUNCH, Vessel::Situations::LANDED));  // first change after PRELAUNCH->LANDED
+    CHECK(changes.back().second == Vessel::Situations::ESCAPING);
+    for (size_t i = 1; i < changes.size(); i++) CHECK(changes[i].first == changes[i - 1].second);
+    GE::onVesselSituationChange.Remove(&listener, &L::Run);
+    // ladder: an EVA kerbal holding a ladder takes the situation of the vessel it hangs on
+    struct Eva final : IEvaController {
+        Part* ladder;
+        Part* LadderPart() override { return ladder; }
+    } eva;
+    eva.ladder = v->rootPart;
+    auto kerbal = Stack14(w, {"kerbalEVA"}, false);
+    kerbal->vesselType = VesselType::EVA;
+    kerbal->evaController = &eva;
+    kerbal->parts = {kerbal->rootPart};
+    kerbal->rootPart->vessel = kerbal.get();
+    v->situation = Vessel::Situations::ORBITING;
+    CHECK(kerbal->EVALadderVessel() == v.get());
+    kerbal->updateSituation();
+    CHECK(kerbal->situation == Vessel::Situations::ORBITING);
+    // GetSituationString has a localised string per situation
+    CHECK(Vessel::GetSituationString(Vessel::Situations::ORBITING) != Vessel::GetSituationString(Vessel::Situations::LANDED));
+    CHECK(Vessel::GetLandedAtString("KSC_Pad_Launch") == "LaunchPad");
+    CHECK(Vessel::GetLandedAtString("Runway_East") == "Runway");
+    CHECK(Vessel::GetLandedAtString("KSC_Administration") == "Administration");  // "KSC" removed, "_" -> " ", trimmed
+    CHECK(Vessel::GetLandedAtString("") == "");
+}
+
+// ======================================================== mass properties
+
+namespace {
+// The C9 part database `parts` rows by part name
+std::map<std::string, std::pair<float, float>> C9Masses() {  // name -> (prefab mass, module mass)
+    std::ifstream f(kHarness14 + "/captures/out2/part_database.json", std::ios::binary);
+    REQUIRE(f.good());
+    const nlohmann::json cap = nlohmann::json::parse(f);
+    const nlohmann::json& t = Table14(cap, "parts");
+    const size_t cName = Col14(t, "name"), cMass = Col14(t, "mass"), cMod = Col14(t, "module_mass"), cErr = Col14(t, "error");
+    std::map<std::string, std::pair<float, float>> out;
+    for (const auto& r : t.at("rows"))
+        if (r[cErr].is_null()) out[r[cName].get<std::string>()] = {static_cast<float>(r[cMass].get<double>()), static_cast<float>(r[cMod].get<double>())};
+    return out;
+}
+}  // namespace
+
+TEST_CASE("WP-14 mass properties of the PhysProf-S vessel: GetTotalMass, UpdateMassStats, CalculatePhysicsStats (CoM, MOI)") {
+    if (!GameAvailable14()) return;
+    World14 w;
+    auto v = w.Craft("PhysProf-S");
+    const auto c9 = C9Masses();
+    // per-part masses: prefab mass + module mass (C9), the resources of the craft file at density
+    double expectedTotal = 0.0;
+    for (Part* p : v->parts) {
+        const auto& m = c9.at(p->partInfo->name);
+        float expected = f32store(fx(m.first) + fx(m.second));
+        if (expected < p->partInfo->MinimumMass()) expected = p->partInfo->MinimumMass();
+        if (p->variants == nullptr) {
+            CHECK(Bits14(p->fields.mass) == Bits14(expected));
+        }
+        float resMass = 0.0f;
+        double rm = 0.0;
+        for (const PartResource& r : p->Resources) rm += r.amount * static_cast<double>(r.info->density());
+        resMass = static_cast<float>(rm);
+        CHECK(std::abs(static_cast<double>(p->GetResourceMass()) - rm) <= 1e-6 * std::max(1.0, rm));
+        expectedTotal += fx(p->fields.mass) + fx(p->GetResourceMass());
+        (void)resMass;
+    }
+    const float total = v->GetTotalMass();
+    CHECK(v->totalMass == expectedTotal);  // Vessel.cs:3422: a double sum of (float mass + float resource mass)
+    CHECK(Bits14(total) == Bits14(static_cast<float>(expectedTotal)));
+    CHECK(total > 10.0f);  // a loaded vertical rocket: tens of tonnes
+
+    // FlightIntegrator.UpdateMassStats: physicsMass = mass + resourceMass for parts with a rigid body, 0 without
+    for (Part* p : v->parts) p->hasRigidbody = p->fields.physicalSignificance == 0;  // Part.PhysicalSignificance.FULL
+    v->UpdateMassStats();
+    double sumPhysics = 0.0;
+    for (Part* p : v->parts) {
+        CHECK(p->fields.resourceMass == p->GetResourceMass());
+        const float expected = f32store(fx(p->fields.mass) + fx(p->fields.resourceMass) + 0.0);
+        CHECK(Bits14(static_cast<float>(p->fields.physicsMass)) == Bits14(std::max(expected, p->partInfo->MinimumMass())));
+        sumPhysics += p->fields.physicsMass;
+    }
+    // a part without a rigid body adds its mass to the parent that has one (GetPhysicslessChildMass)
+    Part* child = v->parts[1];
+    Part* holder = child->parent;
+    REQUIRE(holder != nullptr);
+    const float holderBefore = static_cast<float>(holder->fields.physicsMass);
+    child->hasRigidbody = false;
+    v->UpdateMassStats();
+    CHECK(child->fields.physicsMass == 0.0);
+    CHECK(static_cast<float>(holder->fields.physicsMass) > holderBefore);
+    CHECK(std::abs(static_cast<float>(holder->fields.physicsMass) -
+                   (f32store(fx(holder->fields.mass) + fx(holder->fields.resourceMass) + fx(f32store(fx(child->fields.mass) + fx(child->fields.resourceMass) + 0.0)) ))) <= 1e-3f);
+    child->hasRigidbody = true;
+    v->UpdateMassStats();
+
+    // CalculatePhysicsStats: mass-weighted CoM over the parts' centres of mass
+    v->packed = false;
+    v->CalculatePhysicsStats();
+    CHECK(v->precalc.firstStatsRunComplete);
+    CHECK(v->totalMass == sumPhysics);
+    Vector3d com;
+    for (size_t i = v->parts.size(); i-- > 0;) {  // CalculatePhysicsStats sums from the last part down
+        Part* p = v->parts[i];
+        const Vector3d wc(p->partTransform.position + p->partTransform.rotation * p->fields.CoMOffset);
+        com += wc * p->fields.physicsMass;
+    }
+    com = com * (1.0 / sumPhysics);
+    CHECK(v->CoMD.x == com.x);
+    CHECK(v->CoMD.y == com.y);
+    CHECK(v->CoMD.z == com.z);
+    CHECK(v->CoM == v->CoMD.ToVector3f());
+    // the CoM of a vertical stack lies between its lowest and highest part centre along the stack axis
+    float lo = 1e30f, hi = -1e30f;
+    for (Part* p : v->parts) {
+        const float y = (p->partTransform.rotation * Vector3f(0.0f, 1.0f, 0.0f)).y;
+        (void)y;
+    }
+    for (Part* p : v->parts) {
+        const Vector3f d = p->partTransform.position - v->parts[0]->partTransform.position;
+        lo = std::min(lo, d.magnitude());
+        hi = std::max(hi, d.magnitude());
+    }
+    const Vector3f comOff = v->CoM - v->parts[0]->partTransform.position;
+    CHECK(comOff.magnitude() <= hi);
+    // with no angular velocity and no inertia data the MOI is zero; rigid-body velocity and angular velocity are zero
+    CHECK(v->rb_velocityD == Vector3d());
+    CHECK(v->angularMomentum.x == 0.0f);  // angular velocity 0: no angular momentum
+    // unpacked with no angular velocity the MOI is still summed (parallel axes of the point masses: m * r^2 per part)
+    CHECK(v->MOI.x > 0.0f);
+    v->packed = true;  // packed and not rotating: zero (VesselPrecalculate.cs:433)
+    v->CalculatePhysicsStats();
+    CHECK(v->MOI.x == 0.0f);
+    CHECK(v->angularMomentum.x == 0.0f);
+    v->packed = false;
+    // with an engine-reported inertia tensor and angular velocity the MOI is the parallel-axis sum
+    // (VesselPrecalculate.cs:455-463): two equal point masses at +-d on the reference x axis along y -> Iyy = 0 contribution check
+    auto custom = [&](Part& p) {
+        PartRigidbodyState s = PartRigidbodyState::FromPart(p);
+        s.inertiaTensor = Vector3f(1.0f, 2.0f, 3.0f);
+        s.mass = static_cast<float>(p.fields.physicsMass);
+        s.angularVelocity = Vector3f(0.0f, 0.1f, 0.0f);
+        return s;
+    };
+    v->CalculatePhysicsStats(custom);
+    CHECK(v->angularVelocityD.y != 0.0);
+    CHECK(v->MOI.x > 0.0f);
+    CHECK(v->MOI.y > 0.0f);
+    CHECK(v->MOI.z > 0.0f);
+    CHECK(v->angularMomentum.y == static_cast<float>(static_cast<double>(v->MOI.y) * v->angularVelocityD.y));  // VesselPrecalculate.cs:463
+    // unloaded vessels have no part list: the proto snapshots give the mass
+    auto v2 = w.Craft("PhysProf-S");
+    CHECK(v2->GetUnloadedVesselMass() == doctest::Approx(v2->GetTotalMass()).epsilon(1e-5));
+}
+
+// ======================================================== kinematics: UpdatePosVel, UpdateSurfaceSpeeds, UpdateAcceleration
+
+TEST_CASE("WP-14 surface speeds from srf_velocity (Vessel.cs:2848): srfSpeed, horizontalSrfSpeed, srf_vel_direction") {
+    if (!GameAvailable14()) return;
+    World14 w;
+    auto v = Stack14(w, {"mk1pod.v2"}, false);
+    v->srf_velocity = Vector3d(3.0, 4.0, 12.0);
+    v->verticalSpeed = 5.0;
+    v->UpdateSurfaceSpeeds();
+    CHECK(v->srfSpeed == 13.0);  // sqrt(9 + 16 + 144)
+    CHECK(v->horizontalSrfSpeed == std::sqrt(169.0 - 25.0));
+    CHECK(v->srf_vel_direction.x == 3.0 / 13.0);
+    v->verticalSpeed = 20.0;  // vertical larger than the total (can happen with frame offsets): horizontal 0
+    v->UpdateSurfaceSpeeds();
+    CHECK(v->horizontalSrfSpeed == 0.0);
+    v->srf_velocity = Vector3d();
+    v->UpdateSurfaceSpeeds();
+    CHECK(v->srfSpeed == 0.0);
+    CHECK(v->srf_vel_direction == Vector3d());
+}
+
+TEST_CASE("WP-14 UpdatePosVel on a circular equatorial orbit around Kerbin: altitude, speeds, up / east, distance traveled") {
+    if (!GameAvailable14()) return;
+    World14 w;
+    CelestialBody& kerbin = w.Kerbin();
+    auto v = Stack14(w, {"mk1pod.v2"}, true);
+    kerbin.position = Vector3d();  // Kerbin at the origin so that the float vessel position is exact enough
+    const double r = kerbin.Radius + 100000.0;
+    v->packed = false;
+    v->Landed = false;
+    v->orbit() = Orbit(0.0, 0.0, r, 0.0, 0.0, 0.0, 0.0, &kerbin);
+    v->orbit().Init();
+    v->orbit().UpdateFromUT(0.0);
+    const Vector3d p = kerbin.position + v->orbit().pos.xzy();
+    v->SetPosition(p, false);
+    v->CoMD = p;
+    v->CoM = p.ToVector3f();
+    v->situation = Vessel::Situations::ORBITING;
+    FlightRegistry::ready = true;
+    FlightRegistry::ActiveVessel = v.get();  // Orbit.GetVel subtracts the active vessel's reference body frame velocity
+    v->UpdatePosVel();
+    const double vCirc = std::sqrt(kerbin.gravParameter / r);
+    CHECK(v->altitude == doctest::Approx(100000.0).epsilon(1e-4));
+    CHECK(v->latitude == doctest::Approx(0.0).epsilon(1e-6));
+    CHECK(v->obt_speed == doctest::Approx(vCirc).epsilon(1e-9));
+    CHECK(v->obt_velocity.magnitude() == v->obt_speed);
+    // srf_velocity = orbit.GetVel() - cross(body angular velocity, orbit.pos.xzy)
+    const Vector3d expectSrf = v->orbit().GetVel(&kerbin) - Vector3d::Cross(kerbin.angularVelocity, v->orbit().pos.xzy());
+    CHECK(v->srf_velocity == expectSrf);
+    // equatorial prograde: surface speed = orbital speed - omega * r, with omega = 2 pi / rotationPeriod
+    const double omega = 2.0 * 3.14159265358979323846 / kerbin.rotationPeriod;
+    CHECK(v->srfSpeed == doctest::Approx(vCirc - omega * r).epsilon(1e-6));
+    CHECK(std::abs(v->verticalSpeed) < 0.05);  // circular: perpendicular to the radius (float vessel position)
+    CHECK(v->horizontalSrfSpeed == doctest::Approx(v->srfSpeed).epsilon(1e-4));
+    CHECK(Vector3d::Dot(v->up, v->east) == doctest::Approx(0.0).epsilon(1e-6));
+    CHECK(v->up.magnitude() == doctest::Approx(1.0).epsilon(1e-12));
+    CHECK(v->initialPosVelSet);
+    CHECK(v->distanceTraveled == v->obt_speed * static_cast<double>(Vessel::env.deltaTime));  // ORBITING: += obt_speed * Time.deltaTime
+    v->situation = Vessel::Situations::FLYING;
+    const double before = v->distanceTraveled;
+    v->UpdateDistanceTraveled();
+    CHECK(v->distanceTraveled == before + v->srfSpeed * static_cast<double>(Vessel::env.deltaTime));
+    v->situation = Vessel::Situations::LANDED;
+    v->UpdateDistanceTraveled();
+    CHECK(v->distanceTraveled == before + v->srfSpeed * static_cast<double>(Vessel::env.deltaTime));  // LANDED adds nothing
+    // FlightGlobals.ready is false: UpdatePosVel stops after the radar-altitude block
+    FlightRegistry::ready = false;
+    v->srfSpeed = -1.0;
+    v->UpdatePosVel();
+    CHECK(v->srfSpeed == -1.0);
+    // radar altitude: heightFromTerrain == -1 above the inverse-rotation threshold with the extended calcs off -> altitude
+    GameSettings::RADAR_ALTIMETER_EXTENDED_CALCS = false;
+    v->heightFromTerrain = -1.0f;
+    v->UpdatePosVel();
+    CHECK(v->radarAltitude == v->altitude);
+    GameSettings::RADAR_ALTIMETER_EXTENDED_CALCS = true;
+    // with the PQS hook the terrain altitude comes from the PQS: radar = altitude - terrain
+    Vessel::env.pqsSurfaceHeight = [&](CelestialBody& b, const Vector3d&) { return b.Radius + 1234.0; };
+    v->heightFromTerrain = -1.0f;
+    v->UpdatePosVel();
+    CHECK(v->pqsAltitude == 1234.0);
+    CHECK(v->terrainAltitude == 1234.0);
+    CHECK(v->radarAltitude == v->altitude - 1234.0);
+    CHECK(v->PQSAltitude() == 1234.0);
+    FlightRegistry::ready = false;
+    FlightRegistry::Clear();
+}
+
+TEST_CASE("WP-14 UpdateAcceleration: smoothed acceleration, g-force, ignore frames (Vessel.cs:2892)") {
+    if (!GameAvailable14()) return;
+    World14 w;
+    CelestialBody& kerbin = w.Kerbin();
+    auto v = Stack14(w, {"mk1pod.v2"}, true);
+    v->packed = false;
+    v->orbit() = Orbit(0.0, 0.0, kerbin.Radius + 100000.0, 0.0, 0.0, 0.0, 0.0, &kerbin);
+    v->orbit().Init();
+    FlightRegistry::ready = true;
+    v->lastBody = &kerbin;
+    v->frameWasRotating = kerbin.rotates && kerbin.inverseRotation;
+    v->IgnoreGForces(0);
+    const double fdt = 50.0;  // 1 / 0.02
+    v->lastVel = Vector3d(0.0, 0.0, 0.0);
+    v->obt_velocity = Vector3d(0.0, 0.0, 0.3);  // 0.3 m/s in one frame -> 15 m/s^2
+    v->graviticAcceleration = Vector3d();
+    v->UpdateAcceleration(fdt, false);
+    CHECK(v->acceleration_immediate.z == doctest::Approx(15.0).epsilon(1e-12));
+    CHECK(v->acceleration.z == doctest::Approx(15.0 / 20.0).epsilon(1e-12));  // mean of the 20-slot ring buffer
+    CHECK(v->geeForce == doctest::Approx(15.0 / 20.0 / PhysicsGlobals::GravitationalAcceleration).epsilon(1e-12));
+    CHECK(v->lastVel == v->obt_velocity);
+    // ignored frames skip the update and count down
+    v->IgnoreGForces(2);
+    v->obt_velocity = Vector3d(0.0, 0.0, 9.0);
+    const double geeBefore = v->geeForce;
+    v->UpdateAcceleration(fdt, false);
+    CHECK(v->geeForce == geeBefore);
+    v->UpdateAcceleration(fdt, false);
+    CHECK(v->geeForce == geeBefore);
+    v->obt_velocity = Vector3d(0.0, 0.0, 9.3);
+    v->UpdateAcceleration(fdt, false);  // third call: the counter reached 0, the update runs (another 0.3 m/s step)
+    CHECK(v->geeForce != geeBefore);
+    // packed and landed: perturbation = -g / g0, geeForce = |perturbation|
+    v->packed = true;
+    v->Landed = true;
+    v->graviticAcceleration = Vector3d(0.0, -9.80665, 0.0);
+    v->UpdateAcceleration(fdt, false);
+    CHECK(v->geeForce == doctest::Approx(1.0).epsilon(1e-12));
+    v->Landed = false;
+    v->UpdateAcceleration(fdt, false);
+    CHECK(v->geeForce == 0.0);
+    CHECK(v->acceleration == Vector3d());
+    v->IgnoreSpeed(3);
+    CHECK(v->IgnoreSpeedActive());
+    FlightRegistry::ready = false;
+    FlightRegistry::Clear();
+}
+
+TEST_CASE("WP-14 atmosphere mirror: ApplyFlightIntegratorAtmosphere copies the FlightIntegrator values (FlightIntegrator.cs 621-914)") {
+    if (!GameAvailable14()) return;
+    World14 w;
+    auto v = Stack14(w, {"mk1pod.v2"}, false);
+    FlightIntegratorAtmosphere fi;
+    fi.currentMainBody = &w.Kerbin();
+    fi.altitude = 5000.0;
+    fi.spd = 250.0;
+    fi.CalculatePressure();
+    fi.atmosphereTemperatureOffset = 2.0;
+    fi.CalculateConstantsAtmosphere();
+    v->ApplyFlightIntegratorAtmosphere(fi);
+    CHECK(v->speed == 250.0);
+    CHECK(v->staticPressurekPa == fi.staticPressurekPa);
+    CHECK(v->indicatedAirSpeed == 250.0 * fi.staticPressureAtm);
+    CHECK(v->atmDensity == fi.density);
+    CHECK(v->dynamicPressurekPa == 0.0005 * fi.density * 250.0 * 250.0);
+    CHECK(v->mach == fi.mach);
+    CHECK(v->speedOfSound == fi.speedOfSound);
+    CHECK(v->atmosphericTemperature == fi.atmosphericTemperature);
+    CHECK(v->externalTemperature >= v->atmosphericTemperature);  // max(ambient, shock)
+    // vacuum branch (FlightIntegrator.CalculateConstantsVacuum)
+    FlightIntegratorAtmosphere vac;
+    vac.currentMainBody = &w.Kerbin();
+    vac.altitude = 80000.0;
+    vac.spd = 2200.0;
+    vac.CalculatePressure();
+    CHECK(vac.staticPressurekPa == 0.0);
+    vac.CalculateConstantsVacuum();
+    v->ApplyFlightIntegratorAtmosphere(vac);
+    CHECK(v->staticPressurekPa == 0.0);
+    CHECK(v->atmDensity == 0.0);
+    CHECK(v->mach == 0.0);
+    CHECK(v->dynamicPressurekPa == 0.0);
+    CHECK(v->speedOfSound == 0.0);
+    CHECK(v->atmosphericTemperature == PhysicsGlobals::SpaceTemperature());
+    CHECK(v->externalTemperature == PhysicsGlobals::SpaceTemperature());
+}
+
+// ======================================================== crew, control level, overrides, naming
+
+TEST_CASE("WP-14 crew list, capacity and control level (Vessel.cs 1234-1485)") {
+    if (!GameAvailable14()) return;
+    World14 w;
+    auto v = Stack14(w, {"mk1pod.v2", "fuelTankSmallFlat", "mk1-3pod"});
+    // capacity: the CrewCapacity of the C9 part rows
+    int expectedCap = 0;
+    for (Part* p : v->parts) expectedCap += p->fields.CrewCapacity;
+    CHECK(expectedCap == 1 + 0 + 3);  // mk1pod.v2: 1, mk1-3pod: 3
+    CHECK(v->GetCrewCapacity() == expectedCap);
+    CHECK(v->GetCrewCount() == 0);
+    v->RebuildCrewList();
+    CHECK(v->crewableParts == 2);
+    CHECK(v->crewedParts == 0);
+    auto jeb = std::make_shared<ProtoCrewMember>(ProtoCrewMember_KerbalType::Crew, "Jebediah Kerman");
+    auto bob = std::make_shared<ProtoCrewMember>(ProtoCrewMember_KerbalType::Crew, "Bob Kerman");
+    auto val = std::make_shared<ProtoCrewMember>(ProtoCrewMember_KerbalType::Crew, "Valentina Kerman");
+    CHECK(v->parts[0]->AddCrewmember(jeb));
+    CHECK(v->parts[2]->AddCrewmember(bob));
+    CHECK(v->parts[2]->AddCrewmember(val));
+    // Part.AddCrewmember marks the list dirty; GetVesselCrew rebuilds it
+    const auto& crew = v->GetVesselCrew();
+    REQUIRE(crew.size() == 3);
+    CHECK(crew[0] == jeb);  // parts order
+    CHECK(crew[1] == bob);
+    CHECK(crew[2] == val);
+    CHECK(v->GetCrewCount() == 3);
+    CHECK(v->crewedParts == 2);
+    CHECK(v->crewableParts == 2);
+    CHECK(v->RemoveCrew(std::string("Bob Kerman")));
+    CHECK_FALSE(v->RemoveCrew(std::string("Nobody")));
+    CHECK(v->GetCrewCount() == 2);
+    CHECK(v->RemoveCrew(val));
+    CHECK_FALSE(v->RemoveCrew(val));
+    v->RebuildCrewList();
+    v->RemoveCrewList({jeb}, true);
+    CHECK(v->GetCrewCount() == 2);  // bob and val are crew of the part again (the list was rebuilt), jeb removed
+    // events
+    int modified = 0;
+    struct L2 {
+        int* n;
+        void Run(Vessel*) { ++*n; }
+    } l2{&modified};
+    GE::onVesselCrewWasModified.Add(&l2, &L2::Run);
+    Vessel::CrewWasModified(v.get());
+    Vessel::CrewWasModified(nullptr);
+    CHECK(modified == 1);
+    CHECK(v->GetCrewCount() == 3);
+    GE::onVesselCrewWasModified.Remove(&l2, &L2::Run);
+
+    // control level: the best isControlSource of the parts (Part.isControlSource is set by ModuleCommand: WP-24)
+    CHECK(v->GetControlLevel() == ControlLevel::NONE);
+    v->CheckControllable();
+    CHECK_FALSE(v->IsControllable());
+    CHECK(v->CurrentControlLevel() == ControlLevel::NONE);
+    int controlChanges = 0;
+    bool lastState = false;
+    struct L3 {
+        int* n;
+        bool* last;
+        void Run(Vessel*, bool s) {
+            ++*n;
+            *last = s;
+        }
+    } l3{&controlChanges, &lastState};
+    GE::onVesselControlStateChange.Add(&l3, &L3::Run);
+    v->parts[2]->fields.isControlSource = static_cast<int32_t>(ControlLevel::PARTIAL_MANNED);
+    v->parts[0]->fields.isControlSource = static_cast<int32_t>(ControlLevel::PARTIAL_UNMANNED);
+    CHECK(v->GetControlLevel() == ControlLevel::PARTIAL_MANNED);
+    v->CheckControllable();
+    CHECK(v->IsControllable());
+    CHECK(controlChanges == 1);
+    CHECK(lastState);
+    v->maxControlLevel = ControlLevel::PARTIAL_UNMANNED;  // clamp
+    v->CheckControllable();
+    CHECK(v->CurrentControlLevel() == ControlLevel::PARTIAL_UNMANNED);
+    CHECK(controlChanges == 1);  // still controllable
+    v->parts[0]->fields.isControlSource = 0;
+    v->parts[2]->fields.isControlSource = 0;
+    v->CheckControllable();
+    CHECK_FALSE(v->IsControllable());
+    CHECK(controlChanges == 2);
+    CHECK_FALSE(lastState);
+    GE::onVesselControlStateChange.Remove(&l3, &L3::Run);
+    // CommNet decides when enabled (the hook stands for connection.GetControlLevel)
+    Vessel::env.commNetControlLevel = [](Vessel&) { return std::optional<ControlLevel>(ControlLevel::PARTIAL_UNMANNED); };
+    CHECK(v->GetControlLevel() == ControlLevel::PARTIAL_UNMANNED);
+    // an unloaded vessel is never controllable
+    Vessel::env.commNetControlLevel = nullptr;
+    v->loaded = false;
+    v->CheckControllable();
+    CHECK_FALSE(v->IsControllable());
+    v->loaded = true;
+    // a kerbal on EVA: PARTIAL_MANNED while active, NONE when inactive
+    auto kerbal = Stack14(w, {"kerbalEVA"}, false);
+    kerbal->vesselType = VesselType::EVA;
+    kerbal->parts = {kerbal->rootPart};
+    kerbal->loaded = true;
+    kerbal->RebuildCrewList();
+    CHECK(kerbal->isEVA());
+    CHECK(kerbal->GetControlLevel() == ControlLevel::NONE);  // empty crew: falls through to the parts
+    auto eva = std::make_shared<ProtoCrewMember>(ProtoCrewMember_KerbalType::Crew, "Bill Kerman");
+    kerbal->rootPart->protoModuleCrew.push_back(eva);  // the kerbalEVA prefab is built in code: no CrewCapacity in the cfg
+    kerbal->RebuildCrewList();
+    CHECK(kerbal->GetControlLevel() == ControlLevel::PARTIAL_MANNED);
+    eva->set_inactive(true);
+    CHECK(kerbal->GetControlLevel() == ControlLevel::NONE);
+    kerbal->rootPart->vessel = nullptr;
+}
+
+TEST_CASE("WP-14 control state, group overrides and action-group blocking (Vessel.cs 1994-2035, 4045-4076)") {
+    if (!GameAvailable14()) return;
+    World14 w;
+    auto v = Stack14(w, {"mk1pod.v2"}, false);
+    CHECK(v->setControlStates.size() == 5);  // NumOverrideGroups + 1
+    CHECK(v->setControlStates[0] == &v->ctrlState);
+    CHECK(v->setControlStates[1]->custom_axes == v->ctrlState.custom_axes);
+    FlightCtrlState in;
+    in.pitch = 0.5f;
+    in.mainThrottle = 0.8f;
+    v->SetControlState(in);
+    CHECK(v->setControlStates[0]->pitch == 0.5f);
+    FlightCtrlState out;
+    v->GetControlState(out);
+    CHECK(out.mainThrottle == 0.8f);
+    // SetGroupOverride(2): the new group starts from the main state (everything not blocked is copied)
+    int overrideEvents = 0;
+    struct L4 {
+        int* n;
+        void Run(Vessel*) { ++*n; }
+    } l4{&overrideEvents};
+    GE::OnVesselOverrideGroupChanged.Add(&l4, &L4::Run);
+    v->SetGroupOverride(2);
+    CHECK(v->GroupOverride == 2);
+    CHECK(overrideEvents == 1);
+    CHECK(v->setControlStates[2]->pitch == 0.5f);
+    v->SetGroupOverride(2);  // no change, no event
+    CHECK(overrideEvents == 1);
+    v->OverrideAxisControl[1] = KSPAxisGroup::Pitch;  // override group 2 blocks Pitch of the main state
+    FlightCtrlState in2;
+    in2.pitch = -0.25f;
+    in2.yaw = 0.75f;
+    v->SetControlState(in2);
+    CHECK(v->setControlStates[2]->pitch == -0.25f);
+    CHECK(v->setControlStates[0]->pitch == 0.5f);   // blocked: not forwarded
+    CHECK(v->setControlStates[0]->yaw == 0.75f);    // forwarded
+    CHECK(v->AxisControlBlocked(KSPAxisGroup::Pitch));
+    CHECK_FALSE(v->AxisControlBlocked(KSPAxisGroup::Yaw));
+    v->OverrideActionControl[1] = KSPActionGroup::Gear;
+    CHECK(v->ActionControlBlocked(KSPActionGroup::Gear));
+    CHECK_FALSE(v->ActionControlBlocked(KSPActionGroup::Light));
+    v->SetGroupOverride(0);
+    CHECK_FALSE(v->ActionControlBlocked(KSPActionGroup::Gear));
+    // CopyOverrides
+    auto v2 = Stack14(w, {"mk1pod.v2"}, false);
+    v2->CopyOverrides(*v);
+    CHECK(v2->OverrideAxisControl[1] == KSPAxisGroup::Pitch);
+    CHECK(v2->OverrideActionControl[1] == KSPActionGroup::Gear);
+    GE::OnVesselOverrideGroupChanged.Remove(&l4, &L4::Run);
+}
+
+TEST_CASE("WP-14 naming: FindDefaultVesselType, UpdateVesselNaming priority rules, IsValidVesselName, AutoRename, auto clean") {
+    if (!GameAvailable14()) return;
+    World14 w;
+    auto v = Stack14(w, {"mk1pod.v2", "fuelTankSmallFlat"}, false);
+    v->vesselType = VesselType::Debris;
+    // the highest vesselType of the parts (probe cores are Probe, pods Ship)
+    int best = 0;
+    for (Part* p : v->parts) best = std::max(best, p->fields.vesselType);
+    CHECK(static_cast<int>(v->FindDefaultVesselType()) == best);
+    CHECK(Vessel::IsValidVesselName("a"));
+    CHECK_FALSE(Vessel::IsValidVesselName(""));
+    // VesselNaming priority: the part with the highest namingPriority (> 0) names the vessel
+    CHECK_FALSE(v->UpdateVesselNaming());
+    v->parts[0]->vesselNaming = std::make_shared<VesselNaming>();
+    v->parts[0]->vesselNaming->vesselName = "Probe One";
+    v->parts[0]->vesselNaming->vesselType = VesselType::Probe;
+    v->parts[0]->vesselNaming->namingPriority = 1;
+    v->parts[1]->vesselNaming = std::make_shared<VesselNaming>();
+    v->parts[1]->vesselNaming->vesselName = "Lander Two";
+    v->parts[1]->vesselNaming->vesselType = VesselType::Lander;
+    v->parts[1]->vesselNaming->namingPriority = 5;
+    std::vector<std::string> renames;
+    struct L5 {
+        std::vector<std::string>* out;
+        void Run(GE::HostedFromToAction<Vessel*, std::string> d) { out->push_back(d.from + "->" + d.to); }
+    } l5{&renames};
+    GE::onVesselRename.Add(&l5, &L5::Run);
+    CHECK(v->UpdateVesselNaming());
+    CHECK(v->vesselName == "Lander Two");
+    CHECK(v->vesselType == VesselType::Lander);
+    REQUIRE(renames.size() == 1);
+    CHECK(renames[0] == "Test vessel->Lander Two");
+    CHECK(v->UpdateVesselNaming());   // same part, same data: no new event
+    CHECK(renames.size() == 1);
+    // quirk (Vessel.cs:4181): when the SAME part keeps naming the vessel, `pNewName.vesselNaming.vesselName !=
+    // vesselNamedBy.vesselNaming.vesselName` compares the part with itself, so edits of its naming are never noticed
+    v->parts[1]->vesselNaming->vesselName = "Lander Three";
+    CHECK(v->UpdateVesselNaming());
+    CHECK(v->vesselName == "Lander Two");
+    CHECK(renames.size() == 1);
+    // a different part taking over names the vessel and fires the event
+    v->parts[0]->vesselNaming->namingPriority = 9;
+    CHECK(v->UpdateVesselNaming());
+    CHECK(v->vesselName == "Probe One");
+    CHECK(v->vesselType == VesselType::Probe);
+    REQUIRE(renames.size() == 2);
+    CHECK(renames[1] == "Lander Two->Probe One");
+    v->parts[1]->vesselNaming->namingPriority = 20;  // and back
+    v->UpdateVesselNaming(true);  // noGameEvent: names but fires nothing
+    CHECK(v->vesselName == "Lander Three");
+    CHECK(v->vesselType == VesselType::Lander);
+    CHECK(renames.size() == 2);
+    // events: onVesselWasModified / onPartVesselNamingChanged re-run the naming for their own vessel
+    v->parts[0]->vesselNaming->namingPriority = 30;
+    GE::onVesselWasModified.Fire(v.get());
+    CHECK(v->vesselName == "Probe One");
+    v->parts[1]->vesselNaming->namingPriority = 40;
+    GE::onPartVesselNamingChanged.Fire(v->parts[1]);
+    CHECK(v->vesselName == "Lander Three");
+    auto other = Stack14(w, {"mk1pod.v2"}, false);
+    GE::onVesselWasModified.Fire(other.get());  // another vessel: v is untouched
+    CHECK(v->vesselName == "Lander Three");
+    GE::onVesselRename.Remove(&l5, &L5::Run);
+    // AutoRename: an IVesselAutoRename module with the lowest VesselType wins
+    CHECK(Vessel::AutoRename(*v, "#autoLOC_900676") != "");
+    // auto clean (Vessel.cs:4412)
+    CHECK_FALSE(v->AutoClean());
+    v->SetAutoClean("because");
+    v->SetAutoClean("later");
+    CHECK(v->AutoClean());
+    CHECK(v->AutoCleanReason() == "because");
+    // Vessel.Clean is the Funding / recovery hook
+    std::string cleaned;
+    Vessel::env.cleanVessel = [&](Vessel&, const std::string& r) { cleaned = r; };
+    v->protoVessel = reinterpret_cast<ProtoVessel*>(&cleaned);  // only checked for non-null
+    v->Clean("r1");
+    CHECK(cleaned == "r1");
+    v->protoVessel = nullptr;
+}
+
+// ======================================================== rails, load / unload, Die, registry
+
+TEST_CASE("WP-14 state transitions: GoOffRails / GoOnRails / Unload / Load keep the flags, events and part ownership of Vessel.cs") {
+    if (!GameAvailable14()) return;
+    World14 w;
+    auto v = w.Craft("PhysProf-S");
+    Vessel* vp = v.get();
+    REQUIRE(FlightRegistry::Vessels.size() == 1);
+    CHECK(FlightRegistry::VesselsLoaded.size() == 1);   // SetLoaded(true) moved it from the unloaded list
+    CHECK(FlightRegistry::VesselsUnloaded.empty());
+    std::vector<std::string> events;
+    struct L6 {
+        std::vector<std::string>* out;
+        void Off(Vessel*) { out->push_back("off"); }
+        void On(Vessel*) { out->push_back("on"); }
+        void Loaded(Vessel*) { out->push_back("loaded"); }
+        void Unloaded(Vessel*) { out->push_back("unloaded"); }
+    } l6{&events};
+    GE::onVesselGoOffRails.Add(&l6, &L6::Off);
+    GE::onVesselGoOnRails.Add(&l6, &L6::On);
+    GE::onVesselLoaded.Add(&l6, &L6::Loaded);
+    GE::onVesselUnloaded.Add(&l6, &L6::Unloaded);
+
+    // the physics hold (75 frames for a landed vessel) keeps it packed
+    Vessel::env.frameCount = 10;
+    v->GoOffRails();
+    CHECK(v->packed);
+    CHECK(events.empty());
+    Vessel::env.frameCount = 200;
+    // a landed vessel stays on rails unless the reference frame rotates (FlightGlobals.RefFrameIsRotating)
+    v->GoOffRails();
+    CHECK(v->packed);
+    CHECK_FALSE(v->vesselSpawning);  // reset by the attempt
+    CHECK(events.empty());
+    CelestialBody& kerbin = w.Kerbin();
+    kerbin.inverseRotation = true;
+    int unpacked = 0, initialised = 0;
+    Vessel::env.unpackPart = [&](Part&) { ++unpacked; };
+    Vessel::env.resumePartVelocity = [&](Part&) { ++initialised; };
+    int krakens = 0;
+    Vessel::env.krakensbaneAddFrameVelocity = [&](const Vector3d&) { ++krakens; };
+    FlightRegistry::ActiveVessel = vp;
+    v->GoOffRails();
+    CHECK_FALSE(v->packed);
+    CHECK(unpacked == static_cast<int>(v->parts.size()));
+    CHECK(initialised == static_cast<int>(v->parts.size()));
+    CHECK(krakens == 1);  // the active vessel hands its velocity to the Krakensbane
+    CHECK(v->orbitDriver->updateMode == OrbitDriver::UpdateMode::TRACK_Phys);
+    REQUIRE(events.size() == 1);
+    CHECK(events[0] == "off");
+    CHECK(v->acceleration == Vector3d());  // landed: the smoothing buffer is cleared
+    // GoOnRails: control state neutralized, parts packed, orbit driver follows Landed / flying
+    v->ctrlState.mainThrottle = 1.0f;
+    int packedParts = 0;
+    Vessel::env.packPart = [&](Part&) { ++packedParts; };
+    v->GoOnRails();
+    CHECK(v->packed);
+    CHECK(v->ctrlState.mainThrottle == 0.0f);
+    CHECK(packedParts == static_cast<int>(v->parts.size()));
+    CHECK(v->orbitDriver->updateMode == OrbitDriver::UpdateMode::IDLE);  // LandedOrSplashed
+    CHECK(events.back() == "on");
+    v->GoOnRails();  // already packed: nothing
+    CHECK(events.size() == 2);
+    v->Landed = false;
+    v->packed = false;
+    v->GoOnRails();
+    CHECK(v->orbitDriver->updateMode == OrbitDriver::UpdateMode::UPDATE);
+    v->Landed = true;
+
+    // Unload: ProtoVessel snapshot, parts destroyed, flags
+    const size_t nParts = v->parts.size();
+    const std::string name = v->vesselName;
+    v->Unload();
+    CHECK_FALSE(v->loaded);
+    CHECK(v->parts.empty());
+    CHECK(v->rootPart == nullptr);
+    CHECK(v->OwnedPartCount() == 0);
+    REQUIRE(v->protoVessel != nullptr);
+    CHECK(v->protoVessel->protoPartSnapshots.size() == nParts);
+    CHECK(v->protoVessel->vesselName == name);
+    CHECK(v->protoVessel->landedAt == "LaunchPad");
+    CHECK(events.back() == "unloaded");
+    CHECK(FlightRegistry::VesselsUnloaded.size() == 1);
+    CHECK(FlightRegistry::VesselsLoaded.empty());
+    v->Unload();  // already unloaded: nothing
+    CHECK(events.back() == "unloaded");
+    CHECK(v->GetUnloadedVesselMass() > 10.0);
+    // Load again: the parts come back from the snapshots
+    v->Load();
+    CHECK(v->loaded);
+    CHECK(v->parts.size() == nParts);
+    CHECK(v->OwnedPartCount() == nParts);
+    CHECK(events.back() == "loaded");
+    CHECK(FlightRegistry::VesselsLoaded.size() == 1);
+    CHECK(v->rootPart == v->parts[0]);
+    CHECK(v->parts[0]->vessel == vp);
+    CHECK(v->Landed);  // updateSituation on load: Landed keeps PRELAUNCH
+    CHECK(v->GetCrewCount() == 0);
+    // the reloaded vessel backs up byte-identically to its first snapshot (parts, resources, modules)
+    ProtoVessel* back = v->BackupVessel();
+    CHECK(back->protoPartSnapshots.size() == nParts);
+    CHECK(v->protoVessel == back);
+
+    // Die: state, zeroed motion, registry removal for a non-active vessel
+    FlightRegistry::ActiveVessel = nullptr;
+    int willDestroy = 0;
+    struct L7 {
+        int* n;
+        void Run(Vessel*) { ++*n; }
+    } l7{&willDestroy};
+    GE::onVesselWillDestroy.Add(&l7, &L7::Run);
+    v->obt_velocity = Vector3d(1.0, 2.0, 3.0);
+    v->geeForce = 4.0;
+    v->Die();
+    CHECK(v->state == VesselState::DEAD);
+    CHECK(willDestroy == 1);
+    CHECK(v->obt_velocity == Vector3d());
+    CHECK(v->geeForce == 0.0);
+    CHECK(FlightRegistry::Vessels.empty());
+    GE::onVesselWillDestroy.Remove(&l7, &L7::Run);
+    GE::onVesselGoOffRails.Remove(&l6, &L6::Off);
+    GE::onVesselGoOnRails.Remove(&l6, &L6::On);
+    GE::onVesselLoaded.Remove(&l6, &L6::Loaded);
+    GE::onVesselUnloaded.Remove(&l6, &L6::Unloaded);
+    Vessel::env = VesselEnvironment{};
+}
+
+TEST_CASE("WP-14 reference transform, PartsContain, indexers, landed-in-KSC / recoverable, ranges, vessel size") {
+    if (!GameAvailable14()) return;
+    World14 w;
+    auto v = w.Craft("PhysProf-S");
+    // AssembleForLaunch: the first part with a crewable control source, else the first control source, else the root
+    CHECK(v->GetReferenceTransformPart() == v->rootPart);  // no ModuleCommand state yet: isControlSource NONE -> localRoot
+    CHECK(v->referenceTransformId == v->rootPart->fields.flightID);
+    CHECK(&v->ReferenceTransform() == &v->rootPart->partTransform);
+    v->parts[3]->fields.flightID = 4444;
+    v->SetReferenceTransform(v->parts[3]);
+    CHECK(v->referenceTransformId == 4444u);
+    CHECK(v->referenceTransformIdRecall == 4444u);
+    v->SetReferenceTransform(v->parts[5], false);  // storeRecall = false
+    CHECK(v->referenceTransformIdRecall == 4444u);
+    v->RecallReferenceTransform();
+    CHECK(v->GetReferenceTransformPart() == v->parts[3]);
+    v->SetReferenceTransform(nullptr);
+    CHECK(v->referenceTransformId == 0u);
+    CHECK(&v->ReferenceTransform() == &v->vesselTransform);
+    v->referenceTransformId = 999999;  // no such part: FallBackReferenceTransform picks the first crewable part, else null
+    v->FallBackReferenceTransform();
+    CHECK(v->referenceTransformId == 0u);
+    // indexers (this[uint] searches from the end; this[int] is bounds-checked)
+    CHECK(v->byIndex(0) == v->rootPart);
+    CHECK(v->byIndex(-1) == nullptr);
+    CHECK(v->byIndex(static_cast<int>(v->parts.size())) == nullptr);
+    CHECK(v->byFlightID(4444u) == v->parts[3]);
+    CHECK(v->byFlightID(0xFFFFFFF0u) == nullptr);
+    v->parts[7]->fields.persistentId = 31337;
+    CHECK(v->PartsContain(31337) == v->parts[7]);
+    CHECK(v->PartsContain(1) == nullptr);
+    // properties
+    CHECK(v->LandedInKSC());                 // loaded: landedAt "LaunchPad"
+    v->landedAt = "Mun_Craters";
+    CHECK_FALSE(v->LandedInKSC());
+    v->landedAt = "KSC_Runway";
+    CHECK(v->LandedInKSC());
+    w.Kerbin().isHomeWorld = true;
+    CHECK(v->IsRecoverable());                // Landed on the home world
+    v->Landed = false;
+    CHECK_FALSE(v->IsRecoverable());
+    CHECK(v->isCommandable() == (static_cast<int>(v->vesselType) > static_cast<int>(VesselType::Debris)));
+    v->vesselType = VesselType::Debris;
+    CHECK_FALSE(v->isCommandable());
+    CHECK_FALSE(v->isActiveVessel());
+    FlightRegistry::ActiveVessel = v.get();
+    CHECK(v->isActiveVessel());
+    FlightRegistry::ActiveVessel = nullptr;
+    // isPersistent: any persistent part when loaded, the stored flag otherwise
+    for (Part* p : v->parts) p->fields.isPersistent = false;
+    CHECK_FALSE(v->isPersistent());
+    v->parts[2]->fields.isPersistent = true;
+    CHECK(v->isPersistent());
+    // the pack / unpack ranges (VesselRanges of PhysicsGlobals) and the obsolete accessors
+    CHECK(v->vesselRanges.orbit.pack == 350.0f);
+    v->set_distancePackThreshold(1234.0f);
+    CHECK(v->vesselRanges.orbit.pack == 1234.0f);
+    CHECK(v->vesselRanges.flying.pack == 1234.0f);
+    CHECK(v->vesselRanges.subOrbital.pack == 1234.0f);
+    CHECK(v->vesselRanges.escaping.pack == 1234.0f);
+    CHECK(v->vesselRanges.landed.pack == 350.0f);   // landed ranges have their own accessor
+    v->set_distanceLandedUnpackThreshold(77.0f);
+    CHECK(v->vesselRanges.splashed.unpack == 77.0f);
+    CHECK(v->vesselRanges.prelaunch.unpack == 77.0f);
+    // GetActiveParts: ACTIVE parts that belong to the current or a later stage
+    v->currentStage = 1;
+    v->parts[1]->set_State(PartStates::ACTIVE);
+    v->parts[1]->fields.inverseStage = 2;
+    v->parts[2]->set_State(PartStates::ACTIVE);
+    v->parts[2]->fields.inverseStage = 0;
+    const auto active = v->GetActiveParts();
+    REQUIRE(active.size() == 1);
+    CHECK(active[0] == v->parts[1]);
+    // the vessel size hook (ShipConstruction.CalculateCraftSize)
+    Vessel::env.calculateCraftSize = [](const std::vector<Part*>& ps, Part*) { return Vector3f(static_cast<float>(ps.size()), 2.0f, 3.0f); };
+    v->UpdateVesselSize();
+    CHECK(v->vesselSize.x == static_cast<float>(v->parts.size()));
+    // OnSaveFlightState / OnLoadFlightState: the camera values travel as KSPParseables
+    KSPParseableDictionary d;
+    v->campth = 0.25f;
+    v->camhdg = 0.5f;
+    v->camMode = 2.0f;
+    v->OnSaveFlightState(d);
+    CHECK(d.At("cPch").value == "0.25");
+    CHECK(d.At("cPch").type == KSPParseable::Type::FLOAT);
+    CHECK(d.At("cMod").type == KSPParseable::Type::INT);
+    v->campth = v->camhdg = 0.0f;
+    v->OnLoadFlightState(d);
+    CHECK(v->campth == 0.25f);
+    CHECK(v->camhdg == 0.5f);
+    CHECK(v->camMode == 2.0f);
+    Vessel::env = VesselEnvironment{};
+}
+
+TEST_CASE("WP-14 vessel positioning: SetPosition / Translate / SetRotation move the parts about their pristine layout") {
+    if (!GameAvailable14()) return;
+    World14 w;
+    auto v = w.Craft("PhysProf-S");
+    v->packed = false;
+    const Vector3f root0 = v->rootPart->partTransform.position;
+    std::vector<Vector3f> off0;
+    for (Part* p : v->parts) off0.push_back(p->partTransform.position - root0);
+    v->SetPosition(Vector3d(100.0, 200.0, 300.0), false);  // delta applied to parts with physical significance FULL
+    CHECK(v->vesselTransform.position == Vector3f(100.0f, 200.0f, 300.0f));
+    for (size_t i = 0; i < v->parts.size(); i++) {
+        const Vector3f d = v->parts[i]->partTransform.position - v->rootPart->partTransform.position;
+        CHECK(d.x == doctest::Approx(off0[i].x).epsilon(1e-5));
+        CHECK(d.y == doctest::Approx(off0[i].y).epsilon(1e-5));
+    }
+    v->Translate(Vector3d(1.0, 0.0, 0.0));
+    CHECK(v->vesselTransform.position.x == 101.0f);
+    // SetRotation: parts are rotated by rotation * orgRot, then placed on the pristine layout about the vessel position
+    const Quaternionf q(0.0f, 0.0f, 0.70710678f, 0.70710678f);  // 90 degrees about z
+    v->SetRotation(q);
+    CHECK(v->vesselTransform.rotation.z == doctest::Approx(0.70710678f));
+    for (Part* p : v->parts) {
+        const Quaternionf expect = q * p->fields.orgRot;
+        CHECK(p->partTransform.rotation.x == doctest::Approx(expect.x).epsilon(1e-5));
+        CHECK(p->partTransform.rotation.w == doctest::Approx(expect.w).epsilon(1e-5));
+        const Vector3d pos = Vector3d(v->vesselTransform.position) + QuaternionD(q) * Vector3d(p->fields.orgPos);
+        CHECK(p->partTransform.position.x == doctest::Approx(static_cast<float>(pos.x)).epsilon(1e-5).scale(1.0));
+    }
+    // an unloaded vessel only has its transform
+    v->loaded = false;
+    v->SetPosition(Vector3d(5.0, 6.0, 7.0));
+    CHECK(v->vesselTransform.position == Vector3f(5.0f, 6.0f, 7.0f));
+    v->loaded = true;
 }
