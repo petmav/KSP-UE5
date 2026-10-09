@@ -1991,7 +1991,7 @@ Expected values come from the decompiled control flow (derivation in comments), 
 
 ### Deviations, approximations, seams
 
-- `IStagingHost` (staging/stage_manager.hpp): the scene the manager works in (`LoadedSceneIsFlight` / `IsEditor`, `RootPart` = `EditorLogic.RootPart` / the active vessel's root, `ActiveVessel`,
+- `FlightGlobals.ActiveVessel` is `FlightRegistry::ActiveVessel` (WP-14's registry) until WP-19 merges the two registries (see WP-14 "Deviations"). `IStagingHost` (staging/stage_manager.hpp): the scene the manager works in (`LoadedSceneIsFlight` / `IsEditor`, `RootPart` = `EditorLogic.RootPart` / the active vessel's root, `ActiveVessel`,
   `SelectedPart`). `FlightStagingHost` reads `FlightRegistry::ActiveVessel`, `EditorStagingHost` is set by whoever owns the construct; WP-18's ShipConstruct implements the interface
   (ShipConstruct.cs is not ported here).
 - `StageGroup` / `StageIcon` are plain data records (WP-43 owns the UI classes and should derive or wrap them). `Part.stackIcon.StageIcon != null` is `StageManager::IconOf(part)`, reached through

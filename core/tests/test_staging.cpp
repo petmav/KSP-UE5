@@ -2001,6 +2001,10 @@ TEST_CASE("WP-16 StageManager life cycle: Instance, a second manager is refused,
         CHECK(quiet.Has(log::Level::Error, "Only one instance"));
         CHECK(StageManager::Instance == &sm);
         CHECK(StageManager::StageCount() == 0);
+        // the manager listens to GameEvents.onEditorLoad (:352): rebuildIndexes = true
+        CHECK_FALSE(sm.rebuildIndexesValue());
+        GameEvents::onEditorLoad.Fire(nullptr, static_cast<KSP::UI::Screens::CraftBrowserDialog_LoadType>(0));
+        CHECK(sm.rebuildIndexesValue());
         CHECK(StageManager::LastStage() == 0);   // :146 `Count - 1 < 0 ? 0`
         CHECK(StageManager::CurrentStage() == 0);
     }

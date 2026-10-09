@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "ksp/events/game_event_types.hpp"
 #include "ksp/staging/staging_types.hpp"
 
 namespace ksp {
@@ -179,6 +180,7 @@ public:
     void OnEditorRestoreState();                         // :338
     void OnVesselSwitching(Vessel* from, Vessel* to);    // :344
     void OnEditorLoad();                                 // :352 (the ShipConstruct and LoadType arguments are not read)
+    void OnEditorLoadEvent(ShipConstruct*, KSP::UI::Screens::CraftBrowserDialog_LoadType) { OnEditorLoad(); }  // GameEvents.onEditorLoad handler
     void SortIconsEvent(bool instant) { SortIcons(instant); }  // GameEvents.StageManager.SortIcons handler (:1121)
 
     // ---- icons (:822-947) ------------------------------------------------------------------------------------------------------

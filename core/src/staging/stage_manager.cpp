@@ -635,6 +635,7 @@ bool StageManager::Awake() {
     sub(GE::onEditorRestoreState, &StageManager::OnEditorRestoreState);
     sub(GE::StageManager::OnPartUpdateStageability, &StageManager::OnPartUpdateStageability);
     sub(GE::onVesselSwitching, &StageManager::OnVesselSwitching);
+    sub(GE::onEditorLoad, &StageManager::OnEditorLoadEvent);
     InstallPartHooks();
     return true;
 }

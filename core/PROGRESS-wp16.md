@@ -23,3 +23,4 @@ Branch wp16 (from wp14 7bc606d6). Notes after every major step.
 - chunks 04 (FindStageIndices etc.), 05 (SortIcons, groups, placement) pass. Fixed AvailablePart::preferredStage default 0->3 (AvailablePart.cs:114). Next: 06 flight activation/decouple/couple/undock, 07 DockedVesselInfo; STATUS/README; fresh run
 - chunk 06 flight/decouple/couple/undock/DockedVesselInfo passing (14 WP-16 cases). Next: more tests (module OnDecouple omni, ToggleStaging, Vessel staging misc), full ctest, STATUS/README, commit
 - README rows written; STATUS section next; then fresh run (clang + gcc), final commit
+- committed tests+docs; fresh clang run started (/tmp/claude-0/wp16/fresh_clang.log); then gcc preset
