@@ -1380,3 +1380,15 @@ next to each case.
 | `CelestialBody : ITargetable` | `OrbitDriver::Targetable()` for bodies without a host-supplied target | needs `bodyTransform` (engine) |
 
 Not in this assignment although in `work_packages.csv` for WP-10: nothing (all five WP-10 files are ported).
+
+### Test totals (fresh `./run_tests.sh -f`, Linux Clang 18, linux-rel)
+
+21/21 ctest tests pass (every gate max ULP 0); `unit`: 159 doctest cases, 42,082 assertions (WP-10: 17 cases, 2,009).
+
+### Commits (branch `wp10`)
+
+| hash | content |
+|---|---|
+| `e266c472` | TimeWarp full port, WarpTransition(Calculator), ITargetable/PositionTarget, FlightGlobals/GameSettings/Time/PQS/CelestialBody seams, OrbitDriver::Targetable |
+| `3b0529dd` | `tests/test_timewarp.cpp`, C8 runner drives `TimeWarp::SetRate` and gates `segments.requested_rate`, STATUS/README |
+| (docs) | test totals and commit table |

@@ -28,3 +28,4 @@ Branch wp10 (worktree .worktrees/wp10), from main f50d6121. Implementer: Sonnet.
 - [x] step 5: tests/test_timewarp.cpp written (all pass). Findings: only Kerbin/Minmus/Tylo prefab body limits equal altitudeLimits*Radius, other 14 hand-tuned (Mun 5000 etc.)
 - next: wider scrutiny (Debug build, full fresh run), STATUS.md WP-10 section, README rows, commit
 - [x] step 6: STATUS/README written; full run green (21/21 ctest; unit 159 cases / 42,082 assertions). Remaining: commit, fresh run, final report
+- [x] step 7: fresh full run 21/21 green; unit 159 cases / 42,082 assertions. DONE.
