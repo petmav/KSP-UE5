@@ -25,6 +25,7 @@ add_executable(kspcore_tests
     test_resource_flow.cpp
     test_resource_modules.cpp
     test_vessel.cpp
+    test_aero.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
 )
