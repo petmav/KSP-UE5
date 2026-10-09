@@ -44,6 +44,7 @@ class Part;
 class PartModule;
 class PartResource;
 class PartResourceDefinition;
+struct AttachNode;
 class AvailablePart;
 
 // Dictionary<string, KSPParseable> (insertion order; Add of a duplicate key throws ArgumentException)
@@ -90,6 +91,11 @@ public:
     AttachNodeSnapshot() = default;
     // AttachNodeSnapshot.cs:48 ("id, partIdx" + ",mesh" when the mesh is not empty)
     std::string Save() const;
+    // AttachNodeSnapshot.cs:7 AttachNodeSnapshot(AttachNode, ProtoVessel): partIdx = the node's attachedPart in the vessel's
+    // parts (WP-13; `parts` = pVesselRef.vesselRef.parts)
+    AttachNodeSnapshot(const AttachNode& node, const std::vector<Part*>& vesselParts);
+    // AttachNodeSnapshot.cs:61 findAttachedPart(vessel): null for partIdx -1 (IndexOutOfRange past the list)
+    Part* findAttachedPart(const std::vector<Part*>& vesselParts) const;
 };
 
 // VesselNaming.cs (data side)
@@ -224,7 +230,12 @@ public:
     void storePartRefs();                       // :499 (parent / symLinks / attach node snapshots from the part tree)
     std::unique_ptr<Part> CreatePart();         // :761 (Instantiate the prefab, then ConfigurePart; nullptr without partInfo)
     void ConfigurePart(Vessel* vesselRef, Part& partToConfigure, const AvailablePart& PartInfo, bool setPosition);  // :651
-
+    // :795 Load(Vessel, loadAsRootPart): Instantiate the part's prefab, link it under vesselParts[parentIdx] (not for the root) and
+    // ConfigurePart it. The merge of the root part into the Vessel component and the EVA suit lookup are Unity's / WP-14's; the
+    // vessel transform is the identity. The caller owns the returned part.
+    std::unique_ptr<Part> Load(Vessel* vesselRef, const std::vector<Part*>& vesselParts, bool loadAsRootPart);
+    // :1065 Init(Vessel): symmetry counterparts, srfAttachNode and attachNodes links from vesselParts
+    void Init(const std::vector<Part*>& vesselParts);
     bool HasCrew(const std::string& name) const;   // :1131
     PCM GetCrew(const std::string& name) const;    // :1151
     PCM GetCrew(int index) const;                  // :1171
@@ -305,6 +316,14 @@ public:
     void Save(ConfigNode& node);
     // ProtoVessel.cs:597 (no live vessel: only creates the node when it is null)
     void SaveVesselModules();
+
+    // ProtoVessel.cs:821 LoadObjects (WP-13): the parts of the snapshots, root = protoPartSnapshots[rootIndex]; a snapshot whose
+    // part is unknown is skipped (its index shifts the later ones, as in C#). The Vessel (WP-14) takes the parts over.
+    struct LoadedObjects {
+        std::vector<std::unique_ptr<Part>> parts;
+        Part* rootPart = nullptr;
+    };
+    LoadedObjects LoadObjects(Vessel* vesselRef);
 
     const std::vector<PCM>& GetVesselCrew();  // ProtoVessel.cs:465
     void RebuildCrewCounts();                 // :471

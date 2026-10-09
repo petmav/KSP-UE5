@@ -1542,3 +1542,356 @@ TEST_CASE("WP-13 structural modules: ModuleMirrorPlacement, ModuleDisplaceTweak,
         CHECK(full.HasNode("AXISGROUPS"));
     }
 }
+
+// ============================================ proto snapshots of the physprofile save <-> live parts =============================
+
+namespace {
+const std::string kSaves13 = std::string(KSPCORE_TESTDATA_DIR) + "/saves";
+
+// value-by-value compare of two nodes' values in order, returning the names that differ
+std::vector<std::string> DiffValues(const ConfigNode& a, const ConfigNode& b) {
+    std::vector<std::string> d;
+    const int n = std::max(a.values().Count(), b.values().Count());
+    for (int i = 0; i < n; i++) {
+        if (i >= a.values().Count() || i >= b.values().Count()) {
+            d.push_back("<count>");
+            break;
+        }
+        if (a.values()[i].name != b.values()[i].name || a.values()[i].value != b.values()[i].value) d.push_back(a.values()[i].name);
+    }
+    return d;
+}
+}  // namespace
+
+TEST_CASE("WP-13 physprofile save: ProtoVessel.LoadObjects builds the part tree, ProtoPartSnapshot(Part) writes it back") {
+    if (!GameAvailable()) return;
+    Game13 g;
+    GameParameters::GetDefaultParameters(Game_Modes::CAREER, GameParameters::Preset::Normal);
+    ConfigNode::NodePtr root = ConfigNode::Load(kSaves13 + "/physprofile/persistent.sfs");
+    REQUIRE(root);
+    Game game(root.get());
+    REQUIRE(game.flightState);
+    LogCapture log;
+    size_t vessels = 0, partsTotal = 0;
+    std::map<std::string, size_t> keyDiffs;
+    size_t modulesTotal = 0, modulesEqual = 0, resourcesTotal = 0, resourcesEqual = 0;
+    for (auto& pvp : game.flightState->protoVessels) {
+        ProtoVessel& pv = *pvp;
+        if (pv.protoPartSnapshots.empty()) continue;
+        vessels++;
+        CAPTURE(pv.vesselName);
+        log.lines.clear();
+        ProtoVessel::LoadedObjects lo = pv.LoadObjects(nullptr);
+        REQUIRE(lo.parts.size() == pv.protoPartSnapshots.size());
+        REQUIRE(lo.rootPart != nullptr);
+        CHECK(lo.rootPart == lo.parts[static_cast<size_t>(pv.rootIndex)].get());
+        std::vector<Part*> parts;
+        for (auto& p : lo.parts) parts.push_back(p.get());
+        partsTotal += parts.size();
+        // the tree: parent / children / symmetry exactly as the snapshots index them
+        std::vector<std::vector<Part*>> expectedChildren(parts.size());
+        for (size_t i = 0; i < parts.size(); i++) {
+            const ProtoPartSnapshot& s = *pv.protoPartSnapshots[i];
+            if (static_cast<int>(i) == pv.rootIndex) {
+                CHECK(parts[i]->parent == nullptr);
+            } else {
+                REQUIRE(parts[i]->parent == parts.at(static_cast<size_t>(s.parentIdx)));
+                expectedChildren[static_cast<size_t>(s.parentIdx)].push_back(parts[i]);
+            }
+            REQUIRE(parts[i]->symmetryCounterparts.size() == s.symLinkIdxs.size());
+            for (size_t k = 0; k < s.symLinkIdxs.size(); k++) CHECK(parts[i]->symmetryCounterparts[k] == parts[static_cast<size_t>(s.symLinkIdxs[k])]);
+            CHECK(parts[i]->protoPartSnapshot == &s);
+            CHECK(parts[i]->fields.craftID == s.craftID);
+            CHECK(parts[i]->fields.persistentId == s.persistentId);
+            CHECK(parts[i]->partInfo == s.partInfo);
+        }
+        for (size_t i = 0; i < parts.size(); i++) CHECK(parts[i]->children == expectedChildren[i]);
+        // attach nodes: attN / srfN resolved to parts; a child is reachable through the node pair
+        for (size_t i = 0; i < parts.size(); i++) {
+            Part& p = *parts[i];
+            if (p.parent != nullptr) {
+                // STACK: a node pair; SRF_ATTACH: the child's srfAttachNode points at the parent (the parent has no node for it)
+                if (p.fields.attachMode == static_cast<int>(AttachModes::SRF_ATTACH)) {
+                    CHECK(p.srfAttachNode->attachedPart == p.parent);
+                } else {
+                    CHECK(p.FindAttachNodeByPart(p.parent) != nullptr);
+                    CHECK(p.parent->FindAttachNodeByPart(&p) != nullptr);
+                }
+            }
+            for (const AttachNode& n : p.attachNodes) {
+                if (n.attachedPart == nullptr) continue;
+                CHECK(n.attachedPart->FindAttachNodeByPart(&p) != nullptr);  // stack nodes are mutual
+                CHECK(n.attachedPart->hasIndirectParent(&p) == (n.attachedPart->parent != nullptr));  // (sic) quirk of hasIndirectParent
+            }
+        }
+        // snapshot -> part fields, resources, modules (no module of the snapshot was left unmatched)
+        CHECK_FALSE(log.Has(log::Level::Warning, "module found on part definition"));
+        CHECK_FALSE(log.Has(log::Level::Warning, "indexing mismatch"));
+        for (size_t i = 0; i < parts.size(); i++) {
+            const ProtoPartSnapshot& s = *pv.protoPartSnapshots[i];
+            const Part& p = *parts[i];
+            CHECK(Bits(p.fields.mass) == Bits(s.mass));
+            CHECK(p.State() == PartStates::IDLE);
+            CHECK(p.fields.ResumeState == s.state);
+            CHECK(p.Resources.size() >= s.resources.size());
+            for (const auto& r : s.resources) {
+                const PartResource* pr = const_cast<Part&>(p).GetResource(*r->resourceName);
+                REQUIRE(pr != nullptr);
+                CHECK(pr->amount == r->amount);
+                CHECK(pr->maxAmount == r->maxAmount);
+                CHECK(pr->flowState == r->flowState);
+            }
+            if (!s.refTransformName.empty()) CHECK(p.GetReferenceTransformName() == s.refTransformName);  // asteroid vessels store none
+        }
+        // Part -> snapshots: a fresh ProtoVessel shell takes the live parts and writes them as PART nodes
+        ProtoVessel shell(*ConfigNode::Parse("VESSEL\n{\nname = shell\nORBIT\n{\nREF = 1\n}\nACTIONGROUPS\n{\n}\n}\n")->GetNode("VESSEL"), &game);
+        shell.protoPartSnapshots.clear();
+        for (Part* p : parts) shell.protoPartSnapshots.push_back(std::make_unique<ProtoPartSnapshot>(*p, &shell));
+        for (auto& s : shell.protoPartSnapshots) s->storePartRefs();
+        for (size_t i = 0; i < parts.size(); i++) {
+            ConfigNode original("PART"), rebuilt("PART");
+            pv.protoPartSnapshots[i]->Save(original);
+            shell.protoPartSnapshots[i]->Save(rebuilt);
+            // the identity and structure of the part is reproduced from the live Part. The asteroid vessel's part is written by
+            // ProtoVessel.CreateVesselNode, not from a live part: it stores srfN "None, -1", no rTrf and no MODULE nodes
+            const bool handBuilt = original.GetNodes("MODULE").empty();
+            for (const char* key : {"name", "cid", "uid", "mid", "persistentId", "launchID", "parent", "position", "rotation", "mirror", "symMethod",
+                                    "istg", "resPri", "dstg", "sqor", "sepI", "sidx", "attm", "sameVesselCollision", "srfN", "mass", "temp", "tempExt",
+                                    "tempExtUnexp", "staticPressureAtm", "expt", "state", "attached", "autostrutMode", "rigidAttachment", "flag", "rTrf",
+                                    "modCost", "modMass", "moduleVariantName", "moduleCargoStackableQuantity"}) {
+                CAPTURE(std::string(key));
+                CAPTURE(i);
+                if (handBuilt && (std::string(key) == "srfN" || std::string(key) == "rTrf" || std::string(key) == "modMass")) continue;
+                CHECK(rebuilt.GetValue(key) == original.GetValue(key));
+            }
+            CHECK(rebuilt.GetValues("sym") == original.GetValues("sym"));
+            CHECK(rebuilt.GetValues("attN") == original.GetValues("attN"));
+            CHECK(rebuilt.GetValues("crew") == original.GetValues("crew"));
+            // RESOURCE nodes, in order
+            CHECK(rebuilt.GetNodes("RESOURCE").size() == original.GetNodes("RESOURCE").size());
+            for (size_t k = 0; k < original.GetNodes("RESOURCE").size() && k < rebuilt.GetNodes("RESOURCE").size(); k++) {
+                resourcesTotal++;
+                if (DiffValues(*original.GetNodes("RESOURCE")[k], *rebuilt.GetNodes("RESOURCE")[k]).empty()) resourcesEqual++;
+            }
+            // MODULE nodes: the live part writes every module it has (a snapshot may carry fewer: asteroids store none); the
+            // module host reproduces Save for fields, module OnSave logic belongs to the owning packages
+            CHECK(rebuilt.GetNodes("MODULE").size() == parts[i]->Modules().Count());
+            CHECK(rebuilt.GetNodes("MODULE").size() >= original.GetNodes("MODULE").size());
+            for (size_t k = 0; k < original.GetNodes("MODULE").size() && k < rebuilt.GetNodes("MODULE").size(); k++) {
+                modulesTotal++;
+                if (original.GetNodes("MODULE")[k]->ToString() == rebuilt.GetNodes("MODULE")[k]->ToString()) modulesEqual++;
+            }
+            for (const std::string& d : DiffValues(original, rebuilt)) keyDiffs[d]++;
+        }
+        shell.protoPartSnapshots.clear();
+    }
+    MESSAGE("physprofile: " << vessels << " vessels, " << partsTotal << " parts; modules equal " << modulesEqual << "/" << modulesTotal
+                            << "; resources equal " << resourcesEqual << "/" << resourcesTotal);
+    for (const auto& [k, n] : keyDiffs) MESSAGE("  PART value differs: " << k << " x" << n);
+    CHECK(vessels == 2);
+    CHECK(partsTotal == 458);              // the 457-part PhysProf-L2-AS and the asteroid it is next to
+    CHECK(modulesEqual == modulesTotal);   // MODULE nodes after PartModule.Load -> Save are byte-identical to the game's
+    CHECK(resourcesEqual == resourcesTotal);
+    CHECK(modulesTotal == 1337);
+    CHECK(resourcesTotal == 623);
+}
+
+// ============================================== part trees of the original crafts (harness/inputs/Ships) =========================
+
+namespace {
+// ShipConstruct.LoadShip's part creation (ShipConstruct.cs:378-640) over WP-04's craft form: Instantiate the prefab, assign the
+// values of the PART node, load MODULE / RESOURCE / PARTDATA nodes, then link parent / children / symmetry / attach nodes.
+// ShipConstruct itself (editor integration, staging, delta-v) is WP-18; this is the part-side of it.
+struct CraftParts {
+    std::vector<std::unique_ptr<Part>> parts;
+    bool ok = false;
+    std::string missing;
+};
+
+CraftParts BuildCraftParts(Game13& g, const ShipConstruct& ship) {
+    CraftParts out;
+    for (const auto& d : ship.parts) {
+        const AvailablePart* ap = g.data.parts.getPartInfoByName(d.partInfoName);
+        if (ap == nullptr || !ap->partPrefab) {
+            out.missing = d.partInfoName;
+            return out;
+        }
+    }
+    for (const auto& d : ship.parts) {
+        const AvailablePart* ap = g.data.parts.getPartInfoByName(d.partInfoName);
+        auto part = Part::Instantiate(*ap->partPrefab);
+        part->gameObjectName = d.partInfoName;
+        part->fields.craftID = d.craftID;
+        part->partInfo = ap;
+        part->fields.symMethod = static_cast<int>(d.symMethod);
+        part->fields.persistentId = d.persistentId;
+        part->partTransform.position = d.position;
+        part->partTransform.rotation = d.rotation;
+        part->fields.attPos = d.attPos;
+        part->fields.attPos0 = d.attPos0;
+        part->fields.attRotation = d.attRotation;
+        part->fields.attRotation0 = d.attRotation0;
+        part->SetMirror(d.mirrorVector);
+        part->fields.autoStrutMode = static_cast<int>(d.autoStrutMode);
+        part->fields.rigidAttachment = d.rigidAttachment;
+        part->fields.inverseStage = d.inverseStage;
+        part->fields.resourcePriorityOffset = d.resourcePriorityOffset;
+        part->fields.defaultInverseStage = d.defaultInverseStage;
+        part->fields.inStageIndex = d.inStageIndex;
+        part->fields.manualStageOffset = d.manualStageOffset;
+        part->fields.separationIndex = d.separationIndex;
+        part->fields.attachMode = d.attachMode;
+        part->fields.sameVesselCollision = d.sameVesselCollision;
+        part->fields.customPartData = d.customPartData;
+        if (d.srfAttachNodeInFile) {
+            AttachNode& n = *part->srfAttachNode;
+            n.attachedPartId = d.srfAttachNode.attachedPartId;
+            n.srfAttachMeshName = d.srfAttachNode.srfAttachMeshName.value_or(std::string());
+            if (d.srfAttachNode.originalOrientationKnown) {
+                n.originalPosition = n.position = d.srfAttachNode.position;
+                n.orientation = n.originalOrientation = d.srfAttachNode.orientation;
+            }
+        }
+        for (const auto& a : d.attachNodes) {
+            AttachNode* n = part->FindAttachNode(a.id);
+            if (n == nullptr) continue;
+            n->attachedPartId = a.attachedPartId;
+            if (a.positionKnown) n->position = a.position;
+            if (a.orientationKnown) n->orientation = a.orientation;
+        }
+        int moduleIndex = 0;
+        for (const auto& m : d.modules) part->LoadModule(*m, moduleIndex);
+        for (const auto& r : d.resources) part->SetResource(*r);
+        if (d.partData) part->OnLoad(*d.partData);
+        out.parts.push_back(std::move(part));
+    }
+    for (size_t n = 0; n < out.parts.size(); n++) {
+        Part* part2 = out.parts[n].get();
+        for (int c : ship.parts[n].children) out.parts[static_cast<size_t>(c)]->setParent(part2);
+        for (int s : ship.parts[n].symmetryCounterparts) part2->symmetryCounterparts.push_back(s >= 0 ? out.parts[static_cast<size_t>(s)].get() : nullptr);
+        std::vector<Part*> all;
+        for (auto& p : out.parts) all.push_back(p.get());
+        part2->srfAttachNode->owner = part2;
+        part2->srfAttachNode->FindAttachedPart(all);
+        for (AttachNode& an : part2->attachNodes) {
+            an.owner = part2;
+            an.FindAttachedPart(all);
+        }
+    }
+    for (auto& p : out.parts) p->InitializeModules();
+    out.ok = true;
+    return out;
+}
+}  // namespace
+
+TEST_CASE("WP-13 craft trees: every stock-part craft of harness/inputs/Ships becomes a consistent Part tree") {
+    if (!GameAvailable()) return;
+    Game13 g;
+    LogCapture log;
+    size_t crafts = 0, skippedModded = 0, partsTotal = 0, symLinks = 0, srfParts = 0;
+    size_t modCostChecked = 0, modCostEqual = 0, modMassChecked = 0, modMassEqual = 0, craftsWithForeignModules = 0, loadFailed = 0;
+    std::map<std::string, size_t> costMismatchByClass, massMismatchByClass, oneSided;
+    for (const char* dir : {"VAB", "SPH"}) {
+        const fs::path d = fs::path(KSPCORE_HARNESS_DIR) / "inputs" / "Ships" / dir;
+        std::vector<fs::path> files;
+        for (const auto& e : fs::directory_iterator(d))
+            if (e.path().extension() == ".craft") files.push_back(e.path());
+        std::sort(files.begin(), files.end());
+        for (const fs::path& f : files) {
+            ConfigNode::NodePtr root = ConfigNode::Load(f.string());
+            REQUIRE(root);
+            ShipConstruct ship;
+            std::string err;
+            if (!ship.LoadShip(*root, 0, true, err)) {  // a part missing from the stock database (mods), or a too-old format
+                loadFailed++;
+                continue;
+            }
+            CAPTURE(f.filename().string());
+            log.lines.clear();
+            CraftParts cp = BuildCraftParts(g, ship);
+            // MODULE nodes of mods (FAR, ...) match no module class of the stock part: their mass / cost modifiers are missing
+            const bool foreignModules = log.Has(log::Level::Warning, "module found on part definition");
+            if (foreignModules) craftsWithForeignModules++;
+            if (!cp.ok) {
+                skippedModded++;  // the craft uses a modded part (not in the stock GameData)
+                continue;
+            }
+            crafts++;
+            partsTotal += cp.parts.size();
+            REQUIRE(cp.parts.size() == ship.parts.size());
+            size_t roots = 0;
+            std::vector<Part*> all;
+            for (auto& p : cp.parts) all.push_back(p.get());
+            for (size_t i = 0; i < cp.parts.size(); i++) {
+                Part& p = *cp.parts[i];
+                const ShipConstruct::PartData& d = ship.parts[i];
+                if (p.parent == nullptr) roots++;
+                else CHECK(p.parent == cp.parts[static_cast<size_t>(d.parent)].get());
+                REQUIRE(p.children.size() == d.children.size());
+                for (size_t k = 0; k < d.children.size(); k++) CHECK(p.children[k] == cp.parts[static_cast<size_t>(d.children[k])].get());
+                symLinks += p.symmetryCounterparts.size();
+                // attN / srfN resolve to parts of the craft; a stack node is mutual, a surface child points at its parent
+                // (CompoundParts -- fuel lines, struts -- attach through CompoundPart.target, not through attach nodes)
+                const bool compound = p.className == "CompoundPart" || (p.parent && p.parent->className == "CompoundPart");
+                if (p.parent != nullptr && !compound) {
+                    if (p.fields.attachMode == static_cast<int>(AttachModes::SRF_ATTACH)) {
+                        srfParts++;
+                        CHECK(p.srfAttachNode->attachedPart == p.parent);
+                    } else {
+                        // (a v1.6.0 craft stores the pair one-sided, e.g. a nose cone's attN to a truss that has no node for it)
+                        if (p.FindAttachNodeByPart(p.parent) == nullptr || p.parent->FindAttachNodeByPart(&p) == nullptr)
+                            oneSided[f.filename().string()]++;
+                    }
+                }
+                for (const AttachNode& n : p.attachNodes)
+                    if (n.attachedPart != nullptr && n.attachedPart->className != "CompoundPart" && !compound) {
+                        if (n.attachedPart->FindAttachNodeByPart(&p) == nullptr) oneSided[f.filename().string()]++;
+                    }
+                // the game-written modCost / modMass are GetModuleCosts / GetModuleMass(partInfo.cost) of the live part
+                if (d.modCost && !foreignModules) {
+                    modCostChecked++;
+                    if (Bits(p.GetModuleCosts(p.partInfo->cost)) == Bits(*d.modCost)) modCostEqual++;
+                    else costMismatchByClass[d.partInfoName]++;
+                }
+                if (d.modMass && !foreignModules) {
+                    modMassChecked++;
+                    if (Bits(p.GetModuleMass(p.partInfo->cost)) == Bits(*d.modMass)) modMassEqual++;
+                    else massMismatchByClass[d.partInfoName]++;
+                }
+                // resources of the file are on the part with their amounts
+                for (const auto& r : d.resources) {
+                    PartResource* pr = p.GetResource(*r->GetValue("name"));
+                    REQUIRE(pr != nullptr);
+                    CHECK(pr->amount == dotnet::ParseDouble(*r->GetValue("amount")));
+                }
+            }
+            CHECK(roots == 1);
+            CHECK(cp.parts[0]->parent == nullptr);  // the first PART is the root
+            // hasIndirectChild from the root reaches every part
+            for (Part* p : all) CHECK(all[0]->hasIndirectChild(p));
+        }
+    }
+    MESSAGE("crafts built: " << crafts << " (" << partsTotal << " parts, " << symLinks << " symmetry links, " << srfParts
+                             << " surface-attached parts); LoadShip refused (modded parts / old format): " << loadFailed
+                             << "; crafts with modded MODULE nodes: " << craftsWithForeignModules);
+    MESSAGE("modCost equal " << modCostEqual << "/" << modCostChecked << ", modMass equal " << modMassEqual << "/" << modMassChecked);
+    for (const auto& [k, n] : costMismatchByClass) MESSAGE("  modCost differs: " << k << " x" << n);
+    for (const auto& [k, n] : massMismatchByClass) MESSAGE("  modMass differs: " << k << " x" << n);
+    for (const auto& [k, n] : oneSided) MESSAGE("  one-sided attach node pairs in " << k << ": " << n);
+    CHECK(crafts == 33);
+    CHECK(partsTotal == 1967);
+    CHECK(loadFailed == 53);
+    CHECK(craftsWithForeignModules == 18);
+    // every attach node pair is mutual except those of the one old craft (3 pairs seen from both sides)
+    CHECK(oneSided.size() == 1);
+    CHECK(oneSided.count("Rocket-power VTOL.craft") == 1);
+    // the game-written modCost / modMass equal the live GetModuleCosts / GetModuleMass(partInfo.cost) except for the two
+    // fairings (their mass and cost come from built fairing panels, ModuleProceduralFairing state not in the prefab)
+    CHECK(modCostChecked == 1063);
+    CHECK(modCostEqual == 1061);
+    CHECK(modMassEqual == 1061);
+    CHECK(costMismatchByClass.size() == 2);
+    CHECK(costMismatchByClass.count("fairingSize1") == 1);
+    CHECK(costMismatchByClass.count("fairingSize2") == 1);
+    CHECK(massMismatchByClass == costMismatchByClass);
+}
