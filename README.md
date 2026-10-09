@@ -62,6 +62,7 @@ links).
 | `golden.curves_eval` | WP-01 FloatCurve / Unity AnimationCurve: 366 curves, 28,484 evaluations | `harness/golden/curves_eval` (== native Unity, CAPTURE-SPEC C1) |
 | `golden.orbit_propagation` | WP-07 Orbit: Init, propagation (positions, velocities, anomalies, UpdateFromUT, time to Pe/Ap), UpdateFromStateVectors, Kepler solvers in all three regimes (2,422 rows) | `harness/golden/orbit_propagation` |
 | `corpus.gamedata` | every `.cfg` under `harness/inputs/GameData` and `.craft` under `harness/inputs/Ships`: load, Save->Load->Save byte-identical, Parse == Load, every `key` node loads as a FloatCurve | self-consistency |
+| `corpus.saves` | WP-04: every `.sfs` / `.craft` under `decompiled/KSP-dev/saves` and every stock `.craft` under `decompiled/KSP-dev/Ships`: `Game(ConfigNode)` / `ShipConstruct.LoadShip` -> Save (R1) -> again (R2); R2 == R1 for every file, R1 byte-identical or every difference explained by a documented KSP rule (`tools/save_corpus`), files written by KSP 1.12.5 byte-identical once the mod-owned elements KSP's loaders drop are removed | original game data |
 | `golden.physics_constants` | WP-09 PhysicsGlobals: all 213 field rows (value text, numeric value, source layer) after level0 prefab + Physics.cfg | `harness/golden/physics_constants` |
 | `capture.physics_drag_curve` | WP-09 PhysicsGlobals.DragCurveValue (managed float code, Mono rule) | in-game `harness/captures/out/aero_forces_mono.json` (table drag_curve_value) |
 | `golden.body_catalog` | WP-09 Kerbol system at UT 0 with WP-07's run-time Orbit: bodies (all columns), orbits (all columns: elements, Init outputs, state at UT 0), 1 km atmosphere profiles, every body FloatCurve key | `harness/golden/body_catalog` |
@@ -158,6 +159,10 @@ contract into FMA.
 | `include/ksp/physics/` | WP-09 `physics_globals.hpp` (PhysicsGlobals: fields, static properties, LoadDatabase/SaveDatabase, lifting-surface curves, DragCurveValue; the `*.inc` files are generated), `vessel_ranges.hpp` (VesselRanges, Vessel.Situations) |
 | `include/ksp/celestial/` | WP-09 `celestial_body.hpp` (CelestialBody, CBAttributeMapSO, MiniBiome, GameAssetRef, orbit elements + `ICelestialBodyOrbit` link to the run-time Orbit), `celestial_body_orbit.hpp` (`CelestialBodyOrbitAdapter`: OrbitDriver for bodies over ksp::Orbit), `planetarium.hpp` (Planetarium, the only one: also Orbit's Zup/up/right/ZupAtT), `celestial_system.hpp` (PSystem prefab, `KerbolSystemPrefab()`, spawn, FlightGlobals body list), `flight_atmosphere.hpp` (FlightIntegrator atmosphere helpers) |
 | `include/ksp/curves/serialized_float_curve.hpp` | FloatCurves built from Unity-serialized keyframes (prefab data) |
+| `include/ksp/save/` | WP-04 save model: `game.hpp` (Game, FlightState, ProtoScenarioModule, ScenarioModule data side, GameBackup), `game_parameters.hpp` (GameParameters + every stock parameter node, presets), `proto_vessel.hpp` (ProtoVessel, ProtoPartSnapshot, module / resource snapshots, AttachNodeSnapshot, VesselNaming, target / waypoint info), `crew.hpp` (FlightLog, ProtoCrewMember, KerbalRoster, experience configs), `ship_construct.hpp` (.craft file form), `upgrade_pipeline.hpp` (SaveUpgradePipeline + 40 stock scripts, KSPUpgradePipeline), `game_persistence.hpp` (GamePersistence, quicksave naming, KSPScenarioType), `save_environment.hpp` (the GameDatabase / ExpansionsLoader / HighLogic / FlightGlobals-id / GameSettings / PartLoader state the save model reads, one shim), `save_enums.hpp` |
+| `include/ksp/dotnet/version.hpp`, `enum_parse.hpp` | System.Version; Enum.Parse with numbers, flags and whitespace |
+| `tools/save_corpus/` | the `corpus.saves` gate (round trip + documented-difference classifier) |
+| `tools/wp04/` | `gen_upgrade_scripts.py` (-> `src/save/upgrade_scripts_data.inc` from the decompiled SaveUpgradePipeline scripts), `gen_scenario_types.ps1` (-> `src/save/scenario_types_data.inc`, [KSPScenario] types of the shipped DLL via Mono.Cecil); regenerate, never hand-edit |
 | `data/kerbol_body_assets.json` | index of the game's own body assets (biome maps with attribute tables, mini-biomes, PQS height/colour maps, scaled-space meshes/materials/textures) by asset file + PathID, from `decompiled/KSP-dev/KSP_x64_Data` (`tools/extract_body_assets.py`) |
 | `tools/gen_wp09_data.py` | generates `physics_globals_*.inc` and `src/celestial/kerbol_system_data.cpp` from the decompiled C# (field lists, LoadDatabase/SaveDatabase order) and the game's serialized prefab data; regenerate, never hand-edit |
 | `tools/extract_body_assets.py` | read-only UnityPy indexer of the body assets (run with `harness/tools-cache/venv`) |
@@ -214,6 +219,12 @@ contract into FMA.
 - **Thread safety**: everything is single-threaded like KSP unless stated. `AnimationCurve::Evaluate` is const and
   stateless (thread-safe) for strictly increasing key times; `dotnet::SetRuntime`, `log::SetSink` and
   `UnityRandom::Global()` are process-wide.
+- **Save model (WP-04).** Load = the C# constructor over a ConfigNode (`Game(root)`, `ProtoVessel(node, game)`, ...),
+  Save = the C# Save method; KSP's quirks are kept (see STATUS.md WP-04). Everything the save code reads from other
+  systems (GameDatabase envInfo / loaderInfo / modded, installed DLC, HighLogic.CurrentGame, the FlightGlobals
+  persistentId registry, GameSettings, PartLoader queries, Guid / TickCount randomness) is in
+  `SaveEnvironment::Current()`. A host must call `GameParameters::GetDefaultParameters(...)` (as MainMenu.Start does)
+  before loading saves: the first GameParameters ever constructed has a different custom-parameter order.
 - Namespaces: `ksp` (game types), `ksp::Mathf`, `ksp::UtilMath`, `ksp::KSPUtil`, `ksp::ParseExtensions`, `ksp::dotnet`,
   `ksp::events` (event bus; `ksp::GameEvents` is an alias), `ksp::util` (KSP's extension-method classes). C# namespaces
   map to nested namespaces under `ksp` (`KSP.Localization` -> `ksp::KSP::Localization`, `Contracts` -> `ksp::Contracts`).

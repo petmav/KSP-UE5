@@ -101,3 +101,4 @@
   DefaultCrewForVessel, CrewGenerator random names (GetNewKerbal/AddApplicant/Update), ProtoVessel.CreateVesselNode/
   CreatePartNode (need part DB + live vessel), Load-into-live paths (WP-13/14), Mission (MISSIONTOSTART kept raw),
   adjuster modules (MakingHistory), PartResourceLibrary definitions, ExperienceTrait objects/effects, GetSituationString.
+- FINAL: README + STATUS WP-04 written; full run 16/16 ctest pass (corpus.saves 52.6 s in the full run). Final commit next.
