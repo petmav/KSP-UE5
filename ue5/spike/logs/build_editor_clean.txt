@@ -1,0 +1,54 @@
+﻿Using bundled DotNet SDK version: 10.0 win-x64
+Running UnrealBuildTool: dotnet "..\..\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.dll" KspUe5Editor Win64 Development -Project=C:\Projects\KSP-UE5\ue5\KspUe5.uproject -WaitMutex -NoHotReloadFromIDE
+Log file: C:\Users\pmavr\AppData\Local\UnrealBuildTool\Log.txt
+Determining max actions to execute in parallel (8 physical cores, 16 logical cores)
+  Executing up to 8 processes, one per physical core
+  Requested 1.5 GB memory per action, 6.42 GB available: limiting max parallel actions to 4
+Using 'git status' to determine working set for adaptive non-unity build (C:\Projects\KSP-UE5\ue5).
+Creating makefile for KspUe5Editor (no existing makefile)
+UbaServer - Listening on 0.0.0.0:1345
+UHT compiled-in object format Default
+Building KspUe5Editor...
+===== Toolchain Information =====
+Using ISPC compiler (C:\Program Files\Epic Games\UE_5.8\Engine\Source\ThirdParty\Intel\ISPC\bin\Windows\ispc.exe)
+  Intel(r) Implicit SPMD Program Compiler (Intel(r) ISPC), 1.24.0 (build commit  @ 20250404, LLVM 18.1.2) 
+Using Visual Studio 14.44.35227 toolchain (C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207) and Windows 10.0.22621.0 SDK (C:\Program Files (x86)\Windows Kits\10).
+[Adaptive Build] Excluded from KspUe5 unity file: SpikeActors.cpp
+=================================
+Using Unreal Build Accelerator local executor to run 25 action(s)
+  CPU 8 physical cores, 16 logical cores
+  Memory 23.79 GB physical, 38.39 GB/77.41 GB committed
+  UBA Storage capacity 40 GB
+[1/25] Compile Resource [x64] Default.rc2
+[2/25] Compile Resource [x64] Default.rc2
+[3/25] Compile Resource [x64] Default.rc2
+[4/25] Compile [x64] SharedPCH.Core.Project.ValApi.ValExpApi.Cpp20.cpp
+[5/25] Compile [x64] Module.KspCoreBridge.cpp
+[6/25] Link [x64] UnrealEditor-KspCoreBridge.lib
+[7/25] Link [x64] UnrealEditor-KspCoreBridge.dll
+[8/25] Compile [x64] SharedPCH.UnrealEd.Project.ValApi.ValExpApi.Cpp20.cpp
+[9/25] Compile [x64] KspUe5.cpp
+[10/25] Compile [x64] PerModuleInline.gen.cpp
+[11/25] Compile [x64] KspUe5Tests.cpp
+[12/25] Compile [x64] Module.KspUe5.gen.cpp
+[13/25] Compile [x64] SpikeMath.cpp
+[14/25] Compile [x64] SpikeActors.cpp
+[15/25] Compile [x64] SpikePlanet.cpp
+[16/25] Compile [x64] SpikeDirector.cpp
+[17/25] Link [x64] UnrealEditor-KspUe5.lib
+[18/25] Compile [x64] KspCreateSpikeMapCommandlet.cpp
+[19/25] Compile [x64] KspUe5Editor.cpp
+[20/25] Compile [x64] Module.KspUe5Editor.gen.cpp
+[21/25] Link [x64] UnrealEditor-KspUe5.dll
+[22/25] Compile [x64] PerModuleInline.gen.cpp
+[23/25] Link [x64] UnrealEditor-KspUe5Editor.lib
+[24/25] Link [x64] UnrealEditor-KspUe5Editor.dll
+[25/25] WriteMetadata KspUe5Editor.target [NoUba]
+
+Total time in Unreal Build Accelerator local executor: 45.28 seconds
+Output binary: C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe
+
+Result: Succeeded
+Total execution time: 63.94 seconds
+Trace written to file C:\Users\pmavr\AppData\Local\UnrealBuildTool\Trace.uba with size 15.6kb
+TIMING 2026-10-09 01:14:24  clean full build KspUe5Editor Development         64.4 s  rc=0

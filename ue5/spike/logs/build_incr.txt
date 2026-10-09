@@ -1,0 +1,31 @@
+﻿Using bundled DotNet SDK version: 10.0 win-x64
+Running UnrealBuildTool: dotnet "..\..\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.dll" KspUe5Editor Win64 Development -Project=C:\Projects\KSP-UE5\ue5\KspUe5.uproject -WaitMutex -NoHotReloadFromIDE
+Log file: C:\Users\pmavr\AppData\Local\UnrealBuildTool\Log.txt
+Determining max actions to execute in parallel (8 physical cores, 16 logical cores)
+  Executing up to 8 processes, one per physical core
+  Requested 1.5 GB memory per action, 6.66 GB available: limiting max parallel actions to 4
+Using 'git status' to determine working set for adaptive non-unity build (C:\Projects\KSP-UE5\ue5).
+UbaServer - Listening on 0.0.0.0:1345
+Building KspUe5Editor...
+===== Toolchain Information =====
+Using ISPC compiler (C:\Program Files\Epic Games\UE_5.8\Engine\Source\ThirdParty\Intel\ISPC\bin\Windows\ispc.exe)
+  Intel(r) Implicit SPMD Program Compiler (Intel(r) ISPC), 1.24.0 (build commit  @ 20250404, LLVM 18.1.2) 
+Using Visual Studio 14.44.35227 toolchain (C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207) and Windows 10.0.22621.0 SDK (C:\Program Files (x86)\Windows Kits\10).
+[Adaptive Build] Excluded from KspUe5 unity file: SpikeActors.cpp
+=================================
+Using Unreal Build Accelerator local executor to run 4 action(s)
+  CPU 8 physical cores, 16 logical cores
+  Memory 23.79 GB physical, 37.76 GB/77.41 GB committed
+  UBA Storage capacity 40 GB
+[1/4] Compile [x64] SpikeMath.cpp
+[2/4] Link [x64] UnrealEditor-KspUe5.lib
+[3/4] Link [x64] UnrealEditor-KspUe5.dll
+[4/4] WriteMetadata KspUe5Editor.target [NoUba]
+
+Total time in Unreal Build Accelerator local executor: 8.99 seconds
+Output binary: C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe
+
+Result: Succeeded
+Total execution time: 9.94 seconds
+Trace written to file C:\Users\pmavr\AppData\Local\UnrealBuildTool\Trace.uba with size 6.0kb
+TIMING 2026-10-09 01:14:43  incremental build after touching SpikeMath.cpp      10.1 s  rc=0

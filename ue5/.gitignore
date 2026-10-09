@@ -1,0 +1,31 @@
+# Unreal build products and caches
+Binaries/
+Intermediate/
+DerivedDataCache/
+Saved/
+Plugins/*/Binaries/
+Plugins/*/Intermediate/
+
+# IDE / generated project files (regenerate with Scripts/genproj.ps1)
+.vs/
+.vscode/
+.idea/
+*.sln
+*.slnx
+*.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+*.vcxproj*
+*.xcodeproj
+*.xcworkspace
+
+# Stub CMake build tree (the built stub lib in Stub/lib/ IS committed so clean clones link)
+Stub/build/
+
+# Big raw spike logs (summaries and CSVs are committed)
+spike/logs/*.log
+
+# Cook-generated file open order logs
+Build/*/FileOpenOrder/
