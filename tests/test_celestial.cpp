@@ -30,7 +30,8 @@ const std::string kProjectRoot = KSPCORE_PROJECT_ROOT;
 
 bool SameBits(double a, double b) { return std::memcmp(&a, &b, sizeof a) == 0; }
 
-// The in-game start-up order (as the golden runner's CelestialEnv, without a run-time Orbit unless given).
+// The in-game start-up order (as the golden runner's CelestialEnv); the run-time Orbit is the real one unless a
+// factory is given.
 struct Env {
     PhysicsGlobals pg;
     Planetarium planetarium;
@@ -46,24 +47,6 @@ struct Env {
     }
     ~Env() { sys.reset(); }
     CelestialBody& Body(const char* name) const { return *sys->GetBodyByName(name); }
-};
-
-// Orbit.period as Orbit.Init computes it (Orbit.cs:334/370) - test stand-in for WP-07's Orbit.
-struct PeriodOnlyOrbit : ICelestialBodyOrbit {
-    double p;
-    explicit PeriodOnlyOrbit(const CelestialBody& b) {
-        const double a = std::fabs(b.orbitDriver->orbit.semiMajorAxis);
-        p = UtilMath::PI * 2.0 / std::sqrt(b.orbitDriver->referenceBody->gravParameter / (a * a * a));
-    }
-    double period() const override { return p; }
-    double trueAnomaly() const override { return 0; }
-    double radius() const override { return 0; }
-    double PeR() const override { return 0; }
-    double ApR() const override { return 0; }
-    Vector3d vel() const override { return {}; }
-    Vector3d getRelativePositionAtUT(double) const override { return {}; }
-    Vector3d getOrbitalVelocityAtUT(double) const override { return {}; }
-    void UpdateOrbit() override {}
 };
 
 }  // namespace
@@ -197,7 +180,7 @@ TEST_CASE("Kerbol catalog equals the serialized PSystem prefab bit for bit") {
 }
 
 TEST_CASE("spawned system: hierarchy, SOI ordering, home body, Kerbin constants") {
-    Env env([](CelestialBody& b) { return std::make_unique<PeriodOnlyOrbit>(b); });
+    Env env;
     REQUIRE(env.sys->Bodies().size() == 17);
     for (size_t i = 0; i < env.sys->Bodies().size(); ++i) CHECK(env.sys->Bodies()[i]->flightGlobalsIndex == static_cast<int>(i));
     CelestialBody& sun = env.Body("Sun");
@@ -240,7 +223,7 @@ TEST_CASE("spawned system: hierarchy, SOI ordering, home body, Kerbin constants"
 }
 
 TEST_CASE("spawn without a run-time Orbit takes KSP's orbit == null branches") {
-    Env env;  // no OrbitFactory (WP-07 not attached)
+    Env env([](CelestialBody&) { return std::unique_ptr<ICelestialBodyOrbit>(); });  // factory attaches no Orbit
     CelestialBody& mun = env.Body("Mun");
     CelestialBody& kerbin = env.Body("Kerbin");
     CHECK(mun.orbit() == nullptr);

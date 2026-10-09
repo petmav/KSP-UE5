@@ -27,8 +27,7 @@ add_library(kspcore STATIC
     celestial/celestial_system.cpp
     celestial/kerbol_system_data.cpp
     celestial/flight_atmosphere.cpp
-    orbit/celestial_body_ref.cpp
-    orbit/planetarium_frames.cpp
+    celestial/celestial_body_orbit.cpp
     orbit/orbit.cpp
     orbit/targeting.cpp
     orbit/orbit_snapshot.cpp

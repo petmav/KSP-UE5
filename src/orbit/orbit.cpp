@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "ksp/celestial/planetarium.hpp"
 #include "ksp/config/config_node.hpp"  // ksp::NullReferenceException
 #include "ksp/core/log.hpp"
 #include "ksp/dotnet/math.hpp"
@@ -38,9 +39,15 @@ double SignOrThrow(double v) {
     return static_cast<double>(M::Sign(v));
 }
 
-const CelestialFrame& Zup() { return PlanetariumFrames::Zup(); }
+const CelestialFrame& Zup() { return Planetarium::Zup; }
 
 }  // namespace
+
+// CelestialBody.cs:321 `body.orbit` (see orbit.hpp)
+Orbit* BodyOrbit(const CelestialBody* body) {
+    ICelestialBodyOrbit* link = body->orbit();
+    return link != nullptr ? link->GetOrbit() : nullptr;
+}
 
 Orbit::FindClosestPointsDelegate Orbit::FindClosestPoints = &Orbit::FindClosestPointsDefault;
 Orbit::SolveClosestApproachDelegate Orbit::SolveClosestApproach = &Orbit::SolveClosestApproachDefault;
@@ -75,7 +82,7 @@ double Orbit::CASolutionState::Clamp_dt(double dt) const { return M::Min(maxdt, 
 // ---- construction / elements ---------------------------------------------------------------------------------------
 
 // Orbit.cs:316
-Orbit::Orbit(double inc, double e, double sma, double lan, double argPe, double mEp, double t, CelestialBodyRef* body) {
+Orbit::Orbit(double inc, double e, double sma, double lan, double argPe, double mEp, double t, CelestialBody* body) {
     SetOrbit(inc, e, sma, lan, argPe, mEp, t, body);
 }
 
@@ -119,7 +126,7 @@ double Orbit::GetMeanMotion(double sma) const {
 
 // Orbit.cs:340
 void Orbit::SetOrbit(double inc, double e, double sma, double lan, double argPe, double mEp, double t,
-                     CelestialBodyRef* body) {
+                     CelestialBody* body) {
     inclination = inc;
     eccentricity = e;
     semiMajorAxis = sma;
@@ -162,7 +169,7 @@ double Orbit::SafeAcos(double c) {
 // ---- updates -------------------------------------------------------------------------------------------------------
 
 // Orbit.cs:393
-void Orbit::UpdateFromOrbitAtUT(const Orbit& orbit, double UT, CelestialBodyRef* toBody) {
+void Orbit::UpdateFromOrbitAtUT(const Orbit& orbit, double UT, CelestialBody* toBody) {
     State state;
     State state2;
     if (orbit.referenceBody->HasChild(toBody)) {
@@ -187,7 +194,7 @@ void Orbit::UpdateFromOrbitAtUT(const Orbit& orbit, double UT, CelestialBodyRef*
 }
 
 // Orbit.cs:423
-void Orbit::UpdateFromStateVectors(Vector3d pos_, Vector3d vel_, CelestialBodyRef* refBody, double UT) {
+void Orbit::UpdateFromStateVectors(Vector3d pos_, Vector3d vel_, CelestialBody* refBody, double UT) {
     pos_ = Zup().LocalToWorld(pos_);
     vel_ = Zup().LocalToWorld(vel_);
     UpdateFromFixedVectors(pos_, vel_, refBody, UT);
@@ -195,8 +202,8 @@ void Orbit::UpdateFromStateVectors(Vector3d pos_, Vector3d vel_, CelestialBodyRe
         // Quaternion.AngleAxis(0f - (float)LAN, Planetarium.up) * Planetarium.right: native AngleAxis, managed
         // Quaternion * Vector3 (Vector3d arguments narrowed to Vector3, the result widened back).
         const float angle = f32store(0.0 - fx(static_cast<float>(LAN)));
-        const Vector3d lhs(UnityNative::AngleAxis(angle, PlanetariumFrames::up().ToVector3f()) *
-                           PlanetariumFrames::right().ToVector3f());
+        const Vector3d lhs(UnityNative::AngleAxis(angle, Planetarium::up().ToVector3f()) *
+                           Planetarium::right().ToVector3f());
         const Vector3d xzy = eccVec.xzy();
         const double num = Vector3d::Dot(lhs, xzy) / (lhs.magnitude() * xzy.magnitude());
         if (num > 1.0) argumentOfPeriapsis = 0.0;
@@ -206,7 +213,7 @@ void Orbit::UpdateFromStateVectors(Vector3d pos_, Vector3d vel_, CelestialBodyRe
 }
 
 // Orbit.cs:448
-void Orbit::UpdateFromFixedVectors(Vector3d pos_, Vector3d vel_, CelestialBodyRef* refBody, double UT) {
+void Orbit::UpdateFromFixedVectors(Vector3d pos_, Vector3d vel_, CelestialBody* refBody, double UT) {
     referenceBody = refBody;
     h = Vector3d::Cross(pos_, vel_);
     if (h.sqrMagnitude() == 0.0) {  // h.sqrMagnitude.Equals(0.0)
@@ -582,7 +589,7 @@ Vector3d Orbit::GetEccVector() const { return Zup().WorldToLocal(OrbitFrame.X); 
 Vector3d Orbit::GetANVector() const { return Zup().WorldToLocal(an); }
 
 // Orbit.cs:702
-Vector3d Orbit::GetVel(const CelestialBodyRef* activeVesselReferenceBody) const {
+Vector3d Orbit::GetVel(const CelestialBody* activeVesselReferenceBody) const {
     const Vector3d vector3d =
         GetFrameVel() - (activeVesselReferenceBody ? activeVesselReferenceBody->GetFrameVel() : Vector3d::zero());
     return Vector3d(vector3d.x, vector3d.z, vector3d.y);
@@ -592,13 +599,13 @@ Vector3d Orbit::GetVel(const CelestialBodyRef* activeVesselReferenceBody) const 
 Vector3d Orbit::GetRelativeVel() const { return vel.xzy(); }
 
 // Orbit.cs:713
-Vector3d Orbit::GetRotFrameVel(const CelestialBodyRef& refBody) const {
+Vector3d Orbit::GetRotFrameVel(const CelestialBody& refBody) const {
     if (refBody.rotates && refBody.inverseRotation) return Vector3d::Cross(refBody.zUpAngularVelocity, -pos);
     return Vector3d::zero();
 }
 
 // Orbit.cs:722
-Vector3d Orbit::GetRotFrameVelAtPos(const CelestialBodyRef& refBody, const Vector3d& refPos) const {
+Vector3d Orbit::GetRotFrameVelAtPos(const CelestialBody& refBody, const Vector3d& refPos) const {
     if (refBody.rotates && refBody.inverseRotation) return Vector3d::Cross(refBody.zUpAngularVelocity, -refPos);
     return Vector3d::zero();
 }
@@ -612,7 +619,7 @@ Vector3d Orbit::GetFrameVelAtUT(double UT) const {
 }
 
 // Orbit.cs:741
-Vector3d Orbit::GetWorldSpaceVel(const CelestialBodyRef* activeVesselReferenceBody) const {
+Vector3d Orbit::GetWorldSpaceVel(const CelestialBody* activeVesselReferenceBody) const {
     return GetVel(activeVesselReferenceBody) -
            (referenceBody->inverseRotation ? referenceBody->getRFrmVel(pos + referenceBody->position) : Vector3d::zero());
 }
@@ -661,8 +668,8 @@ double Orbit::GetRelativeInclination(const Orbit& otherOrbit) const {
 double Orbit::TrueAnomalyFromVector(const Vector3d& vec) const {
     const Vector3d vector3d = Vector3d::Exclude(-GetOrbitNormal().xzy().normalized(), vec);
     const Vector3d vector3d2(UnityNative::AngleAxis(f32store(0.0 - fx(static_cast<float>(LAN))),
-                                                    PlanetariumFrames::up().ToVector3f()) *
-                             PlanetariumFrames::right().ToVector3f());
+                                                    Planetarium::up().ToVector3f()) *
+                             Planetarium::right().ToVector3f());
     Vector3d vector3d3(UnityNative::AngleAxis(static_cast<float>(argumentOfPeriapsis),
                                               (-GetOrbitNormal().xzy().normalized()).ToVector3f()) *
                        vector3d2.ToVector3f());
@@ -819,7 +826,7 @@ double Orbit::GetOrbitalStateVectorsAtTrueAnomaly(double tA, double UT, bool wor
     const double num9 = num2 * num7;
     if (worldToLocal) {
         CelestialFrame tempZup;
-        PlanetariumFrames::ZupAtT(UT, *referenceBody, tempZup);
+        Planetarium::ZupAtT(UT, *referenceBody, tempZup);
         pos_ = tempZup.WorldToLocal(OrbitFrame.X * num8 + OrbitFrame.Y * num9);
         vel_ = tempZup.WorldToLocal(OrbitFrame.X * num5 + OrbitFrame.Y * num6);
     } else {
@@ -900,7 +907,7 @@ Vector3d Orbit::Horizontal(double UT) const { return Vector3d::Exclude(Up(UT), P
 // ---- static helpers ------------------------------------------------------------------------------------------------
 
 // Orbit.cs:1365
-Orbit Orbit::OrbitFromStateVectors(const Vector3d& pos_, const Vector3d& vel_, CelestialBodyRef* body, double UT) {
+Orbit Orbit::OrbitFromStateVectors(const Vector3d& pos_, const Vector3d& vel_, CelestialBody* body, double UT) {
     Orbit orbit;
     orbit.UpdateFromStateVectors((pos_ - body->position).xzy(), vel_.xzy(), body, UT);
     return orbit;
@@ -1215,7 +1222,7 @@ double Orbit::RelativeInclination(const Orbit& p, const Orbit& s) {
 }
 
 // Orbit.cs:1783
-Orbit Orbit::CreateRandomOrbitAround(CelestialBodyRef* body) {
+Orbit Orbit::CreateRandomOrbitAround(CelestialBody* body) {
     UnityRandom& rnd = UnityRandom::Global();
     Orbit orbit;
     orbit.referenceBody = body;
@@ -1231,7 +1238,7 @@ Orbit Orbit::CreateRandomOrbitAround(CelestialBodyRef* body) {
 }
 
 // Orbit.cs:1798
-Orbit Orbit::CreateRandomOrbitAround(CelestialBodyRef* body, double minAltitude, double maxAltitude) {
+Orbit Orbit::CreateRandomOrbitAround(CelestialBody* body, double minAltitude, double maxAltitude) {
     UnityRandom& rnd = UnityRandom::Global();
     Orbit orbit;
     orbit.referenceBody = body;
@@ -1263,7 +1270,7 @@ Orbit Orbit::CreateRandomOrbitNearby(const Orbit& baseOrbit) {
 }
 
 // Orbit.cs:1828
-Orbit Orbit::CreateRandomOrbitFlyBy(const CelestialBodyRef& tgtBody, double daysToClosestApproach, double universalTime) {
+Orbit Orbit::CreateRandomOrbitFlyBy(const CelestialBody& tgtBody, double daysToClosestApproach, double universalTime) {
     UnityRandom& rnd = UnityRandom::Global();
     const double periapsis =
         M::Max(tgtBody.Radius * 3.0, tgtBody.sphereOfInfluence * static_cast<double>(rnd.Range(0.0f, 1.1f)));

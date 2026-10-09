@@ -8,7 +8,7 @@
 namespace ksp {
 
 // OrbitSnapshot.cs:19
-OrbitSnapshot::OrbitSnapshot(const Orbit& orbitRef, const std::vector<CelestialBodyRef*>& bodies) {
+OrbitSnapshot::OrbitSnapshot(const Orbit& orbitRef, const std::vector<CelestialBody*>& bodies) {
     semiMajorAxis = orbitRef.semiMajorAxis;
     eccentricity = orbitRef.eccentricity;
     inclination = orbitRef.inclination;
@@ -21,7 +21,7 @@ OrbitSnapshot::OrbitSnapshot(const Orbit& orbitRef, const std::vector<CelestialB
 }
 
 // OrbitSnapshot.cs:31
-OrbitSnapshot::OrbitSnapshot(const CelestialBodyRef& bodyRef) {
+OrbitSnapshot::OrbitSnapshot(const CelestialBody& bodyRef) {
     eccentricity = 0.0;
     semiMajorAxis = bodyRef.Radius + bodyRef.Radius * 0.25;
     inclination = 0.0001;
@@ -60,8 +60,8 @@ void OrbitSnapshot::Save(ConfigNode& node) const {
 }
 
 // OrbitSnapshot.cs:89
-Orbit OrbitSnapshot::Load(const std::vector<CelestialBodyRef*>& bodies) const {
-    CelestialBodyRef* body = bodies.at(static_cast<size_t>(ReferenceBodyIndex < 0 ? bodies.size() : static_cast<size_t>(ReferenceBodyIndex)));
+Orbit OrbitSnapshot::Load(const std::vector<CelestialBody*>& bodies) const {
+    CelestialBody* body = bodies.at(static_cast<size_t>(ReferenceBodyIndex < 0 ? bodies.size() : static_cast<size_t>(ReferenceBodyIndex)));
     return Orbit(inclination, eccentricity, semiMajorAxis, LAN, argOfPeriapsis, meanAnomalyAtEpoch, epoch, body);
 }
 

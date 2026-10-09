@@ -1,5 +1,5 @@
 // WP-07 Orbit: API behaviour the orbit_propagation golden does not cover (frame conventions, degenerate inputs, the
-// CelestialBodyRef / PlanetariumFrames contract, static solvers) and the native Quaternion.AngleAxis that Orbit uses,
+// CelestialBody / Planetarium contract as Orbit uses it, static solvers) and the native Quaternion.AngleAxis that Orbit uses,
 // checked bit for bit against the in-game capture (CAPTURE-SPEC C3).
 #include <algorithm>
 #include <cmath>
@@ -10,6 +10,9 @@
 #include <vector>
 
 #include "doctest/doctest.h"
+#include "ksp/celestial/celestial_body.hpp"
+#include "ksp/celestial/planetarium.hpp"
+#include "ksp/config/config_node.hpp"
 #include "ksp/dotnet/math.hpp"
 #include "ksp/dotnet/text.hpp"
 #include "ksp/orbit/orbit.hpp"
@@ -27,15 +30,15 @@ constexpr double kPI = 3.141592653589793;
 constexpr double kInf = std::numeric_limits<double>::infinity();
 
 // Kerbin as the harness builds it: Mass = R*R*(GeeASL*9.80665)/G, mu = Mass*G (CelestialBody.Awake).
-CelestialBodyRef MakeBody(const char* name, double radius, double geeASL) {
-    CelestialBodyRef b;
+CelestialBody MakeBody(const char* name, double radius, double geeASL) {
+    CelestialBody b;
     b.bodyName = name;
     b.Radius = radius;
     const double mass = radius * radius * (geeASL * 9.80665) / 6.67408E-11;
     b.gravParameter = mass * 6.67408E-11;
     return b;
 }
-CelestialBodyRef MakeKerbin() { return MakeBody("Kerbin", 600000.0, 1.0003416049313476); }
+CelestialBody MakeKerbin() { return MakeBody("Kerbin", 600000.0, 1.0003416049313476); }
 
 uint32_t Bits(float f) {
     uint32_t u;
@@ -53,10 +56,34 @@ bool Near(const Vector3d& a, const Vector3d& b, double tol) {
     return std::fabs(a.x - b.x) <= tol && std::fabs(a.y - b.y) <= tol && std::fabs(a.z - b.z) <= tol;
 }
 
+// Orbit reads the static Planetarium::Zup: every test starts and ends at the frame Planetarium.Awake gives for the
+// serialized inverseRotAngle 0 (no Planetarium instance is registered here).
 struct FramesGuard {
-    FramesGuard() { PlanetariumFrames::Reset(); }
-    ~FramesGuard() { PlanetariumFrames::Reset(); }
+    FramesGuard() { Planetarium::Zup = Planetarium::AwakeZup(0.0); }
+    ~FramesGuard() { Planetarium::Zup = Planetarium::AwakeZup(0.0); }
 };
+
+// A body's run-time Orbit link over an Orbit the test owns (spawned bodies use CelestialBodyOrbitAdapter instead).
+struct OrbitLink : ICelestialBodyOrbit {
+    Orbit* o = nullptr;
+    Orbit* GetOrbit() override { return o; }
+    double period() const override { return o->period; }
+    double trueAnomaly() const override { return o->trueAnomaly; }
+    double radius() const override { return o->radius; }
+    double PeR() const override { return o->PeR(); }
+    double ApR() const override { return o->ApR(); }
+    Vector3d vel() const override { return o->vel; }
+    Vector3d getRelativePositionAtUT(double UT) const override { return o->getRelativePositionAtUT(UT); }
+    Vector3d getOrbitalVelocityAtUT(double UT) const override { return o->getOrbitalVelocityAtUT(UT); }
+    void UpdateOrbit() override {}
+};
+// body.orbitDriver with referenceBody = o.referenceBody and `o` as CelestialBody.orbit
+void Attach(CelestialBody& body, Orbit& o, OrbitLink& link) {
+    link.o = &o;
+    body.orbitDriver.emplace();
+    body.orbitDriver->referenceBody = o.referenceBody;
+    body.orbitDriver->link = &link;
+}
 
 }  // namespace
 
@@ -94,35 +121,52 @@ TEST_CASE("UnityNative::AngleAxis is bit-exact against the in-game capture (C3)"
     CHECK(bad == 0);
 }
 
-TEST_CASE("PlanetariumFrames: Awake(0) frames, up/right/forward, SetInverseRotAngle, ZupAtT") {
+TEST_CASE("Planetarium frames as Orbit reads them: Awake(0) default, up/right/forward, inverse rotation, ZupAtT") {
     FramesGuard guard;
-    const CelestialFrame& zup = PlanetariumFrames::Zup();
+    REQUIRE(Planetarium::fetch == nullptr);
+    const CelestialFrame& zup = Planetarium::Zup;
     CHECK(Near(zup.X, {1, 0, 0}, 1e-15));
     CHECK(Near(zup.Y, {0, 1, 0}, 1e-15));
     CHECK(Near(zup.Z, {0, 0, 1}, 1e-15));
-    CHECK(Near(PlanetariumFrames::up(), {0, 1, 0}, 1e-15));  // Unity world: y up
-    CHECK(Near(PlanetariumFrames::right(), {1, 0, 0}, 1e-15));
-    CHECK(Near(PlanetariumFrames::forward(), {0, 0, 1}, 1e-15));
-    CHECK(PlanetariumFrames::InverseRotAngle() == 0.0);
+    CHECK(Near(Planetarium::up(), {0, 1, 0}, 1e-15));  // Unity world: y up
+    CHECK(Near(Planetarium::right(), {1, 0, 0}, 1e-15));
+    CHECK(Near(Planetarium::forward(), {0, 0, 1}, 1e-15));
+    CHECK(Planetarium::InverseRotAngle() == 0.0);  // no instance: Awake(0)'s values
+    CHECK(Planetarium::Rotation().Equals(Planetarium::AwakeRotation(0.0)));
+    CHECK_THROWS_AS(Planetarium::SetInverseRotAngle(1.0), NullReferenceException);  // KSP: fetch.inverseRotAngle
 
-    // CBUpdate's inverse-rotation update: Zup turns about z by the angle; Reset restores Awake(0) bit for bit.
+    // A registered Planetarium: Awake with a serialized angle, then CBUpdate's inverse-rotation statements
+    // (CelestialBody.cs:562-564); Zup turns about z by the angle. Zup is static (it keeps its value after the instance).
     const Vector3d x0 = zup.X;
-    PlanetariumFrames::SetInverseRotAngle(90.0);
-    CHECK(PlanetariumFrames::InverseRotAngle() == 90.0);
-    CHECK(Near(PlanetariumFrames::Zup().X, {0, 1, 0}, 1e-15));
-    PlanetariumFrames::Reset();
-    CHECK(PlanetariumFrames::Zup().X.Equals(x0));
+    {
+        Planetarium p;
+        p.inverseRotAngle = 90.0;
+        p.Awake();
+        CHECK(Planetarium::InverseRotAngle() == 90.0);
+        CHECK(Near(Planetarium::Zup.X, {0, 1, 0}, 1e-15));
+        CHECK(Planetarium::Rotation().Equals(Planetarium::AwakeRotation(90.0)));
+        Planetarium::SetInverseRotAngle(180.0);
+        CelestialFrame::PlanetaryFrame(0.0, 90.0, Planetarium::InverseRotAngle(), Planetarium::Zup);
+        Planetarium::SetRotation(QuaternionD::Inverse(Planetarium::Zup.Rotation()).swizzle());
+        CHECK(Near(Planetarium::Zup.X, {-1, 0, 0}, 1e-15));
+        CHECK(Near(Planetarium::right(), {-1, 0, 0}, 1e-15));
+    }
+    CHECK(Planetarium::fetch == nullptr);
+    CHECK(Planetarium::InverseRotAngle() == 0.0);
+    CHECK(Near(Planetarium::Zup.X, {-1, 0, 0}, 1e-15));
+    Planetarium::Zup = Planetarium::AwakeZup(0.0);
+    CHECK(Planetarium::Zup.X.Equals(x0));
 
     // ZupAtT: non-inverse-rotation bodies get the current Zup; inverse-rotation bodies their own frame at UT.
-    CelestialBodyRef body = MakeKerbin();
+    CelestialBody body = MakeKerbin();
     CelestialFrame f;
-    PlanetariumFrames::ZupAtT(1234.5, body, f);
+    Planetarium::ZupAtT(1234.5, body, f);
     CHECK((f.X.Equals(zup.X) && f.Y.Equals(zup.Y) && f.Z.Equals(zup.Z)));
     body.inverseRotation = true;
     body.initialRotation = 90.0;
     body.rotPeriodRecip = 1.0 / 21600.0;
     body.directRotAngle = 0.0;
-    PlanetariumFrames::ZupAtT(5400.0, body, f);  // (90 + 360 * 5400 / 21600) % 360 = 180 degrees
+    Planetarium::ZupAtT(5400.0, body, f);  // (90 + 360 * 5400 / 21600) % 360 = 180 degrees
     CelestialFrame expect;
     CelestialFrame::PlanetaryFrame(0.0, 90.0, std::fmod(std::fmod(90.0 + 360.0 * body.rotPeriodRecip * 5400.0, 360.0), 360.0),
                                    expect);
@@ -132,7 +176,7 @@ TEST_CASE("PlanetariumFrames: Awake(0) frames, up/right/forward, SetInverseRotAn
 
 TEST_CASE("Orbit: equatorial prograde circular orbit, frame conventions") {
     FramesGuard guard;
-    CelestialBodyRef kerbin = MakeKerbin();
+    CelestialBody kerbin = MakeKerbin();
     kerbin.position = Vector3d(1.0, 2.0, 3.0);
     const double a = 700000.0;
     Orbit o(0.0, 0.0, a, 0.0, 0.0, 0.0, 0.0, &kerbin);
@@ -176,7 +220,7 @@ TEST_CASE("Orbit: equatorial prograde circular orbit, frame conventions") {
 
 TEST_CASE("Orbit: UpdateFromStateVectors inverts the propagation (inclined ellipse, retrograde, hyperbola)") {
     FramesGuard guard;
-    CelestialBodyRef kerbin = MakeKerbin();
+    CelestialBody kerbin = MakeKerbin();
     struct El {
         double inc, e, sma, lan, argPe, mEp;
     };
@@ -210,7 +254,7 @@ TEST_CASE("Orbit: UpdateFromStateVectors inverts the propagation (inclined ellip
 
 TEST_CASE("Orbit: degenerate state vectors (radial, zero velocity, overflow -> NaN argPe fallback)") {
     FramesGuard guard;
-    CelestialBodyRef kerbin = MakeKerbin();
+    CelestialBody kerbin = MakeKerbin();
     // zero velocity: h = 0 -> inclination from pos.z, an = Cross(pos, forward)
     Orbit z;
     z.UpdateFromStateVectors({700000, 0, 0}, {0, 0, 0}, &kerbin, 1000.0);
@@ -237,7 +281,7 @@ TEST_CASE("Orbit: degenerate state vectors (radial, zero velocity, overflow -> N
 
 TEST_CASE("Orbit: e = 1 boundary and hyperbolic orbits (negative semi-major axis)") {
     FramesGuard guard;
-    CelestialBodyRef kerbin = MakeKerbin();
+    CelestialBody kerbin = MakeKerbin();
     // e = 1: h = 0, period infinite, eccentric-anomaly positions are the zero vector (neither branch)
     Orbit p(10.0, 1.0, 1.0e6, 30.0, 60.0, 0.0, 0.0, &kerbin);
     CHECK(p.period == kInf);
@@ -272,7 +316,7 @@ TEST_CASE("Orbit: e = 1 boundary and hyperbolic orbits (negative semi-major axis
 
 TEST_CASE("Orbit: Kepler solvers (field eccentricity, NaN handling, accuracy)") {
     FramesGuard guard;
-    CelestialBodyRef kerbin = MakeKerbin();
+    CelestialBody kerbin = MakeKerbin();
     const Orbit low(0, 0.3, 1.0e6, 0, 0, 0, 0, &kerbin);
     const Orbit high(0, 0.9, 1.0e6, 0, 0, 0, 0, &kerbin);
     const Orbit hyp(0, 2.0, -1.0e6, 0, 0, 0, 0, &kerbin);
@@ -305,7 +349,7 @@ TEST_CASE("Orbit: Kepler solvers (field eccentricity, NaN handling, accuracy)") 
 
 TEST_CASE("Orbit: GetTimeToPeriapsis quirk, time-of-anomaly helpers, radius helpers") {
     FramesGuard guard;
-    CelestialBodyRef kerbin = MakeKerbin();
+    CelestialBody kerbin = MakeKerbin();
     Orbit o(5, 0.5, 6.0e6, 10, 270, 1.0, 0.0, &kerbin);
     o.UpdateFromUT(1000.0);
     REQUIRE(o.timeToPe > 0.0);
@@ -352,7 +396,7 @@ TEST_CASE("Orbit: GetTimeToPeriapsis quirk, time-of-anomaly helpers, radius help
 
 TEST_CASE("Orbit: state vectors with acceleration and jerk (world-like frame)") {
     FramesGuard guard;
-    CelestialBodyRef kerbin = MakeKerbin();
+    CelestialBody kerbin = MakeKerbin();
     const Orbit o(20, 0.2, 2.0e6, 50, 80, 0.5, 0.0, &kerbin);
     Orbit::State s;
     const double r = o.GetOrbitalStateVectorsAtUT(300.0, s);
@@ -372,20 +416,23 @@ TEST_CASE("Orbit: state vectors with acceleration and jerk (world-like frame)") 
     CHECK(bad.w == 0.0);
 }
 
-TEST_CASE("CelestialBodyRef contract: referenceBody, HasChild, frame velocity and true position chains") {
+TEST_CASE("CelestialBody as Orbit's reference body: referenceBody, HasChild, frame velocity and true position chains") {
     FramesGuard guard;
-    CelestialBodyRef sun = MakeBody("Sun", 261600000.0, 1.7468465610013681);
-    CelestialBodyRef kerbin = MakeKerbin();
-    CelestialBodyRef mun = MakeBody("Mun", 200000.0, 0.1660567000983534);
+    CelestialBody sun = MakeBody("Sun", 261600000.0, 1.7468465610013681);
+    CelestialBody kerbin = MakeKerbin();
+    CelestialBody mun = MakeBody("Mun", 200000.0, 0.1660567000983534);
     sun.position = Vector3d(10.0, 20.0, 30.0);
     Orbit kerbinOrbit(0, 0, 13599840256.0, 0, 0, 3.14000010490417, 0, &sun);
     Orbit munOrbit(0, 0, 12000000.0, 0, 0, 1.70000004768372, 0, &kerbin);
-    kerbin.orbit = &kerbinOrbit;
-    mun.orbit = &munOrbit;
+    OrbitLink kerbinLink, munLink;
+    Attach(kerbin, kerbinOrbit, kerbinLink);
+    Attach(mun, munOrbit, munLink);
     sun.orbitingBodies.push_back(&kerbin);
     kerbin.orbitingBodies.push_back(&mun);
 
     CHECK(sun.referenceBody() == &sun);
+    CHECK(BodyOrbit(&sun) == nullptr);
+    CHECK(BodyOrbit(&mun) == &munOrbit);
     CHECK(kerbin.referenceBody() == &sun);
     CHECK(mun.referenceBody() == &kerbin);
     CHECK(sun.HasChild(&mun));
@@ -408,10 +455,10 @@ TEST_CASE("CelestialBodyRef contract: referenceBody, HasChild, frame velocity an
     CHECK(munOrbit.getTruePositionAtUT(t).Equals(mun.getTruePositionAtUT(t)));
     CHECK(munOrbit.GetFrameVel().Equals(munOrbit.vel + kerbin.GetFrameVel()));
     // a disabled OrbitDriver contributes nothing
-    kerbin.orbitDriverEnabled = false;
+    kerbin.orbitDriver->enabled = false;
     CHECK(kerbin.GetFrameVel().Equals(Vector3d::zero()));
     CHECK(kerbin.getTruePositionAtUT(t).Equals(kerbin.position));
-    kerbin.orbitDriverEnabled = true;
+    kerbin.orbitDriver->enabled = true;
     // GetVel subtracts the active vessel's reference-body frame velocity and swizzles
     const Vector3d gv = munOrbit.GetVel(&kerbin);
     const Vector3d d = munOrbit.GetFrameVel() - kerbin.GetFrameVel();
@@ -421,16 +468,17 @@ TEST_CASE("CelestialBodyRef contract: referenceBody, HasChild, frame velocity an
 
 TEST_CASE("Orbit::UpdateFromOrbitAtUT: parent -> child, child -> parent and sibling transitions") {
     FramesGuard guard;
-    CelestialBodyRef sun = MakeBody("Sun", 261600000.0, 1.7468465610013681);
-    CelestialBodyRef kerbin = MakeKerbin();
-    CelestialBodyRef mun = MakeBody("Mun", 200000.0, 0.1660567000983534);
-    CelestialBodyRef minmus = MakeBody("Minmus", 60000.0, 0.05001708099187999);
+    CelestialBody sun = MakeBody("Sun", 261600000.0, 1.7468465610013681);
+    CelestialBody kerbin = MakeKerbin();
+    CelestialBody mun = MakeBody("Mun", 200000.0, 0.1660567000983534);
+    CelestialBody minmus = MakeBody("Minmus", 60000.0, 0.05001708099187999);
     Orbit kerbinOrbit(0, 0, 13599840256.0, 0, 0, 3.14000010490417, 0, &sun);
     Orbit munOrbit(0, 0, 12000000.0, 0, 0, 1.70000004768372, 0, &kerbin);
     Orbit minmusOrbit(6, 0, 47000000.0, 78, 38, 0.899999976158142, 0, &kerbin);
-    kerbin.orbit = &kerbinOrbit;
-    mun.orbit = &munOrbit;
-    minmus.orbit = &minmusOrbit;
+    OrbitLink kerbinLink, munLink, minmusLink;
+    Attach(kerbin, kerbinOrbit, kerbinLink);
+    Attach(mun, munOrbit, munLink);
+    Attach(minmus, minmusOrbit, minmusLink);
     sun.orbitingBodies = {&kerbin};
     kerbin.orbitingBodies = {&mun, &minmus};
 
@@ -461,7 +509,7 @@ TEST_CASE("Orbit::UpdateFromOrbitAtUT: parent -> child, child -> parent and sibl
 
 TEST_CASE("Orbit static helpers: nodes, inclinations, synodic period, Pe/Ap test, close approach") {
     FramesGuard guard;
-    CelestialBodyRef kerbin = MakeKerbin();
+    CelestialBody kerbin = MakeKerbin();
     const Orbit p(0, 0.1, 2.0e6, 0, 30, 0, 0, &kerbin);
     const Orbit s(25, 0.05, 3.0e6, 60, 10, 1, 0, &kerbin);
     CHECK(p.GetRelativeInclination(s) == doctest::Approx(25.0).epsilon(1e-12));
@@ -490,7 +538,7 @@ TEST_CASE("Orbit static helpers: nodes, inclinations, synodic period, Pe/Ap test
 
 TEST_CASE("Orbit: TrueAnomalyFromVector (Unity AngleAxis path) and GetTrueAnomalyOfZupVector") {
     FramesGuard guard;
-    CelestialBodyRef kerbin = MakeKerbin();
+    CelestialBody kerbin = MakeKerbin();
     const Orbit o(0, 0.1, 2.0e6, 0, 30, 0, 0, &kerbin);
     for (double tA : {0.5, 2.0, 4.0}) {
         const Vector3d local = o.getRelativePositionFromTrueAnomaly(tA);
@@ -501,7 +549,7 @@ TEST_CASE("Orbit: TrueAnomalyFromVector (Unity AngleAxis path) and GetTrueAnomal
 
 TEST_CASE("Orbit: copies, enum names, delegates") {
     FramesGuard guard;
-    CelestialBodyRef kerbin = MakeKerbin();
+    CelestialBody kerbin = MakeKerbin();
     Orbit o(5, 0.2, 3.0e6, 10, 20, 0.3, 50, &kerbin);
     Orbit next;
     o.nextPatch = &next;
@@ -534,7 +582,7 @@ TEST_CASE("Orbit: copies, enum names, delegates") {
 
 TEST_CASE("Targeting::Conic: geometry matches Orbit, line intercepts, inside/real tests") {
     FramesGuard guard;
-    CelestialBodyRef kerbin = MakeKerbin();
+    CelestialBody kerbin = MakeKerbin();
     const Orbit o(20, 0.3, 2.0e6, 40, 60, 0, 0, &kerbin);
     const Targeting::Conic c = Targeting::Conic::Borrow(o);
     CHECK(c.e == 0.3);
@@ -582,7 +630,7 @@ TEST_CASE("Targeting::Conic: geometry matches Orbit, line intercepts, inside/rea
 
 TEST_CASE("Orbit::FindClosestPoints (Targeting.Intercepts) finds the true minimum distance between two conics") {
     FramesGuard guard;
-    CelestialBodyRef kerbin = MakeKerbin();
+    CelestialBody kerbin = MakeKerbin();
     struct Pair {
         Orbit p, s;
     };
@@ -648,11 +696,11 @@ TEST_CASE("Orbit::FindClosestPoints (Targeting.Intercepts) finds the true minimu
 
 TEST_CASE("OrbitSnapshot: save-file ORBIT block round trip, body snapshot, REF resolution") {
     FramesGuard guard;
-    CelestialBodyRef sun = MakeBody("Sun", 261600000.0, 1.7468465610013681);
-    CelestialBodyRef kerbin = MakeKerbin();
+    CelestialBody sun = MakeBody("Sun", 261600000.0, 1.7468465610013681);
+    CelestialBody kerbin = MakeKerbin();
     sun.flightGlobalsIndex = 0;
     kerbin.flightGlobalsIndex = 1;
-    const std::vector<CelestialBodyRef*> bodies = {&sun, &kerbin};
+    const std::vector<CelestialBody*> bodies = {&sun, &kerbin};
     const Orbit o(28.5, 0.123456789, 712345.6789, 77.7, 123.4, -2.5, 98765.4321, &kerbin);
     const OrbitSnapshot snap(o, bodies);
     CHECK(snap.ReferenceBodyIndex == 1);
@@ -691,22 +739,23 @@ TEST_CASE("OrbitSnapshot: save-file ORBIT block round trip, body snapshot, REF r
     worse.AddValue("SMA", "abc");
     CHECK_THROWS(OrbitSnapshot{worse});
     // a body not in the list gives REF = -1 (List.IndexOf)
-    CelestialBodyRef other = MakeKerbin();
+    CelestialBody other = MakeKerbin();
     CHECK(OrbitSnapshot(Orbit(0, 0, 7e5, 0, 0, 0, 0, &other), bodies).ReferenceBodyIndex == -1);
 }
 
 TEST_CASE("OrbitUtil: hierarchy queries, phase and ejection angles, SMA distance quirk") {
     FramesGuard guard;
-    CelestialBodyRef sun = MakeBody("Sun", 261600000.0, 1.7468465610013681);
-    CelestialBodyRef kerbin = MakeKerbin();
-    CelestialBodyRef mun = MakeBody("Mun", 200000.0, 0.1660567000983534);
-    CelestialBodyRef minmus = MakeBody("Minmus", 60000.0, 0.05001708099187999);
+    CelestialBody sun = MakeBody("Sun", 261600000.0, 1.7468465610013681);
+    CelestialBody kerbin = MakeKerbin();
+    CelestialBody mun = MakeBody("Mun", 200000.0, 0.1660567000983534);
+    CelestialBody minmus = MakeBody("Minmus", 60000.0, 0.05001708099187999);
     Orbit kerbinOrbit(0, 0, 13599840256.0, 0, 0, 3.14000010490417, 0, &sun);
     Orbit munOrbit(0, 0, 12000000.0, 0, 0, 1.70000004768372, 0, &kerbin);
     Orbit minmusOrbit(6, 0, 47000000.0, 78, 38, 0.899999976158142, 0, &kerbin);
-    kerbin.orbit = &kerbinOrbit;
-    mun.orbit = &munOrbit;
-    minmus.orbit = &minmusOrbit;
+    OrbitLink kerbinLink, munLink, minmusLink;
+    Attach(kerbin, kerbinOrbit, kerbinLink);
+    Attach(mun, munOrbit, munLink);
+    Attach(minmus, minmusOrbit, minmusLink);
     sun.orbitingBodies = {&kerbin};
     kerbin.orbitingBodies = {&mun, &minmus};
 

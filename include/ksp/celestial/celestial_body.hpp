@@ -4,8 +4,9 @@
 //
 // Engine-free: Unity transforms/renderers (bodyTransform, scaledBody, pqsController, afg, MapObject) are not here; the
 // shell owns them. Orbit maths is NOT here either: a body holds its serialized orbital elements (orbitDriver->orbit)
-// and, at run time, a non-owning link to the ksp::Orbit that WP-07 provides (ICelestialBodyOrbit). Everything that
-// needs Kepler propagation goes through that link.
+// and, at run time, a non-owning link to its ksp::Orbit (ICelestialBodyOrbit; CelestialBodyOrbitAdapter in
+// celestial_body_orbit.hpp, attached by CelestialSystem::Spawn). Everything that needs Kepler propagation goes through
+// that link; Orbit code reaches the ksp::Orbit itself through BodyOrbit(body) (ksp/orbit/orbit.hpp).
 //
 // Prefab data (the 17 stock bodies, their curves, biome maps and asset origins) lives in kerbol_system.hpp.
 #pragma once
@@ -26,6 +27,7 @@
 namespace ksp {
 
 class CelestialBody;
+class Orbit;
 
 // CelestialBodyType.cs
 enum class CelestialBodyType : int32_t { Generic = 0 };
@@ -110,11 +112,15 @@ struct CelestialOrbitElements {
 };
 
 // What CelestialBody reads from its run-time Orbit object (CelestialBody.orbit => orbitDriver.orbit): exactly the
-// members used in CelestialBody.cs. Implemented by WP-07's ksp::Orbit through a trivial adapter; CelestialBody never
-// does Kepler maths itself.
+// members used in CelestialBody.cs. Implemented over ksp::Orbit by CelestialBodyOrbitAdapter (celestial_body_orbit.hpp;
+// an adapter because Orbit's fields period/radius/vel/trueAnomaly carry the names of these methods); CelestialBody
+// never does Kepler maths itself.
 class ICelestialBodyOrbit {
 public:
     virtual ~ICelestialBodyOrbit() = default;
+    // The ksp::Orbit behind this link: CelestialBody.orbit as Orbit/OrbitUtil/Targeting code reads it (BodyOrbit()).
+    // nullptr for links that are not backed by an Orbit (test doubles); Orbit code then cannot use the body as a parent.
+    virtual Orbit* GetOrbit() = 0;
     virtual double period() const = 0;       // Orbit.period (tidal lock, solar day length)
     virtual double trueAnomaly() const = 0;  // GetAtmoThermalStats
     virtual double radius() const = 0;       // GetAtmoThermalStats
@@ -134,7 +140,7 @@ struct CelestialBodyOrbitDriver {
     bool reverse = false;                    // Kerbin's driver is reversed (KSP keeps the home body still)
     int32_t updateMode = 0;                  // OrbitDriver.UpdateMode (serialized)
     bool enabled = true;                     // MonoBehaviour.enabled
-    ICelestialBodyOrbit* link = nullptr;     // run-time Orbit (not owned); null until WP-07 glue attaches one
+    ICelestialBodyOrbit* link = nullptr;     // run-time Orbit (not owned; CelestialSystem owns it), set by Spawn
 };
 
 class CelestialBody {
@@ -261,7 +267,8 @@ public:
     const std::string& name() const { return bodyName; }
     const std::string& displayName() const { return bodyDisplayName; }
     std::string theName() const { return (use_The_InName ? "the " : "") + bodyName; }
-    // CelestialBody.orbit (CelestialBody.cs:324): the run-time Orbit, null without an OrbitDriver (or before WP-07 glue)
+    // CelestialBody.orbit (CelestialBody.cs:324): the run-time Orbit, null without an OrbitDriver (or before Spawn
+    // attaches one). The ksp::Orbit itself: BodyOrbit(this) (ksp/orbit/orbit.hpp) or orbit()->GetOrbit().
     ICelestialBodyOrbit* orbit() const { return orbitDriver ? orbitDriver->link : nullptr; }
     // CelestialBody.referenceBody (CelestialBody.cs:348): the parent, or the body itself when it has no OrbitDriver
     CelestialBody* referenceBody() { return orbitDriver ? orbitDriver->referenceBody : this; }
@@ -301,15 +308,17 @@ public:
     void GetSolarAtmosphericEffects(double sunDot, double density, double& solarAirMass, double& solarFluxMultiplier) const;
     double GetFullTemperature(double altitude, double atmoSunBasedTempOffset) const;
 
-    // GetAtmoThermalStats (CelestialBody.cs:855) is NOT ported yet: it needs native Quaternion.AngleAxis (not in
-    // kspcore; CAPTURE-SPEC C3 holds the native results), the scaled-space transforms and the run-time Orbit (trueAnomaly,
-    // radius, PeR, ApR: WP-07). Its result (atmosphereTemperatureOffset) is an input of GetFullTemperature/
-    // FlightIntegratorAtmosphere until then; in-game reference: CAPTURE-SPEC C4.
+    // GetAtmoThermalStats (CelestialBody.cs:855) is NOT ported yet: it needs the scaled-space transforms (sun direction
+    // in the body frame). The other inputs exist now: native Quaternion.AngleAxis (ksp/unity/quaternion_native.hpp,
+    // bit-exact vs CAPTURE-SPEC C3) and the run-time Orbit (trueAnomaly, radius, PeR, ApR through orbit()). Its result
+    // (atmosphereTemperatureOffset) is an input of GetFullTemperature/FlightIntegratorAtmosphere until then; in-game
+    // reference: CAPTURE-SPEC C4.
 
     // ---- frames and surface coordinates (CelestialBody.cs:610-845, no PQS) ----
     Vector3d GetFrameVel() const;
     Vector3d GetFrameVelAtUT(double UT) const;
     Vector3d getRFrmVel(const Vector3d& worldPos) const;
+    Vector3d getRFrmVelOrbit(const Orbit& o) const;  // CelestialBody.cs:633
     Vector3d getTruePositionAtUT(double UT) const;
     Vector3d getPositionAtUT(double UT) const;
     Vector3d GetRelSurfaceNVector(double lat, double lon) const;

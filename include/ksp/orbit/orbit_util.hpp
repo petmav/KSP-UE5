@@ -4,7 +4,6 @@
 #pragma once
 
 #include "ksp/math/vector3d.hpp"
-#include "ksp/orbit/celestial_body_ref.hpp"
 #include "ksp/orbit/orbit.hpp"
 
 namespace ksp {
@@ -21,10 +20,10 @@ struct OrbitUtil {
     // OrbitUtil.cs:90
     static double GetTransferPhaseAngle(const Orbit& o1, const Orbit& o2, double Th);
     // OrbitUtil.cs:96: the ancestor of src that orbits the root body (nullptr when src has no reference body)
-    static CelestialBodyRef* FindPlanet(CelestialBodyRef* src);
+    static CelestialBody* FindPlanet(CelestialBody* src);
     // OrbitUtil.cs:112: deepest common ancestor of o.referenceBody and cb (hierarchies up to 10 deep, as in KSP;
     // deeper ones throw std::out_of_range like the C# array)
-    static CelestialBodyRef* FindCommonAncestor(const Orbit& o, CelestialBodyRef* cb);
+    static CelestialBody* FindCommonAncestor(const Orbit& o, CelestialBody* cb);
     // OrbitUtil.cs:142
     static double GetSmaDistance(const Orbit* o1, const Orbit* o2);
     // OrbitUtil.cs:147 (KSP quirk: the running sum is passed down AND added again, so ancestors are over-counted)

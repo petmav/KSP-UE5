@@ -11,6 +11,7 @@
 #include "ksp/dotnet/math.hpp"
 #include "ksp/dotnet/mono_float.hpp"
 #include "ksp/dotnet/number.hpp"
+#include "ksp/orbit/orbit.hpp"
 #include "ksp/physics/physics_globals.hpp"
 #include "ksp/unity/mathf.hpp"
 
@@ -229,6 +230,9 @@ Vector3d CelestialBody::GetFrameVelAtUT(double UT) const {
 }
 
 Vector3d CelestialBody::getRFrmVel(const Vector3d& worldPos) const { return Vector3d::Cross(angularVelocity, worldPos - position); }
+
+// CelestialBody.cs:633
+Vector3d CelestialBody::getRFrmVelOrbit(const Orbit& o) const { return Vector3d::Cross(angularVelocity, o.pos.xzy()); }
 
 Vector3d CelestialBody::getTruePositionAtUT(double UT) const {
     if (orbitDriver && orbitDriver->enabled)

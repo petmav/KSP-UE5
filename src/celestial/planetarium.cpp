@@ -10,6 +10,9 @@
 
 namespace ksp {
 
+// Planetarium.cs:74 `public static CelestialFrame Zup` (zero in KSP until the first Awake; see planetarium.hpp)
+CelestialFrame Planetarium::Zup = Planetarium::AwakeZup(0.0);
+
 // Planetarium.cs:193 OnDestroy
 Planetarium::~Planetarium() {
     if (fetch == this) fetch = nullptr;
@@ -57,6 +60,41 @@ void Planetarium::UpdateCBsRecursive(CelestialBody* cb) {
         if (!c->orbitDriver || !c->orbitDriver->reverse) UpdateCBsRecursive(c);
     }
     if (cb->orbitDriver && cb->orbitDriver->reverse) UpdateCBsRecursive(cb->referenceBody());
+}
+
+// Planetarium.cs:127 Rotation / :139 InverseRotAngle (fetch.rotation, fetch.inverseRotAngle). Without an instance KSP
+// throws NullReferenceException; the getter answers with Awake(0)'s frame instead (planetarium.hpp), the setters throw.
+QuaternionD Planetarium::Rotation() {
+    if (fetch == nullptr) {
+        static const QuaternionD awake0 = AwakeRotation(0.0);
+        return awake0;
+    }
+    return fetch->rotation;
+}
+
+void Planetarium::SetRotation(const QuaternionD& q) {
+    if (fetch == nullptr) throw NullReferenceException("Planetarium.Rotation set: no Planetarium");
+    fetch->rotation = q;
+}
+
+void Planetarium::SetInverseRotAngle(double a) {
+    if (fetch == nullptr) throw NullReferenceException("Planetarium.InverseRotAngle set: no Planetarium");
+    fetch->inverseRotAngle = a;
+}
+
+// Planetarium.cs:189-190
+CelestialFrame Planetarium::AwakeZup(double inverseRotAngle) {
+    CelestialFrame zup;
+    QuaternionD rot;
+    PlanetariumAwakeFrames(inverseRotAngle, zup, rot);
+    return zup;
+}
+
+QuaternionD Planetarium::AwakeRotation(double inverseRotAngle) {
+    CelestialFrame zup;
+    QuaternionD rot;
+    PlanetariumAwakeFrames(inverseRotAngle, zup, rot);
+    return rot;
 }
 
 // Planetarium.cs:286

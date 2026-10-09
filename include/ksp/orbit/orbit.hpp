@@ -4,11 +4,12 @@
 //   * the "world-like" frame of OrbitFrame / an / pos-argument of UpdateFromFixedVectors: right-handed, z = north
 //     (orbit normal of an equatorial prograde orbit), built by CelestialFrame.OrbitalFrame(LAN, inc, argPe);
 //   * the "zup local" frame returned by getRelativePositionAtUT / getOrbitalVelocityAtUT / pos / vel / h / eccVec:
-//     PlanetariumFrames::Zup().WorldToLocal(world-like vector). Zup = PlanetaryFrame(0, 90, InverseRotAngle) is the
+//     Planetarium::Zup.WorldToLocal(world-like vector). Zup = PlanetaryFrame(0, 90, InverseRotAngle) is the
 //     identity up to ~6e-17 cross terms while InverseRotAngle = 0.
 //   Unity world coordinates are the .xzy swizzle of zup-local vectors (getPositionAtT etc. return
 //   referenceBody.position + local.xzy). UpdateFromStateVectors takes zup-local vectors; UpdateFromFixedVectors takes
 //   world-like ones.
+// Reference bodies are ksp::CelestialBody (WP-09); frames come from the one ksp::Planetarium (Zup, up/right, ZupAtT).
 // Units: metres, seconds; inclination / LAN / argumentOfPeriapsis in degrees; anomalies in radians; semiMajorAxis < 0
 // for hyperbolic orbits.
 //
@@ -35,8 +36,7 @@
 
 #include "ksp/math/util_math.hpp"
 #include "ksp/math/vector3d.hpp"
-#include "ksp/orbit/celestial_body_ref.hpp"
-#include "ksp/orbit/planetarium_frames.hpp"
+#include "ksp/celestial/celestial_body.hpp"
 #include "ksp/unity/vector.hpp"
 
 namespace ksp {
@@ -97,7 +97,7 @@ public:
     using SolveSOI_BSPDelegate = SolveSOI_Delegate;
 
     // ---- fields (Orbit.cs:126-306, same names and order) ---------------------------------------------------------
-    CelestialBodyRef* referenceBody = nullptr;
+    CelestialBody* referenceBody = nullptr;
     double inclination = 0.0;
     double eccentricity = 0.0;
     double semiMajorAxis = 0.0;
@@ -160,7 +160,7 @@ public:
     double EndUT = 0.0;
     bool activePatch = false;
     Orbit* closestEncounterPatch = nullptr;
-    CelestialBodyRef* closestEncounterBody = nullptr;
+    CelestialBody* closestEncounterBody = nullptr;
     EncounterSolutionLevel closestEncounterLevel = EncounterSolutionLevel::NONE;
     PatchTransitionType patchStartTransition = PatchTransitionType::INITIAL;
     PatchTransitionType patchEndTransition = PatchTransitionType::INITIAL;
@@ -188,7 +188,7 @@ public:
     // the patch pointers); KSP's element-only copy constructor is Orbit::CopyOf.
     Orbit() = default;
     // Orbit.cs:316 -> SetOrbit -> Init
-    Orbit(double inc, double e, double sma, double lan, double argPe, double mEp, double t, CelestialBodyRef* body);
+    Orbit(double inc, double e, double sma, double lan, double argPe, double mEp, double t, CelestialBody* body);
     // Orbit.cs:321 `new Orbit(orbit)`: copies the seven elements and the reference body, then Init().
     static Orbit CopyOf(const Orbit& orbit);
 
@@ -202,14 +202,14 @@ public:
 
     double GetMeanMotion(double sma) const;  // Orbit.cs:334
     void SetOrbit(double inc, double e, double sma, double lan, double argPe, double mEp, double t,
-                  CelestialBodyRef* body);   // Orbit.cs:340
+                  CelestialBody* body);   // Orbit.cs:340
     void Init();                             // Orbit.cs:353
     static double SafeAcos(double c);        // Orbit.cs:380
 
     // ---- updates --------------------------------------------------------------------------------------------------
-    void UpdateFromOrbitAtUT(const Orbit& orbit, double UT, CelestialBodyRef* toBody);              // Orbit.cs:393
-    void UpdateFromStateVectors(Vector3d pos, Vector3d vel, CelestialBodyRef* refBody, double UT);  // Orbit.cs:423
-    void UpdateFromFixedVectors(Vector3d pos, Vector3d vel, CelestialBodyRef* refBody, double UT);  // Orbit.cs:448
+    void UpdateFromOrbitAtUT(const Orbit& orbit, double UT, CelestialBody* toBody);              // Orbit.cs:393
+    void UpdateFromStateVectors(Vector3d pos, Vector3d vel, CelestialBody* refBody, double UT);  // Orbit.cs:423
+    void UpdateFromFixedVectors(Vector3d pos, Vector3d vel, CelestialBody* refBody, double UT);  // Orbit.cs:448
     void UpdateFromUT(double UT);                                                                   // Orbit.cs:541
 
     // ---- time <-> anomaly -----------------------------------------------------------------------------------------
@@ -249,14 +249,14 @@ public:
     Vector3d GetANVector() const;                                             // Orbit.cs:697
     // Orbit.cs:702 GetVel: KSP subtracts FlightGlobals.ActiveVessel.orbitDriver.referenceBody.GetFrameVel() when there
     // is an active vessel; the caller passes that body (nullptr = no active vessel -> Vector3d.zero).
-    Vector3d GetVel(const CelestialBodyRef* activeVesselReferenceBody = nullptr) const;
+    Vector3d GetVel(const CelestialBody* activeVesselReferenceBody = nullptr) const;
     Vector3d GetRelativeVel() const;                                          // Orbit.cs:708
-    Vector3d GetRotFrameVel(const CelestialBodyRef& refBody) const;           // Orbit.cs:713
-    Vector3d GetRotFrameVelAtPos(const CelestialBodyRef& refBody, const Vector3d& refPos) const;  // Orbit.cs:722
+    Vector3d GetRotFrameVel(const CelestialBody& refBody) const;           // Orbit.cs:713
+    Vector3d GetRotFrameVelAtPos(const CelestialBody& refBody, const Vector3d& refPos) const;  // Orbit.cs:722
     Vector3d GetFrameVel() const;                                             // Orbit.cs:731
     Vector3d GetFrameVelAtUT(double UT) const;                                // Orbit.cs:736
     // Orbit.cs:741 (activeVesselReferenceBody: see GetVel)
-    Vector3d GetWorldSpaceVel(const CelestialBodyRef* activeVesselReferenceBody = nullptr) const;
+    Vector3d GetWorldSpaceVel(const CelestialBody* activeVesselReferenceBody = nullptr) const;
     double GetRadiusAtUT(double time) const;                                  // Orbit.cs:755
     double GetRadiusAtPhaseAngle(double phaseAngle) const;                    // Orbit.cs:761
     double PhaseAngle(double time, double longitude) const;                   // Orbit.cs:767
@@ -298,7 +298,7 @@ public:
 
     // ---- static helpers -------------------------------------------------------------------------------------------
     // Orbit.cs:1365 (pos/vel in Unity world coordinates)
-    static Orbit OrbitFromStateVectors(const Vector3d& pos, const Vector3d& vel, CelestialBodyRef* body, double UT);
+    static Orbit OrbitFromStateVectors(const Vector3d& pos, const Vector3d& vel, CelestialBody* body, double UT);
     static bool PeApIntersects(const Orbit& primary, const Orbit& secondary, double threshold);  // Orbit.cs:1372
     // Orbit.cs:1385 _FindClosestPoints: Targeting.Intercepts with 24 samples (returns the number of minima found,
     // 0..2); with LegacyOrbitTargeting it runs FindClosestPoints_old and returns 2, as KSP does.
@@ -327,11 +327,11 @@ public:
     static double DescendingNodeTrueAnomaly(const Orbit& p, const Orbit& s);          // Orbit.cs:1773
     static double RelativeInclination(const Orbit& p, const Orbit& s);                // Orbit.cs:1778 (degrees)
     // Orbit.cs:1783-1845: UnityEngine.Random draws come from UnityRandom::Global().
-    static Orbit CreateRandomOrbitAround(CelestialBodyRef* body);
-    static Orbit CreateRandomOrbitAround(CelestialBodyRef* body, double minAltitude, double maxAltitude);
+    static Orbit CreateRandomOrbitAround(CelestialBody* body);
+    static Orbit CreateRandomOrbitAround(CelestialBody* body, double minAltitude, double maxAltitude);
     static Orbit CreateRandomOrbitNearby(const Orbit& baseOrbit);
     // Orbit.cs:1828/1835: KSP reads Planetarium.GetUniversalTime(); the caller passes it as universalTime.
-    static Orbit CreateRandomOrbitFlyBy(const CelestialBodyRef& tgtBody, double daysToClosestApproach,
+    static Orbit CreateRandomOrbitFlyBy(const CelestialBody& tgtBody, double daysToClosestApproach,
                                         double universalTime);
     static Orbit CreateRandomOrbitFlyBy(const Orbit& targetOrbit, double timeToPeriapsis, double periapsis,
                                         double deltaVatPeriapsis, double universalTime);
@@ -348,6 +348,12 @@ private:
 
     double drawResolution = 15.0;  // Orbit.cs:208 (DrawOrbit only)
 };
+
+// `body.orbit` as Orbit/OrbitUtil/Targeting read it (CelestialBody.cs:321 orbit => orbitDriver.orbit): the ksp::Orbit
+// behind the body's run-time link (body->orbit()->GetOrbit(), CelestialBodyOrbitAdapter for spawned bodies); nullptr
+// without an OrbitDriver (the Sun) or before a link is attached. The single access point to a body's own orbit from
+// Orbit code (5 call sites).
+Orbit* BodyOrbit(const CelestialBody* body);
 
 // Enum names as C# ToString() writes them (save files, golden tables).
 const char* ToString(Orbit::PatchTransitionType t);

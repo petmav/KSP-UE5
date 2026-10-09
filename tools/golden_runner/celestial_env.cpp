@@ -30,34 +30,33 @@ CelestialEnv& CelestialEnv::Get(const RunnerOptions& opt) {
     env->planetarium = std::make_unique<Planetarium>();
     env->planetarium->Awake();
     // KspEnv.InitBodies(0)
-    env->system = CelestialSystem::Spawn(KerbolSystemPrefab(), *env->planetarium, [](CelestialBody& b) {
-        return std::unique_ptr<ICelestialBodyOrbit>(new StandInOrbitPeriod(b));
-    });
+    env->system = CelestialSystem::Spawn(KerbolSystemPrefab(), *env->planetarium);
+    UseHarnessFrame(*env->planetarium);
     env->physics->CalculateValues(env->system->Bodies(), env->planetarium->Sun);
     return *env;
 }
 
-StandInOrbitPeriod::StandInOrbitPeriod(const CelestialBody& body) {
-    const CelestialOrbitElements& o = body.orbitDriver->orbit;
-    // Orbit.cs:334 GetMeanMotion
-    const double num = dotnet::Math::Abs(o.semiMajorAxis);
-    const double meanMotion = dotnet::Math::Sqrt(body.orbitDriver->referenceBody->gravParameter / (num * num * num));
-    // Orbit.cs:368-376
-    period_ = o.eccentricity < 1.0 ? UtilMath::PI * 2.0 / meanMotion : std::numeric_limits<double>::infinity();
+// The harness's CBUpdate (Rehosted/CelestialBodyLifecycle.cs:106-147) leaves out the inverse-rotation branch
+// (CelestialBody.cs:560-565: Planetarium.InverseRotAngle, Zup and Rotation). The Mun and Minmus prefabs carry
+// inverseRotation = 1, so kspcore's faithful first CBUpdate pass (CelestialSystem::Spawn) leaves InverseRotAngle at
+// 230 (their initialRotation at UT 0) and every orbit updated after the Mun in a Zup turned by 230 degrees, while every
+// golden orbit state is in the frame Planetarium.Awake builds for the serialized inverseRotAngle 0. Mirror the harness:
+// restore that frame and redo OrbitDriver.UpdateOrbit (updateFromParameters -> Orbit.UpdateFromUT) for every body in the
+// CBUpdate pass order (Planetarium.UpdateCBsRecursive). Only the frame and the orbit states / positions change; the
+// non-inverse bodies' directRotAngle/BodyFrame from that pass are not gated and are left as computed.
+void CelestialEnv::UseHarnessFrame(Planetarium& planetarium) {
+    planetarium.inverseRotAngle = 0.0;  // scene_singletons.serialized.json: Planetarium.inverseRotAngle
+    PlanetariumAwakeFrames(planetarium.inverseRotAngle, Planetarium::Zup, planetarium.rotation);
+    struct Pass {
+        static void Run(CelestialBody* cb) {  // Planetarium.cs:268 UpdateCBsRecursive, UpdateOrbit part only
+            if (cb->orbitDriver && cb->orbitDriver->link != nullptr) cb->orbitDriver->link->UpdateOrbit();
+            for (CelestialBody* c : cb->orbitingBodies)
+                if (!c->orbitDriver || !c->orbitDriver->reverse) Run(c);
+            if (cb->orbitDriver && cb->orbitDriver->reverse) Run(cb->referenceBody());
+        }
+    };
+    Pass::Run(planetarium.FindRootBody(planetarium.Sun));
 }
-
-namespace {
-[[noreturn]] void Pending(const char* what) {
-    throw std::logic_error(std::string("StandInOrbitPeriod::") + what + ": needs ksp::Orbit (WP-07)");
-}
-}  // namespace
-double StandInOrbitPeriod::trueAnomaly() const { Pending("trueAnomaly"); }
-double StandInOrbitPeriod::radius() const { Pending("radius"); }
-double StandInOrbitPeriod::PeR() const { Pending("PeR"); }
-double StandInOrbitPeriod::ApR() const { Pending("ApR"); }
-Vector3d StandInOrbitPeriod::vel() const { Pending("vel"); }
-Vector3d StandInOrbitPeriod::getRelativePositionAtUT(double) const { Pending("getRelativePositionAtUT"); }
-Vector3d StandInOrbitPeriod::getOrbitalVelocityAtUT(double) const { Pending("getOrbitalVelocityAtUT"); }
 
 namespace {
 std::string Normalize(std::string s) {

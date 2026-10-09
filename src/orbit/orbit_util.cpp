@@ -13,9 +13,9 @@ namespace {
 constexpr double kPI = 3.141592653589793;
 
 // OrbitUtil.cs:132 (static CelestialBody[10] arrays in KSP; local here, same indexing)
-void GetBodyHierarchy(CelestialBodyRef* cb, std::array<CelestialBodyRef*, 10>& hierarchy, int& i) {
+void GetBodyHierarchy(CelestialBody* cb, std::array<CelestialBody*, 10>& hierarchy, int& i) {
     hierarchy.at(static_cast<size_t>(i)) = cb;
-    CelestialBodyRef* ref = cb->referenceBody();
+    CelestialBody* ref = cb->referenceBody();
     if (ref != nullptr && ref != cb) {
         i++;
         GetBodyHierarchy(ref, hierarchy, i);
@@ -35,7 +35,7 @@ double OrbitUtil::CurrentPhaseAngle(const Orbit& origin, const Orbit& destinatio
 
 // OrbitUtil.cs:29
 double OrbitUtil::CurrentEjectionAngle(const Orbit& origin, double UT) {
-    const CelestialBodyRef* referenceBody = origin.referenceBody;
+    const CelestialBody* referenceBody = origin.referenceBody;
     const Orbit* bodyOrbit = BodyOrbit(referenceBody);
     const Vector3d prograde = (bodyOrbit != nullptr) ? bodyOrbit->getOrbitalVelocityAtUT(UT) : Vector3d::zero();
     return CurrentEjectionAngle(origin, UT, prograde);
@@ -64,9 +64,9 @@ double OrbitUtil::GetTransferPhaseAngle(const Orbit& /*o1*/, const Orbit& o2, do
 }
 
 // OrbitUtil.cs:96
-CelestialBodyRef* OrbitUtil::FindPlanet(CelestialBodyRef* src) {
+CelestialBody* OrbitUtil::FindPlanet(CelestialBody* src) {
     if (src->referenceBody() == nullptr) return nullptr;
-    CelestialBodyRef* celestialBody = src;
+    CelestialBody* celestialBody = src;
     do {
         celestialBody = src;
         src = src->referenceBody();
@@ -75,15 +75,15 @@ CelestialBodyRef* OrbitUtil::FindPlanet(CelestialBodyRef* src) {
 }
 
 // OrbitUtil.cs:112
-CelestialBodyRef* OrbitUtil::FindCommonAncestor(const Orbit& o, CelestialBodyRef* cb) {
+CelestialBody* OrbitUtil::FindCommonAncestor(const Orbit& o, CelestialBody* cb) {
     if (o.referenceBody == cb) return cb;
-    std::array<CelestialBodyRef*, 10> p1Hierarchy{};
-    std::array<CelestialBodyRef*, 10> p2Hierarchy{};
+    std::array<CelestialBody*, 10> p1Hierarchy{};
+    std::array<CelestialBody*, 10> p2Hierarchy{};
     int p1i = 0;
     GetBodyHierarchy(o.referenceBody, p1Hierarchy, p1i);
     int p2i = 0;
     GetBodyHierarchy(cb, p2Hierarchy, p2i);
-    CelestialBodyRef* result = nullptr;
+    CelestialBody* result = nullptr;
     while (p1i >= 0 && p2i >= 0 && p1Hierarchy[static_cast<size_t>(p1i)] == p2Hierarchy[static_cast<size_t>(p2i)]) {
         result = p1Hierarchy[static_cast<size_t>(p1i)];
         p1i--;

@@ -4,8 +4,8 @@
 #include <algorithm>
 #include <limits>
 
+#include "ksp/celestial/celestial_body_orbit.hpp"
 #include "ksp/celestial/planetarium.hpp"
-#include "ksp/core/log.hpp"
 
 namespace ksp {
 
@@ -40,15 +40,12 @@ std::unique_ptr<CelestialSystem> CelestialSystem::Spawn(const PSystemPrefab& pre
     }
     // Start(): CelestialBody.Start, then OrbitDriver.Start (orbit.Init(); updateFromParameters())
     for (CelestialBody* b : sys->spawnOrder_) b->Start();
-    if (orbitFactory) {
-        for (CelestialBody* b : sys->spawnOrder_) {
-            if (!b->orbitDriver) continue;
-            std::unique_ptr<ICelestialBodyOrbit> o = orbitFactory(*b);
-            b->orbitDriver->link = o.get();
-            if (o) sys->orbits_.push_back(std::move(o));
-        }
-    } else {
-        log::Warning("CelestialSystem::Spawn: no OrbitFactory; bodies have no run-time Orbit (WP-07 not attached)");
+    const OrbitFactory& factory = orbitFactory ? orbitFactory : OrbitFactory(&MakeCelestialBodyOrbit);
+    for (CelestialBody* b : sys->spawnOrder_) {
+        if (!b->orbitDriver) continue;
+        std::unique_ptr<ICelestialBodyOrbit> o = factory(*b);
+        b->orbitDriver->link = o.get();
+        if (o) sys->orbits_.push_back(std::move(o));
     }
     // first Planetarium.FixedUpdate: UpdateCBsRecursive(FindRootBody(Sun)) at the current UT
     planetarium.UpdateCBs();

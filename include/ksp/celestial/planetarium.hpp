@@ -3,6 +3,13 @@
 //
 // KSP's singleton (Planetarium.fetch) is kept: Awake() registers the instance, the destructor clears it; static members
 // mirror C#'s statics (Zup is static in C#). Process-wide, not thread-safe (like KSP).
+//
+// This is the one Planetarium of kspcore: CelestialBody (CBUpdate, surface vectors) and Orbit (Zup, up/right, ZupAtT)
+// both use it. Deviation, only observable without a Planetarium instance: KSP's static Zup is the zero frame until the
+// first Planetarium.Awake and Rotation/InverseRotAngle throw NullReferenceException without `fetch`; kspcore starts Zup
+// at the frame Awake produces for the serialized inverseRotAngle 0 (PlanetaryFrame(0, 90, 0), the identity up to ~6e-17
+// cross terms) and answers Rotation()/InverseRotAngle() with that frame's values when `fetch` is null, so Orbit works
+// standalone (unit tests). The setters still need an instance (NullReferenceException, as in KSP).
 #pragma once
 
 #include "ksp/math/quaterniond.hpp"
@@ -27,7 +34,7 @@ public:
     double fixedDeltaTime = 0.02;
 
     static inline Planetarium* fetch = nullptr;
-    static inline CelestialFrame Zup{};
+    static CelestialFrame Zup;  // Planetarium.cs:74; starts as AwakeZup(0.0) (see the deviation note above)
 
     Planetarium() = default;
     Planetarium(const Planetarium&) = delete;
@@ -43,10 +50,10 @@ public:
     // statics (Planetarium.cs:85-180, 286-314)
     static double TimeScale() { return fetch == nullptr ? 1.0 : fetch->timeScale; }
     static bool Pause() { return fetch != nullptr && fetch->pause; }
-    static QuaternionD Rotation() { return fetch->rotation; }
-    static void SetRotation(const QuaternionD& q) { fetch->rotation = q; }
-    static double InverseRotAngle() { return fetch->inverseRotAngle; }
-    static void SetInverseRotAngle(double a) { fetch->inverseRotAngle = a; }
+    static QuaternionD Rotation();                // fetch.rotation (no fetch: Awake(0)'s rotation)
+    static void SetRotation(const QuaternionD& q);  // fetch.rotation = q (no fetch: NullReferenceException)
+    static double InverseRotAngle() { return fetch == nullptr ? 0.0 : fetch->inverseRotAngle; }
+    static void SetInverseRotAngle(double a);       // fetch.inverseRotAngle = a (no fetch: NullReferenceException)
     static Vector3d up() { return Rotation() * Vector3d(0.0, 1.0, 0.0); }
     static Vector3d forward() { return Rotation() * Vector3d(0.0, 0.0, 1.0); }
     static Vector3d right() { return Rotation() * Vector3d(1.0, 0.0, 0.0); }
@@ -57,6 +64,11 @@ public:
     static void ZupAtT(double UT, const CelestialBody& body, CelestialFrame& tempZup);
     static Vector3d SphericalVector(double lat, double lon);
     static bool FrameIsRotating();
+
+    // Planetarium.Awake's frame statements (Planetarium.cs:189-190) for a given inverseRotAngle: Zup = PlanetaryFrame(0,
+    // 90, angle) and rotation = QuaternionD.Inverse(Zup.Rotation).swizzle.
+    static CelestialFrame AwakeZup(double inverseRotAngle);
+    static QuaternionD AwakeRotation(double inverseRotAngle);
 
 private:
     static bool findRotatingBodiesRecursive(const CelestialBody* cb);

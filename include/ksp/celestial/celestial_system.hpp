@@ -50,15 +50,19 @@ const PSystemPrefab& KerbolSystemPrefab();
 class CelestialSystem {
 public:
     // Creates the run-time Orbit for a body with an OrbitDriver (OrbitDriver.Start: orbit.Init(); updateFromParameters()).
-    // Until WP-07 lands no factory exists in the library: without one, CelestialBody.orbit is null, which KSP never has
-    // for a body with an OrbitDriver (tidal locking and solarDayLength then take their `orbit == null` branches).
+    // The default is MakeCelestialBodyOrbit (celestial_body_orbit.hpp: ksp::Orbit behind CelestialBodyOrbitAdapter).
+    // A factory may return null: CelestialBody.orbit then stays null, which KSP never has for a body with an OrbitDriver
+    // (tidal locking and solarDayLength take their `orbit == null` branches; unit tests use it).
     using OrbitFactory = std::function<std::unique_ptr<ICelestialBodyOrbit>(CelestialBody& body)>;
 
     // The in-game start-up sequence for `prefab` on `planetarium` (which must be Awake):
     //   PSystemManager.SpawnBody depth-first (instantiate = copy, Awake, wire parent/children, Sun/Home/CurrentMainBody),
     //   PostSetup (FlightGlobals.Bodies sorted by flightGlobalsIndex, maximumSurfaceGeeASL), CelestialBody.Start for every
-    //   body, OrbitDriver.Start (orbitFactory), then one Planetarium.UpdateCBs() at the current UT (the first FixedUpdate's
-    //   CBUpdate pass, without advancing time). PhysicsGlobals.CalculateValues (OnFlightGlobalsReady) is the caller's.
+    //   body, OrbitDriver.Start (orbitFactory; null = MakeCelestialBodyOrbit) in spawn order, then one
+    //   Planetarium.UpdateCBs() at the current UT (the first FixedUpdate's CBUpdate pass, without advancing time; it moves
+    //   every body to its orbit position and, for the stock prefab, runs the Mun's and Minmus' inverse-rotation branch,
+    //   see STATUS.md "Integration WP-07/WP-09"). PhysicsGlobals.CalculateValues (OnFlightGlobalsReady) is the caller's.
+    // Afterwards body->getPositionAtUT(UT) / getTruePositionAtUT(UT) / GetFrameVelAtUT(UT) and BodyOrbit(body) work.
     static std::unique_ptr<CelestialSystem> Spawn(const PSystemPrefab& prefab, Planetarium& planetarium,
                                                   const OrbitFactory& orbitFactory = nullptr);
 

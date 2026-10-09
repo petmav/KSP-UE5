@@ -3,119 +3,31 @@
 // every column with kspcore's Orbit. Tables: cases, state_at_ut, from_state_vectors, state_vector_cases, kepler (all
 // of the golden file; the patched_conics file the same generator writes is WP-08's gate).
 //
-// Central bodies are rebuilt the way the harness built them (harness/src/KspGolden/KspEnv.cs InitBodies and
-// Rehosted/CelestialBodyLifecycle.cs), from harness/golden/serialized/celestial_bodies.serialized.json:
-//   Awake:    Mass = R*R*(GeeASL*9.80665)/6.67408E-11; gravParameter = Mass*6.67408E-11   (CelestialBody.cs:456-475)
-//   Start:    solarRotationPeriod adjustment of rotationPeriod                              (CelestialBody.cs:477-530)
-//   OrbitDriver.Start: orbit.Init(); orbit.UpdateFromUT(0)
-//   CBUpdate: tidally locked -> rotationPeriod = orbit.period; rotPeriodRecip = 1/rotationPeriod (CelestialBody.cs:532)
-// Orbit reads only gravParameter and Radius from them, plus initialRotation / rotPeriodRecip / inverseRotation /
-// directRotAngle in Planetarium.ZupAtT: the Mun and Minmus prefabs carry inverseRotation = 1 and the harness never
-// cleared it, so GetOrbitalStateVectorsAtUT and UpdateFromUT (sv_* and u_* columns) for Mun/Minmus orbits are in
-// those bodies' rotating inverse-rotation frame, exactly as KSP computes them.
+// Central bodies: the harness's KspEnv (the same environment BodiesGen uses), i.e. the runner's CelestialEnv: the
+// Kerbol system spawned from KerbolSystemPrefab() at UT 0 with the real run-time Orbit. Orbit reads gravParameter and
+// Radius from them, plus initialRotation / rotPeriodRecip / inverseRotation / directRotAngle in Planetarium.ZupAtT: the
+// Mun and Minmus prefabs carry inverseRotation = 1 and the harness never cleared it, so GetOrbitalStateVectorsAtUT and
+// UpdateFromUT (sv_* and u_* columns) for Mun/Minmus orbits are in those bodies' rotating inverse-rotation frame,
+// exactly as KSP computes them (rotPeriodRecip of the tidally locked Mun = 1 / its orbit's period, from CBUpdate).
 #include <cmath>
-#include <deque>
-#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
+#include "celestial_env.hpp"
 #include "datasets.hpp"
 #include "golden_json.hpp"
 #include "ksp/dotnet/math.hpp"
 #include "ksp/dotnet/random.hpp"
 #include "ksp/dotnet/text.hpp"
 #include "ksp/orbit/orbit.hpp"
-#include "nlohmann/json.hpp"
 
 using namespace ksp;
 
 namespace {
 
 constexpr double kPI = 3.141592653589793;
-constexpr double kGravitationalAcceleration = 9.80665;  // PhysicsGlobals.GravitationalAcceleration (PhysicsGlobals.cs:111)
-constexpr double kG = 6.67408E-11;
-
-struct BodySystem {
-    std::map<std::string, std::unique_ptr<CelestialBodyRef>> body;
-    std::deque<Orbit> orbits;  // OrbitDriver orbits (stable addresses)
-};
-
-// KspEnv.InitBodies(ut = 0) restricted to the fields Orbit reads.
-void BuildBodies(const std::string& serializedPath, BodySystem& sys) {
-    auto text = dotnet::ReadAllText(serializedPath);
-    if (!text) throw std::runtime_error("cannot read " + serializedPath);
-    const auto j = nlohmann::ordered_json::parse(*text);
-    std::vector<const nlohmann::ordered_json*> entries;
-    for (const auto& b : j.at("bodies")) entries.push_back(&b);
-    std::stable_sort(entries.begin(), entries.end(), [](auto* a, auto* b) {
-        return a->at("spawnOrder").template get<int>() < b->at("spawnOrder").template get<int>();
-    });
-    struct Extra {
-        CelestialBodyRef* cb;
-        bool tidallyLocked, solarRotationPeriod;
-        double GeeASL;
-    };
-    std::vector<Extra> extra;
-    for (const auto* e : entries) {
-        const auto& c = e->at("celestialBody");
-        auto cb = std::make_unique<CelestialBodyRef>();
-        cb->bodyName = c.at("bodyName").get<std::string>();
-        cb->Radius = c.at("Radius").get<double>();
-        cb->rotates = c.at("rotates").get<int>() != 0;
-        cb->rotationPeriod = c.at("rotationPeriod").get<double>();
-        cb->initialRotation = c.at("initialRotation").get<double>();
-        cb->directRotAngle = c.at("directRotAngle").get<double>();
-        cb->inverseRotation = c.at("inverseRotation").get<int>() != 0;
-        const double GeeASL = c.at("GeeASL").get<double>();
-        // CelestialBodyLifecycle.Awake (CelestialBody.cs Awake)
-        const double Mass = cb->Radius * cb->Radius * (GeeASL * kGravitationalAcceleration) / kG;
-        cb->gravParameter = Mass * kG;
-        CelestialBodyRef* raw = cb.get();
-        if (e->contains("orbitDriver") && e->at("orbitDriver").is_object()) {
-            const auto& o = e->at("orbitDriver").at("orbit");
-            Orbit& orb = sys.orbits.emplace_back();
-            orb.inclination = o.at("inclination").get<double>();
-            orb.eccentricity = o.at("eccentricity").get<double>();
-            orb.semiMajorAxis = o.at("semiMajorAxis").get<double>();
-            orb.LAN = o.at("LAN").get<double>();
-            orb.argumentOfPeriapsis = o.at("argumentOfPeriapsis").get<double>();
-            orb.meanAnomalyAtEpoch = o.at("meanAnomalyAtEpoch").get<double>();
-            orb.epoch = o.at("epoch").get<double>();
-            orb.referenceBody = sys.body.at(e->at("parent").get<std::string>()).get();
-            orb.referenceBody->orbitingBodies.push_back(raw);
-            raw->orbit = &orb;
-        }
-        extra.push_back({raw, c.at("tidallyLocked").get<int>() != 0, c.at("solarRotationPeriod").get<int>() != 0, GeeASL});
-        sys.body[cb->bodyName] = std::move(cb);
-    }
-    // CelestialBodyLifecycle.Start: rotationPeriod for solarRotationPeriod bodies (sphereOfInfluence etc. not needed)
-    for (const Extra& x : extra) {
-        if (x.cb->orbit != nullptr && x.solarRotationPeriod) {
-            const Orbit& orbit = *x.cb->orbit;
-            const double num = x.cb->rotationPeriod;
-            const double num2 = kPI * 2.0 * dotnet::Math::Sqrt(dotnet::Math::Pow(dotnet::Math::Abs(orbit.semiMajorAxis), 3.0) /
-                                                               orbit.referenceBody->gravParameter);
-            x.cb->rotationPeriod = num * num2 / (num2 + num);
-        }
-    }
-    // OrbitDriver.Start: orbit.Init(); updateFromParameters -> orbit.UpdateFromUT(0)
-    for (const Extra& x : extra) {
-        if (x.cb->orbit != nullptr) {
-            x.cb->orbit->Init();
-            x.cb->orbit->UpdateFromUT(0.0);
-        }
-    }
-    // CBUpdate (numeric part used here): tidal lock, rotPeriodRecip
-    for (const Extra& x : extra) {
-        CelestialBodyRef* cb = x.cb;
-        if (cb->rotates && cb->rotationPeriod != 0.0 && (!x.tidallyLocked || (cb->orbit != nullptr && cb->orbit->period != 0.0))) {
-            if (x.tidallyLocked) cb->rotationPeriod = cb->orbit->period;
-            cb->rotPeriodRecip = 1.0 / cb->rotationPeriod;
-        }
-    }
-}
 
 struct Case {
     std::string Id, Body, Note;
@@ -123,7 +35,7 @@ struct Case {
 };
 
 // OrbitGen.cs Cases()
-std::vector<Case> Cases(BodySystem& sys) {
+std::vector<Case> Cases(const CelestialSystem& sys) {
     std::vector<Case> cs;
     auto Add = [&](std::string id, std::string body, double inc, double e, double sma, double lan, double argPe,
                    double mEp, double epoch, std::string note) {
@@ -159,7 +71,7 @@ std::vector<Case> Cases(BodySystem& sys) {
     const char* bodies[] = {"Kerbin", "Mun", "Sun", "Jool", "Eve", "Minmus"};
     for (int i = 0; i < 60; i++) {
         const std::string b = bodies[i % 6];
-        const CelestialBodyRef& cb = *sys.body.at(b);
+        const CelestialBody& cb = *sys.GetBodyByName(b);
         const double e1 = rnd.NextDouble() * 0.8;
         const double e2 = 0.8 + rnd.NextDouble() * 0.19;
         const double e3 = 1.0 + rnd.NextDouble() * 4;
@@ -208,9 +120,7 @@ golden::Table& AddTable(golden::File& g, const char* name, const char* desc, std
 }  // namespace
 
 static int RunOrbitPropagation(const RunnerOptions& opt) {
-    BodySystem sys;
-    BuildBodies(opt.harness + "/golden/serialized/celestial_bodies.serialized.json", sys);
-    PlanetariumFrames::Awake(0.0);  // serialized Planetarium.inverseRotAngle = 0 (scene_singletons.serialized.json)
+    const CelestialSystem& sys = *CelestialEnv::Get(opt).system;
 
     golden::File g;
     g.dataset = "orbit_propagation";
@@ -240,7 +150,7 @@ static int RunOrbitPropagation(const RunnerOptions& opt) {
                         {"case_id", "UT"});
 
     for (const Case& c : Cases(sys)) {
-        CelestialBodyRef* body = sys.body.at(c.Body).get();
+        CelestialBody* body = sys.GetBodyByName(c.Body);
         const Orbit o(c.Inc, c.E, c.Sma, c.Lan, c.ArgPe, c.MEp, c.Epoch, body);
         tc.Add({c.Id, c.Body, body->gravParameter, c.Inc, c.E, c.Sma, c.Lan, c.ArgPe, c.MEp, c.Epoch, o.meanMotion, o.period,
                 o.ObTAtEpoch, o.h.x, o.h.y, o.h.z, o.eccVec.x, o.eccVec.y, o.eccVec.z, o.an.x, o.an.y, o.an.z, c.Note});
@@ -280,7 +190,7 @@ static int RunOrbitPropagation(const RunnerOptions& opt) {
                           {"argumentOfPeriapsis", F}, {"meanAnomalyAtEpoch", F}, {"trueAnomaly", F}, {"period", F},
                           {"timeToPe", F}, {"timeToAp", F}},
                          {"case_id"});
-    CelestialBodyRef* kerbin = sys.body.at("Kerbin").get();
+    CelestialBody* kerbin = sys.GetBodyByName("Kerbin");
     const double vc = dotnet::Math::Sqrt(kerbin->gravParameter / 700000.0);
     struct SvCase {
         const char* id;

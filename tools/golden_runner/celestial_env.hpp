@@ -1,9 +1,11 @@
-// The harness's KspEnv (harness/src/KspGolden/KspEnv.cs) rebuilt with kspcore, shared by the WP-09 datasets
-// (physics_constants, body_catalog, atmosphere_curves, physics_drag_curve):
+// The harness's KspEnv (harness/src/KspGolden/KspEnv.cs) rebuilt with kspcore, shared by the WP-09 and WP-07 datasets
+// (physics_constants, body_catalog, atmosphere_curves, physics_drag_curve, orbit_propagation):
 //   PhysicsGlobals: level0 prefab -> physicsDatabaseFilename = harness/inputs/Physics.cfg -> Awake -> LoadDatabase ->
 //                   bodyLiftCurve = GetLiftingSurfaceCurve("BodyLift")
 //   Planetarium:    level9 values (defaults) + Awake
-//   bodies:         CelestialSystem::Spawn(KerbolSystemPrefab()) at UT 0, then PhysicsGlobals.CalculateValues
+//   bodies:         CelestialSystem::Spawn(KerbolSystemPrefab()) at UT 0 with the real run-time Orbit
+//                   (CelestialBodyOrbitAdapter), UseHarnessFrame (the harness's CBUpdate skips the Mun's and
+//                   Minmus' inverse-rotation frame write), then PhysicsGlobals.CalculateValues
 // Created once per process.
 #pragma once
 
@@ -22,26 +24,9 @@ struct CelestialEnv {
     std::string physicsCfgPath;  // as the harness wrote it (Path.Combine, backslashes)
 
     static CelestialEnv& Get(const RunnerOptions& opt);
-};
-
-// Gate-only stand-in for the WP-07 run-time Orbit: Orbit.period exactly as Orbit.Init computes it
-// (Orbit.cs:334 GetMeanMotion, Orbit.cs:370 period = 2*PI / meanMotion for e < 1). Everything else throws: the gate
-// uses it only for CBUpdate's tidal lock (rotationPeriod) and solarDayLength. Replace with ksp::Orbit when WP-07 lands.
-class StandInOrbitPeriod : public ksp::ICelestialBodyOrbit {
-public:
-    explicit StandInOrbitPeriod(const ksp::CelestialBody& body);
-    double period() const override { return period_; }
-    double trueAnomaly() const override;
-    double radius() const override;
-    double PeR() const override;
-    double ApR() const override;
-    ksp::Vector3d vel() const override;
-    ksp::Vector3d getRelativePositionAtUT(double UT) const override;
-    ksp::Vector3d getOrbitalVelocityAtUT(double UT) const override;
-    void UpdateOrbit() override {}  // OrbitDriver.UpdateOrbit: propagation is WP-07's
-
-private:
-    double period_ = 0.0;
+    // After the spawn: the harness's Planetarium frame (inverse-rotation write of the first CBUpdate pass undone,
+    // orbits re-updated); see celestial_env.cpp.
+    static void UseHarnessFrame(ksp::Planetarium& planetarium);
 };
 
 // ExactNumber.FormatDouble / FormatFloat (harness/src/KspGolden/Infra/ExactNumber.cs): the text written into `str`
