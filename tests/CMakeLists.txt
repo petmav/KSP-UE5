@@ -14,12 +14,15 @@ add_executable(kspcore_tests
     test_events.cpp
     test_util.cpp
     test_wp03_reference.cpp
+    test_terrain.cpp
+    ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
 )
 target_link_libraries(kspcore_tests PRIVATE kspcore)
 ksp_set_build_flags(kspcore_tests)
-target_include_directories(kspcore_tests PRIVATE ${PROJECT_SOURCE_DIR}/third_party)
+target_include_directories(kspcore_tests PRIVATE ${PROJECT_SOURCE_DIR}/third_party ${PROJECT_SOURCE_DIR}/tools/golden_runner)
 target_compile_definitions(kspcore_tests PRIVATE KSPCORE_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
                            KSPCORE_HARNESS_DIR="${KSP_HARNESS_DIR}" KSPCORE_PROJECT_ROOT="${KSP_PROJECT_ROOT}"
+                           KSPCORE_DATA_DIR="${PROJECT_SOURCE_DIR}/data"
                            KSP_DICTIONARY_CFG="${KSP_PROJECT_ROOT}/decompiled/KSP-dev/GameData/Squad/Localization/dictionary.cfg")
 add_test(NAME unit COMMAND kspcore_tests)
 
@@ -48,6 +51,7 @@ add_test(NAME capi.ue_like COMMAND capi_ue_like ${KSP_HARNESS_DIR}/inputs/Physic
 find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
 set(KSP_CANDIDATE_DIR "${CMAKE_BINARY_DIR}/candidate")
 set(KSP_CAPTURES_DIR "${KSP_HARNESS_DIR}/captures/out")
+set(KSP_CAPTURES2_DIR "${KSP_HARNESS_DIR}/captures/out2")
 set(KSP_CAPTURE_TOL "${CMAKE_CURRENT_SOURCE_DIR}/tolerances_capture.json")
 
 function(ksp_golden_gate name dataset)
@@ -103,6 +107,16 @@ ksp_golden_gate(capture.physics_drag_curve physics_drag_curve GOLDEN ${KSP_CAPTU
 ksp_golden_gate(golden.body_catalog body_catalog)
 # WP-09 atmosphere: CelestialBody pressure/temperature/density/speed of sound + FlightIntegrator atmosphere helpers
 ksp_golden_gate(golden.atmosphere_curves atmosphere_curves)
+
+# WP-11 terrain: PQS.GetSurfaceHeight for Kerbin and Mun (140,522 samples: 1-degree grids, the 0.01-degree KSC patch,
+# the pad) vs the in-game batch-2 capture, plus the per-scene probe heights and the PQS radii. Kept columns: the
+# capture's bodies.mod_count/isStarted/isActive and scene_probe.has_pqs/isStarted/isActive/mod_count/ut/go_active are
+# scene state of the running game (Kerbin's runtime stack also holds 9 PQSCity2 set-dressing objects spawned by the
+# space-centre scene code, not by the PQS prefab), and the mods/mod_params/map_assets tables are checked by
+# tests/test_terrain.cpp (stack order, prefab fields) instead.
+ksp_golden_gate(capture.terrain_height terrain_height GOLDEN ${KSP_CAPTURES2_DIR}/terrain_height.json DROP_HEX
+                TOL ${KSP_CAPTURE_TOL} TABLES bodies,scene_probe,samples
+                COLUMNS "bodies:body,Radius,pqs_radius,radiusMin,radiusMax,ocean,pqs_name/scene_probe:scene,body,h_ksc,h_override_ksc,h_override_0_0")
 
 # GameData corpus: parse + round-trip every cfg/craft in harness/inputs (no golden; self-consistency + no errors)
 add_test(NAME corpus.gamedata

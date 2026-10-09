@@ -40,6 +40,13 @@ add_library(kspcore STATIC
     util/ksp_util.cpp
     util/misc_util.cpp
     util/simplex.cpp
+    terrain/libnoise.cpp
+    terrain/map_so.cpp
+    terrain/pqs.cpp
+    terrain/pqs_mods.cpp
+    terrain/pqs_mods_land.cpp
+    terrain/pqs_prefab.cpp
+    terrain/pqs_prefab_data.cpp
     capi/kspcore_c.cpp
 )
 add_library(ksp::core ALIAS kspcore)
