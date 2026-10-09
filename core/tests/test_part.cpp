@@ -35,6 +35,7 @@
 #include "ksp/save/save_environment.hpp"
 #include "ksp/save/ship_construct.hpp"
 #include "ksp/unity/bounds.hpp"
+#include "ksp/unity/quaternion_native.hpp"
 #include "nlohmann/json.hpp"
 
 namespace fs = std::filesystem;
@@ -1302,5 +1303,242 @@ TEST_CASE("WP-13 PartVariant and ModulePartVariants: lists of the C9 variants ta
         CHECK(ev->EventIsDisabledByVariant());
         REQUIRE(mv.SetVariant("Rover"));
         CHECK_FALSE(ev->EventIsDisabledByVariant());
+    }
+}
+
+TEST_CASE("WP-13 Part copy semantics: Instantiate, OnWillBeCopied / OnCopy / OnWasCopied over a part tree") {
+    if (!GameAvailable()) return;
+    Game13 g;
+    // original: pod -> tank; the tank is half empty, has no oxidizer, a tweaked module and a selected variant on the pod's neighbour
+    auto pod = g.New("mk1pod.v2");
+    auto tank = g.New("fuelTank");
+    Attach(*pod, "bottom", *tank, "top");
+    tank->SetResource(*ParseNode("RESOURCE\n{\n name = LiquidFuel\n amount = 33\n maxAmount = 180\n}\n"));
+    REQUIRE(tank->RemoveResource("Oxidizer"));
+    PartModule* tmod = tank->Modules().GetModule(0);
+    tmod->Set<bool>("stagingEnabled", false);
+    // the clone path ShipConstruction takes: Instantiate the prefab (or the part) for each part, rebuild the links, OnCopy the roots
+    auto pod2 = g.New("mk1pod.v2");
+    auto tank2 = g.New("fuelTank");
+    Attach(*pod2, "bottom", *tank2, "top");
+    CHECK(tank2->Resources.size() == 2);                              // the prefab's resources
+    CHECK(tank2->Modules().GetModule(0)->Get<bool>("stagingEnabled"));
+    pod->OnWillBeCopied(false);
+    pod2->OnCopy(pod.get(), false);
+    CHECK(pod2->fields.isClone);
+    CHECK(pod2->originalPart == pod.get());
+    CHECK(tank2->fields.isClone);
+    CHECK(tank2->originalPart == tank.get());
+    // resources follow the original: Oxidizer is removed, LiquidFuel takes the amounts, the simulation list is reset
+    REQUIRE(tank2->Resources.size() == 1);
+    CHECK(tank2->Resources[0].resourceName == "LiquidFuel");
+    CHECK(tank2->Resources[0].amount == 33.0);
+    CHECK(tank2->Resources[0].maxAmount == 180.0);
+    REQUIRE(tank2->SimulationResources().size() == 1);
+    CHECK(tank2->SimulationResources()[0].amount == 33.0);
+    // module fields are copied (PartModule.Copy -> BaseField.CopyField over every field)
+    CHECK_FALSE(tank2->Modules().GetModule(0)->Get<bool>("stagingEnabled"));
+    // a resource the original has and the clone lacks is added (with a simulation twin)
+    tank->AddResource(*ParseNode("RESOURCE\n{\n name = MonoPropellant\n amount = 4\n maxAmount = 8\n}\n"));
+    tank2->OnCopy(tank.get(), false);
+    CHECK(tank2->Resources.size() == 2);
+    CHECK(tank2->GetResource("MonoPropellant")->amount == 4.0);
+    CHECK(tank2->SimulationResources().size() == 2);
+    // OnWasCopied hands each module its counterpart in the new part
+    struct Probe : PartModule {
+        using PartModule::PartModule;
+        PartModule* got = nullptr;
+        bool called = false;
+        void OnWasCopied(PartModule* c, bool) override {
+            called = true;
+            got = c;
+        }
+    };
+    auto probe = std::make_shared<Probe>(*GetPartModuleClass("ModuleLight"));
+    probe->part = pod.get();
+    probe->Awake();
+    pod->Modules().Add(probe);
+    pod2->AddModule("ModuleLight");
+    // the probe sits at the end of pod's list; pod2's list is one shorter at that index -> index == Count reads past the end
+    // in C# (`newPart.modules.Count >= i`), kspcore indexes with the same guard: the call is made once the lists line up
+    pod2->AddModule("ModuleLight");
+    pod->OnWasCopied(pod2.get(), false);
+    CHECK(probe->called);
+    CHECK(probe->got != nullptr);
+    CHECK(probe->got->ClassName() == "ModuleLight");
+
+    // variants: OnCopy selects the original's variant by name (Part.cs:2138)
+    auto rcs = g.New("RCSBlock.v2");
+    auto rcsCopy = g.New("RCSBlock.v2");
+    REQUIRE(rcs->variants->SetVariant("2Horn"));
+    CHECK(rcsCopy->variants->GetCurrentVariantIndex() == 0);
+    rcsCopy->OnCopy(rcs.get(), true);
+    CHECK(rcsCopy->variants->GetCurrentVariantIndex() == rcs->variants->GetCurrentVariantIndex());
+    CHECK(rcsCopy->variants->SelectedVariant()->name == "2Horn");
+    // the clone's variant list is its own deep copy (Unity serializes [Serializable] instances by value)
+    CHECK(rcsCopy->variants->variantList[0].get() != rcs->variants->variantList[0].get());
+    rcsCopy->variants->variantList[0]->cost = 99.0f;
+    CHECK(rcs->variants->variantList[0]->cost == 0.0f);
+    CHECK(rcsCopy->baseVariant.get() != rcs->baseVariant.get());
+
+    // Instantiate keeps the data independent: changing the clone's node or resource leaves the original alone
+    auto copyA = g.New("fuelTank");
+    auto copyB = Part::Instantiate(*copyA);
+    copyB->attachNodes[0].position.x = 123.0f;
+    copyB->Resources[0].amount = 1.0;
+    CHECK(copyA->attachNodes[0].position.x != 123.0f);
+    CHECK(copyA->Resources[0].amount != 1.0);
+    CHECK(copyB->attachNodes[0].owner == copyB.get());
+    CHECK(copyB->partInfo == copyA->partInfo);
+}
+
+TEST_CASE("WP-13 structural modules: ModuleMirrorPlacement, ModuleDisplaceTweak, CompoundPartModule, AxisGroupsManager") {
+    if (!GameAvailable()) return;
+    Game13 g;
+    LogCapture log;
+    // ModuleMirrorPlacement.OnWillBeMirrored (ModuleMirrorPlacement.cs:26): X and Z by default, Y optional
+    {
+        Part p;
+        p.Awake();
+        PartModule* mm = p.AddModule("ModuleMirrorPlacement")->module.get();
+        Quaternionf r = Quaternionf::identity();
+        const Quaternionf expected = Quaternionf::identity() * UnityNative::AngleAxis(180.0f, Vector3f::right()) * UnityNative::AngleAxis(180.0f, Vector3f::forward());
+        CHECK(p.OnWillBeMirrored(r, nullptr, nullptr));
+        CHECK(r.Equals(expected));
+        mm->Set<bool>("applyMirrorRotationXAxis", false);
+        mm->Set<bool>("applyMirrorRotationZAxis", false);
+        mm->Set<bool>("applyMirrorRotationYAxis", true);
+        mm->Set<float>("mirrorRotationYAxis", 90.0f);
+        Quaternionf r2 = Quaternionf::identity();
+        CHECK(p.OnWillBeMirrored(r2, nullptr, nullptr));
+        CHECK(r2.Equals(Quaternionf::identity() * UnityNative::AngleAxis(90.0f, Vector3f::up())));
+        // a surface-attached part with a node pointing along X is left alone unless ignoreMirrorIfSurfaceXOffset is on (sic: the
+        // test is inverted -- with the flag OFF the early return happens)
+        AttachNode srf;
+        srf.nodeType = AttachNodeType::Surface;
+        srf.orientation = Vector3f(1, 0, 0);
+        Quaternionf r3 = Quaternionf::identity();
+        mm->Set<bool>("ignoreMirrorIfSurfaceXOffset", false);
+        CHECK_FALSE(p.OnWillBeMirrored(r3, &srf, nullptr));
+        CHECK(r3.Equals(Quaternionf::identity()));
+        mm->Set<bool>("ignoreMirrorIfSurfaceXOffset", true);
+        CHECK(p.OnWillBeMirrored(r3, &srf, nullptr));
+        Part none;
+        none.Awake();
+        Quaternionf r4 = Quaternionf::identity();
+        CHECK_FALSE(none.OnWillBeMirrored(r4, nullptr, nullptr));  // no module answers true
+    }
+    // ModuleDisplaceTweak (ModuleDisplaceTweak.cs): chained displacements of one transform
+    {
+        Part p, sym;
+        p.Awake();
+        sym.Awake();
+        PartModule* a = p.AddModule("ModuleDisplaceTweak")->module.get();
+        PartModule* b = p.AddModule("ModuleDisplaceTweak")->module.get();
+        PartModule* sb = sym.AddModule("ModuleDisplaceTweak")->module.get();
+        sym.AddModule("ModuleDisplaceTweak");
+        p.symmetryCounterparts = {&sym};
+        auto* da = dynamic_cast<ModuleDisplaceTweak*>(a);
+        auto* db = dynamic_cast<ModuleDisplaceTweak*>(b);
+        REQUIRE(da != nullptr);
+        REQUIRE(db != nullptr);
+        std::vector<Vector3f> written;
+        for (auto* d : {da, db}) {
+            d->findModelTransform = [](const std::string&) { return std::make_optional(Vector3f(1, 0, 0)); };
+            d->setLocalPosition = [&](const Vector3f& v) { written.push_back(v); };
+            d->Set<Vector3f>("axis", Vector3f(0, 1, 0));
+            d->Set<float>("displaceMax", 2.0f);
+            d->Set<float>("displaceMin", -1.0f);
+        }
+        da->OnStart(StartState::Editor);
+        db->OnStart(StartState::Editor);
+        CHECK(da->MDprev == nullptr);
+        CHECK(da->MDnext == db);
+        CHECK(db->MDprev == da);
+        CHECK(db->MDnext == nullptr);
+        // scalar 0.5: Lerp((0,-1,0), (0,2,0), 0.5) = (0,0.5,0); b adds a's final position
+        CHECK(da->GetFinalPosition().Equals(Vector3f(1, 0.5f, 0)));
+        CHECK(db->GetFinalPosition().Equals(Vector3f(1, 1.0f, 0)));
+        da->UpdateMorph(0.0f);  // a has a successor: nothing is written
+        CHECK(written.empty());
+        CHECK(da->Get<float>("scalar") == 0.0f);
+        db->UpdateMorph(1.0f);  // the last module writes the chain's final position
+        REQUIRE(written.size() == 1);
+        CHECK(written[0].Equals(Vector3f(1, -1.0f + 2.0f, 0)));  // a: (1,-1,0), b: + (0,2,0)
+        // PartTweaked on a symmetry counterpart re-applies that counterpart's scalar (by module index) to this chain
+        auto* ds = dynamic_cast<ModuleDisplaceTweak*>(sb);
+        ds->Set<float>("scalar", 0.25f);
+        written.clear();
+        GameEvents::onEditorPartEvent.Fire(static_cast<ConstructionEventType>(14), &sym);
+        // mIndex of `db` is 1 -> sym.Modules[1] (the second sym module, default scalar 0.5), b writes the final position
+        CHECK(written.size() >= 1);
+        // an unrelated part's PartTweaked event is ignored
+        written.clear();
+        Part stranger;
+        GameEvents::onEditorPartEvent.Fire(static_cast<ConstructionEventType>(14), &stranger);
+        CHECK(written.empty());
+    }
+    GameEvents::onEditorPartEvent.Fire(static_cast<ConstructionEventType>(0), nullptr);  // listeners of destroyed modules are gone
+    // CompoundPartModule.OnAwake (CompoundPartModule.cs:23): needs a CompoundPart
+    {
+        struct TestCompound : CompoundPartModule {
+            using CompoundPartModule::CompoundPartModule;
+            bool awoke = false;
+            void OnModuleAwake() override { awoke = true; }
+            void OnTargetSet(Part*) override {}
+            void OnTargetLost() override {}
+        };
+        Part comp;
+        comp.className = "CompoundPart";
+        auto m = std::make_shared<TestCompound>(*GetPartModuleClass("ModuleLight"));
+        m->part = &comp;
+        m->Awake();
+        CHECK(m->compoundPart == &comp);
+        CHECK(m->awoke);
+        Part plain;
+        auto m2 = std::make_shared<TestCompound>(*GetPartModuleClass("ModuleLight"));
+        m2->part = &plain;
+        log.lines.clear();
+        m2->Awake();
+        CHECK(m2->compoundPart == nullptr);
+        CHECK(log.Has(log::Level::Error, "CompoundPartModule requires a CompoundPart component!"));
+        CHECK(m2->awoke);
+        comp.className = "CompoundPart";
+        m->compoundTarget = [&](const Part&) { return &plain; };
+        CHECK(m->target() == &plain);
+    }
+    // AxisGroupsManager: AXISGROUPS only for modules with a KSPAxisField (AxisGroupsManager.cs:36), loaded back (:19)
+    {
+        Part p;
+        p.Awake();
+        PartModule* ax = p.AddModule("AxisTestModule")->module.get();
+        BaseAxisField* field = dynamic_cast<BaseAxisField*>(ax->Fields()["TestField"]);
+        REQUIRE(field != nullptr);
+        AxisGroupsManager::BuildBaseAxisFields(*ax);  // idempotent: the field is already a BaseAxisField
+        CHECK(dynamic_cast<BaseAxisField*>(ax->Fields()["TestField"]) == field);
+        ConfigNode saved("MODULE");
+        AxisGroupsManager::SaveAxisFieldNodes(*ax, saved);
+        ConfigNode* groups = saved.GetNode("AXISGROUPS");
+        REQUIRE(groups != nullptr);
+        REQUIRE(groups->nodes().Count() == 1);
+        CHECK(groups->nodes().Shared(0)->name == "TestField");
+        CHECK(groups->nodes().Shared(0)->HasValue("axisGroup"));
+        ConfigNode load("MODULE");
+        ConfigNode* lg = load.AddNode("AXISGROUPS");
+        ConfigNode* lf = lg->AddNode("TestField");
+        lf->AddValue("axisGroup", "Pitch");
+        lf->AddValue("axisSpeedMultiplier", 2.5f);
+        AxisGroupsManager::LoadAxisFieldNodes(*ax, load);
+        CHECK(field->axisGroup == static_cast<int64_t>(KSPAxisGroup::Pitch));
+        CHECK(field->incrementalSpeedMultiplier == 2.5f);
+        // a module without axis fields writes nothing
+        PartModule* plain = p.AddModule("ModuleCommand")->module.get();
+        ConfigNode none("MODULE");
+        AxisGroupsManager::SaveAxisFieldNodes(*plain, none);
+        CHECK_FALSE(none.HasNode("AXISGROUPS"));
+        // PartModule.Save/Load use the manager
+        ConfigNode full("MODULE");
+        ax->Save(full);
+        CHECK(full.HasNode("AXISGROUPS"));
     }
 }
