@@ -210,6 +210,12 @@ Vessel::Vessel() {
     VesselAnchorExceptions = {"ModuleWheelBase", "LaunchClamp", "FlagSite", "ModuleGroundPart"};
     GE::onVesselPrecalcAssign.Fire(this);
     GE::onCrewTransferred.Add(this, &Vessel::onCrewTransferred);
+    // Vessel.cs:1573-1577 (WP-16: the part-count change of a decouple / couple rebuilds the PartSets of the vessel that lost / gained parts)
+    GE::onVesselPartCountChanged.Add(this, &Vessel::OnVesselPartCountChanged);
+    GE::onPartResourceListChange.Add(this, &Vessel::UpdateResourceSetsEventCheckPart);
+    GE::onPartCrossfeedStateChange.Add(this, &Vessel::UpdateResourceSetsEventCheckPart);
+    GE::onPartFuelLookupStateChange.Add(this, &Vessel::UpdateCrossfeedResourceSetFL);
+    GE::onPartPriorityChanged.Add(this, &Vessel::UpdateResourceSetsEventCheckPart);
     GE::onPartVesselNamingChanged.Add(this, &Vessel::OnPartVesselNamingChanged);
     GE::onVesselWasModified.Add(this, &Vessel::OnVesselNamingVesselWasModified);
     VesselModuleManager::AddModulesToVessel(this, vesselModules);
@@ -219,6 +225,11 @@ Vessel::Vessel() {
 
 // Vessel.cs:3341 OnDestroy (event listeners; the registry entry)
 Vessel::~Vessel() {
+    GE::onVesselPartCountChanged.Remove(this, &Vessel::OnVesselPartCountChanged);  // Vessel.cs:3343-3347
+    GE::onPartResourceListChange.Remove(this, &Vessel::UpdateResourceSetsEventCheckPart);
+    GE::onPartCrossfeedStateChange.Remove(this, &Vessel::UpdateResourceSetsEventCheckPart);
+    GE::onPartFuelLookupStateChange.Remove(this, &Vessel::UpdateCrossfeedResourceSetFL);
+    GE::onPartPriorityChanged.Remove(this, &Vessel::UpdateResourceSetsEventCheckPart);
     GE::onPartVesselNamingChanged.Remove(this, &Vessel::OnPartVesselNamingChanged);
     GE::onVesselWasModified.Remove(this, &Vessel::OnVesselNamingVesselWasModified);
     GE::onCrewTransferred.Remove(this, &Vessel::onCrewTransferred);
@@ -968,6 +979,28 @@ void Vessel::UpdateVesselSize() {
 void Vessel::UpdateResourceSets() {
     resourcesDirty = false;
     if (env.updateResourceSets) env.updateResourceSets(*this);
+}
+
+// Vessel.cs:3892
+void Vessel::OnVesselPartCountChanged(Vessel* v) {
+    if (v == this) {
+        if (updateResourcesOnEvent) UpdateResourceSets();
+        else resourcesDirty = true;
+        UpdateVesselSize();
+    }
+}
+
+// Vessel.cs:3943
+void Vessel::UpdateCrossfeedResourceSetFL(GE::HostedFromToAction<bool, Part*> data) {
+    if (data.from->vessel == this) resourcesDirty = true;
+}
+
+// Vessel.cs:3951
+void Vessel::UpdateResourceSetsEventCheckPart(Part* p) {
+    if (p->vessel == this) {
+        if (updateResourcesOnEvent) UpdateResourceSets();
+        else resourcesDirty = true;
+    }
 }
 
 // Vessel.cs:3935

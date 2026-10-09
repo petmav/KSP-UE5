@@ -50,6 +50,7 @@ class ILiftProvider;  // WP-21 ksp/aero/aero_interfaces.hpp
 class IAirstreamShield;
 class PartSet;
 class ShipConstruct;
+class DockedVesselInfo;
 
 // Unity Transform stand-in for the Part's own transform (position, rotation, localScale): only what the engine-agnostic Part
 // maths reads (AttachNode.ReverseSrfNodeDirection / ChangeSrfNodePosition, UpdateOrgPosAndRot, SetMirror's model scale).
@@ -381,7 +382,39 @@ public:
     int GetResourcePriority();                     // :7744
     void ResetPri();                               // :7749
     void ChangeResourcePriority(int offset);       // :7763
+    // Part.cs:7777. `stageCount` is StageManager.StageCount when no StageManager hooks are installed (stagingHooks.stageCount wins).
     void UpdateStageability(bool propagate, bool iconUpdate, int stageCount = 0);  // :7777
+
+    // ---- WP-16: the StageManager side of the part (stackIcon.StageIcon, StageManager.StageCount) ---------------------------------
+    // `stackIcon.StageIcon` belongs to the staging UI (StageIcon, WP-43); the data model of WP-16 (staging/stage_manager.hpp) keeps the
+    // icons and installs these hooks. Without hooks the part only remembers whether its icon exists (the WP-13 behaviour).
+    struct StagingHooks {
+        std::function<int()> stageCount;                  // StageManager.StageCount (:7808 clamps inverseStage to it)
+        std::function<void(Part&, bool)> createIcon;      // stackIcon.CreateIcon(alertStagingSequencer)   (ProtoStageIcon.cs:57)
+        std::function<void(Part&, bool)> removeIcon;      // stackIcon.RemoveIcon(alertStagingSequencer)   (ProtoStageIcon.cs:101)
+        std::function<bool(const Part&)> hasIcon;         // stackIcon.StageIcon != null
+    };
+    static inline StagingHooks stagingHooks;
+    bool HasStageIcon() const;                            // stackIcon.StageIcon != null
+    void CreateStageIcon(bool alertStagingSequencer = true);   // stackIcon.CreateIcon (needs a stagingIcon; flight: active vessel only)
+    void RemoveStageIcon(bool alertStagingSequencer = true);   // stackIcon.RemoveIcon
+    // The staging block of Part.Start (Part.cs:1727-1747): validates the stagingIcon name (DefaultIcons), UpdateStageability(false,
+    // true) and creates the stack icon when stagingOn. Call after the modules' OnStart (ModulesOnStart ran at :1727).
+    void StartStaging();
+
+    // ---- WP-16: vessel split / join (Part.cs:2804-3400); joints, FX and renderers are the physics / render packages' --------------
+    // Part.cs:2804 decouple: splits this part and its subtree off the vessel into a new Vessel (owned by Vessel::SpawnedVessels(),
+    // returned). `attachJoint.DestroyJoint()`, CreateRendererLists and the Rigidbody work of PromoteToPhysicalPart are not ported.
+    Vessel* decouple(float breakForce = 0.0f);
+    // Part.cs:3171 Couple: this part's vessel joins tgtPart's vessel (the source Vessel is destroyed), staging is re-sorted
+    void Couple(Part* tgtPart);
+    // Part.cs:3274 Undock: this part's subtree leaves its vessel as a new Vessel (or, with a DockedVesselInfo, the part it names)
+    Vessel* Undock(const DockedVesselInfo* newVesselInfo);
+    void disconnect(bool controlledSeparation = false);   // :3084
+    void CheckBodyLiftAttachment();                       // :1964
+    void SetVessel(Vessel* v);                            // :3263 private SetVessel: v.parts.Add + vessel = v, recursive
+    virtual void onDecouple(float /*breakForce*/) {}      // :4585 protected virtual
+    virtual void onDisconnect() {}                        // :4589 protected virtual
 
     // ---- virtual hooks (:4513-4670, empty in Part) ----------------------------------------------------------------------------
     virtual void onBackup() {}
@@ -419,7 +452,8 @@ private:
     bool awoken_ = false;
     bool partIsShielded_ = false;                  // :682 private
     std::string referenceTransformName_;
-    bool stageIconCreated_ = false;  // stackIcon.StageIcon != null (the icon itself is UI)
+    bool stageIconCreated_ = false;  // stackIcon.StageIcon != null when no stagingHooks.hasIcon is installed (the icon itself is UI)
+    void Decoupling(float breakForce);  // :2840 private
     void CreateEventListRecursive(int eventID, int requestID, std::vector<BaseEvent*>& eventList, int depth, int maxDepth);  // :6234
     std::vector<ConfigNode::NodePtr> effectNodes_;
     static inline uint32_t nextInstanceID_ = 1;

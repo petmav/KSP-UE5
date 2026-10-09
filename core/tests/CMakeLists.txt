@@ -27,6 +27,7 @@ add_executable(kspcore_tests
     test_vessel.cpp
     test_ship_construct.cpp
     test_aero.cpp
+    test_staging.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
 )
@@ -202,6 +203,14 @@ ksp_golden_gate(capture.ship_construct ship_construct GOLDEN ${KSP_CAPTURES2_DIR
     TOL ${KSP_CAPTURE_TOL} TABLES craft,parts
     DROP_KEYS_FILE ${PROJECT_SOURCE_DIR}/tests/data/ship_construct_exclusions.json
     COLUMNS "craft:craft_id,parts,dry_mass,fuel_mass/parts:craft_id,part_index,part,mass,module_mass")
+
+# WP-16 staging: StageManager (SortIcons / UpdateStageGroups / SetSeparationIndices) and the decoupler modules over the 17 crafts of
+# the C5 delta-v capture. Gated columns: craft.stage_count, parts.inverseStage (Part.inverseStage after the editor rebuilt the
+# staging sequence) and parts.isDecoupler. decoupleStage / activationStage and the stages / engines tables are VesselDeltaV's (WP-17).
+# The craft files are the capture's own inputs (see capture.resource_mass).
+ksp_golden_gate(capture.staging_sequence staging_sequence GOLDEN ${KSP_CAPTURES2_DIR}/deltav_readout.json DROP_HEX
+    TOL ${KSP_CAPTURE_TOL} TABLES craft,parts
+    COLUMNS "craft:craft_id,stage_count/parts:craft_id,part_index,part,inverseStage,isDecoupler")
 # GameDatabase load order vs the game's own log of the capture run (every "Load(Audio|Texture|Model): url" and
 # "Config(TYPE) url" line, in order). Skipped (exit 0 with a note) when the log is not present.
 add_test(NAME capture.gamedatabase_load_order

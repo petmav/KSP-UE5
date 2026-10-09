@@ -1046,7 +1046,8 @@ void Part::ChangeResourcePriority(int offset) {
     GameEvents::onPartPriorityChanged.Fire(this);
 }
 
-// Part.cs:7777 (stack icon creation / removal is UI; `stageCount` is StageManager.StageCount)
+// Part.cs:7777 (the stack icon is the StageManager's: `stagingHooks`; without them `stageIconCreated_` stands for
+// `stackIcon.StageIcon != null`. `stageCount` is StageManager.StageCount unless stagingHooks.stageCount answers)
 void Part::UpdateStageability(bool propagate, bool iconUpdate, int stageCount) {
     if (!hasStagingIcon() || fields.stagingIconAlwaysShown) return;
     bool flag = false;
@@ -1067,21 +1068,22 @@ void Part::UpdateStageability(bool propagate, bool iconUpdate, int stageCount) {
         if (flag) {
             flag3 = !fields.stagingOn;
             fields.stagingOn = true;
-            if (flag3 && !stageIconCreated_) {
-                if (fields.inverseStage > stageCount) {
-                    fields.inverseStage = stageCount;
+            if (flag3 && !HasStageIcon()) {
+                const int sc = stagingHooks.stageCount ? stagingHooks.stageCount() : stageCount;
+                if (fields.inverseStage > sc) {
+                    fields.inverseStage = sc;
                     GameEvents::onPartPriorityChanged.Fire(this);
                 }
                 if (iconUpdate) {
-                    stageIconCreated_ = true;
+                    CreateStageIcon();
                     GameEvents::StageManager::OnPartUpdateStageability.Fire(this);
                 }
             }
         } else {
             flag3 = fields.stagingOn;
             fields.stagingOn = false;
-            if (stageIconCreated_ && iconUpdate) {
-                stageIconCreated_ = false;
+            if (HasStageIcon() && iconUpdate) {
+                RemoveStageIcon();
                 GameEvents::StageManager::OnPartUpdateStageability.Fire(this);
             }
         }
@@ -1098,11 +1100,27 @@ void Part::UpdateStageability(bool propagate, bool iconUpdate, int stageCount) {
         }
     } else if (fields.stagingOn) {
         fields.stagingOn = false;
-        if (iconUpdate && stageIconCreated_) {
-            stageIconCreated_ = false;
+        if (iconUpdate && HasStageIcon()) {
+            RemoveStageIcon();
             GameEvents::StageManager::OnPartUpdateStageability.Fire(this);
         }
     }
+}
+
+// stackIcon.StageIcon != null
+bool Part::HasStageIcon() const { return stagingHooks.hasIcon ? stagingHooks.hasIcon(*this) : stageIconCreated_; }
+
+// ProtoStageIcon.cs:57 (`!string.IsNullOrEmpty(part.stagingIcon)`; the flight-scene filter is the StageManager's hook)
+void Part::CreateStageIcon(bool alertStagingSequencer) {
+    if (!fields.stagingIcon || fields.stagingIcon->empty()) return;
+    if (stagingHooks.createIcon) stagingHooks.createIcon(*this, alertStagingSequencer);
+    else stageIconCreated_ = true;
+}
+
+// ProtoStageIcon.cs:101
+void Part::RemoveStageIcon(bool alertStagingSequencer) {
+    if (stagingHooks.removeIcon) stagingHooks.removeIcon(*this, alertStagingSequencer);
+    else stageIconCreated_ = false;
 }
 
 // ---- effects ----------------------------------------------------------------------------------------------------------------------

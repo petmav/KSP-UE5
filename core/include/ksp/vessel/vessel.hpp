@@ -58,6 +58,7 @@ namespace ksp {
 namespace GameSettings {
 inline bool ADDITIONAL_ACTION_GROUPS = false;
 inline bool RADAR_ALTIMETER_EXTENDED_CALCS = true;
+inline bool ADVANCED_TWEAKABLES = false;  // GameSettings.cs:75 / :979 (BaseAction.AddAction, WP-16)
 }  // namespace GameSettings
 
 class CelestialBody;
@@ -511,6 +512,23 @@ public:
     // FlightRegistry and FlightGlobals; until then the host registers FlightView() in FlightGlobals::ActiveVessel / VesselsLoaded.
     IFlightVessel& FlightView() { return *flightView_; }
 
+    // ---- staging and vessel splitting (WP-16; Vessel.cs:2130-2153, and the Vessel components Part.decouple / Couple / Undock create) ----
+    void ClearStaging();                                           // :2130 (every part's stack icon is removed, onVesselClearStaging)
+    void ResumeStaging();                                          // :2140
+    // `part.gameObject.AddComponent<Vessel>()` for Part.decouple / Undock: a Vessel kept alive by SpawnedVessels()
+    static Vessel* SpawnVessel();
+    // UnityEngine.Object.DestroyImmediate(vessel) (Part.Couple): the vessel leaves the registry and loses its parts; a spawned
+    // vessel is freed, a vessel owned by the caller (std::unique_ptr) stays valid but empty
+    static void DestroyImmediate(Vessel* v);
+    static std::vector<std::unique_ptr<Vessel>>& SpawnedVessels();
+    // Part ownership follows the tree when it moves between vessels: the unique_ptrs of `which` that this vessel owns
+    std::vector<std::unique_ptr<Part>> ReleaseOwnedParts(const std::vector<Part*>& which);
+    void AcceptOwnedParts(std::vector<std::unique_ptr<Part>> moved);
+    // `StartCoroutine(CallbackUtil.DelayedCallback(1, ...))` (Part.Undock: oldVessel.ResumeStaging one frame later): the host
+    // calls RunDelayedFrameCalls() once per frame
+    std::vector<std::function<void()>> delayedFrameCalls;
+    void RunDelayedFrameCalls();
+
     // ---- bookkeeping the host needs ---------------------------------------------------------------------------------------------------
     // Part.vessel hooks (isEVA, partCount, removeCrew, crewListSetDirty, snapshotSavesModules) pointing at the Vessel
     static void InstallPartHooks();
@@ -526,6 +544,9 @@ private:
     void SyncVesselTransform();  // the Vessel component lives on the root part's GameObject: vesselTransform follows rootPart
     Part* FindReferenceTransform(uint32_t refId);          // :963
     void OnVesselNamingVesselWasModified(Vessel* v);       // :4154
+    void OnVesselPartCountChanged(Vessel* v);              // :3892 (WP-16)
+    void UpdateCrossfeedResourceSetFL(events::GameEvents::HostedFromToAction<bool, Part*> data);  // :3943
+    void UpdateResourceSetsEventCheckPart(Part* p);        // :3951
     void OnPartVesselNamingChanged(Part* p);               // :4146
 
     Part* referenceTransformPart_ = nullptr;

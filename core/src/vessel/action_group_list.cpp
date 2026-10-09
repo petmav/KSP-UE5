@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include "ksp/celestial/planetarium.hpp"
+#include "ksp/core/log.hpp"
 #include "ksp/dotnet/enum.hpp"
 #include "ksp/dotnet/number.hpp"
 #include "ksp/dotnet/text.hpp"
@@ -14,16 +15,7 @@
 namespace ksp {
 
 namespace {
-// BaseAction.GetGroupIndex (BaseAction.cs:45): the bit position of a single flag
-int GroupIndex(KSPActionGroup group) {
-    int v = static_cast<int>(group);
-    int i = 0;
-    while (v > 1) {
-        v >>= 1;
-        i++;
-    }
-    return i;
-}
+int GroupIndex(KSPActionGroup group) { return BaseAction::GetGroupIndex(static_cast<int64_t>(static_cast<int>(group))); }  // BaseAction.cs:394
 }  // namespace
 
 // ActionGroupList.cs:24
@@ -36,6 +28,43 @@ ActionGroupList::ActionGroupList(Vessel* vessel) : v(vessel) {
 
 bool ActionGroupList::operator[](KSPActionGroup group) const { return groups.at(static_cast<size_t>(GroupIndex(group))); }
 void ActionGroupList::Set(KSPActionGroup group, bool value) { groups.at(static_cast<size_t>(GroupIndex(group))) = value; }
+
+// ActionGroupList.cs:50
+void ActionGroupList::ToggleGroup(KSPActionGroup group) {
+    const int groupIndex = GroupIndex(group);
+    if (Planetarium::GetUniversalTime() < cooldownTimes[static_cast<size_t>(groupIndex)]) {
+        log::Info("Cannot toggle " + dotnet::EnumToString(group) + ". " +
+                  dotnet::FormatDoubleF(cooldownTimes[static_cast<size_t>(groupIndex)] - Planetarium::GetUniversalTime(), 1) +
+                  " seconds until it becomes available again.");
+        return;
+    }
+    std::vector<bool>* list = &groups;
+    int num = 0;
+    bool flag = false;
+    bool flag2 = false;
+    if (GameSettings::ADDITIONAL_ACTION_GROUPS) {
+        num = v->GroupOverride;
+        if (num > 0 && num <= static_cast<int>(v->OverrideDefault.size())) {
+            flag = v->OverrideDefault[static_cast<size_t>(num - 1)];
+            flag2 = (static_cast<int>(v->OverrideActionControl[static_cast<size_t>(num - 1)]) & static_cast<int>(group)) != 0;
+            list = &groupStates[static_cast<size_t>(num - 1)];
+        }
+    }
+    const size_t gi = static_cast<size_t>(groupIndex);
+    (*list)[gi] = !(*list)[gi];
+    if (num > 0 && !(flag || flag2)) groups[gi] = !groups[gi];
+    KSPActionParam kSPActionParam(static_cast<int64_t>(static_cast<int>(group)), (*list)[gi] ? KSPActionType::Activate : KSPActionType::Deactivate);
+    std::vector<BaseAction*> list2 = BaseAction::CreateActionList(v->parts, kSPActionParam.group, num, flag, true);
+    const size_t count = list2.size();
+    for (size_t i = 0; i < count; i++) list2[i]->Invoke(kSPActionParam);
+    cooldownTimes[gi] = Planetarium::GetUniversalTime() + static_cast<double>(kSPActionParam.Cooldown());
+}
+
+// ActionGroupList.cs:87
+void ActionGroupList::SetGroup(KSPActionGroup group, bool active) {
+    const int groupIndex = GroupIndex(group);
+    if (groups[static_cast<size_t>(groupIndex)] != active) ToggleGroup(group);
+}
 
 // ActionGroupList.cs:96
 void ActionGroupList::Load(const ConfigNode& node) {
