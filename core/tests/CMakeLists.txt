@@ -17,6 +17,7 @@ add_executable(kspcore_tests
     test_util.cpp
     test_wp03_reference.cpp
     test_patched_conics.cpp
+    test_timewarp.cpp
     test_terrain.cpp
     test_partloader.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
@@ -136,11 +137,11 @@ ksp_golden_gate(golden.patched_conics patched_conics)
 # WP-08 on-rails propagation vs the in-game capture C8 (moving bodies, rotating Planetarium frame, warp 1x-100,000x,
 # on-rails SOI transitions). Exclusions (STATUS.md WP-08): samples world_rel_* (floating-origin world positions and the
 # vessel transform / localCoM: WP-14/WP-20) and packed/loaded (Vessel state: WP-14/WP-19); initial.note (free text) and
-# the inputs the runner reads (initial.req_*, segments.requested_rate); soi_events rows of the two asteroids (spawned
+# the inputs the runner reads (initial.req_*; segments.requested_rate is gated since WP-10: it is TimeWarp.warpRates[rate_index]); soi_events rows of the two asteroids (spawned
 # by the game's discovery scenario, not capture inputs): only the "HC8 " probes, keyed by (vessel, UT).
 ksp_golden_gate(capture.orbit_rails orbit_rails GOLDEN ${KSP_CAPTURES2_DIR}/orbit_rails_ingame.json DROP_HEX
                 TOL ${KSP_CAPTURE_TOL} KEEP_ROWS "soi_events:vessel^HC8" KEYS "soi_events:vessel,UT"
-                COLUMNS "initial:id,body,inclination,eccentricity,semiMajorAxis,LAN,argumentOfPeriapsis,meanAnomalyAtEpoch,epoch,meanMotion,period,ObTAtEpoch,mu,spawned/samples:id,frame,segment,UT,warp_rate,ref_body,updateUT,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z,relpos_at_UT_x,relpos_at_UT_y,relpos_at_UT_z,semiMajorAxis,eccentricity,inclination,LAN,argumentOfPeriapsis,meanAnomalyAtEpoch,epoch,ObT,meanAnomaly,trueAnomaly,update_mode/segments:segment,rate_index,achieved_rate,frames,UT_start,UT_end,Time_fixedDeltaTime,TimeWarp_fixedDeltaTime,timeScale")
+                COLUMNS "initial:id,body,inclination,eccentricity,semiMajorAxis,LAN,argumentOfPeriapsis,meanAnomalyAtEpoch,epoch,meanMotion,period,ObTAtEpoch,mu,spawned/samples:id,frame,segment,UT,warp_rate,ref_body,updateUT,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z,relpos_at_UT_x,relpos_at_UT_y,relpos_at_UT_z,semiMajorAxis,eccentricity,inclination,LAN,argumentOfPeriapsis,meanAnomalyAtEpoch,epoch,ObT,meanAnomaly,trueAnomaly,update_mode/segments:segment,rate_index,requested_rate,achieved_rate,frames,UT_start,UT_end,Time_fixedDeltaTime,TimeWarp_fixedDeltaTime,timeScale")
 
 # WP-11 terrain: PQS.GetSurfaceHeight for Kerbin and Mun (140,522 samples: 1-degree grids, the 0.01-degree KSC patch,
 # the pad) vs the in-game batch-2 capture, plus the per-scene probe heights and the PQS radii. Kept columns: the

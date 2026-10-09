@@ -13,6 +13,8 @@
 #include "ksp/dotnet/mono_float.hpp"
 #include "ksp/dotnet/number.hpp"
 #include "ksp/orbit/orbit.hpp"
+#include "ksp/orbit/time_warp.hpp"
+#include "ksp/util/ksp_util.hpp"
 #include "ksp/physics/physics_globals.hpp"
 #include "ksp/unity/mathf.hpp"
 
@@ -139,8 +141,8 @@ double CelestialBody::TerrainAltitude(double latitude, double longitude, bool al
     return terrain::TerrainAltitude(pqsController, latitude, longitude, allowNegative);
 }
 
-// CelestialBody.cs:477 Start. TimeWarp limit-count check (resetTimeWarpLimits), AtmosphereFromGround and PQS mod
-// wiring are engine-side.
+// CelestialBody.cs:477 Start (WP-10 added the TimeWarp limit-count check); AtmosphereFromGround and PQS mod wiring
+// are engine-side.
 void CelestialBody::Start() {
     if (orbitDriver) {
         const CelestialOrbitElements& orbit = orbitDriver->orbit;
@@ -160,7 +162,21 @@ void CelestialBody::Start() {
         hillSphere = std::numeric_limits<double>::infinity();
     }
     SetupConstants();
+    if (TimeWarp::fetch != nullptr && timeWarpAltitudeLimits.size() != TimeWarp::fetch->altitudeLimits.size()) {
+        log::Warning("Warp Rate limits for " + bodyName + " didn't match warp rate count. Limits reset to default");
+        resetTimeWarpLimits();
+    }
     oceanFogPQSDepthRecip = static_cast<float>(1.0 / oceanFogPQSDepth);
+}
+
+// CelestialBody.cs:1013 (debugTimeWarpLimits only prints)
+void CelestialBody::resetTimeWarpLimits() {
+    const TimeWarp* fetch = TimeWarp::fetch;
+    if (fetch == nullptr) throw NullReferenceException("CelestialBody.resetTimeWarpLimits: TimeWarp.fetch");
+    timeWarpAltitudeLimits.assign(fetch->altitudeLimits.size(), 0.0f);
+    for (size_t i = 0; i < fetch->altitudeLimits.size(); ++i)
+        timeWarpAltitudeLimits[i] = f32store(fx(fetch->altitudeLimits[i]) * fx(static_cast<float>(Radius)) *
+                                             fx(GameSettings::ORBIT_WARP_ALTMODE_LIMIT_MODIFIER));
 }
 
 // CelestialBody.cs:535 CBUpdate. transformRight/Up and bodyTransform.rotation are the shell's (it reads `rotation`).

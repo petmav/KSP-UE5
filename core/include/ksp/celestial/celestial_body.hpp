@@ -298,6 +298,7 @@ public:
     void Awake();     // :455 Mass, gravParameter, gMagnitudeAtCenter; registers with the parent's orbitingBodies
     void Start();     // :477 SOI, Hill sphere, solar->sidereal rotation period, SetupConstants, ocean fog recip
     void CBUpdate();  // :535 per physics frame (Planetarium.UpdateCBsRecursive)
+    void resetTimeWarpLimits();  // :1013 (WP-10): timeWarpAltitudeLimits = TimeWarp.fetch.altitudeLimits * Radius * modifier
     void SetupConstants();  // :363 (minOrbitalDistance: see .cpp)
 
     // ---- atmosphere (CelestialBody.cs:387-453, 971-999) ----

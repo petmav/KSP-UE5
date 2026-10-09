@@ -24,3 +24,7 @@ Branch wp10 (worktree .worktrees/wp10), from main f50d6121. Implementer: Sonnet.
 - [x] step 3: warp_transition.{hpp,cpp}, targetable.hpp, position_target.{hpp,cpp}, transform.hpp, OrbitDriver::Targetable
 - WP-08 test amended: tw.LoadStockPrefab() (updateRate reads warpRates[maxPhysicsRate_index])
 - next: runner switch to TimeWarp::SetRate with stock prefab + un-drop segments.requested_rate; tests/test_timewarp.cpp; STATUS/README
+- [x] step 4: runner uses TimeWarp::LoadStockPrefab/Start/SetRate (+ PadVessel stand-in); segments.requested_rate un-dropped and gated (capture.orbit_rails still 0 ULP, segments: 5 rows)
+- [x] step 5: tests/test_timewarp.cpp written (all pass). Findings: only Kerbin/Minmus/Tylo prefab body limits equal altitudeLimits*Radius, other 14 hand-tuned (Mun 5000 etc.)
+- next: wider scrutiny (Debug build, full fresh run), STATUS.md WP-10 section, README rows, commit
+- [x] step 6: STATUS/README written; full run green (21/21 ctest; unit 159 cases / 42,082 assertions). Remaining: commit, fresh run, final report
