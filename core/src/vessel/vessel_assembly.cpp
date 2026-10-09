@@ -1,12 +1,15 @@
 // See include/ksp/vessel/vessel_assembly.hpp
 #include "ksp/vessel/vessel_assembly.hpp"
 
+#include "ksp/save/game.hpp"
 #include "ksp/save/save_environment.hpp"
+#include "ksp/ship/ship_construction.hpp"
 
 namespace ksp {
 
 // ShipConstruct.cs:378-640 (the part creation of LoadShip)
-CraftParts BuildCraftParts(const ShipConstruct& ship, const std::function<const AvailablePart*(const std::string&)>& partInfoByName) {
+CraftParts BuildCraftParts(const ShipConstruct& ship, const std::function<const AvailablePart*(const std::string&)>& partInfoByName,
+                           ShipConstruct* shipOwner, const std::function<void(Part&, size_t)>& onPartLoaded) {
     CraftParts out;
     for (const auto& d : ship.parts) {
         const AvailablePart* ap = partInfoByName(d.partInfoName);
@@ -15,12 +18,14 @@ CraftParts BuildCraftParts(const ShipConstruct& ship, const std::function<const 
             return out;
         }
     }
+    size_t partIndex = 0;
     for (const auto& d : ship.parts) {
         const AvailablePart* ap = partInfoByName(d.partInfoName);
         auto part = Part::Instantiate(*ap->partPrefab);
         part->gameObjectName = d.partInfoName;
         part->fields.craftID = d.craftID;
         part->partInfo = ap;
+        part->ship = shipOwner;  // ShipConstruct.cs:443 part.ship = this
         part->fields.symMethod = static_cast<int>(d.symMethod);
         part->fields.persistentId = d.persistentId;
         part->partTransform.position = d.position;
@@ -61,6 +66,13 @@ CraftParts BuildCraftParts(const ShipConstruct& ship, const std::function<const 
         for (const auto& m : d.modules) part->LoadModule(*m, moduleIndex);
         for (const auto& r : d.resources) part->SetResource(*r);
         if (d.partData) part->OnLoad(*d.partData);
+        // ShipConstruct.cs:600-620: ACTIONS / EVENTS (Part.Events / Actions are kept as nodes, WP-13), EFFECTS, VESSELNAMING
+        if (d.actions) part->partActionsNode = d.actions->CreateCopy();
+        if (d.events) part->partEventsNode = d.events->CreateCopy();
+        if (d.effects) part->LoadEffects(*d.effects);
+        if (d.vesselNaming) part->vesselNaming = std::make_shared<VesselNaming>(*d.vesselNaming);
+        if (onPartLoaded) onPartLoaded(*part, partIndex);
+        partIndex++;
         out.parts.push_back(std::move(part));
     }
     std::vector<Part*> all;
@@ -103,49 +115,39 @@ Guid RandomGuid() {
     g.bytes[8] = static_cast<uint8_t>((g.bytes[8] & 0x3F) | 0x80);
     return g;
 }
-// ShipConstruction.cs:447 findFirstCrewablePart
-Part* FindFirstCrewablePart(Part* part) {
-    if (part->fields.CrewCapacity > 0 && !part->protoModuleCrew.empty() && part->fields.isControlSource > 0) return part;
-    for (Part* c : part->children)
-        if (Part* p = FindFirstCrewablePart(c)) return p;
-    return nullptr;
-}
-// ShipConstruction.cs:499 findFirstControlSource
-Part* FindFirstControlSource(Vessel& v) {
-    for (Part* p : v.parts)
-        if (p->fields.isControlSource > 0) return p;
-    return nullptr;
-}
 }  // namespace
 
-// ShipConstruction.cs:296
-std::unique_ptr<Vessel> AssembleVesselFromCraft(const ShipConstruct& ship,
-                                                const std::function<const AvailablePart*(const std::string&)>& partInfoByName,
+// ShipConstruction.cs:296 (AssembleForLaunch over the parts of a ship; the launch-site placement moves the whole ship)
+std::unique_ptr<Vessel> AssembleVesselFromParts(std::vector<std::unique_ptr<Part>> cpParts, const ShipConstruct& ship,
                                                 const AssembleOptions& options) {
-    CraftParts cp = BuildCraftParts(ship, partInfoByName);
-    if (!cp.ok) return nullptr;
+    if (cpParts.empty()) return nullptr;
     auto vessel = std::make_unique<Vessel>();
-    Part* localRoot = cp.parts[0]->localRoot();
-    // the launch site placement moves the whole ship (the parts hang under the root transform)
-    for (auto& up : cp.parts) {
+    Part* firstPart = cpParts[0].get();
+    Part* localRoot = firstPart->localRoot();  // :298 ship.parts[0].localRoot
+    for (auto& up : cpParts) {
         up->partTransform.position = options.rootPosition + options.rootRotation * up->fields.orgPos;
         up->partTransform.rotation = options.rootRotation * up->fields.orgRot;
     }
     vessel->vesselTransform.position = options.rootPosition;
     vessel->vesselTransform.rotation = options.rootRotation;
-    std::vector<std::unique_ptr<Part>> owned = std::move(cp.parts);
-    vessel->AdoptParts(std::move(owned), localRoot);
+    if (options.orbit) {  // :349 (vessel.gameObject.GetComponent<OrbitDriver>() ?? AddComponent<OrbitDriver>()).orbit = orbit
+        vessel->orbitDriver = std::make_unique<OrbitDriver>();
+        vessel->orbitDriver->vessel = &vessel->OrbitDriverView();
+        vessel->orbitDriver->orbit = options.orbit;
+    }
+    vessel->AdoptParts(std::move(cpParts), localRoot);
     vessel->id = RandomGuid();
     vessel->vesselName = ship.shipName;
     vessel->persistentId = ship.persistentId;
+    // :304-348 the override arrays are copied when the ship has them (else new arrays of Vessel.NumOverrideGroups)
     if (!ship.OverrideDefault.empty()) vessel->OverrideDefault = ship.OverrideDefault;
     if (!ship.OverrideActionControl.empty()) vessel->OverrideActionControl = ship.OverrideActionControl;
     if (!ship.OverrideAxisControl.empty()) vessel->OverrideAxisControl = ship.OverrideAxisControl;
     if (!ship.OverrideGroupNames.empty()) vessel->OverrideGroupNames = ship.OverrideGroupNames;
-    vessel->Initialize(true, false, false, options.setActiveVessel);
+    vessel->Initialize(options.fromShipAssembly, options.preCreate, options.orbiting, options.setActiveVessel);
     vessel->UpdateVesselNaming();
     vessel->IgnoreGForces(10);
-    if (!options.landedAt.empty()) {
+    if (options.fromShipAssembly && !options.landedAt.empty()) {
         vessel->vesselSpawning = true;
         vessel->launchedFrom = options.landedAt;
     }
@@ -164,21 +166,42 @@ std::unique_ptr<Vessel> AssembleVesselFromCraft(const ShipConstruct& ship,
     }
     const uint32_t hashCode = UniqueHash();
     for (Part* part : vessel->parts) {
-        part->fields.flightID = UniqueHash();  // ShipConstruction.GetUniqueFlightID
+        const uint32_t flightID = ShipConstruction::GetUniqueFlightID(options.flightState);  // ShipConstruction.cs:436
+        part->fields.flightID = flightID;
         part->fields.missionID = hashCode;
-        part->fields.launchID = 0;
+        part->fields.launchID = options.launchID;
         part->fields.flagURL = options.flagURL;
     }
+    if (options.crewManifestAssign) options.crewManifestAssign();  // crewManifest.AssignCrewToVessel(ship)
     vessel->RebuildCrewList();
+    if (options.preCreate && vessel->protoVessel != nullptr) {  // :386-399
+        for (auto& pps : vessel->protoVessel->protoPartSnapshots) {
+            for (const auto& pcm : pps->partRef->protoModuleCrew) {
+                pps->protoModuleCrew.push_back(pcm);
+                pps->protoCrewNames.push_back(pcm->name().value_or(std::string()));
+                vessel->protoVessel->AddCrew(pcm);
+            }
+        }
+        vessel->protoVessel->RebuildCrewCounts();
+    }
     if (options.setActiveVessel) FlightRegistry::ActiveVessel = vessel.get();
     if (localRoot->fields.isControlSource == 0) {
-        Part* part2 = FindFirstCrewablePart(ship.parts.empty() ? localRoot : vessel->parts[0]);
-        Part* ref = part2 != nullptr ? part2 : FindFirstControlSource(*vessel);
+        Part* part2 = ShipConstruction::findFirstCrewablePart(firstPart);
+        Part* ref = part2 != nullptr ? part2 : ShipConstruction::findFirstControlSource(*vessel);
         vessel->SetReferenceTransform(ref != nullptr ? ref : localRoot);
     } else {
         vessel->SetReferenceTransform(localRoot);
     }
     return vessel;
+}
+
+// ShipConstruction.cs:296 (AssembleForLaunch with fromShipAssembly = true over a craft file)
+std::unique_ptr<Vessel> AssembleVesselFromCraft(const ShipConstruct& ship,
+                                                const std::function<const AvailablePart*(const std::string&)>& partInfoByName,
+                                                const AssembleOptions& options) {
+    CraftParts cp = BuildCraftParts(ship, partInfoByName);
+    if (!cp.ok) return nullptr;
+    return AssembleVesselFromParts(std::move(cp.parts), ship, options);
 }
 
 }  // namespace ksp
