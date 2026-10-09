@@ -25,7 +25,7 @@ Updated 2026-10-09 (WP-05). One command: `powershell -NoProfile -ExecutionPolicy
 
 | 13. WP-18 craft files and ship construction (branch `wp18`) | done for the engine-agnostic part: ShipConstruct over live `Part`s (`LoadShipWithParts` / `SaveShip` from the parts, costs, masses, naming, ship PartSet), ShipTemplate (whole class), ShipConstruction (paths, backups, load / save, `AssembleForLaunch` over WP-14's assembly, templates through the upgrade pipeline, `GetPartCosts*`, launch-site queries, craft size); new gate `capture.ship_construct` (C5: `GetShipMass` and the per-part masses of 17 crafts, 0 ULP); 26 unit cases (274,042 assertions): round trip of 57 crafts, agreement with the original files, templates vs ships. See "WP-18" |
 
-## Test results (all 24 ctest tests pass on Linux (Clang, GCC); 21 of them are the Windows RelWithDebInfo / Debug set; WP-00L added libm.portable_vs_dll)
+## Test results (all 24 ctest tests pass: Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-18 capture.ship_construct)
 
 Every numeric column of every gate: **max ULP 0, max abs 0** (bit-exact, and the same decimal text). Tolerance files:
 harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture gates use `tests/tolerances_capture.json`
@@ -1891,6 +1891,8 @@ forward-declaration rule of wp13 ae3e81fa was applied (no `class PartVariant|Par
 After merging `wp13` (with main: WP-06, WP-10) and unifying ITargetable: `./run_tests.sh -f` (linux-rel, clang 18) and
 `./run_tests.sh -p linux-gcc-rel -f` (GCC 13): 22/22 each, every gate column max ULP 0 (429 compared columns); `unit` 214 cases /
 149,925 assertions (24 cases / 6,901 of them in `test_vessel.cpp`). Not run here: Windows (MSVC).
+After the later merge of main with WP-15 (`capture.resource_mass`): 23/23 ctest, every gate 0 ULP; `unit` 236 cases / 178,437 assertions
+(the `unit` summary row above). Windows (MSVC) is covered by CI.
 
 ### Commits (branch `wp14`)
 

@@ -37,3 +37,4 @@ Branch wp14 (from wp13 688c5711). Notes written after every major step.
 - Fresh runs: linux-rel (clang 18) 22/22, linux-gcc-rel (GCC 13) 22/22, all 429 gate columns max_ulp=0; unit 214 cases / 149,925
   assertions (test_vessel.cpp 24 / 6,901). STATUS.md unit row, WP-14 section (deviations: two registries left for WP-19) and README updated.
 - Next: merge commit (no push).
+- After merging main with WP-15: 23/23 ctest, every gate 0 ULP; unit 236 cases / 178,437 assertions.
