@@ -18,6 +18,7 @@ add_executable(kspcore_tests
     test_terrain.cpp
     test_partloader.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
+    test_save.cpp
 )
 target_link_libraries(kspcore_tests PRIVATE kspcore)
 ksp_set_build_flags(kspcore_tests)
@@ -177,3 +178,12 @@ add_test(NAME capture.gamedatabase_load_order
             ${KSP_CANDIDATE_DIR}/part_database/gamedatabase_load.log
             ${KSP_PROJECT_ROOT}/decompiled/logs/ksp-capture-capture2-final2-KSP.log)
 set_tests_properties(capture.gamedatabase_load_order PROPERTIES LABELS golden FIXTURES_REQUIRED partdb TIMEOUT 300)
+# WP-04 save model: Load -> Save round trip of every original save (decompiled/KSP-dev/saves/**/*.sfs, *.craft) and
+# stock craft (decompiled/KSP-dev/Ships/**/*.craft); R2 idempotent, R1 byte-identical or every difference documented
+# (tools/save_corpus/save_corpus.cpp). No golden dataset: original game data is the reference.
+set(KSP_DEV_DIR "${KSP_PROJECT_ROOT}/decompiled/KSP-dev")
+if(EXISTS "${KSP_DEV_DIR}/saves")
+    add_test(NAME corpus.saves
+        COMMAND save_corpus --saves "${KSP_DEV_DIR}/saves" --ships "${KSP_DEV_DIR}/Ships")
+    set_tests_properties(corpus.saves PROPERTIES LABELS corpus TIMEOUT 1800)
+endif()

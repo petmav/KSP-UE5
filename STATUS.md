@@ -17,6 +17,7 @@ Updated 2026-10-09 (WP-05). One command: `powershell -NoProfile -ExecutionPolicy
 | 8. WP-08 patched conics, SOI transitions, maneuver nodes (branch `wp08`) | done: PatchedConics, PatchedConicSolver, ManeuverNode, Trajectory, OrbitDriver (minus rendering; vessel through `IOrbitDriverVessel`), Planetarium.Orbits; TimeWarp/FlightGlobals/GameSettings subsets; `golden.patched_conics` and the in-game C8 capture `capture.orbit_rails` bit-exact. See "WP-08" below |
 | 7. WP-03 event bus, FSM, utilities (branch `wp03`, merged) | done: typed event bus + full GameEvents registry (469 events), KerbalFSM, KSPUtil engine-independent parts, Localizer + Lingoona fallback, UtilMath completed, .NET collection/enum semantics, Simplex; gated by unit tests incl. 6,437 values from KSP's IL (no golden dataset), see below |
 | 9. WP-11 terrain height maths (branch `wp11`) | done: PQS height evaluation (SetupMods/List.Sort, radii, GetSurfaceHeight both variants), all 28 height PQSMods, MapSO, KSP's LibNoise subset, native Quaternion.FromToRotation, stock mod stacks for all 15 PQS bodies generated from the game's prefabs, the game's 16 height maps/decals extracted with a manifest; capture gate bit-exact on 140,522 Kerbin/Mun samples. See "WP-11" below |
+| 11. WP-04 save model + upgrade pipeline (branch `wp04`) | done (data side): Game, GameParameters (all nodes, presets), FlightState, Proto* snapshots, ProtoCrewMember, KerbalRoster, ScenarioModule data, craft file form, SaveUpgradePipeline (framework + all 40 stock scripts), GamePersistence; gated by `corpus.saves` (314 original saves / crafts: R2 idempotent 314, R1 byte-identical 50 + 87 after removing mod-owned content, every other difference documented, 0 unexplained) and unit tests; no golden dataset. See "WP-04" |
 
 | 10. WP-05 UrlDir, GameDatabase (data), PartLoader (data), resource library (branch `wp05`, merged in `bfb732f`) | done for the data side: UrlDir + GameDatabase load order identical to KSP.log (2,836 lines), PartLoader compiles all 353 GameData parts + the 9 prefab-part slots; `capture.part_database` gate bit-exact on every in-scope C9 row (parts, cfg values, modules, cfg-set module fields, propellants, resources, attach nodes, drag cubes, variants, asset paths). Module instantiation is WP-06, model contents the UE import. See "WP-05" below |
 
@@ -489,6 +490,157 @@ report lists 641 candidate rows absent from the filtered golden (parts 5, module
 all but one are rows of the 5 prefab parts the gate drops from the golden; the other is the excluded
 sepMotor1 `stackableQuantity` row, which the runner writes as the cfg value 2 while the game holds 1); every golden row
 matched.
+## WP-04: save model and upgrade pipeline (branch `wp04`, data side)
+
+Spec: `Game.cs`, `GameParameters.cs` (+ `CommNet/CommNetParams.cs`, `Expansions/Missions/MissionParams{General,Extras,Facilities}.cs`),
+`FlightState.cs`, `ProtoVessel.cs`, `ProtoPartSnapshot.cs`, `ProtoPartModuleSnapshot.cs`, `ProtoPartResourceSnapshot.cs`,
+`AttachNodeSnapshot.cs`, `VesselNaming.cs`, `ProtoTargetInfo.cs`, `ProtoWaypointInfo.cs`, `ProtoCrewMember.cs`,
+`KerbalRoster.cs`, `FlightLog.cs`, `Experience/Experience{System,Trait,Effect}Config.cs`, `ProtoScenarioModule.cs`,
+`ScenarioModule.cs` (data side), `GameBackup.cs`, `ShipConstruct.cs` (craft load/save), the whole `SaveUpgradePipeline/`
+folder (51 files), `KSPUpgradePipeline.cs`, `GamePersistence.cs`, `QuickSaveLoad.cs` naming, `KSPScenarioType.cs` /
+`ScenarioCreationOptions.cs`, `Versioning.cs` strings, `GameDatabase.cs` loader info, `ROCManager.cs` removed-ROC list,
+`FlightGlobals.cs` persistentId checks, `FinePrint/Utilities/CompatibilityUtilities.cs` (EVA cleanup). Every ported
+function cites `File.cs:line`. OrbitSnapshot is WP-07's.
+
+**No `KSP_GOLDEN_DATASET`**: no dataset was produced; the package is gated by the round trip of original game data
+(`corpus.saves`) and unit tests (`tests/test_save.cpp`).
+
+### Gate: `corpus.saves` (all original saves and crafts of `decompiled/KSP-dev`)
+
+`tools/save_corpus`: `ConfigNode.Load` -> `Game(root)` / `ShipConstruct.LoadShip` -> Save (R1) -> load + save again (R2).
+The environment is the one that wrote each file (raw `envInfo` line, LoaderInfo flags, Breaking Ground if `ROCSeed` or a
+`DeployedScience` scenario exists, Making History if `PreFailState` exists, a ROCManager if `RemovedROCs` exists, the GAME
+values / nodes other systems own fed back through `GameEvents.onGameStateSave` as MessageSystem and mods do; a
+`GetDefaultParameters` call first, as `MainMenu.Start` does). Pass = R2 == R1 for every file, and R1 == file or every
+structural difference matches a documented rule; a file written by KSP 1.12.5 must additionally be byte-identical
+once the mod-owned elements KSP's loaders drop are removed. 36 s (RelWithDebInfo).
+
+| files | count | R1 byte-identical | R1 identical after removing dropped mod-owned elements | differences all documented | unexplained | R2 idempotent |
+|---|---|---|---|---|---|---|
+| `.sfs` written by KSP 1.12.5 (physprofile, default/*, RP-1*) | 61 | 1 (physprofile, the only unmodded one) | 60 (all the modded ones) | 61 | 0 | 61 |
+| `.sfs` older (0.21.0 .. 1.11.2: scenarios, training, gamer, gaming2, 1111111111) | 44 | 0 | - | 44 | 0 | 44 |
+| `.craft` written by KSP 1.12.5 | 80 | 49 | 27 | 80 (4: srfN stale-mesh quirk) | 0 | 80 |
+| `.craft` older / hand-made layouts | 129 | 0 | - | 129 | 0 | 129 |
+| total | 314 | 50 | 87 | 314 | 0 | 314 |
+
+Differences of KSP-1.12.5 files: only mod content KSP's loaders drop without the mod (unknown `PARAMETERS` custom nodes,
+`ORBIT/IDENT` from Kopernicus, `KERBAL/KerbalExt`, craft `_modVersions`) and, in 4 modded crafts, the srfN quirk below.
+Differences of older files (all rules in `ExplainValue` / `CompareNodes`, counted per category in the test output): fields
+KSP's Save writes that the file lacked (defaults: e.g. `VESSEL.persistentId` regenerated, `KERBAL.suit`,
+`PARAMETERS/*` members added since), `CometNames` / `LoaderInfo` / stock custom parameter nodes added, numbers and
+floats re-formatted with the same value (older KSP wrote floats with `ToString()`, today `G9`), enums written by name
+(`Mode = 1` -> `CAREER`, `state = 0` -> `Available`), `ROSTER/CREW` and `APPLICANTS/RECRUIT` -> `KERBAL`, values the
+typed loaders ignore, `PART.connected` dropped, duplicate persistentIds re-generated, craft `version` stamped with the
+running game's, craft attach nodes of the old one-vector layout completed (prefab vectors, see approximations), values
+re-ordered into KSP's fixed Save order. Mutation check: swapping two `PART` fields in `ProtoPartSnapshot::Save` makes
+458 differences in physprofile unexplained and the gate fails.
+
+### Unit tests (`tests/test_save.cpp`, 17 cases, 261 assertions)
+
+- `GetDefaultParameters(SANDBOX, Normal)` saves byte-for-byte the `PARAMETERS` block of the original physprofile save;
+  field defaults against `GameParameters.cs` initialisers; every preset (Easy / Normal / Moderate / Hard / Custom) x
+  mode branch against `SetDifficultyPresets` and the five `SetDifficultyPreset` overrides; the first-instance vs later
+  custom-parameter order; `EnableKerbalExperience` / `OnLoad` with and without `HighLogic.CurrentGame`; a value named
+  like a method is a NullReferenceException; unknown custom nodes dropped.
+- Upgrade pipeline: sorted script order (40, stable within each target version), 33 `PartLoader.AddPartReplacement`
+  calls; a synthetic 1.0.0 save (mk1pod / SmallGearBay / LT-1 leg): 3 iterations, GAME version stamped 1.0.0 -> 1.1.0 ->
+  1.12.0 (the TooEarly v1123 script drives the last stamp), `upgraded = <Name> // <Description>` on the ROOT in run
+  order (mk1pod, LT-1, gear), the part renames / offsets / LT-1 rotation, source tree untouched, a second run is a no-op;
+  a synthetic 1.6.0 craft (liquidEngine3 under a tank): link / attN renames, pos / attPos0 / attN offsets; wheel
+  overhaul module salvage, v180 control surface (`deployAngle = range * limiter * 0.01f`, AXISGROUPS rename, prefab
+  range through the hook), v1123 module replace stamping 1.12.2, a 0.20.0 file failing (all TooEarly), the
+  KSPUpgradePipeline fail callback.
+- Save model: `Game()` defaults and GAME order; `Game(root)` quirks (numeric Mode, `^` in Description, launch-site
+  reset, CREW / APPLICANTS conversion, veteran heroes, FlightLog removing `flight` from the tree); proto snapshots
+  (unknown vessel values truncated at ',', unknown part values gaining ", UNKNOWN", duplicate persistentIds, missing
+  ACTIONGROUPS -> NullReferenceException, the EVA clean-up index quirk); ProtoCrewMember trait / DLC suits / Save order;
+  ShipConstruct (U+00A8 description, srfN position written twice, broken links, too-old craft); GamePersistence
+  (invalid file-name chars, APPEND `name000`, ABORT, BACKUP pruning with SAVE_BACKUPS, `quicksave #1`, CreateNewGame's
+  scenario list == the physprofile save's 14 SCENARIO names and scenes in order, load back).
+- System.Version and full Enum.Parse semantics.
+
+All tests: ctest 16/16 (unit 115 cases / 19,427 assertions; corpus.saves new), RelWithDebInfo.
+
+### Public shape (namespace `ksp`)
+
+`Game` (`Game(ConfigNode* root)`, `Save(ConfigNode&)`, `Updated()`, fields named as in C#: `Title, Description, Mode,
+Status, Seed, ROCSeed, startScene, editorFacility, flightState, Parameters, CrewRoster, scenarios, additionalSystems,
+config, file_version_*, versionFull, versionCreated, flagURL, launchID, loaderInfo, cometNames ...`), `FlightState`
+(`protoVessels`, `universalTime`, `activeVesselIdx`, ...), `ProtoVessel` / `ProtoPartSnapshot` /
+`ProtoPartModuleSnapshot` / `ProtoPartResourceSnapshot` (C# field names; ConfigNode-typed members are shared `NodePtr`s
+aliasing the loaded tree like C# references), `ProtoCrewMember` (shared_ptr; C# properties as `name()`, `rosterStatus()`
+/ `set_rosterStatus()` firing the GameEvents), `KerbalRoster`, `GameParameters` (+ `AdvancedParams`,
+`CommNet::CommNetParams`, `Expansions::Missions::MissionParams*`; `CustomParams<T>()`), `ShipConstruct` (`LoadShip`,
+`SaveShip`, `PartData`), `SaveUpgradePipeline::{SaveUpgradePipeline, UpgradeScript, PartOffset, PartReplace,
+ModuleReplace, NodeUtil, CreateStockUpgradeScripts}`, `KSPUpgradePipeline::Process`, `GamePersistence`,
+`KSPScenarioType`, `SaveEnvironment` (all cross-system inputs), `dotnet::Version`, `dotnet::EnumParseFull`.
+
+### Quirks a later implementer must know
+
+1. KSP rewrites on every save: GAME `envInfo` / `modded` / LoaderInfo flags (the running game's GameDatabase),
+   `ROCSeed` / `RemovedROCs` only with Breaking Ground, `PART.PreFailState` only with Making History, DLC suits reset to
+   Default without the DLC, MESSAGESYSTEM and mods' GAME values / nodes come from `onGameStateSave` listeners (not from
+   the loaded file; `Game::additionalSystems` is filled once and reused), FLIGHTSTATE `commNetUIModeTracking/Flight`
+   are the CommNetUI statics (`SaveEnvironment`), the version stamp only changes in `Updated()` (crafts: always the
+   running version).
+2. Load mutates the source tree: `CompatibilityUtilities.CleanUpUnsanitaryEVAKerbals` removes crewless EVA vessels and
+   rewrites `activeVessel` (its fix-up only decrements for vessels after the active one -- sic); `FlightLog.Load`
+   removes `flight`. ProtoVessel's DISCOVERY / FLIGHTPLAN / CTRLSTATE / ACTIONGROUPS / VESSELMODULES members alias the
+   loaded nodes.
+3. Unknown values: VESSEL keeps `KSPParseable(value).value` (text before the first ','), PART writes
+   `KSPParseable.Save()` ("x" becomes "x, UNKNOWN"), GAME / FLIGHTSTATE / ORBIT / KERBAL / PARAMETERS drop them,
+   duplicate unknown names throw ArgumentException (Dictionary.Add). A missing ACTIONGROUPS or ORBIT node makes
+   `ProtoVessel.Save` throw NullReferenceException (as in KSP).
+4. GameParameters: Save order = Mono `GetMembers` (r/w properties, then fields); floats with `float.ToString()` (G7);
+   custom nodes in the order of a static type list that the FIRST `GameParameters()` sorts by localized Title -- KSP's
+   `MainMenu.Start` constructs one before any load, a host must too; the order also depends on the game language
+   (Advanced / CommNet titles are localized, the Mission titles are raw tags). Unknown custom nodes (mods) are dropped.
+   The Normal preset gets `EnableCommNet = true` after it is added to the dictionary (same object).
+5. `Description`: '^' is read as '\n' and `AddValue`'s CleanupInput strips '\n' on save: line breaks are lost.
+6. persistentIds go through the FlightGlobals registry (`SaveEnvironment::persistentIds`): clear it before each load
+   (`GamePersistence.LoadGame` does); a duplicate gets a new random id (`Guid.NewGuid().GetHashCode()`, a hook).
+7. Upgrade pipeline: every pre-1.12 save is stamped at least 1.12.0 (the v1123 script is TooEarly until then), the
+   stamp is the lowest target among the scripts involved, not the game version; `upgraded` markers go to the root node
+   (dropped again by `Game.Save`); RecurseNodes visits PART nodes in reverse; PartOffset keeps `rotation0` from the
+   previous part when a part has no rotation; v180 needs the prefab's `ctrlSurfaceRange` (NullReferenceException when
+   the part is unknown).
+8. Crafts: `GetAttachNodeInfo` parses srfN mesh / vectors only for the id "srfAttach"; other ids keep the previous
+   part's `attachMeshName` (a variable shared across the whole LoadShip -- sic) and the prefab's vectors; srfN writes
+   the position in its third vector slot; attach nodes with duplicate ids: only the first is updated
+   (`FindAttachNode`); `description` uses U+00A8 for line breaks.
+9. ProtoCrewMember registers an `onGameStateCreated` listener when there is no current game (removed in the destructor,
+   a C++ necessity); KerbalRoster appends its experience tables on every construction (static lists grow);
+   `AddCrewMember` rejects a kerbal whose first name is a substring of an existing name; `FlightLog.GetEntries` always
+   returns nothing.
+
+### Known approximations (data side) and deferred
+
+- Craft file form: Part.partName, modCost / modMass / modSize and the attach-node list come from the part prefab /
+  module host in KSP; kspcore carries them from the file (old one-vector attN layouts are completed with the file's
+  position and a zero orientation). MODULE / RESOURCE / EVENTS / ACTIONS / PARTDATA nodes of crafts and part snapshots
+  are written back as loaded (KSP regenerates them from live PartModules: WP-06 / WP-13). `ShipConstruct.size` is kept
+  (CalculateCraftSize needs live parts). `shipPartsUnlocked` (R&D) is not evaluated.
+- `MISSIONTOSTART` is kept as the loaded node (Mission.Load/Save is the Making History package); adjuster bookkeeping
+  needing AdjusterPartModuleBase objects is deferred (RemovePartModuleAdjuster(Guid) / ProtoPartModuleRepair ported).
+- Live paths (WP-13 / WP-14): ProtoVessel.Load / ProtoPartSnapshot.Load / constructors from live Vessel / Part,
+  FlightState() capturing live vessels (`SaveEnvironment::captureFlightState` hook), ScenarioRunner modules
+  (`getUpdatedProtoModules` hook), SystemUtilities.ExpungeKerbal (logged), ProtoVessel.CreateVesselNode / CreatePartNode,
+  GetSituationString, Clean.
+- Not ported: FlightAutoSave (coroutine timer), ClearToSaveStatus / FlightGlobals.ClearToSave (flight scene),
+  CraftProfileInfo and the `.loadmeta` files (UI metadata), `[Persistent]` attributes (WP-06 reflection),
+  VesselCrewManifest / DefaultCrewForVessel (editor), CrewGenerator random names (GetNewKerbal / AddApplicant /
+  roster Update), ExperienceTrait objects / effects (only the trait configs), PartResourceLibrary definitions,
+  GameParameters preset colours (XKCDColors), the popup dialogs (logged).
+- `SaveEnvironment` stands in for WP-05 (GameDatabase / ExpansionsLoader / PartLoader), WP-19 (FlightGlobals),
+  WP-42 (HighLogic), WP-50 (GameSettings): integrations should point it at the real systems, not duplicate them.
+
+### Commits (branch `wp04`, from main `f964447`)
+
+| hash | content |
+|---|---|
+| `383104f` | save model, upgrade pipeline, craft file form, corpus.saves gate |
+| `42eb750` | GamePersistence, scenario-type table, unit tests |
+| (this) | docs: README, STATUS |
 
 ## WP-09: celestial bodies, atmospheres, PhysicsGlobals (branch `wp09`, merged in `29b71f6`)
 
