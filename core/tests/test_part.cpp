@@ -56,7 +56,6 @@ struct Game13 {
         SaveEnvironment::Reset();
         GameData::Options o;
         o.gameRoot = ksp::testing::GameRoot();
-        o.translate = false;
         data.Load(o);
         SaveEnvironment& env = SaveEnvironment::Current();
         env.getPartInfoByName = [this](std::string_view n) { return data.parts.getPartInfoByName(n); };
@@ -420,4 +419,888 @@ TEST_CASE("WP-13 Part.Instantiate: a clone of every stock prefab, UpdateMass aga
     }
     CHECK(cloned == 353);
     CHECK(variantParts > 50);
+}
+
+// ================================================= attach nodes and the part tree ===============================================
+
+namespace {
+// attach `child`'s node to `parent`'s node (the ShipConstruct link/attN resolution: setParent, nodes' attachedPart both ways)
+void Attach(Part& parent, const char* parentNode, Part& child, const char* childNode) {
+    AttachNode* pn = parent.FindAttachNode(parentNode);
+    AttachNode* cn = child.FindAttachNode(childNode);
+    REQUIRE(pn != nullptr);
+    REQUIRE(cn != nullptr);
+    pn->attachedPart = &child;
+    cn->attachedPart = &parent;
+    child.setParent(&parent);
+}
+}  // namespace
+
+TEST_CASE("WP-13 Part attach nodes: lookups, owner links, mirroring, nodes of the C9 attach_nodes table") {
+    if (!GameAvailable()) return;
+    Game13 g;
+    CaptureTable an = Table("attach_nodes");
+    const int cPart = an.Col("part"), cIdx = an.Col("idx"), cId = an.Col("id"), cPx = an.Col("position_x"), cPy = an.Col("position_y"),
+              cPz = an.Col("position_z"), cSize = an.Col("size");
+    std::map<std::string, std::unique_ptr<Part>> clones;
+    int nodes = 0;
+    for (const auto& row : an.rows) {
+        const std::string name = row[cPart];
+        const AvailablePart* ap = g.data.parts.getPartInfoByName(name);
+        if (ap == nullptr || ap->codeBuilt) continue;
+        auto& c = clones[name];
+        if (!c) c = g.New(name.c_str());
+        CAPTURE(name);
+        const int idx = row[cIdx].get<int>();
+        const AttachNode* node = idx >= 0 ? &c->attachNodes[static_cast<size_t>(idx)] : c->srfAttachNode.get();
+        REQUIRE(node != nullptr);
+        CHECK(node->id == row[cId].get<std::string>());
+        CHECK(Bits(node->position.x) == Bits(static_cast<float>(row[cPx].get<double>())));
+        CHECK(Bits(node->position.y) == Bits(static_cast<float>(row[cPy].get<double>())));
+        CHECK(Bits(node->position.z) == Bits(static_cast<float>(row[cPz].get<double>())));
+        CHECK(node->size == row[cSize].get<int>());
+        if (idx >= 0) {
+            // Part.FindAttachNode: the first node with that id
+            AttachNode* found = c->FindAttachNode(node->id);
+            REQUIRE(found != nullptr);
+            CHECK(found->id == node->id);
+            CHECK(found <= node);
+        }
+        nodes++;
+    }
+    CHECK(nodes == 822);  // the C9 attach_nodes rows of the 357 compiled parts
+    Part& tank = *clones.at("fuelTank");
+    // FindAttachNodes(partial) returns every node whose id contains the text; none -> empty (C#: null)
+    CHECK(tank.FindAttachNodes("o").size() == 2);   // top, bottom
+    CHECK(tank.FindAttachNodes("bott").size() == 1);
+    CHECK(tank.FindAttachNodes("nothing").empty());
+    CHECK(tank.FindAttachNode("nothing") == nullptr);
+    CHECK(tank.TopNode() == tank.FindAttachNode("top"));
+    CHECK(tank.FindAttachNodeByPart(nullptr) == nullptr);
+    CHECK(tank.FindAttachNodeByPart(clones.at("mk1pod.v2").get()) == nullptr);
+    // SetupAttachNodes: a node named "attach" becomes the srfAttachNode, renamed "srfAttach" (Part.cs:6077)
+    Part syn;
+    AttachNode a;
+    a.id = "attach";
+    a.nodeType = AttachNodeType::Surface;
+    a.position = Vector3f(1, 2, 3);
+    syn.attachNodes.push_back(a);
+    syn.SetupAttachNodes();
+    REQUIRE(syn.srfAttachNode);
+    CHECK(syn.srfAttachNode->id == "srfAttach");
+    CHECK(syn.attachNodes[0].id == "srfAttach");
+    // SetMirror: positions and orientations are the originals scaled by the mirror vector
+    tank.attachNodes[0].originalPosition = Vector3f(1, 2, 3);
+    tank.attachNodes[0].originalOrientation = Vector3f(0, 1, 0);
+    tank.SetMirror(Vector3f(-1, 1, 1));
+    CHECK(tank.fields.isMirrored);
+    CHECK(tank.attachNodes[0].position.Equals(Vector3f(-1, 2, 3)));
+    CHECK(tank.attachNodes[0].orientation.Equals(Vector3f(-0.0f, 1, 0)));
+    tank.SetMirror(Vector3f::one());
+    CHECK_FALSE(tank.fields.isMirrored);
+    CHECK(tank.attachNodes[0].position.Equals(Vector3f(1, 2, 3)));
+    // Part.AddAttachNode(NODE{name, transform, size, method, crossfeed, rigid}) with a model transform resolver
+    auto node = ParseNode("NODE\n{\n name = hatch\n transform = HatchTransform\n size = 2\n method = LOCKED_JOINT\n crossfeed = False\n rigid = True\n}\n");
+    AttachNode* added = tank.AddAttachNode(*node, [](const std::string& t) -> std::optional<std::pair<Vector3f, Vector3f>> {
+        if (t == "HatchTransform") return std::make_pair(Vector3f(0, 0.5f, 1), Vector3f(0, 0, 1));
+        return std::nullopt;
+    });
+    REQUIRE(added != nullptr);
+    CHECK(added->id == "hatch");
+    CHECK(added->owner == &tank);
+    CHECK(added->size == 2);
+    CHECK(added->attachMethod == AttachNodeMethod::LOCKED_JOINT);
+    CHECK_FALSE(added->ResourceXFeed);
+    CHECK(added->rigid);
+    CHECK(added->position.Equals(Vector3f(0, 0.5f, 1)));
+    CHECK(added->orientation.Equals(Vector3f(0, 0, 1)));  // transform.forward
+    CHECK(added->originalPosition.Equals(added->position));
+    CHECK_THROWS_WITH_AS(tank.AddAttachNode(*node, nullptr), "Part: Cannot add attach node. Transform of name 'HatchTransform' not found", Exception);
+    auto noName = ParseNode("NODE\n{\n transform = X\n}\n");
+    CHECK_THROWS_AS(tank.AddAttachNode(*noName, nullptr), Exception);
+    // UpdateAttachNodes: nodes with a model transform follow it in the part's local space
+    tank.nodeTransformResolver = [](const std::string&) { return std::make_optional(std::make_pair(Vector3f(5, 0, 0), Vector3f(1, 0, 0))); };
+    tank.partTransform.position = Vector3f(4, 0, 0);
+    tank.UpdateAttachNodes();
+    CHECK(added->position.Equals(Vector3f(1, 0, 0)));  // world (5,0,0) in the local space of a part at (4,0,0)
+}
+
+TEST_CASE("WP-13 Part tree: parent / children, indirect queries, symmetry, physics significance, re-rooting") {
+    if (!GameAvailable()) return;
+    Game13 g;
+    // pod (root) -> tank -> engine, a parachute surface-attached to the tank
+    auto pod = g.New("mk1pod.v2");
+    auto tank = g.New("fuelTank");
+    auto engine = g.New("liquidEngine");
+    auto chute = g.New("parachuteSingle");
+    Attach(*pod, "bottom", *tank, "top");
+    Attach(*tank, "bottom", *engine, "top");
+    tank->addChild(chute.get());  // surface attach: child of the tank through srfAttach
+    chute->parent = tank.get();
+    chute->srfAttachNode->attachedPart = tank.get();
+    chute->srfAttachNode->owner = chute.get();
+    chute->fields.attachMode = static_cast<int>(AttachModes::SRF_ATTACH);
+
+    CHECK(pod->children == std::vector<Part*>{tank.get()});
+    CHECK(tank->children == (std::vector<Part*>{engine.get(), chute.get()}));
+    CHECK(tank->parent == pod.get());
+    CHECK(tank->potentialParent == pod.get());
+    CHECK(pod->hasIndirectChild(engine.get()));
+    CHECK(pod->hasIndirectChild(pod.get()));  // a part is its own indirect child
+    CHECK_FALSE(engine->hasIndirectChild(pod.get()));
+    // Part.hasIndirectParent (sic): recurses with the parent itself, so any part with a parent answers true
+    CHECK(engine->hasIndirectParent(pod.get()));
+    CHECK(engine->hasIndirectParent(chute.get()));
+    CHECK_FALSE(pod->hasIndirectParent(engine.get()));
+    CHECK(engine->localRoot() == pod.get());
+    CHECK(pod->localRoot() == pod.get());
+    CHECK(engine->FindChildPart("fuelTank", true) == nullptr);  // gameObject.name is the part name only after ConfigurePart
+    tank->gameObjectName = "fuelTank";
+    chute->gameObjectName = "parachuteSingle";
+    CHECK(pod->FindChildPart("fuelTank") == tank.get());
+    CHECK(pod->FindChildPart("parachuteSingle") == nullptr);                     // not a direct child
+    CHECK(pod->FindChildPart("parachuteSingle", true) == chute.get());            // recursive
+    CHECK(Part::FindChildPart(tank.get(), "parachuteSingle") == chute.get());
+    // attach node queries
+    CHECK(pod->FindAttachNodeByPart(tank.get()) == pod->FindAttachNode("bottom"));
+    CHECK(tank->FindAttachNodeByPart(pod.get()) == tank->FindAttachNode("top"));
+    CHECK(chute->FindAttachNodeByPart(tank.get()) == chute->srfAttachNode.get());
+    CHECK(tank->FindAttachNode("top")->FindOpposingNode() == pod->FindAttachNode("bottom"));
+    CHECK(pod->FindPartThroughNodes(engine.get()) == pod->FindAttachNode("bottom"));  // reached through the tank
+    CHECK(pod->FindPartThroughNodes(chute.get()) == nullptr);  // the chute is linked only through ITS srfAttachNode
+    CHECK(chute->FindPartThroughNodes(pod.get()) == chute->srfAttachNode.get());
+    CHECK(engine->FindPartThroughNodes(pod.get()) == engine->FindAttachNode("top"));
+    CHECK(pod->FindPartThroughNodes(tank.get(), tank.get()) != nullptr);
+    CHECK(pod->FindPartThroughNodes(engine.get(), pod.get()) == nullptr);  // src == this
+    CHECK(pod->FindAttachNode("top")->attachedPart == nullptr);
+    CHECK(pod->isAttachable());           // bottom is taken, top is free
+    pod->FindAttachNode("top")->attachedPart = tank.get();
+    CHECK_FALSE(pod->isAttachable());     // both nodes taken
+    pod->FindAttachNode("top")->attachedPart = nullptr;
+    CHECK(chute->isAttachable());         // SRF_ATTACH
+    // GetPartsOutTo(part, maxLinks): children (last first), then the parent; a HashSet in insertion order
+    std::vector<Part*> out;
+    Part::GetPartsOutTo(tank.get(), out, 1);
+    CHECK(out == (std::vector<Part*>{tank.get(), chute.get(), engine.get(), pod.get()}));
+    std::vector<Part*> out0;
+    Part::GetPartsOutTo(tank.get(), out0, 0);
+    CHECK(out0 == std::vector<Part*>{tank.get()});
+    // physical significance: NONE parts are skipped by FindNonPhysicslessChildren / Parent
+    chute->fields.physicalSignificance = static_cast<int>(Part_PhysicalSignificance::NONE);
+    std::vector<Part*> phys;
+    pod->FindNonPhysicslessChildren(phys);
+    CHECK(phys == (std::vector<Part*>{tank.get(), engine.get()}));
+    CHECK(chute->FindNonPhysicslessParent() == tank.get());
+    CHECK(pod->FindNonPhysicslessParent() == pod.get());
+    // GetPhysicslessChildMass: children without a Rigidbody: mass + resource mass (float sum of (mass + resource mass))
+    chute->fields.mass = 0.25f;
+    engine->fields.mass = 1.5f;
+    engine->hasRigidbody = true;
+    tank->fields.mass = 1.0f;
+    CHECK(tank->GetPhysicslessChildMass() == 0.25f);  // the chute: no rigidbody, no resources
+    engine->hasRigidbody = false;
+    CHECK(tank->GetPhysicslessChildMass() == 1.75f);
+    // PromoteToPhysicalPart / DemoteToPhysicslessPart: the physicalSignificance state and rigidbody presence
+    chute->PromoteToPhysicalPart();
+    CHECK(chute->fields.physicalSignificance == static_cast<int>(Part_PhysicalSignificance::FULL));
+    CHECK(chute->hasRigidbody);
+    chute->DemoteToPhysicslessPart();
+    CHECK(chute->fields.physicalSignificance == static_cast<int>(Part_PhysicalSignificance::NONE));
+    CHECK(chute->fields.previousPhysicalSignificance == static_cast<int>(Part_PhysicalSignificance::FULL));
+    CHECK_FALSE(chute->hasRigidbody);
+    CHECK(Part::allParts.size() >= 4);
+
+    // symmetry: getSymmetryCounterPart wraps around count + 1
+    auto t2 = g.New("fuelTank");
+    auto t3 = g.New("fuelTank");
+    tank->symmetryCounterparts = {t2.get(), t3.get()};
+    t2->symmetryCounterparts = {tank.get(), t3.get()};
+    t3->symmetryCounterparts = {tank.get(), t2.get()};
+    CHECK(tank->getSymmetryCounterPart(0) == tank.get());
+    CHECK(tank->getSymmetryCounterPart(1) == t2.get());
+    CHECK(tank->getSymmetryCounterPart(2) == t3.get());
+    CHECK(tank->getSymmetryCounterPart(3) == tank.get());  // 3 % (2 + 1) == 0
+    CHECK(tank->isSymmetryCounterPart(t3.get()));
+    CHECK_FALSE(tank->isSymmetryCounterPart(pod.get()));
+    t2->CleanSymmetryReferences();  // removes t2 from both counterparts and empties its own list
+    CHECK(t2->symmetryCounterparts.empty());
+    CHECK(tank->symmetryCounterparts == std::vector<Part*>{t3.get()});
+    CHECK(t3->symmetryCounterparts == std::vector<Part*>{tank.get()});
+
+    // resource priority (Part.cs:7744-7777) fires onPartPriorityChanged and follows the symmetry set
+    int fired = 0;
+    struct L {
+        int* n;
+        void On(Part*) { (*n)++; }
+    } listener{&fired};
+    GameEvents::onPartPriorityChanged.Add(&listener, &L::On);
+    tank->fields.inverseStage = 3;
+    CHECK(tank->GetResourcePriority() == 30);
+    tank->ChangeResourcePriority(2);
+    CHECK(tank->fields.resourcePriorityOffset == 2);
+    CHECK(t3->fields.resourcePriorityOffset == 2);
+    CHECK(tank->GetResourcePriority() == 32);
+    tank->fields.resourcePriorityUseParentInverseStage = true;
+    pod->fields.inverseStage = 5;
+    CHECK(tank->GetResourcePriority() == 52);  // the parent's inverse stage
+    tank->ResetPri();
+    CHECK(t3->fields.resourcePriorityOffset == 0);
+    CHECK(fired == 2);
+    GameEvents::onPartPriorityChanged.Remove(&listener, &L::On);
+
+    // setParent(null) removes the part from its parent's children and fires onPartRemove
+    engine->setParent(nullptr);
+    CHECK(engine->parent == nullptr);
+    CHECK(tank->children == std::vector<Part*>{chute.get()});
+    engine->setParent(tank.get());
+
+    // re-rooting at the tank (the editor's SetHierarchyRoot): the old parent becomes a child, attach modes follow
+    engine->fields.attachMode = static_cast<int>(AttachModes::STACK);
+    tank->SetHierarchyRoot(tank.get());
+    CHECK(tank->parent == nullptr);
+    CHECK(pod->parent == tank.get());
+    CHECK(std::find(tank->children.begin(), tank->children.end(), pod.get()) != tank->children.end());
+    CHECK(pod->children.empty());
+    CHECK(pod->fields.attachMode == static_cast<int>(AttachModes::STACK));
+}
+
+TEST_CASE("WP-13 AttachNode: surface node inversion on re-rooting (ReverseSrfNodeDirection, ChangeSrfNodePosition)") {
+    // part A (root) at the origin with two stack nodes; part B surface-attached to A at A-local (1,0,0); B at world (1,0,0)
+    Part a, b;
+    AttachNode n0, n1;
+    n0.id = "top";
+    n0.position = Vector3f(0, 1, 0);
+    n0.orientation = Vector3f(0, 1, 0);
+    n1.id = "bottom";
+    n1.position = Vector3f(0, -1, 0);
+    n1.orientation = Vector3f(0, -1, 0);
+    n0.owner = n1.owner = &a;
+    a.attachNodes = {n0, n1};
+    a.srfAttachNode = std::make_shared<AttachNode>();
+    a.srfAttachNode->owner = &a;
+    b.srfAttachNode = std::make_shared<AttachNode>();
+    b.srfAttachNode->owner = &b;
+    b.srfAttachNode->nodeType = AttachNodeType::Surface;
+    b.srfAttachNode->position = Vector3f(0, 0, 0.5f);
+    b.srfAttachNode->attachedPart = &a;
+    b.partTransform.position = Vector3f(1, 0, 0);
+    b.parent = &a;
+    a.children = {&b};
+    // ReverseSrfNodeDirection: a's srf node now points at b, positioned where b's node was (in a's space: world (1,0,0.5))
+    a.srfAttachNode->ReverseSrfNodeDirection(*b.srfAttachNode);
+    CHECK(b.srfAttachNode->attachedPart == nullptr);
+    CHECK(a.srfAttachNode->attachedPart == &b);
+    CHECK(a.srfAttachNode->position.Equals(Vector3f(1, 0, 0.5f)));  // TransformPoint of (0,0,0.5) in b's frame at (1,0,0), then into a's
+    // ChangeSrfNodePosition: a node with an attached part is left alone; a free one takes the first free attach node of the owner
+    a.srfAttachNode->attachedPart = nullptr;
+    a.attachNodes[0].attachedPart = &b;  // "top" is taken
+    a.srfAttachNode->originalOrientation = Vector3f(1, 0, 0);
+    a.srfAttachNode->ChangeSrfNodePosition();
+    CHECK(a.srfAttachNode->position.Equals(Vector3f(0, -1, 0)));  // "bottom": the first node without an attached part
+    CHECK(a.srfAttachNode->orientation.Equals(Vector3f(0, -1, 0)));
+    // every owner node taken -> the node is set to the centre of the part (and a warning is logged)
+    a.attachNodes[1].attachedPart = &b;
+    a.srfAttachNode->attachedPart = nullptr;
+    a.srfAttachNode->ChangeSrfNodePosition();
+    CHECK(a.srfAttachNode->position.Equals(Vector3f::zero()));
+    CHECK(a.srfAttachNode->orientation.Equals(Vector3f(1, 0, 0)));  // originalOrientation
+    // FindAttachedPart: GetPartByCraftID, last match, id 0 -> none
+    a.fields.craftID = 7;
+    b.fields.craftID = 7;
+    AttachNode link;
+    link.attachedPartId = 7;
+    link.FindAttachedPart({&a, &b});
+    CHECK(link.attachedPart == &b);
+    link.attachedPartId = 0;
+    link.FindAttachedPart({&a, &b});
+    CHECK(link.attachedPart == nullptr);
+}
+
+// ===================================================== modules, lifecycle, events ===============================================
+
+namespace {
+// Captures ksp::log output
+struct LogCapture {
+    std::vector<std::pair<log::Level, std::string>> lines;
+    LogCapture() {
+        log::SetSink([this](log::Level l, std::string_view m) { lines.emplace_back(l, std::string(m)); });
+    }
+    ~LogCapture() { log::SetSink(nullptr); }
+    bool Has(log::Level l, const std::string& needle) const {
+        for (const auto& [lv, m] : lines)
+            if (lv == l && m.find(needle) != std::string::npos) return true;
+        return false;
+    }
+};
+
+// A PartModule recording the lifecycle calls Part makes (registered over a stock class nobody else instantiates)
+struct LifecycleModule : PartModule, IPartMassModifier {
+    static inline std::vector<std::string>* trace = nullptr;
+    using PartModule::PartModule;
+    void T(const std::string& s) {
+        if (trace) trace->push_back(s);
+    }
+    void OnStart(StartState s) override { T("OnStart:" + std::to_string(static_cast<int>(s))); }
+    void OnStartFinished(StartState s) override { T("OnStartFinished:" + std::to_string(static_cast<int>(s))); }
+    void OnStartBeforePartAttachJoint(StartState s) override { T("BeforeJoint:" + std::to_string(static_cast<int>(s))); }
+    void OnInitialize() override { T("OnInitialize"); }
+    void OnActive() override { T("OnActive"); }
+    void OnInactive() override { T("OnInactive"); }
+    void OnFixedUpdate() override { T("OnFixedUpdate"); }
+    void OnUpdate() override {
+        T("OnUpdate");
+        if (throwInUpdate) throw std::runtime_error("boom");
+    }
+    void OnWillBeCopied(bool sym) override { T(std::string("WillBeCopied:") + (sym ? "sym" : "")); }
+    void OnWasCopied(PartModule* copy, bool) override { T(std::string("WasCopied:") + (copy ? "module" : "null")); }
+    void PromoteToPhysicalPart() override { T("Promote"); }
+    void DemoteToPhysicslessPart() override { T("Demote"); }
+    IPartMassModifier* AsMassModifier() override { return this; }
+    float GetModuleMass(float, ModifierStagingSituation) override { return extraMass; }
+    ModifierChangeWhen GetModuleMassChangeWhen() override { return ModifierChangeWhen::CONSTANTLY; }
+    float extraMass = 0.5f;
+    bool throwInUpdate = false;
+};
+const char* kLifecycleClass = "ModuleKerbNetAccess";
+
+struct LifecycleRegistration {
+    LifecycleRegistration() {
+        ModuleFactory::Register(kLifecycleClass, [](const ModuleClassInfo& c) { return std::static_pointer_cast<PartModule>(std::make_shared<LifecycleModule>(c)); });
+    }
+    ~LifecycleRegistration() {
+        ModuleFactory::Register(kLifecycleClass, [](const ModuleClassInfo& c) { return std::make_shared<PartModule>(c); });
+    }
+};
+}  // namespace
+
+TEST_CASE("WP-13 Part modules: AddModule rules, LoadModule index handling, Find*, RemoveModule") {
+    if (!GameAvailable()) return;
+    Game13 g;
+    LogCapture log;
+    Part p;
+    p.gameObjectName = "testPart";
+    p.Awake();
+    CHECK(p.AddModule("NoSuchModule") == nullptr);
+    CHECK(log.Has(log::Level::Error, "Cannot find a PartModule of typename 'NoSuchModule'"));
+
+    // ModuleCargoPart / ModuleInventoryPart exclusivity (Part.cs:5787): the cargo module is removed when its packedVolume >= 0
+    REQUIRE(p.AddModule("ModuleCargoPart") != nullptr);
+    CHECK(p.isCargoPart());
+    REQUIRE(p.AddModule("ModuleInventoryPart") != nullptr);
+    CHECK(p.Modules().Count() == 1);
+    CHECK(p.ModuleData.size() == 1);
+    CHECK(p.isInventoryPart());
+    CHECK_FALSE(p.isCargoPart());
+    CHECK(log.Has(log::Level::Warning, "Cannot have ModuleCargoPart and ModuleInventoryPart on same Part"));
+    CHECK(p.AddModule("ModuleCargoPart") == nullptr);  // refused while an inventory module exists
+    CHECK(log.Has(log::Level::Warning, "they are mutually exclusive"));
+    Part q;
+    q.Awake();
+    PartModuleData* cargo = q.AddModule("ModuleCargoPart");
+    cargo->module->Set<float>("packedVolume", -1.0f);
+    REQUIRE(q.AddModule("ModuleInventoryPart") != nullptr);  // packedVolume < 0: the cargo module stays (a warning is still logged)
+    CHECK(q.Modules().Count() == 2);
+
+    // AddModule(node): the MODULE node is loaded through PartModule.Load
+    Part r;
+    r.Awake();
+    auto cmd = ParseNode("MODULE\n{\n name = ModuleCommand\n minimumCrew = 2\n}\n");
+    PartModuleData* rec = r.AddModule(*cmd);
+    REQUIRE(rec != nullptr);
+    CHECK(rec->module->Get<int32_t>("minimumCrew") == 2);
+    CHECK(rec->moduleName == "ModuleCommand");
+    CHECK(rec->FindCfgField("minimumCrew") != nullptr);
+    auto noName = ParseNode("MODULE\n{\n isEnabled = True\n}\n");
+    CHECK(r.AddModule(*noName) == nullptr);
+    CHECK(log.Has(log::Level::Error, "contains no module name"));
+
+    // LoadModule(node, ref moduleIndex): follows the cfg order, warns on a mismatch and searches the other indices
+    r.AddModule("ModuleEngines");
+    r.AddModule("ModuleEnginesFX");
+    int index = 0;
+    auto eng = ParseNode("MODULE\n{\n name = ModuleEngines\n exhaustDamageMultiplier = 77\n}\n");
+    log.lines.clear();
+    PartModule* m = r.LoadModule(*eng, index);  // index 0 is ModuleCommand: mismatch, found at 1
+    REQUIRE(m != nullptr);
+    CHECK(m == r.Modules().GetModule(1));
+    CHECK(index == 1);
+    CHECK(m->Get<double>("exhaustDamageMultiplier") == 77.0);
+    CHECK(log.Has(log::Level::Warning, "PartModule indexing mismatch"));
+    auto fx = ParseNode("MODULE\n{\n name = ModuleEnginesFX\n}\n");
+    CHECK(r.LoadModule(*fx, index) == r.Modules().GetModule(2));  // index 1 is ModuleEngines -> mismatch -> found at 2
+    CHECK(index == 2);
+    auto missing = ParseNode("MODULE\n{\n name = ModuleLight\n}\n");
+    CHECK(r.LoadModule(*missing, index) == nullptr);
+    CHECK(log.Has(log::Level::Warning, "no ModuleLight module found on part definition"));
+    index = 9;
+    CHECK(r.LoadModule(*eng, index) == r.Modules().GetModule(1));  // index beyond the list: "index exceeds module count"
+    CHECK(log.Has(log::Level::Warning, "index exceeds module count"));
+
+    // type queries: `is T` over the class hierarchy (ModuleEnginesFX derives from ModuleEngines)
+    CHECK(r.isEngine());
+    CHECK(r.FindModulesImplementing([](PartModule& x) { return x.IsA("ModuleEngines"); }).size() == 2);
+    CHECK(r.FindModuleOfClass("ModuleEnginesFX") == r.Modules().GetModule(2));
+    CHECK(r.HasModuleImplementing([](PartModule& x) { return x.AsMassModifier() != nullptr; }) == false);
+    CHECK_FALSE(r.isDecoupler());
+    CHECK_FALSE(r.isAirIntake());
+    Part child;
+    child.Awake();
+    child.parent = &r;
+    CHECK(child.FindParentModuleImplementing([](PartModule& x) { return x.IsA("ModuleCommand"); }) == r.Modules().GetModule(0));
+    CHECK(child.FindParentModuleImplementing([](PartModule& x) { return x.IsA("ModuleLight"); }) == nullptr);
+
+    // RemoveModule: only a module of this part
+    log.lines.clear();
+    r.RemoveModule(p.Modules().GetModule(0));
+    CHECK(log.Has(log::Level::Error, "Cannot destroy a module which does not belong to this part"));
+    CHECK(r.Modules().Count() == 3);
+    PartModule* fxm = r.Modules().GetModule(2);
+    r.RemoveModule(fxm);
+    CHECK(r.Modules().Count() == 2);
+    CHECK(r.ModuleData.size() == 2);
+    r.RemoveModules();
+    CHECK(r.Modules().Count() == 0);
+    CHECK(r.ModuleData.empty());
+    // the Robotic family needs the Serenity expansion
+    CHECK_FALSE(r.isRobotic());
+}
+
+TEST_CASE("WP-13 Part module lifecycle: Modules* calls, start states, mass update, copy callbacks, error isolation") {
+    if (!GameAvailable()) return;
+    Game13 g;
+    LogCapture log;
+    LifecycleRegistration reg;
+    std::vector<std::string> trace;
+    LifecycleModule::trace = &trace;
+    auto part = g.New("fuelTank");
+    PartModuleData* rec = part->AddModule(kLifecycleClass);
+    REQUIRE(rec != nullptr);
+    auto* lm = dynamic_cast<LifecycleModule*>(rec->module.get());
+    REQUIRE(lm != nullptr);
+
+    // GetModuleStartState (Part.cs:5569)
+    Vessel* fakeVessel = reinterpret_cast<Vessel*>(part.get());  // only compared with nullptr
+    CHECK(part->GetModuleStartState(true, false, std::nullopt) == StartState::Editor);
+    CHECK(part->GetModuleStartState(false, false, std::nullopt) == StartState::None);
+    CHECK(part->GetModuleStartState(false, true, VesselSituations::ORBITING) == StartState::None);  // no vessel yet
+    part->vessel = fakeVessel;
+    auto bits = [](StartState s) { return static_cast<int>(s); };
+    CHECK(bits(part->GetModuleStartState(false, true, VesselSituations::PRELAUNCH)) == (bits(StartState::PreLaunch) | bits(StartState::Landed)));
+    CHECK(part->GetModuleStartState(false, true, VesselSituations::LANDED) == StartState::Landed);
+    CHECK(part->GetModuleStartState(false, true, VesselSituations::SPLASHED) == StartState::Splashed);
+    CHECK(part->GetModuleStartState(false, true, VesselSituations::FLYING) == StartState::Flying);
+    CHECK(part->GetModuleStartState(false, true, VesselSituations::SUB_ORBITAL) == StartState::SubOrbital);
+    CHECK(part->GetModuleStartState(false, true, VesselSituations::ESCAPING) == StartState::Orbital);
+    CHECK(part->GetModuleStartState(false, true, VesselSituations::DOCKED) == StartState::Docked);
+    part->vessel = nullptr;
+
+    // ModulesOnStart: OnStart with the state, mass = prefabMass + sum of mass modifiers (Part.cs:5615)
+    const float prefabMass = g.Info("fuelTank").partPrefab->fields.mass;
+    part->fields.mass = 7.0f;  // stale: ModulesOnStart takes the prefab's mass as prefabMass
+    part->ModulesOnStart(StartState::Editor);
+    CHECK(trace.back() == "OnStart:1");
+    CHECK(part->fields.prefabMass == prefabMass);
+    CHECK(part->fields.mass == f32store(fx(prefabMass) + fx(0.5f)));
+    part->ModulesOnStartFinished(StartState::Editor);
+    CHECK(trace.back() == "OnStartFinished:1");
+    part->ModulesBeforePartAttachJoint(StartState::Editor);
+    CHECK(trace.back() == "BeforeJoint:1");
+    part->InitializeModules();
+    CHECK(trace.back() == "OnInitialize");
+    // ModulesOnFixedUpdate: only enabled modules run OnFixedUpdate, the mass modifier still counts
+    lm->extraMass = 1.25f;
+    lm->isEnabled = false;
+    trace.clear();
+    part->ModulesOnFixedUpdate();
+    CHECK(trace.empty());
+    CHECK(part->fields.mass == f32store(fx(prefabMass) + fx(1.25f)));
+    lm->isEnabled = true;
+    part->ModulesOnFixedUpdate();
+    CHECK(trace == std::vector<std::string>{"OnFixedUpdate"});
+    // minimum mass clamp
+    lm->extraMass = -100.0f;
+    part->ModulesOnFixedUpdate();
+    CHECK(part->fields.mass == g.Info("fuelTank").MinimumMass());
+    lm->extraMass = 0.5f;
+    // staging: OnActive only for modules with stagingEnabled, OnInactive always
+    trace.clear();
+    part->ModulesOnActivate();
+    part->ModulesOnDeactivate();
+    CHECK(trace == (std::vector<std::string>{"OnActive", "OnInactive"}));
+    lm->Set<bool>("stagingEnabled", false);
+    trace.clear();
+    part->ModulesOnActivate();
+    CHECK(trace.empty());
+    // a throwing module is logged and the others still run
+    lm->throwInUpdate = true;
+    log.lines.clear();
+    part->ModulesOnUpdate();
+    CHECK(log.Has(log::Level::Error, "Module ModuleKerbNetAccess threw during OnUpdate: boom"));
+    // physics-significance promotion reaches the modules
+    trace.clear();
+    part->fields.physicalSignificance = static_cast<int>(Part_PhysicalSignificance::NONE);
+    part->PromoteToPhysicalPart();
+    CHECK(trace == std::vector<std::string>{"Promote"});
+    part->parent = part.get();  // DemoteToPhysicslessPart needs a parent
+    part->DemoteToPhysicslessPart();
+    CHECK(trace.back() == "Demote");
+    part->parent = nullptr;
+
+    // copy callbacks (Part.cs:2102 OnWillBeCopied, :2115 OnWasCopied)
+    auto copy = g.New("fuelTank");
+    copy->AddModule(kLifecycleClass);
+    trace.clear();
+    part->OnWillBeCopied(true);
+    part->OnWasCopied(copy.get(), false);
+    CHECK(trace == (std::vector<std::string>{"WillBeCopied:sym", "WasCopied:module"}));
+    // SendEvent reaches the module events of the part and, through the tree, of its neighbours (Part.cs:6207)
+    int sent = 0;
+    auto other = g.New("mk1pod.v2");
+    Attach(*other, "bottom", *part, "top");
+    BaseEvent* toggle = other->Modules().GetModule(0)->Events()["ToggleStaging"];
+    REQUIRE(toggle != nullptr);
+    toggle->onEvent = [&] { sent++; };
+    part->SendEvent("ToggleStaging");  // the pod's module is one link away
+    CHECK(sent >= 1);
+    sent = 0;
+    part->SendEvent("ToggleStaging", nullptr, 0);  // maxDepth 0: only this part's modules
+    CHECK(sent == 0);
+    LifecycleModule::trace = nullptr;
+}
+
+TEST_CASE("WP-13 Part resources, crew, state and the Start() data block") {
+    if (!GameAvailable()) return;
+    Game13 g;
+    LogCapture log;
+    CaptureTable res = Table("resources");
+    const int rPart = res.Col("part"), rName = res.Col("name"), rAmount = res.Col("amount"), rDensity = res.Col("density");
+    auto tank = g.New("fuelTank");
+    // fuelTank holds LiquidFuel and Oxidizer (C9 resources table): mass = float(sum amount * density) in double
+    auto expectedMass = [&](const std::map<std::string, double>& amounts) {
+        double sum = 0.0;
+        for (const auto& row : res.rows)
+            if (row[rPart] == "fuelTank") sum += amounts.at(row[rName]) * static_cast<double>(static_cast<float>(row[rDensity].get<double>()));
+        return static_cast<float>(sum);
+    };
+    std::map<std::string, double> amounts;
+    for (const auto& row : res.rows)
+        if (row[rPart] == "fuelTank") amounts[row[rName]] = row[rAmount].get<double>();
+    REQUIRE(amounts.size() == 2);
+    CHECK(Bits(tank->GetResourceMass()) == Bits(expectedMass(amounts)));
+    // SetResource: Load into the existing resource; the simulation list is kept in step by AddResource only
+    tank->SetResource(*ParseNode("RESOURCE\n{\n name = LiquidFuel\n amount = 100\n maxAmount = 180\n}\n"));
+    amounts["LiquidFuel"] = 100.0;
+    REQUIRE(tank->GetResource("LiquidFuel") != nullptr);
+    CHECK(tank->GetResource("LiquidFuel")->amount == 100.0);
+    CHECK(Bits(tank->GetResourceMass()) == Bits(expectedMass(amounts)));
+    CHECK(tank->GetResourceMass(false) == tank->GetResourceMass());
+    // simulation resources: a copy of the list; ResetSimulationResources re-reads amounts and flow settings
+    tank->SetupSimulationResources();
+    CHECK(tank->SimulationResources().size() == 2);
+    CHECK(tank->SimulationResources()[0].simulationResource);
+    tank->GetResource("Oxidizer")->amount = 50.0;
+    amounts["Oxidizer"] = 50.0;
+    CHECK(tank->GetResourceMass(true) != tank->GetResourceMass(false));
+    tank->ResetSimulation();
+    CHECK(Bits(tank->GetResourceMass(true)) == Bits(tank->GetResourceMass(false)));
+    CHECK(Bits(tank->GetResourceMass(true)) == Bits(expectedMass(amounts)));
+    // AddResource: duplicates and unknown definitions are refused with a warning (PartResourceList.Add)
+    log.lines.clear();
+    CHECK(tank->AddResource(*ParseNode("RESOURCE\n{\n name = Oxidizer\n amount = 1\n maxAmount = 1\n}\n")) == nullptr);
+    CHECK(log.Has(log::Level::Warning, "Part already contains  resource 'Oxidizer'"));
+    CHECK(tank->AddResource(*ParseNode("RESOURCE\n{\n name = Unobtainium\n amount = 1\n maxAmount = 1\n}\n")) == nullptr);
+    CHECK(log.Has(log::Level::Warning, "Could not create PartResource of type 'Unobtainium"));
+    PartResource* mono = tank->AddResource(*ParseNode("RESOURCE\n{\n name = MonoPropellant\n amount = 5\n maxAmount = 10\n flowMode = Out\n}\n"));
+    REQUIRE(mono != nullptr);
+    CHECK(mono->part == tank.get());
+    CHECK(mono->flowMode == PartResourceFlowMode::Out);
+    CHECK(mono->flowState);  // default true
+    CHECK(tank->SimulationResources().size() == 3);  // AddResource adds to the simulation list too
+    // RemoveResource by name, id and object; false when absent
+    CHECK(tank->RemoveResource("MonoPropellant"));
+    CHECK_FALSE(tank->RemoveResource("MonoPropellant"));
+    CHECK(tank->SimulationResources().size() == 2);
+    CHECK(tank->RemoveResource(MonoStringHash("Oxidizer")));
+    PartResource* lf = tank->GetResource("LiquidFuel");
+    CHECK(tank->RemoveResource(lf));
+    CHECK(tank->Resources.empty());
+    CHECK(tank->GetResourceMass() == 0.0f);
+
+    // the thermal overloads: float accumulation (`(float)amount * density`, `thermal += mass * specificHeatCapacity`)
+    {
+        PartResourceLibrary lib;  // a library with a resource that has a specific heat capacity
+        lib.resourceDefinitions.Add(*ParseNode("RESOURCE_DEFINITION\n{\n name = HotFluid\n density = 0.01\n hsp = 4\n unitCost = 1\n}\n"));
+        Part p;
+        p.Awake();
+        PartResource* hot = p.AddResource(*ParseNode("RESOURCE\n{\n name = HotFluid\n amount = 100\n maxAmount = 100\n}\n"));
+        REQUIRE(hot != nullptr);
+        float thermalF = -1.0f;
+        double thermalD = -1.0;
+        const float m1 = p.GetResourceMass(thermalF);
+        const float m2 = p.GetResourceMass(thermalD);
+        const float num2 = f32store(fx(100.0f) * fx(0.01f));
+        CHECK(Bits(m1) == Bits(num2));
+        CHECK(Bits(m2) == Bits(num2));
+        CHECK(Bits(thermalF) == Bits(f32store(fx(num2) * fx(4.0f))));
+        CHECK(thermalD == static_cast<double>(num2) * 4.0);
+        // Start(): resourceMass / thermalMass / thermalMassReciprocal; the part starts at 288 K when temperature is -1
+        p.fields.mass = 0.5f;
+        p.fields.thermalMassModifier = 2.0;
+        Part::StartContext ctx;
+        ctx.flight = true;
+        ctx.standardSpecificHeatCapacity = 800.0;
+        p.StartData(ctx);
+        CHECK(Bits(p.fields.resourceMass) == Bits(num2));
+        CHECK(p.fields.resourceThermalMass == thermalD);
+        CHECK(p.fields.thermalMass == static_cast<double>(0.5f) * 800.0 * 2.0 + thermalD);
+        CHECK(p.fields.thermalMassReciprocal == 1.0 / p.fields.thermalMass);
+        CHECK(p.fields.temperature == 288.0);
+        CHECK(p.fields.skinTemperature == 288.0);
+        CHECK(p.fields.skinUnexposedTemperature == 288.0);
+        CHECK(p.fields.started);
+    }
+
+    // Start(): skinMaxTemp / absorptiveConstant fallbacks, PhysicsSignificance -> physicalSignificance, editor flag
+    auto s = g.New("liquidEngine");
+    s->fields.skinMaxTemp = -1.0;
+    s->fields.maxTemp = 2000.0;
+    s->fields.absorptiveConstant = -1.0;
+    s->fields.emissiveConstant = 0.4;
+    s->fields.PhysicsSignificance = 1;
+    Part::StartContext ectx;
+    ectx.editor = true;
+    s->StartData(ectx);
+    CHECK(s->fields.skinMaxTemp == 2000.0);
+    CHECK(s->fields.absorptiveConstant == 0.4);
+    CHECK(s->fields.physicalSignificance == 1);
+    CHECK(s->fields.previousPhysicalSignificance == 1);
+    CHECK(s->fields.editorStarted);
+    CHECK_FALSE(s->fields.started);
+    auto s2 = g.New("liquidEngine");
+    s2->fields.PhysicsSignificance = -1;  // the default: physicalSignificance is left alone
+    s2->fields.temperature = -1.0;
+    Part::StartContext fctx;
+    fctx.flight = true;
+    fctx.externalTemperature = 250.5;
+    s2->StartData(fctx);
+    CHECK(s2->fields.physicalSignificance == 0);
+    CHECK(s2->fields.temperature == 250.5);  // (float) of the external temperature while it is still negative
+
+    // crew: capacity, duplicates, status changes (Part.cs:2279 / 2260)
+    auto pod = g.New("mk1pod.v2");
+    REQUIRE(pod->fields.CrewCapacity == 1);
+    auto k1 = std::make_shared<ProtoCrewMember>(Game_Modes::SANDBOX, *ParseNode("KERBAL\n{\n name = Jebediah Kerman\n}\n"));
+    auto k2 = std::make_shared<ProtoCrewMember>(Game_Modes::SANDBOX, *ParseNode("KERBAL\n{\n name = Bill Kerman\n}\n"));
+    log.lines.clear();
+    CHECK(pod->AddCrewmember(k1));
+    CHECK(k1->rosterStatus() == ProtoCrewMember::RosterStatus::Assigned);
+    CHECK_FALSE(pod->AddCrewmember(k1));
+    CHECK(log.Has(log::Level::Warning, "Crewmember is already in this part"));
+    CHECK_FALSE(pod->AddCrewmember(k2));
+    CHECK(log.Has(log::Level::Warning, "Part Crew Capacity Exceeded"));
+    CHECK_FALSE(pod->AddCrewmemberAt(k2, 0));
+    CHECK(log.Has(log::Level::Error, "Part Crew Capacity Exceeded"));
+    pod->RemoveCrewmember(k1);
+    CHECK(k1->rosterStatus() == ProtoCrewMember::RosterStatus::Available);
+    CHECK(pod->protoModuleCrew.empty());
+    pod->RemoveCrewmember(k1);
+    CHECK(log.Has(log::Level::Warning, "Crewmember is not in this part"));
+    CHECK(pod->AddCrewmemberAt(k2, 0));
+    CHECK(k2->seatIdx == 0);
+
+    // State / CanFail: FAILED needs Making History; the state before the failure is remembered (Part.cs:946)
+    auto st = g.New("fuelTank");
+    st->set_State(PartStates::ACTIVE);
+    st->set_State(PartStates::FAILED);
+    CHECK(st->State() == PartStates::ACTIVE);  // CanFail is false without the expansion
+    SaveEnvironment::Current().SetStockExpansionInstalled("MakingHistory", true);
+    st->set_State(PartStates::FAILED);
+    CHECK(st->State() == PartStates::FAILED);
+    CHECK(st->fields.PreFailState == static_cast<int>(PartStates::IDLE));  // ACTIVE is remembered as IDLE
+    st->set_State(PartStates::DEAD);
+    st->set_State(PartStates::FAILED);
+    CHECK(st->fields.PreFailState == static_cast<int>(PartStates::DEAD));
+    st->set_CanFail(false);
+    CHECK_FALSE(st->CanFail());
+    CHECK(st->localRoot() == st.get());
+    // shielding display strings follow the flag
+    st->set_ShieldedFromAirstream(true);
+    CHECK(st->ShieldedFromAirstream());
+}
+
+// ===================================================== variants and copy ========================================================
+
+TEST_CASE("WP-13 PartVariant and ModulePartVariants: lists of the C9 variants table, selection, themes, ApplyVariant, mass and cost") {
+    if (!GameAvailable()) return;
+    Game13 g;
+    LogCapture log;
+    CaptureTable vt = Table("variants");
+    const int vPart = vt.Col("part"), vIdx = vt.Col("idx"), vName = vt.Col("name"), vDisp = vt.Col("displayName"), vCost = vt.Col("cost"),
+              vMass = vt.Col("mass");
+    // every variant of every compiled part: names, order, cost and mass (the module owns the list since WP-13)
+    std::map<std::string, std::vector<const nlohmann::json*>> byPart;
+    for (const auto& row : vt.rows) byPart[row[vPart]].push_back(&row);
+    CHECK(byPart.size() == 78);
+    for (const auto& [name, rows] : byPart) {
+        const AvailablePart* ap = g.data.parts.getPartInfoByName(name);
+        if (ap == nullptr || ap->codeBuilt) continue;
+        CAPTURE(name);
+        REQUIRE(ap->partPrefab->variants != nullptr);
+        ModulePartVariants& mv = *ap->partPrefab->variants;
+        const auto* list = ap->Variants();
+        REQUIRE(list != nullptr);
+        REQUIRE(list->size() == rows.size());
+        CHECK(&mv.variantList == list);
+        for (size_t i = 0; i < rows.size(); i++) {
+            const PartVariant& v = *(*list)[i];
+            CHECK(v.name == (*rows[i])[vName].get<std::string>());
+            CHECK(Bits(v.cost) == Bits(static_cast<float>((*rows[i])[vCost].get<double>())));
+            CHECK(Bits(v.mass) == Bits(static_cast<float>((*rows[i])[vMass].get<double>())));
+            CHECK(mv.GetVariantIndex(v.name) == static_cast<int>(i));
+            CHECK(mv.HasVariant(v.name));
+        }
+        CHECK(ap->variant == ap->partPrefab->baseVariant);  // CompilePartInfo: newPartInfo.variant = part.baseVariant
+        CHECK(mv.GetModuleTitle() == "PartVariants");
+        CHECK(mv.GetVariantNames().size() == rows.size());
+    }
+
+    // the base variant: with `baseVariant = X` the list is NOT prefixed by the base and variantIndex points at X
+    {
+        const AvailablePart& lander = g.Info("mk2LanderCabin.v2");
+        ModulePartVariants& mv = *lander.partPrefab->variants;
+        CHECK(mv.variantList.size() == 2);
+        CHECK(mv.variantList[0]->name == "Rover");
+        CHECK(lander.partPrefab->baseVariant == mv.variantList[1]);  // the same object
+        CHECK(lander.partPrefab->baseVariant->name == "Lander");
+        CHECK(mv.GetCurrentVariantIndex() == 1);
+        // `baseVariant = Full` names no variant: GetVariantIndex answers 0 (sic), so the first variant (Shroud) is the base
+        const AvailablePart& skipper = g.Info("engineLargeSkipper.v2");
+        ModulePartVariants& sv = *skipper.partPrefab->variants;
+        CHECK(sv.variantList.size() == 3);
+        CHECK(sv.variantList[0]->name == "Shroud");
+        CHECK(sv.GetCurrentVariantIndex() == 0);
+        CHECK(skipper.partPrefab->baseVariant == sv.variantList[0]);
+        CHECK(sv.variantList[0]->attachNodes.size() == 2);
+        CHECK(sv.variantList[0]->attachNodes[0].id == "top");
+        CHECK(sv.variantList[0]->attachNodes[0].position.y == 1.013f);
+        CHECK(sv.variantList[0]->srfAttachNode == skipper.partPrefab->srfAttachNode);  // sic: the srf node is shared, not cloned
+        REQUIRE(sv.variantList[0]->attachRules);
+        CHECK(sv.variantList[0]->attachRules->String() == skipper.partPrefab->fields.attachRules->String());
+        CHECK_FALSE(sv.variantList[0]->infoGameObjects.empty());
+        CHECK(sv.variantList[1]->GetExtraInfoValue("nothing").empty());
+        CHECK(sv.variantList[2]->GetAttachedNodeIndex("top") == 0);
+        CHECK(sv.variantList[2]->GetAttachedNodeIndex("bottom") == 1);
+        CHECK(sv.variantList[2]->GetAttachedNodeIndex("nope") == -1);
+        // without baseVariant the Basic base variant (a copy of the part's nodes) is inserted first; PartVariant.cs:213
+        // new PartVariant(baseVariant) is not a memberwise copy, so the base itself has no GAMEOBJECTS
+        const AvailablePart& dec = g.Info("Decoupler.1");
+        ModulePartVariants& dv = *dec.partPrefab->variants;
+        CHECK(dv.variantList[0]->name == "Basic");
+        CHECK(dec.partPrefab->baseVariant == dv.variantList[0]);
+        CHECK(dv.variantList[0]->infoGameObjects.empty());
+        CHECK(dv.variantList[0]->attachNodes.size() == dec.partPrefab->attachNodes.size());
+        CHECK_FALSE(dv.variantList[1]->textures.empty());  // the colour variant carries TEXTURE commands
+        // the Bare variant's NODES replace the top node's position and size
+        CHECK(sv.variantList[2]->attachNodes[0].position.y == 0.583f);
+        CHECK(sv.variantList[2]->attachNodes[0].size == 2);
+        const auto vis = sv.variantList[2]->ModelVisibility();
+        CHECK(vis.size() == 5);
+        CHECK(vis[0] == std::make_pair(std::string("COL1"), false));
+    }
+
+    // a clone: SetVariant, events, scene-dependent mass, cost
+    {
+        auto rcs = g.New("RCSBlock.v2");
+        REQUIRE(rcs->variants != nullptr);
+        ModulePartVariants& mv = *rcs->variants;
+        int applied = 0;
+        struct L {
+            int* n;
+            void On(Part*, PartVariant*) { (*n)++; }
+        } l{&applied};
+        GameEvents::onVariantApplied.Add(&l, &L::On);
+        CHECK(mv.GetCurrentVariantIndex() == 0);  // private KSPField: a clone restarts at 0
+        CHECK_FALSE(mv.SetVariant("NoSuchVariant"));
+        CHECK(log.Has(log::Level::Error, "Variant name does not exist to be set. Part:"));
+        CHECK(mv.SetVariant("3Horn"));
+        CHECK(mv.GetCurrentVariantIndex() == 3);  // [Angled, 5Horn, 4Horn, 3Horn, 2Horn]
+        CHECK(applied == 1);
+        CHECK(Bits(mv.GetModuleCost(0.0f, ModifierStagingSituation::CURRENT)) == Bits(-8.0f));
+        CHECK(mv.GetModuleMass(0.0f, ModifierStagingSituation::CURRENT) == 0.0f);  // useVariantMass is off outside the editor
+        CHECK(Bits(rcs->GetModuleCosts(0.0f)) == Bits(-8.0f));
+        SaveEnvironment::Current().loadedScene = GameScenes::EDITOR;
+        CHECK(Bits(mv.GetModuleMass(0.0f, ModifierStagingSituation::CURRENT)) == Bits(-0.01f));
+        CHECK(mv.Get<bool>("useVariantMass"));  // HighLogic.LoadedSceneIsEditor sets it, persistently
+        SaveEnvironment::Current().loadedScene = GameScenes::MAINMENU;
+        CHECK(Bits(mv.GetModuleMass(0.0f, ModifierStagingSituation::CURRENT)) == Bits(-0.01f));
+        // OnSave writes selectedVariant for index > 0; OnLoad restores it by name
+        ConfigNode saved("MODULE");
+        mv.OnSave(saved);
+        CHECK(saved.GetValue("selectedVariant") == "3Horn");
+        mv.Set<int32_t>("variantIndex", 0);
+        ConfigNode none("MODULE");
+        mv.OnSave(none);
+        CHECK_FALSE(none.HasValue("selectedVariant"));
+        mv.OnLoad(saved);
+        CHECK(mv.GetCurrentVariantIndex() == 3);
+        // module info / drag cube names
+        CHECK(mv.GetDragCubeNames() == (std::vector<std::string>{"0", "1", "2", "3", "4"}));
+        mv.AssumeDragCubePosition("2");
+        CHECK(mv.GetCurrentVariantIndex() == 2);
+        mv.AssumeDragCubePosition("x");
+        CHECK(mv.GetCurrentVariantIndex() == 2);
+        CHECK_FALSE(mv.GetInfo().empty());
+        GameEvents::onVariantApplied.Remove(&l, &L::On);
+    }
+
+    // themes: largeAdapter's variants carry themeName White / Orange
+    {
+        auto adapter = g.New("largeAdapter");
+        ModulePartVariants& mv = *adapter->variants;
+        REQUIRE(mv.HasVariantTheme("Orange"));
+        CHECK(mv.SetVariantTheme("Orange"));
+        CHECK(mv.variantList[mv.GetCurrentVariantIndex()]->themeName == std::optional<std::string>("Orange"));
+        CHECK_FALSE(mv.SetVariantTheme("Magenta"));
+        CHECK(log.Has(log::Level::Error, "Variant theme does not exist to be set"));
+    }
+
+    // ApplyVariant in the editor scene: the part's nodes take the variant's, the part follows its parent (Part.cs / ModulePartVariants.cs:48)
+    {
+        SaveEnvironment::Current().loadedScene = GameScenes::EDITOR;
+        auto tank = g.New("fuelTank");
+        auto engine = g.New("engineLargeSkipper.v2");
+        Attach(*tank, "bottom", *engine, "top");
+        engine->partTransform.position = Vector3f(0, 10, 0);
+        ModulePartVariants& mv = *engine->variants;
+        REQUIRE(mv.SetVariant("Bare"));
+        AttachNode* top = engine->FindAttachNode("top");
+        CHECK(top->position.y == 0.583f);
+        CHECK(top->originalPosition.y == 0.583f);
+        CHECK(top->size == 2);
+        // UpdatePartPosition: the attached parent is the owner's potentialParent, so the OWNER moves by current - new
+        const float delta = f32store(fx(1.013f) - fx(0.583f));
+        CHECK(Bits(engine->partTransform.position.y) == Bits(f32store(10.0 + fx(delta))));
+        // the part's attachRules follow the variant (null -> baseVariant.AttachRules)
+        REQUIRE(engine->fields.attachRules);
+        CHECK(engine->fields.attachRules->String() == mv.variantList[2]->attachRules.value_or(*engine->baseVariant->attachRules).String());
+        // the Shroud variant restores the base nodes
+        REQUIRE(mv.SetVariant("Shroud"));
+        CHECK(engine->FindAttachNode("top")->position.y == 1.013f);
+        SaveEnvironment::Current().loadedScene = GameScenes::MAINMENU;
+    }
+
+    // disabledEvents toggle the module event (FlagDecal.ToggleFlag) while the variant that lists it is applied
+    {
+        auto lander = g.New("mk2LanderCabin.v2");
+        ModulePartVariants& mv = *lander->variants;
+        PartModule* flag = lander->Modules()["FlagDecal"];
+        REQUIRE(flag != nullptr);
+        BaseEvent* ev = flag->Events()["ToggleFlag"];
+        REQUIRE(ev != nullptr);
+        CHECK_FALSE(ev->EventIsDisabledByVariant());
+        REQUIRE(mv.SetVariant("Lander"));
+        CHECK(ev->EventIsDisabledByVariant());
+        REQUIRE(mv.SetVariant("Rover"));
+        CHECK_FALSE(ev->EventIsDisabledByVariant());
+    }
 }
