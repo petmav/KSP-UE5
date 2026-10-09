@@ -21,6 +21,7 @@
 #include "ksp/modules/module_part_variants.hpp"
 #include "ksp/modules/part_structural_modules.hpp"
 #include "ksp/modules/part_module.hpp"
+#include "ksp/modules/resource_modules.hpp"
 #include "ksp/parts/available_part.hpp"
 #include "ksp/parts/cs_parse.hpp"
 #include "ksp/parts/part_loader.hpp"
@@ -38,31 +39,7 @@ float MathfClamp(float value, float min, float max) {
 }
 constexpr float kFloatEpsilon = std::numeric_limits<float>::denorm_min();  // Mathf.Epsilon (float.Epsilon, denormal)
 
-// ---- ModuleToggleCrossfeed.cs -------------------------------------------------------------------------------------------
-class ModuleToggleCrossfeed : public PartModule {
-public:
-    using PartModule::PartModule;
-    // :116 (while the prefab compiles part.partInfo is null)
-    void OnAwake() override {
-        PartModule::OnAwake();
-        if (part) defaultCrossfeedStatus = part->fields.fuelCrossFeed;
-    }
-    // :127
-    void OnLoad(const ConfigNode& node) override {
-        PartModule::OnLoad(node);
-        UpdateCrossfeed(false);
-    }
-    // :155 (GameEvents.onPartCrossfeedStateChange has no listener while a prefab compiles)
-    void UpdateCrossfeed(bool /*fireEvent*/) {
-        const bool crossfeedStatus = Get<bool>("crossfeedStatus");
-        if (part) part->fields.fuelCrossFeed = crossfeedStatus;
-        if (BaseEvent* e = Events()["ToggleEvent"]) e->SetGuiName(Get<std::string>(crossfeedStatus ? "disableText" : "enableText"));
-        if (BaseAction* a = Actions()["ToggleAction"]) a->SetGuiName(Get<std::string>("toggleText"));
-        if (BaseAction* a = Actions()["EnableAction"]) a->SetGuiName(Get<std::string>("enableText"));
-        if (BaseAction* a = Actions()["DisableAction"]) a->SetGuiName(Get<std::string>("disableText"));
-    }
-    bool defaultCrossfeedStatus = false;
-};
+// ModuleToggleCrossfeed (ModuleToggleCrossfeed.cs) moved to WP-15: src/modules/resource_modules.cpp
 
 // ---- ModuleCargoPart.cs:96 ----------------------------------------------------------------------------------------------
 class ModuleCargoPart : public PartModule {
@@ -193,6 +170,7 @@ public:
     // ModuleDeployableSolarPanel.cs:97 (resHandler.moduleResourceBasedPrimaryIsInput = false; layer masks: not KSPFields)
     void OnAwake() override {
         ModuleDeployablePart::OnAwake();
+        resHandler.moduleResourceBasedPrimaryIsInput = false;  // ModuleDeployableSolarPanel.cs:97 (WP-15)
         if (IsNull("powerCurve")) Set<FloatCurve>("powerCurve", FloatCurve{});
         if (IsNull("temperatureEfficCurve")) {
             FloatCurve c;
@@ -456,7 +434,7 @@ void RegCurves(std::initializer_list<const char*> names, std::vector<std::string
 
 namespace detail {
 void RegisterBuiltinModules() {
-    Reg<ModuleToggleCrossfeed>({"ModuleToggleCrossfeed"});
+    detail::RegisterResourceModules();  // ModuleToggleCrossfeed, ModuleResourceAutoShiftState, CModuleFuelLine, EVAResourceContainer (WP-15)
     Reg<ModuleCargoPart>({"ModuleCargoPart"});
     Reg<ModuleAnimationSetter>({"ModuleAnimationSetter"});
     Reg<ModuleAnimateHeat>({"ModuleAnimateHeat"});

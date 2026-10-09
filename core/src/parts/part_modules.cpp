@@ -349,18 +349,8 @@ std::unique_ptr<Part> Part::Instantiate(const Part& original) {
         if (p->srfAttachNode->owner == &original) p->srfAttachNode->owner = p.get();
     }
     // resources (PartResourceList is [Serializable]: the clone gets its own entries)
-    for (const PartResource& r : original.Resources) {
-        PartResource c(r);
-        c.part = p.get();
-        p->Resources.push_back(std::move(c));
-    }
-    p->resourcesSetUp_ = true;
-    for (const PartResource& r : original.simulationResources_) {
-        PartResource c(r);
-        c.part = p.get();
-        p->simulationResources_.push_back(std::move(c));
-    }
-    p->simulationSetUp_ = original.simulationSetUp_;
+    p->Resources.CloneFrom(original.Resources, p.get());
+    p->simulationResources_.CloneFrom(original.simulationResources_, p.get());
     // Part.baseVariant is a [Serializable] class instance: deep copied
     if (original.baseVariant) {
         p->baseVariant = std::make_shared<PartVariant>(*original.baseVariant);
@@ -430,33 +420,19 @@ void Part::OnWasCopied(Part* newPart, bool asSymCounterpart) {
 void Part::OnCopy(Part* original, bool asSymCounterpart) {
     fields.isClone = true;
     originalPart = original;
-    int count = static_cast<int>(Resources.size());
+    int count = Resources.Count();
     while (count-- > 0) {
-        const int32_t id = Resources[static_cast<size_t>(count)].info ? Resources[static_cast<size_t>(count)].info->id()
-                                                                       : MonoStringHash(Resources[static_cast<size_t>(count)].resourceName);
-        bool contained = false;
-        for (const PartResource& r : original->Resources)
-            if ((r.info ? r.info->id() : MonoStringHash(r.resourceName)) == id) contained = true;
-        if (!contained) RemoveResource(id);
+        if (!original->Resources.Contains(Resources.At(count).info->id())) Resources.Remove(Resources.At(count).info->id());
     }
     bool flag = false;
-    for (size_t i = 0; i < original->Resources.size(); i++) {
-        PartResource* partResource = GetResource(original->Resources[i].resourceName);
+    for (int i = 0; i < original->Resources.Count(); i++) {
+        PartResource* partResource = Resources.Get(original->Resources.At(i).info->id());
         if (partResource == nullptr) {
-            PartResource c;
-            c.part = this;
-            c.Copy(original->Resources[i]);
-            Resources.push_back(std::move(c));
-            GameEvents::onPartResourceListChange.Fire(this);
-            if (i < original->simulationResources_.size()) {
-                PartResource s;
-                s.part = this;
-                s.Copy(original->simulationResources_[i]);
-                simulationResources_.push_back(std::move(s));
-            }
+            Resources.Add(original->Resources.At(i));
+            simulationResources_.Add(original->simulationResources_.At(i));
         } else {
-            partResource->amount = original->Resources[i].amount;
-            partResource->maxAmount = original->Resources[i].maxAmount;
+            partResource->amount = original->Resources.At(i).amount;
+            partResource->maxAmount = original->Resources.At(i).maxAmount;
             flag = true;
         }
     }

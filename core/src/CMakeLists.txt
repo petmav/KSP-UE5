@@ -63,16 +63,25 @@ add_library(kspcore STATIC
     database/game_database.cpp
     resources/part_resource_library.cpp
     resources/physic_material_library.cpp
+    resources/part_resource_list.cpp
+    resources/flow_graph.cpp
+    resources/part_set.cpp
+    resources/resource_flow_host.cpp
+    resources/resource_broker.cpp
+    resources/planetary_resources.cpp
     parts/ksp_enums.cpp
     parts/part_data.cpp
     parts/part_module_data.cpp
     parts/part_loader.cpp
     parts/part.cpp
     parts/part_modules.cpp
+    parts/part_resource_flow.cpp
     parts/part_variant.cpp
     parts/part_geometry_util.cpp
     parts/part_misc.cpp
     modules/cs_expr.cpp
+    modules/module_resource.cpp
+    modules/resource_modules.cpp
     modules/module_members.cpp
     modules/base_field.cpp
     modules/base_event.cpp

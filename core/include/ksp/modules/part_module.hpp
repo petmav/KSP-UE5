@@ -27,6 +27,7 @@
 #include "ksp/config/config_node.hpp"
 #include "ksp/modules/base_event.hpp"
 #include "ksp/modules/base_field.hpp"
+#include "ksp/modules/module_resource.hpp"
 #include "ksp/unity/quaternion.hpp"
 
 namespace ksp {
@@ -101,6 +102,7 @@ public:
     std::vector<ConfigNode::NodePtr> upgrades;  // PartModule.upgrades (null list is the empty vector)
     bool upgradesLoaded = false;                // upgrades != null
     std::vector<std::string> upgradesApplied;
+    ModuleResourceHandler resHandler;  // PartModule.cs:175 (WP-15)
     bool isStageable = false;        // ReflectedAttributes.isStageable: the class overrides OnActive (set by the registrant)
 
     const std::string& ClassName() const { return className_; }

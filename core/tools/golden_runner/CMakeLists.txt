@@ -19,11 +19,13 @@ add_executable(golden_runner
     ds_orbit_rails.cpp
     ds_terrain_height.cpp
     ds_part_database.cpp
+    ds_resource_mass.cpp
     ds_vessel_state.cpp
 )
 target_link_libraries(golden_runner PRIVATE kspcore)
 ksp_set_build_flags(golden_runner)
-target_include_directories(golden_runner PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/third_party)
+target_include_directories(golden_runner PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/third_party
+                           ${PROJECT_SOURCE_DIR}/tools/support)
 # WP-11 terrain: the extracted original height maps (core/data/terrain, tools/wp11/extract_terrain.py)
 target_compile_definitions(golden_runner PRIVATE KSPCORE_DATA_DIR="${PROJECT_SOURCE_DIR}/data"
                            KSPCORE_DEFAULT_GAME_ROOT="${KSP_GAMEDATA_ROOT}")

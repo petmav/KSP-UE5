@@ -283,7 +283,7 @@ TEST_CASE("WP-06 module behaviours: OnLoad effects on Part prefab data and field
     auto cargo = NewModule("ModuleCargoPart", &part);
     cargo->Load(*MakeNode("MODULE\n{\n name = ModuleCargoPart\n stackableQuantity = 4\n}\n"));
     CHECK(cargo->Get<int32_t>("stackableQuantity") == 4);
-    part.Resources.emplace_back();
+    part.Resources.Insert(std::make_unique<PartResource>(), 1);
     cargo->Load(*MakeNode("MODULE\n{\n name = ModuleCargoPart\n stackableQuantity = 4\n}\n"));
     CHECK(cargo->Get<int32_t>("stackableQuantity") == 1);
     // BaseConverter.OnLoad: status text; OnAwake: default curves
