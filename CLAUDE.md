@@ -29,6 +29,19 @@ Rules:
 
 - `FEASIBILITY.md` — the UE5 port feasibility assessment (2026-10-08).
 
-## Agent roles
+## Agent roles and models
 
-Fable orchestrates and reviews. Haiku does research and web lookups. Sonnet is the implementer for build, decompile and code tasks (Opus 5.5 was used through batch 3; escalate to Opus only after two failed gate attempts).
+The main session orchestrates (Fable when available; otherwise the strongest model offered) and delegates. Project subagents in `.claude/agents/` fix the model per role:
+
+| Agent | Model | Use for |
+|---|---|---|
+| `implementer` | Sonnet | most work packages: port, gate, tests |
+| `optimizer` | Opus | performance/physics tier, bit-exactness forensics, hard merges, architecture |
+| `classifier` | Haiku | read-only locate/classify/identify questions |
+| `gatekeeper` | Sonnet | verify a finished branch before merge |
+
+Rules: at most 4 concurrent subagents; subagents do not spawn subagents (depth limit set in `.claude/settings.json`); every long task writes progress to a `PROGRESS-*.md`; escalate a package from `implementer` to `optimizer` only after two failed gate attempts.
+
+## Cloud sessions (claude.ai/code)
+
+Read `CLOUD-TASKS.md`. Cloud VMs are Ubuntu 24.04: use `core/run_tests.sh -f`. They cannot launch KSP, run captures, build Unreal, or regenerate harness goldens; those are local-only. Everything a gate needs is in the repo (`core/testdata/`, `harness/golden/`, `harness/captures/`). Branch per package `wp<NN>`, PR to `main`, CI must be green.

@@ -129,6 +129,22 @@ Final message: gate results table, commits, anything not achieved.
 - Windows CI uses VS 2022 on `windows-latest` (Enterprise edition): `run_tests.ps1` falls back to any VS 2022 with the C++ tools.
   The workflow has never been run (WP-00L had no GitHub access).
 
+## (g) Cloud session setup (claude.ai/code)
+
+Repo side (committed):
+- `.claude/agents/`: `implementer` (Sonnet), `optimizer` (Opus), `classifier` (Haiku, read-only), `gatekeeper` (Sonnet, verify-only). Delegate by role; the main session orchestrates.
+- `.claude/settings.json`: default subagent model Sonnet, max 4 concurrent subagents, spawn depth 2 (subagents cannot fan out), Bash timeouts 10/30 min, allowlist for build/test/git/gh commands, deny force-push, visibility changes, repo delete, and reads of `decompiled/KSP-dev/`.
+- `.claude/cloud-setup.sh`: the environment setup script (warm `core` build). Paste its contents into the environment's **Setup script** field.
+- `.github/workflows/ci.yml`: Linux (Clang, GCC) + Windows gates on every push/PR.
+
+User side (one-time, in the browser):
+1. Install the Claude GitHub App on `petmav/KSP-UE5` (https://github.com/apps/claude) so cloud sessions can clone and push, and Auto-fix works on PRs. Alternative: run `/web-setup` in a local terminal to lend the `gh` token.
+2. At https://claude.ai/code create a cloud environment "KSP-UE5": network **Trusted** (default; GitHub + registries suffice; no other hosts needed), environment variables none required, setup script = contents of `.claude/cloud-setup.sh`.
+3. Start a session on `petmav/KSP-UE5`, pick the orchestrator model (Fable if offered), and prompt: "Read CLAUDE.md and CLOUD-TASKS.md. Take the next unstarted package from section (c), run it with the implementer agent on branch wp<NN>, verify with gatekeeper, open a PR." Parallel packages: one session each, different `wp<NN>`.
+4. Merging: review the PR's CI (ubuntu + windows must be green) and the gatekeeper report, then merge. Pull `main` locally afterwards; local-only steps (captures, Unreal, physics spike) continue on the Windows machine.
+
+Limits to remember: the cloud VM has no KSP, no Unreal, no `msvcr120` DLL (the portable libm lift is used, bit-exact), no MSVC. Anything marked local-only in (b) stays on the laptop.
+
 ## Repository set-up notes (before the first push)
 
 - The project root is not a git repo yet. `core/` has its own history (main checkout plus `core/.worktrees/*`); decide whether to
