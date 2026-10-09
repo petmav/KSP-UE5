@@ -356,7 +356,7 @@ float ShipConstruct::GetTotalMass() {
 
 // ---- vessel naming (ShipConstruct.cs:866-914) ---------------------------------------------------------------------------------------
 
-// ShipConstruct.cs:866 (VesselNaming.FindPriorityNamePart(ShipConstruct), VesselNaming.cs:51)
+// ShipConstruct.cs:866 (VesselNaming.FindPriorityNamePart(ShipConstruct), VesselNaming.cs:49)
 bool ShipConstruct::UpdateVesselNaming(bool noGameEvent) {
     Part* part = nullptr;
     int num = 0;

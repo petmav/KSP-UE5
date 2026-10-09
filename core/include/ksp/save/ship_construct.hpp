@@ -188,6 +188,9 @@ public:
 
     // ShipConstruct.cs:36-62 Parts / indexer / Count (live)
     const std::vector<Part*>& Parts() const { return liveParts; }
+    // IEnumerable<Part> (:942 GetEnumerator)
+    std::vector<Part*>::iterator begin() { return liveParts.begin(); }
+    std::vector<Part*>::iterator end() { return liveParts.end(); }
     Part*& operator[](size_t index) { return liveParts.at(index); }
     int LiveCount() const { return static_cast<int>(liveParts.size()); }
     // :742 Clear, :747 Add, :752 Remove, :757 Contains, :772 AddToConstruct (recursive over `children`)

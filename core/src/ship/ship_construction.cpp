@@ -68,10 +68,6 @@ std::string NameOf(const std::string& fullName) {  // DirectoryInfo.Name
     return std::string(s.begin(), s.end());
 }
 
-void CaptureThumbnail(ShipConstruct* ship, const std::string& baseFolder, const std::string& thumbURL) {
-    if (ShipConstruction::env.captureThumbnail) ShipConstruction::env.captureThumbnail(ship, baseFolder, thumbURL);
-}
-
 // Retains ProtoVessels removed from a FlightState: in C# the vessel's `protoVessel` reference keeps the object alive
 std::vector<std::unique_ptr<ProtoVessel>>& RemovedProtoVessels() {
     static std::vector<std::unique_ptr<ProtoVessel>> removed;
@@ -602,6 +598,16 @@ void ShipConstruction::RecoverVesselFromFlight(ProtoVessel& vessel, FlightState&
 }
 
 // ---- templates, subassemblies (ShipConstruction.cs:937-985, 1113-1195) ---------------------------------------------------------------------------
+
+// ShipConstruction.cs:829 (HighlightRecursive and the camera angles are UI)
+void ShipConstruction::CaptureStockThumbnail(ShipConstruct* ship, const std::string& craftPath, bool expansion) {
+    if (env.captureStockThumbnail) env.captureStockThumbnail(ship, craftPath, expansion);
+}
+
+// ShipConstruction.cs:846
+void ShipConstruction::CaptureThumbnail(ShipConstruct* ship, const std::string& baseFolder, const std::string& thumbURL) {
+    if (env.captureThumbnail) env.captureThumbnail(ship, baseFolder, thumbURL);
+}
 
 // ShipConstruction.cs:937
 std::unique_ptr<ShipTemplate> ShipConstruction::LoadTemplate(const std::string& shipFilename) {

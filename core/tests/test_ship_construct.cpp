@@ -1310,6 +1310,27 @@ TEST_CASE("WP-18 ShipConstruction.LoadShip / SaveShip / backups / SaveShipToPath
     CHECK(sa2->LiveCount() == 21);
     CHECK(ShipConstruction::LoadSubassembly((vabDir / "nope.craft").string()) == nullptr);
 
+    // the thumbnail hooks (CraftThumbnail is UI): CaptureStockThumbnail / CaptureThumbnail only reach the environment's callbacks
+    {
+        std::vector<std::string> stock;
+        ShipConstruction::env.captureStockThumbnail = [&](ShipConstruct*, const std::string& path, bool expansion) { stock.push_back(path + (expansion ? "|exp" : "|stock")); };
+        ShipConstruction::CaptureStockThumbnail(ship.get(), "a.png", true);
+        ShipConstruction::CaptureStockThumbnail(ship.get(), "b.png", false);
+        CHECK(stock == std::vector<std::string>{"a.png|exp", "b.png|stock"});
+        thumbs.clear();
+        ShipConstruction::CaptureThumbnail(ship.get(), "thumbs", "x");
+        CHECK(thumbs == std::vector<std::string>{"thumbs|x"});
+    }
+    // IEnumerable<Part>: range-for over the live parts
+    {
+        size_t n = 0;
+        for (Part* p : *ship) {
+            CHECK(p == ship->liveParts[n]);
+            n++;
+        }
+        CHECK(n == 21);
+    }
+
     // LoadTemplate: the template of a file (no parts instantiated)
     std::unique_ptr<ShipTemplate> t = ShipConstruction::LoadTemplate((vabDir / "PhysProf-S.craft").string());
     REQUIRE(t != nullptr);
@@ -2052,5 +2073,162 @@ TEST_CASE("WP-18 launch-site queries on the physprofile save: FindVesselsLandedA
         CHECK(rec.events[0].second == true);
         CHECK(fs.protoVessels.empty());
         CHECK(quiet.Has(log::Level::Info, "recovered"));
+    }
+}
+
+// ====================================================================================================================
+// Compatibility checks, craft id sanitising, id tracking modules, recovery of a loaded vessel
+// ====================================================================================================================
+
+TEST_CASE("WP-18 AllPartsFound / IsCompatible / FindPartWithCraftID / SanitizeCraftIDs") {
+    if (!GameAvailable()) return;
+    Game15 g;
+    LogCapture quiet;
+    ShipConstructionScope scope;
+    ConfigNode::NodePtr up = Upgraded(fs::path(KSPCORE_HARNESS_DIR) / "inputs" / "Ships" / "VAB" / "Kerbal 2.craft");
+    REQUIRE(up);
+    // AllPartsFound: needs a root and a non-null error string
+    std::string error = "";
+    CHECK(ShipConstruction::AllPartsFound(up.get(), &error));
+    CHECK(error.empty());
+    CHECK_FALSE(ShipConstruction::AllPartsFound(nullptr, &error));
+    CHECK_FALSE(ShipConstruction::AllPartsFound(up.get(), nullptr));
+    {   // an unknown part appends the "missing part" text per part and fails
+        ConfigNode::NodePtr bad = up->CreateCopy();
+        bad->nodes()[0]->SetValue("part", "noSuchPart_1");
+        bad->nodes()[1]->SetValue("part", "otherMissing_2");
+        std::string e = "prefix:";
+        CHECK_FALSE(ShipConstruction::AllPartsFound(bad.get(), &e));
+        CHECK(e.rfind("prefix:", 0) == 0);
+        CHECK(e.find("noSuchPart") != std::string::npos);
+        CHECK(e.find("otherMissing") != std::string::npos);
+        // a part with a registered replacement (PartLoader.AddPartReplacement) counts as found: DoesPartHaveReplacement is enough, even
+        // when the replacement itself does not exist
+        SaveEnvironment::Current().partReplacements.emplace_back("noSuchPart", "fuelTank");
+        e = "";
+        CHECK_FALSE(ShipConstruction::AllPartsFound(bad.get(), &e));
+        CHECK(e.find("noSuchPart") == std::string::npos);
+        CHECK(e.find("otherMissing") != std::string::npos);
+        SaveEnvironment::Current().partReplacements.emplace_back("otherMissing", "doesNotExistEither");
+        e = "";
+        CHECK(ShipConstruction::AllPartsFound(bad.get(), &e));
+        CHECK(e.empty());
+        SaveEnvironment::Current().partReplacements.clear();
+    }
+    // IsCompatible: the craft version against lastCompatible (0.18.0)
+    error = "";
+    CHECK(ShipConstruction::IsCompatible(up.get(), &error));
+    CHECK(error.empty());
+    {
+        ConfigNode::NodePtr old = up->CreateCopy();
+        old->SetValue("version", "0.17.9");
+        std::string e = "";
+        CHECK_FALSE(ShipConstruction::IsCompatible(old.get(), &e));
+        CHECK_FALSE(e.empty());
+        old->SetValue("version", "0.18.0");
+        e = "";
+        CHECK(ShipConstruction::IsCompatible(old.get(), &e));
+        CHECK(e.empty());
+        CHECK_FALSE(ShipConstruction::IsCompatible(nullptr, &e));
+        CHECK_FALSE(ShipConstruction::IsCompatible(old.get(), nullptr));
+    }
+    // FindPartWithCraftID looks in EditorLogic.fetch.ship
+    ShipConstruct ship;
+    std::string err;
+    REQUIRE(ship.LoadShipWithParts(*up, 0, true, err));
+    CHECK_THROWS_AS(ShipConstruction::FindPartWithCraftID(1), NullReferenceException);   // no editor ship
+    ShipConstruction::env.editorShip = &ship;
+    for (Part* p : ship.liveParts) CHECK(ShipConstruction::FindPartWithCraftID(p->fields.craftID) == p);
+    CHECK(ShipConstruction::FindPartWithCraftID(7) == nullptr);
+    // SanitizeCraftIDs: a part of the given list whose craftID another live part also has gets a new id (the given part, or the other
+    // one when preserveIDsOnGivenParts); Part.allParts is the scene's part list
+    ClearIds();
+    ShipConstruct ship2;
+    REQUIRE(ship2.LoadShipWithParts(*up, 0, true, err));   // the same craftIDs as `ship`
+    Part* mine = ship2.liveParts[2];
+    Part* other = ship.liveParts[2];
+    REQUIRE(mine->fields.craftID == other->fields.craftID);
+    const uint32_t shared = mine->fields.craftID;
+    ShipConstruction::SanitizeCraftIDs({mine}, false);
+    CHECK(mine->fields.craftID == mine->instanceID);          // (uint)part.GetInstanceID()
+    CHECK(other->fields.craftID == shared);
+    mine->fields.craftID = shared;
+    ShipConstruction::SanitizeCraftIDs({mine}, true);
+    CHECK(mine->fields.craftID == shared);
+    CHECK(other->fields.craftID == other->instanceID);
+    ShipConstruction::env.editorShip = nullptr;
+}
+
+namespace {
+// ModuleRoboticController (Serenity) implements IShipConstructIDChanges; this stand-in records what LoadShip tells it
+class TrackerModule : public PartModule, public IShipConstructIDChanges {
+public:
+    explicit TrackerModule(const ModuleClassInfo& c) : PartModule(c) {}
+    void UpdatePersistentIDs(const std::map<uint32_t, uint32_t>& changed) override {
+        seen = changed;
+        calls++;
+    }
+    std::map<uint32_t, uint32_t> seen;
+    int calls = 0;
+};
+}  // namespace
+
+TEST_CASE("WP-18 LoadShip re-issues duplicate part persistentIds and tells IShipConstructIDChanges modules; Part.ship is cleared with the ship") {
+    if (!GameAvailable()) return;
+    Game15 g;
+    LogCapture quiet;
+    ShipConstructionScope scope;
+    ConfigNode::NodePtr up = Upgraded(fs::path(KSPCORE_HARNESS_DIR) / "inputs" / "Ships" / "VAB" / "Kerbal 2.craft");
+    REQUIRE(up);
+    // two parts with the same persistentId: the second is re-issued (CheckPartpersistentId), the pair is recorded once, a warning is
+    // logged for a third part with the same old id
+    ConfigNode::NodePtr dup = up->CreateCopy();
+    const std::string id0 = *dup->nodes()[0]->GetValuePtr("persistentId");
+    dup->nodes()[1]->SetValue("persistentId", id0);
+    dup->nodes()[2]->SetValue("persistentId", id0);
+    uint32_t oldId = 0;
+    REQUIRE(dotnet::TryParseUInt32(id0, oldId));
+    ShipConstruct a;
+    TrackerModule* tracker = nullptr;
+    std::shared_ptr<TrackerModule> keep;
+    ShipConstruct::partTechAvailable = [&](const AvailablePart&) {
+        // called by InstantiateParts for each part before the id hand-over: attach the tracker to the root part once
+        if (keep == nullptr && !a.ownedParts.empty()) {
+            keep = std::make_shared<TrackerModule>(*GetPartModuleClass("PartModule"));
+            tracker = keep.get();
+            a.ownedParts[0]->Modules().Add(keep);
+        }
+        return true;
+    };
+    std::string err;
+    REQUIRE(a.LoadShipWithParts(*dup, 0, true, err));
+    ShipConstruct::partTechAvailable = nullptr;
+    REQUIRE(tracker != nullptr);
+    CHECK(a.liveParts[0]->fields.persistentId == oldId);                       // the first part keeps its id
+    CHECK(a.liveParts[1]->fields.persistentId != oldId);                       // the second is re-issued
+    CHECK(a.liveParts[2]->fields.persistentId != oldId);
+    std::set<uint32_t> ids;
+    for (Part* p : a.liveParts) ids.insert(p->fields.persistentId);
+    CHECK(ids.size() == a.liveParts.size());                                   // all part ids of a ship are distinct
+    CHECK(tracker->calls == 1);
+    REQUIRE(tracker->seen.size() == 1);                                        // the old id appears once (the dictionary keeps the first pair)
+    CHECK(tracker->seen.begin()->first == oldId);
+    CHECK(tracker->seen.begin()->second == a.liveParts[1]->fields.persistentId);
+    CHECK(quiet.Has(log::Level::Warning, "The same persistentID existed on two parts in this ship"));
+    // the registry knows the live parts: loading the same ids again (without clearing) re-issues them all, the first ship keeps its ids
+    const uint32_t firstShipId = a.liveParts[3]->fields.persistentId;
+    ShipConstruct b;
+    REQUIRE(b.LoadShipWithParts(*up, 0, true, err));
+    CHECK(a.liveParts[3]->fields.persistentId == firstShipId);
+    int clashes = 0;
+    std::set<uint32_t> aIds(ids);
+    for (Part* p : b.liveParts) clashes += static_cast<int>(aIds.count(p->fields.persistentId));
+    CHECK(clashes == 0);
+    // Part.ship is cleared when the ship dies (the parts the ship owns do not outlive it here; the destructor must not touch freed parts)
+    {
+        ShipConstruct tmp;
+        ClearIds();
+        REQUIRE(tmp.LoadShipWithParts(*up, 0, true, err));
+        CHECK(tmp.liveParts[0]->ship == &tmp);
     }
 }

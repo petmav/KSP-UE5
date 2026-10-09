@@ -52,8 +52,10 @@ struct ShipConstructionEnvironment {
     ShipConstruct* editorShip = nullptr;         // EditorLogic.fetch.ship
     // KSPSteamUtils.GetSteamIDFromSteamFolder(path); unset: 0
     std::function<uint64_t(const std::string&)> steamIdFromSteamFolder;
-    // CaptureThumbnail(ship, baseFolder, thumbURL) (UI); unset: nothing
+    // CaptureThumbnail(ship, baseFolder, thumbURL) (CraftThumbnail.TakeSnaphot, UI); unset: nothing
     std::function<void(ShipConstruct*, const std::string& baseFolder, const std::string& thumbURL)> captureThumbnail;
+    // CaptureStockThumbnail(ship, craftPath, expansion) (CraftThumbnail.TakeStockSnaphot, UI); unset: nothing
+    std::function<void(ShipConstruct*, const std::string& craftPath, bool expansion)> captureStockThumbnail;
     // PSystemSetup.Instance.GetSpaceCenterFacility(landedAt) == null -> IsStockLaunchSite(landedAt) (AssembleForLaunch; only a lookup)
     std::function<bool(const std::string&)> isStockLaunchSite;
     // Part.SendMessage("OnPutToGround", query): the part modules that adjust the lowest point (landing gear); unset: none
@@ -141,6 +143,10 @@ public:
     static std::vector<ProtoVessel*> FindVesselsAtLaunchSite(const FlightState* flightState, const std::string& launchSiteName);
     static void RecoverVesselFromFlight(ProtoVessel& vessel, FlightState& fromState);               // :753
     static void RecoverVesselFromFlight(ProtoVessel& vessel, FlightState& fromState, bool quick);   // :758
+
+    // :829 / :846: the part-0 highlight is reset (Part.HighlightRecursive, UI), then the thumbnail hook of the environment runs
+    static void CaptureStockThumbnail(ShipConstruct* ship, const std::string& craftPath, bool expansion);
+    static void CaptureThumbnail(ShipConstruct* ship, const std::string& baseFolder, const std::string& thumbURL);
 
     static std::unique_ptr<ShipTemplate> LoadTemplate(const std::string& shipFilename);  // :937
     static std::string SaveSubassembly(ShipConstruct& ship, const std::string& shipFilename);   // :950
