@@ -1,0 +1,37 @@
+name: ci
+
+# Private repo. Builds core/ (kspcore) and runs every gate: unit tests, golden gates against harness/golden, capture gates
+# against harness/captures, and the portable-libm checks. No KSP install and no Unreal are needed: the tests read
+# core/testdata/GameData-mirror. See CLOUD-TASKS.md.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        # with: { lfs: true }   # only if the LFS lines in .gitattributes are enabled
+      - name: Tools
+        run: sudo apt-get update && sudo apt-get install -y ninja-build clang cmake python3
+      - name: Build and test (linux-rel, clang)
+        working-directory: core
+        run: ./run_tests.sh -f
+      - name: Build and test (linux-gcc-rel, g++)
+        working-directory: core
+        run: ./run_tests.sh -p linux-gcc-rel -f
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build and test (MSVC, RelWithDebInfo; msvcr120 DLL libm)
+        working-directory: core
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File run_tests.ps1 -Fresh

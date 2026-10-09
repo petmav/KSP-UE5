@@ -1,0 +1,41 @@
+# KSP-UE5 root .gitattributes
+# Rule of thumb: nothing that is compared byte for byte may be touched by line-ending conversion.
+
+* text=auto
+
+# Source and docs: normalise to LF in the repo, native on checkout.
+*.cpp text
+*.hpp text
+*.h text
+*.c text
+*.inc text
+*.py text eol=lf
+*.sh text eol=lf
+*.md text
+*.txt text
+*.cmake text
+CMakeLists.txt text
+*.ps1 text
+
+# KSP data: byte-exact. ConfigNode output is CRLF + UTF-8 without BOM on every platform (KSP's format); the tests compare bytes.
+*.cfg -text
+*.craft -text
+*.sfs -text
+*.loadmeta -text
+*.tsv -text
+core/testdata/** -text
+
+# Goldens and captures keep their exact bytes (LF, shortest-round-trip numbers).
+*.json -text
+*.bin binary
+*.dds binary
+*.png binary
+*.mu binary
+*.assets binary
+*.resS binary
+
+# Git LFS (OFF by default: enabling it needs `git lfs install`, `git add --renormalize .`, and `lfs: true` in the CI checkout;
+# see CLOUD-TASKS.md "LFS"). Uncomment to enable. Files are 45 MB / 8 MB each, below GitHub's 100 MB hard limit.
+#core/data/terrain/maps/*.bin filter=lfs diff=lfs merge=lfs -text
+#harness/captures/out/libm_mono.json filter=lfs diff=lfs merge=lfs -text
+#harness/captures/out/libm_dotnet.json filter=lfs diff=lfs merge=lfs -text

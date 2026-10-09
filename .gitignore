@@ -1,0 +1,41 @@
+# KSP-UE5 root .gitignore (private repo; the game install and tool downloads never go in)
+
+# --- the game copy and decompile tooling (GBs; Steam-derived or downloaded) ---
+decompiled/KSP-dev/
+decompiled/backup/
+decompiled/KSP-Decompiled-profiling/
+decompiled/tools/dotnet-sdk/
+decompiled/tools/de4dot/
+decompiled/tools/ilspycmd/
+decompiled/logs/*.log
+!decompiled/logs/*.csv
+
+# --- harness caches and downloaded libraries ---
+harness/lib/
+harness/build/
+harness/tools-cache/
+
+# --- build trees, worktrees ---
+**/build/
+**/.worktrees/
+
+# --- Unreal ---
+ue5/Binaries/
+ue5/Intermediate/
+ue5/DerivedDataCache/
+ue5/Saved/
+ue5/Stub/build/
+
+# --- misc ---
+**/__pycache__/
+*.pyc
+*.pdb
+!**/testdata/**/*.pdb
+.vs/
+*.user
+
+# build intermediates of helper tools
+**/obj/
+decompiled/tools/IlspyExport/bin/
+decompiled/_archive/
+*_src/
