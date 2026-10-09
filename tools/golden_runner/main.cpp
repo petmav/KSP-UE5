@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 
+#include "game_root.hpp"
 #include "datasets.hpp"
 
 int WriteCandidate(const RunnerOptions& opt, const golden::File& g, const std::string& relPath) {
@@ -57,7 +58,7 @@ int main(int argc, char** argv) {
         else return Usage();
     }
     if (opt.harness.empty() || opt.out.empty()) return Usage();
-    if (opt.gamedata.empty()) opt.gamedata = opt.harness + "/../decompiled/KSP-dev/GameData";
+    if (opt.gamedata.empty()) opt.gamedata = ksp::testing::GameRoot() + "/GameData";  // mirror, or env KSP_GAMEDATA_ROOT
     for (auto* s : {&opt.harness, &opt.out, &opt.gamedata})
         for (char& c : *s)
             if (c == '\\') c = '/';

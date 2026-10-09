@@ -10,6 +10,7 @@
 #include <set>
 #include <string>
 
+#include "game_root.hpp"
 #include "doctest/doctest.h"
 #include "ksp/celestial/celestial_system.hpp"
 #include "ksp/celestial/flight_atmosphere.hpp"
@@ -392,7 +393,7 @@ TEST_CASE("biome maps, mini-biomes and asset origins come from the game's files"
     CHECK(heightMap);
     CHECK(scaledMain);
     // every referenced asset file exists in the dev copy of the game (when present)
-    const std::filesystem::path game = std::filesystem::path(dotnet::Utf8ToWide(kProjectRoot)) / "decompiled" / "KSP-dev";
+    const std::filesystem::path game = ksp::testing::GameRoot();  // mirror has zero-byte placeholders for these files
     if (std::filesystem::exists(game)) {
         for (const auto& p : s.bodies) {
             for (const GameAssetRef& a : p.body.assets) {

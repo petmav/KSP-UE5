@@ -12,6 +12,7 @@
 #include <set>
 #include <string>
 
+#include "game_root.hpp"
 #include "datasets.hpp"  // Sha256Hex (tools/golden_runner/sha256.cpp)
 #include "doctest/doctest.h"
 #include "ksp/core/exceptions.hpp"
@@ -228,7 +229,7 @@ TEST_CASE_FIXTURE(GlobalStateGuard, "terrain: extracted maps match the manifest 
         REQUIRE(bytes.has_value());
         CHECK(static_cast<int64_t>(bytes->size()) == info->bytes);
         CHECK(Sha256Hex(*bytes) == info->sha256);
-        CHECK(std::filesystem::exists(kRoot + "/decompiled/KSP-dev/" + info->file));
+        CHECK(std::filesystem::exists(ksp::testing::GameRoot() + "/" + info->file));  // mirror: zero-byte placeholder
         const auto map = Maps().Get(key);
         CHECK(map->Width() == info->width);
         CHECK(map->GetOrigin().pathID == info->pathID);

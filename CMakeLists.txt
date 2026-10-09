@@ -50,6 +50,10 @@ set(KSP_PROJECT_ROOT "${_ksp_root_guess}" CACHE PATH "KSP-UE5 project root")
 cmake_path(NORMAL_PATH KSP_PROJECT_ROOT)
 set(KSP_HARNESS_DIR "${KSP_PROJECT_ROOT}/harness" CACHE PATH "Golden-output harness directory (read-only)")
 
+# Game root for the tests: the committed mirror by default (testdata/GameData-mirror, built by tools/mk_gamedata_mirror.py),
+# or a real install (-DKSP_GAMEDATA_ROOT=... at configure time, or env KSP_GAMEDATA_ROOT at run time, which wins).
+set(KSP_GAMEDATA_ROOT "${PROJECT_SOURCE_DIR}/testdata/GameData-mirror" CACHE PATH "KSP game root the tests read (GameData/, Physics.cfg, PartDatabase.cfg)")
+
 option(KSPCORE_BUILD_TESTS "Build unit tests and the golden gate" ON)
 # The VS2013 CRT libm functions (cosh, sinh, pow, tanh, asin, atan, exp, atan2, tan, acos, log, log10): on Windows the
 # default is to call msvcr120_clr0400.dll / msvcr120.dll; elsewhere (and with this option ON) the bit-exact portable

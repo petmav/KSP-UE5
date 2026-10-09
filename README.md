@@ -34,6 +34,30 @@ cmake --build --preset relwithdebinfo
 ctest --preset relwithdebinfo
 ```
 
+### Linux (and the cloud): one command
+
+```bash
+cd core
+./run_tests.sh -f                  # preset linux-rel (Clang if installed, else the default compiler), fresh configure
+./run_tests.sh -p linux-gcc-rel -f # GCC
+#   -p <preset>  linux-rel | linux-dbg | linux-gcc-rel     -f fresh     -t <regex>  ctest -R     -b  build only
+```
+
+Needs cmake >= 3.28, ninja, a C++20 compiler (Clang 16+ or GCC 13+) and python3. Build trees: `build/<preset>/`.
+Everything the gates read is in the repository: `harness/` (goldens, captures, inputs), `data/` (extracted terrain and body
+assets), `testdata/GameData-mirror/` (see below). No KSP install, no Unreal, no Windows is needed.
+
+**Portable libm.** `dotnet::LibmBackend()` (also in `kspcore_build_info()`, field `libm=`) says where the VS2013 CRT maths come
+from: Windows loads `msvcr120_clr0400.dll` / `msvcr120.dll`; every other host, or Windows with `-DKSP_LIBM_PORTABLE=ON` (or env
+`KSPCORE_LIBM_PORTABLE=1`), runs a bit-exact software lift of those DLLs' machine code (`src/dotnet/vs2013_libm_gen.cpp`,
+`ucrt_libm_gen.cpp`; generator `tools/libm/gen_main.py`; details STATUS.md "WP-00L"). `libm.portable_vs_dll` (Windows only)
+compares the two on 300,000 inputs per function.
+
+**Game data for the tests.** The tests read `testdata/GameData-mirror/` (built from the game by `tools/mk_gamedata_mirror.py`; every
+`.cfg` byte-identical, empty placeholders with the same paths for everything else, `.dds`/`.mbm` keep their headers, `MANIFEST.json`
+lists counts and SHA-256s) and `testdata/logs/*.log`. Set env `KSP_GAMEDATA_ROOT=<game root>` (the directory with `GameData/`, e.g.
+`decompiled/KSP-dev`) to run the same tests against a real install; `-DKSP_GAMEDATA_ROOT=...` changes the compiled-in default.
+
 ### Toolchain on this machine
 
 | tool | path / version |
@@ -61,6 +85,7 @@ links).
 | `golden.confignode_roundtrip` | WP-02 ConfigNode Load/Save/ToString/Parse; the runner also checks byte-exact `saved/*.cfg` and tree-exact `trees/*.json` | `harness/golden/confignode_roundtrip` |
 | `golden.curves_eval` | WP-01 FloatCurve / Unity AnimationCurve: 366 curves, 28,484 evaluations | `harness/golden/curves_eval` (== native Unity, CAPTURE-SPEC C1) |
 | `golden.orbit_propagation` | WP-07 Orbit: Init, propagation (positions, velocities, anomalies, UpdateFromUT, time to Pe/Ap), UpdateFromStateVectors, Kepler solvers in all three regimes (2,422 rows) | `harness/golden/orbit_propagation` |
+| `libm.portable_vs_dll` | WP-00L (Windows only; prints "skipped" elsewhere): the portable VS2013-CRT / UCRT libm (`dotnet::vs2013::*`, `dotnet::ucrt::*`) against `msvcr120_clr0400.dll` / `ucrtbase.dll`, 300,000 inputs per function | the DLLs on the machine |
 | `corpus.gamedata` | every `.cfg` under `harness/inputs/GameData` and `.craft` under `harness/inputs/Ships`: load, Save->Load->Save byte-identical, Parse == Load, every `key` node loads as a FloatCurve | self-consistency |
 | `golden.physics_constants` | WP-09 PhysicsGlobals: all 213 field rows (value text, numeric value, source layer) after level0 prefab + Physics.cfg | `harness/golden/physics_constants` |
 | `capture.physics_drag_curve` | WP-09 PhysicsGlobals.DragCurveValue (managed float code, Mono rule) | in-game `harness/captures/out/aero_forces_mono.json` (table drag_curve_value) |
@@ -69,7 +94,7 @@ links).
 | `capture.orbit_rails` | WP-08 on-rails propagation through OrbitDriver in the rotating Planetarium frame, warp 1x-100,000x, 4 on-rails SOI transitions (BSP), TimeWarp.fixedDeltaTime | in-game `harness/captures/out2/orbit_rails_ingame.json` (C8) |
 | `golden.atmosphere_curves` | WP-09 CelestialBody atmosphere + FlightIntegrator atmosphere helpers (pressure, temperature, density, speed of sound, Mach, solar attenuation, shock temperature, convection, pseudo-Reynolds) | `harness/golden/atmosphere_curves` |
 | `capture.terrain_height` | WP-11 PQS.GetSurfaceHeight for Kerbin and Mun with the stock mod stacks (prefab data + the game's own height maps): 140,522 samples (1-degree grids, 0.01-degree KSC patch, the pad), public and overrideQuadBuildCheck variants, terrain altitude, per-scene probe heights, PQS radius/radiusMin/radiusMax | in-game `harness/captures/out2/terrain_height.json` |
-| `capture.part_database` | WP-05 GameDatabase + PartLoader (data side) on the real GameData (`decompiled/KSP-dev/GameData`, runner option `--gamedata`): parts, cfg values, modules, cfg-set module fields, propellants, resources, attach nodes, drag cubes, variants, asset paths; scope limits declared in `tests/CMakeLists.txt` | in-game `harness/captures/out2/part_database.json` (C9) |
+| `capture.part_database` | WP-05 GameDatabase + PartLoader (data side) on the GameData mirror (`testdata/GameData-mirror`; env `KSP_GAMEDATA_ROOT` selects a real install; runner option `--gamedata`): parts, cfg values, modules, cfg-set module fields, propellants, resources, attach nodes, drag cubes, variants, asset paths; scope limits declared in `tests/CMakeLists.txt` | in-game `harness/captures/out2/part_database.json` (C9) |
 | `capture.gamedatabase_load_order` | WP-05 GameDatabase load order: every `Load(Audio/Texture/Model): url` and `Config(TYPE) url` line | KSP.log of the C9 capture run (`decompiled/logs/`) |
 
 All of them are bit-exact today (every numeric column max ULP 0, max abs 0).
@@ -215,6 +240,10 @@ contract into FMA.
 | `tools/wp03/` | `gen_game_events.py` (+ `cs_types.py`): regenerates the GameEvents registry from `GameEvents.cs` |
 | `tools/filter_golden.py` | writes a table/column-filtered / `_hex`-stripped copy of a golden or capture file for compare.py |
 | `tools/wp05/` | `gen_part_fields.py` and `gen_module_schema.py` (regenerate the `include/ksp/parts/*.inc` tables from the decompiled C#; never hand-edit), `check_load_log.py` (load-order gate), `estimate_module_defaults.py` (WP-06 diagnostic) |
+| `tools/libm/`, `tools/libm_check/` | WP-00L: `gen_main.py` (+ `gen_lift.py`, `lift_discover.py`) lifts the x64 code of `msvcr120_clr0400.dll` / `ucrtbase.dll` into `src/dotnet/{vs2013,ucrt}_libm_gen.cpp`; `pe_tool.py`, `callgraph.py`, `census.py` research helpers; `libm_check` compares the result with the DLLs |
+| `tools/mk_gamedata_mirror.py` | WP-00L: builds `testdata/GameData-mirror/` from a KSP install (`--verify` checks the manifest) |
+| `testdata/` | WP-00L: `GameData-mirror/` (game root the tests read; `MANIFEST.json`), `logs/` (KSP.log of the C9 capture run) |
+| `run_tests.sh` | the Linux one-command build + test (mirror of `run_tests.ps1`) |
 | `cmake/RunGolden.cmake` | the per-dataset gate |
 | `third_party/` | doctest 2.4.12, nlohmann/json 3.12.0 (pinned, see `third_party/VERSIONS.md`); used by tests/tools only |
 

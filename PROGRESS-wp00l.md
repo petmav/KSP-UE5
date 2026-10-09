@@ -12,3 +12,7 @@
 - !! lifted libm bit-exact vs msvcr120_clr0400.dll on 20k random/fn (libm_check tool, tools/libm_check). segments: 3 (rdata b7ca0.., be530.., data e4fb0). next: big N, fma3=0 sensitivity, Linux build+ctest, force-portable on Windows
 - Windows ctest 20/20 with KSPCORE_LIBM_PORTABLE=1 (env) too. next: Linux build/test; physics_constants path; mirror
 - libm DONE: msvcr120 (12 fns) + ucrt sinf/cosf/powf lifted, bit-exact vs DLLs on Windows (1-2M inputs/fn, tools/libm_check, FMA3 path; fma3=0 differs for exp/tan/pow). generator: tools/libm/gen_main.py {msvcr120|ucrt}. random.cpp/quaternion_native use dotnet::NativeSinf/Cosf/Powf. TODO: ctest libm.portable_vs_dll, linux ctest, physics_constants path, part_database 'resolved', mirror, CI, root files, docs, commit
+- committed checkpoint 1 (linux build + libm). next: Linux ctest full; mirror; CI; root files; docs
+- mirror built (testdata/GameData-mirror, 535 cfg, 2804 GD files, dds/mbm header stubs needed), tests use ksp::testing::GameRoot() (tools/golden_runner/game_root.hpp, env KSP_GAMEDATA_ROOT). Windows 21/21 with mirror. next: Linux fresh run + gcc; portable-forced windows build; CI; root files; docs; commit
+- README/STATUS updated. todo: CLOUD-TASKS.md, Debug+gcc-dbg check, commit, final fresh runs both platforms, report
+- Debug win + linux-dbg 21/21. CLOUD-TASKS written. todo: final fresh RelWithDebInfo win + linux-rel, commit, report

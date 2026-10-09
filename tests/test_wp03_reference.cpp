@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "game_root.hpp"
 #include "doctest/doctest.h"
 #include "ksp/config/config_node.hpp"
 #include "ksp/dotnet/collections.hpp"
@@ -217,9 +218,10 @@ TEST_CASE("WP-03 vs KSP IL on .NET Framework 4.8 (tests/data/wp03_reference.tsv)
         }
     Localizer::Shutdown();
     Localizer::Init();
-    const bool haveDictionary = std::filesystem::exists(KSP_DICTIONARY_CFG);
+    const std::string dictionaryCfg = ksp::testing::GameRoot() + "/GameData/Squad/Localization/dictionary.cfg";  // verbatim in the mirror
+    const bool haveDictionary = std::filesystem::exists(dictionaryCfg);
     if (haveDictionary) {
-        auto root = ConfigNode::Load(KSP_DICTIONARY_CFG);
+        auto root = ConfigNode::Load(dictionaryCfg);
         REQUIRE(root);
         ConfigNode* loc = root->GetNode("Localization");
         REQUIRE(loc);
@@ -227,7 +229,7 @@ TEST_CASE("WP-03 vs KSP IL on .NET Framework 4.8 (tests/data/wp03_reference.tsv)
         Localizer::Instance()->AddTagValuesForLanguage(nodes, "en-us");
         KSPUtil::CacheLocalStrings();
     } else {
-        MESSAGE("dictionary.cfg not found at " << KSP_DICTIONARY_CFG << ": using the built-in English subset");
+        MESSAGE("dictionary.cfg not found at " << dictionaryCfg << ": using the built-in English subset");
         Localizer::InitWithBuiltInEnglish();
     }
 
