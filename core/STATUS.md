@@ -1297,13 +1297,13 @@ unchanged and green. Every ported function cites `File.cs:line` of `decompiled/K
 | PartModuleList, ScalarModuleSetHandler, IScalarModule / IModuleInfo / IPartMassModifier / IPartCostModifier | `modules/part_module.{hpp,cpp}` (`PartGetModuleMass` / `PartGetModuleCosts` = Part.GetModuleMass / GetModuleCosts with the Mono float rule) | gate (module_mass / module_cost), unit |
 | ModuleFactory (AssemblyLoader.GetClassByName + AddComponent) | `ModuleFactory::Register(className, creator)`; unregistered classes are the generic PartModule; `module_behaviours.cpp` registers the stock behaviours below | gate, unit |
 | PartLoader integration (Part.AddModule, PartLoader.ParsePart) | `PartLoader::AddModule`: AddComponent (constructor chain) -> `Awake()` -> `Load(node)`; `PartModuleData::module` holds the object, `cfgFields` is the Fields.Load trace (unchanged contents, WP-05's tests untouched) | gate |
-| VesselModule, VesselModuleManager (VesselModule.cs, VesselModuleManager.cs) | `modules/vessel_module.{hpp,cpp}`: lifecycle, Load/Save through the BaseFieldList, Activation flags and `ShouldBeActive`, wrapper list built from the 25 VesselModule classes of the schema (order from a temporary instance: FlightIntegrator 0, default 999), `AddModulesToVessel` | unit |
+| VesselModule, VesselModuleManager (VesselModule.cs, VesselModuleManager.cs) | `modules/vessel_module.{hpp,cpp}`: lifecycle, Load/Save through the BaseFieldList, Activation flags and `ShouldBeActive`, wrapper list built from the 5 VesselModule classes of the schema (AxisGroupsModule, CometVessel, FlightIntegrator, SuspensionLoadBalancer, CommNetVessel) (order from a temporary instance: FlightIntegrator 0, default 999), `AddModulesToVessel` | unit |
 | ScenarioModule host fields, ScenarioRunner, ProtoScenarioModule.Load (ScenarioModule.cs, ScenarioRunner.cs, ProtoScenarioModule.cs) | `save/game.hpp` ScenarioModule gained `Awake` / `Fields()` / `Events()` / `Store()` (default `SaveFields`/`LoadFields` = BaseFieldList); `modules/scenario_runner.{hpp,cpp}`: ScenarioRunner (Instance, scene events, `AddModule`, proto-module loading in scene order with MissionSystem first, `GetUpdatedProtoModules` wired into `Game.Updated()` through `SaveEnvironment::getUpdatedProtoModules`), ScenarioModuleFactory | unit |
 
 Generators (regenerate, never hand-edit): `tools/wp05/gen_module_schema.py` (extended: also writes `host_schema.inc`; the
 `module_schema.inc` it writes is byte-identical to WP-05's), `tools/wp06/gen_module_members.py` (`module_members.inc`).
 
-### Gate `capture.part_database` after WP-06 (RelWithDebInfo 1.7 s; bit-exact, no tolerance)
+### Gate `capture.part_database` after WP-06 (Linux release 1.7 s; bit-exact, no tolerance)
 
 | table | capture rows | gated | excluded, and why | max ULP |
 |---|---|---|---|---|
@@ -1317,8 +1317,8 @@ Generators (regenerate, never hand-edit): `tools/wp05/gen_module_schema.py` (ext
 `module_fields` provenance of the 32,912 compiled-part rows (printed by the runner): **5,402** are set by the part's MODULE node,
 **256** are results of the ported OnAwake/OnLoad logic below, **27,254** equal the C# initialiser (WP-05's estimate was 27,391
 against the whole capture, before the cfg-set rows were separated). The first run with only initialisers and the loader's
-`Load` differed in 403 rows (58 module-class/field groups): ten of them were host bugs found and fixed (SetValue rejecting a
-string into a null string field, `new`-hidden duplicate field names, null FloatCurves, ...), the rest are the ported behaviours.
+`Load` differed in 403 rows (58 module-class/field groups): the host bugs found and fixed on the way were SetValue rejecting a string
+into a null string field, `new`-hidden duplicate field names and the FloatCurve null/empty default; the rest are the ported behaviours.
 
 `module_mass` / `module_cost`: the 7 non-zero parts are fairingSize1..3 (Mathf.Epsilon clamp), PotatoComet, PotatoRoid
 (-149 = asteroidMass 1 - part mass 150), fireworksLauncherBig / Small; all other parts are 0. Un-dropped at 0 ULP.
