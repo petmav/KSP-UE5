@@ -1,6 +1,8 @@
 // SaveEnvironment, the FlightGlobals persistentId registry, ROCManager's removed-ROC list, Versioning strings;
 // see include/ksp/save/save_environment.hpp.
 #include "ksp/save/save_environment.hpp"
+#include "ksp/parts/part.hpp"
+#include "ksp/vessel/vessel.hpp"
 
 #include <chrono>
 #include <random>
@@ -129,7 +131,13 @@ uint32_t PersistentIdRegistry::CheckPartpersistentId(uint32_t persistentId, cons
     ProtoPartSnapshot* partout2 = nullptr;
     const bool num = persistentLoadedPartIds.TryGetValue(persistentId, partout);
     const bool flag = persistentUnloadedPartIds.TryGetValue(persistentId, partout2);
-    const bool flag2 = false;  // part.vessel != null && ... (no vessel while loading a craft)
+    // FlightGlobals.cs:557 (WP-14: the part's Vessel exists now): the unloaded snapshot belongs to the part's own vessel
+    bool flag2 = false;
+    if (flag && part != nullptr) {
+        const Part* p = static_cast<const Part*>(part);
+        flag2 = p->vessel != nullptr && partout2->pVesselRef != nullptr && p->vessel->persistentId == partout2->pVesselRef->persistentId &&
+                partout2->pVesselRef->persistentId != 0;
+    }
     bool flag3 = false;
     if (num && (partout == nullptr || part == nullptr || partout != part)) flag3 = true;
     else if (flag && !flag2) flag3 = true;

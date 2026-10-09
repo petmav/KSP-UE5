@@ -24,6 +24,7 @@ add_executable(kspcore_tests
     test_part.cpp
     test_resource_flow.cpp
     test_resource_modules.cpp
+    test_vessel.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
 )
@@ -205,3 +206,26 @@ if(EXISTS "${KSP_DEV_DIR}/saves")
         COMMAND save_corpus --saves "${KSP_DEV_DIR}/saves" --ships "${KSP_DEV_DIR}/Ships")
     set_tests_properties(corpus.saves PROPERTIES LABELS corpus TIMEOUT 1800)
 endif()
+
+# WP-14 vessel model: the assembled-vessel capture C10 (captures/out2/aero_forces_vessel.json). structure: the part tree of the three
+# PhysProf crafts assembled into a Vessel; states: the vessel-level atmosphere values + srfSpeed. The parts and aoa_sweep tables are
+# the drag-cube pipeline (WP-21). Dropped columns (each documented in STATUS.md "WP-14"):
+#   structure.cube_names        cube weights are set by module OnStart logic / DragCubeList.ForceUpdate (WP-21 and the module packages);
+#                               the cube NAMES are checked by tests/test_vessel.cpp
+#   structure.node_contact_areas  AttachNode.contactArea is written by DragCubeList.SetPartOcclusion (WP-21)
+#   states.spd                  input: Vessel.speed is the FlightIntegrator spd copied through ApplyFlightIntegratorAtmosphere, and the
+#                               runner feeds it the captured spd, so the column would only compare the capture with itself
+#   states.frame, UT, altitude, aoa_deg, srf_velocity_*, ref_up_*  inputs of the experiment or rigid-body state. srf_velocity_* feed
+#                               UpdateSurfaceSpeeds; the captured `altitude` (the root part's, not the CoM altitude FlightIntegrator uses)
+#                               is only the FALLBACK altitude when the inversion below fails
+# What the remaining states columns are (see ds_vessel_state.cpp):
+#   staticPressurekPa, staticPressureAtm, atmosphericTemperature  consistency checks, NOT independent gates: they are reproduced from an
+#                               altitude recovered by inverting the captured static pressure and a temperature offset recovered by
+#                               inverting the captured temperature. The altitude-to-pressure and altitude-to-temperature models are
+#                               therefore not gated here (golden.atmosphere_curves gates them).
+#   srfSpeed                    output of UpdateSurfaceSpeeds from the captured srf_velocity
+#   density, mach, dynamicPressurekPa, pseudoReynolds, pseudoReDragMult  functions of the captured P, T and spd
+#   cacheDragCubeMultiplier, parts  PhysicsGlobals.DragCubeMultiplier and vessel.parts.Count of the assembled vessel
+ksp_golden_gate(capture.vessel_state vessel_state GOLDEN ${KSP_CAPTURES2_DIR}/aero_forces_vessel.json DROP_HEX
+                TOL ${KSP_CAPTURE_TOL} TABLES structure,states
+                DROP_COLUMNS "structure:cube_names,node_contact_areas/states:frame,UT,altitude,spd,aoa_deg,srf_velocity_x,srf_velocity_y,srf_velocity_z,ref_up_x,ref_up_y,ref_up_z")

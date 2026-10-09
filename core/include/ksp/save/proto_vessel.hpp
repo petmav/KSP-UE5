@@ -46,6 +46,8 @@ struct PartResource;
 class PartResourceDefinition;
 struct AttachNode;
 struct AvailablePart;
+class ITargetable;
+class FlightState;
 
 // Dictionary<string, KSPParseable> (insertion order; Add of a duplicate key throws ArgumentException)
 using KSPParseableDictionary = dotnet::Dictionary<std::string, KSPParseable>;
@@ -62,6 +64,8 @@ public:
 
     ProtoTargetInfo() = default;                     // ProtoTargetInfo.cs:68
     explicit ProtoTargetInfo(const ConfigNode& node);  // :73
+    explicit ProtoTargetInfo(ITargetable* tgt);        // :44 (WP-14: vessel / part module / generic targets; implemented in vessel/vessel_transitions.cpp)
+    ITargetable* FindTarget() const;                   // :143 (WP-14; vessels and part modules; bodies are not ITargetable in kspcore)
     void Load(const ConfigNode& node);               // :79
     void Save(ConfigNode& node) const;               // :103
 };
@@ -310,12 +314,19 @@ public:
 
     // ProtoVessel.cs:254 (st = the Game, may be nullptr)
     ProtoVessel(const ConfigNode& node, Game* st);
+    // ProtoVessel.cs:149 / :153 (WP-14, vessel/vessel_transitions.cpp): the snapshot of a live Vessel; sets vesselRef.protoVessel
+    explicit ProtoVessel(Vessel& VesselRef);
+    ProtoVessel(Vessel& VesselRef, bool preCreate);
+    // ProtoVessel.cs:633 / :638 (WP-14): creates the unloaded Vessel (vessel == nullptr: the caller owns the result) or fills `vessel`
+    std::unique_ptr<Vessel> Load(FlightState* st, Vessel* vessel = nullptr);
+    void ResetProtoPartSnapShots();  // :615
     ProtoVessel(const ProtoVessel&) = delete;
     ProtoVessel& operator=(const ProtoVessel&) = delete;
     // ProtoVessel.cs:513
     void Save(ConfigNode& node);
     // ProtoVessel.cs:597 (no live vessel: only creates the node when it is null)
     void SaveVesselModules();
+    void SaveLiveVesselModules();  // WP-14: ProtoVessel.cs:604-611 (vesselRef != null)
 
     // ProtoVessel.cs:821 LoadObjects (WP-13): the parts of the snapshots, root = protoPartSnapshots[rootIndex]; a snapshot whose
     // part is unknown is skipped (its index shifts the later ones, as in C#). The Vessel (WP-14) takes the parts over.

@@ -5,10 +5,20 @@
 
 namespace ksp {
 
+namespace {
+// PositionTarget.cs:5 `new GameObject()`: Unity names a GameObject created without a name "New Game Object" (what
+// ProtoTargetInfo saves as uniqueName for a generic target, ProtoTargetInfo.cs:64)
+std::unique_ptr<UnityEngine::Transform> NewGameObject() {
+    auto g = std::make_unique<UnityEngine::Transform>();
+    g->name = "New Game Object";
+    return g;
+}
+}  // namespace
+
 // PositionTarget.cs:11 / :16 (displayName stays null = "" when not given)
-PositionTarget::PositionTarget(const std::string& name) : g_(std::make_unique<UnityEngine::Transform>()), name_(name) {}
+PositionTarget::PositionTarget(const std::string& name) : g_(NewGameObject()), name_(name) {}
 PositionTarget::PositionTarget(const std::string& name, const std::string& displayName)
-    : g_(std::make_unique<UnityEngine::Transform>()), name_(name), displayName_(displayName) {}
+    : g_(NewGameObject()), name_(name), displayName_(displayName) {}
 
 // PositionTarget.cs:22
 void PositionTarget::Update(CelestialBody& body, double latitude, double longitude) {

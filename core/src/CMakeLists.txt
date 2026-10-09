@@ -99,6 +99,18 @@ add_library(kspcore STATIC
     save/proto_vessel.cpp
     save/proto_part_live.cpp
     save/game.cpp
+    vessel/action_group_list.cpp
+    vessel/axis_groups_module.cpp
+    vessel/discovery_info.cpp
+    vessel/flight_com_tracker.cpp
+    vessel/flight_ctrl_state.cpp
+    vessel/flight_logger.cpp
+    vessel/module_trip_logger.cpp
+    vessel/vessel.cpp
+    vessel/vessel_assembly.cpp
+    vessel/vessel_motion.cpp
+    vessel/vessel_transitions.cpp
+    vessel/vessel_values.cpp
     save/upgrade_pipeline.cpp
     save/ship_construct.cpp
     save/game_persistence.cpp

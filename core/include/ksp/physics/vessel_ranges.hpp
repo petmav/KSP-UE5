@@ -9,7 +9,7 @@ namespace ksp {
 class ConfigNode;
 
 // Vessel.Situations (Vessel.cs:25), a [Flags]-style enum.
-enum class VesselSituations : int32_t {
+enum class Vessel_Situations : int32_t {  // the name GameEvents' payloads declare (game_event_types.hpp)
     LANDED = 1,
     SPLASHED = 2,
     PRELAUNCH = 4,
@@ -19,6 +19,7 @@ enum class VesselSituations : int32_t {
     ESCAPING = 0x40,
     DOCKED = 0x80,
 };
+using VesselSituations = Vessel_Situations;  // WP-14: one type for both spellings
 const char* ToString(VesselSituations s);  // Enum.ToString() (name; numeric text for unnamed values)
 
 class VesselRanges {
