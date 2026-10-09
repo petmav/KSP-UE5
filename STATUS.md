@@ -18,7 +18,7 @@ Updated 2026-10-09 (WP-05). One command: `powershell -NoProfile -ExecutionPolicy
 | 7. WP-03 event bus, FSM, utilities (branch `wp03`, merged) | done: typed event bus + full GameEvents registry (469 events), KerbalFSM, KSPUtil engine-independent parts, Localizer + Lingoona fallback, UtilMath completed, .NET collection/enum semantics, Simplex; gated by unit tests incl. 6,437 values from KSP's IL (no golden dataset), see below |
 | 9. WP-11 terrain height maths (branch `wp11`) | done: PQS height evaluation (SetupMods/List.Sort, radii, GetSurfaceHeight both variants), all 28 height PQSMods, MapSO, KSP's LibNoise subset, native Quaternion.FromToRotation, stock mod stacks for all 15 PQS bodies generated from the game's prefabs, the game's 16 height maps/decals extracted with a manifest; capture gate bit-exact on 140,522 Kerbin/Mun samples. See "WP-11" below |
 
-| 10. WP-05 UrlDir, GameDatabase (data), PartLoader (data), resource library (branch `wp05`) | done for the data side: UrlDir + GameDatabase load order identical to KSP.log (2,836 lines), PartLoader compiles all 353 GameData parts + the 9 prefab-part slots; `capture.part_database` gate bit-exact on every in-scope C9 row (parts, cfg values, modules, cfg-set module fields, propellants, resources, attach nodes, drag cubes, variants, asset paths). Module instantiation is WP-06, model contents the UE import. See "WP-05" below |
+| 10. WP-05 UrlDir, GameDatabase (data), PartLoader (data), resource library (branch `wp05`, merged in `bfb732f`) | done for the data side: UrlDir + GameDatabase load order identical to KSP.log (2,836 lines), PartLoader compiles all 353 GameData parts + the 9 prefab-part slots; `capture.part_database` gate bit-exact on every in-scope C9 row (parts, cfg values, modules, cfg-set module fields, propellants, resources, attach nodes, drag cubes, variants, asset paths). Module instantiation is WP-06, model contents the UE import. See "WP-05" below |
 
 ## Test results (all 20 ctest tests pass in RelWithDebInfo and in Debug)
 
@@ -333,7 +333,7 @@ Mod_OnQuadBuilt(PQ)` for quad state. Custom/modded stacks: fill `PQS::childMods`
 | `9ed17fb` | WP-11 code, generated stack data, extracted terrain data (data/terrain), extraction/generator tools, capture gate, unit tests, README/STATUS |
 | (this commit) | STATUS: commit hash, PROGRESS-wp11.md final notes |
 
-## WP-05 UrlDir, GameDatabase (data side), PartLoader (data side), resource library (branch `wp05`)
+## WP-05 UrlDir, GameDatabase (data side), PartLoader (data side), resource library (branch `wp05`, merged in `bfb732f`)
 
 State: done for the data side. Every ported function cites `File.cs:line` (Assembly-CSharp). Input is the game's own
 GameData, read in place and never written.
@@ -467,7 +467,7 @@ KEEP_ROWS_FILE, DROP_KEYS_FILE, RENUMBER), `cmake/RunGolden.cmake`, `tools/filte
 
 ### Merge into main (after WP-11)
 
-`wp05` (from `f964447`) merged into main on top of WP-08 and WP-11.
+`wp05` (from `f964447`) merged into main on top of WP-08 and WP-11: merge commit `bfb732f`.
 
 | file | resolution |
 |---|---|
