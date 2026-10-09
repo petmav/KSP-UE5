@@ -39,6 +39,7 @@ add_library(kspcore STATIC
     orbit/patched_conics.cpp
     orbit/patched_conic_solver.cpp
     orbit/maneuver_node.cpp
+    orbit/trajectory.cpp
     events/base_game_event.cpp
     events/game_events.cpp
     fsm/kerbal_fsm.cpp

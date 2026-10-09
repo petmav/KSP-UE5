@@ -33,3 +33,11 @@
   (incl. mun_encounter death after sample 315 via CheckKill stand-in). Excluded world_rel: capture-internal |world_rel - pos.xzy|
   bodies <= 3.725e-9 m (7.9e-17 rel), vessels <= 1.036e-9 m (3.3e-15 rel) = floating-origin rounding.
 - [next] full suite, commit checkpoint; unit tests test_patched_conics.cpp; Trajectory port; STATUS/README
+- [done] full suite 17/17 green; checkpoint commit 04d00cd on wp08
+- (resumed after rate-limit stop; state verified clean at 04d00cd)
+- [next] tests/test_patched_conics.cpp; Trajectory port; STATUS/README; final commit + report
+- [done] tests/test_patched_conics.cpp: 8 cases, 285 assertions, pass (DeltaV: x radial-out, y normal=Cross(-r,v), z prograde)
+- [done] Trajectory port (src/orbit/trajectory.cpp) + test case (89 assertions); quirk: Reframe* throw NRE, tTimes +period after negative fromE
+- [next] full suite; STATUS.md WP-08 section; README rows; commit; report
+- [done] full suite 17/17 RelWithDebInfo + Debug; unit 107 cases / 19,561 assertions; STATUS WP-08 section + README rows
+- [next] final commit + report

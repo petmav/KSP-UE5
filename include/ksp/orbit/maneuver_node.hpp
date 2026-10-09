@@ -1,8 +1,8 @@
 // ManeuverNode (ManeuverNode.cs, 133 lines): a planned burn on a vessel's patched-conic flight plan.
-//   DeltaV      the burn in the node frame (x = radial-out... in KSP's gizmo terms: x radial, y normal, z prograde): the
-//               solver applies it as QuaternionD.LookRotation(vel, Cross(-pos, vel)) * DeltaV in Unity axes (forward =
-//               velocity = prograde, up = Cross(-pos, vel) = orbit normal, right = Cross(up, forward) = radial-out),
-//               see PatchedConicSolver::CheckNextManeuver (PatchedConicSolver.cs:259).
+//   DeltaV      the burn in the node frame, applied by PatchedConicSolver::CheckNextManeuver (PatchedConicSolver.cs:259)
+//               as QuaternionD.LookRotation(vel, Cross(-pos, vel)) * DeltaV in Unity axes: z = prograde (forward = vel),
+//               y = normal (up = Cross(-pos, vel)), x = radial out (right = Cross(up, forward), +pos for a circular orbit);
+//               verified in tests/test_patched_conics.cpp.
 //   GetBurnVector  world-axis (Unity xzy) velocity change at UT: nextPatch velocity - current orbit velocity
 //   GetPartialDv   the remaining change in the (prograde, normal) LookRotation frame of `patch`
 //   nodeRotation   PatchedConicRenderer's gizmo rotation (PatchedConicRenderer.cs:202), UpdateNodeRotation() below

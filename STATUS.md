@@ -14,9 +14,10 @@ Updated 2026-10-09. One command: `powershell -NoProfile -ExecutionPolicy Bypass 
 | 4. WP-09 celestial bodies, atmospheres, PhysicsGlobals (branch `wp09`, merged) | done for the assigned scope: PhysicsGlobals (all fields/curves/properties, LoadDatabase/SaveDatabase), CelestialBody (data model, Awake/Start/CBUpdate/SetupConstants, atmosphere, frames, lat/lon), Planetarium, PSystem spawn + FlightGlobals list, Kerbol catalog of 17 bodies from the game's prefab + asset index, FlightIntegrator atmosphere helpers; 4 new gates bit-exact. Pending WP-07 integration and deferred items: see "WP-09" below |
 | 5. WP-07 Orbit (branch `wp07`, merged) | done: Orbit.cs (everything but DrawOrbit), Targeting.cs (closest-approach intercept search behind `Orbit.FindClosestPoints`), OrbitSnapshot, OrbitUtil (but CalculateIntersections), FoRModes/VesselTargetModes; `CelestialBodyRef` / `PlanetariumFrames` interfaces for WP-09; golden `orbit_propagation` bit-exact (all 5 tables). TransferMath, DirectionTarget, ITargetable deferred (see "WP-07 Orbit") |
 | 6. Integration WP-07/WP-09 (main) | done: Orbit on `ksp::CelestialBody` (CelestialBodyRef deleted), one Planetarium (PlanetariumFrames deleted), `CelestialBodyOrbitAdapter` (OrbitDriver for bodies over ksp::Orbit) attached by `CelestialSystem::Spawn` by default, `body_catalog/orbits` gated in full, integration unit test. See "Integration WP-07/WP-09" below |
+| 8. WP-08 patched conics, SOI transitions, maneuver nodes (branch `wp08`) | done: PatchedConics, PatchedConicSolver, ManeuverNode, Trajectory, OrbitDriver (minus rendering; vessel through `IOrbitDriverVessel`), Planetarium.Orbits; TimeWarp/FlightGlobals/GameSettings subsets; `golden.patched_conics` and the in-game C8 capture `capture.orbit_rails` bit-exact. See "WP-08" below |
 | 7. WP-03 event bus, FSM, utilities (branch `wp03`, merged) | done: typed event bus + full GameEvents registry (469 events), KerbalFSM, KSPUtil engine-independent parts, Localizer + Lingoona fallback, UtilMath completed, .NET collection/enum semantics, Simplex; gated by unit tests incl. 6,437 values from KSP's IL (no golden dataset), see below |
 
-## Test results (all 15 ctest tests pass in RelWithDebInfo and in Debug)
+## Test results (all 17 ctest tests pass in RelWithDebInfo and in Debug)
 
 Every numeric column of every gate: **max ULP 0, max abs 0** (bit-exact, and the same decimal text). Tolerance files:
 harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture gates use `tests/tolerances_capture.json`
@@ -37,7 +38,9 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `capture.physics_drag_curve` | in-game `captures/out/aero_forces_mono.json` table drag_curve_value: PhysicsGlobals.DragCurveValue under Mono | 2,870 | 0 ULP |
 | `golden.body_catalog` | harness golden `body_catalog` (WP-09 + WP-07 Orbit): bodies 17 x 51 cols, orbits 16 x 26 cols (all: elements, Init outputs, state at UT 0), atmosphere_profile_1km 1,072, body_curves 265 | 1,370 | 0 ULP |
 | `golden.atmosphere_curves` | harness golden `atmosphere_curves` (WP-09): profile_100m 2,704, flight_state 2,176 x 19 cols, solar_effects 320 | 5,200 | 0 ULP |
-| `unit` | 98 doctest cases, 19,187 assertions (WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
+| `golden.patched_conics` | WP-08 harness golden `patched_conics` (PatchedConics.CalculatePatch chains, 5 cases) | 11 | 0 ULP |
+| `capture.orbit_rails` | WP-08 in-game `captures/out2/orbit_rails_ingame.json` (C8): initial 6, samples 3,465, frames 450, segments 5, soi_events 4 (probes); world_rel/packed/loaded/inputs excluded (see WP-08) | 3,930 | 0 ULP |
+| `unit` | 107 doctest cases, 19,561 assertions (WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
 differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 6 ULP (Vector3.Project/ProjectOnPlane) and
@@ -557,7 +560,7 @@ the WP-03 KSP-IL reference test (11,032 assertions); all 41 compared golden/capt
 
 ### Deferred / for later packages
 
-- `Planetarium.Orbits` (the OrbitDriver list patched conics read) is not kept; WP-08's `patched_conics` gate will need it.
+- `Planetarium.Orbits` (the OrbitDriver list patched conics read): done in WP-08 (see "WP-08").
 - The harness's bodies never move (its OrbitDriver rehost only calls `Orbit.UpdateFromUT`), kspcore's spawn moves them
   (`updateFromParameters`); any golden column that depends on `CelestialBody.position` (patched_conics:
   getTruePositionAtUT, GetFrameVel chains) must take that into account in its runner.
@@ -566,3 +569,147 @@ the WP-03 KSP-IL reference test (11,032 assertions); all 41 compared golden/capt
 - `GetAtmoThermalStats` now has its Orbit and native AngleAxis inputs; it still needs scaled-space transforms.
 - Scene setup (`PSystemSetup.OnSceneChange` / `SetSpaceCentre` / `SetFlight`: clear inverseRotation/reverse, home body
   inverse rotation) is not ported; until then a spawned system keeps the prefab's Mun/Minmus inverse-rotation state.
+
+## WP-08 patched conics, SOI transitions, maneuver nodes (branch `wp08`)
+
+Spec: `PatchedConics.cs`, `PatchedConicSolver.cs`, `ManeuverNode.cs`, `Trajectory.cs`, `OrbitDriver.cs`,
+`Planetarium.cs` (orbits), `FlightGlobals.cs:1311-1330` (getMainBody/inSOI), `TimeWarp.cs` (fixedDeltaTime, CurrentRate,
+updateRate, assumeWarpRate), `PatchedConicRenderer.cs:200-204` (nodeRotation), `ManeuverGizmo.cs:94-112` (patch state),
+`GameSettings.cs:999-1000`; every ported function cites its line.
+
+### What is ported
+
+| file | contents |
+|---|---|
+| `include/ksp/orbit/patched_conics.hpp` | `PatchedConics`: SolverParameters, the four settable delegates (`CalculatePatch`, `CheckEncounter`, `EncountersBody`, `GetClosestApproach`) with KSP defaults, `AngleWrap`, `TAIsWithinPatchBounds`; `IsBackgroundThread` (thread_local) for KSP's `Thread.CurrentThread.IsBackground` branches |
+| `include/ksp/orbit/patched_conic_solver.hpp` | `PatchedConicSolver` (whole class): Awake (constructor), OnDestroy, Start coroutine (`StartMoveNext`), Update patch loop, UpdateFlightPlan / CheckNextManeuver, FindPatchContainingUT, FindManeuverIndex, Add/RemoveManeuverNode, Increase/DecreasePatchLimit, OnGameSettingsApplied, OnReferenceBodyChange, Load/Save, LastActivePatch |
+| `include/ksp/orbit/maneuver_node.hpp` | `ManeuverNode` (whole class) + `ManeuverGizmoState` (ManeuverGizmo's patchBefore/patchAhead/prevUT/rotation as plain data); `UpdateNodeRotation` = PatchedConicRenderer's nodeRotation |
+| `include/ksp/orbit/orbit_driver.hpp` | `OrbitDriver` (OrbitDriver.cs minus the renderer/DrawOrbit): Start (Planetarium.Orbits.Add), OnDestroy (Remove), FixedUpdate, UpdateOrbit (UPDATE / TRACK_Phys / IDLE), SetOrbitMode, CheckDominantBody, TrackRigidbody, updateFromParameters, RecalculateOrbit, OnRailsSOITransition, Invoke("unlockFrameSwitch") as `RunDelayedCalls`; the vessel is reached through `IOrbitDriverVessel` |
+| `include/ksp/orbit/trajectory.hpp` | `Trajectory` (whole class, logic only; `GetColors` included) |
+| `include/ksp/orbit/time_warp.hpp` | TimeWarp subset (WP-10 owns the class): Modes, curr_rate, warpRates, WarpMode, CurrentRate, fixedDeltaTime (Mono float rule), updateRate |
+| `include/ksp/celestial/flight_globals.hpp` | FlightGlobals subset (WP-19 owns the class): `bodies` (registered by `CelestialSystem::Spawn`), `overrideOrbit`, `getMainBody` |
+| `include/ksp/core/unity_time.hpp`, `include/ksp/util/ksp_util.hpp` | `Time::timeScale`, `Time::fixedDeltaTime`; `GameSettings::CONIC_PATCH_LIMIT = 3`, `ALWAYS_SHOW_TARGET_APPROACH_MARKERS = false` (SetDefaultValues; settings.cfg loading is the GameSettings port's) |
+
+**Planetarium.Orbits** (deferred by the integration, done here): `Planetarium::orbits` (`std::vector<OrbitDriver*>`,
+Planetarium.cs:60) and the static `Planetarium::Orbits()` (null without an instance, Planetarium.cs:84).
+`OrbitDriver::Start` appends, `~OrbitDriver` (OnDestroy) removes. Bodies now have a real `OrbitDriver`:
+`CelestialBodyOrbitAdapter` owns one (`driver`; `orbit` is a reference to `*driver.orbit`), sets `QueuedUpdate = true`
+(CelestialBody.cs:483) and calls `driver.Start()` in its constructor, so `CelestialSystem::Spawn` registers the 16 body
+drivers in spawn order exactly as KSP's OrbitDriver.Start and the harness's KspEnv do. The adapter's `UpdateOrbit` is
+`driver.UpdateOrbit()`; the scene-visible `reverse` flag stays in `CelestialBodyOrbitDriver` (FindRootBody reads it,
+scene setup writes it) and is copied into the driver before each update. `CelestialSystem::Spawn` also registers
+`FlightGlobals::bodies`. WP-07/WP-09 gates and tests are unchanged (bit-exact).
+
+### Gates (RelWithDebInfo and Debug; harness tolerances unchanged; capture tolerance 0 ULP)
+
+| gate / table | rows | compared columns | max abs | max ULP | missing / extra rows |
+|---|---|---|---|---|---|
+| `golden.patched_conics` / patches | 11 (5 cases) | 19 + key (referenceBody, transitions, StartUT/EndUT/UTsoi, 7 elements, PeR, ApR, closestEncounterLevel/Body, ClAppr, UTappr) | 0 | 0 | 0 / 0 |
+| `capture.orbit_rails` / initial | 6 | 13 (body, 7 elements, meanMotion, period, ObTAtEpoch, mu, spawned) | 0 | 0 | 0 / 0 |
+| `capture.orbit_rails` / samples | 3,465 | 25 (segment, UT, warp_rate f32, ref_body, updateUT, pos/vel/relpos_at_UT xyz, 7 elements, ObT, meanAnomaly, trueAnomaly, update_mode) | 0 | 0 | 0 / 0 |
+| `capture.orbit_rails` / frames | 450 | 12 (UT, Planetarium.Zup X/Y/Z, inverseRotAngle, frame_is_rotating) | 0 | 0 | 0 / 0 |
+| `capture.orbit_rails` / segments | 5 | 8 (rate_index, achieved_rate, frames, UT_start/end, Time.fixedDeltaTime, TimeWarp.fixedDeltaTime, timeScale) | 0 | 0 | 0 / 0 |
+| `capture.orbit_rails` / soi_events | 4 (the "HC8" probes) | 10 (from, to, 7 elements of the new patch, warp_rate) | 0 | 0 | 0 / 0 |
+
+`capture.orbit_rails` covers 6 probes and the Mun/Minmus orbits over 1.3e6 game seconds (warp 1x, 100x, 1,000x,
+10,000x, 100,000x) in the rotating Planetarium frame, the 4 on-rails SOI transitions of the probes (Kerbin->Mun at
+1,000x, Mun->Kerbin, Kerbin->Sun at 10,000x, Kerbin->Mun again) with their BSP-located transition UTs, and the
+Mun-encounter probe's destruction after sample 315: all bit-exact.
+
+### What the runners freeze or take from the capture
+
+`golden.patched_conics` (`tools/golden_runner/ds_patched_conics.cpp`): the harness's KspEnv (CelestialEnv: spawn at UT 0,
+`UseHarnessFrame`, Mun/Minmus prefab `inverseRotation = 1` kept as the harness kept it), Planetarium time frozen at 0
+(no FixedUpdate), and **every CelestialBody.position set to (0,0,0)**: the harness never writes a body position (bodies
+are created uninitialised, its OrbitDriver rehost only calls Orbit.UpdateFromUT), kspcore's spawn moves them. Measured:
+for these five cases the result is bit-identical even without the freeze (every position-dependent sum involves only
+Kerbin, which kspcore's reversed root keeps at the origin; escapes to the Sun go through GetOrbitalStateVectorsAtUT);
+the freeze stays for apples-to-apples. Loop and inputs: OrbitGen.cs PatchCases/SolvePatches (patchLimit 6, fresh
+SolverParameters per case, targetBody null).
+
+`capture.orbit_rails` (`tools/golden_runner/ds_orbit_rails.cpp`, capture code `HarnessCapture2Flight.cs:444-625`):
+- inputs read from the capture file (never gated): provenance `ut0`, the requested probe elements `initial.req_*`
+  (exact bits from `_hex`; the Mun-encounter orbit was constructed in game) and `initial.body`, the warp rates
+  `segments.requested_rate` (TimeWarp prefab data, not extracted elsewhere);
+- hidden game state: **Kerbin.directRotAngle = -140.0008910891089**, frozen since the flight scene switched Kerbin to the
+  rotating frame long before the capture. Recovered from the first frames row as (rotationAngle(UT) - inverseRotAngle)
+  % 360; the runner checks that it reproduces that row bit for bit; the other 449 rows (and every orbit column) are
+  predictions;
+- scene state: PSystemSetup.cs:978-990 (all bodies inverseRotation = false / reverse = false, then Kerbin true/true;
+  this clears the prefab's Mun/Minmus flag), Planetarium time = ut0, Planetarium.fixedDeltaTime 0.02, TimeWarp HIGH,
+  `TimeWarp.SetRate(i, instant)` = assumeWarpRate (curr_rate = rate; updateRate), the capture's frame schedule
+  (5 frames, then per segment 1 + {500, 1000, 1000, 1500, 500} frames, a sample every 10th frame). The game clock
+  reproduces bit for bit: UT += 0.02 * timeScale per frame (450/450 sample UTs);
+- frame loop: Planetarium.FixedUpdate (time, CBUpdate pass from Kerbin), then every probe's OrbitDriver.UpdateOrbit
+  (UPDATE mode, `vessel != null`: CheckDominantBody -> RecalculateOrbit -> OnRailsSOITransition), then a runner-only
+  stand-in for Vessel.CheckKill (Vessel.cs:2746: unloaded vessel destroyed above 1 kPa or below altitude -0.1 m);
+- probes go through ProtoVessel.CreateOrbitNode's G17 text (OrbitSnapshot Save/Load) into an UPDATE-mode OrbitDriver;
+  body positions move as in kspcore (Kerbin, the reversed root, stays at its spawn position; the game keeps it near the
+  floating origin; only CheckDominantBody and the Kerbin->Mun BSP read world positions, through differences);
+- excluded columns (COLUMNS in tests/CMakeLists.txt): `samples.world_rel_*` (vessel.GetWorldPos3D() - mainBody.position:
+  floating-origin world positions and the vessel transform / localCoM, WP-14/WP-20; in the capture itself
+  |world_rel - pos.xzy| <= 3.7e-9 m for the bodies and <= 1.0e-9 m for the probes, <= 3.3e-15 relative: floating-origin
+  rounding), `samples.packed/loaded` (Vessel state, WP-14/WP-19), `initial.note` (free text) and the echoed inputs
+  `initial.req_*`, `segments.requested_rate`. Excluded rows (ROWS): the two asteroid SOI captures in `soi_events`
+  (spawned by the game's discovery scenario, not capture inputs). KEYS gives the keyless `soi_events` the key (vessel, UT).
+
+Gate plumbing: `tools/filter_golden.py` gained `--rows t:col^prefix` and `--key t:c1,c2`, `ksp_golden_gate` /
+`cmake/RunGolden.cmake` the matching `ROWS` / `KEYS` arguments; `KSP_CAPTURES2_DIR` = `harness/captures/out2`.
+
+### Unit tests (`tests/test_patched_conics.cpp`, 9 cases, 374 assertions)
+
+Planetarium.Orbits registration (16 body drivers in spawn order, vessel driver added/removed, cleared with the system);
+Kerbin -> Mun encounter -> Mun escape -> Kerbin -> Sun chain (transition on the SOI sphere, position/velocity continuity,
+UTsoi vs the golden); hyperbolic escape from Kerbin to Kerbol; degenerate cases (LEO: one FINAL patch, Sun-centred
+hyperbola with infinite SOI, debug_disableEscapeCheck, no Planetarium -> caught exception, AngleWrap /
+TAIsWithinPatchBounds); PatchedConicSolver patch list, patch limit (GameSettings at Awake, Increase/Decrease, clamp to
+149, OnGameSettingsApplied), IDLE / timeScale 0; maneuver nodes (burn-vector conventions, GetPartialDv, nodeRotation,
+gizmo state, Save/Load + Start coroutine, two-node chains, RemoveSelf); OrbitDriver on-rails SOI transition under
+1,000x warp vs the patch prediction (OnReferenceBodyChange, onVesselSOIChanged, frameShift lock and Invoke release);
+Trajectory sampling (closed FINAL, non-final with faded ends, hyperbola) and the Reframe quirk.
+
+### Quirks and conventions a later implementer must know
+
+1. **ManeuverNode.DeltaV axes**: z = prograde, y = normal (Unity-axis `Cross(-pos, vel)`), x = radial out:
+   `QuaternionD.LookRotation(vel.xzy, Cross(-pos.xzy, vel.xzy)) * DeltaV`, applied to the world-like state vectors of
+   `GetOrbitalStateVectorsAtUT(UT, out State)` (no Zup) and fed to `UpdateFromFixedVectors`.
+2. **The solver's own iteration fields are unused by KSP**: `PatchedConicSolver.maxGeometrySolverIterations` etc. are
+   never copied into its `SolverParameters` (C# defaults 25/50 always apply); ported as is.
+3. **Patch limit** is read once at Awake (`Mathf.Max(CONIC_PATCH_LIMIT, 1)`), on OnGameSettingsApplied only when it
+   differs, and clamped to [1, 149] at each Update; Update keeps going past the limit until the first maneuver node's
+   UT is covered (it can index past patch 149: `std::out_of_range`, KSP's ArgumentOutOfRangeException).
+4. **On-rails SOI transition order**: in the transition frame `updateFromParameters` has already moved the vessel and
+   set `pos` relative to the old body; the orbit is switched afterwards (OnRailsSOITransition at the BSP crossing in
+   [UT - TimeWarp.fixedDeltaTime, UT]); pos becomes relative to the new body at the next update. `frameShift` blocks
+   another SOI change until Unity's `Invoke("unlockFrameSwitch", 1f)`: kspcore hosts must call
+   `OrbitDriver::RunDelayedCalls()` once per frame (Time.time based).
+5. **CalculatePatch only checks drivers with a `celestialBody`** in Planetarium.Orbits whose reference body equals the
+   patch's; a later driver in the list overwrites an earlier encounter's nextPatch (order = spawn order).
+6. **Trajectory**: the Reframe* methods always throw NullReferenceException in KSP (they fill the new Trajectory's null
+   array); tTimes gain one period for every sample with E > 0 once fromE went negative (non-final patches starting near
+   periapsis); `Vs` is not written for hyperbolas. All kept.
+7. **CheckEncounter's target-approach marker** (`ClAppr` for a targeted body outside the SOI) is computed only with
+   GameSettings.ALWAYS_SHOW_TARGET_APPROACH_MARKERS or on a background thread (`PatchedConics::IsBackgroundThread`).
+
+### Deferred (and why)
+
+- **Vessel side of OrbitDriver** (WP-10/WP-14/WP-19): `IOrbitDriverVessel` is the seam; TRACK_Phys / IDLE need a real
+  Vessel (CoMD, rigidbody, velocityD), the NaN-orbit removal needs Vessel.Unload; GameEvents fire with
+  `IOrbitDriverVessel::AsVessel()` (null for non-Vessel hosts). The C8 runner's CheckKill stand-in belongs to Vessel.
+- **TimeWarp / FlightGlobals / GameSettings** are minimal subsets (WP-10 / WP-19 / WP-50 replace them): no rate changes,
+  altitude limits or SOI-rate caps; FlightGlobals has only getMainBody/overrideOrbit/bodies; settings.cfg is not read.
+- **Scene setup** (PSystemSetup / OrbitPhysicsManager rotating-frame switches, Kerbin.directRotAngle history) is set by
+  the C8 runner only; the library still spawns with the prefab's Mun/Minmus inverseRotation flags.
+- **UI and rendering**: PatchedConicRenderer (except nodeRotation), PatchRendering, ManeuverGizmo input handling,
+  ScreenCast picking, MapObject/MapNode, ScreenMessages / maneuver-editor refresh (static hooks on PatchedConicSolver and
+  ManeuverNode), orbit.DrawOrbit.
+- **Alarm clock and transfer planner** (the AlarmClock*/AlarmType* rows of WP-08 in work_packages.csv): not in this
+  assignment.
+- `world_rel` of the C8 capture: needs the floating-origin state (FloatingOrigin/Krakensbane, WP-20) and Vessel transforms.
+
+### Commits (branch `wp08`)
+
+| hash | content |
+|---|---|
+| `04d00cd` | OrbitDriver, Planetarium.Orbits, PatchedConics, PatchedConicSolver, ManeuverNode, TimeWarp/FlightGlobals/GameSettings subsets, both gates, filter ROWS/KEYS |
+| (next commit) | Trajectory, `tests/test_patched_conics.cpp`, STATUS/README |
