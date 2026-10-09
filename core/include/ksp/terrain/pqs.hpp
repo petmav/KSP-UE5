@@ -158,6 +158,10 @@ public:
     double radiusMin = 0.0;
     double radiusDelta = 0.0;
     double halfChord = 0.0;
+    // PQS.cs:338-339 meshVertMin/meshVertMax: reset by SetupBuildDelegates (PQS.cs:2201-2202), raised by every quad
+    // build (PQS.cs:2273; the quad builder is WP-12, so they stay at the reset values here). TimeWarp.cs:529 reads max.
+    double meshVertMin = 1.7976931348623157e308;
+    double meshVertMax = -1.7976931348623157e308;
     int modRequirements = 0;
     bool isFakeBuild = false;
     bool reqVertexMapCoods = false;  // sic (C# name)

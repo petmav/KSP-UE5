@@ -39,6 +39,8 @@ add_library(kspcore STATIC
     orbit/orbit_util.cpp
     orbit/orbit_driver.cpp
     orbit/time_warp.cpp
+    orbit/warp_transition.cpp
+    orbit/position_target.cpp
     orbit/patched_conics.cpp
     orbit/patched_conic_solver.cpp
     orbit/maneuver_node.cpp

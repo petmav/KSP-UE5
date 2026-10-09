@@ -37,6 +37,7 @@
 #include "ksp/dotnet/number.hpp"
 #include "ksp/dotnet/text.hpp"
 #include "ksp/math/quaterniond.hpp"
+#include "ksp/orbit/time_warp.hpp"
 #include "ksp/math/vector3d.hpp"
 #include "ksp/unity/color.hpp"
 #include "ksp/unity/vector.hpp"
@@ -50,6 +51,12 @@ inline bool KERBIN_TIME = true;
 // WP-08 (patched conics): GameSettings.cs:999-1000 SetDefaultValues (settings.cfg may override them in game)
 inline int CONIC_PATCH_LIMIT = 3;
 inline bool ALWAYS_SHOW_TARGET_APPROACH_MARKERS = false;
+// WP-10 (time warp): GameSettings.cs:1003-1011 SetDefaultValues (settings.cfg may override them in game)
+inline bool ORBIT_WARP_DOWN_AT_SOI = true;
+inline bool SHOW_PWARP_WARNING = true;
+inline TimeWarp::MaxRailsRateMode ORBIT_WARP_MAXRATE_MODE = TimeWarp::MaxRailsRateMode::PeAltitude;
+inline double ORBIT_WARP_PEMODE_SURFACE_MARGIN = 250.0;
+inline float ORBIT_WARP_ALTMODE_LIMIT_MODIFIER = 1.0f;
 }
 
 // Versioning (Versioning.cs: values from the shipped asset; KSP 1.12.5 build 3190)
