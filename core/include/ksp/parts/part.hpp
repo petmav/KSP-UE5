@@ -37,6 +37,7 @@
 #include "ksp/parts/part_types.hpp"
 #include "ksp/save/crew.hpp"
 #include "ksp/physics/vessel_ranges.hpp"
+#include "ksp/resources/resource_types.hpp"
 #include "ksp/save/proto_vessel.hpp"
 #include "ksp/unity/bounds.hpp"
 #include "ksp/unity/quaternion.hpp"
@@ -45,6 +46,7 @@
 namespace ksp {
 
 class ModulePartVariants;
+class PartSet;
 class ShipConstruct;
 
 // Unity Transform stand-in for the Part's own transform (position, rotation, localScale): only what the engine-agnostic Part
@@ -112,6 +114,9 @@ public:
     ModulePartVariants* variants = nullptr;        // :137 (set by PartLoader.CompilePartInfo)
     Part* parent = nullptr;                        // :154
     std::vector<Part*> fuelLookupTargets;          // :156
+    std::vector<Part*> resourceTargets;            // :631 protected List<Part> (RequestFuel / FindFuel scratch list)
+    std::shared_ptr<PartSet> crossfeedPartSet;     // :686 (WP-15: PartSet.BuildPartSets)
+    std::shared_ptr<PartSet> simulationCrossfeedPartSet;  // :689
     std::vector<Part*> children;                   // :158
     PartTransform partTransform;                   // :160 (and Component.transform)
     std::vector<std::shared_ptr<ProtoCrewMember>> protoModuleCrew;  // :231
@@ -157,8 +162,8 @@ public:
     int ClassID() const;                           // :1119 className.GetHashCode()
     PartModuleList& Modules() { return modules_; } // :1143 (C#: Modules property)
     const PartModuleList& Modules() const { return modules_; }
-    std::vector<PartResource>& ResourceList() { return Resources; }  // :1155 Resources (PartResourceList is WP-15)
-    std::vector<PartResource>& SimulationResources() { return simulationResources_; }  // :1157
+    PartResourceList& ResourceList() { return Resources; }  // :1155 Resources
+    PartResourceList& SimulationResources() { return simulationResources_; }  // :1157
     Part* RigidBodyPart();                         // :1236
     bool ShieldedFromAirstream() const { return partIsShielded_; }  // :1171
     void set_ShieldedFromAirstream(bool v);        // :1171 (also updates isShieldedDisplay)
@@ -330,6 +335,35 @@ public:
     float GetResourceMass(bool simulate);          // :6547
     float GetResourceMass(float& thermalMass);     // :6559
     float GetResourceMass(double& thermalMass);    // :6574
+
+    // ---- resource flow (WP-15, Part.cs:4676-4830, 6327-6335, 6404-6830) ----------------------------------------------------
+    void ResetSimulationResources(const PartResourceList* sourceList);  // :6332
+    // Part.RequestResource: the flow mode is the resource definition's default unless given; PartSet / vessel / ship do the work
+    virtual float RequestResource(int resourceID, float demand);                       // :6404 [Obsolete]
+    virtual float RequestResource(std::string_view resourceName, float demand);        // :6415 [Obsolete]
+    virtual double RequestResource(int resourceID, double demand);                     // :6425
+    virtual double RequestResource(int resourceID, double demand, bool simulate);      // :6430
+    virtual double RequestResource(std::string_view resourceName, double demand);      // :6440
+    virtual double RequestResource(std::string_view resourceName, double demand, bool simulate);  // :6445
+    virtual double RequestResource(int resourceID, double demand, ResourceFlowMode flowMode);     // :6455
+    virtual double RequestResource(int resourceID, double demand, ResourceFlowMode flowMode, bool simulate);  // :6460
+    virtual double RequestResource(std::string_view resourceName, double demand, ResourceFlowMode flowMode);  // :6465
+    virtual double RequestResource(std::string_view resourceName, double demand, ResourceFlowMode flowMode, bool simulate);  // :6470
+    virtual double TransferResource(int resourceID, double amount);                    // :6589
+    virtual double TransferResource(PartResource& resource, double amount, Part* other);  // :6600
+    virtual double TransferResource(PartResource& resource, double amount, Part* other, bool simulate);  // :6605
+    void GetConnectedResourceTotals(int resourceID, double& amount, double& maxAmount, bool pulling = true);  // :6697
+    virtual void GetConnectedResourceTotals(int resourceID, ResourceFlowMode flowMode, double& amount, double& maxAmount, bool pulling = true);  // :6702
+    void GetConnectedResourceTotals(int resourceID, ResourceFlowMode flowMode, bool simulate, double& amount, double& maxAmount, bool pulling = true);  // :6707 internal
+    void GetConnectedResourceTotals(int resourceID, double& amount, double& maxAmount, double threshold, bool pulling = true);  // :6753
+    virtual void GetConnectedResourceTotals(int resourceID, ResourceFlowMode flowMode, double& amount, double& maxAmount, double threshold, bool pulling = true);  // :6758
+    virtual void GetConnectedResourceTotals(int resourceID, ResourceFlowMode flowMode, bool simulate, double& amount, double& maxAmount, double threshold, bool pulling = true);  // :6763
+    virtual bool CanCrossfeed(Part* target, std::string_view resName, ResourceFlowMode flow = ResourceFlowMode::NULL_);  // :6823
+    virtual bool CanCrossfeed(Part* target, int resourceID, ResourceFlowMode flow = ResourceFlowMode::NULL_);  // :6828
+    // [Obsolete] fuel lookup of the pre-1.0 resource system (kept as in Part.cs)
+    virtual bool RequestFuel(Part* source, float amount, uint32_t reqId);              // :4681
+    virtual bool FindFuel(Part* source, std::vector<Part*>& fuelSources, uint32_t reqId);  // :4756
+    virtual bool DrainFuel(float amount) { return false; }                              // :4825
     // `info` of every resource (the definition lookup PartResourceLibrary does in PartResource.Load)
 
     // ---- mass, cost, size (:4026, 7518-7561) --------------------------------------------------------------------------------
@@ -373,14 +407,13 @@ private:
     bool compund_ = false;                         // :214
     bool canFail_ = true;                          // :414
     int lastRequestID_ = 0;                        // :676
+    double requestResource(Part* origin, int resourceID, ResourceFlowMode flowMode, double demand, bool simulate = false);  // :6475 / :6480
     static inline int ResourceRequestID_ = 0;      // :678
     PartModuleList modules_;                       // :640 (PartModuleList)
-    std::vector<PartResource> simulationResources_;
+    PartResourceList simulationResources_;  // _simulationResources
     bool awoken_ = false;
     bool partIsShielded_ = false;                  // :682 private
     std::string referenceTransformName_;
-    bool resourcesSetUp_ = false;
-    bool simulationSetUp_ = false;
     bool stageIconCreated_ = false;  // stackIcon.StageIcon != null (the icon itself is UI)
     void CreateEventListRecursive(int eventID, int requestID, std::vector<BaseEvent*>& eventList, int depth, int maxDepth);  // :6234
     std::vector<ConfigNode::NodePtr> effectNodes_;

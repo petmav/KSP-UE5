@@ -998,13 +998,16 @@ TEST_CASE("WP-13 Part resources, crew, state and the Start() data block") {
     // simulation resources: a copy of the list; ResetSimulationResources re-reads amounts and flow settings
     tank->SetupSimulationResources();
     CHECK(tank->SimulationResources().size() == 2);
-    CHECK(tank->SimulationResources()[0].simulationResource);
+    // PartResourceList.cs:36-53: the (part, refList, simulationSet) constructor never assigns the list's own `simulationSet` field (sic),
+    // so the twins Add(ConfigNode) created while the prefab loaded carry simulationResource = false until a refresh sets it
+    CHECK_FALSE(tank->SimulationResources()[0].simulationResource);
     tank->GetResource("Oxidizer")->amount = 50.0;
     amounts["Oxidizer"] = 50.0;
     CHECK(tank->GetResourceMass(true) != tank->GetResourceMass(false));
     tank->ResetSimulation();
     CHECK(Bits(tank->GetResourceMass(true)) == Bits(tank->GetResourceMass(false)));
     CHECK(Bits(tank->GetResourceMass(true)) == Bits(expectedMass(amounts)));
+    CHECK(tank->SimulationResources()[0].simulationResource);  // RefreshSimulationListAmounts sets it (PartResourceList.cs:95)
     // AddResource: duplicates and unknown definitions are refused with a warning (PartResourceList.Add)
     log.lines.clear();
     CHECK(tank->AddResource(*ParseNode("RESOURCE\n{\n name = Oxidizer\n amount = 1\n maxAmount = 1\n}\n")) == nullptr);
@@ -1334,8 +1337,11 @@ TEST_CASE("WP-13 Part copy semantics: Instantiate, OnWillBeCopied / OnCopy / OnW
     CHECK(tank2->Resources[0].resourceName == "LiquidFuel");
     CHECK(tank2->Resources[0].amount == 33.0);
     CHECK(tank2->Resources[0].maxAmount == 180.0);
-    REQUIRE(tank2->SimulationResources().size() == 1);
-    CHECK(tank2->SimulationResources()[0].amount == 33.0);
+    // (OnCopy removes from Resources only, Part.cs:2143-2149: the simulation twin of Oxidizer stays; RefreshSimulationListAmounts
+    // only updates the resources of the source list)
+    REQUIRE(tank2->SimulationResources().size() == 2);
+    REQUIRE(tank2->SimulationResources().Get("LiquidFuel") != nullptr);
+    CHECK(tank2->SimulationResources().Get("LiquidFuel")->amount == 33.0);
     // module fields are copied (PartModule.Copy -> BaseField.CopyField over every field)
     CHECK_FALSE(tank2->Modules().GetModule(0)->Get<bool>("stagingEnabled"));
     // a resource the original has and the clone lacks is added (with a simulation twin)
@@ -1343,7 +1349,7 @@ TEST_CASE("WP-13 Part copy semantics: Instantiate, OnWillBeCopied / OnCopy / OnW
     tank2->OnCopy(tank.get(), false);
     CHECK(tank2->Resources.size() == 2);
     CHECK(tank2->GetResource("MonoPropellant")->amount == 4.0);
-    CHECK(tank2->SimulationResources().size() == 2);
+    CHECK(tank2->SimulationResources().size() == 3);  // LiquidFuel, the stale Oxidizer twin, MonoPropellant
     // OnWasCopied hands each module its counterpart in the new part
     struct Probe : PartModule {
         using PartModule::PartModule;

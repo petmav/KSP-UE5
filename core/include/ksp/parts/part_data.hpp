@@ -201,7 +201,9 @@ private:
 
 class PartResourceDefinition;
 
-// PartResource.cs (data)
+// PartResource.cs
+// `flowState` / `flowMode` are the C# backing fields `_flowState` / `_flowMode`; the C# properties of the same names (which
+// fire onPartResourceFlowStateChange / onPartResourceFlowModeChange on a change) are SetFlowState / SetFlowMode.
 struct PartResource {
     const PartResourceDefinition* info = nullptr;
     std::string resourceName;
@@ -214,9 +216,24 @@ struct PartResource {
     bool simulationResource = false;
     PartResourceFlowMode flowMode = PartResourceFlowMode::None;  // _flowMode
     Part* part = nullptr;               // PartResource.part (WP-13)
+
+    PartResource() = default;
+    explicit PartResource(Part* p) : part(p) {}                                          // PartResource.cs:70
+    PartResource(Part* p, bool simulate) : part(p), simulationResource(simulate) {}      // :75
+    PartResource(const PartResource& res) = default;                                     // :81 (part = res.part; Copy(res))
+    PartResource(const PartResource& res, bool simulate) : PartResource(res) { simulationResource = simulate; }  // :87
+    PartResource& operator=(const PartResource&) = default;
+
     void Load(const ConfigNode& node);  // PartResource.cs:108
     void Copy(const PartResource& res); // PartResource.cs:94
     void Save(ConfigNode& node) const;  // PartResource.cs:160 (name, amount, maxAmount, flowState, isTweakable, hideFlow, isVisible, flowMode)
+    void SetFlowState(bool value);                      // PartResource.cs:36 flowState setter (fires the event on a change)
+    void SetFlowMode(PartResourceFlowMode value);       // :53 flowMode setter
+    void SetInfo(const PartResourceDefinition* i);      // :172
+    std::string GetInfo() const;                        // :178
+    bool CanProvide(double demand) const;               // :183
+    bool CanProvide(bool pulling) const;                // :196
+    bool Flowing(bool pulling) const;                   // :213
 };
 
 // The node_* attach node grammar shared by PartLoader.ParsePart (PartLoader.cs:740) and PartVariant.ParseNode

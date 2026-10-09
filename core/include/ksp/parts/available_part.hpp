@@ -21,6 +21,7 @@
 #include "ksp/parts/part_data.hpp"
 #include "ksp/parts/part_module_data.hpp"
 #include "ksp/parts/part_types.hpp"
+#include "ksp/resources/part_resource_list.hpp"
 
 namespace ksp {
 
@@ -107,7 +108,7 @@ struct PartPrefab {
     std::vector<AttachNode> attachNodes;
     std::shared_ptr<AttachNode> srfAttachNode;  // Part.srfAttachNode (a reference: variants share it)
     DragCubeList DragCubes;
-    std::vector<PartResource> Resources;
+    PartResourceList Resources;           // Part._resources (WP-15: PartResourceList; invalid until SetupResources)
     std::vector<PartModuleData> ModuleData;
     std::vector<ConfigNode::NodePtr> effects;  // EFFECTS nodes (Part.LoadEffects input)
     // fx_* / sound_* values in cfg order: name and raw value (FX prefabs and sounds are Unity/Audio assets)
