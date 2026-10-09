@@ -28,6 +28,7 @@
 #include <utility>
 #include <vector>
 
+#include "ksp/core/exceptions.hpp"  // NullReferenceException (thrown e.g. by CopyTo on a tree with an anonymous node)
 #include "ksp/math/quaterniond.hpp"
 #include "ksp/math/vector3d.hpp"
 #include "ksp/unity/color.hpp"
@@ -35,12 +36,6 @@
 #include "ksp/unity/vector.hpp"
 
 namespace ksp {
-
-// Thrown where KSP's C# code would throw NullReferenceException (e.g. CopyTo on a tree containing an anonymous node).
-class NullReferenceException : public std::runtime_error {
-public:
-    using std::runtime_error::runtime_error;
-};
 
 // System.Guid (16 bytes, .NET byte order: Data1 LE uint32, Data2 LE uint16, Data3 LE uint16, Data4[8]).
 struct Guid {

@@ -6,7 +6,7 @@
 #include <limits>
 
 #include "ksp/celestial/planetarium.hpp"
-#include "ksp/config/config_node.hpp"  // NullReferenceException
+#include "ksp/core/exceptions.hpp"  // NullReferenceException
 #include "ksp/core/log.hpp"
 #include "ksp/dotnet/math.hpp"
 #include "ksp/dotnet/mono_float.hpp"

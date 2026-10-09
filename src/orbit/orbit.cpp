@@ -9,7 +9,7 @@
 #include <string>
 
 #include "ksp/celestial/planetarium.hpp"
-#include "ksp/config/config_node.hpp"  // ksp::NullReferenceException
+#include "ksp/core/exceptions.hpp"  // ksp::NullReferenceException
 #include "ksp/core/log.hpp"
 #include "ksp/dotnet/math.hpp"
 #include "ksp/dotnet/mono_float.hpp"

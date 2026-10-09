@@ -5,7 +5,7 @@
 #include <stdexcept>
 
 #include "ksp/celestial/celestial_body.hpp"
-#include "ksp/config/config_node.hpp"  // NullReferenceException
+#include "ksp/core/exceptions.hpp"  // NullReferenceException
 #include "ksp/dotnet/math.hpp"
 
 namespace ksp {

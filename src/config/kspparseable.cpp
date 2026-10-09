@@ -42,7 +42,8 @@ Vector3f ParseVector3(std::string_view s, char separator) {
 Vector4f ParseVector4(std::string_view s, char separator) {
     const auto a = SplitOn(s, separator);
     if (a.size() < 4) {
-        log::Info("WARNING: Vector4 entry is nor formatted properly! proper format for Vector4s is x,y,z,w");
+        log::Info(std::string("WARNING: Vector4 entry is nor formatted properly! proper format for Vector4s is x") + separator +
+                  "y" + separator + "z" + separator + "w");
         return Vector4f::zero();
     }
     return {dotnet::ParseSingle(a[0]), dotnet::ParseSingle(a[1]), dotnet::ParseSingle(a[2]), dotnet::ParseSingle(a[3])};
@@ -52,7 +53,8 @@ Vector4f ParseVector4(std::string_view s, char separator) {
 Quaternionf ParseQuaternion(std::string_view s, char separator) {
     const auto a = SplitOn(s, separator);
     if (a.size() < 4) {
-        log::Info("WARNING: Quaternion entry is nor formatted properly! proper format for Quaternion is x,y,z,w");
+        log::Info(std::string("WARNING: Quaternion entry is nor formatted properly! proper format for Quaternion is x") +
+                  separator + "y" + separator + "z" + separator + "w");
         return Quaternionf::identity();
     }
     return {dotnet::ParseSingle(a[0]), dotnet::ParseSingle(a[1]), dotnet::ParseSingle(a[2]), dotnet::ParseSingle(a[3])};

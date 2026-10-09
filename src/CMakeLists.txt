@@ -1,6 +1,7 @@
 # kspcore: engine-agnostic static library (no Unity / Unreal dependencies).
 add_library(kspcore STATIC
     core/log.cpp
+    core/delegate.cpp
     dotnet/math.cpp
     dotnet/number.cpp
     dotnet/random.cpp
@@ -32,6 +33,13 @@ add_library(kspcore STATIC
     orbit/targeting.cpp
     orbit/orbit_snapshot.cpp
     orbit/orbit_util.cpp
+    events/base_game_event.cpp
+    events/game_events.cpp
+    fsm/kerbal_fsm.cpp
+    localization/localizer.cpp
+    util/ksp_util.cpp
+    util/misc_util.cpp
+    util/simplex.cpp
     capi/kspcore_c.cpp
 )
 add_library(ksp::core ALIAS kspcore)

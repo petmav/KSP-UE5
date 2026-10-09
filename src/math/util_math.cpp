@@ -2,31 +2,67 @@
 
 #include <algorithm>
 #include <cfloat>
+#include <cstdint>
+#include <limits>
+
+#include "ksp/core/exceptions.hpp"
+#include "ksp/dotnet/number.hpp"
 
 #include "ksp/dotnet/math.hpp"
 
 namespace ksp {
 namespace UtilMath {
 
-// UtilMath.cs:97
-double Flatten(double z, double midPoint, double easing) {
-    return 1.0 - 1.0 / (std::pow(1.0 / midPoint * std::fabs(z), easing) + 1.0) * static_cast<double>(dotnet::Math::Sign(z));
+// UtilMath.cs:117 (unchecked int arithmetic; C# % throws for a zero divisor and for int.MinValue % -1)
+int WrapAround(int value, int min, int max) {
+    if (value < min) value = static_cast<int>(static_cast<uint32_t>(value) + static_cast<uint32_t>(max));
+    if (max == 0) throw DivideByZeroException();
+    if (max == -1) {
+        if (value == std::numeric_limits<int>::min()) throw dotnet::OverflowException("Arithmetic operation resulted in an overflow.");
+        return 0;
+    }
+    return value % max;
 }
 
-// UtilMath.cs:193
+// UtilMath.cs:212
+double Flatten(double z, double midPoint, double easing) {
+    if (std::isnan(z)) throw ArithmeticException("Function does not accept floating point Not-a-Number values.");
+    return 1.0 - 1.0 / (dotnet::Math::Pow(1.0 / midPoint * std::fabs(z), easing) + 1.0) *
+                     static_cast<double>(dotnet::Math::Sign(z));
+}
+
+// UtilMath.cs:217
+double Max(std::span<const double> values) {
+    double num = std::numeric_limits<double>::lowest();
+    size_t num2 = values.size();
+    while (num2-- > 0)
+        if (values[num2] > num) num = values[num2];
+    return num;
+}
+
+// UtilMath.cs:231
+double Min(std::span<const double> values) {
+    double num = std::numeric_limits<double>::max();
+    size_t num2 = values.size();
+    while (num2-- > 0)
+        if (values[num2] < num) num = values[num2];
+    return num;
+}
+
+// UtilMath.cs:381
 float RoundToPlaces(float value, int decimalPlaces) {
     const float num = f32store(dotnet::Math::Pow(10.0, decimalPlaces));
     // Mono: value * num is evaluated in double (exact product), not rounded to float before Math.Round
     return f32store(dotnet::Math::Round(fx(value) * fx(num)) / fx(num));
 }
 
-// UtilMath.cs:196
+// UtilMath.cs:387
 double RoundToPlaces(double value, int decimalPlaces) {
-    const double num = std::pow(10.0, decimalPlaces);
+    const double num = dotnet::Math::Pow(10.0, decimalPlaces);
     return dotnet::Math::Round(value * num) / num;
 }
 
-// UtilMath.cs:199
+// UtilMath.cs:393
 int BSPSolver(double& v0, double dv, const std::function<double(double)>& solveFor, double vMin, double vMax, double epsilon,
               int maxIterations) {
     if (v0 < vMin) return 0;
@@ -40,7 +76,7 @@ int BSPSolver(double& v0, double dv, const std::function<double(double)>& solveF
         if (v0 + dv > vMax) value = DBL_MAX;
         value = std::fabs(value);
         value2 = std::fabs(value2);
-        num2 = std::min(num2, std::min(value, value2));
+        num2 = dotnet::Math::Min(num2, dotnet::Math::Min(value, value2));
         if (num2 == value2) v0 -= dv;
         else if (num2 == value) v0 += dv;
         dv /= 2.0;
@@ -49,7 +85,7 @@ int BSPSolver(double& v0, double dv, const std::function<double(double)>& solveF
     return num;
 }
 
-// UtilMath.cs:223
+// UtilMath.cs:434
 int BSPSolver(float& v0, float dv, const std::function<float(float)>& solveFor, float vMin, float vMax, float epsilon,
               int maxIterations) {
     if (v0 < vMin) return 0;
@@ -63,7 +99,7 @@ int BSPSolver(float& v0, float dv, const std::function<float(float)>& solveFor, 
         if (fx(v0) + fx(dv) > fx(vMax)) value = FLT_MAX;
         value = std::fabs(value);
         value2 = std::fabs(value2);
-        num2 = std::min(num2, std::min(value, value2));
+        num2 = dotnet::Math::Min(num2, dotnet::Math::Min(value, value2));
         if (num2 == value2) v0 = f32store(fx(v0) - fx(dv));
         else if (num2 == value) v0 = f32store(fx(v0) + fx(dv));
         dv = f32store(fx(dv) / 2.0);
@@ -72,14 +108,14 @@ int BSPSolver(float& v0, float dv, const std::function<float(float)>& solveFor, 
     return num;
 }
 
-// UtilMath.cs:247
+// UtilMath.cs:475
 bool IsDivisible(int n, int byN) {
     while (byN % 2 == 0) byN /= 2;
     while (byN % 5 == 0) byN /= 5;
     return n % byN == 0;
 }
 
-// UtilMath.cs:255
+// UtilMath.cs:493
 bool Approximately(double a, double b, double epsilon) {
     const double num = std::fabs(a);
     const double num2 = std::fabs(b);
@@ -89,7 +125,7 @@ bool Approximately(double a, double b, double epsilon) {
     return num3 < epsilon;
 }
 
-// UtilMath.cs:264
+// UtilMath.cs:509
 bool SphereIntersection(double radius, const Vector3d& position, const Vector3d& velocity, double& time, bool later) {
     const double num = Vector3d::Dot(position, velocity);
     const double num2 = Vector3d::Dot(velocity, velocity);
@@ -104,7 +140,7 @@ bool SphereIntersection(double radius, const Vector3d& position, const Vector3d&
     return false;
 }
 
-// UtilMath.cs:277
+// UtilMath.cs:531
 bool SphereIntersection(double radius, const Vector3d& position, const Vector3d& velocity, Vector3d& impact, bool later) {
     double time;
     if (SphereIntersection(radius, position, velocity, time, later)) {
@@ -115,7 +151,7 @@ bool SphereIntersection(double radius, const Vector3d& position, const Vector3d&
     return false;
 }
 
-// UtilMath.cs:283
+// UtilMath.cs:542
 double AngleBetween(const Vector3d& v, const Vector3d& w) {
     const Vector3d a = v * w.magnitude();
     const Vector3d b = w * v.magnitude();

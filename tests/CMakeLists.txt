@@ -11,12 +11,16 @@ add_executable(kspcore_tests
     test_celestial.cpp
     test_orbit.cpp
     test_celestial_orbit.cpp
+    test_events.cpp
+    test_util.cpp
+    test_wp03_reference.cpp
 )
 target_link_libraries(kspcore_tests PRIVATE kspcore)
 ksp_set_build_flags(kspcore_tests)
 target_include_directories(kspcore_tests PRIVATE ${PROJECT_SOURCE_DIR}/third_party)
 target_compile_definitions(kspcore_tests PRIVATE KSPCORE_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-                           KSPCORE_HARNESS_DIR="${KSP_HARNESS_DIR}" KSPCORE_PROJECT_ROOT="${KSP_PROJECT_ROOT}")
+                           KSPCORE_HARNESS_DIR="${KSP_HARNESS_DIR}" KSPCORE_PROJECT_ROOT="${KSP_PROJECT_ROOT}"
+                           KSP_DICTIONARY_CFG="${KSP_PROJECT_ROOT}/decompiled/KSP-dev/GameData/Squad/Localization/dictionary.cfg")
 add_test(NAME unit COMMAND kspcore_tests)
 
 # ---- C ABI consumers: a pure C program, and a C++ program built with Unreal's flags (/GR-, _HAS_EXCEPTIONS=0,

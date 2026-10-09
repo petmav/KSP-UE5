@@ -4,3 +4,4 @@
 .vs/
 *.user
 .worktrees/
+__pycache__/

@@ -14,6 +14,7 @@ Updated 2026-10-09. One command: `powershell -NoProfile -ExecutionPolicy Bypass 
 | 4. WP-09 celestial bodies, atmospheres, PhysicsGlobals (branch `wp09`, merged) | done for the assigned scope: PhysicsGlobals (all fields/curves/properties, LoadDatabase/SaveDatabase), CelestialBody (data model, Awake/Start/CBUpdate/SetupConstants, atmosphere, frames, lat/lon), Planetarium, PSystem spawn + FlightGlobals list, Kerbol catalog of 17 bodies from the game's prefab + asset index, FlightIntegrator atmosphere helpers; 4 new gates bit-exact. Pending WP-07 integration and deferred items: see "WP-09" below |
 | 5. WP-07 Orbit (branch `wp07`, merged) | done: Orbit.cs (everything but DrawOrbit), Targeting.cs (closest-approach intercept search behind `Orbit.FindClosestPoints`), OrbitSnapshot, OrbitUtil (but CalculateIntersections), FoRModes/VesselTargetModes; `CelestialBodyRef` / `PlanetariumFrames` interfaces for WP-09; golden `orbit_propagation` bit-exact (all 5 tables). TransferMath, DirectionTarget, ITargetable deferred (see "WP-07 Orbit") |
 | 6. Integration WP-07/WP-09 (main) | done: Orbit on `ksp::CelestialBody` (CelestialBodyRef deleted), one Planetarium (PlanetariumFrames deleted), `CelestialBodyOrbitAdapter` (OrbitDriver for bodies over ksp::Orbit) attached by `CelestialSystem::Spawn` by default, `body_catalog/orbits` gated in full, integration unit test. See "Integration WP-07/WP-09" below |
+| 7. WP-03 event bus, FSM, utilities (branch `wp03`, merged) | done: typed event bus + full GameEvents registry (469 events), KerbalFSM, KSPUtil engine-independent parts, Localizer + Lingoona fallback, UtilMath completed, .NET collection/enum semantics, Simplex; gated by unit tests incl. 6,437 values from KSP's IL (no golden dataset), see below |
 
 ## Test results (all 15 ctest tests pass in RelWithDebInfo and in Debug)
 
@@ -36,7 +37,7 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `capture.physics_drag_curve` | in-game `captures/out/aero_forces_mono.json` table drag_curve_value: PhysicsGlobals.DragCurveValue under Mono | 2,870 | 0 ULP |
 | `golden.body_catalog` | harness golden `body_catalog` (WP-09 + WP-07 Orbit): bodies 17 x 51 cols, orbits 16 x 26 cols (all: elements, Init outputs, state at UT 0), atmosphere_profile_1km 1,072, body_curves 265 | 1,370 | 0 ULP |
 | `golden.atmosphere_curves` | harness golden `atmosphere_curves` (WP-09): profile_100m 2,704, flight_state 2,176 x 19 cols, solar_effects 320 | 5,200 | 0 ULP |
-| `unit` | 66 doctest cases, 7,508 assertions (WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
+| `unit` | 98 doctest cases, 19,187 assertions (WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
 differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 6 ULP (Vector3.Project/ProjectOnPlane) and
@@ -318,7 +319,7 @@ Shared fixes made for WP-07 (WP-01/runner files): `dotnet::Math::Min/Max` (NaN-p
 and `Vector3d/Vector2d.Angle/AngleBetween` now call `dotnet::Math` (were `std::atan2/std::acos`, which is the UCRT, not
 the VS2013 CRT KSP uses); the golden writer normalises number text like the harness (`ExactNumber.Normalize`: ".0"
 on integral values, lower-case "e"), without which float key columns (`kepler` e/M, `UT`) did not match.
-Still using `<cmath>` in WP-01 code that Orbit does not call (noted, not changed): `UtilMath.Flatten/RoundToPlaces`
+(Since the WP-03 merge only `QuaternionD.Angle` (std::acos/std::min) of this list remains; WP-03 moved the others to System.Math.) Still using `<cmath>` in WP-01 code that Orbit does not call (noted, not changed): `UtilMath.Flatten/RoundToPlaces`
 (std::pow), `UtilMath.ASinh/ACosh/ATanh/Sech/Csch/Coth` (std::log/cosh/sinh), `QuaternionD.Angle` (std::acos).
 
 Not done in WP-07, and why:
@@ -344,7 +345,95 @@ Known deviations and risks (WP-07):
 - Debug.Log / Console.WriteLine in Orbit go to `ksp::log::Info` without the C# stack traces; KSP's
   `!Thread.CurrentThread.IsBackground` guards are treated as "main thread" (always log).
 
-## Integration WP-07/WP-09 (main)
+## WP-03 Event bus, FSM, misc core utilities (branch `wp03`, merged)
+
+State: done (40 of the 42 package files fully or partly ported; see "skipped"). **No `KSP_GOLDEN_DATASET`**: there is
+no harness golden for WP-03 and none was added, so the package is **gated by unit tests**, including
+`test_wp03_reference.cpp`, which replays 6,437 values computed by **KSP's own IL** (the harness's Assembly-CSharp build)
+on .NET Framework 4.8 (`tools/wp03_reference`, data `tests/data/wp03_reference.tsv`): 0 mismatches. A mutation check
+(20 corrupted cells) confirmed every row kind is really compared. Every ported function cites `File.cs:line`.
+
+| area | ported (C++ location) | verification |
+|---|---|---|
+| C# delegates | `ksp::Delegate<R(Args...)>`: Bind/Lambda/Static, C# equality, Target, multicast `+ - += -=`, invocation (`core/delegate.hpp`); `Callback<...>` | unit |
+| Event bus | BaseGameEvent (+FindEvent), GameEventsBase, EventVoid, EventData<1..4>, EventDataModifier, Event{Double,Float,Int}{Max,Min}, EventValueComparison, EventValueOperation, EventValueWrapper (`events/event_data.hpp`) | unit + KSP IL (call orders R1-R4, exception isolation, modifier chain, NaN/signed-zero folds, hidden eventName) |
+| GameEvents registry | all **469 events** (383 EventData, 80 EventVoid, 6 EventDataModifier: 3 static + 3 in `Modifiers`), 7 nested classes, the 5 nested structs, FindEvent; generated by `tools/wp03/gen_game_events.py`; 109 forward-declared KSP/Unity types (`events/game_event_types.hpp`) | KSP IL: member path, event-name string and C# type of all 469 match (`GameEventsRegistry()`) |
+| FSM | KerbalFSM, KFSMState, KFSMEvent, KFSMTimedEvent, KFSMUpdateMode/Callback/EventCondition/StateChange (`fsm/kerbal_fsm.hpp`); UnityEngine.Time shim (`core/unity_time.hpp`) | unit (Time.time is native: cannot run on .NET) |
+| KSPUtil | DefaultDateTimeFormatter (all 16 IDateTimeFormatter members + 10 GetUT*/GetTimeSpan*), IDateFormatterExtensions, dateTimeFormatter get/set, CacheLocalStrings, LocalizeNumber, PrintSI, Print{Coordinates,Latitude,Longitude}, the 12 Print* forwarders, PrintModuleName, PrintLocalizedModuleName, PrintSpacedStringFromCamelcase, GetOrCreatePath, GenerateFilePathWithDate, MoveFile, StripFileExtension, SanitizeString/Filename/InstanceName, CheckDOSName, CalculateFolderSize, CheckVersion x2, ReplaceString, Heading/Bearing x4, PrintCollection, AppendValueToString, Matrix4x4 Add/Diag/ToDiagonalMatrix/OuterProduct (9), DeepCompare, GetPartName, GetPartInfo, GetAttachNodeInfo x4, GetLinkID, GenerateSuperSeed, WriteArray, ParseArray, WriteVector(Vector3d)/WriteQuaternion(QuaternionD), ParseVector3d x2, ParseQuaternionD x2, per-component ParseVector2/3/4/ParseQuaternion (`util/ksp_util.hpp`) | KSP IL: 3,776 date/time strings (Kerbin + Earth calendars, 30 UTs incl. negative/NaN/Inf/1e300, every option), cache sequences, shared date holder, SI, coordinates, LocalizeNumber, strings, versions, craft ids, seeds, vectors |
+| Localizer | KSP.Localization.Localizer tag table, Format (0/params), GetStringByTag, TryGetStringByTag, TranslateBranch, AddTagValuesFromNode/ForLanguage, unescaping; Lingoona.Grammar managed fallback (`localization/localizer.hpp`) | KSP IL: Format/Lingoona rows; the full dictionary.cfg loads to the same 12,030 tags; the built-in English subset equals dictionary.cfg |
+| UtilMath (WP-01 file, completed) | added Max/Min(params), MaxFrom/MinFrom (8 overloads), WrapAround(int) exceptions; fixed to System.Math semantics: ASinh..Coth (CRT Log/Cosh/Sinh), Flatten (Pow, Sign(NaN) throws), RoundToPlaces(double) (Pow), AngleBetween (Atan2), BSPSolver (Math.Min NaN/-0 rules); citations corrected to the real lines | KSP IL: 852 UtilMath values; golden.math_shim.f64 still 0 ULP |
+| .NET semantics | `dotnet::ListSort` (ArraySortHelper introsort), `dotnet::Dictionary` (.NET enumeration order, free-slot reuse), `dotnet::EnumToString/GetName/GetNames/Parse` (+[Flags], duplicates), `Math::Min/Max`, UTF-16 helpers | KSP IL / .NET: sort permutations (n = 17..1000 with ties), dictionary orders, enum strings |
+| Collections / extensions | ArrayExtensions.IndexOf, ListExtension (Shuffle, AddUnique(Range), MaxAt/MinAt, SetRange x4, ContainsId x3, OrderByAlphaNumeric x2), BiDictionaryOneToOne, DictionaryValueList, ListDictionary, EnumExtensions (Description, displayDescription, GetDescriptions, ToStringCached), StringExtensions.GetHashCode_Net35, StringBuilderCache.Format, MinMaxColor, IntersectInformation, DelegateExtensions/CallbackUtil.Clear | unit + KSP IL (hash, Format, DVL, OrderByAlphaNumeric, enums) |
+| Simplex | Simplex (instance, octaves, seed), SimplexNoise (static) (`util/simplex.hpp`) | KSP IL: 88 noise values (default tables); seeding (UnityEngine.Random is native) by reasoning on the bit-exact UnityRandom |
+
+Tests: `unit` now 70 doctest cases / 12,156 assertions (WP-03: test_events 17 cases, test_util 14, test_wp03_reference 1
+with 6,437 compared values). All 10 ctest tests pass in RelWithDebInfo (13.6 s) and Debug (27.1 s).
+
+**Mono-rule float32 paths, verified by reasoning only** (the .NET reference cannot judge them; candidates for a future
+in-game capture): KSPUtil.HeadingRadians/HeadingDegrees/BearingRadians/BearingDegrees, UtilMath.WrapAround(float),
+RoundToPlaces(float), BSPSolver(float), MaxFrom/MinFrom float overloads (no arithmetic), MinMaxColor.GetLerp
+(Color.Lerp), CalculateFolderSize (float sum), EventFloatMax/Min (comparisons only), LocalizeNumber(float) text.
+
+**Skipped, and where it goes**
+- Unity-bound KSPUtil members -> shell / later packages: FindInPartModel, recurseModels, GetTransformPathToRoot,
+  GetTransformIndexPathToRoot, FindTransformAtIndexPath, HasAncestorTransform, HasDescendantTransform,
+  FindComponentsImplementing, FindTagsInChildren (Transform/GameObject: UE5 shell, tier C), RemoveNonHighlightableRenderers
+  (rendering, WP-48), ClampRectToScreen (UI), GenerateTexture2DArray (rendering), GetPartByCraftID (needs Part: WP-13),
+  ApplicationFileProtocol (platform), GetActivator/ObjectActivator (reflection; WP-06 generated factories),
+  SystemDateTime.DateTimeNow (only used by GenerateFilePathWithDate, which reads the local clock directly),
+  GetRelativePath (System.Uri escaping; only the craft-thumbnail UI uses it).
+- CallbackUtil coroutines (DelayedCallback x12, WaitUntil, DoUntil, HoldUntil, LazyCallback): Unity coroutines ->
+  the game-loop scheduler (tier B, with the scene/loop package). Only CallbackUtil.Clear is ported.
+- SafeAbortBackgroundWorker: .NET BackgroundWorker + Thread.Abort -> a C++ job/stop_token design where it is used
+  (tier B).
+- LocalizeNumber with formats other than G/F/R ("N0", "0.0", "0.###E+0", ...): throws std::logic_error until ksp::dotnet
+  ports Mono's NumberFormatter (custom/N/E/P formats; needed by PartModule GetInfo strings, WP-06+).
+- Localizer language switching from GameDatabase / buildID64.txt, mission tags and the native Lingoona engine: WP-51.
+
+**Surprises (a later implementer must know)**
+1. **Fire order is REVERSE registration order** (not registration order): every event class walks its snapshot from
+   the end. EventDataModifier's DefaultModifier is registered first and therefore runs last.
+2. **Re-entrancy**: each event has ONE shared snapshot list. Listeners removed or added during Fire do not affect the
+   current round, but a listener that fires the same event again refills the shared snapshot; the outer loop then
+   continues on the new list (can repeat or skip listeners), and if the new list is shorter the outer index throws
+   ArgumentOutOfRangeException out of Fire (confirmed on KSP's IL: R2-R4).
+3. Remove takes the LAST matching registration; Add of a static-method delegate throws NullReferenceException
+   (`evt.Target.GetType()`), so the `originator == null` cleanup branch in Fire is dead code.
+4. EventValueComparison/Operation.Update have no try/catch (an exception escapes and leaves the nesting counter at 1);
+   their debug logs print an empty name (`new string eventName` / `gameEventName` are never assigned; KSP IL shows null).
+5. GameEvents has duplicate event names (the later declaration wins in FindEvent): onPartCouple/onPartDeCouple,
+   onPartCoupleComplete/onPartDeCoupleComplete, OnFlightState x2, OnApplicantHired (OnCrewmemberHired/Sacked),
+   OnEVAConstructionModePartAttached (Attached/Detached), "Active Node Changed" x2.
+6. KerbalFSM.updateFSM keeps its loop index across a state change, so it continues on the NEW state's event list.
+7. KSPUtil date formatting: PrintTimeLong has no space before units ("1Hour"); PrintTimeCompact never shows years;
+   PrintTime(0, n, explicitPositive: true) is "+ "; a fresh formatter's PrintDate(t, false) for t in [0, 60) and
+   PrintDateCompact/PrintTimeStampCompact for floor(t) == -1 return null (kspcore ""); a UT too large for (int)
+   (e.g. 1e300) throws OverflowException from Math.Abs(int.MinValue).
+8. UtilMath.BSPSolver does not take |f| of the starting value: a negative start never moves (KSP IL confirms).
+9. ListExtension.MaxAt/MinAt always throw for non-empty lists (loop starts at list[Count]); IntersectInformation's
+   constructor swaps the two distances; DelegateExtensions.Clear / CallbackUtil.Clear do nothing.
+10. Simplex.seed rewrites a STATIC permutation table shared by every Simplex and reseeds UnityEngine.Random globally;
+    fastfloor(0) = -1.
+11. SanitizeInstanceName("mk1pod (Clone)") = "mk1pod " (the "(clone" match overrides the " (" match).
+
+**Deviations (documented, deliberate)**: C# null strings returned by the formatter caches are ""; FindEvent finds
+nested-class events without the C# lazy class initialisation; a destroyed C++ event unregisters its name; log texts use
+`e.what()` and C++ type names where C# prints Exception.ToString() / Type names; char.IsUpper/ToUpper cover Latin-1,
+Greek and Cyrillic only; OrderByAlphaNumeric uses `dotnet::CompareCulture` (exact for ASCII); `int.MinValue % -1`
+throws OverflowException as on .NET (unverified on Mono); List.Sort's depth limit uses Count unless the caller passes
+the List capacity.
+
+**Shared files touched** (merge notes): `CMakeLists.txt` (KSP_PROJECT_ROOT searches upwards for harness/, so git
+worktrees under core/.worktrees build), `include/ksp/config/config_node.hpp` (NullReferenceException moved to
+`core/exceptions.hpp`), `include/ksp/dotnet/math.hpp` (Math.Min/Max), `include/ksp/math/util_math.hpp` +
+`src/math/util_math.cpp` (completion and System.Math fixes above), `src/config/kspparseable.cpp` (ParseVector4 /
+ParseQuaternion warning text with the actual separator), `src/CMakeLists.txt`, `tests/CMakeLists.txt`, README.md.
+
+Commits on `wp03` (from main `c051578`, not merged): `05e84fc` delegates + event bus + GameEvents registry, `072e37e`
+KerbalFSM, `ecd9075` KSPUtil/Localizer/UtilMath/.NET semantics/collections/Simplex, `b0f9ba3` KSP-IL reference run,
+`2a2bbb7` KSPUtil double vector helpers + README, then the docs commit (STATUS.md, PROGRESS-wp03.md).
+
+## Integration WP-07/WP-09, then the WP-03 merge (main)
 
 `wp07` merged into main (`d2e66e7`, on top of the WP-09 merge `29b71f6`), then the six integration steps WP-07 listed.
 
@@ -445,6 +534,26 @@ the real game clears these flags on scene setup (`PSystemSetup.OnSceneChange` / 
 | `f93380a` | Orbit on CelestialBody, one Planetarium, CelestialBodyOrbitAdapter, Spawn attaches real orbits, runner (StandIn removed, shared env, harness frame), ported unit tests |
 | `2fae513` | gate the whole body_catalog orbits table |
 | `93cd8ff` | integration unit test |
+| `e4d982c` | docs: this section, README bodies/orbits API |
+| (next) | merge `wp03` (see "WP-03 merge"); hash recorded by the following docs commit |
+
+### WP-03 merge
+
+`wp03` (6 commits on `c051578`) merged after the integration. Conflicts and resolutions:
+
+| file | resolution |
+|---|---|
+| `CMakeLists.txt` | one root mechanism: main's walk-up (WP-09; WP-03 had written the same loop) to the first parent containing `harness/compare/compare.py`; main checkout and worktrees configure without flags; `-DKSP_PROJECT_ROOT` overrides |
+| `include/ksp/dotnet/math.hpp` | one `Math::Max/Min` implementation: WP-03's (double, float and int overloads; double code identical to WP-07's: NaN first argument returned, `val1 > val2 ? val1 : val2` otherwise, so NaN in either argument gives NaN and ties return val2). Orbit/Targeting (double) and WP-03 callers compile unchanged |
+| `src/math/util_math.cpp` | union: WP-03's completion (WrapAround, Max/Min(params), System.Math in Flatten/RoundToPlaces/ASinh..Coth, BSPSolver with Math.Min) plus WP-07's `AngleBetween` via `dotnet::Math::Atan2` (both sides had made that same change) |
+| `include/ksp/config/config_node.hpp` (auto) | `NullReferenceException` now lives in `ksp/core/exceptions.hpp` (WP-03); config_node.hpp includes it. Orbit, CelestialBody and Planetarium now include `core/exceptions.hpp` instead of config_node.hpp |
+| `src/CMakeLists.txt`, `tests/CMakeLists.txt` | union; the unit-test target keeps `KSPCORE_HARNESS_DIR` / `KSPCORE_PROJECT_ROOT` and gains WP-03's `KSP_DICTIONARY_CFG` |
+| `README.md`, `STATUS.md` | union (WP-03 rows/sections kept, WP-03 section after WP-07's) |
+| `tools/wp03/__pycache__/*.pyc` | dropped from the tree (a Python cache file was committed on wp03); `__pycache__/` added to .gitignore |
+
+After the merge (fresh, RelWithDebInfo and Debug): 15/15 ctest tests pass; `unit` 98 cases / 19,187 assertions including
+the WP-03 KSP-IL reference test (11,032 assertions); all 41 compared golden/capture tables 0 ULP / max abs 0, incl.
+`golden.math_shim.f64` (UtilMath / Vector3d angle code touched by both WP-03 and WP-07).
 
 ### Deferred / for later packages
 
