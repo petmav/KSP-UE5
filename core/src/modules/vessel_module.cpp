@@ -4,6 +4,7 @@
 #include <map>
 
 #include "ksp/core/log.hpp"
+#include "ksp/vessel/axis_groups_module.hpp"
 
 namespace ksp {
 
@@ -65,11 +66,8 @@ std::map<std::string, VesselModuleFactory::Creator>& Creators() {
         r["FlightIntegrator"] = [](const ModuleClassInfo& c) {
             return std::make_shared<OrderedVesselModule>(c, 0, VesselModule::Always);
         };
-        // AxisGroupsModule.cs:77
-        r["AxisGroupsModule"] = [](const ModuleClassInfo& c) {
-            return std::make_shared<OrderedVesselModule>(
-                c, 999, static_cast<VesselModule::Activation>(VesselModule::FlightScene | VesselModule::LoadedVessels));
-        };
+        // AxisGroupsModule.cs (WP-14: the real module)
+        r["AxisGroupsModule"] = CreateAxisGroupsModule;
         return r;
     }();
     return m;
