@@ -34,7 +34,11 @@ std::tm Now() {
     if (GamePersistence::DateTimeNow) return GamePersistence::DateTimeNow();
     const std::time_t t = std::time(nullptr);
     std::tm tm{};
+#if defined(_WIN32)
     localtime_s(&tm, &t);
+#else
+    localtime_r(&t, &tm);
+#endif
     return tm;
 }
 std::string Pad(int v, int width) {

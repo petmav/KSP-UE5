@@ -1,6 +1,7 @@
 // WP-04 unit tests: GameParameters defaults and presets (GameParameters.cs constants, and the PARAMETERS / SCENARIO
 // blocks of the original physprofile save), the save upgrade pipeline on synthetic old saves and crafts, save model
 // quirks, System.Version / Enum.Parse, GamePersistence naming and backups.
+#include <chrono>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -587,7 +588,20 @@ TEST_CASE("GamePersistence: file names, APPEND / BACKUP rules, quicksave naming,
     };
     // call 1: no quicksave yet (no backup); 2: Backup created with a copy (_01); 3: 1 < 2 backups -> copy (_02);
     // 4: copy (_03), then the oldest LastWriteTime (_01) is deleted
-    for (int i = 0; i < 4; ++i) GamePersistence::SaveGame(*game, "quicksave", folder, SaveMode::BACKUP);
+    for (int i = 0; i < 4; ++i) {
+        GamePersistence::SaveGame(*game, "quicksave", folder, SaveMode::BACKUP);
+        // The pruning sorts by LastWriteTime. Backups land within one mtime tick on coarse filesystems (WSL DrvFs),
+        // which ties the sort; pin each backup's mtime to the second encoded in its name so the order is the one
+        // the wall clock would give on NTFS.
+        const fs::path backupDir = tmp / "saves" / "unit" / "Backup";
+        if (fs::exists(backupDir))
+            for (const auto& b : fs::directory_iterator(backupDir)) {
+                const std::string name = b.path().stem().string();  // "quicksave (2026_08_17_19_46_SS)"
+                const int sec = std::stoi(name.substr(name.size() - 3, 2));
+                fs::last_write_time(b.path(), fs::file_time_type::clock::now() - std::chrono::hours(1) +
+                                                  std::chrono::seconds(sec));
+            }
+    }
     int backups = 0;
     for (const auto& b : fs::directory_iterator(tmp / "saves" / "unit" / "Backup")) {
         (void)b;
