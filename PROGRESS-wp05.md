@@ -52,7 +52,10 @@ Worktree: core/.worktrees/wp05, branch wp05 from main f964447. Commit only here.
    (scope = cfg-set fields), propellants 77, resources 166, attach_nodes 822, drag_cubes 531, variants 228, assets 743
    (non-texture rows renumbered). Excluded: 5 code-built parts' rows (Unity prefab), texture slot rows (.mu), parts
    columns partSize (.mu bounds) + module_mass/module_cost (WP-06), variants.materials (.mu). 4 DLC error rows gated.
-   NEXT: register ctest gate (CMake opts), load-order ctest vs KSP.log, unit tests, then stretch (.mu reader)
+   DONE: ctest capture.part_database + capture.gamedatabase_load_order (tests/CMakeLists.txt), commit 32f8f60.
+5. tests/test_partloader.cpp DONE (5 cases, 202 assertions; synthetic GameData in temp dir + real KSP-dev check).
+   Full suite 17/17 green (RelWithDebInfo). Quirk found: root.GetDirectory/GetFile never enter the "" GameData dir.
+   NEXT: evaluate module_fields defaults coverage (literal initializers) as stretch; then STATUS/README; Debug run.
 5. tests/test_partloader.cpp [ ]
 6. stretch: .mu metadata reader (texture slots, partSize, variant materials) [ ]
 7. STATUS/README, commit [ ]

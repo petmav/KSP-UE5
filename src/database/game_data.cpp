@@ -21,6 +21,7 @@ void GameData::Load(const Options& options) {
     GameDatabase::LoadOptions lo;
     lo.gameRoot = rootStr;
     lo.language = options.language;
+    lo.translate = options.translate;
     if (!options.gameDataDir.empty()) lo.urlConfig = {io::ConfigDirectory{"", options.gameDataDir, io::DirectoryType::GameData}};
     database.Load(lo);
 

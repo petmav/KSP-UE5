@@ -14,6 +14,7 @@ add_executable(kspcore_tests
     test_events.cpp
     test_util.cpp
     test_wp03_reference.cpp
+    test_partloader.cpp
 )
 target_link_libraries(kspcore_tests PRIVATE kspcore)
 ksp_set_build_flags(kspcore_tests)

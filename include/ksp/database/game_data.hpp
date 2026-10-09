@@ -29,6 +29,7 @@ public:
         std::string gameRoot;            // KSP install directory (KSP: Application.dataPath + "/../")
         std::string gameDataDir;         // GameData directory; default <gameRoot>/GameData
         std::string language = "en-us";  // Localizer language
+        bool translate = true;           // load the language's tags and translate every config (resets the Localizer)
     };
     GameData();
     ~GameData();
