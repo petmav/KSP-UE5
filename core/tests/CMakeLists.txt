@@ -240,3 +240,15 @@ ksp_golden_gate(capture.vessel_state vessel_state GOLDEN ${KSP_CAPTURES2_DIR}/ae
 ksp_golden_gate(golden.aero_forces aero_forces)
 ksp_golden_gate(capture.aero_forces_mono aero_forces_mono GOLDEN ${KSP_CAPTURES_DIR}/aero_forces_mono.json
                 TABLES cube_inputs,cube_weighted,cube_drag DROP_HEX TOL ${KSP_CAPTURE_TOL})
+# WP-21 drag-cube pipeline on the C10 assembled vessels (captures/out2/aero_forces_vessel.json; see ds_aero_forces_vessel.cpp).
+#   structure  only node_contact_areas (AttachNode.contactArea from SetPartOcclusion; the capture writes it with 4 significant digits)
+#              and the part name; the tree columns are capture.vessel_state's; cube_names is an INPUT here (ModuleJettison WP-26 + the
+#              model's jettison transform, ModulePartVariants WP-13 set the weights at flight start)
+#   parts      inputs dropped: dragVectorDirLocal_*, dragVectorMag, dynamicPressurekPa (rigidbody velocity); staticPressureAtm (needs
+#              the part's world altitude, WP-19/20); exposedArea (the previous physics frame's ExposedArea: UpdateAerodynamics reads it
+#              before this frame's SetDrag). No row is filtered.
+#   aoa_sweep  input dropped: flow_local_* (R(aoa) * dragVectorDirLocal, rotated in game). No row is filtered.
+ksp_golden_gate(capture.aero_forces_vessel aero_forces_vessel GOLDEN ${KSP_CAPTURES2_DIR}/aero_forces_vessel.json DROP_HEX
+                TOL ${KSP_CAPTURE_TOL} TABLES structure,parts,aoa_sweep
+                COLUMNS "structure:craft,part_index,part,node_contact_areas"
+                DROP_COLUMNS "parts:dragVectorDirLocal_x,dragVectorDirLocal_y,dragVectorDirLocal_z,dragVectorMag,dynamicPressurekPa,staticPressureAtm,exposedArea/aoa_sweep:flow_local_x,flow_local_y,flow_local_z")
