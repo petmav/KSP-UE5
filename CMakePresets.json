@@ -45,6 +45,45 @@
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       },
       "binaryDir": "${sourceDir}/build/RelWithDebInfo"
+    },
+    {
+      "name": "linux-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "condition": {
+        "type": "notEquals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "linux-rel",
+      "displayName": "Linux Release (Clang if present, else GCC; Ninja)",
+      "inherits": "linux-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      },
+      "binaryDir": "${sourceDir}/build/linux-rel"
+    },
+    {
+      "name": "linux-dbg",
+      "displayName": "Linux Debug (Clang if present, else GCC; Ninja)",
+      "inherits": "linux-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "binaryDir": "${sourceDir}/build/linux-dbg"
+    },
+    {
+      "name": "linux-gcc-rel",
+      "displayName": "Linux Release, GCC",
+      "inherits": "linux-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      },
+      "binaryDir": "${sourceDir}/build/linux-gcc-rel"
     }
   ],
   "buildPresets": [
@@ -55,6 +94,18 @@
     {
       "name": "relwithdebinfo",
       "configurePreset": "relwithdebinfo"
+    },
+    {
+      "name": "linux-rel",
+      "configurePreset": "linux-rel"
+    },
+    {
+      "name": "linux-dbg",
+      "configurePreset": "linux-dbg"
+    },
+    {
+      "name": "linux-gcc-rel",
+      "configurePreset": "linux-gcc-rel"
     }
   ],
   "testPresets": [
@@ -71,6 +122,36 @@
     {
       "name": "relwithdebinfo",
       "configurePreset": "relwithdebinfo",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "linux-rel",
+      "configurePreset": "linux-rel",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "linux-dbg",
+      "configurePreset": "linux-dbg",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "linux-gcc-rel",
+      "configurePreset": "linux-gcc-rel",
       "output": {
         "outputOnFailure": true
       },

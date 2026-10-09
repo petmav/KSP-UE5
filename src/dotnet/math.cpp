@@ -13,15 +13,20 @@
 // Visual Studio 2013 CRT (msvcr120): its cosh/sinh/tanh/exp/pow/asin/atan/atan2 differ in the last bit from the current
 // Windows UCRT on ~1% of inputs (C7 capture; checked function by function with ctypes). On Windows the VS2013 CRT is
 // loaded at runtime from msvcr120_clr0400.dll (installed with .NET Framework 4.x, i.e. every Windows 10/11) or
-// msvcr120.dll; elsewhere, or if neither is present, <cmath> is used (LibmBackend() reports which).
+// msvcr120.dll. Everywhere else (Linux, or Windows when neither DLL is present or KSP_LIBM_PORTABLE is set) the same
+// functions run as portable software: ksp::dotnet::vs2013 (src/dotnet/vs2013_libm_gen.cpp), a mechanical lift of the
+// CRT's own x64 machine code, bit-exact with the DLL (LibmBackend() reports which).
 #include "ksp/dotnet/math.hpp"
 
 #include <atomic>
+#include <cstdlib>
 #include <cstring>
 #include <mutex>
 #include <string_view>
 
 #include "ksp/dotnet/number.hpp"
+#include "ksp/dotnet/ucrt_libm.hpp"
+#include "ksp/dotnet/vs2013_libm.hpp"
 
 #ifdef _WIN32
 #include <intrin.h>
@@ -303,29 +308,27 @@ struct Crt {
     F1 tan = nullptr, asin = nullptr, acos = nullptr, atan = nullptr, sinh = nullptr, cosh = nullptr, tanh = nullptr,
        exp = nullptr, log = nullptr, log10 = nullptr;
     F2 atan2 = nullptr, pow = nullptr;
-    const char* name = "C++ <cmath> (no VS2013 CRT found)";
+    const char* name = "";
 };
 
-double CTan(double x) { return std::tan(x); }
-double CAsin(double x) { return std::asin(x); }
-double CAcos(double x) { return std::acos(x); }
-double CAtan(double x) { return std::atan(x); }
-double CSinh(double x) { return std::sinh(x); }
-double CCosh(double x) { return std::cosh(x); }
-double CTanh(double x) { return std::tanh(x); }
-double CExp(double x) { return std::exp(x); }
-double CLog(double x) { return std::log(x); }
-double CLog10(double x) { return std::log10(x); }
-double CAtan2(double y, double x) { return std::atan2(y, x); }
-double CPow(double x, double y) { return std::pow(x, y); }
+[[maybe_unused]] bool UsePortable() {
+#ifdef KSP_LIBM_PORTABLE
+    return true;
+#else
+    const char* e = std::getenv("KSPCORE_LIBM_PORTABLE");
+    return e && *e && *e != '0';
+#endif
+}
 
 const Crt& GetCrt() {
     static Crt crt;
     static std::once_flag once;
     std::call_once(once, [] {
-        crt = Crt{CTan, CAsin, CAcos, CAtan, CSinh, CCosh, CTanh, CExp, CLog, CLog10, CAtan2, CPow,
-                  "C++ <cmath> (no VS2013 CRT found)"};
+        crt = Crt{vs2013::tan, vs2013::asin, vs2013::acos, vs2013::atan, vs2013::sinh, vs2013::cosh, vs2013::tanh,
+                  vs2013::exp, vs2013::log, vs2013::log10, vs2013::atan2, vs2013::pow,
+                  "VS2013 CRT (portable software lift of msvcr120_clr0400.dll)"};
 #ifdef _WIN32
+        if (UsePortable()) return;
         for (const wchar_t* dll : {L"msvcr120_clr0400.dll", L"msvcr120.dll"}) {
             HMODULE h = LoadLibraryW(dll);
             if (!h) continue;
@@ -348,6 +351,17 @@ const Crt& GetCrt() {
 }  // namespace
 
 const char* LibmBackend() noexcept { return GetCrt().name; }
+
+// ---- Unity native single-precision functions (UCRT sinf/cosf/powf) ----
+#ifdef _WIN32
+float NativeSinf(float x) { return UsePortable() ? ucrt::sinf(x) : std::sin(x); }
+float NativeCosf(float x) { return UsePortable() ? ucrt::cosf(x) : std::cos(x); }
+float NativePowf(float x, float y) { return UsePortable() ? ucrt::powf(x, y) : std::pow(x, y); }
+#else
+float NativeSinf(float x) { return ucrt::sinf(x); }
+float NativeCosf(float x) { return ucrt::cosf(x); }
+float NativePowf(float x, float y) { return ucrt::powf(x, y); }
+#endif
 
 namespace {
 constexpr double kTwo64 = 18446744073709551616.0;

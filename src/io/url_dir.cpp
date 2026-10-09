@@ -25,7 +25,7 @@ std::string PathToUtf8(const fs::path& p) {
 }
 
 fs::path Utf8ToPath(const std::string& s) {
-    return fs::path(std::u8string(s.begin(), s.end()));
+    return dotnet::PathFromUtf8(s);
 }
 
 FileTime LastWriteTime(const fs::path& p) {

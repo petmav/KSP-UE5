@@ -58,10 +58,14 @@ public:
     // A deserialized MapSO: header fields and _data as stored in the asset. Throws std::invalid_argument when the byte
     // count is not width * height * bpp or rowWidth is not width * bpp.
     static MapSO FromSerialized(const std::string& name, int width, int height, int bpp, int rowWidth,
-                                std::vector<uint8_t> data, Origin origin = {});
+                                std::vector<uint8_t> data, Origin origin);
+    // (no `Origin origin = {}` default arguments: Clang rejects them while the class is incomplete; overloads instead)
+    static MapSO FromSerialized(const std::string& name, int width, int height, int bpp, int rowWidth,
+                                std::vector<uint8_t> data);
     // Loads <path> (raw MapSO._data) and checks its size against the header.
     static MapSO LoadRaw(const std::string& path, const std::string& name, int width, int height, int bpp,
-                         Origin origin = {});
+                         Origin origin);
+    static MapSO LoadRaw(const std::string& path, const std::string& name, int width, int height, int bpp);
 
     bool IsCompiled() const { return isCompiled_; }
     const std::string& MapName() const { return name_; }

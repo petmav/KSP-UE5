@@ -28,6 +28,10 @@ target_compile_definitions(kspcore_tests PRIVATE KSPCORE_TEST_DATA_DIR="${CMAKE_
                            KSP_DICTIONARY_CFG="${KSP_PROJECT_ROOT}/decompiled/KSP-dev/GameData/Squad/Localization/dictionary.cfg")
 add_test(NAME unit COMMAND kspcore_tests)
 
+# ---- portable libm vs the real VS2013 / UCRT DLLs (Windows only; skips elsewhere): 300k inputs per function
+add_test(NAME libm.portable_vs_dll COMMAND libm_check 300000)
+set_tests_properties(libm.portable_vs_dll PROPERTIES LABELS libm TIMEOUT 300)
+
 # ---- C ABI consumers: a pure C program, and a C++ program built with Unreal's flags (/GR-, _HAS_EXCEPTIONS=0,
 # /fp:fast) against include/kspcore/kspcore_c.h only. They prove the header is C, the lib links under UE's settings and
 # the consumer's flags do not change kspcore's results.

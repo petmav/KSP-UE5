@@ -45,10 +45,10 @@ void CollectCurves(const ConfigNode& n, int& ok, std::vector<std::string>& error
 static int RunGameDataCorpus(const RunnerOptions& opt) {
     const std::string inputs = opt.harness + "/inputs";
     std::vector<std::pair<std::string, std::string>> files;  // (kind, path)
-    for (const auto& e : fs::recursive_directory_iterator(fs::path(dotnet::Utf8ToWide(inputs + "/GameData")))) {
+    for (const auto& e : fs::recursive_directory_iterator(dotnet::PathFromUtf8(inputs + "/GameData"))) {
         if (e.is_regular_file() && dotnet::EqualsOrdinalIgnoreCase(U8(e.path().extension()), ".cfg")) files.emplace_back("cfg", U8(e.path()));
     }
-    for (const auto& e : fs::recursive_directory_iterator(fs::path(dotnet::Utf8ToWide(inputs + "/Ships")))) {
+    for (const auto& e : fs::recursive_directory_iterator(dotnet::PathFromUtf8(inputs + "/Ships"))) {
         if (e.is_regular_file() && dotnet::EqualsOrdinalIgnoreCase(U8(e.path().extension()), ".craft")) files.emplace_back("craft", U8(e.path()));
     }
     std::sort(files.begin(), files.end());
@@ -102,7 +102,7 @@ static int RunGameDataCorpus(const RunnerOptions& opt) {
         }
     }
     std::error_code ec;
-    fs::remove(fs::path(dotnet::Utf8ToWide(tmp)), ec);
+    fs::remove(dotnet::PathFromUtf8(tmp), ec);
 
     nlohmann::ordered_json s;
     s["files"] = files.size();

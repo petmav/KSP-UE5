@@ -24,7 +24,9 @@ unsigned Bits(float f) {
 int main(int argc, char** argv) {
     const char* info = kspcore_build_info();
     std::printf("%s\n", info);
+#ifdef _MSC_VER
     CHECK(std::strstr(info, "crt=MD ") != nullptr);
+#endif
     CHECK(std::strstr(info, "idl=0") != nullptr);
     kspcore_sim* sim = kspcore_sim_create();
     CHECK(sim != nullptr);

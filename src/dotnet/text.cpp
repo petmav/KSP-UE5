@@ -250,7 +250,22 @@ std::wstring Utf8ToWide(std::string_view s) {
     MultiByteToWideChar(CP_UTF8, 0, s.data(), static_cast<int>(s.size()), w.data(), n);
     return w;
 #else
-    return std::wstring(s.begin(), s.end());
+    // UTF-8 -> UTF-32 (wchar_t is 32-bit here); invalid bytes map to U+FFFD like MultiByteToWideChar
+    std::wstring w;
+    w.reserve(s.size());
+    for (size_t i = 0; i < s.size();) w.push_back(static_cast<wchar_t>(NextCodePoint(s, i)));
+    return w;
+#endif
+}
+
+std::filesystem::path PathFromUtf8(std::string_view s) {
+#ifdef _WIN32
+    return std::filesystem::path(Utf8ToWide(s));
+#else
+    std::string t(s);
+    for (char& c : t)
+        if (c == '\\') c = '/';
+    return std::filesystem::path(std::u8string(t.begin(), t.end()));
 #endif
 }
 
@@ -259,7 +274,7 @@ static FILE* OpenFile(const std::string& path, const char* mode) {
     const std::wstring wmode(mode, mode + std::strlen(mode));
     return _wfopen(Utf8ToWide(path).c_str(), wmode.c_str());
 #else
-    return std::fopen(path.c_str(), mode);
+    return std::fopen(PathFromUtf8(path).c_str(), mode);
 #endif
 }
 

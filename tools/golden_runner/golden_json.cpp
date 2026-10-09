@@ -140,7 +140,7 @@ bool WriteTextFile(const std::string& path, const std::string& text) { return ks
 
 bool MakeDirs(const std::string& path) {
     std::error_code ec;
-    std::filesystem::create_directories(std::filesystem::path(ksp::dotnet::Utf8ToWide(path)), ec);
+    std::filesystem::create_directories(ksp::dotnet::PathFromUtf8(path), ec);
     return !ec;
 }
 

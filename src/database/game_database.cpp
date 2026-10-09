@@ -59,7 +59,7 @@ namespace texture_meta {
 // DatabaseLoaderTexture_DDS.cs:29 Read (header part) and DDSHeaders/DDSHeader.cs layout
 DdsInfo ReadDdsHeader(const std::string& path) {
     DdsInfo info;
-    std::ifstream f(std::filesystem::path(std::u8string(path.begin(), path.end())), std::ios::binary);
+    std::ifstream f(dotnet::PathFromUtf8(path), std::ios::binary);
     unsigned char h[128] = {};
     if (!f.read(reinterpret_cast<char*>(h), sizeof(h))) return info;
     if (Le32(h) != FourCC("DDS ")) return info;  // "DDS: File is not a DDS format file!" -> null
@@ -77,7 +77,7 @@ DdsInfo ReadDdsHeader(const std::string& path) {
 // MBMReader.cs:25 ReadTexture2D header (BinaryReader.ReadString: 7-bit encoded length prefix)
 MbmInfo ReadMbmHeader(const std::string& path) {
     MbmInfo info;
-    std::ifstream f(std::filesystem::path(std::u8string(path.begin(), path.end())), std::ios::binary);
+    std::ifstream f(dotnet::PathFromUtf8(path), std::ios::binary);
     if (!f) return info;
     uint32_t len = 0;
     int shift = 0;

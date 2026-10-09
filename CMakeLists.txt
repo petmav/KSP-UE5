@@ -1,5 +1,16 @@
 cmake_minimum_required(VERSION 3.28)
 
+# Non-Windows: prefer Clang when no compiler was chosen (GCC also works: -DCMAKE_CXX_COMPILER=g++ or preset linux-gcc-rel).
+if(NOT WIN32 AND NOT DEFINED CMAKE_CXX_COMPILER AND NOT DEFINED ENV{CXX})
+    find_program(_ksp_clangxx NAMES clang++ clang++-20 clang++-19 clang++-18 clang++-17 clang++-16)
+    find_program(_ksp_clang NAMES clang clang-20 clang-19 clang-18 clang-17 clang-16)
+    if(_ksp_clangxx AND _ksp_clang)
+        set(CMAKE_CXX_COMPILER "${_ksp_clangxx}")
+        set(CMAKE_C_COMPILER "${_ksp_clang}")
+    endif()
+endif()
+
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)  # no C++ modules: skip the dependency scan (needs clang-scan-deps)
 project(kspcore
     VERSION 0.1.0
     DESCRIPTION "Engine-agnostic C++ reimplementation of the KSP 1.12.5 simulation core"
@@ -40,6 +51,10 @@ cmake_path(NORMAL_PATH KSP_PROJECT_ROOT)
 set(KSP_HARNESS_DIR "${KSP_PROJECT_ROOT}/harness" CACHE PATH "Golden-output harness directory (read-only)")
 
 option(KSPCORE_BUILD_TESTS "Build unit tests and the golden gate" ON)
+# The VS2013 CRT libm functions (cosh, sinh, pow, tanh, asin, atan, exp, atan2, tan, acos, log, log10): on Windows the
+# default is to call msvcr120_clr0400.dll / msvcr120.dll; elsewhere (and with this option ON) the bit-exact portable
+# software lift (src/dotnet/vs2013_libm_gen.cpp) is used. Env KSPCORE_LIBM_PORTABLE=1 forces it at run time.
+option(KSP_LIBM_PORTABLE "Force the portable software libm (bit-exact VS2013 CRT lift) instead of loading msvcr120.dll" OFF)
 
 # ---------------------------------------------------------------------------------------------------------------------
 # kspcore's own compiler flags, applied PRIVATELY to kspcore's targets (never propagated to consumers, and consumers'
@@ -64,5 +79,8 @@ add_subdirectory(src)
 if(KSPCORE_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tools/golden_runner)
+    add_executable(libm_check tools/libm_check/main.cpp)
+    target_link_libraries(libm_check PRIVATE kspcore)
+    ksp_set_build_flags(libm_check)
     add_subdirectory(tests)
 endif()

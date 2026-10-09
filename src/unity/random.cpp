@@ -4,6 +4,7 @@
 
 #include <cmath>
 
+#include "ksp/dotnet/ucrt_libm.hpp"
 #include "ksp/dotnet/math.hpp"
 #include "ksp/dotnet/mono_float.hpp"
 #include "ksp/unity/mathf.hpp"
@@ -60,13 +61,13 @@ Vector3f UnityRandom::onUnitSphere() {
     const float z = Range(-1.0f, 1.0f);
     const float a = Range(0.0f, kTwoPi);
     const float r = std::sqrt(1.0f - z * z);
-    return {r * std::cos(a), r * std::sin(a), z};
+    return {r * dotnet::NativeCosf(a), r * dotnet::NativeSinf(a), z};
 }
 
 // onUnitSphere * powf(value, 1/3)
 Vector3f UnityRandom::insideUnitSphere() {
     const Vector3f u = onUnitSphere();
-    const float s = std::pow(value(), 0.333333343f);
+    const float s = dotnet::NativePowf(value(), 0.333333343f);
     return {u.x * s, u.y * s, u.z * s};
 }
 
@@ -74,7 +75,7 @@ Vector3f UnityRandom::insideUnitSphere() {
 Vector2f UnityRandom::insideUnitCircle() {
     const float t = Range(0.0f, kTwoPi);
     const float r = std::sqrt(Range(0.0f, 1.0f));
-    return {r * std::cos(t), r * std::sin(t)};
+    return {r * dotnet::NativeCosf(t), r * dotnet::NativeSinf(t)};
 }
 
 // Normalize(Range(-1,1) x4) as (x, y, z, w), divide by the norm, then negate all components if w < 0
@@ -96,7 +97,7 @@ Quaternionf UnityRandom::rotationUniform() {
     const float u3 = Range(0.0f, kTwoPi);
     const float a = std::sqrt(1.0f - u1);
     const float b = std::sqrt(u1);
-    Quaternionf q(a * std::sin(u2), a * std::cos(u2), b * std::sin(u3), b * std::cos(u3));
+    Quaternionf q(a * dotnet::NativeSinf(u2), a * dotnet::NativeCosf(u2), b * dotnet::NativeSinf(u3), b * dotnet::NativeCosf(u3));
     if (q.w < 0.0f) q = Quaternionf(-q.x, -q.y, -q.z, -q.w);
     return q;
 }

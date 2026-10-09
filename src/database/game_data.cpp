@@ -1,3 +1,4 @@
+#include "ksp/dotnet/text.hpp"
 #include "ksp/database/game_data.hpp"
 
 #include <filesystem>
@@ -13,7 +14,7 @@ GameData::~GameData() {
 
 void GameData::Load(const Options& options) {
     namespace fs = std::filesystem;
-    const fs::path root = fs::absolute(fs::path(std::u8string(options.gameRoot.begin(), options.gameRoot.end()))).lexically_normal();
+    const fs::path root = fs::absolute(dotnet::PathFromUtf8(options.gameRoot)).lexically_normal();
     const std::u8string r8 = root.u8string();
     std::string rootStr(r8.begin(), r8.end());
     while (!rootStr.empty() && (rootStr.back() == '\\' || rootStr.back() == '/')) rootStr.pop_back();

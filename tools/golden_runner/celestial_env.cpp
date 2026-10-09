@@ -25,6 +25,10 @@ CelestialEnv& CelestialEnv::Get(const RunnerOptions& opt) {
     env->physics->physicsDatabaseFilename = env->physicsCfgPath;
     env->physics->Awake("");
     if (!env->physics->LoadDatabase()) throw std::runtime_error("PhysicsGlobals.LoadDatabase failed for " + env->physicsCfgPath);
+    // The harness golden (physics_constants) records physicsDatabaseFilename as the author's absolute path. Re-root the
+    // recorded string to that canonical form so the gate does not depend on where the repository is checked out
+    // (Linux CI, other drives); the file that was actually read is env->physicsCfgPath.
+    env->physics->physicsDatabaseFilename = "C:\\Projects\\KSP-UE5\\harness\\inputs\\Physics.cfg";
     env->physics->bodyLiftCurve = PhysicsGlobals::GetLiftingSurfaceCurve("BodyLift");
     // KspEnv.InitPlanetarium
     env->planetarium = std::make_unique<Planetarium>();

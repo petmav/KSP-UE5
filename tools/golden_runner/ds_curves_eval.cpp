@@ -201,7 +201,7 @@ void BodyCurves(const std::string& serializedPath, std::vector<CurveSource>& out
 }
 
 void PartCfgCurves(const std::string& inputs, std::vector<CurveSource>& out, std::vector<std::string>& errors) {
-    const fs::path root = fs::path(dotnet::Utf8ToWide(inputs)) / "GameData" / "Squad" / "Parts";
+    const fs::path root = dotnet::PathFromUtf8(inputs) / "GameData" / "Squad" / "Parts";
     std::vector<std::string> files;  // full paths with '\' separators (C# Directory.GetFiles + OrderBy ordinal)
     for (const auto& e : fs::recursive_directory_iterator(root)) {
         if (!e.is_regular_file()) continue;

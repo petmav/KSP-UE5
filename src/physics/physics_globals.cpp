@@ -149,7 +149,7 @@ void PhysicsGlobals::Awake(const std::string& applicationRootPath) {
     instance = this;
     if (physicsDatabaseFilename.find('\\') == std::string::npos && physicsDatabaseFilename.find('/') == std::string::npos)
         physicsDatabaseFilename = applicationRootPath + physicsDatabaseFilename;
-    SurfaceCurvesList surfaceCurves;
+    SurfaceCurvesList surfaceCurves{};
     surfaceCurves.dragCurveTail = &DragCurveTail();
     surfaceCurves.dragCurveSurface = &dragCurveSurface;
     surfaceCurves.dragCurveMultiplier = &dragCurveMultiplier;
@@ -187,7 +187,7 @@ void PhysicsGlobals::CalculateValues(const std::vector<CelestialBody*>& bodies, 
 bool PhysicsGlobals::LoadDatabase() {
     LoadDefaultLiftingSurfaceCurves();
     std::error_code ec;
-    if (std::filesystem::is_regular_file(std::filesystem::path(dotnet::Utf8ToWide(physicsDatabaseFilename)), ec)) {
+    if (std::filesystem::is_regular_file(dotnet::PathFromUtf8(physicsDatabaseFilename), ec)) {
         if (ConfigNode::NodePtr configNode = ConfigNode::Load(physicsDatabaseFilename)) {
             log::Info("PhysicsGlobals: Loading database");
             LoadDatabase(*configNode);
