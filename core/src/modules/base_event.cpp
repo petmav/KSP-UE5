@@ -177,7 +177,7 @@ std::string BaseEvent::ToString() const {
     return name_ + " (Active:" + dotnet::FormatBool(active) + ", GUIActive:" + dotnet::FormatBool(guiActive) + ")";
 }
 
-// BaseEvent.cs:173
+// BaseEvent.OnLoad (BaseEvent.cs:168)
 void BaseEvent::OnLoad(const ConfigNode& node) {
     auto b = [&](const char* key, bool& dst) {
         if (auto t = node.GetValue(key)) dst = cs::BoolParse(*t);
