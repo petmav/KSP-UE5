@@ -21,6 +21,8 @@ add_executable(golden_runner
     ds_part_database.cpp
     ds_resource_mass.cpp
     ds_vessel_state.cpp
+    ds_aero_forces.cpp
+    vessel_capture.cpp
 )
 target_link_libraries(golden_runner PRIVATE kspcore)
 ksp_set_build_flags(golden_runner)

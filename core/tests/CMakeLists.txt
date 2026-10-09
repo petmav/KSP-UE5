@@ -229,3 +229,14 @@ endif()
 ksp_golden_gate(capture.vessel_state vessel_state GOLDEN ${KSP_CAPTURES2_DIR}/aero_forces_vessel.json DROP_HEX
                 TOL ${KSP_CAPTURE_TOL} TABLES structure,states
                 DROP_COLUMNS "structure:cube_names,node_contact_areas/states:frame,UT,altitude,spd,aoa_deg,srf_velocity_x,srf_velocity_y,srf_velocity_z,ref_up_x,ref_up_y,ref_up_z")
+
+# WP-21 aerodynamics (numeric part). One templated port, two float policies (src/aero, ksp/aero/float_eval.hpp):
+#   golden.aero_forces       the .NET harness golden, every table (drag_curve_value, cube_inputs, cube_weighted, cube_drag,
+#                            drag_chain_kerbin, lifting_surface), computed with aero::NetFloat (per-operation float32 rounding as
+#                            RyuJIT does): it proves the operation order of the port against KSP's IL on the rows that have no
+#                            in-game capture (drag_chain_kerbin, lifting_surface). harness/compare/tolerances.json unchanged.
+#   capture.aero_forces_mono the in-game Mono capture of the drag-cube tables with aero::MonoFloat (the game's policy, production
+#                            code). drag_curve_value of the same file stays WP-09's capture.physics_drag_curve.
+ksp_golden_gate(golden.aero_forces aero_forces)
+ksp_golden_gate(capture.aero_forces_mono aero_forces_mono GOLDEN ${KSP_CAPTURES_DIR}/aero_forces_mono.json
+                TABLES cube_inputs,cube_weighted,cube_drag DROP_HEX TOL ${KSP_CAPTURE_TOL})
