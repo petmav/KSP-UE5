@@ -10,6 +10,7 @@ add_executable(kspcore_tests
     test_netfx_reference.cpp
     test_celestial.cpp
     test_orbit.cpp
+    test_celestial_orbit.cpp
 )
 target_link_libraries(kspcore_tests PRIVATE kspcore)
 ksp_set_build_flags(kspcore_tests)
