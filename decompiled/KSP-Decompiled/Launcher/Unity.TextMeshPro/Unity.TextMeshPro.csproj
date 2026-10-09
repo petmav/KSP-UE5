@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{AE4CF9B1-CBEE-4457-ACCB-ADF3101FBDCA}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>11.0</LangVersion>
+    <AssemblyName>Unity.TextMeshPro</AssemblyName>
+    <TargetFrameworkIdentifier>.NETStandard</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="netstandard" />
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextCoreModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.TextCoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TMPro\AtlasPopulationMode.cs" />
+    <Compile Include="TMPro\CaretInfo.cs" />
+    <Compile Include="TMPro\CaretPosition.cs" />
+    <Compile Include="TMPro\ColorMode.cs" />
+    <Compile Include="TMPro\ColorTween.cs" />
+    <Compile Include="TMPro\Compute_DistanceTransform_EventTypes.cs" />
+    <Compile Include="TMPro\Compute_DT_EventArgs.cs" />
+    <Compile Include="TMPro\Extents.cs" />
+    <Compile Include="TMPro\FaceInfo_Legacy.cs" />
+    <Compile Include="TMPro\FastAction.cs" />
+    <Compile Include="TMPro\FloatTween.cs" />
+    <Compile Include="TMPro\FontAssetCreationSettings.cs" />
+    <Compile Include="TMPro\FontFeatureLookupFlags.cs" />
+    <Compile Include="TMPro\FontStyles.cs" />
+    <Compile Include="TMPro\FontWeight.cs" />
+    <Compile Include="TMPro\GlyphPairKey.cs" />
+    <Compile Include="TMPro\GlyphValueRecord_Legacy.cs" />
+    <Compile Include="TMPro\HighlightState.cs" />
+    <Compile Include="TMPro\HorizontalAlignmentOptions.cs" />
+    <Compile Include="TMPro\ITextElement.cs" />
+    <Compile Include="TMPro\ITextPreprocessor.cs" />
+    <Compile Include="TMPro\ITweenValue.cs" />
+    <Compile Include="TMPro\KerningPair.cs" />
+    <Compile Include="TMPro\KerningPairKey.cs" />
+    <Compile Include="TMPro\KerningTable.cs" />
+    <Compile Include="TMPro\MaskingOffsetMode.cs" />
+    <Compile Include="TMPro\MaskingTypes.cs" />
+    <Compile Include="TMPro\MaterialReference.cs" />
+    <Compile Include="TMPro\MaterialReferenceManager.cs" />
+    <Compile Include="TMPro\Mesh_Extents.cs" />
+    <Compile Include="TMPro\RichTextTagAttribute.cs" />
+    <Compile Include="TMPro\SetPropertyUtility.cs" />
+    <Compile Include="TMPro\ShaderUtilities.cs" />
+    <Compile Include="TMPro\SpriteAssetUtilities\SpriteAssetImportFormats.cs" />
+    <Compile Include="TMPro\SpriteAssetUtilities\TexturePacker_JsonArray.cs" />
+    <Compile Include="TMPro\TagAttribute.cs" />
+    <Compile Include="TMPro\TagHashCode.cs" />
+    <Compile Include="TMPro\TagUnitType.cs" />
+    <Compile Include="TMPro\TagValueType.cs" />
+    <Compile Include="TMPro\TextAlignmentOptions.cs" />
+    <Compile Include="TMPro\TextContainer.cs" />
+    <Compile Include="TMPro\TextContainerAnchors.cs" />
+    <Compile Include="TMPro\TextElementType.cs" />
+    <Compile Include="TMPro\TextMeshPro.cs" />
+    <Compile Include="TMPro\TextMeshProUGUI.cs" />
+    <Compile Include="TMPro\TextOverflowModes.cs" />
+    <Compile Include="TMPro\TextRenderFlags.cs" />
+    <Compile Include="TMPro\TextureMappingOptions.cs" />
+    <Compile Include="TMPro\TMPro_EventManager.cs" />
+    <Compile Include="TMPro\TMPro_ExtensionMethods.cs" />
+    <Compile Include="TMPro\TMP_Asset.cs" />
+    <Compile Include="TMPro\TMP_Character.cs" />
+    <Compile Include="TMPro\TMP_CharacterInfo.cs" />
+    <Compile Include="TMPro\TMP_ColorGradient.cs" />
+    <Compile Include="TMPro\TMP_Compatibility.cs" />
+    <Compile Include="TMPro\TMP_DefaultControls.cs" />
+    <Compile Include="TMPro\TMP_Dropdown.cs" />
+    <Compile Include="TMPro\TMP_FontAsset.cs" />
+    <Compile Include="TMPro\TMP_FontAssetUtilities.cs" />
+    <Compile Include="TMPro\TMP_FontFeatureTable.cs" />
+    <Compile Include="TMPro\TMP_FontStyleStack.cs" />
+    <Compile Include="TMPro\TMP_FontUtilities.cs" />
+    <Compile Include="TMPro\TMP_FontWeightPair.cs" />
+    <Compile Include="TMPro\TMP_Glyph.cs" />
+    <Compile Include="TMPro\TMP_GlyphAdjustmentRecord.cs" />
+    <Compile Include="TMPro\TMP_GlyphPairAdjustmentRecord.cs" />
+    <Compile Include="TMPro\TMP_GlyphValueRecord.cs" />
+    <Compile Include="TMPro\TMP_InputField.cs" />
+    <Compile Include="TMPro\TMP_InputValidator.cs" />
+    <Compile Include="TMPro\TMP_LineInfo.cs" />
+    <Compile Include="TMPro\TMP_LinkInfo.cs" />
+    <Compile Include="TMPro\TMP_ListPool.cs" />
+    <Compile Include="TMPro\TMP_MaterialManager.cs" />
+    <Compile Include="TMPro\TMP_MaterialReference.cs" />
+    <Compile Include="TMPro\TMP_Math.cs" />
+    <Compile Include="TMPro\TMP_MeshInfo.cs" />
+    <Compile Include="TMPro\TMP_ObjectPool.cs" />
+    <Compile Include="TMPro\TMP_Offset.cs" />
+    <Compile Include="TMPro\TMP_PageInfo.cs" />
+    <Compile Include="TMPro\TMP_ResourceManager.cs" />
+    <Compile Include="TMPro\TMP_ScrollbarEventHandler.cs" />
+    <Compile Include="TMPro\TMP_SelectionCaret.cs" />
+    <Compile Include="TMPro\TMP_Settings.cs" />
+    <Compile Include="TMPro\TMP_Sprite.cs" />
+    <Compile Include="TMPro\TMP_SpriteAnimator.cs" />
+    <Compile Include="TMPro\TMP_SpriteAsset.cs" />
+    <Compile Include="TMPro\TMP_SpriteCharacter.cs" />
+    <Compile Include="TMPro\TMP_SpriteGlyph.cs" />
+    <Compile Include="TMPro\TMP_SpriteInfo.cs" />
+    <Compile Include="TMPro\TMP_Style.cs" />
+    <Compile Include="TMPro\TMP_StyleSheet.cs" />
+    <Compile Include="TMPro\TMP_SubMesh.cs" />
+    <Compile Include="TMPro\TMP_SubMeshUI.cs" />
+    <Compile Include="TMPro\TMP_Text.cs" />
+    <Compile Include="TMPro\TMP_TextElement.cs" />
+    <Compile Include="TMPro\TMP_TextElementType.cs" />
+    <Compile Include="TMPro\TMP_TextElement_Legacy.cs" />
+    <Compile Include="TMPro\TMP_TextInfo.cs" />
+    <Compile Include="TMPro\TMP_TextParsingUtilities.cs" />
+    <Compile Include="TMPro\TMP_TextProcessingStack.cs" />
+    <Compile Include="TMPro\TMP_TextUtilities.cs" />
+    <Compile Include="TMPro\TMP_UpdateManager.cs" />
+    <Compile Include="TMPro\TMP_UpdateRegistry.cs" />
+    <Compile Include="TMPro\TMP_Vertex.cs" />
+    <Compile Include="TMPro\TMP_VertexDataUpdateFlags.cs" />
+    <Compile Include="TMPro\TMP_WordInfo.cs" />
+    <Compile Include="TMPro\TweenRunner.cs" />
+    <Compile Include="TMPro\Unicode.cs" />
+    <Compile Include="TMPro\VertexGradient.cs" />
+    <Compile Include="TMPro\VertexSortingOrder.cs" />
+    <Compile Include="TMPro\VerticalAlignmentOptions.cs" />
+    <Compile Include="TMPro\WordWrapState.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

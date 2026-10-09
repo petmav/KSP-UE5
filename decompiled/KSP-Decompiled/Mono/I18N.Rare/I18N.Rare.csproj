@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{E97F5956-AD20-4DC4-A337-18AE9A57EC1D}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>11.0</LangVersion>
+    <AssemblyName>I18N.Rare</AssemblyName>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="I18N">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\KSP_x64_Data\Managed\I18N.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Consts.cs" />
+    <Compile Include="I18N\Rare\CP1026.cs" />
+    <Compile Include="I18N\Rare\CP1047.cs" />
+    <Compile Include="I18N\Rare\CP1140.cs" />
+    <Compile Include="I18N\Rare\CP1141.cs" />
+    <Compile Include="I18N\Rare\CP1142.cs" />
+    <Compile Include="I18N\Rare\CP1143.cs" />
+    <Compile Include="I18N\Rare\CP1144.cs" />
+    <Compile Include="I18N\Rare\CP1145.cs" />
+    <Compile Include="I18N\Rare\CP1146.cs" />
+    <Compile Include="I18N\Rare\CP1147.cs" />
+    <Compile Include="I18N\Rare\CP1148.cs" />
+    <Compile Include="I18N\Rare\CP1149.cs" />
+    <Compile Include="I18N\Rare\CP20273.cs" />
+    <Compile Include="I18N\Rare\CP20277.cs" />
+    <Compile Include="I18N\Rare\CP20278.cs" />
+    <Compile Include="I18N\Rare\CP20280.cs" />
+    <Compile Include="I18N\Rare\CP20284.cs" />
+    <Compile Include="I18N\Rare\CP20285.cs" />
+    <Compile Include="I18N\Rare\CP20290.cs" />
+    <Compile Include="I18N\Rare\CP20297.cs" />
+    <Compile Include="I18N\Rare\CP20420.cs" />
+    <Compile Include="I18N\Rare\CP20424.cs" />
+    <Compile Include="I18N\Rare\CP20871.cs" />
+    <Compile Include="I18N\Rare\CP21025.cs" />
+    <Compile Include="I18N\Rare\CP37.cs" />
+    <Compile Include="I18N\Rare\CP500.cs" />
+    <Compile Include="I18N\Rare\CP708.cs" />
+    <Compile Include="I18N\Rare\CP852.cs" />
+    <Compile Include="I18N\Rare\CP855.cs" />
+    <Compile Include="I18N\Rare\CP857.cs" />
+    <Compile Include="I18N\Rare\CP858.cs" />
+    <Compile Include="I18N\Rare\CP862.cs" />
+    <Compile Include="I18N\Rare\CP864.cs" />
+    <Compile Include="I18N\Rare\CP866.cs" />
+    <Compile Include="I18N\Rare\CP869.cs" />
+    <Compile Include="I18N\Rare\CP870.cs" />
+    <Compile Include="I18N\Rare\CP875.cs" />
+    <Compile Include="I18N\Rare\ENCasmo_708.cs" />
+    <Compile Include="I18N\Rare\ENCibm00858.cs" />
+    <Compile Include="I18N\Rare\ENCibm01140.cs" />
+    <Compile Include="I18N\Rare\ENCibm01141.cs" />
+    <Compile Include="I18N\Rare\ENCibm01142.cs" />
+    <Compile Include="I18N\Rare\ENCibm01143.cs" />
+    <Compile Include="I18N\Rare\ENCibm037.cs" />
+    <Compile Include="I18N\Rare\ENCibm1025.cs" />
+    <Compile Include="I18N\Rare\ENCibm1026.cs" />
+    <Compile Include="I18N\Rare\ENCibm1047.cs" />
+    <Compile Include="I18N\Rare\ENCibm1144.cs" />
+    <Compile Include="I18N\Rare\ENCibm1145.cs" />
+    <Compile Include="I18N\Rare\ENCibm1146.cs" />
+    <Compile Include="I18N\Rare\ENCibm1147.cs" />
+    <Compile Include="I18N\Rare\ENCibm1148.cs" />
+    <Compile Include="I18N\Rare\ENCibm1149.cs" />
+    <Compile Include="I18N\Rare\ENCibm273.cs" />
+    <Compile Include="I18N\Rare\ENCibm277.cs" />
+    <Compile Include="I18N\Rare\ENCibm278.cs" />
+    <Compile Include="I18N\Rare\ENCibm280.cs" />
+    <Compile Include="I18N\Rare\ENCibm284.cs" />
+    <Compile Include="I18N\Rare\ENCibm285.cs" />
+    <Compile Include="I18N\Rare\ENCibm290.cs" />
+    <Compile Include="I18N\Rare\ENCibm297.cs" />
+    <Compile Include="I18N\Rare\ENCibm420.cs" />
+    <Compile Include="I18N\Rare\ENCibm424.cs" />
+    <Compile Include="I18N\Rare\ENCibm500.cs" />
+    <Compile Include="I18N\Rare\ENCibm852.cs" />
+    <Compile Include="I18N\Rare\ENCibm855.cs" />
+    <Compile Include="I18N\Rare\ENCibm857.cs" />
+    <Compile Include="I18N\Rare\ENCibm862.cs" />
+    <Compile Include="I18N\Rare\ENCibm864.cs" />
+    <Compile Include="I18N\Rare\ENCibm866.cs" />
+    <Compile Include="I18N\Rare\ENCibm869.cs" />
+    <Compile Include="I18N\Rare\ENCibm870.cs" />
+    <Compile Include="I18N\Rare\ENCibm871.cs" />
+    <Compile Include="I18N\Rare\ENCibm875.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

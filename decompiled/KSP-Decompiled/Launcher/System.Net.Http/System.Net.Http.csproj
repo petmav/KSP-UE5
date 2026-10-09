@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{1E2D0319-545C-4FE9-9C8C-F26284065ADC}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>11.0</LangVersion>
+    <AssemblyName>System.Net.Http</AssemblyName>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\System.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\System.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Consts.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="System\Net\Http\ByteArrayContent.cs" />
+    <Compile Include="System\Net\Http\ClientCertificateOption.cs" />
+    <Compile Include="System\Net\Http\DelegatingHandler.cs" />
+    <Compile Include="System\Net\Http\FormUrlEncodedContent.cs" />
+    <Compile Include="System\Net\Http\Headers\AuthenticationHeaderValue.cs" />
+    <Compile Include="System\Net\Http\Headers\CacheControlHeaderValue.cs" />
+    <Compile Include="System\Net\Http\Headers\CollectionExtensions.cs" />
+    <Compile Include="System\Net\Http\Headers\CollectionParser.cs" />
+    <Compile Include="System\Net\Http\Headers\ContentDispositionHeaderValue.cs" />
+    <Compile Include="System\Net\Http\Headers\ContentRangeHeaderValue.cs" />
+    <Compile Include="System\Net\Http\Headers\ElementTryParser.cs" />
+    <Compile Include="System\Net\Http\Headers\EntityTagHeaderValue.cs" />
+    <Compile Include="System\Net\Http\Headers\HashCodeCalculator.cs" />
+    <Compile Include="System\Net\Http\Headers\HeaderInfo.cs" />
+    <Compile Include="System\Net\Http\Headers\HttpContentHeaders.cs" />
+    <Compile Include="System\Net\Http\Headers\HttpHeaderKind.cs" />
+    <Compile Include="System\Net\Http\Headers\HttpHeaders.cs" />
+    <Compile Include="System\Net\Http\Headers\HttpHeaderValueCollection.cs" />
+    <Compile Include="System\Net\Http\Headers\HttpRequestHeaders.cs" />
+    <Compile Include="System\Net\Http\Headers\HttpResponseHeaders.cs" />
+    <Compile Include="System\Net\Http\Headers\Lexer.cs" />
+    <Compile Include="System\Net\Http\Headers\MediaTypeHeaderValue.cs" />
+    <Compile Include="System\Net\Http\Headers\MediaTypeWithQualityHeaderValue.cs" />
+    <Compile Include="System\Net\Http\Headers\NameValueHeaderValue.cs" />
+    <Compile Include="System\Net\Http\Headers\NameValueWithParametersHeaderValue.cs" />
+    <Compile Include="System\Net\Http\Headers\Parser.cs" />
+    <Compile Include="System\Net\Http\Headers\ProductHeaderValue.cs" />
+    <Compile Include="System\Net\Http\Headers\ProductInfoHeaderValue.cs" />
+    <Compile Include="System\Net\Http\Headers\QualityValue.cs" />
+    <Compile Include="System\Net\Http\Headers\RangeConditionHeaderValue.cs" />
+    <Compile Include="System\Net\Http\Headers\RangeHeaderValue.cs" />
+    <Compile Include="System\Net\Http\Headers\RangeItemHeaderValue.cs" />
+    <Compile Include="System\Net\Http\Headers\RetryConditionHeaderValue.cs" />
+    <Compile Include="System\Net\Http\Headers\StringWithQualityHeaderValue.cs" />
+    <Compile Include="System\Net\Http\Headers\Token.cs" />
+    <Compile Include="System\Net\Http\Headers\TransferCodingHeaderValue.cs" />
+    <Compile Include="System\Net\Http\Headers\TransferCodingWithQualityHeaderValue.cs" />
+    <Compile Include="System\Net\Http\Headers\TryParseDelegate.cs" />
+    <Compile Include="System\Net\Http\Headers\TryParseListDelegate.cs" />
+    <Compile Include="System\Net\Http\Headers\ViaHeaderValue.cs" />
+    <Compile Include="System\Net\Http\Headers\WarningHeaderValue.cs" />
+    <Compile Include="System\Net\Http\HttpClient.cs" />
+    <Compile Include="System\Net\Http\HttpClientHandler.cs" />
+    <Compile Include="System\Net\Http\HttpCompletionOption.cs" />
+    <Compile Include="System\Net\Http\HttpContent.cs" />
+    <Compile Include="System\Net\Http\HttpMessageHandler.cs" />
+    <Compile Include="System\Net\Http\HttpMessageInvoker.cs" />
+    <Compile Include="System\Net\Http\HttpMethod.cs" />
+    <Compile Include="System\Net\Http\HttpRequestException.cs" />
+    <Compile Include="System\Net\Http\HttpRequestMessage.cs" />
+    <Compile Include="System\Net\Http\HttpResponseMessage.cs" />
+    <Compile Include="System\Net\Http\MessageProcessingHandler.cs" />
+    <Compile Include="System\Net\Http\MultipartContent.cs" />
+    <Compile Include="System\Net\Http\MultipartFormDataContent.cs" />
+    <Compile Include="System\Net\Http\StreamContent.cs" />
+    <Compile Include="System\Net\Http\StringContent.cs" />
+    <Compile Include="Unity\ThrowStub.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

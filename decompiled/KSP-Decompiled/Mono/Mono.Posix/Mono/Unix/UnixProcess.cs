@@ -1,0 +1,120 @@
+using System;
+using Mono.Unix.Native;
+
+namespace Mono.Unix;
+
+public sealed class UnixProcess
+{
+	private int pid;
+
+	public int Id => pid;
+
+	public bool HasExited => Syscall.WIFEXITED(GetProcessStatus());
+
+	public int ExitCode
+	{
+		get
+		{
+			if (!HasExited)
+			{
+				throw new InvalidOperationException(global::Locale.GetText("Process hasn't exited"));
+			}
+			return Syscall.WEXITSTATUS(GetProcessStatus());
+		}
+	}
+
+	public bool HasSignaled => Syscall.WIFSIGNALED(GetProcessStatus());
+
+	public Signum TerminationSignal
+	{
+		get
+		{
+			if (!HasSignaled)
+			{
+				throw new InvalidOperationException(global::Locale.GetText("Process wasn't terminated by a signal"));
+			}
+			return Syscall.WTERMSIG(GetProcessStatus());
+		}
+	}
+
+	public bool HasStopped => Syscall.WIFSTOPPED(GetProcessStatus());
+
+	public Signum StopSignal
+	{
+		get
+		{
+			if (!HasStopped)
+			{
+				throw new InvalidOperationException(global::Locale.GetText("Process isn't stopped"));
+			}
+			return Syscall.WSTOPSIG(GetProcessStatus());
+		}
+	}
+
+	public int ProcessGroupId
+	{
+		get
+		{
+			return Syscall.getpgid(pid);
+		}
+		set
+		{
+			UnixMarshal.ThrowExceptionForLastErrorIf(Syscall.setpgid(pid, value));
+		}
+	}
+
+	public int SessionId
+	{
+		get
+		{
+			int num = Syscall.getsid(pid);
+			UnixMarshal.ThrowExceptionForLastErrorIf(num);
+			return num;
+		}
+	}
+
+	internal UnixProcess(int pid)
+	{
+		this.pid = pid;
+	}
+
+	private int GetProcessStatus()
+	{
+		int status;
+		int num = Syscall.waitpid(pid, out status, WaitOptions.WNOHANG | WaitOptions.WUNTRACED);
+		UnixMarshal.ThrowExceptionForLastErrorIf(num);
+		return num;
+	}
+
+	public static UnixProcess GetCurrentProcess()
+	{
+		return new UnixProcess(GetCurrentProcessId());
+	}
+
+	public static int GetCurrentProcessId()
+	{
+		return Syscall.getpid();
+	}
+
+	public void Kill()
+	{
+		Signal(Signum.SIGKILL);
+	}
+
+	[CLSCompliant(false)]
+	public void Signal(Signum signal)
+	{
+		UnixMarshal.ThrowExceptionForLastErrorIf(Syscall.kill(pid, signal));
+	}
+
+	public void WaitForExit()
+	{
+		int num;
+		do
+		{
+			num = Syscall.waitpid(pid, out var _, (WaitOptions)0);
+		}
+		while (UnixMarshal.ShouldRetrySyscall(num));
+		UnixMarshal.ThrowExceptionForLastErrorIf(num);
+	}
+}

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{699E29D9-EE33-4DE2-A06B-5A0876C07AFA}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>11.0</LangVersion>
+    <AssemblyName>UnityEngine.InputLegacyModule</AssemblyName>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="UnityEngine.SharedInternalsModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\KSP_x64_Data\Managed\UnityEngine.SharedInternalsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\KSP_x64_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnityEngine\AccelerationEvent.cs" />
+    <Compile Include="UnityEngine\CameraRaycastHelper.cs" />
+    <Compile Include="UnityEngine\Compass.cs" />
+    <Compile Include="UnityEngine\DeviceOrientation.cs" />
+    <Compile Include="UnityEngine\Gyroscope.cs" />
+    <Compile Include="UnityEngine\IMECompositionMode.cs" />
+    <Compile Include="UnityEngine\Input.cs" />
+    <Compile Include="UnityEngine\LocationInfo.cs" />
+    <Compile Include="UnityEngine\LocationService.cs" />
+    <Compile Include="UnityEngine\LocationServiceStatus.cs" />
+    <Compile Include="UnityEngine\SendMouseEvents.cs" />
+    <Compile Include="UnityEngine\Touch.cs" />
+    <Compile Include="UnityEngine\TouchPhase.cs" />
+    <Compile Include="UnityEngine\TouchType.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

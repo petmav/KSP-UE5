@@ -1,0 +1,7 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+# KSPBuildTools build output (built Assembly-CSharp.dll/.pdb)
+GameData/

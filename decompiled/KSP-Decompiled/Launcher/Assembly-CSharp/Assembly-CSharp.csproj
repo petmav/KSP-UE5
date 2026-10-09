@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{BB379ACA-C375-4DAF-9772-55E00E10F0E5}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>7.3</LangVersion>
+    <AssemblyName>Assembly-CSharp</AssemblyName>
+    <TargetFrameworkIdentifier>.NETStandard</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="netstandard" />
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestWWWModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="activeScreen.cs" />
+    <Compile Include="AdvancedScreen.cs" />
+    <Compile Include="AdvancedSettings.cs" />
+    <Compile Include="AudioScreen.cs" />
+    <Compile Include="Background.cs" />
+    <Compile Include="Banner.cs" />
+    <Compile Include="CFGFileOperator.cs" />
+    <Compile Include="DynamicUIElement.cs" />
+    <Compile Include="Exit.cs" />
+    <Compile Include="GraphicsProfiles.cs" />
+    <Compile Include="GraphicsScreen.cs" />
+    <Compile Include="KSPSite.cs" />
+    <Compile Include="KSPSiteType.cs" />
+    <Compile Include="News.cs" />
+    <Compile Include="NewsPost.cs" />
+    <Compile Include="Play.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Settings.cs" />
+    <Compile Include="SettingsUI.cs" />
+    <Compile Include="StatsCallHome.cs" />
+    <Compile Include="UpdateKSP.cs" />
+    <Compile Include="WindowMan.cs" />
+    <Compile Include="WindowManager.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

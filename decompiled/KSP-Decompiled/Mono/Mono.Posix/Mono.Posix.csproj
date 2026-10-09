@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{F346C610-D8FB-435E-91FB-1FC5FD09D0EA}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>11.0</LangVersion>
+    <AssemblyName>Mono.Posix</AssemblyName>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Consts.cs" />
+    <Compile Include="Locale.cs" />
+    <Compile Include="MapAttribute.cs" />
+    <Compile Include="Mono\Posix\AccessMode.cs" />
+    <Compile Include="Mono\Posix\Catalog.cs" />
+    <Compile Include="Mono\Posix\FileMode.cs" />
+    <Compile Include="Mono\Posix\OpenFlags.cs" />
+    <Compile Include="Mono\Posix\PeerCred.cs" />
+    <Compile Include="Mono\Posix\PeerCredData.cs" />
+    <Compile Include="Mono\Posix\Signals.cs" />
+    <Compile Include="Mono\Posix\Stat.cs" />
+    <Compile Include="Mono\Posix\StatMode.cs" />
+    <Compile Include="Mono\Posix\StatModeMasks.cs" />
+    <Compile Include="Mono\Posix\Syscall.cs" />
+    <Compile Include="Mono\Posix\UnixEndPoint.cs" />
+    <Compile Include="Mono\Posix\WaitOptions.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\ClientConnection.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\HostConnectionPool.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\MessageStatus.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\MethodCallHeaderHandler.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\ReusableUnixClient.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\SimpleBinder.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\UnixBinaryClientFormatterSink.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\UnixBinaryClientFormatterSinkProvider.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\UnixBinaryCore.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\UnixBinaryServerFormatterSink.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\UnixBinaryServerFormatterSinkProvider.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\UnixChannel.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\UnixClientChannel.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\UnixClientTransportSink.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\UnixClientTransportSinkProvider.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\UnixConnection.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\UnixConnectionPool.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\UnixMessageIO.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\UnixServerChannel.cs" />
+    <Compile Include="Mono\Remoting\Channels\Unix\UnixServerTransportSink.cs" />
+    <Compile Include="Mono\Unix\AbstractUnixEndPoint.cs" />
+    <Compile Include="Mono\Unix\Catalog.cs" />
+    <Compile Include="Mono\Unix\ErrorMarshal.cs" />
+    <Compile Include="Mono\Unix\FileAccessPattern.cs" />
+    <Compile Include="Mono\Unix\FileAccessPermissions.cs" />
+    <Compile Include="Mono\Unix\FileHandleOperations.cs" />
+    <Compile Include="Mono\Unix\FileSpecialAttributes.cs" />
+    <Compile Include="Mono\Unix\FileTypes.cs" />
+    <Compile Include="Mono\Unix\Native\AccessModes.cs" />
+    <Compile Include="Mono\Unix\Native\AtFlags.cs" />
+    <Compile Include="Mono\Unix\Native\blkcnt_tAttribute.cs" />
+    <Compile Include="Mono\Unix\Native\blksize_tAttribute.cs" />
+    <Compile Include="Mono\Unix\Native\CdeclFunction.cs" />
+    <Compile Include="Mono\Unix\Native\Cmsghdr.cs" />
+    <Compile Include="Mono\Unix\Native\ConfstrName.cs" />
+    <Compile Include="Mono\Unix\Native\dev_tAttribute.cs" />
+    <Compile Include="Mono\Unix\Native\DirectoryNotifyFlags.cs" />
+    <Compile Include="Mono\Unix\Native\Dirent.cs" />
+    <Compile Include="Mono\Unix\Native\EpollEvent.cs" />
+    <Compile Include="Mono\Unix\Native\EpollEvents.cs" />
+    <Compile Include="Mono\Unix\Native\EpollFlags.cs" />
+    <Compile Include="Mono\Unix\Native\EpollOp.cs" />
+    <Compile Include="Mono\Unix\Native\Errno.cs" />
+    <Compile Include="Mono\Unix\Native\FcntlCommand.cs" />
+    <Compile Include="Mono\Unix\Native\FileNameMarshaler.cs" />
+    <Compile Include="Mono\Unix\Native\FilePermissions.cs" />
+    <Compile Include="Mono\Unix\Native\FilePosition.cs" />
+    <Compile Include="Mono\Unix\Native\Flock.cs" />
+    <Compile Include="Mono\Unix\Native\fsblkcnt_tAttribute.cs" />
+    <Compile Include="Mono\Unix\Native\fsfilcnt_tAttribute.cs" />
+    <Compile Include="Mono\Unix\Native\Fstab.cs" />
+    <Compile Include="Mono\Unix\Native\gid_tAttribute.cs" />
+    <Compile Include="Mono\Unix\Native\Group.cs" />
+    <Compile Include="Mono\Unix\Native\In6Addr.cs" />
+    <Compile Include="Mono\Unix\Native\InAddr.cs" />
+    <Compile Include="Mono\Unix\Native\ino_tAttribute.cs" />
+    <Compile Include="Mono\Unix\Native\Iovec.cs" />
+    <Compile Include="Mono\Unix\Native\Linger.cs" />
+    <Compile Include="Mono\Unix\Native\LockfCommand.cs" />
+    <Compile Include="Mono\Unix\Native\LockType.cs" />
+    <Compile Include="Mono\Unix\Native\MessageFlags.cs" />
+    <Compile Include="Mono\Unix\Native\MlockallFlags.cs" />
+    <Compile Include="Mono\Unix\Native\MmapFlags.cs" />
+    <Compile Include="Mono\Unix\Native\MmapProts.cs" />
+    <Compile Include="Mono\Unix\Native\MountFlags.cs" />
+    <Compile Include="Mono\Unix\Native\MremapFlags.cs" />
+    <Compile Include="Mono\Unix\Native\Msghdr.cs" />
+    <Compile Include="Mono\Unix\Native\MsyncFlags.cs" />
+    <Compile Include="Mono\Unix\Native\NativeConvert.cs" />
+    <Compile Include="Mono\Unix\Native\nlink_tAttribute.cs" />
+    <Compile Include="Mono\Unix\Native\off_tAttribute.cs" />
+    <Compile Include="Mono\Unix\Native\OpenFlags.cs" />
+    <Compile Include="Mono\Unix\Native\Passwd.cs" />
+    <Compile Include="Mono\Unix\Native\PathconfName.cs" />
+    <Compile Include="Mono\Unix\Native\pid_tAttribute.cs" />
+    <Compile Include="Mono\Unix\Native\PollEvents.cs" />
+    <Compile Include="Mono\Unix\Native\Pollfd.cs" />
+    <Compile Include="Mono\Unix\Native\PosixFadviseAdvice.cs" />
+    <Compile Include="Mono\Unix\Native\PosixMadviseAdvice.cs" />
+    <Compile Include="Mono\Unix\Native\RealTimeSignum.cs" />
+    <Compile Include="Mono\Unix\Native\SeekFlags.cs" />
+    <Compile Include="Mono\Unix\Native\ShutdownOption.cs" />
+    <Compile Include="Mono\Unix\Native\SignalAction.cs" />
+    <Compile Include="Mono\Unix\Native\SignalHandler.cs" />
+    <Compile Include="Mono\Unix\Native\Signum.cs" />
+    <Compile Include="Mono\Unix\Native\Sockaddr.cs" />
+    <Compile Include="Mono\Unix\Native\SockaddrIn.cs" />
+    <Compile Include="Mono\Unix\Native\SockaddrIn6.cs" />
+    <Compile Include="Mono\Unix\Native\SockaddrStorage.cs" />
+    <Compile Include="Mono\Unix\Native\SockaddrType.cs" />
+    <Compile Include="Mono\Unix\Native\SockaddrUn.cs" />
+    <Compile Include="Mono\Unix\Native\Stat.cs" />
+    <Compile Include="Mono\Unix\Native\Statvfs.cs" />
+    <Compile Include="Mono\Unix\Native\Stdlib.cs" />
+    <Compile Include="Mono\Unix\Native\suseconds_tAttribute.cs" />
+    <Compile Include="Mono\Unix\Native\Syscall.cs" />
+    <Compile Include="Mono\Unix\Native\SysconfName.cs" />
+    <Compile Include="Mono\Unix\Native\SyslogFacility.cs" />
+    <Compile Include="Mono\Unix\Native\SyslogLevel.cs" />
+    <Compile Include="Mono\Unix\Native\SyslogOptions.cs" />
+    <Compile Include="Mono\Unix\Native\Timespec.cs" />
+    <Compile Include="Mono\Unix\Native\Timeval.cs" />
+    <Compile Include="Mono\Unix\Native\Timezone.cs" />
+    <Compile Include="Mono\Unix\Native\time_tAttribute.cs" />
+    <Compile Include="Mono\Unix\Native\uid_tAttribute.cs" />
+    <Compile Include="Mono\Unix\Native\UnixAddressFamily.cs" />
+    <Compile Include="Mono\Unix\Native\UnixSocketControlMessage.cs" />
+    <Compile Include="Mono\Unix\Native\UnixSocketFlags.cs" />
+    <Compile Include="Mono\Unix\Native\UnixSocketOptionName.cs" />
+    <Compile Include="Mono\Unix\Native\UnixSocketProtocol.cs" />
+    <Compile Include="Mono\Unix\Native\UnixSocketType.cs" />
+    <Compile Include="Mono\Unix\Native\Utimbuf.cs" />
+    <Compile Include="Mono\Unix\Native\Utsname.cs" />
+    <Compile Include="Mono\Unix\Native\WaitOptions.cs" />
+    <Compile Include="Mono\Unix\Native\XattrFlags.cs" />
+    <Compile Include="Mono\Unix\Native\XPrintfFunctions.cs" />
+    <Compile Include="Mono\Unix\Native\_SockaddrDynamic.cs" />
+    <Compile Include="Mono\Unix\Native\_SockaddrHeader.cs" />
+    <Compile Include="Mono\Unix\PeerCred.cs" />
+    <Compile Include="Mono\Unix\PeerCredData.cs" />
+    <Compile Include="Mono\Unix\StdioFileStream.cs" />
+    <Compile Include="Mono\Unix\UnixClient.cs" />
+    <Compile Include="Mono\Unix\UnixDirectoryInfo.cs" />
+    <Compile Include="Mono\Unix\UnixDriveInfo.cs" />
+    <Compile Include="Mono\Unix\UnixDriveType.cs" />
+    <Compile Include="Mono\Unix\UnixEncoding.cs" />
+    <Compile Include="Mono\Unix\UnixEndPoint.cs" />
+    <Compile Include="Mono\Unix\UnixEnvironment.cs" />
+    <Compile Include="Mono\Unix\UnixFileInfo.cs" />
+    <Compile Include="Mono\Unix\UnixFileSystemInfo.cs" />
+    <Compile Include="Mono\Unix\UnixGroupInfo.cs" />
+    <Compile Include="Mono\Unix\UnixIOException.cs" />
+    <Compile Include="Mono\Unix\UnixListener.cs" />
+    <Compile Include="Mono\Unix\UnixMarshal.cs" />
+    <Compile Include="Mono\Unix\UnixPath.cs" />
+    <Compile Include="Mono\Unix\UnixPipes.cs" />
+    <Compile Include="Mono\Unix\UnixProcess.cs" />
+    <Compile Include="Mono\Unix\UnixSignal.cs" />
+    <Compile Include="Mono\Unix\UnixStream.cs" />
+    <Compile Include="Mono\Unix\UnixSymbolicLinkInfo.cs" />
+    <Compile Include="Mono\Unix\UnixUserInfo.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

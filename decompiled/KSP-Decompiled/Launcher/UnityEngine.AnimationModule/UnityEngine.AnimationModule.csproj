@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{52AC9CD8-DB37-4037-8562-453323EE3382}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>11.0</LangVersion>
+    <AssemblyName>UnityEngine.AnimationModule</AssemblyName>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Core">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\System.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.SharedInternalsModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.SharedInternalsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="System">
+      <HintPath>C:\Projects\KSP-UE5\decompiled\KSP-dev\Launcher_Data\Managed\System.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnityEngine\Animation.cs" />
+    <Compile Include="UnityEngine\AnimationBlendMode.cs" />
+    <Compile Include="UnityEngine\AnimationClip.cs" />
+    <Compile Include="UnityEngine\AnimationClipPair.cs" />
+    <Compile Include="UnityEngine\AnimationCullingType.cs" />
+    <Compile Include="UnityEngine\AnimationEvent.cs" />
+    <Compile Include="UnityEngine\AnimationEventSource.cs" />
+    <Compile Include="UnityEngine\AnimationPlayMode.cs" />
+    <Compile Include="UnityEngine\AnimationState.cs" />
+    <Compile Include="UnityEngine\Animations\AimConstraint.cs" />
+    <Compile Include="UnityEngine\Animations\AnimationClipPlayable.cs" />
+    <Compile Include="UnityEngine\Animations\AnimationHumanStream.cs" />
+    <Compile Include="UnityEngine\Animations\AnimationLayerMixerPlayable.cs" />
+    <Compile Include="UnityEngine\Animations\AnimationMixerPlayable.cs" />
+    <Compile Include="UnityEngine\Animations\AnimationMotionXToDeltaPlayable.cs" />
+    <Compile Include="UnityEngine\Animations\AnimationOffsetPlayable.cs" />
+    <Compile Include="UnityEngine\Animations\AnimationPlayableBinding.cs" />
+    <Compile Include="UnityEngine\Animations\AnimationPlayableExtensions.cs" />
+    <Compile Include="UnityEngine\Animations\AnimationPlayableGraphExtensions.cs" />
+    <Compile Include="UnityEngine\Animations\AnimationPlayableOutput.cs" />
+    <Compile Include="UnityEngine\Animations\AnimationPosePlayable.cs" />
+    <Compile Include="UnityEngine\Animations\AnimationRemoveScalePlayable.cs" />
+    <Compile Include="UnityEngine\Animations\AnimationSceneHandleUtility.cs" />
+    <Compile Include="UnityEngine\Animations\AnimationScriptPlayable.cs" />
+    <Compile Include="UnityEngine\Animations\AnimationStream.cs" />
+    <Compile Include="UnityEngine\Animations\AnimationStreamHandleUtility.cs" />
+    <Compile Include="UnityEngine\Animations\AnimatorBindingsVersion.cs" />
+    <Compile Include="UnityEngine\Animations\AnimatorControllerPlayable.cs" />
+    <Compile Include="UnityEngine\Animations\AnimatorJobExtensions.cs" />
+    <Compile Include="UnityEngine\Animations\Axis.cs" />
+    <Compile Include="UnityEngine\Animations\BindType.cs" />
+    <Compile Include="UnityEngine\Animations\ConstraintSource.cs" />
+    <Compile Include="UnityEngine\Animations\CustomStreamPropertyType.cs" />
+    <Compile Include="UnityEngine\Animations\IAnimationJob.cs" />
+    <Compile Include="UnityEngine\Animations\IAnimationJobPlayable.cs" />
+    <Compile Include="UnityEngine\Animations\IConstraint.cs" />
+    <Compile Include="UnityEngine\Animations\IConstraintInternal.cs" />
+    <Compile Include="UnityEngine\Animations\JobMethodIndex.cs" />
+    <Compile Include="UnityEngine\Animations\LookAtConstraint.cs" />
+    <Compile Include="UnityEngine\Animations\MuscleHandle.cs" />
+    <Compile Include="UnityEngine\Animations\NotKeyableAttribute.cs" />
+    <Compile Include="UnityEngine\Animations\ParentConstraint.cs" />
+    <Compile Include="UnityEngine\Animations\PositionConstraint.cs" />
+    <Compile Include="UnityEngine\Animations\ProcessAnimationJobStruct.cs" />
+    <Compile Include="UnityEngine\Animations\PropertySceneHandle.cs" />
+    <Compile Include="UnityEngine\Animations\PropertyStreamHandle.cs" />
+    <Compile Include="UnityEngine\Animations\RotationConstraint.cs" />
+    <Compile Include="UnityEngine\Animations\ScaleConstraint.cs" />
+    <Compile Include="UnityEngine\Animations\TransformSceneHandle.cs" />
+    <Compile Include="UnityEngine\Animations\TransformStreamHandle.cs" />
+    <Compile Include="UnityEngine\Animator.cs" />
+    <Compile Include="UnityEngine\AnimatorClipInfo.cs" />
+    <Compile Include="UnityEngine\AnimatorControllerParameter.cs" />
+    <Compile Include="UnityEngine\AnimatorControllerParameterType.cs" />
+    <Compile Include="UnityEngine\AnimatorCullingMode.cs" />
+    <Compile Include="UnityEngine\AnimatorOverrideController.cs" />
+    <Compile Include="UnityEngine\AnimatorRecorderMode.cs" />
+    <Compile Include="UnityEngine\AnimatorStateInfo.cs" />
+    <Compile Include="UnityEngine\AnimatorTransitionInfo.cs" />
+    <Compile Include="UnityEngine\AnimatorUpdateMode.cs" />
+    <Compile Include="UnityEngine\AnimatorUtility.cs" />
+    <Compile Include="UnityEngine\ArmDof.cs" />
+    <Compile Include="UnityEngine\Avatar.cs" />
+    <Compile Include="UnityEngine\AvatarBuilder.cs" />
+    <Compile Include="UnityEngine\AvatarIKGoal.cs" />
+    <Compile Include="UnityEngine\AvatarIKHint.cs" />
+    <Compile Include="UnityEngine\AvatarMask.cs" />
+    <Compile Include="UnityEngine\AvatarMaskBodyPart.cs" />
+    <Compile Include="UnityEngine\AvatarTarget.cs" />
+    <Compile Include="UnityEngine\BodyDof.cs" />
+    <Compile Include="UnityEngine\Dof.cs" />
+    <Compile Include="UnityEngine\DurationUnit.cs" />
+    <Compile Include="UnityEngine\Experimental\Animations\AnimationPlayableOutputExtensions.cs" />
+    <Compile Include="UnityEngine\Experimental\Animations\AnimationStreamSource.cs" />
+    <Compile Include="UnityEngine\Experimental\Animations\IAnimationWindowPreview.cs" />
+    <Compile Include="UnityEngine\FingerDof.cs" />
+    <Compile Include="UnityEngine\HeadDof.cs" />
+    <Compile Include="UnityEngine\HumanBodyBones.cs" />
+    <Compile Include="UnityEngine\HumanBone.cs" />
+    <Compile Include="UnityEngine\HumanDescription.cs" />
+    <Compile Include="UnityEngine\HumanLimit.cs" />
+    <Compile Include="UnityEngine\HumanParameter.cs" />
+    <Compile Include="UnityEngine\HumanPartDof.cs" />
+    <Compile Include="UnityEngine\HumanPose.cs" />
+    <Compile Include="UnityEngine\HumanPoseHandler.cs" />
+    <Compile Include="UnityEngine\HumanTrait.cs" />
+    <Compile Include="UnityEngine\IAnimationClipSource.cs" />
+    <Compile Include="UnityEngine\LegDof.cs" />
+    <Compile Include="UnityEngine\MatchTargetWeightMask.cs" />
+    <Compile Include="UnityEngine\Motion.cs" />
+    <Compile Include="UnityEngine\Playables\AnimationPlayableUtilities.cs" />
+    <Compile Include="UnityEngine\PlayMode.cs" />
+    <Compile Include="UnityEngine\QueueMode.cs" />
+    <Compile Include="UnityEngine\RuntimeAnimatorController.cs" />
+    <Compile Include="UnityEngine\SharedBetweenAnimatorsAttribute.cs" />
+    <Compile Include="UnityEngine\SkeletonBone.cs" />
+    <Compile Include="UnityEngine\StateInfoIndex.cs" />
+    <Compile Include="UnityEngine\StateMachineBehaviour.cs" />
+    <Compile Include="UnityEngine\TransitionType.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

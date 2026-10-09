@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{C67C8720-CA5A-47AF-8BD4-3B721A32B925}</ProjectGuid>
+    <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <LangVersion>11.0</LangVersion>
+    <AssemblyName>System.Numerics</AssemblyName>
+    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Compile Include="Consts.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SR.cs" />
+    <Compile Include="System\Globalization\FormatProvider.cs" />
+    <Compile Include="System\MathF.cs" />
+    <Compile Include="System\Numerics\BigInteger.cs" />
+    <Compile Include="System\Numerics\BigIntegerCalculator.cs" />
+    <Compile Include="System\Numerics\BigNumber.cs" />
+    <Compile Include="System\Numerics\Complex.cs" />
+    <Compile Include="System\Numerics\DoubleUlong.cs" />
+    <Compile Include="System\Numerics\Hashing\HashHelpers.cs" />
+    <Compile Include="System\Numerics\JitIntrinsicAttribute.cs" />
+    <Compile Include="System\Numerics\Matrix3x2.cs" />
+    <Compile Include="System\Numerics\Matrix4x4.cs" />
+    <Compile Include="System\Numerics\NumericsHelpers.cs" />
+    <Compile Include="System\Numerics\Plane.cs" />
+    <Compile Include="System\Numerics\Quaternion.cs" />
+    <Compile Include="System\Numerics\Vector.cs" />
+    <Compile Include="System\Numerics\Vector2.cs" />
+    <Compile Include="System\Numerics\Vector3.cs" />
+    <Compile Include="System\Numerics\Vector4.cs" />
+    <Compile Include="System\Runtime\CompilerServices\FriendAccessAllowedAttribute.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
