@@ -25,6 +25,7 @@ add_executable(kspcore_tests
     test_resource_flow.cpp
     test_resource_modules.cpp
     test_vessel.cpp
+    test_ship_construct.cpp
     test_aero.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
@@ -191,6 +192,16 @@ set_tests_properties(capture.part_database PROPERTIES FIXTURES_SETUP partdb)
 # The flow solver itself has no capture yet (STATUS.md WP-15: harness dataset `resource_flow`).
 ksp_golden_gate(capture.resource_mass resource_mass GOLDEN ${KSP_CAPTURES2_DIR}/deltav_readout.json DROP_HEX
     TOL ${KSP_CAPTURE_TOL} TABLES parts COLUMNS parts:craft_id,part_index,part,resource_mass)
+# WP-18 ship construction: ShipConstruct.GetShipMass (dryMass / fuelMass out parameters) and the per-part masses (Part.mass after
+# UpdateMass, module mass) of the 17 crafts of the C5 delta-v capture, built as ShipConstruction.CreateConstructFromTemplate builds
+# them (craft file -> KSPUpgradePipeline -> ShipConstruct.LoadShip). Same craft set and inputs as capture.resource_mass. NOT gated:
+# craft.total_mass (it adds the editor crew mass, VesselCrewManifest: tests/test_ship_construct.cpp checks it is the no-crew total plus an
+# integral multiple of KerbalCrewMass), the one fairing of the set (tests/data/ship_construct_exclusions.json: panelMass, WP-26), craft.stage_count / loaded / error (VesselDeltaV, WP-17), parts.inverseStage / decoupleStage /
+# activationStage / isEngine / isDecoupler (staging, WP-16 / WP-23).
+ksp_golden_gate(capture.ship_construct ship_construct GOLDEN ${KSP_CAPTURES2_DIR}/deltav_readout.json DROP_HEX
+    TOL ${KSP_CAPTURE_TOL} TABLES craft,parts
+    DROP_KEYS_FILE ${PROJECT_SOURCE_DIR}/tests/data/ship_construct_exclusions.json
+    COLUMNS "craft:craft_id,parts,dry_mass,fuel_mass/parts:craft_id,part_index,part,mass,module_mass")
 # GameDatabase load order vs the game's own log of the capture run (every "Load(Audio|Texture|Model): url" and
 # "Config(TYPE) url" line, in order). Skipped (exit 0 with a note) when the log is not present.
 add_test(NAME capture.gamedatabase_load_order
