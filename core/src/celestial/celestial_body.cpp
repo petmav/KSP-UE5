@@ -1,6 +1,7 @@
 // CelestialBody.cs ported operation for operation (C# evaluation order kept: left-to-right products, no reassociation).
 // Paths are relative to decompiled/KSP-Decompiled/Assembly-CSharp/.
 #include "ksp/celestial/celestial_body.hpp"
+#include "ksp/terrain/pqs_prefab.hpp"
 
 #include <cmath>
 #include <limits>
@@ -130,6 +131,12 @@ void CelestialBody::Awake() {
     gMagnitudeAtCenter = GeeASL * PhysicsGlobals::GravitationalAcceleration * M::Pow(Radius, 2.0);
     Mass = Radius * Radius * (GeeASL * PhysicsGlobals::GravitationalAcceleration) / kG;
     gravParameter = Mass * kG;
+}
+
+// CelestialBody.cs:831
+double CelestialBody::TerrainAltitude(double latitude, double longitude, bool allowNegative) const {
+    if (pqsController == nullptr) return 0.0;
+    return terrain::TerrainAltitude(pqsController, latitude, longitude, allowNegative);
 }
 
 // CelestialBody.cs:477 Start. TimeWarp limit-count check (resetTimeWarpLimits), AtmosphereFromGround and PQS mod
