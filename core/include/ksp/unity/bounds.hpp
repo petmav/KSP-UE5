@@ -27,26 +27,26 @@ struct Bounds {
     Vector3f min() const { return center() - extents(); }
     Vector3f max() const { return center() + extents(); }
 
-    // Bounds.cs:113
+    // Bounds.cs:93 Equals
     bool Equals(const Bounds& o) const { return m_Center.Equals(o.m_Center) && m_Extents.Equals(o.m_Extents); }
-    // Bounds.cs:130 SetMinMax
+    // Bounds.cs:117 SetMinMax
     void SetMinMax(const Vector3f& min_, const Vector3f& max_) {
         m_Extents = (max_ - min_) * 0.5f;
         m_Center = min_ + m_Extents;
     }
-    // Bounds.cs:136 Encapsulate(Vector3)
+    // Bounds.cs:123 Encapsulate(Vector3)
     void Encapsulate(const Vector3f& point) { SetMinMax(Vector3f::Min(min(), point), Vector3f::Max(max(), point)); }
-    // Bounds.cs:141 Encapsulate(Bounds)
+    // Bounds.cs:128 Encapsulate(Bounds)
     void Encapsulate(const Bounds& bounds) {
         Encapsulate(bounds.center() - bounds.extents());
         Encapsulate(bounds.center() + bounds.extents());
     }
-    // Bounds.cs:147 Expand(float)
+    // Bounds.cs:134 Expand(float)
     void Expand(float amount) {
         amount = f32store(fx(amount) * 0.5);
         m_Extents = m_Extents + Vector3f(amount, amount, amount);
     }
-    // Bounds.cs:153 Expand(Vector3)
+    // Bounds.cs:140 Expand(Vector3)
     void Expand(const Vector3f& amount) { m_Extents = m_Extents + amount * 0.5f; }
 };
 
