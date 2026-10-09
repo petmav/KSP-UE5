@@ -23,7 +23,7 @@ Updated 2026-10-09 (WP-05). One command: `powershell -NoProfile -ExecutionPolicy
 
 | 12. WP-10 time warp, rails propagation, orbit driver (branch `wp10`) | done: TimeWarp (whole class incl. rate limits, mode switching, autoWarpTo), WarpTransition(Calculator), PositionTarget + ITargetable, OrbitDriver finished (Targetable, TRACK_Phys/IDLE/UPDATE tests), CelestialBody.resetTimeWarpLimits/TerrainAltitude; `capture.orbit_rails` bit-exact incl. the newly gated `segments.requested_rate`; 17 unit cases (2,009 assertions); numerics beyond C8 need new captures (listed in "WP-10") |
 
-## Test results (all 21 ctest tests pass in RelWithDebInfo and in Debug on Windows; and on Linux; WP-00L added libm.portable_vs_dll)
+## Test results (all 23 ctest tests pass: Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass)
 
 Every numeric column of every gate: **max ULP 0, max abs 0** (bit-exact, and the same decimal text). Tolerance files:
 harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture gates use `tests/tolerances_capture.json`
@@ -1888,6 +1888,8 @@ forward-declaration rule of wp13 ae3e81fa was applied (no `class PartVariant|Par
 After merging `wp13` (with main: WP-06, WP-10) and unifying ITargetable: `./run_tests.sh -f` (linux-rel, clang 18) and
 `./run_tests.sh -p linux-gcc-rel -f` (GCC 13): 22/22 each, every gate column max ULP 0 (429 compared columns); `unit` 214 cases /
 149,925 assertions (24 cases / 6,901 of them in `test_vessel.cpp`). Not run here: Windows (MSVC).
+After the later merge of main with WP-15 (`capture.resource_mass`): 23/23 ctest, every gate 0 ULP; `unit` 236 cases / 178,437 assertions
+(the `unit` summary row above). Windows (MSVC) is covered by CI.
 
 ### Commits (branch `wp14`)
 
