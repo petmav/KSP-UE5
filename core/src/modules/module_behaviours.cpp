@@ -18,6 +18,7 @@
 #include "ksp/dotnet/mono_float.hpp"
 #include "ksp/dotnet/number.hpp"
 #include "ksp/localization/localizer.hpp"
+#include "ksp/modules/module_part_variants.hpp"
 #include "ksp/modules/part_module.hpp"
 #include "ksp/parts/available_part.hpp"
 #include "ksp/parts/cs_parse.hpp"
@@ -346,30 +347,7 @@ public:
     float mass = 0.0f, cost = 0.0f;  // set when a flag mesh is chosen (flight/editor)
 };
 
-// ---- ModulePartVariants.cs:380 OnLoad, :535 GetModuleMass, :553 GetModuleCost ------------------------------------------------
-class ModulePartVariants : public PartModule, public IPartMassModifier, public IPartCostModifier {
-public:
-    using PartModule::PartModule;
-    void OnLoad(const ConfigNode& node) override {
-        PartModule::OnLoad(node);
-        if (!part) return;
-        const int index = LoadModulePartVariants(*part, node);
-        if (index >= 0) Set<int32_t>("variantIndex", index);
-    }
-    IPartMassModifier* AsMassModifier() override { return this; }
-    IPartCostModifier* AsCostModifier() override { return this; }
-    const PartVariant& SelectedVariant() const {
-        return part->variantList.at(static_cast<size_t>(Get<int32_t>("variantIndex")));
-    }
-    float GetModuleMass(float, ModifierStagingSituation) override {
-        // HighLogic.LoadedSceneIsEditor sets useVariantMass = true (the capture runs in the main menu)
-        if (Get<bool>("useVariantMass")) return SelectedVariant().mass;
-        return 0.0f;
-    }
-    ModifierChangeWhen GetModuleMassChangeWhen() override { return ModifierChangeWhen::FIXED; }
-    float GetModuleCost(float, ModifierStagingSituation) override { return SelectedVariant().cost; }
-    ModifierChangeWhen GetModuleCostChangeWhen() override { return ModifierChangeWhen::FIXED; }
-};
+// ModulePartVariants.cs: module_part_variants.cpp (WP-13)
 
 // ---- the remaining IPartMassModifier / IPartCostModifier implementations -------------------------------------------------
 class ModuleComet : public PartModule, public IPartMassModifier {  // ModuleComet.cs:469
@@ -492,7 +470,7 @@ void RegisterBuiltinModules() {
     Reg<ModuleResourceIntake>({"ModuleResourceIntake"});
     Reg<MultiModeEngine>({"MultiModeEngine"});
     Reg<FlagDecalBackground>({"FlagDecalBackground"});
-    Reg<ModulePartVariants>({"ModulePartVariants"});
+    RegisterModulePartVariants();  // WP-13: modules/module_part_variants.cpp
     Reg<ModuleComet>({"ModuleComet"});
     Reg<ModuleAsteroid>({"ModuleAsteroid"});
     Reg<ModulePartFirework>({"ModulePartFirework"});

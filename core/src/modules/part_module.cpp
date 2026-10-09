@@ -126,6 +126,14 @@ void PartModule::Copy(PartModule& from) {
     OnCopy(from);
 }
 
+// Object.Instantiate of a module component (WP-13): moduleName, isEnabled, upgradesApplied and the serialized KSPFields
+void PartModule::CopySerializedFrom(const PartModule& from) {
+    CopyValuesFrom(from);
+    moduleName = from.moduleName;
+    isEnabled = from.isEnabled;
+    upgradesApplied = from.upgradesApplied;
+}
+
 // PartModule.cs:282
 void PartModule::UpdateStagingToggle() {
     BaseEvent* e = Events()["ToggleStaging"];

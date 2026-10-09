@@ -96,6 +96,9 @@ public:
     const ModuleValue& ValueAt(size_t i) const { return values_[i]; }
     ModuleValue* Value(std::string_view name);
     const ModuleValue* Value(std::string_view name) const;
+    // WP-13: Unity's serialized clone of the component: every field value of `from` (same class) except private ones, which
+    // Unity does not serialize and which keep their initialiser value
+    void CopyValuesFrom(const FieldStore& from);
     // Typed convenience for module code: throws if the field is absent or of another type.
     template <class T>
     T Get(std::string_view name) const {

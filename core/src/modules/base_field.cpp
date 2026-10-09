@@ -188,6 +188,13 @@ const ModuleValue* FieldStore::Value(std::string_view name) const {
     return i < 0 ? nullptr : &values_[static_cast<size_t>(i)];
 }
 
+// WP-13: Unity's serialized clone (Object.Instantiate): public fields are copied, private ones are not serialized
+void FieldStore::CopyValuesFrom(const FieldStore& from) {
+    if (cls_ != from.cls_ || values_.size() != from.values_.size()) throw std::runtime_error("FieldStore::CopyValuesFrom: class mismatch");
+    for (size_t i = 0; i < values_.size(); i++)
+        if (!infos_[i]->isPrivate) values_[i] = from.values_[i];
+}
+
 // ---- BaseField ----------------------------------------------------------------------------------------------------------
 
 // BaseField.cs:409 (KSPField) with BaseField<K>.cs:125

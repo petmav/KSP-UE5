@@ -65,12 +65,16 @@ add_library(kspcore STATIC
     parts/part_data.cpp
     parts/part_module_data.cpp
     parts/part_loader.cpp
+    parts/part.cpp
+    parts/part_modules.cpp
+    parts/part_variant.cpp
     modules/cs_expr.cpp
     modules/module_members.cpp
     modules/base_field.cpp
     modules/base_event.cpp
     modules/part_module.cpp
     modules/module_behaviours.cpp
+    modules/module_part_variants.cpp
     modules/vessel_module.cpp
     modules/scenario_runner.cpp
     database/game_data.cpp

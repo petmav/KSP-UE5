@@ -232,4 +232,18 @@ void PartResource::Load(const ConfigNode& node) {
     }
 }
 
+// PartResource.cs:96 Copy (the `part` link is not copied: the copy constructors set it from the source before Copy)
+void PartResource::Copy(const PartResource& res) {
+    info = res.info;
+    resourceName = res.resourceName;
+    amount = res.amount;
+    maxAmount = res.maxAmount;
+    flowState = res.flowState;
+    isTweakable = res.isTweakable;
+    isVisible = res.isVisible;
+    hideFlow = res.hideFlow;
+    flowMode = res.flowMode;
+    simulationResource = res.simulationResource;
+}
+
 }  // namespace ksp

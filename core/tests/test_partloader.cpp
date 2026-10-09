@@ -14,6 +14,7 @@
 #include "ksp/database/game_database.hpp"
 #include "ksp/dotnet/number.hpp"
 #include "ksp/io/url_dir.hpp"
+#include "ksp/parts/part.hpp"
 #include "ksp/parts/part_loader.hpp"
 #include "ksp/resources/part_resource_library.hpp"
 
@@ -228,9 +229,9 @@ TEST_CASE("PartLoader: synthetic GameData") {
         CHECK(pod.partConfig->HasValue("module"));
         CHECK(pod.showVesselNaming);  // ModuleCommand
         // vesselType Ship > Unknown -> ModuleTripLogger appended
-        REQUIRE(pod.partPrefab->Modules.size() == 2);
-        CHECK(pod.partPrefab->Modules[1].moduleName == "ModuleTripLogger");
-        CHECK(pod.partPrefab->Modules[1].addedInCode);
+        REQUIRE(pod.partPrefab->ModuleData.size() == 2);
+        CHECK(pod.partPrefab->ModuleData[1].moduleName == "ModuleTripLogger");
+        CHECK(pod.partPrefab->ModuleData[1].addedInCode);
         CHECK(pod.internalConfig->GetValue("name") == std::optional<std::string>("podIVA"));
     }
     SUBCASE("drag cubes: part cfg DRAG_CUBE wins, PartDatabase.cfg otherwise, nested PART ignored") {
@@ -267,14 +268,14 @@ TEST_CASE("PartLoader: synthetic GameData") {
         CHECK(dock.nodeType == AttachNodeType::Dock);
         CHECK(dock.size == 3);
         CHECK_FALSE(dock.AllowOneWayXFeed);
-        REQUIRE(t.srfAttachNode.has_value());
+        REQUIRE(t.srfAttachNode != nullptr);
         CHECK(t.srfAttachNode->id == "srfAttach");
         CHECK(t.srfAttachNode->nodeType == AttachNodeType::Surface);
         CHECK(t.srfAttachNode->attachMethod == AttachNodeMethod::HINGE_JOINT);
         CHECK(t.srfAttachNode->position.x == 3.0f);
         // a part without node_attach still has a default srfAttachNode (Unity serializer instance)
         const PartPrefab& n = *L.Part("nestedPart").partPrefab;
-        REQUIRE(n.srfAttachNode.has_value());
+        REQUIRE(n.srfAttachNode != nullptr);
         CHECK(n.srfAttachNode->id.empty());
         CHECK(n.srfAttachNode->radius == 0.4f);
     }

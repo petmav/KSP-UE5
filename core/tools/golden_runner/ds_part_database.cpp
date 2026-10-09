@@ -21,6 +21,7 @@
 #include "ksp/dotnet/utf16.hpp"
 #include "ksp/modules/cs_expr.hpp"
 #include "ksp/modules/part_module.hpp"
+#include "ksp/parts/part.hpp"
 #include "ksp/physics/physics_globals.hpp"
 
 namespace {
@@ -211,7 +212,7 @@ int RunPartDatabase(const RunnerOptions& opt) {
     for (const auto& apPtr : loader.loadedParts) {
         const AvailablePart& ap = *apPtr;
         const std::string& pn = ap.name;
-        PartPrefab& p = *ap.partPrefab;
+        Part& p = *ap.partPrefab;
         if (!ap.loadError.empty()) {
             std::vector<Cell> row(tp.cols.size(), Cell(nullptr));
             row.front() = Cell(pn);
@@ -236,8 +237,8 @@ int RunPartDatabase(const RunnerOptions& opt) {
             }
         }
         // modules + fields + propellants
-        for (size_t mi = 0; mi < p.Modules.size(); mi++) {
-            PartModuleData& m = p.Modules[mi];
+        for (size_t mi = 0; mi < p.ModuleData.size(); mi++) {
+            PartModuleData& m = p.ModuleData[mi];
             tm.Add({Cell(pn), Cell(mi), Cell(m.moduleName), Cell(m.moduleClass ? m.moduleClass->name : ""),
                     Cell(m.moduleClass ? m.moduleClass->Fields().size() : 0), Cell(m.isEnabled)});
             // every KSPField of the module instance, in BaseFieldList order: cfg-set values and defaults alike
@@ -329,7 +330,7 @@ int RunPartDatabase(const RunnerOptions& opt) {
         // variants
         if (const auto* vars = ap.Variants())
             for (size_t k = 0; k < vars->size(); k++) {
-                const PartVariant& v = (*vars)[k];
+                const PartVariant& v = *(*vars)[k];
                 tvar.Add({Cell(pn), Cell(k), Cell(v.name), Cell(v.displayName), Cell(v.cost), Cell(v.mass), Cell(nullptr)});
             }
         // assets (texture slots of the model renderers are not produced: they need the .mu contents)
@@ -343,12 +344,9 @@ int RunPartDatabase(const RunnerOptions& opt) {
         }
         // parts row
         const PartFields& f = p.fields;
-        // Part.GetModuleMass / GetModuleCosts over the prefab's IPartMassModifier / IPartCostModifier modules (CURRENT)
-        PartModuleList moduleList;
-        for (const PartModuleData& md : p.Modules)
-            if (md.module) moduleList.Add(md.module);
-        const float moduleMass = PartGetModuleMass(moduleList, f.mass);
-        const float moduleCost = PartGetModuleCosts(moduleList, ap.cost);
+        // Part.GetModuleMass / GetModuleCosts (Part.cs:7532 / 7518) over the prefab's IPartMassModifier / IPartCostModifier modules
+        const float moduleMass = p.GetModuleMass(f.mass);
+        const float moduleCost = p.GetModuleCosts(ap.cost);
         const auto internalName = ap.internalConfig ? ap.internalConfig->GetValue("name") : std::nullopt;
         std::string cfgRel;
         for (const PartAssetRef& a : ap.assets)
@@ -365,7 +363,7 @@ int RunPartDatabase(const RunnerOptions& opt) {
                 Cell(kEnum_Part_PhysicalSignificance.ToString(f.physicalSignificance)),
                 f.attachRules ? Cell(f.attachRules->String()) : Cell(nullptr),
                 ap.bulkheadProfiles ? Cell(*ap.bulkheadProfiles) : Cell(nullptr), Cell(ap.partSize), Cell(f.scaleFactor),
-                Cell(f.rescaleFactor), Cell(f.stackSymmetry), Cell(f.CrewCapacity), Cell(p.Modules.size()),
+                Cell(f.rescaleFactor), Cell(f.stackSymmetry), Cell(f.CrewCapacity), Cell(p.Modules().Count()),
                 Cell(p.Resources.size()), Cell(p.attachNodes.size()), Cell(p.DragCubes.None()),
                 Cell(p.DragCubes.Procedural()), Cell(cubes.size()), Cell(resMass), Cell(resCost), Cell(moduleMass), Cell(moduleCost),
                 internalName ? Cell(*internalName) : Cell(nullptr), Cell(nullptr)});
