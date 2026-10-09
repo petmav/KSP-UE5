@@ -15,6 +15,8 @@ add_executable(golden_runner
     ds_body_catalog.cpp
     ds_atmosphere_curves.cpp
     ds_orbit_propagation.cpp
+    ds_patched_conics.cpp
+    ds_orbit_rails.cpp
 )
 target_link_libraries(golden_runner PRIVATE kspcore)
 ksp_set_build_flags(golden_runner)

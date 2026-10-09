@@ -5,11 +5,13 @@
 #include <limits>
 
 #include "ksp/celestial/celestial_body_orbit.hpp"
+#include "ksp/celestial/flight_globals.hpp"
 #include "ksp/celestial/planetarium.hpp"
 
 namespace ksp {
 
 CelestialSystem::~CelestialSystem() {
+    if (FlightGlobals::bodies == &bodies_) FlightGlobals::bodies = nullptr;
     // The Planetarium may outlive the system: drop its references to our bodies.
     if (Planetarium::fetch != nullptr) {
         for (const auto& b : owned_) {
@@ -38,6 +40,7 @@ std::unique_ptr<CelestialSystem> CelestialSystem::Spawn(const PSystemPrefab& pre
         sys->bodies_.push_back(b);
         if (b->hasSolidSurface) sys->maximumSurfaceGeeASL_ = std::max(sys->maximumSurfaceGeeASL_, b->GeeASL);
     }
+    FlightGlobals::bodies = &sys->bodies_;  // FlightGlobals.fetch.bodies = localBodies (WP-08: getMainBody)
     // Start(): CelestialBody.Start, then OrbitDriver.Start (orbit.Init(); updateFromParameters())
     for (CelestialBody* b : sys->spawnOrder_) b->Start();
     const OrbitFactory& factory = orbitFactory ? orbitFactory : OrbitFactory(&MakeCelestialBodyOrbit);

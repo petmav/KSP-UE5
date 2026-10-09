@@ -43,10 +43,13 @@
 
 namespace ksp {
 
-// GameSettings: only the values WP-03 reads (the GameSettings port replaces this block). GameSettings.cs:1034
+// GameSettings: only the values WP-03 and WP-08 read (the GameSettings port replaces this block). GameSettings.cs:1034
 // SetDefaultValues sets KERBIN_TIME = true.
 namespace GameSettings {
 inline bool KERBIN_TIME = true;
+// WP-08 (patched conics): GameSettings.cs:999-1000 SetDefaultValues (settings.cfg may override them in game)
+inline int CONIC_PATCH_LIMIT = 3;
+inline bool ALWAYS_SHOW_TARGET_APPROACH_MARKERS = false;
 }
 
 // Versioning (Versioning.cs: values from the shipped asset; KSP 1.12.5 build 3190)

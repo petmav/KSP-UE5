@@ -1,17 +1,18 @@
-// The run-time orbit of a celestial body (CelestialBody.orbit => orbitDriver.orbit): KSP's OrbitDriver
-// (OrbitDriver.cs) as far as a CelestialBody uses it, over WP-07's ksp::Orbit, behind WP-09's ICelestialBodyOrbit link.
-// An adapter rather than Orbit itself because Orbit's fields period / radius / vel / trueAnomaly carry the names of the
-// interface's methods.
+// The run-time orbit of a celestial body (CelestialBody.orbit => orbitDriver.orbit): the body's ksp::OrbitDriver
+// (OrbitDriver.cs, include/ksp/orbit/orbit_driver.hpp) over WP-07's ksp::Orbit, behind WP-09's ICelestialBodyOrbit link.
+// An adapter rather than OrbitDriver/Orbit itself because Orbit's fields period / radius / vel / trueAnomaly carry the
+// names of the interface's methods.
 //
-//   construction  OrbitDriver.Start in UpdateMode.UPDATE (OrbitDriver.cs:98): the Orbit is the deserialized one (the
-//                 seven elements and objectType of body.orbitDriver->orbit, referenceBody = body.orbitDriver->
-//                 referenceBody), then orbit.Init(); updateFromParameters().
-//   UpdateOrbit   OrbitDriver.UpdateOrbit (OrbitDriver.cs:158) in UPDATE mode without a vessel: updateFromParameters()
-//                 (OrbitDriver.cs:272): orbit.UpdateFromUT(Planetarium UT); pos/vel = orbit.pos/vel swizzled; then
-//                 body.position = referenceBody.position + pos, or, for a reversed driver (the home body Kerbin, which
-//                 KSP keeps still), referenceBody.position = body.position - pos.
-// Not here: vessel orbits (TRACK_Phys / IDLE, CheckDominantBody, SOI transitions, the isHyperbolic events) are WP-10's
-// OrbitDriver; Planetarium.Orbits registration (read by patched conics) is WP-08's. Every stock body uses UPDATE.
+//   construction  CelestialBody.Start's `orbitDriver.QueuedUpdate = true` (CelestialBody.cs:483), then OrbitDriver.Start
+//                 in UpdateMode.UPDATE (OrbitDriver.cs:98): the Orbit is the deserialized one (the seven elements and
+//                 objectType of body.orbitDriver->orbit, referenceBody = body.orbitDriver->referenceBody), orbit.Init(),
+//                 updateFromParameters(), Planetarium.Orbits.Add(driver) (WP-08: the list patched conics iterate).
+//   UpdateOrbit   OrbitDriver.UpdateOrbit (OrbitDriver.cs:150) in UPDATE mode without a vessel: updateFromParameters()
+//                 (orbit.UpdateFromUT(Planetarium UT); pos/vel = orbit.pos/vel swizzled; body.position =
+//                 referenceBody.position + pos, or, for a reversed driver (the home body Kerbin, which KSP keeps still),
+//                 referenceBody.position = body.position - pos).
+// `reverse` lives in the body's CelestialBodyOrbitDriver (the scene state Planetarium.FindRootBody reads and
+// PSystemSetup / OrbitPhysicsManager write); the adapter copies it into the run-time driver before every update.
 // The reference body is fixed at spawn (KSP never re-parents a planet): orbit.referenceBody == orbitDriver->referenceBody.
 #pragma once
 
@@ -20,23 +21,23 @@
 #include "ksp/celestial/celestial_body.hpp"
 #include "ksp/math/vector3d.hpp"
 #include "ksp/orbit/orbit.hpp"
+#include "ksp/orbit/orbit_driver.hpp"
 
 namespace ksp {
 
 class CelestialBodyOrbitAdapter final : public ICelestialBodyOrbit {
 public:
-    // OrbitDriver.Start. `body` needs an orbitDriver whose referenceBody is set, and a Planetarium must be registered
-    // (updateFromParameters reads Planetarium.GetUniversalTime()). Throws std::logic_error for other update modes.
+    // CelestialBody.Start's QueuedUpdate + OrbitDriver.Start. `body` needs an orbitDriver whose referenceBody is set, and
+    // a Planetarium must be registered (updateFromParameters reads Planetarium.GetUniversalTime(), Start appends the
+    // driver to Planetarium.Orbits). Throws std::logic_error for other update modes.
     explicit CelestialBodyOrbitAdapter(CelestialBody& body);
     CelestialBodyOrbitAdapter(const CelestialBodyOrbitAdapter&) = delete;
     CelestialBodyOrbitAdapter& operator=(const CelestialBodyOrbitAdapter&) = delete;
 
-    Orbit orbit;            // OrbitDriver.orbit
-    Vector3d driverPos;     // OrbitDriver.pos (orbit.pos swizzled to Unity axes); renamed: vel() is an interface method
-    Vector3d driverVel;     // OrbitDriver.vel
-    double updateUT = 0.0;  // OrbitDriver.updateUT
+    OrbitDriver driver;  // the body's OrbitDriver (celestialBody = &body; registered in Planetarium.Orbits)
+    Orbit& orbit;        // *driver.orbit
 
-    // OrbitDriver.updateFromParameters (OrbitDriver.cs:267/272)
+    // OrbitDriver.updateFromParameters (OrbitDriver.cs:251/256)
     void updateFromParameters(bool setPosition = true);
 
     // ---- ICelestialBodyOrbit ----
