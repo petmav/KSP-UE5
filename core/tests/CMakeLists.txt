@@ -22,12 +22,15 @@ add_executable(kspcore_tests
     test_partloader.cpp
     test_modules.cpp
     test_part.cpp
+    test_resource_flow.cpp
+    test_resource_modules.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
 )
 target_link_libraries(kspcore_tests PRIVATE kspcore)
 ksp_set_build_flags(kspcore_tests)
-target_include_directories(kspcore_tests PRIVATE ${PROJECT_SOURCE_DIR}/third_party ${PROJECT_SOURCE_DIR}/tools/golden_runner)
+target_include_directories(kspcore_tests PRIVATE ${PROJECT_SOURCE_DIR}/third_party ${PROJECT_SOURCE_DIR}/tools/golden_runner
+                           ${PROJECT_SOURCE_DIR}/tools/support)
 target_compile_definitions(kspcore_tests PRIVATE KSPCORE_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
                            KSPCORE_HARNESS_DIR="${KSP_HARNESS_DIR}" KSPCORE_PROJECT_ROOT="${KSP_PROJECT_ROOT}"
                            KSPCORE_DATA_DIR="${PROJECT_SOURCE_DIR}/data"
@@ -180,6 +183,12 @@ ksp_golden_gate(capture.part_database part_database GOLDEN ${KSP_CAPTURES2_DIR}/
     RENUMBER "assets:idx:part"
     DROP_COLUMNS "parts:partSize/variants:materials")
 set_tests_properties(capture.part_database PROPERTIES FIXTURES_SETUP partdb)
+# WP-15 resource flow: Part.GetResourceMass() (PartResourceList amounts x PartResourceDefinition.density) of every part of the
+# 17 crafts of the C5 delta-v capture (table `parts`). The craft files are harness/inputs/Ships (+ analysis/physics/craft for
+# PhysProf-M2 / -L2-AS), the capture's own inputs; only the resource_mass column is WP-15's (mass / module_mass belong to WP-13).
+# The flow solver itself has no capture yet (STATUS.md WP-15: harness dataset `resource_flow`).
+ksp_golden_gate(capture.resource_mass resource_mass GOLDEN ${KSP_CAPTURES2_DIR}/deltav_readout.json DROP_HEX
+    TOL ${KSP_CAPTURE_TOL} TABLES parts COLUMNS parts:craft_id,part_index,part,resource_mass)
 # GameDatabase load order vs the game's own log of the capture run (every "Load(Audio|Texture|Model): url" and
 # "Config(TYPE) url" line, in order). Skipped (exit 0 with a note) when the log is not present.
 add_test(NAME capture.gamedatabase_load_order

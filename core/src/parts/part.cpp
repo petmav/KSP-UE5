@@ -869,152 +869,84 @@ void Part::SetMirror(const Vector3f& mirrorVector_) {
 }
 
 // ---- resources -------------------------------------------------------------------------------------------------------------------
-// Part.cs:6307 (_resources is created from the prefab's list once; the vector is always "valid")
+// Part.cs:6307 (WP-15: over PartResourceList; `_resources == null || !IsValid` is !Resources.IsValid())
 void Part::SetupResources() {
-    if (resourcesSetUp_) return;
-    resourcesSetUp_ = true;
-    if (partInfo != nullptr && partInfo->partPrefab != nullptr && partInfo->partPrefab.get() != this) {
-        Resources.clear();
-        for (const PartResource& r : partInfo->partPrefab->Resources) {
-            PartResource pr(r);
-            pr.part = this;
-            Resources.push_back(std::move(pr));
-        }
+    if (!Resources.IsValid()) {
+        const PartResourceList* prefabList =
+            (partInfo == nullptr || partInfo->partPrefab == nullptr) ? nullptr : &partInfo->partPrefab->Resources;
+        Resources = PartResourceList(this, prefabList);
     }
 }
 
 // Part.cs:6315
 void Part::SetupSimulationResources() {
-    SetupResources();
-    if (simulationSetUp_) return;
-    simulationSetUp_ = true;
-    simulationResources_.clear();
-    for (const PartResource& r : Resources) {
-        PartResource pr(r);
-        pr.part = this;
-        pr.simulationResource = true;
-        simulationResources_.push_back(std::move(pr));
-    }
+    if (!Resources.IsValid()) SetupResources();
+    if (!simulationResources_.IsValid()) simulationResources_ = PartResourceList(this, &Resources, true);
 }
 
-// Part.cs:6327 + PartResourceList.RefreshSimulationListAmounts (PartResourceList.cs:62)
-void Part::ResetSimulationResources() {
-    for (const PartResource& src : Resources) {
-        PartResource* sim = nullptr;
-        for (PartResource& s : simulationResources_)
-            if (s.resourceName == src.resourceName) sim = &s;
-        if (sim == nullptr) {
-            PartResource pr(src);
-            pr.part = src.part;
-            pr.simulationResource = true;
-            simulationResources_.push_back(std::move(pr));
-        } else {
-            sim->amount = src.amount;
-            sim->flowMode = src.flowMode;
-            sim->flowState = src.flowState;
-            sim->simulationResource = true;
-        }
-    }
-}
+// Part.cs:6327
+void Part::ResetSimulationResources() { simulationResources_.RefreshSimulationListAmounts(&Resources); }
+
+// Part.cs:6332
+void Part::ResetSimulationResources(const PartResourceList* sourceList) { simulationResources_.RefreshSimulationListAmounts(sourceList); }
 
 // Part.cs:6337
 void Part::ResetSimulation() {
-    if (simulationSetUp_) ResetSimulationResources();
+    if (simulationResources_.IsValid()) ResetSimulationResources();
     else SetupSimulationResources();
 }
-
-namespace {
-PartResource* FindRes(std::vector<PartResource>& list, std::string_view name) {
-    const int32_t id = MonoStringHash(name);
-    for (PartResource& r : list)
-        if (MonoStringHash(r.resourceName) == id) return &r;
-    return nullptr;
-}
-
-// PartResourceList.Add(ConfigNode) (PartResourceList.cs:195)
-PartResource* ListAdd(std::vector<PartResource>& list, Part* part, bool simulationSet, const ConfigNode& node) {
-    const auto name = node.GetValue("name");
-    if (!name) {
-        log::Warning("ConfigNode has no value 'name'");
-        return nullptr;
-    }
-    if (FindRes(list, *name) != nullptr) {
-        log::Warning(std::string("Part already contains ") + (simulationSet ? " simulation resource '" : " resource '") + *name + "'");
-        return nullptr;
-    }
-    const PartResourceLibrary* lib = PartResourceLibrary::Instance();
-    const PartResourceDefinition* def = lib ? lib->GetDefinition(*name) : nullptr;
-    if (!def) {
-        log::Warning(std::string("Could not create ") + (simulationSet ? "simulation PartResource" : "PartResource") + " of type '" + *name);
-        return nullptr;
-    }
-    PartResource r;
-    r.part = part;
-    r.simulationResource = simulationSet;
-    r.info = def;  // PartResource.SetInfo
-    r.resourceName = def->name();
-    r.Load(node);
-    list.push_back(std::move(r));
-    if (!simulationSet) GameEvents::onPartResourceListChange.Fire(part);
-    return &list.back();
-}
-}  // namespace
 
 // Part.cs:6349
 PartResource* Part::AddResource(const ConfigNode& node) {
     SetupSimulationResources();
     const auto name = node.GetValue("name");
-    PartResource* partResource = name ? FindRes(simulationResources_, *name) : nullptr;
+    PartResource* partResource = name ? simulationResources_.Get(*name) : nullptr;  // (null name: NullReferenceException in C#)
     if (partResource != nullptr) partResource->Load(node);
-    else ListAdd(simulationResources_, this, true, node);
-    return ListAdd(Resources, this, false, node);
+    else simulationResources_.Add(node);
+    return Resources.Add(node);
 }
 
 // Part.cs:6365
 void Part::SetResource(const ConfigNode& node) {
     const auto value = node.GetValue("name");
     if (value && !value->empty()) {
-        PartResource* partResource = FindRes(Resources, *value);
+        PartResource* partResource = Resources.Get(*value);
         if (partResource != nullptr) partResource->Load(node);
         else AddResource(node);
     }
 }
 
-PartResource* Part::GetResource(std::string_view name) { return FindRes(Resources, name); }
+// PartResourceList.Get(name)
+PartResource* Part::GetResource(std::string_view name) { return Resources.Get(name); }
 
-// Part.cs:6382 / PartResourceList.Remove(PartResource) (:289)
+// Part.cs:6382
 bool Part::RemoveResource(const PartResource* res) {
     SetupSimulationResources();
-    const int32_t id = res->info ? res->info->id() : MonoStringHash(res->resourceName);
-    return RemoveResource(id);
+    simulationResources_.Remove(*res);
+    return Resources.Remove(*res);
 }
 
 // Part.cs:6389
-bool Part::RemoveResource(std::string_view rName) { return RemoveResource(MonoStringHash(rName)); }
+bool Part::RemoveResource(std::string_view rName) {
+    SetupSimulationResources();
+    simulationResources_.Remove(rName);
+    return Resources.Remove(rName);
+}
 
 // Part.cs:6396
 bool Part::RemoveResource(int resID) {
     SetupSimulationResources();
-    auto rm = [&](std::vector<PartResource>& list, bool fire) {
-        for (auto it = list.begin(); it != list.end(); ++it)
-            if (MonoStringHash(it->resourceName) == resID) {
-                list.erase(it);
-                if (fire) GameEvents::onPartResourceListChange.Fire(this);
-                return true;
-            }
-        return false;
-    };
-    rm(simulationResources_, false);
-    return rm(Resources, true);
+    simulationResources_.Remove(resID);
+    return Resources.Remove(resID);
 }
 
 // Part.cs:6547 (double sum, one float rounding)
 float Part::GetResourceMass(bool simulate) {
     double num = 0.0;
-    std::vector<PartResource>& list = simulate ? simulationResources_ : Resources;
-    int index = static_cast<int>(list.size());
+    PartResourceList& list = simulate ? simulationResources_ : Resources;
+    int index = list.Count();
     while (index-- > 0) {
-        const PartResource& partResource = list[static_cast<size_t>(index)];
+        const PartResource& partResource = list.At(index);
         num += partResource.amount * static_cast<double>(partResource.info->density());
     }
     return static_cast<float>(num);
@@ -1024,9 +956,9 @@ float Part::GetResourceMass(bool simulate) {
 float Part::GetResourceMass(float& thermalMass) {
     float num = 0.0f;
     thermalMass = 0.0f;
-    int count = static_cast<int>(Resources.size());
+    int count = Resources.Count();
     while (count-- > 0) {
-        const PartResource& partResource = Resources[static_cast<size_t>(count)];
+        const PartResource& partResource = Resources.At(count);
         const float num2 = f32store(fx(static_cast<float>(partResource.amount)) * fx(partResource.info->density()));
         num = f32store(fx(num) + fx(num2));
         thermalMass = f32store(fx(thermalMass) + fx(num2) * fx(partResource.info->specificHeatCapacity()));
@@ -1038,9 +970,9 @@ float Part::GetResourceMass(float& thermalMass) {
 float Part::GetResourceMass(double& thermalMass) {
     float num = 0.0f;
     thermalMass = 0.0;
-    int count = static_cast<int>(Resources.size());
+    int count = Resources.Count();
     while (count-- > 0) {
-        const PartResource& partResource = Resources[static_cast<size_t>(count)];
+        const PartResource& partResource = Resources.At(count);
         const float num2 = f32store(fx(static_cast<float>(partResource.amount)) * fx(partResource.info->density()));
         num = f32store(fx(num) + fx(num2));
         thermalMass += static_cast<double>(num2) * static_cast<double>(partResource.info->specificHeatCapacity());

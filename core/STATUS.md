@@ -48,8 +48,9 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `capture.orbit_rails` | WP-08 in-game `captures/out2/orbit_rails_ingame.json` (C8): initial 6, samples 3,465, frames 450, segments 5, soi_events 4 (probes); world_rel/packed/loaded/inputs excluded (see WP-08) | 3,930 | 0 ULP |
 | `capture.terrain_height` | in-game `captures/out2/terrain_height.json` (WP-11): samples 140,522 x (h_surface, h_override, terrain_alt), bodies 2 (radii), scene_probe 4 | 140,528 | 0 ULP, no exclusions |
 | `capture.part_database` | WP-05 + WP-06: in-game `captures/out2/part_database.json` (C9), scope in "WP-05" and "WP-06" below: parts 357 (module_mass / module_cost included), part_cfg_values 6,235, modules 1,312, module_fields 32,894, module_propellants 77, resources 166, attach_nodes 822, drag_cubes 531, variants 228, assets 743 | 43,365 | 0 ULP, all strings identical |
+| `capture.resource_mass` | WP-15: in-game `captures/out2/deltav_readout.json` (C5) table `parts`, column `resource_mass` (`Part.GetResourceMass()`): 1,225 parts of 17 crafts; scope in "WP-15" | 1,225 | 0 ULP |
 | `capture.gamedatabase_load_order` | WP-05: every `Load(Audio/Texture/Model): url` and `Config(TYPE) url` line of the capture run's KSP.log, in order | 2,836 lines | identical |
-| `unit` | 190 doctest cases, 143,024 assertions (WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
+| `unit` | 212 doctest cases, 171,536 assertions (WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
 differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 6 ULP (Vector3.Project/ProjectOnPlane) and
@@ -1620,3 +1621,106 @@ Fresh run (`./run_tests.sh -f`, Linux release): 21/21 ctest tests passed, includ
 ### Commits (branch `wp13`)
 
 see `git log --oneline wp06..wp13`.
+
+## WP-15: Resource flow (branch `wp15`, from `wp13` 688c5711; wp13 merged again at the end)
+
+State: done. The resource flow of KSP is ported: `PartSet` (the request/delivery solver and the crossfeed set builder) over the SCC flow
+graphs, `PartResourceList`, the `Part.RequestResource` / `TransferResource` / `GetConnectedResourceTotals` family, `ModuleResource` /
+`ModuleResourceHandler` (hosted by every `PartModule`), the crossfeed and fuel-line modules, the resource broker / converter, and the planetary
+resource layer (`ResourceMap`, `ResourceCache`, `ResourceScenario`, `ResourceGameSettings`, `NoiseGenerator`). Every ported function cites
+`File.cs:line` of `decompiled/KSP-Decompiled/Assembly-CSharp/` (checked by script: a name from the C# must appear within three lines of the cited
+line; the ~25 remaining reports of the checker are prose references, names that exist only in C++, or constructors cited against Awake/OnDestroy).
+Existing gates unchanged and green (`capture.part_database` 0 ULP, `corpus.gamedata`, `corpus.saves`, all WP-13 tests).
+There is no in-game capture of the flow solver yet: its gate is the unit suite (expectations derived from the C# control flow and from
+self-consistency properties over the real stock crafts) plus one capture gate for `Part.GetResourceMass()`; the capture the solver needs is
+specified under "Needs".
+
+### What is ported (by C# file)
+
+| C# file | C++ | notes |
+|---|---|---|
+| PartSet.cs | `resources/part_set.hpp`, `src/resources/part_set.cpp` | all: constructors (vessel / part list / SCC graph variants), `GetConnectedResourceTotals` x4, `RequestResource` (priority lists, proportional split, sequential drain with the over-drain quirk), `GetResourceList`, `Rebuild*`, `RemovePart`, `AddPartToSet`, static `BuildPartSets` / `BuildPartSimulationSets`, `SetsEqual`, `OnFlowStateChange` / `OnFlowModeChange` / priority handlers. `_BALANCE` flow modes are not distinguished by the C#, nor here |
+| PartResourceList.cs, PartResource.cs | `resources/part_resource_list.hpp`, `src/resources/part_resource_list.cpp`; `PartResource` extended in `parts/part_data.hpp` | all (`Add` x3, `Remove` x3, `Get`, `GetAll`, `GetAllFlowing`, `GetFlowingTotals`, `GetFlowing`, `HasFlowable(Unhidden)`, `RefreshSimulationListAmounts`; `PartResource` constructors, `SetFlowState` / `SetFlowMode` (event-firing properties), `SetInfo`, `CanProvide`, `Flowing`, `Copy`, `Load` / `Save`) |
+| Part.cs (members WP-13 skipped) | `src/parts/part_resource_flow.cpp` | `RequestResource` x10, `requestResource`, `TransferResource`, `GetConnectedResourceTotals` x6, `CanCrossfeed` x2, `RequestFuel`, `FindFuel`, `fuelLookupTargets`, `crossfeedPartSet`, `simulationCrossfeedPartSet`, `resourceTargets`, `ResetSimulationResources`. `DrainFuel` is WP-13's stub (`part.hpp`, returns false as Part.cs:4825). Not ported: the obsolete `RequestRCS` (Part.cs:4831; no callers anywhere in the assembly) |
+| RUI/Algorithms (FlowGraph, StackFlowGraph, SCCFlowGraph, SCCFlowGraphUCFinder, StronglyConnectedComponentFinder, Vertex) | `resources/flow_graph.hpp`, `src/resources/flow_graph.cpp`; `dotnet/hash_set.hpp` (HashSet with .NET entry order) | all graph and Tarjan code except the constructors `Vertex(IEnumerable<Vertex>)` and `Vertex(T, IEnumerable<Vertex>)` (Vertex.cs:32, 38; unused in the assembly); `Vertex.transformGuide` / `StackFlowGraph.BuildTransformGuides` (Unity transforms of the debug lines) not ported |
+| ModuleResource.cs, ModuleResourceHandler.cs, ModuleResourceAutoShiftState.cs | `modules/module_resource.hpp`, `modules/resource_modules.hpp`, `src/modules/module_resource.cpp`, `resource_modules.cpp` | all but the PAW text (`PrintRate`, `PrintModuleResources`); `PartModule::resHandler` is wired into `Awake` / `Load` like `PartModule.resHandler` |
+| ModuleToggleCrossfeed.cs, IToggleCrossfeed.cs, CompoundParts/CModuleFuelLine.cs, EVAResourceContainer.cs | `modules/resource_modules.hpp`, `src/modules/resource_modules.cpp` | full ports; the WP-06 `ModuleToggleCrossfeed` stand-in was removed. The fuel line's `CompoundPart.target` link is test support only (`tools/support/craft_tree.hpp`, `LinkFuelLines`); `CompoundPart` itself is outside the package |
+| ResourceBroker / IResourceBroker, ResourceConverter, ResourceSetup, ConversionRecipe, ResourceRatio, ConverterResults, ResourceFlowMode, ResourceTransferMode, HarvestTypes, PartResourceDrainDefinition and the small records | `resources/resource_broker.hpp`, `resources/resource_types.hpp`, `src/resources/resource_broker.cpp`; `PartResourceDrainDefinition` extended in `part_resource_library.hpp` | all |
+| ResourceMap, ResourceCache, ResourceScenario, ResourceGameSettings, ResourceUtilities, NoiseGenerator, PlanetaryResource, DistributionData, ResourceData, DepletionData, BiomeLockData, PlanetScanData | `resources/planetary_resources.hpp`, `src/resources/planetary_resources.cpp` | all. `ResourceMap.GetAbundance` reads the biome map: `CBAttributeMapSO.GetAtt` is not ported (needs the biome textures), so the biome lookup is the host hook `ResourceEnvironment::getBiomeAtt`; the altitude / latitude / longitude noise is ported |
+| Vessel.cs:451-464, 3913-4040, ShipConstruct.cs:46, 916-970 (the PartSet owners) | `resources/resource_flow_host.hpp`, `src/resources/resource_flow_host.cpp` | the seam to WP-14 / WP-18, see below |
+| ProtoPartResourceSnapshot.cs | WP-13's `proto_vessel.hpp` (unchanged) | `GetCurrentResourceInfo` returns `AvailablePart.ResourceInfo`, a UI record WP-05 does not have; deferred |
+| ModuleAlternator `moduleResourceBasedPrimaryIsInput` | - | the field exists on the handler; the alternator module does not exist yet (WP-06 solar panel sets it) |
+
+Changed WP-05/06/13 code (all behaviour-preserving for the existing gates): `PartPrefab::Resources` and `Part::simulationResources_` are
+`PartResourceList` (was `vector<PartResource>`; `resourcesSetUp_` / `simulationSetUp_` removed), `Part::Instantiate` clones the list
+(`CloneFrom`), `PartModule` owns a `ModuleResourceHandler`, the part.cpp resource block works over the list. Forward declarations were
+checked against the definitions (`struct PartResource`, `class PartResourceList`, `class PartSet`; MSVC mangles the keyword).
+
+### The Vessel seam (for WP-14, WP-18)
+
+`resources/resource_flow_host.hpp`. A Vessel (or ShipConstruct) is seen through `IResourceVessel` (`ResourceParts()`, `RequestResource`,
+`GetConnectedResourceTotals` x2); `ResourceFlowEnvironment::vesselHost` / `shipHost` map `Part::vessel` / `Part::ship` to it. The PartSet
+owners `VesselResourceSets` (Vessel.cs:3913-4040: `UpdateResourceSets`, `BuildCrossfeedPartSets`, `RequestResource`,
+`GetConnectedResourceTotals`; `resourcePartSet`, `simulationResourcePartSet`, `crossfeedSets`, `simulationCrossfeedSets`, `resourcesDirty`) and
+`ShipResourceSets` (ShipConstruct.cs:916-970) are members the Vessel / ShipConstruct forward to. The three GameEvents subscriptions of
+Vessel.cs:1574-1577 (`onPartResourceListChange`, `onPartCrossfeedStateChange`, `onPartPriorityChanged` -> `UpdateResourceSetsEventCheckPart`)
+stay in the Vessel (they test `p.vessel == this`); `tools/support/craft_tree.hpp::TestVessel` is the reference implementation WP-14 can copy.
+
+### Gate and unit results (Linux release; harness tolerances unchanged)
+
+| gate | rows | max abs | max rel | max ULP | notes |
+|---|---|---|---|---|---|
+| `capture.resource_mass` (new) | `deltav_readout.json` table `parts`, column `resource_mass`: 1,225 parts of 17 crafts (key craft_id + part_index) | 0 | 0 | 0 | `Part.GetResourceMass()` of every part of the C5 craft set: the craft files go through `KSPUpgradePipeline.Process` (as `ShipConstruction.CreateConstructFromTemplate` does; renames `liquidEngine1-2` and the v180 control surfaces; the v180 scripts read the prefab's `ctrlSurfaceRange` through the existing `SaveEnvironment::prefabModuleFloat` hook, which WP-15 only installs from the loaded parts in `InstallUpgradeHooks`, `tools/support/craft_tree.hpp`), `LoadShip`, the part tree; dataset `tools/golden_runner/ds_resource_mass.cpp`. Only `resource_mass` is gated (`mass` / `module_mass` are WP-13's, the staging columns WP-18's) |
+| `capture.part_database` | unchanged | 0 | 0 | 0 | green |
+| `corpus.gamedata`, `corpus.saves`, all WP-13 tests | unchanged | | | | green |
+
+Unit tests: `tests/test_resource_flow.cpp` (11 cases, 21,194 assertions) and `tests/test_resource_modules.cpp` (11 cases, 7,316 assertions).
+Expected values come from the decompiled control flow, the real stock configs, the physprofile save and the stock crafts; no number is invented.
+
+- Flow: predicates and property events; `PartResourceList`; `TransferResource` clamping and thermal mixing; PartSet totals and requests (priority order,
+  proportional inside a list, sequential across lists); every `ResourceFlowMode`; state / mode / priority changes with simulation twins; constructors and
+  `AddPartToSet`; asparagus staging with fuel lines, decoupler crossfeed and `NoCrossFeedNodeKey`; drain definitions.
+- Stock crafts (`harness/inputs/Ships`, `tests/test_resource_flow.cpp`, through the upgrade pipeline): 51 of the 86 files load (the others contain FAR,
+  Pwings and similar mod parts and are refused by LoadShip as in the game); 3,020 parts, 671 request-graph components. For every craft: the SCCs of
+  the request graph partition the parts; the BFS reachability agrees with the condensed DAG and with the transposed delivery graph; 29 fuel lines in 12
+  crafts link their targets (equal to the PARTDATA `tgt` count); 153 `ModuleToggleCrossfeed` parts; connected-resource totals equal the sum over the
+  part's set (514 checks); draws on LiquidFuel of three sizes (1 %, 37 %, 150 % of the set total) obey the solver invariants: conservation (drawn == amount removed from the set), lists drained from the highest priority, at most one partially drained list, the rest untouched, proportional split inside the partial list (138 draws).
+- Modules: `ModuleResourceHandler.OnLoad` equals the cfg on all 353 prefabs (74 with module resources); handler runtime
+  (`UpdateModuleResourceInputs` / `Outputs`, `HasEnoughResourcesToAutoStart`); broker / converter / `ResourceSetup`; `ModuleToggleCrossfeed` (toggle,
+  symmetry propagation, OnStart, Instantiate); `CModuleFuelLine`; `EVAResourceContainer`; `ModuleResourceAutoShiftState`; `ResourceGameSettings` from
+  the physprofile save (GameSeed 1985366484) with the Save round trip; `ResourceUtilities` / `NoiseGenerator`.
+- `ResourceMap.GetAbundance`: bit-exact against an independent Python implementation (`tools/wp15/abundance_reference.py`, numpy float32 stores,
+  KSPRandom int32 wrap), 1,896 cases plus the body item lists (`tests/data/wp15_abundance_reference.json`). The reference and the C++ share only the
+  decompiled C# as source.
+
+### C# quirks reproduced (later code must keep them)
+
+- The 4-argument `PartResourceList` constructor never sets `simulationSet`: simulation twins loaded by `Add(node)` have `simulationResource == false` until `RefreshSimulationListAmounts` runs. Two WP-13 test expectations were corrected to this behaviour (`tests/test_part.cpp`: the sim twin flag; `OnCopy` leaves a stale twin, so the simulation sizes after OnCopy are 2 and 3).
+- `PartResourceList.Add(name, ...)` fires `onPartResourceListChange`; `Add` / `Remove` fire it only for the non-simulation list.
+- `PartResource.flowState` / `flowMode` setters fire the events whenever the value changes; `UpdateCrossfeed` fires the state-change event when the value changed regardless of `fireEvent`.
+- `PartSet.GetConnectedResourceTotals` with a threshold: the pulling check is `maxAmount * (1 - maxAmount * threshold)` (sic).
+- `ModuleResourceHandler.IsResourceBelowShutOffLimit` is inverted relative to its name.
+- `Part.RequestFuel` can loop forever on a part tree that never reaches its target (the C# loop has no cycle guard); kept, not guarded.
+- `Simplex.fastfloor` (Simplex.cs:195, used by the noise generator) is `(int)x - 1` for x <= 0, so `fastfloor(-2.0)` is -3.
+- Sequential drain across lists: the last list's `TransferResource(r, -demand)` can over-drain by the unfilled remainder; returns are `demand - (demand - x)` rounded, tests compare with an approximate check there.
+- Null references the C# would throw as NullReferenceException (a PART without `part`, v180 upgrade without a prefab module) throw `NullReferenceException` here.
+- Set order is `HashSet<Part>` entry order (`dotnet::HashSet`: entries array, LIFO free list), which decides which part drains first among equal priorities.
+
+### Deviations
+
+- `PartResource` keeps public fields (`flowState`, `flowMode` are the C# `_flowState` / `_flowMode`); the property semantics are `SetFlowState` / `SetFlowMode`.
+- Ownership: `PartSet`s are held by `shared_ptr` and compared by identity (C# reference semantics); GameEvents listeners of a PartSet are registered in its constructor and removed in its destructor (C# relies on `OnDestroy` / the vessel doing it).
+- `GetAtt` of the biome maps and the PAW / Localizer display text are host hooks or not modelled (see the table).
+
+### Needs a new (local) capture or data
+
+- Harness dataset `resource_flow` (in-game, EDITOR and FLIGHT): for the 17 C5 crafts plus an asparagus craft with fuel lines and a craft with `ModuleToggleCrossfeed`, per physics tick of a scripted burn: (a) per part the amounts of every resource before / after each `Part.RequestResource` of the engines (key craft, tick, part_index, resource), (b) the `crossfeedSets` composition (part indices per set, set order) after `Vessel.UpdateResourceSets`, (c) the same after toggling crossfeed on one decoupler / fuel line and after changing a `resourcePriorityOffset`, (d) `Vessel.GetConnectedResourceTotals(id, simulate)` for LiquidFuel / Oxidizer / ElectricCharge. With it the unit-level properties here become a 0 ULP gate: the per-part draw split is the one place where order (HashSet enumeration, priority lists) shows in the result.
+- `ResourceMap.GetAbundance` in flight: needs the biome map reader (`CBAttributeMapSO.GetAtt`, the biome PNGs / MapSO data) and a capture of `ResourceMap.Instance.GetAbundance(request)` for a set of bodies / lat / lon / altitudes.
+- `ProtoPartResourceSnapshot.GetCurrentResourceInfo` needs `AvailablePart.ResourceInfo` (part-info panel records).
+- The WP-13 craft statistics ("33 of 86 craft load", 1,967 parts) in `tests/test_part.cpp` use `LoadShip` without the upgrade pipeline; with the pipeline 51 of the 86 files load.
+
+Fresh run (`./run_tests.sh -f`, Linux release): 22/22 ctest tests passed (`unit` 195 cases, `capture.resource_mass` new, `capture.part_database`, `corpus.gamedata`, all golden / capture gates); `corpus.saves` is registered only where `decompiled/KSP-dev/saves` exists (not on this VM, as before WP-15).
+
+### Commits (branch `wp15`)
+
+see `git log --oneline wp13..wp15`.

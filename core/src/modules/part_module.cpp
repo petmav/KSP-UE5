@@ -41,7 +41,8 @@ void PartModule::ModularSetup() {
 // PartModule.cs:743
 void PartModule::Awake() {
     ModularSetup();
-    // resHandler.SetPartModule(this); resHandler.OnAwake(): ModuleResourceHandler is WP-15 (no state observable here)
+    resHandler.SetPartModule(this);  // PartModule.cs:748
+    resHandler.OnAwake();
     OnAwake();
 }
 
@@ -96,7 +97,7 @@ void PartModule::Load(const ConfigNode& node) {
     if (node.HasNode("EVENTS")) Events().OnLoad(*node.GetNode("EVENTS"));
     if (node.HasNode("ACTIONS")) Actions().OnLoad(*node.GetNode("ACTIONS"));
     AxisGroupsManager::LoadAxisFieldNodes(*this, node);  // AxisGroupsManager.cs:19
-    // resHandler.OnLoad(node): ModuleResourceHandler (WP-15)
+    resHandler.OnLoad(node);  // PartModule.cs:829
     try {
         OnLoad(node);
     } catch (const std::exception& e) {

@@ -6,6 +6,7 @@
 #include "ksp/core/log.hpp"
 #include "ksp/dotnet/number.hpp"
 #include "ksp/dotnet/text.hpp"
+#include "ksp/events/game_events.hpp"
 #include "ksp/parts/cs_parse.hpp"
 #include "ksp/resources/part_resource_library.hpp"
 
@@ -212,7 +213,7 @@ void PartResource::Load(const ConfigNode& node) {
     const PartResourceLibrary* lib = PartResourceLibrary::Instance();
     if (node.HasValue("amount")) amount = cs::DoubleParse(*node.GetValue("amount"));
     if (node.HasValue("maxAmount")) maxAmount = cs::DoubleParse(*node.GetValue("maxAmount"));
-    flowState = node.HasValue("flowState") ? cs::BoolParse(*node.GetValue("flowState")) : true;
+    SetFlowState(node.HasValue("flowState") ? cs::BoolParse(*node.GetValue("flowState")) : true);  // the property: fires the event
     auto def = [&]() -> const PartResourceDefinition& {
         const PartResourceDefinition* d = lib ? lib->GetDefinition(MonoStringHash(resourceName)) : nullptr;
         if (!d) throw NullReferenceException("Object reference not set to an instance of an object");
@@ -222,13 +223,14 @@ void PartResource::Load(const ConfigNode& node) {
     isVisible = node.HasValue("isVisible") ? cs::BoolParse(*node.GetValue("isVisible")) : def().isVisible();
     hideFlow = node.HasValue("hideFlow") ? cs::BoolParse(*node.GetValue("hideFlow")) : false;
     if (node.HasValue("flowMode")) {
-        // ConfigNode.TryGetEnum (ConfigNode.cs:4298): default Both, Enum.IsDefined(name) then Enum.Parse
+        // ConfigNode.TryGetEnum (ConfigNode.cs:4298) into the field `_flowMode` (no event): default Both, Enum.IsDefined(name)
+        // then Enum.Parse
         flowMode = PartResourceFlowMode::Both;
         const std::string v = *node.GetValue("flowMode");
         for (const auto& [n, val] : kEnum_PartResource_FlowMode.members)
             if (n == v) flowMode = static_cast<PartResourceFlowMode>(val);
     } else {
-        flowMode = PartResourceFlowMode::Both;
+        SetFlowMode(PartResourceFlowMode::Both);  // the property: fires the event
     }
 }
 
@@ -242,6 +244,63 @@ void PartResource::Save(ConfigNode& node) const {
     node.AddValue("hideFlow", hideFlow);
     node.AddValue("isVisible", isVisible);
     node.AddValue("flowMode", kEnum_PartResource_FlowMode.ToString(static_cast<int64_t>(flowMode)));
+}
+
+// PartResource.cs:36 flowState setter
+void PartResource::SetFlowState(bool value) {
+    const bool flag = flowState;
+    flowState = value;
+    if (value != flag)
+        events::GameEvents::onPartResourceFlowStateChange.Fire(events::GameEvents::HostedFromToAction<PartResource*, bool>(this, flag, value));
+}
+
+// PartResource.cs:53 flowMode setter
+void PartResource::SetFlowMode(PartResourceFlowMode value) {
+    const PartResourceFlowMode old = flowMode;
+    flowMode = value;
+    if (value != old)
+        events::GameEvents::onPartResourceFlowModeChange.Fire(events::GameEvents::HostedFromToAction<PartResource*, PartResource_FlowMode>(
+            this, static_cast<PartResource_FlowMode>(static_cast<int>(old)), static_cast<PartResource_FlowMode>(static_cast<int>(value))));
+}
+
+// PartResource.cs:172
+void PartResource::SetInfo(const PartResourceDefinition* i) {
+    info = i;
+    resourceName = i->name();
+}
+
+// PartResource.cs:178 (string concatenation of a double: Mono's Double.ToString() = "G15"-style shortest form, dotnet "G")
+std::string PartResource::GetInfo() const {
+    return info->displayName() + ": " + dotnet::FormatDoubleG(amount) + " / " + dotnet::FormatDoubleG(maxAmount);
+}
+
+// PartResource.cs:183
+bool PartResource::CanProvide(double demand) const {
+    if (demand > 0.0) return amount > 0.0;
+    if (demand < 0.0) return amount < maxAmount;
+    return false;
+}
+
+// PartResource.cs:196
+bool PartResource::CanProvide(bool pulling) const {
+    if (pulling) {
+        if (amount > 0.0 && flowState) return (static_cast<int>(flowMode) & static_cast<int>(PartResourceFlowMode::Out)) > 0;
+        return false;
+    }
+    if (amount < maxAmount && flowState) return (static_cast<int>(flowMode) & static_cast<int>(PartResourceFlowMode::In)) > 0;
+    return false;
+}
+
+// PartResource.cs:213
+bool PartResource::Flowing(bool pulling) const {
+    if (flowState) {
+        if (pulling) {
+            if ((static_cast<int>(flowMode) & static_cast<int>(PartResourceFlowMode::Out)) > 0) return true;
+        } else if ((static_cast<int>(flowMode) & static_cast<int>(PartResourceFlowMode::In)) > 0) {
+            return true;
+        }
+    }
+    return false;
 }
 
 // PartResource.cs:94 Copy (the `part` link is not copied: the copy constructors set it from the source before Copy)
