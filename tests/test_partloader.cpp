@@ -366,4 +366,10 @@ TEST_CASE("PartLoader on the real GameData (decompiled/KSP-dev)") {
     int errors = 0;
     for (const auto& ap : data.parts.loadedParts) errors += !ap->loadError.empty();
     CHECK(errors == 4);  // the DLC suits
+    // no PHYSICMATERIAL_DEFINITION in stock: the code-built Default
+    REQUIRE(data.physicMaterials.DefaultMaterial != nullptr);
+    CHECK(data.physicMaterials.physicMaterials.empty());
+    CHECK(data.physicMaterials.DefaultMaterial->dynamicFriction() == 0.4f);
+    CHECK(data.physicMaterials.DefaultMaterial->displayName() == "#autoLOC_6011085");
+    CHECK(data.resources.resourceDefinitions.Count() == 10);  // the 10 "Resource X added to database" lines of KSP.log
 }

@@ -7,7 +7,8 @@
 //
 // Steps: GameDatabase.Load (UrlDir, localisation, texture/model/audio tables, CompileConfig) -> PhysicsGlobals
 // (prefab + <gameRoot>/Physics.cfg, only if no instance exists yet) -> PartResourceLibrary.LoadDefinitions ->
-// PartLoader.CompileAll (with <gameRoot>/PartDatabase.cfg). Physic materials, experience traits, part upgrades,
+// PhysicMaterialLibrary.LoadDefinitions -> PartLoader.CompileAll (with <gameRoot>/PartDatabase.cfg). Experience traits,
+// part upgrades,
 // props and internal spaces are not compiled here (configs remain queryable through `database`).
 // Nothing is ever written below gameRoot.
 #pragma once
@@ -18,6 +19,7 @@
 #include "ksp/database/game_database.hpp"
 #include "ksp/parts/part_loader.hpp"
 #include "ksp/resources/part_resource_library.hpp"
+#include "ksp/resources/physic_material_library.hpp"
 
 namespace ksp {
 
@@ -40,6 +42,7 @@ public:
 
     GameDatabase database;
     PartResourceLibrary resources;
+    PhysicMaterialLibrary physicMaterials;
     PartLoader parts;
     std::unique_ptr<PhysicsGlobals> physics;  // created when no PhysicsGlobals instance existed
 };

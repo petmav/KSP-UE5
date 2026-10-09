@@ -32,6 +32,7 @@ void GameData::Load(const Options& options) {
         PhysicsGlobals::SetInstance(physics.get());
     }
     resources.LoadDefinitions(database);
+    physicMaterials.LoadDefinitions(database);
 
     PartLoader::Options po;
     po.partDatabasePath = rootStr + "\\PartDatabase.cfg";

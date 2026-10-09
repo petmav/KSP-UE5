@@ -43,6 +43,7 @@ add_library(kspcore STATIC
     io/url_dir.cpp
     database/game_database.cpp
     resources/part_resource_library.cpp
+    resources/physic_material_library.cpp
     parts/ksp_enums.cpp
     parts/part_data.cpp
     parts/part_module_data.cpp
