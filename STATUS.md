@@ -535,7 +535,7 @@ the real game clears these flags on scene setup (`PSystemSetup.OnSceneChange` / 
 | `2fae513` | gate the whole body_catalog orbits table |
 | `93cd8ff` | integration unit test |
 | `e4d982c` | docs: this section, README bodies/orbits API |
-| (next) | merge `wp03` (see "WP-03 merge"); hash recorded by the following docs commit |
+| `b9d4578` | merge `wp03` (see "WP-03 merge") |
 
 ### WP-03 merge
 
