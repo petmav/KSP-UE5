@@ -108,3 +108,13 @@ ksp_golden_gate(golden.atmosphere_curves atmosphere_curves)
 add_test(NAME corpus.gamedata
     COMMAND golden_runner gamedata --harness ${KSP_HARNESS_DIR} --out ${KSP_CANDIDATE_DIR})
 set_tests_properties(corpus.gamedata PROPERTIES LABELS corpus TIMEOUT 900)
+
+# WP-04 save model: Load -> Save round trip of every original save (decompiled/KSP-dev/saves/**/*.sfs, *.craft) and
+# stock craft (decompiled/KSP-dev/Ships/**/*.craft); R2 idempotent, R1 byte-identical or every difference documented
+# (tools/save_corpus/save_corpus.cpp). No golden dataset: original game data is the reference.
+set(KSP_DEV_DIR "${KSP_PROJECT_ROOT}/decompiled/KSP-dev")
+if(EXISTS "${KSP_DEV_DIR}/saves")
+    add_test(NAME corpus.saves
+        COMMAND save_corpus --saves "${KSP_DEV_DIR}/saves" --ships "${KSP_DEV_DIR}/Ships")
+    set_tests_properties(corpus.saves PROPERTIES LABELS corpus TIMEOUT 1800)
+endif()

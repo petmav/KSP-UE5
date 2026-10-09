@@ -6,6 +6,7 @@ add_library(kspcore STATIC
     dotnet/number.cpp
     dotnet/random.cpp
     dotnet/text.cpp
+    dotnet/version.cpp
     unity/vector.cpp
     unity/animation_curve.cpp
     unity/random.cpp
@@ -40,6 +41,13 @@ add_library(kspcore STATIC
     util/ksp_util.cpp
     util/misc_util.cpp
     util/simplex.cpp
+    save/save_environment.cpp
+    save/game_parameters.cpp
+    save/crew.cpp
+    save/proto_vessel.cpp
+    save/game.cpp
+    save/upgrade_pipeline.cpp
+    save/ship_construct.cpp
     capi/kspcore_c.cpp
 )
 add_library(ksp::core ALIAS kspcore)
