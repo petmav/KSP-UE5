@@ -76,6 +76,8 @@ add_library(kspcore STATIC
     parts/part_geometry_util.cpp
     parts/part_misc.cpp
     modules/cs_expr.cpp
+    modules/module_resource.cpp
+    modules/resource_modules.cpp
     modules/module_members.cpp
     modules/base_field.cpp
     modules/base_event.cpp

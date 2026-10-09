@@ -18,3 +18,5 @@ Branch wp15 (from wp13 688c5711). Notes written after every major step.
 - baseline (before changes): 21/21 ctest pass (build 343 s cold)
 - Step 1 compiled; merged wp13 (ae3e81fa) clean; full unit suite green (173 cases). C# quirks found: PartResourceList 4-arg ctor never sets `simulationSet` (sim twins loaded by Add(node) have simulationResource=false until refresh); Part.OnCopy removes from Resources only (stale sim twin) -> two WP-13 test expectations corrected to the C# behaviour.
 - TODO next: modules (ModuleResource/Handler/AutoShift/ToggleCrossfeed/FuelLine/EVA), broker/converter, planetary layer (map/cache/scenario/settings/noise), tests/test_resource_flow.cpp, STATUS/README
+- Step 2 done: ModuleResource/ModuleResourceHandler (PartModule.resHandler wired into Awake/Load), ModuleResourceAutoShiftState, ModuleToggleCrossfeed (full port, replaces WP-06 stand-in), CModuleFuelLine, EVAResourceContainer. 21/21 ctest still green (capture.part_database unchanged).
+- TODO: ResourceBroker/ResourceConverter, planetary layer, tests/test_resource_flow.cpp, citation check script, STATUS/README, merge wp13 again before final
