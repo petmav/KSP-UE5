@@ -1510,3 +1510,457 @@ TEST_CASE("WP-14 vessel positioning: SetPosition / Translate / SetRotation move 
     CHECK(v->vesselTransform.position == Vector3f(5.0f, 6.0f, 7.0f));
     v->loaded = true;
 }
+
+// ======================================================== VesselValues, FlightRegistry, ProtoTargetInfo
+
+TEST_CASE("WP-14 VesselValues: extremum over the parts' PartValues with the default start value and the per-frame cache") {
+    if (!GameAvailable14()) return;
+    World14 w;
+    auto v = Stack14(w, {"mk1pod.v2", "fuelTankSmallFlat", "mk1-3pod"}, false);
+    struct Src {
+        float f;
+        int i;
+        float Fv() { return f; }
+        int Iv() { return i; }
+    } s0{0.3f, 2}, s1{0.7f, 5}, s2{0.25f, 3};
+    Src* srcs[3] = {&s0, &s1, &s2};
+    for (int i = 0; i < 3; i++) {
+        PartValues& pv = v->parts[static_cast<size_t>(i)]->partValues;
+        pv.MaxThrottle.Add(srcs[i], &Src::Fv);
+        pv.HeatProduction.Add(srcs[i], &Src::Fv);
+        pv.AutopilotSkill.Add(srcs[i], &Src::Iv);
+        pv.Update();
+    }
+    VesselValues& vv = v->GetVesselValues();
+    // MaxThrottle: a > b starting at the default 1.0 -> values below 1 never win
+    CHECK(vv.MaxThrottle.value() == 1.0f);
+    // HeatProduction: a < b starting at 1.0 -> the smallest part value
+    CHECK(vv.HeatProduction.value() == 0.25f);
+    // AutopilotSkill: a > b starting at -1 -> the largest
+    CHECK(vv.AutopilotSkill.value() == 5);
+    CHECK(vv.EVAChuteSkill.defaultValue == 0);
+    CHECK(vv.CommsRange.defaultValue == 1.0f);
+    // the result is cached for the frame: a change of the part values shows after the frame advances or with valueUncached
+    s2.f = 0.1f;
+    v->parts[2]->partValues.Update();
+    CHECK(vv.HeatProduction.value() == 0.25f);
+    CHECK(vv.HeatProduction.valueUncached() == 0.1f);
+    s2.f = 0.05f;
+    v->parts[2]->partValues.Update();
+    CHECK(vv.HeatProduction.value() == 0.1f);
+    Vessel::env.frameCount++;
+    CHECK(vv.HeatProduction.value() == 0.05f);
+    // PartValuesOperation folds from the last part to the first
+    PartValuesOperation<float> sum([&]() -> std::vector<Part*>& { return v->parts; }, 0.0f, [](float a, float b) { return a + b; },
+                                   [](Part& p) { return p.partValues.HeatProduction.value(); });
+    CHECK(sum.value() == doctest::Approx(0.3f + 0.7f + 0.05f));
+    for (int i = 0; i < 3; i++) {
+        PartValues& pv = v->parts[static_cast<size_t>(i)]->partValues;
+        pv.MaxThrottle.Remove(srcs[i], &Src::Fv);
+        pv.HeatProduction.Remove(srcs[i], &Src::Fv);
+        pv.AutopilotSkill.Remove(srcs[i], &Src::Iv);
+    }
+    Vessel::env = VesselEnvironment{};
+}
+
+TEST_CASE("WP-14 FlightRegistry and ProtoTargetInfo: registration, lookup by id, target round trip (ProtoTargetInfo.cs, FlightGlobals.cs)") {
+    if (!GameAvailable14()) return;
+    World14 w;
+    auto a = Stack14(w, {"mk1pod.v2", "fuelTankSmallFlat"});
+    auto b = Stack14(w, {"mk1pod.v2"});
+    a->id = Guid::Parse("11111111111111111111111111111111");
+    b->id = Guid::Parse("22222222222222222222222222222222");
+    CHECK(FlightRegistry::Vessels.size() == 2);   // Initialize registers (FlightGlobals.AddVessel)
+    CHECK(FlightRegistry::VesselsLoaded.size() == 2);
+    CHECK(FlightRegistry::FindVessel(a->id) == a.get());
+    CHECK(FlightRegistry::FindVessel(b->id) == b.get());
+    CHECK(FlightRegistry::FindVessel(Guid::Parse("33333333333333333333333333333333")) == nullptr);
+    // FindPartByID searches the loaded vessels' flightIDs (from the end); 0 is refused
+    a->parts[1]->fields.flightID = 777;
+    b->parts[0]->fields.flightID = 888;
+    CHECK(FlightRegistry::FindPartByID(777) == a->parts[1]);
+    CHECK(FlightRegistry::FindPartByID(888) == b->parts[0]);
+    CHECK(FlightRegistry::FindPartByID(0) == nullptr);
+    CHECK(FlightRegistry::FindPartByID(12345) == nullptr);
+    // SortVessel moves between the loaded and unloaded lists
+    a->loaded = false;
+    FlightRegistry::SortVessel(a.get(), false);
+    CHECK(FlightRegistry::VesselsLoaded.size() == 1);
+    CHECK(FlightRegistry::VesselsUnloaded.size() == 1);
+    a->loaded = true;
+    FlightRegistry::SortVessel(a.get(), true);
+    CHECK(FlightRegistry::VesselsLoaded.size() == 2);
+
+    // ProtoTargetInfo for a vessel target: Save writes type + vesselID, FindTarget resolves through the registry
+    ProtoTargetInfo vt(static_cast<ITargetable*>(b.get()));
+    CHECK(vt.targetType == ProtoTargetInfo::Type::Vessel);
+    CHECK(vt.vesselId == b->id);
+    ConfigNode n("TARGET");
+    vt.Save(n);
+    CHECK(*n.GetValue("type") == "Vessel");
+    CHECK(*n.GetValue("vesselID") == b->id.ToString());
+    ProtoTargetInfo loaded(n);
+    CHECK(loaded.FindTarget() == static_cast<ITargetable*>(b.get()));
+    // null target: Null type, nothing saved
+    ProtoTargetInfo none(static_cast<ITargetable*>(nullptr));
+    CHECK(none.targetType == ProtoTargetInfo::Type::Null);
+    ConfigNode nn("TARGET");
+    none.Save(nn);
+    CHECK(nn.values().Count() == 0);
+    CHECK(none.FindTarget() == nullptr);
+    // a part module target is saved as vessel + part flightID + module index and resolved back to the module (ITargetable modules)
+    struct TModule : ITargetable {
+        std::string GetTransformName() override { return "tm"; }
+        Vector3f GetTransformPosition() override { return {}; }
+        Vector3f GetObtVelocity() override { return {}; }
+        Vector3f GetSrfVelocity() override { return {}; }
+        Vector3f GetFwdVector() override { return {}; }
+        Vessel* GetVessel() override { return nullptr; }
+        std::string GetName() override { return "t"; }
+        std::string GetDisplayName() override { return "t"; }
+        Orbit* GetOrbit() override { return nullptr; }
+        OrbitDriver* GetOrbitDriver() override { return nullptr; }
+        VesselTargetModes GetTargetingMode() override { return VesselTargetModes::None; }
+        bool GetActiveTargetable() override { return false; }
+    } generic;
+    ProtoTargetInfo gt(static_cast<ITargetable*>(&generic));
+    CHECK(gt.targetType == ProtoTargetInfo::Type::Generic);  // neither module nor vessel nor body
+    CHECK(gt.uniqueName == "tm");
+    ConfigNode gn("TARGET");
+    gt.Save(gn);
+    CHECK(*gn.GetValue("tgtId") == "tm");
+    // the unloaded round trip of Vessel.Load: the target survives a snapshot
+    a->targetObject = b.get();
+    ProtoVessel* snap = a->BackupVessel();
+    CHECK(snap->targetInfo.targetType == ProtoTargetInfo::Type::Vessel);
+    CHECK(snap->targetInfo.vesselId == b->id);
+    CHECK(snap->targetInfo.FindTarget() == static_cast<ITargetable*>(b.get()));
+    a->Unload();             // ProtoVessel(this) keeps the target
+    CHECK(a->protoVessel->targetInfo.targetType == ProtoTargetInfo::Type::Vessel);
+    a->targetObject = nullptr;
+    a->Load();
+    CHECK(a->targetObject == static_cast<ITargetable*>(b.get()));  // Vessel.Load resumes the target from the snapshot
+    CHECK(a->pTI.targetType == ProtoTargetInfo::Type::Vessel);
+    FlightRegistry::Clear();
+}
+
+// ======================================================== ModuleTripLogger, VesselTripLog, FlightLogger, FlightCoMTracker, AxisGroupsModule
+
+TEST_CASE("WP-14 ModuleTripLogger: Log round trip of the physprofile modules, deprecated nodes, delayed situation logging, forced logs") {
+    if (!GameAvailable14()) return;
+    World14 w;
+    // the real MODULE nodes of the physprofile save
+    GameParameters::GetDefaultParameters(Game_Modes::CAREER, GameParameters::Preset::Normal);
+    ConfigNode::NodePtr root = ConfigNode::Load(kSaves14 + "/physprofile/persistent.sfs");
+    REQUIRE(root);
+    Game game(root.get());  // HighLogic.CurrentGame: ProtoCrewMember.UpdateExperience reads it
+    SaveEnvironment::Current().currentGame = &game;
+    auto v = Stack14(w, {"mk1pod.v2", "fuelTankSmallFlat"});
+    auto* tl = dynamic_cast<ModuleTripLogger*>(v->parts[0]->FindModuleOfClass("ModuleTripLogger"));
+    REQUIRE(tl != nullptr);  // PartLoader adds ModuleTripLogger to every part with vesselType > Unknown
+    CHECK(tl->GetModuleDisplayName() != "");
+    CHECK(v->parts[1]->FindModuleOfClass("ModuleTripLogger") == nullptr);  // tank: vesselType Debris
+    ConfigNode in("MODULE");
+    in.AddValue("name", "ModuleTripLogger");
+    ConfigNode* log = in.AddNode("Log");
+    log->AddValue("flight", 3);
+    log->AddValue("0", "Flight,Kerbin");
+    log->AddValue("1", "Orbit,Kerbin");
+    tl->Load(in);
+    CHECK(tl->Log.Flight() == 3);
+    REQUIRE(tl->Log.Count() == 2);
+    CHECK(tl->Log[1].type == "Orbit");
+    CHECK(tl->Log[1].target == "Kerbin");
+    ConfigNode out("MODULE");
+    tl->Save(out);
+    ConfigNode* outLog = out.GetNode("Log");
+    REQUIRE(outLog != nullptr);
+    CHECK(*outLog->GetValue("flight") == "3");
+    CHECK(*outLog->GetValue("1") == "Orbit,Kerbin");
+    // deprecated nodes become entries (ModuleTripLogger.cs:40)
+    ConfigNode old("MODULE");
+    old.AddNode("Surfaced")->AddValue("at", "Kerbin");
+    ConfigNode* flew = old.AddNode("Flew");
+    flew->AddValue("at", "Kerbin");
+    flew->AddValue("at", "Mun");
+    tl->Log = FlightLog();
+    tl->Load(old);
+    REQUIRE(tl->Log.Count() == 3);
+    CHECK(tl->Log[0].type == "Land");
+    CHECK(tl->Log[1].type == "Flight");
+    CHECK(tl->Log[2].target == "Mun");
+
+    // OnStart subscribes; a situation change of THIS vessel schedules the 0.2 s delayed log; others are ignored
+    tl->Log = FlightLog();
+    auto jeb = std::make_shared<ProtoCrewMember>(ProtoCrewMember_KerbalType::Crew, "Jebediah Kerman");
+    v->parts[0]->AddCrewmember(jeb);
+    int recorded = 0;
+    struct L8 {
+        int* n;
+        void Run(Vessel*) { ++*n; }
+    } l8{&recorded};
+    GE::OnFlightLogRecorded.Add(&l8, &L8::Run);
+    tl->OnStart(StartState::Orbital);
+    Time::time = 100.0f;
+    v->situation = Vessel::Situations::ORBITING;
+    auto other = Stack14(w, {"mk1pod.v2"});
+    GE::onVesselSituationChange.Fire(GE::HostedFromToAction<Vessel*, Vessel_Situations>(other.get(), Vessel_Situations::FLYING, Vessel_Situations::ORBITING));
+    CHECK_FALSE(tl->IsInvoking());
+    GE::onVesselSituationChange.Fire(GE::HostedFromToAction<Vessel*, Vessel_Situations>(v.get(), Vessel_Situations::FLYING, Vessel_Situations::ORBITING));
+    CHECK(tl->IsInvoking());
+    Time::time = 100.1f;
+    tl->RunDelayedCalls();
+    CHECK(tl->Log.Count() == 0);  // not yet
+    Time::time = 100.3f;
+    tl->RunDelayedCalls();
+    CHECK_FALSE(tl->IsInvoking());
+    REQUIRE(tl->Log.Count() == 1);
+    CHECK(tl->Log[0].type == "Orbit");
+    CHECK(tl->Log[0].target == "Kerbin");
+    CHECK(jeb->flightLog.HasEntry(FlightLog::EntryType::Orbit, "Kerbin"));  // the crew log gets the entry too
+    CHECK(recorded == 1);
+    // the same entry is not added twice (AddEntryUnique); other situations map as in LogNewSituation
+    v->situation = Vessel::Situations::SPLASHED;
+    GE::onVesselSOIChanged.Fire(GE::HostedFromToAction<Vessel*, CelestialBody*>(v.get(), nullptr, &w.Kerbin()));
+    Time::time = 101.0f;
+    tl->RunDelayedCalls();
+    CHECK(tl->Log.HasEntry(FlightLog::EntryType::Land, "Kerbin"));
+    v->situation = Vessel::Situations::ORBITING;
+    GE::onVesselSOIChanged.Fire(GE::HostedFromToAction<Vessel*, CelestialBody*>(v.get(), nullptr, &w.Kerbin()));
+    Time::time = 102.0f;
+    tl->RunDelayedCalls();
+    CHECK(tl->Log.Count() == 2);  // Orbit,Kerbin already there
+    CHECK(recorded == 3);         // but OnFlightLogRecorded fires for every LogSituation
+    // ForceVesselLog (loaded vessel): every module and crew member; unloaded: the snapshot's Log node
+    ModuleTripLogger::ForceVesselLog(v.get(), FlightLog::EntryType::Flyby, w.sys->GetBodyByName("Mun"));
+    CHECK(tl->Log.HasEntry(FlightLog::EntryType::Flyby, "Mun"));
+    CHECK(jeb->flightLog.HasEntry(FlightLog::EntryType::Flyby, "Mun"));
+    CHECK(recorded == 4);
+    ModuleTripLogger::ForceVesselLog(nullptr, FlightLog::EntryType::Flyby, &w.Kerbin());  // null vessel / body: nothing
+    CHECK(recorded == 4);
+    VesselTripLog merged = VesselTripLog::FromVessel(*v);
+    CHECK(merged.Log.Count() == tl->Log.Count());
+    v->Unload();
+    ModuleTripLogger::ForceVesselLog(v.get(), FlightLog::EntryType::Escape, &w.Kerbin());
+    VesselTripLog fromProto = VesselTripLog::FromProtoVessel(*v->protoVessel);
+    CHECK(fromProto.Log.HasEntry(FlightLog::EntryType::Escape, "Kerbin"));
+    CHECK(fromProto.Log.HasEntry(FlightLog::EntryType::Flyby, "Mun"));
+    GE::OnFlightLogRecorded.Remove(&l8, &L8::Run);
+}
+
+TEST_CASE("WP-14 FlightLogger: statistics, the event log, mission end and the delayed calls") {
+    if (!GameAvailable14()) return;
+    World14 w;
+    auto v = Stack14(w, {"mk1pod.v2", "fuelTankSmallFlat"});
+    v->state = VesselState::ACTIVE;
+    FlightRegistry::ActiveVessel = v.get();
+    FlightRegistry::ready = true;
+    {
+        FlightLogger logger;
+        logger.Start();
+        CHECK(FlightLogger::fetch == &logger);
+        FlightLogger second;
+        second.Start();  // a second instance destroys itself (FlightLogger.cs:56)
+        CHECK(second.destroyed());
+        CHECK(FlightLogger::fetch == &logger);
+        CHECK(FlightLogger::eventLog.empty());
+        CHECK_FALSE(FlightLogger::LiftOff());
+        // LateUpdate / FixedUpdate accumulate over the active vessel
+        v->missionTime = 12.5;
+        v->altitude = 1500.0;
+        v->srfSpeed = 100.0;
+        v->horizontalSrfSpeed = 60.0;
+        v->geeForce = 2.5;
+        FlightLogger::LogGees = true;
+        logger.LateUpdate();
+        CHECK(logger.missionTime == 12.5);
+        CHECK(logger.highestAltitude() == 1500.0);
+        CHECK(logger.highestSpeed() == 100.0);
+        CHECK(logger.highestGee() == 2.5);
+        const double fdt = static_cast<double>(TimeWarp::fixedDeltaTime());
+        CHECK(logger.totalDistance() == 100.0 * fdt);
+        CHECK(logger.groundDistance() == 60.0 * fdt);
+        logger.FixedUpdate();   // first call: okToSetSpeed was false -> only the distances
+        CHECK(logger.highestSpeedOverLand() == 0.0);
+        logger.FixedUpdate();   // second call: horizontal speed recorded
+        CHECK(logger.highestSpeedOverLand() == 60.0);
+        CHECK(logger.totalDistance() == doctest::Approx(300.0 * fdt).epsilon(1e-12));
+        v->altitude = 900.0;
+        logger.LateUpdate();
+        CHECK(logger.highestAltitude() == 1500.0);
+        // IgnoreGeeForces: LogGees off until the Invoke fires
+        Time::time = 50.0f;
+        FlightLogger::IgnoreGeeForces(1.0f);
+        CHECK_FALSE(FlightLogger::LogGees);
+        logger.RunDelayedCalls(50.5f, 0.0f);
+        CHECK_FALSE(FlightLogger::LogGees);
+        logger.RunDelayedCalls(51.0f, 0.0f);
+        CHECK(FlightLogger::LogGees);
+        // events: timestamped lines, consecutive duplicates suppressed
+        EventReport launch(FlightEvents::LAUNCH, v->rootPart);
+        GE::onLaunch.Fire(&launch);
+        CHECK(FlightLogger::LiftOff());
+        REQUIRE(FlightLogger::eventLog.size() == 1);
+        CHECK(FlightLogger::eventLog[0].rfind("[", 0) == 0);
+        CHECK(FlightLogger::eventLog[0].find("]: ") != std::string::npos);
+        GE::onLaunch.Fire(&launch);  // liftOff already true: nothing
+        CHECK(FlightLogger::eventLog.size() == 1);
+        logger.LogEvent("same");
+        logger.LogEvent("same");
+        CHECK(FlightLogger::eventLog.size() == 2);  // lastReport suppression
+        EventReport sep(FlightEvents::STAGESEPARATION, v->rootPart, "x", "y", 4);
+        GE::onStageSeparation.Fire(&sep);
+        CHECK(FlightLogger::eventLog.size() == 3);
+        EventReport killed(FlightEvents::CREW_KILLED, v->rootPart, "Bob Kerman");
+        GE::onCrewKilled.Fire(&killed);
+        CHECK(logger.kerbalsKilled() == 1);
+        // a crash of the active vessel's root part ends the mission: parts lost, switch / end-of-flight callbacks
+        bool switched = false;
+        std::pair<Vessel*, FlightEndModes> ended{nullptr, FlightEndModes::SUCCESS};
+        FlightLogger::host.attemptVesselSwitch = [&] {
+            switched = true;
+            return false;  // no other controllable vessel
+        };
+        FlightLogger::host.endFlight = [&](Vessel* vv, FlightEndModes m) { ended = {vv, m}; };
+        EventReport crash(FlightEvents::CRASH, v->rootPart, "Pod", "ground");
+        Time::time = 60.0f;
+        GE::onCrash.Fire(&crash);
+        CHECK(logger.partsLost() == 1);
+        CHECK(logger.missionEnd());
+        logger.RunDelayedCalls(60.4f, 60.4f);
+        CHECK_FALSE(switched);
+        logger.RunDelayedCalls(60.6f, 60.6f);  // attemptSwitchWait 0.5
+        CHECK(switched);
+        CHECK(logger.missionEnd());           // no vessel found: the end timer keeps running
+        logger.RunDelayedCalls(63.9f, 63.9f);
+        CHECK(ended.first == nullptr);
+        logger.RunDelayedCalls(64.1f, 64.1f);  // endFlightWait 4 s
+        CHECK(ended.first == v.get());
+        CHECK(ended.second == FlightEndModes::CATASTROPHIC_FAILURE);
+        // a crash of a part that is not the root does not end the mission
+        EventReport crash2(FlightEvents::CRASH, v->parts[1], "Tank", "ground");
+        GE::onCrash.Fire(&crash2);
+        CHECK(logger.partsLost() == 2);
+        const std::string stats = FlightLogger::getMissionStats();
+        CHECK(stats.size() > 10);
+        FlightLogger::host = FlightLogger::Host{};
+    }
+    CHECK(FlightLogger::fetch == nullptr);  // OnDestroy
+    FlightRegistry::Clear();
+}
+
+TEST_CASE("WP-14 FlightCoMTracker: marker follows the vessel CoM and targets once FlightGlobals is ready") {
+    if (!GameAvailable14()) return;
+    World14 w;
+    auto v = Stack14(w, {"mk1pod.v2", "fuelTankSmallFlat"});
+    PartModule* host = v->parts[0]->Modules().GetModule(0);
+    auto t = FlightCoMTracker::Create(host, true);
+    CHECK(t->name() == "mk1pod.v2 Vessel CoM Marker");
+    CHECK(t->GetActiveTargetable());
+    CHECK(t->GetTargetingMode() == VesselTargetModes::DirectionAndVelocity);
+    CHECK(t->GetVessel() == v.get());
+    v->CoM = Vector3f(1.0f, 2.0f, 3.0f);
+    t->FixedUpdate();
+    CHECK(t->GetTransformPosition() == Vector3f(1.0f, 2.0f, 3.0f));
+    v->obt_velocity = Vector3d(4.0, 5.0, 6.0);
+    v->srf_velocity = Vector3d(7.0, 8.0, 9.0);
+    CHECK(t->GetObtVelocity() == Vector3f(4.0f, 5.0f, 6.0f));
+    CHECK(t->GetSrfVelocity() == Vector3f(7.0f, 8.0f, 9.0f));
+    CHECK(t->GetOrbit() == &v->orbit());
+    CHECK(t->GetOrbitDriver() == v->orbitDriver.get());
+    CHECK(t->GetName() == t->GetDisplayName());
+    CHECK(t->GetName().rfind(v->GetDisplayName(), 0) == 0);
+    ITargetable* chosen = nullptr;
+    FlightCoMTracker::setVesselTarget = [&](ITargetable* x) { chosen = x; };
+    FlightRegistry::ready = false;
+    t->MakeTarget();
+    CHECK(t->pending());     // waits for FlightGlobals.ready
+    CHECK(chosen == nullptr);
+    t->RunPending();
+    CHECK(chosen == nullptr);
+    FlightRegistry::ready = true;
+    t->RunPending();
+    CHECK(chosen == t.get());
+    chosen = nullptr;
+    t->MakeTarget();         // ready: immediate
+    CHECK(chosen == t.get());
+    Vessel::env.LoadedSceneIsFlight = false;
+    chosen = nullptr;
+    t->MakeTarget();
+    CHECK(chosen == nullptr);
+    FlightCoMTracker::setVesselTarget = nullptr;
+    FlightRegistry::Clear();
+}
+
+TEST_CASE("WP-14 AxisGroupsModule: axis groups are built from the vessel's [KSPAxisField] floats and drive them") {
+    if (!GameAvailable14()) return;
+    World14 w;
+    auto v = w.Craft("PhysProf-S");
+    auto* axes = dynamic_cast<AxisGroupsModule*>(v->FindVesselModuleByName("AxisGroupsModule"));
+    REQUIRE(axes != nullptr);
+    CHECK(axes->GetActivation() == (VesselModule::FlightScene | VesselModule::LoadedVessels));
+    CHECK(axes->GetOrder() == 999);
+    CHECK(axes->vesselPtr() == v.get());
+    CHECK_FALSE(axes->ShouldBeActive(false, true));  // not the flight scene
+    CHECK(axes->ShouldBeActive(true, true));
+    CHECK_FALSE(axes->ShouldBeActive(true, false));  // unloaded
+    axes->OnLoadVessel();
+    CHECK(axes->AxisGroups.empty());  // the default axis group of thrustPercentage & co is None
+    // put every engine's thrustPercentage into Custom01
+    std::vector<BaseAxisField*> engineFields;
+    for (PartModule* m : v->FindPartModulesImplementing([](PartModule& pm) { return pm.IsA("ModuleEngines"); })) {
+        auto* f = dynamic_cast<BaseAxisField*>(m->Fields()["thrustPercentage"]);
+        REQUIRE(f != nullptr);
+        f->axisGroup = static_cast<int64_t>(KSPAxisGroup::Custom01);
+        f->axisIncremental = 0;
+        engineFields.push_back(f);
+    }
+    REQUIRE(engineFields.size() >= 3);
+    // AxisGroupsModule rebuilds on onVesselWasModified for its own loaded vessel
+    GE::onVesselWasModified.Fire(v.get());
+    REQUIRE(axes->AxisGroups.count(static_cast<int>(KSPAxisGroup::Custom01)) == 1);
+    CHECK(axes->AxisGroups[static_cast<int>(KSPAxisGroup::Custom01)].size() == engineFields.size());
+    CHECK(axes->AxisGroups.count(static_cast<int>(KSPAxisGroup::Custom02)) == 0);
+    // SetAxis: value = min + (max - min) * (axis + 1) / 2
+    axes->SetAxisGroup(KSPAxisGroup::Custom01, 1.0f);
+    for (BaseAxisField* f : engineFields) CHECK(std::get<float>(f->GetValue()) == 100.0f);
+    axes->SetAxisGroup(KSPAxisGroup::Custom01, -0.5f);
+    for (BaseAxisField* f : engineFields) CHECK(std::get<float>(f->GetValue()) == 25.0f);
+    axes->SetAxisGroup(KSPAxisGroup::Custom04, 1.0f);  // a group nobody is in: nothing happens
+    for (BaseAxisField* f : engineFields) CHECK(std::get<float>(f->GetValue()) == 25.0f);
+    // IncrementAxis: += rate * (max-min) * multiplier(0.2 default) * fixedDeltaTime, clamped
+    const float fdt = TimeWarp::fixedDeltaTime();
+    axes->IncrementAxisGroup(KSPAxisGroup::Custom01, 0.5f);
+    const float expected = f32store(25.0 + fx(0.5f) * fx(f32store(fx(100.0f) * fx(0.2f))) * fx(fdt));
+    for (BaseAxisField* f : engineFields) CHECK(std::get<float>(f->GetValue()) == expected);
+    for (int i = 0; i < 5000; i++) axes->IncrementAxisGroup(KSPAxisGroup::Custom01, 1.0f);
+    for (BaseAxisField* f : engineFields) CHECK(std::get<float>(f->GetValue()) == 100.0f);  // clamped at maxValue
+    // UpdateAxis: inverted groups flip the sign; incremental groups increment, others set
+    for (BaseAxisField* f : engineFields) {
+        f->axisInverted = static_cast<int64_t>(KSPAxisGroup::Custom01);
+        f->axisIncremental = 0;
+    }
+    axes->UpdateAxisGroup(KSPAxisGroup::Custom01, 1.0f);  // inverted set: -1 -> 0
+    for (BaseAxisField* f : engineFields) CHECK(std::get<float>(f->GetValue()) == 0.0f);
+    for (BaseAxisField* f : engineFields) {
+        f->axisInverted = 0;
+        f->axisIncremental = static_cast<int64_t>(KSPAxisGroup::Custom01);
+    }
+    axes->UpdateAxisGroup(KSPAxisGroup::Custom01, 1.0f);  // incremental: +20 * 0.02 more
+    for (BaseAxisField* f : engineFields) CHECK(std::get<float>(f->GetValue()) == f32store(0.0 + 1.0 * fx(f->incrementalSpeed) * fx(fdt)));
+    // an override group changes which fields belong to a group: group override 1 uses overrideGroups[0]
+    GameSettings::ADDITIONAL_ACTION_GROUPS = true;
+    v->GroupOverride = 1;
+    v->OverrideDefault[0] = true;
+    for (BaseAxisField* f : engineFields) f->overrideGroups[0] = static_cast<int64_t>(KSPAxisGroup::Custom02);
+    axes->BuildAxisGroups();
+    CHECK(axes->AxisGroups.count(static_cast<int>(KSPAxisGroup::Custom02)) == 1);
+    CHECK(axes->AxisGroups.count(static_cast<int>(KSPAxisGroup::Custom01)) == 0);  // overrideDefault drops the default group
+    GameSettings::ADDITIONAL_ACTION_GROUPS = false;
+    // an unloaded vessel does not rebuild
+    axes->AxisGroups.clear();
+    v->loaded = false;
+    GE::onVesselWasModified.Fire(v.get());
+    CHECK(axes->AxisGroups.empty());
+    v->loaded = true;
+}
