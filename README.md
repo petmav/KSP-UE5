@@ -64,7 +64,7 @@ links).
 | `corpus.gamedata` | every `.cfg` under `harness/inputs/GameData` and `.craft` under `harness/inputs/Ships`: load, Save->Load->Save byte-identical, Parse == Load, every `key` node loads as a FloatCurve | self-consistency |
 | `golden.physics_constants` | WP-09 PhysicsGlobals: all 213 field rows (value text, numeric value, source layer) after level0 prefab + Physics.cfg | `harness/golden/physics_constants` |
 | `capture.physics_drag_curve` | WP-09 PhysicsGlobals.DragCurveValue (managed float code, Mono rule) | in-game `harness/captures/out/aero_forces_mono.json` (table drag_curve_value) |
-| `golden.body_catalog` | WP-09 Kerbol system at UT 0: bodies (all columns), orbits (serialized elements only; propagated columns wait for WP-07's Orbit), 1 km atmosphere profiles, every body FloatCurve key | `harness/golden/body_catalog` |
+| `golden.body_catalog` | WP-09 Kerbol system at UT 0 with WP-07's run-time Orbit: bodies (all columns), orbits (all columns: elements, Init outputs, state at UT 0), 1 km atmosphere profiles, every body FloatCurve key | `harness/golden/body_catalog` |
 | `golden.atmosphere_curves` | WP-09 CelestialBody atmosphere + FlightIntegrator atmosphere helpers (pressure, temperature, density, speed of sound, Mach, solar attenuation, shock temperature, convection, pseudo-Reynolds) | `harness/golden/atmosphere_curves` |
 
 All of them are bit-exact today (every numeric column max ULP 0, max abs 0).
@@ -147,12 +147,12 @@ contract into FMA.
 | `include/ksp/curves/` | `float_curve.hpp` (FloatCurve) |
 | `include/ksp/config/` | `config_node.hpp` (ConfigNode, Guid), `parse_extensions.hpp` (ParseExtensions, ColorUtility.TryParseHtmlString) |
 | `include/ksp/core/` | `log.hpp` (Debug.Log replacement with an installable sink) |
-| `include/ksp/orbit/` | WP-07: `orbit.hpp` (Orbit), `targeting.hpp` (Targeting: closest-approach search), `orbit_snapshot.hpp`, `orbit_util.hpp`, `targeting_modes.hpp`; `celestial_body_ref.hpp` (the CelestialBody members Orbit reads; WP-09 derives from it) and `planetarium_frames.hpp` (Planetarium.Zup / Rotation / ZupAtT) |
+| `include/ksp/orbit/` | WP-07: `orbit.hpp` (Orbit), `targeting.hpp` (Targeting: closest-approach search), `orbit_snapshot.hpp`, `orbit_util.hpp`, `targeting_modes.hpp`. Reference bodies are `ksp::CelestialBody`, frames come from `ksp::Planetarium`; `BodyOrbit(body)` is a body's own Orbit |
 | `include/ksp/unity/quaternion_native.hpp` | native Unity functions ported bit-exact against in-game captures (Quaternion.AngleAxis) |
 | `include/kspcore/kspcore_c.h` | the C ABI used by the Unreal shell (implementation `src/capi/kspcore_c.cpp`) |
 | `include/ksp/curves/double_curve.hpp`, `include/ksp/math/{matrix4x4d,mathfx}.hpp` | DoubleCurve, Vector3/4Curve, Matrix4x4D, Mathfx, VectorExtensions, QuaternionExtensions, MinMaxFloat, Vect, PIDclamp |
 | `include/ksp/physics/` | WP-09 `physics_globals.hpp` (PhysicsGlobals: fields, static properties, LoadDatabase/SaveDatabase, lifting-surface curves, DragCurveValue; the `*.inc` files are generated), `vessel_ranges.hpp` (VesselRanges, Vessel.Situations) |
-| `include/ksp/celestial/` | WP-09 `celestial_body.hpp` (CelestialBody, CBAttributeMapSO, MiniBiome, GameAssetRef, orbit elements + `ICelestialBodyOrbit` hook for ksp::Orbit), `planetarium.hpp` (Planetarium), `celestial_system.hpp` (PSystem prefab, `KerbolSystemPrefab()`, spawn, FlightGlobals body list), `flight_atmosphere.hpp` (FlightIntegrator atmosphere helpers) |
+| `include/ksp/celestial/` | WP-09 `celestial_body.hpp` (CelestialBody, CBAttributeMapSO, MiniBiome, GameAssetRef, orbit elements + `ICelestialBodyOrbit` link to the run-time Orbit), `celestial_body_orbit.hpp` (`CelestialBodyOrbitAdapter`: OrbitDriver for bodies over ksp::Orbit), `planetarium.hpp` (Planetarium, the only one: also Orbit's Zup/up/right/ZupAtT), `celestial_system.hpp` (PSystem prefab, `KerbolSystemPrefab()`, spawn, FlightGlobals body list), `flight_atmosphere.hpp` (FlightIntegrator atmosphere helpers) |
 | `include/ksp/curves/serialized_float_curve.hpp` | FloatCurves built from Unity-serialized keyframes (prefab data) |
 | `data/kerbol_body_assets.json` | index of the game's own body assets (biome maps with attribute tables, mini-biomes, PQS height/colour maps, scaled-space meshes/materials/textures) by asset file + PathID, from `decompiled/KSP-dev/KSP_x64_Data` (`tools/extract_body_assets.py`) |
 | `tools/gen_wp09_data.py` | generates `physics_globals_*.inc` and `src/celestial/kerbol_system_data.cpp` from the decompiled C# (field lists, LoadDatabase/SaveDatabase order) and the game's serialized prefab data; regenerate, never hand-edit |
@@ -197,6 +197,14 @@ contract into FMA.
   (`GetValuePtr`, no copy).
 - **Reference semantics**: `ConfigNode` children are `std::shared_ptr<ConfigNode>`; `GetNode` returns a non-owning
   pointer into the tree; `ConfigNode` itself is move-only (use `CreateCopy()` for a deep copy).
+- **Bodies and orbits (WP-07 + WP-09).** `CelestialSystem::Spawn(KerbolSystemPrefab(), planetarium)` (an Awake
+  `Planetarium`) spawns the 17 bodies and attaches each body's run-time `ksp::Orbit` (`CelestialBodyOrbitAdapter`, the
+  default `OrbitFactory`); then `body->getPositionAtUT(UT)` (world position: orbit relative position `.xzy` + parent
+  position), `getTruePositionAtUT(UT)` (chained through every parent), `GetFrameVelAtUT(UT)`, `BodyOrbit(body)` (the
+  ksp::Orbit, `nullptr` for the Sun) and `Planetarium::FixedUpdate()` (advance time, CBUpdate every body, move them)
+  work as in KSP. `Orbit::referenceBody` is a `CelestialBody*`. There is one `Planetarium` (static `Zup`, `Rotation()`,
+  `up()/right()`, `ZupAtT`): Orbit works without an instance (Awake(0)'s frame, see planetarium.hpp); the stock prefab's
+  Mun/Minmus `inverseRotation = 1` makes the first CBUpdate pass turn `Zup` (InverseRotAngle 230), as KSP's code does.
 - **Thread safety**: everything is single-threaded like KSP unless stated. `AnimationCurve::Evaluate` is const and
   stateless (thread-safe) for strictly increasing key times; `dotnet::SetRuntime`, `log::SetSink` and
   `UnityRandom::Global()` are process-wide.

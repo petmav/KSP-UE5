@@ -11,8 +11,9 @@ Updated 2026-10-09. One command: `powershell -NoProfile -ExecutionPolicy Bypass 
 | 2. WP-01 maths + Unity shims + FloatCurve | done, all 19 package files (except the native-only Unity functions listed below); every gate bit-exact |
 | 3. WP-02 ConfigNode | done: Load/Parse/Save/ToString, value/node API, typed getters/setters, ParseExtensions, Guid, KSPParseable, type parsers; byte-exact on the whole corpus. UrlDir (GameData tree) deferred, see below |
 | extra | in-game (Mono) runtime semantics from the CAPTURE-SPEC C2/C7 captures: System.Math, float32 evaluation rule, conversions, formatting, System.Random, UnityEngine.Random, KSPRandom |
-| 4. WP-09 celestial bodies, atmospheres, PhysicsGlobals (branch `wp09`) | done for the assigned scope: PhysicsGlobals (all fields/curves/properties, LoadDatabase/SaveDatabase), CelestialBody (data model, Awake/Start/CBUpdate/SetupConstants, atmosphere, frames, lat/lon), Planetarium, PSystem spawn + FlightGlobals list, Kerbol catalog of 17 bodies from the game's prefab + asset index, FlightIntegrator atmosphere helpers; 4 new gates bit-exact. Pending WP-07 integration and deferred items: see "WP-09" below |
+| 4. WP-09 celestial bodies, atmospheres, PhysicsGlobals (branch `wp09`, merged) | done for the assigned scope: PhysicsGlobals (all fields/curves/properties, LoadDatabase/SaveDatabase), CelestialBody (data model, Awake/Start/CBUpdate/SetupConstants, atmosphere, frames, lat/lon), Planetarium, PSystem spawn + FlightGlobals list, Kerbol catalog of 17 bodies from the game's prefab + asset index, FlightIntegrator atmosphere helpers; 4 new gates bit-exact. Pending WP-07 integration and deferred items: see "WP-09" below |
 | 5. WP-07 Orbit (branch `wp07`, merged) | done: Orbit.cs (everything but DrawOrbit), Targeting.cs (closest-approach intercept search behind `Orbit.FindClosestPoints`), OrbitSnapshot, OrbitUtil (but CalculateIntersections), FoRModes/VesselTargetModes; `CelestialBodyRef` / `PlanetariumFrames` interfaces for WP-09; golden `orbit_propagation` bit-exact (all 5 tables). TransferMath, DirectionTarget, ITargetable deferred (see "WP-07 Orbit") |
+| 6. Integration WP-07/WP-09 (main) | done: Orbit on `ksp::CelestialBody` (CelestialBodyRef deleted), one Planetarium (PlanetariumFrames deleted), `CelestialBodyOrbitAdapter` (OrbitDriver for bodies over ksp::Orbit) attached by `CelestialSystem::Spawn` by default, `body_catalog/orbits` gated in full, integration unit test. See "Integration WP-07/WP-09" below |
 
 ## Test results (all 15 ctest tests pass in RelWithDebInfo and in Debug)
 
@@ -33,9 +34,9 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `capi.c`, `capi.ue_like` | C ABI from pure C and from C++ with UE flags (/GR- /EHs-c- _HAS_EXCEPTIONS=0 /fp:fast); FloatCurve values bit-exact vs golden through the ABI | - | pass |
 | `golden.physics_constants` | harness golden `physics_constants` (WP-09): every PhysicsGlobals field, exact value text + source layer | 213 | exact (0 ULP, all strings identical) |
 | `capture.physics_drag_curve` | in-game `captures/out/aero_forces_mono.json` table drag_curve_value: PhysicsGlobals.DragCurveValue under Mono | 2,870 | 0 ULP |
-| `golden.body_catalog` | harness golden `body_catalog` (WP-09): bodies 17 x 51 cols, orbits 16 x 9 (elements only), atmosphere_profile_1km 1,072, body_curves 265 | 1,370 | 0 ULP |
+| `golden.body_catalog` | harness golden `body_catalog` (WP-09 + WP-07 Orbit): bodies 17 x 51 cols, orbits 16 x 26 cols (all: elements, Init outputs, state at UT 0), atmosphere_profile_1km 1,072, body_curves 265 | 1,370 | 0 ULP |
 | `golden.atmosphere_curves` | harness golden `atmosphere_curves` (WP-09): profile_100m 2,704, flight_state 2,176 x 19 cols, solar_effects 320 | 5,200 | 0 ULP |
-| `unit` | 64 doctest cases, 6,563 assertions (WP-09: 8 cases, 5,744 assertions in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
+| `unit` | 66 doctest cases, 7,508 assertions (WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
 differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 6 ULP (Vector3.Project/ProjectOnPlane) and
@@ -49,7 +50,8 @@ differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 
 | Debug | 1.9 s | 6.4 s | 33.2 s (capture.libm_mono 20.1 s, corpus 9.8 s) |
 
 With WP-07 (branch `wp07`, 11 tests): RelWithDebInfo ctest 13.0 s (golden.orbit_propagation 0.4 s, unit 0.2 s), Debug
-33.9 s (golden.orbit_propagation 0.9 s, unit 0.5 s).
+33.9 s (golden.orbit_propagation 0.9 s, unit 0.5 s). Main after the WP-07/WP-09 integration (15 tests, fresh): RelWithDebInfo
+ctest 12.5 s (orbit_propagation 0.4 s, body_catalog 0.1 s), Debug 26.1 s.
 
 Incremental rebuild after a one-file change: ~1-2 s. `build/RelWithDebInfo/kspcore.lib` is 9.6 MB (/Z7 debug info
 embedded).
@@ -70,7 +72,7 @@ embedded).
 
 The first four commits were each built and tested in a clean worktree (each passes the gates it contains).
 
-Branch `wp07` (from `c051578`, not merged): `431b44d` WP-01 fixes needed by Orbit (Math.Min/Max, System.Math in Angle
+Branch `wp07` (from `c051578`, merged in `d2e66e7`): `431b44d` WP-01 fixes needed by Orbit (Math.Min/Max, System.Math in Angle
 helpers, golden number text); `03e2310` Orbit + CelestialBodyRef/PlanetariumFrames + orbit_propagation gate;
 `6073a3f` Orbit unit tests, native AngleAxis bit-exact; `d982b62` Targeting; `7e5a33a` test speed-up; `10d3aea`
 OrbitSnapshot, OrbitUtil, enums; `1804b39` STATUS; `304729a` README; plus the BodyOrbit/integration-notes commit.
@@ -173,8 +175,8 @@ Spec: `CelestialBody.cs`, `PhysicsGlobals.cs`, `Planetarium.cs`, `PSystemManager
 |---|---|---|---|---|---|
 | `golden.physics_constants` / physicsglobals | 213 | value_f64 (+ exact `value` text, `type`, `source`) | 0 | 0 | prefab + Physics.cfg + CalculateValues' solarLuminosity |
 | `capture.physics_drag_curve` / drag_curve_value | 2,870 | value (f32) | 0 | 0 | in-game Mono capture; inputs AeroGen.cs:72-78 |
-| `golden.body_catalog` / bodies | 17 | 34 (inverseRotThresholdAltitude f32) | 0 | 0 | tidal-lock `rotationPeriod` and `solarDayLength` use the gate-only `StandInOrbitPeriod` (Orbit.cs:334/370 period formula) |
-| `golden.body_catalog` / orbits | 16 | 7 | 0 | 0 | serialized elements only (COLUMNS filter) |
+| `golden.body_catalog` / bodies | 17 | 34 (inverseRotThresholdAltitude f32) | 0 | 0 | tidal-lock `rotationPeriod` and `solarDayLength` from the bodies' run-time Orbit (since the integration; WP-09 used a gate-only period stand-in) |
+| `golden.body_catalog` / orbits | 16 | 23 | 0 | 0 | all columns since the integration (WP-09 alone: the 7 serialized elements) |
 | `golden.body_catalog` / atmosphere_profile_1km | 1,072 | 5 | 0 | 0 | |
 | `golden.body_catalog` / body_curves | 265 | 4 (all f32) | 0 | 0 | keys read back from the spawned bodies |
 | `golden.atmosphere_curves` / profile_100m | 2,704 | 7 (tempSunMult f32) | 0 | 0 | |
@@ -188,7 +190,7 @@ follows the Mono rule; DragCurveValue is gated against the in-game capture. No s
 GetPressure branch has no golden. The double columns use only Pow/Sqrt/Log/Sin, which agree between Mono and .NET
 Framework (VS2013 CRT, x87 Sin).
 
-### Pending WP-07 integration (excluded from the gate on purpose)
+### WP-07 integration (done on main, see "Integration WP-07/WP-09"; the notes below are the pre-integration contract)
 
 - `body_catalog/orbits` columns meanMotion, period, PeR, ApR, ObT_UT0, meanAnomaly_UT0, eccentricAnomaly_UT0,
   trueAnomaly_UT0, radius_UT0, orbitalSpeed_UT0, pos_x/y/z, vel_x/y/z: need `ksp::Orbit` (Orbit.Init/UpdateFromUT).
@@ -261,7 +263,7 @@ textures are in the JSON index only (terrain package). Nothing is decoded yet an
 | `663d4c2` | WP-09 code, generated data, asset index, 4 gates, worktree-safe CMake root |
 | `13f4d07` | unit tests `tests/test_celestial.cpp`, STATUS/README |
 
-## WP-07 Orbit (branch `wp07`, merged)
+## WP-07 Orbit (branch `wp07`, merged; `CelestialBodyRef` / `PlanetariumFrames` below were replaced by the integration)
 
 Files: `include/ksp/orbit/{orbit,celestial_body_ref,planetarium_frames,targeting,orbit_snapshot,orbit_util,targeting_modes}.hpp`,
 `src/orbit/*.cpp`, `include/ksp/unity/quaternion_native.hpp` + `src/unity/quaternion_native.cpp` (native
@@ -342,3 +344,116 @@ Known deviations and risks (WP-07):
 - Debug.Log / Console.WriteLine in Orbit go to `ksp::log::Info` without the C# stack traces; KSP's
   `!Thread.CurrentThread.IsBackground` guards are treated as "main thread" (always log).
 
+## Integration WP-07/WP-09 (main)
+
+`wp07` merged into main (`d2e66e7`, on top of the WP-09 merge `29b71f6`), then the six integration steps WP-07 listed.
+
+### Merge conflicts and resolutions
+
+| file | resolution |
+|---|---|
+| `src/CMakeLists.txt`, `tests/CMakeLists.txt`, `tools/golden_runner/CMakeLists.txt` | union of both packages' sources/tests; in tests/ main's `KSPCORE_PROJECT_ROOT` definition kept (WP-07 had only re-indented that line) |
+| `tools/golden_runner/golden_json.cpp` | main's (WP-09) kept: its `Normalize` and WP-07's `NormalizeNumber` were the same `ExactNumber.Normalize` (lower-case "e", ".0" on integral text). Both gates bit-exact with it |
+| `STATUS.md` | both sections kept, WP-07 after WP-09; test table merged |
+| `README.md` (auto-merged) | WP-07's worktree note (`-DKSP_PROJECT_ROOT`) replaced: WP-09's root CMake walk-up (first parent containing `harness/compare/compare.py`) is the one mechanism; the main checkout and `.worktrees/<wp>` configure without flags, `-DKSP_PROJECT_ROOT` still overrides |
+
+### What changed
+
+- **Orbit on `ksp::CelestialBody`.** `Orbit::referenceBody`, `closestEncounterBody` and every Orbit/OrbitSnapshot/OrbitUtil
+  parameter are `CelestialBody*`; `CelestialBodyRef` (and its .cpp) is deleted: WP-09's CelestialBody already had every
+  member Orbit reads under KSP's names, plus the frame methods (GetFrameVel(AtUT), getRFrmVel, getTruePositionAtUT,
+  getPositionAtUT, HasChild, referenceBody). Added `CelestialBody::getRFrmVelOrbit(const Orbit&)` (CelestialBody.cs:633).
+  `orbitDriverEnabled` is `orbitDriver->enabled`.
+- **`BodyOrbit(body)`** (orbit.hpp) is `body->orbit()->GetOrbit()`: `ICelestialBodyOrbit` gained `virtual Orbit* GetOrbit()`
+  (test doubles return null). Still the single access point (5 call sites).
+- **Adapter.** `CelestialBodyOrbitAdapter` (`include/ksp/celestial/celestial_body_orbit.hpp`) owns the body's `ksp::Orbit`
+  and implements `ICelestialBodyOrbit` (needed because Orbit's fields period/radius/vel/trueAnomaly clash with the
+  interface's method names). It is the OrbitDriver as far as bodies use it: construction = OrbitDriver.Start in UPDATE
+  mode (deserialized elements + referenceBody, `Init()`, `updateFromParameters()`), `UpdateOrbit()` =
+  `updateFromParameters()` (`UpdateFromUT(Planetarium UT)`, then `body.position = parent.position + pos.xzy`, or for the
+  reversed Kerbin `parent.position = body.position - pos.xzy`). `MakeCelestialBodyOrbit` is
+  `CelestialSystem::Spawn`'s default factory (a factory may still return null to test KSP's `orbit == null` branches).
+- **One Planetarium.** `PlanetariumFrames` is deleted; Orbit calls `Planetarium::Zup`, `up()`, `right()`, `ZupAtT()` (KSP's
+  names). Kept WP-07's standalone behaviour: `Zup` starts at Awake(0)'s frame (KSP: zero until the first Awake), and
+  `Rotation()`/`InverseRotAngle()` answer with Awake(0)'s values when `fetch` is null (KSP: NullReferenceException).
+  The setters throw `NullReferenceException` without an instance (WP-09 dereferenced null). `Planetarium::AwakeZup(a)` /
+  `AwakeRotation(a)` expose Awake's frame statements.
+- **Golden runner.** `StandInOrbitPeriod` removed; `CelestialEnv` spawns with the real Orbit and then calls
+  `UseHarnessFrame()` (below); `orbit_propagation` now uses the shared `CelestialEnv` (the harness's OrbitGen uses the same
+  KspEnv as BodiesGen) instead of its own body rebuild from the serialized JSON; `body_catalog` writes every orbits column
+  from `BodyOrbit(cb)`; the `COLUMNS` exclusion on `body_catalog/orbits` is gone.
+- **Tests.** test_orbit ported to CelestialBody (an `OrbitLink` test double attaches test-owned Orbits) and to the one
+  Planetarium; test_celestial spawns with real orbits; new `tests/test_celestial_orbit.cpp` (below).
+
+How a caller gets a body's position now: `Planetarium p; p.Awake(); auto sys = CelestialSystem::Spawn(KerbolSystemPrefab(),
+p); CelestialBody* mun = sys->GetBodyByName("Mun");` then `mun->getPositionAtUT(UT)` (orbit position relative to Kerbin,
+Unity axes, + Kerbin's current position), `mun->getTruePositionAtUT(UT)` (chained Mun -> Kerbin -> Sun),
+`mun->GetFrameVelAtUT(UT)`, `BodyOrbit(mun)->getRelativePositionAtUT(UT)`; `p.FixedUpdate()` advances time and moves
+every body (`mun->position`).
+
+### Gate results after the integration (RelWithDebInfo and Debug, fresh; harness tolerances unchanged)
+
+| gate / table | rows | compared columns | max abs | max ULP |
+|---|---|---|---|---|
+| `golden.body_catalog` / bodies | 17 | 51 | 0 | 0 |
+| `golden.body_catalog` / orbits | 16 | 25 + name key (parent, reverse, 7 elements, meanMotion, period, PeR, ApR, ObT/M/E/v at UT 0, radius, orbitalSpeed, pos_xyz, vel_xyz) | 0 | 0 |
+| `golden.body_catalog` / atmosphere_profile_1km | 1,072 | 5 | 0 | 0 |
+| `golden.body_catalog` / body_curves | 265 | 7 | 0 | 0 |
+| `golden.orbit_propagation` / cases | 92 | 22 | 0 | 0 |
+| `golden.orbit_propagation` / state_at_ut | 1,020 | 28 | 0 | 0 |
+| `golden.orbit_propagation` / from_state_vectors | 1,020 | 15 | 0 | 0 |
+| `golden.orbit_propagation` / state_vector_cases | 9 | 18 | 0 | 0 |
+| `golden.orbit_propagation` / kepler | 281 | 4 | 0 | 0 |
+
+All 15 ctest tests pass; every other gate (WP-01/02/09: math_shim f64/f32, libm_mono, unity_random, confignode,
+curves_eval, physics_constants, physics_drag_curve, atmosphere_curves, corpus) unchanged at 0 ULP / exact.
+
+### The harness frame (why the runner calls `UseHarnessFrame`)
+
+The PSystem prefab ships the Mun and Minmus with `inverseRotation = 1`. KSP's `CelestialBody.CBUpdate` (ported
+faithfully) then takes its inverse-rotation branch in the first CBUpdate pass: `Planetarium.InverseRotAngle = (230 - 0) % 360`,
+`Zup = PlanetaryFrame(0, 90, 230)`, `Rotation = ...`. The harness's CBUpdate rehost
+(`harness/src/KspGolden/Rehosted/CelestialBodyLifecycle.cs:106-147`) leaves that branch out ("frame bookkeeping"), so
+every golden orbit state is in the Awake frame. With the faithful spawn, `pos_x/pos_y/vel_x/vel_y` of every body
+updated after the Mun (15 of 16; Kerbin, the root of the pass, was updated first) came out turned by exactly 130 degrees
+(= -230), and orbit_propagation's x/y columns and dependent elements failed the same way. `CelestialEnv::UseHarnessFrame()`
+restores the Awake frame (serialized inverseRotAngle 0) and redoes `UpdateOrbit()` for every body in the CBUpdate order;
+nothing else changes, no tolerance was touched. The library keeps KSP's behaviour (Spawn leaves InverseRotAngle at 230);
+the real game clears these flags on scene setup (`PSystemSetup.OnSceneChange` / `SetSpaceCentre`, not ported yet).
+
+### Integration unit test (`tests/test_celestial_orbit.cpp`, 2 cases, 934 assertions)
+
+1. Faithful spawn: every body with an OrbitDriver has its adapter and `BodyOrbit`, parented like the driver; InverseRotAngle
+   is 230 and Zup = PlanetaryFrame(0, 90, 230) bit for bit; frame-free orbit state (elements, meanMotion, period, PeR,
+   ApR, ObT, anomalies, radius, pos_z, vel_z) equals the golden bit for bit (orbitalSpeed within 4e-16 relative: |vel| of
+   rotated components); Kerbin's pos/vel bit for bit, the others' after undoing the frame within 8e-15 relative; all 7
+   tidally locked bodies (Mun, Ike, Laythe, Vall, Tylo, Bop, Pol): rotationPeriod == orbit period == golden; rotPeriodRecip
+   and solarDayLength == golden for every body; OrbitDriver positions (Kerbin at the origin, Sun = -Kerbin's orbit
+   position, every other body = parent + orbit pos.xzy); Mun getPositionAtUT / getTruePositionAtUT / GetFrameVelAtUT equal
+   the explicit Mun -> Kerbin -> Sun sums at UT 0, 1234.5, half a Mun period, 3e6, 1e8; one Planetarium.FixedUpdate moves
+   time to 0.02 and the Mun with it.
+2. Harness frame (as the runner): every orbits column of every body bit for bit; world positions implied by the golden at
+   UT 0 (Kerbin, Sun, Mun, Minmus, Duna, Ike, Laythe) bit for bit; the Mun at UT 0 through getPositionAtUT /
+   getTruePositionAtUT within 4e-15 relative of the golden-derived values; after 1, 2, 10 periods back at the golden UT-0 position,
+   opposite after half a period and a quarter turn prograde after a quarter (1e-9 relative).
+
+### Commits (main)
+
+| hash | content |
+|---|---|
+| `d2e66e7` | merge `wp07` (conflict resolutions above) |
+| `f93380a` | Orbit on CelestialBody, one Planetarium, CelestialBodyOrbitAdapter, Spawn attaches real orbits, runner (StandIn removed, shared env, harness frame), ported unit tests |
+| `2fae513` | gate the whole body_catalog orbits table |
+| `93cd8ff` | integration unit test |
+
+### Deferred / for later packages
+
+- `Planetarium.Orbits` (the OrbitDriver list patched conics read) is not kept; WP-08's `patched_conics` gate will need it.
+- The harness's bodies never move (its OrbitDriver rehost only calls `Orbit.UpdateFromUT`), kspcore's spawn moves them
+  (`updateFromParameters`); any golden column that depends on `CelestialBody.position` (patched_conics:
+  getTruePositionAtUT, GetFrameVel chains) must take that into account in its runner.
+- Vessel OrbitDrivers (TRACK_Phys / IDLE, CheckDominantBody, SOI transitions) are WP-10; the adapter throws for
+  non-UPDATE modes (every stock body uses UPDATE).
+- `GetAtmoThermalStats` now has its Orbit and native AngleAxis inputs; it still needs scaled-space transforms.
+- Scene setup (`PSystemSetup.OnSceneChange` / `SetSpaceCentre` / `SetFlight`: clear inverseRotation/reverse, home body
+  inverse rotation) is not ported; until then a spawned system keeps the prefab's Mun/Minmus inverse-rotation state.
