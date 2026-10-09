@@ -40,6 +40,10 @@ add_library(kspcore STATIC
     util/ksp_util.cpp
     util/misc_util.cpp
     util/simplex.cpp
+    io/url_dir.cpp
+    database/game_database.cpp
+    resources/part_resource_library.cpp
+    parts/ksp_enums.cpp
     capi/kspcore_c.cpp
 )
 add_library(ksp::core ALIAS kspcore)

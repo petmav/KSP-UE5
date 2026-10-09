@@ -8,6 +8,9 @@
 struct RunnerOptions {
     std::string harness;  // .../harness
     std::string out;      // candidate root directory (dataset/<file>.json is written below it)
+    // KSP GameData directory read by the WP-05 part_database dataset (--gamedata). Default:
+    // <harness>/../decompiled/KSP-dev/GameData (the dev copy; read-only).
+    std::string gamedata;
     bool verbose = false;
 };
 

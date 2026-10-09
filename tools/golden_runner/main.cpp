@@ -1,7 +1,7 @@
 // kspcore golden runner: regenerates the harness datasets with kspcore and writes candidate files in the ksp-golden/1
 // schema, ready for harness/compare/compare.py.
 //
-//   golden_runner <dataset|all> --harness <harness dir> --out <candidate dir>
+//   golden_runner <dataset|all> --harness <harness dir> --out <candidate dir> [--gamedata <GameData dir>]
 //   datasets: whatever the linked ds_*.cpp files register (math_shim, curves_eval, confignode_roundtrip, gamedata)
 #include <algorithm>
 #include <chrono>
@@ -52,11 +52,13 @@ int main(int argc, char** argv) {
     for (int i = 2; i < argc; ++i) {
         if (!std::strcmp(argv[i], "--harness") && i + 1 < argc) opt.harness = argv[++i];
         else if (!std::strcmp(argv[i], "--out") && i + 1 < argc) opt.out = argv[++i];
+        else if (!std::strcmp(argv[i], "--gamedata") && i + 1 < argc) opt.gamedata = argv[++i];
         else if (!std::strcmp(argv[i], "-v")) opt.verbose = true;
         else return Usage();
     }
     if (opt.harness.empty() || opt.out.empty()) return Usage();
-    for (auto* s : {&opt.harness, &opt.out})
+    if (opt.gamedata.empty()) opt.gamedata = opt.harness + "/../decompiled/KSP-dev/GameData";
+    for (auto* s : {&opt.harness, &opt.out, &opt.gamedata})
         for (char& c : *s)
             if (c == '\\') c = '/';
 
