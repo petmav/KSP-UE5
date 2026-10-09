@@ -176,6 +176,7 @@ ProtoPartModuleSnapshot::ProtoPartModuleSnapshot(const ConfigNode& node) {
 
 // ProtoPartModuleSnapshot.cs:48 (EnsureModuleValuesIsInitialized needs a live module: nothing without moduleRef)
 void ProtoPartModuleSnapshot::Save(ConfigNode& node) {
+    EnsureModuleValuesIsInitialized();
     moduleValues->CopyTo(node);
     GE::onProtoPartModuleSnapshotSave.Fire(GE::FromToAction<ProtoPartModuleSnapshot*, ConfigNode*>(this, &node));
 }
@@ -263,7 +264,12 @@ ProtoPartSnapshot::ProtoPartSnapshot(const ConfigNode& node, ProtoVessel* protoV
             else protoCrewNames.push_back(v);
         } else if (n == "name") {
             partName = v;
-            partInfoFound = env.partExists ? env.partExists(v) : false;
+            if (env.getPartInfoByName) {  // PartLoader.getPartInfoByName (WP-13)
+                partInfo = env.getPartInfoByName(v);
+                partInfoFound = partInfo != nullptr;
+            } else {
+                partInfoFound = env.partExists ? env.partExists(v) : false;
+            }
         } else if (n == "autostrutMode") autostrutMode = ParseEnum<Part_AutoStrutMode>(v);
         else if (n == "attached") attached = ParseBool(v);
         else if (n == "shielded") {

@@ -12,7 +12,7 @@
 namespace ksp {
 
 // ---- AttachRules.cs --------------------------------------------------------------------------------------------------
-// AttachRules.cs:25
+// AttachRules.cs:34
 AttachRules AttachRules::Parse(std::string_view value) {
     const std::vector<std::string> a = dotnet::Split(value, ",", false);
     if (a.size() < 5) throw Exception("Attach rules are 8 ints, either ones or zeros, separated by commas!");
@@ -28,7 +28,7 @@ AttachRules AttachRules::Parse(std::string_view value) {
     return r;
 }
 
-// AttachRules.cs:66
+// AttachRules.cs:74
 std::string AttachRules::String() const {
     auto b = [](bool v) { return v ? "1" : "0"; };
     return std::string(b(stack)) + "," + b(srfAttach) + "," + b(allowStack) + "," + b(allowSrfAttach) + "," +
@@ -230,6 +230,32 @@ void PartResource::Load(const ConfigNode& node) {
     } else {
         flowMode = PartResourceFlowMode::Both;
     }
+}
+
+// PartResource.cs:160
+void PartResource::Save(ConfigNode& node) const {
+    node.AddValue("name", info->name());
+    node.AddValue("amount", amount);
+    node.AddValue("maxAmount", maxAmount);
+    node.AddValue("flowState", flowState);
+    node.AddValue("isTweakable", isTweakable);
+    node.AddValue("hideFlow", hideFlow);
+    node.AddValue("isVisible", isVisible);
+    node.AddValue("flowMode", kEnum_PartResource_FlowMode.ToString(static_cast<int64_t>(flowMode)));
+}
+
+// PartResource.cs:94 Copy (the `part` link is not copied: the copy constructors set it from the source before Copy)
+void PartResource::Copy(const PartResource& res) {
+    info = res.info;
+    resourceName = res.resourceName;
+    amount = res.amount;
+    maxAmount = res.maxAmount;
+    flowState = res.flowState;
+    isTweakable = res.isTweakable;
+    isVisible = res.isVisible;
+    hideFlow = res.hideFlow;
+    flowMode = res.flowMode;
+    simulationResource = res.simulationResource;
 }
 
 }  // namespace ksp

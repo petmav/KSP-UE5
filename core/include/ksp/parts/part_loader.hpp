@@ -34,9 +34,6 @@ namespace ksp {
 
 class GameDatabase;
 
-// ModulePartVariants.OnAwake/OnLoad data (PartVariant list on the prefab); see part_loader.cpp
-int LoadModulePartVariants(PartPrefab& part, const ConfigNode& node);
-
 class PartLoader {
 public:
     struct Options {
@@ -92,8 +89,6 @@ private:
     void CompilePartInfo(AvailablePart& ap);
     bool CompileModel(const GameDatabase& db, io::UrlConfig& cfg, ConfigNode& partCfg, AvailablePart& ap);
     void InitializePartDatabase();
-    void AddModule(PartPrefab& part, ConfigNode& node, bool forceAwake);
-    PartModuleData* AddModule(PartPrefab& part, std::string_view moduleName);
     void ResolveAssets(const GameDatabase& db, AvailablePart& ap);
 
     Options options_;

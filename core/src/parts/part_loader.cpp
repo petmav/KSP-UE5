@@ -1,5 +1,7 @@
 #include "ksp/parts/part_loader.hpp"
+#include "ksp/modules/module_part_variants.hpp"
 #include "ksp/modules/part_module.hpp"
+#include "ksp/parts/part.hpp"
 
 #include <algorithm>
 #include <filesystem>
@@ -73,6 +75,8 @@ const std::string& At(const std::vector<std::string>& a, size_t i) {
     return a[i];
 }
 
+}  // namespace
+
 // The node_* attach node grammar shared by ParsePart (PartLoader.cs:740) and PartVariant.ParseNode (PartVariant.cs:515).
 // `withOneWay`: ParsePart reads an 11th value (AllowOneWayXFeed); PartVariant does not. Returns false for < 6 values.
 bool ParseNodeValue(const ConfigNode::Value& v, float scale, bool withOneWay, AttachNode& n) {
@@ -114,6 +118,8 @@ bool ParseNodeValue(const ConfigNode::Value& v, float scale, bool withOneWay, At
     return true;
 }
 
+namespace {
+
 // BasePartCategorizer.cs:246
 std::vector<std::string> SearchTagSplit(std::string_view terms) {
     return dotnet::Split(ToLowerAscii(dotnet::Trim(terms)), " |;,-", true);
@@ -133,7 +139,7 @@ std::string GameDataRel(const std::string& full, const std::string& gameData) {
 }
 
 bool HasModuleClass(const PartPrefab& p, std::string_view cls) {
-    for (const PartModuleData& m : p.Modules)
+    for (const PartModuleData& m : p.ModuleData)
         if (m.moduleClass && m.moduleClass->Is(cls)) return true;
     return false;
 }
@@ -208,160 +214,23 @@ void SanitizePartCosts(AvailablePart& ap, const ConfigNode& partNode) {
     }
 }
 
-// Part.AddResource -> PartResourceList.Add(ConfigNode) (PartResourceList.cs:195)
-void AddResource(PartPrefab& part, const ConfigNode& node) {
-    const auto name = node.GetValue("name");
-    if (!name) {
-        log::Warning("ConfigNode has no value 'name'");
-        return;
-    }
-    for (const PartResource& r : part.Resources)
-        if (MonoStringHash(r.resourceName) == MonoStringHash(*name)) {
-            log::Warning("Part already contains  resource '" + *name + "'");
-            return;
-        }
-    const PartResourceLibrary* lib = PartResourceLibrary::Instance();
-    const PartResourceDefinition* def = lib ? lib->GetDefinition(*name) : nullptr;
-    if (!def) {
-        log::Warning("Could not create PartResource of type '" + *name);
-        return;
-    }
-    PartResource r;
-    r.info = def;
-    r.resourceName = def->name();
-    r.Load(node);
-    part.Resources.push_back(std::move(r));
-}
-
 }  // namespace
 
-// ModulePartVariants.cs:348 OnAwake (base variant) + :380 OnLoad (variant list). Returns the `variantIndex` the load sets
-// (the index of the cfg's baseVariant, then of `selectedVariant`), -1 when it leaves the field alone.
-int LoadModulePartVariants(PartPrefab& part, const ConfigNode& node) {
-    PartVariant base;
-    base.name = LocOr("#autoLOC_8007005", "Basic");
-    base.displayName = base.name;
-    base.attachNodes = part.attachNodes;
-    base.srfAttachNode = part.srfAttachNode;
-    part.baseVariant = base;
-    part.variantList.clear();
-    PartVariant& bv = *part.baseVariant;
-    auto nonEmpty = [&](const char* k) -> std::optional<std::string> {
-        auto v = node.GetValue(k);
-        if (v && !v->empty()) return v;
-        return std::nullopt;
-    };
-    if (auto v = nonEmpty("primaryColor")) bv.primaryColor = *v;
-    if (auto v = nonEmpty("secondaryColor")) bv.secondaryColor = *v;
-    if (auto v = nonEmpty("sizeGroup")) bv.sizeGroup = *v;
-    if (auto v = nonEmpty("baseName")) bv.name = bv.displayName = *v;
-    if (auto v = nonEmpty("baseDisplayName")) bv.displayName = *v;
-    if (auto v = nonEmpty("baseMass")) { float r = 0.0f; cs::FloatTryParse(*v, r); bv.mass = r; }
-    if (auto v = nonEmpty("baseCost")) { float r = 0.0f; cs::FloatTryParse(*v, r); bv.cost = r; }
-    if (auto v = nonEmpty("baseThemeName")) bv.themeName = *v;
-    bv.attachRules = part.fields.attachRules;
-    for (ConfigNode* vn : node.GetNodes("VARIANT")) {
-        PartVariant pv;
-        // new PartVariant(baseVariant): copies name..sizeGroup, mass, cost, srfAttachNode, attach nodes, animations,
-        // events, themeName, attachRules (PartVariant.cs:213)
-        pv.name = bv.name;
-        pv.displayName = bv.displayName;
-        pv.primaryColor = bv.primaryColor;
-        pv.secondaryColor = bv.secondaryColor;
-        pv.sizeGroup = bv.sizeGroup;
-        pv.mass = bv.mass;
-        pv.cost = bv.cost;
-        pv.srfAttachNode = bv.srfAttachNode;
-        pv.attachNodes = bv.attachNodes;
-        pv.disabledAnimations = bv.disabledAnimations;
-        pv.disabledEvents = bv.disabledEvents;
-        pv.themeName = bv.themeName;
-        pv.attachRules = bv.attachRules;
-        pv.Load(*vn);
-        part.variantList.push_back(std::move(pv));
-    }
-    int variantIndex = -1;
-    std::string baseVariantName;
-    if (node.TryGetValue("baseVariant", baseVariantName)) {
-        int index = 0;  // GetVariantIndex: 0 when not found
-        for (size_t i = 0; i < part.variantList.size(); i++)
-            if (part.variantList[i].name == baseVariantName) {
-                index = static_cast<int>(i);
-                break;
-            }
-        part.baseVariant = part.variantList.at(static_cast<size_t>(index));
-        variantIndex = index;
-    } else {
-        part.variantList.insert(part.variantList.begin(), *part.baseVariant);
-    }
-    // OnLoad: selectedVariant -> variantIndex = GetVariantIndex(name) (0 when not found)
-    std::string selected;
-    node.TryGetValue("selectedVariant", selected);
-    if (!selected.empty()) {
-        variantIndex = 0;
-        for (size_t i = 0; i < part.variantList.size(); i++)
-            if (part.variantList[i].name == selected) {
-                variantIndex = static_cast<int>(i);
-                break;
-            }
-    }
-    return variantIndex;
+AvailablePart::AvailablePart() = default;
+AvailablePart::~AvailablePart() = default;
+
+// AvailablePart.cs:259
+PartVariant* AvailablePart::GetVariant(const std::string& variantName) const {
+    const auto* v = Variants();
+    if (v == nullptr) return nullptr;
+    for (const auto& pv : *v)
+        if (pv->name == variantName) return pv.get();
+    return nullptr;
 }
 
-// PartVariant.cs:263
-void PartVariant::Load(const ConfigNode& node) {
-    name = node.GetValue("name").value_or(std::string());
-    const auto dn = node.GetValue("displayName");
-    displayName = (dn && !dn->empty()) ? *dn : name;
-    primaryColor = node.GetValue("primaryColor");
-    secondaryColor = node.GetValue("secondaryColor");
-    sizeGroup = node.GetValue("sizeGroup");
-    float r = 0.0f;
-    if (const auto m = node.GetValue("mass")) cs::FloatTryParse(*m, r); else r = 0.0f;
-    mass = r;
-    float r2 = 0.0f;
-    if (const auto c = node.GetValue("cost")) cs::FloatTryParse(*c, r2); else r2 = 0.0f;
-    cost = r2;
-    if (const ConfigNode* go = node.GetNode("GAMEOBJECTS")) {
-        infoGameObjects.clear();
-        for (const auto& v : go->values()) {
-            bool b;
-            if (cs::BoolTryParse(v.value, b)) infoGameObjects.emplace_back(v.name, b);
-        }
-    }
-    if (const ConfigNode* ei = node.GetNode("EXTRA_INFO")) {
-        extraInfo.clear();
-        for (const auto& v : ei->values()) extraInfo.emplace_back(v.name, v.value);
-    }
-    if (const ConfigNode* nodes = node.GetNode("NODES")) {
-        for (const auto& v : nodes->values()) {
-            if (!dotnet::StartsWith(v.name, "node")) continue;
-            AttachNode an;
-            if (!ParseNodeValue(v, 1.0f, false, an)) continue;
-            if (an.id != "attach" && an.id != "srfAttach") {
-                for (AttachNode& existing : attachNodes)
-                    if (existing.id == an.id) {
-                        existing = an;
-                        break;
-                    }
-            } else {
-                srfAttachNode = an;
-            }
-        }
-    }
-    for (ConfigNode* t : node.GetNodes("TEXTURE")) textures.push_back(t->CreateCopy());
-    if (const auto da = node.GetValue("disabledAnimations"))
-        for (const std::string& s : dotnet::Split(*da, ",", false)) disabledAnimations.push_back(s);
-    if (const auto de = node.GetValue("disabledEvents"))
-        for (const std::string& s : dotnet::Split(*de, ",", false)) disabledEvents.push_back(s);
-    std::string tn;
-    if (node.TryGetValue("themeName", tn)) themeName = tn;
-    std::string ar;
-    if (node.TryGetValue("attachRules", ar)) attachRules = AttachRules::Parse(ar);
-}
-
-const std::vector<PartVariant>* AvailablePart::Variants() const {
-    if (partPrefab && partPrefab->hasVariantsModule) return &partPrefab->variantList;
+// AvailablePart.Variants: partPrefab.variants.variantList (null when the prefab has no variants module)
+const std::vector<std::shared_ptr<PartVariant>>* AvailablePart::Variants() const {
+    if (partPrefab && partPrefab->variants) return &partPrefab->variants->variantList;
     return nullptr;
 }
 
@@ -618,63 +487,6 @@ void PartLoader::SetDatabaseConfig(const AvailablePart& ap, const ConfigNode::No
     db->AddNode(newNode);
 }
 
-// ---- modules ----------------------------------------------------------------------------------------------------------
-// Part.cs:5787 AddModule(string)
-PartModuleData* PartLoader::AddModule(PartPrefab& part, std::string_view moduleName) {
-    const ModuleClassInfo* cls = GetPartModuleClass(moduleName);
-    if (!cls) {
-        log.push_back("Cannot find a PartModule of typename '" + std::string(moduleName) + "'");
-        log::Error(log.back());
-        return nullptr;
-    }
-    auto contains = [&](std::string_view c) {
-        for (const PartModuleData& m : part.Modules)
-            if (m.moduleClass && c == m.moduleClass->name) return true;
-        return false;
-    };
-    if (std::string_view(cls->name) == "ModuleCargoPart" && contains("ModuleInventoryPart")) {
-        log::Warning("[Part]: Cannot add " + std::string(moduleName) + " as this Part '" + part.gameObjectName +
-                     "' already has a ModuleInventoryPart PartModule and they are mutually exclusive.");
-        return nullptr;
-    }
-    if (std::string_view(cls->name) == "ModuleInventoryPart" && contains("ModuleCargoPart")) {
-        for (size_t i = 0; i < part.Modules.size(); i++) {
-            PartModuleData& m = part.Modules[i];
-            if (!m.moduleClass || !m.moduleClass->Is("ModuleCargoPart")) continue;
-            // FindModuleImplementing<ModuleCargoPart>().packedVolume (KSPField, default 0 or the cfg value)
-            float packedVolume = 0.0f;
-            if (m.module) packedVolume = m.module->Get<float>("packedVolume");
-            if (packedVolume >= 0.0f) part.Modules.erase(part.Modules.begin() + static_cast<std::ptrdiff_t>(i));
-            break;
-        }
-        log::Warning("[Part]: Cannot have ModuleCargoPart and ModuleInventoryPart on same Part [" + part.gameObjectName +
-                     "'. Removed ModuleCargoPart");
-    }
-    PartModuleData m;
-    m.moduleName = cls->name;  // PartModule.moduleName = ClassName
-    m.moduleClass = cls;
-    // gameObject.AddComponent(type): the constructor chain (KSPField initialisers) and Awake (the object is active while
-    // the prefab compiles; PartLoader.cs:511 / :551 force Awake on the inactive prefab parts)
-    m.module = ModuleFactory::Create(*cls);
-    m.module->part = &part;
-    m.module->Awake();
-    part.Modules.push_back(std::move(m));
-    return &part.Modules.back();
-}
-
-// Part.cs:5823 AddModule(ConfigNode)
-void PartLoader::AddModule(PartPrefab& part, ConfigNode& node, bool /*forceAwake*/) {
-    const auto name = node.GetValue("name");
-    if (!name) {
-        log::Error("Cannot add a PartModule because the ConfigNode contains no module name");
-        return;
-    }
-    PartModuleData* m = AddModule(part, *name);
-    if (!m) return;
-    m->moduleName = *name;
-    LoadModuleData(*m, node, &part);  // PartModule.Load: Fields.Load ... OnLoad (ModuleToggleCrossfeed, ModuleCargoPart, ...)
-}
-
 // ---- CompileModel (PartLoader.cs:1765), data side ----------------------------------------------------------------------
 bool PartLoader::CompileModel(const GameDatabase& db, io::UrlConfig& cfg, ConfigNode& partCfg, AvailablePart& ap) {
     PartPrefab& part = *ap.partPrefab;
@@ -766,7 +578,7 @@ std::unique_ptr<AvailablePart> PartLoader::ParsePart(const GameDatabase& db, io:
     float num = 1.25f;
     if (node.HasValue("rescaleFactor")) num = cs::FloatParse(*node.GetValue("rescaleFactor"));
     float num2 = f32store(1.0 * fx(num));
-    ap->partPrefab = std::make_unique<PartPrefab>();
+    ap->partPrefab = std::make_unique<Part>();
     if (!CompileModel(db, urlConfig, node, *ap)) {
         log::Error("PartCompiler: Cannot compile model");
         return nullptr;
@@ -777,15 +589,18 @@ std::unique_ptr<AvailablePart> PartLoader::ParsePart(const GameDatabase& db, io:
         log::Error("PartCompiler: Error parsing config");
         return nullptr;
     }
-    PartPrefab& part = *ap->partPrefab;
+    Part& part = *ap->partPrefab;
     part.className = value;
     part.gameObjectName = partName;
+    // CreatePart (PartLoader.cs:1340): AddComponent<Part>() runs Awake, then obj.OnLoad()
+    part.Awake();
+    part.OnLoad();
     part.fields.hasHeiarchyModel = true;
     part.fields.rescaleFactor = num;
     part.fields.partRendererBoundsIgnore = std::vector<std::string>();  // Part.Awake
     // AddComponent<Part>: Unity's serializer gives every [Serializable] class-typed field of a new component a
     // default-constructed instance (the C9 capture shows a default srfAttachNode on parts without node_attach)
-    part.srfAttachNode = AttachNode();
+    part.srfAttachNode = std::make_shared<AttachNode>();
     part.fields.attachRules = AttachRules();
 
     LoadAvailablePartPersistent(*ap, node);
@@ -824,9 +639,10 @@ std::unique_ptr<AvailablePart> PartLoader::ParsePart(const GameDatabase& db, io:
         if (dotnet::StartsWith(n, "node")) {
             AttachNode an;
             if (!ParseNodeValue(v, num2, true, an)) continue;
+            an.owner = &part;
             if (an.nodeType == AttachNodeType::Surface && dotnet::Split(n, "_", false).at(1) == "attach") {
                 if (part.srfAttachNode) log::Warning("PartLoader WARNING: surface attach node is defined more than once!");
-                part.srfAttachNode = an;
+                part.srfAttachNode = std::make_shared<AttachNode>(an);
             } else if (an.nodeType == AttachNodeType::Stack || an.nodeType == AttachNodeType::Dock) {
                 const std::string kind = dotnet::Split(n, "_", false).at(1);
                 if (kind == "stack" || kind == "dock") part.attachNodes.push_back(an);
@@ -875,15 +691,16 @@ std::unique_ptr<AvailablePart> PartLoader::ParsePart(const GameDatabase& db, io:
             an.ResourceXFeed = cf;
             an.rigid = rg;
             an.secondaryAxis = Vector3f{};
+            an.owner = &part;
             log::Warning("PartLoader: NODE '" + *nm + "' on " + partName + " needs model transform '" + *tr + "'");
             part.attachNodes.push_back(an);
         } else if (cn.name == "RESOURCE") {
-            AddResource(part, cn);
+            part.AddResource(cn);
         } else if (cn.name == "MODULE") {
-            AddModule(part, cn, false);
+            part.AddModule(cn, false);
         }
     }
-    if (part.fields.vesselType > 2) AddModule(part, "ModuleTripLogger")->addedInCode = true;  // > VesselType.Unknown
+    if (part.fields.vesselType > 2) part.AddModule("ModuleTripLogger")->addedInCode = true;  // > VesselType.Unknown
     if (node.HasNode("INTERNAL")) node.GetNode("INTERNAL")->CopyTo(*ap->internalConfig);
     if (!node.TryGetValue("showVesselNaming", ap->showVesselNaming)) {
         if (HasModuleClass(part, "ModuleCommand")) ap->showVesselNaming = true;
@@ -896,14 +713,16 @@ std::unique_ptr<AvailablePart> PartLoader::ParsePart(const GameDatabase& db, io:
     node.TryGetValue("minimumRBMass", value5);
     ap->SetMinimumRBMass(value5);
     node.TryGetValue("minimumCost", ap->minimumCost);
+    part.partInfo = ap.get();  // PartLoader.cs:959
     ap->tags = ToLowerAscii(ap->tags) + " " + GeneratePartAutoTags(*ap);
     return ap;
 }
 
 // ---- prefab parts (PartLoader.cs:511) ----------------------------------------------------------------------------------
 void PartLoader::ApplyPrefabOverlay(const GameDatabase& /*db*/, AvailablePart& ap, io::UrlConfig& urlConfig) {
-    PartPrefab& part = *ap.partPrefab;
-    ap.prefabCompiled = true;  // partPrefab.Awake()
+    Part& part = *ap.partPrefab;
+    ap.prefabCompiled = true;
+    part.Awake();  // PartLoader.cs:515 partPrefab.Awake()
     if (!part.fields.partRendererBoundsIgnore) part.fields.partRendererBoundsIgnore = std::vector<std::string>();
     ConfigNode& cfg = urlConfig.config();
     for (const auto& v : cfg.values()) ApplyPartValue(part, v);
@@ -914,26 +733,26 @@ void PartLoader::ApplyPrefabOverlay(const GameDatabase& /*db*/, AvailablePart& a
         } else if (cn.name == "DRAG_CUBE") {
             part.DragCubes.LoadCubes(cn);
         } else if (cn.name == "RESOURCE") {
-            AddResource(part, cn);
+            part.AddResource(cn);
         } else if (cn.name == "MODULE") {
             const auto ov = cn.GetValue("__OVERLOAD");
             if (ov && !ov->empty() && cs::BoolParse(*ov)) {
                 // Modules[name].Load(node): the module comes with the Unity prefab; kspcore records it here
                 const std::string nm = cn.GetValue("name").value_or("");
                 PartModuleData* m = nullptr;
-                for (PartModuleData& pm : part.Modules)
+                for (PartModuleData& pm : part.ModuleData)
                     if (pm.moduleName == nm) m = &pm;
                 if (!m) {
                     PartModuleData pm;
                     pm.moduleName = nm;
                     pm.moduleClass = GetPartModuleClass(nm);
-                    part.Modules.push_back(std::move(pm));
-                    m = &part.Modules.back();
+                    part.ModuleData.push_back(std::move(pm));
+                    m = &part.ModuleData.back();
                 }
                 m->cfgFields.clear();
                 LoadModuleData(*m, cn, &part);
             } else {
-                AddModule(part, cn, true);
+                part.AddModule(cn, true);
             }
         }
     }
@@ -943,11 +762,16 @@ void PartLoader::ApplyPrefabOverlay(const GameDatabase& /*db*/, AvailablePart& a
 
 // ---- CompilePartInfo (PartLoader.cs:1169), data side -------------------------------------------------------------------
 void PartLoader::CompilePartInfo(AvailablePart& ap) {
-    PartPrefab& part = *ap.partPrefab;
+    Part& part = *ap.partPrefab;
     bool flag = false;
-    for (const PartModuleData& m : part.Modules) {
+    for (const PartModuleData& m : part.ModuleData) {
         if (!m.moduleClass) continue;
-        if (m.moduleClass->Is("ModulePartVariants")) part.hasVariantsModule = true;  // GetModuleTitle() == "PartVariants"
+        // GetModuleTitle() == ModulePartVariants.GetTitle() (IModuleInfo): part.variants = the module (PartLoader.cs:1249)
+        if (m.module && m.module->AsModuleInfo() && m.module->AsModuleInfo()->GetModuleTitle() == ModulePartVariants::GetTitle())
+        {
+            part.variants = dynamic_cast<ModulePartVariants*>(m.module.get());
+            ap.variant = part.baseVariant;  // PartLoader.cs:1252 newPartInfo.variant = part.baseVariant
+        }
         if (m.moduleClass->Is("ModuleCommand")) flag = true;
     }
     if (part.fields.applyKerbalMassModification && part.fields.CrewCapacity > 0) {
@@ -1014,7 +838,7 @@ void PartLoader::CompileAll(const GameDatabase& db, const Options& options) {
         ap->name = n;
         ap->codeBuilt = true;
         ap->prefabCompiled = false;
-        ap->partPrefab = std::make_unique<PartPrefab>();
+        ap->partPrefab = std::make_unique<Part>();
         ap->partPrefab->gameObjectName = n;
         loadedParts.push_back(std::move(ap));
     }

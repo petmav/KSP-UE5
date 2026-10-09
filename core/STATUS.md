@@ -49,7 +49,7 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `capture.terrain_height` | in-game `captures/out2/terrain_height.json` (WP-11): samples 140,522 x (h_surface, h_override, terrain_alt), bodies 2 (radii), scene_probe 4 | 140,528 | 0 ULP, no exclusions |
 | `capture.part_database` | WP-05 + WP-06: in-game `captures/out2/part_database.json` (C9), scope in "WP-05" and "WP-06" below: parts 357 (module_mass / module_cost included), part_cfg_values 6,235, modules 1,312, module_fields 32,894, module_propellants 77, resources 166, attach_nodes 822, drag_cubes 531, variants 228, assets 743 | 43,365 | 0 ULP, all strings identical |
 | `capture.gamedatabase_load_order` | WP-05: every `Load(Audio/Texture/Model): url` and `Config(TYPE) url` line of the capture run's KSP.log, in order | 2,836 lines | identical |
-| `unit` | 173 doctest cases, 42,286 assertions (WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
+| `unit` | 190 doctest cases, 143,024 assertions (WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
 differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 6 ULP (Vector3.Project/ProjectOnPlane) and
@@ -1520,3 +1520,103 @@ Not in this assignment although in `work_packages.csv` for WP-10: nothing (all f
 | `e266c472` | TimeWarp full port, WarpTransition(Calculator), ITargetable/PositionTarget, FlightGlobals/GameSettings/Time/PQS/CelestialBody seams, OrbitDriver::Targetable |
 | `3b0529dd` | `tests/test_timewarp.cpp`, C8 runner drives `TimeWarp::SetRate` and gates `segments.requested_rate`, STATUS/README |
 | (docs) | test totals and commit table |
+
+## WP-13: Part model and part tree (branch `wp13`, from `wp06` e27bc88b)
+
+State: done for the engine-agnostic part. `Part` is now a real object (data model, part tree, attach nodes, module list, resources, mass/cost,
+crew, copy semantics, states, live proto snapshots) and the WP-05 loader builds it. Gates unchanged and green: `capture.part_database`
+max ULP 0 (same columns as after WP-06, `parts:partSize` and `variants:materials` still dropped, reasons below), `corpus.gamedata` (86 crafts)
+and the saves corpus tests inside `unit` unchanged and green. Every ported function cites `File.cs:line` of `decompiled/KSP-Decompiled/Assembly-CSharp/`; the line numbers were
+checked by script against the decompile (a function name must appear within three lines of the cited line).
+
+### What is ported (by C# file)
+
+| C# file | C++ | ported | not ported (and why) |
+|---|---|---|---|
+| Part.cs (9,023 lines) | `parts/part.hpp`, `src/parts/part.cpp` (tree, nodes, resources, mass, crew, states, StartData), `src/parts/part_modules.cpp` (modules, Instantiate, copy callbacks) | fields and properties (`Part::fields` holds the PartFields row, WP-05); constructor / `Awake`; tree: `setParent`, `addChild`, `removeChild`, `clearParent`, `hasIndirectParent/Child`, `localRoot`, `RigidBodyPart`, `FindChildPart`, `FindNonPhysicslessChildren/Parent`, `GetPartsOutTo`, `SetHierarchyRoot`, `onAttach`, `onDetach`, `OnDelete`; symmetry (`getSymmetryCounterPart`, `isSymmetryCounterPart`, `RemoveFromSymmetry`, `CleanSymmetry*`, `SetMirror`); attach nodes (`AddAttachNode`, `SetupAttachNodes`, `UpdateAttachNodes`, `UpdateSrfAttachNode`, `FindAttachNode*`, `FindPartThroughNodes`, `UpdateOrgPosAndRot`); `PartCanBeDetached/Offset/Rotated`, `isAttachable`, the `isXxx` module-class queries; resources (`AddResource`, `SetResource`, `RemoveResource`, `GetResource`, `GetResourceMass`, priority, simulation reset/setup); mass (`UpdateMass`, `GetModuleMass/Costs/Size`, `GetPhysicslessChildMass`); crew (`AddCrewmember(At)`, `RemoveCrewmember`); `AddModule`, `LoadModule`, `RemoveModule(s)`, `FindModule*`, `HasModuleImplementing`, `InitializeModules`, `GetModuleStartState`, `Modules{OnStart,OnStartFinished,OnUpdate,OnFixedUpdate,OnActivate,OnDeactivate,BeforePartAttachJoint}`; states (`set_State`, `CanFail`, `activate`, `deactivate`, `force_activate`, `UpdateStageability`, `ShieldedFromAirstream`); `Instantiate` (Object.Instantiate clone), `OnWillBeCopied`, `OnCopy`, `OnWasCopied`, `OnWillBeMirrored`; `OnLoad`/`LoadEffects`/`SaveEffects`, `SendEvent`, `StartData` (the data block of `Start()`) | rendering, highlighting, colliders and joints (`PartJoint`, autostrut `7904-8660`, `Couple`/`Undock`/`decouple`/`Decoupling`/`disconnect`), collision handling, pack/unpack, thermal update and `FixedUpdate`, FX/audio/UI (`fxGroups` playing, stage icons), `RequestResource`/`TransferResource` family (WP-15), shields/airstream flow, `GetBoundsPoints`, the `PartToVesselSpace*` statics, Part's own BaseFieldList/BaseEventList/BaseActionList (EVENTS/ACTIONS nodes of the part are kept and written back unevaluated), ExperienceTrait registration, the Start coroutine's Unity component work |
+| PartVariant.cs, ModulePartVariants.cs | `available_part.hpp` (`PartVariant`), `src/parts/part_variant.cpp`, `modules/module_part_variants.hpp`, `src/modules/module_part_variants.cpp` | constructors incl. `PartVariant(PartVariant baseVariant)`, `Load`, `GetAttachedNodeIndex`, `GetExtraInfoValue`, `ModelVisibility` (the GAMEOBJECTS list `UpdateModel` applies), variant lists, `RefreshVariant`, `SetVariant`, `ApplyVariant` data part (attach nodes, mass, cost, drag cubes, extra info), themes, `GetModuleMass/Cost` | Material/texture/shader switching, mesh enable/disable on a GameObject, PAW rebuild |
+| PartGeometryUtil.cs | `parts/part_geometry_util.hpp`, `src/parts/part_geometry_util.cpp` | `GetRendererBounds`, `GetColliderBounds`, `GetPartRendererBounds`, `MergeBounds` (3 overloads), `FindBoundsCentroid`, `PartSize` (PartLoader.cs:937) over stored bounds (`Part::modelRenderers`, `Part::colliderBounds`) | reading the bounds from a mesh (`.mu` renderers are not read, see Needs) |
+| AttachNode.cs, AttachNodeSnapshot.cs, AttachRules.cs, Attachment.cs, AttachModes.cs, AttachNodeMethod.cs | `parts/part_data.hpp/.cpp` (AttachNode gained `owner`, `attachedPart`, `FindAttachedPart`, `FromTransform`, `Clone`, `FindOpposingNode`, `ReverseSrfNodeDirection`, `ChangeSrfNodePosition`), `parts/part_types.hpp`, `save/proto_vessel.hpp/.cpp` (`AttachNodeSnapshot(AttachNode)`, `findAttachedPart`) | all | node icon (`DestroyNodeIcon`) |
+| AxisGroupsManager.cs, KSPAxisGroup.cs, AxisFieldLimit.cs, IAxisFieldLimits.cs, KSPAxisMode.cs | `modules/axis_groups_manager.{hpp,cpp}`, `parts/part_types.hpp`; `PartModule::Save/Load` call it for AXISGROUPS | all (`KSPAxisGroup` itself was WP-04's, reused) | input binding of axis groups (WP-27) |
+| PartValues.cs, PartStates.cs, PartPointer.cs, PartRawInfo.cs, PartGameObjectInfo.cs, PartHeightQuery.cs, PartSpaceMode.cs, ModifierChangeWhen.cs, IPartSizeModifier.cs, KSPPart.cs, KSPModelEvent.cs | `parts/part_types.hpp` | all (`PartValues` with the extremum rules of its constructor, `PartPointer` index/Equals) | none |
+| ModuleDisplaceTweak.cs, ModuleMirrorPlacement.cs, CompoundPartModule.cs, ICompoundPartAnchorMethod.cs | `modules/part_structural_modules.{hpp,cpp}` | all four (`CompoundPart.target` is read through the interface the CompoundPart implementation will provide) | the PAW fields' GUI side |
+| FlagNameManager.cs | `parts/flag_name_manager.hpp`, `src/parts/part_misc.cpp` | all; `FlagOrientation` / `FlagMesh` data records defined here because the manager needs them (owned later by WP-48) | flag texture loading |
+| ProtoPartSnapshot / ProtoPartModuleSnapshot / ProtoPartResourceSnapshot live paths | `src/save/proto_part_live.cpp`, `save/proto_vessel.hpp` | `ProtoPartSnapshot(Part, ProtoVessel, ...)`, `storePartRefs`, `ConfigurePart`, `CreatePart`, `Load(vessel parts)`, `Init`, `ProtoVessel::LoadObjects`, snapshots from live modules/resources (`moduleMass` quirk below) | `ProtoVessel(Vessel)` and the Vessel-bound members (WP-14) |
+| IPartMassModifier, IPartCostModifier | WP-06's `modules/part_module.hpp`, reused | | |
+| Other | `unity/bounds.hpp` (Bounds with the managed Unity maths), `parts/available_variant_theme.hpp` | | |
+
+Also changed (WP-05/06 code the Part model replaced): `PartPrefab` is now the data base of `Part` (virtual destructor; `PartPrefab::Modules`
+renamed `ModuleData`; `srfAttachNode` and `baseVariant` are `shared_ptr` because the C# objects are shared); `AvailablePart` owns a
+`Part` prefab, `variant`, `GetVariant`, `Variants()`; `PartLoader` builds `Part` objects and runs `Awake` / `OnLoad` at `CreatePart`;
+the old stand-in `ModulePartVariants` of `module_behaviours.cpp` and the loader's private `AddModule` / `AddResource` / `PartVariant::Load`
+were removed; `PartModule` gained the virtual hooks `OnStartBeforePartAttachJoint`, `OnWillBeCopied`, `OnWasCopied`, `OnWillBeMirrored`,
+`PromoteToPhysicalPart`, `DemoteToPhysicslessPart`, `CopySerializedFrom`, `AsSizeModifier`, `AsConstruction`; `FieldStore::CopyValuesFrom`
+(Object.Instantiate copies non-private serialised fields), `BaseFieldList::Set`; `SaveEnvironment::getPartInfoByName` hook.
+
+### Gate results (Linux release, fresh build; harness tolerances unchanged)
+
+| gate | rows | max abs | max rel | max ULP | notes |
+|---|---|---|---|---|---|
+| `capture.part_database` | same as after WP-06 (353 parts, 32,894 `module_fields`, 357 module_mass / module_cost) | 0 | 0 | 0 | now produced by the `Part` objects of the loader (`ds_part_database.cpp` reads `Part&`); row set and values unchanged |
+| `corpus.gamedata` | 86 crafts | unchanged | | | untouched |
+| `unit` (includes the saves corpus tests) | all cases | | | | green |
+
+Excluded columns of `capture.part_database` (unchanged, `DROP_COLUMNS` in `tests/CMakeLists.txt`):
+- `parts:partSize` is `PartGeometryUtil.MergeBounds(GetRendererBounds()).size.magnitude` over the renderer bounds of the instantiated prefab. The
+  formula is ported (`PartGeometryUtil::PartSize`, unit-tested over given bounds in `tests/test_part.cpp`) but the bounds come from the `.mu`
+  meshes (`KSP_x64_Data` / GameData models), which no package reads yet. It cannot be computed without mesh data, so it stays dropped.
+- `variants:materials` is the `Material.name` list of the variant renderers (shader/texture names after `Renderer.material` instancing), again
+  mesh/renderer data.
+
+### Measured facts (unit tests in `tests/test_part.cpp`)
+
+- 353 stock prefabs (362 cfg parts minus 4 DLC error rows and 5 prefab-only parts) build as `Part`: module counts, resource counts and mass sums equal the C9
+  capture rows; `Instantiate` of every prefab followed by `UpdateMass` reproduces the C9 mass plus module mass.
+- `physprofile` save: 458 parts / 1337 modules / 623 resources build through `ProtoVessel.LoadObjects` and write back byte-identically
+  (`ProtoPartSnapshot(Part)`), except the hand-built asteroid part (skipped for srfN / rTrf / modMass).
+- 33 of the 86 corpus crafts (stock parts only; 53 contain modded parts or an old format and are refused by `LoadShip`, as in the game) become
+  consistent trees: 1,967 parts, one root each, parent/child links equal the `parent` indices, attach-node pairs mutual (except 3 pairs of one old craft). `modCost` / `modMass` written by the game equal `GetModuleCosts` / `GetModuleMass(partInfo.cost)` for 1,061 of 1,063 checked
+  parts; the two differences are the fairings (`fairingSize1`, `fairingSize2`: their mass and cost come from built fairing panels, state of
+  ModuleProceduralFairing not in the prefab).
+
+### Unit tests (`tests/test_part.cpp`, 17 cases, 100,738 assertions)
+
+enums and records; FlagNameManager and themes; Bounds and PartGeometryUtil; prefabs vs C9; Instantiate + UpdateMass of all prefabs; attach nodes;
+part tree; surface node inversion; AddModule/LoadModule/RemoveModule rules; module lifecycle and error isolation; resources, crew, state, StartData;
+variants and ModulePartVariants against the C9 variants table; copy semantics over a part tree; structural modules; physprofile round trip;
+craft trees; activation / detach / delete state machine. Expected values come from the decompiled source, the C9 capture, the game's own saves and
+crafts; no number is invented.
+
+### Quirks reproduced (a later implementer must keep them)
+
+- `hasIndirectParent` recurses with the part itself (Part.cs, not `parent`); `PartCanBeRotated` calls `CanBeOffset`.
+- `RefreshVariant` uses `>` against `Count` (an index equal to Count is accepted); `baseVariant` with an unknown name selects index 0 (skipper
+  `baseVariant = Full` -> Shroud); `new PartVariant(base)` is not memberwise and shares `srfAttachNode`.
+- ProtoPartSnapshot constructor passes the part cost as the default mass of `GetModuleMass` (`moduleMass` field).
+- `ModulePartVariants.useVariantMass` is set persistently in the EDITOR scene.
+- A clone's private `variantIndex` resets to 0 (Object.Instantiate does not copy private fields): call `SetVariant(partInfo.variant.Name)` after `Instantiate`.
+- The `OnEditorAttach/Detach/Destroy` and `OnJustAboutToDie/BeDestroyed` Callbacks start as empty delegates, never null.
+
+### Deviations
+
+- The Part object is a plain C++ class (no GameObject): `PartTransform` stands for the Transform fields used (position, rotation, scale), `PartModelRenderer` and
+  `colliderBounds` are the renderer/collider inputs that a model reader will fill. Native Unity maths in them (quaternion, matrix) is plain float.
+- `Part::Instantiate` approximates Object.Instantiate: public/serialised fields copied via `FieldStore::CopyValuesFrom`, variant lists deep-copied,
+  `srfAttachNode`/`baseVariant` re-aliased; private state resets exactly as in C#.
+- Hooks for the Vessel (WP-14) in `Part::vesselHooks` (isEVA, partCount, removeCrew, crewListSetDirty, snapshotSavesModules); `Part::vessel` is an opaque pointer.
+- Part's own PAW lists (BaseFieldList/Events/Actions) are not modelled (listed above).
+
+### Needs a new (local) capture or data
+
+- `partSize` and `variants.materials` of every part: needs the `.mu` model reader (renderer bounds, material names) or a capture of
+  `PartGeometryUtil.GetRendererBounds` after `Instantiate`; then un-drop the two columns.
+- Native Transform maths for `PartToVesselSpace*`, `GetBoundsPoints`, `transform.position` of a parent chain (Quaternion/Matrix4x4 float outputs).
+- `Part.Start` thermal values in flight (`skinTemperature`, `thermalMass`, `skinThermalMass`, `skinInternalConductionMult`) and the `FixedUpdate` temperature step: needs an in-flight capture.
+- Fairing mass / cost (ModuleProceduralFairing panel state) for the two craft rows above.
+- `module_persistence` (Part.Save of an instantiated, started part in flight).
+
+Fresh run (`./run_tests.sh -f`, Linux release): 21/21 ctest tests passed, including `unit`, `corpus.gamedata` and `capture.part_database`.
+
+### Commits (branch `wp13`)
+
+see `git log --oneline wp06..wp13`.

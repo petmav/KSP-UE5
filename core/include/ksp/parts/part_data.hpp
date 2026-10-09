@@ -23,6 +23,8 @@
 
 namespace ksp {
 
+class Part;
+
 using NullableString = std::optional<std::string>;
 using NullableStringList = std::optional<std::vector<std::string>>;
 
@@ -37,9 +39,9 @@ struct AttachRules {
     bool allowRotate = false;
     bool allowRoot = false;
     bool StackOrSurfaceAttachable() const { return srfAttach || stack; }
-    // AttachRules.cs:25: elements compared to "1" exactly (no trimming); fewer than 5 throws Exception
+    // AttachRules.cs:34: elements compared to "1" exactly (no trimming); fewer than 5 throws Exception
     static AttachRules Parse(std::string_view value);
-    // AttachRules.cs:66: the first 7 flags ("allowRoot" is not written)
+    // AttachRules.cs:74: the first 7 flags ("allowRoot" is not written)
     std::string String() const;
 };
 using NullableAttachRules = std::optional<AttachRules>;
@@ -119,6 +121,25 @@ struct AttachNode {
     float overrideDragArea = -1.0f;
     std::string nodeTransform;  // NODE{transform=} name (Part.AddAttachNode); empty for node_* values
     uint32_t attachedPartId = 0;
+    // ---- WP-13 (AttachNode.cs): the live links of a node on an instantiated part
+    Part* owner = nullptr;         // AttachNode.owner
+    Part* attachedPart = nullptr;  // AttachNode.attachedPart
+    float nodeDistEpsilon = 0.001f;  // private, [SerializeField]
+
+    // AttachNode.cs:86 (the transform constructor: position = transform.position, orientation = transform.forward; the
+    // originals the same; secondaryAxis zero)
+    static AttachNode FromTransform(std::string id, const Vector3f& transformPosition, const Vector3f& transformForward,
+                                    int32_t size, AttachNodeMethod attachMethod, bool crossfeed, bool rigid);
+    // AttachNode.cs:107 FindAttachedPart: attachedPart = parts.GetPartByCraftID(attachedPartId)
+    void FindAttachedPart(const std::vector<Part*>& parts);
+    // AttachNode.cs:112 FindOpposingNode
+    AttachNode* FindOpposingNode() const;
+    // AttachNode.cs:129 Clone (MemberwiseClone: a plain copy)
+    static AttachNode Clone(const AttachNode& referenceNode) { return referenceNode; }
+    // AttachNode.cs:132 ReverseSrfNodeDirection
+    void ReverseSrfNodeDirection(AttachNode& fromNode);
+    // AttachNode.cs:143 ChangeSrfNodePosition (internal)
+    void ChangeSrfNodePosition();
 };
 
 // ---- DragCube.cs -----------------------------------------------------------------------------------------------------
@@ -192,7 +213,15 @@ struct PartResource {
     bool hideFlow = false;
     bool simulationResource = false;
     PartResourceFlowMode flowMode = PartResourceFlowMode::None;  // _flowMode
+    Part* part = nullptr;               // PartResource.part (WP-13)
     void Load(const ConfigNode& node);  // PartResource.cs:108
+    void Copy(const PartResource& res); // PartResource.cs:94
+    void Save(ConfigNode& node) const;  // PartResource.cs:160 (name, amount, maxAmount, flowState, isTweakable, hideFlow, isVisible, flowMode)
 };
+
+// The node_* attach node grammar shared by PartLoader.ParsePart (PartLoader.cs:740) and PartVariant.ParseNode
+// (PartVariant.cs:515). `withOneWay`: ParsePart scales by `scale` and reads an 11th value (AllowOneWayXFeed); PartVariant does
+// neither. Returns false (and logs) for fewer than 6 values.
+bool ParseNodeValue(const ConfigNode::Value& v, float scale, bool withOneWay, AttachNode& n);
 
 }  // namespace ksp

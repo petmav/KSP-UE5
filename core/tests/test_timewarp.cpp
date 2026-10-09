@@ -36,6 +36,7 @@
 #include "ksp/save/save_enums.hpp"
 #include "ksp/terrain/pqs_prefab.hpp"
 #include "ksp/unity/random.hpp"
+#include "ksp/localization/localizer.hpp"
 #include "ksp/util/ksp_util.hpp"
 #include "ksp/util/simplex.hpp"
 #include "nlohmann/json.hpp"
@@ -64,6 +65,9 @@ struct Env {
     TimeWarpEnvironment twEnv;
     Env() {
         Reset();
+        // The screen-message checks below assume no Localizer instance (keys are posted verbatim, as before any
+        // GameData load); another test file may have left one installed (Localizer.cs:154).
+        Localizer::Shutdown();
         pg.physicsDatabaseFilename = kHarness + "/inputs/Physics.cfg";
         pg.Awake("");
         REQUIRE(pg.LoadDatabase());

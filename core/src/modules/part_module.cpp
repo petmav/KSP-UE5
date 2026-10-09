@@ -1,4 +1,5 @@
 #include "ksp/modules/part_module.hpp"
+#include "ksp/modules/axis_groups_manager.hpp"
 
 #include <algorithm>
 #include <map>
@@ -31,6 +32,7 @@ void PartModule::ModularSetup() {
     events_ = std::make_unique<BaseEventList>(this, Class());
     actions_ = std::make_unique<BaseActionList>(this, Class());
     fields_ = std::make_unique<BaseFieldList>(*this);
+    AxisGroupsManager::BuildBaseAxisFields(*this);
     // ModuleAttributes.kspModules is empty for every class (KSPModule is never applied): guiName = PrintModuleName
     guiName_ = KSPUtil::PrintModuleName(className_);
     moduleName = className_;  // both branches of the partInfo test assign className
@@ -54,17 +56,7 @@ void PartModule::Save(ConfigNode& node) {
     Fields().Save(node);
     Events().OnSave(*node.AddNode("EVENTS"));
     Actions().OnSave(*node.AddNode("ACTIONS"));
-    // AxisGroupsManager.SaveAxisFieldNodes (AxisGroupsManager.cs:36): AXISGROUPS with one node per BaseAxisField
-    {
-        bool any = false;
-        for (size_t i = Fields().Count(); i-- > 0;)
-            if (dynamic_cast<BaseAxisField*>(Fields()[i])) { any = true; break; }
-        if (any) {
-            ConfigNode* axes = node.AddNode("AXISGROUPS");
-            for (size_t i = 0; i < Fields().Count(); i++)
-                if (auto* a = dynamic_cast<BaseAxisField*>(Fields()[i])) a->OnSave(*axes->AddNode(a->name()));
-        }
-    }
+    AxisGroupsManager::SaveAxisFieldNodes(*this, node);  // AxisGroupsManager.cs:36
     OnSave(node);
     // SaveUpgradesApplied(node.AddNode("UPGRADESAPPLIED")) (PartModule.cs:400)
     ConfigNode* ua = node.AddNode("UPGRADESAPPLIED");
@@ -103,12 +95,7 @@ void PartModule::Load(const ConfigNode& node) {
     Fields().Load(node, &loadTrace_);
     if (node.HasNode("EVENTS")) Events().OnLoad(*node.GetNode("EVENTS"));
     if (node.HasNode("ACTIONS")) Actions().OnLoad(*node.GetNode("ACTIONS"));
-    // AxisGroupsManager.LoadAxisFieldNodes (AxisGroupsManager.cs:19)
-    if (ConfigNode* axes = node.GetNode("AXISGROUPS"))
-        for (int i = 0; i < axes->nodes().Count(); i++) {
-            ConfigNode& c = *axes->nodes().Shared(i);
-            if (auto* a = dynamic_cast<BaseAxisField*>(Fields()[c.name])) a->OnLoad(c);
-        }
+    AxisGroupsManager::LoadAxisFieldNodes(*this, node);  // AxisGroupsManager.cs:19
     // resHandler.OnLoad(node): ModuleResourceHandler (WP-15)
     try {
         OnLoad(node);
@@ -124,6 +111,14 @@ void PartModule::Copy(PartModule& from) {
     for (size_t i = Fields().Count(); i-- > 0;) Fields()[i]->CopyField(*from.Fields()[i]);
     Fields().SetOriginalValue();
     OnCopy(from);
+}
+
+// Object.Instantiate of a module component (WP-13): moduleName, isEnabled, upgradesApplied and the serialized KSPFields
+void PartModule::CopySerializedFrom(const PartModule& from) {
+    CopyValuesFrom(from);
+    moduleName = from.moduleName;
+    isEnabled = from.isEnabled;
+    upgradesApplied = from.upgradesApplied;
 }
 
 // PartModule.cs:282

@@ -27,11 +27,16 @@
 #include "ksp/config/config_node.hpp"
 #include "ksp/modules/base_event.hpp"
 #include "ksp/modules/base_field.hpp"
+#include "ksp/unity/quaternion.hpp"
 
 namespace ksp {
 
 struct PartPrefab;
+struct AttachNode;
+class Part;
 class ProtoPartModuleSnapshot;
+class IPartSizeModifier;
+class IConstruction;
 
 // ModifierStagingSituation.cs / ModifierChangeWhen.cs
 enum class ModifierStagingSituation { CURRENT, UNSTAGED, STAGED };
@@ -123,6 +128,7 @@ public:
     virtual void OnIconCreate() {}
     virtual void OnStart(StartState) {}
     virtual void OnStartFinished(StartState) {}
+    virtual void OnStartBeforePartAttachJoint(StartState) {}      // PartModule.cs:873 (WP-13)
     virtual void OnInitialize() {}
     virtual void OnActive() {}
     virtual void OnInactive() {}
@@ -131,6 +137,16 @@ public:
     virtual void OnSave(ConfigNode&) {}
     virtual void OnLoad(const ConfigNode&) {}
     virtual void OnCopy(PartModule&) {}
+    // WP-13 (Part.OnWillBeCopied / OnWasCopied / OnWillBeMirrored / PromoteToPhysicalPart / DemoteToPhysicslessPart call these)
+    virtual void OnWillBeCopied(bool /*asSymCounterpart*/) {}                      // PartModule.cs:919
+    virtual void OnWasCopied(PartModule* /*copyPartModule*/, bool /*asSymCounterpart*/) {}  // :923
+    virtual bool OnWillBeMirrored(Quaternionf& /*rotation*/, AttachNode* /*selPartNode*/, Part* /*partParent*/) { return false; }  // :927
+    virtual void PromoteToPhysicalPart() {}                                        // :948
+    virtual void DemoteToPhysicslessPart() {}                                      // :952
+    // Unity's Instantiate: the serialized state of `from` (non-private KSPField values, moduleName, isEnabled,
+    // upgradesApplied) is copied into this fresh component before its Awake. Modules with serialized state of their own
+    // (ModulePartVariants.variantList) extend it.
+    virtual void CopySerializedFrom(const PartModule& from);
     virtual std::string GetInfo() { return ""; }                   // PartModule.cs:905
     virtual std::string GetModuleDisplayName() { return ""; }      // PartModule.cs:910
     virtual void LoadUpgrades(const ConfigNode& node);             // PartModule.cs:422 (no PartUpgradeManager: see FindUpgrades)
@@ -153,6 +169,8 @@ public:
     virtual IPartCostModifier* AsCostModifier() { return nullptr; }
     virtual IModuleInfo* AsModuleInfo() { return nullptr; }
     virtual IScalarModule* AsScalarModule() { return nullptr; }
+    virtual IPartSizeModifier* AsSizeModifier() { return nullptr; }   // `module is IPartSizeModifier` (WP-13)
+    virtual IConstruction* AsConstruction() { return nullptr; }       // `module is IConstruction` (WP-13)
 
 private:
     std::string className_, guiName_;

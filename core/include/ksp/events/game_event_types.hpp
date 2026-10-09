@@ -10,7 +10,7 @@
 namespace ksp {
 class AlarmTypeBase;  // C# class AlarmTypeBase
 enum class AltimeterDisplayState : int;  // C# enum AltimeterDisplayState
-class AvailablePart;  // C# class AvailablePart
+struct AvailablePart;  // C# class AvailablePart
 class BaseConverter;  // C# class BaseConverter
 enum class CameraManager_CameraMode : int;  // C# enum CameraManager.CameraMode
 class CelestialBody;  // C# class CelestialBody
@@ -60,10 +60,10 @@ class Part;  // C# class Part
 class PartItemTransfer;  // C# class PartItemTransfer
 class PartJoint;  // C# class PartJoint
 class PartModule;  // C# class PartModule
-class PartResource;  // C# class PartResource
+struct PartResource;  // C# class PartResource
 enum class PartResource_FlowMode : int;  // C# enum PartResource.FlowMode
 class PartUpgradeHandler_Upgrade;  // C# class PartUpgradeHandler.Upgrade
-class PartVariant;  // C# class PartVariant
+struct PartVariant;  // C# class PartVariant
 class PatchedConicSolver;  // C# class PatchedConicSolver
 class ProgressNode;  // C# class ProgressNode
 class ProtoCrewMember;  // C# class ProtoCrewMember

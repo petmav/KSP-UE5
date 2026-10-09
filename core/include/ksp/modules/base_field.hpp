@@ -96,6 +96,9 @@ public:
     const ModuleValue& ValueAt(size_t i) const { return values_[i]; }
     ModuleValue* Value(std::string_view name);
     const ModuleValue* Value(std::string_view name) const;
+    // WP-13: Unity's serialized clone of the component: every field value of `from` (same class) except private ones, which
+    // Unity does not serialize and which keep their initialiser value
+    void CopyValuesFrom(const FieldStore& from);
     // Typed convenience for module code: throws if the field is absent or of another type.
     template <class T>
     T Get(std::string_view name) const {
@@ -203,6 +206,7 @@ public:
     void Load(const ConfigNode& node, std::vector<ModuleFieldValue>* trace = nullptr);
     void Save(ConfigNode& node) const;  // BaseFieldList.cs:366
     void Add(std::shared_ptr<BaseField> f) { fields_.push_back(std::move(f)); }
+    void Set(size_t index, std::shared_ptr<BaseField> f) { fields_[index] = std::move(f); }  // `Fields[i] = value` (WP-13)
     void AddBaseFieldList(const BaseFieldList& add);
     void RemoveBaseFieldList(const BaseFieldList& remove);
     auto begin() const { return fields_.begin(); }
