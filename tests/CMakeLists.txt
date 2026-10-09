@@ -93,11 +93,9 @@ ksp_golden_gate(golden.physics_constants physics_constants)
 # WP-09 PhysicsGlobals.DragCurveValue (managed float code) vs the in-game Mono capture of the aero_forces table
 ksp_golden_gate(capture.physics_drag_curve physics_drag_curve GOLDEN ${KSP_CAPTURES_DIR}/aero_forces_mono.json
                 TABLES drag_curve_value DROP_HEX TOL ${KSP_CAPTURE_TOL})
-# WP-09 celestial bodies. orbits: only the serialized elements are gated; meanMotion, period, PeR, ApR, ObT_UT0,
-# meanAnomaly_UT0, eccentricAnomaly_UT0, trueAnomaly_UT0, radius_UT0, orbitalSpeed_UT0, pos_*, vel_* need ksp::Orbit
-# (pending WP-07 integration, see STATUS.md).
-ksp_golden_gate(golden.body_catalog body_catalog
-                COLUMNS orbits:name,parent,reverse,inclination,eccentricity,semiMajorAxis,LAN,argumentOfPeriapsis,meanAnomalyAtEpoch,epoch)
+# WP-09 celestial bodies with WP-07's run-time Orbit: every table and column (bodies, orbits incl. the propagated
+# meanMotion ... vel_z, atmosphere_profile_1km, body_curves).
+ksp_golden_gate(golden.body_catalog body_catalog)
 # WP-09 atmosphere: CelestialBody pressure/temperature/density/speed of sound + FlightIntegrator atmosphere helpers
 ksp_golden_gate(golden.atmosphere_curves atmosphere_curves)
 

@@ -1,9 +1,8 @@
 // body_catalog candidate: mirrors harness/src/KspGolden/Generators/BodiesGen.cs on kspcore's spawned Kerbol system
 // (CelestialEnv: KerbolSystemPrefab() at UT 0). Tables:
-//   bodies                 every column (tidal-lock rotationPeriod and solarDayLength use the gate's StandInOrbitPeriod,
-//                          the Orbit.Init period formula, until WP-07's ksp::Orbit is attached)
-//   orbits                 the serialized elements (name, parent, reverse, inclination ... epoch); the propagated columns
-//                          (meanMotion ... vel_z) need ksp::Orbit and are excluded in tests/CMakeLists.txt (pending WP-07)
+//   bodies                 every column (tidal-lock rotationPeriod and solarDayLength from the bodies' run-time Orbit)
+//   orbits                 every column: the run-time ksp::Orbit of each body (BodyOrbit) after OrbitDriver.Start and
+//                          the first CBUpdate pass at UT 0 (Orbit.Init, Orbit.UpdateFromUT(0))
 //   atmosphere_profile_1km GetPressure / GetPressureAtm / GetTemperature / GetDensity / GetSpeedOfSound
 //   body_curves            the keyframes of every FloatCurve of every body, read back from the spawned bodies
 #include <string>
@@ -12,6 +11,7 @@
 #include "celestial_env.hpp"
 #include "datasets.hpp"
 #include "golden_json.hpp"
+#include "ksp/orbit/orbit.hpp"
 
 using namespace ksp;
 using golden::ColType;
@@ -72,16 +72,20 @@ int RunBodyCatalog(const RunnerOptions& opt) {
     }
     g.tables.push_back(std::move(t));
 
-    golden::Table o("orbits", "Orbital elements relative to the parent body (serialized; propagated columns pending WP-07).");
+    golden::Table o("orbits", "Orbital elements relative to the parent body and the state at UT=0 (run-time ksp::Orbit).");
     o.Col("name", ColType::Str).Col("parent", ColType::Str).Col("reverse", ColType::Bool);
-    for (const char* c : {"inclination", "eccentricity", "semiMajorAxis", "LAN", "argumentOfPeriapsis", "meanAnomalyAtEpoch", "epoch"})
+    for (const char* c : {"inclination", "eccentricity", "semiMajorAxis", "LAN", "argumentOfPeriapsis", "meanAnomalyAtEpoch",
+                          "epoch", "meanMotion", "period", "PeR", "ApR", "ObT_UT0", "meanAnomaly_UT0", "eccentricAnomaly_UT0",
+                          "trueAnomaly_UT0", "radius_UT0", "orbitalSpeed_UT0", "pos_x", "pos_y", "pos_z", "vel_x", "vel_y", "vel_z"})
         o.Col(c, ColType::F64);
     o.key = {"name"};
     for (const CelestialBody* cb : bodies) {
         if (!cb->orbitDriver) continue;
-        const CelestialOrbitElements& e = cb->orbitDriver->orbit;
-        o.Add({cb->bodyName, cb->orbitDriver->referenceBody->bodyName, cb->orbitDriver->reverse, e.inclination, e.eccentricity,
-               e.semiMajorAxis, e.LAN, e.argumentOfPeriapsis, e.meanAnomalyAtEpoch, e.epoch});
+        const Orbit& ob = *BodyOrbit(cb);  // BodiesGen.cs: `var ob = cb.orbit`
+        o.Add({cb->bodyName, ob.referenceBody->bodyName, cb->orbitDriver->reverse, ob.inclination, ob.eccentricity,
+               ob.semiMajorAxis, ob.LAN, ob.argumentOfPeriapsis, ob.meanAnomalyAtEpoch, ob.epoch, ob.meanMotion, ob.period,
+               ob.PeR(), ob.ApR(), ob.ObT, ob.meanAnomaly, ob.eccentricAnomaly, ob.trueAnomaly, ob.radius, ob.orbitalSpeed,
+               ob.pos.x, ob.pos.y, ob.pos.z, ob.vel.x, ob.vel.y, ob.vel.z});
     }
     g.tables.push_back(std::move(o));
 
