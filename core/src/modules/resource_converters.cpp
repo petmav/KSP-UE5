@@ -137,13 +137,13 @@ bool BaseConverter::ShowDebugOptions() {
     return c->ShowDebugOptions;
 }
 
-// BaseConverter.cs:93
+// BaseConverter.cs:130
 ResourceConverter& BaseConverter::ResConverter() {
     if (!_resConverter) _resConverter = std::make_unique<ResourceConverter>(&ResBroker());
     return *_resConverter;
 }
 
-// BaseConverter.cs:95
+// BaseConverter.cs:130
 IResourceBroker& BaseConverter::ResBroker() {
     if (_resBroker == nullptr) {
         ownedBroker_ = std::make_unique<ResourceBroker>();
@@ -152,7 +152,7 @@ IResourceBroker& BaseConverter::ResBroker() {
     return *_resBroker;
 }
 
-// BaseConverter.cs:97
+// BaseConverter.cs:134
 void BaseConverter::UpdateDebugInfo(const ConverterResults& result, double deltaTime) {
     if (ShowDebugOptions()) {
         Set<std::string>("debugEffBonus", dotnet::FormatSingleG(Get<float>("EfficiencyBonus")));
@@ -161,7 +161,7 @@ void BaseConverter::UpdateDebugInfo(const ConverterResults& result, double delta
     }
 }
 
-// BaseConverter.cs:108 (`float result = SpecialistBonusBase + (1f + (float)HasSpecialist(..)) * SpecialistEfficiencyFactor`: one store)
+// BaseConverter.cs:144 (`float result = SpecialistBonusBase + (1f + (float)HasSpecialist(..)) * SpecialistEfficiencyFactor`: one store)
 float BaseConverter::GetCrewEfficiencyBonus() {
     float result = 1.0f;
     if (Get<bool>("UseSpecialistBonus")) {
@@ -172,7 +172,7 @@ float BaseConverter::GetCrewEfficiencyBonus() {
     return result;
 }
 
-// BaseConverter.cs:122
+// BaseConverter.cs:158
 float BaseConverter::GetCrewHeatBonus() {
     float result = 0.0f;
     if (Get<bool>("UseSpecialistHeatBonus")) {
@@ -183,20 +183,20 @@ float BaseConverter::GetCrewHeatBonus() {
     return result;
 }
 
-// BaseConverter.cs:134
+// BaseConverter.cs:169
 void BaseConverter::SetupDebugging() {
     const bool show = ShowDebugOptions();
     for (const char* f : {"debugEffBonus", "debugDelta", "debugTimeFac", "debugFinBon", "debugCrewBon"}) Fields()[f]->guiActive = show;
 }
 
-// BaseConverter.cs:143
+// BaseConverter.cs:178
 void BaseConverter::EnableModule() {
     isEnabled = true;
     Set<bool>("DirtyFlag", !Get<bool>("IsActivated"));
     UpdateConverterStatus();
 }
 
-// BaseConverter.cs:150
+// BaseConverter.cs:185
 void BaseConverter::DisableModule() {
     isEnabled = false;
     Set<bool>("IsActivated", false);
@@ -204,17 +204,17 @@ void BaseConverter::DisableModule() {
     UpdateConverterStatus();
 }
 
-// BaseConverter.cs:158
+// BaseConverter.cs:193
 bool BaseConverter::ModuleIsActive() { return Get<bool>("IsActivated"); }
 
-// BaseConverter.cs:163
+// BaseConverter.cs:198
 bool BaseConverter::IsAnimationGroupDeployed() {
     if (hasAnimationGroup && !(ResourceProcessingEnvironment::animationGroupDeployed ? ResourceProcessingEnvironment::animationGroupDeployed(*partAnimationModule) : true))
         return false;
     return true;
 }
 
-// BaseConverter.cs:173 (the screen message names the animation group's deploy action: not modelled, the message id is recorded)
+// BaseConverter.cs:208 (the screen message names the animation group's deploy action: not modelled, the message id is recorded)
 void BaseConverter::StartResourceConverter() {
     if (hasAnimationGroup && !IsAnimationGroupDeployed()) {
         Post("#autoLOC_6010007");
@@ -223,28 +223,28 @@ void BaseConverter::StartResourceConverter() {
     }
 }
 
-// BaseConverter.cs:188
+// BaseConverter.cs:222
 void BaseConverter::StopResourceConverter() {
     Set<bool>("IsActivated", false);
     Set<std::string>("status", Localizer::Format("#autoLOC_257112"));
 }
 
-// BaseConverter.cs:196
+// BaseConverter.cs:229
 void BaseConverter::StopResourceConverterAction(KSPActionParam&) { StopResourceConverter(); }
 
-// BaseConverter.cs:202
+// BaseConverter.cs:235
 void BaseConverter::StartResourceConverterAction(KSPActionParam&) { StartResourceConverter(); }
 
-// BaseConverter.cs:208
+// BaseConverter.cs:241
 void BaseConverter::ToggleResourceConverterAction(KSPActionParam&) {
     if (Get<bool>("IsActivated")) StopResourceConverter();
     else StartResourceConverter();
 }
 
-// BaseConverter.cs:221
+// BaseConverter.cs:253
 void BaseConverter::SetEfficiencyBonus(float bonus) { Set<float>("EfficiencyBonus", bonus); }
 
-// BaseConverter.cs:226
+// BaseConverter.cs:258
 double BaseConverter::GetDeltaTime() {
     try {
         if (!(ResourceProcessingEnvironment::timeSinceLevelLoad < 1.0f) && ResourceProcessingEnvironment::flightReady) {
@@ -271,7 +271,7 @@ double BaseConverter::GetDeltaTime() {
     }
 }
 
-// BaseConverter.cs:264
+// BaseConverter.cs:292
 double BaseConverter::GetBestDeltaTime(double deltaTime) {
     ConversionRecipe* conversionRecipe = PrepareRecipe(deltaTime);
     if (conversionRecipe == nullptr) return deltaTime;
@@ -370,7 +370,7 @@ void BaseConverter::SetupModule() {
     }
 }
 
-// BaseConverter.cs:437
+// BaseConverter.cs:434
 void BaseConverter::OnStart(StartState state) {
     SetupDebugging();
     SetupLabels();
@@ -493,14 +493,14 @@ void BaseConverter::FixedUpdate() {
     }
 }
 
-// BaseConverter.cs:568 (`_totalEfficiencyModifiers *= value`: float store per step)
+// BaseConverter.cs:557 (`_totalEfficiencyModifiers *= value`: float store per step)
 void BaseConverter::TallyEfficiencyModifiers() {
     _totalEfficiencyModifiers = 1.0f;
     if (!efficiencyModifiersCreated) throw Nre();
     for (const auto& kv : EfficiencyModifiers) _totalEfficiencyModifiers = f32store(fx(_totalEfficiencyModifiers) * fx(kv.second));
 }
 
-// BaseConverter.cs:578. KSP quirk kept: a requirement whose density exceeds 1E-09 is added to the OUTPUT list (list2), not to the
+// BaseConverter.cs:566. KSP quirk kept: a requirement whose density exceeds 1E-09 is added to the OUTPUT list (list2), not to the
 // requirement list; only low density requirements stay requirements.
 void BaseConverter::ConvertRecipeToUnits(ConversionRecipe& recipe) {
     const int count = static_cast<int>(recipe.Inputs().size());
@@ -536,7 +536,7 @@ void BaseConverter::ConvertRecipeToUnits(ConversionRecipe& recipe) {
     recipe.SetRequirements(&list3);
 }
 
-// BaseConverter.cs:640
+// BaseConverter.cs:621
 float BaseConverter::GetHeatThrottle() {
     if (!Get<bool>("IsActivated")) return 1.0f;
     Part* p = GetPart();
@@ -549,7 +549,7 @@ float BaseConverter::GetHeatThrottle() {
     return ThermalEfficiency.Evaluate(static_cast<float>(p->fields.temperature));
 }
 
-// BaseConverter.cs:657 (the screen message is recorded)
+// BaseConverter.cs:635 (the screen message is recorded)
 void BaseConverter::CheckForShutdown() {
     if (Get<bool>("AutoShutdown") && Get<bool>("GeneratesHeat")) {
         Part* p = GetPart();
@@ -561,7 +561,7 @@ void BaseConverter::CheckForShutdown() {
     }
 }
 
-// BaseConverter.cs:671
+// BaseConverter.cs:648
 int BaseConverter::HasSpecialist(const std::string& effect) {
     int num = -1;
     const ProcessingVessel* v = Vessel();
@@ -578,7 +578,7 @@ int BaseConverter::HasSpecialist(const std::string& effect) {
     return num;
 }
 
-// BaseConverter.cs:692
+// BaseConverter.cs:671
 bool BaseConverter::IsOverheating() {
     Part* p = GetPart();
     if (PartModule* core = p->FindModuleOfClass("ModuleCoreHeat")) {
@@ -588,7 +588,7 @@ bool BaseConverter::IsOverheating() {
     return false;
 }
 
-// BaseConverter.cs:711
+// BaseConverter.cs:689
 void BaseConverter::PostProcess(const ConverterResults& result, double deltaTime) {
     if (result.TimeFactor <= 1E-09) {
         Set<std::string>("status", result.Status);
@@ -603,25 +603,25 @@ void BaseConverter::PostProcess(const ConverterResults& result, double deltaTime
     }
 }
 
-// BaseConverter.cs:738
+// BaseConverter.cs:708
 ConversionRecipe* BaseConverter::PrepareRecipe(double) {
     log::Info("[RESOURCES] No Implementation of PrepareRecipe in derived class");
     return nullptr;
 }
 
-// BaseConverter.cs:745
+// BaseConverter.cs:714
 bool BaseConverter::IsSituationValid() {
     log::Info("[RESOURCES] No Implementation of IsSituationValid in derived class");
     return true;
 }
 
-// BaseConverter.cs:751
+// BaseConverter.cs:720
 void BaseConverter::OnOverheat(double) {}
 
-// BaseConverter.cs:763
+// BaseConverter.cs:732
 bool BaseConverter::DisplayCoreHeat() { return GetPart()->FindModuleOfClass("ModuleCoreHeat") != nullptr; }
 
-// BaseConverter.cs:768
+// BaseConverter.cs:737
 double BaseConverter::GetCoreTemperature() {
     Part* p = GetPart();
     PartModule* core = p->FindModuleOfClass("ModuleCoreHeat");
@@ -629,7 +629,7 @@ double BaseConverter::GetCoreTemperature() {
     return ResourceProcessingEnvironment::coreTemperature ? ResourceProcessingEnvironment::coreTemperature(*core) : 0.0;
 }
 
-// BaseConverter.cs:778 (CoreTempGoal + CoreTempGoalAdjustment)
+// BaseConverter.cs:747 (CoreTempGoal + CoreTempGoalAdjustment)
 double BaseConverter::GetGoalTemperature() {
     Part* p = GetPart();
     PartModule* core = p->FindModuleOfClass("ModuleCoreHeat");
@@ -637,10 +637,10 @@ double BaseConverter::GetGoalTemperature() {
     return core->Get<double>("CoreTempGoal") + core->Get<double>("CoreTempGoalAdjustment");
 }
 
-// BaseConverter.cs:803
+// BaseConverter.cs:772
 std::string BaseConverter::GetModuleDisplayName() { return Localizer::Format("#autoLoc_6003020"); }
 
-// BaseConverter.cs:808 (the cached strings are read through Localizer.Format at use: the cache holds the same text)
+// BaseConverter.cs:777 (the cached strings are read through Localizer.Format at use: the cache holds the same text)
 void BaseConverter::CacheLocalStrings() {}
 
 // BaseDrill.cs:14
@@ -758,7 +758,7 @@ ConversionRecipe* ModuleResourceHarvester::PrepareRecipe(double deltaTime) {
     }
 }
 
-// ModuleResourceHarvester.cs:273 (intakeTransform.forward: the model's transform, host hook; none = multiplier 1)
+// ModuleResourceHarvester.cs:250 (intakeTransform.forward: the model's transform, host hook; none = multiplier 1)
 double ModuleResourceHarvester::GetIntakeMultiplier() {
     const ProcessingVessel* v = Vessel();
     if (v == nullptr) throw Nre();
@@ -778,7 +778,7 @@ double ModuleResourceHarvester::GetIntakeMultiplier() {
     return num3 * num4;
 }
 
-// ModuleResourceHarvester.cs:298
+// ModuleResourceHarvester.cs:271
 void ModuleResourceHarvester::PostUpdateCleanup() {
     if (Get<bool>("IsActivated")) {
         if (_displayedResFlow != _resFlow) {
@@ -792,7 +792,7 @@ void ModuleResourceHarvester::PostUpdateCleanup() {
     }
 }
 
-// ModuleResourceHarvester.cs:321
+// ModuleResourceHarvester.cs:291
 void ModuleResourceHarvester::LoadRecipe(double harvestRate) {
     recipe.Clear();
     try {
@@ -816,7 +816,7 @@ void ModuleResourceHarvester::LoadRecipe(double harvestRate) {
     }
 }
 
-// ModuleResourceHarvester.cs:359
+// ModuleResourceHarvester.cs:324
 void ModuleResourceHarvester::PostProcess(const ConverterResults& result, double deltaTime) {
     if (Get<bool>("CausesDepletion")) {
         const ProcessingVessel* v = Vessel();
@@ -842,14 +842,14 @@ void ModuleResourceHarvester::PostProcess(const ConverterResults& result, double
     }
 }
 
-// ModuleResourceHarvester.cs:402 (Physics.Raycast(impact ray, ImpactRange, layer 32768): host hook)
+// ModuleResourceHarvester.cs:348 (Physics.Raycast(impact ray, ImpactRange, layer 32768): host hook)
 bool ModuleResourceHarvester::CheckForImpact() {
     if (!Get<std::string>("ImpactTransform").empty() && hasImpactTransform)
         return ResourceProcessingEnvironment::impactRaycast ? ResourceProcessingEnvironment::impactRaycast(*this) : true;
     return true;
 }
 
-// ModuleResourceHarvester.cs:413
+// ModuleResourceHarvester.cs:358
 bool ModuleResourceHarvester::IsSituationValid() {
     if (!ResourceFlowEnvironment::LoadedSceneIsFlight()) return false;
     const ProcessingVessel* v = Vessel();
@@ -898,7 +898,7 @@ bool ModuleResourceHarvester::IsSituationValid() {
     }
 }
 
-// ModuleResourceHarvester.cs:466 (base.OnUpdate() is the empty PartModule.OnUpdate)
+// ModuleResourceHarvester.cs:428 (base.OnUpdate() is the empty PartModule.OnUpdate)
 void ModuleResourceHarvester::PreProcessing() {
     const bool flag = isEnabled;
     _isValidSituation = IsSituationValid();
@@ -907,17 +907,17 @@ void ModuleResourceHarvester::PreProcessing() {
     PartModule::OnUpdate();
 }
 
-// ModuleResourceHarvester.cs:482
+// ModuleResourceHarvester.cs:443
 std::vector<const PartResourceDefinition*> ModuleResourceHarvester::GetConsumedResources() { return {DefByName("ElectricCharge")}; }
 
-// ModuleResourceHarvester.cs:487
+// ModuleResourceHarvester.cs:448
 std::string ModuleResourceHarvester::GetModuleDisplayName() { return Localizer::Format("#autoLoc_6003054"); }
 
 void ModuleResourceHarvester::CacheLocalStrings() {}
 
 // ============================================== asteroid / comet drills =========================================================
 
-// ModuleAsteroidDrill.cs:45 / ModuleCometDrill.cs:45
+// ModuleAsteroidDrill.cs:50 / ModuleCometDrill.cs:45
 ConversionRecipe* ModuleSpaceObjectDrillBase::PrepareRecipe(double deltaTime) {
     _status = "Connected";
     _potato = GetAttachedPotato();
@@ -989,14 +989,14 @@ ConversionRecipe* ModuleSpaceObjectDrillBase::PrepareRecipe(double deltaTime) {
     return &recipe;
 }
 
-// ModuleAsteroidDrill.cs:170 (the raycast and GetComponentUpwards<ModuleAsteroid>: host hook)
+// ModuleAsteroidDrill.cs:154 (the raycast and GetComponentUpwards<ModuleAsteroid>: host hook)
 bool ModuleSpaceObjectDrillBase::CheckForImpact() {
     if (!(Get<std::string>("ImpactTransform").empty()) && hasImpactTransform)
         return ResourceProcessingEnvironment::impactRaycast ? ResourceProcessingEnvironment::impactRaycast(*this) : false;
     return true;
 }
 
-// ModuleAsteroidDrill.cs:190 (the vessel's parts from the last: the first with the object module)
+// ModuleAsteroidDrill.cs:170 (the vessel's parts from the last: the first with the object module)
 Part* ModuleSpaceObjectDrillBase::GetAttachedPotato() {
     const ProcessingVessel* v = Vessel();
     if (v == nullptr) throw Nre();
@@ -1007,7 +1007,7 @@ Part* ModuleSpaceObjectDrillBase::GetAttachedPotato() {
     return nullptr;
 }
 
-// ModuleAsteroidDrill.cs:214
+// ModuleAsteroidDrill.cs:208
 bool ModuleSpaceObjectDrillBase::IsSituationValid() {
     const ProcessingVessel* v = Vessel();
     if (v == nullptr) throw Nre();
@@ -1021,7 +1021,7 @@ bool ModuleSpaceObjectDrillBase::IsSituationValid() {
     return false;
 }
 
-// ModuleAsteroidDrill.cs:234
+// ModuleAsteroidDrill.cs:205
 void ModuleSpaceObjectDrillBase::OnUpdate() {
     bool isValidSituation;
     if ((isValidSituation = IsSituationValid()) != _isValidSituation) {
@@ -1032,7 +1032,7 @@ void ModuleSpaceObjectDrillBase::OnUpdate() {
     BaseDrill::OnUpdate();
 }
 
-// ModuleAsteroidDrill.cs:253
+// ModuleAsteroidDrill.cs:222
 void ModuleSpaceObjectDrillBase::OnStart(StartState state) {
     BaseDrill::OnStart(state);
     if (ResourceFlowEnvironment::LoadedSceneIsFlight()) {
@@ -1087,18 +1087,18 @@ double ModuleSpaceObjectInfo::currentMassVal() const {
     if (!dotnet::TryParseDouble(Get<std::string>("currentMass"), result)) result = 0.0;
     return result;
 }
-// :41
+// ModuleSpaceObjectInfo.cs:31
 void ModuleSpaceObjectInfo::set_currentMassVal(double v) { Set<std::string>("currentMass", dotnet::FormatDoubleG(v, 17)); }
-// :46
+// ModuleSpaceObjectInfo.cs:46
 double ModuleSpaceObjectInfo::massThresholdVal() const {
     double result = 0.0;
     if (!dotnet::TryParseDouble(Get<std::string>("massThreshold"), result)) result = 0.0;
     return result;
 }
-// :57
+// ModuleSpaceObjectInfo.cs:45
 void ModuleSpaceObjectInfo::set_massThresholdVal(double v) { Set<std::string>("massThreshold", dotnet::FormatDoubleG(v, 17)); }
 
-// ModuleSpaceObjectInfo.cs:62
+// ModuleSpaceObjectInfo.cs:59
 void ModuleSpaceObjectInfo::SetupSpaceObjectResources(const std::vector<ModuleSpaceObjectResource*>& resInfoList) {
     if (!ResourceFlowEnvironment::LoadedSceneIsFlight()) return;
     KSPRandom kSPRandom(ResourceEnvironment::TickCount());
@@ -1156,7 +1156,7 @@ void ModuleSpaceObjectInfoBase::OnStart(StartState state) {
     }
 }
 
-// :31
+// ModuleAsteroidInfo.cs:31
 void ModuleSpaceObjectInfoBase::SetupAsteroidResources() {
     Part* p = dynamic_cast<Part*>(part);
     resInfoList.clear();
@@ -1165,7 +1165,7 @@ void ModuleSpaceObjectInfoBase::SetupAsteroidResources() {
     SetupSpaceObjectResources(resInfoList);
 }
 
-// :37 (displayMass / resources are text fields)
+// ModuleAsteroidInfo.cs:37 (displayMass / resources are text fields)
 void ModuleSpaceObjectInfoBase::Update() {
     if (ResourceFlowEnvironment::LoadedSceneIsFlight()) {
         Set<std::string>("displayMass", Fmt(currentMassVal(), 5) + "t");
@@ -1179,12 +1179,12 @@ void ModuleSpaceObjectInfoBase::Update() {
 // ModuleAnalysisResource.cs:16
 void ModuleAnalysisResource::OnStart(StartState) { Fields()["status"]->guiName = Get<std::string>("resourceName"); }
 
-// :22
+// ModuleAnalysisResource.cs:22
 void ModuleAnalysisResource::Update() {
     if (ResourceFlowEnvironment::LoadedSceneIsFlight()) SetupAnalysis();
 }
 
-// :30 (`$"{displayAbundance * 100f:0.0000}%"`: float product, formatted)
+// ModuleAnalysisResource.cs:30 (`$"{displayAbundance * 100f:0.0000}%"`: float product, formatted)
 void ModuleAnalysisResource::SetupAnalysis() {
     if (static_cast<double>(Get<float>("abundance")) > 1E-09) {
         Fields()["status"]->guiActive = true;
@@ -1228,7 +1228,7 @@ void ModuleSpaceObjectAnalysisBase::OnStart(StartState) {
     }
 }
 
-// :15
+// ModuleAsteroidAnalysis.cs:15
 void ModuleSpaceObjectAnalysisBase::OnDestroy() {
     analyzers.clear();
     if (subscribed_) GE::onVesselWasModified.Remove(this, &ModuleSpaceObjectAnalysisBase::CheckForPotato);
@@ -1239,7 +1239,7 @@ ModuleSpaceObjectAnalysisBase::~ModuleSpaceObjectAnalysisBase() {
     if (subscribed_) GE::onVesselWasModified.Remove(this, &ModuleSpaceObjectAnalysisBase::CheckForPotato);
 }
 
-// :21 (v.FindPartModuleImplementing<ModuleAsteroid>(): the vessel's parts through the processing record of the module's part)
+// ModuleAsteroidAnalysis.cs:21 (v.FindPartModuleImplementing<ModuleAsteroid>(): the vessel's parts through the processing record of the module's part)
 void ModuleSpaceObjectAnalysisBase::CheckForPotato(Vessel*) {
     const ProcessingVessel* v = ResourceProcessingEnvironment::VesselOf(dynamic_cast<Part*>(part));
     PartModule* obj = nullptr;
@@ -1250,7 +1250,7 @@ void ModuleSpaceObjectAnalysisBase::CheckForPotato(Vessel*) {
     else ClearAsteroidResources();
 }
 
-// :34
+// ModuleAsteroidAnalysis.cs:34
 void ModuleSpaceObjectAnalysisBase::ClearAsteroidResources() {
     Part* p = dynamic_cast<Part*>(part);
     if (potatoPart != nullptr) {
@@ -1269,7 +1269,7 @@ void ModuleSpaceObjectAnalysisBase::ClearAsteroidResources() {
     analyzers.clear();
 }
 
-// :56
+// ModuleAsteroidAnalysis.cs:56
 void ModuleSpaceObjectAnalysisBase::FindAsteroidResources(Part* pp) {
     if (potatoPart != nullptr && potatoPart != pp) ClearAsteroidResources();
     potatoPart = pp;

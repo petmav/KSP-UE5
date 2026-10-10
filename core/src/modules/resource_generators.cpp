@@ -43,17 +43,17 @@ void ModuleGenerator::OnAwake() {
     Actions().Bind("ShutdownAction", [this](KSPActionParam& p) { ShutdownAction(p); });
 }
 
-// ModuleGenerator.cs:58 (KSPActionType: Activate 0, Deactivate 1, Toggle 2)
+// ModuleGenerator.cs:65 (KSPActionType: Activate 0, Deactivate 1, Toggle 2)
 void ModuleGenerator::ToggleAction(KSPActionParam& param) {
     if (param.type != 0 && (param.type != static_cast<int>(KSPActionType::Toggle) || Get<bool>("generatorIsActive"))) Shutdown();
     else Activate();
 }
-// :71
+// ModuleGenerator.cs:78
 void ModuleGenerator::ActivateAction(KSPActionParam&) { Activate(); }
-// :77
+// ModuleGenerator.cs:84
 void ModuleGenerator::ShutdownAction(KSPActionParam&) { Shutdown(); }
 
-// :83
+// ModuleGenerator.cs:90
 void ModuleGenerator::Activate() {
     if (!Get<bool>("isAlwaysActive")) {
         Set<bool>("generatorIsActive", true);
@@ -61,7 +61,7 @@ void ModuleGenerator::Activate() {
         Events()["Activate"]->active = false;
     }
 }
-// :95
+// ModuleGenerator.cs:95
 void ModuleGenerator::Shutdown() {
     if (!Get<bool>("isAlwaysActive")) {
         Set<bool>("generatorIsActive", false);
@@ -70,7 +70,7 @@ void ModuleGenerator::Shutdown() {
     }
 }
 
-// :107
+// ModuleGenerator.cs:111
 void ModuleGenerator::OnStart(StartState state) {
     const bool moduleIsEnabled = Get<bool>("moduleIsEnabled");
     const bool isAlwaysActive = Get<bool>("isAlwaysActive");
@@ -93,7 +93,7 @@ void ModuleGenerator::OnStart(StartState state) {
     if (state != StartState::Editor && isAlwaysActive) Set<bool>("generatorIsActive", moduleIsEnabled);
 }
 
-// :163. cacheAutoLOC_219034 / cacheAutoLOC_220477 are Localizer.Format of the two ids, taken once.
+// ModuleGenerator.cs:147. cacheAutoLOC_219034 / cacheAutoLOC_220477 are Localizer.Format of the two ids, taken once.
 void ModuleGenerator::FixedUpdate() {
     if (Get<bool>("generatorIsActive") && Get<bool>("moduleIsEnabled")) {
         inputRecieved = 1.0;
@@ -144,10 +144,10 @@ void ModuleGenerator::FixedUpdate() {
     }
 }
 
-// :246
+// ModuleGenerator.cs:234
 std::string ModuleGenerator::GetModuleDisplayName() { return Localizer::Format("#autoLoc_6003042"); }
 
-// :269
+// ModuleGenerator.cs:255
 float ModuleGenerator::ApplyEfficiencyAdjustments(float efficiency) {
     for (const auto& a : efficiencyAdjusters) efficiency = a(efficiency);
     return efficiency;
@@ -155,10 +155,10 @@ float ModuleGenerator::ApplyEfficiencyAdjustments(float efficiency) {
 
 // ================================================== ModuleAlternator ===========================================================
 
-// ModuleAlternator.cs:31 (fld = Fields["outputRate"]; the events of this class: none)
+// ModuleAlternator.cs:44 (fld = Fields["outputRate"]; the events of this class: none)
 void ModuleAlternator::OnAwake() { resHandler.moduleResourceBasedPrimaryIsInput = false; }
 
-// :37 (does not call base.OnLoad)
+// ModuleAlternator.cs:50 (does not call base.OnLoad)
 void ModuleAlternator::OnLoad(const ConfigNode&) {
     BaseField* fld = Fields()["outputRate"];
     fld->guiName = Get<std::string>("outputName");
@@ -166,7 +166,7 @@ void ModuleAlternator::OnLoad(const ConfigNode&) {
     fld->guiFormat = Get<std::string>("outputFormat");
 }
 
-// :44
+// ModuleAlternator.cs:57
 void ModuleAlternator::OnStart(StartState) {
     BaseField* fld = Fields()["outputRate"];
     fld->guiName = Get<std::string>("outputName");
@@ -193,7 +193,7 @@ void ModuleAlternator::OnStart(StartState) {
     // engineNormalizedOutput
 }
 
-// :106
+// ModuleAlternator.cs:110
 void ModuleAlternator::FixedUpdate() {
     if (!ResourceFlowEnvironment::LoadedSceneIsFlight() || !Get<bool>("moduleIsEnabled")) return;
     float num = 0.0f;
@@ -205,13 +205,13 @@ void ModuleAlternator::FixedUpdate() {
     if (num > 0.0f) Set<float>("outputRate", static_cast<float>(resHandler.UpdateModuleResourceOutputs(static_cast<double>(num), Get<double>("singleTickThreshold"))));
 }
 
-// :154
+// ModuleAlternator.cs:150
 float ModuleAlternator::ApplyOutputAdjustments(float output) {
     for (const auto& a : outputAdjusters) output = a(output);
     return output;
 }
 
-// :163
+// ModuleAlternator.cs:159
 std::string ModuleAlternator::GetModuleDisplayName() { return Localizer::Format("#autoLoc_6003026"); }
 
 // ================================================== ModuleFuelJettison =========================================================
@@ -237,7 +237,7 @@ void ModuleFuelJettison::FuelJettison() {
     }
 }
 
-// :28 (the screen message `Localizer.Format("#autoLOC_6001051", amount.ToString("0.00"), info.displayName)` is recorded)
+// ModuleFuelJettison.cs:28 (the screen message `Localizer.Format("#autoLOC_6001051", amount.ToString("0.00"), info.displayName)` is recorded)
 void ModuleFuelJettison::Dump(PartResource& res) {
     Part* p = PartOf(*this);
     ResourceProcessingEnvironment::screenMessages.push_back(
@@ -245,10 +245,10 @@ void ModuleFuelJettison::Dump(PartResource& res) {
     p->TransferResource(res, std::numeric_limits<double>::lowest(), p);  // double.MinValue
 }
 
-// :35
+// ModuleFuelJettison.cs:35
 void ModuleFuelJettison::FuelJettisonAction(KSPActionParam&) { FuelJettison(); }
 
-// :40
+// ModuleFuelJettison.cs:40
 void ModuleFuelJettison::OnStart(StartState) {
     const std::string ResourceName = IsNull("ResourceName") ? std::string() : Get<std::string>("ResourceName");
     if (!ResourceName.empty()) {
@@ -259,8 +259,8 @@ void ModuleFuelJettison::OnStart(StartState) {
 
 // ================================================== ModuleResourceDrain ========================================================
 
+// ModuleResourceDrain.cs:110
 void ModuleResourceDrain::OnAwake() {
-    // ModuleResourceDrain.cs:110
     Actions()["ToggleResourceDrainAction"]->SetGuiName(Localizer::Format("#autoLOC_6006002"));
     Actions()["ToggleResourceDrainFlowAction"]->SetGuiName(Localizer::Format("#autoLOC_6006016"));
     Fields()["flowMode"]->guiName = Localizer::Format("#autoLOC_6006015");
@@ -273,7 +273,7 @@ void ModuleResourceDrain::OnAwake() {
     Actions().Bind("ToggleResourceDrainFlowAction", [this](KSPActionParam& p) { ToggleResourceDrainFlowAction(p); });
 }
 
-// :121 (the GameEvents / OnValueModified subscriptions are the host's: onPartResourceListChange -> OnPartResourceListChanged)
+// ModuleResourceDrain.cs:121 (the GameEvents / OnValueModified subscriptions are the host's: onPartResourceListChange -> OnPartResourceListChanged)
 void ModuleResourceDrain::OnStart(StartState) {
     Set<float>("drainRate", Mathf::Clamp(Get<float>("drainRate"), minDrainRate, maxDrainRate));
     Part* p = PartOf(*this);
@@ -291,38 +291,38 @@ void ModuleResourceDrain::OnStart(StartState) {
     Initialize();
 }
 
-// :147
+// ModuleResourceDrain.cs:147
 void ModuleResourceDrain::OnStartFinished(StartState) {
     if (IsDraining()) CheckDrainingForEffects();
 }
 
-// :157
+// ModuleResourceDrain.cs:157
 void ModuleResourceDrain::FixedUpdate() {
     if (isDraining() && snapshot != nullptr) DrainPart();
 }
 
-// :165
+// ModuleResourceDrain.cs:165
 void ModuleResourceDrain::OnDestroy() {}
 
-// :173
+// ModuleResourceDrain.cs:173
 void ModuleResourceDrain::StartResourceDrainAction(KSPActionParam&) { TurnOnDrain(); }
-// :179
+// ModuleResourceDrain.cs:179
 void ModuleResourceDrain::StopResourceDrainAction(KSPActionParam&) { TurnOffDrain(); }
-// :185
+// ModuleResourceDrain.cs:185
 void ModuleResourceDrain::ToggleResourceDrainAction(KSPActionParam&) { ToggleDrain(); }
-// :191
+// ModuleResourceDrain.cs:191
 void ModuleResourceDrain::ToggleResourceDrainFlowAction(KSPActionParam&) { TogglePartFlowMode(); }
-// :197
+// ModuleResourceDrain.cs:202
 void ModuleResourceDrain::TogglePartFlowMode() { Set<bool>("flowMode", !Get<bool>("flowMode")); }
 
-// :207
+// ModuleResourceDrain.cs:207
 void ModuleResourceDrain::OnPartResourceListChanged(Part* hostPart) {
     Part* p = PartOf(*this);
     if (p == nullptr || p->parent == nullptr) throw Nre();
     if (hostPart->fields.persistentId == p->parent->fields.persistentId) LoadResources();
 }
 
-// :232 (UI_Resources lookups are UI; the action names and the axis field limits are state)
+// ModuleResourceDrain.cs:223 (UI_Resources lookups are UI; the action names and the axis field limits are state)
 void ModuleResourceDrain::Initialize() {
     LoadResources();
     Actions()["StartResourceDrainAction"]->SetGuiName(Localizer::Format("#autoLOC_6006003"));
@@ -336,7 +336,7 @@ void ModuleResourceDrain::Initialize() {
     Fields()["noResourceAvailable"]->guiActiveEditor = resourcesAvailable.size() <= 0;
 }
 
-// :265
+// ModuleResourceDrain.cs:254
 void ModuleResourceDrain::LoadResources() {
     Part* p = PartOf(*this);
     if (p == nullptr) throw Nre();
@@ -354,7 +354,7 @@ void ModuleResourceDrain::LoadResources() {
     if (loadedResources && !loadedResources->empty()) UpdateResourcesToRelease(*loadedResources);
 }
 
-// :290
+// ModuleResourceDrain.cs:277
 void ModuleResourceDrain::LoadResourcesAvailable() {
     Part* p = PartOf(*this);
     if (p->parent != nullptr) {
@@ -376,7 +376,7 @@ void ModuleResourceDrain::LoadResourcesAvailable() {
     }
 }
 
-// :316
+// ModuleResourceDrain.cs:302
 void ModuleResourceDrain::UpdateVFXToUse() {
     if (highestPriorityFXGroup) fxGroupActive[*highestPriorityFXGroup] = false;
     if (!resourceDrainStatus.empty()) {
@@ -394,7 +394,7 @@ void ModuleResourceDrain::UpdateVFXToUse() {
     if (highestPriorityFXGroup && IsDraining() && !ResourceFlowEnvironment::LoadedSceneIsEditor()) fxGroupActive[*highestPriorityFXGroup] = true;
 }
 
-// :349
+// ModuleResourceDrain.cs:337
 void ModuleResourceDrain::UpdatePriorityIndices() {
     highestValue = 0;
     for (size_t i = 0; i < resourceDrainStatus.size(); i++) {
@@ -406,7 +406,7 @@ void ModuleResourceDrain::UpdatePriorityIndices() {
     }
 }
 
-// :378 (`maxAmount / (double)(100f / drainRate) * (double)TimeWarp.deltaTime`)
+// ModuleResourceDrain.cs:350 (`maxAmount / (double)(100f / drainRate) * (double)TimeWarp.deltaTime`)
 bool ModuleResourceDrain::HasEnoughDrainingResources() {
     bool result = false;
     Part* p = PartOf(*this);
@@ -430,7 +430,7 @@ bool ModuleResourceDrain::HasEnoughDrainingResources() {
     return result;
 }
 
-// :406
+// ModuleResourceDrain.cs:376
 bool ModuleResourceDrain::DrainResourceNotFinished(int rdsIndex) {
     Part* parent = PartOf(*this)->parent;
     double amount = 0.0, maxAmount = 0.0;
@@ -442,7 +442,7 @@ bool ModuleResourceDrain::DrainResourceNotFinished(int rdsIndex) {
     return false;
 }
 
-// :429
+// ModuleResourceDrain.cs:392
 void ModuleResourceDrain::UpdateResourcesToRelease(const std::vector<std::string>& resourceNames, bool exclude) {
     if (exclude) {
         for (size_t i = 0; i < resourceNames.size(); i++)
@@ -457,7 +457,7 @@ void ModuleResourceDrain::UpdateResourcesToRelease(const std::vector<std::string
     if (ResourcesToDrain() <= 0) set_IsDraining(false);
 }
 
-// :455
+// ModuleResourceDrain.cs:455
 void ModuleResourceDrain::DrainPart() {
     drainAmount = 0.0;
     amtReceived = 0.0;
@@ -488,19 +488,19 @@ void ModuleResourceDrain::DrainPart() {
     if (flag) UpdateVFXToUse();
 }
 
-// :513
+// ModuleResourceDrain.cs:501
 bool ModuleResourceDrain::PartContainsResource(const std::string& partResource) {
     Part* p = PartOf(*this);
     if (p->parent == nullptr) return false;
     return p->parent->ResourceList().Contains(partResource);
 }
 
-// :520
+// ModuleResourceDrain.cs:510
 void ModuleResourceDrain::TurnOnDrain() {
     if (ResourcesToDrain() > 0 && HasEnoughDrainingResources()) set_IsDraining(true);
 }
 
-// :483
+// ModuleResourceDrain.cs:518
 void ModuleResourceDrain::CheckDrainingForEffects() {
     if (!ResourceFlowEnvironment::LoadedSceneIsEditor() && highestPriorityFXGroup) {
         if (IsDraining() && ResourcesToDrain() > 0 && ResourcesToDrainHaveFX() && HasEnoughDrainingResources()) {
@@ -512,22 +512,22 @@ void ModuleResourceDrain::CheckDrainingForEffects() {
     }
 }
 
-// :534
+// ModuleResourceDrain.cs:534
 void ModuleResourceDrain::TurnOffDrain() { set_IsDraining(false); }
-// :539
+// ModuleResourceDrain.cs:539
 void ModuleResourceDrain::TurnOffDrain(const std::vector<std::string>& resourcesToStopDraining) { UpdateResourcesToRelease(resourcesToStopDraining, true); }
 
-// :544
+// ModuleResourceDrain.cs:544
 void ModuleResourceDrain::ToggleDrain() {
     set_IsDraining(!IsDraining());
     if (IsDraining()) TurnOnDrain();
     else TurnOffDrain();
 }
 
-// :557
+// ModuleResourceDrain.cs:557
 bool ModuleResourceDrain::IsResourceDraining(PartResource& pR) { return GetResourceDrainStatus(pR); }
 
-// :561
+// ModuleResourceDrain.cs:561
 PartResource* ModuleResourceDrain::GetPartResource(const std::string& resourceName) {
     Part* p = PartOf(*this);
     if (p->parent == nullptr) return nullptr;
@@ -537,19 +537,19 @@ PartResource* ModuleResourceDrain::GetPartResource(const std::string& resourceNa
     return nullptr;
 }
 
-// :585
+// ModuleResourceDrain.cs:585
 void ModuleResourceDrain::TogglePartResource(PartResource* resource, bool status) {
     if (resource != nullptr) UpdateResourceDrainStatus(resource->info->id(), status);
 }
 
-// :595
+// ModuleResourceDrain.cs:595
 void ModuleResourceDrain::UpdateResourceDrainStatus(int resourceID, bool status) {
     for (auto& s : resourceDrainStatus)
         if (s.resource->id() == resourceID) s.isDraining = status;
     UpdateVFXToUse();
 }
 
-// :607 (writes the `resourcesDraining` field)
+// ModuleResourceDrain.cs:607 (writes the `resourcesDraining` field)
 int ModuleResourceDrain::ResourcesToDrain() {
     int n = 0;
     for (const auto& s : resourceDrainStatus)
@@ -558,14 +558,14 @@ int ModuleResourceDrain::ResourcesToDrain() {
     return n;
 }
 
-// :621
+// ModuleResourceDrain.cs:618
 bool ModuleResourceDrain::ResourcesToDrainHaveFX() {
     for (const auto& s : resourceDrainStatus)
         if ((ResourceFlowEnvironment::InfinitePropellant || s.isDraining) && s.showDrainFX) return true;
     return false;
 }
 
-// :636
+// ModuleResourceDrain.cs:636
 bool ModuleResourceDrain::GetResourceDrainStatus(PartResource& resource) {
     size_t num = 0;
     while (true) {
@@ -580,7 +580,7 @@ bool ModuleResourceDrain::GetResourceDrainStatus(PartResource& resource) {
     return true;
 }
 
-// :90 / :95 (the property setter)
+// ModuleResourceDrain.cs:94 / :95 (the property setter)
 void ModuleResourceDrain::set_IsDraining(bool v) {
     Set<bool>("isDraining", v);
     CheckDrainingForEffects();
@@ -588,7 +588,7 @@ void ModuleResourceDrain::set_IsDraining(bool v) {
     if (highestPriorityFXGroup) fxGroupPower[*highestPriorityFXGroup] = f32store(fx(Get<float>("drainRate")) * fx(0.05f));
 }
 
-// :675
+// ModuleResourceDrain.cs:675
 void ModuleResourceDrain::OnSave(ConfigNode& node) {
     PartModule::OnSave(node);
     if (!resourcesAvailable.empty()) {
@@ -601,7 +601,7 @@ void ModuleResourceDrain::OnSave(ConfigNode& node) {
     }
 }
 
-// :696
+// ModuleResourceDrain.cs:696
 void ModuleResourceDrain::OnLoad(const ConfigNode& node) {
     PartModule::OnLoad(node);
     node.TryGetValue("resourcesToRelease", loadedSavedResources);

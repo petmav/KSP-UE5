@@ -150,56 +150,56 @@ public:
     int catchupRetries = 0;
     static constexpr int MAX_CATCHUP_RETRIES = 10;
 
-    ResourceConverter& ResConverter();   // :93 (virtual property)
-    IResourceBroker& ResBroker();        // :95
-    virtual void UpdateDebugInfo(const ConverterResults& result, double deltaTime);  // :97
-    virtual float GetCrewEfficiencyBonus();                                          // :108
-    virtual float GetCrewHeatBonus();                                                // :122
-    virtual void SetupDebugging();                                                   // :134
-    virtual void EnableModule();                                                     // :143
-    virtual void DisableModule();                                                    // :150
-    virtual bool ModuleIsActive();                                                   // :158
-    bool IsAnimationGroupDeployed();                                                 // :163 (private)
-    void StartResourceConverter();                                                   // :173 [KSPEvent]
-    void StopResourceConverter();                                                    // :188 [KSPEvent]
-    void StopResourceConverterAction(KSPActionParam& param);                         // :196 [KSPAction]
-    void StartResourceConverterAction(KSPActionParam& param);                        // :202
-    void ToggleResourceConverterAction(KSPActionParam& param);                       // :208
-    virtual void SetEfficiencyBonus(float bonus);                                    // :221
-    virtual double GetDeltaTime();                                                   // :226
-    double GetBestDeltaTime(double deltaTime);                                       // :264
+    ResourceConverter& ResConverter();   // :130 (virtual property)
+    IResourceBroker& ResBroker();        // :130
+    virtual void UpdateDebugInfo(const ConverterResults& result, double deltaTime);  // :134
+    virtual float GetCrewEfficiencyBonus();                                          // :144
+    virtual float GetCrewHeatBonus();                                                // :158
+    virtual void SetupDebugging();                                                   // :169
+    virtual void EnableModule();                                                     // :178
+    virtual void DisableModule();                                                    // :185
+    virtual bool ModuleIsActive();                                                   // :193
+    bool IsAnimationGroupDeployed();                                                 // :198 (private)
+    void StartResourceConverter();                                                   // :208 [KSPEvent]
+    void StopResourceConverter();                                                    // :222 [KSPEvent]
+    void StopResourceConverterAction(KSPActionParam& param);                         // :229 [KSPAction]
+    void StartResourceConverterAction(KSPActionParam& param);                        // :235
+    void ToggleResourceConverterAction(KSPActionParam& param);                       // :241
+    virtual void SetEfficiencyBonus(float bonus);                                    // :253
+    virtual double GetDeltaTime();                                                   // :258
+    double GetBestDeltaTime(double deltaTime);                                       // :292
     virtual void UpdateConverterStatus();                                            // :326
     void OnLoad(const ConfigNode& node) override;                                    // :342
     virtual void SetupLabels();                                                      // :400
     virtual void SetupModule();                                                      // :420
-    void OnStart(StartState state) override;                                         // :437
+    void OnStart(StartState state) override;                                         // :434
     void OnAwake() override;                                                         // :460
     void OnSave(ConfigNode& node) override;                                          // :486
     // Unity's Instantiate: the public serialisable members (the three ResourceRatio lists) travel with the KSPFields
     void CopySerializedFrom(const PartModule& from) override;
     virtual double GetEfficiencyMultiplier();                                        // :493
     virtual void FixedUpdate();                                                      // :500 (Unity message)
-    virtual void TallyEfficiencyModifiers();                                         // :568
-    virtual void ConvertRecipeToUnits(ConversionRecipe& recipe);                     // :578
-    virtual float GetHeatThrottle();                                                 // :640
-    virtual void CheckForShutdown();                                                 // :657
-    virtual int HasSpecialist(const std::string& effect);                            // :671
-    virtual bool IsOverheating();                                                    // :692
-    virtual void PreProcessing() {}                                                  // :703
-    virtual void PostUpdateCleanup() {}                                              // :707
-    virtual void PostProcess(const ConverterResults& result, double deltaTime);      // :711
-    virtual ConversionRecipe* PrepareRecipe(double deltatime);                       // :738
-    virtual bool IsSituationValid();                                                 // :745
-    virtual void OnOverheat(double amount = 1.0);                                    // :751
-    virtual double GetFlux() { return lastHeatFlux; }                                // :758
-    virtual bool DisplayCoreHeat();                                                  // :763
-    virtual double GetCoreTemperature();                                             // :768
-    virtual double GetGoalTemperature();                                             // :778
-    virtual bool CanBeDetached() { return !Get<bool>("IsActivated"); }               // :788
-    virtual bool CanBeOffset() { return !Get<bool>("IsActivated"); }                 // :793
-    virtual bool CanBeRotated() { return !Get<bool>("IsActivated"); }                // :798
-    std::string GetModuleDisplayName() override;                                     // :803
-    static void CacheLocalStrings();                                                 // :808
+    virtual void TallyEfficiencyModifiers();                                         // :557
+    virtual void ConvertRecipeToUnits(ConversionRecipe& recipe);                     // :566
+    virtual float GetHeatThrottle();                                                 // :621
+    virtual void CheckForShutdown();                                                 // :635
+    virtual int HasSpecialist(const std::string& effect);                            // :648
+    virtual bool IsOverheating();                                                    // :671
+    virtual void PreProcessing() {}                                                  // :681
+    virtual void PostUpdateCleanup() {}                                              // :685
+    virtual void PostProcess(const ConverterResults& result, double deltaTime);      // :689
+    virtual ConversionRecipe* PrepareRecipe(double deltatime);                       // :708
+    virtual bool IsSituationValid();                                                 // :714
+    virtual void OnOverheat(double amount = 1.0);                                    // :720
+    virtual double GetFlux() { return lastHeatFlux; }                                // :727
+    virtual bool DisplayCoreHeat();                                                  // :732
+    virtual double GetCoreTemperature();                                             // :737
+    virtual double GetGoalTemperature();                                             // :747
+    virtual bool CanBeDetached() { return !Get<bool>("IsActivated"); }               // :757
+    virtual bool CanBeOffset() { return !Get<bool>("IsActivated"); }                 // :762
+    virtual bool CanBeRotated() { return !Get<bool>("IsActivated"); }                // :767
+    std::string GetModuleDisplayName() override;                                     // :772
+    static void CacheLocalStrings();                                                 // :777
 
     Part* GetPart() const;
     const ProcessingVessel* Vessel() const;
@@ -244,16 +244,16 @@ public:
     void OnStart(StartState state) override;                              // :154
     void CopySerializedFrom(const PartModule& from) override;             // Instantiate: eInput / hasEInput / intakeTransformName
     ConversionRecipe* PrepareRecipe(double deltaTime) override;           // :176
-    double GetIntakeMultiplier();                                         // :273 (private)
-    void PostUpdateCleanup() override;                                    // :298
-    virtual void LoadRecipe(double harvestRate);                          // :321
-    void PostProcess(const ConverterResults& result, double deltaTime) override;  // :359
-    virtual bool CheckForImpact();                                        // :402
-    bool IsSituationValid() override;                                     // :413
-    void PreProcessing() override;                                        // :466
-    std::vector<const PartResourceDefinition*> GetConsumedResources() override;  // :482
-    std::string GetModuleDisplayName() override;                          // :487
-    static void CacheLocalStrings();                                      // :492
+    double GetIntakeMultiplier();                                         // :250 (private)
+    void PostUpdateCleanup() override;                                    // :271
+    virtual void LoadRecipe(double harvestRate);                          // :291
+    void PostProcess(const ConverterResults& result, double deltaTime) override;  // :324
+    virtual bool CheckForImpact();                                        // :348
+    bool IsSituationValid() override;                                     // :358
+    void PreProcessing() override;                                        // :428
+    std::vector<const PartResourceDefinition*> GetConsumedResources() override;  // :443
+    std::string GetModuleDisplayName() override;                          // :448
+    static void CacheLocalStrings();                                      // :453
 };
 
 // ModuleAsteroidDrill.cs:8 / ModuleCometDrill.cs:8 share one body; the two classes differ in the potato / info / resource module
@@ -269,12 +269,12 @@ public:
     Part* _potato = nullptr;
     PartModule* _info = nullptr;  // ModuleAsteroidInfo / ModuleCometInfo
 
-    ConversionRecipe* PrepareRecipe(double deltaTime) override;           // :45
-    virtual bool CheckForImpact();                                        // :170
-    virtual Part* GetAttachedPotato();                                    // :190
-    bool IsSituationValid() override;                                     // :214
-    void OnUpdate() override;                                             // :234
-    void OnStart(StartState state) override;                              // :253
+    ConversionRecipe* PrepareRecipe(double deltaTime) override;           // :50
+    virtual bool CheckForImpact();                                        // :154
+    virtual Part* GetAttachedPotato();                                    // :170
+    bool IsSituationValid() override;                                     // :208
+    void OnUpdate() override;                                             // :205
+    void OnStart(StartState state) override;                              // :222
     void PostProcess(const ConverterResults& result, double deltaTime) override;  // :...
 
 protected:
@@ -328,10 +328,10 @@ public:
     double totalResourcePercent = 0.0;    // :28
     void CopySerializedFrom(const PartModule& from) override;  // Instantiate: totalResourceMass / totalResourcePercent
     double currentMassVal() const;        // :30 (double.TryParse; 0 on failure)
-    void set_currentMassVal(double v);    // :41 (G17)
+    void set_currentMassVal(double v);    // :31 (G17)
     double massThresholdVal() const;      // :46
-    void set_massThresholdVal(double v);  // :57
-    void SetupSpaceObjectResources(const std::vector<ModuleSpaceObjectResource*>& resInfoList);  // :62
+    void set_massThresholdVal(double v);  // :45
+    void SetupSpaceObjectResources(const std::vector<ModuleSpaceObjectResource*>& resInfoList);  // :59
 };
 
 // ModuleAsteroidInfo.cs:4 / ModuleCometInfo.cs:4 (the same body; `baseMod` is ModuleAsteroid / ModuleComet)
@@ -418,22 +418,22 @@ protected:
 class ModuleGenerator : public PartModule {
 public:
     using PartModule::PartModule;
-    ModuleResource* currentResource = nullptr;  // :46
-    double inputRecieved = 0.0;                 // :48
-    bool lackingResources = false;              // :50
+    ModuleResource* currentResource = nullptr;  // :52
+    double inputRecieved = 0.0;                 // :54
+    bool lackingResources = false;              // :56
     std::vector<std::function<float(float)>> efficiencyAdjusters;  // adjusterCache (AdjusterGeneratorBase.ApplyEfficiencyAdjustment)
     void OnAwake() override;                    // (binds the events / actions)
-    void ToggleAction(KSPActionParam& param);   // :58
-    void ActivateAction(KSPActionParam&);       // :71
-    void ShutdownAction(KSPActionParam&);       // :77
-    void Activate();                            // :83 [KSPEvent]
+    void ToggleAction(KSPActionParam& param);   // :65
+    void ActivateAction(KSPActionParam&);       // :78
+    void ShutdownAction(KSPActionParam&);       // :84
+    void Activate();                            // :90 [KSPEvent]
     void Shutdown();                            // :95 [KSPEvent]
-    void OnStart(StartState state) override;    // :107
-    void FixedUpdate();                         // :163 (Unity message)
-    std::string GetContractObjectiveType() const { return "Generator"; }  // :235
-    bool CheckContractObjectiveValidity() const { return !Get<bool>("isGroundFixture"); }  // :240
-    std::string GetModuleDisplayName() override;  // :246
-    float ApplyEfficiencyAdjustments(float efficiency);  // :269
+    void OnStart(StartState state) override;    // :111
+    void FixedUpdate();                         // :147 (Unity message)
+    std::string GetContractObjectiveType() const { return "Generator"; }  // :224
+    bool CheckContractObjectiveValidity() const { return !Get<bool>("isGroundFixture"); }  // :229
+    std::string GetModuleDisplayName() override;  // :234
+    float ApplyEfficiencyAdjustments(float efficiency);  // :255
 };
 
 // ModuleAlternator.cs:9
@@ -444,15 +444,15 @@ public:
     // robotics packages own them): the host binds them
     std::function<float()> engineNormalizedOutput;   // `engine != null` when set
     std::function<float()> rotorNormalizedOutput;    // ModuleRoboticServoRotor.normalizedOutput (`rotor != null` is the module being found)
-    PartModule* rotor = nullptr;                     // :12 (FindModuleImplementing<ModuleRoboticServoRotor>)
+    PartModule* rotor = nullptr;                     // :7 (FindModuleImplementing<ModuleRoboticServoRotor>)
     bool serenityInstalled = true;                   // ExpansionsLoader.IsExpansionInstalled("Serenity")
     std::vector<std::function<float(float)>> outputAdjusters;  // AdjusterAlternatorBase.ApplyOutputAdjustment
-    void OnAwake() override;                         // :31
-    void OnLoad(const ConfigNode& node) override;    // :37
-    void OnStart(StartState state) override;         // :44
-    void FixedUpdate();                              // :106 (Unity message)
-    float ApplyOutputAdjustments(float output);      // :154
-    std::string GetModuleDisplayName() override;     // :163
+    void OnAwake() override;                         // :44
+    void OnLoad(const ConfigNode& node) override;    // :50
+    void OnStart(StartState state) override;         // :57
+    void FixedUpdate();                              // :110 (Unity message)
+    float ApplyOutputAdjustments(float output);      // :150
+    std::string GetModuleDisplayName() override;     // :159
 };
 
 // ModuleFuelJettison.cs:3
@@ -490,7 +490,7 @@ public:
     std::optional<std::vector<std::string>> loadedResources;
     // forces added by DrainPart: Part.AddForce(part.transform.forward * thrust): the thrust magnitudes, in order
     std::vector<float> addedForces;
-    static inline double epsilon = 1E-15;            // :56
+    static inline double epsilon = 1E-15;            // :46
 
     void OnAwake() override;                          // :110
     void OnStart(StartState state) override;          // :121
@@ -501,17 +501,17 @@ public:
     void StopResourceDrainAction(KSPActionParam&);    // :179
     void ToggleResourceDrainAction(KSPActionParam&);  // :185
     void ToggleResourceDrainFlowAction(KSPActionParam&);  // :191
-    void TogglePartFlowMode();                        // :197
+    void TogglePartFlowMode();                        // :202
     void OnPartResourceListChanged(Part* hostPart);   // :207
-    void Initialize();                                // :232
-    void LoadResources();                             // :265
-    void LoadResourcesAvailable();                    // :290
-    bool HasEnoughDrainingResources();                // :378
-    bool DrainResourceNotFinished(int rdsIndex);      // :406
-    void UpdateResourcesToRelease(const std::vector<std::string>& resourceNames, bool exclude = false);  // :429
+    void Initialize();                                // :223
+    void LoadResources();                             // :254
+    void LoadResourcesAvailable();                    // :277
+    bool HasEnoughDrainingResources();                // :350
+    bool DrainResourceNotFinished(int rdsIndex);      // :376
+    void UpdateResourcesToRelease(const std::vector<std::string>& resourceNames, bool exclude = false);  // :392
     virtual void DrainPart();                         // :455
-    bool PartContainsResource(const std::string& partResource);  // :513
-    void TurnOnDrain();                               // :520
+    bool PartContainsResource(const std::string& partResource);  // :501
+    void TurnOnDrain();                               // :510
     void TurnOffDrain();                              // :534
     void TurnOffDrain(const std::vector<std::string>& resourcesToStopDraining);  // :539
     void ToggleDrain();                               // :544
@@ -520,16 +520,16 @@ public:
     void TogglePartResource(PartResource* resource, bool status);    // :585
     void UpdateResourceDrainStatus(int resourceID, bool status);     // :595
     int ResourcesToDrain();                           // :607
-    bool ResourcesToDrainHaveFX();                    // :621
+    bool ResourcesToDrainHaveFX();                    // :618
     bool GetResourceDrainStatus(PartResource& resource);  // :636
     virtual bool CanBeDetached() { return !isDraining(); }  // :660
     virtual bool CanBeOffset() { return !isDraining(); }    // :665
     virtual bool CanBeRotated() { return !isDraining(); }   // :670
     void OnSave(ConfigNode& node) override;           // :675
     void OnLoad(const ConfigNode& node) override;     // :696
-    bool IsDraining() const { return isDraining(); }  // :90 (property)
+    bool IsDraining() const { return isDraining(); }  // :94 (property)
     void set_IsDraining(bool v);                      // :95
-    bool IsInactive() const { return isInactive; }    // :104
+    bool IsInactive() const { return isInactive; }    // :108
     // the FX groups of the effects system (Part.findFxGroup / FXGroup.setActive / SetPower): groups are names of Part::fxGroupNames;
     // the active flag and power each group was last given are recorded
     std::vector<std::string> drainFXGroups;           // :77
@@ -539,9 +539,9 @@ public:
 
 private:
     bool isDraining() const { return Get<bool>("isDraining"); }
-    void UpdateVFXToUse();                            // :316
-    void UpdatePriorityIndices();                     // :349
-    void CheckDrainingForEffects();                   // :483 (object argument unused)
+    void UpdateVFXToUse();                            // :302
+    void UpdatePriorityIndices();                     // :337
+    void CheckDrainingForEffects();                   // :518 (object argument unused)
 };
 
 // ======================================================= scanners ==========================================================
@@ -555,11 +555,11 @@ public:
     int partCacheCount = -1;                          // :26
     bool wasValid = false;                            // :28
     bool aDispFldGuiActive = false;                   // aDispFld.guiActive
-    double abundance() const { return abundanceValue; }  // :36
-    void EnableModule() { isEnabled = true; }         // :38
-    void DisableModule() { isEnabled = false; }       // :43
-    bool ModuleIsActive() { return isEnabled; }       // :48
-    std::string GetDisplayFormat();                   // :53
+    double abundance() const { return abundanceValue; }  // :39
+    void EnableModule() { isEnabled = true; }         // :41
+    void DisableModule() { isEnabled = false; }       // :46
+    bool ModuleIsActive() { return isEnabled; }       // :51
+    std::string GetDisplayFormat();                   // :56
     std::string GetScanningMode(bool abbrevation);    // :58
     void OnAwake() override;                          // :82
     void OnStart(StartState state) override;          // :87
@@ -568,7 +568,7 @@ public:
     void DisplayAbundance();                          // :146
     void ToggleEvent(const std::string& name, bool status);  // :194
     bool IsSituationValid();                          // :200
-    std::string GetModuleDisplayName() override;      // :251
+    std::string GetModuleDisplayName() override;      // :247
 };
 
 // ModuleOrbitalScanner.cs:3 (IAnimatedModule)
@@ -580,29 +580,29 @@ public:
     BaseEvent* setCol = nullptr;
     bool _ShowSurveyMenu = false, _ShowOverlayMenu = false;
     void OnAwake() override;                          // (binds the events)
-    virtual void SwitchResource();                    // :21 [KSPEvent]
-    virtual void ToggleOverlay();                     // :34 [KSPEvent]
+    virtual void SwitchResource();                    // :29 [KSPEvent]
+    virtual void ToggleOverlay();                     // :40 [KSPEvent]
     virtual void GenerateOverlay();                   // :52
-    virtual void HideOverlay();                       // :57
+    virtual void HideOverlay();                       // :60
     virtual void SetColor();                          // :64 [KSPEvent]
     virtual std::string GetOverlayColor(int dispType);  // :79
     virtual void IncreaseCutoff();                    // :99 [KSPEvent]
     virtual void DecreaseCutoff();                    // :113
     virtual void ActivateScanner();                   // :127 [KSPEvent]
     virtual void ToggleSurvey(bool state);            // :132
-    virtual void ToggleMenu(bool state);              // :144
-    void OnActive() override;                         // :158
-    virtual void UpdateGUI();                         // :166
-    virtual void FixedUpdate();                       // :180 (Unity message)
-    virtual void SetupMap();                          // :201
-    virtual void Start();                             // :213 (Unity message)
-    virtual void ShowResourceName();                  // :225
-    virtual void EnableModule();                      // :251
-    virtual void DisableModule();                     // :256
-    virtual bool ModuleIsActive();                    // :265
-    virtual bool IsSituationValid();                  // :270
-    virtual void OnDestroy();                         // :281
-    virtual void OnResourceMapLoaded();               // :286
+    virtual void ToggleMenu(bool state);              // :141
+    void OnActive() override;                         // :154
+    virtual void UpdateGUI();                         // :163
+    virtual void FixedUpdate();                       // :176 (Unity message)
+    virtual void SetupMap();                          // :193
+    virtual void Start();                             // :205 (Unity message)
+    virtual void ShowResourceName();                  // :216
+    virtual void EnableModule();                      // :245
+    virtual void DisableModule();                     // :250
+    virtual bool ModuleIsActive();                    // :259
+    virtual bool IsSituationValid();                  // :264
+    virtual void OnDestroy();                         // :274
+    virtual void OnResourceMapLoaded();               // :279
     ~ModuleOrbitalScanner() override;
 private:
     bool subscribed_ = false;
@@ -620,20 +620,20 @@ public:
     // research and development (ResearchAndDevelopment.Instance.AddScience): unset: no instance
     std::function<void(float science)> addScience;
     void OnAwake() override;
-    virtual void PerformSurvey();                     // :17 [KSPEvent]
-    void OnStart(StartState state) override;          // :34
+    virtual void PerformSurvey();                     // :25 [KSPEvent]
+    void OnStart(StartState state) override;          // :41
     void rescaleThresholds();                         // :44
-    virtual void OnDestroy();                         // :64
-    virtual void sendDataToComms();                   // :69
+    virtual void OnDestroy();                         // :72
+    virtual void sendDataToComms();                   // :77
     // OnTriggeredDataTransmission(data, origin, xmitAborted): data.container, data.subjectID
-    virtual void CompleteSurvey(uint32_t container, const std::string& subjectID, bool xmitAborted);  // :86
+    virtual void CompleteSurvey(uint32_t container, const std::string& subjectID, bool xmitAborted);  // :94
     virtual void CheckForScanData();                  // :119
     virtual void Update();                            // :130 (Unity message)
-    virtual void EnableModule() { isEnabled = true; }   // :140
-    virtual void DisableModule() { isEnabled = false; } // :145
-    virtual bool ModuleIsActive() { return isEnabled; } // :150
-    virtual bool IsSituationValid() { return true; }    // :155
-    std::string GetModuleDisplayName() override;      // :165
+    virtual void EnableModule() { isEnabled = true; }   // :136
+    virtual void DisableModule() { isEnabled = false; } // :141
+    virtual bool ModuleIsActive() { return isEnabled; } // :146
+    virtual bool IsSituationValid() { return true; }    // :151
+    std::string GetModuleDisplayName() override;      // :161
     int surveysCompleted = 0;                         // OnOrbitalSurveyCompleted fired
     ~ModuleOrbitalSurveyor() override;
 private:
@@ -646,7 +646,7 @@ public:
     using PartModule::PartModule;
     void OnAwake() override;
     virtual void RunAnalysis();  // :6 [KSPEvent]
-    void FixedUpdate();          // :32 (Unity message)
+    void FixedUpdate();          // :28 (Unity message)
 };
 
 namespace detail {

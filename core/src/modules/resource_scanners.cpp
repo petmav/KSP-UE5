@@ -35,10 +35,10 @@ OverlayGeneratorState& Ov() { return ResourceProcessingEnvironment::overlay; }
 
 // ================================================== ModuleResourceScanner ======================================================
 
-// ModuleResourceScanner.cs:53
+// ModuleResourceScanner.cs:56
 std::string ModuleResourceScanner::GetDisplayFormat() { return ResourceDisplayName + "[" + GetScanningMode(true) + "]"; }
 
-// :58 (Convert.ToInt32(bool) = 0 / 1)
+// ModuleResourceScanner.cs:58 (Convert.ToInt32(bool) = 0 / 1)
 std::string ModuleResourceScanner::GetScanningMode(bool abbrevation) {
     std::string result;
     const std::string abbr = abbrevation ? "1" : "0";
@@ -51,17 +51,17 @@ std::string ModuleResourceScanner::GetScanningMode(bool abbrevation) {
     return result;
 }
 
-// :82
+// ModuleResourceScanner.cs:82
 void ModuleResourceScanner::OnAwake() {}
 
-// :87
+// ModuleResourceScanner.cs:87
 void ModuleResourceScanner::OnStart(StartState) {
     Fields()["abundanceDisplay"]->guiName = GetDisplayFormat();
     const PartResourceDefinition* definition = PartResourceLibrary::Instance()->GetDefinition(Get<std::string>("ResourceName"));
     ResourceDisplayName = definition != nullptr ? definition->displayName() : Get<std::string>("ResourceName");
 }
 
-// :101 (FlightGlobals.currentMainBody is the vessel's main body in flight)
+// ModuleResourceScanner.cs:101 (FlightGlobals.currentMainBody is the vessel's main body in flight)
 void ModuleResourceScanner::Update() {
     const ProcessingVessel* v = ResourceProcessingEnvironment::VesselOf(PartOf(*this));
     if (ResourceFlowEnvironment::LoadedSceneIsFlight() && v != nullptr) {
@@ -81,7 +81,7 @@ void ModuleResourceScanner::Update() {
     }
 }
 
-// :128
+// ModuleResourceScanner.cs:128
 void ModuleResourceScanner::CheckAbundanceDisplay() {
     const ProcessingVessel& v = V(*this);
     const int type = Get<int32_t>("ScannerType");
@@ -95,7 +95,7 @@ void ModuleResourceScanner::CheckAbundanceDisplay() {
         DisplayAbundance();
 }
 
-// :146
+// ModuleResourceScanner.cs:146
 void ModuleResourceScanner::DisplayAbundance() {
     const ProcessingVessel& v = V(*this);
     const double lat = ResourceUtilities::Deg2Rad(ResourceUtilities::clampLat(v.latitude));
@@ -123,13 +123,13 @@ void ModuleResourceScanner::DisplayAbundance() {
     Set<std::string>("abundanceDisplay", Localizer::Format("#autoLOC_6002267", {text}));
 }
 
-// :194
+// ModuleResourceScanner.cs:194
 void ModuleResourceScanner::ToggleEvent(const std::string& name, bool status) {
     Events()[name]->active = status;
     Events()[name]->guiActive = status;
 }
 
-// :200
+// ModuleResourceScanner.cs:200
 bool ModuleResourceScanner::IsSituationValid() {
     const ProcessingVessel& v = V(*this);
     const int count = static_cast<int>(v.parts.size());
@@ -156,7 +156,7 @@ bool ModuleResourceScanner::IsSituationValid() {
     return true;
 }
 
-// :251
+// ModuleResourceScanner.cs:247
 std::string ModuleResourceScanner::GetModuleDisplayName() { return Localizer::Format("#autoLoc_6003056"); }
 
 // ================================================== ModuleOrbitalScanner =======================================================
@@ -175,7 +175,7 @@ ModuleOrbitalScanner::~ModuleOrbitalScanner() {
     if (subscribed_) GE::OnResourceMapLoaded.Remove(this, &ModuleOrbitalScanner::OnResourceMapLoaded);
 }
 
-// ModuleOrbitalScanner.cs:21 (OverlayGenerator.FetchNextResource advances DisplayResource through ResourceList: the generator's own
+// ModuleOrbitalScanner.cs:29 (OverlayGenerator.FetchNextResource advances DisplayResource through ResourceList: the generator's own
 // cycle; here the next list entry, wrapping)
 void ModuleOrbitalScanner::SwitchResource() {
     Ov().fetchNextResourceCalls++;
@@ -184,7 +184,7 @@ void ModuleOrbitalScanner::SwitchResource() {
     if (Ov().IsActive) GenerateOverlay();
 }
 
-// :34
+// ModuleOrbitalScanner.cs:40
 void ModuleOrbitalScanner::ToggleOverlay() {
     if (Ov().IsActive) {
         Ov().IsActive = false;
@@ -195,17 +195,17 @@ void ModuleOrbitalScanner::ToggleOverlay() {
     }
 }
 
-// :52
+// ModuleOrbitalScanner.cs:52
 void ModuleOrbitalScanner::GenerateOverlay() {
     UpdateGUI();
     Ov().generateOverlayCalls++;
     Ov().lastCheckForLock = Get<bool>("CheckForLock");
 }
 
-// :57
+// ModuleOrbitalScanner.cs:60
 void ModuleOrbitalScanner::HideOverlay() { Ov().clearDisplayCalls++; }
 
-// :64 (`displayMode++; if (displayMode == 4) displayMode = 0`)
+// ModuleOrbitalScanner.cs:64 (`displayMode++; if (displayMode == 4) displayMode = 0`)
 void ModuleOrbitalScanner::SetColor() {
     int displayMode = Ov().DisplayMode;
     displayMode++;
@@ -215,7 +215,7 @@ void ModuleOrbitalScanner::SetColor() {
     GenerateOverlay();
 }
 
-// :79 (MapDisplayTypes: Monochrome, Inverse, HeatMapGreen, HeatMapBlue)
+// ModuleOrbitalScanner.cs:79 (MapDisplayTypes: Monochrome, Inverse, HeatMapGreen, HeatMapBlue)
 std::string ModuleOrbitalScanner::GetOverlayColor(int dispType) {
     switch (dispType) {
         case 0: return Localizer::Format("#autoLOC_7003278");
@@ -226,24 +226,24 @@ std::string ModuleOrbitalScanner::GetOverlayColor(int dispType) {
     }
 }
 
-// :99
+// ModuleOrbitalScanner.cs:99
 void ModuleOrbitalScanner::IncreaseCutoff() {
     Ov().Cutoff += 10;
     if (Ov().Cutoff > 100) Ov().Cutoff = 100;
     if (Ov().IsActive) GenerateOverlay();
 }
 
-// :113
+// ModuleOrbitalScanner.cs:113
 void ModuleOrbitalScanner::DecreaseCutoff() {
     Ov().Cutoff -= 10;
     if (Ov().Cutoff < 0) Ov().Cutoff = 0;
     if (Ov().IsActive) GenerateOverlay();
 }
 
-// :127
+// ModuleOrbitalScanner.cs:127
 void ModuleOrbitalScanner::ActivateScanner() { SetupMap(); }
 
-// :132
+// ModuleOrbitalScanner.cs:132
 void ModuleOrbitalScanner::ToggleSurvey(bool state) {
     if (_ShowSurveyMenu != state) {
         switchR->active = state;
@@ -252,7 +252,7 @@ void ModuleOrbitalScanner::ToggleSurvey(bool state) {
     }
 }
 
-// :144
+// ModuleOrbitalScanner.cs:141
 void ModuleOrbitalScanner::ToggleMenu(bool state) {
     if (_ShowOverlayMenu != state) {
         setCol->active = state;
@@ -263,13 +263,13 @@ void ModuleOrbitalScanner::ToggleMenu(bool state) {
     }
 }
 
-// :158
+// ModuleOrbitalScanner.cs:154
 void ModuleOrbitalScanner::OnActive() {
     UpdateGUI();
     if (Ov().IsActive) GenerateOverlay();
 }
 
-// :166 (cacheAutoLOC_6001054 = "#autoLOC_6001054"; the part-window test is the UI hook)
+// ModuleOrbitalScanner.cs:163 (cacheAutoLOC_6001054 = "#autoLOC_6001054"; the part-window test is the UI hook)
 void ModuleOrbitalScanner::UpdateGUI() {
     if (ResourceFlowEnvironment::partActionUIContains && ResourceFlowEnvironment::partActionUIContains(PartOf(*this))) {
         const std::string text = Localizer::Format(Localizer::Format("#autoLOC_6001054"), {GetOverlayColor(Ov().DisplayMode), std::to_string(Ov().Cutoff)});
@@ -277,7 +277,7 @@ void ModuleOrbitalScanner::UpdateGUI() {
     }
 }
 
-// :180
+// ModuleOrbitalScanner.cs:176
 void ModuleOrbitalScanner::FixedUpdate() {
     if (ResourceFlowEnvironment::LoadedSceneIsFlight()) {
         const ProcessingVessel& v = V(*this);
@@ -293,7 +293,7 @@ void ModuleOrbitalScanner::FixedUpdate() {
     }
 }
 
-// :201
+// ModuleOrbitalScanner.cs:193
 void ModuleOrbitalScanner::SetupMap() {
     if (Ov().IsActive) Ov().clearDisplayCalls++;
     Ov().DisplayBody = V(*this).mainBody.flightGlobalsIndex;
@@ -303,7 +303,7 @@ void ModuleOrbitalScanner::SetupMap() {
     ShowResourceName();
 }
 
-// :213
+// ModuleOrbitalScanner.cs:205
 void ModuleOrbitalScanner::Start() {
     toggleO = Events()["ToggleOverlay"];
     switchR = Events()["SwitchResource"];
@@ -314,7 +314,7 @@ void ModuleOrbitalScanner::Start() {
     }
 }
 
-// :225 (`$"{(double)(num2 + num) / 0.02:0.00}%"`: float sum, cast, divided in double)
+// ModuleOrbitalScanner.cs:216 (`$"{(double)(num2 + num) / 0.02:0.00}%"`: float sum, cast, divided in double)
 void ModuleOrbitalScanner::ShowResourceName() {
     if (Ov().DisplayResource < 0 && !Ov().ResourceList.empty()) Ov().DisplayResource = 0;
     Ov().DisplayBody = V(*this).mainBody.flightGlobalsIndex;  // FlightGlobals.currentMainBody
@@ -332,19 +332,19 @@ void ModuleOrbitalScanner::ShowResourceName() {
     switchR->SetGuiName(disp.displayName + Localizer::Format("#autoLOC_6002267", {text}));
 }
 
-// :251
+// ModuleOrbitalScanner.cs:245
 void ModuleOrbitalScanner::EnableModule() { isEnabled = true; }
 
-// :256
+// ModuleOrbitalScanner.cs:250
 void ModuleOrbitalScanner::DisableModule() {
     if (isEnabled) Ov().clearDisplayCalls++;
     isEnabled = false;
 }
 
-// :265
+// ModuleOrbitalScanner.cs:259
 bool ModuleOrbitalScanner::ModuleIsActive() { return Ov().IsActive; }
 
-// :270 (vessel.mainBody.BiomeMap == null: a message and false)
+// ModuleOrbitalScanner.cs:264 (vessel.mainBody.BiomeMap == null: a message and false)
 bool ModuleOrbitalScanner::IsSituationValid() {
     const ProcessingVessel& v = V(*this);
     if (!v.mainBody.hasBiomeMap) {
@@ -354,7 +354,7 @@ bool ModuleOrbitalScanner::IsSituationValid() {
     return true;
 }
 
-// :281
+// ModuleOrbitalScanner.cs:274
 void ModuleOrbitalScanner::OnDestroy() {
     if (subscribed_) {
         GE::OnResourceMapLoaded.Remove(this, &ModuleOrbitalScanner::OnResourceMapLoaded);
@@ -362,7 +362,7 @@ void ModuleOrbitalScanner::OnDestroy() {
     }
 }
 
-// :286
+// ModuleOrbitalScanner.cs:279
 void ModuleOrbitalScanner::OnResourceMapLoaded() {
     if (ResourceFlowEnvironment::LoadedSceneIsFlight()) {
         ShowResourceName();
@@ -382,7 +382,7 @@ void ModuleOrbitalSurveyor::OnAwake() {
 
 ModuleOrbitalSurveyor::~ModuleOrbitalSurveyor() = default;
 
-// ModuleOrbitalSurveyor.cs:17 (minThreshold / maxThreshold are fields)
+// ModuleOrbitalSurveyor.cs:25 (minThreshold / maxThreshold are fields)
 void ModuleOrbitalSurveyor::PerformSurvey() {
     const ProcessingVessel& v = V(*this);
     if (v.mainBody.Radius < Get<double>("minThreshold") && Get<bool>("useCustomThresholds")) rescaleThresholds();
@@ -395,14 +395,14 @@ void ModuleOrbitalSurveyor::PerformSurvey() {
     Post(Localizer::Format("#autoLOC_6001056", {Fmt(num / 1000.0, 0), Fmt(num2 / 1000.0, 0)}));
 }
 
-// :34 (GameEvents.OnTriggeredDataTransmission.Add(CompleteSurvey): the host forwards the event to CompleteSurvey)
+// ModuleOrbitalSurveyor.cs:41 (GameEvents.OnTriggeredDataTransmission.Add(CompleteSurvey): the host forwards the event to CompleteSurvey)
 void ModuleOrbitalSurveyor::OnStart(StartState) {
     perfSurv = Events()["PerformSurvey"];
     if (ResourceFlowEnvironment::LoadedSceneIsFlight() && V(*this).mainBody.Radius < Get<double>("minThreshold") && Get<bool>("useCustomThresholds")) rescaleThresholds();
     subscribed_ = true;
 }
 
-// :44
+// ModuleOrbitalSurveyor.cs:44
 void ModuleOrbitalSurveyor::rescaleThresholds() {
     const ProcessingVessel& v = V(*this);
     const double num = v.mainBody.sphereOfInfluence - v.mainBody.Radius;
@@ -421,10 +421,10 @@ void ModuleOrbitalSurveyor::rescaleThresholds() {
     Set<double>("minThreshold", minThreshold);
 }
 
-// :64
+// ModuleOrbitalSurveyor.cs:72
 void ModuleOrbitalSurveyor::OnDestroy() { subscribed_ = false; }
 
-// :69 (`(float)Radius * 0.001f / (float)ScanTime`; the transmitter is the science package's)
+// ModuleOrbitalSurveyor.cs:77 (`(float)Radius * 0.001f / (float)ScanTime`; the transmitter is the science package's)
 void ModuleOrbitalSurveyor::sendDataToComms() {
     const ProcessingVessel& v = V(*this);
     if (transmit) {
@@ -434,7 +434,7 @@ void ModuleOrbitalSurveyor::sendDataToComms() {
     Post(Localizer::Format("#autoLOC_259348"));
 }
 
-// :86
+// ModuleOrbitalSurveyor.cs:94
 void ModuleOrbitalSurveyor::CompleteSurvey(uint32_t container, const std::string& subjectID, bool xmitAborted) {
     if (!(container != flightID || subjectID.rfind("survey@", 0) != 0 || xmitAborted)) {
         const ProcessingVessel& v = V(*this);
@@ -453,18 +453,18 @@ void ModuleOrbitalSurveyor::CompleteSurvey(uint32_t container, const std::string
     }
 }
 
-// :119
+// ModuleOrbitalSurveyor.cs:119
 void ModuleOrbitalSurveyor::CheckForScanData() {
     bool active;
     if (perfSurv->active != (active = !ResourceMap::Instance()->IsPlanetScanned(V(*this).mainBody.flightGlobalsIndex))) perfSurv->active = active;
 }
 
-// :130
+// ModuleOrbitalSurveyor.cs:130
 void ModuleOrbitalSurveyor::Update() {
     if (ResourceFlowEnvironment::LoadedSceneIsFlight()) CheckForScanData();
 }
 
-// :165
+// ModuleOrbitalSurveyor.cs:161
 std::string ModuleOrbitalSurveyor::GetModuleDisplayName() { return Localizer::Format("#autoLoc_6003047"); }
 
 // ================================================== ModuleBiomeScanner =========================================================
@@ -495,7 +495,7 @@ void ModuleBiomeScanner::RunAnalysis() {
     ResourceMap::Instance()->UnlockBiome(v.mainBody.flightGlobalsIndex, situationString);
 }
 
-// :32
+// ModuleBiomeScanner.cs:28
 void ModuleBiomeScanner::FixedUpdate() {
     const ProcessingVessel* v = ResourceProcessingEnvironment::VesselOf(PartOf(*this));
     if (!ResourceFlowEnvironment::LoadedSceneIsFlight() || v == nullptr) return;
