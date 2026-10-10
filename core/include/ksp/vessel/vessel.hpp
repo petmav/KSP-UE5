@@ -53,6 +53,9 @@
 #include "ksp/vessel/vessel_values.hpp"
 
 namespace ksp {
+namespace CommNet {
+class CommNetVessel;
+}  // namespace CommNet
 
 // GameSettings values Vessel.cs reads (GameSettings.cs:978, 1008; the shim namespace is shared with ksp_util.hpp)
 namespace GameSettings {
@@ -282,6 +285,7 @@ public:
     ConfigNode flightPlanNode{"FLIGHTPLAN"};
     ITargetable* targetObject = nullptr;
     std::vector<std::shared_ptr<VesselModule>> vesselModules;
+    CommNet::CommNetVessel* connection = nullptr;  // Vessel.cs:346 (WP-39: set by CommNetVessel.OnAwake / OnStart)
     ProtoTargetInfo pTI;
     VesselRanges vesselRanges;
     double heightFromPartOffsetLocal = 0.0;

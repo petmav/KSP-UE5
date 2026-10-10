@@ -134,6 +134,12 @@ TEST_CASE("WP-15 ModuleResourceHandler.OnLoad on every stock part: INPUT_RESOURC
                 const auto rn = md.config->GetValue("resourceName");
                 out.push_back(rn ? *rn : std::string("ElectricCharge"));
             }
+            // ModuleDataTransmitter.OnLoad (ModuleDataTransmitter.cs:152, WP-39): a prefab module (partInfo still null) without module resources adds the
+            // `requiredResource` (default ElectricCharge) as its input
+            if (md.moduleName == "ModuleDataTransmitter" && in.empty()) {
+                const auto rr = md.config->GetValue("requiredResource");
+                in.push_back(rr ? *rr : std::string("ElectricCharge"));
+            }
             CAPTURE(ap->name);
             CAPTURE(md.moduleName);
             CHECK(names(md.module->resHandler.inputResources) == in);
