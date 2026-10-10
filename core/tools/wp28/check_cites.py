@@ -21,7 +21,10 @@ CLASS_FILE = {
     "ModuleSpaceObjectDrillBase": "ModuleAsteroidDrill", "ModuleSpaceObjectInfoBase": "ModuleAsteroidInfo",
     "ModuleSpaceObjectAnalysisBase": "ModuleAsteroidAnalysis",
 }
-NAME_ALIAS = {"set_currentMassVal": "currentMassVal", "set_massThresholdVal": "massThresholdVal", "set_IsDraining": "IsDraining"}
+NAME_ALIAS = {"set_currentMassVal": "currentMassVal", "set_massThresholdVal": "massThresholdVal", "set_IsDraining": "IsDraining",
+              "set_inactive": "inactive", "set_rosterStatus": "rosterStatus", "set_type": "type",
+              "SetExtraExperience": "ExtraExperience", "CrewGenerator_GetLastName": "GetLastName",
+              "CrewGenerator_RemoveLastName": "RemoveLastName"}
 CITE = re.compile(r"^(\s*)// (?:([A-Za-z0-9_]+)\.cs)?:(\d+)\b")
 FUNC = re.compile(r"(\w+)::(~?\w+)\s*\(")
 
