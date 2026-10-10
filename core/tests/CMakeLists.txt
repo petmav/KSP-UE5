@@ -28,6 +28,7 @@ add_executable(kspcore_tests
     test_ship_construct.cpp
     test_aero.cpp
     test_staging.cpp
+    test_structural_modules.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
 )

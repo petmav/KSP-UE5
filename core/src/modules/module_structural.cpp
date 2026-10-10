@@ -25,6 +25,8 @@ using GE = GameEvents;
 Part* PartOfModule(const PartModule& m) { return dynamic_cast<Part*>(m.part); }
 bool SceneIs(GameScenes s) { return SaveEnvironment::Current().loadedScene == s; }
 bool SceneEditor() { return SceneIs(GameScenes::EDITOR); }
+// a string KSPField without initialiser is null after AddComponent (WP-06): string.IsNullOrEmpty semantics
+std::string StrField(const PartModule& m, const char* name) { return m.IsNull(name) ? std::string() : m.Get<std::string>(name); }
 bool SceneFlight() { return SceneIs(GameScenes::FLIGHT); }
 template <class T>
 void AddUnique(std::vector<T>& v, const T& x) {
@@ -97,7 +99,7 @@ void ModuleCargoBay::OnStartFinished(StartState) {
 void ModuleCargoBay::FindAttachNodes() {
     Part* p = PartOf();
     auto find = [&](const char* idField, AttachNode*& node, const char* nodeName) {
-        const std::string id = Get<std::string>(idField);
+        const std::string id = StrField(*this, idField);
         if (!id.empty()) {
             node = p->FindAttachNode(id);
             if (node == nullptr) log::Error("[ModuleCargoBay]: Could not find an attach node with id " + id + " for " + nodeName + ".");
@@ -708,13 +710,13 @@ void ModuleServiceModule::ProcessJettisonModules(bool state, bool updateShrouds)
         } else if (!j->Get<bool>("isJettisoned") && !j->Get<bool>("shroudHideOverride")) {
             setActive(state);
             // ToggleShellMesh(state): the shell transform is the model's
-            const std::string shell = Get<std::string>("ShellMeshName");
+            const std::string shell = StrField(*this, "ShellMeshName");
             if (!shell.empty() && StructuralModel().setModelTransformActive && StructuralModel().hasModelTransform && StructuralModel().hasModelTransform(*p, shell))
                 StructuralModel().setModelTransformActive(*p, shell, state);
         }
     }
     // SetExteriorCollider(state): the exterior collider is the model's
-    const std::string ext = Get<std::string>("ExteriorColliderName");
+    const std::string ext = StrField(*this, "ExteriorColliderName");
     if (!ext.empty() && StructuralModel().setModelTransformActive && StructuralModel().hasModelTransform && StructuralModel().hasModelTransform(*p, ext))
         StructuralModel().setModelTransformActive(*p, ext, state);
 }
@@ -728,7 +730,7 @@ void ModuleServiceModule::ToggleShrouds() {
     if (bay != nullptr) bay->ModifyShieldInEnclosedParts(flag);
     ProcessJettisonModules(flag, true);
     if (SceneEditor()) {
-        const std::string shell = Get<std::string>("ShellMeshName");
+        const std::string shell = StrField(*this, "ShellMeshName");
         if (!shell.empty() && StructuralModel().setModelTransformActive && StructuralModel().hasModelTransform && StructuralModel().hasModelTransform(*p, shell))
             StructuralModel().setModelTransformActive(*p, shell, flag);
     }
@@ -775,7 +777,7 @@ void ModuleServiceModule::OnActive() {
         ShedExternalParts();
         // SetExteriorCollider(false)
         if (Part* p = PartOf()) {
-            const std::string ext = Get<std::string>("ExteriorColliderName");
+            const std::string ext = StrField(*this, "ExteriorColliderName");
             if (!ext.empty() && StructuralModel().setModelTransformActive && StructuralModel().hasModelTransform && StructuralModel().hasModelTransform(*p, ext))
                 StructuralModel().setModelTransformActive(*p, ext, false);
         }
@@ -801,7 +803,7 @@ void ModuleServiceModule::BuildJettisonPartsList() {
     jettisonParts.clear();
     std::vector<BoxZone> list;
     if (Get<bool>("UseJettisonZones")) {
-        for (const std::string& zone : dotnet::Split(Get<std::string>("JettisonZoneNames"), ",", false)) {
+        for (const std::string& zone : dotnet::Split(StrField(*this, "JettisonZoneNames"), ",", false)) {
             if (p == nullptr || !hooks.findZone) continue;
             if (auto z = hooks.findZone(*p, zone)) list.push_back(*z);
         }
