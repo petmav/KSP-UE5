@@ -28,7 +28,8 @@ def main(data_dir, out_dir):
         if obj.type.name != "TextAsset" or data.m_Name not in WANTED:
             continue
         parts = path.replace("\\", "/").split("/")
-        lang = parts[parts.index("CrewGenerator") + 1] if "CrewGenerator" in parts else "en-us"
+        low = [x.lower() for x in parts]  # container paths may be lower-cased: match case-insensitively, keep the language folder as is
+        lang = parts[low.index("crewgenerator") + 1] if "crewgenerator" in low else "en-us"
         text = data.m_Script if isinstance(data.m_Script, str) else bytes(data.m_Script).decode("utf-8-sig")
         os.makedirs(os.path.join(out_dir, lang), exist_ok=True)
         with open(os.path.join(out_dir, lang, data.m_Name + ".txt"), "w", encoding="utf-8", newline="") as f:
