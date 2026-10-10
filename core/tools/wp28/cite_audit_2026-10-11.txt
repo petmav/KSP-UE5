@@ -1,0 +1,669 @@
+src/aero/drag_cube_list.cpp:58: DragCubeList.cs has no FaceDirections (cite :128)
+src/aero/flight_integrator_aero.cpp:23: FlightIntegrator.cs has no CacheGlobals (cite :573)
+src/aero/lifting_surface.cpp:183: ModuleLiftingSurface.cs has no FixedUpdateAero (cite :170)
+src/aero/lifting_surface.cpp:328: ModuleControlSurface.cs has no FixedUpdateAero (cite :366)
+src/celestial/celestial_body.cpp:46: CBAttributeMapSO.cs:148 -> 150 (RGBColorSqrMag) off by 2
+src/celestial/celestial_body.cpp:337: CelestialBody.cs:991 -> 990 (GetFullTemperature) off by 1
+src/celestial/celestial_system.cpp:82: FlightGlobals.cs:1813 -> 1797 (GetHomeBody) off by 16
+src/celestial/celestial_system.cpp:89: FlightGlobals.cs:1752 -> 1736 (GetBodyByName) off by 16
+src/celestial/flight_atmosphere.cpp:23: FlightIntegrator.cs:808 -> 784 (CalculatePressure) off by 24
+src/celestial/flight_atmosphere.cpp:34: FlightIntegrator.cs:861 -> 837 (CalculateDensityThermalLerp) off by 24
+src/celestial/flight_atmosphere.cpp:47: FlightIntegrator.cs:880 -> 856 (CalculateBackgroundRadiationTemperature) off by 24
+src/celestial/flight_atmosphere.cpp:52: FlightIntegrator.cs:885 -> 861 (CalculateConstantsVacuum) off by 24
+src/celestial/flight_atmosphere.cpp:68: FlightIntegrator.cs:917 -> 893 (CalculateConstantsAtmosphere) off by 24
+src/celestial/flight_atmosphere.cpp:91: FlightIntegrator.cs:944 -> 920 (CalculateShockTemperature) off by 24
+src/celestial/flight_atmosphere.cpp:101: FlightIntegrator.cs:955 -> 931 (CalculateAtmosphericDensity) off by 24
+src/celestial/flight_atmosphere.cpp:106: FlightIntegrator.cs:965 -> 946 (CalculateConvectiveCoefficient) off by 19
+src/celestial/flight_atmosphere.cpp:109: FlightIntegrator.cs:970 -> 946 (CalculateConvectiveCoefficient) off by 24
+src/celestial/flight_atmosphere.cpp:127: FlightIntegrator.cs:977 -> 953 (CalculateConvectiveCoefficientNewtonian) off by 24
+src/celestial/flight_atmosphere.cpp:134: FlightIntegrator.cs:982 -> 958 (CalculateConvectiveCoefficientMach) off by 24
+src/celestial/planetarium.cpp:13: Planetarium.cs has no AwakeZup (cite :74)
+src/celestial/planetarium.cpp:16: Planetarium.cs has no ~Planetarium (cite :193)
+src/celestial/planetarium.cpp:39: Planetarium.cs:238 -> 222 (UpdateCBs) off by 16
+src/celestial/planetarium.cpp:47: Planetarium.cs:247 -> 231 (FindRootBody) off by 16
+src/celestial/planetarium.cpp:54: Planetarium.cs:268 -> 252 (UpdateCBsRecursive) off by 16
+src/celestial/planetarium.cpp:85: Planetarium.cs has no AwakeZup (cite :189)
+src/celestial/planetarium.cpp:100: Planetarium.cs:286 -> 270 (GetUniversalTime) off by 16
+src/celestial/planetarium.cpp:106: Planetarium.cs:295 -> 279 (SetUniversalTime) off by 16
+src/celestial/planetarium.cpp:133: Planetarium.cs:303 -> 287 (FrameIsRotating) off by 16
+src/config/config_node.cpp:94: ConfigNode.cs has no GetValuePtr (cite :394)
+src/config/config_node.cpp:526: ConfigNode.cs has no LoadFromLines (cite :1113)
+src/config/config_node.cpp:649: ConfigNode.cs has no SaveToString (cite :1137)
+src/core/coroutine.cpp:169: CoroutineHost.cs:19 -> 20 (StartCoroutine) off by 1
+src/core/coroutine.cpp:175: CoroutineHost.cs:28 -> 29 (RunAndDispose) off by 1
+src/core/coroutine.cpp:181: CoroutineHost.cs:34 -> 35 (Terminate) off by 1
+src/database/game_database.cpp:118: GameDatabase.cs has no MainLoaderFileTypes (cite :992)
+src/database/game_database.cpp:162: GameDatabase.cs:1087 -> 1092 (TranslateBranch) off by 5
+src/database/game_database.cpp:287: GameDatabase.cs:1509 -> 1504 (CompileConfig) off by 5
+src/dotnet/version.cpp:11: no C# file for Version::Version
+src/dotnet/version.cpp:24: no C# file for Version::Version
+src/dotnet/version.cpp:34: no C# file for Version::Version
+src/dotnet/version.cpp:69: no C# file for Version::Version
+src/dotnet/version.cpp:83: no C# file for Version::TryParse
+src/dotnet/version.cpp:95: no C# file for Version::CompareTo
+src/dotnet/version.cpp:104: no C# file for Version::ToString
+src/dotnet/version.cpp:111: no C# file for Version::ToString
+src/editor/editor_geometry.cpp:17: EditorBounds.cs:31 -> 30 (Awake) off by 1
+src/editor/editor_geometry.cpp:24: EditorBounds.cs:44 -> 42 (OnDestroy) off by 2
+src/editor/editor_geometry.cpp:29: EditorBounds.cs:60 -> 59 (ClampToCameraBounds) off by 1
+src/editor/editor_geometry.cpp:129: EditorGeometryUtil.cs:104 -> 102 (GetPixelDistance) off by 2
+src/editor/editor_geometry.cpp:189: EditorReRootUtil.cs:8 -> 6 (GetRootCandidates) off by 2
+src/editor/editor_markers.cpp:62: EditorMarker_CoL.cs:87 -> 84 (FindCoL) off by 3
+src/editor/editor_markers.cpp:89: EditorMarker_CoL.cs:130 -> 129 (recurseParts) off by 1
+src/editor/editor_markers.cpp:132: EditorMarker_CoT.cs:75 -> 74 (recurseParts) off by 1
+src/editor/preflight_tests.cpp:212: AntennaPresent.cs:32 -> 33 (TestCondition) off by 1
+src/editor/preflight_tests.cpp:285: CanAffordLaunchTest.cs:47 -> 45 (Test) off by 2
+src/editor/preflight_tests.cpp:303: ContractEquipment.cs:19 -> 21 (TestCondition) off by 2
+src/editor/preflight_tests.cpp:368: DecouplerFacing.cs:21 -> 20 (TestCondition) off by 1
+src/editor/preflight_tests.cpp:416: DockingPortAsDecoupler.cs:18 -> 19 (TestCondition) off by 1
+src/editor/preflight_tests.cpp:422: DockingPortAsDecoupler.cs:27 -> 29 (RecurseHierarchy) off by 2
+src/editor/preflight_tests.cpp:470: DockingPortFacing.cs:18 -> 19 (TestCondition) off by 1
+src/editor/preflight_tests.cpp:476: DockingPortFacing.cs:27 -> 29 (RecurseHierarchy) off by 2
+src/editor/preflight_tests.cpp:652: EnginesJettisonedBeforeUse.cs:19 -> 20 (TestCondition) off by 1
+src/editor/preflight_tests.cpp:663: EnginesJettisonedBeforeUse.cs:35 -> 36 (RecurseHierarchy) off by 1
+src/editor/preflight_tests.cpp:734: FacilityOperational.cs:12 -> 14 (FacilityOperational) off by 2
+src/editor/preflight_tests.cpp:754: HatchObstructed.cs:17 -> 16 (TestCondition) off by 1
+src/editor/preflight_tests.cpp:777: KerbalSeatCollision.cs:12 -> 10 (TestCondition) off by 2
+src/editor/preflight_tests.cpp:802: LadderPresent.cs:11 -> 13 (TestCondition) off by 2
+src/editor/preflight_tests.cpp:854: LaunchSiteClear.cs:34 -> 33 (Test) off by 1
+src/editor/preflight_tests.cpp:982: ParachuteOnEngineStage.cs:19 -> 20 (TestCondition) off by 1
+src/editor/preflight_tests.cpp:1123: ResourceContainersReachable.cs:23 -> 25 (TestCondition) off by 2
+src/editor/preflight_tests.cpp:1204: PreFlightCheck.cs:43 -> 46 (runNextTest) off by 3
+src/events/base_game_event.cpp:18: BaseGameEvent.cs:15 -> 14 (BaseGameEvent) off by 1
+src/events/base_game_event.cpp:37: BaseGameEvent.cs has no LogTypeMismatch (cite :30)
+src/io/url_dir.cpp:90: UrlDir.cs:128 -> 123 (UrlIdentifier) off by 5
+src/kerbals/crew_manifest.cpp:65: PartCrewManifest.cs:25 -> 23 (FromConfigNode) off by 2
+src/kerbals/crew_manifest.cpp:83: PartCrewManifest.cs:44 -> 42 (CloneOf) off by 2
+src/kerbals/crew_manifest.cpp:274: VesselCrewManifest.cs:86 -> 84 (GetAllCrew) off by 2
+src/kerbals/crew_manifest.cpp:279: VesselCrewManifest.cs:91 -> 89 (GetAllCrew) off by 2
+src/kerbals/crew_manifest.cpp:341: VesselCrewManifest.cs:182 -> 183 (SetPartManifestNoOverwrite) off by 1
+src/kerbals/experience.cpp:114: ExperienceTrait.cs:58 -> 59 (Create) off by 1
+src/kerbals/experience.cpp:132: ExperienceTrait.cs:74 -> 76 (SetupConfig) off by 2
+src/kerbals/experience.cpp:138: ExperienceTrait.cs:83 -> 85 (AddEffect) off by 2
+src/kerbals/experience.cpp:157: ExperienceTrait.cs:134 -> 126 (Register) off by 8
+src/kerbals/experience.cpp:163: ExperienceTrait.cs:144 -> 136 (Unregister) off by 8
+src/kerbals/experience.cpp:200: AutopilotSkill.cs:20 -> 22 (SkillsReadable) off by 2
+src/kerbals/experience.cpp:207: AutopilotSkill.cs:44 -> 45 (GetDescription) off by 1
+src/kerbals/experience.cpp:228: AutopilotSkill.cs:68 -> 72 (GetValue) off by 4
+src/kerbals/experience.cpp:238: DeployedScienceExpSkill.cs:17 -> 18 (GetDefaultValue) off by 1
+src/kerbals/experience.cpp:240: DeployedScienceExpSkill.cs:26 -> 27 (GetDescription) off by 1
+src/kerbals/experience.cpp:248: DeployedScienceExpSkill.cs:36 -> 37 (GetValue) off by 1
+src/kerbals/experience.cpp:255: DeployedSciencePowerSkill.cs:17 -> 18 (GetDefaultValue) off by 1
+src/kerbals/experience.cpp:257: DeployedSciencePowerSkill.cs:26 -> 27 (GetDescription) off by 1
+src/kerbals/experience.cpp:278: EnginePower.cs:21 -> 22 (GetDescription) off by 1
+src/kerbals/experience.cpp:280: EnginePower.cs:27 -> 28 (OnRegister) off by 1
+src/kerbals/experience.cpp:282: EnginePower.cs:32 -> 33 (OnUnregister) off by 1
+src/kerbals/experience.cpp:284: EnginePower.cs:37 -> 38 (GetValue) off by 1
+src/kerbals/experience.cpp:287: FuelUsage.cs:21 -> 22 (GetDescription) off by 1
+src/kerbals/experience.cpp:289: FuelUsage.cs:27 -> 28 (OnRegister) off by 1
+src/kerbals/experience.cpp:291: FuelUsage.cs:32 -> 33 (OnUnregister) off by 1
+src/kerbals/experience.cpp:293: FuelUsage.cs:37 -> 38 (GetValue) off by 1
+src/kerbals/experience.cpp:296: HeatProduction.cs:21 -> 22 (GetDescription) off by 1
+src/kerbals/experience.cpp:298: HeatProduction.cs:27 -> 28 (OnRegister) off by 1
+src/kerbals/experience.cpp:300: HeatProduction.cs:32 -> 33 (OnUnregister) off by 1
+src/kerbals/experience.cpp:302: HeatProduction.cs:37 -> 38 (GetValue) off by 1
+src/kerbals/experience.cpp:305: MaxThrottle.cs:21 -> 22 (GetDescription) off by 1
+src/kerbals/experience.cpp:307: MaxThrottle.cs:27 -> 28 (OnRegister) off by 1
+src/kerbals/experience.cpp:309: MaxThrottle.cs:32 -> 33 (OnUnregister) off by 1
+src/kerbals/experience.cpp:311: MaxThrottle.cs:37 -> 38 (GetValue) off by 1
+src/kerbals/experience.cpp:314: PartScienceReturn.cs:21 -> 22 (GetDescription) off by 1
+src/kerbals/experience.cpp:316: PartScienceReturn.cs:27 -> 28 (OnRegister) off by 1
+src/kerbals/experience.cpp:318: PartScienceReturn.cs:32 -> 33 (OnUnregister) off by 1
+src/kerbals/experience.cpp:320: PartScienceReturn.cs:37 -> 38 (GetValue) off by 1
+src/kerbals/experience.cpp:323: VesselScienceReturn.cs:21 -> 22 (GetDescription) off by 1
+src/kerbals/experience.cpp:325: VesselScienceReturn.cs:27 -> 28 (OnRegister) off by 1
+src/kerbals/experience.cpp:327: VesselScienceReturn.cs:32 -> 33 (OnUnregister) off by 1
+src/kerbals/experience.cpp:329: VesselScienceReturn.cs:37 -> 38 (GetValue) off by 1
+src/kerbals/experience.cpp:337: EVAChuteSkill.cs:18 -> 25 (GetValue) off by 7
+src/kerbals/experience.cpp:345: FailureRepairSkill.cs:12 -> 13 (SkillsReadable) off by 1
+src/kerbals/experience.cpp:364: FailureRepairSkill.cs:56 -> 61 (GetValue) off by 5
+src/kerbals/experience.cpp:384: GeeForceTolerance.cs:26 -> 32 (GeeTolerance) off by 6
+src/kerbals/experience.cpp:393: RepairSkill.cs:16 -> 15 (SkillsReadable) off by 1
+src/kerbals/experience.cpp:399: RepairSkill.cs:36 -> 37 (GetDescription) off by 1
+src/kerbals/experience.cpp:414: RepairSkill.cs:63 -> 68 (GetValue) off by 5
+src/kerbals/experience.cpp:422: ScienceSkill.cs:27 -> 35 (GetValue) off by 8
+src/kerbals/kerbal_misc.cpp:102: ModuleExperienceManagement.cs:14 -> 11 (OnStart) off by 3
+src/kerbals/kerbal_misc.cpp:151: ModuleExperienceManagement.cs:71 -> 69 (GetModuleDisplayName) off by 2
+src/kerbals/proto_crew_member_ext.cpp:60: ProtoCrewMember.cs:193 -> 195 (nameWithGender) off by 2
+src/localization/localizer.cpp:61: no C# file for Grammar::useGrammar
+src/localization/localizer.cpp:83: no C# file for Grammar::useGrammar
+src/math/quaterniond.cpp:13: QuaternionD.cs:50 -> 56 (QuaternionD) off by 6
+src/math/quaterniond.cpp:49: QuaternionD.cs:88 -> 129 (FrameVectors) off by 41
+src/math/quaterniond.cpp:56: QuaternionD.cs:98 -> 151 (AngleAxis) off by 53
+src/math/quaterniond.cpp:76: QuaternionD.cs:126 -> 196 (LookRotation) off by 70
+src/math/quaterniond.cpp:122: QuaternionD.cs:203 -> 316 (Angle) off by 113
+src/math/util_math.cpp:163: Planetarium.cs:25 -> 30 (SetFrame) off by 5
+src/math/util_math.cpp:176: Planetarium.cs:37 -> 43 (OrbitalFrame) off by 6
+src/math/util_math.cpp:184: Planetarium.cs:45 -> 51 (PlanetaryFrame) off by 6
+src/modules/animation_modules.cpp:66: ModuleAnimationSetter.cs:54 -> 52 (OnStart) off by 2
+src/modules/animation_modules.cpp:69: ModuleAnimationSetter.cs:59 -> 57 (Update) off by 2
+src/modules/animation_modules.cpp:72: ModuleAnimationSetter.cs:64 -> 62 (AnimStartup) off by 2
+src/modules/animation_modules.cpp:89: ModuleAnimationSetter.cs:81 -> 79 (SetScalar) off by 2
+src/modules/animation_modules.cpp:132: ModuleAnimateGeneric.cs:234 -> 197 (Toggle) off by 37
+src/modules/animation_modules.cpp:698: ModuleAnimationGroup.cs:313 -> 312 (UpdateAnimationTime) off by 1
+src/modules/animation_modules.cpp:955: ModuleAnimatorLandingGear.cs:10 -> 7 (InputGearToggle) off by 3
+src/modules/axis_groups_manager.cpp:9: AxisGroupsManager.cs:7 -> 5 (BuildBaseAxisFields) off by 2
+src/modules/base_event.cpp:72: BaseEventDetails.cs:84 -> 80 (GetInt) off by 4
+src/modules/base_event.cpp:200: BaseEvent.cs:255 -> 241 (OnSave) off by 14
+src/modules/base_event.cpp:222: BaseEventList.cs:135 -> 116 (CreateDelegates) off by 19
+src/modules/base_event.cpp:231: BaseEventList.cs:150 -> 149 (Add) off by 1
+src/modules/base_event.cpp:263: BaseEventList.cs:225 -> 233 (Send) off by 8
+src/modules/base_event.cpp:332: BaseAction.cs:37 -> 55 (ActionGroupsLength) off by 18
+src/modules/base_event.cpp:360: BaseAction.cs:150 -> 155 (OnLoad) off by 5
+src/modules/base_event.cpp:373: BaseAction.cs:183 -> 184 (OnSave) off by 1
+src/modules/base_event.cpp:387: BaseActionList.cs:79 -> 99 (ReflectActions) off by 20
+src/modules/base_field.cpp:69: BaseField.cs has no FromAttribute (cite :517)
+src/modules/base_field.cpp:109: BaseField.cs has no NewLabel (cite :536)
+src/modules/base_field.cpp:479: BaseFieldList.cs:154 -> 135 (BaseFieldList) off by 19
+src/modules/base_field.cpp:512: BaseFieldList.cs:259 -> 288 (ReadValue) off by 29
+src/modules/base_field.cpp:523: BaseFieldList.cs:293 -> 336 (Load) off by 43
+src/modules/base_field.cpp:569: BaseFieldList.cs:366 -> 401 (Save) off by 35
+src/modules/control_types.cpp:9: ControlPoint.cs:21 -> 19 (ControlPoint) off by 2
+src/modules/control_types.cpp:27: SteeringObject.cs:31 -> 30 (FindAlignmentAxis) off by 1
+src/modules/deployables.cpp:153: ModuleDeployablePart.cs:328 -> 329 (Extend) off by 1
+src/modules/deployables.cpp:218: ModuleDeployablePart.cs:406 -> 407 (EventRepairExternal) off by 1
+src/modules/deployables.cpp:224: ModuleDeployablePart.cs:445 -> 443 (CheatRepair) off by 2
+src/modules/deployables.cpp:227: ModuleDeployablePart.cs:450 -> 448 (DoRepair) off by 2
+src/modules/deployables.cpp:678: ModuleDeployablePart.cs:1137 -> 1136 (ShouldBreakFromG) off by 1
+src/modules/deployables.cpp:685: ModuleDeployablePart.cs:1146 -> 1145 (CalculateTrackingLOS) off by 1
+src/modules/deployables.cpp:694: ModuleDeployablePart.cs:1157 -> 1155 (CalculateTracking) off by 2
+src/modules/deployables.cpp:832: ModuleDeployableAntenna.cs:11 -> 5 (CanMove) off by 6
+src/modules/deployables.cpp:855: ModuleDeployableAntenna.cs:56 -> 55 (GetModuleDisplayName) off by 1
+src/modules/deployables.cpp:860: ModuleDeployableRadiator.cs:9 -> 7 (OnLoad) off by 2
+src/modules/module_command.cpp:267: ModuleCommand.cs:462 -> 466 (UpdateControlState) off by 4
+src/modules/module_command.cpp:376: ModuleCommand.cs:625 -> 631 (MakeReference) off by 6
+src/modules/module_command.cpp:516: ModuleRemoteController.cs:6 -> 7 (Toggle) off by 1
+src/modules/module_decouplers.cpp:48: ModuleDecouplerBase.cs has no ~ModuleDecouplerBase (cite :122)
+src/modules/module_docking_node.cpp:471: ModuleDockingNode.cs:759 -> 758 (DemoteToPhysicslessPart) off by 1
+src/modules/module_docking_node.cpp:474: ModuleDockingNode.cs:764 -> 763 (PromoteToPhysicalPart) off by 1
+src/modules/module_docking_node.cpp:477: ModuleDockingNode.cs:769 -> 768 (OnPartMenuOpen) off by 1
+src/modules/module_docking_node.cpp:486: ModuleDockingNode.cs:779 -> 777 (OnPartMenuClose) off by 2
+src/modules/module_docking_node.cpp:503: ModuleDockingNode.cs:797 -> 795 (lateFSMStart) off by 2
+src/modules/module_docking_node.cpp:1245: ModuleDockingNode.cs:1751 -> 1750 (DecoupleAction) off by 1
+src/modules/module_docking_node.cpp:1250: ModuleDockingNode.cs:1760 -> 1759 (Decouple) off by 1
+src/modules/module_docking_node.cpp:1389: ModuleDockingNode.cs:1981 -> 1982 (GetStagingDisableText) off by 1
+src/modules/module_docking_node.cpp:1396: ModuleDockingNode.cs:2044 -> 2046 (GetModuleDisplayName) off by 2
+src/modules/module_engines.cpp:861: MultiModeEngine.cs has no ~MultiModeEngine (cite :303)
+src/modules/module_grapple_node.cpp:675: ModuleGrappleNode.cs:826 -> 827 (MakeReferenceToggle) off by 1
+src/modules/module_grapple_node.cpp:678: ModuleGrappleNode.cs:832 -> 833 (MakeReferenceTransform) off by 1
+src/modules/module_grapple_node.cpp:685: ModuleGrappleNode.cs:839 -> 840 (SetLoose) off by 1
+src/modules/module_grapple_node.cpp:694: ModuleGrappleNode.cs:848 -> 849 (LockPivot) off by 1
+src/modules/module_grapple_node.cpp:730: ModuleGrappleNode.cs:911 -> 909 (IsJointUnlocked) off by 2
+src/modules/module_grapple_node.cpp:736: ModuleGrappleNode.cs:903 -> 904 (GetInfo) off by 1
+src/modules/module_procedural_fairing.cpp:125: bare cite :1366 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:157: bare cite :1427 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:174: bare cite :1462 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:180: bare cite :1468 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:195: bare cite :1494 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:201: bare cite :1534 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:210: bare cite :1552 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:233: bare cite :1558 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:241: bare cite :1573 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:246: bare cite :1581 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:253: bare cite :1663 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:259: bare cite :1682 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:265: bare cite :1701 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:268: ModuleProceduralFairing.cs:274 -> 295 (GetScalar) off by 21
+src/modules/module_procedural_fairing.cpp:276: bare cite :1711 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:279: bare cite :1765 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:294: bare cite :640 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:305: bare cite :673 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:313: ModuleProceduralFairing.cs has no OnVesselModified (cite :737)
+src/modules/module_procedural_fairing.cpp:331: bare cite :2031 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:350: bare cite :2122 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:365: bare cite :2157 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:383: bare cite :2186 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:387: bare cite :2196 (add ModuleProceduralFairing.cs)
+src/modules/module_procedural_fairing.cpp:392: bare cite :2201 (add ModuleProceduralFairing.cs)
+src/modules/module_staging.cpp:79: ModuleDecouplerBase.cs has no SetModuleAttributesIsStageable (cite :116)
+src/modules/module_structural.cpp:51: ModuleCargoBay.cs has no IsAlive (cite :326)
+src/modules/module_structural.cpp:125: ModuleCargoBay.cs has no OnEditorVesselModified (cite :207)
+src/modules/module_structural.cpp:128: ModuleCargoBay.cs has no ScheduleColliderReset (cite :212)
+src/modules/module_structural.cpp:143: ModuleCargoBay.cs has no RunScheduledColliderReset (cite :225)
+src/modules/module_structural.cpp:159: ModuleCargoBay.cs has no OnVesselModified (cite :253)
+src/modules/module_structural.cpp:174: ModuleCargoBay.cs has no OnCargoBayDoorsMoving (cite :284)
+src/modules/module_structural.cpp:179: ModuleCargoBay.cs has no OnCargoBayDoorsStopped (cite :293)
+src/modules/module_structural.cpp:199: ModuleCargoBay.cs has no FindModule (cite :349)
+src/modules/module_structural.cpp:371: ModuleCargoBay.cs has no ScheduleColliderResetForAllBays (cite :730)
+src/modules/module_structural.cpp:476: ModuleJettison.cs has no OnVariantApplied (cite :233)
+src/modules/module_strut.cpp:27: CModuleStrut.cs:26 -> 24 (OnTargetSet) off by 2
+src/modules/module_strut.cpp:76: CModuleStrut.cs:77 -> 78 (GetInfo) off by 1
+src/modules/module_strut.cpp:86: CModuleStrut.cs:97 -> 98 (GetModuleDisplayName) off by 1
+src/modules/module_strut.cpp:89: CModuleStrut.cs:102 -> 103 (CacheLocalStrings) off by 1
+src/modules/parachutes.cpp:740: ModuleEvaChute.cs:218 -> 226 (ToggleEVAChuteParams) off by 8
+src/modules/parachutes.cpp:765: ModuleEvaChute.cs:263 -> 262 (OnParachuteSemiDeployed) off by 1
+src/modules/parachutes.cpp:774: ModuleEvaChute.cs:279 -> 280 (OnParachuteFullyDeployed) off by 1
+src/modules/parachutes.cpp:792: ModuleEvaChute.cs:296 -> 295 (CutParachute) off by 1
+src/modules/part_structural_modules.cpp:59: ModuleDisplaceTweak.cs has no ~ModuleDisplaceTweak (cite :74)
+src/modules/resource_converters.cpp:132: ResourceRatio.cs:55 -> 56 (Save) off by 1
+src/modules/resource_converters.cpp:318: BaseConverter.cs:326 -> 327 (UpdateConverterStatus) off by 1
+src/modules/resource_converters.cpp:360: BaseConverter.cs:400 -> 399 (SetupLabels) off by 1
+src/modules/resource_converters.cpp:378: BaseConverter.cs:420 -> 418 (SetupModule) off by 2
+src/modules/resource_converters.cpp:433: BaseConverter.cs:486 -> 488 (OnSave) off by 2
+src/modules/resource_converters.cpp:471: BaseConverter.cs:493 -> 494 (GetEfficiencyMultiplier) off by 1
+src/modules/resource_converters.cpp:695: ModuleResourceConverter.cs:125 -> 123 (GetModuleDisplayName) off by 2
+src/modules/resource_converters.cpp:713: ModuleResourceHarvester.cs:176 -> 174 (PrepareRecipe) off by 2
+src/modules/resource_converters.cpp:1062: ModuleAsteroidDrill.cs:260 -> 259 (PostProcess) off by 1
+src/modules/resource_converters.cpp:1084: ModuleSpaceObjectResource.cs:28 -> 29 (OnLoad) off by 1
+src/modules/resource_converters.cpp:1101: ModuleSpaceObjectInfo.cs:30 -> 31 (currentMassVal) off by 1
+src/modules/resource_converters.cpp:1109: ModuleSpaceObjectInfo.cs:46 -> 45 (massThresholdVal) off by 1
+src/modules/resource_converters.cpp:1160: ModuleAsteroidInfo.cs:11 -> 10 (OnStart) off by 1
+src/modules/resource_converters.cpp:1176: ModuleAsteroidInfo.cs:31 -> 30 (SetupAsteroidResources) off by 1
+src/modules/resource_converters.cpp:1185: ModuleAsteroidInfo.cs:37 -> 36 (Update) off by 1
+src/modules/resource_converters.cpp:1196: ModuleAnalysisResource.cs:16 -> 17 (OnStart) off by 1
+src/modules/resource_converters.cpp:1199: ModuleAnalysisResource.cs:22 -> 23 (Update) off by 1
+src/modules/resource_converters.cpp:1204: ModuleAnalysisResource.cs:30 -> 31 (SetupAnalysis) off by 1
+src/modules/resource_converters.cpp:1248: ModuleAsteroidAnalysis.cs:15 -> 14 (OnDestroy) off by 1
+src/modules/resource_converters.cpp:1259: ModuleAsteroidAnalysis.cs:21 -> 20 (CheckForPotato) off by 1
+src/modules/resource_converters.cpp:1270: ModuleAsteroidAnalysis.cs:34 -> 33 (ClearAsteroidResources) off by 1
+src/modules/resource_generators.cpp:64: ModuleGenerator.cs:95 -> 101 (Shutdown) off by 6
+src/modules/resource_generators.cpp:240: ModuleFuelJettison.cs:28 -> 29 (Dump) off by 1
+src/modules/resource_generators.cpp:248: ModuleFuelJettison.cs:35 -> 36 (FuelJettisonAction) off by 1
+src/modules/resource_generators.cpp:251: ModuleFuelJettison.cs:40 -> 41 (OnStart) off by 1
+src/modules/resource_generators.cpp:299: ModuleResourceDrain.cs:157 -> 156 (FixedUpdate) off by 1
+src/modules/resource_generators.cpp:304: ModuleResourceDrain.cs:165 -> 164 (OnDestroy) off by 1
+src/modules/resource_generators.cpp:307: ModuleResourceDrain.cs:173 -> 174 (StartResourceDrainAction) off by 1
+src/modules/resource_generators.cpp:309: ModuleResourceDrain.cs:179 -> 180 (StopResourceDrainAction) off by 1
+src/modules/resource_generators.cpp:311: ModuleResourceDrain.cs:185 -> 186 (ToggleResourceDrainAction) off by 1
+src/modules/resource_generators.cpp:313: ModuleResourceDrain.cs:191 -> 192 (ToggleResourceDrainFlowAction) off by 1
+src/modules/resource_generators.cpp:530: ModuleResourceDrain.cs:561 -> 562 (GetPartResource) off by 1
+src/modules/resource_generators.cpp:545: ModuleResourceDrain.cs:595 -> 593 (UpdateResourceDrainStatus) off by 2
+src/modules/resource_generators.cpp:552: ModuleResourceDrain.cs:607 -> 605 (ResourcesToDrain) off by 2
+src/modules/resource_generators.cpp:568: ModuleResourceDrain.cs:636 -> 637 (GetResourceDrainStatus) off by 1
+src/modules/resource_scanners.cpp:41: ModuleResourceScanner.cs:58 -> 61 (GetScanningMode) off by 3
+src/modules/resource_scanners.cpp:84: ModuleResourceScanner.cs:128 -> 130 (CheckAbundanceDisplay) off by 2
+src/modules/resource_scanners.cpp:98: ModuleResourceScanner.cs:146 -> 150 (DisplayAbundance) off by 4
+src/modules/resource_scanners.cpp:126: ModuleResourceScanner.cs:194 -> 195 (ToggleEvent) off by 1
+src/modules/resource_scanners.cpp:132: ModuleResourceScanner.cs:200 -> 201 (IsSituationValid) off by 1
+src/modules/resource_scanners.cpp:198: ModuleOrbitalScanner.cs:52 -> 54 (GenerateOverlay) off by 2
+src/modules/resource_scanners.cpp:208: ModuleOrbitalScanner.cs:64 -> 66 (SetColor) off by 2
+src/modules/resource_scanners.cpp:229: ModuleOrbitalScanner.cs:99 -> 97 (IncreaseCutoff) off by 2
+src/modules/resource_scanners.cpp:236: ModuleOrbitalScanner.cs:113 -> 111 (DecreaseCutoff) off by 2
+src/modules/resource_scanners.cpp:243: ModuleOrbitalScanner.cs:127 -> 125 (ActivateScanner) off by 2
+src/modules/resource_scanners.cpp:246: ModuleOrbitalScanner.cs:132 -> 130 (ToggleSurvey) off by 2
+src/modules/resource_scanners.cpp:405: ModuleOrbitalSurveyor.cs:44 -> 51 (rescaleThresholds) off by 7
+src/modules/resource_scanners.cpp:456: ModuleOrbitalSurveyor.cs:119 -> 118 (CheckForScanData) off by 1
+src/modules/resource_scanners.cpp:462: ModuleOrbitalSurveyor.cs:130 -> 128 (Update) off by 2
+src/modules/scenario_runner.cpp:36: ScenarioRunner.cs:20 -> 11 (ScenarioRunner) off by 9
+src/modules/scenario_runner.cpp:52: ScenarioRunner.cs has no ~ScenarioRunner (cite :32)
+src/modules/scenario_runner.cpp:62: ScenarioRunner.cs:39 -> 35 (OnGameSceneLoadRequested) off by 4
+src/modules/scenario_runner.cpp:69: ScenarioRunner.cs:54 -> 48 (onLevelWasLoaded) off by 6
+src/modules/scenario_runner.cpp:74: ScenarioRunner.cs:64 -> 56 (AddMainMenuScenarios) off by 8
+src/modules/scenario_runner.cpp:92: ScenarioRunner.cs:122 -> 107 (AddModule) off by 15
+src/modules/scenario_runner.cpp:106: ScenarioRunner.cs:140 -> 107 (AddModule) off by 33
+src/modules/scenario_runner.cpp:125: ProtoScenarioModule.cs:66 -> 83 (Load) off by 17
+src/modules/scenario_runner.cpp:140: ScenarioRunner.cs:98 -> 131 (LoadModules) off by 33
+src/modules/scenario_runner.cpp:161: ScenarioRunner.cs:158 -> 169 (UpdateModules) off by 11
+src/modules/scenario_runner.cpp:184: ScenarioRunner.cs:213 -> 202 (RemoveModule) off by 11
+src/modules/vessel_module.cpp:16: VesselModule.cs:54 -> 49 (Awake) off by 5
+src/modules/vessel_module.cpp:22: VesselModule.cs:68 -> 61 (Load) off by 7
+src/modules/vessel_module.cpp:28: VesselModule.cs:74 -> 67 (Save) off by 7
+src/modules/vessel_module.cpp:34: VesselModule.cs:99 -> 105 (ShouldBeActive) off by 6
+src/modules/vessel_module.cpp:147: VesselModuleManager.cs:178 -> 143 (AddModulesToVessel) off by 35
+src/orbit/maneuver_node.cpp:39: ManeuverNode.cs:28 -> 27 (AttachGizmo) off by 1
+src/orbit/maneuver_node.cpp:49: ManeuverNode.cs:41 -> 40 (OnGizmoUpdated) off by 1
+src/orbit/maneuver_node.cpp:74: ManeuverNode.cs:72 -> 70 (DetachGizmo) off by 2
+src/orbit/maneuver_node.cpp:82: ManeuverNode.cs:82 -> 80 (RemoveSelf) off by 2
+src/orbit/maneuver_node.cpp:92: ManeuverNode.cs:93 -> 91 (GetBurnVector) off by 2
+src/orbit/maneuver_node.cpp:102: ManeuverNode.cs:105 -> 104 (Load) off by 1
+src/orbit/maneuver_node.cpp:108: ManeuverNode.cs:117 -> 116 (Save) off by 1
+src/orbit/maneuver_node.cpp:114: ManeuverNode.cs:123 -> 122 (GetPartialDv) off by 1
+src/orbit/maneuver_node.cpp:125: PatchedConicRenderer.cs has no UpdateNodeRotation (cite :200)
+src/orbit/orbit.cpp:74: Orbit.cs:90 -> 91 (Halley_dt) off by 1
+src/orbit/orbit.cpp:79: Orbit.cs:95 -> 96 (Clamp_dt) off by 1
+src/orbit/orbit.cpp:89: Orbit.cs has no CopyOf (cite :321)
+src/orbit/orbit.cpp:104: Orbit.cs:282 -> 290 (semiMinorAxis) off by 8
+src/orbit/orbit.cpp:110: Orbit.cs:294 -> 302 (semiLatusRectum) off by 8
+src/orbit/orbit.cpp:112: Orbit.cs:296 -> 304 (PeR) off by 8
+src/orbit/orbit.cpp:114: Orbit.cs:298 -> 306 (ApR) off by 8
+src/orbit/orbit.cpp:116: Orbit.cs:300 -> 308 (PeA) off by 8
+src/orbit/orbit.cpp:118: Orbit.cs:302 -> 310 (ApA) off by 8
+src/orbit/orbit.cpp:930: Orbit.cs has no FindClosestPointsDefault (cite :1385)
+src/orbit/orbit.cpp:1041: Orbit.cs has no SolveClosestApproachDefault (cite :1530)
+src/orbit/orbit.cpp:1121: Orbit.cs has no SolveSOIDefault (cite :1648)
+src/orbit/orbit.cpp:1150: Orbit.cs has no SolveSOI_BSPDefault (cite :1680)
+src/orbit/orbit_driver.cpp:59: OrbitDriver.cs has no ~OrbitDriver (cite :123)
+src/orbit/patched_conic_solver.cpp:41: PatchedConicSolver.cs:71 -> 8 (PatchedConicSolver) off by 63
+src/orbit/patched_conic_solver.cpp:56: PatchedConicSolver.cs has no ~PatchedConicSolver (cite :96)
+src/orbit/patched_conic_solver.cpp:65: PatchedConicSolver.cs:51 -> 50 (LastActivePatch) off by 1
+src/orbit/patched_conic_solver.cpp:75: PatchedConicSolver.cs:105 -> 103 (OnReferenceBodyChange) off by 2
+src/orbit/patched_conic_solver.cpp:78: PatchedConicSolver.cs:110 -> 108 (OnGameSettingsApplied) off by 2
+src/orbit/patched_conic_solver.cpp:86: PatchedConicSolver.cs has no StartMoveNext (cite :116)
+src/orbit/patched_conic_solver.cpp:113: PatchedConicSolver.cs:137 -> 141 (Update) off by 4
+src/orbit/patched_conic_solver.cpp:143: PatchedConicSolver.cs:183 -> 181 (UpdateFlightPlan) off by 2
+src/orbit/patched_conic_solver.cpp:178: PatchedConicSolver.cs:228 -> 229 (FindManeuverIndex) off by 1
+src/orbit/patched_conic_solver.cpp:224: PatchedConicSolver.cs:287 -> 292 (AddManeuverNode) off by 5
+src/orbit/patched_conic_solver.cpp:241: PatchedConicSolver.cs:310 -> 315 (RemoveManeuverNode) off by 5
+src/orbit/patched_conic_solver.cpp:260: PatchedConicSolver.cs:337 -> 344 (IncreasePatchLimit) off by 7
+src/orbit/patched_conic_solver.cpp:266: PatchedConicSolver.cs:344 -> 351 (DecreasePatchLimit) off by 7
+src/orbit/patched_conic_solver.cpp:272: PatchedConicSolver.cs:350 -> 357 (Load) off by 7
+src/orbit/patched_conic_solver.cpp:282: PatchedConicSolver.cs:364 -> 370 (Save) off by 6
+src/orbit/patched_conics.cpp:41: PatchedConics.cs:99 -> 95 (_GetClosestApproach) off by 4
+src/orbit/patched_conics.cpp:69: PatchedConics.cs:127 -> 124 (_EncountersBody) off by 3
+src/orbit/patched_conics.cpp:178: PatchedConics.cs:265 -> 259 (_CalculatePatch) off by 6
+src/orbit/patched_conics.cpp:234: PatchedConics.cs:444 -> 445 (AngleWrap) off by 1
+src/orbit/patched_conics.cpp:240: PatchedConics.cs:450 -> 451 (TAIsWithinPatchBounds) off by 1
+src/orbit/targeting.cpp:325: Targeting.cs has no BorrowSample (cite :472)
+src/orbit/targeting.cpp:348: Targeting.cs has no BorrowInterval (cite :691)
+src/orbit/time_warp.cpp:84: TimeWarp.cs has no ~TimeWarp (cite :699)
+src/orbit/time_warp.cpp:584: TimeWarp.cs has no autoWarpMoveNext (cite :748)
+src/parts/compound_part.cpp:114: CompoundPart.cs has no OnPartDestroy (cite :283)
+src/parts/compound_part.cpp:123: CompoundPart.cs has no OnStartComplete (cite :169)
+src/parts/compound_part.cpp:239: CompoundPart.cs has no OnTargetDetach (cite :375)
+src/parts/part.cpp:75: AttachNode.cs has no FromTransform (cite :86)
+src/parts/part.cpp:207: Part.cs has no set_State (cite :909)
+src/parts/part.cpp:240: Part.cs has no set_ShieldedFromAirstream (cite :1171)
+src/parts/part.cpp:348: Part.cs has no StartData (cite :1663)
+src/parts/part.cpp:1119: ProtoStageIcon.cs has no CreateStageIcon (cite :57)
+src/parts/part.cpp:1126: ProtoStageIcon.cs has no RemoveStageIcon (cite :101)
+src/parts/part_data.cpp:249: PartResource.cs has no SetFlowState (cite :36)
+src/parts/part_data.cpp:257: PartResource.cs has no SetFlowMode (cite :53)
+src/parts/part_decouple.cpp:47: Part.cs has no StartStaging (cite :1727)
+src/parts/part_decouple.cpp:242: DockedVesselInfo.cs:31 -> 30 (Load) off by 1
+src/parts/part_decouple.cpp:275: DockedVesselInfo.cs:96 -> 101 (Save) off by 5
+src/parts/part_loader.cpp:331: PartLoader.cs has no FloatParse (cite :1124)
+src/parts/part_module_data.cpp:320: Propellant.cs:62 -> 79 (Load) off by 17
+src/parts/part_module_data.cpp:345: Propellant.cs:114 -> 126 (GetFlowMode) off by 12
+src/parts/part_module_data.cpp:351: Propellant.cs:58 -> 74 (UpdateConnectedResources) off by 16
+src/parts/part_shield.cpp:26: Part.cs:7641 -> 7640 (OnShieldModified) off by 1
+src/parts/part_variant.cpp:21: PartVariant.cs has no FromBase (cite :213)
+src/parts/part_variant.cpp:105: PartVariant.cs has no ModelVisibility (cite :471)
+src/physics/physics_globals.cpp:139: PhysicsGlobals.cs has no ~PhysicsGlobals (cite :2775)
+src/resources/part_resource_library.cpp:122: PartResourceDefinitionList.cs:45 -> 42 (Add) off by 3
+src/resources/part_resource_library.cpp:150: PartResourceLibrary.cs:44 -> 46 (LoadDefinitions) off by 2
+src/resources/part_resource_library.cpp:166: PartResourceLibrary.cs:77 -> 75 (GetDefaultFlowMode) off by 2
+src/resources/physic_material_library.cpp:40: PhysicMaterialDefinition.cs:58 -> 78 (Load) off by 20
+src/resources/physic_material_library.cpp:72: PhysicMaterialLibrary.cs:44 -> 47 (LoadDefinitions) off by 3
+src/resources/physic_material_library.cpp:92: PhysicMaterialLibrary.cs:70 -> 78 (CreatePhysicMaterials) off by 8
+src/resources/planetary_resources.cpp:645: ResourceMap.cs:77 -> 25 (ResourceMap) off by 52
+src/resources/planetary_resources.cpp:652: ResourceMap.cs has no ~ResourceMap (cite :87)
+src/resources/resource_broker.cpp:56: ResourceSetup.cs:33 -> 32 (LoadResourceConfig) off by 1
+src/resources/resource_broker.cpp:133: ResourceConverter.cs:23 -> 22 (ProcessRecipe) off by 1
+src/save/game.cpp:56: ScenarioModule.cs:41 -> 44 (Awake) off by 3
+src/save/game.cpp:74: ScenarioModule.cs:55 -> 52 (Save) off by 3
+src/save/game.cpp:82: ScenarioModule.cs:72 -> 70 (Load) off by 2
+src/save/game.cpp:90: ProtoScenarioModule.cs:13 -> 14 (ProtoScenarioModule) off by 1
+src/save/game.cpp:100: ProtoScenarioModule.cs:23 -> 24 (ProtoScenarioModule) off by 1
+src/save/game.cpp:114: ProtoScenarioModule.cs:51 -> 53 (SetTargetScenes) off by 2
+src/save/game.cpp:122: ProtoScenarioModule.cs:73 -> 78 (Save) off by 5
+src/save/game.cpp:167: FlightState.cs:92 -> 91 (FlightState) off by 1
+src/save/game.cpp:196: FlightState.cs:153 -> 150 (Save) off by 3
+src/save/game.cpp:209: FlightState.cs:182 -> 177 (ContainsFlightID) off by 5
+src/save/game.cpp:219: Game.cs:146 -> 145 (Game) off by 1
+src/save/game.cpp:249: Game.cs:181 -> 176 (Game) off by 5
+src/save/game.cpp:381: Game.cs:372 -> 397 (Updated) off by 25
+src/save/game.cpp:389: Game.cs:381 -> 397 (Updated) off by 16
+src/save/game.cpp:418: Game.cs:419 -> 442 (Save) off by 23
+src/save/game.cpp:491: Game.cs:600 -> 605 (GetCloneOf) off by 5
+src/save/game.cpp:498: Game.cs:607 -> 612 (AddProtoScenarioModule) off by 5
+src/save/game.cpp:540: Game.cs:666 -> 680 (RemoveProtoScenarioModule) off by 14
+src/save/game.cpp:549: Game.cs:738 -> 720 (PopulateGameSeed) off by 18
+src/save/game.cpp:558: Game.cs:747 -> 729 (PopulateROCGameSeed) off by 18
+src/save/game.cpp:567: Game.cs:752 -> 738 (ToString) off by 14
+src/save/game.cpp:574: Game.cs:759 -> 745 (GetCometNumberedName) off by 14
+src/save/game.cpp:583: Game.cs:772 -> 758 (SaveCometNames) off by 14
+src/save/game.cpp:591: Game.cs:784 -> 769 (LoadCometNames) off by 15
+src/save/game.cpp:633: GameBackup.cs:15 -> 13 (GameBackup) off by 2
+src/save/game_parameters.cpp:127: GameParameters.cs:438 -> 434 (Load) off by 4
+src/save/game_parameters.cpp:298: GameParameters.cs:206 -> 202 (DifficultyParams) off by 4
+src/save/game_parameters.cpp:333: GameParameters.cs has no GetEnableKerbalExperience (cite :317)
+src/save/game_parameters.cpp:344: GameParameters.cs:342 -> 334 (KerbalExperienceEnabled) off by 8
+src/save/game_parameters.cpp:355: GameParameters.cs:356 -> 348 (SetDifficultyPreset) off by 8
+src/save/game_parameters.cpp:376: GameParameters.cs:378 -> 371 (Interactible) off by 7
+src/save/game_parameters.cpp:384: GameParameters.cs:394 -> 388 (OnLoad) off by 6
+src/save/game_parameters.cpp:395: CommNetParams.cs:43 -> 41 (Interactible) off by 2
+src/save/game_parameters.cpp:400: CommNetParams.cs:48 -> 46 (SetDifficultyPreset) off by 2
+src/save/game_parameters.cpp:428: MissionParamsGeneral.cs:47 -> 48 (Interactible) off by 1
+src/save/game_parameters.cpp:437: MissionParamsGeneral.cs:59 -> 61 (SetDifficultyPreset) off by 2
+src/save/game_parameters.cpp:463: MissionParamsExtras.cs:37 -> 42 (Interactible) off by 5
+src/save/game_parameters.cpp:470: MissionParamsExtras.cs:49 -> 55 (SetDifficultyPreset) off by 6
+src/save/game_parameters.cpp:527: GameParameters.cs:616 -> 612 (ParameterTypes) off by 4
+src/save/game_parameters.cpp:565: GameParameters.cs:641 -> 643 (GameParameters) off by 2
+src/save/game_parameters.cpp:572: GameParameters.cs:723 -> 737 (CustomParams) off by 14
+src/save/game_parameters.cpp:586: GameParameters.cs:661 -> 666 (Load) off by 5
+src/save/game_parameters.cpp:602: GameParameters.cs:692 -> 703 (Save) off by 11
+src/save/game_parameters.cpp:618: GameParameters.cs:735 -> 748 (LoadCustomNode) off by 13
+src/save/game_parameters.cpp:641: GameParameters.cs:759 -> 771 (SetDifficultyPresets) off by 12
+src/save/game_parameters.cpp:705: GameParameters.cs:840 -> 841 (GetDefaultParameters) off by 1
+src/save/game_persistence.cpp:127: GamePersistence.cs:24 -> 25 (SaveGame) off by 1
+src/save/game_persistence.cpp:142: GamePersistence.cs:132 -> 131 (SaveGame) off by 1
+src/save/game_persistence.cpp:151: GamePersistence.cs:208 -> 210 (LoadSFSFile) off by 2
+src/save/game_persistence.cpp:161: GamePersistence.cs:219 -> 221 (LoadGameCfg) off by 2
+src/save/game_persistence.cpp:173: GamePersistence.cs:237 -> 241 (LoadGame) off by 4
+src/save/game_persistence.cpp:182: GamePersistence.cs:248 -> 252 (UpdateScenarioModules) off by 4
+src/save/game_persistence.cpp:205: GamePersistence.cs:304 -> 308 (CreateNewGame) off by 4
+src/save/game_persistence.cpp:258: QuickSaveLoad.cs has no NextQuicksaveFilename (cite :346)
+src/save/proto_part_live.cpp:35: ProtoPartResourceSnapshot.cs:73 -> 72 (Load) off by 1
+src/save/proto_part_live.cpp:44: ProtoPartModuleSnapshot.cs:14 -> 18 (ProtoPartModuleSnapshot) off by 4
+src/save/proto_part_live.cpp:63: ProtoPartModuleSnapshot.cs:55 -> 58 (Load) off by 3
+src/save/proto_part_live.cpp:176: AttachNodeSnapshot.cs:7 -> 9 (AttachNodeSnapshot) off by 2
+src/save/proto_part_live.cpp:189: AttachNodeSnapshot.cs:61 -> 62 (findAttachedPart) off by 1
+src/save/proto_part_live.cpp:330: ProtoVessel.cs:821 -> 820 (LoadObjects) off by 1
+src/save/proto_vessel.cpp:49: ProtoTargetInfo.cs:79 -> 83 (Load) off by 4
+src/save/proto_vessel.cpp:58: ProtoTargetInfo.cs:103 -> 107 (Save) off by 4
+src/save/proto_vessel.cpp:86: ProtoWaypointInfo.cs:49 -> 51 (Load) off by 2
+src/save/proto_vessel.cpp:92: ProtoWaypointInfo.cs:61 -> 63 (Save) off by 2
+src/save/proto_vessel.cpp:101: AttachNodeSnapshot.cs:33 -> 37 (AttachNodeSnapshot) off by 4
+src/save/proto_vessel.cpp:110: AttachNodeSnapshot.cs:48 -> 52 (Save) off by 4
+src/save/proto_vessel.cpp:119: VesselNaming.cs:18 -> 14 (VesselNaming) off by 4
+src/save/proto_vessel.cpp:125: VesselNaming.cs:23 -> 19 (Load) off by 4
+src/save/proto_vessel.cpp:133: VesselNaming.cs:30 -> 26 (Save) off by 4
+src/save/proto_vessel.cpp:142: ProtoPartResourceSnapshot.cs:30 -> 31 (ProtoPartResourceSnapshot) off by 1
+src/save/proto_vessel.cpp:157: ProtoPartResourceSnapshot.cs:55 -> 58 (Save) off by 3
+src/save/proto_vessel.cpp:165: ProtoPartResourceSnapshot.cs:63 -> 66 (UpdateConfigNodeAmounts) off by 3
+src/save/proto_vessel.cpp:173: ProtoPartModuleSnapshot.cs:34 -> 35 (ProtoPartModuleSnapshot) off by 1
+src/save/proto_vessel.cpp:183: ProtoPartModuleSnapshot.cs:48 -> 51 (Save) off by 3
+src/save/proto_vessel.cpp:190: ProtoPartModuleSnapshot.cs:156 -> 143 (RemovePartModuleAdjuster) off by 13
+src/save/proto_vessel.cpp:206: ProtoPartModuleSnapshot.cs:197 -> 204 (ProtoPartModuleRepair) off by 7
+src/save/ship_construct_live.cpp:139: ShipConstruct.cs has no InstantiateParts (cite :378)
+src/save/ship_construct_live.cpp:162: Localizer.cs:455 -> 154 (Format) off by 301
+src/save/ship_construct_live.cpp:171: ShipConstruct.cs has no partTechAvailable (cite :446)
+src/save/ship_construct_live.cpp:186: ShipConstruct.cs has no LoadShipWithParts (cite :301)
+src/save/ship_construct_live.cpp:195: ShipConstruct.cs has no LoadShipWithParts (cite :295)
+src/save/ship_construct_live.cpp:203: ShipConstruct.cs has no SaveShipFromParts (cite :153)
+src/save/upgrade_pipeline.cpp:70: LogEntry.cs:17 -> 15 (ToString) off by 2
+src/save/upgrade_pipeline.cpp:160: UpgradeScript.cs:25 -> 22 (Init) off by 3
+src/save/upgrade_pipeline.cpp:169: UpgradeScript.cs:46 -> 43 (Test) off by 3
+src/save/upgrade_pipeline.cpp:200: UpgradeScript.cs:86 -> 82 (Upgrade) off by 4
+src/save/upgrade_pipeline.cpp:215: UpgradeScript.cs:127 -> 122 (VersionTest) off by 5
+src/save/upgrade_pipeline.cpp:226: UpgradeScript.cs:141 -> 136 (GetNodeURL) off by 5
+src/save/upgrade_pipeline.cpp:235: UpgradeScript.cs:154 -> 149 (RecurseNodes) off by 5
+src/save/upgrade_pipeline.cpp:248: UpgradeScript.cs:169 -> 165 (LogTestResults) off by 4
+src/save/upgrade_pipeline.cpp:258: UpgradeScript.cs:178 -> 181 (ToString) off by 3
+src/save/upgrade_pipeline.cpp:301: PartReplace.cs:24 -> 28 (OnInit) off by 4
+src/save/upgrade_pipeline.cpp:308: PartReplace.cs:29 -> 34 (Setup) off by 5
+src/save/upgrade_pipeline.cpp:318: PartReplace.cs:38 -> 47 (OnUpgrade) off by 9
+src/save/upgrade_pipeline.cpp:408: PartReplace.cs:173 -> 191 (AdjustCraftChildPartsPos) off by 18
+src/save/upgrade_pipeline.cpp:434: PartReplace.cs:210 -> 229 (AdjustSFSChildPartsPos) off by 19
+src/save/upgrade_pipeline.cpp:449: PartReplace.cs:227 -> 246 (AdjustSFSRootChildPartsPos) off by 19
+src/save/upgrade_pipeline.cpp:470: PartReplace.cs:255 -> 272 (AdjustPartByOffset) off by 17
+src/save/upgrade_pipeline.cpp:484: ModuleReplace.cs:22 -> 19 (OnTest) off by 3
+src/save/upgrade_pipeline.cpp:491: ModuleReplace.cs:33 -> 30 (OnUpgrade) off by 3
+src/save/upgrade_pipeline.cpp:504: v110_WheelModuleOverhaul.cs:36 -> 35 (OnTest) off by 1
+src/save/upgrade_pipeline.cpp:519: v110_WheelModuleOverhaul.cs:57 -> 56 (OnUpgrade) off by 1
+src/save/upgrade_pipeline.cpp:541: v110_WheelModuleOverhaul.cs:87 -> 86 (SalvageBrakes) off by 1
+src/save/upgrade_pipeline.cpp:585: v110_WheelModuleOverhaul.cs:147 -> 148 (SalvageDamage) off by 1
+src/save/upgrade_pipeline.cpp:594: v110_WheelModuleOverhaul.cs:161 -> 163 (SalvageGearDeployment) off by 2
+src/save/upgrade_pipeline.cpp:614: v110_WheelModuleOverhaul.cs:191 -> 195 (SalvageLegDeployment) off by 4
+src/save/upgrade_pipeline.cpp:634: v110_WheelModuleOverhaul.cs:221 -> 227 (DeployStateUpgrade) off by 6
+src/save/upgrade_pipeline.cpp:643: v110_WheelModuleOverhaul.cs:233 -> 227 (DeployStateUpgrade) off by 6
+src/save/upgrade_pipeline.cpp:654: v180_ModuleAeroSurface.cs:17 -> 16 (OnTest) off by 1
+src/save/upgrade_pipeline.cpp:667: v180_ModuleAeroSurface.cs has no GetBaseModuleCtrlSurfaceRange (cite :52)
+src/save/upgrade_pipeline.cpp:718: SaveUpgradePipeline.cs:31 -> 34 (Init) off by 3
+src/save/upgrade_pipeline.cpp:735: SaveUpgradePipeline.cs:50 -> 56 (Run) off by 6
+src/save/upgrade_pipeline.cpp:837: SaveUpgradePipeline.cs:148 -> 167 (SanityCheck) off by 19
+src/save/upgrade_pipeline.cpp:850: SaveUpgradePipeline.cs:162 -> 182 (TestExceptionCases) off by 20
+src/save/upgrade_pipeline.cpp:870: SaveUpgradePipeline.cs:176 -> 199 (OnSetCfgNodeVersion_Default) off by 23
+src/save/upgrade_pipeline.cpp:881: SaveUpgradePipeline.cs:187 -> 211 (RunTest) off by 24
+src/save/upgrade_pipeline.cpp:894: SaveUpgradePipeline.cs:204 -> 229 (RunUpgrade) off by 25
+src/save/upgrade_pipeline.cpp:914: SaveUpgradePipeline.cs:227 -> 253 (PrintLog) off by 26
+src/save/upgrade_pipeline.cpp:1072: KSPUpgradePipeline.cs:24 -> 22 (Pipeline) off by 2
+src/save/upgrade_pipeline.cpp:1084: KSPUpgradePipeline.cs:35 -> 46 (Process) off by 11
+src/science/research_and_development.cpp:122: ProtoRDNode.cs:20 -> 21 (ProtoRDNode) off by 1
+src/science/science.cpp:368: TechPerk.cs:14 -> 12 (SetPerk) off by 2
+src/science/science.cpp:371: TechPerk.cs:19 -> 17 (GetPerkState) off by 2
+src/staging/stage_manager.cpp:137: StageIcon.cs has no ListSort (cite :863)
+src/staging/stage_manager.cpp:618: bare cite :184 (add StageManager.cs)
+src/staging/stage_manager.cpp:648: ProtoStageIcon.cs has no InstallPartHooks (cite :57)
+src/staging/stage_manager.cpp:675: bare cite :146 (add StageManager.cs)
+src/staging/stage_manager.cpp:681: bare cite :158 (add StageManager.cs)
+src/staging/stage_manager.cpp:686: bare cite :160 (add StageManager.cs)
+src/staging/stage_manager.cpp:691: bare cite :162 (add StageManager.cs)
+src/staging/stage_manager.cpp:700: bare cite :174 (add StageManager.cs)
+src/staging/stage_manager.cpp:708: bare cite :281 (add StageManager.cs)
+src/staging/stage_manager.cpp:711: bare cite :286 (add StageManager.cs)
+src/staging/stage_manager.cpp:716: bare cite :294 (add StageManager.cs)
+src/staging/stage_manager.cpp:723: bare cite :301 (add StageManager.cs)
+src/staging/stage_manager.cpp:726: bare cite :307 (add StageManager.cs)
+src/staging/stage_manager.cpp:732: bare cite :313 (add StageManager.cs)
+src/staging/stage_manager.cpp:735: bare cite :318 (add StageManager.cs)
+src/staging/stage_manager.cpp:741: bare cite :328 (add StageManager.cs)
+src/staging/stage_manager.cpp:744: bare cite :333 (add StageManager.cs)
+src/staging/stage_manager.cpp:747: bare cite :338 (add StageManager.cs)
+src/staging/stage_manager.cpp:753: bare cite :344 (add StageManager.cs)
+src/staging/stage_manager.cpp:758: bare cite :352 (add StageManager.cs)
+src/staging/stage_manager.cpp:789: bare cite :416 (add StageManager.cs)
+src/staging/stage_manager.cpp:912: bare cite :637 (add StageManager.cs)
+src/staging/stage_manager.cpp:953: bare cite :822 (add StageManager.cs)
+src/staging/stage_manager.cpp:961: bare cite :835 (add StageManager.cs)
+src/staging/stage_manager.cpp:964: bare cite :843 (add StageManager.cs)
+src/staging/stage_manager.cpp:979: bare cite :881 (add StageManager.cs)
+src/staging/stage_manager.cpp:1002: bare cite :932 (add StageManager.cs)
+src/staging/stage_manager.cpp:1016: bare cite :949 (add StageManager.cs)
+src/staging/stage_manager.cpp:1023: bare cite :958 (add StageManager.cs)
+src/staging/stage_manager.cpp:1039: bare cite :972 (add StageManager.cs)
+src/staging/stage_manager.cpp:1050: bare cite :1005 (add StageManager.cs)
+src/staging/stage_manager.cpp:1053: bare cite :1010 (add StageManager.cs)
+src/staging/stage_manager.cpp:1072: bare cite :1032 (add StageManager.cs)
+src/staging/stage_manager.cpp:1083: bare cite :1038 (add StageManager.cs)
+src/staging/stage_manager.cpp:1091: bare cite :1049 (add StageManager.cs)
+src/staging/stage_manager.cpp:1101: bare cite :1063 (add StageManager.cs)
+src/staging/stage_manager.cpp:1107: StageManager.cs has no ListSort (cite :1067)
+src/staging/stage_manager.cpp:1135: bare cite :1104 (add StageManager.cs)
+src/staging/stage_manager.cpp:1143: StageManager.cs has no SortIconsDefault (cite :1116)
+src/staging/stage_manager.cpp:1145: bare cite :1121 (add StageManager.cs)
+src/staging/stage_manager.cpp:1147: bare cite :1126 (add StageManager.cs)
+src/staging/stage_manager.cpp:1150: bare cite :1131 (add StageManager.cs)
+src/staging/stage_manager.cpp:1166: bare cite :1150 (add StageManager.cs)
+src/staging/stage_manager.cpp:1209: bare cite :1193 (add StageManager.cs)
+src/staging/stage_manager.cpp:1214: bare cite :1202 (add StageManager.cs)
+src/staging/stage_manager.cpp:1222: bare cite :1209 (add StageManager.cs)
+src/staging/stage_manager.cpp:1237: bare cite :1227 (add StageManager.cs)
+src/staging/stage_manager.cpp:1245: bare cite :1235 (add StageManager.cs)
+src/staging/stage_manager.cpp:1248: bare cite :1244 (add StageManager.cs)
+src/staging/stage_manager.cpp:1286: bare cite :1314 (add StageManager.cs)
+src/staging/stage_manager.cpp:1292: bare cite :1323 (add StageManager.cs)
+src/staging/stage_manager.cpp:1300: bare cite :1335 (add StageManager.cs)
+src/staging/stage_manager.cpp:1308: bare cite :1347 (add StageManager.cs)
+src/staging/stage_manager.cpp:1311: bare cite :1376 (add StageManager.cs)
+src/staging/stage_manager.cpp:1318: bare cite :1383 (add StageManager.cs)
+src/staging/stage_manager.cpp:1330: bare cite :1402 (add StageManager.cs)
+src/staging/stage_manager.cpp:1336: bare cite :1408 (add StageManager.cs)
+src/staging/stage_manager.cpp:1357: bare cite :1477 (add StageManager.cs)
+src/staging/stage_manager.cpp:1370: bare cite :1494 (add StageManager.cs)
+src/staging/stage_manager.cpp:1377: bare cite :1506 (add StageManager.cs)
+src/staging/stage_manager.cpp:1383: bare cite :1512 (add StageManager.cs)
+src/staging/stage_manager.cpp:1422: bare cite :1579 (add StageManager.cs)
+src/staging/stage_manager.cpp:1445: bare cite :1631 (add StageManager.cs)
+src/terrain/libnoise.cpp:285: RidgedMultifractal.cs:25 -> 22 (Lacunarity) off by 3
+src/terrain/libnoise.cpp:455: Select.cs:22 -> 20 (EdgeFalloff) off by 2
+src/terrain/pqs.cpp:33: PQS.cs has no SetupForHeight (cite :758)
+src/terrain/pqs_mods.cpp:198: PQSMod_MapDecal.cs has no SetupCommon (cite :88)
+src/terrain/pqs_mods.cpp:564: PQSMod_VertexHeightNoise.cs has no CreateNoiseMap (cite :44)
+src/terrain/pqs_mods.cpp:726: PQSMod_VertexHeightNoiseVertHeightCurve3.cs:26 -> 32 (Setup) off by 6
+src/terrain/pqs_mods.cpp:731: PQSMod_VertexHeightNoiseVertHeightCurve3.cs:58 -> 64 (Setup) off by 6
+src/terrain/pqs_mods_land.cpp:177: PQSMod_VertexPlanet.cs:33 -> 37 (Setup) off by 4
+src/thermal/flight_integrator_thermal.cpp:28: ThermalLink.cs:21 -> 20 (ThermalLink) off by 1
+src/thermal/flight_integrator_thermal.cpp:59: PartThermalData.cs:104 -> 108 (PartThermalData) off by 4
+src/thermal/flight_integrator_thermal.cpp:85: PartThermalDataIntComparer.cs has no IntCompare (cite :7)
+src/thermal/flight_integrator_thermal.cpp:98: FlightIntegrator.cs has no CacheGlobals (cite :573)
+src/thermal/flight_integrator_thermal.cpp:114: FlightIntegrator.cs has no UpdateThermalMassStats (cite :452)
+src/thermal/flight_integrator_thermal.cpp:129: FlightIntegrator.cs:672 -> 695 (ThermoPrecalculate) off by 23
+src/thermal/flight_integrator_thermal.cpp:162: FlightIntegrator.cs has no FixedUpdateThermal (cite :593)
+src/thermal/flight_integrator_thermal.cpp:476: FlightIntegrator.cs has no UpdateSkinLocalConduction (cite :1631)
+src/thermal/flight_integrator_thermal.cpp:912: FlightIntegrator.cs has no PrecalcRadiationIncoming (cite :2138)
+src/thermal/thermal_modules.cpp:44: TemperatureModel.cs has no Linear (cite :33)
+src/thermal/thermal_modules.cpp:49: TemperatureModel.cs:31 -> 39 (getTemperatureAtAltitude) off by 8
+src/thermal/thermal_modules.cpp:51: TemperatureModel.cs:55 -> 60 (getTemperatureAtAltitude) off by 5
+src/thermal/thermal_modules.cpp:56: TemperatureModel.cs:90 -> 101 (AddInitialLinearStepEquation) off by 11
+src/thermal/thermal_modules.cpp:67: TemperatureModel.cs:105 -> 116 (AddInitialLinearStep) off by 11
+src/thermal/thermal_modules.cpp:78: TemperatureModel.cs:121 -> 131 (AddInitialQuadraticStep) off by 10
+src/thermal/thermal_modules.cpp:89: TemperatureModel.cs:137 -> 146 (AddInitialConstantStep) off by 9
+src/thermal/thermal_modules.cpp:100: TemperatureModel.cs:153 -> 161 (AddConstantStep) off by 8
+src/thermal/thermal_modules.cpp:122: TemperatureModel.cs:185 -> 192 (AddLinearStep) off by 7
+src/thermal/thermal_modules.cpp:147: TemperatureModel.cs:215 -> 223 (AddQuadraticStep) off by 8
+src/thermal/thermal_modules.cpp:170: TemperatureModel.cs:245 -> 254 (getTemperatureAtAltitude) off by 9
+src/thermal/thermal_modules.cpp:192: ModuleConductionMultiplier.cs:19 -> 20 (Start) off by 1
+src/thermal/thermal_modules.cpp:194: ModuleConductionMultiplier.cs:24 -> 25 (FixedUpdate) off by 1
+src/thermal/thermal_modules.cpp:295: ModuleAblator.cs has no CharScalar (cite :236)
+src/thermal/thermal_modules.cpp:312: bare cite :152 (add ModuleActiveRadiator.cs)
+src/thermal/thermal_modules.cpp:318: bare cite :485 (add ModuleActiveRadiator.cs)
+src/thermal/thermal_modules.cpp:335: bare cite :353 (add ModuleActiveRadiator.cs)
+src/thermal/thermal_modules.cpp:344: bare cite :216 (add ModuleActiveRadiator.cs)
+src/thermal/thermal_modules.cpp:381: bare cite :276 (add ModuleActiveRadiator.cs)
+src/thermal/thermal_modules.cpp:434: ModuleCoreHeat.cs:107 -> 149 (CoreTemperature) off by 42
+src/thermal/thermal_modules.cpp:442: bare cite :255 (add ModuleCoreHeat.cs)
+src/thermal/thermal_modules.cpp:451: bare cite :353 (add ModuleCoreHeat.cs)
+src/thermal/thermal_modules.cpp:457: bare cite :359 (add ModuleCoreHeat.cs)
+src/thermal/thermal_modules.cpp:473: bare cite :382 (add ModuleCoreHeat.cs)
+src/thermal/thermal_modules.cpp:480: bare cite :399 (add ModuleCoreHeat.cs)
+src/thermal/thermal_modules.cpp:488: bare cite :562 (add ModuleCoreHeat.cs)
+src/thermal/thermal_modules.cpp:497: bare cite :579 (add ModuleCoreHeat.cs)
+src/thermal/thermal_modules.cpp:516: bare cite :677 (add ModuleCoreHeat.cs)
+src/thermal/thermal_modules.cpp:531: bare cite :554 (add ModuleCoreHeat.cs)
+src/thermal/thermal_modules.cpp:538: bare cite :431 (add ModuleCoreHeat.cs)
+src/thermal/thermal_modules.cpp:600: bare cite :273 (add ModuleCoreHeat.cs)
+src/util/ksp_util.cpp:607: KSPUtil.cs has no ParseSingle (cite :1004)
+src/vessel/action_group_list.cpp:21: ActionGroupList.cs:24 -> 28 (ActionGroupList) off by 4
+src/vessel/axis_groups_module.cpp:56: AxisGroupsModule.cs:79 -> 82 (OnAwake) off by 3
+src/vessel/axis_groups_module.cpp:63: AxisGroupsModule.cs:11 -> 9 (AddAxis) off by 2
+src/vessel/axis_groups_module.cpp:96: AxisGroupsModule.cs:60 -> 61 (onVesselWasModified) off by 1
+src/vessel/axis_groups_module.cpp:101: AxisGroupsModule.cs:67 -> 69 (OnVesselOverrideGroupChanged) off by 2
+src/vessel/delta_v_part_info.cpp:16: DeltaVAppValues.cs:81 -> 83 (atmPressure) off by 2
+src/vessel/delta_v_part_info.cpp:19: DeltaVAppValues.cs:83 -> 85 (atmDensity) off by 2
+src/vessel/delta_v_part_info.cpp:24: DeltaVGlobals.cs:60 -> 44 (PropellantsToIgnore) off by 16
+src/vessel/delta_v_part_info.cpp:35: DeltaVGlobals.cs has no SetPropellantsToIgnore (cite :73)
+src/vessel/delta_v_part_info.cpp:58: DeltaVGlobals.cs:129 -> 128 (EnableStockSimluations) off by 1
+src/vessel/delta_v_part_info.cpp:65: DeltaVGlobals.cs:140 -> 139 (DisableStockSimluations) off by 1
+src/vessel/delta_v_part_info.cpp:76: DeltaVPropellantInfo.cs:43 -> 44 (Copy) off by 1
+src/vessel/delta_v_part_info.cpp:91: DeltaVPropellantInfo.cs:57 -> 60 (MassBurnt) off by 3
+src/vessel/flight_com_tracker.cpp:36: FlightCoMTracker.cs has no RunPending (cite :42)
+src/vessel/flight_ctrl_state.cpp:110: FlightCtrlState.cs:173 -> 170 (NeutralizeStick) off by 3
+src/vessel/flight_ctrl_state.cpp:118: FlightCtrlState.cs:181 -> 178 (ResetTrim) off by 3
+src/vessel/flight_ctrl_state.cpp:127: FlightCtrlState.cs:190 -> 187 (NeutralizeAll) off by 3
+src/vessel/flight_logger.cpp:36: FlightLogger.cs has no ~FlightLogger (cite :111)
+src/vessel/flight_logger.cpp:148: FlightLogger.cs:213 -> 216 (onJointBreak) off by 3
+src/vessel/flight_logger.cpp:151: FlightLogger.cs:218 -> 221 (onCrash) off by 3
+src/vessel/flight_logger.cpp:158: FlightLogger.cs:225 -> 228 (onCrashSplashdown) off by 3
+src/vessel/flight_logger.cpp:165: FlightLogger.cs:232 -> 235 (onCollision) off by 3
+src/vessel/flight_logger.cpp:172: FlightLogger.cs:239 -> 242 (onOverheat) off by 3
+src/vessel/flight_logger.cpp:179: FlightLogger.cs:246 -> 249 (onOverPressure) off by 3
+src/vessel/flight_logger.cpp:186: FlightLogger.cs:253 -> 256 (onOverG) off by 3
+src/vessel/flight_logger.cpp:193: FlightLogger.cs:260 -> 263 (onStageSeparation) off by 3
+src/vessel/flight_logger.cpp:196: FlightLogger.cs:265 -> 268 (onCrewOnEva) off by 3
+src/vessel/flight_logger.cpp:217: FlightLogger.cs:287 -> 291 (onCrewKilled) off by 4
+src/vessel/flight_logger.cpp:223: FlightLogger.cs:293 -> 297 (onCrewBoardVessel) off by 4
+src/vessel/flight_logger.cpp:229: FlightLogger.cs:298 -> 302 (onLaunch) off by 4
+src/vessel/flight_logger.cpp:237: FlightLogger.cs:309 -> 311 (onUndock) off by 2
+src/vessel/flight_logger.cpp:240: FlightLogger.cs:314 -> 316 (onSplashDamage) off by 2
+src/vessel/module_trip_logger.cpp:27: ModuleTripLogger.cs:17 -> 13 (OnAwake) off by 4
+src/vessel/module_trip_logger.cpp:33: ModuleTripLogger.cs:22 -> 18 (OnLoad) off by 4
+src/vessel/module_trip_logger.cpp:44: ModuleTripLogger.cs:40 -> 43 (LoadDeprecated) off by 3
+src/vessel/module_trip_logger.cpp:144: ModuleTripLogger.cs:183 -> 179 (ForceLogEntry) off by 4
+src/vessel/module_trip_logger.cpp:166: ModuleTripLogger.cs:208 -> 207 (GetModuleDisplayName) off by 1
+src/vessel/module_trip_logger.cpp:171: VesselTripLog.cs:12 -> 10 (FromVessel) off by 2
+src/vessel/vessel.cpp:117: FlightGlobals.cs:1435 -> 1434 (getStaticPressure) off by 1
+src/vessel/vessel.cpp:190: Vessel.cs:1520 -> 1367 (Vessel) off by 153
+src/vessel/vessel.cpp:230: Vessel.cs has no ~Vessel (cite :3341)
+src/vessel/vessel.cpp:286: Vessel.cs has no byFlightID (cite :538)
+src/vessel/vessel.cpp:294: Vessel.cs has no byIndex (cite :558)
+src/vessel/vessel.cpp:346: Vessel.cs has no set_distancePackThreshold (cite :804)
+src/vessel/vessel.cpp:874: Vessel.cs has no FindVesselModuleByName (cite :3870)
+src/vessel/vessel.cpp:881: Vessel.cs has no FindPartModuleImplementingClass (cite :3851)
+src/vessel/vessel_motion.cpp:141: VesselPrecalculate.cs:387 -> 388 (CalculatePhysicsStats) off by 1
+src/vessel/vessel_motion.cpp:319: Vessel.cs has no UpdateSurfaceSpeeds (cite :2845)
+src/vessel/vessel_motion.cpp:472: FlightIntegrator.cs has no ApplyFlightIntegratorAtmosphere (cite :621)
+src/vessel/vessel_transitions.cpp:39: Vessel.cs has no FindVesselParts (cite :1776)
+src/vessel/vessel_transitions.cpp:344: ProtoVessel.cs:149 -> 153 (ProtoVessel) off by 4
+src/vessel/vessel_transitions.cpp:409: ProtoVessel.cs has no SaveLiveVesselModules (cite :604)
+3864 cites checked, 668 mismatches
