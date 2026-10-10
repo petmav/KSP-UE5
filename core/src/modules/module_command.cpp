@@ -1,5 +1,6 @@
 // WP-24: ModuleCommand.cs, ModuleSAS.cs, ModuleRemoteController.cs (see ksp/modules/module_command.hpp for the scope and the seams).
 #include "ksp/modules/module_command.hpp"
+#include "ksp/unity/quaternion_native.hpp"
 
 #include <algorithm>
 
@@ -197,11 +198,7 @@ void ModuleCommand::OnAwake() {
 }
 
 // Unity Quaternion.Euler (ZXY order; native Unity, single precision, the trig through ksp::dotnet)
-Quaternionf ModuleCommand::DefaultQuaternionEuler(const Vector3f& euler) {
-    const float hx = euler.x * 0.0174532924f * 0.5f, hy = euler.y * 0.0174532924f * 0.5f, hz = euler.z * 0.0174532924f * 0.5f;
-    const float cx = Mathf::Cos(hx), sx = Mathf::Sin(hx), cy = Mathf::Cos(hy), sy = Mathf::Sin(hy), cz = Mathf::Cos(hz), sz = Mathf::Sin(hz);
-    return {cy * sx * cz + sy * cx * sz, sy * cx * cz - cy * sx * sz, cy * cx * sz - sy * sx * cz, cy * cx * cz + sy * sx * sz};
-}
+Quaternionf ModuleCommand::DefaultQuaternionEuler(const Vector3f& euler) { return UnityNative::Euler(euler); }   // WP-40: the single implementation
 
 // ModuleCommand.cs:406
 void ModuleCommand::OnStart(StartState) {
