@@ -135,7 +135,13 @@ add_library(kspcore STATIC
     modules/module_gimbal.cpp
     modules/module_rcs.cpp
     modules/module_resource_intake.cpp
+    # WP-26 fairings, cargo bays, jettison, shielding, launch clamps
+    modules/fairing_panel.cpp
+    modules/module_procedural_fairing.cpp
+    modules/module_structural.cpp
     parts/part_decouple.cpp
+    parts/part_shield.cpp
+    parts/compound_part.cpp
     vessel/vessel_staging.cpp
     vessel/delta_v_part_info.cpp
     vessel/delta_v_engine_info.cpp

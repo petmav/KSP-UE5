@@ -28,6 +28,7 @@
 #include "ksp/modules/module_gimbal.hpp"
 #include "ksp/modules/module_rcs.hpp"
 #include "ksp/modules/module_resource_intake.hpp"
+#include "ksp/modules/module_structural.hpp"
 #include "ksp/parts/available_part.hpp"
 #include "ksp/parts/cs_parse.hpp"
 #include "ksp/parts/part_loader.hpp"
@@ -286,38 +287,6 @@ public:
     ModifierChangeWhen GetModuleMassChangeWhen() override { return ModifierChangeWhen::CONSTANTLY; }
 };
 
-class ModuleProceduralFairing : public PartModule, public IPartMassModifier, public IPartCostModifier {  // :1663 / :1682
-public:
-    using PartModule::PartModule;
-    IPartMassModifier* AsMassModifier() override { return this; }
-    IPartCostModifier* AsCostModifier() override { return this; }
-    float GetModuleMass(float, ModifierStagingSituation sit) override {
-        if (sit == ModifierStagingSituation::STAGED) return 0.0f;
-        return MathfClamp(panelMass, kFloatEpsilon, panelMass < 0.0f ? -panelMass : panelMass);
-    }
-    ModifierChangeWhen GetModuleMassChangeWhen() override { return ModifierChangeWhen::STAGED; }
-    float GetModuleCost(float, ModifierStagingSituation sit) override {
-        if (sit == ModifierStagingSituation::STAGED) return 0.0f;
-        return f32store(fx(GetFairingArea()) * fx(Get<float>("UnitAreaCost")));
-    }
-    ModifierChangeWhen GetModuleCostChangeWhen() override { return ModifierChangeWhen::STAGED; }
-    float GetFairingArea() const { return 0.0f; }  // sum over the built fairing panels: none on a prefab
-    float panelMass = 0.0f;  // private; panelMass = GetFairingArea() * UnitAreaMass when the fairing is built
-};
-
-class ModuleJettison : public PartModule, public IPartMassModifier {  // ModuleJettison.cs:602
-public:
-    using PartModule::PartModule;
-    IPartMassModifier* AsMassModifier() override { return this; }
-    float GetModuleMass(float, ModifierStagingSituation) override {
-        if (!Get<bool>("modifyJettisonedMass")) return 0.0f;
-        if (Get<bool>("isJettisoned")) return Get<bool>("useCalculatedMass") ? -partDensity : -Get<float>("jettisonedObjectMass");
-        return 0.0f;
-    }
-    ModifierChangeWhen GetModuleMassChangeWhen() override { return ModifierChangeWhen::STAGED; }
-    float partDensity = 0.0f;  // private
-};
-
 class ModuleInventoryPart : public PartModule, public IPartMassModifier, public IPartCostModifier {  // :1928 / :1966
 public:
     using PartModule::PartModule;
@@ -378,13 +347,12 @@ void RegisterBuiltinModules() {
     Reg<FlagDecalBackground>({"FlagDecalBackground"});
     RegisterModulePartVariants();  // WP-13: modules/module_part_variants.cpp
     RegisterStructuralModules();   // WP-13: ModuleMirrorPlacement, ModuleDisplaceTweak
+    detail::RegisterWp26Modules();  // WP-26: ModuleProceduralFairing, ModuleJettison, ModuleCargoBay, ModuleServiceModule, LaunchClamp, ModuleStructuralNode(+Toggle), ModuleDynamicNodes (module_structural.cpp)
     RegisterTripLoggerModule();    // WP-14: ModuleTripLogger (vessel/module_trip_logger.cpp)
     RegisterAeroModules();         // WP-21: ModuleLiftingSurface, ModuleControlSurface, ModuleAeroSurface
     Reg<ModuleComet>({"ModuleComet"});
     Reg<ModuleAsteroid>({"ModuleAsteroid"});
     Reg<ModulePartFirework>({"ModulePartFirework"});
-    Reg<ModuleProceduralFairing>({"ModuleProceduralFairing"});
-    Reg<ModuleJettison>({"ModuleJettison"});
     Reg<ModuleInventoryPart>({"ModuleInventoryPart"});
     Reg<PartStatsUpgradeModule>({"PartStatsUpgradeModule"});
     RegCurves({"ModuleColorChanger"}, {"redCurve", "greenCurve", "blueCurve", "alphaCurve"});

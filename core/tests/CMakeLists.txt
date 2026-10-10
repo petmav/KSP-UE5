@@ -31,6 +31,7 @@ add_executable(kspcore_tests
     test_engines.cpp
     test_staging.cpp
     test_thermal.cpp
+    test_structural_modules.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
 )
@@ -200,11 +201,10 @@ ksp_golden_gate(capture.resource_mass resource_mass GOLDEN ${KSP_CAPTURES2_DIR}/
 # UpdateMass, module mass) of the 17 crafts of the C5 delta-v capture, built as ShipConstruction.CreateConstructFromTemplate builds
 # them (craft file -> KSPUpgradePipeline -> ShipConstruct.LoadShip). Same craft set and inputs as capture.resource_mass. NOT gated:
 # craft.total_mass (it adds the editor crew mass, VesselCrewManifest: tests/test_ship_construct.cpp checks it is the no-crew total plus an
-# integral multiple of KerbalCrewMass), the one fairing of the set (tests/data/ship_construct_exclusions.json: panelMass, WP-26), craft.stage_count / loaded / error (VesselDeltaV, WP-17), parts.inverseStage / decoupleStage /
+# integral multiple of KerbalCrewMass), craft.stage_count / loaded / error (VesselDeltaV, WP-17), parts.inverseStage / decoupleStage /
 # activationStage / isEngine / isDecoupler (staging, WP-16 / WP-23).
 ksp_golden_gate(capture.ship_construct ship_construct GOLDEN ${KSP_CAPTURES2_DIR}/deltav_readout.json DROP_HEX
     TOL ${KSP_CAPTURE_TOL} TABLES craft,parts
-    DROP_KEYS_FILE ${PROJECT_SOURCE_DIR}/tests/data/ship_construct_exclusions.json
     COLUMNS "craft:craft_id,parts,dry_mass,fuel_mass/parts:craft_id,part_index,part,mass,module_mass")
 
 # WP-16 staging: StageManager (SortIcons / UpdateStageGroups / SetSeparationIndices) and the decoupler modules over the 17 crafts of
