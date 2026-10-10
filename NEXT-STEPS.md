@@ -92,6 +92,32 @@ New follow-ups from wave 3:
 - Optional test tightening: `tiny <= 16` to `== 8` in `test_docking.cpp`; add the remaining stage fields to the WP-00 scheduler-vs-driver comparison (it also skips silently without a game copy); `CHECK_THROWS_AS` for the firework missing-prefab path; solar `_efficMult` bound (WP-27).
 - Agent memory files written by implementers running in a worktree land under `core/.claude/agent-memory/`; fold them into `.claude/agent-memory/` after each wave (done this time).
 
+## Session 3, waves 4-5 (2026-10-11, laptop; the user stayed on the laptop after all)
+
+Same protocol. Branches from `ad208205` (wave 4) and `7199d110` / `dcef6d17` (wave 5); Sonnet implementers and gatekeepers, merged in gate order:
+
+| package | merge | gate | notes |
+|---|---|---|---|
+| WP-35 science, R&D, tech tree | `b05dfb92`-era (before WP-39) | unit (16 cases; `tools/wp35/science_reference.py`, 84,600 subject values 0 ULP); part_database unchanged | currency / CommNet / UI seams to WP-36 / WP-39 / WP-46 |
+| WP-39 CommNet and KerbNet | `b05dfb92` | unit (25 cases; Python reference 0 ULP; `ModuleDataTransmitter` on the WP-00 scheduler) | first-packet gap was a test-driver bug (fixed in wpfix5) |
+| WP-40 editor core | `fe7feda1` | unit (11 cases; Python reference 0 ULP) | one native `Euler` / `EulerAngles` / `LookRotation` (`quaternion_native.hpp`, UNVERIFIED vs game); nested `static inline` struct was MSVC-only, fixed |
+| WP-36 funds, reputation, strategies, facilities, recovery, progress | `bfd968c8` | unit (31 cases; `tools/wp36/currency_reference.py` 0 ULP); physprofile SCENARIO nodes byte-exact | listener order is last-to-first (`EventData.Fire`); needs GameVariables prefab curves, facility level data, a career save |
+| small fixes wave 5 (`wpfix5`) | `bb923bc2` | 35/35; unit +1 case / +49 assertions | Linux is 16 assertions below Windows because `WP-03 vs KSP IL` takes the `CellEquals` NaN fallback for 1 row on Linux vs 5 on MSVC (NaN sign bit): legitimate, documented. One `SqrtF`. `check_cites.py` exact-line mode is the default (`--window K` for the old check); audit `core/tools/wp28/cite_audit_2026-10-11.txt`: 668 mismatches repo-wide (463 off-by-k, 98 bare, 107 to review), nothing fixed outside the touched files |
+| WP-37 contract system core and stock templates | `85b0085f` | unit (29 cases; `tools/wp37/contract_reference.py` 0 ULP / byte-exact, 480 generated contracts) | 5 of 8 templates; VesselRepair / OrbitalConstruction / RoverConstruction need WP-38; `check_cites.py --fix` snapped 116 cites after the merge (exact mode) |
+
+Main after wave 5: `85b0085f`, 35 ctest tests, 566 unit cases / 935,159 assertions (Windows; Linux 16 fewer, explained).
+
+In flight at the time of writing:
+- `wp17b` (WP-17 to 0 ULP with real `.mu` thrust transforms): `core/tools/wp17/stage_engine_models.py` stages 19 engine parts (cfg + .mu + MANIFEST.json with origin and sha256) into gitignored `core/data/mu_staging/` (run it on a machine with `decompiled/KSP-dev`); `core/tools/wp17/mu_transforms.py` -> `core/data/engine_thrust_transforms.json`. 13 of 17 crafts are 0 ULP on every delta-v column; the Puff is tilted 10 degrees (explains Dynawing / Learstar). Blocked on `sepMotor1` staging. Residuals after that: Kerbal X (6 Swivels, 1 ULP) and Stearwing A300 (turboFanSize2, 2 ULP): to be documented exclusions, not tolerances.
+- `wpfix6`: CI Linux clang `unit` SIGSEGV in `test_part.cpp:307` (WP-13 Part prefabs vs C9) on every main push since the wp39 merge; passes locally (WSL clang / gcc) and on Windows. ASan / UBSan hunt. CI `linux` job is red until this lands.
+- `wp38` FinePrint (21,322 lines; may hand back a coherent subset) and `wp42` scene flow / KSC / launch sites (fills the WP-36 seams).
+
+Follow-ups from waves 4-5:
+- Repo-wide cite audit (668 mismatches, see wpfix5 row): fix per owning package or one sweep with `check_cites.py --fix` + hand review of the 107 "no symbol" cases.
+- `corpus.saves` only runs on main with `decompiled/KSP-dev`; it was run after every merge here (35/35).
+- Needs data (local): GameVariables prefab (`reputationAddition` / `reputationSubtraction` curves, contract / mentality factors), KSC facility `levelCost` / `KSCUpgradeableLevelText`, a career save with ContractSystem / Funding / Reputation / Facilities / Strategy nodes, the `SiteGeneratorInfo` TextAsset, a C3-style capture for `Quaternion.Euler` / `eulerAngles` / `LookRotation`.
+- Next after WP-38 / WP-42: WP-33 inventory / EVA construction (7,547), WP-50 input bindings (7,026), WP-32 EVA controller (8,818, needs WP-20 for the rigidbody part), WP-53 Breaking Ground deployed science, WP-52 robotics (needs WP-20 joints). WP-19 / WP-20 / WP-12 wait for the Jolt spike (Opus `optimizer`). WP-29 wheels (VehiclePhysics) after WP-20.
+
 ## Handoff to the PC (2026-10-10)
 
 Local-only tasks (need `decompiled/KSP-dev`, which no worktree or cloud VM has):
