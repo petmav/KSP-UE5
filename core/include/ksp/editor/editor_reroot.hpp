@@ -1,0 +1,31 @@
+// WP-40: EditorReRootUtil.cs -- which parts can become the root of the craft and the hierarchy flip.
+#pragma once
+
+#include <functional>
+#include <vector>
+
+#include "ksp/parts/part.hpp"
+
+namespace ksp {
+
+class EditorReRootUtil {
+public:
+    // What isRootCandidate reads from EditorLogic: EditorLogic.SelectedPart and EditorLogic.fetch.ship.parts.Contains(p)
+    struct Context {
+        Part* selectedPart = nullptr;
+        std::function<bool(const Part*)> shipContains;
+    };
+    // The context of the running editor (the host / EditorLogic fills it; unset: nothing selected, empty ship)
+    static inline Context context;
+
+    static std::vector<Part*> GetRootCandidates(const std::vector<Part*>& fromSet);   // :8
+    static bool MakeRoot(Part* newRoot, Part* oldRoot);                               // :44
+    static void StripInvalidSymmetrySets(Part* setRoot);                              // :61
+    static bool SymmetrySetIsValid(Part* p);                                          // :90
+
+private:
+    static bool isRootCandidate(Part* p);                                             // :20
+    static void StripInvalidSymmetrySets_recurseChildren(Part* p);                    // :66
+};
+
+}  // namespace ksp

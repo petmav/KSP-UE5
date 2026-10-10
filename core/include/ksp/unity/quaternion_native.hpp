@@ -26,3 +26,19 @@ namespace ksp::UnityNative {
 Quaternionf FromToRotation(const Vector3f& fromDirection, const Vector3f& toDirection);
 
 }  // namespace ksp::UnityNative
+
+namespace ksp::UnityNative {
+
+// WP-40 (UnityEngine.Quaternion natives the editor maths needs; per-operation float32 like the two above). NOT captured against the game
+// (CAPTURE-SPEC C3 has no rows for them): written from Unity 2019.4 Runtime/Math/Quaternion.cpp as documented in each definition.
+//
+// Quaternion.LookRotation(forward, up): LookRotationToMatrix (z = forward / |forward|, x = cross(up, z) / |x|, y = cross(z, x); identity when
+// |forward| or |x| < 1e-5 or | |y|^2 - 1 | >= 1e-6) then MatrixToQuaternion.
+Quaternionf LookRotation(const Vector3f& forward, const Vector3f& up);
+// Quaternion.Euler(Vector3 euler) (degrees): the managed `euler * ((float)Math.PI / 180f)` (Mono rule), then native EulerToQuaternion
+// (q = (qY * qX) * qZ of the half-angle sin / cos).
+Quaternionf Euler(const Vector3f& eulerDegrees);
+// Quaternion.eulerAngles: native QuaternionToEuler (matrix, YXZ order, asin / atan2), `* 57.29578f`, then the managed Internal_MakePositive.
+Vector3f EulerAngles(const Quaternionf& q);
+
+}  // namespace ksp::UnityNative
