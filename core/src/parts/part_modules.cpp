@@ -9,6 +9,7 @@
 #include "ksp/dotnet/mono_float.hpp"
 #include "ksp/events/game_events.hpp"
 #include "ksp/modules/module_part_variants.hpp"
+#include "ksp/parts/compound_part.hpp"
 #include "ksp/parts/part.hpp"
 #include "ksp/resources/part_resource_library.hpp"
 
@@ -314,7 +315,7 @@ void Part::InitializeModules() {
 // and start empty here (a part with a child hierarchy would clone the hierarchy: not modelled; the editor's copy path in
 // ShipConstruction builds the clone's links itself).
 std::unique_ptr<Part> Part::Instantiate(const Part& original) {
-    auto p = std::make_unique<Part>();
+    std::unique_ptr<Part> p = original.className == "CompoundPart" ? std::make_unique<CompoundPart>() : std::make_unique<Part>();  // Instantiate keeps the runtime class (WP-26)
     p->className = original.className;
     p->gameObjectName = original.gameObjectName;
     p->fields = original.fields;

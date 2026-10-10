@@ -162,6 +162,7 @@ public:
     bool isAttached() const { return attached_; }  // :972
     void set_isAttached(bool v) { attached_ = v; }
     bool isCompund() const { return compund_; }    // :984
+    void set_isCompund(bool v) { compund_ = v; }   // `compund = true` (CompoundPart.onPartAwake :140)
     bool isAttachable() const;                     // :989
     bool CanFail() const;                          // :1056 (MakingHistory installed && _canFail)
     void set_CanFail(bool v);
@@ -175,6 +176,10 @@ public:
     Part* RigidBodyPart();                         // :1236
     bool ShieldedFromAirstream() const { return partIsShielded_; }  // :1171
     void set_ShieldedFromAirstream(bool v);        // :1171 (also updates isShieldedDisplay)
+    // WP-26 (src/parts/part_shield.cpp): airstream shields of the cargo bay / engine plate modules
+    void AddShield(IAirstreamShield* shd);         // :7627
+    void RemoveShield(IAirstreamShield* shd);      // :7634
+    void OnShieldModified(IAirstreamShield* shd);  // :7641
     // GetReferenceTransform().name / SetReferenceTransform (:1547, :1567): the model transform is the model reader's; the
     // part's own transform is named like the GameObject
     const std::string& GetReferenceTransformName() const { return referenceTransformName_.empty() ? gameObjectName : referenceTransformName_; }

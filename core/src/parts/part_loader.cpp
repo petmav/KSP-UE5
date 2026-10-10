@@ -1,6 +1,7 @@
 #include "ksp/parts/part_loader.hpp"
 #include "ksp/modules/module_part_variants.hpp"
 #include "ksp/modules/part_module.hpp"
+#include "ksp/parts/compound_part.hpp"
 #include "ksp/parts/part.hpp"
 
 #include <algorithm>
@@ -578,7 +579,11 @@ std::unique_ptr<AvailablePart> PartLoader::ParsePart(const GameDatabase& db, io:
     float num = 1.25f;
     if (node.HasValue("rescaleFactor")) num = cs::FloatParse(*node.GetValue("rescaleFactor"));
     float num2 = f32store(1.0 * fx(num));
-    ap->partPrefab = std::make_unique<Part>();
+    {  // PartLoader.CreatePart: AssemblyLoader.GetClassByName(typeof(Part), module): CompoundPart is a Part subclass (WP-26)
+        const std::string* moduleName = node.GetValuePtr("module");
+        if (moduleName != nullptr && *moduleName == "CompoundPart") ap->partPrefab = std::make_unique<CompoundPart>();
+        else ap->partPrefab = std::make_unique<Part>();
+    }
     if (!CompileModel(db, urlConfig, node, *ap)) {
         log::Error("PartCompiler: Cannot compile model");
         return nullptr;
