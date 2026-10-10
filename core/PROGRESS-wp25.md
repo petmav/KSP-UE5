@@ -11,3 +11,4 @@ A module_docking_node.{hpp,cpp} | B module_grapple_node | C module_strut (CModul
 - [x] tools/wp25/dock_reference.py + tests/data/wp25_reference.json (contact 1080+, acquire, matching). Next: tests/test_docking.cpp
 - [x] tests/test_docking.cpp written (uncompiled), in tests/CMakeLists.txt
 - [x] tests pass (15 cases). Next: check_cites, full run, STATUS/README, WSL
+- [x] STATUS section + README written; WSL run started (/tmp/wp25_wsl.log). Remaining: Linux result into STATUS, commit, report

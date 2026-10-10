@@ -1,6 +1,6 @@
 # kspcore status
 
-Updated 2026-10-10 (WP-17, WP-22, WP-23, WP-26, WP-27, WP-28, WP-31). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
+Updated 2026-10-10 (WP-17, WP-22, WP-23, WP-25, WP-26, WP-27, WP-28, WP-31). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
 (details in README.md). Local git repository in `core/` only, never pushed.
 
 ## Summary
@@ -30,6 +30,7 @@ Updated 2026-10-10 (WP-17, WP-22, WP-23, WP-26, WP-27, WP-28, WP-31). One comman
 | 15. WP-28 resource-processing modules (branch `wp28`, from main `289d0c98`) | done (numeric / data side, unit-gated): BaseConverter family (catch-up, efficiency, recipe units), drills, harvester, generator, alternator, jettison, drain, space-object info / resource / analysis, scanners, surveyor, biome scanner; all 26 csv files. `unit` +17 cases / 8,571 assertions; every existing gate unchanged (`capture.part_database` 0 ULP). See the WP-28 section |
 | 18. WP-17 delta-v calculation (branch `wp17`) | done: VesselDeltaV (Ship and Vessel modes, RunCalculations run to the end, part staging ResetPartInfo / Process*PartInfoChildren), DeltaVStageInfo (ProcessParts, SimulateDeltaV burn simulation, StoreInterimDeltaV, CheckTimeStep, ISP / TWR), DeltaVEngineInfo (CalculateISP / ThrustVector / Burn / ApplyBurn), DeltaVPartInfo, DeltaVEngineStageSet (two list instances), the small files and extensions; gate `capture.deltav_stages` (stages 180 rows, totals 60, parts 1,225): 0 ULP except the vector-magnitude delta-v columns (<= 11 ULP, rel 1.02e-6, tolerance rel 2e-6), 16 rows of two crafts excluded (omsEngine thrust direction needs the .mu model); see "WP-17" |
 | 19. WP-31 kerbal roster, experience, crew (branch `wp31`, from main `135fb5aa`) | done (engine-agnostic part, unit-gated): the 20 experience effects, ExperienceTrait / Effect, CrewGenerator (KSPRandom draw order; name tables are hook-supplied), Part/VesselCrewManifest (replace the WP-18 seam), KerbalRoster / ProtoCrewMember extensions (applicants, Update, DefaultCrewForVessel, g-force, effects), APSkillExtensions, ModuleExperienceManagement; `unit` +20 cases, `data.roster_experience`; needs name-table and flight-log captures, see "WP-31" |
+| 21. WP-25 docking, grapple, struts, vessel merge / split (branch `wp25`, from main `95ed0a16`) | done (engine-agnostic part, unit-gated; no docking golden or capture exists): ModuleDockingNode (KSPFields / OnLoad / OnSave / OnStart, the 9-state KerbalFSM with all 16 events, nodeType / gender / snapRotation matching, CheckDockContact and the Acquire force chain in the Mono float rule, DockToVessel / Undock / Decouple over the WP-16 Couple / Undock / decouple, crossfeed events, rotation (servo) maths), ModuleGrappleNode (FSM, Grapple / Release / GrappleSameVessel / Decouple, both DockedVesselInfo), CModuleStrut (rigidbody-owner resolution, the Strut AttachNode); the WP-16 stand-in and the WP-17 runner crossfeed stand-in are gone; part_database / ship_construct / deltav_stages / staging_sequence stay 0 ULP; joints, transforms, raycasts, FX are documented seams (WP-20) |
 
 ## Test results (all 35 ctest tests pass (34 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience)
 
@@ -2295,7 +2296,7 @@ Support added for the staging queries (not in the 13 files, needed by `Part.Upda
   ModuleEngines.cs:1653 LIQUID_ENGINE, ModuleParachute.cs:310 PARACHUTES, LaunchClamp.cs:159 STRUT, ModuleServiceModule.cs:174 and ModuleProceduralFairing.cs:402
   FUEL_TANK, ModuleScienceExperiment.cs:263 SCIENCE_GENERIC). Without it no engine has a stack icon.
 - `PartModule::ToggleStaging` / `SetStagingState` (:303, :326), bound to the `ToggleStaging` [KSPEvent] in `PartModule::Awake`.
-- IStageSeparator stand-ins registered under `LaunchClamp` (`GetStageIndex` = inverseStage, LaunchClamp.cs:369) and `ModuleDockingNode` (`fallback + 1`,
+- IStageSeparator stand-ins registered under `LaunchClamp` (`GetStageIndex` = inverseStage, LaunchClamp.cs:369) and `ModuleDockingNode` (`fallback + 1`; WP-25 replaced the docking one by the real module,
   ModuleDockingNode.cs:1944): the full classes belong to WP-26 (LaunchClamp) / WP-25 (ModuleDockingNode) and only have to keep implementing `IStageSeparator` (ModuleServiceModule, WP-26, implements `IStageSeparator` + `IStageSeparatorChild`).
 - `AvailablePart::preferredStage` defaulted to 0 (FIRST) in WP-05's struct; AvailablePart.cs:114 is `DEFAULT` (3). Fixed (it decides where a newly placed part goes).
 
@@ -3006,7 +3007,7 @@ The inputs the C# gets from editor objects that have no package yet are installe
 - Fuel lines: `CompoundPart.OnStartComplete` (WP-26, `CompoundPart::hooks.editorShipParts`) resolves the `tgt` of every fuel line; without it the asparagus
   crafts (Kerbal X, Dynawing) burn from the wrong tanks.
 - `ModuleDockingNode.OnLoad` / `OnStart` (ModuleDockingNode.cs:533, :594) do `part.fuelCrossFeed = crossfeed`: a closed docking port (`crossfeed = False` in the craft
-  file) cuts the crossfeed graph. The docking node module is still the WP-16 staging stand-in; the runner applies this one statement.
+  file) cuts the crossfeed graph. WP-25 replaced the WP-16 stand-in and the runner statement by the real module: OnLoad sets the flag while the craft loads (see the WP-25 section).
 - `HighLogic.LoadedScene` = EDITOR through `SaveEnvironment::loadedScene` (the library reads it through `DeltaVGlobals::LoadedSceneIsEditor()`).
 
 ### Float and collection details that decide the result (later code must keep them)
@@ -3155,3 +3156,127 @@ What the unit tests establish (oracles are the decompiled C#, the game's cfgs an
   `Format` strips from arguments.
 - The localization of `ExperienceTraitConfig.Title` / `Description` happens in the UI, never in the config.
 - `tests/test_kerbals.cpp` needs the stock game (GameData mirror) like the other part-based tests.
+
+## WP-25: docking, grapple, struts, vessel merge / split (branch `wp25`, from main `95ed0a16`)
+
+Spec: `ModuleDockingNode.cs` (2,059 lines), `ModuleGrappleNode.cs` (996), `CompoundParts/CModuleStrut.cs` (108), `DockedVesselInfo.cs` (107; ported by
+WP-16, used here). New files: `include/ksp/modules/module_docking_node.hpp`, `module_grapple_node.hpp`, `module_strut.hpp`,
+`src/modules/module_docking_node.cpp` / `module_grapple_node.cpp` / `module_strut.cpp`, `tests/test_docking.cpp`, `tools/wp25/dock_reference.py`,
+`tests/data/wp25_reference.json`. Every ported function cites `File.cs:line` (`python -I tools/wp28/check_cites.py src/modules/module_docking_node.cpp
+src/modules/module_grapple_node.cpp src/modules/module_strut.cpp`: 128 cites, 0 mismatches). Floats follow the Mono rule (`fx()` / `f32store()`),
+maths only through `ksp::dotnet::Math` (Acos / Cos) and the WP-01 / WP-07 Unity shims (`Vector3f`, `UnityNative::AngleAxis` / `FromToRotation`).
+
+**No docking golden or capture exists**: `harness/golden/MANIFEST.json` has no docking entry and `harness/captures/out*/` hold no table about docking,
+grappling or struts. The gate is therefore (a) the existing captures staying at 0 ULP while the real classes own the KSPFields, and (b) unit tests
+whose expectations come from the decompiled C#, the game's own data (part database capture, the stock `.craft` files, the part prefabs) and an
+independent numpy reference.
+
+### Gate results (Windows MSVC RelWithDebInfo, fresh build, `tests/tolerances_capture.json` and `harness/compare/tolerances.json` unchanged)
+
+| ctest | rows compared | result |
+|---|---|---|
+| `capture.part_database` | 43,365 (10 tables: parts 357, part_cfg_values 6,235, modules 1,312, module_fields 32,894, module_propellants 77, resources 166, attach_nodes 822, drag_cubes 531, variants 228, assets 743) | max ULP 0, abs 0, rel 0; row counts identical to the WP-06 numbers (every `ModuleDockingNode` / `ModuleGrappleNode` / `CModuleStrut` field of the 6 + 2 + 1 stock parts as the game resolved it) |
+| `capture.ship_construct` | 1,242 | 0 ULP (17 crafts, 1,225 parts; the crafts with docking ports and struts included) |
+| `capture.staging_sequence` | 1,242 | 0 ULP |
+| `capture.deltav_stages` | 1,465 | unchanged from WP-17: everything 0 ULP except the delta-v / totals columns (max rel 1.02e-6, tolerance 2e-6). The runner stand-in `ApplyDockingNodeCrossfeed` is deleted; `fuelCrossFeed = crossfeed` now comes from `ModuleDockingNode.OnLoad` while the craft loads |
+| `unit` | 416 cases / 717,391 assertions (`./build/RelWithDebInfo/tests/kspcore_tests`), of them `tests/test_docking.cpp` 15 cases / 6,434 assertions | all pass |
+
+All 34 ctest tests pass in the worktree (`corpus.saves` registers only where `decompiled/KSP-dev` exists). Linux: see "Fresh run" below.
+
+### What is ported (by C# file)
+
+| C# file | C++ | state |
+|---|---|---|
+| `ModuleDockingNode.cs` | `module_docking_node.hpp/.cpp` | KSPFields (schema driven), OnAwake (event / action binding, `dockingPorts.AddUnique`, motor rate), OnLoad (state, dockUId, dockNodeIdx, DOCKEDVESSEL, `referenceNode`, `fuelCrossFeed = crossfeed`, the `nodeType` split on `,` / space, `hardMinMaxLimits` clamp), OnSave, OnStart, OnStartFinished, OnPartPack / Unpack, OnInventoryModeEnable / Disable, `lateFSMStart`, **SetupFSM** (9 states, 16 events and every OnEnter / OnLeave / OnUpdate / OnFixedUpdate body), `FindNodeApproaches` + `CanDockWith` (nodeTypes, gendered / genderFemale, snapRotation / snapOffset), `CheckDockContact` / `DockContact` (Mono float, `Math.Acos` / `Math.Cos` through `dotnet::Math`, the snapRotation roll fold), the Acquire force and torque chain, `DockToVessel` (DockedVesselInfo of both ports, `onVesselDocking`, `SetRotation` / `SetPosition` / `FromToRotation`, `Part.Couple`, active-vessel hand-over, `onVesselWasModified`, `onDockingComplete`), `Undock` / `OnOtherNodeUndock` (incl. pre-attached ports) / `Decouple` / `UndockSameVessel`, same-vessel docking (`DockToSameVessel`, `DestroySameVesselJoint`, `onSameVesselDock` / `Undock`), `MakePrimary`, `NodeIsTooFar`, crossfeed events and actions (`onPartCrossfeedStateChange` only on a change), `MakeReferenceTransform`, `OnActive` (staged + stagingEnabled -> Decouple), the staging overrides, ITargetable / IStageSeparator / IResourceConsumer, `GetInfo`, node lock (`EngageNodeLock` / `DisengageNodeLock` / `ModifyLocked`), the servo maths (`JointTargetAngle`, `VisualTargetAngle`, `RotationJoint` selection by FSM state, `UpdateAlignmentRotation` with `Mathf.MoveTowards`, `GetRotationAxis`, `SetTargetRotation`, `CalculateResourceDrain`, `SetJointHighLowLimits`, `RecurseCoordUpdate`) |
+| `ModuleGrappleNode.cs` | `module_grapple_node.hpp/.cpp` | KSPFields, OnLoad / OnSave (grapplePos / Ort / Ort2, grappledSameVessel, DOCKEDVESSEL and DOCKEDVESSEL_Other), OnStart (restores a Grappled state: node, owner, pivot), SetupFSM (5 states, 7 events), `FindContactParts` / `CheckGrappleContact`, **Grapple** (both DockedVesselInfo, part positions saved and restored around `Part.Couple`, grapple node position / orientation, target clearing, asteroid / comet size class), **Release** (`Part.Undock` with the side that hangs below), `GrappleSameVessel` / `DestroySameVesselJoint`, `Decouple`, `SetLoose` / `LockPivot` / `OnDriveModeChanged`, `NodeIsTooFar`, `OtherPartIsLost`, IJointLockState |
+| `CompoundParts/CModuleStrut.cs` | `module_strut.hpp/.cpp` | KSPFields, `OnTargetSet` (the rigidbody owners of both ends = the `Part.Rigidbody` walk, the "Strut" `AttachNode`: id, attachedPart, srfAttachMeshName, Surface, FIXED_JOINT, breaking force / torque from the two strengths, position / orientation in the target frame, `ResourceXFeed = false`, owner), same-body struts (no joint, warning), `OnTargetLost`, `OnStartFinished`, `GetInfo` |
+| `DockedVesselInfo.cs` | `parts/docked_vessel_info.hpp` (WP-16) | unchanged; round trips unit-tested here |
+| `ModuleJettison.cs:151` | `module_structural.cpp` | the "jettison transform hangs under a docking node" flag is real now: `Part::isDockingPort()` is the module test, the model hierarchy comes through `ModuleJettison::Hooks::jettisonTransformParentIsPartRoot` |
+| `ModuleDockingNode.cs:1944-1970` (WP-16 stand-in) | removed from `module_decouplers.cpp` | the real class registers `ModuleDockingNode`; `module_staging.cpp` keeps its class rules (identical answers) |
+
+### Seams (documented; the engine / other packages fill them)
+
+`DockingEnvironment` (`module_docking_node.hpp`): `modelTransformPose(Part&, name)` = `Part.FindModelTransform` (node, control and rotation transforms;
+position / forward / up / right), `partVelocity` (`part.rb.velocity`), `addTorque`, `setNeutralControls`, `createSameVesselJoint` /
+`destroySameVesselJoint` (`PartJoint.Create` / `DestroyJoint`), `attachJointOf` + `setTargetRotationLocal` / `limitAngularXMotion` / `setAngularXLimits` /
+`scaleBreakForces` (the servo ConfigurableJoint), `rotationTransformEuler` / `setRotationTransformLocalRotation`, `vesselTarget` / `setVesselTarget`,
+`sceneIsMissionBuilder`, `fixedDeltaTime`. `ModuleDecouplerBase::addForce` / `addForceAtPosition` / `forceSetActiveVessel` (WP-16) are reused.
+`GrappleEnvironment`: `raycast` (the contact ray), `createPivot` (`ActiveJointPivot`, interface `IGrapplePivot`), same-vessel joint, `evaOnGrapple`,
+`resumeVesselCtrlState`, `minDistanceBackaway`, `setNodeRotation`. `StrutEnvironment`: `createJoint` / `destroyJoint`, `evaConstructionOpen`.
+Coroutines (`lateFSMStart`, `WaitAndSwitchFocus`) are one-frame `Delayed` entries advanced by `ModuleDockingNode::TickAll()` /
+`ModuleGrappleNode::TickAll()`; the host calls `Update()` / `FixedUpdate()` / `LateUpdate()` per frame.
+
+### Deferred (for WP-20 joints and later)
+
+- Everything inside the joints: `PartJoint.Create` / `DestroyJoint`, the `ConfigurableJoint` limits / drive / break forces, `ActiveJointPivot` (drive modes,
+  pivot limits, `GetLocalPivotRotation`), the `PartJoint` creation inside `Part.Couple` / `Part.Undock` (WP-16 skips it too), `vessel.CycleAllAutoStrut()` /
+  `CycleAutoStrut()` (AutoStrut), the application of `Part.AddTorque` / `AddForce`, the strut's physical joint. Their call sites are the seam calls above.
+- Engine / UI: the model Transforms and their per-frame poses, `Physics.Raycast`, `Debug.DrawLine` / `DrawRay`, the part action window refresh (`UpdatePAWUI`
+  only writes the field flags), FX, audio, `ScreenMessages` (collected in `DockingEnvironment::screenMessages`), the `FlightGlobals.PersistentLoadedPartIds` /
+  `PersistentUnloadedPartIds` bookkeeping of `DockToVessel` (kspcore has no such registry), the `AnalyticsUtil` calls of the grapple.
+- Missions adjusters (`AdjusterDockingNodeBase` / `AdjusterGrappleNodeBase`): `IsAdjusterBlockingUndock` / `CountAdjustersBlockingGrappleRelease` /
+  `IsAdjusterBlockingGrappleGrab` answer "nothing blocks" (the same decision as WP-16 took for the decouplers).
+- `ModuleDockingNode` does not implement `IActivateOnDecouple` in the C# (only `ModuleJettison` does): the decouple path needs no hook from this module.
+  `GameEvents.onActiveJointNeedUpdate` is fired (no subscribers until WP-20).
+
+### Deviations (documented, none changes a number)
+
+- `nodeTypes` is a `std::set<string>`, not `dotnet::HashSet<T>`: the only users iterate it with `&=` over the whole set, so the enumeration order is irrelevant.
+- `PartPrefab::attachNodes` is a value vector, so the C# reference `grappleNode` lives in the module until it is added to the owner part and is found by
+  its id `"grapple"` afterwards (`ModuleGrappleNode::GrappleNode()`); `OnLoad` reserves one slot so pointers into the list stay valid. A docking node
+  `referenceNode` pointer taken before that reserve would dangle on a part that carries both modules (no stock part does).
+- `DockToVessel` evaluates `vessel == FlightGlobals.ActiveVessel` before `Part.Couple` (the old vessel is destroyed by the couple; C# compares the
+  destroyed object reference afterwards, the same answer).
+- `OnAwake` tolerates `part == null` (the prefab path of `LoadModuleData` awakes the module before it assigns the part) and registers the module in
+  `Part.dockingPorts` again in `OnStart`.
+- `rotationTransformName` has no initialiser in the C#, so its value is `null` and `null != string.Empty` is true: `OnStart` looks the transform up
+  (a missing one logs the warning and clears `canRotate`) exactly like the game does for every stock port.
+- The strut `targetMeshColName` (a null string in the C# when unset) is copied as `""` into the node `srfAttachMeshName`.
+
+### Quirks reproduced (later code must keep them)
+
+- A port whose `referenceAttachNode` (`top`, the docking face) holds any part, not only another port, starts in `PreAttached` (`lateFSMStart`); `Undock`
+  there is `Decouple`.
+- `Acquire` is the docker, `Acquire (dockee)` the dominant vessel port (`Vessel.GetDominantVessel`); only `Acquire` has the `Capture` event. On the same
+  vessel `GetDominantNode` (the port whose part is later in `vessel.parts`) goes straight to `Docked (dockee)`.
+- `MakePrimary` is only active on the dockee; it swaps the roles through `on_swapPrimary` / `on_swapSecondary` without touching the tree.
+- The ejection force is `(0f - undockEjectionForce) * 0.5f` evaluated in double and stored once (Mono rule), applied along the node forward on the
+  undocking part and with the opposite sign on its old parent.
+- The stock claws start `Disabled` until the deploy animation reaches progress 1 (`on_disable` / `on_enable` are UPDATE events).
+- `ModuleGrappleNode.OnStart` restores a `Grappled` state by re-adding the grapple node to whichever part was the node owner (`otherPart == part.parent`).
+
+### Unit tests (`tests/test_docking.cpp`, 15 cases, 6,434 assertions)
+
+DockedVesselInfo Save / Load round trip of every `VesselType` (vesselName, rootUId, vesselType keys) and the pre-1.2 numeric types (`core/testdata/saves` has
+no `DOCKEDVESSEL` node, only the physprofile save: the C# field list is the source); the 6 stock docking ports' KSPFields and `OnLoad` effects against the part
+database capture (nodeTypes, crossfeed -> `fuelCrossFeed` and the two event flags, `dockingPorts`, clamp, staging overrides); OnLoad / OnSave of state,
+dockUId, dockNodeIdx and DOCKEDVESSEL; the matching of all 36 port pairs plus synthetic multi-type, gendered and snapping combinations; **CheckDockContact on
+1,080 hand-constructed pose cases** (stock capture / acquire ranges and dots, 4 synthetic snapRotation offsets) and the **Acquire force / torque chain on 15
+cases** against `tools/wp25/dock_reference.py` (numpy float32, no kspcore code, `tests/data/wp25_reference.json`); two GDLV3 vessels docking through the
+FSM (Ready, Acquire / Acquire (dockee), Docked, the `Part.Couple` flip of parent and child, both DockedVesselInfo, `fuelLookupTargets`, saved state,
+MakePrimary, Undock restoring name / type / root and the ejection forces, Disengage -> Ready on distance); same-vessel docking on the first stock craft with
+two free compatible ports (joint seam, events, UndockSameVessel); a pre-attached port of Kerbal 1-5 (Undock = Decouple splits the vessel); crossfeed
+events, rotation axis / angle maths, node lock; CModuleStrut over every stock craft with struts (137 struts: 133 resolve to a joint between different
+rigidbody owners, all 133 degrade to "same body" when only the root keeps a rigidbody, 4 have a `tgt` that names a part absent from their craft: FAR
+Firehound MS and Ravenspear Mk4, 2 each); ModuleGrappleNode OnLoad / OnSave of both stock claws, `CheckGrappleContact`, the pivot events, and a full grab
+(Disabled -> Ready through the deploy animation, `on_contact`, both DockedVesselInfo, `Part.Couple`, pivot seam) and Release of a second vessel restoring
+name, type, root and part counts.
+
+Tolerances inside the tests: bit-exact (0 ULP) everywhere except the roll dot of the snapRotation fold where the snapped angle is a quarter turn:
+`cos(~pi/2)` is ~1e-17 and its last digits depend on the libm (`dotnet::Math::Cos` follows the x87 semantics of Mono, numpy the C library), so those values
+(non-zero, |x| < 1e-9) are compared with an absolute 1e-15; the boolean outcome is identical in all 1,080 cases.
+
+### Needs a new (local) capture to become a 0 ULP gate
+
+An in-game capture of two docking ports approaching and capturing (node transform poses, `part.rb.velocity`, the Acquire forces, the vessel position and
+rotation after `DockToVessel`) would turn the geometry and the tree operations into a captured gate; the same for a claw grabbing an asteroid, and for the
+`PartJoint` the strut creates (WP-20).
+
+### Fresh run
+
+Windows MSVC: `core/build` deleted, `powershell -NoProfile -File core/run_tests.ps1 -Fresh`: configure 2.5 s, build 123 s, 34 tests 114 s, ALL TESTS PASSED.
+Linux (WSL Ubuntu-24.04, `./run_tests.sh -f`, preset linux-rel, /mnt/c): fresh configure and build succeed (237 targets); `build/linux-rel/tests/kspcore_tests -tc="WP-25*"` 15 cases / 6,434 assertions pass (same counts as Windows); `ctest -R "capture.part_database|capture.ship_construct|capture.deltav_stages|capture.staging_sequence"` 4/4 pass. The complete `unit` ctest test (416 cases, each loading the game data) was still running after 30+ minutes on the slow /mnt/c mount when this was written and was not awaited; CI on a native Linux disk runs it.
+
+### Commits (branch `wp25`)
+
+See `git log wp25` (package commit "WP-25: ModuleDockingNode, ModuleGrappleNode, CModuleStrut ...", then the docs / gate commit).
