@@ -2857,7 +2857,7 @@ Spec: `Experience/*.cs` (ExperienceEffect, ExperienceTrait, the three configs), 
 `CrewGenerator.cs`, `KerbalMovementParameters.cs`, `KerbalRoster.cs`, `ModuleExperienceManagement.cs`, `PartCrewManifest.cs`,
 `ProtoCrewMember.cs`, `VesselCrewManifest.cs` (33 files). WP-04 had already ported the data side of FlightLog, the three configs,
 ProtoCrewMember and KerbalRoster (gated by `corpus.saves`); WP-31 extends those classes in place (`ksp/save/crew.hpp`) and adds
-`ksp/kerbals/*.hpp` + `src/kerbals/*.cpp`. Every ported function cites `File.cs:line` (`tools/wp28/check_cites.py src/kerbals/*.cpp`: 170
+`ksp/kerbals/*.hpp` + `src/kerbals/*.cpp`. Every ported function cites `File.cs:line` (`tools/wp28/check_cites.py src/kerbals/*.cpp`: 169
 cites, 0 mismatches; the script now also finds classes in sub folders such as `Experience/Effects`).
 
 **No golden dataset and no capture exists for these classes**: the package is unit-gated (`tests/test_kerbals.cpp`, 20 cases) plus a data
@@ -2885,9 +2885,9 @@ and `UnityRandom::Global()` (`UnityEngine.Random` in `KerbalRoster.Update` / `Ad
 | gate | result |
 |---|---|
 | `unit` (`tests/test_kerbals.cpp`) | 20 cases, 11,856 assertions, all pass (Windows MSVC and Linux) |
-| `data.roster_experience` | 1 save in the repo (`core/testdata/saves/physprofile/persistent.sfs`; `harness/inputs` has none): 4 kerbals, experience / level recomputed from the raw CAREER_LOG / FLIGHT_LOG by an independent oracle, 0 mismatches; the ROSTER saves back byte-identical |
+| `data.roster_experience` | 1 save in the repo (`core/testdata/saves/physprofile/persistent.sfs`; `harness/inputs` has none): 4 kerbals, experience / level recomputed from the raw CAREER_LOG / FLIGHT_LOG by an independent oracle, 0 mismatches; the ROSTER saves back identical to the loaded file's ROSTER node. **Weak gate**: that save has `EnableKerbalExperience = False` and empty logs, so every expected value is 99999 / level 5 and the oracle's flight-log maths is never exercised; it checks the load / compute / save plumbing only (the maths is covered by the synthetic-log unit tests) |
 | `corpus.saves` | registered only when `decompiled/KSP-dev/saves` exists (not in a worktree or in CI, see the WP-04 section): NOT run in the WP-31 session. The roster round trip through the extended classes is covered by the data gate on the physprofile save; the orchestrator should rerun `corpus.saves` on the merged main checkout |
-| `tools/wp28/check_cites.py src/kerbals/*.cpp` | 170 cites, 0 mismatches |
+| `tools/wp28/check_cites.py src/kerbals/*.cpp` | 169 cites, 0 mismatches |
 
 What the unit tests establish (oracles are the decompiled C#, the game's cfgs and an independent replay, never the code under test):
 - Traits.cfg: 4 traits, 20 stock effect classes, `StockBuiltIn()` identical to the cfg; every effect of every trait at levels 0..5: LevelModifiers
