@@ -1,6 +1,6 @@
 # kspcore status
 
-Updated 2026-10-10 (WP-00, WP-17, WP-22, WP-23, WP-24, WP-25, WP-26, WP-27, WP-28, WP-30, WP-31). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
+Updated 2026-10-11 (WP-39, WP-00, WP-17, WP-22, WP-23, WP-24, WP-25, WP-26, WP-27, WP-28, WP-30, WP-31). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
 (details in README.md). Local git repository in `core/` only, never pushed.
 
 ## Summary
@@ -34,6 +34,7 @@ Updated 2026-10-10 (WP-00, WP-17, WP-22, WP-23, WP-24, WP-25, WP-26, WP-27, WP-2
 | 24. WP-25 docking, grapple, struts, vessel merge / split (branch `wp25`, from main `95ed0a16`) | done (engine-agnostic part, unit-gated; no docking golden or capture exists): ModuleDockingNode (KSPFields / OnLoad / OnSave / OnStart, the 9-state KerbalFSM with all 15 events, nodeType / gender / snapRotation matching, CheckDockContact and the Acquire force chain in the Mono float rule, DockToVessel / Undock / Decouple over the WP-16 Couple / Undock / decouple, crossfeed events, rotation (servo) maths), ModuleGrappleNode (FSM, Grapple / Release / GrappleSameVessel / Decouple, both DockedVesselInfo), CModuleStrut (rigidbody-owner resolution, the Strut AttachNode); the WP-16 stand-in and the WP-17 runner crossfeed stand-in are gone; part_database / ship_construct / deltav_stages / staging_sequence stay 0 ULP; joints, transforms, raycasts, FX are documented seams (WP-20) |
 | 25. WP-30 misc part modules (branch `wp30`, from main `95ed0a16`) | done (engine-agnostic part, unit-gated): ModuleGPS (update-rate gate, lat / lon / biome text, asteroid / comet connection, `IAnimatedModule`), FlagSite (the KerbalFSM Placing / Placed / Toppled machine, joint / lock / dialog bookkeeping, OnSave / OnLoad of the state, afterFlagPlanted), ModulePartFirework (OnAwake / OnStart / OnLoad / OnSave, shot counter, color pickers, LaunchShell rigidbody numbers, mass modifier; replaces the WP-06 stand-in); `unit` +4 cases (+ the 2 small-fix tests), shell numbers and GPS text 0 ULP against a numpy float32 reference; `capture.part_database` unchanged (0 ULP, same rows). Part B small fixes listed in "WP-30". See the WP-30 section |
 | 26. WP-00 core runtime skeleton: tick phases, coroutine scheduler (branch `wp00`, from main `95ed0a16`) | done (engine-agnostic part, unit-gated; no golden or capture of scheduling exists, every existing gate unchanged): TimingManager + the eight Timing* hosts (Delegate add / remove-during-iteration semantics), `PlayerLoop` with the script order measured in game (Timing0, TimingPre, Timing1, Timing2, TimingManager, Timing3, TimingFI, Timing4, Timing5 for FixedUpdate / Update / LateUpdate; fixed-step and frame slot order), C++20 coroutine scheduler (null / WaitForSeconds / WaitForFixedUpdate / WaitForEndOfFrame / WaitUntil / nested / Stop), CoroutineHost, CallbackUtil.DelayedCallback, HierarchyUtil / TransformExtension / GameObjectExtension pure functions; VesselDeltaV.RunCalculations is now a real coroutine driven by the scheduler with identical results; scheduler vs independent numpy float32 replay 0 ULP; 18 cases / 396 assertions (17 in test_timing + 1 in test_deltav); the resume rules assumed for the engine are listed in the WP-00 section |
+| 27. WP-39 CommNet and KerbNet (branch `wp39`, from main `ad208205`) | done (engine-agnostic part, unit-gated; no CommNet golden or capture exists): generic Net / Node / Link / Path with .NET Dictionary link order, CommNetwork (SetNodeConnection / TryConnect / horizon occlusion / best-path searches), CommNetVessel, CommNetScenario / Network / Home / Body, ModuleDataTransmitter (transmit coroutine), ModuleRelayEnabler, ModuleProbeControlPoint, ModuleKerbNetAccess; ModuleCommand registers as command source; independent Python reference, 0 ULP; part_database gate unchanged. See "WP-39" below |
 
 ## Test results (all 35 ctest tests pass (34 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience)
 
@@ -3535,3 +3536,69 @@ model (double clock, float casts, wake rule); it cannot validate the engine beha
 - `./build/RelWithDebInfo/tests/kspcore_tests | grep -E "test cases|assertions"`: 419 test cases, 711,273 assertions, 0 failed;
   with `-tc="WP-00*"`: 18 cases, 396 assertions (17 in test_timing.cpp / 367, 1 in test_deltav.cpp / 29).
 - WSL (Ubuntu 24.04, clang, `./run_tests.sh -f` from the worktree): ALL TESTS PASSED, 34 of 34 ctest tests (the C++20 coroutines build and run on both toolchains).
+
+## WP-39: CommNet and KerbNet (branch `wp39`, from main `ad208205`)
+
+State: done for the engine-agnostic part, unit-gated against an independent Python reference (`tools/wp39/commnet_reference.py`, 0 ULP everywhere).
+**No golden and no capture exists for CommNet**: `harness/golden/MANIFEST.json` has no CommNet / antenna / KerbNet dataset and `harness/captures/out/` and `out2/` carry
+none (the load log has no flight scene). The gates that must not move did not move.
+
+### Gate numbers (RelWithDebInfo, Windows MSVC; `build/RelWithDebInfo/candidate/*/compare_report_*.json`)
+
+| gate | rows | max abs / rel / ULP | note |
+|---|---|---|---|
+| `capture.part_database` | parts 357, part_cfg_values 6,235, modules 1,312, module_fields 32,894, module_propellants 77, resources 166, attach_nodes 822, drag_cubes 531, variants 228, assets 743 | 0 / 0 / 0 in every table | identical row counts to the WP-24 section: the real ModuleDataTransmitter (36 modules) / ModuleKerbNetAccess (17) / ModuleProbeControlPoint (5) own their `[KSPField]`s, the schema-driven fields did not change |
+| `capture.deltav_stages`, `capture.ship_construct`, all other 31 ctest gates | unchanged | unchanged | 34 of 34 ctest tests pass (worktree: `corpus.saves` absent) |
+| `unit` (new `tests/test_commnet.cpp`) | 25 cases, 29,745 assertions | every replay **0 ULP** (doubles) | whole suite on this tree: 478 cases, 761,243 assertions |
+
+### What is ported
+
+| C# | kspcore |
+|---|---|
+| CommNet/Network/Net.cs, Node.cs, Link.cs, Path.cs, CommNet/Occluder.cs | `include/ksp/commnet/network.hpp`, `src/commnet/network.cpp`. The CRTP generics are concrete base classes. `Node` owns a `ksp::dotnet::Dictionary` (links enumerate in .NET order, free-list reuse after Remove: this decides every tie of the searches). `CommPath.Clear` hides `List.Clear`, so the generic code only calls `ClearList` |
+| CommNode, CommLink, CommPath, CommNetwork, NodeUtilities, SignalStrength, HopType, IRangeModel, CommRangeModel, ICommAntenna, AntennaType, IRelayEnabler, ICommNetControlSource, OccluderHorizonCulling | `include/ksp/commnet/comm_network.hpp`, `control_source.hpp` (VesselControlState moved here from `module_command.hpp`), `src/commnet/comm_network.cpp` (SetNodeConnection, TryConnect, TestOcclusion, FindPath / FindClosestWhere / CreateShortestPathTree / UpdateShortestPath / UpdateShortestWhere, FindHome, FindClosestControlSource) |
+| CommNetScenario, CommNetNetwork, CommNetHome, CommNetBody, CommNetNode, GameVariables.GetDSNRange / GetDSNRangeCurve | `include/ksp/commnet/commnet_scene.hpp`, `src/commnet/commnet_scene.cpp`. CommNetParams was already complete (WP-04). `CommNetScenario` is a registered `ScenarioModule` (physprofile `SCENARIO` node round-trips through `ProtoScenarioModule` -> module -> `ProtoScenarioModule`) |
+| CommNetVessel | `include/ksp/commnet/comm_net_vessel.hpp`, `src/commnet/comm_net_vessel.cpp` (registered VesselModule; UpdateComm loaded and unloaded, plasma blackout, control state, CreateControlConnection + the two CommNet events, GetBestTransmitter, GetControlLevel, command source registry). `Vessel.connection` is a new field; `Vessel::GetControlLevel` consults it when CommNet is on (Vessel.cs:1388) |
+| ModuleDataTransmitter | `include/ksp/modules/module_data_transmitter.hpp`, `src/modules/module_data_transmitter.cpp` replace the old stand-in in `module_behaviours.cpp`. `transmitQueuedData` is a real C++20 coroutine on the WP-00 scheduler |
+| ModuleRelayEnabler, ModuleProbeControlPoint | `include/ksp/modules/module_commnet_parts.hpp`, `src/modules/module_commnet_parts.cpp` (also `detail::RegisterCommNetModules`) |
+| ModuleKerbNetAccess | `include/ksp/modules/module_kerbnet_access.hpp`, `src/modules/module_kerbnet_access.cpp` |
+| ModuleCommand (WP-24 hooks) | now an `ICommNetControlSource`: Start / OnDestroy / OnNetworkInitialised / UpdateNetwork. `CommandEnvironment::commNetEnabled` / `connection` unset now mean the real scenario / `vessel.connection` (a test hook still overrides) |
+
+### Findings and the rules the tests pin down
+
+- **Link cost vs signal strength.** `CommLink.Update(x)` sets `signalStrength` (not `cost`); `Net.Connect` of a new link goes through `Link.Set` (cost = signal = distance), an
+  existing link only gets `signalStrength = distance`: its `cost` stays the distance it was created with. Path links take `cost = bestLink.signalStrength` and
+  `signalStrength = bestLink.GetSignalStrength(start)`; `ModuleDataTransmitter` reads `ControlPath.First.start[First.end].cost`. All ported as written.
+- **flag2 / flag3** in `SetNodeConnection` are both true when the relay-relay test passes, even if a node has no transmitter; `GetNormalizedRange(.., 0, ..)` then divides by zero
+  (+-inf / NaN, never an exception) and the combination is dropped (`normalizedRange > 0` is false).
+- **The generic `Net.FindPath` / `Net.FindClosestWhere(path != null)` can never succeed**: `path[0]` is the END link and `path[0].Contains(start)` is false (CommNetwork overrides both).
+  `CommNetNetwork.Update` rebuilds on every call unless a focused (map-selected) vessel exists, as decompiled (the last conjunct is `prevUpdate + 0 > now`).
+- **Reference scope.** Parts come from the cfg mirror filtered to the in-game capture C9 part list *and* its `cfg_file` (the mirror holds deprecated and duplicate cfgs): 36 antennas, 17 KerbNet parts.
+- **ModuleDataTransmitter.OnLoad** adds the `requiredResource` ElectricCharge input to a prefab module without module resources (`partInfo == null`); `test_resource_modules.cpp` (WP-15) now expects it.
+- **Leak hygiene.** Modules that subscribe events in Start / OnStart (ModuleCommand, ModuleKerbNetAccess, CommNetVessel) unsubscribe in their destructors; a dangling `GameEvents` handler crashed the WP-25 grapple test before.
+
+### Reference (`tools/wp39/commnet_reference.py` -> `tests/data/wp39_reference.json`, 1.4 MB)
+
+Independent Python (floats are doubles; float32 via numpy), no kspcore code. Inputs: the cfgs under `testdata/GameData-mirror`, `harness/captures/out2/part_database.json` (part list), and
+`harness/golden/serialized/celestial_bodies.serialized.json` (17 bodies). Compared and **0 ULP**: range model grid (8 stock / DSN powers squared x 9 distances), 2,187 node pairs
+(9 stock configurations x 9 x 9 distances x 3 distance offsets: link strengths RR/AR/BR, flags, the four `GetSignalStrength` combinations, best signal, enum), 68 body x preset occluders with
+1,632 rays (radius, Raycast, InRange, end-to-end through `SetNodeConnection`), two hand-built graphs (13 and 10 nodes) with 859 FindHome / FindClosestControlSource / FindPath queries across five
+phases (built, node removed, re-added, moved away, moved back) including each node's link order, 240 `UpdateComm` aggregations over random sets of stock antennas (combinable exponent sums through
+`Math.Pow`: **also 0 ULP**), the control-state table, 88 transmissions (packets, per-packet data, EC drawn, steps between packets), and per KerbNet part the FoV / situation walk.
+
+### Seams (documented in the headers; all `static inline` hooks, unset = the stated default)
+
+- `CommNetEnvironment`: tracking station level (WP-36), body transform, `Time.timeSinceLevelLoad`, debug log.
+- `TransmitterEnvironment`: coroutine scheduler, recorded screen messages, the vessel's science containers + dialog (`collectVesselData`), `returnData`, `createCommsStream`
+  (RnDCommsStream), `onTriggeredDataTransmission`, `applyUpgrades` (UPGRADESAPPLIED). `IScienceDataTransmitter`, `ICommsStream` and the plain `TransmissionItem` (the ScienceData
+  fields the coroutine uses, with Load / Save) live in `include/ksp/commnet/science_transmitter.hpp` for WP-35 to adapt or replace.
+- `CommNetModuleEnvironment`: Missions adjusters of unloaded snapshots (`IProbeControlPointAdjuster`, `IDataTransmitterAdjuster`).
+- `KerbNetEnvironment`: KerbNetDialog hooks (open, FoV bounds, error refresh), recorded screen messages; the 0.2 s `Invoke` is a pending flag + `RunInvoke()`.
+
+### Not ported / deferred / unverified
+
+- CommNetUI, CommNetUIModeButton and the line renderers (rendering); `GetInfo` text of ModuleRelayEnabler and the resource line of ModuleDataTransmitter (`PrintModuleResources` is not modelled); `CreateDebug` uses plain number text.
+- KerbNet map scanning (altitude limits, biome / anomaly sampling) is `KerbNetDialog`'s, not in this package; only the module's FoV / anomaly / situation rules are.
+- `CommNode.transform` for vessels is null (the vessel position comes from `GetWorldPos3D` in `OnNetworkPreUpdate`); `gameObject.name` is the vessel name.
+- First gap between two transmitted packets is one fixed step shorter in the unit driver: the WP-00 scheduler resumes the first `WaitForFixedUpdate` in the pass that started the routine (assumption of `coroutine.hpp`); later gaps equal the reference count.
+- Unverified against the player: everything above (no capture). Needed captures (local): a flight dump of a vessel's `CommNode` powers / `ControlPath` per network rebuild with a ground station and a relay, and one transmission (packet timing, EC) to gate the coroutine.
