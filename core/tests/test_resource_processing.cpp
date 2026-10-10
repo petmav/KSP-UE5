@@ -137,7 +137,7 @@ TEST_CASE("WP-28 stock cfg: every converter / harvester / drill / generator / al
                     if (!c->HasValue("ResourceName") && c->name.size() >= 9 && c->name.substr(c->name.size() - 9) == "_RESOURCE") continue;
                     ResourceRatio r;
                     r.FlowMode = ResourceFlowMode::NULL_;
-                    r.ResourceName = *c->GetValue("ResourceName");
+                    r.ResourceName = c->GetValue("ResourceName").value_or("");
                     if (c->HasValue("Ratio")) r.Ratio = static_cast<double>(dotnet::ParseSingle(*c->GetValue("Ratio")));
                     if (c->HasValue("DumpExcess")) r.DumpExcess = (*c->GetValue("DumpExcess") == "True" || *c->GetValue("DumpExcess") == "true");
                     if (c->HasValue("FlowMode")) r.FlowMode = AsFlowMode(static_cast<int32_t>(kEnum_ResourceFlowMode.Parse(*c->GetValue("FlowMode"))));
@@ -192,14 +192,14 @@ TEST_CASE("WP-28 stock cfg: every converter / harvester / drill / generator / al
                     // electric charge input becomes eInput
                     hv->LoadRecipe(0.25);
                     REQUIRE(hv->recipe.Outputs().size() == 1);
-                    CHECK(hv->recipe.Outputs()[0].ResourceName == *md.config->GetValue("ResourceName"));
+                    if (md.config->HasValue("ResourceName")) CHECK(hv->recipe.Outputs()[0].ResourceName == *md.config->GetValue("ResourceName"));
                     CHECK(hv->recipe.Outputs()[0].Ratio == 0.25);
                     CHECK(hv->recipe.Outputs()[0].DumpExcess == (hv->Get<int32_t>("HarvesterType") == 2));
                     CHECK(hv->recipe.Outputs()[0].FlowMode == ResourceFlowMode::NULL_);
                     bool hasEc = false;
                     for (const auto& r : in) hasEc = hasEc || r.ResourceName == "ElectricCharge";
                     CHECK(hv->hasEInput == hasEc);
-                    CHECK(hv->Get<int32_t>("HarvesterType") == ParseI(*md.config->GetValue("HarvesterType")));
+                    if (md.config->HasValue("HarvesterType")) CHECK(hv->Get<int32_t>("HarvesterType") == ParseI(*md.config->GetValue("HarvesterType")));
                     CHECK(hv->GetConsumedResources().size() == 1);
                 }
             } else if (cls == "ModuleGenerator" || cls == "ModuleAlternator") {
@@ -210,7 +210,7 @@ TEST_CASE("WP-28 stock cfg: every converter / harvester / drill / generator / al
                     ConfigNode* c = md.config->nodes()[i];
                     if (c->name != "OUTPUT_RESOURCE") continue;
                     REQUIRE(static_cast<size_t>(idx) < md.module->resHandler.outputResources.size());
-                    CHECK(md.module->resHandler.outputResources[static_cast<size_t>(idx)]->rate == dotnet::ParseDouble(*c->GetValue("rate")));
+                    if (c->HasValue("rate")) CHECK(md.module->resHandler.outputResources[static_cast<size_t>(idx)]->rate == dotnet::ParseDouble(*c->GetValue("rate")));
                     idx++;
                     ratios++;
                 }
@@ -222,14 +222,14 @@ TEST_CASE("WP-28 stock cfg: every converter / harvester / drill / generator / al
                        cls == "ModuleAsteroidAnalysis" || cls == "ModuleCometAnalysis") {
                 perClass[cls]++;
                 if (cls == "ModuleResourceScanner") {
-                    CHECK(md.module->Get<int32_t>("ScannerType") == ParseI(*md.config->GetValue("ScannerType")));
-                    CHECK(md.module->Get<std::string>("ResourceName") == *md.config->GetValue("ResourceName"));
+                    if (md.config->HasValue("ScannerType")) CHECK(md.module->Get<int32_t>("ScannerType") == ParseI(*md.config->GetValue("ScannerType")));
+                    if (md.config->HasValue("ResourceName")) CHECK(md.module->Get<std::string>("ResourceName") == *md.config->GetValue("ResourceName"));
                 }
                 if (cls == "ModuleAsteroidResource" || cls == "ModuleCometResource") {
                     // ModuleSpaceObjectResource.OnLoad (:28): the flow mode of the resource definition unless FlowMode names one
                     auto* sr = dynamic_cast<ModuleSpaceObjectResource*>(md.module.get());
                     REQUIRE(sr != nullptr);
-                    const PartResourceDefinition* d = PartResourceLibrary::Instance()->GetDefinition(*md.config->GetValue("resourceName"));
+                    const PartResourceDefinition* d = PartResourceLibrary::Instance()->GetDefinition(md.config->GetValue("resourceName").value_or(""));
                     if (!md.config->HasValue("FlowMode") && d) CHECK(static_cast<int>(sr->_flowMode) == d->resourceFlowMode());
                 }
             }

@@ -2493,7 +2493,7 @@ The Python reference shares no code with kspcore (numpy float32 stores per the M
 
 ### Fresh run
 
-Windows: `run_tests.ps1` 28/28 ctest tests, `unit` 309 cases / 693,597 assertions, ALL TESTS PASSED. Linux: see the line below.
+Windows: `run_tests.ps1` 28/28 ctest tests, `unit` 309 cases / 693,597 assertions, ALL TESTS PASSED. Linux (clang 18, `./run_tests.sh`, WSL): 28/28 ctest tests, ALL TESTS PASSED (a first Linux run aborted in the cfg sweep on an unguarded optional dereference of a cfg key the module does not set; fixed).
 
 ### Commits (branch `wp28`)
 

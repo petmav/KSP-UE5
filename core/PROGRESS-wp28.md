@@ -19,3 +19,4 @@
 - TODO: tests for harvester branches, drills, generator, alternator, jettison, drain, scanners, surveyor, biome, analysis, BaseConverter misc; STATUS + README; Linux run
 - [x] fix found: PartModule::CopySerializedFrom did not copy resHandler lists (Instantiate): added ModuleResource::CloneSerialized (WP-15/06 file touch, documented in STATUS)
 - [x] 17 WP-28 test cases pass (8571 assertions) on Windows; next: full ctest, STATUS/README, WSL run, commit
+- [x] docs committed; running WSL ./run_tests.sh -f (log /tmp/wp28_wsl.log)
