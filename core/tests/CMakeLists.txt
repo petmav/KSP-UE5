@@ -296,4 +296,4 @@ ksp_golden_gate(capture.thermal_step thermal_step GOLDEN ${KSP_CAPTURES2_DIR}/th
                 DROP_ROWS "parts:frame=0"
                 DROP_KEYS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/data/thermal_step_exclusions.json
                 COLUMNS "vessel:case,frame,mach,density,staticPressurekPa,dynamicPressurekPa,atmosphericTemperature,externalTemperature,convectiveCoefficient,convectiveMachLerp,densityThermalLerp,solarFluxMultiplier,backgroundRadiationTemp,backgroundRadiationTempExposed,fi_isAnalytical"
-                DROP_COLUMNS "parts:radiativeArea,exposedArea,thermalMass,ptd_intConductionFlux,ptd_skinConductionFlux/part_constants:resource_mass")
+                DROP_COLUMNS "parts:radiativeArea,exposedArea,thermalMass,ptd_intConductionFlux,ptd_skinConductionFlux,ptd_convectionArea,ptd_postShockExtTemp,ptd_brtExposed,ptd_expFlux,ptd_unexpFlux,ptd_sunFlux,ptd_bodyFlux/part_constants:resource_mass")

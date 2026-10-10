@@ -40,3 +40,5 @@ tests/test_thermal.cpp, STATUS/README, full runs Windows + WSL.
 Next: README rows (tests table, layout, golden gate options), STATUS WP-22 section + header counts, full Windows -Fresh run, WSL run, commit.
 
 ## Step 6: README/STATUS committed; Windows -Fresh run: 30/30 ctest pass, 299 unit cases / 685,133 assertions. WSL linux-rel run in progress (/tmp/wp22_wsl.log).
+
+## Follow-up: 7 circular parts columns dropped from the gate (parts now 20 compared columns); from-scratch Windows and WSL runs 30/30.

@@ -63,7 +63,7 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `capture.aero_forces_mono` | WP-21: in-game `captures/out/aero_forces_mono.json`, the AeroGen drag-cube tables under Mono (`aero::MonoFloat`, the production policy): cube_inputs 34, cube_weighted 204, cube_drag 18,122 | 18,360 | 0 ULP |
 | `capture.aero_forces_vessel` | WP-21: in-game `captures/out2/aero_forces_vessel.json` (C10): structure 631 (node_contact_areas), parts 4,224 x 46 columns, aoa_sweep 25,344 x 12 columns on the three assembled PhysProf vessels; inputs dropped as listed in "WP-21" | 30,199 | 0 ULP |
 | `capture.atmosphere_thermal_offsets` | WP-22: in-game `captures/out2/atmosphere_thermal_offsets.json` (C4), `samples` 27 columns: `CelestialBody.GetAtmoThermalStats` / `GetFullTemperature` on Kerbin, Eve, Duna, Laythe, Jool, Mun at 4 epochs | 2,688 | 0 ULP |
-| `capture.thermal_step` | WP-22: in-game `captures/out2/thermal_step.json` (C6): vessel 2,994 x 12 + isAnalytical, parts 14,985 x 27 + exposed (the real UpdateThermodynamics per tracked part and frame), part_constants 15; inputs recovered from the capture and exclusions as listed in "WP-22" | 17,994 | 0 ULP |
+| `capture.thermal_step` | WP-22: in-game `captures/out2/thermal_step.json` (C6): vessel 2,994 x 12 + isAnalytical, parts 14,985 x 19 + exposed (the real UpdateThermodynamics per tracked part and frame; 7 recovered columns are inputs, not compared), part_constants 15; inputs recovered from the capture and exclusions as listed in "WP-22" | 17,994 | 0 ULP |
 | `unit` | 299 doctest cases, 685,133 assertions (WP-22: 7 cases, 112 assertions in `test_thermal.cpp`; WP-16: 19 cases, 12,222 assertions in `test_staging.cpp`; WP-21: 11 cases, 220,304 assertions in `test_aero.cpp`; WP-18: 26 cases, 274,042 assertions in `test_ship_construct.cpp`; WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
@@ -2404,7 +2404,7 @@ gate unchanged and green.
 |---|---|---|---|---|
 | `capture.atmosphere_thermal_offsets` (C4) | `samples` | 2,688 | 27 (inputs echoed + atmosphereTemperatureOffset, bodyEmissiveFlux, bodyAlbedoFlux, bodyTemperature, GetTemperature, GetFullTemperature(alt, offset) and (pos), pressure_kPa, density, solarAirMass, solarFluxMultiplier) | 0 |
 | `capture.thermal_step` (C6) | `vessel` | 2,994 (3,000 - 6 excluded) | 12 f64 + fi_isAnalytical | 0 |
-| | `parts` | 14,985 (15,000 - 15 first frames) | 27 f64 + ptd_exposed | 0 |
+| | `parts` | 14,985 (15,000 - 15 first frames) | 19 f64 + ptd_exposed compared (20) (7 more are recovered inputs, see below) | 0 |
 | | `part_constants` | 15 | 10 (mass f32, maxTemp ... skinThermalMassModifier, ptd_thermalLinkCount) | 0 |
 
 `tools/golden_runner/ds_atmosphere_thermal_offsets.cpp` rebuilds the C4 inputs from the capture's own input columns (sun / body scaled
@@ -2424,10 +2424,22 @@ one-part graph per row:
 - INPUTS recovered from the capture: `ptd_intConductionFlux` / `ptd_skinConductionFlux` (conduction to the 16 unlogged neighbours:
   `GateFI::UpdateConduction` takes them and runs the real skin-local block `UpdateSkinLocalConduction`); the occlusion multipliers
   (convectionAreaMultiplier / convectionTempMultiplier: the m that reproduces the logged convectionArea / postShockExtTemp AND brtExposed bit
-  for bit, 1.0 when it does; 0 recovery misses); the sun / body radiation entering each skin (cube area along the sun / up direction: the exact
-  double I with I - emission == the logged expFlux / unexpFlux, searched +-4 ulp around logged + emission; 0 misses), so the emission term,
+  for bit, 1.0 when it does); the sun / body radiation entering each skin (cube area along the sun / up direction: the exact
+  double I with I - emission == the logged expFlux / unexpFlux, searched +-4 ulp around logged + emission), so the emission term,
   the split between the skins and every later statement are verified; `thermalMass` (includes the resource thermal mass, which depends on the
   propellant left after the C10 ascent).
+- Recovery is not verification: a nearby double that reproduces the logged value always exists, so the runner's recovery-miss counter
+  (0) is a sanity check only. The seven columns recovered from their own logged values are therefore INPUTS and are dropped from the
+  gate (`DROP_COLUMNS`): `ptd_convectionArea`, `ptd_postShockExtTemp`, `ptd_brtExposed`, `ptd_expFlux`, `ptd_unexpFlux`, `ptd_sunFlux`,
+  `ptd_bodyFlux`.
+- Genuinely verified (computed from non-circular inputs, 0 ULP): the `vessel` atmosphere scalars; SetSkinProperties (skinExposedAreaFrac,
+  skinExposedArea, exposed flag, skin temperature transfers); PrecalcConvection `ptd_finalCoeff` and the convection fluxes
+  (`ptd_convectionFlux`, `thermalConvectionFlux`); the emission term and radiation fluxes (`ptd_radiationFlux`, `ptd_unexpRadiationFlux`,
+  `thermalRadiationFlux`, given the recovered incoming flux), `ptd_brtUnexposed`; the skin-local conduction (`ptd_skinSkinConductionFlux`,
+  `ptd_skinInteralConductionFlux`); `thermalConductionFlux` (convergence factor); the integrated temperatures (temperature,
+  skinTemperature, skinUnexposedTemperature); thermalInternal/Skin/ExposedFlux; skinThermalMass; part_constants (incl. the link count).
+- Inputs / recovered / NOT verified: the occlusion passes and the multipliers, GetSunArea / GetBodyArea (cube areas, direction cosines),
+  conduction to the 16 unlogged neighbours, and the seven dropped columns above.
 - not written / not gated: `radiativeArea`, `exposedArea`, `thermalMass`, the two neighbour fluxes (inputs), `resource_mass` (propellant left
   after the ascent), `solarFlux` of `vessel` (the unattenuated flux needs the sun-ray cast distance).
 - `vessel`: FlightIntegratorAtmosphere recomputed from altitude, spd, sunDot, atmosphereTemperatureOffset (inputs: C4 gates them) and the

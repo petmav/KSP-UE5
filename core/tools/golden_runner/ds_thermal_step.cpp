@@ -25,6 +25,10 @@
 //            * the sun and body flux entering each skin (geometry: cube area along the sun / up direction, direction cosines to
 //              the velocity): the exact double I with I - emission == the logged expFlux / unexpFlux (searched +-4 ulp around
 //              logged + emission), so that the emission and everything after it are verified.
+//          Recovery is not verification: a nearby double that reproduces the logged value always exists, so recoveryMisses (0) is a
+//          sanity check only. The seven columns recovered from their own logged values (ptd_convectionArea, ptd_postShockExtTemp,
+//          ptd_brtExposed, ptd_expFlux, ptd_unexpFlux, ptd_sunFlux, ptd_bodyFlux) are inputs: tests/CMakeLists.txt drops them from
+//          the comparison.
 //          Row frame 0 of each case has no previous row and is not written.
 #include <cmath>
 #include <cstring>
