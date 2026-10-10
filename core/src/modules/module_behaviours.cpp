@@ -22,6 +22,7 @@
 #include "ksp/modules/part_structural_modules.hpp"
 #include "ksp/modules/part_module.hpp"
 #include "ksp/modules/resource_modules.hpp"
+#include "ksp/modules/resource_processing.hpp"
 #include "ksp/modules/module_decouplers.hpp"
 #include "ksp/parts/available_part.hpp"
 #include "ksp/parts/cs_parse.hpp"
@@ -79,29 +80,7 @@ public:
     }
 };
 
-// ---- BaseConverter.cs:460 OnAwake / :342 OnLoad (ModuleResourceConverter, BaseDrill descendants, ModuleScienceConverter) --
-// The resource-ratio lists (INPUT/OUTPUT/REQUIRED_RESOURCE) are WP-28's; the prefab has no vessel, so OnLoad returns before
-// SetupModule.
-class BaseConverter : public PartModule {
-public:
-    using PartModule::PartModule;
-    void OnAwake() override {
-        if (IsNull("ThermalEfficiency")) {
-            FloatCurve c;
-            c.Add(0.0f, 1.0f);
-            Set<FloatCurve>("ThermalEfficiency", std::move(c));
-        }
-        if (IsNull("TemperatureModifier")) {
-            FloatCurve c;
-            c.Add(0.0f, 100.0f);
-            Set<FloatCurve>("TemperatureModifier", std::move(c));
-        }
-    }
-    void OnLoad(const ConfigNode& node) override {
-        PartModule::OnLoad(node);
-        Set<std::string>("status", Localizer::Format("#autoLOC_257112"));
-    }
-};
+// ---- BaseConverter / drills / converters / harvesters / generators / scanners: WP-28 (modules/resource_processing.hpp) ----
 
 // ---- `if (curve == null) curve = new FloatCurve();` OnAwake bodies --------------------------------------------------------
 // ModuleColorChanger.cs:162 (four colour curves), ModuleEngines.cs:1609 / ModuleRCS.cs:378 (atmosphereCurve; the FX
@@ -332,7 +311,7 @@ public:
 // ModulePartVariants.cs: module_part_variants.cpp (WP-13)
 
 // ---- the remaining IPartMassModifier / IPartCostModifier implementations -------------------------------------------------
-class ModuleComet : public PartModule, public IPartMassModifier {  // ModuleComet.cs:469
+class ModuleComet : public PartModule, public IPartMassModifier, public ISpaceObjectMass {  // ModuleComet.cs:469
 public:
     using PartModule::PartModule;
     IPartMassModifier* AsMassModifier() override { return this; }
@@ -341,15 +320,17 @@ public:
         return MathfClamp(d, kFloatEpsilon, d < 0.0f ? -d : d);
     }
     ModifierChangeWhen GetModuleMassChangeWhen() override { return ModifierChangeWhen::CONSTANTLY; }
+    void SetSpaceObjectMass(float nMass) override { cometMass = nMass; }  // ModuleComet.cs:479 SetCometMass
     float cometMass = 1.0f;  // private, set by SetCometMass
 };
 
-class ModuleAsteroid : public PartModule, public IPartMassModifier {  // ModuleAsteroid.cs:229
+class ModuleAsteroid : public PartModule, public IPartMassModifier, public ISpaceObjectMass {  // ModuleAsteroid.cs:229
 public:
     using PartModule::PartModule;
     IPartMassModifier* AsMassModifier() override { return this; }
     float GetModuleMass(float defaultMass, ModifierStagingSituation) override { return f32store(fx(asteroidMass) - fx(defaultMass)); }
     ModifierChangeWhen GetModuleMassChangeWhen() override { return ModifierChangeWhen::CONSTANTLY; }
+    void SetSpaceObjectMass(float nMass) override { asteroidMass = nMass; }  // ModuleAsteroid.cs:239 SetAsteroidMass
     float asteroidMass = 1.0f;  // private, set by SetAsteroidMass
 };
 
@@ -441,8 +422,7 @@ void RegisterBuiltinModules() {
     Reg<ModuleCargoPart>({"ModuleCargoPart"});
     Reg<ModuleAnimationSetter>({"ModuleAnimationSetter"});
     Reg<ModuleAnimateHeat>({"ModuleAnimateHeat"});
-    Reg<BaseConverter>({"BaseConverter", "BaseDrill", "ModuleAsteroidDrill", "ModuleCometDrill", "ModuleResourceConverter",
-                        "ModuleResourceHarvester", "ModuleScienceConverter"});
+    detail::RegisterResourceProcessingModules();  // WP-28: BaseConverter family, generators, scanners
     Reg<ModuleDeployablePart>({"ModuleDeployablePart"});
     Reg<ModuleDeployableAntenna>({"ModuleDeployableAntenna"});
     Reg<ModuleDeployableRadiator>({"ModuleDeployableRadiator"});
