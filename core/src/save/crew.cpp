@@ -243,7 +243,7 @@ ExperienceTraitConfig* ExperienceSystemConfig::GetExperienceTraitConfig(std::str
     return nullptr;
 }
 
-// ExperienceSystemConfig.cs:90 (returns trait TITLES, which LoadTraitConfigs compares with names -- sic)
+// ExperienceSystemConfig.cs:97 (returns trait TITLES, which LoadTraitConfigs compares with names -- sic)
 std::vector<std::string> ExperienceSystemConfig::GetTraitsWithEffect(std::string_view effectName) const {
     std::vector<std::string> list;
     for (const auto& c : categories_)

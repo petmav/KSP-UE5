@@ -369,7 +369,7 @@ void EVAResourceContainer::StopTransfer() {
     transferring = false;
     updateModuleUI();
 }
-
+// EVAResourceContainer.cs:99 transferResources (the coroutine; TransferStep is one loop iteration of its while body :102-:109). `sqrDistance` = (src.part.position - dest.part.position).sqrMagnitude
 // EVAResourceContainer.cs:99 transferResources: one loop iteration. `sqrDistance` = (src.part.position - dest.part.position).sqrMagnitude
 bool EVAResourceContainer::TransferStep(PartResource& src, PartResource& dest, double& transferRate, float maxDist, double sqrDistance) {
     if (!(dest.amount < dest.maxAmount && src.amount > 0.0 && !(sqrDistance >= static_cast<double>(maxDist * maxDist)))) return false;

@@ -30,6 +30,7 @@ Updated 2026-10-10 (WP-17, WP-22, WP-23, WP-26, WP-27, WP-28, WP-31). One comman
 | 15. WP-28 resource-processing modules (branch `wp28`, from main `289d0c98`) | done (numeric / data side, unit-gated): BaseConverter family (catch-up, efficiency, recipe units), drills, harvester, generator, alternator, jettison, drain, space-object info / resource / analysis, scanners, surveyor, biome scanner; all 26 csv files. `unit` +17 cases / 8,571 assertions; every existing gate unchanged (`capture.part_database` 0 ULP). See the WP-28 section |
 | 18. WP-17 delta-v calculation (branch `wp17`) | done: VesselDeltaV (Ship and Vessel modes, RunCalculations run to the end, part staging ResetPartInfo / Process*PartInfoChildren), DeltaVStageInfo (ProcessParts, SimulateDeltaV burn simulation, StoreInterimDeltaV, CheckTimeStep, ISP / TWR), DeltaVEngineInfo (CalculateISP / ThrustVector / Burn / ApplyBurn), DeltaVPartInfo, DeltaVEngineStageSet (two list instances), the small files and extensions; gate `capture.deltav_stages` (stages 180 rows, totals 60, parts 1,225): 0 ULP except the vector-magnitude delta-v columns (<= 11 ULP, rel 1.02e-6, tolerance rel 2e-6), 16 rows of two crafts excluded (omsEngine thrust direction needs the .mu model); see "WP-17" |
 | 19. WP-31 kerbal roster, experience, crew (branch `wp31`, from main `135fb5aa`) | done (engine-agnostic part, unit-gated): the 20 experience effects, ExperienceTrait / Effect, CrewGenerator (KSPRandom draw order; name tables are hook-supplied), Part/VesselCrewManifest (replace the WP-18 seam), KerbalRoster / ProtoCrewMember extensions (applicants, Update, DefaultCrewForVessel, g-force, effects), APSkillExtensions, ModuleExperienceManagement; `unit` +20 cases, `data.roster_experience`; needs name-table and flight-log captures, see "WP-31" |
+| 22. WP-30 misc part modules (branch `wp30`, from main `95ed0a16`) | done (engine-agnostic part, unit-gated): ModuleGPS (update-rate gate, lat / lon / biome text, asteroid / comet connection, `IAnimatedModule`), FlagSite (the KerbalFSM Placing / Placed / Toppled machine, joint / lock / dialog bookkeeping, OnSave / OnLoad of the state, afterFlagPlanted), ModulePartFirework (OnAwake / OnStart / OnLoad / OnSave, shot counter, color pickers, LaunchShell rigidbody numbers, mass modifier; replaces the WP-06 stand-in); `unit` +4 cases (+ the 2 small-fix tests), shell numbers and GPS text 0 ULP against a numpy float32 reference; `capture.part_database` unchanged (0 ULP, same rows). Part B small fixes listed in "WP-30". See the WP-30 section |
 
 ## Test results (all 35 ctest tests pass (34 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience)
 
@@ -2873,7 +2874,7 @@ does not exist in KSP 1.12.5; the equivalents are `GetArea` / `CalcBaseStats` (a
 | ModuleAnimateGeneric.cs | ported whole: Toggle, `UpdateAnimSwitch`, `FixedUpdate` (deployPercent clamp, deploy limit), `AnimationHandler`, `SetScalar`, `SetDragState`, `CheckForRestrictions`, crew capacity, `OnSave` revert, `FailAnimationForCargoBay` / `RestartFailedAnimationForCargoBay`, `OnMoving` / `OnStop` events | `modules/animation_modules.hpp`, `src/modules/animation_modules.cpp` |
 | ModuleAnimationGroup.cs | ported: deploy / retract states, `PlayDeployAnimation` with the animation lock, `Update` (post-animation method, `CheckForActivity`, `ToggleActiveState`), realTimeAnimation clock, `IAnimatedModule` enable / disable fan-out, drag cube names / weights, `OnAnimationGroupStateChanged` events. Deferred: particle emitters (state recorded), `Part.Effect` (recorded calls) | same |
 | ModuleAnimationSetter.cs, ModuleAnimatorLandingGear.cs | ported whole (the setter implements `IScalarModule`) | same |
-| IAnimatedModule.cs | ported; implemented by BaseConverter, ModuleResourceScanner, ModuleOrbitalScanner, ModuleOrbitalSurveyor (the WP-28 classes gained the base class and `AsAnimatedModule()`); ModuleGPS / ModuleGroundPart are not ported yet | `modules/animated_module.hpp` |
+| IAnimatedModule.cs | ported; implemented by BaseConverter, ModuleResourceScanner, ModuleOrbitalScanner, ModuleOrbitalSurveyor (the WP-28 classes gained the base class and `AsAnimatedModule()`); ModuleGPS (WP-30, `modules/misc_modules.hpp`) also implements it; ModuleGroundPart is not ported yet | `modules/animated_module.hpp` |
 
 ### The Unity `Animation` model and the host seams
 
@@ -3155,3 +3156,50 @@ What the unit tests establish (oracles are the decompiled C#, the game's cfgs an
   `Format` strips from arguments.
 - The localization of `ExperienceTraitConfig.Title` / `Description` happens in the UI, never in the config.
 - `tests/test_kerbals.cpp` needs the stock game (GameData mirror) like the other part-based tests.
+
+## WP-30: misc part modules (branch `wp30`, from main `95ed0a16`)
+
+Spec: `ModuleGPS.cs` (176 lines), `FlagSite.cs` (529), `ModulePartFirework.cs` (778): the three csv files of WP-30. `include/ksp/modules/misc_modules.hpp` +
+`src/modules/misc_modules.cpp`; registered by `detail::RegisterMiscModules()` (the WP-06 `Reg<ModulePartFirework>` stand-in is gone; the
+registration list order is otherwise unchanged). Every ported function cites `File.cs:line` (`tools/wp28/check_cites.py
+src/modules/misc_modules.cpp include/ksp/modules/misc_modules.hpp`: 60 cites, 0 mismatches). No golden and no capture of these modules'
+runtime behaviour exists: the package is unit-gated plus the unchanged part-database gate.
+
+### Gate
+
+| gate | result |
+|---|---|
+| `capture.part_database` (`module_fields` of every WP-30 module of every stock part, via the real classes) | 0 ULP, max abs 0, max rel 0 in all 10 tables; rows identical to main: parts 357, part_cfg_values 6,235, modules 1,312, module_fields 32,894, module_propellants 77, resources 166, attach_nodes 822, drag_cubes 531, variants 228, assets 743 (extra rows 5 / 66 / 1,907 / 5 are the same as on main) |
+| `unit` `tests/test_misc_modules.cpp` | 4 cases, 4,148 assertions. Shell rigidbody numbers (mass, impulse force, vessel-velocity force, recoil: 96 launch cases x 3 vessel velocities), `GetModuleMass`, the shot label, the `fireworkShots > maxShots` clamp and the GPS lat / lon argument text (6 coordinates) are 0 ULP against `tools/wp30/firework_reference.py` (independent numpy float32; inputs are the launcher parts' own MODULE values from `testdata/GameData-mirror` and the field initialisers parsed from the C#) -> `tests/data/wp30_reference.json` |
+| full suite | `core/run_tests.ps1 -Fresh`: 34 / 34 ctest tests pass (worktree: `corpus.saves` absent); `unit` 406 cases / 715,833 assertions |
+
+### Ported vs seam
+
+| class | ported | seam (documented, hook or recorded value) |
+|---|---|---|
+| ModuleGPS | whole: `Update` (0.1 s gate on `Time.deltaTime`, flight scene, asteroid / comet connection through `HasModuleImplementing`, lat / lon / biome / situation text, `Math.Abs(x).ToString("0.000")` as `FormatDoubleF`, the catch-all print), `Enable/DisableModule`, `ModuleIsActive`, `IsSituationValid`, display name | `UIPartActionController.ItemListContains` (`ModuleGPSEnvironment::itemListContains`, unset = no PAW open, so nothing is rewritten); the vessel / main body / biome come from `ProcessingVessel` and `ResourceProcessingEnvironment::biomeAt`; the `cacheAutoLOC_*` statics are `Localizer.Format` at use |
+| FlagSite | `Start`, `OnLoad` / `OnSave` (`state`), `SetupFSM` (all four states, the timed `Place Complete` event, `Place Failed`, `Toppled`, `AddEventExcluding`, start in the saved state), Update / FixedUpdate / LateUpdate (NullReferenceException without an FSM), `PickUp` / `TakeDown`, joint set / unset (the delayed break force is `ApplyJointBreakForce`), `OnVesselPack` / `Unpack`, `OnPlacementFail` / `Complete` (fires `afterFlagPlanted`), `OnJointBreak`, the site-rename dialog logic (`RenameSite`, accept / cancel / dismiss, button handlers, enabled condition), `ReadPlaque` | Animation / Collider / GameObject / ConfigurableJoint / Physics.OverlapSphere / PopupDialog / FlagPlaqueDialog / KerbalEVA through `FlagSiteEnvironment` hooks; `InputLockManager` is the recorded `controlLocks` map; `Invoke("MakeVisible", delay)` and the DelayedCallback coroutine are recorded (`pendingInvokes`, `jointBreakPending`) for the host to fire. **Deferred**: `FlagSite.CreateFlag` (Object.Instantiate of the "flag" prefab, orbit initialisation) and `ScanSurroundingTerrain` (Physics.Raycast) |
+| ModulePartFirework | `OnAwake` (UI control presence, gui names, value-modified handlers, the `Events["LaunchShell"]` lookup that is null in the C# and therefore throws when the shell prefab is missing, sic), `OnSave` / `OnLoad`, `OnStart` (option lists, `fireworkShots` clamp, `configureColorFields`), `OnColorChanged`, `GetCurrentColor`, `UpdateFireworksColors` / `updatePickerColor` / `setAllColors`, `getCurrentFXByType` (last match wins), `updateFireworkShotLabel` (`F0`), `LaunchShell` accounting and numbers, `LaunchShellEvent` (symmetry counterparts), `GetModuleMass`; random direction variation through `UnityRandom::Global().onUnitSphere()` | PAW color pickers (`pickerIds`, `setPickerColor`), FireworkFX particle systems and AudioFX (`launchShell` receives a `FireworkShellLaunch` with every number `FireworkFX.Setup` and the rigidbody get), `AssetBase.GetPrefab`, the fireworks FX list (`FireworkEnvironment::fxDefinitions`; `FireworkFXList.cs` / `FireworkFX.cs` are not in this package), `GameSettings.GetFireworkPresetColors`, Krakensbane frame velocity, `rb_velocityD`. `PartModule.GetCurrentColor` base is `Color.white` |
+
+Observations: (1) `ModulePartFirework.OnAwake` runs while the part prefab is compiled, so it touches `Fields[...]` of the colour fields in
+every scene; the part-database values are unaffected (only `guiName` and handlers change). (2) The Localizer fallback does not resolve the
+`<<2[N/S]>>` selector of `#autoLOC_6001052/53` (Lingoona grammar, WP-03 seam), so ModuleGPS lat / lon strings keep the placeholder; the tests
+compare against `Localizer::Format` of the same template with the reference arguments. (3) `double.ToString("0.000")` is `FormatDoubleF(x, 3)`; the
+reference applies the Mono rule (15 significant digits, then half-up) and agrees on 12.3455 / 5.0005.
+(4) 10 cites in `src/modules/module_structural.cpp` (ModuleCargoBay lambda-style names, `OnVariantApplied`) fail `check_cites.py` since WP-26;
+they are not touched here.
+
+## Small fixes 2026-10-10 (wave-2 gatekeeper findings, branch `wp30`)
+
+1. `src/save/crew.cpp`: the stale cite `ExperienceSystemConfig.cs:90` is `:97` (GetTraitsWithEffect); the other six (`set_inactive` :197,
+   `set_rosterStatus` :215, `set_type` :230, `SetExtraExperience` :392, `CrewGenerator_GetLastName` :138, `..._RemoveLastName` :145) pointed at the
+   right declarations (C# properties / differently named C++ wrappers); `tools/wp28/check_cites.py` learned the name aliases (`NAME_ALIAS`).
+   `check_cites.py src/save/crew.cpp`: 77 cites, 0 mismatches.
+2. `src/modules/resource_modules.cpp`: `EVAResourceContainer::TransferStep` is one iteration of the while body of
+   `EVAResourceContainer.transferResources` (`EVAResourceContainer.cs:99`, body :102-:109); cite text corrected, alias added. 0 mismatches.
+3. `ModuleServiceModule::BuildJettisonPartsList` throws `NullReferenceException` when `UseJettisonZones` is set and `JettisonZoneNames` is
+   null (`ModuleServiceModule.cs:248`, `JettisonZoneNames.Split(',')` on a field without a default); unit assertions in
+   `test_structural_modules.cpp` (null throws, empty string does not).
+4. `tests/test_kerbals.cpp`: new case for the mission-editor branch of `CrewGenerator.RandomCrewMemberPrototype` (`CrewGenerator.cs:78-95`):
+   80 seeds x {enableKerbalLevels off, on}, `Next(maxValue)` on the attribute generator replayed by hand (maxValue 6, or the per-trait
+   `kerbalLevel*`), all three traits covered, `experienceLevel` equals the draw (Training<N> gives level N), and the no-hook path leaves level 0.

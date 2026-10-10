@@ -31,6 +31,7 @@
 #include "ksp/modules/module_gimbal.hpp"
 #include "ksp/modules/module_rcs.hpp"
 #include "ksp/modules/module_resource_intake.hpp"
+#include "ksp/modules/misc_modules.hpp"
 #include "ksp/modules/module_structural.hpp"
 #include "ksp/parts/available_part.hpp"
 #include "ksp/parts/cs_parse.hpp"
@@ -190,16 +191,6 @@ public:
     float asteroidMass = 1.0f;  // private, set by SetAsteroidMass
 };
 
-class ModulePartFirework : public PartModule, public IPartMassModifier {  // ModulePartFirework.cs:769
-public:
-    using PartModule::PartModule;
-    IPartMassModifier* AsMassModifier() override { return this; }
-    float GetModuleMass(float defaultMass, ModifierStagingSituation) override {
-        return f32store(fx(defaultMass) + fx(Get<float>("fireworkShots")) * fx(Get<float>("shellMass")) * fx(0.001f));
-    }
-    ModifierChangeWhen GetModuleMassChangeWhen() override { return ModifierChangeWhen::CONSTANTLY; }
-};
-
 class ModuleInventoryPart : public PartModule, public IPartMassModifier, public IPartCostModifier {  // :1928 / :1966
 public:
     using PartModule::PartModule;
@@ -264,7 +255,7 @@ void RegisterBuiltinModules() {
     RegisterAeroModules();         // WP-21: ModuleLiftingSurface, ModuleControlSurface, ModuleAeroSurface
     Reg<ModuleComet>({"ModuleComet"});
     Reg<ModuleAsteroid>({"ModuleAsteroid"});
-    Reg<ModulePartFirework>({"ModulePartFirework"});
+    detail::RegisterMiscModules();  // WP-30: ModuleGPS, FlagSite, ModulePartFirework (misc_modules.cpp)
     Reg<ModuleInventoryPart>({"ModuleInventoryPart"});
     Reg<PartStatsUpgradeModule>({"PartStatsUpgradeModule"});
     RegCurves({"ModuleColorChanger"}, {"redCurve", "greenCurve", "blueCurve", "alphaCurve"});
