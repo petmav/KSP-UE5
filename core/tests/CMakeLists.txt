@@ -310,3 +310,13 @@ ksp_golden_gate(capture.thermal_step thermal_step GOLDEN ${KSP_CAPTURES2_DIR}/th
 ksp_golden_gate(golden.engine_thrust engine_thrust)
 ksp_golden_gate(capture.engine_deltav engine_deltav GOLDEN ${KSP_CAPTURES2_DIR}/deltav_readout.json DROP_HEX
                 TOL ${KSP_CAPTURE_TOL} TABLES engines DROP_COLUMNS "engines:startBurnStage")
+# WP-17 delta-v calculation (VesselDeltaV / DeltaVStageInfo / DeltaVEngineInfo / DeltaVPartInfo; see ds_deltav_stages.cpp).
+#   capture.deltav_stages   the in-game stage readout of the C5 delta-v capture (deltav_readout.json): `stages` (all columns), `totals`
+#                           (all columns but calc_events: the number of onDeltaVCalcsCompleted events the capture's own handler saw
+#                           after its SetCalcsDirty, not a VesselDeltaV value) and from `parts` the DeltaVPartInfo columns
+#                           decoupleStage / activationStage / isEngine (inverseStage, isDecoupler: WP-16, mass columns: WP-18 /
+#                           WP-15). Engines are capture.engine_deltav (WP-23). Mono float semantics; no row is filtered.
+ksp_golden_gate(capture.deltav_stages deltav_stages GOLDEN ${KSP_CAPTURES2_DIR}/deltav_readout.json DROP_HEX
+                TOL ${KSP_CAPTURE_TOL} TABLES stages,totals,parts
+                DROP_COLUMNS "totals:calc_events"
+                COLUMNS "parts:craft_id,part_index,part,decoupleStage,activationStage,isEngine")

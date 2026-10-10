@@ -137,6 +137,10 @@ add_library(kspcore STATIC
     modules/module_resource_intake.cpp
     parts/part_decouple.cpp
     vessel/vessel_staging.cpp
+    vessel/delta_v_part_info.cpp
+    vessel/delta_v_engine_info.cpp
+    vessel/delta_v_stage_info.cpp
+    vessel/vessel_delta_v.cpp
     capi/kspcore_c.cpp
 )
 add_library(ksp::core ALIAS kspcore)
