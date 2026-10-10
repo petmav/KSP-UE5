@@ -32,8 +32,9 @@ Updated 2026-10-10 (WP-22, WP-23, WP-26, WP-28). One command: `powershell -NoPro
 
 | 14. WP-23 engines, RCS, gimbals, intakes, numeric part (branch `wp23`) | done (numeric / data side): ModuleEngines / ModuleEnginesFX (fields, OnLoad / OnStart, propellant setup, thrust / Isp / fuel-flow maths over the float policy, throttle model, flameout, staging overrides, RequestPropellant through WP-15), MultiModeEngine, ModuleRCS(FX), ModuleGimbal, ModuleResourceIntake, EngineType / IEngineStatus / IThrustProvider / IThrottleControl, Propellant run-time state; gates `golden.engine_thrust` (.NET golden, 5,248 rows, NetFloat) and `capture.engine_deltav` (in-game, 460 rows, MonoFloat), both 0 ULP; FX / audio, rigidbody force application and PAW text deferred (see "WP-23") |
 | 15. WP-28 resource-processing modules (branch `wp28`, from main `289d0c98`) | done (numeric / data side, unit-gated): BaseConverter family (catch-up, efficiency, recipe units), drills, harvester, generator, alternator, jettison, drain, space-object info / resource / analysis, scanners, surveyor, biome scanner; all 26 csv files. `unit` +17 cases / 8,571 assertions; every existing gate unchanged (`capture.part_database` 0 ULP). See the WP-28 section |
+| 17. WP-31 kerbal roster, experience, crew (branch `wp31`, from main `135fb5aa`) | done (engine-agnostic part, unit-gated): the 20 experience effects, ExperienceTrait / Effect, CrewGenerator (KSPRandom draw order; name tables are hook-supplied), Part/VesselCrewManifest (replace the WP-18 seam), KerbalRoster / ProtoCrewMember extensions (applicants, Update, DefaultCrewForVessel, g-force, effects), APSkillExtensions, ModuleExperienceManagement; `unit` +20 cases, `data.roster_experience`; needs name-table and flight-log captures, see "WP-31" |
 
-## Test results (all 33 ctest tests pass: Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav)
+## Test results (all 34 ctest tests pass (33 where `corpus.saves` is not registered, e.g. a worktree): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-31 data.roster_experience)
 
 Every numeric column of every gate: **max ULP 0, max abs 0** (bit-exact, and the same decimal text). Tolerance files:
 harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture gates use `tests/tolerances_capture.json`
@@ -70,7 +71,7 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `capture.thermal_step` | WP-22: in-game `captures/out2/thermal_step.json` (C6): vessel 2,994 x 12 + isAnalytical, parts 14,985 x 19 + exposed (the real UpdateThermodynamics per tracked part and frame; 7 recovered columns are inputs, not compared), part_constants 15; inputs recovered from the capture and exclusions as listed in "WP-22" | 17,994 | 0 ULP |
 | `golden.engine_thrust` | WP-23: harness golden `engine_thrust` (KSP's IL on .NET 4.8), every table, computed with the `aero::NetFloat` policy: engines 41 x 22 columns, isp_thrust_vs_pressure 738, kerbin_flight 4,059, rocket_equation 410 | 5,248 | 0 ULP |
 | `capture.engine_deltav` | WP-23: in-game `captures/out2/deltav_readout.json` (C5) table `engines` (DeltaVEngineInfo's editor-situation reads of ModuleEngines: ispVac / ASL / Actual, thrustVac / ASL / Actual, requiresAir, propellants; 17 crafts x 4 bodies, `aero::MonoFloat`); `startBurnStage` is WP-16's | 460 | 0 ULP |
-| `unit` | 355 doctest cases, 696,649 assertions (WP-26: 29 cases, 1,218 assertions in `test_structural_modules.cpp`; WP-22: 7 cases, 112 assertions in `test_thermal.cpp`; WP-23: 10 cases, 1,690 assertions in `test_engines.cpp`; WP-28: 17 cases, 8,571 assertions in `test_resource_processing.cpp`; WP-16: 19 cases, 12,222 assertions in `test_staging.cpp`; WP-21: 11 cases, 220,304 assertions in `test_aero.cpp`; WP-18: 26 cases, 274,042 assertions in `test_ship_construct.cpp`; WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
+| `unit` | 375 doctest cases, 708,505 assertions (WP-31: 20 cases, 11,856 assertions in `test_kerbals.cpp`; WP-26: 29 cases, 1,218 assertions in `test_structural_modules.cpp`; WP-22: 7 cases, 112 assertions in `test_thermal.cpp`; WP-23: 10 cases, 1,690 assertions in `test_engines.cpp`; WP-28: 17 cases, 8,571 assertions in `test_resource_processing.cpp`; WP-16: 19 cases, 12,222 assertions in `test_staging.cpp`; WP-21: 11 cases, 220,304 assertions in `test_aero.cpp`; WP-18: 26 cases, 274,042 assertions in `test_ship_construct.cpp`; WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
 differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 6 ULP (Vector3.Project/ProjectOnPlane) and
@@ -2849,3 +2850,110 @@ Derivations are in comments; values come from the cfgs of the GameData mirror, t
 ### Commits (branch `wp26`)
 
 see `git log --oneline main..wp26`.
+
+## WP-31: kerbal roster, experience, crew (branch `wp31`, from main `135fb5aa`, merged with main `d46be6e4`)
+
+Spec: `Experience/*.cs` (ExperienceEffect, ExperienceTrait, the three configs), `Experience/Effects/*.cs` (20 effects), `APSkillExtensions.cs`,
+`CrewGenerator.cs`, `KerbalMovementParameters.cs`, `KerbalRoster.cs`, `ModuleExperienceManagement.cs`, `PartCrewManifest.cs`,
+`ProtoCrewMember.cs`, `VesselCrewManifest.cs` (33 files). WP-04 had already ported the data side of FlightLog, the three configs,
+ProtoCrewMember and KerbalRoster (gated by `corpus.saves`); WP-31 extends those classes in place (`ksp/save/crew.hpp`) and adds
+`ksp/kerbals/*.hpp` + `src/kerbals/*.cpp`. Every ported function cites `File.cs:line` (`tools/wp28/check_cites.py src/kerbals/*.cpp`: 170
+cites, 0 mismatches; the script now also finds classes in sub folders such as `Experience/Effects`).
+
+**No golden dataset and no capture exists for these classes**: the package is unit-gated (`tests/test_kerbals.cpp`, 20 cases) plus a data
+gate (`data.roster_experience`). All floats follow the Mono rule (`fx()` / `f32store()`); randomness only through `KSPRandom` (CrewGenerator)
+and `UnityRandom::Global()` (`UnityEngine.Random` in `KerbalRoster.Update` / `AddApplicant` / the g-force jitter); maths through `dotnet::Math`.
+
+### File by file
+
+| C# file | C++ | state |
+|---|---|---|
+| `Experience/ExperienceEffect.cs` | `kerbals/experience.hpp/.cpp` | whole: LoadFromConfig (`modifiers` split on `,` and space, `[0]` = GetDefaultValue), Name (`GetType().Name` via `ClassName()`), the two odd constructors (`(parent, float[])` throws ArgumentNullException because LevelModifiers is null; `(parent, int)` does not store the parent) |
+| `Experience/ExperienceTrait.cs` | same | whole: Create (trait-type registry for mods, plain type otherwise), effect creation by name (unknown effect: error log, skipped), CrewMemberExperienceLevel, Register / Unregister, DescriptionEffects; `TypeName` of the plain type is `Config.Title`, i.e. the raw `#autoLOC_..` tag (sic) |
+| `Experience/Effects/*.cs` (20) | same | whole; the 20 classes are the registry behind `KerbalRoster.GetExperienceEffectType`; Register / Unregister bind delegates in `Part.PartValues` (WP-13) |
+| `Experience/ExperienceSystemConfig.cs`, `ExperienceTraitConfig.cs`, `ExperienceEffectConfig.cs` | `save/crew.hpp` (WP-04) | unchanged; WP-31 gates them against the game's own `Squad/Experience/Traits.cfg` (`StockBuiltIn()` == the cfg, every field) |
+| `APSkillExtensions.cs` | `kerbals/kerbal_misc.hpp/.cpp` | whole (both `AvailableAtLevel`, `GetRequiredSkill`); `VesselAutopilot.AutopilotMode` enum added (`VesselAutopilot_AutopilotMode`) |
+| `KerbalMovementParameters.cs` | `kerbals/kerbal_misc.hpp` | whole (data holder) |
+| `ModuleExperienceManagement.cs` | same | whole: OnStart enable rules, GetInfo, FinalizeExperience, display name; registered with the ModuleFactory; CommNet / Funding / ScreenMessages are hooks |
+| `CrewGenerator.cs` | `kerbals/crew_generator.hpp/.cpp` | whole: Initialize (TextAsset loader hook), GetRandomName (KSPRandom and System.Random generators, the reject-substring loop), RandomCrewMemberPrototype (seeds `TickCount ^ Guid hash` via `SaveEnvironment` hooks; courage / stupidity / badass from `KSPRandom(name.GetHashCode_Net35())`; the mission-editor level branch), GetFullName (ignores its argument, "ja" has no space), Get/RemoveLastName (WP-04's) |
+| `PartCrewManifest.cs`, `VesselCrewManifest.cs` | `kerbals/crew_manifest.hpp/.cpp` | whole. `VesselCrewManifest` replaces the WP-18 seam class of `save/ship_construct.hpp` (its virtual members kept, so ShipConstruct / ShipConstruction / `test_ship_construct.cpp` are unchanged except an include) |
+| `KerbalRoster.cs` | `save/crew.cpp` (WP-04) + `kerbals/kerbal_roster_ext.cpp`, `crew_manifest.cpp` | added: RepopulateCrewRoster, CheckRosterRespawn(), GetNextOrNewKerbal, GetNewKerbal, PCMUpdate, Update, AddApplicant, GenerateExperienceLog, CheatExperience (UI refresh dropped), DefaultCrewForVessel, the `SetExperienceLevel` overloads, SetExperienceTrait now creates the real `ExperienceTrait` |
+| `ProtoCrewMember.cs` | `save/crew.hpp` + `kerbals/proto_crew_member_ext.cpp` | added: `experienceTrait` is an `ExperienceTrait` (was the config), Register/UnregisterExperienceTraits, HasEffect / GetEffect (name and `<T>`), GetLocalizedType/Status/Trait, nameWithGender, GetKerbalIVAName, icon suit suffix / path, Equals / GetHashCode (sic `hasToured.Equals(hasToured)`), GToleranceMult / MaxSustainedG / ActiveFixedUpdate / ActiveUpdate / Update / OnPartPack / OnPartUnpack and the static callbacks, InventoryCosts / InventoryMass / ResourceMass |
+
+### Gates
+
+| gate | result |
+|---|---|
+| `unit` (`tests/test_kerbals.cpp`) | 20 cases, 11,856 assertions, all pass (Windows MSVC and Linux) |
+| `data.roster_experience` | 1 save in the repo (`core/testdata/saves/physprofile/persistent.sfs`; `harness/inputs` has none): 4 kerbals, experience / level recomputed from the raw CAREER_LOG / FLIGHT_LOG by an independent oracle, 0 mismatches; the ROSTER saves back byte-identical |
+| `corpus.saves` | registered only when `decompiled/KSP-dev/saves` exists (not in a worktree or in CI, see the WP-04 section): NOT run in the WP-31 session. The roster round trip through the extended classes is covered by the data gate on the physprofile save; the orchestrator should rerun `corpus.saves` on the merged main checkout |
+| `tools/wp28/check_cites.py src/kerbals/*.cpp` | 170 cites, 0 mismatches |
+
+What the unit tests establish (oracles are the decompiled C#, the game's cfgs and an independent replay, never the code under test):
+- Traits.cfg: 4 traits, 20 stock effect classes, `StockBuiltIn()` identical to the cfg; every effect of every trait at levels 0..5: LevelModifiers
+  (`[default] + parsed modifiers`, float32 parse), `Level`, GeeTolerance (level 0 = m1 - (m2 - m1)), the values the effects publish in
+  `Part.PartValues` (AutopilotSkill, AutopilotKerbalSkill, RepairSkill, FailureRepairSkill, ScienceSkill, EVAChuteSkill, ScienceReturnMax /
+  Sum), best-of-several kerbals, Unregister restoring the defaults. EnginePower / FuelUsage / HeatProduction / MaxThrottle and the two Serenity
+  skills (no stock trait uses them) through a synthetic EXPERIENCE_TRAIT node.
+- All effect descriptions against the game's `Squad/Localization/dictionary.cfg` (352 checks, including the `Enum.GetNames` sorted-by-value order
+  quirk of RepairSkill: Parachutes 1, LandingLegs 2, Wheels 3).
+- Experience points with the real Kerbol bodies' RecoveryValue: per-target maximum, home vs away tables, Die clearing the accumulators, unknown
+  bodies, ImmediateLevelUp, experience disabled (99999), level thresholds 2 / 8 / 16 / 32 / 64, ArchiveFlightLog, SetExperienceLevel.
+- The four original kerbals: `GenerateInitialCrewRoster` against the physprofile save (name, trait, gender, brave, dumb, badS, veteran, hero, idx).
+- CrewGenerator: for 8 seeds an independent KSPRandom replay of the draw order (gender, special?, index; then `KSPRandom(hash)` for courage,
+  stupidity, badass) equals the prototype; the Environment.TickCount ^ Guid seeding; the reject-substring loop; System.Random generator; "ja".
+- VesselCrewManifest over all 86 stock crafts (more than 1,000 PART nodes with a known part): part manifests = PART nodes with a known part, capacities = prefab CrewCapacity,
+  crewable parts, seat bookkeeping, moving a kerbal between parts, clone / merge, queries.
+
+### Quirks reproduced (a later implementer must keep them)
+
+1. `ExperienceTrait.TypeName` for a plain trait is `Config.Title` (the raw tag), so `SetExperienceTrait`'s "already has this trait" early-out never fires
+   for stock traits: the trait object (and its effects) is rebuilt on every call. Effects registered on a part by the old object stay registered.
+2. `VesselCrewManifest.AnyCrewWithTrait` returns `!noCrewWithTrait` when nothing matches: true by default, always false with `noCrewWithTrait`;
+   `DefaultCrewForVessel` therefore computes its "pick a pilot first" flag as `previous == null` only.
+3. `PartCrewManifest.CloneOf(blank = false)` calls `SetCrewMember("", ...)` for every empty seat: `""` becomes a crew key and counts in `CrewCount`.
+4. Seat index checks use `<=` CrewCapacity (one too many); `MergeInto` with a null filter does nothing.
+5. `KerbalRoster.Update` removes expired applicants then tops the group up to `10 + Range(-3, 3)`; `AddApplicant` copies the prototype
+   (`new ProtoCrewMember(copy)`) and gives it `UTaR = UT + Range(1, 3) * 86400f`.
+6. `GetRandomName` rejects a draw whose first name is a substring of ANY roster name (loops forever with a table smaller than the roster).
+7. `ProtoCrewMember.Equals` ignores `hasToured`.
+8. `SetInactive` returns the previous inactive state; it is additive only while already inactive.
+9. `ModuleCommand.OnAwake` (ModuleCommand.cs:378) is what sets `isControlSource = FULL` on a pod's prefab; ModuleCommand is not ported, so the
+   prefabs have `NONE` and `DefaultCrewForVessel` finds no crewable part until it is (the tests apply that one assignment themselves).
+
+### Deviations and deferred
+
+- Experience is not stored in saves: the KERBAL node carries `extraXP` only; `experience` / `experienceLevel` are computed on load
+  (`onGameStateCreated`). The brief's "compare with the saved fields" has no saved value to compare with; the gate recomputes with an independent
+  oracle instead. The repo has only the physprofile save (SANDBOX, empty logs, experience disabled), so the data gate exercises the plumbing, the
+  unit tests exercise the maths with synthetic logs.
+- `CrewGenerator` name tables: Unity TextAssets (`TextAssets/CrewGenerator/<lang>/KerbalNames*`), not in the GameData mirror and the dev copy was
+  not readable from the worktree. `CrewGenerator::loadTextAsset` / `SetNameTables` take them; tests use clearly synthetic tables
+  (`SyntheticNames`). `tools/wp31/extract_crew_names.py` is written but not run.
+- `ProtoCrewMember`: not ported are `SaveEVAChute` (ModuleEvaChute), `SaveInventory` / `KerbalInventoryModule` / the `kerbalModule` instance
+  (ModuleInventoryPart object; `InventoryCosts` / `InventoryMass` / `ResourceMass` read hooks `kerbalModuleCost` / `kerbalModuleMass` /
+  `kerbalPrefabResourceMass`, 0 when unset), `Spawn` / `_Spawn` / `KerbalRef` / `seat` (Kerbal prefab, InternalSeat: UI / scene objects).
+- `DefaultCrewForVessel`: GameVariables, Funding, the astronaut complex level and ScreenMessages are `CrewAssignmentEnvironment` hooks;
+  `KerbalSeat` is detected as a module of that class name.
+- `nameWithGender` is the plain `"^M"` / `"^F"` suffix of `LocalizeNoun` (the Lingoona engine itself is WP-03's fallback).
+- Effects hold raw pointers: an `ExperienceTrait` registered on a part must be unregistered before it dies (as KSP does on part destruction).
+- The rest of the 33 files is complete; `KerbalRoster.GenerateExperienceTypes` / `GetExperienceTraitType` reflection is the factory / registry.
+
+### Needed in-game captures (local)
+
+1. **CrewGenerator name tables** (`harness/captures` or `tools/wp31/extract_crew_names.py`): the four TextAssets of every language. Needed
+   to gate `GetRandomName` bit-exact against real names.
+2. **CrewGenerator sequence for a known seed**: a harness that calls `CrewGenerator.RandomCrewMemberPrototype` after `KSPRandom` is replaced by a
+   fixed seed is impossible without patching the game; instead capture, from a profiling build, `(Environment.TickCount ^ Guid hash, resulting
+   name, courage, stupidity, isBadass, trait)` for a few hundred applicants. That fixes the whole name path (the draw order is already replayed
+   independently here).
+3. **Experience of kerbals with real flight logs**: any career save with flights (the repo only has the empty physprofile roster) with the
+   in-game `experience` / `experienceLevel` read after load (KSP does not store them), to gate `CalculateExperience` on real logs.
+4. `corpus.saves` rerun on the main checkout after merging this branch.
+
+### Surprises for later implementers
+
+- `Localizer` dictionary values hold a literal `\n` that `Format` turns into a newline; body display names carry a `^N` Lingoona suffix that
+  `Format` strips from arguments.
+- The localization of `ExperienceTraitConfig.Title` / `Description` happens in the UI, never in the config.
+- `tests/test_kerbals.cpp` needs the stock game (GameData mirror) like the other part-based tests.
