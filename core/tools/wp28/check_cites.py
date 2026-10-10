@@ -30,7 +30,7 @@ NAME_ALIAS = {"set_currentMassVal": "currentMassVal", "set_massThresholdVal": "m
               "TransferStep": "transferResources",
               "ApplyJointBreakForce": "SetJoint", "SiteRenameAcceptPressed": "RenameSite", "SiteRenameDismissPressed": "RenameSite",
               "SiteRenameAcceptEnabled": "RenameSite"}
-CITE = re.compile(r"^(\s*)// (?:([A-Za-z0-9_]+)\.cs)?:(\d+)\b")
+CITE = re.compile(r"^(\s*)// (?:([A-Za-z0-9_/]+)\.cs)?:(\d+)\b")
 FUNC = re.compile(r"(\w+)::(~?\w+)\s*\(")
 
 
@@ -38,6 +38,13 @@ def load(cs_root, f, cache={}):
     key = (cs_root, f)
     if key not in cache:
         p = os.path.join(cs_root, f + ".cs")
+        if "/" in f and not os.path.exists(p):  # WP-37: `Templates/PlantFlag.cs` disambiguates same-named files in different folders
+            suffix = os.sep + f.replace("/", os.sep) + ".cs"
+            for dp, _dn, fn in os.walk(cs_root):
+                cand = os.path.join(dp, f.split("/")[-1] + ".cs")
+                if f.split("/")[-1] + ".cs" in fn and cand.endswith(suffix):
+                    p = cand
+                    break
         if not os.path.exists(p):  # WP-31: classes in sub folders (Experience/Effects/X.cs ...): first file of that name below cs_root
             for dp, _dn, fn in os.walk(cs_root):
                 if f + ".cs" in fn:
