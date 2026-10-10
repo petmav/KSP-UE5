@@ -23,6 +23,9 @@
 #include "ksp/modules/part_module.hpp"
 #include "ksp/modules/resource_modules.hpp"
 #include "ksp/modules/resource_processing.hpp"
+#include "ksp/modules/animation_modules.hpp"
+#include "ksp/modules/deployables.hpp"
+#include "ksp/modules/parachutes.hpp"
 #include "ksp/modules/module_decouplers.hpp"
 #include "ksp/modules/module_engines.hpp"
 #include "ksp/modules/module_gimbal.hpp"
@@ -64,19 +67,7 @@ public:
     }
 };
 
-// ---- ModuleAnimationSetter.cs:40 / ModuleAnimateHeat.cs:22 -------------------------------------------------------------
-class ModuleAnimationSetter : public PartModule {
-public:
-    using PartModule::PartModule;
-    void OnAwake() override {
-        if (IsNull("animStateCurve")) {
-            FloatCurve c;
-            c.Add(0.0f, 0.0f);
-            c.Add(1.0f, 1.0f);
-            Set<FloatCurve>("animStateCurve", std::move(c));
-        }
-    }
-};
+// ---- ModuleAnimationSetter: WP-27 (modules/animation_modules.hpp); ModuleAnimateHeat.cs:22 -------------------------------------------
 class ModuleAnimateHeat : public ModuleAnimationSetter {
 public:
     using ModuleAnimationSetter::ModuleAnimationSetter;
@@ -106,86 +97,7 @@ private:
     std::vector<std::string> curves_;
 };
 
-// ---- ModuleDeployablePart.cs ------------------------------------------------------------------------------------------
-class ModuleDeployablePart : public PartModule {
-public:
-    using PartModule::PartModule;
-    // :542 OnAwake also reads originalRotation / currentRotation from the part's pivot transform (FindModelTransform): the
-    // model's transform tree is UE-import data (excluded in tests/data/part_database_exclusions.json)
-    // :732
-    void OnLoad(const ConfigNode& node) override {
-        Set<std::string>("subPartName", Localizer::Format(Get<std::string>("subPartName")));
-        Set<std::string>("partType", Localizer::Format(Get<std::string>("partType")));
-        if (node.HasValue("stateString")) SetEnumByName("deployState", *node.GetValue("stateString"));
-        if (node.HasValue("sunTracking")) {
-            if (cs::BoolParse(*node.GetValue("sunTracking"))) {
-                Set<bool>("isTracking", true);
-                SetEnumByName("trackingMode", "SUN");
-            } else {
-                Set<bool>("isTracking", false);
-            }
-        }
-        if (node.HasValue("vesselID")) vesselID = *node.GetValue("vesselID");
-        destroyOnBreakObjects = node.GetValues("destroyOnBreakObject");
-    }
-    std::string vesselID;
-    std::vector<std::string> destroyOnBreakObjects;
-};
-
-class ModuleDeployableAntenna : public ModuleDeployablePart {
-public:
-    using ModuleDeployablePart::ModuleDeployablePart;
-    void OnLoad(const ConfigNode& node) override {  // ModuleDeployableAntenna.cs:23
-        ModuleDeployablePart::OnLoad(node);
-        Set<std::string>("subPartName", Localizer::Format("#autoLOC_234195"));
-        Set<std::string>("partType", Localizer::Format("#autoLOC_234196"));
-    }
-};
-
-class ModuleDeployableRadiator : public ModuleDeployablePart {
-public:
-    using ModuleDeployablePart::ModuleDeployablePart;
-    void OnLoad(const ConfigNode& node) override {  // ModuleDeployableRadiator.cs:7
-        ModuleDeployablePart::OnLoad(node);
-        Set<std::string>("subPartName", Localizer::Format("#autoLOC_234369"));
-        Set<std::string>("partType", Localizer::Format("#autoLOC_232117"));
-    }
-};
-
-class ModuleDeployableSolarPanel : public ModuleDeployablePart {
-public:
-    using ModuleDeployablePart::ModuleDeployablePart;
-    // ModuleDeployableSolarPanel.cs:97 (resHandler.moduleResourceBasedPrimaryIsInput = false; layer masks: not KSPFields)
-    void OnAwake() override {
-        ModuleDeployablePart::OnAwake();
-        resHandler.moduleResourceBasedPrimaryIsInput = false;  // ModuleDeployableSolarPanel.cs:97 (WP-15)
-        if (IsNull("powerCurve")) Set<FloatCurve>("powerCurve", FloatCurve{});
-        if (IsNull("temperatureEfficCurve")) {
-            FloatCurve c;
-            c.Add(4.0f, 1.2f, 0.0f, -0.0006f);
-            c.Add(300.0f, 1.0f, -0.0008f, -0.0008f);
-            c.Add(1200.0f, 0.134f, -0.00035f, -0.00035f);
-            c.Add(1900.0f, 0.02f, -3.72E-05f, -3.72E-05f);
-            c.Add(2500.0f, 0.01f, 0.0f, 0.0f);
-            Set<FloatCurve>("temperatureEfficCurve", std::move(c));
-        }
-        if (IsNull("timeEfficCurve")) {
-            FloatCurve c;
-            c.Add(0.0f, 1.0f);
-            Set<FloatCurve>("timeEfficCurve", std::move(c));
-        }
-        // originalEfficiencyMultiplier = efficiencyMult (not a KSPField)
-    }
-    // :173 (the output ModuleResource is resHandler state, WP-15)
-    void OnLoad(const ConfigNode& node) override {
-        const std::string secondary = Get<std::string>("secondaryTransformName");
-        if (secondary.empty()) Set<std::string>("secondaryTransformName", Get<std::string>("raycastTransformName"));
-        ModuleDeployablePart::OnLoad(node);
-        Set<std::string>("subPartName", Localizer::Format("#autoLOC_235328"));
-        Set<std::string>("partType", Localizer::Format("#autoLOC_235329"));
-        if (node.HasValue("type")) SetEnumByName("panelType", *node.GetValue("type"));
-    }
-};
+// ---- ModuleDeployablePart / Antenna / Radiator / SolarPanel: WP-27 (modules/deployables.hpp) ----------------------------------------
 
 // ---- ModuleDataTransmitter.cs:107 / :133 -------------------------------------------------------------------------------
 class ModuleDataTransmitter : public PartModule {
@@ -331,13 +243,11 @@ void RegisterBuiltinModules() {
     detail::RegisterDecouplerModules();  // ModuleDecouplerBase / ModuleDecouple / ModuleAnchoredDecoupler (+ LaunchClamp, ModuleDockingNode staging stand-ins) (WP-16)
     detail::RegisterResourceModules();  // ModuleToggleCrossfeed, ModuleResourceAutoShiftState, CModuleFuelLine, EVAResourceContainer (WP-15)
     Reg<ModuleCargoPart>({"ModuleCargoPart"});
-    Reg<ModuleAnimationSetter>({"ModuleAnimationSetter"});
+    detail::RegisterAnimationModules();  // WP-27: ModuleAnimationSetter, ModuleAnimateGeneric, ModuleAnimationGroup, ModuleAnimatorLandingGear
+    detail::RegisterDeployableModules();  // WP-27: ModuleDeployablePart / Antenna / Radiator / SolarPanel
+    detail::RegisterParachuteModules();   // WP-27: ModuleParachute, ModuleEvaChute
     Reg<ModuleAnimateHeat>({"ModuleAnimateHeat"});
     detail::RegisterResourceProcessingModules();  // WP-28: BaseConverter family, generators, scanners
-    Reg<ModuleDeployablePart>({"ModuleDeployablePart"});
-    Reg<ModuleDeployableAntenna>({"ModuleDeployableAntenna"});
-    Reg<ModuleDeployableRadiator>({"ModuleDeployableRadiator"});
-    Reg<ModuleDeployableSolarPanel>({"ModuleDeployableSolarPanel"});
     Reg<ModuleDataTransmitter>({"ModuleDataTransmitter"});
     detail::RegisterThermalModules();  // ModuleCoreHeat, ModuleActiveRadiator, ModuleAblator, ModuleConductionMultiplier (WP-22)
     detail::RegisterEngineModules();  // WP-23: ModuleEngines, ModuleEnginesFX, MultiModeEngine (module_engines.cpp)

@@ -1,6 +1,6 @@
 # kspcore status
 
-Updated 2026-10-10 (WP-22, WP-23, WP-26, WP-28). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
+Updated 2026-10-10 (WP-22, WP-23, WP-26, WP-27, WP-28). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
 (details in README.md). Local git repository in `core/` only, never pushed.
 
 ## Summary
@@ -29,11 +29,12 @@ Updated 2026-10-10 (WP-22, WP-23, WP-26, WP-28). One command: `powershell -NoPro
 
 | 13. WP-18 craft files and ship construction (branch `wp18`) | done for the engine-agnostic part: ShipConstruct over live `Part`s (`LoadShipWithParts` / `SaveShip` from the parts, costs, masses, naming, ship PartSet), ShipTemplate (whole class), ShipConstruction (paths, backups, load / save, `AssembleForLaunch` over WP-14's assembly, templates through the upgrade pipeline, `GetPartCosts*`, launch-site queries, craft size); new gate `capture.ship_construct` (C5: `GetShipMass` and the per-part masses of 17 crafts, 0 ULP); 26 unit cases (274,042 assertions): round trip of 57 crafts, agreement with the original files, templates vs ships. See "WP-18" |
 | 16. WP-26 fairings, cargo bays, jettison, shielding, launch clamps (branch `wp26`) | done (engine-agnostic part): ModuleProceduralFairing with FairingPanel / FairingXSection geometry (panel areas, mesh points, triangle lists; `panelMass` gated at 0 ULP through `capture.ship_construct` with craft_ComSat_Lx no longer excluded), ModuleCargoBay (shield bookkeeping, `Part.AddShield`), ModuleJettison (drag cube weights, engine-plate hook), ModuleServiceModule, LaunchClamp, ModuleStructuralNode(+Toggle), ModuleDynamicNodes, CompoundPart as a Part subclass; model / physics seams are hooks; scope and exclusions in "WP-26" |
+| 17. WP-27 parachutes, deployables, animation-driven modules (branch `wp27`) | done (numeric / data side, unit-gated; no golden or capture of these modules exists): ModuleParachute / ModuleEvaChute (deployment states, arming rule, drag lerp + cube weights, area / safe-speed / heating maths), ModuleDeployablePart / Antenna / Radiator / SolarPanel (DeployState machine, animation-time arithmetic, shielding / break rules, solar flux chain), ModuleAnimateGeneric / ModuleAnimationGroup / ModuleAnimationSetter / ModuleAnimatorLandingGear, `IAnimatedModule`, a time-driven `Animation` / `AnimationState` model, `IScalarModule.OnMoving` / `OnStop` wired to the real `ModuleCargoBay`; all WP-06 stand-ins replaced, `capture.part_database` still 0 ULP. See the WP-27 section |
 
 | 14. WP-23 engines, RCS, gimbals, intakes, numeric part (branch `wp23`) | done (numeric / data side): ModuleEngines / ModuleEnginesFX (fields, OnLoad / OnStart, propellant setup, thrust / Isp / fuel-flow maths over the float policy, throttle model, flameout, staging overrides, RequestPropellant through WP-15), MultiModeEngine, ModuleRCS(FX), ModuleGimbal, ModuleResourceIntake, EngineType / IEngineStatus / IThrustProvider / IThrottleControl, Propellant run-time state; gates `golden.engine_thrust` (.NET golden, 5,248 rows, NetFloat) and `capture.engine_deltav` (in-game, 460 rows, MonoFloat), both 0 ULP; FX / audio, rigidbody force application and PAW text deferred (see "WP-23") |
 | 15. WP-28 resource-processing modules (branch `wp28`, from main `289d0c98`) | done (numeric / data side, unit-gated): BaseConverter family (catch-up, efficiency, recipe units), drills, harvester, generator, alternator, jettison, drain, space-object info / resource / analysis, scanners, surveyor, biome scanner; all 26 csv files. `unit` +17 cases / 8,571 assertions; every existing gate unchanged (`capture.part_database` 0 ULP). See the WP-28 section |
 
-## Test results (all 33 ctest tests pass: Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav)
+## Test results (all 33 ctest tests pass (32 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav)
 
 Every numeric column of every gate: **max ULP 0, max abs 0** (bit-exact, and the same decimal text). Tolerance files:
 harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture gates use `tests/tolerances_capture.json`
@@ -2849,3 +2850,98 @@ Derivations are in comments; values come from the cfgs of the GameData mirror, t
 ### Commits (branch `wp26`)
 
 see `git log --oneline main..wp26`.
+
+## WP-27: parachutes, deployable parts, animation-driven modules (branch `wp27`, from main `135fb5aa`, merged `main` d46be6e4)
+
+State: done for the numeric / data side; **unit-gated**. There is no golden and no capture of any parachute, deployable-panel or animation-module quantity
+(searched: `harness/golden/*` and `harness/captures/out*/*` hold no parachute / solar / animate table; the only mention is the confignode round-trip of
+`cfg_parachuteMk1` and of crafts). The one data gate that sees these modules, `capture.part_database` (`module_fields`: every KSPField of every WP-27 module of every
+stock part, the 18 excluded pivot-rotation rows unchanged), stayed at **max ULP 0 with identical row counts** once the real classes replaced the WP-06 stand-ins
+(the stand-in logic for `subPartName` / `partType`, `stateString`, `sunTracking`, the solar default curves and `type` is now the real `OnLoad` / `OnAwake`). The
+`drag_cubes` table (parachute `PACKED` / `SEMIDEPLOYED` / `DEPLOYED`, panel `RETRACTED` / `EXTENDED_A` / `EXTENDED_B`, `A` / `B`, group `DEPLOY_*` / `ACTIVE_*`) is unchanged and its cube
+names are asserted by the unit tests. Every ported function cites `File.cs:line` (`tools/wp28/check_cites.py`: 178 cites, 0 mismatches). Note: `ModuleParachute.CalcDragAtDeployedAltitude`
+does not exist in KSP 1.12.5; the equivalents are `GetArea` / `CalcBaseStats` (areas, `maxSafeSpeedAtRef`) and the drag lerps of `FixedUpdate`.
+
+### File by file
+
+| C# file (csv row) | state | C++ |
+|---|---|---|
+| ModuleParachute.cs | ported: deployment states and events (`Deploy`, `CutParachute`, `Repack`, `Disarm`, `OnActive`), `OnLoad` / `OnAwake` / `OnStart` (stagingIcon default moved from the WP-16 table, baseDrag, min-pressure editor minimum, `SetUIEVents`), `FixedUpdate` (arming rule, safe-deploy state, animation-driven `animTime` / `lerpTime`, `maximum_drag` Lerp, cube weights, vessel-modified bookkeeping), `GetArea`, `CalcBaseStats`, `SetConvectiveStats`, `DeploySafe`, `UpdateCut`, `ShouldDeploy`, `IsMovingFastEnoughToDeploy`, `GetDragCubeNames` / `AssumeDragCubePosition`, symmetry count. Deferred: `GetInfo` text; canopy / cap transforms are flags (`canopyActive`, `capActive`), the canopy orientation block is the `orientCanopy` hook; `FXGroup.Burst` is a counter; stack-icon colours are recorded names | `modules/parachutes.hpp`, `src/modules/parachutes.cpp` |
+| ModuleEvaChute.cs | ported: `OnStart` (ChuteNode load, flags, activation check), `IsStageable` false, `OnActive` empty, `CutParachute`, `AllowRepack`, `CanCrewMemberUseParachute`, `SetEVAChuteActive`, `PassedAdditionalDeploymentChecks`, `OnParachuteSemiDeployed` / `FullyDeployed`, the yaw / pitch / roll rate arithmetic (`ComputeChuteRates`). Deferred: shader swaps, the `Quaternion.AngleAxis` / `FromToRotation` angular-velocity term and canopy rotations (KerbalEVA / rigidbody are the engine side); `KerbalEVAHost` is the record of the EVA controller state | same |
+| ModuleDeployablePart.cs | ported: all KSPFields, DeployState machine (`Extend` / `Retract` with symmetry, `DoExtend` / `DoRetract`, `startFSM`, `updateFSM`, `breakPanels`, `DoRepair`, `OnCollisionEnter`), animation `speed` / `normalizedTime` arithmetic, `GetScalar` / `CanMove` / `SetScalar` / `SetUIRead` / `SetUIWrite` / `IsMoving`, shielding rules, `ShouldBreakFromPressure` / `ShouldBreakFromG`, `CalculateTracking` / `CalculateTrackingLOS` / `GetTrackingBodyTransforms`, `SetDragCubes`, drag cube names / `AssumeDragCubePosition`, Load / Save, `IConstruction` queries, module-adjuster stuck predicates. Deferred: `GetInfo` text, the pivot transform writes (`panelRotation` / `alignPanel` hooks), `physicalObject` conversion of broken panels (`convertBreakObjects`), EVA repair-kit inventory (`EventRepairExternal` assumes the kit) | `modules/deployables.hpp`, `src/modules/deployables.cpp` |
+| ModuleDeployableAntenna.cs, ModuleDeployableRadiator.cs | ported (antenna: `CanMove`, `MinAoAForQCheck` 0.5, `Extend` refused under break pressure; radiator: display names). The radiator heat rejection is WP-22's `ModuleActiveRadiator`, a separate module; the deployable part only moves | same |
+| ModuleDeployableSolarPanel.cs | ported: `OnAwake` (default curves, `resHandler.moduleResourceBasedPrimaryIsInput = false`), `OnStart`, `OnLoad` (creates the `chargeRate` output ModuleResource), `FixedUpdate` (launchUT, efficiency adjusters), `PostFSMUpdate`, `CalculateTrackingLOS` (aero shielding, then the `trackingRaycast` hook), `PostCalculateTracking` (sunAOA for FLAT / CYLINDRICAL / SPHERICAL, `_distMult` from `useCurve` or `solarFlux / SolarLuminosityAtHome`, `_efficMult` = temperature curve x time curve x `efficiencyMult`, `_flowRate`, ocean submersion, `resHandler.UpdateModuleResourceOutputs`), `OnPartRepaired`. Deferred: `GetInfo`, the two `Physics.Raycast` calls | same |
+| ModuleAnimateGeneric.cs | ported whole: Toggle, `UpdateAnimSwitch`, `FixedUpdate` (deployPercent clamp, deploy limit), `AnimationHandler`, `SetScalar`, `SetDragState`, `CheckForRestrictions`, crew capacity, `OnSave` revert, `FailAnimationForCargoBay` / `RestartFailedAnimationForCargoBay`, `OnMoving` / `OnStop` events | `modules/animation_modules.hpp`, `src/modules/animation_modules.cpp` |
+| ModuleAnimationGroup.cs | ported: deploy / retract states, `PlayDeployAnimation` with the animation lock, `Update` (post-animation method, `CheckForActivity`, `ToggleActiveState`), realTimeAnimation clock, `IAnimatedModule` enable / disable fan-out, drag cube names / weights, `OnAnimationGroupStateChanged` events. Deferred: particle emitters (state recorded), `Part.Effect` (recorded calls) | same |
+| ModuleAnimationSetter.cs, ModuleAnimatorLandingGear.cs | ported whole (the setter implements `IScalarModule`) | same |
+| IAnimatedModule.cs | ported; implemented by BaseConverter, ModuleResourceScanner, ModuleOrbitalScanner, ModuleOrbitalSurveyor (the WP-28 classes gained the base class and `AsAnimatedModule()`); ModuleGPS / ModuleGroundPart are not ported yet | `modules/animated_module.hpp` |
+
+### The Unity `Animation` model and the host seams
+
+`ksp/unity/animation.hpp` models `Animation` / `AnimationState` as state only (time, speed, weight, layer, enabled, wrapMode, `Play` / `Stop` / `IsPlaying`); the host
+calls `Animation::Tick(dt)` once per frame where Unity runs its animation update, and supplies the model animation components through
+`DeployablesEnvironment::modelAnimations`. Unity-native semantics that no KSP code documents (and no capture checks) are marked "Unity:" in the header: `Play` stops the
+other states of the same layer, `Stop` rewinds, a `Default`-wrapped clip plays as `Once` (stops and rewinds when `time` reaches `length` or 0), `ClampForever` clamps and keeps playing.
+Clip LENGTHS live in the .mu models (no reader here), so every test supplies them: the tests verify the arithmetic on a given length. Other hooks (each documented in its header):
+`hasModelTransform`, `trackingFrame` (the numbers of one tracking frame: direction, distance, dot forward, part axes, pivot euler Y), `alignPanel` / `panelRotation` / `panelLocalRotation`
+(pivot transform writes), `trackingRaycast`, `secondaryTransformAltitude`, `convertBreakObjects`, `planetariumBody`; parachutes: `velocity` (rigidbody + Krakensbane), `staticPressure`,
+`altitudeAtPos`, `raycastDown`, `orientCanopy`. The vessel is the WP-28 `ProcessingVessel` record, which gained `externalTemperature`, `atmosphericTemperature`, `mach`,
+`convectiveCoefficient`, `geeForce`, `speed`, `velocityD`, `upAxis`, `CoM`, `holdPhysics` and the main body `oceanDensity` (filled by `FromVessel`). Screen messages, flight-log lines and
+`ScheduleSetCollisionIgnores` calls are recorded in the environments.
+
+### Cargo bay hook (WP-26)
+
+`IScalarModule` gained `OnMoving()` / `OnStop()` (default `nullptr`), implemented by ModuleDeployablePart, ModuleAnimateGeneric and ModuleAnimationSetter. `ModuleCargoBay::OnStart`
+now subscribes `OnCargoBayDoorsMoving` / `OnCargoBayDoorsStopped` to its deploy module (ModuleCargoBay.cs:134-137) and the destructor unsubscribes (skipped when the deploy module died
+first: `IScalarModule::IsAlive`, a registry the base class maintains). Unit test: a real `mk3CargoBayS` door toggle reaches `EnableShieldedVolume` through the events.
+
+### Results (Windows MSVC RelWithDebInfo, fresh; Linux below)
+
+| table / test | rows / assertions | max abs / rel / ULP |
+|---|---|---|
+| `capture.part_database` `module_fields` (all WP-27 modules of all stock parts: 5 parachutes, 11 solar panels, 6 antennas, 3 radiators, 1 base deployable, 19 animate-generic, 6 animation groups) | 32,894 rows, unchanged | 0 ULP (identical strings) |
+| `unit`: parachutes vs `tools/wp27/deploy_reference.py` (5 stock parachutes): `GetArea` (areaDeployed / areaSemi), `invThermalMass`, `CalcBaseStats` bisection (`maxSafeSpeedAtRef`), 5 flight points of `SetConvectiveStats` with 2 `DeploySafe` states each, 3 x 6,000-step `UpdateCut` heating series (chuteTemp every 1,000 steps and the first overheat-cut step), 7 float32 drag-lerp points | 335 checks | areas, invThermalMass, maxSafeSpeed, heating series: 0 (bit-identical doubles); `SetConvectiveStats` doubles <= 4 ULP allowed, measured 0; the `Pow`-dependent float lerps <= 1 float ULP (CPython `pow` is the host libm; kspcore `Math.Pow` is the game libm) |
+| `unit`: solar panels vs the reference (10 stock panels x 10 samples: FLAT / CYLINDRICAL / SPHERICAL, clamp, vacuum, hot panel, time curve, no line of sight) + `SetDragCubes` weights (30 pairs) | 500 + 120 checks | sunAOA and `_distMult` bit-exact; `_efficMult` / `_flowRate` (Hermite temperature curve written independently in Python) within 4e-7 relative, measured 2 float ULP |
+| `unit`: state machines on real parts (parachuteSingle, radialDrogue, solarPanels4, HighGainAntenna, foldingRadMed, Magnetometer, GooExperiment, mk3CargoBayL / S, MiniDrill, ISRU), the Animation model, ModuleAnimationSetter / LandingGear, EVA chute rules | 16 cases total | derived from the C# (derivation in each comment) |
+| `unit` total on the merged tree | 371 cases / 698,667 assertions (+16 cases / 2,018 assertions over main d46be6e4) | |
+
+### KSP quirks reproduced (later code must keep them)
+
+- `updateFSM` EXTENDING / RETRACTING sets `SetDragCubes(1 - normalizedTime, 0)` AFTER `anim.Stop` rewound the clip to 0: on the transition frame the RETRACTED cube weight is 1; the next frame corrects it.
+- `GetDragCubeNames` (ModuleDeployablePart) assigns `anim = GetComponentInChildren<Animation>()` as a side effect, and `AssumeDragCubePosition` relies on it.
+- `ModuleParachute.OnLoad` adds the `deploy` FXGroup to `part.fxGroups` after `Part.OnLoad` created the four default groups (order prelaunch, activate, active, deactivate, deploy; one `deploy` per ModuleParachute); `deploymentState` is `Enum.Parse(persistentState)` and throws for an unknown text.
+- The parachute opens only when `automateSafeDeploy >= (int)deploymentSafeState` (SAFE 0, RISKY 1, UNSAFE 2, NONE 3: the default `automateSafeDeploy = 0` never opens an UNSAFE or NONE-state chute) and when static pressure x 0.009869... exceeds `minAirPressureToOpen` (or `ShouldDeploy`).
+- `UpdateCut` cuts a chute in a vacuum (`part.atmDensity == 0`) before anything else is looked at, and `CutParachute` needs the canopy transform (NullReferenceException without it).
+- `ModuleDeployableSolarPanel.OnLoad` creates the output ModuleResource only when `resHandler.outputResources` is empty and the node has `chargeRate`; the solar `_efficMult` is a double product of three float operands (no float store).
+- `ModuleAnimateGeneric.OnAwake` replaces `REPLACEWITHDEFAULT` of the toggle action groups with `defaultActionGroup`; `revClampPercent` mirrors the deployPercent clamp (the cargo bays have it).
+
+### Changes outside the WP-27 files (all behaviour-preserving for the gates)
+
+- `module_behaviours.cpp`: the stand-ins for ModuleDeployablePart / Antenna / Radiator / SolarPanel and ModuleAnimationSetter removed (ModuleAnimateHeat now derives from the real setter); `module_staging.cpp`: the `ModuleParachute` stagingIcon default and the `ModuleEvaChute` `IsStageable` rule removed (the classes override them).
+- `part_module.hpp`: `IScalarModule` (ctor / dtor, `IsAlive`, `OnMoving` / `OnStop`), `PartModule::AsAnimatedModule()`.
+- `resource_converters.cpp`: `BaseConverter::IsAnimationGroupDeployed` reads the real `ModuleAnimationGroup` when the `animationGroupDeployed` hook is unset.
+- Test expectations that encoded the stand-ins and now follow the C#: `test_part.cpp` (a parachute part `fxGroupNames` end with `deploy`), `test_resource_modules.cpp` (a solar panel with `chargeRate` and no output node has the output resource `resourceName`).
+
+### Deviations, approximations
+
+- `ModuleParachute.OnVesselWasModified` compares `v.persistentId == currentVessel.persistentId` by vessel identity (a loaded vessel keeps its id; the test vessel stand-in has none).
+- `GetInfo` UI texts, PAW refresh, stack-icon colours (recorded as names), FX groups (a name on `Part::fxGroupNames`, bursts counted), particle emitters and `Part.Effect` (recorded) are not modelled.
+- `Planetarium.fetch.Home` is the stock `Kerbin` (index 1; `DeployablesEnvironment::planetariumBody` overrides).
+- The EVA repair (`EventRepairExternal`) assumes the kit is available; KerbalExperience gating and the inventory are the Kerbal package.
+- Unity `Animation` semantics beyond what KSP code states (see above) are the documented Unity behaviour, not verified.
+
+### Needs a new (local) capture or data to become a 0 ULP gate
+
+1. **Animation clip lengths and the Unity animation update** (`AnimationState.time` / `normalizedTime` / `speed` / `enabled`, `Animation.isPlaying` per frame) for a scripted parachute drop, a solar panel / antenna extend and retract, a `ModuleAnimateGeneric` toggle and a cargo-bay door: gates the `Animation` model (Play / Stop / wrap-mode semantics) and supplies the .mu clip lengths.
+2. **Parachute flight**: `maximum_drag`, the three cube weights, `animTime`, `lerpTime`, `deploymentState`, `chuteTemp`, `shockTemp`, `convectivekW`, the `deploySafe` state per FixedUpdate during a drop through the atmosphere (with `vessel.externalTemperature`, `mach`, `convectiveCoefficient`, `atmDensity` captured alongside), and `part.dragVectorDir` for the canopy orientation.
+3. **Solar panel flight**: `sunAOA`, `_distMult`, `_efficMult`, `_flowRate`, `flowRate`, `trackingLOS`, `blockingObject`, `part.skinTemperature`, `vessel.solarFlux`, the pivot `rotation.eulerAngles.y` and the SetDragCubes weights per FixedUpdate for FLAT / CYLINDRICAL panels, in sunlight, in shadow and tracking; with the transform positions that feed `trackingDirection`.
+4. **Break rules**: `ShouldBreakFromPressure` / `ShouldBreakFromG` inputs (`dynamicPressurekPa`, `submergedDynamicPressurekPa`, pivot forward, `velocityD`) and the frame a panel breaks.
+5. **Pivot tracking**: `alignPanel` (Atan2 / Euler / Quaternion.Lerp of CalculateTracking) and the RETRACTING `Quaternion.Lerp` to `originalRotation`.
+
+### Fresh run
+
+Windows (`run_tests.ps1 -Fresh`, core/build deleted first): 32/32 ctest tests, ALL TESTS PASSED (configure 2.2 s, build 112.8 s, test 92.6 s); `unit` 371 cases / 698,667 assertions. Linux (clang 18, `./run_tests.sh -f`, WSL): 32/32 ctest tests, ALL TESTS PASSED (the first fresh Linux build stopped on a `std::max` initializer-list type error in the new test file; fixed, then an incremental `./run_tests.sh` built the rest and ran every test: test 2,170 s on /mnt/c).
+
+### Commits (branch `wp27`)
+
+see `git log --oneline 135fb5aa..wp27`.

@@ -326,7 +326,12 @@ TEST_CASE("WP-13 Part prefabs: the Part model agrees with the C9 part database o
         CHECK((p.className == "Part" || p.className == "CompoundPart"));  // fuelLine, strutConnector
         CHECK(p.fields.partName.value_or("") == p.className);              // Part.AttributeSetup: the class name
         CHECK(p.isAttached());
-        CHECK(p.fxGroupNames == std::vector<std::string>{"prelaunch", "activate", "active", "deactivate"});
+        // Part.OnLoad (Part.cs:1593) adds the four groups at CreatePart; ModuleParachute.OnLoad (ModuleParachute.cs:278, WP-27) then adds
+        // its "deploy" group once per ModuleParachute module (the modules are added after CreatePart)
+        std::vector<std::string> expectedFx{"prelaunch", "activate", "active", "deactivate"};
+        for (size_t mi = 0; mi < p.Modules().Count(); mi++)
+            if (p.Modules().GetModule(mi)->IsA("ModuleParachute")) expectedFx.push_back("deploy");
+        CHECK(p.fxGroupNames == expectedFx);
         CHECK(p.Modules().Count() == p.ModuleData.size());
         for (size_t i = 0; i < p.Modules().Count(); i++) {
             CHECK(p.Modules().GetModule(i)->part == &p);

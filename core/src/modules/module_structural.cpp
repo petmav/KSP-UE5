@@ -1,6 +1,7 @@
 // WP-26: ModuleCargoBay.cs, ModuleJettison.cs, ModuleServiceModule.cs, LaunchClamp.cs, ModuleStructuralNode.cs,
 // ModuleStructuralNodeToggle.cs, ModuleDynamicNodes.cs, DynamicNodeSet.cs (scope: module_structural.hpp).
 #include "ksp/modules/module_structural.hpp"
+#include "ksp/events/event_data.hpp"
 
 #include <algorithm>
 
@@ -47,6 +48,11 @@ ModuleCargoBay::~ModuleCargoBay() {
     GE::onEditorShipModified.Remove(this, &ModuleCargoBay::OnEditorVesselModified);
     GE::onVesselWasModified.Remove(this, &ModuleCargoBay::OnVesselModified);
     GE::onPartDie.Remove(this, &ModuleCargoBay::OnPartDestroyed);
+    // ModuleCargoBay.cs:326 (WP-27): deployModule.OnMoving / OnStop; skipped when the deploy module died first
+    if (deployModule != nullptr && IScalarModule::IsAlive(deployModule)) {
+        if (auto* mv = deployModule->OnMoving()) mv->Remove(this, &ModuleCargoBay::OnCargoBayDoorsMoving);
+        if (auto* sp = deployModule->OnStop()) sp->Remove(this, &ModuleCargoBay::OnCargoBayDoorsStopped);
+    }
     if (SceneFlight() && PartOf() != nullptr) OnPartDestroyed(PartOf());
 }
 
@@ -75,7 +81,12 @@ void ModuleCargoBay::OnStart(StartState state) {
         GE::onEditorShipModified.Add(this, &ModuleCargoBay::OnEditorVesselModified);
         GE::onVesselWasModified.Add(this, &ModuleCargoBay::OnVesselModified);
         GE::onPartDie.Add(this, &ModuleCargoBay::OnPartDestroyed);
-        // onCommandSeatInteraction (KerbalEVA) and deployModule.OnMoving / OnStop: the deploy module calls OnCargoBayDoorsMoving / Stopped
+        // deployModule.OnMoving / OnStop (ModuleCargoBay.cs:134-137; WP-27 modules expose the real events, a module without them returns nullptr)
+        if (deployModule != nullptr) {
+            if (auto* mv = deployModule->OnMoving()) mv->Add(this, &ModuleCargoBay::OnCargoBayDoorsMoving);
+            if (auto* sp = deployModule->OnStop()) sp->Add(this, &ModuleCargoBay::OnCargoBayDoorsStopped);
+        }
+        // onCommandSeatInteraction (KerbalEVA) is the EVA package's
     }
 }
 

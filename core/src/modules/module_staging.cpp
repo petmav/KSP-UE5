@@ -46,13 +46,13 @@ bool& ModuleAttributesIsStageable(const ModuleClassInfo& cls) {
 }  // namespace
 
 // The `part.stagingIcon = ...` default inside the OnStart / Setup of modules whose package has not ported the class yet:
-// `if (part.stagingIcon == string.Empty && overrideStagingIconIfBlank) part.stagingIcon = <icon>` (ModuleParachute.cs:310, LaunchClamp.cs:159, ModuleServiceModule.cs:174, ModuleProceduralFairing.cs:402; ModuleScienceExperiment.cs:263
+// `if (part.stagingIcon == string.Empty && overrideStagingIconIfBlank) part.stagingIcon = <icon>` (LaunchClamp.cs:159, ModuleServiceModule.cs:174, ModuleProceduralFairing.cs:402; ModuleScienceExperiment.cs:263
 // additionally needs useStaging). The decouplers' own (ModuleDecouple / ModuleAnchoredDecoupler) are ported in module_decouplers.cpp.
 void PartModule::OnStart(StartState) {
     const ModuleClassInfo& cls = Class();
     const char* icon = nullptr;
-    if (cls.Is("ModuleParachute")) icon = "PARACHUTES";
-    else if (cls.Is("LaunchClamp")) icon = "STRUT";
+    // ModuleParachute.cs:297 is ModuleParachute::OnStart (WP-27)
+    if (cls.Is("LaunchClamp")) icon = "STRUT";
     else if (cls.Is("ModuleServiceModule") || cls.Is("ModuleProceduralFairing")) icon = "FUEL_TANK";
     else if (cls.Is("ModuleScienceExperiment") && Get<bool>("useStaging")) icon = "SCIENCE_GENERIC";
     if (icon == nullptr) return;
@@ -70,7 +70,7 @@ bool PartModule::IsStageable() {
         return true;
     }
     // ModuleEngines.cs:2137 / ModuleGimbal.cs:326 are ModuleEngines::IsStageable / ModuleGimbal::IsStageable (WP-23)
-    if (cls.Is("ModuleTestSubject") || cls.Is("ModuleEvaChute")) return false;  // ModuleTestSubject.cs:200, ModuleEvaChute.cs:136
+    if (cls.Is("ModuleTestSubject")) return false;  // ModuleTestSubject.cs:200 (ModuleEvaChute.cs:136 is ModuleEvaChute::IsStageable, WP-27)
     if (cls.Is("ModuleDockingNode")) return Get<bool>("staged");               // ModuleDockingNode.cs:1949
     if (cls.Is("ModuleScienceExperiment")) return Get<bool>("useStaging");      // ModuleScienceExperiment.cs:1183
     return ModuleAttributesIsStageable(cls);

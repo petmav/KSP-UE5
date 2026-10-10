@@ -128,6 +128,12 @@ TEST_CASE("WP-15 ModuleResourceHandler.OnLoad on every stock part: INPUT_RESOURC
                 for (const auto& m : l) r.push_back(m->name);
                 return r;
             };
+            // ModuleDeployableSolarPanel.OnLoad (ModuleDeployableSolarPanel.cs:184, WP-27): without module resources and with a chargeRate value
+            // the panel creates its own output resource `resourceName` (default ElectricCharge)
+            if (md.moduleName == "ModuleDeployableSolarPanel" && out.empty() && md.config->HasValue("chargeRate")) {
+                const auto rn = md.config->GetValue("resourceName");
+                out.push_back(rn ? *rn : std::string("ElectricCharge"));
+            }
             CAPTURE(ap->name);
             CAPTURE(md.moduleName);
             CHECK(names(md.module->resHandler.inputResources) == in);

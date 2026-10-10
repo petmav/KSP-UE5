@@ -1,6 +1,7 @@
 // WP-28: BaseConverter, BaseDrill, ModuleResourceConverter, ModuleResourceHarvester, the asteroid / comet drills and the
 // space-object info / resource / analysis modules. See ksp/modules/resource_processing.hpp.
 #include "ksp/modules/resource_processing.hpp"
+#include "ksp/modules/animation_modules.hpp"
 
 #include <algorithm>
 
@@ -80,6 +81,16 @@ ProcessingVessel ResourceProcessingEnvironment::FromVessel(Vessel& v) {
     r.horizontalSrfSpeed = v.horizontalSrfSpeed;
     r.solarFlux = v.solarFlux;
     r.srf_vel_direction = v.srf_vel_direction;
+    r.externalTemperature = v.externalTemperature;
+    r.atmosphericTemperature = v.atmosphericTemperature;
+    r.mach = v.mach;
+    r.convectiveCoefficient = v.convectiveCoefficient;
+    r.geeForce = v.geeForce;
+    r.speed = v.speed;
+    r.velocityD = v.velocityD;
+    r.upAxis = v.upAxis;
+    r.CoM = v.CurrentCoM();
+    r.holdPhysics = v.HoldPhysics();
     r.situation = v.situation;
     r.isActiveVessel = v.isActiveVessel();
     r.controlLevel = v.CurrentControlLevel();
@@ -93,6 +104,7 @@ ProcessingVessel ResourceProcessingEnvironment::FromVessel(Vessel& v) {
         r.mainBody.atmosphere = b->atmosphere;
         r.mainBody.bodyName = b->bodyName;
         r.mainBody.displayName = b->displayName();
+        r.mainBody.oceanDensity = b->oceanDensity;
     }
     return r;
 }
@@ -209,8 +221,13 @@ bool BaseConverter::ModuleIsActive() { return Get<bool>("IsActivated"); }
 
 // BaseConverter.cs:198
 bool BaseConverter::IsAnimationGroupDeployed() {
-    if (hasAnimationGroup && !(ResourceProcessingEnvironment::animationGroupDeployed ? ResourceProcessingEnvironment::animationGroupDeployed(*partAnimationModule) : true))
-        return false;
+    // ModuleAnimationGroup.isDeployed: the host hook wins, else the real ModuleAnimationGroup (WP-27), else deployed
+    if (hasAnimationGroup) {
+        bool deployed = true;
+        if (ResourceProcessingEnvironment::animationGroupDeployed) deployed = ResourceProcessingEnvironment::animationGroupDeployed(*partAnimationModule);
+        else if (auto* g = dynamic_cast<ModuleAnimationGroup*>(partAnimationModule)) deployed = g->IsDeployed();
+        if (!deployed) return false;
+    }
     return true;
 }
 

@@ -11,6 +11,7 @@ add_library(kspcore STATIC
     dotnet/version.cpp
     unity/vector.cpp
     unity/animation_curve.cpp
+    unity/animation.cpp
     unity/random.cpp
     unity/quaternion_native.cpp
     math/vector3d.cpp
@@ -87,6 +88,9 @@ add_library(kspcore STATIC
     modules/resource_converters.cpp
     modules/resource_generators.cpp
     modules/resource_scanners.cpp
+    modules/deployables.cpp
+    modules/parachutes.cpp
+    modules/animation_modules.cpp
     modules/module_members.cpp
     modules/base_field.cpp
     modules/base_event.cpp

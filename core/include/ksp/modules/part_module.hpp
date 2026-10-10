@@ -38,6 +38,11 @@ class Part;
 class ProtoPartModuleSnapshot;
 class IPartSizeModifier;
 class IConstruction;
+class IAnimatedModule;                 // WP-27 ksp/modules/animated_module.hpp
+namespace events {
+template <class... Ts>
+class EventData;                       // ksp/events/event_data.hpp
+}
 class IAnalyticOverheatModule;         // WP-22 ksp/thermal/thermal_types.hpp
 class IAnalyticPreview;
 class IAnalyticTemperatureModifier;
@@ -73,7 +78,11 @@ public:
 // IScalarModule.cs (EventData<float,float> OnMoving / EventData<float> OnStop are owned by the implementing module)
 class IScalarModule {
 public:
-    virtual ~IScalarModule() = default;
+    IScalarModule();
+    virtual ~IScalarModule();
+    // WP-27: the live scalar modules (a subscriber such as ModuleCargoBay must not touch the OnMoving / OnStop events of a deploy module
+    // that was destroyed before it: C# keeps the destroyed object alive, C++ does not)
+    static bool IsAlive(const IScalarModule* m);
     virtual std::string ScalarModuleID() const = 0;
     virtual float GetScalar() const = 0;
     virtual bool CanMove() const = 0;
@@ -81,6 +90,11 @@ public:
     virtual void SetUIRead(bool state) = 0;
     virtual void SetUIWrite(bool state) = 0;
     virtual bool IsMoving() = 0;
+    // IScalarModule.OnMoving / OnStop (EventData<float, float> / EventData<float>), WP-27: the modules that move (ModuleDeployablePart,
+    // ModuleAnimateGeneric, ModuleAnimationSetter) fire them; ModuleCargoBay (WP-26) subscribes (ModuleCargoBay.cs:136). nullptr = the
+    // implementation has none.
+    virtual events::EventData<float, float>* OnMoving() { return nullptr; }
+    virtual events::EventData<float>* OnStop() { return nullptr; }
 };
 
 // PartModule.StartState (PartModule.cs:71)
@@ -185,6 +199,7 @@ public:
     virtual IPartCostModifier* AsCostModifier() { return nullptr; }
     virtual IModuleInfo* AsModuleInfo() { return nullptr; }
     virtual IScalarModule* AsScalarModule() { return nullptr; }
+    virtual IAnimatedModule* AsAnimatedModule() { return nullptr; }   // `module is IAnimatedModule` (WP-27)
     virtual IPartSizeModifier* AsSizeModifier() { return nullptr; }   // `module is IPartSizeModifier` (WP-13)
     virtual IConstruction* AsConstruction() { return nullptr; }       // `module is IConstruction` (WP-13)
     virtual IAnalyticOverheatModule* AsAnalyticOverheatModule() { return nullptr; }  // `module is IAnalyticOverheatModule` (WP-22)
