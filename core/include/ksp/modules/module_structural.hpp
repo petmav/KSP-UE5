@@ -151,28 +151,28 @@ public:
     float PartDensity() const { return partDensity_; }
     bool InEditor() const { return inEditor_; }
 
-    void OnLoad(const ConfigNode& node) override;   // :178
-    void OnStart(StartState state) override;        // :260
-    void OnActive() override;                       // :454 (:386 in the file with blanks)
-    void LateUpdate();                              // :456
-    void OnInventoryModeDisable();                  // :184 (SetVariants + SetupJettisonState)
-    void Jettison();                                // :107 [KSPEvent]
-    void JettisonAction(KSPActionParam& param);     // :103 [KSPAction]
-    void CheckAttachNode();                         // :483
-    void SetupJettisonState(bool isEditor);         // :331
-    void SetVariants();                             // :292
-    void SetFairingDragCube(bool fairingState);     // :519
+    void OnLoad(const ConfigNode& node) override;   // :238
+    void OnStart(StartState state) override;        // :297
+    void OnActive() override;                       // :451
+    void LateUpdate();                              // :474
+    void OnInventoryModeDisable();                  // :244 (SetVariants + SetupJettisonState)
+    void Jettison();                                // :136 [KSPEvent]
+    void JettisonAction(KSPActionParam& param);     // :130 [KSPAction]
+    void CheckAttachNode();                         // :498
+    void SetupJettisonState(bool isEditor);         // :344
+    void SetVariants();                             // :329
+    void SetFairingDragCube(bool fairingState);     // :524
     void OnVariantApplied(Part* eventPart, PartVariant* variant);  // :233
     void OnAwake() override;
 
-    // IActivateOnDecouple (:553)
+    // IActivateOnDecouple (:594)
     void DecoupleAction(const std::string& nodeName, bool weDecouple) override;
-    // IMultipleDragCube (:51, :547, :561)
+    // IMultipleDragCube (:559, :564, :589)
     bool IsMultipleCubesActive() const override { return Get<bool>("useMultipleDragCubes"); }
     std::vector<std::string> GetDragCubeNames() const override { return {"Fairing", "Clean"}; }
     void AssumeDragCubePosition(const std::string& name) override;
     bool UsesProceduralDragCubes() const override { return Get<bool>("useProceduralDragCubes"); }
-    // IScalarModule (:93-130, :577-590)
+    // IScalarModule (:624-640)
     std::string ScalarModuleID() const override { return Get<std::string>("moduleID"); }
     float GetScalar() const override { return Get<bool>("isJettisoned") ? 1.0f : 0.0f; }
     bool CanMove() const override { return !Get<bool>("isJettisoned"); }
@@ -180,21 +180,21 @@ public:
     void SetUIRead(bool) override {}
     void SetUIWrite(bool) override {}
     bool IsMoving() override { return false; }
-    // IPartMassModifier (:567)
+    // IPartMassModifier (:602, :619)
     IPartMassModifier* AsMassModifier() override { return this; }
     IScalarModule* AsScalarModule() override { return this; }
     float GetModuleMass(float defaultMass, ModifierStagingSituation sit) override;
     ModifierChangeWhen GetModuleMassChangeWhen() override { return ModifierChangeWhen::STAGED; }
-    // staging (:632-661)
+    // staging (:641-661)
     bool IsStageable() override;
     std::string GetStagingEnableText() override;
     std::string GetStagingDisableText() override;
 
 private:
     Part* PartOf() const;
-    bool FetchActiveMeshTransform(const std::string& nameList);  // :219: sets jettisonTransform* and activejettisonName
-    void LoadJettisonMeshState();                   // :241
-    void SetActionsSuffix();                        // :311
+    bool FetchActiveMeshTransform(const std::string& nameList);  // :261: sets jettisonTransform* and activejettisonName
+    void LoadJettisonMeshState();                   // :285
+    void SetActionsSuffix();                        // :337
     bool jettisonTransformPresent_ = false;
     std::string jettisonTransformName_;
     bool inEditor_ = false;
@@ -228,25 +228,25 @@ public:
     bool jettisonModulesNull = true;
     std::vector<Part*> jettisonParts;
 
-    void OnStart(StartState state) override;        // :60
-    void OnActive() override;                       // :190
-    void OnFieldUpdated(const std::string& fieldName);  // :64 (UI_Toggle.onFieldChanged of showMesh / openCutaway)
+    void OnStart(StartState state) override;        // :72
+    void OnActive() override;                       // :209
+    void OnFieldUpdated(const std::string& fieldName);  // :77 (UI_Toggle.onFieldChanged of showMesh / openCutaway)
     void CheckCutaway(Vessel* vFrom, Vessel* vTo);  // :197
-    void ToggleCutaway(bool state);                 // :80
-    void ToggleShrouds();                           // :121
-    void SetupJettisonModules();                    // :152
-    void Setup();                                   // :170
-    void ShedExternalParts();                       // :211
-    void BuildJettisonPartsList();                  // :218
-    static bool PointInBox(const Vector3f& pointLocal, const Vector3f& center, const Vector3f& size);  // :263
-    void UpdateStaging();                           // :290
-    void UpdateStaging(bool state);                 // :299
+    void ToggleCutaway(bool state);                 // :95
+    void ToggleShrouds();                           // :127
+    void SetupJettisonModules();                    // :160
+    void Setup();                                   // :171
+    void ShedExternalParts();                       // :233
+    void BuildJettisonPartsList();                  // :242
+    static bool PointInBox(const Vector3f& pointLocal, const Vector3f& center, const Vector3f& size);  // :296
+    void UpdateStaging();                           // :317
+    void UpdateStaging(bool state);                 // :317
     std::string GetModuleDisplayName() override { return "ServiceModule"; }  // :384
     // IStageSeparator / IStageSeparatorChild
-    int GetStageIndex(int fallback) override;       // :313
-    bool PartDetaches(std::vector<Part*>& decoupledParts) override;  // :318
-    bool IsEnginePlate() override { return false; } // :325
-    // IScalarModule (:42-56, :330-346)
+    int GetStageIndex(int fallback) override;       // :345
+    bool PartDetaches(std::vector<Part*>& decoupledParts) override;  // :350
+    bool IsEnginePlate() override { return false; } // :357
+    // IScalarModule (:362-378)
     std::string ScalarModuleID() const override { return Get<std::string>("moduleID"); }
     float GetScalar() const override { return Get<bool>("IsDeployed") ? 1.0f : 0.0f; }
     bool CanMove() const override { return !Get<bool>("IsDeployed"); }
@@ -258,7 +258,7 @@ public:
 
 private:
     Part* PartOf() const;
-    void ProcessJettisonModules(bool state, bool updateShrouds);  // :90 with UpdateCutaway (false) / UpdateShrouds (true)
+    void ProcessJettisonModules(bool state, bool updateShrouds);  // :109 with UpdateCutaway (false) / UpdateShrouds (true)
 };
 
 // LaunchClamp.cs:5
@@ -280,19 +280,19 @@ public:
     bool extension_enabled = false;                 // :33 private
     bool jointSet = false;
 
-    void EnableExtension() { extension_enabled = true; }  // :37
-    void OnLoad(const ConfigNode& node) override;   // :42
-    void OnSave(ConfigNode& node) override;         // :50
-    void OnPutToGround(PartHeightQuery& qr);        // :84
-    void OnInitialize() override;                   // :155
-    void OnStart(StartState state) override;        // :160
-    void OnActive() override;                       // :340
-    void OnVesselPack();                            // :349
-    void OnVesselUnpack();                          // :357
-    void ReleaseClamp(KSPActionParam& param);       // :367 [KSPAction]
-    void Release();                                 // :373 [KSPEvent]
+    void EnableExtension() { extension_enabled = true; }  // :55
+    void OnLoad(const ConfigNode& node) override;   // :60
+    void OnSave(ConfigNode& node) override;         // :68
+    void OnPutToGround(PartHeightQuery& qr);        // :95
+    void OnInitialize() override;                   // :152
+    void OnStart(StartState state) override;        // :157
+    void OnActive() override;                       // :316
+    void OnVesselPack();                            // :324
+    void OnVesselUnpack();                          // :332
+    void ReleaseClamp(KSPActionParam& param);       // :341 [KSPAction]
+    void Release();                                 // :347 [KSPEvent]
     void OnAwake() override;
-    int GetStageIndex(int fallback) override;       // :387 (the clamp separates in its own stage)
+    int GetStageIndex(int fallback) override;       // :369 (the clamp separates in its own stage)
 
 private:
     Part* PartOf() const;
@@ -303,16 +303,16 @@ class ModuleStructuralNode : public PartModule, public IActivateOnDecouple {
 public:
     explicit ModuleStructuralNode(const ModuleClassInfo& cls) : PartModule(cls) {}
     bool structTransformPresent = false;            // :8 structTransform != null
-    void OnStart(StartState state) override;        // :33
-    void LateUpdate();                              // :49
-    void CheckDisplayEditor(Part* p);               // :56
-    void SpawnStructure() { Set<bool>("spawnState", true); }    // :64
-    void DespawnStructure() { Set<bool>("spawnState", false); } // :69
-    void SetNodeState(bool showNodes);              // :74
+    void OnStart(StartState state) override;        // :29
+    void LateUpdate();                              // :45
+    void CheckDisplayEditor(Part* p);               // :53
+    void SpawnStructure() { Set<bool>("spawnState", true); }    // :61
+    void DespawnStructure() { Set<bool>("spawnState", false); } // :66
+    void SetNodeState(bool showNodes);              // :71
     // :95: the visibility the structure gets (structTransform.gameObject.SetActive(flag)); recorded in `structureVisible`
     bool CheckDisplay();
     bool structureVisible = false;
-    void DecoupleAction(const std::string& nodeName, bool weDecouple) override;  // :129
+    void DecoupleAction(const std::string& nodeName, bool weDecouple) override;  // :132
 
 private:
     Part* PartOf() const;
@@ -322,9 +322,9 @@ private:
 class ModuleStructuralNodeToggle : public PartModule {
 public:
     explicit ModuleStructuralNodeToggle(const ModuleClassInfo& cls) : PartModule(cls) {}
-    void Start();                                   // :27 (Unity Start: the host calls it once)
-    void OnFieldUpdated(const std::string& fieldName);  // :43 (UI_Toggle.onFieldChanged)
-    void UpdateNodes();                             // :48
+    void Start();                                   // :21 (Unity Start: the host calls it once)
+    void OnFieldUpdated(const std::string& fieldName);  // :36 (UI_Toggle.onFieldChanged)
+    void UpdateNodes();                             // :41
     std::vector<ModuleStructuralNode*> structNodes;
     bool structNodesNull = true;
 };
@@ -334,7 +334,7 @@ struct DynamicNodeSet {
     std::string DisplayText, MeshTransform, NodePrefix;
     int SetCount = 0;
     int Symmetry = 0;
-    void Load(const ConfigNode& node);              // :17
+    void Load(const ConfigNode& node);              // :16
 };
 
 // ModuleDynamicNodes.cs:4
@@ -347,16 +347,16 @@ public:
     std::vector<DynamicNodeSet> SetList;
     bool setListNull = true;
 
-    void OnAwake() override;                        // :138
-    void OnLoad(const ConfigNode& node) override;   // :146
-    void OnStart(StartState state) override;        // :61
-    void OnStartFinished(StartState state) override;  // :68
-    void FixedUpdate();                             // :167 (editor)
-    void ChangeNodeSet(int newIndex);               // :24
-    void ToggleNodeSet(int idx, bool showNodes);    // :34
+    void OnAwake() override;                        // :126
+    void OnLoad(const ConfigNode& node) override;   // :134
+    void OnStart(StartState state) override;        // :63
+    void OnStartFinished(StartState state) override;  // :70
+    void FixedUpdate();                             // :155 (editor)
+    void ChangeNodeSet(int newIndex);               // :25
+    void ToggleNodeSet(int idx, bool showNodes);    // :35
     void OnShipModified(ShipConstruct* ship);       // :78
-    void SetupAutoStrut();                          // :80
-    void InitializeNodeSets();                      // :110
+    void SetupAutoStrut();                          // :83
+    void InitializeNodeSets();                      // :106
     std::vector<std::string> stateNames;            // the UI_Cycle of setIndex
 
 private:

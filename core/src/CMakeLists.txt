@@ -132,6 +132,7 @@ add_library(kspcore STATIC
     modules/module_structural.cpp
     parts/part_decouple.cpp
     parts/part_shield.cpp
+    parts/compound_part.cpp
     vessel/vessel_staging.cpp
     capi/kspcore_c.cpp
 )

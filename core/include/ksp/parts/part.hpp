@@ -160,6 +160,7 @@ public:
     bool isAttached() const { return attached_; }  // :972
     void set_isAttached(bool v) { attached_ = v; }
     bool isCompund() const { return compund_; }    // :984
+    void set_isCompund(bool v) { compund_ = v; }   // `compund = true` (CompoundPart.onPartAwake :140)
     bool isAttachable() const;                     // :989
     bool CanFail() const;                          // :1056 (MakingHistory installed && _canFail)
     void set_CanFail(bool v);

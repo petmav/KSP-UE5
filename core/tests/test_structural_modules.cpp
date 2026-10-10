@@ -16,6 +16,7 @@
 #include "ksp/modules/module_decouplers.hpp"
 #include "ksp/modules/module_procedural_fairing.hpp"
 #include "ksp/modules/module_structural.hpp"
+#include "ksp/parts/compound_part.hpp"
 #include "ksp/parts/part.hpp"
 #include "ksp/parts/part_module_data.hpp"
 #include "ksp/save/save_environment.hpp"
@@ -898,4 +899,91 @@ TEST_CASE("service module: PointInBox, UpdateStaging propagation and the jettiso
     CHECK_FALSE(sm->Get<bool>("stagingEnabled"));
     CHECK(sm->GetScalar() == 1.0f);
     CHECK_FALSE(sm->CanMove());
+}
+
+// ---------------------------------------------------------------------------------------------------------------------- CompoundPart
+
+// CompoundPart.cs:128 onPartAwake, :145 OnSave / :158 OnLoad, :639 SetTarget, :683 DumpTarget, :677 UpdateWorldValues, :808 UpdateTargetCoords,
+// :91 DisconnectCompoundPart, :827 ParseCustomPartData; the cfg values of fuelLine.cfg (maxLength = 10, disconnectAction = true)
+TEST_CASE("compound part: fuelLine is a CompoundPart with its cfg fields; target bookkeeping, persistence, disconnect") {
+    Game15 g;
+    SaveEnvironment::Current().loadedScene = GameScenes::EDITOR;
+    auto p = g.New("fuelLine");
+    auto* cp = dynamic_cast<CompoundPart*>(p.get());
+    REQUIRE(cp != nullptr);  // Part.Instantiate keeps the CompoundPart class
+    CHECK(cp->className == "CompoundPart");
+    CHECK(cp->compoundFields.maxLength == 10.0f);
+    CHECK(cp->compoundFields.disconnectAction);
+    CHECK(cp->attachState() == CompoundPart::AttachState::Detached);
+    cp->onPartAwake();
+    CHECK(cp->isCompund());
+    // OnLoad: absent / unparsable keys leave the fields unchanged; HasData sets hasSaveData
+    ConfigNode in("PARTDATA");
+    in.AddValue("tgt", "17");
+    in.AddValue("tpersID", "99");
+    in.AddValue("pos", "1,2,3");
+    in.AddValue("dir", "0,1,0");
+    in.AddValue("rot", "0,0,0,1");
+    in.AddValue("col", "meshCol");
+    cp->OnLoad(in);
+    CHECK(cp->hasSaveData());
+    CHECK(cp->tgtId() == 17u);
+    CHECK(cp->targetPersistentId() == 99u);
+    CHECK(cp->compoundFields.targetPosition == Vector3f(1.0f, 2.0f, 3.0f));
+    CHECK(cp->compoundFields.targetMeshColName.value_or("") == "meshCol");
+    ConfigNode out("PARTDATA");
+    cp->OnSave(out);
+    CHECK(*out.GetValuePtr("tgt") == "17");
+    CHECK(*out.GetValuePtr("tpersID") == "99");
+    CHECK(*out.GetValuePtr("pos") == "1,2,3");
+    CHECK(*out.GetValuePtr("col") == "meshCol");
+    ConfigNode empty("PARTDATA");
+    cp->OnLoad(empty);
+    CHECK_FALSE(cp->hasSaveData());
+    CHECK(cp->tgtId() == 17u);  // unchanged
+    // SetTarget: ids from the target, link, Attached; the world values invert the transforms
+    auto tgt = g.New("fairingSize1");
+    tgt->fields.craftID = 31u;
+    tgt->fields.persistentId = 77u;
+    tgt->partTransform.position = Vector3f(0.0f, 5.0f, 0.0f);
+    cp->compoundFields.targetPosition = Vector3f(0.0f, 5.0f, 0.0f);
+    CHECK(cp->SetTarget(tgt.get(), "col2"));
+    CHECK(cp->target == tgt.get());
+    CHECK(cp->tgtId() == 31u);
+    CHECK(cp->targetPersistentId() == 77u);
+    CHECK(cp->attachState() == CompoundPart::AttachState::Attached);
+    CHECK(cp->wTgtPos() == Vector3f::zero());  // target.InverseTransformPoint(this.TransformPoint(targetPosition)) with both at their places
+    // UpdateTargetCoords: the target moved 2 up in the world; targetPosition follows, direction = its normal
+    tgt->partTransform.position = Vector3f(0.0f, 7.0f, 0.0f);
+    cp->UpdateTargetCoords();
+    CHECK(cp->compoundFields.targetPosition == Vector3f(0.0f, 7.0f, 0.0f));
+    CHECK(cp->compoundFields.direction == Vector3f(0.0f, 1.0f, 0.0f));
+    // DisconnectCompoundPart: dumps the target and detaches
+    cp->DisconnectCompoundPart();
+    CHECK(cp->target == nullptr);
+    CHECK(cp->tgtId() == 0u);
+    CHECK(cp->targetPersistentId() == 0u);
+    CHECK(cp->attachState() == CompoundPart::AttachState::Detached);
+    CHECK(cp->SetTarget(nullptr, "") == false);
+    cp->OnPartDestroy();
+}
+
+// CompoundPart.cs:827 ParseCustomPartData: the deprecated `customPartData` string ("rot: ..; pos: ..; dir: ..; tgt: part_N")
+TEST_CASE("compound part: ParseCustomPartData upgrades the legacy string; tgt index resolves through the editor's sorted list") {
+    Game15 g;
+    SaveEnvironment::Current().loadedScene = GameScenes::EDITOR;
+    auto p = g.New("strutConnector");
+    auto* cp = dynamic_cast<CompoundPart*>(p.get());
+    REQUIRE(cp != nullptr);
+    auto other = g.New("fairingSize1");
+    other->fields.craftID = 555u;
+    CompoundPart::hooks.editorSortedShipList = [&] { return std::vector<Part*>{p.get(), other.get()}; };
+    ConfigNode n = cp->ParseCustomPartData("rot:0,0,0,1;pos:1,0,0;dir:0,0,1;tgt:part_1;junk");
+    CompoundPart::hooks = {};
+    CHECK(*n.GetValuePtr("rot") == "0,0,0,1");
+    CHECK(*n.GetValuePtr("pos") == "1,0,0");
+    CHECK(*n.GetValuePtr("dir") == "0,0,1");
+    CHECK(*n.GetValuePtr("tgt") == "555");
+    ConfigNode none = cp->ParseCustomPartData("");
+    CHECK_FALSE(none.HasData());
 }
