@@ -417,6 +417,16 @@ ExperimentResultDialogPage::ExperimentResultDialogPage(Part* host_, const std::s
     OnSendToLab = std::move(onSendToLab);
 }
 
+// ExperimentResultDialogPage.cs:148 (the arithmetic of the body of UpdatePageLabValue)
+float ExperimentResultDialogPage::LabValueMaths(float refValue, bool landed, bool splashed, bool subjectContainsMainBodyName, bool mainBodyIsHome,
+                                                float SurfaceBonus, float ContextBonus, float homeworldMultiplier) {
+    float labValue = refValue;
+    if (landed) labValue = f32store(fx(labValue) * (1.0 + fx(SurfaceBonus)));
+    if (subjectContainsMainBodyName) labValue = f32store(fx(labValue) * (1.0 + fx(ContextBonus)));
+    if ((landed || splashed) && mainBodyIsHome) labValue = f32store(fx(labValue) * fx(homeworldMultiplier));
+    return static_cast<float>(dotnet::Math::Round(static_cast<double>(labValue)));
+}
+
 // ExperimentResultDialogPage.cs:148
 float ExperimentResultDialogPage::UpdatePageLabValue() {
     pageData->labValue = 0.0f;
@@ -425,13 +435,14 @@ float ExperimentResultDialogPage::UpdatePageLabValue() {
         pageData->labValue = refValue;
         auto* moduleScienceLab = dynamic_cast<ModuleScienceLab*>(activeVessel->FindPartModuleImplementingClass("ModuleScienceLab"));
         if (moduleScienceLab != nullptr) {
-            if (activeVessel->Landed) pageData->labValue = f32store(fx(pageData->labValue) * (1.0 + fx(moduleScienceLab->Get<float>("SurfaceBonus"))));
-            if (pageData->subjectID.find(FlightGlobals::currentMainBody->bodyName) != std::string::npos)
-                pageData->labValue = f32store(fx(pageData->labValue) * (1.0 + fx(moduleScienceLab->Get<float>("ContextBonus"))));
-            if ((activeVessel->Landed || activeVessel->Splashed) && activeVessel->mainBody() == HomeBody())
-                pageData->labValue = f32store(fx(pageData->labValue) * fx(moduleScienceLab->Get<float>("homeworldMultiplier")));
+            pageData->labValue = LabValueMaths(
+                refValue, activeVessel->Landed, activeVessel->Splashed,
+                pageData->subjectID.find(FlightGlobals::currentMainBody->bodyName) != std::string::npos, activeVessel->mainBody() == HomeBody(),
+                moduleScienceLab->Get<float>("SurfaceBonus"), moduleScienceLab->Get<float>("ContextBonus"),
+                moduleScienceLab->Get<float>("homeworldMultiplier"));
+        } else {
+            pageData->labValue = static_cast<float>(dotnet::Math::Round(static_cast<double>(pageData->labValue)));
         }
-        pageData->labValue = static_cast<float>(dotnet::Math::Round(static_cast<double>(pageData->labValue)));
     }
     return pageData->labValue;
 }

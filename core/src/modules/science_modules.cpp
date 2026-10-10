@@ -1753,18 +1753,17 @@ std::string ModuleScienceConverter::DataExpectationSummary(float dataAmount) {
     return Fmt("#autoLOC_6001024", {text, F32(f32store(fx(stored) + fx(dataAmount))), text2});
 }
 
-// ModuleScienceConverter.cs:63
+// ModuleScienceConverter.cs:63 (`return dataAmount * (float)scienceMultiplier;` in a double method: the float product is converted, not stored as float)
 double ModuleScienceConverter::CalculateScienceAmount(float dataAmount) {
-    return static_cast<double>(f32store(fx(dataAmount) * fx(static_cast<float>(Get<int>("scienceMultiplier")))));
+    return fx(dataAmount) * fx(static_cast<float>(Get<int>("scienceMultiplier")));
 }
 
-// ModuleScienceConverter.cs:68
+// ModuleScienceConverter.cs:68 (`(double)(day * scientists * ...)`: a cast to double is no float store)
 double ModuleScienceConverter::CalculateScienceRate(float dataAmount) {
     float scientists = GetScientists();
     const float day = static_cast<float>(KSPUtil::dateTimeFormatter().Day());
-    const float num = f32store(fx(day) * fx(scientists) * fx(dataAmount) * fx(Get<float>("dataProcessingMultiplier")) *
-                               fx(static_cast<float>(Get<int>("scienceMultiplier"))));
-    return static_cast<double>(num) / dotnet::Math::Pow(10.0, static_cast<double>(Get<int>("researchTime")));
+    const double num = fx(day) * fx(scientists) * fx(dataAmount) * fx(Get<float>("dataProcessingMultiplier")) * fx(static_cast<float>(Get<int>("scienceMultiplier")));
+    return num / dotnet::Math::Pow(10.0, static_cast<double>(Get<int>("researchTime")));
 }
 
 // ModuleScienceConverter.cs:74

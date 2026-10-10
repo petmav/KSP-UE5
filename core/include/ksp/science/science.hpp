@@ -492,6 +492,9 @@ public:
                                std::shared_ptr<ScienceLabSearch> labSearch, ScienceCallback onDiscardData, ScienceCallback onKeepData,
                                ScienceCallback onTransmitData, ScienceCallback onSendToLab);  // :64
     float UpdatePageLabValue();  // :148
+    // The arithmetic of UpdatePageLabValue (:153-:171) for the given vessel / lab state (floats stored per the Mono rule, then Math.Round)
+    static float LabValueMaths(float refValue, bool landed, bool splashed, bool subjectContainsMainBodyName, bool mainBodyIsHome, float SurfaceBonus,
+                               float ContextBonus, float homeworldMultiplier);
 };
 
 // ---------------------------------------------------------------------------------------------------------------------------------
