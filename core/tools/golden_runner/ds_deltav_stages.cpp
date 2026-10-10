@@ -165,7 +165,7 @@ void StartCompoundParts(ShipConstruct& ship) {
     CompoundPart::hooks.editorShipParts = nullptr;
 }
 
-// (ModuleDockingNode.OnLoad sets `part.fuelCrossFeed = crossfeed` (ModuleDockingNode.cs:547): the real module of WP-25 does it while the craft loads;
+// (ModuleDockingNode.OnLoad sets `part.fuelCrossFeed = crossfeed` (ModuleDockingNode.cs:533): the real module of WP-25 does it while the craft loads;
 // a closed docking port in a craft file has `crossfeed = False` and blocks the crossfeed through the part.)
 
 int RunDeltaVStages(const RunnerOptions& opt) {

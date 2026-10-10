@@ -654,7 +654,7 @@ void ModuleGrappleNode::DecoupleAction(KSPActionParam&) {
     if (Events()["Decouple"]->active) Decouple();
 }
 
-// ModuleGrappleNode.cs:789
+// ModuleGrappleNode.cs:797
 void ModuleGrappleNode::Decouple() {
     Part* p = PartOf();
     AttachNode* g = GrappleNode();
@@ -716,7 +716,7 @@ void ModuleGrappleNode::OnJointInit(IGrapplePivot* joint) {
     else log::Info("[Grapple Joint]: joint lost");
 }
 
-// ModuleGrappleNode.cs:883
+// ModuleGrappleNode.cs:885
 void ModuleGrappleNode::OnDriveModeChanged(ActiveJointDriveMode mode) {
     if (mode != ActiveJointDriveMode::NoJoint) {
         Events()["SetLoose"]->active = mode != ActiveJointDriveMode::Neutral;

@@ -181,7 +181,7 @@ public:
     // The matching expression of FindNodeApproaches (:1257-:1270): `this` approaches `other` when they share a nodeType, agree on gendered (opposite
     // genderFemale when gendered) and on snapRotation (same snapOffset when snapping)
     bool CanDockWith(ModuleDockingNode& other);
-    // :1281. The pose-level kernel of CheckDockContact is DockContact() so unit tests can reach the intermediate roll dot.
+    // :1390. The pose-level kernel of CheckDockContact is DockContact() so unit tests can reach the intermediate roll dot.
     bool CheckDockContact(ModuleDockingNode* m1, ModuleDockingNode* m2, float minDist, float minFwdDot, float minRollDot);
     static bool DockContact(const DockPose& p1, const DockPose& p2, bool snapRotation, float snapOffset, float minDist, float minFwdDot, float minRollDot,
                             float* rollDot = nullptr);

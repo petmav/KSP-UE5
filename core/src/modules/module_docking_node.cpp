@@ -957,7 +957,7 @@ bool ModuleDockingNode::CanDockWith(ModuleDockingNode& other) {
            other.Get<bool>("snapRotation") == snapRotation && (!snapRotation || other.Get<float>("snapOffset") == Get<float>("snapOffset"));
 }
 
-// kspcore helper: the pose maths of CheckDockContact (ModuleDockingNode.cs line 1281), with the intermediate roll dot reported
+// kspcore helper: the pose maths of CheckDockContact (ModuleDockingNode.cs line 1390), with the intermediate roll dot reported
 bool ModuleDockingNode::DockContact(const DockPose& p1, const DockPose& p2, bool snapRotation, float snapOffset, float minDist, float minFwdDot, float minRollDot,
                                     float* rollDot) {
     if (rollDot != nullptr) *rollDot = 0.0f;
@@ -982,7 +982,7 @@ bool ModuleDockingNode::DockContact(const DockPose& p1, const DockPose& p2, bool
     return false;
 }
 
-// ModuleDockingNode.cs:1378
+// ModuleDockingNode.cs:1390
 bool ModuleDockingNode::CheckDockContact(ModuleDockingNode* m1, ModuleDockingNode* m2, float minDist, float minFwdDot, float minRollDot) {
     return DockContact(m1->NodePose(), m2->NodePose(), m1->Get<bool>("snapRotation"), m1->Get<float>("snapOffset"), minDist, minFwdDot, minRollDot);
 }
@@ -1317,7 +1317,7 @@ void ModuleDockingNode::UnsetTarget() {
     if (DockingEnvironment::setVesselTarget) DockingEnvironment::setVesselTarget(nullptr);
 }
 
-// ModuleDockingNode.cs:1917
+// ModuleDockingNode.cs:1872
 void ModuleDockingNode::EnableXFeed() {
     Events()["EnableXFeed"]->active = false;
     Events()["DisableXFeed"]->active = true;
@@ -1328,7 +1328,7 @@ void ModuleDockingNode::EnableXFeed() {
     if (fuelCrossFeed != Get<bool>("crossfeed")) GE::onPartCrossfeedStateChange.Fire(p);
 }
 
-// ModuleDockingNode.cs:1930
+// ModuleDockingNode.cs:1887
 void ModuleDockingNode::DisableXFeed() {
     Events()["EnableXFeed"]->active = true;
     Events()["DisableXFeed"]->active = false;
