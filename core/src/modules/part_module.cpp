@@ -118,6 +118,14 @@ void PartModule::Copy(PartModule& from) {
 // Object.Instantiate of a module component (WP-13): moduleName, isEnabled, upgradesApplied and the serialized KSPFields
 void PartModule::CopySerializedFrom(const PartModule& from) {
     CopyValuesFrom(from);
+    // PartModule.resHandler is a public [Serializable] ModuleResourceHandler: its lists and flags travel with the clone (WP-28; a module's
+    // resource nodes are loaded once into the prefab by Load and never again for a runtime instance)
+    resHandler.moduleResourceBasedPrimaryIsInput = from.resHandler.moduleResourceBasedPrimaryIsInput;
+    resHandler.currentResourceLowerThanLayoff = from.resHandler.currentResourceLowerThanLayoff;
+    resHandler.inputResources.clear();
+    resHandler.outputResources.clear();
+    for (const auto& r : from.resHandler.inputResources) resHandler.inputResources.push_back(r->CloneSerialized());
+    for (const auto& r : from.resHandler.outputResources) resHandler.outputResources.push_back(r->CloneSerialized());
     moduleName = from.moduleName;
     isEnabled = from.isEnabled;
     upgradesApplied = from.upgradesApplied;

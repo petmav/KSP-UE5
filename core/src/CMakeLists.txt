@@ -84,6 +84,9 @@ add_library(kspcore STATIC
     modules/cs_expr.cpp
     modules/module_resource.cpp
     modules/resource_modules.cpp
+    modules/resource_converters.cpp
+    modules/resource_generators.cpp
+    modules/resource_scanners.cpp
     modules/module_members.cpp
     modules/base_field.cpp
     modules/base_event.cpp
