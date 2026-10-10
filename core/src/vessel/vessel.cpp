@@ -1,5 +1,7 @@
 // Vessel (Vessel.cs): identity, parts, reference transform, situations, crew, control level, modules, naming.
 // The state transitions live in vessel_transitions.cpp, kinematics / mass / atmosphere in vessel_motion.cpp.
+#include "ksp/commnet/comm_net_vessel.hpp"
+#include "ksp/commnet/commnet_scene.hpp"
 #include "ksp/vessel/vessel.hpp"
 #include "ksp/vessel/vessel_autopilot.hpp"
 
@@ -742,6 +744,8 @@ ControlLevel Vessel::GetControlLevel() {
     if (env.commNetControlLevel) {
         if (std::optional<ControlLevel> l = env.commNetControlLevel(*this)) return *l;
     }
+    if (connection != nullptr && CommNet::CommNetScenario::Instance() != nullptr && CommNet::CommNetScenario::CommNetEnabled())
+        return connection->GetControlLevel();
     int level = 0;
     int count = static_cast<int>(parts.size());
     while (count-- > 0) {

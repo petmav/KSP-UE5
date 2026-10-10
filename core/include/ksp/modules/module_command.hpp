@@ -25,6 +25,7 @@
 #include <string>
 #include <vector>
 
+#include "ksp/commnet/control_source.hpp"
 #include "ksp/modules/control_types.hpp"
 #include "ksp/modules/part_module.hpp"
 #include "ksp/parts/part.hpp"
@@ -35,18 +36,6 @@ namespace ksp {
 class Vessel;
 class PartResourceDefinition;
 class ModuleCommand;
-
-// CommNet.VesselControlState (CommNet/VesselControlState.cs, [Flags])
-enum class VesselControlState : int {
-    None = 0, Probe = 2, Kerbal = 4, Partial = 8, Full = 16,
-    ProbeNone = 2, ProbePartial = 10, ProbeFull = 18, KerbalNone = 4, KerbalPartial = 12, KerbalFull = 20
-};
-inline VesselControlState operator&(VesselControlState a, VesselControlState b) {
-    return static_cast<VesselControlState>(static_cast<int>(a) & static_cast<int>(b));
-}
-inline VesselControlState operator|(VesselControlState a, VesselControlState b) {
-    return static_cast<VesselControlState>(static_cast<int>(a) | static_cast<int>(b));
-}
 
 // What ModuleCommand reads from the vessel CommNetVessel (vessel.connection)
 struct CommNetLinkState {
@@ -76,11 +65,12 @@ struct CommandEnvironment {
     static void Reset();
 };
 
-class ModuleCommand : public PartModule {
+class ModuleCommand : public PartModule, public CommNet::ICommNetControlSource {
 public:
     enum class ModuleControlState { NotEnoughCrew, NotEnoughResources, PartialManned, NoControlPoint, TouristCrew, PartialProbe, Nominal };  // :12
 
     explicit ModuleCommand(const ModuleClassInfo& cls) : PartModule(cls) {}
+    ~ModuleCommand() override;  // drops the OnNetworkInitialized subscription of Start (Unity calls OnDestroy)
 
     // ---- state that is not a [KSPField] (ModuleCommand.cs) ----
     std::vector<const PartResourceDefinition*> consumedResources;
@@ -90,8 +80,15 @@ public:
     bool showControlPointVisual = false;
 
     ModuleControlState ModuleState() const { return moduleState_; }          // :105
-    bool IsCommCapable() const { return commCapable_; }                      // :417
-    VesselControlState GetControlSourceState() const { return localVesselControlState_; }  // :412
+    bool IsCommCapable() const override { return commCapable_; }             // :417
+    VesselControlState GetControlSourceState() const override { return localVesselControlState_; }  // :412
+    // ICommNetControlSource (WP-39): `name` (the component name), UpdateNetwork (:347), Start (:319), OnDestroy (:332), OnNetworkInitialised (:341)
+    std::string ControlSourceName() const override { return moduleName; }
+    void UpdateNetwork() override;
+    virtual void Start();
+    virtual void OnDestroy();
+    virtual void OnNetworkInitialised();
+    bool networkInitialised() const { return networkInitialised_; }
     int crewCount() const { return crewCount_; }
     int totalCrewCount() const { return totalCrewCount_; }
     int pilots() const { return pilots_; }
@@ -131,6 +128,8 @@ protected:
     ModuleControlState moduleState_ = ModuleControlState::NotEnoughCrew;
     VesselControlState localVesselControlState_ = VesselControlState::None;
     bool commCapable_ = true;
+    bool networkInitialised_ = false;
+    bool networkSubscribed_ = false;
     int crewCount_ = 0;
     int totalCrewCount_ = 0;
     int pilots_ = 0;
