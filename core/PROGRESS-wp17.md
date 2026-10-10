@@ -5,3 +5,5 @@
 - Design: synchronous RunCalculations (the coroutine yields only wait frames); two runs first (syncListInstances), one per body.
 - Thrust direction: no .mu model reader -> runner installs engine thrust transforms (documented deviation).
 - gate capture.deltav_stages passes: dV cols <=11 ULP (tolerance rel 2e-6, STATUS), everything else 0 ULP; exclusions: Dynawing/Learstar stage0 (omsEngine thrust direction) + totals rows. Merged main (WP-26) at 47c2cad4. TODO: citations check, unit tests, README/STATUS, fresh runs (Windows + WSL).
+
+- DONE: merged main d46be6e4 (47c2cad4); fresh Windows 33/33 and WSL 33/33 passed; STATUS/README updated; unit tests 10 cases / 354 assertions.

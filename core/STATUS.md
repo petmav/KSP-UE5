@@ -2956,4 +2956,4 @@ the engine-less craft, Kerbal X asparagus stages and nested stage parts).
 
 ### Fresh run
 
-Windows MSVC (`coreun_tests.ps1 -Fresh`, build deleted first): 33/33 ctest tests passed (34 where `decompiled/KSP-dev/saves` exists and `corpus.saves` is registered; this worktree has none): `unit` 365 cases / 697,003 assertions, `capture.deltav_stages` 0.9 s, `capture.engine_deltav` unchanged, every earlier gate unchanged. Linux (WSL, `./run_tests.sh -f`): WSL_PLACEHOLDER
+Windows MSVC (`coreun_tests.ps1 -Fresh`, build deleted first): 33/33 ctest tests passed (34 where `decompiled/KSP-dev/saves` exists and `corpus.saves` is registered; this worktree has none): `unit` 365 cases / 697,003 assertions, `capture.deltav_stages` 0.9 s, `capture.engine_deltav` unchanged, every earlier gate unchanged. Linux (WSL, `./run_tests.sh -f`): 33/33 ctest tests passed (linux-rel preset on the /mnt/c checkout: build 230 s, `unit` included, `capture.deltav_stages` 11.0 s, test 1,867 s). GCC was not run here (CI).
