@@ -24,3 +24,14 @@ Worktree C:\Projects\KSP-UE5\.worktrees\wp37, branch wp37 (from main 7199d110, w
   check_cites.py extended: `// Templates/PlantFlag.cs:N` (sub path) disambiguates same-named files. cites: 0 mismatches.
 - Windows build OK (run_tests.ps1 -BuildOnly).
 - Next: tests/test_contracts.cpp + tools/wp37/contract_reference.py, waypoints, remaining 6 templates, STATUS/README, WSL run.
+- Slice 2 (done, commit e2eea151): RecoverAsset + PartTest templates (src/contracts/templates_recover.cpp, templates_parttest.cpp), WaypointManager seam +
+  ScenarioCustomWaypoints (waypoints.cpp; ProtoWaypointInfo data side is WP-04's, only Make/Find helpers added), TemplateEnvironment seams,
+  tests/test_contracts.cpp (15 cases, 13065 assertions, all green) + tools/wp37/contract_reference.py -> tests/data/wp37_reference.json
+  (rng, rewards 126, expiry, mentality 228 rows, counts, weights, text 189, trees 480 [284 generated], agents, part_constraints).
+  Findings: Contract.AddKeywords adds only the FIRST new keyword (KSP bug, ported); ContractSystem update value is saved to the SCENARIO node
+  but loaded from CONTRACTS (not restored); LoadContract mutates the node (removes `type`); TextGen needs GameDatabase-translated STORY_DEF.
+  Python reads GameData-mirror cfgs + celestial_bodies.serialized.json; GameVariables contract factors = C# initialisers (needs data: prefab).
+- NOT DONE yet: GrandTour, VesselRepairContract, OrbitalConstructionContract, RoverConstructionContract templates (need WP-38 FinePrint
+  parameters: VesselSystemsParameter, VesselDestinationParameter, LocationAndSituationParameter, RepairPartParameter, ConstructionParameter,
+  RoverWayPointParameter, CrewTraitParameter -> factory seam), tests for parameters / ModuleTestSubject / constraints / PartTest+RecoverAsset
+  templates, STATUS.md section, README rows, WSL run, full run_tests.ps1 -Fresh.
