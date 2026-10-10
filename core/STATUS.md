@@ -30,6 +30,7 @@ Updated 2026-10-10 (WP-17, WP-22, WP-23, WP-26, WP-27, WP-28, WP-31). One comman
 | 15. WP-28 resource-processing modules (branch `wp28`, from main `289d0c98`) | done (numeric / data side, unit-gated): BaseConverter family (catch-up, efficiency, recipe units), drills, harvester, generator, alternator, jettison, drain, space-object info / resource / analysis, scanners, surveyor, biome scanner; all 26 csv files. `unit` +17 cases / 8,571 assertions; every existing gate unchanged (`capture.part_database` 0 ULP). See the WP-28 section |
 | 18. WP-17 delta-v calculation (branch `wp17`) | done: VesselDeltaV (Ship and Vessel modes, RunCalculations run to the end, part staging ResetPartInfo / Process*PartInfoChildren), DeltaVStageInfo (ProcessParts, SimulateDeltaV burn simulation, StoreInterimDeltaV, CheckTimeStep, ISP / TWR), DeltaVEngineInfo (CalculateISP / ThrustVector / Burn / ApplyBurn), DeltaVPartInfo, DeltaVEngineStageSet (two list instances), the small files and extensions; gate `capture.deltav_stages` (stages 180 rows, totals 60, parts 1,225): 0 ULP except the vector-magnitude delta-v columns (<= 11 ULP, rel 1.02e-6, tolerance rel 2e-6), 16 rows of two crafts excluded (omsEngine thrust direction needs the .mu model); see "WP-17" |
 | 19. WP-31 kerbal roster, experience, crew (branch `wp31`, from main `135fb5aa`) | done (engine-agnostic part, unit-gated): the 20 experience effects, ExperienceTrait / Effect, CrewGenerator (KSPRandom draw order; name tables are hook-supplied), Part/VesselCrewManifest (replace the WP-18 seam), KerbalRoster / ProtoCrewMember extensions (applicants, Update, DefaultCrewForVessel, g-force, effects), APSkillExtensions, ModuleExperienceManagement; `unit` +20 cases, `data.roster_experience`; needs name-table and flight-log captures, see "WP-31" |
+| 23. WP-00 core runtime skeleton: tick phases, coroutine scheduler (branch `wp00`, from main `95ed0a16`) | done (engine-agnostic part, unit-gated; no golden or capture of scheduling exists, every existing gate unchanged): TimingManager + the eight Timing* hosts (Delegate add / remove-during-iteration semantics), `PlayerLoop` with the script order measured in game (Timing0, TimingPre, Timing1, Timing2, TimingManager, Timing3, TimingFI, Timing4, Timing5 for FixedUpdate / Update / LateUpdate; fixed-step and frame slot order), C++20 coroutine scheduler (null / WaitForSeconds / WaitForFixedUpdate / WaitForEndOfFrame / WaitUntil / nested / Stop), CoroutineHost, CallbackUtil.DelayedCallback, HierarchyUtil / TransformExtension / GameObjectExtension pure functions; VesselDeltaV.RunCalculations is now a real coroutine driven by the scheduler with identical results; scheduler vs independent numpy float32 replay 0 ULP; 18 cases / 396 assertions (+1 in test_deltav); the resume rules assumed for the engine are listed in the WP-00 section |
 
 ## Test results (all 35 ctest tests pass (34 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience)
 
@@ -3155,3 +3156,116 @@ What the unit tests establish (oracles are the decompiled C#, the game's cfgs an
   `Format` strips from arguments.
 - The localization of `ExperienceTraitConfig.Title` / `Description` happens in the UI, never in the config.
 - `tests/test_kerbals.cpp` needs the stock game (GameData mirror) like the other part-based tests.
+
+## WP-00: core runtime skeleton: tick phases, timer / coroutine scheduler (branch `wp00`, from main `95ed0a16`)
+
+Spec: `TimingManager.cs`, `Timing0.cs` ... `Timing5.cs`, `TimingPre.cs`, `TimingFI.cs`, `CoroutineHost.cs`, `HierarchyUtil.cs`,
+`TransformExtension.cs`, `GameObjectExtension.cs`; seams noted below for `MonoUtilities.cs` and `BlankMonoBehaviour.cs`. Also read:
+`CallbackUtil.cs:26-60` (DelayedCallback), `VesselDeltaV.cs:234-282, :853` (the first real coroutine consumer), and the in-game one-frame call
+trace `analysis/physics/raw/run1/run1-{L,M,S}_calltrace.csv` (`analysis/physics/PROFILE.md`, "One-frame call-order trace") for the
+script execution order, which is Unity project data and not in the C#.
+
+**No golden and no capture covers scheduling directly** (checked: `harness/golden/MANIFEST.json` has no timing / coroutine dataset;
+`harness/captures/out*` contain none; the only in-game scheduling data is the physics profile's call trace). So the gate is unit tests
+(`tests/test_timing.cpp`, 18 cases / 396 assertions, plus one case in `tests/test_deltav.cpp`) and every existing gate unchanged:
+all 34 ctest tests pass with identical numbers (`capture.deltav_stages`, `capture.thermal_step`, `capture.orbit_rails`, ... all 0 ULP,
+nothing re-baselined, `tolerances.json` untouched). Unit totals on this tree: **419 test cases, 711,273 assertions**.
+
+### What is ported
+
+| area | files | notes |
+|---|---|---|
+| TimingManager + the eight phase hosts | `include/ksp/core/timing_manager.hpp`, `src/core/timing_manager.cpp` | `TimingStage` (9 values), Awake (a second instance logs and destroys itself), OnDestroy, `UpdateAdd/Remove`, `FixedUpdateAdd/Remove`, `LateUpdateAdd/Remove` over `ksp::Delegate` (Combine appends; Remove drops the LAST occurrence; invocation runs a snapshot, so add / remove during iteration only affect the next invocation; an exception skips the rest of that delegate). `TimingPhase` = Timing0..5 / TimingPre / TimingFI (identical classes; try/catch -> `Debug.LogError("<name> threw during <phase>: ...")`); the Normal stage (TimingManager itself) has no try/catch. |
+| PlayerLoop (not C#: the engine loop) | same files | `FixedStep()`, `Frame(dt, fixedSteps)`, `Frame(dt)` (step count from a fixedTime accumulator); scripts register with an order key (`AddScript`), the nine timing components via `AddTimingManager`; `physicsStep` seam; optional trace of every slot. Time plumbing: inside a fixed step `Time.time` = fixedTime and `Time.deltaTime` = `Time.fixedDeltaTime`, in Update / LateUpdate the frame values (restored after the fixed steps); both clocks are doubles accumulating the float deltas, `ksp::Time` gets the float casts (extends `core/unity_time.hpp`, no second set of statics). |
+| Coroutines | `include/ksp/core/coroutine.hpp`, `coroutine_host.hpp`, `src/core/coroutine.cpp` | C++20 `Enumerator` (`co_yield YieldInstruction::...` = `yield return`, `co_return` = `yield break`); `CoroutineScheduler` with the three delayed-call passes; `CoroutineHost` (Create / StartCoroutine / RunAndDispose / Terminate), `CallbackUtil::DelayedCallback` (float, int frames, coroutine overloads). |
+| HierarchyUtil, TransformExtension, GameObjectExtension | `include/ksp/util/hierarchy_util.hpp`, `src/util/hierarchy_util.cpp`; `unity/transform.hpp` extended (parent / children / `SetParent` / `GetChild` / `childCount` / `activeInHierarchy`, `localPosition/Rotation/Scale`, `layer`, `tag`, `activeSelf`) | depth / comparison / ancestor helpers (Part, Transform and the generic accessor forms), `CompileID`, `NestToParent` x2, `FindChild` x2, `FindParent`, `SetLayerRecursive` x3, `SetTagsRecursive`, `GameObject.GetChild`. |
+| VesselDeltaV on the scheduler | `include/ksp/vessel/delta_v.hpp`, `src/vessel/vessel_delta_v.cpp` | `RunCalculations` is now the real coroutine `RunCalculationsCoroutine()` with its two `yield return null` (:895, :920); `RunCalculations()` and `DriveToCompletion()` run it to the end exactly as before (the gates are unchanged); new `CheckDirtyAndRun(scheduler)` (editor branch of :247) and `DriveToCompletion(scheduler, loop, dt)` start the `DelayedCallback(frames = 3)` -> `RunCalculations` chain from a `FixedUpdate` script of the PlayerLoop. A unit test drives PhysProf-S both ways and compares totals and every stage bit for bit. |
+
+Every ported function carries a `// File.cs:N` cite (`tools/wp28/check_cites.py` on the four new / changed sources: 59 cites, 0 mismatches;
+two pre-existing VesselDeltaV driver comments were reworded because they cited C# members that do not exist under that name).
+
+### Phase-order table (measured; row = `seq` in `analysis/physics/raw/run1/run1-L_calltrace.csv`)
+
+The three phases use the same order (all three profiles L / M / S are checked by the unit test `WP-00 PlayerLoop: ExecutionOrder()`, and
+the L row numbers are asserted):
+
+| position | component | TimingStage | FixedUpdate seq | Update seq | LateUpdate seq | C# registration |
+|---|---|---|---|---|---|---|
+| 1 | Timing0 | ObscenelyEarly | 5 | 310 | 622 | `TimingManager.cs:45` Awake (`AddComponent<Timing0>`); stage -> host in the switches of `:128`, `:192`, `:266`, `:330`, `:404`, `:468` |
+| 2 | TimingPre | Precalc | 8 | 314 | 623 | same |
+| 3 | Timing1 | Early | 10 | 315 | 624 | same |
+| 4 | Timing2 | Earlyish | 13 | 317 | 625 | same |
+| 5 | TimingManager | Normal | 14 | 325 | 628 | own delegates, `TimingManager.cs:104`, `:112`, `:120` |
+| 6 | Timing3 | FashionablyLate | 277 | 575 | 877 | same as 1 |
+| 7 | TimingFI | FlightIntegrator | 279 | 577 | 878 | same as 1 |
+| 8 | Timing4 | Late | 283 | 580 | 881 | same as 1 |
+| 9 | Timing5 | BetterLateThanNever | 286 | 584 | 897 | same as 1 |
+
+Precalc runs BEFORE Early although the enum lists Early first (`TimingManager.cs:5-15`); the measurement wins. Between these components the
+real trace interleaves other script behaviours (Planetarium and VesselPrecalculate between Timing0 and TimingPre, OrbitDriver and
+CollisionEnhancer after TimingPre / Timing1, FlightGlobals, PQS, Part, the modules ... after TimingManager). The numeric order keys are
+synthetic (0, 100, ... 800; only the relative order is measured); `PlayerLoop::AddScript(name, order, ...)` lets later packages place those
+scripts.
+
+Player-loop slots, in the measured order (same trace):
+
+| step | slot | seq (L) | modelled by |
+|---|---|---|---|
+| fixed step | `FixedUpdate.ScriptRunBehaviourFixedUpdate` | 4 | scripts' FixedUpdate |
+| | `FixedUpdate.PhysicsFixedUpdate` | 291 | `PlayerLoop::physicsStep` seam |
+| | `FixedUpdate.ScriptRunDelayedFixedFrameRate` | 297 | `CoroutineScheduler::RunDelayedFixedFrameRate` (WaitForFixedUpdate) |
+| frame | `PreUpdate.PhysicsUpdate` | 299 | marker |
+| | `Update.ScriptRunBehaviourUpdate` | 309 | scripts' Update |
+| | `Update.ScriptRunDelayedDynamicFrameRate` | 585 | `RunDelayedDynamicFrameRate` (null, WaitForSeconds, WaitUntil / WaitWhile) |
+| | `PreLateUpdate.ScriptRunBehaviourLateUpdate` | 621 | scripts' LateUpdate |
+| | `PostLateUpdate.ScriptRunDelayedDynamicFrameRate` | 901 | marker only (see assumptions) |
+| | `PostLateUpdate.TriggerEndOfFrameCallbacks` | 929 | `RunEndOfFrame` (WaitForEndOfFrame) |
+
+All fixed steps of a frame run before `PreUpdate.PhysicsUpdate` and Update (`n_fixed` per frame in the profile).
+
+### Coroutine scheduler against the independent replay
+
+`tools/wp00/coroutine_reference.py` (numpy float32, event-style, no queue simulation) replays six routines over 600 frames and writes
+`tests/data/wp00_reference.json`. The stimuli are not hand-authored: the per-frame `Time.deltaTime` (float32 of `frame_ms / 1000`) and the
+fixed steps per frame (`n_fixed`, `fixed_dt` 0.02) are the first 600 rows of the in-game profile `run1-L_ascent_frames.csv` (826 fixed
+steps, 18.047 s). The test `WP-00 coroutine scheduler vs the independent numpy float32 replay` runs the same routines on the C++
+scheduler through `PlayerLoop::Frame` and compares the frame index and the float32 BITS of `Time.time` at every resume: three
+`WaitForSeconds` chains (6 x 0.1, 4 x 0.25, 1.5 then 5 x 0.016), 8 x `yield null` accumulating `Time.deltaTime` in a float under the Mono
+rule (`f32store(fx(acc) + fx(dt))`), 6 x `WaitForFixedUpdate` (frame, fixed `Time.time`, global step index), 5 x `WaitForEndOfFrame`, the
+final clock and the fixed-step total. **All 0 ULP, max abs 0** (35 records plus the final clock). This validates the arithmetic of the
+model (double clock, float casts, wake rule); it cannot validate the engine behaviour (next section).
+
+### Assumptions that no capture checks (documented in `coroutine.hpp`; revisit when an engine trace of coroutine resume times exists)
+
+- `yield null` resumes in the first dynamic pass of a LATER frame than the one it yielded in (a coroutine started in Update does NOT
+  resume in the same frame's pass); `WaitForSeconds` wakes in the first dynamic pass with `curTime >= start + seconds`, never in the pass
+  it yielded in. The second `ScriptRunDelayedDynamicFrameRate` (PostLateUpdate, seq 901) is recorded but does nothing.
+- The scheduler clock is a double accumulating the float `deltaTime` (the engine's native frame time), `Time.time` its float cast. If the
+  engine accumulated in float the wake times would differ in the last bit of `Time.time`; the reference only pins the model.
+- `yield return StartCoroutine(child)`: the parent resumes immediately when the child ends (inside the child's last resume); a child that
+  already finished does not block.
+- The fixed-step count of `Frame(dt)` (`fixedTime + fixedDeltaTime <= frameTime`, no maximum-timestep clamp) is an assumption; the
+  explicit `Frame(dt, n)` is what the tests use.
+- An exception in a coroutine is logged and ends that routine (the log text is the C++ `what()`, not `Exception.ToString()`).
+
+### Seams / not ported
+
+- `MonoUtilities.cs` (`RefreshContextWindows`, `RefreshPartContextWindow`: UIPartActionWindow / UIPartActionController UI) and
+  `BlankMonoBehaviour.cs` (empty Start / Update): UI / engine only, no behaviour.
+- `TransformExtension.SetShader` (Shader.Find, MeshRenderer.material), the translucent-shader scan of `SetLayerRecursive(filterTranslucent)`
+  (a predicate parameter replaces it), `GameObjectExtension.GetComponentCached / AddOrGetComponent / GetComponentOnParent /
+  GetComponentUpwards / GetComponentIndex` (the component registry belongs to the engine shell), `DestroyGameObject(Immediate)`.
+- `CoroutineHost.Create`: `new GameObject` and `DontDestroyOnLoad` are recorded (`Persistent()`); the host object stays valid after
+  `Terminate()` (`IsDestroyed()`, its coroutines stopped).
+- The transform hierarchy in the shim is links only: `SetParent` does not recompute world / local transforms (the "double-precision transform
+  hierarchy" and the component registry of the package title are not part of this port; the shim keeps plain `local*` fields).
+- Not done: the other coroutine users (`StartCoroutine` call sites in thermal, staging, time warp, `CompoundPart`, fairing ...) still run
+  their bodies synchronously or are hosted elsewhere; they can now move to `CoroutineScheduler` one at a time. `TimeWarp.CancelAutoWarp`
+  (`CallbackUtil.DelayedCallback(1, ...)`) is the next candidate.
+
+### Verification
+
+- Windows (this tree): `core/build` deleted, `powershell -NoProfile -File core/run_tests.ps1 -Fresh`, then a normal run: ALL TESTS PASSED
+  (34 ctest tests; `corpus.saves` registers only where `decompiled/KSP-dev` exists, so the worktree has one fewer than main).
+- `./build/RelWithDebInfo/tests/kspcore_tests | grep -E "test cases|assertions"`: 419 test cases, 711,273 assertions, 0 failed;
+  with `-tc="WP-00*"`: 18 cases, 396 assertions.

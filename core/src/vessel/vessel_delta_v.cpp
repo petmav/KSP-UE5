@@ -7,6 +7,7 @@
 #include "ksp/modules/module_decouplers.hpp"
 #include "ksp/save/ship_construct.hpp"
 #include "ksp/staging/stage_manager.hpp"
+#include "ksp/core/coroutine_host.hpp"
 #include "ksp/vessel/delta_v.hpp"
 #include "ksp/vessel/vessel.hpp"
 
@@ -264,10 +265,42 @@ void VesselDeltaV::Start() {
     _doStockSimulation = DeltaVGlobals::DoStockSimulations();
 }
 
-// VesselDeltaV.cs:247 CheckDirtyAndRun, editor branch: a run starts while the calculations are dirty or the instances must be synced
+// Editor branch of CheckDirtyAndRun (VesselDeltaV.cs:247): a run starts while the calculations are dirty or the instances must be synced
 void VesselDeltaV::DriveToCompletion() {
     int guard = 0;
     while (_doStockSimulation && (calcsDirty_ || syncListInstances_) && guard++ < 16) RunCalculations();
+}
+
+// CheckDirtyAndRun of VesselDeltaV.cs:247, editor branch (the flight-scene conditions and the Time.time based refreshes need
+// HighLogic / FlightGlobals and are the host's): while idle, dirty calculations or an unsynced list start the frame-delayed run.
+void VesselDeltaV::CheckDirtyAndRun(CoroutineScheduler& scheduler, int owner) {
+    if (!_doStockSimulation) return;
+    auto startDelayed = [&]() {
+        CoroutineScheduler* sched = &scheduler;
+        simulationRunning_ = false;  // `simulation = StartCoroutine(...)`; the delayed coroutine yields before RunCalculations starts
+        scheduler.StartCoroutine(
+            CallbackUtil::DelayedCallback(frames_, Callback<>::Lambda(this, [this, sched, owner] { sched->StartCoroutine(RunCalculationsCoroutine(), owner); })),
+            owner);
+        simulationRunning_ = true;
+    };
+    if (!SimulationRunning() && calcsDirty_) {
+        startDelayed();
+        return;
+    }
+    if (!SimulationRunning() && syncListInstances_) startDelayed();
+}
+
+// The FixedUpdate of VesselDeltaV.cs:234 driven by the player loop (WP-00)
+int VesselDeltaV::DriveToCompletion(CoroutineScheduler& scheduler, PlayerLoop& loop, float frameDeltaTime, int maxFrames) {
+    loop.AddScript("VesselDeltaV", 1000, nullptr, Delegate<void()>::Lambda(this, [this, &scheduler] { CheckDirtyAndRun(scheduler); }), nullptr);
+    int i = 0;
+    while (i < maxFrames) {
+        loop.Frame(frameDeltaTime, 1);
+        i++;
+        if (!(_doStockSimulation && (calcsDirty_ || syncListInstances_ || SimulationRunning()))) break;
+    }
+    loop.RemoveScript("VesselDeltaV");
+    return i;
 }
 
 // VesselDeltaV.cs:471
@@ -481,8 +514,15 @@ void VesselDeltaV::changePartInfoDecoupleStage(DeltaVPartInfo* partInfoItem, Del
     }
 }
 
-// VesselDeltaV.cs:853 RunCalculations (the coroutine; its yields wait frames, so it runs to the end)
+// VesselDeltaV.cs:853 RunCalculations: the coroutine driven to its end (the yields only wait frames)
 void VesselDeltaV::RunCalculations() {
+    Enumerator e = RunCalculationsCoroutine();
+    while (e.MoveNext()) {
+    }
+}
+
+// Coroutine body of RunCalculations (VesselDeltaV.cs:853; `co_yield Null` is its two `yield return null`)
+Enumerator VesselDeltaV::RunCalculationsCoroutine() {
     runCount_++;
     simulationRunning_ = true;  // `simulation = StartCoroutine(...)` was set by CheckDirtyAndRun
     lowestStageWithDeltaV = INT_MAX;
@@ -508,13 +548,14 @@ void VesselDeltaV::RunCalculations() {
         }
         simulationRunning_ = false;
         completedEvents_++;  // GameEvents.onDeltaVCalcsCompleted.Fire()
-        return;
+        co_return;
     }
     _totalDeltaVVac = 0.0;
     _totalDeltaVASL = 0.0;
     _totalDeltaVActual = 0.0;
     _totalBurnTime = 0.0;
     ResetSimulationResources();
+    co_yield YieldInstruction::Null();  // :895
     std::vector<DeltaVStageInfoPtr> stages = WorkingStageInfo();
     for (size_t i = 0; i < stages.size(); i++) {
         stages[i]->SimulateDeltaV(ActiveMode() == Mode::Vessel, false, DeltaVGameSettings::DELTAV_CALCULATIONS_TIMESTEP, false);
@@ -523,6 +564,7 @@ void VesselDeltaV::RunCalculations() {
         if (!std::isnan(stageDVActual(stages[i].get()))) _totalDeltaVActual += stageDVActual(stages[i].get());
         if (!std::isnan(stages[i]->stageBurnTime)) _totalBurnTime += stages[i]->stageBurnTime;
         if ((stages[i]->deltaVinVac > 0.0f || stages[i]->deltaVatASL > 0.0f) && stages[i]->stage < lowestStageWithDeltaV) lowestStageWithDeltaV = stages[i]->stage;
+        co_yield YieldInstruction::Null();  // :920
     }
     ResetSimulationResources();
     if (useMultipleInfoLists) {

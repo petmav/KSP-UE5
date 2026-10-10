@@ -27,6 +27,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "ksp/core/coroutine.hpp"
+#include "ksp/core/timing_manager.hpp"
 #include "ksp/math/mathfx.hpp"
 #include "ksp/modules/module_engines.hpp"
 #include "ksp/parts/part.hpp"
@@ -410,7 +412,14 @@ public:
     void Start();
     // The Unity driver of :234-282: runs RunCalculations() until nothing is dirty (the editor re-runs while syncListInstances is set)
     void DriveToCompletion();
+    // WP-00: the same driver on the coroutine scheduler: FixedUpdate -> CheckDirtyAndRun starts the DelayedCallback(frames) coroutine,
+    // which after `frames` frames starts RunCalculations(); one PlayerLoop frame (1 fixed step) at a time until idle. Registers a
+    // "VesselDeltaV" script on `loop` for the duration. Same result as DriveToCompletion(), frames later (frames() = 3).
+    int DriveToCompletion(CoroutineScheduler& scheduler, PlayerLoop& loop, float frameDeltaTime, int maxFrames = 1000);  // returns the frames run
+    void CheckDirtyAndRun(CoroutineScheduler& scheduler, int owner = 0);   // :247 (editor branch)
+    int frames() const { return frames_; }                    // :82 (private int frames = 3)
     void RunCalculations();                                  // :853 (the coroutine, run to the end)
+    Enumerator RunCalculationsCoroutine();                   // :853 (the coroutine; yields at :895 and :920)
 
     std::vector<DeltaVEngineInfoPtr>& WorkingEngineInfo() { return engineStageSet->WorkingEngineInfo(); }  // :87
     std::vector<DeltaVEngineInfoPtr>& OperatingEngineInfo() { return engineStageSet->OperatingEngineInfo(); }  // :89
@@ -466,6 +475,7 @@ private:
     bool calcsDirty_ = false;
     bool resetPartCaches_ = false;
     int runCount_ = 0;
+    int frames_ = 3;                                    // :82
     int completedEvents_ = 0;
 
     void CalculateSeparationStageIndexes(const std::vector<Part*>& parts);   // :555
