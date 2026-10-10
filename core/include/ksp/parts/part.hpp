@@ -197,6 +197,10 @@ public:
     bool isAirIntake();                            // :1297
     bool isSolarPanel();                           // :1307
     bool isRadiator();                             // :1313
+    // Part.cs:7612-7625 (kilowatts * TimeWarp.fixedDeltaTime, accumulated into the flux the next thermal step integrates)
+    void AddThermalFlux(double kilowatts);         // :7612
+    void AddSkinThermalFlux(double kilowatts);     // :7617
+    void AddExposedThermalFlux(double kilowatts);  // :7622
     bool isAntenna();                              // :1319
     bool isGenerator();                            // :1325
     bool isFairing();                              // :1331

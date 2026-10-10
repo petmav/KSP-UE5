@@ -2,6 +2,7 @@
 // Modules, copy semantics and events are in part_modules.cpp. Every function cites Part.cs:line (Assembly-CSharp) or the
 // file named in its comment. Float32 paths follow the Mono rule (ksp/dotnet/mono_float.hpp).
 #include "ksp/parts/part.hpp"
+#include "ksp/orbit/time_warp.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -952,6 +953,11 @@ float Part::GetResourceMass(bool simulate) {
     }
     return static_cast<float>(num);
 }
+
+// Part.cs:7612 / :7617 / :7622 (WP-22)
+void Part::AddThermalFlux(double kilowatts) { fields.thermalInternalFlux += kilowatts * static_cast<double>(TimeWarp::fixedDeltaTime()); }
+void Part::AddSkinThermalFlux(double kilowatts) { fields.thermalSkinFlux += kilowatts * static_cast<double>(TimeWarp::fixedDeltaTime()); }
+void Part::AddExposedThermalFlux(double kilowatts) { fields.thermalExposedFlux += kilowatts * static_cast<double>(TimeWarp::fixedDeltaTime()); }
 
 // Part.cs:6559 (float products: `(float)amount * density`, `thermalMass += num2 * specificHeatCapacity` in float)
 float Part::GetResourceMass(float& thermalMass) {

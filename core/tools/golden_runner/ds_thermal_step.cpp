@@ -226,14 +226,13 @@ int RunThermalStep(const RunnerOptions& opt) {
 
     // the tracked parts: first part of the craft with that name (the capture tracks the first of each)
     std::map<std::string, Part*> trackedParts;
-    for (Part* p : vessel->parts)
-        if (trackedParts.find(p->partInfo->name) == trackedParts.end()) {
-            trackedParts[p->partInfo->name] = p;
-            Part::StartContext ctx;  // Part.Start(): absorptiveConstant := emissiveConstant when unset, skinMaxTemp, thermal mass block
-            ctx.flight = true;
-            ctx.standardSpecificHeatCapacity = PhysicsGlobals::StandardSpecificHeatCapacity();
-            p->StartData(ctx);
-        }
+    for (Part* p : vessel->parts) {
+        Part::StartContext ctx;  // Part.Start(): absorptiveConstant := emissiveConstant when unset, skinMaxTemp, thermal mass block
+        ctx.flight = true;
+        ctx.standardSpecificHeatCapacity = PhysicsGlobals::StandardSpecificHeatCapacity();
+        p->StartData(ctx);
+        if (trackedParts.find(p->partInfo->name) == trackedParts.end()) trackedParts[p->partInfo->name] = p;
+    }
 
     std::map<std::tuple<std::string, std::string, int64_t>, const nlohmann::json*> prow;
     for (const auto& r : ptab.rows()) prow[{ptab.S(r, "case"), ptab.S(r, "part"), ptab.I(r, "frame")}] = &r;
@@ -448,6 +447,42 @@ int RunThermalStep(const RunnerOptions& opt) {
                 ptd.postShockExtTemp, ptd.finalCoeff, ptd.skinSkinConductionFlux, ptd.skinInteralConductionFlux, ptd.brtExposed,
                 ptd.brtUnexposed, ptd.exposed});
     }
+    // ---------------------------------------------------------------- part_constants
+    // The thermal constants of the tracked parts at flight start (the part prefab after Part.Start) and the thermal graph's link
+    // count (FlightIntegrator.UpdateThermalGraph over the whole PhysProf-S tree: every part with a thermal mass is linked to its
+    // parent and children). resource_mass is the amount of propellant left after the C10 ascent: not an input of the craft file.
+    golden::Table tc("part_constants", "Thermal constants of each tracked part.");
+    tc.Col("case", ColType::Str).Col("part", ColType::Str).Col("partName", ColType::Str).Col("mass", ColType::F32);
+    for (const char* c : {"maxTemp", "skinMaxTemp", "emissiveConstant", "absorptiveConstant", "heatConductivity", "skinInternalConductionMult",
+                          "thermalMassModifier", "skinMassPerArea", "skinThermalMassModifier"})
+        tc.Col(c, ColType::F64);
+    tc.Col("ptd_thermalLinkCount", ColType::I64);
+    tc.key = {"case", "part"};
+    {
+        GateFI graph;
+        graph.vessel = vessel;
+        graph.sunBody = sunBody;
+        graph.CacheGlobals();
+        graph.partCount = static_cast<int>(vessel->parts.size());
+        graph.UpdateThermalGraph();
+        for (const auto& r : ctab.rows()) {
+            const std::string cs = ctab.S(r, "case"), pn = ctab.S(r, "part");
+            Part& part = *trackedParts.at(pn.substr(0, pn.find('#')));
+            const PartFields& f = part.fields;
+            tc.Add({cs, pn, part.partInfo->name, f.mass, f.maxTemp, f.skinMaxTemp, f.emissiveConstant, f.absorptiveConstant,
+                    f.heatConductivity, f.skinInternalConductionMult, f.thermalMassModifier, f.skinMassPerArea, f.skinThermalMassModifier,
+                    static_cast<int64_t>(part.ptd != nullptr ? part.ptd->thermalLinkCount : -1)});
+        }
+        if (opt.verbose)
+            for (Part* p : vessel->parts) {
+                std::fprintf(stderr, "thermal_step: %s tm=%g parent=%s children:", p->partInfo->name.c_str(), p->fields.thermalMass,
+                             p->parent ? p->parent->partInfo->name.c_str() : "-");
+                for (Part* c : p->children) std::fprintf(stderr, " %s(%g)", c->partInfo->name.c_str(), c->fields.thermalMass);
+                std::fprintf(stderr, "\n");
+            }
+        for (Part* p : vessel->parts) p->ptd = nullptr;  // the graph object dies with `graph`
+    }
+    g.tables.push_back(std::move(tc));
     if (opt.verbose) std::fprintf(stderr, "thermal_step: %d part rows, %d recovery misses\n", tracked, recoveryMisses);
     g.tables.push_back(std::move(tp));
     return WriteCandidate(opt, g, "thermal_step/thermal_step.json");

@@ -28,6 +28,7 @@ add_executable(kspcore_tests
     test_ship_construct.cpp
     test_aero.cpp
     test_staging.cpp
+    test_thermal.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
 )
@@ -286,12 +287,13 @@ ksp_golden_gate(capture.atmosphere_thermal_offsets atmosphere_thermal_offsets GO
 # its header lists every input taken from the capture). Scope filters, each one for data this package cannot reproduce from the file:
 #   vessel  only the atmosphere / thermal scalars recomputed from the frame inputs; the inputs (UT, altitude, srfSpeed, spd, sunDot,
 #           atmosphereTemperatureOffset, bodyEmissive/AlbedoFlux, ...) and `solarFlux` (sun-ray distance) are not written
+#   part_constants  resource_mass (propellant left after the C10 ascent, not an input of the craft file) is dropped
 #   parts   frame 0 of each case (no previous row for the pre-state); columns that are inputs of the step (radiativeArea, exposedArea,
 #           thermalMass, ptd_intConductionFlux, ptd_skinConductionFlux: conduction to the 16 unlogged parts) or that need
 #           the engine (skinExposedAreaFrac stays: computed); skinThermalMass etc. are computed
 ksp_golden_gate(capture.thermal_step thermal_step GOLDEN ${KSP_CAPTURES2_DIR}/thermal_step.json DROP_HEX
-                TOL ${KSP_CAPTURE_TOL} TABLES vessel,parts
+                TOL ${KSP_CAPTURE_TOL} TABLES vessel,parts,part_constants
                 DROP_ROWS "parts:frame=0"
                 DROP_KEYS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/data/thermal_step_exclusions.json
                 COLUMNS "vessel:case,frame,mach,density,staticPressurekPa,dynamicPressurekPa,atmosphericTemperature,externalTemperature,convectiveCoefficient,convectiveMachLerp,densityThermalLerp,solarFluxMultiplier,backgroundRadiationTemp,backgroundRadiationTempExposed,fi_isAnalytical"
-                DROP_COLUMNS "parts:radiativeArea,exposedArea,thermalMass,ptd_intConductionFlux,ptd_skinConductionFlux")
+                DROP_COLUMNS "parts:radiativeArea,exposedArea,thermalMass,ptd_intConductionFlux,ptd_skinConductionFlux/part_constants:resource_mass")

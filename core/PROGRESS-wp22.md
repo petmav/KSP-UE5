@@ -33,3 +33,8 @@ real UpdateThermodynamics on a one-part graph). Recovered inputs: occlusion mult
 neighbours, FI.altitude from static pressure. Part::StartData supplies absorptiveConstant etc. Exclusions: tests/data/thermal_step_exclusions.json.
 Remaining: part_constants table gate, modules (TemperatureModel, ModuleConductionMultiplier, ModuleCoreHeat, ModuleActiveRadiator, ModuleAblator),
 tests/test_thermal.cpp, STATUS/README, full runs Windows + WSL.
+
+## Step 4: thermal_modules (TemperatureModel, RadiatorUtilities, ModuleConductionMultiplier/Ablator/CoreHeat/ActiveRadiator) written + registered (stand-in ModuleCoreHeat removed from module_behaviours.cpp), Part::AddThermalFlux/AddSkinThermalFlux/AddExposedThermalFlux added. Builds. Next: tests/test_thermal.cpp, README/STATUS, full runs.
+
+## Step 5 DONE: tests/test_thermal.cpp (7 cases, 112 assertions) pass; part_constants table added to capture.thermal_step (15 rows, 0 ULP).
+Next: README rows (tests table, layout, golden gate options), STATUS WP-22 section + header counts, full Windows -Fresh run, WSL run, commit.
