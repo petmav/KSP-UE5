@@ -59,18 +59,18 @@ public:
     ~ScenarioCustomWaypoints() override;
     static inline ScenarioCustomWaypoints* Instance = nullptr;      // :17
     void OnAwake() override;                                        // :19
-    void OnDestroy();                                               // :31
-    static void AddWaypoint(FinePrint::Waypoint* waypoint);         // :48
-    static void AddWaypoint(FinePrint::Waypoint* waypoint, bool isMission);  // :53
-    static void RemoveWaypoint(FinePrint::Waypoint* waypoint);      // :66
-    void OnLoad(ConfigNode& node) override;                         // :90
-    void OnSave(ConfigNode& node) override;                         // :114
+    void OnDestroy();                                               // :30
+    static void AddWaypoint(FinePrint::Waypoint* waypoint);         // :50
+    static void AddWaypoint(FinePrint::Waypoint* waypoint, bool isMission);  // :50
+    static void RemoveWaypoint(FinePrint::Waypoint* waypoint);      // :65
+    void OnLoad(ConfigNode& node) override;                         // :86
+    void OnSave(ConfigNode& node) override;                         // :112
     const std::vector<std::unique_ptr<FinePrint::Waypoint>>& Waypoints() const { return owned_; }
     static void Register();
 
 private:
-    static void ProcessWaypoint(FinePrint::Waypoint* waypoint);     // :77
-    std::vector<FinePrint::Waypoint*> waypoints_;                   // :14 (null until OnAwake)
+    static void ProcessWaypoint(FinePrint::Waypoint* waypoint);     // :74
+    std::vector<FinePrint::Waypoint*> waypoints_;                   // (C++ addition) (null until OnAwake)
     bool awake_ = false;
     std::vector<std::unique_ptr<FinePrint::Waypoint>> owned_;       // the waypoints created by OnLoad
 };

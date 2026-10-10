@@ -28,10 +28,10 @@ public:
 
 private:
     static std::string GetSentence(const std::string& sentenceType, bool allowGeneric);        // :63
-    static std::string ProcessTextReplacements(std::string src, bool wipeReplacements);        // :123
-    static inline std::map<std::string, std::shared_ptr<ListDictionary<std::string, std::string>>> texts;  // :11
-    static inline bool setup = false;                                                          // :13
-    static inline std::string currentContractType, currentAgency, currentTopic, currentSubject;  // :15-:21
+    static std::string ProcessTextReplacements(std::string src, bool wipeReplacements);        // :124
+    static inline std::map<std::string, std::shared_ptr<ListDictionary<std::string, std::string>>> texts;  // :9
+    static inline bool setup = false;                                                          // :11
+    static inline std::string currentContractType, currentAgency, currentTopic, currentSubject;  // :19-:21
 };
 
 }  // namespace ksp::Contracts

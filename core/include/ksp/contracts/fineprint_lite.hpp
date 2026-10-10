@@ -176,18 +176,18 @@ public:
     CelestialBody* body = nullptr;
     ProgressType type = ProgressType::SPLASHDOWN;
     MannedStatus manned = MannedStatus::ANY;
-    ProgressMilestone();                                                                    // :153
-    ProgressMilestone(CelestialBody* body_, ProgressType type_, MannedStatus manned_ = MannedStatus::ANY);  // :160
-    KSPAchievements::CelestialBodySubtree* progress();                                      // :12
-    bool complete();                                                                        // :37
-    bool possible() const;                                                                  // :114
-    bool bodySensitive() const;                                                             // :140
-    bool crewSensitive() const;                                                             // :170
-    bool impliesManned() const;                                                             // :200
+    ProgressMilestone();                                                                    // :234
+    ProgressMilestone(CelestialBody* body_, ProgressType type_, MannedStatus manned_ = MannedStatus::ANY);  // :234
+    KSPAchievements::CelestialBodySubtree* progress();                                      // :15
+    bool complete();                                                                        // :46
+    bool possible() const;                                                                  // :122
+    bool bodySensitive() const;                                                             // :154
+    bool crewSensitive() const;                                                             // :186
+    bool impliesManned() const;                                                             // :216
 
 private:
-    bool CheckCompletion(ProgressNode* node) const;                                         // :212
-    bool CheckCompletion(const std::string& nodeID) const;                                  // :226
+    bool CheckCompletion(ProgressNode* node) const;                                         // :248
+    bool CheckCompletion(const std::string& nodeID) const;                                  // :248
     KSPAchievements::CelestialBodySubtree* progressTree = nullptr;
 };
 
@@ -209,7 +209,7 @@ std::vector<CelestialBody*> GetBodiesProgressNoReach(ProgressType type, bool pro
                                                      const std::vector<CelestialBody*>* bodies = nullptr);
 // :176 GetBodiesProgress(bodyReached, manned, where, bodies)
 std::vector<CelestialBody*> GetBodiesReached(bool bodyReached, MannedStatus manned, const Where& where = nullptr, const std::vector<CelestialBody*>* bodies = nullptr);
-std::vector<CelestialBody*> GetBodiesReached(bool bodyReached, const Where& where = nullptr, const std::vector<CelestialBody*>* bodies = nullptr);  // :193
+std::vector<CelestialBody*> GetBodiesReached(bool bodyReached, const Where& where = nullptr, const std::vector<CelestialBody*>* bodies = nullptr);  // (C++ addition)
 // :242 CelestialCrewCounts(situations)
 std::map<CelestialBody*, int> CelestialCrewCounts(const std::vector<Vessel::Situations>& situations);
 // :193 GetNextUnreached(count, manned, where) and :237 (manned = ANY)

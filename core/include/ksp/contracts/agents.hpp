@@ -28,12 +28,12 @@ enum class KeywordScore : int { Ignore = -2147483647 - 1, NegativeHigh = -2, Neg
 // AgentStanding.cs:5
 class AgentStanding {
 public:
-    AgentStanding(Agent* parentAgent, std::string agentName, float standing);  // :17
-    const std::string& AgentName() const { return agentName_; }                // :11
-    Agent* ParentAgent() const { return parentAgent_; }                         // :12
-    Agent* GetAgent() const { return agent_; }                                  // :13
-    float Standing() const { return standing_; }                                // :14
-    bool Link();                                                                // :24
+    AgentStanding(Agent* parentAgent, std::string agentName, float standing);  // :27
+    const std::string& AgentName() const { return agentName_; }                // :19
+    Agent* ParentAgent() const { return parentAgent_; }                         // :21
+    Agent* GetAgent() const { return agent_; }                                  // (C++ addition)
+    float Standing() const { return standing_; }                                // :25
+    bool Link();                                                                // :34
 
 private:
     std::string agentName_;
@@ -47,30 +47,30 @@ class AgentMentality {
 public:
     virtual ~AgentMentality() = default;
     virtual std::string TypeName() const = 0;     // GetType().Name
-    Agent* GetAgent() const { return agent; }     // :14
-    float Factor() const { return factor; }       // :16
-    std::string Description() { return GetDescription(); }   // :18
-    std::string DisplayName() { return GetDisplayName(); }   // :20
-    virtual std::string GetDescription() { return std::string(); }  // :49 (null)
-    virtual std::string GetDisplayName() { return TypeName(); }     // :54
-    virtual KeywordScore ScoreKeyword(const std::string& keyword) { (void)keyword; return KeywordScore::None; }  // :59
-    virtual bool CanProcessContract(Contract& contract) { (void)contract; return true; }   // :64
-    virtual void ProcessContract(Contract& contract) { (void)contract; }                    // :69
-    virtual void OnAdded() {}                                                                // :73
+    Agent* GetAgent() const { return agent; }     // (C++ addition)
+    float Factor() const { return factor; }       // :19
+    std::string Description() { return GetDescription(); }   // :21
+    std::string DisplayName() { return GetDisplayName(); }   // :23
+    virtual std::string GetDescription() { return std::string(); }  // :62 (null)
+    virtual std::string GetDisplayName() { return TypeName(); }     // :67
+    virtual KeywordScore ScoreKeyword(const std::string& keyword) { (void)keyword; return KeywordScore::None; }  // :72
+    virtual bool CanProcessContract(Contract& contract) { (void)contract; return true; }   // :77
+    virtual void ProcessContract(Contract& contract) { (void)contract; }                    // :82
+    virtual void OnAdded() {}                                                                // :86
     // :77 AddMentality: nullptr when the type name is unknown or the agent already has that type
     static AgentMentality* AddMentality(Agent& agent, const std::string& mentalityName, float factor);
     // the registered mentality type names (AssemblyLoader order is the registration order)
     static const std::vector<std::string>& MentalityTypeNames();
 
     // :104-:174 the Factor* helpers
-    void FactorFundsAdvance(Contract& contract, bool positive);           // :104
-    void FactorFundsCompletion(Contract& contract, bool positive);        // :114
-    void FactorFundsFailure(Contract& contract, bool positive);           // :124
-    void FactorScienceCompletion(Contract& contract, bool positive);      // :134
-    void FactorReputationCompletion(Contract& contract, bool positive);   // :144
-    void FactorReputationFailure(Contract& contract, bool positive);      // :154
-    void FactorDeadline(Contract& contract, bool positive);               // :164
-    void FactorExpiry(Contract& contract, bool positive);                 // :174
+    void FactorFundsAdvance(Contract& contract, bool positive);           // :122
+    void FactorFundsCompletion(Contract& contract, bool positive);        // :132
+    void FactorFundsFailure(Contract& contract, bool positive);           // :142
+    void FactorScienceCompletion(Contract& contract, bool positive);      // :152
+    void FactorReputationCompletion(Contract& contract, bool positive);   // :162
+    void FactorReputationFailure(Contract& contract, bool positive);      // :172
+    void FactorDeadline(Contract& contract, bool positive);               // :182
+    void FactorExpiry(Contract& contract, bool positive);                 // :192
 
     Agent* agent = nullptr;  // :12
     float factor = 0.0f;     // :15
@@ -79,23 +79,23 @@ public:
 // Agent.cs:7
 class Agent {
 public:
-    Agent(std::string name, std::string title, std::string logoURL, const char* logoScaledURL);  // :88
-    const std::string& Name() const { return name_; }                 // :43
-    const std::string& Title() const { return title_; }               // :45
-    const std::string& Description() const { return description_; }   // :47
-    std::string DescriptionRich();                                    // :49
-    const std::string& LogoURL() const { return logoURL_; }           // :78
-    std::vector<std::unique_ptr<AgentMentality>>& Mentality() { return mentality_; }  // :84
-    std::vector<AgentStanding>& Standings() { return standings_; }    // :86
-    bool CanProcessContract(Contract& contract);                      // :127
+    Agent(std::string name, std::string title, std::string logoURL, const char* logoScaledURL);  // :79
+    const std::string& Name() const { return name_; }                 // :34
+    const std::string& Title() const { return title_; }               // :36
+    const std::string& Description() const { return description_; }   // :38
+    std::string DescriptionRich();                                    // :40
+    const std::string& LogoURL() const { return logoURL_; }           // :69
+    std::vector<std::unique_ptr<AgentMentality>>& Mentality() { return mentality_; }  // :75
+    std::vector<AgentStanding>& Standings() { return standings_; }    // :77
+    bool CanProcessContract(Contract& contract);                      // :121
     int ScoreAgentSuitability(Contract& contract);                    // :165
-    bool ProcessContract(Contract& contract);                         // :183
-    std::string GetMindsetString();                                   // :201
+    bool ProcessContract(Contract& contract);                         // :182
+    std::string GetMindsetString();                                   // :199
     // :212 LoadAgent: nullptr when invalid (errors are logged)
     static std::unique_ptr<Agent> LoadAgent(ConfigNode& node);
 
 private:
-    bool HasExclusiveKeywords(Contract& contract);                    // :148
+    bool HasExclusiveKeywords(Contract& contract);                    // :145
     std::string name_;
     std::string title_;
     std::string description_;
@@ -107,25 +107,25 @@ private:
 // AgentList.cs:7
 class AgentList {
 public:
-    AgentList();                                  // :27 Awake: Instance = this
-    ~AgentList();                                 // :37 OnDestroy
-    static inline AgentList* Instance = nullptr;  // :21
+    AgentList();                                  // (C++ addition) Awake: Instance = this
+    ~AgentList();                                 // (C++ addition) OnDestroy
+    static inline AgentList* Instance = nullptr;  // :24
     int LogoWidth() const { return logoWidth_; }
     int LogoHeight() const { return logoHeight_; }
-    std::vector<std::unique_ptr<Agent>>& Agencies() { return agencies_; }  // :23
-    void Start();                                 // :32: GameDatabase.Instance.GetConfigNodes("AGENT") -> LoadAgents
-    void LoadAgents(const std::vector<ConfigNode*>& nodes);   // :44
-    Agent* GetAgent(const std::string& name);                 // :81
-    Agent* GetAgentbyTitle(const std::string& title);         // :100
-    Agent* GetAgentRandom();                                  // :118
-    Agent* GetSuitableAgentForContract(Contract& contract);   // :123
-    Agent* GetPartManufacturer(const std::string& manufacturer);  // :152 (AvailablePart.manufacturer)
+    std::vector<std::unique_ptr<Agent>>& Agencies() { return agencies_; }  // :26
+    void Start();                                 // :33: GameDatabase.Instance.GetConfigNodes("AGENT") -> LoadAgents
+    void LoadAgents(const std::vector<ConfigNode*>& nodes);   // :47
+    Agent* GetAgent(const std::string& name);                 // :77
+    Agent* GetAgentbyTitle(const std::string& title);         // :97
+    Agent* GetAgentRandom();                                  // :117
+    Agent* GetSuitableAgentForContract(Contract& contract);   // :122
+    Agent* GetPartManufacturer(const std::string& manufacturer);  // :148 (AvailablePart.manufacturer)
 
 private:
     int logoWidth_ = 64;
     int logoHeight_ = 40;
     std::vector<std::unique_ptr<Agent>> agencies_;
-    static inline int suitabilityFactor = 2;      // :19
+    static inline int suitabilityFactor = 2;      // :18
 };
 
 }  // namespace ksp::Contracts::Agents

@@ -66,7 +66,7 @@ void TemplateEnvironment::Reset() {
     grandTourAccepted = nullptr;
 }
 
-// RecoverAsset.cs:105
+// RecoverAsset.cs:120
 RecoverAsset::RecoverAsset() {
     static const char* kerbalTags[10] = {"#autoLOC_6100036", "#autoLOC_6100037", "#autoLOC_6100038", "#autoLOC_6100039", "#autoLOC_6100040",
                                          "#autoLOC_6100041", "#autoLOC_6100042", "#autoLOC_6100043", "#autoLOC_6100044", "#autoLOC_6100045"};
@@ -75,7 +75,7 @@ RecoverAsset::RecoverAsset() {
     for (int i = 0; i < 6; ++i) DescriptionStrings[i] = Localizer::Format(partTags[i]);
 }
 
-// RecoverAsset.cs:52
+// RecoverAsset.cs:57
 bool RecoverAsset::PartIsValid() const {
     if (partName != "kerbalEVA" && partName != "kerbalEVAfemale" && partName != "kerbalEVAVintage" && partName != "kerbalEVAfemaleVintage") {
         const auto& get = SaveEnvironment::Current().getPartInfoByName;
@@ -84,23 +84,23 @@ bool RecoverAsset::PartIsValid() const {
     return false;
 }
 
-// RecoverAsset.cs:63
+// RecoverAsset.cs:93
 std::string RecoverAsset::VesselDescription() {
     KSPRandom kSPRandom(MissionSeed());
     if (RecoveringKerbal()) return RecoveringKerbalDescriptionStrings[kSPRandom.Next(0, 10)];
     return DescriptionStrings[kSPRandom.Next(0, 6)];
 }
 
-// RecoverAsset.cs:78
+// RecoverAsset.cs:106
 std::string RecoverAsset::VesselName() {
     if (!RecoveringKerbal()) return Fmt("#autoLOC_6100053", {VesselDescription(), SU::AlphaNumericDesignation(MissionSeed())});
     return Fmt("#autoLOC_6100052", {SU::ShortKerbalName(recoveryKerbal->nameWithGender()), VesselDescription()});
 }
 
-// RecoverAsset.cs:99
+// RecoverAsset.cs:118
 std::shared_ptr<ProtoCrewMember> RecoverAsset::ProtoKerbal() { return (*CurrentGame()->CrewRoster)[recoveryKerbal->name().value_or(std::string())]; }
 
-// RecoverAsset.cs:127
+// RecoverAsset.cs:140
 bool RecoverAsset::Generate() {
     int num = 0;
     int num2 = 0;
@@ -153,7 +153,7 @@ bool RecoverAsset::Generate() {
     return false;
 }
 
-// RecoverAsset.cs:200
+// RecoverAsset.cs:207
 void RecoverAsset::OnAccepted() {
     if (RecoveringKerbal()) {
         GetParameterT<Parameters::AcquireCrew>()->AddKerbal(recoveryKerbal->name().value_or(std::string()));
@@ -166,7 +166,7 @@ void RecoverAsset::OnAccepted() {
     }
 }
 
-// RecoverAsset.cs:221
+// RecoverAsset.cs:229
 void RecoverAsset::OnParameterStateChange(ContractParameter* p) {
     if (p->State() == ParameterState::Complete) {
         if (RecoveringKerbal()) {
@@ -186,10 +186,10 @@ void RecoverAsset::OnParameterStateChange(ContractParameter* p) {
     Contract::OnParameterStateChange(p);
 }
 
-// RecoverAsset.cs:255
+// RecoverAsset.cs:258
 std::string RecoverAsset::GetHashString() { return dotnet::FormatInt64(Lite::SuperSeed(*this)); }
 
-// RecoverAsset.cs:260
+// RecoverAsset.cs:263
 std::string RecoverAsset::GetTitle() {
     const std::string text = (recoveryKerbal != nullptr) ? SU::ShortKerbalName(recoveryKerbal->nameWithGender()) : std::string();
     switch (recoveryType) {
@@ -205,7 +205,7 @@ std::string RecoverAsset::GetTitle() {
     }
 }
 
-// RecoverAsset.cs:302
+// RecoverAsset.cs:298
 std::string RecoverAsset::GetDescription() {
     if (RecoveringKerbal())
         return TextGen::GenerateBackStories(TypeName(), Agent()->Title(), SU::ShortKerbalName(recoveryKerbal->nameWithGender()), "RecoverKerbal", MissionSeed(), true, false, true);
@@ -213,7 +213,7 @@ std::string RecoverAsset::GetDescription() {
     return TextGen::GenerateBackStories(TypeName(), Agent()->Title(), Planetarium::fetch->Home->displayName(), "Kerbal", MissionSeed(), true, false, true);
 }
 
-// RecoverAsset.cs:316
+// RecoverAsset.cs:311
 std::string RecoverAsset::GetSynopsys() {
     const std::string home = Planetarium::fetch->Home->displayName();
     switch (recoveryType) {
@@ -243,7 +243,7 @@ std::string RecoverAsset::GetSynopsys() {
     }
 }
 
-// RecoverAsset.cs:374
+// RecoverAsset.cs:366
 std::string RecoverAsset::GetNotes() {
     if (RecoveringPart()) {
         const auto& get = SaveEnvironment::Current().getPartInfoByName;
@@ -260,7 +260,7 @@ std::string RecoverAsset::GetNotes() {
     return std::string();
 }
 
-// RecoverAsset.cs:392
+// RecoverAsset.cs:385
 std::string RecoverAsset::MessageCompleted() {
     switch (recoveryType) {
         default: return Fmt("#autoLOC_6001092", {SU::ShortKerbalName(recoveryKerbal->nameWithGender()), ToLower(VesselDescription())});
@@ -269,7 +269,7 @@ std::string RecoverAsset::MessageCompleted() {
     }
 }
 
-// RecoverAsset.cs:405
+// RecoverAsset.cs:398
 std::string RecoverAsset::MessageFailed() {
     ContractParameter* parameter = GetParameterT<Parameters::AcquireCrew>();
     ContractParameter* parameter2 = GetParameterT<Parameters::AcquirePart>();
@@ -305,7 +305,7 @@ std::string RecoverAsset::MessageDeadlineExpired() {
     }
 }
 
-// RecoverAsset.cs:466
+// RecoverAsset.cs:463
 void RecoverAsset::OnLoad(ConfigNode& node) {
     std::string value = "Jebediah Kerman";
     targetBody = Planetarium::fetch->Home;
@@ -323,7 +323,7 @@ void RecoverAsset::OnLoad(ConfigNode& node) {
     recoveryKerbal = (*CurrentGame()->CrewRoster)[value];
 }
 
-// RecoverAsset.cs:479
+// RecoverAsset.cs:475
 void RecoverAsset::OnSave(ConfigNode& node) {
     const std::string value = (recoveryKerbal != nullptr) ? recoveryKerbal->name().value_or(std::string()) : std::string("Jebediah Kerman");
     node.AddValue("targetBody", static_cast<int32_t>(targetBody->flightGlobalsIndex));
@@ -334,7 +334,7 @@ void RecoverAsset::OnSave(ConfigNode& node) {
     node.AddValue("recoveryType", static_cast<int32_t>(recoveryType));
 }
 
-// RecoverAsset.cs:490
+// RecoverAsset.cs:486
 bool RecoverAsset::MeetRequirements() {
     if (ProgressTracking::Instance() == nullptr) return state == State::Active;
     if (!ProgressTracking::Instance()->NodeComplete({"ReachedSpace"})) return false;
@@ -345,7 +345,7 @@ bool RecoverAsset::MeetRequirements() {
     return true;
 }
 
-// RecoverAsset.cs:522
+// RecoverAsset.cs:512
 void RecoverAsset::Cleanup() {
     if (RecoveringKerbal()) {
         std::shared_ptr<ProtoCrewMember> protoKerbal = ProtoKerbal();
@@ -356,7 +356,7 @@ void RecoverAsset::Cleanup() {
     if (TemplateEnvironment::destroyUnownedVesselsWithPart) TemplateEnvironment::destroyUnownedVesselsWithPart(partID);
 }
 
-// RecoverAsset.cs:588
+// RecoverAsset.cs:599
 bool RecoverAsset::Initialize() {
     KSPRandom kSPRandom(MissionSeed());
     const bool flag = GameVariables::Instance->UnlockedEVA(ScenarioUpgradeableFacilities::GetFacilityLevel(SpaceCenterFacility::AstronautComplex));
@@ -379,7 +379,7 @@ bool RecoverAsset::Initialize() {
     return true;
 }
 
-// RecoverAsset.cs:630
+// RecoverAsset.cs:636
 void RecoverAsset::ChooseLocation(KSPRandom* generator) {
     std::unique_ptr<KSPRandom> own;
     if (generator == nullptr) {
@@ -413,7 +413,7 @@ void RecoverAsset::ChooseLocation(KSPRandom* generator) {
     }
 }
 
-// RecoverAsset.cs:684
+// RecoverAsset.cs:679
 std::string RecoverAsset::ChooseVesselType(KSPRandom* generator) {
     std::unique_ptr<KSPRandom> own;
     if (generator == nullptr) {
@@ -453,7 +453,7 @@ bool RecoverAsset::AcceptablePart(Part* p) {
     return false;
 }
 
-// RecoverAsset.cs:833
+// RecoverAsset.cs:846
 bool RecoverAsset::PartHasSeats(const std::string& part) {
     if (TemplateEnvironment::partHasSeats) return TemplateEnvironment::partHasSeats(part);
     const auto& get = SaveEnvironment::Current().getPartInfoByName;
@@ -461,7 +461,7 @@ bool RecoverAsset::PartHasSeats(const std::string& part) {
     return info != nullptr && info->partPrefab != nullptr && info->partPrefab->fields.CrewCapacity > 0;
 }
 
-// RecoverAsset.cs:887
+// RecoverAsset.cs:925
 float RecoverAsset::GetMultiplier() {
     if (recoveryType == RecoveryType::NONE) return 1.0f;
     if (recoveryLocation == RecoveryLocation::SURFACE) {
@@ -480,7 +480,7 @@ float RecoverAsset::GetMultiplier() {
     }
 }
 
-// RecoverAsset.cs:913
+// RecoverAsset.cs:956
 void RecoverAsset::CheckComplete() {
     auto* parameter = GetParameterT<Parameters::RecoverKerbal>();
     auto* parameter2 = GetParameterT<Parameters::RecoverPart>();
@@ -491,7 +491,7 @@ void RecoverAsset::CheckComplete() {
         Complete();
 }
 
-// RecoverAsset.cs:960
+// RecoverAsset.cs:998
 void RecoverAsset::DiscoverAsset(Vessel* v) {
     if (RecoveringKerbal()) {
         std::shared_ptr<ProtoCrewMember> protoKerbal = ProtoKerbal();

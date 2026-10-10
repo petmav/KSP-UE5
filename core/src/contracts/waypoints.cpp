@@ -69,7 +69,7 @@ void ScenarioCustomWaypoints::OnDestroy() {
 // ScenarioCustomWaypoints.cs:48
 void ScenarioCustomWaypoints::AddWaypoint(FinePrint::Waypoint* waypoint) { AddWaypoint(waypoint, false); }
 
-// ScenarioCustomWaypoints.cs:53
+// ScenarioCustomWaypoints.cs:50
 void ScenarioCustomWaypoints::AddWaypoint(FinePrint::Waypoint* waypoint, bool isMission) {
     if (!(Instance == nullptr)) {
         ProcessWaypoint(waypoint);
@@ -91,7 +91,7 @@ void ScenarioCustomWaypoints::RemoveWaypoint(FinePrint::Waypoint* waypoint) {
     }
 }
 
-// ScenarioCustomWaypoints.cs:77
+// ScenarioCustomWaypoints.cs:74
 void ScenarioCustomWaypoints::ProcessWaypoint(FinePrint::Waypoint* waypoint) {
     waypoint->seed = StringExtensions::GetHashCode_Net35(waypoint->name);
     waypoint->id = "custom";

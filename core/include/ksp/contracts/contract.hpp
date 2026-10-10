@@ -57,14 +57,14 @@ public:
     virtual int ParameterCount() const = 0;                            // :13
     // :19 (the host takes ownership)
     virtual ContractParameter* AddParameter(std::unique_ptr<ContractParameter> parameter, const std::string& id = std::string()) = 0;
-    virtual ContractParameter* GetParameter(int index) = 0;            // :21
+    virtual ContractParameter* GetParameter(int index) = 0;            // :23
     virtual ContractParameter* GetParameter(const std::string& id) = 0;  // :23
-    virtual ContractParameter* GetParameterOfType(const std::string& typeName) = 0;  // :25 GetParameter(Type)
-    virtual void RemoveParameter(int index) = 0;                       // :29
+    virtual ContractParameter* GetParameterOfType(const std::string& typeName) = 0;  // (C++ addition) GetParameter(Type)
+    virtual void RemoveParameter(int index) = 0;                       // :31
     virtual void RemoveParameter(const std::string& id) = 0;           // :31
-    virtual void RemoveParameterOfType(const std::string& typeName) = 0;  // :33
+    virtual void RemoveParameterOfType(const std::string& typeName) = 0;  // (C++ addition)
     virtual void RemoveParameter(ContractParameter* parameter) = 0;    // :35
-    virtual void ParameterStateUpdate(ContractParameter* p) = 0;       // :37
+    virtual void ParameterStateUpdate(ContractParameter* p) = 0;       // :39
 };
 
 // ContractParameter.cs:9
@@ -78,44 +78,44 @@ public:
     // GetType().Name
     virtual std::string TypeName() const { return "ContractParameter"; }
 
-    double FundsCompletion = 0.0;                 // :31
-    double FundsFailure = 0.0;                    // :33
-    float ScienceCompletion = 0.0f;               // :35
-    float ReputationCompletion = 0.0f;            // :37
-    float ReputationFailure = 0.0f;               // :39
-    events::EventData<ContractParameter*, ParameterState> OnStateChange{"OnStateChange"};  // :41
+    double FundsCompletion = 0.0;                 // :37
+    double FundsFailure = 0.0;                    // :39
+    float ScienceCompletion = 0.0f;               // :41
+    float ReputationCompletion = 0.0f;            // :43
+    float ReputationFailure = 0.0f;               // :45
+    events::EventData<ContractParameter*, ParameterState> OnStateChange{"OnStateChange"};  // :47
 
-    IContractParameterHost* Parent() override { return parent_; }   // :43
-    Contract* Root() override { return root_; }                      // :45
-    ParameterState State() const { return state; }                   // :47
-    const std::string& ID() const { return id; }                     // :49
+    IContractParameterHost* Parent() override { return parent_; }   // :49
+    Contract* Root() override { return root_; }                      // :51
+    ParameterState State() const { return state; }                   // :53
+    const std::string& ID() const { return id; }                     // :55
     void SetID(const std::string& v) { id = v; }
-    bool DisableOnStateChange() const { return disableOnStateChange; }  // :63
+    bool DisableOnStateChange() const { return disableOnStateChange; }  // :67
     void SetDisableOnStateChange(bool v) { disableOnStateChange = v; }
-    bool Optional() const { return optional; }                       // :77
+    bool Optional() const { return optional; }                       // :79
     void SetOptional(bool v) { optional = v; }
     bool AllowPartialFailure() const { return allowPartialFailure; } // :91
     void SetAllowPartialFailure(bool v) { allowPartialFailure = v; }
-    bool Enabled() const { return enabled; }                          // :105
-    void SetEnabled(bool value);                                      // :105 setter
-    int ParameterCount() const override { return static_cast<int>(parameters_.size()); }  // :121
-    std::string HashString();                                         // :127
-    std::string Title() override { return GetTitle(); }               // :144
-    std::string Notes() { return GetNotes(); }                        // :146
-    std::string MessageComplete() { return GetMessageComplete(); }    // :148
-    std::string MessageFailed() { return GetMessageFailed(); }        // :150
-    std::string MessageIncomplete() { return GetMessageIncomplete(); }  // :152
+    bool Enabled() const { return enabled; }                          // :103
+    void SetEnabled(bool value);                                      // (C++ addition) setter
+    int ParameterCount() const override { return static_cast<int>(parameters_.size()); }  // :122
+    std::string HashString();                                         // :130
+    std::string Title() override { return GetTitle(); }               // :149
+    std::string Notes() { return GetNotes(); }                        // :151
+    std::string MessageComplete() { return GetMessageComplete(); }    // :153
+    std::string MessageFailed() { return GetMessageFailed(); }        // :155
+    std::string MessageIncomplete() { return GetMessageIncomplete(); }  // :157
     // :154 AllParameters: this, then the children depth first
     void AllParameters(std::vector<ContractParameter*>& out);
 
-    void NestToParent(IContractParameterHost* parent);                // :171
-    void Enable();                                                    // :177
-    void Disable(bool recursive = false);                             // :187
-    void ParameterStateUpdate(ContractParameter* p) override;         // :205
-    ContractParameter* AddParameter(std::unique_ptr<ContractParameter> parameter, const std::string& id = std::string()) override;  // :212
-    ContractParameter* GetParameter(int index) override;              // :223
-    ContractParameter* GetParameter(const std::string& id) override;  // :228
-    ContractParameter* GetParameterOfType(const std::string& typeName) override;  // :247
+    void NestToParent(IContractParameterHost* parent);                // :179
+    void Enable();                                                    // :185
+    void Disable(bool recursive = false);                             // :194
+    void ParameterStateUpdate(ContractParameter* p) override;         // :212
+    ContractParameter* AddParameter(std::unique_ptr<ContractParameter> parameter, const std::string& id = std::string()) override;  // :219
+    ContractParameter* GetParameter(int index) override;              // :230
+    ContractParameter* GetParameter(const std::string& id) override;  // :230
+    ContractParameter* GetParameterOfType(const std::string& typeName) override;  // (C++ addition)
     // :266 GetParameter<T>(id = null): the first child with this id that is a T
     template <class T>
     T* GetParameterT(const std::string& id = std::string()) {
@@ -123,61 +123,61 @@ public:
             if (p->ID() == id && dynamic_cast<T*>(p.get()) != nullptr) return static_cast<T*>(p.get());
         return nullptr;
     }
-    void RemoveParameter(int index) override;                         // :288
-    void RemoveParameter(const std::string& id) override;             // :293
-    void RemoveParameterOfType(const std::string& typeName) override;  // :312
-    void RemoveParameter(ContractParameter* parameter) override;      // :331
-    virtual void OnParameterStateChange(ContractParameter* p) { (void)p; }  // :336
-    bool AllChildParametersComplete();                                // :340
-    bool AnyChildParametersFailed();                                  // :354
-    void SetFunds(float completion, CelestialBody* body = nullptr);   // :368
-    void SetFunds(float completion, float failure, CelestialBody* body = nullptr);  // :378
-    void SetReputation(float completion, float failure, CelestialBody* body = nullptr);  // :389
-    void SetReputation(float completion, CelestialBody* body = nullptr);  // :399
-    void SetScience(float completion, CelestialBody* body = nullptr);  // :408
+    void RemoveParameter(int index) override;                         // :295
+    void RemoveParameter(const std::string& id) override;             // :295
+    void RemoveParameterOfType(const std::string& typeName) override;  // (C++ addition)
+    void RemoveParameter(ContractParameter* parameter) override;      // :340
+    virtual void OnParameterStateChange(ContractParameter* p) { (void)p; }  // :345
+    bool AllChildParametersComplete();                                // :349
+    bool AnyChildParametersFailed();                                  // :363
+    void SetFunds(float completion, CelestialBody* body = nullptr);   // :377
+    void SetFunds(float completion, float failure, CelestialBody* body = nullptr);  // :377
+    void SetReputation(float completion, float failure, CelestialBody* body = nullptr);  // :398
+    void SetReputation(float completion, CelestialBody* body = nullptr);  // :398
+    void SetScience(float completion, CelestialBody* body = nullptr);  // :419
 
-    virtual void AwardCompletion();                                   // :423
-    virtual void PenalizeFailure();                                   // :466
-    void Load(ConfigNode& node);                                      // :512
-    void Save(ConfigNode& node);                                      // :578
-    void Register();                                                  // :614
-    void Unregister();                                                // :627
-    void Update();                                                    // :636
-    void Reset();                                                     // :656
-    long long CreateID();                                             // :784
+    virtual void AwardCompletion();                                   // :434
+    virtual void PenalizeFailure();                                   // :475
+    void Load(ConfigNode& node);                                      // :513
+    void Save(ConfigNode& node);                                      // :576
+    void Register();                                                  // :612
+    void Unregister();                                                // :625
+    void Update();                                                    // :635
+    void Reset();                                                     // :655
+    long long CreateID();                                             // :722
 
     // overridables (protected virtuals of the C# class)
-    virtual std::string GetHashString() { return ""; }                // :676
-    virtual std::string GetTitle();                                   // :681
-    virtual std::string GetNotes() { return ""; }                     // :686 (null)
-    virtual std::string GetMessageComplete();                         // :691
-    virtual std::string GetMessageFailed();                           // :696
-    virtual std::string GetMessageIncomplete();                       // :701
-    virtual void OnLoad(ConfigNode& node) { (void)node; }             // :706
-    virtual void OnSave(ConfigNode& node) { (void)node; }             // :710
-    virtual void OnRegister() {}                                      // :714
-    virtual void OnUnregister() {}                                    // :718
-    virtual void OnUpdate() {}                                        // :722
-    virtual void OnReset() {}                                         // :726
+    virtual std::string GetHashString() { return ""; }                // :668
+    virtual std::string GetTitle();                                   // :673
+    virtual std::string GetNotes() { return ""; }                     // :678 (null)
+    virtual std::string GetMessageComplete();                         // :683
+    virtual std::string GetMessageFailed();                           // :688
+    virtual std::string GetMessageIncomplete();                       // :693
+    virtual void OnLoad(ConfigNode& node) { (void)node; }             // :698
+    virtual void OnSave(ConfigNode& node) { (void)node; }             // :702
+    virtual void OnRegister() {}                                      // :706
+    virtual void OnUnregister() {}                                    // :710
+    virtual void OnUpdate() {}                                        // :714
+    virtual void OnReset() {}                                         // :718
 
-    void SetComplete();                                               // :727
-    void SetIncomplete();                                             // :746
-    void SetFailed();                                                 // :764
-    void SendStateMessage(const std::string& title, const std::string& message);  // :810
+    void SetComplete();                                               // :744
+    void SetIncomplete();                                             // :772
+    void SetFailed();                                                 // :791
+    void SendStateMessage(const std::string& title, const std::string& message);  // :832
 
     // protected fields of the C#
-    ParameterState state = ParameterState::Incomplete;                // :14
-    std::string id;                                                   // :17
-    bool disableOnStateChange = true;                                 // :20
-    bool optional = false;                                            // :23
-    bool allowPartialFailure = false;                                 // :26
-    bool enabled = true;                                              // :28
+    ParameterState state = ParameterState::Incomplete;                // :18
+    std::string id;                                                   // :21
+    bool disableOnStateChange = true;                                 // :24
+    bool optional = false;                                            // :27
+    bool allowPartialFailure = false;                                 // :30
+    bool enabled = true;                                              // :32
 
 private:
-    float GetDestinationWeight(CelestialBody* body);                  // :418
-    IContractParameterHost* parent_ = nullptr;                        // :11
-    Contract* root_ = nullptr;                                        // :13
-    std::vector<std::unique_ptr<ContractParameter>> parameters_;      // :30
+    float GetDestinationWeight(CelestialBody* body);                  // :429
+    IContractParameterHost* parent_ = nullptr;                        // (C++ addition)
+    Contract* root_ = nullptr;                                        // (C++ addition)
+    std::vector<std::unique_ptr<ContractParameter>> parameters_;      // (C++ addition)
 };
 
 // ContractPredicate.cs:7
@@ -185,21 +185,21 @@ class ContractPredicate {
 public:
     explicit ContractPredicate(IContractParameterHost* parent);
     virtual ~ContractPredicate() = default;
-    IContractParameterHost* Parent() const { return parent_; }       // :12
-    Contract* Root() const { return root_; }                          // :15
-    std::string Description() { return GetDescription(); }            // :17
-    bool AllowMultiple() { return GetAllowMultiple(); }               // :19
+    IContractParameterHost* Parent() const { return parent_; }       // :11
+    Contract* Root() const { return root_; }                          // :14
+    std::string Description() { return GetDescription(); }            // :16
+    bool AllowMultiple() { return GetAllowMultiple(); }               // :18
     virtual std::string TypeName() const { return "ContractPredicate"; }
-    void Load(ConfigNode& node) { OnLoad(node); }                     // :28
-    void Save(ConfigNode& node) { OnSave(node); }                     // :33
-    virtual bool Test(Vessel* vessel);                                // :38
-    virtual bool Test(ProtoVessel* vessel);                           // :43
-    void Update() { OnUpdate(); }                                     // :62
-    virtual std::string GetDescription();                             // :48
-    virtual bool GetAllowMultiple() { return false; }                 // :53
-    virtual void OnLoad(ConfigNode& node) { (void)node; }             // :58 (the C# declares OnLoad / OnSave virtual at :58 / :60)
+    void Load(ConfigNode& node) { OnLoad(node); }                     // :26
+    void Save(ConfigNode& node) { OnSave(node); }                     // :31
+    virtual bool Test(Vessel* vessel);                                // :36
+    virtual bool Test(ProtoVessel* vessel);                           // :41
+    void Update() { OnUpdate(); }                                     // :64
+    virtual std::string GetDescription();                             // :46
+    virtual bool GetAllowMultiple() { return false; }                 // :51
+    virtual void OnLoad(ConfigNode& node) { (void)node; }             // :56 (the C# declares OnLoad / OnSave virtual at :58 / :60)
     virtual void OnSave(ConfigNode& node) { (void)node; }
-    virtual void OnUpdate() {}                                        // :67
+    virtual void OnUpdate() {}                                        // :69
 
 protected:
     IContractParameterHost* parent_;
@@ -211,78 +211,78 @@ class Contract : public IContractParameterHost {
 public:
     using ContractPrestige = ksp::ContractPrestige;  // :14 (declared by WP-36 in career_environment.hpp)
 
-    enum class State : int { Generated, Offered, OfferExpired, Declined, Cancelled, Active, Completed, DeadlineExpired, Failed, Withdrawn };  // :27
-    enum class Viewed : int { Unseen, Seen, Read };                  // :52
-    enum class DeadlineType : int { Fixed, Floating, None };          // :60
-    enum class ProgressState : int { Unreached, Reached, Incomplete, Complete };  // :67
+    enum class State : int { Generated, Offered, OfferExpired, Declined, Cancelled, Active, Completed, DeadlineExpired, Failed, Withdrawn };  // :24
+    enum class Viewed : int { Unseen, Seen, Read };                  // :48
+    enum class DeadlineType : int { Fixed, Floating, None };          // :55
+    enum class ProgressState : int { Unreached, Reached, Incomplete, Complete };  // :62
 
     Contract();
     ~Contract() override;
     Contract(const Contract&) = delete;
     Contract& operator=(const Contract&) = delete;
 
-    static inline int contractsInExistance = 0;                       // :149 (private set)
+    static inline int contractsInExistance = 0;                       // :139 (private set)
 
     virtual std::string TypeName() const { return "Contract"; }       // GetType().Name
 
-    double TimeExpiry = 0.0;                                          // :113
-    double TimeDeadline = 0.0;                                        // :115
-    double FundsAdvance = 0.0;                                        // :117
-    double FundsCompletion = 0.0;                                     // :119
-    double FundsFailure = 0.0;                                        // :121
-    float ScienceCompletion = 0.0f;                                   // :123
-    float ReputationCompletion = 0.0f;                                // :125
-    float ReputationFailure = 0.0f;                                   // :127
-    bool AutoAccept = false;                                          // :129
-    bool IgnoresWeight = false;                                       // :131
-    events::EventData<State> OnStateChange{"OnStateChange"};          // :139
-    events::EventData<Viewed> OnViewedChange{"OnViewedChange"};       // :141
+    double TimeExpiry = 0.0;                                          // :108
+    double TimeDeadline = 0.0;                                        // :110
+    double FundsAdvance = 0.0;                                        // :112
+    double FundsCompletion = 0.0;                                     // :114
+    double FundsFailure = 0.0;                                        // :116
+    float ScienceCompletion = 0.0f;                                   // :118
+    float ReputationCompletion = 0.0f;                                // :120
+    float ReputationFailure = 0.0f;                                   // :122
+    bool AutoAccept = false;                                          // :124
+    bool IgnoresWeight = false;                                       // :126
+    events::EventData<State> OnStateChange{"OnStateChange"};          // :135
+    events::EventData<Viewed> OnViewedChange{"OnViewedChange"};       // :137
 
-    ContractPrestige Prestige() const { return prestige; }            // :151
-    std::string Title() override { return GetTitle(); }               // :153
-    std::string Synopsys() { return GetSynopsys(); }                  // :155
-    std::string Description() { return GetDescription(); }            // :157
-    std::string Notes() { return GetNotes(); }                        // :159
-    Agents::Agent* Agent() const { return agent; }                    // :161
-    State ContractState() const { return state; }                     // :163
-    std::string LocalizedContractState() const;                       // :165
-    Viewed ContractViewed() const { return viewed; }                  // :167
-    double DateExpire() const { return dateExpire; }                  // :169
-    double DateAccepted() const { return dateAccepted; }              // :171
-    double DateDeadline() const { return dateDeadline; }              // :173
-    double DateFinished() const { return dateFinished; }              // :175
-    long long ContractID() const { return contractID; }               // :177
-    const Guid& ContractGuid() const { return contractGuid; }         // :179
-    int MissionSeed() const { return missionSeed; }                   // :181
-    std::vector<std::string>& Keywords() { return keywords; }         // :183
-    std::vector<std::string>& KeywordsRequired() { return keywordsRequired; }  // :185
-    IContractParameterHost* Parent() override { return nullptr; }     // :187
-    Contract* Root() override { return this; }                        // :189
-    int ParameterCount() const override { return static_cast<int>(parameters_.size()); }  // :191
+    ContractPrestige Prestige() const { return prestige; }            // :141
+    std::string Title() override { return GetTitle(); }               // :143
+    std::string Synopsys() { return GetSynopsys(); }                  // :145
+    std::string Description() { return GetDescription(); }            // :155
+    std::string Notes() { return GetNotes(); }                        // :149
+    Agents::Agent* Agent() const { return agent; }                    // :151
+    State ContractState() const { return state; }                     // :153
+    std::string LocalizedContractState() const;                       // :155
+    Viewed ContractViewed() const { return viewed; }                  // :157
+    double DateExpire() const { return dateExpire; }                  // :159
+    double DateAccepted() const { return dateAccepted; }              // :161
+    double DateDeadline() const { return dateDeadline; }              // :163
+    double DateFinished() const { return dateFinished; }              // :165
+    long long ContractID() const { return contractID; }               // :167
+    const Guid& ContractGuid() const { return contractGuid; }         // :169
+    int MissionSeed() const { return missionSeed; }                   // :171
+    std::vector<std::string>& Keywords() { return keywords; }         // :173
+    std::vector<std::string>& KeywordsRequired() { return keywordsRequired; }  // :175
+    IContractParameterHost* Parent() override { return nullptr; }     // :177
+    Contract* Root() override { return this; }                        // :179
+    int ParameterCount() const override { return static_cast<int>(parameters_.size()); }  // :181
     // :199 AllParameters: the parameters' trees depth first (each parameter first, then its children)
     void AllParameters(std::vector<ContractParameter*>& out);
-    static double GameTime();                                         // :218
+    static double GameTime();                                         // :208
 
     // :237 / :242 / :247 (UnityEngine.Random draws on the process-wide generator)
     void SetExpiry();
     void SetExpiry(int minDays, int maxDays);
     void SetExpiry(float minDays, float maxDays);
-    void SetDeadlineDays(float days, CelestialBody* body = nullptr);   // :252
-    void SetDeadlineYears(float years, CelestialBody* body = nullptr); // :262
-    void SetFunds(float advance, float completion, CelestialBody* body = nullptr);  // :272
-    void SetFunds(float advance, float completion, float failure, CelestialBody* body = nullptr);  // :283
-    void SetReputation(float completion, float failure, CelestialBody* body = nullptr);  // :294
-    void SetReputation(float completion, CelestialBody* body = nullptr);  // :304
-    void SetScience(float completion, CelestialBody* body = nullptr); // :313
-    float GetDestinationWeight(CelestialBody* body);                  // :323
-    bool AddKeywords(const std::vector<std::string>& keywords);       // :328
-    bool AddKeywordsRequired(const std::vector<std::string>& keywords);  // :353
+    void SetDeadlineDays(float days, CelestialBody* body = nullptr);   // :245
+    void SetDeadlineYears(float years, CelestialBody* body = nullptr); // :255
+    void SetFunds(float advance, float completion, CelestialBody* body = nullptr);  // :277
+    void SetFunds(float advance, float completion, float failure, CelestialBody* body = nullptr);  // :277
+    void SetReputation(float completion, float failure, CelestialBody* body = nullptr);  // :289
+    void SetReputation(float completion, CelestialBody* body = nullptr);  // :300
+    void SetScience(float completion, CelestialBody* body = nullptr); // :310
+    float GetDestinationWeight(CelestialBody* body);                  // :320
+    bool AddKeywords(const std::vector<std::string>& keywords);       // :325
+    bool AddKeywordsRequired(const std::vector<std::string>& keywords);  // :350
 
-    ContractParameter* AddParameter(std::unique_ptr<ContractParameter> parameter, const std::string& id = std::string()) override;  // :378
-    void ParameterStateUpdate(ContractParameter* p) override { OnParameterStateChange(p); }  // :388
-    ContractParameter* GetParameter(int index) override;              // :393
-    ContractParameter* GetParameter(const std::string& id) override;  // :398
-    ContractParameter* GetParameterOfType(const std::string& typeName) override;  // :415
+    ContractParameter* AddParameter(std::unique_ptr<ContractParameter> parameter, const std::string& id = std::string()) override;  // :375
+    void ParameterStateUpdate(ContractParameter* p) override { OnParameterStateChange(p); }  // :386
+    ContractParameter* GetParameter(int index) override;              // :391
+    ContractParameter* GetParameter(const std::string& id) override;  // :396
+    ContractParameter* GetParameterOfType(const std::string& typeName) override;  // (C++ addition)
     // :432 GetParameter<T>(id = null): id null = the first T
     template <class T>
     T* GetParameterT(const std::optional<std::string>& id = std::nullopt) {
@@ -294,33 +294,33 @@ public:
         }
         return nullptr;
     }
-    void RemoveParameter(int index) override;                         // :456
-    void RemoveParameter(const std::string& id) override;             // :461
-    void RemoveParameterOfType(const std::string& typeName) override;  // :480
-    void RemoveParameter(ContractParameter* parameter) override;      // :499
-    virtual void OnParameterStateChange(ContractParameter* p);        // :505
-    virtual bool CanBeCancelled() { return true; }                    // :554
-    virtual bool CanBeDeclined() { return true; }                     // :559
-    virtual bool CanBeFailed() { return true; }                       // :564
-    virtual bool MeetRequirements() { return false; }                 // :569
-    virtual std::vector<CelestialBody*>* GetWeightBodies() { return nullptr; }  // :574 (a fresh list in the C#; the pointer is owned by the caller: see WeightBodies())
+    void RemoveParameter(int index) override;                         // :463
+    void RemoveParameter(const std::string& id) override;             // :463
+    void RemoveParameterOfType(const std::string& typeName) override;  // (C++ addition)
+    void RemoveParameter(ContractParameter* parameter) override;      // :489
+    virtual void OnParameterStateChange(ContractParameter* p);        // :516
+    virtual bool CanBeCancelled() { return true; }                    // :572
+    virtual bool CanBeDeclined() { return true; }                     // :577
+    virtual bool CanBeFailed() { return true; }                       // :582
+    virtual bool MeetRequirements() { return false; }                 // :587
+    virtual std::vector<CelestialBody*>* GetWeightBodies() { return nullptr; }  // :592 (a fresh list in the C#; the pointer is owned by the caller: see WeightBodies())
     virtual std::vector<CelestialBody*> WeightBodies() { return {}; }  // GetWeightBodies() result; empty + hasWeightBodies=false = null
     virtual bool HasWeightBodies() { return false; }
-    virtual std::string GetSynopsys() { return ""; }                  // :579
-    virtual std::string GetDescription() { return ""; }               // :584
-    virtual std::string GetTitle() { return ""; }                     // :589 (null)
-    virtual std::string GetNotes() { return ""; }                     // :594 (null)
-    virtual bool Generate() { return false; }                         // :599
-    virtual void OnRegister() {}                                      // :604
-    virtual void OnUnregister() {}                                    // :608
-    virtual void OnUpdate() {}                                        // :612
-    virtual void OnReset() {}                                         // :616
-    virtual void OnLoad(ConfigNode& node) { (void)node; }             // :620
-    virtual void OnSave(ConfigNode& node) { (void)node; }             // :624
-    virtual void AwardAdvance();                                      // :628
-    virtual void AwardCompletion();                                   // :638
-    virtual void PenalizeCancellation();                              // :664
-    virtual void PenalizeFailure();                                   // :712
+    virtual std::string GetSynopsys() { return ""; }                  // :597
+    virtual std::string GetDescription() { return ""; }               // :602
+    virtual std::string GetTitle() { return ""; }                     // :607 (null)
+    virtual std::string GetNotes() { return ""; }                     // :612 (null)
+    virtual bool Generate() { return false; }                         // :617
+    virtual void OnRegister() {}                                      // :622
+    virtual void OnUnregister() {}                                    // :626
+    virtual void OnUpdate() {}                                        // :630
+    virtual void OnReset() {}                                         // :634
+    virtual void OnLoad(ConfigNode& node) { (void)node; }             // :638
+    virtual void OnSave(ConfigNode& node) { (void)node; }             // :642
+    virtual void AwardAdvance();                                      // :646
+    virtual void AwardCompletion();                                   // :658
+    virtual void PenalizeCancellation();                              // :686
+    virtual void PenalizeFailure();                                   // :714
     virtual void OnOffered() {}                                       // :734
     virtual void OnOfferExpired() {}                                  // :738
     virtual void OnAccepted() {}                                      // :742
@@ -344,34 +344,34 @@ public:
     virtual std::string MessageCompleted();                           // :821
     // mission control rich text (WP-46 GUI seam): "" unless installed through ContractRichText
     virtual std::string MessageAdvances();                            // :826
-    virtual std::string MessageRewards();                             // :857
-    virtual std::string MessageFailurePenalties();                    // :907
-    virtual std::string MessageCancellationPenalties(double fundsPenalty, float repPenalty);  // :951
-    virtual std::string MissionControlTextRich();                     // :993
+    virtual std::string MessageRewards();                             // :853
+    virtual std::string MessageFailurePenalties();                    // :888
+    virtual std::string MessageCancellationPenalties(double fundsPenalty, float repPenalty);  // :919
+    virtual std::string MissionControlTextRich();                     // :950
 
-    void SendStateMessage(const std::string& title, const std::string& message);  // :1181 (colour / icon are GUI)
-    bool Offer();                                                     // :1195
-    bool Accept();                                                    // :1214
-    bool Decline();                                                   // :1229
-    bool Cancel();                                                    // :1247
-    void Update();                                                    // :1259
-    void Reset();                                                     // :1314
-    void Withdraw();                                                  // :1330
-    bool Fail();                                                      // :1338
-    bool Complete();                                                  // :1350
-    void SetState(State newState);                                    // :1363
-    bool IsFinished();                                                // :1470
-    void Register();                                                  // :1477
-    void Unregister();                                                // :1487
-    void Kill();                                                      // :1497
-    void SetViewed(Viewed viewed);                                    // :1505
+    void SendStateMessage(const std::string& title, const std::string& message);  // :1213 (colour / icon are GUI)
+    bool Offer();                                                     // :1222
+    bool Accept();                                                    // :1240
+    bool Decline();                                                   // :1255
+    bool Cancel();                                                    // :1270
+    void Update();                                                    // :1281
+    void Reset();                                                     // :1330
+    void Withdraw();                                                  // :1343
+    bool Fail();                                                      // :1351
+    bool Complete();                                                  // :1362
+    void SetState(State newState);                                    // :1373
+    bool IsFinished();                                                // :1476
+    void Register();                                                  // :1486
+    void Unregister();                                                // :1496
+    void Kill();                                                      // :1506
+    void SetViewed(Viewed viewed);                                    // :1513
 
     // :1531 Generate(Type, difficulty, seed, state): the contract is created through the ContractSystem type table
     static std::unique_ptr<Contract> Generate(const std::string& contractTypeName, ContractPrestige difficulty, int seed, State state);
     // :1566 Load(contract, node)
     static bool Load(Contract& contract, ConfigNode& node);
-    void Save(ConfigNode& node);                                      // :1727
-    void GenerateFailed() { OnGenerateFailed(); }                     // :1773
+    void Save(ConfigNode& node);                                      // :1702
+    void GenerateFailed() { OnGenerateFailed(); }                     // :1734
 
     // :1779-1981 body lists (PSystemManager.Instance.localBodies = SaveEnvironment::Current().localBodies)
     static std::vector<CelestialBody*> GetBodies(bool includeKerbin, bool includeSun);
@@ -389,24 +389,24 @@ public:
     CelestialBody* WeightedBodyChoice(const std::vector<CelestialBody*>& bodies, KSPRandom* generator = nullptr);
 
     // protected fields of the C#
-    ContractPrestige prestige = ContractPrestige::Trivial;           // :80
-    DeadlineType expiryType = DeadlineType::Floating;                 // :83
-    DeadlineType deadlineType = DeadlineType::Floating;               // :86
-    Agents::Agent* agent = nullptr;                                   // :89
-    State state = State::Generated;                                   // :92
-    Viewed viewed = Viewed::Unseen;                                   // :95
-    double dateExpire = 0.0;                                          // :98
-    double dateAccepted = 0.0;                                        // :101
-    double dateDeadline = 0.0;                                        // :104
-    double dateFinished = 0.0;                                        // :107
-    long long contractID = 0;                                         // :110
-    Guid contractGuid;                                                // :112
-    int missionSeed = 0;                                              // :115
+    ContractPrestige prestige = ContractPrestige::Trivial;           // :71
+    DeadlineType expiryType = DeadlineType::Floating;                 // :74
+    DeadlineType deadlineType = DeadlineType::Floating;               // :77
+    Agents::Agent* agent = nullptr;                                   // :80
+    State state = State::Generated;                                   // :83
+    Viewed viewed = Viewed::Unseen;                                   // :86
+    double dateExpire = 0.0;                                          // :89
+    double dateAccepted = 0.0;                                        // :92
+    double dateDeadline = 0.0;                                        // :95
+    double dateFinished = 0.0;                                        // :98
+    long long contractID = 0;                                         // :101
+    Guid contractGuid;                                                // :103
+    int missionSeed = 0;                                              // :106
 
 private:
-    void SetupSeed(int seed = -1);                                    // :1158
-    void SetupID();                                                   // :1172
-    std::string StateMsgAddition(const std::string& addition);       // :1384
+    void SetupSeed(int seed = -1);                                    // :1180
+    void SetupID();                                                   // :1190
+    std::string StateMsgAddition(const std::string& addition);       // :1467
     static void AddBodyNodes(ProgressState nodeState, const std::string& nodeName, std::vector<CelestialBody*>& bodies,
                              KSPAchievements::CelestialBodySubtree* tree, const std::function<bool(CelestialBody*)>& where);
     static void AddBodyTrees(ProgressState bodyState, std::vector<KSPAchievements::CelestialBodySubtree*>& bodies,
@@ -416,9 +416,9 @@ private:
     static void AddNextUnreachedBodyTrees(int& depth, std::vector<KSPAchievements::CelestialBodySubtree*>& bodies,
                                           KSPAchievements::CelestialBodySubtree* tree, const std::function<bool(CelestialBody*)>& where);
 
-    std::vector<std::string> keywords;                                // :133
-    std::vector<std::string> keywordsRequired;                        // :135
-    std::vector<std::unique_ptr<ContractParameter>> parameters_;      // :138
+    std::vector<std::string> keywords;                                // :128
+    std::vector<std::string> keywordsRequired;                        // :130
+    std::vector<std::unique_ptr<ContractParameter>> parameters_;      // (C++ addition)
 };
 
 // Rich-text seam for the mission control texts (WP-46). kind: "advances", "rewards", "failure", "cancellation", "mission".

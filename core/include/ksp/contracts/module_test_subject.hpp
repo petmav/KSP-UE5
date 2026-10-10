@@ -27,8 +27,8 @@ class Part;
 class PartTestConstraint {
 public:
     enum class ConstraintType : int { SPEED, SPEEDENV, ALTITUDE, ALTITUDEENV, DENSITY, DYNAMICPRESSURE, OXYGEN, ATMOSPHERE, SITUATION, REPEATABILITY };  // :8
-    enum class ConstraintTest : int { GT, LT, EQ, NEQ };                                  // :21
-    enum class TestRepeatability : int { ALWAYS, BODYANDSITUATION, ONCEPERPART };          // :29
+    enum class ConstraintTest : int { GT, LT, EQ, NEQ };                                  // :22
+    enum class TestRepeatability : int { ALWAYS, BODYANDSITUATION, ONCEPERPART };          // :30
 
     ConstraintType type = ConstraintType::SPEED;                                          // :37
     ConstraintTest test = ConstraintTest::EQ;                                             // :39
@@ -36,7 +36,7 @@ public:
     std::string prestige = "_Any";                                                        // :43
     ContractPrestige prestigeLevel = ContractPrestige::Trivial;                           // :45
     std::string value = "";                                                               // :47
-    double valueD = std::numeric_limits<double>::quiet_NaN();                              // :49
+    double valueD = std::numeric_limits<double>::quiet_NaN();                              // (C++ addition)
     bool valueB = false;                                                                  // :51
     uint32_t valueI = 0;                                                                  // :53
     TestRepeatability valueR = TestRepeatability::ALWAYS;                                 // :55
@@ -45,16 +45,16 @@ public:
 
     explicit PartTestConstraint(ConfigNode* node = nullptr);                              // :61
     bool SituationAvailable(Vessel::Situations sit) const;                                // :69
-    bool BodyAvailable(CelestialBody* cb) const;                                          // :79
+    bool BodyAvailable(CelestialBody* cb) const;                                          // :78
     bool PrestigeAvailable(ContractPrestige pres) const;                                  // :107
-    bool Test(double input) const;                                                        // :121
-    bool Test(int input) const;                                                           // :144
-    bool Test(bool input) const;                                                          // :167
-    bool Test(const std::string& input) const;                                            // :181
-    bool Test(uint32_t sitmask) const;                                                    // :195
-    void Load(ConfigNode& node);                                                          // :209
-    void Save(ConfigNode& node) {(void)node;}                                             // :321
-    static bool SituationAvailable(const std::vector<PartTestConstraint>& constraints, Vessel::Situations sit);  // :325
+    bool Test(double input) const;                                                        // :120
+    bool Test(int input) const;                                                           // :141
+    bool Test(bool input) const;                                                          // :162
+    bool Test(const std::string& input) const;                                            // :175
+    bool Test(uint32_t sitmask) const;                                                    // :188
+    void Load(ConfigNode& node);                                                          // :201
+    void Save(ConfigNode& node) {(void)node;}                                             // :298
+    static bool SituationAvailable(const std::vector<PartTestConstraint>& constraints, Vessel::Situations sit);  // :302
 };
 
 // ModuleTestSubject.cs:8
@@ -78,21 +78,21 @@ public:
 
     std::string GetTestNotes();                           // :44 (empty = null)
     bool HasTestNotes();
-    void OnAwake() override;                              // :60
-    void OnDestroy();                                     // :68
-    void OnLoad(const ConfigNode& node) override;         // :77
-    void OnStart(StartState state) override;              // :99
+    void OnAwake() override;                              // :61
+    void OnDestroy();                                     // :69
+    void OnLoad(const ConfigNode& node) override;         // :78
+    void OnStart(StartState state) override;              // :101
     void CopySerializedFrom(const PartModule& from) override;
-    Enumerator delayedStart(int frameDelay);              // :105
-    void onPartDie(Part* p);                              // :143
-    void RunTest();                                       // :151
-    void OnActive() override;                             // :156
-    void RunTestEvent();                                  // :166 [KSPEvent]
-    void OnContractStateChange(Contracts::Contract* c, Contracts::ContractParameter* p);  // :176
-    bool SituationAvailable(Vessel::Situations sit);      // :188
-    std::string GetModuleDisplayName() override;          // :193
-    static void CacheLocalStrings();                      // :201
-    bool IsStageable() override { return false; }         // :215
+    Enumerator delayedStart(int frameDelay);              // :107
+    void onPartDie(Part* p);                              // :140
+    void RunTest();                                       // :148
+    void OnActive() override;                             // :153
+    void RunTestEvent();                                  // :162 [KSPEvent]
+    void OnContractStateChange(Contracts::Contract* c, Contracts::ContractParameter* p);  // :171
+    bool SituationAvailable(Vessel::Situations sit);      // :179
+    std::string GetModuleDisplayName() override;          // :184
+    static void CacheLocalStrings();                      // :193
+    bool IsStageable() override { return false; }         // :200
 
     int CoroutineOwner() const { return coroutineOwner_; }
 

@@ -31,18 +31,18 @@ namespace ksp::Contracts::Templates {
 class PlantFlag : public Contract {
 public:
     std::string TypeName() const override { return "PlantFlag"; }
-    CelestialBody* TargetBody() const { return targetBody; }                  // :17
-    bool MeetRequirements() override;                                         // :19
-    std::vector<CelestialBody*> WeightBodies() override { return {targetBody}; }  // :31
+    CelestialBody* TargetBody() const { return targetBody; }                  // :18
+    bool MeetRequirements() override;                                         // :20
+    std::vector<CelestialBody*> WeightBodies() override { return {targetBody}; }  // (C++ addition)
     bool HasWeightBodies() override { return true; }
-    std::string GetDescription() override;                                    // :36
-    std::string GetSynopsys() override;                                       // :41
-    std::string GetTitle() override;                                          // :46
-    std::string MessageCompleted() override;                                  // :51
-    void OnLoad(ConfigNode& node) override;                                   // :56
-    void OnSave(ConfigNode& node) override;                                   // :64
-    bool Generate() override;                                                 // :70
-    std::string GetHashString() override;                                     // :129
+    std::string GetDescription() override;                                    // :38
+    std::string GetSynopsys() override;                                       // :43
+    std::string GetTitle() override;                                          // :48
+    std::string MessageCompleted() override;                                  // :53
+    void OnLoad(ConfigNode& node) override;                                   // :58
+    void OnSave(ConfigNode& node) override;                                   // :66
+    bool Generate() override;                                                 // :71
+    std::string GetHashString() override;                                     // :132
 
 protected:
     CelestialBody* targetBody = nullptr;
@@ -52,26 +52,26 @@ protected:
 class CollectScience : public Contract {
 public:
     std::string TypeName() const override { return "CollectScience"; }
-    CelestialBody* TargetBody() const { return targetBody; }                  // :17
-    BodyLocation TargetLocation() const { return targetLocation; }            // :19
-    bool MeetRequirements() override;                                         // :21
-    std::vector<CelestialBody*> WeightBodies() override { return {targetBody}; }  // :29
+    CelestialBody* TargetBody() const { return targetBody; }                  // :19
+    BodyLocation TargetLocation() const { return targetLocation; }            // :21
+    bool MeetRequirements() override;                                         // :23
+    std::vector<CelestialBody*> WeightBodies() override { return {targetBody}; }  // (C++ addition)
     bool HasWeightBodies() override { return true; }
-    std::string GetDescription() override;                                    // :34
-    std::string GetSynopsys() override;                                       // :43
-    std::string GetTitle() override;                                          // :54
-    std::string MessageCompleted() override;                                  // :63
-    void OnLoad(ConfigNode& node) override;                                   // :72
-    void OnSave(ConfigNode& node) override;                                   // :84
-    bool Generate() override;                                                 // :90
+    std::string GetDescription() override;                                    // :37
+    std::string GetSynopsys() override;                                       // :46
+    std::string GetTitle() override;                                          // :55
+    std::string MessageCompleted() override;                                  // :64
+    void OnLoad(ConfigNode& node) override;                                   // :73
+    void OnSave(ConfigNode& node) override;                                   // :85
+    bool Generate() override;                                                 // :91
 
 protected:
     CelestialBody* targetBody = nullptr;
     BodyLocation targetLocation = BodyLocation::Space;
 
 private:
-    bool GenerateContract_Orbit();                                            // :104
-    bool GenerateContract_Surface();                                          // :140
+    bool GenerateContract_Orbit();                                            // :105
+    bool GenerateContract_Surface();                                          // :141
 };
 
 // What the templates read from systems that are other work packages (seams; the default is documented per member)
@@ -111,56 +111,56 @@ struct TemplateEnvironment {
 // Contracts/Templates/RecoverAsset.cs:14
 class RecoverAsset : public Contract {
 public:
-    enum class RecoveryLocation : int { NONE, ORBITLOW, ORBITHIGH, SURFACE };          // :16
-    enum class RecoveryType : int { NONE, KERBAL, PART, COMPOUND };                    // :24
-    RecoverAsset();                                                                    // :105
+    enum class RecoveryLocation : int { NONE, ORBITLOW, ORBITHIGH, SURFACE };          // :15
+    enum class RecoveryType : int { NONE, KERBAL, PART, COMPOUND };                    // :23
+    RecoverAsset();                                                                    // :120
     std::string TypeName() const override { return "RecoverAsset"; }
-    std::shared_ptr<ProtoCrewMember> RecoveryKerbal() const { return recoveryKerbal; } // :46
+    std::shared_ptr<ProtoCrewMember> RecoveryKerbal() const { return recoveryKerbal; } // :55
     CelestialBody* TargetBody() const { return targetBody; }
     RecoveryLocation Location() const { return recoveryLocation; }
     RecoveryType Type() const { return recoveryType; }
     const std::string& PartNameValue() const { return partName; }
     uint32_t PartID() const { return partID; }
     void SetPartID(uint32_t id) { partID = id; }
-    bool Generate() override;                                                          // :127
-    void OnAccepted() override;                                                        // :200
-    void OnParameterStateChange(ContractParameter* p) override;                        // :221
-    std::string GetHashString() override;                                              // :255
-    std::string GetTitle() override;                                                   // :260
-    std::string GetDescription() override;                                             // :302
-    std::string GetSynopsys() override;                                                // :316
-    std::string GetNotes() override;                                                   // :374
-    std::string MessageCompleted() override;                                           // :392
-    std::string MessageFailed() override;                                              // :405
-    std::string MessageCancelled() override;                                           // :438
-    std::string MessageDeadlineExpired() override;                                     // :452
-    void OnLoad(ConfigNode& node) override;                                            // :466
-    void OnSave(ConfigNode& node) override;                                            // :479
-    bool MeetRequirements() override;                                                  // :490
-    std::vector<CelestialBody*> WeightBodies() override { return {targetBody}; }       // :512
+    bool Generate() override;                                                          // :140
+    void OnAccepted() override;                                                        // :207
+    void OnParameterStateChange(ContractParameter* p) override;                        // :229
+    std::string GetHashString() override;                                              // :258
+    std::string GetTitle() override;                                                   // :263
+    std::string GetDescription() override;                                             // :298
+    std::string GetSynopsys() override;                                                // :311
+    std::string GetNotes() override;                                                   // :366
+    std::string MessageCompleted() override;                                           // :385
+    std::string MessageFailed() override;                                              // :398
+    std::string MessageCancelled() override;                                           // :437
+    std::string MessageDeadlineExpired() override;                                     // :450
+    void OnLoad(ConfigNode& node) override;                                            // :463
+    void OnSave(ConfigNode& node) override;                                            // :475
+    bool MeetRequirements() override;                                                  // :486
+    std::vector<CelestialBody*> WeightBodies() override { return {targetBody}; }       // (C++ addition)
     bool HasWeightBodies() override { return true; }
-    void OnGenerateFailed() override { Cleanup(); }                                    // :569
-    void OnDeclined() override { Cleanup(); }                                          // :574
-    void OnOfferExpired() override { Cleanup(); }                                      // :579
-    void OnFinished() override { Cleanup(); }                                          // :584
-    void DiscoverAsset(Vessel* v);                                                     // :960
+    void OnGenerateFailed() override { Cleanup(); }                                    // :579
+    void OnDeclined() override { Cleanup(); }                                          // :584
+    void OnOfferExpired() override { Cleanup(); }                                      // :589
+    void OnFinished() override { Cleanup(); }                                          // :594
+    void DiscoverAsset(Vessel* v);                                                     // :998
 
-    std::string VesselDescription();                                                   // :63
-    std::string VesselName();                                                          // :78
+    std::string VesselDescription();                                                   // :93
+    std::string VesselName();                                                          // :106
 
 private:
-    bool PartIsValid() const;                                                          // :52
-    bool RecoveringKerbal() const { return recoveryType == RecoveryType::KERBAL || recoveryType == RecoveryType::COMPOUND; }  // :66
-    bool RecoveringPart() const { return recoveryType == RecoveryType::PART || recoveryType == RecoveryType::COMPOUND; }      // :78
-    std::shared_ptr<ProtoCrewMember> ProtoKerbal();                                    // :99
-    void Cleanup();                                                                    // :522
-    bool Initialize();                                                                 // :588
-    void ChooseLocation(KSPRandom* generator = nullptr);                               // :630
-    std::string ChooseVesselType(KSPRandom* generator = nullptr);                      // :684
-    bool AcceptablePart(Part* p);                                                      // :718
-    bool PartHasSeats(const std::string& part);                                        // :833
-    float GetMultiplier();                                                             // :887
-    void CheckComplete();                                                              // :913
+    bool PartIsValid() const;                                                          // :57
+    bool RecoveringKerbal() const { return recoveryType == RecoveryType::KERBAL || recoveryType == RecoveryType::COMPOUND; }  // :69
+    bool RecoveringPart() const { return recoveryType == RecoveryType::PART || recoveryType == RecoveryType::COMPOUND; }      // :81
+    std::shared_ptr<ProtoCrewMember> ProtoKerbal();                                    // :118
+    void Cleanup();                                                                    // :512
+    bool Initialize();                                                                 // :599
+    void ChooseLocation(KSPRandom* generator = nullptr);                               // :636
+    std::string ChooseVesselType(KSPRandom* generator = nullptr);                      // :679
+    bool AcceptablePart(Part* p);                                                      // :716
+    bool PartHasSeats(const std::string& part);                                        // :846
+    float GetMultiplier();                                                             // :925
+    void CheckComplete();                                                              // :956
     CelestialBody* targetBody = nullptr;
     RecoveryLocation recoveryLocation = RecoveryLocation::NONE;
     RecoveryType recoveryType = RecoveryType::NONE;
@@ -175,28 +175,28 @@ private:
 class PartTest : public Contract {
 public:
     std::string TypeName() const override { return "PartTest"; }
-    std::string PartName;                                                              // :17
-    bool PartIsExperimental = false;                                                   // :20
-    bool Hauled() const { return hauled; }                                             // :30
+    std::string PartName;                                                              // :16
+    bool PartIsExperimental = false;                                                   // :19
+    bool Hauled() const { return hauled; }                                             // :33
     CelestialBody* Destination() const { return destination; }
     Vessel::Situations TargetSituation() const { return tgtSituation; }
     const AvailablePart* TargetPart() const { return tgtPart; }
-    bool MeetRequirements() override;                                                  // :32
-    std::vector<CelestialBody*> WeightBodies() override { return {destination}; }      // :40
+    bool MeetRequirements() override;                                                  // :35
+    std::vector<CelestialBody*> WeightBodies() override { return {destination}; }      // (C++ addition)
     bool HasWeightBodies() override { return true; }
-    std::string GetDescription() override;                                             // :45
-    std::string GetSynopsys() override;                                                // :50
-    std::string GetTitle() override;                                                   // :59
-    std::string MessageCompleted() override;                                           // :68
-    std::string GetSituationString(Vessel::Situations sit, CelestialBody* body, const std::string& biomeName);  // :77
-    void OnLoad(ConfigNode& node) override;                                            // :250
-    void OnSave(ConfigNode& node) override;                                            // :281
-    bool Generate() override;                                                          // :290
-    void OnRegister() override;                                                        // :955
-    void OnUnregister() override;                                                      // :960
-    void OnAccepted() override;                                                        // :965
-    void OnPartResearched(AvailablePart* ap);                                          // :978
-    void OnFinished() override;                                                        // :990
+    std::string GetDescription() override;                                             // :49
+    std::string GetSynopsys() override;                                                // :54
+    std::string GetTitle() override;                                                   // :63
+    std::string MessageCompleted() override;                                           // :72
+    std::string GetSituationString(Vessel::Situations sit, CelestialBody* body, const std::string& biomeName);  // :81
+    void OnLoad(ConfigNode& node) override;                                            // :191
+    void OnSave(ConfigNode& node) override;                                            // :216
+    bool Generate() override;                                                          // :225
+    void OnRegister() override;                                                        // :813
+    void OnUnregister() override;                                                      // :818
+    void OnAccepted() override;                                                        // :823
+    void OnPartResearched(AvailablePart* ap);                                          // :835
+    void OnFinished() override;                                                        // :845
 
 protected:
     const AvailablePart* tgtPart = nullptr;
@@ -209,29 +209,29 @@ protected:
 class GrandTour : public Contract {
 public:
     std::string TypeName() const override { return "GrandTour"; }
-    const std::vector<CelestialBody*>& TargetBodies() const { return targetBodies; }   // :28
-    bool MeetRequirements() override;                                                  // :55
-    std::vector<CelestialBody*> WeightBodies() override { return targetBodies; }       // :60
+    const std::vector<CelestialBody*>& TargetBodies() const { return targetBodies; }   // :30
+    bool MeetRequirements() override;                                                  // :58
+    std::vector<CelestialBody*> WeightBodies() override { return targetBodies; }       // (C++ addition)
     bool HasWeightBodies() override { return true; }
-    std::string GetDescription() override;                                             // :65
-    std::string GetSynopsys() override;                                                // :75
-    std::string GetTitle() override;                                                   // :107
-    std::string MessageCompleted() override;                                           // :166
-    void OnAccepted() override;                                                        // :171
-    std::string GetNotes() override;                                                   // :180
-    void OnLoad(ConfigNode& node) override;                                            // :200
-    void OnSave(ConfigNode& node) override;                                            // :225
-    bool Generate() override;                                                          // :244
-    std::string GetHashString() override;                                              // :540
+    std::string GetDescription() override;                                             // :68
+    std::string GetSynopsys() override;                                                // :74
+    std::string GetTitle() override;                                                   // :110
+    std::string MessageCompleted() override;                                           // :175
+    void OnAccepted() override;                                                        // :180
+    std::string GetNotes() override;                                                   // :189
+    void OnLoad(ConfigNode& node) override;                                            // :208
+    void OnSave(ConfigNode& node) override;                                            // :234
+    bool Generate() override;                                                          // :255
+    std::string GetHashString() override;                                              // :547
     FinePrint::Utilities::ProgressType ProgressTypeValue() const { return progressType; }
 
 private:
-    int TotalBodies() const;                                                           // :30
-    std::string FormattedDestinations() const;                                         // :40
-    void AttemptRandomTour(KSPRandom* generator = nullptr);                            // :317
-    void AttemptFocusedTour(KSPRandom* generator = nullptr);                           // :380
-    std::vector<CelestialBody*> GetFocusedChallenges(FinePrint::Utilities::ProgressType type);    // :437
-    void AttemptFinalDestination(KSPRandom* generator = nullptr);                      // :485
+    int TotalBodies() const;                                                           // :32
+    std::string FormattedDestinations() const;                                         // :44
+    void AttemptRandomTour(KSPRandom* generator = nullptr);                            // :334
+    void AttemptFocusedTour(KSPRandom* generator = nullptr);                           // :386
+    std::vector<CelestialBody*> GetFocusedChallenges(FinePrint::Utilities::ProgressType type);    // :443
+    void AttemptFinalDestination(KSPRandom* generator = nullptr);                      // :487
     std::vector<CelestialBody*> targetBodies;
     FinePrint::Utilities::ProgressType progressType = FinePrint::Utilities::ProgressType::NULL_;
     bool finalDestination = false;

@@ -42,19 +42,19 @@ void RemoveOne(std::vector<T>& v, const T& x) {
 // GrandTour.cs:30
 int GrandTour::TotalBodies() const { return !finalDestination ? static_cast<int>(targetBodies.size()) : static_cast<int>(targetBodies.size()) + 1; }
 
-// GrandTour.cs:40
+// GrandTour.cs:44
 std::string GrandTour::FormattedDestinations() const {
     std::vector<std::string> list;
     for (size_t i = 0; i < targetBodies.size(); ++i) list.push_back(Localizer::Format("#autoLOC_7001301", {targetBodies[i]->displayName()}));
     return Lite::StringUtilities::ThisThisAndThat(list);
 }
 
-// GrandTour.cs:55
+// GrandTour.cs:58
 bool GrandTour::MeetRequirements() {
     return fx(static_cast<float>(Lite::HashNumber(static_cast<uint32_t>(MissionSeed())) % 100u)) <= fx(Def("", "Rarity"));
 }
 
-// GrandTour.cs:65
+// GrandTour.cs:68
 std::string GrandTour::GetDescription() {
     const std::string text = focused ? focusBody->displayName() : ((targetBodies.size() <= 0) ? CareerEnvironment::Current().HomeBody()->displayName() : targetBodies[0]->displayName());
     return TextGen::GenerateBackStories(TypeName(), Agent()->Title(), text, text, MissionSeed(), true, false, true);
@@ -80,7 +80,7 @@ std::string GrandTour::GetSynopsys() {
     return Localizer::Format("#autoLOC_6002377", {text, text2, text3, text4, text5});
 }
 
-// GrandTour.cs:107
+// GrandTour.cs:110
 std::string GrandTour::GetTitle() {
     KSPRandom kSPRandom(MissionSeed());
     std::string text, tmpl, text2, text3;
@@ -118,15 +118,15 @@ std::string GrandTour::GetTitle() {
     return Localizer::Format("#autoLOC_6002376", {text, tmpl, text2, text3});
 }
 
-// GrandTour.cs:166
+// GrandTour.cs:175
 std::string GrandTour::MessageCompleted() { return Localizer::Format("#autoLOC_272741", {dotnet::FormatInt64(TotalBodies())}); }
 
-// GrandTour.cs:171
+// GrandTour.cs:180
 void GrandTour::OnAccepted() {
     if (TemplateEnvironment::grandTourAccepted) TemplateEnvironment::grandTourAccepted(*this, SaveEnvironment::Current().currentGame->launchID);
 }
 
-// GrandTour.cs:180
+// GrandTour.cs:189
 std::string GrandTour::GetNotes() {
     if (finalDestination && CU::IsGasGiant(finalBody)) {
         if (finalSituation != Sit::FLYING && finalSituation != Sit::SUB_ORBITAL) return std::string();
@@ -137,7 +137,7 @@ std::string GrandTour::GetNotes() {
     return std::string();
 }
 
-// GrandTour.cs:200
+// GrandTour.cs:208
 void GrandTour::OnLoad(ConfigNode& node) {
     Lite::LoadNode(node, "Template.GrandTour", "progressType", progressType, ProgressType::FLYBY);
     Lite::LoadNode(node, "Template.GrandTour", "finalDestination", finalDestination, false);
@@ -160,7 +160,7 @@ void GrandTour::OnLoad(ConfigNode& node) {
     }
 }
 
-// GrandTour.cs:225
+// GrandTour.cs:234
 void GrandTour::OnSave(ConfigNode& node) {
     node.AddValue("progressType", static_cast<int32_t>(progressType));
     node.AddValue("finalDestination", finalDestination);
@@ -173,7 +173,7 @@ void GrandTour::OnSave(ConfigNode& node) {
     }
 }
 
-// GrandTour.cs:244
+// GrandTour.cs:255
 bool GrandTour::Generate() {
     KSPRandom generator(MissionSeed());
     targetBodies.clear();
@@ -227,7 +227,7 @@ bool GrandTour::Generate() {
     return true;
 }
 
-// GrandTour.cs:317
+// GrandTour.cs:334
 void GrandTour::AttemptRandomTour(KSPRandom* generator) {
     std::unique_ptr<KSPRandom> own;
     if (generator == nullptr) {
@@ -265,7 +265,7 @@ void GrandTour::AttemptRandomTour(KSPRandom* generator) {
     }
 }
 
-// GrandTour.cs:380
+// GrandTour.cs:386
 void GrandTour::AttemptFocusedTour(KSPRandom* generator) {
     std::unique_ptr<KSPRandom> own;
     if (generator == nullptr) {
@@ -295,7 +295,7 @@ void GrandTour::AttemptFocusedTour(KSPRandom* generator) {
         if (!CU::IsGasGiant(list[i])) targetBodies.push_back(list[i]);
 }
 
-// GrandTour.cs:437
+// GrandTour.cs:443
 std::vector<CelestialBody*> GrandTour::GetFocusedChallenges(ProgressType type) {
     std::vector<CelestialBody*> list;
     const auto& all = FlightRegistry::Bodies();
@@ -358,7 +358,7 @@ void GrandTour::AttemptFinalDestination(KSPRandom* generator) {
     finalSituation = list[static_cast<size_t>(generator->Next(0, static_cast<int32_t>(list.size())))];
 }
 
-// GrandTour.cs:540
+// GrandTour.cs:547
 std::string GrandTour::GetHashString() { return dotnet::FormatInt64(Lite::SuperSeed(*this)); }
 
 }  // namespace ksp::Contracts::Templates

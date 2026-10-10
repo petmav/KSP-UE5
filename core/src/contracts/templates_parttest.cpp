@@ -44,13 +44,13 @@ void RemoveOne(std::vector<T>& v, const T& x) {
     auto it = std::find(v.begin(), v.end(), x);
     if (it != v.end()) v.erase(it);
 }
-// PartTest.cs:1010 RemoveSituations(list, params remove): the removals walk `remove` from the end
+// Templates/PartTest.cs:1010 RemoveSituations(list, params remove): the removals walk `remove` from the end
 void RemoveSituations(std::vector<Sit>& list, std::initializer_list<Sit> remove) {
     std::vector<Sit> r(remove);
     int num = static_cast<int>(r.size());
     while (num-- > 0) RemoveOne(list, r[static_cast<size_t>(num)]);
 }
-// PartTest.cs:1018 CombineSituations(list, check)
+// Templates/PartTest.cs:1018 CombineSituations(list, check)
 void CombineSituations(std::vector<Sit>& list, const std::vector<Sit>& check) {
     int count = static_cast<int>(list.size());
     while (count-- > 0)
@@ -61,33 +61,33 @@ ModuleTestSubject* TestSubjectOf(AvailablePart* ap) {
 }
 }  // namespace
 
-// PartTest.cs:32
+// Templates/PartTest.cs:35
 bool PartTest::MeetRequirements() { return ProgressTracking::Instance()->NodeComplete({"FirstLaunch"}); }
 
-// PartTest.cs:45
+// Templates/PartTest.cs:49
 std::string PartTest::GetDescription() {
     return TextGen::GenerateBackStories(TypeName(), Agent()->Title(), PartName, "Parts" + PartName, MissionSeed(), true, false, true);
 }
 
-// PartTest.cs:50
+// Templates/PartTest.cs:54
 std::string PartTest::GetSynopsys() {
     if (hauled) return Fmt2("#autoLOC_6100002", PartName, GetSituationString(tgtSituation, destination, ""));
     return Fmt2("#autoLOC_6100003", PartName, GetSituationString(tgtSituation, destination, ""));
 }
 
-// PartTest.cs:59
+// Templates/PartTest.cs:63
 std::string PartTest::GetTitle() {
     if (hauled) return Fmt2("#autoLOC_6100004", PartName, GetSituationString(tgtSituation, destination, ""));
     return Fmt2("#autoLOC_6100005", PartName, GetSituationString(tgtSituation, destination, ""));
 }
 
-// PartTest.cs:68
+// Templates/PartTest.cs:72
 std::string PartTest::MessageCompleted() {
     if (hauled) return Localizer::Format("#autoLOC_273203");
     return Localizer::Format("#autoLOC_6003090");
 }
 
-// PartTest.cs:77
+// Templates/PartTest.cs:81
 std::string PartTest::GetSituationString(Sit sit, CelestialBody* body, const std::string& biomeName) {
     const std::string dn = body->displayName();
     if (biomeName.empty()) {
@@ -118,7 +118,7 @@ std::string PartTest::GetSituationString(Sit sit, CelestialBody* body, const std
     }
 }
 
-// PartTest.cs:250
+// Templates/PartTest.cs:191
 void PartTest::OnLoad(ConfigNode& node) {
     if (node.HasValue("part")) {
         const auto& get = SaveEnvironment::Current().getPartInfoByName;
@@ -139,7 +139,7 @@ void PartTest::OnLoad(ConfigNode& node) {
     }
 }
 
-// PartTest.cs:281
+// Templates/PartTest.cs:216
 void PartTest::OnSave(ConfigNode& node) {
     node.AddValue("part", (tgtPart != nullptr) ? tgtPart->name : std::string("Part"));
     node.AddValue("haul", hauled);
@@ -152,7 +152,7 @@ void PartTest::OnSave(ConfigNode& node) {
     node.AddValue("exp", PartIsExperimental);
 }
 
-// PartTest.cs:290
+// Templates/PartTest.cs:225
 bool PartTest::Generate() {
     std::vector<PartTest*> currentContracts = ContractSystem::Instance->GetCurrentContracts<PartTest>();
     if (static_cast<int>(currentContracts.size()) >= ContractDefsLite::I("Test", "", "MaximumExistent")) return false;
@@ -461,12 +461,12 @@ bool PartTest::Generate() {
     return false;
 }
 
-// PartTest.cs:955
+// Templates/PartTest.cs:813
 void PartTest::OnRegister() { GE::OnPartPurchased.Add(this, &PartTest::OnPartResearched); }
-// PartTest.cs:960
+// Templates/PartTest.cs:818
 void PartTest::OnUnregister() { GE::OnPartPurchased.Remove(this, &PartTest::OnPartResearched); }
 
-// PartTest.cs:965
+// Templates/PartTest.cs:823
 void PartTest::OnAccepted() {
     if (tgtPart != nullptr) {
         PartIsExperimental = !ResearchAndDevelopment::PartModelPurchased(tgtPart) || ResearchAndDevelopment::IsExperimentalPart(tgtPart);
@@ -474,7 +474,7 @@ void PartTest::OnAccepted() {
     }
 }
 
-// PartTest.cs:978
+// Templates/PartTest.cs:835
 void PartTest::OnPartResearched(AvailablePart* ap) {
     if (tgtPart != nullptr && !(ap->title != PartName) && PartIsExperimental) {
         log::Info("[PartTest]: Contract for " + ap->title + " is no longer an experimental test. Part was researched.");
@@ -483,7 +483,7 @@ void PartTest::OnPartResearched(AvailablePart* ap) {
     }
 }
 
-// PartTest.cs:990
+// Templates/PartTest.cs:845
 void PartTest::OnFinished() {
     if (tgtPart != nullptr && PartIsExperimental) ResearchAndDevelopment::RemoveExperimentalPart(tgtPart);
 }
