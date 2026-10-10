@@ -27,6 +27,7 @@
 #include "ksp/modules/deployables.hpp"
 #include "ksp/modules/parachutes.hpp"
 #include "ksp/modules/module_decouplers.hpp"
+#include "ksp/modules/module_strut.hpp"
 #include "ksp/modules/module_engines.hpp"
 #include "ksp/modules/module_gimbal.hpp"
 #include "ksp/modules/module_rcs.hpp"
@@ -232,7 +233,10 @@ void RegCurves(std::initializer_list<const char*> names, std::vector<std::string
 
 namespace detail {
 void RegisterBuiltinModules() {
-    detail::RegisterDecouplerModules();  // ModuleDecouplerBase / ModuleDecouple / ModuleAnchoredDecoupler (+ LaunchClamp, ModuleDockingNode staging stand-ins) (WP-16)
+    detail::RegisterDecouplerModules();  // ModuleDecouplerBase / ModuleDecouple / ModuleAnchoredDecoupler (WP-16)
+    detail::RegisterDockingModules();    // WP-25: ModuleDockingNode
+    detail::RegisterGrappleModules();    // WP-25: ModuleGrappleNode
+    detail::RegisterStrutModules();      // WP-25: CModuleStrut
     detail::RegisterResourceModules();  // ModuleToggleCrossfeed, ModuleResourceAutoShiftState, CModuleFuelLine, EVAResourceContainer (WP-15)
     Reg<ModuleCargoPart>({"ModuleCargoPart"});
     detail::RegisterAnimationModules();  // WP-27: ModuleAnimationSetter, ModuleAnimateGeneric, ModuleAnimationGroup, ModuleAnimatorLandingGear

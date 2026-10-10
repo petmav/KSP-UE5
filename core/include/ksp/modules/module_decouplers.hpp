@@ -1,5 +1,4 @@
-// WP-16: ModuleDecouplerBase.cs, ModuleDecouple.cs, ModuleAnchoredDecoupler.cs (+ the IStageSeparator stand-ins of LaunchClamp and
-// ModuleDockingNode, whose own packages are WP-25 / WP-26).
+// WP-16: ModuleDecouplerBase.cs, ModuleDecouple.cs, ModuleAnchoredDecoupler.cs (ModuleDockingNode is WP-25's module_docking_node.hpp).
 //
 // The schema (KSPFields, KSPEvent / KSPAction attribute data) comes from the generated module_schema.inc / module_members.inc.
 // Not ported (Unity / other packages): FXGroup.Burst and setActive (`fx` is only "the group exists"), the anchor Transform

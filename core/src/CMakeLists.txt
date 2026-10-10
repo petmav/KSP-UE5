@@ -141,6 +141,9 @@ add_library(kspcore STATIC
     modules/module_staging.cpp
     modules/base_action_lists.cpp
     modules/module_decouplers.cpp
+    modules/module_docking_node.cpp
+    modules/module_grapple_node.cpp
+    modules/module_strut.cpp
     modules/module_engines.cpp
     modules/module_gimbal.cpp
     modules/module_rcs.cpp

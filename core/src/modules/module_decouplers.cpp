@@ -375,23 +375,11 @@ std::string ModuleAnchoredDecoupler::GetInfo() { return "" + Localizer::Format("
 // ModuleAnchoredDecoupler.cs:96
 std::string ModuleAnchoredDecoupler::GetModuleDisplayName() { return Localizer::Format("#autoLOC_6001040"); }
 
-// ============================================================================================ IStageSeparator stand-ins
-
-namespace {
-// ModuleDockingNode.cs:1944: `return fallback + 1;` (the staging overrides are PartModule's class rules, module_staging.cpp)
-class DockingNodeStageSeparator : public PartModule, public IStageSeparator {
-public:
-    using PartModule::PartModule;
-    int GetStageIndex(int fallback) override { return fallback + 1; }
-};
-}  // namespace
-
 namespace detail {
 void RegisterDecouplerModules() {
     ModuleFactory::Register("ModuleDecouplerBase", [](const ModuleClassInfo& c) { return std::static_pointer_cast<PartModule>(std::make_shared<ModuleDecouplerBase>(c)); });
     ModuleFactory::Register("ModuleDecouple", [](const ModuleClassInfo& c) { return std::static_pointer_cast<PartModule>(std::make_shared<ModuleDecouple>(c)); });
     ModuleFactory::Register("ModuleAnchoredDecoupler", [](const ModuleClassInfo& c) { return std::static_pointer_cast<PartModule>(std::make_shared<ModuleAnchoredDecoupler>(c)); });
-    ModuleFactory::Register("ModuleDockingNode", [](const ModuleClassInfo& c) { return std::static_pointer_cast<PartModule>(std::make_shared<DockingNodeStageSeparator>(c)); });
 }
 }  // namespace detail
 

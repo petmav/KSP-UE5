@@ -32,6 +32,7 @@ add_executable(kspcore_tests
     test_aero.cpp
     test_engines.cpp
     test_staging.cpp
+    test_docking.cpp
     test_thermal.cpp
     test_structural_modules.cpp
     test_misc_modules.cpp

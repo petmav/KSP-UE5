@@ -165,16 +165,8 @@ void StartCompoundParts(ShipConstruct& ship) {
     CompoundPart::hooks.editorShipParts = nullptr;
 }
 
-// ModuleDockingNode.OnLoad (ModuleDockingNode.cs:533) / OnStart (:594): `base.part.fuelCrossFeed = crossfeed;` -- the docking node module is
-// a staging stand-in (WP-16, module_decouplers.cpp) until its package (WP-25: replace this runner statement by the module's own OnLoad / OnStart); this is the one statement of it the fuel flow graph needs (a closed
-// docking port in a craft file has `crossfeed = False` and blocks the crossfeed through the part).
-void ApplyDockingNodeCrossfeed(ShipConstruct& ship) {
-    for (Part* p : ship.liveParts)
-        for (size_t i = 0; i < p->Modules().Count(); i++) {
-            PartModule* m = p->Modules().GetModule(i);
-            if (m->IsA("ModuleDockingNode")) p->fields.fuelCrossFeed = m->Get<bool>("crossfeed");
-        }
-}
+// (ModuleDockingNode.OnLoad sets `part.fuelCrossFeed = crossfeed` (ModuleDockingNode.cs:533): the real module of WP-25 does it while the craft loads;
+// a closed docking port in a craft file has `crossfeed = False` and blocks the crossfeed through the part.)
 
 int RunDeltaVStages(const RunnerOptions& opt) {
     SaveEnvironment::Reset();
@@ -239,7 +231,6 @@ int RunDeltaVStages(const RunnerOptions& opt) {
         support::EditorSession::StartParts(ship.liveParts);
         editor.Load();
         for (Part* p : ship.liveParts) InstallThrustTransforms(*p);
-        ApplyDockingNodeCrossfeed(ship);
         StartCompoundParts(ship);
         AssignDefaultCrew(ship.liveParts, inventoryPerKerbal);
 
