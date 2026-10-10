@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "ksp/staging/staging_types.hpp"  // IAirstreamShield.cs (one definition, WP-16; WP-26 uses it from here too)
 #include "ksp/unity/vector.hpp"
 
 namespace ksp {
@@ -45,14 +46,6 @@ public:
     }
 };
 
-// IAirstreamShield.cs
-class IAirstreamShield {
-public:
-    virtual ~IAirstreamShield() = default;
-    virtual bool ClosedAndLocked() = 0;
-    virtual Vessel* GetVessel() = 0;
-    virtual Part* GetPart() = 0;
-};
 
 // ILiftProvider.cs
 class ILiftProvider {

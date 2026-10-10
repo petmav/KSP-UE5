@@ -126,7 +126,12 @@ add_library(kspcore STATIC
     modules/module_staging.cpp
     modules/base_action_lists.cpp
     modules/module_decouplers.cpp
+    # WP-26 fairings, cargo bays, jettison, shielding, launch clamps
+    modules/fairing_panel.cpp
+    modules/module_procedural_fairing.cpp
+    modules/module_structural.cpp
     parts/part_decouple.cpp
+    parts/part_shield.cpp
     vessel/vessel_staging.cpp
     capi/kspcore_c.cpp
 )
