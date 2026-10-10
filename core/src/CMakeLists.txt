@@ -156,6 +156,13 @@ add_library(kspcore STATIC
     modules/module_rcs.cpp
     modules/control_types.cpp
     modules/module_command.cpp
+    modules/module_commnet_parts.cpp
+    modules/module_data_transmitter.cpp
+    modules/module_kerbnet_access.cpp
+    commnet/network.cpp
+    commnet/comm_network.cpp
+    commnet/commnet_scene.cpp
+    commnet/comm_net_vessel.cpp
     modules/module_reaction_wheel.cpp
     modules/module_resource_intake.cpp
     # WP-26 fairings, cargo bays, jettison, shielding, launch clamps

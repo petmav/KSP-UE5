@@ -3,6 +3,8 @@
 
 #include <algorithm>
 
+#include "ksp/commnet/comm_net_vessel.hpp"
+#include "ksp/commnet/commnet_scene.hpp"
 #include "ksp/core/exceptions.hpp"
 #include "ksp/core/log.hpp"
 #include "ksp/events/game_events.hpp"
@@ -18,6 +20,7 @@
 #include "ksp/save/game_parameters.hpp"
 #include "ksp/save/save_environment.hpp"
 #include "ksp/unity/mathf.hpp"
+#include "ksp/util/ksp_util.hpp"
 #include "ksp/vessel/vessel.hpp"
 #include "ksp/vessel/vessel_autopilot.hpp"
 
@@ -36,6 +39,13 @@ void CommandEnvironment::Reset() {
 }
 
 namespace {
+// CommNetScenario.CommNetEnabled (the hook overrides; unset = the real scenario / difficulty setting, WP-39)
+bool CommNetOn() { return CommandEnvironment::commNetEnabled ? CommandEnvironment::commNetEnabled() : CommNet::CommNetScenario::CommNetEnabled(); }
+// CommNetScenario.CommNetEnabled && CommNetScenario.Instance != null
+bool CommNetOnWithScenario() {
+    return CommandEnvironment::commNetEnabled ? CommandEnvironment::commNetEnabled()
+                                              : (CommNet::CommNetScenario::CommNetEnabled() && CommNet::CommNetScenario::Instance() != nullptr);
+}
 const PartResourceDefinition* LookupDefinition(const std::string& name) {
     const PartResourceLibrary* lib = PartResourceLibrary::Instance();
     return lib ? lib->GetDefinition(std::string_view(name)) : nullptr;
@@ -53,12 +63,19 @@ Vessel* ModuleCommand::VesselPtr() const {
 std::optional<CommNetLinkState> ModuleCommand::Connection() const {
     Vessel* v = VesselPtr();
     if (v == nullptr) throw NullReferenceException();
-    return CommandEnvironment::connection ? CommandEnvironment::connection(*v) : std::nullopt;
+    if (CommandEnvironment::connection) return CommandEnvironment::connection(*v);
+    CommNet::CommNetVessel* c = v->connection;  // vessel.connection (WP-39)
+    if (c == nullptr) return std::nullopt;
+    CommNetLinkState st;
+    st.isConnected = c->IsConnected;
+    st.signalStrength = c->SignalStrengthValue();
+    if (std::shared_ptr<CommNet::Network::Link> first = c->ControlPath().First()) st.firstHopCost = first->cost;
+    return st;
 }
 
 // ModuleCommand.cs:142
 bool ModuleCommand::SignalRequired() const {
-    const bool enabled = CommandEnvironment::commNetEnabled ? CommandEnvironment::commNetEnabled() : false;
+    const bool enabled = CommNetOn();
     if (enabled) {
         Game* g = SaveEnvironment::Current().currentGame;  // HighLogic.CurrentGame
         if (g == nullptr || !g->Parameters) throw NullReferenceException();
@@ -308,7 +325,7 @@ VesselControlState ModuleCommand::UpdateControlSourceState() {
         return VesselControlState::Kerbal;
     }
     commCapable_ = true;
-    const bool commNet = CommandEnvironment::commNetEnabled ? CommandEnvironment::commNetEnabled() : false;
+    const bool commNet = CommNetOnWithScenario();
     const bool remoteControl = Get<bool>("remoteControl");
     if (commNet) {
         const std::optional<CommNetLinkState> link = Connection();
@@ -504,6 +521,49 @@ void ModuleRemoteController::Toggle() {
     const std::string v = Get<std::string>("controllerActive");
     if (v == "Inactive") Set<std::string>("controllerActive", "Active");
     else if (v == "Active") Set<std::string>("controllerActive", "Inactive");
+}
+
+ModuleCommand::~ModuleCommand() {
+    if (networkSubscribed_) GameEvents::CommNet::OnNetworkInitialized.Remove(this, &ModuleCommand::OnNetworkInitialised);
+}
+
+// ModuleCommand.cs:319
+void ModuleCommand::Start() {
+    const SaveEnvironment& env = SaveEnvironment::Current();
+    Vessel* v = VesselPtr();
+    if (env.loadedSceneIsGame && env.loadedScene != GameScenes::EDITOR && env.loadedScene != GameScenes::SPACECENTER && v != nullptr) {
+        networkInitialised_ = false;
+        if (CommNet::CommNetNetwork::Initialized() && v->connection != nullptr) OnNetworkInitialised();
+        GameEvents::CommNet::OnNetworkInitialized.Add(this, &ModuleCommand::OnNetworkInitialised);
+        networkSubscribed_ = true;
+    }
+}
+
+// ModuleCommand.cs:332
+void ModuleCommand::OnDestroy() {
+    Vessel* v = VesselPtr();
+    if (v != nullptr && v->connection != nullptr) v->connection->UnregisterCommandSource(this);
+    GameEvents::CommNet::OnNetworkInitialized.Remove(this, &ModuleCommand::OnNetworkInitialised);
+    networkSubscribed_ = false;
+}
+
+// ModuleCommand.cs:341
+void ModuleCommand::OnNetworkInitialised() {
+    Vessel* v = VesselPtr();
+    if (v == nullptr || v->connection == nullptr) throw NullReferenceException();
+    v->connection->RegisterCommandSource(this);
+    networkInitialised_ = true;
+}
+
+// ModuleCommand.cs:347
+void ModuleCommand::UpdateNetwork() {
+    const bool inPAW = CommandEnvironment::partInPAW ? CommandEnvironment::partInPAW(*this) : false;
+    if (!inPAW) return;
+    const std::optional<CommNetLinkState> link = Connection();
+    if (!link.has_value()) return;
+    Set<std::string>("commNetSignal", KSPUtil::LocalizeNumber(link->signalStrength, "F2"));
+    if (link->isConnected) Set<std::string>("commNetFirstHopDistance", KSPUtil::PrintSI(link->firstHopCost, Localizer::Format("#autoLOC_7001411")));
+    else Set<std::string>("commNetFirstHopDistance", "-");
 }
 
 namespace detail {

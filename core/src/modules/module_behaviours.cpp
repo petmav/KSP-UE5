@@ -18,6 +18,7 @@
 #include "ksp/dotnet/mono_float.hpp"
 #include "ksp/dotnet/number.hpp"
 #include "ksp/localization/localizer.hpp"
+#include "ksp/modules/module_commnet_parts.hpp"
 #include "ksp/modules/module_part_variants.hpp"
 #include "ksp/modules/part_structural_modules.hpp"
 #include "ksp/modules/part_module.hpp"
@@ -107,34 +108,7 @@ private:
 
 // ---- ModuleDeployablePart / Antenna / Radiator / SolarPanel: WP-27 (modules/deployables.hpp) ----------------------------------------
 
-// ---- ModuleDataTransmitter.cs:107 / :133 -------------------------------------------------------------------------------
-class ModuleDataTransmitter : public PartModule {
-public:
-    using PartModule::PartModule;
-    void OnAwake() override {
-        DoubleCurve range;
-        range.Add(0.0, 0.0, 0.0, 0.0);
-        range.Add(1.0, 1.0, 0.0, 0.0);
-        Set<DoubleCurve>("rangeCurve", std::move(range));
-        DoubleCurve science;
-        science.Add(0.0, 0.0, 0.0, 0.0);
-        science.Add(0.44999998807907104, 0.07999999821186066, 0.4951019, 0.4951019);
-        science.Add(0.8100000023841858, 0.3499999940395355, 0.8020515, 0.8020515);
-        science.Add(1.0, 0.4000000059604645, 0.0, 0.0);
-        Set<DoubleCurve>("scienceCurve", std::move(science));
-        // consumedResources / transmissionQueue: not KSPFields (resource handler: WP-15)
-    }
-    void OnLoad(const ConfigNode&) override {
-        // DeployFxModules / ProgressFxModules / CommsData (ScienceData queue): science package
-        Events()["TransmitIncompleteToggle"]->SetGuiName(Get<bool>("xmitIncomplete") ? "#autoLOC_7001224" : "#autoLOC_7001225");
-        UpdatePowerText();
-    }
-    // :165 (no module adjusters on a prefab: CommPower == antennaPower)
-    void UpdatePowerText() {
-        Set<std::string>("powerText", KSPUtil::PrintSI(Get<double>("antennaPower"), "") +
-                                          (Get<bool>("antennaCombinable") ? " " + Localizer::Format("#autoLOC_236248") : std::string()));
-    }
-};
+// ModuleDataTransmitter / ModuleKerbNetAccess / ModuleRelayEnabler / ModuleProbeControlPoint: module_commnet_parts.cpp (WP-39)
 
 // ---- FlagDecalBackground.cs:57 / :563 + IPartMassModifier / IPartCostModifier --------------------------------------------
 class FlagDecalBackground : public PartModule, public IPartMassModifier, public IPartCostModifier {
@@ -250,7 +224,7 @@ void RegisterBuiltinModules() {
     Reg<ModuleAnimateHeat>({"ModuleAnimateHeat"});
     detail::RegisterResourceProcessingModules();  // WP-28: BaseConverter family, generators, scanners
     detail::RegisterScienceModules();  // WP-35: ModuleScienceExperiment / Container / Lab / Converter, ModuleEnviroSensor, ModuleSampleContainer (science_modules.cpp)
-    Reg<ModuleDataTransmitter>({"ModuleDataTransmitter"});
+    detail::RegisterCommNetModules();  // WP-39: ModuleDataTransmitter, ModuleKerbNetAccess, ModuleRelayEnabler, ModuleProbeControlPoint, CommNetVessel, CommNetScenario
     detail::RegisterThermalModules();  // ModuleCoreHeat, ModuleActiveRadiator, ModuleAblator, ModuleConductionMultiplier (WP-22)
     detail::RegisterEngineModules();  // WP-23: ModuleEngines, ModuleEnginesFX, MultiModeEngine (module_engines.cpp)
     detail::RegisterRcsModules();     // WP-23: ModuleRCS, ModuleRCSFX
