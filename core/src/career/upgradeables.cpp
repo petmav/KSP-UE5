@@ -119,7 +119,7 @@ std::string KSCFacilityLevelText::GetValue(const std::string& valueTag, float fa
     auto loc = [](const char* tag) { return Localizer::Format(tag); };
     auto crewLike = [&](float limit) {
         return GetValueOrFallback(limit, kFloatMax, "", loc("#autoLOC_6002245"), [&](float s) {
-            return loc("#autoLOC_6002246") + " " + KSPUtil::LocalizeNumber(f32store(fx(s) * 5.0), "0");
+            return loc("#autoLOC_6002246") + " " + career::LocalizeNumber(f32store(fx(s) * 5.0), "0");
         });
     };
     const bool isVAB = facility == SpaceCenterFacility::VehicleAssemblyBuilding;
@@ -144,7 +144,7 @@ std::string KSCFacilityLevelText::GetValue(const std::string& valueTag, float fa
         return loc("#autoLOC_6002239");
     }
     if (text == "ScienceDataRatio")
-        return KSPUtil::LocalizeNumber(f32store(fx(gv.GetDataToScienceRatio(facilityLevel)) * 100.0), "0.0##") + "%";
+        return career::LocalizeNumber(f32store(fx(gv.GetDataToScienceRatio(facilityLevel)) * 100.0), "0.0##") + "%";
     if (text == "ManeuverTool") {
         if (!gv.ManeuverToolAvailable(facilityLevel)) return "";
         if (!gv.UnlockedFlightPlanning(ScenarioUpgradeableFacilities::GetFacilityLevel(SpaceCenterFacility::MissionControl)))
@@ -199,7 +199,7 @@ std::string KSCFacilityLevelText::GetValue(const std::string& valueTag, float fa
     if (text == "level")
         return career::FormatNumber(f32store(fx(facilityLevel) * fx(static_cast<float>(ScenarioUpgradeableFacilities::GetFacilityLevelCount(text2)))), "0");
     if (text == "StrategyRange")
-        return KSPUtil::LocalizeNumber(f32store(fx(gv.GetStrategyCommitRange(facilityLevel)) * 100.0), "0.0#") + "%";
+        return career::LocalizeNumber(f32store(fx(gv.GetStrategyCommitRange(facilityLevel)) * 100.0), "0.0#") + "%";
     if (text == "CraftParts")
         return GetValueOrFallback(static_cast<float>(gv.GetPartCountLimit(facilityLevel, isVAB)), kIntMaxAsFloat, "0", loc("#autoLOC_416922"));
     if (text == "UnownedObjects") {
@@ -209,21 +209,21 @@ std::string KSCFacilityLevelText::GetValue(const std::string& valueTag, float fa
     if (text == "CraftSizeYXZ" || text == "CraftSize") {
         const Vector3f craftSize = gv.GetCraftSizeLimit(facilityLevel, isPad);
         return GetValueOrFallback(craftSize.magnitude(), kFloatMax, "", loc("#autoLOC_416922"), [&](float) {
-            return KSPUtil::LocalizeNumber(craftSize.y, "0.0") + meters + ", " + KSPUtil::LocalizeNumber(craftSize.x, "0.0") + meters + ", " +
-                   KSPUtil::LocalizeNumber(craftSize.z, "0.0") + meters;
+            return career::LocalizeNumber(craftSize.y, "0.0") + meters + ", " + career::LocalizeNumber(craftSize.x, "0.0") + meters + ", " +
+                   career::LocalizeNumber(craftSize.z, "0.0") + meters;
         });
     }
     if (text == "CraftMass")
         return GetValueOrFallback(gv.GetCraftMassLimit(facilityLevel, isPad), kFloatMax, "", loc("#autoLOC_416922"),
-                                  [&](float s) { return KSPUtil::LocalizeNumber(s, "0.0#") + loc("#autoLOC_7001407"); });
+                                  [&](float s) { return career::LocalizeNumber(s, "0.0#") + loc("#autoLOC_7001407"); });
     if (text == "ScienceCost")
         return GetValueOrFallback(gv.GetScienceCostLimit(facilityLevel), kFloatMax, "0", loc("#autoLOC_416922"));
     if (text == "ContractLevel") return crewLike(gv.GetContractLevelLimit(facilityLevel));
     if (text == "CraftSizeHgtDiam") {
         const Vector3f craftSize = gv.GetCraftSizeLimit(facilityLevel, isPad);
         return GetValueOrFallback(craftSize.magnitude(), kFloatMax, "", loc("#autoLOC_416922"), [&](float) {
-            return KSPUtil::LocalizeNumber(craftSize.y, "0.0") + meters + ", " +
-                   KSPUtil::LocalizeNumber(Mathf::Sqrt(f32store(fx(Mathf::Pow(craftSize.x, 2.0f)) + fx(Mathf::Pow(craftSize.z, 2.0f)))), "0.0") + meters;
+            return career::LocalizeNumber(craftSize.y, "0.0") + meters + ", " +
+                   career::LocalizeNumber(Mathf::Sqrt(f32store(fx(Mathf::Pow(craftSize.x, 2.0f)) + fx(Mathf::Pow(craftSize.z, 2.0f)))), "0.0") + meters;
         });
     }
     if (text == "EVA") {

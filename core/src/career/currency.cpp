@@ -2,7 +2,9 @@
 // text helper.
 #include "ksp/career/currency.hpp"
 
+#include <limits>
 #include <stdexcept>
+#include "ksp/localization/localizer.hpp"
 
 #include "ksp/career/career_environment.hpp"
 #include "ksp/career/format.hpp"
@@ -110,6 +112,16 @@ std::string FormatNumber(double value, bool isFloat, std::string_view format) {
         if (!allZero) out.insert(out.begin(), '-');
     }
     return out;
+}
+
+// KSPUtil.cs:858
+std::string LocalizeNumber(double value, std::string_view format) {
+    if (value == std::numeric_limits<double>::infinity()) return KSP::Localization::Localizer::Format("#autoLOC_462439");
+    return KSP::Localization::Localizer::Format("<<1>>", {FormatNumber(value, false, format)});
+}
+// KSPUtil.cs:867
+std::string LocalizeNumber(float value, std::string_view format) {
+    return KSP::Localization::Localizer::Format("<<1>>", {FormatNumber(static_cast<double>(value), true, format)});
 }
 
 }  // namespace career
@@ -251,13 +263,13 @@ std::string CurrencyModifierQuery::GetCostLine(bool displayInverted, bool useCur
     const bool flag2 = CanAfford(Currency::Science);
     const bool flag3 = CanAfford(Currency::Reputation);
     const std::string text = !Mathf::Approximately(num, 0.0f)
-                                 ? "<sprite=\"CurrencySpriteAsset\" name=\"Funds\" tint=1> " + KSPUtil::LocalizeNumber(num, "N2")
+                                 ? "<sprite=\"CurrencySpriteAsset\" name=\"Funds\" tint=1> " + career::LocalizeNumber(num, "N2")
                                  : "";
     const std::string text2 = !Mathf::Approximately(num2, 0.0f)
-                                  ? "<sprite=\"CurrencySpriteAsset\" name=\"Science\" tint=1> " + KSPUtil::LocalizeNumber(num2, "N0")
+                                  ? "<sprite=\"CurrencySpriteAsset\" name=\"Science\" tint=1> " + career::LocalizeNumber(num2, "N0")
                                   : "";
     const std::string text3 = !Mathf::Approximately(num3, 0.0f)
-                                  ? "<sprite=\"CurrencySpriteAsset\" name=\"Reputation\" tint=1> " + KSPUtil::LocalizeNumber(num3, "F2")
+                                  ? "<sprite=\"CurrencySpriteAsset\" name=\"Reputation\" tint=1> " + career::LocalizeNumber(num3, "F2")
                                   : "";
     const char* brightOrange = "#ff5b00";  // XKCDColors.HexFormat.BrightOrange
     auto colored = [&](const std::string& body, bool afford, const char* ok) {

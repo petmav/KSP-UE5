@@ -27,7 +27,7 @@ constexpr int kIntMax = std::numeric_limits<int>::max();
 constexpr float kFloatMax = std::numeric_limits<float>::max();
 }  // namespace
 
-// GameVariables.cs:80 Awake
+// GameVariables.cs:6 (the class; the constructor is its Awake, GameVariables.cs:80)
 GameVariables::GameVariables() {
     if (Instance != nullptr) {
         log::Error("[GameVariables]: Instance already exists!");
@@ -36,7 +36,7 @@ GameVariables::GameVariables() {
     }
 }
 
-// GameVariables.cs:92 OnDestroy
+// (GameVariables.OnDestroy, GameVariables.cs:92)
 GameVariables::~GameVariables() {
     if (Instance != nullptr && Instance == this) Instance = nullptr;
 }

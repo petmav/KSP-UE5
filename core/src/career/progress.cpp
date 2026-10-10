@@ -1,4 +1,5 @@
 // WP-36: ProgressNode.cs, ProgressTree.cs, ProgressTracking.cs.
+#include "ksp/career/format.hpp"
 #include "ksp/career/progress.hpp"
 
 #include "ksp/career/funding.hpp"
@@ -104,7 +105,7 @@ void ProgressNode::Save(ConfigNode& node) {
 // ProgressNode.cs:145
 std::string ProgressNode::GetNodeSummary(const std::string& baseID) {
     if (OnGenerateSummary) return OnGenerateSummary(baseID);
-    return baseID + Id() + "=" + KSPUtil::LocalizeNumber(AchieveDate, "0.0");
+    return baseID + Id() + "=" + career::LocalizeNumber(AchieveDate, "0.0");
 }
 
 // ProgressNode.cs:154

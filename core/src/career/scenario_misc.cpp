@@ -449,7 +449,7 @@ void VesselRecovery::OnDestroy() {
     }
 }
 
-// VesselRecovery.cs:37-:70 (the distance factor part of OnVesselRecovered; num = great-circle distance from the space centre,
+// (VesselRecovery.cs:37-:70 helper: the distance factor part of OnVesselRecovered; num = great-circle distance from the space centre,
 // num2 = body radius * pi)
 VesselRecovery::RecoveryFactor VesselRecovery::ComputeRecoveryFactor(double num, double num2, float minDelta, float maxDelta, const std::string& landedAt) {
     const float b = dotnet::Math::Max(0.0f, dotnet::Math::Min(1.0f, f32store(fx(0.1f) + fx(minDelta))));
@@ -552,10 +552,10 @@ void VesselRecovery::OnVesselRecovered(ProtoVessel* pv, bool quick) {
             else
                 empty = env.rndMiniBiomeDisplayName ? env.rndMiniBiomeDisplayName(Vessel::GetLandedAtString(pv->landedAt), true) : Vessel::GetLandedAtString(pv->landedAt);
             missionRecoveryDialog->recoveryLocation = Localizer::Format("#autoLOC_303271", {empty});
-            missionRecoveryDialog->recoveryFactor = KSPUtil::LocalizeNumber(f32store(fx(num3) * 100.0), "0.0") + "% " + text;
+            missionRecoveryDialog->recoveryFactor = career::LocalizeNumber(f32store(fx(num3) * 100.0), "0.0") + "% " + text;
         } else {
             missionRecoveryDialog->recoveryLocation = Localizer::Format("#autoLOC_303276", {career::FormatNumber(num * 0.0010000000474974513, false, "0.0")});
-            missionRecoveryDialog->recoveryFactor = KSPUtil::LocalizeNumber(f32store(fx(num3) * 100.0), "0.0") + "% " + text;
+            missionRecoveryDialog->recoveryFactor = career::LocalizeNumber(f32store(fx(num3) * 100.0), "0.0") + "% " + text;
         }
         log::Info("[VesselRecovery]: " + pv->GetDisplayName() + " recovered " + missionRecoveryDialog->recoveryLocation + ". Recovery Value: " +
                   missionRecoveryDialog->recoveryFactor);

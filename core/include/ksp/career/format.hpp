@@ -9,6 +9,10 @@
 namespace ksp::career {
 
 std::string FormatNumber(double value, bool isFloat, std::string_view format);
+// KSPUtil.LocalizeNumber(value, format) (KSPUtil.cs:858 / :867) with the formats FormatNumber knows: Localizer.Format("<<1>>", text),
+// "#autoLOC_462439" for a double +infinity
+std::string LocalizeNumber(double value, std::string_view format);
+std::string LocalizeNumber(float value, std::string_view format);
 inline std::string FormatNumber(float value, std::string_view format) { return FormatNumber(static_cast<double>(value), true, format); }
 inline std::string FormatNumber(double value, std::string_view format) { return FormatNumber(value, false, format); }
 

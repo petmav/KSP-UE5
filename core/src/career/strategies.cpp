@@ -736,7 +736,7 @@ void StrategySystem::RegisterEffectType(const std::string& typeName, EffectFacto
     EffectTypes()[typeName] = std::move(factory);
 }
 
-// StrategySystem.cs:94
+// (StrategySystem.GetStrategyType != null, StrategySystem.cs:94)
 bool StrategySystem::HasStrategyType(const std::string& typeName) { return Strategy::StrategyTypes().count(typeName) != 0; }
 
 // StrategySystem.cs:31
@@ -787,7 +787,7 @@ Enumerator StrategySystem::OnLoadRoutine(ConfigNode::NodePtr gameNode) {
     LoadNow(*gameNode);
 }
 
-// StrategySystem.cs:181 (after the yield)
+// (StrategySystem.OnLoadRoutine after its yield, StrategySystem.cs:181)
 void StrategySystem::LoadNow(ConfigNode& gameNode) {
     strategies_.clear();
     ConfigNode* node = gameNode.GetNode("STRATEGIES");
