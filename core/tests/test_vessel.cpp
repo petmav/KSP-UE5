@@ -504,7 +504,7 @@ TEST_CASE("WP-14 physprofile save: ProtoVessel.Load -> Vessel.Load -> BackupVess
             CHECK(original.nodes()[i]->name == rewritten.nodes()[i]->name);
             if (original.nodes()[i]->name == "VESSELMODULES") continue;  // see above
             // PART nodes: everything but the MODULE nodes is byte-identical; a MODULE node is identical unless the module class
-            // writes values in an OnSave that its owning package has not ported (ModuleReactionWheel.WheelState: WP-24 ...)
+            // differs after Load / OnSave (ModuleReactionWheel: OnLoad sets stateString to the WheelState description, WP-24 ...)
             ConfigNode& pa = *original.nodes()[i];
             ConfigNode& pb = *rewritten.nodes()[i];
             if (pa.name != "PART") {
@@ -531,7 +531,10 @@ TEST_CASE("WP-14 physprofile save: ProtoVessel.Load -> Vessel.Load -> BackupVess
     for (const auto& [name, n] : modulesDiffer) MESSAGE("  module OnSave differs: " << name << " x" << n);
     CHECK(modulesTotal == 1337);
     CHECK(modulesEqual == 1335);
-    CHECK(modulesDiffer.size() == 2);  // OnSave of ModuleReactionWheel (WheelState: WP-24) and ModuleDataTransmitter (WP-39)
+    // ModuleReactionWheel: the save has stateString = Idle (the flight FixedUpdate text) and WheelState = Active; ModuleReactionWheel.OnLoad (ModuleReactionWheel.cs:124,
+    // WP-24) runs `State = Active`, which rewrites stateString to "Active", and OnSave writes WheelState back (the C# does the same until the next FixedUpdate).
+    // ModuleDataTransmitter: OnSave not ported (WP-39)
+    CHECK(modulesDiffer.size() == 2);
     CHECK(modulesDiffer.count("ModuleReactionWheel") == 1);
     CHECK(modulesDiffer.count("ModuleDataTransmitter") == 1);
 }
