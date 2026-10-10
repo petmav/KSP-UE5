@@ -3660,3 +3660,7 @@ for these the formats are tested with synthetic nodes written from the C# OnSave
 
 `tests/test_progress.cpp`: 31 cases, 36,928 assertions (GameVariables x3, strategy config / costs / effects / combined / save / activation / exchangers, Funding / Reputation transactions and events, CurrencyModifierQuery, facilities x4,
 recovery grid and pipeline and the physprofile vessels, ScenarioDestructibles, ScenarioAchievements, ProgressNode / Tracking / node formats, the physprofile round trip and the synthetic format round trips). `unit` total: see the Test results table.
+
+### Verification
+
+Windows MSVC RelWithDebInfo fresh build: 34/34 ctest, `unit` 484 cases / 768,426 assertions. Linux Clang (`run_tests.sh -f`, WSL Ubuntu 24.04, log `/tmp/wp36_clang.log`): 34/34 ctest pass. GCC not run.
