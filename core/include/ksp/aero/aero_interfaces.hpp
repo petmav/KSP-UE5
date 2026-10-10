@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "ksp/staging/staging_types.hpp"
 #include "ksp/unity/vector.hpp"
 
 namespace ksp {
@@ -45,14 +46,8 @@ public:
     }
 };
 
-// IAirstreamShield.cs
-class IAirstreamShield {
-public:
-    virtual ~IAirstreamShield() = default;
-    virtual bool ClosedAndLocked() = 0;
-    virtual Vessel* GetVessel() = 0;
-    virtual Part* GetPart() = 0;
-};
+// IAirstreamShield.cs: defined once, in ksp/staging/staging_types.hpp (WP-16 and WP-21 each defined it; the merge of the two
+// branches left two identical definitions that no translation unit could include together, WP-23 removed this copy)
 
 // ILiftProvider.cs
 class ILiftProvider {

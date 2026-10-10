@@ -9,6 +9,7 @@
 #include "ksp/dotnet/utf16.hpp"
 #include "ksp/modules/part_module.hpp"
 #include "ksp/parts/cs_parse.hpp"
+#include "ksp/parts/part.hpp"
 #include "ksp/resources/part_resource_library.hpp"
 
 namespace ksp {
@@ -345,6 +346,11 @@ void Propellant::Load(const ConfigNode& node) {
 int32_t Propellant::GetFlowMode() {
     if (flowMode == 8) flowMode = PartResourceLibrary::GetDefaultFlowMode(id);
     return flowMode;
+}
+
+// Propellant.cs:58
+void Propellant::UpdateConnectedResources(Part& p) {
+    p.GetConnectedResourceTotals(id, static_cast<ResourceFlowMode>(GetFlowMode()), actualTotalAvailable, totalResourceCapacity);
 }
 
 namespace {

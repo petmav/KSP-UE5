@@ -106,8 +106,24 @@ struct Propellant {
     bool drawStackGauge = false;
     int32_t flowMode = 8;  // ResourceFlowMode.NULL
     int32_t fMode = 8;
+    // WP-23: the run-time half of Propellant.cs (Propellant.cs:11-25), written by ModuleEngines / ModuleRCS
+    double currentRequirement = 0.0;      // :11
+    double currentAmount = 0.0;           // :13
+    bool isDeprived = false;              // :15
+    double actualTotalAvailable = 0.0;    // :21
+    double totalResourceCapacity = 0.0;   // :23
+    bool hasAlternatePropellant = false;  // :25
     void Load(const ConfigNode& node);  // Propellant.cs:62
     int32_t GetFlowMode();              // Propellant.cs:114: NULL -> the resource's default flow mode (cached)
+    // Propellant.cs:44 totalResourceAvailable getter / :54 setter
+    double totalResourceAvailable() const {
+        const double num = actualTotalAvailable - minResToLeave;
+        if (num > 0.0) return num;
+        return 0.0;
+    }
+    void set_totalResourceAvailable(double value) { actualTotalAvailable = value; }
+    // Propellant.cs:58 (Part.GetConnectedResourceTotals(id, GetFlowMode(), out actualTotalAvailable, out totalResourceCapacity))
+    void UpdateConnectedResources(class Part& p);
 };
 
 // One MODULE of a part prefab.
