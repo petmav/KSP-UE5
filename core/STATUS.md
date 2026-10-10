@@ -32,8 +32,9 @@ Updated 2026-10-10 (WP-22, WP-23, WP-26, WP-28). One command: `powershell -NoPro
 
 | 14. WP-23 engines, RCS, gimbals, intakes, numeric part (branch `wp23`) | done (numeric / data side): ModuleEngines / ModuleEnginesFX (fields, OnLoad / OnStart, propellant setup, thrust / Isp / fuel-flow maths over the float policy, throttle model, flameout, staging overrides, RequestPropellant through WP-15), MultiModeEngine, ModuleRCS(FX), ModuleGimbal, ModuleResourceIntake, EngineType / IEngineStatus / IThrustProvider / IThrottleControl, Propellant run-time state; gates `golden.engine_thrust` (.NET golden, 5,248 rows, NetFloat) and `capture.engine_deltav` (in-game, 460 rows, MonoFloat), both 0 ULP; FX / audio, rigidbody force application and PAW text deferred (see "WP-23") |
 | 15. WP-28 resource-processing modules (branch `wp28`, from main `289d0c98`) | done (numeric / data side, unit-gated): BaseConverter family (catch-up, efficiency, recipe units), drills, harvester, generator, alternator, jettison, drain, space-object info / resource / analysis, scanners, surveyor, biome scanner; all 26 csv files. `unit` +17 cases / 8,571 assertions; every existing gate unchanged (`capture.part_database` 0 ULP). See the WP-28 section |
+| 17. WP-17 delta-v calculation (branch `wp17`) | done: VesselDeltaV (Ship and Vessel modes, RunCalculations run to the end, part staging ResetPartInfo / Process*PartInfoChildren), DeltaVStageInfo (ProcessParts, SimulateDeltaV burn simulation, StoreInterimDeltaV, CheckTimeStep, ISP / TWR), DeltaVEngineInfo (CalculateISP / ThrustVector / Burn / ApplyBurn), DeltaVPartInfo, DeltaVEngineStageSet (two list instances), the small files and extensions; gate `capture.deltav_stages` (stages 180 rows, totals 60, parts 1,225): 0 ULP except the vector-magnitude delta-v columns (<= 11 ULP, rel 1.02e-6, tolerance rel 2e-6), 16 rows of two crafts excluded (omsEngine thrust direction needs the .mu model); see "WP-17" |
 
-## Test results (all 33 ctest tests pass: Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav)
+## Test results (all 34 ctest tests pass: Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages)
 
 Every numeric column of every gate: **max ULP 0, max abs 0** (bit-exact, and the same decimal text). Tolerance files:
 harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture gates use `tests/tolerances_capture.json`
@@ -70,7 +71,8 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `capture.thermal_step` | WP-22: in-game `captures/out2/thermal_step.json` (C6): vessel 2,994 x 12 + isAnalytical, parts 14,985 x 19 + exposed (the real UpdateThermodynamics per tracked part and frame; 7 recovered columns are inputs, not compared), part_constants 15; inputs recovered from the capture and exclusions as listed in "WP-22" | 17,994 | 0 ULP |
 | `golden.engine_thrust` | WP-23: harness golden `engine_thrust` (KSP's IL on .NET 4.8), every table, computed with the `aero::NetFloat` policy: engines 41 x 22 columns, isp_thrust_vs_pressure 738, kerbin_flight 4,059, rocket_equation 410 | 5,248 | 0 ULP |
 | `capture.engine_deltav` | WP-23: in-game `captures/out2/deltav_readout.json` (C5) table `engines` (DeltaVEngineInfo's editor-situation reads of ModuleEngines: ispVac / ASL / Actual, thrustVac / ASL / Actual, requiresAir, propellants; 17 crafts x 4 bodies, `aero::MonoFloat`); `startBurnStage` is WP-16's | 460 | 0 ULP |
-| `unit` | 355 doctest cases, 696,649 assertions (WP-26: 29 cases, 1,218 assertions in `test_structural_modules.cpp`; WP-22: 7 cases, 112 assertions in `test_thermal.cpp`; WP-23: 10 cases, 1,690 assertions in `test_engines.cpp`; WP-28: 17 cases, 8,571 assertions in `test_resource_processing.cpp`; WP-16: 19 cases, 12,222 assertions in `test_staging.cpp`; WP-21: 11 cases, 220,304 assertions in `test_aero.cpp`; WP-18: 26 cases, 274,042 assertions in `test_ship_construct.cpp`; WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
+| `capture.deltav_stages` | WP-17: in-game `captures/out2/deltav_readout.json` (C5) tables `stages` (180 rows x 25 columns), `totals` (60 rows x 10 columns) and `parts` (1,225 rows: decoupleStage, activationStage, isEngine): VesselDeltaV over the editor ship, Mono float rule. 0 ULP on every column except deltaVinVac / deltaVatASL / deltaVActual (max 11 ULP, rel 1.02e-6) and the three TotalDeltaV sums (rel 1.02e-6); tolerance rules in `tests/tolerances_capture.json`; 8 stage rows + 8 totals rows excluded | 1,465 | 0 ULP (delta-v: rel <= 2e-6) |
+| `unit` | 365 doctest cases, 697,003 assertions (WP-17: 10 cases, 354 assertions in `test_deltav.cpp`; WP-26: 29 cases, 1,218 assertions in `test_structural_modules.cpp`; WP-22: 7 cases, 112 assertions in `test_thermal.cpp`; WP-23: 10 cases, 1,690 assertions in `test_engines.cpp`; WP-28: 17 cases, 8,571 assertions in `test_resource_processing.cpp`; WP-16: 19 cases, 12,222 assertions in `test_staging.cpp`; WP-21: 11 cases, 220,304 assertions in `test_aero.cpp`; WP-18: 26 cases, 274,042 assertions in `test_ship_construct.cpp`; WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
 differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 6 ULP (Vector3.Project/ProjectOnPlane) and
@@ -2849,3 +2851,109 @@ Derivations are in comments; values come from the cfgs of the GameData mirror, t
 ### Commits (branch `wp26`)
 
 see `git log --oneline main..wp26`.
+
+## WP-17: delta-v calculation (branch `wp17`, from main `135fb5aa`, merged main `d46be6e4` (WP-26) before the final runs)
+
+State: done for the editor (Ship mode) path that the capture covers, and the Vessel (flight) mode ported with the same code paths (Vessel.parts,
+FlightRegistry, `ctrlState`, `Part.vessel`); the flight branches have no capture (see "Needs a new capture"). New gate `capture.deltav_stages`
+(tables `stages`, `totals`, and the DeltaVPartInfo columns of `parts`). Every other gate is unchanged and green. Every ported function cites
+`File.cs:line` (checked with `tools/wp28/check_cites.py`: the one report left is `VesselDeltaV::DriveToCompletion`, a C++-only name for the
+Unity driver `CheckDirtyAndRun`).
+
+### What is ported (by C# file)
+
+| C# file | C++ | ported | not ported |
+|---|---|---|---|
+| VesselDeltaV.cs (1,270) | `vessel/delta_v.hpp`, `src/vessel/vessel_delta_v.cpp` | Create (Ship and Vessel), Start (separation indexes, ResetPartInfo), CalculateSeparationStageIndexes, UpdateStageInfo, ProcessPayloadStages, ResetPartInfo (engine children, docking ports, decouplers, stage separators), ProcessEnginePartInfoChildren, ProcessDecouplePartInfoChildren, changePartInfoDecoupleStage, RunCalculations (the coroutine run to its end), SimulateFlightScene / SimulateLastStage, ReCalculateVesselTotals, stageDVActual, ResetSimulationResources, ResetStagePartCaches, UpdateModuleEngines (both modes), ProcessActiveUpdateEngines, GetWorkingStage / GetStage, GetActivatedEngines, GetHighestSeparationStage, ResetSeparationIndexes, SetCalcsDirty, the situation total | the GameEvents subscriptions of `Start` / `OnDestroy` and their handlers (the host calls `SetCalcsDirty` where the event would), `FixedUpdate` / `Update` / `CheckDirtyAndRun` as Unity callbacks (replaced by `DriveToCompletion`: the editor loop runs while calcsDirty or syncListInstances), the frame delay of the coroutine (`frames`), vesselEventDelayTime |
+| DeltaVStageInfo.cs (1,224) | `src/vessel/delta_v_stage_info.cpp` | both constructors, Reset, ProcessParts, CalculateStartMass, StoreInterimDeltaV, GetHighestSeparationIndex, MatchingSeparationIndex, GetEngineResourceParts, CalculateEngineResourceFuelMass, EnginesDeprived, Store{Start,End}FuelMass, CheckTimeStep, SimulateDeltaV, CalculateTimeRequiredDV, CalcLerpDeltaV, ProcessActiveEngines, ResetPartCaches, GetStageMass, GetCurrentStageMass, Contains*Decoupler, CalculateISP, CalculateTWR, Parts*InStage, the Get*Situation* getters | GetPartDisplayInfo (UI text), CoTForStage (returns a Ray; unused by the calculation) |
+| DeltaVEngineInfo.cs (796) | `src/vessel/delta_v_engine_info.cpp` | everything: constructor, Reset, PropellantStarved, CalculateBurn, ApplyBurn, ResetCalcVariables, SwitchEngine, CalculateFuelTime, CalcThrustActual, CalculateISP, CalculateThrustVector, the getters, RequiresAir, ThrottleLimited, PropellantDemand | the debug logs |
+| DeltaVPartInfo.cs (357) | `src/vessel/delta_v_part_info.cpp` | everything (CheckDecoupler, GetSeparationStage, CalculateMassValues, CalculateStagingValues, FindDecouplerParent, stage fuel mass records over `PartResourceList(part, refList, simulationSet: true)`) | the debug logs |
+| DeltaVEngineStageSet.cs (507) | `src/vessel/vessel_delta_v.cpp` | everything: the two list instances, WorkingStageInfo / OperatingStageInfo (sorted by stage, highest first), Working / OperatingEngineInfo (the `SimulationRunning` switch), UpdateStageInfo(stage), RemoveStaleStages, RemoveStagedStages, SetPayload, AddEngineWorkingSet, RemoveInvalidEnginesWorkingSet | - |
+| DeltaVGlobals.cs, DeltaVAppValues.cs (data half), DeltaVSituationOptions.cs, DeltaVExtensions.cs, DeltaVEngineExtensions.cs, DeltaVPartExtensions.cs, DeltaVEngineResourcePartExtensions.cs, DeltaVPropellantInfo.cs, DeltaVEngineBurnTotals.cs, DeltaVEngineResourcePartInfo.cs, DeltaVCalc.cs | `delta_v.hpp`, `src/vessel/delta_v_part_info.cpp` | all of them (`DeltaVAppValues`: body, situation, altitude, atmPressure, atmDensity; WP-43 owns its info lines; `GameSettings.DELTAV_*` defaults as `DeltaVGameSettings`; HighLogic scene = `SaveEnvironment::loadedScene`) | `DeltaVGlobals.Awake / Start / InitDeltaVGlobal / OnSceneSwitch / InitInfoLines` (scene and UI plumbing) |
+
+Changed earlier files: `tools/support/editor_staging.hpp` (EditorSession constructors over a `vector<Part*>` for a ShipConstruct's live parts).
+
+### Gate results (Windows MSVC, harness tolerances unchanged, `tests/tolerances_capture.json` 0 ULP except the rules below)
+
+| table | rows | columns compared | max ULP |
+|---|---|---|---|
+| `stages` | 180 | stage, separationIndex, payloadStage, TWRVac / ASL / Actual, ispVac / ASL / Actual, thrustVac / ASL / Actual, startMass, endMass, dryMass, fuelMass, stageMass, decoupledMass, stageBurnTime, engines_in_stage, engines_active, parts | **0** |
+| `stages` | 180 | deltaVinVac, deltaVatASL, deltaVActual | 9 / 11 / 11 ULP (rel 1.02e-6), tolerance rel 2e-6 |
+| `totals` | 60 | altitude, atmPressure_atm, atmDensity, GeeASL, TotalBurnTime, IsReady, stages | **0** |
+| `totals` | 60 | TotalDeltaVVac / ASL / Actual | rel 1.02e-6 (sums of the stage values above), tolerance rel 2e-6 |
+| `parts` | 1,225 | part, decoupleStage, activationStage, isEngine | **0** |
+
+The tolerance rules (`deltav_readout/stages/deltaV*` f32, `deltav_readout/totals/TotalDeltaV*` f64, rel 2e-6, well inside the 5e-6 / 64 ULP limit)
+are the only relaxation. Cause: the stage delta-v is `|sum of thrustVector| * (ln(m0/m1) * isp * g / thrust)` (DeltaVStageInfo.cs:331), and each
+thrust vector is `thrust * sum(thrustTransform.forward * multiplier)` of the engine's thrust transforms, whose world rotation comes from the part
+model (`.mu`, PartReader) and Unity's native transform chain. The model reader is not ported and the 551 `.mu` files of
+`testdata/GameData-mirror` are empty stubs, so the runner installs ONE thrust transform per engine at the part along the part's -Y (every
+stock axial engine's exhaust direction: `ModuleEngines.ThrustUpdate` applies `-transform.forward`), with the craft file's part rotation
+normalized as Unity's native `rotation` getter does (not normalizing: 96 stage rows off instead of 60). That reproduces the direction to about
+1e-7, which is 0 to 11 ULP of the result. Every mass, time, Isp, thrust and TWR column does not depend on the direction and is bit-exact.
+
+Exclusions (`tests/data/deltav_stages_exclusions.json`, next to the gate in `tests/CMakeLists.txt`; each row with its reason; compare.py reports the
+candidate rows of a dropped row as extra, as for the other DROP_KEYS_FILE gates): `stages` rows `(craft_Dynawing, craft_Learstar_A1) x
+(Kerbin, Mun, Duna, Eve)` at `list_idx` 4 (stage 0) and the `totals` rows of the same crafts and bodies: stage 0 of both crafts burns four
+`omsEngine` (Puff_v2.mu) whose thrust transform is not along the part's -Y; the captured delta-v differs from the stand-in by 1.5 % (Dynawing,
+capture 355.16 vs 349.96) and 0.09 % (Learstar, 297.43 vs 297.68). Mass, burn time, Isp, thrust and TWR of those rows were compared before the
+exclusion and are exact. `totals` also drops the column `calc_events` (the number of `onDeltaVCalcsCompleted` events the capture's own handler
+saw after its SetCalcsDirty: a harness counter, not a VesselDeltaV value; the unit tests check the event count of the port).
+
+### What the runner replays (`tools/golden_runner/ds_deltav_stages.cpp`) and why
+
+The editor session of the capture is rebuilt from the craft files (through the upgrade pipeline, as WP-18): `ShipConstruct.LoadShipWithParts`, Part.Start
+of every part, StageManager's SortIcons (WP-16), VesselDeltaV.Create / Start, the loop (two runs, then one run per body with `SetCalcsDirty(false)`).
+The inputs the C# gets from editor objects that have no package yet are installed by the runner, each citing its decompiled statement:
+
+- Crew mass. `Part.FixedUpdate` in the editor (Part.cs:4094-4143) does `UpdateMass(); mass += KerbalCrewMass; mass += ResourceMass; mass += InventoryMass` per
+  crew member, and DeltaVPartInfo.CalculateMassValues reads that `Part.mass`. `KerbalRoster.DefaultCrewForVessel` (KerbalRoster.cs:491-615) fills ONE part, the first
+  (file order) that is a control source with crew capacity, to its capacity (the final `break`); the inventory mass of a kerbal is 0.049 t, computed from the
+  part database exactly as `tests/test_ship_construct.cpp` (kerbalEVA.cfg DEFAULTPARTS evaChute + evaJetpack). 11 crafts have 1-4 crew; the masses of all 17
+  crafts match the capture bit for bit. `isControlSource` is ModuleCommand's (WP-24, not ported): the runner treats a ModuleCommand part as the control source.
+- Fuel lines: `CompoundPart.OnStartComplete` (WP-26, `CompoundPart::hooks.editorShipParts`) resolves the `tgt` of every fuel line; without it the asparagus
+  crafts (Kerbal X, Dynawing) burn from the wrong tanks.
+- `ModuleDockingNode.OnLoad` / `OnStart` (ModuleDockingNode.cs:533, :594) do `part.fuelCrossFeed = crossfeed`: a closed docking port (`crossfeed = False` in the craft
+  file) cuts the crossfeed graph. The docking node module is still the WP-16 staging stand-in; the runner applies this one statement.
+- `HighLogic.LoadedScene` = EDITOR through `SaveEnvironment::loadedScene` (the library reads it through `DeltaVGlobals::LoadedSceneIsEditor()`).
+
+### Float and collection details that decide the result (later code must keep them)
+
+- `StoreInterimDeltaV`: `Math.Log(startingMass / currentMass)` divides two floats in double (a double parameter does not round), then `* ispVac * g / (double)thrustVac`, cast to
+  float, and `Vector3 * float` rounds each component once. `CalculateTWR`: `thrust / (startMass * ((float)g * gee))` is one double expression stored once.
+- `CheckTimeStep`, `GetCurrentStageMass`, `MassBurnt` (`density * (float)amountBurnt`), every `num += x` on floats: f32store at each store.
+- `SimulateDeltaV` ends a stage when the last-listed resource of every "stage next" tank is empty (`flag3` is overwritten per resource, so only the LAST entry of
+  `SimulationResources` counts) and `ApplyBurn` abandons an engine at the first propellant whose returned amount differs from the demand by more than 1e-5, which
+  skips its remaining propellants: this is where a fuel line or a crossfeed block shows (Kerbal X: 12 t per asparagus stage; Dynawing: one engine's oxidizer left over).
+- Enumeration order: `Part.simulationCrossfeedPartSet.GetParts()` is a `HashSet<Part>` enumerated in insertion order (`dotnet::HashSet`), `stageInfoEntries` are
+  sorted by InstanceOne.stage descending (a null InstanceOne last), the stage lists by stage descending; the stage numbers are unique so the unstable
+  `List.Sort` of Mono cannot reorder equal keys.
+- The two list instances alternate every run (`workingIndex`/`operatingIndex`), `DeltaVStageInfo.Reset` keeps `separationIndex` (it only grows), and `payloadStage` of a
+  stage comes from the PREVIOUS run's payload list (`UpdateStageInfo()` clears `payloadStages` after the stages were created, `ProcessPayloadStages` refills it). The
+  editor therefore needs the two runs the first `syncListInstances` causes; `DriveToCompletion` reproduces the count (`RunCount()`, `CompletedEvents()`).
+- A craft with no engine never sets `_isReady` (the early exit of RunCalculations), fires the completion event on both runs and has one mass-only stage 0.
+- `PropellantsToIgnore` holds the `string.GetHashCode()` of "IntakeAir" and "ElectricCharge" (Mono hash): IntakeAir/ElectricCharge are never starved and never drawn.
+
+### Deviations
+
+- The Unity coroutine/MonoBehaviour driver and the GameEvents wiring are not ported (host calls); `RunCalculations` runs to the end because its yields only wait frames.
+- `Debug.Log` calls and `logMsgs` are dropped. `DeltaVGlobals.homeBody` null (no scene) reads 0 for `GetHomeBody().atmDensityASL / GeeASL` instead of throwing.
+- Engine `part` is `PartModule::part` cast to `Part*`; DeltaVPropellantInfo keeps a pointer to the engine's `Propellant` record (the C# shares the object).
+
+### Needs a new capture or data
+
+- The `.mu` model reader (thrust transforms of every engine, with their multipliers and the part-tree transform chain): with it the runner stand-in disappears and
+  the three delta-v columns can go back to 0 ULP; the omsEngine rows come back into the gate. The shipped assets are not readable from the repo mirror (empty stubs).
+- An in-game FLIGHT capture of VesselDeltaV (`SimulateFlightScene`, `CalcLerpDeltaV`, `OperatingStageInfo` in the flight scene, engine ignition events): the flight
+  branches are ported from the decompile but not gated.
+- ModuleCommand (WP-24): `Part.isControlSource` for the crew assignment above; ModuleDockingNode (WP-25): `crossfeed` in OnLoad / OnStart.
+
+### Unit tests (`tests/test_deltav.cpp`: 10 cases, 354 assertions)
+
+See README "unit (WP-17)". All expectations are derived from the decompiled control flow, the part database and the game crafts (stage order and contents, the
+totals as sums of the stages, the editor run count, rocket-equation bounds, the TWR formula, sea level == vacuum on Mun, the engine info against the module curves,
+the engine-less craft, Kerbal X asparagus stages and nested stage parts).
+
+### Fresh run
+
+Windows MSVC (`coreun_tests.ps1 -Fresh`, build deleted first): 33/33 ctest tests passed (34 where `decompiled/KSP-dev/saves` exists and `corpus.saves` is registered; this worktree has none): `unit` 365 cases / 697,003 assertions, `capture.deltav_stages` 0.9 s, `capture.engine_deltav` unchanged, every earlier gate unchanged. Linux (WSL, `./run_tests.sh -f`): WSL_PLACEHOLDER

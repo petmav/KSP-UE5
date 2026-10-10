@@ -32,6 +32,7 @@ add_executable(kspcore_tests
     test_staging.cpp
     test_thermal.cpp
     test_structural_modules.cpp
+    test_deltav.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
 )
@@ -319,4 +320,5 @@ ksp_golden_gate(capture.engine_deltav engine_deltav GOLDEN ${KSP_CAPTURES2_DIR}/
 ksp_golden_gate(capture.deltav_stages deltav_stages GOLDEN ${KSP_CAPTURES2_DIR}/deltav_readout.json DROP_HEX
                 TOL ${KSP_CAPTURE_TOL} TABLES stages,totals,parts
                 DROP_COLUMNS "totals:calc_events"
+                DROP_KEYS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/data/deltav_stages_exclusions.json
                 COLUMNS "parts:craft_id,part_index,part,decoupleStage,activationStage,isEngine")

@@ -28,7 +28,7 @@
 #include "ksp/database/game_data.hpp"
 #include "ksp/dotnet/number.hpp"
 #include "ksp/dotnet/text.hpp"
-#include "ksp/modules/resource_modules.hpp"
+#include "ksp/parts/compound_part.hpp"
 #include "ksp/modules/module_engines.hpp"
 #include "ksp/resources/planetary_resources.hpp"
 #include "ksp/resources/resource_broker.hpp"
@@ -156,28 +156,13 @@ void AssignDefaultCrew(const std::vector<Part*>& parts, float inventoryPerKerbal
     }
 }
 
-// CompoundPart.Start (CompoundPart.cs:170-235) of the fuel lines of the editor ship: the PARTDATA `tgt` craftID names the target part;
-// SetTarget -> SetLink -> every CompoundPartModule.OnTargetSet(target) (CompoundPart.cs:708); same as support::LinkFuelLines (which
-// works on a CraftTree) over the ShipConstruct's live parts (the file-side record `ship.parts[i]` and `ship.liveParts[i]` share the index).
-void LinkFuelLines(ShipConstruct& ship) {
-    for (size_t i = 0; i < ship.liveParts.size(); i++) {
-        Part& p = *ship.liveParts[i];
-        if (p.className != "CompoundPart" || !ship.parts[i].partData) continue;
-        if (p.Modules().GetModule([](PartModule& pm) { return dynamic_cast<CModuleFuelLine*>(&pm) != nullptr; }) == nullptr) continue;
-        const auto tgt = ship.parts[i].partData->GetValue("tgt");
-        if (!tgt) continue;
-        uint32_t tgtId = 0;
-        if (!dotnet::TryParseUInt32(*tgt, tgtId)) continue;
-        Part* target = nullptr;
-        for (Part* q : ship.liveParts)
-            if (q->fields.craftID == tgtId) target = q;
-        if (target == nullptr) continue;
-        for (PartModule* m : p.Modules().GetModules([](PartModule& pm) { return dynamic_cast<CompoundPartModule*>(&pm) != nullptr; })) {
-            auto* cm = dynamic_cast<CompoundPartModule*>(m);
-            cm->compoundTarget = [target](const Part&) { return target; };
-            cm->OnTargetSet(target);
-        }
-    }
+// Part.Start of a CompoundPart (CompoundPart.cs:169 onStartComplete, WP-26): the editor ship's fuel lines find their target by the
+// PARTDATA `tgt` craftID (EditorLogic.fetch.ship.parts) and SetTarget -> every CompoundPartModule.OnTargetSet.
+void StartCompoundParts(ShipConstruct& ship) {
+    CompoundPart::hooks.editorShipParts = [&ship]() { return ship.liveParts; };
+    for (Part* p : ship.liveParts)
+        if (auto* cp = dynamic_cast<CompoundPart*>(p)) cp->OnStartComplete();
+    CompoundPart::hooks.editorShipParts = nullptr;
 }
 
 // ModuleDockingNode.OnLoad (ModuleDockingNode.cs:533) / OnStart (:594): `base.part.fuelCrossFeed = crossfeed;` -- the docking node module is
@@ -255,7 +240,7 @@ int RunDeltaVStages(const RunnerOptions& opt) {
         editor.Load();
         for (Part* p : ship.liveParts) InstallThrustTransforms(*p);
         ApplyDockingNodeCrossfeed(ship);
-        LinkFuelLines(ship);
+        StartCompoundParts(ship);
         AssignDefaultCrew(ship.liveParts, inventoryPerKerbal);
 
         DeltaVGlobals::appValues = std::make_unique<DeltaVAppValues>(kerbin);

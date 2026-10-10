@@ -77,9 +77,9 @@ struct DeltaVGameSettings {
 // DeltaVAppValues.cs: the data half (the info lines are the flight / editor UI, WP-43)
 class DeltaVAppValues {
 public:
-    const CelestialBody* body = nullptr;                                 // :71
-    DeltaVSituationOptions situation = DeltaVSituationOptions::Vaccum;  // :73
-    double altitude = 0.0;                                               // :75
+    const CelestialBody* body = nullptr;
+    DeltaVSituationOptions situation = DeltaVSituationOptions::Vaccum;
+    double altitude = 0.0;
     DeltaVAppValues() = default;                                         // :86 (body = FlightGlobals.GetHomeBody())
     explicit DeltaVAppValues(const CelestialBody* homeBody) : body(homeBody) {}
     float atmPressure() const;   // :81 (float)(body.GetPressure(altitude) * 0.009869232667160128)
@@ -89,10 +89,10 @@ public:
 // DeltaVGlobals.cs
 class DeltaVGlobals {
 public:
-    static inline bool ready = false;                         // :6
+    static inline bool ready = false;
     static inline std::unique_ptr<DeltaVAppValues> appValues;  // `fetch.deltaVAppValues` (null: no DeltaVGlobals in the scene)
     static DeltaVAppValues* DeltaVAppValuesPtr() { return appValues.get(); }  // :19 DeltaVAppValues
-    static inline bool _doStockSimulations = true;            // :14
+    static inline bool _doStockSimulations = true;
     static bool DoStockSimulations() { return _doStockSimulations; }  // :58
     static const std::vector<int>& PropellantsToIgnore();     // :60 (the hash codes of "IntakeAir" and "ElectricCharge")
     static void SetPropellantsToIgnore(std::vector<int> v);   // :73
@@ -112,18 +112,18 @@ private:
 // DeltaVPropellantInfo.cs
 class DeltaVPropellantInfo {
 public:
-    Propellant* propellant = nullptr;       // :6 (the engine's own Propellant record)
-    double amountAvailable = 0.0;           // :8
-    double amountBurnt = 0.0;               // :10
-    double maxBurnTime = 0.0;               // :12
-    double setThrottleBurnTime = 0.0;       // :14
-    double currentBurnTime = 0.0;           // :16
-    double amountPerSecondMaxThrottle = 0.0;     // :18
-    double amountPerSecondSetThrottle = 0.0;     // :20
-    double amountPerSecondCurrentThrottle = 0.0;  // :22
-    double pendingDemand = 0.0;             // :24
-    float timeLeftSetThrottle = 0.0f;       // :26
-    float timeLeftCurrentThrottle = 0.0f;   // :28
+    Propellant* propellant = nullptr;
+    double amountAvailable = 0.0;
+    double amountBurnt = 0.0;
+    double maxBurnTime = 0.0;
+    double setThrottleBurnTime = 0.0;
+    double currentBurnTime = 0.0;
+    double amountPerSecondMaxThrottle = 0.0;
+    double amountPerSecondSetThrottle = 0.0;
+    double amountPerSecondCurrentThrottle = 0.0;
+    double pendingDemand = 0.0;
+    float timeLeftSetThrottle = 0.0f;
+    float timeLeftCurrentThrottle = 0.0f;
     explicit DeltaVPropellantInfo(Propellant* p);   // :30
     DeltaVPropellantInfo Copy() const;              // :43
     float MassBurnt() const;                        // :57
@@ -132,18 +132,18 @@ public:
 // DeltaVEngineBurnTotals.cs
 class DeltaVEngineBurnTotals {
 public:
-    double maxTotalBurnTime = 0.0;             // :5
-    double setFuelFlowTotalBurnTime = 0.0;     // :7
-    double currentFuelFlowTotalBurnTime = 0.0;  // :9
-    std::vector<DeltaVPropellantInfo> propellantInfo;  // :11
+    double maxTotalBurnTime = 0.0;
+    double setFuelFlowTotalBurnTime = 0.0;
+    double currentFuelFlowTotalBurnTime = 0.0;
+    std::vector<DeltaVPropellantInfo> propellantInfo;
 };
 
 // DeltaVEngineResourcePartInfo.cs
 class DeltaVEngineResourcePartInfo {
 public:
-    std::shared_ptr<DeltaVPartInfo> resourcePart;  // :5
-    std::vector<int> resourceIdsUsed;              // :7
-    float fuelMassUsed = 0.0f;                     // :9
+    std::shared_ptr<DeltaVPartInfo> resourcePart;
+    std::vector<int> resourceIdsUsed;
+    float fuelMassUsed = 0.0f;
     explicit DeltaVEngineResourcePartInfo(std::shared_ptr<DeltaVPartInfo> partInfo) : resourcePart(std::move(partInfo)) {}  // :11
 };
 
@@ -171,24 +171,24 @@ public:
         PartResourceList resources;
         explicit PartStageFuelMass(Part& part) : resources(&part, &part.Resources, true) {}  // :17
     };
-    VesselDeltaV* vesselDeltaV = nullptr;   // :27
-    Part* part = nullptr;                   // :29
-    int decoupleStage = 0;                  // :31
-    bool decoupleBeforeBurn = false;        // :33
-    int activationStage = 0;                // :35
+    VesselDeltaV* vesselDeltaV = nullptr;
+    Part* part = nullptr;
+    int decoupleStage = 0;
+    bool decoupleBeforeBurn = false;
+    int activationStage = 0;
     bool isDecoupler = false, isStageSeparator = false, isFairing = false, isDockingPort = false, isEngine = false;  // :37-45
     bool isJettison = false, isIntake = false, isSolarPanel = false, isGenerator = false;                            // :47-53
-    ModuleResourceIntake* moduleResourceIntake = nullptr;    // :55
-    PartModule* moduleDeployableSolarPanel = nullptr;       // :57
-    PartModule* moduleGenerator = nullptr;                  // :59
-    PartModule* moduleDockingNode = nullptr;                // :61
-    ModuleDecouple* moduleDecoupler = nullptr;              // :63
-    ModuleAnchoredDecoupler* moduleAnchoredDecoupler = nullptr;  // :65
-    IStageSeparator* moduleStageSeparator = nullptr;        // :67
-    std::vector<ModuleEngines*> engines;                    // :69
+    ModuleResourceIntake* moduleResourceIntake = nullptr;
+    PartModule* moduleDeployableSolarPanel = nullptr;
+    PartModule* moduleGenerator = nullptr;
+    PartModule* moduleDockingNode = nullptr;
+    ModuleDecouple* moduleDecoupler = nullptr;
+    ModuleAnchoredDecoupler* moduleAnchoredDecoupler = nullptr;
+    IStageSeparator* moduleStageSeparator = nullptr;
+    std::vector<ModuleEngines*> engines;
     float dryMass = 0.0f, fuelMass = 0.0f, jettisonMass = 0.0f;  // :71-75
-    std::unordered_map<int, std::unique_ptr<PartStageFuelMass>> stageFuelMass;  // :77 DictionaryValueList<int, PartStageFuelMass>
-    Part* jettisonPart = nullptr;                           // :79
+    std::unordered_map<int, std::unique_ptr<PartStageFuelMass>> stageFuelMass;
+    Part* jettisonPart = nullptr;
 
     DeltaVPartInfo(Part* part, VesselDeltaV* vesselDeltaV);   // :76
     void StageStartFuelMass(int stage);                      // :176
@@ -209,20 +209,20 @@ private:
 // DeltaVEngineInfo.cs
 class DeltaVEngineInfo {
 public:
-    VesselDeltaV* vesselDeltaV = nullptr;     // :8
-    ModuleEngines* engine = nullptr;          // :12
-    MultiModeEngine* multiModeEngine = nullptr;  // :14
-    std::vector<DeltaVPropellantInfo> propellantInfo;  // :16
-    double atmosphere = 0.0;                  // :18
+    VesselDeltaV* vesselDeltaV = nullptr;
+    ModuleEngines* engine = nullptr;
+    MultiModeEngine* multiModeEngine = nullptr;
+    std::vector<DeltaVPropellantInfo> propellantInfo;
+    double atmosphere = 0.0;
     double ispVac = 0.0, ispASL = 0.0, ispActual = 0.0;  // :20-24
     Vector3f thrustVectorVac, thrustVectorASL, thrustVectorActual;  // :26-30
     float thrustVac = 0.0f, thrustASL = 0.0f, thrustActual = 0.0f;  // :32-36
-    int startBurnStage = 0;                   // :38
-    bool deprived = false;                    // :40
-    float maxTimeStep = 0.0f;                 // :42
-    std::unordered_map<int, DeltaVEngineBurnTotals> stageBurnTotals;  // :45 DictionaryValueList<int, DeltaVEngineBurnTotals>
-    bool requiresAir = false;                 // :47
-    bool throttleLimited = false;             // :49
+    int startBurnStage = 0;
+    bool deprived = false;
+    float maxTimeStep = 0.0f;
+    std::unordered_map<int, DeltaVEngineBurnTotals> stageBurnTotals;
+    bool requiresAir = false;
+    bool throttleLimited = false;
 
     DeltaVEngineInfo(VesselDeltaV* inVesselDeltaV, ModuleEngines* inEngine, MultiModeEngine* inMultiModeEngine = nullptr);  // :68
     DeltaVPartInfo* partInfo();               // :56 (the cached DeltaVPartInfo of engine.part)
@@ -234,7 +234,7 @@ public:
     void Reset();                             // :120
     bool PropellantStarved();                 // :147
     void CalculateBurn(DeltaVStageInfo* deltaVStage, std::vector<DeltaVEngineInfoPtr>& enginesStillActive, float deltaTime, bool runningActive,
-                       bool logMsgs, bool infiniteFuel, bool reCalc, bool& checkDeprived, float& minTimeStep);  // :167
+                       bool logMsgs, bool infiniteFuel, bool reCalc, bool& checkDeprived, float& minTimeStep);
     void ApplyBurn(DeltaVStageInfo* deltaVStage, float deltaTime, bool runningActive, bool logMsgs, bool infiniteFuel);  // :289
     void ResetCalcVariables();                // :347
     void SwitchEngine();                      // :354
@@ -261,9 +261,9 @@ public:
     double PropellantDemand(int id, bool runningActive);  // :782
 
 private:
-    DeltaVPartInfo* partInfo_ = nullptr;      // :52 _partInfo
-    bool lastStep = false;                    // :51
-    static constexpr double epsilon = 1E-05;  // :53
+    DeltaVPartInfo* partInfo_ = nullptr;
+    bool lastStep = false;
+    static constexpr double epsilon = 1E-05;
     void ResetResourceTotals();               // :514
     void ResetStageInfo();                    // :529
 };
@@ -271,12 +271,12 @@ private:
 // DeltaVStageInfo.cs
 class DeltaVStageInfo {
 public:
-    int stage = 0;                            // :12
-    int separationIndex = 0;                  // :14
-    VesselDeltaV* vesselDeltaV = nullptr;     // :17
-    bool payloadStage = false;                // :19
-    std::vector<DeltaVPartInfoPtr> parts;     // :21
-    std::vector<ModuleResourceIntake*> airIntakeParts;  // :23
+    int stage = 0;
+    int separationIndex = 0;
+    VesselDeltaV* vesselDeltaV = nullptr;
+    bool payloadStage = false;
+    std::vector<DeltaVPartInfoPtr> parts;
+    std::vector<ModuleResourceIntake*> airIntakeParts;
     std::vector<DeltaVEngineInfoPtr> enginesActiveInStage, enginesInStage;  // :25-27
     float stageMass = 0.0f, dryMass = 0.0f, fuelMass = 0.0f, startMass = 0.0f, endMass = 0.0f, decoupledMass = 0.0f;  // :29-39
     double ispVac = 0.0, ispASL = 0.0, ispActual = 0.0;                      // :41-45
@@ -284,8 +284,8 @@ public:
     float thrustVac = 0.0f, thrustASL = 0.0f, thrustActual = 0.0f;          // :53-57
     float vectoredThrustVac = 0.0f, vectoredThrustASL = 0.0f, vectoredThrustActual = 0.0f;  // :59-63
     float deltaVinVac = 0.0f, deltaVatASL = 0.0f, deltaVActual = 0.0f;      // :65-69
-    double stageBurnTime = 0.0;               // :71
-    std::vector<DeltaVCalc> deltaVCalcs;      // :73
+    double stageBurnTime = 0.0;
+    std::vector<DeltaVCalc> deltaVCalcs;
     float totalExhaustVelocityVAC = 0.0f, totalExhaustVelocityASL = 0.0f, totalExhaustVelocityActual = 0.0f;  // :75-79
     Vector3f vectoredExhaustVelocityVAC, vectoredExhaustVelocityASL, vectoredExhaustVelocityActual;          // :81-85
 
@@ -311,7 +311,7 @@ public:
     void ProcessActiveEngines();                           // :961
     void ResetPartCaches();                                // :983
     float GetStageMass(float& dryMass, float& fuelMass, float& decoupledDryMass, float& decoupledFuelMass, float& jettisonedDryMass,
-                       int& decoupledPartCount);          // :989
+                       int& decoupledPartCount);
     float GetCurrentStageMass();                           // :1017
     bool ContainsAnchoredDecoupler() const;                // :1033
     bool ContainsDecoupler() const;                        // :1052
@@ -323,17 +323,17 @@ public:
 
 private:
     Vector3f enginesThrustVac, enginesThrustASL, enginesThrustActual;   // :91-95
-    std::vector<Part*> cachedResourcePartSetParts;         // :97 (null list: cachedResourcePartSetValid_ false)
+    std::vector<Part*> cachedResourcePartSetParts;
     bool cachedResourcePartSetValid_ = false;
-    std::vector<DeltaVPartInfoPtr> cachedActivatedParts;   // :99
-    std::unique_ptr<RUI::Algorithms::SCCFlowGraph> cachedFlowGraph;  // :101
-    std::unordered_map<uint32_t, DeltaVPartInfoPtr> partInfoDictionary;  // :103
-    float removedFuelMass = 0.0f;                          // :105
-    bool stageContainsOnlyLaunchClamps = false;            // :108
+    std::vector<DeltaVPartInfoPtr> cachedActivatedParts;
+    std::unique_ptr<RUI::Algorithms::SCCFlowGraph> cachedFlowGraph;
+    std::unordered_map<uint32_t, DeltaVPartInfoPtr> partInfoDictionary;
+    float removedFuelMass = 0.0f;
+    bool stageContainsOnlyLaunchClamps = false;
     void ProcessParts(int inStage);                        // :230
     void CalculateStartMass();                             // :318
     void StoreInterimDeltaV(std::vector<DeltaVEngineInfoPtr>& engines, std::vector<DeltaVCalc>& deltaVCalcsList, float startingMass,
-                            float currentMass, double simulationTime, bool logMsgs);   // :331
+                            float currentMass, double simulationTime, bool logMsgs);
     int GetHighestSeparationIndex(std::vector<DeltaVEngineInfoPtr>& engines);          // :354
     std::vector<DeltaVEngineInfoPtr> MatchingSeparationIndex(std::vector<DeltaVEngineInfoPtr>& engines, int index);  // :364
     std::vector<DeltaVEngineResourcePartInfo> GetEngineResourceParts(std::vector<DeltaVEngineInfoPtr>& engines);    // :381
@@ -342,7 +342,7 @@ private:
     void StoreStartFuelMass();                             // :468
     void StoreEndFuelMass();                               // :476
     float CheckTimeStep(float timeStep, float simulationBurnTime, float fuelMassRemoved, std::vector<DeltaVEngineInfoPtr>& enginesStillActive,
-                        std::vector<DeltaVEngineResourcePartInfo>& resourcePartsToStageNext, bool logMsgs);  // :484
+                        std::vector<DeltaVEngineResourcePartInfo>& resourcePartsToStageNext, bool logMsgs);
 };
 
 // DeltaVEngineStageSet.cs
@@ -357,8 +357,8 @@ public:
     };
     std::vector<DeltaVEngineInfoPtr> engineInfo_InstanceOne, engineInfo_InstanceTwo;  // :54-58
     int operatingIndex = 0, workingIndex = 0, flightSceneOperatingIndex = 0;          // :60-64
-    VesselDeltaV* vesselDeltaV = nullptr;                                             // :66
-    std::vector<int> payloadStages;                                                   // :68
+    VesselDeltaV* vesselDeltaV = nullptr;
+    std::vector<int> payloadStages;
 
     explicit DeltaVEngineStageSet(VesselDeltaV* vesselDeltaV);                        // :205
     std::vector<DeltaVStageInfoPtr> WorkingStageInfo();                               // :72
@@ -372,7 +372,7 @@ public:
     void RemoveInvalidEnginesWorkingSet();                                            // :470
 
 private:
-    std::vector<DeltaVStageInfoEntry> stageInfoEntries;                               // :48
+    std::vector<DeltaVStageInfoEntry> stageInfoEntries;
     void AddStageInfo(DeltaVStageInfoPtr stageInfo);                                  // :217
     void RemoveStaleStages();                                                         // :359
     void SetPayload(DeltaVStageInfo* stageInfo);                                      // :390
@@ -395,11 +395,11 @@ std::vector<DeltaVEngineResourcePartInfo> PartsMatchingSeparationIndex(const std
 // VesselDeltaV.cs
 class VesselDeltaV {
 public:
-    enum class Mode { Ship, Vessel };   // :18
+    enum class Mode { Ship, Vessel };
 
-    std::unique_ptr<DeltaVEngineStageSet> engineStageSet;   // :25
-    bool currentStageActivated = false;                     // :52
-    int lowestStageWithDeltaV = 0;                          // :54
+    std::unique_ptr<DeltaVEngineStageSet> engineStageSet;
+    bool currentStageActivated = false;
+    int lowestStageWithDeltaV = 0;
 
     // :154 / :170 Create
     static std::unique_ptr<VesselDeltaV> Create(Vessel* vesselRef);
@@ -449,22 +449,22 @@ public:
     void SimulateLastStage(bool recalcVesselTotals = true);          // :982
 
 private:
-    enum class PartStageComparisonOperator { LessThan, NotEqual, Equal };  // :10
+    enum class PartStageComparisonOperator { LessThan, NotEqual, Equal };
     VesselDeltaV() = default;
-    Vessel* _vessel = nullptr;                          // :27
-    ShipConstruct* _ship = nullptr;                     // :30
-    bool syncListInstances_ = true;                     // :33
-    bool useMultipleInfoLists = true;                   // :36
-    std::vector<int> _separationStageIndexes;           // :39
-    std::vector<DeltaVPartInfoPtr> _partInfo;           // :42
+    Vessel* _vessel = nullptr;
+    ShipConstruct* _ship = nullptr;
+    bool syncListInstances_ = true;
+    bool useMultipleInfoLists = true;
+    std::vector<int> _separationStageIndexes;
+    std::vector<DeltaVPartInfoPtr> _partInfo;
     double _totalDeltaVVac = 0.0, _totalDeltaVASL = 0.0, _totalDeltaVActual = 0.0, _totalBurnTime = 0.0;  // :45-54
-    Mode _activeMode = Mode::Ship;                      // :57
+    Mode _activeMode = Mode::Ship;
     bool simulationRunning_ = false;                    // `simulation != null`
-    bool _isReady = false;                              // :62
-    bool _doStockSimulation = true;                     // :64
-    bool updateFlightScene_ = false;                    // :66
-    bool calcsDirty_ = false;                           // :73
-    bool resetPartCaches_ = false;                      // :75
+    bool _isReady = false;
+    bool _doStockSimulation = true;
+    bool updateFlightScene_ = false;
+    bool calcsDirty_ = false;
+    bool resetPartCaches_ = false;
     int runCount_ = 0;
     int completedEvents_ = 0;
 
@@ -474,7 +474,7 @@ private:
     void ResetPartInfo(const std::vector<Part*>& parts);                     // :624
     void ProcessEnginePartInfoChildren(DeltaVPartInfo* partInfoItem);        // :767
     void ProcessDecouplePartInfoChildren(DeltaVPartInfo* partInfoItem, PartStageComparisonOperator comparisonOp, int decoupleStage,
-                                         int activationStage, bool bypassFairings, bool bypassJettison, bool setToParentDecoupleStage);  // :788
+                                         int activationStage, bool bypassFairings, bool bypassJettison, bool setToParentDecoupleStage);
     void changePartInfoDecoupleStage(DeltaVPartInfo* partInfoItem, DeltaVPartInfo* childPart, bool setToParentDecoupleStage = false);  // :826
     void ReCalculateVesselTotals();                                          // :1012
     double stageDVActual(DeltaVStageInfo* stageInfo);                        // :1040

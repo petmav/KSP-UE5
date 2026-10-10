@@ -36,7 +36,7 @@ T* FindModuleOf(Part& part) {
 // DeltaVEngineStageSet.cs:205
 DeltaVEngineStageSet::DeltaVEngineStageSet(VesselDeltaV* v) : vesselDeltaV(v) {}
 
-// DeltaVEngineStageSet.cs:72 WorkingStageInfo: the instance of `workingIndex`, sorted descending by stage
+// DeltaVEngineStageSet.cs:69 WorkingStageInfo: the instance of `workingIndex`, sorted descending by stage
 std::vector<DeltaVStageInfoPtr> DeltaVEngineStageSet::WorkingStageInfo() {
     std::vector<DeltaVStageInfoPtr> list;
     for (const auto& e : stageInfoEntries) {
@@ -47,7 +47,7 @@ std::vector<DeltaVStageInfoPtr> DeltaVEngineStageSet::WorkingStageInfo() {
     return list;
 }
 
-// DeltaVEngineStageSet.cs:104 OperatingStageInfo
+// DeltaVEngineStageSet.cs:98 OperatingStageInfo
 std::vector<DeltaVStageInfoPtr> DeltaVEngineStageSet::OperatingStageInfo() {
     std::vector<DeltaVStageInfoPtr> list;
     auto byStage = [](const DeltaVStageInfoPtr& a, const DeltaVStageInfoPtr& b) { return a->stage > b->stage; };
@@ -75,13 +75,13 @@ std::vector<DeltaVStageInfoPtr> DeltaVEngineStageSet::OperatingStageInfo() {
     return list;
 }
 
-// DeltaVEngineStageSet.cs:171 WorkingEngineInfo
+// DeltaVEngineStageSet.cs:157 WorkingEngineInfo
 std::vector<DeltaVEngineInfoPtr>& DeltaVEngineStageSet::WorkingEngineInfo() {
     if (vesselDeltaV->SimulationRunning()) return workingIndex == 0 ? engineInfo_InstanceOne : engineInfo_InstanceTwo;
     return operatingIndex == 0 ? engineInfo_InstanceOne : engineInfo_InstanceTwo;
 }
 
-// DeltaVEngineStageSet.cs:195 OperatingEngineInfo
+// DeltaVEngineStageSet.cs:185 OperatingEngineInfo
 std::vector<DeltaVEngineInfoPtr>& DeltaVEngineStageSet::OperatingEngineInfo() {
     return operatingIndex == 0 ? engineInfo_InstanceOne : engineInfo_InstanceTwo;
 }
