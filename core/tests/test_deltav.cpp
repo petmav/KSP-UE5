@@ -6,6 +6,7 @@
 // crafts (harness/inputs/Ships, analysis/physics/craft) and part database: the stage list order and contents, the sums VesselDeltaV
 // builds, the Tsiolkovsky bounds a burn simulation must respect, vacuum bodies, the situation switch, the engine-less craft. No number is
 // invented; every expected value is computed from the decompiled formula over the ship / part values.
+#include <cstring>
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
@@ -392,7 +393,9 @@ TEST_CASE("WP-17 Kerbal X: asparagus stages through fuel lines, separation index
 // WP-00: the same editor loop driven by the coroutine scheduler (FixedUpdate -> CheckDirtyAndRun -> DelayedCallback(frames = 3) ->
 // RunCalculations coroutine with its two yields) gives bit-identical results to DriveToCompletion(), `frames` frames per run later.
 TEST_CASE("WP-00 VesselDeltaV on the coroutine scheduler == DriveToCompletion (VesselDeltaV.cs:234-282, :853)") {
-    if (!GameAvailable()) return;
+    // the game data is the repo mirror (core/testdata/GameData-mirror) and the craft is harness/inputs: neither may be missing, so no silent skip
+    REQUIRE(GameAvailable());
+    REQUIRE(fs::exists(PhysProfS()));
     World17 w;
     EditorCraft ref(w, PhysProfS(), w.Kerbin());
     EditorCraft sch(w, PhysProfS(), w.Kerbin(), false);
@@ -413,11 +416,34 @@ TEST_CASE("WP-00 VesselDeltaV on the coroutine scheduler == DriveToCompletion (V
     CHECK(sch.dv->TotalBurnTime() == ref.dv->TotalBurnTime());
     const auto a = sch.dv->OperatingStageInfo(), b = ref.dv->OperatingStageInfo();
     REQUIRE(a.size() == b.size());
+    // every DeltaVStageInfo field the golden dataset deltav_stages writes (tools/golden_runner/ds_deltav_stages.cpp:253), compared bit for bit
+    auto same = [](auto x, auto y) { return std::memcmp(&x, &y, sizeof x) == 0; };
     for (size_t i = 0; i < a.size(); i++) {
-        CHECK(a[i]->stage == b[i]->stage);
-        CHECK(a[i]->deltaVinVac == b[i]->deltaVinVac);
-        CHECK(a[i]->deltaVatASL == b[i]->deltaVatASL);
-        CHECK(a[i]->stageBurnTime == b[i]->stageBurnTime);
-        CHECK(a[i]->startMass == b[i]->startMass);
+        const DeltaVStageInfo &x = *a[i], &y = *b[i];
+        CHECK(x.stage == y.stage);
+        CHECK(x.separationIndex == y.separationIndex);
+        CHECK(x.payloadStage == y.payloadStage);
+        CHECK(same(x.deltaVinVac, y.deltaVinVac));
+        CHECK(same(x.deltaVatASL, y.deltaVatASL));
+        CHECK(same(x.deltaVActual, y.deltaVActual));
+        CHECK(same(x.TWRVac, y.TWRVac));
+        CHECK(same(x.TWRASL, y.TWRASL));
+        CHECK(same(x.TWRActual, y.TWRActual));
+        CHECK(same(x.ispVac, y.ispVac));
+        CHECK(same(x.ispASL, y.ispASL));
+        CHECK(same(x.ispActual, y.ispActual));
+        CHECK(same(x.thrustVac, y.thrustVac));
+        CHECK(same(x.thrustASL, y.thrustASL));
+        CHECK(same(x.thrustActual, y.thrustActual));
+        CHECK(same(x.startMass, y.startMass));
+        CHECK(same(x.endMass, y.endMass));
+        CHECK(same(x.dryMass, y.dryMass));
+        CHECK(same(x.fuelMass, y.fuelMass));
+        CHECK(same(x.stageMass, y.stageMass));
+        CHECK(same(x.decoupledMass, y.decoupledMass));
+        CHECK(same(x.stageBurnTime, y.stageBurnTime));
+        CHECK(x.enginesInStage.size() == y.enginesInStage.size());
+        CHECK(x.enginesActiveInStage.size() == y.enginesActiveInStage.size());
+        CHECK(x.parts.size() == y.parts.size());
     }
 }
