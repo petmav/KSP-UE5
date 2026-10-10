@@ -134,6 +134,12 @@ TEST_CASE("WP-15 ModuleResourceHandler.OnLoad on every stock part: INPUT_RESOURC
                 const auto rn = md.config->GetValue("resourceName");
                 out.push_back(rn ? *rn : std::string("ElectricCharge"));
             }
+            // ModuleEnviroSensor.OnLoad (ModuleEnviroSensor.cs:80, WP-35): a prefab compile (partInfo / partPrefab not yet linked) without module resources
+            // gives the sensor its own input resource `resourceName` (default ElectricCharge)
+            if (md.moduleName == "ModuleEnviroSensor" && in.empty()) {
+                const auto rn = md.config->GetValue("resourceName");
+                in.push_back(rn ? *rn : std::string("ElectricCharge"));
+            }
             CAPTURE(ap->name);
             CAPTURE(md.moduleName);
             CHECK(names(md.module->resHandler.inputResources) == in);

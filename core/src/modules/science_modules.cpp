@@ -171,7 +171,7 @@ void ScienceLabSearch::PostErrorToScreen() const {
 // ----------------------------------------------------------------------------------------------------------------------------------
 // ExperimentTransfer
 
-// ExperimentTransfer.cs:94
+// ExperimentTransfer.cs:9
 bool ExperimentTransfer::Create(Part& srcPart, IScienceDataContainer& cont) {
     if (ScienceEnvironment::resultDialogOpen && ScienceEnvironment::resultDialogOpen()) {
         PostMsg(Loc::Format("#autoLOC_133305"));
@@ -181,10 +181,10 @@ bool ExperimentTransfer::Create(Part& srcPart, IScienceDataContainer& cont) {
     return true;
 }
 
-// ExperimentTransfer.cs:107
+// ExperimentTransfer.cs:22
 bool ExperimentTransfer::IsSemiValidPart(Part&) { return false; }
 
-// ExperimentTransfer.cs:112
+// ExperimentTransfer.cs:27
 bool ExperimentTransfer::IsValidPart(Part& p) {
     auto* moduleScienceContainer = FindModule<ModuleScienceContainer>(p, "ModuleScienceContainer");
     if (moduleScienceContainer != nullptr) return moduleScienceContainer->Get<bool>("canBeTransferredToInVessel");

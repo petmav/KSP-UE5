@@ -132,7 +132,7 @@ ProtoRDNode::ProtoRDNode(const ConfigNode& node) {
     if (tech == nullptr) tech = std::make_shared<ProtoTechNode>(node);
 }
 
-// ProtoRDNode.cs:147
+// ProtoRDNode.cs:48
 void ProtoRDNode::LoadLinks(const ConfigNode& node, std::vector<std::shared_ptr<ProtoRDNode>>& rdNodes) {
     for (ConfigNode* configNode : node.GetNodes("Parent")) {
         if (configNode->HasValue("parentID")) {
@@ -146,7 +146,7 @@ void ProtoRDNode::LoadLinks(const ConfigNode& node, std::vector<std::shared_ptr<
     }
 }
 
-// ProtoRDNode.cs:167
+// ProtoRDNode.cs:68
 ProtoRDNode* ProtoRDNode::FindNodeByID(const std::string& techID, std::vector<std::shared_ptr<ProtoRDNode>>& nodes) {
     for (auto& n : nodes)
         if (n->tech != nullptr && n->tech->techID == techID) return n.get();
@@ -417,7 +417,7 @@ ExperimentResultDialogPage::ExperimentResultDialogPage(Part* host_, const std::s
     OnSendToLab = std::move(onSendToLab);
 }
 
-// ExperimentResultDialogPage.cs:148 (the arithmetic of the body of UpdatePageLabValue)
+// the arithmetic of ExperimentResultDialogPage.UpdatePageLabValue (.cs:148), without the vessel / lab lookups
 float ExperimentResultDialogPage::LabValueMaths(float refValue, bool landed, bool splashed, bool subjectContainsMainBodyName, bool mainBodyIsHome,
                                                 float SurfaceBonus, float ContextBonus, float homeworldMultiplier) {
     float labValue = refValue;
@@ -450,12 +450,12 @@ float ExperimentResultDialogPage::UpdatePageLabValue() {
 // ----------------------------------------------------------------------------------------------------------------------------------
 // RnDCommsStream
 
-// RnDCommsStream.cs:222
+// RnDCommsStream.cs:30
 RnDCommsStream::RnDCommsStream(std::shared_ptr<ScienceSubject> subject_, float fileSize_, float timeout_, float xmitValue_, bool xmitIncomplete_,
                                ResearchAndDevelopment* RDInstance)
     : RnDCommsStream(std::move(subject_), fileSize_, timeout_, xmitValue_, 1.0f, xmitIncomplete_, RDInstance) {}
 
-// RnDCommsStream.cs:227
+// RnDCommsStream.cs:35
 RnDCommsStream::RnDCommsStream(std::shared_ptr<ScienceSubject> subject_, float fileSize_, float timeout_, float xmitValue_,
                                float scienceValueRatio_, bool xmitIncomplete_, ResearchAndDevelopment* RDInstance) {
     subject = std::move(subject_);
@@ -470,7 +470,7 @@ RnDCommsStream::RnDCommsStream(std::shared_ptr<ScienceSubject> subject_, float f
     timedOut_ = true;
 }
 
-// RnDCommsStream.cs:241
+// RnDCommsStream.cs:49
 void RnDCommsStream::StreamData(float dataAmount, ProtoVessel* source) {
     dataIn_ = Mathf::Min(fileSize, f32store(fx(dataIn_) + fx(dataAmount)));
     UTofLastTransmit_ = Time::time;
@@ -481,7 +481,7 @@ void RnDCommsStream::StreamData(float dataAmount, ProtoVessel* source) {
     }
 }
 
-// RnDCommsStream.cs:255
+// RnDCommsStream.cs:63
 Enumerator RnDCommsStream::timeoutCoroutine(ProtoVessel* source) {
     timedOut_ = false;
     while (!timedOut_ && !(dataIn_ >= fileSize)) {
@@ -498,7 +498,7 @@ Enumerator RnDCommsStream::timeoutCoroutine(ProtoVessel* source) {
     }
 }
 
-// RnDCommsStream.cs:275
+// RnDCommsStream.cs:83
 void RnDCommsStream::submitStreamData(ProtoVessel* source) {
     float num = f32store(fx(dataIn_) - fx(dataOut_));
     if (num > 0.0f) host_->SubmitScienceData(num, scienceValueRatio, *subject, xmitValue, source);
@@ -510,7 +510,7 @@ void RnDCommsStream::submitStreamData(ProtoVessel* source) {
 
 ResearchAndDevelopment::ResearchAndDevelopment() : ScenarioModule("ResearchAndDevelopment") {}
 
-// ResearchAndDevelopment.cs:106 OnDestroy
+// OnDestroy (ResearchAndDevelopment.cs:106)
 ResearchAndDevelopment::~ResearchAndDevelopment() {
     GameEvents::onVesselRecoveryProcessing.Remove(this, &ResearchAndDevelopment::onVesselRecoveryProcessing);
     if (Instance != nullptr && Instance == this) Instance = nullptr;

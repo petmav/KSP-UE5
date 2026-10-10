@@ -296,15 +296,15 @@ void ScienceSubject::Save(ConfigNode& node) const {
 // ----------------------------------------------------------------------------------------------------------------------------------
 // ScienceData
 
-// ScienceData.cs:197
+// ScienceData.cs:23
 ScienceData::ScienceData(const ConfigNode& node) { Load(node); }
 
-// ScienceData.cs:202
+// ScienceData.cs:28
 ScienceData::ScienceData(float amount, float xmitValue, float xmitBonus, const std::string& id, const std::string& dataName, bool triggered_,
                          uint32_t container_)
     : ScienceData(amount, 1.0f, xmitValue, xmitBonus, id, dataName, triggered_, container_) {}
 
-// ScienceData.cs:207
+// ScienceData.cs:33
 ScienceData::ScienceData(float amount, float scienceValueRatio_, float xmitValue, float xmitBonus, const std::string& id,
                          const std::string& dataName, bool triggered_, uint32_t container_, const std::string& extraResultString_) {
     dataAmount = amount;
@@ -318,7 +318,7 @@ ScienceData::ScienceData(float amount, float scienceValueRatio_, float xmitValue
     extraResultString = extraResultString_;
 }
 
-// ScienceData.cs:220
+// ScienceData.cs:46
 void ScienceData::Load(const ConfigNode& node) {
     node.TryGetValue("data", dataAmount);
     scienceValueRatio = 1.0f;
@@ -344,7 +344,7 @@ void ScienceData::Load(const ConfigNode& node) {
     node.TryGetValue("extraResultString", extraResultString);
 }
 
-// ScienceData.cs:250
+// ScienceData.cs:76
 void ScienceData::Save(ConfigNode& node) const {
     node.AddValue("data", dataAmount);
     node.AddValue("scienceValueRatio", scienceValueRatio);
@@ -357,7 +357,7 @@ void ScienceData::Save(ConfigNode& node) const {
     if (!extraResultString.empty()) node.AddValue("extraResultString", extraResultString);
 }
 
-// ScienceData.cs:266
+// ScienceData.cs:92
 std::shared_ptr<ScienceData> ScienceData::CopyOf(const ScienceData* src) {
     if (src != nullptr)
         return std::make_shared<ScienceData>(src->dataAmount, src->scienceValueRatio, src->baseTransmitValue, src->transmitBonus, src->subjectID,

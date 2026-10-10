@@ -177,14 +177,14 @@ public:
     uint32_t container = 0;
     std::string extraResultString;
 
-    explicit ScienceData(const ConfigNode& node);                                                                          // :197
+    explicit ScienceData(const ConfigNode& node);                                                                          // :23
     ScienceData(float amount, float xmitValue, float xmitBonus, const std::string& id, const std::string& dataName, bool triggered = false,
-                uint32_t container = 0u);                                                                                  // :202
+                uint32_t container = 0u);                                                                                  // :28
     ScienceData(float amount, float scienceValueRatio, float xmitValue, float xmitBonus, const std::string& id, const std::string& dataName,
-                bool triggered = false, uint32_t container = 0u, const std::string& extraResultString = "");               // :207
-    void Load(const ConfigNode& node);                                                                                     // :220
-    void Save(ConfigNode& node) const;                                                                                     // :250
-    static std::shared_ptr<ScienceData> CopyOf(const ScienceData* src);                                                    // :266
+                bool triggered = false, uint32_t container = 0u, const std::string& extraResultString = "");               // :33
+    void Load(const ConfigNode& node);                                                                                     // :46
+    void Save(ConfigNode& node) const;                                                                                     // :76
+    static std::shared_ptr<ScienceData> CopyOf(const ScienceData* src);                                                    // :92
 };
 
 // IScienceDataContainer.cs:3
@@ -428,9 +428,9 @@ public:
 
     ProtoRDNode() = default;                           // :14
     explicit ProtoRDNode(const ConfigNode& node);      // :20
-    void LoadLinks(const ConfigNode& node, std::vector<std::shared_ptr<ProtoRDNode>>& rdNodes);  // :147
-    ProtoRDNode* FindNodeByID(const std::string& techID, std::vector<std::shared_ptr<ProtoRDNode>>& nodes);  // :167
-    void Save(ConfigNode&) {}                          // :189
+    void LoadLinks(const ConfigNode& node, std::vector<std::shared_ptr<ProtoRDNode>>& rdNodes);  // :48
+    ProtoRDNode* FindNodeByID(const std::string& techID, std::vector<std::shared_ptr<ProtoRDNode>>& nodes);  // :68
+    void Save(ConfigNode&) {}                          // :90
 };
 
 // KSP/UI/Screens/RDTechTree.cs:7 (the static data side; the MonoBehaviour / RDController / RDNode half is UI)
@@ -509,18 +509,18 @@ public:
     bool xmitIncomplete = false;
 
     RnDCommsStream(std::shared_ptr<ScienceSubject> subject, float fileSize, float timeout, float xmitValue, bool xmitIncomplete,
-                   ResearchAndDevelopment* RDInstance);  // :222
+                   ResearchAndDevelopment* RDInstance);  // :30
     RnDCommsStream(std::shared_ptr<ScienceSubject> subject, float fileSize, float timeout, float xmitValue, float scienceValueRatio,
-                   bool xmitIncomplete, ResearchAndDevelopment* RDInstance);  // :227
-    // :241. Time.time is `Time.time` (ksp::Time); the timeout coroutine runs on ScienceEnvironment::Scheduler()
+                   bool xmitIncomplete, ResearchAndDevelopment* RDInstance);  // :35
+    // :49. Time.time is `Time.time` (ksp::Time); the timeout coroutine runs on ScienceEnvironment::Scheduler()
     void StreamData(float dataAmount, ProtoVessel* source);
     float dataIn() const { return dataIn_; }
     float dataOut() const { return dataOut_; }
     bool timedOut() const { return timedOut_; }
 
 private:
-    Enumerator timeoutCoroutine(ProtoVessel* source);  // :255
-    void submitStreamData(ProtoVessel* source);        // :275
+    Enumerator timeoutCoroutine(ProtoVessel* source);  // :63
+    void submitStreamData(ProtoVessel* source);        // :83
     float dataIn_ = 0.0f, dataOut_ = 0.0f, UTofLastTransmit_ = 0.0f;
     bool timedOut_ = true;
     ResearchAndDevelopment* host_ = nullptr;

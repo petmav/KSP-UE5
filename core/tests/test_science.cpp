@@ -96,6 +96,7 @@ struct SciGuard {
         RDTechTree::Reset();
         ResourceProcessingEnvironment::Reset();
         ResourceFlowEnvironment::partActionUIContains = nullptr;
+        ResourceFlowEnvironment::vesselHost = nullptr;  // TestVessel installs it and never resets it
     }
     void Wire(Game15& g) {
         Game15* gp = &g;
@@ -1125,6 +1126,19 @@ struct World35V {
     }
 };
 
+// An IScalarModule that moves 0.25 towards the target per SetScalar call
+class FakeScalar : public IScalarModule {
+public:
+    float value = 0.0f;
+    std::string ScalarModuleID() const override { return "fake"; }
+    float GetScalar() const override { return value; }
+    bool CanMove() const override { return true; }
+    void SetScalar(float t) override { value = t > value ? std::min(t, value + 0.25f) : std::max(t, value - 0.25f); }
+    void SetUIRead(bool) override {}
+    void SetUIWrite(bool) override {}
+    bool IsMoving() override { return false; }
+};
+
 // ModuleDataTransmitter stand-in (WP-39 owns the real one): records what it is asked to transmit
 class FakeTransmitter : public IScienceDataTransmitter {
 public:
@@ -1178,6 +1192,7 @@ TEST_CASE("WP-35 ModuleScienceExperiment on a vessel: deploy, data creation, rev
     auto* exp = ModuleOf<ModuleScienceExperiment>(*gooPart, "ModuleScienceExperiment");
     auto* podCont = ModuleOf<ModuleScienceContainer>(*pod, "ModuleScienceContainer");
     auto* lab = ModuleOf<ModuleScienceLab>(*labPart, "ModuleScienceLab");
+    exp->fxModuleIndices.reset();  // FxModules = 0 is the goo animation (ModuleAnimateGeneric needs the model animation: DeployablesEnvironment::modelAnimations)
     exp->OnStart(StartState::PreLaunch);
     podCont->OnStart(StartState::PreLaunch);
     lab->OnStart(StartState::PreLaunch);
@@ -1266,11 +1281,26 @@ TEST_CASE("WP-35 ModuleScienceExperiment on a vessel: deploy, data creation, rev
     CHECK(!exp->Get<bool>("Inoperable"));
     CHECK(exp->Events()["DeployExperiment"]->active);
 
-    // deploy again: the same subject, the R&D entry is reused
+    // deploy again with a scalar FX module (the stock goo animation needs the model, absent here): gatherData waits for SetFXModules(1) (:732),
+    // which calls SetScalar(1) every frame until |GetScalar - 1| < 0.01
+    FakeScalar fx1;
+    exp->fxModules = {&fx1};
+    exp->fxModulesCreated = true;
     ut = 200.0;
     exp->DeployExperiment();
+    CHECK(!exp->HasExperimentData());
+    CHECK(fx1.value == 0.25f);
+    RunFrames(2);
+    CHECK(fx1.value == 0.75f);
+    CHECK(!exp->HasExperimentData());
+    RunFrames(3);
+    CHECK(fx1.value == 1.0f);
+    CHECK(exp->HasExperimentData());  // the experiment ran once the FX reached its target
     ut = 200.5;
     RunFrames(1);
+    CHECK(exp->subject == ResearchAndDevelopment::GetSubjectByID(exp->subject->id));  // the same subject, the R&D entry is reused
+    exp->fxModules.clear();
+    exp->fxModulesCreated = false;
     REQUIRE(exp->HasExperimentData());
     CHECK(exp->subject == ResearchAndDevelopment::GetSubjectByID(exp->subject->id));
     // send to a lab: no manned lab -> the error is posted and the data stays

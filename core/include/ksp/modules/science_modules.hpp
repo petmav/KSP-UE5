@@ -73,11 +73,11 @@ public:
 // ExperimentTransfer.cs:3 (PartItemTransfer is UI; the part filter and the create guard are the data side)
 class ExperimentTransfer {
 public:
-    // :12: false (`ExperimentsResultDialog.Instance != null && pages.Count > 0`, posts a screen message) or the transfer request is recorded in
+    // :9 Create: false (`ExperimentsResultDialog.Instance != null && pages.Count > 0`, posts a screen message) or the transfer request is recorded in
     // ScienceModuleEnvironment::experimentTransfers
     static bool Create(Part& srcPart, IScienceDataContainer& cont);
-    static bool IsSemiValidPart(Part& p);  // :107
-    static bool IsValidPart(Part& p);      // :112
+    static bool IsSemiValidPart(Part& p);  // :22
+    static bool IsValidPart(Part& p);      // :27
 };
 
 // ModuleScienceExperiment.cs:10
