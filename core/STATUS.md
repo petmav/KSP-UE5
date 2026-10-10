@@ -37,6 +37,7 @@ Updated 2026-10-11 (WP-35, WP-39, WP-40; 2026-10-10: WP-00, WP-17, WP-22, WP-23,
 | 27. WP-35 science, R&D and tech tree (branch `wp35`, from main `ad208205`) | done (engine-agnostic part, unit-gated; no golden or capture of science exists): ScienceExperiment / ScienceSubject / ScienceData, ScienceUtil, ResearchAndDevelopment (science points, subjects, tech tree, parts, recovery, OnLoad / OnSave round trip), RDTechTree / ProtoTechNode / ProtoRDNode, RnDCommsStream, ExperimentResultDialogPage (data side), ModuleScienceExperiment / Container / Lab / Converter, ModuleEnviroSensor, ModuleSampleContainer, ScienceLabSearch; the subject value maths (84,600 floats), lab page value and converter catch-up are 0 ULP against an independent numpy reference; `capture.part_database` unchanged (0 ULP, identical rows); currency / CommNet / UI are seams (WP-36, WP-39); see the WP-35 section |
 | 28. WP-39 CommNet and KerbNet (branch `wp39`, from main `ad208205`) | done (engine-agnostic part, unit-gated; no CommNet golden or capture exists): generic Net / Node / Link / Path with .NET Dictionary link order, CommNetwork (SetNodeConnection / TryConnect / horizon occlusion / best-path searches), CommNetVessel, CommNetScenario / Network / Home / Body, ModuleDataTransmitter (transmit coroutine), ModuleRelayEnabler, ModuleProbeControlPoint, ModuleKerbNetAccess; ModuleCommand registers as command source; independent Python reference, 0 ULP; part_database gate unchanged. See "WP-39" below |
 | 29. WP-40 editor core (branch `wp40`, from main `ad208205`, merged main `5ba0ff06`) | done (engine-agnostic part, unit-gated; no editor golden or capture exists): EditorLogic / EditorLogicBase data side (part tree attach / detach / re-attach, radial and mirror symmetry, undo / redo, delete, placement flow without the KFSM mouse loop), EditorGeometryUtil, EditorEnumExtensions, EditorPartListFilter(List), EditorBounds, EditorReRootUtil, EditorMarker CoM / CoL / CoT, GizmoOffset / GizmoRotate maths, PreFlightCheck + every PreFlightTest; native Quaternion.LookRotation / Euler / eulerAngles are now the single implementation (WP-24 seams delegate to them, WP-24 replay still 0 ULP); local pose, symmetry, mirror, gizmo, CoM and CoT 0 ULP against `tools/wp40/editor_reference.py`; **CoL aggregation ported, untested against any reference**; the three native quaternion functions are written from Unity's documented formulation and are **unverified against the game**; `unit` +11 cases / 95,023 assertions; every capture gate unchanged. See the WP-40 section |
+| 29. WP-36 funds, reputation, strategies, facilities, recovery, progress tracking (branch `wp36`, from main `ad208205`) | done (engine-agnostic part, unit-gated; no golden or capture of these systems exists, every existing gate unchanged): currency modifier pipeline (CurrencyModifierQuery / ValueModifierQuery, TransactionReasons), Funding and Reputation ScenarioModules (granular reputation, strategy deltas applied through OnCurrencyModified), GameVariables (all 52 formulas), upgradeable facilities (levels, costs, KSCFacilityLevelText, ScenarioUpgradeableFacilities), ProgressTracking with every KSPAchievements node (50 points of interest, 17 body subtrees, records), the strategy system with the four stock effects (configs from the GameData mirror), VesselRecovery value maths, ScenarioAchievements, ScenarioDestructibles; `unit` +31 cases / 36,928 assertions, 0 ULP against `tools/wp36/currency_reference.py` (strategy effects, transactions, GameVariables grid, recovery over 1,400 distance rows); the four SCENARIO nodes of the physprofile save round-trip byte-exact (it has no Funding / Reputation / Facilities / Strategy node); needs the GameVariables reputation curves and the KSC facility level data (not in any dataset), see the WP-36 section |
 
 ## Test results (all 35 ctest tests pass (34 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience)
 
@@ -3788,3 +3789,130 @@ copies (`ModuleCommand::DefaultQuaternionEuler`, `AutopilotEnvironment::DefaultE
 - `./build/RelWithDebInfo/tests/kspcore_tests | grep -E "test cases|assertions"`: 464 test cases, 826,521 assertions, 0 failed; `-tc="WP-40*"`: 11 cases, 95,023 assertions.
 - WSL (Ubuntu 24.04) from the worktree, after the gatekeeper fixes (`EditorReRootContext` moved to namespace scope: clang and gcc rejected the nested struct with default member initializers; `std::sqrt` replaced by `dotnet::Math::Sqrt`): `./run_tests.sh -f` (clang, linux-rel) EXIT 0, 34 of 34 ctest tests; `./run_tests.sh -p linux-gcc-rel -f` EXIT 0, 34 of 34. Windows unit after the fixes: 464 cases, 826,522 assertions (WP-40 CHECK(restoredLinks <= 14) added), WP-40 and WP-24 reference tests 0 ULP. Linux clang unit binary (measured by the gatekeeper): 464 cases, 826,506 assertions, 0 failed (Windows: 826,522; the 16-assertion difference is platform-dependent and was not investigated).
 
+## WP-36: funds, reputation, strategies, facilities, recovery, progress tracking (branch `wp36`, from main `ad208205`)
+
+State: done for the engine-agnostic part (data, maths, save formats, event wiring), unit-gated. 61 csv files; the GUI part of them is
+documented seams. There is no funds, reputation, strategy, facility, recovery or progress golden or capture: `harness/golden/MANIFEST.json`
+lists no such dataset and `harness/captures/out*/` has none (the only hits for "facility" / "recover" are PartDatabase and terrain fields). Every
+existing gate is unchanged (34 ctest tests pass in the worktree: `capture.part_database`, `capture.ship_construct`, `capture.staging_sequence`,
+`capture.deltav_stages`, ... at their previous numbers; `corpus.saves` registers only where `decompiled/KSP-dev` exists, so it was not run here).
+
+### Gate
+
+| gate | result |
+|---|---|
+| golden / capture | none exists for these classes (see above); `harness/compare/tolerances.json` and `tests/tolerances_capture.json` untouched |
+| `unit` `tests/test_progress.cpp` | 31 cases, 36,928 assertions; every float compared bit for bit (0 ULP, `CHECK_F32`), doubles with `==` |
+| independent reference | `tools/wp36/currency_reference.py` (numpy float32 / Python float64, the Mono rule: expression in double, rounded to float32 where C# stores / passes / returns it; no kspcore code) -> `tests/data/wp36_reference.json` (830 KB) |
+| physprofile save | the SCENARIO nodes of `core/testdata/saves/physprofile/persistent.sfs` that belong to this package round-trip byte-exact through `ScenarioRunner` -> live module -> `ProtoScenarioModule` (Save): see the list below |
+
+Per-table numbers of the reference comparison (max abs / max rel / max ULP are all 0 except where noted):
+
+| table | rows / values compared | max abs | max rel | max ULP |
+|---|---|---|---|---|
+| GameVariables facility-level grid (67 levels: k/40, the 11 thresholds +-1 ULP, i/n for n = 1..3; 30 formulas incl. DSN range at 3 modifiers, ActionGroupsAlways both ways) | 67 rows x about 45 values | 0 | 0 | 0 |
+| hire cost (`GetRecruitHireCost`, 41 crew counts x 5 FundsLossMultiplier) | 205 | 0 | 0 | 0 |
+| contract factors (3 prestige x 5 multipliers x 7 functions), mentality factors (11 x 5), recovered part / resource value, `ScoreFlightEnvelope` (480 inputs) | 2,089 | 0 | 0 | 0 |
+| strategy initial costs / required reputation (11 strategies x 21 factors x 4 values) | 924 | 0 | 0 | 0 |
+| `CurrencyModifierQuery` deltas, one strategy active (9 strategies x 6 factors x 14 reasons x 7 inputs x 3 currencies) | 5,292 queries | 0 | 0 | 0 |
+| `ValueModifierQuery` (RecoveryTransponders at 6 factors x 3 ids) | 18 | 0 | 0 | 0 |
+| all 9 non-exchanger strategies active together (4 factors x 14 x 7) | 392 queries | 0 | 0 | 0 (needed the reverse listener order, see findings) |
+| CurrencyExchanger (BailoutGrant, researchIPsellout: 3 factors x 3 balances) | 18 registrations: funds, reputation, science adds | 0 | 0 | 0 |
+| Funding / Reputation transaction sequences (4 factors x AllowNegativeCurrency both ways x 10 steps, strategies active) | 80 steps | 0 | 0 | 0 |
+| facility `setNormLevel` / `GetNormLevel` (3 MaxLevel x 23 inputs) and upgrade / downgrade cost (3 x levels x 4 multipliers x game / not game) | 69 + 36 rows x 4 | 0 | 0 | 0 |
+| recovery factor `num3` / `num4` (Kerbin radius 600000 from the WP-09 catalog source, KSC position from the Kerbin/KSC PQSCity, 50 lat / lon points x 4 delta pairs x 7 landedAt) | 1,400 rows | 0 | 0 | 0 |
+| recovery great-circle distance (double; `GetRelSurfaceNVector` + `Acos` against numpy libm) | 1,400 rows (50 points) | 0 on Windows (checked at rel 1e-12) | 0 | 0 |
+
+Exclusions: the two CurrencyExchanger strategies are not in the CurrencyModifierQuery tables (they act on registration, tested separately);
+distance grid points whose `acos` argument leaves [-1, 1] are skipped.
+
+### What is ported (C# file -> `include/ksp/career/` + `src/career/`; every function carries `// File.cs:N`, `check_cites.py` 0 mismatches)
+
+| C# | port |
+|---|---|
+| `Currency.cs`, `TransactionReasons.cs`, `CurrencyModifierQuery.cs`, `ValueModifierQuery.cs` | `currency.hpp` / `.cpp` (GetInput / AddDelta / GetEffectDelta / GetTotal / CanAfford / the text builders / RunQuery); `EnumTraits` so flags format and parse (`Enum.Parse` of "ContractReward, Progression") |
+| `Funding.cs`, `Reputation.cs` | `funding.hpp` / `.cpp`: AddFunds / SetFunds / AllowNegativeCurrency clamp / the six event listeners / OnLoad / OnSave; AddReputation (granular), addReputation_discrete, SetReputation, ModifyReputationDelta, crew killed, recovery, OnLoad / OnSave |
+| `GameVariables.cs` | `game_variables.hpp` / `.cpp`: all 52 methods (51 virtual + the static `GetRecruitHireCost`) incl. `ScoreSituation`, `ScoreFlightEnvelope`, `GetRecruitHireCost`, DSN curves and range, `EVAIsPossible`, `GetEVALockedReason` |
+| `Upgradeables/*`, `ScenarioUpgradeableFacilities.cs`, `SpaceCenterFacility.cs` | `upgradeables.hpp` / `.cpp`: levels, setNormLevel / GetNormLevel / costs / level text, Register / Unregister, ProtoUpgradeable, OnLoad (incl. the initial and mission initial state) / OnSave, CheatFacilities, SlashSanitize; `KSCFacilityLevelText.GetText` with every tag of the C# switch |
+| `ProgressNode.cs`, `ProgressTree.cs`, `ProgressTracking.cs`, `KSPAchievements/*` (31 files) | `progress.hpp`, `progress.cpp`, `achievements.cpp`: the tree (50 points of interest in the C# order, 17 body subtrees linked from the home world), every node's Load / Save / event handler (FirstLaunch, TowerBuzz, the four records, ReachSpace, CrewRecovery, TargetedLanding, PointOfInterest, the 15 per-body nodes, CelestialBodySubtree), FindNode / Node* / GetBodyTree / cheats |
+| `Strategies/*` (10 files) | `strategies.hpp` / `.cpp`: configs from the GameDatabase (`STRATEGY_DEPARTMENT`, `STRATEGY`), Strategy (Create, Load, Save, Register, Activate, Deactivate, CanBeActivated, Update), StrategySystem (OnLoad through the one-frame coroutine, OnSave, conflicting tags), ValueModifier, CurrencyOperation, CurrencyConverter, CurrencyExchanger |
+| `VesselRecovery.cs`, `ScenarioAchievements.cs`, `ScenarioDestructibles.cs` | `scenario_misc.hpp` / `.cpp`; `MissionRecoveryDialog` is a plain data class (fundsEarned, reputationEarned, ..., the recorded widgets) |
+
+`RegisterCareerScenarioModules()` (`career.hpp`) registers Funding, Reputation, ProgressTracking, ScenarioUpgradeableFacilities, StrategySystem, ScenarioAchievements,
+ScenarioDestructibles and VesselRecovery with the `ScenarioModuleFactory`. The WP-06 host schema supplies no KSPFields for them (all are hand-saved).
+The host must call `Reputation::Start()`, `ProgressTracking::Start()` (Deploy) and the frame loop (`Update`) itself, exactly like `ResourceScenario::Start`: the ScenarioRunner
+only runs Awake.
+
+One shared-header edit: `CelestialBody::progressTree` (+ forward declaration) in `include/ksp/celestial/celestial_body.hpp`.
+
+### Findings (rules the tests pin down)
+
+- **`EventData.Fire` calls the listeners from the last registered to the first** (WP-03). The float delta of a `CurrencyModifierQuery` is accumulated listener by
+  listener, so with several strategies active the summed delta differs by 1-4 ULP from the file-order sum. The reference iterates strategies and effects in reverse.
+- `Strategy.LeastDuration` / `LongestDuration` read the protected `minLeastDuration` / `maxLeastDuration` FIELDS (never assigned), not the config properties: both are 0 for every
+  stock strategy, so `Update` never expires a strategy and `CanBeDeactivated` never refuses (sic). `LongestDuration` also uses the *least* fields.
+- `Strategy.Load` marks the strategy active and calls `Register()`: loading a saved `CurrencyExchanger` strategy performs the exchange again and schedules its own deactivation one frame later.
+- `StrategySystem.OnLoad` defers the strategy construction one frame (a coroutine); `strategies.Clear()` does not unregister the old strategies (the C# object stays subscribed; here destroying a
+  Strategy unregisters its effects, otherwise a dangling listener).
+- `CelestialBodySubtree` checks `AllComplete()` only on `OnProgressReached`, and `ProgressNode.Complete()` fires Reached *before* it sets `complete`: a subtree completes on the next `Reach()` of a child, never in the
+  `Complete()` of the last one.
+- `Reputation.addReputation_granular` takes the remainder from the *applied* sum (`value - num2`), not from the raw steps; `Reputation.OnCurrenciesModified` runs the granular add again for the strategy delta.
+- `Funding.OnCurrenciesModified` adds the float effect delta to the double balance without the `AllowNegativeCurrency` clamp (only `AddFunds` / `SetFunds` clamp).
+- Reputation has no decay in 1.12.5 (`Reputation.cs` has no time-based term); there is no `GameVariables.GetActiveVesselMaxReputation`. Funds / reputation "conversion" is the CurrencyConverter / CurrencyExchanger maths above.
+- `ScenarioUpgradeableFacilities.OnLoad` of a node without children builds the initial state from `PSystemSetup.SpaceCenterFacilities` (lvl 0 per upgradeable object); the lvl text of a facility without a registered
+  object is the saved one (`GetFacilityLevel` = `float.Parse(lvl)`), 1 when unknown.
+- `KSCFacilityLevelText.GetText` loops forever on an unclosed tag in the C# (ProcessTextTags returns the text unchanged); the port stops instead.
+- Part of `Funding.onVesselRecoveryProcessing`: `num += (double)(dryCost + fuelCost)` is the unrounded double sum of the two floats (Mono rule).
+
+### Physprofile save (sandbox) SCENARIO nodes
+
+Nodes in `core/testdata/saves/physprofile/persistent.sfs` that belong to this package: `ProgressTracking` (an empty `Progress {}`), `ScenarioAchievements` (no body), `ScenarioDestructibles` (23 `intact = True`
+nodes), `VesselRecovery` (no body). All four round-trip byte-exact (`ToString` and `SaveToString`). The sandbox save has **no** `Funding`, `Reputation`, `ScenarioUpgradeableFacilities` or `StrategySystem` node:
+for these the formats are tested with synthetic nodes written from the C# OnSave code (marked in the test); no original career save exists in the repo, so those four formats are unverified against real files
+(needs data: a career save).
+
+### Seams (all in `CareerEnvironment`, `career_environment.hpp`; unset = the stated default)
+
+- WP-35 `ResearchAndDevelopment`: `rndPresent`, `rndScience`, `rndAddScience`, `rndCanAfford`, `rndSurfaceSampleExperiment`, `rndNextUnavailableNodeCount` / `rndUnlockNextUnavailableNode` (AwardProgressRandomTech),
+  `rndMiniBiomeDisplayName`; the `ScienceSubject.IsFromBody` and `ScienceData.dataAmount` hooks of CelestialBodyScience (static in `CelestialBodyScience`).
+- WP-38: `worldFirstStandardReward`, `worldFirstIntervalReward`, `findNextRecord`, `contractDefsPresent`, `progressionRecordSplit` / `MaxDepthRecord` / `MaxDistanceRecord` / `MaxSpeedRecord`, `greatCircleDistance`,
+  `valueAndUnits`; `ProgressType`, `ProgressRewardType` and `ContractPrestige` are declared in `career_environment.hpp` (WP-38 should take them over).
+- WP-42: `spaceCenterBody`, `spaceCenterGreatCircleDistance`, `launchSites`, `isStockLaunchSite`, `launchSiteDistance`, `launchSiteFound`, `spaceCenterFacilities`, `missionsFacilityLimit`, `IDestructibleBuilding`, `PointOfInterest::pqsCitySeed`.
+- WP-46 / GUI: `worldFirstMessage`, `postMessage`, `administration` (Administration.Instance counters), `MissionRecoveryDialog` data, `UpgradeLevel` spawn / despawn hooks. WP-59 `AnalyticsUtil`: every call dropped.
+- Misc: `upgradeEntryCost` (PartUpgradeHandler), `getHomeBody` (FlightGlobals.GetHomeBody: default = first `isHomeWorld` body), `actualCrewCapacity`, `kerbalRefLockReason`, `scheduler` (the coroutine host; default an internal `CoroutineScheduler`).
+- For WP-35: `ResearchAndDevelopment.AddScience` goes through `Funding`'s pattern: build `CurrencyModifierQuery(reason, 0, science, 0)`, fire `OnCurrencyModifierQuery` then `OnCurrencyModified`, add `GetEffectDelta(Currency::Science)`.
+  For WP-40: `GameVariables::Instance->GetPartCountLimit / GetCraftMassLimit / GetCraftSizeLimit / UnlockedActionGroupsStock / UnlockedFuelTransfer(normLevel, ...)` with `ScenarioUpgradeableFacilities::GetFacilityLevel(SpaceCenterFacility::VehicleAssemblyBuilding)`.
+
+### Not ported / deferred
+
+- GUI text and widgets: `Strategy.GetText` / `GetEffectText` / `Text` / `Effect`, `StrategyEffect.GetDescription` and the effect `Description`s, the cached localised strings, the KSP.UI `Administration`, `MissionRecoveryDialog` widgets (data recorded only), MessageSystem body
+  of `AwardProgress` (`StringUtilities.FormattedCurrencies`), ScreenMessages.
+- The visual side of `UpgradeLevel` (Instantiate / Destroy / reparent of the facility prefab) and of the facility objects; `DestructibleBuilding` itself (WP-42), `SpaceCenter`, `LaunchSite`, `PSystemSetup` launch sites (WP-09 / WP-42), `TutorialScenario`
+  (ScenarioAchievements takes `EndInTutorials(bool)`).
+- Event-driven achievement handlers are ported but not exercised by a test beyond `ScenarioAchievements` (they need live `Vessel` objects with discovery info, trip logs and a coroutine host; no capture exists): FirstLaunch, the four records' `iterateVessels`,
+  TowerBuzz, Rendezvous, TargetedLanding, the per-body situation nodes, PointOfInterest.
+- `GetEVALockedReason`'s live-Kerbal branch (`KerbalRef.state`, `InPart.NoAutoEVA`) is the `kerbalRefLockReason` seam.
+
+### Unverified / assumptions
+
+- Numeric text (`N<d>`, `F<d>`, `0.0##` ...) in the GUI strings is the port's own formatter (`career/format.hpp`); the shared `KSPUtil.LocalizeNumber` supports only `G` / `F` / `R`. Nothing numeric reads these strings.
+- Log lines use `float.ToString()` through `FormatSingleG` (7 digits): Unity's Mono may print more digits; logs only.
+- `ParseEnum` of `Enum.Parse` (`currency`, `operation`, `AffectReasons`) throws `ArgumentException` on an unknown name, as the C# does (not caught by `LoadFromConfig`).
+- The KSC position of the recovery test is the normalised `repositionRadial` of the Kerbin/KSC PQSCity (`SpaceCenter.Start` derives it from the scene transform, WP-42); its latitude differs from the real KSC by about 0.0003 degree.
+
+### Needs data (local extraction)
+
+- `GameVariables` prefab: `reputationAddition` / `reputationSubtraction` AnimationCurves and any overridden scalars (the C# initialisers are `reputationKerbalDeath = 10`, `reputationKerbalRecovery = 25`, ...; the shipped game
+  loses reputation on a Kerbal's death, so the prefab value is certainly not +10). Not in `harness/golden/serialized`; `harness/tools/extract_assets.py` would have to dump the `GameVariables` MonoBehaviour. The tests use constant 0.9 / 1.3 curves as fixtures.
+- `UpgradeableFacility` / `UpgradeableObject` serialized fields on the KSC scene (`upgradeLevels[].levelCost`, `KSCUpgradeableLevelText` assets, `preCompiledId`): the tests use fixture costs.
+- A career save (Funding / Reputation / ScenarioUpgradeableFacilities / StrategySystem / ProgressTracking with content) to turn the synthetic-format tests into a corpus gate; an in-game capture of a recovery
+  (funds, reputation, `onVesselRecoveryProcessing` score) and of `Reputation.AddReputation` with the real curves would give the first float32 capture gates for this package.
+
+### Unit tests
+
+`tests/test_progress.cpp`: 31 cases, 36,928 assertions (GameVariables x3, strategy config / costs / effects / combined / save / activation / exchangers, Funding / Reputation transactions and events, CurrencyModifierQuery, facilities x4,
+recovery grid and pipeline and the physprofile vessels, ScenarioDestructibles, ScenarioAchievements, ProgressNode / Tracking / node formats, the physprofile round trip and the synthetic format round trips). `unit` total: see the Test results table.
+
+### Verification
+
+Windows MSVC RelWithDebInfo fresh build: 34/34 ctest, `unit` 484 cases / 768,426 assertions. Linux Clang (`run_tests.sh -f`, WSL Ubuntu 24.04, log `/tmp/wp36_clang.log`): 34/34 ctest pass. GCC not run.

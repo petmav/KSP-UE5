@@ -27,6 +27,9 @@
 namespace ksp {
 
 class CelestialBody;
+namespace KSPAchievements {
+class CelestialBodySubtree;  // WP-36 (CelestialBody.progressTree)
+}
 class Orbit;
 class PQS;
 
@@ -260,6 +263,7 @@ public:
     // ---- run-time state (not serialized) ----
     std::optional<CelestialBodyOrbitDriver> orbitDriver;  // none for the Sun
     std::vector<CelestialBody*> orbitingBodies;           // children, PSystem order
+    KSPAchievements::CelestialBodySubtree* progressTree = nullptr;  // CelestialBody.progressTree (WP-36: set by CelestialBodySubtree)
     int32_t flightGlobalsIndex = 0;                       // set by PSystemManager.SpawnBody
     Vector3d position;                                    // world position (KSP: bodyTransform.position; shell-driven)
     QuaternionD rotation;                                 // BodyFrame.Rotation.swizzle (CBUpdate)
