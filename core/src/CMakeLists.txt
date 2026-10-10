@@ -128,6 +128,10 @@ add_library(kspcore STATIC
     modules/module_staging.cpp
     modules/base_action_lists.cpp
     modules/module_decouplers.cpp
+    modules/module_engines.cpp
+    modules/module_gimbal.cpp
+    modules/module_rcs.cpp
+    modules/module_resource_intake.cpp
     parts/part_decouple.cpp
     vessel/vessel_staging.cpp
     capi/kspcore_c.cpp

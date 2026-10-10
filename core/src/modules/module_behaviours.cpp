@@ -23,6 +23,10 @@
 #include "ksp/modules/part_module.hpp"
 #include "ksp/modules/resource_modules.hpp"
 #include "ksp/modules/module_decouplers.hpp"
+#include "ksp/modules/module_engines.hpp"
+#include "ksp/modules/module_gimbal.hpp"
+#include "ksp/modules/module_rcs.hpp"
+#include "ksp/modules/module_resource_intake.hpp"
 #include "ksp/parts/available_part.hpp"
 #include "ksp/parts/cs_parse.hpp"
 #include "ksp/parts/part_loader.hpp"
@@ -232,57 +236,6 @@ public:
     }
 };
 
-// ---- ModuleGimbal.cs:296 ------------------------------------------------------------------------------------------------
-class ModuleGimbal : public PartModule {
-public:
-    using PartModule::PartModule;
-    void OnLoad(const ConfigNode&) override {
-        if (Get<float>("gimbalRangeXP") < 0.0f) Set<float>("gimbalRangeXP", Get<float>("gimbalRange"));
-        if (Get<float>("gimbalRangeYP") < 0.0f) Set<float>("gimbalRangeYP", Get<float>("gimbalRange"));
-        if (Get<float>("gimbalRangeXN") < 0.0f) Set<float>("gimbalRangeXN", Get<float>("gimbalRangeXP"));
-        if (Get<float>("gimbalRangeYN") < 0.0f) Set<float>("gimbalRangeYN", Get<float>("gimbalRangeYP"));
-    }
-};
-
-// ---- ModuleResourceIntake.cs:75 / MultiModeEngine.cs:283 (ModuleCoreHeat: WP-22, thermal/thermal_modules.cpp) ---------------------------
-class ModuleResourceIntake : public PartModule {
-public:
-    using PartModule::PartModule;
-    void OnAwake() override {
-        PartModule::OnAwake();
-        if (IsNull("machCurve")) {
-            FloatCurve c;
-            c.Add(0.0f, 1.0f);
-            Set<FloatCurve>("machCurve", std::move(c));
-        }
-    }
-    void OnLoad(const ConfigNode&) override {  // :134 (resourceId = resourceName.GetHashCode(): not a KSPField)
-        if (Get<bool>("intakeEnabled")) {
-            Events()["Deactivate"]->active = false;
-            Events()["Activate"]->active = true;
-        }
-    }
-};
-
-class MultiModeEngine : public PartModule {
-public:
-    using PartModule::PartModule;
-    void OnLoad(const ConfigNode& node) override {
-        PartModule::OnLoad(node);
-        if (!Get<bool>("autoSwitchAvailable")) {
-            Set<bool>("autoSwitch", false);
-            BaseEvent* disable = Events()["DisableAutoSwitch"];
-            BaseEvent* enable = Events()["EnableAutoSwitch"];
-            enable->guiActiveEditor = false;
-            enable->guiActive = false;
-            enable->active = false;
-            disable->guiActiveEditor = false;
-            disable->guiActive = false;
-            disable->active = false;
-        }
-    }
-};
-
 // ---- FlagDecalBackground.cs:57 / :563 + IPartMassModifier / IPartCostModifier --------------------------------------------
 class FlagDecalBackground : public PartModule, public IPartMassModifier, public IPartCostModifier {
 public:
@@ -437,10 +390,11 @@ void RegisterBuiltinModules() {
     Reg<ModuleDeployableRadiator>({"ModuleDeployableRadiator"});
     Reg<ModuleDeployableSolarPanel>({"ModuleDeployableSolarPanel"});
     Reg<ModuleDataTransmitter>({"ModuleDataTransmitter"});
-    Reg<ModuleGimbal>({"ModuleGimbal"});
     detail::RegisterThermalModules();  // ModuleCoreHeat, ModuleActiveRadiator, ModuleAblator, ModuleConductionMultiplier (WP-22)
-    Reg<ModuleResourceIntake>({"ModuleResourceIntake"});
-    Reg<MultiModeEngine>({"MultiModeEngine"});
+    detail::RegisterEngineModules();  // WP-23: ModuleEngines, ModuleEnginesFX, MultiModeEngine (module_engines.cpp)
+    detail::RegisterRcsModules();     // WP-23: ModuleRCS, ModuleRCSFX
+    detail::RegisterGimbalModule();   // WP-23: ModuleGimbal
+    detail::RegisterIntakeModule();   // WP-23: ModuleResourceIntake
     Reg<FlagDecalBackground>({"FlagDecalBackground"});
     RegisterModulePartVariants();  // WP-13: modules/module_part_variants.cpp
     RegisterStructuralModules();   // WP-13: ModuleMirrorPlacement, ModuleDisplaceTweak
@@ -454,7 +408,6 @@ void RegisterBuiltinModules() {
     Reg<ModuleInventoryPart>({"ModuleInventoryPart"});
     Reg<PartStatsUpgradeModule>({"PartStatsUpgradeModule"});
     RegCurves({"ModuleColorChanger"}, {"redCurve", "greenCurve", "blueCurve", "alphaCurve"});
-    RegCurves({"ModuleEngines", "ModuleEnginesFX", "ModuleRCS", "ModuleRCSFX"}, {"atmosphereCurve"});
     RegCurves({"ModuleWheelSteering"}, {"steeringCurve", "steeringMaxAngleCurve"});
     RegCurves({"ModuleWheelMotor", "ModuleWheelMotorSteering"}, {"torqueCurve"});
 }

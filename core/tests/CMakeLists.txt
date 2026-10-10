@@ -27,6 +27,7 @@ add_executable(kspcore_tests
     test_vessel.cpp
     test_ship_construct.cpp
     test_aero.cpp
+    test_engines.cpp
     test_staging.cpp
     test_thermal.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
@@ -297,3 +298,14 @@ ksp_golden_gate(capture.thermal_step thermal_step GOLDEN ${KSP_CAPTURES2_DIR}/th
                 DROP_KEYS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/data/thermal_step_exclusions.json
                 COLUMNS "vessel:case,frame,mach,density,staticPressurekPa,dynamicPressurekPa,atmosphericTemperature,externalTemperature,convectiveCoefficient,convectiveMachLerp,densityThermalLerp,solarFluxMultiplier,backgroundRadiationTemp,backgroundRadiationTempExposed,fi_isAnalytical"
                 DROP_COLUMNS "parts:radiativeArea,exposedArea,thermalMass,ptd_intConductionFlux,ptd_skinConductionFlux,ptd_convectionArea,ptd_postShockExtTemp,ptd_brtExposed,ptd_expFlux,ptd_unexpFlux,ptd_sunFlux,ptd_bodyFlux/part_constants:resource_mass")
+# WP-23 engines (ModuleEngines / ModuleEnginesFX / MultiModeEngine; see ds_engine_thrust.cpp, ds_engine_deltav.cpp).
+#   golden.engine_thrust    the .NET harness golden (harness/golden/engine_thrust): all four tables, every column, computed with
+#                           aero::NetFloat (the generator ran KSP's IL on .NET Framework 4.8). harness/compare/tolerances.json unchanged.
+#   capture.engine_deltav   the in-game engine rows of the C5 delta-v capture (deltav_readout.json `engines`, Mono float semantics,
+#                           aero::MonoFloat = production code). startBurnStage is not gated: it is engine.part.inverseStage
+#                           (DeltaVEngineInfo.cs:88), gated by capture.staging_sequence as parts.inverseStage. The other 12 columns
+#                           (ispVac, ispASL, ispActual, thrustVac, thrustASL, thrustActual, requiresAir, propellants, part, part_index,
+#                           key columns) are ModuleEngines outputs. No row is filtered.
+ksp_golden_gate(golden.engine_thrust engine_thrust)
+ksp_golden_gate(capture.engine_deltav engine_deltav GOLDEN ${KSP_CAPTURES2_DIR}/deltav_readout.json DROP_HEX
+                TOL ${KSP_CAPTURE_TOL} TABLES engines DROP_COLUMNS "engines:startBurnStage")

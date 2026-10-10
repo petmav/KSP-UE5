@@ -1,6 +1,6 @@
 # kspcore status
 
-Updated 2026-10-09 (WP-05). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
+Updated 2026-10-10 (WP-23). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
 (details in README.md). Local git repository in `core/` only, never pushed.
 
 ## Summary
@@ -29,7 +29,9 @@ Updated 2026-10-09 (WP-05). One command: `powershell -NoProfile -ExecutionPolicy
 
 | 13. WP-18 craft files and ship construction (branch `wp18`) | done for the engine-agnostic part: ShipConstruct over live `Part`s (`LoadShipWithParts` / `SaveShip` from the parts, costs, masses, naming, ship PartSet), ShipTemplate (whole class), ShipConstruction (paths, backups, load / save, `AssembleForLaunch` over WP-14's assembly, templates through the upgrade pipeline, `GetPartCosts*`, launch-site queries, craft size); new gate `capture.ship_construct` (C5: `GetShipMass` and the per-part masses of 17 crafts, 0 ULP); 26 unit cases (274,042 assertions): round trip of 57 crafts, agreement with the original files, templates vs ships. See "WP-18" |
 
-## Test results (all 30 ctest tests pass: Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step)
+| 14. WP-23 engines, RCS, gimbals, intakes, numeric part (branch `wp23`) | done (numeric / data side): ModuleEngines / ModuleEnginesFX (fields, OnLoad / OnStart, propellant setup, thrust / Isp / fuel-flow maths over the float policy, throttle model, flameout, staging overrides, RequestPropellant through WP-15), MultiModeEngine, ModuleRCS(FX), ModuleGimbal, ModuleResourceIntake, EngineType / IEngineStatus / IThrustProvider / IThrottleControl, Propellant run-time state; gates `golden.engine_thrust` (.NET golden, 5,248 rows, NetFloat) and `capture.engine_deltav` (in-game, 460 rows, MonoFloat), both 0 ULP; FX / audio, rigidbody force application and PAW text deferred (see "WP-23") |
+
+## Test results (all 32 ctest tests pass: Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav)
 
 Every numeric column of every gate: **max ULP 0, max abs 0** (bit-exact, and the same decimal text). Tolerance files:
 harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture gates use `tests/tolerances_capture.json`
@@ -64,7 +66,9 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `capture.aero_forces_vessel` | WP-21: in-game `captures/out2/aero_forces_vessel.json` (C10): structure 631 (node_contact_areas), parts 4,224 x 46 columns, aoa_sweep 25,344 x 12 columns on the three assembled PhysProf vessels; inputs dropped as listed in "WP-21" | 30,199 | 0 ULP |
 | `capture.atmosphere_thermal_offsets` | WP-22: in-game `captures/out2/atmosphere_thermal_offsets.json` (C4), `samples` 27 columns: `CelestialBody.GetAtmoThermalStats` / `GetFullTemperature` on Kerbin, Eve, Duna, Laythe, Jool, Mun at 4 epochs | 2,688 | 0 ULP |
 | `capture.thermal_step` | WP-22: in-game `captures/out2/thermal_step.json` (C6): vessel 2,994 x 12 + isAnalytical, parts 14,985 x 19 + exposed (the real UpdateThermodynamics per tracked part and frame; 7 recovered columns are inputs, not compared), part_constants 15; inputs recovered from the capture and exclusions as listed in "WP-22" | 17,994 | 0 ULP |
-| `unit` | 299 doctest cases, 685,133 assertions (WP-22: 7 cases, 112 assertions in `test_thermal.cpp`; WP-16: 19 cases, 12,222 assertions in `test_staging.cpp`; WP-21: 11 cases, 220,304 assertions in `test_aero.cpp`; WP-18: 26 cases, 274,042 assertions in `test_ship_construct.cpp`; WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
+| `golden.engine_thrust` | WP-23: harness golden `engine_thrust` (KSP's IL on .NET 4.8), every table, computed with the `aero::NetFloat` policy: engines 41 x 22 columns, isp_thrust_vs_pressure 738, kerbin_flight 4,059, rocket_equation 410 | 5,248 | 0 ULP |
+| `capture.engine_deltav` | WP-23: in-game `captures/out2/deltav_readout.json` (C5) table `engines` (DeltaVEngineInfo's editor-situation reads of ModuleEngines: ispVac / ASL / Actual, thrustVac / ASL / Actual, requiresAir, propellants; 17 crafts x 4 bodies, `aero::MonoFloat`); `startBurnStage` is WP-16's | 460 | 0 ULP |
+| `unit` | 309 doctest cases, 686,823 assertions (WP-22: 7 cases, 112 assertions in `test_thermal.cpp`; WP-23: 10 cases, 1,690 assertions in `test_engines.cpp`; WP-16: 19 cases, 12,222 assertions in `test_staging.cpp`; WP-21: 11 cases, 220,304 assertions in `test_aero.cpp`; WP-18: 26 cases, 274,042 assertions in `test_ship_construct.cpp`; WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
 differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 6 ULP (Vector3.Project/ProjectOnPlane) and
@@ -2513,3 +2517,127 @@ two-part graph (links, contact area, hot to cold).
 - `e8f77a05` WP-22: thermal modules (TemperatureModel, RadiatorUtilities, ModuleConductionMultiplier, ModuleAblator, ModuleCoreHeat, ModuleActiveRadiator), Part thermal flux helpers, part_constants gate, test_thermal.cpp
 - `defb93f9` WP-22: README rows, STATUS section and counts
 - (this commit) STATUS commit list, PROGRESS-wp22.md; verification: Windows MSVC `run_tests.ps1 -Fresh` and WSL Clang 18 `run_tests.sh -f`, 30/30 ctest tests each, 299 unit cases / 685,133 assertions
+## WP-23: engines, RCS, gimbals, intakes, numeric part (branch `wp23`, from main `289d0c98`)
+
+State: done for the numeric and data side. `ModuleEngines`, `ModuleEnginesFX`, `MultiModeEngine`, `ModuleRCS`, `ModuleRCSFX`, `ModuleGimbal`,
+`ModuleResourceIntake` and the engine interfaces are real classes now (the WP-06 / WP-16 stand-ins for them are gone). Two new gates, every
+column 0 ULP: `golden.engine_thrust` (the .NET harness golden, all four tables) and `capture.engine_deltav` (the in-game engine rows of the C5
+delta-v capture). Every earlier gate is unchanged and green (`capture.part_database` included: the ported OnAwake / OnLoad bodies change no
+captured KSPField). Every ported function cites `File.cs:line` of `decompiled/KSP-Decompiled/Assembly-CSharp/` (checked by script against the
+method lines; the two reports left are the destructor ported from `OnDestroy` and a static field).
+
+### Float policy per table (the key design point, same mechanism as WP-21)
+
+The thrust maths is managed float32 code. Unity's Mono (the game) evaluates a float expression in double and rounds at stores; the .NET
+Framework 4.8 JIT (the golden harness) rounds after every operation. The multi-operation expressions (`GetEngineThrust` = `Lerp(...) *
+getExhaustVelocity`, `MaxThrustOutputAtm` / `Vac`, the `flowMultCap` formula, `maxThrust / (Evaluate(0f) * g)`, `SetupPropellant`'s
+`num += density * ratio`) are `template <class P>` members over `aero::MonoFloat` / `aero::NetFloat` (`ksp/aero/float_eval.hpp`); the virtual
+methods the game calls are the `MonoFloat` instantiations, the golden runner calls the `NetFloat` ones. Evidence that the choice matters: with
+`MonoFloat` the golden differs (engines.maxFuelFlow 1 ULP, MaxThrustOutputVac / MaxThrustOutputAtm / GetEngineThrust / thrust / dV up to 2 ULP,
+13 of 41 `propellant_maxFuelFlow` strings, 130 of 410 `burnTime_fullThrottle`); with `NetFloat` it matches bit for bit.
+
+| gate / table | rows | reference | policy | max ULP | notes |
+|---|---|---|---|---|---|
+| `golden.engine_thrust` / engines | 41 x 22 columns | harness golden (.NET) | NetFloat | 0 | maxThrust, minThrust, g, maxFuelFlow, minFuelFlow, throttleMin, isp_vac / asl, exhaustVelocity_vac, MaxThrustOutputVac, the flow / curve flags, flowMultCap, multIsp, multFlow, mixtureDensity, ratioSum, the propellant flow strings, the curve key strings, `file` |
+| `golden.engine_thrust` / isp_thrust_vs_pressure | 738 | same | NetFloat | 0 | isp, MaxThrustOutputAtm, GetEngineThrust at throttle 1 and 0.5, 18 pressures |
+| `golden.engine_thrust` / kerbin_flight | 4,059 | same | NetFloat | 0 | pressure, density (WP-09 Kerbin atmosphere), isp, MaxThrustOutputAtm with the part's Mach number (jets: atmCurve / velCurve) |
+| `golden.engine_thrust` / rocket_equation | 410 | same | NetFloat | 0 | thrust, isp, dV (`DeltaVStageInfo.StoreInterimDeltaV` expression, Vector3 magnitude under NetFloat), burnTime |
+| `capture.engine_deltav` / engines | 460 x 9 columns | in-game `captures/out2/deltav_readout.json` (C5) | MonoFloat | 0 | part, part_index, ispVac, ispASL, ispActual, thrustVac, thrustASL, thrustActual, requiresAir, propellants (the key columns craft_id, body, idx included: the engine order of `VesselDeltaV.UpdateModuleEngines` is reproduced) |
+
+Exclusions (`tests/CMakeLists.txt` next to the gate; no row is filtered anywhere): `capture.engine_deltav` drops the column `startBurnStage`: it is
+`engine.part.inverseStage` (DeltaVEngineInfo.cs:88), already gated as `parts.inverseStage` by `capture.staging_sequence` (WP-16). The other
+tables of `deltav_readout.json` (`stages`, `totals`) are VesselDeltaV's (WP-17); `engines` holds no column that belongs to the stage simulation
+(`DeltaVEngineInfo.CalculateISP` / `CalculateThrustVector` / `CalcThrustActual` editor branches only call ModuleEngines: atmosphereCurve,
+atmCurveIsp, MaxThrustOutputVac, MaxThrustOutputAtm, propellants). The runner re-hosts those statements (not DeltaVEngineInfo itself, which is
+WP-17's) with the situation inputs of `DeltaVAppValues` (body atmPressure / atmDensity at altitude 0) and builds the crafts like
+`capture.resource_mass` does.
+
+### What is ported (by C# file)
+
+| C# file | C++ | ported | not ported |
+|---|---|---|---|
+| EngineType.cs, IEngineStatus.cs, IThrustProvider.cs, IThrottleControl.cs | `engines/engine_interfaces.hpp` | all | - |
+| Propellant.cs | `parts/part_module_data.hpp` (+ `part_module_data.cpp`) | the run-time half added to WP-05's data record: `currentRequirement`, `currentAmount`, `isDeprived`, `actualTotalAvailable`, `totalResourceCapacity`, `hasAlternatePropellant`, `totalResourceAvailable` (getter / setter), `UpdateConnectedResources(Part&)`; Load / GetFlowMode are WP-05's | `Save`, `getPartResourceDefinition`, `GetFlowModeDescription` (UI text) |
+| ModuleEngines.cs (2,217) | `modules/module_engines.hpp`, `src/modules/module_engines.cpp` | every field (generated schema), OnAwake (:1609, event / action binding, atmosphereCurve), OnLoad (:598: PROPELLANT nodes, SetupPropellant, maxFuelFlow / minFuelFlow / throttleMin, throttleResponseRate, EngineType, thrust transforms and their multipliers), OnStart (:1651: staging icon default, event and field activity), SetupPropellant (:390), UpdatePropellantStatus (:421), Flameout / UnFlameout (:497, :517), CheckDeprived (:529), RequestPropellant (:550, through `Part.RequestResource` and the flow mode of each propellant), Activate / Shutdown / ToggleIncludeinDV and the four actions (:740-870), OnActive (:1724), IsStageable (:2137), the thrust maths (:1833-2060: MaxThrustOutputAtm, MaxThrustOutputVac, getMaxFuelFlow, getFuelFlow, getExhaustVelocity, GetEngineThrust, GetThrottlingMult, ModifyFlow), the throttle model (UpdateThrottle :1352 incl. throttleUseAlternate and the engine response time, RequiredPropellantMass :1454, CalculateThrust :1478, ThrustUpdate :1540, FixedUpdate :1587), OnCenterOfThrustQuery (:2103), IThrustProvider / IEngineStatus, CanBeDetached / Offset / Rotated, Instantiate's copy of the public members | see "Deferred, exactly" |
+| ModuleEnginesFX.cs (191) | same files | OnAwake, CanStart (:105), the engineSpool value of FXUpdate | the `part.Effect(...)` calls (FX), PlayEngageFX / PlayShutdownFX / PlayFlameoutFX / DeactivateLoopingFX / InitializeFX / FXReset / SetListener (FX, audio) |
+| MultiModeEngine.cs (415) | same files | everything: OnAwake / OnLoad / OnStart, OnUpdate (auto switch), OnAutoSwitch, onVesselModified, SetPrimary / SetSecondary (engine activation, throttle carry-over, mode name, `isEnabled` / `manuallyOverridden`), ToggleMode, ModeEvent, the auto-switch events and the three actions, the IEngineStatus properties, the GameEvents (`onMultiModeEngineSwitchActive`, the static auto-switch event, `onVesselWasModified`) | - |
+| ModuleRCS.cs (978) | `modules/module_rcs.hpp`, `src/modules/module_rcs.cpp` | fields, OnAwake / OnLoad (incl. the synthesised PROPELLANT, into a copy of the node: PartLoader still adds it to the prefab's own node) / OnStart / OnActive, Update (:211 input mapping), GetLeverDistance(+Original), FixedUpdate (:277 per-thruster thrust), CalculateThrust, SetupPropellant, UpdatePropellantStatus, RequestPropellant, getMaxFuelFlow x2, GetPotentialTorque, IsStageable and the staging texts, SetResource, CanBeDetached / Offset / Rotated | SetupFX, UpdatePowerFX, DeactivatePowerFX (FX; DeactivateFX keeps the thrustForces reset), UpdatePropellantGauge, GetInfo, UpdateToggles' guiName text, Missions adjuster plumbing |
+| ModuleRCSFX.cs (45) | same files | the class (its overrides are FX only) | FX |
+| ModuleGimbal.cs (466) | `modules/module_gimbal.hpp`, `src/modules/module_gimbal.cpp` | fields, OnLoad (:296 range fallbacks), OnStart (transform list / initial rotations through the model hook), events / actions, FixedUpdate (:161, returns `newLocalRotations`), GimbalRotation (:196), CreateEngineList, GetPotentialTorque (:374), UpdatePAWUI / UpdateToggles (activity flags), IsStageable (false), OnActive | GetInfo, SetActionsSuffix text, Missions adjusters |
+| ModuleResourceIntake.cs (267) | `modules/module_resource_intake.hpp`, `src/modules/module_resource_intake.cpp` | fields, OnAwake (default machCurve), OnStart, OnLoad, Activate / Deactivate / ToggleAction x2, FixedUpdate (:201: airspeed, area x unitScalar x machCurve x density, resource units, TransferResource / RequestResource, the five status states) | GetInfo / GetModuleDisplayName text |
+
+Changed earlier packages' files (behaviour-preserving for every earlier gate): `modules/module_behaviours.cpp` (the stand-ins of ModuleGimbal,
+ModuleResourceIntake, MultiModeEngine and the `atmosphereCurve` null-curve creation for ModuleEngines(FX) / ModuleRCS(FX) were removed: the real
+classes do all of it; registration calls added), `modules/module_staging.cpp` (the ModuleEngines / ModuleRCS / ModuleGimbal rules of `IsStageable`
+and the `LIQUID_ENGINE` staging icon default moved into the classes), `parts/part_module_data.{hpp,cpp}` (Propellant, above), and
+`aero/aero_interfaces.hpp`: **`IAirstreamShield` was defined twice on main** (WP-16's `staging/staging_types.hpp` and WP-21's
+`aero/aero_interfaces.hpp`, identical, left by the union merge of the two branches): no translation unit could include both headers (MSVC
+C2011). The new engine headers need both, so the WP-21 copy was removed and `aero_interfaces.hpp` includes `staging_types.hpp`.
+
+### Seams (what WP-20 / the model reader / the UI feed)
+
+- Flight inputs: every flight method takes the Unity scene state as an input struct (`EngineFlightInput`, `RCSFlightInput`,
+  `IntakeFlightInput`) or parameters (gimbal: the reference transform, CoM, control state, `fixedDeltaTime`). Outputs the C# hands to Unity are
+  returned: `ModuleEngines::ThrustUpdate` returns `EngineThrustResult` (the `-transform.forward * finalThrust * multiplier` forces at each thrust
+  transform for `Part.AddForceAtPosition`, the kilowatts for `Part.AddThermalFlux`, whether `EngineExhaustDamage` was reached), `ModuleRCS`
+  keeps `lastForces`, `ModuleGimbal` keeps `newLocalRotations` (what to assign to `Transform.localRotation`).
+- Model transforms: `ModuleEngines::findModelTransforms`, `ModuleGimbal::findModelTransforms`, `ModuleRCS::findModelTransforms`,
+  `ModuleResourceIntake::findModelTransform` are static hooks (`Part.FindModelTransforms(name)`); unset they return nothing, as for a part
+  without a model. The engine's `thrustTransforms` are `PartTransform` records; `thrustTransformMultipliers` follow OnLoad's rule from their count.
+  `ModuleGimbal::isTransformInChildren` replaces `Part.FindTransformInChildrenExplicit` (default: the same transform).
+- `ModuleEngines::flightInput` / `warping` (TimeWarping(): high warp or packed) are set by the host before `FixedUpdate()`.
+- Missions adjusters (`AdjusterEnginesBase`, `AdjusterRCSBase`, `AdjusterGimbalBase`): `ApplyThrottleAdjustments` and the control adjustments are
+  the identity, `IsEngineDead()` is false, `IsAdjusterBreakingRCS()` is false.
+
+### Deferred, exactly
+
+Not ported (and why): everything FX / audio (`ModuleEngines.SetupFXGroups`, `AutoPlaceFXGroup`, `HijackFX`, `InitializeFX`, `FXUpdate` effects,
+`Play*FX`, `Deactivate*FX`, `ActivateRunningFX`, `BurstFlameoutGroups`, `SetRunningGroupsActive`, `SetPowerGroupsActive`, `ParticlesStop`,
+`OnPause` / `OnUnpause`: FXGroup / AudioSource / ParticleSystem are Unity objects); `EngineExhaustDamage` (raycasts and `Part.AddDamage`:
+WP-20 / WP-22); the stage-icon gauges (`UpdatePropellantGauge`, `OnStageIconDestroy`, `Shutdown`'s `RemoveInfo`); the PAW / UI-control
+plumbing (`UI_Control.onFieldChanged` of thrustPercentage: the body is `thrustPercentChanged()`, `throttleModeChanged`'s
+`SetSceneVisibility`, `UpdateIncludeDVUI`, `GetDrawModulePanelCallback`, every `GetInfo` / `GetInfoThrust` / `GetPrimaryField` /
+`GetModuleDisplayName`, `CacheLocalStrings`, `ScreenMessages.PostScreenMessage`); `CheckTransformsUnderwater` (the thrust transforms' world
+altitude is `EngineFlightInput::underwater`); `OnInventoryModeDisable` (FX group lookup); force application to rigidbodies (WP-20 / Jolt).
+`VesselDeltaV` / `DeltaVEngineInfo` themselves are WP-17's.
+
+### C# quirks reproduced (later code must keep them)
+
+- `ModuleEngines.OnStart` / `ModuleGimbal.OnStart` rebuild the transform lists; `OnLoad` runs before any model exists, so the lists are empty
+  until a model reader is installed.
+- `ModuleRCS.exhaustVel` is a private field (not serialized): an instance made by `Part::Instantiate` has 0 until the first `FixedUpdate`
+  (`CalculateThrust` before that returns 0). The prefab, which ran OnLoad, has `Isp(0) * G`.
+- `MultiModeEngine.OnStart` runs the loop clearing the secondary's action count twice (both loops write `primaryEngine.Actions[k].active = false`).
+- `ModuleRCS.OnAwake` sets `stagingEnabled = false` when `part.partInfo == null || partInfo.partPrefab == null` (ported). Every stock RCS cfg sets
+  `stagingEnabled = False` itself, so no stock gate can tell the two apart: a mod RCS part without that line would differ from the cfg value.
+- `Propellant.displayName` is the resource's abbreviation when its display name is longer than 14 characters (so `CheckDeprived` reports the
+  abbreviation for long names), `Electric Charge` excepted.
+- `ModuleEngines.CalculateThrust` multiplies `finalThrust` by `vessel.VesselValues.EnginePower` AFTER the propellant request; the fuel flow GUI value
+  is `(float)(massFlow * num * mixtureDensityRecip * ratioSum) * (1f / fixedDeltaTime)` (the `1f / dt` is a float division inside the Mono double
+  expression).
+
+### Unit tests (`tests/test_engines.cpp`, 10 cases, 1,690 assertions)
+
+See README "unit (WP-23)". Expectations are derived from the decompiled control flow and the real stock cfgs: all 41 engine modules (propellant
+names / ratios / flags / flow modes against the cfg, the mixture density, `maxFuelFlow = maxThrust / (Isp(0) * g)`, the mass-flow split over the
+propellants, the `EngineType`), the thrust maths for liquidEngine and the turboJet flow multipliers (atmCurve, velCurve, flowMultCap, CLAMP),
+`RequestPropellant` draws on a real tank -> engine stack (WP-15's flow), flameout / unflameout / ignition, the throttle model including the
+alternate response, MultiModeEngine on turboJet and RAPIER (mode names, `isEnabled`, throttle carry-over in flight, a missing secondary engine),
+the 22 stock gimbals (range fallbacks) with GimbalRotation / FixedUpdate / PAW flags, the stock RCS modules, the intake rate, Propellant.
+
+### Needs a new (local) capture or data
+
+- An in-game capture of a FLIGHT-scene engine tick (`FixedUpdate`: requestedThrottle, `finalThrust`, `fuelFlowGui`, `propellantReqMet`, the
+  per-tick propellant draw, flameout transitions) on a craft with a throttle program and a jet: with it `UpdateThrottle` / `CalculateThrust` /
+  `ThrustUpdate` become a gate (today they are unit-tested against the decompiled control flow only; `CalculateThrust` / `ThrustUpdate` need a real
+  `Vessel` for `VesselValues`, which the WP-15 `TestVessel` stand-in cannot provide).
+- A gimbal / RCS capture (`GimbalRotation` actuation angles per axis input, per-thruster `thrustForces`) and an intake capture
+  (`airFlow` / `airSpeedGui` per flight condition): their maths has unit tests only.
+- The model reader (thrust / gimbal / RCS transforms): `thrustTransformMultipliers` for multi-nozzle engines, `OnCenterOfThrustQuery` positions and
+  the thrust force positions need it.
+
+### Fresh run
+
+Windows MSVC: `core\run_tests.ps1 -Fresh`: 30/30 ctest tests passed (the 28 earlier tests unchanged plus `golden.engine_thrust` and
+`capture.engine_deltav`), `unit` 302 cases / 686,711 assertions. Linux (WSL, `./run_tests.sh -f` on the /mnt/c checkout, linux-rel preset): 30/30 ctest tests passed (build 229 s, `golden.engine_thrust` 15.9 s,
+`capture.engine_deltav` 11.9 s; slow because the tree is on the Windows file system). GCC was not run here (CI).
