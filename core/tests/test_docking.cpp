@@ -452,7 +452,7 @@ TEST_CASE("WP-25 CheckDockContact: capture / acquire geometry on hand-constructe
     }
     CHECK(n == ref["contact"].size());
     CHECK(trues == 560);
-    CHECK(tiny <= 16);
+    CHECK(tiny == 8);  // the cos(~pi/2) cases of the generated reference (tests/data/wp25_reference.json: 8 of 1080 rollDot values with 0 < |v| < 1e-9)
 }
 
 TEST_CASE("WP-25 CheckDockContact through the module: the node transform seam and the method on real stock ports") {

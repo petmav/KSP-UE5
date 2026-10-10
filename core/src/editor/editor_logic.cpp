@@ -21,8 +21,6 @@ namespace ksp {
 using QuaternionExtensions::Inverse;
 
 namespace {
-// float sqrt through ksp::dotnet (IEEE sqrt is correctly rounded: the double result rounded to float equals the float sqrt)
-static inline float SqrtF(float x) { return static_cast<float>(dotnet::Math::Sqrt(static_cast<double>(x))); }
 
 AttachRules RulesOf(const Part& p) { return p.fields.attachRules.value_or(AttachRules{}); }
 
@@ -33,7 +31,7 @@ bool Contains(const std::vector<T>& v, const T& x) {
 
 // Unity's Transform.rotation / localRotation setter: NormalizeSafe (Runtime/Math/Quaternion.h): identity under 1e-5, else q / |q|
 Quaternionf NormalizeSafe(const Quaternionf& q) {
-    const float mag = SqrtF(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
+    const float mag = UnityNative::SqrtF(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
     if (mag < 0.00001f) return Quaternionf::identity();
     return {q.x / mag, q.y / mag, q.z / mag, q.w / mag};
 }
@@ -78,7 +76,7 @@ void EditorLogicBase::clearAttachNodes(Part* part, Part* otherPart) {
     if (part->srfAttachNode->attachedPart == otherPart) part->srfAttachNode->attachedPart = nullptr;
 }
 
-// EditorLogicBase.cs:232
+// EditorLogicBase.cs:231
 bool EditorLogicBase::PartInHierarchy(Part* part, Part* tgtPart) const {
     if (Contains(part->children, tgtPart)) return true;
     for (size_t num = 0, count = part->children.size(); num < count; num++)
@@ -86,7 +84,7 @@ bool EditorLogicBase::PartInHierarchy(Part* part, Part* tgtPart) const {
     return false;
 }
 
-// EditorLogicBase.cs:259
+// EditorLogicBase.cs:260
 float EditorLogicBase::FindPartSurface(Part& p, const Vector3f& origin, const Vector3f& direction, const Vector3f& fromParent,
                                        const EditorSurfaceHit& hit, Vector3f& srfNormal) const {
     EditorEnvironment& env = EditorEnvironment::Current();
@@ -154,7 +152,7 @@ void EditorLogicBase::handleChildNodeIcons(Part* part) {
     }
 }
 
-// EditorLogicBase.cs:129
+// EditorLogicBase.cs:148
 void EditorLogicBase::handleAttachNodeIcons(Part* part, bool stackNodes, bool srfNodes, bool dockNodes) {
     for (size_t i = 0, count = part->attachNodes.size(); i < count; i++) AssignAttachIcon(part, part->attachNodes[i], stackNodes, srfNodes, dockNodes);
 }
@@ -1347,7 +1345,7 @@ int EditorLogic::CountAllSceneParts(bool includeSelected) {
     return static_cast<int>(Part::allParts.size());
 }
 
-// EditorLogic.cs:5429
+// EditorLogic.cs:5430
 bool EditorLogic::ShipIsValid(const ShipConstruct* s) const { return s != nullptr && !s->liveParts.empty(); }
 
 // EditorLogic.cs:376
