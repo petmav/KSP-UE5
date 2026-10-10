@@ -29,6 +29,7 @@ add_executable(golden_runner
     ds_thermal_step.cpp
     ds_engine_thrust.cpp
     ds_engine_deltav.cpp
+    ds_deltav_stages.cpp
     vessel_capture.cpp
 )
 target_link_libraries(golden_runner PRIVATE kspcore)

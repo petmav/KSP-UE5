@@ -147,6 +147,10 @@ add_library(kspcore STATIC
     parts/part_shield.cpp
     parts/compound_part.cpp
     vessel/vessel_staging.cpp
+    vessel/delta_v_part_info.cpp
+    vessel/delta_v_engine_info.cpp
+    vessel/delta_v_stage_info.cpp
+    vessel/vessel_delta_v.cpp
     capi/kspcore_c.cpp
 )
 add_library(ksp::core ALIAS kspcore)

@@ -26,6 +26,22 @@ struct EditorSession {
         sm = std::make_unique<StageManager>(&host);
         sm->Awake();
     }
+    // The same over a ShipConstruct's live parts (WP-17: VesselDeltaV works on the editor ship)
+    explicit EditorSession(const std::vector<Part*>& parts) {
+        for (Part* p : parts)
+            if (p->parent == nullptr) {
+                host.root = p;
+                break;
+            }
+        sm = std::make_unique<StageManager>(&host);
+        sm->Awake();
+    }
+    static void StartParts(const std::vector<Part*>& parts) {
+        for (Part* p : parts) {
+            p->ModulesOnStart(StartState::Editor);
+            p->StartStaging();
+        }
+    }
     // Part.Start in the editor (Part.cs:1727-1747): ModulesOnStart, then the staging block
     static void StartParts(CraftTree& tree) {
         for (auto& p : tree.parts) {

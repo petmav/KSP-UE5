@@ -1,9 +1,11 @@
 {
-  "comment": "kspcore tolerances for comparisons against the in-game captures (harness/captures/out, CAPTURE-SPEC C1/C2/C7). Same format and first-match semantics as harness/compare/tolerances.json. Coordinator rule: float32 columns may accept at most 64 ULP or rel 5e-6 where bit-exactness is not reached; every relaxation must be listed in STATUS.md. Currently everything is exact.",
+  "comment": "kspcore tolerances for comparisons against the in-game captures (harness/captures/out, CAPTURE-SPEC C1/C2/C7). Same format and first-match semantics as harness/compare/tolerances.json. Coordinator rule: float32 columns may accept at most 64 ULP or rel 5e-6 where bit-exactness is not reached; every relaxation must be listed in STATUS.md. Exception: deltav_readout stage / total delta-v (WP-17, STATUS.md); everything else is exact.",
   "rules": [
     {"match": "math_shim/f32/*", "abs": 0.0, "rel": 0.0, "ulp": 0, "why": "Unity managed float maths under Mono's float rule: bit-exact"},
     {"match": "libm_mono/*", "abs": 0.0, "rel": 0.0, "ulp": 0, "why": "runtime layer: bit-exact"},
     {"match": "unity_random/*", "abs": 0.0, "rel": 0.0, "ulp": 0, "why": "native xorshift128 + mappings: bit-exact"},
+    {"match": "deltav_readout/stages/deltaV*", "type": "f32", "abs": 0.0, "rel": 2e-6, "ulp": 0, "why": "WP-17: the stage delta-v is |sum of thrust * thrustTransform.forward| times the rocket-equation factor (DeltaVStageInfo.cs:331); the thrust transforms come from the .mu models (model reader, not ported), the runner uses one -Y transform at the part rotation. Measured max rel 1.02e-6 (11 ULP) on the 180 compared rows; STATUS.md WP-17"},
+    {"match": "deltav_readout/totals/TotalDeltaV*", "type": "f64", "abs": 0.0, "rel": 2e-6, "ulp": 0, "why": "WP-17: sums of the stage delta-v above; measured max rel 1.02e-6; STATUS.md WP-17"},
     {"match": "*", "abs": 0.0, "rel": 0.0, "ulp": 0}
   ]
 }
