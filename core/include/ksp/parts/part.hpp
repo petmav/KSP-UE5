@@ -48,6 +48,7 @@ namespace ksp {
 class ModulePartVariants;
 class ILiftProvider;  // WP-21 ksp/aero/aero_interfaces.hpp
 class IAirstreamShield;
+class PartThermalData;  // WP-22 ksp/thermal/thermal_types.hpp
 class PartSet;
 class ShipConstruct;
 class DockedVesselInfo;
@@ -142,6 +143,7 @@ public:
     // ---- WP-21 (aero): Object-typed public fields of Part.cs that PartFields has no storage for
     ILiftProvider* bodyLiftOnlyProvider = nullptr;  // :491
     std::vector<IAirstreamShield*> airstreamShields;  // :791 (AddShield / RemoveShield: the fairing / cargo-bay packages)
+    PartThermalData* ptd = nullptr;                 // :476 (WP-22; owned by the FlightIntegratorThermal that created it)
 
     // ---- private / protected / internal members of Part.cs --------------------------------------------------------------
     float moduleMass = 0.0f;                       // :306 internal

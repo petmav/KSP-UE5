@@ -26,6 +26,7 @@ add_executable(golden_runner
     ds_aero_forces.cpp
     ds_aero_forces_vessel.cpp
     ds_atmosphere_thermal_offsets.cpp
+    ds_thermal_step.cpp
     vessel_capture.cpp
 )
 target_link_libraries(golden_runner PRIVATE kspcore)

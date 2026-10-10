@@ -18,3 +18,18 @@ eccentricity()/inclination(); runner ds_atmosphere_thermal_offsets.cpp, gate cap
 Plan for thermal_step: gate per-frame vessel scalars with FlightIntegratorAtmosphere (inputs from capture) + per-part one-step recompute
 (prev-frame temps from capture row n-1, local fluxes; conduction with unlogged neighbours cannot be reproduced -> take the two
 neighbour-dependent fluxes as inputs and document).
+
+## Step 1 DONE: capture.atmosphere_thermal_offsets passes, samples 2688 rows, 0 ULP all columns (commit on wp22).
+
+
+## Step 2: thermal port written (include/ksp/thermal/{thermal_types,flight_integrator_thermal}.hpp, src/thermal/flight_integrator_thermal.cpp), builds on Windows.
+Part::ptd member + PartModule::AsAnalytic*() added. Next: gate ds_thermal_step.cpp (vessel table: FlightIntegratorAtmosphere with capture inputs; parts table:
+per-part one-step recompute, prev-row temps as inputs; neighbour conduction fluxes + recovered radiation geometry as inputs), unit tests, modules.
+
+
+## Step 3 DONE: capture.thermal_step passes 0 ULP (vessel 2994 rows after 6 documented exclusions, parts 14,985 rows x 27 columns).
+Runner ds_thermal_step.cpp: GateFI (UpdateConduction neighbour terms + PrecalcRadiationIncoming geometry from capture; everything else the
+real UpdateThermodynamics on a one-part graph). Recovered inputs: occlusion multipliers, incoming sun/body flux, conduction to unlogged
+neighbours, FI.altitude from static pressure. Part::StartData supplies absorptiveConstant etc. Exclusions: tests/data/thermal_step_exclusions.json.
+Remaining: part_constants table gate, modules (TemperatureModel, ModuleConductionMultiplier, ModuleCoreHeat, ModuleActiveRadiator, ModuleAblator),
+tests/test_thermal.cpp, STATUS/README, full runs Windows + WSL.

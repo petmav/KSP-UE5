@@ -281,3 +281,17 @@ ksp_golden_gate(capture.aero_forces_vessel aero_forces_vessel GOLDEN ${KSP_CAPTU
 # (scaled-space transforms, run-time orbit values), echoed by the runner from the capture itself.
 ksp_golden_gate(capture.atmosphere_thermal_offsets atmosphere_thermal_offsets GOLDEN ${KSP_CAPTURES2_DIR}/atmosphere_thermal_offsets.json
                 DROP_HEX TOL ${KSP_CAPTURE_TOL} TABLES samples)
+
+# WP-22 FlightIntegrator thermal model vs the in-game capture C6 (captures/out2/thermal_step.json; see tools/golden_runner/ds_thermal_step.cpp,
+# its header lists every input taken from the capture). Scope filters, each one for data this package cannot reproduce from the file:
+#   vessel  only the atmosphere / thermal scalars recomputed from the frame inputs; the inputs (UT, altitude, srfSpeed, spd, sunDot,
+#           atmosphereTemperatureOffset, bodyEmissive/AlbedoFlux, ...) and `solarFlux` (sun-ray distance) are not written
+#   parts   frame 0 of each case (no previous row for the pre-state); columns that are inputs of the step (radiativeArea, exposedArea,
+#           thermalMass, ptd_intConductionFlux, ptd_skinConductionFlux: conduction to the 16 unlogged parts) or that need
+#           the engine (skinExposedAreaFrac stays: computed); skinThermalMass etc. are computed
+ksp_golden_gate(capture.thermal_step thermal_step GOLDEN ${KSP_CAPTURES2_DIR}/thermal_step.json DROP_HEX
+                TOL ${KSP_CAPTURE_TOL} TABLES vessel,parts
+                DROP_ROWS "parts:frame=0"
+                DROP_KEYS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/data/thermal_step_exclusions.json
+                COLUMNS "vessel:case,frame,mach,density,staticPressurekPa,dynamicPressurekPa,atmosphericTemperature,externalTemperature,convectiveCoefficient,convectiveMachLerp,densityThermalLerp,solarFluxMultiplier,backgroundRadiationTemp,backgroundRadiationTempExposed,fi_isAnalytical"
+                DROP_COLUMNS "parts:radiativeArea,exposedArea,thermalMass,ptd_intConductionFlux,ptd_skinConductionFlux")
