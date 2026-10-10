@@ -25,7 +25,9 @@ NAME_ALIAS = {"set_currentMassVal": "currentMassVal", "set_massThresholdVal": "m
               "set_inactive": "inactive", "set_rosterStatus": "rosterStatus", "set_type": "type",
               "SetExtraExperience": "ExtraExperience", "CrewGenerator_GetLastName": "GetLastName",
               "CrewGenerator_RemoveLastName": "RemoveLastName",
-              "TransferStep": "transferResources"}
+              "TransferStep": "transferResources",
+              "ApplyJointBreakForce": "SetJoint", "SiteRenameAcceptPressed": "RenameSite", "SiteRenameDismissPressed": "RenameSite",
+              "SiteRenameAcceptEnabled": "RenameSite"}
 CITE = re.compile(r"^(\s*)// (?:([A-Za-z0-9_]+)\.cs)?:(\d+)\b")
 FUNC = re.compile(r"(\w+)::(~?\w+)\s*\(")
 

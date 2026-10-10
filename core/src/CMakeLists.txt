@@ -149,6 +149,7 @@ add_library(kspcore STATIC
     modules/fairing_panel.cpp
     modules/module_procedural_fairing.cpp
     modules/module_structural.cpp
+    modules/misc_modules.cpp
     parts/part_decouple.cpp
     parts/part_shield.cpp
     parts/compound_part.cpp

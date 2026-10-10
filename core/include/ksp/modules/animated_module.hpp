@@ -1,5 +1,5 @@
 // IAnimatedModule.cs: the modules ModuleAnimationGroup enables / disables with its deploy state (BaseConverter, ModuleResourceScanner,
-// ModuleOrbitalScanner, ModuleOrbitalSurveyor; ModuleGPS / ModuleGroundPart are not ported yet).
+// ModuleOrbitalScanner, ModuleOrbitalSurveyor; ModuleGPS (WP-30: misc_modules.hpp); ModuleGroundPart is not ported yet).
 #pragma once
 
 namespace ksp {
