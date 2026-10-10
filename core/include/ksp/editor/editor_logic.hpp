@@ -33,7 +33,7 @@ namespace ksp {
 
 class PreFlightCheck;
 
-// EditorLogicBase.cs:8 -- the members that do not depend on the editor scene
+// EditorLogicBase.cs:7 -- the members that do not depend on the editor scene
 class EditorLogicBase {
 public:
     virtual ~EditorLogicBase() = default;
@@ -254,7 +254,7 @@ private:
     std::unique_ptr<ShipConstruct> shipOwned_;
     std::vector<std::unique_ptr<Part>> editorParts_;        // the Parts the editor created (Instantiate)
     std::vector<std::unique_ptr<ShipConstruct>> oldShips_;  // ships replaced by RestoreState (DestroyImmediate; kept alive)
-    CompoundPart* selectedCompoundPart = nullptr;           // EditorLogicBase.cs:21
+    CompoundPart* selectedCompoundPart = nullptr;           // EditorLogicBase.cs:27
     std::unordered_set<const Part*> destroyed_;
 
     Part* InstantiateCopy(Part* p);                         // recursive Object.Instantiate of the part and its child hierarchy

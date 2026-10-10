@@ -83,7 +83,7 @@ private:
     std::function<bool(const T&)> filterCriteria_;
 };
 
-// EditorPartListFilterList.cs:4
+// EditorPartListFilterList.cs:3
 template <class T>
 class EditorPartListFilterList {
 public:
