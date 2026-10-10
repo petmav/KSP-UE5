@@ -41,13 +41,13 @@ std::string GroupThousands(double x) {
 }
 }  // namespace
 
-// ProgressTrackingParameter.cs:113
+// ProgressTrackingParameter.cs:164
 ProgressTrackingParameter::ProgressTrackingParameter() : milestone() {}
 
-// ProgressTrackingParameter.cs:118
+// ProgressTrackingParameter.cs:164
 ProgressTrackingParameter::ProgressTrackingParameter(const Lite::ProgressMilestone& m) : milestone(m.body, m.type) {}
 
-// ProgressTrackingParameter.cs:17
+// ProgressTrackingParameter.cs:15
 bool ProgressTrackingParameter::IsTutorial() {
     if (!(milestone.body == nullptr) && !(milestone.body != Planetarium::fetch->Home)) {
         switch (milestone.type) {
@@ -327,13 +327,13 @@ void ProgressTrackingParameter::ProgressCheck(ProgressNode*) {
     if (milestone.complete()) SetComplete();
 }
 
-// ProgressTrackingParameter.cs:340
+// ProgressTrackingParameter.cs:339
 void ProgressTrackingParameter::OnSave(ConfigNode& node) {
     node.AddValue("targetBody", static_cast<int32_t>(milestone.body->flightGlobalsIndex));
     node.AddValue("targetType", dotnet::EnumToString(milestone.type));
 }
 
-// ProgressTrackingParameter.cs:346
+// ProgressTrackingParameter.cs:345
 void ProgressTrackingParameter::OnLoad(ConfigNode& node) {
     Lite::LoadNode(node, "ProgressTrackingParameter", "targetBody", milestone.body, Planetarium::fetch->Home);
     Lite::LoadNode(node, "ProgressTrackingParameter", "targetType", milestone.type, ProgressType::FIRSTLAUNCH);
@@ -375,13 +375,13 @@ int MilestoneCompare(const ProgressMilestone& first, const ProgressMilestone& se
 }
 }  // namespace
 
-// ExplorationContract.cs:73
+// ExplorationContract.cs:59
 bool ExplorationContract::IsTutorial() {
     if (TrackingParameters().size() == 1) return TrackingParameters()[0]->IsTutorial();
     return false;
 }
 
-// ExplorationContract.cs:84
+// ExplorationContract.cs:71
 std::vector<ProgressTrackingParameter*>& ExplorationContract::TrackingParameters() {
     if (trackingParametersBuilt) return trackingParameters;
     if (ParameterCount() < 1) {
@@ -396,7 +396,7 @@ std::vector<ProgressTrackingParameter*>& ExplorationContract::TrackingParameters
     return trackingParameters;
 }
 
-// ExplorationContract.cs:107
+// ExplorationContract.cs:95
 bool ExplorationContract::Generate() {
     IgnoresWeight = true;
     std::vector<ProgressMilestone> missionMilestones = GetMissionMilestones();
@@ -417,7 +417,7 @@ bool ExplorationContract::Generate() {
     return false;
 }
 
-// ExplorationContract.cs:160
+// ExplorationContract.cs:136
 std::string ExplorationContract::GetTitle() {
     if (IsTutorial()) {
         ProgressMilestone& milestone = TrackingParameters()[0]->milestone;
@@ -432,7 +432,7 @@ std::string ExplorationContract::GetTitle() {
     return Localizer::Format("#autoLOC_278647", {targetBody->displayName()});
 }
 
-// ExplorationContract.cs:183
+// ExplorationContract.cs:156
 std::string ExplorationContract::GetDescription() {
     if (IsTutorial()) {
         switch (TrackingParameters()[0]->milestone.type) {
@@ -446,7 +446,7 @@ std::string ExplorationContract::GetDescription() {
     return TextGen::GenerateBackStories(TypeName(), Agent()->Title(), targetBody->displayName(), targetBody->displayName(), MissionSeed(), true, true, true);
 }
 
-// ExplorationContract.cs:204
+// ExplorationContract.cs:175
 std::string ExplorationContract::GetSynopsys() {
     if (IsTutorial()) return TrackingParameters()[0]->FlavorNote();
     if (fx(bodyRatio) < fx(0.33f)) return Localizer::Format("#autoLOC_278678", {targetBody->displayName()});
@@ -454,7 +454,7 @@ std::string ExplorationContract::GetSynopsys() {
     return Localizer::Format("#autoLOC_278682", {targetBody->displayName()});
 }
 
-// ExplorationContract.cs:221
+// ExplorationContract.cs:192
 std::string ExplorationContract::MessageCompleted() {
     if (IsTutorial()) {
         switch (TrackingParameters()[0]->milestone.type) {
@@ -470,19 +470,19 @@ std::string ExplorationContract::MessageCompleted() {
     return Localizer::Format("#autoLOC_278709", {targetBody->displayName()});
 }
 
-// ExplorationContract.cs:250
+// ExplorationContract.cs:219
 void ExplorationContract::OnSave(ConfigNode& node) {
     node.AddValue("targetBody", static_cast<int32_t>(targetBody->flightGlobalsIndex));
     node.AddValue("bodyRatio", bodyRatio);
 }
 
-// ExplorationContract.cs:256
+// ExplorationContract.cs:225
 void ExplorationContract::OnLoad(ConfigNode& node) {
     Lite::LoadNode(node, "ExplorationContract", "targetBody", targetBody, Planetarium::fetch->Sun);
     Lite::LoadNode(node, "ExplorationContract", "bodyRatio", bodyRatio, 0.5f);
 }
 
-// ExplorationContract.cs:262
+// ExplorationContract.cs:231
 bool ExplorationContract::MeetRequirements() {
     if (ContractState() == State::Generated || ContractState() == State::Offered) {
         int count = static_cast<int>(TrackingParameters().size());
@@ -493,7 +493,7 @@ bool ExplorationContract::MeetRequirements() {
     return true;
 }
 
-// ExplorationContract.cs:277
+// ExplorationContract.cs:247
 int ExplorationContract::AllowableContracts(const std::vector<ProgressMilestone>& milestones) {
     if (milestones.size() != 1) return 1;
     int num = 0;
@@ -511,7 +511,7 @@ int ExplorationContract::AllowableContracts(const std::vector<ProgressMilestone>
     return num;
 }
 
-// ExplorationContract.cs:316
+// ExplorationContract.cs:281
 void ExplorationContract::SetLocals() {
     if (TrackingParameters().size() < 1) {
         targetBody = Home();
@@ -528,7 +528,7 @@ void ExplorationContract::SetLocals() {
     bodyRatio = f32store(fx(bodyRatio) / fx(static_cast<float>(subtree.Count())));
 }
 
-// ExplorationContract.cs:336
+// ExplorationContract.cs:303
 void ExplorationContract::SetPrestige() {
     if (TrackingParameters().size() < 1) {
         prestige = ContractPrestige::Trivial;
@@ -554,7 +554,7 @@ void ExplorationContract::SetPrestige() {
     prestige = ContractPrestige::Exceptional;
 }
 
-// ExplorationContract.cs:380
+// ExplorationContract.cs:340
 void ExplorationContract::SetRewards() {
     float num = 0.0f;
     float num2 = 0.0f;
@@ -580,7 +580,7 @@ void ExplorationContract::SetRewards() {
     SetReputation(num3);
 }
 
-// ExplorationContract.cs:418
+// ExplorationContract.cs:367
 std::vector<ProgressMilestone> ExplorationContract::GetMissionMilestones() {
     KSPRandom kSPRandom(MissionSeed());
     rendezvousUnlocked = PU::GetProgressLevel() >= 4;
@@ -603,7 +603,7 @@ std::vector<ProgressMilestone> ExplorationContract::GetMissionMilestones() {
     return list;
 }
 
-// ExplorationContract.cs:443
+// ExplorationContract.cs:389
 std::vector<ProgressMilestone> ExplorationContract::GetSeedMilestones(KSPRandom* generator) {
     std::unique_ptr<KSPRandom> own;
     if (generator == nullptr) {
@@ -753,7 +753,7 @@ std::vector<ProgressMilestone> ExplorationContract::GetSeedMilestones(KSPRandom*
     return list;
 }
 
-// ExplorationContract.cs:740
+// ExplorationContract.cs:686
 std::vector<ProgressMilestone> ExplorationContract::GetThemedMilestones(ProgressMilestone& seed) {
     std::vector<ProgressMilestone> list;
     CelestialBody* body = seed.body;

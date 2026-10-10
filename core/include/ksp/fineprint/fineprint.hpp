@@ -48,21 +48,21 @@ namespace ksp::Contracts::Parameters {
 class ProgressTrackingParameter : public ContractParameter {
 public:
     Lite::ProgressMilestone milestone;                                    // :11
-    ProgressTrackingParameter();                                          // :113
-    explicit ProgressTrackingParameter(const Lite::ProgressMilestone& milestone);  // :118
+    ProgressTrackingParameter();                                          // :164
+    explicit ProgressTrackingParameter(const Lite::ProgressMilestone& milestone);  // :164
     std::string TypeName() const override { return "ProgressTrackingParameter"; }
-    bool IsTutorial();                                                    // :17
-    std::string InstructionalNote();                                      // :37
-    std::string FlavorNote();                                             // :87
-    std::string GetHashString() override;                                 // :123
-    std::string GetTitle() override;                                      // :128
-    std::string GetNotes() override;                                      // :189
-    std::string GetMessageComplete() override;                            // :203
-    void OnRegister() override;                                           // :280
-    void OnUnregister() override;                                         // :292
-    void OnSave(ConfigNode& node) override;                               // :310
-    void OnLoad(ConfigNode& node) override;                               // :316
-    void ProgressCheck(ProgressNode* node);                               // :301
+    bool IsTutorial();                                                    // :15
+    std::string InstructionalNote();                                      // :36
+    std::string FlavorNote();                                             // :96
+    std::string GetHashString() override;                                 // :174
+    std::string GetTitle() override;                                      // :179
+    std::string GetNotes() override;                                      // :232
+    std::string GetMessageComplete() override;                            // :247
+    void OnRegister() override;                                           // :312
+    void OnUnregister() override;                                         // :323
+    void OnSave(ConfigNode& node) override;                               // :339
+    void OnLoad(ConfigNode& node) override;                               // :345
+    void ProgressCheck(ProgressNode* node);                               // :331
 
 private:
     bool eventsAdded = false;                                             // :13
@@ -78,41 +78,41 @@ namespace Lite = ::ksp::Contracts::Lite;
 class ExplorationContract : public ksp::Contracts::Contract {
 public:
     std::string TypeName() const override { return "ExplorationContract"; }
-    bool IsTutorial();                                                    // :73
-    std::vector<ksp::Contracts::Parameters::ProgressTrackingParameter*>& TrackingParameters();  // :84
-    bool Generate() override;                                             // :107
-    bool CanBeCancelled() override { return false; }                      // :145
-    bool CanBeDeclined() override { return false; }                       // :150
-    bool CanBeFailed() override { return false; }                         // :155
-    std::string GetTitle() override;                                      // :160
-    std::string GetDescription() override;                                // :183
-    std::string GetSynopsys() override;                                   // :204
-    std::string MessageCompleted() override;                              // :221
-    void OnSave(ConfigNode& node) override;                               // :250
-    void OnLoad(ConfigNode& node) override;                               // :256
-    bool MeetRequirements() override;                                     // :262
+    bool IsTutorial();                                                    // :59
+    std::vector<ksp::Contracts::Parameters::ProgressTrackingParameter*>& TrackingParameters();  // :71
+    bool Generate() override;                                             // :95
+    bool CanBeCancelled() override { return false; }                      // :121
+    bool CanBeDeclined() override { return false; }                       // :126
+    bool CanBeFailed() override { return false; }                         // :131
+    std::string GetTitle() override;                                      // :136
+    std::string GetDescription() override;                                // :156
+    std::string GetSynopsys() override;                                   // :175
+    std::string MessageCompleted() override;                              // :192
+    void OnSave(ConfigNode& node) override;                               // :219
+    void OnLoad(ConfigNode& node) override;                               // :225
+    bool MeetRequirements() override;                                     // :231
     CelestialBody* TargetBody() const { return targetBody; }
     float BodyRatio() const { return bodyRatio; }
 
 private:
     // MilestoneComparer (ExplorationContract.cs:15) is a free function in the .cpp
-    int AllowableContracts(const std::vector<Lite::ProgressMilestone>& milestones);                 // :277
-    void SetLocals();                                                     // :316
-    void SetPrestige();                                                   // :336
-    void SetRewards();                                                    // :380
-    std::vector<Lite::ProgressMilestone> GetMissionMilestones();          // :418
-    std::vector<Lite::ProgressMilestone> GetSeedMilestones(KSPRandom* generator = nullptr);  // :443
-    std::vector<Lite::ProgressMilestone> GetThemedMilestones(Lite::ProgressMilestone& seed);  // :740
+    int AllowableContracts(const std::vector<Lite::ProgressMilestone>& milestones);                 // :247
+    void SetLocals();                                                     // :281
+    void SetPrestige();                                                   // :303
+    void SetRewards();                                                    // :340
+    std::vector<Lite::ProgressMilestone> GetMissionMilestones();          // :367
+    std::vector<Lite::ProgressMilestone> GetSeedMilestones(KSPRandom* generator = nullptr);  // :389
+    std::vector<Lite::ProgressMilestone> GetThemedMilestones(Lite::ProgressMilestone& seed);  // :686
 
-    std::vector<ksp::Contracts::Parameters::ProgressTrackingParameter*> trackingParameters;  // :44
+    std::vector<ksp::Contracts::Parameters::ProgressTrackingParameter*> trackingParameters;  // :45
     bool trackingParametersBuilt = false;
     std::vector<ksp::Contracts::Parameters::ProgressTrackingParameter*> emptyList_;  // the fresh empty list of the C# getter
-    CelestialBody* targetBody = nullptr;                                  // :46
-    float bodyRatio = 0.0f;                                               // :48
-    bool rendezvousUnlocked = false;                                      // :50
-    bool dockUnlocked = false;                                            // :52
-    bool evaUnlocked = false;                                             // :54
-    bool flagsUnlocked = false;                                           // :56
+    CelestialBody* targetBody = nullptr;                                  // :47
+    float bodyRatio = 0.0f;                                               // :49
+    bool rendezvousUnlocked = false;                                      // :51
+    bool dockUnlocked = false;                                            // :53
+    bool evaUnlocked = false;                                             // :55
+    bool flagsUnlocked = false;                                           // :57
 };
 
 }  // namespace ksp::FinePrint::Contracts

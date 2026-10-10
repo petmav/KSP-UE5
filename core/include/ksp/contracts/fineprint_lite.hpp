@@ -229,18 +229,18 @@ float AverageFacilityLevel();                       // :305
 int GetProgressLevel();                             // :310
 float ScoreProgressType(ProgressType type, CelestialBody* body);  // :372
 // WP-38 (full port of the remaining ProgressUtilities members)
-bool IntroWorldFirstContract(ProgressMilestone& milestone);                       // :338
+bool IntroWorldFirstContract(ProgressMilestone& milestone);                       // :333
 bool OutlierWorldFirstContract(ProgressType type, CelestialBody* body);           // :350
 bool OutlierWorldFirstContract(ProgressMilestone& milestone);                     // :367
-ContractPrestige ProgressTypePrestige(ProgressType type, CelestialBody* body = nullptr);  // :437
-ContractPrestige ProgressTypePrestige(ProgressMilestone& milestone);             // :467
+ContractPrestige ProgressTypePrestige(ProgressType type, CelestialBody* body = nullptr);  // :451
+ContractPrestige ProgressTypePrestige(ProgressMilestone& milestone);             // :451
 float WorldFirstStandardReward(ProgressRewardType reward, Currency currency, ProgressType progress, CelestialBody* body = nullptr);  // :488
 float WorldFirstIntervalReward(ProgressRewardType reward, Currency currency, ProgressType progress, CelestialBody* body = nullptr, int currentInterval = 1,
-                               int totalIntervals = 10);                          // :530
+                               int totalIntervals = 10);                          // :532
 bool ReachedHomeBodies();                                                         // :574
-double FindNextRecord(double currentRecord, double maximumRecord, double roundValue);                  // :603
+double FindNextRecord(double currentRecord, double maximumRecord, double roundValue);                  // :600
 double FindNextRecord(double currentRecord, double maximumRecord, double roundValue, int& interval);  // :624
-bool VisitedSurfaceOf(CelestialBody* body, MannedStatus manned = MannedStatus::ANY);  // :645
+bool VisitedSurfaceOf(CelestialBody* body, MannedStatus manned = MannedStatus::ANY);  // :650
 }  // namespace ProgressUtilities
 
 namespace StringUtilities {
@@ -253,12 +253,12 @@ std::string PossessiveString(std::string thing);                     // :220
 
 // SystemUtilities.cs (WP-38: the pure maths / list helpers)
 namespace SystemUtilities {
-bool WithinDeviation(double v1, double v2, double deviation);                    // :519
-bool WithinDeviationByValue(double v1, double v2, double deviation, double fullValue);  // :525
-double MeasureDeviation(double v1, double v2);                                   // :531
-double MeasureDeviationByValue(double v1, double v2, double fullValue);          // :536
-double WithinDeviationAccuracy(double v1, double v2, double deviation);          // :549
-double WithinDeviationByReferenceAccuracy(double v1, double v2, double reference, double deviation);  // :557
+bool WithinDeviation(double v1, double v2, double deviation);                    // (C++ addition)
+bool WithinDeviationByValue(double v1, double v2, double deviation, double fullValue);  // (C++ addition)
+double MeasureDeviation(double v1, double v2);                                   // (C++ addition)
+double MeasureDeviationByValue(double v1, double v2, double fullValue);          // (C++ addition)
+double WithinDeviationAccuracy(double v1, double v2, double deviation);          // (C++ addition)
+double WithinDeviationByReferenceAccuracy(double v1, double v2, double reference, double deviation);  // (C++ addition)
 // :565 ShuffleList(ref list, generator): generator null -> new KSPRandom()
 template <class T>
 void ShuffleList(std::vector<T>& list, KSPRandom* generator = nullptr);
@@ -276,23 +276,23 @@ CelestialBody* LowestBody(const std::vector<CelestialBody*>& bodies);          /
 std::vector<CelestialBody*> GetNeighbors(CelestialBody* body, const std::function<bool(CelestialBody*)>& where = nullptr);  // :72
 // :111 GetHighestPeak: the PQSMod reflection walk (deformity / heightMapDeformity / heightMapOffset). Unset: 0 (no PQS mod sum available).
 extern std::function<double(CelestialBody*)> highestPeakProvider;
-double GetHighestPeak(CelestialBody* body);                                    // :111
-double GetNextTimeWarp(CelestialBody* body, double altitude);                  // :148
-double GetMinimumOrbitalDistance(CelestialBody* body, float margin);           // :184
-Vessel::Situations ApplicableSituation(int seed, CelestialBody* body, bool splashAllowed);  // :243
-float PlanetScienceRanking(CelestialBody* body);                               // :292
-Vector3f LLAtoECEF(double lat, double lon, double alt, double radius);         // :306
-double SynchronousSMA(CelestialBody* body);                                    // :314
+double GetHighestPeak(CelestialBody* body);                                    // :117
+double GetNextTimeWarp(CelestialBody* body, double altitude);                  // :155
+double GetMinimumOrbitalDistance(CelestialBody* body, float margin);           // :187
+Vessel::Situations ApplicableSituation(int seed, CelestialBody* body, bool splashAllowed);  // :256
+float PlanetScienceRanking(CelestialBody* body);                               // :290
+Vector3f LLAtoECEF(double lat, double lon, double alt, double radius);         // :305
+double SynchronousSMA(CelestialBody* body);                                    // :315
 bool CanBodyBeSynchronous(CelestialBody* body, double eccentricity);           // :324
 double KolniyaSMA(CelestialBody* body);                                        // :339
-bool CanBodyBeKolniya(CelestialBody* body);                                    // :350
-bool CanBodyBeTundra(CelestialBody* body);                                     // :367
-double TerrainAltitude(CelestialBody* body, double latitude, double longitude, bool underwater = false);  // :383
-double GetSolarExtents();                                                      // :432
-double GreatCircleDistance(CelestialBody* body, double latitude1, double longitude1, double latitude2, double longitude2);  // :446
-double GreatCircleDistance(CelestialBody* body, Vector3d position1, Vector3d position2);  // :451
-CelestialBody* GetHostPlanet(CelestialBody* body);                             // :456
-std::vector<CelestialBody*> GetPlanetarySystem(CelestialBody* body);           // :466
+bool CanBodyBeKolniya(CelestialBody* body);                                    // :349
+bool CanBodyBeTundra(CelestialBody* body);                                     // :365
+double TerrainAltitude(CelestialBody* body, double latitude, double longitude, bool underwater = false);  // :381
+double GetSolarExtents();                                                      // :424
+double GreatCircleDistance(CelestialBody* body, double latitude1, double longitude1, double latitude2, double longitude2);  // :443
+double GreatCircleDistance(CelestialBody* body, Vector3d position1, Vector3d position2);  // :443
+CelestialBody* GetHostPlanet(CelestialBody* body);                             // :448
+std::vector<CelestialBody*> GetPlanetarySystem(CelestialBody* body);           // :461
 }  // namespace CelestialUtilities
 
 namespace SystemUtilities {

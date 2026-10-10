@@ -210,10 +210,10 @@ bool WithinDeviationByValue(double v1, double v2, double deviation, double fullV
     return MeasureDeviationByValue(v1, v2, fullValue) <= deviationAsFraction;
 }
 
-// SystemUtilities.cs:531
+// SystemUtilities.cs:533
 double MeasureDeviation(double v1, double v2) { return M::Abs(v1 - v2) / ((v1 + v2) / 2.0); }
 
-// SystemUtilities.cs:536
+// SystemUtilities.cs:538
 double MeasureDeviationByValue(double v1, double v2, double fullValue) { return M::Abs(v1 - v2) / fullValue; }
 
 // SystemUtilities.cs:549

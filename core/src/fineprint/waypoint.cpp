@@ -135,7 +135,7 @@ void Waypoint::RandomizeAwayFrom(double originLatitude, double originLongitude, 
     RandomizeAwayFrom(originLatitude, originLongitude, 0.0, maximumDistance, samples, waterAllowed, gen.g);
 }
 
-// WaypointManager.cs:219 (kSPRandom is never null here: the C# `kSPRandom?.NextDouble() ?? generator.NextDouble() * 360.0 - 180.0` therefore always
+// WaypointManager.cs:227 (kSPRandom is never null here: the C# `kSPRandom?.NextDouble() ?? generator.NextDouble() * 360.0 - 180.0` therefore always
 // takes the left side, so the longitude is a plain NextDouble() in [0, 1))
 void WaypointManager::ChooseRandomPosition(double& latitude, double& longitude, const std::string& celestialName, bool waterAllowed, bool equatorial,
                                            KSPRandom* generator) {
@@ -175,7 +175,7 @@ void WaypointManager::ChooseRandomPosition(double& latitude, double& longitude, 
     }
 }
 
-// WaypointManager.cs:280
+// WaypointManager.cs:290
 void WaypointManager::ChooseRandomPositionNear(double& latitude, double& longitude, double centerLatitude, double centerLongitude,
                                                const std::string& celestialName, double searchRadius, bool waterAllowed, KSPRandom* generator) {
     latitude = 0.0;
@@ -219,7 +219,7 @@ void WaypointManager::ChooseRandomPositionNear(double& latitude, double& longitu
     }
 }
 
-// WaypointManager.cs:153
+// WaypointManager.cs:166
 float WaypointManager::Distance(double latitude1, double longitude1, double altitude1, double latitude2, double longitude2, double altitude2,
                                 CelestialBody* body) {
     const Vector3d worldSurfacePosition = body->GetWorldSurfacePosition(latitude1, longitude1, altitude1);
