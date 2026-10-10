@@ -1423,3 +1423,143 @@ TEST_CASE("WP-31 ModuleExperienceManagement: OnStart enable rules and FinalizeEx
     v.parts.clear();
 }
 
+
+// ================================================== data gate ======================================================
+
+namespace {
+// Independent XP oracle over the RAW CAREER_LOG / FLIGHT_LOG nodes of a KERBAL (not the FlightLog class): KerbalRoster.cs:1126-1372
+//   per log (last to first), per flight (in order): the flight counts only when its last entry is not "Die" (otherwise everything gathered so
+//   far is dropped); per target body the maximum of home / away value x RecoveryValue; the sum over targets in first-seen order.
+struct RawEntry {
+    int flight;
+    std::string type, target;
+};
+std::vector<RawEntry> RawLog(const ConfigNode* log) {
+    std::vector<RawEntry> out;
+    if (log == nullptr) return out;
+    for (int i = 0; i < log->values().Count(); ++i) {
+        const auto& v = log->values()[i];
+        if (v.name == "flight") continue;
+        const size_t us = v.name.find('_');  // "<flight>_<index>" in KSP 1.12.5 saves
+        RawEntry e;
+        e.flight = us == std::string::npos ? 0 : std::stoi(v.name.substr(0, us));
+        const size_t comma = v.value.find(',');
+        e.type = v.value.substr(0, comma);
+        e.target = comma == std::string::npos ? "" : v.value.substr(comma + 1);
+        out.push_back(e);
+    }
+    return out;
+}
+float OracleXp(const std::vector<std::vector<RawEntry>>& logs, World31& w) {
+    struct V {
+        float home, away;
+    };
+    const std::map<std::string, V> table = {{"Training1", {2.0f, 2.0f}}, {"Training2", {8.0f, 8.0f}}, {"Training3", {16.0f, 16.0f}},
+                                            {"Training4", {32.0f, 32.0f}}, {"Training5", {64.0f, 64.0f}}, {"PlantFlag", {0.0f, 2.5f}},
+                                            {"Land", {0.0f, 2.3f}}, {"Flight", {1.0f, 2.0f}}, {"Suborbit", {1.0f, 0.0f}},
+                                            {"Flyby", {1.5f, 1.0f}}, {"Escape", {0.0f, 1.0f}}, {"Orbit", {2.0f, 1.5f}}};
+    std::vector<std::string> targets;
+    std::vector<float> xp;
+    for (int l = static_cast<int>(logs.size()) - 1; l >= 0; --l) {
+        std::map<int, std::vector<RawEntry>> flights;
+        for (const RawEntry& e : logs[static_cast<size_t>(l)]) flights[e.flight].push_back(e);
+        for (auto& [fl, entries] : flights) {
+            if (entries.empty() || entries.back().type == "Die") {
+                targets.clear();
+                xp.clear();
+                continue;
+            }
+            for (const RawEntry& e : entries) {
+                if (e.target.empty()) continue;
+                CelestialBody* body = nullptr;
+                for (CelestialBody* b : SaveEnvironment::Current().localBodies)
+                    if (b->name() == e.target || b->displayName() == e.target) body = b;
+                auto it = table.find(e.type);
+                if (body == nullptr || it == table.end()) continue;
+                const float mult = body->isHomeWorld ? it->second.home : it->second.away;
+                if (mult == 0.0f) continue;
+                const float value = body->scienceValues.RecoveryValue * mult;
+                auto pos = std::find(targets.begin(), targets.end(), e.target);
+                if (pos == targets.end()) {
+                    targets.push_back(e.target);
+                    xp.push_back(value);
+                } else if (xp[static_cast<size_t>(pos - targets.begin())] < value) {
+                    xp[static_cast<size_t>(pos - targets.begin())] = value;
+                }
+            }
+        }
+    }
+    float sum = 0.0f;
+    for (float v : xp) sum += v;
+    return sum;
+}
+}  // namespace
+
+TEST_CASE("WP-31 data gate: every KERBAL of every save in testdata and harness/inputs, experience recomputed from its flight logs") {
+    World31 w;
+    std::vector<fs::path> saves;
+    for (const std::string& root : {std::string(KSPCORE_TESTDATA_DIR) + "/saves", kHarness31 + "/inputs"})
+        if (fs::exists(root))
+            for (const auto& e : fs::recursive_directory_iterator(root))
+                if (e.is_regular_file() && e.path().extension() == ".sfs") saves.push_back(e.path());
+    std::sort(saves.begin(), saves.end());
+    REQUIRE_FALSE(saves.empty());
+    int kerbals = 0, mismatches = 0, storedFields = 0;
+    for (const fs::path& path : saves) {
+        ConfigNode::NodePtr root = ConfigNode::Load(path.string());
+        REQUIRE(root);
+        ConfigNode* gameNode = root->GetNode("GAME");
+        REQUIRE(gameNode);
+        ConfigNode* rosterNode = gameNode->GetNode("ROSTER");
+        if (rosterNode == nullptr) continue;
+        // the raw logs, before FlightLog.Load removes `flight` from the tree
+        struct Raw {
+            std::string name;
+            std::vector<std::vector<RawEntry>> logs;
+            bool hasStored;
+        };
+        std::vector<Raw> raws;
+        for (ConfigNode* k : rosterNode->GetNodes("KERBAL")) {
+            Raw r;
+            r.name = k->GetValue("name").value_or("");
+            r.logs = {RawLog(k->GetNode("CAREER_LOG")), RawLog(k->GetNode("FLIGHT_LOG"))};
+            r.hasStored = k->HasValue("experience") || k->HasValue("experienceLevel");
+            raws.push_back(r);
+        }
+        SaveEnvironment::Current().currentGame = nullptr;
+        Game g(root.get());
+        SaveEnvironment::Current().currentGame = &g;
+        GE::onGameStateCreated.Fire(&g);  // KerbalRoster/ProtoCrewMember: experience is computed once the game exists
+        REQUIRE(g.CrewRoster);
+        REQUIRE(static_cast<size_t>(g.CrewRoster->Count()) == raws.size());
+        auto& adv = g.Parameters->CustomParams<GameParameters::AdvancedParams>();
+        for (const Raw& r : raws) {
+            PCM p = (*g.CrewRoster)[r.name];
+            REQUIRE_MESSAGE(p, r.name);
+            kerbals++;
+            float expected;
+            if (!adv.KerbalExperienceEnabled(g.Mode))
+                expected = 99999.0f;
+            else if (adv.ImmediateLevelUp)
+                expected = OracleXp({r.logs[0], r.logs[1]}, w);
+            else
+                expected = OracleXp({r.logs[0]}, w);
+            const int level = KerbalRoster::CalculateExperienceLevel(expected);
+            if (p->experience != expected || p->experienceLevel != level) mismatches++;
+            CHECK_MESSAGE(p->experience == expected, path.string() << " " << r.name);
+            CHECK_MESSAGE(p->experienceLevel == level, path.string() << " " << r.name);
+            if (r.hasStored) storedFields++;
+            // a trait object exists for every kerbal and its trait name is the saved one
+            REQUIRE(p->experienceTrait);
+        }
+        // the ROSTER saves back identically (WP-04 round trip, now through the extended classes)
+        ConfigNode out;
+        g.Save(out);
+        ConfigNode::NodePtr reload = ConfigNode::Load(path.string());
+        CHECK(out.GetNode("GAME")->GetNode("ROSTER")->ToString() == reload->GetNode("GAME")->GetNode("ROSTER")->ToString());
+        SaveEnvironment::Current().currentGame = &w.game;
+    }
+    MESSAGE("kerbals " << kerbals << ", mismatches " << mismatches << ", KERBAL nodes carrying a stored experience value: " << storedFields);
+    CHECK(kerbals >= 4);
+    CHECK(mismatches == 0);
+}
