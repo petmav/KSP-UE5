@@ -1,0 +1,467 @@
+// WP-37: the stock contract parameters (Assembly-CSharp/Contracts/Parameters/*.cs): AcquireCrew, AcquirePart, CollectScience, EnterOrbit,
+// EnterSOI, KerbalDeaths, LandOnBody, OR, XOR, PartTest, PlantFlag, ReachAltitudeEnvelope, ReachBiome, ReachDestination,
+// ReachFlightEnvelope, ReachSituation, ReachSpeedEnvelope, RecoverKerbal, RecoverPart.
+//
+// Every parameter registers/unregisters its GameEvents listeners in OnRegister / OnUnregister (the seams to the flight events), reads the
+// active vessel through FlightRegistry (FlightGlobals.ActiveVessel / ready) and the scene through SaveEnvironment (HighLogic.LoadedScene).
+// SystemUtilities.LoadNode / FlightIsReady come from fineprint_lite.hpp. The biome lookup (BiomeMap.GetAtt) is ContractsEnvironment::biomeNameAt.
+#pragma once
+
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
+
+#include "ksp/contracts/contract.hpp"
+#include "ksp/dotnet/enum.hpp"
+#include "ksp/vessel/vessel.hpp"
+#include "ksp/vessel/vessel_types.hpp"
+
+namespace ksp {
+class AvailablePart;
+class Part;
+class ProtoVessel;
+class Vessel;
+class ScienceSubject;
+class ScienceData;
+class ModuleTestSubject;
+}  // namespace ksp
+
+namespace ksp::Contracts::Templates {
+class RecoverAsset;
+}
+
+namespace ksp::Contracts::Parameters {
+
+// the shared "body" parameters (EnterOrbit, EnterSOI, LandOnBody, PlantFlag all carry targetBody)
+class BodyParameterBase : public ContractParameter {
+public:
+    CelestialBody* TargetBody() const { return targetBody; }
+    std::string GetHashString() override;
+    void OnLoad(ConfigNode& node) override;
+    void OnSave(ConfigNode& node) override;
+
+protected:
+    CelestialBody* targetBody = nullptr;
+};
+
+// EnterOrbit.cs:9
+class EnterOrbit : public BodyParameterBase {
+public:
+    EnterOrbit() = default;                                                        // :13
+    explicit EnterOrbit(CelestialBody* body) { targetBody = body; }                // :17
+    std::string TypeName() const override { return "EnterOrbit"; }
+    std::string GetTitle() override;                                               // :27
+    void OnRegister() override;                                                    // :52
+    void OnUnregister() override;                                                  // :57
+    void OnEnterOrbit(Vessel* vessel, CelestialBody* body);                        // :62
+};
+
+// EnterSOI.cs:9
+class EnterSOI : public BodyParameterBase {
+public:
+    EnterSOI() = default;
+    explicit EnterSOI(CelestialBody* body) { targetBody = body; }
+    std::string TypeName() const override { return "EnterSOI"; }
+    std::string GetTitle() override;
+    void OnRegister() override;
+    void OnUnregister() override;
+    void OnEnterSOI(Vessel* vessel, CelestialBody* body);
+};
+
+// LandOnBody.cs:9
+class LandOnBody : public BodyParameterBase {
+public:
+    LandOnBody() = default;
+    explicit LandOnBody(CelestialBody* body) { targetBody = body; }
+    std::string TypeName() const override { return "LandOnBody"; }
+    std::string GetTitle() override;
+    void OnRegister() override;
+    void OnUnregister() override;
+    void OnVesselLand(Vessel* vessel, CelestialBody* body);
+};
+
+// PlantFlag.cs:9
+class PlantFlag : public BodyParameterBase {
+public:
+    PlantFlag() = default;
+    explicit PlantFlag(CelestialBody* body) { targetBody = body; }
+    std::string TypeName() const override { return "PlantFlag"; }
+    std::string GetTitle() override;
+    void OnRegister() override;
+    void OnUnregister() override;
+    void OnPlantFlag(Vessel* vessel);
+};
+
+// OR.cs:7
+class OR : public ContractParameter {
+public:
+    std::string TypeName() const override { return "OR"; }
+    std::string GetHashString() override { return "OR"; }                  // :11
+    void OnParameterStateChange(ContractParameter* p) override;            // :16
+};
+
+// XOR.cs:7
+class XOR : public ContractParameter {
+public:
+    std::string TypeName() const override { return "XOR"; }
+    std::string GetHashString() override { return "XOR"; }                 // :11
+    void OnParameterStateChange(ContractParameter* p) override;            // :16
+};
+
+// KerbalDeaths.cs:9
+class KerbalDeaths : public ContractParameter {
+public:
+    KerbalDeaths() = default;                                              // :19
+    explicit KerbalDeaths(int countMax_);                                  // :23
+    std::string TypeName() const override { return "KerbalDeaths"; }
+    int CountMax() const { return countMax; }                              // :15
+    int CountCurrent() const { return countCurrent; }                      // :17
+    std::string GetHashString() override { return ""; }                    // :30 (null)
+    std::string GetTitle() override;                                       // :35
+    void OnLoad(ConfigNode& node) override;                                // :45
+    void OnSave(ConfigNode& node) override;                                // :57
+    void OnRegister() override;                                            // :63
+    void OnUnregister() override;                                          // :68
+    void OnCrewKilled(EventReport* report);                                // :73
+
+protected:
+    int countMax = 0;
+    int countCurrent = 0;
+};
+
+// CollectScience.cs:9
+class CollectScience : public ContractParameter {
+public:
+    CollectScience() = default;                                            // :19
+    CollectScience(CelestialBody* body, BodyLocation location);            // :23
+    std::string TypeName() const override { return "CollectScience"; }
+    CelestialBody* TargetBody() const { return targetBody; }               // :15
+    BodyLocation TargetLocation() const { return targetLocation; }         // :17
+    std::string GetHashString() override;                                  // :30
+    std::string GetTitle() override;                                       // :35
+    void OnLoad(ConfigNode& node) override;                                // :45
+    void OnSave(ConfigNode& node) override;                                // :56
+    void OnRegister() override;                                            // :62
+    void OnUnregister() override;                                          // :68
+    void OnScience(float science, ScienceSubject* subject, ProtoVessel* pv, bool reverseEngineered);  // :74
+    void OnTriggeredScience(ScienceData* data, Vessel* origin, bool xmitAborted);                      // :96
+
+protected:
+    CelestialBody* targetBody = nullptr;
+    BodyLocation targetLocation = BodyLocation::Space;
+};
+
+// ReachSituation.cs:9
+class ReachSituation : public ContractParameter {
+public:
+    ReachSituation() = default;                                            // :17
+    ReachSituation(Vessel::Situations sit, std::string title_);            // :21
+    std::string TypeName() const override { return "ReachSituation"; }
+    Vessel::Situations Situation = static_cast<Vessel::Situations>(0);     // :13
+    std::string GetTitle() override;                                       // :27
+    static std::string GetTitleStringShort(Vessel::Situations sit);        // :32
+    void OnLoad(ConfigNode& node) override;                                // :61
+    void OnSave(ConfigNode& node) override;                                // :73
+    void OnRegister() override;                                            // :79
+    void OnUnregister() override;                                          // :84
+    void OnReset() override;                                               // :89
+    void OnVesselSituationChange(events::GameEvents::HostedFromToAction<Vessel*, Vessel::Situations> v);  // :101
+    bool checkVesselSituation(Vessel* v);                                  // :121
+
+protected:
+    std::string title;
+    void TrackVessel(Vessel* v);                                           // :109
+};
+
+// ReachDestination.cs:9
+class ReachDestination : public ContractParameter {
+public:
+    ReachDestination() = default;
+    ReachDestination(CelestialBody* destination, std::string title_);
+    std::string TypeName() const override { return "ReachDestination"; }
+    CelestialBody* Destination = nullptr;                                  // :13
+    std::string GetTitle() override;                                       // :26
+    static std::string GetTitleStringShort(CelestialBody* dest);           // :31
+    void OnLoad(ConfigNode& node) override;                                // :36
+    void OnSave(ConfigNode& node) override;                                // :47
+    void OnRegister() override;                                            // :53
+    void OnUnregister() override;                                          // :58
+    void OnReset() override;                                               // :63
+    void OnVesselSOIChange(events::GameEvents::HostedFromToAction<Vessel*, CelestialBody*> v);  // :74
+    bool checkVesselDestination(Vessel* v);                                // :91
+
+protected:
+    std::string title;
+    void TrackVessel(Vessel* v);                                           // :81
+};
+
+// ReachBiome.cs:9
+class ReachBiome : public ContractParameter {
+public:
+    ReachBiome() = default;
+    ReachBiome(const std::string* biomeName, std::string title_);          // :22 (biomeName null -> "")
+    std::string TypeName() const override { return "ReachBiome"; }
+    std::string BiomeName;                                                 // :11
+    std::string GetTitle() override;                                       // :29
+    static std::string GetTitleStringShort(const std::string& biomeName);  // :34
+    void OnReset() override;                                               // :39
+    void OnLoad(ConfigNode& node) override;                                // :44
+    void OnSave(ConfigNode& node) override;                                // :57
+    void OnUpdate() override;                                              // :63
+    bool IsWithinBiome = false;                                            // :19
+
+protected:
+    std::string title;
+    bool trackerActive = false;
+    bool checkVesselWithinBiome(Vessel* v);                                // :85
+    bool bodyHasBiome(CelestialBody* body);                                // :96
+};
+
+// ReachAltitudeEnvelope.cs:9
+class ReachAltitudeEnvelope : public ContractParameter {
+public:
+    ReachAltitudeEnvelope();                                               // :15
+    ReachAltitudeEnvelope(float minAlt, float maxAlt);                     // :21
+    std::string TypeName() const override { return "ReachAltitudeEnvelope"; }
+    double minAltitude = 0.0;                                              // :11
+    double maxAltitude = 0.0;                                              // :13
+    std::string GetTitle() override;                                       // :28
+    void OnReset() override;                                               // :33
+    void OnLoad(ConfigNode& node) override;                                // :38
+    void OnSave(ConfigNode& node) override;                                // :44
+    void OnUpdate() override;                                              // :50
+};
+
+// ReachSpeedEnvelope.cs:9
+class ReachSpeedEnvelope : public ContractParameter {
+public:
+    ReachSpeedEnvelope();                                                  // :15
+    ReachSpeedEnvelope(float minSpd, float maxSpd);                        // :21
+    std::string TypeName() const override { return "ReachSpeedEnvelope"; }
+    double minSpeed = 0.0;                                                 // :11
+    double maxSpeed = 0.0;                                                 // :13
+    std::string GetTitle() override;                                       // :28
+    void OnReset() override;                                               // :33
+    void OnLoad(ConfigNode& node) override;                                // :38
+    void OnSave(ConfigNode& node) override;                                // :44
+    void OnUpdate() override;                                              // :50
+    bool checkVesselWithinEnvelope(Vessel* v);                             // :62
+};
+
+// ReachFlightEnvelope.cs:11
+class ReachFlightEnvelope : public ContractParameter {
+public:
+    ReachFlightEnvelope() = default;                                       // :35
+    ReachFlightEnvelope(CelestialBody* dest, Vessel::Situations sit, const std::string* biomeName, float maxAlt, float minAlt, float maxSpd,
+                        float minSpd, std::string title_);                 // :39
+    std::string TypeName() const override { return "ReachFlightEnvelope"; }
+    CelestialBody* Destination = nullptr;                                  // :13
+    Vessel::Situations Situation = static_cast<Vessel::Situations>(0);     // :15
+    std::string BiomeName;                                                 // :17
+    bool useAltLimits = false, useSpdLimits = false;                       // :19, :21
+    double maxAltitude = 0.0, minAltitude = 0.0, maxSpeed = 0.0, minSpeed = 0.0;  // :23-:29
+    std::string GetTitle() override;                                       // :54
+    static std::string GetSituationStringShort(Vessel::Situations sit, CelestialBody* body, const std::string& biomeName);  // :69
+    void OnLoad(ConfigNode& node) override;                                // :141
+    void OnSave(ConfigNode& node) override;                                // :190
+    void OnRegister() override;                                            // :203
+    void OnUnregister() override;                                          // :221
+    void OnFlightReady();                                                  // :232
+    void OnVesselChange(Vessel* v);                                        // :238
+    void OnVesselSituationChange(events::GameEvents::HostedFromToAction<Vessel*, Vessel::Situations> v);  // :244
+    Enumerator TrackVessel(Vessel* v);                                     // :253
+    bool checkVesselWithinBiome(Vessel* v);                                // :279
+    bool checkVesselWithinFlightEnvelope(Vessel* v);                       // :291
+
+protected:
+    std::string title;
+    Vessel* tgtVessel = nullptr;
+    bool trackerActive = false;
+};
+
+// RecoverKerbal.cs:11
+class RecoverKerbal : public ContractParameter {
+public:
+    enum class CompleteCondition : int { All, Any };                       // :13
+    RecoverKerbal() = default;                                             // :31
+    explicit RecoverKerbal(std::string title_, CompleteCondition win = CompleteCondition::All, CompleteCondition fail = CompleteCondition::All);  // :35
+    std::string TypeName() const override { return "RecoverKerbal"; }
+    std::string GetTitle() override { return title; }                      // :43
+    void OnLoad(ConfigNode& node) override;                                // :48
+    void OnSave(ConfigNode& node) override;                                // :73
+    void OnRegister() override;                                            // :85
+    void OnUnregister() override;                                          // :99
+    void OnVesselRecovered(ProtoVessel* v, bool quick);                    // :112
+    void OnCrewKilled(EventReport* evt);                                   // :162
+    void OnPartDied(Part* p);                                              // :207
+    void AddKerbal(const std::string& kerbalName);                         // :230
+    void RemoveKerbal(const std::string& kerbalName);                      // :238
+    void SetTitle(const std::string& t) { title = t; }                     // :246
+    void OnVesselLoad(Vessel* v);                                          // :251
+    void OnFlightReady();                                                  // :260
+    std::vector<std::string> kerbalsToRecover;                             // :17
+    std::string title;                                                     // :20
+    CompleteCondition failCondition = CompleteCondition::All;              // :23
+    CompleteCondition winCondition = CompleteCondition::All;               // :26
+
+private:
+    bool eventsAdded = false;
+};
+
+// RecoverPart.cs:10
+class RecoverPart : public ContractParameter {
+public:
+    enum class CompleteCondition : int { None, AllCandidates, AnyCandidate };  // :12
+    RecoverPart();                                                         // :34
+    RecoverPart(std::string title_, CompleteCondition win, CompleteCondition fail);  // :42
+    std::string TypeName() const override { return "RecoverPart"; }
+    std::string GetTitle() override { return title; }                      // :50
+    void OnLoad(ConfigNode& node) override;                                // :55
+    void OnSave(ConfigNode& node) override;                                // :70
+    void OnRegister() override;                                            // :84
+    void OnUnregister() override;                                          // :98
+    void OnVesselRecovered(ProtoVessel* v, bool quick);                    // :110
+    void OnPartDie(Part* p);                                               // :147
+    void AddPartToRecover(uint32_t partFlightId);                          // :164
+    void RemovePartToRecover(uint32_t partFlightId);                       // :172
+    void OnVesselLoad(Vessel* v);                                          // :180
+    void OnFlightReady();                                                  // :189
+    std::vector<uint32_t> partsToRecover;                                  // :22
+    std::string title;                                                     // :24
+    CompleteCondition failCondition;                                       // :26
+    CompleteCondition winCondition;                                        // :28
+
+private:
+    bool eventsAdded = false;
+};
+
+// AcquireCrew.cs:11
+class AcquireCrew : public ContractParameter {
+public:
+    enum class CompleteCondition : int { All, Any };                       // :13
+    AcquireCrew() = default;                                               // :27
+    explicit AcquireCrew(std::string title_, CompleteCondition win = CompleteCondition::All);  // :31
+    std::string TypeName() const override { return "AcquireCrew"; }
+    void SetTitle(const std::string& t) { title = t; }                     // :38
+    std::string GetTitle() override { return title; }                      // :43
+    void OnLoad(ConfigNode& node) override;                                // :48
+    void OnSave(ConfigNode& node) override;                                // :60
+    void OnRegister() override;                                            // :72
+    void OnUnregister() override;                                          // :89
+    void OnReset() override;                                               // :103
+    void OnCrewBoardVessel(events::GameEvents::FromToAction<Part*, Part*> action);                       // :111
+    void OnCrewTransferred(events::GameEvents::HostedFromToAction<ProtoCrewMember*, Part*> action);      // :116
+    void OnCouple(events::GameEvents::FromToAction<Part*, Part*> action);                                // :121
+    void OnCrewKilled(EventReport* evt);                                   // :126
+    void OnPartDied(Part* p);                                              // :131
+    void AddKerbal(const std::string& kerbalName);                         // :139
+    void RemoveKerbal(const std::string& kerbalName);                      // :147
+    std::vector<std::string> kerbalsToRecover;                             // :17
+    std::string title;                                                     // :20
+    CompleteCondition winCondition = CompleteCondition::All;               // :23
+
+private:
+    void ScanVessel(Vessel* v);                                            // :155
+    void CheckNewKerbal(const std::string& kerbalName);                    // :171
+    void KillKerbal(const std::string& kerbalName);                        // :186
+    bool eventsAdded = false;
+};
+
+// AcquirePart.cs:10
+class AcquirePart : public ContractParameter {
+public:
+    enum class CompleteCondition : int { All, Any };                       // :12
+    AcquirePart() = default;
+    explicit AcquirePart(std::string title_, CompleteCondition win = CompleteCondition::All);
+    std::string TypeName() const override { return "AcquirePart"; }
+    void SetTitle(const std::string& t) { title = t; }
+    std::string GetTitle() override { return title; }
+    void OnLoad(ConfigNode& node) override;
+    void OnSave(ConfigNode& node) override;
+    void OnRegister() override;
+    void OnUnregister() override;
+    void OnReset() override;
+    void OnCouple(events::GameEvents::FromToAction<Part*, Part*> action);
+    void OnPartDied(Part* p);
+    void AddPart(uint32_t id);
+    void RemovePart(uint32_t id);
+    std::vector<uint32_t> partsToRecover;
+    std::string title;
+    CompleteCondition winCondition = CompleteCondition::All;
+
+private:
+    void ScanVessel(Vessel* v);
+    void CheckNewPart(uint32_t id);
+    void DestroyPart(uint32_t id);
+    bool eventsAdded = false;
+};
+
+// PartTest.cs:12 (Contracts.Parameters.PartTest)
+class PartTest : public ContractParameter {
+public:
+    PartTest();                                                            // :31
+    PartTest(const AvailablePart* tgtPart, const std::optional<std::string>& testNotes_, int partRepeatability, CelestialBody* tgtBody, Vessel::Situations tgtSit,
+             const std::string& id_, bool hauled_);                        // :36
+    std::string TypeName() const override { return "PartTest"; }
+    std::string partName;                                                  // :14
+    const AvailablePart* tgtPartInfo = nullptr;                            // :16
+    std::vector<uint32_t> testedParts;                                     // :18
+    std::optional<std::string> testNotes;                                  // :20 (null = nullopt)
+    std::string body;                                                      // :22
+    std::string situation;                                                 // :24
+    std::string uniqueID;                                                  // :26
+    int repeatability = 2;                                                 // :28 PartTestConstraint.TestRepeatability.ONCEPERPART
+    bool hauled = false;                                                   // :30
+    std::string title;                                                     // :43
+    std::string GetHashString() override;                                  // :49
+    std::string GetTitle() override;                                       // :64
+    std::string GetNotes() override { return testNotes.value_or(std::string()); }  // :79
+    void OnLoad(ConfigNode& node) override;                                // :84
+    void OnSave(ConfigNode& node) override;                                // :164
+    void OnRegister() override;                                            // :188
+    void OnUnregister() override;                                          // :210
+    void OnPartRunTest(ModuleTestSubject* p);                              // :229
+    void OnTestPartDestroyed(ModuleTestSubject* p);                        // :243
+    void OnVesselChanged(Vessel* v);                                       // :252
+    void OnReset() override;                                               // :281
+    void OnUpdate() override;                                              // :318
+
+private:
+    bool hasTestedPart(Vessel* v);                                         // :267
+    void VesselModified(Vessel* v);                                        // :290
+    void PartModified(Part* p);                                            // :298
+    void OnDock(events::GameEvents::FromToAction<Part*, Part*> action);    // :306
+    bool eventsAdded = false;
+    bool validVessel = false;
+    bool dirtyVessel = true;
+    int successCounter = 0;
+    int activePartCount = 0;
+};
+
+}  // namespace ksp::Contracts::Parameters
+
+template <>
+struct ksp::dotnet::EnumTraits<ksp::Contracts::Parameters::RecoverKerbal::CompleteCondition> {
+    using E = ksp::Contracts::Parameters::RecoverKerbal::CompleteCondition;
+    static constexpr bool flags = false;
+    static constexpr EnumMember<E> members[] = {{E::All, "All"}, {E::Any, "Any"}};
+};
+template <>
+struct ksp::dotnet::EnumTraits<ksp::Contracts::Parameters::RecoverPart::CompleteCondition> {
+    using E = ksp::Contracts::Parameters::RecoverPart::CompleteCondition;
+    static constexpr bool flags = false;
+    static constexpr EnumMember<E> members[] = {{E::None, "None"}, {E::AllCandidates, "AllCandidates"}, {E::AnyCandidate, "AnyCandidate"}};
+};
+template <>
+struct ksp::dotnet::EnumTraits<ksp::Contracts::Parameters::AcquireCrew::CompleteCondition> {
+    using E = ksp::Contracts::Parameters::AcquireCrew::CompleteCondition;
+    static constexpr bool flags = false;
+    static constexpr EnumMember<E> members[] = {{E::All, "All"}, {E::Any, "Any"}};
+};
+template <>
+struct ksp::dotnet::EnumTraits<ksp::Contracts::Parameters::AcquirePart::CompleteCondition> {
+    using E = ksp::Contracts::Parameters::AcquirePart::CompleteCondition;
+    static constexpr bool flags = false;
+    static constexpr EnumMember<E> members[] = {{E::All, "All"}, {E::Any, "Any"}};
+};
