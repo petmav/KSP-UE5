@@ -55,6 +55,7 @@ void ResourceProcessingEnvironment::Reset() {
     animationGroupDeployed = nullptr;
     impactRaycast = nullptr;
     intakeForward = nullptr;
+    biomeAt = nullptr;
     screenMessages.clear();
     overlay = OverlayGeneratorState{};
 }

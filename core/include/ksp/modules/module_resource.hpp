@@ -50,6 +50,9 @@ public:
     std::shared_ptr<ModuleResourceAutoShiftState> ownedShifter_;  // the object OnAwake creates (`new ModuleResourceAutoShiftState()`)
 
     const PartResourceDefinition* resourceDef();        // :54 (cached lookup by id)
+    // Unity Instantiate of the [Serializable] ModuleResource: every data member travels; the auto-shift module object (created by OnAwake)
+    // does not (WP-28: PartModule::CopySerializedFrom)
+    std::shared_ptr<ModuleResource> CloneSerialized() const;
     virtual ~ModuleResource() = default;
     virtual void OnAwake();                             // :66
     void Load(const ConfigNode& node);                  // :74

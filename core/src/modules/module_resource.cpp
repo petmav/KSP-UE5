@@ -42,6 +42,14 @@ const PartResourceDefinition* ModuleResource::resourceDef() {
     return cachedResourceDef_;
 }
 
+// Unity's Instantiate copy of a [Serializable] ModuleResource (ModuleResource.cs:4): all serialised members, not the OnAwake-created helper
+std::shared_ptr<ModuleResource> ModuleResource::CloneSerialized() const {
+    auto c = std::make_shared<ModuleResource>(*this);
+    c->autoStateShifter = nullptr;
+    c->ownedShifter_.reset();
+    return c;
+}
+
 // ModuleResource.cs:65
 void ModuleResource::OnAwake() {
     if (autoStateShifter == nullptr) {
