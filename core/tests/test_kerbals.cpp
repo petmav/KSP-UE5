@@ -1294,7 +1294,7 @@ TEST_CASE("WP-31 KerbalRoster.DefaultCrewForVessel: pilot first, auto-hire, inac
     const AvailablePart* mk1 = w.g.data.parts.getPartInfoByName("mk1pod.v2");
     REQUIRE(mk13);
     REQUIRE(mk1);
-    // ModuleCommand.OnAwake (ModuleCommand.cs:366, WP-24) sets part.isControlSource = FULL on the prefab: the real module did it
+    // ModuleCommand.OnAwake (ModuleCommand.cs:378, WP-24) sets part.isControlSource = FULL on the prefab: the real module did it
     REQUIRE(mk13->partPrefab->fields.isControlSource == static_cast<int>(ControlLevel::FULL));
     REQUIRE(mk1->partPrefab->fields.isControlSource == static_cast<int>(ControlLevel::FULL));
     REQUIRE(mk13->partPrefab->fields.CrewCapacity == 3);

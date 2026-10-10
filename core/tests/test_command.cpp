@@ -220,7 +220,7 @@ TEST_CASE("WP-24 every stock ModuleCommand / ModuleReactionWheel / ModuleSAS / M
             INFO(ap->name);
             if (auto* c = dynamic_cast<ModuleCommand*>(d.module.get())) {
                 cmds++;
-                // ModuleCommand.OnAwake (ModuleCommand.cs:366): isControlSource = FULL on the prefab
+                // ModuleCommand.OnAwake (ModuleCommand.cs:378): isControlSource = FULL on the prefab
                 CHECK(ap->partPrefab->fields.isControlSource == static_cast<int>(ControlLevel::FULL));
                 const std::optional<std::string> mc = d.config->GetValue("minimumCrew");
                 CHECK(c->Get<int>("minimumCrew") == (mc ? std::stoi(*mc) : 0));

@@ -3117,7 +3117,7 @@ What the unit tests establish (oracles are the decompiled C#, the game's cfgs an
 6. `GetRandomName` rejects a draw whose first name is a substring of ANY roster name (loops forever with a table smaller than the roster).
 7. `ProtoCrewMember.Equals` ignores `hasToured`.
 8. `SetInactive` returns the previous inactive state; it is additive only while already inactive.
-9. `ModuleCommand.OnAwake` (ModuleCommand.cs:366) sets `isControlSource = FULL` on a pod prefab; since WP-24 the real module does it and
+9. `ModuleCommand.OnAwake` (ModuleCommand.cs:378) sets `isControlSource = FULL` on a pod prefab; since WP-24 the real module does it and
    `DefaultCrewForVessel` finds the crewable pod (the test asserts the value instead of setting it).
 
 ### Deviations and deferred

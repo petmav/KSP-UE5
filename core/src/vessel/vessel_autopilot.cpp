@@ -599,7 +599,7 @@ void VesselSAS::ControlUpdate(FlightCtrlState& s) {
     lastRotation_ = currentRotation_;
 }
 
-// VesselAutopilot.cs:906
+// VesselAutopilot.cs:828
 void VesselSAS::Destroy() {
     DisconnectFlyByWire();
 }

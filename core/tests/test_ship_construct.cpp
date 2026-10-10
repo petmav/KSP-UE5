@@ -2007,7 +2007,7 @@ TEST_CASE("WP-18 AssembleForLaunch variants: splashed, not landed, orbit, preCre
     {   // findFirstControlSource: the first part of the vessel with a control level
         auto s = load();
         auto v = ShipConstruction::AssembleForLaunch(*s, "LaunchPad", "", "flag", game, &manifest, true, false, true, false, nullptr, false, false, lp);
-        // ModuleCommand.OnAwake (ModuleCommand.cs:366, WP-24) made every command part a FULL control source: the first one is found
+        // ModuleCommand.OnAwake (ModuleCommand.cs:378, WP-24) made every command part a FULL control source: the first one is found
         Part* firstCmd = nullptr;
         for (Part* p : v->parts)
             if (firstCmd == nullptr && p->fields.isControlSource > 0) firstCmd = p;

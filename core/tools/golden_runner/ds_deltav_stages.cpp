@@ -141,7 +141,7 @@ float KerbalInventoryMass(GameData& data, const fs::path& gameDataDir) {
 void AssignDefaultCrew(const std::vector<Part*>& parts, float inventoryPerKerbal) {
     for (Part* p : parts) p->UpdateMass();
     for (Part* p : parts) {
-        // Part.isControlSource > NONE: ModuleCommand.OnAwake sets FULL on the prefab and the instance (ModuleCommand.cs:366, WP-24), so a part
+        // Part.isControlSource > NONE: ModuleCommand.OnAwake sets FULL on the prefab and the instance (ModuleCommand.cs:378, WP-24), so a part
         // with a ModuleCommand is a control source (the pods and cockpits of the capture crafts all are)
         const bool isControlSource = p->fields.isControlSource > 0;
         const bool flag2 = !isControlSource && p->fields.CrewCapacity > 0 && p->FindModuleOfClass("KerbalSeat") != nullptr;
