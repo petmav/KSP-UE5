@@ -28,6 +28,7 @@
 #include "ksp/save/ship_construct.hpp"
 #include "ksp/staging/stage_manager.hpp"
 #include "ksp/unity/quaternion_native.hpp"
+#include "ksp/core/timing_manager.hpp"
 #include "ksp/vessel/delta_v.hpp"
 #include "ksp/vessel/vessel.hpp"
 
@@ -73,7 +74,7 @@ struct EditorCraft {
     ShipConstruct ship;
     std::unique_ptr<support::EditorSession> editor;
     std::unique_ptr<VesselDeltaV> dv;
-    EditorCraft(World17&, const fs::path& file, const CelestialBody& body) {
+    EditorCraft(World17&, const fs::path& file, const CelestialBody& body, bool drive = true) {
         ConfigNode::NodePtr root = ConfigNode::Load(file.string());
         REQUIRE_MESSAGE(root, file.string());
         ConfigNode::NodePtr upgraded;
@@ -105,7 +106,7 @@ struct EditorCraft {
         DeltaVGlobals::appValues->body = &body;
         dv = VesselDeltaV::Create(&ship);
         dv->Start();
-        dv->DriveToCompletion();
+        if (drive) dv->DriveToCompletion();
     }
     void SetBody(const CelestialBody& b) {
         DeltaVGlobals::appValues->body = &b;
@@ -385,5 +386,38 @@ TEST_CASE("WP-17 Kerbal X: asparagus stages through fuel lines, separation index
         if (s->enginesActiveInStage.empty()) CHECK(s->deltaVinVac == 0.0f);
         else CHECK(s->deltaVinVac > 0.0f);
         CHECK(std::isfinite(s->deltaVinVac));
+    }
+}
+
+// WP-00: the same editor loop driven by the coroutine scheduler (FixedUpdate -> CheckDirtyAndRun -> DelayedCallback(frames = 3) ->
+// RunCalculations coroutine with its two yields) gives bit-identical results to DriveToCompletion(), `frames` frames per run later.
+TEST_CASE("WP-00 VesselDeltaV on the coroutine scheduler == DriveToCompletion (VesselDeltaV.cs:234-282, :853)") {
+    if (!GameAvailable()) return;
+    World17 w;
+    EditorCraft ref(w, PhysProfS(), w.Kerbin());
+    EditorCraft sch(w, PhysProfS(), w.Kerbin(), false);
+    CHECK_FALSE(sch.dv->IsReady());
+    CoroutineScheduler scheduler;
+    PlayerLoop loop(scheduler);
+    const int frames = sch.dv->DriveToCompletion(scheduler, loop, 0.02f, 100);
+    // two runs (the first sets syncListInstances = false and marks dirty again), each: 3 delay frames + the run's yields (1 + stages)
+    CHECK(frames > 2 * sch.dv->frames());
+    CHECK(scheduler.Pending() == 0);
+    CHECK(sch.dv->IsReady());
+    CHECK(sch.dv->RunCount() == ref.dv->RunCount());
+    CHECK(sch.dv->CompletedEvents() == ref.dv->CompletedEvents());
+    CHECK_FALSE(sch.dv->SimulationRunning());
+    CHECK(sch.dv->TotalDeltaVVac() == ref.dv->TotalDeltaVVac());
+    CHECK(sch.dv->TotalDeltaVASL() == ref.dv->TotalDeltaVASL());
+    CHECK(sch.dv->TotalDeltaVActual() == ref.dv->TotalDeltaVActual());
+    CHECK(sch.dv->TotalBurnTime() == ref.dv->TotalBurnTime());
+    const auto a = sch.dv->OperatingStageInfo(), b = ref.dv->OperatingStageInfo();
+    REQUIRE(a.size() == b.size());
+    for (size_t i = 0; i < a.size(); i++) {
+        CHECK(a[i]->stage == b[i]->stage);
+        CHECK(a[i]->deltaVinVac == b[i]->deltaVinVac);
+        CHECK(a[i]->deltaVatASL == b[i]->deltaVatASL);
+        CHECK(a[i]->stageBurnTime == b[i]->stageBurnTime);
+        CHECK(a[i]->startMass == b[i]->startMass);
     }
 }

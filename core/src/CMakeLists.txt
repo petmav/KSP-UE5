@@ -2,6 +2,8 @@
 add_library(kspcore STATIC
     core/log.cpp
     core/delegate.cpp
+    core/coroutine.cpp
+    core/timing_manager.cpp
     dotnet/math.cpp
     dotnet/vs2013_libm_gen.cpp
     dotnet/ucrt_libm_gen.cpp
@@ -52,6 +54,7 @@ add_library(kspcore STATIC
     events/game_events.cpp
     fsm/kerbal_fsm.cpp
     localization/localizer.cpp
+    util/hierarchy_util.cpp
     util/ksp_util.cpp
     util/misc_util.cpp
     util/simplex.cpp
