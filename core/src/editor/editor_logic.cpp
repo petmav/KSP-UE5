@@ -43,20 +43,20 @@ float SqrMag(const Vector3f& v) { return v.sqrMagnitude(); }
 // EditorLogicBase
 // ==================================================================================================================================
 
-// EditorLogicBase.cs:330
+// EditorLogicBase.cs:292
 std::vector<Part*> EditorLogicBase::FindPartsInChildren(Part* part) {
     std::vector<Part*> parts;
     FindPartsInChildren(parts, part);
     return parts;
 }
 
-// EditorLogicBase.cs:336
+// EditorLogicBase.cs:292
 void EditorLogicBase::FindPartsInChildren(std::vector<Part*>& parts, Part* part) {
     parts.push_back(part);
     for (size_t i = 0, count = part->children.size(); i < count; i++) FindPartsInChildren(parts, part->children[i]);
 }
 
-// EditorLogicBase.cs:201
+// EditorLogicBase.cs:194
 void EditorLogicBase::clearAttachNodes(Part* part, Part* otherPart) {
     if (otherPart == nullptr) return;
     for (size_t i = 0, count = otherPart->attachNodes.size(); i < count; i++) {
@@ -94,7 +94,7 @@ float EditorLogicBase::FindPartSurface(Part& p, const Vector3f& origin, const Ve
     return 1.0f;
 }
 
-// EditorLogicBase.cs:57
+// EditorLogicBase.cs:75
 void EditorLogicBase::partRotationInputUpdate(RotationKey key, bool inRotateTweakStateNow) {
     partTweaked = false;
     EditorEnvironment& env = EditorEnvironment::Current();
@@ -137,14 +137,14 @@ void EditorLogicBase::partRotationInputUpdate(RotationKey key, bool inRotateTwea
     }
 }
 
-// EditorLogicBase.cs:104
+// EditorLogicBase.cs:126
 void EditorLogicBase::displayAttachNodeIcons(const std::vector<Part*>& parts, Part* selected, bool stackNodes, bool srfNodes, bool dockNodes) {
     for (size_t i = 0, count = parts.size(); i < count; i++) handleAttachNodeIcons(parts[i], stackNodes, srfNodes, dockNodes);
     handleAttachNodeIcons(selected, stackNodes, srfNodes, dockNodes);
     handleChildNodeIcons(selected);
 }
 
-// EditorLogicBase.cs:115
+// EditorLogicBase.cs:137
 void EditorLogicBase::handleChildNodeIcons(Part* part) {
     for (size_t i = 0, count = part->children.size(); i < count; i++) {
         Part* part2 = part->children[i];
@@ -158,7 +158,7 @@ void EditorLogicBase::handleAttachNodeIcons(Part* part, bool stackNodes, bool sr
     for (size_t i = 0, count = part->attachNodes.size(); i < count; i++) AssignAttachIcon(part, part->attachNodes[i], stackNodes, srfNodes, dockNodes);
 }
 
-// EditorLogicBase.cs:139 (the icon object itself is the shell's: iconNodes_ holds the nodes that have one, `onNodeIconPose` places it)
+// EditorLogicBase.cs:157 (the icon object itself is the shell's: iconNodes_ holds the nodes that have one, `onNodeIconPose` places it)
 void EditorLogicBase::AssignAttachIcon(Part* part, AttachNode& node, bool stackNodes, bool srfNodes, bool dockNodes) {
     (void)srfNodes;
     if ((stackNodes || node.nodeType != AttachNodeType::Stack) && (dockNodes || node.nodeType != AttachNodeType::Dock) &&
@@ -267,14 +267,14 @@ void EditorLogic::prevSymMode() {
 // EditorLogic.cs:1100 (the symmetry / mirror sprite state is the shell's)
 void EditorLogic::SetSymState() { RestoreSymmetryState(); }
 
-// EditorLogic.cs:1133 symInputUpdate: Editor_toggleSymMethod released
+// symInputUpdate (EditorLogic.cs:1133): the Editor_toggleSymMethod branch
 void EditorLogic::ToggleSymMethod() {
     RestoreSymmetryState();
     symmetryMethod = symmetryMethod == SymmetryMethod::Mirror ? SymmetryMethod::Radial : SymmetryMethod::Mirror;
     GameEvents::onEditorSymmetryMethodChange.Fire(symmetryMethod);
 }
 
-// EditorLogic.cs:1133 symInputUpdate: Editor_coordSystem pressed
+// symInputUpdate (EditorLogic.cs:1133): the Editor_coordSystem branch
 void EditorLogic::ToggleSymmetryCoordSpace() {
     RestoreSymmetryState();
     if (symmetryMethod == SymmetryMethod::Radial) {
@@ -1053,7 +1053,7 @@ void EditorLogic::DestroySelectedPart() {
 // composite steps of the placement loop
 // ==================================================================================================================================
 
-// EditorLogic.cs:1380 (st_place.OnUpdate, after the drag position was applied)
+// st_place.OnUpdate (EditorLogic.cs:1380, the state delegate) after the drag position was applied
 void EditorLogic::UpdatePlacement() {
     if (selectedPart == nullptr) return;
     SetRotation(*selectedPart, vesselRotation * selectedPart->fields.initRotation * selectedPart->fields.attRotation);
@@ -1080,7 +1080,7 @@ void EditorLogic::UpdatePlacement() {
     GameEvents::onEditorPartEvent.Fire(ConstructionEventType::PartDragging, selectedPart);
 }
 
-// EditorLogic.cs:1900 (st_place.OnLeave)
+// st_place.OnLeave (EditorLogic.cs:1900, the state delegate)
 void EditorLogic::LeavePlace(bool toIdle) {
     if (selectedPart != nullptr) displayAttachNodeIcons(ship->liveParts, selectedPart, false, false, false);
     cleanSymmetry();
@@ -1090,7 +1090,7 @@ void EditorLogic::LeavePlace(bool toIdle) {
     GameEvents::onEditorPartEvent.Fire(ConstructionEventType::PartDropped, selectedPart);
 }
 
-// EditorLogic.cs:1940 (on_partAttached.OnEvent)
+// on_partAttached.OnEvent (EditorLogic.cs:1940, the event delegate)
 bool EditorLogic::DropSelectedPart() {
     isCurrentPartFlag = false;
     if (!selectedPart->symmetryCounterparts.empty()) {
@@ -1113,7 +1113,7 @@ bool EditorLogic::DropSelectedPart() {
     return true;
 }
 
-// EditorLogic.cs:1770 (on_partPicked.OnEvent for a part that is not the root)
+// on_partPicked.OnEvent (EditorLogic.cs:1770, the event delegate) for a part that is not the root
 void EditorLogic::PickPart(Part* part) {
     selectedPart = part;
     if (selectedPart != selectedPart->localRoot()) {
@@ -1330,7 +1330,7 @@ std::vector<Part*> EditorLogic::getSortedShipList() {
 // EditorLogic.cs:464
 std::vector<Part*> EditorLogic::SortedShipList() { return fetch->getSortedShipList(); }
 
-// EditorLogic.cs:5399
+// EditorLogic.cs:5407
 bool EditorLogic::AreAllPartsConnected() {
     int count = static_cast<int>(Part::allParts.size());
     do {
@@ -1349,13 +1349,13 @@ int EditorLogic::CountAllSceneParts(bool includeSelected) {
 // EditorLogic.cs:5429
 bool EditorLogic::ShipIsValid(const ShipConstruct* s) const { return s != nullptr && !s->liveParts.empty(); }
 
-// EditorLogic.cs:414
+// EditorLogic.cs:376
 Vector3f EditorLogic::initialPodPosition() const {
     if (!EditorBounds::Instance) return Vector3f(0.0f, 5.0f, 0.0f);
     return EditorBounds::Instance->rootPartSpawnPoint;
 }
 
-// EditorLogic.cs:434
+// EditorLogic.cs:402
 Bounds EditorLogic::editorBounds() const {
     if (!EditorBounds::Instance) return Bounds(Vector3f::zero(), Vector3f::one() * 3.40282347E+38f);
     return EditorBounds::Instance->constructionBounds;

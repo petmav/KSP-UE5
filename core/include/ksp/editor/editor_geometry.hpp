@@ -31,9 +31,9 @@ public:
     bool Awake();                                     // :31 (false: a second instance, the C# destroys it)
     void OnDestroy();                                 // :44
     static Vector3f ClampToCameraBounds(Vector3f pos, const Vector3f& camFwd, float& clampHeight);   // :60
-    static float ClampCameraDistance(float dist);     // :84
-    static void CenterSceneryOrigin(Vector3f& sceneryRootPosition);   // :93
-    void SetExtents(const Vector3f& extents) { cameraOffsetBounds.set_extents(extents); }   // :112
+    static float ClampCameraDistance(float dist);     // :80
+    static void CenterSceneryOrigin(Vector3f& sceneryRootPosition);   // :89
+    void SetExtents(const Vector3f& extents) { cameraOffsetBounds.set_extents(extents); }   // :102
 };
 
 // EditorGeometryUtil.cs:3
@@ -42,9 +42,9 @@ public:
     static bool TestPartBoundsIntersect(Part& p1, Part& p2);                                    // :5
     static bool TestPartBoundsSeparate(Part& p1, Part& p2, float threshold, Vector3f& gap);     // :10
     static Vector3f GetPartBoundsSeparation(Part& p1, Part& p2);                                // :17
-    static Quaternionf MirrorRotation(const Quaternionf& input, const PartTransform& mirrorRoot, const PartTransform& setRoot);   // :77
-    static Vector3f MirrorPos(const Vector3f& input, const PartTransform& mirrorRoot, const PartTransform& setRoot);              // :89
-    static Vector3f MirrorDirection(const Vector3f& input, const PartTransform& setRoot);                                          // :97
+    static Quaternionf MirrorRotation(const Quaternionf& input, const PartTransform& mirrorRoot, const PartTransform& setRoot);   // :72
+    static Vector3f MirrorPos(const Vector3f& input, const PartTransform& mirrorRoot, const PartTransform& setRoot);              // :84
+    static Vector3f MirrorDirection(const Vector3f& input, const PartTransform& setRoot);                                          // :91
     static float GetPixelDistance(const Vector3f& sPos1, const Vector3f& sPos2);                // :104
     // Collider.ClosestPointOnBounds(point) of a box collider: the point of the bounds nearest to `point`
     static Vector3f ClosestPointOnBounds(const Bounds& b, const Vector3f& point);
@@ -95,20 +95,20 @@ public:
             if (f->ID() == id) return f;
         return nullptr;
     }
-    void AddFilter(const FilterPtr& filter) {                       // :54
+    void AddFilter(const FilterPtr& filter) {                       // :41
         if (std::find(filters_.begin(), filters_.end(), filter) == filters_.end()) filters_.push_back(filter);
     }
-    void RemoveFilter(const FilterPtr& filter) {                    // :62
+    void RemoveFilter(const FilterPtr& filter) {                    // :57
         auto it = std::find(filters_.begin(), filters_.end(), filter);
         if (it != filters_.end()) filters_.erase(it);
     }
-    void RemoveFilter(const std::string& filterID) { RemoveFilter((*this)[filterID]); }   // :70
-    std::vector<T> GetFilteredList(const std::vector<T>& list) const {   // :79
+    void RemoveFilter(const std::string& filterID) { RemoveFilter((*this)[filterID]); }   // :57
+    std::vector<T> GetFilteredList(const std::vector<T>& list) const {   // :67
         std::vector<T> list2 = list;
         for (const FilterPtr& f : filters_) EditorPartListFilter<T>::FilterList(list2, f->FilterCriteria());
         return list2;
     }
-    void FilterList(std::vector<T>& list) const {                   // :89
+    void FilterList(std::vector<T>& list) const {                   // :78
         for (const FilterPtr& f : filters_) EditorPartListFilter<T>::FilterList(list, f->FilterCriteria());
     }
     std::string GetFilterKey() const {                              // :98
@@ -116,7 +116,7 @@ public:
         for (const FilterPtr& f : filters_) text += f->ID();
         return text;
     }
-    std::string GetFilterKeySingleOrNothing() const { return filters_.size() == 1 ? filters_[0]->ID() : std::string(); }   // :108
+    std::string GetFilterKeySingleOrNothing() const { return filters_.size() == 1 ? filters_[0]->ID() : std::string(); }   // :99
     std::string ToString(const std::string& typeName) const {       // :116
         std::string text = "EditorPartListFilterList(" + typeName + "): " + std::to_string(filters_.size());
         for (const FilterPtr& f : filters_) text += "\n  " + f->ToString(typeName);

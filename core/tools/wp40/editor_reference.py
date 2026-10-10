@@ -860,8 +860,6 @@ def sec_cot(parts, db):
             qpos = vadd(ZERO, vmul(tpos, F(1.0)))
             qdir = vadd(ZERO, vmul(fwd, F(1.0)))
             thrust = f(float(max_thrust) * (float(tp) * float(F(0.01))))
-            if os.environ.get("WP40_TRACE") and p["i"] >= 0 and "Dove" in str(p.get("label", "")):
-                print("ENG", p["name"], mi, repr(float(thrust)), repr(float(tp)), repr(float(max_thrust)), file=sys.stderr)
             origin = vadd(origin, vmul(qpos, thrust))
             direction = vadd(direction, vmul(qdir, thrust))
             t = f(float(t) + float(thrust))
@@ -979,7 +977,7 @@ def sec_preflight(parts, db):
                 nid, _, rest = an.partition(",")
                 if not rest.startswith("Null"):
                     linked.add(nid)
-            if any(n["id"] not in linked for n in db["nodes"].get("stationHub", [])):
+            if any(n["id"] not in linked for n in db["nodes"].get("stationHub", []) if n["id"] != ""):   # the id-less row is the surface node placeholder
                 hubs.append(p["i"])
     res["StationHubAttachments"] = {"pass": not hubs, "failed": hubs}
     # NonRootCmdMissaligned

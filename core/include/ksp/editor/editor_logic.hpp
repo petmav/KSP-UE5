@@ -27,6 +27,7 @@
 #include "ksp/parts/part.hpp"
 #include "ksp/save/ship_construct.hpp"
 #include "ksp/ship/ship_construction.hpp"
+#include "ksp/staging/stage_manager.hpp"
 
 namespace ksp {
 
@@ -43,7 +44,7 @@ public:
 
     // :330 FindPartsInChildren (depth first, the part first)
     static std::vector<Part*> FindPartsInChildren(Part* part);
-    static void FindPartsInChildren(std::vector<Part*>& parts, Part* part);   // :334 (recursion)
+    static void FindPartsInChildren(std::vector<Part*>& parts, Part* part);   // :292 (recursion)
 
     // :201 clearAttachNodes: drop the two attach node links between `part` and `otherPart`
     static void clearAttachNodes(Part* part, Part* otherPart);
@@ -61,12 +62,12 @@ protected:
     bool isCurrentPartFlag = false;        // :35
 
 public:
-    bool IsCurrentPartFlag() const { return isCurrentPartFlag; }   // :55
+    bool IsCurrentPartFlag() const { return isCurrentPartFlag; }   // :73
     // :57 partRotationInputUpdate: the keyboard rotation of the selected part. `key` is the pressed command (GameSettings.Editor_yawLeft ...)
     enum class RotationKey { None, YawLeft, YawRight, RollLeft, RollRight, PitchUp, PitchDown };
     // `inRotateTweakState`: fsm.currentStateName == "st_rotate_tweak" (the keys are ignored there, only the reset runs)
     void partRotationInputUpdate(RotationKey key, bool inRotateTweakState);
-    virtual void partRotationResetUpdate() {}   // :99
+    virtual void partRotationResetUpdate() {}   // :122
 
     // :104 displayAttachNodeIcons .. :149 AssignAttachIcon: which attach nodes carry an icon (the icon objects are the shell's; the set of
     // nodes that have one is what checkAttach tests)
@@ -76,9 +77,9 @@ public:
     std::function<void(Part&, AttachNode&)> onNodeIconPose;
 
 protected:
-    void handleChildNodeIcons(Part* part);                                                  // :115
+    void handleChildNodeIcons(Part* part);                                                  // :137
     void handleAttachNodeIcons(Part* part, bool stackNodes, bool srfNodes, bool dockNodes); // :129
-    void AssignAttachIcon(Part* part, AttachNode& node, bool stackNodes, bool srfNodes, bool dockNodes);  // :139
+    void AssignAttachIcon(Part* part, AttachNode& node, bool stackNodes, bool srfNodes, bool dockNodes);  // :157
     std::set<const AttachNode*> iconNodes_;
 };
 
@@ -93,7 +94,7 @@ public:
     EditorLogic& operator=(const EditorLogic&) = delete;
 
     // ---- state (EditorLogic.cs:66-340) ---------------------------------------------------------------------------------------------
-    Quaternionf vesselRotation = Quaternionf::identity();   // :66
+    Quaternionf vesselRotation = Quaternionf::identity();   // :45
     float srfAttachAngleSnap = 15.0f;                       // :70
     float srfAttachAngleSnapFine = 5.0f;                    // :72
     bool allowSrfAttachment = true;                         // :166
@@ -107,11 +108,11 @@ public:
     ShipConstruct* ship = nullptr;
     // the hooks of a scene without FlightGlobals (HighLogic.LoadedSceneIsEditor with FlightGlobals.fetch == null)
 
-    Part* SelectedPart() const { return selectedPart; }     // :437 (static in C#: fetch.selectedPart)
-    Part* RootPart() const { return rootPart; }             // :450
+    Part* SelectedPart() const { return selectedPart; }     // :414 (static in C#: fetch.selectedPart)
+    Part* RootPart() const { return rootPart; }             // :426
     void SetSelectedPart(Part* p) { selectedPart = p; }     // OnSubassemblyDialogDismiss :2829
     void SetRootPart(Part* p) { rootPart = p; }
-    ConstructionMode EditorConstructionMode() const { return constructionMode; }   // :482
+    ConstructionMode EditorConstructionMode() const { return constructionMode; }   // :450
     void SetConstructionMode(ConstructionMode m) { constructionMode = m; }
     int UndoLevel() const { return undoLevel; }
     Attachment& CurrentAttachment() { return attachment; }
@@ -124,8 +125,8 @@ public:
     Part* symUpdateParent = nullptr;                        // :318
     AttachNode* symUpdateAttachNode = nullptr;              // :320
     Vector3f gizmoPivot{};                                  // :322
-    Quaternionf gizmoAttRotate = Quaternionf::identity();   // :254 (private)
-    Quaternionf gizmoAttRotate0 = Quaternionf::identity();  // :256
+    Quaternionf gizmoAttRotate = Quaternionf::identity();   // :45 (private)
+    Quaternionf gizmoAttRotate0 = Quaternionf::identity();  // :45
     // the transform of the rotate / offset gizmo object (GizmoRotate / GizmoOffset are the shell's objects; their maths is in
     // editor_gizmos.hpp). coordSpace: gizmoRotate.CoordSpace
     struct GizmoState {
@@ -220,11 +221,11 @@ public:
     // ---- ship queries (:5380-5430) -------------------------------------------------------------------------------------------------------
     std::vector<Part*> getSortedShipList();                 // :5380
     static std::vector<Part*> SortedShipList();             // :464
-    bool AreAllPartsConnected();                            // :5399
+    bool AreAllPartsConnected();                            // :5407
     int CountAllSceneParts(bool includeSelected);           // :5421
     bool ShipIsValid(const ShipConstruct* s) const;         // :5429
-    Vector3f initialPodPosition() const;                    // :414
-    Bounds editorBounds() const;                            // :434 (EditorBounds.Instance)
+    Vector3f initialPodPosition() const;                    // :376
+    Bounds editorBounds() const;                            // :402 (EditorBounds.Instance)
 
     // ---- launch checks (:4993) ----------------------------------------------------------------------------------------------------------
     // GetStockPreFlightCheck(siteName): the stock list of tests the Launch button runs
@@ -259,6 +260,19 @@ private:
     Part* InstantiateCopy(Part* p);                         // recursive Object.Instantiate of the part and its child hierarchy
     void Destroy(Part* p);                                  // Object.Destroy(part.gameObject)
     void RegisterEditorPart(std::unique_ptr<Part> p);
+};
+
+// The IStagingHost of an editor scene driven by an EditorLogic (StageManager reads EditorLogic.RootPart / SelectedPart through it)
+class EditorLogicStagingHost : public IStagingHost {
+public:
+    explicit EditorLogicStagingHost(EditorLogic& e) : editor_(&e) {}
+    bool LoadedSceneIsFlight() const override { return false; }
+    bool LoadedSceneIsEditor() const override { return true; }
+    Part* RootPart() override { return editor_->RootPart(); }
+    Part* SelectedPart() override { return editor_->SelectedPart(); }
+
+private:
+    EditorLogic* editor_;
 };
 
 }  // namespace ksp

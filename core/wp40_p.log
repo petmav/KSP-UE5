@@ -1,0 +1,12 @@
+[doctest] doctest version is "2.4.12"
+[doctest] run with "--help" for options
+===============================================================================
+C:\Projects\KSP-UE5\.worktrees\wp40\core\tests\test_editor.cpp(666):
+TEST CASE:  WP-40 PreFlightTests: every design concern and pre-flight test over every stock craft
+
+C:\Projects\KSP-UE5\.worktrees\wp40\core\tests\test_editor.cpp(822): MESSAGE: 1596 test evaluations, 577 compared with the Python expectation, 275 affected parts reported
+
+===============================================================================
+[doctest] test cases:     1 |     1 passed | 0 failed | 459 skipped
+[doctest] assertions: 10891 | 10891 passed | 0 failed |
+[doctest] Status: SUCCESS!

@@ -23,7 +23,7 @@ Part* DraggedPart() {
 
 // ---- EditorMarker_CoM -------------------------------------------------------------------------------------------------------------------
 
-// EditorMarker_CoM.cs:35
+// EditorMarker_CoM.cs:31
 Vector3f EditorMarker_CoM::findCenterOfMass(Part* root) {
     Vector3f CoM = Vector3f::zero();
     float m = 0.0f;
@@ -35,7 +35,7 @@ Vector3f EditorMarker_CoM::findCenterOfMass(Part* root) {
     return CoM / m;
 }
 
-// EditorMarker_CoM.cs:55 (`m += part.mass + part.GetResourceMass()` is one double expression rounded at the store)
+// EditorMarker_CoM.cs:51 (`m += part.mass + part.GetResourceMass()` is one double expression rounded at the store)
 void EditorMarker_CoM::recurseParts(Part* part, Vector3f& CoM, float& m) {
     auto add = [&](Part& at) {
         const float resMass = part->GetResourceMass();
@@ -51,7 +51,7 @@ void EditorMarker_CoM::recurseParts(Part* part, Vector3f& CoM, float& m) {
 
 // ---- EditorMarker_CoL -------------------------------------------------------------------------------------------------------------------
 
-// EditorMarker_CoL.cs:40 (UpdatePosition, editor branch)
+// the editor branch of EditorMarker_CoL.UpdatePosition (EditorMarker_CoL.cs:40)
 Vector3f EditorMarker_CoL::EditorReferenceVelocity(const Quaternionf& vesselRotation, Part& rootPart, float referencePitch, float referenceSpeed) {
     Vector3f v = vesselRotation * (UnityNative::AngleAxis(referencePitch, rootPart.partTransform.rotation * Vector3f::right()) * Vector3f::up());
     v *= referenceSpeed;
@@ -64,7 +64,7 @@ EditorRay EditorMarker_CoL::FindCoL(Part* rootPart, const Vector3f& refVel, doub
     return FindCoL(rootPart, refVel, refAlt, refStp, refDens, noLift);
 }
 
-// EditorMarker_CoL.cs:93
+// EditorMarker_CoL.cs:90
 EditorRay EditorMarker_CoL::FindCoL(Part* rootPart, const Vector3f& refVel, double refAlt, double refStp, double refDens, bool& noLift) {
     Vector3f CoL = Vector3f::zero();
     Vector3f DoL = Vector3f::zero();
@@ -107,7 +107,7 @@ void EditorMarker_CoL::recurseParts(Part* part, const Vector3f& refVel, Vector3f
 
 // ---- EditorMarker_CoT -------------------------------------------------------------------------------------------------------------------
 
-// EditorMarker_CoT.cs:42
+// EditorMarker_CoT.cs:37
 EditorRay EditorMarker_CoT::FindCoT(Part* rootPart) {
     float t = 0.0f;
     Vector3f origin = Vector3f::zero();

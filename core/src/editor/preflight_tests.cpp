@@ -35,6 +35,14 @@ std::vector<PartModule*> ModulesOf(Part& p, std::string_view cls) {
 
 bool Contains(const std::vector<Part*>& v, const Part* x) { return std::find(v.begin(), v.end(), x) != v.end(); }
 
+// the value of an enum [KSPField] (AntennaType, WheelType)
+int64_t EnumField(PartModule& m, std::string_view name) {
+    const ModuleValue v = m.Fields().GetValue(name);
+    if (const auto* e = std::get_if<EnumValue>(&v)) return e->value;
+    if (const auto* i = std::get_if<int32_t>(&v)) return *i;
+    return 0;
+}
+
 bool IsStageSeparator(Part& p) {
     return p.FindModuleImplementing([](PartModule& m) { return dynamic_cast<IStageSeparator*>(&m) != nullptr; }) != nullptr;
 }
@@ -99,7 +107,7 @@ std::string DesignConcernBase::GetConcernDescription() {
     return t.empty() ? t : Localizer::Format(t);
 }
 
-// DesignConcernBase.cs:51
+// DesignConcernBase.cs:48
 bool DesignConcernBase::Test() {
     const bool flag = TestCondition();
     if (firstTest) {
@@ -135,7 +143,7 @@ bool HasIntakeAirEngine(Part& part) {
 }
 }  // namespace
 
-// AirBreathingEnginesForIntakes.cs:25
+// AirBreathingEnginesForIntakes.cs:21
 bool AirBreathingEnginesForIntakes::TestCondition() {
     ShipConstruct& ship = SHIP();
     failedParts.clear();
@@ -159,7 +167,7 @@ DesignConcernSeverity AirBreathingEnginesForIntakes::GetSeverity() { return Desi
 std::string AirBreathingEnginesForIntakes::ConcernTitleTag() { return "#autoLOC_250906"; }
 std::string AirBreathingEnginesForIntakes::ConcernDescriptionTag() { return "#autoLOC_250911"; }
 
-// IntakesForAirBreathingEngines.cs:25
+// IntakesForAirBreathingEngines.cs:21
 bool IntakesForAirBreathingEngines::TestCondition() {
     ShipConstruct& ship = SHIP();
     failedParts.clear();
@@ -185,7 +193,7 @@ std::string IntakesForAirBreathingEngines::ConcernDescriptionTag() { return "#au
 
 // ---- AntennaPresent.cs ---------------------------------------------------------------------------------------------------------------------
 
-// AntennaPresent.cs:74
+// AntennaPresent.cs:85
 bool AntennaPresent::PartIsCrewControlled(Part& p, VesselCrewManifest* manifest) {
     if (manifest == nullptr) return false;
     auto pcm = manifest->GetPartCrewManifest(p.fields.craftID);
@@ -216,7 +224,7 @@ bool AntennaPresent::TestCondition() {
             std::vector<PartModule*> list = part->FindModulesImplementing([](PartModule& m) { return m.IsA("ModuleDataTransmitter") || m.IsA("ModuleGroundCommsPart"); });
             int num = static_cast<int>(list.size()) - 1;
             while (num >= 0 && (!foundShortRanged || !foundLongRanged)) {
-                if (list[static_cast<size_t>(num)]->Get<int32_t>("antennaType") == 0) foundShortRanged = true;
+                if (EnumField(*list[static_cast<size_t>(num)], "antennaType") == 0) foundShortRanged = true;
                 else foundLongRanged = true;
                 num--;
             }
@@ -227,7 +235,7 @@ bool AntennaPresent::TestCondition() {
     if (!foundCrewedPart && (!foundShortRanged || !foundLongRanged)) return false;
     return true;
 }
-// AntennaPresent.cs:138
+// the title / description branches of AntennaPresent.cs:138 (GetConcernTitle / GetConcernDescription), as the #autoLOC tag chosen
 std::string AntennaPresent::ConcernTitleTag() {
     if (foundCrewedPart) {
         if (!foundLongRanged) return "#autoLOC_251018";
@@ -333,7 +341,7 @@ CraftWithinSizeLimits::CraftWithinSizeLimits(ShipTemplate& tmpl, SpaceCenterFaci
       facility(facility_) {}
 CraftWithinSizeLimits::CraftWithinSizeLimits(const Vector3f& shipSize, const std::string& name, SpaceCenterFacility facility_, const Vector3f& maxSize)
     : craftSize(shipSize), maxSizeAllowed(maxSize), facilityName(LocalizedFacilityName(facility_)), shipName(name), facility(facility_) {}
-// CraftWithinSizeLimits.cs:67
+// CraftWithinSizeLimits.cs:76
 bool CraftWithinSizeLimits::Test() {
     if (craftSize.x <= maxSizeAllowed.x && craftSize.y <= maxSizeAllowed.y && craftSize.z <= maxSizeAllowed.z) return craftSize != Vector3f::zero();
     return false;
@@ -451,7 +459,7 @@ bool DockingPortAsDecoupler::RecurseHierarchy(Part* part) {
     }
     return flag2;
 }
-// DockingPortAsDecoupler.cs:84
+// DockingPortAsDecoupler.cs:99
 void DockingPortAsDecoupler::AddToFailedParts(Part* part, const std::string&) {
     if (!Contains(failedParts, part)) failedParts.push_back(part);
 }
@@ -517,7 +525,7 @@ bool DockingPortFacing::RecurseHierarchy(Part* part) {
     }
     return result;
 }
-// DockingPortFacing.cs:110
+// DockingPortFacing.cs:105
 void DockingPortFacing::AddToFailedParts(Part* part, const std::string&) {
     if (!Contains(failedParts, part)) failedParts.push_back(part);
 }
@@ -527,7 +535,7 @@ std::string DockingPortFacing::ConcernDescriptionTag() { return failedParts.size
 
 // ---- Electric*.cs -------------------------------------------------------------------------------------------------------------------------
 
-// ElectricBatteryAndNoCharge.cs:18
+// ElectricBatteryAndNoCharge.cs:26
 bool ElectricBatteryAndNoCharge::TestCondition() {
     ShipConstruct& ship = SHIP();
     failedParts.clear();
@@ -557,7 +565,7 @@ std::string ElectricBatteryAndNoCharge::ConcernDescriptionTag() {
     return failedParts.size() == 1 ? "#autoLOC_251820" : "#autoLOC_251821";
 }
 
-// ElectricChargeAndNoBattery.cs:15
+// ElectricChargeAndNoBattery.cs:20
 bool ElectricChargeAndNoBattery::TestCondition() {
     ShipConstruct& ship = SHIP();
     failedParts.clear();
@@ -581,11 +589,11 @@ DesignConcernSeverity ElectricChargeAndNoBattery::GetSeverity() { return DesignC
 std::string ElectricChargeAndNoBattery::ConcernTitleTag() { return failedParts.size() == 1 ? "#autoLOC_251890" : "#autoLOC_251891"; }
 std::string ElectricChargeAndNoBattery::ConcernDescriptionTag() { return failedParts.size() == 1 ? "#autoLOC_251897" : "#autoLOC_251898"; }
 
-// ElectricChargeAndNoConsumer.cs:16
+// ElectricChargeAndNoConsumer.cs:22
 ElectricChargeAndNoConsumer::ElectricChargeAndNoConsumer() {
     resourceDefinition = PartResourceLibrary::Instance()->GetDefinition("ElectricCharge");
 }
-// ElectricChargeAndNoConsumer.cs:22
+// ElectricChargeAndNoConsumer.cs:27
 bool ElectricChargeAndNoConsumer::TestCondition() {
     ShipConstruct& ship = SHIP();
     failedParts.clear();
@@ -609,11 +617,11 @@ DesignConcernSeverity ElectricChargeAndNoConsumer::GetSeverity() { return Design
 std::string ElectricChargeAndNoConsumer::ConcernTitleTag() { return failedParts.size() == 1 ? "#autoLOC_251969" : "#autoLOC_251970"; }
 std::string ElectricChargeAndNoConsumer::ConcernDescriptionTag() { return failedParts.size() == 1 ? "#autoLOC_251976" : "#autoLOC_251977"; }
 
-// ElectricConsumerAndNoCharge.cs:18
+// ElectricConsumerAndNoCharge.cs:26
 ElectricConsumerAndNoCharge::ElectricConsumerAndNoCharge() {
     resourceDefinition = PartResourceLibrary::Instance()->GetDefinition(Localizer::Format("#autoLOC_252004"));
 }
-// ElectricConsumerAndNoCharge.cs:24
+// ElectricConsumerAndNoCharge.cs:31
 bool ElectricConsumerAndNoCharge::TestCondition() {
     ShipConstruct& ship = SHIP();
     failedParts.clear();
@@ -681,7 +689,7 @@ bool NotPurchased(const AvailablePart& info) {
 }
 }  // namespace
 
-// ExperimentalPartsAvailable.cs:14
+// ExperimentalPartsAvailable.cs:10
 ExperimentalPartsAvailable::ExperimentalPartsAvailable(ShipConstruct& ship) {
     if (!PreFlightEnvironment::Current().researchAndDevelopmentPresent) return;
     hasDictionary = true;
@@ -691,7 +699,7 @@ ExperimentalPartsAvailable::ExperimentalPartsAvailable(ShipConstruct& ship) {
         if (NotPurchased(info)) AddExperimental(expPartsOnShip, &info);
     }
 }
-// ExperimentalPartsAvailable.cs:39
+// ExperimentalPartsAvailable.cs:36
 ExperimentalPartsAvailable::ExperimentalPartsAvailable(VesselCrewManifest& manifest) {
     if (!PreFlightEnvironment::Current().researchAndDevelopmentPresent) return;
     hasDictionary = true;
@@ -818,7 +826,7 @@ DesignConcernSeverity LadderPresent::GetSeverity() { return DesignConcernSeverit
 std::string LadderPresent::ConcernTitleTag() { return "#autoLOC_252377"; }
 std::string LadderPresent::ConcernDescriptionTag() { return "#autoLOC_252382"; }
 
-// LandingGearPresent.cs:14 (WheelType: FREE = 0, MOTORIZED = 1, LEG = 2)
+// LandingGearPresent.cs:23 (WheelType: FREE = 0, MOTORIZED = 1, LEG = 2)
 bool LandingGearPresent::TestCondition() {
     ShipConstruct& ship = SHIP();
     roverWheelsPresent = false;
@@ -826,7 +834,7 @@ bool LandingGearPresent::TestCondition() {
     for (int i = 0; i < count; i++) {
         PartModule* wheel = ship[static_cast<size_t>(i)]->FindModuleOfClass("ModuleWheelBase");
         if (wheel != nullptr) {
-            switch (wheel->Get<int32_t>("wheelType")) {
+            switch (EnumField(*wheel, "wheelType")) {
             case 1: roverWheelsPresent = true; break;
             case 0: return true;
             default: break;
@@ -864,7 +872,7 @@ std::string LaunchSiteClear::GetAbortOption() { return Localizer::Format("#autoL
 
 // ---- MissingCrew.cs --------------------------------------------------------------------------------------------------------------------------
 
-// MissingCrew.cs:20
+// MissingCrew.cs:27
 bool MissingCrew::TestCondition() {
     ShipConstruct& ship = SHIP();
     failedParts.clear();
@@ -887,7 +895,7 @@ std::string MissingCrew::ConcernDescriptionTag() { return failedParts.size() == 
 NoControlSources::NoControlSources() : manifest(ShipConstruction::ShipManifest), updateManifest(true) {}
 NoControlSources::NoControlSources(VesselCrewManifest* crewManifest) : manifest(crewManifest) {}
 NoControlSources::NoControlSources(VesselCrewManifest* crewManifest, KerbalRoster* r) : manifest(crewManifest), roster(r) {}
-// NoControlSources.cs:35
+// NoControlSources.cs:30
 bool NoControlSources::TestCondition() {
     if (updateManifest) manifest = ShipConstruction::ShipManifest;
     if (manifest == nullptr) return false;
@@ -919,7 +927,7 @@ std::string NoControlSources::GetAbortOption() { return Localizer::Format("#auto
 
 NoCrewInMannedVessel::NoCrewInMannedVessel() : manifest(ShipConstruction::ShipManifest), updateManifest(true) {}
 NoCrewInMannedVessel::NoCrewInMannedVessel(VesselCrewManifest* crewManifest) : manifest(crewManifest) {}
-// NoCrewInMannedVessel.cs:36
+// NoCrewInMannedVessel.cs:26
 bool NoCrewInMannedVessel::TestCondition() {
     if (updateManifest) manifest = ShipConstruction::ShipManifest;
     bool flag = false;
@@ -992,7 +1000,7 @@ DesignConcernSeverity ParachuteOnEngineStage::GetSeverity() { return DesignConce
 std::string ParachuteOnEngineStage::ConcernTitleTag() { return failedParts.size() == 1 ? "#autoLOC_252616" : "#autoLOC_252617"; }
 std::string ParachuteOnEngineStage::ConcernDescriptionTag() { return failedParts.size() == 1 ? "#autoLOC_252623" : "#autoLOC_252624"; }
 
-// ParachuteOnFirstStage.cs:17
+// ParachuteOnFirstStage.cs:21
 bool ParachuteOnFirstStage::TestCondition() {
     ShipConstruct& ship = SHIP();
     failedParts.clear();
@@ -1007,7 +1015,7 @@ DesignConcernSeverity ParachuteOnFirstStage::GetSeverity() { return DesignConcer
 std::string ParachuteOnFirstStage::ConcernTitleTag() { return failedParts.size() == 1 ? "#autoLOC_252675" : "#autoLOC_252676"; }
 std::string ParachuteOnFirstStage::ConcernDescriptionTag() { return failedParts.size() == 1 ? "#autoLOC_252682" : "#autoLOC_252683"; }
 
-// ParachutePresent.cs:22
+// ParachutePresent.cs:28
 bool ParachutePresent::TestCondition() {
     ShipConstruct& ship = SHIP();
     failedParts.clear();
@@ -1042,7 +1050,7 @@ std::string ParachutePresent::ConcernDescriptionTag() {
 
 // ---- RequiredIScienceDataTransmitter.cs ---------------------------------------------------------------------------------------------------------
 
-// RequiredIScienceDataTransmitter.cs:15 (IScienceDataTransmitter implementers: ModuleDataTransmitter, ModuleRTAntenna-style mods are not stock)
+// RequiredIScienceDataTransmitter.cs:18 (IScienceDataTransmitter implementers: ModuleDataTransmitter, ModuleRTAntenna-style mods are not stock)
 bool RequiredIScienceDataTransmitter::TestCondition() {
     ShipConstruct& ship = SHIP();
     failedParts.clear();
@@ -1069,7 +1077,7 @@ std::vector<Part*> ToVector(const PartHashSetPtr& set) { return set ? set->ToLis
 }  // namespace
 
 ResourceConsumersReachable::ResourceConsumersReachable(const PartResourceDefinition* def) : resourceDefinition(def) {}
-// ResourceConsumersReachable.cs:32
+// ResourceConsumersReachable.cs:27
 bool ResourceConsumersReachable::TestCondition() {
     ShipConstruct& ship = SHIP();
     exceptionCommandPod = false;
@@ -1146,7 +1154,7 @@ std::string ResourceContainersReachable::GetConcernDescription() {
 
 // ---- StationHubAttachments.cs -----------------------------------------------------------------------------------------------------------------
 
-// StationHubAttachments.cs:15
+// StationHubAttachments.cs:18
 bool StationHubAttachments::TestCondition() {
     ShipConstruct& ship = SHIP();
     failedParts.clear();
@@ -1184,7 +1192,7 @@ std::string WrongVesselTypeForLaunchSite::GetAbortOption() { return Localizer::F
 // PreFlightCheck.cs
 // ==================================================================================================================================
 
-// PreFlightCheck.cs:29
+// PreFlightCheck.cs:35
 bool PreFlightCheck::RunTests() {
     currentTest = -1;
     failedTest = nullptr;
@@ -1220,13 +1228,13 @@ void PreFlightCheck::runNextTest() {
     }
 }
 
-// PreFlightCheck.cs:127
+// PreFlightCheck.cs:105
 void PreFlightCheck::Complete() {
     log.push_back("[Pre-Flight Check]: All Checks Complete. Go for Launch!");
     OnComplete();
 }
 
-// PreFlightCheck.cs:135
+// PreFlightCheck.cs:111
 void PreFlightCheck::Abort() {
     log.push_back("[Pre-Flight Check]: Launch Aborted.");
     OnAbort();

@@ -43,13 +43,13 @@ Vector3f EditorBounds::ClampToCameraBounds(Vector3f pos, const Vector3f& camFwd,
     return pos;
 }
 
-// EditorBounds.cs:84
+// EditorBounds.cs:80
 float EditorBounds::ClampCameraDistance(float dist) {
     if (Instance != nullptr) dist = Mathf::Clamp(dist, Instance->cameraMinDistance, Instance->cameraMaxDistance);
     return dist;
 }
 
-// EditorBounds.cs:93 (centerSceneryOrigin :102: sceneryRoot.position = sceneryCenter.position)
+// EditorBounds.cs:89 (centerSceneryOrigin :102: sceneryRoot.position = sceneryCenter.position)
 void EditorBounds::CenterSceneryOrigin(Vector3f& sceneryRootPosition) {
     if (Instance != nullptr) sceneryRootPosition = Instance->sceneryCenter;
 }
@@ -100,7 +100,7 @@ Vector3f EditorGeometryUtil::GetPartBoundsSeparation(Part& p1, Part& p2) {
     return vector - vector2;
 }
 
-// EditorGeometryUtil.cs:77
+// EditorGeometryUtil.cs:72
 Quaternionf EditorGeometryUtil::MirrorRotation(const Quaternionf& input, const PartTransform& mirrorRoot, const PartTransform& setRoot) {
     (void)mirrorRoot;
     Vector3f direction = setRoot.InverseTransformDirection(input * Vector3f::up());
@@ -113,14 +113,14 @@ Quaternionf EditorGeometryUtil::MirrorRotation(const Quaternionf& input, const P
     return UnityNative::AngleAxis(180.0f, direction) * quaternion;
 }
 
-// EditorGeometryUtil.cs:89
+// EditorGeometryUtil.cs:84
 Vector3f EditorGeometryUtil::MirrorPos(const Vector3f& input, const PartTransform& mirrorRoot, const PartTransform& setRoot) {
     const Vector3f vector = input - mirrorRoot.position;
     const Vector3f vector2 = Vector3f::ProjectOnPlane(vector, setRoot.up() * Vector3f::Dot(setRoot.up(), vector));
     return mirrorRoot.position + (vector - vector2) + UnityNative::AngleAxis(180.0f, -setRoot.forward()) * vector2;
 }
 
-// EditorGeometryUtil.cs:97
+// EditorGeometryUtil.cs:91
 Vector3f EditorGeometryUtil::MirrorDirection(const Vector3f& input, const PartTransform& setRoot) {
     const Vector3f vector = Vector3f::ProjectOnPlane(input, setRoot.up() * Vector3f::Dot(setRoot.up(), input));
     return input - vector + UnityNative::AngleAxis(180.0f, -setRoot.forward()) * vector;
@@ -215,7 +215,7 @@ bool EditorReRootUtil::isRootCandidate(Part* p) {
     return false;
 }
 
-// EditorReRootUtil.cs:44
+// EditorReRootUtil.cs:58
 bool EditorReRootUtil::MakeRoot(Part* newRoot, Part* oldRoot) {
     if (!isRootCandidate(newRoot)) return false;
     if (!HierarchyUtil::isDescendant(newRoot, oldRoot)) return false;
@@ -224,10 +224,10 @@ bool EditorReRootUtil::MakeRoot(Part* newRoot, Part* oldRoot) {
     return true;
 }
 
-// EditorReRootUtil.cs:61
+// EditorReRootUtil.cs:75
 void EditorReRootUtil::StripInvalidSymmetrySets(Part* setRoot) { StripInvalidSymmetrySets_recurseChildren(setRoot); }
 
-// EditorReRootUtil.cs:66
+// EditorReRootUtil.cs:80
 void EditorReRootUtil::StripInvalidSymmetrySets_recurseChildren(Part* p) {
     if (!SymmetrySetIsValid(p)) {
         int count = static_cast<int>(p->symmetryCounterparts.size());
@@ -238,7 +238,7 @@ void EditorReRootUtil::StripInvalidSymmetrySets_recurseChildren(Part* p) {
     while (count2-- > 0) StripInvalidSymmetrySets_recurseChildren(p->children[static_cast<size_t>(count2)]);
 }
 
-// EditorReRootUtil.cs:90
+// EditorReRootUtil.cs:82
 bool EditorReRootUtil::SymmetrySetIsValid(Part* p) {
     int num = static_cast<int>(p->symmetryCounterparts.size()) - 1;
     if (num >= 0) {

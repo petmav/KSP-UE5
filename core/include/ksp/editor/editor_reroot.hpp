@@ -19,13 +19,13 @@ public:
     static inline Context context;
 
     static std::vector<Part*> GetRootCandidates(const std::vector<Part*>& fromSet);   // :8
-    static bool MakeRoot(Part* newRoot, Part* oldRoot);                               // :44
-    static void StripInvalidSymmetrySets(Part* setRoot);                              // :61
-    static bool SymmetrySetIsValid(Part* p);                                          // :90
+    static bool MakeRoot(Part* newRoot, Part* oldRoot);                               // :58
+    static void StripInvalidSymmetrySets(Part* setRoot);                              // :75
+    static bool SymmetrySetIsValid(Part* p);                                          // :82
 
 private:
     static bool isRootCandidate(Part* p);                                             // :20
-    static void StripInvalidSymmetrySets_recurseChildren(Part* p);                    // :66
+    static void StripInvalidSymmetrySets_recurseChildren(Part* p);                    // :80
 };
 
 }  // namespace ksp

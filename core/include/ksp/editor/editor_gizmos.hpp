@@ -29,25 +29,25 @@ public:
     bool useGrid = false;                 // :24
     PartTransform transform{};            // the gizmo's own transform
     GizmoHost host;                       // :28
-    Quaternionf rotOffset = Quaternionf::identity();   // :30
-    std::function<void(const Vector3f&)> onGizmoMove = [](const Vector3f&) {};    // :32
-    std::function<void(const Vector3f&)> onGizmoMoved = [](const Vector3f&) {};   // :36
+    Quaternionf rotOffset = Quaternionf::identity();   // :77
+    std::function<void(const Vector3f&)> onGizmoMove = [](const Vector3f&) {};    // :90
+    std::function<void(const Vector3f&)> onGizmoMoved = [](const Vector3f&) {};   // :90
     bool isDragging = false;              // :40
     Vector3f trfPos0{}, offset0{}, offset{};   // :42-46
     static inline UnityEngine::Space coordSpace = UnityEngine::Space::World;   // :48 (`private static Space coordSpace;` = World)
 
-    float SnapInterval() const;                                     // :62
-    bool IsDragging() const { return isDragging; }                  // :74
-    UnityEngine::Space CoordSpace() const { return coordSpace; }    // :76
+    float SnapInterval() const;                                     // :51
+    bool IsDragging() const { return isDragging; }                  // :63
+    UnityEngine::Space CoordSpace() const { return coordSpace; }    // :65
     // :78 Attach(host, rotOffset, onMove, onMoved)
     static GizmoOffset Attach(const GizmoHost& host, const Quaternionf& rotOffset, std::function<void(const Vector3f&)> onMove,
                               std::function<void(const Vector3f&)> onMoved);
-    void OnHandleMoveStart();                                       // :158
-    void OnHandleMove(const Vector3f& axis, float distance);        // :178
-    void OnHandleMoveEnd();                                         // :185
-    void onEditorSnapChanged(bool useSnap) { useGrid = useSnap; }   // :201
-    void SetCoordSystem(UnityEngine::Space space);                  // :206
-    void SnapToGrid();                                              // :226
+    void OnHandleMoveStart();                                       // :146
+    void OnHandleMove(const Vector3f& axis, float distance);        // :166
+    void OnHandleMoveEnd();                                         // :173
+    void onEditorSnapChanged(bool useSnap) { useGrid = useSnap; }   // :188
+    void SetCoordSystem(UnityEngine::Space space);                  // :193
+    void SnapToGrid();                                              // :212
 };
 
 // GizmoRotate.cs:6
@@ -59,18 +59,18 @@ public:
     PartTransform transform{};            // the gizmo's own transform
     GizmoHost host;                       // :26
     Vector3f pivot{};                     // :24
-    Quaternionf rot0 = Quaternionf::identity();      // :26
-    Quaternionf hostRot0 = Quaternionf::identity();  // :28
-    Quaternionf rotOffset = Quaternionf::identity(); // :30
-    std::function<void(const Quaternionf&)> onGizmoRotate = [](const Quaternionf&) {};    // :34
-    std::function<void(const Quaternionf&)> onGizmoRotated = [](const Quaternionf&) {};   // :38
+    Quaternionf rot0 = Quaternionf::identity();      // :83
+    Quaternionf hostRot0 = Quaternionf::identity();  // :83
+    Quaternionf rotOffset = Quaternionf::identity(); // :83
+    std::function<void(const Quaternionf&)> onGizmoRotate = [](const Quaternionf&) {};    // :90
+    std::function<void(const Quaternionf&)> onGizmoRotated = [](const Quaternionf&) {};   // :90
     bool isDragging = false;              // :42
     static inline UnityEngine::Space coordSpace = UnityEngine::Space::Self;   // :14
 
-    UnityEngine::Space CoordSpace() const { return coordSpace; }   // :53
-    float SnapDegrees() const;                                     // :55
-    const Quaternionf& HostRot0() const { return hostRot0; }       // :65
-    bool IsDragging() const { return isDragging; }                 // :67
+    UnityEngine::Space CoordSpace() const { return coordSpace; }   // :44
+    float SnapDegrees() const;                                     // :46
+    const Quaternionf& HostRot0() const { return hostRot0; }       // :58
+    bool IsDragging() const { return isDragging; }                 // :60
     // :73 Attach(host, pivotPoint, rotOffset, onRotate, onRotated)
     static GizmoRotate Attach(const GizmoHost& host, const Vector3f& pivotPoint, const Quaternionf& rotOffset,
                               std::function<void(const Quaternionf&)> onRotate, std::function<void(const Quaternionf&)> onRotated);

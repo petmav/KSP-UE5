@@ -21,3 +21,9 @@ Branch wp40 (worktree .worktrees/wp40), from main ad208205.
 ## Todo
 - pre-flight tests expected outcomes (Python) + C++ test; flow test (checkAttach / createSymmetry / Drop / undo); EditorSession coherence;
   native quaternion / enum / filter / EditorBounds unit tests; remove WP40_TRACE debug; check_cites; STATUS / README; full run; WSL run.
+
+## Slice 3 (state at ~700k tokens)
+Done+uncommitted: preflight test, flow test, API tests, EditorLogicStagingHost, README rows, cite fixes, regenerated reference json.
+Remaining (coordinator list): 1 commit (rm full_run.log); 2 single Euler/eulerAngles impl (grep WP-24 AutopilotEnvironment::eulerAngles / CommandEnvironment::quaternionEuler) + unverified comments;
+3 CoL: leave, STATUS says "aggregation ported, untested against any reference"; 4 full run -Fresh (34/34, read compare_report_*.json of ship_construct/staging_sequence/deltav_stages), WSL run in background -> /tmp/wp40_clang.log;
+5 git merge main, rerun unit; 6 STATUS section + summary row 30; check_cites; 7 commit + final report.

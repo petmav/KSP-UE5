@@ -25,10 +25,10 @@ void GizmoHost::set_localPosition(const Vector3f& v) const { transform->position
 
 // ---- GizmoOffset --------------------------------------------------------------------------------------------------------------------------
 
-// GizmoOffset.cs:62
+// GizmoOffset.cs:51
 float GizmoOffset::SnapInterval() const { return EditorEnvironment::Current().fineTweak ? gridSnapIntervalFine : gridSnapInterval; }
 
-// GizmoOffset.cs:78
+// GizmoOffset.cs:67
 GizmoOffset GizmoOffset::Attach(const GizmoHost& host, const Quaternionf& rotOffset, std::function<void(const Vector3f&)> onMove,
                                 std::function<void(const Vector3f&)> onMoved) {
     GizmoOffset component;
@@ -45,7 +45,7 @@ GizmoOffset GizmoOffset::Attach(const GizmoHost& host, const Quaternionf& rotOff
     return component;
 }
 
-// GizmoOffset.cs:158
+// GizmoOffset.cs:146
 void GizmoOffset::OnHandleMoveStart() {
     if (useGrid && coordSpace == UnityEngine::Space::World) SnapToGrid();
     offset0 = Vector3f::zero();
@@ -53,20 +53,20 @@ void GizmoOffset::OnHandleMoveStart() {
     isDragging = true;
 }
 
-// GizmoOffset.cs:178
+// GizmoOffset.cs:166
 void GizmoOffset::OnHandleMove(const Vector3f& axis, float distance) {
     offset = offset0 + axis * distance;
     transform.position = trfPos0 + offset;
     onGizmoMove(offset);
 }
 
-// GizmoOffset.cs:185
+// GizmoOffset.cs:173
 void GizmoOffset::OnHandleMoveEnd() {
     isDragging = false;
     onGizmoMoved(offset);
 }
 
-// GizmoOffset.cs:206
+// GizmoOffset.cs:193
 void GizmoOffset::SetCoordSystem(UnityEngine::Space space) {
     if (space != coordSpace) {
         switch (space) {
@@ -79,7 +79,7 @@ void GizmoOffset::SetCoordSystem(UnityEngine::Space space) {
     }
 }
 
-// GizmoOffset.cs:226
+// GizmoOffset.cs:212
 void GizmoOffset::SnapToGrid() {
     const float snap = SnapInterval();
     auto round = [&](float v) { return Mathf::Round(f32store(static_cast<double>(v) / static_cast<double>(snap))) * snap; };
@@ -98,10 +98,10 @@ void GizmoOffset::SnapToGrid() {
 
 // ---- GizmoRotate --------------------------------------------------------------------------------------------------------------------------
 
-// GizmoRotate.cs:55
+// GizmoRotate.cs:46
 float GizmoRotate::SnapDegrees() const { return EditorEnvironment::Current().fineTweak ? gridSnapIntervalFine : gridSnapInterval; }
 
-// GizmoRotate.cs:73
+// GizmoRotate.cs:66
 GizmoRotate GizmoRotate::Attach(const GizmoHost& host, const Vector3f& pivotPoint, const Quaternionf& rotOffset,
                                 std::function<void(const Quaternionf&)> onRotate, std::function<void(const Quaternionf&)> onRotated) {
     GizmoRotate component;

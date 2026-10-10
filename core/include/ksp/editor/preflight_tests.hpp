@@ -102,14 +102,14 @@ public:
 class DesignConcernBase : public IDesignConcern {
 public:
     std::vector<std::function<void(bool)>> TestResultChanged;   // :14 (event Callback<bool>)
-    virtual bool TestCondition() = 0;                           // :28
+    virtual bool TestCondition() = 0;                           // :25
     virtual std::string ConcernTitleTag() { return ""; }
     virtual std::string ConcernDescriptionTag() { return ""; }
     std::string GetConcernTitle() override;
     std::string GetConcernDescription() override;
-    EditorFacilities GetEditorFacilities() override { return EditorFacilities::ALL; }   // :36
-    std::vector<Part*> GetAffectedParts() override { return {}; }                          // :41 (null)
-    bool GetPreviousResult() override { return lastPassed; }                               // :46
+    EditorFacilities GetEditorFacilities() override { return EditorFacilities::ALL; }   // :33
+    std::vector<Part*> GetAffectedParts() override { return {}; }                          // :38 (null)
+    bool GetPreviousResult() override { return lastPassed; }                               // :43
     bool Test() override;                                                                  // :51
 
 private:
@@ -143,7 +143,7 @@ public:
     bool foundShortRanged = false, foundLongRanged = false, foundCrewedPart = false;
 
 private:
-    bool PartIsCrewControlled(Part& p, VesselCrewManifest* manifest);   // :74
+    bool PartIsCrewControlled(Part& p, VesselCrewManifest* manifest);   // :85
 };
 
 // CanAffordLaunchTest.cs:5
@@ -187,7 +187,7 @@ public:
     CraftWithinMassLimits(ShipConstruct& ship, SpaceCenterFacility facility, double maxMass);   // :19
     CraftWithinMassLimits(ShipTemplate& tmpl, SpaceCenterFacility facility, double maxMass);    // :28
     CraftWithinMassLimits(float mass, const std::string& name, SpaceCenterFacility facility, double maxMass);   // :37
-    bool Test() override { return craftMass <= maxMass; }                                       // :64
+    bool Test() override { return craftMass <= maxMass; }                                       // :59
     std::string GetWarningTitle() override;
     std::string GetWarningDescription() override;
     std::optional<std::string> GetProceedOption() override { return std::nullopt; }
@@ -219,7 +219,7 @@ public:
     CraftWithinSizeLimits(ShipConstruct& ship, SpaceCenterFacility facility, const Vector3f& maxSize);   // :25
     CraftWithinSizeLimits(ShipTemplate& tmpl, SpaceCenterFacility facility, const Vector3f& maxSize);    // :35
     CraftWithinSizeLimits(const Vector3f& shipSize, const std::string& shipName, SpaceCenterFacility facility, const Vector3f& maxSize);   // :45
-    bool Test() override;                                                                                   // :67
+    bool Test() override;                                                                                   // :76
     std::string GetWarningTitle() override;
     std::string GetWarningDescription() override;
     std::optional<std::string> GetProceedOption() override { return std::nullopt; }
@@ -256,7 +256,7 @@ public:
 
 private:
     bool RecurseHierarchy(Part* part);                       // :27
-    void AddToFailedParts(Part* part, const std::string&);   // :84
+    void AddToFailedParts(Part* part, const std::string&);   // :99
 };
 
 // DockingPortFacing.cs:7
@@ -268,7 +268,7 @@ public:
 
 private:
     bool RecurseHierarchy(Part* part);                       // :27
-    void AddToFailedParts(Part* part, const std::string&);   // :110
+    void AddToFailedParts(Part* part, const std::string&);   // :105
 };
 
 // DockingPortRCS.cs:6
@@ -299,7 +299,7 @@ public:
 // ElectricChargeAndNoConsumer.cs:7
 class ElectricChargeAndNoConsumer : public DesignConcernBase {
 public:
-    ElectricChargeAndNoConsumer();   // :16
+    ElectricChargeAndNoConsumer();   // :22
     KSP_CONCERN_HEAD(ElectricChargeAndNoConsumer)
     std::vector<Part*> GetAffectedParts() override { return failedParts; }
     std::vector<Part*> failedParts;
@@ -309,7 +309,7 @@ public:
 // ElectricConsumerAndNoCharge.cs:8
 class ElectricConsumerAndNoCharge : public DesignConcernBase {
 public:
-    ElectricConsumerAndNoCharge();   // :18
+    ElectricConsumerAndNoCharge();   // :26
     KSP_CONCERN_HEAD(ElectricConsumerAndNoCharge)
     std::vector<Part*> GetAffectedParts() override { return failedParts; }
     std::vector<Part*> failedParts;
@@ -331,8 +331,8 @@ private:
 // ExperimentalPartsAvailable.cs:10
 class ExperimentalPartsAvailable : public IPreFlightTest {
 public:
-    explicit ExperimentalPartsAvailable(ShipConstruct& ship);       // :14
-    explicit ExperimentalPartsAvailable(VesselCrewManifest& manifest);   // :39
+    explicit ExperimentalPartsAvailable(ShipConstruct& ship);       // :10
+    explicit ExperimentalPartsAvailable(VesselCrewManifest& manifest);   // :36
     bool Test() override;                                            // :64
     std::string GetWarningTitle() override;
     std::string GetWarningDescription() override;
@@ -369,7 +369,7 @@ public:
 // InputAuthority.cs:5
 class InputAuthority : public DesignConcernBase {
 public:
-    explicit InputAuthority(ShipConstruct& s) : ship(&s) {}   // :9
+    explicit InputAuthority(ShipConstruct& s) : ship(&s) {}   // :13
     KSP_CONCERN_HEAD(InputAuthority)
     ShipConstruct* ship;
 };
@@ -449,7 +449,7 @@ public:
     std::string GetWarningDescription() override;
     std::optional<std::string> GetProceedOption() override;
     std::string GetAbortOption() override;
-    std::string GetTestName() { return "No Control Sources"; }   // :99
+    std::string GetTestName() { return "No Control Sources"; }   // :104
     VesselCrewManifest* manifest = nullptr;
     bool updateManifest = false;
     KerbalRoster* roster = nullptr;
@@ -458,7 +458,7 @@ public:
 // NoCrewInMannedVessel.cs:8 [Obsolete]
 class NoCrewInMannedVessel : public DesignConcernBase, public IPreFlightTest {
 public:
-    NoCrewInMannedVessel();   // :28
+    NoCrewInMannedVessel();   // :20
     explicit NoCrewInMannedVessel(VesselCrewManifest* crewManifest);   // :20
     std::string TypeName() const override { return "NoCrewInMannedVessel"; }
     bool TestCondition() override;
@@ -470,7 +470,7 @@ public:
     std::string GetWarningDescription() override;
     std::optional<std::string> GetProceedOption() override;
     std::string GetAbortOption() override;
-    std::string GetTestName();   // :96
+    std::string GetTestName();   // :101
     VesselCrewManifest* manifest = nullptr;
     bool updateManifest = false;
 };
@@ -571,13 +571,13 @@ public:
 // the host calls Proceed() / Abort() for the user's choice, Proceed continues with the next test)
 class PreFlightCheck {
 public:
-    PreFlightCheck(std::function<void()> onComplete, std::function<void()> onAbort);   // :17
-    void AddTest(std::unique_ptr<PreFlightTests::IPreFlightTest> test) { tests.push_back(std::move(test)); }   // :24
+    PreFlightCheck(std::function<void()> onComplete, std::function<void()> onAbort);   // :22
+    void AddTest(std::unique_ptr<PreFlightTests::IPreFlightTest> test) { tests.push_back(std::move(test)); }   // :30
     // :29 RunTests: true when every test passed (or there is none)
     bool RunTests();
     // the dialog choices (runNextTest after the proceed button, Abort())
     void Proceed() { runNextTest(); }     // :58 (the proceed delegate)
-    void Abort();                         // :135
+    void Abort();                         // :111
     // observation: the test that is showing its warning (nullptr when none) and the log of "[Pre-Flight Check]" results
     PreFlightTests::IPreFlightTest* failedTest = nullptr;
     std::vector<std::string> log;
@@ -587,7 +587,7 @@ public:
 
 private:
     void runNextTest();   // :43
-    void Complete();      // :127
+    void Complete();      // :105
     std::function<void()> OnComplete, OnAbort;
     int currentTest = -1;
     bool runTestResult = false;

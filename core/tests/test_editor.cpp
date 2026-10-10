@@ -6,8 +6,6 @@
 // independent numpy re-implementation from the decompiled C#, tests/data/wp40_reference.json, 0 ULP). Every craft / part value is original game data.
 #include <algorithm>
 #include <cmath>
-#include <cstdio>
-#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -24,10 +22,12 @@
 #include "ksp/kerbals/crew_manifest.hpp"
 #include "ksp/math/mathfx.hpp"
 #include "ksp/modules/module_engines.hpp"
+#include "ksp/save/game.hpp"
 #include "ksp/ship/ship_construction.hpp"
 #include "ksp/staging/stage_manager.hpp"
 #include "ksp/unity/quaternion_native.hpp"
 #include "nlohmann/json.hpp"
+#include "editor_staging.hpp"
 #include "resource_fixture.hpp"
 
 using namespace ksp;
@@ -106,6 +106,7 @@ struct EditorScope {
 struct LoadedCraft {
     CraftFile file;
     std::unique_ptr<ShipConstruct> ship;
+    ConfigNode::NodePtr node;   // the upgraded craft node LoadShip read
 };
 
 std::vector<LoadedCraft> LoadAllCrafts() {
@@ -117,7 +118,7 @@ std::vector<LoadedCraft> LoadAllCrafts() {
         auto ship = std::make_unique<ShipConstruct>();
         std::string err;
         if (!ship->LoadShipWithParts(*up, 0, true, err)) continue;
-        out.push_back({cf, std::move(ship)});
+        out.push_back({cf, std::move(ship), up});
     }
     return out;
 }
@@ -185,7 +186,6 @@ TEST_CASE("WP-40 attachPart / detachPart: detaching and re-attaching every part 
     size_t partsDone = 0, symGroups = 0, crafted = 0, localDiffs = 0, restoredLinks = 0;
     for (LoadedCraft& lc : crafts) {
         CAPTURE(lc.file.label);
-        std::fprintf(stderr, "craft %s\n", lc.file.label.c_str());
         ShipConstruct& ship = *lc.ship;
         EditorLogic editor;
         editor.ship = &ship;
@@ -199,7 +199,6 @@ TEST_CASE("WP-40 attachPart / detachPart: detaching and re-attaching every part 
             std::vector<Part*> group{p};
             for (Part* s : p->symmetryCounterparts)
                 if (s != nullptr && s != p && s != editor.RootPart() && std::find(group.begin(), group.end(), s) == group.end()) group.push_back(s);
-            if (std::getenv("WP40_TRACE")) std::fprintf(stderr, "  part %s grp %zu parent %p\n", p->partInfo->name.c_str(), group.size(), (void*)p->parent);
             std::map<Part*, std::vector<Part*>> linksBefore;   // attachedPart of every node (srf node first)
             for (Part* q : ship.liveParts) {
                 std::vector<Part*>& v = linksBefore[q];
@@ -217,16 +216,13 @@ TEST_CASE("WP-40 attachPart / detachPart: detaching and re-attaching every part 
             const size_t countBefore = ship.liveParts.size();
             size_t subtree = 0;
             for (Part* q : group) subtree += EditorLogicBase::FindPartsInChildren(q).size();
-            if (std::getenv("WP40_TRACE")) std::fprintf(stderr, "   detaching\n");
             for (Part* q : group) editor.detachPart(q);
-            if (std::getenv("WP40_TRACE")) std::fprintf(stderr, "   detached\n");
             REQUIRE(ship.liveParts.size() == countBefore - subtree);
             for (Part* q : group) {
                 REQUIRE(q->parent == nullptr);
                 REQUIRE_FALSE(ship.Contains(q));
             }
-            for (size_t i = 0; i < group.size(); i++) { if (std::getenv("WP40_TRACE")) std::fprintf(stderr, "   attaching %zu\n", i); editor.attachPart(group[i], att[i]); }
-            if (std::getenv("WP40_TRACE")) std::fprintf(stderr, "   attached\n");
+            for (size_t i = 0; i < group.size(); i++) editor.attachPart(group[i], att[i]);
             REQUIRE(ship.liveParts.size() == countBefore);
             // attachPart appends to the parent's child list (the editor drops parts at the end): put the siblings back at their file index
             {
@@ -625,17 +621,6 @@ TEST_CASE("WP-40 reference: centre of mass and centre of thrust of the stock cra
         const Vector3f com = EditorMarker_CoM::findCenterOfMass(root);
         CHECK_MESSAGE(SameBits(com, ref->at("com").at("com")), "CoM" << Fmt(com, ref->at("com").at("com")));
         for (Part* p : ship.liveParts) InstallThrustTransforms(*p);
-        if (std::getenv("WP40_TRACE") && lc.file.label == "SPH/Dove.craft")
-            for (Part* p : ship.liveParts)
-                for (size_t m = 0; m < p->Modules().Count(); m++) {
-                    if (auto* ee = dynamic_cast<ModuleEngines*>(p->Modules().GetModule(m)))
-                        std::fprintf(stderr, "ENGMOD %s %zu maxThrust %g tp %g override %d nT %zu\n", p->partInfo->name.c_str(), m, ee->maxThrust, ee->thrustPercentage(), (int)ee->Get<bool>("manuallyOverridden"), ee->thrustTransforms.size());
-                    if (auto* tp = dynamic_cast<IThrustProvider*>(p->Modules().GetModule(m))) {
-                        CenterOfThrustQuery q;
-                        tp->OnCenterOfThrustQuery(q);
-                        std::fprintf(stderr, "ENG %s mod %zu thrust %.9g pos %g %g %g\n", p->partInfo->name.c_str(), m, q.thrust, q.pos.x, q.pos.y, q.pos.z);
-                    }
-                }
         const EditorRay cot = EditorMarker_CoT::FindCoT(root);
         const json& rc = ref->at("cot");
         CHECK_MESSAGE(SameBits(cot.origin, rc.at("origin")), "CoT origin" << Fmt(cot.origin, rc.at("origin")));
@@ -643,4 +628,437 @@ TEST_CASE("WP-40 reference: centre of mass and centre of thrust of the stock cra
         used++;
     }
     CHECK(used >= 30);
+}
+
+// ====================================================================================================================================
+// (4) every PreFlightTest over every stock craft; the expected outcomes are derived from the craft contents by the Python side
+// ====================================================================================================================================
+
+namespace {
+
+std::vector<size_t> IndicesOf(const std::vector<Part*>& parts, const std::vector<Part*>& all) {
+    std::vector<size_t> out;
+    for (Part* p : parts) out.push_back(static_cast<size_t>(std::find(all.begin(), all.end(), p) - all.begin()));
+    std::sort(out.begin(), out.end());
+    return out;
+}
+
+}  // namespace
+
+TEST_CASE("WP-40 PreFlightTests: every design concern and pre-flight test over every stock craft") {
+    if (!GameAvailable()) return;
+    Game15 g;
+    LogCapture quiet;
+    EditorScope scope;
+    using namespace PreFlightTests;
+    std::vector<LoadedCraft> crafts = LoadAllCrafts();
+    REQUIRE(crafts.size() == 57);
+    Game game;   // HighLogic.CurrentGame: a sandbox game with an empty crew roster
+    game.CrewRoster = std::make_shared<KerbalRoster>(Game_Modes::SANDBOX);
+    ShipConstruction::env.CurrentGame = &game;
+    SaveEnvironment::Current().currentGame = &game;
+    SaveEnvironment::Current().loadedScene = GameScenes::EDITOR;
+    size_t checked = 0, derived = 0, failedParts = 0;
+    for (LoadedCraft& lc : crafts) {
+        CAPTURE(lc.file.label);
+        ShipConstruct& ship = *lc.ship;
+        EditorLogic editor;
+        editor.ship = &ship;
+        Part* root = RootOf(ship);
+        editor.SetRootPart(root);
+        EditorSession session(editor);   // EditorLogic.Start: the StageManager of the scene (ParachuteOnFirstStage reads StageManager.LastStage)
+        EditorSession::StartParts(ship.liveParts);
+        session.Load();
+        std::shared_ptr<VesselCrewManifest> manifest = VesselCrewManifest::FromConfigNode(*lc.node);
+        ShipConstruction::ShipManifest = manifest.get();
+        PreFlightEnvironment& env = PreFlightEnvironment::Current();
+        env = PreFlightEnvironment{};
+        env.commNetEnabled = true;
+        env.ship = &ship;
+        env.rootPart = root;
+        const json* ref = RefFor(lc);
+        auto expect = [&](const char* name, bool pass, const std::vector<Part*>* failed) {
+            checked++;
+            if (ref == nullptr || !ref->at("preflight").contains(name)) return;
+            const json& e = ref->at("preflight").at(name);
+            derived++;
+            CHECK_MESSAGE(pass == e.at("pass").get<bool>(), std::string(name) << " on " << lc.file.label);
+            if (failed != nullptr && e.contains("failed")) {
+                std::vector<size_t> want;
+                for (const json& i : e.at("failed")) want.push_back(i.get<size_t>());
+                std::sort(want.begin(), want.end());
+                CHECK_MESSAGE(IndicesOf(*failed, ship.liveParts) == want, std::string(name) << " affected parts on " << lc.file.label);
+            }
+        };
+        auto concern = [&](auto&& t, const char* name) {
+            const bool pass = t.Test();
+            const std::vector<Part*> failed = t.GetAffectedParts();
+            for (Part* p : failed) CHECK(std::find(ship.liveParts.begin(), ship.liveParts.end(), p) != ship.liveParts.end());
+            failedParts += failed.size();
+            CHECK(t.GetPreviousResult() == pass);
+            CHECK(t.Test() == pass);   // idempotent
+            const DesignConcernSeverity sev = t.GetSeverity();
+            CHECK((sev == DesignConcernSeverity::NOTICE || sev == DesignConcernSeverity::WARNING || sev == DesignConcernSeverity::CRITICAL));
+            expect(name, pass, &failed);
+        };
+        concern(AirBreathingEnginesForIntakes(), "AirBreathingEnginesForIntakes");
+        concern(IntakesForAirBreathingEngines(), "IntakesForAirBreathingEngines");
+        concern(AntennaPresent(), "AntennaPresent");
+        concern(ComOffset(), "ComOffset");
+        concern(ContractEquipment(ship), "ContractEquipment");
+        concern(DecouplerFacing(), "DecouplerFacing");
+        concern(DecouplersBeforeClamps(), "DecouplersBeforeClamps");
+        concern(DockingPortAsDecoupler(), "DockingPortAsDecoupler");
+        concern(DockingPortFacing(), "DockingPortFacing");
+        concern(DockingPortRCS(), "DockingPortRCS");
+        concern(ElectricBatteryAndNoCharge(), "ElectricBatteryAndNoCharge");
+        concern(ElectricChargeAndNoBattery(), "ElectricChargeAndNoBattery");
+        concern(ElectricChargeAndNoConsumer(), "ElectricChargeAndNoConsumer");
+        concern(ElectricConsumerAndNoCharge(), "ElectricConsumerAndNoCharge");
+        concern(EnginesJettisonedBeforeUse(), "EnginesJettisonedBeforeUse");
+        concern(HatchObstructed(), "HatchObstructed");
+        concern(InputAuthority(ship), "InputAuthority");
+        concern(KerbalSeatCollision(), "KerbalSeatCollision");
+        concern(LadderPresent(), "LadderPresent");
+        concern(LandingGearPresent(), "LandingGearPresent");
+        concern(MissingCrew(), "MissingCrew");
+        concern(NonRootCmdMissaligned(), "NonRootCmdMissaligned");
+        concern(ParachuteOnEngineStage(), "ParachuteOnEngineStage");
+        concern(ParachuteOnFirstStage(), "ParachuteOnFirstStage");
+        concern(ParachutePresent(), "ParachutePresent");
+        concern(RequiredIScienceDataTransmitter(), "RequiredIScienceDataTransmitter");
+        concern(StationHubAttachments(), "StationHubAttachments");
+        {
+            NoControlSources t;
+            const bool pass = t.Test();
+            expect("NoControlSources", pass, nullptr);
+            NoControlSources fixed(manifest.get());
+            CHECK(fixed.Test() == pass);
+            NoCrewInMannedVessel nc;   // [Obsolete] but ported
+            (void)nc.Test();
+        }
+        // the resource design concerns of the engineer report: every resource that flows and is not ElectricCharge
+        PartResourceLibrary* lib = PartResourceLibrary::Instance();
+        env.sccFlowGraphUCFinder = std::make_shared<RUI::Algorithms::SCCFlowGraphUCFinder>(ship.liveParts);
+        for (const auto& def : lib->resourceDefinitions) {
+            if (def->resourceFlowMode() == 0 || def->name() == "ElectricCharge") continue;
+            ResourceContainersReachable a(def.get());
+            ResourceConsumersReachable b(def.get());
+            const bool pa = a.Test(), pb = b.Test();
+            for (Part* p : a.GetAffectedParts()) CHECK(std::find(ship.liveParts.begin(), ship.liveParts.end(), p) != ship.liveParts.end());
+            for (Part* p : b.GetAffectedParts()) CHECK(std::find(ship.liveParts.begin(), ship.liveParts.end(), p) != ship.liveParts.end());
+            CHECK(a.Test() == pa);
+            CHECK(b.Test() == pb);
+            CHECK_FALSE(a.GetConcernDescription().empty());
+            CHECK_FALSE(b.GetConcernTitle().empty());
+        }
+        // the IPreFlightTest family
+        {
+            CraftWithinPartCountLimit okCount(ship, SpaceCenterFacility::VehicleAssemblyBuilding, ship.LiveCount());
+            CraftWithinPartCountLimit overCount(ship, SpaceCenterFacility::VehicleAssemblyBuilding, ship.LiveCount() - 1);
+            CHECK(okCount.Test());
+            CHECK_FALSE(overCount.Test());
+            const float mass = ship.GetTotalMass();
+            CraftWithinMassLimits okMass(ship, SpaceCenterFacility::LaunchPad, static_cast<double>(mass));
+            CraftWithinMassLimits overMass(ship, SpaceCenterFacility::LaunchPad, static_cast<double>(mass) * 0.5);
+            CHECK(okMass.Test());
+            CHECK((mass == 0.0f ? overMass.Test() : !overMass.Test()));
+            const Vector3f size = ShipConstruction::CalculateCraftSize(ship);
+            CraftWithinSizeLimits sizeTest(ship, SpaceCenterFacility::LaunchPad, Vector3f(size.x + 1.0f, size.y + 1.0f, size.z + 1.0f));
+            // a craft without renderer bounds has size zero: the test then refuses it (craftSize != zero is part of the condition)
+            CHECK(sizeTest.Test() == (size != Vector3f::zero()));
+            CraftWithinSizeLimits tooBig(size, "x", SpaceCenterFacility::LaunchPad, Vector3f(size.x - 1.0f, size.y, size.z));
+            CHECK_FALSE(tooBig.Test());
+            CanAffordLaunchTest freeLaunch(ship, std::nullopt);
+            CHECK(freeLaunch.Test());
+            CanAffordLaunchTest poor(ship, 0.0);
+            CHECK(poor.Test() == (poor.launchCost <= 0.0f));
+            ExperimentalPartsAvailable exp(ship);   // no R&D: always passes
+            CHECK(exp.Test());
+            FacilityOperational fo("LaunchPad", "LaunchPad");
+            CHECK_FALSE(fo.Test());   // no PSystemSetup facility
+            WrongVesselTypeForLaunchSite wrong(EditorFacility::VAB, "no/such/file.craft", "Plane", "LaunchPad");
+            (void)wrong.Test();
+            LaunchSiteClear clear("LaunchPad", "LaunchPad");
+            CHECK(clear.Test());   // no flight state: nothing obstructs
+        }
+    }
+    // PreFlightCheck: the list runs in order, stops at the first failing test, Proceed() continues, Abort() reports
+    {
+        bool completed = false, aborted = false;
+        PreFlightCheck check([&] { completed = true; }, [&] { aborted = true; });
+        CHECK(check.RunTests());   // no tests: runTestResult = true
+        auto* ship = crafts[0].ship.get();
+        check.AddTest(std::make_unique<CraftWithinPartCountLimit>(*ship, SpaceCenterFacility::LaunchPad, ship->LiveCount()));
+        check.AddTest(std::make_unique<CraftWithinPartCountLimit>(*ship, SpaceCenterFacility::LaunchPad, 0));
+        check.AddTest(std::make_unique<CraftWithinPartCountLimit>(*ship, SpaceCenterFacility::LaunchPad, ship->LiveCount()));
+        CHECK_FALSE(check.RunTests());
+        CHECK(check.failedTest != nullptr);
+        CHECK_FALSE(completed);
+        CHECK(check.log.size() == 2);
+        check.Abort();
+        CHECK(aborted);
+    }
+    SaveEnvironment::Current().currentGame = nullptr;
+    MESSAGE(checked << " test evaluations, " << derived << " compared with the Python expectation, " << failedParts << " affected parts reported");
+    CHECK(derived > 500);
+}
+
+// ====================================================================================================================================
+// the placement flow with real parts: spawn, checkAttach (stack and surface), radial symmetry, drop, undo / redo, delete
+// ====================================================================================================================================
+
+TEST_CASE("WP-40 EditorLogic placement flow: stack attach, radial symmetry, drop, undo / redo, delete (stock part prefabs)") {
+    if (!GameAvailable()) return;
+    Game15 g;
+    LogCapture quiet;
+    EditorScope scope;
+    ClearIds();
+    ShipConstruct ship(EditorFacility::VAB);
+    EditorLogic editor;
+    editor.ship = &ship;
+    editor.shipNameField = "WP-40 flow";
+    EditorEnvironment& env = EditorEnvironment::Current();
+    env.nodeIconUnderCursor = [](Part&, AttachNode&, const Vector3f&) { return true; };
+
+    // the command pod becomes the root (OnPodSpawn, then st_podSelect drops it at initialPodPosition)
+    Part* pod = editor.OnPodSpawn(g.Info("mk1pod.v2"));
+    REQUIRE(pod != nullptr);
+    CHECK(editor.RootPart() == pod);
+    pod->partTransform.position = Vector3f(0.0f, 15.0f, 0.0f);
+    ship.Add(pod);
+    editor.SetBackup();
+    CHECK(ShipConstruction::backups.size() == 1);
+    CHECK(editor.UndoLevel() == 1);
+
+    // a stack part: the tank is dragged to the pod and its top node meets the pod bottom node
+    Part* tank = editor.SpawnPart(g.Info("fuelTankSmallFlat"));
+    REQUIRE(tank != nullptr);
+    CHECK(editor.SelectedPart() == tank);
+    tank->partTransform.position = pod->partTransform.position + Vector3f(0.0f, -1.5f, 0.0f);
+    editor.displayAttachNodeIcons(ship.liveParts, tank, true, true, true);
+    editor.symmetryMode = 0;
+    editor.UpdatePlacement();
+    CHECK(editor.CurrentAttachment().possible);
+    CHECK(editor.CurrentAttachment().mode == AttachModes::STACK);
+    CHECK(editor.CurrentAttachment().potentialParent == pod);
+    REQUIRE(editor.CurrentAttachment().callerPartNode != nullptr);
+    REQUIRE(editor.CurrentAttachment().otherPartNode != nullptr);
+    // the pair is the last one the search loop finds (tank bottom against pod top here: both orientations qualify); either way they oppose
+    CHECK(Vector3f::Dot(tank->partTransform.TransformDirection(editor.CurrentAttachment().callerPartNode->orientation).normalized(),
+                        pod->partTransform.TransformDirection(editor.CurrentAttachment().otherPartNode->orientation).normalized()) < -0.7f);
+    // the two nodes coincide in the world
+    const Vector3f a = tank->partTransform.TransformPoint(editor.CurrentAttachment().callerPartNode->position);
+    const Vector3f b = pod->partTransform.TransformPoint(editor.CurrentAttachment().otherPartNode->position + editor.CurrentAttachment().otherPartNode->offset);
+    CHECK((a - b).magnitude() < 1e-4f);
+    REQUIRE(editor.DropSelectedPart());
+    CHECK(ship.LiveCount() == 2);
+    CHECK(tank->parent == pod);
+    CHECK(tank->isAttached());
+    CHECK(editor.CurrentAttachment().callerPartNode->attachedPart == pod);
+    CHECK(editor.CurrentAttachment().otherPartNode->attachedPart == tank);
+    CHECK(ShipConstruction::backups.size() == 2);
+    editor.LeavePlace(true);
+    CHECK(editor.SelectedPart() == nullptr);
+
+    // a surface part with three-way radial symmetry on the tank: two counterparts are created by DuplicatePart and rotated by 120 / 240 degrees
+    Part* battery = editor.SpawnPart(g.Info("radialDecoupler"));
+    REQUIRE(battery != nullptr);
+    env.surfaceRaycast = [&]() -> std::optional<EditorSurfaceHit> {
+        EditorSurfaceHit h;
+        h.part = tank;
+        h.point = tank->partTransform.position + Vector3f(0.625f, 0.0f, 0.0f);
+        h.normal = Vector3f(1.0f, 0.0f, 0.0f);
+        h.colliderName = "model";
+        return h;
+    };
+    editor.displayAttachNodeIcons(ship.liveParts, battery, true, true, true);
+    editor.symmetryMethod = SymmetryMethod::Radial;
+    editor.symmetryMode = 2;
+    battery->partTransform.position = tank->partTransform.position + Vector3f(0.7f, 0.0f, 0.0f);
+    editor.UpdatePlacement();
+    REQUIRE(editor.CurrentAttachment().possible);
+    CHECK(editor.CurrentAttachment().mode == AttachModes::SRF_ATTACH);
+    CHECK(editor.CurrentAttachment().potentialParent == tank);
+    REQUIRE(battery->symmetryCounterparts.size() == 2);
+    REQUIRE(editor.PartAttachments().size() == 2);
+    for (Part* c : battery->symmetryCounterparts) {
+        CHECK(c != battery);
+        CHECK(c->symmetryCounterparts.size() == 2);
+        CHECK(c->potentialParent == tank);
+        CHECK(c->fields.persistentId != battery->fields.persistentId);
+    }
+    for (const Attachment& at : editor.PartAttachments()) CHECK(at.possible);
+    // the radial maths: the three parts sit on a circle around the tank axis, 120 degrees apart
+    const Vector3f axisPos = tank->partTransform.position;
+    const float r0 = Vector3f(battery->partTransform.position.x - axisPos.x, 0.0f, battery->partTransform.position.z - axisPos.z).magnitude();
+    for (Part* c : battery->symmetryCounterparts) {
+        const float r = Vector3f(c->partTransform.position.x - axisPos.x, 0.0f, c->partTransform.position.z - axisPos.z).magnitude();
+        CHECK(std::fabs(r - r0) < 1e-4f);
+        CHECK(std::fabs(c->partTransform.position.y - battery->partTransform.position.y) < 1e-4f);
+    }
+    const float ang1 = Vector3f::SignedAngle(battery->partTransform.position - axisPos, battery->symmetryCounterparts[0]->partTransform.position - axisPos, Vector3f::up());
+    const float ang2 = Vector3f::SignedAngle(battery->partTransform.position - axisPos, battery->symmetryCounterparts[1]->partTransform.position - axisPos, Vector3f::up());
+    CHECK(std::fabs(std::fabs(ang1) - 120.0f) < 0.01f);
+    CHECK(std::fabs(std::fabs(ang2) - 120.0f) < 0.01f);
+    CHECK(ang1 * ang2 < 0.0f);   // one each way round
+    REQUIRE(editor.DropSelectedPart());
+    CHECK(ship.LiveCount() == 5);
+    CHECK(battery->parent == tank);
+    for (Part* c : battery->symmetryCounterparts) {
+        CHECK(c->parent == tank);
+        CHECK(ship.Contains(c));
+    }
+    CHECK(ShipConstruction::backups.size() == 3);
+    editor.LeavePlace(true);
+    CHECK(editor.getSortedShipList().size() == 5);
+    CHECK(editor.getSortedShipList()[0] == pod);
+    CHECK(editor.AreAllPartsConnected() == (Part::allParts.size() == 5));
+
+    // picking one of the three up removes it from the ship and deletes the counterparts (on_partPicked): back to two parts
+    const std::vector<Part*> cps = battery->symmetryCounterparts;
+    editor.PickPart(battery);
+    CHECK(editor.SelectedPart() == battery);
+    CHECK_FALSE(ship.Contains(battery));
+    CHECK(ship.LiveCount() == 2);
+    CHECK(battery->symmetryCounterparts.empty());
+    for (Part* c : cps) CHECK(editor.IsDestroyed(c));
+
+    // on_partPicked took a backup of the two-part ship; undo / redo walk the backup stack (4: two parts, 3: five parts, 2: two parts, 1: pod)
+    CHECK(editor.UndoLevel() == 4);
+    CHECK(ShipConstruction::backups.size() == 4);
+    editor.RestoreState(-1);
+    CHECK(editor.UndoLevel() == 3);
+    CHECK(editor.ship->LiveCount() == 5);
+    editor.RestoreState(-1);
+    CHECK(editor.UndoLevel() == 2);
+    CHECK(editor.ship->LiveCount() == 2);
+    editor.RestoreState(-1);
+    CHECK(editor.UndoLevel() == 1);
+    CHECK(editor.ship->LiveCount() == 1);
+    editor.RestoreState(1);
+    editor.RestoreState(1);
+    CHECK(editor.UndoLevel() == 3);
+    CHECK(editor.ship->LiveCount() == 5);
+    CHECK(editor.RootPart() == editor.ship->liveParts[0]->localRoot());
+
+    // delete: the selected part and its subtree leave the ship
+    Part* extra = editor.SpawnPart(g.Info("fuelTankSmallFlat"));
+    CHECK(editor.CountAllSceneParts(true) == static_cast<int>(Part::allParts.size()) - 1);
+    editor.DestroySelectedPart();
+    CHECK(editor.SelectedPart() == nullptr);
+    CHECK(editor.IsDestroyed(extra));
+}
+
+// ====================================================================================================================================
+// small API tests: symmetry mode state machine, enum conversions, filters, EditorBounds, native quaternion cases
+// ====================================================================================================================================
+
+TEST_CASE("WP-40 EditorLogic symmetry mode cycling (nextSymMode / prevSymMode / symButton / onSymMethodChange)") {
+    EditorScope scope;
+    EditorLogic editor;
+    // Radial: 0 1 2 3 5 7 (4 and 6 are skipped), then wraps
+    std::vector<int> seen;
+    editor.symmetryMethod = SymmetryMethod::Radial;
+    for (int i = 0; i < 7; i++) {
+        seen.push_back(editor.symmetryMode);
+        editor.symButton(EditorLogic::SymButton::Left);
+    }
+    CHECK(seen == std::vector<int>{0, 1, 2, 3, 5, 7, 0});
+    // previous: 0 -> 7 -> 5 -> 3 ...
+    editor.symmetryMode = 0;
+    editor.symButton(EditorLogic::SymButton::Right);
+    CHECK(editor.symmetryMode == 7);
+    editor.symButton(EditorLogic::SymButton::Right);
+    CHECK(editor.symmetryMode == 5);
+    editor.symButton(EditorLogic::SymButton::Right);
+    CHECK(editor.symmetryMode == 3);
+    // middle button toggles the method; mirror has two modes and onSymMethodChange clamps the mode
+    editor.symmetryMode = 5;
+    editor.symButton(EditorLogic::SymButton::Middle);
+    CHECK(editor.symmetryMethod == SymmetryMethod::Mirror);
+    editor.onSymMethodChange(SymmetryMethod::Mirror);
+    CHECK(editor.symmetryMode == 1);
+    editor.symButton(EditorLogic::SymButton::Left);
+    CHECK(editor.symmetryMode == 0);
+    editor.symButton(EditorLogic::SymButton::Right);
+    CHECK(editor.symmetryMode == 1);
+    editor.ToggleSymmetryCoordSpace();   // Mirror: unchanged
+    CHECK(editor.symmetryCoordSpace == UnityEngine::Space::Self);
+    editor.ToggleSymMethod();
+    CHECK(editor.symmetryMethod == SymmetryMethod::Radial);
+    editor.ToggleSymmetryCoordSpace();
+    CHECK(editor.symmetryCoordSpace == UnityEngine::Space::World);
+    CHECK(EditorEnumExtensions::GetSymmetryMethodName(SymmetryMethod::Mirror) != EditorEnumExtensions::GetSymmetryMethodName(SymmetryMethod::Radial));
+}
+
+TEST_CASE("WP-40 EditorEnumExtensions, EditorPartListFilter(List) and EditorBounds") {
+    using namespace EditorEnumExtensions;
+    CHECK(ToFacility(EditorFacility::VAB) == SpaceCenterFacility::VehicleAssemblyBuilding);
+    CHECK(ToFacility(EditorFacility::SPH) == SpaceCenterFacility::SpaceplaneHangar);
+    CHECK(ToFacility(EditorFacility::None) == SpaceCenterFacility::SpaceplaneHangar);
+    CHECK(ToEditor(SpaceCenterFacility::Runway) == EditorFacility::SPH);
+    CHECK(ToEditor(SpaceCenterFacility::SpaceplaneHangar) == EditorFacility::SPH);
+    CHECK(ToEditor(SpaceCenterFacility::LaunchPad) == EditorFacility::VAB);
+    CHECK(ToEditor(SpaceCenterFacility::VehicleAssemblyBuilding) == EditorFacility::VAB);
+    CHECK(ToEditor(SpaceCenterFacility::TrackingStation) == EditorFacility::None);
+    CHECK(GetEditorFacility(SpaceCenterFacility::Runway) == SpaceCenterFacility::SpaceplaneHangar);
+    CHECK(GetEditorFacility(SpaceCenterFacility::LaunchPad) == SpaceCenterFacility::VehicleAssemblyBuilding);
+    CHECK(GetFacility("RnD") == SpaceCenterFacility::ResearchAndDevelopment);
+    CHECK(GetFacility("VAB") == SpaceCenterFacility::VehicleAssemblyBuilding);
+    CHECK(GetFacility("FlagPole") == SpaceCenterFacility::AstronautComplex);
+    CHECK_THROWS(GetFacility("Nope"));
+
+    EditorPartListFilterList<int> filters;
+    auto even = std::make_shared<EditorPartListFilter<int>>("even", [](const int& v) { return v % 2 == 0; }, "odd");
+    auto big = std::make_shared<EditorPartListFilter<int>>("big", [](const int& v) { return v > 3; });
+    filters.AddFilter(even);
+    filters.AddFilter(even);   // already there
+    filters.AddFilter(big);
+    CHECK(filters.Count() == 2);
+    CHECK(filters["big"] == big);
+    CHECK(filters["none"] == nullptr);
+    CHECK(filters.GetFilterKey() == "evenbig");
+    CHECK(filters.GetFilterKeySingleOrNothing().empty());
+    const std::vector<int> src{1, 2, 3, 4, 5, 6, 7, 8};
+    CHECK(filters.GetFilteredList(src) == std::vector<int>{4, 6, 8});
+    std::vector<int> inPlace = src;
+    filters.FilterList(inPlace);
+    CHECK(inPlace == std::vector<int>{4, 6, 8});
+    filters.RemoveFilter("big");
+    CHECK(filters.GetFilterKeySingleOrNothing() == "even");
+    CHECK(filters.ToString("Int32").find("even 'odd'") != std::string::npos);
+
+    // EditorBounds: one instance; ClampCameraDistance without an instance leaves the value
+    CHECK(EditorBounds::ClampCameraDistance(123.0f) == 123.0f);
+    EditorBounds a, b;
+    a.cameraMinDistance = 3.0f;
+    a.cameraMaxDistance = 35.0f;
+    CHECK(a.Awake());
+    CHECK_FALSE(b.Awake());
+    CHECK(EditorBounds::ClampCameraDistance(1.0f) == 3.0f);
+    CHECK(EditorBounds::ClampCameraDistance(50.0f) == 35.0f);
+    CHECK(EditorBounds::ClampCameraDistance(10.0f) == 10.0f);
+    a.OnDestroy();
+    CHECK(EditorBounds::Instance == nullptr);
+}
+
+TEST_CASE("WP-40 native Quaternion.LookRotation / Euler / eulerAngles: identities and degenerate inputs") {
+    // LookRotation(forward, up): the result rotates Vector3.forward onto forward and Vector3.up into the up/forward plane
+    const Vector3f fwd = Vector3f(1.0f, 2.0f, 3.0f).normalized();
+    const Quaternionf q = UnityNative::LookRotation(fwd, Vector3f::up());
+    CHECK((q * Vector3f::forward() - fwd).magnitude() < 1e-6f);
+    CHECK(Vector3f::Dot(q * Vector3f::right(), fwd) < 1e-6f);
+    // degenerate: zero forward, forward parallel to up -> identity
+    CHECK(UnityNative::LookRotation(Vector3f::zero(), Vector3f::up()).Equals(Quaternionf::identity()));
+    CHECK(UnityNative::LookRotation(Vector3f::up(), Vector3f::up()).Equals(Quaternionf::identity()));
+    // Euler and eulerAngles are inverse of each other (away from gimbal lock)
+    const Vector3f e(10.0f, 200.0f, 330.0f);
+    const Vector3f back = UnityNative::EulerAngles(UnityNative::Euler(e));
+    CHECK(std::fabs(back.x - e.x) < 1e-3f);
+    CHECK(std::fabs(back.y - e.y) < 1e-3f);
+    CHECK(std::fabs(back.z - e.z) < 1e-3f);
+    // eulerAngles is made positive: 0..360
+    for (float v : {back.x, back.y, back.z}) CHECK((v >= -0.0057f && v <= 360.0f));
+    CHECK(UnityNative::Euler(Vector3f::zero()).Equals(Quaternionf::identity()));
 }

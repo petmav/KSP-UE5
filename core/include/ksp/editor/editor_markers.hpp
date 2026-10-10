@@ -23,9 +23,9 @@ struct EditorRay {
 class EditorMarker_CoM {
 public:
     static inline Vector3f CraftCoM{};                                // :5
-    static Vector3f findCenterOfMass(Part* root);                     // :35
+    static Vector3f findCenterOfMass(Part* root);                     // :31
 private:
-    static void recurseParts(Part* part, Vector3f& CoM, float& m);    // :55
+    static void recurseParts(Part* part, Vector3f& CoM, float& m);    // :51
 };
 
 // EditorMarker_CoL.cs:4
@@ -34,7 +34,7 @@ public:
     // :40 the editor's reference conditions: referenceVelocity = VesselRotation * (AngleAxis(referencePitch, root.transform.right) * up) * referenceSpeed
     static Vector3f EditorReferenceVelocity(const Quaternionf& vesselRotation, Part& rootPart, float referencePitch, float referenceSpeed);
     static EditorRay FindCoL(Part* rootPart, const Vector3f& refVel, double refAlt, double refStp, double refDens);                   // :87
-    static EditorRay FindCoL(Part* rootPart, const Vector3f& refVel, double refAlt, double refStp, double refDens, bool& noLift);    // :93
+    static EditorRay FindCoL(Part* rootPart, const Vector3f& refVel, double refAlt, double refStp, double refDens, bool& noLift);    // :90
 private:
     static void recurseParts(Part* part, const Vector3f& refVel, Vector3f& CoL, Vector3f& DoL, float& t, double refAlt, double refStp, double refDens);   // :130
 };
@@ -42,7 +42,7 @@ private:
 // EditorMarker_CoT.cs:3
 class EditorMarker_CoT {
 public:
-    static EditorRay FindCoT(Part* rootPart);                         // :42
+    static EditorRay FindCoT(Part* rootPart);                         // :37
     static inline EditorRay CoT{};                                    // :5
 private:
     static void recurseParts(Part* part, Vector3f& origin, Vector3f& direction, float& t);   // :75
