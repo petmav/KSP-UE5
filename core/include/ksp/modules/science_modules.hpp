@@ -128,6 +128,8 @@ public:
 
     // ---- PartModule hooks ----
     void OnAwake() override;                               // :204
+    // Unity Instantiate: the public serialisable members (ModuleScienceExperiment.cs:99-:200) travel with the KSPFields
+    void CopySerializedFrom(const PartModule& from) override;
     void OnLoad(const ConfigNode& node) override;          // :213
     void OnSave(ConfigNode& node) override;                // :240
     void OnStart(StartState state) override;               // :248
@@ -271,6 +273,8 @@ public:
     std::vector<const PartResourceDefinition*> GetConsumedResources() override { return consumedResources; }  // :75
     void TransmitScience();                                    // :81
     void OnAwake() override;                                   // :107
+    // Unity Instantiate: ExperimentData / processResources are public serialisable members (ModuleScienceLab.cs:13, :57)
+    void CopySerializedFrom(const PartModule& from) override;
     void OnLoad(const ConfigNode& node) override;             // :136
     void OnSave(ConfigNode& node) override;                   // :165
     void OnStart(StartState state) override;                   // :178

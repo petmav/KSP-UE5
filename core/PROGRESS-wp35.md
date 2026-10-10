@@ -15,3 +15,5 @@ Branch wp35 (worktree .worktrees/wp35) from main ad208205.
 - [ ] Step 4 next: tools/wp35/science_reference.py + tests/test_science.cpp (+ tests/CMakeLists.txt, tests/data/wp35_reference.json)
 - [x] Step 4a: tools/wp35/science_reference.py + tests/data/wp35_reference.json; tests/test_science.cpp has 6 cases passing (ScienceDefs, TechTree, subject maths 1880 subjects/84600 floats 0 ULP, lab page 792 values 0 ULP, converter formulas, converter FixedUpdate 7 scenarios).
 - [ ] Step 4b next: more unit cases (R&D scenario round trip + tech/part state, module cfg sweep, container, experiment flow on a real vessel, ScienceUtil strings, RnDCommsStream, lab search, recovery); then full run_tests, STATUS/README, WSL run.
+- [x] Step 4b: tests/test_science.cpp now 15 cases (defs, tree, subject maths, lab page, lab/converter formulas, converter FixedUpdate, R&D round trip, subject/data, stock cfg sweep, container, experiment flow on a real vessel, situations, comms stream, recovery, sensors+samples, lab cleanup) all pass.
+- [ ] Step 5: full run_tests.ps1 (-Fresh from deleted build), cite check, STATUS/README, WSL run, final commit.

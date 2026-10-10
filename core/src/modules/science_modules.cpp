@@ -55,6 +55,23 @@ bool PartActionUIContains(const Part* p) {
 
 std::string F32(float v) { return dotnet::FormatSingleG(v); }
 
+// A .NET custom numeric format of digit placeholders: `minInt` zeros before the point, `minFrac` zeros and (`maxFrac` - `minFrac`) '#'s after it
+// ("0.##" = 1,0,2; "00.00" = 2,2,2; "00.0##" = 2,1,3; "0.00##" = 1,2,4; "0.0###" = 1,1,4). UI text only.
+std::string CustomFixed(double v, int minInt, int minFrac, int maxFrac) {
+    const bool neg = v < 0.0;
+    std::string s = dotnet::FormatDoubleF(neg ? -v : v, maxFrac);
+    std::string ip = s, fp;
+    const size_t dot = s.find('.');
+    if (dot != std::string::npos) {
+        ip = s.substr(0, dot);
+        fp = s.substr(dot + 1);
+    }
+    while (static_cast<int>(fp.size()) > minFrac && !fp.empty() && fp.back() == '0') fp.pop_back();
+    while (static_cast<int>(ip.size()) < minInt) ip.insert(ip.begin(), '0');
+    std::string r = ip + (fp.empty() ? std::string() : "." + fp);
+    return neg ? "-" + r : r;
+}
+
 template <class T>
 T* FindModule(Part& p, const char* cls) {
     return dynamic_cast<T*>(p.FindModuleOfClass(cls));
@@ -228,6 +245,19 @@ void ModuleScienceExperiment::OnAwake() {
         subscribed_ = true;
     }
     // onGamePause / onGameUnpause: the dialogs' visibility (UI); onCommandSeatInteraction: OnCommandSeatInteraction is called by the EVA host
+}
+
+// Unity Instantiate (ModuleScienceExperiment.cs:99-:200 public members)
+void ModuleScienceExperiment::CopySerializedFrom(const PartModule& from) {
+    PartModule::CopySerializedFrom(from);
+    if (const auto* f = dynamic_cast<const ModuleScienceExperiment*>(&from)) {
+        DeployEventDisabled = f->DeployEventDisabled;
+        fxModuleIndices = f->fxModuleIndices;
+        evaSituations = f->evaSituations;  // ScriptableObject references: shared
+        useCooldown = f->useCooldown;
+        containersDirty = f->containersDirty;
+        hasContainer = f->hasContainer;
+    }
 }
 
 // ModuleScienceExperiment.cs:213
@@ -687,7 +717,7 @@ void ModuleScienceExperiment::sendDataToLab(const std::shared_ptr<ScienceData>& 
 
 // ModuleScienceExperiment.cs:835
 void ModuleScienceExperiment::CollectDataExternalEvent() {
-    Vessel* active = dynamic_cast<Vessel*>(FlightGlobals::ActiveVessel);
+    Vessel* active = FlightRegistry::ActiveVessel;
     if (active == nullptr) throw NullReferenceException("FlightGlobals.ActiveVessel");
     TransferToContainer(dynamic_cast<ModuleScienceContainer*>(active->FindPartModuleImplementingClass("ModuleScienceContainer")), active->GetDisplayName());
     updateModuleUI();
@@ -772,7 +802,7 @@ void ModuleScienceExperiment::DeployExperimentExternal() {
         } else if (!Get<bool>("availableShielded") && p->ShieldedFromAirstream()) {
             PostMsg(Loc::Format("#autoLOC_238643"));
         } else {
-            Vessel* active = dynamic_cast<Vessel*>(FlightGlobals::ActiveVessel);
+            Vessel* active = FlightRegistry::ActiveVessel;
             std::string msg = StrField(*this, "usageReqMessage");
             const bool ok = ScienceUtil::RequiredUsageExternalAvailable(*p->vessel, *active, static_cast<ExperimentUsageReqs>(Get<int>("usageReqMaskExternal")), *experiment, msg);
             Set<std::string>("usageReqMessage", msg);
@@ -861,7 +891,7 @@ void ModuleScienceExperiment::SetInoperable() {
 
 // ModuleScienceExperiment.cs:1068
 void ModuleScienceExperiment::CleanUpExperimentExternal() {
-    Vessel* active = dynamic_cast<Vessel*>(FlightGlobals::ActiveVessel);
+    Vessel* active = FlightRegistry::ActiveVessel;
     if (active != nullptr && active->isEVA()) {
         if (active->parts[0]->protoModuleCrew[0]->HasEffect<Experience::Effects::ScienceResetSkill>()) {
             Set<bool>("Inoperable", false);
@@ -1026,7 +1056,7 @@ void ModuleScienceContainer::updateModuleUI() {
 
 // ModuleScienceContainer.cs:134
 int ModuleScienceContainer::GetActiveVesselDataCount() {
-    Vessel* activeVessel = dynamic_cast<Vessel*>(FlightGlobals::ActiveVessel);
+    Vessel* activeVessel = FlightRegistry::ActiveVessel;
     if (activeVessel != nullptr) {
         int num = 0;
         int count = static_cast<int>(activeVessel->parts.size());
@@ -1056,7 +1086,7 @@ int ModuleScienceContainer::GetStoredDataCount() {
 
 // ModuleScienceContainer.cs:177
 void ModuleScienceContainer::StoreDataExternalEvent() {
-    Vessel* active = dynamic_cast<Vessel*>(FlightGlobals::ActiveVessel);
+    Vessel* active = FlightRegistry::ActiveVessel;
     std::vector<IScienceDataContainer*> list;
     for (Part* p : active->Parts())
         for (size_t i = 0; i < p->Modules().Count(); i++)
@@ -1081,7 +1111,7 @@ void ModuleScienceContainer::StoreDataExternalEvent() {
 
 // ModuleScienceContainer.cs:209
 void ModuleScienceContainer::CollectDataExternalEvent() {
-    Vessel* active = dynamic_cast<Vessel*>(FlightGlobals::ActiveVessel);
+    Vessel* active = FlightRegistry::ActiveVessel;
     TransferToContainer(dynamic_cast<ModuleScienceContainer*>(active->FindPartModuleImplementingClass("ModuleScienceContainer")), active->GetDisplayName());
     updateModuleUI();
 }
@@ -1431,6 +1461,16 @@ void ModuleScienceLab::OnTransmissionComplete(ScienceData* data, Vessel*, bool x
     }
 }
 
+// Unity Instantiate (ModuleScienceLab.cs:13, :57 public members)
+void ModuleScienceLab::CopySerializedFrom(const PartModule& from) {
+    PartModule::CopySerializedFrom(from);
+    if (const auto* f = dynamic_cast<const ModuleScienceLab*>(&from)) {
+        ExperimentData = f->ExperimentData;
+        processResources.clear();
+        for (const auto& r : f->processResources) processResources.push_back(r->CloneSerialized());
+    }
+}
+
 // ModuleScienceLab.cs:107
 void ModuleScienceLab::OnAwake() {
     PartModule::OnAwake();
@@ -1509,7 +1549,7 @@ void ModuleScienceLab::updateModuleUI() {
         return;
     }
     int num = 0;
-    Vessel* active = dynamic_cast<Vessel*>(FlightGlobals::ActiveVessel);
+    Vessel* active = FlightRegistry::ActiveVessel;
     int count = static_cast<int>(active->Parts().size());
     while (count-- > 0) {
         Part* pt = active->Parts()[static_cast<size_t>(count)];
@@ -1560,7 +1600,7 @@ void ModuleScienceLab::StoreData(const std::shared_ptr<ScienceData>& item) {
 
 // ModuleScienceLab.cs:275
 void ModuleScienceLab::CleanModulesEvent() {
-    running.push_back(ScienceEnvironment::Scheduler().StartCoroutine(CleanUpVesselExperiments(dynamic_cast<Vessel*>(FlightGlobals::ActiveVessel))));
+    running.push_back(ScienceEnvironment::Scheduler().StartCoroutine(CleanUpVesselExperiments(FlightRegistry::ActiveVessel)));
 }
 
 // ModuleScienceLab.cs:280
@@ -1647,8 +1687,8 @@ bool ModuleScienceLab::IsOperational() {
 
 // ModuleScienceLab.cs:381
 std::string ModuleScienceLab::GetInfo() {
-    return Fmt("#autoLOC_239317", {dotnet::FormatSingleF(Get<float>("crewsRequired"), 1)}) +
-           Fmt("#autoLOC_239318", {dotnet::FormatSingleF(Get<float>("dataStorage"), 1)});
+    return Fmt("#autoLOC_239317", {CustomFixed(static_cast<double>(Get<float>("crewsRequired")), 1, 1, 4)}) +
+           Fmt("#autoLOC_239318", {CustomFixed(static_cast<double>(Get<float>("dataStorage")), 1, 1, 4)});
 }
 
 // ModuleScienceLab.cs:386
@@ -1901,22 +1941,22 @@ void ModuleEnviroSensor::FixedUpdate() {
             const SensorType sensorType = sensorTypeName == "TEMP" ? SensorType::TEMP : sensorTypeName == "GRAV" ? SensorType::GRAV : sensorTypeName == "ACC" ? SensorType::ACC : SensorType::PRES;
             switch (sensorType) {
             case SensorType::TEMP:
-                Set<std::string>("readoutInfo", dotnet::FormatDoubleF(p->fields.temperature, 2) + " " + Loc::Format("#autoLOC_7001406"));
+                Set<std::string>("readoutInfo", CustomFixed(p->fields.temperature, 1, 0, 2) + " " + Loc::Format("#autoLOC_7001406"));
                 break;
             case SensorType::GRAV:
                 if (vessel->orbit().altitude <= vessel->orbit().referenceBody->Radius * 3.0) {
                     const double g = ScienceModuleEnvironment::geeForceAtPosition ? ScienceModuleEnvironment::geeForceAtPosition(*p) : vessel->geeForce;
-                    Set<std::string>("readoutInfo", Fmt("#autoLOC_237120", {dotnet::FormatDoubleF(g, 2)}));
+                    Set<std::string>("readoutInfo", Fmt("#autoLOC_237120", {CustomFixed(g, 2, 2, 2)}));
                 } else {
                     Set<std::string>("readoutInfo", Loc::Format("#autoLOC_6004058"));
                 }
                 break;
             case SensorType::ACC:
-                Set<std::string>("readoutInfo", dotnet::FormatDoubleF(vessel->geeForce, 3) + Loc::Format("#autoLOC_7001413"));
+                Set<std::string>("readoutInfo", CustomFixed(vessel->geeForce, 2, 1, 3) + Loc::Format("#autoLOC_7001413"));
                 break;
             case SensorType::PRES: {
                 double staticPressurekPa = vessel->staticPressurekPa;
-                if (staticPressurekPa > 0.0001) Set<std::string>("readoutInfo", dotnet::FormatDoubleF(staticPressurekPa, 4) + " " + Loc::Format("#autoLOC_7001410"));
+                if (staticPressurekPa > 0.0001) Set<std::string>("readoutInfo", CustomFixed(staticPressurekPa, 1, 2, 4) + " " + Loc::Format("#autoLOC_7001410"));
                 else if (staticPressurekPa > 0.0) Set<std::string>("readoutInfo", Loc::Format("#autoLOC_6004059"));
                 else Set<std::string>("readoutInfo", Loc::Format("#autoLOC_6004060"));
                 break;

@@ -430,7 +430,7 @@ float ExperimentResultDialogPage::LabValueMaths(float refValue, bool landed, boo
 // ExperimentResultDialogPage.cs:148
 float ExperimentResultDialogPage::UpdatePageLabValue() {
     pageData->labValue = 0.0f;
-    Vessel* activeVessel = dynamic_cast<Vessel*>(FlightGlobals::ActiveVessel);
+    Vessel* activeVessel = FlightRegistry::ActiveVessel;
     if (activeVessel != nullptr) {
         pageData->labValue = refValue;
         auto* moduleScienceLab = dynamic_cast<ModuleScienceLab*>(activeVessel->FindPartModuleImplementingClass("ModuleScienceLab"));
