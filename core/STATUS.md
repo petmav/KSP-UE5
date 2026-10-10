@@ -1,6 +1,6 @@
 # kspcore status
 
-Updated 2026-10-10 (WP-00, WP-17, WP-22, WP-23, WP-25, WP-26, WP-27, WP-28, WP-30, WP-31). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
+Updated 2026-10-10 (WP-00, WP-17, WP-22, WP-23, WP-24, WP-25, WP-26, WP-27, WP-28, WP-30, WP-31). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
 (details in README.md). Local git repository in `core/` only, never pushed.
 
 ## Summary
@@ -30,6 +30,7 @@ Updated 2026-10-10 (WP-00, WP-17, WP-22, WP-23, WP-25, WP-26, WP-27, WP-28, WP-3
 | 15. WP-28 resource-processing modules (branch `wp28`, from main `289d0c98`) | done (numeric / data side, unit-gated): BaseConverter family (catch-up, efficiency, recipe units), drills, harvester, generator, alternator, jettison, drain, space-object info / resource / analysis, scanners, surveyor, biome scanner; all 26 csv files. `unit` +17 cases / 8,571 assertions; every existing gate unchanged (`capture.part_database` 0 ULP). See the WP-28 section |
 | 18. WP-17 delta-v calculation (branch `wp17`) | done: VesselDeltaV (Ship and Vessel modes, RunCalculations run to the end, part staging ResetPartInfo / Process*PartInfoChildren), DeltaVStageInfo (ProcessParts, SimulateDeltaV burn simulation, StoreInterimDeltaV, CheckTimeStep, ISP / TWR), DeltaVEngineInfo (CalculateISP / ThrustVector / Burn / ApplyBurn), DeltaVPartInfo, DeltaVEngineStageSet (two list instances), the small files and extensions; gate `capture.deltav_stages` (stages 180 rows, totals 60, parts 1,225): 0 ULP except the vector-magnitude delta-v columns (<= 11 ULP, rel 1.02e-6, tolerance rel 2e-6), 16 rows of two crafts excluded (omsEngine thrust direction needs the .mu model); see "WP-17" |
 | 19. WP-31 kerbal roster, experience, crew (branch `wp31`, from main `135fb5aa`) | done (engine-agnostic part, unit-gated): the 20 experience effects, ExperienceTrait / Effect, CrewGenerator (KSPRandom draw order; name tables are hook-supplied), Part/VesselCrewManifest (replace the WP-18 seam), KerbalRoster / ProtoCrewMember extensions (applicants, Update, DefaultCrewForVessel, g-force, effects), APSkillExtensions, ModuleExperienceManagement; `unit` +20 cases, `data.roster_experience`; needs name-table and flight-log captures, see "WP-31" |
+| 20. WP-24 command, SAS / autopilot, reaction wheels, control state (branch `wp24`, from main `95ed0a16`) | done (numeric / state side, unit-gated; no golden or capture of these modules exists): VesselAutopilot + VesselSAS (all float stores of ControlUpdate: rotation delta, coasting, decay, auto-tune, PIDclamp, damping; torque sum over ITorqueProvider modules; modes, locks, SAS action group; `Vessel::Autopilot()` / `OnAutopilotUpdate`), ModuleCommand (control source rules, minimumCrew, hibernation, ModuleControlState, resource draw, CommNet rules through a hook, control points), ModuleSAS, ModuleReactionWheel, ModuleRemoteController, ControlPoint, SteeringObject; replaces the ModuleCommand stand-in of the delta-v runner; `capture.part_database` / `deltav_stages` / `ship_construct` unchanged (0 ULP / WP-17 numbers); `unit` +14 cases against `tools/wp24/sas_reference.py`: 47,000 values at 0 ULP; Unity natives `Quaternion.eulerAngles` / `Euler` unverified, see "WP-24" |
 | 21. WP-25 docking, grapple, struts, vessel merge / split (branch `wp25`, from main `95ed0a16`) | done (engine-agnostic part, unit-gated; no docking golden or capture exists): ModuleDockingNode (KSPFields / OnLoad / OnSave / OnStart, the 9-state KerbalFSM with all 15 events, nodeType / gender / snapRotation matching, CheckDockContact and the Acquire force chain in the Mono float rule, DockToVessel / Undock / Decouple over the WP-16 Couple / Undock / decouple, crossfeed events, rotation (servo) maths), ModuleGrappleNode (FSM, Grapple / Release / GrappleSameVessel / Decouple, both DockedVesselInfo), CModuleStrut (rigidbody-owner resolution, the Strut AttachNode); the WP-16 stand-in and the WP-17 runner crossfeed stand-in are gone; part_database / ship_construct / deltav_stages / staging_sequence stay 0 ULP; joints, transforms, raycasts, FX are documented seams (WP-20) |
 | 22. WP-30 misc part modules (branch `wp30`, from main `95ed0a16`) | done (engine-agnostic part, unit-gated): ModuleGPS (update-rate gate, lat / lon / biome text, asteroid / comet connection, `IAnimatedModule`), FlagSite (the KerbalFSM Placing / Placed / Toppled machine, joint / lock / dialog bookkeeping, OnSave / OnLoad of the state, afterFlagPlanted), ModulePartFirework (OnAwake / OnStart / OnLoad / OnSave, shot counter, color pickers, LaunchShell rigidbody numbers, mass modifier; replaces the WP-06 stand-in); `unit` +4 cases (+ the 2 small-fix tests), shell numbers and GPS text 0 ULP against a numpy float32 reference; `capture.part_database` unchanged (0 ULP, same rows). Part B small fixes listed in "WP-30". See the WP-30 section |
 | 23. WP-00 core runtime skeleton: tick phases, coroutine scheduler (branch `wp00`, from main `95ed0a16`) | done (engine-agnostic part, unit-gated; no golden or capture of scheduling exists, every existing gate unchanged): TimingManager + the eight Timing* hosts (Delegate add / remove-during-iteration semantics), `PlayerLoop` with the script order measured in game (Timing0, TimingPre, Timing1, Timing2, TimingManager, Timing3, TimingFI, Timing4, Timing5 for FixedUpdate / Update / LateUpdate; fixed-step and frame slot order), C++20 coroutine scheduler (null / WaitForSeconds / WaitForFixedUpdate / WaitForEndOfFrame / WaitUntil / nested / Stop), CoroutineHost, CallbackUtil.DelayedCallback, HierarchyUtil / TransformExtension / GameObjectExtension pure functions; VesselDeltaV.RunCalculations is now a real coroutine driven by the scheduler with identical results; scheduler vs independent numpy float32 replay 0 ULP; 18 cases / 396 assertions (17 in test_timing + 1 in test_deltav); the resume rules assumed for the engine are listed in the WP-00 section |
@@ -73,7 +74,7 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `capture.engine_deltav` | WP-23: in-game `captures/out2/deltav_readout.json` (C5) table `engines` (DeltaVEngineInfo's editor-situation reads of ModuleEngines: ispVac / ASL / Actual, thrustVac / ASL / Actual, requiresAir, propellants; 17 crafts x 4 bodies, `aero::MonoFloat`); `startBurnStage` is WP-16's | 460 | 0 ULP |
 | `capture.deltav_stages` | WP-17: in-game `captures/out2/deltav_readout.json` (C5) tables `stages` (180 rows x 25 columns), `totals` (60 rows x 10 columns) and `parts` (1,225 rows: decoupleStage, activationStage, isEngine): VesselDeltaV over the editor ship, Mono float rule. 0 ULP on every column except deltaVinVac / deltaVatASL / deltaVActual (max 11 ULP, rel 1.02e-6) and the three TotalDeltaV sums (rel 1.02e-6); tolerance rules in `tests/tolerances_capture.json`; 8 stage rows + 8 totals rows excluded | 1,465 | 0 ULP (delta-v: rel <= 2e-6) |
 | `data.roster_experience` | WP-31: recompute every kerbal's experience from its flight log in the one save in the repo (`core/testdata/saves/physprofile/persistent.sfs`: 4 kerbals, 0 mismatches) and round-trip the ROSTER node. Weak gate: that save has `EnableKerbalExperience = False` and empty logs, so it checks load / compute / save plumbing only; see "WP-31" | 4 | exact |
-| `unit` | 439 doctest cases, 722,743 assertions (WP-00: 17 cases, 367 assertions in `test_timing.cpp`, 1 case / 29 assertions in `test_deltav.cpp`; WP-25: 15 cases, 6,434 assertions in `test_docking.cpp`; WP-30: 4 cases, 4,148 assertions in `test_misc_modules.cpp`; WP-31: 20 cases, 11,856 assertions in `test_kerbals.cpp`; WP-17: 10 cases, 354 assertions in `test_deltav.cpp`; WP-27: 16 cases, 2,018 assertions in `test_deployables.cpp`; WP-26: 29 cases, 1,218 assertions in `test_structural_modules.cpp`; WP-22: 7 cases, 112 assertions in `test_thermal.cpp`; WP-23: 10 cases, 1,690 assertions in `test_engines.cpp`; WP-28: 17 cases, 8,571 assertions in `test_resource_processing.cpp`; WP-16: 19 cases, 12,222 assertions in `test_staging.cpp`; WP-21: 11 cases, 220,304 assertions in `test_aero.cpp`; WP-18: 26 cases, 274,042 assertions in `test_ship_construct.cpp`; WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
+| `unit` | 453 doctest cases, 731,493 assertions (WP-24: 14 cases, 8,750 assertions in `test_command.cpp`; WP-00: 17 cases, 367 assertions in `test_timing.cpp`, 1 case / 29 assertions in `test_deltav.cpp`; WP-25: 15 cases, 6,434 assertions in `test_docking.cpp`; WP-30: 4 cases, 4,148 assertions in `test_misc_modules.cpp`; WP-31: 20 cases, 11,856 assertions in `test_kerbals.cpp`; WP-17: 10 cases, 354 assertions in `test_deltav.cpp`; WP-27: 16 cases, 2,018 assertions in `test_deployables.cpp`; WP-26: 29 cases, 1,218 assertions in `test_structural_modules.cpp`; WP-22: 7 cases, 112 assertions in `test_thermal.cpp`; WP-23: 10 cases, 1,690 assertions in `test_engines.cpp`; WP-28: 17 cases, 8,571 assertions in `test_resource_processing.cpp`; WP-16: 19 cases, 12,222 assertions in `test_staging.cpp`; WP-21: 11 cases, 220,304 assertions in `test_aero.cpp`; WP-18: 26 cases, 274,042 assertions in `test_ship_construct.cpp`; WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
 differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 6 ULP (Vector3.Project/ProjectOnPlane) and
@@ -1820,7 +1821,7 @@ crafts; no number is invented.
 ### Measured facts
 
 - `physprofile` save (458 parts): 1335 of 1337 MODULE nodes write back identically through `ProtoVessel.Load` -> `Vessel.Load` ->
-  `BackupVessel`. The two exceptions are `ModuleReactionWheel` and `ModuleDataTransmitter` `OnSave` (not ported: WP-24 / WP-39); the test asserts
+  `BackupVessel`. The two exceptions are `ModuleReactionWheel` (since WP-24: `OnLoad` rewrites stateString `Idle` to `Active`) and `ModuleDataTransmitter` `OnSave` (not ported: WP-39); the test asserts
   the exact difference. `cPch` / `cHdg` reload as 0 (KSPParseable returns 0 from `value_float()` for an UNKNOWN-typed value: faithful).
   VESSELMODULES: the test does not compare the VESSELMODULES node at all (`continue` in the node loop of the physprofile round-trip case). The
   save's node lists `FlightIntegrator`, `AxisGroupsModule`, `SuspensionLoadBalancer` (and `CommNetVessel` with `controlState` / `canComm` on the L2-AS
@@ -3005,7 +3006,7 @@ The inputs the C# gets from editor objects that have no package yet are installe
   crew member, and DeltaVPartInfo.CalculateMassValues reads that `Part.mass`. `KerbalRoster.DefaultCrewForVessel` (KerbalRoster.cs:491-615) fills ONE part, the first
   (file order) that is a control source with crew capacity, to its capacity (the final `break`); the inventory mass of a kerbal is 0.049 t, computed from the
   part database exactly as `tests/test_ship_construct.cpp` (kerbalEVA.cfg DEFAULTPARTS evaChute + evaJetpack). 11 crafts have 1-4 crew; the masses of all 17
-  crafts match the capture bit for bit. `isControlSource` is ModuleCommand's (WP-24, not ported): the runner treats a ModuleCommand part as the control source.
+  crafts match the capture bit for bit. `isControlSource` is ModuleCommand's: since WP-24 the real `ModuleCommand.OnAwake` writes FULL and the runner reads `isControlSource > 0` (the earlier "a ModuleCommand part is a control source" stand-in is gone).
 - Fuel lines: `CompoundPart.OnStartComplete` (WP-26, `CompoundPart::hooks.editorShipParts`) resolves the `tgt` of every fuel line; without it the asparagus
   crafts (Kerbal X, Dynawing) burn from the wrong tanks.
 - `ModuleDockingNode.OnLoad` / `OnStart` (ModuleDockingNode.cs:533, :594) do `part.fuelCrossFeed = crossfeed`: a closed docking port (`crossfeed = False` in the craft
@@ -3041,7 +3042,7 @@ The inputs the C# gets from editor objects that have no package yet are installe
   the three delta-v columns can go back to 0 ULP; the omsEngine rows come back into the gate. The shipped assets are not readable from the repo mirror (empty stubs).
 - An in-game FLIGHT capture of VesselDeltaV (`SimulateFlightScene`, `CalcLerpDeltaV`, `OperatingStageInfo` in the flight scene, engine ignition events): the flight
   branches are ported from the decompile but not gated.
-- ModuleCommand (WP-24): `Part.isControlSource` for the crew assignment above; ModuleDockingNode (WP-25): `crossfeed` in OnLoad / OnStart.
+- ModuleCommand (WP-24, done): `Part.isControlSource` for the crew assignment above; ModuleDockingNode (WP-25): `crossfeed` in OnLoad / OnStart.
 
 ### Unit tests (`tests/test_deltav.cpp`: 10 cases, 354 assertions)
 
@@ -3119,8 +3120,8 @@ What the unit tests establish (oracles are the decompiled C#, the game's cfgs an
 6. `GetRandomName` rejects a draw whose first name is a substring of ANY roster name (loops forever with a table smaller than the roster).
 7. `ProtoCrewMember.Equals` ignores `hasToured`.
 8. `SetInactive` returns the previous inactive state; it is additive only while already inactive.
-9. `ModuleCommand.OnAwake` (ModuleCommand.cs:378) is what sets `isControlSource = FULL` on a pod's prefab; ModuleCommand is not ported, so the
-   prefabs have `NONE` and `DefaultCrewForVessel` finds no crewable part until it is (the tests apply that one assignment themselves).
+9. `ModuleCommand.OnAwake` (ModuleCommand.cs:378) sets `isControlSource = FULL` on a pod prefab; since WP-24 the real module does it and
+   `DefaultCrewForVessel` finds the crewable pod (the test asserts the value instead of setting it).
 
 ### Deviations and deferred
 
@@ -3159,6 +3160,99 @@ What the unit tests establish (oracles are the decompiled C#, the game's cfgs an
 - The localization of `ExperienceTraitConfig.Title` / `Description` happens in the UI, never in the config.
 - `tests/test_kerbals.cpp` needs the stock game (GameData mirror) like the other part-based tests.
 
+## WP-24: command, SAS / autopilot, reaction wheels, control state (branch `wp24`, from main `95ed0a16`)
+
+State: done for the engine-agnostic numeric and state parts, unit-gated against an independent Python reference (`tools/wp24/sas_reference.py`).
+**No golden and no capture exists for these classes**: `harness/golden/MANIFEST.json` has no SAS / autopilot / command / reaction wheel dataset and
+`harness/captures/out/` and `out2/` carry none either (the load log has no flight scene). The gates that must not move did not move.
+
+### Gate numbers (RelWithDebInfo, Windows MSVC; `build/RelWithDebInfo/candidate/*/compare_report_*.json`)
+
+| gate | rows | max abs / rel / ULP | note |
+|---|---|---|---|
+| `capture.part_database` | parts 357, part_cfg_values 6,235, modules 1,312, module_fields 32,894, module_propellants 77, resources 166, attach_nodes 822, drag_cubes 531, variants 228, assets 743 | 0 / 0 / 0 in every table | row counts identical to the WP-06 section; the real ModuleCommand / ModuleReactionWheel / ModuleSAS own their `[KSPField]`s (the schema-driven fields did not change) |
+| `capture.deltav_stages` | stages 180, totals 60, parts 1,225 | stages abs 0.039 / rel 1.02e-6 / 11 ULP; parts 0 | unchanged from WP-17 (rule rel 2e-6). The runner stand-in is gone: `isControlSource > 0`, written by the real `ModuleCommand.OnAwake` |
+| `capture.ship_construct` | craft 17, parts 1,225 | 0 / 0 / 0 | unchanged |
+| `unit` (new `tests/test_command.cpp`) | 14 cases, 8,750 assertions | SAS replay 37,400 values and wheel replay 9,595 values: **0 ULP** (float and double) | whole suite on this tree: 415 cases, 719,632 assertions; no ctest test added (34 in a worktree: `corpus.saves` is absent) |
+
+### What is ported (files, with the C# line cites above every function)
+
+| C# | kspcore |
+|---|---|
+| ControlPoint.cs, SteeringObject.cs, ISteerable.cs, ITorqueProvider.cs | `include/ksp/modules/control_types.hpp`, `src/modules/control_types.cpp` (`PartModule::AsTorqueProvider` is the `is ITorqueProvider` query) |
+| FlightCtrlState.cs | already complete since WP-14 (`vessel/flight_ctrl_state.hpp`: fields, Neutralize, NeutralizeStick, CopyFrom / MaskedCopyFrom, Load / Save); WP-24 adds nothing and drives it through the SAS replays |
+| VesselAutopilot.cs (VesselAutopilot + VesselSAS) | `include/ksp/vessel/vessel_autopilot.hpp`, `src/vessel/vessel_autopilot.cpp`: every float / double store of ControlUpdate (rotation delta, CheckCoasting, StabilityDecay, AutoTuneScalar / EvaluateScalar, the three `PIDclamp.Update`, CheckDamping, the clamp to the control state), GetTotalVesselTorque over the ITorqueProvider modules (ModuleReactionWheel, ModuleRCS, ModuleGimbal), Enable / Disable / SetMode / CanSetMode, the three SetAutopilot* switches, the SAS action group in Update, lock / target / maneuver rules. `Vessel::Autopilot()` and `Vessel::OnAutopilotUpdate` (a multicast `Delegate`; ConnectFlyByWire combines ControlUpdate then UpdateVesselTorque, so the controller reads the torque of the previous frame, as in the game) |
+| ModuleCommand.cs, ModuleSAS.cs, ModuleRemoteController.cs | `include/ksp/modules/module_command.hpp`, `src/modules/module_command.cpp` |
+| ModuleReactionWheel.cs | `include/ksp/modules/module_reaction_wheel.hpp`, `src/modules/module_reaction_wheel.cpp` |
+
+Registered by `detail::RegisterControlModules()` (called from `module_behaviours.cpp`). Not touched: `ds_deltav_stages.cpp` near the docking crossfeed,
+`module_decouplers.cpp`, any docking class.
+
+### Findings and the rules the tests pin down
+
+- **Prefab vs instance.** `PartModule.Awake` runs before `Load` on the prefab, so on a prefab `consumedResources` is empty and `controlPoints` is null
+  (`controlPointsList` is filled by `OnLoad` after `OnAwake`); an instantiated part gets the serialized `resHandler` / `controlPointsList` first, so its
+  `OnAwake` builds both. `Part.isControlSource = FULL` (ModuleCommand.OnAwake) is on the prefab and on every instance.
+- **Control source rules** (`UpdateControlSourceState`): ModuleControlState / VesselControlState / `Part.isControlSource` follow the decision table written
+  out in `tests/test_command.cpp` (`Oracle`), checked on all 25 stock command parts x up to 12 scenes (no ElectricCharge, no crew, crew to `minimumCrew` with
+  and without a pilot, too few crew, a tourist in the seat, hibernation, CommNet on x connected x signal required x crewed or probe): 299 scenes, 0
+  mismatches. The hibernation draw is `rate * hibernationMultiplier * fixedDeltaTime`.
+- **ModuleReactionWheel.OnLoad** (`State = ...`) rewrites `stateString` with the localized description. Consequences in existing tests (all updated in
+  this branch, each with the C# cite): `test_ship_construct.cpp` (live SaveShip vs the craft file skips `ModuleReactionWheel.stateString`: the craft was
+  saved at editor time with an empty string), `test_vessel.cpp` (physprofile round trip still has one differing ModuleReactionWheel, now because stateString
+  `Idle` becomes `Active`; WheelState itself is written back), the `findFirstControlSource` and `GetControlLevel` tests (command parts are FULL control
+  sources from OnAwake, the tests clear `isControlSource` before asserting NONE), `test_kerbals.cpp` (asserts the prefab value instead of setting it).
+- **Reaction wheel resource draw.** `UpdateModuleResourceInputs` returns `satisfied > 0`, so a wheel with some but less than the threshold of its demand is
+  still `operational`; ElectricCharge is STAGE_PRIORITY_FLOW and `PartSet.ProcessRequest` drains `(-demand / amount) * amount`, not `demand`: the
+  reference models that proportional drain (an `amount - demand` model differs by up to 16 ULP in the stored amount).
+- **Test hygiene.** `Disable()` calls `NeutralizeStick()`, so a test must switch the autopilot before it sets `ctrlState`.
+
+### Reference (`tools/wp24/sas_reference.py` -> `tests/data/wp24_reference.json`, 1.7 MB)
+
+Independent numpy float32 / Python implementation (Mono float rule via `st()`; no kspcore code, no copy of the C++), reading the stock reaction wheels'
+`PitchTorque / YawTorque / RollTorque / torqueResponseSpeed`, `RESOURCE rate` and the part ElectricCharge store from the cfgs under
+`testdata/GameData-mirror`. The dynamic inputs (attitude trace, angular velocity, pilot input) are recorded in the JSON. Four SAS scenarios, 1,100
+steps (locked stability assist with pilot input and rotation bursts; target orientation mode; TimeWarp rate 5 without auto-tune with the decay lock; no
+decay), and 23 wheels x 48 steps (modes 0..2, authority, SAS on / off, the active vessel, a quarter of the wheels started nearly empty). Compared: control
+outputs, `sasResponse`, `rotationDelta`, `angularDeltaRad`, `angularAccelerationMax`, decay scalars, locked rotation, damping flag, tuning / clamp scalars,
+PID outputs, the vessel torque, and per wheel the temporary / smoothed input vectors, `inputSum`, `operational`, the world torque and the stored
+ElectricCharge. Result: **0 ULP** on all 47,000 values, no libm difference (the two sides share the formulation of the two Unity natives below, and the
+trig of the double-then-round path agrees).
+
+### Seams (documented in the headers; all `static inline` hooks, unset = the stated default)
+
+- `AutopilotEnvironment`: `eulerAngles` (Quaternion.eulerAngles), `pitchInput / rollInput / yawInput` (GameSettings axes, SpaceNavigator, keys:
+  unset = no input), `speedDisplayMode`, `displayVelocitySqrMagnitude`, `killAngularVelocity` (rb.angularVelocity = 0), `precisionMode`,
+  `torqueProviderHook` (providers of other packages with scene inputs, e.g. ModuleControlSurface), recorded `screenMessages`.
+- `CommandEnvironment`: CommNet (`commNetEnabled`, `connection`: WP-39 provides them), `flightPaused`, `partInPAW`, `setPartReferenceTransform`,
+  `renameVessel`, GameSettings control point visuals, `quaternionEuler`.
+- `ReactionWheelEnvironment`: `activeVesselPYR` (FlightInputHandler.state), `addTorque` (Part.AddTorque; the last torque is also `lastTorque`);
+  `IReactionWheelAdjuster` and `ModuleSAS::AddAdjuster` stand for the Missions adjusters.
+- **Two Unity natives are not verified against a capture**: `Quaternion.eulerAngles` (ToEulerRad, YXZ matrix form, single precision per operation, trig
+  as `(float)Math.F`) and `Quaternion.Euler` (ControlPoint child rotation). The managed `Internal_MakePositive` is ported from the decompile. The SAS
+  replay therefore proves the port against an independent re-implementation of the same formulation, not against the player; a capture of
+  `eulerAngles` for random quaternions (like C3 for `AngleAxis`) closes it. `Quaternion.Inverse` is the conjugate as measured in C3.
+
+### Not ported / deferred
+
+- CommNet registration of ModuleCommand (`Start`, `OnDestroy`, `OnNetworkInitialised`, `UpdateNetwork` signal text): WP-39. The control rules read the link
+  through `CommandEnvironment`.
+- Control point arrows (`UpdateControlPointVisuals`, `DestroyCPArrows`, colours): rendering. `Part.SetReferenceTransform(Transform)` is a hook.
+- `GetInfo`, `GetModuleDisplayName`, `CacheLocalStrings` of the four modules (part-info panel text: `PrintModuleResources` and the `"0.0###"` format are not
+  modelled, as in `ModuleResourceHandler`).
+- `VesselSAS.Start` subscribes `GameEvents.onVesselWasModified` (the host calls `VesselModified`); `Vessel.FeedInputFeed` / `OnPreAutopilotUpdate` /
+  `OnPostAutopilotUpdate` / `OnFlyByWire` (the host invokes `Vessel::OnAutopilotUpdate(ctrlState)`); `KillAngularVelocity` per-part rigidbody loop (hook);
+  `ModuleControlSurface.GetPotentialTorque` (WP-21 does not expose it: the SAS torque sum misses control surfaces until `torqueProviderHook` is filled).
+- `ModuleCommand.SetControlPoint` on a pod without CONTROLPOINT nodes logs the C# error line "There are no alternate control points for ..." (faithfully:
+  `OnStart` always calls it). The flight-scene KSP.log was not captured, so how often the game prints it is unverified.
+- `ISteerable` has no implementer here (the wheel modules of WP-29 implement it); `SteeringObject.neutralAngle` / `pivot` are data only.
+- `Part.AddTorque` is an output (`lastTorque`), not applied to a rigid body.
+
+### Needed in-game captures (local)
+
+1. `Quaternion.eulerAngles` and `Quaternion.Euler` for a few thousand random and near-gimbal-lock quaternions (the C3 pattern) to close the unverified natives.
+2. One flight-scene dump of a vessel under SAS (per fixed step: `ctrlState`, `sasResponse`, rotation, angular velocity, `MOI`, `torqueVector`) and of a
+   ModuleReactionWheel (`inputVector`, `inputSum`, `stateString`, ElectricCharge amount) to gate the controllers against the player instead of a re-implementation.
 ## WP-25: docking, grapple, struts, vessel merge / split (branch `wp25`, from main `95ed0a16`)
 
 Spec: `ModuleDockingNode.cs` (2,059 lines), `ModuleGrappleNode.cs` (996), `CompoundParts/CModuleStrut.cs` (108), `DockedVesselInfo.cs` (107; ported by

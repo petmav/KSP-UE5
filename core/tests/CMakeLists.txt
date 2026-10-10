@@ -38,6 +38,7 @@ add_executable(kspcore_tests
     test_misc_modules.cpp
     test_deltav.cpp
     test_timing.cpp
+    test_command.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
 )

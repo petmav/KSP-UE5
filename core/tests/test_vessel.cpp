@@ -504,7 +504,7 @@ TEST_CASE("WP-14 physprofile save: ProtoVessel.Load -> Vessel.Load -> BackupVess
             CHECK(original.nodes()[i]->name == rewritten.nodes()[i]->name);
             if (original.nodes()[i]->name == "VESSELMODULES") continue;  // see above
             // PART nodes: everything but the MODULE nodes is byte-identical; a MODULE node is identical unless the module class
-            // writes values in an OnSave that its owning package has not ported (ModuleReactionWheel.WheelState: WP-24 ...)
+            // differs after Load / OnSave (ModuleReactionWheel: OnLoad sets stateString to the WheelState description, WP-24 ...)
             ConfigNode& pa = *original.nodes()[i];
             ConfigNode& pb = *rewritten.nodes()[i];
             if (pa.name != "PART") {
@@ -531,7 +531,10 @@ TEST_CASE("WP-14 physprofile save: ProtoVessel.Load -> Vessel.Load -> BackupVess
     for (const auto& [name, n] : modulesDiffer) MESSAGE("  module OnSave differs: " << name << " x" << n);
     CHECK(modulesTotal == 1337);
     CHECK(modulesEqual == 1335);
-    CHECK(modulesDiffer.size() == 2);  // OnSave of ModuleReactionWheel (WheelState: WP-24) and ModuleDataTransmitter (WP-39)
+    // ModuleReactionWheel: the save has stateString = Idle (the flight FixedUpdate text) and WheelState = Active; ModuleReactionWheel.OnLoad (ModuleReactionWheel.cs:124,
+    // WP-24) runs `State = Active`, which rewrites stateString to "Active", and OnSave writes WheelState back (the C# does the same until the next FixedUpdate).
+    // ModuleDataTransmitter: OnSave not ported (WP-39)
+    CHECK(modulesDiffer.size() == 2);
     CHECK(modulesDiffer.count("ModuleReactionWheel") == 1);
     CHECK(modulesDiffer.count("ModuleDataTransmitter") == 1);
 }
@@ -1074,7 +1077,10 @@ TEST_CASE("WP-14 crew list, capacity and control level (Vessel.cs 1234-1485)") {
     CHECK(v->GetCrewCount() == 3);
     GE::onVesselCrewWasModified.Remove(&l2, &L2::Run);
 
-    // control level: the best isControlSource of the parts (Part.isControlSource is set by ModuleCommand: WP-24)
+    // control level: the best isControlSource of the parts (Part.isControlSource is set by ModuleCommand, WP-24: OnAwake writes FULL on every
+    // command part, ModuleCommand.cs:378; UpdateControlState rewrites it in flight)
+    CHECK(v->GetControlLevel() == ControlLevel::FULL);
+    for (Part* p : v->parts) p->fields.isControlSource = static_cast<int32_t>(ControlLevel::NONE);   // the command parts have not computed their state
     CHECK(v->GetControlLevel() == ControlLevel::NONE);
     v->CheckControllable();
     CHECK_FALSE(v->IsControllable());

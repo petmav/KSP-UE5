@@ -122,6 +122,7 @@ add_library(kspcore STATIC
     vessel/discovery_info.cpp
     vessel/flight_com_tracker.cpp
     vessel/flight_ctrl_state.cpp
+    vessel/vessel_autopilot.cpp
     vessel/flight_logger.cpp
     vessel/module_trip_logger.cpp
     vessel/vessel.cpp
@@ -150,6 +151,9 @@ add_library(kspcore STATIC
     modules/module_engines.cpp
     modules/module_gimbal.cpp
     modules/module_rcs.cpp
+    modules/control_types.cpp
+    modules/module_command.cpp
+    modules/module_reaction_wheel.cpp
     modules/module_resource_intake.cpp
     # WP-26 fairings, cargo bays, jettison, shielding, launch clamps
     modules/fairing_panel.cpp

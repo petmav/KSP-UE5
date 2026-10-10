@@ -29,6 +29,8 @@
 #include "ksp/modules/module_decouplers.hpp"
 #include "ksp/modules/module_strut.hpp"
 #include "ksp/modules/module_engines.hpp"
+#include "ksp/modules/module_command.hpp"
+#include "ksp/modules/module_reaction_wheel.hpp"
 #include "ksp/modules/module_gimbal.hpp"
 #include "ksp/modules/module_rcs.hpp"
 #include "ksp/modules/module_resource_intake.hpp"
@@ -248,6 +250,7 @@ void RegisterBuiltinModules() {
     detail::RegisterThermalModules();  // ModuleCoreHeat, ModuleActiveRadiator, ModuleAblator, ModuleConductionMultiplier (WP-22)
     detail::RegisterEngineModules();  // WP-23: ModuleEngines, ModuleEnginesFX, MultiModeEngine (module_engines.cpp)
     detail::RegisterRcsModules();     // WP-23: ModuleRCS, ModuleRCSFX
+    detail::RegisterControlModules(); // WP-24: ModuleCommand, ModuleSAS, ModuleRemoteController, ModuleReactionWheel
     detail::RegisterGimbalModule();   // WP-23: ModuleGimbal
     detail::RegisterIntakeModule();   // WP-23: ModuleResourceIntake
     Reg<FlagDecalBackground>({"FlagDecalBackground"});

@@ -1,6 +1,7 @@
 // Vessel (Vessel.cs): identity, parts, reference transform, situations, crew, control level, modules, naming.
 // The state transitions live in vessel_transitions.cpp, kinematics / mass / atmosphere in vessel_motion.cpp.
 #include "ksp/vessel/vessel.hpp"
+#include "ksp/vessel/vessel_autopilot.hpp"
 
 #include <algorithm>
 
@@ -205,6 +206,7 @@ Vessel::Vessel() {
         setControlStates.push_back(ownedControlStates_.back().get());
     }
     vesselValues_ = std::make_unique<VesselValues>(*this);
+    autopilot_ = std::make_unique<VesselAutopilot>(*this);  // Vessel.cs:1553
     discoveryInfo_ = std::make_unique<DiscoveryInfo>(this);
     if (PhysicsGlobals::Instance() != nullptr) vesselRanges = VesselRanges(PhysicsGlobals::Instance()->VesselRangesDefault);
     VesselAnchorExceptions = {"ModuleWheelBase", "LaunchClamp", "FlagSite", "ModuleGroundPart"};
