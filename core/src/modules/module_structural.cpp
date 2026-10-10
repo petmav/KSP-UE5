@@ -814,6 +814,8 @@ void ModuleServiceModule::BuildJettisonPartsList() {
     jettisonParts.clear();
     std::vector<BoxZone> list;
     if (Get<bool>("UseJettisonZones")) {
+        // ModuleServiceModule.cs:248 JettisonZoneNames.Split(',') on a field with no default: null reference when the config omits it
+        if (IsNull("JettisonZoneNames")) throw NullReferenceException();
         for (const std::string& zone : dotnet::Split(StrField(*this, "JettisonZoneNames"), ",", false)) {
             if (p == nullptr || !hooks.findZone) continue;
             if (auto z = hooks.findZone(*p, zone)) list.push_back(*z);

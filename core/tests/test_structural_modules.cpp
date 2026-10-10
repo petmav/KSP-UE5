@@ -877,6 +877,13 @@ TEST_CASE("service module: PointInBox, UpdateStaging propagation and the jettiso
     shielded->set_ShieldedFromAirstream(true);
     stacked->srfAttachNode->attachedPart = nullptr;
     std::vector<Part*> detaches;
+    // ModuleServiceModule.cs:248: UseJettisonZones with a missing JettisonZoneNames throws (NullReferenceException on .Split)
+    sm->Set<bool>("UseJettisonZones", true);
+    REQUIRE(sm->IsNull("JettisonZoneNames"));  // no default in the C# (public string JettisonZoneNames;)
+    CHECK_THROWS_AS(sm->BuildJettisonPartsList(), NullReferenceException);
+    sm->Set<std::string>("JettisonZoneNames", "");
+    CHECK_NOTHROW(sm->BuildJettisonPartsList());
+    sm->Set<bool>("UseJettisonZones", false);
     sm->Set<bool>("partDecoupled", true);
     CHECK(sm->PartDetaches(detaches));
     REQUIRE(detaches.size() == 1);
