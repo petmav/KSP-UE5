@@ -275,3 +275,9 @@ ksp_golden_gate(capture.aero_forces_vessel aero_forces_vessel GOLDEN ${KSP_CAPTU
                 TOL ${KSP_CAPTURE_TOL} TABLES structure,parts,aoa_sweep
                 COLUMNS "structure:craft,part_index,part,node_contact_areas"
                 DROP_COLUMNS "parts:dragVectorDirLocal_x,dragVectorDirLocal_y,dragVectorDirLocal_z,dragVectorMag,dynamicPressurekPa,staticPressureAtm,exposedArea,DragVector_x,DragVector_y,DragVector_z/aoa_sweep:flow_local_x,flow_local_y,flow_local_z")
+
+# WP-22 CelestialBody.GetAtmoThermalStats / GetFullTemperature(pos) vs the in-game capture C4 (captures/out2/atmosphere_thermal_offsets.json,
+# see tools/golden_runner/ds_atmosphere_thermal_offsets.cpp). Only `samples` is compared: `epochs` and `body_epoch` are the engine inputs
+# (scaled-space transforms, run-time orbit values), echoed by the runner from the capture itself.
+ksp_golden_gate(capture.atmosphere_thermal_offsets atmosphere_thermal_offsets GOLDEN ${KSP_CAPTURES2_DIR}/atmosphere_thermal_offsets.json
+                DROP_HEX TOL ${KSP_CAPTURE_TOL} TABLES samples)

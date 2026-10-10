@@ -71,6 +71,8 @@ struct OrbitLink : ICelestialBodyOrbit {
     double trueAnomaly() const override { return o->trueAnomaly; }
     double radius() const override { return o->radius; }
     double PeR() const override { return o->PeR(); }
+    double eccentricity() const override { return o->eccentricity; }
+    double inclination() const override { return o->inclination; }
     double ApR() const override { return o->ApR(); }
     Vector3d vel() const override { return o->vel; }
     Vector3d getRelativePositionAtUT(double UT) const override { return o->getRelativePositionAtUT(UT); }

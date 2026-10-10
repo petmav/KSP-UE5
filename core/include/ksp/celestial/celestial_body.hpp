@@ -127,6 +127,8 @@ public:
     virtual double radius() const = 0;       // GetAtmoThermalStats
     virtual double PeR() const = 0;
     virtual double ApR() const = 0;
+    virtual double eccentricity() const = 0;  // GetAtmoThermalStats
+    virtual double inclination() const = 0;   // GetAtmoThermalStats
     virtual Vector3d vel() const = 0;        // GetFrameVel
     virtual Vector3d getRelativePositionAtUT(double UT) const = 0;  // getPositionAtUT / getTruePositionAtUT
     virtual Vector3d getOrbitalVelocityAtUT(double UT) const = 0;   // GetFrameVelAtUT
@@ -311,11 +313,23 @@ public:
     void GetSolarAtmosphericEffects(double sunDot, double density, double& solarAirMass, double& solarFluxMultiplier) const;
     double GetFullTemperature(double altitude, double atmoSunBasedTempOffset) const;
 
-    // GetAtmoThermalStats (CelestialBody.cs:855) is NOT ported yet: it needs the scaled-space transforms (sun direction
-    // in the body frame). The other inputs exist now: native Quaternion.AngleAxis (ksp/unity/quaternion_native.hpp,
-    // bit-exact vs CAPTURE-SPEC C3) and the run-time Orbit (trueAnomaly, radius, PeR, ApR through orbit()). Its result
-    // (atmosphereTemperatureOffset) is an input of GetFullTemperature/FlightIntegratorAtmosphere until then; in-game
-    // reference: CAPTURE-SPEC C4.
+    // GetAtmoThermalStats (CelestialBody.cs:855, WP-22). The Unity transform state it reads is the `frame` argument (the
+    // shell fills it from scaledBody / bodyTransform / ScaledSpace); the sun is `sunBody`, the orbit values come from the
+    // ICelestialBodyOrbit links of this body and of GetBodyReferencing(this, sunBody).
+    struct AtmoThermalFrame {
+        Vector3f sunScaledPos;       // sunBody.scaledBody.transform.position
+        Vector3f scaledBodyPos;      // scaledBody.transform.position
+        float scaleFactor = 6000.0f;  // ScaledSpace.ScaleFactor
+        Vector3f bodyUp;             // bodyTransform.up
+    };
+    void GetAtmoThermalStats(bool getBodyFlux, const CelestialBody* sunBody, const Vector3d& sunVector, double sunDot,
+                             const Vector3d& upAxis, double altitude, const AtmoThermalFrame& frame,
+                             double& atmosphereTemperatureOffset, double& bodyEmissiveFlux, double& bodyAlbedoFlux);
+    // GetFullTemperature(Vector3d pos) (CelestialBody.cs:991): the shell supplies Planetarium.fetch.Sun.scaledBody.transform.position -
+    // ScaledSpace.LocalToScaledSpace(pos) (UNnormalised: the C# passes it as the sun vector), FlightGlobals.getUpAxis(this, pos) and
+    // FlightGlobals.getAltitudeAtPos(pos, this). Returns the atmosphereTemperatureOffset (not a temperature, as in 1.12.5).
+    double GetFullTemperature(const CelestialBody* sunBody, double altitudeAtPos, const Vector3d& sunMinusScaledPos,
+                              const Vector3d& upAxis, const AtmoThermalFrame& frame);
 
     // ---- frames and surface coordinates (CelestialBody.cs:610-845, no PQS) ----
     Vector3d GetFrameVel() const;

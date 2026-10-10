@@ -17,6 +17,8 @@
 #include "ksp/util/ksp_util.hpp"
 #include "ksp/physics/physics_globals.hpp"
 #include "ksp/unity/mathf.hpp"
+#include "ksp/unity/quaternion.hpp"
+#include "ksp/unity/quaternion_native.hpp"
 
 namespace ksp {
 
@@ -35,6 +37,9 @@ ICelestialBodyOrbit& RequireOrbit(const CelestialBody& cb) {
 
 // C# `x % y` on doubles (IEEE fmod semantics, sign of the dividend)
 double CsRem(double x, double y) { return std::fmod(x, y); }
+
+// System.Math.Max(double, double): NaN-propagating
+double CsMax(double a, double b) { return (a > b) ? a : ((a != a) ? a : b); }
 
 }  // namespace
 
@@ -214,6 +219,129 @@ void CelestialBody::CBUpdate() {
     } else {
         solarDayLength = 1.0;
     }
+}
+
+// CelestialBody.cs:855 GetAtmoThermalStats. Float statements follow the Mono rule (fx()/f32store()); Vector3.Dot and
+// Quaternion * Vector3 are the managed UnityEngine members (ksp/unity/vector.hpp, quaternion.hpp); Quaternion.AngleAxis is native.
+void CelestialBody::GetAtmoThermalStats(bool getBodyFlux, const CelestialBody* sunBody, const Vector3d& sunVector,
+                                        double sunDot, const Vector3d& upAxis, double altitude,
+                                        const AtmoThermalFrame& frame, double& atmosphereTemperatureOffset,
+                                        double& bodyEmissiveFlux, double& bodyAlbedoFlux) {
+    atmosphereTemperatureOffset = 0.0;
+    bodyEmissiveFlux = 0.0;
+    bodyAlbedoFlux = 0.0;
+    if (!(sunBody != this)) return;
+    const Vector3d vector3d = frame.sunScaledPos;
+    const Vector3f up = frame.bodyUp;
+    const Vector3f sunVectorF = sunVector.ToVector3f();
+    const Vector3f upAxisF = upAxis.ToVector3f();
+    double num = static_cast<double>(Vector3f::Dot(sunVectorF, up));
+    const double num2 = static_cast<double>(Vector3f::Dot(up, upAxisF));
+    double num3 = M::Acos(num2);
+    if (num3 != num3) num3 = (num2 < 0.0) ? kPI : 0.0;
+    double num4 = M::Acos(num);
+    if (num4 != num4) num4 = (num < 0.0) ? kPI : 0.0;
+    const double num5 = (1.0 + M::Cos(num4 - num3)) * 0.5;
+    const double num6 = (1.0 + M::Cos(num4 + num3)) * 0.5;
+    if (num2 < 0.0) num = 0.0 - num;
+    double num7 = num3;
+    double num8 = num4;
+    if (num3 > kPI / 2.0) {
+        num7 = kPI - num7;
+        num8 = kPI - num8;
+    }
+    (void)num8;
+    const double sqrMagnitude =
+        ((vector3d - Vector3d(frame.scaledBodyPos)) * static_cast<double>(frame.scaleFactor)).sqrMagnitude();
+    const double num9 = PhysicsGlobals::SolarLuminosity() / (kPI * 4.0 * sqrMagnitude);
+    const Quaternionf rot = UnityNative::AngleAxis(f32store(45.0 * fx(Mathf::Sign(static_cast<float>(rotationPeriod)))), up);
+    const Vector3f rotated = rot * upAxisF;
+    const double num10 = (1.0 + static_cast<double>(Vector3f::Dot(sunVectorF, rotated))) * 0.5;
+    const double num11 = num5 - num6;
+    double num12;
+    if (num11 > 0.001) {
+        num12 = (num10 - num6) / num11;
+        if (num12 != num12) num12 = (!(num10 > 0.5)) ? 0.0 : 1.0;
+    } else {
+        num12 = num6 + num11 * 0.5;
+    }
+    const CelestialBody* bodyReferencing = nullptr;
+    if (atmosphere) {
+        float num13 = static_cast<float>(kPI / 2.0 - num7);
+        num13 = f32store(fx(num13) * fx(57.29578f));
+        bodyReferencing = GetBodyReferencing(this, sunBody);
+        const ICelestialBodyOrbit& ro = RequireOrbit(*bodyReferencing);
+        const float time = f32store(CsRem(fx(static_cast<float>(ro.trueAnomaly())) * fx(57.29578f) + 360.0, 360.0));
+        atmosphereTemperatureOffset =
+            static_cast<double>(latitudeTemperatureBiasCurve.Evaluate(num13)) +
+            static_cast<double>(latitudeTemperatureSunMultCurve.Evaluate(num13)) * num12 +
+            fx(axialTemperatureSunBiasCurve.Evaluate(time)) * fx(axialTemperatureSunMultCurve.Evaluate(num13)) +
+            ((ro.eccentricity() == 0.0)
+                 ? 0.0
+                 : static_cast<double>(eccentricityTemperatureBiasCurve.Evaluate(
+                       static_cast<float>((ro.radius() - ro.PeR()) / (ro.ApR() - ro.PeR())))));
+    } else {
+        atmosphereTemperatureOffset = 0.0;
+    }
+    if (getBodyFlux) {
+        double num14 = 0.0;
+        double num15 = 0.0;
+        double num16 = 0.0;
+        if (atmosphere) {
+            const double temperature = GetTemperature(0.0);
+            bodyTemperature = temperature + atmosphereTemperatureOffset;
+            const ICelestialBodyOrbit& o = RequireOrbit(*this);
+            num15 = temperature + (fx(latitudeTemperatureBiasCurve.Evaluate(90.0f)) +
+                                   fx(axialTemperatureSunMultCurve.Evaluate(f32store(0.0 - fx(static_cast<float>(o.inclination()))))));
+            num16 = temperature + (fx(latitudeTemperatureBiasCurve.Evaluate(0.0f)) + fx(latitudeTemperatureSunMultCurve.Evaluate(0.0f)) +
+                                   fx(axialTemperatureSunMultCurve.Evaluate(static_cast<float>(o.inclination()))));
+            num14 = 1.0 - M::Sqrt(num16) * 0.0016;
+            num14 = UtilMath::Clamp01(num14);
+        } else {
+            double spaceTemperature = PhysicsGlobals::SpaceTemperature();
+            spaceTemperature *= spaceTemperature;
+            spaceTemperature *= spaceTemperature;
+            const double num17 = 1.0 / (PhysicsGlobals::StefanBoltzmanConstant() * emissivity);
+            const double num18 = num9 * (1.0 - albedo) * num17;
+            const double num19 = M::Sqrt(M::Sqrt(0.25 * num18 + spaceTemperature));
+            const double num20 = M::Sqrt(M::Sqrt(num18 + spaceTemperature)) - num19;
+            num16 = num19 + M::Sqrt(num20) * 2.0;
+            num15 = num19 - M::Pow(num20, 1.1) * 1.22;
+            const double t = 2.0 / M::Sqrt(M::Sqrt(solarDayLength));
+            num16 = UtilMath::Lerp(num16, num19, t);
+            num15 = UtilMath::Lerp(num15, num19, t);
+            double d = CsMax(0.0, num5 * 2.0 - 1.0);
+            d = M::Sqrt(d);
+            num14 = 1.0 - M::Sqrt(num16) * 0.0016;
+            num14 = UtilMath::Clamp01(num14);
+            const double num21 = (num16 - num15) * d;
+            const double num22 = num15 + num21;
+            const double num23 = num15 + num21 * num14;
+            bodyTemperature = CsMax(PhysicsGlobals::SpaceTemperature(), num23 + (num22 - num23) * num12 + coreTemperatureOffset);
+        }
+        const double b = UtilMath::LerpUnclamped(
+            UtilMath::LerpUnclamped(
+                UtilMath::LerpUnclamped(num15, num16, UtilMath::LerpUnclamped(0.782048841, 0.87513007, num14)),
+                UtilMath::LerpUnclamped(num15, num16, UtilMath::LerpUnclamped(0.093081228, 0.87513007, num14)), num12),
+            UtilMath::LerpUnclamped(num15, num16, UtilMath::LerpUnclamped(0.398806364, 0.797612728, num14)), num5);
+        double num24 = UtilMath::Lerp(bodyTemperature, b, 0.2 + altitude / Radius * 0.5);
+        num24 *= num24;
+        num24 *= num24;
+        double num25 = Radius * Radius / ((Radius + altitude) * (Radius + altitude));
+        if (num25 > 1.0) num25 = 1.0;
+        bodyEmissiveFlux = PhysicsGlobals::StefanBoltzmanConstant() * emissivity * num24 * num25;
+        bodyAlbedoFlux = num9 * 0.5 * (sunDot + 1.0) * albedo * num25;
+    }
+}
+
+// CelestialBody.cs:991
+double CelestialBody::GetFullTemperature(const CelestialBody* sunBody, double altitudeAtPos, const Vector3d& sunMinusScaledPos,
+                                         const Vector3d& upAxis, const AtmoThermalFrame& frame) {
+    const double sunDot = Vector3d::Dot(sunMinusScaledPos, upAxis);
+    double atmosphereTemperatureOffset = 0.0, emissive = 0.0, albedoFlux = 0.0;
+    GetAtmoThermalStats(false, sunBody, sunMinusScaledPos, sunDot, upAxis, altitudeAtPos, frame, atmosphereTemperatureOffset,
+                        emissive, albedoFlux);
+    return atmosphereTemperatureOffset;
 }
 
 // CelestialBody.cs:971
