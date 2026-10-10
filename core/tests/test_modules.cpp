@@ -18,6 +18,7 @@
 #include "ksp/parts/available_part.hpp"
 #include "ksp/save/save_environment.hpp"
 #include "ksp/util/ksp_util.hpp"
+#include "ksp/vessel/vessel.hpp"
 
 using namespace ksp;
 
@@ -326,8 +327,10 @@ TEST_CASE("WP-06 VesselModuleManager: order, activation, wrappers") {
     CHECK_FALSE(axes->ShouldBeActive(false, true));
     CHECK_FALSE(axes->ShouldBeActive(true, false));
     // module list for a vessel
+    // host must be a real Vessel: CommNetVessel.OnAwake (CommNetVessel.cs:88) writes Vessel.connection through it (WP-39); declared first so it
+    // outlives the modules
+    Vessel vessel;
     std::vector<std::shared_ptr<VesselModule>> mods;
-    int vessel = 0;
     VesselModuleManager::AddModulesToVessel(&vessel, mods, nullptr, true, true);
     CHECK(mods.size() == ordered.size());
     CHECK(mods.front()->vessel == &vessel);
