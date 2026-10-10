@@ -35,3 +35,9 @@ Worktree C:\Projects\KSP-UE5\.worktrees\wp37, branch wp37 (from main 7199d110, w
   parameters: VesselSystemsParameter, VesselDestinationParameter, LocationAndSituationParameter, RepairPartParameter, ConstructionParameter,
   RoverWayPointParameter, CrewTraitParameter -> factory seam), tests for parameters / ModuleTestSubject / constraints / PartTest+RecoverAsset
   templates, STATUS.md section, README rows, WSL run, full run_tests.ps1 -Fresh.
+- Slice 3 (done): GrandTour (factory seams for the WP-38 parameters), tests for OR/XOR/KerbalDeaths/Reach*/Acquire/Recover, PartTestConstraint over 75 parts, ModuleTestSubject,
+  predicates, PartTest/RecoverAsset/GrandTour pieces; header citations snapped (tools/wp37/fix_header_cites.py); STATUS section + README rows; check_cites 0 mismatches.
+- Found with MSVC ASAN (/fsanitize=address, build/asan, wp37_asan.ps1 outside the repo): my World37 teardown left ProgressTracking nodes subscribed (call pt->OnDestroy()); fixed, ASAN clean on all WP-37 cases + WP-25 docking.
+- main (dcef6d17, wp36 merged) merged into wp37 (f7a12b85): Windows fresh-equivalent run 34/34, unit 565 cases / 935,110 assertions (WP-37: 29 cases / 29,484).
+- WSL clang run started (log /tmp/wp37_clang.log in WSL); STATUS "Verification" placeholder to fill with its numbers.
+- Deferred: VesselRepair / OrbitalConstruction / RoverConstruction templates (WP-38 dependencies; see STATUS).
