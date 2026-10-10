@@ -38,6 +38,7 @@ Updated 2026-10-11 (WP-35, WP-39, WP-40; 2026-10-10: WP-00, WP-17, WP-22, WP-23,
 | 28. WP-39 CommNet and KerbNet (branch `wp39`, from main `ad208205`) | done (engine-agnostic part, unit-gated; no CommNet golden or capture exists): generic Net / Node / Link / Path with .NET Dictionary link order, CommNetwork (SetNodeConnection / TryConnect / horizon occlusion / best-path searches), CommNetVessel, CommNetScenario / Network / Home / Body, ModuleDataTransmitter (transmit coroutine), ModuleRelayEnabler, ModuleProbeControlPoint, ModuleKerbNetAccess; ModuleCommand registers as command source; independent Python reference, 0 ULP; part_database gate unchanged. See "WP-39" below |
 | 29. WP-40 editor core (branch `wp40`, from main `ad208205`, merged main `5ba0ff06`) | done (engine-agnostic part, unit-gated; no editor golden or capture exists): EditorLogic / EditorLogicBase data side (part tree attach / detach / re-attach, radial and mirror symmetry, undo / redo, delete, placement flow without the KFSM mouse loop), EditorGeometryUtil, EditorEnumExtensions, EditorPartListFilter(List), EditorBounds, EditorReRootUtil, EditorMarker CoM / CoL / CoT, GizmoOffset / GizmoRotate maths, PreFlightCheck + every PreFlightTest; native Quaternion.LookRotation / Euler / eulerAngles are now the single implementation (WP-24 seams delegate to them, WP-24 replay still 0 ULP); local pose, symmetry, mirror, gizmo, CoM and CoT 0 ULP against `tools/wp40/editor_reference.py`; **CoL aggregation ported, untested against any reference**; the three native quaternion functions are written from Unity's documented formulation and are **unverified against the game**; `unit` +11 cases / 95,023 assertions; every capture gate unchanged. See the WP-40 section |
 | 29. WP-36 funds, reputation, strategies, facilities, recovery, progress tracking (branch `wp36`, from main `ad208205`) | done (engine-agnostic part, unit-gated; no golden or capture of these systems exists, every existing gate unchanged): currency modifier pipeline (CurrencyModifierQuery / ValueModifierQuery, TransactionReasons), Funding and Reputation ScenarioModules (granular reputation, strategy deltas applied through OnCurrencyModified), GameVariables (all 52 formulas), upgradeable facilities (levels, costs, KSCFacilityLevelText, ScenarioUpgradeableFacilities), ProgressTracking with every KSPAchievements node (50 points of interest, 17 body subtrees, records), the strategy system with the four stock effects (configs from the GameData mirror), VesselRecovery value maths, ScenarioAchievements, ScenarioDestructibles; `unit` +31 cases / 36,928 assertions, 0 ULP against `tools/wp36/currency_reference.py` (strategy effects, transactions, GameVariables grid, recovery over 1,400 distance rows); the four SCENARIO nodes of the physprofile save round-trip byte-exact (it has no Funding / Reputation / Facilities / Strategy node); needs the GameVariables reputation curves and the KSC facility level data (not in any dataset), see the WP-36 section |
+| 30. WP-37 contract system core and stock templates (branch `wp37`, from main `7199d110`, `wp36` merged first) | done for the engine-agnostic part, unit-gated (no contract golden or capture exists, every existing gate unchanged): Contract state machine / rewards / expiry and deadline maths through the WP-36 GameVariables and currency pipeline, ContractParameter tree, ContractSystem (generation, weights, GetContractCounts, WEIGHTS / CONTRACTS save format), Agents + 19 mentalities, TextGen, 19 stock parameters, 5 predicates, PartTestConstraint, the real ModuleTestSubject PartModule, ScenarioCustomWaypoints, templates PlantFlag / CollectScience / PartTest / RecoverAsset / GrandTour; compared 0 ULP / byte-exact with the independent `tools/wp37/contract_reference.py` (rewards, expiry, mentalities, counts, weights, 189 TextGen strings, 284 generated contracts incl. ContractID, 1,426 part CONSTRAINT nodes); deferred: VesselRepair / OrbitalConstruction / RoverConstruction templates (WP-38 dependencies), see the section. |
 
 ## Test results (all 35 ctest tests pass (34 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience)
 
@@ -3916,3 +3917,107 @@ recovery grid and pipeline and the physprofile vessels, ScenarioDestructibles, S
 ### Verification
 
 Windows MSVC RelWithDebInfo fresh build: 34/34 ctest, `unit` 484 cases / 768,426 assertions. Linux Clang (`run_tests.sh -f`, WSL Ubuntu 24.04, log `/tmp/wp36_clang.log`): 34/34 ctest pass. GCC not run.
+
+## WP-37: contract system core and stock templates (branch `wp37`, from main `7199d110`, `wp36` merged first)
+
+State: done for the engine-agnostic part (state machine, rewards, generation, weights, text, parameters, predicates, agents, save formats, PartTestConstraint /
+ModuleTestSubject), unit-gated; five of the eight stock templates are ported (PlantFlag, CollectScience, PartTest, RecoverAsset, GrandTour), three are deferred
+with the reason below. There is **no contract golden or capture**: `harness/golden/MANIFEST.json` lists no contract, agent or ContractSystem dataset and
+`harness/captures/out*/` has none. Every existing gate is unchanged (`capture.part_database` identical row counts: ModuleTestSubject is now a real class and the
+host-schema fields it reads are the same; the rest of the 34 ctest tests at their previous numbers).
+
+### Gate
+
+| gate | result |
+|---|---|
+| golden / capture | none exists for these classes; `harness/compare/tolerances.json` and `tests/tolerances_capture.json` untouched |
+| `unit` `tests/test_contracts.cpp` | 25 cases, 29,484 assertions; every float compared bit for bit (`CHECK_F32`), every double bit for bit (`CHECK_F64`), every string byte for byte |
+| independent reference | `tools/wp37/contract_reference.py` (numpy float32 / Python float64 under the Mono rule; reimplements UnityEngine.Random from `harness/captures/README.md` C2, the Localizer, the Lingoona managed fallback, TextGen, Agents, the mentalities, PartTestConstraint.Load; reads `Contracts.cfg`, `Agents.cfg`, `StoryDefs.cfg`, the en-us `dictionary.cfg`, the part cfgs of the GameData mirror and `harness/golden/serialized/celestial_bodies.serialized.json`; no kspcore code) -> `tests/data/wp37_reference.json` |
+| physprofile save | the sandbox save has **no ContractSystem SCENARIO** (it has `ScenarioCustomWaypoints`, no WAYPOINT node): `ScenarioCustomWaypoints` round-trips byte-exact (`name`, `scene = 7, 8, 21`); the ContractSystem node format (WEIGHTS, CONTRACTS, CONTRACT_FINISHED, `update`, `version`) is round-tripped byte-exact on nodes this package writes itself (synthetic: not KSP data). The career save needed to gate real contract nodes is listed under "Needs data". |
+
+Per-table numbers of the reference comparison (max abs / max rel / max ULP are 0 everywhere):
+
+| table | rows / values compared | max abs | max rel | max ULP |
+|---|---|---|---|---|
+| UnityEngine.Random `Range(int)` / `Range(float)` cross-check (7 seeds incl. int.MinValue/MaxValue) | 7 x 13 draws | 0 | 0 | 0 |
+| `Contract.SetFunds` (both overloads) / `SetReputation` / `SetScience` / `SetDeadlineDays` / `SetDeadlineYears` (2 multiplier sets x 3 prestige x 7 body choices incl. none x 3 base sets) | 126 rows x 11 values | 0 | 0 | 0 |
+| `Contract.SetExpiry` (int and float draws, 4 seeds) | 8 | 0 | 0 | 0 |
+| agent mentalities: the 19 `Factor*` combinations, `CanProcessContract`, `ScoreKeyword` (19 x 3 prestige x 4 factors) | 228 rows x 13 values | 0 | 0 | 0 |
+| `Agents.cfg` (27 agents: default Cooperative / Competitive, listed mentalities, clamped factors) | 27 agents, 124 mentalities | 0 | 0 | 0 |
+| `ContractSystem.GetContractCounts` (3 averages x 45 reputations) | 135 rows x 3 tiers | exact ints | - | - |
+| generation weights after accept / decline / withdraw(read, seen) / complete, body weights through `GetWeightBodies`, clamps, `WeightAssignment`, `ResetWeights` | 16 steps x 3 weights | exact ints | - | - |
+| `TextGen.GenerateBackStories` (9 contract types, 7 seeds incl. negative, 3 `allowGeneric` combinations) | 189 strings | byte-exact | - | - |
+| generated PlantFlag / CollectScience contracts (3 prestige x 40 seeds x 2 career multiplier sets; the whole `Generate` path: progress scenario, weighted body choice, agent choice and mentality processing, rewards, deadline / expiry, keywords, title / synopsis / description, parameter tree, `ContractID`) | 480 cases: 284 generated, 196 correctly refused (e.g. Exceptional); per generated case 14 scalars + strings + parameter rows | 0 | 0 | 0 |
+| `PartTestConstraint.Load` over every `ModuleTestSubject` of the stock parts (type, test, value, valueD / valueB / valueI / valueR, body, prestige, situationMask, validity) | 75 parts, 1,426 CONSTRAINT nodes | exact | - | - |
+
+Exclusions: the Exceptional prestige of PlantFlag / CollectScience (the C# returns false: the reference agrees, the cases are in the 196); text of types without
+a STORY_DEF entry is compared too (the generic fallback). The `GameVariables` contract / mentality factors are the C# field initialisers (see "Needs data").
+
+### What is ported (C# file -> `include/ksp/contracts/` + `src/contracts/`; every function carries `// File.cs:N`, `check_cites.py` 0 mismatches; header member citations are snapped by `tools/wp37/fix_header_cites.py`)
+
+| file | content |
+|---|---|
+| `contract.hpp/.cpp` (Contract.cs, ContractParameter.cs, ContractPredicate.cs, IContractParameterHost.cs, ParameterState.cs, BodyLocation.cs) | the state machine (`Offer` / `Accept` / `Decline` / `Cancel` / `Complete` / `Fail` / `Withdraw` / `Kill` / `Update` / `Reset` / `SetState` with the weight adjustment and the `GameEvents.Contract` events), `SetExpiry` / `SetDeadline*` / `SetFunds` / `SetReputation` / `SetScience` through `GameVariables` (Mono rule), awards and penalties through Funding / Reputation / R&D (WP-36 currency pipeline), `Generate(type, prestige, seed, state)`, `Load` / `Save` (CONTRACT, PARAM), the parameter tree (nesting, `State`, `Optional`, `Disable`, `OnRegister` / `OnUnregister` events), `SetupID` / `HashString` / `CreateID`, the body list helpers over ProgressTracking (Mono `List.Sort` for the RecoveryValue order), `WeightedBodyChoice` |
+| `contract_system.hpp/.cpp` (ContractSystem.cs) | the ScenarioModule: type tables, `OnAwake` / `OnLoad` (coroutine, `LoadNow`) / `OnSave` (WEIGHTS, CONTRACTS, CONTRACT_FINISHED), `GetContractCounts`, `RefreshContracts`, `GenerateContracts` / `GenerateContract` (seed walk, duplicate-id drop), `WithdrawSurplusContracts`, `UpdateDaemon` / `UpdateContracts`, the weights (`WeightedContractChoice`, `WeightedBodyChoice`, `AdjustWeight`, `WeightAssignment` / `WeightAdjustment`, `ResetWeights`), `GenerateMandatoryContracts`, queries |
+| `agents.hpp/.cpp` (Agents/*.cs, Agents/Mentalities/*.cs) | Agent, AgentList (`Agents.cfg`), AgentStanding, AgentMentality + the 19 mentality classes, KeywordScore |
+| `text_gen.hpp/.cpp` (TextGen.cs) | the deterministic back-story generator |
+| `parameters.hpp/.cpp` (Parameters/*.cs) | AcquireCrew, AcquirePart, CollectScience, EnterOrbit, EnterSOI, KerbalDeaths, LandOnBody, OR, XOR, PartTest, PlantFlag, ReachAltitudeEnvelope, ReachBiome, ReachDestination, ReachFlightEnvelope (the TrackVessel coroutine), ReachSituation, ReachSpeedEnvelope, RecoverKerbal, RecoverPart |
+| `predicates.hpp/.cpp` (Predicates/*.cs) | AgentFlag, AgentParts, IsActiveVessel, IsControllable, LaunchID |
+| `module_test_subject.hpp/.cpp` (PartTestConstraint.cs, ModuleTestSubject.cs) | PartTestConstraint, the real ModuleTestSubject PartModule (registered through `detail::RegisterContractModules`, replaces the schema-only stand-in; the RunTestEvent, the 5 frame `delayedStart` coroutine, `onTestRun` / `onTestSujectDestroyed`) |
+| `templates.hpp`, `templates.cpp`, `templates_recover.cpp`, `templates_parttest.cpp`, `templates_grandtour.cpp` (Templates/*.cs) | PlantFlag, CollectScience, RecoverAsset, PartTest, GrandTour |
+| `waypoints.hpp/.cpp` (ScenarioCustomWaypoints.cs, ProtoWaypointInfo.cs) | the ScenarioModule and `Make/FindWaypoint` over WP-04's ProtoWaypointInfo; the `FinePrint::Waypoint` class is reduced to the members these files use (WP-38) |
+| `fineprint_lite.hpp/.cpp` (FinePrint/Utilities/*.cs, WP-38's files) | the stateless helpers the WP-37 files call: `SystemUtilities.LoadNode` / `FlightIsReady` / `CoinFlip` / `HashNumber` / `SuperSeed`, `ProgressMilestone`, `ProgressUtilities` (`GetBodiesProgress` family, `GetNextUnreached`, `GetProgressLevel`, `ScoreProgressType`, `CelestialCrewCounts`), `CelestialUtilities` (`IsGasGiant`, `IsFlyablePlanet`, `ChildrenOf`, `GetAltitudeForDensity`), `StringUtilities` (`ThisThisAndThat`, `ShortKerbalName`, `AlphaNumericDesignation`), `VesselUtilities` (`GetPartName`, `VesselHasPartName`, `ActiveVesselFallback`). They live in `ksp::Contracts::Lite` so WP-38 can replace them by the full port without a name clash |
+| `contract_environment.hpp/.cpp` | `ContractDefsLite` (the Contracts.cfg values the WP-37 files read), `ContractsEnvironment` seams |
+
+Registered ScenarioModules: `RegisterContractScenarioModules()` (ContractSystem, ScenarioCustomWaypoints); registered PartModule: ModuleTestSubject.
+
+### Findings (KSP behaviours the tests pin down; all ported as they are)
+
+- `Contract.AddKeywords(params string[])` adds **only the first** keyword that is not in the list yet and returns (so `AddKeywords("Scientific", "Commercial")` adds just "Scientific").
+- `ContractSystem.OnSave` writes `update` to the SCENARIO node, `OnLoadRoutine` reads it from the CONTRACTS node: `lastUpdate` is never restored from a save.
+- `ContractSystem.LoadContract` removes the `type` values from the node it is given.
+- `Contract.SetState` calls `Register()` **before** it stores the new state: parameters that test `Root.ContractState == Active` in `OnRegister` (AcquireCrew, AcquirePart, RecoverKerbal, RecoverPart, PartTest) only subscribe when the contract is registered while already Active (`RegisterContracts` after a load, `Reset`).
+- `ContractSystem.TryGetWeight(name)` returns 0 for a name that is not in the dictionary (`Dictionary.TryGetValue` leaves `default(int)`), not the default weight; `WeightAdjustment` ignores unknown names.
+- `TimeExpiry` / `TimeDeadline` are `float * float * float` stored into a double: the exact product, no float rounding (C7); the arguments of `Mathf.Round` are rounded to float.
+- `GetContractCounts`: `num8 = 1f / ((num5 + num6 + num7) / num)` is one double expression (no intermediate float).
+- `Predicates.LaunchID.ID` is `uint ID => ID;` (infinite recursion in the C#): the port throws.
+- `ReachFlightEnvelope.GetTitle` appends to its own `title` field on every call and prints the altitudes in the speed phrase; `ReachSpeedEnvelope` tests `srfSpeed >= minSpeed` in the orbital branch; `Parameters.PartTest.OnLoad` stores `title` into `body`.
+- `TextGen` needs GameDatabase-translated STORY_DEF values (`Localizer.TranslateBranch` at load); the Lingoona managed fallback cuts a parameter at `^` (a body `displayName` is `"The Mun^N"` after `CelestialBody.Awake`).
+- `SystemUtilities.SuperSeed(contract)` hashes `Guid.NewGuid()`: PlantFlag / RecoverAsset / GrandTour `GetHashString` (and so the `ContractID`) are not reproducible from the seed alone; the tests inject the Guid through `ContractsEnvironment::newGuid`.
+
+### Seams (unset = the stated default)
+
+- `ContractsEnvironment` (`contract_environment.hpp`): clock (`gameTime`, default `Planetarium.time`), `newGuid`, `nowTicks` (DateTime ticks of `SetupSeed(-1)` / `RefreshContracts`), `newRandomSeed` (`new KSPRandom()`), `ignoreAgencyMindsetOnContracts` (CheatOptions), `postMessage` (MessageSystem; falls back to `CareerEnvironment::postMessage`), `verboseDebugLog`, `timeWarpRate`, `partModelPurchased`, `oldCareerSave` / `updateCareerSave` / `versionString` (CompatibilityUtilities, WP-38), `biomeNameAt` (CBAttributeMapSO.GetAtt: the biome bitmap decode is a later package), `spawnPreBuiltShip` (ContractSystem.ConstructShip).
+- `TemplateEnvironment` (`templates.hpp`): `researchedValidContractObjectives` (default false), `checkTouristRecoveryContractKerbals`, `expungeKerbal`, `alphaNumeric` (the SiteGeneratorInfo TextAsset), `spawnRecoveryVessels` (RecoverAsset.GenerateLandRecovery / GenerateOrbitalRecovery), `destroyUnownedVesselsWithPart`, `discoverVessel`, `estimatePartSize`, `partHasSeats`, and the WP-38 GrandTour parameter factories `makeVesselSystemsParameter` / `makeVesselDestinationParameter` / `makeLocationAndSituationParameter` / `grandTourAccepted` (unset: GrandTour.Generate returns false).
+- `ContractRichText::provider` (mission control rich text: `MessageAdvances`, `MessageRewards`, `MessageFailurePenalties`, `MessageCancellationPenalties`, `MissionControlTextRich`; GUI, WP-46) and `FinePrint::WaypointManagerSeam`.
+- WP-36 `CareerEnvironment`: `rndPresent` / `rndAddScience` (AwardCompletion science), `postMessage`, `Scheduler()` (UpdateDaemon, OnLoadRoutine, TrackVessel, delayedStart coroutines), `HomeBody()`.
+
+### Not ported / deferred
+
+- **VesselRepairContract, OrbitalConstructionContract, RoverConstructionContract** (Templates): the `Generate` of each draws from `new KSPRandom()` (tick seeded, not reproducible) and builds on WP-38 classes that do not exist yet: `ContractDefs.PreBuiltCraftDefs` / `PreBuiltCraftPositions` / `constructionParts` (the PrebuiltCraft cfgs), `OrbitUtilities.GenerateOrbit`, `WaypointManager.ChooseRandomPosition*`, the `RepairPartParameter`, `ConstructionParameter`, `RoverWayPointParameter`, `CrewTraitParameter` classes, the `ContractOrbitRenderer`, and the pre-built vessel spawn pipeline (`ContractSystem.ConstructShip`, MissionSystem). They need WP-38 first; nothing was stubbed or registered under their names.
+- GrandTour is ported with factory seams for its three WP-38 parameters; the unit test uses stand-in parameters (not KSP behaviour) and checks the structure, the reward arithmetic input, the node format. Its `Generate` is not compared with the Python reference.
+- `PartTest` template `Generate` (R&D tech tree state + the part database + atmosphere density maths) and `RecoverAsset.Generate` (roster, part candidates) are ported but not run end-to-end in a test; their texts / node formats / hashes / wiring are tested (`GetSituationString`, `OnLoad` / `OnSave`, `Parameters.PartTest` hash by repeatability, RecoverAsset load / save / OnAccepted with the spawn seam). A gate needs the R&D scenario fixture of a career save.
+- `ContractSystem.ConstructShip` / `SpawnPreBuiltShip` (vessel construction), `MissionControlTextRich` and the `Message*` currency rich texts (GUI), the Agent logo textures, the GUI parts of ContractParameter / Contract (`SendStateMessage` posts the title / text to the message seam).
+- `ExplorationContract` (the mandatory type, WP-38): `GenerateMandatoryContracts` skips a mandatory type that is not registered.
+- `ContractSystem.ContractTypes` order: `AssemblyLoader` returns the types in the TypeDef order of the shipped Assembly-CSharp, which is not in the repo; the registration order is used. It decides `WeightedContractChoice` (reverse walk) and the key order of the saved WEIGHTS node.
+
+### Unverified / assumptions
+
+- The `GameVariables` contract and mentality factors (`contractPrestige*`, `contractFunds*Factor`, `mentality*`) are the C# field initialisers; the Unity prefab serializes them and it is not in `harness/golden/serialized`. The reference uses the same constants, so the comparison proves the arithmetic, not the prefab values.
+- `ContractDefsLite` reads the Contracts.cfg that ships with the game; `ContractDefs.LoadConfig` of the C# clamps nothing for the keys used here.
+- `GetBodies*` sorts with the Mono introsort (unstable): equal RecoveryValue bodies keep the C# order only if `dotnet::ListSort` is bit-exact for them (it is gated by WP-03).
+
+### Needs data (local extraction)
+
+- A **career** save with a ContractSystem SCENARIO (WEIGHTS key order = the reversed ContractTypes TypeDef order, real CONTRACT nodes with their `values` strings, CONTRACT_FINISHED) to gate the node format and the type order; `core/testdata/saves/physprofile` is a sandbox save.
+- `GameVariables` prefab values (contract / mentality factors, reputation curves).
+- `TextAssets/SiteGenerator/en-us/SiteGeneratorInfo` (the `Alphanumeric` list: `RecoverAsset.VesselName` for parts).
+- The PrebuiltCraft definitions are in the mirror (`GameData/Squad/Contracts/PrebuiltCraft`), consumed once WP-38 ports `ContractDefs`.
+
+### Unit tests
+
+`tests/test_contracts.cpp`: 25 cases / 29,484 assertions (Windows, RelWithDebInfo). See the Gate table; the remaining cases: OR / XOR / EnterOrbit / EnterSOI / KerbalDeaths event flows, Reach* checks, Acquire / Recover parameter formats, the state machine with funds / reputation / weights / events, failure / cancellation / decline / withdraw / deadline expiry, generation order and duplicate drop, the ContractSystem node round trip, the physprofile / waypoint nodes, PartTestConstraint tests, ModuleTestSubject on `HeatShield0`, predicates, PartTest / RecoverAsset / GrandTour template pieces.
+
+### Verification
+
+WP37_VERIFICATION_PLACEHOLDER
