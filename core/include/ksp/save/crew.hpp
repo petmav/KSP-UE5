@@ -11,6 +11,7 @@
 // roster (DictionaryValueList.Add).
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -27,6 +28,9 @@ class Game;
 class GameParameters;
 class CelestialBody;
 class ProtoCrewMember;
+class Part;
+class VesselCrewManifest;
+namespace Experience { class ExperienceTrait; class ExperienceEffect; }
 
 // ===================================================== FlightLog ====================================================
 
@@ -193,14 +197,14 @@ public:
     FlightLog flightLog;
     float experience = 0.0f;
     int experienceLevel = 0;
-    Experience::ExperienceTraitConfig* experienceTrait = nullptr;  // the trait's config (the ExperienceTrait object with
-                                                                   // its effects is created by the experience package)
+    std::shared_ptr<Experience::ExperienceTrait> experienceTrait;  // ProtoCrewMember.cs:167 (WP-31: kerbals/experience.hpp)
     std::optional<std::string> trait;
     bool isHero = false;
 
     // ---- properties ----
     const std::optional<std::string>& name() const { return name_; }
     std::string displayName() const;  // ProtoCrewMember.cs:175
+    std::string nameWithGender() const;  // :193 _name.LocalizeName(_gender): LingoonaGrammarExtensions.cs:12 ("^M" / "^F" suffix)
     bool inactive() const { return inactive_; }
     void set_inactive(bool value);    // fires onKerbalInactiveChange when it changes
     RosterStatus rosterStatus() const { return rosterStatus_; }
@@ -235,6 +239,51 @@ public:
     float CalculateExperiencePoints(const Game& game) const;                  // :1278
     float CalculateExperiencePoints(const GameParameters& parameters, Game_Modes mode) const;  // :1283
     std::string ToString() const { return name_.value_or(""); }               // :1353
+
+    // ---- WP-31 ----
+    std::string GetLocalizedType() const;                     // :673 (the enum Description: the raw localization tag)
+    std::string GetLocalizedStatus() const;                   // :678
+    std::string GetLocalizedTrait() const;                    // :683
+    std::string GetKerbalIVAName();                           // :1054
+    std::string GetKerbalIconSuitSuffix();                    // :1100
+    std::string GetKerbalIconSuitPath();                      // :1123
+    void RegisterExperienceTraits(Part& part);                // :1296
+    void UnregisterExperienceTraits(Part& part);              // :1304
+    bool HasEffect(const std::string& effect);                // :1317
+    Experience::ExperienceEffect* GetEffect(const std::string& effect);  // :1339 (last match first; NullReference without a trait)
+    // GetEffect<T> / HasEffect<T> (:1309 / :1327): the last effect of the trait that is a T
+    template <class T>
+    T* GetEffect();
+    template <class T>
+    bool HasEffect() { return GetEffect<T>() != nullptr; }
+    bool Equals(const ProtoCrewMember& o) const;              // :1358 (sic: `hasToured.Equals(hasToured)`)
+    int32_t GetHashCode() const;                              // :1371
+    double GExperiencedNormalized() const;                    // :149 expression property
+
+    // ---- g-force and per-frame callbacks (:81-98, :856-980) ----
+    using voidDelegate_PCM_Part = std::function<void(ProtoCrewMember&, Part&)>;
+    using voidDelegate_PCM_UT = std::function<void(ProtoCrewMember&, double)>;
+    using doubleDelegatePCM = std::function<double(ProtoCrewMember&)>;
+    static inline voidDelegate_PCM_Part CallbackActiveFixedUpdate, CallbackActiveUpdate, CallbackOnPartPack, CallbackOnPartUnpack,
+        ApplyGCallback;
+    static inline voidDelegate_PCM_UT CallbackUpdate;
+    static double _GToleranceMult(ProtoCrewMember& pcm);   // :856
+    static double _MaxSustainedG(ProtoCrewMember& pcm);    // :871
+    static inline doubleDelegatePCM GToleranceMult = _GToleranceMult;
+    static inline doubleDelegatePCM MaxSustainedG = _MaxSustainedG;
+    static inline bool doStockGCalcs = true;
+    // ScreenMessages.PostScreenMessage(text, duration) (UI; unset: dropped)
+    static inline std::function<void(const std::string&, float)> PostScreenMessage;
+    void ActiveFixedUpdate(Part& p);                       // :876
+    void ActiveUpdate(Part& p);                            // :960
+    void Update(double UT);                                // :968
+    void OnPartUnpack(Part& p);                            // :840
+    void OnPartPack(Part& p);                              // :848
+    // ModuleInventoryPart-backed values (kerbalModule is a WP-29/inventory object): hooks, unset = no module
+    static inline std::function<float(ProtoCrewMember&)> kerbalModuleCost, kerbalModuleMass, kerbalPrefabResourceMass;
+    float InventoryCosts();                                // :761 (0 for tourists; hook otherwise)
+    float InventoryMass();                                 // :775
+    float ResourceMass();                                  // :789
 
     // used by KerbalRoster
     void SetNameInternal(std::optional<std::string> n) { name_ = std::move(n); }
@@ -280,6 +329,10 @@ public:
     void Init(const Game& st);                                                          // :250
     void CheckRosterRespawn(double universalTime, const GameParameters& parameters);   // :258
     void Save(ConfigNode& node) const;                                                  // :272
+    void RepopulateCrewRoster(int rosterSize);                                          // :234
+    PCM GetNextOrNewKerbal(ProtoCrewMember_KerbalType type = ProtoCrewMember_KerbalType::Crew);  // :281
+    PCM GetNewKerbal(ProtoCrewMember_KerbalType type = ProtoCrewMember_KerbalType::Crew);        // :291
+    void CheckRosterRespawn();                                                          // :267
     PCM GetNextAvailableKerbal(ProtoCrewMember_KerbalType type = ProtoCrewMember_KerbalType::Crew);                     // :302 (Planetarium UT)
     bool AddCrewMember(const PCM& crew);                                                // :325
     bool ChangeNameCalledFromPCM(const PCM& crew, const std::string& oldName, const std::string& newName);  // :349
@@ -288,6 +341,9 @@ public:
     bool Remove(const std::string& name);                                               // :381
     bool Remove(const PCM& crew);                                                        // :393
     void Remove(int i);                                                                  // :398
+    // :491 (implemented in kerbals/vessel_crew_manifest.cpp; the funding / facility / kerbal-seat inputs are hooks)
+    std::shared_ptr<VesselCrewManifest> DefaultCrewForVessel(const ConfigNode& vesselNode, VesselCrewManifest* previous = nullptr,
+                                                              bool autohire = true, bool usePreviousVCMToFill = false);
     void ValidateAssignments(Game& st);                                                  // :403
     int IndexOf(const PCM& pcm) const;                                                   // :616
     std::vector<PCM> Kerbals(ProtoCrewMember_KerbalType type,
@@ -300,6 +356,10 @@ public:
     int GetMissingCrewCount() const;   // :738
     int GetKIACrewCount() const;       // :753
     PCM GetNextApplicant() const;      // :768
+    void PCMUpdate(double UT);         // :788
+    void Update(double UT);            // :797
+    // AddApplicant (:837, private) is exposed for the tests as AddApplicant
+    void AddApplicant(double UT);
     void UpdateExperience();           // :829
     void HireApplicant(const PCM& ap); // :851
     void SackAvailable(const PCM& ap); // :864
@@ -309,12 +369,20 @@ public:
     // ---- experience (static) ----
     static void SetExperienceTrait(ProtoCrewMember& pcm, std::optional<std::string> traitName = std::nullopt);  // :982
     static bool TryGetExperienceTraitConfig(const std::string& traitName, Experience::ExperienceTraitConfig*& traitConfig);
+    // :1048 / :1053 without a home body name: FlightGlobals.GetHomeBody().name (SaveEnvironment::localBodies, isHomeWorld);
+    // the first needs HighLogic.CurrentGame
+    static void SetExperienceLevel(ProtoCrewMember& pcm, int level);
+    static void SetExperienceLevel(ProtoCrewMember& pcm, int level, const GameParameters& parameters, Game_Modes mode);
     static void SetExperienceLevel(ProtoCrewMember& pcm, int level, const GameParameters& parameters, Game_Modes mode,
                                    const std::string& homeBodyName);  // :1053 (FlightGlobals.GetHomeBody().name)
+    static std::string GetHomeBodyName();  // FlightGlobals.GetHomeBody().name (NullReferenceException when none)
     static float GetExperienceLevelRequirement(int level);           // :1088
     static int GetExperienceMaxLevel();                              // :1101
     static int CalculateExperienceLevel(float xp);                   // :1106
     static float CalculateExperience(const std::vector<const FlightLog*>& logs);  // :1126
+    // :1159 GenerateExperienceLog; :1188 gettargetdisplayName; :1372 CheatExperience (HighLogic.CurrentGame.CrewRoster)
+    static std::string GenerateExperienceLog(const FlightLog& log);
+    static void CheatExperience();
     static std::string GetLocalizedExperienceTraitName(const std::optional<std::string>& queriedTrait);  // :1207
     static void AddExperienceType(const std::string& type, const std::string& typeName, float notHomeValue,
                                   float homeValue = 0.0f);  // :1241
@@ -325,6 +393,8 @@ public:
     const DictionaryValueList<std::string, PCM>& kerbals() const { return kerbals_; }
 
 private:
+    static void SetExperienceLevelImpl(ProtoCrewMember& pcm, int level, const GameParameters& parameters, Game_Modes mode,
+                                       const std::function<std::string()>& homeBodyName);
     static void InitializeExperienceTypes();  // :1225
     static bool ExperienceAddFlight(const FlightLog& flight, std::vector<std::string>& targets,
                                     std::vector<std::string>& types, std::vector<float>& targetXP);  // :1257

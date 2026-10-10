@@ -40,17 +40,9 @@ class Part;
 struct AvailablePart;
 class ShipConstruct;
 
-// VesselCrewManifest.cs: the editor's crew assignment, seen through what ShipConstruct / ShipConstruction read of it (WP-18
-// seam; the editor package implements it). ShipConstruction.ShipManifest is a pointer to one.
-class VesselCrewManifest {
-public:
-    virtual ~VesselCrewManifest() = default;
-    virtual int CrewCount() const = 0;                 // VesselCrewManifest.cs:18
-    virtual float GetCrewInventoryCosts() = 0;         // :112
-    virtual float GetCrewInventoryMass() = 0;          // :126
-    virtual float GetCrewResourceMass() = 0;           // :145
-    virtual void AssignCrewToVessel(ShipConstruct& ship) = 0;  // :490
-};
+// VesselCrewManifest.cs: the editor's crew assignment (WP-31: kerbals/crew_manifest.hpp). ShipConstruct / ShipConstruction only
+// hold pointers to it.
+class VesselCrewManifest;
 
 // IShipConstructIDChanges.cs (implemented by ModuleRoboticController, Serenity): a module that tracks the part persistentIds
 // LoadShip re-issued

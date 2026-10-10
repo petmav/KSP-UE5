@@ -15,6 +15,7 @@
 #include <set>
 #include <sstream>
 
+#include "ksp/kerbals/crew_manifest.hpp"
 #include "ksp/celestial/celestial_body.hpp"
 #include "ksp/celestial/celestial_system.hpp"
 #include "ksp/celestial/planetarium.hpp"

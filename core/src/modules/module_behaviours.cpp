@@ -36,6 +36,7 @@
 #include "ksp/thermal/thermal_modules.hpp"
 
 namespace ksp {
+void RegisterExperienceManagementModule();  // kerbals/kerbal_misc.cpp (WP-31)
 void RegisterTripLoggerModule();  // vessel/module_trip_logger.cpp (WP-14)
 void RegisterAeroModules();       // aero/lifting_surface.cpp (WP-21)
 namespace {
@@ -378,6 +379,7 @@ void RegisterBuiltinModules() {
     Reg<FlagDecalBackground>({"FlagDecalBackground"});
     RegisterModulePartVariants();  // WP-13: modules/module_part_variants.cpp
     RegisterStructuralModules();   // WP-13: ModuleMirrorPlacement, ModuleDisplaceTweak
+    RegisterExperienceManagementModule();  // WP-31: ModuleExperienceManagement
     RegisterTripLoggerModule();    // WP-14: ModuleTripLogger (vessel/module_trip_logger.cpp)
     RegisterAeroModules();         // WP-21: ModuleLiftingSurface, ModuleControlSurface, ModuleAeroSurface
     Reg<ModuleComet>({"ModuleComet"});

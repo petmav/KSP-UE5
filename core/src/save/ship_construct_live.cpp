@@ -2,6 +2,7 @@
 // src/save/ship_construct.cpp; the editor / UI parts of ShipConstruct.cs are not ported.
 #include <algorithm>
 
+#include "ksp/kerbals/crew_manifest.hpp"
 #include "ksp/core/exceptions.hpp"
 #include "ksp/core/log.hpp"
 #include "ksp/dotnet/mono_float.hpp"
