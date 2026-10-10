@@ -41,7 +41,7 @@ void RadiatorUtilities::TransferEnergy(const Radiators::RadiatorData& src, const
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
-// TemperatureModel.cs:25
+// TemperatureModel.cs:33
 TemperatureModel::Linear::Linear(float temp1, float alt1, float temp2, float alt2) {
     m = f32store((fx(temp1) - fx(temp2)) / (fx(alt1) - fx(alt2)));
     b = f32store(fx(temp1) - fx(m) * fx(alt1));
@@ -185,7 +185,7 @@ float TemperatureModel::Stepped::getTemperatureAtAltitude(float altitude) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
-// ModuleConductionMultiplier.cs:14
+// ModuleConductionMultiplier.cs:15
 void ModuleConductionMultiplier::OnAwake() {
     if (Part* p = dynamic_cast<Part*>(part)) originalConduction = p->fields.heatConductivity;
 }
@@ -210,7 +210,7 @@ void ModuleConductionMultiplier::FixedUpdate() {
 // ---------------------------------------------------------------------------------------------------------------------
 Part* ModuleAblator::PartOf() const { return dynamic_cast<Part*>(part); }
 
-// ModuleAblator.cs:95 (the char module and the node lookup; PartResourceLibrary / GetConnectedResourceTotals as in C#)
+// ModuleAblator.cs:106 (the char module and the node lookup; PartResourceLibrary / GetConnectedResourceTotals as in C#)
 void ModuleAblator::Start() {
     Part& p = *PartOf();
     if (Get<bool>("useChar") && !charModuleFound) Set<bool>("useChar", false);  // charModule == null -> useChar = false
@@ -251,7 +251,7 @@ void ModuleAblator::Start() {
     origConductivity = p.fields.heatConductivity;
 }
 
-// ModuleAblator.cs:166
+// ModuleAblator.cs:168
 void ModuleAblator::FixedUpdate() {
     if (!ThermalModuleEnvironment::loadedSceneIsFlight) return;
     Part& p = *PartOf();
@@ -292,7 +292,7 @@ void ModuleAblator::FixedUpdate() {
     Set<double>("loss", loss);
 }
 
-// ModuleAblator.cs:248 UpdateColor: `float num = (float)(ablativeAmount * nominalAmountRecip); if (num > 1f) num = 1f;
+// ModuleAblator.cs:236 UpdateColor: `float num = (float)(ablativeAmount * nominalAmountRecip); if (num > 1f) num = 1f;
 // float num2 = charMax - charMin; float scalar = charMin + num2 * num;`
 float ModuleAblator::CharScalar() const {
     float num = f32store(ablativeAmount * Get<double>("nominalAmountRecip"));
