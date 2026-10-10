@@ -14,3 +14,5 @@ src/modules/{module_commnet_parts,module_data_transmitter,module_kerbnet_access}
 Step 2 (done): tools/wp39/commnet_reference.py -> tests/data/wp39_reference.json (parts filtered to the in-game capture C9 part list + cfg_file).
 Step 3 (in progress): tests/test_commnet.cpp debugging (most cases pass); then: check_cites, run_tests.ps1 -Fresh, gates, STATUS/README, WSL run.
 Step 3 done: tests green (478 cases), docs written; WSL run pending (/tmp/wp39_clang.log in WSL).
+
+WSL clang (linux-rel, ./run_tests.sh -f): 34/34 pass, log /tmp/wp39_clang.log.
