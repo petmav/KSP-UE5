@@ -555,7 +555,7 @@ void ModuleCommand::OnNetworkInitialised() {
     networkInitialised_ = true;
 }
 
-// ModuleCommand.cs:345
+// ModuleCommand.cs:347
 void ModuleCommand::UpdateNetwork() {
     const bool inPAW = CommandEnvironment::partInPAW ? CommandEnvironment::partInPAW(*this) : false;
     if (!inPAW) return;

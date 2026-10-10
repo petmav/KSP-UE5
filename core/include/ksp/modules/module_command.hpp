@@ -82,7 +82,7 @@ public:
     ModuleControlState ModuleState() const { return moduleState_; }          // :105
     bool IsCommCapable() const override { return commCapable_; }             // :417
     VesselControlState GetControlSourceState() const override { return localVesselControlState_; }  // :412
-    // ICommNetControlSource (WP-39): `name` (the component name), UpdateNetwork (:345), Start (:319), OnDestroy (:332), OnNetworkInitialised (:341)
+    // ICommNetControlSource (WP-39): `name` (the component name), UpdateNetwork (:347), Start (:319), OnDestroy (:332), OnNetworkInitialised (:341)
     std::string ControlSourceName() const override { return moduleName; }
     void UpdateNetwork() override;
     virtual void Start();

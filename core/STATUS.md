@@ -3602,3 +3602,10 @@ phases (built, node removed, re-added, moved away, moved back) including each no
 - `CommNode.transform` for vessels is null (the vessel position comes from `GetWorldPos3D` in `OnNetworkPreUpdate`); `gameObject.name` is the vessel name.
 - First gap between two transmitted packets is one fixed step shorter in the unit driver: the WP-00 scheduler resumes the first `WaitForFixedUpdate` in the pass that started the routine (assumption of `coroutine.hpp`); later gaps equal the reference count.
 - Unverified against the player: everything above (no capture). Needed captures (local): a flight dump of a vessel's `CommNode` powers / `ControlPath` per network rebuild with a ground station and a relay, and one transmission (packet timing, EC) to gate the coroutine.
+
+### Verification (gatekeeper, HEAD 351bb61d)
+
+- Windows MSVC (`core/build` deleted, `powershell -NoProfile -File core/run_tests.ps1 -Fresh`): 34/34 ctest tests passed (worktree: `corpus.saves` absent); `kspcore_tests`: 478 cases, 761,243 assertions, 0 failed. All 27 `compare_report_*.json` are byte-identical to main's; non-zero entries are only the known WP-17 `capture.deltav_stages` delta-v columns.
+- Linux clang (WSL, `./run_tests.sh -f`): 34/34 passed (configure 128 s, build 315 s, test 3,834 s, `unit` 3,326 s); `kspcore_tests`: 478 cases, 761,227 assertions, 0 failed (16 fewer assertions than MSVC: platform-dependent test branches).
+- Linux GCC (`./run_tests.sh -p linux-gcc-rel -f`): 34/34 passed (build 245 s, test 2,163 s, `unit` 1,989 s).
+- `tools/wp39/commnet_reference.py` run with `python -I` reproduces `tests/data/wp39_reference.json` byte for byte; `tools/wp28/check_cites.py` on the 7 new / changed `.cpp` files plus `module_command.cpp`: 0 mismatches.
