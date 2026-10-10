@@ -39,3 +39,6 @@ ue5/Stub/build/
 decompiled/tools/IlspyExport/bin/
 decompiled/_archive/
 *_src/
+
+# WP-17: staged engine .mu/.cfg copies from decompiled/KSP-dev (recreate with core/tools/wp17/stage_engine_models.py)
+core/data/mu_staging/
