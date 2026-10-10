@@ -47,6 +47,8 @@ public:
     double radius() const override { return orbit.radius; }
     double PeR() const override { return orbit.PeR(); }
     double ApR() const override { return orbit.ApR(); }
+    double eccentricity() const override { return orbit.eccentricity; }
+    double inclination() const override { return orbit.inclination; }
     Vector3d vel() const override { return orbit.vel; }
     Vector3d getRelativePositionAtUT(double UT) const override { return orbit.getRelativePositionAtUT(UT); }
     Vector3d getOrbitalVelocityAtUT(double UT) const override { return orbit.getOrbitalVelocityAtUT(UT); }

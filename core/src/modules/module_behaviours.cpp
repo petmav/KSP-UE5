@@ -28,6 +28,8 @@
 #include "ksp/parts/part_loader.hpp"
 #include "ksp/util/ksp_util.hpp"
 
+#include "ksp/thermal/thermal_modules.hpp"
+
 namespace ksp {
 void RegisterTripLoggerModule();  // vessel/module_trip_logger.cpp (WP-14)
 void RegisterAeroModules();       // aero/lifting_surface.cpp (WP-21)
@@ -242,20 +244,7 @@ public:
     }
 };
 
-// ---- ModuleCoreHeat.cs:416 / ModuleResourceIntake.cs:75 / MultiModeEngine.cs:283 ---------------------------------------------
-class ModuleCoreHeat : public PartModule {
-public:
-    using PartModule::PartModule;
-    void OnAwake() override {
-        if (IsNull("PassiveEnergy")) {
-            FloatCurve c;
-            c.Add(0.0f, 0.0f);
-            Set<FloatCurve>("PassiveEnergy", std::move(c));
-        }
-    }
-    // OnLoad returns at once without a vessel (the prefab has none)
-};
-
+// ---- ModuleResourceIntake.cs:75 / MultiModeEngine.cs:283 (ModuleCoreHeat: WP-22, thermal/thermal_modules.cpp) ---------------------------
 class ModuleResourceIntake : public PartModule {
 public:
     using PartModule::PartModule;
@@ -449,7 +438,7 @@ void RegisterBuiltinModules() {
     Reg<ModuleDeployableSolarPanel>({"ModuleDeployableSolarPanel"});
     Reg<ModuleDataTransmitter>({"ModuleDataTransmitter"});
     Reg<ModuleGimbal>({"ModuleGimbal"});
-    Reg<ModuleCoreHeat>({"ModuleCoreHeat"});
+    detail::RegisterThermalModules();  // ModuleCoreHeat, ModuleActiveRadiator, ModuleAblator, ModuleConductionMultiplier (WP-22)
     Reg<ModuleResourceIntake>({"ModuleResourceIntake"});
     Reg<MultiModeEngine>({"MultiModeEngine"});
     Reg<FlagDecalBackground>({"FlagDecalBackground"});

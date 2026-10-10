@@ -28,6 +28,7 @@ add_executable(kspcore_tests
     test_ship_construct.cpp
     test_aero.cpp
     test_staging.cpp
+    test_thermal.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
 )
@@ -275,3 +276,24 @@ ksp_golden_gate(capture.aero_forces_vessel aero_forces_vessel GOLDEN ${KSP_CAPTU
                 TOL ${KSP_CAPTURE_TOL} TABLES structure,parts,aoa_sweep
                 COLUMNS "structure:craft,part_index,part,node_contact_areas"
                 DROP_COLUMNS "parts:dragVectorDirLocal_x,dragVectorDirLocal_y,dragVectorDirLocal_z,dragVectorMag,dynamicPressurekPa,staticPressureAtm,exposedArea,DragVector_x,DragVector_y,DragVector_z/aoa_sweep:flow_local_x,flow_local_y,flow_local_z")
+
+# WP-22 CelestialBody.GetAtmoThermalStats / GetFullTemperature(pos) vs the in-game capture C4 (captures/out2/atmosphere_thermal_offsets.json,
+# see tools/golden_runner/ds_atmosphere_thermal_offsets.cpp). Only `samples` is compared: `epochs` and `body_epoch` are the engine inputs
+# (scaled-space transforms, run-time orbit values), echoed by the runner from the capture itself.
+ksp_golden_gate(capture.atmosphere_thermal_offsets atmosphere_thermal_offsets GOLDEN ${KSP_CAPTURES2_DIR}/atmosphere_thermal_offsets.json
+                DROP_HEX TOL ${KSP_CAPTURE_TOL} TABLES samples)
+
+# WP-22 FlightIntegrator thermal model vs the in-game capture C6 (captures/out2/thermal_step.json; see tools/golden_runner/ds_thermal_step.cpp,
+# its header lists every input taken from the capture). Scope filters, each one for data this package cannot reproduce from the file:
+#   vessel  only the atmosphere / thermal scalars recomputed from the frame inputs; the inputs (UT, altitude, srfSpeed, spd, sunDot,
+#           atmosphereTemperatureOffset, bodyEmissive/AlbedoFlux, ...) and `solarFlux` (sun-ray distance) are not written
+#   part_constants  resource_mass (propellant left after the C10 ascent, not an input of the craft file) is dropped
+#   parts   frame 0 of each case (no previous row for the pre-state); columns that are inputs of the step (radiativeArea, exposedArea,
+#           thermalMass, ptd_intConductionFlux, ptd_skinConductionFlux: conduction to the 16 unlogged parts) or that need
+#           the engine (skinExposedAreaFrac stays: computed); skinThermalMass etc. are computed
+ksp_golden_gate(capture.thermal_step thermal_step GOLDEN ${KSP_CAPTURES2_DIR}/thermal_step.json DROP_HEX
+                TOL ${KSP_CAPTURE_TOL} TABLES vessel,parts,part_constants
+                DROP_ROWS "parts:frame=0"
+                DROP_KEYS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/data/thermal_step_exclusions.json
+                COLUMNS "vessel:case,frame,mach,density,staticPressurekPa,dynamicPressurekPa,atmosphericTemperature,externalTemperature,convectiveCoefficient,convectiveMachLerp,densityThermalLerp,solarFluxMultiplier,backgroundRadiationTemp,backgroundRadiationTempExposed,fi_isAnalytical"
+                DROP_COLUMNS "parts:radiativeArea,exposedArea,thermalMass,ptd_intConductionFlux,ptd_skinConductionFlux,ptd_convectionArea,ptd_postShockExtTemp,ptd_brtExposed,ptd_expFlux,ptd_unexpFlux,ptd_sunFlux,ptd_bodyFlux/part_constants:resource_mass")

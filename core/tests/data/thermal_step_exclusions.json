@@ -1,0 +1,11 @@
+{
+ "_comment": "Rows of harness/captures/out2/thermal_step.json excluded from the capture.thermal_step gate (table vessel), one by one, each with its reason (README \"Golden gate options\", STATUS.md WP-22). The FlightIntegrator atmosphere is recomputed from altitude, spd, sunDot and atmosphereTemperatureOffset; two quantities of the capture are not recoverable from the file: (a) FlightIntegrator.altitude (the CoM altitude, the capture only has Vessel.altitude of the root part) is recovered from the captured static pressure, which is a plateau of the Kerbin pressure curve in the last metres of the atmosphere (the lowest altitude with the same pressure bits is not the true one); (b) GetSolarAtmosphericEffects reads the PREVIOUS frame's density (KSP quirk), which is not in the file for the first frame of a case or for the frame after (a).",
+ "vessel": [
+  {"key": ["pad", 0], "reason": "solarFluxMultiplier uses the density of the physics frame before the first captured frame (not in the file); every other column of this row is reproduced"},
+  {"key": ["reentry", 1035], "reason": "static pressure on the plateau at the top of the atmosphere: FlightIntegrator.altitude not recoverable (see _comment a)"},
+  {"key": ["reentry", 1040], "reason": "static pressure on the plateau at the top of the atmosphere: FlightIntegrator.altitude not recoverable (see _comment a)"},
+  {"key": ["reentry", 1041], "reason": "solarFluxMultiplier uses the density of frame 1040, which is the excluded frame (see _comment b)"},
+  {"key": ["reentry", 1050], "reason": "static pressure on the plateau at the top of the atmosphere: FlightIntegrator.altitude not recoverable (see _comment a)"},
+  {"key": ["reentry", 1051], "reason": "solarFluxMultiplier uses the density of frame 1050, which is the excluded frame (see _comment b)"}
+ ]
+}
