@@ -34,6 +34,7 @@ Updated 2026-10-10 (WP-00, WP-17, WP-22, WP-23, WP-24, WP-25, WP-26, WP-27, WP-2
 | 24. WP-25 docking, grapple, struts, vessel merge / split (branch `wp25`, from main `95ed0a16`) | done (engine-agnostic part, unit-gated; no docking golden or capture exists): ModuleDockingNode (KSPFields / OnLoad / OnSave / OnStart, the 9-state KerbalFSM with all 15 events, nodeType / gender / snapRotation matching, CheckDockContact and the Acquire force chain in the Mono float rule, DockToVessel / Undock / Decouple over the WP-16 Couple / Undock / decouple, crossfeed events, rotation (servo) maths), ModuleGrappleNode (FSM, Grapple / Release / GrappleSameVessel / Decouple, both DockedVesselInfo), CModuleStrut (rigidbody-owner resolution, the Strut AttachNode); the WP-16 stand-in and the WP-17 runner crossfeed stand-in are gone; part_database / ship_construct / deltav_stages / staging_sequence stay 0 ULP; joints, transforms, raycasts, FX are documented seams (WP-20) |
 | 25. WP-30 misc part modules (branch `wp30`, from main `95ed0a16`) | done (engine-agnostic part, unit-gated): ModuleGPS (update-rate gate, lat / lon / biome text, asteroid / comet connection, `IAnimatedModule`), FlagSite (the KerbalFSM Placing / Placed / Toppled machine, joint / lock / dialog bookkeeping, OnSave / OnLoad of the state, afterFlagPlanted), ModulePartFirework (OnAwake / OnStart / OnLoad / OnSave, shot counter, color pickers, LaunchShell rigidbody numbers, mass modifier; replaces the WP-06 stand-in); `unit` +4 cases (+ the 2 small-fix tests), shell numbers and GPS text 0 ULP against a numpy float32 reference; `capture.part_database` unchanged (0 ULP, same rows). Part B small fixes listed in "WP-30". See the WP-30 section |
 | 26. WP-00 core runtime skeleton: tick phases, coroutine scheduler (branch `wp00`, from main `95ed0a16`) | done (engine-agnostic part, unit-gated; no golden or capture of scheduling exists, every existing gate unchanged): TimingManager + the eight Timing* hosts (Delegate add / remove-during-iteration semantics), `PlayerLoop` with the script order measured in game (Timing0, TimingPre, Timing1, Timing2, TimingManager, Timing3, TimingFI, Timing4, Timing5 for FixedUpdate / Update / LateUpdate; fixed-step and frame slot order), C++20 coroutine scheduler (null / WaitForSeconds / WaitForFixedUpdate / WaitForEndOfFrame / WaitUntil / nested / Stop), CoroutineHost, CallbackUtil.DelayedCallback, HierarchyUtil / TransformExtension / GameObjectExtension pure functions; VesselDeltaV.RunCalculations is now a real coroutine driven by the scheduler with identical results; scheduler vs independent numpy float32 replay 0 ULP; 18 cases / 396 assertions (17 in test_timing + 1 in test_deltav); the resume rules assumed for the engine are listed in the WP-00 section |
+| 28. WP-35 science, R&D and tech tree (branch `wp35`, from main `ad208205`) | done (engine-agnostic part, unit-gated; no golden or capture of science exists): ScienceExperiment / ScienceSubject / ScienceData, ScienceUtil, ResearchAndDevelopment (science points, subjects, tech tree, parts, recovery, OnLoad / OnSave round trip), RDTechTree / ProtoTechNode / ProtoRDNode, RnDCommsStream, ExperimentResultDialogPage (data side), ModuleScienceExperiment / Container / Lab / Converter, ModuleEnviroSensor, ModuleSampleContainer, ScienceLabSearch; the subject value maths (84,600 floats), lab page value and converter catch-up are 0 ULP against an independent numpy reference; `capture.part_database` unchanged (0 ULP, identical rows); currency / CommNet / UI are seams (WP-36, WP-39); see the WP-35 section |
 
 ## Test results (all 35 ctest tests pass (34 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience)
 
@@ -3535,3 +3536,116 @@ model (double clock, float casts, wake rule); it cannot validate the engine beha
 - `./build/RelWithDebInfo/tests/kspcore_tests | grep -E "test cases|assertions"`: 419 test cases, 711,273 assertions, 0 failed;
   with `-tc="WP-00*"`: 18 cases, 396 assertions (17 in test_timing.cpp / 367, 1 in test_deltav.cpp / 29).
 - WSL (Ubuntu 24.04, clang, `./run_tests.sh -f` from the worktree): ALL TESTS PASSED, 34 of 34 ctest tests (the C++20 coroutines build and run on both toolchains).
+
+## WP-35: science, R&D and tech tree (branch `wp35`, from main `ad208205`)
+
+State: done for the engine-agnostic part, **unit-gated** (no golden or capture of science exists: `harness/golden/MANIFEST.json` and `harness/captures/out*/` carry no
+science, R&D or tech-tree data; checked by grep). Every ported function cites `File.cs:line` (declaration line) of `decompiled/KSP-Decompiled/Assembly-CSharp/`;
+`tools/wp28/check_cites.py` reports 263 cites, 0 mismatches over the three .cpp files. The WP-06 stand-in for `ModuleScienceConverter` (registered as a plain
+`BaseConverter`) is replaced by the real class, and the five other science modules (`ModuleScienceExperiment`, `ModuleScienceContainer`, `ModuleScienceLab`,
+`ModuleEnviroSensor`, `ModuleSampleContainer`) are no longer the generic `PartModule`; the registration list is unchanged otherwise
+(`detail::RegisterScienceModules()` runs right after the WP-28 registrations, so the later registration of `ModuleScienceConverter` wins).
+
+Two facts about 1.12.5 that differ from the work-package text: `ModuleScienceLab` has **no `GenerateScience` / `ProcessData` maths** (`ProcessData` only stores the
+subject id and `labValue`; `SurfaceBonus` / `ContextBonus` / `homeworldMultiplier` are applied in `ExperimentResultDialogPage.UpdatePageLabValue`, which is where the
+lab value of a data item is computed), and the lab science is produced by `ModuleScienceConverter.PostProcess`. Both are ported and gated.
+
+### Gate (RelWithDebInfo, fresh `core/build`; harness and capture tolerances unchanged)
+
+`capture.part_database` (every KSPField of every module instance, now owned by the real classes): identical row counts to WP-06 and all columns at max abs 0 /
+max rel 0 / max ULP 0.
+
+| table | rows gated | excluded (unchanged, WP-05 / WP-06) | max abs / rel / ULP |
+|---|---|---|---|
+| parts | 357 | 5 prefab parts | 0 / 0 / 0 |
+| part_cfg_values | 6,235 | - | 0 / 0 / 0 |
+| modules | 1,312 | 66 rows of the 5 prefab parts | 0 / 0 / 0 |
+| module_fields | 32,894 | 1,907 (5 prefab parts, 18 solar-panel pivot rotations) | 0 / 0 / 0 |
+| module_propellants, resources, attach_nodes, drag_cubes, variants, assets | 77, 166, 822, 531, 228, 743 | as before | 0 / 0 / 0 |
+
+The module_fields rows of every stock `ModuleScienceExperiment` (36), `ModuleScienceContainer` (25), `ModuleScienceLab` (1), `ModuleScienceConverter` (1),
+`ModuleEnviroSensor` (4) are among the 32,894. Every other ctest gate is unchanged and green: Windows MSVC `run_tests.ps1 -Fresh` then a normal run: ALL TESTS PASSED,
+34 of 34 ctest tests (a worktree registers 34: `corpus.saves` needs `decompiled/KSP-dev`).
+
+### Unit tests (`tests/test_science.cpp`: 16 cases, 12,488 assertions; whole `unit` 469 cases / 743,986 assertions, measured with `kspcore_tests | grep -E "test cases|assertions"`)
+
+The independent Python reference `tools/wp35/science_reference.py` (numpy float32 stores per the Mono rule, its own cfg parser, no kspcore code) reads only game data:
+`ScienceDefs.cfg` (GameData-mirror), the lab part cfg, `harness/golden/serialized/celestial_bodies.serialized.json` (CelestialBodyScienceParams, atmosphere, home
+world of the 17 bodies) and the biome attribute names in `src/celestial/kerbol_system_data.cpp` (generated from the PSystem prefab). It writes
+`tests/data/wp35_reference.json` (2.6 MB).
+
+| test | what is compared | result |
+|---|---|---|
+| ScienceDefs.cfg | all 18 EXPERIMENT_DEFINITIONs: every field, the RESULTS dictionary (order, `*` renaming of duplicate keys; values are localised by the game database), Save / Load round trip, `IsAvailableWhile` / `BiomeIsRelevantWhile` over 17 bodies x 6 situations, the added `recovery` experiment | exact |
+| TechTree.cfg | 63 RDNodes -> ProtoRDNode / ProtoTechNode: id, cost, icon, anyToUnlock, 81 parent links (and the child back links), titles, `GetNextUnavailableNodes`, `GetCheapestUnavailableNodes`, `FindTech` | exact |
+| subject / science value maths | 1,880 subjects (18 experiments x 17 bodies x their situations x biomes incl. names with spaces) x 7 submission steps (xmit 1, .5, .25, 0, ratios 1, .5, .3): id string, subjectValue, scienceCap, dataScale, `GetReferenceDataValue`, `GetScienceValue`, `GetNextScienceValue`, `SubmitScienceData` return, `science`, `scientificValue`: 84,600 floats | max ULP **0** |
+| lab page value (`UpdatePageLabValue` arithmetic) | 792 (ref value x landed / splashed x context x home world), `Math.Round` banker's | max ULP **0** |
+| `ModuleScienceConverter` formulas | `GetScientists` (crew levels 0-5, 1-4 scientists), `CalculateScienceAmount / Rate / ResearchTime` for both day lengths (the test takes the entries of `KSPUtil.dateTimeFormatter.Day`) | exact (doubles) |
+| `ModuleScienceConverter.FixedUpdate` | 7 scenarios, 69 steps through the real `BaseConverter.FixedUpdate` / `GetBestDeltaTime` / `ProcessRecipe` / `PostProcess` on a tank store: `lastUpdateTime`, `catchupRetries`, `lastTimeFactor`, ElectricCharge, `dataStored`, `storedScience` (float bits), activation, status text; catch-up retries, science cap, no scientists (the converter stops), clamps of data above storage | exact |
+| ResearchAndDevelopment | initial tech (`getInitialTech`), part availability / purchase, experimental parts, `AddScience` (clamp at 0, AllowNegativeCurrency, OnScienceChanged), `UnlockProtoTechNode`, **OnSave -> OnLoad -> OnSave is the identity** (tech, subjects, ExpParts) | exact |
+| ScienceSubject / ScienceData / ScienceUtil | constructors, Save / Load, id parsing (`GetExperimentFieldsFromScienceID`, `GetExperimentBodyName`), localised titles, recovery titles, `CopyOf`, the unknown-experiment null dereference | exact |
+| stock cfg sweep | all 36 + 25 + 1 + 1 + 4 modules are the real classes with their cfg values (usage masks, xmitDataScalar, capacity, storageRange, dataStorage, sensorType, EVASITUATIONs) | exact |
+| ModuleScienceContainer | `StoreData` (capacity, repeated subjects, `dumpRepeats`, the ascending-count sort and containers-last order, `excludeScienceContainers`), `AddData` (data.container = flightID), `HasData`, `ReturnData`, `OnSave` node names by `dataIsRecoverable`, `OnLoad`, `ExperimentTransfer.IsValidPart` | exact |
+| ModuleScienceExperiment on a real `Vessel` | `RequiredUsageInternalAvailable` (all masks and messages), deploy -> `ScienceData` (`baseValue * dataScale`, flightID, xmit scalar), the dialog delay (UT > dialogTimer), the result page values, transmit without / with a transmitter, `Inoperable`, reset (SetFXModules over frames with a fake scalar module), send to a lab (`ScienceLabSearch` errors NO_MANNED / ALL_RESEARCHED, lab storage), collect into a container | exact |
+| `GetExperimentSituation`, `RnDCommsStream`, recovery | 12 situation / altitude rows at the thresholds; complete stream, timeout with and without `xmitIncomplete`; `onVesselRecoveryProcessing` over a vessel of the game's physprofile save (ScienceData submitted, lab `storedScience` added, trip-log recovery subjects) | exact |
+| sensors, samples, lab cleaning | `ModuleEnviroSensor` toggling and readout (`0.##` etc.), EC draw; `ModuleSampleContainer`; `CleanUpExperiment` over frames (shortage, enough charge, `currentAmount -= amount * resourceResetCost`) | exact |
+
+### Ported (by C# file) and seams
+
+| C# file | state |
+|---|---|
+| ScienceExperiment, ScienceSubject, ScienceData, ExperimentSituations, ExperimentUsageReqs, RecoverySituations, IScienceDataContainer, IScienceDataTransmitter, ITechPerk / TechPerk, PlanetarySample, KnowledgeItem | ported (`science/science.hpp`, `src/science/science.cpp`). `KnowledgeItem<T>` takes a `HaveKnowledge` predicate for `DiscoveryInfo.HaveKnowledgeAbout(level)` and a `formatValue` hook for `IFormattable.ToString(format, null)` |
+| ScienceUtil | ported: situations, biome strings (`BiomeIsUnlisted`, `GetBiomedisplayName`), id parsing, all title generators, `GetTransmitterScore`, `GetBestTransmitter` (CommNet branch is a hook), usage requirements (internal / external). `GetExperimentBiome` reads the map through `ScienceEnvironment::biomeAtt` (the `CBAttributeMapSO.GetAtt` pixel reader belongs to a later package) |
+| ResearchAndDevelopment | ported (`src/science/research_and_development.cpp`): science points, subjects, tech nodes, experiments, mini biomes, `OnLoad` / `OnSave`, recovery processing incl. reverse engineering (through `VesselTripLog`), `GetResults`, `CountUniversalScience`, the part queries. `ResearchedValidContractObjectives` returns false (`PartModule.IsValidContractObjective` belongs to the contract package) |
+| ProtoTechNode, ProtoRDNode, RDTechTree (static data side) | ported; the MonoBehaviour half (RDController / RDNode rendering, `SpawnTechTreeNodes`, editor part-list filters) is UI |
+| RnDCommsStream | ported; its timeout coroutine is a C++20 coroutine on `ScienceEnvironment::Scheduler()` (WP-00) |
+| ExperimentResultDialogPage | data side ported (constructor values, `UpdatePageLabValue`; the arithmetic is `LabValueMaths`); the dialog is UI |
+| ModuleScienceExperiment, ModuleScienceContainer, ModuleScienceLab, ModuleScienceConverter, ModuleEnviroSensor, ModuleSampleContainer, ScienceLabSearch, ExperimentTransfer | ported (`modules/science_modules.hpp`, `src/modules/science_modules.cpp`); the C# iterators are coroutines |
+
+Seams (all in `ScienceEnvironment` / `ScienceModuleEnvironment`, each commented): the currency side (`CurrencyModifierQuery`, `Funding.Instance`, the R&D facility level /
+damage, `GameVariables.GetExperimentLevel`, `StringUtilities.FormattedCurrencies` for the reward string) belongs to **WP-36** (defaults: facility level 1, damage 0, no
+modifier, no reward text); CommNet (`CommNetScenario.CommNetEnabled`, `connection.GetBestTransmitter`, the comm node science curve) and `ModuleDataTransmitter` (must derive from
+`IScienceDataTransmitter`) belong to **WP-39**; `TransactionReasons` is declared only as the opaque enum of `game_event_types.hpp` (WP-36 defines it): the three values used
+are `science_reason::*` casts of the C# numbers; the result dialog (`displayResult`, recorded `shownPages`; the user's choice is made by calling the page's `OnDiscardData /
+OnKeepData / OnTransmitData / OnSendToLab`), the overwrite popup, the transfer confirm dialog, `PartItemTransfer`, screen messages (recorded), `KerbalEVA` actions (PlayGolf /
+Banana / Dzhanibekov), the inventory (`ContainsPart`), the PAW membership test, `FlightGlobals.getGeeForceAtPosition`. The host must install the existing
+`VesselEnvironment` hook that calls `ResearchAndDevelopment::GetMiniBiomedisplayNameByUnityTag(tag, false)` (vessel.hpp:116) and `ScienceEnvironment::getConfigNodes /
+loadedParts` (GameDatabase / PartLoader).
+
+### Mono float rule and quirks reproduced (later code must keep them)
+
+- `ModuleScienceConverter.CalculateScienceAmount` returns `dataAmount * (float)scienceMultiplier` from a **double** method and `CalculateScienceRate` is
+  `(double)(day * scientists * ... )`: no float store in either (a cast to double or a double return is not a float store); the 0 ULP gate against the reference proves it.
+  The stores are at `GetScientists` (`num += 1f + bonus * level`), `Lab.dataStored -= (float)num2`, `Lab.storedScience += (float)num3`.
+- `GetScienceValue` / `GetNextScienceValue` pass `a * b * c` to `Mathf.Min` (float parameter => store) and store `Lerp(...) * xmitScalar` in a local; `SubmitScienceData` stores
+  `subject.science += value`, then `scientificValue = GetSubjectValue(science)`, then `value *= ScienceGainMultiplier`.
+- `ScienceExperiment.Load` renames duplicate RESULTS keys by appending `*` **inside the config node** (`value.name += "*"`).
+- `ScienceData.Load` dereferences a null experiment for a bare (no `@`) unknown id (NullReferenceException); `ScienceUtil.GenerateLocalizedTitle` indexes `array2[1]`.
+- `ModuleScienceLab.ExperimentData` and `processResources` are public serialised members, null / empty on a code-built prefab and copied by `Instantiate`
+  (`CopySerializedFrom`); the experiment's `fxModuleIndices`, `evaSituations`, `DeployEventDisabled` likewise.
+- `ModuleEnviroSensor.OnLoad` gives a sensor on a prefab compile an ElectricCharge input at 0.0075 (`partInfo` still null): the WP-15 module-resource test now expects it.
+- The converter's `PostProcess` clamps `dataStored` / `storedScience` BEFORE checking the scientists, and `StopResourceConverter` ends the converter for good when a step
+  has no scientist; a converter used without crew produces nothing.
+- The goo's `FxModules = 0` is the model animation (`ModuleAnimateGeneric`): without `DeployablesEnvironment::modelAnimations` its `SetScalar` is not usable, so tests clear
+  `fxModuleIndices` (or use a fake scalar module).
+
+### Unverified / not done (and why)
+
+- `corpus.saves` cannot run in a worktree; `core/testdata/saves/physprofile/persistent.sfs` has **no ResearchAndDevelopment SCENARIO node** (nor any tech / science node), so the
+  scenario round trip is built through the API from the game's own experiments and tech tree. Needs data: a career save (SCENARIO `ResearchAndDevelopment` with `Tech`,
+  `Science`, `ExpParts` nodes) to gate `OnLoad` / `OnSave` against the original bytes.
+- No in-game capture of: `ScienceSubject.scientificValue` progression, result page values, lab science generation, transmission. A capture would be a harness dataset
+  `science` (EDITOR-free FLIGHT: `GetScienceValue / GetNextScienceValue` per experiment x situation x body, a lab with 1-4 scientists of levels 0-5 over a time-warp sequence).
+- UI-only members (dialogs, PAW refresh, RD tree rendering, the `N0` / custom numeric formats of the `GetInfo` / readout texts are approximated by `CustomFixed` / `FormatSingleF`) are not modelled.
+- `OnModuleInventoryChanged` compares nothing (the inventory module class belongs to its package): any inventory change refreshes the UI.
+- The biome map pixel reader (`CBAttributeMapSO.GetAtt`), `KerbalEVA`, `ModuleInventoryPart.ContainsPart` and the contract hook `IsValidContractObjective` are not ported.
+
+### Linux (WSL Ubuntu 24.04, `./run_tests.sh -f` clang and `-p linux-gcc-rel -f`, fresh builds, in the worktree)
+
+Gatekeeper full runs (shared CPU with other packages' runs): clang `linux-rel` 34 of 34 ctest tests passed (unit alone about 1 h under contention; test 3,764 s), and `kspcore_tests`
+on Linux clang: 469 cases / 743,970 assertions, 0 failed (Windows MSVC 743,986: the known 16-assertion Windows-only difference is unchanged). gcc `linux-gcc-rel` 34 of 34 ctest
+tests passed (test 2,325 s). The implementer's earlier partial Linux run (WP-35 filter: 18 cases / 15,100 assertions) is superseded.
+
+### Commits (branch `wp35`)
+
+see `git log --oneline ad208205..wp35`.

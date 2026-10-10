@@ -91,6 +91,9 @@ add_library(kspcore STATIC
     modules/resource_converters.cpp
     modules/resource_generators.cpp
     modules/resource_scanners.cpp
+    modules/science_modules.cpp
+    science/science.cpp
+    science/research_and_development.cpp
     modules/deployables.cpp
     modules/parachutes.cpp
     modules/animation_modules.cpp
