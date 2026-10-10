@@ -18,6 +18,8 @@
 #include "ksp/config/config_node.hpp"
 #include "ksp/database/game_data.hpp"
 #include "ksp/dotnet/text.hpp"
+#include "ksp/modules/part_module.hpp"
+#include "ksp/parts/part.hpp"
 #include "ksp/resources/planetary_resources.hpp"
 #include "ksp/resources/resource_broker.hpp"
 #include "ksp/save/save_environment.hpp"
@@ -73,6 +75,7 @@ int RunShipConstruct(const RunnerOptions& opt) {
     go.gameDataDir = fs::absolute(dotnet::PathFromUtf8(opt.gamedata)).lexically_normal().string();
     data.Load(go);
     SaveEnvironment& env = SaveEnvironment::Current();
+    env.loadedScene = GameScenes::EDITOR;  // the C5 capture was taken in the VAB
     env.getPartInfoByName = [&data](std::string_view n) { return data.parts.getPartInfoByName(n); };
     env.partExists = [&data](std::string_view n) { return data.parts.getPartInfoByName(n) != nullptr; };
     support::InstallUpgradeHooks(data);
@@ -105,6 +108,9 @@ int RunShipConstruct(const RunnerOptions& opt) {
         ShipConstruct ship;
         std::string err;
         if (!ship.LoadShipWithParts(*upgraded, 0, true, err)) throw std::runtime_error(std::string("LoadShip ") + c.craftId + ": " + err);
+        // The capture is an editor session: Part.Start ran on every part (ModulesOnStart, Part.cs:1727), so ModuleProceduralFairing.OnStart
+        // set `panelMass = GetFairingArea() * UnitAreaMass` from the XSECTION nodes the craft file stores (ModuleProceduralFairing.cs:443).
+        for (Part* p : ship.liveParts) p->ModulesOnStart(StartState::Editor);
         float dryMass = 0.0f, fuelMass = 0.0f;
         ship.GetShipMass(dryMass, fuelMass);
         tc.Add({c.craftId, static_cast<int64_t>(ship.LiveCount()), dryMass, fuelMass});
