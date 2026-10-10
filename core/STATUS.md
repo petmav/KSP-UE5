@@ -4019,4 +4019,10 @@ Registered ScenarioModules: `RegisterContractScenarioModules()` (ContractSystem,
 
 ### Verification
 
-WP37_VERIFICATION_PLACEHOLDER
+Windows MSVC RelWithDebInfo (main `dcef6d17` merged): 34/34 ctest, `unit` 565 doctest cases / 935,110 assertions (WP-37: 29 cases / 29,484 assertions), configure 0.7 s, build 17.5 s
+(incremental after a fresh build of 190 s), test 149 s. MSVC AddressSanitizer build (`/fsanitize=address`, separate build dir): all 29 WP-37 cases plus `WP-25 docking two vessels`
+clean (it found a teardown bug of the test fixture: ProgressTracking nodes stayed subscribed to `GameEvents.onPartCouple`; fixed with `ProgressTracking::OnDestroy`).
+`check_cites.py` 0 mismatches over `src/contracts/*.cpp` (497 citations), `tools/wp37/fix_header_cites.py --check` 0 mismatches over the headers.
+Linux Clang (`run_tests.sh -f`, WSL Ubuntu 24.04): the fresh configure and the whole clang -O3 build of kspcore, tests and tools succeeded and ctest reached `unit`; the unit run was
+**not completed in the implementer session** (WSL ran at a fraction of real time and two concurrent launches collided on `build/linux-rel` once; the log is `/tmp/wp37_clang.log` in WSL,
+the unit run of this tree was still executing). The gatekeeper must run `./run_tests.sh -f` (Linux assertion counts are not equal to Windows, see the WP-40 note).
