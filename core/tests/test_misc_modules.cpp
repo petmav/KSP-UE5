@@ -162,6 +162,23 @@ TEST_CASE("WP-30 ModulePartFirework: shell numbers, mass modifier and shot label
     }
 }
 
+// ModulePartFirework.cs:167 OnAwake with a missing shell prefab: the C# looks up base.Events["LaunchShell"] (the event is named LaunchShellEvent), the
+// lookup is null and the guiActive write throws NullReferenceException (the sic path of OnAwake)
+TEST_CASE("WP-30 ModulePartFirework.OnAwake with shellPrefabExists == false throws NullReferenceException (ModulePartFirework.cs:167)") {
+    Reset30 r;
+    Game15 g;
+    SaveEnvironment::Current().loadedScene = GameScenes::EDITOR;
+    LoadLocalizer30();
+    auto p = g.New("fireworksLauncherSmall");
+    auto* m = Mod<ModulePartFirework>(*p, "ModulePartFirework");
+    FireworkEnvironment::shellPrefabExists = [](const std::string&) { return false; };
+    CHECK_THROWS_AS(m->OnAwake(), NullReferenceException);
+    CHECK_FALSE(m->shellPrefabPresent);
+    FireworkEnvironment::shellPrefabExists = [](const std::string&) { return true; };
+    CHECK_NOTHROW(m->OnAwake());
+    CHECK(m->shellPrefabPresent);
+}
+
 // ModulePartFirework.cs:261 OnStart (clamp, option lists, color field names), :473 shot counter, :230 / :250 colors
 TEST_CASE("WP-30 ModulePartFirework: OnStart clamp and option lists, shot counter, color save / load, OnColorChanged") {
     Reset30 r;
