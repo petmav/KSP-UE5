@@ -3269,3 +3269,4 @@ model (double clock, float casts, wake rule); it cannot validate the engine beha
   (34 ctest tests; `corpus.saves` registers only where `decompiled/KSP-dev` exists, so the worktree has one fewer than main).
 - `./build/RelWithDebInfo/tests/kspcore_tests | grep -E "test cases|assertions"`: 419 test cases, 711,273 assertions, 0 failed;
   with `-tc="WP-00*"`: 18 cases, 396 assertions.
+- WSL (Ubuntu 24.04, clang, `./run_tests.sh -f` from the worktree): ALL TESTS PASSED, 34 of 34 ctest tests (the C++20 coroutines build and run on both toolchains).
