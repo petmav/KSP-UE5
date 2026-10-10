@@ -3606,6 +3606,6 @@ phases (built, node removed, re-added, moved away, moved back) including each no
 ### Verification (gatekeeper, HEAD 351bb61d)
 
 - Windows MSVC (`core/build` deleted, `powershell -NoProfile -File core/run_tests.ps1 -Fresh`): 34/34 ctest tests passed (worktree: `corpus.saves` absent); `kspcore_tests`: 478 cases, 761,243 assertions, 0 failed. All 27 `compare_report_*.json` are byte-identical to main's; non-zero entries are only the known WP-17 `capture.deltav_stages` delta-v columns.
-- Linux clang (WSL, `./run_tests.sh -f`): 34/34 passed (configure 128 s, build 315 s, test 3,834 s, `unit` 3,326 s); `kspcore_tests`: 478 cases, 761,227 assertions, 0 failed (16 fewer assertions than MSVC: platform-dependent test branches).
+- Linux clang (WSL, `./run_tests.sh -f`): 34/34 passed (configure 128 s, build 315 s, test 3,834 s, `unit` 3,326 s); `kspcore_tests`: 478 cases, 761,227 assertions, 0 failed (16 fewer assertions than MSVC; cause not investigated).
 - Linux GCC (`./run_tests.sh -p linux-gcc-rel -f`): 34/34 passed (build 245 s, test 2,163 s, `unit` 1,989 s).
 - `tools/wp39/commnet_reference.py` run with `python -I` reproduces `tests/data/wp39_reference.json` byte for byte; `tools/wp28/check_cites.py` on the 7 new / changed `.cpp` files plus `module_command.cpp`: 0 mismatches.
