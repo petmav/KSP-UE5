@@ -9,12 +9,16 @@
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
+#include <map>
+#include <fstream>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "doctest/doctest.h"
 #include "editor_staging.hpp"
+#include "engine_thrust_transforms.hpp"
 #include "resource_fixture.hpp"
 
 #include "ksp/celestial/celestial_body.hpp"
@@ -39,6 +43,12 @@ namespace fs = std::filesystem;
 namespace {
 
 const std::string kHarness17 = KSPCORE_HARNESS_DIR;
+
+fs::path ThrustJsonPath() { return fs::path(KSPCORE_PROJECT_ROOT) / "core" / "data" / "engine_thrust_transforms.json"; }
+const wp17b::EngineThrustTransforms& ThrustData() {
+    static const wp17b::EngineThrustTransforms data = wp17b::EngineThrustTransforms::Load(ThrustJsonPath());
+    return data;
+}
 
 // The stock game + PhysicsGlobals + Planetarium + the Kerbol system (the bodies of DeltaVAppValues), as the editor scene has them
 struct World17 {
@@ -88,16 +98,8 @@ struct EditorCraft {
         editor = std::make_unique<support::EditorSession>(ship.liveParts);
         support::EditorSession::StartParts(ship.liveParts);
         editor->Load();
-        // the thrust directions come from the model (not ported): one transform along the part's -Y per engine
-        for (Part* p : ship.liveParts)
-            for (size_t i = 0; i < p->Modules().Count(); i++)
-                if (auto* e = dynamic_cast<ModuleEngines*>(p->Modules().GetModule(i))) {
-                    PartTransform t;
-                    t.position = p->partTransform.position;
-                    t.rotation = Quaternionf::Normalize(p->partTransform.rotation * UnityNative::AngleAxis(90.0f, Vector3f::right()));
-                    e->thrustTransforms = {t};
-                    e->thrustTransformMultipliers = {1.0f};
-                }
+        // the thrust directions come from the model: the real transforms of the staged engine models (WP-17b)
+        for (Part* p : ship.liveParts) ThrustData().Install(*p);
         CompoundPart::hooks.editorShipParts = [this]() { return ship.liveParts; };
         for (Part* p : ship.liveParts)
             if (auto* cp = dynamic_cast<CompoundPart*>(p)) cp->OnStartComplete();
@@ -420,4 +422,123 @@ TEST_CASE("WP-00 VesselDeltaV on the coroutine scheduler == DriveToCompletion (V
         CHECK(a[i]->stageBurnTime == b[i]->stageBurnTime);
         CHECK(a[i]->startMass == b[i]->startMass);
     }
+}
+
+// WP-17b: core/data/engine_thrust_transforms.json (tools/wp17/mu_transforms.py) and its installation on the engines.
+namespace {
+uint32_t BitsOf(float f) {
+    uint32_t b;
+    std::memcpy(&b, &f, 4);
+    return b;
+}
+float FloatOf(const nlohmann::json& s) {
+    const uint32_t b = static_cast<uint32_t>(std::stoul(s.get<std::string>(), nullptr, 16));
+    float f;
+    std::memcpy(&f, &b, 4);
+    return f;
+}
+}  // namespace
+
+TEST_CASE("WP-17b engine thrust transforms: loader == an independent re-read of the JSON, counts as Part.FindModelTransforms finds them") {
+    std::ifstream in(ThrustJsonPath(), std::ios::binary);
+    REQUIRE(in);
+    const nlohmann::json j = nlohmann::json::parse(in);
+    const auto& parts = ThrustData().Parts();
+    CHECK(parts.size() == 18);
+    CHECK(j.at("parts").size() == 18);
+    // thrust transforms per staged part: the number of `thrustTransform` nodes in the part's model (pre-order search below "model",
+    // Part.cs:5147), counted from the chain data (each transform's chain ends with the transform and starts with "model")
+    const std::map<std::string, size_t> expected = {
+        {"JetEngine", 2}, {"MassiveBooster", 1}, {"SSME", 1}, {"Size3AdvancedEngine", 1}, {"ionEngine", 1}, {"liquidEngine2", 1},
+        {"liquidEngine2-2.v2", 3}, {"liquidEngine3.v2", 1}, {"liquidEngineMainsail.v2", 1}, {"microEngine.v2", 1}, {"miniJetEngine", 1},
+        {"omsEngine", 1}, {"radialLiquidEngine1-2", 1}, {"solidBooster.sm.v2", 1}, {"solidBooster.v2", 1}, {"toroidalAerospike", 1},
+        {"turboFanEngine", 1}, {"turboFanSize2", 2}};
+    for (const auto& [name, count] : expected) {
+        INFO(name);
+        REQUIRE(parts.count(name) == 1);
+        CHECK(parts.at(name).transforms.size() == count);
+        CHECK(j.at("parts").at(name).at("thrustTransforms").size() == count);
+        for (const auto& t : j.at("parts").at(name).at("thrustTransforms")) {
+            CHECK(t.at("chain").front().at("name") == "model");
+            CHECK(t.at("chain").back().at("name") == t.at("name"));
+        }
+    }
+    for (const char* name : {"omsEngine", "liquidEngine2-2.v2", "JetEngine"}) {
+        INFO(name);
+        const auto& jt = j.at("parts").at(name).at("thrustTransforms");
+        const auto& lt = parts.at(name).transforms;
+        REQUIRE(jt.size() == lt.size());
+        for (size_t i = 0; i < lt.size(); i++) {
+            CHECK(BitsOf(lt[i].partSpaceRotation.x) == BitsOf(FloatOf(jt[i].at("partSpaceRotation")[0])));
+            CHECK(BitsOf(lt[i].partSpaceRotation.y) == BitsOf(FloatOf(jt[i].at("partSpaceRotation")[1])));
+            CHECK(BitsOf(lt[i].partSpaceRotation.z) == BitsOf(FloatOf(jt[i].at("partSpaceRotation")[2])));
+            CHECK(BitsOf(lt[i].partSpaceRotation.w) == BitsOf(FloatOf(jt[i].at("partSpaceRotation")[3])));
+            // the chain product recomputed in C++ (UnityEngine Quaternion.operator*, right-nested: root * (... * leaf)) and
+            // the forward vector the python tool wrote
+            const auto& chain = jt[i].at("chain");
+            const auto& last = chain[chain.size() - 1].at("rotation");
+            Quaternionf q(FloatOf(last[0]), FloatOf(last[1]), FloatOf(last[2]), FloatOf(last[3]));
+            for (size_t c = chain.size() - 1; c-- > 0;) {
+                const auto& r = chain[c].at("rotation");
+                q = UnityNative::Multiply(Quaternionf(FloatOf(r[0]), FloatOf(r[1]), FloatOf(r[2]), FloatOf(r[3])), q);
+            }
+            CHECK(BitsOf(q.x) == BitsOf(lt[i].partSpaceRotation.x));  // C++ native chain == the python tool's chain
+            CHECK(BitsOf(q.y) == BitsOf(lt[i].partSpaceRotation.y));
+            CHECK(BitsOf(q.z) == BitsOf(lt[i].partSpaceRotation.z));
+            CHECK(BitsOf(q.w) == BitsOf(lt[i].partSpaceRotation.w));
+            PartTransform pt;
+            pt.rotation = q;
+            const Vector3f fwd = pt.forward();
+            CHECK(BitsOf(fwd.x) == BitsOf(lt[i].partSpaceForward.x));
+            CHECK(BitsOf(fwd.y) == BitsOf(lt[i].partSpaceForward.y));
+            CHECK(BitsOf(fwd.z) == BitsOf(lt[i].partSpaceForward.z));
+        }
+    }
+    // origin and sha256 of every source file are recorded
+    for (const auto& [name, p] : parts) {
+        CHECK(p.muOrigin.rfind("GameData/", 0) == 0);
+        CHECK(p.cfgOrigin.rfind("GameData/", 0) == 0);
+        CHECK(p.muSha256.size() == 64);
+        CHECK(p.cfgSha256.size() == 64);
+    }
+}
+
+TEST_CASE("WP-17b the Puff (omsEngine) thrust transform is tilted, not the part's -Y (why Dynawing / Learstar failed with the stand-in)") {
+    const auto& t = ThrustData().Parts().at("omsEngine").transforms;
+    REQUIRE(t.size() == 1);
+    const Vector3f f = t[0].partSpaceForward;
+    CHECK(f.z > 0.17f);   // 10 degree cant: (0, -cos 10, sin 10)
+    CHECK(f.z < 0.18f);
+    CHECK(f.y < -0.98f);
+    CHECK(f.y > -0.99f);
+    // an axial engine points along -Y
+    const Vector3f g = ThrustData().Parts().at("liquidEngineMainsail.v2").transforms[0].partSpaceForward;
+    CHECK(g.y < -0.999f);
+    CHECK(std::abs(g.z) < 1e-5f);
+}
+
+TEST_CASE("WP-17b Install: an engine that is not staged fails loudly, installed engines get count transforms with multipliers 1 / count") {
+    if (!GameAvailable()) return;
+    World17 w;
+    EditorCraft craft(w, PhysProfS(), w.Kerbin(), false);
+    size_t engines = 0;
+    for (Part* p : craft.ship.liveParts)
+        for (size_t i = 0; i < p->Modules().Count(); i++)
+            if (auto* e = dynamic_cast<ModuleEngines*>(p->Modules().GetModule(i))) {
+                engines++;
+                const auto& expected = ThrustData().Parts().at(p->gameObjectName).transforms;
+                REQUIRE(e->thrustTransforms.size() == expected.size());
+                REQUIRE(e->thrustTransformMultipliers.size() == expected.size());
+                for (float m : e->thrustTransformMultipliers) CHECK(m == 1.0f / static_cast<float>(expected.size()));
+            }
+    CHECK(engines > 0);
+    // a part name that is not in the data
+    const std::string saved = craft.ship.liveParts[0]->gameObjectName;
+    for (Part* p : craft.ship.liveParts)
+        for (size_t i = 0; i < p->Modules().Count(); i++)
+            if (dynamic_cast<ModuleEngines*>(p->Modules().GetModule(i))) {
+                p->gameObjectName = "noSuchEngine";
+                CHECK_THROWS_AS(ThrustData().Install(*p), std::runtime_error);
+                return;
+            }
 }

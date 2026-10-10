@@ -8,12 +8,13 @@
 // body (Kerbin, Mun, Duna, Eve at altitude 0), DeltaVAppValues.body / altitude are set, SetCalcsDirty(false) and one more run.
 //
 // Thrust directions: DeltaVEngineInfo.CalculateThrustVector reads the engine's thrust transforms (OnCenterOfThrustQuery: dir = sum
-// of transform.forward * multiplier). The .mu model reader is not ported, so the thrust transform of every engine is installed here as
-// ONE transform at the part, pointing along the part's -Y (the exhaust direction of every stock axial engine: ModuleEngines.ThrustUpdate
-// applies -transform.forward), with the part's rotation of the craft file (documented deviation in STATUS.md).
+// of transform.forward * multiplier). They are the real ones: tools/wp17/mu_transforms.py reads the transform hierarchy of the engine
+// .mu models (PartReader.cs), places it as PartLoader.CompileModel does and writes core/data/engine_thrust_transforms.json;
+// tools/support/engine_thrust_transforms.hpp installs them (world rotation = part rotation * part-space chain rotation).
 //
 // Inputs (original game data only): the craft files of the capture (see ds_resource_mass.cpp), GameData of --gamedata, the bodies of
 // WP-09.
+#include <algorithm>
 #include <filesystem>
 #include <iostream>
 #include <string>
@@ -23,6 +24,7 @@
 #include "craft_tree.hpp"
 #include "datasets.hpp"
 #include "editor_staging.hpp"
+#include "engine_thrust_transforms.hpp"
 #include "ksp/celestial/celestial_system.hpp"
 #include "ksp/config/config_node.hpp"
 #include "ksp/database/game_data.hpp"
@@ -85,21 +87,6 @@ const CelestialBody* FindBody(CelestialEnv& env, const std::string& name) {
     for (CelestialBody* b : env.system->SpawnOrder())
         if (b->bodyName == name) return b;
     throw std::runtime_error("deltav_stages: no body " + name);
-}
-
-// the model reader's stand-in (see the file comment): one thrust transform per engine, forward = the part's -Y
-void InstallThrustTransforms(Part& part) {
-    for (size_t i = 0; i < part.Modules().Count(); i++) {
-        auto* engine = dynamic_cast<ModuleEngines*>(part.Modules().GetModule(i));
-        if (engine == nullptr) continue;
-        PartTransform t;
-        t.position = part.partTransform.position;
-        t.rotation = part.partTransform.rotation * UnityNative::AngleAxis(90.0f, Vector3f::right());
-        // the thrust transform's rotation is the native (normalized) world rotation of the Transform
-        t.rotation = Quaternionf::Normalize(t.rotation);
-        engine->thrustTransforms = {t};
-        engine->thrustTransformMultipliers = {1.0f};
-    }
 }
 
 // ProtoCrewMember.InventoryMass() (ProtoCrewMember.cs:775) of an editor kerbal = kerbalEVA's ModuleInventoryPart.GetModuleMass(0, CURRENT)
@@ -208,10 +195,13 @@ int RunDeltaVStages(const RunnerOptions& opt) {
     const fs::path shipsDir = fs::path(dotnet::PathFromUtf8(opt.harness)) / "inputs" / "Ships";
     const fs::path repoRoot = fs::path(dotnet::PathFromUtf8(opt.harness)).parent_path();
     const CelestialBody* kerbin = FindBody(env, "Kerbin");
+    // the real thrust transforms of the staged engine models (WP-17b); an engine that is not staged throws
+    const wp17b::EngineThrustTransforms thrust = wp17b::EngineThrustTransforms::Load(repoRoot / "core" / "data" / "engine_thrust_transforms.json");
     const float inventoryPerKerbal = KerbalInventoryMass(data, fs::path(go.gameDataDir));
     SaveEnvironment::Current().loadedScene = GameScenes::EDITOR;  // HighLogic.LoadedScene
     DeltaVGlobals::homeBody = kerbin;
     size_t stageRows = 0;
+    std::vector<std::string> missingEngineParts;
     for (const CraftEntry& c : kCrafts) {
         const std::string rel = c.relPath;
         const fs::path file = rel[0] == '!' ? repoRoot / rel.substr(1) : shipsDir / rel;
@@ -230,7 +220,8 @@ int RunDeltaVStages(const RunnerOptions& opt) {
         support::EditorSession editor(ship.liveParts);
         support::EditorSession::StartParts(ship.liveParts);
         editor.Load();
-        for (Part* p : ship.liveParts) InstallThrustTransforms(*p);
+        const wp17b::EditorHierarchy hierarchy = wp17b::EditorHierarchy::Build(ship.liveParts);
+        for (Part* p : ship.liveParts) thrust.Install(*p, &missingEngineParts, &hierarchy);
         StartCompoundParts(ship);
         AssignDefaultCrew(ship.liveParts, inventoryPerKerbal);
 
@@ -269,6 +260,13 @@ int RunDeltaVStages(const RunnerOptions& opt) {
         }
         dv.reset();
         DeltaVGlobals::appValues.reset();
+    }
+    if (!missingEngineParts.empty()) {
+        std::sort(missingEngineParts.begin(), missingEngineParts.end());
+        missingEngineParts.erase(std::unique(missingEngineParts.begin(), missingEngineParts.end()), missingEngineParts.end());
+        std::string list;
+        for (const std::string& n : missingEngineParts) list += " " + n;
+        throw std::runtime_error("deltav_stages: engine parts without staged .mu thrust transforms:" + list);
     }
     g.tables.push_back(std::move(tt));
     g.tables.push_back(std::move(ts));

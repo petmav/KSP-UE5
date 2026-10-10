@@ -1,0 +1,2837 @@
+{
+ "about": "WP-17b: thrust transforms of the stock engine models. Floats are IEEE binary32 bit patterns (8 hex digits, '*F' arrays are the same values as decimal doubles for reading). Chain = transforms from the part's 'model' child down to the thrust transform as PartLoader.CompileModel builds them. Produced by core/tools/wp17/mu_transforms.py.",
+ "parts": {
+  "JetEngine": {
+   "cfg": {
+    "file": "jetEngineBasic.cfg",
+    "origin": "GameData/Squad/Parts/Engine/jetEngines/jetEngineBasic.cfg",
+    "sha256": "da7f3bf5981fdb8d5a568d64b33053c03e2dcaabc1f284dbc5a7328195d8185a"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "file": "turboFanSize1.mu",
+    "origin": "GameData/Squad/Parts/Engine/jetEngines/turboFanSize1.mu",
+    "sha256": "a7ac60a2c5e67d92f177d128c0ebbf1d7eb725273fb7ac331e13be2d7ab482d5"
+   },
+   "muVersion": 4,
+   "rescaleFactor": "3f800000",
+   "thrustTransforms": [
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "BJE",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "TurboFanSize1",
+       "position": [
+        "00000000",
+        "3f790e56",
+        "00000000"
+       ],
+       "rotation": [
+        "3f3504f7",
+        "00000000",
+        "00000000",
+        "3f3504f1"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "ReverseTransform1",
+       "position": [
+        "00000000",
+        "80000000",
+        "3fa00004"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "00000000",
+        "80000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf800001",
+      "b5200000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -1.0000001192092896,
+      -5.960464477539062e-07
+     ],
+     "partSpacePosition": [
+      "00000000",
+      "be8de368",
+      "b5480005"
+     ],
+     "partSpaceRotation": [
+      "3f3504f7",
+      "00000000",
+      "00000000",
+      "3f3504f1"
+     ]
+    },
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "BJE",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "TurboFanSize1",
+       "position": [
+        "00000000",
+        "3f790e56",
+        "00000000"
+       ],
+       "rotation": [
+        "3f3504f7",
+        "00000000",
+        "00000000",
+        "3f3504f1"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "ReverseTransform2",
+       "position": [
+        "00000000",
+        "80000000",
+        "3fa00006"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "3f800000",
+        "b42eef4c"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "00000000",
+        "80000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "a8800000",
+      "bf800001",
+      "b5200000"
+     ],
+     "partSpaceForwardF": [
+      -1.4210854715202004e-14,
+      -1.0000001192092896,
+      -5.960464477539062e-07
+     ],
+     "partSpacePosition": [
+      "00000000",
+      "be8de370",
+      "b5480008"
+     ],
+     "partSpaceRotation": [
+      "b3f7652b",
+      "bf3504f7",
+      "3f3504f1",
+      "b3f76522"
+     ]
+    }
+   ],
+   "thrustVectorTransformName": [
+    "thrustTransform"
+   ]
+  },
+  "MassiveBooster": {
+   "cfg": {
+    "file": "part.cfg",
+    "origin": "GameData/Squad/Parts/Engine/MassiveSRB/part.cfg",
+    "sha256": "50ece12eef08355a1e227550a3e2817620b17cb35f563e51bf324396d5d3c86c"
+   },
+   "modelNodes": 0,
+   "mu": {
+    "file": "MassiveSRB.mu",
+    "origin": "GameData/Squad/Parts/Engine/MassiveSRB/MassiveSRB.mu",
+    "sha256": "2e1025e4e3a056ea7e8a41be85a917fcb3d64cd80f03320296d71afe808426a0"
+   },
+   "muVersion": 5,
+   "rescaleFactor": "3f800000",
+   "thrustTransforms": [
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "MassiveSRB",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "MassiveSRB",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "3f3504f4",
+        "00000000",
+        "3f3504f4"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "80000000",
+        "c0d43958",
+        "00000000"
+       ],
+       "rotation": [
+        "3efffffe",
+        "bf000001",
+        "3efffffe",
+        "3f000001"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf800001",
+      "33800000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -1.0000001192092896,
+      5.960464477539063e-08
+     ],
+     "partSpacePosition": [
+      "00000000",
+      "c0d43958",
+      "00000000"
+     ],
+     "partSpaceRotation": [
+      "3f3504f3",
+      "00000000",
+      "00000000",
+      "3f3504f5"
+     ]
+    }
+   ],
+   "thrustVectorTransformName": [
+    "thrustTransform"
+   ]
+  },
+  "SSME": {
+   "cfg": {
+    "file": "SSME.cfg",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineSSME/SSME.cfg",
+    "sha256": "c45ae6f768ddad2a41d87f2e6c800f38d336eb24ad87d3c747bd92df5985b8e2"
+   },
+   "modelNodes": 0,
+   "mu": {
+    "file": "SSME.mu",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineSSME/SSME.mu",
+    "sha256": "0c1d1ca53b7cee3da8880e49917dd838ee5cb23853fadd4d9efa29c4e55a5278"
+   },
+   "muVersion": 4,
+   "rescaleFactor": "3f800000",
+   "thrustTransforms": [
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "SSME",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "Nozzle",
+       "position": [
+        "80000000",
+        "3e266667",
+        "00000000"
+       ],
+       "rotation": [
+        "3f3504f1",
+        "00000000",
+        "00000000",
+        "3f3504f6"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "00000000",
+        "80000000",
+        "3fe1999a"
+       ],
+       "rotation": [
+        "b37ffffe",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf800000",
+      "35100000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -1.0,
+      5.364418029785156e-07
+     ],
+     "partSpacePosition": [
+      "00000000",
+      "bfcccccd",
+      "35293334"
+     ],
+     "partSpaceRotation": [
+      "3f3504f0",
+      "00000000",
+      "00000000",
+      "3f3504f7"
+     ]
+    }
+   ],
+   "thrustVectorTransformName": [
+    "thrustTransform"
+   ]
+  },
+  "Size3AdvancedEngine": {
+   "cfg": {
+    "file": "part.cfg",
+    "origin": "GameData/Squad/Parts/Engine/Size3AdvancedEngine/part.cfg",
+    "sha256": "60c51142c841e40a714ca697b20d78ae8ae1813fc5054229b682e8e5755f4ded"
+   },
+   "modelNodes": 0,
+   "mu": {
+    "file": "Size3AdvancedEngine.mu",
+    "origin": "GameData/Squad/Parts/Engine/Size3AdvancedEngine/Size3AdvancedEngine.mu",
+    "sha256": "33b77b285a63a10510f4275d33872c6be3ea079cf3c15f4b800c75e180d595cd"
+   },
+   "muVersion": 3,
+   "rescaleFactor": "3f800000",
+   "thrustTransforms": [
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "Size3AdvancedEngine",
+       "position": [
+        "00000000",
+        "3fb70a3d",
+        "00000000"
+       ],
+       "rotation": [
+        "3f3504f4",
+        "00000000",
+        "00000000",
+        "3f3504f4"
+       ],
+       "scale": [
+        "3fbb020c",
+        "3fbb020c",
+        "3fbb020c"
+       ]
+      },
+      {
+       "name": "Nozzle",
+       "position": [
+        "00000000",
+        "34119aa9",
+        "3f919aaa"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "00000000",
+        "338833ac",
+        "3f0833ac"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf800001",
+      "b4000000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -1.0000001192092896,
+      -1.1920928955078125e-07
+     ],
+     "partSpacePosition": [
+      "00000000",
+      "bf812ee4",
+      "29000000"
+     ],
+     "partSpaceRotation": [
+      "3f3504f4",
+      "00000000",
+      "00000000",
+      "3f3504f4"
+     ]
+    }
+   ],
+   "thrustVectorTransformName": [
+    "thrustTransform"
+   ]
+  },
+  "ionEngine": {
+   "cfg": {
+    "file": "ionEngine.cfg",
+    "origin": "GameData/Squad/Parts/Engine/ionEngine/ionEngine.cfg",
+    "sha256": "7cb74db78d742a8722c9073773451e9d903569ec65d872946316d95eba1f1988"
+   },
+   "modelNodes": 0,
+   "mu": {
+    "file": "model.mu",
+    "origin": "GameData/Squad/Parts/Engine/ionEngine/model.mu",
+    "sha256": "74374c728809b8b44cd2012a85aac5769bcd47e7cbb6f4fcff7f968a2e97b48e"
+   },
+   "muVersion": 1,
+   "rescaleFactor": "3f800000",
+   "thrustTransforms": [
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "ionEngine",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "00000000",
+        "be03b7d0",
+        "00000000"
+       ],
+       "rotation": [
+        "3f3504f4",
+        "00000000",
+        "00000000",
+        "3f3504f4"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf800001",
+      "b4000000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -1.0000001192092896,
+      -1.1920928955078125e-07
+     ],
+     "partSpacePosition": [
+      "00000000",
+      "be03b7d0",
+      "00000000"
+     ],
+     "partSpaceRotation": [
+      "3f3504f4",
+      "00000000",
+      "00000000",
+      "3f3504f4"
+     ]
+    }
+   ],
+   "thrustVectorTransformName": [
+    "thrustTransform"
+   ]
+  },
+  "liquidEngine2": {
+   "cfg": {
+    "file": "liquidEngineLV-T45.cfg",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineLV-T45/liquidEngineLV-T45.cfg",
+    "sha256": "d5fce4619ebd1c65fc0d92599d4124e72592498c2fa4fbea6ad7b69b0b243c05"
+   },
+   "modelNodes": 0,
+   "mu": {
+    "file": "model.mu",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineLV-T45/model.mu",
+    "sha256": "7fa671ffa480caf5539e8160aae7a7fceaeed3b009e33158f0ba553eb860ece1"
+   },
+   "muVersion": 1,
+   "rescaleFactor": "3fa00000",
+   "thrustTransforms": [
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3fa00000",
+        "3fa00000",
+        "3fa00000"
+       ]
+      },
+      {
+       "name": "liquidEngine",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "3f800000",
+        "00000000",
+        "b42eef4c"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "00000000",
+        "bdef0440",
+        "80000000"
+       ],
+       "rotation": [
+        "3f3504f4",
+        "00000000",
+        "00000000",
+        "3f3504f4"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf800001",
+      "b4000000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -1.0000001192092896,
+      -1.1920928955078125e-07
+     ],
+     "partSpacePosition": [
+      "00000000",
+      "be1562a8",
+      "00000000"
+     ],
+     "partSpaceRotation": [
+      "b3f76526",
+      "3f3504f4",
+      "bf3504f4",
+      "b3f76526"
+     ]
+    }
+   ],
+   "thrustVectorTransformName": [
+    "thrustTransform"
+   ]
+  },
+  "liquidEngine2-2.v2": {
+   "cfg": {
+    "file": "liquidEnginePoodle_v2.cfg",
+    "origin": "GameData/Squad/Parts/Engine/liquidEnginePoodle_v2/liquidEnginePoodle_v2.cfg",
+    "sha256": "951246680f07e1491bb81853284f63aa42876540dac6f146757fdd751d065121"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "file": "LqdEnginePoodle_v2.mu",
+    "origin": "GameData/Squad/Parts/Engine/liquidEnginePoodle_v2/LqdEnginePoodle_v2.mu",
+    "sha256": "ceab1868ca9f6576dacc9c1bc10679886185a7529bb5e607e5191f4cac43d0d4"
+   },
+   "muVersion": 5,
+   "rescaleFactor": "3f800000",
+   "thrustTransforms": [
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "Poodle_v2",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "Mesh",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "80000000",
+        "80000000",
+        "80000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "EngineFixed",
+       "position": [
+        "80000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "bf3504f4",
+        "00000000",
+        "80000000",
+        "3f3504f2"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "Gimbal",
+       "position": [
+        "80000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "80000000",
+        "80000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "3f0ccccd",
+        "00000000",
+        "bfb33333"
+       ],
+       "rotation": [
+        "3f800000",
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf7fffff",
+      "34400000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -0.9999999403953552,
+      1.7881393432617188e-07
+     ],
+     "partSpacePosition": [
+      "3f0ccccd",
+      "bfb33332",
+      "34333333"
+     ],
+     "partSpaceRotation": [
+      "3f3504f2",
+      "00000000",
+      "00000000",
+      "3f3504f4"
+     ]
+    },
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "Poodle_v2",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "Mesh",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "80000000",
+        "80000000",
+        "80000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "EngineFixed",
+       "position": [
+        "80000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "bf3504f4",
+        "00000000",
+        "80000000",
+        "3f3504f2"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "Gimbal",
+       "position": [
+        "80000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "80000000",
+        "80000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "bf0ccccd",
+        "00000000",
+        "bfb33333"
+       ],
+       "rotation": [
+        "3f800000",
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf7fffff",
+      "34400000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -0.9999999403953552,
+      1.7881393432617188e-07
+     ],
+     "partSpacePosition": [
+      "bf0ccccd",
+      "bfb33332",
+      "34333333"
+     ],
+     "partSpaceRotation": [
+      "3f3504f2",
+      "00000000",
+      "00000000",
+      "3f3504f4"
+     ]
+    },
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "Poodle_v2",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "Mesh",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "80000000",
+        "80000000",
+        "80000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "Shroud",
+       "position": [
+        "80000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "bf3504f4",
+        "00000000",
+        "80000000",
+        "3f3504f2"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "Gimbal",
+       "position": [
+        "35888000",
+        "b5070000",
+        "bf60d758"
+       ],
+       "rotation": [
+        "00000000",
+        "80000000",
+        "80000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "Engine",
+       "position": [
+        "80000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "80000000",
+        "80000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "00000000",
+        "00000000",
+        "bfea0a52"
+       ],
+       "rotation": [
+        "3f800000",
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf7fffff",
+      "34400000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -0.9999999403953552,
+      1.7881393432617188e-07
+     ],
+     "partSpacePosition": [
+      "35888000",
+      "c02d3afe",
+      "355d9d7e"
+     ],
+     "partSpaceRotation": [
+      "3f3504f2",
+      "00000000",
+      "00000000",
+      "3f3504f4"
+     ]
+    }
+   ],
+   "thrustVectorTransformName": [
+    "thrustTransform"
+   ]
+  },
+  "liquidEngine3.v2": {
+   "cfg": {
+    "file": "liquidEngineLV-909_v2.cfg",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineLV-909_v2/liquidEngineLV-909_v2.cfg",
+    "sha256": "fce8aed52b8b7a11e6b6cf1a815c096389adef1ff800a4fe40cef7c8618e385e"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "file": "TerrierV2.mu",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineLV-909_v2/TerrierV2.mu",
+    "sha256": "266b59e898812bdb6fbdb35fec755affe2105d697809bf5828154706ca89b6e3"
+   },
+   "muVersion": 5,
+   "rescaleFactor": "3f800000",
+   "thrustTransforms": [
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "Terrier",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "TerrierNew",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "Engine",
+       "position": [
+        "80000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "80000000",
+        "80000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "gimbal",
+       "position": [
+        "2fd55553",
+        "bdb4aaa0",
+        "322aaaac"
+       ],
+       "rotation": [
+        "3f3504f4",
+        "80000000",
+        "80000000",
+        "3f3504f4"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "00000000",
+        "00000000",
+        "3f266666"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf800001",
+      "b4000000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -1.0000001192092896,
+      -1.1920928955078125e-07
+     ],
+     "partSpacePosition": [
+      "2fd55553",
+      "bf3cfbbb",
+      "b3911110"
+     ],
+     "partSpaceRotation": [
+      "3f3504f4",
+      "00000000",
+      "00000000",
+      "3f3504f4"
+     ]
+    }
+   ],
+   "thrustVectorTransformName": [
+    "thrustTransform"
+   ]
+  },
+  "liquidEngineMainsail.v2": {
+   "cfg": {
+    "file": "liquidEngineMainsail_v2.cfg",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineMainsail_v2/liquidEngineMainsail_v2.cfg",
+    "sha256": "f98cbf8ed36bb745927b6b45c09596c9d08adc9fbc6e97eb34065af0cd1e98a2"
+   },
+   "modelNodes": 0,
+   "mu": {
+    "file": "liquidEngineMainsail_v2.mu",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineMainsail_v2/liquidEngineMainsail_v2.mu",
+    "sha256": "5abe17785214e1f454c20eab93f2195674147b990522c53e8f4acc176944b461"
+   },
+   "muVersion": 5,
+   "rescaleFactor": "3f800000",
+   "thrustTransforms": [
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "liquidEngineMainsail_v2",
+       "position": [
+        "00000000",
+        "3f81b3d0",
+        "00000000"
+       ],
+       "rotation": [
+        "80000000",
+        "80000000",
+        "80000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "gimbal",
+       "position": [
+        "80000000",
+        "bf2281a4",
+        "00000000"
+       ],
+       "rotation": [
+        "3f3504f4",
+        "80000000",
+        "80000000",
+        "3f3504f4"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "80000000",
+        "1fe0239d",
+        "3f12f1aa"
+       ],
+       "rotation": [
+        "00000000",
+        "80000000",
+        "80000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf800001",
+      "b4000000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -1.0000001192092896,
+      -1.1920928955078125e-07
+     ],
+     "partSpacePosition": [
+      "00000000",
+      "be482ebc",
+      "b392f1aa"
+     ],
+     "partSpaceRotation": [
+      "3f3504f4",
+      "00000000",
+      "00000000",
+      "3f3504f4"
+     ]
+    }
+   ],
+   "thrustVectorTransformName": [
+    "thrustTransform"
+   ]
+  },
+  "microEngine.v2": {
+   "cfg": {
+    "file": "liquidEngineLV-1_v2.cfg",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineLV-1_v2/liquidEngineLV-1_v2.cfg",
+    "sha256": "52793c9a71269a7b9f6065e710774e26d83c256e8f42d90fa3c462d4ad4e1493"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "file": "Ant.mu",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineLV-1_v2/Assets/Ant.mu",
+    "sha256": "f51f26ed082a7419d30e987910e398fbef71fdbe13a0854cb62d85db176d34ed"
+   },
+   "muVersion": 5,
+   "rescaleFactor": "3f800000",
+   "thrustTransforms": [
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "microEngine",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "base",
+       "position": [
+        "80000000",
+        "bc985f07",
+        "00000000"
+       ],
+       "rotation": [
+        "bf3504f4",
+        "00000000",
+        "00000000",
+        "3f3504f4"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "engine",
+       "position": [
+        "80000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "80000000",
+        "80000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "33afd455",
+        "a7fc339b",
+        "be876627"
+       ],
+       "rotation": [
+        "3f800000",
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "scale": [
+        "3f800002",
+        "3f800000",
+        "3f800002"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf800001",
+      "b4000000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -1.0000001192092896,
+      -1.1920928955078125e-07
+     ],
+     "partSpacePosition": [
+      "33afd455",
+      "be90ec18",
+      "33076629"
+     ],
+     "partSpaceRotation": [
+      "3f3504f4",
+      "00000000",
+      "00000000",
+      "3f3504f4"
+     ]
+    }
+   ],
+   "thrustVectorTransformName": [
+    "thrustTransform"
+   ]
+  },
+  "miniJetEngine": {
+   "cfg": {
+    "file": "SmallJetEngine.cfg",
+    "origin": "GameData/Squad/Parts/Engine/miniJet/SmallJetEngine.cfg",
+    "sha256": "7cdba73fcd0c8315a8320391be5856fba3cc5a96afa3cb76c564e33cad570a85"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "file": "SmallJet.mu",
+    "origin": "GameData/Squad/Parts/Engine/miniJet/SmallJet.mu",
+    "sha256": "6e23f7efe838289bfee63ff6b7558e2047ba00bef9e1c4e5d945919c3331beae"
+   },
+   "muVersion": 3,
+   "rescaleFactor": "3f800000",
+   "thrustTransforms": [
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "MiniNozzle",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "MiniNozzle",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "3f800000",
+        "00000000",
+        "00000000",
+        "3529b4a4"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "00000000",
+        "3f000006",
+        "00000000"
+       ],
+       "rotation": [
+        "bf3504ec",
+        "00000000",
+        "00000000",
+        "3f3504fc"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf800002",
+      "b4c00000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -1.000000238418579,
+      -3.5762786865234375e-07
+     ],
+     "partSpacePosition": [
+      "00000000",
+      "bf000006",
+      "3529b4ac"
+     ],
+     "partSpaceRotation": [
+      "3f3504f5",
+      "00000000",
+      "00000000",
+      "3f3504f4"
+     ]
+    }
+   ],
+   "thrustVectorTransformName": [
+    "thrustTransform"
+   ]
+  },
+  "omsEngine": {
+   "cfg": {
+    "file": "omsEngine.cfg",
+    "origin": "GameData/Squad/Parts/Engine/OMSEngine/omsEngine.cfg",
+    "sha256": "b4924ad1f29d99f71b2ab8bf421dc909fbbe8b592de8eea745f38064c9570421"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "file": "Puff_v2.mu",
+    "origin": "GameData/Squad/Parts/Engine/OMSEngine/Puff_v2.mu",
+    "sha256": "836ae4b3cb7d43568b4856ca61666b1f600cd2bed05a0f00ce17040dbd6a0b5f"
+   },
+   "muVersion": 5,
+   "rescaleFactor": "3f800000",
+   "thrustTransforms": [
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "OMSEngine",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "4019999a",
+        "4019999a",
+        "4019999a"
+       ]
+      },
+      {
+       "name": "Puff_Body",
+       "position": [
+        "00000000",
+        "bc351113",
+        "3d5d2f1b"
+       ],
+       "rotation": [
+        "b273f1f9",
+        "bf7f069e",
+        "3db27ebb",
+        "b42e44e2"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "Gimbal",
+       "position": [
+        "00000000",
+        "bcebfe5c",
+        "39b7f4a0"
+       ],
+       "rotation": [
+        "3f3504f3",
+        "32b6b527",
+        "b34bbfe1",
+        "3f3504f5"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "80000000",
+        "80000000",
+        "3e8a3d71"
+       ],
+       "rotation": [
+        "27417113",
+        "b36d5170",
+        "a85ffffd",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "33c3491a",
+      "bf7c1c60",
+      "3e31d0c4"
+     ],
+     "partSpaceForwardF": [
+      9.09369219925793e-08,
+      -0.9848079681396484,
+      0.173647940158844
+     ],
+     "partSpacePosition": [
+      "b28c3b30",
+      "bf3ba03b",
+      "3e81b098"
+     ],
+     "partSpaceRotation": [
+      "b31f3906",
+      "bf248dbc",
+      "3f441b7e",
+      "b3f6c846"
+     ]
+    }
+   ],
+   "thrustVectorTransformName": [
+    "thrustTransform"
+   ]
+  },
+  "radialLiquidEngine1-2": {
+   "cfg": {
+    "file": "liquidEngineMk55.cfg",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineMk55/liquidEngineMk55.cfg",
+    "sha256": "189cfdca80fc76b7371152b6c4918b37235b38b7ebd4918a403aab29210c4290"
+   },
+   "modelNodes": 0,
+   "mu": {
+    "file": "Thud.mu",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineMk55/Thud.mu",
+    "sha256": "fb64f979f426dcdcc0bbf4400c3865a5d0b24d09529f79fb15c0c4d93455ae18"
+   },
+   "muVersion": 4,
+   "rescaleFactor": "3f800000",
+   "thrustTransforms": [
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "Thud",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "3f800000",
+        "00000000",
+        "b42eef4c"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "THUD",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "Gimbal",
+       "position": [
+        "33c92cc6",
+        "beb111f1",
+        "be933330"
+       ],
+       "rotation": [
+        "bf3504fc",
+        "29e1367a",
+        "a82bd8b2",
+        "bf3504eb"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "00000000",
+        "00000000",
+        "3effffff"
+       ],
+       "rotation": [
+        "b4b00000",
+        "28800000",
+        "a8c00000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "2ac80000",
+      "bf800000",
+      "35400000"
+     ],
+     "partSpaceForwardF": [
+      3.552713678800501e-13,
+      -1.0,
+      7.152557373046875e-07
+     ],
+     "partSpacePosition": [
+      "2aa7ffff",
+      "bf5888f8",
+      "3e933347"
+     ],
+     "partSpaceRotation": [
+      "33f7652b",
+      "bf3504ef",
+      "3f3504f8",
+      "33f76515"
+     ]
+    }
+   ],
+   "thrustVectorTransformName": [
+    "thrustTransform"
+   ]
+  },
+  "solidBooster.sm.v2": {
+   "cfg": {
+    "file": "solidBoosterRT-5_v2.cfg",
+    "origin": "GameData/Squad/Parts/Engine/Size1_SRBs/solidBoosterRT-5_v2.cfg",
+    "sha256": "bf73a17e5b2dff129c4a6b26e800fe9929d6367f2e6380cd5850117c486cd6c7"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "file": "SRB5.mu",
+    "origin": "GameData/Squad/Parts/Engine/Size1_SRBs/SRB5.mu",
+    "sha256": "c78ae46952b20266b33d8aed106d1888840a08b63724ff505fc2692d9b78c890"
+   },
+   "muVersion": 5,
+   "rescaleFactor": "3f800000",
+   "thrustTransforms": [
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "SRB5",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "SRB5",
+       "position": [
+        "80000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "00000000",
+        "bf4ccccd",
+        "00000000"
+       ],
+       "rotation": [
+        "3f3504f4",
+        "80000000",
+        "80000000",
+        "3f3504f4"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf800001",
+      "b4000000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -1.0000001192092896,
+      -1.1920928955078125e-07
+     ],
+     "partSpacePosition": [
+      "00000000",
+      "bf4ccccd",
+      "00000000"
+     ],
+     "partSpaceRotation": [
+      "3f3504f4",
+      "00000000",
+      "00000000",
+      "3f3504f4"
+     ]
+    }
+   ],
+   "thrustVectorTransformName": [
+    "thrustTransform"
+   ]
+  },
+  "solidBooster.v2": {
+   "cfg": {
+    "file": "solidBoosterRT-10_v2.cfg",
+    "origin": "GameData/Squad/Parts/Engine/Size1_SRBs/solidBoosterRT-10_v2.cfg",
+    "sha256": "c8ec1a9f595383b328a87130b6c2a36b4ed054487b14f9ba498c733cd811608d"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "file": "SRB10.mu",
+    "origin": "GameData/Squad/Parts/Engine/Size1_SRBs/SRB10.mu",
+    "sha256": "fcfd638e5ade7e23d2558cab6c5b11a0ab9539276e325b7f4c444d7732419d01"
+   },
+   "muVersion": 5,
+   "rescaleFactor": "3f800000",
+   "thrustTransforms": [
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "SRB10",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "SRB10",
+       "position": [
+        "80000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "00000000",
+        "bfa66666",
+        "00000000"
+       ],
+       "rotation": [
+        "3f3504f4",
+        "80000000",
+        "80000000",
+        "3f3504f4"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf800001",
+      "b4000000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -1.0000001192092896,
+      -1.1920928955078125e-07
+     ],
+     "partSpacePosition": [
+      "00000000",
+      "bfa66666",
+      "00000000"
+     ],
+     "partSpaceRotation": [
+      "3f3504f4",
+      "00000000",
+      "00000000",
+      "3f3504f4"
+     ]
+    }
+   ],
+   "thrustVectorTransformName": [
+    "thrustTransform"
+   ]
+  },
+  "toroidalAerospike": {
+   "cfg": {
+    "file": "liquidEngineAerospike.cfg",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineAerospike/liquidEngineAerospike.cfg",
+    "sha256": "26a479723edf6d02c74abb063281f1c4c7fb3b45197879038ad3c0b935675fbc"
+   },
+   "modelNodes": 0,
+   "mu": {
+    "file": "AeroSpike.mu",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineAerospike/AeroSpike.mu",
+    "sha256": "54dc358e5c13ef9a79d828234869e2a0502be734f566906314ffd34a10beca8a"
+   },
+   "muVersion": 3,
+   "rescaleFactor": "3f800000",
+   "thrustTransforms": [
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "AeroSpike",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "80000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "00000000",
+        "bf000000",
+        "00000000"
+       ],
+       "rotation": [
+        "3f3504f4",
+        "00000000",
+        "00000000",
+        "3f3504f4"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf800001",
+      "b4000000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -1.0000001192092896,
+      -1.1920928955078125e-07
+     ],
+     "partSpacePosition": [
+      "00000000",
+      "bf000000",
+      "00000000"
+     ],
+     "partSpaceRotation": [
+      "3f3504f4",
+      "00000000",
+      "00000000",
+      "3f3504f4"
+     ]
+    }
+   ],
+   "thrustVectorTransformName": [
+    "thrustTransform"
+   ]
+  },
+  "turboFanEngine": {
+   "cfg": {
+    "file": "jetEngineTurbo.cfg",
+    "origin": "GameData/Squad/Parts/Engine/jetEngines/jetEngineTurbo.cfg",
+    "sha256": "994413e9652614e3733db80284c7fd133b9efb7bb7753ed6c9f6a50519b3496e"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "file": "turboRamJet.mu",
+    "origin": "GameData/Squad/Parts/Engine/jetEngines/turboRamJet.mu",
+    "sha256": "d8610092ba54313a325310a1e26033a374eb3bcaf959c20b72c715f9b978b379"
+   },
+   "muVersion": 4,
+   "rescaleFactor": "3f800000",
+   "thrustTransforms": [
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "TRJ",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "TurboRamjet",
+       "position": [
+        "00000000",
+        "3fb33333",
+        "00000000"
+       ],
+       "rotation": [
+        "3f3504f7",
+        "00000000",
+        "00000000",
+        "3f3504f1"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "Gimbal",
+       "position": [
+        "80000000",
+        "27040000",
+        "3fa00000"
+       ],
+       "rotation": [
+        "26c00000",
+        "00000000",
+        "80000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "00000000",
+        "00000000",
+        "3f400010"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf800001",
+      "b5200000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -1.0000001192092896,
+      -5.960464477539062e-07
+     ],
+     "partSpacePosition": [
+      "00000000",
+      "bf1999ae",
+      "b5a00005"
+     ],
+     "partSpaceRotation": [
+      "3f3504f7",
+      "00000000",
+      "00000000",
+      "3f3504f1"
+     ]
+    }
+   ],
+   "thrustVectorTransformName": [
+    "thrustTransform"
+   ]
+  },
+  "turboFanSize2": {
+   "cfg": {
+    "file": "jetEngineBig.cfg",
+    "origin": "GameData/Squad/Parts/Engine/jetEngines/jetEngineBig.cfg",
+    "sha256": "73071b4952ae2eb3c4606744b636883b4d2e1ea01171d33c19af1d4817d9e01f"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "file": "turboFanSize2.mu",
+    "origin": "GameData/Squad/Parts/Engine/jetEngines/turboFanSize2.mu",
+    "sha256": "b4e668440002cabf10f65bd0a73e6acc3d9187af310972d0bf0a12939a6d8e10"
+   },
+   "muVersion": 4,
+   "rescaleFactor": "3f800000",
+   "thrustTransforms": [
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "TurboFanSize2",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "ReverseTransform1",
+       "position": [
+        "00000000",
+        "c0400000",
+        "80000000"
+       ],
+       "rotation": [
+        "3f000000",
+        "3f000000",
+        "bf000002",
+        "3efffffe"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "b2fffffe",
+        "33bfffff",
+        "3f3504f5",
+        "3f3504f3"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf800002",
+      "b4c00000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -1.000000238418579,
+      -3.5762786865234375e-07
+     ],
+     "partSpacePosition": [
+      "00000000",
+      "c0400000",
+      "00000000"
+     ],
+     "partSpaceRotation": [
+      "3f3504f5",
+      "00000000",
+      "00000000",
+      "3f3504f4"
+     ]
+    },
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "TurboFanSize2",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "ReverseTransform2",
+       "position": [
+        "00000000",
+        "c0400000",
+        "a8100000"
+       ],
+       "rotation": [
+        "3f000000",
+        "3f000000",
+        "bf000002",
+        "3efffffe"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "b2fffffe",
+        "33bfffff",
+        "3f3504f5",
+        "3f3504f3"
+       ],
+       "scale": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf800002",
+      "b4c00000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -1.000000238418579,
+      -3.5762786865234375e-07
+     ],
+     "partSpacePosition": [
+      "00000000",
+      "c0400000",
+      "a8100000"
+     ],
+     "partSpaceRotation": [
+      "3f3504f5",
+      "00000000",
+      "00000000",
+      "3f3504f4"
+     ]
+    }
+   ],
+   "thrustVectorTransformName": [
+    "thrustTransform"
+   ]
+  }
+ }
+}
