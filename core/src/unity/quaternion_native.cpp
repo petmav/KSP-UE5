@@ -159,6 +159,13 @@ Quaternionf NativeMul(const Quaternionf& lhs, const Quaternionf& rhs) {
     return r;
 }
 
+// the CRT atan2f of native code is IEEE: a zero result keeps the sign of y (the Mono library the dotnet shim follows returns +0)
+float NativeAtan2f(float y, float x) {
+    double r = ksp::dotnet::Math::Atan2(static_cast<double>(y), static_cast<double>(x));
+    if (r == 0.0) r = std::copysign(0.0, static_cast<double>(y));
+    return static_cast<float>(r);
+}
+
 }  // namespace
 
 // QuaternionScripting::LookRotation -> LookRotationToQuaternion (Runtime/Math/Quaternion.cpp) / LookRotationToMatrix (Matrix3x3.cpp)
@@ -225,16 +232,16 @@ Vector3f EulerAngles(const Quaternionf& q) {
     if (m12 < 0.999f) {
         if (m12 > -0.999f) {
             vx = static_cast<float>(ksp::dotnet::Math::Asin(static_cast<double>(-m12)));
-            vy = static_cast<float>(ksp::dotnet::Math::Atan2(static_cast<double>(m02), static_cast<double>(m22)));
-            vz = static_cast<float>(ksp::dotnet::Math::Atan2(static_cast<double>(m10), static_cast<double>(m11)));
+            vy = NativeAtan2f(m02, m22);
+            vz = NativeAtan2f(m10, m11);
         } else {
             vx = kPI * 0.5f;
-            vy = static_cast<float>(ksp::dotnet::Math::Atan2(static_cast<double>(m01), static_cast<double>(m00)));
+            vy = NativeAtan2f(m01, m00);
             vz = 0.0f;
         }
     } else {
         vx = -kPI * 0.5f;
-        vy = static_cast<float>(ksp::dotnet::Math::Atan2(static_cast<double>(-m01), static_cast<double>(m00)));
+        vy = NativeAtan2f(-m01, m00);
         vz = 0.0f;
     }
     (void)m20;

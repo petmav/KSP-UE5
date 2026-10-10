@@ -139,6 +139,8 @@ add_library(kspcore STATIC
     editor/editor_logic.cpp
     editor/editor_geometry.cpp
     editor/preflight_tests.cpp
+    editor/editor_markers.cpp
+    editor/editor_gizmos.cpp
     save/game_persistence.cpp
     aero/drag_cube_list.cpp
     aero/flight_integrator_aero.cpp
