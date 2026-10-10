@@ -170,6 +170,7 @@ struct World37 {
     }
     ~World37() {
         agents.reset();
+        pt->OnDestroy();  // ProgressTracking.OnDestroy: Stow the achievement nodes (their GameEvents subscriptions) before the tree dies
         pt.reset();
         gv.reset();
         ContractSystem::ClearTypes();
@@ -623,104 +624,106 @@ TEST_CASE("WP-37 Contract state machine: Offer / Accept / Complete move funds, r
     CHECK(raw->IsFinished());
 }
 
-TEST_CASE("WP-37 Contract failure, cancellation, decline, withdraw and deadline expiry") {
-    {
-        Life37 L;
-        auto c = L.Make("PlantFlag", "Significant");
-        Contract* raw = c.get();
-        L.cs.contracts.push_back(std::move(c));
-        const double failure = raw->FundsFailure, advance = raw->FundsAdvance;
-        const float repF = raw->ReputationFailure;
-        raw->Offer();
-        raw->Accept();
-        const double fundsAfterAccept = L.funds.Funds();
-        CHECK(fundsAfterAccept == 1000000.0 + advance);
-        CHECK(raw->Fail());
-        CHECK(raw->ContractState() == Contract::State::Failed);
-        CHECK(L.funds.Funds() == fundsAfterAccept - std::fabs(failure));  // PenalizeFailure
-        CHECK_F32(L.rep.reputation(), GranularRef37(0.0f, -std::fabs(repF), 0.9f, 1.3f));
-        CHECK(L.events.back() == "finished");
-    }
-    {
-        Life37 L;
-        auto c = L.Make("PlantFlag", "Significant");
-        Contract* raw = c.get();
-        L.cs.contracts.push_back(std::move(c));
-        Planetarium::fetch->time = 100.0;
-        raw->Offer();
-        raw->Accept();
-        const double acc = raw->DateAccepted();
-        Planetarium::fetch->time = acc + raw->TimeDeadline * 0.5;
-        const double before = L.funds.Funds();
-        CHECK(raw->Cancel());
-        CHECK(raw->ContractState() == Contract::State::Cancelled);
-        // PenalizeCancellation: num = InverseLerp(accepted, deadline, finished); funds = Lerp(advance, failure, num)
-        const float num = Mathf::InverseLerp(static_cast<float>(raw->DateAccepted()), static_cast<float>(raw->DateDeadline()), static_cast<float>(raw->DateFinished()));
-        const double funds = Mathfx::Lerp(raw->FundsAdvance, raw->FundsFailure, static_cast<double>(num));
-        CHECK(L.funds.Funds() == before - std::fabs(funds));
-        const float repLoss = Mathfx::Lerp(L.w.Career().RepLossDeclined, raw->ReputationFailure, num);
-        CHECK_F32(L.rep.reputation(), GranularRef37(0.0f, -std::fabs(repLoss), 0.9f, 1.3f));
-    }
-    {
-        Life37 L;
-        auto c = L.Make("PlantFlag", "Significant");
-        Contract* raw = c.get();
-        L.cs.contracts.push_back(std::move(c));
-        const int wBefore = ContractSystem::TryGetWeightValue("PlantFlag");
-        raw->Offer();
-        CHECK(raw->Decline());
-        CHECK(raw->ContractState() == Contract::State::Declined);
-        CHECK(ContractSystem::TryGetWeightValue("PlantFlag") == std::max(wBefore - 8, 10));
-        // Reputation.AddReputation(-RepLossDeclined = -1) with ContractDecline
-        CHECK_F32(L.rep.reputation(), GranularRef37(0.0f, -1.0f, 0.9f, 1.3f));
-        CHECK_FALSE(raw->Decline());
-    }
-    {
-        Life37 L;
-        auto c = L.Make("PlantFlag", "Significant");
-        Contract* raw = c.get();
-        L.cs.contracts.push_back(std::move(c));
-        const int wBefore = ContractSystem::TryGetWeightValue("PlantFlag");
-        raw->Offer();
-        raw->SetViewed(Contract::Viewed::Read);
-        raw->SetViewed(Contract::Viewed::Seen);  // never goes back
-        CHECK(raw->ContractViewed() == Contract::Viewed::Read);
-        raw->Withdraw();
-        CHECK(raw->ContractState() == Contract::State::Withdrawn);
-        CHECK(ContractSystem::TryGetWeightValue("PlantFlag") == std::max(wBefore - 2, 10));
-        raw->Withdraw();  // idempotent
-        CHECK(raw->IsFinished());
-    }
-    {
-        // Update(): an Offered contract expires, an Active contract passes its deadline (UpdateContracts then archives it)
-        Life37 L;
-        auto c = L.Make("PlantFlag", "Significant");
-        Contract* raw = c.get();
-        L.cs.contracts.push_back(std::move(c));
-        Planetarium::fetch->time = 0.0;
-        raw->Offer();
-        Planetarium::fetch->time = raw->DateExpire() - 1.0;
-        raw->Update();
-        CHECK(raw->ContractState() == Contract::State::Offered);
-        Planetarium::fetch->time = raw->DateExpire();
-        raw->Update();
-        CHECK(raw->ContractState() == Contract::State::OfferExpired);
-        CHECK_F64(raw->DateFinished(), raw->DateExpire());
-        auto c2 = L.Make("CollectScience", "Trivial");
-        Contract* r2 = c2.get();
-        L.cs.contracts.push_back(std::move(c2));
-        Planetarium::fetch->time = 10.0;
-        r2->Offer();
-        r2->Accept();
-        const double fundsBefore = L.funds.Funds();
-        Planetarium::fetch->time = r2->DateDeadline();
-        L.cs.UpdateContracts();  // updates the active ones (r2 passes its deadline here), archives the finished ones
-        CHECK(r2->ContractState() == Contract::State::DeadlineExpired);
-        L.cs.UpdateContracts();  // r2 is finished now: archived
-        CHECK(L.funds.Funds() == fundsBefore - std::fabs(r2->FundsFailure));
-        CHECK(L.cs.ContractsFinished().size() == 1);  // DeadlineExpired is archived; OfferExpired is not
-        CHECK(L.cs.RequireRefresh());
-    }
+TEST_CASE("WP-37 Contract failure") {
+    Life37 L;
+    auto c = L.Make("PlantFlag", "Significant");
+    Contract* raw = c.get();
+    L.cs.contracts.push_back(std::move(c));
+    const double failure = raw->FundsFailure, advance = raw->FundsAdvance;
+    const float repF = raw->ReputationFailure;
+    raw->Offer();
+    raw->Accept();
+    const double fundsAfterAccept = L.funds.Funds();
+    CHECK(fundsAfterAccept == 1000000.0 + advance);
+    CHECK(raw->Fail());
+    CHECK(raw->ContractState() == Contract::State::Failed);
+    CHECK(L.funds.Funds() == fundsAfterAccept - std::fabs(failure));  // PenalizeFailure
+    CHECK_F32(L.rep.reputation(), GranularRef37(0.0f, -std::fabs(repF), 0.9f, 1.3f));
+    CHECK(L.events.back() == "finished");
+}
+
+TEST_CASE("WP-37 Contract cancellation") {
+    Life37 L;
+    auto c = L.Make("PlantFlag", "Significant");
+    Contract* raw = c.get();
+    L.cs.contracts.push_back(std::move(c));
+    Planetarium::fetch->time = 100.0;
+    raw->Offer();
+    raw->Accept();
+    const double acc = raw->DateAccepted();
+    Planetarium::fetch->time = acc + raw->TimeDeadline * 0.5;
+    const double before = L.funds.Funds();
+    CHECK(raw->Cancel());
+    CHECK(raw->ContractState() == Contract::State::Cancelled);
+    // PenalizeCancellation: num = InverseLerp(accepted, deadline, finished); funds = Lerp(advance, failure, num)
+    const float num = Mathf::InverseLerp(static_cast<float>(raw->DateAccepted()), static_cast<float>(raw->DateDeadline()), static_cast<float>(raw->DateFinished()));
+    const double funds = Mathfx::Lerp(raw->FundsAdvance, raw->FundsFailure, static_cast<double>(num));
+    CHECK(L.funds.Funds() == before - std::fabs(funds));
+    const float repLoss = Mathfx::Lerp(L.w.Career().RepLossDeclined, raw->ReputationFailure, num);
+    CHECK_F32(L.rep.reputation(), GranularRef37(0.0f, -std::fabs(repLoss), 0.9f, 1.3f));
+}
+
+TEST_CASE("WP-37 Contract decline") {
+    Life37 L;
+    auto c = L.Make("PlantFlag", "Significant");
+    Contract* raw = c.get();
+    L.cs.contracts.push_back(std::move(c));
+    const int wBefore = ContractSystem::TryGetWeightValue("PlantFlag");
+    raw->Offer();
+    CHECK(raw->Decline());
+    CHECK(raw->ContractState() == Contract::State::Declined);
+    CHECK(ContractSystem::TryGetWeightValue("PlantFlag") == std::max(wBefore - 8, 10));
+    // Reputation.AddReputation(-RepLossDeclined = -1) with ContractDecline
+    CHECK_F32(L.rep.reputation(), GranularRef37(0.0f, -1.0f, 0.9f, 1.3f));
+    CHECK_FALSE(raw->Decline());
+}
+
+TEST_CASE("WP-37 Contract withdraw") {
+    Life37 L;
+    auto c = L.Make("PlantFlag", "Significant");
+    Contract* raw = c.get();
+    L.cs.contracts.push_back(std::move(c));
+    const int wBefore = ContractSystem::TryGetWeightValue("PlantFlag");
+    raw->Offer();
+    raw->SetViewed(Contract::Viewed::Read);
+    raw->SetViewed(Contract::Viewed::Seen);  // never goes back
+    CHECK(raw->ContractViewed() == Contract::Viewed::Read);
+    raw->Withdraw();
+    CHECK(raw->ContractState() == Contract::State::Withdrawn);
+    CHECK(ContractSystem::TryGetWeightValue("PlantFlag") == std::max(wBefore - 2, 10));
+    raw->Withdraw();  // idempotent
+    CHECK(raw->IsFinished());
+}
+
+TEST_CASE("WP-37 Contract Update expiry") {
+    // Update(): an Offered contract expires, an Active contract passes its deadline (UpdateContracts then archives it)
+    Life37 L;
+    auto c = L.Make("PlantFlag", "Significant");
+    Contract* raw = c.get();
+    L.cs.contracts.push_back(std::move(c));
+    Planetarium::fetch->time = 0.0;
+    raw->Offer();
+    Planetarium::fetch->time = raw->DateExpire() - 1.0;
+    raw->Update();
+    CHECK(raw->ContractState() == Contract::State::Offered);
+    Planetarium::fetch->time = raw->DateExpire();
+    raw->Update();
+    CHECK(raw->ContractState() == Contract::State::OfferExpired);
+    CHECK_F64(raw->DateFinished(), raw->DateExpire());
+    auto c2 = L.Make("CollectScience", "Trivial");
+    Contract* r2 = c2.get();
+    L.cs.contracts.push_back(std::move(c2));
+    Planetarium::fetch->time = 10.0;
+    r2->Offer();
+    r2->Accept();
+    const double fundsBefore = L.funds.Funds();
+    Planetarium::fetch->time = r2->DateDeadline();
+    L.cs.UpdateContracts();  // updates the active ones (r2 passes its deadline here), archives the finished ones
+    CHECK(r2->ContractState() == Contract::State::DeadlineExpired);
+    L.cs.UpdateContracts();  // r2 is finished now: archived
+    CHECK(L.funds.Funds() == fundsBefore - std::fabs(r2->FundsFailure));
+    CHECK(L.cs.ContractsFinished().size() == 1);  // DeadlineExpired is archived; OfferExpired is not
+    CHECK(L.cs.RequireRefresh());
 }
 
 TEST_CASE("WP-37 ContractSystem: generation order, duplicate ids, surplus withdrawal and the seed wrap") {
@@ -1100,6 +1103,7 @@ TEST_CASE("WP-37 Acquire / Recover parameters: kerbals, parts, save format") {
     EventReport killed(FlightEvents::CREW_KILLED, nullptr, "Bill Kerman");
     GE::onCrewKilled.Fire(&killed);  // All: any death fails the AcquireCrew
     CHECK(ac->State() == ParameterState::Failed);
+    c.Unregister();  // the parameters must not outlive their GameEvents subscriptions (the later tests fire the same static events)
 }
 
 // ---- PartTestConstraint / ModuleTestSubject vs the part cfgs ------------------------------------------------------------------------------------------

@@ -14,7 +14,7 @@
 #include "ksp/dotnet/enum.hpp"
 
 namespace ksp {
-class AvailablePart;
+struct AvailablePart;
 }
 
 namespace ksp::Contracts::Agents {

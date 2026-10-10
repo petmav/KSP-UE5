@@ -18,7 +18,7 @@
 
 namespace ksp {
 class ProtoCrewMember;
-class AvailablePart;
+struct AvailablePart;
 class ModuleTestSubject;
 class Part;
 class ProtoVessel;

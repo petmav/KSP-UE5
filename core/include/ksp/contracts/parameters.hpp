@@ -18,7 +18,7 @@
 #include "ksp/vessel/vessel_types.hpp"
 
 namespace ksp {
-class AvailablePart;
+struct AvailablePart;
 class Part;
 class ProtoVessel;
 class Vessel;
