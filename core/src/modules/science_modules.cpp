@@ -912,8 +912,8 @@ void ModuleScienceExperiment::ReviewDataItem(const std::shared_ptr<ScienceData>&
 
 // ModuleScienceExperiment.cs:1097
 std::string ModuleScienceExperiment::GetInfo() {
-    // XKCDColors.HexFormat.Cyan, RUIutils.GetYesNoUIString: UI texts; the yes/no tags are #autoLOC_ yes / no strings
-    auto yn = [](bool b) { return Loc::Format(b ? "#autoLOC_6001078" : "#autoLOC_6001079"); };
+    // RUIutils.GetYesNoUIString (RUIutils.cs:117): a green V or a red X; XKCDColors.HexFormat.Green / Red / Cyan
+    auto yn = [](bool b) { return std::string(b ? "<color=#15b01a>V</color>" : "<color=#e50000>X</color>"); };
     std::string text = "<color=#00ffff>" + StrField(*this, "experimentActionName") + "</color>\n";
     text += Fmt("#autoLOC_238797", {yn(Get<bool>("dataIsCollectable"))});
     text += Fmt("#autoLOC_238798", {yn(Get<bool>("rerunnable"))});
