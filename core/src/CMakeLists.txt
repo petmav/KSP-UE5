@@ -84,6 +84,22 @@ add_library(kspcore STATIC
     career/strategies.cpp
     career/scenario_misc.cpp
     career/career_register.cpp
+    contracts/contract_environment.cpp
+    contracts/contract.cpp
+    contracts/contract_parameter.cpp
+    contracts/contract_system.cpp
+    contracts/agents.cpp
+    contracts/text_gen.cpp
+    contracts/fineprint_lite.cpp
+    contracts/parameters.cpp
+    contracts/predicates.cpp
+    contracts/module_test_subject.cpp
+    contracts/templates.cpp
+    contracts/templates_recover.cpp
+    contracts/templates_parttest.cpp
+    contracts/templates_grandtour.cpp
+    contracts/waypoints.cpp
+    contracts/contract_register.cpp
     parts/ksp_enums.cpp
     parts/part_data.cpp
     parts/part_module_data.cpp
