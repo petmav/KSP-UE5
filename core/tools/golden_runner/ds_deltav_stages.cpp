@@ -166,7 +166,7 @@ void StartCompoundParts(ShipConstruct& ship) {
 }
 
 // ModuleDockingNode.OnLoad (ModuleDockingNode.cs:533) / OnStart (:594): `base.part.fuelCrossFeed = crossfeed;` -- the docking node module is
-// a staging stand-in (WP-16, module_decouplers.cpp) until its package; this is the one statement of it the fuel flow graph needs (a closed
+// a staging stand-in (WP-16, module_decouplers.cpp) until its package (WP-25: replace this runner statement by the module's own OnLoad / OnStart); this is the one statement of it the fuel flow graph needs (a closed
 // docking port in a craft file has `crossfeed = False` and blocks the crossfeed through the part).
 void ApplyDockingNodeCrossfeed(ShipConstruct& ship) {
     for (Part* p : ship.liveParts)
