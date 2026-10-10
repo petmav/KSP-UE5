@@ -1,6 +1,7 @@
 // WP-16: ModuleDecouplerBase.cs, ModuleDecouple.cs, ModuleAnchoredDecoupler.cs (see include/ksp/modules/module_decouplers.hpp).
 // Every function cites File.cs:line of decompiled/KSP-Decompiled/Assembly-CSharp/.
 #include "ksp/modules/module_decouplers.hpp"
+#include "ksp/modules/module_structural.hpp"
 
 #include <algorithm>
 
@@ -47,6 +48,9 @@ ModuleDecouplerBase::ModuleDecouplerBase(const ModuleClassInfo& cls) : PartModul
 // ModuleDecouplerBase.cs:122
 ModuleDecouplerBase::~ModuleDecouplerBase() {
     live_.erase(std::remove(live_.begin(), live_.end(), this), live_.end());
+    if (jettisonModule != nullptr) {  // :122 OnDestroy
+        if (auto* jm = dynamic_cast<ModuleJettison*>(jettisonModule)) if (ModuleJettison::IsAlive(jm)) jm->OnStop.Remove(this, &ModuleDecouplerBase::OnJettison);
+    }
     if (subscribed_) GE::onVesselWasModified.Remove(this, &ModuleDecouplerBase::OnVesselWasModified);
 }
 
@@ -93,7 +97,7 @@ void ModuleDecouplerBase::OnStart(StartState state) {
         jettisonModule = p->FindModuleOfClass("ModuleJettison");
         if (jettisonModule != nullptr && !jettisonModule->Get<bool>("isJettisoned")) {
             SetAirstream(true);
-            // jettisonModule.OnStop.Add(OnJettison): the jettison module calls OnJettison (ModuleJettison, WP-30)
+            if (auto* jm = dynamic_cast<ModuleJettison*>(jettisonModule)) jm->OnStop.Add(this, &ModuleDecouplerBase::OnJettison);  // jettisonModule.OnStop.Add(OnJettison)
             if (!subscribed_) {
                 GE::onVesselWasModified.Add(this, &ModuleDecouplerBase::OnVesselWasModified);
                 subscribed_ = true;
@@ -374,13 +378,6 @@ std::string ModuleAnchoredDecoupler::GetModuleDisplayName() { return Localizer::
 // ============================================================================================ IStageSeparator stand-ins
 
 namespace {
-// LaunchClamp.cs:369: `public int GetStageIndex(int fallback) { return base.part.inverseStage; }` -- the clamp's other behaviour is
-// the physics package's; this stand-in only answers the staging query (replaced when LaunchClamp is ported)
-class LaunchClampStageSeparator : public PartModule, public IStageSeparator {
-public:
-    using PartModule::PartModule;
-    int GetStageIndex(int /*fallback*/) override { return dynamic_cast<Part*>(part)->fields.inverseStage; }
-};
 // ModuleDockingNode.cs:1944: `return fallback + 1;` (the staging overrides are PartModule's class rules, module_staging.cpp)
 class DockingNodeStageSeparator : public PartModule, public IStageSeparator {
 public:
@@ -394,7 +391,6 @@ void RegisterDecouplerModules() {
     ModuleFactory::Register("ModuleDecouplerBase", [](const ModuleClassInfo& c) { return std::static_pointer_cast<PartModule>(std::make_shared<ModuleDecouplerBase>(c)); });
     ModuleFactory::Register("ModuleDecouple", [](const ModuleClassInfo& c) { return std::static_pointer_cast<PartModule>(std::make_shared<ModuleDecouple>(c)); });
     ModuleFactory::Register("ModuleAnchoredDecoupler", [](const ModuleClassInfo& c) { return std::static_pointer_cast<PartModule>(std::make_shared<ModuleAnchoredDecoupler>(c)); });
-    ModuleFactory::Register("LaunchClamp", [](const ModuleClassInfo& c) { return std::static_pointer_cast<PartModule>(std::make_shared<LaunchClampStageSeparator>(c)); });
     ModuleFactory::Register("ModuleDockingNode", [](const ModuleClassInfo& c) { return std::static_pointer_cast<PartModule>(std::make_shared<DockingNodeStageSeparator>(c)); });
 }
 }  // namespace detail

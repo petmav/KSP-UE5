@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "ksp/staging/staging_types.hpp"
+#include "ksp/staging/staging_types.hpp"  // IAirstreamShield.cs (one definition, WP-16; WP-26 uses it from here too)
 #include "ksp/unity/vector.hpp"
 
 namespace ksp {
