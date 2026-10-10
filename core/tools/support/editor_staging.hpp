@@ -2,19 +2,28 @@
 // runs on it -- Part.Start's staging half for every part (modules' OnStart, stagingIcon check, UpdateStageability, stack icon), the
 // StageManager that listens (Awake), then EditorLogic's onEditorLoad and the deferred SortIcons. ShipConstruct editing (WP-18)
 // will own this sequence; until then it is what the dataset tools/golden_runner/ds_staging_sequence.cpp and
-// tests/test_staging.cpp share.
+// tests/test_staging.cpp share. WP-40 added the EditorLogic-driven constructor (EditorLogicStagingHost).
 #pragma once
 
 #include <memory>
 
 #include "craft_tree.hpp"
+#include "ksp/editor/editor_logic.hpp"
 #include "ksp/staging/stage_manager.hpp"
 
 namespace ksp::support {
 
 struct EditorSession {
     EditorStagingHost host;
+    std::unique_ptr<EditorLogicStagingHost> logicHost;   // WP-40: the host of a session that follows an EditorLogic (root / selected part live)
     std::unique_ptr<StageManager> sm;
+
+    // WP-40: the same session over an EditorLogic (EditorLogic.cs: StageManager reads EditorLogic.RootPart / SelectedPart): the part-tree
+    // operations of the editor (attachPart / detachPart ...) then regenerate the staging sequence through Part.onAttach
+    explicit EditorSession(EditorLogic& editor) : logicHost(std::make_unique<EditorLogicStagingHost>(editor)) {
+        sm = std::make_unique<StageManager>(logicHost.get());
+        sm->Awake();
+    }
 
     // The root is the part without a parent (not necessarily the first of the craft file). The StageManager is created before the parts start so that the icons they create are held by it.
     explicit EditorSession(CraftTree& tree) {

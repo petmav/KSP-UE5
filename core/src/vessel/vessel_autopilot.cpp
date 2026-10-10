@@ -1,5 +1,6 @@
 // WP-24: VesselAutopilot.cs (see ksp/vessel/vessel_autopilot.hpp for the scope and the seams).
 #include "ksp/vessel/vessel_autopilot.hpp"
+#include "ksp/unity/quaternion_native.hpp"
 
 #include <cmath>
 
@@ -36,55 +37,6 @@ void AutopilotEnvironment::Reset() {
 }
 
 namespace {
-// Quaternion.Internal_MakePositive (Quaternion.cs:240, managed)
-Vector3f MakePositive(Vector3f euler) {
-    const float num = -0.005729578f;
-    const float num2 = f32store(360.0 + fx(num));
-    auto fix = [&](float& c) {
-        if (c < num) c = f32store(fx(c) + 360.0);
-        else if (c > num2) c = f32store(fx(c) - 360.0);
-    };
-    fix(euler.x);
-    fix(euler.y);
-    fix(euler.z);
-    return euler;
-}
-// Native Unity QuaternionToEuler (YXZ order, single precision per operation): the formulation of Unity's Math/Quaternion.cpp. The native
-// build is not in the captures; the trig calls go through ksp::dotnet (the double result rounded to float).
-Vector3f ToEulerRad(const Quaternionf& q) {
-    const float x = q.x * 2.0f, y = q.y * 2.0f, z = q.z * 2.0f;
-    const float xx = q.x * x, yy = q.y * y, zz = q.z * z;
-    const float xy = q.x * y, xz = q.x * z, yz = q.y * z;
-    const float wx = q.w * x, wy = q.w * y, wz = q.w * z;
-    float m[9];
-    m[0] = 1.0f - (yy + zz);
-    m[1] = xy + wz;
-    m[2] = xz - wy;
-    m[3] = xy - wz;
-    m[4] = 1.0f - (xx + zz);
-    m[5] = yz + wx;
-    m[6] = xz + wy;
-    m[7] = yz - wx;
-    m[8] = 1.0f - (xx + yy);
-    auto g = [&](int r, int c) { return m[r + 3 * c]; };
-    Vector3f v;
-    if (g(1, 2) < 0.999f) {
-        if (g(1, 2) > -0.999f) {
-            v.x = Mathf::Asin(-g(1, 2));
-            v.y = Mathf::Atan2(g(0, 2), g(2, 2));
-            v.z = Mathf::Atan2(g(1, 0), g(1, 1));
-        } else {
-            v.x = Mathf::PI * 0.5f;
-            v.y = Mathf::Atan2(g(0, 1), g(0, 0));
-            v.z = 0.0f;
-        }
-    } else {
-        v.x = -Mathf::PI * 0.5f;
-        v.y = Mathf::Atan2(-g(0, 1), g(0, 0));
-        v.z = 0.0f;
-    }
-    return v;
-}
 Vector3f EulerAngles(const Quaternionf& q) {
     if (AutopilotEnvironment::eulerAngles) return AutopilotEnvironment::eulerAngles(q);
     return AutopilotEnvironment::DefaultEulerAngles(q);
@@ -92,10 +44,7 @@ Vector3f EulerAngles(const Quaternionf& q) {
 }  // namespace
 
 // see Quaternion.cs:68 eulerAngles = Internal_MakePositive(Internal_ToEulerRad(this) * 57.29578f)
-Vector3f AutopilotEnvironment::DefaultEulerAngles(const Quaternionf& q) {
-    const Vector3f r = ToEulerRad(q);
-    return MakePositive(r * 57.29578f);
-}
+Vector3f AutopilotEnvironment::DefaultEulerAngles(const Quaternionf& q) { return UnityNative::EulerAngles(q); }   // WP-40: the single implementation
 
 // ======================================================= VesselAutopilot.VesselSAS
 

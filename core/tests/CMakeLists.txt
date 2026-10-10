@@ -41,6 +41,7 @@ add_executable(kspcore_tests
     test_command.cpp
     test_science.cpp
     test_commnet.cpp
+    test_editor.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
 )

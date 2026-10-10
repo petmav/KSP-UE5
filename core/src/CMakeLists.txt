@@ -138,6 +138,12 @@ add_library(kspcore STATIC
     save/ship_construct_live.cpp
     ship/ship_construction.cpp
     ship/ship_template.cpp
+    # WP-40 editor core: EditorLogic data side, geometry / re-root / enum helpers, pre-flight tests, markers, gizmos
+    editor/editor_logic.cpp
+    editor/editor_geometry.cpp
+    editor/preflight_tests.cpp
+    editor/editor_markers.cpp
+    editor/editor_gizmos.cpp
     save/game_persistence.cpp
     aero/drag_cube_list.cpp
     aero/flight_integrator_aero.cpp
