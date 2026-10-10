@@ -67,14 +67,14 @@ bool APSkillExtensions::AvailableAtLevel(AutopilotMode mode, Vessel& vessel) {
     return true;
 }
 
-// APSkillExtensions.cs:61
+// APSkillExtensions.cs:48
 bool APSkillExtensions::AvailableAtLevel(AutopilotMode mode, int skillLvl) {
     if (Params().CustomParams<GameParameters::AdvancedParams>().KerbalExperienceEnabled(CurrentGame().Mode))
         return skillLvl >= GetRequiredSkill(mode);
     return true;
 }
 
-// APSkillExtensions.cs:69
+// APSkillExtensions.cs:57
 int APSkillExtensions::GetRequiredSkill(AutopilotMode mode) {
     switch (mode) {
     case AutopilotMode::Prograde:
@@ -106,10 +106,10 @@ void ModuleExperienceManagement::OnStart(StartState state) {
     if (!adv.GetEnableKerbalExperience() || adv.ImmediateLevelUp || CurrentGame().Mode == Game_Modes::MISSION) enabled = false;
 }
 
-// ModuleExperienceManagement.cs:23
+// ModuleExperienceManagement.cs:20
 std::string ModuleExperienceManagement::GetInfo() { return Localizer::Format("#autoLOC_230278"); }
 
-// ModuleExperienceManagement.cs:29
+// ModuleExperienceManagement.cs:26
 void ModuleExperienceManagement::FinalizeExperience() {
     Vessel* vessel = VesselOf(*this);
     if (vessel == nullptr) throw NullReferenceException("ModuleExperienceManagement.vessel is null");

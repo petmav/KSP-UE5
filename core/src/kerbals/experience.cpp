@@ -23,16 +23,16 @@ using Localizer = KSP::Localization::Localizer;
 
 // ================================================== ExperienceEffect ================================================
 
-// ExperienceEffect.cs:27
+// ExperienceEffect.cs:35
 ExperienceEffect::ExperienceEffect(ExperienceTrait*, const std::vector<float>&) {
     // modifiers.CopyTo(LevelModifiers, 0) with LevelModifiers == null
     throw ArgumentNullException("array");
 }
 
-// ExperienceEffect.cs:32
+// ExperienceEffect.cs:35
 ExperienceEffect::ExperienceEffect(ExperienceTrait*, int level) : level_(level) {}
 
-// ExperienceEffect.cs:13
+// ExperienceEffect.cs:19
 const std::string& ExperienceEffect::Name() {
     if (!haveName_) {
         name_ = ClassName();
@@ -41,7 +41,7 @@ const std::string& ExperienceEffect::Name() {
     return name_;
 }
 
-// ExperienceEffect.cs:26
+// ExperienceEffect.cs:31
 const std::vector<float>& ExperienceEffect::LevelModifiers() const {
     if (!levelModifiers_) throw NullReferenceException("ExperienceEffect.LevelModifiers is null");
     return *levelModifiers_;
@@ -53,7 +53,7 @@ float ExperienceEffect::LevelModifier(int index) const {
     return m[static_cast<size_t>(index)];
 }
 
-// ExperienceEffect.cs:50
+// ExperienceEffect.cs:60
 void ExperienceEffect::LoadFromConfig(const ConfigNode& node) {
     if (const std::string* value = node.GetValuePtr("modifiers")) {
         const std::vector<std::string> array = dotnet::Split(*value, ", ", true);
@@ -146,7 +146,7 @@ void ExperienceTrait::AddEffect(ExperienceEffectConfig& cfg) {
     effects_.push_back(std::move(effect));
 }
 
-// ExperienceTrait.cs:104
+// ExperienceTrait.cs:101
 int ExperienceTrait::CrewMemberExperienceLevel(int levelCap) const {
     if (protoCrewMember_ == nullptr) throw NullReferenceException("ExperienceTrait.CrewMember is null");
     const int level = std::max(protoCrewMember_->experienceLevel, 0);
@@ -166,7 +166,7 @@ void ExperienceTrait::Unregister(Part& part) {
     for (size_t i = 0; i < effects_.size(); ++i) effects_[i]->Unregister(part);
 }
 
-// ExperienceTrait.cs:154 (MessageSystem is UI)
+// ExperienceTrait.cs:146 (MessageSystem is UI)
 void ExperienceTrait::SendStateMessage(const std::string& /*title*/, const std::string& message) {
     log::Info("Experience (" + Title() + "): " + message);
 }
@@ -215,12 +215,12 @@ std::string AutopilotSkill::GetDescription() {
     }
     return text;
 }
-// AutopilotSkill.cs:56
+// AutopilotSkill.cs:60
 void AutopilotSkill::OnRegister(Part& part) {
     part.partValues.AutopilotSkill.Add(this, &AutopilotSkill::GetValue);
     part.partValues.AutopilotKerbalSkill.Add(this, &AutopilotSkill::GetValue);
 }
-// AutopilotSkill.cs:62
+// AutopilotSkill.cs:66
 void AutopilotSkill::OnUnregister(Part& part) {
     part.partValues.AutopilotSkill.Remove(this, &AutopilotSkill::GetValue);
     part.partValues.AutopilotKerbalSkill.Remove(this, &AutopilotSkill::GetValue);
@@ -268,7 +268,7 @@ float DeployedSciencePowerSkill::GetValue() {
     }
     return 0.0f;
 }
-// DeployedSciencePowerSkill.cs:52
+// DeployedSciencePowerSkill.cs:49
 float DeployedSciencePowerSkill::GetTraitBonus(int level) {
     if (level < static_cast<int>(LevelModifiers().size())) return f32store(fx(1.0f) + fx(LevelModifier(level)));
     return 1.0f;
@@ -330,9 +330,9 @@ void VesselScienceReturn::OnUnregister(Part& part) { part.partValues.ScienceRetu
 float VesselScienceReturn::GetValue() { return LevelModifier(Parent()->CrewMemberExperienceLevel(static_cast<int>(LevelModifiers().size()))); }
 
 // ---- EVAChuteSkill.cs ----
-// EVAChuteSkill.cs:8
+// EVAChuteSkill.cs:15
 void EVAChuteSkill::OnRegister(Part& part) { part.partValues.EVAChuteSkill.Add(this, &EVAChuteSkill::GetValue); }
-// EVAChuteSkill.cs:13
+// EVAChuteSkill.cs:20
 void EVAChuteSkill::OnUnregister(Part& part) { part.partValues.EVAChuteSkill.Remove(this, &EVAChuteSkill::GetValue); }
 // EVAChuteSkill.cs:18 (the first effect of the same C# type in the parent's list, which may be another instance)
 int EVAChuteSkill::GetValue() {
@@ -357,15 +357,15 @@ std::string FailureRepairSkill::GetDescription() {
         if (num >= values[i]) text = text + "\n" + Localizer::Format(SkillsReadable()[static_cast<size_t>(i)]);
     return text;
 }
-// FailureRepairSkill.cs:46
-void FailureRepairSkill::OnRegister(Part& part) { part.partValues.FailureRepairSkill.Add(this, &FailureRepairSkill::GetValue); }
 // FailureRepairSkill.cs:51
+void FailureRepairSkill::OnRegister(Part& part) { part.partValues.FailureRepairSkill.Add(this, &FailureRepairSkill::GetValue); }
+// FailureRepairSkill.cs:56
 void FailureRepairSkill::OnUnregister(Part& part) { part.partValues.FailureRepairSkill.Remove(this, &FailureRepairSkill::GetValue); }
 // FailureRepairSkill.cs:56
 int FailureRepairSkill::GetValue() { return Parent()->CrewMemberExperienceLevel(); }
 
 // ---- FullVesselControlSkill.cs ----
-// FullVesselControlSkill.cs:17
+// FullVesselControlSkill.cs:22
 std::string FullVesselControlSkill::GetDescription() {
     const std::string result = Fmt("#autoLOC_18556");
     if (!CurrentParameters().Difficulty.EnableCommNet) return "";
@@ -373,7 +373,7 @@ std::string FullVesselControlSkill::GetDescription() {
 }
 
 // ---- GeeForceTolerance.cs ----
-// GeeForceTolerance.cs:17 (C# returns null when GKerbalLimits is off; "" here, ExperienceTrait.DescriptionEffects treats both alike)
+// GeeForceTolerance.cs:22 (C# returns null when GKerbalLimits is off; "" here, ExperienceTrait.DescriptionEffects treats both alike)
 std::string GeeForceTolerance::GetDescription() {
     if (CurrentParameters().CustomParams<GameParameters::AdvancedParams>().GKerbalLimits) {
         const std::string text = dotnet::FormatSingleF(GeeTolerance(), 2);
@@ -407,17 +407,17 @@ std::string RepairSkill::GetDescription() {
         if (num >= values[i]) text = text + "\n" + Localizer::Format(SkillsReadable()[static_cast<size_t>(i)]);
     return text;
 }
-// RepairSkill.cs:53
-void RepairSkill::OnRegister(Part& part) { part.partValues.RepairSkill.Add(this, &RepairSkill::GetValue); }
 // RepairSkill.cs:58
+void RepairSkill::OnRegister(Part& part) { part.partValues.RepairSkill.Add(this, &RepairSkill::GetValue); }
+// RepairSkill.cs:63
 void RepairSkill::OnUnregister(Part& part) { part.partValues.RepairSkill.Remove(this, &RepairSkill::GetValue); }
 // RepairSkill.cs:63
 int RepairSkill::GetValue() { return Parent()->CrewMemberExperienceLevel(); }
 
 // ---- ScienceSkill.cs ----
-// ScienceSkill.cs:17
+// ScienceSkill.cs:25
 void ScienceSkill::OnRegister(Part& part) { part.partValues.ScienceSkill.Add(this, &ScienceSkill::GetValue); }
-// ScienceSkill.cs:22
+// ScienceSkill.cs:30
 void ScienceSkill::OnUnregister(Part& part) { part.partValues.ScienceSkill.Remove(this, &ScienceSkill::GetValue); }
 // ScienceSkill.cs:27
 int ScienceSkill::GetValue() { return Parent()->CrewMemberExperienceLevel(); }

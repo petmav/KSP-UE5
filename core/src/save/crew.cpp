@@ -1113,7 +1113,7 @@ bool KerbalRoster::TryGetExperienceTraitConfig(const std::string& traitName, Exp
     return false;
 }
 
-// KerbalRoster.cs:1053
+// body of KerbalRoster.SetExperienceLevel(pcm, level, parameters, mode) (KerbalRoster.cs:1053); the home body name is evaluated lazily
 void KerbalRoster::SetExperienceLevelImpl(ProtoCrewMember& pcm, int level, const GameParameters& parameters, Game_Modes mode,
                                           const std::function<std::string()>& homeBodyName) {
     if (!parameters.CustomParams<GameParameters::AdvancedParams>().KerbalExperienceEnabled(mode)) level = 5;
@@ -1151,7 +1151,7 @@ void KerbalRoster::SetExperienceLevel(ProtoCrewMember& pcm, int level) {
     SetExperienceLevel(pcm, level, *g->Parameters, g->Mode);
 }
 
-// FlightGlobals.cs:1797 GetHomeBody().name over PSystemManager.localBodies
+// FlightGlobals.GetHomeBody().name (FlightGlobals.cs:1797) over PSystemManager.localBodies
 std::string KerbalRoster::GetHomeBodyName() {
     for (CelestialBody* body : SaveEnvironment::Current().localBodies)
         if (body != nullptr && body->isHomeWorld) return body->name();

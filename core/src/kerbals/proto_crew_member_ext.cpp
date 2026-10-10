@@ -179,7 +179,7 @@ int32_t ProtoCrewMember::GetHashCode() const {
            (veteran ? 1 : 0) ^ (hasToured ? 1 : 0) ^ DoubleHash(UTaR);
 }
 
-// ProtoCrewMember.cs:149
+// ProtoCrewMember.cs:390
 double ProtoCrewMember::GExperiencedNormalized() const {
     const double mult = GToleranceMult(const_cast<ProtoCrewMember&>(*this));
     return gExperienced / (PhysicsGlobals::KerbalGThresholdLOC() * mult *

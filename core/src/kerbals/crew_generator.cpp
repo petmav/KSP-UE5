@@ -72,7 +72,7 @@ std::shared_ptr<ProtoCrewMember> CrewGenerator::RandomCrewMemberPrototype(ProtoC
     return RandomCrewMemberPrototypeSeeded(tick ^ guid, type);
 }
 
-// CrewGenerator.cs:37
+// the body of RandomCrewMemberPrototype after the seed is known (kspcore split so tests can pin the seed)
 std::shared_ptr<ProtoCrewMember> CrewGenerator::RandomCrewMemberPrototypeSeeded(int32_t seed,
                                                                                 ProtoCrewMember_KerbalType type) {
     KSPRandom kSPRandom(seed);

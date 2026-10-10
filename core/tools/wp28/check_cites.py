@@ -30,6 +30,11 @@ def load(cs_root, f, cache={}):
     key = (cs_root, f)
     if key not in cache:
         p = os.path.join(cs_root, f + ".cs")
+        if not os.path.exists(p):  # WP-31: classes in sub folders (Experience/Effects/X.cs ...): first file of that name below cs_root
+            for dp, _dn, fn in os.walk(cs_root):
+                if f + ".cs" in fn:
+                    p = os.path.join(dp, f + ".cs")
+                    break
         cache[key] = open(p, encoding="utf-8-sig", errors="replace").read().splitlines() if os.path.exists(p) else None
     return cache[key]
 

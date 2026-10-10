@@ -99,7 +99,7 @@ std::shared_ptr<PartCrewManifest> PartCrewManifest::CloneOf(const PartCrewManife
     return partCrewManifest;
 }
 
-// PartCrewManifest.cs:71 (sic: seatIndex <= CrewCapacity admits one index too many: partCrew[capacity] then throws)
+// PartCrewManifest.cs:64 (sic: seatIndex <= CrewCapacity admits one index too many: partCrew[capacity] then throws)
 void PartCrewManifest::AddCrewToSeat(const PCM& crew, int seatIndex) {
     const int cap = CrewCapacityOf(partInfo_);
     if (seatIndex >= 0 && seatIndex <= cap) {
@@ -126,7 +126,7 @@ void PartCrewManifest::AddCrewToSeat(const PCM& crew, int seatIndex) {
                             " while " + partInfo_->name + " has " + dotnet::FormatInt64(cap) + " seats");
 }
 
-// PartCrewManifest.cs:98
+// PartCrewManifest.cs:87
 void PartCrewManifest::RemoveCrewFromSeat(int seatIndex) {
     const int cap = CrewCapacityOf(partInfo_);
     if (seatIndex >= 0 && seatIndex <= cap) {
@@ -142,20 +142,20 @@ void PartCrewManifest::RemoveCrewFromSeat(int seatIndex) {
                             " while part has " + dotnet::FormatInt64(cap) + " seats");
 }
 
-// PartCrewManifest.cs:118
+// PartCrewManifest.cs:103
 void PartCrewManifest::RemoveCrew(const std::string& name) {
     const int crewSeat = GetCrewSeat(name);
     if (crewSeat != -1) RemoveCrewFromSeat(crewSeat);
 }
 
-// PartCrewManifest.cs:127
+// PartCrewManifest.cs:119
 std::vector<PartCrewManifest::PCM> PartCrewManifest::GetPartCrew() {
     std::vector<PCM> crewArray(partCrew.size());
     GetPartCrew(crewArray);
     return crewArray;
 }
 
-// PartCrewManifest.cs:134
+// PartCrewManifest.cs:119
 void PartCrewManifest::GetPartCrew(std::vector<PCM>& crewArray) {
     if (crewArray.size() != partCrew.size()) crewArray.assign(partCrew.size(), nullptr);
     for (size_t i = 0; i < partCrew.size(); ++i) {
@@ -166,13 +166,13 @@ void PartCrewManifest::GetPartCrew(std::vector<PCM>& crewArray) {
     }
 }
 
-// PartCrewManifest.cs:155
+// PartCrewManifest.cs:139
 bool PartCrewManifest::Contains(const PCM& crew) { return GetCrewSeat(crew->name().value_or("")) >= 0; }
 
-// PartCrewManifest.cs:160
+// PartCrewManifest.cs:149
 int PartCrewManifest::GetCrewSeat(const ProtoCrewMember& crew) { return GetCrewSeat(crew.name().value_or("")); }
 
-// PartCrewManifest.cs:165
+// PartCrewManifest.cs:149
 int PartCrewManifest::GetCrewSeat(const std::string& name) {
     const int num = static_cast<int>(partCrew.size());
     for (int i = 0; i < num; ++i)
@@ -180,30 +180,30 @@ int PartCrewManifest::GetCrewSeat(const std::string& name) {
     return -1;
 }
 
-// PartCrewManifest.cs:193
+// PartCrewManifest.cs:184
 bool PartCrewManifest::AllSeatsEmpty() { return AllSeatsEmpty(CurrentRoster()); }
 
-// PartCrewManifest.cs:198
+// PartCrewManifest.cs:184
 bool PartCrewManifest::AllSeatsEmpty(KerbalRoster& roster) {
     for (size_t i = 0; i < partCrew.size(); ++i)
         if (!partCrew[i].empty() && roster[partCrew[i]] != nullptr) return false;
     return true;
 }
 
-// PartCrewManifest.cs:221
+// PartCrewManifest.cs:209
 bool PartCrewManifest::AnySeatTaken() { return AnySeatTaken(CurrentRoster()); }
 
-// PartCrewManifest.cs:226
+// PartCrewManifest.cs:209
 bool PartCrewManifest::AnySeatTaken(KerbalRoster& roster) {
     for (size_t i = 0; i < partCrew.size(); ++i)
         if (!partCrew[i].empty() && roster[partCrew[i]] != nullptr) return true;
     return false;
 }
 
-// PartCrewManifest.cs:248
+// PartCrewManifest.cs:234
 int PartCrewManifest::CountCrewType(ProtoCrewMember_KerbalType type) { return CountCrewType(type, CurrentRoster()); }
 
-// PartCrewManifest.cs:253
+// PartCrewManifest.cs:234
 int PartCrewManifest::CountCrewType(ProtoCrewMember_KerbalType type, KerbalRoster& roster) {
     int num = 0;
     for (size_t i = 0; i < partCrew.size(); ++i) {
@@ -214,10 +214,10 @@ int PartCrewManifest::CountCrewType(ProtoCrewMember_KerbalType type, KerbalRoste
     return num;
 }
 
-// PartCrewManifest.cs:272
+// PartCrewManifest.cs:257
 int PartCrewManifest::CountCrewNotType(ProtoCrewMember_KerbalType type) { return CountCrewNotType(type, CurrentRoster()); }
 
-// PartCrewManifest.cs:277
+// PartCrewManifest.cs:257
 int PartCrewManifest::CountCrewNotType(ProtoCrewMember_KerbalType type, KerbalRoster& roster) {
     int num = 0;
     for (size_t i = 0; i < partCrew.size(); ++i) {
@@ -243,7 +243,7 @@ std::shared_ptr<VesselCrewManifest> VesselCrewManifest::FromConfigNode(const Con
     return vesselCrewManifest;
 }
 
-// VesselCrewManifest.cs:47
+// VesselCrewManifest.cs:50
 std::shared_ptr<VesselCrewManifest> VesselCrewManifest::CloneOf(VesselCrewManifest& original, bool blank) {
     auto vesselCrewManifest = std::make_shared<VesselCrewManifest>();
     const int count = static_cast<int>(original.partManifests_.size());
@@ -255,7 +255,7 @@ std::shared_ptr<VesselCrewManifest> VesselCrewManifest::CloneOf(VesselCrewManife
     return vesselCrewManifest;
 }
 
-// VesselCrewManifest.cs:59 (sic: a null filter removes nothing from m1 and merges nothing from m2)
+// VesselCrewManifest.cs:62 (sic: a null filter removes nothing from m1 and merges nothing from m2)
 void VesselCrewManifest::MergeInto(VesselCrewManifest& m1, VesselCrewManifest& m2,
                                    const std::function<bool(PartCrewManifest&)>& inclusionFilter) {
     int count = static_cast<int>(m1.partManifests_.size());
@@ -378,7 +378,7 @@ void VesselCrewManifest::SetPartManifestNoOverwrite(uint32_t id, const PartManif
     }
 }
 
-// VesselCrewManifest.cs:240
+// VesselCrewManifest.cs:229
 void VesselCrewManifest::SetPartManifest(uint32_t id, const PartManifest& newPCMtoUse) {
     PartManifest value;
     auto it = partLookup_.find(id);
@@ -418,7 +418,7 @@ void VesselCrewManifest::SetPartManifest(uint32_t id, const PartManifest& newPCM
     }
 }
 
-// VesselCrewManifest.cs:296
+// VesselCrewManifest.cs:271
 void VesselCrewManifest::UpdatePartManifest(uint32_t id, const PartManifest& referencePCM) {
     auto it = partLookup_.find(id);
     if (it == partLookup_.end()) return;
@@ -444,7 +444,7 @@ void VesselCrewManifest::UpdatePartManifest(uint32_t id, const PartManifest& ref
     }
 }
 
-// VesselCrewManifest.cs:331
+// VesselCrewManifest.cs:300
 void VesselCrewManifest::RemovePartManifest(const PartManifest& pcm) {
     int num = static_cast<int>(pcm->partCrew.size());
     while (num-- > 0) {
@@ -458,7 +458,7 @@ void VesselCrewManifest::RemovePartManifest(const PartManifest& pcm) {
     if (pos != partManifests_.end()) partManifests_.erase(pos);
 }
 
-// VesselCrewManifest.cs:345
+// VesselCrewManifest.cs:315
 void VesselCrewManifest::SetCrewMember(const std::string& cName, const PartManifest& pcm) {
     PartManifest value;
     auto it = crewLookup_.find(cName);
@@ -472,7 +472,7 @@ void VesselCrewManifest::SetCrewMember(const std::string& cName, const PartManif
     }
 }
 
-// VesselCrewManifest.cs:360
+// VesselCrewManifest.cs:329
 void VesselCrewManifest::RemoveCrewMember(const std::string& cName) {
     auto it = crewLookup_.find(cName);
     if (it != crewLookup_.end()) {
@@ -483,19 +483,19 @@ void VesselCrewManifest::RemoveCrewMember(const std::string& cName) {
     }
 }
 
-// VesselCrewManifest.cs:373
+// VesselCrewManifest.cs:340
 VesselCrewManifest::PartManifest VesselCrewManifest::GetPartCrewManifest(uint32_t id) {
     auto it = partLookup_.find(id);
     return it != partLookup_.end() ? it->second : nullptr;
 }
 
-// VesselCrewManifest.cs:382
+// VesselCrewManifest.cs:349
 VesselCrewManifest::PartManifest VesselCrewManifest::GetPartForCrew(const ProtoCrewMember& crew) {
     auto it = crewLookup_.find(crew.name().value_or(""));
     return it != crewLookup_.end() ? it->second : nullptr;
 }
 
-// VesselCrewManifest.cs:391 (Dictionary.Values order: here the partManifests order)
+// VesselCrewManifest.cs:358 (Dictionary.Values order: here the partManifests order)
 void VesselCrewManifest::DebugManifest() {
     for (const PartManifest& value : partManifests_) {
         const std::vector<PCM> crew = value->GetPartCrew();
@@ -509,7 +509,7 @@ void VesselCrewManifest::DebugManifest() {
     }
 }
 
-// VesselCrewManifest.cs:411
+// VesselCrewManifest.cs:376
 void VesselCrewManifest::Filter(const std::function<bool(PartCrewManifest&)>& inclusionFilter) {
     int count = static_cast<int>(partManifests_.size());
     while (count-- > 0) {
@@ -518,10 +518,10 @@ void VesselCrewManifest::Filter(const std::function<bool(PartCrewManifest&)>& in
     }
 }
 
-// VesselCrewManifest.cs:424
+// VesselCrewManifest.cs:394
 bool VesselCrewManifest::HasAnyCrew() { return HasAnyCrew(CurrentRoster()); }
 
-// VesselCrewManifest.cs:429
+// VesselCrewManifest.cs:394
 bool VesselCrewManifest::HasAnyCrew(KerbalRoster& roster) {
     int count = static_cast<int>(partManifests_.size());
     while (count-- > 0) {
@@ -538,12 +538,12 @@ bool VesselCrewManifest::HasAnyCrew(KerbalRoster& roster) {
     return false;
 }
 
-// VesselCrewManifest.cs:453
+// VesselCrewManifest.cs:425
 bool VesselCrewManifest::AnyCrewInState(ProtoCrewMember_RosterStatus state, bool notInState) {
     return AnyCrewInState(state, CurrentRoster(), notInState);
 }
 
-// VesselCrewManifest.cs:458
+// VesselCrewManifest.cs:425
 bool VesselCrewManifest::AnyCrewInState(ProtoCrewMember_RosterStatus state, KerbalRoster& roster, bool notInState) {
     int count = static_cast<int>(partManifests_.size());
     while (count-- > 0) {
@@ -564,12 +564,12 @@ bool VesselCrewManifest::AnyCrewInState(ProtoCrewMember_RosterStatus state, Kerb
     return false;
 }
 
-// VesselCrewManifest.cs:493
+// VesselCrewManifest.cs:464
 bool VesselCrewManifest::AnyCrewWithTrait(const std::string& trait, bool noCrewWithTrait) {
     return AnyCrewWithTrait(trait, CurrentRoster(), noCrewWithTrait);
 }
 
-// VesselCrewManifest.cs:498
+// VesselCrewManifest.cs:464
 bool VesselCrewManifest::AnyCrewWithTrait(const std::string& trait, KerbalRoster& roster, bool noCrewWithTrait) {
     int count = static_cast<int>(partManifests_.size());
     while (count-- > 0) {
@@ -588,10 +588,10 @@ bool VesselCrewManifest::AnyCrewWithTrait(const std::string& trait, KerbalRoster
     return !noCrewWithTrait;
 }
 
-// VesselCrewManifest.cs:523
+// VesselCrewManifest.cs:495
 void VesselCrewManifest::AssignCrewToVessel(ShipConstruct& ship) { AssignCrewToVessel(ship, CurrentRoster()); }
 
-// VesselCrewManifest.cs:528
+// VesselCrewManifest.cs:495
 void VesselCrewManifest::AssignCrewToVessel(ShipConstruct& ship, KerbalRoster& roster) {
     const int count = static_cast<int>(partManifests_.size());
     for (int i = 0; i < count; ++i) {
@@ -621,7 +621,7 @@ void VesselCrewManifest::AssignCrewToVessel(ShipConstruct& ship, KerbalRoster& r
     }
 }
 
-// VesselCrewManifest.cs:566
+// VesselCrewManifest.cs:527
 std::shared_ptr<VesselCrewManifest> VesselCrewManifest::UpdateCrewForVessel(
     const ConfigNode& vesselNode, const std::function<bool(PartCrewManifest&)>& persistFilter) {
     std::shared_ptr<VesselCrewManifest> vesselCrewManifest = FromConfigNode(vesselNode);
@@ -634,7 +634,7 @@ std::shared_ptr<VesselCrewManifest> VesselCrewManifest::UpdateCrewForVessel(
     return vesselCrewManifest;
 }
 
-// VesselCrewManifest.cs:582
+// VesselCrewManifest.cs:542
 void VesselCrewManifest::AddCrewMembers(std::vector<Expansions::Missions::Crew>& vesselCrew, KerbalRoster& roster) {
     int count = static_cast<int>(vesselCrew.size());
     while (count-- > 0) {
