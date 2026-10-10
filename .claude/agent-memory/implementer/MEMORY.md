@@ -1,1 +1,4 @@
 - [Core port gotchas](gotchas-core-port.md) — heredoc apostrophes, null string KSPFields, ModuleData reallocation, part-name underscores, fast build/test commands
+- [Bash apostrophe heredoc](feedback_bash_apostrophe_heredoc.md) — apostrophes in Bash commands break parsing; use Write for such text
+- [WP-25 docking lessons](wp25-docking-lessons.md) — host/test-scaffolding facts: Awake-before-part, packed vessels, flightIDs, attachNodes by value
+- [WP-24 control lessons](wp24-control-lessons.md) — prefab-vs-instance Awake order, real Vessel resource host in tests, check_cites --fix, native Unity hooks

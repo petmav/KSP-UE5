@@ -72,6 +72,26 @@ Process notes that paid off: gatekeeper briefs must ask for from-scratch builds 
 
 Main after wave 2: `1fcad814`, 35 ctest tests, 401 unit cases / 710,877 assertions, every gate 0 ULP except the WP-17 delta-v columns above. Branches `wp17`, `wp27`, `wp31` pushed. Worktrees under `.worktrees/` are gitignored and can be deleted (`git worktree prune` after).
 
+## Session 3, wave 3 (2026-10-10/11, laptop; the user stayed on the laptop)
+
+Same protocol. Branches from `95ed0a16`; four implementers, four gatekeepers, merged in gate order:
+
+| package | merge | gate | notes |
+|---|---|---|---|
+| WP-30 misc modules (ModuleGPS, FlagSite, ModulePartFirework) + small fixes | `8ee5a951` (merge before it) | unit (4 cases; `tools/wp30/firework_reference.py`, 0 ULP); part_database unchanged | fixes landed: crew.cpp / resource_modules.cpp cites, `check_cites.py` name aliases, `ModuleServiceModule.BuildJettisonPartsList` null throw, CrewGenerator mission-editor test. Kept a C# bug on purpose (`OnAwake` looks up `Events["LaunchShell"]`, event is `LaunchShellEvent`) |
+| WP-25 docking, grapple, struts | `8ee5b6fb` | unit (15 cases; `tools/wp25/dock_reference.py`, 1,080 contact poses 0 ULP except 8 roll-dot cases near cos(pi/2) at abs 1e-15, test-only); part_database / ship_construct / staging_sequence / deltav_stages unchanged | joints, AddForce/AddTorque, pivots are WP-20 seams; WP-16 and WP-17 docking stand-ins removed. Needs a two-port approach capture and a claw capture |
+| WP-00 runtime skeleton | `21c76c2a` | unit (17 + 1 cases; `tools/wp00/coroutine_reference.py` on 600 rows of `run1-L_ascent_frames.csv`, 0 ULP); every gate byte-identical | TimingManager + Timing* hosts, PlayerLoop model with the measured phase order, C++20 coroutine scheduler; VesselDeltaV.RunCalculations is a real coroutine. Coroutine resume rules are assumptions, no capture. Other `StartCoroutine` sites (thermal, staging, TimeWarp.CancelAutoWarp, CompoundPart, fairing) not migrated |
+| WP-24 command, SAS, reaction wheels | `ef47ccf7` | unit (14 cases; `tools/wp24/sas_reference.py`: 1,100-step VesselSAS replay and 23 wheels x 48 steps, 0 ULP; 299 control-source scenes vs a decision table); gates unchanged | `Quaternion.eulerAngles` / `Euler` formulation unverified (needs a C3-style capture); `ModuleControlSurface.GetPotentialTorque` missing from the SAS torque sum until WP-21 exposes it; CommNet registration is WP-39. Fixed a destructor-order SIGSEGV (ModuleSAS vs dying Part) found by the Linux run; ASan clean |
+
+Main after wave 3: `c172c84b`, 35 ctest tests, 453 unit cases / 731,498 assertions (Windows; Linux counts 16 fewer assertions in some pre-existing test, unexplained, see below). STATUS summary table renumbered 1-26 in order of appearance (rows for WP-06 / 13 / 14 / 15 are still missing from that table; their sections exist).
+
+New follow-ups from wave 3:
+- Linux unit total is 16 assertions below Windows (seen on wp24, wp25, wp30 trees alike, so it predates wave 3). Find the platform-conditional test and record it in STATUS.
+- `check_cites.py` only checks the name within a +-2 line window; two gatekeepers found wrong line cites it missed. Make it verify the declaration line exactly (or report the distance).
+- WSL gatekeeper logs collide on `/tmp/lin_*.log` when several run at once; gatekeeper briefs should name per-branch logs. Linux unit takes 45-50 min per toolchain on /mnt/c under contention.
+- Optional test tightening: `tiny <= 16` to `== 8` in `test_docking.cpp`; add the remaining stage fields to the WP-00 scheduler-vs-driver comparison (it also skips silently without a game copy); `CHECK_THROWS_AS` for the firework missing-prefab path; solar `_efficMult` bound (WP-27).
+- Agent memory files written by implementers running in a worktree land under `core/.claude/agent-memory/`; fold them into `.claude/agent-memory/` after each wave (done this time).
+
 ## Handoff to the PC (2026-10-10)
 
 Local-only tasks (need `decompiled/KSP-dev`, which no worktree or cloud VM has):
@@ -91,9 +111,9 @@ Small fixes anyone can do:
 
 Next packages (dependency order; Sonnet `implementer`, Sonnet `gatekeeper`, same protocol):
 
-1. WP-24 command, SAS / autopilot, reaction wheels, control state (2,941 lines; WP-17 and WP-31 both stand in for `ModuleCommand`).
-2. WP-25 docking, grapple, struts, vessel merge / split (3,270; WP-17 stands in for `ModuleDockingNode` crossfeed).
-3. WP-30 misc part modules (1,483) and WP-00 runtime skeleton (1,526) are small fillers for a 4-slot wave.
+1. (done in wave 3: WP-24, WP-25, WP-30, WP-00.)
+2. WP-39 CommNet / KerbNet (4,534; WP-24 hooks wait for it), WP-35 science / R&D (6,225), WP-36 funds / reputation / progress (9,201), WP-40 editor core (10,865).
+3. Still local-only: the WP-17 `.mu` thrust-transform extraction (the laptop's permission classifier blocked copying the 18 engine `.mu` files out of decompiled/KSP-dev; do it on the PC or allow the copy).
 4. WP-19 vessel load / unload / flight registry (6,523) and WP-20 physics core (6,854) need the Jolt spike first (Opus `optimizer`; see item 3 of the old list below). WP-12 PQS quadtree / mesh build (9,326) is `optimizer` tier.
 5. After those: WP-29 wheels (29,217, VehiclePhysics subset), WP-35 science, WP-36 funds / progress, WP-39 CommNet, WP-40 editor core.
 
