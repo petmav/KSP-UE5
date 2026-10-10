@@ -3663,4 +3663,4 @@ recovery grid and pipeline and the physprofile vessels, ScenarioDestructibles, S
 
 ### Verification
 
-Windows MSVC RelWithDebInfo fresh build: 34/34 ctest, `unit` 484 cases / 768,426 assertions. Linux Clang (`run_tests.sh -f`, WSL Ubuntu 24.04, log `/tmp/wp36_clang.log`): 34/34 ctest pass. GCC not run.
+Windows MSVC RelWithDebInfo fresh build: 34/34 ctest, `unit` 484 cases / 768,426 assertions. Linux Clang (`run_tests.sh -f`, WSL Ubuntu 24.04, log `/tmp/wp36_clang.log`): 34/34 ctest pass. Gatekeeper re-run from a deleted `build` (2026-10-11): Windows MSVC 34/34, `unit` 484 cases / 768,426 assertions; Linux Clang (`run_tests.sh -f`) 34/34, `unit` 484 cases / 768,410 assertions; Linux GCC (`run_tests.sh -p linux-gcc-rel -f`) 34/34, `unit` 484 cases / 768,410 assertions (Windows stays 16 assertions above Linux, as before this package). All 27 `compare_report_*.json` are max_abs 0 / max_ulp 0 on all three builds except `capture.deltav_stages` (the known WP-17 columns, identical to main: per-stage deltaV <= 11 ULP).
