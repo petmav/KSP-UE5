@@ -31,6 +31,8 @@ add_library(kspcore STATIC
     celestial/celestial_system.cpp
     celestial/kerbol_system_data.cpp
     celestial/flight_atmosphere.cpp
+    thermal/flight_integrator_thermal.cpp
+    thermal/thermal_modules.cpp
     celestial/celestial_body_orbit.cpp
     celestial/flight_globals.cpp
     orbit/orbit.cpp

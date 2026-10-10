@@ -38,6 +38,10 @@ class Part;
 class ProtoPartModuleSnapshot;
 class IPartSizeModifier;
 class IConstruction;
+class IAnalyticOverheatModule;         // WP-22 ksp/thermal/thermal_types.hpp
+class IAnalyticPreview;
+class IAnalyticTemperatureModifier;
+class IOverheatDisplay;
 
 // ModifierStagingSituation.cs / ModifierChangeWhen.cs
 enum class ModifierStagingSituation { CURRENT, UNSTAGED, STAGED };
@@ -183,6 +187,10 @@ public:
     virtual IScalarModule* AsScalarModule() { return nullptr; }
     virtual IPartSizeModifier* AsSizeModifier() { return nullptr; }   // `module is IPartSizeModifier` (WP-13)
     virtual IConstruction* AsConstruction() { return nullptr; }       // `module is IConstruction` (WP-13)
+    virtual IAnalyticOverheatModule* AsAnalyticOverheatModule() { return nullptr; }  // `module is IAnalyticOverheatModule` (WP-22)
+    virtual IAnalyticPreview* AsAnalyticPreview() { return nullptr; }                // `module is IAnalyticPreview` (WP-22)
+    virtual IAnalyticTemperatureModifier* AsAnalyticTemperatureModifier() { return nullptr; }  // (WP-22)
+    virtual IOverheatDisplay* AsOverheatDisplay() { return nullptr; }                // `module is IOverheatDisplay` (WP-22)
 
 private:
     std::string className_, guiName_;
