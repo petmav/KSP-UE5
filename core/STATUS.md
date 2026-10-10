@@ -1,6 +1,6 @@
 # kspcore status
 
-Updated 2026-10-09 (WP-05). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
+Updated 2026-10-10 (WP-26). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
 (details in README.md). Local git repository in `core/` only, never pushed.
 
 ## Summary
@@ -27,6 +27,7 @@ Updated 2026-10-09 (WP-05). One command: `powershell -NoProfile -ExecutionPolicy
 | 13. WP-21 aerodynamics, numeric part (branch `wp21`) | done: DragCubeList aero half (weights, occlusion, SetDrag / AddSurfaceDragDirection, queries, ForceUpdate), FlightIntegrator aero members (drag models, areas, UpdateAerodynamics with returned forces, DragCubeSetupAndPartAeroStats), ModuleLiftingSurface / ModuleControlSurface / ModuleAeroSurface, thermal-occlusion geometry, aero interfaces; one templated port with a Mono and a .NET float policy; 3 new gates bit-exact (74,253 rows). See "WP-21" below |
 
 | 13. WP-18 craft files and ship construction (branch `wp18`) | done for the engine-agnostic part: ShipConstruct over live `Part`s (`LoadShipWithParts` / `SaveShip` from the parts, costs, masses, naming, ship PartSet), ShipTemplate (whole class), ShipConstruction (paths, backups, load / save, `AssembleForLaunch` over WP-14's assembly, templates through the upgrade pipeline, `GetPartCosts*`, launch-site queries, craft size); new gate `capture.ship_construct` (C5: `GetShipMass` and the per-part masses of 17 crafts, 0 ULP); 26 unit cases (274,042 assertions): round trip of 57 crafts, agreement with the original files, templates vs ships. See "WP-18" |
+| 14. WP-26 fairings, cargo bays, jettison, shielding, launch clamps (branch `wp26`) | done (engine-agnostic part): ModuleProceduralFairing with FairingPanel / FairingXSection geometry (panel areas, mesh points, triangle lists; `panelMass` gated at 0 ULP through `capture.ship_construct` with craft_ComSat_Lx no longer excluded), ModuleCargoBay (shield bookkeeping, `Part.AddShield`), ModuleJettison (drag cube weights, engine-plate hook), ModuleServiceModule, LaunchClamp, ModuleStructuralNode(+Toggle), ModuleDynamicNodes, CompoundPart as a Part subclass; model / physics seams are hooks; scope and exclusions in "WP-26" |
 
 ## Test results (all 28 ctest tests pass: Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel)
 
@@ -54,14 +55,14 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `capture.terrain_height` | in-game `captures/out2/terrain_height.json` (WP-11): samples 140,522 x (h_surface, h_override, terrain_alt), bodies 2 (radii), scene_probe 4 | 140,528 | 0 ULP, no exclusions |
 | `capture.part_database` | WP-05 + WP-06: in-game `captures/out2/part_database.json` (C9), scope in "WP-05" and "WP-06" below: parts 357 (module_mass / module_cost included), part_cfg_values 6,235, modules 1,312, module_fields 32,894, module_propellants 77, resources 166, attach_nodes 822, drag_cubes 531, variants 228, assets 743 | 43,365 | 0 ULP, all strings identical |
 | `capture.resource_mass` | WP-15: in-game `captures/out2/deltav_readout.json` (C5) table `parts`, column `resource_mass` (`Part.GetResourceMass()`): 1,225 parts of 17 crafts; scope in "WP-15" | 1,225 | 0 ULP |
-| `capture.ship_construct` | WP-18: in-game `captures/out2/deltav_readout.json` (C5) tables `craft` (16 crafts: parts, dry_mass, fuel_mass of `ShipConstruct.GetShipMass`) and `parts` (1,224 parts: mass, module_mass); `craft_ComSat_Lx` (fairing panelMass, WP-26) excluded per `tests/data/ship_construct_exclusions.json`; `total_mass` (editor crew) checked in the unit test; scope in "WP-18" | 1,240 | 0 ULP |
+| `capture.ship_construct` | WP-18 + WP-26: in-game `captures/out2/deltav_readout.json` (C5) tables `craft` (17 crafts: parts, dry_mass, fuel_mass of `ShipConstruct.GetShipMass`) and `parts` (1,225 parts: mass, module_mass, incl. the fairing `panelMass` of craft_ComSat_Lx computed by `ModuleProceduralFairing`); `total_mass` (editor crew) checked in the unit test; scope in "WP-18" and "WP-26" | 1,242 | 0 ULP |
 | `capture.gamedatabase_load_order` | WP-05: every `Load(Audio/Texture/Model): url` and `Config(TYPE) url` line of the capture run's KSP.log, in order | 2,836 lines | identical |
 | `capture.vessel_state` | WP-14: in-game `captures/out2/aero_forces_vessel.json` (C10): structure 631 (part tree of the three PhysProf crafts assembled into a `Vessel`), states 20 (surface speed and the FlightIntegrator atmosphere mirror); cube_names, node_contact_areas and engine/input columns excluded (see WP-14) | 651 | 0 ULP, strings/ints identical |
 | `capture.staging_sequence` | WP-16: in-game `captures/out2/deltav_readout.json` (C5) tables `craft` (`stage_count`, 17) and `parts` (`inverseStage`, `isDecoupler`, 1,225 parts of 17 crafts) produced by the StageManager model + decoupler modules; scope in "WP-16" | 1,242 | 0 ULP (ints and bools identical) |
 | `golden.aero_forces` | WP-21: harness golden `aero_forces` (KSP's IL on .NET 4.8), every table, computed with the `aero::NetFloat` policy: drag_curve_value 2,870, cube_inputs 34, cube_weighted 204, cube_drag 18,122, drag_chain_kerbin 2,304, lifting_surface 2,160 | 25,694 | 0 ULP (signed zeros included) |
 | `capture.aero_forces_mono` | WP-21: in-game `captures/out/aero_forces_mono.json`, the AeroGen drag-cube tables under Mono (`aero::MonoFloat`, the production policy): cube_inputs 34, cube_weighted 204, cube_drag 18,122 | 18,360 | 0 ULP |
 | `capture.aero_forces_vessel` | WP-21: in-game `captures/out2/aero_forces_vessel.json` (C10): structure 631 (node_contact_areas), parts 4,224 x 46 columns, aoa_sweep 25,344 x 12 columns on the three assembled PhysProf vessels; inputs dropped as listed in "WP-21" | 30,199 | 0 ULP |
-| `unit` | 292 doctest cases, 685,005 assertions (WP-16: 19 cases, 12,222 assertions in `test_staging.cpp`; WP-21: 11 cases, 220,304 assertions in `test_aero.cpp`; WP-18: 26 cases, 274,042 assertions in `test_ship_construct.cpp`; WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
+| `unit` | 321 doctest cases, 686,271 assertions (WP-26: 29 cases, 1,218 assertions in `test_structural_modules.cpp`; WP-16: 19 cases, 12,222 assertions in `test_staging.cpp`; WP-21: 11 cases, 220,304 assertions in `test_aero.cpp`; WP-18: 26 cases, 274,042 assertions in `test_ship_construct.cpp`; WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
 differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 6 ULP (Vector3.Project/ProjectOnPlane) and
@@ -1951,7 +1952,7 @@ of `GetPartCosts` (the overloads take a `ProtoPartSnapshot`; the ship-level form
 | `capture.resource_mass`, `capture.part_database`, `capture.vessel_state`, `corpus.gamedata`, every earlier gate | unchanged | 0 | 0 | 0 | green |
 
 Excluded from the gate (and why):
-- `craft_ComSat_Lx` (craft row) and its part 10 (parts row), via `tests/data/ship_construct_exclusions.json` (DROP_KEYS_FILE, with the reason per
+- (RESOLVED by WP-26: the exclusion and its file are gone, the fairing panelMass is computed; text kept as history) `craft_ComSat_Lx` (craft row) and its part 10 (parts row), via `tests/data/ship_construct_exclusions.json` (DROP_KEYS_FILE, with the reason per
   row): `fairingSize1`'s module mass is `ModuleProceduralFairing.panelMass`, the mass of the fairing panels the module builds (FairingPanel mesh
   generation, WP-26); until then `panelMass` is 0 and `GetModuleMass` returns `Mathf.Epsilon`. The craft's `dry_mass` includes it; the 16 other
   crafts, the other 17 parts of this craft and its `fuel_mass` are exact (the filter drops the whole craft row, so `fuel_mass` / `parts` of this one
@@ -2386,3 +2387,98 @@ them in `test_staging.cpp`). Build 326 s (clang) / 355 s (GCC) cold on 4 shared 
 
 see `git log --oneline wp14..wp16`.
 
+
+## WP-26: fairings, cargo bays, jettison, shielding, launch clamps (branch `wp26`, from main `289d0c98`)
+
+State: done for the engine-agnostic part. `capture.ship_construct` now covers **all 17 crafts and all 1,225 parts** of the C5 capture: the exclusion
+of `craft_ComSat_Lx` (and its part 10, `fairingSize1`) is removed (`tests/data/ship_construct_exclusions.json` deleted, no `DROP_KEYS_FILE` on the
+gate) and the fairing's `panelMass` is computed by the ported `ModuleProceduralFairing` from the XSECTION nodes the craft file stores:
+max ULP 0 on `craft` (17 rows: parts, dry_mass, fuel_mass) and `parts` (1,225 rows: part, mass, module_mass). Every other gate is unchanged and green
+(28/28 ctest). Every ported function cites `File.cs:line` of `decompiled/KSP-Decompiled/Assembly-CSharp/` (a script checked each cited line against the
+name of the function that follows the comment in the `.cpp` files).
+
+### What produces the fairing mass (the concrete gate)
+
+`ModuleProceduralFairing.OnStart` (ModuleProceduralFairing.cs:330) -> `SpawnMeshes` (:1366) -> `FairingPanel.SetupPanelArray` (FairingPanel.cs:152) builds
+`RoundToInt(nArcs)` panels per section pair (4 arcs each: bottom, the two lerp sections, top) plus the nose-cap panels when the last section's radius
+equals `capRadius` (the cap section: r 0, `h = last.h + last.r * Tan(GetSlopeAngle) * noseTip`, :178), `BuildMesh` (:274) computes the arc points, then
+`panelMass = GetFairingArea() * UnitAreaMass` (:443, `GetFairingArea` :1581 sums `FairingPanel.GetArea` :624, last panel to first, Mono float rule),
+`GetModuleMass` (:1663) is `Mathf.Clamp(panelMass, Mathf.Epsilon, Mathf.Abs(panelMass))`. The inputs are the craft's own values (`h` / `r` of 5 x-sections,
+`nArcs = 2`, cfg `UnitAreaMass 0.01`, `capRadius 0.2`, `noseTip 0.7`). The runner (`tools/golden_runner/ds_ship_construct.cpp`) now does what the editor session
+of the capture did: scene EDITOR and `Part.ModulesOnStart(Editor)` on every part after `LoadShip` (Part.Start, Part.cs:1727). The unit test compares the fairing's
+module mass with the capture row bit for bit and re-derives the panel areas from the frustum formula.
+
+### What is ported (by C# file)
+
+| C# file | C++ | ported | not ported (and why) |
+|---|---|---|---|
+| ModuleProceduralFairing.cs (2,220 lines) | `modules/module_procedural_fairing.hpp`, `src/modules/module_procedural_fairing.cpp` | all fields (generated schema), OnAwake, OnStart (numeric half), OnLoad / OnSave (XSECTION nodes sorted by `h` with `List.Sort`, `fsm`), `SpawnMeshes` / `WipeMesh` / `RefreshPanels`, `GetFairingArea`, mass / cost / size modifiers, the flight state machine as a state name (`st_idle` / `st_flight_deployed`) with `DeployFairing` / `DeployFairingAction` / `OnActive`, `JettisonPanels` bookkeeping (panels and x-sections cleared, `panelMass` 0, `onFairingsDeployed`, `onVesselWasModified`, `OnMoving` / `OnStop`), interstage (`SetInterstage`, `DumpInterstage`, `OnVesselModified` = on_Breakoff_NoJettison), `DecoupleAction` (IActivateOnDecouple), `OnChildRemove`, `CheckForFairingEdit`, IScalarModule, GetInfo / titles, the `AssumeClosedDragCube` attach-node drag-area override | the mouse-driven editor state machine (`PlaceNewXSection`, `UpdateXSectionConeCast`, `GetMouse*`, snapping, `on_PlaceCap` ...: input), materials / textures / shaders, variant material copies, colliders (`ColliderSection`, `SwitchToConvexColliders`), the physical panels (`MakePanelPhysical`, clamshell grouping: transforms, rigidbodies; the hook `makePanelPhysical` is called per panel), the payload joint (`SecurePayload`, `PartJoint`; hooks `payloadJointFor` / `releasePayload`), flag parenting (`ParentChildFlagsParts`, `OnChildAdd`: coroutines + raycasts), the drag cube render (`DragCubeSystem.RenderProceduralDragCube`: hook `assumeClosedDragCube`) |
+| FairingPanel.cs (897), FairingXSection.cs (281), FairingPanelFlags.cs, MeshArc.cs, MeshPoint.cs | `modules/fairing_panel.hpp`, `src/modules/fairing_panel.cpp` | constructor, `SetupPanelArray`, `BuildMesh` (arc points with `Quaternion.AngleAxis` / `FromToRotation` native, slope, uv, normals, barycentre, exploded position, the triangle index lists of `TriangulatePanelMesh` / `TriangulateConePanel` / `TriangulateTriangleMesh`), `GetArea`, `GetSlope`, `GetMidPoint`, interpolation (`UpdateLerp`), flag bookkeeping (`AddAttachedFlag`, `AddNewFairingPanel`, `GetPanelIndexFromFlag`, `RemoveAttachedFlag`, `RemoveFlag`), x-section Load / Save / CompareTo | `Spawn` / `Despawn` (GameObject), the Unity `Mesh` (the arrays `AssignMesh` assigns are in `PanelMesh`), colliders (`GeneratePanelColliders`, `GenerateCompoundColliders`), `SetOpacity` / `SetExplodedView` / `GetCursorProximity` (camera), `AddFlag` / `ReadyFlagsForJettison` (Part reparenting), `FairingXSection.CircleCast` / `ConeCast` (Physics.Raycast) |
+| ColliderChunk.cs, ColliderSection.cs | - | - | Unity MeshCollider construction only (no number leaves them) |
+| ModuleCargoBay.cs (942) | `modules/module_structural.hpp`, `src/modules/module_structural.cpp` | attach node lookup, connecting parts, `FindBayColliders` graph walk (colliders are handles from a hook), `FindConnectingNodes`, `GetOpposingNode`, `EndCapped`, `TestAttachmentFit`, `ClosedAndLocked` / `SelfClosedAndLocked`, shielding bookkeeping (`EnableShieldedVolume`, `DisableShieldedVolume`, `ShieldEnclosedParts`, `UnShieldEnclosedParts`, `NotifyShieldModified`, `ModifyShieldInEnclosedParts`), dynamic occluders (`SetupDynamicCargoOccluders` over `IDynamicCargoOccluder`), the scheduled collider reset as state (`RunScheduledColliderReset`), IAirstreamShield; `Part.AddShield` / `RemoveShield` / `OnShieldModified` (Part.cs:7627-7680, `src/parts/part_shield.cpp`) | the physics queries `FindNearbyParts` / `FindEnclosedParts` / `PartWithinBounds` (OverlapSphere, collider bounds: hooks `findNearbyParts` / `findEnclosedParts` / `findPartColliders`), `onCommandSeatInteraction` (KerbalEVA), the deploy module's OnMoving / OnStop subscription (the deploy module, WP-27, calls `OnCargoBayDoorsMoving` / `OnCargoBayDoorsStopped`), adjusters (`ForceCargoBayStuck`, Missions) |
+| IDynamicCargoOccluder.cs | `modules/module_procedural_fairing.hpp` | interface; implemented by the fairing | the fairing's occluder body only toggles collider containers (model) |
+| ModuleJettison.cs (667) | `module_structural.hpp` / `.cpp` | Jettison / JettisonAction, DecoupleAction, OnActive, OnStart, OnLoad, LateUpdate, CheckAttachNode, SetupJettisonState (non-collider part), `FetchActiveMeshTransform` / `LoadJettisonMeshState` (through `StructuralModel()` hooks: transform lookup / active state), `SetFairingDragCube` (the `DragCubeList` cube weights "Clean" / "Fairing" and `ForceUpdate`, the WP-21 hook), `AssumeDragCubePosition`, mass modifier, staging queries and texts, IScalarModule, `OnStop` -> `ModuleDecouplerBase.OnJettison` (engine plate shroud, subscribed in `ModuleDecouplerBase.OnStart`) | the physical half of `Jettison` (ConvertToPhysicalObject, rb velocity / mass / forces: hook `jettisonTransformToPhysical`), collider ignore flags, the temperature renderer |
+| ModuleServiceModule.cs (388) | same | `Setup`, `ToggleCutaway`, `ToggleShrouds`, `ProcessJettisonModules`, `UpdateStaging` (stagingEnabled + `isStageable` of itself and the jettison modules, `UpdateStageability`), `OnActive`, `BuildJettisonPartsList` / `PartDetaches` (surface children, `PointInBox` with a hook for the box colliders), `GetStageIndex`, IScalarModule | transforms (shell, exterior collider: `StructuralModel()` hooks), `CheckCutaway` camera trigger body is ported, `OnDestroy` |
+| LaunchClamp.cs (373) | same | OnLoad / OnSave (`towerRot`), `OnPutToGround`, OnStart (strut icon, `PermanentGroundContact`, `scaleFactor = height / initialHeight`), OnActive / Release / ReleaseClamp (`Part.decouple` in flight, `GroundContacts`), OnVesselPack / Unpack (joint hooks), `GetStageIndex`; replaces WP-16's stand-in | the tower transforms, animation, material scale, `ExtendTower` ground raycast, the `ConfigurableJoint` (hooks `setJoint` / `unsetJoint` / `initialHeightFromModel`) |
+| ModuleStructuralNode.cs, ModuleStructuralNodeToggle.cs | same | `SetNodeState` (Stack with `nodeRadius` / Dock 0.001), `CheckDisplay` (visibility from attached parts, `spawnManually`, `reverseVisibility`), `DecoupleAction`, the toggle's `UpdateNodes` | the structure transform's SetActive is the `StructuralModel()` hook |
+| DynamicNodeSet.cs, ModuleDynamicNodes.cs | same | NODE_SET loading, `ToggleNodeSet`, `ChangeNodeSet` (`stackSymmetry`), `InitializeNodeSets`, `SetupAutoStrut` (sets `autoStrutMode` ForceGrandparent), FixedUpdate | `UpdateAutoStrut` (joint), `RefreshPartContextWindow` (UI). No stock part carries the module |
+| CompoundPart.cs (874) | `parts/compound_part.hpp`, `src/parts/compound_part.cpp` | `class CompoundPart : Part` (created by `Part::Instantiate` and the PartLoader for `module = CompoundPart`): persistence (tgt, tpersID, pos, rot, dir, col), `onPartAwake` (`compund = true`, CompoundPartModule target wiring), `onCopy`, `onPartAttach` / `onPartDetach` (data half), `OnStartComplete` (target lookup by craftID / persistentId in flight and editor), `SetTarget` / `DumpTarget` / `UpdateWorldValues` / `UpdateTargetCoords` (native `Quaternion.Inverse`), `DisconnectCompoundPart` with symmetry counterparts, `OnEditorEvent`, `ParseCustomPartData` (legacy format), CompoundPartModule `OnTargetSet` / `OnTargetLost` / `OnTargetUpdate` calls | mouse targeting and cone casts (`onAttachUpdate`, `raycastTarget`, `findTargetDirection`, `getAnchorRot`), the tweak mode (`ICMTweakTarget`, `onEditorStartTweak`), input locks, the disconnect effect, `GetReferenceTransform` / `GetPartColliders`, `onTargetReattach` / the delayed raycast coroutine (hook `scheduleRaycast`) |
+
+### Gate results (Windows RelWithDebInfo, fresh; `tests/tolerances_capture.json` unchanged, 0 ULP)
+
+| gate | rows | max abs | max rel | max ULP | notes |
+|---|---|---|---|---|---|
+| `capture.ship_construct` | `craft` 17 rows (parts, dry_mass, fuel_mass); `parts` 1,225 rows (part, mass, module_mass) | 0 | 0 | 0 | was 16 + 1,224; `craft_ComSat_Lx` and its part 10 no longer excluded. `craft.total_mass` and the staging columns stay outside this gate (see WP-18) |
+| `capture.part_database` | unchanged (357 parts, 32,894 module_fields, module_mass / module_cost, `drag_cubes`) | 0 | 0 | 0 | the fairing / jettison / cargo bay / clamp modules are now real classes; their fields, events and mass / cost of the stock prefabs are unchanged |
+| `capture.staging_sequence`, `capture.resource_mass`, `capture.vessel_state`, every earlier gate | unchanged | 0 | 0 | 0 | `LaunchClamp` is the real class; `isDecoupler` of the 15 clamp rows is still null |
+
+Other WP-26 columns of the captures: `part_database` has no per-module mass / cost beyond the gated `module_mass` / `module_cost` (stock fairings, jettison
+shrouds, cargo bays and clamps have no panels / state on a prefab: Mathf.Epsilon / 0), and its `drag_cubes` table (cube names "Fairing" / "Clean" of
+jettison parts) is gated since WP-05. `deltav_readout.json` has no other column that a WP-26 module produces.
+
+### Unit tests (`tests/test_structural_modules.cpp`: 29 cases, 1,218 assertions)
+
+Derivations are in comments; values come from the cfgs of the GameData mirror, the XSECTION data of `harness/inputs/Ships/VAB/ComSat Lx.craft` and the C5 capture.
+- fairing: OnLoad of the craft's x-sections (sorted, `isLast`, `fsm`), `FairingXSection` Load / Save / CompareTo (NaN) / flags, panel structure (2 arcs, sections - 1 rows
+  plus the cap row, 4 arcs per body panel and 2 per cap panel, nCollidersPerArc 3, cap section r = 0 and `h` from the slope formula), panel areas vs the frustum formula and
+  their sum, **module mass == the capture's `module_mass` bit for bit**, STAGED rule, cost, `Mathf.Epsilon` for an unbuilt fairing, BuildMesh (vertices on the
+  section circles r and r - 0.1, vertex / normal / uv counts = 4 arcs x 2 x nSides, triangle counts from the three `TriangulatePanelMesh` calls, indices in range, barycentre
+  offset), the cap fan, OnSave, flight deploy (panels and x-sections cleared, `panelMass` 0, events once, hook per panel, state, scalar), `CheckForFairingEdit`, interstage
+  bookkeeping, GetInfo from the cfg.
+- jettison (liquidEngineMini.v2 cfg): Jettison, OnStop(1), mass modifier (3 modes), `checkBottomNode`, `DecoupleAction` node filter, `OnActive` manual / staged,
+  staging queries and texts, drag cube weights.
+- shielding / cargo bay (mk3CargoBayS): `Part.AddShield` / `RemoveShield` / `OnShieldModified`, attach nodes, `EndCapped` / `TestAttachmentFit` / `ClosedAndLocked`
+  (door position, moving), connecting nodes, opposing nodes, the collider graph walk across joined bays, connecting parts, enclosed-part shielding with doors moving / stopping.
+- launch clamp (launchClamp1): `towerRot` round trip, `OnPutToGround` both branches, stage index, OnStart defaults, Release outside flight.
+- structural nodes (fairingSize1): `SetNodeState`, `CheckDisplay` (attached, reversed, manual), the toggle; dynamic nodes (NODE_SET loading and switching); service module
+  (no stock part has it: added to a part): PointInBox, UpdateStaging propagation, `PartDetaches` list, field-update chain; CompoundPart (fuelLine / strutConnector cfg):
+  persistence, SetTarget / UpdateTargetCoords / Disconnect, legacy `customPartData`.
+
+### Deviations, approximations, seams
+
+- **String KSPFields are null after AddComponent** (WP-06 surprise 1): the module code reads possibly-null strings through `StrField` (`string.IsNullOrEmpty` semantics:
+  `nodeOuter*ID`, `ExteriorColliderName`, `ShellMeshName`, `JettisonZoneNames`); `Get<std::string>` on a null string throws.
+- The fairing / jettison / cargo bay / service module / launch clamp / node modules replace the stand-ins: the WP-06 `ModuleProceduralFairing` / `ModuleJettison` mass modifiers
+  (module_behaviours.cpp), WP-16's `LaunchClampStageSeparator`. `ModuleJettison::IsStageable` and the staging texts override PartModule's per-class table; the table entry stays.
+- `ModuleDecouplerBase.OnStart` now subscribes `OnJettison` to the jettison module's `OnStop` (it was a comment); the destructor unsubscribes only while the jettison module is alive
+  (`ModuleJettison::IsAlive`: C# keeps a destroyed module reachable, C++ does not).
+- The Unity coroutines are state advanced by the host: `ModuleCargoBay::RunScheduledColliderReset` (the 0.5 s collider reset), the fairing's `StartCoroutine(WaitUntil(started))` payload setup is a hook.
+- `IAirstreamShield` had two identical definitions (staging_types.hpp, aero_interfaces.hpp); `aero_interfaces.hpp` now includes the first.
+- `Part::Instantiate` and the PartLoader build a `CompoundPart` for className `CompoundPart` (the C# class lookup); `Part.Start`'s tail / `Part.OnDestroy` do not model `onStartComplete` /
+  `onPartDestroy`, so the host calls `CompoundPart::OnStartComplete` / `OnPartDestroy`.
+- Scene queries use `SaveEnvironment::Current().loadedScene` (EDITOR / FLIGHT / MISSIONBUILDER); `FlightGlobals.ActiveVessel` is `FlightRegistry::ActiveVessel`.
+- `FairingPanel` `MeshPoint` / `MeshArc` are shared objects (`shared_ptr`) as the C# classes are: `pts[num] = arc[i]` aliases the arc's point, so `index` and the aberrant-normal flip
+  are visible through both. `CleanUp` (end of `SpawnMeshes`) releases `pts` and the triangle list; the mesh arrays stay in `PanelMesh`.
+- The `FairingXSection.fairingPanelFlags` / `Panel.attachedFlagParts` lists keep the C# "null until created" state in `*Null` flags.
+
+### Needs a new (local) capture or data
+
+- the panel vertices / triangle lists have no capture: a harness dump of `FairingPanel.mesh` (vertices, normals, triangles of every panel of the ComSat fairing, in the editor) would gate
+  `BuildMesh` and the triangulation directly (today only `GetArea` through `panelMass` is gated at 0 ULP, the rest is unit-tested from the decompiled formulas).
+- the `.mu` model reader: jettison / structural-node transform names (`Shroud`, `Cap1` ...), collider bounds (`part.collider.bounds.size` of `partDensity`), launch-clamp tower transforms,
+  fairing base mesh; they enter through `StructuralModel()` and the per-class `hooks`.
+- the physics package (WP-20): rigidbody conversion of jettisoned panels / shrouds, `OverlapSphere` for the cargo volume, `PartJoint` for the payload.
+
+### Commits (branch `wp26`)
+
+see `git log --oneline main..wp26`.

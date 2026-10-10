@@ -6,3 +6,4 @@
 - [x] module_structural.{hpp,cpp}, part_shield.cpp, registration, decoupler wiring, ds_ship_construct (OnStart+EDITOR), exclusion removed; NEXT: build (win) and fix compile; then CompoundPart, unit tests, docs
 - [x] GATE GREEN: capture.ship_construct 17 craft + 1225 parts 0 ULP incl. ComSat_Lx (Windows RelWithDebInfo). NEXT: full tests, part_database gates, unit tests, CompoundPart, docs
 - [x] CompoundPart + tests (47 cases pass locally); header line cites fixed. NEXT: README/STATUS, full run Windows + WSL, final commit
+- [x] docs written; NEXT: fresh Windows run, WSL run, final commit
