@@ -1,6 +1,6 @@
 # KSP-UE5: state and next steps
 
-Updated 2026-10-09 (session 2 in progress).
+Updated 2026-10-10 (session 3, laptop; handoff to the PC at the end of this file).
 
 ## Done
 
@@ -46,7 +46,61 @@ un_tests.ps1`. C ABI at `core/include/kspcore/kspcore_c.h`, lib at `core/build/R
 - Follow-up: `harness/compare/compare.py` passes silently when the candidate has rows the golden lacks (641 such rows in part_database, all explained). Add an extra-rows check with an explicit allow-list before more capture gates land.
 - Batch 3 originally (worktrees wp04, wp05, wp08, wp11): save model + SaveUpgradePipeline; UrlDir/GameDatabase/PartLoader data side; patched conics + maneuver nodes + Planetarium.Orbits; PQS height maths + LibNoise subset + original heightmap extraction. Merge order when done: wp08, wp11, wp05, wp04 (resolve CMake/STATUS unions; rerun fresh after each).
 
-## Next session, in order
+## Session 3 (2026-10-10, laptop, Fable orchestrating)
+
+Wave 1 merged into `main` (one Sonnet `implementer` per package in a worktree `.worktrees/wp<NN>`, one Sonnet `gatekeeper` per branch, merge by the orchestrator with CMake/STATUS/README unions, fresh `run_tests.ps1` after every merge, push after every merge):
+
+| package | merge | gate | notes |
+|---|---|---|---|
+| WP-22 thermal model, numeric part | `eea132a3` | `capture.atmosphere_thermal_offsets` (2,688 rows) and `capture.thermal_step` (vessel 2,994 x 13, parts 14,985 x 20, part_constants 15), 0 ULP | the C6 parts gate runs `UpdateThermodynamics` on a one-part graph with the capture's neighbour conduction, occlusion multipliers and incoming sun/body radiation as inputs (5 of 21 parts logged, no transforms); 7 ptd columns that could only be recovered from their own logged value are dropped as inputs, not compared (gatekeeper finding). Not verified: occlusion passes, GetSunArea/GetBodyArea, analytic branch, module FixedUpdate paths |
+| WP-23 engines, RCS, gimbals, intakes, numeric part | `34dd0d3f` | `golden.engine_thrust` (5,248 rows, NetFloat policy for the .NET golden) and `capture.engine_deltav` (460 rows, MonoFloat), 0 ULP | game-facing virtuals are MonoFloat; MonoFloat differs from the .NET golden by 1-2 ULP, which is expected (Mono rule). ThrustUpdate returns forces for WP-20; FX, exhaust damage, PAW deferred |
+| WP-28 resource-processing modules | `6844d1b5` | unit-gated (17 cases; `tools/wp28/processing_reference.py` independent Python oracle, 0 ULP on 420 catch-up steps) | gatekeeper found 54 wrong C# line citations, fixed; `tools/wp28/check_cites.py [--fix]` now checks `// File.cs:N` cites against the decompile: run it in every package |
+| WP-26 fairings, cargo bays, jettison, shielding, launch clamps | `e87c5aab` | `capture.ship_construct` now 17 crafts / 1,225 parts with the ComSat Lx fairing panelMass computed from the craft's XSECTION nodes (exclusion file deleted) | FairingPanel mesh only unit-tested (needs a panel-mesh capture); CompoundPart is a Part subclass; `StrField` helper: null string KSPFields. Optional follow-up: `ModuleServiceModule.BuildJettisonPartsList` should throw on null JettisonZoneNames like the C# |
+
+Main after wave 1: `d46be6e4`, 33 ctest tests, 355 unit cases / 696,649 assertions, every gate 0 ULP, CI green on Windows + Linux.
+
+Wave 2 (branches `wp17`, `wp27`, `wp31`, from `135fb5aa`, told to merge `d46be6e4` before finishing): WP-17 delta-v (gate: the VesselDeltaV columns of `deltav_readout.json`), WP-27 parachutes / deployables / animation modules (unit + Python reference; replaces the WP-06 deployable stand-ins), WP-31 Kerbal roster / experience (gate: recompute every saved kerbal's XP from its flight log vs the saves). Results:
+
+Process notes that paid off: gatekeeper briefs must ask for from-scratch builds (`-Fresh` is only `cmake --fresh`; delete `core/build` first), for a circularity check on any "recovered input" gate, and for a scripted citation check. Each implementer used ~500k tokens and 60-90 minutes; gatekeepers 60-100k tokens.
+
+
+| package | merge | gate | notes |
+|---|---|---|---|
+| WP-27 parachutes, deployables, animation modules | `c9931cf8` (STATUS totals `2396200f`) | unit-gated: 16 cases, `tools/wp27/deploy_reference.py` (numpy float32, independent Hermite) regenerates `tests/data/wp27_reference.json` byte-identical; `capture.part_database` module_fields unchanged at 0 ULP (32,894 rows) once the real classes replaced the WP-06 stand-ins | Unity `Animation` semantics in `unity/animation.hpp` are modelled, not verified (needs a capture). Cargo-bay hook subscribes in OnStart, unsubscribes in the destructor through an `IScalarModule::IsAlive` registry (global, unlocked). Optional: tighten the solar `_efficMult` / `_flowRate` bound (4e-7 rel) to ULPs |
+| WP-17 delta-v | `90de2da1` | `capture.deltav_stages` (stages 180 x 25, totals 60 x 10, parts 1,225 x 4): 0 ULP on every column except deltaVinVac / deltaVatASL / deltaVActual (<= 11 ULP, rel 1.02e-6) and TotalDeltaVASL / TotalDeltaVActual (rel 1.02e-6; TotalDeltaVVac 1.35e-7). Rules `rel 2e-6` in `tests/tolerances_capture.json`, within policy. 8 stage + 8 totals rows excluded (Dynawing, Learstar_A1 stage 0, omsEngine; Dynawing is +1.5 % off) | Cause (consistent, not proven): the runner stands in each engine's thrustTransform.forward as part -Y; the real transforms live in the `.mu` models, which worktrees and CI cannot read. Single-axis crafts (Kerbal_2, Jumping_Flea, ion probe) are 0 ULP. Flight branches (SimulateFlightScene, CalcLerpDeltaV, vectored exhaust) ported but ungated |
+| WP-31 kerbal roster, experience, crew | `1fcad814` | `data.roster_experience` (1 save, 4 kerbals, 0 mismatches; weak: that save has `EnableKerbalExperience = False`, empty logs) + 20 unit cases (effects vs `dictionary.cfg`, CrewGenerator vs an independent KSPRandom replay with synthetic name tables) | real VesselCrewManifest replaces the WP-18 stub; `tools/wp31/extract_crew_names.py` written, never run (needs the game's TextAssets) |
+
+Main after wave 2: `1fcad814`, 35 ctest tests, 401 unit cases / 710,877 assertions, every gate 0 ULP except the WP-17 delta-v columns above. Branches `wp17`, `wp27`, `wp31` pushed. Worktrees under `.worktrees/` are gitignored and can be deleted (`git worktree prune` after).
+
+## Handoff to the PC (2026-10-10)
+
+Local-only tasks (need `decompiled/KSP-dev`, which no worktree or cloud VM has):
+
+1. Run `corpus.saves` on the merged main checkout (it only registers where `decompiled/KSP-dev/saves` exists; the laptop's from-scratch runs after each merge did run it, 35/35 green).
+2. WP-17 to 0 ULP: extract, per engine part in the 17 crafts (JetEngine, MassiveBooster, SSME, Size3AdvancedEngine, ionEngine, liquidEngine2, liquidEngine2-2.v2, liquidEngine3.v2, liquidEngineMainsail.v2, microEngine.v2, miniJetEngine, omsEngine, radialLiquidEngine1-2, solidBooster.sm.v2, solidBooster.v2, toroidalAerospike, turboFanEngine, turboFanSize2), every transform named by `thrustVectorTransformName` from `decompiled/KSP-dev/GameData/Squad/Parts/Engine/**/*.mu`: local position / rotation / scale and the parent chain to the model root, plus the model-root transform PartReader applies, plus `thrustTransformMultipliers`. Store as byte-exact float32 in `core/data/` with the origin `.mu` path and sha256. Compose the world rotation with the native float quaternion chain (WP-07). Load it in `ds_deltav_stages.cpp` in place of `InstallThrustTransforms`, drop the two `rel 2e-6` rules and `tests/data/deltav_stages_exclusions.json`. Cheaper alternative: a profiling-branch capture of each engine's `thrustTransform.forward` as hex floats per craft (needs a KSP launch).
+3. WP-31 data: run `python -I core/tools/wp31/extract_crew_names.py` against the dev copy (the `KerbalNames` / `KerbalSpecialNames` Male/Female TextAssets under `TextAssets/CrewGenerator/<lang>/`; `env.container` may not list `resources.assets`, untested), store under `core/data/` with origin recorded, and replace the synthetic tables in `tests/test_kerbals.cpp`. Then a career save with applicants and non-empty flight logs (or a capture of `KerbalRoster` after `ExperienceAddFlight`) to make `data.roster_experience` a real gate.
+4. Captures still wanted: parachute / solar-panel / animation runtime tables (WP-27), in-flight delta-v (WP-17 flight branches), ablation thermal case (WP-22), FairingPanel mesh (WP-26).
+
+Small fixes anyone can do:
+
+- 7 WP-04 cite mismatches in `core/src/save/crew.cpp` (lines 246, 466, 474, 482, 505, 836, 845) and 1 WP-15 one at `core/src/modules/resource_modules.cpp:373` (`EVAResourceContainer.cs` has no `TransferStep`); `check_cites.py --fix` handles the line-number ones.
+- `ModuleServiceModule.BuildJettisonPartsList` should throw on null `JettisonZoneNames` like the C# (WP-26).
+- Name WP-24 in the `isControlSource` stand-in comments (`ds_deltav_stages.cpp`, `test_kerbals.cpp:1297`); add a test for the mission-editor branch of `CrewGenerator::RandomCrewMemberPrototype`.
+- `compare.py` extra-rows check (CLOUD-TASKS item f).
+- `core/STATUS.md` summary table: rows for WP-06 / WP-13 / WP-14 / WP-15 are missing and numbers repeat (13 x3, 14 x2, 17 x2); renumber once.
+
+Next packages (dependency order; Sonnet `implementer`, Sonnet `gatekeeper`, same protocol):
+
+1. WP-24 command, SAS / autopilot, reaction wheels, control state (2,941 lines; WP-17 and WP-31 both stand in for `ModuleCommand`).
+2. WP-25 docking, grapple, struts, vessel merge / split (3,270; WP-17 stands in for `ModuleDockingNode` crossfeed).
+3. WP-30 misc part modules (1,483) and WP-00 runtime skeleton (1,526) are small fillers for a 4-slot wave.
+4. WP-19 vessel load / unload / flight registry (6,523) and WP-20 physics core (6,854) need the Jolt spike first (Opus `optimizer`; see item 3 of the old list below). WP-12 PQS quadtree / mesh build (9,326) is `optimizer` tier.
+5. After those: WP-29 wheels (29,217, VehiclePhysics subset), WP-35 science, WP-36 funds / progress, WP-39 CommNet, WP-40 editor core.
+
+Protocol that worked (keep): one worktree per package from the current main; implementer brief says the cap (4 concurrent), no children, PROGRESS-wp<NN>.md, compact near 600k tokens, merge main before finishing, `check_cites.py` on every ported file, no reads of `decompiled/KSP-dev/**`. Gatekeeper brief says: delete `core/build` then `-Fresh`, WSL clang + gcc, read every `compare_report_*.json`, circularity check on recovered inputs, scripted cite check, verify STATUS numbers. Orchestrator merges `--no-ff`, resolves STATUS / README / CMake as unions (keep both sides, renumber the summary row, bump the header count), from-scratch suite, measures unit totals with `./build/RelWithDebInfo/tests/kspcore_tests | grep -E "test cases|assertions"`, pushes main + branch. Worktrees show one fewer ctest test than main (`corpus.saves`).
+
+## Older notes (session 1, kept for reference)
+
 
 1. Next work packages in dependency order, one Opus agent each, 3-4 at a time, every one gated by core
 un_tests.ps1: WP-03 event bus/utilities, WP-07 Orbit (golden orbit_propagation), WP-09 celestial bodies/atmospheres (body_catalog, atmosphere_curves), WP-08 patched conics (patched_conics), WP-11 terrain height maths (LibNoise subset; no golden yet, needs a capture), WP-04 save model, WP-05 GameDatabase/PartLoader + UrlDir, WP-06 module host + KSPField reflection mapping.

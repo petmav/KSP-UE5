@@ -1,0 +1,1 @@
+- [Core port gotchas](gotchas-core-port.md) — heredoc apostrophes, null string KSPFields, ModuleData reallocation, part-name underscores, fast build/test commands
