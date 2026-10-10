@@ -4,10 +4,15 @@
 // fn = "Quaternion.AngleAxis", 84 rows) by tests/test_orbit.cpp.
 #pragma once
 
+#include "ksp/dotnet/math.hpp"
 #include "ksp/unity/quaternion.hpp"
 #include "ksp/unity/vector.hpp"
 
 namespace ksp::UnityNative {
+
+// float sqrt through ksp::dotnet (IEEE sqrt is correctly rounded: the double result rounded to float equals the float sqrt)
+// (shared by the native quaternion code and the editor gizmo / logic code; Mathf::Sqrt is the Mono-float counterpart)
+inline float SqrtF(float x) { return static_cast<float>(dotnet::Math::Sqrt(static_cast<double>(x))); }
 
 // UnityEngine.Quaternion.AngleAxis(float angle /*degrees*/, Vector3 axis): identity when |axis| <= 1e-6. Unity's
 // Deg2Rad is `deg / 360 * 2 * kPI` (not deg * kDeg2Rad); with deg * (pi/180) 18 of the 84 captured rows differ.
