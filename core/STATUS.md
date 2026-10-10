@@ -1,6 +1,6 @@
 # kspcore status
 
-Updated 2026-10-10 (WP-00, WP-17, WP-22, WP-23, WP-24, WP-25, WP-26, WP-27, WP-28, WP-30, WP-31). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
+Updated 2026-10-11 (WP-40, WP-00, WP-17, WP-22, WP-23, WP-24, WP-25, WP-26, WP-27, WP-28, WP-30, WP-31). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
 (details in README.md). Local git repository in `core/` only, never pushed.
 
 ## Summary
@@ -34,6 +34,7 @@ Updated 2026-10-10 (WP-00, WP-17, WP-22, WP-23, WP-24, WP-25, WP-26, WP-27, WP-2
 | 24. WP-25 docking, grapple, struts, vessel merge / split (branch `wp25`, from main `95ed0a16`) | done (engine-agnostic part, unit-gated; no docking golden or capture exists): ModuleDockingNode (KSPFields / OnLoad / OnSave / OnStart, the 9-state KerbalFSM with all 15 events, nodeType / gender / snapRotation matching, CheckDockContact and the Acquire force chain in the Mono float rule, DockToVessel / Undock / Decouple over the WP-16 Couple / Undock / decouple, crossfeed events, rotation (servo) maths), ModuleGrappleNode (FSM, Grapple / Release / GrappleSameVessel / Decouple, both DockedVesselInfo), CModuleStrut (rigidbody-owner resolution, the Strut AttachNode); the WP-16 stand-in and the WP-17 runner crossfeed stand-in are gone; part_database / ship_construct / deltav_stages / staging_sequence stay 0 ULP; joints, transforms, raycasts, FX are documented seams (WP-20) |
 | 25. WP-30 misc part modules (branch `wp30`, from main `95ed0a16`) | done (engine-agnostic part, unit-gated): ModuleGPS (update-rate gate, lat / lon / biome text, asteroid / comet connection, `IAnimatedModule`), FlagSite (the KerbalFSM Placing / Placed / Toppled machine, joint / lock / dialog bookkeeping, OnSave / OnLoad of the state, afterFlagPlanted), ModulePartFirework (OnAwake / OnStart / OnLoad / OnSave, shot counter, color pickers, LaunchShell rigidbody numbers, mass modifier; replaces the WP-06 stand-in); `unit` +4 cases (+ the 2 small-fix tests), shell numbers and GPS text 0 ULP against a numpy float32 reference; `capture.part_database` unchanged (0 ULP, same rows). Part B small fixes listed in "WP-30". See the WP-30 section |
 | 26. WP-00 core runtime skeleton: tick phases, coroutine scheduler (branch `wp00`, from main `95ed0a16`) | done (engine-agnostic part, unit-gated; no golden or capture of scheduling exists, every existing gate unchanged): TimingManager + the eight Timing* hosts (Delegate add / remove-during-iteration semantics), `PlayerLoop` with the script order measured in game (Timing0, TimingPre, Timing1, Timing2, TimingManager, Timing3, TimingFI, Timing4, Timing5 for FixedUpdate / Update / LateUpdate; fixed-step and frame slot order), C++20 coroutine scheduler (null / WaitForSeconds / WaitForFixedUpdate / WaitForEndOfFrame / WaitUntil / nested / Stop), CoroutineHost, CallbackUtil.DelayedCallback, HierarchyUtil / TransformExtension / GameObjectExtension pure functions; VesselDeltaV.RunCalculations is now a real coroutine driven by the scheduler with identical results; scheduler vs independent numpy float32 replay 0 ULP; 18 cases / 396 assertions (17 in test_timing + 1 in test_deltav); the resume rules assumed for the engine are listed in the WP-00 section |
+| 30. WP-40 editor core (branch `wp40`, from main `ad208205`, merged main `5ba0ff06`) | done (engine-agnostic part, unit-gated; no editor golden or capture exists): EditorLogic / EditorLogicBase data side (part tree attach / detach / re-attach, radial and mirror symmetry, undo / redo, delete, placement flow without the KFSM mouse loop), EditorGeometryUtil, EditorEnumExtensions, EditorPartListFilter(List), EditorBounds, EditorReRootUtil, EditorMarker CoM / CoL / CoT, GizmoOffset / GizmoRotate maths, PreFlightCheck + every PreFlightTest; native Quaternion.LookRotation / Euler / eulerAngles are now the single implementation (WP-24 seams delegate to them, WP-24 replay still 0 ULP); local pose, symmetry, mirror, gizmo, CoM and CoT 0 ULP against `tools/wp40/editor_reference.py`; **CoL aggregation ported, untested against any reference**; the three native quaternion functions are written from Unity's documented formulation and are **unverified against the game**; `unit` +11 cases / 95,023 assertions; every capture gate unchanged. See the WP-40 section |
 
 ## Test results (all 35 ctest tests pass (34 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience)
 
@@ -3535,3 +3536,69 @@ model (double clock, float casts, wake rule); it cannot validate the engine beha
 - `./build/RelWithDebInfo/tests/kspcore_tests | grep -E "test cases|assertions"`: 419 test cases, 711,273 assertions, 0 failed;
   with `-tc="WP-00*"`: 18 cases, 396 assertions (17 in test_timing.cpp / 367, 1 in test_deltav.cpp / 29).
 - WSL (Ubuntu 24.04, clang, `./run_tests.sh -f` from the worktree): ALL TESTS PASSED, 34 of 34 ctest tests (the C++20 coroutines build and run on both toolchains).
+
+## WP-40: editor core (branch `wp40`, from main `ad208205`, merged main `5ba0ff06`)
+
+Spec: `EditorLogic.cs`, `EditorLogicBase.cs`, `EditorGeometryUtil.cs`, `EditorEnumExtensions.cs`, `EditorPartListFilter.cs`, `EditorPartListFilterList.cs`,
+`EditorBounds.cs`, `EditorReRootUtil`, `EditorMarker_CoM.cs` / `_CoL` / `_CoT`, `EditorGizmos/GizmoOffset.cs` / `GizmoRotate.cs`, `PreFlightCheck.cs`, `PreFlightTests/*`.
+New files: `include/ksp/editor/` (editor_types, editor_logic, editor_geometry, editor_reroot, editor_markers, editor_gizmos, preflight_tests),
+`src/editor/*.cpp`, `src/unity/quaternion_native.cpp` (+ `include/ksp/unity/quaternion_native.hpp`), `tests/test_editor.cpp`, `tools/wp40/editor_reference.py`,
+`tests/data/wp40_reference.json`, `EditorLogicStagingHost` and `EditorSession(EditorLogic&)` in `tools/support/editor_staging.hpp`.
+`python -I tools/wp28/check_cites.py` over `src/editor/*.cpp` and `include/ksp/editor/*.hpp`: 152 cites, 0 mismatches; the header cites were fixed heuristically and
+10 of them were opened against the C# (class declaration lines; 3 were off by one to four lines and are corrected: `EditorPartListFilterList.cs:3`, `EditorLogicBase.cs:7`,
+`EditorLogicBase.cs:27`). Floats follow the Mono rule; all maths through `ksp::dotnet`. There is no editor golden or capture, so the gate is the unit test against an
+independent Python implementation (numpy float32, Mono rule; `sinf` / `cosf` come from ucrtbase through ctypes because the UCRT `sinf` is not the correctly rounded value).
+
+### Gate (unit, 0 ULP unless stated)
+
+| Test | Coverage | Max abs / rel / ULP |
+|---|---|---|
+| attPos0 / attRot0 after attachPart vs Python | 3,187 parts of 39 crafts | 0 / 0 / 0 |
+| UpdateSymmetry (radial, mirror) | 300 cases, 952 poses | 0 / 0 / 0 |
+| EditorGeometryUtil mirror maths, gizmo snapping and drag deltas | 845 + 7,320 cases | 0 / 0 / 0 |
+| CoM and CoT of the stock crafts | 39 crafts | 0 / 0 / 0 |
+| attach / detach round trip (SaveShip byte-exact except attPos0 / attRot0) | 57 loadable crafts | byte-exact; see caveat 1 |
+| EditorReRootUtil to every possible root and back | 57 crafts | tree restored; see caveat 2 |
+| PreFlightTests, every concern over every stock craft | 1,596 evaluations, 577 compared with Python expectations | outcomes equal; the rest are C++ invariants only (caveat 5) |
+| placement flow, symmetry mode cycling, enums / filters / EditorBounds, native quaternion identities | stock part prefabs | pass |
+
+`unit`: 11 WP-40 cases, 95,023 assertions; whole binary measured on the merged tree: 464 cases, 826,521 assertions, 0 failed. Windows `run_tests.ps1 -Fresh`: 34 of 34 ctest tests
+pass. Capture gates (compare_report_*.json): `capture.ship_construct` craft 17 / parts 1,225 rows, `capture.staging_sequence` craft 17 / parts 1,225, `capture.part_database`
+(all ten tables) all 0 ULP, no missing rows, same row counts and extra-row counts as before; `capture.deltav_stages` unchanged (stages deltaV* max 11 ULP, rel 1.02e-6, rule rel 2e-6;
+totals rel 1.02e-6 on the f64 columns; parts 0).
+
+### Native Quaternion functions (single implementation)
+
+`UnityNative::LookRotation`, `Euler`, `EulerAngles` in `quaternion_native.hpp` / `.cpp` were written from Unity's documented formulation (LookRotation: z / x / y basis then
+matrix to quaternion; Euler: ZXY order, half-angle sin / cos; eulerAngles: matrix, YXZ extraction, `* 57.29578f`, managed Internal_MakePositive). They are **not captured against
+the game**, and `tools/wp40/editor_reference.py` uses the same formulation, so agreement with it is a consistency check, not independent evidence. WP-24 had its own private
+copies (`ModuleCommand::DefaultQuaternionEuler`, `AutopilotEnvironment::DefaultEulerAngles`); they are deleted and the seams `CommandEnvironment::quaternionEuler` /
+`AutopilotEnvironment::eulerAngles` default to the shared functions. `tests/test_command.cpp` vs `tests/data/wp24_reference.json` stayed at 0 ULP, no number changed.
+
+### Seams
+
+`EditorEnvironment` (editor facility, CheatOptions, the GameSettings the editor reads (angle snap, fine-offset threshold, undo / redo limit, fine-tweak and modifier keys), reference transforms; defaults are a VAB with GameSettings defaults), `EditorLimits` (facility level, part-count, craft-size and craft-mass limits that GameVariables supplies; unset until WP-36 career provides GameVariables), `PreFlightEnvironment` (ship, root part, CommNet flag, funds, career flag, roster, flight state for LaunchSiteClear, game compatibility, facility lookup and damage hooks).
+
+### Caveats
+
+1. attPos0 / attRot0 are re-derived from the world pose and gated against Python at 0 ULP instead of byte-exact against the saved craft (7,649 lines; 3,187 parts / 39 crafts).
+2. The round-trip test restores sibling order and 14 attach-node links (stale surface links, Z-MAP strut cubes).
+3. The reference covers 39 of the 57 loadable crafts: 18 are excluded because the upgrade pipeline renames their parts; 3 SmallGearBay parts are skipped.
+4. No ship-bounds numeric reference: the part database has no renderer / collider bounds.
+5. Python expectations are missing for DecouplersBeforeClamps, DockingPortRCS, Electric*, Hatch, KerbalSeat and Resource*Reachable (C++ invariants only): 577 of 1,596 evaluations are compared.
+6. CoT uses the same thrust-transform stand-in as `ds_deltav_stages` (WP-17).
+7. **CoL (`EditorMarker_CoL`): aggregation ported, untested against any reference.** The Python reference has no lift model; CoL is not gated.
+8. `SetSymmetry`, `SelectPartOfType` and `ChangeStage` do not exist in EditorLogic 1.12.5 (nothing to port).
+9. Not ported: the KFSM placement loop (EditorLogic.cs:1236-2366), UI, audio, Steam, dialogs.
+
+### Unverified and needed in-game captures
+
+- Unverified: `UnityNative::LookRotation`, `Euler`, `EulerAngles` (see above).
+- Needed: a C3-style capture of Quaternion.LookRotation / Euler / eulerAngles; an editor placement capture (symmetry counterpart poses, attPos0 / attRot0 as written by the game).
+
+### Verification
+
+- Windows (this tree, after merging main): `core/build` deleted, `powershell -NoProfile -File core/run_tests.ps1 -Fresh`: ALL TESTS PASSED (34 ctest tests).
+- `./build/RelWithDebInfo/tests/kspcore_tests | grep -E "test cases|assertions"`: 464 test cases, 826,521 assertions, 0 failed; `-tc="WP-40*"`: 11 cases, 95,023 assertions.
+- WSL clang: see the final report of the WP-40 session (Linux unit takes 45+ minutes on /mnt/c).
+
