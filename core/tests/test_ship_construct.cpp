@@ -609,6 +609,9 @@ TEST_CASE("WP-18 live SaveShip agrees with the craft file on everything the live
                         const auto& fv = fm.values()[v];
                         const std::string* lv = it->second->GetValuePtr(fv.name);
                         if (lv == nullptr) continue;
+                        // ModuleReactionWheel.OnLoad (ModuleReactionWheel.cs:124, WP-24): WheelState = Active sets stateString to its display
+                        // description after the field load, so the live module saves "Active" where the craft saved the editor-time ""
+                        if (mn == "ModuleReactionWheel" && fv.name == "stateString") continue;
                         CHECK_MESSAGE((fv.value == *lv || SameFloats(fv.value, *lv)), where << " " << mn << "." << fv.name << " [" << fv.value << "] vs [" << *lv << "]");
                         checks["module fields"]++;
                     }
@@ -2004,7 +2007,14 @@ TEST_CASE("WP-18 AssembleForLaunch variants: splashed, not landed, orbit, preCre
     {   // findFirstControlSource: the first part of the vessel with a control level
         auto s = load();
         auto v = ShipConstruction::AssembleForLaunch(*s, "LaunchPad", "", "flag", game, &manifest, true, false, true, false, nullptr, false, false, lp);
-        CHECK(ShipConstruction::findFirstControlSource(*v) == nullptr);   // no part has a control level yet (ModuleCommand sets it, WP-24)
+        // ModuleCommand.OnAwake (ModuleCommand.cs:366, WP-24) made every command part a FULL control source: the first one is found
+        Part* firstCmd = nullptr;
+        for (Part* p : v->parts)
+            if (firstCmd == nullptr && p->fields.isControlSource > 0) firstCmd = p;
+        REQUIRE(firstCmd != nullptr);
+        CHECK(ShipConstruction::findFirstControlSource(*v) == firstCmd);
+        for (Part* p : v->parts) p->fields.isControlSource = 0;   // no part has a control level yet
+        CHECK(ShipConstruction::findFirstControlSource(*v) == nullptr);
         v->parts[3]->fields.isControlSource = 1;
         v->parts[5]->fields.isControlSource = 2;
         CHECK(ShipConstruction::findFirstControlSource(*v) == v->parts[3]);

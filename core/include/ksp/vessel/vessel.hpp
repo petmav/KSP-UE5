@@ -66,6 +66,7 @@ struct FlightIntegratorAtmosphere;
 enum class ClearToSaveStatus : int;  // ClearToSaveStatus.cs (defined by TimeWarp, WP-10)
 class FlightState;
 class PatchedConicSolver;
+class VesselAutopilot;  // WP-24 ksp/vessel/vessel_autopilot.hpp
 class Vessel;
 
 // KerbalEVA (WP-32), as far as Vessel.cs reads it: the part the kerbal holds on to (EVALadderVessel, updateSituation), and
@@ -224,6 +225,9 @@ public:
     std::string displaylandedAt = "";
     std::string landedAtLast = "";
     Delegate<void()> OnJustAboutToBeDestroyed = Delegate<void()>::Static(&Vessel::NoCallback);
+    // Vessel.cs:370 OnAutopilotUpdate (FlightInputCallback(FlightCtrlState), WP-24: VesselSAS connects ControlUpdate / UpdateVesselTorque). The host
+    // invokes it from FeedInputFeed (Vessel.cs:2035) between OnPreAutopilotUpdate and OnPostAutopilotUpdate.
+    Delegate<void(FlightCtrlState&)> OnAutopilotUpdate = Delegate<void(FlightCtrlState&)>::Static(&Vessel::NoFlightCallback);
     Situations situation = static_cast<Situations>(0);
     double missionTime = 0.0;
     double launchTime = 0.0;
@@ -338,6 +342,7 @@ public:
     Vessel* EVALadderVessel();                // Vessel.cs:739
     ControlLevel CurrentControlLevel() const { return controlLevel_; }  // Vessel.cs:753
     bool IsControllable() const { return isControllable_; }            // Vessel.cs:755
+    VesselAutopilot& Autopilot() { return *autopilot_; }               // Vessel.cs:751
     VesselValues& GetVesselValues() { return *vesselValues_; }         // Vessel.cs:757 VesselValues
     bool PatchedConicsAttached() const { return patchedConicsAttached_; }  // Vessel.cs:795
     void set_PatchedConicsAttached(bool v) { patchedConicsAttached_ = v; }
@@ -540,6 +545,7 @@ private:
     friend class ProtoVessel;
     friend class VesselOrbitDriverView;
     static void NoCallback() {}
+    static void NoFlightCallback(FlightCtrlState&) {}
     void FindVesselParts(Part* part, bool checkAttached);  // findVesselParts (:1776)
     void SyncVesselTransform();  // the Vessel component lives on the root part's GameObject: vesselTransform follows rootPart
     Part* FindReferenceTransform(uint32_t refId);          // :963
@@ -562,6 +568,7 @@ private:
     bool controlLockSet_ = false;
     bool controlLockPartial_ = false;
     std::unique_ptr<VesselValues> vesselValues_;
+    std::unique_ptr<VesselAutopilot> autopilot_;  // Vessel.cs:310
     std::unique_ptr<ActionGroupList> actionGroups_;
     std::unique_ptr<DiscoveryInfo> discoveryInfo_;
     bool patchedConicsAttached_ = false;

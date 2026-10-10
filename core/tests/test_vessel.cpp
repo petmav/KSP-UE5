@@ -1074,7 +1074,10 @@ TEST_CASE("WP-14 crew list, capacity and control level (Vessel.cs 1234-1485)") {
     CHECK(v->GetCrewCount() == 3);
     GE::onVesselCrewWasModified.Remove(&l2, &L2::Run);
 
-    // control level: the best isControlSource of the parts (Part.isControlSource is set by ModuleCommand: WP-24)
+    // control level: the best isControlSource of the parts (Part.isControlSource is set by ModuleCommand, WP-24: OnAwake writes FULL on every
+    // command part, ModuleCommand.cs:366; UpdateControlState rewrites it in flight)
+    CHECK(v->GetControlLevel() == ControlLevel::FULL);
+    for (Part* p : v->parts) p->fields.isControlSource = static_cast<int32_t>(ControlLevel::NONE);   // the command parts have not computed their state
     CHECK(v->GetControlLevel() == ControlLevel::NONE);
     v->CheckControllable();
     CHECK_FALSE(v->IsControllable());

@@ -39,6 +39,7 @@ class ProtoPartModuleSnapshot;
 class IPartSizeModifier;
 class IConstruction;
 class IAnimatedModule;                 // WP-27 ksp/modules/animated_module.hpp
+class ITorqueProvider;                 // WP-24 ksp/modules/control_types.hpp
 namespace events {
 template <class... Ts>
 class EventData;                       // ksp/events/event_data.hpp
@@ -206,6 +207,7 @@ public:
     virtual IAnalyticPreview* AsAnalyticPreview() { return nullptr; }                // `module is IAnalyticPreview` (WP-22)
     virtual IAnalyticTemperatureModifier* AsAnalyticTemperatureModifier() { return nullptr; }  // (WP-22)
     virtual IOverheatDisplay* AsOverheatDisplay() { return nullptr; }                // `module is IOverheatDisplay` (WP-22)
+    virtual ITorqueProvider* AsTorqueProvider() { return nullptr; }                  // `module is ITorqueProvider` (WP-24)
 
 private:
     std::string className_, guiName_;
