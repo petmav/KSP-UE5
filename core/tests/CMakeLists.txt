@@ -26,6 +26,7 @@ add_executable(kspcore_tests
     test_resource_modules.cpp
     test_resource_processing.cpp
     test_deployables.cpp
+    test_kerbals.cpp
     test_vessel.cpp
     test_ship_construct.cpp
     test_aero.cpp
@@ -47,6 +48,9 @@ target_compile_definitions(kspcore_tests PRIVATE KSPCORE_TEST_DATA_DIR="${CMAKE_
                            KSPCORE_TESTDATA_DIR="${PROJECT_SOURCE_DIR}/testdata"
                            KSPCORE_DEFAULT_GAME_ROOT="${KSP_GAMEDATA_ROOT}")
 add_test(NAME unit COMMAND kspcore_tests)
+# WP-31 data gate: ROSTER of every save in testdata / harness/inputs, experience recomputed from the raw flight logs (also part of `unit`)
+add_test(NAME data.roster_experience COMMAND kspcore_tests "-tc=WP-31 data gate*")
+set_tests_properties(data.roster_experience PROPERTIES LABELS data TIMEOUT 600)
 
 # ---- portable libm vs the real VS2013 / UCRT DLLs (Windows only; skips elsewhere): 300k inputs per function
 add_test(NAME libm.portable_vs_dll COMMAND libm_check 300000)

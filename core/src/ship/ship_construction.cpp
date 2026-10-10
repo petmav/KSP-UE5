@@ -1,4 +1,5 @@
 // See include/ksp/ship/ship_construction.hpp. Spec: Assembly-CSharp/ShipConstruction.cs
+#include "ksp/kerbals/crew_manifest.hpp"
 #include "ksp/ship/ship_construction.hpp"
 
 #include <algorithm>

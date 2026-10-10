@@ -11,6 +11,7 @@
 #include "ksp/dotnet/number.hpp"
 #include "ksp/dotnet/text.hpp"
 #include "ksp/events/game_events.hpp"
+#include "ksp/kerbals/experience.hpp"
 #include "ksp/localization/localizer.hpp"
 #include "ksp/save/game.hpp"
 #include "ksp/save/game_parameters.hpp"
@@ -1070,8 +1071,7 @@ void KerbalRoster::RemoveDead(const PCM& ap) {
     }
 }
 
-// KerbalRoster.cs:982 (the ExperienceTrait object itself -- effects, registration on parts -- belongs to the
-// experience package; pcm.experienceTrait points at the trait config)
+// KerbalRoster.cs:982
 void KerbalRoster::SetExperienceTrait(ProtoCrewMember& pcm, std::optional<std::string> traitName) {
     Experience::ExperienceSystemConfig& cfg = ExperienceConfigs();
     if (traitName && !traitName->empty()) pcm.trait = *traitName;
@@ -1089,7 +1089,9 @@ void KerbalRoster::SetExperienceTrait(ProtoCrewMember& pcm, std::optional<std::s
         traitName = cfg.TraitNamesNoTourist()[static_cast<size_t>(std::abs(h) % n)];
         pcm.trait = traitName;
     }
-    if (pcm.experienceTrait != nullptr && !(pcm.experienceTrait->Name() != *traitName)) return;
+    // TypeName of the plain ExperienceTrait is Config.Title (the raw "#autoLOC_.." tag), so this early-out only fires for a
+    // trait subclass registered under the trait's name (mods) -- stock traits are rebuilt on every call (sic)
+    if (pcm.experienceTrait != nullptr && !(pcm.experienceTrait->TypeName() != *traitName)) return;
     Experience::ExperienceTraitConfig* found = nullptr;
     for (const auto& c : cfg.Categories())
         if (*traitName == c->Name()) {
@@ -1097,7 +1099,7 @@ void KerbalRoster::SetExperienceTrait(ProtoCrewMember& pcm, std::optional<std::s
             break;
         }
     if (found == nullptr) return;
-    pcm.experienceTrait = found;
+    pcm.experienceTrait = Experience::ExperienceTrait::Create(*traitName, found, &pcm);
 }
 
 // KerbalRoster.cs:1027
@@ -1111,9 +1113,9 @@ bool KerbalRoster::TryGetExperienceTraitConfig(const std::string& traitName, Exp
     return false;
 }
 
-// KerbalRoster.cs:1053
-void KerbalRoster::SetExperienceLevel(ProtoCrewMember& pcm, int level, const GameParameters& parameters, Game_Modes mode,
-                                      const std::string& homeBodyName) {
+// body of KerbalRoster.SetExperienceLevel(pcm, level, parameters, mode) (KerbalRoster.cs:1053); the home body name is evaluated lazily
+void KerbalRoster::SetExperienceLevelImpl(ProtoCrewMember& pcm, int level, const GameParameters& parameters, Game_Modes mode,
+                                          const std::function<std::string()>& homeBodyName) {
     if (!parameters.CustomParams<GameParameters::AdvancedParams>().KerbalExperienceEnabled(mode)) level = 5;
     level = std::clamp(level, 0, 5);
     pcm.careerLog.Clear();
@@ -1126,9 +1128,34 @@ void KerbalRoster::SetExperienceLevel(ProtoCrewMember& pcm, int level, const Gam
     case 4: entryType = FlightLog::EntryType::Training4; break;
     default: entryType = FlightLog::EntryType::Training5; break;
     }
-    pcm.careerLog.AddEntryUnique(entryType, homeBodyName);
+    pcm.careerLog.AddEntryUnique(entryType, homeBodyName());
     pcm.experience = pcm.CalculateExperiencePoints(parameters, mode);
     pcm.experienceLevel = CalculateExperienceLevel(pcm.experience);
+}
+
+// KerbalRoster.cs:1053 (home body name given)
+void KerbalRoster::SetExperienceLevel(ProtoCrewMember& pcm, int level, const GameParameters& parameters, Game_Modes mode,
+                                      const std::string& homeBodyName) {
+    SetExperienceLevelImpl(pcm, level, parameters, mode, [&] { return homeBodyName; });
+}
+
+// KerbalRoster.cs:1053 (FlightGlobals.GetHomeBody().name evaluated when the entry is added)
+void KerbalRoster::SetExperienceLevel(ProtoCrewMember& pcm, int level, const GameParameters& parameters, Game_Modes mode) {
+    SetExperienceLevelImpl(pcm, level, parameters, mode, [] { return GetHomeBodyName(); });
+}
+
+// KerbalRoster.cs:1048
+void KerbalRoster::SetExperienceLevel(ProtoCrewMember& pcm, int level) {
+    const Game* g = SaveEnvironment::Current().currentGame;
+    if (g == nullptr || !g->Parameters) throw NullReferenceException("KerbalRoster.SetExperienceLevel: HighLogic.CurrentGame is null");
+    SetExperienceLevel(pcm, level, *g->Parameters, g->Mode);
+}
+
+// FlightGlobals.GetHomeBody().name (FlightGlobals.cs:1797) over PSystemManager.localBodies
+std::string KerbalRoster::GetHomeBodyName() {
+    for (CelestialBody* body : SaveEnvironment::Current().localBodies)
+        if (body != nullptr && body->isHomeWorld) return body->name();
+    throw NullReferenceException("FlightGlobals.GetHomeBody() is null");
 }
 
 // KerbalRoster.cs:1088

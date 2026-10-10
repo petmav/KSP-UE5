@@ -105,6 +105,12 @@ add_library(kspcore STATIC
     save/save_environment.cpp
     save/game_parameters.cpp
     save/crew.cpp
+    kerbals/experience.cpp
+    kerbals/crew_generator.cpp
+    kerbals/crew_manifest.cpp
+    kerbals/proto_crew_member_ext.cpp
+    kerbals/kerbal_roster_ext.cpp
+    kerbals/kerbal_misc.cpp
     save/proto_vessel.cpp
     save/proto_part_live.cpp
     save/game.cpp
