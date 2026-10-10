@@ -38,3 +38,5 @@ tests/test_thermal.cpp, STATUS/README, full runs Windows + WSL.
 
 ## Step 5 DONE: tests/test_thermal.cpp (7 cases, 112 assertions) pass; part_constants table added to capture.thermal_step (15 rows, 0 ULP).
 Next: README rows (tests table, layout, golden gate options), STATUS WP-22 section + header counts, full Windows -Fresh run, WSL run, commit.
+
+## Step 6: README/STATUS committed; Windows -Fresh run: 30/30 ctest pass, 299 unit cases / 685,133 assertions. WSL linux-rel run in progress (/tmp/wp22_wsl.log).

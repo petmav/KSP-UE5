@@ -2496,4 +2496,8 @@ two-part graph (links, contact area, hot to cold).
 
 ### Commits (branch `wp22`)
 
-COMMITS_PLACEHOLDER
+- `8dfec855` WP-22: CelestialBody.GetAtmoThermalStats + GetFullTemperature(pos), gate capture.atmosphere_thermal_offsets (C4, 2688 rows, 0 ULP)
+- `083c8e1d` WP-22: FlightIntegrator thermal model (UpdateThermodynamics, conduction, convection, radiation, occlusion passes, ThermalLink, PartThermalData), gate capture.thermal_step (0 ULP)
+- `e8f77a05` WP-22: thermal modules (TemperatureModel, RadiatorUtilities, ModuleConductionMultiplier, ModuleAblator, ModuleCoreHeat, ModuleActiveRadiator), Part thermal flux helpers, part_constants gate, test_thermal.cpp
+- `defb93f9` WP-22: README rows, STATUS section and counts
+- (this commit) STATUS commit list, PROGRESS-wp22.md; verification: Windows MSVC `run_tests.ps1 -Fresh` and WSL Clang 18 `run_tests.sh -f`, 30/30 ctest tests each, 299 unit cases / 685,133 assertions
