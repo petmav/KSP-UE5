@@ -3640,6 +3640,13 @@ loadedParts` (GameDatabase / PartLoader).
 - `OnModuleInventoryChanged` compares nothing (the inventory module class belongs to its package): any inventory change refreshes the UI.
 - The biome map pixel reader (`CBAttributeMapSO.GetAtt`), `KerbalEVA`, `ModuleInventoryPart.ContainsPart` and the contract hook `IsValidContractObjective` are not ported.
 
+### Linux (WSL Ubuntu 24.04, clang, `./run_tests.sh -f` in the worktree)
+
+The fresh Linux build is clean (252 of 252 targets; only unused-capture / unused-parameter warnings). `kspcore_tests -tc='WP-35*,WP-15 ModuleResourceHandler*'` on Linux: 18 cases /
+15,100 assertions, 0 failed. The complete Linux ctest run did NOT finish: the first `run_tests.sh -f` was killed (SIGTERM, exit 15) when its unit test had just started, and a second
+`ctest --preset linux-rel` was stopped after 1 h 45 min of the `unit` test (shared CPU with other packages' runs on /mnt/c). The Windows run is complete (34 of 34). Re-run
+`./run_tests.sh -f` on a quiet machine before merging if the Linux totals are needed.
+
 ### Commits (branch `wp35`)
 
 see `git log --oneline ad208205..wp35`.
