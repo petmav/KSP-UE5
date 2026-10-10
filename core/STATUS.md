@@ -25,10 +25,11 @@ Updated 2026-10-09 (WP-05). One command: `powershell -NoProfile -ExecutionPolicy
 | 13. WP-16 staging, action groups, decouplers, decouple / couple tree ops (branch `wp16`, from `wp14`) | done (model side): StageManager.cs staging model with StageGroup / StageIcon / ProtoStageIcon as data records (FindStageIndices, SetSeparationIndices, the SortIcons pipeline, ActivateStage), ModuleDecouplerBase / ModuleDecouple / ModuleAnchoredDecoupler, ActionGroupList.ToggleGroup / SetGroup + the BaseAction statics, KSPActionParam, Part.decouple / Couple / Undock, DockedVesselInfo, Vessel.ClearStaging / ResumeStaging; `capture.staging_sequence` bit-exact (stage_count, inverseStage, isDecoupler of the C5 crafts); 19 unit cases (12,222 assertions); the vessel-split golden needs an in-flight capture (listed in "WP-16") |
 
 | 13. WP-21 aerodynamics, numeric part (branch `wp21`) | done: DragCubeList aero half (weights, occlusion, SetDrag / AddSurfaceDragDirection, queries, ForceUpdate), FlightIntegrator aero members (drag models, areas, UpdateAerodynamics with returned forces, DragCubeSetupAndPartAeroStats), ModuleLiftingSurface / ModuleControlSurface / ModuleAeroSurface, thermal-occlusion geometry, aero interfaces; one templated port with a Mono and a .NET float policy; 3 new gates bit-exact (74,253 rows). See "WP-21" below |
+| 14. WP-22 thermal model, numeric part (branch `wp22`) | done: `CelestialBody.GetAtmoThermalStats` / `GetFullTemperature(pos)`, the thermal half of FlightIntegrator (UpdateThermodynamics, ThermalIntegrationPass, conduction, convection, radiation, analytic temperature, thermal graph, occlusion passes), PartThermalData / ThermalLink / thermal interfaces, TemperatureModel, RadiatorUtilities, ModuleConductionMultiplier / ModuleAblator / ModuleCoreHeat / ModuleActiveRadiator; 2 new gates bit-exact (20,682 rows); see "WP-22" below for the inputs the C6 capture could not supply and the deferred items |
 
 | 13. WP-18 craft files and ship construction (branch `wp18`) | done for the engine-agnostic part: ShipConstruct over live `Part`s (`LoadShipWithParts` / `SaveShip` from the parts, costs, masses, naming, ship PartSet), ShipTemplate (whole class), ShipConstruction (paths, backups, load / save, `AssembleForLaunch` over WP-14's assembly, templates through the upgrade pipeline, `GetPartCosts*`, launch-site queries, craft size); new gate `capture.ship_construct` (C5: `GetShipMass` and the per-part masses of 17 crafts, 0 ULP); 26 unit cases (274,042 assertions): round trip of 57 crafts, agreement with the original files, templates vs ships. See "WP-18" |
 
-## Test results (all 28 ctest tests pass: Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel)
+## Test results (all 30 ctest tests pass: Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step)
 
 Every numeric column of every gate: **max ULP 0, max abs 0** (bit-exact, and the same decimal text). Tolerance files:
 harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture gates use `tests/tolerances_capture.json`
@@ -61,7 +62,9 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `golden.aero_forces` | WP-21: harness golden `aero_forces` (KSP's IL on .NET 4.8), every table, computed with the `aero::NetFloat` policy: drag_curve_value 2,870, cube_inputs 34, cube_weighted 204, cube_drag 18,122, drag_chain_kerbin 2,304, lifting_surface 2,160 | 25,694 | 0 ULP (signed zeros included) |
 | `capture.aero_forces_mono` | WP-21: in-game `captures/out/aero_forces_mono.json`, the AeroGen drag-cube tables under Mono (`aero::MonoFloat`, the production policy): cube_inputs 34, cube_weighted 204, cube_drag 18,122 | 18,360 | 0 ULP |
 | `capture.aero_forces_vessel` | WP-21: in-game `captures/out2/aero_forces_vessel.json` (C10): structure 631 (node_contact_areas), parts 4,224 x 46 columns, aoa_sweep 25,344 x 12 columns on the three assembled PhysProf vessels; inputs dropped as listed in "WP-21" | 30,199 | 0 ULP |
-| `unit` | 292 doctest cases, 685,005 assertions (WP-16: 19 cases, 12,222 assertions in `test_staging.cpp`; WP-21: 11 cases, 220,304 assertions in `test_aero.cpp`; WP-18: 26 cases, 274,042 assertions in `test_ship_construct.cpp`; WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
+| `capture.atmosphere_thermal_offsets` | WP-22: in-game `captures/out2/atmosphere_thermal_offsets.json` (C4), `samples` 27 columns: `CelestialBody.GetAtmoThermalStats` / `GetFullTemperature` on Kerbin, Eve, Duna, Laythe, Jool, Mun at 4 epochs | 2,688 | 0 ULP |
+| `capture.thermal_step` | WP-22: in-game `captures/out2/thermal_step.json` (C6): vessel 2,994 x 12 + isAnalytical, parts 14,985 x 27 + exposed (the real UpdateThermodynamics per tracked part and frame), part_constants 15; inputs recovered from the capture and exclusions as listed in "WP-22" | 17,994 | 0 ULP |
+| `unit` | 299 doctest cases, 685,133 assertions (WP-22: 7 cases, 112 assertions in `test_thermal.cpp`; WP-16: 19 cases, 12,222 assertions in `test_staging.cpp`; WP-21: 11 cases, 220,304 assertions in `test_aero.cpp`; WP-18: 26 cases, 274,042 assertions in `test_ship_construct.cpp`; WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
 differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 6 ULP (Vector3.Project/ProjectOnPlane) and
@@ -2386,3 +2389,111 @@ them in `test_staging.cpp`). Build 326 s (clang) / 355 s (GCC) cold on 4 shared 
 
 see `git log --oneline wp14..wp16`.
 
+## WP-22: thermal model, numeric part (branch `wp22`, from main `289d0c98`)
+
+State: done for the numeric part (no rigid-body world). `CelestialBody.GetAtmoThermalStats` / `GetFullTemperature(pos)` and the whole
+thermal half of `FlightIntegrator` (UpdateThermodynamics, ThermalIntegrationPass, UpdateConduction, SetSkinProperties, convection,
+radiation, analytic temperature, thermal graph, the three occlusion passes, CalculateSunBodyFlux over engine inputs) are ported over the
+WP-14 Vessel / WP-13 Part / WP-09 `FlightIntegratorAtmosphere` / WP-21 occlusion geometry, with TemperatureModel, RadiatorUtilities and the
+modules ModuleConductionMultiplier, ModuleAblator, ModuleCoreHeat, ModuleActiveRadiator. Two new gates, every column 0 ULP; every earlier
+gate unchanged and green.
+
+### Gates (RelWithDebInfo; `tests/tolerances_capture.json` unchanged: 0 ULP; harness tolerances unchanged)
+
+| ctest | table | rows | columns | max ULP |
+|---|---|---|---|---|
+| `capture.atmosphere_thermal_offsets` (C4) | `samples` | 2,688 | 27 (inputs echoed + atmosphereTemperatureOffset, bodyEmissiveFlux, bodyAlbedoFlux, bodyTemperature, GetTemperature, GetFullTemperature(alt, offset) and (pos), pressure_kPa, density, solarAirMass, solarFluxMultiplier) | 0 |
+| `capture.thermal_step` (C6) | `vessel` | 2,994 (3,000 - 6 excluded) | 12 f64 + fi_isAnalytical | 0 |
+| | `parts` | 14,985 (15,000 - 15 first frames) | 27 f64 + ptd_exposed | 0 |
+| | `part_constants` | 15 | 10 (mass f32, maxTemp ... skinThermalMassModifier, ptd_thermalLinkCount) | 0 |
+
+`tools/golden_runner/ds_atmosphere_thermal_offsets.cpp` rebuilds the C4 inputs from the capture's own input columns (sun / body scaled
+positions, bodyTransform.up, the run-time orbit values GetAtmoThermalStats reads through `ICelestialBodyOrbit`, sunVector, upAxis, sunDot,
+alt); the body prefab data (curves, albedo, emissivity) is the game's, through CelestialEnv. `ICelestialBodyOrbit` gained `eccentricity()` /
+`inclination()` (the Orbit adapter and the test double implement them).
+
+### What the C6 gate feeds from the capture, and why (`tools/golden_runner/ds_thermal_step.cpp` header lists it too)
+
+The capture logs 5 of the 21 parts and has no rigid body, part transforms or sun ray. The `parts` table runs the REAL
+`FlightIntegratorThermal::UpdateThermodynamics` (SetSkinProperties, PrecalcConduction / Convection / Radiation, ThermalIntegrationPass) on a
+one-part graph per row:
+- pre-state = the previous frame's row (temperatures, flux accumulators, ptd.exposed, the stale ptd values that survive frames without
+  convection); frame inputs = the vessel row, this frame's `radiativeArea` (DragCubeSetupAndPartAeroStats runs before the thermal step) and the
+  PREVIOUS frame's `exposedArea` (UpdateAerodynamics sets it after the step); skinThermalMass uses the previous frame's radiativeArea
+  (UpdateMassStats runs first in FixedUpdate); part constants are the prefab's after `Part.Start` (WP-13 `StartData`).
+- INPUTS recovered from the capture: `ptd_intConductionFlux` / `ptd_skinConductionFlux` (conduction to the 16 unlogged neighbours:
+  `GateFI::UpdateConduction` takes them and runs the real skin-local block `UpdateSkinLocalConduction`); the occlusion multipliers
+  (convectionAreaMultiplier / convectionTempMultiplier: the m that reproduces the logged convectionArea / postShockExtTemp AND brtExposed bit
+  for bit, 1.0 when it does; 0 recovery misses); the sun / body radiation entering each skin (cube area along the sun / up direction: the exact
+  double I with I - emission == the logged expFlux / unexpFlux, searched +-4 ulp around logged + emission; 0 misses), so the emission term,
+  the split between the skins and every later statement are verified; `thermalMass` (includes the resource thermal mass, which depends on the
+  propellant left after the C10 ascent).
+- not written / not gated: `radiativeArea`, `exposedArea`, `thermalMass`, the two neighbour fluxes (inputs), `resource_mass` (propellant left
+  after the ascent), `solarFlux` of `vessel` (the unattenuated flux needs the sun-ray cast distance).
+- `vessel`: FlightIntegratorAtmosphere recomputed from altitude, spd, sunDot, atmosphereTemperatureOffset (inputs: C4 gates them) and the
+  previous frame's density (KSP quirk: GetSolarAtmosphericEffects reads last frame's density). FlightIntegrator.altitude (CoM) is recovered
+  from the captured static pressure (as WP-14's vessel_state).
+- Exclusions (`tests/data/thermal_step_exclusions.json`, one by one with reasons): `vessel` pad/0 (previous-frame density not in the file),
+  reentry/1035, 1040, 1050 (the captured pressure is on the plateau at the top of the atmosphere: the CoM altitude is not recoverable) and
+  reentry/1041, 1051 (their previous-frame density is the excluded frame). `parts` frame 0 of each case (no previous row): 15 rows.
+
+### Ported (by C# file)
+
+| C# | C++ | notes |
+|---|---|---|
+| CelestialBody.cs:855 GetAtmoThermalStats, :991 GetFullTemperature(Vector3d) | `celestial/celestial_body.hpp`, `src/celestial/celestial_body.cpp` | the Unity transform state is `AtmoThermalFrame` (sun / body scaled positions, ScaleFactor, bodyTransform.up); Vector3.Dot / Quaternion * Vector3 managed (Mono rule), Quaternion.AngleAxis native |
+| FlightIntegrator.cs thermal members (:452-465, 573-593, 593-668 after the atmosphere, 672-697, 798-835, 963-2241, 2545-2769) | `thermal/flight_integrator_thermal.hpp`, `src/thermal/flight_integrator_thermal.cpp` | `FlightIntegratorThermal` owns a `FlightIntegratorAtmosphere atm` (composition: WP-09 is not duplicated); the aero half stays `FlightIntegratorAero` |
+| PartThermalData.cs (+ both comparers), ThermalLink.cs, the four interfaces, RadiatorData.cs | `thermal/thermal_types.hpp` | `PartThermalData : OcclusionThermalRef` (WP-21's seam); modules expose the interfaces through `PartModule::AsAnalyticOverheatModule() / AsAnalyticPreview() / AsAnalyticTemperatureModifier() / AsOverheatDisplay()` |
+| TemperatureModel.cs, RadiatorUtilities.cs, ModuleConductionMultiplier.cs, ModuleAblator.cs, ModuleCoreHeat.cs, ModuleActiveRadiator.cs | `thermal/thermal_modules.hpp`, `src/thermal/thermal_modules.cpp` | registered with the ModuleFactory; the earlier ModuleCoreHeat stand-in of module_behaviours.cpp is replaced |
+| Part.cs:7612-7625 AddThermalFlux / AddSkinThermalFlux / AddExposedThermalFlux | `parts/part.hpp`, `src/parts/part.cpp` | kW * TimeWarp.fixedDeltaTime |
+
+### Deviations (same operations, same order)
+
+- `UpdateConduction`'s skin loop is split: the per-part block (skin-skin, unexposed-skin-internal, skin-internal fluxes: it reads only that
+  part's temperatures) is `UpdateSkinLocalConduction`; `PrecalcRadiation`'s tail (sun / body flux over the cube areas) is the virtual
+  `PrecalcRadiationIncoming`. Both exist so a host without part transforms can supply the geometry; the base implementations are the C#.
+- The thermal interfaces take `FlightIntegratorThermal&` (C#: FlightIntegrator). `List<T>.Sort` is `dotnet::ListSort` with the list size
+  as the depth-limit length (C#: the backing array length, only reached by the heap-sort fallback). CompoundPart.target is a hook
+  (`compoundTarget`; CompoundPart itself is not ported). FXCamera.ApplyObliqueness (rendering), GameSettings.FI_LOG_* Debug.Log and
+  MonoBehaviour.print lines are not ported (no thermal state). `Vessel::IsFirstFrame()` is WP-14's stub (false).
+- ModuleCoreHeat / ModuleActiveRadiator: BaseConverter, ModuleDeployableRadiator and the radiator's ModuleResourceHandler are seams
+  (`ModuleCoreHeat::ConverterState`, `ModuleActiveRadiator::isRadiator / deployableExtended / checkResources`); PAW debug fields (D_*),
+  GetInfo / GetModuleDisplayName text and adjusters (WP-55) are not ported.
+
+### Surprises a later implementer must know
+
+- `Part.absorptiveConstant` is -1 in the prefab and `Part.Start` copies `emissiveConstant` into it; a Part that never ran `StartData` radiates
+  with a negative absorptivity. The cfg values are loaded through a float cast (heatConductivity 0.1 is 0.10000000149).
+- FixedUpdate may run several times per Update: `solarFlux` is set in Update (ThermoPrecalculate) and MULTIPLIED by solarFluxMultiplier in
+  every CalculateConstantsAtmosphere, so it compounds (the capture's pad frame 1 is frame 0 times 0.857).
+- Order inside one FixedUpdate: UpdateMassStats (skinThermalMass from last frame's radiativeArea), atmosphere, DragCubeSetupAndPartAeroStats
+  (radiativeArea, atmDensity), UpdateThermodynamics (exposedArea of the previous frame), UpdateAerodynamics (this frame's exposedArea).
+- ptd.postShockExtTemp / finalCoeff / convectionFlux keep their last value while convectionArea is 0 (PrecalcConvection returns early); the
+  capture's rows show the stale values.
+- `thermalConductionFlux` = ptd.intConductionFlux * ThermalConvergenceFactor; `thermalConvectionFlux` = ptd.convectionFlux * the same factor.
+- UpdateConduction sorts both part lists with an unstable introsort every pass in which the order changed: equal temperatures keep the order
+  `dotnet::ListSort` produces.
+- Kerbin's static pressure is a plateau in the last ~100 m of the atmosphere (the lowest altitude with the same bits is not the true one).
+
+### Deferred (and what it needs)
+
+| item | needs |
+|---|---|
+| FixedUpdate sequencing around the thermal step (SmoothVelocity, nVel from the rigid-body velocity, vessel.upAxis, CoM altitude) | WP-20 (physics tick, Jolt) |
+| `GetSunArea` / `GetBodyArea` / the occlusion passes on a live vessel: part `localToWorldMatrix` (`localToWorld` hook) and the world orientation of the cubes | WP-20 / part transforms of the UE shell; no capture exists for the occlusion multipliers (recovered here) |
+| the sun ray (`Physics.Raycast` against the scaled-space colliders: `SunBodyFluxInput`) | engine |
+| CalculateAnalyticTemperature / the analytic branch of UpdateThermodynamics, CalculateSunBodyFlux | no capture; ported, not numerically verified (unit tests cover the graph and conduction) |
+| ModuleDeployableRadiator, BaseConverter, resource handler of the radiator, CompoundPart links, adjusters | WP-27, the converter package, WP-55 |
+| engine / reactor heat sources (ModuleEngines.AddThermalFlux, ModuleCoreReactor ...) | their module packages (they call `Part::AddThermalFlux`) |
+
+### Unit tests (`tests/test_thermal.cpp`: 7 cases, 112 assertions)
+
+TemperatureModel (all four models and the step search, formulas of the C#), RadiatorUtilities, ModuleConductionMultiplier (real mk1pod.v2:
+factor 0.003, threshold 3000), ModuleAblator (real HeatShield1: -7500 / 0.1 / 6000 / 500, conductivity switch, Start from the resource
+library), ModuleActiveRadiator (real foldingRadSmall: IsSibling, InternalCooling transfer), ModuleCoreHeat (real ISRU: starting
+temperature, GetDeltaTime, converter heat), FlightIntegratorThermal.UpdateThermalGraph / PrecalcConduction / UpdateConduction on a real
+two-part graph (links, contact area, hot to cold).
+
+### Commits (branch `wp22`)
+
+COMMITS_PLACEHOLDER
