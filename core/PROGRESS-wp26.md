@@ -7,3 +7,4 @@
 - [x] GATE GREEN: capture.ship_construct 17 craft + 1225 parts 0 ULP incl. ComSat_Lx (Windows RelWithDebInfo). NEXT: full tests, part_database gates, unit tests, CompoundPart, docs
 - [x] CompoundPart + tests (47 cases pass locally); header line cites fixed. NEXT: README/STATUS, full run Windows + WSL, final commit
 - [x] docs written; NEXT: fresh Windows run, WSL run, final commit
+- [x] DONE: Windows fresh 28/28, WSL 28/28 (Linux build 1.5k s on /mnt/c)
