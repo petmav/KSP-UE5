@@ -460,7 +460,8 @@ void ModuleJettison::Jettison() {
     if (!Get<bool>("isJettisoned") && jettisonTransformPresent_) {
         if (!p->fields.partRendererBoundsIgnore) p->fields.partRendererBoundsIgnore = std::vector<std::string>();
         p->fields.partRendererBoundsIgnore->push_back(jettisonTransformName_);
-        const bool flag = false;  // the transform's parent is a ModuleDockingNode: the model's (docking port shrouds)
+        // :151 the transform's parent object carries a ModuleDockingNode (docking port shrouds): the hierarchy is the model's (hook), the module test real
+        const bool flag = hooks.jettisonTransformParentIsPartRoot && hooks.jettisonTransformParentIsPartRoot(*p, *this) && p->isDockingPort();
         if (!Get<bool>("isFairing") || flag) {
             OnMoving.Fire(0.0f, 1.0f);
             if (hooks.jettisonTransformToPhysical) hooks.jettisonTransformToPhysical(*p, *this);

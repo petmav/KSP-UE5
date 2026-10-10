@@ -139,6 +139,9 @@ public:
     // Jettison's physical half (physicalObject.ConvertToPhysicalObject of the jettison transform, rb velocities, forces): the physics package
     struct Hooks {
         std::function<void(Part&, ModuleJettison&)> jettisonTransformToPhysical;
+        // `jettisonTransform.parent != null && parent.gameObject.GetComponent<ModuleDockingNode>() != null` (:151, WP-25): the model hierarchy says
+        // whether the jettison transform hangs directly under the part's root object. The module test is real (Part::isDockingPort). Unset: false.
+        std::function<bool(Part&, ModuleJettison&)> jettisonTransformParentIsPartRoot;
     };
     static inline Hooks hooks;
 
