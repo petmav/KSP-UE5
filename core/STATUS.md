@@ -3600,5 +3600,5 @@ copies (`ModuleCommand::DefaultQuaternionEuler`, `AutopilotEnvironment::DefaultE
 
 - Windows (this tree, after merging main): `core/build` deleted, `powershell -NoProfile -File core/run_tests.ps1 -Fresh`: ALL TESTS PASSED (34 ctest tests).
 - `./build/RelWithDebInfo/tests/kspcore_tests | grep -E "test cases|assertions"`: 464 test cases, 826,521 assertions, 0 failed; `-tc="WP-40*"`: 11 cases, 95,023 assertions.
-- WSL clang: see the final report of the WP-40 session (Linux unit takes 45+ minutes on /mnt/c).
+- WSL (Ubuntu 24.04) from the worktree, after the gatekeeper fixes (`EditorReRootContext` moved to namespace scope: clang and gcc rejected the nested struct with default member initializers; `std::sqrt` replaced by `dotnet::Math::Sqrt`): `./run_tests.sh -f` (clang, linux-rel) EXIT 0, 34 of 34 ctest tests; `./run_tests.sh -p linux-gcc-rel -f` EXIT 0, 34 of 34. Windows unit after the fixes: 464 cases, 826,522 assertions (WP-40 CHECK(restoredLinks <= 14) added), WP-40 and WP-24 reference tests 0 ULP. The Linux unit binary runs the same doctest cases (counts equal to Windows).
 

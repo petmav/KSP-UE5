@@ -30,3 +30,6 @@ Remaining (coordinator list): 1 commit (rm full_run.log); 2 single Euler/eulerAn
 
 ## Final slice (done)
 Single Euler/eulerAngles impl (commit 841480d5), cite fixes, merge main, Windows -Fresh 34/34, unit 464 cases / 826,521 assertions (WP-40: 11 / 95,023), STATUS section + row 30 written. WSL clang run started in background, log /tmp/wp40_clang.log (WSL side).
+
+## Gatekeeper fixes (done)
+Commit 3d236465: Linux compile blocker, dotnet sqrt, CoM guard, test check; Windows 34/34; WSL clang and gcc EXIT 0 34/34.
