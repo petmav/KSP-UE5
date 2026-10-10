@@ -235,3 +235,17 @@ std::vector<CelestialBody*> ChildrenOf(CelestialBody* parent);  // :99
 }  // namespace CelestialUtilities
 
 }  // namespace ksp::Contracts::Lite
+
+template <>
+struct ksp::dotnet::EnumTraits<ksp::FinePrint::Utilities::ProgressType> {
+    using E = ksp::FinePrint::Utilities::ProgressType;
+    static constexpr bool flags = false;
+    static constexpr EnumMember<E> members[] = {
+        {E::NULL_, "NULL"}, {E::ALTITUDERECORD, "ALTITUDERECORD"}, {E::BASECONSTRUCTION, "BASECONSTRUCTION"}, {E::CREWTRANSFER, "CREWTRANSFER"},
+        {E::CREWRECOVERY, "CREWRECOVERY"}, {E::DEPTHRECORD, "DEPTHRECORD"}, {E::DISTANCERECORD, "DISTANCERECORD"}, {E::DOCKING, "DOCKING"},
+        {E::ESCAPE, "ESCAPE"}, {E::FIRSTLAUNCH, "FIRSTLAUNCH"}, {E::FLAGPLANT, "FLAGPLANT"}, {E::FLIGHT, "FLIGHT"}, {E::FLYBY, "FLYBY"},
+        {E::FLYBYRETURN, "FLYBYRETURN"}, {E::LANDING, "LANDING"}, {E::LANDINGRETURN, "LANDINGRETURN"}, {E::ORBIT, "ORBIT"},
+        {E::ORBITRETURN, "ORBITRETURN"}, {E::POINTOFINTEREST, "POINTOFINTEREST"}, {E::REACHSPACE, "REACHSPACE"}, {E::RENDEZVOUS, "RENDEZVOUS"},
+        {E::SCIENCE, "SCIENCE"}, {E::SPACEWALK, "SPACEWALK"}, {E::SPEEDRECORD, "SPEEDRECORD"}, {E::SPLASHDOWN, "SPLASHDOWN"},
+        {E::STATIONCONSTRUCTION, "STATIONCONSTRUCTION"}, {E::STUNT, "STUNT"}, {E::SUBORBIT, "SUBORBIT"}, {E::SURFACEEVA, "SURFACEEVA"}};
+};

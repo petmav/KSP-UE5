@@ -97,6 +97,7 @@ add_library(kspcore STATIC
     contracts/templates.cpp
     contracts/templates_recover.cpp
     contracts/templates_parttest.cpp
+    contracts/templates_grandtour.cpp
     contracts/waypoints.cpp
     contracts/contract_register.cpp
     parts/ksp_enums.cpp

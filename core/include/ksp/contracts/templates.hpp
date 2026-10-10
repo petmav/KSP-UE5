@@ -97,6 +97,14 @@ struct TemplateEnvironment {
     static inline std::function<Vector3f(const AvailablePart*)> estimatePartSize;
     // PartHasSeats(partName): InternalModel.seats of the internal of the part (PartLoader.Instance.internalParts). Unset: CrewCapacity > 0.
     static inline std::function<bool(const std::string& partName)> partHasSeats;
+    // The WP-38 FinePrint parameters GrandTour builds (VesselSystemsParameter(null, null, title), VesselDestinationParameter(body, entryType),
+    // LocationAndSituationParameter(body, situation, title, finalObjective)). entryType = FlightLog.EntryType as int. Unset: GrandTour.Generate fails.
+    static inline std::function<std::unique_ptr<ContractParameter>(const std::string& title)> makeVesselSystemsParameter;
+    static inline std::function<std::unique_ptr<ContractParameter>(CelestialBody*, int entryType)> makeVesselDestinationParameter;
+    static inline std::function<std::unique_ptr<ContractParameter>(CelestialBody*, Vessel::Situations, const std::string& title, bool finalObjective)>
+        makeLocationAndSituationParameter;
+    // GrandTour.OnAccepted: VesselSystemsParameter.requireNew -> launchID = HighLogic.CurrentGame.launchID (WP-38 parameter). Unset: nothing.
+    static inline std::function<void(Contract&, uint32_t launchID)> grandTourAccepted;
     static void Reset();
 };
 
@@ -195,6 +203,42 @@ protected:
     CelestialBody* destination = nullptr;
     Vessel::Situations tgtSituation = static_cast<Vessel::Situations>(0);
     bool hauled = false;
+};
+
+// Contracts/Templates/GrandTour.cs:12
+class GrandTour : public Contract {
+public:
+    std::string TypeName() const override { return "GrandTour"; }
+    const std::vector<CelestialBody*>& TargetBodies() const { return targetBodies; }   // :28
+    bool MeetRequirements() override;                                                  // :55
+    std::vector<CelestialBody*> WeightBodies() override { return targetBodies; }       // :60
+    bool HasWeightBodies() override { return true; }
+    std::string GetDescription() override;                                             // :65
+    std::string GetSynopsys() override;                                                // :75
+    std::string GetTitle() override;                                                   // :107
+    std::string MessageCompleted() override;                                           // :166
+    void OnAccepted() override;                                                        // :171
+    std::string GetNotes() override;                                                   // :180
+    void OnLoad(ConfigNode& node) override;                                            // :200
+    void OnSave(ConfigNode& node) override;                                            // :225
+    bool Generate() override;                                                          // :244
+    std::string GetHashString() override;                                              // :540
+    FinePrint::Utilities::ProgressType ProgressTypeValue() const { return progressType; }
+
+private:
+    int TotalBodies() const;                                                           // :30
+    std::string FormattedDestinations() const;                                         // :40
+    void AttemptRandomTour(KSPRandom* generator = nullptr);                            // :317
+    void AttemptFocusedTour(KSPRandom* generator = nullptr);                           // :380
+    std::vector<CelestialBody*> GetFocusedChallenges(FinePrint::Utilities::ProgressType type);    // :437
+    void AttemptFinalDestination(KSPRandom* generator = nullptr);                      // :485
+    std::vector<CelestialBody*> targetBodies;
+    FinePrint::Utilities::ProgressType progressType = FinePrint::Utilities::ProgressType::NULL_;
+    bool finalDestination = false;
+    bool focused = false;
+    CelestialBody* focusBody = nullptr;
+    CelestialBody* finalBody = nullptr;
+    Vessel::Situations finalSituation = static_cast<Vessel::Situations>(0);
 };
 
 }  // namespace ksp::Contracts::Templates

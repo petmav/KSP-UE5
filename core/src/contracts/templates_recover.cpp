@@ -60,6 +60,10 @@ void TemplateEnvironment::Reset() {
     discoverVessel = nullptr;
     estimatePartSize = nullptr;
     partHasSeats = nullptr;
+    makeVesselSystemsParameter = nullptr;
+    makeVesselDestinationParameter = nullptr;
+    makeLocationAndSituationParameter = nullptr;
+    grandTourAccepted = nullptr;
 }
 
 // RecoverAsset.cs:105

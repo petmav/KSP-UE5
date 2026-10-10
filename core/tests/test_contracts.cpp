@@ -33,6 +33,7 @@
 #include "ksp/modules/scenario_runner.hpp"
 #include "ksp/physics/physics_globals.hpp"
 #include "ksp/save/game.hpp"
+#include "ksp/save/crew.hpp"
 #include "ksp/save/game_parameters.hpp"
 #include "ksp/unity/mathf.hpp"
 #include "ksp/unity/random.hpp"
@@ -887,4 +888,544 @@ TEST_CASE("WP-37 ScenarioCustomWaypoints WAYPOINT nodes and ProtoWaypointInfo (f
     CHECK(FindWaypoint(info) == &a);
     FinePrint::WaypointManagerSeam::findWaypoint = nullptr;
     CHECK(FindWaypoint(none) == nullptr);
+}
+
+// ---- parameters: logic nodes, events, envelopes -------------------------------------------------------------------------------------------------
+namespace {
+
+// A contract that holds an explicit parameter tree (no generation)
+class TreeContract : public Contract {
+public:
+    std::string TypeName() const override { return "TreeContract"; }
+    bool MeetRequirements() override { return true; }
+    std::string GetTitle() override { return "tree"; }
+};
+
+}  // namespace
+
+TEST_CASE("WP-37 OR / XOR / EnterOrbit / KerbalDeaths: parameter events complete and fail the contract") {
+    Life37 L;
+    CelestialBody& mun = L.w.Body("Mun");
+    CelestialBody& minmus = L.w.Body("Minmus");
+    // OR(EnterOrbit(Mun), EnterOrbit(Minmus)): either completes the OR, which completes the (only) top level parameter
+    {
+        TreeContract c;
+        c.agent = L.w.agents->GetAgent("Kerbodyne");
+        ContractParameter* orp = c.AddParameter(std::make_unique<Parameters::OR>());
+        orp->AddParameter(std::make_unique<Parameters::EnterOrbit>(&mun));
+        orp->AddParameter(std::make_unique<Parameters::EnterOrbit>(&minmus));
+        c.state = Contract::State::Offered;
+        CHECK(c.Accept());
+        CHECK(orp->State() == ParameterState::Incomplete);
+        GE::VesselSituation::onOrbit.Fire(nullptr, &minmus);
+        CHECK(orp->GetParameter(1)->State() == ParameterState::Complete);
+        CHECK(orp->GetParameter(0)->State() == ParameterState::Incomplete);
+        CHECK(orp->State() == ParameterState::Complete);
+        CHECK(c.ContractState() == Contract::State::Completed);
+        CHECK(orp->HashString() == "ORMunMinmus");
+    }
+    // XOR: exactly one complete child -> Complete; a second one makes it Incomplete again
+    {
+        TreeContract c;
+        c.agent = L.w.agents->GetAgent("Kerbodyne");
+        ContractParameter* x = c.AddParameter(std::make_unique<Parameters::XOR>());
+        x->AddParameter(std::make_unique<Parameters::EnterSOI>(&mun));
+        x->AddParameter(std::make_unique<Parameters::EnterSOI>(&minmus));
+        x->SetDisableOnStateChange(false);
+        c.state = Contract::State::Offered;
+        c.Accept();
+        GE::VesselSituation::onFlyBy.Fire(nullptr, &mun);
+        CHECK(x->State() == ParameterState::Complete);
+        CHECK(c.ContractState() == Contract::State::Completed);
+    }
+    // KerbalDeaths(2): starts Complete, the second CREW_KILLED fails it and the contract (AllowPartialFailure is false)
+    {
+        TreeContract c;
+        c.agent = L.w.agents->GetAgent("Kerbodyne");
+        ContractParameter* kd = c.AddParameter(std::make_unique<Parameters::KerbalDeaths>(2));
+        CHECK(kd->State() == ParameterState::Complete);
+        CHECK(kd->Title() == Localizer37::Format("#autoLOC_269684", {"2"}));
+        c.state = Contract::State::Offered;
+        c.Accept();
+        EventReport report(FlightEvents::CREW_KILLED, nullptr, "Jeb");
+        GE::onCrewKilled.Fire(&report);
+        CHECK(kd->State() == ParameterState::Complete);
+        GE::onCrewKilled.Fire(&report);
+        CHECK(kd->State() == ParameterState::Failed);
+        CHECK(c.ContractState() == Contract::State::Failed);
+        ConfigNode n("PARAM");
+        kd->Save(n);
+        CHECK(*n.GetValue("count") == "2");
+        CHECK(*n.GetValue("countMax") == "2");
+        CHECK(*n.GetValue("state") == "Failed");
+    }
+    // events of an unregistered parameter do nothing: a finished contract unregisters its parameters
+    GE::VesselSituation::onOrbit.Fire(nullptr, &mun);
+}
+
+TEST_CASE("WP-37 ReachSituation / ReachSpeedEnvelope / ReachAltitudeEnvelope / ReachFlightEnvelope / ReachDestination checks") {
+    Life37 L;
+    Vessel v;
+    CelestialBody& kerbin = L.w.Body("Kerbin");
+    Parameters::ReachSituation landed(Vessel::Situations::LANDED, "Be ");
+    v.situation = Vessel::Situations::PRELAUNCH;
+    CHECK(landed.checkVesselSituation(&v));  // LANDED accepts PRELAUNCH
+    v.situation = Vessel::Situations::LANDED;
+    CHECK(landed.checkVesselSituation(&v));
+    v.situation = Vessel::Situations::FLYING;
+    CHECK_FALSE(landed.checkVesselSituation(&v));
+    Parameters::ReachSituation pre(Vessel::Situations::PRELAUNCH, "");
+    v.situation = Vessel::Situations::LANDED;
+    v.landedAt = "Runway";
+    CHECK(pre.checkVesselSituation(&v));
+    v.landedAt = "LaunchPad";
+    CHECK(pre.checkVesselSituation(&v));
+    v.landedAt = "Somewhere";
+    CHECK_FALSE(pre.checkVesselSituation(&v));
+    CHECK(landed.Title() == "Be " + Parameters::ReachSituation::GetTitleStringShort(Vessel::Situations::LANDED));
+    CHECK(Parameters::ReachSituation::GetTitleStringShort(static_cast<Vessel::Situations>(128)) == Localizer37::Format("#autoLOC_268861"));
+    // ReachSpeedEnvelope (the orbital branch tests srfSpeed >= minSpeed, sic)
+    Parameters::ReachSpeedEnvelope spd(100.0f, 500.0f);
+    v.situation = Vessel::Situations::FLYING;
+    v.srfSpeed = 99.9;
+    CHECK_FALSE(spd.checkVesselWithinEnvelope(&v));
+    v.srfSpeed = 100.0;
+    CHECK(spd.checkVesselWithinEnvelope(&v));
+    v.srfSpeed = 500.0;
+    CHECK_FALSE(spd.checkVesselWithinEnvelope(&v));
+    v.situation = Vessel::Situations::ORBITING;
+    v.obt_speed = 499.0;
+    v.srfSpeed = 120.0;
+    CHECK(spd.checkVesselWithinEnvelope(&v));
+    v.srfSpeed = 50.0;
+    CHECK_FALSE(spd.checkVesselWithinEnvelope(&v));
+    v.situation = Vessel::Situations::DOCKED;
+    CHECK_FALSE(spd.checkVesselWithinEnvelope(&v));
+    CHECK(spd.minSpeed == 100.0);
+    CHECK(Parameters::ReachSpeedEnvelope().maxSpeed == std::numeric_limits<double>::max());
+    CHECK(Parameters::ReachSpeedEnvelope(500.0f, 100.0f).minSpeed == 100.0);  // Math.Min / Math.Max of the arguments
+    // load / save (SystemUtilities.LoadNode defaults)
+    ConfigNode sn("PARAM");
+    spd.Save(sn);
+    CHECK(*sn.GetValue("minSpd") == "100");
+    Parameters::ReachSpeedEnvelope spd2;
+    spd2.Load(sn);
+    CHECK(spd2.minSpeed == 100.0);
+    CHECK(spd2.maxSpeed == 500.0);
+    Parameters::ReachSpeedEnvelope spd3;
+    ConfigNode empty("PARAM");
+    spd3.Load(empty);
+    CHECK(spd3.minSpeed == 0.0);
+    CHECK(spd3.maxSpeed == std::numeric_limits<double>::max());
+    // ReachFlightEnvelope
+    Parameters::ReachFlightEnvelope fe(&kerbin, Vessel::Situations::FLYING, nullptr, 20000.0f, 5000.0f, 600.0f, 200.0f, "");
+    CHECK(fe.useAltLimits);
+    CHECK(fe.useSpdLimits);
+    v.situation = Vessel::Situations::FLYING;
+    v.srfSpeed = 300.0;
+    v.altitude = 10000.0;
+    CHECK(fe.checkVesselWithinFlightEnvelope(&v));
+    v.altitude = 4999.0;
+    CHECK_FALSE(fe.checkVesselWithinFlightEnvelope(&v));
+    v.altitude = 20000.0;
+    CHECK_FALSE(fe.checkVesselWithinFlightEnvelope(&v));
+    v.situation = Vessel::Situations::LANDED;
+    CHECK_FALSE(fe.checkVesselWithinFlightEnvelope(&v));  // not the envelope situation
+    // GetTitle mutates the stored title (sic): a second call appends again
+    const std::string t1 = fe.Title();
+    const std::string t2 = fe.Title();
+    CHECK(t2.size() > t1.size());
+    // ReachDestination
+    Parameters::ReachDestination rd(&kerbin, "Reach ");
+    CHECK(rd.Title() == "Reach " + Localizer37::Format("#autoLOC_7001301", {kerbin.displayName()}));
+    // parameter ids and the tree helpers
+    TreeContract c;
+    c.agent = L.w.agents->GetAgent("Kerbodyne");
+    c.AddParameter(std::make_unique<Parameters::ReachDestination>(&kerbin, ""), "dest");
+    CHECK(c.GetParameter("dest") != nullptr);
+    CHECK(c.GetParameterT<Parameters::ReachDestination>() != nullptr);
+    CHECK(c.GetParameterT<Parameters::ReachDestination>(std::string("dest")) != nullptr);
+    CHECK(c.GetParameterT<Parameters::ReachDestination>(std::string("other")) == nullptr);
+    CHECK(c.GetParameterOfType("ReachDestination") != nullptr);
+    c.RemoveParameter("dest");
+    CHECK(c.ParameterCount() == 0);
+}
+
+TEST_CASE("WP-37 Acquire / Recover parameters: kerbals, parts, save format") {
+    Life37 L;
+    TreeContract c;
+    c.agent = L.w.agents->GetAgent("Kerbodyne");
+    auto* ac = static_cast<Parameters::AcquireCrew*>(c.AddParameter(std::make_unique<Parameters::AcquireCrew>("Get Jeb", Parameters::AcquireCrew::CompleteCondition::All)));
+    ac->AddKerbal("Jebediah Kerman");
+    ac->AddKerbal("Jebediah Kerman");  // no duplicate
+    ac->AddKerbal("Bill Kerman");
+    auto* ap = static_cast<Parameters::AcquirePart*>(c.AddParameter(std::make_unique<Parameters::AcquirePart>("Get parts")));
+    ap->AddPart(11u);
+    ap->AddPart(11u);
+    ap->AddPart(22u);
+    auto* rk = static_cast<Parameters::RecoverKerbal*>(c.AddParameter(std::make_unique<Parameters::RecoverKerbal>("Recover Jeb")));
+    rk->AddKerbal("Jebediah Kerman");
+    auto* rp = static_cast<Parameters::RecoverPart*>(c.AddParameter(std::make_unique<Parameters::RecoverPart>(
+        "Recover part", Parameters::RecoverPart::CompleteCondition::AllCandidates, Parameters::RecoverPart::CompleteCondition::AnyCandidate)));
+    rp->AddPartToRecover(11u);
+    rp->AddPartToRecover(11u);
+    CHECK(ac->kerbalsToRecover.size() == 2);
+    CHECK(ap->partsToRecover.size() == 2);
+    CHECK(rp->partsToRecover.size() == 1);
+    ConfigNode n1("PARAM"), n2("PARAM"), n3("PARAM"), n4("PARAM");
+    ac->Save(n1);
+    ap->Save(n2);
+    rk->Save(n3);
+    rp->Save(n4);
+    CHECK(*n1.GetValue("winOn") == "0");  // (int)winCondition
+    CHECK(n1.GetValues("kerbal") == std::vector<std::string>{"Jebediah Kerman", "Bill Kerman"});
+    CHECK(n2.GetValues("part") == std::vector<std::string>{"11", "22"});
+    CHECK(*n3.GetValue("failOn") == "All");
+    CHECK(*n3.GetValue("winOn") == "All");
+    CHECK(*n4.GetValue("winOn") == "AllCandidates");
+    CHECK(*n4.GetValue("failOn") == "AnyCandidate");
+    Parameters::AcquireCrew ac2;
+    ac2.Load(n1);
+    CHECK(ac2.kerbalsToRecover == ac->kerbalsToRecover);
+    CHECK(ac2.winCondition == Parameters::AcquireCrew::CompleteCondition::All);
+    Parameters::RecoverPart rp2;
+    rp2.Load(n4);
+    CHECK(rp2.partsToRecover == rp->partsToRecover);
+    CHECK(rp2.winCondition == Parameters::RecoverPart::CompleteCondition::AllCandidates);
+    // the AcquireCrew / AcquirePart events (events are live once the contract is Active)
+    // Contract.SetState registers the parameters BEFORE it stores the new state, so AcquireCrew.OnRegister (`Root.ContractState == Active`) only
+    // subscribes when the contract is registered again while Active (ContractSystem.RegisterContracts after a load): do that here
+    c.state = Contract::State::Active;
+    c.Register();
+    EventReport killed(FlightEvents::CREW_KILLED, nullptr, "Bill Kerman");
+    GE::onCrewKilled.Fire(&killed);  // All: any death fails the AcquireCrew
+    CHECK(ac->State() == ParameterState::Failed);
+}
+
+// ---- PartTestConstraint / ModuleTestSubject vs the part cfgs ------------------------------------------------------------------------------------------
+TEST_CASE("WP-37 PartTestConstraint.Load over every ModuleTestSubject of the stock parts vs the reference (1426 CONSTRAINT nodes)") {
+    int constraints = 0, parts = 0;
+    const std::string base = GameData37();
+    for (const json& p : Ref37()["part_constraints"]) {
+        ConfigNode::NodePtr root = ConfigNode::Load(base + "/" + p["file"].get<std::string>());
+        REQUIRE(root);
+        ConfigNode* part = nullptr;
+        for (ConfigNode* n : root->GetNodes("PART"))
+            if (n->GetValue("name") == std::optional<std::string>(p["part"].get<std::string>())) part = n;
+        REQUIRE(part != nullptr);
+        ConfigNode* mod = nullptr;
+        for (ConfigNode* m : part->GetNodes("MODULE"))
+            if (m->GetValue("name") == std::optional<std::string>("ModuleTestSubject")) mod = m;
+        REQUIRE(mod != nullptr);
+        std::vector<ConfigNode*> nodes = mod->GetNodes("CONSTRAINT");
+        CHECK(nodes.size() == p["total"].get<size_t>());
+        size_t valid = 0;
+        for (ConfigNode* cn : nodes) {
+            PartTestConstraint c(cn);
+            if (!c.valid) continue;
+            REQUIRE(valid < p["valid"].size());
+            const json& r = p["valid"][valid++];
+            INFO(p["part"] << " " << r["type"]);
+            CHECK(dotnet::EnumToString(c.type) == r["type"].get<std::string>());
+            CHECK(dotnet::EnumToString(c.test) == r["test"].get<std::string>());
+            CHECK(c.body == r["body"].get<std::string>());
+            CHECK(c.prestige == r["prestige"].get<std::string>());
+            CHECK(c.value == r["value"].get<std::string>());
+            CHECK(c.valueB == r["valueB"].get<bool>());
+            CHECK(c.valueI == r["valueI"].get<uint32_t>());
+            CHECK(dotnet::EnumToString(c.valueR) == r["valueR"].get<std::string>());
+            CHECK(c.situationMask == r["situationMask"].get<uint32_t>());
+            if (r["valueD"].is_null())
+                CHECK(std::isnan(c.valueD));
+            else
+                CHECK_F64(c.valueD, r["valueD"].get<double>());
+            ++constraints;
+        }
+        CHECK(valid == p["valid"].size());
+        ++parts;
+    }
+    CHECK(parts == 75);
+    CHECK(constraints == 1426);
+}
+
+TEST_CASE("WP-37 PartTestConstraint tests, body / prestige / situation availability") {
+    World37 w;
+    ConfigNode alt("CONSTRAINT");
+    alt.AddValue("type", "ALTITUDE");
+    alt.AddValue("test", "GT");
+    alt.AddValue("value", "1000");
+    PartTestConstraint gt(&alt);
+    CHECK(gt.valid);
+    CHECK(gt.Test(1000.5));
+    CHECK_FALSE(gt.Test(1000.0));
+    CHECK(gt.Test(1001));  // the int overload compares with valueI (uint)
+    CHECK_FALSE(gt.Test(999));
+    ConfigNode bad("CONSTRAINT");
+    bad.AddValue("type", "ALTITUDE");
+    bad.AddValue("value", "high");  // not a number: invalid
+    CHECK_FALSE(PartTestConstraint(&bad).valid);
+    ConfigNode badType("CONSTRAINT");
+    badType.AddValue("type", "WEIGHT");
+    CHECK_FALSE(PartTestConstraint(&badType).valid);
+    CHECK_FALSE(PartTestConstraint().valid);
+    CHECK_FALSE(PartTestConstraint(&bad).Test(1.0));  // an invalid constraint tests false
+    ConfigNode atm("CONSTRAINT");
+    atm.AddValue("type", "ATMOSPHERE");
+    atm.AddValue("value", "True");
+    PartTestConstraint a(&atm);
+    CHECK(a.valid);
+    CHECK(a.Test(true));
+    CHECK_FALSE(a.Test(false));
+    ConfigNode sit("CONSTRAINT");
+    sit.AddValue("type", "SITUATION");
+    sit.AddValue("test", "EQ");
+    sit.AddValue("value", "24");  // FLYING (8) | SUB_ORBITAL (16)
+    PartTestConstraint s(&sit);
+    CHECK(s.valid);
+    CHECK(s.Test(8u));
+    CHECK_FALSE(s.Test(32u));
+    std::vector<PartTestConstraint> list{s};
+    CHECK(PartTestConstraint::SituationAvailable(list, Vessel::Situations::FLYING));
+    CHECK_FALSE(PartTestConstraint::SituationAvailable(list, Vessel::Situations::ORBITING));
+    ConfigNode body("CONSTRAINT");
+    body.AddValue("type", "ATMOSPHERE");
+    body.AddValue("value", "False");
+    body.AddValue("body", "_NotHome");
+    body.AddValue("prestige", "Significant");
+    PartTestConstraint b(&body);
+    CHECK(b.BodyAvailable(&w.Body("Mun")));
+    CHECK_FALSE(b.BodyAvailable(&w.Body("Kerbin")));
+    CHECK(b.PrestigeAvailable(ContractPrestige::Significant));
+    CHECK_FALSE(b.PrestigeAvailable(ContractPrestige::Trivial));
+    CHECK(PartTestConstraint().PrestigeAvailable(ContractPrestige::Exceptional));
+    CHECK_FALSE(PartTestConstraint().SituationAvailable(Vessel::Situations::LANDED));  // invalid -> false
+}
+
+TEST_CASE("WP-37 ModuleTestSubject is a real PartModule on the stock parts (HeatShield0)") {
+    Game15 g;
+    const AvailablePart& info = g.Info("HeatShield0");
+    REQUIRE(info.partPrefab != nullptr);
+    PartModule* m = info.partPrefab->FindModuleOfClass("ModuleTestSubject");
+    REQUIRE(m != nullptr);
+    auto* mts = dynamic_cast<ModuleTestSubject*>(m);
+    REQUIRE(mts != nullptr);
+    const json* ref = nullptr;
+    for (const json& p : Ref37()["part_constraints"])
+        if (p["part"].get<std::string>() == "HeatShield0") ref = &p;
+    REQUIRE(ref != nullptr);
+    CHECK(mts->constraints.size() == (*ref)["valid"].size());
+    CHECK(mts->situationMask() == static_cast<uint32_t>(std::stoul((*ref)["situationMask"].get<std::string>())));
+    CHECK(mts->useStaging() == ((*ref)["useStaging"].get<std::string>() == "True"));
+    CHECK(mts->SituationAvailable(Vessel::Situations::FLYING));
+    CHECK_FALSE(mts->IsStageable());
+    // a second instance (Instantiate) keeps the constraints
+    auto p2 = Part::Instantiate(*info.partPrefab);
+    auto* mts2 = dynamic_cast<ModuleTestSubject*>(p2->FindModuleOfClass("ModuleTestSubject"));
+    REQUIRE(mts2 != nullptr);
+    CHECK(mts2->constraints.size() == mts->constraints.size());
+}
+
+// ---- predicates -------------------------------------------------------------------------------------------------------------------------------------
+TEST_CASE("WP-37 predicates: AgentParts / AgentFlag load and save, LaunchID date capture, IsActiveVessel") {
+    Life37 L;
+    TreeContract c;
+    c.agent = L.w.agents->GetAgent("Kerbodyne");
+    Agents::Agent* kerbodyne = L.w.agents->GetAgent("Kerbodyne");
+    REQUIRE(kerbodyne != nullptr);
+    Predicates::AgentParts ap(&c, kerbodyne, 2);
+    CHECK(ap.Description() == Localizer37::Format("Vessel must contain at least <<1>> parts made by <<2>>", {"2", kerbodyne->Title()}));
+    Predicates::AgentParts ap1(&c, kerbodyne, 1);
+    CHECK(ap1.Description() == Localizer37::Format("#autoLOC_271049", {kerbodyne->Title()}));
+    ConfigNode n("PREDICATE");
+    ap.Save(n);
+    CHECK(*n.GetValue("agent") == "Kerbodyne");
+    CHECK(*n.GetValue("count") == "2");
+    Predicates::AgentParts ap2(&c);
+    ap2.Load(n);
+    CHECK(ap2.PartCount() == 2);
+    CHECK(ap2.GetAgent() == kerbodyne);
+    Predicates::AgentFlag af(&c, kerbodyne);
+    ConfigNode n2("PREDICATE");
+    af.Save(n2);
+    Predicates::AgentFlag af2(&c);
+    af2.Load(n2);
+    CHECK(af2.GetAgent() == kerbodyne);
+    // LaunchID captures the launch id and the date when the contract becomes Active
+    c.state = Contract::State::Offered;
+    {
+        Predicates::LaunchID lid(&c);
+        L.w.game.launchID = 42;
+        Planetarium::fetch->time = 777.0;
+        L.w.game.flightState->universalTime = 777.0;
+        c.Accept();
+        CHECK(lid.Date() == 777.0);
+        CHECK_THROWS(lid.ID());  // `public uint ID => ID;` recurses forever in the C#
+        ConfigNode ln("PREDICATE");
+        lid.Save(ln);
+        CHECK(*ln.GetValue("launchID") == "42");
+        CHECK(*ln.GetValue("date") == "777");
+        Vessel v;
+        v.launchTime = 800.0;
+        CHECK(lid.Test(&v));
+        v.launchTime = 700.0;
+        CHECK_FALSE(lid.Test(&v));
+    }
+    CHECK(c.OnStateChange.EventName() == "OnStateChange");
+    Predicates::IsActiveVessel iav(&c);
+    Vessel v;
+    CHECK_FALSE(iav.Test(&v));
+    FlightRegistry::ActiveVessel = &v;
+    CHECK(iav.Test(&v));
+    FlightRegistry::ActiveVessel = nullptr;
+}
+
+// ---- templates that need the part database / R&D: PartTest and RecoverAsset state, text and node formats -------------------------------------------
+TEST_CASE("WP-37 PartTest template: situation strings, OnLoad / OnSave and the parameter hash by repeatability") {
+    Life37 L;
+    Templates::PartTest t;
+    t.agent = L.w.agents->GetAgent("Kerbodyne");
+    CelestialBody& mun = L.w.Body("Mun");
+    CelestialBody& kerbin = L.w.Body("Kerbin");
+    // GetSituationString(sit, body, biome) for the haul and non-haul variants
+    CHECK(t.GetSituationString(Vessel::Situations::FLYING, &kerbin, "") == Localizer37::Format("#autoLOC_6100009", {kerbin.displayName()}));
+    CHECK(t.GetSituationString(Vessel::Situations::LANDED, &mun, "") == Localizer37::Format("#autoLOC_6100012", {mun.displayName()}));
+    CHECK(t.GetSituationString(Vessel::Situations::PRELAUNCH, &kerbin, "") == Localizer37::Format("#autoLOC_6100007"));
+    CHECK(t.GetSituationString(Vessel::Situations::DOCKED, &kerbin, "") == "No situation report available");
+    CHECK(t.GetSituationString(Vessel::Situations::ORBITING, &mun, "Highlands") == Localizer37::Format("#autoLOC_6100029", {mun.displayName(), "Highlands"}));
+    // node round trip
+    ConfigNode node("CONTRACT");
+    node.AddValue("part", "HeatShield0");
+    node.AddValue("haul", "True");
+    node.AddValue("dest", static_cast<int32_t>(mun.flightGlobalsIndex));
+    node.AddValue("sit", "ORBITING");
+    node.AddValue("exp", "True");
+    t.OnLoad(node);
+    CHECK(t.Hauled());
+    CHECK(t.Destination() == &mun);
+    CHECK(t.TargetSituation() == Vessel::Situations::ORBITING);
+    CHECK(t.PartIsExperimental);
+    CHECK(t.TargetPart() != nullptr);
+    CHECK(t.PartName == t.TargetPart()->title);
+    ConfigNode out("CONTRACT");
+    t.OnSave(out);
+    CHECK(*out.GetValue("part") == "HeatShield0");
+    CHECK(*out.GetValue("haul") == "True");
+    CHECK(*out.GetValue("dest") == dotnet::FormatInt64(mun.flightGlobalsIndex));
+    CHECK(*out.GetValue("sit") == "ORBITING");
+    // Contracts.Parameters.PartTest hash: ALWAYS adds the unique id, BODYANDSITUATION the body and situation, ONCEPERPART only the part
+    Parameters::PartTest p(t.TargetPart(), std::nullopt, 0, &mun, Vessel::Situations::ORBITING, "uid", false);
+    CHECK(p.HashString() == "HeatShield0uid");
+    p.repeatability = 1;
+    CHECK(p.HashString() == "HeatShield0MunORBITING");
+    p.repeatability = 2;
+    CHECK(p.HashString() == "HeatShield0");
+    ConfigNode pn("PARAM");
+    p.Save(pn);
+    CHECK(*pn.GetValue("repeatability") == "ONCEPERPART");
+    CHECK_FALSE(pn.HasValue("notes"));  // null notes are not written
+}
+
+TEST_CASE("WP-37 RecoverAsset template: multiplier, hash, node formats and the parameter wiring with a spawn seam") {
+    Life37 L;
+    Templates::TemplateEnvironment::Reset();
+    Templates::RecoverAsset r;
+    r.agent = L.w.agents->GetAgent("Kerbodyne");
+    ConfigNode node("CONTRACT");
+    node.AddValue("targetBody", static_cast<int32_t>(L.w.Body("Mun").flightGlobalsIndex));
+    node.AddValue("kerbalName", "Jebediah Kerman");
+    node.AddValue("partName", "mk1pod.v2");
+    node.AddValue("partID", static_cast<uint32_t>(4242));
+    node.AddValue("recoveryLocation", static_cast<int32_t>(1));
+    node.AddValue("recoveryType", static_cast<int32_t>(1));
+    L.w.game.CrewRoster = std::make_shared<KerbalRoster>(Game_Modes::CAREER);
+    L.w.game.CrewRoster->AddCrewMember(std::make_shared<ProtoCrewMember>(ProtoCrewMember_KerbalType::Crew, "Jebediah Kerman"));
+    r.OnLoad(node);
+    CHECK(r.TargetBody() == &L.w.Body("Mun"));
+    CHECK(r.Location() == Templates::RecoverAsset::RecoveryLocation::ORBITLOW);
+    CHECK(r.Type() == Templates::RecoverAsset::RecoveryType::KERBAL);
+    CHECK(r.PartID() == 4242u);
+    CHECK(r.PartNameValue() == "mk1pod.v2");
+    CHECK(r.RecoveryKerbal() != nullptr);
+    ConfigNode out("CONTRACT");
+    r.OnSave(out);
+    CHECK(*out.GetValue("recoveryLocation") == "1");
+    CHECK(*out.GetValue("recoveryType") == "1");
+    CHECK(*out.GetValue("partID") == "4242");
+    // OnAccepted calls the spawn seam (the vessel creation is WP-38 / WP-19), then wires the part into the parameters
+    bool spawned = false, land = true;
+    Templates::TemplateEnvironment::spawnRecoveryVessels = [&](Templates::RecoverAsset& a, bool l) {
+        spawned = true;
+        land = l;
+        a.SetPartID(77u);
+    };
+    r.AddParameter(std::make_unique<Parameters::AcquireCrew>("crew"));
+    r.AddParameter(std::make_unique<Parameters::RecoverKerbal>("recover"));
+    r.OnAccepted();
+    CHECK(spawned);
+    CHECK_FALSE(land);
+    CHECK(r.GetParameterT<Parameters::AcquireCrew>()->kerbalsToRecover.size() == 1);
+    CHECK(r.GetParameterT<Parameters::RecoverKerbal>()->kerbalsToRecover.size() == 1);
+    Templates::TemplateEnvironment::Reset();
+}
+
+// ---- GrandTour: structure, rewards from the visited bodies, the node format (the WP-38 parameter classes are test stand-ins) ------------------------------
+TEST_CASE("WP-37 GrandTour template: tour selection, parameter wiring, reward sums and node round trip (WP-38 parameters are stand-ins)") {
+    Life37 L;
+    Templates::TemplateEnvironment::Reset();
+    Templates::TemplateEnvironment::makeVesselSystemsParameter = [](const std::string& title) { return std::make_unique<Parameters::AcquirePart>(title); };
+    Templates::TemplateEnvironment::makeVesselDestinationParameter = [](CelestialBody* b, int) { return std::make_unique<Parameters::EnterSOI>(b); };
+    Templates::TemplateEnvironment::makeLocationAndSituationParameter = [](CelestialBody* b, Vessel::Situations, const std::string&, bool) {
+        return std::make_unique<Parameters::ReachDestination>(b, "");
+    };
+    // many bodies flown by (the Flyby node of the body subtrees): Mun, Minmus, Duna, Eve, Moho, Ike, Eeloo, Dres
+    ConfigNode scen("SCENARIO");
+    ConfigNode* prog = scen.AddNode("Progress");
+    for (const char* b : {"Kerbin", "Mun", "Minmus", "Duna", "Eve", "Moho", "Ike", "Eeloo", "Dres"}) {
+        ConfigNode* bn = prog->AddNode(b);
+        bn->AddNode("Orbit")->AddValue("completed", 0.0);
+        if (std::string(b) != "Kerbin") bn->AddNode("Flyby")->AddValue("completed", 0.0);
+    }
+    L.w.pt->OnLoad(scen);
+    int generated = 0;
+    for (int seed = 1; seed < 4000 && generated < 6; ++seed) {
+        Templates::GrandTour probe;
+        // MeetRequirements: (float)(HashNumber((uint)MissionSeed) % 100) <= Rarity (5)
+        const std::unique_ptr<Contract> c = L.cs.GenerateContract(seed, seed % 2 ? ContractPrestige::Significant : ContractPrestige::Exceptional, "GrandTour");
+        const bool meets = static_cast<float>(Lite::HashNumber(static_cast<uint32_t>(seed)) % 100u) <= 5.0f;
+        if (!meets) {
+            CHECK(c == nullptr);
+            continue;
+        }
+        if (c == nullptr) continue;  // e.g. not enough bodies for the prestige
+        ++generated;
+        auto* gt = dynamic_cast<Templates::GrandTour*>(c.get());
+        REQUIRE(gt != nullptr);
+        INFO("seed " << seed);
+        const auto& bodies = gt->TargetBodies();
+        REQUIRE(bodies.size() >= 1);
+        // one VesselSystems stand-in, then one destination parameter per target body, then the final one when there is a final destination
+        CHECK(c->ParameterCount() >= static_cast<int>(bodies.size()) + 1);
+        CHECK(c->GetParameter(0)->TypeName() == "AcquirePart");
+        for (size_t i = 0; i < bodies.size(); ++i) CHECK(static_cast<Parameters::EnterSOI*>(c->GetParameter(static_cast<int>(i) + 1))->TargetBody() == bodies[i]);
+        // Funds.BaseAdvance summed over the bodies: ScoreProgressType * RecoveryValue (before the prestige / agent factors): the reward grows with the tour
+        CHECK(c->FundsAdvance > 0.0);
+        CHECK_FALSE(c->Title().empty());
+        CHECK_FALSE(c->Synopsys().empty());
+        CHECK_FALSE(c->Description().empty());
+        CHECK(c->Synopsys().find(bodies[0]->displayName().substr(0, bodies[0]->displayName().find('^'))) != std::string::npos);  // Lingoona drops the ^N gender tag
+        // node format
+        ConfigNode saved("CONTRACT");
+        c->Save(saved);
+        CHECK(saved.GetValues("body").size() == bodies.size());
+        CHECK(*saved.GetValue("type") == "GrandTour");
+        L.cs.contracts.clear();
+        L.cs.contracts.push_back(std::make_unique<Templates::GrandTour>());
+        auto& loaded = *L.cs.contracts.back();
+        REQUIRE(Contract::Load(loaded, *saved.CreateCopy()));
+        ConfigNode saved2("CONTRACT");
+        loaded.Save(saved2);
+        CHECK(saved2.ToString() == saved.ToString());
+    }
+    CHECK(generated >= 1);
+    Templates::TemplateEnvironment::Reset();
 }

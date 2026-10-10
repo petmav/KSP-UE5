@@ -213,6 +213,7 @@ void ContractSystem::RegisterStockTypes() {
     using namespace Templates;
     RegisterContractType("PlantFlag", [] { return std::make_unique<PlantFlag>(); });
     RegisterContractType("CollectScience", [] { return std::make_unique<CollectScience>(); });
+    RegisterContractType("GrandTour", [] { return std::make_unique<GrandTour>(); });
     RegisterContractType("PartTest", [] { return std::make_unique<PartTest>(); });
     RegisterContractType("RecoverAsset", [] { return std::make_unique<RecoverAsset>(); });
     RegisterParameterType("EnterOrbit", [] { return std::make_unique<Parameters::EnterOrbit>(); });
