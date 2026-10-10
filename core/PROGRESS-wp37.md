@@ -18,3 +18,9 @@ Worktree C:\Projects\KSP-UE5\.worktrees\wp37, branch wp37 (from main 7199d110, w
 4. tests + python reference, STATUS / README
 
 ## Steps
+- Slice 1 (done, commit d97885a6): include/ksp/contracts/{contract,contract_environment,contract_system,agents,text_gen,parameters,predicates,
+  module_test_subject,fineprint_lite,templates,contracts}.hpp + src/contracts/*.cpp. ContractDefsLite (Contracts.cfg), ProgressMilestone /
+  ProgressUtilities / CelestialUtilities ported into ksp::Contracts::Lite (WP-38 will replace). Templates so far: PlantFlag, CollectScience.
+  check_cites.py extended: `// Templates/PlantFlag.cs:N` (sub path) disambiguates same-named files. cites: 0 mismatches.
+- Windows build OK (run_tests.ps1 -BuildOnly).
+- Next: tests/test_contracts.cpp + tools/wp37/contract_reference.py, waypoints, remaining 6 templates, STATUS/README, WSL run.
