@@ -3721,7 +3721,7 @@ phases (built, node removed, re-added, moved away, moved back) including each no
 ### Verification (gatekeeper, HEAD 351bb61d)
 
 - Windows MSVC (`core/build` deleted, `powershell -NoProfile -File core/run_tests.ps1 -Fresh`): 34/34 ctest tests passed (worktree: `corpus.saves` absent); `kspcore_tests`: 478 cases, 761,243 assertions, 0 failed. All 27 `compare_report_*.json` are byte-identical to main's; non-zero entries are only the known WP-17 `capture.deltav_stages` delta-v columns.
-- Linux clang (WSL, `./run_tests.sh -f`): 34/34 passed (configure 128 s, build 315 s, test 3,834 s, `unit` 3,326 s); `kspcore_tests`: 478 cases, 761,227 assertions, 0 failed (16 fewer assertions than MSVC; cause not investigated).
+- Linux clang (WSL, `./run_tests.sh -f`): 34/34 passed (configure 128 s, build 315 s, test 3,834 s, `unit` 3,326 s); `kspcore_tests`: 478 cases, 761,227 assertions, 0 failed (16 fewer assertions than MSVC: explained 2026-10-11, NaN-sign fallback in the WP-03 reference test, see "Small fixes 2026-10-11" item 1).
 - Linux GCC (`./run_tests.sh -p linux-gcc-rel -f`): 34/34 passed (build 245 s, test 2,163 s, `unit` 1,989 s).
 - `tools/wp39/commnet_reference.py` run with `python -I` reproduces `tests/data/wp39_reference.json` byte for byte; `tools/wp28/check_cites.py` on the 7 new / changed `.cpp` files plus `module_command.cpp`: 0 mismatches.
 ## WP-40: editor core (branch `wp40`, from main `ad208205`, merged main `5ba0ff06`)
@@ -3787,7 +3787,7 @@ copies (`ModuleCommand::DefaultQuaternionEuler`, `AutopilotEnvironment::DefaultE
 
 - Windows (this tree, after merging main): `core/build` deleted, `powershell -NoProfile -File core/run_tests.ps1 -Fresh`: ALL TESTS PASSED (34 ctest tests).
 - `./build/RelWithDebInfo/tests/kspcore_tests | grep -E "test cases|assertions"`: 464 test cases, 826,521 assertions, 0 failed; `-tc="WP-40*"`: 11 cases, 95,023 assertions.
-- WSL (Ubuntu 24.04) from the worktree, after the gatekeeper fixes (`EditorReRootContext` moved to namespace scope: clang and gcc rejected the nested struct with default member initializers; `std::sqrt` replaced by `dotnet::Math::Sqrt`): `./run_tests.sh -f` (clang, linux-rel) EXIT 0, 34 of 34 ctest tests; `./run_tests.sh -p linux-gcc-rel -f` EXIT 0, 34 of 34. Windows unit after the fixes: 464 cases, 826,522 assertions (WP-40 CHECK(restoredLinks <= 14) added), WP-40 and WP-24 reference tests 0 ULP. Linux clang unit binary (measured by the gatekeeper): 464 cases, 826,506 assertions, 0 failed (Windows: 826,522; the 16-assertion difference is platform-dependent and was not investigated).
+- WSL (Ubuntu 24.04) from the worktree, after the gatekeeper fixes (`EditorReRootContext` moved to namespace scope: clang and gcc rejected the nested struct with default member initializers; `std::sqrt` replaced by `dotnet::Math::Sqrt`): `./run_tests.sh -f` (clang, linux-rel) EXIT 0, 34 of 34 ctest tests; `./run_tests.sh -p linux-gcc-rel -f` EXIT 0, 34 of 34. Windows unit after the fixes: 464 cases, 826,522 assertions (WP-40 CHECK(restoredLinks <= 14) added), WP-40 and WP-24 reference tests 0 ULP. Linux clang unit binary (measured by the gatekeeper): 464 cases, 826,506 assertions, 0 failed (Windows: 826,522; the 16-assertion difference is the NaN-sign fallback of the WP-03 reference test, see "Small fixes 2026-10-11" item 1).
 
 ## Small fixes 2026-10-11 (wave 5, branch `wpfix5`, from main `7199d110`)
 
