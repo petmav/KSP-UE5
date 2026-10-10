@@ -29,6 +29,12 @@ enum class GameScenes : int {
 // EditorFacility.cs
 enum class EditorFacility : int { None, VAB, SPH };
 
+// SpaceCenterFacility.cs:2 (WP-36 / WP-40 declared it twice; WP-42 needs both headers in one translation unit)
+enum class SpaceCenterFacility : int {
+    Administration, AstronautComplex, LaunchPad, MissionControl, ResearchAndDevelopment, Runway, TrackingStation, SpaceplaneHangar,
+    VehicleAssemblyBuilding
+};
+
 // Game.cs:12 Game.Modes / Game.cs:28 Game.GameStatus
 enum class Game_Modes : int { SANDBOX, CAREER, SCENARIO, SCENARIO_NON_RESUMABLE, SCIENCE_SANDBOX, MISSION, MISSION_BUILDER };
 enum class Game_GameStatus : int { UNSTARTED, ONGOING, FAILED_OR_ABORTED, COMPLETED };
