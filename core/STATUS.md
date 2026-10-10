@@ -1,6 +1,6 @@
 # kspcore status
 
-Updated 2026-10-09 (WP-05). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
+Updated 2026-10-10 (WP-28). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
 (details in README.md). Local git repository in `core/` only, never pushed.
 
 ## Summary
@@ -27,6 +27,8 @@ Updated 2026-10-09 (WP-05). One command: `powershell -NoProfile -ExecutionPolicy
 | 13. WP-21 aerodynamics, numeric part (branch `wp21`) | done: DragCubeList aero half (weights, occlusion, SetDrag / AddSurfaceDragDirection, queries, ForceUpdate), FlightIntegrator aero members (drag models, areas, UpdateAerodynamics with returned forces, DragCubeSetupAndPartAeroStats), ModuleLiftingSurface / ModuleControlSurface / ModuleAeroSurface, thermal-occlusion geometry, aero interfaces; one templated port with a Mono and a .NET float policy; 3 new gates bit-exact (74,253 rows). See "WP-21" below |
 
 | 13. WP-18 craft files and ship construction (branch `wp18`) | done for the engine-agnostic part: ShipConstruct over live `Part`s (`LoadShipWithParts` / `SaveShip` from the parts, costs, masses, naming, ship PartSet), ShipTemplate (whole class), ShipConstruction (paths, backups, load / save, `AssembleForLaunch` over WP-14's assembly, templates through the upgrade pipeline, `GetPartCosts*`, launch-site queries, craft size); new gate `capture.ship_construct` (C5: `GetShipMass` and the per-part masses of 17 crafts, 0 ULP); 26 unit cases (274,042 assertions): round trip of 57 crafts, agreement with the original files, templates vs ships. See "WP-18" |
+
+| 14. WP-28 resource-processing modules (branch `wp28`, from main `289d0c98`) | done (numeric / data side, unit-gated): BaseConverter family (catch-up, efficiency, recipe units), drills, harvester, generator, alternator, jettison, drain, space-object info / resource / analysis, scanners, surveyor, biome scanner; all 26 csv files. `unit` +17 cases / 8,571 assertions; every existing gate unchanged (`capture.part_database` 0 ULP). See the WP-28 section |
 
 ## Test results (all 28 ctest tests pass: Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel)
 
@@ -2386,3 +2388,113 @@ them in `test_staging.cpp`). Build 326 s (clang) / 355 s (GCC) cold on 4 shared 
 
 see `git log --oneline wp14..wp16`.
 
+## WP-28: resource-processing modules (branch `wp28`, from main `289d0c98`)
+
+State: done for the numeric / data side; **unit-gated** (no golden or capture of these modules' runtime behaviour exists). Every ported function cites
+`File.cs:line` of `decompiled/KSP-Decompiled/Assembly-CSharp/`. `capture.part_database` (every KSPField of every module instance) and all other gates are
+unchanged and green (0 ULP, same row counts): the schema entries of all WP-28 module classes already existed (WP-05 / WP-06), the registry now builds the real
+classes for them, and the WP-06 stand-in for `BaseConverter`'s OnAwake / OnLoad was replaced by the full class (same prefab results: the gate proves it).
+
+### File by file
+
+| C# file (csv row) | state | C++ |
+|---|---|---|
+| BaseConverter.cs | ported, all members; deferred: the Unity PAW refresh, `CacheLocalStrings` (the strings are read through `Localizer.Format` at use) | `modules/resource_processing.hpp`, `src/modules/resource_converters.cpp` |
+| BaseDrill.cs | ported | same |
+| ConversionRecipe.cs, ConverterResults.cs | WP-15 already ported them (`resources/resource_types.hpp`); `ResourceRatio::Load` / `Save` were declared there but never defined: defined here (ResourceRatio.cs:31, :55) | `resource_converters.cpp` |
+| ModuleResourceConverter.cs | ported; `GetInfo` (UI text) deferred | `resource_converters.cpp` |
+| ModuleResourceHarvester.cs | ported; `GetInfo` / `GetLocationString` deferred; `FindModelTransform` (impact / intake transform) and `Physics.Raycast` are host hooks (`hasImpactTransform`, `impactRaycast`, `intakeForward`) | same |
+| ModuleAsteroidDrill.cs, ModuleCometDrill.cs | ported (one shared body `ModuleSpaceObjectDrillBase`: the two C# files differ only in class names and two status ids); raycast / `GetComponentUpwards` is the `impactRaycast` hook; `GetInfo` deferred | same |
+| ModuleSpaceObjectInfo.cs, ModuleAsteroidInfo.cs, ModuleCometInfo.cs | ported (`SetupSpaceObjectResources` is bit-exact against the Python reference) | same |
+| ModuleSpaceObjectResource.cs, ModuleAsteroidResource.cs, ModuleCometResource.cs | ported | same |
+| ModuleSpaceObjectAnalysis.cs, ModuleAsteroidAnalysis.cs, ModuleCometAnalysis.cs, ModuleAnalysisResource.cs | ported; `GameEvents.onVesselWasModified` is subscribed / unsubscribed like the C#; `v.FindPartModuleImplementing<ModuleAsteroid>()` runs over the vessel record's part list | same |
+| ModuleGenerator.cs | ported (module adjusters: a list of `float(float)` functions replaces the `AdjusterGeneratorBase` chain); `GetInfo` deferred | `src/modules/resource_generators.cpp` |
+| ModuleAlternator.cs | ported; the engine (`FindEngineNearby` / `IEngineStatus.normalizedOutput`, engine package) and the Serenity rotor are bound by the host (`engineNormalizedOutput`, `rotor` + `rotorNormalizedOutput`); `GetInfo` deferred | same |
+| ModuleFuelJettison.cs | ported | same |
+| ModuleResourceDrain.cs | ported; FX groups are names of `Part::fxGroupNames` with the last `setActive` / `SetPower` recorded (`fxGroupActive`, `fxGroupPower`); `Part.AddForce` is recorded (`addedForces`, the thrust magnitude); PAW (`UI_Resources`) and the GameEvents subscriptions are the host's | same |
+| ModuleResourceScanner.cs | ported; `GetInfo` deferred | `src/modules/resource_scanners.cpp` |
+| ModuleOrbitalScanner.cs | ported; the `OverlayGenerator` singleton is `ResourceProcessingEnvironment::overlay` (state + call counters; rendering and `FetchNextResource`'s cycling belong to the overlay package) | same |
+| ModuleOrbitalSurveyor.cs | ported; `ScienceUtil.GetBestTransmitter` / `ResearchAndDevelopment` are the `transmit` / `addScience` hooks, `GameEvents.OnOrbitalSurveyCompleted` is a counter (it needs a real Vessel / body); `GetInfo` deferred | same |
+| ModuleBiomeScanner.cs | ported; `CBAttributeMapSO.GetAtt` is the `biomeAt` hook | same |
+
+Not in the 26 csv rows and therefore not ported here: **ModuleDeployableSolarPanel.cs** (csv: WP-27; its flux / occlusion maths come with
+ModuleDeployablePart, the task's "solar panel" scope belongs to that package), ModuleAsteroid.cs / ModuleComet.cs (WP-09; their WP-06 mass-modifier stand-ins gained
+`ISpaceObjectMass::SetSpaceObjectMass` = `SetAsteroidMass` / `SetCometMass`), ModuleScienceConverter (science package; still registered as a plain `BaseConverter` like before).
+
+### The host seam (`ResourceProcessingEnvironment`)
+
+`Part.vessel` is still the resource-flow stand-in in tests (`TestVessel`), so modules read the vessel through `ProcessingVessel` records (`vesselOf(part)`;
+`FromVessel(Vessel&)` fills one from the real WP-14 Vessel): landed / splashed / situation / altitude / radarAltitude / lat / lon / atmDensity / srfSpeed /
+srf_vel_direction / main body record / crew effects and levels / parts / ctrlState.mainThrottle. Also plain inputs: UT (`universalTime`, default
+`ResourceEnvironment::universalTime`, then the Planetarium), `Time.timeSinceLevelLoad`, `FlightGlobals.ready`, ModuleCoreHeat's `CoreTemperature` (a property of the
+thermal package), ModuleAnimationGroup's `isDeployed`, the biome lookup, the raycast / transform hooks. Outputs: `screenMessages` (the texts
+`ScreenMessages.PostScreenMessage` would show) and the overlay record. `HighLogic.LoadedScene*`, `CheatOptions`, `TimeWarp.fixedDeltaTime / deltaTime`,
+`ResourceScenario` / `ResourceMap` / `ResourceSetup` are the existing WP-10 / WP-15 services.
+
+### Results (Windows MSVC RelWithDebInfo; Linux below)
+
+| table / test | rows / assertions | max abs / rel / ULP |
+|---|---|---|
+| `unit`: stock cfg sweep (every WP-28 module of every stock part: 10 ModuleResourceConverter, 2 harvesters, 2 + 2 drills, 18 alternators, 2 generators, 3 jettison, 1 drain, 2 resource scanners, 1 orbital scanner, 1 surveyor, potato / comet info, ...) | every resource ratio / output rate / curve point / harvest type equals its MODULE node | exact |
+| `unit`: converter catch-up vs `tools/wp28/processing_reference.py` | 48 scenarios, 420 FixedUpdate steps: lastUpdateTime, catchupRetries, lastTimeFactor, every tank amount, GetEfficiencyMultiplier | 0 / 0 / 0 (bit-identical doubles) |
+| `unit`: `SetupSpaceObjectResources` vs the same reference | 40 cases, 61 abundances (float bits), totals, mass strings | 0 ULP |
+| `unit`: harvester, drills, generator, alternator, jettison, drain, info / analysis, scanners, surveyor, biome scanner | 14 cases | derived from the C# (the derivation is in each comment) |
+| `unit` total | 309 cases / 693,597 assertions (+17 cases / 8,571 assertions) | |
+
+The Python reference shares no code with kspcore (numpy float32 stores per the Mono rule; its own KSPRandom). It models the converter on a simple tank store
+(`AmountAvailable = amount`, `StorageAvailable = max(0, max * fill - amount)`, request / store clamp): the C++ side runs the real `BaseConverter.FixedUpdate` /
+`ResourceConverter.ProcessRecipe` with a `TankBroker` implementing the same store, so the catch-up logic is compared, not the PartSet solver (that is WP-15's).
+
+### KSP quirks reproduced (later code must keep them)
+
+- **The first catch-up step has no retry**: `FixedUpdate` runs `GetDeltaTime()` BEFORE `if (AlwaysActive) IsActivated = true`, and
+  `ModuleResourceConverter.PrepareRecipe` returns null while `IsActivated` is false, so `GetBestDeltaTime` returns the full delta and the first long step is never
+  shortened. (Found by the Python reference, which first modelled it the other way.)
+- `ConvertRecipeToUnits` puts a REQUIREMENT whose resource has density > 1E-09 into the OUTPUT list (`list2`); only massless requirements stay requirements.
+- `GetEfficiencyMultiplier` is a double product of float operands (`EfficiencyBonus * heat * total * crew`), no float store; `_totalEfficiencyModifiers` is 0 until
+  `OnStart` tallies it (a converter used before OnStart produces nothing).
+- `ModuleSpaceObjectInfo.SetupSpaceObjectResources`: `KSPRandom.NextDouble(min, max)` returns `min` without consuming a sample when the range is <= 1 (every
+  percentage range is), and `currentMassVal = totalResourceMass * 1.01f` is a float product passed to a double setter (no float store).
+- `ModuleResourceDrain.LoadResourcesAvailable` adds a fresh status object per resource on each call (`AddUnique` on new references never dedups).
+- `ModuleFuelJettison.ResourceName` has no initialiser: the prefab's field is null but a runtime clone (Unity serialises null strings as "") dumps every resource;
+  kspcore treats a null name as "" in `FuelJettison` / `OnStart`.
+- `ModuleResourceScanner.OnStart` sets the field name before `ResourceDisplayName` is looked up (the first name has an empty resource name).
+
+### Changes outside the WP-28 files (behaviour-preserving for every gate)
+
+- `PartModule::CopySerializedFrom` now deep-copies `resHandler` (input / output `ModuleResource` lists and flags; `ModuleResource::CloneSerialized`):
+  `ModuleResourceHandler` and `ModuleResource` are `[Serializable]`, so a runtime part (Unity Instantiate of the prefab) carries its module resources. WP-15's tests only
+  used prefab modules and explicit `OnLoad`; a generator / alternator on an instantiated part had no outputs before.
+- `ResourceRatio::Load` / `Save` defined (declared since WP-15).
+- `module_behaviours.cpp`: the `BaseConverter` stand-in removed (the full class replaces it), `ISpaceObjectMass` added to the Asteroid / Comet stand-ins.
+
+### Deviations, approximations
+
+- `ToString("0.00")`-style custom formats are `dotnet::FormatDoubleF` (UI texts only; a finite value formats identically).
+- The `CacheLocalStrings` statics are not cached: `Localizer.Format` is called at use (the same text once the localisation is loaded).
+- `Part.vessel` is read through `ProcessingVessel` (see the seam above); `FlightGlobals.currentMainBody` is taken to be the vessel's main body.
+- `MonoUtilities.RefreshPartContextWindow`, `UIPartActionController` (only the `partActionUIContains` hook of WP-15 decides the PAW-only text updates), `ScreenMessages`
+  (texts are recorded), animations and the `GetInfo` UI text are not modelled.
+
+### Needs a new (local) capture: harness dataset `resource_processing` (EDITOR and FLIGHT) to make these a 0 ULP gate
+
+1. `BaseConverter.GetDeltaTime / GetBestDeltaTime` (lastUpdateTime, catchupRetries, the dt of each FixedUpdate) of an ISRU, a fuel cell and a MiniDrill during a scripted
+   time-warp sequence (1x, 5x, 100,000x, then a 6 h rail jump with a full tank, an empty tank and a full output), and the resulting `PartResource.amount` of every part
+   after each step: this gates the catch-up chain through the real PartSet solver.
+2. `GetEfficiencyMultiplier` terms per step (`EfficiencyBonus`, `GetHeatThrottle` at several part / core temperatures, `GetCrewEfficiencyBonus` with crew of levels 0-5
+   and 0-3 specialists, `_totalEfficiencyModifiers`): float32 products.
+3. `ModuleResourceHarvester` abundance requests (`ResourceMap.GetAbundance` in flight, needs the biome map reader) and `_resFlow` per HarvesterType, with the intake
+   multiplier (`srfSpeed`, `atmDensity`, `intakeTransform.forward`).
+4. `ModuleAsteroidDrill` / `ModuleCometDrill`: per-step `_drilledMass`, recipe ratios and `currentMassVal` on a real potato; `SetupSpaceObjectResources` of a spawned
+   asteroid (the seed is `Environment.TickCount`: capture the seed).
+5. `ModuleGenerator.efficiency / inputRecieved`, `ModuleAlternator.outputRate` with the engine's `normalizedOutput`, the drain's `DrainPart` request amounts and
+   `Part.AddForce` values.
+6. Orbital scanner / surveyor / biome scanner state (`DisplayBody`, `Cutoff`, thresholds after `rescaleThresholds` on every body, the science reward).
+
+### Fresh run
+
+Windows: `run_tests.ps1` 28/28 ctest tests, `unit` 309 cases / 693,597 assertions, ALL TESTS PASSED. Linux: see the line below.
+
+### Commits (branch `wp28`)
+
+see `git log --oneline 289d0c98..wp28`.
