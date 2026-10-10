@@ -283,7 +283,7 @@ void ContractSystem::GetContractCounts(float rep, int avgContracts, int& tier1, 
     const float num5 = Mathf::Floor(Mathf::Lerp(num, 2.0f, f32store(fx(num2) - fx(num3) * 0.5)));
     const float num6 = Mathf::Floor(Mathf::Lerp(0.0f, num, f32store(fx(num3) - fx(num4) * 0.5)));
     const float num7 = Mathf::Floor(Mathf::Lerp(0.0f, num, num4));
-    const float num8 = f32store(1.0 / (f32store(fx(num5) + fx(num6) + fx(num7)) / fx(num)));
+    const float num8 = f32store(1.0 / ((fx(num5) + fx(num6) + fx(num7)) / fx(num)));
     tier1 = Mathf::RoundToInt(f32store(fx(num5) * fx(num8)));
     tier2 = Mathf::RoundToInt(f32store(fx(num6) * fx(num8)));
     tier3 = Mathf::RoundToInt(f32store(fx(num7) * fx(num8)));

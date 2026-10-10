@@ -95,6 +95,9 @@ add_library(kspcore STATIC
     contracts/predicates.cpp
     contracts/module_test_subject.cpp
     contracts/templates.cpp
+    contracts/templates_recover.cpp
+    contracts/templates_parttest.cpp
+    contracts/waypoints.cpp
     contracts/contract_register.cpp
     parts/ksp_enums.cpp
     parts/part_data.cpp

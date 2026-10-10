@@ -3,6 +3,9 @@
 
 namespace ksp {
 
-void RegisterContractScenarioModules() { Contracts::ContractSystem::Register(); }
+void RegisterContractScenarioModules() {
+    Contracts::ContractSystem::Register();
+    ScenarioCustomWaypoints::Register();
+}
 
 }  // namespace ksp

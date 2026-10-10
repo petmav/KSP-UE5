@@ -12,6 +12,7 @@
 #include "ksp/contracts/predicates.hpp"
 #include "ksp/contracts/templates.hpp"
 #include "ksp/contracts/text_gen.hpp"
+#include "ksp/contracts/waypoints.hpp"
 
 namespace ksp {
 // ScenarioModuleFactory registration of the contract scenario modules (ContractSystem, ScenarioCustomWaypoints)

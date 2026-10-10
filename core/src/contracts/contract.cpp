@@ -81,7 +81,7 @@ void Contract::SetExpiry(int minDays, int maxDays) {
     const float range = static_cast<float>(UnityRandom::Global().Range(minDays, maxDays));
     const float day = static_cast<float>(KSPUtil::dateTimeFormatter().Day());
     const float r = Mathf::Round(f32store(fx(range) * fx(day) / 60.0));
-    TimeExpiry = static_cast<double>(f32store(fx(r) * 60.0));
+    TimeExpiry = fx(r) * 60.0;  // float * float stored into a double: the exact product (C7)
 }
 
 // Contract.cs:240
@@ -89,7 +89,7 @@ void Contract::SetExpiry(float minDays, float maxDays) {
     const float range = UnityRandom::Global().Range(minDays, maxDays);
     const float day = static_cast<float>(KSPUtil::dateTimeFormatter().Day());
     const float r = Mathf::Round(f32store(fx(range) * fx(day) / 60.0));
-    TimeExpiry = static_cast<double>(f32store(fx(r) * 60.0));
+    TimeExpiry = fx(r) * 60.0;  // float * float stored into a double: the exact product (C7)
 }
 
 // Contract.cs:245
@@ -97,7 +97,7 @@ void Contract::SetDeadlineDays(float days, CelestialBody* body) {
     float num = 1.0f;
     if (body != nullptr) num = GetDestinationWeight(body);
     const float day = static_cast<float>(KSPUtil::dateTimeFormatter().Day());
-    TimeDeadline = static_cast<double>(f32store(fx(days) * fx(day) * fx(num)));
+    TimeDeadline = fx(days) * fx(day) * fx(num);  // stored into a double: no float rounding (C7)
 }
 
 // Contract.cs:255
@@ -105,7 +105,7 @@ void Contract::SetDeadlineYears(float years, CelestialBody* body) {
     float num = 1.0f;
     if (body != nullptr) num = GetDestinationWeight(body);
     const float year = static_cast<float>(KSPUtil::dateTimeFormatter().Year());
-    TimeDeadline = static_cast<double>(f32store(fx(years) * fx(year) * fx(num)));
+    TimeDeadline = fx(years) * fx(year) * fx(num);  // stored into a double: no float rounding (C7)
 }
 
 // Contract.cs:277

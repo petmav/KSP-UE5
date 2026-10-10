@@ -212,10 +212,25 @@ std::vector<CelestialBody*> GetBodiesReached(bool bodyReached, MannedStatus mann
 std::vector<CelestialBody*> GetBodiesReached(bool bodyReached, const Where& where = nullptr, const std::vector<CelestialBody*>* bodies = nullptr);  // :193
 // :242 CelestialCrewCounts(situations)
 std::map<CelestialBody*, int> CelestialCrewCounts(const std::vector<Vessel::Situations>& situations);
+// :193 GetNextUnreached(count, manned, where) and :237 (manned = ANY)
+std::vector<CelestialBody*> GetNextUnreached(int count, MannedStatus manned, const Where& where = nullptr);
+std::vector<CelestialBody*> GetNextUnreached(int count, const Where& where = nullptr);
+float AverageFacilityLevel();                       // :305
+int GetProgressLevel();                             // :310
+float ScoreProgressType(ProgressType type, CelestialBody* body);  // :372
 }  // namespace ProgressUtilities
+
+namespace StringUtilities {
+std::string AlphaNumericDesignation(int seed);                       // StringUtilities.cs:189
+std::string ThisThisAndThat(const std::vector<std::string>& stringList, const std::string& connector = "#autoLOC_6002373",
+                            const std::string& conjugation = "#autoLOC_6002374");  // :226
+std::string ShortKerbalName(const std::string& fullKerbalName);      // :250
+}  // namespace StringUtilities
 
 namespace CelestialUtilities {
 bool IsGasGiant(CelestialBody* body);                         // CelestialUtilities.cs:272
+bool IsFlyablePlanet(CelestialBody* body);                    // :281
+double GetAltitudeForDensity(CelestialBody* body, double density);  // :220
 std::vector<CelestialBody*> ChildrenOf(CelestialBody* parent);  // :99
 }  // namespace CelestialUtilities
 
