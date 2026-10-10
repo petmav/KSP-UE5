@@ -10,7 +10,7 @@ Re-implements, in plain Python (numpy float32) and from the decompiled C#, the n
   the PreFlightTests predicates that depend only on part modules / resources / tree / stages / crew-less manifests
 It shares NO code with kspcore. The Mono float rule is followed: managed float expressions are evaluated in double and rounded to float32
 where the C# stores / passes / returns a float; native Unity code (AngleAxis, LookRotation, Euler, eulerAngles, Normalize on set) is
-per-operation float32 (sinf / cosf / asin / atan2 are evaluated in double and rounded to float32, which is the correctly rounded value).
+per-operation float32 (sinf / cosf / asin / atan2 are evaluated in double and rounded to float32; sinf / cosf come from ucrtbase through ctypes where available, see below).
 
 Inputs (original game data, never hand-authored):
   harness/inputs/Ships/{VAB,SPH}/*.craft and analysis/physics/craft/*.craft  (the stock crafts)

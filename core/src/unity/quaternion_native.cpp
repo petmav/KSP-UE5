@@ -7,12 +7,14 @@
 #include "ksp/dotnet/ucrt_libm.hpp"
 
 namespace ksp::UnityNative {
+// float sqrt through ksp::dotnet (IEEE sqrt is correctly rounded: the double result rounded to float equals the float sqrt)
+static inline float SqrtF(float x) { return static_cast<float>(dotnet::Math::Sqrt(static_cast<double>(x))); }
 
 // QuaternionScripting::AngleAxis -> AxisAngleToQuaternionSafe(axis, Deg2Rad(angle)) (Runtime/Math/Quaternion.h)
 Quaternionf AngleAxis(float angle, const Vector3f& axis) {
     // Unity's Deg2Rad (Runtime/Math/FloatConversion.h) keeps a historical operation order: deg / 360 * 2 * kPI.
     const float rad = angle / 360.0f * 2.0f * 3.14159265358979323846f;
-    const float mag = std::sqrt(axis.x * axis.x + axis.y * axis.y + axis.z * axis.z);
+    const float mag = SqrtF(axis.x * axis.x + axis.y * axis.y + axis.z * axis.z);
     if (mag > 0.000001f) {
         const float halfAngle = rad * 0.5f;
         Quaternionf q;
@@ -55,7 +57,7 @@ void FromToRotationMatrix(const float from[3], const float to[3], float mtx[3][3
             left[1] = 0.0f;
             left[2] = from[0];
         }
-        const float invlen = 1.0f / std::sqrt(left[0] * left[0] + left[1] * left[1] + left[2] * left[2]);
+        const float invlen = 1.0f / SqrtF(left[0] * left[0] + left[1] * left[1] + left[2] * left[2]);
         left[0] *= invlen;
         left[1] *= invlen;
         left[2] *= invlen;
@@ -95,7 +97,7 @@ Quaternionf MatrixToQuaternion(const float m[3][3]) {
     Quaternionf q;
     const float trace = m[0][0] + m[1][1] + m[2][2];
     if (trace > 0.0f) {
-        float root = std::sqrt(trace + 1.0f);
+        float root = SqrtF(trace + 1.0f);
         q.w = 0.5f * root;
         root = 0.5f / root;
         q.x = (m[2][1] - m[1][2]) * root;
@@ -108,7 +110,7 @@ Quaternionf MatrixToQuaternion(const float m[3][3]) {
         if (m[2][2] > m[i][i]) i = 2;
         const int j = next[i];
         const int k = next[j];
-        float root = std::sqrt(m[i][i] - m[j][j] - m[k][k] + 1.0f);
+        float root = SqrtF(m[i][i] - m[j][j] - m[k][k] + 1.0f);
         float* quat[3] = {&q.x, &q.y, &q.z};
         *quat[i] = 0.5f * root;
         root = 0.5f / root;
@@ -116,7 +118,7 @@ Quaternionf MatrixToQuaternion(const float m[3][3]) {
         *quat[j] = (m[j][i] + m[i][j]) * root;
         *quat[k] = (m[k][i] + m[i][k]) * root;
     }
-    const float mag = std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
+    const float mag = SqrtF(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
     q.x /= mag;
     q.y /= mag;
     q.z /= mag;
@@ -128,8 +130,8 @@ Quaternionf MatrixToQuaternion(const float m[3][3]) {
 
 // QuaternionScripting::FromToRotation -> FromToQuaternionSafe (Runtime/Math/Quaternion.h)
 Quaternionf FromToRotation(const Vector3f& fromDirection, const Vector3f& toDirection) {
-    const float lhsMag = std::sqrt(fromDirection.x * fromDirection.x + fromDirection.y * fromDirection.y + fromDirection.z * fromDirection.z);
-    const float rhsMag = std::sqrt(toDirection.x * toDirection.x + toDirection.y * toDirection.y + toDirection.z * toDirection.z);
+    const float lhsMag = SqrtF(fromDirection.x * fromDirection.x + fromDirection.y * fromDirection.y + fromDirection.z * fromDirection.z);
+    const float rhsMag = SqrtF(toDirection.x * toDirection.x + toDirection.y * toDirection.y + toDirection.z * toDirection.z);
     if (lhsMag < 0.00001f || rhsMag < 0.00001f) return Quaternionf::identity();
     const float from[3] = {fromDirection.x / lhsMag, fromDirection.y / lhsMag, fromDirection.z / lhsMag};
     const float to[3] = {toDirection.x / rhsMag, toDirection.y / rhsMag, toDirection.z / rhsMag};
@@ -172,13 +174,13 @@ float NativeAtan2f(float y, float x) {
 Quaternionf LookRotation(const Vector3f& forward, const Vector3f& up) {
     constexpr float kEps = 0.00001f;
     float z[3] = {forward.x, forward.y, forward.z};
-    float mag = std::sqrt(z[0] * z[0] + z[1] * z[1] + z[2] * z[2]);
+    float mag = SqrtF(z[0] * z[0] + z[1] * z[1] + z[2] * z[2]);
     if (mag < kEps) return Quaternionf::identity();
     z[0] /= mag;
     z[1] /= mag;
     z[2] /= mag;
     float x[3] = {up.y * z[2] - up.z * z[1], up.z * z[0] - up.x * z[2], up.x * z[1] - up.y * z[0]};
-    mag = std::sqrt(x[0] * x[0] + x[1] * x[1] + x[2] * x[2]);
+    mag = SqrtF(x[0] * x[0] + x[1] * x[1] + x[2] * x[2]);
     if (mag < kEps) return Quaternionf::identity();
     x[0] /= mag;
     x[1] /= mag;

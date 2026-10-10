@@ -8,13 +8,16 @@
 
 namespace ksp {
 
+// What isRootCandidate reads from EditorLogic: EditorLogic.SelectedPart and EditorLogic.fetch.ship.parts.Contains(p)
+// (namespace scope: a nested struct with default member initializers cannot be used as a static member of its enclosing class on clang / gcc)
+struct EditorReRootContext {
+    Part* selectedPart = nullptr;
+    std::function<bool(const Part*)> shipContains;
+};
+
 class EditorReRootUtil {
 public:
-    // What isRootCandidate reads from EditorLogic: EditorLogic.SelectedPart and EditorLogic.fetch.ship.parts.Contains(p)
-    struct Context {
-        Part* selectedPart = nullptr;
-        std::function<bool(const Part*)> shipContains;
-    };
+    using Context = EditorReRootContext;
     // The context of the running editor (the host / EditorLogic fills it; unset: nothing selected, empty ship)
     static inline Context context;
 

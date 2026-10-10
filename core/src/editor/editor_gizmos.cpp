@@ -3,6 +3,8 @@
 
 #include <cmath>
 
+#include "ksp/dotnet/math.hpp"
+
 #include "ksp/editor/editor_logic.hpp"
 #include "ksp/math/mathfx.hpp"
 #include "ksp/unity/mathf.hpp"
@@ -13,9 +15,11 @@ namespace ksp::EditorGizmos {
 using QuaternionExtensions::Inverse;
 
 namespace {
+// float sqrt through ksp::dotnet (IEEE sqrt is correctly rounded: the double result rounded to float equals the float sqrt)
+static inline float SqrtF(float x) { return static_cast<float>(dotnet::Math::Sqrt(static_cast<double>(x))); }
 // Transform.rotation = q (Unity normalises on set)
 void SetRotation(PartTransform& t, const Quaternionf& q) {
-    const float mag = std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
+    const float mag = SqrtF(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
     t.rotation = mag < 0.00001f ? Quaternionf::identity() : Quaternionf(q.x / mag, q.y / mag, q.z / mag, q.w / mag);
 }
 }  // namespace

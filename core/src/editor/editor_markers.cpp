@@ -25,6 +25,7 @@ Part* DraggedPart() {
 
 // EditorMarker_CoM.cs:31
 Vector3f EditorMarker_CoM::findCenterOfMass(Part* root) {
+    if (EditorLogic::fetch == nullptr) return Vector3f::zero();   // EditorMarker_CoM.cs:33 (HighLogic.LoadedSceneIsEditor && EditorLogic.fetch == null)
     Vector3f CoM = Vector3f::zero();
     float m = 0.0f;
     recurseParts(root, CoM, m);
