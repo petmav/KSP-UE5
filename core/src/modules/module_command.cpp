@@ -392,8 +392,11 @@ bool ModuleCommand::ControlPointsExist() const { return controlPoints.has_value(
 // ======================================================= ModuleSAS
 
 ModuleSAS::~ModuleSAS() {
-    // OnDestroy (ModuleSAS.cs:104): the providers leave the part values (the Part outlives its modules)
-    if (registeredOn_ != nullptr) {
+    // OnDestroy (ModuleSAS.cs:104): the providers leave the part values. A Part that is being destroyed has left Part::allParts (Part.~Part) and
+    // its partValues member may already be gone while the shared module in PartPrefab::ModuleData (a base class member) is released last:
+    // then the delegates died with the part values and there is nothing to remove.
+    const bool partLive = registeredOn_ != nullptr && std::find(Part::allParts.begin(), Part::allParts.end(), registeredOn_) != Part::allParts.end();
+    if (partLive) {
         registeredOn_->partValues.AutopilotSkill.Remove(this, &ModuleSAS::GetValue);
         registeredOn_->partValues.AutopilotSASSkill.Remove(this, &ModuleSAS::GetValue);
     }

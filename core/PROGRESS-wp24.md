@@ -14,3 +14,5 @@
 - [ ] STATUS/README, fresh run_tests.ps1, WSL run_tests.sh -f, merge main if moved, commit
 - [x] STATUS.md WP-24 section + summary row 20, README rows (unit, headers, tools/wp24)
 - [ ] fresh full run_tests.ps1, merge main if moved, WSL run, commit
+- [x] fresh Windows run_tests.ps1: 34/34 green; WSL: first run found a SIGSEGV in the ModuleSAS test (module destructor touched a destroyed partValues: ModuleData is a PartPrefab base member, released after Part members); fixed with a Part::allParts liveness check; WSL unit 100% after fix (other 33 ctest tests passed in the first WSL run)
+- [ ] commit
