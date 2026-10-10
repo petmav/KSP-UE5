@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 
+#include "ksp/modules/animated_module.hpp"
 #include "ksp/modules/part_module.hpp"
 #include "ksp/physics/vessel_ranges.hpp"
 #include "ksp/resources/resource_broker.hpp"
@@ -52,6 +53,7 @@ struct ProcessingBody {
     bool hasBiomeMap = true;  // BiomeMap != null
     std::string bodyName, displayName;
     float recoveryValue = 1.0f;  // scienceValues.RecoveryValue
+    double oceanDensity = 0.0;   // CelestialBody.oceanDensity (WP-27: solar panel submersion)
 };
 
 // The Vessel values the modules read (Part.vessel and what hangs off it)
@@ -62,6 +64,12 @@ struct ProcessingVessel {
     double atmDensity = 0.0, srfSpeed = 0.0, horizontalSrfSpeed = 0.0, solarFlux = 0.0;
     Vector3d srf_vel_direction;
     bool isActiveVessel = false;
+    // WP-27 (parachutes, deployables): Vessel.externalTemperature / atmosphericTemperature / mach / convectiveCoefficient / geeForce / speed /
+    // velocityD / upAxis / CurrentCoM / HoldPhysics
+    double externalTemperature = 0.0, atmosphericTemperature = 0.0, mach = 0.0, convectiveCoefficient = 0.0, geeForce = 0.0, speed = 0.0;
+    Vector3d velocityD, upAxis;
+    Vector3f CoM;
+    bool holdPhysics = false;
     bool isControllable = true;                      // vessel.IsControllable
     ControlLevel controlLevel = ControlLevel::FULL;  // vessel.CurrentControlLevel
     float mainThrottle = 0.0f;                       // vessel.ctrlState.mainThrottle
@@ -130,9 +138,10 @@ public:
 // ======================================================= BaseConverter =========================================================
 
 // BaseConverter.cs:6 (abstract; IAnimatedModule / IOverheatDisplay / IConstruction members are plain methods)
-class BaseConverter : public PartModule {
+class BaseConverter : public PartModule, public IAnimatedModule {
 public:
     using PartModule::PartModule;
+    IAnimatedModule* AsAnimatedModule() override { return this; }
     std::vector<ResourceRatio> inputList, outputList, reqList;  // :8-:12 (null until OnAwake)
     bool listsCreated = false;
     std::unique_ptr<IResourceBroker> ownedBroker_;      // :71 _resBroker
@@ -156,9 +165,9 @@ public:
     virtual float GetCrewEfficiencyBonus();                                          // :144
     virtual float GetCrewHeatBonus();                                                // :158
     virtual void SetupDebugging();                                                   // :169
-    virtual void EnableModule();                                                     // :178
-    virtual void DisableModule();                                                    // :185
-    virtual bool ModuleIsActive();                                                   // :193
+    virtual void EnableModule() override;                                                     // :178
+    virtual void DisableModule() override;                                                    // :185
+    virtual bool ModuleIsActive() override;                                                   // :193
     bool IsAnimationGroupDeployed();                                                 // :198 (private)
     void StartResourceConverter();                                                   // :208 [KSPEvent]
     void StopResourceConverter();                                                    // :222 [KSPEvent]
@@ -189,7 +198,7 @@ public:
     virtual void PostUpdateCleanup() {}                                              // :685
     virtual void PostProcess(const ConverterResults& result, double deltaTime);      // :689
     virtual ConversionRecipe* PrepareRecipe(double deltatime);                       // :708
-    virtual bool IsSituationValid();                                                 // :714
+    virtual bool IsSituationValid() override;                                                 // :714
     virtual void OnOverheat(double amount = 1.0);                                    // :720
     virtual double GetFlux() { return lastHeatFlux; }                                // :727
     virtual bool DisplayCoreHeat();                                                  // :732
@@ -547,18 +556,19 @@ private:
 // ======================================================= scanners ==========================================================
 
 // ModuleResourceScanner.cs:4 (IAnimatedModule)
-class ModuleResourceScanner : public PartModule {
+class ModuleResourceScanner : public PartModule, public IAnimatedModule {
 public:
     using PartModule::PartModule;
+    IAnimatedModule* AsAnimatedModule() override { return this; }
     double abundanceValue = 0.0;                      // :20
     std::string ResourceDisplayName;                  // :22
     int partCacheCount = -1;                          // :26
     bool wasValid = false;                            // :28
     bool aDispFldGuiActive = false;                   // aDispFld.guiActive
     double abundance() const { return abundanceValue; }  // :39
-    void EnableModule() { isEnabled = true; }         // :41
-    void DisableModule() { isEnabled = false; }       // :46
-    bool ModuleIsActive() { return isEnabled; }       // :51
+    void EnableModule() override { isEnabled = true; }         // :41
+    void DisableModule() override { isEnabled = false; }       // :46
+    bool ModuleIsActive() override { return isEnabled; }       // :51
     std::string GetDisplayFormat();                   // :56
     std::string GetScanningMode(bool abbrevation);    // :58
     void OnAwake() override;                          // :82
@@ -567,14 +577,15 @@ public:
     void CheckAbundanceDisplay();                     // :128
     void DisplayAbundance();                          // :146
     void ToggleEvent(const std::string& name, bool status);  // :194
-    bool IsSituationValid();                          // :200
+    bool IsSituationValid() override;                          // :200
     std::string GetModuleDisplayName() override;      // :247
 };
 
 // ModuleOrbitalScanner.cs:3 (IAnimatedModule)
-class ModuleOrbitalScanner : public PartModule {
+class ModuleOrbitalScanner : public PartModule, public IAnimatedModule {
 public:
     using PartModule::PartModule;
+    IAnimatedModule* AsAnimatedModule() override { return this; }
     BaseEvent* switchR = nullptr;
     BaseEvent* toggleO = nullptr;
     BaseEvent* setCol = nullptr;
@@ -597,10 +608,10 @@ public:
     virtual void SetupMap();                          // :193
     virtual void Start();                             // :205 (Unity message)
     virtual void ShowResourceName();                  // :216
-    virtual void EnableModule();                      // :245
-    virtual void DisableModule();                     // :250
-    virtual bool ModuleIsActive();                    // :259
-    virtual bool IsSituationValid();                  // :264
+    virtual void EnableModule() override;                      // :245
+    virtual void DisableModule() override;                     // :250
+    virtual bool ModuleIsActive() override;                    // :259
+    virtual bool IsSituationValid() override;                  // :264
     virtual void OnDestroy();                         // :274
     virtual void OnResourceMapLoaded();               // :279
     ~ModuleOrbitalScanner() override;
@@ -609,9 +620,10 @@ private:
 };
 
 // ModuleOrbitalSurveyor.cs:5 (IAnimatedModule)
-class ModuleOrbitalSurveyor : public PartModule {
+class ModuleOrbitalSurveyor : public PartModule, public IAnimatedModule {
 public:
     using PartModule::PartModule;
+    IAnimatedModule* AsAnimatedModule() override { return this; }
     BaseEvent* perfSurv = nullptr;
     // sendDataToComms (:60): the best transmitter (ScienceUtil.GetBestTransmitter) is the science package's. `transmit` receives the
     // ScienceData's (dataAmount, subjectID, container flightID); unset: no transmitter (a screen message)
@@ -629,10 +641,10 @@ public:
     virtual void CompleteSurvey(uint32_t container, const std::string& subjectID, bool xmitAborted);  // :94
     virtual void CheckForScanData();                  // :119
     virtual void Update();                            // :130 (Unity message)
-    virtual void EnableModule() { isEnabled = true; }   // :136
-    virtual void DisableModule() { isEnabled = false; } // :141
-    virtual bool ModuleIsActive() { return isEnabled; } // :146
-    virtual bool IsSituationValid() { return true; }    // :151
+    virtual void EnableModule() override { isEnabled = true; }   // :136
+    virtual void DisableModule() override { isEnabled = false; } // :141
+    virtual bool ModuleIsActive() override { return isEnabled; } // :146
+    virtual bool IsSituationValid() override { return true; }    // :151
     std::string GetModuleDisplayName() override;      // :161
     int surveysCompleted = 0;                         // OnOrbitalSurveyCompleted fired
     ~ModuleOrbitalSurveyor() override;

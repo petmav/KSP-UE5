@@ -25,6 +25,7 @@ add_executable(kspcore_tests
     test_resource_flow.cpp
     test_resource_modules.cpp
     test_resource_processing.cpp
+    test_deployables.cpp
     test_vessel.cpp
     test_ship_construct.cpp
     test_aero.cpp

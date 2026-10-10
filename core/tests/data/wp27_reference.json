@@ -1,0 +1,2553 @@
+{
+ "physics": {
+  "tail0": 1.0,
+  "surface0": 0.019999999552965164,
+  "tip0": 1.0,
+  "mult0": 0.5,
+  "dragMultiplier": 8.0,
+  "dragCubeMultiplier": 0.10000000149011612,
+  "spaceTemperature": 4.0,
+  "newtonianTemperatureFactor": 1.0,
+  "radiationFactor": 1.0,
+  "solarLuminosityAtHome": 1360.0,
+  "fullToCrossSectionLerpStart": 0.8,
+  "fullToCrossSectionLerpEnd": 1.5,
+  "stefanBoltzmanConstant": 5.670373e-08
+ },
+ "parachutes": [
+  {
+   "part": "parachuteSingle",
+   "areaDeployed": 336.43687024767496,
+   "areaSemi": 0.561869248179633,
+   "invThermalMass": 0.0495387638530734,
+   "maxSafeSpeedAtRef": 264,
+   "points": [
+    {
+     "density": 1.2,
+     "extTemp": 300.0,
+     "mach": 0.3,
+     "conv": 40.0,
+     "machHeatMult": 1.0,
+     "convectivekW": 13.457474809906998,
+     "shockTemp": 300.0,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 0.5,
+     "extTemp": 250.0,
+     "mach": 0.9,
+     "conv": 25.0,
+     "machHeatMult": 1.809484631448571,
+     "convectivekW": 15.21943365414562,
+     "shockTemp": 452.37115786214275,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 0.05,
+     "extTemp": 220.0,
+     "mach": 2.0,
+     "conv": 5.0,
+     "machHeatMult": 1.2098076211353317,
+     "convectivekW": 2.0351194482827792,
+     "shockTemp": 266.15767664977295,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 0.0,
+     "extTemp": 4.0,
+     "mach": 3.0,
+     "conv": 0.0,
+     "machHeatMult": 1.2098076211353317,
+     "convectivekW": 0.0,
+     "shockTemp": 4.0,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 1.0,
+     "extTemp": 288.0,
+     "mach": 0.0,
+     "conv": 0.0,
+     "machHeatMult": 1.0,
+     "convectivekW": 0.0,
+     "shockTemp": 288.0,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    }
+   ],
+   "heats": [
+    {
+     "density": 0.8,
+     "extTemp": 280.0,
+     "mach": 1.6,
+     "conv": 80.0,
+     "dt": 0.019999999552965164,
+     "series": [
+      987.9714552648027,
+      987.9714552648027,
+      987.9714552648027,
+      987.9714552648027,
+      987.9714552648027,
+      987.9714552648027
+     ],
+     "cutStep": 9,
+     "shockTemp": 995.0917825218153,
+     "convectivekW": 95.65301854880559
+    },
+    {
+     "density": 1.0,
+     "extTemp": 250.0,
+     "mach": 0.5,
+     "conv": 6.0,
+     "dt": 0.019999999552965164,
+     "series": [
+      258.32122719235207,
+      263.5097388828184,
+      263.95569048776827,
+      263.99389400206024,
+      263.9971658665378,
+      263.99744607207015
+     ],
+     "cutStep": -1,
+     "shockTemp": 272.4227850112692,
+     "convectivekW": 2.1996736601603195
+    },
+    {
+     "density": 0.3,
+     "extTemp": 230.0,
+     "mach": 1.0,
+     "conv": 12.0,
+     "dt": 0.019999999552965164,
+     "series": [
+      347.115966681051,
+      347.28398304780546,
+      347.28416513530306,
+      347.2841653326269,
+      347.2841653328362,
+      347.2841653328362
+     ],
+     "cutStep": -1,
+     "shockTemp": 356.1614716074871,
+     "convectivekW": 6.2517835205441274
+    }
+   ],
+   "baseDrag": 0.019999999552965164,
+   "lerps": [
+    {
+     "t": 0.0,
+     "lerpTime": 0.0,
+     "semi": 0.23999999463558197,
+     "full": 1.0199999809265137,
+     "wPackedSemi": 1.0,
+     "wSemiFull": 1.0
+    },
+    {
+     "t": 0.1,
+     "lerpTime": 0.003162277629598975,
+     "semi": 0.24246656894683838,
+     "full": 2.5979764461517334,
+     "wPackedSemi": 0.9968377351760864,
+     "wSemiFull": 0.9968377351760864
+    },
+    {
+     "t": 0.25,
+     "lerpTime": 0.03125,
+     "semi": 0.2643750011920929,
+     "full": 16.613750457763672,
+     "wPackedSemi": 0.96875,
+     "wSemiFull": 0.96875
+    },
+    {
+     "t": 0.5,
+     "lerpTime": 0.1767766922712326,
+     "semi": 0.3778858184814453,
+     "full": 89.2315673828125,
+     "wPackedSemi": 0.8232232928276062,
+     "wSemiFull": 0.8232232928276062
+    },
+    {
+     "t": 0.75,
+     "lerpTime": 0.4871392846107483,
+     "semi": 0.619968593120575,
+     "full": 244.10250854492188,
+     "wPackedSemi": 0.5128607153892517,
+     "wSemiFull": 0.5128607153892517
+    },
+    {
+     "t": 0.999,
+     "lerpTime": 0.9975018501281738,
+     "semi": 1.0180515050888062,
+     "full": 498.7734069824219,
+     "wPackedSemi": 0.002498149871826172,
+     "wSemiFull": 0.002498149871826172
+    },
+    {
+     "t": 1.0,
+     "lerpTime": 1.0,
+     "semi": 1.0199999809265137,
+     "full": 500.0199890136719,
+     "wPackedSemi": 0.0,
+     "wSemiFull": 0.0
+    }
+   ],
+   "fields": {
+    "stowedDrag": 0.2199999988079071,
+    "semiDeployedDrag": 1.0,
+    "fullyDeployedDrag": 500.0,
+    "deploymentCurve": 2.5,
+    "chuteMaxTemp": 650.0,
+    "safeMult": 0.95,
+    "deployAltitude": 1000.0,
+    "minAirPressureToOpen": 0.03999999910593033,
+    "autoCutSpeed": 0.5
+   }
+  },
+  {
+   "part": "parachuteRadial",
+   "areaDeployed": 1341.0959184213862,
+   "areaSemi": 2.09041789308813,
+   "invThermalMass": 0.012427646999541332,
+   "maxSafeSpeedAtRef": 264,
+   "points": [
+    {
+     "density": 1.2,
+     "extTemp": 300.0,
+     "mach": 0.3,
+     "conv": 40.0,
+     "machHeatMult": 1.0,
+     "convectivekW": 53.64383673685545,
+     "shockTemp": 300.0,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 0.5,
+     "extTemp": 250.0,
+     "mach": 0.9,
+     "conv": 25.0,
+     "machHeatMult": 1.809484631448571,
+     "convectivekW": 60.667311342047626,
+     "shockTemp": 452.37115786214275,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 0.05,
+     "extTemp": 220.0,
+     "mach": 2.0,
+     "conv": 5.0,
+     "machHeatMult": 1.2098076211353317,
+     "convectivekW": 8.1123403138984,
+     "shockTemp": 266.15767664977295,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 0.0,
+     "extTemp": 4.0,
+     "mach": 3.0,
+     "conv": 0.0,
+     "machHeatMult": 1.2098076211353317,
+     "convectivekW": 0.0,
+     "shockTemp": 4.0,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 1.0,
+     "extTemp": 288.0,
+     "mach": 0.0,
+     "conv": 0.0,
+     "machHeatMult": 1.0,
+     "convectivekW": 0.0,
+     "shockTemp": 288.0,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    }
+   ],
+   "heats": [
+    {
+     "density": 0.8,
+     "extTemp": 280.0,
+     "mach": 1.6,
+     "conv": 80.0,
+     "dt": 0.019999999552965164,
+     "series": [
+      987.9714552648027,
+      987.9714552648027,
+      987.9714552648027,
+      987.9714552648027,
+      987.9714552648027,
+      987.9714552648027
+     ],
+     "cutStep": 9,
+     "shockTemp": 995.0917825218153,
+     "convectivekW": 381.28957942704807
+    },
+    {
+     "density": 1.0,
+     "extTemp": 250.0,
+     "mach": 0.5,
+     "conv": 6.0,
+     "dt": 0.019999999552965164,
+     "series": [
+      258.32122719235207,
+      263.5097388828184,
+      263.95569048776827,
+      263.99389400206024,
+      263.9971658665378,
+      263.99744607207015
+     ],
+     "cutStep": -1,
+     "shockTemp": 272.4227850112692,
+     "convectivekW": 8.768282041526398
+    },
+    {
+     "density": 0.3,
+     "extTemp": 230.0,
+     "mach": 1.0,
+     "conv": 12.0,
+     "dt": 0.019999999552965164,
+     "series": [
+      347.115966681051,
+      347.28398304780546,
+      347.28416513530306,
+      347.2841653326269,
+      347.2841653328362,
+      347.2841653328362
+     ],
+     "cutStep": -1,
+     "shockTemp": 356.1614716074871,
+     "convectivekW": 24.92069717591767
+    }
+   ],
+   "baseDrag": 0.019999999552965164,
+   "lerps": [
+    {
+     "t": 0.0,
+     "lerpTime": 0.0,
+     "semi": 0.23999999463558197,
+     "full": 1.0199999809265137,
+     "wPackedSemi": 1.0,
+     "wSemiFull": 1.0
+    },
+    {
+     "t": 0.1,
+     "lerpTime": 0.003162277629598975,
+     "semi": 0.24246656894683838,
+     "full": 2.5979764461517334,
+     "wPackedSemi": 0.9968377351760864,
+     "wSemiFull": 0.9968377351760864
+    },
+    {
+     "t": 0.25,
+     "lerpTime": 0.03125,
+     "semi": 0.2643750011920929,
+     "full": 16.613750457763672,
+     "wPackedSemi": 0.96875,
+     "wSemiFull": 0.96875
+    },
+    {
+     "t": 0.5,
+     "lerpTime": 0.1767766922712326,
+     "semi": 0.3778858184814453,
+     "full": 89.2315673828125,
+     "wPackedSemi": 0.8232232928276062,
+     "wSemiFull": 0.8232232928276062
+    },
+    {
+     "t": 0.75,
+     "lerpTime": 0.4871392846107483,
+     "semi": 0.619968593120575,
+     "full": 244.10250854492188,
+     "wPackedSemi": 0.5128607153892517,
+     "wSemiFull": 0.5128607153892517
+    },
+    {
+     "t": 0.999,
+     "lerpTime": 0.9975018501281738,
+     "semi": 1.0180515050888062,
+     "full": 498.7734069824219,
+     "wPackedSemi": 0.002498149871826172,
+     "wSemiFull": 0.002498149871826172
+    },
+    {
+     "t": 1.0,
+     "lerpTime": 1.0,
+     "semi": 1.0199999809265137,
+     "full": 500.0199890136719,
+     "wPackedSemi": 0.0,
+     "wSemiFull": 0.0
+    }
+   ],
+   "fields": {
+    "stowedDrag": 0.2199999988079071,
+    "semiDeployedDrag": 1.0,
+    "fullyDeployedDrag": 500.0,
+    "deploymentCurve": 2.5,
+    "chuteMaxTemp": 650.0,
+    "safeMult": 0.95,
+    "deployAltitude": 1000.0,
+    "minAirPressureToOpen": 0.03999999910593033,
+    "autoCutSpeed": 0.5
+   }
+  },
+  {
+   "part": "parachuteLarge",
+   "areaDeployed": 2062.7318666745996,
+   "areaSemi": 4.977156522529668,
+   "invThermalMass": 0.008079899736816288,
+   "maxSafeSpeedAtRef": 264,
+   "points": [
+    {
+     "density": 1.2,
+     "extTemp": 300.0,
+     "mach": 0.3,
+     "conv": 40.0,
+     "machHeatMult": 1.0,
+     "convectivekW": 82.50927466698398,
+     "shockTemp": 300.0,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 0.5,
+     "extTemp": 250.0,
+     "mach": 0.9,
+     "conv": 25.0,
+     "machHeatMult": 1.809484631448571,
+     "convectivekW": 93.31204028867278,
+     "shockTemp": 452.37115786214275,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 0.05,
+     "extTemp": 220.0,
+     "mach": 2.0,
+     "conv": 5.0,
+     "machHeatMult": 1.2098076211353317,
+     "convectivekW": 12.477543663308198,
+     "shockTemp": 266.15767664977295,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 0.0,
+     "extTemp": 4.0,
+     "mach": 3.0,
+     "conv": 0.0,
+     "machHeatMult": 1.2098076211353317,
+     "convectivekW": 0.0,
+     "shockTemp": 4.0,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 1.0,
+     "extTemp": 288.0,
+     "mach": 0.0,
+     "conv": 0.0,
+     "machHeatMult": 1.0,
+     "convectivekW": 0.0,
+     "shockTemp": 288.0,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    }
+   ],
+   "heats": [
+    {
+     "density": 0.8,
+     "extTemp": 280.0,
+     "mach": 1.6,
+     "conv": 80.0,
+     "dt": 0.019999999552965164,
+     "series": [
+      987.9714552648027,
+      987.9714552648027,
+      987.9714552648027,
+      987.9714552648027,
+      987.9714552648027,
+      987.9714552648027
+     ],
+     "cutStep": 9,
+     "shockTemp": 995.0917825218153,
+     "convectivekW": 586.4592943067939
+    },
+    {
+     "density": 1.0,
+     "extTemp": 250.0,
+     "mach": 0.5,
+     "conv": 6.0,
+     "dt": 0.019999999552965164,
+     "series": [
+      258.32122719235207,
+      263.5097388828184,
+      263.95569048776827,
+      263.99389400206024,
+      263.9971658665378,
+      263.99744607207015
+     ],
+     "cutStep": -1,
+     "shockTemp": 272.4227850112692,
+     "convectivekW": 13.486443836423724
+    },
+    {
+     "density": 0.3,
+     "extTemp": 230.0,
+     "mach": 1.0,
+     "conv": 12.0,
+     "dt": 0.019999999552965164,
+     "series": [
+      347.115966681051,
+      347.28398304780546,
+      347.28416513530306,
+      347.2841653326269,
+      347.2841653328362,
+      347.2841653328362
+     ],
+     "cutStep": -1,
+     "shockTemp": 356.1614716074871,
+     "convectivekW": 38.33038002607744
+    }
+   ],
+   "baseDrag": 0.019999999552965164,
+   "lerps": [
+    {
+     "t": 0.0,
+     "lerpTime": 0.0,
+     "semi": 0.23999999463558197,
+     "full": 1.0199999809265137,
+     "wPackedSemi": 1.0,
+     "wSemiFull": 1.0
+    },
+    {
+     "t": 0.1,
+     "lerpTime": 0.003162277629598975,
+     "semi": 0.24246656894683838,
+     "full": 2.5979764461517334,
+     "wPackedSemi": 0.9968377351760864,
+     "wSemiFull": 0.9968377351760864
+    },
+    {
+     "t": 0.25,
+     "lerpTime": 0.03125,
+     "semi": 0.2643750011920929,
+     "full": 16.613750457763672,
+     "wPackedSemi": 0.96875,
+     "wSemiFull": 0.96875
+    },
+    {
+     "t": 0.5,
+     "lerpTime": 0.1767766922712326,
+     "semi": 0.3778858184814453,
+     "full": 89.2315673828125,
+     "wPackedSemi": 0.8232232928276062,
+     "wSemiFull": 0.8232232928276062
+    },
+    {
+     "t": 0.75,
+     "lerpTime": 0.4871392846107483,
+     "semi": 0.619968593120575,
+     "full": 244.10250854492188,
+     "wPackedSemi": 0.5128607153892517,
+     "wSemiFull": 0.5128607153892517
+    },
+    {
+     "t": 0.999,
+     "lerpTime": 0.9975018501281738,
+     "semi": 1.0180515050888062,
+     "full": 498.7734069824219,
+     "wPackedSemi": 0.002498149871826172,
+     "wSemiFull": 0.002498149871826172
+    },
+    {
+     "t": 1.0,
+     "lerpTime": 1.0,
+     "semi": 1.0199999809265137,
+     "full": 500.0199890136719,
+     "wPackedSemi": 0.0,
+     "wSemiFull": 0.0
+    }
+   ],
+   "fields": {
+    "stowedDrag": 0.2199999988079071,
+    "semiDeployedDrag": 1.0,
+    "fullyDeployedDrag": 500.0,
+    "deploymentCurve": 2.5,
+    "chuteMaxTemp": 650.0,
+    "safeMult": 0.95,
+    "deployAltitude": 1000.0,
+    "minAirPressureToOpen": 0.03999999910593033,
+    "autoCutSpeed": 0.5
+   }
+  },
+  {
+   "part": "radialDrogue",
+   "areaDeployed": 46.2488684870134,
+   "areaSemi": 1.3066098407895836,
+   "invThermalMass": 0.2702768826335714,
+   "maxSafeSpeedAtRef": 424,
+   "points": [
+    {
+     "density": 1.2,
+     "extTemp": 300.0,
+     "mach": 0.3,
+     "conv": 40.0,
+     "machHeatMult": 1.0,
+     "convectivekW": 1.8499547394805358,
+     "shockTemp": 300.0,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 0.5,
+     "extTemp": 250.0,
+     "mach": 0.9,
+     "conv": 25.0,
+     "machHeatMult": 1.3282511696339463,
+     "convectivekW": 1.5357528415530526,
+     "shockTemp": 332.0627924084866,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 0.05,
+     "extTemp": 220.0,
+     "mach": 2.0,
+     "conv": 5.0,
+     "machHeatMult": 1.1476423537605236,
+     "convectivekW": 0.2653858014459848,
+     "shockTemp": 252.4813178273152,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 0.0,
+     "extTemp": 4.0,
+     "mach": 3.0,
+     "conv": 0.0,
+     "machHeatMult": 1.1476423537605236,
+     "convectivekW": 0.0,
+     "shockTemp": 4.0,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 1.0,
+     "extTemp": 288.0,
+     "mach": 0.0,
+     "conv": 0.0,
+     "machHeatMult": 1.0,
+     "convectivekW": 0.0,
+     "shockTemp": 288.0,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    }
+   ],
+   "heats": [
+    {
+     "density": 0.8,
+     "extTemp": 280.0,
+     "mach": 1.6,
+     "conv": 80.0,
+     "dt": 0.019999999552965164,
+     "series": [
+      722.9737601738311,
+      722.9737601738311,
+      722.9737601738311,
+      722.9737601738311,
+      722.9737601738311,
+      722.9737601738311
+     ],
+     "cutStep": -1,
+     "shockTemp": 737.6743621407513,
+     "convectivekW": 9.747601303111173
+    },
+    {
+     "density": 1.0,
+     "extTemp": 250.0,
+     "mach": 0.5,
+     "conv": 6.0,
+     "dt": 0.019999999552965164,
+     "series": [
+      234.9855503241969,
+      241.7743332618487,
+      243.06691394153304,
+      243.31206036312176,
+      243.3585190056895,
+      243.36732230231894
+     ],
+     "cutStep": -1,
+     "shockTemp": 250.0,
+     "convectivekW": 0.2774932109220804
+    },
+    {
+     "density": 0.3,
+     "extTemp": 230.0,
+     "mach": 1.0,
+     "conv": 12.0,
+     "dt": 0.019999999552965164,
+     "series": [
+      281.37951089143496,
+      282.8934176852365,
+      282.9208782429653,
+      282.92137609096005,
+      282.92138511664405,
+      282.92138528027385
+     ],
+     "cutStep": -1,
+     "shockTemp": 287.76109418902945,
+     "convectivekW": 0.6943630435214347
+    }
+   ],
+   "baseDrag": 0.019999999552965164,
+   "lerps": [
+    {
+     "t": 0.0,
+     "lerpTime": 0.0,
+     "semi": 0.23999999463558197,
+     "full": 2.0199999809265137,
+     "wPackedSemi": 1.0,
+     "wSemiFull": 1.0
+    },
+    {
+     "t": 0.1,
+     "lerpTime": 0.003162277629598975,
+     "semi": 0.24562884867191315,
+     "full": 2.3299031257629395,
+     "wPackedSemi": 0.9968377351760864,
+     "wSemiFull": 0.9968377351760864
+    },
+    {
+     "t": 0.25,
+     "lerpTime": 0.03125,
+     "semi": 0.2956250011920929,
+     "full": 5.082499980926514,
+     "wPackedSemi": 0.96875,
+     "wSemiFull": 0.96875
+    },
+    {
+     "t": 0.5,
+     "lerpTime": 0.1767766922712326,
+     "semi": 0.5546624660491943,
+     "full": 19.3441162109375,
+     "wPackedSemi": 0.8232232928276062,
+     "wSemiFull": 0.8232232928276062
+    },
+    {
+     "t": 0.75,
+     "lerpTime": 0.4871392846107483,
+     "semi": 1.1071078777313232,
+     "full": 49.75965118408203,
+     "wPackedSemi": 0.5128607153892517,
+     "wSemiFull": 0.5128607153892517
+    },
+    {
+     "t": 0.999,
+     "lerpTime": 0.9975018501281738,
+     "semi": 2.0155532360076904,
+     "full": 99.77517700195312,
+     "wPackedSemi": 0.002498149871826172,
+     "wSemiFull": 0.002498149871826172
+    },
+    {
+     "t": 1.0,
+     "lerpTime": 1.0,
+     "semi": 2.0199999809265137,
+     "full": 100.0199966430664,
+     "wPackedSemi": 0.0,
+     "wSemiFull": 0.0
+    }
+   ],
+   "fields": {
+    "stowedDrag": 0.2199999988079071,
+    "semiDeployedDrag": 2.0,
+    "fullyDeployedDrag": 100.0,
+    "deploymentCurve": 2.5,
+    "chuteMaxTemp": 1100.0,
+    "safeMult": 0.95,
+    "deployAltitude": 2500.0,
+    "minAirPressureToOpen": 0.019999999552965164,
+    "autoCutSpeed": 0.5
+   }
+  },
+  {
+   "part": "parachuteDrogue",
+   "areaDeployed": 30.742938690527353,
+   "areaSemi": 0.5756799306821812,
+   "invThermalMass": 0.361419941761609,
+   "maxSafeSpeedAtRef": 550,
+   "points": [
+    {
+     "density": 1.2,
+     "extTemp": 300.0,
+     "mach": 0.3,
+     "conv": 40.0,
+     "machHeatMult": 1.0,
+     "convectivekW": 1.2297175476210942,
+     "shockTemp": 300.0,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 0.5,
+     "extTemp": 250.0,
+     "mach": 0.9,
+     "conv": 25.0,
+     "machHeatMult": 1.1166188044489074,
+     "convectivekW": 0.8582035861465678,
+     "shockTemp": 279.15470111222686,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 0.05,
+     "extTemp": 220.0,
+     "mach": 2.0,
+     "conv": 5.0,
+     "machHeatMult": 1.11875,
+     "convectivekW": 0.17196831330013737,
+     "shockTemp": 246.12499999999997,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 0.0,
+     "extTemp": 4.0,
+     "mach": 3.0,
+     "conv": 0.0,
+     "machHeatMult": 1.11875,
+     "convectivekW": 0.0,
+     "shockTemp": 4.0,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    },
+    {
+     "density": 1.0,
+     "extTemp": 288.0,
+     "mach": 0.0,
+     "conv": 0.0,
+     "machHeatMult": 1.0,
+     "convectivekW": 0.0,
+     "shockTemp": 288.0,
+     "safe": "SAFE",
+     "unsafeJustUnpacked": "UNSAFE"
+    }
+   ],
+   "heats": [
+    {
+     "density": 0.8,
+     "extTemp": 280.0,
+     "mach": 1.6,
+     "conv": 80.0,
+     "dt": 0.019999999552965164,
+     "series": [
+      610.7329969110931,
+      610.7329969110931,
+      610.7329969110931,
+      610.7329969110931,
+      610.7329969110931,
+      610.7329969110931
+     ],
+     "cutStep": -1,
+     "shockTemp": 619.6449378819968,
+     "convectivekW": 5.442773238629102
+    },
+    {
+     "density": 1.0,
+     "extTemp": 250.0,
+     "mach": 0.5,
+     "conv": 6.0,
+     "dt": 0.019999999552965164,
+     "series": [
+      226.10160706489302,
+      232.56815505482456,
+      234.1487504130651,
+      234.53373078726898,
+      234.62741741788372,
+      234.6502116037986
+     ],
+     "cutStep": -1,
+     "shockTemp": 240.61211748674097,
+     "convectivekW": 0.1775309658262282
+    },
+    {
+     "density": 0.3,
+     "extTemp": 230.0,
+     "mach": 1.0,
+     "conv": 12.0,
+     "dt": 0.019999999552965164,
+     "series": [
+      251.5743268244473,
+      253.81971282122217,
+      253.91602771928714,
+      253.92015625020827,
+      253.9203332141127,
+      253.92034079942175
+     ],
+     "cutStep": -1,
+     "shockTemp": 257.4304315296784,
+     "convectivekW": 0.4129131116657167
+    }
+   ],
+   "baseDrag": 0.019999999552965164,
+   "lerps": [
+    {
+     "t": 0.0,
+     "lerpTime": 0.0,
+     "semi": 0.23999999463558197,
+     "full": 4.019999980926514,
+     "wPackedSemi": 1.0,
+     "wSemiFull": 1.0
+    },
+    {
+     "t": 0.1,
+     "lerpTime": 0.003162277629598975,
+     "semi": 0.2519534230232239,
+     "full": 4.544938087463379,
+     "wPackedSemi": 0.9968377351760864,
+     "wSemiFull": 0.9968377351760864
+    },
+    {
+     "t": 0.25,
+     "lerpTime": 0.03125,
+     "semi": 0.3581250011920929,
+     "full": 9.207500457763672,
+     "wPackedSemi": 0.96875,
+     "wSemiFull": 0.96875
+    },
+    {
+     "t": 0.5,
+     "lerpTime": 0.1767766922712326,
+     "semi": 0.9082158803939819,
+     "full": 33.364933013916016,
+     "wPackedSemi": 0.8232232928276062,
+     "wSemiFull": 0.8232232928276062
+    },
+    {
+     "t": 0.75,
+     "lerpTime": 0.4871392846107483,
+     "semi": 2.0813865661621094,
+     "full": 84.88511657714844,
+     "wPackedSemi": 0.5128607153892517,
+     "wSemiFull": 0.5128607153892517
+    },
+    {
+     "t": 0.999,
+     "lerpTime": 0.9975018501281738,
+     "semi": 4.010557174682617,
+     "full": 169.60531616210938,
+     "wPackedSemi": 0.002498149871826172,
+     "wSemiFull": 0.002498149871826172
+    },
+    {
+     "t": 1.0,
+     "lerpTime": 1.0,
+     "semi": 4.019999980926514,
+     "full": 170.02000427246094,
+     "wPackedSemi": 0.0,
+     "wSemiFull": 0.0
+    }
+   ],
+   "fields": {
+    "stowedDrag": 0.2199999988079071,
+    "semiDeployedDrag": 4.0,
+    "fullyDeployedDrag": 170.0,
+    "deploymentCurve": 2.5,
+    "chuteMaxTemp": 1600.0,
+    "safeMult": 0.95,
+    "deployAltitude": 2500.0,
+    "minAirPressureToOpen": 0.019999999552965164,
+    "autoCutSpeed": 0.5
+   }
+  }
+ ],
+ "solar": [
+  {
+   "part": "solarPanelOX10C",
+   "chargeRate": 8.25,
+   "flowMult": 1.0,
+   "samples": [
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.5,
+     "solarFlux": 1360.0,
+     "skinTemperature": 310.0,
+     "ut_minus_launch_seconds": 864000.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.5,
+     "tempEffic": 0.9918968677520752,
+     "efficMult": 0.9918968677520752,
+     "distMult": 1.0,
+     "flowRate": 0.4959484338760376
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.2,
+     "solarFlux": 680.0,
+     "skinTemperature": 700.0,
+     "ut_minus_launch_seconds": 8640000.0,
+     "efficiencyMult": 0.9,
+     "sunAOA": 0.20000000298023224,
+     "tempEffic": 0.5746721625328064,
+     "efficMult": 0.5172049325782737,
+     "distMult": 0.5,
+     "flowRate": 0.05172049402852278
+    },
+    {
+     "type": "FLAT",
+     "dot": -0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 1.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.7,
+     "solarFlux": 3000.0,
+     "skinTemperature": 4.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.2000000476837158,
+     "efficMult": 1.2000000476837158,
+     "distMult": 2.2058823529411766,
+     "flowRate": 2.6470589287140793
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 1500.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 0.05757854878902435,
+     "efficMult": 0.05757854878902435,
+     "distMult": 1.0,
+     "flowRate": 0.05757854878902435
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.22281691431999207,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.22281691431999207
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "SPHERICAL",
+     "dot": 0.9,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.25,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.25
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    }
+   ]
+  },
+  {
+   "part": "solarPanelSP10C",
+   "chargeRate": 8.25,
+   "flowMult": 1.0,
+   "samples": [
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.5,
+     "solarFlux": 1360.0,
+     "skinTemperature": 310.0,
+     "ut_minus_launch_seconds": 864000.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.5,
+     "tempEffic": 0.9918968677520752,
+     "efficMult": 0.9918968677520752,
+     "distMult": 1.0,
+     "flowRate": 0.4959484338760376
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.2,
+     "solarFlux": 680.0,
+     "skinTemperature": 700.0,
+     "ut_minus_launch_seconds": 8640000.0,
+     "efficiencyMult": 0.9,
+     "sunAOA": 0.20000000298023224,
+     "tempEffic": 0.5746721625328064,
+     "efficMult": 0.5172049325782737,
+     "distMult": 0.5,
+     "flowRate": 0.05172049402852278
+    },
+    {
+     "type": "FLAT",
+     "dot": -0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 1.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.7,
+     "solarFlux": 3000.0,
+     "skinTemperature": 4.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.2000000476837158,
+     "efficMult": 1.2000000476837158,
+     "distMult": 2.2058823529411766,
+     "flowRate": 2.6470589287140793
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 1500.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 0.05757854878902435,
+     "efficMult": 0.05757854878902435,
+     "distMult": 1.0,
+     "flowRate": 0.05757854878902435
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.22281691431999207,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.22281691431999207
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "SPHERICAL",
+     "dot": 0.9,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.25,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.25
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    }
+   ]
+  },
+  {
+   "part": "solarPanelOX10L",
+   "chargeRate": 8.25,
+   "flowMult": 1.0,
+   "samples": [
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.5,
+     "solarFlux": 1360.0,
+     "skinTemperature": 310.0,
+     "ut_minus_launch_seconds": 864000.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.5,
+     "tempEffic": 0.9918968677520752,
+     "efficMult": 0.9918968677520752,
+     "distMult": 1.0,
+     "flowRate": 0.4959484338760376
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.2,
+     "solarFlux": 680.0,
+     "skinTemperature": 700.0,
+     "ut_minus_launch_seconds": 8640000.0,
+     "efficiencyMult": 0.9,
+     "sunAOA": 0.20000000298023224,
+     "tempEffic": 0.5746721625328064,
+     "efficMult": 0.5172049325782737,
+     "distMult": 0.5,
+     "flowRate": 0.05172049402852278
+    },
+    {
+     "type": "FLAT",
+     "dot": -0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 1.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.7,
+     "solarFlux": 3000.0,
+     "skinTemperature": 4.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.2000000476837158,
+     "efficMult": 1.2000000476837158,
+     "distMult": 2.2058823529411766,
+     "flowRate": 2.6470589287140793
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 1500.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 0.05757854878902435,
+     "efficMult": 0.05757854878902435,
+     "distMult": 1.0,
+     "flowRate": 0.05757854878902435
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.22281691431999207,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.22281691431999207
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "SPHERICAL",
+     "dot": 0.9,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.25,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.25
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    }
+   ]
+  },
+  {
+   "part": "solarPanelSP10L",
+   "chargeRate": 8.25,
+   "flowMult": 1.0,
+   "samples": [
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.5,
+     "solarFlux": 1360.0,
+     "skinTemperature": 310.0,
+     "ut_minus_launch_seconds": 864000.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.5,
+     "tempEffic": 0.9918968677520752,
+     "efficMult": 0.9918968677520752,
+     "distMult": 1.0,
+     "flowRate": 0.4959484338760376
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.2,
+     "solarFlux": 680.0,
+     "skinTemperature": 700.0,
+     "ut_minus_launch_seconds": 8640000.0,
+     "efficiencyMult": 0.9,
+     "sunAOA": 0.20000000298023224,
+     "tempEffic": 0.5746721625328064,
+     "efficMult": 0.5172049325782737,
+     "distMult": 0.5,
+     "flowRate": 0.05172049402852278
+    },
+    {
+     "type": "FLAT",
+     "dot": -0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 1.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.7,
+     "solarFlux": 3000.0,
+     "skinTemperature": 4.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.2000000476837158,
+     "efficMult": 1.2000000476837158,
+     "distMult": 2.2058823529411766,
+     "flowRate": 2.6470589287140793
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 1500.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 0.05757854878902435,
+     "efficMult": 0.05757854878902435,
+     "distMult": 1.0,
+     "flowRate": 0.05757854878902435
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.22281691431999207,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.22281691431999207
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "SPHERICAL",
+     "dot": 0.9,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.25,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.25
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    }
+   ]
+  },
+  {
+   "part": "solarPanels2",
+   "chargeRate": 1.6399999856948853,
+   "flowMult": 1.0,
+   "samples": [
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.5,
+     "solarFlux": 1360.0,
+     "skinTemperature": 310.0,
+     "ut_minus_launch_seconds": 864000.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.5,
+     "tempEffic": 0.9918968677520752,
+     "efficMult": 0.9918968677520752,
+     "distMult": 1.0,
+     "flowRate": 0.4959484338760376
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.2,
+     "solarFlux": 680.0,
+     "skinTemperature": 700.0,
+     "ut_minus_launch_seconds": 8640000.0,
+     "efficiencyMult": 0.9,
+     "sunAOA": 0.20000000298023224,
+     "tempEffic": 0.5746721625328064,
+     "efficMult": 0.5172049325782737,
+     "distMult": 0.5,
+     "flowRate": 0.05172049402852278
+    },
+    {
+     "type": "FLAT",
+     "dot": -0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 1.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.7,
+     "solarFlux": 3000.0,
+     "skinTemperature": 4.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.2000000476837158,
+     "efficMult": 1.2000000476837158,
+     "distMult": 2.2058823529411766,
+     "flowRate": 2.6470589287140793
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 1500.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 0.05757854878902435,
+     "efficMult": 0.05757854878902435,
+     "distMult": 1.0,
+     "flowRate": 0.05757854878902435
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.22281691431999207,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.22281691431999207
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "SPHERICAL",
+     "dot": 0.9,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.25,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.25
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    }
+   ]
+  },
+  {
+   "part": "solarPanels4",
+   "chargeRate": 1.6399999856948853,
+   "flowMult": 1.0,
+   "samples": [
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.5,
+     "solarFlux": 1360.0,
+     "skinTemperature": 310.0,
+     "ut_minus_launch_seconds": 864000.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.5,
+     "tempEffic": 0.9918968677520752,
+     "efficMult": 0.9918968677520752,
+     "distMult": 1.0,
+     "flowRate": 0.4959484338760376
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.2,
+     "solarFlux": 680.0,
+     "skinTemperature": 700.0,
+     "ut_minus_launch_seconds": 8640000.0,
+     "efficiencyMult": 0.9,
+     "sunAOA": 0.20000000298023224,
+     "tempEffic": 0.5746721625328064,
+     "efficMult": 0.5172049325782737,
+     "distMult": 0.5,
+     "flowRate": 0.05172049402852278
+    },
+    {
+     "type": "FLAT",
+     "dot": -0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 1.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.7,
+     "solarFlux": 3000.0,
+     "skinTemperature": 4.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.2000000476837158,
+     "efficMult": 1.2000000476837158,
+     "distMult": 2.2058823529411766,
+     "flowRate": 2.6470589287140793
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 1500.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 0.05757854878902435,
+     "efficMult": 0.05757854878902435,
+     "distMult": 1.0,
+     "flowRate": 0.05757854878902435
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.22281691431999207,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.22281691431999207
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "SPHERICAL",
+     "dot": 0.9,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.25,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.25
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    }
+   ]
+  },
+  {
+   "part": "solarPanels1",
+   "chargeRate": 1.6399999856948853,
+   "flowMult": 1.0,
+   "samples": [
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.5,
+     "solarFlux": 1360.0,
+     "skinTemperature": 310.0,
+     "ut_minus_launch_seconds": 864000.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.5,
+     "tempEffic": 0.9918968677520752,
+     "efficMult": 0.9918968677520752,
+     "distMult": 1.0,
+     "flowRate": 0.4959484338760376
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.2,
+     "solarFlux": 680.0,
+     "skinTemperature": 700.0,
+     "ut_minus_launch_seconds": 8640000.0,
+     "efficiencyMult": 0.9,
+     "sunAOA": 0.20000000298023224,
+     "tempEffic": 0.5746721625328064,
+     "efficMult": 0.5172049325782737,
+     "distMult": 0.5,
+     "flowRate": 0.05172049402852278
+    },
+    {
+     "type": "FLAT",
+     "dot": -0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 1.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.7,
+     "solarFlux": 3000.0,
+     "skinTemperature": 4.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.2000000476837158,
+     "efficMult": 1.2000000476837158,
+     "distMult": 2.2058823529411766,
+     "flowRate": 2.6470589287140793
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 1500.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 0.05757854878902435,
+     "efficMult": 0.05757854878902435,
+     "distMult": 1.0,
+     "flowRate": 0.05757854878902435
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.22281691431999207,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.22281691431999207
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "SPHERICAL",
+     "dot": 0.9,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.25,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.25
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    }
+   ]
+  },
+  {
+   "part": "solarPanels3",
+   "chargeRate": 1.6399999856948853,
+   "flowMult": 1.0,
+   "samples": [
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.5,
+     "solarFlux": 1360.0,
+     "skinTemperature": 310.0,
+     "ut_minus_launch_seconds": 864000.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.5,
+     "tempEffic": 0.9918968677520752,
+     "efficMult": 0.9918968677520752,
+     "distMult": 1.0,
+     "flowRate": 0.4959484338760376
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.2,
+     "solarFlux": 680.0,
+     "skinTemperature": 700.0,
+     "ut_minus_launch_seconds": 8640000.0,
+     "efficiencyMult": 0.9,
+     "sunAOA": 0.20000000298023224,
+     "tempEffic": 0.5746721625328064,
+     "efficMult": 0.5172049325782737,
+     "distMult": 0.5,
+     "flowRate": 0.05172049402852278
+    },
+    {
+     "type": "FLAT",
+     "dot": -0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 1.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.7,
+     "solarFlux": 3000.0,
+     "skinTemperature": 4.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.2000000476837158,
+     "efficMult": 1.2000000476837158,
+     "distMult": 2.2058823529411766,
+     "flowRate": 2.6470589287140793
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 1500.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 0.05757854878902435,
+     "efficMult": 0.05757854878902435,
+     "distMult": 1.0,
+     "flowRate": 0.05757854878902435
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.22281691431999207,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.22281691431999207
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "SPHERICAL",
+     "dot": 0.9,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.25,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.25
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    }
+   ]
+  },
+  {
+   "part": "largeSolarPanel",
+   "chargeRate": 24.399999618530273,
+   "flowMult": 1.0,
+   "samples": [
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.5,
+     "solarFlux": 1360.0,
+     "skinTemperature": 310.0,
+     "ut_minus_launch_seconds": 864000.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.5,
+     "tempEffic": 0.9918968677520752,
+     "efficMult": 0.9918968677520752,
+     "distMult": 1.0,
+     "flowRate": 0.4959484338760376
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.2,
+     "solarFlux": 680.0,
+     "skinTemperature": 700.0,
+     "ut_minus_launch_seconds": 8640000.0,
+     "efficiencyMult": 0.9,
+     "sunAOA": 0.20000000298023224,
+     "tempEffic": 0.5746721625328064,
+     "efficMult": 0.5172049325782737,
+     "distMult": 0.5,
+     "flowRate": 0.05172049402852278
+    },
+    {
+     "type": "FLAT",
+     "dot": -0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 1.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.7,
+     "solarFlux": 3000.0,
+     "skinTemperature": 4.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.2000000476837158,
+     "efficMult": 1.2000000476837158,
+     "distMult": 2.2058823529411766,
+     "flowRate": 2.6470589287140793
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 1500.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 0.05757854878902435,
+     "efficMult": 0.05757854878902435,
+     "distMult": 1.0,
+     "flowRate": 0.05757854878902435
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.22281691431999207,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.22281691431999207
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "SPHERICAL",
+     "dot": 0.9,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.25,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.25
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    }
+   ]
+  },
+  {
+   "part": "solarPanels5",
+   "chargeRate": 0.3499999940395355,
+   "flowMult": 1.0,
+   "samples": [
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.5,
+     "solarFlux": 1360.0,
+     "skinTemperature": 310.0,
+     "ut_minus_launch_seconds": 864000.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.5,
+     "tempEffic": 0.9918968677520752,
+     "efficMult": 0.9918968677520752,
+     "distMult": 1.0,
+     "flowRate": 0.4959484338760376
+    },
+    {
+     "type": "FLAT",
+     "dot": 0.2,
+     "solarFlux": 680.0,
+     "skinTemperature": 700.0,
+     "ut_minus_launch_seconds": 8640000.0,
+     "efficiencyMult": 0.9,
+     "sunAOA": 0.20000000298023224,
+     "tempEffic": 0.5746721625328064,
+     "efficMult": 0.5172049325782737,
+     "distMult": 0.5,
+     "flowRate": 0.05172049402852278
+    },
+    {
+     "type": "FLAT",
+     "dot": -0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 1.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.7,
+     "solarFlux": 3000.0,
+     "skinTemperature": 4.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.2000000476837158,
+     "efficMult": 1.2000000476837158,
+     "distMult": 2.2058823529411766,
+     "flowRate": 2.6470589287140793
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 1500.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 0.05757854878902435,
+     "efficMult": 0.05757854878902435,
+     "distMult": 1.0,
+     "flowRate": 0.05757854878902435
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 0.3,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.22281691431999207,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.22281691431999207
+    },
+    {
+     "type": "CYLINDRICAL",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.0
+    },
+    {
+     "type": "SPHERICAL",
+     "dot": 0.9,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 5.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 0.25,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 0.25
+    },
+    {
+     "type": "FLAT",
+     "dot": 1.0,
+     "solarFlux": 1360.0,
+     "skinTemperature": 300.0,
+     "ut_minus_launch_seconds": 0.0,
+     "efficiencyMult": 1.0,
+     "sunAOA": 1.0,
+     "tempEffic": 1.0,
+     "efficMult": 1.0,
+     "distMult": 1.0,
+     "flowRate": 1.0
+    }
+   ]
+  }
+ ],
+ "dragWeights": [
+  {
+   "retracted": 0.0,
+   "angle": 0.0,
+   "A": 0.0,
+   "B": 1.0,
+   "Aonly": 1.0
+  },
+  {
+   "retracted": 0.0,
+   "angle": 0.10000000149011612,
+   "A": 0.10000000149011612,
+   "B": 0.8999999761581421,
+   "Aonly": 1.0
+  },
+  {
+   "retracted": 0.0,
+   "angle": 0.5,
+   "A": 0.5,
+   "B": 0.5,
+   "Aonly": 1.0
+  },
+  {
+   "retracted": 0.0,
+   "angle": 0.7699999809265137,
+   "A": 0.7699999809265137,
+   "B": 0.23000001907348633,
+   "Aonly": 1.0
+  },
+  {
+   "retracted": 0.0,
+   "angle": 1.0,
+   "A": 1.0,
+   "B": 0.0,
+   "Aonly": 1.0
+  },
+  {
+   "retracted": 0.25,
+   "angle": 0.0,
+   "A": 0.0,
+   "B": 0.75,
+   "Aonly": 0.75
+  },
+  {
+   "retracted": 0.25,
+   "angle": 0.10000000149011612,
+   "A": 0.07500000298023224,
+   "B": 0.675000011920929,
+   "Aonly": 0.75
+  },
+  {
+   "retracted": 0.25,
+   "angle": 0.5,
+   "A": 0.375,
+   "B": 0.375,
+   "Aonly": 0.75
+  },
+  {
+   "retracted": 0.25,
+   "angle": 0.7699999809265137,
+   "A": 0.5774999856948853,
+   "B": 0.17250001430511475,
+   "Aonly": 0.75
+  },
+  {
+   "retracted": 0.25,
+   "angle": 1.0,
+   "A": 0.75,
+   "B": 0.0,
+   "Aonly": 0.75
+  },
+  {
+   "retracted": 0.3333333432674408,
+   "angle": 0.0,
+   "A": 0.0,
+   "B": 0.6666666269302368,
+   "Aonly": 0.6666666269302368
+  },
+  {
+   "retracted": 0.3333333432674408,
+   "angle": 0.10000000149011612,
+   "A": 0.06666667014360428,
+   "B": 0.5999999642372131,
+   "Aonly": 0.6666666269302368
+  },
+  {
+   "retracted": 0.3333333432674408,
+   "angle": 0.5,
+   "A": 0.3333333134651184,
+   "B": 0.3333333134651184,
+   "Aonly": 0.6666666269302368
+  },
+  {
+   "retracted": 0.3333333432674408,
+   "angle": 0.7699999809265137,
+   "A": 0.5133333206176758,
+   "B": 0.15333335101604462,
+   "Aonly": 0.6666666269302368
+  },
+  {
+   "retracted": 0.3333333432674408,
+   "angle": 1.0,
+   "A": 0.6666666269302368,
+   "B": 0.0,
+   "Aonly": 0.6666666269302368
+  },
+  {
+   "retracted": 0.5,
+   "angle": 0.0,
+   "A": 0.0,
+   "B": 0.5,
+   "Aonly": 0.5
+  },
+  {
+   "retracted": 0.5,
+   "angle": 0.10000000149011612,
+   "A": 0.05000000074505806,
+   "B": 0.44999998807907104,
+   "Aonly": 0.5
+  },
+  {
+   "retracted": 0.5,
+   "angle": 0.5,
+   "A": 0.25,
+   "B": 0.25,
+   "Aonly": 0.5
+  },
+  {
+   "retracted": 0.5,
+   "angle": 0.7699999809265137,
+   "A": 0.38499999046325684,
+   "B": 0.11500000953674316,
+   "Aonly": 0.5
+  },
+  {
+   "retracted": 0.5,
+   "angle": 1.0,
+   "A": 0.5,
+   "B": 0.0,
+   "Aonly": 0.5
+  },
+  {
+   "retracted": 0.8999999761581421,
+   "angle": 0.0,
+   "A": 0.0,
+   "B": 0.10000002384185791,
+   "Aonly": 0.10000002384185791
+  },
+  {
+   "retracted": 0.8999999761581421,
+   "angle": 0.10000000149011612,
+   "A": 0.010000002570450306,
+   "B": 0.09000001847743988,
+   "Aonly": 0.10000002384185791
+  },
+  {
+   "retracted": 0.8999999761581421,
+   "angle": 0.5,
+   "A": 0.050000011920928955,
+   "B": 0.050000011920928955,
+   "Aonly": 0.10000002384185791
+  },
+  {
+   "retracted": 0.8999999761581421,
+   "angle": 0.7699999809265137,
+   "A": 0.07700001448392868,
+   "B": 0.02300000749528408,
+   "Aonly": 0.10000002384185791
+  },
+  {
+   "retracted": 0.8999999761581421,
+   "angle": 1.0,
+   "A": 0.10000002384185791,
+   "B": 0.0,
+   "Aonly": 0.10000002384185791
+  },
+  {
+   "retracted": 1.0,
+   "angle": 0.0,
+   "A": 0.0,
+   "B": 0.0,
+   "Aonly": 0.0
+  },
+  {
+   "retracted": 1.0,
+   "angle": 0.10000000149011612,
+   "A": 0.0,
+   "B": 0.0,
+   "Aonly": 0.0
+  },
+  {
+   "retracted": 1.0,
+   "angle": 0.5,
+   "A": 0.0,
+   "B": 0.0,
+   "Aonly": 0.0
+  },
+  {
+   "retracted": 1.0,
+   "angle": 0.7699999809265137,
+   "A": 0.0,
+   "B": 0.0,
+   "Aonly": 0.0
+  },
+  {
+   "retracted": 1.0,
+   "angle": 1.0,
+   "A": 0.0,
+   "B": 0.0,
+   "Aonly": 0.0
+  }
+ ]
+}
