@@ -1101,6 +1101,60 @@ TEST_CASE("WP-31 CrewGenerator: the name draw sequence, prototype attributes and
     CHECK_THROWS_AS(CrewGenerator::GetRandomName(ProtoCrewMember::Gender::Male, &rng), NullReferenceException);
 }
 
+// CrewGenerator.cs:78-95 mission-editor branch: after the attribute draws the same generator draws Next(maxValue), maxValue = 6 or
+// the per-trait kerbalLevel* of MissionParamsGeneral when enableKerbalLevels; SetExperienceLevel(MISSION) turns the draw into training.
+TEST_CASE("WP-31 CrewGenerator.RandomCrewMemberPrototype mission-editor branch: Next(maxValue) draws against a KSPRandom replay") {
+    World31 w;
+    const std::vector<std::string> male = {"Alan", "Bart", "Cal", "Dud", "Edz", "Fil", "Gus", "Hal", "Ivo", "Jax", "Kip", "Leo", "Max", "Ned", "Oz", "Pip"};
+    const std::vector<std::string> female = {"Ada", "Bea", "Cyd", "Dot"};
+    const std::vector<std::string> sMale = {"Spec", "Spud"};
+    const std::vector<std::string> sFemale = {"Fspec"};
+    CrewGenerator::SetNameTables(male, female, sMale, sFemale, "Kerman");
+    w.game.CrewRoster = std::make_shared<KerbalRoster>(Game_Modes::CAREER);
+    SaveEnvironment::Current().currentGame = &w.game;
+    GameParameters params;
+    auto& general = params.CustomParams<Expansions::Missions::MissionParamsGeneral>();
+    CrewGenerator::missionEditorParameters = [&params] { return &params; };
+    std::set<std::string> traitsSeen;
+    for (const bool levels : {false, true}) {
+        general.enableKerbalLevels = levels;
+        general.kerbalLevelPilot = 2;
+        general.kerbalLevelEngineer = 3;
+        general.kerbalLevelScientist = 5;
+        for (int32_t seed = 1; seed <= 80; ++seed) {
+            KSPRandom rng(seed);
+            const bool female_ = rng.Next(2) > 0;
+            const auto& names = female_ ? female : male;
+            const auto& special = female_ ? sFemale : sMale;
+            std::string first;
+            if (rng.Next(20) != 0) first = names[static_cast<size_t>(rng.Next(static_cast<int32_t>(names.size())))];
+            else first = special[static_cast<size_t>(rng.Next(static_cast<int32_t>(special.size())))];
+            const std::string full = first + " Kerman";
+            const int32_t hash = StringExtensions::GetHashCode_Net35(full);
+            const std::string trait = std::vector<std::string>{"Pilot", "Engineer", "Scientist"}[static_cast<size_t>(std::abs(hash) % 3)];
+            traitsSeen.insert(trait);
+            int maxValue = 6;
+            if (levels) maxValue = trait == "Scientist" ? 5 : trait == "Engineer" ? 3 : 2;
+            KSPRandom attr(hash);
+            attr.NextDouble();
+            attr.NextDouble();
+            attr.Next(10);
+            const int32_t expectedLevel = attr.Next(maxValue);
+            PCM p = CrewGenerator::RandomCrewMemberPrototypeSeeded(seed, ProtoCrewMember::KerbalType::Crew);
+            REQUIRE(p->name().value_or("") == full);
+            CHECK(p->trait == trait);
+            CHECK(expectedLevel >= 0);
+            CHECK(expectedLevel < maxValue);
+            CHECK(p->experienceLevel == expectedLevel);  // Training<N> gives exactly level N (N = 0: no log, level stays as drawn)
+        }
+    }
+    CHECK(traitsSeen.size() == 3);
+    // without a MissionEditorLogic (hook unset) the attributes are untouched and no level is drawn
+    CrewGenerator::missionEditorParameters = nullptr;
+    PCM q = CrewGenerator::RandomCrewMemberPrototypeSeeded(7, ProtoCrewMember::KerbalType::Crew);
+    CHECK(q->experienceLevel == 0);
+}
+
 TEST_CASE("WP-31 CrewGenerator.Initialize reads the four TextAssets (ConfigNode text with Element values)") {
     World31 w;
     std::vector<std::string> requested;
