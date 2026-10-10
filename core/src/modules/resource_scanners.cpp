@@ -524,9 +524,8 @@ void Reg(std::initializer_list<const char*> names) {
 }  // namespace
 
 void RegisterResourceProcessingModules() {
-    // ModuleScienceConverter (science package) is a BaseConverter subclass: its BaseConverter behaviour (OnAwake / OnLoad / FixedUpdate)
-    // is registered under that name, as WP-06's stand-in did
-    Reg<BaseConverter>({"BaseConverter", "ModuleScienceConverter"});
+    // ModuleScienceConverter is the real class of WP-35 (science_modules.cpp, registered after this function)
+    Reg<BaseConverter>({"BaseConverter"});
     Reg<ModuleResourceConverter>({"ModuleResourceConverter"});
     Reg<BaseDrill>({"BaseDrill"});
     Reg<ModuleResourceHarvester>({"ModuleResourceHarvester"});
