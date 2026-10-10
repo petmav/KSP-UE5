@@ -1195,7 +1195,7 @@ TEST_CASE("WP-39 ModuleDataTransmitter.transmitQueuedData: packet count, packet 
         TransmitterEnvironment::screenMessages.clear();
         std::vector<float> sent;
         std::vector<int> frames;
-        int frame = 0;
+        int frame = -1;  // the first packet is sent synchronously inside TransmitData, before pass 0
         TransmitterEnvironment::createCommsStream = [&](const TransmissionItem&, float, float, bool) {
             auto s = std::make_unique<Stream>();
             s->sent = &sent;
@@ -1216,10 +1216,10 @@ TEST_CASE("WP-39 ModuleDataTransmitter.transmitQueuedData: packet count, packet 
         tx->TransmitData({item});
         CHECK(tx->IsBusy());
         while (tx->IsBusy() && frame < 200000) {
+            frame++;  // the pass number the packets of this pass are stamped with
             sched.AdvanceFrame(0.02f);
             sched.RunDelayedFixedFrameRate();
             sched.RunDelayedDynamicFrameRate();
-            frame++;
         }
         REQUIRE(!tx->IsBusy());
         const json& expSent = r["sent"];
@@ -1230,10 +1230,9 @@ TEST_CASE("WP-39 ModuleDataTransmitter.transmitQueuedData: packet count, packet 
         const double used = before - totalEC();
         const double expectEc = r["ec"];
         CHECK(std::abs(used - expectEc) <= 1e-9 * expectEc);
-        // the gap between packets: WaitForFixedSeconds(packetInterval) with the float curTime += fixedDeltaTime accumulation. The first gap of a run is
-        // one step shorter: the scheduler resumes the first WaitForFixedUpdate in the pass that started it (coroutine.hpp:16, the routine was started
-        // from outside a fixed step); every later gap is exactly the reference count.
-        for (size_t i = 1; i < frames.size(); i++) CHECK(frames[i] - frames[i - 1] == r["stepsPerPacket"].get<int>() - (i == 1 ? 1 : 0));
+        // the gap between packets: WaitForFixedSeconds(packetInterval) with the float curTime += fixedDeltaTime accumulation. Packet 0 is sent
+        // synchronously in TransmitData (frame index -1, before pass 0), so every gap, the first included, is exactly the reference count.
+        for (size_t i = 1; i < frames.size(); i++) CHECK(frames[i] - frames[i - 1] == r["stepsPerPacket"].get<int>());
         CHECK_FALSE(tx->xmitAborted());
         CHECK(tx->Get<std::string>("statusText") == Localizer::Format("#autoLOC_236147"));
         // the first screen message is the "Transmitting" status; the last status is the completion message
