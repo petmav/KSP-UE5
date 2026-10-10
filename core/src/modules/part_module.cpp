@@ -1,4 +1,6 @@
 #include "ksp/modules/part_module.hpp"
+
+#include <unordered_set>
 #include "ksp/modules/axis_groups_manager.hpp"
 
 #include <algorithm>
@@ -16,6 +18,16 @@
 #include "ksp/resources/part_resource_library.hpp"
 
 namespace ksp {
+
+namespace {
+std::unordered_set<const IScalarModule*>& LiveScalarModules() {
+    static std::unordered_set<const IScalarModule*> live;
+    return live;
+}
+}  // namespace
+IScalarModule::IScalarModule() { LiveScalarModules().insert(this); }
+IScalarModule::~IScalarModule() { LiveScalarModules().erase(this); }
+bool IScalarModule::IsAlive(const IScalarModule* m) { return LiveScalarModules().count(m) != 0; }
 
 // ---- PartModule ---------------------------------------------------------------------------------------------------------
 

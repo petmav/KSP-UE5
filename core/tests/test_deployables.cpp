@@ -13,6 +13,7 @@
 #include "ksp/events/game_events.hpp"
 #include "ksp/modules/animation_modules.hpp"
 #include "ksp/modules/deployables.hpp"
+#include "ksp/modules/module_structural.hpp"
 #include "ksp/modules/parachutes.hpp"
 #include "ksp/modules/resource_processing.hpp"
 #include "ksp/orbit/time_warp.hpp"
@@ -893,7 +894,7 @@ TEST_CASE("WP-27 ModuleDeployableSolarPanel: sunAOA, temperature / time efficien
             const int64_t u1 = UlpD(m->_efficMult, smp["efficMult"].get<double>());
             const int64_t u2 = UlpD(m->_distMult, smp["distMult"].get<double>());
             const int64_t u3 = UlpD(m->_flowRate, smp["flowRate"].get<double>());
-            maxUlp = std::max({maxUlp, u1 / (1LL << 29), u3 / (1LL << 29)});  // float-sized ULPs of the double
+            maxUlp = std::max({maxUlp, u1 / (int64_t{1} << 29), u3 / (int64_t{1} << 29)});  // float-sized ULPs of the double
             CHECK(u2 == 0);
             CHECK(std::fabs(m->_efficMult - smp["efficMult"].get<double>()) <= 4e-7 * std::max(1.0, std::fabs(m->_efficMult)));
             CHECK(std::fabs(m->_flowRate - smp["flowRate"].get<double>()) <= 4e-7 * std::max(1.0, std::fabs(m->_flowRate)));
@@ -1423,4 +1424,32 @@ TEST_CASE("WP-27 UnityEngine.Animation model: Play / Stop / wrap modes / normali
     AnimationState& z = a.AddClip("z", 0.0f);
     z.time = 3.0f;
     CHECK(z.normalizedTime() == 0.0f);
+}
+
+// ============================================== the cargo bay hook (ModuleCargoBay.cs:134-137, :284, :293) ========================
+
+TEST_CASE("WP-27 ModuleAnimateGeneric drives ModuleCargoBay.OnCargoBayDoorsMoving / OnCargoBayDoorsStopped through IScalarModule.OnMoving / OnStop") {
+    if (!GameAvailable()) return;
+    World27 w;
+    Rig27 rig(w.game, "mk3CargoBayS");
+    auto* bay = rig.Mod<ModuleCargoBay>("ModuleCargoBay");
+    auto* door = rig.Mod<ModuleAnimateGeneric>("ModuleAnimateGeneric");
+    rig.anim->AddClip(Str(*door, "animationName"), 2.0f);
+    int nearbyQueries = 0;
+    ModuleCargoBay::hooks.findNearbyParts = [&](ModuleCargoBay&, float, const Vector3f&) {
+        nearbyQueries++;
+        return std::vector<Part*>{};
+    };
+    door->OnStart(StartState::Flying);
+    bay->OnStart(StartState::Flying);
+    // OnStart resolved the deploy module through DeployModuleIndex and subscribed to its events
+    CHECK(bay->deployModule == door->AsScalarModule());
+    const int before = nearbyQueries;
+    door->Toggle();                   // OnMoving(from, to) -> OnCargoBayDoorsMoving: NotifyShieldModified only (no volume query)
+    CHECK(nearbyQueries == before);
+    rig.anim->Tick(5.0f);             // the Once clip ends
+    door->FixedUpdate();              // AnimationHandler: onStop.Fire(animTime) -> OnCargoBayDoorsStopped -> EnableShieldedVolume
+    CHECK(nearbyQueries == before + 1);
+    // the deploy module dies first (module list destruction order): the bay's destructor must not touch its events
+    ModuleCargoBay::hooks.findNearbyParts = nullptr;
 }

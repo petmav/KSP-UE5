@@ -3,6 +3,7 @@
 #include "ksp/modules/animation_modules.hpp"
 
 #include <cmath>
+#include <stdexcept>
 
 #include "ksp/core/exceptions.hpp"
 #include "ksp/core/log.hpp"

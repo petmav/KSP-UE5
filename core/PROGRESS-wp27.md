@@ -6,3 +6,4 @@
 - [ ] code, [ ] gate (capture.part_database), [ ] python ref, [ ] unit tests, [ ] STATUS/README
 - [x] code compiles, capture.part_database green with real classes (Windows)
 - [x] tests/test_deployables.cpp + tools/wp27/deploy_reference.py written, WP-27 unit tests pass (Windows)
+- [x] Windows fresh + WSL (32/32 each) green; docs written; commit pending

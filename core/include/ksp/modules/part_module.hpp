@@ -78,7 +78,11 @@ public:
 // IScalarModule.cs (EventData<float,float> OnMoving / EventData<float> OnStop are owned by the implementing module)
 class IScalarModule {
 public:
-    virtual ~IScalarModule() = default;
+    IScalarModule();
+    virtual ~IScalarModule();
+    // WP-27: the live scalar modules (a subscriber such as ModuleCargoBay must not touch the OnMoving / OnStop events of a deploy module
+    // that was destroyed before it: C# keeps the destroyed object alive, C++ does not)
+    static bool IsAlive(const IScalarModule* m);
     virtual std::string ScalarModuleID() const = 0;
     virtual float GetScalar() const = 0;
     virtual bool CanMove() const = 0;

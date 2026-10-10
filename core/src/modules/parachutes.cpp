@@ -5,6 +5,7 @@
 #include "ksp/modules/cs_expr.hpp"
 
 #include <algorithm>
+#include <stdexcept>
 
 #include "ksp/core/exceptions.hpp"
 #include "ksp/core/log.hpp"
