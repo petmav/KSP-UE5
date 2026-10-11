@@ -1,15 +1,16 @@
 # PROGRESS WP-38 (FinePrint)
 
-Branch wp38 from main 85b0085f, worktree .worktrees/wp38.
+Branch wp38 from main 85b0085f (main 6da79774 merged), worktree .worktrees/wp38.
 
-## Scope decision (coherent subset, see STATUS WP-38 section when written)
-Ported: Utilities (ProgressUtilities rest, CelestialUtilities all but PQSMod peak walk, SystemUtilities deviation maths + ShuffleList + LoadNode<CelestialBody>,
+## Scope decision (coherent subset; see the STATUS WP-38 section)
+Ported: Utilities (ProgressUtilities rest, CelestialUtilities all but the PQSMod peak walk, SystemUtilities deviation maths + ShuffleList + LoadNode<CelestialBody>,
 OrbitUtilities complete), Waypoint data side + WaypointManager.ChooseRandomPosition/Near/Distance, ProgressTrackingParameter, ExplorationContract.
-Deferred: the other 24 FinePrint parameters, 9 other contract templates, Sentinel, CompatibilityUtilities, VesselUtilities (rest), SystemUtilities (rest), StringUtilities site names.
+Deferred: the other 24 FinePrint parameters, 8 other contracts, Sentinel, CompatibilityUtilities, VesselUtilities, rest of SystemUtilities/StringUtilities, full ContractDefs.
 
 ## Milestones
-- [x] M1 Lite extensions (src/contracts/fineprint_utilities.cpp), build green
-- [x] M2 OrbitUtilities, Waypoint/WaypointManager, ProgressTrackingParameter, ExplorationContract (src/fineprint/*), build green
-- [ ] M3 Python reference tools/wp38/fineprint_reference.py -> tests/data/wp38_reference.json
-- [ ] M4 tests/test_fineprint.cpp
-- [ ] M5 cites (check_cites), README/STATUS, full Windows + WSL verification, merge main
+- [x] M1 Lite extensions (src/contracts/fineprint_utilities.cpp)
+- [x] M2 OrbitUtilities, Waypoint/WaypointManager, ProgressTrackingParameter, ExplorationContract (src/fineprint/*)
+- [x] M3 Python reference tools/wp38/fineprint_reference.py -> tests/data/wp38_reference.json
+- [x] M4 tests/test_fineprint.cpp (13 cases, 27,984 assertions, 0 ULP)
+- [x] M5 cites (0 mismatches), README / STATUS, Windows full run 34/34 (579 cases / 963,143 assertions)
+- [ ] M6 WSL clang run (log /tmp/wp38_clang.log in WSL), final commit
