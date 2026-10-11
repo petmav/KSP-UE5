@@ -9,6 +9,7 @@
 #include "ksp/terrain/pq.hpp"
 #include "ksp/terrain/pqs.hpp"
 #include "ksp/terrain/pqs_cache.hpp"
+#include "ksp/terrain/pqs_parallel.hpp"
 #include "ksp/unity/matrix_native.hpp"
 
 namespace ksp {
@@ -151,12 +152,27 @@ bool PQS::BuildQuad(PQ& quad) {
     vbData_.gnomonicPlane = static_cast<int>(buildQuad_->plane);
     buildQuad_->meshVertMin = 1.7976931348623157e308;   // double.MaxValue
     buildQuad_->meshVertMax = -1.7976931348623157e308;  // double.MinValue
+    // WP-12a optimisation: the height pass evaluated in parallel beforehand (pqs_parallel.hpp), else inline
+    const PQSBuildHeights* pre = heightWorkers != nullptr ? heightWorkers->Find(quad) : nullptr;
+    if (pre != nullptr) heightWorkers->used++;
     for (vertexIndex = 0; vertexIndex < c.cacheVertCount; vertexIndex++) {
         vbData_.globalV = Vector3d(MultiplyPoint3x4(buildQuad_->quadMatrix, c.cacheVerts[Z(vertexIndex)]));
         vbData_.directionFromCenter = vbData_.globalV.normalized();
         vbData_.vertHeight = radius;
         vbData_.vertIndex = vertexIndex;
-        Mod_OnVertexBuildHeight(vbData_, false);
+        if (pre == nullptr) {
+            Mod_OnVertexBuildHeight(vbData_, false);
+        } else {
+            const size_t k = Z(vertexIndex);
+            if (reqVertexMapCoods) BuildVertexMapCoords(vbData_);
+            vbData_.vertHeight = pre->vertHeight[k];
+            const uint8_t w = pre->colorWritten[k];
+            if (w & 1) vbData_.vertColor.r = pre->vertColor[k].r;
+            if (w & 2) vbData_.vertColor.g = pre->vertColor[k].g;
+            if (w & 4) vbData_.vertColor.b = pre->vertColor[k].b;
+            if (w & 8) vbData_.vertColor.a = pre->vertColor[k].a;
+            vbData_.allowScatter = pre->allowScatter[k] != 0;
+        }
         Mod_OnVertexBuild(vbData_);
         vbData_.vertHeight -= radius;
         if (vbData_.vertHeight > buildQuad_->meshVertMax) buildQuad_->meshVertMax = vbData_.vertHeight;

@@ -71,6 +71,7 @@ add_library(kspcore STATIC
     terrain/pqs_cache.cpp
     terrain/pqs_mods_quad.cpp
     terrain/pqs_quadtree.cpp
+    terrain/pqs_parallel.cpp
     io/url_dir.cpp
     database/game_database.cpp
     resources/part_resource_library.cpp
@@ -262,6 +263,9 @@ add_library(ksp::core ALIAS kspcore)
 target_include_directories(kspcore PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_compile_features(kspcore PUBLIC cxx_std_20)
 ksp_set_build_flags(kspcore)
+# WP-12a: PQSHeightWorkers (std::thread)
+find_package(Threads REQUIRED)
+target_link_libraries(kspcore PUBLIC Threads::Threads)
 if(KSP_LIBM_PORTABLE)
     target_compile_definitions(kspcore PRIVATE KSP_LIBM_PORTABLE=1)
 endif()

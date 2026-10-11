@@ -138,6 +138,9 @@ public:
     PQ* GetSidePQ(PQS::QuadEdge edge) const;  // :1020
     void SetNeighbour(PQ* oldNeighbour, PQ* newNeighbour);  // :1035
 
+    // The quadMatrix SetupQuad (:193) gives a non-root quad from its current fields (PQSHeightWorkers prediction)
+    Matrix4x4f PredictQuadMatrix() const;
+
     double angularinterval() const { return angularinterval_; }
     int corner() const { return Corner_; }
 

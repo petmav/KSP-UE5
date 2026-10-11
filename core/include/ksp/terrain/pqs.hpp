@@ -49,6 +49,8 @@ class PQSVertexBuildData;
 class PQ;             // ksp/terrain/pq.hpp (included at the end of this header)
 class PQSCache;       // ksp/terrain/pqs_cache.hpp
 class PQSMeshCache;   // ksp/terrain/pqs_cache.hpp
+struct PQSBuildHeights;   // ksp/terrain/pqs_parallel.hpp
+class PQSHeightWorkers;   // ksp/terrain/pqs_parallel.hpp
 
 // One serialized field of a mod, for the bit-exact prefab test (tests/test_terrain.cpp): C# field path (nested
 // fields as `a.b`, arrays as `a[i]`) and its value with the C# type kind.
@@ -344,6 +346,9 @@ public:
     float Now() const { return realtimeSinceStartup ? realtimeSinceStartup() : 1.0f; }
     // Camera.main.transform for Mod_OnSphereStart's fallback target (unset: no camera)
     std::function<const PQSTarget*()> mainCamera;
+    // WP-12a optimisation (ksp/terrain/pqs_parallel.hpp): when set, the height pass of quads about to be built is
+    // evaluated on these workers in parallel (bit-identical; not owned)
+    PQSHeightWorkers* heightWorkers = nullptr;
     // Called for every quad whose MeshCollider PQSMod_QuadMeshColliders enables / disables (WP-12b seam)
     std::function<void(PQ&)> onQuadColliderEnabled, onQuadColliderDisabled;
     // PQSLandControl / PQSMod_AerialPerspectiveMaterial / PQSMod_CelestialBodyTransform found by SetupMods
@@ -398,6 +403,8 @@ public:
     void BuildNormals(PQ& quad);         // :1760 (static in C#)
     void BuildNormalsNoClear(PQ& quad);  // :1798 (static in C#; no caller)
     void BuildTangents(PQ& quad);        // :1619 (static in C#)
+    // The height half of BuildQuad for the geometry of `quad` with quad matrix `m` (the PQSHeightWorkers job)
+    void EvaluateBuildHeights(const PQ& quad, const Matrix4x4f& m, const PQSMeshCache& cache, PQSBuildHeights& out);
 
     // ---- frame helpers (PQS.cs:3042-3167) ----
     Vector3d GetRelativePosition(const Vector3d& worldPosition) const;   // :3042
@@ -442,6 +449,7 @@ private:
     void DisableSubdivision();      // :1371
     void EnableSubdivision();       // :1380
     void UpdateSphereIteration();   // one pass of the UpdateSphere loop body (:1108-1117)
+    void PrefetchVisibleLeaves();   // PQSHeightWorkers: the leaves UpdateQuadsInit's building pass will build
     void StartUpdateSphereRoutine();
     void BuildVertexHeight(VertexBuildData& data);          // :2318
     void BuildVertexSurfaceRelative(VertexBuildData& data); // :2324

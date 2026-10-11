@@ -9,6 +9,7 @@
 #include "ksp/core/exceptions.hpp"
 #include "ksp/dotnet/math.hpp"
 #include "ksp/terrain/pqs_cache.hpp"
+#include "ksp/terrain/pqs_parallel.hpp"
 #include "ksp/unity/matrix_native.hpp"
 #include "ksp/unity/quaternion_native.hpp"
 
@@ -52,6 +53,13 @@ PQ::PQ() {
     edgeState = PQS::EdgeState::Reset;
 }
 
+// PQ.cs:190-193: the non-root quad matrix (shared by SetupQuad and the PQSHeightWorkers prediction)
+Matrix4x4f PQ::PredictQuadMatrix() const {
+    const double factor = 1.0 / dotnet::Math::Pow(2.0, subdivision - 1);
+    return UnityNative::TRS(positionPlanePosition.ToVector3f(), Deref(quadRoot).planeRotation.ToQuaternionf(),
+                            (Vector3d::one() * factor).ToVector3f());
+}
+
 // PQ.cs:178 SetupQuad
 void PQ::SetupQuad(PQ* parentQuad, QuadChild parentChildPosition) {
     // (north/south/east/west null: Debug.LogError + Debug.Break, then carries on)
@@ -62,7 +70,7 @@ void PQ::SetupQuad(PQ* parentQuad, QuadChild parentChildPosition) {
         quadScaleFactor = 1.0 / dotnet::Math::Pow(2.0, subdivision - 1);
         quadArea = quadRoot->quadArea * quadScaleFactor;
         quadScale = Vector3d::one() * quadScaleFactor;
-        quadMatrix = UnityNative::TRS(positionPlanePosition.ToVector3f(), quadRoot->planeRotation.ToQuaternionf(), quadScale.ToVector3f());
+        quadMatrix = PredictQuadMatrix();  // TRS(positionPlanePosition, quadRoot.planeRotation, quadScale)
     } else {
         planeRotation = QuaternionD(UnityNative::FromToRotation(Vector3f::up(), positionPlanePosition.normalized().ToVector3f()));
         quadScaleFactor = 2.0;
@@ -272,6 +280,16 @@ bool PQ::Subdivide() {
         n2->uvDelta = uvDel;
         n3->uvSW = uvSW;
         n3->uvDelta = uvDel;
+    }
+    if (s.heightWorkers != nullptr && s.quadAllowBuild) {
+        // WP-12a optimisation: the height pass of the children UpdateVisibility below will build, in parallel
+        std::vector<std::pair<PQ*, Matrix4x4f>> jobs;
+        for (PQ* c : subNodes) {
+            if (c->isCached || c->isBuilt) continue;
+            const double g = dotnet::Math::Acos(Vector3d::Dot(c->positionPlanetRelative, s.relativeTargetPositionNormalized)) * s.radius * 1.3;
+            if (g < s.visibleRadius) jobs.emplace_back(c, c->PredictQuadMatrix());
+        }
+        if (jobs.size() >= 2) s.heightWorkers->Prefetch(jobs, s.meshCache());
     }
     isSubdivided = true;
     SetInvisible();

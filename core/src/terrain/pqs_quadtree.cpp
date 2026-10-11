@@ -14,6 +14,7 @@
 #include "ksp/terrain/pqs.hpp"
 #include "ksp/terrain/pqs_cache.hpp"
 #include "ksp/terrain/pqs_mods.hpp"
+#include "ksp/terrain/pqs_parallel.hpp"
 #include "ksp/unity/mathf.hpp"
 
 namespace ksp {
@@ -514,9 +515,30 @@ void PQS::UpdateQuadsInit() {
         num = quadCount;
         for (int num4 = 5; num4 >= 0; num4--) quads[static_cast<size_t>(num4)]->UpdateSubdivisionInit();
     }
+    if (heightWorkers != nullptr) PrefetchVisibleLeaves();  // WP-12a optimisation
     quadAllowBuild = true;
     for (int num5 = 5; num5 >= 0; num5--) quads[static_cast<size_t>(num5)]->UpdateSubdivision();
+    if (heightWorkers != nullptr) heightWorkers->Clear();
     isThinking = false;
+}
+
+// WP-12a optimisation (pqs_parallel.hpp): the leaves the building pass of UpdateQuadsInit will build (PQ.UpdateSubdivision
+// -> UpdateVisibility for a leaf at or above minLevel with gcd1 < visibleRadius; gcd1 is recomputed from the same inputs)
+void PQS::PrefetchVisibleLeaves() {
+    std::vector<std::pair<PQ*, Matrix4x4f>> jobs;
+    std::vector<PQ*> stack(quads.begin(), quads.end());
+    while (!stack.empty()) {
+        PQ* q = stack.back();
+        stack.pop_back();
+        if (q->isSubdivided) {
+            for (PQ* c : q->subNodes)
+                if (c != nullptr) stack.push_back(c);
+            continue;
+        }
+        if (q->isActive && !q->isBuilt && !q->isCached && q->subdivision >= minLevel && q->gcd1 < visibleRadius)
+            jobs.emplace_back(q, q->quadMatrix);
+    }
+    heightWorkers->Prefetch(jobs, meshCache());
 }
 
 // PQS.cs:1411 UpdateQuads: insertion sort of the six roots by distance to the target, then only the first FIVE are
@@ -538,6 +560,7 @@ void PQS::UpdateQuads() {
     }
     for (int j = 0; j < Mathf::Min(num, 5); j++) quads[static_cast<size_t>(j)]->UpdateSubdivision();
     if (reqCustomNormals) UpdateEdges();
+    if (heightWorkers != nullptr) heightWorkers->Clear();
     isThinking = false;
 }
 
