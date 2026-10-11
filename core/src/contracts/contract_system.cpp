@@ -133,6 +133,7 @@ void ContractSystem::Register() {
 void ContractSystem::OnAwake() {
     loaded = false;
     Instance = this;
+    if (ContractsEnvironment::Current().loadContractDefsData) ContractsEnvironment::Current().loadContractDefsData();
     GenerateTypes();
     if (!LoadedSceneIsEditor()) Career().Scheduler().StartCoroutine(UpdateDaemon(), coroutineOwner_);
 }
