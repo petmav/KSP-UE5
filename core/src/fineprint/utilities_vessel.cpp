@@ -253,6 +253,7 @@ bool HavePartTech(std::string partName, bool logging) {
 }
 // ProgressUtilities.cs:29
 bool HaveModuleTech(const std::string& moduleName, const std::string* excludeModule) {
+    if (FinePrintEnvironment::haveModuleTech) return FinePrintEnvironment::haveModuleTech(moduleName);
     PartLoader* loader = PartLoader::Instance();
     if (loader == nullptr) return false;
     int count = static_cast<int>(loader->loadedParts.size());
@@ -404,6 +405,7 @@ bool HasValidContractObjectives(Vessel& vessel, std::vector<std::string> objecti
 // ResearchAndDevelopment.cs:1177
 bool ResearchedValidContractObjectives(std::vector<std::string> objectiveTypes, bool copy) {
     (void)copy;
+    if (FinePrintEnvironment::researchedValidContractObjectives) return FinePrintEnvironment::researchedValidContractObjectives(objectiveTypes);
     if (!objectiveTypes.empty()) {
         std::vector<std::string>& list = objectiveTypes;
         PartLoader* loader = PartLoader::Instance();

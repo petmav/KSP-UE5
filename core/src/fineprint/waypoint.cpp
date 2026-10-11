@@ -32,7 +32,7 @@ struct Gen {
     std::unique_ptr<KSPRandom> own;
     explicit Gen(KSPRandom* generator, int seedIfNull, bool seedIsUnique) : g(generator) {
         if (g == nullptr) {
-            own = std::make_unique<KSPRandom>(seedIsUnique ? seedIfNull : Contracts::ContractsEnvironment::Current().NewRandomSeed());
+            own = std::make_unique<KSPRandom>(seedIsUnique ? seedIfNull : ksp::Contracts::ContractsEnvironment::Current().NewRandomSeed());
             g = own.get();
         }
     }
@@ -40,7 +40,7 @@ struct Gen {
 }  // namespace
 
 // Waypoint.cs:126
-Waypoint::Waypoint() { navigationId = Contracts::ContractsEnvironment::Current().NewGuid(); }
+Waypoint::Waypoint() { navigationId = ksp::Contracts::ContractsEnvironment::Current().NewGuid(); }
 
 // Waypoint.cs:131 (the map node / position caches are GUI and are not copied)
 Waypoint::Waypoint(const Waypoint& that)
@@ -49,13 +49,13 @@ Waypoint::Waypoint(const Waypoint& that)
       isOnSurface(that.isOnSurface), isNavigatable(that.isNavigatable), visible(that.visible), landLocked(that.landLocked),
       enableMarker(that.enableMarker), enableTooltip(that.enableTooltip), iconSize(that.iconSize), alphaRatio(that.alphaRatio), iconAlpha(that.iconAlpha),
       fadeRange(that.fadeRange), navigationId(that.navigationId), contractReference(that.contractReference), orbitPosition(that.orbitPosition) {
-    if (navigationId == Guid::Empty()) navigationId = Contracts::ContractsEnvironment::Current().NewGuid();
+    if (navigationId == Guid::Empty()) navigationId = ksp::Contracts::ContractsEnvironment::Current().NewGuid();
 }
 
 // Waypoint.cs:165
 void Waypoint::setName(bool uniqueSites, bool allowNamed) {
     if (celestialBody() != nullptr) {
-        const std::string text = Contracts::Lite::StringUtilities::GenerateSiteName(uniqueSites ? uniqueSeed() : seed, celestialBody(), landLocked, allowNamed);
+        const std::string text = ksp::Contracts::Lite::StringUtilities::GenerateSiteName(uniqueSites ? uniqueSeed() : seed, celestialBody(), landLocked, allowNamed);
         name = KSP::Localization::Localizer::Format("#autoLOC_7001301", {text});
     }
 }

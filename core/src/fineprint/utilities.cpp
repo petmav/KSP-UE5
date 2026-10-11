@@ -57,6 +57,9 @@ void FinePrintEnvironment::Reset() {
     orbitRendererDriverOrbit = nullptr;
     deltaTime = nullptr;
     cometTypeName = nullptr;
+    researchedValidContractObjectives = nullptr;
+    haveModuleTech = nullptr;
+    probeCoresUnlocked = nullptr;
 }
 
 // ------------------------------------------------------------------------------------------------------------------ StringUtilities

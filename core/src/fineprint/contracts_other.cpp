@@ -74,6 +74,7 @@ bool SatelliteContract::AreSatellitesUnlocked() {
 }
 // SatelliteContract.cs:611
 bool SatelliteContract::ProbeCoresUnlocked() {
+    if (Lite::FinePrintEnvironment::probeCoresUnlocked) return Lite::FinePrintEnvironment::probeCoresUnlocked();
     PartLoader* loader = PartLoader::Instance();
     if (loader == nullptr) return false;
     int count = static_cast<int>(loader->loadedParts.size());

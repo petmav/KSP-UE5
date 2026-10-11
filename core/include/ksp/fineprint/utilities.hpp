@@ -20,6 +20,7 @@
 
 #include "ksp/contracts/fineprint_lite.hpp"
 #include "ksp/contracts/waypoints.hpp"
+#include "ksp/fineprint/fineprint.hpp"
 #include "ksp/dotnet/random.hpp"
 #include "ksp/orbit/orbit.hpp"
 
@@ -69,6 +70,11 @@ struct FinePrintEnvironment {
     static inline std::function<Orbit*()> orbitRendererDriverOrbit;
     // Vessel.Comet.typeName (CometVessel is not ported; Sentinel/comet package). Unset: ""
     static inline std::function<std::string(Vessel&)> cometTypeName;
+    // R&D overrides for hosts / tests that have no loaded part database: ResearchAndDevelopment.ResearchedValidContractObjectives(types),
+    // ProgressUtilities.HaveModuleTech(name), SatelliteContract.ProbeCoresUnlocked(). Unset: computed from PartLoader.LoadedPartsList like the C#.
+    static inline std::function<bool(const std::vector<std::string>&)> researchedValidContractObjectives;
+    static inline std::function<bool(const std::string&)> haveModuleTech;
+    static inline std::function<bool()> probeCoresUnlocked;
     // TimeWarp / frame: Time.deltaTime (StabilityParameter.OnUpdate). Unset: Vessel::env.deltaTime
     static inline std::function<float()> deltaTime;
 
