@@ -4260,6 +4260,8 @@ Status: a coherent subset of the package is done and gated; Sentinel, the full C
 
 Windows MSVC RelWithDebInfo (`run_tests.ps1 -Fresh` from the worktree with `core/build` deleted first, `CMAKE_BUILD_PARALLEL_LEVEL=6`, from main `af3798c6`): 34/34 ctest, `kspcore_tests` 609 doctest cases / 1,063,520 assertions (WP-38b: 15 cases / 98,893 assertions), configure 2.8 s, build 212.9 s, test 222.9 s. Linux was not run.
 
+After merging main (wp50, wp53): fresh `run_tests.ps1 -Fresh`, 34/34 ctest, `kspcore_tests` 671 cases / 1,145,528 assertions (gatekeeper run, 0 failed).
+
 ## WP-42: scene flow, KSC, facilities, launch sites (branch `wp42`, from main `85b0085f`, main `13750b33` merged)
 
 State: done for the engine-agnostic part (PQSCity / PQSCity2 placement maths, SpaceCenter, LaunchSite, PSystemSetup registry and launch-site setup, HighLogic scene flow,
@@ -4599,4 +4601,3 @@ maths and prefs, InputSettings listen session, TrackIR.Settings, speed multiplie
 ### Verification
 
 Windows MSVC RelWithDebInfo (`core/build` deleted, `run_tests.ps1 -Fresh`, main `af3798c6`): 34/34 ctest, `unit` 626 doctest cases / 1,012,303 assertions (WP-50: 32 cases / 47,676 assertions); configure 1.8 s, build 138.6 s, test 126.3 s. GCC (WSL g++, `-std=c++20 -fsyntax-only -Wall -Wextra`) over `src/input/*.cpp` and the four `tests/test_input*.cpp`: no errors or warnings in the WP-50 files (it found the nested-struct default-member-initializer rule that MSVC accepts; `FlightInputHost` and `MouseButton` are namespace-level types for it). `check_cites.py` exact mode: 0 mismatches over `src/input/*.cpp` (212 citations); `tools/wp50/header_cites.py`: 0 over `include/ksp/input/*.hpp` (291).
-After merging main (wp50, wp53): fresh `run_tests.ps1 -Fresh`, 34/34 ctest, `kspcore_tests` 671 cases / 1,145,528 assertions (gatekeeper run, 0 failed).
