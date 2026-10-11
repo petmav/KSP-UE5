@@ -47,6 +47,7 @@ private:
         int joint = -1;  // CraftModel::joints index
         JPH::Vec3 localAnchor1, localAnchor2;  // body-local anchor points (for the stretch measure)
     };
+    void DropCrossingAutostruts();  // also removes the constraints of every broken joint
     World* world_ = nullptr;
     const CraftModel* craft_ = nullptr;
     std::vector<JPH::Body*> bodies_;        // per physical body

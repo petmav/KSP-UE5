@@ -52,6 +52,7 @@ struct Sample {
     double t, altitude, speed;
     double comX, comY, comZ;  // body-fixed
     float jointError;
+    double tiltDeg;  // angle between the root part's axis and the local vertical
 };
 
 struct FlightResult {

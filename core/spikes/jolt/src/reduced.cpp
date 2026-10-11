@@ -165,7 +165,8 @@ void ReducedVessel::Recluster(const std::vector<bool>& cut, bool inheritVelocity
     std::vector<int> oldClusterOfPart = clusterOfPart_;
     // remove the old bodies
     BodyInterface& bi = world_->Bodies();
-    for (auto& ij : interJoints_) world_->System().RemoveConstraint(ij);
+    for (auto& ij : interJoints_)
+        if (ij->GetEnabled()) world_->System().RemoveConstraint(ij);  // fired joints were removed already
     interJoints_.clear();
     interJointOf_.clear();
     for (Cluster& c : clusters_)

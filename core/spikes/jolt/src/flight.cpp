@@ -210,6 +210,12 @@ FlightResult RunFlight(KspContext& ctx, CraftModel& craft, const FlightConfig& c
             s.comY = cb.GetY();
             s.comZ = cb.GetZ();
             s.jointError = model->MaxJointError();
+            {
+                const Vec3 axis = model->partRot[craft.root] * Vec3::sAxisY();
+                const DVec3 upv = cb.Normalized();
+                const double c = std::clamp(DVec3(axis).Dot(upv), -1.0, 1.0);
+                s.tiltDeg = std::acos(c) * 180.0 / JPH_PI;
+            }
             r.maxJointError = std::max(r.maxJointError, s.jointError);
             r.samples.push_back(s);
             if (!std::isfinite(s.altitude) || !std::isfinite(s.speed) || s.speed > 5.0e4) {

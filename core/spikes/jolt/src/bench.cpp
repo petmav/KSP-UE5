@@ -57,9 +57,18 @@ std::string CraftPath(const std::string& c) {
     throw std::runtime_error("craft not found: " + c);
 }
 
+// Solver steps per model: the articulated model needs PhysX-like iteration counts to hold the PartJoint chain (KSP: 50 PhysX
+// position iterations [runtime]; 10 Jolt velocity steps let the chain stretch by a metre on the pad); the reduced model has
+// few or no joints and runs Jolt's defaults (10 / 2). --vel-steps / --pos-steps override both.
+void SetModel(FlightConfig& c, const std::string& m, const Args& a) {
+    c.model = m;
+    c.world.velocitySteps = static_cast<int>(a.Num("vel-steps", m == "articulated" ? a.Num("art-vel-steps", 50) : 10));
+    c.world.positionSteps = static_cast<int>(a.Num("pos-steps", 2));
+}
+
 FlightConfig ConfigFromArgs(const Args& a) {
     FlightConfig c;
-    c.model = a.Str("model", c.model);
+    SetModel(c, a.Str("model", c.model), a);
     c.ticks = static_cast<int>(a.Num("ticks", c.ticks));
     c.settleTicks = static_cast<int>(a.Num("settle", c.settleTicks));
     c.dt = a.Num("dt", c.dt);
@@ -83,8 +92,7 @@ FlightConfig ConfigFromArgs(const Args& a) {
     c.orbitAltitude = a.Num("orbit-alt", c.orbitAltitude);
     c.sampleEvery = static_cast<int>(a.Num("sample-every", c.sampleEvery));
     c.debug = a.Has("debug");
-    c.world.velocitySteps = static_cast<int>(a.Num("vel-steps", c.world.velocitySteps));
-    c.world.positionSteps = static_cast<int>(a.Num("pos-steps", c.world.positionSteps));
+    if (a.Has("pad")) c.throttle = 0.0f;
     c.world.threads = static_cast<int>(a.Num("threads", c.world.threads));
     return c;
 }
@@ -155,7 +163,7 @@ int RunBench(KspContext& ctx, const std::string& name, const Args& args) {
         for (const std::string& c : list)
             for (const std::string& m : models) {
                 FlightConfig cfg = ConfigFromArgs(args);
-                cfg.model = m;
+                SetModel(cfg, m, args);
                 FlightResult r = RunFlight(ctx, craft(c), cfg);
                 PrintResult(r, cfg);
                 csv.Row(name, r, cfg);
@@ -170,7 +178,7 @@ int RunBench(KspContext& ctx, const std::string& name, const Args& args) {
             for (const std::string& m : models)
                 for (const std::string& s : steps) {
                     FlightConfig cfg = ConfigFromArgs(args);
-                    cfg.model = m;
+                    SetModel(cfg, m, args);
                     const size_t slash = s.find('/');
                     cfg.world.velocitySteps = std::stoi(s.substr(0, slash));
                     cfg.world.positionSteps = std::stoi(s.substr(slash + 1));
@@ -188,7 +196,7 @@ int RunBench(KspContext& ctx, const std::string& name, const Args& args) {
             for (const std::string& m : models)
                 for (const std::string& t : threads) {
                     FlightConfig cfg = ConfigFromArgs(args);
-                    cfg.model = m;
+                    SetModel(cfg, m, args);
                     cfg.world.threads = std::stoi(t);
                     FlightResult r = RunFlight(ctx, craft(c), cfg);
                     PrintResult(r, cfg);
@@ -209,7 +217,7 @@ int RunBench(KspContext& ctx, const std::string& name, const Args& args) {
                 double alt1 = 0, v1 = 0, tick1 = 0;
                 for (const std::string& rate : rates) {
                     FlightConfig cfg = ConfigFromArgs(args);
-                    cfg.model = m;
+                    SetModel(cfg, m, args);
                     const double w = std::stod(rate);
                     cfg.dt = 0.02 * w;
                     cfg.ticks = static_cast<int>(std::lround(gameTime / cfg.dt));
@@ -240,7 +248,7 @@ int RunBench(KspContext& ctx, const std::string& name, const Args& args) {
             for (const std::string& m : models)
                 for (int s = 0; s < 2; s++) {
                     FlightConfig cfg = ConfigFromArgs(args);
-                    cfg.model = m;
+                    SetModel(cfg, m, args);
                     cfg.perTickShift = s == 1;
                     FlightResult r = RunFlight(ctx, craft(c), cfg);
                     PrintResult(r, cfg);
@@ -256,7 +264,7 @@ int RunBench(KspContext& ctx, const std::string& name, const Args& args) {
         for (const std::string& c : list)
             for (const std::string& k : args.List("kernels", "exact,soa,both")) {
                 FlightConfig cfg = ConfigFromArgs(args);
-                cfg.model = args.Str("model", "reduced-whole");
+                SetModel(cfg, args.Str("model", "reduced-whole"), args);
                 cfg.kernel = k == "soa" ? PartPipeline::AeroKernel::SoA : k == "both" ? PartPipeline::AeroKernel::Both : PartPipeline::AeroKernel::Exact;
                 FlightResult r = RunFlight(ctx, craft(c), cfg);
                 const double n = std::max(1, r.measuredTicks);
@@ -276,7 +284,7 @@ int RunBench(KspContext& ctx, const std::string& name, const Args& args) {
         for (const std::string& c : list)
             for (const std::string& m : models) {
                 FlightConfig cfg = ConfigFromArgs(args);
-                cfg.model = m;
+                SetModel(cfg, m, args);
                 cfg.fireDecouplersAtTick = cfg.settleTicks + 250;
                 FlightResult r = RunFlight(ctx, craft(c), cfg);
                 std::printf("| %s | %s | %d | %d | %.3f | %.3f | %.1f | %d |\n", c.c_str(), m.c_str(), r.bodies, r.bodiesAfterStaging, r.stagingMs,
@@ -294,7 +302,7 @@ int RunBench(KspContext& ctx, const std::string& name, const Args& args) {
             for (const std::string& m : models)
                 for (int o = 0; o < 2; o++) {
                     FlightConfig cfg = ConfigFromArgs(args);
-                    cfg.model = m;
+                    SetModel(cfg, m, args);
                     cfg.originAtBody = o == 0;
                     cfg.throttle = 0.0f;
                     cfg.aero = false;
@@ -334,7 +342,7 @@ int RunBench(KspContext& ctx, const std::string& name, const Args& args) {
             for (const std::string& m : models)
                 for (const std::string& rate : rates) {
                     FlightConfig cfg = ConfigFromArgs(args);
-                    cfg.model = m;
+                    SetModel(cfg, m, args);
                     cfg.orbit = true;
                     cfg.terrain = false;
                     cfg.aero = false;

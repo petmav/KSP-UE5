@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
             PrintResult(r, cfg);
             if (args.Has("samples"))
                 for (const Sample& s : r.samples)
-                    std::printf("  t %7.2f  alt %10.3f  v %9.3f  jointErr %.5f\n", s.t, s.altitude, s.speed, s.jointError);
+                    std::printf("  t %7.2f  alt %10.3f  v %9.3f  tilt %7.3f  jointErr %.5f\n", s.t, s.altitude, s.speed, s.tiltDeg, s.jointError);
         } else if (cmd == "bench") {
             if (args.positional.empty()) throw std::runtime_error("bench: name missing");
             rc = RunBench(ctx, args.positional[0], args);

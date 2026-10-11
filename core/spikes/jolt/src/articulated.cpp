@@ -180,12 +180,7 @@ std::vector<BreakEvent> ArticulatedVessel::AfterStep(float dt, int tick) {
             out.push_back({sj.joint, tick, f, t});
         }
     }
-    if (!out.empty())
-        for (SubJoint& sj : subJoints_)
-            if (jointBroken_[sj.joint] && sj.c->GetEnabled()) {
-                world_->System().RemoveConstraint(sj.c);
-                sj.c->SetEnabled(false);
-            }
+    if (!out.empty()) DropCrossingAutostruts();
     return out;
 }
 
@@ -201,14 +196,31 @@ int ArticulatedVessel::FireDecouplers() {
         if (!craft_->parts[js.child].isDecoupler) continue;
         jointBroken_[sj.joint] = true;
     }
+    DropCrossingAutostruts();
+    return BodyCount();
+}
+
+void ArticulatedVessel::DropCrossingAutostruts() {
+    // KSP splits the vessel and re-creates autostruts per new vessel (onVesselWasModified -> CycleAutoStrut, Part.cs:8023-8041):
+    // an autostrut whose ends are no longer connected through attach joints disappears
+    const size_t n = craft_->parts.size();
+    std::vector<int> uf(n);
+    for (size_t i = 0; i < n; i++) uf[i] = static_cast<int>(i);
+    auto find = [&](int x) {
+        while (uf[x] != x) x = uf[x] = uf[uf[x]];
+        return x;
+    };
+    for (size_t i = 0; i < n; i++)
+        if (!craft_->parts[i].physical && craft_->parts[i].parent >= 0) uf[find(static_cast<int>(i))] = find(craft_->parts[i].parent);
+    for (int j = 0; j < craft_->attachJointCount; j++)
+        if (!jointBroken_[j]) uf[find(craft_->joints[j].child)] = find(craft_->joints[j].parent);
+    for (size_t j = craft_->attachJointCount; j < craft_->joints.size(); j++)
+        if (!jointBroken_[j] && find(craft_->joints[j].child) != find(craft_->joints[j].parent)) jointBroken_[j] = true;
     for (SubJoint& sj : subJoints_)
         if (jointBroken_[sj.joint] && sj.c->GetEnabled()) {
             world_->System().RemoveConstraint(sj.c);
             sj.c->SetEnabled(false);
         }
-    // autostruts that now connect separated pieces would be rebuilt by KSP (onVesselWasModified -> CycleAutoStrut); the spike
-    // removes every autostrut that crosses a decoupler: anchor and part on different sides
-    return BodyCount();
 }
 
 int ArticulatedVessel::ConstraintCount() const {

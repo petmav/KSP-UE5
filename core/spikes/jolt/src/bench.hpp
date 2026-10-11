@@ -23,6 +23,7 @@ struct Args {
 
 std::string CraftPath(const std::string& nameOrPath);
 FlightConfig ConfigFromArgs(const Args& a);
+void SetModel(FlightConfig& c, const std::string& model, const Args& a);
 void PrintResultHeader();
 void PrintResult(const FlightResult& r, const FlightConfig& cfg);
 int RunBench(KspContext& ctx, const std::string& name, const Args& args);
