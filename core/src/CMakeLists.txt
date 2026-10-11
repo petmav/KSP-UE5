@@ -234,6 +234,11 @@ add_library(kspcore STATIC
     modules/module_procedural_fairing.cpp
     modules/module_structural.cpp
     modules/misc_modules.cpp
+    # WP-33 inventory and EVA construction
+    inventory/inventory.cpp
+    inventory/module_inventory_part.cpp
+    inventory/construction.cpp
+    inventory/inventory_ui.cpp
     # WP-53 Breaking Ground: deployed science, ROCs, contracts
     modules/module_cargo_part.cpp
     serenity/serenity_env.cpp

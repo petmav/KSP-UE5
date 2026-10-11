@@ -33,6 +33,7 @@ NAME_ALIAS = {"~Mission": "OnDestroy", "~TestModule": "OnDestroy", "~ActionModul
               "TransferStep": "transferResources",
               "ApplyJointBreakForce": "SetJoint", "SiteRenameAcceptPressed": "RenameSite", "SiteRenameDismissPressed": "RenameSite",
               "SiteRenameAcceptEnabled": "RenameSite",
+              "UpdatePlacement": "OnUpdate", "SetCurrentCargoPart": "CurrentCargoPart", "SetupPaw": "Setup", "ModuleFor": "kerbalModule",
               # WP-53: C# properties ported as getter / Set* functions, and one renamed private function
               "UpdateGroundModuleUI": "UpdateModuleUI", "SetPowerUnitsProduced": "PowerUnitsProduced", "SetEnabled": "Enabled",
               "SetScienceLimit": "ScienceLimit", "OnDestroyed": "OnDestroy"}
