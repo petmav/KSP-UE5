@@ -27,6 +27,7 @@ namespace ksp {
 class Game;
 class GameParameters;
 class CelestialBody;
+class ModuleInventoryPart;
 class ProtoCrewMember;
 class Part;
 class VesselCrewManifest;
@@ -229,6 +230,7 @@ public:
     bool CheckActive(double ut);                          // :642
     bool ChangeName(const std::string& newName);          // :652
     void SetDefaultInventory();                           // :810 (empty INVENTORY; contents need the part database)
+    void SaveInventory(ModuleInventoryPart* inventory);   // :831 (WP-33: inventory/inventory_ui.cpp)
     std::string GetKerbalEVAPartName();                   // :1008
     void Die();                                           // :1205 (onCrewKilled / KerbalRef.die need the flight scene)
     void CheckRespawnTimer(double UT, const GameParameters& gameParameters);  // :1221

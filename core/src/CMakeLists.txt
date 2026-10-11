@@ -214,6 +214,11 @@ add_library(kspcore STATIC
     modules/module_procedural_fairing.cpp
     modules/module_structural.cpp
     modules/misc_modules.cpp
+    # WP-33 inventory and EVA construction
+    inventory/inventory.cpp
+    inventory/module_inventory_part.cpp
+    inventory/construction.cpp
+    inventory/inventory_ui.cpp
     parts/part_decouple.cpp
     parts/part_shield.cpp
     parts/compound_part.cpp
