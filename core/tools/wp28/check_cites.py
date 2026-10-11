@@ -29,7 +29,10 @@ NAME_ALIAS = {"set_currentMassVal": "currentMassVal", "set_massThresholdVal": "m
               "CrewGenerator_RemoveLastName": "RemoveLastName",
               "TransferStep": "transferResources",
               "ApplyJointBreakForce": "SetJoint", "SiteRenameAcceptPressed": "RenameSite", "SiteRenameDismissPressed": "RenameSite",
-              "SiteRenameAcceptEnabled": "RenameSite"}
+              "SiteRenameAcceptEnabled": "RenameSite",
+              # WP-53: C# properties ported as getter / Set* functions, and one renamed private function
+              "UpdateGroundModuleUI": "UpdateModuleUI", "SetPowerUnitsProduced": "PowerUnitsProduced", "SetEnabled": "Enabled",
+              "SetScienceLimit": "ScienceLimit", "OnDestroyed": "OnDestroy"}
 CITE = re.compile(r"^(\s*)// (?:([A-Za-z0-9_/]+)\.cs)?:(\d+)\b")
 FUNC = re.compile(r"(\w+)::(~?\w+)\s*\(")
 
@@ -50,6 +53,10 @@ def load(cs_root, f, cache={}):
                 if f + ".cs" in fn:
                     p = os.path.join(dp, f + ".cs")
                     break
+        if not os.path.exists(p):  # WP-50: Assembly-CSharp-firstpass is a sibling assembly (SpaceNavigator*.cs, QuaternionExtensions.cs)
+            fp = os.path.join(os.path.dirname(cs_root.rstrip("/\\")), "Assembly-CSharp-firstpass", f + ".cs")
+            if os.path.exists(fp):
+                p = fp
         cache[key] = open(p, encoding="utf-8-sig", errors="replace").read().splitlines() if os.path.exists(p) else None
     return cache[key]
 

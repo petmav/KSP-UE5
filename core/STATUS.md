@@ -1,6 +1,6 @@
 # kspcore status
 
-Updated 2026-10-11 (WP-35, WP-36, WP-37, WP-39, WP-40, small fixes wave 5; 2026-10-10: WP-00, WP-17, WP-22, WP-23, WP-24, WP-25, WP-26, WP-27, WP-28, WP-30, WP-31). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
+Updated 2026-10-11 (WP-50, WP-35, WP-36, WP-37, WP-39, WP-40, small fixes wave 5; 2026-10-10: WP-00, WP-17, WP-22, WP-23, WP-24, WP-25, WP-26, WP-27, WP-28, WP-30, WP-31). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
 (details in README.md). Local git repository in `core/` only, never pushed.
 
 ## Summary
@@ -41,6 +41,8 @@ Updated 2026-10-11 (WP-35, WP-36, WP-37, WP-39, WP-40, small fixes wave 5; 2026-
 | 31. WP-37 contract system core and stock templates (branch `wp37`, from main `7199d110`, `wp36` merged first, main `dcef6d17` merged) | done for the engine-agnostic part, unit-gated (no contract golden or capture exists, every existing gate unchanged): Contract state machine / rewards / expiry and deadline maths through the WP-36 GameVariables and currency pipeline, ContractParameter tree, ContractSystem (generation, weights, GetContractCounts, WEIGHTS / CONTRACTS save format), Agents + 19 mentalities, TextGen, 19 stock parameters, 5 predicates, PartTestConstraint, the real ModuleTestSubject PartModule, ScenarioCustomWaypoints, templates PlantFlag / CollectScience / PartTest / RecoverAsset / GrandTour; compared 0 ULP / byte-exact with the independent `tools/wp37/contract_reference.py` (rewards, expiry, mentalities, counts, weights, 189 TextGen strings, 284 generated contracts incl. ContractID, 1,426 part CONSTRAINT nodes); deferred: VesselRepair / OrbitalConstruction / RoverConstruction templates (WP-38 dependencies), see the section. |
 | 32. WP-38 FinePrint utilities, waypoints, orbit generation, ExplorationContract (branch `wp38`, from main `85b0085f`, main `13750b33` merged) | a coherent subset, unit-gated (no FinePrint golden or capture exists, every existing gate unchanged): `ProgressUtilities` rest (world-first rewards, prestige, record tracks), `CelestialUtilities`, deviation maths, `OrbitUtilities` complete (`GenerateOrbit`, `ValidateOrbit`, `IdentifyOrbit`), `Waypoint` data side and `WaypointManager.ChooseRandomPosition*`, `ProgressTrackingParameter`, `ExplorationContract` (the mandatory type); compared 0 ULP / byte-exact with the independent `tools/wp38/fineprint_reference.py` (184 KSPRandom values, 2,352 world-first rewards, 90 + 48 random positions, 448 parameter texts, 540 generated or refused ExplorationContracts); the final `GenerateOrbit` orbit agrees with the draw-level elements to 1e-12 relative; deferred: the other 24 FinePrint parameters (so GrandTour's factory seams and the VesselRepair / OrbitalConstruction / RoverConstruction templates stay open), the 8 other FinePrint contracts, Sentinel, VesselUtilities, CompatibilityUtilities, full ContractDefs; see the section. |
 | 33. WP-42 scene flow, KSC, facilities, launch sites (branch `wp42`, from main `85b0085f`, main `13750b33` merged) | done for the engine-agnostic part, unit-gated (no golden or capture covers launch sites / the KSC / facilities, every existing gate unchanged): PQSCity / PQSCity2 placement (float32 `localPosition`, reorient quaternion, lat / lon / alt, Randomize, seeds, `GetRandomLatitudeAndLongitude`), SpaceCenter, LaunchSite / KSCSiteNode, PSystemSetup (facility / launch-site registry, SetupLaunchSites coroutine, scene-mode data effects, `InstallSeams` filling the WP-36 / WP-40 / WP-18 seams), HighLogic scene flow, DestructibleBuilding state machine, SpaceCenterBuilding + 9 facility classes (damage / repair / upgrade / entry rules, LaunchSiteFacility pre-flight test assembly), FlightDriver / EditorDriver state and launch-site validity; compared 0 ULP / byte-exact with the independent `tools/wp42/ksc_reference.py` (KSC position, 247-point great-circle grid, 16 launch-site pairs, 14 city placements, 39 real KSC DestructibleBuilding save nodes); WP-36 recovery test now runs on the real seam (reference KSC corrected by ~6 m); `SpaceCenterFacility` enum de-duplicated into `save_enums.hpp` | see "WP-42" below: the level scene (`PSystemSetup.facilities` / `stocklaunchsites`, DestructibleBuilding / UpgradeableFacility prefab values) is not extracted (fixtures marked), terrain-snapped placement needs an in-game capture, `Quaternion.Lerp` unverified; Unity scene / camera / GUI parts are documented seams (WP-46 / WP-47 / WP-48) |
+| 34. WP-50 input, bindings, input locks (branch `wp50`, from main `af3798c6`) | done for the engine-agnostic part (unit-gated against an independent Python reference, no golden or capture of input exists): ControlTypes / KeyCode, InputLockManager, KeyBinding / AxisBinding model and settings.cfg Save / Load (9 shipped layouts reproduced, 1,034 binding nodes), GameSettings (447 public static fields, SetDefaultValues, WriteCfg / ParseCfg, layouts), FlightInputHandler Update + FixedUpdate (360 frames, 0 ULP), AxisGroupsInputHandler, SpaceNavigator, Mouse, InputSettings listen session, KSP.UI input-lock helpers; 32 unit cases / 47,676 assertions; details in the WP-50 section |
+| 35. WP-53 Breaking Ground deployed science, ROCs and the Serenity contracts (branch `wp53`, from main `af3798c6`) | done for the engine-agnostic part, unit-gated against an independent Python reference at 0 ULP (no golden or capture exists; the GameData mirror has no SquadExpansion/Serenity data, so every Serenity-specific input is a labelled fixture): the five `ModuleGround*` modules on a `ModuleCargoPart` base, the deployed-science runtime (scenario, cluster, part, experiment: power rules, diminishing returns, science accumulation, R&D transmission, seismic events, save / load), the ROC chain (definitions, manager, `LandClassROC` deterministic seeding and placement, `PQSROCControl`), the three Serenity contracts and their parameters, `ControlledBase` / `RoboticCollisions` / `SerenityUtils`; rendering, physics, PQS quad meshes, EVA inventory and UI are seams. See the WP-53 section |
 
 ## Test results (all 35 ctest tests pass (34 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience)
 
@@ -81,7 +83,7 @@ harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture
 | `capture.engine_deltav` | WP-23: in-game `captures/out2/deltav_readout.json` (C5) table `engines` (DeltaVEngineInfo's editor-situation reads of ModuleEngines: ispVac / ASL / Actual, thrustVac / ASL / Actual, requiresAir, propellants; 17 crafts x 4 bodies, `aero::MonoFloat`); `startBurnStage` is WP-16's | 460 | 0 ULP |
 | `capture.deltav_stages` | WP-17 / WP-17b: in-game `captures/out2/deltav_readout.json` (C5) tables `stages` (188 rows x 25 columns), `totals` (68 rows x 10 columns) and `parts` (1,225 rows: decoupleStage, activationStage, isEngine): VesselDeltaV over the editor ship, Mono float rule, real thrust transforms of the engine .mu models. No tolerance rule, no excluded row. 0 ULP on every compared row; 20 stage cells (deltaVinVac 4, deltaVatASL 8, deltaVActual 8; Dynawing 14, Stearwing A300 6; max 4 ULP) and the 18 totals cells that sum them are excluded one by one with reasons in `tests/data/deltav_stages_exclusions.json` (consumed by `ds_deltav_stages.cpp`, which prints them and FAILS if an excluded cell is now bit-identical, i.e. self-retiring); see "WP-17b" | 1,481 | pass |
 | `data.roster_experience` | WP-31: recompute every kerbal's experience from its flight log in the one save in the repo (`core/testdata/saves/physprofile/persistent.sfs`: 4 kerbals, 0 mismatches) and round-trip the ROSTER node. Weak gate: that save has `EnableKerbalExperience = False` and empty logs, so it checks load / compute / save plumbing only; see "WP-31" | 4 | exact |
-| `unit` | 594 doctest cases, 964,627 assertions on Windows MSVC (sum of the wp38 (+13 / +27,984), wp42 (+11 / +1,075), wpfix7 (+1 / +136) and wp17b (+3 / +273) deltas over main 566 / 935,159, computed at merge and to be confirmed by the next full run;  Linux clang / gcc report 16 fewer: `WP-03 vs KSP IL` takes the NaN fallback of `CellEquals` for one row on Linux and five on Windows, see "Small fixes 2026-10-11" item 1; wpfix5 added 1 case / 49 assertions) (WP-38: 13 cases, 27,984 assertions in `test_fineprint.cpp`; WP-37: 29 cases, 29,484 assertions in `test_contracts.cpp`; WP-36: 31 cases, 36,928 assertions in `test_progress.cpp`; WP-40: 11 cases, 95,023 assertions in `test_editor.cpp`; WP-39: 25 cases, 29,745 assertions in `test_commnet.cpp`; WP-35: 16 cases, 12,488 assertions in `test_science.cpp`; WP-24: 14 cases, 8,750 assertions in `test_command.cpp`; WP-00: 17 cases, 367 assertions in `test_timing.cpp`, 1 case / 29 assertions in `test_deltav.cpp`; WP-25: 15 cases, 6,434 assertions in `test_docking.cpp`; WP-30: 4 cases, 4,148 assertions in `test_misc_modules.cpp`; WP-31: 20 cases, 11,856 assertions in `test_kerbals.cpp`; WP-17: 10 cases, 354 assertions in `test_deltav.cpp`; WP-27: 16 cases, 2,018 assertions in `test_deployables.cpp`; WP-26: 29 cases, 1,218 assertions in `test_structural_modules.cpp`; WP-22: 7 cases, 112 assertions in `test_thermal.cpp`; WP-23: 10 cases, 1,690 assertions in `test_engines.cpp`; WP-28: 17 cases, 8,571 assertions in `test_resource_processing.cpp`; WP-16: 19 cases, 12,222 assertions in `test_staging.cpp`; WP-21: 11 cases, 220,304 assertions in `test_aero.cpp`; WP-18: 26 cases, 274,042 assertions in `test_ship_construct.cpp`; WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
+| `unit` | 656 doctest cases, 1,046,635 assertions on Windows MSVC (wp50 measured 626 / 1,012,303 and wp53 measured 624 / 998,959 on branches off 594 / 964,627; this is the computed sum, +32 / +47,676 and +30 / +34,332, to be confirmed by CI; earlier: sum of the wp38 (+13 / +27,984), wp42 (+11 / +1,075), wpfix7 (+1 / +136) and wp17b (+3 / +273) deltas over main 566 / 935,159, computed at merge and to be confirmed by the next full run;  Linux clang / gcc report 16 fewer: `WP-03 vs KSP IL` takes the NaN fallback of `CellEquals` for one row on Linux and five on Windows, see "Small fixes 2026-10-11" item 1; wpfix5 added 1 case / 49 assertions) (WP-38: 13 cases, 27,984 assertions in `test_fineprint.cpp`; WP-37: 29 cases, 29,484 assertions in `test_contracts.cpp`; WP-36: 31 cases, 36,928 assertions in `test_progress.cpp`; WP-40: 11 cases, 95,023 assertions in `test_editor.cpp`; WP-39: 25 cases, 29,745 assertions in `test_commnet.cpp`; WP-35: 16 cases, 12,488 assertions in `test_science.cpp`; WP-24: 14 cases, 8,750 assertions in `test_command.cpp`; WP-00: 17 cases, 367 assertions in `test_timing.cpp`, 1 case / 29 assertions in `test_deltav.cpp`; WP-25: 15 cases, 6,434 assertions in `test_docking.cpp`; WP-30: 4 cases, 4,148 assertions in `test_misc_modules.cpp`; WP-31: 20 cases, 11,856 assertions in `test_kerbals.cpp`; WP-17: 10 cases, 354 assertions in `test_deltav.cpp`; WP-27: 16 cases, 2,018 assertions in `test_deployables.cpp`; WP-26: 29 cases, 1,218 assertions in `test_structural_modules.cpp`; WP-22: 7 cases, 112 assertions in `test_thermal.cpp`; WP-23: 10 cases, 1,690 assertions in `test_engines.cpp`; WP-28: 17 cases, 8,571 assertions in `test_resource_processing.cpp`; WP-16: 19 cases, 12,222 assertions in `test_staging.cpp`; WP-21: 11 cases, 220,304 assertions in `test_aero.cpp`; WP-18: 26 cases, 274,042 assertions in `test_ship_construct.cpp`; WP-14: 24 cases, 6,901 assertions in `test_vessel.cpp`; WP-15: 11 cases, 21,194 assertions in `test_resource_flow.cpp` and 11 cases, 7,316 assertions in `test_resource_modules.cpp`; WP-13: 17 cases, 100,738 assertions in `test_part.cpp`; WP-10: 17 cases, 2,009 assertions in `test_timewarp.cpp`; WP-06: 14 cases, 204 assertions in `test_modules.cpp`; WP-05: 5 cases, 207 assertions in `test_partloader.cpp`; WP-11: 13 cases, 20,081 assertions in `test_terrain.cpp`; WP-08: 9 cases, 374 assertions in `test_patched_conics.cpp`; WP-09: 8 cases in `test_celestial.cpp`; WP-07: 18 cases in `test_orbit.cpp`, incl. native Quaternion.AngleAxis 84/84 bit-exact vs the in-game C3 capture; integration: 2 cases, 934 assertions in `test_celestial_orbit.cpp`; WP-03: `test_events.cpp`, `test_util.cpp`, `test_wp03_reference.cpp` with 11,032 assertions against 6,437 values from KSP's IL on .NET Framework 4.8, `tests/data/wp03_reference.tsv`), incl. 29,028 .NET Framework 4.8 reference results (`tests/data/netfx_reference.tsv`: parse 6,041 doubles + 6,041 floats, G17/G/G9 formatting 7,118, Sin/Cos/Tan 3,005 each, Ceiling/Round 400 each) | - | pass |
 
 Not gated any more by design: the harness's .NET-generated float32 math_shim rows. kspcore follows Mono (the game) and
 differs from that .NET golden in 46 cells outside its tolerance (r0..r2): up to 6 ULP (Vector3.Project/ProjectOnPlane) and
@@ -4292,6 +4294,116 @@ Windows MSVC RelWithDebInfo (`core/build` deleted, `run_tests.ps1 -Fresh`, main 
 Re-gate after fixes F1-F7 (`98a4ba49`) and the main merge (`68c68e06`), Windows MSVC fresh `core/build`: 34/34 ctest, `unit` 577 cases / 936,234 assertions (+1 case, +19 assertions vs the first gate: WP-42 11 cases / 1,063 assertions); configure 1.7 s, build 84 s, test 180 s; 27 compare reports, max_ulp 0 except `capture.deltav_stages` as before; `check_cites.py` exact 226 citations, 0 mismatches. Linux totals are expected 936,218 (Windows minus the known 16) and are not re-measured locally (CI covers the build).
 `check_cites.py` exact mode: 0 mismatches over `src/space_center/*.cpp` (226 citations).
 
+## WP-53: Breaking Ground deployed science, ROCs and the Serenity contracts (branch `wp53`, from main `af3798c6`)
+
+State: done for the engine-agnostic part, unit-gated against an independent Python reference (0 ULP). Ported: the five ground-part modules
+(`ModuleGroundPart` / `ModuleGroundSciencePart` / `ModuleGroundCommsPart` / `ModuleGroundExpControl` / `ModuleGroundExperiment`, on a `ModuleCargoPart` base moved
+out of `module_behaviours.cpp`), the deployed-science runtime (`DeployedScience` scenario, `DeployedScienceCluster`, `DeployedSciencePart`,
+`DeployedScienceExperiment`, `DeployedScienceExtensions`: power rules, diminishing returns, science accumulation, transmission to R&D, seismic events, save / load),
+the ROC chain (`ROCDefinition`, `RocCBDefinition`, `ROC`, `ROCManager`, `ROCScenario`, `LandClassROC` seeding and deterministic placement over UnityEngine.Random,
+`PQSROCControl`), the six contract classes on the WP-37 system (`DeployedScienceContract`, `ROCScienceArmContract`, `ROCScienceRetrievalContract`,
+`CollectDeployedScience`, `CollectROCScienceArm`, `CollectROCScienceRetrieval`), and `ControlledBase`, `RoboticCollisions`, `SerenityUtils`.
+Rendering, physics (Rigidbody / FixedJoint / raycasts), the PQS quad meshes, the EVA kerbal's inventory and the UI are documented seams (below).
+**No golden or capture exists for any of this** (the part-database capture ran with `Serenity=False`); every existing gate is unchanged (34/34 ctest);
+`harness/compare/tolerances.json` and `tests/tolerances_capture.json` untouched.
+
+**DATA: the GameData mirror has no `SquadExpansion/Serenity`.** No `ROC_DEFINITION` cfgs, no deployed-science part cfgs (the 8 `Deployed*` parts), no `DEPLOYEDSCIENCE`
+node, no Serenity experiment definitions (`deployedSeismicSensor` ...), no Serenity `Contracts.cfg` sections, no `DeployedSciencePowerSkill` in the traits. Nothing was
+hand-authored into the mirror. Real game data used by the tests: the stock `groundAnchor` / `groundLight1` (`ModuleGroundPart` + `ModuleAnimationGroup`), `ScienceDefs.cfg`
+(`temperatureScan`, `mysteryGoo`), `Traits.cfg` (the Engineer node), the Kerbol system with the real biome maps (names) of Kerbin / Mun / Minmus / Duna, the physprofile save's vessel
+with a `ModuleScienceContainer`, `Contracts.cfg` / `Agents.cfg` / `StoryDefs.cfg`. Everything Serenity-specific in `tests/test_serenity.cpp` is a fixture written from the cfg field
+names of the decompiled classes (MODULE values, ROC_DEFINITION nodes, the experiment copies, synthetic quad meshes, the appended `DeployedSciencePowerSkill` EFFECT) and is
+labelled as such in the test and in `tools/wp53/serenity_reference.py`. Defaults that live in C# code are ported as written: the diminishing-returns table, the 15 seismic
+energies, delays, `ContractDefs.DeployedScience / ROCScienceArm / ROCScienceRetrieval` initialisers. To run against the real DLC data: add `SquadExpansion/Serenity` to the
+mirror (`tools/mk_gamedata_mirror.py` from a game with the expansion) and extend the tests with the real part cfgs.
+
+### Gate
+
+| gate | result |
+|---|---|
+| golden / capture | none exists; nothing relaxed |
+| `unit` `tests/test_serenity.cpp` | 30 cases, 34,332 assertions; floats / doubles compared bit for bit (`CHECK_F32` / `CHECK_F64`) |
+| independent reference | `tools/wp53/serenity_reference.py` -> `tests/data/wp53_reference.json` (numpy float32 under the Mono rule, no kspcore imports; spec: the decompiled C#, `UnityEngine.Random` xorshift128 as fitted by capture C2, `KSPRandom.cs`, `StringExtensions.GetHashCode_Net35`) |
+
+| table | rows / values compared | max abs | max rel | max ULP |
+|---|---|---|---|---|
+| `DeployedScienceCluster.UpdatePowerState` (+ `SolarPanelUnitsProduced`, power-changed event count): powerRequired / powerAvailable / partial / multiplier / isPowered / controller flag | 600 cases x 8 | 0 | 0 | 0 |
+| `DeployedScience.GetDiminishingReturnsMultiplier` (4 tables incl. insertion order != key order and the empty table) | 4 x 9 | 0 | 0 | 0 |
+| `DeployedScienceExperiment.CalculateScience` / `TimeToSendStoredData` (generated, total, stored, enabled flag, send decision, LastScienceGeneratedUT) | 60 runs x 45 steps (2,700 steps incl. the cap and the part switch-off) x 6 | 0 | 0 | 0 |
+| `DeployedScienceExperiment.ProcessSeismicEvent` maths (joules sum, `(float)totalJoules / impactRate`, distance multiplier, cap, stored) | 160 events (124 processed, 36 below the minimum energy) | 0 | 0 | 0 |
+| `LandClassROC.AddScatterMeshController` seeding (quadSeed with the .NET 3.5 string hash and int wrap, rocN incl. num = 0 -> `(int)inf`, maxROCs, assigned quad) | 840 quads | 0 | 0 | 0 |
+| `LandClassROC.CreateScatterMesh` placements (vertex choice, duplicate suppression with `Mathf.Round`, depth shift, rocPOS float32 vector maths, rocID) | 40 quads / 167 ROC records (8 duplicates) | 0 | 0 | 0 |
+| KSPRandom picks of the three contracts (candidate index, 1/2/3 distinct biomes) | 120 | exact | - | - |
+| contract rewards / expiry / deadline of the three generated contracts vs a probe contract applying the same defaults through the WP-37 `Set*` pipeline | 24 + 30 + 36 contracts x 9 | 0 | 0 | 0 |
+
+### What is ported (C# file -> `include/ksp/serenity/` + `src/serenity/`, `include/ksp/contracts/serenity_contracts.hpp`; every function carries `// File.cs:N`, `check_cites.py` exact mode 0 mismatches over the 6 new `.cpp` files (285 citations), header members snapped by `tools/wp37/fix_header_cites.py`)
+
+| C# | C++ | notes |
+|---|---|---|
+| `ModuleCargoPart.cs` (slice) | `modules/module_cargo_part.hpp/.cpp` | OnLoad (stackable quantity), GetInfo / GetTooltip, EnableModule, OnPartUnpack, `MakePartSettle` coroutine; the EVA-construction highlight, welding FX and compound-part link bookkeeping are WP-33 / audio / UI. The class moved out of `module_behaviours.cpp`; WP-33 extends it |
+| `ModuleGroundPart.cs`, `ModuleGroundSciencePart.cs`, `ModuleGroundCommsPart.cs`, `ModuleGroundExpControl.cs`, `ModuleGroundExperiment.cs` | `serenity/ground_modules.hpp/.cpp` | schema fields stay in the typed store; `ICommAntenna` / `ICommNetControlSource`; deploy (`MakePartKinematic`), retrieve, scan-and-connect coroutine, booster antennas, comm state, info texts (with `DeployedSciencePowerSkill`) |
+| `DeployedScience*.cs` (5 files) | `serenity/deployed_science.hpp/.cpp` | Unity components as `SerenityBehaviour` (registry, Start next frame via `RunPendingStarts`, Destroy at the end of the frame via `FlushDestroyed`); coroutines on `ScienceEnvironment::Scheduler()` |
+| `ROCDefinition.cs`, `RocCBDefinition.cs`, `ROC.cs`, `ROCManager.cs`, `ROCScenario.cs`, `LandClassROC.cs`, `PQSROCControl.cs` | `serenity/roc.hpp/.cpp` | `ROCManager` derives from the save model's `ROCManagerRemovedROCs` and registers as `SaveEnvironment::rocManager`; `RocQuad` / `RocPqsView` carry the PQS data |
+| `Expansions/Serenity/Contracts/*.cs` (6) | `contracts/serenity_contracts.hpp/.cpp` | registered by `Contracts::Install()`; PartLoader's `GetAvailableDeployedScienceExpParts` / `GetAvailableRobotArmScannerParts` derived from `ScienceEnvironment::loadedParts` |
+| `ControlledBase.cs`, `RoboticCollisions.cs`, `SerenityUtils.cs` | `serenity/serenity_misc.hpp/.cpp` | the row base for WP-52 (controller opaque), collision forwarding, bundle asset paths |
+
+### Findings (KSP behaviours the tests pin down; all ported as they are)
+
+- `ModuleGroundPart.UpdateModuleUI` is private and non-virtual; `ModuleGroundSciencePart` declares its own virtual of the same name, so the base class's own calls never reach the science / experiment UI (kept: `UpdateGroundModuleUI` vs `UpdateModuleUI`).
+- `ModuleGroundPart.OnPartUnpack` re-enables the part's `ModuleAnimationGroup` while the part is being deployed (`beingDeployed`) even if it was disabled.
+- A part with `kinematicDelay < 1` that is being deployed waits 3 s (the field is overwritten with 3) and then needs `GroundContact`; without it the part shows "cannot deploy unless on the ground" and stays `beingDeployed`.
+- `ROCManager.ValidateCBBiomeCombos` indexes `myCelestialBodies[num2]` after `RemoveAt(num2)`: a definition whose last body entry is an unknown body throws `ArgumentOutOfRangeException` (tested as `std::out_of_range`).
+- `ROCManager.Start` keeps a definition whose prefab is missing (warning only) and drops one whose prefab has no ROC component.
+- `ROCScenario.Instance` is never assigned (only set to null): always null (kept).
+- `LandClassROC.AddScatterMeshController` draws `Random.Range(1, (int)num2)` even for quads with no ROC; with `num = 0` (`1/0 = inf`) `(int)inf = int.MinValue` and the draw takes the `max < min` branch.
+- `DeployedScienceExperiment.ProcessSeismicEvent` returns without clearing the part list or the pending flag when the impact is below `MinimumSeismicEnergyRequired`: the event stays pending and no further callback is scheduled until a power-state change.
+- `CalculateScience` always fires `onGroundScienceGenerated`, also with `num = 0` (the toggles of a part call it with dt = 0).
+- A new `DeployedScienceCluster` / `Part` / `Experiment` subscribes in `Start` (next frame); `ModuleGroundExpControl` scans only the parts loaded at that moment and does not set `DistanceToController` on the scan path (only the `onGroundSciencePartDeployed` path does).
+- The three contracts' `Next(0, count - 1)` index never reaches the last candidate (`KSPRandom.Next(min, max)` is exclusive at the top).
+- `DeployedScienceContract` / `ROCScienceArmContract` rewards differ from the defaults only through the WP-37 pipeline; the real `Generate` consumes Unity Random in `WeightedBodyChoice` before the agent is chosen, so a probe must make the same draw.
+
+### Seams (documented; owner)
+
+| seam | where | owner |
+|---|---|---|
+| `SerenityEnvironment`: screen messages, vessel-marker / map-object refresh counters, the EVA kerbal's inventory (`KerbalInventory`), `groundContact`, `physicsAction` log (Rigidbody constraints, FixedJoint, FX burst, `autoStrutMode`), `srfVelocityMagnitude`, `partRbVelocityMagnitude`, sun tracking (`trackingLineOfSight`, `hasModelTransform`, `panelAtOrigin`) | `serenity/serenity_env.hpp` | WP-20 physics / WP-33 inventory / WP-48 |
+| `RocEnvironment`: prefab state, instantiated name and renderer bounds, local bodies, body -> `PQSROCControl`, PQS view, ray test, explosions, mission seed | `serenity/roc.hpp` | WP-48 rendering / WP-11 PQS |
+| `PQSROCControl::quadInfo` (the quad mesh data), `RocPqsStatics` (`cacheSideVertCount` 15) | `serenity/roc.hpp` | WP-12 quad builder |
+| `SerenityMiscEnvironment`: `GetPersistenActiontId`, part collision handlers, bundle loader | `serenity/serenity_misc.hpp` | WP-52 / WP-48 |
+| `SerenityContractEnvironment`: overrides of the two PartLoader lists | `contracts/serenity_contracts.hpp` | WP-05 |
+| CommNet (`CommNetScenario::CommNetEnabled`, `Vessel::connection`), R&D, `ScienceEnvironment` (time, scheduler, config nodes, biome map) | existing seams | WP-39 / WP-35 |
+
+### Not ported / deferred
+
+`AxisLimitLine.cs` (79 lines, tier C Unity LineRenderer UI), `PQSMod_ROCScatterQuad` GameObject plumbing, `ROCEmitter` / `ROCsSFX` (WP-48), the debug `ArrowPointer`s of `ROC.UpdateRocArrow` (WP-43),
+UIPartActionWindow handling (only the open / dismiss flag), `Part.OnCollision*` bodies, the sun-tracker pivot rotation maths (`Atan2` / `Quaternion.Lerp` on the pivot's local rotation) and
+`SunTrackerToOrigin`'s `RotateTowards` (one engine step per frame through `panelAtOrigin`), `Object.Instantiate` of the ROC prefab (placement records are returned), the part-upgrade system
+in `CommPowerUnloaded` (`ApplyUpgradeNode`), the `Debug.Log` impact energy line of `CalcSendSeismicScience` (needs `Math.Pow` for a log value only), `ModuleRobotArmScanner` / `ModuleRoboticController`
+(WP-52; the contracts and `ControlledBase` use them by class name / opaque pointer).
+
+### Unverified / assumptions
+
+- UnityEngine.Random: `Random.rotation` consumes 4 draws and `Range(int)` follows the WP-01 model (capture C2); both sides of the gate share these.
+- The instantiated ROC prefab's GameObject name is `prefabName + "(Clone)"` (Unity's rule; the prefab's own name needs the asset bundle `serenity_assets`): it feeds `rocID` through `GetHashCode_Net35(rocObject.name)`. UNVERIFIED against the game.
+- `PQS.cacheSideVertCount` = 15 (the C# initialiser; the PQS settings node `vertCount` is not in the mirror).
+- The Unity frame model (Start one frame after creation, Destroy at the end of the frame, coroutine pass order) is the WP-00 assumption set; nothing here is captured.
+- `ProtoVessel.GetAllProtoPartsIncludingCargo` cargo walk, `FlightGlobals.FindLoadedPart` through `SaveEnvironment::persistentIds` (the WP-19 FlightGlobals port will replace it).
+
+### Needs data (local extraction)
+
+`SquadExpansion/Serenity` into the mirror: the 8 `DeployedXxx` part cfgs, `ROC_DEFINITION` cfgs, `DEPLOYEDSCIENCE` node, Serenity `ScienceDefs` experiments, Contracts.cfg sections, Traits.cfg effects, the `serenity_assets` bundle (ROC prefabs: renderer bounds, names).
+
+### Unit tests
+
+`tests/test_serenity.cpp`: 30 cases / 34,332 assertions: power state, dimret, defaults / save round trip, science accumulation, seismic maths and the seismic integration through a cluster, ROC seeding / placement,
+ROC definition load, ROCManager (prefab checks, validation, population, ROCSeed switch, removed list, stats), PQSROCControl quad flow, ROC scan / collision / perform experiment, module chain, groundAnchor deploy / retrieve,
+end to end (scan, register, power, science, R&D, save / load, retrieval, deregistration), comm boosters, info texts, sun tracking, ControlledBase, contract defaults, the three contract generators and the three parameters.
+
+### Verification
+
+Windows MSVC RelWithDebInfo, `core/build` deleted and `run_tests.ps1 -Fresh` (configure 1.6 s, build 146 s, tests 155 s): 34/34 ctest, `unit` 624 doctest cases / 998,959 assertions (WP-53: 30 / 34,332); g++ 13 (WSL) `-fsyntax-only` clean for the 8 touched sources and `test_serenity.cpp`.
+`check_cites.py` exact mode: 0 mismatches over the new `.cpp` files (name aliases added for the C# property setters).
+
 ## Small fixes 2026-10-11 (wave 5, branch `wpfix5`, from main `7199d110`)
 
 Seven items from the wave-3 / wave-4 gatekeepers; one commit each. `src/` changes are limited to item 2 and the cites of the two files it touches; everything else is tests, a script and notes.
@@ -4320,3 +4432,107 @@ Remaining finding in ported code (not fixed):
 - `src/contracts/contract.cpp:399` and `:400` (`Contract::SetupID`, signed 64-bit overflow in `num = num * 23LL + ...`): the C# (`Contract.cs:1190` SetupID, unchecked `long` arithmetic) wraps. Fix would be to compute in `uint64_t`; results are already the wrapped values on all three compilers.
 
 Tooling note: the full ASan+UBSan run takes about 3 hours here (build ~2 h on the shared WSL).
+
+## WP-50: input, bindings, input locks (branch `wp50`, from main `af3798c6`)
+
+State: done for the engine-agnostic part (ControlTypes, InputLockManager, the KeyBinding / AxisBinding model and its settings.cfg (de)serialisation, KeyCodeExtended / ExtendedInput,
+GameSettings (every `public static` field, `SetDefaultValues`, `WriteCfg` / `ParseCfg`, the keyboard-layout loader on the shipped `GameData/Squad/Controls/*.cfg`),
+FlightInputHandler (`Update` key toggles and the whole `FixedUpdate` axis / trim / throttle / precision maths), AxisGroupsInputHandler, SpaceNavigator, Mouse, the
+InputSettings "listen" transaction, the KSP.UI input-lock helpers), unit-gated against an independent Python reference. **No golden or capture covers input**
+(`harness/golden/MANIFEST.json` and `harness/captures/out*/` were checked: none), so the gate is `tools/wp50/input_reference.py` -> `tests/data/wp50_reference.json`;
+every float is compared bit for bit. Every existing gate is unchanged (34/34 ctest, golden / capture tables at their previous numbers); `harness/compare/tolerances.json`
+and `tests/tolerances_capture.json` untouched.
+
+### Gate
+
+| gate | result |
+|---|---|
+| golden / capture | none exists; nothing relaxed |
+| `unit` `tests/test_input.cpp`, `test_input_flight.cpp`, `test_input_devices.cpp`, `test_input_ui.cpp` | 32 cases, 47,676 assertions |
+| independent reference | `tools/wp50/input_reference.py` (Python `math` + `struct` float32, Mono's float rule, no kspcore imports; parses the decompiled C# text and the shipped layouts itself): ControlTypes / KeyCode member tables and `Enum.ToString` of 288 flag values (Mono `InternalFlagsFormat`), KeyCodeExtended(string) over 36 tokens, 400 random InputLockManager operations (a .NET `Dictionary` entry / free-list model for the PrintLockStack order, the event sequence and 7 probe masks per step), `ControlLocks` over 140 (lower, upper) pairs, the 9 shipped keyboard layouts (dependency + KEY_MAP merge by `ConfigNode.CopyTo(overwrite)`), every `new KeyBinding(..)` overload of `SetDefaultValues`, every scalar default and its `Convert.ToString` text (float G7, double G15), `AxisBinding_Single.GetAxis` / `AxisBinding.GetAxis` over 600 cases, `FlightInputHandler.FixedUpdate` over 360 scripted frames, the Mouse tap routine as a Python generator over 400 frames, `QuaternionExtensions` Pitch / Yaw / Roll over 400 quaternions, SpaceNavigator sensor scaling over 200 readings |
+| layouts | 9 layout files, 1,034 binding nodes: `LoadLayoutKeyBindings` + `WriteCfg` reproduce `primary` / `secondary` / `group` / `modeMask` / `modeMaskSec` of every node |
+
+Per-table numbers (max abs / max rel / max ULP are 0 everywhere):
+
+| table | rows / values compared | max abs | max rel | max ULP |
+|---|---|---|---|---|
+| `AxisBinding_Single.GetAxis` (scale, invert, dead zone, sensitivity `Mathf.Pow`, neutral) and `AxisBinding.GetAxis` (larger deflection wins) | 600 x 2 floats | 0 | 0 | 0 |
+| `FlightInputHandler.FixedUpdate` state after each of 360 frames (14 floats: mainThrottle, roll / yaw / pitch + trims, wheelSteer / wheelThrottle + trims, X, Y, Z), random keys, lock masks, precision mode, 10 axis bindings, throttle focus | 360 x 14 | 0 | 0 | 0 |
+| Mouse tap / double tap / drag / delta / `WasDragging` / `IsMoving` | 400 frames x 17 flags and floats | 0 | 0 | 0 |
+| `QuaternionPitch / Yaw / Roll` | 400 x 3 | 0 | 0 | 0 |
+| SpaceNavigator translation (locks, gear sensitivity, two float multiplies) | 200 x 3 | 0 | 0 | 0 |
+
+UNVERIFIED (no oracle in the repository): (1) which of the two zero-valued members of `ControlTypes` (`None`, `STAGE_IN_MAP_CONTROLS`) lands at index 0 / 1 of Mono's sorted name table decides
+the first name in every flags `ToString` ("STAGE_IN_MAP_CONTROLS, All, ..." here; only log text); the reference accepts either assignment and the test checks the choice is consistent; (2) the
+`KeyCode` aliases (`LeftApple` / `LeftCommand`, `RightApple` / `RightCommand`) print as whichever name `ksp::dotnet::EnumToString` picks (WP-03 emulation); no shipped layout uses them; (3) Unity runs
+the coroutine pass after `Update`, and a coroutine started inside `Update` first resumes in the NEXT frame's pass (`Mouse::ResumeCoroutines`, from Unity's documented order, not a capture); (4)
+`GameSettings.controlsLayoutPath` is a prefab value (not in the repository); the host passes the directory.
+
+### What is ported (C# file -> `include/ksp/input/` + `src/input/`; every function carries `// File.cs:N`; `check_cites.py` exact mode 0 mismatches over `src/input/*.cpp` (212 citations), `tools/wp50/header_cites.py` 0 over the headers (291))
+
+| C# | C++ | notes |
+|---|---|---|
+| `ControlTypes.cs` (89 flags), `UnityEngine.KeyCode` (326) | `control_types.hpp`, `keycode.hpp` (generated by `tools/wp50/gen_keycode.py` from the decompile) | `EnumTraits` in declaration order, so `Enum.ToString` / `Enum.Parse` behave as Mono's |
+| `InputLockManager.cs` | `input_lock_manager.hpp/.cpp` | lock stack on `dotnet::Dictionary`, mask, `onInputLocksModified` / `onGUILock` / `onGUIUnlock` / `onTooltipDestroyRequested`, all queries, `PrintLockStack`, `ControlLocks` |
+| `KeyCodeExtended.cs`, `InputBinding.cs`, `InputBindingModes.cs`, `KeyBinding.cs` | `input_binding.hpp`, `input_binding.cpp`, `key_binding.cpp` | all constructors, Save / Load (settings.cfg text), GetKey / GetKeyDown / GetKeyUp, double taps, CompareSwitchState (FlightUIModeController seam) |
+| `AxisBinding_Single.cs`, `AxisBinding.cs`, `AxisKeyBinding.cs`, `AxisKeyBindingList.cs`, `InputDevices.cs` | `input_binding.hpp`, `axis_binding.cpp`, `key_binding.cpp` | GetAxis maths, Load branches (`axis` / legacy `id`), `MemberwiseClone` aliasing of AxisKeyBinding |
+| `ExtendedInput.cs` | `extended_input.hpp/.cpp` | typed-character bindings, frame thresholds, `DetectKeyDown` |
+| `GameSettings.cs`, `KeyboardLayout.cs`, `KeyboardLayoutType.cs`, `TrackIR.Settings` | `game_settings.hpp`, `game_settings.cpp`, generated `game_settings_defaults.cpp` / `game_settings_vars.inc` (`tools/wp50/gen_game_settings.py`) | 456 static fields (447 public, in `Type.GetFields()` order), `SetDefaultValues` (446 statements translated 1:1), WriteCfg / ParseCfg (typed values, version gates, node fields), layouts (dependency, KEY_MAP), DetectKeyboardLayout, colour presets, axis speed multipliers |
+| `FlightInputHandler.cs`, `FlightInputCallback.cs`, `AxisGroupsInputHandler.cs` | `flight_input_handler.hpp/.cpp` | Update, FixedUpdate, ProcessAxis, SetNeutralControls / ResumeVesselCtrlState / SetLaunchCtrlState, OnRawAxisInput delegate |
+| `SpaceNavigator*.cs`, `QuaternionExtensions.cs` (Pitch / Yaw / Roll) | `space_navigator.hpp/.cpp` | sensitivities, locks, PlayerPrefs read / write, NoDevice / Windows scaling |
+| `Mouse.cs` | `mouse.hpp/.cpp` | MouseButton tap routine (state machine), screenPos / delta, button masks |
+| `InputSettings.cs` (listen session) | `input_settings.hpp/.cpp` | valid keys, ListenToKey / ListenToAxis / SetKey / SetAxis / Apply*, OnUpdate polling |
+| `KSP/UI/CanvasGroupInputLock.cs`, `KSPGraphicRaycaster.cs`, `DialogMouseEnterControlLock.cs`, `UIInputExtraMouseButtons.cs`, `MenuNavInput.cs` | `ui_input_locks.hpp/.cpp`, `menu_nav_input.hpp` | lock-mask parsing (`Enum.Parse` ignoreCase), event-driven raycast blocking |
+
+Not ported (scene / GUI only): `InputSettings` layout (`drawInputPage`, `DrawKeyBinding`, `DrawMiniSettings`, the 150 reference copies of `GetSettings` / `ApplySettings`), `MiniKeyBindings` (a popup),
+`MouseEventsHandlerBase` / `MouseEventsHandler` / `MouseRayEventsHandler` / `StandaloneInputModuleCustom` (GameObject / EventSystem), `Mouse.CheckHoveredPart` (Physics raycast; seam), `GameSettings.Awake / Start /
+OnDestroy` (scene wiring), `WriteLauncherCFG` / `ParseLauncherCfg` (launcher .bak file), `ApplyEngineSettings` / `WaitAndSetResolution` (QualitySettings), the TrackIR component itself (`TrackIR.cs` beyond `Settings`).
+
+### Findings (KSP behaviour kept as written)
+
+- `ControlTypes` declares two members with value 0 (`None`, `STAGE_IN_MAP_CONTROLS`); Mono's flags `ToString` has no exact-name shortcut and always lists the second zero member first.
+- `InputLockManager.SetControlLock` fires `onGUILock` (and the tooltip event) when the GUI bit was set before and is CLEAR afterwards; `RemoveControlLock` fires `onGUIUnlock` when it was clear before and is set afterwards: the names are inverted against the transition.
+- `KeyCodeExtended(string)` parses with `Enum.Parse`: numbers become key codes (`160` in several shipped layouts is `KeyCode` 160, printed back as `160`), `W, A` ORs two names, anything unparsable keeps the text as a typed-character name.
+- `KeyBinding.Load` keeps `group` / `modeMaskSec` when the node lacks them but resets `primary` / `secondary` to None; `AxisBinding_Single.Load` ends in `idTag = name` when the axis index is -1, so an unnamed binding is "NULL", not "None" (which would disable the axis).
+- `GameSettings.WriteCfg` writes every public static field with `Convert.ToString`: `AXIS_INCREMENTAL_SPEED_MULTIPLIER_VALUES` goes out as `System.Collections.Generic.List`1[System.Single]` (and is never parsed), `ORBIT_WARP_MAXRATE_MODE` is written but not parsed back, floats use Mono's 7-digit "G" while `ConfigNode.AddValue(float)` (the binding fields) uses "G9" (`deadzone = 0.100000001`).
+- A layout `dependency = Qwerty.cfg` resolves through the layouts loaded so far (file order: `Directory.GetFiles`); a dependency that is not loaded yet is read as a path relative to the working directory and silently yields an empty base.
+- The first `FixedUpdate` with an unbound throttle axis (`AXIS_THROTTLE` None, neutral -1) jumps `throttle` to -1 (`|axis - lastAxisThrottle| > 0.25`) unless `refocusThrottle` was set (`SetLaunchCtrlState`, `OnApplicationFocus`, `ResumeVesselCtrlState`).
+- `AxisKeyBinding.Clone` / `AxisKeyBindingList.Clone` are shallow: the copies share the three binding objects (a Load through the clone changes the original).
+
+### Seams (documented; owner)
+
+| seam | what | owner |
+|---|---|---|
+| `InputEnvironment::device` (`IInputDevice`), `realtimeSinceStartup`, `applicationIsPlaying`, `screenHeight` | UnityEngine.Input (keys, axes, mouse, `inputString`, joystick names), Time.realtimeSinceStartup, Application.isPlaying, Screen.height | WP-47 / the UE5 input shell |
+| `FlightUIModeControllerSeam::present / mode` | `FlightUIModeController.Instance` / `.Mode` for `InputBinding.CompareSwitchState` | WP-46 UI |
+| `FlightInputHandler::host` | ScreenMessages, `StageManager.ActivateNextStage` (default: the ported StageManager), `Vessel.FeedInputFeed`, ActionGroupsApp | WP-46 / WP-19 |
+| `GameSettings::host`, `KeyboardLayout::provider` | PQSCache preset list save / load / create, QualitySettings / Screen / UIMasterController, user32 `GetKeyboardLayout` (+ LCID -> culture name) | WP-11 / WP-47 |
+| `SpaceNavigatorWindows::sensorFactory` (`ISpaceNavSensor`), `IPlayerPrefs` | the 3Dconnexion COM sensor, PlayerPrefs | WP-47 |
+| `TrackIRSettings::Instance` (`ITrackIRInstance`) | the TrackIR component | WP-47 |
+| `Mouse::hoveredPartProvider` | `Mouse.CheckHoveredPart` (raycast over `Part.layerMask`) | WP-12 / WP-47 |
+| `UI::CanvasGroup::blocksRaycasts`, `UIInputExtraMouseButtons` callbacks | Unity UI | WP-46 |
+
+Not re-pointed (deferred to the integration): the earlier InputLockManager stand-ins (`TimeWarp` / `FlagSiteEnvironment` `controlLocks` maps, `SpaceCenterUI::controlLock`, `EditorDriver` input-lock mask) and the other
+GameSettings copies (`ksp::GameSettings` shim blocks in `util/ksp_util.hpp` / `vessel/vessel.hpp` keep their definitions and the generated `game_settings_vars.inc` skips those 11 names; `DeltaVGameSettings`,
+`ResourceGameSettings` stay separate). `FlightUIMode`, `ValidatorMode` (namespace `Expansions::Missions::Editor`), `KeyboardLayoutType`, `MenuNavInput` are defined here; a later owner must not redefine them.
+
+### Needs data
+
+- `GameSettings.controlsLayoutPath` / the stock `settings.cfg`: both live outside the repository (prefab / the user's game folder); the layouts themselves are in the mirror.
+- A capture of `settings.cfg` written by the game (to verify the `Convert.ToString` text of the float fields, the field order of `Type.GetFields()` on Mono, and the `List`1[System.Single]` line).
+- A frame-resolved capture of the Unity coroutine pass for `Mouse.TapRoutine` (the next-frame resume is the documented order).
+
+### Host contract
+
+Set `InputEnvironment::device` and update `realtimeSinceStartup`, `Time::deltaTime`, `Time::frameCount` each frame; `GameSettings::SetDefaultValues()`, `ParseLayoutsCfg(files in directory order)`, `ParseCfgFile()` (or `LoadLayoutKeyBindings(DetectKeyboardLayout(), true)`);
+`ExtendedInput::LateUpdate()` last in the frame; `FlightInputHandler::Update()` per frame and `FixedUpdate()` per physics step; `Mouse::Update()` then `Mouse::ResumeCoroutines()`.
+
+### Unit tests
+
+`tests/test_input.cpp` (6 cases: control types, key codes, 400-op lock sequence, ControlLocks, 9 layouts, DetectKeyboardLayout), `tests/test_input_flight.cpp` (13: defaults vs reference, WriteCfg text, ParseCfg, round trip,
+600 axis cases, Save / Load branches, AxisKeyBinding, InputDevices, ExtendedInput, double taps, 360-frame FixedUpdate, FixedUpdate corner cases), `tests/test_input_devices.cpp` (7: Mouse 400 frames, button masks, SpaceNavigator
+maths and prefs, InputSettings listen session, TrackIR.Settings, speed multipliers, ResetSettings hooks), `tests/test_input_ui.cpp` (5: Update toggles, double-tap hold mode / EVA / SpaceNav toggle, control-state helpers, UI locks).
+
+### Verification
+
+Windows MSVC RelWithDebInfo (`core/build` deleted, `run_tests.ps1 -Fresh`, main `af3798c6`): 34/34 ctest, `unit` 626 doctest cases / 1,012,303 assertions (WP-50: 32 cases / 47,676 assertions); configure 1.8 s, build 138.6 s, test 126.3 s. GCC (WSL g++, `-std=c++20 -fsyntax-only -Wall -Wextra`) over `src/input/*.cpp` and the four `tests/test_input*.cpp`: no errors or warnings in the WP-50 files (it found the nested-struct default-member-initializer rule that MSVC accepts; `FlightInputHost` and `MouseButton` are namespace-level types for it). `check_cites.py` exact mode: 0 mismatches over `src/input/*.cpp` (212 citations); `tools/wp50/header_cites.py`: 0 over `include/ksp/input/*.hpp` (291).

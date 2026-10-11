@@ -36,6 +36,7 @@
 #include "ksp/modules/module_rcs.hpp"
 #include "ksp/modules/module_resource_intake.hpp"
 #include "ksp/modules/misc_modules.hpp"
+#include "ksp/modules/module_cargo_part.hpp"
 #include "ksp/modules/module_structural.hpp"
 #include "ksp/parts/available_part.hpp"
 #include "ksp/parts/cs_parse.hpp"
@@ -50,6 +51,7 @@ void RegisterTripLoggerModule();  // vessel/module_trip_logger.cpp (WP-14)
 void RegisterAeroModules();       // aero/lifting_surface.cpp (WP-21)
 namespace detail {
 void RegisterContractModules();  // contracts/module_test_subject.cpp (WP-37)
+void RegisterSerenityModules();  // serenity/ground_modules.cpp (WP-53)
 void RegisterScienceModules();  // modules/science_modules.cpp (WP-35; its header pulls in game_events.hpp, which would make the ModuleInventoryPart below ambiguous)
 }
 namespace {
@@ -64,18 +66,7 @@ constexpr float kFloatEpsilon = std::numeric_limits<float>::denorm_min();  // Ma
 
 // ModuleToggleCrossfeed (ModuleToggleCrossfeed.cs) moved to WP-15: src/modules/resource_modules.cpp
 
-// ---- ModuleCargoPart.cs:96 ----------------------------------------------------------------------------------------------
-class ModuleCargoPart : public PartModule {
-public:
-    using PartModule::PartModule;
-    void OnLoad(const ConfigNode& node) override {
-        PartModule::OnLoad(node);
-        if (Get<int32_t>("stackableQuantity") > 1 && part && !part->Resources.empty()) {
-            log::Info("[ModuleCargoPart]: Setting stackableQuantity to 1 as " + part->gameObjectName + " contains resources");
-            Set<int32_t>("stackableQuantity", 1);
-        }
-    }
-};
+// ---- ModuleCargoPart.cs: WP-53 (modules/module_cargo_part.hpp, src/modules/module_cargo_part.cpp) ----
 
 // ---- ModuleAnimationSetter: WP-27 (modules/animation_modules.hpp); ModuleAnimateHeat.cs:22 -------------------------------------------
 class ModuleAnimateHeat : public ModuleAnimationSetter {
@@ -219,6 +210,7 @@ void RegisterBuiltinModules() {
     detail::RegisterStrutModules();      // WP-25: CModuleStrut
     detail::RegisterResourceModules();  // ModuleToggleCrossfeed, ModuleResourceAutoShiftState, CModuleFuelLine, EVAResourceContainer (WP-15)
     Reg<ModuleCargoPart>({"ModuleCargoPart"});
+    detail::RegisterSerenityModules();  // WP-53: ModuleGroundPart / SciencePart / CommsPart / ExpControl / Experiment (serenity/ground_modules.cpp)
     detail::RegisterAnimationModules();  // WP-27: ModuleAnimationSetter, ModuleAnimateGeneric, ModuleAnimationGroup, ModuleAnimatorLandingGear
     detail::RegisterDeployableModules();  // WP-27: ModuleDeployablePart / Antenna / Radiator / SolarPanel
     detail::RegisterParachuteModules();   // WP-27: ModuleParachute, ModuleEvaChute
