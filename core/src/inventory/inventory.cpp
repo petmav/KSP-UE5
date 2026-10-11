@@ -290,7 +290,7 @@ void ModuleCargoPart::OnPartUnpack() {
 void ModuleCargoPart::OnLoad(const ConfigNode& node) {
     PartModule::OnLoad(node);
     if (stackableQuantity() > 1 && part != nullptr && !part->Resources.empty()) {
-        log::Info("[ModuleCargoPart]: Setting stackableQuantity to 1 as " + PartOf()->gameObjectName + " contains resources");
+        log::Info("[ModuleCargoPart]: Setting stackableQuantity to 1 as " + part->gameObjectName + " contains resources");
         Set<int32_t>("stackableQuantity", 1);
     }
 }
