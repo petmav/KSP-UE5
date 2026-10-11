@@ -27,7 +27,6 @@
 #include <memory>
 #include <vector>
 
-#include "ksp/core/delegate.hpp"
 #include "ksp/math/quaterniond.hpp"
 #include "ksp/math/vector3d.hpp"
 
@@ -143,7 +142,7 @@ public:
 private:
     struct Impl;
     std::unique_ptr<Impl> impl_;
-    Delegate<void()> attached_;
+    std::shared_ptr<void> loopHook_;  // the Delegate registered by Attach (type-erased: this header and physics_world.cpp are RTTI-free)
 };
 
 }  // namespace ksp::physics

@@ -29,6 +29,7 @@ add_library(kspcore STATIC
     config/kspparseable.cpp
     physics/physics_globals.cpp
     physics/vessel_ranges.cpp
+    physics/physics_world_loop.cpp
     physics/krakensbane.cpp
     physics/floating_origin.cpp
     physics/reference_frame.cpp
@@ -262,12 +263,17 @@ target_compile_features(kspcore_physics_glue PRIVATE cxx_std_20)
 target_link_libraries(kspcore_physics_glue PRIVATE Jolt)
 ksp_set_build_flags(kspcore_physics_glue)
 if(MSVC)
+    target_compile_options(kspcore_physics_glue PRIVATE /GR-)  # like Jolt (see the header of physics_world.cpp)
     # Jolt headers: unreferenced parameters, padding, constant conditionals under /W4 are not ours to fix; /external:W0 for the
     # include path as well.
     target_compile_options(kspcore_physics_glue PRIVATE /wd4100 /wd4324 /wd4127 /external:W0)
 else()
-    # Jolt headers under -Wall -Wextra; the glue file itself stays warning-free on Clang / GCC.
-    target_compile_options(kspcore_physics_glue PRIVATE -Wno-unused-parameter -Wno-class-memaccess -Wno-psabi)
+    # -fno-rtti like Jolt: its polymorphic classes have no typeinfo, a derived class compiled with RTTI fails to link.
+    # -Wno-*: Jolt headers under -Wall -Wextra.
+    target_compile_options(kspcore_physics_glue PRIVATE -fno-rtti -Wno-unused-parameter)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(kspcore_physics_glue PRIVATE -Wno-class-memaccess -Wno-psabi)
+    endif()
 endif()
 target_include_directories(kspcore_physics_glue SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/third_party/jolt)
 target_sources(kspcore PRIVATE $<TARGET_OBJECTS:kspcore_physics_glue>)

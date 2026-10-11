@@ -2,7 +2,9 @@
 //
 // This file is compiled with Jolt's usage requirements (include path, /arch:AVX2 or -mavx2, the JPH_* definitions) and is the
 // only kspcore translation unit that sees a Jolt header. It is glue, not ported KSP code: no Mono float rule applies, and the
-// std:: maths ban for ported code does not cover Jolt internals. The layer set and the group filter are the spike's
+// std:: maths ban for ported code does not cover Jolt internals. Compiled WITHOUT RTTI like Jolt itself (-fno-rtti, /GR-): a
+// polymorphic class derived from a Jolt class would otherwise reference a typeinfo Jolt does not provide (GCC / Clang link error), so
+// nothing here may use typeid / dynamic_cast, and the PlayerLoop hook (Delegate uses typeid) lives in physics_world_loop.cpp. The layer set and the group filter are the spike's
 // (core/spikes/jolt/src/jolt_world.cpp), generalised to the API of the header.
 #include "ksp/physics/physics_world.hpp"
 
@@ -28,7 +30,6 @@
 #include <unordered_set>
 
 #include "ksp/core/log.hpp"
-#include "ksp/core/timing_manager.hpp"
 #include "ksp/core/unity_time.hpp"
 
 namespace ksp::physics {
@@ -201,18 +202,6 @@ void PhysicsWorld::Step(float dt, int collisionSteps) {
 void PhysicsWorld::FixedStep() { Step(Time::fixedDeltaTime); }
 
 uint64_t PhysicsWorld::StepCount() const { return impl_->steps; }
-
-void PhysicsWorld::Attach(PlayerLoop& loop) {
-    if (!(attached_ == nullptr)) return;
-    attached_ = Delegate<void()>::Lambda(this, [this] { FixedStep(); });
-    loop.physicsStep += attached_;
-}
-
-void PhysicsWorld::Detach(PlayerLoop& loop) {
-    if (attached_ == nullptr) return;
-    loop.physicsStep -= attached_;
-    attached_ = Delegate<void()>();
-}
 
 BodyId PhysicsWorld::CreateBody(const BodyDesc& d) {
     Impl& m = *impl_;
