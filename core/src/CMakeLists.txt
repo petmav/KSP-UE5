@@ -207,6 +207,7 @@ add_library(kspcore STATIC
     vessel/vessel_motion.cpp
     vessel/vessel_flight.cpp
     vessel/flight_scene.cpp
+    vessel/vessel_switching.cpp
     vessel/vessel_precalculate.cpp
     vessel/flight_globals_vessels.cpp
     vessel/vessel_transitions.cpp

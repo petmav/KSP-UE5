@@ -59,7 +59,7 @@ void Vessel::CheckKill() {
     }
 }
 
-// Vessel.cs:2990 (the camera-dependent FloatingOrigin.ResetTerrainShaderOffset branch for the active vessel is rendering)
+// Vessel.cs:2991 (the camera-dependent FloatingOrigin.ResetTerrainShaderOffset branch for the active vessel is rendering)
 void Vessel::Update() {
     if (state == State::DEAD) return;
     if (situation == Situations::PRELAUNCH) launchTime = Planetarium::GetUniversalTime();

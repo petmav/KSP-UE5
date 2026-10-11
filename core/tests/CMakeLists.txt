@@ -40,6 +40,8 @@ add_executable(kspcore_tests
     test_timing.cpp
     test_physics_world.cpp
     test_flight.cpp
+    test_flight2.cpp
+    test_flight3.cpp
     test_command.cpp
     test_science.cpp
     test_commnet.cpp
@@ -189,6 +191,15 @@ ksp_golden_gate(golden.patched_conics patched_conics)
 ksp_golden_gate(capture.orbit_rails orbit_rails GOLDEN ${KSP_CAPTURES2_DIR}/orbit_rails_ingame.json DROP_HEX
                 TOL ${KSP_CAPTURE_TOL} KEEP_ROWS "soi_events:vessel^HC8" KEYS "soi_events:vessel,UT"
                 COLUMNS "initial:id,body,inclination,eccentricity,semiMajorAxis,LAN,argumentOfPeriapsis,meanAnomalyAtEpoch,epoch,meanMotion,period,ObTAtEpoch,mu,spawned/samples:id,frame,segment,UT,warp_rate,ref_body,updateUT,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z,relpos_at_UT_x,relpos_at_UT_y,relpos_at_UT_z,semiMajorAxis,eccentricity,inclination,LAN,argumentOfPeriapsis,meanAnomalyAtEpoch,epoch,ObT,meanAnomaly,trueAnomaly,update_mode/segments:segment,rate_index,requested_rate,achieved_rate,frames,UT_start,UT_end,Time_fixedDeltaTime,TimeWarp_fixedDeltaTime,timeScale")
+
+# WP-19a on-rails propagation through REAL vessels vs the same in-game capture C8: probes are unloaded, packed Vessels in the FlightGlobals
+# registry; every frame runs Planetarium.FixedUpdate, VesselPrecalculate.MainPhysics (OrbitDriver.UpdateOrbit, CalculatePhysicsStats, UpdatePosVel,
+# UpdateAcceleration, Vessel.CheckKill) and OrbitDriver.FixedUpdate in the order measured in game; SOI changes come from GameEvents.onVesselSOIChanged.
+# Adds to capture.orbit_rails: samples.packed and samples.loaded (Vessel state) for the vessel rows (the two body rows "body:Mun" / "body:Minmus"
+# are gated by capture.orbit_rails and dropped here because a body has no Vessel state). Exclusions as in capture.orbit_rails: initial.note, initial.req_*.
+ksp_golden_gate(capture.vessel_rails vessel_rails GOLDEN ${KSP_CAPTURES2_DIR}/orbit_rails_ingame.json DROP_HEX
+                TOL ${KSP_CAPTURE_TOL} KEEP_ROWS "soi_events:vessel^HC8" DROP_ROWS "samples:id^body:" KEYS "soi_events:vessel,UT"
+                COLUMNS "initial:id,body,inclination,eccentricity,semiMajorAxis,LAN,argumentOfPeriapsis,meanAnomalyAtEpoch,epoch,meanMotion,period,ObTAtEpoch,mu,spawned/samples:id,frame,segment,UT,warp_rate,ref_body,updateUT,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z,relpos_at_UT_x,relpos_at_UT_y,relpos_at_UT_z,semiMajorAxis,eccentricity,inclination,LAN,argumentOfPeriapsis,meanAnomalyAtEpoch,epoch,ObT,meanAnomaly,trueAnomaly,packed,loaded,update_mode/frames:frame,UT,Zup_X_x,Zup_X_y,Zup_X_z,Zup_Y_x,Zup_Y_y,Zup_Y_z,Zup_Z_x,Zup_Z_y,Zup_Z_z,inverseRotAngle,frame_is_rotating/segments:segment,rate_index,requested_rate,achieved_rate,frames,UT_start,UT_end,Time_fixedDeltaTime,TimeWarp_fixedDeltaTime,timeScale")
 
 # WP-11 terrain: PQS.GetSurfaceHeight for Kerbin and Mun (140,522 samples: 1-degree grids, the 0.01-degree KSC patch,
 # the pad) vs the in-game batch-2 capture, plus the per-scene probe heights and the PQS radii. Kept columns: the

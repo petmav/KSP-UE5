@@ -15,13 +15,13 @@ using GE = events::GameEvents;
 // OrbitPhysicsManager.cs:33
 CelestialBody* OrbitPhysicsManager::DominantBody() { return fetch_ != nullptr ? fetch_->dominantBody : nullptr; }
 
-// OrbitPhysicsManager.cs:45 Awake
+// Awake (OrbitPhysicsManager.cs:45)
 OrbitPhysicsManager::OrbitPhysicsManager() {
     if (fetch_ != nullptr) alive_ = false;  // UnityEngine.Object.Destroy(this)
     else fetch_ = this;
 }
 
-// OrbitPhysicsManager.cs:57 OnDestroy
+// OnDestroy (OrbitPhysicsManager.cs:57)
 OrbitPhysicsManager::~OrbitPhysicsManager() {
     if (fetch_ != nullptr && fetch_ == this) fetch_ = nullptr;
 }

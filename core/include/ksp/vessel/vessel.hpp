@@ -99,6 +99,16 @@ struct PartRigidbodyState {
     static PartRigidbodyState FromPart(const Part& p);
 };
 
+// VesselPhysics::ReadState() (PHYSICS-SPIKE.md 5.3, WP-20b): the vessel's rigid-body state in the DOUBLE physics frame, which is what
+// VesselPrecalculate.CalculatePhysicsStats (VesselPrecalculate.cs:387-498) derives from the part Rigidbodies' float fields.
+struct VesselPhysicsState {
+    double totalMass = 0.0;       // sum of physicsMass over the parts that have a rigid body; <= 0 selects the mass-less branch
+    Vector3d CoMD;                // world centre of mass (physics frame)
+    Vector3d rb_velocityD;        // CoM velocity in the physics frame (Krakensbane's frame velocity is added by CalculatePhysicsStats)
+    Vector3d angularVelocityD;    // Quaternion.Inverse(ReferenceTransform.rotation) * rb.angularVelocity, mass-weighted
+    Vector3f MOI;                 // diagonal of the summed inertia tensor in the reference frame (KSPUtil.Diag(left))
+};
+
 // Services of other packages / the engine that Vessel.cs reaches through statics. Every hook is optional; the comment says what an
 // unset hook means.
 struct VesselEnvironment {
@@ -139,6 +149,9 @@ struct VesselEnvironment {
     // Krakensbane.AddFrameVelocity (GoOffRails of the active vessel): unset = nothing to do
     std::function<void(const Vector3d&)> krakensbaneAddFrameVelocity;
     // WP-19a physics seams (VesselPhysics, WP-20b; PHYSICS-SPIKE.md 5.3). Unset = the C# answer for "no rigid body" (rb == null).
+    // VesselPhysics::ReadState(): the double-frame state CalculatePhysicsStats reads; when it returns a state with totalMass > 0 it replaces
+    // the per-part loop over partRigidbody (kept as the float oracle and for hosts without a VesselPhysics)
+    std::function<std::optional<VesselPhysicsState>(Vessel&)> readPhysicsState;
     // Part.rb as the engine reports it for CalculatePhysicsStats (VesselPrecalculate.cs:387): default PartRigidbodyState::FromPart.
     std::function<PartRigidbodyState(Part&)> partRigidbody;
     // rootPart.rb.GetPointVelocity(point) and rootPart.rb.angularVelocity (world) for the mass-less / packed branch (VesselPrecalculate.cs:491-498);

@@ -144,7 +144,7 @@ Vector3d FlightGlobals::getUpAxis(const Vector3d& position) { return (position -
 // FlightGlobals.cs:1491
 Vector3d FlightGlobals::getUpAxis(const CelestialBody& body, const Vector3d& position) { return (position - body.position).normalized(); }
 
-// FlightGlobals.cs:1292 clearInverseRotation / :1300
+// FlightGlobals.cs:1300 clearInverseRotation / :1300
 void FlightGlobals::ClearInverseRotation() {
     for (CelestialBody* b : Bodies()) b->inverseRotation = false;
 }

@@ -144,65 +144,92 @@ void Vessel::CalculatePhysicsStats(const std::function<PartRigidbodyState(Part&)
     const std::function<PartRigidbodyState(Part&)>& rbOf = rbOfArg ? rbOfArg : env.partRigidbody;  // WP-19a: the seam when no override
     bool flag = true;
     if (loaded) {
-        PartTransform& referenceTransform = ReferenceTransform();
-        const int count = static_cast<int>(parts.size());
-        const QuaternionD quaternionD = QuaternionD::Inverse(QuaternionD(referenceTransform.rotation));
-        Vector3d zero, zero2, zero3;
-        double num = 0.0;
-        std::vector<PartRigidbodyState> states(static_cast<size_t>(count));
-        for (int i = 0; i < count; i++)
-            states[static_cast<size_t>(i)] = rbOf ? rbOf(*parts[static_cast<size_t>(i)]) : PartRigidbodyState::FromPart(*parts[static_cast<size_t>(i)]);
-        int index = count;
-        while (index-- > 0) {
-            const PartRigidbodyState& rb = states[static_cast<size_t>(index)];
-            if (rb.present) {
-                const double physicsMass = rb.physicsMass;
-                zero += Vector3d(rb.worldCenterOfMass) * physicsMass;
-                const Vector3d vector3d = Vector3d(rb.velocity) * physicsMass;
-                zero2 += vector3d;
-                zero3 += (quaternionD * Vector3d(rb.angularVelocity)) * physicsMass;
-                num += physicsMass;
-            }
-        }
-        if (num > 0.0) {
+        // WP-19a: VesselPhysics::ReadState() (PHYSICS-SPIKE.md 5.3): the vessel's rigid-body state in the double frame replaces the per-part
+        // float sums of the loop below (a physics engine that keeps positions in doubles cannot hand out float Rigidbody.worldCenterOfMass).
+        // Everything after the sums (frame velocity, localCoM, MOI rules) is unchanged.
+        std::optional<VesselPhysicsState> physics;
+        if (env.readPhysicsState && !rbOfArg) physics = env.readPhysicsState(*this);
+        if (physics && physics->totalMass > 0.0) {
             flag = false;
-            totalMass = num;
-            const double num2 = 1.0 / num;
-            CoMD = zero * num2;
-            rb_velocityD = zero2 * num2;
+            totalMass = physics->totalMass;
+            CoMD = physics->CoMD;
+            rb_velocityD = physics->rb_velocityD;
             velocityD = rb_velocityD + FrameVelocity();
             CoM = CoMD.ToVector3f();
             localCoM = vesselTransform.InverseTransformPoint(CoM);
             rb_velocity = rb_velocityD.ToVector3f();
-            angularVelocityD = zero3 * num2;
+            angularVelocityD = physics->angularVelocityD;
             angularVelocity = angularVelocityD.ToVector3f();
             if (!(angularVelocityD != Vector3d()) && packed) {
-                // VesselPrecalculate.cs:421-424: `MOI.Zero()` / `angularMomentum.Zero()` on Vector3 fields are no-ops (see below)
+                // `MOI.Zero()` / `angularMomentum.Zero()` are no-ops (see below)
             } else {
-                Matrix4x4f left;  // Matrix4x4.zero
-                Matrix4x4f m = Matrix4x4f::identity(), m2 = Matrix4x4f::identity(), m3 = Matrix4x4f::identity();
-                const Quaternionf quaternion = ToFloat(quaternionD);
-                for (int i = 0; i < count; i++) {
-                    const PartRigidbodyState& rb = states[static_cast<size_t>(i)];
-                    if (!rb.present) continue;
-                    KSPUtil::ToDiagonalMatrix2(rb.inertiaTensor, m);
-                    const Quaternionf quaternion2 = quaternion * rb.rotation * rb.inertiaTensorRotation;
-                    const Quaternionf q = QInverse(quaternion2);
-                    const Matrix4x4f matrix4x = TRSRotation(quaternion2);
-                    const Matrix4x4f matrix4x2 = TRSRotation(q);
-                    Matrix4x4f right = Mul(Mul(matrix4x, m), matrix4x2);
-                    KSPUtil::Add(left, right);
-                    const Vector3f vector = referenceTransform.InverseTransformDirection((Vector3d(rb.position) - CoMD).ToVector3f());
-                    KSPUtil::ToDiagonalMatrix2(rb.mass * vector.sqrMagnitude(), m2);
-                    KSPUtil::Add(left, m2);
-                    KSPUtil::OuterProduct2(vector, vector * (0.0f - rb.mass), m3);
-                    KSPUtil::Add(left, m3);
-                }
-                MOI = KSPUtil::Diag(left).ToVector3f();
+                MOI = physics->MOI;
                 angularMomentum.x = static_cast<float>(static_cast<double>(MOI.x) * angularVelocityD.x);
                 angularMomentum.y = static_cast<float>(static_cast<double>(MOI.y) * angularVelocityD.y);
                 angularMomentum.z = static_cast<float>(static_cast<double>(MOI.z) * angularVelocityD.z);
             }
+        } else {
+            PartTransform& referenceTransform = ReferenceTransform();
+            const int count = static_cast<int>(parts.size());
+            const QuaternionD quaternionD = QuaternionD::Inverse(QuaternionD(referenceTransform.rotation));
+            Vector3d zero, zero2, zero3;
+            double num = 0.0;
+            std::vector<PartRigidbodyState> states(static_cast<size_t>(count));
+            for (int i = 0; i < count; i++)
+                states[static_cast<size_t>(i)] = rbOf ? rbOf(*parts[static_cast<size_t>(i)]) : PartRigidbodyState::FromPart(*parts[static_cast<size_t>(i)]);
+            int index = count;
+            while (index-- > 0) {
+                const PartRigidbodyState& rb = states[static_cast<size_t>(index)];
+                if (rb.present) {
+                    const double physicsMass = rb.physicsMass;
+                    zero += Vector3d(rb.worldCenterOfMass) * physicsMass;
+                    const Vector3d vector3d = Vector3d(rb.velocity) * physicsMass;
+                    zero2 += vector3d;
+                    zero3 += (quaternionD * Vector3d(rb.angularVelocity)) * physicsMass;
+                    num += physicsMass;
+                }
+            }
+            if (num > 0.0) {
+                flag = false;
+                totalMass = num;
+                const double num2 = 1.0 / num;
+                CoMD = zero * num2;
+                rb_velocityD = zero2 * num2;
+                velocityD = rb_velocityD + FrameVelocity();
+                CoM = CoMD.ToVector3f();
+                localCoM = vesselTransform.InverseTransformPoint(CoM);
+                rb_velocity = rb_velocityD.ToVector3f();
+                angularVelocityD = zero3 * num2;
+                angularVelocity = angularVelocityD.ToVector3f();
+                if (!(angularVelocityD != Vector3d()) && packed) {
+                    // VesselPrecalculate.cs:421-424: `MOI.Zero()` / `angularMomentum.Zero()` on Vector3 fields are no-ops (see below)
+                } else {
+                    Matrix4x4f left;  // Matrix4x4.zero
+                    Matrix4x4f m = Matrix4x4f::identity(), m2 = Matrix4x4f::identity(), m3 = Matrix4x4f::identity();
+                    const Quaternionf quaternion = ToFloat(quaternionD);
+                    for (int i = 0; i < count; i++) {
+                        const PartRigidbodyState& rb = states[static_cast<size_t>(i)];
+                        if (!rb.present) continue;
+                        KSPUtil::ToDiagonalMatrix2(rb.inertiaTensor, m);
+                        const Quaternionf quaternion2 = quaternion * rb.rotation * rb.inertiaTensorRotation;
+                        const Quaternionf q = QInverse(quaternion2);
+                        const Matrix4x4f matrix4x = TRSRotation(quaternion2);
+                        const Matrix4x4f matrix4x2 = TRSRotation(q);
+                        Matrix4x4f right = Mul(Mul(matrix4x, m), matrix4x2);
+                        KSPUtil::Add(left, right);
+                        const Vector3f vector = referenceTransform.InverseTransformDirection((Vector3d(rb.position) - CoMD).ToVector3f());
+                        KSPUtil::ToDiagonalMatrix2(rb.mass * vector.sqrMagnitude(), m2);
+                        KSPUtil::Add(left, m2);
+                        KSPUtil::OuterProduct2(vector, vector * (0.0f - rb.mass), m3);
+                        KSPUtil::Add(left, m3);
+                    }
+                    MOI = KSPUtil::Diag(left).ToVector3f();
+                    angularMomentum.x = static_cast<float>(static_cast<double>(MOI.x) * angularVelocityD.x);
+                    angularMomentum.y = static_cast<float>(static_cast<double>(MOI.y) * angularVelocityD.y);
+                    angularMomentum.z = static_cast<float>(static_cast<double>(MOI.z) * angularVelocityD.z);
+                }
+            }
+    
         }
     }
     if (flag) {

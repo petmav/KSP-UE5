@@ -299,6 +299,47 @@ def situation(sc):
     return SIT["ESCAPING"]
 
 
+def vessel_switching(sc):
+    """VesselSwitching.cs:35-130. Returns ['none'], ['msg', key], ['force', index] or ['set', index]"""
+    if sc["mapEnabled"] or sc["locked"] or sc["paused"]:
+        return ["none"]
+    if not (sc["prev"] or sc["next"]):
+        return ["none"]
+    if not sc["hasGame"] or not sc["sceneFlight"]:
+        return ["none"]
+    if not sc["canSwitch"]:
+        return ["msg", "137562"]
+    cands = []
+    flag = False
+    vs = sc["vessels"]
+    idx = sc["active"]
+    d = -1 if sc["prev"] else 1
+    n = len(vs)
+    cur = idx
+    while True:
+        cur += d
+        if cur >= 0:
+            if cur >= n:
+                cur -= n
+        else:
+            cur += n
+        v = vs[cur]
+        if v["loaded"] and cur != idx and v["type"] != 14:  # VesselType.DeployedSciencePart
+            if v["type"] <= 1 and not sc["modifier"]:  # <= VesselType.SpaceObject
+                flag = True
+            else:
+                cands.append(cur)
+        if cur == idx:
+            break
+    if not cands:
+        return ["msg", "8003367" if flag else "137597"]
+    for c in cands:
+        if vs[c]["packed"] and sc["status"] != 0:
+            continue
+        return ["force", c]
+    return ["set", cands[0]]
+
+
 # ---------------------------------------------------------------------------------------------------- case generation
 def gen_ranges():
     out = {}
@@ -523,6 +564,21 @@ def build():
                    "easing": sc["easing"], "spawning": sc["spawning"], "pressure": hx(sc["pressure"]), "ecc": hx(ecc), "sma": hx(sma),
                    "radius": hx(radius), "soi": hx(soi), "depth": hx(depth), "atmo": sc["atmo"], "result": res})
     out["situation"] = st
+
+    # ---- K. VesselSwitching
+    vsw = []
+    for k in range(600):
+        n = R.randint(2, 7)
+        vs = [{"loaded": R.random() < 0.7, "type": R.choice([0, 1, 2, 3, 3, 7, 7, 8, 11, 14, 16]), "packed": R.random() < 0.5} for _ in range(n)]
+        sc = {"vessels": vs, "active": R.randrange(n), "prev": R.random() < 0.5, "next": R.random() < 0.8, "modifier": R.random() < 0.3,
+              "hasGame": R.random() < 0.95, "canSwitch": R.random() < 0.9, "sceneFlight": R.random() < 0.95, "mapEnabled": R.random() < 0.05,
+              "locked": R.random() < 0.05, "paused": R.random() < 0.05, "status": R.choice([0, 0, 1])}
+        vs[sc["active"]]["loaded"] = True
+        res = vessel_switching(sc)
+        vsw.append({"vessels": vs, "active": sc["active"], "prev": sc["prev"], "next": sc["next"], "modifier": sc["modifier"], "hasGame": sc["hasGame"],
+                    "canSwitch": sc["canSwitch"], "sceneFlight": sc["sceneFlight"], "mapEnabled": sc["mapEnabled"], "locked": sc["locked"],
+                    "paused": sc["paused"], "status": sc["status"], "result": res})
+    out["vessel_switching"] = vsw
     return out
 
 

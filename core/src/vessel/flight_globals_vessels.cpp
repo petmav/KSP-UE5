@@ -42,35 +42,32 @@ Vessel& Active() {
     return *FlightGlobals::ActiveVessel;
 }
 
-// FlightGlobals.cs:900-938 (HookVesselEvents handlers)
-void OnPartEvent(Part* part) {
-    if (part != nullptr && part->vessel != nullptr) GE::onVesselStandardModification.Fire(part->vessel);
-}
-void OnVesselEvent(Vessel* vessel) {
-    if (vessel != nullptr) GE::onVesselStandardModification.Fire(vessel);
-}
-void OnPartEventTargetAction(GE::HostTargetAction<Part*, Part*> data) {
-    if (data.host != nullptr && data.host->vessel != nullptr) GE::onVesselStandardModification.Fire(data.host->vessel);
-    if (data.host != nullptr && data.target->vessel != nullptr) GE::onVesselStandardModification.Fire(data.target->vessel);
-}
-void OnPartEventFromToAction(GE::FromToAction<Part*, Part*> data) {
-    if (data.from != nullptr && data.from->vessel != nullptr) GE::onVesselStandardModification.Fire(data.from->vessel);
-    if (data.to != nullptr && data.to->vessel != nullptr) GE::onVesselStandardModification.Fire(data.to->vessel);
-}
-// FlightGlobals.cs:1258
-void SurfaceVesselEaseIn(GE::HostedFromToAction<Vessel*, Vessel_Situations> data) {
-    if (data.host->easingInToSurface && data.to == Vessel_Situations::LANDED) FlightGlobals::ToggleVesselEaseIn(data.host, false);
-}
-void OnSceneChangeHandler(GameScenes) { FlightGlobals::OnSceneChange(); }
+// FlightGlobals.cs:900-938 (HookVesselEvents handlers). The C# subscribes INSTANCE methods of the FlightGlobals MonoBehaviour (EventData.EvtDelegate
+// reads evt.Target.GetType(): a static method group would throw NullReferenceException), so the handlers are members of one object.
+struct FlightGlobalsHooks {
+    void OnPartEvent(Part* part) {
+        if (part != nullptr && part->vessel != nullptr) GE::onVesselStandardModification.Fire(part->vessel);
+    }
+    void OnVesselEvent(Vessel* vessel) {
+        if (vessel != nullptr) GE::onVesselStandardModification.Fire(vessel);
+    }
+    void OnPartEventTargetAction(GE::HostTargetAction<Part*, Part*> data) {
+        if (data.host != nullptr && data.host->vessel != nullptr) GE::onVesselStandardModification.Fire(data.host->vessel);
+        if (data.host != nullptr && data.target->vessel != nullptr) GE::onVesselStandardModification.Fire(data.target->vessel);
+    }
+    void OnPartEventFromToAction(GE::FromToAction<Part*, Part*> data) {
+        if (data.from != nullptr && data.from->vessel != nullptr) GE::onVesselStandardModification.Fire(data.from->vessel);
+        if (data.to != nullptr && data.to->vessel != nullptr) GE::onVesselStandardModification.Fire(data.to->vessel);
+    }
+    // FlightGlobals.cs:1258
+    void SurfaceVesselEaseIn(GE::HostedFromToAction<Vessel*, Vessel_Situations> data) {
+        if (data.host->easingInToSurface && data.to == Vessel_Situations::LANDED) FlightGlobals::ToggleVesselEaseIn(data.host, false);
+    }
+    // FlightGlobals.cs:747 OnSceneChange
+    void OnSceneChange(GameScenes) { FlightGlobals::OnSceneChange(); }
+};
+FlightGlobalsHooks g_hooksObj;
 bool g_hooked = false;
-template <class E, class R, class... A>
-void AddStatic(E& e, R (*fn)(A...)) {
-    e.Add(E::OnEvent::Static(fn));
-}
-template <class E, class R, class... A>
-void RemoveStatic(E& e, R (*fn)(A...)) {
-    e.Remove(E::OnEvent::Static(fn));
-}
 }  // namespace
 
 // ============================================================ the registry
@@ -279,7 +276,7 @@ std::vector<Vessel*> FlightGlobals::FindNearestVesselWhere(const Vector3d& refPo
     return list;
 }
 
-// FlightGlobals.cs:770 OnDestroy (plus the test reset): the scene is gone
+// FlightGlobals.cs:776 OnDestroy (plus the test reset): the scene is gone
 void FlightGlobals::Clear() {
     ActiveVessel = nullptr;
     currentMainBody = nullptr;
@@ -297,16 +294,16 @@ void FlightGlobals::Clear() {
     cometPerturber = nullptr;
     physicalObjects.clear();
     disableOverridePending_ = false;
+    GE::onVesselSituationChange.Remove(&g_hooksObj, &FlightGlobalsHooks::SurfaceVesselEaseIn);  // OnDestroy (FlightGlobals.cs:773)
     if (g_hooked) {
-        RemoveStatic(GE::onGameSceneLoadRequested, OnSceneChangeHandler);
-        RemoveStatic(GE::onVesselSituationChange, SurfaceVesselEaseIn);
-        RemoveStatic(GE::onPartAttach, OnPartEventTargetAction);
-        RemoveStatic(GE::onPartRemove, OnPartEventTargetAction);
-        RemoveStatic(GE::onPartCouple, OnPartEventFromToAction);
-        RemoveStatic(GE::onPartDie, OnPartEvent);
-        RemoveStatic(GE::onPartUndock, OnPartEvent);
-        RemoveStatic(GE::onVesselWasModified, OnVesselEvent);
-        RemoveStatic(GE::onVesselPartCountChanged, OnVesselEvent);
+        GE::onGameSceneLoadRequested.Remove(&g_hooksObj, &FlightGlobalsHooks::OnSceneChange);
+        GE::onPartAttach.Remove(&g_hooksObj, &FlightGlobalsHooks::OnPartEventTargetAction);
+        GE::onPartRemove.Remove(&g_hooksObj, &FlightGlobalsHooks::OnPartEventTargetAction);
+        GE::onPartCouple.Remove(&g_hooksObj, &FlightGlobalsHooks::OnPartEventFromToAction);
+        GE::onPartDie.Remove(&g_hooksObj, &FlightGlobalsHooks::OnPartEvent);
+        GE::onPartUndock.Remove(&g_hooksObj, &FlightGlobalsHooks::OnPartEvent);
+        GE::onVesselWasModified.Remove(&g_hooksObj, &FlightGlobalsHooks::OnVesselEvent);
+        GE::onVesselPartCountChanged.Remove(&g_hooksObj, &FlightGlobalsHooks::OnVesselEvent);
         g_hooked = false;
     }
 }
@@ -450,14 +447,14 @@ void FlightGlobals::Start() {
     disableOverridePending_ = true;  // Invoke("disableOverride", 1f)
     disableOverrideAt_ = Time::time + 1.0f;
     if (!g_hooked) {
-        AddStatic(GE::onGameSceneLoadRequested, OnSceneChangeHandler);
-        AddStatic(GE::onPartAttach, OnPartEventTargetAction);
-        AddStatic(GE::onPartRemove, OnPartEventTargetAction);
-        AddStatic(GE::onPartCouple, OnPartEventFromToAction);
-        AddStatic(GE::onPartDie, OnPartEvent);
-        AddStatic(GE::onPartUndock, OnPartEvent);
-        AddStatic(GE::onVesselWasModified, OnVesselEvent);
-        AddStatic(GE::onVesselPartCountChanged, OnVesselEvent);
+        GE::onGameSceneLoadRequested.Add(&g_hooksObj, &FlightGlobalsHooks::OnSceneChange);
+        GE::onPartAttach.Add(&g_hooksObj, &FlightGlobalsHooks::OnPartEventTargetAction);
+        GE::onPartRemove.Add(&g_hooksObj, &FlightGlobalsHooks::OnPartEventTargetAction);
+        GE::onPartCouple.Add(&g_hooksObj, &FlightGlobalsHooks::OnPartEventFromToAction);
+        GE::onPartDie.Add(&g_hooksObj, &FlightGlobalsHooks::OnPartEvent);
+        GE::onPartUndock.Add(&g_hooksObj, &FlightGlobalsHooks::OnPartEvent);
+        GE::onVesselWasModified.Add(&g_hooksObj, &FlightGlobalsHooks::OnVesselEvent);
+        GE::onVesselPartCountChanged.Add(&g_hooksObj, &FlightGlobalsHooks::OnVesselEvent);
         g_hooked = true;
     }
 }
@@ -651,7 +648,7 @@ void FlightGlobals::ToggleVesselEaseIn(Vessel* vessel, bool enableEaseIn, double
             vessel->easeInMultiplier = easeInMultiplier;
             vessel->gravityMultiplier *= easeInMultiplier;
             vessel->easingInToSurface = true;
-            AddStatic(GE::onVesselSituationChange, SurfaceVesselEaseIn);
+            GE::onVesselSituationChange.Add(&g_hooksObj, &FlightGlobalsHooks::SurfaceVesselEaseIn);
         } else {
             vessel->gravityMultiplier /= vessel->easeInMultiplier;
             vessel->easeInMultiplier = easeInMultiplier;
@@ -660,7 +657,7 @@ void FlightGlobals::ToggleVesselEaseIn(Vessel* vessel, bool enableEaseIn, double
     } else if (vessel->easingInToSurface) {
         vessel->gravityMultiplier /= vessel->easeInMultiplier;
         vessel->easingInToSurface = false;
-        RemoveStatic(GE::onVesselSituationChange, SurfaceVesselEaseIn);
+        GE::onVesselSituationChange.Remove(&g_hooksObj, &FlightGlobalsHooks::SurfaceVesselEaseIn);
     }
 }
 

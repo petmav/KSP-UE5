@@ -97,22 +97,22 @@ GravityResult IntegrationGravity(const GravityInputs& in, const std::function<Ve
 
 // ============================================================ the component
 
-// VesselPrecalculate.cs:104 Awake (GetComponent<Vessel>; the onDockingComplete subscription)
+// Awake (VesselPrecalculate.cs:104: GetComponent<Vessel>, the onDockingComplete subscription)
 VesselPrecalculate::VesselPrecalculate(Vessel* v) : vessel(v) {
     GE::onDockingComplete.Add(this, &VesselPrecalculate::onDockingComplete);
 }
 
-// VesselPrecalculate.cs:109 OnDestroy
+// The destructor is the delegate removal of OnDestroy (VesselPrecalculate.cs:113)
 VesselPrecalculate::~VesselPrecalculate() { GE::onDockingComplete.Remove(this, &VesselPrecalculate::onDockingComplete); }
 
-// VesselPrecalculate.cs:109 OnDestroy (called by ~Vessel, while the vessel and its orbit driver are still alive)
+// VesselPrecalculate.cs:113 OnDestroy (called by ~Vessel, while the vessel and its orbit driver are still alive)
 void VesselPrecalculate::OnDestroy() {
     StopEasing();
     GE::onDockingComplete.Remove(this, &VesselPrecalculate::onDockingComplete);
     if (vessel != nullptr && vessel->orbitDriver != nullptr) vessel->orbitDriver->QueueOnce = false;
 }
 
-// VesselPrecalculate.cs:103-124
+// The isEasingGravity setter (VesselPrecalculate.cs:103-124)
 void VesselPrecalculate::set_isEasingGravity(bool value) {
     if (easing_) {
         if (!value) StopEasing();
@@ -122,7 +122,7 @@ void VesselPrecalculate::set_isEasingGravity(bool value) {
     easing_ = value;
 }
 
-// VesselPrecalculate.cs:132
+// VesselPrecalculate.cs:123
 void VesselPrecalculate::RunFirst() {
     if (vessel == nullptr || vessel->parts.empty()) return;
     int count = static_cast<int>(vessel->parts.size());
@@ -137,10 +137,10 @@ void VesselPrecalculate::RunFirst() {
     } while (vessel->parts[static_cast<size_t>(count)] != nullptr);
 }
 
-// VesselPrecalculate.cs:155
+// VesselPrecalculate.cs:144
 void VesselPrecalculate::FixedUpdate() { MainPhysics(true); }
 
-// VesselPrecalculate.cs:160
+// VesselPrecalculate.cs:149
 void VesselPrecalculate::MainPhysics(bool doKillChecks) {
     Vessel& v = *vessel;
     packedInFixed = !v.loaded || v.packed;
@@ -174,7 +174,7 @@ void VesselPrecalculate::MainPhysics(bool doKillChecks) {
     physStatsNotDoneInUpdate = true;
 }
 
-// VesselPrecalculate.cs:221
+// VesselPrecalculate.cs:207
 void VesselPrecalculate::Update() {
     if (!packedInFixed && !disableRunInUpdate) {
         const double universalTime = Planetarium::GetUniversalTime();
@@ -191,14 +191,14 @@ void VesselPrecalculate::Update() {
     }
 }
 
-// VesselPrecalculate.cs:240
+// VesselPrecalculate.cs:226
 void VesselPrecalculate::ApplyVelocityCorrection() {
     if (correctDriftThisFrame_) vessel->OffsetVelocity(postIntegrationVelocityCorrection);
     correctDriftThisFrame_ = false;
     postIntegrationVelocityCorrection.Zero();
 }
 
-// VesselPrecalculate.cs:251
+// VesselPrecalculate.cs:236
 void VesselPrecalculate::GoOnRails() {
     if (vessel->orbitDriver->updateMode == OrbitDriver::UpdateMode::TRACK_Phys && !postIntegrationVelocityCorrection.IsZero()) {
         ApplyVelocityCorrection();
@@ -211,10 +211,10 @@ void VesselPrecalculate::GoOnRails() {
     postIntegrationVelocityCorrection.Zero();
 }
 
-// VesselPrecalculate.cs:264
+// VesselPrecalculate.cs:250
 void VesselPrecalculate::GoOffRails() {}
 
-// VesselPrecalculate.cs:269
+// VesselPrecalculate.cs:254
 void VesselPrecalculate::StartEasing() {
     vessel->gravityMultiplier = 0.0;
     easing_ = true;
@@ -228,7 +228,7 @@ void VesselPrecalculate::StartEasing() {
     }
 }
 
-// VesselPrecalculate.cs:283
+// VesselPrecalculate.cs:267
 void VesselPrecalculate::StopEasing() {
     easing_ = false;
     if (vessel != nullptr) vessel->gravityMultiplier = 1.0;
@@ -236,7 +236,7 @@ void VesselPrecalculate::StopEasing() {
     if (easingLockOn_) InputLockManager::RemoveControlLock("PhysicsEase");
 }
 
-// VesselPrecalculate.cs:293 CalculateGravity
+// VesselPrecalculate.cs:281 CalculateGravity
 void VesselPrecalculate::CalculateGravity() {
     Vessel& v = *vessel;
     v.gravityTrue = (gAccelTrue = PrecalcMath::GeeForceAtPosition(v.CoMD, v.mainBody()->position, v.mainBody()->gMagnitudeAtCenter));
@@ -326,7 +326,7 @@ void VesselPrecalculate::CalculateGravity() {
     }
 }
 
-// VesselPrecalculate.cs:376
+// VesselPrecalculate.cs:377
 void VesselPrecalculate::SetLandedPosRot() {
     Vessel& v = *vessel;
     if (v.LandedOrSplashed() && v.packed && railsSetPosRot) {
@@ -338,7 +338,7 @@ void VesselPrecalculate::SetLandedPosRot() {
     }
 }
 
-// VesselPrecalculate.cs:387 (the arithmetic is Vessel::CalculatePhysicsStats, WP-14, which reads worldSurfacePos / worldSurfaceRot from here)
+// VesselPrecalculate.cs:388 (the arithmetic is Vessel::CalculatePhysicsStats, WP-14, which reads worldSurfacePos / worldSurfaceRot from here)
 void VesselPrecalculate::CalculatePhysicsStats() { vessel->CalculatePhysicsStats(); }
 
 // VesselPrecalculate.cs:513
