@@ -1,10 +1,8 @@
-# PROGRESS wp55 (Making History node library: tests, actions, adjusters)
+# PROGRESS wp55 (Making History node library, slice A)
 
-- [x] Read protocol, WP-54 section, registries; scope chosen (slice A): engine-agnostic Tests (25), Actions that need no slice-2 types, all Adjusters
-      (dynamic modules). Deferred: everything needing VesselSituation / MissionKerbal / MissionOrbit / ParamChoices_* / SurfaceArea / Asteroid / Comet
-      (the Create* actions, Situation/Kerbal/Distance/Orbit/GoTo/FlyThrough tests, Part* actions) unless time allows slice B.
-- [x] node_library.hpp/.cpp (MissionCelestialBody, NodeLibraryEnvironment, MEScoreModule table, RegisterNodeLibrary), mission_tests.hpp/.cpp written
-- [x] compile tests; actions; adjusters (compiles; check_cites 504 cites 0 mismatches)
-- [ ] Python reference + gate test
-- [ ] check_cites (tools/wp55/check_cites.py), STATUS section + summary row 37, README
-- [ ] merge origin/main, fresh verification, push wp55
+- [x] scope: engine-agnostic Tests (25), Actions (12), Adjusters (39) + MissionCelestialBody; slice-2-dependent classes deferred (see STATUS WP-55)
+- [x] ports compile, check_cites exact 504 cites 0 mismatches
+- [x] Python reference + gate (5 unit cases / 9,576 assertions, 0 differences)
+- [x] main merged, fresh build: kspcore_tests 724 cases / 1,202,445 assertions, ctest 34/34
+- [x] STATUS section + row 38, README entry
+- [ ] push (coordinator)
