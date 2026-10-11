@@ -10,3 +10,7 @@
 #include "ksp/missions/mission_score.hpp"
 #include "ksp/missions/mission_types.hpp"
 #include "ksp/missions/mission_validator.hpp"
+#include "ksp/missions/mission_actions.hpp"
+#include "ksp/missions/mission_adjusters.hpp"
+#include "ksp/missions/mission_tests.hpp"
+#include "ksp/missions/node_library.hpp"

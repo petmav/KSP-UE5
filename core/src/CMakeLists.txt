@@ -117,6 +117,14 @@ add_library(kspcore STATIC
     fineprint/contracts_survey.cpp
     fineprint/contracts_other.cpp
     fineprint/scenario_contract_events.cpp
+    fineprint/contract_defs.cpp
+    fineprint/contract_defs_gen.cpp
+    fineprint/sentinel_utilities.cpp
+    fineprint/sentinel_contracts.cpp
+    fineprint/sentinel_scenario.cpp
+    fineprint/compatibility.cpp
+    fineprint/prebuilt.cpp
+    fineprint/construction_templates.cpp
     contracts/parameters.cpp
     contracts/predicates.cpp
     contracts/module_test_subject.cpp
@@ -134,6 +142,10 @@ add_library(kspcore STATIC
     missions/mission_awards.cpp
     missions/mission_validator.cpp
     missions/mission.cpp
+    missions/node_library.cpp
+    missions/mission_tests.cpp
+    missions/mission_actions.cpp
+    missions/mission_adjusters.cpp
     space_center/pqs_city.cpp
     space_center/pqs_city_data.cpp
     space_center/space_center.cpp

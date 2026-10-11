@@ -1788,6 +1788,13 @@ uint32_t Mission::CurrentVesselID(MENode* node, uint32_t vesselID) {
     return num;
 }
 
+// Mission.cs:1665
+void Mission::SetLockedCamera(MissionCameraModeOptions newCameraMode, MissionCameraLockOptions newCameraLock) {
+    cameraLockMode = newCameraMode;
+    cameraLockOptions = newCameraLock;
+    if (MissionsEnvironment::setLockedCamera) MissionsEnvironment::setLockedCamera(this, cameraLockMode, cameraLockOptions);
+}
+
 // Mission.cs:2296
 MENode* Mission::GetNodeById(const Guid& guid) {
     int num = 0;
