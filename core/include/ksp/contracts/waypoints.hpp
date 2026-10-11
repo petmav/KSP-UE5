@@ -16,7 +16,10 @@
 
 namespace ksp {
 class CelestialBody;
+namespace Contracts {
+class Contract;
 }
+}  // namespace ksp
 
 namespace ksp::FinePrint {
 
@@ -50,12 +53,18 @@ public:
     float iconAlpha = 0.0f;                     // :80
     double fadeRange = 1.7976931348623157e308;  // :82
     Guid navigationId;                          // :98 (Guid.Empty until the constructor assigns Guid.NewGuid())
+    ksp::Contracts::Contract* contractReference = nullptr;  // :58
+    Vector3f orbitPosition;                     // :62
+    std::string nodeCaption1, nodeCaption2, nodeCaption3;  // :92 / :94 / :96
 
     Waypoint();                                 // :126 (navigationId = Guid.NewGuid(): ContractsEnvironment::NewGuid)
     Waypoint(const Waypoint& that);             // :131 (also draws a Guid when that.navigationId is empty)
     CelestialBody* celestialBody();             // :100 (cachedBody walk over FlightGlobals.Bodies by GetName(), falls back to Bodies[0])
     int uniqueSeed() const { return (index + seed) * (index + seed + 1) / 2 + seed; }  // :122 (int arithmetic, wraps like C#)
-    void SetFadeRange() { /* GUI: ScaledSpace.InverseScaleFactor, WP-46 */ }
+    // :174 SetFadeRange(referenceAltitude): the fade range is map-icon geometry (ScaledSpace.InverseScaleFactor, WP-46); recorded as a no-op
+    void SetFadeRange(double referenceAltitude = -1.0) { (void)referenceAltitude; }
+    // :165 setName(uniqueSites, allowNamed): StringUtilities.GenerateSiteName + #autoLOC_7001301
+    void setName(bool uniqueSites = true, bool allowNamed = true);
     // :189 / :227: generator null -> new KSPRandom(uniqueSeed)
     void RandomizeNear(double centerLatitude, double centerLongitude, double minimumDistance, double maximumDistance, bool waterAllowed = true,
                        KSPRandom* generator = nullptr);
