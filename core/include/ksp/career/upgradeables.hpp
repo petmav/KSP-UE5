@@ -24,18 +24,7 @@
 
 namespace ksp {
 
-// SpaceCenterFacility.cs:2 (the [Description]s are localisation tags)
-enum class SpaceCenterFacility : int {
-    Administration,
-    AstronautComplex,
-    LaunchPad,
-    MissionControl,
-    ResearchAndDevelopment,
-    Runway,
-    TrackingStation,
-    SpaceplaneHangar,
-    VehicleAssemblyBuilding
-};
+// SpaceCenterFacility.cs:2 is declared in save/save_enums.hpp (WP-42: one definition for WP-36 and WP-40; the [Description]s are below)
 
 }  // namespace ksp
 

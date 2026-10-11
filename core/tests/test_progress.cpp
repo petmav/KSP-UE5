@@ -35,6 +35,10 @@
 #include "ksp/save/game_parameters.hpp"
 #include "ksp/save/proto_vessel.hpp"
 #include "ksp/ship/ship_construction.hpp"
+#include "ksp/space_center/pqs_city.hpp"
+#include "ksp/space_center/psystem_setup.hpp"
+#include "ksp/space_center/space_center.hpp"
+#include "ksp/terrain/pqs.hpp"
 #include "ksp/vessel/vessel.hpp"
 #include "ksp/vessel/vessel_types.hpp"
 #include "nlohmann/json.hpp"
@@ -845,18 +849,35 @@ TEST_CASE("WP-36 KSCFacilityLevelText tag replacement") {
 
 namespace {
 
+// WP-42: the KSC position and the great-circle distance now come from the real SpaceCenter (PQSCity.Orientate of the Kerbin/KSC prefab,
+// SpaceCenter.Start) through PSystemSetup::InstallSeams, replacing the double-normalised fixture of WP-36 (the reference's KSC moved by ~1e-8)
 struct RecoveryWorld {
     World36& w;
-    std::array<double, 3> ksc;
+    PQS pqs;
+    std::unique_ptr<PQSCity> kscCity;
+    SpaceCenter sc;
+    PSystemSetup setup;
     explicit RecoveryWorld(World36& world) : w(world) {
         const json& rec = Ref36()["recovery"];
-        ksc = {rec["ksc"][0].get<double>(), rec["ksc"][1].get<double>(), rec["ksc"][2].get<double>()};
-        CareerEnvironment& env = CareerEnvironment::Current();
-        env.spaceCenterBody = [this] { return &w.Body("Kerbin"); };
-        env.spaceCenterGreatCircleDistance = [this](double lat, double lon) {
-            const Vector3d v = w.Body("Kerbin").GetRelSurfaceNVector(lat, lon);
-            return w.Body("Kerbin").Radius * dotnet::Math::Acos(ksc[0] * v.x + ksc[1] * v.y + ksc[2] * v.z);  // SpaceCenter.GreatCircleDistance
-        };
+        pqs.radius = w.Body("Kerbin").Radius;
+        const PQSCityPrefab* prefab = nullptr;
+        for (const PQSCityPrefab& p : StockPQSCities())
+            if (std::string(p.bodyName) == "Kerbin" && std::string(p.name) == "KSC") prefab = &p;
+        REQUIRE(prefab != nullptr);
+        kscCity = std::make_unique<PQSCity>(*prefab, &w.Body("Kerbin"), &pqs);
+        kscCity->Orientate();
+        sc.cb = &w.Body("Kerbin");
+        sc.AttachToCity(*kscCity);
+        sc.Awake();
+        sc.Start();
+        for (int i = 0; i < 3; ++i) CHECK(sc.SrfNVector()[i] == rec["ksc"][static_cast<size_t>(i)].get<double>());
+        setup.Awake();
+        PSystemSetup::InstallSeams();
+    }
+    ~RecoveryWorld() {
+        PSystemSetup::UninstallSeams();
+        sc.OnDestroy();
+        setup.OnDestroy();
     }
 };
 

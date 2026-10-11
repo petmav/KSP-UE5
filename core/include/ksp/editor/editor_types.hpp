@@ -41,11 +41,7 @@ enum class ConstructionMode : int { Place, Move, Rotate, Root };
 // EditorFacilities.cs:4 ([Flags])
 enum class EditorFacilities : int { NONE = 0, ALL = -1, VAB = 1, SPH = 2 };
 
-// SpaceCenterFacility.cs:3
-enum class SpaceCenterFacility : int {
-    Administration, AstronautComplex, LaunchPad, MissionControl, ResearchAndDevelopment, Runway, TrackingStation, SpaceplaneHangar,
-    VehicleAssemblyBuilding
-};
+// SpaceCenterFacility.cs:3 is declared in save/save_enums.hpp (WP-42: one definition for WP-36 and WP-40)
 
 // Attachment.cs:3 is declared in parts/part_types.hpp (WP-13)
 

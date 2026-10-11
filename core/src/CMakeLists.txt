@@ -104,6 +104,15 @@ add_library(kspcore STATIC
     contracts/templates_grandtour.cpp
     contracts/waypoints.cpp
     contracts/contract_register.cpp
+    space_center/pqs_city.cpp
+    space_center/pqs_city_data.cpp
+    space_center/space_center.cpp
+    space_center/launch_site.cpp
+    space_center/psystem_setup.cpp
+    space_center/high_logic.cpp
+    space_center/destructible_building.cpp
+    space_center/space_center_building.cpp
+    space_center/scene_drivers.cpp
     parts/ksp_enums.cpp
     parts/part_data.cpp
     parts/part_module_data.cpp
