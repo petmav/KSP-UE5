@@ -294,7 +294,9 @@ public:
         ownedParts.push_back(std::move(p));
         return raw;
     }
+    std::vector<std::unique_ptr<Part>> pendingDestroy;  // Object.Destroy'ed parts, freed at the end of the frame
     void ReleaseOwned(Part* p);
+    void FlushDestroyed();                                // end of frame: frees pendingDestroy
     static inline std::function<void(Part&, const AttachNode&)> onAttachFlight;  // unused slot (reserved)
     std::function<std::unique_ptr<Part>(ProtoPartSnapshot&)> createPartFromSnapshot;  // protoPartSnapshot.CreatePart() (unset: ProtoPartSnapshot::CreatePart)
     std::string cacheAutoLOC_6006095 = "#autoLOC_6006095";

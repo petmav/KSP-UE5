@@ -760,7 +760,8 @@ void ModuleInventoryPart::OnUpdate() {
         Part* self = PartOf();
         if (c->CurrentCargoPart() != nullptr) {
             Vessel* active = FlightRegistry::ActiveVessel;
-            distanceToVessel = (active != nullptr) ? Vector3f::Distance(active->vesselTransform.position, self->partTransform.position) : 0.0f;
+            if (active == nullptr) throw NullReferenceException();  // FlightGlobals.ActiveVessel.vesselTransform
+            distanceToVessel = (active->vesselTransform.position - self->partTransform.position).magnitude();
             if (containerHighlight) {
                 if (distanceToVessel > InventoryEnvironment::EVA_INVENTORY_RANGE) {
                     flag = true;

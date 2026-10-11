@@ -548,6 +548,7 @@ EVAConstructionModeEditor::~EVAConstructionModeEditor() {
 
 // EVAConstructionModeEditor.cs:180
 void EVAConstructionModeEditor::Update(const UpdateInput& in) {
+    FlushDestroyed();  // the previous frame's Object.Destroy calls
     EVAConstructionModeController* c = EVAConstructionModeController::Instance;
     if (!c->IsOpen() || c->panelMode != EVAConstructionModeController::PanelMode::Construction) return;
     UpdateAssistingKerbals();
@@ -820,8 +821,8 @@ void EVAConstructionModeEditor::PickupPart() {
         }
         if (selectedPart != nullptr) {
             selectedPart->fields.attRotation = Quaternionf::identity();
-            selectedPart->fields.attRotation0 = hoveredPart->partTransform.rotation;
-            selectedPart->fields.attPos0 = hoveredPart->partTransform.position;
+            selectedPart->fields.attRotation0 = EditorLogic::LocalRotation(*hoveredPart);
+            selectedPart->fields.attPos0 = EditorLogic::LocalPosition(*hoveredPart);
             selectedPartOriginalRotation = hoveredPart->partTransform.rotation;
             Effect("part:SetLayerRecursive(0)", selectedPart);
             selectedPart->hasRigidbody = true;
@@ -929,7 +930,7 @@ void EVAConstructionModeEditor::partRotationResetUpdate() {
     if (resetRotationKeyDown && selectedPartIsReferenceTransform) {
         srfAttachCursorOffset = Vector3f::zero();
         selectedPart->fields.attRotation = Quaternionf::identity();
-        selectedPart->partTransform.rotation = selectedPart->fields.attRotation0;  // localRotation (parentless)
+        EditorLogic::SetLocalRotation(*selectedPart, selectedPart->fields.attRotation0);  // transform.localRotation = attRotation0
         partTweaked = true;
     }
 }
@@ -965,8 +966,8 @@ Part* EVAConstructionModeEditor::AttachPart(Part* part, Attachment& attach) {
         }
     }
     if (attach.otherPartNode != nullptr) attach.otherPartNode->attachedPart = part2;
-    part2->fields.attPos0 = part->partTransform.position;      // part.transform.localPosition
-    part2->fields.attRotation0 = part->partTransform.rotation;  // part.transform.localRotation
+    part2->fields.attPos0 = EditorLogic::LocalPosition(*part);      // part.transform.localPosition
+    part2->fields.attRotation0 = EditorLogic::LocalRotation(*part);  // part.transform.localRotation
     Effect("part:OnAttachFlight", part2);
     if (attach.mode == AttachModes::SRF_ATTACH) {
         part2->fields.attachMode = static_cast<int32_t>(AttachModes::SRF_ATTACH);
@@ -1011,12 +1012,12 @@ void EVAConstructionModeEditor::DetachInput() {
 // EVAConstructionModeEditor.cs:781
 void EVAConstructionModeEditor::DetachPart(Part* part) {
     Part* parent = part->parent;
-    const Vector3f localPosition = part->partTransform.position;
+    const Vector3f localPosition = EditorLogic::LocalPosition(*part);
     selectedPartOriginalRotation = part->partTransform.rotation;
     BackupPart(part, parent);
     Effect("part:OnDetachFlight", part);
     part->fields.attRotation = Quaternionf::identity();
-    part->fields.attRotation0 = part->partTransform.rotation;
+    part->fields.attRotation0 = EditorLogic::LocalRotation(*part);
     part->fields.attPos0 = localPosition;
     Effect("part:RefreshHighlighter", part);
     UIPartActionControllerInventory* inv = UIPartActionControllerInventory::Instance;
@@ -1456,8 +1457,8 @@ void EVAConstructionModeEditor::OnRotateGizmoUpdate(const Quaternionf& dRot, con
         case UnityEngine::Space::Self: selectedPart->partTransform.rotation = gizmoRotation * selectedPart->fields.initRotation; break;
         case UnityEngine::Space::World: selectedPart->partTransform.rotation = dRot * hostRot0; break;
     }
-    selectedPart->fields.attRotation0 = selectedPart->partTransform.rotation;  // localRotation (parentless)
-    selectedPart->fields.attRotation = gizmoAttRotate * UnityNative::Inverse(gizmoAttRotate0) * selectedPart->partTransform.rotation;
+    selectedPart->fields.attRotation0 = EditorLogic::LocalRotation(*selectedPart);
+    selectedPart->fields.attRotation = gizmoAttRotate * UnityNative::Inverse(gizmoAttRotate0) * EditorLogic::LocalRotation(*selectedPart);
     GE::onEditorPartEvent.Fire(ConstructionEventType::PartRotating, selectedPart);
 }
 
@@ -1498,9 +1499,9 @@ void EVAConstructionModeEditor::OnOffsetGizmoUpdate(const Vector3f&, Vector3f& g
             if (selectedPart->fields.attachMode == static_cast<int32_t>(AttachModes::STACK)) {
                 AttachNode* childToParent = selectedPart->FindAttachNodeByPart(selectedPart->parent);
                 AttachNode* parentToChild = selectedPart->parent->FindAttachNodeByPart(selectedPart);
-                const Vector3f local = transform.position - (selectedPart->parent ? selectedPart->parent->partTransform.position : Vector3f::zero());
+                const Vector3f local = EditorLogic::LocalPosition(*selectedPart);
                 diff = parentToChild->position - (local + selectedPart->fields.attRotation * childToParent->position);
-                if (diff.sqrMagnitude() > f32store(fx(threshold) * fx(static_cast<float>(parentToChild->size + 1)))) {
+                if (fx(diff.sqrMagnitude()) > fx(threshold) * fx(static_cast<float>(parentToChild->size + 1))) {
                     gizmoPosition -= offsetGap;
                     transform.position = gizmoPosition;
                 }
@@ -1724,9 +1725,16 @@ void EVAConstructionModeEditor::PostMessage(const std::string& text) {
     InventoryEnvironment::Post(text, 5.0f);
 }
 
+// UnityEngine.Object.Destroy(gameObject) is deferred to the end of the frame: the part stays alive (its nodes are still read by the
+// caller, e.g. AttachPart's Attachment) until FlushDestroyed()
 void EVAConstructionModeEditor::ReleaseOwned(Part* p) {
     auto it = std::find_if(ownedParts.begin(), ownedParts.end(), [&](const std::unique_ptr<Part>& u) { return u.get() == p; });
-    if (it != ownedParts.end()) ownedParts.erase(it);
+    if (it != ownedParts.end()) {
+        pendingDestroy.push_back(std::move(*it));
+        ownedParts.erase(it);
+    }
 }
+
+void EVAConstructionModeEditor::FlushDestroyed() { pendingDestroy.clear(); }
 
 }  // namespace ksp

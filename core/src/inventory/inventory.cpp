@@ -451,9 +451,14 @@ void ModuleCargoPart::OnUpdateHighlight() {
     bool flag2 = false;
     if (!UIHidden && part != nullptr) {
         Part* p = PartOf();
-        distanceToEngineer = InventoryEnvironment::activeVesselPosition
-                                 ? Vector3f::Distance(InventoryEnvironment::activeVesselPosition(), p->partTransform.position)
-                                 : 0.0f;
+        Vector3f active;
+        if (InventoryEnvironment::activeVesselPosition) {
+            active = InventoryEnvironment::activeVesselPosition();
+        } else {
+            if (FlightRegistry::ActiveVessel == nullptr) throw NullReferenceException();  // FlightGlobals.ActiveVessel.vesselTransform
+            active = FlightRegistry::ActiveVessel->vesselTransform.position;
+        }
+        distanceToEngineer = (active - p->partTransform.position).magnitude();
         const bool underLimit = EVAConstructionUtil::IsUnderConstructionWeightLimit(*p);
         if (constructionModeHighlight) {
             if (!inConstructionMode || distanceToEngineer > InventoryEnvironment::EVA_CONSTRUCTION_RANGE || !underLimit ||
