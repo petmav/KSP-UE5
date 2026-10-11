@@ -222,6 +222,14 @@ public:
     Part* PartOf() const;
 };
 
+// The ModuleGroundPart family (ModuleGroundPart.cs:7 : ModuleCargoPart; ModuleGroundSciencePart, ModuleGroundCommsPart, ModuleGroundExpControl,
+// ModuleGroundExperiment) is WP-53 (Breaking Ground). Until then these classes are ModuleCargoPart with its OnLoad / construction logic, so
+// every `FindModuleImplementing<ModuleCargoPart>()` finds them as in C#; the deploy animation / science behaviour is absent.
+class GroundPartSeam : public ModuleCargoPart {
+public:
+    using ModuleCargoPart::ModuleCargoPart;
+};
+
 // ================================================================ ModuleInventoryPart (ModuleInventoryPart.cs:9)
 
 class ModuleInventoryPart : public PartModule, public IPartMassModifier, public IPartCostModifier {

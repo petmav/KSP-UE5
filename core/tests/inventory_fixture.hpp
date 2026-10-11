@@ -142,9 +142,9 @@ inline bool Has(const std::vector<std::string>& v, const std::string& s) { retur
 
 // the EVA kerbal vessel the construction code asks (seated / engineer answers by pointer)
 struct Kerbals {
-    std::vector<std::unique_ptr<Vessel>> vessels;
+    std::vector<std::unique_ptr<Part>> rootParts;  // the kerbals' own parts (declared first: destroyed after the vessels that list them)
     std::vector<std::unique_ptr<FakeEva>> controllers;
-    std::vector<std::unique_ptr<Part>> rootParts;  // the kerbal's own part
+    std::vector<std::unique_ptr<Vessel>> vessels;
     std::map<Vessel*, bool> seated;
     std::map<Vessel*, int> engineers;
     Vessel* Add(const Vector3f& pos, bool isSeated = false, int engineer = 0) {

@@ -1095,6 +1095,8 @@ void KerbalInventory::Uninstall() {
 namespace detail {
 void RegisterInventoryModules() {
     ModuleFactory::Register("ModuleCargoPart", [](const ModuleClassInfo& c) { return std::static_pointer_cast<PartModule>(std::make_shared<ModuleCargoPart>(c)); });
+    for (const char* n : {"ModuleGroundPart", "ModuleGroundSciencePart", "ModuleGroundCommsPart", "ModuleGroundExpControl", "ModuleGroundExperiment"})
+        ModuleFactory::Register(n, [](const ModuleClassInfo& c) { return std::static_pointer_cast<PartModule>(std::make_shared<GroundPartSeam>(c)); });
     ModuleFactory::Register("ModuleInventoryPart", [](const ModuleClassInfo& c) { return std::static_pointer_cast<PartModule>(std::make_shared<ModuleInventoryPart>(c)); });
 }
 }  // namespace detail
