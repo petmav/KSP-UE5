@@ -4345,7 +4345,7 @@ Status: the whole list wp38b deferred is ported and gated, except the pieces tha
 
 ### Verification
 
-See the final line of this section (filled in after the fresh run).
+Windows MSVC RelWithDebInfo (`core/build` deleted, `run_tests.ps1 -Fresh`, `CMAKE_BUILD_PARALLEL_LEVEL=6`, wp38b and main `3472bc56` merged; re-run after merging main with wp38b included): 34/34 ctest, `kspcore_tests` 746 doctest cases / 1,282,859 assertions (WP-38c: 27 cases / 89,990 assertions); configure 1.8 s, build 181 s, test 179 s. GCC 13 (WSL, `-std=c++20 -fsyntax-only -Wall -Wextra`) over the new sources and `test_fineprint2/3.cpp`: no errors, no new warnings. Linux was not run.
 
 ## WP-42: scene flow, KSC, facilities, launch sites (branch `wp42`, from main `85b0085f`, main `13750b33` merged)
 
