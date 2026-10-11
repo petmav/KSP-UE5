@@ -4,6 +4,7 @@
 // `guiNode == nullptr` (play mode, tests) every call below is skipped exactly like the C# `guiNode != null` tests.
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -11,6 +12,8 @@
 #include "ksp/unity/color.hpp"
 
 namespace ksp::Expansions::Missions {
+
+class MissionCelestialBody;
 
 namespace Editor {
 // Editor/BaseAPField.cs: the reflection record of one [MEGUI_*] field. The attribute reflection (BaseAPFieldList, MEGUI controls) is the editor
@@ -21,8 +24,12 @@ class BaseAPField {
 public:
     std::string name;
     std::string guiName;
-    std::string value;
+    std::string value;       // MissionsUtils.GetFieldValueForDisplay(field): enum displayDescription, localized bool, else ToString()
     bool hasValue = true;
+    // TestModule.GetNodeBodyParameterString :258 looks at the field's type: MissionCelestialBody (pointer to the value) and the slice-2 types
+    // ParamChoices_CelestialBodySurface / MissionKerbal (the text their branch returns, precomputed by the caller)
+    const MissionCelestialBody* celestialBody = nullptr;
+    std::optional<std::string> typedText;
     BaseAPField() = default;
     BaseAPField(std::string n, std::string gui, std::string v = "", bool has = true)
         : name(std::move(n)), guiName(std::move(gui)), value(std::move(v)), hasValue(has) {}

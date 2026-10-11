@@ -148,6 +148,11 @@ void RegisterAction() {
 }
 }  // namespace
 
+void RegisterTest_TestVessel() {
+    // TestVessel is a concrete public class: Type.GetType("Expansions.Missions.Tests.TestVessel") resolves
+    TestModuleRegistry::Register({"TestVessel", [] { return std::make_unique<Tests::TestVessel>("TestVessel"); }});
+}
+
 void RegisterNodeLibrary() {
     using namespace Tests;
     RegisterTest<TestEmptyTrue>();
@@ -174,6 +179,20 @@ void RegisterNodeLibrary() {
     RegisterTest<TestResourcesRecovery>();
     RegisterTest<TestSOILeft>();
     RegisterTest<TestSOIReached>();
+    RegisterTest_TestVessel();
+    using namespace Actions;
+    RegisterAction<ActionMessage>();
+    RegisterAction<ActionDialogMessage>();
+    RegisterAction<ActionModifierFunds>();
+    RegisterAction<ActionMissionScore>();
+    RegisterAction<ActionModifierScore>();
+    ActionModuleRegistry::Register({"ActionVessel", [] { return std::make_unique<ActionVessel>("ActionVessel"); }});
+    RegisterAction<ActionVesselActionGroup>();
+    RegisterAction<ActionVesselExplode>();
+    RegisterAction<ActionVesselStage>();
+    RegisterAction<ActionSetCamera>();
+    RegisterAction<ActionPartResourceAmount>();
+    RegisterAction<ActionPartExplode>();
     // MissionScore.GetSupportedTypes reads [MEScoreModule] of the objective's own class (inherit: false)
     MissionScore::allowedSystemsOf = [](IScoreableObjective* objective) -> std::vector<std::string> {
         auto* module = dynamic_cast<TestModule*>(objective);

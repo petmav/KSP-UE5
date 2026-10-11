@@ -14,7 +14,9 @@
 #include "ksp/core/log.hpp"
 #include "ksp/dotnet/mono_float.hpp"
 #include "ksp/dotnet/number.hpp"
+#include "../save/save_util.hpp"
 #include "ksp/missions/mission.hpp"
+#include "ksp/missions/mission_awards.hpp"
 #include "ksp/missions/mission_validator.hpp"
 #include "ksp/parts/part.hpp"
 #include "ksp/resources/part_resource_library.hpp"
@@ -93,7 +95,7 @@ void TestVessel::OnVesselDocking(uint32_t oldId, uint32_t newId) {
         } else {
             v = AwardEnvironment::VesselByPersistentId(oldId);
         }
-        if (v != nullptr) oldRootPart = v->rootPart->persistentId;
+        if (v != nullptr) oldRootPart = v->rootPart->fields.persistentId;
     }
 }
 
@@ -250,7 +252,7 @@ void TestMETTime::Save(ConfigNode& node) const {
 void TestMETTime::Load(const ConfigNode& node) {
     TestVessel::Load(node);
     node.TryGetValue("time", time);
-    node.TryGetEnum("comparisonOperator", comparisonOperator, TestComparisonLessGreaterOnly::LessThan);
+    save_detail::TryGetEnum(node, "comparisonOperator", comparisonOperator, TestComparisonLessGreaterOnly::LessThan);
 }
 // TestMETTime.cs:74
 ScoreModifier TestMETTime::GetScoreModifier(const std::string& scoreModule) {
@@ -292,7 +294,7 @@ void TestMissionTime::Save(ConfigNode& node) const {
 void TestMissionTime::Load(const ConfigNode& node) {
     TestModule::Load(node);
     node.TryGetValue("time", time);
-    node.TryGetEnum("comparisonOperator", comparisonOperator, TestComparisonLessGreaterOnly::LessThan);
+    save_detail::TryGetEnum(node, "comparisonOperator", comparisonOperator, TestComparisonLessGreaterOnly::LessThan);
 }
 // TestMissionTime.cs:71
 ScoreModifier TestMissionTime::GetScoreModifier(const std::string& scoreModule) {
@@ -360,7 +362,7 @@ void TestTimeSinceNode::Load(const ConfigNode& node) {
     }
     node.TryGetValue("nodeID", nodeID);
     node.TryGetValue("time", time);
-    node.TryGetEnum("comparisonOperator", comparisonOperator, TestComparisonLessGreaterOnly::LessThan);
+    save_detail::TryGetEnum(node, "comparisonOperator", comparisonOperator, TestComparisonLessGreaterOnly::LessThan);
 }
 // TestTimeSinceNode.cs:111
 void TestTimeSinceNode::RunValidation(Editor::MissionEditorValidator* validator) {
@@ -415,7 +417,7 @@ void TestMissionScore::Save(ConfigNode& node) const {
 void TestMissionScore::Load(const ConfigNode& node) {
     TestModule::Load(node);
     node.TryGetValue("score", score);
-    if (!node.TryGetEnum("comparisonOperator", comparisonOperator, TestComparisonOperator::Equal)) {
+    if (!save_detail::TryGetEnum(node, "comparisonOperator", comparisonOperator, TestComparisonOperator::Equal)) {
         log::Error("Failed to parse comparisonOperator from " + title);
     }
 }
@@ -461,7 +463,7 @@ void TestMissionFunds::Save(ConfigNode& node) const {
 void TestMissionFunds::Load(const ConfigNode& node) {
     TestModule::Load(node);
     node.TryGetValue("funds", funds);
-    if (!node.TryGetEnum("comparisonOperator", comparisonOperator, TestComparisonOperator::Equal)) {
+    if (!save_detail::TryGetEnum(node, "comparisonOperator", comparisonOperator, TestComparisonOperator::Equal)) {
         log::Error("Failed to parse comparisonOperator from " + title);
     }
 }
@@ -510,7 +512,7 @@ void TestAccuracy::Save(ConfigNode& node) const {
 void TestAccuracy::Load(const ConfigNode& node) {
     TestModule::Load(node);
     node.TryGetValue("accuracy", accuracy);
-    node.TryGetEnum("comparisonOperator", comparisonOperator, TestComparisonLessGreaterOnly::GreaterThan);
+    save_detail::TryGetEnum(node, "comparisonOperator", comparisonOperator, TestComparisonLessGreaterOnly::GreaterThan);
 }
 
 // ---- TestGameEvent -----------------------------------------------------------------------------------------------------------
@@ -586,7 +588,7 @@ void TestVesselMass::Save(ConfigNode& node) const {
 void TestVesselMass::Load(const ConfigNode& node) {
     TestVessel::Load(node);
     node.TryGetValue("mass", mass);
-    node.TryGetEnum("comparisonOperator", comparisonOperator, TestComparisonLessGreaterOnly::GreaterThan);
+    save_detail::TryGetEnum(node, "comparisonOperator", comparisonOperator, TestComparisonLessGreaterOnly::GreaterThan);
 }
 // TestVesselMass.cs:78
 ScoreModifier TestVesselMass::GetScoreModifier(const std::string& scoreModule) {
@@ -651,7 +653,7 @@ void TestVesselPartCount::Save(ConfigNode& node) const {
 void TestVesselPartCount::Load(const ConfigNode& node) {
     TestVessel::Load(node);
     node.TryGetValue("numberOfParts", parts);
-    node.TryGetEnum("comparisonOperator", comparisonOperator, TestComparisonOperator::Equal);
+    save_detail::TryGetEnum(node, "comparisonOperator", comparisonOperator, TestComparisonOperator::Equal);
 }
 // TestVesselPartCount.cs:128
 ScoreModifier TestVesselPartCount::GetScoreModifier(const std::string& scoreModule) {
@@ -721,7 +723,7 @@ void TestVesselCrewCount::Load(const ConfigNode& node) {
     TestVessel::Load(node);
     node.TryGetValue("crewAmount", crewAmount);
     node.TryGetValue("traitName", traitName);
-    node.TryGetEnum("comparisonOperator", comparisonOperator, TestComparisonOperator::Equal);
+    save_detail::TryGetEnum(node, "comparisonOperator", comparisonOperator, TestComparisonOperator::Equal);
 }
 // TestVesselCrewCount.cs:148
 ScoreModifier TestVesselCrewCount::GetScoreModifier(const std::string& scoreModule) {
@@ -777,7 +779,7 @@ void TestVesselAltitude::Load(const ConfigNode& node) {
     TestVessel::Load(node);
     node.TryGetValue("altitude", altitude);
     node.TryGetValue("useRadarAltimiter", useRadarAltimiter);
-    node.TryGetEnum("comparisonOperator", comparisonOperator, TestComparisonLessGreaterOnly::GreaterThan);
+    save_detail::TryGetEnum(node, "comparisonOperator", comparisonOperator, TestComparisonLessGreaterOnly::GreaterThan);
 }
 // TestVesselAltitude.cs:99
 ScoreModifier TestVesselAltitude::GetScoreModifier(const std::string& scoreModule) {
@@ -872,8 +874,8 @@ void TestVesselActiveCount::Save(ConfigNode& node) const {
 // TestVesselActiveCount.cs:171
 void TestVesselActiveCount::Load(const ConfigNode& node) {
     TestModule::Load(node);
-    node.TryGetEnum("vesselType", vesselType, VesselType::All);
-    node.TryGetEnum("comparisonOperator", comparisonOperator, TestComparisonOperator::GreaterThan);
+    save_detail::TryGetEnum(node, "vesselType", vesselType, VesselType::All);
+    save_detail::TryGetEnum(node, "comparisonOperator", comparisonOperator, TestComparisonOperator::GreaterThan);
     node.TryGetValue("vesselCount", vesselCount);
 }
 
@@ -961,7 +963,7 @@ void TestVesselResource::Load(const ConfigNode& node) {
     TestVessel::Load(node);
     node.TryGetValue("resourceName", resourceName);
     node.TryGetValue("resourceAmount", resourceAmount);
-    if (!node.TryGetEnum("comparisonOperator", comparisonOperator, TestComparisonOperator::Equal)) {
+    if (!save_detail::TryGetEnum(node, "comparisonOperator", comparisonOperator, TestComparisonOperator::Equal)) {
         log::Error("Failed to parse comparisonOperator from " + title);
     }
 }
@@ -1010,7 +1012,7 @@ void TestVesselStage::Save(ConfigNode& node) const {
 void TestVesselStage::Load(const ConfigNode& node) {
     TestVessel::Load(node);
     node.TryGetValue("stage", stage);
-    node.TryGetEnum("comparisonOperator", comparisonOperator, TestComparisonOperator::GreaterThan);
+    save_detail::TryGetEnum(node, "comparisonOperator", comparisonOperator, TestComparisonOperator::GreaterThan);
 }
 // TestVesselStage.cs:102
 ScoreModifier TestVesselStage::GetScoreModifier(const std::string& scoreModule) {
@@ -1087,7 +1089,7 @@ void TestVesselState::Save(ConfigNode& node) const {
 // TestVesselState.cs:42
 void TestVesselState::Load(const ConfigNode& node) {
     TestVessel::Load(node);
-    if (!node.TryGetEnum("state", vesselState, Vessel::State::INACTIVE)) log::Error("Failed to parse vesselstate from " + title);
+    if (!save_detail::TryGetEnum(node, "state", vesselState, Vessel::State::INACTIVE)) log::Error("Failed to parse vesselstate from " + title);
 }
 // TestVesselState.cs:51
 ScoreModifier TestVesselState::GetScoreModifier(const std::string& scoreModule) {
@@ -1183,7 +1185,7 @@ void TestFundsRecovery::Save(ConfigNode& node) const {
 // TestFundsRecovery.cs:124
 void TestFundsRecovery::Load(const ConfigNode& node) {
     TestModule::Load(node);
-    node.TryGetEnum("comparisonOperator", comparisonOperator, TestComparisonOperator::GreaterThan);
+    save_detail::TryGetEnum(node, "comparisonOperator", comparisonOperator, TestComparisonOperator::GreaterThan);
     node.TryGetValue("fundsRecovered", fundsToRecover);
 }
 // TestFundsRecovery.cs:131
@@ -1268,7 +1270,7 @@ void TestResourcesRecovery::Save(ConfigNode& node) const {
 // TestResourcesRecovery.cs:176
 void TestResourcesRecovery::Load(const ConfigNode& node) {
     TestVessel::Load(node);
-    node.TryGetEnum("comparisonOperator", comparisonOperator, TestComparisonOperator::GreaterThan);
+    save_detail::TryGetEnum(node, "comparisonOperator", comparisonOperator, TestComparisonOperator::GreaterThan);
     node.TryGetValue("resourcesToRecover", resourcesToRecover);
     node.TryGetValue("resourceName", resourceName);
 }

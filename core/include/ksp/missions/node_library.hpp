@@ -30,12 +30,14 @@
 namespace ksp {
 class CelestialBody;
 class ProtoVessel;
+class Part;
+class Vessel;
 }  // namespace ksp
 
 namespace ksp::Expansions::Missions {
 
-// ScreenMessageStyle (UnityEngine/KSP ScreenMessageStyle.cs): the values ActionMessage stores.
-enum class ScreenMessageStyle { UPPER_CENTER = 0, UPPER_LEFT = 1, UPPER_RIGHT = 2, LOWER_CENTER = 3, KSP_CENTER = 4 };
+// ScreenMessageStyle.cs:3 (the value ActionMessage stores)
+enum class ScreenMessageStyle { UPPER_CENTER = 0, UPPER_LEFT = 1, UPPER_RIGHT = 2, LOWER_CENTER = 3, KERBAL_EVA = 4 };
 
 // MissionCelestialBody.cs:6 (slice-2 class pulled in by TestSOILeft / TestSOIReached)
 class MissionCelestialBody {
@@ -55,12 +57,6 @@ public:
 
 private:
     CelestialBody* body_ = nullptr;
-};
-
-// BaseAPField.GetValue() stand-ins of the typed fields the base GetNodeBodyParameterString looks at (TestModule.cs:258)
-struct NodeBodyFieldValue {
-    const MissionCelestialBody* celestialBody = nullptr;  // field.GetValue() is MissionCelestialBody
-    std::optional<std::string> typedText;                 // slice 2 types (MissionKerbal.Name, ParamChoices_CelestialBodySurface text)
 };
 
 namespace Library {
@@ -105,9 +101,22 @@ struct NodeLibraryEnvironment {
     // MessageSystem.Instance.AddMessage(new Message(title, message, color, icon), animate: false). Unset: recorded as (title, message).
     static inline std::function<void(const std::string& title, const std::string& message)> addMessageSystemMessage;
     static inline std::vector<std::pair<std::string, std::string>> systemMessages;
+    // FlightGlobals.FindLoadedPart(partId, out part) (ActionPartExplode.Fire). Unset: nullptr (not found).
+    static inline std::function<Part*(uint32_t partPersistentId)> findLoadedPart;
+    // FlightGlobals.FindNearestControllableVessel(v) / ForceSetActiveVessel(v) + FlightInputHandler.ResumeVesselCtrlState(v)
+    static inline std::function<Vessel*(Vessel*)> findNearestControllableVessel;
+    static inline std::function<void(Vessel*)> forceSetActiveVessel;
+    // UnityEngine.Random.Range(min, max) (int, max exclusive) (ActionPartExplode.Fire). Unset: min.
+    static inline std::function<int(int, int)> randomRange;
+    // MissionMessages / editor: MissionEditorLogic.LoadVessel(craft).parts persistentIds of the craft of vessel `vesselId` (VesselPartIDPair.
+    // ValidatePartAgainstCraft). Unset: nullopt = no craft (the validation returns).
+    static inline std::function<std::optional<std::vector<uint32_t>>(MENode*, uint32_t vesselId)> craftPartIds;
     // Part.explode() (ActionVesselExplode.Fire). Unset: recorded in explodedParts.
-    static inline std::function<void(class Part*)> explodePart;
-    static inline std::vector<class Part*> explodedParts;
+    static inline std::function<void(Part*)> explodePart;
+    static inline std::vector<Part*> explodedParts;
+    // Vessel.RequestResource(part, id, demand, usePriority) (Vessel.cs:3975; resource flow, WP-15; ActionPartResourceAmount.Fire).
+    // Unset: nothing is drained or added (returns 0).
+    static inline std::function<double(Vessel*, Part*, int resourceId, double demand, bool usePriority)> vesselRequestResource;
     // StageManager.ActivateNextStage() (ActionVesselStage.Fire). Unset: counted.
     static inline std::function<void()> activateNextStage;
     static inline int stagesActivated = 0;

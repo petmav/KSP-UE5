@@ -483,3 +483,23 @@ private:
 };
 
 }  // namespace ksp::Expansions::Missions::Tests
+
+// ---- enum metadata (declaration order, [Description] text) ---------------------------------------------------------------------
+template <>
+struct ksp::dotnet::EnumTraits<ksp::Expansions::Missions::Tests::TestVesselActiveCount::VesselType> {
+    using E = ksp::Expansions::Missions::Tests::TestVesselActiveCount::VesselType;
+    static constexpr bool flags = false;
+    // TestVesselActiveCount.cs:9
+    static constexpr EnumMember<E> members[] = {{E::All, "All", "#autoLOC_900712"},
+                                                {E::PlayerControlled, "PlayerControlled", "#autoLOC_8001049"},
+                                                {E::Asteroids, "Asteroids", "#autoLOC_308682"},
+                                                {E::Comets, "Comets", "#autoLOC_6006050"},
+                                                {E::Unowned, "Unowned", "#autoLOC_901070"}};
+};
+// Vessel.State (Vessel.cs:12): TestVesselState parses / writes the member names
+template <>
+struct ksp::dotnet::EnumTraits<ksp::VesselState> {
+    using E = ksp::VesselState;
+    static constexpr bool flags = false;
+    static constexpr EnumMember<E> members[] = {{E::INACTIVE, "INACTIVE"}, {E::ACTIVE, "ACTIVE"}, {E::DEAD, "DEAD"}};
+};
