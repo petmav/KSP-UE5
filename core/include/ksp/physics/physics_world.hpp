@@ -1,0 +1,149 @@
+// WP-20a: the physics world. A thin owner of one Jolt PhysicsSystem (Jolt Physics v5.6.0, vendored in third_party/jolt, built
+// with JPH_DOUBLE_PRECISION) and the rules KSP's PhysX scene had that do not depend on vessels:
+//
+//   * Replaces the PhysX scene Unity steps at FixedUpdate.PhysicsFixedUpdate (PlayerLoop::physicsStep, WP-00). Gravity is zero
+//     in the world itself: KSP sets Physics.gravity = 0 and applies gravity as a per-vessel force (VesselPrecalculate,
+//     Assembly-CSharp/VesselPrecalculate.cs:281-368), so the seam for it is AddForce / AddForceAtPosition.
+//   * Two object layers, as in the spike (PHYSICS-SPIKE.md 5.2): Static (terrain quads, KSC, WP-12/WP-42) and Moving (parts and
+//     vessel clusters, WP-20b). Static bodies only collide with Moving ones.
+//   * Same-vessel collision suppression is a Jolt GroupFilter keyed on the vessel id: O(1) per candidate pair and nothing to
+//     rebuild on a structural event. It replaces CollisionManager's O(C^2) Physics.IgnoreCollision rebuild
+//     (Assembly-CSharp/CollisionManager.cs:126-168); sub-group flag 1 on BOTH bodies is Part.sameVesselCollision.
+//   * Positions are doubles in the PHYSICS FRAME (the main body's body-fixed frame below the inverse-rotation threshold, its
+//     inertial frame above: ksp/physics/reference_frame.hpp). The world never shifts; the Galilean frame velocity is a velocity
+//     offset only (ksp/physics/krakensbane.hpp): velocities stored here are physics-frame velocities, i.e. the true velocity
+//     minus Krakensbane::GetFrameVelocity().
+//
+// Not here (documented seams): vessel rigid bodies, clusters, joints and structural loads (WP-20b / WP-20c), ray / overlap
+// queries and the static mesh interface AddStaticMesh(id, centre, vertices, triangles) of WP-12b, the contact listener that
+// feeds Part.HandleCollision (WP-20d), EVA kerbals and wheels (WP-20e). CollisionEnhancer.cs (anti-tunnelling) is replaced by
+// Jolt's motion quality (LinearCast) on those bodies.
+//
+// The header includes no Jolt header: the implementation is a pimpl, so consumers need no Jolt include paths or ISA flags.
+#pragma once
+
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <vector>
+
+#include "ksp/core/delegate.hpp"
+#include "ksp/math/quaterniond.hpp"
+#include "ksp/math/vector3d.hpp"
+
+namespace ksp {
+class PlayerLoop;
+}
+
+namespace ksp::physics {
+
+// Jolt body id (index | sequence number << 24). 0xFFFFFFFF is invalid.
+using BodyId = uint32_t;
+constexpr BodyId kInvalidBody = 0xFFFFFFFFu;
+
+enum class MotionType : uint8_t { Static, Kinematic, Dynamic };
+
+struct ShapeDesc {
+    enum class Kind : uint8_t { Box, Sphere, Capsule };
+    Kind kind = Kind::Box;
+    Vector3f halfExtents{0.5f, 0.5f, 0.5f};  // Box
+    float radius = 0.5f;                     // Sphere, Capsule
+    float halfHeight = 0.5f;                 // Capsule (half of the cylinder part, along local Y)
+    static ShapeDesc Box(Vector3f halfExtents_) { ShapeDesc s; s.kind = Kind::Box; s.halfExtents = halfExtents_; return s; }
+    static ShapeDesc Sphere(float radius_) { ShapeDesc s; s.kind = Kind::Sphere; s.radius = radius_; return s; }
+    static ShapeDesc Capsule(float halfHeight_, float radius_) { ShapeDesc s; s.kind = Kind::Capsule; s.halfHeight = halfHeight_; s.radius = radius_; return s; }
+};
+
+struct BodyDesc {
+    ShapeDesc shape;
+    MotionType motion = MotionType::Dynamic;       // Static bodies go to the Static layer, the others to Moving
+    Vector3d position;                             // physics frame, double
+    QuaternionD rotation = QuaternionD::identity();
+    Vector3d linearVelocity;                       // physics-frame velocity (true velocity - frame velocity)
+    Vector3d angularVelocity;
+    float mass = 1.0f;                             // Dynamic only; the inertia tensor is derived from the shape
+    float friction = 0.5f;
+    float restitution = 0.0f;
+    float linearDamping = 0.0f;                    // KSP applies its own drag; Jolt's default 0.05/s is not wanted
+    float angularDamping = 0.0f;
+    // Jolt's default linear speed cap is 500 m/s; orbital speeds need it lifted (spike: 1e5). With a frame velocity the
+    // physics-frame speed is small anyway. Angular: PhysicsGlobals.MaxAngularVelocity (Physics.cfg, 50 rad/s); callers with a
+    // PhysicsGlobals instance pass PhysicsGlobals::MaxAngularVelocity().
+    float maxLinearVelocity = 1.0e5f;
+    float maxAngularVelocity = 50.0f;
+    bool allowSleeping = false;                    // KSP never lets a part rigidbody sleep
+    uint32_t vesselGroup = 0;                      // Vessel id for the same-vessel GroupFilter; 0 = ungrouped (collides with everything)
+    bool sameVesselCollision = false;              // Part.sameVesselCollision: collide with the same vessel's bodies if both set
+    uint64_t userData = 0;                         // opaque to the world (the part / quad id of the caller)
+};
+
+struct PhysicsWorldConfig {
+    // Jolt's default is 10 velocity steps; PhysX in KSP ran 50 position iterations / 1 velocity iteration ([runtime], PHYSICS-SPIKE.md).
+    int velocitySteps = 10;
+    int positionSteps = 2;
+    int threads = 1;  // total threads including the calling one (the pool has threads - 1 workers); results do not depend on it
+    unsigned maxBodies = 65536;
+    unsigned maxBodyPairs = 65536;
+    unsigned maxContacts = 65536;
+    unsigned tempAllocatorBytes = 32u * 1024u * 1024u;
+};
+
+class PhysicsWorld {
+public:
+    explicit PhysicsWorld(const PhysicsWorldConfig& cfg = {});
+    ~PhysicsWorld();
+    PhysicsWorld(const PhysicsWorld&) = delete;
+    PhysicsWorld& operator=(const PhysicsWorld&) = delete;
+
+    const PhysicsWorldConfig& Config() const;
+
+    // ---- stepping -------------------------------------------------------------------------------------------------------
+    // One simulation step of `dt` seconds (Jolt PhysicsSystem::Update with `collisionSteps` collision steps).
+    void Step(float dt, int collisionSteps = 1);
+    // Step(Time.fixedDeltaTime): what Unity's physics step did once per FixedUpdate (ksp::Time::fixedDeltaTime, WP-00/WP-08).
+    void FixedStep();
+    // Steps taken so far.
+    uint64_t StepCount() const;
+    // Hooks FixedStep into FixedUpdate.PhysicsFixedUpdate of `loop` (after Timing5; the number of steps per frame, bounded by
+    // PHYSICS_FRAME_DT_LIMIT, is the loop's). Detach removes it; the destructor does not touch the loop, so detach first.
+    void Attach(PlayerLoop& loop);
+    void Detach(PlayerLoop& loop);
+
+    // ---- bodies ---------------------------------------------------------------------------------------------------------
+    BodyId CreateBody(const BodyDesc& desc);  // kInvalidBody when the body limit is reached
+    void RemoveBody(BodyId id);               // removes and destroys; unknown ids are ignored
+    size_t BodyCount() const;
+    // Ids of every live body in creation order (the order all aggregate operations use: determinism).
+    const std::vector<BodyId>& Bodies() const;
+    bool IsValid(BodyId id) const;
+    uint64_t UserData(BodyId id) const;
+
+    Vector3d GetPosition(BodyId id) const;  // body origin == centre of mass for the shapes of this API, double
+    QuaternionD GetRotation(BodyId id) const;
+    Vector3d GetLinearVelocity(BodyId id) const;   // physics-frame velocity (float precision inside Jolt)
+    Vector3d GetAngularVelocity(BodyId id) const;
+    void SetPosition(BodyId id, const Vector3d& position);
+    void SetLinearVelocity(BodyId id, const Vector3d& v);
+    void SetAngularVelocity(BodyId id, const Vector3d& w);
+    float GetMass(BodyId id) const;  // 0 for non-dynamic bodies
+
+    // ---- forces: accumulated until the next Step, then cleared by Jolt (Rigidbody.AddForce(ForceMode.Force) semantics) --------
+    void AddForce(BodyId id, const Vector3d& force);
+    void AddForceAtPosition(BodyId id, const Vector3d& force, const Vector3d& point);  // point: physics frame, double
+    void AddTorque(BodyId id, const Vector3d& torque);
+    void AddImpulse(BodyId id, const Vector3d& impulse);  // ForceMode.Impulse
+    // ForceMode.VelocityChange on every non-static body, in creation order: the whole of Krakensbane.AddExcess / Zero's velocity
+    // work for bodies owned by the world ("one velocity write per body", Krakensbane.cs:121-173). Returns the bodies touched.
+    size_t AddVelocityChangeToAllMoving(const Vector3d& dv);
+
+    // ---- determinism ----------------------------------------------------------------------------------------------------
+    // FNV-1a 64 over the raw bits of every body's position, rotation and both velocities, in creation order.
+    uint64_t StateHash() const;
+
+private:
+    struct Impl;
+    std::unique_ptr<Impl> impl_;
+    Delegate<void()> attached_;
+};
+
+}  // namespace ksp::physics

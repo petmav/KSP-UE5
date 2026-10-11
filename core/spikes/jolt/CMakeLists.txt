@@ -1,35 +1,8 @@
 # Jolt physics spike (core/PHYSICS-SPIKE.md). Opt-in: configure with -DKSPCORE_BUILD_SPIKES=ON, or use the presets
 # `spike-jolt` (Jolt DOUBLE_PRECISION) / `spike-jolt-f32` (single precision), each in its own build tree. It is not part of
-# run_tests.ps1 / ctest / CI and changes nothing in kspcore.
-include(FetchContent)
-
-option(KSP_JOLT_DOUBLE "Build Jolt with DOUBLE_PRECISION (JPH_DOUBLE_PRECISION: RVec3 = double positions)" ON)
-option(KSP_JOLT_DETERMINISTIC "Build Jolt with CROSS_PLATFORM_DETERMINISTIC" OFF)
-
-# Jolt's own options (Build/CMakeLists.txt of the release). kspcore is /MD, never IPO, never /WX on third-party code.
-set(DOUBLE_PRECISION ${KSP_JOLT_DOUBLE} CACHE BOOL "" FORCE)
-set(CROSS_PLATFORM_DETERMINISTIC ${KSP_JOLT_DETERMINISTIC} CACHE BOOL "" FORCE)
-set(USE_STATIC_MSVC_RUNTIME_LIBRARY OFF CACHE BOOL "" FORCE)
-set(INTERPROCEDURAL_OPTIMIZATION OFF CACHE BOOL "" FORCE)
-set(ENABLE_ALL_WARNINGS OFF CACHE BOOL "" FORCE)
-set(GENERATE_DEBUG_SYMBOLS OFF CACHE BOOL "" FORCE)
-set(FLOATING_POINT_EXCEPTIONS_ENABLED OFF CACHE BOOL "" FORCE)
-set(ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
-set(ENABLE_OBJECT_STREAM OFF CACHE BOOL "" FORCE)
-set(DEBUG_RENDERER_IN_DEBUG_AND_RELEASE OFF CACHE BOOL "" FORCE)
-set(PROFILER_IN_DEBUG_AND_RELEASE OFF CACHE BOOL "" FORCE)
-set(JPH_USE_DX12 OFF CACHE BOOL "" FORCE)
-set(JPH_USE_VK OFF CACHE BOOL "" FORCE)
-set(JPH_USE_MTL OFF CACHE BOOL "" FORCE)
-set(JPH_USE_CPU_COMPUTE OFF CACHE BOOL "" FORCE)
-
-# Jolt Physics v5.6.0 (2026-07-11), commit e77f175595e64cb44218cc9d9d56fc365ad0e36a: the GitHub release archive, pinned by hash.
-FetchContent_Declare(JoltPhysics
-    URL https://github.com/jrouwe/JoltPhysics/archive/refs/tags/v5.6.0.tar.gz
-    URL_HASH SHA256=6e069ee0172478cc78182047aac87e5310ba14a67a53348ae14cc37801fd3f8e
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-    SOURCE_SUBDIR Build)
-FetchContent_MakeAvailable(JoltPhysics)
+# run_tests.ps1 / ctest / CI.
+# Jolt itself is the vendored copy built by the root CMakeLists (cmake/ksp_jolt.cmake, third_party/jolt): since WP-20a the spike
+# no longer fetches it. KSP_JOLT_DOUBLE / KSP_JOLT_DETERMINISTIC are the root options.
 
 add_executable(jolt_spike
     src/main.cpp

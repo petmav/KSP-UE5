@@ -81,6 +81,8 @@ function(ksp_set_build_flags target)
     endif()
 endfunction()
 
+include(cmake/ksp_jolt.cmake)
+
 add_subdirectory(src)
 
 if(KSPCORE_BUILD_TESTS)
