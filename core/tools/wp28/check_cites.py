@@ -53,6 +53,10 @@ def load(cs_root, f, cache={}):
                 if f + ".cs" in fn:
                     p = os.path.join(dp, f + ".cs")
                     break
+        if not os.path.exists(p):  # WP-50: Assembly-CSharp-firstpass is a sibling assembly (SpaceNavigator*.cs, QuaternionExtensions.cs)
+            fp = os.path.join(os.path.dirname(cs_root.rstrip("/\\")), "Assembly-CSharp-firstpass", f + ".cs")
+            if os.path.exists(fp):
+                p = fp
         cache[key] = open(p, encoding="utf-8-sig", errors="replace").read().splitlines() if os.path.exists(p) else None
     return cache[key]
 
