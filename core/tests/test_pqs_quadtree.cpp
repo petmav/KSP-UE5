@@ -28,6 +28,7 @@
 #include "ksp/terrain/pqs_cache.hpp"
 #include "ksp/terrain/pqs_mods.hpp"
 #include "ksp/terrain/pqs_mods_quad.hpp"
+#include "ksp/terrain/pqs_parallel.hpp"
 #include "ksp/terrain/pqs_prefab.hpp"
 #include "ksp/unity/matrix_native.hpp"
 #include "ksp/unity/random.hpp"
@@ -229,6 +230,7 @@ json SnapshotQuad(const PQ& q, bool digest) {
 
 struct Scene {
     PQSCache cache;
+    std::unique_ptr<PQSHeightWorkers> workers;  // optional (WP-12a optimisation), outlives the sphere
     std::unique_ptr<PQS> sphere;
     PQSTarget target;
     PQSMod_CelestialBodyTransform* cbt = nullptr;
@@ -236,12 +238,12 @@ struct Scene {
     float clockStep = 0.0f;
 };
 
-void BuildScene(Scene& sc, const json& s, GlobalStateGuard&) {
-    sc.cache.cachePQInitialCount = 64;
+// The synthetic sphere of a scenario (sc != nullptr: the scene's main sphere, with the flight host)
+std::unique_ptr<PQS> MakeSynthSphere(const json& s, Scene* sc) {
     const json& sp = s.at("sphere");
-    if (s.at("kind") == "synth") {
-        sc.sphere = std::make_unique<PQS>();
-        PQS& p = *sc.sphere;
+    auto sphere = std::make_unique<PQS>();
+    {
+        PQS& p = *sphere;
         p.name = sp.at("name").get<std::string>();
         p.radius = sp.at("radius").get<double>();
         p.surfaceRelativeQuads = sp.at("surfaceRelativeQuads").get<bool>();
@@ -302,8 +304,10 @@ void BuildScene(Scene& sc, const json& s, GlobalStateGuard&) {
                 x->highQualityShaderDeactivateAltitude = m.at("hqDeactivate").get<double>();
                 x->planetFade = Fade(m.at("planetFade"));
                 for (const json& f : m.at("secondaryFades")) x->secondaryFades.push_back(Fade(f));
-                FlightHost(*x, &sc.target);
-                sc.cbt = x.get();
+                if (sc != nullptr) {
+                    FlightHost(*x, &sc->target);
+                    sc->cbt = x.get();
+                }
                 mod = std::move(x);
             } else {
                 FAIL("unknown mod " << t);
@@ -312,6 +316,16 @@ void BuildScene(Scene& sc, const json& s, GlobalStateGuard&) {
             mod->order = m.at("order").get<int>();
             p.childMods.push_back(std::move(mod));
         }
+    }
+    return sphere;
+}
+
+void BuildScene(Scene& sc, const json& s, GlobalStateGuard&, int workerThreads = 0) {
+    sc.cache.cachePQInitialCount = 64;
+    const json& sp = s.at("sphere");
+    if (s.at("kind") == "synth") {
+        sc.sphere = MakeSynthSphere(s, &sc);
+        PQS& p = *sc.sphere;
         const json& pr = sp.at("preset");
         PQSCache::PresetList = std::make_unique<PQSCache::PQSGlobalPresetList>();
         PQSCache::PQSPreset preset;
@@ -328,6 +342,22 @@ void BuildScene(Scene& sc, const json& s, GlobalStateGuard&) {
             }
         }
         PQSCache::CreateDefaultPresetList();  // "Default": the scenario's `preset`
+    }
+    if (workerThreads > 0) {
+        // independent spheres with the same height stack, set up for GetSurfaceHeight
+        PQSHeightWorkers::Factory factory;
+        if (s.at("kind") == "synth") {
+            factory = [&s] {
+                auto w = MakeSynthSphere(s, nullptr);
+                w->SetupForHeight();
+                return w;
+            };
+        } else {
+            const std::string body = s.at("body").get<std::string>();
+            factory = [body] { return terrain::LoadStockPQS(body, Maps()); };
+        }
+        sc.workers = std::make_unique<PQSHeightWorkers>(factory, workerThreads);
+        sc.sphere->heightWorkers = sc.workers.get();
     }
     PQS& p = *sc.sphere;
     p.cache = &sc.cache;
@@ -424,10 +454,10 @@ void CompareSnapshot(const std::string& where, const json& mine, const json& ref
     }
 }
 
-void ReplayScenario(const json& s) {
+void ReplayScenario(const json& s, int workerThreads = 0) {
     GlobalStateGuard guard;
     Scene sc;
-    BuildScene(sc, s, guard);
+    BuildScene(sc, s, guard, workerThreads);
     const bool real = s.at("kind") == "real";
     Tally t;
     const json& frames = s.at("frames");
@@ -474,6 +504,11 @@ void ReplayScenario(const json& s) {
     }
     CHECK(t.mismatches == 0);
     CHECK(t.digests > 0);
+    if (sc.workers) {
+        CHECK(sc.workers->used > 0);
+        MESSAGE(s.at("name").get<std::string>() << " with " << sc.workers->threads() << " height workers: " << sc.workers->prefetched
+                                                << " quads prefetched, " << sc.workers->used << " builds took them");
+    }
     MESSAGE(s.at("name").get<std::string>() << ": " << frames.size() << " frames, " << t.allRows << " quad rows and "
                                             << t.allDigests << " mesh digests compared (" << t.quadRows
                                             << " rows field by field, the rest through each frame's rows digest), "
@@ -569,6 +604,59 @@ TEST_CASE("WP-12a reference replay: stock Kerbin at the KSC pad (WP-11 heights t
 
 TEST_CASE("WP-12a reference replay: stock Mun (WP-11 heights through the oracle)") {
     ReplayScenario(ScenarioNamed("mun"));
+}
+
+TEST_CASE("WP-12a PQSHeightWorkers: every reference scenario replayed with 4 height workers is bit-identical") {
+    // the optimisation's gate: the same quad rows and mesh digests as the inline build and the Python reference
+    for (const char* name : {"synth_a", "synth_b", "kerbin_ksc", "mun"}) ReplayScenario(ScenarioNamed(name), 4);
+}
+
+TEST_CASE("WP-12a PQSHeightWorkers: every built quad of stock Kerbin / Mun is bit-identical to the inline build") {
+    // the reference digests cover the sampled stock quads only; here every quad: inline scene vs worker scene
+    for (const char* name : {"kerbin_ksc", "mun"}) {
+        const json& s = ScenarioNamed(name);
+        GlobalStateGuard guard;
+        std::map<std::string, std::string> inlineDigest;
+        {
+            Scene sc;
+            BuildScene(sc, s, guard);
+            const json& fr = s.at("frames");
+            for (size_t f = 0; f < fr.size(); f++) {
+                const json& tg = fr[f].at("target");
+                sc.target.position = Vector3d(tg[0].get<double>(), tg[1].get<double>(), tg[2].get<double>());
+                for (int k = 0; k < fr[f].at("fixed").get<int>(); k++) sc.sphere->FixedUpdate();
+                for (const json& a : fr[f].at("actions")) {
+                    if (a == "start") sc.sphere->Start();
+                    if (a == "frame") sc.sphere->FrameUpdate();
+                }
+            }
+            for (const PQ* q : WalkSphere(*sc.sphere))
+                if (q->isBuilt) inlineDigest[q->name] = MeshDigest(*q);
+        }
+        Scene sc;
+        BuildScene(sc, s, guard, 4);
+        const json& fr = s.at("frames");
+        for (size_t f = 0; f < fr.size(); f++) {
+            const json& tg = fr[f].at("target");
+            sc.target.position = Vector3d(tg[0].get<double>(), tg[1].get<double>(), tg[2].get<double>());
+            for (int k = 0; k < fr[f].at("fixed").get<int>(); k++) sc.sphere->FixedUpdate();
+            for (const json& a : fr[f].at("actions")) {
+                if (a == "start") sc.sphere->Start();
+                if (a == "frame") sc.sphere->FrameUpdate();
+            }
+        }
+        int64_t built = 0, same = 0;
+        for (const PQ* q : WalkSphere(*sc.sphere)) {
+            if (!q->isBuilt) continue;
+            built++;
+            auto it = inlineDigest.find(q->name);
+            if (it != inlineDigest.end() && it->second == MeshDigest(*q)) same++;
+        }
+        CHECK(built == static_cast<int64_t>(inlineDigest.size()));
+        CHECK(same == built);
+        MESSAGE(std::string(name) << ": " << built << " built quads, " << same << " identical to the inline build ("
+                                  << sc.workers->used << " took prefetched heights)");
+    }
 }
 
 namespace {

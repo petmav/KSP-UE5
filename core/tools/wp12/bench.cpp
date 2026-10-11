@@ -22,6 +22,7 @@
 #include "ksp/terrain/pq.hpp"
 #include "ksp/terrain/pqs_cache.hpp"
 #include "ksp/terrain/pqs_mods_quad.hpp"
+#include "ksp/terrain/pqs_parallel.hpp"
 #include "ksp/terrain/pqs_prefab.hpp"
 #include "ksp/unity/matrix_native.hpp"
 
@@ -144,9 +145,40 @@ void Bench(const char* label, std::unique_ptr<PQS> sphere, std::unique_ptr<PQS> 
 
 }  // namespace
 
+// StartSphere (UpdateQuadsInit's tree + building pass) inline vs with N height workers (PQSHeightWorkers)
+void BenchWorkers(const char* body, double lat, double lon, double alt, terrain::MapLibrary& maps, int threads, int repeats) {
+    std::vector<double> times;
+    int64_t used = 0;
+    for (int r = 0; r < repeats; r++) {
+        PQSCache cache;
+        cache.cachePQInitialCount = 64;
+        std::unique_ptr<PQSHeightWorkers> workers;
+        if (threads > 0)
+            workers = std::make_unique<PQSHeightWorkers>([&] { return terrain::LoadStockPQS(body, maps); }, threads);
+        auto sphere = terrain::CreateStockPQS(body, maps);
+        PQSTarget target;
+        target.position = terrain::GetRelSurfaceNVector(lat, lon) * (sphere->radius + alt);
+        FlightHost(*sphere, &target);
+        sphere->cache = &cache;
+        sphere->heightWorkers = workers.get();
+        sphere->SetTarget(&target);
+        PQSCache::CreateDefaultPresetList();
+        const auto t0 = Clock::now();
+        sphere->Start();
+        times.push_back(Ms(Clock::now() - t0));
+        if (workers) used = workers->used;
+        sphere.reset();
+        PQSCache::PresetList.reset();
+    }
+    std::printf("%-8s StartSphere with %2d height workers: median %8.2f ms (%lld builds took prefetched heights)\n", body, threads,
+                Median(times), static_cast<long long>(used));
+}
+
 int main(int argc, char** argv) {
     const int repeats = argc > 1 ? std::atoi(argv[1]) : 3;
     terrain::MapLibrary maps(KSPCORE_DATA_DIR "/terrain");
+    for (int threads : {0, 2, 4, 8, 15}) BenchWorkers("Kerbin", -0.0972, -74.5577, 70.0, maps, threads, repeats);
+    for (int threads : {0, 4, 15}) BenchWorkers("Mun", 3.0, 25.0, 6000.0, maps, threads, repeats);
     Bench("Kerbin (KSC pad)", terrain::CreateStockPQS("Kerbin", maps), terrain::LoadStockPQS("Kerbin", maps), -0.0972,
           -74.5577, 70.0, repeats);
     Bench("Mun", terrain::CreateStockPQS("Mun", maps), terrain::LoadStockPQS("Mun", maps), 3.0, 25.0, 6000.0, repeats);

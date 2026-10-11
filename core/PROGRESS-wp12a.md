@@ -63,3 +63,12 @@ for heights. STATUS row 38, README, check_cites exact mode, no subagents.
   Lesson: bash heredocs here collapse backslashes; use the Edit tool for strings with escapes.
 - next: unit tests (pool, presets, colliders, fades, all-quads heights == WP-11, KSC triangulation vs capture), bench,
   parallel height prefetch (bit-identical, gated by the replay), docs, check_cites, merge, fresh run.
+- `d85be49a` unit tests: every built quad == WP-11 heights (Kerbin 479 quads / 107,775 vertices, Mun 421 / 94,725),
+  the live quad-building sphere vs the terrain_height capture (140,522 points, 0 differ), pool, presets, colliders seam,
+  fades, render handoff (max |origin + float vertex - double vertex| 0.031 m).
+- bench (tools/wp12/bench.cpp, wp12_bench 5, 7950X3D, 1 thread): Kerbin BuildQuad 732 us/quad (heights 695, geometry
+  ~38), StartSphere 369 ms for 479 built quads; Mun 1,234 us/quad; flat stack 38 us/quad; steady frame 0.018-0.029 ms.
+- `7abad55b` PQSHeightWorkers (opt-in parallel height pass; UpdateQuadsInit leaves + Subdivide children), pushed.
+- resumed after a rate-limit cut; merged origin/main (wp33, wp38b) cleanly; build + WP-12a tests green.
+- next: replay gate with workers on (bit-identical), bench with workers, docs (STATUS row 38, README), check_cites,
+  fresh full run, push.
