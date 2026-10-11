@@ -4321,7 +4321,7 @@ mirror (`tools/mk_gamedata_mirror.py` from a game with the expansion) and extend
 | gate | result |
 |---|---|
 | golden / capture | none exists; nothing relaxed |
-| `unit` `tests/test_serenity.cpp` | 27 cases, 34,261 assertions; floats / doubles compared bit for bit (`CHECK_F32` / `CHECK_F64`) |
+| `unit` `tests/test_serenity.cpp` | 30 cases, 34,332 assertions; floats / doubles compared bit for bit (`CHECK_F32` / `CHECK_F64`) |
 | independent reference | `tools/wp53/serenity_reference.py` -> `tests/data/wp53_reference.json` (numpy float32 under the Mono rule, no kspcore imports; spec: the decompiled C#, `UnityEngine.Random` xorshift128 as fitted by capture C2, `KSPRandom.cs`, `StringExtensions.GetHashCode_Net35`) |
 
 | table | rows / values compared | max abs | max rel | max ULP |
@@ -4394,14 +4394,14 @@ in `CommPowerUnloaded` (`ApplyUpgradeNode`), the `Debug.Log` impact energy line 
 
 ### Unit tests
 
-`tests/test_serenity.cpp`: 27 cases / 34,261 assertions: power state, dimret, defaults / save round trip, science accumulation, seismic maths and the seismic integration through a cluster, ROC seeding / placement,
+`tests/test_serenity.cpp`: 30 cases / 34,332 assertions: power state, dimret, defaults / save round trip, science accumulation, seismic maths and the seismic integration through a cluster, ROC seeding / placement,
 ROC definition load, ROCManager (prefab checks, validation, population, ROCSeed switch, removed list, stats), PQSROCControl quad flow, ROC scan / collision / perform experiment, module chain, groundAnchor deploy / retrieve,
 end to end (scan, register, power, science, R&D, save / load, retrieval, deregistration), comm boosters, info texts, sun tracking, ControlledBase, contract defaults, the three contract generators and the three parameters.
 
 ### Verification
 
-Windows MSVC RelWithDebInfo: 34/34 ctest, `unit` 621 doctest cases / 998,888 assertions (WP-53: 27 / 34,261); g++ 13 (WSL) `-fsyntax-only` clean for the 8 touched sources and `test_serenity.cpp`.
-`check_cites.py` exact mode: 0 mismatches over the new `.cpp` files (name aliases added for the C# property setters). Fresh-build verification: see the final report of the package.
+Windows MSVC RelWithDebInfo, `core/build` deleted and `run_tests.ps1 -Fresh` (configure 1.6 s, build 146 s, tests 155 s): 34/34 ctest, `unit` 624 doctest cases / 998,959 assertions (WP-53: 30 / 34,332); g++ 13 (WSL) `-fsyntax-only` clean for the 8 touched sources and `test_serenity.cpp`.
+`check_cites.py` exact mode: 0 mismatches over the new `.cpp` files (name aliases added for the C# property setters).
 
 ## Small fixes 2026-10-11 (wave 5, branch `wpfix5`, from main `7199d110`)
 

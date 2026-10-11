@@ -371,7 +371,7 @@ public:
     static void Register();
 };
 
-// registers the ScenarioModule types DeployedScience and ROCScenario with the ScenarioModuleFactory (the host calls it with the other
+// registers the ScenarioModule types DeployedScience and ROCScenario (the host calls it with the other
 // Register*ScenarioModules functions); the contract types are added by Expansions::Serenity::Contracts::Install()
 void RegisterSerenityScenarioModules();
 
