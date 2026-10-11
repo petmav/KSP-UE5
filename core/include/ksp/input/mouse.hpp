@@ -14,40 +14,42 @@ namespace ksp {
 
 class Part;
 
+// Mouse.cs:8
+class MouseButton {
+public:
+    MouseButton(int button) : buttonIndex_(button) {}   // :35 (the owner is the global Mouse)
+    void Update();                                      // :41
+    void ClearMouseState();                             // :109
+    bool GetButtonDown() const { return down_; }        // :120
+    bool GetButtonUp() const { return up_; }            // :125
+    bool GetButton() const { return button_; }          // :130
+    bool GetClick() const { return tap_; }              // :135
+    bool GetDoubleClick(bool isDelegate = false) const; // :140
+    Vector2f GetDragDelta() const { return dragDelta_; }   // :149
+    bool WasDragging(float delta = 400.0f) const;       // :154
+    void ResumeTapRoutine();                            // kspcore: the TapRoutine coroutine (Mouse.cs:61), after a `yield return null`
+    bool isTapStarted() const { return isTapStarted_; }
+
+private:
+    enum class Phase { Done, WaitUp, TapYield, WaitDown };
+    void StartTapRoutine();                             // kspcore: the TapRoutine coroutine (Mouse.cs:61), StartCoroutine runs the first segment
+    void RunTapRoutine();
+
+    bool button_ = false, down_ = false, up_ = false, tap_ = false, doubleTap_ = false, abort_ = false;
+    float doubleClickTime_ = 0.0f;
+    Vector2f dragDelta_ = Vector2f::zero();
+    Vector2f pAtBtnDown_ = Vector2f::zero();
+    int buttonIndex_ = 0;
+    bool isTapStarted_ = false;
+    Phase phase_ = Phase::Done;
+    float endTime2_ = 0.0f;
+    bool tapped_ = false;
+    bool justStarted_ = false;   // started in this frame's Update: first resumed in the next frame's coroutine pass
+};
+
 class Mouse {
 public:
-    // Mouse.cs:8
-    class MouseButton {
-    public:
-        MouseButton(int button) : buttonIndex_(button) {}   // :35 (the owner is the global Mouse)
-        void Update();                                      // :41
-        void ClearMouseState();                             // :109
-        bool GetButtonDown() const { return down_; }        // :120
-        bool GetButtonUp() const { return up_; }            // :125
-        bool GetButton() const { return button_; }          // :130
-        bool GetClick() const { return tap_; }              // :135
-        bool GetDoubleClick(bool isDelegate = false) const; // :140
-        Vector2f GetDragDelta() const { return dragDelta_; }   // :149
-        bool WasDragging(float delta = 400.0f) const;       // :154
-        void ResumeTapRoutine();                            // kspcore: the TapRoutine coroutine (Mouse.cs:61), after a `yield return null`
-        bool isTapStarted() const { return isTapStarted_; }
-
-    private:
-        enum class Phase { Done, WaitUp, TapYield, WaitDown };
-        void StartTapRoutine();                             // kspcore: the TapRoutine coroutine (Mouse.cs:61), StartCoroutine runs the first segment
-        void RunTapRoutine();
-
-        bool button_ = false, down_ = false, up_ = false, tap_ = false, doubleTap_ = false, abort_ = false;
-        float doubleClickTime_ = 0.0f;
-        Vector2f dragDelta_ = Vector2f::zero();
-        Vector2f pAtBtnDown_ = Vector2f::zero();
-        int buttonIndex_ = 0;
-        bool isTapStarted_ = false;
-        Phase phase_ = Phase::Done;
-        float endTime2_ = 0.0f;
-        bool tapped_ = false;
-        bool justStarted_ = false;   // started in this frame's Update: first resumed in the next frame's coroutine pass
-    };
+    using MouseButton = ksp::MouseButton;   // Mouse.cs:7 (a namespace-level class here: its default member initializers must be complete where Left / Right / Middle are defined)
 
     // Mouse.cs:164 ([Flags])
     enum class Buttons : int { None = 0, Left = 1, Right = 2, Middle = 4, Btn4 = 8, Btn5 = 0x10, Any = -1 };

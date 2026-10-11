@@ -4,6 +4,9 @@
 
 #include "ksp/celestial/planetarium.hpp"
 #include "ksp/input/menu_nav_input.hpp"
+#include "ksp/modules/vessel_module.hpp"
+#include "ksp/parts/part_module_data.hpp"
+#include "ksp/vessel/axis_groups_module.hpp"
 #include "ksp/input/ui_input_locks.hpp"
 
 using namespace ksp;
@@ -430,4 +433,31 @@ TEST_CASE("WP-50 CanvasGroupInputLock / KSPGraphicRaycaster / DialogMouseEnterCo
     // MenuNavInput
     CHECK(static_cast<int>(MenuNavInput::None) == 7);
     CHECK(static_cast<int>(MenuNavInput::Tab) == 6);
+}
+
+TEST_CASE("WP-50 AxisGroupsInputHandler: subscribes to OnRawAxisInput and onVesselChange, picks the last AxisGroupsModule of the vessel") {
+    InputFixture fixture;
+    Vessel vessel;
+    std::shared_ptr<VesselModule> mod = VesselModuleFactory::Create(*GetVesselModuleClass("AxisGroupsModule"));
+    auto* axes = dynamic_cast<AxisGroupsModule*>(mod.get());
+    REQUIRE(axes != nullptr);
+    std::shared_ptr<VesselModule> other = VesselModuleFactory::Create(*GetVesselModuleClass("FlightIntegrator"));
+    vessel.vesselModules = {mod, other};
+    const size_t before = FlightInputHandler::OnRawAxisInput.GetInvocationList().size();
+    AxisGroupsInputHandler h;
+    h.Awake();
+    CHECK(FlightInputHandler::OnRawAxisInput.GetInvocationList().size() == before + 1);
+    CHECK(h.VesselAxisGroups == nullptr);
+    events::GameEvents::onVesselChange.Fire(&vessel);
+    CHECK(h.VesselAxisGroups == axes);  // the FlightIntegrator at the end is skipped
+    FlightCtrlState st;
+    st.pitch = 0.5f;
+    CHECK_NOTHROW(FlightInputHandler::OnRawAxisInput(st));  // no axis groups built: UpdateAxisGroup returns at once
+    vessel.vesselModules = {other};
+    events::GameEvents::onVesselChange.Fire(&vessel);
+    CHECK(h.VesselAxisGroups == nullptr);
+    h.OnDestroy();
+    CHECK(FlightInputHandler::OnRawAxisInput.GetInvocationList().size() == before);
+    events::GameEvents::onVesselChange.Fire(&vessel);
+    CHECK(h.VesselAxisGroups == nullptr);
 }

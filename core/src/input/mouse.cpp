@@ -8,7 +8,7 @@
 namespace ksp {
 
 // Mouse.cs:41
-void Mouse::MouseButton::Update() {
+void MouseButton::Update() {
     if (abort_) {
         if (!isTapStarted_) abort_ = false;
         return;
@@ -30,7 +30,7 @@ void Mouse::MouseButton::Update() {
 }
 
 // kspcore state machine for Mouse.cs:61 MouseButton.TapRoutine (the first segment, up to the first `yield return null`)
-void Mouse::MouseButton::StartTapRoutine() {
+void MouseButton::StartTapRoutine() {
     isTapStarted_ = true;
     endTime2_ = f32store(fx(InputEnvironment::realtimeSinceStartup) + fx(GameSettings::DOUBLECLICK_MOUSESPEED));
     tapped_ = false;
@@ -40,7 +40,7 @@ void Mouse::MouseButton::StartTapRoutine() {
 }
 
 // kspcore state machine for Mouse.cs:61 MouseButton.TapRoutine (a resume after `yield return null`)
-void Mouse::MouseButton::ResumeTapRoutine() {
+void MouseButton::ResumeTapRoutine() {
     if (phase_ == Phase::Done) return;
     if (justStarted_) {  // `yield return null` resumes in the NEXT frame's coroutine pass
         justStarted_ = false;
@@ -51,7 +51,7 @@ void Mouse::MouseButton::ResumeTapRoutine() {
 
 // kspcore state machine for Mouse.cs:61 MouseButton.TapRoutine: while (!abort && !(now >= endTime)) { if (up) { tap = tapped = true; yield; tap = false; break; } yield; }
 // then, when tapped, the same wait for a second button down (doubleTap).
-void Mouse::MouseButton::RunTapRoutine() {
+void MouseButton::RunTapRoutine() {
     const IInputDevice& input = InputEnvironment::Input();
     for (;;) {
         switch (phase_) {
@@ -111,7 +111,7 @@ void Mouse::MouseButton::RunTapRoutine() {
 }
 
 // Mouse.cs:109
-void Mouse::MouseButton::ClearMouseState() {
+void MouseButton::ClearMouseState() {
     doubleClickTime_ = InputEnvironment::realtimeSinceStartup;
     tap_ = false;
     doubleTap_ = false;
@@ -122,13 +122,13 @@ void Mouse::MouseButton::ClearMouseState() {
 }
 
 // Mouse.cs:140
-bool Mouse::MouseButton::GetDoubleClick(bool isDelegate) const {
+bool MouseButton::GetDoubleClick(bool isDelegate) const {
     if (isDelegate && InputEnvironment::realtimeSinceStartup < doubleClickTime_) return true;
     return doubleTap_;
 }
 
 // Mouse.cs:154
-bool Mouse::MouseButton::WasDragging(float delta) const {
+bool MouseButton::WasDragging(float delta) const {
     if (!button_ && !up_) return false;
     return dragDelta_.sqrMagnitude() > delta;
 }

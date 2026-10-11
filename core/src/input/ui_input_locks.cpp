@@ -54,28 +54,28 @@ uint64_t ComputeLockMask(const std::vector<std::string>& names, const std::strin
     return mask;
 }
 
-// CanvasGroupInputLock.cs:47
+// CanvasGroupInputLock.cs:45
 void CanvasGroupInputLock::UpdateLockMask() {
     lockMask_ = ComputeLockMask(inputLockMask_, gameObjectName);
     lockMaskDirty_ = false;
 }
 
-// CanvasGroupInputLock.cs:64
+// CanvasGroupInputLock.cs:65
 void CanvasGroupInputLock::Awake() {
     InitializeDefaultMask();
     events::GameEvents::onInputLocksModified.Add(this, &CanvasGroupInputLock::OnInputLocksModified);
 }
 
-// CanvasGroupInputLock.cs:71
+// CanvasGroupInputLock.cs:72
 void CanvasGroupInputLock::InitializeDefaultMask() {
     defaultMask_.clear();
     for (const std::string& s : inputLockMask_) defaultMask_.push_back(s);
 }
 
-// CanvasGroupInputLock.cs:78
+// CanvasGroupInputLock.cs:81
 void CanvasGroupInputLock::SetInputMaskToDefault() { SetInputMask(defaultMask_); }
 
-// CanvasGroupInputLock.cs:83
+// CanvasGroupInputLock.cs:86
 void CanvasGroupInputLock::SetInputMask(const std::vector<std::string>& newMask) {
     const std::vector<std::string> copy = newMask;  // SetInputMask(defaultMask) passes our own list
     inputLockMask_.clear();
@@ -83,10 +83,10 @@ void CanvasGroupInputLock::SetInputMask(const std::vector<std::string>& newMask)
     UpdateLockMask();
 }
 
-// CanvasGroupInputLock.cs:84
+// CanvasGroupInputLock.cs:96
 void CanvasGroupInputLock::OnDestroy() { events::GameEvents::onInputLocksModified.Remove(this, &CanvasGroupInputLock::OnInputLocksModified); }
 
-// CanvasGroupInputLock.cs:91
+// CanvasGroupInputLock.cs:101
 void CanvasGroupInputLock::Start() {
     if (!disableAllLocking) {
         UpdateLockMask();
@@ -94,7 +94,7 @@ void CanvasGroupInputLock::Start() {
     }
 }
 
-// CanvasGroupInputLock.cs:100
+// CanvasGroupInputLock.cs:110
 void CanvasGroupInputLock::OnInputLocksModified(events::GameEvents::FromToAction<ControlTypes, ControlTypes> fromTo) {
     if (!disableAllLocking) {
         if (lockMaskDirty_) UpdateLockMask();
@@ -102,10 +102,10 @@ void CanvasGroupInputLock::OnInputLocksModified(events::GameEvents::FromToAction
     }
 }
 
-// CanvasGroupInputLock.cs:111
+// CanvasGroupInputLock.cs:122
 std::string CanvasGroupInputLock::ToBits(ControlTypes lockMask) { return ToBits(static_cast<uint64_t>(lockMask)); }
 
-// CanvasGroupInputLock.cs:116
+// CanvasGroupInputLock.cs:127
 std::string CanvasGroupInputLock::ToBits(uint64_t lockMask) {
     std::string text;
     uint64_t v = lockMask;
@@ -118,13 +118,13 @@ std::string CanvasGroupInputLock::ToBits(uint64_t lockMask) {
     return text;
 }
 
-// KSPGraphicRaycaster.cs:36
+// KSPGraphicRaycaster.cs:42
 void KSPGraphicRaycaster::UpdateLockMask() {
     lockMask_ = ComputeLockMask(inputLockMask_, gameObjectName);
     lockMaskDirty_ = false;
 }
 
-// KSPGraphicRaycaster.cs:53
+// KSPGraphicRaycaster.cs:61
 bool KSPGraphicRaycaster::Raycast() {
     if (lockMaskDirty_) UpdateLockMask();
     return lockMask_ == 0 || InputLockManager::IsUnlocked(static_cast<ControlTypes>(lockMask_));
@@ -151,7 +151,7 @@ void DialogMouseEnterControlLock::OnPointerExit() { InputLockManager::RemoveCont
 // DialogMouseEnterControlLock.cs:38
 void DialogMouseEnterControlLock::OnDestroy() { InputLockManager::RemoveControlLock(lockName); }
 
-// UIInputExtraMouseButtons.cs:43
+// UIInputExtraMouseButtons.cs:41
 void UIInputExtraMouseButtons::Update() {
     if (mouseEntered_) {
         const IInputDevice& input = InputEnvironment::Input();

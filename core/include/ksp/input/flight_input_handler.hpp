@@ -24,6 +24,16 @@ class AxisGroupsModule;
 // FlightInputCallback.cs:1 (public delegate void FlightInputCallback(FlightCtrlState st)): the state is a reference in C#
 using FlightInputCallback = Delegate<void(FlightCtrlState&)>;
 
+// the host seams of FlightInputHandler
+struct FlightInputHost {
+    std::function<void(const std::string& text, float duration)> postScreenMessage;  // ScreenMessages.PostScreenMessage(.., LOWER_CENTER)
+    std::function<void()> activateNextStage;           // unset: StageManager.ActivateNextStage()
+    std::function<void(Vessel*)> feedInputFeed;        // Vessel.FeedInputFeed()
+    bool actionGroupsAppPresent = false;               // ActionGroupsApp.Instance != null
+    std::function<void()> actionGroupsSelectNext;      // ActionGroupsApp.Instance.SelectNext()
+    std::function<void()> actionGroupsSelectPrev;      // ActionGroupsApp.Instance.SelectPrev()
+};
+
 class FlightInputHandler {
 public:
     static void NoCallback(FlightCtrlState&) {}           // `delegate { }` (:11, :15)
@@ -45,15 +55,8 @@ public:
 
     static bool RCSLock() { return fetch != nullptr ? fetch->rcslock : false; }  // :71
 
-    // host seams
-    struct Host {
-        std::function<void(const std::string& text, float duration)> postScreenMessage;  // ScreenMessages.PostScreenMessage(.., LOWER_CENTER)
-        std::function<void()> activateNextStage;           // unset: StageManager.ActivateNextStage()
-        std::function<void(Vessel*)> feedInputFeed;        // Vessel.FeedInputFeed()
-        bool actionGroupsAppPresent = false;               // ActionGroupsApp.Instance != null
-        std::function<void()> actionGroupsSelectNext;      // ActionGroupsApp.Instance.SelectNext()
-        std::function<void()> actionGroupsSelectPrev;      // ActionGroupsApp.Instance.SelectPrev()
-    };
+    // host seams (FlightInputHost: a namespace-level type, so its default member initializers are complete here)
+    using Host = FlightInputHost;
     static inline Host host;
 
     void Awake();                                         // :83
