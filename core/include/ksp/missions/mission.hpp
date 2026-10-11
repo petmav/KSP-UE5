@@ -375,6 +375,7 @@ public:
     void Save(ConfigNode& node);                            // :2174
     uint32_t CurrentVesselID(MENode* node, uint32_t vesselID);  // :2258
     MENode* GetNodeById(const Guid& guid);                  // :2296
+    void SetLockedCamera(MissionCameraModeOptions newCameraMode, MissionCameraLockOptions newCameraLock);  // :1665 (WP-55)
     Guid GetNodeGuidByVesselID(uint32_t persistentId);      // :2315
     Guid GetNodeGuidByVesselID(uint32_t persistentId, bool processMappedVessels);  // :2320
     bool PendingVesselLaunch(MENode* node);                 // :2344

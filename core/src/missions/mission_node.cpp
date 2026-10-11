@@ -14,6 +14,7 @@
 #include "ksp/missions/mission.hpp"
 #include "ksp/missions/mission_flow.hpp"
 #include "ksp/missions/mission_validator.hpp"
+#include "ksp/missions/node_library.hpp"
 #include "ksp/unity/mathf.hpp"
 #include "ksp/util/collections.hpp"
 
@@ -201,7 +202,16 @@ bool TestModule::HasSAPParameter(const std::string& parameter) {
 }
 
 // TestModule.cs:258
-std::string TestModule::GetNodeBodyParameterString(const Editor::BaseAPField&) { return ""; }
+std::string TestModule::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
+    // ParamChoices_CelestialBodySurface / MissionKerbal fields: the caller passes the text of their branch
+    if (field.typedText.has_value()) return *field.typedText;
+    if (field.celestialBody != nullptr) {
+        return KSP::Localization::Localizer::Format("#autoLOC_8004190", {field.guiName, field.celestialBody->DisplayName()});
+    }
+    std::string text = KSP::Localization::Localizer::Format("#autoLOC_6003000");
+    if (field.hasValue) text = field.value;
+    return KSP::Localization::Localizer::Format("#autoLOC_8004190", {field.guiName, text});
+}
 
 // TestModule.cs:280
 void TestModule::UpdateNodeBodyUI() { node_->guiNode->DisplayNodeBodyParameters(); }
@@ -314,7 +324,11 @@ bool ActionModule::HasSAPParameter(const std::string& parameter) {
 }
 
 // ActionModule.cs:183
-std::string ActionModule::GetNodeBodyParameterString(const Editor::BaseAPField&) { return ""; }
+std::string ActionModule::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
+    std::string text = KSP::Localization::Localizer::Format("#autoLOC_6003083");
+    if (field.hasValue) text = field.value;
+    return KSP::Localization::Localizer::Format("#autoLOC_8004190", {field.guiName, text});
+}
 
 // ActionModule.cs:193
 void ActionModule::UpdateNodeBodyUI() {

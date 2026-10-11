@@ -175,6 +175,10 @@ struct MissionsEnvironment {
     enum class PartLookup { NotFound, FoundNoVessel, Found };
     static inline std::function<bool(uint32_t persistentVesselId)> persistentVesselIdExists;
     static inline std::function<PartLookup(uint32_t partPersistentId, bool loaded, uint32_t& vesselPersistentId)> partVessel;
+    // MissionSystem.SetLockedCamera(mission, mode, lock) (Mission.SetLockedCamera :1665, camera UI). Unset: not run.
+    static inline std::function<void(Mission*, MissionCameraModeOptions, MissionCameraLockOptions)> setLockedCamera;
+    // MissionEditorLogic.Instance.EditorMission (TestTimeSinceNode.RunValidation :111). Unset: the node's own mission.
+    static inline std::function<Mission*()> editorMission;
     // The vessel world read by the award modules (FlightGlobals / Vessel / PartResourceLibrary), WP-19: see AwardModuleEnvironment.
 
     static Guid NewGuid();
