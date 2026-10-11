@@ -101,6 +101,11 @@ add_library(kspcore STATIC
     fineprint/parameters_log.cpp
     fineprint/parameters_space.cpp
     fineprint/parameters_waypoint.cpp
+    fineprint/contracts_basic.cpp
+    fineprint/install.cpp
+    fineprint/contracts_survey.cpp
+    fineprint/contracts_other.cpp
+    fineprint/scenario_contract_events.cpp
     contracts/parameters.cpp
     contracts/predicates.cpp
     contracts/module_test_subject.cpp

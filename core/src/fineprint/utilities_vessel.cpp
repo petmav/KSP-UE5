@@ -219,6 +219,21 @@ void ProcessSideRequests(Contract& contract, ConfigNode& contractNode, Celestial
     }
 }
 
+// SystemUtilities.cs:621
+bool CheckTouristRecoveryContractKerbals(const std::string& kerbalName) {
+    auto currentContracts = ksp::Contracts::ContractSystem::Instance->GetCurrentContracts<ksp::FinePrint::Contracts::TourismContract>();
+    auto currentContracts2 = ksp::Contracts::ContractSystem::Instance->GetCurrentContracts<ksp::Contracts::Templates::RecoverAsset>();
+    for (size_t i = 0; i < currentContracts.size(); i++) {
+        for (size_t j = 0; j < currentContracts[i]->Tourists().size(); j++)
+            if (currentContracts[i]->Tourists()[j].find(kerbalName) != std::string::npos) return true;
+    }
+    for (size_t num = 0; num < currentContracts2.size(); num++) {
+        auto k = currentContracts2[num]->RecoveryKerbal();
+        if (k != nullptr && k->name().value_or("").find(kerbalName) != std::string::npos) return true;
+    }
+    return false;
+}
+
 }  // namespace SystemUtilities
 
 // ------------------------------------------------------------------------------------------------------------------ ProgressUtilities

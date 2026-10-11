@@ -303,3 +303,17 @@ public:
 };
 
 }  // namespace ksp::FinePrint::Contracts
+
+template <>
+struct ksp::dotnet::EnumTraits<ksp::FinePrint::Contracts::SatelliteContract::SatellitePlacementMode> {
+    using E = ksp::FinePrint::Contracts::SatelliteContract::SatellitePlacementMode;
+    static constexpr bool flags = false;
+    static constexpr EnumMember<E> members[] = {{E::NEW, "NEW"}, {E::ADJUST, "ADJUST"}, {E::NETWORK, "NETWORK"}, {E::NETWORKADJUST, "NETWORKADJUST"}};
+};
+
+namespace ksp::FinePrint {
+// Install() plus every contract and parameter type of slice 2, ScenarioContractEvents, and the seams the FinePrint ports answer
+// (CareerEnvironment::valueAndUnits, TemplateEnvironment::researchedValidContractObjectives / checkTouristRecoveryContractKerbals /
+// discoverVessel / the GrandTour parameter factories). Idempotent.
+void InstallAll();
+}  // namespace ksp::FinePrint

@@ -129,7 +129,8 @@ std::string RandomSplitChoice(std::vector<std::vector<std::string>*>& listOfList
 // :292 ProcessSideRequests(contract, contractNode, targetBody, vesselName, ref funds, ref science, ref reputation, vessel)
 void ProcessSideRequests(Contract& contract, ConfigNode& contractNode, CelestialBody* targetBody, const std::string& vesselName, float& fundsMultiplier,
                          float& scienceMultiplier, float& reputationMultiplier, Vessel* vessel = nullptr);
-// :621 CheckTouristRecoveryContractKerbals is TemplateEnvironment::checkTouristRecoveryContractKerbals (WP-37)
+// :621 CheckTouristRecoveryContractKerbals (FinePrint::Install() also installs it as TemplateEnvironment::checkTouristRecoveryContractKerbals)
+bool CheckTouristRecoveryContractKerbals(const std::string& kerbalName);
 }  // namespace SystemUtilities
 
 namespace ProgressUtilities {

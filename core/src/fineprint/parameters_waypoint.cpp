@@ -34,7 +34,8 @@ CelestialBody* GetBodyByName(const std::string& name) {
         if (b->bodyName == name) return b;
     return nullptr;
 }
-double DefD(const char* sec, const char* sub, const char* key) { return ContractDefsLite::D(sec, sub, key); }
+double DefD(const char* sec, const char* sub, const char* key) { return ContractDefsLite::D(sec, sub, key); }  // a C# double member
+double DefFd(const char* sec, const char* sub, const char* key) { return static_cast<double>(ContractDefsLite::F(sec, sub, key)); }  // a C# float member read as double
 float DefF(const char* sec, const char* sub, const char* key) { return ContractDefsLite::F(sec, sub, key); }
 // the body a vessel orbits: loaded ? orbit.referenceBody : FlightGlobals.Bodies[protoVessel.orbitSnapShot.ReferenceBodyIndex]
 CelestialBody* ReferenceBodyOf(Vessel* v) {
@@ -403,16 +404,16 @@ void SpecificOrbitParameter::ValidateOrbit() {
         double inclinationDifficulty;
         switch (Root()->Prestige()) {
             default:
-                altitudeDifficulty = DefD("Satellite", "", "SignificantAltitudeDifficulty");
-                inclinationDifficulty = DefD("Satellite", "", "SignificantInclinationDifficulty");
+                altitudeDifficulty = DefFd("Satellite", "", "SignificantAltitudeDifficulty");
+                inclinationDifficulty = DefFd("Satellite", "", "SignificantInclinationDifficulty");
                 break;
             case Contract::ContractPrestige::Exceptional:
-                altitudeDifficulty = DefD("Satellite", "", "ExceptionalAltitudeDifficulty");
-                inclinationDifficulty = DefD("Satellite", "", "ExceptionalInclinationDifficulty");
+                altitudeDifficulty = DefFd("Satellite", "", "ExceptionalAltitudeDifficulty");
+                inclinationDifficulty = DefFd("Satellite", "", "ExceptionalInclinationDifficulty");
                 break;
             case Contract::ContractPrestige::Trivial:
-                altitudeDifficulty = DefD("Satellite", "", "TrivialAltitudeDifficulty");
-                inclinationDifficulty = DefD("Satellite", "", "TrivialInclinationDifficulty");
+                altitudeDifficulty = DefFd("Satellite", "", "TrivialAltitudeDifficulty");
+                inclinationDifficulty = DefFd("Satellite", "", "TrivialInclinationDifficulty");
                 break;
         }
         if (!FinePrint::Utilities::OrbitUtilities::ValidateOrbit(Root()->MissionSeed(), *orbit, orbitType, altitudeDifficulty, inclinationDifficulty,
@@ -894,7 +895,7 @@ void SurveyWaypointParameter::Bounce() {
         std::string text = wp->name;
         if (wp->isClustered) text = text + " " + L::StringUtilities::IntegerToGreek(wp->index);
         L::FinePrintEnvironment::Post(Fmt("#autoLOC_285955", {text, ContextualAnomalyName()}), 5.0f, L::ScreenMessageStyle::UPPER_LEFT);
-        const double num = M::Max(ksp::FinePrint::Contracts::SurveyContract::ParamRange(Root()->Prestige(), targetBody, band), static_cast<double>(DefF("Survey", "", "MinimumTriggerRange")));
+        const double num = M::Max(ksp::FinePrint::Contracts::SurveyContract::ParamRange(Root()->Prestige(), targetBody, band), DefD("Survey", "", "MinimumTriggerRange"));
         auto waypoint = std::make_unique<Waypoint>(*wp);
         waypoint->index++;
         waypoint->RandomizeAwayFrom(bounceOriginLatitude, bounceOriginLongitude, num, num * 2.0, 3, !waypoint->landLocked);
@@ -918,8 +919,8 @@ void SurveyWaypointParameter::Bounce() {
 }
 // SurveyWaypointParameter.cs:384
 double SurveyWaypointParameter::TriggerRange(FlightBand band) {
-    const double minimumTriggerRange = DefF("Survey", "", "MinimumTriggerRange");
-    double num = DefF("Survey", "", "MaximumTriggerRange");
+    const double minimumTriggerRange = DefD("Survey", "", "MinimumTriggerRange");
+    double num = DefD("Survey", "", "MaximumTriggerRange");
     if (minimumTriggerRange == num) num += 1.0;
     const double num2 = M::Min(minimumTriggerRange, num);
     const double num3 = M::Max(minimumTriggerRange, num);
@@ -972,8 +973,8 @@ void SurveyWaypointParameter::CalculateAltitudes(double terrainAltitude) {
     double num = M::Max(M::Min(static_cast<double>(DefF("Survey", "", "ThresholdDeviancy")), static_cast<double>(100.0f)), static_cast<double>(0.0f));
     if (num < 1.0) num *= 100.0;
     num = static_cast<double>(kSPRandom.Next(static_cast<int>(num))) / 100.0;
-    thresholdAltitude = static_cast<double>(DefF("Survey", "", "MinimumThreshold")) +
-                        targetBody->GeeASL * (static_cast<double>(DefF("Survey", "", "MaximumThreshold")) - static_cast<double>(DefF("Survey", "", "MinimumThreshold")));
+    thresholdAltitude = DefD("Survey", "", "MinimumThreshold") +
+                        targetBody->GeeASL * (DefD("Survey", "", "MaximumThreshold") - DefD("Survey", "", "MinimumThreshold"));
     if (targetBody->atmosphere) {
         if (static_cast<double>(targetBody->scienceValues.flyingAltitudeThreshold) > terrainAltitude)
             thresholdAltitude = static_cast<double>(targetBody->scienceValues.flyingAltitudeThreshold) - terrainAltitude;
