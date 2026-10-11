@@ -1,6 +1,7 @@
 // WP-38 slice 3: SentinelMission/{SentinelModule,SentinelScenario}.cs. See include/ksp/fineprint/sentinel.hpp.
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 
 #include "ksp/career/career_environment.hpp"
 #include "ksp/celestial/celestial_body.hpp"
