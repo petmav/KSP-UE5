@@ -24,7 +24,12 @@
 #include "ksp/celestial/celestial_body.hpp"
 #include "ksp/celestial/celestial_system.hpp"
 #include "ksp/celestial/planetarium.hpp"
+#include "ksp/career/career.hpp"
+#include "ksp/contracts/contracts.hpp"
 #include "ksp/contracts/serenity_contracts.hpp"
+#include "ksp/dotnet/random.hpp"
+#include "ksp/save/game_parameters.hpp"
+#include "ksp/save/crew.hpp"
 #include "ksp/database/game_data.hpp"
 #include "ksp/parts/part.hpp"
 #include "ksp/parts/part_loader.hpp"
@@ -1527,4 +1532,363 @@ TEST_CASE("WP-53 ROCManager.ValidateCBBiomeCombos keeps the C# quirk: an unknown
     mgr._rocDefinitions[0]->myCelestialBodies.push_back(RocCBDefinition("NoSuchBody", {"X"}));
     // ROCManager.cs:260: RemoveAt(num2) is followed by `myCelestialBodies[num2].biomes.Count` on the same index (ArgumentOutOfRangeException)
     CHECK_THROWS_AS(mgr.ValidateCBBiomeCombos(), std::out_of_range);
+}
+
+// =============================================================================================================================
+// The Breaking Ground contracts on the WP-37 contract system
+
+namespace KC = ksp::Contracts;
+namespace SC = ksp::Expansions::Serenity::Contracts;
+
+namespace {
+
+void LoadProgress53(ProgressTracking& pt, const json& scenario) {
+    ConfigNode scen("SCENARIO");
+    ConfigNode* prog = scen.AddNode("Progress");
+    for (auto it = scenario["progress"].begin(); it != scenario["progress"].end(); ++it) {
+        ConfigNode* b = prog->AddNode(it.key());
+        for (auto jt = it.value().begin(); jt != it.value().end(); ++jt) {
+            ConfigNode* n = b->AddNode(jt.key());
+            n->AddValue(jt.value().get<std::string>(), 0.0);
+        }
+    }
+    pt.OnLoad(scen);
+}
+
+KC::Contract::ContractPrestige Prestige53(const char* s) {
+    if (std::string(s) == "Trivial") return KC::Contract::ContractPrestige::Trivial;
+    if (std::string(s) == "Significant") return KC::Contract::ContractPrestige::Significant;
+    return KC::Contract::ContractPrestige::Exceptional;
+}
+
+// A contract that applies the defaults a Serenity contract's Generate passes to the WP-37 Set* pipeline (the same calls in the same order, no random
+// draws of its own): generating it with the seed / prestige of the real contract must give bit-identical expiry, deadline and rewards. The agent's
+// mentality factors are applied by ContractSystem.GenerateContract after Generate.
+struct ProbeRewards {
+    float advance = 0, reward = 0, failure = 0, repReward = 0, repFailure = 0, science = 0;
+    int minExpire = 1, maxExpire = 7, deadlineDays = 2130;
+    CelestialBody* body = nullptr;
+};
+class ProbeSerenity : public KC::Contract {
+public:
+    static inline ProbeRewards r;
+    std::string TypeName() const override { return "ProbeSerenity"; }
+    bool MeetRequirements() override { return true; }
+    bool Generate() override {
+        AddKeywords({"Scientific", "Commercial"});
+        SetExpiry(r.minExpire, r.maxExpire);
+        SetDeadlineDays(static_cast<float>(r.deadlineDays), r.body);
+        SetFunds(r.advance, r.reward, r.failure, r.body);
+        SetReputation(r.repReward, r.repFailure);
+        SetScience(r.science);
+        return true;
+    }
+};
+void CheckAgainstProbe(KC::ContractSystem& cs, KC::Contract& real, int seed, const char* prestige, const ProbeRewards& pr) {
+    ProbeSerenity::r = pr;
+    KC::ContractSystem::RegisterContractType("ProbeSerenity", [] { return std::make_unique<ProbeSerenity>(); });
+    auto probe = cs.GenerateContract(seed, Prestige53(prestige), "ProbeSerenity");
+    REQUIRE(probe != nullptr);
+    CHECK(probe->Agent()->Name() == real.Agent()->Name());
+    CHECK_F64(real.FundsAdvance, probe->FundsAdvance);
+    CHECK_F64(real.FundsCompletion, probe->FundsCompletion);
+    CHECK_F64(real.FundsFailure, probe->FundsFailure);
+    CHECK_F32(real.ReputationCompletion, probe->ReputationCompletion);
+    CHECK_F32(real.ReputationFailure, probe->ReputationFailure);
+    CHECK_F32(real.ScienceCompletion, probe->ScienceCompletion);
+    CHECK_F64(real.TimeExpiry, probe->TimeExpiry);
+    CHECK_F64(real.TimeDeadline, probe->TimeDeadline);
+    CHECK(real.Keywords() == probe->Keywords());
+}
+
+// The career, the contract machinery and the Serenity fixtures (ROC definitions, experiment / scanner parts): see the file header for what is fixture
+struct ContractRig {
+    WorldSer w;
+    Game game;
+    std::unique_ptr<GameVariables> gv;
+    std::unique_ptr<KC::Agents::AgentList> agents;
+    std::unique_ptr<ProgressTracking> pt;
+    Funding funds;
+    Reputation rep;
+    KC::ContractSystem cs;
+    ResearchAndDevelopment rd;
+    ROCManager mgr;
+    Guid nextGuid;
+    std::vector<std::string> munBiomes, minmusBiomes, dunaBiomes;
+    ContractRig() {
+        CareerEnvironment::Reset();
+        KC::ContractsEnvironment::Reset();
+        KC::ContractSystem::ClearTypes();
+        KC::ContractSystem::ContractWeights.reset();
+        ScenarioUpgradeableFacilities::ClearStatics();
+        SaveEnvironment& env = SaveEnvironment::Current();
+        CelestialBody* k = &w.Kerbin();
+        CareerEnvironment::Current().getHomeBody = [k] { return k; };
+        game.Mode = Game::Modes::CAREER;
+        game.flightState = std::make_shared<FlightState>();
+        env.currentGame = &game;
+        gv = std::make_unique<GameVariables>();
+        gv->reputationAddition = AnimationCurve(std::vector<Keyframe>{Keyframe(0.0f, 0.9f)});
+        gv->reputationSubtraction = AnimationCurve(std::vector<Keyframe>{Keyframe(0.0f, 1.3f)});
+        const std::string gd = ksp::testing::GameRoot() + "/GameData";
+        KC::ContractDefsLite::Load(gd + "/Squad/Contracts/Contracts.cfg");
+        for (CelestialBody* b : w.sys->SpawnOrder()) b->bodyDisplayName = KSP::Localization::Localizer::Format(b->bodyDisplayName);
+        ConfigNode::NodePtr story = ConfigNode::Load(gd + "/Squad/Resources/StoryDefs.cfg");
+        REQUIRE(story);
+        ConfigNode::NodePtr sd = story->GetNode("STORY_DEF")->CreateCopy();
+        KSP::Localization::Localizer::TranslateBranch(*sd);
+        KC::TextGen::Reset();
+        KC::TextGen::Setup(*sd);
+        agents = std::make_unique<KC::Agents::AgentList>();
+        ConfigNode::NodePtr ag = ConfigNode::Load(gd + "/Squad/Agencies/Agents.cfg");
+        REQUIRE(ag);
+        agents->LoadAgents(ag->GetNodes("AGENT"));
+        KC::ContractSystem::RegisterStockTypes();
+        SC::Install();
+        pt = std::make_unique<ProgressTracking>();
+        pt->Awake();
+        pt->Start();
+        Planetarium::fetch->time = 0.0;
+        KC::ContractsEnvironment::Current().newGuid = [this] { return nextGuid; };
+        KC::ContractsEnvironment::Current().nowTicks = [] { return int64_t(636000000000000000LL); };
+        funds.Awake();
+        rep.Awake();
+        rep.Start();
+        funds.SetFunds(1000000.0, TransactionReasons::Cheating);
+        rep.SetReputation(0.0f, TransactionReasons::Cheating);
+        CareerEnvironment::Current().rndPresent = [] { return true; };
+        rd.Awake();
+        ConfigNode rdEmpty("ResearchAndDevelopment");
+        rd.OnLoad(rdEmpty);
+        cs.Awake();
+        ConfigNode weights("SCENARIO");
+        ConfigNode* wn = weights.AddNode("WEIGHTS");
+        for (auto it = Ref37Scenario()["weights"].begin(); it != Ref37Scenario()["weights"].end(); ++it)
+            wn->AddValue(it.key(), static_cast<int32_t>(it.value().get<int>()));
+        cs.LoadNow(weights);
+        LoadProgress53(*pt, Ref37Scenario());
+        // the career multipliers of the first WP-37 set
+        game.Parameters->Career.FundsGainMultiplier = 1.0f;
+        game.Parameters->Career.FundsLossMultiplier = 1.0f;
+        game.Parameters->Career.RepGainMultiplier = 1.0f;
+        game.Parameters->Career.RepLossMultiplier = 1.0f;
+        game.Parameters->Career.ScienceGainMultiplier = 1.0f;
+        // ROC fixtures: three definitions over the real biome names of the loaded bodies' biome maps
+        mgr.Awake();
+        const auto names = [&](const char* body, size_t n) {
+            std::vector<std::string> r;
+            CelestialBody* b = w.sys->GetBodyByName(body);
+            REQUIRE(b->BiomeMap.has_value());
+            for (size_t i = 0; i < n && i < b->BiomeMap->Attributes.size(); i++) r.push_back(b->BiomeMap->Attributes[i].name);
+            return r;
+        };
+        munBiomes = names("Mun", 6);
+        minmusBiomes = names("Minmus", 2);
+        dunaBiomes = names("Duna", 1);
+        const auto add = [&](const char* type, bool canBeTaken, std::vector<RocCBDefinition> bodies) {
+            auto d = std::make_unique<ROCDefinition>();
+            d->type = type;
+            d->displayName = std::string("Display ") + type;
+            d->canBeTaken = canBeTaken;
+            d->myCelestialBodies = std::move(bodies);
+            mgr._rocDefinitions.push_back(std::move(d));
+        };
+        add("ROC_A", true, {RocCBDefinition("Mun", munBiomes), RocCBDefinition("Minmus", minmusBiomes)});
+        add("ROC_B", false, {RocCBDefinition("Duna", dunaBiomes)});
+        add("ROC_C", true, {RocCBDefinition("Mun", {munBiomes[0], munBiomes[1]})});
+        mgr.SetROCsStateForGame(true);
+        // the parts the contracts look at: experiments on two part prefabs, scanner arms on two others
+        const auto addGround = [&](const char* part, const char* expId) {
+            AvailablePart* ap = const_cast<AvailablePart*>(w.data.parts.getPartInfoByName(part));
+            REQUIRE(ap != nullptr);
+            ConfigNode node("MODULE");
+            node.AddValue("name", "ModuleGroundExperiment");
+            node.AddValue("experimentId", expId);
+            REQUIRE(ap->partPrefab->AddModule(node, true) != nullptr);
+            return ap;
+        };
+        deployedParts = {addGround("mk1pod.v2", "temperatureScan"), addGround("GooExperiment", "barometerScan")};
+    }
+    ~ContractRig() {
+        pt->OnDestroy();
+        pt.reset();
+        agents.reset();
+        gv.reset();
+        KC::ContractSystem::ClearTypes();
+        KC::ContractSystem::ContractWeights.reset();
+        KC::ContractSystem::Instance = nullptr;
+        KC::ContractsEnvironment::Reset();
+        KC::ContractDefsLite::Clear();
+        KC::TextGen::Reset();
+        CareerEnvironment::Reset();
+        ScenarioUpgradeableFacilities::ClearStatics();
+        SaveEnvironment::Current().currentGame = nullptr;
+        ROCManager::Instance = nullptr;
+    }
+    std::vector<AvailablePart*> deployedParts;
+    static const json& Ref37Scenario() {
+        static const json j = [] {
+            std::ifstream f(std::string(KSPCORE_TEST_DATA_DIR) + "/wp37_reference.json", std::ios::binary);
+            REQUIRE(f.good());
+            return json::parse(f)["scenario"];
+        }();
+        return j;
+    }
+    std::unique_ptr<KC::Contract> Gen(int seed, const char* prestige, const char* type) {
+        nextGuid.bytes[0] = static_cast<uint8_t>(seed);
+        nextGuid.bytes[5] = static_cast<uint8_t>(seed >> 8);
+        return cs.GenerateContract(seed, Prestige53(prestige), type);
+    }
+};
+}  // namespace
+
+TEST_CASE("WP-53 contract primitives: the KSPRandom picks of the three contracts vs the reference (120 cases)") {
+    Clean53 clean;
+    for (const json& c : Ref53()["picks"]) {
+        KSPRandom g(c["seed"].get<int>());
+        const int index = g.Next(0, c["candidates"].get<int>() - 1);
+        CHECK(index == c["index"].get<int>());
+        const int biomeCount = c["biomeCount"].get<int>();
+        int want = 1;
+        if (biomeCount >= 5) want = 3;
+        else if (biomeCount >= 3) want = 2;
+        std::vector<int> picked;
+        for (int n = 0; n < 10 && static_cast<int>(picked.size()) < want; n++) {
+            const int i2 = g.Next(0, biomeCount - 1);
+            if (std::find(picked.begin(), picked.end(), i2) == picked.end()) picked.push_back(i2);
+        }
+        CHECK(picked == c["biomes"].get<std::vector<int>>());
+    }
+}
+
+TEST_CASE("WP-53 ContractDefs of the Serenity contracts: the C# initialisers, overridden only when Serenity is installed and the node exists") {
+    Clean53 clean;
+    SaveEnvironment::Reset();
+    SC::SerenityContractDefs::DeployedScienceDefs d = SC::SerenityContractDefs::DeployedScience();
+    CHECK(d.MaximumExistent == 5);
+    CHECK_F32(d.SciencePercentage, 50.0f);
+    CHECK(d.expire.DeadlineDays == 2130);
+    CHECK_F32(d.FundsBaseAdvance, 10000.0f);
+    CHECK_F32(d.FundsBaseReward, 21000.0f);
+    CHECK_F32(d.FundsBaseFailure, 12000.0f);
+    CHECK_F32(d.ReputationBaseReward, 6.0f);
+    CHECK_F32(d.ReputationBaseFailure, 3.0f);
+    CHECK_F32(d.ScienceBaseReward, 0.0f);
+    SC::SerenityContractDefs::ROCScienceArmDefs a = SC::SerenityContractDefs::ROCScienceArm();
+    CHECK(a.MaximumExistent == 3);
+    CHECK_F32(a.SimpleArmPercentage, 40.0f);
+    CHECK_F32(a.ComplexArmPercentage, 70.0f);
+    CHECK_F32(a.SimpleArmAdvance, 8000.0f);
+    CHECK_F32(a.ComplexArmReward, 21000.0f);
+    CHECK_F32(a.AdvancedArmFailure, 17000.0f);
+    CHECK_F32(a.ReputationAdvancedArmReward, 2.0f);
+    SC::SerenityContractDefs::ROCScienceRetrievalDefs r = SC::SerenityContractDefs::ROCScienceRetrieval();
+    CHECK(r.MaximumExistent == 2);
+    CHECK_F32(r.FundsAdvance, 22000.0f);
+    CHECK_F32(r.FundsReward, 35000.0f);
+    CHECK_F32(r.FundsFailure, 27000.0f);
+    // a Contracts.cfg node overrides the value when Serenity is installed (ContractDefs.cs:2307), and is ignored when it is not
+    ConfigNode root("Contracts");
+    ConfigNode* ds = root.AddNode("DeployedScience");
+    ds->AddValue("MaximumExistent", 9);
+    ds->AddValue("SciencePercentage", 75.0f);
+    ConfigNode* funds = ds->AddNode("Funds");
+    funds->AddValue("BaseReward", 123456.0f);
+    KC::ContractDefsLite::Load(root);
+    CHECK(SC::SerenityContractDefs::DeployedScience().MaximumExistent == 5);  // Serenity not installed
+    InstallSerenity();
+    d = SC::SerenityContractDefs::DeployedScience();
+    CHECK(d.MaximumExistent == 9);
+    CHECK_F32(d.SciencePercentage, 75.0f);
+    CHECK_F32(d.FundsBaseReward, 123456.0f);
+    CHECK_F32(d.FundsBaseAdvance, 10000.0f);  // keys the node does not carry keep the initialiser
+    KC::ContractDefsLite::Clear();
+}
+
+TEST_CASE("WP-53 ROCScienceRetrievalContract: generation follows the candidate list and the KSPRandom picks; parameter completes on recovery") {
+    Clean53 clean;
+    ContractRig R;
+    ScienceEnvironment::biomeAtt = nullptr;
+    int generated = 0;
+    for (int seed = 1; seed <= 24; seed++) {
+        auto c = R.Gen(seed, seed % 2 ? "Significant" : "Exceptional", "ROCScienceRetrievalContract");
+        // the candidates: reached solid bodies (reverse body order), ROC definitions that can be taken, no finished subject
+        const auto reached = KC::Lite::ProgressUtilities::GetBodiesReached(true, [&](CelestialBody* cb) { return cb != Planetarium::fetch->Sun && cb->hasSolidSurface; });
+        struct Combo {
+            std::string body;
+            ROCDefinition* def;
+            std::string id;
+        };
+        std::vector<Combo> list;
+        for (CelestialBody* b : reached)
+            for (ROCDefinition* d : R.mgr.rocDefinitions())
+                for (const RocCBDefinition& cb : d->myCelestialBodies)
+                    if (b->name() == cb.name && d->canBeTaken) list.push_back({b->name(), d, "ROCScience_" + d->type + "@" + cb.name + "SrfLanded"});
+        REQUIRE(!list.empty());
+        REQUIRE(c != nullptr);
+        ++generated;
+        KSPRandom g(seed);
+        const Combo& pick = list[static_cast<size_t>(g.Next(0, static_cast<int>(list.size()) - 1))];
+        auto* rc = dynamic_cast<SC::ROCScienceRetrievalContract*>(c.get());
+        REQUIRE(rc != nullptr);
+        CHECK(rc->SubjectId() == pick.id);
+        CHECK(rc->TargetBody()->name() == pick.body);
+        CHECK(rc->MissionSeed() == seed);
+        // the biomes: 1 / 2 / 3 of the body entry's biomes by their count, KSPRandom continuing after the pick
+        const RocCBDefinition* cbd = nullptr;
+        for (const RocCBDefinition& cb : pick.def->myCelestialBodies)
+            if (cb.name == pick.body) cbd = &cb;
+        REQUIRE(cbd != nullptr);
+        const int want = cbd->biomes.size() >= 5 ? 3 : (cbd->biomes.size() >= 3 ? 2 : 1);
+        std::vector<std::string> biomes;
+        for (int n = 0; n < 10 && static_cast<int>(biomes.size()) >= 0 && static_cast<int>(biomes.size()) < want; n++) {
+            const std::string b = cbd->biomes[static_cast<size_t>(g.Next(0, static_cast<int>(cbd->biomes.size()) - 1))];
+            if (std::find(biomes.begin(), biomes.end(), b) == biomes.end()) biomes.push_back(b);
+        }
+        for (auto& b : biomes) b = ScienceUtil::GetBiomedisplayName(rc->TargetBody(), b, false);
+        ConfigNode saved("CONTRACT");
+        c->Save(saved);
+        // the Contract.Save wrapper writes the parameters and the contract's own OnSave values: the biomes are repeated `biomes` values
+        const ConfigNode* params = &saved;
+        CHECK(params->GetValuesList("biomes") == biomes);
+        CHECK(*saved.GetValue("rocType") == pick.def->type);
+        CHECK(*saved.GetValue("scienceTitle") == pick.def->displayName);
+        CHECK(*saved.GetValue("subjectId") == pick.id);
+        CHECK(*saved.GetValue("body") == pick.body);
+        // parameter, rewards (the defaults through the WP-37 Set* pipeline) and keywords
+        REQUIRE(c->ParameterCount() == 1);
+        auto* p = dynamic_cast<SC::CollectROCScienceRetrieval*>(c->GetParameter(0));
+        REQUIRE(p != nullptr);
+        CHECK(p->SubjectId() == pick.id);
+        CHECK(p->HashString() == pick.id + " " + pick.body);
+        const SC::SerenityContractDefs::ROCScienceRetrievalDefs defs = SC::SerenityContractDefs::ROCScienceRetrieval();
+        ProbeRewards pr;
+        pr.advance = defs.FundsAdvance;
+        pr.reward = defs.FundsReward;
+        pr.failure = defs.FundsFailure;
+        pr.repReward = defs.ReputationReward;
+        pr.repFailure = defs.ReputationFailure;
+        pr.science = defs.ScienceReward;
+        pr.minExpire = defs.expire.MinimumExpireDays;
+        pr.maxExpire = defs.expire.MaximumExpireDays;
+        pr.deadlineDays = defs.expire.DeadlineDays;
+        pr.body = rc->TargetBody();
+        CheckAgainstProbe(R.cs, *c, seed, seed % 2 ? "Significant" : "Exceptional", pr);
+        CHECK(c->FundsAdvance > 0.0);
+        CHECK(c->FundsCompletion > c->FundsAdvance);
+        CHECK(c->ReputationCompletion > 0.0f);
+        // title / synopsis / completion message use the display name
+        CHECK(c->Title() == KSP::Localization::Localizer::Format("#autoLOC_8004396", {pick.def->displayName}));
+        CHECK(c->Synopsys().rfind(KSP::Localization::Localizer::Format("#autoLOC_8004421", {pick.def->displayName}), 0) == 0);
+        // load back: the same node
+        auto copy = KC::ContractSystem::CreateContract("ROCScienceRetrievalContract");
+        REQUIRE(copy != nullptr);
+        ConfigNode full("CONTRACT");
+        c->Save(full);
+        REQUIRE(KC::Contract::Load(*copy, full));
+        ConfigNode again("CONTRACT");
+        copy->Save(again);
+        CHECK(full.ToString() == again.ToString());
+    }
+    CHECK(generated == 24);
 }
