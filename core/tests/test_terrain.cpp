@@ -387,7 +387,8 @@ TEST_CASE_FIXTURE(GlobalStateGuard, "terrain: the Mun's FlattenArea mods depend 
     const Vector3d d = terrain::GetRelSurfaceNVector(-82.0, 102.0);
     CHECK(Bits(mun->GetSurfaceHeight(d)) == Bits(205384.67548674063));
     CHECK(Bits(mun->GetSurfaceHeight(d, true)) == Bits(205312.53309413718));
-    mun->Mod_OnQuadBuilt(PQ{});  // after any quad build FlattenArea.quadActive is true
+    PQ builtQuad;
+    mun->Mod_OnQuadBuilt(builtQuad);  // after any quad build FlattenArea.quadActive is true
     CHECK(Bits(mun->GetSurfaceHeight(d)) == Bits(205312.53309413718));
 }
 
@@ -540,7 +541,8 @@ TEST_CASE_FIXTURE(GlobalStateGuard, "terrain: quad-dependent mod state and textu
     pqs.childMods.push_back(std::move(fat));
     pqs.SetupForHeight();
     CHECK(pqs.GetSurfaceHeight(Vector3d(0.0, 1.0, 0.0), true) == 1000.0);
-    pqs.Mod_OnQuadBuilt(PQ{});
+    PQ builtQuad;
+    pqs.Mod_OnQuadBuilt(builtQuad);
     CHECK(fatp->quadActive);
     CHECK(pqs.GetSurfaceHeight(Vector3d(0.0, 1.0, 0.0)) == 1050.0);  // flattenToRadius / cos(0)
     // VertexHeightMapStep samples a Texture2D natively: without a sampler it throws instead of guessing

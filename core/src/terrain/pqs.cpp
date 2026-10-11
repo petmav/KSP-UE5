@@ -1,4 +1,5 @@
-// WP-11: port of the height-evaluation path of Assembly-CSharp/PQS.cs and the PQSMod base (PQSMod.cs).
+// WP-11: port of the height-evaluation path of Assembly-CSharp/PQS.cs and the PQSMod base (PQSMod.cs). The quadtree and
+// quad build (WP-12a) are in pqs_quadtree.cpp, pqs_build.cpp, pq.cpp and pqs_cache.cpp.
 #include "ksp/terrain/pqs.hpp"
 
 #include <cmath>
@@ -7,6 +8,7 @@
 #include "ksp/dotnet/collections.hpp"
 #include "ksp/dotnet/math.hpp"
 #include "ksp/terrain/map_so.hpp"
+#include "ksp/terrain/pqs_mods.hpp"
 
 namespace ksp {
 
@@ -52,6 +54,11 @@ void PQS::SetupMods() {
         size_t count = list.size();
         while (count-- > 0) {
             list[count]->sphere = this;
+            // PQS.cs:2120-2134: the (last seen = lowest-index) PQSLandControl, AerialPerspectiveMaterial and
+            // CelestialBodyTransform, disabled ones included; a field keeps its old value when none is found
+            if (dynamic_cast<PQSLandControl*>(list[count]) != nullptr) landControl = list[count];
+            if (list[count]->className == "PQSMod_AerialPerspectiveMaterial") aerialPerspectiveMaterial = list[count];
+            if (list[count]->className == "PQSMod_CelestialBodyTransform") modCBTransform = list[count];
             if (!list[count]->modEnabled || !list[count]->gameObjectActiveSelf || list[count]->modExpansionDisabled)
                 list.erase(list.begin() + static_cast<std::ptrdiff_t>(count));
         }
@@ -109,12 +116,12 @@ double PQS::Mod_GetVertexMinHeight() {
 }
 
 // PQS.cs:2077
-void PQS::Mod_OnQuadPreBuild(const PQ& quad) {
+void PQS::Mod_OnQuadPreBuild(PQ& quad) {
     for (PQSMod* m : mods) m->OnQuadPreBuild(quad);
 }
 
 // PQS.cs:2085
-void PQS::Mod_OnQuadBuilt(const PQ& quad) {
+void PQS::Mod_OnQuadBuilt(PQ& quad) {
     for (PQSMod* m : mods) m->OnQuadBuilt(quad);
 }
 

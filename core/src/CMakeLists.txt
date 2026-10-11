@@ -16,6 +16,7 @@ add_library(kspcore STATIC
     unity/animation.cpp
     unity/random.cpp
     unity/quaternion_native.cpp
+    unity/matrix_native.cpp
     math/vector3d.cpp
     math/quaterniond.cpp
     math/util_math.cpp
@@ -65,6 +66,11 @@ add_library(kspcore STATIC
     terrain/pqs_mods_land.cpp
     terrain/pqs_prefab.cpp
     terrain/pqs_prefab_data.cpp
+    terrain/pq.cpp
+    terrain/pqs_build.cpp
+    terrain/pqs_cache.cpp
+    terrain/pqs_mods_quad.cpp
+    terrain/pqs_quadtree.cpp
     io/url_dir.cpp
     database/game_database.cpp
     resources/part_resource_library.cpp

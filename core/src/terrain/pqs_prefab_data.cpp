@@ -2,13 +2,15 @@
 // core/data/terrain/manifest.json (tools/wp11/extract_terrain.py: the PSystem prefab in
 // decompiled/KSP-dev/KSP_x64_Data/sharedassets9.assets, sha256 09e9525ab0fa6aa359fce06be20735bfbdb4e4339cc597da019ed2b7d5d81c3c); do not edit.
 // One factory per body with a PQS: the PQSMod components under the PQS GameObject in PQS.GetChildMods order
-// with every serialized field the height path consumes; other mod classes are PQSModPassive (order,
-// modEnabled, GameObject state and the requirements their OnSetup assigns).
+// with every serialized field the height path consumes, the WP-12a quad mods (ksp/terrain/pqs_mods_quad.hpp) with
+// theirs; other mod classes are PQSModPassive (order, modEnabled, GameObject state and the requirements their
+// OnSetup assigns).
 #include "ksp/terrain/pqs_prefab.hpp"
 
 #include <limits>
 
 #include "ksp/terrain/pqs_mods.hpp"
+#include "ksp/terrain/pqs_mods_quad.hpp"
 
 namespace ksp::terrain {
 
@@ -43,6 +45,12 @@ std::unique_ptr<PQS> MakeKerbin(MapLibrary& maps, const StockPQSOptions& options
     pqs->buildTangents = true;
     pqs->isFakeBuild = false;
     pqs->childModListCapacity = 64;  // List<PQSMod> after AddRange batches [3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 2, 1, 2, 5, 1, 1, 1, 1, 1, 1]
+    pqs->minLevel = 1;
+    pqs->maxLevel = 10;
+    // not in pqs_prefab.json (extract_terrain.py PQS_FIELDS before WP-12a): minDetailDistance, maxDetailDistance, subdivisionThreshold, collapseSeaLevelValue, collapseAltitudeValue, collapseAltitudeMax, visRadSeaLevelValue, visRadAltitudeValue, visRadAltitudeMax, detailSeaLevelQuads, detailAltitudeQuads, detailAltitudeMax, maxQuadLenghtsPerFrame, frameTimeDelta, maxFrameTime, surfaceRelativeQuads, seed
+    // -> PQS.Reset() defaults (PQS.cs:565); surfaceRelativeQuads FIXTURE true (see STATUS WP-12a)
+    pqs->surfaceRelativeQuads = true;
+    pqs->lodSettingsFromPrefab = false;
     {  // [0] PQSMod_VertexSimplexHeightAbsolute on Kerbin/_HeightNoise (PathID 20185)
         auto m = std::make_unique<PQSMod_VertexSimplexHeightAbsolute>();
         Base(*m, "PQSMod_VertexSimplexHeightAbsolute", "Kerbin/_HeightNoise", true, 64, true, 20, false);
@@ -95,15 +103,18 @@ std::unique_ptr<PQS> MakeKerbin(MapLibrary& maps, const StockPQSOptions& options
         pqs->childMods.push_back(std::move(m));
     }
     {  // [3] PQSMod_AltitudeAlpha on Kerbin/_Material_ModProjection (PathID 20303)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_AltitudeAlpha>();
         Base(*m, "PQSMod_AltitudeAlpha", "Kerbin/_Material_ModProjection", true, 0, false, 999999999, false);
-        m->setupRequirements = 32;  // OnSetup result
+        m->atmosphereDepth = 4000.0;
+        m->invert = false;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [4] PQSMod_AltitudeUV on Kerbin/_Material_ModProjection (PathID 20694)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_AltitudeUV>();
         Base(*m, "PQSMod_AltitudeUV", "Kerbin/_Material_ModProjection", true, 0, true, 2147483647, false);
-        m->setupRequirements = 512;  // OnSetup result
+        m->atmosphereHeight = 70000.0;
+        m->oceanDepth = 1000.0;
+        m->invert = false;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [5] PQSLandControl on Kerbin/_LandClassOcean (PathID 20620)
@@ -708,9 +719,8 @@ std::unique_ptr<PQS> MakeKerbin(MapLibrary& maps, const StockPQSOptions& options
         pqs->childMods.push_back(std::move(m));
     }
     {  // [7] PQSMod_UVPlanetRelativePosition on Kerbin/_Material_SurfaceQuads (PathID 20558)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_UVPlanetRelativePosition>();
         Base(*m, "PQSMod_UVPlanetRelativePosition", "Kerbin/_Material_SurfaceQuads", true, 0, true, 999999, false);
-        m->setupRequirements = 0;  // OnSetup result
         pqs->childMods.push_back(std::move(m));
     }
     {  // [8] PQSROCControl on Kerbin/_PQSROCControl (PathID 21012)
@@ -737,15 +747,37 @@ std::unique_ptr<PQS> MakeKerbin(MapLibrary& maps, const StockPQSOptions& options
         pqs->childMods.push_back(std::move(m));
     }
     {  // [11] PQSMod_QuadEnhanceCoast on Kerbin/_CoastlineLOD (PathID 20637)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_QuadEnhanceCoast>();
         Base(*m, "PQSMod_QuadEnhanceCoast", "Kerbin/_CoastlineLOD", true, 0, true, 9999, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->coastLessThan = 0.0;
+        m->oceanFactor = 1.0;
+        m->coastFactor = 2.0;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [12] PQSMod_CelestialBodyTransform on Kerbin/_CelestialBody (PathID 20528)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_CelestialBodyTransform>();
         Base(*m, "PQSMod_CelestialBodyTransform", "Kerbin/_CelestialBody", true, 0, true, 0, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->deactivateAltitude = 160000.0;
+        m->highQualityShaderDeactivateAltitude = -1.0;
+        m->forceRebuildOnTargetChange = false;
+        m->forceActivate = false;
+        m->overrideFade = false;
+        m->planetFade.fadeFloatName = "_PlanetOpacity";
+        m->planetFade.fadeStart = 20000.0f;
+        m->planetFade.fadeEnd = 120000.0f;
+        m->planetFade.valueStart = 0.0f;
+        m->planetFade.valueEnd = 1.0f;
+        m->planetFade.highQualityShaderFadeStart = -1.0f;
+        m->planetFade.highQualityShaderFadeEnd = -1.0f;
+        m->secondaryFades.emplace_back();
+        m->secondaryFades.back().fadeFloatName = "_PlanetOpacity";
+        m->secondaryFades.back().fadeStart = 80000.0f;
+        m->secondaryFades.back().fadeEnd = 150000.0f;
+        m->secondaryFades.back().valueStart = 0.0f;
+        m->secondaryFades.back().valueEnd = 1.0f;
+        m->secondaryFades.back().highQualityShaderFadeStart = -1.0f;
+        m->secondaryFades.back().highQualityShaderFadeEnd = -1.0f;
+        m->secondaryFades.back().secondaryRendererNames.push_back("KerbinOcean");
         pqs->childMods.push_back(std::move(m));
     }
     {  // [13] PQSMod_MaterialSetDirection on Kerbin/_Material_SunLight (PathID 20377)
@@ -805,9 +837,10 @@ std::unique_ptr<PQS> MakeKerbin(MapLibrary& maps, const StockPQSOptions& options
         pqs->childMods.push_back(std::move(m));
     }
     {  // [18] PQSMod_QuadMeshColliders on Kerbin/QuadMeshColliders (PathID 20438)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_QuadMeshColliders>();
         Base(*m, "PQSMod_QuadMeshColliders", "Kerbin/QuadMeshColliders", true, 0, true, 100, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->maxLevelOffset = 0;
+        m->physicsMaterialName = "Ground";
         pqs->childMods.push_back(std::move(m));
     }
     {  // [19] PQSCity on Kerbin/Monolith00 (PathID 20625)
@@ -968,10 +1001,27 @@ std::unique_ptr<PQS> MakeMun(MapLibrary& maps, const StockPQSOptions& options) {
     pqs->buildTangents = true;
     pqs->isFakeBuild = false;
     pqs->childModListCapacity = 32;  // List<PQSMod> after AddRange batches [1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 4, 1]
+    pqs->minLevel = 1;
+    pqs->maxLevel = 8;
+    // not in pqs_prefab.json (extract_terrain.py PQS_FIELDS before WP-12a): minDetailDistance, maxDetailDistance, subdivisionThreshold, collapseSeaLevelValue, collapseAltitudeValue, collapseAltitudeMax, visRadSeaLevelValue, visRadAltitudeValue, visRadAltitudeMax, detailSeaLevelQuads, detailAltitudeQuads, detailAltitudeMax, maxQuadLenghtsPerFrame, frameTimeDelta, maxFrameTime, surfaceRelativeQuads, seed
+    // -> PQS.Reset() defaults (PQS.cs:565); surfaceRelativeQuads FIXTURE true (see STATUS WP-12a)
+    pqs->surfaceRelativeQuads = true;
+    pqs->lodSettingsFromPrefab = false;
     {  // [0] PQSMod_CelestialBodyTransform on Mun/_CelestialBody (PathID 20452)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_CelestialBodyTransform>();
         Base(*m, "PQSMod_CelestialBodyTransform", "Mun/_CelestialBody", true, 0, true, 0, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->deactivateAltitude = 120750.0;
+        m->highQualityShaderDeactivateAltitude = -1.0;
+        m->forceRebuildOnTargetChange = false;
+        m->forceActivate = false;
+        m->overrideFade = false;
+        m->planetFade.fadeFloatName = "_PlanetOpacity";
+        m->planetFade.fadeStart = 60000.0f;
+        m->planetFade.fadeEnd = 120000.0f;
+        m->planetFade.valueStart = 0.0f;
+        m->planetFade.valueEnd = 1.0f;
+        m->planetFade.highQualityShaderFadeStart = -1.0f;
+        m->planetFade.highQualityShaderFadeEnd = -1.0f;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [1] PQSMod_VertexColorMap on Mun/_Color (PathID 20142)
@@ -990,15 +1040,15 @@ std::unique_ptr<PQS> MakeMun(MapLibrary& maps, const StockPQSOptions& options) {
         pqs->childMods.push_back(std::move(m));
     }
     {  // [3] PQSMod_AltitudeAlpha on Mun/_Material_ModProjection (PathID 20580)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_AltitudeAlpha>();
         Base(*m, "PQSMod_AltitudeAlpha", "Mun/_Material_ModProjection", true, 32, true, 999999999, false);
-        m->setupRequirements = 32;  // OnSetup result
+        m->atmosphereDepth = 8000.0;
+        m->invert = false;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [4] PQSMod_UVPlanetRelativePosition on Mun/_SurfaceQuadUVs (PathID 20065)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_UVPlanetRelativePosition>();
         Base(*m, "PQSMod_UVPlanetRelativePosition", "Mun/_SurfaceQuadUVs", true, 0, true, 100, false);
-        m->setupRequirements = 0;  // OnSetup result
         pqs->childMods.push_back(std::move(m));
     }
     {  // [5] PQSLandControl on Mun/Scatter (PathID 20609)
@@ -1083,9 +1133,10 @@ std::unique_ptr<PQS> MakeMun(MapLibrary& maps, const StockPQSOptions& options) {
         pqs->childMods.push_back(std::move(m));
     }
     {  // [7] PQSMod_QuadMeshColliders on Mun/QuadMeshColliders (PathID 20536)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_QuadMeshColliders>();
         Base(*m, "PQSMod_QuadMeshColliders", "Mun/QuadMeshColliders", true, 0, true, 100, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->maxLevelOffset = 0;
+        m->physicsMaterialName = "";
         pqs->childMods.push_back(std::move(m));
     }
     {  // [8] PQSCity on Mun/Monolith02 (PathID 20359)
@@ -1266,22 +1317,39 @@ std::unique_ptr<PQS> MakeMinmus(MapLibrary& maps, const StockPQSOptions& options
     pqs->buildTangents = true;
     pqs->isFakeBuild = false;
     pqs->childModListCapacity = 16;  // List<PQSMod> after AddRange batches [1, 1, 1, 1, 1, 1, 1, 1, 1]
+    pqs->minLevel = 1;
+    pqs->maxLevel = 5;
+    // not in pqs_prefab.json (extract_terrain.py PQS_FIELDS before WP-12a): minDetailDistance, maxDetailDistance, subdivisionThreshold, collapseSeaLevelValue, collapseAltitudeValue, collapseAltitudeMax, visRadSeaLevelValue, visRadAltitudeValue, visRadAltitudeMax, detailSeaLevelQuads, detailAltitudeQuads, detailAltitudeMax, maxQuadLenghtsPerFrame, frameTimeDelta, maxFrameTime, surfaceRelativeQuads, seed
+    // -> PQS.Reset() defaults (PQS.cs:565); surfaceRelativeQuads FIXTURE true (see STATUS WP-12a)
+    pqs->surfaceRelativeQuads = true;
+    pqs->lodSettingsFromPrefab = false;
     {  // [0] PQSMod_CelestialBodyTransform on Minmus/_CelestialBody (PathID 20106)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_CelestialBodyTransform>();
         Base(*m, "PQSMod_CelestialBodyTransform", "Minmus/_CelestialBody", true, 0, true, 0, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->deactivateAltitude = 180000.0;
+        m->highQualityShaderDeactivateAltitude = -1.0;
+        m->forceRebuildOnTargetChange = false;
+        m->forceActivate = false;
+        m->overrideFade = false;
+        m->planetFade.fadeFloatName = "_PlanetOpacity";
+        m->planetFade.fadeStart = 100000.0f;
+        m->planetFade.fadeEnd = 145000.0f;
+        m->planetFade.valueStart = 0.0f;
+        m->planetFade.valueEnd = 1.0f;
+        m->planetFade.highQualityShaderFadeStart = -1.0f;
+        m->planetFade.highQualityShaderFadeEnd = -1.0f;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [1] PQSMod_AltitudeAlpha on Minmus/_Material_ModProjection (PathID 20019)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_AltitudeAlpha>();
         Base(*m, "PQSMod_AltitudeAlpha", "Minmus/_Material_ModProjection", true, 32, true, 999999999, false);
-        m->setupRequirements = 32;  // OnSetup result
+        m->atmosphereDepth = 8000.0;
+        m->invert = false;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [2] PQSMod_UVPlanetRelativePosition on Minmus/_SurfaceQuadUVs (PathID 20372)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_UVPlanetRelativePosition>();
         Base(*m, "PQSMod_UVPlanetRelativePosition", "Minmus/_SurfaceQuadUVs", true, 0, true, 100, false);
-        m->setupRequirements = 0;  // OnSetup result
         pqs->childMods.push_back(std::move(m));
     }
     {  // [3] PQSMod_VertexPlanet on Minmus/VertexPlanet (PathID 20337)
@@ -1521,9 +1589,10 @@ std::unique_ptr<PQS> MakeMinmus(MapLibrary& maps, const StockPQSOptions& options
         pqs->childMods.push_back(std::move(m));
     }
     {  // [7] PQSMod_QuadMeshColliders on Minmus/QuadMeshColliders (PathID 20298)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_QuadMeshColliders>();
         Base(*m, "PQSMod_QuadMeshColliders", "Minmus/QuadMeshColliders", true, 0, true, 100, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->maxLevelOffset = 0;
+        m->physicsMaterialName = "Ground";
         pqs->childMods.push_back(std::move(m));
     }
     {  // [8] PQSROCControl on Minmus/_PQSROCControl (PathID 21037)
@@ -1547,6 +1616,12 @@ std::unique_ptr<PQS> MakeMoho(MapLibrary& maps, const StockPQSOptions& options) 
     pqs->buildTangents = true;
     pqs->isFakeBuild = false;
     pqs->childModListCapacity = 16;  // List<PQSMod> after AddRange batches [2, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1]
+    pqs->minLevel = 1;
+    pqs->maxLevel = 8;
+    // not in pqs_prefab.json (extract_terrain.py PQS_FIELDS before WP-12a): minDetailDistance, maxDetailDistance, subdivisionThreshold, collapseSeaLevelValue, collapseAltitudeValue, collapseAltitudeMax, visRadSeaLevelValue, visRadAltitudeValue, visRadAltitudeMax, detailSeaLevelQuads, detailAltitudeQuads, detailAltitudeMax, maxQuadLenghtsPerFrame, frameTimeDelta, maxFrameTime, surfaceRelativeQuads, seed
+    // -> PQS.Reset() defaults (PQS.cs:565); surfaceRelativeQuads FIXTURE true (see STATUS WP-12a)
+    pqs->surfaceRelativeQuads = true;
+    pqs->lodSettingsFromPrefab = false;
     {  // [0] PQSMod_VertexSimplexNoiseColor on Moho/_Color (PathID 20517)
         auto m = std::make_unique<PQSModPassive>();
         Base(*m, "PQSMod_VertexSimplexNoiseColor", "Moho/_Color", true, 32, true, 200, false);
@@ -1560,9 +1635,10 @@ std::unique_ptr<PQS> MakeMoho(MapLibrary& maps, const StockPQSOptions& options) 
         pqs->childMods.push_back(std::move(m));
     }
     {  // [2] PQSMod_AltitudeAlpha on Moho/_Material_ModProjection (PathID 20535)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_AltitudeAlpha>();
         Base(*m, "PQSMod_AltitudeAlpha", "Moho/_Material_ModProjection", true, 0, true, 999999999, false);
-        m->setupRequirements = 32;  // OnSetup result
+        m->atmosphereDepth = 7000.0;
+        m->invert = false;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [3] PQSMod_AerialPerspectiveMaterial on Moho/_Material_AerialPerspective (PathID 20450)
@@ -1572,9 +1648,8 @@ std::unique_ptr<PQS> MakeMoho(MapLibrary& maps, const StockPQSOptions& options) 
         pqs->childMods.push_back(std::move(m));
     }
     {  // [4] PQSMod_UVPlanetRelativePosition on Moho/_Material_SurfaceQuads (PathID 20475)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_UVPlanetRelativePosition>();
         Base(*m, "PQSMod_UVPlanetRelativePosition", "Moho/_Material_SurfaceQuads", true, 0, true, 999999, false);
-        m->setupRequirements = 0;  // OnSetup result
         pqs->childMods.push_back(std::move(m));
     }
     {  // [5] PQSMod_VertexHeightMap on Moho/_HeightNoise (PathID 20422)
@@ -1625,9 +1700,28 @@ std::unique_ptr<PQS> MakeMoho(MapLibrary& maps, const StockPQSOptions& options) 
         pqs->childMods.push_back(std::move(m));
     }
     {  // [9] PQSMod_CelestialBodyTransform on Moho/_CelestialBody (PathID 20319)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_CelestialBodyTransform>();
         Base(*m, "PQSMod_CelestialBodyTransform", "Moho/_CelestialBody", true, 0, true, 0, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->deactivateAltitude = 150000.0;
+        m->highQualityShaderDeactivateAltitude = -1.0;
+        m->forceRebuildOnTargetChange = false;
+        m->forceActivate = false;
+        m->overrideFade = false;
+        m->planetFade.fadeFloatName = "_PlanetOpacity";
+        m->planetFade.fadeStart = 45000.0f;
+        m->planetFade.fadeEnd = 150000.0f;
+        m->planetFade.valueStart = 0.0f;
+        m->planetFade.valueEnd = 1.0f;
+        m->planetFade.highQualityShaderFadeStart = -1.0f;
+        m->planetFade.highQualityShaderFadeEnd = -1.0f;
+        m->secondaryFades.emplace_back();
+        m->secondaryFades.back().fadeFloatName = "_PlanetOpacity";
+        m->secondaryFades.back().fadeStart = 100000.0f;
+        m->secondaryFades.back().fadeEnd = 110000.0f;
+        m->secondaryFades.back().valueStart = 0.0f;
+        m->secondaryFades.back().valueEnd = 1.0f;
+        m->secondaryFades.back().highQualityShaderFadeStart = -1.0f;
+        m->secondaryFades.back().highQualityShaderFadeEnd = -1.0f;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [10] PQSMod_MaterialSetDirection on Moho/_Material_SunLight (PathID 20272)
@@ -1637,9 +1731,10 @@ std::unique_ptr<PQS> MakeMoho(MapLibrary& maps, const StockPQSOptions& options) 
         pqs->childMods.push_back(std::move(m));
     }
     {  // [11] PQSMod_QuadMeshColliders on Moho/QuadMeshColliders (PathID 20060)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_QuadMeshColliders>();
         Base(*m, "PQSMod_QuadMeshColliders", "Moho/QuadMeshColliders", true, 0, true, 100, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->maxLevelOffset = 0;
+        m->physicsMaterialName = "Ground";
         pqs->childMods.push_back(std::move(m));
     }
     {  // [12] PQSMod_VertexSimplexHeightAbsolute on Moho/_FineDetail (PathID 20209)
@@ -1685,6 +1780,12 @@ std::unique_ptr<PQS> MakeEve(MapLibrary& maps, const StockPQSOptions& options) {
     pqs->buildTangents = true;
     pqs->isFakeBuild = false;
     pqs->childModListCapacity = 16;  // List<PQSMod> after AddRange batches [3, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1]
+    pqs->minLevel = 1;
+    pqs->maxLevel = 10;
+    // not in pqs_prefab.json (extract_terrain.py PQS_FIELDS before WP-12a): minDetailDistance, maxDetailDistance, subdivisionThreshold, collapseSeaLevelValue, collapseAltitudeValue, collapseAltitudeMax, visRadSeaLevelValue, visRadAltitudeValue, visRadAltitudeMax, detailSeaLevelQuads, detailAltitudeQuads, detailAltitudeMax, maxQuadLenghtsPerFrame, frameTimeDelta, maxFrameTime, surfaceRelativeQuads, seed
+    // -> PQS.Reset() defaults (PQS.cs:565); surfaceRelativeQuads FIXTURE true (see STATUS WP-12a)
+    pqs->surfaceRelativeQuads = true;
+    pqs->lodSettingsFromPrefab = false;
     {  // [0] PQSMod_VertexHeightMap on Eve/_HeightNoise (PathID 20547)
         auto m = std::make_unique<PQSMod_VertexHeightMap>();
         Base(*m, "PQSMod_VertexHeightMap", "Eve/_HeightNoise", true, 66, true, 10, false);
@@ -1914,15 +2015,18 @@ std::unique_ptr<PQS> MakeEve(MapLibrary& maps, const StockPQSOptions& options) {
         pqs->childMods.push_back(std::move(m));
     }
     {  // [6] PQSMod_AltitudeAlpha on Eve/_Material_ModProjection (PathID 20256)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_AltitudeAlpha>();
         Base(*m, "PQSMod_AltitudeAlpha", "Eve/_Material_ModProjection", true, 32, true, 999999999, false);
-        m->setupRequirements = 32;  // OnSetup result
+        m->atmosphereDepth = 10000.0;
+        m->invert = false;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [7] PQSMod_AltitudeUV on Eve/_Material_ModProjection (PathID 20744)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_AltitudeUV>();
         Base(*m, "PQSMod_AltitudeUV", "Eve/_Material_ModProjection", true, 0, true, 999999999, false);
-        m->setupRequirements = 512;  // OnSetup result
+        m->atmosphereHeight = 90000.0;
+        m->oceanDepth = 1000.0;
+        m->invert = false;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [8] PQSMod_AerialPerspectiveMaterial on Eve/_Material_AerialPerspective (PathID 20035)
@@ -1932,21 +2036,42 @@ std::unique_ptr<PQS> MakeEve(MapLibrary& maps, const StockPQSOptions& options) {
         pqs->childMods.push_back(std::move(m));
     }
     {  // [9] PQSMod_UVPlanetRelativePosition on Eve/_Material_SurfaceQuads (PathID 20467)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_UVPlanetRelativePosition>();
         Base(*m, "PQSMod_UVPlanetRelativePosition", "Eve/_Material_SurfaceQuads", true, 0, true, 999999, false);
-        m->setupRequirements = 0;  // OnSetup result
         pqs->childMods.push_back(std::move(m));
     }
     {  // [10] PQSMod_QuadEnhanceCoast on Eve/_CoastlineLOD (PathID 20490)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_QuadEnhanceCoast>();
         Base(*m, "PQSMod_QuadEnhanceCoast", "Eve/_CoastlineLOD", true, 0, true, 9999, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->coastLessThan = 0.0;
+        m->oceanFactor = 1.0;
+        m->coastFactor = 2.0;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [11] PQSMod_CelestialBodyTransform on Eve/_CelestialBody (PathID 20348)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_CelestialBodyTransform>();
         Base(*m, "PQSMod_CelestialBodyTransform", "Eve/_CelestialBody", true, 0, true, 0, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->deactivateAltitude = 150000.0;
+        m->highQualityShaderDeactivateAltitude = -1.0;
+        m->forceRebuildOnTargetChange = false;
+        m->forceActivate = false;
+        m->overrideFade = false;
+        m->planetFade.fadeFloatName = "_PlanetOpacity";
+        m->planetFade.fadeStart = 60000.0f;
+        m->planetFade.fadeEnd = 110000.0f;
+        m->planetFade.valueStart = 0.0f;
+        m->planetFade.valueEnd = 1.0f;
+        m->planetFade.highQualityShaderFadeStart = -1.0f;
+        m->planetFade.highQualityShaderFadeEnd = -1.0f;
+        m->secondaryFades.emplace_back();
+        m->secondaryFades.back().fadeFloatName = "_PlanetOpacity";
+        m->secondaryFades.back().fadeStart = 85000.0f;
+        m->secondaryFades.back().fadeEnd = 150000.0f;
+        m->secondaryFades.back().valueStart = 0.0f;
+        m->secondaryFades.back().valueEnd = 1.0f;
+        m->secondaryFades.back().highQualityShaderFadeStart = -1.0f;
+        m->secondaryFades.back().highQualityShaderFadeEnd = -1.0f;
+        m->secondaryFades.back().secondaryRendererNames.push_back("EveOcean");
         pqs->childMods.push_back(std::move(m));
     }
     {  // [12] PQSMod_MaterialSetDirection on Eve/_Material_SunLight (PathID 20442)
@@ -1956,9 +2081,10 @@ std::unique_ptr<PQS> MakeEve(MapLibrary& maps, const StockPQSOptions& options) {
         pqs->childMods.push_back(std::move(m));
     }
     {  // [13] PQSMod_QuadMeshColliders on Eve/QuadMeshColliders (PathID 20118)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_QuadMeshColliders>();
         Base(*m, "PQSMod_QuadMeshColliders", "Eve/QuadMeshColliders", true, 0, true, 100, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->maxLevelOffset = 0;
+        m->physicsMaterialName = "Ground";
         pqs->childMods.push_back(std::move(m));
     }
     {  // [14] PQSCity on Eve/Randolith (PathID 20928)
@@ -1988,6 +2114,12 @@ std::unique_ptr<PQS> MakeDuna(MapLibrary& maps, const StockPQSOptions& options) 
     pqs->buildTangents = true;
     pqs->isFakeBuild = false;
     pqs->childModListCapacity = 20;  // List<PQSMod> after AddRange batches [5, 1, 3, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1]
+    pqs->minLevel = 1;
+    pqs->maxLevel = 10;
+    // not in pqs_prefab.json (extract_terrain.py PQS_FIELDS before WP-12a): minDetailDistance, maxDetailDistance, subdivisionThreshold, collapseSeaLevelValue, collapseAltitudeValue, collapseAltitudeMax, visRadSeaLevelValue, visRadAltitudeValue, visRadAltitudeMax, detailSeaLevelQuads, detailAltitudeQuads, detailAltitudeMax, maxQuadLenghtsPerFrame, frameTimeDelta, maxFrameTime, surfaceRelativeQuads, seed
+    // -> PQS.Reset() defaults (PQS.cs:565); surfaceRelativeQuads FIXTURE true (see STATUS WP-12a)
+    pqs->surfaceRelativeQuads = true;
+    pqs->lodSettingsFromPrefab = false;
     {  // [0] PQSMod_VertexHeightMap on Duna/_Height (PathID 20171)
         auto m = std::make_unique<PQSMod_VertexHeightMap>();
         Base(*m, "PQSMod_VertexHeightMap", "Duna/_Height", true, 66, true, 10, false);
@@ -2074,9 +2206,10 @@ std::unique_ptr<PQS> MakeDuna(MapLibrary& maps, const StockPQSOptions& options) 
         pqs->childMods.push_back(std::move(m));
     }
     {  // [5] PQSMod_AltitudeAlpha on Duna/_Material_ModProjection (PathID 20294)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_AltitudeAlpha>();
         Base(*m, "PQSMod_AltitudeAlpha", "Duna/_Material_ModProjection", true, 32, true, 999999999, false);
-        m->setupRequirements = 32;  // OnSetup result
+        m->atmosphereDepth = 11500.0;
+        m->invert = false;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [6] PQSLandControl on Duna/_LandClass (PathID 20403)
@@ -2323,15 +2456,25 @@ std::unique_ptr<PQS> MakeDuna(MapLibrary& maps, const StockPQSOptions& options) 
         pqs->childMods.push_back(std::move(m));
     }
     {  // [10] PQSMod_UVPlanetRelativePosition on Duna/_Material_SurfaceQuads (PathID 20482)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_UVPlanetRelativePosition>();
         Base(*m, "PQSMod_UVPlanetRelativePosition", "Duna/_Material_SurfaceQuads", true, 0, true, 999999, false);
-        m->setupRequirements = 0;  // OnSetup result
         pqs->childMods.push_back(std::move(m));
     }
     {  // [11] PQSMod_CelestialBodyTransform on Duna/_CelestialBody (PathID 20565)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_CelestialBodyTransform>();
         Base(*m, "PQSMod_CelestialBodyTransform", "Duna/_CelestialBody", true, 0, true, 0, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->deactivateAltitude = 120000.0;
+        m->highQualityShaderDeactivateAltitude = -1.0;
+        m->forceRebuildOnTargetChange = false;
+        m->forceActivate = false;
+        m->overrideFade = false;
+        m->planetFade.fadeFloatName = "_PlanetOpacity";
+        m->planetFade.fadeStart = 50000.0f;
+        m->planetFade.fadeEnd = 110000.0f;
+        m->planetFade.valueStart = 0.0f;
+        m->planetFade.valueEnd = 1.0f;
+        m->planetFade.highQualityShaderFadeStart = -1.0f;
+        m->planetFade.highQualityShaderFadeEnd = -1.0f;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [12] PQSCity on Duna/Face (PathID 20235)
@@ -2341,9 +2484,10 @@ std::unique_ptr<PQS> MakeDuna(MapLibrary& maps, const StockPQSOptions& options) 
         pqs->childMods.push_back(std::move(m));
     }
     {  // [13] PQSMod_QuadMeshColliders on Duna/QuadMeshColliders (PathID 20574)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_QuadMeshColliders>();
         Base(*m, "PQSMod_QuadMeshColliders", "Duna/QuadMeshColliders", true, 0, true, 100, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->maxLevelOffset = 0;
+        m->physicsMaterialName = "";
         pqs->childMods.push_back(std::move(m));
     }
     {  // [14] PQSCity on Duna/MSL (PathID 20333)
@@ -2410,10 +2554,27 @@ std::unique_ptr<PQS> MakeIke(MapLibrary& maps, const StockPQSOptions& options) {
     pqs->buildTangents = true;
     pqs->isFakeBuild = false;
     pqs->childModListCapacity = 16;  // List<PQSMod> after AddRange batches [1, 3, 1, 1, 2, 1, 1, 1, 1, 1]
+    pqs->minLevel = 1;
+    pqs->maxLevel = 7;
+    // not in pqs_prefab.json (extract_terrain.py PQS_FIELDS before WP-12a): minDetailDistance, maxDetailDistance, subdivisionThreshold, collapseSeaLevelValue, collapseAltitudeValue, collapseAltitudeMax, visRadSeaLevelValue, visRadAltitudeValue, visRadAltitudeMax, detailSeaLevelQuads, detailAltitudeQuads, detailAltitudeMax, maxQuadLenghtsPerFrame, frameTimeDelta, maxFrameTime, surfaceRelativeQuads, seed
+    // -> PQS.Reset() defaults (PQS.cs:565); surfaceRelativeQuads FIXTURE true (see STATUS WP-12a)
+    pqs->surfaceRelativeQuads = true;
+    pqs->lodSettingsFromPrefab = false;
     {  // [0] PQSMod_CelestialBodyTransform on Ike/_CelestialBody (PathID 20393)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_CelestialBodyTransform>();
         Base(*m, "PQSMod_CelestialBodyTransform", "Ike/_CelestialBody", true, 0, true, 0, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->deactivateAltitude = 180000.0;
+        m->highQualityShaderDeactivateAltitude = -1.0;
+        m->forceRebuildOnTargetChange = false;
+        m->forceActivate = false;
+        m->overrideFade = false;
+        m->planetFade.fadeFloatName = "_PlanetOpacity";
+        m->planetFade.fadeStart = 25000.0f;
+        m->planetFade.fadeEnd = 50000.0f;
+        m->planetFade.valueStart = 0.0f;
+        m->planetFade.valueEnd = 1.0f;
+        m->planetFade.highQualityShaderFadeStart = -1.0f;
+        m->planetFade.highQualityShaderFadeEnd = -1.0f;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [1] PQSMod_VertexSimplexHeightAbsolute on Ike/_Height (PathID 20451)
@@ -2450,15 +2611,15 @@ std::unique_ptr<PQS> MakeIke(MapLibrary& maps, const StockPQSOptions& options) {
         pqs->childMods.push_back(std::move(m));
     }
     {  // [4] PQSMod_AltitudeAlpha on Ike/_Material_ModProjection (PathID 20141)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_AltitudeAlpha>();
         Base(*m, "PQSMod_AltitudeAlpha", "Ike/_Material_ModProjection", true, 32, true, 999999999, false);
-        m->setupRequirements = 32;  // OnSetup result
+        m->atmosphereDepth = 8000.0;
+        m->invert = false;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [5] PQSMod_UVPlanetRelativePosition on Ike/_SurfaceQuadUVs (PathID 20211)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_UVPlanetRelativePosition>();
         Base(*m, "PQSMod_UVPlanetRelativePosition", "Ike/_SurfaceQuadUVs", true, 0, true, 100, false);
-        m->setupRequirements = 0;  // OnSetup result
         pqs->childMods.push_back(std::move(m));
     }
     {  // [6] PQSMod_VertexSimplexNoiseColor on Ike/_Color (PathID 20320)
@@ -2549,9 +2710,10 @@ std::unique_ptr<PQS> MakeIke(MapLibrary& maps, const StockPQSOptions& options) {
         pqs->childMods.push_back(std::move(m));
     }
     {  // [9] PQSMod_QuadMeshColliders on Ike/QuadMeshColliders (PathID 20358)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_QuadMeshColliders>();
         Base(*m, "PQSMod_QuadMeshColliders", "Ike/QuadMeshColliders", true, 0, true, 100, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->maxLevelOffset = 0;
+        m->physicsMaterialName = "";
         pqs->childMods.push_back(std::move(m));
     }
     {  // [10] PQSCity on Ike/Randolith (PathID 20897)
@@ -2587,6 +2749,12 @@ std::unique_ptr<PQS> MakeLaythe(MapLibrary& maps, const StockPQSOptions& options
     pqs->buildTangents = true;
     pqs->isFakeBuild = false;
     pqs->childModListCapacity = 16;  // List<PQSMod> after AddRange batches [1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    pqs->minLevel = 1;
+    pqs->maxLevel = 10;
+    // not in pqs_prefab.json (extract_terrain.py PQS_FIELDS before WP-12a): minDetailDistance, maxDetailDistance, subdivisionThreshold, collapseSeaLevelValue, collapseAltitudeValue, collapseAltitudeMax, visRadSeaLevelValue, visRadAltitudeValue, visRadAltitudeMax, detailSeaLevelQuads, detailAltitudeQuads, detailAltitudeMax, maxQuadLenghtsPerFrame, frameTimeDelta, maxFrameTime, surfaceRelativeQuads, seed
+    // -> PQS.Reset() defaults (PQS.cs:565); surfaceRelativeQuads FIXTURE true (see STATUS WP-12a)
+    pqs->surfaceRelativeQuads = true;
+    pqs->lodSettingsFromPrefab = false;
     {  // [0] PQSLandControl on Laythe/_LandClass (PathID 20557)
         auto m = std::make_unique<PQSLandControl>();
         Base(*m, "PQSLandControl", "Laythe/_LandClass", true, 34, true, 100, false);
@@ -2913,15 +3081,18 @@ std::unique_ptr<PQS> MakeLaythe(MapLibrary& maps, const StockPQSOptions& options
         pqs->childMods.push_back(std::move(m));
     }
     {  // [1] PQSMod_AltitudeAlpha on Laythe/_Material_ModProjection (PathID 20025)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_AltitudeAlpha>();
         Base(*m, "PQSMod_AltitudeAlpha", "Laythe/_Material_ModProjection", true, 0, false, 999999999, false);
-        m->setupRequirements = 32;  // OnSetup result
+        m->atmosphereDepth = 4000.0;
+        m->invert = false;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [2] PQSMod_AltitudeUV on Laythe/_Material_ModProjection (PathID 20888)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_AltitudeUV>();
         Base(*m, "PQSMod_AltitudeUV", "Laythe/_Material_ModProjection", true, 512, true, 2147483647, false);
-        m->setupRequirements = 512;  // OnSetup result
+        m->atmosphereHeight = 50000.0;
+        m->oceanDepth = 1000.0;
+        m->invert = false;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [3] PQSMod_AerialPerspectiveMaterial on Laythe/_Material_AerialPerspective (PathID 20183)
@@ -2931,9 +3102,8 @@ std::unique_ptr<PQS> MakeLaythe(MapLibrary& maps, const StockPQSOptions& options
         pqs->childMods.push_back(std::move(m));
     }
     {  // [4] PQSMod_UVPlanetRelativePosition on Laythe/_Material_SurfaceQuads (PathID 20584)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_UVPlanetRelativePosition>();
         Base(*m, "PQSMod_UVPlanetRelativePosition", "Laythe/_Material_SurfaceQuads", true, 0, true, 999999, false);
-        m->setupRequirements = 0;  // OnSetup result
         pqs->childMods.push_back(std::move(m));
     }
     {  // [5] PQSMod_VertexHeightNoise on Laythe/_HeightNoise (PathID 20486)
@@ -2963,15 +3133,37 @@ std::unique_ptr<PQS> MakeLaythe(MapLibrary& maps, const StockPQSOptions& options
         pqs->childMods.push_back(std::move(m));
     }
     {  // [7] PQSMod_QuadEnhanceCoast on Laythe/_CoastlineLOD (PathID 20436)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_QuadEnhanceCoast>();
         Base(*m, "PQSMod_QuadEnhanceCoast", "Laythe/_CoastlineLOD", true, 0, true, 9999, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->coastLessThan = 0.0;
+        m->oceanFactor = 1.0;
+        m->coastFactor = 2.0;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [8] PQSMod_CelestialBodyTransform on Laythe/_CelestialBody (PathID 20575)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_CelestialBodyTransform>();
         Base(*m, "PQSMod_CelestialBodyTransform", "Laythe/_CelestialBody", true, 0, true, 0, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->deactivateAltitude = 150000.0;
+        m->highQualityShaderDeactivateAltitude = -1.0;
+        m->forceRebuildOnTargetChange = false;
+        m->forceActivate = false;
+        m->overrideFade = false;
+        m->planetFade.fadeFloatName = "_PlanetOpacity";
+        m->planetFade.fadeStart = 40000.0f;
+        m->planetFade.fadeEnd = 110000.0f;
+        m->planetFade.valueStart = 0.0f;
+        m->planetFade.valueEnd = 1.0f;
+        m->planetFade.highQualityShaderFadeStart = -1.0f;
+        m->planetFade.highQualityShaderFadeEnd = -1.0f;
+        m->secondaryFades.emplace_back();
+        m->secondaryFades.back().fadeFloatName = "_PlanetOpacity";
+        m->secondaryFades.back().fadeStart = 85000.0f;
+        m->secondaryFades.back().fadeEnd = 150000.0f;
+        m->secondaryFades.back().valueStart = 0.0f;
+        m->secondaryFades.back().valueEnd = 1.0f;
+        m->secondaryFades.back().highQualityShaderFadeStart = -1.0f;
+        m->secondaryFades.back().highQualityShaderFadeEnd = -1.0f;
+        m->secondaryFades.back().secondaryRendererNames.push_back("LaytheOcean");
         pqs->childMods.push_back(std::move(m));
     }
     {  // [9] PQSMod_MaterialSetDirection on Laythe/_Material_SunLight (PathID 20340)
@@ -2981,9 +3173,10 @@ std::unique_ptr<PQS> MakeLaythe(MapLibrary& maps, const StockPQSOptions& options
         pqs->childMods.push_back(std::move(m));
     }
     {  // [10] PQSMod_QuadMeshColliders on Laythe/QuadMeshColliders (PathID 20462)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_QuadMeshColliders>();
         Base(*m, "PQSMod_QuadMeshColliders", "Laythe/QuadMeshColliders", true, 0, true, 103, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->maxLevelOffset = 0;
+        m->physicsMaterialName = "Ground";
         pqs->childMods.push_back(std::move(m));
     }
     {  // [11] PQSMod_VertexHeightNoiseVertHeight on Laythe/_FineDetail (PathID 20566)
@@ -3043,10 +3236,27 @@ std::unique_ptr<PQS> MakeVall(MapLibrary& maps, const StockPQSOptions& options) 
     pqs->buildTangents = true;
     pqs->isFakeBuild = false;
     pqs->childModListCapacity = 16;  // List<PQSMod> after AddRange batches [1, 5, 1, 1, 2, 1, 1, 1, 1, 1]
+    pqs->minLevel = 1;
+    pqs->maxLevel = 9;
+    // not in pqs_prefab.json (extract_terrain.py PQS_FIELDS before WP-12a): minDetailDistance, maxDetailDistance, subdivisionThreshold, collapseSeaLevelValue, collapseAltitudeValue, collapseAltitudeMax, visRadSeaLevelValue, visRadAltitudeValue, visRadAltitudeMax, detailSeaLevelQuads, detailAltitudeQuads, detailAltitudeMax, maxQuadLenghtsPerFrame, frameTimeDelta, maxFrameTime, surfaceRelativeQuads, seed
+    // -> PQS.Reset() defaults (PQS.cs:565); surfaceRelativeQuads FIXTURE true (see STATUS WP-12a)
+    pqs->surfaceRelativeQuads = true;
+    pqs->lodSettingsFromPrefab = false;
     {  // [0] PQSMod_CelestialBodyTransform on Vall/_CelestialBody (PathID 20020)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_CelestialBodyTransform>();
         Base(*m, "PQSMod_CelestialBodyTransform", "Vall/_CelestialBody", true, 0, true, 0, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->deactivateAltitude = 330000.0;
+        m->highQualityShaderDeactivateAltitude = -1.0;
+        m->forceRebuildOnTargetChange = false;
+        m->forceActivate = false;
+        m->overrideFade = false;
+        m->planetFade.fadeFloatName = "_PlanetOpacity";
+        m->planetFade.fadeStart = 200000.0f;
+        m->planetFade.fadeEnd = 300000.0f;
+        m->planetFade.valueStart = 0.0f;
+        m->planetFade.valueEnd = 1.0f;
+        m->planetFade.highQualityShaderFadeStart = -1.0f;
+        m->planetFade.highQualityShaderFadeEnd = -1.0f;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [1] PQSMod_VertexSimplexHeightAbsolute on Vall/_Height (PathID 20525)
@@ -3101,15 +3311,15 @@ std::unique_ptr<PQS> MakeVall(MapLibrary& maps, const StockPQSOptions& options) 
         pqs->childMods.push_back(std::move(m));
     }
     {  // [6] PQSMod_AltitudeAlpha on Vall/_Material_ModProjection (PathID 20407)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_AltitudeAlpha>();
         Base(*m, "PQSMod_AltitudeAlpha", "Vall/_Material_ModProjection", true, 32, true, 999999999, false);
-        m->setupRequirements = 32;  // OnSetup result
+        m->atmosphereDepth = 8000.0;
+        m->invert = false;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [7] PQSMod_UVPlanetRelativePosition on Vall/_SurfaceQuadUVs (PathID 20179)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_UVPlanetRelativePosition>();
         Base(*m, "PQSMod_UVPlanetRelativePosition", "Vall/_SurfaceQuadUVs", true, 0, true, 100, false);
-        m->setupRequirements = 0;  // OnSetup result
         pqs->childMods.push_back(std::move(m));
     }
     {  // [8] PQSMod_HeightColorMap on Vall/_Color (PathID 20338)
@@ -3200,9 +3410,10 @@ std::unique_ptr<PQS> MakeVall(MapLibrary& maps, const StockPQSOptions& options) 
         pqs->childMods.push_back(std::move(m));
     }
     {  // [11] PQSMod_QuadMeshColliders on Vall/QuadMeshColliders (PathID 20299)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_QuadMeshColliders>();
         Base(*m, "PQSMod_QuadMeshColliders", "Vall/QuadMeshColliders", true, 0, true, 100, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->maxLevelOffset = 0;
+        m->physicsMaterialName = "";
         pqs->childMods.push_back(std::move(m));
     }
     {  // [12] PQSCity on Vall/Icehenge (PathID 20107)
@@ -3238,10 +3449,27 @@ std::unique_ptr<PQS> MakeBop(MapLibrary& maps, const StockPQSOptions& options) {
     pqs->buildTangents = true;
     pqs->isFakeBuild = false;
     pqs->childModListCapacity = 16;  // List<PQSMod> after AddRange batches [1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1]
+    pqs->minLevel = 1;
+    pqs->maxLevel = 6;
+    // not in pqs_prefab.json (extract_terrain.py PQS_FIELDS before WP-12a): minDetailDistance, maxDetailDistance, subdivisionThreshold, collapseSeaLevelValue, collapseAltitudeValue, collapseAltitudeMax, visRadSeaLevelValue, visRadAltitudeValue, visRadAltitudeMax, detailSeaLevelQuads, detailAltitudeQuads, detailAltitudeMax, maxQuadLenghtsPerFrame, frameTimeDelta, maxFrameTime, surfaceRelativeQuads, seed
+    // -> PQS.Reset() defaults (PQS.cs:565); surfaceRelativeQuads FIXTURE true (see STATUS WP-12a)
+    pqs->surfaceRelativeQuads = true;
+    pqs->lodSettingsFromPrefab = false;
     {  // [0] PQSMod_CelestialBodyTransform on Bop/_CelestialBody (PathID 20399)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_CelestialBodyTransform>();
         Base(*m, "PQSMod_CelestialBodyTransform", "Bop/_CelestialBody", true, 0, true, 0, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->deactivateAltitude = 250000.0;
+        m->highQualityShaderDeactivateAltitude = -1.0;
+        m->forceRebuildOnTargetChange = false;
+        m->forceActivate = false;
+        m->overrideFade = false;
+        m->planetFade.fadeFloatName = "_PlanetOpacity";
+        m->planetFade.fadeStart = 30000.0f;
+        m->planetFade.fadeEnd = 150000.0f;
+        m->planetFade.valueStart = 0.0f;
+        m->planetFade.valueEnd = 1.0f;
+        m->planetFade.highQualityShaderFadeStart = 150000.0f;
+        m->planetFade.highQualityShaderFadeEnd = 250000.0f;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [1] PQSMod_FlattenArea on Bop/_Crater1 (PathID 20501)
@@ -3342,15 +3570,15 @@ std::unique_ptr<PQS> MakeBop(MapLibrary& maps, const StockPQSOptions& options) {
         pqs->childMods.push_back(std::move(m));
     }
     {  // [7] PQSMod_AltitudeAlpha on Bop/_Material_ModProjection (PathID 20539)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_AltitudeAlpha>();
         Base(*m, "PQSMod_AltitudeAlpha", "Bop/_Material_ModProjection", true, 32, true, 999999999, false);
-        m->setupRequirements = 32;  // OnSetup result
+        m->atmosphereDepth = 8000.0;
+        m->invert = false;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [8] PQSMod_UVPlanetRelativePosition on Bop/_SurfaceQuadUVs (PathID 20455)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_UVPlanetRelativePosition>();
         Base(*m, "PQSMod_UVPlanetRelativePosition", "Bop/_SurfaceQuadUVs", true, 0, true, 100, false);
-        m->setupRequirements = 0;  // OnSetup result
         pqs->childMods.push_back(std::move(m));
     }
     {  // [9] PQSMod_VertexSimplexNoiseColor on Bop/_Color (PathID 20162)
@@ -3435,9 +3663,10 @@ std::unique_ptr<PQS> MakeBop(MapLibrary& maps, const StockPQSOptions& options) {
         pqs->childMods.push_back(std::move(m));
     }
     {  // [11] PQSMod_QuadMeshColliders on Bop/QuadMeshColliders (PathID 20287)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_QuadMeshColliders>();
         Base(*m, "PQSMod_QuadMeshColliders", "Bop/QuadMeshColliders", true, 0, true, 100, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->maxLevelOffset = 0;
+        m->physicsMaterialName = "";
         pqs->childMods.push_back(std::move(m));
     }
     {  // [12] PQSCity on Bop/DeadKraken (PathID 20428)
@@ -3473,10 +3702,27 @@ std::unique_ptr<PQS> MakeTylo(MapLibrary& maps, const StockPQSOptions& options) 
     pqs->buildTangents = true;
     pqs->isFakeBuild = false;
     pqs->childModListCapacity = 16;  // List<PQSMod> after AddRange batches [1, 5, 1, 1, 2, 1, 1, 1, 1, 1, 1]
+    pqs->minLevel = 1;
+    pqs->maxLevel = 10;
+    // not in pqs_prefab.json (extract_terrain.py PQS_FIELDS before WP-12a): minDetailDistance, maxDetailDistance, subdivisionThreshold, collapseSeaLevelValue, collapseAltitudeValue, collapseAltitudeMax, visRadSeaLevelValue, visRadAltitudeValue, visRadAltitudeMax, detailSeaLevelQuads, detailAltitudeQuads, detailAltitudeMax, maxQuadLenghtsPerFrame, frameTimeDelta, maxFrameTime, surfaceRelativeQuads, seed
+    // -> PQS.Reset() defaults (PQS.cs:565); surfaceRelativeQuads FIXTURE true (see STATUS WP-12a)
+    pqs->surfaceRelativeQuads = true;
+    pqs->lodSettingsFromPrefab = false;
     {  // [0] PQSMod_CelestialBodyTransform on Tylo/_CelestialBody (PathID 20405)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_CelestialBodyTransform>();
         Base(*m, "PQSMod_CelestialBodyTransform", "Tylo/_CelestialBody", true, 0, true, 0, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->deactivateAltitude = 400000.0;
+        m->highQualityShaderDeactivateAltitude = -1.0;
+        m->forceRebuildOnTargetChange = false;
+        m->forceActivate = false;
+        m->overrideFade = false;
+        m->planetFade.fadeFloatName = "_PlanetOpacity";
+        m->planetFade.fadeStart = 50000.0f;
+        m->planetFade.fadeEnd = 100000.0f;
+        m->planetFade.valueStart = 0.0f;
+        m->planetFade.valueEnd = 1.0f;
+        m->planetFade.highQualityShaderFadeStart = 200000.0f;
+        m->planetFade.highQualityShaderFadeEnd = 400000.0f;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [1] PQSMod_VertexSimplexHeightAbsolute on Tylo/_Height (PathID 20541)
@@ -3537,15 +3783,15 @@ std::unique_ptr<PQS> MakeTylo(MapLibrary& maps, const StockPQSOptions& options) 
         pqs->childMods.push_back(std::move(m));
     }
     {  // [6] PQSMod_AltitudeAlpha on Tylo/_Material_ModProjection (PathID 20336)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_AltitudeAlpha>();
         Base(*m, "PQSMod_AltitudeAlpha", "Tylo/_Material_ModProjection", true, 32, false, 999999999, false);
-        m->setupRequirements = 32;  // OnSetup result
+        m->atmosphereDepth = 8000.0;
+        m->invert = false;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [7] PQSMod_UVPlanetRelativePosition on Tylo/_SurfaceQuadUVs (PathID 20017)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_UVPlanetRelativePosition>();
         Base(*m, "PQSMod_UVPlanetRelativePosition", "Tylo/_SurfaceQuadUVs", true, 0, true, 999999, false);
-        m->setupRequirements = 0;  // OnSetup result
         pqs->childMods.push_back(std::move(m));
     }
     {  // [8] PQSMod_HeightColorMap on Tylo/_Color (PathID 20104)
@@ -3636,9 +3882,10 @@ std::unique_ptr<PQS> MakeTylo(MapLibrary& maps, const StockPQSOptions& options) 
         pqs->childMods.push_back(std::move(m));
     }
     {  // [11] PQSMod_QuadMeshColliders on Tylo/QuadMeshColliders (PathID 20459)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_QuadMeshColliders>();
         Base(*m, "PQSMod_QuadMeshColliders", "Tylo/QuadMeshColliders", true, 0, true, 100, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->maxLevelOffset = 0;
+        m->physicsMaterialName = "";
         pqs->childMods.push_back(std::move(m));
     }
     {  // [12] PQSMod_MapDecal on Tylo/Sagan (PathID 20242)
@@ -3693,10 +3940,27 @@ std::unique_ptr<PQS> MakeGilly(MapLibrary& maps, const StockPQSOptions& options)
     pqs->buildTangents = true;
     pqs->isFakeBuild = false;
     pqs->childModListCapacity = 16;  // List<PQSMod> after AddRange batches [1, 2, 1, 1, 1, 1, 1, 1, 1]
+    pqs->minLevel = 1;
+    pqs->maxLevel = 5;
+    // not in pqs_prefab.json (extract_terrain.py PQS_FIELDS before WP-12a): minDetailDistance, maxDetailDistance, subdivisionThreshold, collapseSeaLevelValue, collapseAltitudeValue, collapseAltitudeMax, visRadSeaLevelValue, visRadAltitudeValue, visRadAltitudeMax, detailSeaLevelQuads, detailAltitudeQuads, detailAltitudeMax, maxQuadLenghtsPerFrame, frameTimeDelta, maxFrameTime, surfaceRelativeQuads, seed
+    // -> PQS.Reset() defaults (PQS.cs:565); surfaceRelativeQuads FIXTURE true (see STATUS WP-12a)
+    pqs->surfaceRelativeQuads = true;
+    pqs->lodSettingsFromPrefab = false;
     {  // [0] PQSMod_CelestialBodyTransform on Gilly/_CelestialBody (PathID 20155)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_CelestialBodyTransform>();
         Base(*m, "PQSMod_CelestialBodyTransform", "Gilly/_CelestialBody", true, 0, true, 0, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->deactivateAltitude = 180000.0;
+        m->highQualityShaderDeactivateAltitude = 65000.0;
+        m->forceRebuildOnTargetChange = false;
+        m->forceActivate = false;
+        m->overrideFade = false;
+        m->planetFade.fadeFloatName = "_PlanetOpacity";
+        m->planetFade.fadeStart = 10000.0f;
+        m->planetFade.fadeEnd = 40000.0f;
+        m->planetFade.valueStart = 0.0f;
+        m->planetFade.valueEnd = 1.0f;
+        m->planetFade.highQualityShaderFadeStart = 18000.0f;
+        m->planetFade.highQualityShaderFadeEnd = 60000.0f;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [1] PQSMod_VertexSimplexHeightAbsolute on Gilly/_Height (PathID 20225)
@@ -3723,15 +3987,15 @@ std::unique_ptr<PQS> MakeGilly(MapLibrary& maps, const StockPQSOptions& options)
         pqs->childMods.push_back(std::move(m));
     }
     {  // [3] PQSMod_AltitudeAlpha on Gilly/_Material_ModProjection (PathID 20327)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_AltitudeAlpha>();
         Base(*m, "PQSMod_AltitudeAlpha", "Gilly/_Material_ModProjection", true, 32, true, 999999999, false);
-        m->setupRequirements = 32;  // OnSetup result
+        m->atmosphereDepth = 8000.0;
+        m->invert = false;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [4] PQSMod_UVPlanetRelativePosition on Gilly/_SurfaceQuadUVs (PathID 20427)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_UVPlanetRelativePosition>();
         Base(*m, "PQSMod_UVPlanetRelativePosition", "Gilly/_SurfaceQuadUVs", true, 0, true, 100, false);
-        m->setupRequirements = 0;  // OnSetup result
         pqs->childMods.push_back(std::move(m));
     }
     {  // [5] PQSMod_VertexColorMap on Gilly/_Color (PathID 21036)
@@ -3816,9 +4080,10 @@ std::unique_ptr<PQS> MakeGilly(MapLibrary& maps, const StockPQSOptions& options)
         pqs->childMods.push_back(std::move(m));
     }
     {  // [7] PQSMod_QuadMeshColliders on Gilly/QuadMeshColliders (PathID 20078)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_QuadMeshColliders>();
         Base(*m, "PQSMod_QuadMeshColliders", "Gilly/QuadMeshColliders", true, 0, true, 100, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->maxLevelOffset = 0;
+        m->physicsMaterialName = "";
         pqs->childMods.push_back(std::move(m));
     }
     {  // [8] PQSCity on Gilly/Randolith (PathID 20979)
@@ -3848,10 +4113,27 @@ std::unique_ptr<PQS> MakePol(MapLibrary& maps, const StockPQSOptions& options) {
     pqs->buildTangents = true;
     pqs->isFakeBuild = false;
     pqs->childModListCapacity = 16;  // List<PQSMod> after AddRange batches [1, 5, 1, 1, 2, 1, 1, 1, 1]
+    pqs->minLevel = 1;
+    pqs->maxLevel = 6;
+    // not in pqs_prefab.json (extract_terrain.py PQS_FIELDS before WP-12a): minDetailDistance, maxDetailDistance, subdivisionThreshold, collapseSeaLevelValue, collapseAltitudeValue, collapseAltitudeMax, visRadSeaLevelValue, visRadAltitudeValue, visRadAltitudeMax, detailSeaLevelQuads, detailAltitudeQuads, detailAltitudeMax, maxQuadLenghtsPerFrame, frameTimeDelta, maxFrameTime, surfaceRelativeQuads, seed
+    // -> PQS.Reset() defaults (PQS.cs:565); surfaceRelativeQuads FIXTURE true (see STATUS WP-12a)
+    pqs->surfaceRelativeQuads = true;
+    pqs->lodSettingsFromPrefab = false;
     {  // [0] PQSMod_CelestialBodyTransform on Pol/_CelestialBody (PathID 20466)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_CelestialBodyTransform>();
         Base(*m, "PQSMod_CelestialBodyTransform", "Pol/_CelestialBody", true, 0, true, 0, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->deactivateAltitude = 80000.0;
+        m->highQualityShaderDeactivateAltitude = -1.0;
+        m->forceRebuildOnTargetChange = false;
+        m->forceActivate = false;
+        m->overrideFade = false;
+        m->planetFade.fadeFloatName = "_PlanetOpacity";
+        m->planetFade.fadeStart = 15000.0f;
+        m->planetFade.fadeEnd = 60000.0f;
+        m->planetFade.valueStart = 0.0f;
+        m->planetFade.valueEnd = 1.0f;
+        m->planetFade.highQualityShaderFadeStart = 20000.0f;
+        m->planetFade.highQualityShaderFadeEnd = 80000.0f;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [1] PQSMod_VertexSimplexHeightAbsolute on Pol/_Height (PathID 20116)
@@ -3900,15 +4182,15 @@ std::unique_ptr<PQS> MakePol(MapLibrary& maps, const StockPQSOptions& options) {
         pqs->childMods.push_back(std::move(m));
     }
     {  // [6] PQSMod_AltitudeAlpha on Pol/_Material_ModProjection (PathID 20033)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_AltitudeAlpha>();
         Base(*m, "PQSMod_AltitudeAlpha", "Pol/_Material_ModProjection", true, 32, true, 999999999, false);
-        m->setupRequirements = 32;  // OnSetup result
+        m->atmosphereDepth = 8000.0;
+        m->invert = false;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [7] PQSMod_UVPlanetRelativePosition on Pol/_SurfaceQuadUVs (PathID 20381)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_UVPlanetRelativePosition>();
         Base(*m, "PQSMod_UVPlanetRelativePosition", "Pol/_SurfaceQuadUVs", true, 0, true, 100, false);
-        m->setupRequirements = 0;  // OnSetup result
         pqs->childMods.push_back(std::move(m));
     }
     {  // [8] PQSMod_VertexSimplexNoiseColor on Pol/_Color (PathID 20489)
@@ -4000,9 +4282,10 @@ std::unique_ptr<PQS> MakePol(MapLibrary& maps, const StockPQSOptions& options) {
         pqs->childMods.push_back(std::move(m));
     }
     {  // [11] PQSMod_QuadMeshColliders on Pol/QuadMeshColliders (PathID 20530)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_QuadMeshColliders>();
         Base(*m, "PQSMod_QuadMeshColliders", "Pol/QuadMeshColliders", true, 0, true, 100, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->maxLevelOffset = 0;
+        m->physicsMaterialName = "";
         pqs->childMods.push_back(std::move(m));
     }
     {  // [12] PQSCity on Pol/Randolith (PathID 20937)
@@ -4032,6 +4315,12 @@ std::unique_ptr<PQS> MakeDres(MapLibrary& maps, const StockPQSOptions& options) 
     pqs->buildTangents = true;
     pqs->isFakeBuild = false;
     pqs->childModListCapacity = 16;  // List<PQSMod> after AddRange batches [2, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1]
+    pqs->minLevel = 1;
+    pqs->maxLevel = 8;
+    // not in pqs_prefab.json (extract_terrain.py PQS_FIELDS before WP-12a): minDetailDistance, maxDetailDistance, subdivisionThreshold, collapseSeaLevelValue, collapseAltitudeValue, collapseAltitudeMax, visRadSeaLevelValue, visRadAltitudeValue, visRadAltitudeMax, detailSeaLevelQuads, detailAltitudeQuads, detailAltitudeMax, maxQuadLenghtsPerFrame, frameTimeDelta, maxFrameTime, surfaceRelativeQuads, seed
+    // -> PQS.Reset() defaults (PQS.cs:565); surfaceRelativeQuads FIXTURE true (see STATUS WP-12a)
+    pqs->surfaceRelativeQuads = true;
+    pqs->lodSettingsFromPrefab = false;
     {  // [0] PQSMod_VertexSimplexNoiseColor on Dres/_Color (PathID 20289)
         auto m = std::make_unique<PQSModPassive>();
         Base(*m, "PQSMod_VertexSimplexNoiseColor", "Dres/_Color", true, 32, true, 200, false);
@@ -4045,9 +4334,10 @@ std::unique_ptr<PQS> MakeDres(MapLibrary& maps, const StockPQSOptions& options) 
         pqs->childMods.push_back(std::move(m));
     }
     {  // [2] PQSMod_AltitudeAlpha on Dres/_Material_ModProjection (PathID 20000)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_AltitudeAlpha>();
         Base(*m, "PQSMod_AltitudeAlpha", "Dres/_Material_ModProjection", true, 0, false, 999999999, false);
-        m->setupRequirements = 32;  // OnSetup result
+        m->atmosphereDepth = 4000.0;
+        m->invert = false;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [3] PQSMod_AerialPerspectiveMaterial on Dres/_Material_AerialPerspective (PathID 20540)
@@ -4057,9 +4347,8 @@ std::unique_ptr<PQS> MakeDres(MapLibrary& maps, const StockPQSOptions& options) 
         pqs->childMods.push_back(std::move(m));
     }
     {  // [4] PQSMod_UVPlanetRelativePosition on Dres/_Material_SurfaceQuads (PathID 20502)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_UVPlanetRelativePosition>();
         Base(*m, "PQSMod_UVPlanetRelativePosition", "Dres/_Material_SurfaceQuads", true, 0, true, 999999, false);
-        m->setupRequirements = 0;  // OnSetup result
         pqs->childMods.push_back(std::move(m));
     }
     {  // [5] PQSMod_VertexHeightMap on Dres/_HeightNoise (PathID 20401)
@@ -4101,9 +4390,20 @@ std::unique_ptr<PQS> MakeDres(MapLibrary& maps, const StockPQSOptions& options) 
         pqs->childMods.push_back(std::move(m));
     }
     {  // [9] PQSMod_CelestialBodyTransform on Dres/_CelestialBody (PathID 20368)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_CelestialBodyTransform>();
         Base(*m, "PQSMod_CelestialBodyTransform", "Dres/_CelestialBody", true, 0, true, 0, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->deactivateAltitude = 170000.0;
+        m->highQualityShaderDeactivateAltitude = 170000.0;
+        m->forceRebuildOnTargetChange = false;
+        m->forceActivate = false;
+        m->overrideFade = false;
+        m->planetFade.fadeFloatName = "_PlanetOpacity";
+        m->planetFade.fadeStart = 40000.0f;
+        m->planetFade.fadeEnd = 160000.0f;
+        m->planetFade.valueStart = 0.0f;
+        m->planetFade.valueEnd = 1.0f;
+        m->planetFade.highQualityShaderFadeStart = 40000.0f;
+        m->planetFade.highQualityShaderFadeEnd = 160000.0f;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [10] PQSMod_MaterialSetDirection on Dres/_Material_SunLight (PathID 20522)
@@ -4113,9 +4413,10 @@ std::unique_ptr<PQS> MakeDres(MapLibrary& maps, const StockPQSOptions& options) 
         pqs->childMods.push_back(std::move(m));
     }
     {  // [11] PQSMod_QuadMeshColliders on Dres/QuadMeshColliders (PathID 20088)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_QuadMeshColliders>();
         Base(*m, "PQSMod_QuadMeshColliders", "Dres/QuadMeshColliders", true, 0, true, 100, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->maxLevelOffset = 0;
+        m->physicsMaterialName = "Ground";
         pqs->childMods.push_back(std::move(m));
     }
     {  // [12] PQSMod_VertexSimplexHeightAbsolute on Dres/_FineDetail (PathID 20230)
@@ -4161,10 +4462,17 @@ std::unique_ptr<PQS> MakeEeloo(MapLibrary& maps, const StockPQSOptions& options)
     pqs->buildTangents = true;
     pqs->isFakeBuild = false;
     pqs->childModListCapacity = 16;  // List<PQSMod> after AddRange batches [1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1]
+    pqs->minLevel = 1;
+    pqs->maxLevel = 10;
+    // not in pqs_prefab.json (extract_terrain.py PQS_FIELDS before WP-12a): minDetailDistance, maxDetailDistance, subdivisionThreshold, collapseSeaLevelValue, collapseAltitudeValue, collapseAltitudeMax, visRadSeaLevelValue, visRadAltitudeValue, visRadAltitudeMax, detailSeaLevelQuads, detailAltitudeQuads, detailAltitudeMax, maxQuadLenghtsPerFrame, frameTimeDelta, maxFrameTime, surfaceRelativeQuads, seed
+    // -> PQS.Reset() defaults (PQS.cs:565); surfaceRelativeQuads FIXTURE true (see STATUS WP-12a)
+    pqs->surfaceRelativeQuads = true;
+    pqs->lodSettingsFromPrefab = false;
     {  // [0] PQSMod_AltitudeAlpha on Eeloo/_Material_ModProjection (PathID 20311)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_AltitudeAlpha>();
         Base(*m, "PQSMod_AltitudeAlpha", "Eeloo/_Material_ModProjection", true, 0, false, 999999999, false);
-        m->setupRequirements = 32;  // OnSetup result
+        m->atmosphereDepth = 4000.0;
+        m->invert = false;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [1] PQSLandControl on Eeloo/_LandClass (PathID 20040)
@@ -4349,9 +4657,8 @@ std::unique_ptr<PQS> MakeEeloo(MapLibrary& maps, const StockPQSOptions& options)
         pqs->childMods.push_back(std::move(m));
     }
     {  // [3] PQSMod_UVPlanetRelativePosition on Eeloo/_Material_SurfaceQuads (PathID 20260)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_UVPlanetRelativePosition>();
         Base(*m, "PQSMod_UVPlanetRelativePosition", "Eeloo/_Material_SurfaceQuads", true, 0, true, 999999, false);
-        m->setupRequirements = 0;  // OnSetup result
         pqs->childMods.push_back(std::move(m));
     }
     {  // [4] PQSMod_VertexSimplexHeight on Eeloo/_HeightNoise (PathID 20513)
@@ -4403,15 +4710,27 @@ std::unique_ptr<PQS> MakeEeloo(MapLibrary& maps, const StockPQSOptions& options)
         pqs->childMods.push_back(std::move(m));
     }
     {  // [9] PQSMod_CelestialBodyTransform on Eeloo/_CelestialBody (PathID 20386)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_CelestialBodyTransform>();
         Base(*m, "PQSMod_CelestialBodyTransform", "Eeloo/_CelestialBody", true, 0, true, 0, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->deactivateAltitude = 120000.0;
+        m->highQualityShaderDeactivateAltitude = -1.0;
+        m->forceRebuildOnTargetChange = false;
+        m->forceActivate = false;
+        m->overrideFade = false;
+        m->planetFade.fadeFloatName = "_PlanetOpacity";
+        m->planetFade.fadeStart = 50000.0f;
+        m->planetFade.fadeEnd = 110000.0f;
+        m->planetFade.valueStart = 0.0f;
+        m->planetFade.valueEnd = 1.0f;
+        m->planetFade.highQualityShaderFadeStart = -1.0f;
+        m->planetFade.highQualityShaderFadeEnd = -1.0f;
         pqs->childMods.push_back(std::move(m));
     }
     {  // [10] PQSMod_QuadMeshColliders on Eeloo/QuadMeshColliders (PathID 20193)
-        auto m = std::make_unique<PQSModPassive>();
+        auto m = std::make_unique<PQSMod_QuadMeshColliders>();
         Base(*m, "PQSMod_QuadMeshColliders", "Eeloo/QuadMeshColliders", true, 0, true, 100, false);
-        m->setupRequirements = -1;  // OnSetup leaves the serialized value
+        m->maxLevelOffset = 0;
+        m->physicsMaterialName = "";
         pqs->childMods.push_back(std::move(m));
     }
     {  // [11] PQSMod_VertexHeightNoiseVertHeight on Eeloo/_FineDetail (PathID 20417)

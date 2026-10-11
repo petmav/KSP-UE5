@@ -66,7 +66,8 @@ int RunTerrainHeight(const RunnerOptions& opt) {
             const std::string body = bn;
             std::unique_ptr<PQS> pqs = LoadStockPQS(body, maps);
             const bool flight = std::string(scene) == "FLIGHT";
-            if (flight && body == "Kerbin") pqs->Mod_OnQuadBuilt(ksp::PQ{});  // the active sphere has built quads
+            ksp::PQ builtQuad;
+            if (flight && body == "Kerbin") pqs->Mod_OnQuadBuilt(builtQuad);  // the active sphere has built quads
             // HarnessCapture2.cs:915-917
             const double ksc = pqs->GetSurfaceHeight(GetRelSurfaceNVector(-0.0972, -74.5577));
             const double ksco = pqs->GetSurfaceHeight(GetRelSurfaceNVector(-0.0972, -74.5577), true);
