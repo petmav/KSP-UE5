@@ -349,6 +349,7 @@ struct Scene {
                 world->protos.push_back(MakeProto(vj["id"].get<std::string>(), pid, vj["proto"]));
                 v->protoVessel = world->protos.back().get();
             }
+            if (!v->parts.empty()) v->rootPart = v->parts.front();
             world->byPid[pid] = v.get();
             FlightRegistry::Vessels.push_back(v.get());
             FlightRegistry::VesselsLoaded.push_back(v.get());
