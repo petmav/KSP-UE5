@@ -29,6 +29,10 @@ add_library(kspcore STATIC
     config/kspparseable.cpp
     physics/physics_globals.cpp
     physics/vessel_ranges.cpp
+    physics/physics_world_loop.cpp
+    physics/krakensbane.cpp
+    physics/floating_origin.cpp
+    physics/reference_frame.cpp
     celestial/celestial_body.cpp
     celestial/planetarium.cpp
     celestial/celestial_system.cpp
@@ -276,6 +280,32 @@ add_library(ksp::core ALIAS kspcore)
 target_include_directories(kspcore PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_compile_features(kspcore PUBLIC cxx_std_20)
 ksp_set_build_flags(kspcore)
+
+# WP-20a physics glue: the only translation unit that includes Jolt headers. It is compiled as an OBJECT library so that Jolt's
+# PUBLIC usage requirements (JPH_* definitions, /arch:AVX2 or -mavx2, include path) apply to it and NOT to the rest of kspcore,
+# whose float code must stay SSE2-scalar and uncontracted. The objects are folded into kspcore.lib; Jolt itself (Jolt.lib, the
+# vendored third_party/jolt build from cmake/ksp_jolt.cmake) is linked in as a plain static dependency.
+add_library(kspcore_physics_glue OBJECT physics/physics_world.cpp)
+target_include_directories(kspcore_physics_glue PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_compile_features(kspcore_physics_glue PRIVATE cxx_std_20)
+target_link_libraries(kspcore_physics_glue PRIVATE Jolt)
+ksp_set_build_flags(kspcore_physics_glue)
+if(MSVC)
+    target_compile_options(kspcore_physics_glue PRIVATE /GR-)  # like Jolt (see the header of physics_world.cpp)
+    # Jolt headers: unreferenced parameters, padding, constant conditionals under /W4 are not ours to fix; /external:W0 for the
+    # include path as well.
+    target_compile_options(kspcore_physics_glue PRIVATE /wd4100 /wd4324 /wd4127 /external:W0)
+else()
+    # -fno-rtti like Jolt: its polymorphic classes have no typeinfo, a derived class compiled with RTTI fails to link.
+    # -Wno-*: Jolt headers under -Wall -Wextra.
+    target_compile_options(kspcore_physics_glue PRIVATE -fno-rtti -Wno-unused-parameter)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(kspcore_physics_glue PRIVATE -Wno-class-memaccess -Wno-psabi)
+    endif()
+endif()
+target_include_directories(kspcore_physics_glue SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/third_party/jolt)
+target_sources(kspcore PRIVATE $<TARGET_OBJECTS:kspcore_physics_glue>)
+target_link_libraries(kspcore PRIVATE $<LINK_ONLY:Jolt>)  # link only: Jolt's /arch:AVX2 etc. must not reach kspcore's own sources
 if(KSP_LIBM_PORTABLE)
     target_compile_definitions(kspcore PRIVATE KSP_LIBM_PORTABLE=1)
 endif()

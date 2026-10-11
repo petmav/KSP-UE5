@@ -42,3 +42,6 @@ decompiled/_archive/
 
 # WP-17: staged engine .mu/.cfg copies from decompiled/KSP-dev (recreate with core/tools/wp17/stage_engine_models.py)
 core/data/mu_staging/
+
+# vendored Jolt ships a Build/ directory (CMake entry point); the **/build/ rule above is case-insensitive on Windows
+!core/third_party/jolt/Build/
