@@ -84,28 +84,28 @@ std::vector<std::string> ModuleInventoryPart::InventoryPartsList() {
     return list;
 }
 
-// ModuleInventoryPart.cs:175
+// ModuleInventoryPart.cs:174
 bool ModuleInventoryPart::InventoryIsEmpty() const { return !storedPartsNull ? storedParts.Count() == 0 : true; }
-// ModuleInventoryPart.cs:187
+// ModuleInventoryPart.cs:186
 bool ModuleInventoryPart::InventoryIsFull() const { return !storedPartsNull ? storedParts.Count() >= InventorySlots() : false; }
-// ModuleInventoryPart.cs:199
+// ModuleInventoryPart.cs:198
 int ModuleInventoryPart::InventoryItemCount() const { return !storedPartsNull ? storedParts.Count() : 0; }
 
-// ModuleInventoryPart.cs:211
+// ModuleInventoryPart.cs:210
 bool ModuleInventoryPart::AbleToPlaceParts() const {
     Part* p = PartOf();
     if (p != nullptr && p->vessel != nullptr && p->vessel->isEVA() && p->vessel->Landed && p->vessel->isActiveVessel()) return selectedPart == nullptr;
     return false;
 }
 
-// ModuleInventoryPart.cs:223
+// ModuleInventoryPart.cs:222
 bool ModuleInventoryPart::IsKerbalOnEVA() const {
     Part* p = PartOf();
     if (p != nullptr && p->vessel != nullptr) return p->vessel->isEVA();
     return false;
 }
 
-// ModuleInventoryPart.cs:235
+// ModuleInventoryPart.cs:234
 bool ModuleInventoryPart::kerbalMode() const {
     if (kerbalReference != nullptr) return kerbalReference->name().value_or("") != "";  // kerbalReference.name != "" (a null name differs from "")
     return false;
@@ -808,7 +808,7 @@ void ModuleInventoryPart::OnUpdate() {
     UpdatePlacement(placementInput);
 }
 
-// ModuleInventoryPart.cs:1300-1403 (OnUpdate's placement block)
+// ModuleInventoryPart.cs:1223 OnUpdate (its placement block, lines 1300-1403)
 void ModuleInventoryPart::UpdatePlacement(const PlacementInput& in) {
     Vessel* v = VesselOf();
     if (selectedPart != nullptr) {
@@ -1101,6 +1101,20 @@ void ModuleInventoryPart::OnCopy(PartModule& fromModule) {
         const auto& sp = from->storedParts.ValuesList()[i];
         storedParts.Add(sp->slotIndex, sp->Copy());
     }
+}
+
+// Object.Instantiate(prefab module): ModuleInventoryPart.cs:60-81 [SerializeField] members
+void ModuleInventoryPart::CopySerializedFrom(const PartModule& from) {
+    PartModule::CopySerializedFrom(from);
+    const auto* o = dynamic_cast<const ModuleInventoryPart*>(&from);
+    if (o == nullptr) return;
+    storedParts = DictionaryValueList<int32_t, std::shared_ptr<StoredPart>>();
+    storedPartsNull = o->storedPartsNull;  // a prefab that was loaded has an (empty) list; the clone gets one too
+    defaultInventoryParts = o->defaultInventoryParts;
+    defaultInventoryPartsNull = o->defaultInventoryPartsNull;
+    inventoryPartsByName = o->inventoryPartsByName;
+    maxInventorySlots = o->maxInventorySlots;
+    spawnDistance = o->spawnDistance;
 }
 
 // ModuleInventoryPart.cs:1754

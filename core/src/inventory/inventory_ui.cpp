@@ -20,6 +20,7 @@
 #include "ksp/save/game.hpp"
 #include "ksp/save/save_environment.hpp"
 #include "ksp/ship/ship_construction.hpp"
+#include "ksp/unity/quaternion_native.hpp"
 #include "ksp/util/ksp_util.hpp"
 #include "ksp/vessel/vessel.hpp"
 
@@ -41,7 +42,7 @@ std::string VariantNameOf(Part& p) {
 
 // ================================================================ UIPartActionControllerInventory
 
-// UIPartActionControllerInventory.cs:241 Awake
+// UIPartActionControllerInventory.cs:231 Awake
 UIPartActionControllerInventory::UIPartActionControllerInventory() {
     if (Instance != nullptr) {
         log::Error("[UIPartActionControllerInventory]: Instance exists.");
@@ -56,7 +57,7 @@ UIPartActionControllerInventory::~UIPartActionControllerInventory() {
     if (Instance == this) Instance = nullptr;
 }
 
-// UIPartActionControllerInventory.cs:250
+// UIPartActionControllerInventory.cs:240
 void UIPartActionControllerInventory::Start() {
     if (destroyed_) return;
     if (IsEditor()) GE::onEditorPartEvent.Add(this, &UIPartActionControllerInventory::OnCargoPartConstructionEvent);
@@ -71,7 +72,7 @@ void UIPartActionControllerInventory::Start() {
     eventsAdded_ = true;
 }
 
-// UIPartActionControllerInventory.cs:274
+// UIPartActionControllerInventory.cs:261
 void UIPartActionControllerInventory::OnDestroy() {
     GE::onEditorPartEvent.Remove(this, &UIPartActionControllerInventory::OnCargoPartConstructionEvent);
     if (eventsAdded_) {
@@ -81,32 +82,32 @@ void UIPartActionControllerInventory::OnDestroy() {
     }
 }
 
-// UIPartActionControllerInventory.cs:139 (setter)
+// UIPartActionControllerInventory.cs:174 (setter)
 void UIPartActionControllerInventory::SetCurrentCargoPart(Part* p) {
     currentCargoPart_ = p;
     GE::OnInventoryPartOnMouseChanged.Fire(CurrentCargoPart());
 }
 
-// UIPartActionControllerInventory.cs:152
+// UIPartActionControllerInventory.cs:187
 ModuleCargoPart* UIPartActionControllerInventory::CurrentModuleCargoPart() const {
     if (currentCargoPart_ != nullptr) return dynamic_cast<ModuleCargoPart*>(currentCargoPart_->FindModuleOfClass("ModuleCargoPart"));
     return nullptr;
 }
 
-// UIPartActionControllerInventory.cs:105
+// UIPartActionControllerInventory.cs:160
 ModuleInventoryPart* UIPartActionControllerInventory::CurrentInventorySlotHoveredModule() const {
     if (currentInventorySlotHovered == nullptr) throw NullReferenceException();
     return currentInventorySlotHovered->moduleInventoryPart;
 }
 
-// UIPartActionControllerInventory.cs:283
+// UIPartActionControllerInventory.cs:271
 bool UIPartActionControllerInventory::IsKerbalWithinRange(ModuleInventoryPart& inventoryPart) {
     Vessel* active = FlightRegistry::ActiveVessel;
     if (active->isEVA()) currentDistanceFromPart = Vector3f::Distance(active->GetWorldPos3D().ToVector3f(), inventoryPart.TransformPosition());
     return currentDistanceFromPart <= InventoryEnvironment::EVA_INVENTORY_RANGE;
 }
 
-// UIPartActionControllerInventory.cs:293
+// UIPartActionControllerInventory.cs:280
 void UIPartActionControllerInventory::OnCargoPartConstructionEvent(ConstructionEventType construction, Part* p) {
     if (!Contains(availableCargoParts, p->partInfo->name)) return;
     switch (construction) {
@@ -125,7 +126,7 @@ void UIPartActionControllerInventory::OnCargoPartConstructionEvent(ConstructionE
     }
 }
 
-// UIPartActionControllerInventory.cs:328
+// UIPartActionControllerInventory.cs:317
 void UIPartActionControllerInventory::ResetInventoryCacheValues(bool destroyCurrentCargoPart) {
     if (currentCargoPart_ != nullptr && destroyCurrentCargoPart) {
         DestroyHeldObject(currentCargoPart_);
@@ -147,7 +148,7 @@ void UIPartActionControllerInventory::DestroyHeldObject(Part* p) {
     else if (InventoryEnvironment::destroyPartObject) InventoryEnvironment::destroyPartObject(*p);
 }
 
-// UIPartActionControllerInventory.cs:344 (PAW windows and SpawnPartActionWindow are the shell's)
+// UIPartActionControllerInventory.cs:351 (PAW windows and SpawnPartActionWindow are the shell's)
 void UIPartActionControllerInventory::OnInventoryPartHover(uint32_t partId, Part* p) {
     if (pawWindowOpenFor && pawWindowOpenFor(partId)) return;
     if (currentHoveredInventoryPart != partId) {
@@ -159,7 +160,7 @@ void UIPartActionControllerInventory::OnInventoryPartHover(uint32_t partId, Part
     }
 }
 
-// UIPartActionControllerInventory.cs:437
+// UIPartActionControllerInventory.cs:420
 void UIPartActionControllerInventory::ReturnHeldPart() {
     if (currentInventorySlotClicked != nullptr && currentCargoPart_ != nullptr) {
         Part* go = currentCargoPart_;
@@ -169,23 +170,23 @@ void UIPartActionControllerInventory::ReturnHeldPart() {
     }
 }
 
-// UIPartActionControllerInventory.cs:456
+// UIPartActionControllerInventory.cs:437
 void UIPartActionControllerInventory::OnVesselDestroy(Vessel* v) {
     if (currentInventory != nullptr && currentInventory->VesselOf() != nullptr && currentInventory->VesselOf()->persistentId == v->persistentId) ReturnHeldPart();
 }
 
-// UIPartActionControllerInventory.cs:608
+// UIPartActionControllerInventory.cs:504
 void UIPartActionControllerInventory::OnPartPurchased(AvailablePart*) {
     availableCargoParts = InventoryEnvironment::GetAvailableCargoPartNames();
     availableInventoryParts = InventoryEnvironment::GetAvailableCargoInventoryPartNames();
 }
 
-// UIPartActionControllerInventory.cs:614
+// UIPartActionControllerInventory.cs:510
 void UIPartActionControllerInventory::DestroyHeldPartAsIcon() {
     if (hasCurrentInventoryOnlyIcon) hasCurrentInventoryOnlyIcon = false;
 }
 
-// UIPartActionControllerInventory.cs:537
+// UIPartActionControllerInventory.cs:471
 void UIPartActionControllerInventory::ToggleCargoPartsLight(int counter) {
     if (!IsEditor()) {
         cargoInventoriesOpen += counter;
@@ -193,7 +194,7 @@ void UIPartActionControllerInventory::ToggleCargoPartsLight(int counter) {
     }
 }
 
-// UIPartActionControllerInventory.cs:660 (SetIconAsPart: the part leaves the icon slot; the flight branch re-parents it to the scene)
+// UIPartActionControllerInventory.cs:534 (SetIconAsPart: the part leaves the icon slot; the flight branch re-parents it to the scene)
 void UIPartActionControllerInventory::SetIconAsPart() {
     if (IsCursorOverAnyPAWOrCargoPane || isSetAsPart || !inventoryAndCargoPartExist()) return;
     if (IsEditor()) isSetAsPart = !heldPartIsStack;
@@ -218,7 +219,7 @@ bool UIPartActionControllerInventory::inventoryAndCargoPartExist() const {
     return currentInventory != nullptr && currentCargoPart_ != nullptr;
 }
 
-// UIPartActionControllerInventory.cs:732 (state only: whether the held part / icon objects are active)
+// UIPartActionControllerInventory.cs:592 (state only: whether the held part / icon objects are active)
 void UIPartActionControllerInventory::UpdateSelectedPartVisibility() {
     bool flag = false;
     EVAConstructionModeController* c = EVAConstructionModeController::Instance;
@@ -256,7 +257,80 @@ void UIPartActionControllerInventory::UpdateSelectedPartVisibility() {
     }
 }
 
-// UIPartActionControllerInventory.cs:698
+// UIPartActionControllerInventory.cs:371 (the PAW windows Hover flags are summed by the caller)
+void UIPartActionControllerInventory::UpdateCursorOverPAWs(bool anyPawWindowHovered) {
+    bool flag = anyPawWindowHovered;
+    if (IsFlight()) {
+        if (EVAConstructionModeController::Instance == nullptr) throw NullReferenceException();
+        flag |= EVAConstructionModeController::Instance->Hover();
+    } else if (IsEditor()) {
+        if (InventoryPanelController::Instance == nullptr) throw NullReferenceException();
+        flag |= InventoryPanelController::Instance->Hover();
+    }
+    IsCursorOverAnyPAWOrCargoPane = flag;
+}
+
+// UIPartActionControllerInventory.cs:389
+void UIPartActionControllerInventory::UpdateCurrentCargoPart(const Vector2f& mouseLocalPoint) {
+    currentCargoExists = currentCargoPart_ != nullptr;
+    EVAConstructionModeController* c = EVAConstructionModeController::Instance;
+    if (!(c != nullptr && c->IsOpen() && c->evaEditor != nullptr && c->evaEditor->SelectedPart() != nullptr)) MoveSelectedPart(mouseLocalPoint);
+    if (!isSetAsPart) UpdatePartIconScale();
+    UpdateSelectedPartVisibility();
+}
+
+// UIPartActionControllerInventory.cs:403
+void UIPartActionControllerInventory::MoveSelectedPart(const Vector2f& mouseLocalPoint) {
+    if (isHeldPartOutOfActionWindows && currentCargoExists) heldPartPosition = dragOverPlane(mouseLocalPoint);
+}
+
+// UIPartActionControllerInventory.cs:411 (ScreenPointToLocalPointInRectangle is the shell: it supplies the local point)
+Vector3f UIPartActionControllerInventory::dragOverPlane(const Vector2f& mouseLocalPoint) const {
+    return Vector3f(mouseLocalPoint.x, mouseLocalPoint.y, cargoPartDepthOffset);
+}
+
+// UIPartActionControllerInventory.cs:577
+void UIPartActionControllerInventory::UpdatePartIconScale() {
+    if (currentCargoExists) {
+        const Vector3f partOriginalScale(partScale, partScale, partScale);
+        if (!IsCursorOverAnyPAWOrCargoPane && EVAConstructionModeController::Instance != nullptr && !EVAConstructionModeController::Instance->Hover())
+            heldPartScale = partOriginalScale * partScaleMultiplier;
+        else
+            heldPartScale = partOriginalScale;
+    }
+}
+
+// UIPartActionControllerInventory.cs:518 (the part becomes the child of the grid selected-item icon)
+void UIPartActionControllerInventory::SetPartAsIcon(UIPartActionInventory& icon, Part& part) {
+    icon.selectedIconChildren++;
+    heldPartPosition = Vector3f(0.0f, 0.0f, 0.0f - partIconDepthDistance);
+    float num = 2.0f;
+    if (InventoryEnvironment::getPartRendererBound) num = InventoryEnvironment::getPartRendererBound(part).size().magnitude();
+    heldPartScale = Vector3f::one() * f32store(fx(iconHeight) / fx(num));
+    heldPartRotation = UnityNative::Euler(Vector3f(-15.0f, 0.0f, 0.0f));
+    heldPartRotation = heldPartRotation * UnityNative::Euler(Vector3f(0.0f, -30.0f, 0.0f));  // transform.Rotate(0, -30, 0) (Space.Self)
+    EVAConstructionEnvironment::Effect("icon:SetPartAsIcon", &part);
+    isSetAsPart = false;
+}
+
+// UIPartActionControllerInventory.cs:445
+void UIPartActionControllerInventory::CreateFlightTooltip(const AvailablePart& ap) {
+    PartModule* m = ap.partPrefab->FindModuleOfClass("ModuleCargoPart");
+    if (m == nullptr) return;
+    tooltipActive = true;
+    tooltipTitle = ap.title;
+    auto* cargo = dynamic_cast<ModuleCargoPart*>(m);
+    tooltipText = cargo != nullptr ? cargo->GetTooltip() : std::string();
+}
+
+// UIPartActionControllerInventory.cs:462
+void UIPartActionControllerInventory::DestroyTooltip() {
+    tooltipActive = false;
+    tooltipTitle.clear();
+    tooltipText.clear();
+}
+
+// UIPartActionControllerInventory.cs:681
 std::unique_ptr<Part> UIPartActionControllerInventory::CreatePartFromInventory(ProtoPartSnapshot& protoPartSnapshot) {
     std::unique_ptr<Part> part = protoPartSnapshot.CreatePart();
     ConfigureInventoryPart(*part);
@@ -270,7 +344,7 @@ std::unique_ptr<Part> UIPartActionControllerInventory::CreatePartFromInventory(P
     return part;
 }
 
-// UIPartActionControllerInventory.cs:719
+// UIPartActionControllerInventory.cs:702
 void UIPartActionControllerInventory::ConfigureInventoryPart(Part& invPart) {
     if (IsFlight()) {
         invPart.set_State(PartStates::CARGO);
@@ -289,7 +363,7 @@ void UIPartActionControllerInventory::ConfigureInventoryPart(Part& invPart) {
 
 UIPartActionInventorySlot::~UIPartActionInventorySlot() { OnDestroy(); }
 
-// UIPartActionInventorySlot.cs:54
+// UIPartActionInventorySlot.cs:50
 void UIPartActionInventorySlot::Setup(UIPartActionInventory* inventoryRef, int index) {
     inventoryPartActionUI = inventoryRef;
     moduleInventoryPart = inventoryPartActionUI->inventoryPartModule;
@@ -301,7 +375,7 @@ void UIPartActionInventorySlot::Setup(UIPartActionInventory* inventoryRef, int i
     }
 }
 
-// UIPartActionInventorySlot.cs:65
+// UIPartActionInventorySlot.cs:61
 void UIPartActionInventorySlot::SlotClicked() {
     EVAConstructionModeController* c = EVAConstructionModeController::Instance;
     if ((c != nullptr && c->IsOpen() && c->evaEditor != nullptr && c->evaEditor->EVAConstructionMode() != ConstructionMode::Place) || !pawControllerPresent)
@@ -312,7 +386,7 @@ void UIPartActionInventorySlot::SlotClicked() {
     if (IsEditor()) inv->currentInventory = moduleInventoryPart;
 }
 
-// UIPartActionInventorySlot.cs:92
+// UIPartActionInventorySlot.cs:86
 void UIPartActionInventorySlot::ProcessClickWithHeldPart() {
     UIPartActionControllerInventory* inv = UIPartActionControllerInventory::Instance;
     Part* held = inv->CurrentCargoPart();
@@ -394,7 +468,7 @@ void UIPartActionInventorySlot::ProcessClickWithHeldPart() {
     inventoryPartActionUI->SetAllSlotsNotSelected();
 }
 
-// UIPartActionInventorySlot.cs:217
+// UIPartActionInventorySlot.cs:192
 void UIPartActionInventorySlot::ProcessClickNoHeldPart() {
     UIPartActionControllerInventory* inv = UIPartActionControllerInventory::Instance;
     if (moduleInventoryPart->IsSlotEmpty(slotIndex)) return;
@@ -427,14 +501,14 @@ void UIPartActionInventorySlot::ProcessClickNoHeldPart() {
     inv->controlLocks.insert("CargoPartHeld");  // InputLockManager.SetControlLock(UI_DRAGGING, "CargoPartHeld")
 }
 
-// UIPartActionInventorySlot.cs:263
+// UIPartActionInventorySlot.cs:234
 void UIPartActionInventorySlot::EmptyStack() {
     if (UIPartActionControllerInventory::Instance != nullptr) UIPartActionControllerInventory::Instance->currentInventorySlotEmptied = this;
     inventoryPartActionUI->inventoryPartModule->ClearPartAtSlot(slotIndex);
     ClearEmptiedSlot();
 }
 
-// UIPartActionInventorySlot.cs:273
+// UIPartActionInventorySlot.cs:244
 void UIPartActionInventorySlot::ClearEmptiedSlot(int) {
     UIPartActionControllerInventory* inv = UIPartActionControllerInventory::Instance;
     if (inv->currentInventorySlotEmptied != nullptr && inv->currentInventorySlotEmptied == this) {
@@ -444,7 +518,7 @@ void UIPartActionInventorySlot::ClearEmptiedSlot(int) {
     }
 }
 
-// UIPartActionInventorySlot.cs:284
+// UIPartActionInventorySlot.cs:254
 void UIPartActionInventorySlot::StorePartInEmptySlot(Part& partToStore, const std::string& variantName) {
     UIPartActionControllerInventory* inv = UIPartActionControllerInventory::Instance;
     if (inv->currentInventorySlotClicked == nullptr) inv->currentInventorySlotClicked = this;
@@ -468,7 +542,7 @@ void UIPartActionInventorySlot::StorePartInEmptySlot(Part& partToStore, const st
     inv->ResetInventoryCacheValues();
 }
 
-// UIPartActionInventorySlot.cs:316
+// UIPartActionInventorySlot.cs:291
 bool UIPartActionInventorySlot::StackPartsInThisSlot(Part& heldPart, const std::string& partVariantName) {
     UIPartActionControllerInventory* inv = UIPartActionControllerInventory::Instance;
     if (inv->currentInventorySlotClicked == nullptr) inv->currentInventorySlotClicked = this;
@@ -500,24 +574,24 @@ bool UIPartActionInventorySlot::StackPartsInThisSlot(Part& heldPart, const std::
     return false;
 }
 
-// UIPartActionInventorySlot.cs:353
+// UIPartActionInventorySlot.cs:333
 void UIPartActionInventorySlot::StackPartsInSlot(int slot, const std::string& variantName, bool destroyHeldPart) {
     if (InventoryEnvironment::MODIFIER_KEY_DOWN && IsEditor()) moduleInventoryPart->UpdateStackAmountAtSlot(slot, MaxStackedAmount(), variantName);
     else moduleInventoryPart->UpdateStackAmountAtSlot(slot, CurrentStackedAmount() + 1, variantName);
     if (destroyHeldPart && UIPartActionControllerInventory::stackSize == 0) inventoryPartActionUI->DestroyHeldPart();
 }
 
-// UIPartActionInventorySlot.cs:367
+// UIPartActionInventorySlot.cs:349
 void UIPartActionInventorySlot::SetStackedPartsInSlot(int slot, int howMany, const std::string& variantName) {
     moduleInventoryPart->UpdateStackAmountAtSlot(slot, howMany, variantName);
 }
 
-// UIPartActionInventorySlot.cs:372
+// UIPartActionInventorySlot.cs:354
 void UIPartActionInventorySlot::RemovePartFromStack(int slot, const std::string& variantName) {
     moduleInventoryPart->UpdateStackAmountAtSlot(slot, CurrentStackedAmount() - 1, variantName);
 }
 
-// UIPartActionInventorySlot.cs:383
+// UIPartActionInventorySlot.cs:364
 std::unique_ptr<Part> UIPartActionInventorySlot::CreatePartFromThisSlot(int slotIdx) {
     UIPartActionControllerInventory* inv = UIPartActionControllerInventory::Instance;
     std::unique_ptr<Part> part;
@@ -556,7 +630,7 @@ std::unique_ptr<Part> UIPartActionInventorySlot::CreatePartFromThisSlot(int slot
     return part;
 }
 
-// UIPartActionInventorySlot.cs:441 (the icon object is the shell's: state only)
+// UIPartActionInventorySlot.cs:422 (the icon object is the shell's: state only)
 bool UIPartActionInventorySlot::CreatePartIconFromThisSlot(int slotIdx) {
     UIPartActionControllerInventory* inv = UIPartActionControllerInventory::Instance;
     inv->PlayPartSelectedSFX();
@@ -572,13 +646,13 @@ bool UIPartActionInventorySlot::CreatePartIconFromThisSlot(int slotIdx) {
     return false;
 }
 
-// UIPartActionInventorySlot.cs:488
+// UIPartActionInventorySlot.cs:457
 void UIPartActionInventorySlot::ReturnHeldPartToThisSlot() {
     UIPartActionControllerInventory::Instance->PlayPartDroppedSFX();
     SlotClicked();
 }
 
-// UIPartActionInventorySlot.cs:494
+// UIPartActionInventorySlot.cs:463
 void UIPartActionInventorySlot::UpdateCurrentSelectedSlot(bool isCurrent) {
     UIPartActionControllerInventory* inv = UIPartActionControllerInventory::Instance;
     if (pawControllerPresent) {
@@ -589,7 +663,7 @@ void UIPartActionInventorySlot::UpdateCurrentSelectedSlot(bool isCurrent) {
     inventoryPartActionUI->slotStackUI[static_cast<size_t>(slotIndex)] = {IsStackable(), CurrentStackedAmount(), MaxStackedAmount()};  // UpdateStackUI
 }
 
-// UIPartActionInventorySlot.cs:515
+// UIPartActionInventorySlot.cs:479
 void UIPartActionInventorySlot::OnPointerEnter() {
     if (!(inventoryPartActionUI == nullptr) && slotIndex <= moduleInventoryPart->InventorySlots() - 1 && UIPartActionControllerInventory::Instance != nullptr) {
         UIPartActionControllerInventory::Instance->currentInventorySlotHovered = this;
@@ -597,14 +671,14 @@ void UIPartActionInventorySlot::OnPointerEnter() {
     }
 }
 
-// UIPartActionInventorySlot.cs:525
+// UIPartActionInventorySlot.cs:489
 void UIPartActionInventorySlot::OnPointerExit() {
     if (UIPartActionControllerInventory::Instance->CurrentCargoPart() != nullptr) moduleInventoryPart->RestoreLimitsDisplay();
     UIPartActionControllerInventory::Instance->currentInventorySlotHovered = nullptr;
     moduleInventoryPart->showPreview = false;
 }
 
-// UIPartActionInventorySlot.cs:534
+// UIPartActionInventorySlot.cs:499
 void UIPartActionInventorySlot::OnEditorPartDeleted(Part*) {
     UIPartActionControllerInventory* inv = UIPartActionControllerInventory::Instance;
     if (inv->currentInventorySlotEmptied != nullptr) inv->currentInventorySlotEmptied->ClearEmptiedSlot();
@@ -614,13 +688,13 @@ void UIPartActionInventorySlot::OnEditorPartDeleted(Part*) {
     }
 }
 
-// UIPartActionInventorySlot.cs:544
+// UIPartActionInventorySlot.cs:512
 void UIPartActionInventorySlot::OnCargoModeToggled(bool opened) {
     UIPartActionControllerInventory* inv = UIPartActionControllerInventory::Instance;
     if (!opened && IsFlight() && inv != nullptr && inv->currentInventorySlotClicked == this) inv->ReturnHeldPart();
 }
 
-// UIPartActionInventorySlot.cs:552
+// UIPartActionInventorySlot.cs:520
 void UIPartActionInventorySlot::OnDestroy() {
     UIPartActionControllerInventory* inv = UIPartActionControllerInventory::Instance;
     if (IsFlight() && inv != nullptr && inv->currentInventorySlotClicked == this) {
@@ -643,7 +717,7 @@ void UIPartActionInventorySlot::OnDestroy() {
 UIPartActionInventory::UIPartActionInventory() = default;
 UIPartActionInventory::~UIPartActionInventory() { OnDestroy(); }
 
-// UIPartActionInventory.cs:85
+// UIPartActionInventory.cs:72
 bool UIPartActionInventory::AbleToPlaceParts() const { return inventoryPartModule != nullptr ? inventoryPartModule->AbleToPlaceParts() : false; }
 
 // UIPartActionInventory.cs:90
@@ -658,7 +732,7 @@ void UIPartActionInventory::OnDestroy() {
     UIPartActionControllerInventory::Instance ? (void)UIPartActionControllerInventory::Instance->controlLocks.erase("CargoPartHeld") : void();
 }
 
-// UIPartActionInventory.cs:106 (flight / editor PAW)
+// UIPartActionInventory.cs:109 (flight / editor PAW)
 void UIPartActionInventory::SetupPaw(ModuleInventoryPart& inventoryPart, int slots) {
     inventoryPartModule = &inventoryPart;
     inventoryPart.pawInventory = this;
@@ -675,7 +749,7 @@ void UIPartActionInventory::SetupPaw(ModuleInventoryPart& inventoryPart, int slo
     InitializeSlots();
 }
 
-// UIPartActionInventory.cs:148
+// UIPartActionInventory.cs:142
 void UIPartActionInventory::SetupConstruction(ModuleInventoryPart& inventoryPart) {
     inventoryPartModule = &inventoryPart;
     inventoryPartModule->constructorModeInventory = this;
@@ -696,27 +770,27 @@ void UIPartActionInventory::SetupConstruction(ModuleInventoryPart& inventoryPart
     InitializeSlots();
 }
 
-// UIPartActionInventory.cs:190
+// UIPartActionInventory.cs:173
 void UIPartActionInventory::OnVesselSituationChange(GameEvents::HostedFromToAction<Vessel*, Vessel_Situations> data) {
     if (data.host->id == inventoryPartModule->VesselOf()->id) UpdatePlacePartIcons(data.to == Vessel::Situations::LANDED);
 }
 
-// UIPartActionInventory.cs:198
+// UIPartActionInventory.cs:181
 void UIPartActionInventory::OnVesselChange(Vessel* vsl) { UpdatePlacePartIcons(vsl->id == inventoryPartModule->VesselOf()->id); }
 
-// UIPartActionInventory.cs:203
+// UIPartActionInventory.cs:186
 void UIPartActionInventory::OnModuleInventoryChanged(ModuleInventoryPart* changed) {
     if (!(changed != inventoryPartModule)) {
         for (size_t i = 0; i < slotPartIcon.size(); i++) UpdateSlot(static_cast<int>(i), false);
     }
 }
 
-// UIPartActionInventory.cs:215
+// UIPartActionInventory.cs:197
 void UIPartActionInventory::OnModuleInventorySlotChanged(ModuleInventoryPart* inventory, int slotChanged) {
     if (!(inventoryPartModule != inventory)) UpdateSlot(slotChanged, true);
 }
 
-// UIPartActionInventory.cs:224
+// UIPartActionInventory.cs:205
 void UIPartActionInventory::UpdateSlot(int slotChanged, bool updateStackUI) {
     const std::string text = slotPartIcon.at(static_cast<size_t>(slotChanged));
     std::shared_ptr<StoredPart> val;
@@ -734,7 +808,7 @@ void UIPartActionInventory::UpdateSlot(int slotChanged, bool updateStackUI) {
     }
 }
 
-// UIPartActionInventory.cs:255
+// UIPartActionInventory.cs:231
 void UIPartActionInventory::InitializeSlots() {
     if (UIPartActionControllerInventory::Instance != nullptr) UIPartActionControllerInventory::Instance->ToggleCargoPartsLight(1);
     slotButton.clear();
@@ -749,13 +823,13 @@ void UIPartActionInventory::InitializeSlots() {
     }
 }
 
-// UIPartActionInventory.cs:301
+// UIPartActionInventory.cs:274
 void UIPartActionInventory::SpawnEmptySlot(int slotIndex) {
     if (slotIndex > -1 && slotIndex <= static_cast<int>(slotButton.size()) - 1) slotButton[static_cast<size_t>(slotIndex)]->Setup(this, slotIndex);
     DestroyItem(slotIndex);
 }
 
-// UIPartActionInventory.cs:310
+// UIPartActionInventory.cs:283
 void UIPartActionInventory::SpawnLoadedPart(StoredPart& sp) {
     if (sp.slotIndex > -1 && sp.slotIndex <= static_cast<int>(slotButton.size()) - 1) {
         slotButton[static_cast<size_t>(sp.slotIndex)]->Setup(this, sp.slotIndex);
@@ -771,34 +845,69 @@ void UIPartActionInventory::SpawnLoadedPart(StoredPart& sp) {
     }
 }
 
-// ModuleInventoryPart.cs:349 (grid.pawInventory.slotPartIcon[num].Create(...))
+// the slotPartIcon[num].Create(...) call of PartDroppedOnInventory (see ModuleInventoryPart.cs line 349)
 void UIPartActionInventory::SpawnLoadedPartAtSlot(int slot) {
     std::shared_ptr<StoredPart> sp;
     if (inventoryPartModule->storedParts.TryGetValue(slot, sp)) slotPartIcon[static_cast<size_t>(slot)] = sp->partName;
 }
 
-// UIPartActionInventory.cs:342
+// UIPartActionInventory.cs:319
 void UIPartActionInventory::DestroyHeldPart(bool fromConstructionController) {
     if (inCargoPane && !fromConstructionController) {
         if (IsFlight()) EVAConstructionModeController::Instance->DestroyHeldIcons(this);
         if (IsEditor() && InventoryPanelController::Instance != nullptr) InventoryPanelController::Instance->DestroyHeldIcons(this);
     }
+    selectedIconChildren = 0;  // Destroy(currentSelectedItemPartIcon.GetChild(...)) for every child
     UIPartActionControllerInventory* inv = UIPartActionControllerInventory::Instance;
     if (inv->hasCurrentInventoryOnlyIcon) inv->hasCurrentInventoryOnlyIcon = false;
     inv->controlLocks.erase("CargoPartHeld");
 }
 
-// UIPartActionInventory.cs:370
+// UIPartActionInventory.cs:345
 void UIPartActionInventory::DestroyItem(int index) {
     if (static_cast<int>(slotPartIcon.size()) >= index && index >= 0 && index < static_cast<int>(slotPartIcon.size())) slotPartIcon[static_cast<size_t>(index)] = "";
 }
 
-// UIPartActionInventory.cs:438
+// UIPartActionInventory.cs:353
+void UIPartActionInventory::Update(const UpdateInput& in) {
+    UIPartActionControllerInventory* inv = UIPartActionControllerInventory::Instance;
+    if (in.windowPresent) {
+        parentWindowHovered = in.windowHover;
+    } else if (IsFlight()) {
+        if (EVAConstructionModeController::Instance == nullptr) throw NullReferenceException();
+        parentWindowHovered = EVAConstructionModeController::Instance->Hover();
+    } else {
+        if (!IsEditor()) return;
+        if (InventoryPanelController::Instance == nullptr) throw NullReferenceException();
+        parentWindowHovered = InventoryPanelController::Instance->Hover();
+    }
+    if (parentWindowHovered) {
+        if (!pawControllerPresent || !inv->inventoryAndCargoPartExist()) return;
+        if (inv->isSetAsPart) {
+            Part* currentCargoPart = inv->CurrentCargoPart();
+            if (IsEditor()) {
+                inv->editorPartPickedBlockSfx = true;
+                inv->editorPartDroppedBlockSfx = true;
+                if (inv->releasePartToIcon) inv->releasePartToIcon();
+                inv->SetCurrentCargoPart(currentCargoPart);
+            }
+            if (!in.windowPresent || !in.windowDisplayDirty) inv->SetPartAsIcon(*this, *currentCargoPart);
+            EVAConstructionEnvironment::Effect("highlight:ConstantOffImmediate", currentCargoPart);
+        }
+        if (!inv->isSetAsPart) inv->isHeldPartOutOfActionWindows = false;  // the icon follows the cursor (the shell positions it)
+    } else if ((IsEditor() && selectedIconChildren > 0) || (IsEditor() && inv != nullptr && !inv->isSetAsPart) ||
+               (IsFlight() && inv != nullptr && !inv->IsCursorOverAnyPAWOrCargoPane)) {
+        inv->SetIconAsPart();
+        inv->isHeldPartOutOfActionWindows = true;
+    }
+}
+
+// UIPartActionInventory.cs:420
 void UIPartActionInventory::SetAllSlotsNotSelected() {
     for (auto& s : slotButton) s->UpdateCurrentSelectedSlot(false);
 }
 
-// UIPartActionInventory.cs:446
+// UIPartActionInventory.cs:428
 void UIPartActionInventory::StartPartPlacement(int slotIconIndex) {
     if (slotIconIndex > -1 && inventoryPartModule != nullptr) {
         UpdatePlacePartIcons(false);
@@ -806,7 +915,7 @@ void UIPartActionInventory::StartPartPlacement(int slotIconIndex) {
     }
 }
 
-// UIPartActionInventory.cs:466
+// UIPartActionInventory.cs:450
 void UIPartActionInventory::ResetPlacePartIcons(bool active) {
     if (active) {
         if (inventoryPartModule != nullptr && inventoryPartModule->VesselOf() != nullptr && inventoryPartModule->AbleToPlaceParts()) UpdatePlacePartIcons(true);
@@ -816,7 +925,7 @@ void UIPartActionInventory::ResetPlacePartIcons(bool active) {
     }
 }
 
-// UIPartActionInventory.cs:484
+// UIPartActionInventory.cs:469
 void UIPartActionInventory::UpdatePlacePartIcons(bool active) {
     placePartIconActive.assign(slotPartIcon.size(), false);
     for (size_t i = 0; i < slotPartIcon.size(); i++) {
@@ -832,7 +941,7 @@ bool UIPartActionInventory::SlotIsDeployable(int slot) const {
     return ap != nullptr && ap->partPrefab->isGroundDeployable();  // EditorPartIcon.IsDeployablePart
 }
 
-// UIPartActionInventory.cs:517
+// UIPartActionInventory.cs:498
 void UIPartActionInventory::InitializeMassVolumeDisplay() {
     limitsFooterActive = inventoryPartModule->HasMassLimit() || inventoryPartModule->HasPackedVolumeLimit();
     packedVolumeLimitsActive = inventoryPartModule->HasPackedVolumeLimit();
@@ -844,7 +953,7 @@ void UIPartActionInventory::InitializeMassVolumeDisplay() {
     }
 }
 
-// UIPartActionInventory.cs:540
+// UIPartActionInventory.cs:519
 void UIPartActionInventory::UpdateVolumeLimits(float currentPackedVolume, float maxPackedVolume, bool overLimit, bool constructionOnly) {
     volumeSliderMax = maxPackedVolume;
     volumeSliderValue = currentPackedVolume;
@@ -853,7 +962,7 @@ void UIPartActionInventory::UpdateVolumeLimits(float currentPackedVolume, float 
     volumeOverLimit = overLimit;
 }
 
-// UIPartActionInventory.cs:566
+// UIPartActionInventory.cs:550
 void UIPartActionInventory::UpdateMassLimits(float currentMass, float maxMass, bool overLimit) {
     massSliderMax = maxMass;
     massSliderValue = currentMass;
@@ -873,7 +982,7 @@ InventoryPanelController::~InventoryPanelController() {
     if (Instance == this) Instance = nullptr;
 }
 
-// InventoryPanelController.cs:80
+// InventoryPanelController.cs:61
 void InventoryPanelController::Start() {
     GE::onEditorShipModified.Add(this, &InventoryPanelController::OnEditorShipModified);
     GE::onEditorShipCrewModified.Add(this, &InventoryPanelController::OnEditorCrewModified);
@@ -881,7 +990,7 @@ void InventoryPanelController::Start() {
     eventsAdded_ = true;
 }
 
-// InventoryPanelController.cs:88
+// InventoryPanelController.cs:68
 void InventoryPanelController::OnDestroy() {
     if (!eventsAdded_) return;
     GE::onEditorShipModified.Remove(this, &InventoryPanelController::OnEditorShipModified);
@@ -890,12 +999,12 @@ void InventoryPanelController::OnDestroy() {
     eventsAdded_ = false;
 }
 
-// InventoryPanelController.cs:95
+// InventoryPanelController.cs:75
 void InventoryPanelController::Update() {
     if (isOpen) UpdateDisplayedInventories();
 }
 
-// InventoryPanelController.cs:108
+// InventoryPanelController.cs:88
 void InventoryPanelController::OnEditorScreenChange(EditorScreen screen) {
     isOpen = screen == EditorScreen::Cargo;
     if (isOpen == prevIsOpen) return;
@@ -909,19 +1018,19 @@ void InventoryPanelController::OnEditorScreenChange(EditorScreen screen) {
     }
 }
 
-// InventoryPanelController.cs:146
+// InventoryPanelController.cs:121
 void InventoryPanelController::OnEditorCrewModified(VesselCrewManifest* manifest) {
     if (manifest != nullptr) crew = manifest->GetAllCrew(false);
     if (EditorLogic::fetch != nullptr && EditorLogic::fetch->ship != nullptr) UpdateInventoryLists(EditorLogic::fetch->ship->liveParts, crew);
 }
 
-// InventoryPanelController.cs:158
+// InventoryPanelController.cs:133
 void InventoryPanelController::OnEditorShipModified(ShipConstruct* ship) {
     if (shipManifestPresent && shipManifestCrew) crew = shipManifestCrew();
     if (ship != nullptr) UpdateInventoryLists(ship->liveParts, crew);
 }
 
-// InventoryPanelController.cs:170
+// InventoryPanelController.cs:145
 void InventoryPanelController::UpdateInventoryLists(const std::vector<Part*>& parts, std::vector<std::shared_ptr<ProtoCrewMember>> crewList) {
     for (size_t i = 0; i < parts.size(); i++) {
         auto* m = dynamic_cast<ModuleInventoryPart*>(parts[i]->FindModuleOfClass("ModuleInventoryPart"));
@@ -957,7 +1066,7 @@ void InventoryPanelController::UpdateInventoryLists(const std::vector<Part*>& pa
         if (d.uiInventory != nullptr) d.uiInventory->SetAllSlotsNotSelected();
 }
 
-// InventoryPanelController.cs:229
+// InventoryPanelController.cs:206
 void InventoryPanelController::UpdateDisplayedInventories() {
     bool flag = false;
     for (size_t i = 0; i < moduleInventories.size(); i++) {
@@ -991,7 +1100,7 @@ void InventoryPanelController::UpdateDisplayedInventories() {
         if (!displayedInventories[k].inventoryModule->kerbalMode()) siblingOrder.push_back(static_cast<int>(k));
 }
 
-// InventoryPanelController.cs:273
+// InventoryPanelController.cs:266
 bool InventoryPanelController::TryGetDisplayedInventory(ModuleInventoryPart* inventoryModule, InventoryDisplayItem*& displayItem) {
     for (auto& d : displayedInventories) {
         if (d.inventoryModule == inventoryModule) {
@@ -1003,7 +1112,7 @@ bool InventoryPanelController::TryGetDisplayedInventory(ModuleInventoryPart* inv
     return false;
 }
 
-// InventoryPanelController.cs:293
+// InventoryPanelController.cs:287
 void InventoryPanelController::DestroyHeldIcons(UIPartActionInventory* callingInventory) {
     for (auto& d : displayedInventories)
         if (d.uiInventory != callingInventory) d.uiInventory->DestroyHeldPart(true);

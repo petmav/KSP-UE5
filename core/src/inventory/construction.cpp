@@ -121,7 +121,7 @@ EVAConstructionModeController::~EVAConstructionModeController() {
     if (Instance == this) Instance = nullptr;
 }
 
-// EVAConstructionModeController.cs:119
+// EVAConstructionModeController.cs:111
 bool EVAConstructionModeController::MovementRestricted() {
     if (Instance != nullptr && Instance->evaEditor != nullptr) {
         if (Instance->IsOpen()) return Instance->evaEditor->SelectedPart() != nullptr;
@@ -130,7 +130,7 @@ bool EVAConstructionModeController::MovementRestricted() {
     return false;
 }
 
-// EVAConstructionModeController.cs:147 (Awake :124 sets Instance)
+// EVAConstructionModeController.cs:140 (Awake :124 sets Instance)
 void EVAConstructionModeController::Start() {
     if (Instance != nullptr && Instance != this) return;  // Awake: `if (Instance) Destroy(this); return;`
     Instance = this;
@@ -144,7 +144,7 @@ void EVAConstructionModeController::Start() {
     eventsAdded_ = true;
 }
 
-// EVAConstructionModeController.cs:168
+// EVAConstructionModeController.cs:159
 void EVAConstructionModeController::OnDestroy() {
     if (!eventsAdded_) return;
     GE::onGameSceneLoadRequested.Remove(this, &EVAConstructionModeController::OnGameSceneLoadRequested);
@@ -155,7 +155,7 @@ void EVAConstructionModeController::OnDestroy() {
     eventsAdded_ = false;
 }
 
-// EVAConstructionModeController.cs:189 (the EVA_CONSTRUCTION_MODE_TOGGLE key is the shell's: it calls Open/ClosePanel)
+// EVAConstructionModeController.cs:187 (the EVA_CONSTRUCTION_MODE_TOGGLE key is the shell's: it calls Open/ClosePanel)
 void EVAConstructionModeController::Update() {
     if (!isOpen) return;
     SearchForInventoryParts();
@@ -167,12 +167,13 @@ void EVAConstructionModeController::Update() {
     }
 }
 
-// EVAConstructionModeController.cs:241
+// EVAConstructionModeController.cs:229
 void EVAConstructionModeController::OpenConstructionPanel() {
     if (CanOpenConstructionPanel() && !IsOpen()) {
         Vessel* active = FlightRegistry::ActiveVessel;
         activeEVAVessel = (active != nullptr && active->evaController != nullptr) ? active : nullptr;
         if (activeEVAVessel != nullptr && hooks.evaEnterExitConstruction) hooks.evaEnterExitConstruction(true);
+        if (evaToolsUI != nullptr) evaToolsUI->ShowModeTools();
         if (hooks.ui) hooks.ui("construction:open");
         panelMode = PanelMode::Construction;
         isOpen = true;
@@ -182,9 +183,10 @@ void EVAConstructionModeController::OpenConstructionPanel() {
     }
 }
 
-// EVAConstructionModeController.cs:290
+// EVAConstructionModeController.cs:272
 void EVAConstructionModeController::OpenCargoPanel() {
     if (CanOpenCargoPanel() && !IsOpen()) {
+        if (evaToolsUI != nullptr) evaToolsUI->HideModeTools();
         if (hooks.ui) hooks.ui("cargo:open");
         panelMode = PanelMode::Cargo;
         isOpen = true;
@@ -193,7 +195,7 @@ void EVAConstructionModeController::OpenCargoPanel() {
     }
 }
 
-// EVAConstructionModeController.cs:313
+// EVAConstructionModeController.cs:297
 void EVAConstructionModeController::ClosePanel() {
     if (!IsOpen()) return;
     evaEditor->ForceDrop();
@@ -207,7 +209,7 @@ void EVAConstructionModeController::ClosePanel() {
     if (panelMode == PanelMode::Cargo) GE::OnEVACargoMode.Fire(false);
 }
 
-// EVAConstructionModeController.cs:378
+// EVAConstructionModeController.cs:386
 bool EVAConstructionModeController::CanOpenConstructionPanel() {
     Vessel* active = FlightRegistry::ActiveVessel;
     const bool map = hooks.mapIsEnabled ? hooks.mapIsEnabled() : false;
@@ -219,19 +221,19 @@ bool EVAConstructionModeController::CanOpenConstructionPanel() {
     return false;
 }
 
-// EVAConstructionModeController.cs:388
+// EVAConstructionModeController.cs:360
 bool EVAConstructionModeController::CanOpenCargoPanel() {
     const bool map = hooks.mapIsEnabled ? hooks.mapIsEnabled() : false;
     if (IsFlight() && !map && FlightRegistry::ActiveVessel != nullptr && !CanOpenConstructionPanel()) return true;
     return false;
 }
 
-// EVAConstructionModeController.cs:398
+// EVAConstructionModeController.cs:369
 void EVAConstructionModeController::OnGameSceneLoadRequested(GameScenes) {
     if (isOpen) ClosePanel();
 }
 
-// EVAConstructionModeController.cs:408
+// EVAConstructionModeController.cs:378
 void EVAConstructionModeController::OnVesselChange(Vessel* vessel) {
     if (activeEVAVessel != nullptr && hooks.activeEvaInConstructionMode && hooks.activeEvaInConstructionMode()) {
         if (hooks.evaEnterExitConstruction) hooks.evaEnterExitConstruction(false);
@@ -247,7 +249,7 @@ void EVAConstructionModeController::OnVesselChange(Vessel* vessel) {
     }
 }
 
-// EVAConstructionModeController.cs:432 (the slot highlight clears are UIPartActionInventory.SetAllSlotsNotSelected)
+// EVAConstructionModeController.cs:403 (the slot highlight clears are UIPartActionInventory.SetAllSlotsNotSelected)
 void EVAConstructionModeController::OnEditorPartEvent(ConstructionEventType eventType, Part* p) {
     switch (eventType) {
         case ConstructionEventType::PartPicked:
@@ -276,7 +278,7 @@ ModuleInventoryPart* EVAConstructionModeController::Lookup(uint32_t id) const {
     return nullptr;
 }
 
-// EVAConstructionModeController.cs:482
+// EVAConstructionModeController.cs:439
 void EVAConstructionModeController::RemoveInvDisplayItem(Part* p) {
     if (!(p != nullptr)) return;
     auto it = std::find_if(loadedModuleInventoryPart.begin(), loadedModuleInventoryPart.end(),
@@ -297,10 +299,10 @@ void EVAConstructionModeController::RemoveInvDisplayItem(Part* p) {
     loadedModuleInventoryPart.erase(it);
 }
 
-// EVAConstructionModeController.cs:504
+// EVAConstructionModeController.cs:458
 void EVAConstructionModeController::OnActionGroupsOpened() { ClosePanel(); }
 
-// EVAConstructionModeController.cs:509
+// EVAConstructionModeController.cs:463
 void EVAConstructionModeController::SearchForInventoryParts() {
     const std::vector<Vessel*> vesselsLoaded = FlightRegistry::VesselsLoaded;
     for (Vessel* vessel : vesselsLoaded) {
@@ -323,7 +325,7 @@ void EVAConstructionModeController::SearchForInventoryParts() {
     }
 }
 
-// EVAConstructionModeController.cs:547
+// EVAConstructionModeController.cs:502
 void EVAConstructionModeController::UpdateDisplayedInventories() {
     Vector3f position(3.4028235e+38f, 3.4028235e+38f, 3.4028235e+38f);  // maxVector
     if (FlightRegistry::ActiveVessel != nullptr) position = FlightRegistry::ActiveVessel->vesselTransform.position;
@@ -357,7 +359,7 @@ void EVAConstructionModeController::UpdateDisplayedInventories() {
     }
 }
 
-// EVAConstructionModeController.cs:604
+// EVAConstructionModeController.cs:550
 void EVAConstructionModeController::UpdateInfoLabels() {
     AssistingKerbalsLabelText = Localizer::Format(InventoryEnvironment::EVA_CONSTRUCTION_COMBINE_NONENGINEERS ? "#autoLOC_8014163" : "#autoLOC_8014164");
     AssistingKerbalsNumberText = dotnet::FormatInt64(evaEditor->AssistingKerbals());
@@ -372,13 +374,13 @@ void EVAConstructionModeController::UpdateInfoLabels() {
     }
 }
 
-// EVAConstructionModeController.cs:622
+// EVAConstructionModeController.cs:567
 void EVAConstructionModeController::DestroyHeldIcons(UIPartActionInventory* callingInventory) {
     for (auto& d : displayedInventories)
         if (d.uiInventory != callingInventory) d.uiInventory->DestroyHeldPart(true);
 }
 
-// EVAConstructionModeController.cs:632
+// EVAConstructionModeController.cs:578
 bool EVAConstructionModeController::TryGetDisplayedInventory(ModuleInventoryPart* inventoryModule, InventoryDisplayItem*& displayItem) {
     for (auto& d : displayedInventories) {
         if (d.inventoryModule == inventoryModule) {
@@ -392,10 +394,81 @@ bool EVAConstructionModeController::TryGetDisplayedInventory(ModuleInventoryPart
 
 // ================================================================ EVAConstructionToolsUI
 
-// EVAConstructionToolsUI.cs: the mode buttons raise OnEVAConstructionModeChanged (the editor's OnConstructionModeChanged is the listener)
-void EVAConstructionToolsUI::SetMode(ConstructionMode mode) {
-    currentMode = mode;
-    GE::OnEVAConstructionModeChanged.Fire(mode);
+// EVAConstructionToolsUI.cs:25 (Editor_modePlace / Editor_modeOffset / Editor_modeRotate GetKeyDown)
+void EVAConstructionToolsUI::Update(bool placeKeyDown, bool offsetKeyDown, bool rotateKeyDown) {
+    EVAConstructionModeController* c = EVAConstructionModeController::Instance;
+    const bool focus = anyTextFieldHasFocus ? anyTextFieldHasFocus() : false;
+    if ((!(c != nullptr) || c->IsOpen() || !focus)) {
+        if (c == nullptr) throw NullReferenceException();  // `Instance.panelMode` after the guard
+        if (c->panelMode == EVAConstructionModeController::PanelMode::Construction) {
+            if (placeKeyDown) SetMode(ConstructionMode::Place);
+            if (offsetKeyDown) SetMode(ConstructionMode::Move);
+            if (rotateKeyDown) SetMode(ConstructionMode::Rotate);
+        }
+    }
+}
+
+// EVAConstructionToolsUI.cs:65
+void EVAConstructionToolsUI::onPlaceButtonInput(bool b) {
+    if (b && placeButton.interactable) SetMode(ConstructionMode::Place, false);
+}
+
+// EVAConstructionToolsUI.cs:73
+void EVAConstructionToolsUI::onMoveButtonInput(bool b) {
+    if (b && moveButton.interactable) SetMode(ConstructionMode::Move, false);
+}
+
+// EVAConstructionToolsUI.cs:81
+void EVAConstructionToolsUI::onRotateButtonInput(bool b) {
+    if (b && rotateButton.interactable) SetMode(ConstructionMode::Rotate, false);
+}
+
+// EVAConstructionToolsUI.cs:89
+void EVAConstructionToolsUI::SetMode(ConstructionMode mode, bool updateUI) {
+    EVAConstructionModeController* c = EVAConstructionModeController::Instance;
+    if (!(c == nullptr) && !(c->evaEditor == nullptr)) {
+        if (mode != ConstructionMode::Place && gizmoToolsLocked && gizmoToolsLocked()) {
+            OnChangeModeBlocked();
+            return;
+        }
+        if (constructionMode == ConstructionMode::Place && (mode == ConstructionMode::Move || mode == ConstructionMode::Rotate) &&
+            c->evaEditor->SelectedPart() != nullptr) {
+            c->evaEditor->PlayAudioClip("cannotPlaceClip");
+            OnChangeModeBlocked();
+            return;
+        }
+        if (constructionMode != mode) {
+            constructionMode = mode;
+            GE::OnEVAConstructionModeChanged.Fire(constructionMode);
+        }
+        if (updateUI) {
+            switch (mode) {
+                case ConstructionMode::Place: placeButton.isOn = true; break;
+                case ConstructionMode::Move: moveButton.isOn = true; break;
+                case ConstructionMode::Rotate: rotateButton.isOn = true; break;
+                case ConstructionMode::Root: break;
+            }
+        }
+    } else {
+        OnChangeModeBlocked();
+    }
+}
+
+// EVAConstructionToolsUI.cs:133
+void EVAConstructionToolsUI::OnChangeModeBlocked() {
+    placeButton.isOn = constructionMode == ConstructionMode::Place;
+    moveButton.isOn = constructionMode == ConstructionMode::Move;
+    rotateButton.isOn = constructionMode == ConstructionMode::Rotate;
+}
+
+// EVAConstructionToolsUI.cs:149
+void EVAConstructionToolsUI::ShowModeTools() {
+    placeButton.active = moveButton.active = rotateButton.active = coordButtonActive = true;
+}
+
+// EVAConstructionToolsUI.cs:157
+void EVAConstructionToolsUI::HideModeTools() {
+    placeButton.active = moveButton.active = rotateButton.active = coordButtonActive = false;
 }
 
 // ================================================================ PartItemTransfer
@@ -404,7 +477,7 @@ PartItemTransfer::~PartItemTransfer() {
     if (!destroyed) OnDestroy();
 }
 
-// PartItemTransfer.cs:38
+// PartItemTransfer.cs:35
 void PartItemTransfer::Setup(Part& src, const std::string& itemType, const std::string& itemName, const std::string& semiValidMsg,
                              std::function<void(DismissAction, Part*)> onDialogDismiss) {
     type = Localizer::Format(itemType);
@@ -443,30 +516,30 @@ void PartItemTransfer::Setup(Part& src, const std::string& itemType, const std::
     GE::onItemTransferStarted.Fire(this);
 }
 
-// PartItemTransfer.cs:86
+// PartItemTransfer.cs:91
 void PartItemTransfer::DismissInterrupted() {
     screenMessages.push_back(Localizer::Format("#autoLOC_135812", {type}));
     Dismiss(DismissAction::Interrupted, nullptr);
 }
 
-// PartItemTransfer.cs:92
+// PartItemTransfer.cs:97
 void PartItemTransfer::DismissActive() {
     if (Instance != nullptr) Instance->DismissInterrupted();
 }
 
-// PartItemTransfer.cs:100
+// PartItemTransfer.cs:105
 void PartItemTransfer::DismissAlreadyRunning() {
     screenMessages.push_back(Localizer::Format("#autoLOC_135824", {type}));
     Dismiss(DismissAction::Interrupted, nullptr);
 }
 
-// PartItemTransfer.cs:106 (ScreenMessages.RemoveMessage; Object.Destroy(gameObject) -> OnDestroy)
+// PartItemTransfer.cs:111 (ScreenMessages.RemoveMessage; Object.Destroy(gameObject) -> OnDestroy)
 void PartItemTransfer::Dismiss(DismissAction dma, Part* p) {
     if (onDismiss) onDismiss(dma, p);
     OnDestroy();
 }
 
-// PartItemTransfer.cs:116
+// PartItemTransfer.cs:121
 void PartItemTransfer::OnDestroy() {
     if (destroyed) return;
     destroyed = true;
@@ -482,29 +555,29 @@ void PartItemTransfer::OnDestroy() {
     if (Instance == this) Instance = nullptr;
 }
 
-// PartItemTransfer.cs:168
+// PartItemTransfer.cs:155
 void PartItemTransfer::onVesselModified(Vessel* v) {
     if (v == srcPart->vessel) DismissInterrupted();
 }
 
-// PartItemTransfer.cs:177
+// PartItemTransfer.cs:163
 void PartItemTransfer::onVesselSituationChange(GameEvents::HostedFromToAction<Vessel*, Vessel_Situations> vs) {
     if (vs.host == srcPart->vessel) DismissInterrupted();
 }
 
-// PartItemTransfer.cs:185
+// PartItemTransfer.cs:171
 void PartItemTransfer::onVesselChanged(Vessel*) { DismissInterrupted(); }
 
-// PartItemTransfer.cs:190
+// PartItemTransfer.cs:176
 void PartItemTransfer::OnSrcPartSelect(Part*) { screenMessages.push_back(Localizer::Format("#autoLOC_135891")); }
 
-// PartItemTransfer.cs:195
+// PartItemTransfer.cs:181
 void PartItemTransfer::OnSemiValidPartSelect(Part*) { screenMessages.push_back(Localizer::Format(semiValidMessage)); }
 
-// PartItemTransfer.cs:200
+// PartItemTransfer.cs:186
 void PartItemTransfer::OnPartSelect(Part* p) { Dismiss(DismissAction::ItemMoved, p); }
 
-// PartItemTransfer.cs:205
+// PartItemTransfer.cs:191
 void PartItemTransfer::LateUpdate(bool escapeUp) {
     if (escapeUp) Dismiss(DismissAction::Cancelled, nullptr);
 }

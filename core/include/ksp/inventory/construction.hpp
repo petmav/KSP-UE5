@@ -27,6 +27,7 @@
 #include "ksp/editor/editor_types.hpp"
 #include "ksp/inventory/inventory.hpp"
 #include "ksp/parts/part.hpp"
+#include "ksp/unity/vector.hpp"
 #include "ksp/vessel/vessel.hpp"
 
 namespace ksp {
@@ -37,6 +38,7 @@ enum class EditorScreen : int { Parts, Actions, Crew, Cargo };
 class Vessel;
 class KerbalEVA;
 class EVAConstructionModeEditor;
+class EVAConstructionToolsUI;
 class UIPartActionInventorySlot;
 
 // ================================================================ seams
@@ -102,6 +104,7 @@ public:
 
     static inline EVAConstructionModeController* Instance = nullptr;  // :29
     EVAConstructionModeEditor* evaEditor = nullptr;                    // :31
+    EVAConstructionToolsUI* evaToolsUI = nullptr;                      // :33
     PanelMode panelMode = PanelMode::Construction;                      // :88
     // the last text values of the info labels (UpdateInfoLabels)
     std::string AssistingKerbalsLabelText, AssistingKerbalsNumberText, MaxMassLimitNumberText;
@@ -315,13 +318,26 @@ public:
 
 class EVAConstructionToolsUI {
 public:
-    // The tool buttons of the construction panel: which mode each selects and whether the panel shows the mode tools. The widgets are
-    // the shell's; the logic is the mode state (button click -> GameEvents.OnEVAConstructionModeChanged).
-    ConstructionMode currentMode = ConstructionMode::Place;
-    bool modeToolsVisible = true;
-    void ShowModeTools() { modeToolsVisible = true; }     // :ShowModeTools
-    void HideModeTools() { modeToolsVisible = false; }    // :HideModeTools
-    void SetMode(ConstructionMode mode);                  // button handler: fires OnEVAConstructionModeChanged
+    // The tool toggles of the construction panel (the widgets are the shell's: `isOn`, `interactable` and the active flags)
+    struct Toggle {
+        bool isOn = false;
+        bool interactable = true;
+        bool active = true;
+    };
+    Toggle placeButton, moveButton, rotateButton;  // :9 / :12 / :15
+    bool coordButtonActive = true;                  // :18 coordButton.gameObject.activeSelf
+    ConstructionMode constructionMode = ConstructionMode::Place;  // :20
+    // InputLockManager.IsLocked(ControlTypes.EDITOR_GIZMO_TOOLS), DeltaVApp.AnyTextFieldHasFocus(); unset: false
+    static inline std::function<bool()> gizmoToolsLocked, anyTextFieldHasFocus;
+
+    void Update(bool placeKeyDown, bool offsetKeyDown, bool rotateKeyDown);  // :27
+    void onPlaceButtonInput(bool b);                          // :69
+    void onMoveButtonInput(bool b);                           // :77
+    void onRotateButtonInput(bool b);                         // :85
+    void SetMode(ConstructionMode mode, bool updateUI = true);  // :93
+    void OnChangeModeBlocked();                               // :139
+    void ShowModeTools();                                     // :155 (internal)
+    void HideModeTools();                                     // :163 (internal)
 };
 
 // ================================================================ PartItemTransfer (PartItemTransfer.cs:6)
@@ -427,7 +443,25 @@ public:
     // :689 / :701: Instantiate + ConfigureInventoryPart
     std::unique_ptr<Part> CreatePartFromInventory(ProtoPartSnapshot& protoPartSnapshot);  // :698
     void ConfigureInventoryPart(Part& invPart);                           // :719
-    void DestroyTooltip() {}                                              // :522 (UI)
+    // ---- the held part's presentation (UI state of UIPartActionControllerInventory)
+    float partScale = 1.0f, partScaleMultiplier = 1.0f;                   // :64 / :62 (serialized UI values)
+    float cargoPartDepthOffset = 0.0f;                                    // :60
+    float partIconDepthDistance = 39.0f, iconHeight = 58.0f;              // :124 / :126
+    Vector3f heldPartScale = Vector3f::one();                             // CurrentCargoPart.transform.localScale
+    Vector3f heldPartPosition;                                            // CurrentCargoPart.transform.localPosition
+    Quaternionf heldPartRotation = Quaternionf::identity();
+    bool currentCargoExists = false;                                      // :90
+    void UpdateCursorOverPAWs(bool anyPawWindowHovered);                  // :384
+    void UpdateCurrentCargoPart(const Vector2f& mouseLocalPoint);         // :398
+    void MoveSelectedPart(const Vector2f& mouseLocalPoint);               // :415
+    Vector3f dragOverPlane(const Vector2f& mouseLocalPoint) const;        // :423
+    void UpdatePartIconScale();                                           // :640
+    void SetPartAsIcon(UIPartActionInventory& icon, Part& part);          // :623
+    void CreateFlightTooltip(const AvailablePart& ap);                    // :468
+    void DestroyTooltip();                                                // :485
+    std::string tooltipTitle, tooltipText;                                // the flight tooltip texts ("" = no tooltip)
+    bool tooltipActive = false;
+    std::function<void()> releasePartToIcon;                              // EditorLogic.fetch.ReleasePartToIcon()
     void ToggleCargoPartsLight(int counter);                              // :537
     int cargoInventoriesOpen = 0;
     bool enableCargoLight = false;
@@ -487,6 +521,14 @@ public:
     std::vector<std::unique_ptr<UIPartActionInventorySlot>> slotButton;  // :37
     std::vector<std::string> slotPartIcon;                // :39 (the part name each slot icon shows; "" = empty slot)
     bool inCargoPane = false;                             // :55
+    int selectedIconChildren = 0;                         // currentSelectedItemPartIcon.childCount (the held part parented under the grid icon)
+    bool parentWindowHovered = false;                     // :80
+    // UIPartActionInventory.Update: the PAW window that hosts the grid (absent in the construction / cargo panes)
+    struct UpdateInput {
+        bool windowPresent = false, windowHover = false, windowDisplayDirty = false;
+    };
+    void Update(const UpdateInput& in);                   // :384
+    bool pawControllerPresent = true;                     // UIPartActionController.Instance != null
     ModuleInventoryPart* inventoryPartModule = nullptr;   // :73
     // limits display (UpdateVolumeLimits / UpdateMassLimits): the last texts and fill state
     float volumeSliderMax = 0.0f, volumeSliderValue = 0.0f;

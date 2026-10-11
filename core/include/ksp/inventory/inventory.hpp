@@ -382,6 +382,9 @@ public:
     std::string GetInfo() override;                                           // :1406
     std::string GetModuleDisplayName() override;                              // :1424
     void OnCopy(PartModule& fromModule) override;                             // :1744
+    // Unity Instantiate of the prefab module: the [SerializeField] members (storedParts is a non-null, empty copy; the dictionary half of a
+    // DictionaryValueList is not serializable), defaultInventoryParts, inventoryPartsByName, maxInventorySlots, spawnDistance
+    void CopySerializedFrom(const PartModule& from) override;
     void OnAwake() override;
 
     // ---- capacity maths ----

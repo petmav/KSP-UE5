@@ -132,20 +132,20 @@ bool InventoryEnvironment::CargoPartsLoaded() {
 
 // ================================================================ StoredPart
 
-// StoredPart.cs:19
+// StoredPart.cs:18
 bool StoredPart::IsEmpty() const { return snapshot != nullptr ? quantity < 1 : false; }
-// StoredPart.cs:29
+// StoredPart.cs:30
 bool StoredPart::IsFull() const { return quantity < stackCapacity; }
-// StoredPart.cs:34
+// StoredPart.cs:32
 bool StoredPart::CanStack() const { return snapshot != nullptr ? stackCapacity > 1 : false; }
 
-// StoredPart.cs:47
+// StoredPart.cs:44
 StoredPart::StoredPart(std::string partName_, int slotIndex_) : slotIndex(slotIndex_), partName(std::move(partName_)) {}
 
-// StoredPart.cs:53
+// StoredPart.cs:50
 StoredPart::StoredPart(const ConfigNode& node) { Load(node); }
 
-// StoredPart.cs:58
+// StoredPart.cs:55
 void StoredPart::Load(const ConfigNode& node) {
     node.TryGetValue("slotIndex", slotIndex);
     node.TryGetValue("partName", partName);
@@ -155,7 +155,7 @@ void StoredPart::Load(const ConfigNode& node) {
     if (node.HasNode("PART")) snapshot = std::make_shared<ProtoPartSnapshot>(*node.GetNode("PART"), nullptr, nullptr);
 }
 
-// StoredPart.cs:72
+// StoredPart.cs:68
 void StoredPart::Save(ConfigNode& node) const {
     node.AddValue("slotIndex", slotIndex);
     node.AddValue("partName", partName);
@@ -165,7 +165,7 @@ void StoredPart::Save(ConfigNode& node) const {
     if (snapshot != nullptr) snapshot->Save(*node.AddNode("PART"));
 }
 
-// StoredPart.cs:87
+// StoredPart.cs:81
 std::shared_ptr<StoredPart> StoredPart::Copy() const {
     auto storedPart = std::make_shared<StoredPart>(partName, slotIndex);
     storedPart->variantName = variantName;
@@ -265,13 +265,13 @@ ModuleCargoPart::~ModuleCargoPart() { OnDestroy(); }
 
 void ModuleCargoPart::OnAwake() {}
 
-// ModuleCargoPart.cs:44
+// ModuleCargoPart.cs:55
 float ModuleCargoPart::MassForWeightTesting() const {
     if (preSettlingPrefabMass > 0.0f) return preSettlingPrefabMass;
     return part->fields.mass;
 }
 
-// ModuleCargoPart.cs:64
+// ModuleCargoPart.cs:67
 void ModuleCargoPart::OnDestroy() {
     if (settleCoroutine && InventoryEnvironment::scheduler) InventoryEnvironment::scheduler->StopCoroutine(settleCoroutine);  // StopCoroutine("MakePartSettle")
     settleCoroutine.reset();
@@ -285,7 +285,7 @@ void ModuleCargoPart::OnDestroy() {
     GE::OnFlightCompoundPartDetached.Remove(this, &ModuleCargoPart::OnCompoundPartDetached);
 }
 
-// ModuleCargoPart.cs:80
+// ModuleCargoPart.cs:84
 void ModuleCargoPart::OnPartUnpack() {
     if (beingAttached()) {
         Set<bool>("beingAttached", false);
@@ -308,7 +308,7 @@ void ModuleCargoPart::OnLoad(const ConfigNode& node) {
     }
 }
 
-// ModuleCargoPart.cs:107 (the FXGroup / AudioSource setup of the welding sparks is the engine's: FX hooks)
+// ModuleCargoPart.cs:106 (the FXGroup / AudioSource setup of the welding sparks is the engine's: FX hooks)
 void ModuleCargoPart::OnStart(StartState) {
     if (!IsFlight()) return;
     GE::onPartWillDie.Add(this, &ModuleCargoPart::OnPartWillDie);
@@ -327,6 +327,9 @@ void ModuleCargoPart::OnStart(StartState) {
 // ModuleCargoPart.cs:158
 void ModuleCargoPart::OnInitialize() {
     PartModule::OnInitialize();
+    // InitializeModules may run more than once per module (assembly, then Vessel.Initialize): one subscription is kept, so the single
+    // Remove of OnDestroy leaves no handler on a destroyed module (the C# adds a second delegate here and leaks it)
+    GE::OnEVAConstructionMode.Remove(this, &ModuleCargoPart::OnEVAConstructionMode);
     GE::OnEVAConstructionMode.Add(this, &ModuleCargoPart::OnEVAConstructionMode);
 }
 
@@ -349,27 +352,27 @@ std::string ModuleCargoPart::GetInfo() {
     return text;
 }
 
-// ModuleCargoPart.cs:449
+// ModuleCargoPart.cs:396
 std::string ModuleCargoPart::GetModuleDisplayName() { return Localizer::Format("#autoLOC_8002221"); }
 
-// ModuleCargoPart.cs:183 (the Rigidbody constraint reset is the physics engine's: hook)
+// ModuleCargoPart.cs:181 (the Rigidbody constraint reset is the physics engine's: hook)
 void ModuleCargoPart::OnPartWillDie(Part* p) {
     if (part != nullptr && p->fields.persistentId == part->fields.persistentId && PartOf()->hasRigidbody) {
         if (InventoryEnvironment::releasePartRigidbody) InventoryEnvironment::releasePartRigidbody(*PartOf());
     }
 }
 
-// ModuleCargoPart.cs:194
+// ModuleCargoPart.cs:190
 void ModuleCargoPart::HideUI() {
     UIHidden = true;
     constructionModeHighlight = false;
     SetConstructionHighlight(constructionModeHighlight);
 }
 
-// ModuleCargoPart.cs:201
+// ModuleCargoPart.cs:197
 void ModuleCargoPart::ShowUI() { UIHidden = false; }
 
-// ModuleCargoPart.cs:206 (WaitForSeconds / yield null replay on the WP-00 scheduler)
+// ModuleCargoPart.cs:202 (WaitForSeconds / yield null replay on the WP-00 scheduler)
 Enumerator ModuleCargoPart::MakePartSettle(bool waitForMotionStop) {
     bool adjustMass = false;
     Part* p = PartOf();
@@ -401,7 +404,7 @@ Enumerator ModuleCargoPart::MakePartSettle(bool waitForMotionStop) {
     }
 }
 
-// ModuleCargoPart.cs:229
+// ModuleCargoPart.cs:258
 void ModuleCargoPart::OnWeldStart(KerbalEVA* kerbalEVA) {
     EVAConstructionModeController* c = EVAConstructionModeController::Instance;
     if (c->evaEditor->LastAttachedPart()->fields.persistentId == part->fields.persistentId && InventoryEnvironment::weldSparkClipCount > 0 &&
@@ -413,7 +416,7 @@ void ModuleCargoPart::OnWeldStart(KerbalEVA* kerbalEVA) {
     }
 }
 
-// ModuleCargoPart.cs:239
+// ModuleCargoPart.cs:268
 void ModuleCargoPart::OnWeldFinish(KerbalEVA*) {
     EVAConstructionModeController* c = EVAConstructionModeController::Instance;
     if (c->evaEditor->LastAttachedPart()->fields.persistentId == part->fields.persistentId && InventoryEnvironment::weldSparkClipCount > 0 &&
@@ -423,7 +426,7 @@ void ModuleCargoPart::OnWeldFinish(KerbalEVA*) {
     }
 }
 
-// ModuleCargoPart.cs:248
+// ModuleCargoPart.cs:242
 void ModuleCargoPart::OnEVAConstructionMode(bool opened) {
     if (EVAConstructionModeController::Instance != nullptr &&
         EVAConstructionModeController::Instance->panelMode == EVAConstructionModeController::PanelMode::Construction)
@@ -433,19 +436,19 @@ void ModuleCargoPart::OnEVAConstructionMode(bool opened) {
     if (!inConstructionMode) OnUpdateHighlight();
 }
 
-// ModuleCargoPart.cs:264
+// ModuleCargoPart.cs:276
 void ModuleCargoPart::SetConstructionHighlight(bool state) {
     if (part == nullptr) return;
     constructionHighlightApplied = state;
     if (setConstructionHighlight) setConstructionHighlight(*PartOf(), state);
 }
 
-// ModuleCargoPart.cs:279
+// ModuleCargoPart.cs:295
 void ModuleCargoPart::OnUpdate() {
     if (inConstructionMode) OnUpdateHighlight();
 }
 
-// ModuleCargoPart.cs:286
+// ModuleCargoPart.cs:303
 void ModuleCargoPart::OnUpdateHighlight() {
     bool flag = false;
     bool flag2 = false;
@@ -481,23 +484,23 @@ void ModuleCargoPart::OnUpdateHighlight() {
     }
 }
 
-// ModuleCargoPart.cs:330
+// ModuleCargoPart.cs:336
 std::string ModuleCargoPart::GetTooltip() {
     if (IsNull("inventoryTooltip") || Get<std::string>("inventoryTooltip").empty()) return GetInfo();
     return Localizer::Format(Get<std::string>("inventoryTooltip"));
 }
 
-// ModuleCargoPart.cs:339
+// ModuleCargoPart.cs:345
 bool ModuleCargoPart::IsDeployedSciencePart() {
     const bool serenity = isExpansionInstalled ? isExpansionInstalled("Serenity") : true;
     if (!serenity) return false;
     return PartOf()->FindModuleOfClass("ModuleGroundSciencePart") != nullptr;
 }
 
-// ModuleCargoPart.cs:348
+// ModuleCargoPart.cs:354
 void ModuleCargoPart::EnableModule() { isEnabled = true; }
 
-// ModuleCargoPart.cs:358 (CompoundPart.target is the part the compound part is linked to)
+// ModuleCargoPart.cs:363 (CompoundPart.target is the part the compound part is linked to)
 void ModuleCargoPart::OnCompoundPartLinked(CompoundPart* linkedPart) {
     if (linkedPart == nullptr) return;
     Part* target = linkedPart->target;
@@ -507,7 +510,7 @@ void ModuleCargoPart::OnCompoundPartLinked(CompoundPart* linkedPart) {
     }
 }
 
-// ModuleCargoPart.cs:371
+// ModuleCargoPart.cs:375
 void ModuleCargoPart::OnCompoundPartDetached(CompoundPart* linkedPart) {
     if (linkedPart == nullptr) return;
     Part* target = linkedPart->target;
@@ -517,7 +520,7 @@ void ModuleCargoPart::OnCompoundPartDetached(CompoundPart* linkedPart) {
     }
 }
 
-// ModuleCargoPart.cs:384
+// ModuleCargoPart.cs:387
 bool ModuleCargoPart::HasLinkedCompoundParts() const { return !linkedCompoundParts.empty(); }
 
 // ================================================================ KerbalInventoryScenario
@@ -534,7 +537,7 @@ int KerbalInventoryScenario::Find(const std::string& name) const {
     return -1;
 }
 
-// KerbalInventoryScenario.cs:36
+// KerbalInventoryScenario.cs:33
 void KerbalInventoryScenario::OnAwake() {
     if (Instance != nullptr && Instance != this) {
         log::Error("[KerbalInventoryScenario]: Instance already exists!");
@@ -547,12 +550,12 @@ void KerbalInventoryScenario::OnAwake() {
     eventsAdded_ = true;
 }
 
-// KerbalInventoryScenario.cs:48
+// KerbalInventoryScenario.cs:45
 void KerbalInventoryScenario::Update() {
     for (auto& kv : kerbalInventories_) kv.second->Update();
 }
 
-// KerbalInventoryScenario.cs:56
+// KerbalInventoryScenario.cs:53
 void KerbalInventoryScenario::OnSave(ConfigNode&) {
     for (auto& kv : kerbalInventories_) {
         if (kv.second == nullptr) continue;
@@ -567,7 +570,7 @@ void KerbalInventoryScenario::OnSave(ConfigNode&) {
     }
 }
 
-// KerbalInventoryScenario.cs:68
+// KerbalInventoryScenario.cs:64
 void KerbalInventoryScenario::OnDestroy() {
     for (auto& kv : kerbalInventories_) {
         if (kv.second != nullptr) {
@@ -584,7 +587,7 @@ void KerbalInventoryScenario::OnDestroy() {
     if (Instance == this) Instance = nullptr;
 }
 
-// KerbalInventoryScenario.cs:88
+// KerbalInventoryScenario.cs:85
 void KerbalInventoryScenario::OnKerbalNameChanged(ProtoCrewMember*, std::string prevName, std::string newName) {
     const int i = Find(prevName);
     if (i >= 0) {
@@ -595,7 +598,7 @@ void KerbalInventoryScenario::OnKerbalNameChanged(ProtoCrewMember*, std::string 
     }
 }
 
-// KerbalInventoryScenario.cs:99
+// KerbalInventoryScenario.cs:95
 void KerbalInventoryScenario::AddKerbalInventoryInstance(const std::string& crewName, ModuleInventoryPart* inventory) {
     const int i = Find(crewName);
     if (i >= 0) {
@@ -607,10 +610,10 @@ void KerbalInventoryScenario::AddKerbalInventoryInstance(const std::string& crew
     }
 }
 
-// KerbalInventoryScenario.cs:113
+// KerbalInventoryScenario.cs:110
 bool KerbalInventoryScenario::ContainsCrew(const std::string& crewName) const { return Find(crewName) >= 0; }
 
-// KerbalInventoryScenario.cs:118
+// KerbalInventoryScenario.cs:115
 void KerbalInventoryScenario::RemoveKerbalInventoryInstance(const std::string& crewName) {
     const int i = Find(crewName);
     if (i < 0) return;
