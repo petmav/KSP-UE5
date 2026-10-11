@@ -50,7 +50,7 @@ public:
     virtual ~ISiteNode() = default;
     virtual std::string GetName() = 0;
     virtual std::optional<Vector3d> GetWorldPos() = 0;             // Transform GetWorldPos(): the world position, nullopt = null
-    virtual std::string NodeCaptionHeader() = 0;                   // UpdateNodeCaption: data.Header = ...
+    virtual std::string UpdateNodeCaption() = 0;                   // UpdateNodeCaption: data.Header = ...
 };
 
 // LaunchSite.cs:8
@@ -111,7 +111,7 @@ public:
     void SetSpawnPointsLatLonAlt();                                                  // :232
     std::string GetName() override;                                                  // :240
     std::optional<Vector3d> GetWorldPos() override;                                  // :245
-    std::string NodeCaptionHeader() override;                                        // :258
+    std::string UpdateNodeCaption() override;                                        // :258
     double GreatCircleDistance(const Vector3d& fromSrfNrm);                          // :263
 
 private:
@@ -129,7 +129,7 @@ public:
     std::string GetName() override { return "KSC"; }                // :9
     std::string GetDisplayName();                                   // :14
     std::optional<Vector3d> GetWorldPos() override;                 // :19 (the Runway facility transform)
-    std::string NodeCaptionHeader() override { return GetDisplayName(); }   // :28
+    std::string UpdateNodeCaption() override { return GetDisplayName(); }   // :28
 };
 
 }  // namespace ksp

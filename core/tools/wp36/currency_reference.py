@@ -454,7 +454,7 @@ def recovery(strats):
     def find(o):
         if isinstance(o, dict):
             if o.get("gameObject") == "Kerbin/KSC" and o.get("class") == "PQSCity":
-                return o["fields"]["repositionRadial"]
+                return o["fields"]
             for v in o.values():
                 r = find(v)
                 if r:
@@ -466,14 +466,25 @@ def recovery(strats):
                     return r
         return None
 
-    rr = find(pq["bodies"])
-    nrm = math.sqrt(rr["x"] ** 2 + rr["y"] ** 2 + rr["z"] ** 2)
-    ksc = [rr["x"] / nrm, rr["y"] / nrm, rr["z"] / nrm]  # the xzy form of GetRelSurfaceNVector(lat, lon): (cos lat cos lon, sin lat, cos lat sin lon)
+    # WP-42: the KSC position as SpaceCenter.Start derives it: PQSCity.Orientate (Vector3.normalized of repositionRadial in float32, times
+    # radius + repositionRadiusOffset, stored as the float32 transform.localPosition), then CelestialBody.GetLatitudeAndLongitude (identity
+    # frame) and GetRelSurfaceNVector(lat, lon) (the srfNVector GreatCircleDistance uses)
+    fields = find(pq["bodies"])
+    rr = [F(fields["repositionRadial"][k]) for k in "xyz"]
+    num = F(math.sqrt(rr[0] * rr[0] + rr[1] * rr[1] + rr[2] * rr[2]))
+    unit = [F(c / num) for c in rr]
+    local = [F(c * (radius + fields["repositionRadiusOffset"])) for c in unit]
+    mag = math.sqrt(local[0] * local[0] + local[1] * local[1] + local[2] * local[2])
+    nrm = [c / mag for c in local]
+    sc_lat = math.asin(nrm[1]) * 57.295780181884766  # (x, z, y) swizzle: rPos.z is the local y
+    sc_lon = math.atan2(nrm[2], nrm[0]) * 57.295780181884766
 
     def nvec(lat, lon):  # CelestialBody.GetRelSurfaceNVector
         la, lo = lat * (math.pi / 180.0), lon * (math.pi / 180.0)
         x, y, z = math.cos(la) * math.cos(lo), math.cos(la) * math.sin(lo), math.sin(la)
         return [x, z, y]
+
+    ksc = nvec(sc_lat, sc_lon)
 
     transponder = next(s for s in strats if s["name"] == "RecoveryTransponders")
     deltas = [(0.0, 0.0)]

@@ -41,16 +41,16 @@ bool HighLogic::LoadedSceneIsGame() { return SaveEnvironment::Current().loadedSc
 std::string HighLogic::SaveFolder() { return fetch == nullptr ? std::string() : fetch->GameSaveFolder; }
 bool HighLogic::HasSaveFolder() { return fetch != nullptr; }
 
-// HighLogic.cs:84
-void HighLogic::SetSaveFolder(const std::string& value) {
+// HighLogic.cs:74
+void HighLogic::SaveFolder(const std::string& value) {
     if (fetch != nullptr) fetch->GameSaveFolder = value;
 }
 
 // HighLogic.cs:93
 Game* HighLogic::CurrentGame() { return fetch == nullptr ? nullptr : SaveEnvironment::Current().currentGame; }
 
-// HighLogic.cs:103
-void HighLogic::SetCurrentGame(Game* game) {
+// HighLogic.cs:93
+void HighLogic::CurrentGame(Game* game) {
     if (fetch != nullptr) SaveEnvironment::Current().currentGame = game;
 }
 

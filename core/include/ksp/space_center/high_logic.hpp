@@ -53,9 +53,9 @@ public:
     static bool LoadedSceneIsGame();                          // :54
     static std::string SaveFolder();                          // :74 (null without fetch: "")
     static bool HasSaveFolder();
-    static void SetSaveFolder(const std::string& value);      // :84
+    static void SaveFolder(const std::string& value);         // :84 (the property setter)
     static Game* CurrentGame();                               // :93 (null without fetch)
-    static void SetCurrentGame(Game* game);                   // :103
+    static void CurrentGame(Game* game);                      // :103 (the property setter)
 
     // seams ------------------------------------------------------------------------------------------------------------------
     // SceneManager.LoadScene(buildIndex) (buffered = false) / the loadingBuffer + LoadSceneAsync routine (buffered = true)

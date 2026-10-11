@@ -389,7 +389,7 @@ void DestructibleBuilding::OnDestroy() {
     }
 }
 
-// DestructibleBuilding.cs:600
+// DestructibleBuilding.cs:594
 Enumerator DestructibleBuilding::delayedCallback(float delay, std::function<void()> cb) {
     co_yield YieldInstruction::WaitForSeconds(delay);
     cb();
@@ -451,7 +451,7 @@ void DestructibleBuilding::AddDamage(float d) {
     }
 }
 
-// DestructibleBuilding.cs:709
+// DestructibleBuilding.cs:695
 void DestructibleBuilding::StartFlightNoDamagePeriod() {
     indestructible_ = true;
     if (!noDamageHandlerAdded_) {
@@ -460,7 +460,7 @@ void DestructibleBuilding::StartFlightNoDamagePeriod() {
     }
 }
 
-// DestructibleBuilding.cs:715 (v.StartCoroutine(CallbackUtil.DelayedCallback(1f, ...)): the one second delay on the shared scheduler)
+// DestructibleBuilding.cs:701 (v.StartCoroutine(CallbackUtil.DelayedCallback(1f, ...)): the one second delay on the shared scheduler)
 void DestructibleBuilding::EndFlightNoDamagePeriod(Vessel* v) {
     if (v == static_cast<Vessel*>(FlightRegistry::ActiveVessel)) {
         GE::onVesselGoOffRails.Remove(this, &DestructibleBuilding::EndFlightNoDamagePeriod);

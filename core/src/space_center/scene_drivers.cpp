@@ -340,7 +340,7 @@ std::vector<std::string>& EditorDriver::ValidLaunchSites() {
 }
 
 // EditorDriver.cs:195
-uint64_t EditorDriver::InputLockFromGameParameters() {
+uint64_t EditorDriver::SetInputLockFromGameParameters() {
     Game* game = HighLogic::CurrentGame();
     if (game == nullptr) return 0;
     uint64_t controlTypes = 0;

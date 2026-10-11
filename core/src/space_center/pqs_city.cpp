@@ -103,7 +103,7 @@ void PQSCity::Orientate(bool allowReposition) {
     GE::OnPQSCityOrientated.Fire(body, name);
 }
 
-// PQSCity.cs:272
+// PQSCity.cs:287
 void PQSCity::Randomize() {
     repositionToSphereSurface = true;
     if (body == nullptr) {
@@ -141,7 +141,7 @@ int PQSCity::GetPQSCitySeed(const std::string& name, const std::string& body) {
     return static_cast<int32_t>(static_cast<uint32_t>(prod / 2) + static_cast<uint32_t>(hashCode_Net));
 }
 
-// PQSCity.cs:395
+// PQSCity.cs:394
 int PQSCity::GetStableHashCode(const std::string& str, bool Bit32) {
     uint32_t num = 5381u;
     if (Bit32) num = 352654597u;
@@ -179,7 +179,7 @@ void PQSCity2::LatLonAlt(double& latitude, double& longitude, double& altitude) 
         LatLonAltIdentity(Vector3d(localPosition), sphere != nullptr ? sphere->radius : body->Radius, latitude, longitude, altitude);
 }
 
-// PQSCity2.cs:390
+// PQSCity2.cs:377
 void PQSCity2::Reset() {
     up = Vector3f::up();
     positioningCompleted = false;

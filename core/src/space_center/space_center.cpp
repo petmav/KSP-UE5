@@ -31,7 +31,7 @@ void SpaceCenter::AttachToCity(const PQSCity& city) {
     identityFrame = true;
 }
 
-// SpaceCenter.cs:38
+// SpaceCenter.cs:40
 void SpaceCenter::Awake() {
     if (Instance != nullptr) {
         destroyed = true;   // UnityEngine.Object.Destroy(this)
@@ -42,7 +42,7 @@ void SpaceCenter::Awake() {
     GE::onLevelWasLoaded.Add(this, &SpaceCenter::OnGameSceneLoaded);
 }
 
-// SpaceCenter.cs:48
+// SpaceCenter.cs:51
 void SpaceCenter::Start() {
     const Vector3d position = transformPosition ? transformPosition() : Vector3d();
     const Vector2d latitudeAndLongitude = identityFrame ? LatitudeAndLongitudeIdentityFrame(position) : cb->GetLatitudeAndLongitude(position);
@@ -51,7 +51,7 @@ void SpaceCenter::Start() {
     srfNVector_ = cb->GetRelSurfaceNVector(latitude_, longitude_);
 }
 
-// SpaceCenter.cs:57
+// SpaceCenter.cs:61
 void SpaceCenter::OnDestroy() {
     if (registered_) {
         GE::onLevelWasLoaded.Remove(this, &SpaceCenter::OnGameSceneLoaded);
@@ -62,12 +62,12 @@ void SpaceCenter::OnDestroy() {
 
 SpaceCenter::~SpaceCenter() { OnDestroy(); }
 
-// SpaceCenter.cs:66
+// SpaceCenter.cs:70
 void SpaceCenter::OnGameSceneLoaded(GameScenes scn) {
     if (setAreaTriggerActive) setAreaTriggerActive(scn != GameScenes::SPACECENTER);
 }
 
-// SpaceCenter.cs:79
+// SpaceCenter.cs:82
 double SpaceCenter::GreatCircleDistance(const Vector3d& fromSrfNrm) const {
     return cb->Radius * dotnet::Math::Acos(Vector3d::Dot(srfNVector_, fromSrfNrm));
 }

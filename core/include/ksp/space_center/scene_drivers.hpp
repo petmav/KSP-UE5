@@ -139,7 +139,7 @@ public:
         EDITOR_SAVE = 0x100000000ull, EDITOR_LOAD = 0x200000000ull, EDITOR_EXIT = 0x400000000ull, EDITOR_NEW = 0x800000000ull,
         EDITOR_LAUNCH = 0x1000000000ull, EDITOR_CREW = 9223372036854775808ull
     };
-    static uint64_t InputLockFromGameParameters();             // :195 (the ControlTypes mask passed to SetControlLock("EditorDriver_GameParameters"))
+    static uint64_t SetInputLockFromGameParameters();             // :195 (the ControlTypes mask passed to SetControlLock("EditorDriver_GameParameters"))
 
 private:
     static std::string& selectedlaunchSiteName_();

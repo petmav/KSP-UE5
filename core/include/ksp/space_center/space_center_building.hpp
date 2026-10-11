@@ -79,7 +79,7 @@ public:
     Upgradeables::UpgradeableFacility* Facility() { return upgradeableFacility; }   // :77
 
     // SpaceCenterBuilding.Start (the data part; the renderer / collider / camera setup is WP-47)
-    bool StartSetup();                                         // :103
+    bool Start();                                         // :103
     void OnDestroy();                                          // :122
     void OnGameSceneChange(GameScenes scene);                  // :130
     void OnLeftClick();                                        // :373

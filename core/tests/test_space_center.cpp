@@ -450,7 +450,7 @@ TEST_CASE("WP-42 HighLogic.LoadScene: events, flags, transition matrix, loaded e
     HighLogic hl;
     hl.Awake();
     CHECK(HighLogic::fetch == &hl);
-    HighLogic::SetSaveFolder("physprofile");
+    HighLogic::SaveFolder("physprofile");
     CHECK(HighLogic::SaveFolder() == "physprofile");
     // flags per scene (HighLogic.cs:300)
     struct Row {
@@ -606,7 +606,7 @@ TEST_CASE("WP-42 FlightDriver / EditorDriver startup state and launch-site valid
     // ControlTypes mask of SetInputLockFromGameParameters
     w.game.Parameters->Editor.CanSave = false;
     w.game.Parameters->Editor.CanLaunch = false;
-    CHECK(EditorDriver::InputLockFromGameParameters() == (EditorDriver::EDITOR_SAVE | EditorDriver::EDITOR_LAUNCH));
+    CHECK(EditorDriver::SetInputLockFromGameParameters() == (EditorDriver::EDITOR_SAVE | EditorDriver::EDITOR_LAUNCH));
     setup.OnDestroy();
     hl.OnDestroy();
 }

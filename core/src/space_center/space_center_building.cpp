@@ -48,7 +48,7 @@ bool Contains(const std::vector<DestructibleBuilding*>& v, DestructibleBuilding*
 SpaceCenterBuilding::~SpaceCenterBuilding() = default;
 
 // SpaceCenterBuilding.cs:103 (the Start coroutine's data part; SetupRenderers / SetupColliders / highlight are WP-47)
-bool SpaceCenterBuilding::StartSetup() {
+bool SpaceCenterBuilding::Start() {
     if (PSystemSetup::Instance == nullptr) throw NullReferenceException();
     spaceCenterFacility = PSystemSetup::Instance->GetSpaceCenterFacility(facilityName);
     if (spaceCenterFacility == nullptr) {
@@ -440,10 +440,10 @@ void VehicleAssemblyBuilding::OnClicked() {
     }
 }
 
-// SpacePlaneHangarBuilding.cs:8
+// SpacePlaneHangarBuilding.cs:7
 bool SpacePlaneHangarBuilding::IsOpen() { return !ModeIsNonResumable(); }
 
-// SpacePlaneHangarBuilding.cs:13
+// SpacePlaneHangarBuilding.cs:12
 void SpacePlaneHangarBuilding::OnClicked() {
     Game& game = CurrentGameChecked();
     if (game.Mode == Game_Modes::SCENARIO_NON_RESUMABLE) return;
@@ -464,10 +464,10 @@ void SpacePlaneHangarBuilding::OnClicked() {
     }
 }
 
-// TrackingStationBuilding.cs:7
+// TrackingStationBuilding.cs:6
 bool TrackingStationBuilding::IsOpen() { return !ModeIsNonResumable(); }
 
-// TrackingStationBuilding.cs:12
+// TrackingStationBuilding.cs:11
 void TrackingStationBuilding::OnClicked() {
     Game& game = CurrentGameChecked();
     if (game.Mode != Game_Modes::SCENARIO_NON_RESUMABLE) {
@@ -481,10 +481,10 @@ void TrackingStationBuilding::OnClicked() {
     }
 }
 
-// AstronautComplexFacility.cs:9
+// AstronautComplexFacility.cs:8
 bool AstronautComplexFacility::IsOpen() { return !ModeIsNonResumable(); }
 
-// AstronautComplexFacility.cs:14 (CrewRoster.CheckRosterRespawn is subscribed to onGUIAstronautComplexSpawn: WP-46's roster call; the
+// AstronautComplexFacility.cs:13 (CrewRoster.CheckRosterRespawn is subscribed to onGUIAstronautComplexSpawn: WP-46's roster call; the
 // event wiring below is the same)
 void AstronautComplexFacility::OnClicked() {
     Game& game = CurrentGameChecked();
@@ -503,19 +503,19 @@ void AstronautComplexFacility::OnClicked() {
     }
 }
 
-// AstronautComplexFacility.cs:48
+// AstronautComplexFacility.cs:46
 void AstronautComplexFacility::onAstronautComplexDialogClose() {
     dialogIsUp_ = false;
     SpaceCenterUI::RemoveLock("astronautComplexFacility");
 }
 
-// AstronautComplexFacility.cs:55
+// AstronautComplexFacility.cs:54
 void AstronautComplexFacility::OnOnDestroy() { dialogIsUp_ = false; }
 
-// AdministrationFacility.cs:8
+// AdministrationFacility.cs:9
 bool AdministrationFacility::IsOpen() { return strategySystemPresent && strategySystemPresent(); }
 
-// AdministrationFacility.cs:13
+// AdministrationFacility.cs:14
 void AdministrationFacility::OnClicked() {
     SpaceCenterUI::SetLock("administrationFacility");
     if (CurrentGameChecked().Parameters->SpaceCenter.CanGoToAdmin) {
@@ -530,19 +530,19 @@ void AdministrationFacility::OnClicked() {
     }
 }
 
-// AdministrationFacility.cs:43
+// AdministrationFacility.cs:44
 void AdministrationFacility::onDialogClose() {
     dialogIsUp_ = false;
     SpaceCenterUI::RemoveLock("administrationFacility");
 }
 
-// AdministrationFacility.cs:50
+// AdministrationFacility.cs:51
 void AdministrationFacility::OnOnDestroy() { dialogIsUp_ = false; }
 
-// MissionControlBuilding.cs:8
+// MissionControlBuilding.cs:9
 bool MissionControlBuilding::IsOpen() { return contractSystemPresent && contractSystemPresent(); }
 
-// MissionControlBuilding.cs:13
+// MissionControlBuilding.cs:14
 void MissionControlBuilding::OnClicked() {
     SpaceCenterUI::SetLock("missionControlFacility");
     if (CurrentGameChecked().Parameters->SpaceCenter.CanGoToMissionControl) {
@@ -557,13 +557,13 @@ void MissionControlBuilding::OnClicked() {
     }
 }
 
-// MissionControlBuilding.cs:40
+// MissionControlBuilding.cs:42
 void MissionControlBuilding::onDialogClose() {
     dialogIsUp_ = false;
     SpaceCenterUI::RemoveLock("missionControlFacility");
 }
 
-// MissionControlBuilding.cs:47
+// MissionControlBuilding.cs:49
 void MissionControlBuilding::OnOnDestroy() { dialogIsUp_ = false; }
 
 // RnDBuilding.cs:8
@@ -584,16 +584,16 @@ void RnDBuilding::OnClicked() {
     }
 }
 
-// RnDBuilding.cs:40
+// RnDBuilding.cs:41
 void RnDBuilding::onDialogClose() {
     dialogIsUp_ = false;
     SpaceCenterUI::RemoveLock("RnDFacility");
 }
 
-// RnDBuilding.cs:47
+// RnDBuilding.cs:48
 void RnDBuilding::OnOnDestroy() { dialogIsUp_ = false; }
 
-// FlagPoleFacility.cs:12
+// FlagPoleFacility.cs:10
 void FlagPoleFacility::OnClicked() {
     if (CurrentGameChecked().Parameters->SpaceCenter.CanSelectFlag) {
         if (spawnFlagBrowser) spawnFlagBrowser();
@@ -604,7 +604,7 @@ void FlagPoleFacility::OnClicked() {
     Popup("FacilityLocked", Localizer::Format("#autoLOC_6002147"), Localizer::Format("#autoLOC_7003201"));
 }
 
-// FlagPoleFacility.cs:35
+// FlagPoleFacility.cs:34
 void FlagPoleFacility::OnFlagSelect(const std::string& textureName) {
     Game* game = HighLogic::CurrentGame();
     if (game != nullptr) {
@@ -615,7 +615,7 @@ void FlagPoleFacility::OnFlagSelect(const std::string& textureName) {
     SpaceCenterUI::RemoveLock("flagPoleFacility");
 }
 
-// FlagPoleFacility.cs:47
+// FlagPoleFacility.cs:45
 void FlagPoleFacility::OnFlagCancel() { SpaceCenterUI::RemoveLock("flagPoleFacility"); }
 
 // ---- LaunchSiteFacility -------------------------------------------------------------------------------------------------------

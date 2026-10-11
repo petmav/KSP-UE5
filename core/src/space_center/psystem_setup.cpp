@@ -32,10 +32,10 @@ using space_center::SceneGraph;
 
 // ---- SpaceCenterFacility ----------------------------------------------------------------------------------------------------
 
-// PSystemSetup.cs:28
+// PSystemSetup.cs:35
 void PSystemSetup::SpaceCenterFacility::SpawnPoint::Setup(SpaceCenterFacility* hostFacility) { host = hostFacility; }
 
-// PSystemSetup.cs:33
+// PSystemSetup.cs:40
 std::optional<Vector3d> PSystemSetup::SpaceCenterFacility::SpawnPoint::GetSpawnPointTransform() {
     if (!transformFound && SceneGraph::FindChild) {
         const auto found = SceneGraph::FindChild(host->pqsName, host->facilityTransformName, spawnTransformURL);
@@ -51,14 +51,14 @@ std::optional<Vector3d> PSystemSetup::SpaceCenterFacility::SpawnPoint::GetSpawnP
     return transformPosition;
 }
 
-// PSystemSetup.cs:44
+// PSystemSetup.cs:54
 void PSystemSetup::SpaceCenterFacility::SpawnPoint::GetSpawnPointLatLonAlt(double& lat, double& lon, double& alt) const {
     lat = latitude;
     lon = longitude;
     alt = altitude;
 }
 
-// PSystemSetup.cs:50
+// PSystemSetup.cs:61
 void PSystemSetup::SpaceCenterFacility::SpawnPoint::SetSpawnPointLatLonAlt() {
     if (SceneGraph::FindChild) {
         const auto found = SceneGraph::FindChild(host->pqsName, host->facilityTransformName, spawnTransformURL);
@@ -77,7 +77,7 @@ void PSystemSetup::SpaceCenterFacility::SpawnPoint::SetSpawnPointLatLonAlt() {
     }
 }
 
-// PSystemSetup.cs:84
+// PSystemSetup.cs:107
 void PSystemSetup::SpaceCenterFacility::Setup(const std::vector<PQSInfo>& PQSs, const std::function<CelestialBody*(const PQSInfo&)>& bodyOf) {
     for (const PQSInfo& pQS : PQSs) {
         if (pQS.gameObjectName == pqsName) {
@@ -103,12 +103,12 @@ void PSystemSetup::SpaceCenterFacility::Setup(const std::vector<PQSInfo>& PQSs, 
     }
 }
 
-// PSystemSetup.cs:112
+// PSystemSetup.cs:138
 void PSystemSetup::SpaceCenterFacility::SetSpawnPointsLatLonAlt() {
     for (size_t i = 0; i < spawnPoints.size(); i++) spawnPoints[i].SetSpawnPointLatLonAlt();
 }
 
-// PSystemSetup.cs:120
+// PSystemSetup.cs:146
 PSystemSetup::SpaceCenterFacility::SpawnPoint* PSystemSetup::SpaceCenterFacility::GetSpawnPoint(const std::string& spawnPointName) {
     for (SpawnPoint& sp : spawnPoints)
         if (sp.name == spawnPointName) return &sp;
@@ -116,13 +116,13 @@ PSystemSetup::SpaceCenterFacility::SpawnPoint* PSystemSetup::SpaceCenterFacility
     return nullptr;
 }
 
-// PSystemSetup.cs:146
+// PSystemSetup.cs:169
 float PSystemSetup::SpaceCenterFacility::GetFacilityDamage() { return ScenarioDestructibles::GetFacilityDamage(facilityName); }
 
-// PSystemSetup.cs:150
+// PSystemSetup.cs:174
 float PSystemSetup::SpaceCenterFacility::GetFacilityLevel() { return ScenarioUpgradeableFacilities::GetFacilityLevel(facilityName); }
 
-// PSystemSetup.cs:154
+// PSystemSetup.cs:179
 bool PSystemSetup::SpaceCenterFacility::IsLaunchFacility() const { return !spawnPoints.empty(); }
 
 // ---- PSystemSetup -----------------------------------------------------------------------------------------------------------
@@ -130,7 +130,7 @@ bool PSystemSetup::SpaceCenterFacility::IsLaunchFacility() const { return !spawn
 PSystemSetup::PSystemSetup() = default;
 PSystemSetup::~PSystemSetup() { OnDestroy(); }
 
-// PSystemSetup.cs:207
+// PSystemSetup.cs:238
 std::vector<LaunchSite*> PSystemSetup::NonStockLaunchSites() const {
     std::vector<LaunchSite*> list;
     for (size_t i = 0; i < launchsites.size(); i++) {
@@ -146,13 +146,13 @@ std::vector<LaunchSite*> PSystemSetup::NonStockLaunchSites() const {
     return list;
 }
 
-// PSystemSetup.cs:238
+// PSystemSetup.cs:267
 void PSystemSetup::Awake() {
     if (Instance != nullptr && Instance != this) return;   // DestroyImmediate(gameObject)
     Instance = this;
 }
 
-// PSystemSetup.cs:248 (SceneManager.sceneLoaded and PSystemManager.OnPSystemReady are the host's)
+// PSystemSetup.cs:281 (SceneManager.sceneLoaded and PSystemManager.OnPSystemReady are the host's)
 void PSystemSetup::Start() {
     GE::onGameSceneLoadRequested.Add(this, &PSystemSetup::OnSceneChange);
     GE::OnUpgradeableObjLevelChange.Add(this, &PSystemSetup::onUpgradeableObjLevelChange);
@@ -160,14 +160,14 @@ void PSystemSetup::Start() {
     launchsites.clear();
 }
 
-// PSystemSetup.cs:265
+// PSystemSetup.cs:299
 void PSystemSetup::OnDestroy() {
     GE::onGameSceneLoadRequested.Remove(this, &PSystemSetup::OnSceneChange);
     GE::OnUpgradeableObjLevelChange.Remove(this, &PSystemSetup::onUpgradeableObjLevelChange);
     if (Instance != nullptr && Instance == this) Instance = nullptr;
 }
 
-// PSystemSetup.cs:276
+// PSystemSetup.cs:310
 void PSystemSetup::onUpgradeableObjLevelChange(Upgradeables::UpgradeableObject* upgradeObject, int level) {
     (void)level;
     for (size_t i = 0; i < spaceCenterFacilityLaunchSites.size(); i++) {
@@ -179,7 +179,7 @@ void PSystemSetup::onUpgradeableObjLevelChange(Upgradeables::UpgradeableObject* 
     }
 }
 
-// PSystemSetup.cs:378
+// PSystemSetup.cs:403
 void PSystemSetup::SetupFacilities() {
     for (SpaceCenterFacility& spaceCenterFacility : facilities) {
         spaceCenterFacility.Setup(pqsArray, bodyOfPQS);
@@ -195,7 +195,7 @@ const PQSInfo* FindPQSInfo(const std::vector<PQSInfo>& arr, const std::string& n
 }
 }  // namespace
 
-// PSystemSetup.cs:387 (FloatingOrigin.SetOffset / ForceInitPQS / PQS.SetTarget / ResetModList are `sceneHook` calls)
+// PSystemSetup.cs:416 (FloatingOrigin.SetOffset / ForceInitPQS / PQS.SetTarget / ResetModList are `sceneHook` calls)
 Enumerator PSystemSetup::SetupLaunchSites() {
     std::vector<PQS*> spherestoSetup;
     for (size_t lsI = 0; lsI < stocklaunchsites.size(); lsI++) {
@@ -292,14 +292,14 @@ Enumerator PSystemSetup::SetupLaunchSites() {
     co_yield YieldInstruction::Null();
 }
 
-// PSystemSetup.cs:608
+// PSystemSetup.cs:658
 bool PSystemSetup::IsStockLaunchSite(const std::string& name) const {
     for (size_t num = 0; num < stocklaunchsites.size(); num++)
         if (stocklaunchsites[num]->name == name || stocklaunchsites[num]->launchSiteName == name) return true;
     return false;
 }
 
-// PSystemSetup.cs:628
+// PSystemSetup.cs:677
 bool PSystemSetup::IsFacilityOrLaunchSite(const std::string& inputName, bool& isFacility, std::string& displayName) {
     isFacility = false;
     displayName = "";
@@ -311,7 +311,7 @@ bool PSystemSetup::IsFacilityOrLaunchSite(const std::string& inputName, bool& is
     return false;
 }
 
-// PSystemSetup.cs:641
+// PSystemSetup.cs:681
 bool PSystemSetup::IsFacility(const std::string& inputName, std::string& displayName) {
     displayName = "";
     for (size_t num = 0; num < facilities.size(); num++) {
@@ -323,7 +323,7 @@ bool PSystemSetup::IsFacility(const std::string& inputName, std::string& display
     return false;
 }
 
-// PSystemSetup.cs:659
+// PSystemSetup.cs:686
 bool PSystemSetup::IsLaunchSite(const std::string& inputName, std::string& displayName) {
     displayName = "";
     for (size_t num = 0; num < launchsites.size(); num++) {
@@ -335,7 +335,7 @@ bool PSystemSetup::IsLaunchSite(const std::string& inputName, std::string& displ
     return false;
 }
 
-// PSystemSetup.cs:682
+// PSystemSetup.cs:739
 LaunchSite* PSystemSetup::GetLaunchSite(const std::string& name) {
     for (size_t num = 0; num < launchsites.size(); num++) {
         if (launchsites[num]->name == name || launchsites[num]->launchSiteName == name) {
@@ -346,7 +346,7 @@ LaunchSite* PSystemSetup::GetLaunchSite(const std::string& name) {
     return nullptr;
 }
 
-// PSystemSetup.cs:709
+// PSystemSetup.cs:765
 CelestialBody* PSystemSetup::GetLaunchSiteBody(const std::string& name) {
     SpaceCenterFacility* spaceCenterFacility = GetSpaceCenterFacility(name);
     auto bodyOfPqsPtr = [this](PQS* pqs) -> CelestialBody* {
@@ -360,7 +360,7 @@ CelestialBody* PSystemSetup::GetLaunchSiteBody(const std::string& name) {
     return bodyOfPqsPtr(site->launchsitePQS);
 }
 
-// PSystemSetup.cs:719
+// PSystemSetup.cs:775
 std::string PSystemSetup::GetLaunchSiteBodyName(const std::string& name) {
     SpaceCenterFacility* spaceCenterFacility = GetSpaceCenterFacility(name);
     if (spaceCenterFacility != nullptr) return spaceCenterFacility->pqsName;
@@ -368,7 +368,7 @@ std::string PSystemSetup::GetLaunchSiteBodyName(const std::string& name) {
     return site != nullptr ? site->pqsName : std::string();
 }
 
-// PSystemSetup.cs:729
+// PSystemSetup.cs:785
 std::string PSystemSetup::GetLaunchSiteDisplayName(const std::string& name) {
     SpaceCenterFacility* spaceCenterFacility = GetSpaceCenterFacility(name);
     if (spaceCenterFacility != nullptr) return Localizer::Format(spaceCenterFacility->facilityDisplayName);
@@ -377,7 +377,7 @@ std::string PSystemSetup::GetLaunchSiteDisplayName(const std::string& name) {
     return name;
 }
 
-// PSystemSetup.cs:745 (DontDestroyOnLoad of the city objects is the engine's)
+// PSystemSetup.cs:800 (DontDestroyOnLoad of the city objects is the engine's)
 bool PSystemSetup::AddLaunchSite(LaunchSite* launchsite, bool overRide) {
     if (GetLaunchSite(launchsite->launchSiteName) == nullptr) {
         if (!overRide && !launchsite->IsSetup()) {
@@ -391,7 +391,7 @@ bool PSystemSetup::AddLaunchSite(LaunchSite* launchsite, bool overRide) {
     return false;
 }
 
-// PSystemSetup.cs:779 (PQSCity.OnSphereInactive / DestroyGameObject are the engine's)
+// PSystemSetup.cs:829 (PQSCity.OnSphereInactive / DestroyGameObject are the engine's)
 bool PSystemSetup::RemoveLaunchSite(const std::string& name) {
     LaunchSite* launchSite = GetLaunchSite(name);
     if (launchSite != nullptr) {
@@ -403,23 +403,23 @@ bool PSystemSetup::RemoveLaunchSite(const std::string& name) {
     return false;
 }
 
-// PSystemSetup.cs:813
+// PSystemSetup.cs:851
 PSystemSetup::SpaceCenterFacility* PSystemSetup::GetSpaceCenterFacility(const std::string& name) {
     for (SpaceCenterFacility& f : facilities)
         if (f.name == name || f.facilityName == name) return &f;
     return nullptr;
 }
 
-// PSystemSetup.cs:835
+// PSystemSetup.cs:873
 void PSystemSetup::LoadTestScene(GameScenes sceneBase) {
     loadTestScene = true;
     nextScene = sceneBase;
 }
 
-// PSystemSetup.cs:826
+// PSystemSetup.cs:879
 void PSystemSetup::OnSceneLoaded(int buildIndex) { OnLevelLoaded(HighLogic::GetLoadedGameSceneFromBuildIndex(buildIndex)); }
 
-// PSystemSetup.cs:843
+// PSystemSetup.cs:884
 void PSystemSetup::OnLevelLoaded(GameScenes level) {
     switch (level) {
         case GameScenes::MISSIONBUILDER: SetMissionEditor(); break;
@@ -434,7 +434,7 @@ void PSystemSetup::OnLevelLoaded(GameScenes level) {
     }
 }
 
-// PSystemSetup.cs:879
+// PSystemSetup.cs:917
 void PSystemSetup::OnSceneChange(GameScenes scene) {
     (void)scene;
     if (FlightGlobals::bodies != nullptr) {
@@ -454,13 +454,13 @@ void PlanetariumSet(bool pause) {
 }
 }  // namespace
 
-// PSystemSetup.cs:902
+// PSystemSetup.cs:933
 void PSystemSetup::SetMainMenu() {
     PlanetariumSet(true);
     if (sceneHook) sceneHook("SetMainMenu", nullptr);
 }
 
-// PSystemSetup.cs:925
+// PSystemSetup.cs:956
 void PSystemSetup::SetSpaceCentre() {
     if (Planetarium::fetch != nullptr) {
         Planetarium::fetch->pause = false;
@@ -480,19 +480,19 @@ void PSystemSetup::SetSpaceCentre() {
     if (sceneHook) sceneHook("SetSpaceCentre", nullptr);
 }
 
-// PSystemSetup.cs:969
+// PSystemSetup.cs:997
 void PSystemSetup::SetMissionEditor() {
     SetMainMenu();
     if (sceneHook) sceneHook("SetMissionEditor", nullptr);
 }
 
-// PSystemSetup.cs:976
+// PSystemSetup.cs:1004
 void PSystemSetup::SetFlight() {
     PlanetariumSet(false);
     if (sceneHook) sceneHook("SetFlight", nullptr);
 }
 
-// PSystemSetup.cs:993
+// PSystemSetup.cs:1025
 void PSystemSetup::SetTrackingStation() {
     if (Planetarium::fetch != nullptr) {
         Planetarium::fetch->pause = false;
@@ -501,41 +501,41 @@ void PSystemSetup::SetTrackingStation() {
     if (sceneHook) sceneHook("SetTrackingStation", nullptr);
 }
 
-// PSystemSetup.cs:1016
+// PSystemSetup.cs:1048
 void PSystemSetup::SetEditor() {
     PlanetariumSet(true);
     if (sceneHook) sceneHook("SetEditor", nullptr);
 }
 
-// PSystemSetup.cs:1040
+// PSystemSetup.cs:1075
 void PSystemSetup::SetDisabled() {
     PlanetariumSet(true);
     FlightGlobals::currentMainBody = nullptr;
     if (sceneHook) sceneHook("SetDisabled", nullptr);
 }
 
-// PSystemSetup.cs:1109
+// PSystemSetup.cs:1114
 void PSystemSetup::SetPQSInactive(bool keepActiveInFlight) {
     if (sceneHook) sceneHook(keepActiveInFlight ? "SetPQSInactive(keepActiveInFlight)" : "SetPQSInactive", nullptr);
 }
 
-// PSystemSetup.cs:1130
+// PSystemSetup.cs:1132
 void PSystemSetup::SetPQSActive(PQS* pqs) {
     (void)pqs;
     if (sceneHook) sceneHook("SetPQSActive(pqs)", nullptr);
 }
 
-// PSystemSetup.cs:1146
+// PSystemSetup.cs:1149
 void PSystemSetup::SetPQSActive() {
     if (sceneHook) sceneHook("SetPQSActive", nullptr);
 }
 
-// PSystemSetup.cs:1157
+// PSystemSetup.cs:1159
 void PSystemSetup::SetPQSDisabled() {
     if (sceneHook) sceneHook("SetPQSDisabled", nullptr);
 }
 
-// PSystemSetup.cs:1167
+// PSystemSetup.cs:1168
 void PSystemSetup::ResetTransforms() {
     PlanetariumSet(true);
     if (sceneHook) sceneHook("ResetTransforms", nullptr);

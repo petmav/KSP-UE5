@@ -77,7 +77,7 @@ LaunchSite::LaunchSite(const std::string& name_, const std::string& pqsName_, co
     : name(name_), pqsName(pqsName_), launchSiteName(launchSiteName_), spawnPoints(std::move(spawnPoints_)), launchSiteTransformURL(launchSiteTransformURL_),
       editorFacility(editorFacility_) {}
 
-// LaunchSite.cs:160 (the second half of Setup after the PQSCity / PQSCity2 cast)
+// (the second half of LaunchSite.Setup, after the PQSCity / PQSCity2 cast)
 bool LaunchSite::SetupCommon(const std::vector<space_center::PQSInfo>& PQSs) {
     for (size_t i = 0; i < PQSs.size(); i++) {
         if (PQSs[i].gameObjectName == pqsName) {
@@ -159,7 +159,7 @@ std::optional<Vector3d> LaunchSite::GetWorldPos() {
 }
 
 // LaunchSite.cs:258
-std::string LaunchSite::NodeCaptionHeader() { return Localizer::Format(launchSiteName); }
+std::string LaunchSite::UpdateNodeCaption() { return Localizer::Format(launchSiteName); }
 
 // LaunchSite.cs:263
 double LaunchSite::GreatCircleDistance(const Vector3d& fromSrfNrm) {
