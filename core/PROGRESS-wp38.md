@@ -13,4 +13,4 @@ Deferred: the other 24 FinePrint parameters, 8 other contracts, Sentinel, Compat
 - [x] M3 Python reference tools/wp38/fineprint_reference.py -> tests/data/wp38_reference.json
 - [x] M4 tests/test_fineprint.cpp (13 cases, 27,984 assertions, 0 ULP)
 - [x] M5 cites (0 mismatches), README / STATUS, Windows full run 34/34 (579 cases / 963,143 assertions)
-- [ ] M6 WSL clang run (log /tmp/wp38_clang.log in WSL), final commit
+- [x] M6 WSL clang 34/34, unit 579 cases / 963,127 assertions

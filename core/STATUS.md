@@ -4099,7 +4099,7 @@ Status: a coherent subset of the package is done and unit-gated; the rest is def
 
 ### Verification
 
-Windows MSVC RelWithDebInfo (`run_tests.ps1 -Fresh` from the worktree, `core/build` deleted first, main `6da79774` merged): 34/34 ctest (`corpus.saves` registers only on main), `unit` 579 doctest cases / 963,143 assertions (WP-38: 13 cases / 27,984 assertions; the WP-37 `test_contracts.cpp` cases are unchanged and green), configure 2.1 s, build 174.4 s, test 450 s. `capture.part_database` and `capture.deltav_stages` unchanged. {WSL}
+Windows MSVC RelWithDebInfo (`run_tests.ps1 -Fresh` from the worktree, `core/build` deleted first, main `6da79774` merged): 34/34 ctest (`corpus.saves` registers only on main), `unit` 579 doctest cases / 963,143 assertions (WP-38: 13 cases / 27,984 assertions; the WP-37 `test_contracts.cpp` cases are unchanged and green), configure 2.1 s, build 174.4 s, test 450 s. `capture.part_database` and `capture.deltav_stages` unchanged. Linux Clang (`run_tests.sh -f`, WSL, per-branch log): 34/34 ctest, `unit` 579 cases / 963,127 assertions (the documented 16 fewer than Windows; the 13 WP-38 cases give the same 27,984 assertions), configure 14 s, build 375 s, test 4,470 s under heavy shared-WSL contention. GCC was not run.
 ## Small fixes 2026-10-11 (wave 5, branch `wpfix5`, from main `7199d110`)
 
 Seven items from the wave-3 / wave-4 gatekeepers; one commit each. `src/` changes are limited to item 2 and the cites of the two files it touches; everything else is tests, a script and notes.
