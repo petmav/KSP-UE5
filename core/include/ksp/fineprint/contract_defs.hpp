@@ -12,7 +12,11 @@
 #include <variant>
 #include <vector>
 
+#include <functional>
+#include <utility>
+
 #include "ksp/config/config_node.hpp"
+#include "ksp/fineprint/prebuilt.hpp"
 
 namespace ksp::FinePrint {
 
@@ -35,6 +39,29 @@ struct ContractDefs {
     static constexpr const char* ObjectiveGenerator = "Generator";
     static constexpr const char* ObjectiveGrapple = "Grapple";
     static constexpr const char* ObjectiveWheel = "Wheel";
+
+    // ---- the pre-built craft data (ContractDefs.cs:1290-1294 / :1438-1560) ----
+    using PositionList = std::vector<Contracts::Lite::PreBuiltCraftPosition>;
+    // DictionaryValueList<string, List<PreBuiltCraftPosition>>: insertion ordered, ContainsKey / indexer by body name
+    struct PositionDictionary {
+        std::vector<std::pair<std::string, PositionList>> items;
+        bool ContainsKey(const std::string& key) const;
+        PositionList& operator[](const std::string& key);
+        PositionList* TryGetValue(const std::string& key);
+    };
+    static inline std::shared_ptr<Contracts::Lite::PreBuiltCraft> PreBuiltCraftDefs;          // :1290
+    static inline PositionDictionary PreBuiltCraftPositions;                                 // :1292
+    static inline std::shared_ptr<Contracts::Lite::ConstructionParts> constructionParts;     // :1294
+    static inline bool loadedContractCraftDefs = false;                                      // :1298
+    static inline bool loadedConstructionPartsList = false;                                  // :1300
+    // GameDatabase.Instance.GetConfigNodes(typeName). Unset: the GameDatabase singleton (none: no nodes).
+    static inline std::function<std::vector<ConfigNode*>(const std::string& typeName)> gameDatabaseConfigNodes;
+    static void LoadContractCraftDefs();                                                    // :1438
+    static void LoadConstructionPartsList();                                                // :1455
+    static std::shared_ptr<Contracts::Lite::PreBuiltCraft> GetPreBuiltCraft(const std::string& className, const ConfigNode& node);  // :1503
+    static PositionDictionary GetPreBuiltCraftPositions(const ConfigNode& node);            // :1535
+    // ContractDefs.TechResearched (:1432): the loaded craft definitions are reloaded after any research
+    static void TechResearched();
 
     // ---- the registry (C++ helper) ----
     using Ptr = std::variant<int*, float*, double*, bool*, std::string*>;

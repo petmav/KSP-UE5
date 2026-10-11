@@ -112,6 +112,8 @@ add_library(kspcore STATIC
     fineprint/sentinel_contracts.cpp
     fineprint/sentinel_scenario.cpp
     fineprint/compatibility.cpp
+    fineprint/prebuilt.cpp
+    fineprint/construction_templates.cpp
     contracts/parameters.cpp
     contracts/predicates.cpp
     contracts/module_test_subject.cpp

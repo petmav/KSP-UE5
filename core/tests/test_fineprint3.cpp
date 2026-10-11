@@ -955,3 +955,633 @@ TEST_CASE("WP-38c CompatibilityUtilities.CleanUpUnsanitaryEVAKerbals + FindSurve
         CHECK_FALSE(save2.GetNode("CONTRACTS")->GetNode("CONTRACT")->HasValue("placementMode"));
     }
 }
+
+// ================================================================================================================================================
+// The pre-built craft model and the three WP-37 deferred templates (VesselRepair, OrbitalConstruction, RoverConstruction)
+// ================================================================================================================================================
+#include "ksp/fineprint/construction_templates.hpp"
+#include "ksp/fineprint/prebuilt.hpp"
+
+namespace {
+
+const json& RefT() { return Ref3()["templates"]; }
+
+// Waypoint.RandomizeNear runs through sin / cos / asin / atan2: the reference model uses the host libm, kspcore the game runtime's (ksp::dotnet::Math), so the
+// result may differ in the last bits. The distance in units in the last place is recorded and bounded (STATUS.md).
+int64_t UlpDistance(double a, double b) {
+    int64_t x, y;
+    std::memcpy(&x, &a, 8);
+    std::memcpy(&y, &b, 8);
+    if (x < 0) x = INT64_MIN - x;
+    if (y < 0) y = INT64_MIN - y;
+    return x > y ? x - y : y - x;
+}
+void CheckUlp(double got, double want, int64_t& maxUlp) {
+    const int64_t d = UlpDistance(got, want);
+    if (d > maxUlp) maxUlp = d;
+    CHECK_MESSAGE(d <= 16, "got ", got, " want ", want, " (", d, " ulp)");
+}
+
+// The synthetic craft files and PREBUILTCRAFT definitions of the reference (the stock .craft files are empty files in the mirror) are written below a temp
+// folder; the PREBUILTPOSITIONS and CONSTRUCTION_PART nodes are the real Squad cfgs.
+struct PreBuiltFixture {
+    std::filesystem::path dir;
+    ConfigNode::NodePtr craftCfg, positions, constructionParts;
+    PreBuiltFixture() {
+        namespace fs = std::filesystem;
+        dir = fs::temp_directory_path() / "kspcore_wp38c_prebuilt";
+        fs::remove_all(dir);
+        for (auto it = RefT()["crafts"].begin(); it != RefT()["crafts"].end(); ++it) {
+            const fs::path p = dir / it.key();
+            fs::create_directories(p.parent_path());
+            std::ofstream f(p, std::ios::binary);
+            f << it.value().get<std::string>();
+        }
+        craftCfg = ConfigNode::Parse(RefT()["cfg"].get<std::string>());
+        const std::string root = ksp::testing::GameRoot() + "/GameData/Squad/Contracts/";
+        ConfigNode::NodePtr pos = ConfigNode::Load(root + "PrebuiltCraft/prebuiltData.cfg");
+        REQUIRE(pos);
+        positions = pos;
+        ConfigNode::NodePtr parts = ConfigNode::Load(root + "constructionContractParts.cfg");
+        REQUIRE(parts);
+        constructionParts = parts;
+        FP3::ContractDefs::applicationRootPath = dir.generic_string() + "/";
+        FP3::ContractDefs::gameDatabaseConfigNodes = [this](const std::string& type) {
+            std::vector<ConfigNode*> out;
+            if (type == "CONTRACTCRAFT") {
+                // GameDatabase.GetConfigNodes returns the nodes of the files (the CONTRACTCRAFT node itself, not the file wrapper)
+                for (ConfigNode* n : craftCfg->GetNodes("CONTRACTCRAFT")) out.push_back(n);
+                for (ConfigNode* n : positions->GetNodes("CONTRACTCRAFT")) out.push_back(n);
+            } else if (type == "CONTRACT_CONSTRUCTION_PARTS") {
+                for (ConfigNode* n : constructionParts->GetNodes("CONTRACT_CONSTRUCTION_PARTS")) out.push_back(n);
+            }
+            return out;
+        };
+        Reload();
+    }
+    ~PreBuiltFixture() {
+        FP3::ContractDefs::gameDatabaseConfigNodes = nullptr;
+        FP3::ContractDefs::applicationRootPath.clear();
+        FP3::ContractDefs::loadedContractCraftDefs = false;
+        FP3::ContractDefs::loadedConstructionPartsList = false;
+        FP3::ContractDefs::PreBuiltCraftDefs.reset();
+        FP3::ContractDefs::constructionParts.reset();
+        FP3::ContractDefs::PreBuiltCraftPositions.items.clear();
+        std::filesystem::remove_all(dir);
+    }
+    // a fresh load: the per-type lists are cached by reference and the contracts remove entries from them
+    void Reload() {
+        FP3::ContractDefs::loadedContractCraftDefs = false;
+        FP3::ContractDefs::loadedConstructionPartsList = false;
+        FP3::ContractDefs::LoadContractCraftDefs();
+        FP3::ContractDefs::LoadConstructionPartsList();
+    }
+};
+
+std::string GameDataTail(const std::string& url) {
+    const size_t i = url.rfind("GameData");
+    return i == std::string::npos ? url : url.substr(i);
+}
+
+}  // namespace
+
+TEST_CASE("WP-38c pre-built craft model: PREBUILTCRAFT definitions validated against the part database, positions, construction parts (vs the reference)") {
+    World38b w;
+    PreBuiltFixture fx;
+    const json& r = RefT();
+    REQUIRE(FP3::ContractDefs::PreBuiltCraftDefs != nullptr);
+    // the definitions in cfg order: every contract type's list
+    std::map<std::string, std::vector<const json*>> expected;
+    for (const json& d : r["definitions"])
+        for (const json& t : d["types"]) expected[t.get<std::string>()].push_back(&d);
+    CHECK(expected.size() == 3);
+    for (const auto& kv : expected) {
+        auto& list = FP3::ContractDefs::PreBuiltCraftDefs->CraftForContractType(kv.first);
+        REQUIRE(list.size() == kv.second.size());
+        for (size_t i = 0; i < list.size(); ++i) {
+            const json& d = *kv.second[i];
+            CHECK(GameDataTail(list[i]->craftURL) == d["url"].get<std::string>());
+            CHECK(list[i]->allowGround == d["allowGround"].get<bool>());
+            CHECK(list[i]->allowOrbit == d["allowOrbit"].get<bool>());
+            CHECK(list[i]->allowWater == d["allowWater"].get<bool>());
+            CHECK(list[i]->usePreBuiltPositions == d["usePos"].get<bool>());
+            CHECK(list[i]->brokenPartNames() == d["broken"].get<std::vector<std::string>>());
+            CHECK(list[i]->craftInfo.compatibility == VersionCompareResult::COMPATIBLE);
+            CHECK_FALSE(list[i]->craftInfo.CraftHasErrors());
+            CHECK_FALSE(list[i]->craftNode == nullptr);
+        }
+        // CraftForContractType caches by reference
+        CHECK(&FP3::ContractDefs::PreBuiltCraftDefs->CraftForContractType(kv.first) == &list);
+    }
+    // CraftByURL compares from "GameData" on
+    auto byUrl = FP3::ContractDefs::PreBuiltCraftDefs->CraftByURL("C:/elsewhere/" + r["definitions"][0]["url"].get<std::string>());
+    REQUIRE(byUrl != nullptr);
+    CHECK(GameDataTail(byUrl->craftURL) == r["definitions"][0]["url"].get<std::string>());
+    CHECK(FP3::ContractDefs::PreBuiltCraftDefs->CraftByURL("GameData/none.craft") == nullptr);
+    CHECK_THROWS_AS(FP3::ContractDefs::PreBuiltCraftDefs->CraftByURL("no marker.craft"), std::out_of_range);
+    // the positions: insertion ordered per body
+    const json& pos = r["positions"];
+    REQUIRE(FP3::ContractDefs::PreBuiltCraftPositions.items.size() == pos.size());
+    for (size_t i = 0; i < pos.size(); ++i) {
+        CHECK(FP3::ContractDefs::PreBuiltCraftPositions.items[i].first == pos[i][0].get<std::string>());
+        const auto& lst = FP3::ContractDefs::PreBuiltCraftPositions.items[i].second;
+        REQUIRE(lst.size() == pos[i][1].size());
+        for (size_t j = 0; j < lst.size(); ++j) {
+            CHECK_F64n(static_cast<double>(lst[j].CenterLatitude), pos[i][1][j][0].get<double>());
+            CHECK_F64n(static_cast<double>(lst[j].CenterLongitude), pos[i][1][j][1].get<double>());
+            CHECK_F64n(static_cast<double>(lst[j].SearchRadius), pos[i][1][j][2].get<double>());
+        }
+    }
+    CHECK(FP3::ContractDefs::PreBuiltCraftPositions.ContainsKey("Mun"));
+    CHECK_FALSE(FP3::ContractDefs::PreBuiltCraftPositions.ContainsKey("Kerbin"));
+    // the construction parts (parts whose ModuleCargoPart has a packedVolume >= 0)
+    REQUIRE(FP3::ContractDefs::constructionParts != nullptr);
+    auto& cp = FP3::ContractDefs::constructionParts->PartsForContractType("OrbitalConstruction");
+    const json& ecp = r["constructionParts"];
+    size_t n = 0;
+    for (const json& e : ecp) {
+        if (std::find(e["types"].begin(), e["types"].end(), "OrbitalConstruction") == e["types"].end()) continue;
+        REQUIRE(n < cp.size());
+        CHECK(cp[n]->partName == e["name"].get<std::string>());
+        CHECK(cp[n]->availablePart != nullptr);
+        ++n;
+    }
+    CHECK(n == cp.size());
+    CHECK(n > 0);
+    CHECK(Contracts::Lite::ContainsPart(cp, cp[0]->partName));
+    CHECK_FALSE(Contracts::Lite::ContainsPart(cp, "noSuchPart"));
+    // the stock craft files are empty files in the mirror: every stock PREBUILTCRAFT definition is invalid (reported, not hand-authored)
+    ConfigNode::NodePtr stock = ConfigNode::Load(ksp::testing::GameRoot() + "/GameData/Squad/Contracts/PrebuiltCraft/RoverContract/roverContractCraft.cfg");
+    REQUIRE(stock);
+    auto none = FP3::ContractDefs::GetPreBuiltCraft("test", *stock->GetNode("CONTRACTCRAFT"));
+    CHECK(none->CraftForContractType("RoverConstruction").empty());
+}
+
+TEST_CASE("WP-38c RoverConstruction / OrbitalConstruction / VesselRepair contracts: generated trees (targets, craft, positions, orbits, parameters, texts, rewards, agent, id) vs the reference") {
+    const json& ref = RefT();
+    std::map<std::string, std::pair<int, int>> counts;
+    int thrown = 0, paramsChecked = 0, orbitCases = 0, groundCases = 0;
+    int64_t maxUlpEnd = 0;
+    for (size_t si = 0; si < ref["scenarios"].size(); ++si) {
+        World38b w;
+        PreBuiltFixture fx;
+        ContractSystem cs;
+        cs.Awake();
+        ConfigNode weights = WeightsNode38b(ref["weights"]);
+        cs.LoadNow(weights);
+        LoadScenario38b(w, ref["scenarios"][si]);
+        fx.Reload();
+        int curMult = -1;
+        for (const json& e : ref["contracts"]) {
+            if (e["scenario"].get<size_t>() != si) continue;
+            if (e["mult"].get<int>() != curMult) {
+                curMult = e["mult"].get<int>();
+                w.SetMult(Ref38b()["mult_sets"][static_cast<size_t>(curMult)]);
+            }
+            w.nextGuid = GuidOf38b(e["guid"]);
+            const int rseed = e["rseed"].get<int>();  // what `new KSPRandom()` takes in this case
+            ContractsEnvironment::Current().newRandomSeed = [rseed] { return rseed; };
+            const std::string type = e["type"].get<std::string>();
+            INFO(type << " scenario " << ref["scenarios"][si]["name"] << " prestige " << e["prestige"] << " seed " << e["seed"] << " mult " << e["mult"]);
+            const json& r = e["result"];
+            if (!r.is_null() && r.contains("exception")) {
+                CHECK_THROWS_AS(cs.GenerateContract(e["seed"].get<int>(), PrestigeOf38b(e["prestige"].get<int>()), type), NullReferenceException);
+                ++thrown;
+                continue;
+            }
+            std::unique_ptr<Contract> c = cs.GenerateContract(e["seed"].get<int>(), PrestigeOf38b(e["prestige"].get<int>()), type);
+            if (r.is_null()) {
+                INFO("unexpected contract: " << (c ? c->Title() : std::string()));
+                CHECK(c == nullptr);
+                ++counts[type].second;
+                continue;
+            }
+            REQUIRE(c != nullptr);
+            ++counts[type].first;
+            CHECK(c->Agent()->Name() == r["agent"].get<std::string>());
+            CHECK(c->Agent()->Title() == r["agentTitle"].get<std::string>());
+            CHECK(c->Keywords() == r["keywords"].get<std::vector<std::string>>());
+            CHECK(c->Title() == r["title"].get<std::string>());
+            CHECK(c->Synopsys() == r["synopsis"].get<std::string>());
+            CHECK(c->Description() == r["description"].get<std::string>());
+            CHECK(c->MessageCompleted() == r["completed"].get<std::string>());
+            CHECK(c->ContractID() == r["contractID"].get<long long>());
+            CHECK(dotnet::EnumToString(c->Prestige()) == r["prestige"].get<std::string>());
+            CHECK_F64b(c->FundsAdvance, r["fa"].get<double>());
+            CHECK_F64b(c->FundsCompletion, r["fc"].get<double>());
+            CHECK_F64b(c->FundsFailure, r["ff"].get<double>());
+            CHECK_F32b(c->ReputationCompletion, F38b(r["rc"]));
+            CHECK_F32b(c->ReputationFailure, F38b(r["rf"]));
+            CHECK_F32b(c->ScienceCompletion, F38b(r["sc"]));
+            CHECK_F64b(c->TimeExpiry, r["expiry"].get<double>());
+            CHECK_F64b(c->TimeDeadline, r["deadline"].get<double>());
+            CHECK(c->CanBeCancelled());
+            CHECK(c->CanBeDeclined());
+            REQUIRE(c->ParameterCount() == static_cast<int>(r["params"].size()));
+            for (int i = 0; i < c->ParameterCount(); ++i) {
+                ContractParameter* p = c->GetParameter(i);
+                const json& pr = r["params"][static_cast<size_t>(i)];
+                CHECK(p->TypeName() == pr["type"].get<std::string>());
+                CHECK(p->HashString() == pr["hash"].get<std::string>());
+                CHECK(p->Title() == pr["title"].get<std::string>());
+                if (pr["type"] == "RoverWayPointParameter") {
+                    auto* rp = dynamic_cast<P38::RoverWayPointParameter*>(p);
+                    REQUIRE(rp != nullptr);
+                    CHECK_F64n(rp->craftStartLatitude, pr["start"][0].get<double>());
+                    CHECK_F64n(rp->craftStartLongitude, pr["start"][1].get<double>());
+                    CheckUlp(rp->craftEndLatitude, pr["end"][0].get<double>(), maxUlpEnd);
+                    CheckUlp(rp->craftEndLongitude, pr["end"][1].get<double>(), maxUlpEnd);
+                }
+                ++paramsChecked;
+            }
+            auto checkOrbit = [&](const Orbit* o, const json& el) {
+                REQUIRE(o != nullptr);
+                // the draw level elements; the final orbit went through Orbit.UpdateFromStateVectors (see tests/test_fineprint.cpp, GenerateOrbit)
+                CHECK(std::fabs(o->semiMajorAxis - el["sma"].get<double>()) <= 1e-12 * std::fabs(el["sma"].get<double>()));
+                CHECK(std::fabs(std::fabs(o->eccentricity) - std::fabs(el["ecc"].get<double>())) <= 1e-9);
+                CHECK(std::fabs(o->inclination - el["inc"].get<double>()) <= 1e-9);
+            };
+            if (type == "RoverConstructionContract") {
+                auto* t = dynamic_cast<Templates::RoverConstructionContract*>(c.get());
+                REQUIRE(t != nullptr);
+                CHECK(t->TargetBody()->name() == r["targetBody"].get<std::string>());
+                CHECK(GameDataTail(t->roverCraftDefinition->craftURL) == r["craftURL"].get<std::string>());
+                CHECK_F64n(t->CraftStartLatitude(), r["start"][0].get<double>());
+                CHECK_F64n(t->CraftStartLongitude(), r["start"][1].get<double>());
+                CheckUlp(t->CraftEndLatitude(), r["end"][0].get<double>(), maxUlpEnd);
+                CheckUlp(t->CraftEndLongitude(), r["end"][1].get<double>(), maxUlpEnd);
+                ++groundCases;
+            } else if (type == "OrbitalConstructionContract") {
+                auto* t = dynamic_cast<Templates::OrbitalConstructionContract*>(c.get());
+                REQUIRE(t != nullptr);
+                CHECK(t->TargetBody()->name() == r["targetBody"].get<std::string>());
+                CHECK(GameDataTail(t->craftDefinition->craftURL) == r["craftURL"].get<std::string>());
+                CHECK(t->ConstructionPartName() == r["partName"].get<std::string>());
+                CHECK(t->VesselName() == r["vesselName"].get<std::string>());
+                CHECK_F64n(t->OrbitEccentricity(), r["eccentricity"].get<double>());
+                CHECK_F64n(t->OrbitAltitudeFactor(), r["altitudeFactor"].get<double>());
+                CHECK_F64n(t->OrbitInclinationFactor(), r["inclinationFactor"].get<double>());
+                checkOrbit(t->orbit.get(), r["orbit"]);
+                ++orbitCases;
+            } else {
+                auto* t = dynamic_cast<Templates::VesselRepairContract*>(c.get());
+                REQUIRE(t != nullptr);
+                CHECK(t->TargetBody()->name() == r["targetBody"].get<std::string>());
+                CHECK(GameDataTail(t->repairCraftDefinition->craftURL) == r["craftURL"].get<std::string>());
+                CHECK(t->RepairPartName() == r["partName"].get<std::string>());
+                CHECK(t->VesselName() == r["vesselName"].get<std::string>());
+                CHECK(t->spawnOnGround == r["spawnOnGround"].get<bool>());
+                CHECK(t->spawnInOrbit == r["spawnInOrbit"].get<bool>());
+                CHECK_F64n(t->CraftStartLatitude(), r["start"][0].get<double>());
+                CHECK_F64n(t->CraftStartLongitude(), r["start"][1].get<double>());
+                CHECK_F64n(t->OrbitEccentricity(), r["eccentricity"].get<double>());
+                CHECK_F64n(t->OrbitAltitudeFactor(), r["altitudeFactor"].get<double>());
+                CHECK_F64n(t->OrbitInclinationFactor(), r["inclinationFactor"].get<double>());
+                if (t->spawnInOrbit) {
+                    checkOrbit(t->orbit.get(), r["orbit"]);
+                    ++orbitCases;
+                } else {
+                    ++groundCases;
+                }
+            }
+        }
+    }
+    MESSAGE("generated / refused: Rover " << counts["RoverConstructionContract"].first << "/" << counts["RoverConstructionContract"].second << ", Orbital "
+                                          << counts["OrbitalConstructionContract"].first << "/" << counts["OrbitalConstructionContract"].second << ", Repair "
+                                          << counts["VesselRepairContract"].first << "/" << counts["VesselRepairContract"].second << "; NullReferenceException " << thrown << "; max ulp of the end coordinates " << maxUlpEnd
+                                          << "; parameters checked " << paramsChecked << "; orbit cases " << orbitCases << ", ground cases " << groundCases);
+    for (const char* t : {"RoverConstructionContract", "OrbitalConstructionContract", "VesselRepairContract"}) {
+        CHECK(counts[t].first > 0);
+        CHECK(counts[t].second > 0);
+    }
+    CHECK(thrown > 0);
+    CHECK(orbitCases > 0);
+    CHECK(groundCases > 0);
+}
+
+// ---- behaviour: derived from the decompiled C# (each check names the member it follows) --------------------------------------------------------
+namespace {
+
+// the first reference case of a contract type in the scenario "everything" that was generated and is not an exception
+const json* FirstGenerated(const std::string& type, int prestige, std::function<bool(const json&)> pred = nullptr) {
+    for (const json& e : RefT()["contracts"]) {
+        if (e["scenario"].get<size_t>() != 9 || e["type"] != type || e["prestige"].get<int>() != prestige || e["mult"].get<int>() != 0) continue;
+        const json& r = e["result"];
+        if (r.is_null() || r.contains("exception")) continue;
+        if (pred && !pred(r)) continue;
+        return &e;
+    }
+    return nullptr;
+}
+
+struct TemplateRig {
+    World38b w;
+    PreBuiltFixture fx;
+    ContractSystem cs;
+    explicit TemplateRig(size_t scenario = 9) {
+        cs.Awake();
+        ConfigNode weights = WeightsNode38b(RefT()["weights"]);
+        cs.LoadNow(weights);
+        LoadScenario38b(w, RefT()["scenarios"][scenario]);
+        fx.Reload();
+    }
+    std::unique_ptr<Contract> Make(const json& e) {
+        w.SetMult(Ref38b()["mult_sets"][static_cast<size_t>(e["mult"].get<int>())]);
+        w.nextGuid = GuidOf38b(e["guid"]);
+        const int rseed = e["rseed"].get<int>();
+        ContractsEnvironment::Current().newRandomSeed = [rseed] { return rseed; };
+        std::unique_ptr<Contract> c = cs.GenerateContract(e["seed"].get<int>(), PrestigeOf38b(e["prestige"].get<int>()), e["type"].get<std::string>());
+        REQUIRE(c != nullptr);
+        return c;
+    }
+};
+
+}  // namespace
+
+TEST_CASE("WP-38c RoverConstructionContract: OnAccepted spawn request, vessel events, node round trip") {
+    TemplateRig t;
+    const json* e = FirstGenerated("RoverConstructionContract", 1);
+    REQUIRE(e != nullptr);
+    std::unique_ptr<Contract> c = t.Make(*e);
+    auto* rc = dynamic_cast<Templates::RoverConstructionContract*>(c.get());
+    REQUIRE(rc != nullptr);
+    // OnAccepted: a landed pre-built rover at the start position, named after the contract seed
+    std::vector<Contracts::Lite::PreBuiltVesselSituation> requests;
+    Contracts::Lite::PreBuiltEnvironment::spawnPreBuiltShip = [&](Contracts::Lite::PreBuiltCraftDefinition& def, const Contracts::Lite::PreBuiltVesselSituation& s) {
+        CHECK(def.craftURL == s.craftFile);
+        requests.push_back(s);
+    };
+    c->state = Contract::State::Active;
+    c->Register();
+    rc->OnAccepted();
+    REQUIRE(requests.size() == 1);
+    CHECK(requests[0].targetBody == rc->targetBody);
+    CHECK_F64n(requests[0].latitude, rc->craftStartLatitude);
+    CHECK_F64n(requests[0].longitude, rc->craftStartLongitude);
+    CHECK(requests[0].situation == Contracts::Lite::PreBuiltVesselSituation::StartSituation::LANDED);
+    CHECK_FALSE(requests[0].playerCreated);
+    CHECK_FALSE(requests[0].focusOnSpawn);
+    CHECK(requests[0].vesselName == rc->CreateVesselName(rc->targetBody->bodyDisplayName));
+    CHECK(rc->waitingForVslSpawn);
+    // the spawned vessel arrives through GameEvents.Contract.onContractPreBuiltVesselSpawned
+    VRig vrig(t.w, *rc->targetBody, {"mk1pod.v2"}, Vessel::Situations::LANDED);
+    vrig.v.persistentId = 777;
+    vrig.v.vesselName = requests[0].vesselName;
+    ksp::events::GameEvents::Contract::onContractPreBuiltVesselSpawned.Fire(&vrig.v);
+    CHECK(rc->RoverVesselId() == 777u);
+    CHECK_FALSE(rc->waitingForVslSpawn);
+    auto* wp = rc->GetParameterT<P38::RoverWayPointParameter>();
+    REQUIRE(wp != nullptr);
+    CHECK(wp->RoverVslId() == 777u);
+    CHECK(wp->RoverVessel() == &vrig.v);
+    // a second spawn event is ignored (not waiting any more)
+    vrig.v.persistentId = 778;
+    ksp::events::GameEvents::Contract::onContractPreBuiltVesselSpawned.Fire(&vrig.v);
+    CHECK(rc->RoverVesselId() == 777u);
+    // persistentId changes are followed
+    ksp::events::GameEvents::onVesselPersistentIdChanged.Fire(777u, 888u);
+    CHECK(rc->RoverVesselId() == 888u);
+    ksp::events::GameEvents::onVesselPersistentIdChanged.Fire(1u, 2u);
+    CHECK(rc->RoverVesselId() == 888u);
+    // node round trip: OnSave -> a fresh contract of the same type loaded through the ContractSystem
+    ConfigNode node("CONTRACT");
+    c->Save(node);
+    CHECK(node.HasValue("bodyName"));
+    CHECK(node.HasValue("roverCraftDef"));
+    CHECK(*node.GetValue("roverVslId") == "888");
+    {
+        ConfigNode save("SCENARIO");
+        save.AddValue("name", "ContractSystem");
+        ConfigNode* contracts = save.AddNode("CONTRACTS");
+        contracts->AddNode(node.CreateCopy());
+        ContractSystem cs2;
+        cs2.Awake();
+        cs2.LoadNow(save);
+        REQUIRE(cs2.Contracts().size() == 1);
+        auto* back = dynamic_cast<Templates::RoverConstructionContract*>(cs2.Contracts()[0].get());
+        REQUIRE(back != nullptr);
+        CHECK(back->targetBody == rc->targetBody);
+        CHECK(back->roverCraftDefinition == rc->roverCraftDefinition);
+        CHECK_F64n(back->craftStartLatitude, rc->craftStartLatitude);
+        CHECK_F64n(back->craftEndLongitude, rc->craftEndLongitude);
+        CHECK(back->RoverVesselId() == 888u);
+        ConfigNode again("CONTRACT");
+        cs2.Contracts()[0]->Save(again);
+        CHECK(again.ToString() == node.ToString());
+        cs2.Contracts()[0]->Unregister();
+    }
+    // OnVesselDestroy of the contract's rover fails the contract
+    vrig.v.persistentId = 888;
+    ksp::events::GameEvents::onVesselDestroy.Fire(&vrig.v);
+    CHECK(c->ContractState() == Contract::State::Failed);
+    Contracts::Lite::PreBuiltEnvironment::spawnPreBuiltShip = nullptr;
+}
+
+TEST_CASE("WP-38c OrbitalConstructionContract: OnAccepted spawn request (orbit), vessel events, node round trip, requirements") {
+    TemplateRig t;
+    const json* e = FirstGenerated("OrbitalConstructionContract", 0);
+    REQUIRE(e != nullptr);
+    std::unique_ptr<Contract> c = t.Make(*e);
+    auto* oc = dynamic_cast<Templates::OrbitalConstructionContract*>(c.get());
+    REQUIRE(oc != nullptr);
+    std::vector<Contracts::Lite::PreBuiltVesselSituation> requests;
+    Contracts::Lite::PreBuiltEnvironment::spawnPreBuiltShip = [&](Contracts::Lite::PreBuiltCraftDefinition&, const Contracts::Lite::PreBuiltVesselSituation& s) { requests.push_back(s); };
+    c->state = Contract::State::Active;
+    c->Register();
+    oc->OnAccepted();
+    REQUIRE(requests.size() == 1);
+    CHECK(requests[0].hasOrbit);
+    CHECK(requests[0].situation == Contracts::Lite::PreBuiltVesselSituation::StartSituation::ORBITING);
+    CHECK(requests[0].orbit.referenceBody == oc->targetBody);
+    CHECK_F64n(requests[0].orbit.semiMajorAxis, oc->orbit->semiMajorAxis);
+    CHECK(requests[0].vesselName == oc->VesselName());
+    CHECK(requests[0].craftFile == oc->craftDefinition->craftURL);
+    CHECK(oc->waitingForVslSpawn);
+    VRig vrig(t.w, *oc->targetBody, {"mk1pod.v2"}, Vessel::Situations::ORBITING);
+    vrig.v.persistentId = 4711;
+    ksp::events::GameEvents::Contract::onContractPreBuiltVesselSpawned.Fire(&vrig.v);
+    CHECK(oc->ConstructionVesselId() == 4711u);
+    auto* cp = oc->GetParameterT<P38::ConstructionParameter>();
+    REQUIRE(cp != nullptr);
+    CHECK(cp->VesselPersistentId() == 4711u);
+    CHECK(cp->PartName() == oc->ConstructionPartName());
+    CHECK(cp->VesselName() == oc->VesselName());
+    ksp::events::GameEvents::onVesselPersistentIdChanged.Fire(4711u, 4712u);
+    CHECK(oc->ConstructionVesselId() == 4712u);
+    // OnSave / OnLoad
+    ConfigNode node("CONTRACT");
+    c->Save(node);
+    CHECK(*node.GetValue("constructionPartName") == oc->ConstructionPartName());
+    CHECK(*node.GetValue("vesselName") == oc->VesselName());
+    CHECK(node.HasValue("constructionCraftDef"));
+    {
+        ConfigNode save("SCENARIO");
+        save.AddValue("name", "ContractSystem");
+        save.AddNode("CONTRACTS")->AddNode(node.CreateCopy());
+        ContractSystem cs2;
+        cs2.Awake();
+        cs2.LoadNow(save);
+        REQUIRE(cs2.Contracts().size() == 1);
+        auto* back = dynamic_cast<Templates::OrbitalConstructionContract*>(cs2.Contracts()[0].get());
+        REQUIRE(back != nullptr);
+        CHECK(back->craftDefinition == oc->craftDefinition);
+        CHECK(back->constructionPart != nullptr);  // OnLoad: PartLoader.getPartInfoByName(constructionPartName)
+        REQUIRE(back->orbit != nullptr);           // OnLoad regenerates the orbit from the factors
+        CHECK_F64n(back->orbit->semiMajorAxis, oc->orbit->semiMajorAxis);
+        ConfigNode again("CONTRACT");
+        cs2.Contracts()[0]->Save(again);
+        CHECK(again.ToString() == node.ToString());
+        cs2.Contracts()[0]->Unregister();
+    }
+    // the map renderer is set up in the tracking station for an offered contract (ContractDefs.DisplayOfferedOrbits)
+    int setups = 0;
+    L38::FinePrintEnvironment::setupOrbitRenderer = [&](Contract&, Orbit&) { ++setups; };
+    L38::FinePrintEnvironment::cleanupOrbitRenderer = [] {};
+    {
+        SceneScope sc(GameScenes::TRACKSTATION);
+        ConfigNode save("SCENARIO");
+        save.AddValue("name", "ContractSystem");
+        ConfigNode* cn = save.AddNode("CONTRACTS")->AddNode(node.CreateCopy());
+        cn->SetValue("state", "Offered", true);
+        ContractSystem cs3;
+        cs3.Awake();
+        cs3.LoadNow(save);
+        CHECK(setups == 1);
+        for (auto& x : cs3.Contracts()) x->Unregister();
+    }
+    L38::FinePrintEnvironment::setupOrbitRenderer = nullptr;
+    L38::FinePrintEnvironment::cleanupOrbitRenderer = nullptr;
+    // vessel destruction fails the contract
+    vrig.v.persistentId = 4712;
+    ksp::events::GameEvents::onVesselDestroy.Fire(&vrig.v);
+    CHECK(c->ContractState() == Contract::State::Failed);
+    Contracts::Lite::PreBuiltEnvironment::spawnPreBuiltShip = nullptr;
+}
+
+TEST_CASE("WP-38c VesselRepairContract: OnAccepted (orbit / landed), the broken part of the spawned vessel, node round trip") {
+    TemplateRig t;
+    // one orbit contract and one landed contract
+    const json* eo = FirstGenerated("VesselRepairContract", 0, [](const json& r) { return r["spawnInOrbit"].get<bool>(); });
+    const json* eg = FirstGenerated("VesselRepairContract", 1, [](const json& r) { return r["spawnOnGround"].get<bool>(); });
+    REQUIRE(eo != nullptr);
+    REQUIRE(eg != nullptr);
+    std::vector<Contracts::Lite::PreBuiltVesselSituation> requests;
+    Contracts::Lite::PreBuiltEnvironment::spawnPreBuiltShip = [&](Contracts::Lite::PreBuiltCraftDefinition&, const Contracts::Lite::PreBuiltVesselSituation& s) { requests.push_back(s); };
+    {
+        std::unique_ptr<Contract> c = t.Make(*eo);
+        auto* vr = dynamic_cast<Templates::VesselRepairContract*>(c.get());
+        REQUIRE(vr != nullptr);
+        c->state = Contract::State::Active;
+        c->Register();
+        vr->OnAccepted();
+        REQUIRE(requests.size() == 1);
+        CHECK(requests[0].hasOrbit);
+        CHECK(requests[0].situation == Contracts::Lite::PreBuiltVesselSituation::StartSituation::ORBITING);
+        CHECK(requests[0].vesselName == vr->VesselName());
+        CHECK(vr->waitingForVslSpawn);
+        // the spawned vessel: a ProtoVessel whose solar panel part has a BROKEN module (deployState)
+        VRig vrig(t.w, *vr->targetBody, {"mk1pod.v2", "solarPanels1"}, Vessel::Situations::ORBITING);
+        auto pv = std::make_shared<ProtoVessel>(vrig.v);
+        pv->persistentId = 9100;
+        vrig.v.protoVessel = pv.get();
+        ProtoPartSnapshot* panel = nullptr;
+        for (auto& ps : pv->protoPartSnapshots)
+            if (ps->partName.value_or("") == vr->RepairPartName()) panel = ps.get();
+        REQUIRE(panel != nullptr);
+        {
+            panel->persistentId = 6001;
+            for (auto& m : panel->modules) m->moduleValues->SetValue("deployState", "BROKEN", true);
+        }
+        const AvailablePart* info = t.w.g.data.parts.getPartInfoByName(vr->RepairPartName());
+        REQUIRE(info != nullptr);
+        ksp::events::GameEvents::Contract::onContractPreBuiltVesselSpawned.Fire(&vrig.v);
+        CHECK(vr->RepairVesselId() == 9100u);
+        CHECK_FALSE(vr->waitingForVslSpawn);
+        auto* rp = vr->GetParameterT<P38::RepairPartParameter>();
+        REQUIRE(rp != nullptr);
+        CHECK(rp->VesselPersistentId() == 9100u);
+        CHECK(rp->PartName() == vr->RepairPartName());
+        CHECK(rp->VesselName() == vr->VesselName());
+        CHECK(rp->PartPersistentId() == 6001u);
+        // OnSave / OnLoad (spawnOrbit is only written for a landed craft)
+        ConfigNode node("CONTRACT");
+        c->Save(node);
+        CHECK_FALSE(node.HasValue("spawnOrbit"));
+        CHECK(*node.GetValue("repairVslId") == "9100");
+        CHECK(*node.GetValue("repairPartName") == vr->RepairPartName());
+        ksp::events::GameEvents::onVesselPersistentIdChanged.Fire(9100u, 9200u);
+        CHECK(vr->RepairVesselId() == 9200u);
+        vrig.v.protoVessel = nullptr;
+        vrig.v.persistentId = 9200;
+        ksp::events::GameEvents::onVesselDestroy.Fire(&vrig.v);
+        CHECK(c->ContractState() == Contract::State::Failed);
+    }
+    {
+        requests.clear();
+        std::unique_ptr<Contract> c = t.Make(*eg);
+        auto* vr = dynamic_cast<Templates::VesselRepairContract*>(c.get());
+        REQUIRE(vr != nullptr);
+        c->state = Contract::State::Active;
+        c->Register();
+        vr->OnAccepted();
+        REQUIRE(requests.size() == 1);
+        CHECK_FALSE(requests[0].hasOrbit);
+        CHECK(requests[0].situation == Contracts::Lite::PreBuiltVesselSituation::StartSituation::LANDED);
+        CHECK_F64n(requests[0].latitude, vr->craftStartLatitude);
+        CHECK_F64n(requests[0].longitude, vr->craftStartLongitude);
+        ConfigNode node("CONTRACT");
+        c->Save(node);
+        CHECK(*node.GetValue("spawnOrbit") == "Landed");
+        // OnLoad restores the landed flags
+        ConfigNode save("SCENARIO");
+        save.AddValue("name", "ContractSystem");
+        save.AddNode("CONTRACTS")->AddNode(node.CreateCopy());
+        ContractSystem cs2;
+        cs2.Awake();
+        cs2.LoadNow(save);
+        REQUIRE(cs2.Contracts().size() == 1);
+        auto* back = dynamic_cast<Templates::VesselRepairContract*>(cs2.Contracts()[0].get());
+        REQUIRE(back != nullptr);
+        CHECK(back->spawnOnGround);
+        CHECK_FALSE(back->spawnInOrbit);
+        CHECK(back->orbit == nullptr);
+        CHECK(back->repairCraftDefinition == vr->repairCraftDefinition);
+        CHECK_F64n(back->craftStartLatitude, vr->craftStartLatitude);
+        ConfigNode again("CONTRACT");
+        cs2.Contracts()[0]->Save(again);
+        CHECK(again.ToString() == node.ToString());
+        cs2.Contracts()[0]->Unregister();
+        c->Unregister();
+    }
+    Contracts::Lite::PreBuiltEnvironment::spawnPreBuiltShip = nullptr;
+}
+
+TEST_CASE("WP-38c construction templates: requirements (R&D / part purchase seams), list mutation of the cached craft lists, NullReferenceException without loaded craft defs") {
+    TemplateRig t;
+    // MeetRequirements
+    Templates::VesselRepairContract vr;
+    CHECK(vr.MeetRequirements());  // evaRepairKit exists and PartModelPurchased is true by default
+    ContractsEnvironment::Current().partModelPurchased = [](const std::string&) { return false; };
+    CHECK_FALSE(vr.MeetRequirements());
+    ContractsEnvironment::Current().partModelPurchased = nullptr;
+    Templates::OrbitalConstructionContract oc;
+    CHECK(oc.MeetRequirements());  // no R&D: every technology node is Available
+    Templates::RoverConstructionContract rc;
+    CHECK(rc.MeetRequirements());  // an orbited body besides the home world exists in the scenario "everything"
+}
+
+TEST_CASE("WP-38c construction templates: VesselRepair removes crafts without exactly one broken part from the cached list, Generate fails without craft defs") {
+    TemplateRig t;
+    auto& list = FP3::ContractDefs::PreBuiltCraftDefs->CraftForContractType("VesselRepair");
+    const size_t before = list.size();
+    const json* e = FirstGenerated("VesselRepairContract", 0);
+    REQUIRE(e != nullptr);
+    t.Make(*e);
+    // the 2-broken-part craft (P1) was removed from the cache by Generate (sic: the C# edits the cached list)
+    CHECK(list.size() < before);
+    for (auto& d : list) CHECK(d->brokenPartNames().size() == 1);
+    // without ContractDefs.PreBuiltCraftDefs the C# throws a NullReferenceException
+    FP3::ContractDefs::PreBuiltCraftDefs.reset();
+    Templates::RoverConstructionContract rc;
+    CHECK_THROWS_AS(t.cs.GenerateContract(5, ContractPrestige::Trivial, "RoverConstructionContract"), NullReferenceException);
+}

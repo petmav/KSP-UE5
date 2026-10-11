@@ -7,6 +7,8 @@
 #include "ksp/fineprint/contracts.hpp"
 #include "ksp/fineprint/parameters.hpp"
 #include "ksp/fineprint/compatibility.hpp"
+#include "ksp/fineprint/construction_templates.hpp"
+#include "ksp/fineprint/contract_defs.hpp"
 #include "ksp/fineprint/scenario_contract_events.hpp"
 #include "ksp/fineprint/sentinel.hpp"
 #include "ksp/save/game.hpp"
@@ -28,6 +30,10 @@ void InstallAll() {
     ContractSystem::RegisterContractType("StationContract", [] { return std::make_unique<Contracts::StationContract>(); });
     ContractSystem::RegisterContractType("SurveyContract", [] { return std::make_unique<Contracts::SurveyContract>(); });
     ContractSystem::RegisterContractType("TourismContract", [] { return std::make_unique<Contracts::TourismContract>(); });
+    // Contracts/Templates/{OrbitalConstruction,RoverConstruction,VesselRepair}Contract.cs (the WP-37 templates that were deferred to the FinePrint package)
+    ContractSystem::RegisterContractType("OrbitalConstructionContract", [] { return std::make_unique<T::OrbitalConstructionContract>(); });
+    ContractSystem::RegisterContractType("RoverConstructionContract", [] { return std::make_unique<T::RoverConstructionContract>(); });
+    ContractSystem::RegisterContractType("VesselRepairContract", [] { return std::make_unique<T::VesselRepairContract>(); });
     // SentinelMission/*.cs (namespace SentinelMission)
     ContractSystem::RegisterContractType("CometDetectionContract", [] { return std::make_unique<SentinelMission::CometDetectionContract>(); });
     ContractSystem::RegisterContractType("SentinelContract", [] { return std::make_unique<SentinelMission::SentinelContract>(); });
@@ -61,6 +67,10 @@ void InstallAll() {
     SentinelMission::SentinelScenario::Register();
     SentinelMission::SentinelModule::Register();
     // seams
+    ksp::Contracts::ContractsEnvironment::Current().loadContractDefsData = [] {  // ContractSystem.OnAwake (ContractSystem.cs:219)
+        FinePrint::ContractDefs::LoadContractCraftDefs();
+        FinePrint::ContractDefs::LoadConstructionPartsList();
+    };
     ksp::Contracts::ContractsEnvironment::Current().oldCareerSave = [](const std::string& v) { return L::CompatibilityUtilities::OldCareerSave(Game::Modes::CAREER, v); };
     ksp::Contracts::ContractsEnvironment::Current().updateCareerSave = [](ConfigNode& n) { L::CompatibilityUtilities::UpdateCareerSave(n); };
     ksp::CareerEnvironment::Current().valueAndUnits = [](int recordTrackType, double value) {
