@@ -38,6 +38,7 @@ class Part;
 class ProtoPartModuleSnapshot;
 class IPartSizeModifier;
 class IConstruction;
+class ModuleInventoryPart;
 class IAnimatedModule;                 // WP-27 ksp/modules/animated_module.hpp
 class ITorqueProvider;                 // WP-24 ksp/modules/control_types.hpp
 namespace events {
@@ -166,6 +167,13 @@ public:
     virtual bool OnWillBeMirrored(Quaternionf& /*rotation*/, AttachNode* /*selPartNode*/, Part* /*partParent*/) { return false; }  // :927
     virtual void PromoteToPhysicalPart() {}                                        // :948
     virtual void DemoteToPhysicslessPart() {}                                      // :952
+    // WP-33 (PartModule.cs:932-962): the inventory / EVA-construction hooks; every one is an empty virtual in C#
+    virtual void OnInventoryModeDisable() {}                                       // :932
+    virtual void OnInventoryModeEnable() {}                                        // :936
+    virtual void OnConstructionModeUpdate() {}                                     // :940
+    virtual void OnConstructionModeFixedUpdate() {}                                // :944
+    virtual void OnPartCreatedFomInventory(ModuleInventoryPart&) {}                // :956
+    virtual void OnStoredInInventory(ModuleInventoryPart&) {}                      // :960
     // Unity's Instantiate: the serialized state of `from` (non-private KSPField values, moduleName, isEnabled,
     // upgradesApplied) is copied into this fresh component before its Awake. Modules with serialized state of their own
     // (ModulePartVariants.variantList) extend it.

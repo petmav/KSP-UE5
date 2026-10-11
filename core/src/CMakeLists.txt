@@ -102,6 +102,17 @@ add_library(kspcore STATIC
     fineprint/orbit_utilities.cpp
     fineprint/waypoint.cpp
     fineprint/exploration_contract.cpp
+    fineprint/utilities.cpp
+    fineprint/utilities_vessel.cpp
+    fineprint/parameters_vessel.cpp
+    fineprint/parameters_log.cpp
+    fineprint/parameters_space.cpp
+    fineprint/parameters_waypoint.cpp
+    fineprint/contracts_basic.cpp
+    fineprint/install.cpp
+    fineprint/contracts_survey.cpp
+    fineprint/contracts_other.cpp
+    fineprint/scenario_contract_events.cpp
     contracts/parameters.cpp
     contracts/predicates.cpp
     contracts/module_test_subject.cpp
@@ -241,6 +252,11 @@ add_library(kspcore STATIC
     modules/module_procedural_fairing.cpp
     modules/module_structural.cpp
     modules/misc_modules.cpp
+    # WP-33 inventory and EVA construction
+    inventory/inventory.cpp
+    inventory/module_inventory_part.cpp
+    inventory/construction.cpp
+    inventory/inventory_ui.cpp
     # WP-53 Breaking Ground: deployed science, ROCs, contracts
     modules/module_cargo_part.cpp
     serenity/serenity_env.cpp

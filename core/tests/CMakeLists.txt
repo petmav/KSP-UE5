@@ -47,9 +47,17 @@ add_executable(kspcore_tests
     test_contracts.cpp
     test_serenity.cpp
     test_fineprint.cpp
+    test_fineprint2.cpp
     test_space_center.cpp
     test_missions.cpp
     test_missions_runtime.cpp
+    test_inventory.cpp
+    test_inventory_rules.cpp
+    test_construction.cpp
+    test_inventory_ui.cpp
+    test_inventory_deploy.cpp
+    test_inventory_misc.cpp
+    test_construction_flow.cpp
     test_input.cpp
     test_input_flight.cpp
     test_input_devices.cpp
