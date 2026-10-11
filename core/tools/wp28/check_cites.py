@@ -2,10 +2,12 @@
 """Check (and with --fix repair) the C# line citations above ported functions.
 
 A cite is a comment line starting with `// File.cs:N` or a bare `// :N` (File taken from the class of the function that follows, or the
-last explicit file). The function name is taken from the next code line (`Class::Name(`). The check: line N +-2 of
-decompiled/KSP-Decompiled/Assembly-CSharp/<File>.cs contains the name. --fix moves N to the nearest declaration line of that name.
+last explicit file). The function name is taken from the next code line (`Class::Name(`). The default (exact) check: N must be a
+declaration line of that name in decompiled/KSP-Decompiled/Assembly-CSharp/<File>.cs (candidates(): the line where the member name
+appears with its signature, not a brace or body line); a miss prints `off by k` and the right line. `--window K` keeps the legacy
+check (the name appears within +-K lines of N; the old default was 2). --fix moves N to the nearest declaration line of that name.
 
-Usage: python -I tools/wp28/check_cites.py [--fix] [--cs-root DIR] file.cpp ...   (exit 1 on mismatches)
+Usage: python -I tools/wp28/check_cites.py [--fix] [--window K] [--cs-root DIR] file.cpp ...   (exit 1 on mismatches)
 """
 import os
 import re
@@ -28,7 +30,7 @@ NAME_ALIAS = {"set_currentMassVal": "currentMassVal", "set_massThresholdVal": "m
               "TransferStep": "transferResources",
               "ApplyJointBreakForce": "SetJoint", "SiteRenameAcceptPressed": "RenameSite", "SiteRenameDismissPressed": "RenameSite",
               "SiteRenameAcceptEnabled": "RenameSite"}
-CITE = re.compile(r"^(\s*)// (?:([A-Za-z0-9_]+)\.cs)?:(\d+)\b")
+CITE = re.compile(r"^(\s*)// (?:([A-Za-z0-9_/]+)\.cs)?:(\d+)\b")
 FUNC = re.compile(r"(\w+)::(~?\w+)\s*\(")
 
 
@@ -36,6 +38,13 @@ def load(cs_root, f, cache={}):
     key = (cs_root, f)
     if key not in cache:
         p = os.path.join(cs_root, f + ".cs")
+        if "/" in f and not os.path.exists(p):  # WP-37: `Templates/PlantFlag.cs` disambiguates same-named files in different folders
+            suffix = os.sep + f.replace("/", os.sep) + ".cs"
+            for dp, _dn, fn in os.walk(cs_root):
+                cand = os.path.join(dp, f.split("/")[-1] + ".cs")
+                if f.split("/")[-1] + ".cs" in fn and cand.endswith(suffix):
+                    p = cand
+                    break
         if not os.path.exists(p):  # WP-31: classes in sub folders (Experience/Effects/X.cs ...): first file of that name below cs_root
             for dp, _dn, fn in os.walk(cs_root):
                 if f + ".cs" in fn:
@@ -54,7 +63,7 @@ def candidates(lines, name):
     return sorted(set(out))
 
 
-def process(path, cs_root, fix):
+def process(path, cs_root, fix, window=None):
     src = open(path, encoding="utf-8", newline="").read()
     nl = "\r\n" if "\r\n" in src else "\n"
     lines = src.split(nl)
@@ -89,7 +98,10 @@ def process(path, cs_root, fix):
             total += 1
             continue
         total += 1
-        ok = any(re.search(r"\b" + re.escape(name) + r"\b", cs[k - 1]) for k in range(max(1, n - 2), min(len(cs), n + 2) + 1))
+        if window is None:  # exact: N must itself be a declaration line
+            ok = n in candidates(cs, name)
+        else:
+            ok = any(re.search(r"" + re.escape(name) + r"", cs[k - 1]) for k in range(max(1, n - window), min(len(cs), n + window) + 1))
         if ok and fname:
             continue
         if ok:  # right line, but the file name is missing
@@ -105,7 +117,7 @@ def process(path, cs_root, fix):
             bad += 1
             continue
         best = min(cands, key=lambda c: abs(c - n))
-        print("%s:%d: %s.cs:%d -> %d (%s)" % (path, i + 1, f, n, best, name))
+        print("%s:%d: %s.cs:%d -> %d (%s) off by %d" % (path, i + 1, f, n, best, name, abs(best - n)))
         if fix:
             new = (CITE.sub(lambda mm: "%s// %s:%d" % (mm.group(1), (mm.group(2) + ".cs") if mm.group(2) else (f + ".cs"), best), l, count=1))
             lines[i] = new
@@ -124,10 +136,15 @@ def main():
         k = args.index("--cs-root")
         cs = args[k + 1]
         del args[k:k + 2]
+    window = None
+    if "--window" in args:
+        k = args.index("--window")
+        window = int(args[k + 1])
+        del args[k:k + 2]
     files = [a for a in args if not a.startswith("--")]
     bad = total = 0
     for f in files:
-        b, t = process(f, cs, fix)
+        b, t = process(f, cs, fix, window)
         bad += b
         total += t
     print("%d cites checked, %d mismatches" % (total, bad))

@@ -7,8 +7,6 @@
 #include "ksp/dotnet/ucrt_libm.hpp"
 
 namespace ksp::UnityNative {
-// float sqrt through ksp::dotnet (IEEE sqrt is correctly rounded: the double result rounded to float equals the float sqrt)
-static inline float SqrtF(float x) { return static_cast<float>(dotnet::Math::Sqrt(static_cast<double>(x))); }
 
 // QuaternionScripting::AngleAxis -> AxisAngleToQuaternionSafe(axis, Deg2Rad(angle)) (Runtime/Math/Quaternion.h)
 Quaternionf AngleAxis(float angle, const Vector3f& axis) {

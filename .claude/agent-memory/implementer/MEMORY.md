@@ -2,3 +2,9 @@
 - [Bash apostrophe heredoc](feedback_bash_apostrophe_heredoc.md) — apostrophes in Bash commands break parsing; use Write for such text
 - [WP-25 docking lessons](wp25-docking-lessons.md) — host/test-scaffolding facts: Awake-before-part, packed vessels, flightIDs, attachNodes by value
 - [WP-24 control lessons](wp24-control-lessons.md) — prefab-vs-instance Awake order, real Vessel resource host in tests, check_cites --fix, native Unity hooks
+- [WP-36 career lessons](wp36-career-lessons.md) — listener order is reverse, scenario Start is manual, test world, save/data gaps, WSL edit hazard
+- [WP-35 science lessons](wp35-science-lessons.md) — lab has no GenerateScience, TestVessel vesselHost leak, FxModules animation, cat -n cite pitfall
+- [WP-39 CommNet lessons](wp39-commnet-lessons.md) — Game15 before fixtures, event-handler dtor leaks, cfg reference filtering, WSL detached run
+- [WSL launch from Git Bash](wsl-launch-from-gitbash.md) — MSYS_NO_PATHCONV + script file + run_in_background; nohup children die
+- [WP-17b thrust lessons](wp17b-thrust-lessons.md) — sepMotor1 not staged, native quaternion multiply order, hierarchy normalisation, residuals
+- [WP-37 contracts lessons](wp37-contracts-lessons.md) — KSP quirks ported (AddKeywords first-only, SetState order), World37 fixture, stale-exe + heredoc pitfalls

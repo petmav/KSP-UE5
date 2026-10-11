@@ -26,6 +26,7 @@ WANT = {
     "microEngine.v2", "miniJetEngine", "omsEngine", "radialLiquidEngine1-2",
     "solidBooster.sm.v2", "solidBooster.v2", "toroidalAerospike", "turboFanEngine",
     "turboFanSize2",
+    "sepMotor1",  # Sepratron I (Dynawing, Learstar A1 separation motors)
 }
 
 

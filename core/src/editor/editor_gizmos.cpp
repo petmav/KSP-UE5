@@ -15,11 +15,9 @@ namespace ksp::EditorGizmos {
 using QuaternionExtensions::Inverse;
 
 namespace {
-// float sqrt through ksp::dotnet (IEEE sqrt is correctly rounded: the double result rounded to float equals the float sqrt)
-static inline float SqrtF(float x) { return static_cast<float>(dotnet::Math::Sqrt(static_cast<double>(x))); }
 // Transform.rotation = q (Unity normalises on set)
 void SetRotation(PartTransform& t, const Quaternionf& q) {
-    const float mag = SqrtF(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
+    const float mag = UnityNative::SqrtF(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
     t.rotation = mag < 0.00001f ? Quaternionf::identity() : Quaternionf(q.x / mag, q.y / mag, q.z / mag, q.w / mag);
 }
 }  // namespace
@@ -123,7 +121,7 @@ GizmoRotate GizmoRotate::Attach(const GizmoHost& host, const Vector3f& pivotPoin
     return component;
 }
 
-// GizmoRotate.cs:130
+// GizmoRotate.cs:129
 void GizmoRotate::OnHandleRotateStart() {
     if (useAngleSnap && coordSpace == UnityEngine::Space::World) SnapToGrid();
     rot0 = transform.rotation;
@@ -131,7 +129,7 @@ void GizmoRotate::OnHandleRotateStart() {
     if (host.transform != nullptr) hostRot0 = host.transform->rotation;
 }
 
-// GizmoRotate.cs:151
+// GizmoRotate.cs:152
 void GizmoRotate::OnHandleRotate(const Vector3f& axis, float dAngle) {
     if (!std::isnan(dAngle)) {
         if (coordSpace == UnityEngine::Space::Self) SetRotation(transform, UnityNative::AngleAxis(dAngle, axis) * rot0);
@@ -139,13 +137,13 @@ void GizmoRotate::OnHandleRotate(const Vector3f& axis, float dAngle) {
     }
 }
 
-// GizmoRotate.cs:163
+// GizmoRotate.cs:164
 void GizmoRotate::OnHandleRotateEnd(const Vector3f& axis, float deltaAngle) {
     isDragging = false;
     onGizmoRotated(UnityNative::AngleAxis(deltaAngle, axis));
 }
 
-// GizmoRotate.cs:185
+// GizmoRotate.cs:184
 void GizmoRotate::SetCoordSystem(UnityEngine::Space space) {
     if (space != coordSpace) {
         switch (space) {
@@ -157,7 +155,7 @@ void GizmoRotate::SetCoordSystem(UnityEngine::Space space) {
     }
 }
 
-// GizmoRotate.cs:203
+// GizmoRotate.cs:202
 void GizmoRotate::SnapToGrid() {
     const Vector3f eulerAngles = UnityNative::EulerAngles(host.transform->rotation);
     const float snap = SnapDegrees();

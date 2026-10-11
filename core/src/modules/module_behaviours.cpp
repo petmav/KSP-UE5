@@ -49,6 +49,7 @@ void RegisterExperienceManagementModule();  // kerbals/kerbal_misc.cpp (WP-31)
 void RegisterTripLoggerModule();  // vessel/module_trip_logger.cpp (WP-14)
 void RegisterAeroModules();       // aero/lifting_surface.cpp (WP-21)
 namespace detail {
+void RegisterContractModules();  // contracts/module_test_subject.cpp (WP-37)
 void RegisterScienceModules();  // modules/science_modules.cpp (WP-35; its header pulls in game_events.hpp, which would make the ModuleInventoryPart below ambiguous)
 }
 namespace {
@@ -224,6 +225,7 @@ void RegisterBuiltinModules() {
     Reg<ModuleAnimateHeat>({"ModuleAnimateHeat"});
     detail::RegisterResourceProcessingModules();  // WP-28: BaseConverter family, generators, scanners
     detail::RegisterScienceModules();  // WP-35: ModuleScienceExperiment / Container / Lab / Converter, ModuleEnviroSensor, ModuleSampleContainer (science_modules.cpp)
+    detail::RegisterContractModules();  // WP-37: ModuleTestSubject (contracts/module_test_subject.cpp)
     detail::RegisterCommNetModules();  // WP-39: ModuleDataTransmitter, ModuleKerbNetAccess, ModuleRelayEnabler, ModuleProbeControlPoint, CommNetVessel, CommNetScenario
     detail::RegisterThermalModules();  // ModuleCoreHeat, ModuleActiveRadiator, ModuleAblator, ModuleConductionMultiplier (WP-22)
     detail::RegisterEngineModules();  // WP-23: ModuleEngines, ModuleEnginesFX, MultiModeEngine (module_engines.cpp)
