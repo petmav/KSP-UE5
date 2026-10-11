@@ -1568,6 +1568,7 @@ struct ProbeRewards {
     float advance = 0, reward = 0, failure = 0, repReward = 0, repFailure = 0, science = 0;
     int minExpire = 1, maxExpire = 7, deadlineDays = 2130;
     CelestialBody* body = nullptr;
+    std::vector<CelestialBody*> weightedFrom;  // the real Generate draws WeightedBodyChoice(list) from the contract's Unity Random first
 };
 class ProbeSerenity : public KC::Contract {
 public:
@@ -1575,6 +1576,7 @@ public:
     std::string TypeName() const override { return "ProbeSerenity"; }
     bool MeetRequirements() override { return true; }
     bool Generate() override {
+        if (!r.weightedFrom.empty()) r.body = WeightedBodyChoice(r.weightedFrom);
         AddKeywords({"Scientific", "Commercial"});
         SetExpiry(r.minExpire, r.maxExpire);
         SetDeadlineDays(static_cast<float>(r.deadlineDays), r.body);
@@ -1590,6 +1592,7 @@ void CheckAgainstProbe(KC::ContractSystem& cs, KC::Contract& real, int seed, con
     auto probe = cs.GenerateContract(seed, Prestige53(prestige), "ProbeSerenity");
     REQUIRE(probe != nullptr);
     CHECK(probe->Agent()->Name() == real.Agent()->Name());
+    if (!pr.weightedFrom.empty()) CHECK(ProbeSerenity::r.body == dynamic_cast<SC::DeployedScienceContract&>(real).TargetBody());
     CHECK_F64(real.FundsAdvance, probe->FundsAdvance);
     CHECK_F64(real.FundsCompletion, probe->FundsCompletion);
     CHECK_F64(real.FundsFailure, probe->FundsFailure);
@@ -1891,4 +1894,390 @@ TEST_CASE("WP-53 ROCScienceRetrievalContract: generation follows the candidate l
         CHECK(full.ToString() == again.ToString());
     }
     CHECK(generated == 24);
+}
+
+TEST_CASE("WP-53 PartLoader lists of the contracts: parts with ModuleGroundExperiment / ModuleRobotArmScanner, unlocked parts only (mission mode unlocks all)") {
+    Clean53 clean;
+    ContractRig R;
+    // CAREER: ResearchAndDevelopment.PartModelPurchased decides
+    const std::vector<const AvailablePart*> career = SC::GetAvailableDeployedScienceExpParts();
+    for (const AvailablePart* ap : career) {
+        CHECK(ResearchAndDevelopment::PartModelPurchased(ap));
+        CHECK(ap->partPrefab->FindModuleOfClass("ModuleGroundExperiment") != nullptr);
+    }
+    // MISSION: every part carrying the module, in the PartLoader order
+    R.game.Mode = Game::Modes::MISSION;
+    const std::vector<const AvailablePart*> mission = SC::GetAvailableDeployedScienceExpParts();
+    std::vector<std::string> expect;
+    for (const auto& p : R.w.data.parts.loadedParts)
+        if (p->partPrefab && p->partPrefab->FindModuleOfClass("ModuleGroundExperiment") != nullptr) expect.push_back(p->name);
+    REQUIRE(expect.size() == 2);
+    std::vector<std::string> got;
+    for (const AvailablePart* ap : mission) got.push_back(ap->name);
+    CHECK(got == expect);
+    CHECK(SC::GetAvailableRobotArmScannerParts().empty());  // no stock part carries ModuleRobotArmScanner (Serenity part cfgs are not in the mirror)
+    SC::SerenityContractEnvironment::availableRobotArmScannerParts = [&R] { return std::vector<const AvailablePart*>{R.deployedParts[0]}; };
+    CHECK(SC::GetAvailableRobotArmScannerParts().size() == 1);
+    R.game.Mode = Game::Modes::CAREER;
+}
+
+TEST_CASE("WP-53 DeployedScienceContract: requirements, generation (candidate experiments x bodies, KSPRandom pick), rewards vs the probe, parameter completion") {
+    Clean53 clean;
+    ContractRig R;
+    SC::SerenityContractEnvironment::availableDeployedScienceExpParts = [&R] {
+        return std::vector<const AvailablePart*>(R.deployedParts.begin(), R.deployedParts.end());
+    };
+    // MeetRequirements: Serenity installed, EVA unlocked (astronaut complex), the home body orbited
+    {
+        SC::DeployedScienceContract probe;
+        CHECK(probe.MeetRequirements());
+        SaveEnvironment::Current().SetStockExpansionInstalled("Serenity", false);
+        CHECK(!probe.MeetRequirements());
+        SaveEnvironment::Current().SetStockExpansionInstalled("Serenity", true);
+    }
+    // Trivial contracts are never generated
+    CHECK(R.Gen(5, "Trivial", "DeployedScienceContract") == nullptr);
+    int generated = 0;
+    std::set<std::string> subjects, bodiesSeen;
+    for (int seed = 1; seed <= 30; seed++) {
+        const char* prestige = seed % 2 ? "Significant" : "Exceptional";
+        auto c = R.Gen(seed, prestige, "DeployedScienceContract");
+        const auto reached = KC::Lite::ProgressUtilities::GetBodiesReached(true, [&](CelestialBody* cb) {
+            return cb != Planetarium::fetch->Home && cb != Planetarium::fetch->Sun && cb->hasSolidSurface;
+        });
+        struct Combo {
+            std::string exp;
+            CelestialBody* body;
+        };
+        std::vector<Combo> list;
+        for (AvailablePart* ap : R.deployedParts) {
+            auto* m = dynamic_cast<ModuleGroundExperiment*>(ap->partPrefab->FindModuleOfClass("ModuleGroundExperiment"));
+            REQUIRE(m != nullptr);
+            ScienceExperiment* e = ResearchAndDevelopment::GetExperiment(m->experimentId());
+            REQUIRE(e != nullptr);
+            for (CelestialBody* b : reached) {
+                if ((!e->requireAtmosphere || b->atmosphere) && (!e->requireNoAtmosphere || !b->atmosphere)) list.push_back({m->experimentId(), b});
+            }
+        }
+        // (experiments are the outer loop of the C#; bodies the inner)
+        REQUIRE(c != nullptr);
+        ++generated;
+        auto* dc = dynamic_cast<SC::DeployedScienceContract*>(c.get());
+        REQUIRE(dc != nullptr);
+        const int index = KSPRandom(seed).Next(0, static_cast<int>(list.size()) - 1);
+        CHECK(dc->SubjectId() == list[static_cast<size_t>(index)].exp);
+        bool inList = false;
+        for (const Combo& cb : list)
+            if (cb.exp == dc->SubjectId() && cb.body == dc->TargetBody()) inList = true;
+        CHECK(inList);
+        subjects.insert(dc->SubjectId());
+        bodiesSeen.insert(dc->TargetBody()->name());
+        // the parameter
+        REQUIRE(c->ParameterCount() == 1);
+        auto* p = dynamic_cast<SC::CollectDeployedScience*>(c->GetParameter(0));
+        REQUIRE(p != nullptr);
+        CHECK(p->SubjectId() == dc->SubjectId());
+        CHECK(p->TargetBody() == dc->TargetBody());
+        CHECK_F32(p->sciencePercentage, 50.0f);
+        CHECK(p->HashString() == dc->SubjectId() + " " + dc->TargetBody()->name());
+        const ScienceExperiment* e = ResearchAndDevelopment::GetExperiment(dc->SubjectId());
+        CHECK(p->scienceTitle == e->experimentTitle);
+        CHECK(c->Title() == KSP::Localization::Localizer::Format("#autoLOC_8002258", {e->experimentTitle, dc->TargetBody()->displayName()}));
+        // rewards through the WP-37 pipeline
+        const SC::SerenityContractDefs::DeployedScienceDefs defs = SC::SerenityContractDefs::DeployedScience();
+        ProbeRewards pr;
+        pr.advance = defs.FundsBaseAdvance;
+        pr.reward = defs.FundsBaseReward;
+        pr.failure = defs.FundsBaseFailure;
+        pr.repReward = defs.ReputationBaseReward;
+        pr.repFailure = defs.ReputationBaseFailure;
+        pr.science = defs.ScienceBaseReward;
+        pr.minExpire = defs.expire.MinimumExpireDays;
+        pr.maxExpire = defs.expire.MaximumExpireDays;
+        pr.deadlineDays = defs.expire.DeadlineDays;
+        for (CelestialBody* b : reached) {  // bodiesProgress after the PotentialsContainBody pruning (same order)
+            for (const Combo& cb : list)
+                if (cb.exp == dc->SubjectId() && cb.body == b) {
+                    pr.weightedFrom.push_back(b);
+                    break;
+                }
+        }
+        CheckAgainstProbe(R.cs, *c, seed, prestige, pr);
+        // save / load round trip
+        ConfigNode full("CONTRACT");
+        c->Save(full);
+        CHECK(*full.GetValue("subjectId") == dc->SubjectId());
+        CHECK(*full.GetValue("body") == dc->TargetBody()->name());
+        auto copy = KC::ContractSystem::CreateContract("DeployedScienceContract");
+        REQUIRE(KC::Contract::Load(*copy, full));
+        ConfigNode again("CONTRACT");
+        copy->Save(again);
+        CHECK(full.ToString() == again.ToString());
+        auto* dcopy = dynamic_cast<SC::DeployedScienceContract*>(copy.get());
+        CHECK(dcopy->SubjectId() == dc->SubjectId());
+        CHECK(dcopy->TargetBody() == dc->TargetBody());
+        CHECK(copy->Title() == c->Title());
+    }
+    CHECK(generated == 30);
+    CHECK(subjects.size() == 2);  // both fixture experiments get picked over 30 seeds
+    CHECK(bodiesSeen.size() >= 2);
+
+    // MaximumExistent: with the node saying 0 contracts may exist none is generated
+    ConfigNode root("Contracts");
+    root.AddNode("DeployedScience")->AddValue("MaximumExistent", 0);
+    KC::ContractDefsLite::Load(root);
+    CHECK(R.Gen(1, "Significant", "DeployedScienceContract") == nullptr);
+    // a finished experiment (percentage reached) is not a candidate any more
+    KC::ContractDefsLite::Clear();
+    ConfigNode root2("Contracts");
+    root2.AddNode("DeployedScience")->AddValue("SciencePercentage", 50.0f);
+    KC::ContractDefsLite::Load(root2);
+    for (const char* body : {"Mun", "Minmus", "Duna", "Eve", "Ike"}) {
+        CelestialBody* b = R.w.sys->GetBodyByName(body);
+        for (const char* exp : {"temperatureScan", "barometerScan"}) {
+            ScienceExperiment* e = ResearchAndDevelopment::GetExperiment(exp);
+            if ((e->requireAtmosphere && !b->atmosphere) || (e->requireNoAtmosphere && b->atmosphere)) continue;
+            auto subj = ResearchAndDevelopment::GetExperimentSubject(*e, ExperimentSituations::SrfLanded, *b, "", "");
+            subj->science = subj->scienceCap;  // 100 %
+        }
+    }
+    CHECK(R.Gen(2, "Significant", "DeployedScienceContract") == nullptr);  // every experiment x body is complete
+    KC::ContractDefsLite::Clear();
+}
+
+TEST_CASE("WP-53 ROCScienceArmContract: scanner arm tier by the best science value ratio, candidates, biomes, rewards vs the probe") {
+    Clean53 clean;
+    ContractRig R;
+    // scanner arms: two prefabs carry ModuleScienceExperiment; the ratio of the best one picks the tier (the arm part itself is a WP-52 module)
+    auto* podExp = dynamic_cast<ModuleScienceExperiment*>(R.deployedParts[0]->partPrefab->FindModuleOfClass("ModuleScienceExperiment"));
+    auto* gooExp = dynamic_cast<ModuleScienceExperiment*>(R.deployedParts[1]->partPrefab->FindModuleOfClass("ModuleScienceExperiment"));
+    REQUIRE(podExp != nullptr);
+    REQUIRE(gooExp != nullptr);
+    SC::SerenityContractEnvironment::availableRobotArmScannerParts = [&R] {
+        return std::vector<const AvailablePart*>(R.deployedParts.begin(), R.deployedParts.end());
+    };
+    {
+        SC::ROCScienceArmContract probe;
+        CHECK(probe.MeetRequirements());
+        R.mgr.rocsEnabledInCurrentGame = false;
+        CHECK(!probe.MeetRequirements());  // ROCs are off in this game
+        R.mgr.rocsEnabledInCurrentGame = true;
+        SaveEnvironment::Current().SetStockExpansionInstalled("Serenity", false);
+        CHECK(!probe.MeetRequirements());
+        SaveEnvironment::Current().SetStockExpansionInstalled("Serenity", true);
+    }
+    const SC::SerenityContractDefs::ROCScienceArmDefs defs = SC::SerenityContractDefs::ROCScienceArm();
+    struct Tier {
+        float podRatio, gooRatio;
+        const char* name;
+    };
+    int total = 0;
+    for (const Tier& t : {Tier{0.2f, 0.3f, "simple"}, Tier{0.55f, 0.4f, "complex"}, Tier{0.2f, 0.9f, "advanced"}}) {
+        podExp->Set<float>("scienceValueRatio", t.podRatio);
+        gooExp->Set<float>("scienceValueRatio", t.gooRatio);
+        const float best = std::max(t.podRatio, t.gooRatio);
+        const float percentage = f32store(fx(best) * 100.0);
+        const AvailablePart* bestPart = t.podRatio > t.gooRatio ? R.deployedParts[0] : R.deployedParts[1];
+        for (int seed = 1; seed <= 12; seed++) {
+            const char* prestige = seed % 2 ? "Significant" : "Exceptional";
+            auto c = R.Gen(seed, prestige, "ROCScienceArmContract");
+            REQUIRE(c != nullptr);
+            ++total;
+            auto* ac = dynamic_cast<SC::ROCScienceArmContract*>(c.get());
+            REQUIRE(ac != nullptr);
+            ConfigNode full("CONTRACT");
+            c->Save(full);
+            CHECK(*full.GetValue("scannerArmName") == bestPart->name);
+            CHECK(*full.GetValue("scannerArmTitle") == bestPart->title);
+            CHECK_F32(std::stof(*full.GetValue("sciencePercentage")), percentage);
+            // candidates: reached solid bodies, every definition x body entry whose subject is not at 95 % of the arm's ratio yet
+            const auto reached = KC::Lite::ProgressUtilities::GetBodiesReached(true, [&](CelestialBody* cb) { return cb != Planetarium::fetch->Sun && cb->hasSolidSurface; });
+            struct Combo {
+                std::string body;
+                ROCDefinition* def;
+                std::string id;
+            };
+            std::vector<Combo> list;
+            for (CelestialBody* b : reached)
+                for (ROCDefinition* d : R.mgr.rocDefinitions())
+                    for (const RocCBDefinition& cb : d->myCelestialBodies)
+                        if (b->name() == cb.name) list.push_back({b->name(), d, "ROCScience_" + d->type + "@" + cb.name + "SrfLanded"});
+            KSPRandom g(seed);
+            const Combo& pick = list[static_cast<size_t>(g.Next(0, static_cast<int>(list.size()) - 1))];
+            CHECK(ac->SubjectId() == pick.id);
+            CHECK(ac->TargetBody()->name() == pick.body);
+            CHECK(*full.GetValue("rocType") == pick.def->type);
+            // parameter
+            REQUIRE(c->ParameterCount() == 1);
+            auto* p = dynamic_cast<SC::CollectROCScienceArm*>(c->GetParameter(0));
+            REQUIRE(p != nullptr);
+            CHECK(p->SubjectId() == pick.id);
+            CHECK_F32(p->sciencePercentage, percentage);
+            CHECK(p->scienceTitle == pick.def->displayName);
+            // the three description variants and titles by tier
+            const char* titleTag = t.name == std::string("simple") ? "#autoLOC_8004391" : (t.name == std::string("complex") ? "#autoLOC_8004392" : "#autoLOC_8004393");
+            CHECK(c->Title() == KSP::Localization::Localizer::Format(titleTag, {pick.def->displayName}));
+            // rewards by tier through the WP-37 pipeline
+            ProbeRewards pr;
+            pr.minExpire = defs.expire.MinimumExpireDays;
+            pr.maxExpire = defs.expire.MaximumExpireDays;
+            pr.deadlineDays = defs.expire.DeadlineDays;
+            pr.body = ac->TargetBody();
+            if (percentage < defs.SimpleArmPercentage) {
+                pr.advance = defs.SimpleArmAdvance;
+                pr.reward = defs.SimpleArmReward;
+                pr.failure = defs.SimpleArmFailure;
+                pr.repReward = defs.ReputationSimpleArmReward;
+                pr.repFailure = defs.ReputationSimpleArmFailure;
+                pr.science = defs.ScienceSimpleArmReward;
+            } else if (percentage < defs.ComplexArmPercentage) {
+                pr.advance = defs.ComplexArmAdvance;
+                pr.reward = defs.ComplexArmReward;
+                pr.failure = defs.ComplexArmFailure;
+                pr.repReward = defs.ReputationComplexArmReward;
+                pr.repFailure = defs.ReputationComplexArmFailure;
+                pr.science = defs.ScienceComplexArmReward;
+            } else {
+                pr.advance = defs.AdvancedArmAdvance;
+                pr.reward = defs.AdvancedArmReward;
+                pr.failure = defs.AdvancedArmFailure;
+                pr.repReward = defs.ReputationAdvancedArmReward;
+                pr.repFailure = defs.ReputationAdvancedArmFailure;
+                pr.science = defs.ScienceAdvancedArmReward;
+            }
+            CheckAgainstProbe(R.cs, *c, seed, prestige, pr);
+            // round trip
+            auto copy = KC::ContractSystem::CreateContract("ROCScienceArmContract");
+            REQUIRE(KC::Contract::Load(*copy, full));
+            ConfigNode again("CONTRACT");
+            copy->Save(again);
+            CHECK(full.ToString() == again.ToString());
+            CHECK(copy->Title() == c->Title());
+        }
+    }
+    CHECK(total == 36);
+    // no scanner arm at all: nothing to generate
+    SC::SerenityContractEnvironment::availableRobotArmScannerParts = [] { return std::vector<const AvailablePart*>(); };
+    CHECK(R.Gen(1, "Significant", "ROCScienceArmContract") == nullptr);
+}
+
+TEST_CASE("WP-53 Serenity contract parameters: science events complete CollectDeployedScience / CollectROCScienceArm, recovery completes CollectROCScienceRetrieval") {
+    Clean53 clean;
+    ContractRig R;
+    SC::SerenityContractEnvironment::availableDeployedScienceExpParts = [&R] {
+        return std::vector<const AvailablePart*>(R.deployedParts.begin(), R.deployedParts.end());
+    };
+    auto* podExp = dynamic_cast<ModuleScienceExperiment*>(R.deployedParts[0]->partPrefab->FindModuleOfClass("ModuleScienceExperiment"));
+    podExp->Set<float>("scienceValueRatio", 0.5f);
+    SC::SerenityContractEnvironment::availableRobotArmScannerParts = [&R] { return std::vector<const AvailablePart*>{R.deployedParts[0]}; };
+    Planetarium::fetch->time = 1000.0;
+
+    const auto activate = [&R](std::unique_ptr<KC::Contract> c) {
+        KC::Contract* raw = c.get();
+        R.cs.contracts.push_back(std::move(c));
+        REQUIRE(raw->Offer());
+        REQUIRE(raw->Accept());
+        return raw;
+    };
+
+    // ---- CollectDeployedScience: percentage of the science cap
+    {
+        auto c = R.Gen(3, "Significant", "DeployedScienceContract");
+        REQUIRE(c != nullptr);
+        auto* dc = dynamic_cast<SC::DeployedScienceContract*>(c.get());
+        const std::string subjectId = dc->SubjectId();
+        CelestialBody* body = dc->TargetBody();
+        KC::Contract* raw = activate(std::move(c));
+        auto* p = dynamic_cast<SC::CollectDeployedScience*>(raw->GetParameter(0));
+        REQUIRE(p != nullptr);
+        int changes = 0;
+        struct L {
+            int* n;
+            void On(KC::Contract*, KC::ContractParameter*) { ++*n; }
+        } l{&changes};
+        GE::Contract::onParameterChange.Add(&l, &L::On);
+        ScienceExperiment* e = ResearchAndDevelopment::GetExperiment(subjectId);
+        auto subj = std::make_shared<ScienceSubject>(subjectId + "@" + body->name() + "SrfLanded", "t", 1.0f, 1.0f, 10.0f);
+        // not another body / situation / reverse engineered: ignored
+        subj->science = 9.0f;
+        GE::OnScienceRecieved.Fire(1.0f, subj.get(), nullptr, true);
+        CHECK(p->State() == KC::ParameterState::Incomplete);
+        auto orbit = std::make_shared<ScienceSubject>(subjectId + "@" + body->name() + "InSpaceLow", "t", 1.0f, 1.0f, 10.0f);
+        orbit->science = 9.0f;
+        GE::OnScienceRecieved.Fire(1.0f, orbit.get(), nullptr, false);
+        CHECK(p->State() == KC::ParameterState::Incomplete);
+        // 40 % < 50 %: progress only (the title shows the collected percentage)
+        subj->science = 4.0f;
+        GE::OnScienceRecieved.Fire(1.0f, subj.get(), nullptr, false);
+        CHECK(p->State() == KC::ParameterState::Incomplete);
+        CHECK_F32(p->scienceCollected, 40.0f);
+        CHECK(changes == 1);
+        CHECK(p->GetTitle() == KSP::Localization::Localizer::Format("#autoLOC_8002260", {"40", "50", e->experimentTitle, body->displayName()}));
+        subj->science = 5.0f;  // exactly the percentage completes
+        GE::OnScienceRecieved.Fire(1.0f, subj.get(), nullptr, false);
+        CHECK(p->State() == KC::ParameterState::Complete);
+        CHECK(raw->ContractState() == KC::Contract::State::Completed);
+        GE::Contract::onParameterChange.Remove(&l, &L::On);
+    }
+    // ---- CollectROCScienceArm: 95 % of the arm's ratio on the ROC subject
+    {
+        auto c = R.Gen(4, "Exceptional", "ROCScienceArmContract");
+        REQUIRE(c != nullptr);
+        auto* ac = dynamic_cast<SC::ROCScienceArmContract*>(c.get());
+        const std::string subjectId = ac->SubjectId();
+        CelestialBody* body = ac->TargetBody();
+        KC::Contract* raw = activate(std::move(c));
+        auto* p = dynamic_cast<SC::CollectROCScienceArm*>(raw->GetParameter(0));
+        REQUIRE(p != nullptr);
+        CHECK_F32(p->sciencePercentage, 50.0f);
+        auto other = std::make_shared<ScienceSubject>("ROCScience_Other@" + body->name() + "SrfLanded", "t", 1.0f, 1.0f, 10.0f);
+        other->science = 10.0f;
+        GE::OnScienceRecieved.Fire(1.0f, other.get(), nullptr, false);
+        CHECK(p->State() == KC::ParameterState::Incomplete);
+        auto subj = std::make_shared<ScienceSubject>(subjectId, "t", 1.0f, 1.0f, 100.0f);
+        subj->science = 40.0f;  // 40 % of the cap < 0.95 * 50 %
+        GE::OnScienceRecieved.Fire(1.0f, subj.get(), nullptr, false);
+        CHECK(p->State() == KC::ParameterState::Incomplete);
+        CHECK_F32(p->scienceCollected, 40.0f);
+        subj->science = 47.5f;  // 47.5 % == 0.95 * 50 %
+        GE::OnScienceRecieved.Fire(1.0f, subj.get(), nullptr, false);
+        CHECK(p->State() == KC::ParameterState::Complete);
+        CHECK(raw->ContractState() == KC::Contract::State::Completed);
+    }
+    // ---- CollectROCScienceRetrieval: the ScienceData of a recovered vessel's container
+    {
+        auto c = R.Gen(5, "Significant", "ROCScienceRetrievalContract");
+        REQUIRE(c != nullptr);
+        auto* rc = dynamic_cast<SC::ROCScienceRetrievalContract*>(c.get());
+        const std::string subjectId = rc->SubjectId();
+        KC::Contract* raw = activate(std::move(c));
+        auto* p = dynamic_cast<SC::CollectROCScienceRetrieval*>(raw->GetParameter(0));
+        REQUIRE(p != nullptr);
+        ConfigNode::NodePtr save = ConfigNode::Load(std::string(KSPCORE_TESTDATA_DIR) + "/saves/physprofile/persistent.sfs");
+        REQUIRE(save);
+        ConfigNode* vnode = nullptr;
+        for (ConfigNode* n : save->GetNode("GAME")->GetNode("FLIGHTSTATE")->GetNodes("VESSEL"))
+            for (ConfigNode* part : n->GetNodes("PART"))
+                for (ConfigNode* mod : part->GetNodes("MODULE"))
+                    if (vnode == nullptr && mod->GetValue("name") == "ModuleScienceContainer") vnode = n;
+        REQUIRE(vnode != nullptr);
+        ProtoVessel pv(*vnode, &R.game);
+        ProtoPartModuleSnapshot* snap = nullptr;
+        for (ProtoPartSnapshot* ps : pv.GetAllProtoPartsIncludingCargo())
+            for (auto& m : ps->modules)
+                if (m->moduleName && *m->moduleName == "ModuleScienceContainer" && snap == nullptr) snap = m.get();
+        REQUIRE(snap != nullptr);
+        // a recovery with other data does nothing
+        ScienceData wrong(5.0f, 1.0f, 0.0f, "somethingElse@KerbinSrfLanded", "x");
+        wrong.Save(*snap->moduleValues->AddNode("ScienceData"));
+        GE::onVesselRecoveryProcessing.Fire(&pv, nullptr, 0.0f);
+        CHECK(p->State() == KC::ParameterState::Incomplete);
+        GE::onVesselRecoveryProcessing.Fire(nullptr, nullptr, 0.0f);  // a null vessel is ignored
+        CHECK(p->State() == KC::ParameterState::Incomplete);
+        ScienceData right(5.0f, 1.0f, 0.0f, subjectId, "x");
+        right.Save(*snap->moduleValues->AddNode("ScienceData"));
+        GE::onVesselRecoveryProcessing.Fire(&pv, nullptr, 0.0f);
+        CHECK(p->State() == KC::ParameterState::Complete);
+        CHECK(raw->ContractState() == KC::Contract::State::Completed);
+    }
 }
