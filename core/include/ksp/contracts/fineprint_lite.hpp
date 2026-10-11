@@ -13,6 +13,9 @@
 
 #include "ksp/config/config_node.hpp"
 #include "ksp/contracts/contract.hpp"
+#include "ksp/contracts/contract_environment.hpp"
+#include <memory>
+#include "ksp/math/vector3d.hpp"
 #include "ksp/core/log.hpp"
 #include "ksp/dotnet/enum_parse.hpp"
 #include "ksp/dotnet/number.hpp"
@@ -91,6 +94,12 @@ void LoadNode(ConfigNode& node, const char* className, const char* valueName, T&
     LoadNode(&node, className, valueName, value, defaultValue, logging);
 }
 
+// SystemUtilities.cs:113 LoadNode<CelestialBody>: the node value is a FlightGlobals.Bodies index (WP-38: the typeof(T) == typeof(CelestialBody) branch)
+void LoadNode(ConfigNode* node, const char* className, const char* valueName, CelestialBody*& value, CelestialBody* defaultValue, bool logging = true);
+inline void LoadNode(ConfigNode& node, const char* className, const char* valueName, CelestialBody*& value, CelestialBody* defaultValue, bool logging = true) {
+    LoadNode(&node, className, valueName, value, defaultValue, logging);
+}
+
 // SystemUtilities.cs:219 FlightIsReady(checkVessel, targetBody)
 inline bool FlightIsReady(bool checkVessel = false, CelestialBody* targetBody = nullptr) {
     if (SaveEnvironment::Current().loadedScene != GameScenes::FLIGHT) return false;
@@ -166,6 +175,7 @@ inline bool VesselHasPartName(std::string partName, Vessel* v = nullptr) {
 // ---- FinePrint.Utilities.ProgressType / MannedStatus / ProgressMilestone / ProgressUtilities (the part the templates use) --------------------
 
 using ProgressType = FinePrint::Utilities::ProgressType;  // ProgressType.cs:3 (declared by WP-36 in career_environment.hpp)
+using ProgressRewardType = FinePrint::Utilities::ProgressRewardType;  // ProgressRewardType.cs:3
 
 // MannedStatus.cs:3
 enum class MannedStatus : int { MANNED, UNMANNED, ANY };
@@ -218,6 +228,19 @@ std::vector<CelestialBody*> GetNextUnreached(int count, const Where& where = nul
 float AverageFacilityLevel();                       // :305
 int GetProgressLevel();                             // :310
 float ScoreProgressType(ProgressType type, CelestialBody* body);  // :372
+// WP-38 (full port of the remaining ProgressUtilities members)
+bool IntroWorldFirstContract(ProgressMilestone& milestone);                       // :333
+bool OutlierWorldFirstContract(ProgressType type, CelestialBody* body);           // :350
+bool OutlierWorldFirstContract(ProgressMilestone& milestone);                     // :367
+ContractPrestige ProgressTypePrestige(ProgressType type, CelestialBody* body = nullptr);  // :451
+ContractPrestige ProgressTypePrestige(ProgressMilestone& milestone);             // :451
+float WorldFirstStandardReward(ProgressRewardType reward, Currency currency, ProgressType progress, CelestialBody* body = nullptr);  // :488
+float WorldFirstIntervalReward(ProgressRewardType reward, Currency currency, ProgressType progress, CelestialBody* body = nullptr, int currentInterval = 1,
+                               int totalIntervals = 10);                          // :532
+bool ReachedHomeBodies();                                                         // :574
+double FindNextRecord(double currentRecord, double maximumRecord, double roundValue);                  // :600
+double FindNextRecord(double currentRecord, double maximumRecord, double roundValue, int& interval);  // :624
+bool VisitedSurfaceOf(CelestialBody* body, MannedStatus manned = MannedStatus::ANY);  // :650
 }  // namespace ProgressUtilities
 
 namespace StringUtilities {
@@ -225,14 +248,69 @@ std::string AlphaNumericDesignation(int seed);                       // StringUt
 std::string ThisThisAndThat(const std::vector<std::string>& stringList, const std::string& connector = "#autoLOC_6002373",
                             const std::string& conjugation = "#autoLOC_6002374");  // :226
 std::string ShortKerbalName(const std::string& fullKerbalName);      // :250
+std::string PossessiveString(std::string thing);                     // :220
 }  // namespace StringUtilities
+
+// SystemUtilities.cs (WP-38: the pure maths / list helpers)
+namespace SystemUtilities {
+bool WithinDeviation(double v1, double v2, double deviation);                    // (C++ addition)
+bool WithinDeviationByValue(double v1, double v2, double deviation, double fullValue);  // (C++ addition)
+double MeasureDeviation(double v1, double v2);                                   // (C++ addition)
+double MeasureDeviationByValue(double v1, double v2, double fullValue);          // (C++ addition)
+double WithinDeviationAccuracy(double v1, double v2, double deviation);          // (C++ addition)
+double WithinDeviationByReferenceAccuracy(double v1, double v2, double reference, double deviation);  // (C++ addition)
+// :565 ShuffleList(ref list, generator): generator null -> new KSPRandom()
+template <class T>
+void ShuffleList(std::vector<T>& list, KSPRandom* generator = nullptr);
+}  // namespace SystemUtilities
 
 namespace CelestialUtilities {
 bool IsGasGiant(CelestialBody* body);                         // CelestialUtilities.cs:272
 bool IsFlyablePlanet(CelestialBody* body);                    // :281
 double GetAltitudeForDensity(CelestialBody* body, double density);  // :220
 std::vector<CelestialBody*> ChildrenOf(CelestialBody* parent);  // :99
+// WP-38: the rest of CelestialUtilities.cs
+CelestialBody* RandomBody(const std::vector<CelestialBody*>& bodies);          // :10 (new KSPRandom(): ContractsEnvironment::newRandomSeed)
+CelestialBody* HighestBody(const std::vector<CelestialBody*>& bodies);         // :16
+CelestialBody* LowestBody(const std::vector<CelestialBody*>& bodies);          // :44
+std::vector<CelestialBody*> GetNeighbors(CelestialBody* body, const std::function<bool(CelestialBody*)>& where = nullptr);  // :72
+// :111 GetHighestPeak: the PQSMod reflection walk (deformity / heightMapDeformity / heightMapOffset). Unset: 0 (no PQS mod sum available).
+extern std::function<double(CelestialBody*)> highestPeakProvider;
+double GetHighestPeak(CelestialBody* body);                                    // :117
+double GetNextTimeWarp(CelestialBody* body, double altitude);                  // :155
+double GetMinimumOrbitalDistance(CelestialBody* body, float margin);           // :187
+Vessel::Situations ApplicableSituation(int seed, CelestialBody* body, bool splashAllowed);  // :256
+float PlanetScienceRanking(CelestialBody* body);                               // :290
+Vector3f LLAtoECEF(double lat, double lon, double alt, double radius);         // :305
+double SynchronousSMA(CelestialBody* body);                                    // :315
+bool CanBodyBeSynchronous(CelestialBody* body, double eccentricity);           // :324
+double KolniyaSMA(CelestialBody* body);                                        // :339
+bool CanBodyBeKolniya(CelestialBody* body);                                    // :349
+bool CanBodyBeTundra(CelestialBody* body);                                     // :365
+double TerrainAltitude(CelestialBody* body, double latitude, double longitude, bool underwater = false);  // :381
+double GetSolarExtents();                                                      // :424
+double GreatCircleDistance(CelestialBody* body, double latitude1, double longitude1, double latitude2, double longitude2);  // :443
+double GreatCircleDistance(CelestialBody* body, Vector3d position1, Vector3d position2);  // :443
+CelestialBody* GetHostPlanet(CelestialBody* body);                             // :448
+std::vector<CelestialBody*> GetPlanetarySystem(CelestialBody* body);           // :461
 }  // namespace CelestialUtilities
+
+namespace SystemUtilities {
+template <class T>
+void ShuffleList(std::vector<T>& list, KSPRandom* generator) {
+    std::unique_ptr<KSPRandom> own;
+    if (generator == nullptr) {
+        own = std::make_unique<KSPRandom>(ContractsEnvironment::Current().NewRandomSeed());
+        generator = own.get();
+    }
+    for (int num = static_cast<int>(list.size()) - 1; num > 0; num--) {
+        int index = generator->Next(0, num + 1);
+        T value = list[static_cast<size_t>(num)];
+        list[static_cast<size_t>(num)] = list[static_cast<size_t>(index)];
+        list[static_cast<size_t>(index)] = value;
+    }
+}
+}  // namespace SystemUtilities
 
 }  // namespace ksp::Contracts::Lite
 

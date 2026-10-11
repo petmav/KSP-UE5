@@ -91,6 +91,10 @@ add_library(kspcore STATIC
     contracts/agents.cpp
     contracts/text_gen.cpp
     contracts/fineprint_lite.cpp
+    contracts/fineprint_utilities.cpp
+    fineprint/orbit_utilities.cpp
+    fineprint/waypoint.cpp
+    fineprint/exploration_contract.cpp
     contracts/parameters.cpp
     contracts/predicates.cpp
     contracts/module_test_subject.cpp
