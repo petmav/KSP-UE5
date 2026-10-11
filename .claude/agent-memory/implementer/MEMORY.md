@@ -8,3 +8,5 @@
 - [WSL launch from Git Bash](wsl-launch-from-gitbash.md) — MSYS_NO_PATHCONV + script file + run_in_background; nohup children die
 - [WP-17b thrust lessons](wp17b-thrust-lessons.md) — sepMotor1 not staged, native quaternion multiply order, hierarchy normalisation, residuals
 - [WP-37 contracts lessons](wp37-contracts-lessons.md) — KSP quirks ported (AddKeywords first-only, SetState order), World37 fixture, stale-exe + heredoc pitfalls
+- [WP-38 FinePrint lessons](wp38-fineprint-lessons.md) — output elision workaround, prefab-vs-runtime body values, node ids, fixture defaults, wp37 reference reuse
+- [WP-42 KSC lessons](wp42-ksc-lessons.md) — float32 PQSCity position, x87 Cos vs Python at poles, duplicate enum, fixture traps, data gaps

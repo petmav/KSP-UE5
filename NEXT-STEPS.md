@@ -118,6 +118,37 @@ Follow-ups from waves 4-5:
 - Needs data (local): GameVariables prefab (`reputationAddition` / `reputationSubtraction` curves, contract / mentality factors), KSC facility `levelCost` / `KSCUpgradeableLevelText`, a career save with ContractSystem / Funding / Reputation / Facilities / Strategy nodes, the `SiteGeneratorInfo` TextAsset, a C3-style capture for `Quaternion.Euler` / `eulerAngles` / `LookRotation`.
 - Next after WP-38 / WP-42: WP-33 inventory / EVA construction (7,547), WP-50 input bindings (7,026), WP-32 EVA controller (8,818, needs WP-20 for the rigidbody part), WP-53 Breaking Ground deployed science, WP-52 robotics (needs WP-20 joints). WP-19 / WP-20 / WP-12 wait for the Jolt spike (Opus `optimizer`). WP-29 wheels (VehiclePhysics) after WP-20.
 
+## Handoff to the PC (2026-10-11, end of session 3)
+
+### Moving the whole directory to another machine
+
+The git remote holds only the repo; `decompiled/KSP-dev`, `decompiled/_archive/KSP-Decompiled.git`, `harness/lib`, `harness/tools-cache`, `core/data/mu_staging`, all build dirs and the Claude memory are local. Copy the directory with symlinks preserved, to the SAME path (`C:\Projects\KSP-UE5`) and the same Windows username if possible:
+
+```
+robocopy C:\Projects\KSP-UE5 <dest>\Projects\KSP-UE5 /E /SL /XJ /R:1 /W:1 /MT:16
+robocopy C:\Users\<user>\.claude\projects\C--Projects-KSP-UE5 <dest>\Users\<user>\.claude\projects\C--Projects-KSP-UE5 /E
+```
+
+Absolute paths are baked into: `.worktrees/*/.git` + `.git/worktrees/*/gitdir`; `decompiled/KSP-Decompiled-profiling/` (worktree of the bare `_archive` repo) and the DLL symlink under `decompiled/KSP-Decompiled/GameData/`; every `core/build` (Windows CMake cache and the WSL `build/linux-*` dirs with `/mnt/c/...`). If the path or user differs: `git worktree repair` in the root and in `decompiled/KSP-Decompiled`; delete every `core/build` and rebuild (`run_tests.ps1 -Fresh`, `./run_tests.sh -f`); recreate the DLL symlink per `decompiled/STATUS.md`. The Claude memory dir is keyed by project path, so a different path starts with empty memory (this file is the handoff either way).
+
+Prerequisites on the new machine: VS 2022 (MSVC x64), CMake >= 3.25, Ninja, Python 3 with numpy, `gh` logged in as petmav, WSL Ubuntu 24.04 with `clang g++ cmake ninja-build python3`, UE 5.8 only for `ue5/`. KSP dev copy is inside `decompiled/KSP-dev`; `decompiled/tools/scripts/launch_ksp.ps1` launches it for captures.
+
+
+Main `13750b33`: 35 ctest tests, 566 unit cases / 935,159 assertions (Windows; Linux 16 fewer, explained), CI linux + windows green. Four branches are pushed but NOT merged; every agent was stopped mid-verification by the user. Pick each up with a gatekeeper (or implementer for FIX items) against the branch HEAD:
+
+| branch | HEAD | state | what is left |
+|---|---|---|---|
+| `wp42` KSC / launch sites / scene flow | `3b594cd4` | gate ran all three toolchains green (34/34; unit 576 / 936,215 Windows, 936,199 Linux), CI run 38104664000 green, merge-tree into main clean | implementer FIX items in `core/PROGRESS-wp42-gate.md`: F1 call-site cites `psystem_setup.cpp` (IsFacility :681 -> :693, IsLaunchSite :686 -> :714); F2 `PQSCity::Orientate` / `PQSCity2::Orientate` omit `spaceCenterFacility.SetSpawnPointsLatLonAlt()` (PQSCity.cs:343); F3 `PQSCity2::Orientate` sets `inVisibleRange = false` with no C# counterpart; F4 `space_center_building.cpp:300` `fx(num) + 0.1` must be `0.1f` (SpaceCenterBuilding.cs:728); F5 `SetupLaunchSites` sets `forcePQSPosition = true` for every prefab (C#: only with a PQSMod_FlattenArea); F6 `space_center.hpp` cites 2-3 lines off; F7 optional: Moho/Mohole reference can use `harness/captures/out/libm_mono.json` row 9 (`Math.Cos(pi/2)` = 6.123031769111886e-17) instead of a 1e-9 comparison. Then re-gate the changed files and merge (STATUS row 32; renumber wp38's row to 33) |
+| `wp38` FinePrint slice 1 (utilities, OrbitUtilities, waypoints, ProgressTrackingParameter, ExplorationContract) | `43271cde` | gate: Windows 34/34 (unit 579 / 963,143), clang green, STATUS corrections committed by the gatekeeper; gcc run and compare-report / diff-review steps cut off | finish the gate (gcc, compare reports, circularity of `wp37_reference.json` under the monkeypatch, the `GenerateOrbit` rel 1e-12 table: can the reference round-trip through state vectors to reach 0 ULP?), merge. Then WP-38 slice 2: the other 24 FinePrint parameters, 8 contracts (ARM, CometSample, ISRU, Satellite, Station, Survey, Tourism, Base), Sentinel, `VesselUtilities`, full `ContractDefs`, `ScenarioContractEvents`; afterwards WP-37's deferred VesselRepair / OrbitalConstruction / RoverConstruction and GrandTour seams |
+| `wp17b` WP-17 delta-v with real `.mu` thrust transforms | `82cf2f34` (WIP) | 15 of 17 crafts 0 ULP on every column; 20 rows (Dynawing 14, Stearwing A300 6; 2-4 ULP) listed in `core/tests/data/deltav_stages_exclusions.json` with self-retiring runner logic in `ds_deltav_stages.cpp`; `rel 2e-6` rules removed from `tests/tolerances_capture.json`; the native quaternion w association `(lw*rw - lx*rx) - (ly*ry + lz*rz)` and the right-nested composition are empirical fits, marked UNVERIFIED | the WIP commit was never run: delete `core/build`, Windows `-Fresh` (34/34 expected), WSL clang; gatekeeper; merge. Local-only data: `core/data/mu_staging/` is gitignored, regenerate with `python -I core/tools/wp17/stage_engine_models.py` (needs `decompiled/KSP-dev`), then `python -I core/tools/wp17/mu_transforms.py`; `core/data/engine_thrust_transforms.json` (committed) is what the runner reads. What settles the residual: one editor-scene capture on the profiling branch of `part.transform.rotation`, `thrustTransform.rotation` / `.forward` (hex float32) for every engine of Dynawing and Stearwing A300, plus a Quaternion product capture (see STATUS WP-17b "Needs capture") |
+| `wpfix7` sanitizer fixes | `fec99df4` | items 1-4 committed: firework test lambda lifetime, `random.cpp:29` seed arithmetic wraps defined (bit-identical), `TestVessel` owns a real `Vessel` (was `reinterpret_cast`), STATUS "Sanitizer run 2026-10-11"; last ASan finding was an intentional test-only leak (fix: shared static-lifetime log) | Windows `-Fresh` and WSL clang verification not completed; gatekeeper; merge |
+
+After those merges: STATUS summary renumber (wp42 32, wp38 33), fold `core/.claude/agent-memory` files if any into `.claude/agent-memory/`, update this file.
+
+Next packages (unchanged order): WP-38 slice 2; WP-33 inventory / EVA construction (7,547); WP-50 input (7,026); WP-53 Breaking Ground deployed science; WP-32 EVA controller and WP-52 robotics after WP-20; WP-19 / WP-20 / WP-12 after the Jolt spike (Opus `optimizer`); WP-29 wheels after WP-20; WP-54 / WP-55 Making History.
+
+Repo-wide follow-ups: cite audit `core/tools/wp28/cite_audit_2026-10-11.txt` (668 mismatches, exact-line mode); needs-data list in the waves 4-5 section above (GameVariables prefab, KSC facility `levelCost`, career save, `SiteGeneratorInfo`, Euler / LookRotation / Lerp quaternion captures).
+
 ## Handoff to the PC (2026-10-10)
 
 Local-only tasks (need `decompiled/KSP-dev`, which no worktree or cloud VM has):
