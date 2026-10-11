@@ -15,3 +15,6 @@ Checklist is appended below as milestones complete.
 Known gaps: SiteGeneratorInfo TextAsset not in repo (seam FinePrintEnvironment::siteGeneratorInfo); Comet/CometManager seams; PQS highest peak seam
 - [x] D reference tools/wp38b/fineprint2_reference.py -> tests/data/wp38b_reference.json (ARM/Base/Station/ISRU/Satellite: 4830 cases) ; tests/test_fineprint2.cpp first case PASSES (85,973 assertions): all generated trees byte-exact, rewards 0 ULP
   NOTE: the test world has the real stock part database (Game15): HavePartTech is real; the R&D objective/module overrides are fixtures
+- [x] E tests: 15 cases / 98,893 assertions (test_fineprint2.cpp); Tourism/Survey sanity added; cites snapped (475 exact); STATUS row 32b + section, README rows done
+- [x] F fresh verification: 34/34 ctest, kspcore_tests 609 cases / 1,063,520 assertions
+- Deferred: Sentinel, full ContractDefs, CompatibilityUtilities, WP-37 templates VesselRepair/OrbitalConstruction/RoverConstruction, CometSample generation test
