@@ -1453,10 +1453,20 @@ TEST_CASE("WP-38b Tourism / CometSample / Survey generation: deterministic, stru
         LoadScenario38b(w, ref["scenarios"][si]);
         w.SetFixture(ref["fixtures"][0]);
         w.SetMult(ref["mult_sets"][0]);
+        // the real experiment definitions (ScienceDefs.cfg of the part database) so Survey can see experiments
+        ScienceEnvironment::getConfigNodes = [&w](std::string_view t) { return w.g.data.database.GetConfigNodes(t); };
+        ResearchAndDevelopment::ResetStatics();
+        // synthetic named-site lists (NOT KSP data; the shipped SiteGeneratorInfo text asset is not in the repo): the reference fixture has none
+        ConfigNode::NodePtr extSite = SiteGeneratorFixture();
+        for (const char* n : {"DeveloperPrefixes", "AbstractPrefixes", "AbstractSuffixes", "planetSuffixes", "LandSuffixes", "HomeSuffixes"}) {
+            ConfigNode* sn = extSite->AddNode(n);
+            for (const char* e : {"Alpha", "Beta", "Gamma"}) sn->AddValue("Element", std::string(n) + "-" + e);
+        }
+        L38::FinePrintEnvironment::siteGeneratorInfo = extSite.get();
+        L38::StringUtilities::LoadSiteGenerationInfo();
         // the comet seam: one discovered comet vessel so CometSample has a target
         C38::CometManagerSeam::discoveredComets = [] { return std::vector<Vessel*>{}; };
         for (const char* type : {"TourismContract", "CometSampleContract", "SurveyContract"}) {
-            std::fprintf(stderr, "[38b] scenario %zu type %s\n", si, type);
             for (int seed = 1; seed <= (std::string(type) == "TourismContract" ? 12 : 60); ++seed) {
                 for (int prestige = 0; prestige < 3; ++prestige) {
                     INFO(type << " scenario " << si << " seed " << seed << " prestige " << prestige);
@@ -1491,7 +1501,11 @@ TEST_CASE("WP-38b Tourism / CometSample / Survey generation: deterministic, stru
             }
         }
         C38::CometManagerSeam::discoveredComets = nullptr;
+        ResearchAndDevelopment::ResetStatics();
+        ScienceEnvironment::getConfigNodes = nullptr;
         ksp::CrewGenerator::Reset();
+        L38::FinePrintEnvironment::siteGeneratorInfo = w.siteNode.get();
+        L38::StringUtilities::LoadSiteGenerationInfo();
     }
     MESSAGE("generated: Tourism " << generated["TourismContract"] << " (refused " << refused["TourismContract"] << "), CometSample " << generated["CometSampleContract"]
                                   << " (refused " << refused["CometSampleContract"] << "), Survey " << generated["SurveyContract"] << " (refused " << refused["SurveyContract"] << ")");
