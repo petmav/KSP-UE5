@@ -25,14 +25,20 @@
 #include "ksp/missions/mission_display.hpp"
 #include "ksp/localization/localizer.hpp"
 #include "ksp/missions/mission_types.hpp"
+#include "ksp/unity/vector.hpp"
 #include "ksp/vessel/vessel_types.hpp"
 
 namespace ksp {
 class CelestialBody;
 class ProtoVessel;
 class Part;
+class PartModule;
 class Vessel;
 }  // namespace ksp
+
+namespace ksp::Expansions::Missions::Adjusters {
+class AdjusterPartModuleBase;
+}
 
 namespace ksp::Expansions::Missions {
 
@@ -120,6 +126,30 @@ struct NodeLibraryEnvironment {
     // StageManager.ActivateNextStage() (ActionVesselStage.Fire). Unset: counted.
     static inline std::function<void()> activateNextStage;
     static inline int stagesActivated = 0;
+    // ---- Adjusters (mission_adjusters.hpp): `adjustedModule as ModuleX` and the calls an adjuster makes on it --------------------------------
+    // `adjustedModule as <cls>` (class or subclass). Unset: PartModule::ClassName() == cls.
+    static inline std::function<bool(PartModule*, const std::string& cls)> moduleIsA;
+    // module.<call>(arg) with the C# arguments encoded as an int (KSPActionType Activate = 0 / Deactivate = 1, bool 0/1, enum value). Unset: recorded
+    // in moduleCalls as "<cls>.<call>(<arg>)".
+    static inline std::function<void(PartModule*, const std::string& cls, const std::string& call, int arg)> moduleCall;
+    static inline std::vector<std::string> moduleCalls;
+    // module.<query>() -> bool (IsCooling, IsBusy, HasThisDialogOpen). Unset: false.
+    static inline std::function<bool(PartModule*, const std::string& cls, const std::string& query)> moduleQuery;
+    // module.<member> -> string (ModuleCargoBay.partTypeName). Unset: "".
+    static inline std::function<std::string(PartModule*, const std::string& cls, const std::string& member)> moduleText;
+    // module.GetAppliedTorque() (FailureReactionWheelStuck). Unset: zero.
+    static inline std::function<Vector3f(PartModule*)> reactionWheelAppliedTorque;
+    // adjustedModule.Fields.AddBaseFieldList / Events.AddBaseEventList (attach = true, AdjusterPartModuleBase.Setup) and their removal
+    // (CleanUp): the PartModule's BaseField / BaseEvent lists, the KSPField [AdjusterState] and KSPEvent [RemoveAdjuster]. Unset: not run.
+    static inline std::function<void(Adjusters::AdjusterPartModuleBase*, PartModule*, bool attach)> adjusterAttach;
+    // adjustedModule.RemovePartModuleAdjuster(adjuster) (AdjusterPartModuleBase.RemoveAdjuster). Unset: not run.
+    static inline std::function<void(PartModule*, Adjusters::AdjusterPartModuleBase*)> removePartModuleAdjuster;
+    // AssemblyLoader.GetSubclassesOfParentClass(typeof(<cls>)): the subclass names of a part module class. Unset: none.
+    static inline std::function<std::vector<std::string>(const std::string& cls)> partModuleSubclasses;
+    // UnityEngine.Random.Range(min, max) (float) / Random.value / Time.deltaTime. Unset: min / 0 / 0.
+    static inline std::function<float(float, float)> randomRangeFloat;
+    static inline std::function<float()> randomValue;
+    static inline std::function<float()> deltaTime;
     // Funding.Instance (ActionModifierFunds, TestMissionFunds): the live Funding scenario module (Funding::Instance). No seam needed.
     // ModuleAsteroid / ModuleComet part modules of a vessel (TestVesselActiveCount): found by class name through Vessel.
     static void Reset();

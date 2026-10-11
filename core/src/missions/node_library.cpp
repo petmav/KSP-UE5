@@ -31,6 +31,24 @@ void NodeLibraryEnvironment::Reset() {
     explodedParts.clear();
     activateNextStage = nullptr;
     stagesActivated = 0;
+    findLoadedPart = nullptr;
+    findNearestControllableVessel = nullptr;
+    forceSetActiveVessel = nullptr;
+    randomRange = nullptr;
+    craftPartIds = nullptr;
+    vesselRequestResource = nullptr;
+    moduleIsA = nullptr;
+    moduleCall = nullptr;
+    moduleCalls.clear();
+    moduleQuery = nullptr;
+    moduleText = nullptr;
+    reactionWheelAppliedTorque = nullptr;
+    adjusterAttach = nullptr;
+    removePartModuleAdjuster = nullptr;
+    partModuleSubclasses = nullptr;
+    randomRangeFloat = nullptr;
+    randomValue = nullptr;
+    deltaTime = nullptr;
 }
 
 // FlightGlobals.GetHomeBody() (FlightGlobals.cs:1813)
@@ -52,12 +70,12 @@ CelestialBody* NodeLibraryEnvironment::BodyByName(const std::string& name) {
 
 // ---- MissionCelestialBody ----------------------------------------------------------------------------------------------------
 
-// MissionCelestialBody.cs:61
+// MissionCelestialBody.cs:62
 MissionCelestialBody::MissionCelestialBody() : body_(NodeLibraryEnvironment::HomeBody()) {}
-// MissionCelestialBody.cs:66
+// MissionCelestialBody.cs:67
 MissionCelestialBody::MissionCelestialBody(CelestialBody* body) : body_(body) {}
 
-// MissionCelestialBody.cs:13 (LingoonaGrammarExtensions.cs:35 LocalizeRemoveGender: cut at the last '^')
+// MissionCelestialBody.cs:14 (LingoonaGrammarExtensions.cs:35 LocalizeRemoveGender: cut at the last '^')
 std::string MissionCelestialBody::DisplayName() const {
     if (body_ != nullptr) {
         std::string input = body_->displayName();
@@ -68,26 +86,26 @@ std::string MissionCelestialBody::DisplayName() const {
     return Localizer::Format("#autoLOC_8000273");
 }
 
-// MissionCelestialBody.cs:24
+// MissionCelestialBody.cs:26
 std::string MissionCelestialBody::Name() const {
     if (body_ != nullptr) return body_->name();
     return "AnyValid";
 }
 
-// MissionCelestialBody.cs:74
+// MissionCelestialBody.cs:72
 bool MissionCelestialBody::IsValid(CelestialBody* targetbody) const {
     bool result = true;
     if (!AnyValid()) result = body_ == targetbody;
     return result;
 }
 
-// MissionCelestialBody.cs:94
+// MissionCelestialBody.cs:93
 std::string MissionCelestialBody::GetNodeBodyParameterString() const { return Localizer::Format("#autoLOC_8000267", {DisplayName()}); }
 
-// MissionCelestialBody.cs:99
+// MissionCelestialBody.cs:98
 void MissionCelestialBody::Save(ConfigNode& node) const { node.AddValue("bodyName", Name()); }
 
-// MissionCelestialBody.cs:104
+// MissionCelestialBody.cs:103
 void MissionCelestialBody::Load(const ConfigNode& node) {
     std::string value;
     node.TryGetValue("bodyName", value);
@@ -103,7 +121,7 @@ void MissionCelestialBody::Load(const ConfigNode& node) {
 // ---- Library helpers ---------------------------------------------------------------------------------------------------------
 
 namespace Library {
-// MissionsUtils.cs:571
+// MissionsUtils.GetFieldValueForDisplay (MissionsUtils.cs, line 571)
 std::string BoolFieldText(bool v) { return Localizer::Format(v ? "#autoLOC_439839" : "#autoLOC_439840"); }
 }  // namespace Library
 
@@ -193,6 +211,7 @@ void RegisterNodeLibrary() {
     RegisterAction<ActionSetCamera>();
     RegisterAction<ActionPartResourceAmount>();
     RegisterAction<ActionPartExplode>();
+    Adjusters::RegisterAdjusters();
     // MissionScore.GetSupportedTypes reads [MEScoreModule] of the objective's own class (inherit: false)
     MissionScore::allowedSystemsOf = [](IScoreableObjective* objective) -> std::vector<std::string> {
         auto* module = dynamic_cast<TestModule*>(objective);

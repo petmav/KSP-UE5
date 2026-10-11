@@ -36,10 +36,10 @@ std::string Tag(const char* t) { return Localizer::Format(t); }
 
 // ---- VesselPartIDPair --------------------------------------------------------------------------------------------------------
 
-// VesselPartIDPair.cs:26
+// VesselPartIDPair.cs:25
 bool VesselPartIDPair::Equals(const VesselPartIDPair& other) const { return VesselID == other.VesselID && partID == other.partID; }
 
-// VesselPartIDPair.cs:45
+// VesselPartIDPair.cs:43
 void VesselPartIDPair::ValidatePartAgainstCraft(MENode* node, Editor::MissionEditorValidator* validator) {
     if (partID == 0 || !(node != nullptr)) return;
     // MissionCraft craft = node.mission.GetCraftBySituationsVesselID(VesselID); ShipConstruct ship = MissionEditorLogic.Instance.LoadVessel(craft)
@@ -57,18 +57,18 @@ void VesselPartIDPair::ValidatePartAgainstCraft(MENode* node, Editor::MissionEdi
     if (flag) validator->AddNodeFail(node, Tag("#autoLOC_8002115"));
 }
 
-// VesselPartIDPair.cs:72
-void VesselPartIDPair::Save(ConfigNode& node) const {
-    node.AddValue("partPersistentId", partID);
-    node.AddValue("vesselPersistentId", VesselID);
-    node.AddValue("partName", partName);
+// VesselPartIDPair.cs:74
+void VesselPartIDPair::Save(ConfigNode& cfg) const {
+    cfg.AddValue("partPersistentId", partID);
+    cfg.AddValue("vesselPersistentId", VesselID);
+    cfg.AddValue("partName", partName);
 }
 
-// VesselPartIDPair.cs:79
-void VesselPartIDPair::Load(const ConfigNode& node) {
-    node.TryGetValue("partPersistentId", partID);
-    node.TryGetValue("vesselPersistentId", VesselID);
-    node.TryGetValue("partName", partName);
+// VesselPartIDPair.cs:81
+void VesselPartIDPair::Load(const ConfigNode& cfg) {
+    cfg.TryGetValue("partPersistentId", partID);
+    cfg.TryGetValue("vesselPersistentId", VesselID);
+    cfg.TryGetValue("partName", partName);
 }
 
 }  // namespace ksp::Expansions::Missions
@@ -116,22 +116,22 @@ Enumerator ActionMessage::Fire() {
 // ActionMessage.cs:33
 std::string ActionMessage::GetInfo() { return Tag("#autoLOC_8004021"); }
 // ActionMessage.cs:38
-void ActionMessage::Save(ConfigNode& node) const {
-    ActionModule::Save(node);
+void ActionMessage::Save(ConfigNode& cfg) const {
+    ActionModule::Save(cfg);
     std::string text = ReplaceAll(message, "\n", "\\n");
     text = ReplaceAll(text, "\t", "\\t");
-    node.AddValue("message", text);
-    node.AddValue("duration", duration);
-    node.AddValue("style", dotnet::EnumToString(style));
+    cfg.AddValue("message", text);
+    cfg.AddValue("duration", duration);
+    cfg.AddValue("style", dotnet::EnumToString(style));
 }
 // ActionMessage.cs:48
-void ActionMessage::Load(const ConfigNode& node) {
-    ActionModule::Load(node);
-    node.TryGetValue("message", message);
+void ActionMessage::Load(const ConfigNode& cfg) {
+    ActionModule::Load(cfg);
+    cfg.TryGetValue("message", message);
     message = ReplaceAll(message, "\\n", "\n");
     message = ReplaceAll(message, "\\t", "\t");
-    node.TryGetValue("duration", duration);
-    save_detail::TryGetEnum(node, "style", style, ScreenMessageStyle::UPPER_LEFT);
+    cfg.TryGetValue("duration", duration);
+    save_detail::TryGetEnum(cfg, "style", style, ScreenMessageStyle::UPPER_LEFT);
 }
 
 // ---- ActionDialogMessage -----------------------------------------------------------------------------------------------------
@@ -292,16 +292,16 @@ Enumerator ActionModifierFunds::Fire() {
 // ActionModifierFunds.cs:55
 std::string ActionModifierFunds::GetInfo() { return Tag("#autoLOC_8003124"); }
 // ActionModifierFunds.cs:60
-void ActionModifierFunds::Load(const ConfigNode& node) {
-    ActionModule::Load(node);
-    save_detail::TryGetEnum(node, "type", modifierType, FundsModifierType::Multiply);
-    node.TryGetValue("modifier", modifierFunds);
+void ActionModifierFunds::Load(const ConfigNode& cfg) {
+    ActionModule::Load(cfg);
+    save_detail::TryGetEnum(cfg, "type", modifierType, FundsModifierType::Multiply);
+    cfg.TryGetValue("modifier", modifierFunds);
 }
 // ActionModifierFunds.cs:67
-void ActionModifierFunds::Save(ConfigNode& node) const {
-    ActionModule::Save(node);
-    node.AddValue("type", dotnet::EnumToString(modifierType));
-    node.AddValue("modifier", modifierFunds);
+void ActionModifierFunds::Save(ConfigNode& cfg) const {
+    ActionModule::Save(cfg);
+    cfg.AddValue("type", dotnet::EnumToString(modifierType));
+    cfg.AddValue("modifier", modifierFunds);
 }
 
 // ---- ActionMissionScore / ActionModifierScore --------------------------------------------------------------------------------
@@ -360,7 +360,7 @@ void ActionModifierScore::Initialize(MENode* n) {
 
 // ActionVessel.cs:43 Awake
 ActionVessel::ActionVessel(std::string typeName) : ActionModule(std::move(typeName)) {}
-// ActionVessel.cs:18
+// ActionVessel.cs:17
 Vessel* ActionVessel::vessel() {
     if (vessel_ == nullptr) {
         if (vesselID == 0) {
@@ -447,14 +447,14 @@ Enumerator ActionVesselActionGroup::Fire() {
 // ActionVesselActionGroup.cs:34
 std::string ActionVesselActionGroup::GetInfo() { return Tag("#autoLOC_8003180"); }
 // ActionVesselActionGroup.cs:39
-void ActionVesselActionGroup::Save(ConfigNode& node) const {
-    ActionModule::Save(node);
-    node.AddValue("actionGroup", dotnet::EnumToString(actionGroup));
+void ActionVesselActionGroup::Save(ConfigNode& cfg) const {
+    ActionModule::Save(cfg);
+    cfg.AddValue("actionGroup", dotnet::EnumToString(actionGroup));
 }
 // ActionVesselActionGroup.cs:45
-void ActionVesselActionGroup::Load(const ConfigNode& node) {
-    ActionModule::Load(node);
-    save_detail::TryGetEnum(node, "actionGroup", actionGroup, KSPActionGroup::None);
+void ActionVesselActionGroup::Load(const ConfigNode& cfg) {
+    ActionModule::Load(cfg);
+    save_detail::TryGetEnum(cfg, "actionGroup", actionGroup, KSPActionGroup::None);
 }
 
 // ---- ActionVesselExplode -----------------------------------------------------------------------------------------------------
@@ -494,14 +494,14 @@ std::string ActionVesselExplode::GetNodeBodyParameterString(const Editor::BaseAP
 // ActionVesselExplode.cs:59
 std::string ActionVesselExplode::GetInfo() { return Tag("#autoLOC_8004001"); }
 // ActionVesselExplode.cs:64
-void ActionVesselExplode::Save(ConfigNode& node) const {
-    ActionVessel::Save(node);
-    node.AddValue("explodeTime", partsExplodeTime);
+void ActionVesselExplode::Save(ConfigNode& cfg) const {
+    ActionVessel::Save(cfg);
+    cfg.AddValue("explodeTime", partsExplodeTime);
 }
 // ActionVesselExplode.cs:70
-void ActionVesselExplode::Load(const ConfigNode& node) {
-    ActionVessel::Load(node);
-    node.TryGetValue("explodeTime", partsExplodeTime);
+void ActionVesselExplode::Load(const ConfigNode& cfg) {
+    ActionVessel::Load(cfg);
+    cfg.TryGetValue("explodeTime", partsExplodeTime);
 }
 
 // ---- ActionVesselStage -------------------------------------------------------------------------------------------------------
@@ -524,9 +524,9 @@ Enumerator ActionVesselStage::Fire() {
 // ActionVesselStage.cs:27
 std::string ActionVesselStage::GetInfo() { return Tag("#autoLOC_8004005"); }
 // ActionVesselStage.cs:32
-void ActionVesselStage::Save(ConfigNode& node) const { ActionModule::Save(node); }
+void ActionVesselStage::Save(ConfigNode& cfg) const { ActionModule::Save(cfg); }
 // ActionVesselStage.cs:37
-void ActionVesselStage::Load(const ConfigNode& node) { ActionModule::Load(node); }
+void ActionVesselStage::Load(const ConfigNode& cfg) { ActionModule::Load(cfg); }
 
 // ---- ActionSetCamera ---------------------------------------------------------------------------------------------------------
 
@@ -540,16 +540,16 @@ Enumerator ActionSetCamera::Fire() {
 // ActionSetCamera.cs:27
 std::string ActionSetCamera::GetInfo() { return Tag("#autoLOC_8004180"); }
 // ActionSetCamera.cs:32
-void ActionSetCamera::Save(ConfigNode& node) const {
-    ActionModule::Save(node);
-    node.AddValue("cameraTypeOptions", dotnet::EnumToString(cameraLockMode));
-    node.AddValue("cameraLockOptions", dotnet::EnumToString(cameraLockOptions));
+void ActionSetCamera::Save(ConfigNode& cfg) const {
+    ActionModule::Save(cfg);
+    cfg.AddValue("cameraTypeOptions", dotnet::EnumToString(cameraLockMode));
+    cfg.AddValue("cameraLockOptions", dotnet::EnumToString(cameraLockOptions));
 }
 // ActionSetCamera.cs:39
-void ActionSetCamera::Load(const ConfigNode& node) {
-    ActionModule::Load(node);
-    save_detail::TryGetEnum(node, "cameraTypeOptions", cameraLockMode, MissionCameraModeOptions::NoChange);
-    save_detail::TryGetEnum(node, "cameraLockOptions", cameraLockOptions, MissionCameraLockOptions::Unlock);
+void ActionSetCamera::Load(const ConfigNode& cfg) {
+    ActionModule::Load(cfg);
+    save_detail::TryGetEnum(cfg, "cameraTypeOptions", cameraLockMode, MissionCameraModeOptions::NoChange);
+    save_detail::TryGetEnum(cfg, "cameraLockOptions", cameraLockOptions, MissionCameraLockOptions::Unlock);
 }
 
 // ---- ActionPartResourceAmount ------------------------------------------------------------------------------------------------
@@ -653,16 +653,16 @@ std::string ActionPartResourceAmount::GetNodeBodyParameterString(const Editor::B
 // ActionPartResourceAmount.cs:163
 std::string ActionPartResourceAmount::GetInfo() { return Tag("#autoLOC_8004000"); }
 // ActionPartResourceAmount.cs:168
-void ActionPartResourceAmount::Save(ConfigNode& node) const {
-    ActionVessel::Save(node);
-    node.AddValue("resourceName", resourceName);
-    node.AddValue("adjustAmount", adjustAmount);
+void ActionPartResourceAmount::Save(ConfigNode& cfg) const {
+    ActionVessel::Save(cfg);
+    cfg.AddValue("resourceName", resourceName);
+    cfg.AddValue("adjustAmount", adjustAmount);
 }
 // ActionPartResourceAmount.cs:175
-void ActionPartResourceAmount::Load(const ConfigNode& node) {
-    ActionVessel::Load(node);
-    node.TryGetValue("resourceName", resourceName);
-    node.TryGetValue("adjustAmount", adjustAmount);
+void ActionPartResourceAmount::Load(const ConfigNode& cfg) {
+    ActionVessel::Load(cfg);
+    cfg.TryGetValue("resourceName", resourceName);
+    cfg.TryGetValue("adjustAmount", adjustAmount);
 }
 
 // ---- ActionPartExplode -------------------------------------------------------------------------------------------------------
