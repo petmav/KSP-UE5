@@ -80,11 +80,12 @@ T* FindImpl(Part& p) {
     return static_cast<T*>(p.FindModuleImplementing([](PartModule& m) { return dynamic_cast<T*>(&m) != nullptr; }));
 }
 
-// the module is Unity-null once destroyed
+// the object is Unity-null once destroyed
 template <class T>
-bool IsNull(const T* o) {
+bool UnityNull(const T* o) {
     return o == nullptr || o->destroyed;
 }
+inline bool UnityNull(const Part* p) { return p == nullptr; }
 
 }  // namespace
 
@@ -449,7 +450,7 @@ void ModuleGroundSciencePart::SetEnabled(bool v) {
 
 // ModuleGroundSciencePart.cs:209
 ModuleGroundSciencePart::Cluster* ModuleGroundSciencePart::ScienceClusterData() {
-    if (IsNull(scienceClusterData) && DeployedScience::Instance != nullptr && SerenityInstalled()) {
+    if (UnityNull(scienceClusterData) && DeployedScience::Instance != nullptr && SerenityInstalled()) {
         Cluster* found = nullptr;
         if (!DeployedScience::Instance->DeployedScienceClusters().TryGetValue(ControlUnitId(), found)) found = nullptr;
         scienceClusterData = found;
@@ -665,10 +666,10 @@ std::string ModuleGroundSciencePart::GetInfo() {
         if (cfgs) {
             const std::vector<std::string> traitsNamesWithEffect = cfgs->GetTraitsNamesWithEffect("DeployedSciencePowerSkill");
             Experience::ExperienceTrait trait;
-            Experience::DeployedSciencePowerSkill skill(&trait);
+            Experience::Effects::DeployedSciencePowerSkill skill(&trait);
             for (size_t i = 0; i < traitsNamesWithEffect.size(); i++) {
                 Experience::ExperienceTraitConfig* traitConfig = nullptr;
-                ProtoCrewMember::TryGetExperienceTraitConfig(traitsNamesWithEffect[i], traitConfig);
+                KerbalRoster::TryGetExperienceTraitConfig(traitsNamesWithEffect[i], traitConfig);
                 if (traitConfig == nullptr) continue;
                 for (size_t j = 0; j < traitConfig->Effects().size(); j++) {
                     if (traitConfig->Effects()[j]->Name() != "DeployedSciencePowerSkill") continue;
@@ -723,8 +724,8 @@ bool ModuleGroundCommsPart::CanScienceTo(bool, double, double) { return false; }
 bool ModuleGroundCommsPart::CanComm() {
     Cluster* cluster = ScienceClusterData();
     if (cluster != nullptr) {
-        if (IsNull(controllerModule_)) {
-            if (IsNull(loadedPart_)) loadedPart_ = FindLoadedPart(cluster->ControlModulePartId());
+        if (UnityNull(controllerModule_)) {
+            if (UnityNull(loadedPart_)) loadedPart_ = FindLoadedPart(cluster->ControlModulePartId());
             if (loadedPart_ != nullptr) controllerModule_ = FindImpl<ModuleGroundExpControl>(*loadedPart_);
         }
         if (cluster->ControlModulePartId() != NeedPart(*this).fields.persistentId && loadedPart_ != nullptr && controllerModule_ != nullptr) {
@@ -1123,12 +1124,12 @@ void ModuleGroundExperiment::OnGroundScienceTransmitted(DSExperiment*, DSPart* s
 // ModuleGroundExperiment.cs:133
 void ModuleGroundExperiment::UpdateModuleUI() {
     ModuleGroundSciencePart::UpdateModuleUI();
-    if (IsNull(scienceExperiment) && ScienceClusterData() != nullptr) {
+    if (UnityNull(scienceExperiment) && ScienceClusterData() != nullptr) {
         scienceExperiment = nullptr;
         DSPart* dsp = RT::DeployedScienceExtensions::GetExperiment(ScienceClusterData()->DeployedScienceParts, experimentId());
         if (dsp != nullptr) scienceExperiment = dsp->Experiment;
     }
-    if (!IsNull(scienceExperiment)) {
+    if (!UnityNull(scienceExperiment)) {
         const float limit = Get<float>("scienceLimit");
         Set<float>("ScienceCompletedPercentage",
                    (limit > 0.0f) ? f32store(fx(scienceExperiment->TotalScienceGenerated()) / fx(scienceExperiment->ScienceLimit()) * 100.0) : 0.0f);
@@ -1140,9 +1141,9 @@ void ModuleGroundExperiment::UpdateModuleUI() {
         Set<float>("ScienceCompletedPercentage", 0.0f);
         Set<float>("ScienceTransmittedPercentage", 0.0f);
     }
-    if ((!Enabled() || !DeployedOnGround()) && !IsNull(scienceExperiment) && !scienceExperiment->ExperimentSituationValid())
+    if ((!Enabled() || !DeployedOnGround()) && !UnityNull(scienceExperiment) && !scienceExperiment->ExperimentSituationValid())
         Set<std::string>("PowerState", Localizer::Format("#autoLOC_8002251"));
-    if (Enabled() && DeployedOnGround() && !IsNull(scienceExperiment) && scienceExperiment->ExperimentSituationValid() &&
+    if (Enabled() && DeployedOnGround() && !UnityNull(scienceExperiment) && scienceExperiment->ExperimentSituationValid() &&
         (ScienceClusterData() == nullptr || scienceClusterData->IsPowered()))
         Set<float>("scienceValueDisplay", scienceValue);
     else

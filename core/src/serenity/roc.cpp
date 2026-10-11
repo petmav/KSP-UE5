@@ -33,6 +33,11 @@ std::vector<CelestialBody*> LocalBodies() {
     return FlightRegistry::Bodies();
 }
 
+// unchecked int arithmetic (C# wraps)
+int Wrap3(int a, int b, int c = 0, int d = 0) {
+    return static_cast<int>(static_cast<uint32_t>(a) + static_cast<uint32_t>(b) + static_cast<uint32_t>(c) + static_cast<uint32_t>(d));
+}
+
 template <class T>
 void AddUnique(std::vector<T>& v, const T& x) {
     if (std::find(v.begin(), v.end(), x) == v.end()) v.push_back(x);
@@ -285,7 +290,7 @@ void RocScatterQuad::Setup(RocQuad* q, int quadSeed_, LandClassROC* roc_, int co
     count = count_;
     roc = roc_;
     name = "_" + roc_->rocName;
-    rocIDForRoc = quadSeed_ + GetHashCode_Net35(roc_->rocName) + rocIDCounter;
+    rocIDForRoc = Wrap3(quadSeed_, StringExtensions::GetHashCode_Net35(roc_->rocName), rocIDCounter);
     isVisible = true;
     isBuilt = false;
 }
@@ -361,7 +366,7 @@ void LandClassROC::AddScatterMeshController(RocQuad* quad, int rocIDCounter) {
     } else {
         gameSeed = 0;
     }
-    quadSeed = gameSeed + GetHashCode_Net35(quad->name) + GetHashCode_Net35(rocName);
+    quadSeed = Wrap3(gameSeed, StringExtensions::GetHashCode_Net35(quad->name), StringExtensions::GetHashCode_Net35(rocName));
     UnityRandom& rnd = UnityRandom::Global();
     rnd.InitState(quadSeed);
     const float num = f32store(fx(rocFrequency) * fx(rocControl->quadArea));
@@ -403,8 +408,8 @@ void LandClassROC::BuildCache(int countToAdd) {
 
 // LandClassROC.cs:183
 void LandClassROC::DestroyQuad(RocScatterQuad* q) {
-    if (rocControl != nullptr && q->quad != nullptr && rocControl->rocPositionsUsed.ContainsKey(GetHashCode_Net35(q->quad->name))) {
-        RocPositionList list = rocControl->rocPositionsUsed[GetHashCode_Net35(q->quad->name)];
+    if (rocControl != nullptr && q->quad != nullptr && rocControl->rocPositionsUsed.ContainsKey(StringExtensions::GetHashCode_Net35(q->quad->name))) {
+        RocPositionList list = rocControl->rocPositionsUsed[StringExtensions::GetHashCode_Net35(q->quad->name)];
         int count = static_cast<int>(list->size());
         while (count-- > 0)
             if ((*list)[static_cast<size_t>(count)]->rocType == rocName) list->erase(list->begin() + count);
@@ -428,7 +433,7 @@ std::vector<RocPlacement> LandClassROC::CreateScatterMesh(RocScatterQuad* q) {
     UnityRandom& rnd = UnityRandom::Global();
     rnd.InitState(q->quadSeed);
     if (rocControl != nullptr) {
-        const int key = GetHashCode_Net35(q->quad->name);
+        const int key = StringExtensions::GetHashCode_Net35(q->quad->name);
         if (!rocControl->rocPositionsUsed.ContainsKey(key)) rocControl->rocPositionsUsed.Add(key, std::make_shared<std::vector<std::shared_ptr<RocPositionInfo>>>());
         RocPositionList listRef = rocControl->rocPositionsUsed[key];
         std::vector<std::shared_ptr<RocPositionInfo>>& list = *listRef;
@@ -489,7 +494,7 @@ std::vector<RocPlacement> LandClassROC::CreateScatterMesh(RocScatterQuad* q) {
                     rocPOS += -rocUp * num4;
                 else
                     rocPOS += -rocUp * num6;
-                const int num9 = gameSeed + GetHashCode_Net35(rocObjectName) + rocLoop + dotnet::ConvToInt32(fx(rocPOS.magnitude()));
+                const int num9 = Wrap3(gameSeed, StringExtensions::GetHashCode_Net35(rocObjectName), rocLoop, dotnet::ConvToInt32(fx(rocPOS.magnitude())));
                 const bool removed = !rocObjectName.empty() && ROCManager::Instance != nullptr && ROCManager::Instance->ROCRemoved(num9);
                 if (!rocObjectName.empty() && ROCManager::Instance != nullptr && !removed) {
                     RocPlacement pl;
@@ -598,7 +603,7 @@ void PQSROCControl::OnQuadBuilt(const PQ& pq) {
         }
     }
     if (hasQuadROCTypesCache && ROCManager::Instance != nullptr && ROCManager::Instance->debugROCStats)
-        quadAppliedROCTypes.Add(GetHashCode_Net35(quad->name), quadROCTypesCache);
+        quadAppliedROCTypes.Add(StringExtensions::GetHashCode_Net35(quad->name), quadROCTypesCache);
     rocsActive = false;
 }
 
@@ -616,7 +621,7 @@ void PQSROCControl::OnSphereReset() {
 void PQSROCControl::OnQuadDestroy(const PQ& pq) {
     RocQuad* quad = quadInfo ? quadInfo(pq) : nullptr;
     if (quad == nullptr) return;
-    const int key = GetHashCode_Net35(quad->name);
+    const int key = StringExtensions::GetHashCode_Net35(quad->name);
     if (ROCManager::Instance != nullptr && ROCManager::Instance->debugROCStats && quadAppliedROCTypes.ContainsKey(key)) {
         std::vector<ROCDefinition*> types = quadAppliedROCTypes[key];
         for (size_t i = 0; i < types.size(); i++) ROCManager::Instance->SubtractROCStats_Quad(this, types[i]);

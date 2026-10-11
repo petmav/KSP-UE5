@@ -55,7 +55,7 @@ T* FindImpl(Part& p) {
     return static_cast<T*>(p.FindModuleImplementing([](PartModule& m) { return dynamic_cast<T*>(&m) != nullptr; }));
 }
 template <class T>
-bool IsNull(const T* o) {
+bool UnityNull(const T* o) {
     return o == nullptr || o->destroyed;
 }
 CelestialBody* BodyByName(const std::string& name) {  // FlightGlobals.GetBodyByName (FlightGlobals.cs:1736; searches from the end)
@@ -273,14 +273,14 @@ bool DeployedSciencePart::Enabled() { return moduleEnabled; }
 
 // :47 setter
 void DeployedSciencePart::SetEnabled(bool value) {
-    if (IsNull(loadedPartModule)) {
+    if (UnityNull(loadedPartModule)) {
         Part* partout = FindLoadedPart(partId);
         if (partout != nullptr) loadedPartModule = FindImpl<ModuleGroundSciencePart>(*partout);
     }
     moduleEnabled = value;
-    if (!IsNull(loadedPartModule) && loadedPartModule->Enabled() != moduleEnabled)
+    if (!UnityNull(loadedPartModule) && loadedPartModule->Enabled() != moduleEnabled)
         loadedPartModule->SetEnabled(moduleEnabled);
-    else if (!IsNull(Cluster))
+    else if (!UnityNull(Cluster))
         Cluster->UpdatePowerState();
 }
 
@@ -295,8 +295,8 @@ void DeployedSciencePart::UpdateSciencePart(ModuleGroundSciencePart* part) {
     isSolarPanel = part->IsSolarPanel();
     ModuleGroundExperiment* component = FindImpl<ModuleGroundExperiment>(static_cast<Part&>(*part->part));
     if (component != nullptr) {
-        if (IsNull(Experiment)) {
-            if (!IsNull(Cluster)) {
+        if (UnityNull(Experiment)) {
+            if (!UnityNull(Cluster)) {
                 Experiment = DeployedScienceExperiment::Spawn(component, Cluster);
                 Experiment->sciencePart = this;
             }
@@ -311,7 +311,7 @@ void DeployedSciencePart::UpdateSciencePart(ModuleGroundSciencePart* part) {
         isAntenna = true;
         antennaBoosterPower = component2->antennaPower();
     }
-    if (!IsNull(Cluster)) {
+    if (!UnityNull(Cluster)) {
         if (isSolarPanel) AddUnique(Cluster->solarPanelParts, this);
         if (isAntenna) AddUnique(Cluster->antennaParts, this);
         Cluster->UpdatePowerState();
@@ -421,7 +421,7 @@ void DeployedScienceExperiment::Awake() {
 
 // :146
 ModuleGroundExperiment* DeployedScienceExperiment::GroundExperimentModule() {
-    if (!IsNull(moduleGroundExperiment)) return moduleGroundExperiment;
+    if (!UnityNull(moduleGroundExperiment)) return moduleGroundExperiment;
     moduleGroundExperiment = nullptr;
     Part* partout = FindLoadedPart(partId);
     if (partout != nullptr) moduleGroundExperiment = FindImpl<ModuleGroundExperiment>(*partout);
@@ -472,7 +472,7 @@ void DeployedScienceExperiment::Start() {
 
 // :274
 void DeployedScienceExperiment::FixedUpdate() {
-    if (FlightRegistry::ready && !ExperimentSituationValid() && !IsNull(sciencePart) && sciencePart->Enabled()) sciencePart->SetEnabled(false);
+    if (FlightRegistry::ready && !ExperimentSituationValid() && !UnityNull(sciencePart) && sciencePart->Enabled()) sciencePart->SetEnabled(false);
 }
 
 // :282
@@ -502,19 +502,19 @@ void DeployedScienceExperiment::SeismicDataCalcOverrideRemove(const SeismicDataC
 
 // :315
 void DeployedScienceExperiment::GroundScienceClusterPowerStateChanged(DeployedScienceCluster* cluster) {
-    if (IsNull(Cluster) || cluster->ControlModulePartId() != Cluster->ControlModulePartId()) return;
+    if (UnityNull(Cluster) || cluster->ControlModulePartId() != Cluster->ControlModulePartId()) return;
     noPowerMsgPosted = false;
     if (cluster->IsPowered()) {
         if (SeismicEventDataSendPending()) ProcessSeismicEvent();
         LastScienceGeneratedUT = UT();
-    } else if (!IsNull(sciencePart) && sciencePart->Enabled() && experimentId != DeployedScience::SeismicExperimentId) {
+    } else if (!UnityNull(sciencePart) && sciencePart->Enabled() && experimentId != DeployedScience::SeismicExperimentId) {
         StartCoroutine(CalcScience());
     }
 }
 
 // :336
 void DeployedScienceExperiment::GroundSciencePartEnabledStateChanged(ModuleGroundSciencePart* sciencePartModule) {
-    if (IsNull(Cluster) || sciencePartModule->part->fields.persistentId != PartId()) return;
+    if (UnityNull(Cluster) || sciencePartModule->part->fields.persistentId != PartId()) return;
     if (sciencePartModule->Enabled() && sciencePartModule->DeployedOnGround()) {
         if (SeismicEventDataSendPending()) ProcessSeismicEvent();
         LastScienceGeneratedUT = UT();
@@ -533,7 +533,7 @@ Enumerator DeployedScienceExperiment::CalcScience() {
 
 // :370
 void DeployedScienceExperiment::UpdateScienceLimitExperiment(ModuleGroundExperiment* mge) {
-    if (!IsNull(mge) && PartId() == mge->part->fields.persistentId) {
+    if (!UnityNull(mge) && PartId() == mge->part->fields.persistentId) {
         moduleGroundExperiment = mge;
         scienceLimit = mge->ScienceLimit();
     }
@@ -541,7 +541,7 @@ void DeployedScienceExperiment::UpdateScienceLimitExperiment(ModuleGroundExperim
 
 // :379
 void DeployedScienceExperiment::UpdateScienceValueExperiment(ModuleGroundExperiment* mge) {
-    if (!IsNull(mge) && PartId() == mge->part->fields.persistentId) {
+    if (!UnityNull(mge) && PartId() == mge->part->fields.persistentId) {
         moduleGroundExperiment = mge;
         scienceValue = mge->ScienceValue();
     }
@@ -549,7 +549,7 @@ void DeployedScienceExperiment::UpdateScienceValueExperiment(ModuleGroundExperim
 
 // :388
 void DeployedScienceExperiment::UpdateScienceExperiment(ModuleGroundExperiment* mge) {
-    if (!IsNull(mge) && PartId() == mge->part->fields.persistentId) {
+    if (!UnityNull(mge) && PartId() == mge->part->fields.persistentId) {
         moduleGroundExperiment = mge;
         scienceLimit = mge->ScienceLimit();
         scienceValue = mge->ScienceValue();
@@ -559,7 +559,7 @@ void DeployedScienceExperiment::UpdateScienceExperiment(ModuleGroundExperiment* 
 
 // :399
 void DeployedScienceExperiment::CalculateScience(float solarMultiplierArg) {
-    if (!IsNull(sciencePart) && sciencePart->Enabled() && !(TotalScienceGenerated() >= ScienceLimit()) && ExperimentSituationValid() && !IsNull(Cluster) &&
+    if (!UnityNull(sciencePart) && sciencePart->Enabled() && !(TotalScienceGenerated() >= ScienceLimit()) && ExperimentSituationValid() && !UnityNull(Cluster) &&
         Cluster->IsPowered()) {
         if (experimentId == DeployedScience::SeismicExperimentId) {
             LastScienceGeneratedUT = UT();
@@ -576,16 +576,16 @@ void DeployedScienceExperiment::CalculateScience(float solarMultiplierArg) {
         }
         LastScienceGeneratedUT = UT();
     } else {
-        if (!IsNull(sciencePart) && TotalScienceGenerated() >= ScienceLimit() && sciencePart->Enabled()) sciencePart->SetEnabled(false);
+        if (!UnityNull(sciencePart) && TotalScienceGenerated() >= ScienceLimit() && sciencePart->Enabled()) sciencePart->SetEnabled(false);
         LastScienceGeneratedUT = UT();
     }
 }
 
 // :431
 void DeployedScienceExperiment::CalcSendSeismicScience(Vessel* vessel, Part* part, float solarMultiplierArg) {
-    if (!IsNull(Cluster) && vessel != nullptr && !(experimentId != DeployedScience::SeismicExperimentId)) {
+    if (!UnityNull(Cluster) && vessel != nullptr && !(experimentId != DeployedScience::SeismicExperimentId)) {
         solarMultiplier = solarMultiplierArg;
-        if (Cluster->IsPowered() && !IsNull(sciencePart) && sciencePart->Enabled()) {
+        if (Cluster->IsPowered() && !UnityNull(sciencePart) && sciencePart->Enabled()) {
             if (ExperimentVessel != nullptr && Experiment != nullptr && subject != nullptr) {
                 seismicEventVelocity = vessel->loaded ? vessel->rb_velocity.magnitude() : static_cast<float>(vessel->srfSpeed);
                 if (!seismicEventDataSendPending) {
@@ -611,13 +611,13 @@ void DeployedScienceExperiment::CalcSendSeismicScience(Vessel* vessel, Part* par
                         for (size_t k = 0; k < pps.resources.size(); k++) {
                             ProtoPartResourceSnapshot* prs = pps.resources[k].get();
                             if (prs != nullptr && prs->definition != nullptr)
-                                d->resourceMass = f32store(fx(d->resourceMass) + prs->amount * static_cast<double>(prs->definition->density));
+                                d->resourceMass = f32store(fx(d->resourceMass) + fx(f32store(prs->amount * static_cast<double>(prs->definition->density()))));
                         }
                         d->mass = f32store(fx(d->mass) + fx(d->resourceMass));
                         d->velocity = seismicEventVelocity;
                         SetControllerVessel();
                         if (ControllerVessel != nullptr) {
-                            d->impactDistance = Contracts::Lite::GreatCircleDistance(vessel->mainBody(), vessel->latitude, vessel->longitude,
+                            d->impactDistance = Contracts::Lite::CelestialUtilities::GreatCircleDistance(vessel->mainBody(), vessel->latitude, vessel->longitude,
                                                                                       ControllerVessel->latitude, ControllerVessel->longitude);
                             const double num3 = d->impactDistance / vessel->mainBody()->Radius;
                             d->impactDistanceMultiplier = distanceCurve.Evaluate(static_cast<float>(num3));
@@ -637,7 +637,7 @@ void DeployedScienceExperiment::CalcSendSeismicScience(Vessel* vessel, Part* par
         } else {
             const std::string bodyText = Cluster->DeployedBody != nullptr ? Cluster->DeployedBody->bodyDisplayName : Localizer::Format("#autoLOC_8100159");
             if (!Cluster->IsPowered()) PostMsg(Localizer::Format("#autoLOC_8002371", {bodyText}));
-            if (IsNull(sciencePart) || !sciencePart->Enabled()) PostMsg(Localizer::Format("#autoLOC_8002372", {bodyText}));
+            if (UnityNull(sciencePart) || !sciencePart->Enabled()) PostMsg(Localizer::Format("#autoLOC_8002372", {bodyText}));
         }
     } else {
         log::Info("[DeployedScienceExperiment]: Cluster Cannot calculate and send Seismic Data event - Invalid Call Parameters.");
@@ -656,7 +656,7 @@ void DeployedScienceExperiment::processImpactVesselPart(Vessel* vessel, Part* pa
         d->mass = f32store(fx(part->fields.mass) + fx(d->resourceMass));
         SetControllerVessel();
         if (ControllerVessel != nullptr) {
-            d->impactDistance = Contracts::Lite::GreatCircleDistance(vessel->mainBody(), vessel->latitude, vessel->longitude, ControllerVessel->latitude,
+            d->impactDistance = Contracts::Lite::CelestialUtilities::GreatCircleDistance(vessel->mainBody(), vessel->latitude, vessel->longitude, ControllerVessel->latitude,
                                                                       ControllerVessel->longitude);
             const double num = d->impactDistance / vessel->mainBody()->Radius;
             d->impactDistanceMultiplier = Mathf::Clamp01(distanceCurve.Evaluate(static_cast<float>(num)));
@@ -689,7 +689,7 @@ void DeployedScienceExperiment::ProcessSeismicEvent() {
     distanceMultiplier = 1.0;
     std::vector<std::shared_ptr<SeismicPartData>> list(seismicPartList);
     for (size_t i = 0; i < list.size(); i++) {
-        totalJoules += 0.5 * (fx(list[i]->mass) * 1000.0) * dotnet::Pow(static_cast<double>(list[i]->velocity), 2.0);
+        totalJoules += 0.5 * (fx(list[i]->mass) * 1000.0) * dotnet::Math::Pow(static_cast<double>(list[i]->velocity), 2.0);
         num = f32store(fx(num) + fx(list[i]->mass));
         num2 = list[i]->impactDistance;
         distanceMultiplier = static_cast<double>(list[i]->impactDistanceMultiplier);
@@ -739,13 +739,13 @@ bool DeployedScienceExperiment::TimeToSendStoredData() {
 // :659
 bool DeployedScienceExperiment::GatherScienceData(std::shared_ptr<ScienceData>& experimentData) {
     experimentData = nullptr;
-    if (Experiment != nullptr && ExperimentVessel != nullptr && subject != nullptr && !IsNull(Cluster) && !(storedScienceData <= 0.0f) &&
-        ExperimentSituationValid() && !IsNull(sciencePart)) {
+    if (Experiment != nullptr && ExperimentVessel != nullptr && subject != nullptr && !UnityNull(Cluster) && !(storedScienceData <= 0.0f) &&
+        ExperimentSituationValid() && !UnityNull(sciencePart)) {
         experimentData = std::make_shared<ScienceData>(StoredScienceData(), 1.0f, xmitDataScalar, 0.0f, subject->id, subject->title);
         storedScienceData = 0.0f;
         return true;
     }
-    if (Experiment == nullptr || IsNull(sciencePart) || (ExperimentVessel == nullptr && ExperimentSituationValid()))
+    if (Experiment == nullptr || UnityNull(sciencePart) || (ExperimentVessel == nullptr && ExperimentSituationValid()))
         log::Warning("[DeployedScienceExperiment]: Unable to take data from experiment " + ExperimentName() + " part Id " + std::to_string(PartId()) +
                      " as Experiment, Science Part or Vessel reference are null.");
     return false;
@@ -753,7 +753,7 @@ bool DeployedScienceExperiment::GatherScienceData(std::shared_ptr<ScienceData>& 
 
 // :675
 bool DeployedScienceExperiment::SendDataToComms() {
-    if (Experiment != nullptr && ExperimentVessel != nullptr && subject != nullptr && !IsNull(Cluster) && sciencePart->Enabled() &&
+    if (Experiment != nullptr && ExperimentVessel != nullptr && subject != nullptr && !UnityNull(Cluster) && sciencePart->Enabled() &&
         !(storedScienceData <= 0.0f) && ExperimentSituationValid()) {
         const bool commNetEnabled = CommNet::CommNetScenario::CommNetEnabled();
         if (commNetEnabled && ControllerVessel == nullptr && Cluster != nullptr) SetControllerVessel();
@@ -1188,7 +1188,7 @@ void DeployedScience::FixedUpdate() {
     SerenityBehaviour::RunPendingStarts();
     for (size_t i = 0; i < deployedScienceClusters.ValuesList().size(); i++) {
         DeployedScienceCluster* cluster = deployedScienceClusters.ValuesList()[i];
-        if (IsNull(cluster)) continue;
+        if (UnityNull(cluster)) continue;
         bool flag = false;
         if (cluster->UpdatingScience()) continue;
         const double rate = static_cast<double>(TimeWarp::CurrentRate());
@@ -1205,10 +1205,10 @@ void DeployedScience::FixedUpdate() {
     // the DeployedScienceExperiment.FixedUpdate messages of the live components
     for (size_t i = 0; i < deployedScienceClusters.ValuesList().size(); i++) {
         DeployedScienceCluster* cluster = deployedScienceClusters.ValuesList()[i];
-        if (IsNull(cluster)) continue;
+        if (UnityNull(cluster)) continue;
         for (size_t j = 0; j < cluster->DeployedScienceParts.size(); j++) {
             DeployedSciencePart* dsp = cluster->DeployedScienceParts[j];
-            if (!IsNull(dsp) && !IsNull(dsp->Experiment)) dsp->Experiment->FixedUpdate();
+            if (!UnityNull(dsp) && !UnityNull(dsp->Experiment)) dsp->Experiment->FixedUpdate();
         }
     }
 }
