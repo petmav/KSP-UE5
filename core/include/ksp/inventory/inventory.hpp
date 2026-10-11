@@ -122,6 +122,7 @@ struct InventoryEnvironment {
     static inline std::function<void()> toggleJetpack;                           // evaController.ToggleJetpack()
     static inline bool alwaysShowInventory = false;                              // KerbalEVA.alwaysShowInventory
     static inline std::function<int(Part&)> currentCollisionCount;               // part.currentCollisions.Count
+    static inline std::function<Vector3d()> bodyPosition;                        // mainBody.position (SetPositionFromTerrain's ray length)
     static inline std::function<Quaternionf()> bodyRotation;                     // mainBody.bodyTransform.rotation
     static inline std::function<uint32_t()> uniqueFlightID;                      // ShipConstruction.GetUniqueFlightID(flightState)
     static inline std::function<std::vector<Part*>()> persistentLoadedParts;     // FlightGlobals.PersistentLoadedPartIds.ValuesList

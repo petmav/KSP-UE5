@@ -350,8 +350,10 @@ void ModuleInventoryPart::SetPositionFromTerrain() {
     Vessel* v = VesselOf();
     placementStartingPosition = v->vesselTransform.position + v->vesselTransform.forward() * spawnDistance;
     Vector3f vector = placementStartingPosition;
-    const Vector3d upAxisD = FlightMath::getUpAxis(*v->mainBody(), Vector3d(placementStartingPosition));
-    const float maxDistance = static_cast<float>((Vector3d(vector) - v->mainBody()->position).magnitude());
+    const Vector3d upAxisD = EVAConstructionEnvironment::upAxisAt ? EVAConstructionEnvironment::upAxisAt(Vector3d(placementStartingPosition))
+                                                                  : FlightMath::getUpAxis(*v->mainBody(), Vector3d(placementStartingPosition));
+    const Vector3d bodyPos = InventoryEnvironment::bodyPosition ? InventoryEnvironment::bodyPosition() : v->mainBody()->position;
+    const float maxDistance = static_cast<float>((Vector3d(vector) - bodyPos).magnitude());
     const Vector3f upAxis = upAxisD.ToVector3f();
     // vector += upAxis * 50.0 (Vector3d arithmetic, then the implicit Vector3d -> Vector3 narrowing of the sum)
     vector = (Vector3d(vector) + upAxisD * 50.0).ToVector3f();

@@ -105,6 +105,7 @@ struct PhysicsWorld {
 inline std::unique_ptr<Vessel> BareVessel(VesselType type, const Vector3f& pos) {
     auto v = std::make_unique<Vessel>();
     v->vesselType = type;
+    v->loaded = true;
     v->vesselTransform.position = pos;
     return v;
 }

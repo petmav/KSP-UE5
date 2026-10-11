@@ -55,7 +55,7 @@ struct EVAConstructionEnvironment {
     // the ground / cursor geometry of UpdatePartPlacementPosition
     struct GroundHit { Vector3f point, normal; };
     static inline std::function<std::optional<GroundHit>()> groundRaycast;       // Physics.Raycast(ray, 10000, 32768) from the cursor
-    static inline std::function<Vector3f(const Vector3f& up)> upAxisAt;          // FlightGlobals.getUpAxis(mainBody, point) (hit point given)
+    static inline std::function<Vector3d(const Vector3d& position)> upAxisAt;     // FlightGlobals.getUpAxis(mainBody, position); unset: FlightMath
     static inline std::function<std::optional<Vector3f>()> cameraPlanePoint;     // plane(camera forward, ReferenceTransform).Raycast(cursor ray)
     // CheckAttach's surface branch: Physics.RaycastAll sorted by distance (nearest first)
     static inline std::function<std::vector<EditorSurfaceHit>()> surfaceRaycastAll;

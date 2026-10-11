@@ -48,6 +48,7 @@ add_executable(kspcore_tests
     test_space_center.cpp
     test_inventory.cpp
     test_inventory_rules.cpp
+    test_construction.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
 )

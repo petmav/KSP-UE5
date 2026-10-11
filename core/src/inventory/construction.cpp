@@ -34,6 +34,21 @@ AttachRules RulesOf(const Part& p) { return p.fields.attachRules.value_or(Attach
 bool IsFlight() { return SaveEnvironment::Current().loadedScene == GameScenes::FLIGHT; }
 bool Contains(const std::vector<Vessel*>& v, Vessel* x) { return std::find(v.begin(), v.end(), x) != v.end(); }
 Vector3d V3d(const Vector3f& v) { return Vector3d(v); }
+// a null Part dereference is a NullReferenceException in C#
+Part* Need(Part* p) {
+    if (p == nullptr) throw NullReferenceException();
+    return p;
+}
+// FlightGlobals.ActiveVessel.GetWorldPos3D() (the floating-origin world position the shell knows)
+Vector3f ActiveWorldPos() {
+    if (EVAConstructionEnvironment::activeVesselWorldPos) return EVAConstructionEnvironment::activeVesselWorldPos();
+    return FlightRegistry::ActiveVessel->GetWorldPos3D().ToVector3f();
+}
+// FlightGlobals.getUpAxis(vessel.mainBody, position)
+Vector3d UpAxis(Vessel& v, const Vector3d& pos) {
+    if (EVAConstructionEnvironment::upAxisAt) return EVAConstructionEnvironment::upAxisAt(pos);
+    return FlightMath::getUpAxis(*v.mainBody(), pos);
+}
 }  // namespace
 
 // ================================================================ EVAConstructionEnvironment
@@ -524,7 +539,12 @@ void EVAConstructionModeEditor::OnDestroy() {
     RemoveAttachNodes();
 }
 
-EVAConstructionModeEditor::~EVAConstructionModeEditor() { OnDestroy(); }
+EVAConstructionModeEditor::~EVAConstructionModeEditor() {
+    try {
+        OnDestroy();
+    } catch (const std::exception&) {  // a MonoBehaviour exception is logged, never propagated
+    }
+}
 
 // EVAConstructionModeEditor.cs:180
 void EVAConstructionModeEditor::Update(const UpdateInput& in) {
@@ -682,14 +702,14 @@ void EVAConstructionModeEditor::UpdatePartPlacementPosition() {
         if (EVAConstructionEnvironment::groundRaycast) {
             if (auto g = EVAConstructionEnvironment::groundRaycast()) {
                 Vector3f point = g->point;
-                const Vector3d upAxis = FlightMath::getUpAxis(*active->mainBody(), V3d(point));
+                const Vector3d upAxis = UpAxis(*active, V3d(point));
                 float centerPointOffset = 0.0f;
                 float boundsPoints = EVAConstructionEnvironment::getBoundsPoints
                                          ? EVAConstructionEnvironment::getBoundsPoints(*selectedPart, g->normal, centerPointOffset)
                                          : 0.0f;
                 boundsPoints = f32store(fx(boundsPoints) + fx(placementGroundOffset));
                 point = (V3d(point) + upAxis * static_cast<double>(boundsPoints)).ToVector3f();
-                if (Vector3f::Distance(point, active->GetWorldPos3D().ToVector3f()) < InventoryEnvironment::EVA_CONSTRUCTION_RANGE) {
+                if (Vector3f::Distance(point, ActiveWorldPos()) < InventoryEnvironment::EVA_CONSTRUCTION_RANGE) {
                     selectedPart->partTransform.position = point;
                     isPlacementValid_ = true;
                     isPlacementOnGround = true;
@@ -769,7 +789,7 @@ void EVAConstructionModeEditor::PickupPartInput() {
     UIPartActionControllerInventory* inv = UIPartActionControllerInventory::Instance;
     Part* hovered = EVAConstructionEnvironment::hoveredPart;
     if (EVAConstructionEnvironment::mouseButtonUp0 && selectedPart == nullptr && hovered != nullptr &&
-        Vector3f::Distance(hovered->partTransform.position, FlightRegistry::ActiveVessel->GetWorldPos3D().ToVector3f()) <
+        Vector3f::Distance(hovered->partTransform.position, ActiveWorldPos()) <
             InventoryEnvironment::EVA_CONSTRUCTION_RANGE &&
         inv != nullptr && !inv->IsCursorOverAnyPAWOrCargoPane && !EVAConstructionModeController::Instance->Hover() &&
         !EVAConstructionEnvironment::pointerOverUI)
@@ -821,15 +841,15 @@ void EVAConstructionModeEditor::PickupPart() {
 // EVAConstructionModeEditor.cs:566
 void EVAConstructionModeEditor::RemoveAttachNodes() {
     for (size_t i = 0; i < attachVessels.size(); i++) {
-        handleChildNodeIcons(attachVessels[i]->rootPart);
-        handleAttachNodeIcons(attachVessels[i]->rootPart, false, false, false);
+        handleChildNodeIcons(Need(attachVessels[i]->rootPart));
+        handleAttachNodeIcons(Need(attachVessels[i]->rootPart), false, false, false);
     }
     if (selectedPart != nullptr) handleAttachNodeIcons(selectedPart, false, false, false);
 }
 
 // EVAConstructionModeEditor.cs:579
 void EVAConstructionModeEditor::ProcessAttachNodes() {
-    const Vector3f b = FlightRegistry::ActiveVessel->GetWorldPos3D().ToVector3f();
+    const Vector3f b = ActiveWorldPos();
     UpdateVesselsInConstructionRange();
     for (size_t i = 0; i < attachVessels.size(); i++) {
         if (!(attachVessels[i] != nullptr)) continue;
@@ -848,15 +868,15 @@ void EVAConstructionModeEditor::ProcessAttachNodes() {
 
 // EVAConstructionModeEditor.cs:608
 void EVAConstructionModeEditor::UpdateVesselsInConstructionRange() {
-    const Vector3f b = FlightRegistry::ActiveVessel->GetWorldPos3D().ToVector3f();
+    const Vector3f b = ActiveWorldPos();
     for (size_t i = 0; i < FlightRegistry::VesselsLoaded.size(); i++) {
         Vessel* vl = FlightRegistry::VesselsLoaded[i];
         const float num = f32store(fx(Vector3f::Distance(vl->vesselTransform.position, b)) - fx(vl->vesselSize.magnitude()));
         if (!Contains(attachVessels, vl)) {
             if (InventoryEnvironment::EVA_CONSTRUCTION_RANGE > num) attachVessels.push_back(vl);
         } else if (InventoryEnvironment::EVA_CONSTRUCTION_RANGE <= num) {
-            handleChildNodeIcons(vl->rootPart);
-            handleAttachNodeIcons(vl->rootPart, false, false, false);
+            handleChildNodeIcons(Need(vl->rootPart));
+            handleAttachNodeIcons(Need(vl->rootPart), false, false, false);
             attachVessels.erase(std::find(attachVessels.begin(), attachVessels.end(), vl));
         }
     }
@@ -867,8 +887,8 @@ void EVAConstructionModeEditor::UpdateVesselsInConstructionRange() {
             // sic: the C# indexes FlightGlobals.VesselsLoaded[count] here (not attachVessels[count])
             Vessel* bad = static_cast<size_t>(count) < FlightRegistry::VesselsLoaded.size() ? FlightRegistry::VesselsLoaded[static_cast<size_t>(count)] : nullptr;
             if (bad == nullptr) throw std::out_of_range("Index was out of range.");
-            handleChildNodeIcons(bad->rootPart);
-            handleAttachNodeIcons(bad->rootPart, false, false, false);
+            handleChildNodeIcons(Need(bad->rootPart));
+            handleAttachNodeIcons(Need(bad->rootPart), false, false, false);
             attachVessels.erase(attachVessels.begin() + count);
         } else if (v == nullptr) {
             attachVessels.erase(attachVessels.begin() + count);
@@ -878,8 +898,8 @@ void EVAConstructionModeEditor::UpdateVesselsInConstructionRange() {
 
 // EVAConstructionModeEditor.cs:644
 void EVAConstructionModeEditor::OnVesselUnloaded(Vessel* vessel) {
-    handleChildNodeIcons(vessel->rootPart);
-    handleAttachNodeIcons(vessel->rootPart, false, false, false);
+    handleChildNodeIcons(Need(vessel->rootPart));
+    handleAttachNodeIcons(Need(vessel->rootPart), false, false, false);
 }
 
 // EVAConstructionModeEditor.cs:650
@@ -975,7 +995,7 @@ void EVAConstructionModeEditor::DetachInput() {
     UIPartActionControllerInventory* inv = UIPartActionControllerInventory::Instance;
     if (!attachSuccesful && EVAConstructionEnvironment::mouseButtonUp0 && hoveredPart != nullptr &&
         hoveredPart->FindModuleOfClass("ModuleCargoPart") != nullptr &&
-        Vector3f::Distance(hoveredPart->partTransform.position, FlightRegistry::ActiveVessel->GetWorldPos3D().ToVector3f()) <
+        Vector3f::Distance(hoveredPart->partTransform.position, ActiveWorldPos()) <
             InventoryEnvironment::EVA_CONSTRUCTION_RANGE &&
         hoveredPart->vessel != nullptr && hoveredPart->vessel->rootPart->fields.persistentId != hoveredPart->fields.persistentId && inv != nullptr &&
         !inv->IsCursorOverAnyPAWOrCargoPane && !EVAConstructionModeController::Instance->Hover() && !EVAConstructionEnvironment::pointerOverUI &&
