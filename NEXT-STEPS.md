@@ -120,6 +120,20 @@ Follow-ups from waves 4-5:
 
 ## Handoff to the PC (2026-10-11, end of session 3)
 
+### Moving the whole directory to another machine
+
+The git remote holds only the repo; `decompiled/KSP-dev`, `decompiled/_archive/KSP-Decompiled.git`, `harness/lib`, `harness/tools-cache`, `core/data/mu_staging`, all build dirs and the Claude memory are local. Copy the directory with symlinks preserved, to the SAME path (`C:\Projects\KSP-UE5`) and the same Windows username if possible:
+
+```
+robocopy C:\Projects\KSP-UE5 <dest>\Projects\KSP-UE5 /E /SL /XJ /R:1 /W:1 /MT:16
+robocopy C:\Users\<user>\.claude\projects\C--Projects-KSP-UE5 <dest>\Users\<user>\.claude\projects\C--Projects-KSP-UE5 /E
+```
+
+Absolute paths are baked into: `.worktrees/*/.git` + `.git/worktrees/*/gitdir`; `decompiled/KSP-Decompiled-profiling/` (worktree of the bare `_archive` repo) and the DLL symlink under `decompiled/KSP-Decompiled/GameData/`; every `core/build` (Windows CMake cache and the WSL `build/linux-*` dirs with `/mnt/c/...`). If the path or user differs: `git worktree repair` in the root and in `decompiled/KSP-Decompiled`; delete every `core/build` and rebuild (`run_tests.ps1 -Fresh`, `./run_tests.sh -f`); recreate the DLL symlink per `decompiled/STATUS.md`. The Claude memory dir is keyed by project path, so a different path starts with empty memory (this file is the handoff either way).
+
+Prerequisites on the new machine: VS 2022 (MSVC x64), CMake >= 3.25, Ninja, Python 3 with numpy, `gh` logged in as petmav, WSL Ubuntu 24.04 with `clang g++ cmake ninja-build python3`, UE 5.8 only for `ue5/`. KSP dev copy is inside `decompiled/KSP-dev`; `decompiled/tools/scripts/launch_ksp.ps1` launches it for captures.
+
+
 Main `13750b33`: 35 ctest tests, 566 unit cases / 935,159 assertions (Windows; Linux 16 fewer, explained), CI linux + windows green. Four branches are pushed but NOT merged; every agent was stopped mid-verification by the user. Pick each up with a gatekeeper (or implementer for FIX items) against the branch HEAD:
 
 | branch | HEAD | state | what is left |
