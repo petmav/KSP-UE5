@@ -141,7 +141,8 @@ Quaternionf FromToRotation(const Vector3f& fromDirection, const Vector3f& toDire
 // Transform.rotation composition of the native Unity code (UnityPlayer.dll): Quaternionf * Quaternionf with one float32 rounding per
 // operation (not the Mono rule of the managed Quaternion.operator*, which rounds a whole expression once). The evaluation order is the
 // one that reproduces the in-game stage delta-v (capture.deltav_stages, WP-17b): cross product first, then the two w * v terms,
-// w = (lw * rw - lx * rx) - (ly * ry + lz * rz)  (fitted: ((lx*rx + ly*ry) + lz*rz) leaves 2 rows of Learstar A1 one ULP off):
+// w = (lw * rw - lx * rx) - (ly * ry + lz * rz). EMPIRICAL FIT (24 x-term orders x 16 w forms searched against capture.deltav_stages), UNVERIFIED against
+// Unity native: ((lx*rx + ly*ry) + lz*rz) leaves 2 Learstar A1 rows one ULP off. A capture of native Quaternion products would settle it.
 //   x = ((ly * rz - lz * ry) + lw * rx) + rw * lx    (y, z cyclic)
 // The orders  lw*rx + lx*rw + ly*rz - lz*ry  (the C# source order) and the other permutations of the three terms do not.
 // WP-17b: world rotation of a thrust transform = parentLocal * (... * (partLocal * (modelChain...))), right-nested (EditorHierarchy::World).

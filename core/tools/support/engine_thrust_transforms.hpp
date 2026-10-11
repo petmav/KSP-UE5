@@ -46,6 +46,8 @@ struct EditorHierarchy {
     std::map<const ksp::Part*, ksp::Quaternionf> local;
     std::map<const ksp::Part*, const ksp::Part*> parent;
 
+    // EMPIRICAL (not documented in the decompile, UNVERIFIED against Unity native): the right-nesting over part hierarchy AND model chain fixed
+    // Kerbal X in capture.deltav_stages. Documented: ShipConstruct.cs:473 (`part.transform.rotation = rot`) and :644 (`transform.parent = ...`).
     // `tail` (optional): a rotation below the part (the model chain of a thrust transform); Unity composes the whole chain from the leaf
     // upward (rot = parentLocal * rot), i.e. right-nested over the part hierarchy AND the model chain, not (part world) * (chain).
     ksp::Quaternionf World(const ksp::Part* p, const ksp::Quaternionf* tail = nullptr) const {
