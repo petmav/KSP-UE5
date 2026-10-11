@@ -117,9 +117,9 @@ bool ARMContract::Generate() {
     AddParameter(std::make_unique<StabilityParameter>(10.0f));
     return true;
 }
-// ARMContract.cs:181
+// ARMContract.cs:132
 std::string ARMContract::GetHashString() { return I(Lite::SuperSeed(*this)); }
-// ARMContract.cs:186
+// ARMContract.cs:137
 std::string ARMContract::GetTitle() {
     if (targetBody != Sun()) {
         if (isLanding) return Fmt("#autoLOC_278134", {asteroidClass, targetBody->displayName()});
@@ -127,11 +127,11 @@ std::string ARMContract::GetTitle() {
     }
     return Fmt("#autoLOC_278139", {asteroidClass});
 }
-// ARMContract.cs:197
+// ARMContract.cs:150
 std::string ARMContract::GetDescription() {
     return TextGen::GenerateBackStories(TypeName(), Agent()->Title(), targetBody->displayName(), Fmt("#autoLOC_7001015"), MissionSeed(), true, false, true);
 }
-// ARMContract.cs:202
+// ARMContract.cs:155
 std::string ARMContract::GetSynopsys() {
     KSPRandom kSPRandom(MissionSeed());
     if (targetBody != Sun()) {
@@ -148,7 +148,7 @@ std::string ARMContract::GetSynopsys() {
         case 0: return Fmt("#autoLOC_278175", {asteroidClass});
     }
 }
-// ARMContract.cs:238
+// ARMContract.cs:185
 std::string ARMContract::MessageCompleted() {
     KSPRandom kSPRandom(MissionSeed());
     if (targetBody != Sun()) return Fmt("#autoLOC_278189", {targetBody->displayName()});
@@ -158,19 +158,19 @@ std::string ARMContract::MessageCompleted() {
         case 0: return Fmt("#autoLOC_278195");
     }
 }
-// ARMContract.cs:257
+// ARMContract.cs:203
 void ARMContract::OnSave(ConfigNode& node) {
     node.AddValue("targetBody", static_cast<int32_t>(targetBody->flightGlobalsIndex));
     node.AddValue("asteroidClass", asteroidClass);
     node.AddValue("isLanding", isLanding);
 }
-// ARMContract.cs:264
+// ARMContract.cs:210
 void ARMContract::OnLoad(ConfigNode& node) {
     Lite::LoadNode(node, "ARMContract", "targetBody", targetBody, Home());
     Lite::LoadNode(node, "ARMContract", "asteroidClass", asteroidClass, std::string("A"));
     Lite::LoadNode(node, "ARMContract", "isLanding", isLanding, false);
 }
-// ARMContract.cs:271
+// ARMContract.cs:217
 bool ARMContract::MeetRequirements() {
     if (!ProgressTracking::Instance()->NodeComplete({Sun()->name(), "Orbit"})) return false;
     if (!GameVariables::Instance->UnlockedSpaceObjectDiscovery(ScenarioUpgradeableFacilities::GetFacilityLevel(SpaceCenterFacility::TrackingStation))) return false;
@@ -179,12 +179,12 @@ bool ARMContract::MeetRequirements() {
 
 // ================================================================================================================================ BaseContract
 
-// BaseContract.cs:271
+// BaseContract.cs:255
 bool BaseContract::AreFacilitiesUnlocked() {
     if (Lite::ResearchedValidContractObjectives({"Antenna", "Dock", "Generator"})) return true;
     return false;
 }
-// BaseContract.cs:21
+// BaseContract.cs:22
 bool BaseContract::Generate() {
     if (!AreFacilitiesUnlocked()) return false;
     if (static_cast<int>(ContractSystem::Instance->GetCurrentContracts<BaseContract>().size()) >= DI("Base", "", "MaximumExistent")) return false;
@@ -270,64 +270,64 @@ bool BaseContract::Generate() {
     if (ContractSystem::Instance->AnyCurrentContracts<StationContract>([this](StationContract* contract) { return contract->targetBody == targetBody; })) return false;
     return true;
 }
-// BaseContract.cs:188
+// BaseContract.cs:174
 std::string BaseContract::GetHashString() { return I(Lite::SuperSeed(*this)); }
-// BaseContract.cs:193
+// BaseContract.cs:179
 std::string BaseContract::GetTitle() {
     if (contextual) return Fmt("#autoLOC_7001079", {Lite::StringUtilities::SpecificVesselName(*this), targetBody->displayName()});
     return Fmt("#autoLOC_7001080", {targetBody->displayName()});
 }
-// BaseContract.cs:202
+// BaseContract.cs:188
 std::string BaseContract::GetDescription() {
     const std::string text = Lite::StringUtilities::IntegerToGreek(KSPRandom(MissionSeed()).Next(23));
     const std::string topic = contextual ? Lite::StringUtilities::SpecificVesselName(*this) : (targetBody->displayName() + " Base " + text);
     return TextGen::GenerateBackStories(TypeName(), Agent()->Title(), topic, targetBody->displayName() + "Srf", MissionSeed(), true, false, true);
 }
-// BaseContract.cs:209
+// BaseContract.cs:195
 std::string BaseContract::GetSynopsys() {
     if (contextual) return Fmt("#autoLOC_278436", {targetBody->displayName(), Lite::StringUtilities::SpecificVesselName(*this)});
     return Fmt("#autoLOC_278438", {I(capacity), targetBody->displayName()});
 }
-// BaseContract.cs:219
+// BaseContract.cs:204
 std::string BaseContract::MessageCompleted() {
     if (contextual) return Fmt("#autoLOC_278444", {Lite::StringUtilities::SpecificVesselName(*this)});
     return Fmt("#autoLOC_278446", {targetBody->displayName()});
 }
-// BaseContract.cs:229
+// BaseContract.cs:213
 void BaseContract::OnSave(ConfigNode& node) {
     node.AddValue("targetBody", static_cast<int32_t>(targetBody->flightGlobalsIndex));
     node.AddValue("capacity", static_cast<int32_t>(capacity));
     node.AddValue("contextual", contextual);
 }
-// BaseContract.cs:236
+// BaseContract.cs:220
 void BaseContract::OnLoad(ConfigNode& node) {
     Lite::LoadNode(node, "BaseContract", "targetBody", targetBody, Home());
     Lite::LoadNode(node, "BaseContract", "capacity", capacity, 8);
     Lite::LoadNode(node, "BaseContract", "contextual", contextual, false);
 }
-// BaseContract.cs:243
+// BaseContract.cs:227
 bool BaseContract::MeetRequirements() {
     if (!ProgressTracking::Instance()->NodeComplete({Home()->name(), Fmt("#autoLOC_278465")})) return false;
     return true;
 }
-// BaseContract.cs:256
+// BaseContract.cs:241
 void BaseContract::OnAccepted() {
     auto* parameter = GetParameterT<VesselSystemsParameter>();
     if (parameter != nullptr && parameter->requireNew) parameter->launchID = SaveEnvironment::Current().currentGame->launchID;
 }
-// BaseContract.cs:266
+// BaseContract.cs:250
 void BaseContract::OnFinished() {
     if (auto* p = GetParameterT<SpecificVesselParameter>()) p->CleanupWaypoints();
 }
 
 // ================================================================================================================================ StationContract
 
-// StationContract.cs:287
+// StationContract.cs:275
 bool StationContract::AreFacilitiesUnlocked() {
     if (Lite::ResearchedValidContractObjectives({"Antenna", "Dock", "Generator"})) return true;
     return false;
 }
-// StationContract.cs:296
+// StationContract.cs:284
 bool StationContract::AreAsteroidsUnlocked() {
     if (!DB("Station", "", "AllowAsteroid")) return false;
     if (!GameVariables::Instance->UnlockedSpaceObjectDiscovery(ScenarioUpgradeableFacilities::GetFacilityLevel(SpaceCenterFacility::TrackingStation))) return false;
@@ -335,7 +335,7 @@ bool StationContract::AreAsteroidsUnlocked() {
     if (!Lite::ResearchedValidContractObjectives({"Grapple"})) return false;
     return true;
 }
-// StationContract.cs:21
+// StationContract.cs:22
 bool StationContract::Generate() {
     if (!AreFacilitiesUnlocked()) return false;
     if (static_cast<int>(ContractSystem::Instance->GetCurrentContracts<StationContract>().size()) >= DI("Station", "", "MaximumExistent")) return false;
@@ -430,62 +430,62 @@ bool StationContract::Generate() {
     if (ContractSystem::Instance->AnyCurrentContracts<BaseContract>([this](BaseContract* contract) { return contract->targetBody == targetBody; })) return false;
     return true;
 }
-// StationContract.cs:203
+// StationContract.cs:188
 std::string StationContract::GetHashString() { return I(Lite::SuperSeed(*this)); }
-// StationContract.cs:208
+// StationContract.cs:193
 std::string StationContract::GetTitle() {
     const std::string text = !contextual ? Fmt("#autoLOC_7001020") : Fmt("#autoLOC_7001019", {Lite::StringUtilities::SpecificVesselName(*this)});
     const std::string text2 = !(targetBody == Sun()) ? Fmt("#autoLOC_7001022", {targetBody->displayName()}) : Fmt("#autoLOC_7001021");
     return Fmt("#autoLOC_6002375", {text, text2});
 }
-// StationContract.cs:215
+// StationContract.cs:200
 std::string StationContract::GetDescription() {
     const std::string text = Lite::StringUtilities::IntegerToGreek(KSPRandom(MissionSeed()).Next(23));
     const std::string topic = contextual ? Lite::StringUtilities::SpecificVesselName(*this) : (targetBody->displayName() + " Station " + text);
     return TextGen::GenerateBackStories(TypeName(), Agent()->Title(), topic, targetBody->displayName(), MissionSeed(), true, true, true);
 }
-// StationContract.cs:221
+// StationContract.cs:207
 std::string StationContract::GetSynopsys() {
     if (contextual) return Fmt("#autoLOC_280652", {targetBody->displayName(), Lite::StringUtilities::SpecificVesselName(*this)});
     if (targetBody == Sun()) return Fmt("#autoLOC_7001071", {I(capacity)});
     return Fmt("#autoLOC_7001072", {I(capacity), targetBody->displayName()});
 }
-// StationContract.cs:233
+// StationContract.cs:220
 std::string StationContract::MessageCompleted() {
     if (contextual) return Fmt("#autoLOC_280660", {Lite::StringUtilities::SpecificVesselName(*this)});
     if (targetBody == Sun()) return Fmt("#autoLOC_7001073");
     return Fmt("#autoLOC_7001074", {targetBody->displayName()});
 }
-// StationContract.cs:246
+// StationContract.cs:233
 void StationContract::OnSave(ConfigNode& node) {
     node.AddValue("targetBody", static_cast<int32_t>(targetBody->flightGlobalsIndex));
     node.AddValue("capacity", static_cast<int32_t>(capacity));
     node.AddValue("contextual", contextual);
 }
-// StationContract.cs:253
+// StationContract.cs:240
 void StationContract::OnLoad(ConfigNode& node) {
     Lite::LoadNode(node, "StationContract", "targetBody", targetBody, Home());
     Lite::LoadNode(node, "StationContract", "capacity", capacity, 8);
     Lite::LoadNode(node, "StationContract", "contextual", contextual, false);
 }
-// StationContract.cs:260
+// StationContract.cs:247
 bool StationContract::MeetRequirements() {
     if (!ProgressTracking::Instance()->NodeComplete({Home()->name(), "Orbit"})) return false;
     return true;
 }
-// StationContract.cs:274
+// StationContract.cs:261
 void StationContract::OnAccepted() {
     auto* parameter = GetParameterT<VesselSystemsParameter>();
     if (parameter != nullptr && parameter->requireNew) parameter->launchID = SaveEnvironment::Current().currentGame->launchID;
 }
-// StationContract.cs:282
+// StationContract.cs:270
 void StationContract::OnFinished() {
     if (auto* p = GetParameterT<SpecificVesselParameter>()) p->CleanupWaypoints();
 }
 
 // ================================================================================================================================ ISRUContract
 
-// ISRUContract.cs:296
+// ISRUContract.cs:258
 std::vector<ConfigNode*> ISRUContract::PossibleResources() {
     std::vector<ConfigNode*> list;
     ConfigNode* node = ContractDefsLite::Node("ISRU");
@@ -497,7 +497,7 @@ std::vector<ConfigNode*> ISRUContract::PossibleResources() {
     }
     return list;
 }
-// ISRUContract.cs:316
+// ISRUContract.cs:279
 bool ISRUContract::CelestialIsForbidden(CelestialBody* body, ConfigNode* resourceRequest) {
     if (body != nullptr && resourceRequest != nullptr) {
         const std::vector<std::string> values = resourceRequest->GetValuesList("Forbidden");
@@ -509,7 +509,7 @@ bool ISRUContract::CelestialIsForbidden(CelestialBody* body, ConfigNode* resourc
     }
     return true;
 }
-// ISRUContract.cs:27
+// ISRUContract.cs:28
 bool ISRUContract::Generate() {
     if (static_cast<int>(ContractSystem::Instance->GetCurrentContracts<ISRUContract>().size()) >= DI("ISRU", "", "MaximumExistent")) return false;
     std::vector<ConfigNode*> list = PossibleResources();
@@ -609,9 +609,9 @@ bool ISRUContract::Generate() {
     if (ContractSystem::Instance->AnyCurrentContracts<ISRUContract>([this](ISRUContract* contract) { return contract->targetBody == targetBody; })) return false;
     return true;
 }
-// ISRUContract.cs:205
+// ISRUContract.cs:169
 std::string ISRUContract::GetHashString() { return I(Lite::SuperSeed(*this)); }
-// ISRUContract.cs:210
+// ISRUContract.cs:174
 std::string ISRUContract::GetTitle() {
     if (isDelivering) return Fmt("#autoLOC_279475", {resourceTitle, targetBody->displayName(), deliveryBody->displayName()});
     return Fmt("#autoLOC_279477", {RoundedThousands(static_cast<double>(Mathf::Round(gatherGoal))), resourceTitle, targetBody->displayName()});
@@ -622,23 +622,23 @@ std::string Lower(std::string s) {
     return s;
 }
 }  // namespace
-// ISRUContract.cs:219
+// ISRUContract.cs:183
 std::string ISRUContract::GetDescription() {
     return TextGen::GenerateBackStories(TypeName(), Agent()->Title(), Lower(Fmt(resourceTitle.c_str())), targetBody->displayName() + "Srf", MissionSeed(), true, false, true);
 }
-// ISRUContract.cs:224
+// ISRUContract.cs:188
 std::string ISRUContract::GetSynopsys() {
     const std::string goal = RoundedThousands(static_cast<double>(Mathf::Round(gatherGoal)));
     if (isDelivering) return Fmt("#autoLOC_279488", {resourceTitle, targetBody->displayName(), goal, deliveryBody->displayName()});
     return Fmt("#autoLOC_279490", {resourceTitle, targetBody->displayName(), goal});
 }
-// ISRUContract.cs:234
+// ISRUContract.cs:197
 std::string ISRUContract::MessageCompleted() {
     const std::string goal = RoundedThousands(static_cast<double>(Mathf::Round(gatherGoal)));
     if (isDelivering) return Fmt("#autoLOC_279496", {goal, resourceTitle, deliveryBody->displayName(), Agent()->Title()});
     return Fmt("#autoLOC_279498", {goal, resourceTitle, Agent()->Title()});
 }
-// ISRUContract.cs:244
+// ISRUContract.cs:206
 void ISRUContract::OnSave(ConfigNode& node) {
     node.AddValue("targetBody", static_cast<int32_t>(targetBody->flightGlobalsIndex));
     node.AddValue("gatherGoal", gatherGoal);
@@ -650,7 +650,7 @@ void ISRUContract::OnSave(ConfigNode& node) {
         node.AddValue("deliverySituation", dotnet::EnumToString(deliverySituation));
     }
 }
-// ISRUContract.cs:258
+// ISRUContract.cs:220
 void ISRUContract::OnLoad(ConfigNode& node) {
     Lite::LoadNode(node, "ISRUContract", "targetBody", targetBody, Home());
     Lite::LoadNode(node, "ISRUContract", "gatherGoal", gatherGoal, 1.0f);
@@ -665,12 +665,12 @@ void ISRUContract::OnLoad(ConfigNode& node) {
     if (resourcePossessionParameter != nullptr && !PartResourceLibrary::Instance()->resourceDefinitions.Contains(resourcePossessionParameter->resourceName))
         resourcePossessionParameter->resourceName = targetResource;
 }
-// ISRUContract.cs:277
+// ISRUContract.cs:239
 bool ISRUContract::MeetRequirements() {
     if (!ProgressTracking::Instance()->NodeComplete({Home()->name(), "Orbit"})) return false;
     return true;
 }
-// ISRUContract.cs:286
+// ISRUContract.cs:248
 std::vector<CelestialBody*> ISRUContract::WeightBodies() {
     std::vector<CelestialBody*> list{targetBody};
     if (isDelivering) list.push_back(deliveryBody);

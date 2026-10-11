@@ -59,7 +59,7 @@ SpecificVesselParameter::SpecificVesselParameter() : targetVesselID(Guid::Empty(
     TargetBody = Planetarium::fetch->Home;
     wp = std::make_unique<Waypoint>();
 }
-// SpecificVesselParameter.cs:45
+// SpecificVesselParameter.cs:46
 SpecificVesselParameter::SpecificVesselParameter(Vessel* v) {
     partIDs = L::GetPartIDList(v);
     targetVessel = v;
@@ -70,13 +70,13 @@ SpecificVesselParameter::SpecificVesselParameter(Vessel* v) {
     TargetBody = ReferenceBodyOf(v);
     wp = std::make_unique<Waypoint>();
 }
-// SpecificVesselParameter.cs:57
+// SpecificVesselParameter.cs:58
 std::string SpecificVesselParameter::GetHashString() { return I(L::SuperSeed(*Root())) + ID(); }
-// SpecificVesselParameter.cs:62
+// SpecificVesselParameter.cs:63
 std::string SpecificVesselParameter::GetTitle() { return Fmt("#autoLOC_285073", {targetVesselName}); }
-// SpecificVesselParameter.cs:67
+// SpecificVesselParameter.cs:68
 std::string SpecificVesselParameter::GetMessageComplete() { return Fmt("#autoLOC_285078", {targetVesselName}); }
-// SpecificVesselParameter.cs:72
+// SpecificVesselParameter.cs:73
 std::string SpecificVesselParameter::GetNotes() {
     if (!Root()->IsFinished() && targetVessel != nullptr) {
         const std::string bn = TargetBody->displayName();
@@ -94,13 +94,13 @@ std::string SpecificVesselParameter::GetNotes() {
     }
     return "";
 }
-// SpecificVesselParameter.cs:99
+// SpecificVesselParameter.cs:102
 void SpecificVesselParameter::OnRegister() { SetDisableOnStateChange(false); }
-// SpecificVesselParameter.cs:104
+// SpecificVesselParameter.cs:107
 void SpecificVesselParameter::OnUnregister() { CleanupWaypoints(); }
-// SpecificVesselParameter.cs:109
+// SpecificVesselParameter.cs:112
 void SpecificVesselParameter::OnReset() { SetIncomplete(); }
-// SpecificVesselParameter.cs:114
+// SpecificVesselParameter.cs:117
 void SpecificVesselParameter::OnSave(ConfigNode& node) {
     node.AddValue("TargetBody", static_cast<int32_t>(TargetBody->flightGlobalsIndex));
     node.AddValue("targetVesselID", targetVesselID.ToString('N'));
@@ -109,7 +109,7 @@ void SpecificVesselParameter::OnSave(ConfigNode& node) {
     node.AddValue("targetVesselSituation", dotnet::EnumToString(targetVesselSituation));
     L::SystemUtilities::SaveNodeList(&node, "partIDs", partIDs);
 }
-// SpecificVesselParameter.cs:125
+// SpecificVesselParameter.cs:127
 void SpecificVesselParameter::OnLoad(ConfigNode& node) {
     tracked = true;
     std::string value;
@@ -153,7 +153,7 @@ void SpecificVesselParameter::OnLoad(ConfigNode& node) {
             setup();
     }
 }
-// SpecificVesselParameter.cs:199
+// SpecificVesselParameter.cs:196
 void SpecificVesselParameter::OnUpdate() {
     if (!L::FlightIsReady(Root()->ContractState(), Contract::State::Active, true) || !tracked) return;
     if (State() == ParameterState::Incomplete) {
@@ -165,7 +165,7 @@ void SpecificVesselParameter::OnUpdate() {
     }
     if (State() == ParameterState::Complete && FlightRegistry::ActiveVessel != targetVessel) SetIncomplete();
 }
-// SpecificVesselParameter.cs:228
+// SpecificVesselParameter.cs:223
 void SpecificVesselParameter::UpdateWaypoints(bool focus) {
     (void)focus;
     if (targetVessel != nullptr && !Root()->IsFinished() && tracked) {
@@ -188,14 +188,14 @@ void SpecificVesselParameter::UpdateWaypoints(bool focus) {
         }
     }
 }
-// SpecificVesselParameter.cs:257
+// SpecificVesselParameter.cs:251
 void SpecificVesselParameter::SpecificVesselRename(const Guid& id, const std::string& name) {
     if (targetVessel != nullptr && !Root()->IsFinished() && tracked && refreshContractRequested && id == targetVesselID) {
         targetVesselName = name;
         refreshContractRequested(*Root(), false);
     }
 }
-// SpecificVesselParameter.cs:267
+// SpecificVesselParameter.cs:260
 void SpecificVesselParameter::SpecificVesselScan(const std::vector<Guid>& ids) {
     if (!tracked) return;
     for (const Guid& current : ids) {
@@ -205,7 +205,7 @@ void SpecificVesselParameter::SpecificVesselScan(const std::vector<Guid>& ids) {
         }
     }
 }
-// SpecificVesselParameter.cs:287
+// SpecificVesselParameter.cs:281
 void SpecificVesselParameter::TargetVesselSearch(bool cached) {
     if (!tracked) return;
     targetVessel = nullptr;
@@ -235,14 +235,14 @@ void SpecificVesselParameter::TargetVesselSearch(bool cached) {
     targetVesselSituation = targetVessel->loaded ? targetVessel->situation : targetVessel->protoVessel->situation;
     TargetBody = ReferenceBodyOf(targetVessel);
 }
-// SpecificVesselParameter.cs:331
+// SpecificVesselParameter.cs:326
 void SpecificVesselParameter::CleanupWaypoints() {
     if (submittedWaypoint) {
         WpRemove(wp.get());
         submittedWaypoint = false;
     }
 }
-// SpecificVesselParameter.cs:340 (the iterator: the first segment up to `yield return null` is run by the coroutine at once, the rest on the next frame)
+// SpecificVesselParameter.cs:335 (the iterator: the first segment up to `yield return null` is run by the coroutine at once, the rest on the next frame)
 void SpecificVesselParameter::KillContract() {
     if (Root() == nullptr || Root()->IsFinished()) return;
     tracked = false;
@@ -271,12 +271,12 @@ void SpecificVesselParameter::KillContract() {
 
 // ---- SpecificOrbitParameter -----------------------------------------------------------------------------------------------------------
 
-// SpecificOrbitParameter.cs:41
+// SpecificOrbitParameter.cs:39
 SpecificOrbitParameter::SpecificOrbitParameter() {
     TargetBody = Planetarium::fetch->Home;
     orbit = nullptr;
 }
-// SpecificOrbitParameter.cs:54
+// SpecificOrbitParameter.cs:55
 SpecificOrbitParameter::SpecificOrbitParameter(OrbitType orbitType_, double inclination_, double eccentricity_, double sma_, double lan_,
                                                double argumentOfPeriapsis_, double meanAnomalyAtEpoch_, double epoch_, CelestialBody* targetBody_,
                                                double deviationWindow_)
@@ -285,9 +285,9 @@ SpecificOrbitParameter::SpecificOrbitParameter(OrbitType orbitType_, double incl
     TargetBody = targetBody_;
     orbit = std::make_unique<Orbit>(inclination, eccentricity, sma, lan, argumentOfPeriapsis, meanAnomalyAtEpoch, epoch, TargetBody);
 }
-// SpecificOrbitParameter.cs:72
+// SpecificOrbitParameter.cs:71
 std::string SpecificOrbitParameter::GetHashString() { return I(L::SuperSeed(*Root())) + ID(); }
-// SpecificOrbitParameter.cs:77
+// SpecificOrbitParameter.cs:76
 std::string SpecificOrbitParameter::GetTitle() {
     std::string text = Fmt("#autoLOC_284812");
     switch (Root()->Prestige()) {
@@ -312,7 +312,7 @@ std::string SpecificOrbitParameter::GetTitle() {
         case OrbitType::TUNDRA: return Fmt("#autoLOC_7001089", {Fmt("#autoLOC_7001204"), bn, text});
     }
 }
-// SpecificOrbitParameter.cs:135
+// SpecificOrbitParameter.cs:126
 std::string SpecificOrbitParameter::GetNotes() {
     const double a = sma * (1.0 - eccentricity) - TargetBody->Radius;
     const double a2 = sma * (1.0 + eccentricity) - TargetBody->Radius;
@@ -325,13 +325,13 @@ std::string SpecificOrbitParameter::GetNotes() {
     if (eccentricity > 0.05) text = text + "\n" + Fmt("#autoLOC_7003233", {dotnet::FormatDoubleG(M::Round(argumentOfPeriapsis, 1, dotnet::MidpointRounding::ToEven))});
     return text;
 }
-// SpecificOrbitParameter.cs:157
+// SpecificOrbitParameter.cs:147
 void SpecificOrbitParameter::OnRegister() { SetDisableOnStateChange(false); }
-// SpecificOrbitParameter.cs:162
+// SpecificOrbitParameter.cs:152
 void SpecificOrbitParameter::OnUnregister() { CleanupRenderer(); }
-// SpecificOrbitParameter.cs:167
+// SpecificOrbitParameter.cs:157
 void SpecificOrbitParameter::OnReset() { SetIncomplete(); }
-// SpecificOrbitParameter.cs:172
+// SpecificOrbitParameter.cs:162
 void SpecificOrbitParameter::OnSave(ConfigNode& node) {
     if (orbit == nullptr) orbit = std::make_unique<Orbit>(inclination, eccentricity, sma, lan, argumentOfPeriapsis, meanAnomalyAtEpoch, epoch, TargetBody);
     ValidateOrbit();
@@ -346,7 +346,7 @@ void SpecificOrbitParameter::OnSave(ConfigNode& node) {
     node.AddValue("meanAnomalyAtEpoch", meanAnomalyAtEpoch);
     node.AddValue("epoch", epoch);
 }
-// SpecificOrbitParameter.cs:192
+// SpecificOrbitParameter.cs:181
 void SpecificOrbitParameter::OnLoad(ConfigNode& node) {
     L::LoadNode(node, "SpecificOrbitParameter", "TargetBody", TargetBody, Planetarium::fetch->Home);
     L::LoadNode(node, "SpecificOrbitParameter", "deviationWindow", deviationWindow, 10.0);
@@ -365,7 +365,7 @@ void SpecificOrbitParameter::OnLoad(ConfigNode& node) {
         (Root()->ContractState() == Contract::State::Active || (!Root()->IsFinished() && ContractDefB("DisplayOfferedOrbits"))))
         SetupRenderer();
 }
-// SpecificOrbitParameter.cs:216
+// SpecificOrbitParameter.cs:208
 void SpecificOrbitParameter::OnUpdate() {
     if (!L::FlightIsReady(Root()->ContractState(), Contract::State::Active, true)) return;
     Orbit* driverOrbit = L::FinePrintEnvironment::orbitRendererDriverOrbit ? L::FinePrintEnvironment::orbitRendererDriverOrbit() : nullptr;
@@ -386,18 +386,18 @@ void SpecificOrbitParameter::OnUpdate() {
     if (rendererSetUp) rendererActiveDraw = true;
     SetIncomplete();
 }
-// SpecificOrbitParameter.cs:273
+// SpecificOrbitParameter.cs:253
 void SpecificOrbitParameter::SetupRenderer() {
     if (!rendererSetUp && orbit != nullptr) {
         if (L::FinePrintEnvironment::setupOrbitRenderer) L::FinePrintEnvironment::setupOrbitRenderer(*Root(), *orbit);
         rendererSetUp = true;
     }
 }
-// SpecificOrbitParameter.cs:281
+// SpecificOrbitParameter.cs:261
 void SpecificOrbitParameter::CleanupRenderer() {
     if (rendererSetUp && L::FinePrintEnvironment::cleanupOrbitRenderer) L::FinePrintEnvironment::cleanupOrbitRenderer();
 }
-// SpecificOrbitParameter.cs:289
+// SpecificOrbitParameter.cs:290
 void SpecificOrbitParameter::ValidateOrbit() {
     if (Root() != nullptr && !Root()->IsFinished() && TargetBody != nullptr && orbit != nullptr) {
         double altitudeDifficulty;
@@ -492,7 +492,7 @@ void StationaryPointParameter::OnLoad(ConfigNode& node) {
         (Root()->ContractState() == Contract::State::Active || (!Root()->IsFinished() && ContractDefB("DisplayOfferedOrbits"))))
         setup();
 }
-// StationaryPointParameter.cs:124
+// StationaryPointParameter.cs:126
 void StationaryPointParameter::OnUpdate() {
     if (!L::FlightIsReady(Root()->ContractState(), Contract::State::Active, true)) return;
     Vessel* activeVessel = FlightRegistry::ActiveVessel;
@@ -510,13 +510,13 @@ void StationaryPointParameter::OnUpdate() {
 
 // ---- RoverWayPointParameter -----------------------------------------------------------------------------------------------------------
 
-// RoverWayPointParameter.cs:52
+// RoverWayPointParameter.cs:48
 RoverWayPointParameter::RoverWayPointParameter() {
     startwp = std::make_unique<Waypoint>();
     endwp = std::make_unique<Waypoint>();
     TargetBody = nullptr;
 }
-// RoverWayPointParameter.cs:65
+// RoverWayPointParameter.cs:62
 RoverWayPointParameter::RoverWayPointParameter(double CraftStartLatitude_, double CraftStartLongitude_, double CraftEndLatitude_, double CraftEndLongitude_,
                                                CelestialBody* targetBody) {
     startwp = std::make_unique<Waypoint>();
@@ -528,31 +528,31 @@ RoverWayPointParameter::RoverWayPointParameter(double CraftStartLatitude_, doubl
     craftEndLongitude = CraftEndLongitude_;
     TargetBody = targetBody;
 }
-// RoverWayPointParameter.cs:79
+// RoverWayPointParameter.cs:76
 std::string RoverWayPointParameter::GetHashString() { return I(L::SuperSeed(*Root())) + ID(); }
-// RoverWayPointParameter.cs:84
+// RoverWayPointParameter.cs:81
 std::string RoverWayPointParameter::GetTitle() { return Fmt("#autoLOC_6002560"); }
-// RoverWayPointParameter.cs:89
+// RoverWayPointParameter.cs:86
 std::string RoverWayPointParameter::GetMessageComplete() { return Fmt("#autoLOC_6002561"); }
-// RoverWayPointParameter.cs:94
+// RoverWayPointParameter.cs:91
 std::string RoverWayPointParameter::GetNotes() {
     if (!Root()->IsFinished() && roverVessel != nullptr && TargetBody != nullptr)
         return Fmt("#autoLOC_6002562", {roverVessel->vesselName, endwp->name, TargetBody->displayName()});
     return "";
 }
-// RoverWayPointParameter.cs:103
+// RoverWayPointParameter.cs:100
 void RoverWayPointParameter::OnRegister() {
     SetDisableOnStateChange(false);
     GE::onVesselPersistentIdChanged.Add(this, &RoverWayPointParameter::VesselIdChanged);
 }
-// RoverWayPointParameter.cs:109
+// RoverWayPointParameter.cs:106
 void RoverWayPointParameter::OnUnregister() {
     CleanupWaypoints();
     GE::onVesselPersistentIdChanged.Remove(this, &RoverWayPointParameter::VesselIdChanged);
 }
-// RoverWayPointParameter.cs:116
+// RoverWayPointParameter.cs:112
 void RoverWayPointParameter::OnReset() { SetIncomplete(); }
-// RoverWayPointParameter.cs:121
+// RoverWayPointParameter.cs:117
 void RoverWayPointParameter::OnSave(ConfigNode& node) {
     node.AddValue("bodyName", TargetBody->bodyName);
     node.AddValue("roverVslId", roverVslId);
@@ -562,7 +562,7 @@ void RoverWayPointParameter::OnSave(ConfigNode& node) {
     node.AddValue("craftEndLon", craftEndLongitude);
     if (endwp != nullptr) node.AddValue("endWPName", endwp->name);
 }
-// RoverWayPointParameter.cs:135
+// RoverWayPointParameter.cs:131
 void RoverWayPointParameter::OnLoad(ConfigNode& node) {
     std::string value;
     if (node.TryGetValue("bodyName", value)) TargetBody = GetBodyByName(value);
@@ -638,7 +638,7 @@ void RoverWayPointParameter::OnLoad(ConfigNode& node) {
         }
     }
 }
-// RoverWayPointParameter.cs:221
+// RoverWayPointParameter.cs:216
 void RoverWayPointParameter::OnUpdate() {
     if (!L::FlightIsReady(Root()->ContractState(), Contract::State::Active, true) || roverVessel == nullptr || State() != ParameterState::Incomplete ||
         !submittedWaypoint || !(roverVessel->mainBody() == TargetBody) || !WpManagerPresent())
@@ -670,7 +670,7 @@ void RoverWayPointParameter::OnUpdate() {
         if (successCounter >= 5) SetComplete();
     }
 }
-// RoverWayPointParameter.cs:272
+// RoverWayPointParameter.cs:268
 void RoverWayPointParameter::UpdateWaypoints(bool focus) {
     (void)focus;
     if (roverVessel != nullptr && !Root()->IsFinished()) {
@@ -687,12 +687,12 @@ void RoverWayPointParameter::UpdateWaypoints(bool focus) {
         endwp->isOnSurface = true;
     }
 }
-// RoverWayPointParameter.cs:290
+// RoverWayPointParameter.cs:286
 void RoverWayPointParameter::UpdateRoverInfo(Vessel* vsl) {
     roverVessel = vsl;
     roverVslId = vsl->persistentId;
 }
-// RoverWayPointParameter.cs:296
+// RoverWayPointParameter.cs:292
 void RoverWayPointParameter::CleanupWaypoints() {
     if (submittedWaypoint) {
         WpRemove(startwp.get());
@@ -700,14 +700,14 @@ void RoverWayPointParameter::CleanupWaypoints() {
         submittedWaypoint = false;
     }
 }
-// RoverWayPointParameter.cs:305
+// RoverWayPointParameter.cs:302
 void RoverWayPointParameter::VesselIdChanged(uint32_t oldId, uint32_t newId) {
     if (roverVslId == oldId) roverVslId = newId;
 }
 
 // ---- SurveyWaypointParameter ----------------------------------------------------------------------------------------------------------
 
-// SurveyWaypointParameter.cs:47 ContextualAnomalyName
+// SurveyWaypointParameter.cs:45 ContextualAnomalyName
 std::string SurveyWaypointParameter::ContextualAnomalyName() {
     if (!contextualAnomalyName.empty()) return contextualAnomalyName;
     auto* surveyContract = dynamic_cast<ksp::FinePrint::Contracts::SurveyContract*>(Root());
@@ -715,7 +715,7 @@ std::string SurveyWaypointParameter::ContextualAnomalyName() {
     contextualAnomalyName = Fmt("#autoLOC_8004457", {surveyContract->dataName, surveyContract->anomalyName});
     return contextualAnomalyName;
 }
-// SurveyWaypointParameter.cs:63
+// SurveyWaypointParameter.cs:62
 SurveyWaypointParameter::SurveyWaypointParameter()
     : targetBody(Planetarium::fetch->Home), band(FlightBand::NONE), submittedWaypoint(false), outerWarning(false), verified(false),
       actionDescription("Perform a survey"), experiment("crewReport"), clusterState(WaypointClusterState::MIXED), thresholdAltitude(10000.0) {
@@ -731,7 +731,7 @@ SurveyWaypointParameter::SurveyWaypointParameter(const std::string& experiment_,
     wp = std::make_unique<Waypoint>(wp_);
     ProcessWaypoint();
 }
-// SurveyWaypointParameter.cs:92
+// SurveyWaypointParameter.cs:95
 SurveyWaypointParameter::SurveyWaypointParameter(const std::string& experiment_, const std::string& actionDescription_, CelestialBody* targetBody_,
                                                  const Waypoint& wp_, FlightBand band_, bool contextual_, int bouncesLeft_, double bounceOriginLatitude_,
                                                  double bounceOriginLongitude_)
@@ -741,9 +741,9 @@ SurveyWaypointParameter::SurveyWaypointParameter(const std::string& experiment_,
     wp = std::make_unique<Waypoint>(wp_);
     ProcessWaypoint();
 }
-// SurveyWaypointParameter.cs:109
+// SurveyWaypointParameter.cs:113
 std::string SurveyWaypointParameter::GetHashString() { return I(L::SuperSeed(*Root())) + ID(); }
-// SurveyWaypointParameter.cs:114
+// SurveyWaypointParameter.cs:118
 std::string SurveyWaypointParameter::GetTitle() {
     bool value = L::CelestialUtilities::IsFlyablePlanet(targetBody);
     if (value && band == FlightBand::HIGH) {
@@ -759,7 +759,7 @@ std::string SurveyWaypointParameter::GetTitle() {
             return Fmt("#autoLOC_6001087", {actionDescription, I(value ? 1 : 0), RoundedThousands(thresholdAltitude), SiteString()});
     }
 }
-// SurveyWaypointParameter.cs:143
+// SurveyWaypointParameter.cs:142
 std::string SurveyWaypointParameter::GetMessageComplete() {
     if (clusterState == WaypointClusterState::FULL)
         return Fmt("#autoLOC_285754", {L::StringUtilities::GenerateSiteName(wp->seed, targetBody, wp->landLocked, !contextual), L::StringUtilities::IntegerToGreek(wp->index),
@@ -769,14 +769,14 @@ std::string SurveyWaypointParameter::GetMessageComplete() {
                                        targetBody->displayName()});
     return Fmt("#autoLOC_285759", {L::StringUtilities::GenerateSiteName(wp->uniqueSeed(), targetBody, wp->landLocked, !contextual), targetBody->displayName()});
 }
-// SurveyWaypointParameter.cs:156
+// SurveyWaypointParameter.cs:155
 void SurveyWaypointParameter::OnRegister() {
     if (Root()->ContractState() == Contract::State::Active && !eventsAdded) {
         GE::OnExperimentDeployed.Add(this, &SurveyWaypointParameter::CheckExperimentResults);
         eventsAdded = true;
     }
 }
-// SurveyWaypointParameter.cs:165
+// SurveyWaypointParameter.cs:164
 void SurveyWaypointParameter::OnUnregister() {
     if (eventsAdded) GE::OnExperimentDeployed.Remove(this, &SurveyWaypointParameter::CheckExperimentResults);
     if (submittedWaypoint) {
@@ -787,7 +787,7 @@ void SurveyWaypointParameter::OnUnregister() {
         WpRemove(wp.get());
     }
 }
-// SurveyWaypointParameter.cs:183
+// SurveyWaypointParameter.cs:180
 void SurveyWaypointParameter::OnSave(ConfigNode& node) {
     node.AddValue("targetBody", static_cast<int32_t>(targetBody->flightGlobalsIndex));
     node.AddValue("actionDescription", actionDescription);
@@ -810,7 +810,7 @@ void SurveyWaypointParameter::OnSave(ConfigNode& node) {
     node.AddValue("wpLandlocked", wp->landLocked);
     node.AddValue("wpNavigationId", wp->navigationId.ToString());
 }
-// SurveyWaypointParameter.cs:207
+// SurveyWaypointParameter.cs:205
 void SurveyWaypointParameter::OnLoad(ConfigNode& node) {
     L::LoadNode(node, "SurveyWaypointParameter", "targetBody", targetBody, Planetarium::fetch->Home);
     L::LoadNode(node, "SurveyWaypointParameter", "actionDescription", actionDescription, std::string("Perform a survey"));
@@ -835,7 +835,7 @@ void SurveyWaypointParameter::OnLoad(ConfigNode& node) {
     if (wp->navigationId == Guid::Empty()) wp->navigationId = Contracts::ContractsEnvironment::Current().NewGuid();
     ProcessWaypoint();
 }
-// SurveyWaypointParameter.cs:244
+// SurveyWaypointParameter.cs:236
 void SurveyWaypointParameter::OnUpdate() {
     if (!L::FlightIsReady(Root()->ContractState(), Contract::State::Active, true)) return;
     Vessel* activeVessel = FlightRegistry::ActiveVessel;
@@ -862,7 +862,7 @@ void SurveyWaypointParameter::OnUpdate() {
         fetch->setBlinking(false);
     }
 }
-// SurveyWaypointParameter.cs:309
+// SurveyWaypointParameter.cs:287
 void SurveyWaypointParameter::CheckExperimentResults(ScienceData* experimentData) {
     if (Root()->ContractState() != Contract::State::Active || !L::FlightIsReady(true, targetBody) || !submittedWaypoint || !WpManagerPresent() ||
         experimentData->subjectID.rfind(experiment + "@", 0) != 0 || L::GetFlightBand(thresholdAltitude) != band)
@@ -889,7 +889,7 @@ void SurveyWaypointParameter::CheckExperimentResults(ScienceData* experimentData
     submittedWaypoint = false;
     SetComplete();
 }
-// SurveyWaypointParameter.cs:346
+// SurveyWaypointParameter.cs:325
 void SurveyWaypointParameter::Bounce() {
     if (submittedWaypoint) {
         std::string text = wp->name;
@@ -917,7 +917,7 @@ void SurveyWaypointParameter::Bounce() {
         }
     }
 }
-// SurveyWaypointParameter.cs:384
+// SurveyWaypointParameter.cs:356
 double SurveyWaypointParameter::TriggerRange(FlightBand band) {
     const double minimumTriggerRange = DefD("Survey", "", "MinimumTriggerRange");
     double num = DefD("Survey", "", "MaximumTriggerRange");
@@ -931,7 +931,7 @@ double SurveyWaypointParameter::TriggerRange(FlightBand band) {
         case FlightBand::HIGH: return num3;
     }
 }
-// SurveyWaypointParameter.cs:408
+// SurveyWaypointParameter.cs:379
 void SurveyWaypointParameter::ProcessWaypoint() {
     wp->celestialName = targetBody->GetName();
     wp->isOnSurface = true;
@@ -966,7 +966,7 @@ void SurveyWaypointParameter::ProcessWaypoint() {
         }
     }
 }
-// SurveyWaypointParameter.cs:482
+// SurveyWaypointParameter.cs:432
 void SurveyWaypointParameter::CalculateAltitudes(double terrainAltitude) {
     if (targetBody == nullptr || wp == nullptr) return;
     KSPRandom kSPRandom(wp->uniqueSeed());
@@ -998,7 +998,7 @@ void SurveyWaypointParameter::CalculateAltitudes(double terrainAltitude) {
     thresholdAltitude += terrainAltitude;
     thresholdAltitude = M::Round(thresholdAltitude / 100.0) * 100.0;
 }
-// SurveyWaypointParameter.cs:550
+// SurveyWaypointParameter.cs:489
 void SurveyWaypointParameter::VerifyWaypoint(double terrainAltitude) {
     KSPRandom generator(wp->uniqueSeed());
     int num = 0;
@@ -1015,7 +1015,7 @@ void SurveyWaypointParameter::VerifyWaypoint(double terrainAltitude) {
     } while (num <= 25);
     log::Info("Contract Log: Survey unable to place " + experiment + " waypoint - the survey definition is misconfigured.");
 }
-// SurveyWaypointParameter.cs:573
+// SurveyWaypointParameter.cs:510
 std::string SurveyWaypointParameter::SiteString() {
     std::string text;
     if (clusterState == WaypointClusterState::FULL)
@@ -1027,7 +1027,7 @@ std::string SurveyWaypointParameter::SiteString() {
     if (contextual) text += Fmt("#autoLOC_285746", {ContextualAnomalyName()});
     return text;
 }
-// SurveyWaypointParameter.cs:593
+// SurveyWaypointParameter.cs:521
 Waypoint* SurveyWaypointParameter::NextWaypointInCluster() {
     Waypoint* result = nullptr;
     double num = 1.7976931348623157e308;
@@ -1045,7 +1045,7 @@ Waypoint* SurveyWaypointParameter::NextWaypointInCluster() {
     }
     return result;
 }
-// SurveyWaypointParameter.cs:613
+// SurveyWaypointParameter.cs:541
 void SurveyWaypointParameter::UpdateNavWaypoint(Waypoint* newWaypoint) {
     auto* fetch = L::FinePrintEnvironment::navWaypoint;
     if (fetch != nullptr && fetch->isActive && fetch->isActive() && fetch->isUsing && fetch->isUsing(wp.get())) {

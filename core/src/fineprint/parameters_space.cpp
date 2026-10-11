@@ -44,20 +44,20 @@ int ModuleSeed(PartModule* m) { return m->Get<int32_t>("seed"); }
 
 // ---- AsteroidParameter ----------------------------------------------------------------------------------------------------------------
 
-// AsteroidParameter.cs:29
+// AsteroidParameter.cs:27
 AsteroidParameter::AsteroidParameter() : forStation(false), asteroidClass("A") {}
-// AsteroidParameter.cs:35
+// AsteroidParameter.cs:34
 AsteroidParameter::AsteroidParameter(const std::string& size, bool forStation_) : forStation(forStation_), asteroidClass(Upper(size)) {}
-// AsteroidParameter.cs:43
+// AsteroidParameter.cs:41
 std::string AsteroidParameter::GetHashString() { return I(L::SuperSeed(*Root())) + ID(); }
-// AsteroidParameter.cs:48
+// AsteroidParameter.cs:46
 std::string AsteroidParameter::GetTitle() {
     if (forStation) return Fmt("#autoLOC_282737", {asteroidClass});
     return Fmt("#autoLOC_282739", {asteroidClass});
 }
-// AsteroidParameter.cs:57
+// AsteroidParameter.cs:55
 std::string AsteroidParameter::GetNotes() { return Fmt("#autoLOC_282744", {Root()->Agent()->Title(), asteroidClass}); }
-// AsteroidParameter.cs:62
+// AsteroidParameter.cs:60
 void AsteroidParameter::OnRegister() {
     SetDisableOnStateChange(false);
     eventsAdded = false;
@@ -68,7 +68,7 @@ void AsteroidParameter::OnRegister() {
         eventsAdded = true;
     }
 }
-// AsteroidParameter.cs:77
+// AsteroidParameter.cs:73
 void AsteroidParameter::OnUnregister() {
     if (eventsAdded) {
         GE::onPartCouple.Remove(this, &AsteroidParameter::OnDock);
@@ -76,20 +76,20 @@ void AsteroidParameter::OnUnregister() {
         GE::onPartDie.Remove(this, &AsteroidParameter::PartModified);
     }
 }
-// AsteroidParameter.cs:91
+// AsteroidParameter.cs:83
 void AsteroidParameter::OnReset() {
     SetIncomplete();
     dirtyVessel = true;
 }
-// AsteroidParameter.cs:97
+// AsteroidParameter.cs:89
 void AsteroidParameter::VesselModified(Vessel* v) {
     if (v == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// AsteroidParameter.cs:105
+// AsteroidParameter.cs:97
 void AsteroidParameter::PartModified(Part* p) {
     if (p->vessel == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// AsteroidParameter.cs:113
+// AsteroidParameter.cs:105
 void AsteroidParameter::OnDock(GE::FromToAction<Part*, Part*> action) {
     if (!L::FlightIsReady(Root()->ContractState(), Contract::State::Active, true)) return;
     std::vector<PartModule*> list = action.from->vessel->FindPartModulesImplementing([](PartModule& m) { return m.IsA("ModuleAsteroid"); });
@@ -117,19 +117,19 @@ void AsteroidParameter::OnDock(GE::FromToAction<Part*, Part*> action) {
     }
     if (action.from->vessel == FlightRegistry::ActiveVessel || action.to->vessel == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// AsteroidParameter.cs:171
+// AsteroidParameter.cs:157
 void AsteroidParameter::OnSave(ConfigNode& node) {
     node.AddValue("forStation", forStation);
     node.AddValue("asteroidClass", asteroidClass);
     L::SystemUtilities::SaveNodeList(&node, "seedList", asteroidSeeds);
 }
-// AsteroidParameter.cs:178
+// AsteroidParameter.cs:164
 void AsteroidParameter::OnLoad(ConfigNode& node) {
     L::LoadNode(node, "AsteroidParameter", "forStation", forStation, false);
     L::LoadNode(node, "AsteroidParameter", "asteroidClass", asteroidClass, std::string("A"));
     L::SystemUtilities::LoadNodeList(&node, "AsteroidParameter", "seedList", asteroidSeeds);
 }
-// AsteroidParameter.cs:185
+// AsteroidParameter.cs:171
 void AsteroidParameter::OnUpdate() {
     if (!L::FlightIsReady(Root()->ContractState(), Contract::State::Active, true)) return;
     Vessel* av = FlightRegistry::ActiveVessel;
@@ -145,7 +145,7 @@ void AsteroidParameter::OnUpdate() {
     }
     if (State() == ParameterState::Complete && !validVessel) SetIncomplete();
 }
-// AsteroidParameter.cs:213
+// AsteroidParameter.cs:207
 bool AsteroidParameter::VesselTowingAsteroid(Vessel* v) {
     dirtyVessel = false;
     activePartCount = v->loaded ? static_cast<int>(v->Parts().size()) : static_cast<int>(v->protoVessel->protoPartSnapshots.size());
@@ -161,20 +161,20 @@ bool AsteroidParameter::VesselTowingAsteroid(Vessel* v) {
 
 // ---- CometParameter -------------------------------------------------------------------------------------------------------------------
 
-// CometParameter.cs:29
+// CometParameter.cs:27
 CometParameter::CometParameter() : forStation(false), cometClass("A") {}
-// CometParameter.cs:35
+// CometParameter.cs:34
 CometParameter::CometParameter(const std::string& size, bool forStation_) : forStation(forStation_), cometClass(Upper(size)) {}
-// CometParameter.cs:43
+// CometParameter.cs:41
 std::string CometParameter::GetHashString() { return I(L::SuperSeed(*Root())) + ID(); }
-// CometParameter.cs:48
+// CometParameter.cs:46
 std::string CometParameter::GetTitle() {
     if (forStation) return Fmt("#autoLOC_282737", {cometClass});
     return Fmt("#autoLOC_282739", {cometClass});
 }
-// CometParameter.cs:57
+// CometParameter.cs:55
 std::string CometParameter::GetNotes() { return Fmt("#autoLOC_282744", {Root()->Agent()->Title(), cometClass}); }
-// CometParameter.cs:62
+// CometParameter.cs:60
 void CometParameter::OnRegister() {
     SetDisableOnStateChange(false);
     eventsAdded = false;
@@ -185,7 +185,7 @@ void CometParameter::OnRegister() {
         eventsAdded = true;
     }
 }
-// CometParameter.cs:77
+// CometParameter.cs:73
 void CometParameter::OnUnregister() {
     if (eventsAdded) {
         GE::onPartCouple.Remove(this, &CometParameter::OnDock);
@@ -193,20 +193,20 @@ void CometParameter::OnUnregister() {
         GE::onPartDie.Remove(this, &CometParameter::PartModified);
     }
 }
-// CometParameter.cs:91
+// CometParameter.cs:83
 void CometParameter::OnReset() {
     SetIncomplete();
     dirtyVessel = true;
 }
-// CometParameter.cs:97
+// CometParameter.cs:89
 void CometParameter::VesselModified(Vessel* v) {
     if (v == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// CometParameter.cs:105
+// CometParameter.cs:97
 void CometParameter::PartModified(Part* p) {
     if (p->vessel == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// CometParameter.cs:113
+// CometParameter.cs:105
 void CometParameter::OnDock(GE::FromToAction<Part*, Part*> action) {
     if (!L::FlightIsReady(Root()->ContractState(), Contract::State::Active, true)) return;
     std::vector<PartModule*> list = action.from->vessel->FindPartModulesImplementing([](PartModule& m) { return m.IsA("ModuleComet"); });
@@ -234,19 +234,19 @@ void CometParameter::OnDock(GE::FromToAction<Part*, Part*> action) {
     }
     if (action.from->vessel == FlightRegistry::ActiveVessel || action.to->vessel == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// CometParameter.cs:171
+// CometParameter.cs:157
 void CometParameter::OnSave(ConfigNode& node) {
     node.AddValue("forStation", forStation);
     node.AddValue("cometClass", cometClass);
     L::SystemUtilities::SaveNodeList(&node, "seedList", cometSeeds);
 }
-// CometParameter.cs:178
+// CometParameter.cs:164
 void CometParameter::OnLoad(ConfigNode& node) {
     L::LoadNode(node, "CometParameter", "forStation", forStation, false);
     L::LoadNode(node, "CometParameter", "cometClass", cometClass, std::string("A"));
     L::SystemUtilities::LoadNodeList(&node, "CometParameter", "seedList", cometSeeds);
 }
-// CometParameter.cs:185
+// CometParameter.cs:171
 void CometParameter::OnUpdate() {
     if (!L::FlightIsReady(Root()->ContractState(), Contract::State::Active, true)) return;
     Vessel* av = FlightRegistry::ActiveVessel;
@@ -262,7 +262,7 @@ void CometParameter::OnUpdate() {
     }
     if (State() == ParameterState::Complete && !validVessel) SetIncomplete();
 }
-// CometParameter.cs:213
+// CometParameter.cs:207
 bool CometParameter::VesselTowingComet(Vessel* v) {
     dirtyVessel = false;
     activePartCount = v->loaded ? static_cast<int>(v->Parts().size()) : static_cast<int>(v->protoVessel->protoPartSnapshots.size());
@@ -278,25 +278,25 @@ bool CometParameter::VesselTowingComet(Vessel* v) {
 
 // ---- CometDetectionParameter ----------------------------------------------------------------------------------------------------------
 
-// CometDetectionParameter.cs:20
+// CometDetectionParameter.cs:19
 CometDetectionParameter::CometDetectionParameter() : cometCountDetected(0) {}
-// CometDetectionParameter.cs:25
+// CometDetectionParameter.cs:24
 CometDetectionParameter::CometDetectionParameter(int cometCountRequired_, const std::string& sentinelPartName_)
     : cometCountRequired(cometCountRequired_), cometCountDetected(0), sentinelPartName(sentinelPartName_) {}
-// CometDetectionParameter.cs:33
+// CometDetectionParameter.cs:31
 std::string CometDetectionParameter::GetHashString() { return I(L::SuperSeed(*Root())) + ID(); }
-// CometDetectionParameter.cs:38
+// CometDetectionParameter.cs:36
 std::string CometDetectionParameter::GetTitle() { return Fmt("#autoLOC_6011147", {I(cometCountRequired)}); }
-// CometDetectionParameter.cs:43
+// CometDetectionParameter.cs:41
 std::string CometDetectionParameter::GetNotes() { return std::string(Scene() == GameScenes::SPACECENTER ? "\n" : "") + Fmt("#autoLOC_8003406"); }
-// CometDetectionParameter.cs:48
+// CometDetectionParameter.cs:46
 void CometDetectionParameter::OnRegister() {
     SetDisableOnStateChange(false);
     GE::onSentinelCometDetected.Add(this, &CometDetectionParameter::CometDetected);
 }
-// CometDetectionParameter.cs:54
+// CometDetectionParameter.cs:52
 void CometDetectionParameter::OnUnregister() { GE::onSentinelCometDetected.Remove(this, &CometDetectionParameter::CometDetected); }
-// CometDetectionParameter.cs:59
+// CometDetectionParameter.cs:57
 void CometDetectionParameter::CometDetected(Vessel* data) {
     (void)data;
     cometCountDetected++;
@@ -326,28 +326,28 @@ void CometDetectionParameter::OnLoad(ConfigNode& node) {
 
 // ---- CometScienceParameter ------------------------------------------------------------------------------------------------------------
 
-// CometScienceParameter.cs:32
+// CometScienceParameter.cs:30
 CometScienceParameter::CometScienceParameter(uint32_t cometId, const std::string& cometName_, const std::string& scienceSubjectId_)
     : cometPersistentId(cometId), cometName(cometName_), scienceSubjectId(scienceSubjectId_), scienceDataCollected(false) {}
-// CometScienceParameter.cs:40
+// CometScienceParameter.cs:38
 std::string CometScienceParameter::GetHashString() { return cometName + dotnet::FormatUInt64(cometPersistentId); }
-// CometScienceParameter.cs:45
+// CometScienceParameter.cs:43
 std::string CometScienceParameter::GetTitle() { return Fmt("#autoLOC_8012045", {cometName}); }
-// CometScienceParameter.cs:50
+// CometScienceParameter.cs:48
 void CometScienceParameter::OnLoad(ConfigNode& node) {
     node.TryGetValue("cometName", cometName);
     node.TryGetValue("cometPersistentId", cometPersistentId);
     node.TryGetValue("scienceSubjectId", scienceSubjectId);
     node.TryGetValue("scienceDataCollected", scienceDataCollected);
 }
-// CometScienceParameter.cs:58
+// CometScienceParameter.cs:56
 void CometScienceParameter::OnSave(ConfigNode& node) {
     node.AddValue("cometName", cometName);
     node.AddValue("cometPersistentId", cometPersistentId);
     node.AddValue("scienceSubjectId", scienceSubjectId);
     node.AddValue("scienceDataCollected", scienceDataCollected);
 }
-// CometScienceParameter.cs:66
+// CometScienceParameter.cs:64
 void CometScienceParameter::OnRegister() {
     GE::onVesselPersistentIdChanged.Add(this, &CometScienceParameter::VesselIdChanged);
     GE::OnScienceRecieved.Add(this, &CometScienceParameter::OnScience);
@@ -355,7 +355,7 @@ void CometScienceParameter::OnRegister() {
     GE::onVesselRename.Add(this, &CometScienceParameter::OnVesselRename);
     GE::OnExperimentDeployed.Add(this, &CometScienceParameter::OnExperimentDeployed);
 }
-// CometScienceParameter.cs:75
+// CometScienceParameter.cs:73
 void CometScienceParameter::OnUnregister() {
     GE::onVesselPersistentIdChanged.Remove(this, &CometScienceParameter::VesselIdChanged);
     GE::OnScienceRecieved.Remove(this, &CometScienceParameter::OnScience);
@@ -363,11 +363,11 @@ void CometScienceParameter::OnUnregister() {
     GE::onVesselRename.Remove(this, &CometScienceParameter::OnVesselRename);
     GE::OnExperimentDeployed.Remove(this, &CometScienceParameter::OnExperimentDeployed);
 }
-// CometScienceParameter.cs:84
+// CometScienceParameter.cs:82
 void CometScienceParameter::OnExperimentDeployed(ScienceData* experimentData) {
     if (experimentData->subjectID == scienceSubjectId) scienceDataCollected = true;
 }
-// CometScienceParameter.cs:92
+// CometScienceParameter.cs:90
 void CometScienceParameter::OnVesselRename(GE::HostedFromToAction<Vessel*, std::string> hostedFromTo) {
     if (hostedFromTo.host != nullptr && !scienceDataCollected && cometPersistentId == hostedFromTo.host->persistentId) {
         cometName = hostedFromTo.to;
@@ -375,11 +375,11 @@ void CometScienceParameter::OnVesselRename(GE::HostedFromToAction<Vessel*, std::
         scienceSubjectId = "cometSample_" + typeName + "@SunInSpaceHigh_" + cometName;
     }
 }
-// CometScienceParameter.cs:104
+// CometScienceParameter.cs:99
 void CometScienceParameter::VesselIdChanged(uint32_t oldId, uint32_t newId) {
     if (cometPersistentId == oldId) cometPersistentId = newId;
 }
-// CometScienceParameter.cs:112
+// CometScienceParameter.cs:107
 void CometScienceParameter::OnScience(float science, ScienceSubject* subject, ProtoVessel* pv, bool reverseEngineered) {
     (void)science;
     (void)pv;
@@ -388,7 +388,7 @@ void CometScienceParameter::OnScience(float science, ScienceSubject* subject, Pr
         Root()->Complete();
     }
 }
-// CometScienceParameter.cs:120
+// CometScienceParameter.cs:116
 void CometScienceParameter::OnTriggeredScience(ScienceData* data, Vessel* origin, bool xmitAborted) {
     (void)origin;
     if (!(data == nullptr || xmitAborted) && !(data->dataAmount <= 0.0f) && data->subjectID == scienceSubjectId) {
@@ -399,11 +399,11 @@ void CometScienceParameter::OnTriggeredScience(ScienceData* data, Vessel* origin
 
 // ---- ConstructionParameter ------------------------------------------------------------------------------------------------------------
 
-// ConstructionParameter.cs:36
+// ConstructionParameter.cs:34
 ConstructionParameter::ConstructionParameter(const std::string& partName_, uint32_t vesselId, const std::string& vesselName_, CelestialBody* targetBody_) {
     UpdatePartInfo(partName_, vesselId, vesselName_, targetBody_);
 }
-// ConstructionParameter.cs:41
+// ConstructionParameter.cs:39
 void ConstructionParameter::UpdatePartInfo(const std::string& partName_, uint32_t vesselId, const std::string& vesselName_, CelestialBody* targetBody_) {
     if (!partName_.empty()) {
         partName = partName_;
@@ -414,14 +414,14 @@ void ConstructionParameter::UpdatePartInfo(const std::string& partName_, uint32_
     if (targetBody_ != nullptr) targetBody = targetBody_;
     vsl = FindVesselByPersistentId(vesselId);
 }
-// ConstructionParameter.cs:60
+// ConstructionParameter.cs:58
 std::string ConstructionParameter::GetHashString() { return partName + dotnet::FormatUInt64(vesselPersistentId); }
-// ConstructionParameter.cs:65
+// ConstructionParameter.cs:63
 std::string ConstructionParameter::GetTitle() {
     if (vsl == nullptr) vsl = FindVesselByPersistentId(vesselPersistentId);
     return Fmt("#autoLOC_6002602", {ap != nullptr ? ap->title : partName, vsl != nullptr ? vsl->vesselName : vesselName});
 }
-// ConstructionParameter.cs:74
+// ConstructionParameter.cs:72
 void ConstructionParameter::OnLoad(ConfigNode& node) {
     std::string value;
     if (node.TryGetValue("bodyName", value)) targetBody = GetBodyByName(value);
@@ -431,30 +431,30 @@ void ConstructionParameter::OnLoad(ConfigNode& node) {
     ap = SaveEnvironment::Current().getPartInfoByName ? SaveEnvironment::Current().getPartInfoByName(partName) : nullptr;
     vsl = FindVesselByPersistentId(vesselPersistentId);
 }
-// ConstructionParameter.cs:90
+// ConstructionParameter.cs:86
 void ConstructionParameter::OnSave(ConfigNode& node) {
     node.AddValue("bodyName", targetBody->bodyName);
     node.AddValue("partName", partName);
     node.AddValue("vesselName", vesselName);
     node.AddValue("vesselPersistentId", vesselPersistentId);
 }
-// ConstructionParameter.cs:98
+// ConstructionParameter.cs:94
 void ConstructionParameter::OnRegister() {
     GE::onVesselPersistentIdChanged.Add(this, &ConstructionParameter::VesselIdChanged);
     GE::OnEVAConstructionModePartAttached.Add(this, &ConstructionParameter::OnConstructionPartAttached);
 }
-// ConstructionParameter.cs:104
+// ConstructionParameter.cs:100
 void ConstructionParameter::OnUnregister() {
     GE::onVesselPersistentIdChanged.Remove(this, &ConstructionParameter::VesselIdChanged);
     GE::OnEVAConstructionModePartAttached.Remove(this, &ConstructionParameter::OnConstructionPartAttached);
 }
-// ConstructionParameter.cs:110
+// ConstructionParameter.cs:106
 std::string ConstructionParameter::GetMessageComplete() { return Fmt("#autoLOC_6002604"); }
-// ConstructionParameter.cs:115
+// ConstructionParameter.cs:111
 void ConstructionParameter::VesselIdChanged(uint32_t oldId, uint32_t newId) {
     if (vesselPersistentId == oldId) vesselPersistentId = newId;
 }
-// ConstructionParameter.cs:123
+// ConstructionParameter.cs:119
 void ConstructionParameter::OnConstructionPartAttached(Vessel* vsl_, Part* p) {
     if (vsl_->persistentId == vesselPersistentId && p->partInfo->name == partName) {
         SetComplete();
@@ -464,11 +464,11 @@ void ConstructionParameter::OnConstructionPartAttached(Vessel* vsl_, Part* p) {
 
 // ---- RepairPartParameter --------------------------------------------------------------------------------------------------------------
 
-// RepairPartParameter.cs:40
+// RepairPartParameter.cs:38
 RepairPartParameter::RepairPartParameter(uint32_t partId, const std::string& partName_, uint32_t vesselId, const std::string& vesselName_, CelestialBody* targetBody_) {
     UpdatePartInfo(partId, partName_, vesselId, vesselName_, targetBody_);
 }
-// RepairPartParameter.cs:45
+// RepairPartParameter.cs:43
 void RepairPartParameter::UpdatePartInfo(uint32_t partId, const std::string& partName_, uint32_t vesselId, const std::string& vesselName_, CelestialBody* targetBody_) {
     partPersistentId = partId;
     if (!partName_.empty()) {
@@ -480,14 +480,14 @@ void RepairPartParameter::UpdatePartInfo(uint32_t partId, const std::string& par
     if (targetBody_ != nullptr) targetBody = targetBody_;
     vsl = FindVesselByPersistentId(vesselId);
 }
-// RepairPartParameter.cs:66
+// RepairPartParameter.cs:63
 std::string RepairPartParameter::GetHashString() { return partName + dotnet::FormatUInt64(partPersistentId); }
-// RepairPartParameter.cs:71
+// RepairPartParameter.cs:68
 std::string RepairPartParameter::GetTitle() {
     if (vsl == nullptr) vsl = FindVesselByPersistentId(vesselPersistentId);
     return Fmt("#autoLOC_6002578", {vsl != nullptr ? vsl->vesselName : vesselName, ap != nullptr ? ap->title : partName, targetBody != nullptr ? targetBody->bodyDisplayName : std::string()});
 }
-// RepairPartParameter.cs:80
+// RepairPartParameter.cs:77
 void RepairPartParameter::OnLoad(ConfigNode& node) {
     std::string value;
     if (node.TryGetValue("bodyName", value)) targetBody = GetBodyByName(value);
@@ -498,7 +498,7 @@ void RepairPartParameter::OnLoad(ConfigNode& node) {
     ap = SaveEnvironment::Current().getPartInfoByName ? SaveEnvironment::Current().getPartInfoByName(partName) : nullptr;
     vsl = FindVesselByPersistentId(vesselPersistentId);
 }
-// RepairPartParameter.cs:96
+// RepairPartParameter.cs:92
 void RepairPartParameter::OnSave(ConfigNode& node) {
     node.AddValue("bodyName", targetBody->bodyName);
     node.AddValue("partName", partName);
@@ -506,29 +506,29 @@ void RepairPartParameter::OnSave(ConfigNode& node) {
     node.AddValue("vesselPersistentId", vesselPersistentId);
     if (!vesselName.empty()) node.AddValue("vesselName", vesselName);
 }
-// RepairPartParameter.cs:108
+// RepairPartParameter.cs:104
 void RepairPartParameter::OnRegister() {
     GE::onVesselPersistentIdChanged.Add(this, &RepairPartParameter::VesselIdChanged);
     GE::onPartPersistentIdChanged.Add(this, &RepairPartParameter::PartIdChanged);
     GE::onPartRepaired.Add(this, &RepairPartParameter::OnPartRepaired);
 }
-// RepairPartParameter.cs:115
+// RepairPartParameter.cs:111
 void RepairPartParameter::OnUnregister() {
     GE::onVesselPersistentIdChanged.Remove(this, &RepairPartParameter::VesselIdChanged);
     GE::onPartPersistentIdChanged.Remove(this, &RepairPartParameter::PartIdChanged);
     GE::onPartRepaired.Remove(this, &RepairPartParameter::OnPartRepaired);
 }
-// RepairPartParameter.cs:122
+// RepairPartParameter.cs:118
 std::string RepairPartParameter::GetMessageComplete() { return Fmt("#autoLOC_6002580"); }
-// RepairPartParameter.cs:127
+// RepairPartParameter.cs:123
 void RepairPartParameter::PartIdChanged(uint32_t vslId, uint32_t oldId, uint32_t newId) {
     if (vslId == vesselPersistentId && oldId == partPersistentId) partPersistentId = newId;
 }
-// RepairPartParameter.cs:135
+// RepairPartParameter.cs:131
 void RepairPartParameter::VesselIdChanged(uint32_t oldId, uint32_t newId) {
     if (vesselPersistentId == oldId) vesselPersistentId = newId;
 }
-// RepairPartParameter.cs:143
+// RepairPartParameter.cs:139
 void RepairPartParameter::OnPartRepaired(Part* p) {
     if ((partPersistentId == 0 || p->fields.persistentId == partPersistentId) && p->vessel->persistentId == vesselPersistentId) {
         SetComplete();

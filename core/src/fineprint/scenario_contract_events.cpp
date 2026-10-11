@@ -26,7 +26,7 @@ Guid FromKey(const std::vector<uint8_t>& k) {
 ScenarioContractEvents::ScenarioContractEvents() : ScenarioModule("ScenarioContractEvents") {}
 ScenarioContractEvents::~ScenarioContractEvents() { OnDestroy(); }
 
-// ScenarioContractEvents.cs:28
+// ScenarioContractEvents.cs:27
 void ScenarioContractEvents::OnAwake() {
     GE::onVesselWasModified.Add(this, &ScenarioContractEvents::VesselWasModifiedEvent);
     GE::onPartCouple.Add(this, &ScenarioContractEvents::PartCoupleEvent);
@@ -70,23 +70,23 @@ void ScenarioContractEvents::ProcessGameSeed() {
         while (gameSeed == -1) gameSeed = kSPRandom.Next(INT32_MIN, INT32_MAX);
     }
 }
-// ScenarioContractEvents.cs:74
+// ScenarioContractEvents.cs:75
 void ScenarioContractEvents::VesselWasModifiedEvent(Vessel* v) { InvokeCheckSpecificVessels({v->id}); }
-// ScenarioContractEvents.cs:79
+// ScenarioContractEvents.cs:80
 void ScenarioContractEvents::PartCoupleEvent(GE::FromToAction<Part*, Part*> action) {
     InvokeCheckSpecificVessels({action.from->vessel->id, action.to->vessel->id});
 }
-// ScenarioContractEvents.cs:84
+// ScenarioContractEvents.cs:85
 void ScenarioContractEvents::VesselWillDestroyEvent(Vessel* v) { InvokeCheckSpecificVessels({v->id}); }
-// ScenarioContractEvents.cs:89
+// ScenarioContractEvents.cs:90
 void ScenarioContractEvents::VesselTerminatedEvent(ProtoVessel* pv) { InvokeCheckSpecificVessels({pv->vesselID}); }
-// ScenarioContractEvents.cs:94
+// ScenarioContractEvents.cs:95
 void ScenarioContractEvents::VesselRecoveredEvent(ProtoVessel* pv, bool quick) {
     (void)quick;
     InvokeCheckSpecificVessels({pv->vesselID});
     TouristDepartures(eventDelay, pv);
 }
-// ScenarioContractEvents.cs:100
+// ScenarioContractEvents.cs:101
 void ScenarioContractEvents::VesselRenameEvent(GE::HostedFromToAction<Vessel*, std::string> action) {
     Game* game = SaveEnvironment::Current().currentGame;
     if (game->Mode != Game::Modes::CAREER || ksp::Contracts::ContractSystem::Instance == nullptr) return;
@@ -101,7 +101,7 @@ void ScenarioContractEvents::VesselRenameEvent(GE::HostedFromToAction<Vessel*, s
             if (auto* sv = dynamic_cast<ksp::Contracts::Parameters::SpecificVesselParameter*>(p)) sv->SpecificVesselRename(action.host->id, action.to);
     }
 }
-// ScenarioContractEvents.cs:124 (the iterator takes its crew snapshot at once and acts after WaitForSeconds(delay))
+// ScenarioContractEvents.cs:126 (the iterator takes its crew snapshot at once and acts after WaitForSeconds(delay))
 void ScenarioContractEvents::TouristDepartures(float delay, ProtoVessel* pv) {
     Pending p;
     p.remaining = delay;
@@ -109,7 +109,7 @@ void ScenarioContractEvents::TouristDepartures(float delay, ProtoVessel* pv) {
     p.pv = pv;
     departures_.push_back(std::move(p));
 }
-// ScenarioContractEvents.cs:138
+// ScenarioContractEvents.cs:142
 void ScenarioContractEvents::InvokeCheckSpecificVessels(const std::vector<Guid>& guids) {
     if (IsInvoking()) invoking_ = false;
     int num = static_cast<int>(guids.size());
@@ -117,7 +117,7 @@ void ScenarioContractEvents::InvokeCheckSpecificVessels(const std::vector<Guid>&
     invoking_ = true;
     invokeRemaining_ = eventDelay;
 }
-// ScenarioContractEvents.cs:151
+// ScenarioContractEvents.cs:156
 void ScenarioContractEvents::CheckSpecificVessels() {
     Game* game = SaveEnvironment::Current().currentGame;
     if (game->Mode == Game::Modes::CAREER && ksp::Contracts::ContractSystem::Instance != nullptr) {

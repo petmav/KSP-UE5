@@ -57,83 +57,83 @@ public:
 class SpecificVesselParameter;
 class CrewCapacityParameter : public ContractParameter {
 public:
-    int targetCapacity = 8;                                   // :11
-    int successCounter = 0;                                   // :13
-    bool validVessel = false;                                 // :15
-    bool dirtyVessel = true;                                  // :17
-    int activePartCount = 0;                                  // :19
-    bool eventsAdded = false;                                 // :21
-    SpecificVesselParameter* specificVesselSibling = nullptr;  // :23
-    CrewCapacityParameter();                                  // :27
-    explicit CrewCapacityParameter(int targetCapacity_);      // :33
+    int targetCapacity = 8;                                   // :10
+    int successCounter = 0;                                   // :12
+    bool validVessel = false;                                 // :14
+    bool dirtyVessel = true;                                  // :16
+    int activePartCount = 0;                                  // :18
+    bool eventsAdded = false;                                 // :20
+    SpecificVesselParameter* specificVesselSibling = nullptr;  // :22
+    CrewCapacityParameter();                                  // :26
+    explicit CrewCapacityParameter(int targetCapacity_);      // :32
     std::string TypeName() const override { return "CrewCapacityParameter"; }
-    SpecificVesselParameter* SpecificVesselSibling();         // :25
-    std::string GetHashString() override;                     // :41
-    std::string GetTitle() override;                          // :46
-    std::string GetNotes() override;                          // :51
-    void OnRegister() override;                               // :68
-    void OnUnregister() override;                             // :82
-    void OnReset() override;                                  // :94
-    void VesselModified(Vessel* v);                           // :100
-    void PartModified(Part* p);                               // :108
-    void OnDock(GE_::GameEvents::FromToAction<Part*, Part*> action);  // :116
-    void OnSave(ConfigNode& node) override;                   // :124
-    void OnLoad(ConfigNode& node) override;                   // :129
-    void OnUpdate() override;                                 // :134
+    SpecificVesselParameter* SpecificVesselSibling();         // :24
+    std::string GetHashString() override;                     // :38
+    std::string GetTitle() override;                          // :43
+    std::string GetNotes() override;                          // :48
+    void OnRegister() override;                               // :66
+    void OnUnregister() override;                             // :79
+    void OnReset() override;                                  // :89
+    void VesselModified(Vessel* v);                           // :95
+    void PartModified(Part* p);                               // :103
+    void OnDock(GE_::GameEvents::FromToAction<Part*, Part*> action);  // :111
+    void OnSave(ConfigNode& node) override;                   // :119
+    void OnLoad(ConfigNode& node) override;                   // :124
+    void OnUpdate() override;                                 // :129
 };
 
 // CrewTraitParameter.cs:9
 class CrewTraitParameter : public ContractParameter {
 public:
-    std::string vesselDescription;                            // :11
-    std::string targetTrait = "Scientist";                    // :13
-    int targetCount = 1;                                      // :15
-    int successCounter = 0;                                   // :17
-    bool validVessel = false;                                 // :19
-    bool dirtyVessel = true;                                  // :21
-    int activePartCount = 0;                                  // :23
-    bool eventsAdded = false;                                 // :25
-    SpecificVesselParameter* specificVesselSibling = nullptr;  // :27
+    std::string vesselDescription;                            // :10
+    std::string targetTrait = "Scientist";                    // :12
+    int targetCount = 1;                                      // :14
+    int successCounter = 0;                                   // :16
+    bool validVessel = false;                                 // :18
+    bool dirtyVessel = true;                                  // :20
+    int activePartCount = 0;                                  // :22
+    bool eventsAdded = false;                                 // :24
+    SpecificVesselParameter* specificVesselSibling = nullptr;  // :26
     CrewTraitParameter();                                     // :48
-    CrewTraitParameter(const std::string& targetTrait_, int targetCount_, const std::string& vesselDescription_);  // :54
+    CrewTraitParameter(const std::string& targetTrait_, int targetCount_, const std::string& vesselDescription_);  // :48
     std::string TypeName() const override { return "CrewTraitParameter"; }
-    std::string targetTraitDisplayName();                     // :29
-    SpecificVesselParameter* SpecificVesselSibling();         // :46
-    std::string GetHashString() override;                     // :62
-    std::string GetTitle() override;                          // :67
-    std::string GetNotes() override;                          // :76
-    void OnRegister() override;                               // :95
-    void OnUnregister() override;                             // :111
-    void OnReset() override;                                  // :125
-    void VesselModified(Vessel* v);                           // :131
-    void PartModified(Part* p);                               // :139
-    void OnDock(GE_::GameEvents::FromToAction<Part*, Part*> action);  // :147
-    void CrewModified(Vessel* v);                             // :155
-    void OnSave(ConfigNode& node) override;                   // :163
-    void OnLoad(ConfigNode& node) override;                   // :170
-    void OnUpdate() override;                                 // :177
+    std::string targetTraitDisplayName();                     // :28
+    SpecificVesselParameter* SpecificVesselSibling();         // :40
+    std::string GetHashString() override;                     // :55
+    std::string GetTitle() override;                          // :60
+    std::string GetNotes() override;                          // :69
+    void OnRegister() override;                               // :87
+    void OnUnregister() override;                             // :101
+    void OnReset() override;                                  // :112
+    void VesselModified(Vessel* v);                           // :118
+    void PartModified(Part* p);                               // :126
+    void OnDock(GE_::GameEvents::FromToAction<Part*, Part*> action);  // :134
+    void CrewModified(Vessel* v);                             // :142
+    void OnSave(ConfigNode& node) override;                   // :150
+    void OnLoad(ConfigNode& node) override;                   // :157
+    void OnUpdate() override;                                 // :164
 };
 
 // MobileBaseParameter.cs:9
 class MobileBaseParameter : public ContractParameter {
 public:
-    int successCounter = 0;                                   // :11
-    bool validVessel = false;                                 // :13
-    bool dirtyVessel = true;                                  // :15
-    int activePartCount = 0;                                  // :17
-    bool eventsAdded = false;                                 // :19
-    MobileBaseParameter();                                    // :21
+    int successCounter = 0;                                   // :10
+    bool validVessel = false;                                 // :12
+    bool dirtyVessel = true;                                  // :14
+    int activePartCount = 0;                                  // :16
+    bool eventsAdded = false;                                 // :18
+    MobileBaseParameter();                                    // :20
     std::string TypeName() const override { return "MobileBaseParameter"; }
-    std::string GetHashString() override;                     // :26
-    std::string GetTitle() override;                          // :31
-    void OnRegister() override;                               // :36
-    void OnUnregister() override;                             // :52
-    void OnReset() override;                                  // :66
-    void VesselModified(Vessel* v);                           // :72
-    void PartModified(Part* p);                               // :80
-    void OnDock(GE_::GameEvents::FromToAction<Part*, Part*> action);  // :88
-    void ChangeSituation(GE_::GameEvents::HostedFromToAction<Vessel*, Vessel::Situations> action);  // :96
-    void OnUpdate() override;                                 // :104
+    std::string GetHashString() override;                     // :25
+    std::string GetTitle() override;                          // :30
+    void OnRegister() override;                               // :35
+    void OnUnregister() override;                             // :48
+    void OnReset() override;                                  // :59
+    void VesselModified(Vessel* v);                           // :65
+    void PartModified(Part* p);                               // :73
+    void OnDock(GE_::GameEvents::FromToAction<Part*, Part*> action);  // :81
+    void ChangeSituation(GE_::GameEvents::HostedFromToAction<Vessel*, Vessel::Situations> action);  // :89
+    void OnUpdate() override;                                 // :97
 };
 
 // LocationAndSituationParameter.cs:9
@@ -150,72 +150,72 @@ public:
     LocationAndSituationParameter();                          // :27
     LocationAndSituationParameter(CelestialBody* targetBody_, Vessel::Situations targetSituation_, const std::string& noun_, bool finalObjective_ = false);  // :36
     std::string TypeName() const override { return "LocationAndSituationParameter"; }
-    void OnRegister() override;                               // :46
-    void OnUnregister() override;                             // :57
-    void OnReset() override;                                  // :66
-    void ChangeBody(GE_::GameEvents::HostedFromToAction<Vessel*, CelestialBody*> action);  // :72
-    void ChangeSituation(GE_::GameEvents::HostedFromToAction<Vessel*, Vessel::Situations> action);  // :80
-    std::string GetHashString() override;                     // :88
-    std::string GetTitle() override;                          // :93
-    void OnSave(ConfigNode& node) override;                   // :124
-    void OnLoad(ConfigNode& node) override;                   // :132
-    void OnUpdate() override;                                 // :142
+    void OnRegister() override;                               // :45
+    void OnUnregister() override;                             // :56
+    void OnReset() override;                                  // :65
+    void ChangeBody(GE_::GameEvents::HostedFromToAction<Vessel*, CelestialBody*> action);  // :71
+    void ChangeSituation(GE_::GameEvents::HostedFromToAction<Vessel*, Vessel::Situations> action);  // :79
+    std::string GetHashString() override;                     // :87
+    std::string GetTitle() override;                          // :92
+    void OnSave(ConfigNode& node) override;                   // :121
+    void OnLoad(ConfigNode& node) override;                   // :129
+    void OnUpdate() override;                                 // :137
 };
 
 // VesselDestinationParameter.cs:11
 class VesselDestinationParameter : public ContractParameter {
 public:
-    CelestialBody* targetBody = nullptr;                      // :13
-    FlightLog_EntryType targetType = FlightLog_EntryType::Suborbit;  // :15
-    bool eventsAdded = false;                                 // :17
-    VesselDestinationParameter();                             // :19
-    VesselDestinationParameter(CelestialBody* targetBody_, FlightLog_EntryType targetType_);  // :25
+    CelestialBody* targetBody = nullptr;                      // :11
+    FlightLog_EntryType targetType = FlightLog_EntryType::Suborbit;  // :13
+    bool eventsAdded = false;                                 // :15
+    VesselDestinationParameter();                             // :17
+    VesselDestinationParameter(CelestialBody* targetBody_, FlightLog_EntryType targetType_);  // :23
     std::string TypeName() const override { return "VesselDestinationParameter"; }
-    std::string GetHashString() override;                     // :31
-    std::string GetTitle() override;                          // :36
-    void OnRegister() override;                               // :56
-    void OnUnregister() override;                             // :68
-    void OnReset() override;                                  // :79
-    void OnSave(ConfigNode& node) override;                   // :87
-    void OnLoad(ConfigNode& node) override;                   // :93
-    void CheckFlightLog(Vessel* v);                           // :99
+    std::string GetHashString() override;                     // :29
+    std::string GetTitle() override;                          // :34
+    void OnRegister() override;                               // :53
+    void OnUnregister() override;                             // :64
+    void OnReset() override;                                  // :73
+    void OnSave(ConfigNode& node) override;                   // :81
+    void OnLoad(ConfigNode& node) override;                   // :87
+    void CheckFlightLog(Vessel* v);                           // :93
 };
 
 // KerbalDestinationParameter.cs:11
 class KerbalDestinationParameter : public ContractParameter {
 public:
-    CelestialBody* targetBody = nullptr;                      // :13
-    FlightLog_EntryType targetType = FlightLog_EntryType::Suborbit;  // :15
-    std::string kerbalName = "Jebediah Kerman";               // :17
-    bool eventsAdded = false;                                 // :19
-    KerbalDestinationParameter();                             // :21
-    KerbalDestinationParameter(CelestialBody* targetBody_, FlightLog_EntryType targetType_, const std::string& kerbalName_);  // :29
+    CelestialBody* targetBody = nullptr;                      // :11
+    FlightLog_EntryType targetType = FlightLog_EntryType::Suborbit;  // :13
+    std::string kerbalName = "Jebediah Kerman";               // :15
+    bool eventsAdded = false;                                 // :17
+    KerbalDestinationParameter();                             // :19
+    KerbalDestinationParameter(CelestialBody* targetBody_, FlightLog_EntryType targetType_, const std::string& kerbalName_);  // :26
     std::string TypeName() const override { return "KerbalDestinationParameter"; }
-    std::string GetHashString() override;                     // :37
-    std::string GetTitle() override;                          // :42
-    void OnRegister() override;                               // :62
-    void OnUnregister() override;                             // :74
-    void OnSave(ConfigNode& node) override;                   // :82
-    void OnLoad(ConfigNode& node) override;                   // :90
-    void CheckFlightLog(Vessel* v);                           // :98
-    bool CheckFlightLogs();                                   // :122
+    std::string GetHashString() override;                     // :33
+    std::string GetTitle() override;                          // :38
+    void OnRegister() override;                               // :57
+    void OnUnregister() override;                             // :67
+    void OnSave(ConfigNode& node) override;                   // :75
+    void OnLoad(ConfigNode& node) override;                   // :82
+    void CheckFlightLog(Vessel* v);                           // :89
+    bool CheckFlightLogs();                                   // :113
 };
 
 // KerbalGeeAdventureParameter.cs:9
 class KerbalGeeAdventureParameter : public ContractParameter {
 public:
-    std::string kerbalName = "Jebediah Kerman";               // :11
-    bool eventsAdded = false;                                 // :13
-    KerbalGeeAdventureParameter();                            // :15
-    explicit KerbalGeeAdventureParameter(const std::string& kerbalName_);  // :20
+    std::string kerbalName = "Jebediah Kerman";               // :10
+    bool eventsAdded = false;                                 // :12
+    KerbalGeeAdventureParameter();                            // :14
+    explicit KerbalGeeAdventureParameter(const std::string& kerbalName_);  // :19
     std::string TypeName() const override { return "KerbalGeeAdventureParameter"; }
-    std::string GetHashString() override;                     // :26
-    std::string GetTitle() override;                          // :31
-    void OnRegister() override;                               // :36
-    void OnUnregister() override;                             // :48
-    void OnSave(ConfigNode& node) override;                   // :58
-    void OnLoad(ConfigNode& node) override;                   // :63
-    void OnCrewKilled(EventReport* evt);                      // :68
+    std::string GetHashString() override;                     // :25
+    std::string GetTitle() override;                          // :30
+    void OnRegister() override;                               // :35
+    void OnUnregister() override;                             // :46
+    void OnSave(ConfigNode& node) override;                   // :55
+    void OnLoad(ConfigNode& node) override;                   // :60
+    void OnCrewKilled(EventReport* evt);                      // :65
     void OnKerbalPassedOut(ProtoCrewMember* pcm);             // :81
 };
 
@@ -232,14 +232,14 @@ public:
     std::string GetHashString() override;                     // :32
     std::string GetTitle() override;                          // :37
     void OnRegister() override;                               // :42
-    void OnUnregister() override;                             // :56
-    void OnSave(ConfigNode& node) override;                   // :69
-    void OnLoad(ConfigNode& node) override;                   // :75
-    void OnCrewKilled(EventReport* evt);                      // :81
-    void OnParameterStateChange(ContractParameter* p) override;  // :94
-    void OnVesselRecovered(ProtoVessel* v, KSP::UI::Screens::MissionRecoveryDialog* mrd, float x);  // :107
-    void OnKerbalInactiveChange(ProtoCrewMember* pcm, bool oldValue, bool newValue);  // :114
-    std::string GetMessageFailed() override;                  // :127
+    void OnUnregister() override;                             // :54
+    void OnSave(ConfigNode& node) override;                   // :64
+    void OnLoad(ConfigNode& node) override;                   // :70
+    void OnCrewKilled(EventReport* evt);                      // :76
+    void OnParameterStateChange(ContractParameter* p) override;  // :92
+    void OnVesselRecovered(ProtoVessel* v, KSP::UI::Screens::MissionRecoveryDialog* mrd, float x);  // :104
+    void OnKerbalInactiveChange(ProtoCrewMember* pcm, bool oldValue, bool newValue);  // :112
+    std::string GetMessageFailed() override;                  // :125
 };
 
 // VesselSystemsParameter.cs:9
@@ -256,24 +256,24 @@ public:
     bool dirtyVessel = true;                                  // :27
     int activePartCount = 0;                                  // :29
     bool eventsAdded = false;                                 // :31
-    VesselSystemsParameter();                                 // :48
+    VesselSystemsParameter();                                 // :49
     VesselSystemsParameter(const std::vector<std::string>& checkModuleTypes_, const std::vector<std::string>& checkModuleDescriptions_,
-                           const std::string& vesselDescription_, MannedStatus mannedStatus_ = MannedStatus::ANY, bool requireNew_ = true);  // :56
+                           const std::string& vesselDescription_, MannedStatus mannedStatus_ = MannedStatus::ANY, bool requireNew_ = true);  // (C++ addition)
     std::string TypeName() const override { return "VesselSystemsParameter"; }
     std::string mannedString();                               // :33
     std::string GetHashString() override;                     // :66
     std::string GetTitle() override;                          // :71
-    std::string GetNotes() override;                          // :90
-    void OnRegister() override;                               // :99
-    void OnUnregister() override;                             // :115
-    void OnReset() override;                                  // :129
-    void VesselModified(Vessel* v);                           // :135
-    void PartModified(Part* p);                               // :143
-    void OnDock(GE_::GameEvents::FromToAction<Part*, Part*> action);  // :151
-    void OnSave(ConfigNode& node) override;                   // :159
-    void OnLoad(ConfigNode& node) override;                   // :171
-    void OnUpdate() override;                                 // :184
-    bool isVesselValid(Vessel* v);                            // :220
+    std::string GetNotes() override;                          // :92
+    void OnRegister() override;                               // :101
+    void OnUnregister() override;                             // :114
+    void OnReset() override;                                  // :124
+    void VesselModified(Vessel* v);                           // :130
+    void PartModified(Part* p);                               // :138
+    void OnDock(GE_::GameEvents::FromToAction<Part*, Part*> action);  // :146
+    void OnSave(ConfigNode& node) override;                   // :154
+    void OnLoad(ConfigNode& node) override;                   // :167
+    void OnUpdate() override;                                 // :180
+    bool isVesselValid(Vessel* v);                            // :218
 };
 
 // PartRequestParameter.cs:9
@@ -291,71 +291,71 @@ public:
     int activePartCount = 0;                                  // :29
     bool eventsAdded = false;                                 // :31
     PartRequestParameter();                                   // :33
-    explicit PartRequestParameter(ConfigNode& requestNode, Vessel* v = nullptr);  // :48
+    explicit PartRequestParameter(ConfigNode& requestNode, Vessel* v = nullptr);  // :46
     std::string TypeName() const override { return "PartRequestParameter"; }
-    std::string GetHashString() override;                     // :68
-    std::string GetTitle() override;                          // :73
-    void OnRegister() override;                               // :82
-    void OnUnregister() override;                             // :95
-    void OnReset() override;                                  // :106
-    void VesselModified(Vessel* v);                           // :112
-    void PartModified(Part* p);                               // :120
-    void OnDock(GE_::GameEvents::FromToAction<Part*, Part*> action);  // :128
-    void OnSave(ConfigNode& node) override;                   // :136
-    void OnLoad(ConfigNode& node) override;                   // :146
-    void OnUpdate() override;                                 // :157
-    void CheckLists();                                        // :189
-    bool VesselHasPartRequest(Vessel* v = nullptr);           // :198
-    void ScanVesselForExistingParts(Vessel* v);               // :274
+    std::string GetHashString() override;                     // :67
+    std::string GetTitle() override;                          // :72
+    void OnRegister() override;                               // :81
+    void OnUnregister() override;                             // :93
+    void OnReset() override;                                  // :103
+    void VesselModified(Vessel* v);                           // :109
+    void PartModified(Part* p);                               // :117
+    void OnDock(GE_::GameEvents::FromToAction<Part*, Part*> action);  // :125
+    void OnSave(ConfigNode& node) override;                   // :133
+    void OnLoad(ConfigNode& node) override;                   // :143
+    void OnUpdate() override;                                 // :154
+    void CheckLists();                                        // :192
+    bool VesselHasPartRequest(Vessel* v = nullptr);           // :201
+    void ScanVesselForExistingParts(Vessel* v);               // :276
 };
 
 // ResourcePossessionParameter.cs:8
 class ResourcePossessionParameter : public ContractParameter {
 public:
-    int successCounter = 0;                                   // :10
-    double currentResource = 0.0;                             // :12
-    double goalResource = 1000.0;                             // :14
-    std::string resourceName = "Matter";                      // :16
-    std::string resourceTitle = "matter";                     // :18
-    std::string vesselName = "vessel";                        // :20
-    SpecificVesselParameter* specificVesselSibling = nullptr;  // :22
-    ResourcePossessionParameter();                            // :26
-    ResourcePossessionParameter(const std::string& resourceName_, const std::string& resourceTitle_, const std::string& vesselName_, double goalResource_);  // :35
+    int successCounter = 0;                                   // :11
+    double currentResource = 0.0;                             // :13
+    double goalResource = 1000.0;                             // :15
+    std::string resourceName = "Matter";                      // :17
+    std::string resourceTitle = "matter";                     // :19
+    std::string vesselName = "vessel";                        // :21
+    SpecificVesselParameter* specificVesselSibling = nullptr;  // :23
+    ResourcePossessionParameter();                            // :27
+    ResourcePossessionParameter(const std::string& resourceName_, const std::string& resourceTitle_, const std::string& vesselName_, double goalResource_);  // :37
     std::string TypeName() const override { return "ResourcePossessionParameter"; }
-    SpecificVesselParameter* SpecificVesselSibling();         // :24
-    std::string GetHashString() override;                     // :45
-    std::string GetTitle() override;                          // :50
-    std::string GetNotes() override;                          // :55
-    void OnRegister() override;                               // :71
-    void OnReset() override;                                  // :76
-    void OnSave(ConfigNode& node) override;                   // :81
-    void OnLoad(ConfigNode& node) override;                   // :89
-    void OnUpdate() override;                                 // :97
+    SpecificVesselParameter* SpecificVesselSibling();         // :25
+    std::string GetHashString() override;                     // :47
+    std::string GetTitle() override;                          // :52
+    std::string GetNotes() override;                          // :57
+    void OnRegister() override;                               // :75
+    void OnReset() override;                                  // :80
+    void OnSave(ConfigNode& node) override;                   // :85
+    void OnLoad(ConfigNode& node) override;                   // :93
+    void OnUpdate() override;                                 // :101
 };
 
 // ResourceExtractionParameter.cs:9
 class ResourceExtractionParameter : public ContractParameter {
 public:
-    CelestialBody* targetBody = nullptr;                      // :11
-    int successCounter = 0;                                   // :13
-    double totalHarvested = 0.0;                              // :15
-    double goalHarvested = 1000.0;                            // :17
-    std::string resourceName = "Matter";                      // :19
-    std::string resourceTitle = "matter";                     // :21
-    std::vector<std::string> modules;                         // :23
-    bool eventsAdded = false;                                 // :25
-    float notifyLevel = 0.25f;                                // :27
-    ResourceExtractionParameter();                            // :29
+    CelestialBody* targetBody = nullptr;                      // :12
+    int successCounter = 0;                                   // :14
+    double totalHarvested = 0.0;                              // :16
+    double goalHarvested = 1000.0;                            // :18
+    std::string resourceName = "Matter";                      // :20
+    std::string resourceTitle = "matter";                     // :22
+    std::vector<std::string> modules;                         // :24
+    bool eventsAdded = false;                                 // :26
+    float notifyLevel = 0.25f;                                // :28
+    ResourceExtractionParameter();                            // :30
     ResourceExtractionParameter(const std::string& resourceName_, const std::string& resourceTitle_, double goalHarvested_, CelestialBody* targetBody_,
                                 const std::vector<std::string>& modules_);  // :41
     std::string TypeName() const override { return "ResourceExtractionParameter"; }
-    std::string GetHashString() override;                     // :53
-    std::string GetTitle() override;                          // :58
-    void OnRegister() override;                               // :63
-    void OnUnregister() override;                             // :73
-    void OnReset() override;                                  // :81
-    void ResourcesHarvested(PartModule* module, const std::string& resource, double amount);  // :86
-    void OnSave(ConfigNode& node) override;                   // :104
+    std::string GetHashString() override;                     // :56
+    std::string GetTitle() override;                          // :61
+    void OnRegister() override;                               // :66
+    void OnUnregister() override;                             // :76
+    void OnReset() override;                                  // :84
+    void ResourcesHarvested(PartModule* module, const std::string& resource, double amount);  // :89
+    void OnSave(ConfigNode& node) override;                   // :105
     void OnLoad(ConfigNode& node) override;                   // :116
     void OnUpdate() override;                                 // :127
 };
@@ -363,76 +363,76 @@ public:
 // AsteroidParameter.cs:11 / CometParameter.cs:11 (same body: ModuleAsteroid / ModuleComet)
 class AsteroidParameter : public ContractParameter {
 public:
-    bool forStation = false;                                  // :13
-    std::vector<int32_t> asteroidSeeds;                       // :15
-    std::string asteroidClass = "A";                          // :17
-    int successCounter = 0;                                   // :19
-    bool validVessel = false;                                 // :21
-    bool dirtyVessel = true;                                  // :23
-    int activePartCount = 0;                                  // :25
-    bool eventsAdded = false;                                 // :27
-    AsteroidParameter();                                      // :29
-    AsteroidParameter(const std::string& size, bool forStation_);  // :35
+    bool forStation = false;                                  // :11
+    std::vector<int32_t> asteroidSeeds;                       // :13
+    std::string asteroidClass = "A";                          // :15
+    int successCounter = 0;                                   // :17
+    bool validVessel = false;                                 // :19
+    bool dirtyVessel = true;                                  // :21
+    int activePartCount = 0;                                  // :23
+    bool eventsAdded = false;                                 // :25
+    AsteroidParameter();                                      // :27
+    AsteroidParameter(const std::string& size, bool forStation_);  // :34
     std::string TypeName() const override { return "AsteroidParameter"; }
-    std::string GetHashString() override;                     // :43
-    std::string GetTitle() override;                          // :48
-    std::string GetNotes() override;                          // :57
-    void OnRegister() override;                               // :62
-    void OnUnregister() override;                             // :77
-    void OnReset() override;                                  // :91
-    void VesselModified(Vessel* v);                           // :97
-    void PartModified(Part* p);                               // :105
-    void OnDock(GE_::GameEvents::FromToAction<Part*, Part*> action);  // :113
-    void OnSave(ConfigNode& node) override;                   // :171
-    void OnLoad(ConfigNode& node) override;                   // :178
-    void OnUpdate() override;                                 // :185
-    bool VesselTowingAsteroid(Vessel* v);                     // :213
+    std::string GetHashString() override;                     // :41
+    std::string GetTitle() override;                          // :46
+    std::string GetNotes() override;                          // :55
+    void OnRegister() override;                               // :60
+    void OnUnregister() override;                             // :73
+    void OnReset() override;                                  // :83
+    void VesselModified(Vessel* v);                           // :89
+    void PartModified(Part* p);                               // :97
+    void OnDock(GE_::GameEvents::FromToAction<Part*, Part*> action);  // :105
+    void OnSave(ConfigNode& node) override;                   // :157
+    void OnLoad(ConfigNode& node) override;                   // :164
+    void OnUpdate() override;                                 // :171
+    bool VesselTowingAsteroid(Vessel* v);                     // :207
 };
 
 class CometParameter : public ContractParameter {
 public:
-    bool forStation = false;                                  // :13
-    std::vector<int32_t> cometSeeds;                          // :15
-    std::string cometClass = "A";                             // :17
-    int successCounter = 0;                                   // :19
-    bool validVessel = false;                                 // :21
-    bool dirtyVessel = true;                                  // :23
-    int activePartCount = 0;                                  // :25
-    bool eventsAdded = false;                                 // :27
-    CometParameter();                                         // :29
-    CometParameter(const std::string& size, bool forStation_);  // :35
+    bool forStation = false;                                  // :11
+    std::vector<int32_t> cometSeeds;                          // (C++ addition)
+    std::string cometClass = "A";                             // (C++ addition)
+    int successCounter = 0;                                   // :17
+    bool validVessel = false;                                 // :19
+    bool dirtyVessel = true;                                  // :21
+    int activePartCount = 0;                                  // :23
+    bool eventsAdded = false;                                 // :25
+    CometParameter();                                         // (C++ addition)
+    CometParameter(const std::string& size, bool forStation_);  // (C++ addition)
     std::string TypeName() const override { return "CometParameter"; }
-    std::string GetHashString() override;                     // :43
-    std::string GetTitle() override;                          // :48
-    std::string GetNotes() override;                          // :57
-    void OnRegister() override;                               // :62
-    void OnUnregister() override;                             // :77
-    void OnReset() override;                                  // :91
-    void VesselModified(Vessel* v);                           // :97
-    void PartModified(Part* p);                               // :105
-    void OnDock(GE_::GameEvents::FromToAction<Part*, Part*> action);  // :113
-    void OnSave(ConfigNode& node) override;                   // :171
-    void OnLoad(ConfigNode& node) override;                   // :178
-    void OnUpdate() override;                                 // :185
-    bool VesselTowingComet(Vessel* v);                        // :213
+    std::string GetHashString() override;                     // :41
+    std::string GetTitle() override;                          // :46
+    std::string GetNotes() override;                          // :55
+    void OnRegister() override;                               // :60
+    void OnUnregister() override;                             // :73
+    void OnReset() override;                                  // :83
+    void VesselModified(Vessel* v);                           // :89
+    void PartModified(Part* p);                               // :97
+    void OnDock(GE_::GameEvents::FromToAction<Part*, Part*> action);  // :105
+    void OnSave(ConfigNode& node) override;                   // :157
+    void OnLoad(ConfigNode& node) override;                   // :164
+    void OnUpdate() override;                                 // :171
+    bool VesselTowingComet(Vessel* v);                        // (C++ addition)
 };
 
 // CometDetectionParameter.cs:10
 class CometDetectionParameter : public ContractParameter {
 public:
-    int cometCountRequired = 0;                               // :12
-    int cometCountDetected = 0;                               // :14
-    std::string sentinelPartName;                             // :16
-    int RemainingDiscoveries = 0;                             // :18
-    CometDetectionParameter();                                // :20
-    CometDetectionParameter(int cometCountRequired_, const std::string& sentinelPartName_);  // :25
+    int cometCountRequired = 0;                               // :11
+    int cometCountDetected = 0;                               // :13
+    std::string sentinelPartName;                             // :15
+    int RemainingDiscoveries = 0;                             // :17
+    CometDetectionParameter();                                // :19
+    CometDetectionParameter(int cometCountRequired_, const std::string& sentinelPartName_);  // :24
     std::string TypeName() const override { return "CometDetectionParameter"; }
-    std::string GetHashString() override;                     // :33
-    std::string GetTitle() override;                          // :38
-    std::string GetNotes() override;                          // :43
-    void OnRegister() override;                               // :48
-    void OnUnregister() override;                             // :54
-    void CometDetected(Vessel* data);                         // :59
+    std::string GetHashString() override;                     // :31
+    std::string GetTitle() override;                          // :36
+    std::string GetNotes() override;                          // :41
+    void OnRegister() override;                               // :46
+    void OnUnregister() override;                             // :52
+    void CometDetected(Vessel* data);                         // :57
     void OnReset() override;                                  // :75
     void OnSave(ConfigNode& node) override;                   // :80
     void OnLoad(ConfigNode& node) override;                   // :86
@@ -441,87 +441,87 @@ public:
 // CometScienceParameter.cs:8
 class CometScienceParameter : public ContractParameter {
 public:
-    uint32_t cometPersistentId = 0;                           // :12
-    std::string cometName;                                    // :14
-    std::string scienceSubjectId;                             // :16
-    bool scienceDataCollected = false;                        // :18
-    uint32_t CometPersistentId() const { return cometPersistentId; }   // :20
-    const std::string& CometName() const { return cometName; }         // :22
-    const std::string& ScienceSubjectId() const { return scienceSubjectId; }  // :24
-    bool ScienceDataCollected() const { return scienceDataCollected; }  // :26
-    CometScienceParameter() = default;                        // :28
-    CometScienceParameter(uint32_t cometId, const std::string& cometName_, const std::string& scienceSubjectId_);  // :32
+    uint32_t cometPersistentId = 0;                           // :10
+    std::string cometName;                                    // :12
+    std::string scienceSubjectId;                             // :14
+    bool scienceDataCollected = false;                        // :16
+    uint32_t CometPersistentId() const { return cometPersistentId; }   // :18
+    const std::string& CometName() const { return cometName; }         // :20
+    const std::string& ScienceSubjectId() const { return scienceSubjectId; }  // :22
+    bool ScienceDataCollected() const { return scienceDataCollected; }  // :24
+    CometScienceParameter() = default;                        // :26
+    CometScienceParameter(uint32_t cometId, const std::string& cometName_, const std::string& scienceSubjectId_);  // :30
     std::string TypeName() const override { return "CometScienceParameter"; }
-    std::string GetHashString() override;                     // :40
-    std::string GetTitle() override;                          // :45
-    void OnLoad(ConfigNode& node) override;                   // :50
-    void OnSave(ConfigNode& node) override;                   // :58
-    void OnRegister() override;                               // :66
-    void OnUnregister() override;                             // :75
-    void OnExperimentDeployed(ScienceData* experimentData);   // :84
-    void OnVesselRename(GE_::GameEvents::HostedFromToAction<Vessel*, std::string> hostedFromTo);  // :92
-    void VesselIdChanged(uint32_t oldId, uint32_t newId);     // :104
-    void OnScience(float science, ScienceSubject* subject, ProtoVessel* pv, bool reverseEngineered);  // :112
-    void OnTriggeredScience(ScienceData* data, Vessel* origin, bool xmitAborted);  // :120
+    std::string GetHashString() override;                     // :38
+    std::string GetTitle() override;                          // :43
+    void OnLoad(ConfigNode& node) override;                   // :48
+    void OnSave(ConfigNode& node) override;                   // :56
+    void OnRegister() override;                               // :64
+    void OnUnregister() override;                             // :73
+    void OnExperimentDeployed(ScienceData* experimentData);   // :82
+    void OnVesselRename(GE_::GameEvents::HostedFromToAction<Vessel*, std::string> hostedFromTo);  // :90
+    void VesselIdChanged(uint32_t oldId, uint32_t newId);     // :99
+    void OnScience(float science, ScienceSubject* subject, ProtoVessel* pv, bool reverseEngineered);  // :107
+    void OnTriggeredScience(ScienceData* data, Vessel* origin, bool xmitAborted);  // :116
 };
 
 // ConstructionParameter.cs:9
 class ConstructionParameter : public ContractParameter {
 public:
-    CelestialBody* targetBody = nullptr;                      // :12
-    uint32_t vesselPersistentId = 0;                          // :14
-    std::string partName;                                     // :16
-    std::string vesselName;                                   // :18
-    const AvailablePart* ap = nullptr;                        // :20
-    Vessel* vsl = nullptr;                                    // :22
-    CelestialBody* TargetBody() const { return targetBody; }  // :24
-    uint32_t VesselPersistentId() const { return vesselPersistentId; }  // :26
-    const std::string& PartName() const { return partName; }  // :28
-    const std::string& VesselName() const { return vesselName; }  // :30
-    ConstructionParameter() = default;                        // :32
-    ConstructionParameter(const std::string& partName_, uint32_t vesselId, const std::string& vesselName_, CelestialBody* targetBody_);  // :36
+    CelestialBody* targetBody = nullptr;                      // :10
+    uint32_t vesselPersistentId = 0;                          // :12
+    std::string partName;                                     // :14
+    std::string vesselName;                                   // :16
+    const AvailablePart* ap = nullptr;                        // :18
+    Vessel* vsl = nullptr;                                    // :20
+    CelestialBody* TargetBody() const { return targetBody; }  // :22
+    uint32_t VesselPersistentId() const { return vesselPersistentId; }  // :24
+    const std::string& PartName() const { return partName; }  // :26
+    const std::string& VesselName() const { return vesselName; }  // :28
+    ConstructionParameter() = default;                        // :30
+    ConstructionParameter(const std::string& partName_, uint32_t vesselId, const std::string& vesselName_, CelestialBody* targetBody_);  // :34
     std::string TypeName() const override { return "ConstructionParameter"; }
-    void UpdatePartInfo(const std::string& partName_, uint32_t vesselId, const std::string& vesselName_, CelestialBody* targetBody_);  // :41
-    std::string GetHashString() override;                     // :60
-    std::string GetTitle() override;                          // :65
-    void OnLoad(ConfigNode& node) override;                   // :74
-    void OnSave(ConfigNode& node) override;                   // :90
-    void OnRegister() override;                               // :98
-    void OnUnregister() override;                             // :104
-    std::string GetMessageComplete() override;                // :110
-    void VesselIdChanged(uint32_t oldId, uint32_t newId);     // :115
-    void OnConstructionPartAttached(Vessel* vsl_, Part* p);   // :123
+    void UpdatePartInfo(const std::string& partName_, uint32_t vesselId, const std::string& vesselName_, CelestialBody* targetBody_);  // :39
+    std::string GetHashString() override;                     // :58
+    std::string GetTitle() override;                          // :63
+    void OnLoad(ConfigNode& node) override;                   // :72
+    void OnSave(ConfigNode& node) override;                   // :86
+    void OnRegister() override;                               // :94
+    void OnUnregister() override;                             // :100
+    std::string GetMessageComplete() override;                // :106
+    void VesselIdChanged(uint32_t oldId, uint32_t newId);     // :111
+    void OnConstructionPartAttached(Vessel* vsl_, Part* p);   // :119
 };
 
 // RepairPartParameter.cs:9
 class RepairPartParameter : public ContractParameter {
 public:
-    CelestialBody* targetBody = nullptr;                      // :12
-    uint32_t vesselPersistentId = 0;                          // :14
-    uint32_t partPersistentId = 0;                            // :16
-    std::string partName;                                     // :18
-    std::string vesselName = "";                              // :20
-    const AvailablePart* ap = nullptr;                        // :22
-    Vessel* vsl = nullptr;                                    // :24
-    CelestialBody* TargetBody() const { return targetBody; }  // :26
-    uint32_t VesselPersistentId() const { return vesselPersistentId; }  // :28
-    uint32_t PartPersistentId() const { return partPersistentId; }      // :30
-    const std::string& PartName() const { return partName; }  // :32
-    const std::string& VesselName() const { return vesselName; }  // :34
-    RepairPartParameter() = default;                          // :36
-    RepairPartParameter(uint32_t partId, const std::string& partName_, uint32_t vesselId, const std::string& vesselName_, CelestialBody* targetBody_);  // :40
+    CelestialBody* targetBody = nullptr;                      // :10
+    uint32_t vesselPersistentId = 0;                          // :12
+    uint32_t partPersistentId = 0;                            // :14
+    std::string partName;                                     // :16
+    std::string vesselName = "";                              // :18
+    const AvailablePart* ap = nullptr;                        // :20
+    Vessel* vsl = nullptr;                                    // :22
+    CelestialBody* TargetBody() const { return targetBody; }  // :24
+    uint32_t VesselPersistentId() const { return vesselPersistentId; }  // :26
+    uint32_t PartPersistentId() const { return partPersistentId; }      // :28
+    const std::string& PartName() const { return partName; }  // :30
+    const std::string& VesselName() const { return vesselName; }  // :32
+    RepairPartParameter() = default;                          // :34
+    RepairPartParameter(uint32_t partId, const std::string& partName_, uint32_t vesselId, const std::string& vesselName_, CelestialBody* targetBody_);  // :38
     std::string TypeName() const override { return "RepairPartParameter"; }
-    void UpdatePartInfo(uint32_t partId, const std::string& partName_, uint32_t vesselId, const std::string& vesselName_, CelestialBody* targetBody_);  // :45
-    std::string GetHashString() override;                     // :66
-    std::string GetTitle() override;                          // :71
-    void OnLoad(ConfigNode& node) override;                   // :80
-    void OnSave(ConfigNode& node) override;                   // :96
-    void OnRegister() override;                               // :108
-    void OnUnregister() override;                             // :115
-    std::string GetMessageComplete() override;                // :122
-    void PartIdChanged(uint32_t vslId, uint32_t oldId, uint32_t newId);  // :127
-    void VesselIdChanged(uint32_t oldId, uint32_t newId);     // :135
-    void OnPartRepaired(Part* p);                             // :143
+    void UpdatePartInfo(uint32_t partId, const std::string& partName_, uint32_t vesselId, const std::string& vesselName_, CelestialBody* targetBody_);  // :43
+    std::string GetHashString() override;                     // :63
+    std::string GetTitle() override;                          // :68
+    void OnLoad(ConfigNode& node) override;                   // :77
+    void OnSave(ConfigNode& node) override;                   // :92
+    void OnRegister() override;                               // :104
+    void OnUnregister() override;                             // :111
+    std::string GetMessageComplete() override;                // :118
+    void PartIdChanged(uint32_t vslId, uint32_t oldId, uint32_t newId);  // :123
+    void VesselIdChanged(uint32_t oldId, uint32_t newId);     // :131
+    void OnPartRepaired(Part* p);                             // :139
 };
 
 // SpecificVesselParameter.cs:12
@@ -538,24 +538,24 @@ public:
     bool submittedWaypoint = false;                           // :30
     int successCounter = 0;                                   // :32
     SpecificVesselParameter();                                // :34
-    explicit SpecificVesselParameter(Vessel* v);              // :45
+    explicit SpecificVesselParameter(Vessel* v);              // :46
     std::string TypeName() const override { return "SpecificVesselParameter"; }
-    std::string GetHashString() override;                     // :57
-    std::string GetTitle() override;                          // :62
-    std::string GetMessageComplete() override;                // :67
-    std::string GetNotes() override;                          // :72
-    void OnRegister() override;                               // :99
-    void OnUnregister() override;                             // :104
-    void OnReset() override;                                  // :109
-    void OnSave(ConfigNode& node) override;                   // :114
-    void OnLoad(ConfigNode& node) override;                   // :125
-    void OnUpdate() override;                                 // :199
-    void UpdateWaypoints(bool focus) override;                // :228
-    void SpecificVesselRename(const Guid& id, const std::string& name);  // :257
-    void SpecificVesselScan(const std::vector<Guid>& ids);    // :267
-    void TargetVesselSearch(bool cached);                     // :287
-    void CleanupWaypoints() override;                         // :331
-    void KillContract();                                      // :340
+    std::string GetHashString() override;                     // :58
+    std::string GetTitle() override;                          // :63
+    std::string GetMessageComplete() override;                // :68
+    std::string GetNotes() override;                          // :73
+    void OnRegister() override;                               // :102
+    void OnUnregister() override;                             // :107
+    void OnReset() override;                                  // :112
+    void OnSave(ConfigNode& node) override;                   // :117
+    void OnLoad(ConfigNode& node) override;                   // :127
+    void OnUpdate() override;                                 // :196
+    void UpdateWaypoints(bool focus) override;                // :223
+    void SpecificVesselRename(const Guid& id, const std::string& name);  // :251
+    void SpecificVesselScan(const std::vector<Guid>& ids);    // :260
+    void TargetVesselSearch(bool cached);                     // :281
+    void CleanupWaypoints() override;                         // :326
+    void KillContract();                                      // :335
     // ContractsApp.Instance (UI) != null: the SpecificVesselRename refresh is a seam (unset: no ContractsApp)
     static inline std::function<void(Contract&, bool changePositions)> refreshContractRequested;
 };
@@ -563,37 +563,37 @@ public:
 // SpecificOrbitParameter.cs:11
 class SpecificOrbitParameter : public ContractParameter {
 public:
-    double deviationWindow = 10.0;                            // :13
-    int successCounter = 0;                                   // :17
-    OrbitType orbitType = OrbitType::RANDOM;                  // :19
-    std::unique_ptr<Orbit> orbit;                             // :21
-    double inclination = 0.0;                                 // :23
-    double eccentricity = 0.0;                                // :25
-    double sma = 10000000.0;                                  // :27
-    double lan = 0.0;                                         // :29
-    double argumentOfPeriapsis = 0.0;                         // :31
-    double meanAnomalyAtEpoch = 0.0;                          // :33
-    double epoch = 0.0;                                       // :35
-    CelestialBody* TargetBody = nullptr;                      // :37
+    double deviationWindow = 10.0;                            // :11
+    int successCounter = 0;                                   // :15
+    OrbitType orbitType = OrbitType::RANDOM;                  // :17
+    std::unique_ptr<Orbit> orbit;                             // :19
+    double inclination = 0.0;                                 // :21
+    double eccentricity = 0.0;                                // :23
+    double sma = 10000000.0;                                  // :25
+    double lan = 0.0;                                         // :27
+    double argumentOfPeriapsis = 0.0;                         // :29
+    double meanAnomalyAtEpoch = 0.0;                          // :31
+    double epoch = 0.0;                                       // :33
+    CelestialBody* TargetBody = nullptr;                      // :35
     bool rendererSetUp = false;                               // (orbitRenderer != null)
     bool rendererActiveDraw = false;                          // orbitRenderer.activeDraw
-    Orbit* Orbit_() { return orbit.get(); }                   // :39 Orbit
-    SpecificOrbitParameter();                                 // :41
+    Orbit* Orbit_() { return orbit.get(); }                   // (C++ addition) Orbit
+    SpecificOrbitParameter();                                 // :39
     SpecificOrbitParameter(OrbitType orbitType_, double inclination_, double eccentricity_, double sma_, double lan_, double argumentOfPeriapsis_,
                            double meanAnomalyAtEpoch_, double epoch_, CelestialBody* targetBody_, double deviationWindow_);  // :54
     std::string TypeName() const override { return "SpecificOrbitParameter"; }
-    std::string GetHashString() override;                     // :72
-    std::string GetTitle() override;                          // :77
-    std::string GetNotes() override;                          // :135
-    void OnRegister() override;                               // :157
-    void OnUnregister() override;                             // :162
-    void OnReset() override;                                  // :167
-    void OnSave(ConfigNode& node) override;                   // :172
-    void OnLoad(ConfigNode& node) override;                   // :192
-    void OnUpdate() override;                                 // :216
-    void SetupRenderer();                                     // :273
-    void CleanupRenderer();                                   // :281
-    void ValidateOrbit();                                     // :289
+    std::string GetHashString() override;                     // :71
+    std::string GetTitle() override;                          // :76
+    std::string GetNotes() override;                          // :126
+    void OnRegister() override;                               // :147
+    void OnUnregister() override;                             // :152
+    void OnReset() override;                                  // :157
+    void OnSave(ConfigNode& node) override;                   // :162
+    void OnLoad(ConfigNode& node) override;                   // :181
+    void OnUpdate() override;                                 // :208
+    void SetupRenderer();                                     // :253
+    void CleanupRenderer();                                   // :261
+    void ValidateOrbit();                                     // :269
 };
 
 // StationaryPointParameter.cs:9
@@ -616,94 +616,94 @@ public:
     void OnReset() override;                                  // :71
     void OnSave(ConfigNode& node) override;                   // :76
     void OnLoad(ConfigNode& node) override;                   // :83
-    void OnUpdate() override;                                 // :124
+    void OnUpdate() override;                                 // :126
 };
 
 // RoverWayPointParameter.cs:12
 class RoverWayPointParameter : public WaypointParameter {
 public:
-    Vessel* roverVessel = nullptr;                            // :14
-    uint32_t roverVslId = 0;                                  // :16
-    std::unique_ptr<Waypoint> startwp;                        // :18
-    std::unique_ptr<Waypoint> endwp;                          // :20
-    double craftStartLatitude = 0.0;                          // :22
-    double craftStartLongitude = 0.0;                         // :24
-    double craftEndLatitude = 0.0;                            // :26
-    double craftEndLongitude = 0.0;                           // :28
-    bool submittedWaypoint = false;                           // :30
-    int successCounter = 0;                                   // :32
-    bool outerWarning = false;                                // :34
-    Vessel* RoverVessel() const { return roverVessel; }       // :36
-    uint32_t RoverVslId() const { return roverVslId; }        // :38
-    Waypoint* Startwp() const { return startwp.get(); }       // :40
-    Waypoint* Endwp() const { return endwp.get(); }           // :42
-    double CraftStartLatitude() const { return craftStartLatitude; }    // :44
-    double CraftStartLongitude() const { return craftStartLongitude; }  // :46
-    double CraftEndLatitude() const { return craftEndLatitude; }        // :48
-    double CraftEndLongitude() const { return craftEndLongitude; }      // :50
-    RoverWayPointParameter();                                 // :52
+    Vessel* roverVessel = nullptr;                            // :10
+    uint32_t roverVslId = 0;                                  // :12
+    std::unique_ptr<Waypoint> startwp;                        // :14
+    std::unique_ptr<Waypoint> endwp;                          // :16
+    double craftStartLatitude = 0.0;                          // :18
+    double craftStartLongitude = 0.0;                         // :20
+    double craftEndLatitude = 0.0;                            // :22
+    double craftEndLongitude = 0.0;                           // :24
+    bool submittedWaypoint = false;                           // :26
+    int successCounter = 0;                                   // :28
+    bool outerWarning = false;                                // :30
+    Vessel* RoverVessel() const { return roverVessel; }       // :32
+    uint32_t RoverVslId() const { return roverVslId; }        // :34
+    Waypoint* Startwp() const { return startwp.get(); }       // :36
+    Waypoint* Endwp() const { return endwp.get(); }           // :38
+    double CraftStartLatitude() const { return craftStartLatitude; }    // :40
+    double CraftStartLongitude() const { return craftStartLongitude; }  // :42
+    double CraftEndLatitude() const { return craftEndLatitude; }        // :44
+    double CraftEndLongitude() const { return craftEndLongitude; }      // :46
+    RoverWayPointParameter();                                 // :48
     RoverWayPointParameter(double CraftStartLatitude_, double CraftStartLongitude_, double CraftEndLatitude_, double CraftEndLongitude_,
                            CelestialBody* targetBody);        // :65
     std::string TypeName() const override { return "RoverWayPointParameter"; }
-    std::string GetHashString() override;                     // :79
-    std::string GetTitle() override;                          // :84
-    std::string GetMessageComplete() override;                // :89
-    std::string GetNotes() override;                          // :94
-    void OnRegister() override;                               // :103
-    void OnUnregister() override;                             // :109
-    void OnReset() override;                                  // :116
-    void OnSave(ConfigNode& node) override;                   // :121
-    void OnLoad(ConfigNode& node) override;                   // :135
-    void OnUpdate() override;                                 // :221
-    void UpdateWaypoints(bool focus) override;                // :272
-    void UpdateRoverInfo(Vessel* vsl);                        // :290
-    void CleanupWaypoints() override;                         // :296
-    void VesselIdChanged(uint32_t oldId, uint32_t newId);     // :305
+    std::string GetHashString() override;                     // :76
+    std::string GetTitle() override;                          // :81
+    std::string GetMessageComplete() override;                // :86
+    std::string GetNotes() override;                          // :91
+    void OnRegister() override;                               // :100
+    void OnUnregister() override;                             // :106
+    void OnReset() override;                                  // :112
+    void OnSave(ConfigNode& node) override;                   // :117
+    void OnLoad(ConfigNode& node) override;                   // :131
+    void OnUpdate() override;                                 // :216
+    void UpdateWaypoints(bool focus) override;                // :268
+    void UpdateRoverInfo(Vessel* vsl);                        // :286
+    void CleanupWaypoints() override;                         // :292
+    void VesselIdChanged(uint32_t oldId, uint32_t newId);     // :302
 };
 
 // SurveyWaypointParameter.cs:13
 class SurveyWaypointParameter : public ContractParameter {
 public:
-    std::unique_ptr<Waypoint> wp;                             // :15
-    WaypointClusterState clusterState = WaypointClusterState::NONE;  // :17
-    std::string experiment;                                   // :19
-    std::string actionDescription;                            // :21
-    double thresholdAltitude = 0.0;                           // :23
-    FlightBand band = FlightBand::NONE;                       // :25
-    CelestialBody* targetBody = nullptr;                      // :27
-    bool submittedWaypoint = false;                           // :29
-    bool outerWarning = false;                                // :31
-    bool verified = false;                                    // :33
-    bool contextual = false;                                  // :35
-    int bouncesLeft = 0;                                      // :37
-    double bounceOriginLatitude = 0.0;                        // :39
-    double bounceOriginLongitude = 0.0;                       // :41
-    bool eventsAdded = false;                                 // :43
-    std::string contextualAnomalyName;                        // :45
-    std::string ContextualAnomalyName();                      // :47
-    SurveyWaypointParameter();                                // :63
+    std::unique_ptr<Waypoint> wp;                             // :13
+    WaypointClusterState clusterState = WaypointClusterState::NONE;  // :15
+    std::string experiment;                                   // :17
+    std::string actionDescription;                            // :19
+    double thresholdAltitude = 0.0;                           // :21
+    FlightBand band = FlightBand::NONE;                       // :23
+    CelestialBody* targetBody = nullptr;                      // :25
+    bool submittedWaypoint = false;                           // :27
+    bool outerWarning = false;                                // :29
+    bool verified = false;                                    // :31
+    bool contextual = false;                                  // :33
+    int bouncesLeft = 0;                                      // :35
+    double bounceOriginLatitude = 0.0;                        // :37
+    double bounceOriginLongitude = 0.0;                       // :39
+    bool eventsAdded = false;                                 // :41
+    std::string contextualAnomalyName;                        // :43
+    std::string ContextualAnomalyName();                      // :45
+    SurveyWaypointParameter();                                // :62
     SurveyWaypointParameter(const std::string& experiment_, const std::string& actionDescription_, CelestialBody* targetBody_, const Waypoint& wp_,
                             FlightBand band_);                // :77
     SurveyWaypointParameter(const std::string& experiment_, const std::string& actionDescription_, CelestialBody* targetBody_, const Waypoint& wp_,
                             FlightBand band_, bool contextual_, int bouncesLeft_, double bounceOriginLatitude_, double bounceOriginLongitude_);  // :92
     std::string TypeName() const override { return "SurveyWaypointParameter"; }
-    std::string GetHashString() override;                     // :109
-    std::string GetTitle() override;                          // :114
-    std::string GetMessageComplete() override;                // :143
-    void OnRegister() override;                               // :156
-    void OnUnregister() override;                             // :165
-    void OnSave(ConfigNode& node) override;                   // :183
-    void OnLoad(ConfigNode& node) override;                   // :207
-    void OnUpdate() override;                                 // :244
-    void CheckExperimentResults(ScienceData* experimentData);  // :309
-    void Bounce();                                            // :346
-    static double TriggerRange(FlightBand band);              // :384
-    void ProcessWaypoint();                                   // :408
-    void CalculateAltitudes(double terrainAltitude);          // :482
-    void VerifyWaypoint(double terrainAltitude);              // :550
-    std::string SiteString();                                 // :573
-    Waypoint* NextWaypointInCluster();                        // :593
-    void UpdateNavWaypoint(Waypoint* newWaypoint);            // :613
+    std::string GetHashString() override;                     // :113
+    std::string GetTitle() override;                          // :118
+    std::string GetMessageComplete() override;                // :142
+    void OnRegister() override;                               // :155
+    void OnUnregister() override;                             // :164
+    void OnSave(ConfigNode& node) override;                   // :180
+    void OnLoad(ConfigNode& node) override;                   // :205
+    void OnUpdate() override;                                 // :236
+    void CheckExperimentResults(ScienceData* experimentData);  // :287
+    void Bounce();                                            // :325
+    static double TriggerRange(FlightBand band);              // :356
+    void ProcessWaypoint();                                   // :379
+    void CalculateAltitudes(double terrainAltitude);          // :432
+    void VerifyWaypoint(double terrainAltitude);              // :489
+    std::string SiteString();                                 // :510
+    Waypoint* NextWaypointInCluster();                        // :521
+    void UpdateNavWaypoint(Waypoint* newWaypoint);            // :541
 };
 
 }  // namespace ksp::Contracts::Parameters

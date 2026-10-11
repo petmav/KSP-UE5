@@ -74,20 +74,20 @@ void StabilityParameter::OnUpdate() {
 
 // ---- CrewCapacityParameter ------------------------------------------------------------------------------------------------------------
 
-// CrewCapacityParameter.cs:23 SpecificVesselSibling
+// CrewCapacityParameter.cs:24 SpecificVesselSibling
 SpecificVesselParameter* CrewCapacityParameter::SpecificVesselSibling() {
     if (specificVesselSibling == nullptr) specificVesselSibling = Root()->GetParameterT<SpecificVesselParameter>();
     return specificVesselSibling;
 }
-// CrewCapacityParameter.cs:27
+// CrewCapacityParameter.cs:26
 CrewCapacityParameter::CrewCapacityParameter() : targetCapacity(8), successCounter(0) {}
-// CrewCapacityParameter.cs:33
+// CrewCapacityParameter.cs:32
 CrewCapacityParameter::CrewCapacityParameter(int targetCapacity_) : targetCapacity(targetCapacity_), successCounter(0) {}
-// CrewCapacityParameter.cs:41
+// CrewCapacityParameter.cs:38
 std::string CrewCapacityParameter::GetHashString() { return I(L::SuperSeed(*Root())) + ID(); }
-// CrewCapacityParameter.cs:46
+// CrewCapacityParameter.cs:43
 std::string CrewCapacityParameter::GetTitle() { return Fmt("#autoLOC_282944", {I(targetCapacity)}); }
-// CrewCapacityParameter.cs:51
+// CrewCapacityParameter.cs:48
 std::string CrewCapacityParameter::GetNotes() {
     if (!Root()->IsFinished() && SpecificVesselSibling() != nullptr && SpecificVesselSibling()->targetVessel != nullptr) {
         const int num = L::ActualCrewCapacity(SpecificVesselSibling()->targetVessel);
@@ -97,7 +97,7 @@ std::string CrewCapacityParameter::GetNotes() {
     }
     return "";
 }
-// CrewCapacityParameter.cs:68
+// CrewCapacityParameter.cs:66
 void CrewCapacityParameter::OnRegister() {
     SetDisableOnStateChange(false);
     eventsAdded = false;
@@ -108,7 +108,7 @@ void CrewCapacityParameter::OnRegister() {
         eventsAdded = true;
     }
 }
-// CrewCapacityParameter.cs:82
+// CrewCapacityParameter.cs:79
 void CrewCapacityParameter::OnUnregister() {
     if (eventsAdded) {
         GE::onPartCouple.Remove(this, &CrewCapacityParameter::OnDock);
@@ -116,28 +116,28 @@ void CrewCapacityParameter::OnUnregister() {
         GE::onPartDie.Remove(this, &CrewCapacityParameter::PartModified);
     }
 }
-// CrewCapacityParameter.cs:94
+// CrewCapacityParameter.cs:89
 void CrewCapacityParameter::OnReset() {
     SetIncomplete();
     dirtyVessel = true;
 }
-// CrewCapacityParameter.cs:100
+// CrewCapacityParameter.cs:95
 void CrewCapacityParameter::VesselModified(Vessel* v) {
     if (v == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// CrewCapacityParameter.cs:108
+// CrewCapacityParameter.cs:103
 void CrewCapacityParameter::PartModified(Part* p) {
     if (p->vessel == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// CrewCapacityParameter.cs:116
+// CrewCapacityParameter.cs:111
 void CrewCapacityParameter::OnDock(GE::FromToAction<Part*, Part*> action) {
     if (action.from->vessel == FlightRegistry::ActiveVessel || action.to->vessel == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// CrewCapacityParameter.cs:124
+// CrewCapacityParameter.cs:119
 void CrewCapacityParameter::OnSave(ConfigNode& node) { node.AddValue("targetCapacity", static_cast<int32_t>(targetCapacity)); }
-// CrewCapacityParameter.cs:129
+// CrewCapacityParameter.cs:124
 void CrewCapacityParameter::OnLoad(ConfigNode& node) { L::LoadNode(node, "CrewCapacityParameter", "targetCapacity", targetCapacity, 8); }
-// CrewCapacityParameter.cs:134
+// CrewCapacityParameter.cs:129
 void CrewCapacityParameter::OnUpdate() {
     if (!L::FlightIsReady(Root()->ContractState(), Contract::State::Active, true)) return;
     Vessel* av = FlightRegistry::ActiveVessel;
@@ -160,23 +160,23 @@ void CrewCapacityParameter::OnUpdate() {
 
 // ---- CrewTraitParameter ---------------------------------------------------------------------------------------------------------------
 
-// CrewTraitParameter.cs:29 targetTraitDisplayName
+// CrewTraitParameter.cs:28 targetTraitDisplayName
 std::string CrewTraitParameter::targetTraitDisplayName() {
     Experience::ExperienceTraitConfig* traitConfig = nullptr;
     if (KerbalRoster::TryGetExperienceTraitConfig(targetTrait, traitConfig)) return traitConfig->Title().value_or("");
     return targetTrait;
 }
-// CrewTraitParameter.cs:46 SpecificVesselSibling
+// CrewTraitParameter.cs:40 SpecificVesselSibling
 SpecificVesselParameter* CrewTraitParameter::SpecificVesselSibling() {
     if (specificVesselSibling == nullptr) specificVesselSibling = Root()->GetParameterT<SpecificVesselParameter>();
     return specificVesselSibling;
 }
 // CrewTraitParameter.cs:48
 CrewTraitParameter::CrewTraitParameter() : targetTrait("Scientist"), targetCount(1) {}
-// CrewTraitParameter.cs:54
+// CrewTraitParameter.cs:48
 CrewTraitParameter::CrewTraitParameter(const std::string& targetTrait_, int targetCount_, const std::string& vesselDescription_)
     : vesselDescription(vesselDescription_), targetTrait(targetTrait_), targetCount(targetCount_) {}
-// CrewTraitParameter.cs:62
+// CrewTraitParameter.cs:55
 std::string CrewTraitParameter::GetHashString() { return I(L::SuperSeed(*Root())) + ID(); }
 
 namespace {
@@ -187,12 +187,12 @@ std::string Lower(std::string s) {
 }
 }  // namespace
 
-// CrewTraitParameter.cs:67
+// CrewTraitParameter.cs:60
 std::string CrewTraitParameter::GetTitle() {
     if (targetCount <= 1) return Fmt("#autoLOC_6001095", {Lower(targetTraitDisplayName()), vesselDescription});
     return Fmt("#autoLOC_283108", {I(targetCount), Lower(targetTraitDisplayName()), vesselDescription});
 }
-// CrewTraitParameter.cs:76
+// CrewTraitParameter.cs:69
 std::string CrewTraitParameter::GetNotes() {
     if (!Root()->IsFinished() && SpecificVesselSibling() != nullptr && SpecificVesselSibling()->targetVessel != nullptr) {
         const int num = L::VesselCrewWithTraitCount(targetTrait, SpecificVesselSibling()->targetVessel);
@@ -202,7 +202,7 @@ std::string CrewTraitParameter::GetNotes() {
     }
     return "";
 }
-// CrewTraitParameter.cs:95
+// CrewTraitParameter.cs:87
 void CrewTraitParameter::OnRegister() {
     SetDisableOnStateChange(false);
     eventsAdded = false;
@@ -214,7 +214,7 @@ void CrewTraitParameter::OnRegister() {
         eventsAdded = true;
     }
 }
-// CrewTraitParameter.cs:111
+// CrewTraitParameter.cs:101
 void CrewTraitParameter::OnUnregister() {
     if (eventsAdded) {
         GE::onPartCouple.Remove(this, &CrewTraitParameter::OnDock);
@@ -223,40 +223,40 @@ void CrewTraitParameter::OnUnregister() {
         GE::onPartDie.Remove(this, &CrewTraitParameter::PartModified);
     }
 }
-// CrewTraitParameter.cs:125
+// CrewTraitParameter.cs:112
 void CrewTraitParameter::OnReset() {
     SetIncomplete();
     dirtyVessel = true;
 }
-// CrewTraitParameter.cs:131
+// CrewTraitParameter.cs:118
 void CrewTraitParameter::VesselModified(Vessel* v) {
     if (v == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// CrewTraitParameter.cs:139
+// CrewTraitParameter.cs:126
 void CrewTraitParameter::PartModified(Part* p) {
     if (p->vessel == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// CrewTraitParameter.cs:147
+// CrewTraitParameter.cs:134
 void CrewTraitParameter::OnDock(GE::FromToAction<Part*, Part*> action) {
     if (action.from->vessel == FlightRegistry::ActiveVessel || action.to->vessel == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// CrewTraitParameter.cs:155
+// CrewTraitParameter.cs:142
 void CrewTraitParameter::CrewModified(Vessel* v) {
     if (v != nullptr && v == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// CrewTraitParameter.cs:163
+// CrewTraitParameter.cs:150
 void CrewTraitParameter::OnSave(ConfigNode& node) {
     node.AddValue("targetTrait", targetTrait);
     node.AddValue("targetCount", static_cast<int32_t>(targetCount));
     node.AddValue("vesselDescription", vesselDescription);
 }
-// CrewTraitParameter.cs:170
+// CrewTraitParameter.cs:157
 void CrewTraitParameter::OnLoad(ConfigNode& node) {
     L::LoadNode(node, "CrewTraitParameter", "targetTrait", targetTrait, std::string("Scientist"));
     L::LoadNode(node, "CrewTraitParameter", "targetCount", targetCount, 1);
     L::LoadNode(node, "CrewTraitParameter", "vesselDescription", vesselDescription, std::string("vessel"));
 }
-// CrewTraitParameter.cs:177
+// CrewTraitParameter.cs:164
 void CrewTraitParameter::OnUpdate() {
     if (!L::FlightIsReady(Root()->ContractState(), Contract::State::Active, true)) return;
     Vessel* av = FlightRegistry::ActiveVessel;
@@ -279,13 +279,13 @@ void CrewTraitParameter::OnUpdate() {
 
 // ---- MobileBaseParameter --------------------------------------------------------------------------------------------------------------
 
-// MobileBaseParameter.cs:21
+// MobileBaseParameter.cs:20
 MobileBaseParameter::MobileBaseParameter() : successCounter(0) {}
-// MobileBaseParameter.cs:26
+// MobileBaseParameter.cs:25
 std::string MobileBaseParameter::GetHashString() { return I(L::SuperSeed(*Root())) + ID(); }
-// MobileBaseParameter.cs:31
+// MobileBaseParameter.cs:30
 std::string MobileBaseParameter::GetTitle() { return Fmt("#autoLOC_7001018"); }
-// MobileBaseParameter.cs:36
+// MobileBaseParameter.cs:35
 void MobileBaseParameter::OnRegister() {
     SetDisableOnStateChange(false);
     if (Root()->ContractState() == Contract::State::Active) {
@@ -296,7 +296,7 @@ void MobileBaseParameter::OnRegister() {
         eventsAdded = true;
     }
 }
-// MobileBaseParameter.cs:52
+// MobileBaseParameter.cs:48
 void MobileBaseParameter::OnUnregister() {
     if (eventsAdded) {
         GE::onPartCouple.Remove(this, &MobileBaseParameter::OnDock);
@@ -305,28 +305,28 @@ void MobileBaseParameter::OnUnregister() {
         GE::onVesselSituationChange.Remove(this, &MobileBaseParameter::ChangeSituation);
     }
 }
-// MobileBaseParameter.cs:66
+// MobileBaseParameter.cs:59
 void MobileBaseParameter::OnReset() {
     SetIncomplete();
     dirtyVessel = true;
 }
-// MobileBaseParameter.cs:72
+// MobileBaseParameter.cs:65
 void MobileBaseParameter::VesselModified(Vessel* v) {
     if (v == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// MobileBaseParameter.cs:80
+// MobileBaseParameter.cs:73
 void MobileBaseParameter::PartModified(Part* p) {
     if (p->vessel == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// MobileBaseParameter.cs:88
+// MobileBaseParameter.cs:81
 void MobileBaseParameter::OnDock(GE::FromToAction<Part*, Part*> action) {
     if (action.from->vessel == FlightRegistry::ActiveVessel || action.to->vessel == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// MobileBaseParameter.cs:96
+// MobileBaseParameter.cs:89
 void MobileBaseParameter::ChangeSituation(GE::HostedFromToAction<Vessel*, Vessel::Situations> action) {
     if (action.host == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// MobileBaseParameter.cs:104
+// MobileBaseParameter.cs:97
 void MobileBaseParameter::OnUpdate() {
     if (!L::FlightIsReady(Root()->ContractState(), Contract::State::Active, true)) return;
     Vessel* av = FlightRegistry::ActiveVessel;
@@ -356,7 +356,7 @@ LocationAndSituationParameter::LocationAndSituationParameter()
 LocationAndSituationParameter::LocationAndSituationParameter(CelestialBody* targetBody_, Vessel::Situations targetSituation_, const std::string& noun_,
                                                              bool finalObjective_)
     : targetBody(targetBody_), targetSituation(targetSituation_), noun(noun_), finalObjective(finalObjective_), successCounter(0) {}
-// LocationAndSituationParameter.cs:46
+// LocationAndSituationParameter.cs:45
 void LocationAndSituationParameter::OnRegister() {
     SetDisableOnStateChange(false);
     if (Root()->ContractState() == Contract::State::Active) {
@@ -365,29 +365,29 @@ void LocationAndSituationParameter::OnRegister() {
         eventsAdded = true;
     }
 }
-// LocationAndSituationParameter.cs:57
+// LocationAndSituationParameter.cs:56
 void LocationAndSituationParameter::OnUnregister() {
     if (eventsAdded) {
         GE::onVesselSOIChanged.Remove(this, &LocationAndSituationParameter::ChangeBody);
         GE::onVesselSituationChange.Remove(this, &LocationAndSituationParameter::ChangeSituation);
     }
 }
-// LocationAndSituationParameter.cs:66
+// LocationAndSituationParameter.cs:65
 void LocationAndSituationParameter::OnReset() {
     SetIncomplete();
     dirtyVessel = true;
 }
-// LocationAndSituationParameter.cs:72
+// LocationAndSituationParameter.cs:71
 void LocationAndSituationParameter::ChangeBody(GE::HostedFromToAction<Vessel*, CelestialBody*> action) {
     if (action.host == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// LocationAndSituationParameter.cs:80
+// LocationAndSituationParameter.cs:79
 void LocationAndSituationParameter::ChangeSituation(GE::HostedFromToAction<Vessel*, Vessel::Situations> action) {
     if (action.host == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// LocationAndSituationParameter.cs:88
+// LocationAndSituationParameter.cs:87
 std::string LocationAndSituationParameter::GetHashString() { return I(L::SuperSeed(*Root())) + ID(); }
-// LocationAndSituationParameter.cs:93
+// LocationAndSituationParameter.cs:92
 std::string LocationAndSituationParameter::GetTitle() {
     if (targetBody == nullptr) return Fmt("#autoLOC_283645", {Planetarium::fetch->Sun->displayName()});
     const std::string flag = I(!finalObjective ? 1 : 0);
@@ -404,21 +404,21 @@ std::string LocationAndSituationParameter::GetTitle() {
         case Vessel::Situations::ORBITING: return Fmt("#autoLOC_7000014", {flag, noun, bn});
     }
 }
-// LocationAndSituationParameter.cs:124
+// LocationAndSituationParameter.cs:121
 void LocationAndSituationParameter::OnSave(ConfigNode& node) {
     node.AddValue("targetBody", static_cast<int32_t>(targetBody->flightGlobalsIndex));
     node.AddValue("targetSituation", dotnet::EnumToString(targetSituation));
     node.AddValue("noun", noun);
     node.AddValue("finalObjective", finalObjective);
 }
-// LocationAndSituationParameter.cs:132
+// LocationAndSituationParameter.cs:129
 void LocationAndSituationParameter::OnLoad(ConfigNode& node) {
     L::LoadNode(node, "LocationAndSituationParameter", "targetBody", targetBody, Planetarium::fetch->Home);
     L::LoadNode(node, "LocationAndSituationParameter", "targetSituation", targetSituation, Vessel::Situations::ORBITING);
     L::LoadNode(node, "LocationAndSituationParameter", "noun", noun, std::string("potato"));
     L::LoadNode(node, "LocationAndSituationParameter", "finalObjective", finalObjective, false);
 }
-// LocationAndSituationParameter.cs:142
+// LocationAndSituationParameter.cs:137
 void LocationAndSituationParameter::OnUpdate() {
     if (!L::FlightIsReady(Root()->ContractState(), Contract::State::Active, true)) return;
     if (dirtyVessel) {
@@ -448,9 +448,9 @@ std::string VesselSystemsParameter::mannedString() {
         case MannedStatus::MANNED: return Fmt("#autoLOC_286380");
     }
 }
-// VesselSystemsParameter.cs:48
+// VesselSystemsParameter.cs:49
 VesselSystemsParameter::VesselSystemsParameter() : requireNew(false), vesselDescription("potato") {}
-// VesselSystemsParameter.cs:56
+// VesselSystemsParameter.cs:57
 VesselSystemsParameter::VesselSystemsParameter(const std::vector<std::string>& checkModuleTypes_, const std::vector<std::string>& checkModuleDescriptions_,
                                                const std::string& vesselDescription_, MannedStatus mannedStatus_, bool requireNew_)
     : requireNew(requireNew_), checkModuleTypes(checkModuleTypes_), checkModuleDescriptions(checkModuleDescriptions_), mannedStatus(mannedStatus_),
@@ -469,12 +469,12 @@ std::string VesselSystemsParameter::GetTitle() {
     if (mannedStatus != MannedStatus::ANY) return Fmt("#autoLOC_286404", {vesselDescription, mannedString()});
     return Fmt("#autoLOC_286407", {vesselDescription});
 }
-// VesselSystemsParameter.cs:90
+// VesselSystemsParameter.cs:92
 std::string VesselSystemsParameter::GetNotes() {
     if (requireNew) return Fmt("#autoLOC_7000009", {mannedString(), vesselDescription, Root()->Agent()->Title()});
     return "";
 }
-// VesselSystemsParameter.cs:99
+// VesselSystemsParameter.cs:101
 void VesselSystemsParameter::OnRegister() {
     SetDisableOnStateChange(false);
     eventsAdded = false;
@@ -485,7 +485,7 @@ void VesselSystemsParameter::OnRegister() {
         eventsAdded = true;
     }
 }
-// VesselSystemsParameter.cs:115
+// VesselSystemsParameter.cs:114
 void VesselSystemsParameter::OnUnregister() {
     if (eventsAdded) {
         GE::onPartCouple.Remove(this, &VesselSystemsParameter::OnDock);
@@ -493,24 +493,24 @@ void VesselSystemsParameter::OnUnregister() {
         GE::onPartDie.Remove(this, &VesselSystemsParameter::PartModified);
     }
 }
-// VesselSystemsParameter.cs:129
+// VesselSystemsParameter.cs:124
 void VesselSystemsParameter::OnReset() {
     SetIncomplete();
     dirtyVessel = true;
 }
-// VesselSystemsParameter.cs:135
+// VesselSystemsParameter.cs:130
 void VesselSystemsParameter::VesselModified(Vessel* v) {
     if (v == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// VesselSystemsParameter.cs:143
+// VesselSystemsParameter.cs:138
 void VesselSystemsParameter::PartModified(Part* p) {
     if (p->vessel == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// VesselSystemsParameter.cs:151
+// VesselSystemsParameter.cs:146
 void VesselSystemsParameter::OnDock(GE::FromToAction<Part*, Part*> action) {
     if (action.from->vessel == FlightRegistry::ActiveVessel || action.to->vessel == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// VesselSystemsParameter.cs:159
+// VesselSystemsParameter.cs:154
 void VesselSystemsParameter::OnSave(ConfigNode& node) {
     node.AddValue("typeString", vesselDescription);
     node.AddValue("mannedStatus", static_cast<int32_t>(mannedStatus));
@@ -519,7 +519,7 @@ void VesselSystemsParameter::OnSave(ConfigNode& node) {
     L::SystemUtilities::SaveNodeList(&node, "checkModuleDescriptions", checkModuleDescriptions);
     if (requireNew) node.AddValue("launchID", launchID);
 }
-// VesselSystemsParameter.cs:171
+// VesselSystemsParameter.cs:167
 void VesselSystemsParameter::OnLoad(ConfigNode& node) {
     L::LoadNode(node, "VesselSystemsParameter", "typeString", vesselDescription, std::string("potato"));
     L::LoadNode(node, "VesselSystemsParameter", "mannedStatus", mannedStatus, MannedStatus::ANY);
@@ -528,7 +528,7 @@ void VesselSystemsParameter::OnLoad(ConfigNode& node) {
     L::SystemUtilities::LoadNodeList(&node, "VesselSystemsParameter", "checkModuleDescriptions", checkModuleDescriptions);
     if (requireNew) L::LoadNode(node, "VesselSystemsParameter", "launchID", launchID, 0u);
 }
-// VesselSystemsParameter.cs:184
+// VesselSystemsParameter.cs:180
 void VesselSystemsParameter::OnUpdate() {
     if (!L::FlightIsReady(Root()->ContractState(), Contract::State::Active, true)) return;
     Vessel* av = FlightRegistry::ActiveVessel;
@@ -548,7 +548,7 @@ void VesselSystemsParameter::OnUpdate() {
     }
     if (State() == ParameterState::Complete && !validVessel) SetIncomplete();
 }
-// VesselSystemsParameter.cs:220
+// VesselSystemsParameter.cs:218
 bool VesselSystemsParameter::isVesselValid(Vessel* v) {
     if (v == nullptr) return false;
     if (!v->IsControllable()) return false;
@@ -567,7 +567,7 @@ PartRequestParameter::PartRequestParameter() : successCounter(0), article("a"), 
     partNames.push_back("part");
     moduleNames.push_back("module");
 }
-// PartRequestParameter.cs:48
+// PartRequestParameter.cs:46
 PartRequestParameter::PartRequestParameter(ConfigNode& requestNode, Vessel* v) : successCounter(0), article("a"), partDescription("part"), vesselDescription("vessel") {
     L::LoadNode(requestNode, "PartRequestParameter", "Article", article, std::string("a"), false);
     L::LoadNode(requestNode, "PartRequestParameter", "PartDescription", partDescription, std::string("part"), false);
@@ -577,14 +577,14 @@ PartRequestParameter::PartRequestParameter(ConfigNode& requestNode, Vessel* v) :
     if (v != nullptr) ScanVesselForExistingParts(v);
     CheckLists();
 }
-// PartRequestParameter.cs:68
+// PartRequestParameter.cs:67
 std::string PartRequestParameter::GetHashString() { return I(L::SuperSeed(*Root())) + ID(); }
-// PartRequestParameter.cs:73
+// PartRequestParameter.cs:72
 std::string PartRequestParameter::GetTitle() {
     if (!existingParts.empty()) return Fmt("#autoLOC_7001087", {partDescription, vesselDescription});
     return Fmt("#autoLOC_7001088", {partDescription, vesselDescription});
 }
-// PartRequestParameter.cs:82
+// PartRequestParameter.cs:81
 void PartRequestParameter::OnRegister() {
     SetDisableOnStateChange(false);
     if (Root()->ContractState() == Contract::State::Active) {
@@ -594,7 +594,7 @@ void PartRequestParameter::OnRegister() {
         eventsAdded = true;
     }
 }
-// PartRequestParameter.cs:95
+// PartRequestParameter.cs:93
 void PartRequestParameter::OnUnregister() {
     if (eventsAdded) {
         GE::onPartCouple.Remove(this, &PartRequestParameter::OnDock);
@@ -602,24 +602,24 @@ void PartRequestParameter::OnUnregister() {
         GE::onPartDie.Remove(this, &PartRequestParameter::PartModified);
     }
 }
-// PartRequestParameter.cs:106
+// PartRequestParameter.cs:103
 void PartRequestParameter::OnReset() {
     SetIncomplete();
     dirtyVessel = true;
 }
-// PartRequestParameter.cs:112
+// PartRequestParameter.cs:109
 void PartRequestParameter::VesselModified(Vessel* v) {
     if (v == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// PartRequestParameter.cs:120
+// PartRequestParameter.cs:117
 void PartRequestParameter::PartModified(Part* p) {
     if (p->vessel == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// PartRequestParameter.cs:128
+// PartRequestParameter.cs:125
 void PartRequestParameter::OnDock(GE::FromToAction<Part*, Part*> action) {
     if (action.from->vessel == FlightRegistry::ActiveVessel || action.to->vessel == FlightRegistry::ActiveVessel) dirtyVessel = true;
 }
-// PartRequestParameter.cs:136
+// PartRequestParameter.cs:133
 void PartRequestParameter::OnSave(ConfigNode& node) {
     node.AddValue("article", article);
     node.AddValue("partDescription", partDescription);
@@ -628,7 +628,7 @@ void PartRequestParameter::OnSave(ConfigNode& node) {
     L::SystemUtilities::SaveNodeList(&node, "moduleNames", moduleNames);
     L::SystemUtilities::SaveNodeList(&node, "existingParts", existingParts);
 }
-// PartRequestParameter.cs:146
+// PartRequestParameter.cs:143
 void PartRequestParameter::OnLoad(ConfigNode& node) {
     L::LoadNode(node, "PartRequestParameter", "article", article, std::string("a"));
     L::LoadNode(node, "PartRequestParameter", "partDescription", partDescription, std::string("part"));
@@ -638,7 +638,7 @@ void PartRequestParameter::OnLoad(ConfigNode& node) {
     L::SystemUtilities::LoadNodeList(&node, "PartRequestParameter", "existingParts", existingParts);
     CheckLists();
 }
-// PartRequestParameter.cs:157
+// PartRequestParameter.cs:154
 void PartRequestParameter::OnUpdate() {
     if (!L::FlightIsReady(Root()->ContractState(), Contract::State::Active, true)) return;
     Vessel* av = FlightRegistry::ActiveVessel;
@@ -658,7 +658,7 @@ void PartRequestParameter::OnUpdate() {
     }
     if (State() == ParameterState::Complete && !validVessel) SetIncomplete();
 }
-// PartRequestParameter.cs:189
+// PartRequestParameter.cs:192
 void PartRequestParameter::CheckLists() {
     if (partNames.empty() && moduleNames.empty()) {
         Root()->RemoveParameter(this);
@@ -675,7 +675,7 @@ std::string DotName(std::string s) {
 bool ListContains(const std::vector<uint32_t>& l, uint32_t v) { return std::find(l.begin(), l.end(), v) != l.end(); }
 }  // namespace
 
-// PartRequestParameter.cs:198
+// PartRequestParameter.cs:201
 bool PartRequestParameter::VesselHasPartRequest(Vessel* v) {
     if (!L::ActiveVesselFallback(v, false)) return false;
     if (v->loaded) {
@@ -713,7 +713,7 @@ bool PartRequestParameter::VesselHasPartRequest(Vessel* v) {
     }
     return false;
 }
-// PartRequestParameter.cs:274
+// PartRequestParameter.cs:276
 void PartRequestParameter::ScanVesselForExistingParts(Vessel* v) {
     if (v->loaded) {
         int count = static_cast<int>(v->Parts().size());
@@ -766,23 +766,23 @@ void PartRequestParameter::ScanVesselForExistingParts(Vessel* v) {
 
 // ---- ResourcePossessionParameter ------------------------------------------------------------------------------------------------------
 
-// ResourcePossessionParameter.cs:24 SpecificVesselSibling
+// ResourcePossessionParameter.cs:25 SpecificVesselSibling
 SpecificVesselParameter* ResourcePossessionParameter::SpecificVesselSibling() {
     if (specificVesselSibling == nullptr) specificVesselSibling = Root()->GetParameterT<SpecificVesselParameter>();
     return specificVesselSibling;
 }
-// ResourcePossessionParameter.cs:26
+// ResourcePossessionParameter.cs:27
 ResourcePossessionParameter::ResourcePossessionParameter()
     : successCounter(0), currentResource(0.0), goalResource(1000.0), resourceName("Matter"), resourceTitle("matter"), vesselName("vessel") {}
-// ResourcePossessionParameter.cs:35
+// ResourcePossessionParameter.cs:37
 ResourcePossessionParameter::ResourcePossessionParameter(const std::string& resourceName_, const std::string& resourceTitle_, const std::string& vesselName_,
                                                          double goalResource_)
     : successCounter(0), currentResource(0.0), goalResource(goalResource_), resourceName(resourceName_), resourceTitle(resourceTitle_), vesselName(vesselName_) {}
-// ResourcePossessionParameter.cs:45
+// ResourcePossessionParameter.cs:47
 std::string ResourcePossessionParameter::GetHashString() { return I(L::SuperSeed(*Root())) + ID(); }
-// ResourcePossessionParameter.cs:50
+// ResourcePossessionParameter.cs:52
 std::string ResourcePossessionParameter::GetTitle() { return Fmt("#autoLOC_284677", {RoundedThousands(goalResource), resourceTitle, vesselName}); }
-// ResourcePossessionParameter.cs:55
+// ResourcePossessionParameter.cs:57
 std::string ResourcePossessionParameter::GetNotes() {
     if (!Root()->IsFinished() && SpecificVesselSibling() != nullptr && SpecificVesselSibling()->targetVessel != nullptr) {
         const double num = L::VesselResourceAmount(resourceName, SpecificVesselSibling()->targetVessel);
@@ -792,25 +792,25 @@ std::string ResourcePossessionParameter::GetNotes() {
     }
     return "";
 }
-// ResourcePossessionParameter.cs:71
+// ResourcePossessionParameter.cs:75
 void ResourcePossessionParameter::OnRegister() { SetDisableOnStateChange(false); }
-// ResourcePossessionParameter.cs:76
+// ResourcePossessionParameter.cs:80
 void ResourcePossessionParameter::OnReset() { SetIncomplete(); }
-// ResourcePossessionParameter.cs:81
+// ResourcePossessionParameter.cs:85
 void ResourcePossessionParameter::OnSave(ConfigNode& node) {
     node.AddValue("goalResource", goalResource);
     node.AddValue("resourceName", resourceName);
     node.AddValue("resourceTitle", resourceTitle);
     node.AddValue("vesselName", vesselName);
 }
-// ResourcePossessionParameter.cs:89
+// ResourcePossessionParameter.cs:93
 void ResourcePossessionParameter::OnLoad(ConfigNode& node) {
     L::LoadNode(node, "ResourcePossessionParameter", "goalResource", goalResource, 1000.0);
     L::LoadNode(node, "ResourcePossessionParameter", "resourceName", resourceName, std::string("Matter"));
     L::LoadNode(node, "ResourcePossessionParameter", "resourceTitle", resourceTitle, std::string("matter"));
     L::LoadNode(node, "ResourcePossessionParameter", "vesselName", vesselName, std::string("vessel"));
 }
-// ResourcePossessionParameter.cs:97
+// ResourcePossessionParameter.cs:101
 void ResourcePossessionParameter::OnUpdate() {
     if (!L::FlightIsReady(Root()->ContractState(), Contract::State::Active, true)) return;
     currentResource = L::VesselResourceAmount(resourceName);
@@ -827,20 +827,20 @@ void ResourcePossessionParameter::OnUpdate() {
 
 // ---- ResourceExtractionParameter ------------------------------------------------------------------------------------------------------
 
-// ResourceExtractionParameter.cs:29
+// ResourceExtractionParameter.cs:30
 ResourceExtractionParameter::ResourceExtractionParameter()
     : targetBody(Planetarium::fetch->Home), successCounter(0), totalHarvested(0.0), goalHarvested(1000.0), resourceName("Matter"), resourceTitle("matter"),
       eventsAdded(false), notifyLevel(0.25f) {}
-// ResourceExtractionParameter.cs:41
+// ResourceExtractionParameter.cs:43
 ResourceExtractionParameter::ResourceExtractionParameter(const std::string& resourceName_, const std::string& resourceTitle_, double goalHarvested_,
                                                          CelestialBody* targetBody_, const std::vector<std::string>& modules_)
     : targetBody(targetBody_), successCounter(0), totalHarvested(0.0), goalHarvested(goalHarvested_), resourceName(resourceName_), resourceTitle(resourceTitle_),
       modules(modules_), eventsAdded(false), notifyLevel(0.25f) {}
-// ResourceExtractionParameter.cs:53
+// ResourceExtractionParameter.cs:56
 std::string ResourceExtractionParameter::GetHashString() { return I(L::SuperSeed(*Root())) + ID(); }
-// ResourceExtractionParameter.cs:58
+// ResourceExtractionParameter.cs:61
 std::string ResourceExtractionParameter::GetTitle() { return Fmt("#autoLOC_284531", {RoundedThousands(goalHarvested), resourceTitle, targetBody->displayName()}); }
-// ResourceExtractionParameter.cs:63
+// ResourceExtractionParameter.cs:66
 void ResourceExtractionParameter::OnRegister() {
     eventsAdded = false;
     if (Root()->ContractState() == Contract::State::Active) {
@@ -848,13 +848,13 @@ void ResourceExtractionParameter::OnRegister() {
         eventsAdded = true;
     }
 }
-// ResourceExtractionParameter.cs:73
+// ResourceExtractionParameter.cs:76
 void ResourceExtractionParameter::OnUnregister() {
     if (eventsAdded) GE::OnResourceConverterOutput.Remove(this, &ResourceExtractionParameter::ResourcesHarvested);
 }
-// ResourceExtractionParameter.cs:81
+// ResourceExtractionParameter.cs:84
 void ResourceExtractionParameter::OnReset() { SetIncomplete(); }
-// ResourceExtractionParameter.cs:86
+// ResourceExtractionParameter.cs:89
 void ResourceExtractionParameter::ResourcesHarvested(PartModule* module, const std::string& resource, double amount) {
     if (!(resource != resourceName) && amount > 0.0 && module != nullptr && module->part != nullptr) {
         Vessel* mv = static_cast<Part*>(module->part)->vessel;
@@ -872,7 +872,7 @@ void ResourceExtractionParameter::ResourcesHarvested(PartModule* module, const s
         }
     }
 }
-// ResourceExtractionParameter.cs:104
+// ResourceExtractionParameter.cs:105
 void ResourceExtractionParameter::OnSave(ConfigNode& node) {
     node.AddValue("targetBody", static_cast<int32_t>(targetBody->flightGlobalsIndex));
     node.AddValue("totalHarvested", totalHarvested);

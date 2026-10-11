@@ -16,14 +16,14 @@ namespace L = Lite;
 
 // ---- VesselDestinationParameter -------------------------------------------------------------------------------------------------------
 
-// VesselDestinationParameter.cs:19
+// VesselDestinationParameter.cs:17
 VesselDestinationParameter::VesselDestinationParameter() : targetBody(Planetarium::fetch->Home), targetType(FlightLog_EntryType::Suborbit) {}
-// VesselDestinationParameter.cs:25
+// VesselDestinationParameter.cs:23
 VesselDestinationParameter::VesselDestinationParameter(CelestialBody* targetBody_, FlightLog_EntryType targetType_)
     : targetBody(targetBody_), targetType(targetType_) {}
-// VesselDestinationParameter.cs:31
+// VesselDestinationParameter.cs:29
 std::string VesselDestinationParameter::GetHashString() { return I(L::SuperSeed(*Root())) + ID(); }
-// VesselDestinationParameter.cs:36
+// VesselDestinationParameter.cs:34
 std::string VesselDestinationParameter::GetTitle() {
     switch (targetType) {
         default: return Fmt("#autoLOC_286272");
@@ -34,7 +34,7 @@ std::string VesselDestinationParameter::GetTitle() {
         case FlightLog_EntryType::Suborbit: return Fmt("#autoLOC_286264", {targetBody->displayName()});
     }
 }
-// VesselDestinationParameter.cs:56
+// VesselDestinationParameter.cs:53
 void VesselDestinationParameter::OnRegister() {
     SetDisableOnStateChange(false);
     if (Root()->ContractState() == Contract::State::Active) {
@@ -43,28 +43,28 @@ void VesselDestinationParameter::OnRegister() {
         eventsAdded = true;
     }
 }
-// VesselDestinationParameter.cs:68
+// VesselDestinationParameter.cs:64
 void VesselDestinationParameter::OnUnregister() {
     if (eventsAdded) {
         GE::OnFlightLogRecorded.Remove(this, &VesselDestinationParameter::CheckFlightLog);
         GE::onVesselWasModified.Remove(this, &VesselDestinationParameter::CheckFlightLog);
     }
 }
-// VesselDestinationParameter.cs:79
+// VesselDestinationParameter.cs:73
 void VesselDestinationParameter::OnReset() {
     if (L::FlightIsReady(true)) CheckFlightLog(FlightRegistry::ActiveVessel);
 }
-// VesselDestinationParameter.cs:87
+// VesselDestinationParameter.cs:81
 void VesselDestinationParameter::OnSave(ConfigNode& node) {
     node.AddValue("targetBody", static_cast<int32_t>(targetBody->flightGlobalsIndex));
     node.AddValue("targetType", dotnet::EnumToString(targetType));
 }
-// VesselDestinationParameter.cs:93
+// VesselDestinationParameter.cs:87
 void VesselDestinationParameter::OnLoad(ConfigNode& node) {
     L::LoadNode(node, "VesselDestinationParameter", "targetBody", targetBody, Planetarium::fetch->Home);
     L::LoadNode(node, "VesselDestinationParameter", "targetType", targetType, FlightLog_EntryType::Suborbit);
 }
-// VesselDestinationParameter.cs:99
+// VesselDestinationParameter.cs:93
 void VesselDestinationParameter::CheckFlightLog(Vessel* v) {
     if (static_cast<int>(v->vesselType) <= static_cast<int>(VesselType::SpaceObject)) return;
     VesselTripLog trip = VesselTripLog::FromVessel(*v);
@@ -84,15 +84,15 @@ void VesselDestinationParameter::CheckFlightLog(Vessel* v) {
 
 // ---- KerbalDestinationParameter -------------------------------------------------------------------------------------------------------
 
-// KerbalDestinationParameter.cs:21
+// KerbalDestinationParameter.cs:19
 KerbalDestinationParameter::KerbalDestinationParameter()
     : targetBody(Planetarium::fetch->Home), targetType(FlightLog_EntryType::Suborbit), kerbalName("Jebediah Kerman") {}
-// KerbalDestinationParameter.cs:29
+// KerbalDestinationParameter.cs:26
 KerbalDestinationParameter::KerbalDestinationParameter(CelestialBody* targetBody_, FlightLog_EntryType targetType_, const std::string& kerbalName_)
     : targetBody(targetBody_), targetType(targetType_), kerbalName(kerbalName_) {}
-// KerbalDestinationParameter.cs:37
+// KerbalDestinationParameter.cs:33
 std::string KerbalDestinationParameter::GetHashString() { return I(L::SuperSeed(*Root())) + ID(); }
-// KerbalDestinationParameter.cs:42
+// KerbalDestinationParameter.cs:38
 std::string KerbalDestinationParameter::GetTitle() {
     switch (targetType) {
         default: return Fmt("#autoLOC_283280");
@@ -103,7 +103,7 @@ std::string KerbalDestinationParameter::GetTitle() {
         case FlightLog_EntryType::Suborbit: return Fmt("#autoLOC_283272", {targetBody->displayName()});
     }
 }
-// KerbalDestinationParameter.cs:62
+// KerbalDestinationParameter.cs:57
 void KerbalDestinationParameter::OnRegister() {
     SetDisableOnStateChange(true);
     if (Root()->ContractState() == Contract::State::Active && !CheckFlightLogs()) {
@@ -111,23 +111,23 @@ void KerbalDestinationParameter::OnRegister() {
         eventsAdded = true;
     }
 }
-// KerbalDestinationParameter.cs:74
+// KerbalDestinationParameter.cs:67
 void KerbalDestinationParameter::OnUnregister() {
     if (eventsAdded) GE::OnFlightLogRecorded.Remove(this, &KerbalDestinationParameter::CheckFlightLog);
 }
-// KerbalDestinationParameter.cs:82
+// KerbalDestinationParameter.cs:75
 void KerbalDestinationParameter::OnSave(ConfigNode& node) {
     node.AddValue("targetBody", static_cast<int32_t>(targetBody->flightGlobalsIndex));
     node.AddValue("targetType", dotnet::EnumToString(targetType));
     node.AddValue("kerbalName", kerbalName);
 }
-// KerbalDestinationParameter.cs:90
+// KerbalDestinationParameter.cs:82
 void KerbalDestinationParameter::OnLoad(ConfigNode& node) {
     L::LoadNode(node, "KerbalDestinationParameter", "targetBody", targetBody, Planetarium::fetch->Home);
     L::LoadNode(node, "KerbalDestinationParameter", "targetType", targetType, FlightLog_EntryType::Suborbit);
     L::LoadNode(node, "KerbalDestinationParameter", "kerbalName", kerbalName, std::string("Jebediah Kerman"));
 }
-// KerbalDestinationParameter.cs:98
+// KerbalDestinationParameter.cs:89
 void KerbalDestinationParameter::CheckFlightLog(Vessel* v) {
     const std::vector<std::shared_ptr<ProtoCrewMember>> vesselCrew = v->GetVesselCrew();
     int count = static_cast<int>(vesselCrew.size());
@@ -142,7 +142,7 @@ void KerbalDestinationParameter::CheckFlightLog(Vessel* v) {
         }
     }
 }
-// KerbalDestinationParameter.cs:122
+// KerbalDestinationParameter.cs:113
 bool KerbalDestinationParameter::CheckFlightLogs() {
     std::shared_ptr<ProtoCrewMember> protoCrewMember;
     Game* game = SaveEnvironment::Current().currentGame;
@@ -168,15 +168,15 @@ bool KerbalDestinationParameter::CheckFlightLogs() {
 
 // ---- KerbalGeeAdventureParameter ------------------------------------------------------------------------------------------------------
 
-// KerbalGeeAdventureParameter.cs:15
+// KerbalGeeAdventureParameter.cs:14
 KerbalGeeAdventureParameter::KerbalGeeAdventureParameter() : kerbalName("Jebediah Kerman") {}
-// KerbalGeeAdventureParameter.cs:20
+// KerbalGeeAdventureParameter.cs:19
 KerbalGeeAdventureParameter::KerbalGeeAdventureParameter(const std::string& kerbalName_) : kerbalName(kerbalName_) { allowPartialFailure = true; }
-// KerbalGeeAdventureParameter.cs:26
+// KerbalGeeAdventureParameter.cs:25
 std::string KerbalGeeAdventureParameter::GetHashString() { return I(L::SuperSeed(*Root())) + ID(); }
-// KerbalGeeAdventureParameter.cs:31
+// KerbalGeeAdventureParameter.cs:30
 std::string KerbalGeeAdventureParameter::GetTitle() { return Fmt("#autoLOC_283371", {L::StringUtilities::ShortKerbalName(kerbalName)}); }
-// KerbalGeeAdventureParameter.cs:36
+// KerbalGeeAdventureParameter.cs:35
 void KerbalGeeAdventureParameter::OnRegister() {
     SetDisableOnStateChange(false);
     if (Root()->ContractState() == Contract::State::Active) {
@@ -185,18 +185,18 @@ void KerbalGeeAdventureParameter::OnRegister() {
         eventsAdded = true;
     }
 }
-// KerbalGeeAdventureParameter.cs:48
+// KerbalGeeAdventureParameter.cs:46
 void KerbalGeeAdventureParameter::OnUnregister() {
     if (eventsAdded) {
         GE::onCrewKilled.Remove(this, &KerbalGeeAdventureParameter::OnCrewKilled);
         GE::onKerbalPassedOutFromGeeForce.Remove(this, &KerbalGeeAdventureParameter::OnKerbalPassedOut);
     }
 }
-// KerbalGeeAdventureParameter.cs:58
+// KerbalGeeAdventureParameter.cs:55
 void KerbalGeeAdventureParameter::OnSave(ConfigNode& node) { node.AddValue("kerbalName", kerbalName); }
-// KerbalGeeAdventureParameter.cs:63
+// KerbalGeeAdventureParameter.cs:60
 void KerbalGeeAdventureParameter::OnLoad(ConfigNode& node) { L::LoadNode(node, "KerbalGeeAdventureParameter", "kerbalName", kerbalName, std::string("Jebediah Kerman")); }
-// KerbalGeeAdventureParameter.cs:68
+// KerbalGeeAdventureParameter.cs:65
 void KerbalGeeAdventureParameter::OnCrewKilled(EventReport* evt) {
     if (evt->sender == kerbalName) {
         if (state != ParameterState::Failed) {
@@ -240,7 +240,7 @@ void KerbalTourParameter::OnRegister() {
         eventsAdded = true;
     }
 }
-// KerbalTourParameter.cs:56
+// KerbalTourParameter.cs:54
 void KerbalTourParameter::OnUnregister() {
     if (eventsAdded) {
         GE::onCrewKilled.Remove(this, &KerbalTourParameter::OnCrewKilled);
@@ -248,17 +248,17 @@ void KerbalTourParameter::OnUnregister() {
         GE::onKerbalInactiveChange.Remove(this, &KerbalTourParameter::OnKerbalInactiveChange);
     }
 }
-// KerbalTourParameter.cs:69
+// KerbalTourParameter.cs:64
 void KerbalTourParameter::OnSave(ConfigNode& node) {
     node.AddValue("kerbalName", kerbalName);
     node.AddValue("kerbalGender", dotnet::EnumToString(kerbalGender));
 }
-// KerbalTourParameter.cs:75
+// KerbalTourParameter.cs:70
 void KerbalTourParameter::OnLoad(ConfigNode& node) {
     L::LoadNode(node, "KerbalTourParameter", "kerbalName", kerbalName, std::string("Jebediah Kerman"));
     L::LoadNode(node, "KerbalTourParameter", "kerbalGender", kerbalGender, ProtoCrewMember_Gender::Male);
 }
-// KerbalTourParameter.cs:81
+// KerbalTourParameter.cs:76
 void KerbalTourParameter::OnCrewKilled(EventReport* evt) {
     if (evt->sender == kerbalName) {
         if (state != ParameterState::Failed) {
@@ -269,7 +269,7 @@ void KerbalTourParameter::OnCrewKilled(EventReport* evt) {
         }
     }
 }
-// KerbalTourParameter.cs:94
+// KerbalTourParameter.cs:92
 void KerbalTourParameter::OnParameterStateChange(ContractParameter* p) {
     (void)p;
     if (AllChildParametersComplete()) {
@@ -277,7 +277,7 @@ void KerbalTourParameter::OnParameterStateChange(ContractParameter* p) {
         if (protoCrewMember != nullptr && protoCrewMember->type() == ProtoCrewMember_KerbalType::Tourist) protoCrewMember->hasToured = true;
     }
 }
-// KerbalTourParameter.cs:107
+// KerbalTourParameter.cs:104
 void KerbalTourParameter::OnVesselRecovered(ProtoVessel* v, KSP::UI::Screens::MissionRecoveryDialog* mrd, float x) {
     (void)mrd;
     (void)x;
@@ -288,7 +288,7 @@ void KerbalTourParameter::OnVesselRecovered(ProtoVessel* v, KSP::UI::Screens::Mi
         if (c == member) contains = true;
     if (contains && AllChildParametersComplete()) SetComplete();
 }
-// KerbalTourParameter.cs:114
+// KerbalTourParameter.cs:112
 void KerbalTourParameter::OnKerbalInactiveChange(ProtoCrewMember* pcm, bool oldValue, bool newValue) {
     (void)oldValue;
     if (ContractDefsLite::B("Tour", "", "FailOnInactive") && newValue && pcm->name().value_or("") == kerbalName) {
@@ -297,7 +297,7 @@ void KerbalTourParameter::OnKerbalInactiveChange(ProtoCrewMember* pcm, bool oldV
         SetFailed();
     }
 }
-// KerbalTourParameter.cs:127
+// KerbalTourParameter.cs:125
 std::string KerbalTourParameter::GetMessageFailed() {
     if (kerbalInactive) return Fmt("#autoLOC_283554", {Title(), kerbalName});
     return ContractParameter::GetMessageFailed();

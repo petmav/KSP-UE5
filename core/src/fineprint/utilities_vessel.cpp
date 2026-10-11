@@ -1115,9 +1115,9 @@ Part* FindFirstPartOrModuleName(const std::vector<std::string>* partNames, const
 
 // ------------------------------------------------------------------------------------------------------------------ Survey definitions
 
-// SurveyDefinitionParameter.cs:40
+// SurveyDefinitionParameter.cs:39
 SurveyDefinitionParameter::SurveyDefinitionParameter() { Definition = nullptr; }
-// SurveyDefinitionParameter.cs:47
+// SurveyDefinitionParameter.cs:46
 SurveyDefinitionParameter::SurveyDefinitionParameter(const SurveyDefinitionParameter& that)
     : Experiment(that.Experiment), Description(that.Description), Texture(that.Texture), AllowGround(that.AllowGround), AllowLow(that.AllowLow),
       AllowHigh(that.AllowHigh), AllowWater(that.AllowWater), AllowVacuum(that.AllowVacuum), CrewRequired(that.CrewRequired), EVARequired(that.EVARequired),
@@ -1127,7 +1127,7 @@ SurveyDefinitionParameter::SurveyDefinitionParameter(const SurveyDefinitionParam
     while (count-- > 0) Tech.push_back(that.Tech[static_cast<size_t>(count)]);
     if (EVARequired) CrewRequired = true;
 }
-// SurveyDefinitionParameter.cs:73
+// SurveyDefinitionParameter.cs:75
 SurveyDefinitionParameter::SurveyDefinitionParameter(SurveyDefinition* definition, const ConfigNode* node) {
     if (definition != nullptr && node != nullptr && !(node->name != "PARAM")) {
         ConfigNode* n = const_cast<ConfigNode*>(node);
@@ -1151,12 +1151,12 @@ SurveyDefinitionParameter::SurveyDefinitionParameter(SurveyDefinition* definitio
     }
 }
 
-// SurveyDefinition.cs:30
+// SurveyDefinition.cs:29
 SurveyDefinition::SurveyDefinition()
     : FundsAdvance(DefF("Survey", "Funds", "DefaultAdvance")), FundsReward(DefF("Survey", "Funds", "DefaultReward")),
       FundsFailure(DefF("Survey", "Funds", "DefaultFailure")), ScienceReward(DefF("Survey", "Science", "DefaultReward")),
       ReputationReward(DefF("Survey", "Reputation", "DefaultReward")), ReputationFailure(DefF("Survey", "Reputation", "DefaultFailure")) {}
-// SurveyDefinition.cs:36
+// SurveyDefinition.cs:35
 SurveyDefinition::SurveyDefinition(const SurveyDefinition& that)
     : DataName(that.DataName), AnomalyName(that.AnomalyName), ResultName(that.ResultName), FundsAdvance(that.FundsAdvance), FundsReward(that.FundsReward),
       FundsFailure(that.FundsFailure), ScienceReward(that.ScienceReward), ReputationReward(that.ReputationReward), ReputationFailure(that.ReputationFailure),
@@ -1166,7 +1166,7 @@ SurveyDefinition::SurveyDefinition(const SurveyDefinition& that)
         Parameters.push_back(std::make_unique<SurveyDefinitionParameter>(*that.Parameters[static_cast<size_t>(count)]));
     }
 }
-// SurveyDefinition.cs:56
+// SurveyDefinition.cs:55
 SurveyDefinition::SurveyDefinition(const ConfigNode* node)
     : FundsAdvance(DefF("Survey", "Funds", "DefaultAdvance")), FundsReward(DefF("Survey", "Funds", "DefaultReward")),
       FundsFailure(DefF("Survey", "Funds", "DefaultFailure")), ScienceReward(DefF("Survey", "Science", "DefaultReward")),

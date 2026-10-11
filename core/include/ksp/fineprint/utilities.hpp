@@ -161,36 +161,36 @@ bool ResearchedValidContractObjectives(std::vector<std::string> objectiveTypes, 
 
 // ---- VesselUtilities (VesselUtilities.cs) ---------------------------------------------------------------------------------------------------
 // ActiveVesselFallback, GetPartName and VesselHasPartName are declared in fineprint_lite.hpp (WP-37).
-int HighestPodCapacity();                                                                             // :15
-bool VesselHasModuleName(const std::string& moduleName, Vessel* v = nullptr);                         // :96
-double VesselResourceAmount(const std::string& resourceName, Vessel* v = nullptr);                    // :135
-bool VesselHasAnyParts(const std::vector<std::string>* partList, Vessel* v = nullptr);                // :171
-bool VesselHasAnyModules(const std::vector<std::string>* moduleList, Vessel* v = nullptr);            // :216
-bool VesselHasAnyPartsOrModules(const std::vector<std::string>* partList, const std::vector<std::string>* moduleList, Vessel* v = nullptr);  // :267
-int VesselPartAndModuleCount(const std::vector<std::string>& partList, const std::vector<std::string>& moduleList, Vessel* v = nullptr);    // :346
-std::vector<uint32_t> GetPartIDList(Vessel* v = nullptr);                                             // :414
-Vessel* FindVesselWithPartIDs(const std::vector<uint32_t>* partIDs);                                  // :440
-VesselType ClassifyVesselType(Vessel* v = nullptr, bool useVesselType = true);                        // :484
-std::vector<std::pair<Vessel*, VesselType>> ClassifyAllVesselsAt(CelestialBody* body, bool useVesselType = true);  // :540 (Dictionary: insertion order)
+int HighestPodCapacity();                                                                             // (C++ addition)
+bool VesselHasModuleName(const std::string& moduleName, Vessel* v = nullptr);                         // (C++ addition)
+double VesselResourceAmount(const std::string& resourceName, Vessel* v = nullptr);                    // (C++ addition)
+bool VesselHasAnyParts(const std::vector<std::string>* partList, Vessel* v = nullptr);                // (C++ addition)
+bool VesselHasAnyModules(const std::vector<std::string>* moduleList, Vessel* v = nullptr);            // (C++ addition)
+bool VesselHasAnyPartsOrModules(const std::vector<std::string>* partList, const std::vector<std::string>* moduleList, Vessel* v = nullptr);  // (C++ addition)
+int VesselPartAndModuleCount(const std::vector<std::string>& partList, const std::vector<std::string>& moduleList, Vessel* v = nullptr);    // (C++ addition)
+std::vector<uint32_t> GetPartIDList(Vessel* v = nullptr);                                             // (C++ addition)
+Vessel* FindVesselWithPartIDs(const std::vector<uint32_t>* partIDs);                                  // (C++ addition)
+VesselType ClassifyVesselType(Vessel* v = nullptr, bool useVesselType = true);                        // (C++ addition)
+std::vector<std::pair<Vessel*, VesselType>> ClassifyAllVesselsAt(CelestialBody* body, bool useVesselType = true);  // (C++ addition) (Dictionary: insertion order)
 std::vector<Vessel*> SpecificVesselClassAt(CelestialBody* body, VesselType vesselType, bool requireOwned = false, bool excludeActive = false,
-                                           bool useVesselType = true);                                // :559
+                                           bool useVesselType = true);                                // (C++ addition)
 std::vector<Vessel*> SpecificVesselClassAt(Vessel::Situations situation, CelestialBody* body, VesselType vesselType, bool requireOwned = false,
-                                           bool excludeActive = false, bool useVesselType = true);  // :578
-bool VesselHasWheelsOnGround(Vessel* v, const std::vector<WheelType>& validWheelTypes);               // :597
-FlightBand GetFlightBand(double threshold, Vessel* v = nullptr);                                      // :686
-int ActualCrewCapacity(Vessel* v = nullptr);                                                          // :727
-bool VesselLaunchedAfterID(uint32_t launchID, Vessel* v, std::vector<std::string> ignore);            // :753
-bool VesselIsOwned(Vessel* v = nullptr);                                                              // :821
-void DiscoverVessel(Vessel* v = nullptr);                                                             // :840
-uint32_t VesselID(Vessel* v = nullptr);                                                               // :866
-std::vector<std::shared_ptr<ProtoCrewMember>> VesselCrewWithTrait(const std::string& trait, Vessel* v = nullptr);  // :883
-int VesselCrewWithTraitCount(const std::string& trait, Vessel* v = nullptr);                          // :901
-int CrewTraitMissionAvailability(const std::string& trait, CelestialBody* targetBody = nullptr, Vessel* excludeVessel = nullptr);  // :920
+                                           bool excludeActive = false, bool useVesselType = true);  // (C++ addition)
+bool VesselHasWheelsOnGround(Vessel* v, const std::vector<WheelType>& validWheelTypes);               // (C++ addition)
+FlightBand GetFlightBand(double threshold, Vessel* v = nullptr);                                      // (C++ addition)
+int ActualCrewCapacity(Vessel* v = nullptr);                                                          // (C++ addition)
+bool VesselLaunchedAfterID(uint32_t launchID, Vessel* v, std::vector<std::string> ignore);            // (C++ addition)
+bool VesselIsOwned(Vessel* v = nullptr);                                                              // (C++ addition)
+void DiscoverVessel(Vessel* v = nullptr);                                                             // (C++ addition)
+uint32_t VesselID(Vessel* v = nullptr);                                                               // (C++ addition)
+std::vector<std::shared_ptr<ProtoCrewMember>> VesselCrewWithTrait(const std::string& trait, Vessel* v = nullptr);  // (C++ addition)
+int VesselCrewWithTraitCount(const std::string& trait, Vessel* v = nullptr);                          // (C++ addition)
+int CrewTraitMissionAvailability(const std::string& trait, CelestialBody* targetBody = nullptr, Vessel* excludeVessel = nullptr);  // (C++ addition)
 Orbit GenerateAdjustedVesselOrbit(double minimumDeviation, double modificationLength, int numberOfModifications, KSPRandom* generator = nullptr,
-                                  Vessel* v = nullptr);                                               // :1001
-bool VesselAtOrbit(Orbit* o, double deviationWindow, Vessel* v = nullptr);                            // :1114
-double VesselAtOrbitAccuracy(Orbit* o, double deviationWindow, Vessel* v = nullptr);                  // :1212
-Part* FindFirstPartOrModuleName(const std::vector<std::string>* partNames, const std::vector<std::string>* moduleNames);  // :1248
+                                  Vessel* v = nullptr);                                               // (C++ addition)
+bool VesselAtOrbit(Orbit* o, double deviationWindow, Vessel* v = nullptr);                            // (C++ addition)
+double VesselAtOrbitAccuracy(Orbit* o, double deviationWindow, Vessel* v = nullptr);                  // (C++ addition)
+Part* FindFirstPartOrModuleName(const std::vector<std::string>* partNames, const std::vector<std::string>* moduleNames);  // (C++ addition)
 
 
 // ---- SurveyDefinition / SurveyDefinitionParameter (FinePrint/Utilities/SurveyDefinition*.cs) ------------------------------------------------
@@ -198,44 +198,44 @@ class SurveyDefinition;
 // SurveyDefinitionParameter.cs:6
 class SurveyDefinitionParameter {
 public:
-    std::string Experiment = "experiment";           // :8
-    std::string Description = "Perform a survey";    // :10
-    std::string Texture = "default";                 // :12
-    bool AllowGround = true;                         // :14
-    bool AllowLow = true;                            // :16
-    bool AllowHigh = true;                           // :18
-    bool AllowWater = true;                          // :20
-    bool AllowVacuum = true;                         // :22
-    bool CrewRequired = false;                       // :24
-    bool EVARequired = false;                        // :26
-    float FundsMultiplier = 1.0f;                    // :28
-    float ScienceMultiplier = 1.0f;                  // :30
-    float ReputationMultiplier = 1.0f;               // :32
-    std::vector<std::string> Tech;                   // :34
-    const ConfigNode* Node = nullptr;                // :36
-    SurveyDefinition* Definition = nullptr;          // :38
-    SurveyDefinitionParameter();                                          // :40
-    SurveyDefinitionParameter(const SurveyDefinitionParameter& that);     // :47
-    SurveyDefinitionParameter(SurveyDefinition* definition, const ConfigNode* node);  // :73
+    std::string Experiment = "experiment";           // :7
+    std::string Description = "Perform a survey";    // :9
+    std::string Texture = "default";                 // :11
+    bool AllowGround = true;                         // :13
+    bool AllowLow = true;                            // :15
+    bool AllowHigh = true;                           // :17
+    bool AllowWater = true;                          // :19
+    bool AllowVacuum = true;                         // :21
+    bool CrewRequired = false;                       // :23
+    bool EVARequired = false;                        // :25
+    float FundsMultiplier = 1.0f;                    // :27
+    float ScienceMultiplier = 1.0f;                  // :29
+    float ReputationMultiplier = 1.0f;               // :31
+    std::vector<std::string> Tech;                   // :33
+    const ConfigNode* Node = nullptr;                // :35
+    SurveyDefinition* Definition = nullptr;          // :37
+    SurveyDefinitionParameter();                                          // :39
+    SurveyDefinitionParameter(const SurveyDefinitionParameter& that);     // :46
+    SurveyDefinitionParameter(SurveyDefinition* definition, const ConfigNode* node);  // :75
 };
 
 // SurveyDefinition.cs:6
 class SurveyDefinition {
 public:
-    std::string DataName = "generic";                // :8
-    std::string AnomalyName = "anomalies";           // :10
-    std::string ResultName = "report";               // :12
-    float FundsAdvance = 0.0f;                       // :14 (ContractDefs.Survey.Funds.DefaultAdvance)
-    float FundsReward = 0.0f;                        // :16
-    float FundsFailure = 0.0f;                       // :18
-    float ScienceReward = 0.0f;                      // :20
-    float ReputationReward = 0.0f;                   // :22
-    float ReputationFailure = 0.0f;                  // :24
-    std::vector<std::unique_ptr<SurveyDefinitionParameter>> Parameters;  // :26
-    const ConfigNode* Node = nullptr;                // :28
-    SurveyDefinition();                              // :30
-    SurveyDefinition(const SurveyDefinition& that);  // :36
-    SurveyDefinition(const ConfigNode* node);        // :56
+    std::string DataName = "generic";                // :7
+    std::string AnomalyName = "anomalies";           // :9
+    std::string ResultName = "report";               // :11
+    float FundsAdvance = 0.0f;                       // :13 (ContractDefs.Survey.Funds.DefaultAdvance)
+    float FundsReward = 0.0f;                        // :15
+    float FundsFailure = 0.0f;                       // :17
+    float ScienceReward = 0.0f;                      // :19
+    float ReputationReward = 0.0f;                   // :21
+    float ReputationFailure = 0.0f;                  // :23
+    std::vector<std::unique_ptr<SurveyDefinitionParameter>> Parameters;  // :25
+    const ConfigNode* Node = nullptr;                // :27
+    SurveyDefinition();                              // :29
+    SurveyDefinition(const SurveyDefinition& that);  // :35
+    SurveyDefinition(const ConfigNode* node);        // :55
     SurveyDefinition& operator=(const SurveyDefinition&) = delete;
 };
 // ContractDefs.cs:1359 SurveyDefinitions (a fresh copy of the loaded definitions, in node order)

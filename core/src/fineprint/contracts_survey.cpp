@@ -45,7 +45,7 @@ CelestialBody* Home() { return Planetarium::fetch->Home; }
 bool Has(const std::vector<std::string>& l, const std::string& s) { return std::find(l.begin(), l.end(), s) != l.end(); }
 }  // namespace
 
-// SurveyContract.cs:877
+// SurveyContract.cs:873
 double SurveyContract::ParamRange(Contract::ContractPrestige prestige, CelestialBody* body, FlightBand band) {
     double num = 10000.0;
     switch (prestige) {
@@ -66,7 +66,7 @@ double SurveyContract::ParamRange(Contract::ContractPrestige prestige, Celestial
     return result;
 }
 
-// SurveyContract.cs:907
+// SurveyContract.cs:905
 void SurveyContract::RandomizeNearKSC(Contract::ContractPrestige prestigeLevel, bool allowWater, KSPRandom* generator) {
     std::unique_ptr<KSPRandom> own;
     if (generator == nullptr) {
@@ -96,7 +96,7 @@ void SurveyContract::RandomizeNearKSC(Contract::ContractPrestige prestigeLevel, 
     centerLongitude = waypoint.longitude;
 }
 
-// SurveyContract.cs:790
+// SurveyContract.cs:792
 std::vector<std::unique_ptr<SurveyDefinition>> SurveyContract::PossibleDefinitions() {
     std::vector<std::unique_ptr<SurveyDefinition>> surveyDefinitions = Lite::SurveyDefinitions();
     int count = static_cast<int>(surveyDefinitions.size());
@@ -139,7 +139,7 @@ std::vector<std::unique_ptr<SurveyDefinition>> SurveyContract::PossibleDefinitio
     return surveyDefinitions;
 }
 
-// SurveyContract.cs:660
+// SurveyContract.cs:676
 std::vector<std::pair<Vessel*, std::vector<std::string>>> SurveyContract::CachePossibleVessels(CelestialBody* body,
                                                                                                std::vector<std::unique_ptr<SurveyDefinition>>& originalDefinitions) {
     std::vector<std::pair<Vessel*, std::vector<std::string>>> list;
@@ -222,7 +222,7 @@ std::vector<std::pair<Vessel*, std::vector<std::string>>> SurveyContract::CacheP
     return list;
 }
 
-// SurveyContract.cs:610
+// SurveyContract.cs:628
 void SurveyContract::SetupParam(int paramIndex, const std::pair<SurveyDefinitionParameter*, FlightBand>& pair, int totalParameters, Vessel* contextualVessel) {
     (void)contextualVessel;
     SurveyDefinitionParameter* key = pair.first;
@@ -262,7 +262,7 @@ void SurveyContract::SetupParam(int paramIndex, const std::pair<SurveyDefinition
     }
 }
 
-// SurveyContract.cs:39
+// SurveyContract.cs:38
 bool SurveyContract::Generate() {
     const int progressLevel = PU::GetProgressLevel();
     int num = 0;
@@ -547,26 +547,26 @@ bool SurveyContract::Generate() {
     SetReputation(Round(f32store(fx(surveyDefinition2->ReputationReward) * fx(num8))), Round(f32store(fx(surveyDefinition2->ReputationFailure) * fx(num8))));
     return true;
 }
-// SurveyContract.cs:492
+// SurveyContract.cs:518
 std::string SurveyContract::GetHashString() { return I(Lite::SuperSeed(*this)); }
-// SurveyContract.cs:497
+// SurveyContract.cs:523
 std::string SurveyContract::GetTitle() {
     if (focusedSurvey) return Fmt("#autoLOC_281262", {dataName, locationName});
     return Fmt("#autoLOC_281264", {dataName, locationName});
 }
-// SurveyContract.cs:506
+// SurveyContract.cs:532
 std::string SurveyContract::GetDescription() {
     return TextGen::GenerateBackStories(TypeName(), Agent()->Title(), targetBody->displayName(), targetBody->displayName(), MissionSeed(), true, false, true);
 }
-// SurveyContract.cs:511
+// SurveyContract.cs:537
 std::string SurveyContract::GetSynopsys() {
     if (focusedSurvey) return Fmt("#autoLOC_281275", {targetBody->displayName(), dataName, resultName});
     if (contextual) return Fmt("#autoLOC_281278", {vesselName, targetBody->displayName(), dataName, anomalyName, cardinalName, resultName});
     return Fmt("#autoLOC_281280", {dataName, anomalyName, locationName, resultName});
 }
-// SurveyContract.cs:526
+// SurveyContract.cs:550
 std::string SurveyContract::MessageCompleted() { return Fmt("#autoLOC_281285", {dataName, resultName}); }
-// SurveyContract.cs:531
+// SurveyContract.cs:555
 std::string SurveyContract::GetNotes() {
     std::string text;
     if (Lite::CelestialUtilities::IsGasGiant(targetBody)) {
@@ -576,7 +576,7 @@ std::string SurveyContract::GetNotes() {
     }
     return "";
 }
-// SurveyContract.cs:546
+// SurveyContract.cs:570
 void SurveyContract::OnSave(ConfigNode& node) {
     node.AddValue("targetBody", static_cast<int32_t>(targetBody->flightGlobalsIndex));
     node.AddValue("centerLatitude", centerLatitude);
@@ -593,7 +593,7 @@ void SurveyContract::OnSave(ConfigNode& node) {
         node.AddValue("cardinalName", cardinalName);
     }
 }
-// SurveyContract.cs:565
+// SurveyContract.cs:589
 void SurveyContract::OnLoad(ConfigNode& node) {
     Lite::LoadNode(node, "SurveyContract", "targetBody", targetBody, Home());
     Lite::LoadNode(node, "SurveyContract", "centerLatitude", centerLatitude, 0.0);
@@ -610,7 +610,7 @@ void SurveyContract::OnLoad(ConfigNode& node) {
         Lite::LoadNode(node, "SurveyContract", "cardinalName", cardinalName, std::string("cardinal"));
     }
 }
-// SurveyContract.cs:590
+// SurveyContract.cs:608
 bool SurveyContract::MeetRequirements() {
     if (!ProgressTracking::Instance()->NodeComplete({"FirstLaunch"})) return false;
     const int progressLevel = PU::GetProgressLevel();

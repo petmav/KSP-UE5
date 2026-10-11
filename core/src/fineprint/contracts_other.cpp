@@ -67,12 +67,12 @@ bool Has(const std::vector<CelestialBody*>& l, CelestialBody* b) { return std::f
 
 // ================================================================================================================================ SatelliteContract
 
-// SatelliteContract.cs:603
+// SatelliteContract.cs:632
 bool SatelliteContract::AreSatellitesUnlocked() {
     if (ProbeCoresUnlocked() && Lite::ResearchedValidContractObjectives({"Antenna", "Generator"})) return true;
     return false;
 }
-// SatelliteContract.cs:611
+// SatelliteContract.cs:634
 bool SatelliteContract::ProbeCoresUnlocked() {
     if (Lite::FinePrintEnvironment::probeCoresUnlocked) return Lite::FinePrintEnvironment::probeCoresUnlocked();
     PartLoader* loader = PartLoader::Instance();
@@ -90,7 +90,7 @@ bool SatelliteContract::ProbeCoresUnlocked() {
              availablePart->partPrefab->fields.CrewCapacity != 0);
     return true;
 }
-// SatelliteContract.cs:39
+// SatelliteContract.cs:38
 bool SatelliteContract::Generate() {
     if (!AreSatellitesUnlocked()) return false;
     int num = 0;
@@ -286,7 +286,7 @@ bool SatelliteContract::Generate() {
     }
     return false;
 }
-// SatelliteContract.cs:288
+// SatelliteContract.cs:307
 std::string SatelliteContract::GetHashString() { return I(Lite::SuperSeed(*this)); }
 
 namespace {
@@ -304,7 +304,7 @@ std::string StatName(CelestialBody* body) {
 std::string MolniyaName() { return Fmt("#autoLOC_7001203"); }
 }  // namespace
 
-// SatelliteContract.cs:293
+// SatelliteContract.cs:312
 std::string SatelliteContract::GetTitle() {
     using SPM = SatellitePlacementMode;
     const std::string bn = targetBody->displayName();
@@ -336,7 +336,7 @@ std::string SatelliteContract::GetTitle() {
             return Fmt("#autoLOC_279938", {bn});
     }
 }
-// SatelliteContract.cs:371
+// SatelliteContract.cs:391
 std::string SatelliteContract::GetDescription() {
     std::string topic = "Satellite";
     const std::string text = (placementMode == SatellitePlacementMode::NETWORK || placementMode == SatellitePlacementMode::NETWORKADJUST) ? "Network" : "Orbit";
@@ -352,7 +352,7 @@ std::string SatelliteContract::GetDescription() {
     if (placementMode == SatellitePlacementMode::ADJUST || placementMode == SatellitePlacementMode::NETWORKADJUST) topic = Lite::StringUtilities::SpecificVesselName(*this);
     return TextGen::GenerateBackStories(TypeName(), Agent()->Title(), topic, targetBody->displayName(), MissionSeed(), true, true, true);
 }
-// SatelliteContract.cs:402
+// SatelliteContract.cs:423
 std::string SatelliteContract::GetSynopsys() {
     using SPM = SatellitePlacementMode;
     const std::string bn = targetBody->displayName();
@@ -383,7 +383,7 @@ std::string SatelliteContract::GetSynopsys() {
             return Fmt("#autoLOC_280033", {bn});
     }
 }
-// SatelliteContract.cs:480
+// SatelliteContract.cs:502
 std::string SatelliteContract::MessageCompleted() {
     using SPM = SatellitePlacementMode;
     const std::string bn = targetBody->displayName();
@@ -415,21 +415,21 @@ std::string SatelliteContract::MessageCompleted() {
             return Fmt("#autoLOC_280095", {bn});
     }
 }
-// SatelliteContract.cs:558
+// SatelliteContract.cs:581
 void SatelliteContract::OnSave(ConfigNode& node) {
     node.AddValue("targetBody", static_cast<int32_t>(targetBody->flightGlobalsIndex));
     node.AddValue("deviation", deviation);
     node.AddValue("orbitType", static_cast<int32_t>(orbitType));
     node.AddValue("placementMode", static_cast<int32_t>(placementMode));
 }
-// SatelliteContract.cs:565
+// SatelliteContract.cs:589
 void SatelliteContract::OnLoad(ConfigNode& node) {
     Lite::LoadNode(node, "SatelliteContract", "targetBody", targetBody, Home());
     Lite::LoadNode(node, "SatelliteContract", "deviation", deviation, 10.0);
     Lite::LoadNode(node, "SatelliteContract", "orbitType", orbitType, OrbitType::RANDOM);
     Lite::LoadNode(node, "SatelliteContract", "placementMode", placementMode, SatellitePlacementMode::NEW);
 }
-// SatelliteContract.cs:572
+// SatelliteContract.cs:597
 bool SatelliteContract::MeetRequirements() {
     if (!ProgressTracking::Instance()->NodeComplete({Home()->name(), "Orbit"})) return false;
     if (static_cast<int>(GameVariables::Instance->GetOrbitDisplayMode(ScenarioUpgradeableFacilities::GetFacilityLevel(SpaceCenterFacility::TrackingStation))) <
@@ -437,19 +437,19 @@ bool SatelliteContract::MeetRequirements() {
         return false;
     return true;
 }
-// SatelliteContract.cs:588
+// SatelliteContract.cs:615
 void SatelliteContract::OnAccepted() {
     auto* parameter = GetParameterT<VesselSystemsParameter>();
     if (parameter != nullptr && parameter->requireNew) parameter->launchID = SaveEnvironment::Current().currentGame->launchID;
 }
-// SatelliteContract.cs:596
+// SatelliteContract.cs:624
 void SatelliteContract::OnFinished() {
     auto* parameter = GetParameterT<SpecificOrbitParameter>();
     auto* parameter2 = GetParameterT<SpecificVesselParameter>();
     if (parameter != nullptr) parameter->CleanupRenderer();
     if (parameter2 != nullptr) parameter2->CleanupWaypoints();
 }
-// SatelliteContract.cs:627
+// SatelliteContract.cs:658
 void SatelliteContract::pickEasy() {
     if (generator != nullptr) {
         const int num = generator->Next(0, 101);
@@ -461,7 +461,7 @@ void SatelliteContract::pickEasy() {
             setOrbitType(OrbitType::EQUATORIAL, altitudeFactor);
     }
 }
-// SatelliteContract.cs:646
+// SatelliteContract.cs:678
 void SatelliteContract::pickMedium() {
     if (generator != nullptr) {
         const int num = generator->Next(0, 101);
@@ -473,7 +473,7 @@ void SatelliteContract::pickMedium() {
             setOrbitType(OrbitType::SYNCHRONOUS, altitudeFactor);
     }
 }
-// SatelliteContract.cs:665
+// SatelliteContract.cs:698
 void SatelliteContract::pickHard() {
     if (generator != nullptr) {
         const int num = generator->Next(0, 101);
@@ -489,7 +489,7 @@ void SatelliteContract::pickHard() {
             setOrbitType(OrbitType::STATIONARY, altitudeFactor);
     }
 }
-// SatelliteContract.cs:692
+// SatelliteContract.cs:726
 void SatelliteContract::setOrbitType(OrbitType targetType, double altitudeFactor_) {
     if (targetBody == nullptr) return;
     switch (targetType) {
@@ -543,7 +543,7 @@ void SatelliteContract::setOrbitType(OrbitType targetType, double altitudeFactor
         default: orbitType = targetType; break;
     }
 }
-// SatelliteContract.cs:790
+// SatelliteContract.cs:825
 bool SatelliteContract::PrestigeAppropriateOrbitType(OrbitType ot) {
     switch (ot) {
         default: return true;
@@ -553,14 +553,14 @@ bool SatelliteContract::PrestigeAppropriateOrbitType(OrbitType ot) {
         case OrbitType::STATIONARY: return Prestige() >= ContractPrestige::Significant;
     }
 }
-// SatelliteContract.cs:804
+// SatelliteContract.cs:840
 int SatelliteContract::NetworkSatelliteCount(CelestialBody* body) {
     const int seed = (391 + ScenarioContractEvents::GameSeed()) * 23 + body->flightGlobalsIndex;
     const int minValue = M::Min(DI("Satellite", "", "NetworkMinimum"), DI("Satellite", "", "NetworkMaximum"));
     const int maxValue = M::Max(DI("Satellite", "", "NetworkMinimum"), DI("Satellite", "", "NetworkMaximum")) + 1;
     return KSPRandom(seed).Next(minValue, maxValue);
 }
-// SatelliteContract.cs:811
+// SatelliteContract.cs:848
 bool SatelliteContract::CheckSatelliteNetwork(int networkCount, std::vector<Vessel*>& possibleSatellites, OrbitType orbitType_, std::unique_ptr<Orbit>& orbit,
                                               double& stationaryLongitude, Vessel*& adjustVessel, Vessel* startVessel) {
     if (Lite::ActiveVesselFallback(startVessel) && networkCount > 1) {
@@ -627,7 +627,7 @@ double HomeSma() { return BodyOrbit(HomeBody())->semiMajorAxis; }
 std::string CometTypeName(Vessel& v) { return Lite::FinePrintEnvironment::cometTypeName ? Lite::FinePrintEnvironment::cometTypeName(v) : std::string(); }
 }  // namespace
 
-// CometSampleContract.cs:247
+// CometSampleContract.cs:227
 bool CometSampleContract::ValidCometAvailable() {
     std::vector<Vessel*> discoveredComets = CometManagerSeam::discoveredComets ? CometManagerSeam::discoveredComets() : std::vector<Vessel*>();
     if (discoveredComets.empty()) return false;
@@ -653,7 +653,7 @@ bool CometSampleContract::ValidCometAvailable() {
     cometName = discoveredComets[static_cast<size_t>(index)]->vesselName;
     return true;
 }
-// CometSampleContract.cs:29
+// CometSampleContract.cs:27
 bool CometSampleContract::Generate() {
     if (!ValidCometAvailable()) return false;
     int num = 0;
@@ -693,20 +693,20 @@ bool CometSampleContract::Generate() {
     }
     return false;
 }
-// CometSampleContract.cs:105
+// CometSampleContract.cs:93
 void CometSampleContract::OnRegister() {
     GE::onVesselPersistentIdChanged.Add(this, &CometSampleContract::VesselIdChanged);
     GE::onVesselRename.Add(this, &CometSampleContract::OnVesselRename);
     GE::OnDiscoverableObjectExpired.Add(this, &CometSampleContract::OnDiscoverableObjectExpired);
     scienceParameter = dynamic_cast<CometScienceParameter*>(GetParameterOfType("CometScienceParameter"));
 }
-// CometSampleContract.cs:113
+// CometSampleContract.cs:101
 void CometSampleContract::OnUnregister() {
     GE::onVesselPersistentIdChanged.Remove(this, &CometSampleContract::VesselIdChanged);
     GE::onVesselRename.Remove(this, &CometSampleContract::OnVesselRename);
     GE::OnDiscoverableObjectExpired.Remove(this, &CometSampleContract::OnDiscoverableObjectExpired);
 }
-// CometSampleContract.cs:121
+// CometSampleContract.cs:108
 void CometSampleContract::OnVesselRename(GE::HostedFromToAction<Vessel*, std::string> hostedFromTo) {
     if (hostedFromTo.host != nullptr) {
         if (scienceParameter == nullptr) scienceParameter = dynamic_cast<CometScienceParameter*>(GetParameterOfType("CometScienceParameter"));
@@ -716,7 +716,7 @@ void CometSampleContract::OnVesselRename(GE::HostedFromToAction<Vessel*, std::st
         }
     }
 }
-// CometSampleContract.cs:134
+// CometSampleContract.cs:124
 void CometSampleContract::OnDiscoverableObjectExpired(Vessel* v) {
     if (scienceParameter == nullptr) scienceParameter = dynamic_cast<CometScienceParameter*>(GetParameterOfType("CometScienceParameter"));
     if (scienceParameter == nullptr || !scienceParameter->ScienceDataCollected()) {
@@ -724,19 +724,19 @@ void CometSampleContract::OnDiscoverableObjectExpired(Vessel* v) {
         if (v == vessel) Fail();
     }
 }
-// CometSampleContract.cs:149
+// CometSampleContract.cs:140
 void CometSampleContract::VesselIdChanged(uint32_t oldId, uint32_t newId) {
     if (cometPersistentId == oldId) cometPersistentId = newId;
 }
-// CometSampleContract.cs:167
+// CometSampleContract.cs:158
 std::string CometSampleContract::GetHashString() { return I(Lite::SuperSeed(*this)); }
-// CometSampleContract.cs:172
+// CometSampleContract.cs:163
 std::string CometSampleContract::GetTitle() { return Fmt("#autoLOC_8012043", {cometName}); }
-// CometSampleContract.cs:177
+// CometSampleContract.cs:168
 std::string CometSampleContract::GetDescription() {
     return TextGen::GenerateBackStories("CometSample", Agent()->Title(), cometName, Fmt("#autoLOC_6002299"), MissionSeed(), false, false, false);
 }
-// CometSampleContract.cs:182
+// CometSampleContract.cs:173
 std::string CometSampleContract::GetSynopsys() {
     Vessel* vessel = FindVessel(cometPersistentId);
     if (vessel != nullptr) {
@@ -747,21 +747,21 @@ std::string CometSampleContract::GetSynopsys() {
     }
     return Fmt("#autoLOC_8012044", {cometName});
 }
-// CometSampleContract.cs:219
+// CometSampleContract.cs:199
 std::string CometSampleContract::MessageCompleted() { return Fmt("#autoLOC_8012046", {cometName}); }
-// CometSampleContract.cs:224
+// CometSampleContract.cs:204
 void CometSampleContract::OnLoad(ConfigNode& node) {
     node.TryGetValue("cometName", cometName);
     node.TryGetValue("cometPersistentId", cometPersistentId);
     node.TryGetValue("scienceSubjectId", scienceSubjectId);
 }
-// CometSampleContract.cs:231
+// CometSampleContract.cs:211
 void CometSampleContract::OnSave(ConfigNode& node) {
     node.AddValue("cometName", cometName);
     node.AddValue("cometPersistentId", cometPersistentId);
     node.AddValue("scienceSubjectId", scienceSubjectId);
 }
-// CometSampleContract.cs:238
+// CometSampleContract.cs:218
 bool CometSampleContract::MeetRequirements() {
     if (PU::GetBodiesProgress(ProgressType::LANDING, true, true, MannedStatus::ANY, [](CelestialBody* cb) { return cb != Home(); }).size() == 0) return false;
     return true;
@@ -779,13 +779,13 @@ std::string TourismContract::TouristNamesJoined() const {
     for (const std::string& t : tourists) list.push_back(Lite::StringUtilities::ShortKerbalName(t));
     return Lite::StringUtilities::ThisThisAndThat(list);
 }
-// TourismContract.cs:69
+// TourismContract.cs:70
 std::shared_ptr<ProtoCrewMember> TourismContract::GetKerbal(const std::string& name) {
     Game* game = SaveEnvironment::Current().currentGame;
     if (game->CrewRoster->Exists(name)) return (*game->CrewRoster)[name];
     return nullptr;
 }
-// TourismContract.cs:671
+// TourismContract.cs:606
 void TourismContract::GetContractSubject() {
     if (tourists.size() > 1) {
         contractSubject = "^p";
@@ -797,7 +797,7 @@ void TourismContract::GetContractSubject() {
     else
         contractSubject = "^m";
 }
-// TourismContract.cs:539
+// TourismContract.cs:473
 std::vector<CelestialBody*> TourismContract::RandomReachedBodyGrouping(const std::vector<CelestialBody*>& reachedBodies, KSPRandom* generator) {
     std::unique_ptr<KSPRandom> own;
     if (generator == nullptr) {
@@ -820,7 +820,7 @@ std::vector<CelestialBody*> TourismContract::RandomReachedBodyGrouping(const std
     }
     return list2;
 }
-// TourismContract.cs:482
+// TourismContract.cs:413
 std::vector<CelestialBody*> TourismContract::PossibleBodies(KSPRandom* generator) {
     std::unique_ptr<KSPRandom> own;
     if (generator == nullptr) {
@@ -841,7 +841,7 @@ std::vector<CelestialBody*> TourismContract::PossibleBodies(KSPRandom* generator
     }
     return list2;
 }
-// TourismContract.cs:507
+// TourismContract.cs:437
 std::vector<FlightLog_EntryType> TourismContract::PossibleSituations(CelestialBody* body) {
     std::vector<FlightLog_EntryType> list;
     if (body == Home()) {
@@ -857,7 +857,7 @@ std::vector<FlightLog_EntryType> TourismContract::PossibleSituations(CelestialBo
     }
     return list;
 }
-// TourismContract.cs:450
+// TourismContract.cs:379
 std::vector<TourismContract::Itinerary> TourismContract::BuildPossibleItineraries(KSPRandom* generator) {
     std::unique_ptr<KSPRandom> own;
     if (generator == nullptr) {
@@ -881,7 +881,7 @@ std::vector<TourismContract::Itinerary> TourismContract::BuildPossibleItinerarie
     }
     return list;
 }
-// TourismContract.cs:569
+// TourismContract.cs:506
 TourismContract::Itinerary TourismContract::WeightedItineraryChoice(const std::vector<Itinerary>& itineraryChoices, KSPRandom* generator) {
     std::unique_ptr<KSPRandom> own;
     if (generator == nullptr) {
@@ -903,7 +903,7 @@ TourismContract::Itinerary TourismContract::WeightedItineraryChoice(const std::v
     }
     return list[static_cast<size_t>(generator->Next(0, static_cast<int>(list.size())))];
 }
-// TourismContract.cs:78
+// TourismContract.cs:79
 bool TourismContract::Generate() {
     int num = 0;
     int num2 = 0;
@@ -1006,25 +1006,25 @@ bool TourismContract::Generate() {
     }
     return false;
 }
-// TourismContract.cs:290
+// TourismContract.cs:236
 std::string TourismContract::GetHashString() { return I(Lite::SuperSeed(*this)); }
-// TourismContract.cs:295
+// TourismContract.cs:241
 std::string TourismContract::GetTitle() {
     if (isGeeAdventure) return Fmt("#autoLOC_7000002", {I(TouristCount())});
     return Fmt("#autoLOC_7000003", {I(TouristCount()), contractSubject, I(SingleDestination() ? 1 : 0), I(homeDestinations ? 1 : 0)});
 }
-// TourismContract.cs:304
+// TourismContract.cs:250
 std::string TourismContract::GetDescription() {
     const std::string fullKerbalName = TouristCount() <= 0 ? "#autoLOC_7000019" : FirstTourist();
     return TextGen::GenerateBackStories(TypeName(), Agent()->Title(), Lite::StringUtilities::ShortKerbalName(fullKerbalName), "#autoLOC_7000020", MissionSeed(), true, true, true);
 }
-// TourismContract.cs:310
+// TourismContract.cs:256
 std::string TourismContract::GetSynopsys() {
     const std::string text = TouristCount() > 1 ? TouristNamesJoined() : FirstTourist();
     if (isGeeAdventure) return Fmt("#autoLOC_7000000", {text, I(TouristCount()), contractSubject});
     return Fmt("#autoLOC_7000001", {text, I(TouristCount()), preposition, contractSubject});
 }
-// TourismContract.cs:322
+// TourismContract.cs:266
 std::string TourismContract::GetNotes() {
     if (isGeeAdventure) return "";
     std::string text;
@@ -1034,32 +1034,32 @@ std::string TourismContract::GetNotes() {
     if (Scene() == GameScenes::SPACECENTER) text += "\n";
     return text;
 }
-// TourismContract.cs:348
+// TourismContract.cs:285
 std::string TourismContract::MessageCompleted() {
     const std::string text = TouristCount() > 1 ? TouristNamesJoined() : FirstTourist();
     if (isGeeAdventure) return Fmt("#autoLOC_7000005", {text, contractSubject});
     return Fmt("#autoLOC_7000006", {text});
 }
-// TourismContract.cs:359
+// TourismContract.cs:295
 std::string TourismContract::MessageFailed() { return Fmt("#autoLOC_7000007", {I(static_cast<int>(tourists.size()))}); }
-// TourismContract.cs:364
+// TourismContract.cs:300
 std::string TourismContract::MessageCancelled() {
     const std::string text = TouristCount() > 1 ? TouristNamesJoined() : FirstTourist();
     return Fmt("#autoLOC_7003400", {text, contractSubject});
 }
-// TourismContract.cs:370
+// TourismContract.cs:306
 std::string TourismContract::MessageDeadlineExpired() {
     const std::string text = TouristCount() > 1 ? TouristNamesJoined() : FirstTourist();
     return Fmt("#autoLOC_7000008", {text, contractSubject});
 }
-// TourismContract.cs:376
+// TourismContract.cs:312
 void TourismContract::OnSave(ConfigNode& node) {
     if (!preposition.empty()) node.AddValue("preposition", preposition);
     node.AddValue("homeDestinations", homeDestinations);
     node.AddValue("isGeeAdventure", isGeeAdventure);
     Lite::SystemUtilities::SaveNodeList(&node, "tourists", tourists);
 }
-// TourismContract.cs:388
+// TourismContract.cs:323
 void TourismContract::OnLoad(ConfigNode& node) {
     Lite::LoadNode(node, "TourismContract", "preposition", preposition, std::string("of the solar system"));
     Lite::LoadNode(node, "TourismContract", "homeDestinations", homeDestinations, false);
@@ -1067,12 +1067,12 @@ void TourismContract::OnLoad(ConfigNode& node) {
     Lite::SystemUtilities::LoadNodeList(&node, "TourismContract", "tourists", tourists);
     GetContractSubject();
 }
-// TourismContract.cs:398
+// TourismContract.cs:332
 bool TourismContract::MeetRequirements() {
     if (!ProgressTracking::Instance()->NodeComplete({"ReachedSpace"})) return false;
     return true;
 }
-// TourismContract.cs:407
+// TourismContract.cs:341
 std::vector<CelestialBody*> TourismContract::WeightBodies() {
     std::vector<CelestialBody*> list;
     std::vector<ContractParameter*> all;
@@ -1088,7 +1088,7 @@ std::vector<CelestialBody*> TourismContract::WeightBodies() {
     }
     return list;
 }
-// TourismContract.cs:433
+// TourismContract.cs:364
 void TourismContract::OnAccepted() {
     int count = static_cast<int>(tourists.size());
     while (count-- > 0) {
@@ -1100,7 +1100,7 @@ void TourismContract::OnAccepted() {
         }
     }
 }
-// TourismContract.cs:596
+// TourismContract.cs:533
 void TourismContract::ClearKerbalsSoft() {
     int count = static_cast<int>(tourists.size());
     while (count-- > 0) {
@@ -1113,12 +1113,12 @@ void TourismContract::ClearKerbalsSoft() {
         }
     }
 }
-// TourismContract.cs:618 / :623 / :628 / :633
+// TourismContract.cs:553 / :623 / :628 / :633
 void TourismContract::OnCancelled() { ClearKerbalsSoft(); }
 void TourismContract::OnDeadlineExpired() { ClearKerbalsSoft(); }
 void TourismContract::OnFailed() { ClearKerbalsSoft(); }
 void TourismContract::OnFinished() { ClearKerbalsSoft(); }
-// TourismContract.cs:638
+// TourismContract.cs:573
 void TourismContract::ClearKerbalsHard() {
     int count = static_cast<int>(tourists.size());
     while (count-- > 0) {
@@ -1126,12 +1126,12 @@ void TourismContract::ClearKerbalsHard() {
         if (kerbal != nullptr) SaveEnvironment::Current().currentGame->CrewRoster->Remove(kerbal->name().value_or(""));
     }
 }
-// TourismContract.cs:651 / :656 / :661 / :666
+// TourismContract.cs:586 / :656 / :661 / :666
 void TourismContract::OnGenerateFailed() { ClearKerbalsHard(); }
 void TourismContract::OnWithdrawn() { ClearKerbalsHard(); }
 void TourismContract::OnDeclined() { ClearKerbalsHard(); }
 void TourismContract::OnOfferExpired() { ClearKerbalsHard(); }
-// TourismContract.cs:688
+// TourismContract.cs:624
 std::string TourismContract::Pluralize(const std::string& single, const std::string& plural) {
     if (TouristCount() != 1) return plural;
     return single;
