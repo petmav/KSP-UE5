@@ -47,6 +47,8 @@ add_executable(kspcore_tests
     test_serenity.cpp
     test_fineprint.cpp
     test_space_center.cpp
+    test_missions.cpp
+    test_missions_runtime.cpp
     test_input.cpp
     test_input_flight.cpp
     test_input_devices.cpp
