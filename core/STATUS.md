@@ -4123,7 +4123,7 @@ Not ported (documented, scene / GUI only; owners): `DestroyOnSceneSwitch`, `DoNo
 
 ### Verification
 
-Windows MSVC RelWithDebInfo (`core/build` deleted, `run_tests.ps1 -Fresh`, main `13750b33` merged): 34/34 ctest, `unit` 576 doctest cases / 936,215 assertions (WP-42: 10 cases / 1,044; WP-36 `test_progress.cpp` 31 cases / 36,940, +12 assertions from the RecoveryWorld seam checks); configure 2.7 s, build 188.7 s, test 296.8 s. LINUX_PLACEHOLDER
+Windows MSVC RelWithDebInfo (`core/build` deleted, `run_tests.ps1 -Fresh`, main `13750b33` merged): 34/34 ctest, `unit` 576 doctest cases / 936,215 assertions (WP-42: 10 cases / 1,044; WP-36 `test_progress.cpp` 31 cases / 36,940, +12 assertions from the RecoveryWorld seam checks); configure 2.7 s, build 188.7 s, test 296.8 s. Linux clang (WSL, `run_tests.sh -f`, shared machine under contention): 34/34 ctest, configure 14 s, build 309 s, test 4,265 s; `kspcore_tests -tc='WP-42*'` 10 cases / 1,044 assertions (same as Windows). The full Linux unit totals were not read (ctest hides them and a second 70-minute run was not started); by the known 16-assertion platform gap (wpfix5 item 1) they are expected to be 576 cases, about 936,199 assertions. gcc was not run.
 `check_cites.py` exact mode: 0 mismatches over `src/space_center/*.cpp` (226 citations).
 
 ## Small fixes 2026-10-11 (wave 5, branch `wpfix5`, from main `7199d110`)
