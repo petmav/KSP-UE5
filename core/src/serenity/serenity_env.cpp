@@ -1,6 +1,9 @@
 // WP-53: SerenityEnvironment (include/ksp/serenity/serenity_env.hpp)
 #include "ksp/serenity/serenity_env.hpp"
 
+#include "ksp/serenity/deployed_science.hpp"
+#include "ksp/serenity/roc.hpp"
+
 namespace ksp::Expansions::Serenity {
 
 void SerenityEnvironment::Reset() {
@@ -20,3 +23,12 @@ void SerenityEnvironment::Reset() {
 }
 
 }  // namespace ksp::Expansions::Serenity
+
+namespace ksp {
+
+void RegisterSerenityScenarioModules() {
+    Expansions::Serenity::DeployedScience::Runtime::DeployedScience::Register();
+    ROCScenario::Register();
+}
+
+}  // namespace ksp

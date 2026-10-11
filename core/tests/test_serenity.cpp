@@ -2924,3 +2924,27 @@ TEST_CASE("WP-53 DeployedScience.DeRegisterCluster retypes the other parts' vess
     ds.DeRegisterCluster(12345u);  // unknown id: nothing happens
     CHECK(ds.DeployedScienceClusters().Count() == 1);
 }
+
+TEST_CASE("WP-53 scenario registration: DeployedScience and ROCScenario are created by the ScenarioModuleFactory") {
+    Clean53 clean;
+    SaveEnvironment::Reset();
+    InstallSerenity();
+    RegisterSerenityScenarioModules();
+    std::unique_ptr<ScenarioModule> a = ScenarioModuleFactory::Create("DeployedScience");
+    REQUIRE(a != nullptr);
+    CHECK(dynamic_cast<RT::DeployedScience*>(a.get()) != nullptr);
+    CHECK(a->ClassName() == "DeployedScience");
+    std::unique_ptr<ScenarioModule> b = ScenarioModuleFactory::Create("ROCScenario");
+    REQUIRE(b != nullptr);
+    auto* roc = dynamic_cast<ROCScenario*>(b.get());
+    REQUIRE(roc != nullptr);
+    CHECK(ROCScenario::Instance == nullptr);  // sic: never assigned
+    roc->Start();
+    CHECK(!roc->destroyed);
+    SaveEnvironment::Current().SetStockExpansionInstalled("Serenity", false);
+    roc->Start();
+    CHECK(roc->destroyed);
+    SaveEnvironment::Current().SetStockExpansionInstalled("Serenity", true);
+    a.reset();
+    RT::DeployedScience::Instance = nullptr;
+}

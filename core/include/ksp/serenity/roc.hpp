@@ -371,8 +371,8 @@ public:
     static void Register();
 };
 
-namespace detail {
-void RegisterRocScenario();
-}
+// registers the ScenarioModule types DeployedScience and ROCScenario with the ScenarioModuleFactory (the host calls it with the other
+// Register*ScenarioModules functions); the contract types are added by Expansions::Serenity::Contracts::Install()
+void RegisterSerenityScenarioModules();
 
 }  // namespace ksp
