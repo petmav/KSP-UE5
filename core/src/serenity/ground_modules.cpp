@@ -662,7 +662,9 @@ std::string ModuleGroundSciencePart::GetInfo() {
         text += "\n";
         text += Localizer::Format("#autoLOC_8004190", {Localizer::Format("#autoLOC_8002235"), ""}) + "\n";
         text += Localizer::Format("#autoLOC_8004190", {Localizer::Format("#autoLOC_6006033"), std::to_string(produced)}) + "\n";
-        std::shared_ptr<Experience::ExperienceSystemConfig> cfgs = SaveEnvironment::Current().experienceConfigs;
+        SaveEnvironment& senv = SaveEnvironment::Current();
+        if (!senv.experienceConfigs) senv.experienceConfigs = Experience::ExperienceSystemConfig::StockBuiltIn();  // GameDatabase.Instance.ExperienceConfigs
+        std::shared_ptr<Experience::ExperienceSystemConfig> cfgs = senv.experienceConfigs;
         if (cfgs) {
             const std::vector<std::string> traitsNamesWithEffect = cfgs->GetTraitsNamesWithEffect("DeployedSciencePowerSkill");
             Experience::ExperienceTrait trait;

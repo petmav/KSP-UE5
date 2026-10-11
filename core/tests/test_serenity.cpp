@@ -28,6 +28,8 @@
 #include "ksp/contracts/contracts.hpp"
 #include "ksp/contracts/serenity_contracts.hpp"
 #include "ksp/dotnet/random.hpp"
+#include "ksp/kerbals/experience.hpp"
+#include "ksp/unity/mathf.hpp"
 #include "ksp/save/game_parameters.hpp"
 #include "ksp/save/crew.hpp"
 #include "ksp/database/game_data.hpp"
@@ -2280,4 +2282,488 @@ TEST_CASE("WP-53 Serenity contract parameters: science events complete CollectDe
         CHECK(p->State() == KC::ParameterState::Complete);
         CHECK(raw->ContractState() == KC::Contract::State::Completed);
     }
+}
+
+// =============================================================================================================================
+// Seismic experiment through the cluster, comm boosters, module info text, sun tracking, ControlledBase
+
+TEST_CASE("WP-53 seismic sensor: a ground impact on the same body feeds the seismic experiment (parts, velocity, distance curve, delayed processing)") {
+    Clean53 clean;
+    WorldSer w;
+    // the Serenity seismic experiment is not in the mirror's ScienceDefs: a copy of the real temperatureScan under its id (fixture)
+    auto prior = ScienceEnvironment::getConfigNodes;
+    std::shared_ptr<ConfigNode> synth;
+    ScienceEnvironment::getConfigNodes = [&](std::string_view t) {
+        std::vector<ConfigNode*> r = prior(t);
+        if (t == "EXPERIMENT_DEFINITION") {
+            if (!synth) {
+                for (ConfigNode* n : r)
+                    if (n->GetValue("id") == std::optional<std::string>("temperatureScan")) synth = n->CreateCopy();
+                REQUIRE(synth != nullptr);
+                synth->SetValue("id", "deployedSeismicSensor");
+            }
+            r.push_back(synth.get());
+        }
+        return r;
+    };
+    ResearchAndDevelopment::ResetStatics();
+    ResearchAndDevelopment rd;
+    rd.Awake();
+    ConfigNode rdEmpty("ResearchAndDevelopment");
+    rd.OnLoad(rdEmpty);
+    RT::DeployedScience ds;
+    ds.Awake();
+    ConfigNode empty("SCENARIO");
+    ds.OnLoad(empty);
+
+    Vessel* A = w.Mk("mk1pod.v2", 8001, {{"ModuleGroundExpControl", {{"deployedOnGround", "True"}, {"powerUnitsProduced", "6"}, {"powerUnitsRequired", "1"}}}});
+    Vessel* B = w.Mk("mk1pod.v2", 8002,
+                     {{"ModuleGroundExperiment", {{"experimentId", "deployedSeismicSensor"}, {"deployedOnGround", "True"}, {"powerUnitsRequired", "1"}, {"ScienceModifierRate", "100"}}}},
+                     Vector3f(5.0f, 0.0f, 0.0f));
+    auto* ctrl = WorldSer::Mod<ModuleGroundExpControl>(*A->parts[0], "ModuleGroundExpControl");
+    auto* seis = WorldSer::Mod<ModuleGroundExperiment>(*B->parts[0], "ModuleGroundExperiment");
+    // distanceCurve [KSPField] FloatCurve: full strength at the sensor, zero at one body radius
+    FloatCurve curve;
+    curve.Add(0.0f, 1.0f);
+    curve.Add(0.01f, 0.25f);
+    curve.Add(0.1f, 0.0f);
+    seis->Set<FloatCurve>("distanceCurve", curve);
+    A->latitude = 10.0;
+    A->longitude = 20.0;
+    ctrl->Start();
+    seis->Start();
+    seis->OnStart(StartState::Landed);
+    ctrl->OnStart(StartState::Landed);
+    w.Frames(8);
+    REQUIRE(ds.DeployedScienceClusters().Count() == 1);
+    RT::DeployedScienceCluster* cl = ds.DeployedScienceClusters()[8001u];
+    RT::SerenityBehaviour::RunPendingStarts();
+    RT::DeployedSciencePart* sensor = RT::DeployedScienceExtensions::GetExperiment(cl->DeployedScienceParts, RT::DeployedScience::SeismicExperimentId);
+    REQUIRE(sensor != nullptr);
+    RT::DeployedScienceExperiment* exp = sensor->Experiment;
+    REQUIRE(exp != nullptr);
+    REQUIRE(exp->subject != nullptr);
+    CHECK(cl->IsPowered());
+    // the curve was handed to the experiment at spawn
+    CHECK_F32(exp->distanceCurve.Evaluate(0.01f), 0.25f);
+
+    // an impacting vessel on the same body: 50 m/s, 12 degrees away in latitude
+    Vessel* X = w.Mk("mk1pod.v2", 8003, {}, Vector3f(100.0f, 0.0f, 0.0f));
+    X->rb_velocity = Vector3f(0.0f, -50.0f, 0.0f);
+    X->latitude = 10.0 + 0.5;
+    X->longitude = 20.0;
+    CelestialBody& kerbin = w.Kerbin();
+    int generated = 0;
+    float num3 = -1.0f;
+    struct L {
+        int* n;
+        float* v;
+        void On(RT::DeployedScienceExperiment*, RT::DeployedSciencePart*, RT::DeployedScienceCluster*, float x) {
+            ++*n;
+            *v = x;
+        }
+    } l{&generated, &num3};
+    GE::onGroundScienceGenerated.Add(&l, &L::On);
+    GE::onVesselExplodeGroundCollision.Fire(X);
+    REQUIRE(exp->seismicEventDataSendPending);
+    REQUIRE(exp->seismicPartList.size() == 1);
+    const auto& d = *exp->seismicPartList[0];
+    Part& xp = *X->parts[0];
+    CHECK(d.partId == xp.fields.persistentId);
+    CHECK_F32(d.velocity, 50.0f);  // no Rigidbody on the part: the event's vessel velocity
+    CHECK_F32(d.resourceMass, xp.GetResourceMass());
+    CHECK_F32(d.mass, f32store(fx(xp.fields.mass) + fx(xp.GetResourceMass())));
+    const double dist = KC::Lite::CelestialUtilities::GreatCircleDistance(&kerbin, X->latitude, X->longitude, A->latitude, A->longitude);
+    CHECK_F64(d.impactDistance, dist);
+    const float frac = static_cast<float>(dist / kerbin.Radius);
+    CHECK_F32(d.impactDistanceMultiplier, Mathf::Clamp01(curve.Evaluate(frac)));
+    CHECK(d.impactDistanceMultiplier > 0.0f);
+    CHECK(d.impactDistanceMultiplier < 1.0f);
+    // processed after SeismicScienceProcessingDelay (3) frames
+    w.Frames(2);
+    CHECK(generated == 0);
+    w.Frames(3);
+    REQUIRE(generated == 1);
+    const double joules = 0.5 * (fx(d.mass) * 1000.0) * (50.0 * 50.0);
+    float rate = 0.0f;
+    REQUIRE(ds.SeismicEnergyRates().TryGetValue("Kerbin", rate));
+    float expect = f32store(fx(exp->ScienceDiminishingModifierRate()) * fx(1.0f) * fx(exp->subject->dataScale) * fx(exp->ScienceLimit()) *
+                            (fx(f32store(joules)) / fx(rate)) * (fx(exp->ScienceModifierRate()) / 100.0));
+    expect = f32store(fx(expect) * fx(f32store(static_cast<double>(d.impactDistanceMultiplier))));
+    if (fx(0.0f) + fx(expect) > fx(exp->ScienceLimit())) expect = exp->ScienceLimit();
+    CHECK_F32(num3, expect);
+    CHECK(!exp->seismicEventDataSendPending);
+    CHECK(exp->seismicPartList.empty());
+    CHECK(exp->TransmittedScienceData() > 0.0f);  // the powered cluster sent the data at once
+    CHECK(rd.Science() > 0.0f);
+
+    // an impact on another body does not reach this cluster; a tiny one is ignored but leaves the event pending (C# behaviour)
+    X->latitude = 11.0;
+    X->rb_velocity = Vector3f(0.0f, -0.5f, 0.0f);
+    GE::onVesselExplodeGroundCollision.Fire(X);
+    w.Frames(5);
+    CHECK(generated == 1);  // below MinimumSeismicEnergyRequired
+    CHECK(exp->SeismicEventDataSendPending());
+    CHECK(exp->seismicPartList.size() == 1);
+    GE::onGroundScienceGenerated.Remove(&l, &L::On);
+    ResearchAndDevelopment::ResetStatics();
+}
+
+TEST_CASE("WP-53 comm part: booster antennas raise the controller's CommPower, unloaded snapshots, canComm rules") {
+    Clean53 clean;
+    WorldSer w;
+    ResearchAndDevelopment rd;
+    rd.Awake();
+    ConfigNode rdEmpty("ResearchAndDevelopment");
+    rd.OnLoad(rdEmpty);
+    RT::DeployedScience ds;
+    ds.Awake();
+    ConfigNode empty("SCENARIO");
+    ds.OnLoad(empty);
+    Vessel* A = w.Mk("mk1pod.v2", 8101, {{"ModuleGroundExpControl", {{"deployedOnGround", "True"}, {"powerUnitsProduced", "5"}, {"antennaPower", "1000000"}}}});
+    Vessel* B = w.Mk("mk1pod.v2", 8102, {{"ModuleGroundCommsPart", {{"deployedOnGround", "True"}, {"antennaPower", "250000"}, {"powerUnitsRequired", "1"}}}},
+                     Vector3f(4.0f, 0.0f, 0.0f));
+    auto* ctrl = WorldSer::Mod<ModuleGroundExpControl>(*A->parts[0], "ModuleGroundExpControl");
+    auto* ant = WorldSer::Mod<ModuleGroundCommsPart>(*B->parts[0], "ModuleGroundCommsPart");
+    ctrl->Start();
+    ant->Start();
+    ant->OnStart(StartState::Landed);
+    ctrl->OnStart(StartState::Landed);
+    w.Frames(8);
+    REQUIRE(ds.DeployedScienceClusters().Count() == 1);
+    RT::DeployedScienceCluster* cl = ds.DeployedScienceClusters()[8101u];
+    REQUIRE(cl->DeployedScienceParts.size() == 2);
+    CHECK(cl->DeployedScienceParts[1]->IsAntenna());
+    CHECK_F64(cl->DeployedScienceParts[1]->AntennaBoosterPower(), 250000.0);
+    CHECK(cl->AntennaParts().size() == 2);  // the controller (an ExpControl is a comms part, Spawn adds it) and the booster
+    // the cluster-updated event made the controller sum its booster antennas
+    CHECK_F64(ctrl->boostedAntennaPower(), 250000.0);
+    CHECK_F64(ctrl->CommPower(), 1250000.0);
+    CHECK(ant->CanComm());  // its own part enabled, on the ground, powered cluster, controller enabled
+    CHECK(ctrl->CanComm());
+    // disabling the antenna removes its boost
+    ant->ToggleActive();
+    CHECK_F64(ctrl->boostedAntennaPower(), 0.0);
+    CHECK_F64(ctrl->CommPower(), 1000000.0);
+    CHECK(!ant->CanComm());
+    ant->ToggleActive();
+    CHECK_F64(ctrl->boostedAntennaPower(), 250000.0);
+    // unloaded: the snapshot's canComm flag and boostedAntennaPower
+    ConfigNode snapNode("MODULE");
+    snapNode.AddValue("name", "ModuleGroundExpControl");
+    snapNode.AddValue("boostedAntennaPower", 12345.0);
+    ProtoPartModuleSnapshot snap(snapNode);
+    CHECK(ctrl->CanCommUnloaded(nullptr));
+    CHECK(ctrl->CanCommUnloaded(&snap));  // no canComm value: true
+    CHECK_F64(ctrl->CommPowerUnloaded(&snap), 1000000.0 + 12345.0);
+    CHECK_F64(ctrl->CommPowerUnloaded(nullptr), 1000000.0);
+    snap.moduleValues->AddValue("canComm", "True");
+    CHECK(ctrl->CanCommUnloaded(&snap));
+    snap.moduleValues->AddValue("canComm", "False");  // the LAST canComm entry decides
+    CHECK(!ctrl->CanCommUnloaded(&snap));
+    // ICommAntenna: CanScienceTo is false, the curves are the module's
+    CHECK(!ctrl->CanScienceTo(true, 0.0, 0.0));
+    CHECK(ctrl->CommCombinable() == false);
+    // a part that is not in a cluster cannot communicate
+    Vessel* C = w.Mk("mk1pod.v2", 8103, {{"ModuleGroundCommsPart", {{"deployedOnGround", "True"}}}}, Vector3f(200.0f, 0.0f, 0.0f));
+    auto* lone = WorldSer::Mod<ModuleGroundCommsPart>(*C->parts[0], "ModuleGroundCommsPart");
+    CHECK(!lone->CanComm());
+    // the controller's OnSave records canComm in the flight scene only
+    ConfigNode s1("MODULE");
+    ctrl->OnSave(s1);
+    CHECK(*s1.GetValue("canComm") == "True");
+    SaveEnvironment::Current().loadedScene = GameScenes::SPACECENTER;
+    ConfigNode s2("MODULE");
+    ctrl->OnSave(s2);
+    CHECK(!s2.HasValue("canComm"));
+    SaveEnvironment::Current().loadedScene = GameScenes::FLIGHT;
+    // control source state follows the cluster power; with CommNet on, UpdateNetwork prints through the vessel's connection (none here)
+    CHECK(ctrl->GetControlSourceState() == VesselControlState::ProbeFull);
+    ctrl->SetEnabled(false);
+    CHECK(ctrl->GetControlSourceState() == VesselControlState::None);
+    CHECK(!ctrl->IsCommCapable());
+    ctrl->UpdateNetwork();  // no connection: nothing to print
+}
+
+TEST_CASE("WP-53 module info texts: ModuleGroundSciencePart.GetInfo with the Traits.cfg DeployedSciencePowerSkill bonuses, ExpControl / Experiment text") {
+    Clean53 clean;
+    WorldSer w;
+    // The Serenity expansion adds DeployedSciencePowerSkill to the traits (not in the base game's Traits.cfg of the mirror): the real Engineer node with
+    // one fixture EFFECT appended
+    ConfigNode::NodePtr traits = ConfigNode::Load(ksp::testing::GameRoot() + "/GameData/Squad/Experience/Traits.cfg");
+    REQUIRE(traits);
+    std::vector<ConfigNode*> traitNodes = traits->GetNodes("EXPERIENCE_TRAIT");
+    std::vector<const ConfigNode*> constNodes(traitNodes.begin(), traitNodes.end());
+    for (ConfigNode* n : traitNodes) {
+        if (n->GetValue("name") == std::optional<std::string>("Engineer")) {
+            ConfigNode* eff = n->AddNode("EFFECT");
+            eff->AddValue("name", "DeployedSciencePowerSkill");
+            eff->AddValue("modifiers", "0.25, 0.5, 0.75, 1.0, 1.25");
+        }
+    }
+    SaveEnvironment::Current().experienceConfigs = std::make_shared<Experience::ExperienceSystemConfig>(constNodes);
+    Vessel* v = w.Mk("mk1pod.v2", 8201, {{"ModuleGroundSciencePart", {{"powerUnitsProduced", "5"}, {"powerUnitsRequired", "2"}, {"packedVolume", "10"}, {"stackableQuantity", "3"}}},
+                                          {"ModuleGroundExperiment", {{"experimentId", "temperatureScan"}}}});
+    auto* sci = WorldSer::Mod<ModuleGroundSciencePart>(*v->parts[0], "ModuleGroundSciencePart");
+    using Loc = KSP::Localization::Localizer;
+    const std::string info = sci->GetInfo();
+    // base: ModuleCargoPart header, then the science block: required power, produced power and one line per trait level with the bonus
+    CHECK(info.rfind(Loc::Format("#autoLOC_8002220") + "\n\n", 0) == 0);
+    CHECK(info.find(Loc::Format("#autoLOC_8004190", {Loc::Format("#autoLOC_8002236"), "2"})) != std::string::npos);
+    CHECK(info.find(Loc::Format("#autoLOC_8004190", {Loc::Format("#autoLOC_8002235"), ""})) != std::string::npos);
+    CHECK(info.find(Loc::Format("#autoLOC_8004190", {Loc::Format("#autoLOC_6006033"), "5"})) != std::string::npos);
+    Experience::ExperienceTraitConfig* eng = nullptr;
+    REQUIRE(KerbalRoster::TryGetExperienceTraitConfig("Engineer", eng));
+    REQUIRE(eng != nullptr);
+    Experience::ExperienceTrait trait;
+    Experience::Effects::DeployedSciencePowerSkill skill(&trait);
+    bool found = false;
+    for (auto& eff : eng->Effects())
+        if (eff->Name() == "DeployedSciencePowerSkill") {
+            skill.LoadFromConfig(*eff->Config());
+            found = true;
+        }
+    REQUIRE(found);
+    REQUIRE(skill.HasLevelModifiers());
+    int lines = 0;
+    for (size_t k = 1; k < skill.LevelModifiers().size(); k++) {
+        const std::string expectLine =
+            Loc::Format("#autoLOC_8004190", {Loc::Format("#autoLOC_6006034", {Loc::Format(eng->Title().value_or("")), std::to_string(k)}),
+                                             dotnet::FormatSingleG(f32store(fx(5.0f) + fx(skill.GetTraitBonus(static_cast<int>(k)))))});
+        CHECK(info.find(expectLine) != std::string::npos);
+        ++lines;
+    }
+    CHECK(lines >= 1);
+    // no power produced: no skill block
+    sci->Set<int32_t>("powerUnitsProduced", 0);
+    const std::string quiet = sci->GetInfo();
+    CHECK(quiet.find(Loc::Format("#autoLOC_8002235")) == std::string::npos);
+    // tooltip: the info unless the part carries a tooltip format
+    CHECK(sci->GetTooltip() == sci->GetInfo());
+    sci->Set<std::string>("inventoryTooltip", "#autoLOC_8004190");
+    CHECK(sci->GetTooltip() == Loc::Format("#autoLOC_8004190", {"2"}));
+    CHECK(sci->GetModuleDisplayName() == Loc::Format("#autoLOC_8002223"));
+    // ExpControl and Experiment text
+    Vessel* v2 = w.Mk("mk1pod.v2", 8202, {{"ModuleGroundExpControl", {}}, {"ModuleGroundExperiment", {{"experimentId", "temperatureScan"}}}});
+    auto* ctrl = WorldSer::Mod<ModuleGroundExpControl>(*v2->parts[0], "ModuleGroundExpControl");
+    auto* expm = WorldSer::Mod<ModuleGroundExperiment>(*v2->parts[0], "ModuleGroundExperiment");
+    const std::string cinfo = ctrl->GetInfo();
+    CHECK(cinfo.rfind(Loc::Format("#autoLOC_8002220") + "\n\n", 0) == 0);
+    CHECK(cinfo.find(Loc::Format("#autoLOC_8002328", {"20"})) != std::string::npos);
+    CHECK(ctrl->GetModuleDisplayName() == Loc::Format("#autoLOC_8002227"));
+    ResearchAndDevelopment rd;
+    rd.Awake();
+    ConfigNode rdEmpty("ResearchAndDevelopment");
+    rd.OnLoad(rdEmpty);
+    const std::string einfo = expm->GetInfo();
+    const ScienceExperiment* e = ResearchAndDevelopment::GetExperiment("temperatureScan");
+    REQUIRE(e != nullptr);
+    CHECK(einfo.find(e->experimentTitle) != std::string::npos);
+    CHECK(einfo.find("<color=#00ffff>" + e->experimentTitle + "</color>\n") != std::string::npos);
+    CHECK(expm->GetModuleDisplayName() == Loc::Format("#autoLOC_8002225"));
+}
+
+TEST_CASE("WP-53 ModuleGroundSciencePart: sun tracking power (FixedUpdate), the packing coroutine, and the disabled-expansion self destruction") {
+    Clean53 clean;
+    WorldSer w;
+    Vessel* v = w.Mk("mk1pod.v2", 8301, {{"ModuleGroundSciencePart", {{"TrackSun", "True"}, {"isSolarPanel", "True"}, {"powerUnitsProduced", "4"},
+                                                                    {"secondaryTransformName", "sun_sensor"}, {"deployedOnGround", "True"}}}});
+    Part& p = *v->parts[0];
+    auto* sci = WorldSer::Mod<ModuleGroundSciencePart>(p, "ModuleGroundSciencePart");
+    sci->OnStart(StartState::Landed);  // not a controller yet: a DeployedScience instance is needed for the vessel type change
+    CHECK_F32(static_cast<float>(sci->ActualPowerUnitsProduced()), 4.0f);  // OnStart: actual = produced
+    // FixedUpdate needs the secondary transform: without it nothing changes (the else-branch needs a disabled / undeployed part)
+    int changed = 0;
+    struct L {
+        int* n;
+        void On(ModuleGroundSciencePart*) { ++*n; }
+    } l{&changed};
+    GE::onGroundSciencePartChanged.Add(&l, &L::On);
+    SerenityEnvironment::hasModelTransform = [](Part&, const std::string& name) { return name == "sun_sensor"; };
+    bool los = false;
+    SerenityEnvironment::trackingLineOfSight = [&los](Part&, std::string& blocker) {
+        blocker = los ? "" : "Terrain";
+        return los;
+    };
+    Planetarium::fetch->time = 0.0;
+    los = false;
+    sci->FixedUpdate();  // blocked: a solar panel loses its output
+    CHECK(sci->ActualPowerUnitsProduced() == 0);
+    CHECK(sci->blockingObject == "Terrain");
+    CHECK(changed == 1);
+    los = true;
+    sci->FixedUpdate();  // clear again: back to the nominal output
+    CHECK(sci->ActualPowerUnitsProduced() == 4);
+    CHECK(changed == 2);
+    sci->FixedUpdate();
+    CHECK(changed == 2);  // no further events when nothing changes
+    // a part that is not deployed produces nothing
+    sci->Set<bool>("deployedOnGround", false);
+    sci->FixedUpdate();
+    CHECK(sci->ActualPowerUnitsProduced() == 0);
+    sci->Set<bool>("deployedOnGround", true);
+    // time warp (CurrentRate != 1) skips the tracking branch: only the not-deployed / disabled branch can set 0
+    sci->SetActualPowerUnitsProduced(4);
+    sci->behaviourEnabled = false;  // MonoBehaviour disabled
+    sci->FixedUpdate();
+    CHECK(sci->ActualPowerUnitsProduced() == 0);
+    sci->behaviourEnabled = true;
+    GE::onGroundSciencePartChanged.Remove(&l, &L::On);
+
+    // RetrievePart with TrackSun: the panel returns to its packing rotation first (engine step), then the part is retrieved
+    Vessel* eva = w.Mk("mk1pod.v2", 8302, {});
+    eva->vesselType = VesselType::EVA;
+    FlightRegistry::ActiveVessel = eva;
+    auto inv = std::make_shared<SerenityEnvironment::KerbalInventory>();
+    int stored = 0;
+    inv->hasCapacity = [](Part&) { return true; };
+    inv->firstEmptySlot = [] { return 1; };
+    inv->storeCargoPartAtSlot = [&stored](Part&, int) {
+        ++stored;
+        return true;
+    };
+    SerenityEnvironment::activeKerbalInventory = inv;
+    sci->OnVesselChange(nullptr);
+    int steps = 0;
+    SerenityEnvironment::panelAtOrigin = [&steps](Part&) { return ++steps >= 3; };
+    sci->RetrievePart();
+    CHECK(sci->beingRetrieved);
+    CHECK(sci->ControlUnitId() == 0u);
+    CHECK(stored == 0);  // still rotating
+    w.Frames(1);
+    CHECK(stored == 0);
+    w.Frames(3);
+    CHECK(stored == 1);
+    CHECK(steps == 3);
+    CHECK(!sci->sunTrackerRunning);
+    FlightRegistry::ActiveVessel = nullptr;
+
+    // the expansion is not installed: Start() removes the module in a game scene
+    SaveEnvironment::Current().SetStockExpansionInstalled("Serenity", false);
+    Vessel* v3 = w.Mk("mk1pod.v2", 8303, {{"ModuleGroundExperiment", {{"experimentId", "temperatureScan"}}}});
+    auto* gone = WorldSer::Mod<ModuleGroundExperiment>(*v3->parts[0], "ModuleGroundExperiment");
+    ResearchAndDevelopment rd;
+    rd.Awake();
+    ConfigNode rdEmpty("ResearchAndDevelopment");
+    rd.OnLoad(rdEmpty);
+    gone->Start();
+    CHECK(gone->destroyed);
+    CHECK(!gone->behaviourEnabled);
+    CHECK(!gone->IsDeployedSciencePart());  // ExpansionsLoader gate
+    SaveEnvironment::Current().SetStockExpansionInstalled("Serenity", true);
+}
+
+namespace {
+// ControlledBase is abstract: a row with the bookkeeping the WP-52 axis / action rows share
+class TestRow : public Expansions::Serenity::ControlledBase {
+public:
+    using ControlledBase::ControlledBase;
+    std::string BaseName() const override { return "TestRow"; }
+    std::vector<uint32_t> symmetry;
+    bool allowMasterChange = true;
+    int assigned = 0;
+    bool OnAssignReferenceVars() override {
+        ++assigned;
+        return true;
+    }
+    void ClearSymmetryLists() override { symmetry.clear(); }
+    void AddSymmetryPart(Part* part) override { symmetry.push_back(part->fields.persistentId); }
+    bool OnChangeSymmetryMaster(Part* part, uint32_t& oldPartId) override {
+        oldPartId = partId;
+        (void)part;
+        return allowMasterChange;
+    }
+    void OnLoad(const ConfigNode& node) override { node.TryGetValue("extra", extra); }
+    void OnSave(ConfigNode& node) override { node.AddValue("extra", extra); }
+    int extra = 0;
+};
+}  // namespace
+
+TEST_CASE("WP-53 ControlledBase / RoboticCollisions / SerenityUtils (robotics row base, collision forwarding, asset paths)") {
+    Clean53 clean;
+    WorldSer w;
+    Vessel* v = w.Mk("mk1pod.v2", 8401, {});
+    Part& p = *v->parts[0];
+    Part s1, s2;
+    s1.fields.persistentId = 8402;
+    s2.fields.persistentId = 8403;
+    p.symmetryCounterparts = {&s1, &s2};
+    Expansions::Serenity::SerenityMiscEnvironment::persistentActionId = [](PartModule&) { return 77u; };
+    PartModule* any = p.Modules().GetModule(static_cast<size_t>(0));
+    REQUIRE(any != nullptr);
+    TestRow row(&p, any, nullptr);
+    CHECK(row.partId == 8401u);
+    CHECK(row.PartPersistentId() == 8401u);
+    CHECK(row.moduleId == any->GetPersistentId());
+    CHECK(row.PersistentActionId() == 77u);
+    CHECK(row.BaseName() == "TestRow");
+    CHECK(row.SymmetryParts() == &p.symmetryCounterparts);
+    // AssignReferenceVars: the part is found by persistentId, the nickname defaults to the part title, the symmetry list is rebuilt
+    CHECK(row.AssignReferenceVars());
+    CHECK(row.assigned == 1);
+    CHECK(row.PartNickName() == p.partInfo->title);
+    CHECK(row.Module() == any);
+    CHECK(row.symmetry == std::vector<uint32_t>({8402u, 8403u}));
+    row.SetPartNickName("My hinge");
+    row.RebuildSymmetryList({8402u});
+    CHECK(row.symmetry == std::vector<uint32_t>({8403u}));
+    // ChangeSymmetryMaster: only to a listed part; the old master is excluded from the rebuilt list
+    Part stranger;
+    stranger.fields.persistentId = 9999;
+    row.ChangeSymmetryMaster(&stranger);
+    CHECK(row.partId == 8401u);
+    row.allowMasterChange = false;
+    row.ChangeSymmetryMaster(&s1);
+    CHECK(row.partId == 8401u);
+    row.allowMasterChange = true;
+    row.ChangeSymmetryMaster(&s1);
+    CHECK(row.partId == 8402u);
+    CHECK(row.PartPtr() == &s1);
+    CHECK(row.symmetry.empty());  // s1's own symmetry list is empty
+    // Save / Load
+    row.partId = 8401u;
+    row.extra = 5;
+    ConfigNode node("ROW");
+    row.Save(node);
+    CHECK(*node.GetValue("persistentId") == "8401");
+    CHECK(*node.GetValue("partNickName") == "My hinge");
+    CHECK(*node.GetValue("rowIndex") == "-1");
+    CHECK(*node.GetValue("extra") == "5");
+    TestRow loaded;
+    loaded.Load(node);
+    CHECK(loaded.partId == 8401u);
+    CHECK(loaded.PartNickName() == "My hinge");
+    CHECK(loaded.extra == 5);
+    CHECK(loaded.PartPersistentId() == 0u);  // no Part until AssignReferenceVars
+    CHECK(loaded.AssignReferenceVars());  // finds the registered part 8401 (the vessel's root)
+    TestRow orphan;
+    orphan.partId = 424242u;
+    CHECK(!orphan.AssignReferenceVars());
+    // RoboticCollisions forwards to the part's handlers
+    Expansions::Serenity::RoboticCollisions rc;
+    rc.part = &p;
+    std::vector<std::string> seen;
+    Expansions::Serenity::SerenityMiscEnvironment::partCollision = [&seen](Part&, const std::string& m) { seen.push_back(m); };
+    rc.OnCollisionEnter();
+    rc.OnTriggerExit();
+    rc.OnCollisionExit();
+    rc.OnTriggerEnter();
+    CHECK(seen == std::vector<std::string>({"OnCollisionEnter", "OnTriggerExit", "OnCollisionExit", "OnTriggerEnter"}));
+    rc.part = nullptr;
+    rc.OnCollisionEnter();
+    CHECK(seen.size() == 4);
+    SaveEnvironment::Current().SetStockExpansionInstalled("Serenity", false);
+    rc.Start();
+    CHECK(rc.destroyed);
+    SaveEnvironment::Current().SetStockExpansionInstalled("Serenity", true);
+    // SerenityUtils: the bundle path
+    CHECK(Expansions::Serenity::SerenityUtils::AssetPath("Parts/x.prefab") == "Assets/Expansions/Serenity/Parts/x.prefab");
+    CHECK(Expansions::Serenity::SerenityUtils::SerenityPrefab("a") == nullptr);
+    std::string asked;
+    Expansions::Serenity::SerenityMiscEnvironment::loadAsset = [&asked](const std::string& bundle, const std::string& path) {
+        asked = bundle + ":" + path;
+        return std::shared_ptr<void>(std::make_shared<int>(1));
+    };
+    CHECK(Expansions::Serenity::SerenityUtils::SerenityTexture("tex.png") != nullptr);
+    CHECK(asked == "serenity_assets:Assets/Expansions/Serenity/tex.png");
 }
