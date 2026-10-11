@@ -34,6 +34,11 @@ Quaternionf FromToRotation(const Vector3f& fromDirection, const Vector3f& toDire
 
 namespace ksp::UnityNative {
 
+// UnityEngine.Transform.rotation composition (native, UnityPlayer.dll): Quaternionf operator* with one float32 rounding per operation
+// (see quaternion_native.cpp). WP-17b: world rotation of a thrust transform = partRotation * partSpaceChainRotation.
+Quaternionf Multiply(const Quaternionf& lhs, const Quaternionf& rhs);
+Quaternionf Inverse(const Quaternionf& q);    // conjugate
+Quaternionf Normalize(const Quaternionf& q);  // q / sqrt(dot(q, q)), float per operation
 // WP-40 (UnityEngine.Quaternion natives the editor maths needs; per-operation float32 like the two above). The ONE implementation in kspcore
 // (WP-24 ModuleCommand::DefaultQuaternionEuler and AutopilotEnvironment::DefaultEulerAngles delegate here).
 // UNVERIFIED: each of the three is written from Unity's documented formulation (Runtime/Math/Quaternion.cpp), NOT captured against the game

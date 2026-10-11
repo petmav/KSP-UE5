@@ -138,6 +138,47 @@ Quaternionf FromToRotation(const Vector3f& fromDirection, const Vector3f& toDire
     return MatrixToQuaternion(m);
 }
 
+// Transform.rotation composition of the native Unity code (UnityPlayer.dll): Quaternionf * Quaternionf with one float32 rounding per
+// operation (not the Mono rule of the managed Quaternion.operator*, which rounds a whole expression once). The evaluation order is the
+// one that reproduces the in-game stage delta-v (capture.deltav_stages, WP-17b): cross product first, then the two w * v terms,
+// w = (lw * rw - lx * rx) - (ly * ry + lz * rz). EMPIRICAL FIT (24 x-term orders x 16 w forms searched against capture.deltav_stages), UNVERIFIED against
+// Unity native: ((lx*rx + ly*ry) + lz*rz) leaves 2 Learstar A1 rows one ULP off. A capture of native Quaternion products would settle it.
+//   x = ((ly * rz - lz * ry) + lw * rx) + rw * lx    (y, z cyclic)
+// The orders  lw*rx + lx*rw + ly*rz - lz*ry  (the C# source order) and the other permutations of the three terms do not.
+// WP-17b: world rotation of a thrust transform = parentLocal * (... * (partLocal * (modelChain...))), right-nested (EditorHierarchy::World).
+Quaternionf Multiply(const Quaternionf& lhs, const Quaternionf& rhs) {
+    const float L[4] = {lhs.x, lhs.y, lhs.z, lhs.w}, R[4] = {rhs.x, rhs.y, rhs.z, rhs.w};
+    float out[4];
+    for (int c = 0; c < 3; c++) {
+        const int j = (c + 1) % 3, k = (c + 2) % 3;
+        volatile float m0 = L[j] * R[k], m1 = L[k] * R[j];  // volatile: keep the per-operation rounding (no FMA contraction)
+        volatile float cross = m0 - m1;
+        volatile float a0 = L[3] * R[c], a1 = R[3] * L[c];
+        volatile float acc = cross + a0;
+        acc = acc + a1;
+        out[c] = acc;
+    }
+    volatile float d0 = L[0] * R[0], d1 = L[1] * R[1], d2 = L[2] * R[2];
+    volatile float dd = d1 + d2;  // w = (lw * rw - lx * rx) - (ly * ry + lz * rz)
+    volatile float ww = L[3] * R[3];
+    volatile float wr = ww - d0;
+    out[3] = wr - dd;
+    return Quaternionf(out[0], out[1], out[2], out[3]);
+}
+
+// Runtime/Math/Quaternion.h: Inverse(q) = (-x, -y, -z, w) (for the unit quaternions a Transform stores)
+Quaternionf Inverse(const Quaternionf& q) { return Quaternionf(-q.x, -q.y, -q.z, q.w); }
+
+// Runtime/Math/Quaternion.h: Normalize(q) = q / Magnitude(q), Magnitude = sqrt(Dot(q, q)) (float, per operation)
+Quaternionf Normalize(const Quaternionf& q) {
+    volatile float d0 = q.x * q.x, d1 = q.y * q.y, d2 = q.z * q.z, d3 = q.w * q.w;
+    volatile float s = d0 + d1;
+    s = s + d2;
+    s = s + d3;
+    const float mag = SqrtF(s);
+    return Quaternionf(q.x / mag, q.y / mag, q.z / mag, q.w / mag);
+}
+
 }  // namespace ksp::UnityNative
 
 // ---- WP-40 -------------------------------------------------------------------------------------------------------------------------

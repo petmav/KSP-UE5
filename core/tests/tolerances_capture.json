@@ -4,8 +4,6 @@
     {"match": "math_shim/f32/*", "abs": 0.0, "rel": 0.0, "ulp": 0, "why": "Unity managed float maths under Mono's float rule: bit-exact"},
     {"match": "libm_mono/*", "abs": 0.0, "rel": 0.0, "ulp": 0, "why": "runtime layer: bit-exact"},
     {"match": "unity_random/*", "abs": 0.0, "rel": 0.0, "ulp": 0, "why": "native xorshift128 + mappings: bit-exact"},
-    {"match": "deltav_readout/stages/deltaV*", "type": "f32", "abs": 0.0, "rel": 2e-6, "ulp": 0, "why": "WP-17: the stage delta-v is |sum of thrust * thrustTransform.forward| times the rocket-equation factor (DeltaVStageInfo.cs:331); the thrust transforms come from the .mu models (model reader, not ported), the runner uses one -Y transform at the part rotation. Measured max rel 1.02e-6 (11 ULP) on the 180 compared rows; STATUS.md WP-17"},
-    {"match": "deltav_readout/totals/TotalDeltaV*", "type": "f64", "abs": 0.0, "rel": 2e-6, "ulp": 0, "why": "WP-17: sums of the stage delta-v above; measured max rel 1.02e-6; STATUS.md WP-17"},
     {"match": "*", "abs": 0.0, "rel": 0.0, "ulp": 0}
   ]
 }
