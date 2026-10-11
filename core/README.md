@@ -34,6 +34,22 @@ cmake --build --preset relwithdebinfo
 ctest --preset relwithdebinfo
 ```
 
+### Physics (WP-20a): Jolt is vendored and part of every build
+
+kspcore links Jolt Physics v5.6.0, vendored in `third_party/jolt` (source, MIT licence, origin URL and archive SHA-256 in
+`third_party/jolt/README.md`, per-file `SHA256SUMS`); no network access is needed or used. `cmake/ksp_jolt.cmake` builds it as the static
+library `Jolt` (double precision, the spike's configuration). The only kspcore translation unit that includes Jolt headers is
+`src/physics/physics_world.cpp`, built as the OBJECT library `kspcore_physics_glue` with Jolt's AVX2 flags and folded into
+`kspcore.lib`; the rest of kspcore keeps its SSE2-scalar float flags. Consumers of `kspcore.lib` (the Unreal bridge) must also
+link `<build>/third_party/jolt/Jolt.lib` (`libJolt.a`). Jolt needs an AVX2 CPU. Options: `-DKSP_JOLT_DOUBLE=OFF`,
+`-DKSP_JOLT_DETERMINISTIC=ON` (cross-platform deterministic build).
+
+### Physics spike (opt-in, not part of the tests)
+
+`spikes/jolt/` is the Jolt Physics spike behind [PHYSICS-SPIKE.md](PHYSICS-SPIKE.md). It is off by default
+(`KSPCORE_BUILD_SPIKES`), builds in its own trees with the presets `spike-jolt` / `spike-jolt-f32` (no tests; uses the vendored Jolt
+since WP-20a): `powershell -File spikes\jolt\build_spike.ps1`. Nothing in `run_tests.ps1`, ctest or CI uses it.
+
 ### Linux (and the cloud): one command
 
 ```bash
@@ -268,7 +284,7 @@ contract into FMA.
 | `include/ksp/util/` | `ksp_util.hpp` (KSPUtil, IDateTimeFormatter, DefaultDateTimeFormatter, GameSettings/Versioning shims), `collections.hpp` (ArrayExtensions, ListExtension, BiDictionaryOneToOne, DictionaryValueList, ListDictionary), `enum_extensions.hpp`, `simplex.hpp` (Simplex, SimplexNoise), `misc_util.hpp` (StringExtensions, StringBuilderCache.Format, MinMaxColor, IntersectInformation), WP-00: `hierarchy_util.hpp` (HierarchyUtil, TransformExtension, GameObjectExtension pure functions over the Transform shim) |
 | `include/kspcore/kspcore_c.h` | the C ABI used by the Unreal shell (implementation `src/capi/kspcore_c.cpp`) |
 | `include/ksp/curves/double_curve.hpp`, `include/ksp/math/{matrix4x4d,mathfx}.hpp` | DoubleCurve, Vector3/4Curve, Matrix4x4D, Mathfx, VectorExtensions, QuaternionExtensions, MinMaxFloat, Vect, PIDclamp |
-| `include/ksp/physics/` | WP-09 `physics_globals.hpp` (PhysicsGlobals: fields, static properties, LoadDatabase/SaveDatabase, lifting-surface curves, DragCurveValue; the `*.inc` files are generated), `vessel_ranges.hpp` (VesselRanges, Vessel.Situations) |
+| `include/ksp/physics/` | WP-09 `physics_globals.hpp` (PhysicsGlobals: fields, static properties, LoadDatabase/SaveDatabase, lifting-surface curves, DragCurveValue; the `*.inc` files are generated), `vessel_ranges.hpp` (VesselRanges, Vessel.Situations); WP-20a `physics_world.hpp` (`PhysicsWorld`: pimpl over one Jolt PhysicsSystem, Static / Moving layers, same-vessel `GroupFilter`, double positions, fixed step from `Time::fixedDeltaTime` / `PlayerLoop::physicsStep`, StateHash), `krakensbane.hpp` (Krakensbane.cs: frame velocity as a velocity offset, no shift), `floating_origin.hpp` (FloatingOrigin.cs without the world shift: `FrameOffset()`), `reference_frame.hpp` (body-fixed <-> inertial decision and re-expression, getCentrifugalAcc / getCoriolisAcc, physics-frame <-> true conversions) |
 | `include/ksp/celestial/` | WP-09 `celestial_body.hpp` (CelestialBody, CBAttributeMapSO, MiniBiome, GameAssetRef, orbit elements + `ICelestialBodyOrbit` link to the run-time Orbit), `celestial_body_orbit.hpp` (`CelestialBodyOrbitAdapter`: OrbitDriver for bodies over ksp::Orbit), `planetarium.hpp` (Planetarium, the only one: also Orbit's Zup/up/right/ZupAtT), `celestial_system.hpp` (PSystem prefab, `KerbolSystemPrefab()`, spawn, FlightGlobals body list), `flight_globals.hpp` (WP-08: FlightGlobals.getMainBody/overrideOrbit subset), `flight_atmosphere.hpp` (FlightIntegrator atmosphere helpers) |
 | `include/ksp/io/` | WP-05 `url_dir.hpp` (UrlDir, UrlFile, UrlConfig, UrlIdentifier: the GameData tree) |
 | `include/ksp/database/` | WP-05 `game_database.hpp` (GameDatabase data side: configs, texture/model/audio metadata tables), `game_data.hpp` (`ksp::GameData`: the whole loading sequence on a KSP install; GameData root = `<gameRoot>/GameData`, plus `<gameRoot>/Physics.cfg` and `<gameRoot>/PartDatabase.cfg`) |
@@ -366,7 +382,8 @@ contract into FMA.
 | `testdata/` | WP-00L: `GameData-mirror/` (game root the tests read; `MANIFEST.json`), `logs/` (KSP.log of the C9 capture run) |
 | `run_tests.sh` | the Linux one-command build + test (mirror of `run_tests.ps1`) |
 | `cmake/RunGolden.cmake` | the per-dataset gate |
-| `third_party/` | doctest 2.4.12, nlohmann/json 3.12.0 (pinned, see `third_party/VERSIONS.md`); used by tests/tools only |
+| `cmake/ksp_jolt.cmake` | WP-20a: options and `add_subdirectory` of the vendored Jolt (`third_party/jolt/Build`) |
+| `third_party/` | doctest 2.4.12, nlohmann/json 3.12.0 (pinned, see `third_party/VERSIONS.md`); used by tests/tools only; Jolt Physics 5.6.0 (`third_party/jolt`, WP-20a, linked into kspcore) |
 
 ## Conventions
 
