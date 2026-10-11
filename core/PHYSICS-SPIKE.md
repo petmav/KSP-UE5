@@ -1,6 +1,6 @@
 # Physics spike (Jolt): what WP-19 / WP-20 / WP-12 should build
 
-Status: 2026-10-11, branch `jolt-spike` (from main `af3798c6`). Spike code: `core/spikes/jolt/` (opt-in CMake target, never part of
+Status: 2026-10-11, branch `jolt-spike` (from main `af3798c6`, main `a5d23742` merged; full suite 34/34 green). Spike code: `core/spikes/jolt/` (opt-in CMake target, never part of
 `run_tests.ps1` / CI). Raw results: `core/spikes/jolt/results/*.md|csv`. Progress log: `core/PROGRESS-jolt.md`.
 Inputs: [PHYSICS-ENGINE-REVIEW.md](../analysis/physics/PHYSICS-ENGINE-REVIEW.md), [PROFILE.md](../analysis/physics/PROFILE.md),
 [TIERING.md](../analysis/tiering/TIERING.md). C# citations are relative to `decompiled/KSP-Decompiled/Assembly-CSharp/`.
@@ -11,7 +11,8 @@ Inputs: [PHYSICS-ENGINE-REVIEW.md](../analysis/physics/PHYSICS-ENGINE-REVIEW.md)
 inside kspcore, with double-precision positions in KSP's own body-fixed / inertial frame and no per-tick world shift. The
 PhysX-equivalent articulated model (one body per part, PartJoint springs) is kept only as a test oracle.**
 
-What the spike measured on this machine (Ryzen 9 7950X3D, one thread; KSP's numbers are PROFILE.md's, other CPU):
+What the spike measured on this machine (Ryzen 9 7950X3D, one thread; KSP's numbers are PROFILE.md's, taken on another CPU,
+and KSP's tick does more work than the spike's: no thermal, SAS, module logic or buoyancy here, so compare the component rows):
 
 | | KSP 1.12.5 (PROFILE.md) | Jolt, articulated (PhysX-equivalent) | Jolt, reduced (recommended) |
 |---|---|---|---|
@@ -442,6 +443,14 @@ stated reference. The spike's code is the starting point of 20a-20d (move, do no
 | **WP-12b terrain colliders** | PQSMod_QuadMeshColliders rule, PQS_Collider*, PQS_PartCollider, PQSCity / PQSCity2 / KSC meshes as static colliders through `AddStaticMesh` | WP-12a, WP-20a, WP-42 | collider triangles == the quad mesh (same buffers) | `ksc_ground` (TIERING.md): ray heights on the pad / runway / around KSC vs `capture.terrain_height` within the triangulation error (< 0.05 m on the flattened pad); a craft spawned on the pad settles within 0.1 m of KSP's spawn height |
 
 Order: 20a -> 20b -> (20c || 20d || 19a) -> 20e -> 19b; 12a can start now (needs only WP-11 / WP-00), 12b after 20a.
+
+TIERING.md's WP-20 acceptance lists `joint_stiffness` (vs KSP traces): with the reduced model there is no joint compliance to
+compare, so it becomes `joint_loads` + `joint_capacity` above; `free_fall`, `physics_orbit_hold` and `crash_tolerance` stay.
+Captures (profiling branch) that would turn scenarios into capture gates: (1) a 30 s PhysProf-M2 ascent with SAS on, CoM
+altitude / speed / q / Mach per tick (`ascent_profile`); (2) `VesselPrecalculate` inputs and outputs per tick on the pad, in
+ascent and in orbit (`integrationAccel`, Coriolis, centrifugal, drift-compensation offsets) for WP-19a; (3) the PQS quad set
+around KSC from a fixed target (`quad_subdivision`); (4) KSP's own first-break load under a slow gravity / thrust ramp for
+PhysProf-S and -M2 (the `capacity` bench run in the game) to settle how much of KSP's early M2 failure is compliance.
 Not in these packages: wheels and legs (WP-29 on 20b / 20e), robotics (WP-52 on 20b), EVA kerbal rigidbody (WP-32 on 20b),
 rendering of vessels and terrain (UE shell).
 

@@ -53,6 +53,17 @@ recommendation in `core/PHYSICS-SPIKE.md`.
   stretch; with a Galilean frame velocity 23 m / 0.00006 m (= rigid). Float build: body-centre origin unusable (13 m drift),
   double costs nothing measurable. Pinned (`--affinity 4`, `--repeat 3`) scaling: L2-AS articulated 2.83 ms, reduced 0.33 ms.
 - Doc sections drafted in the scratchpad; PHYSICS-SPIKE.md assembled at the end.
+- Direct graph solve (sparse block Cholesky, factor per structural / contact-set change): same loads as PCG, 0.02-0.08 ms per
+  tick, 0.1-0.6 ms per factorisation. Ground contacts are point supports of the graph. Capacity bench (gravity ramp on the pad):
+  S breaks the same joint at 33.7 g in all models; M2 articulated 10.8 g vs reduced 29 g (stack lean / compliance). Selftest
+  bench (joint counts, SoA == exact, loads, trajectories, determinism): 0 failures.
+- Merged origin/main (wp50, wp53) into jolt-spike: fresh `run_tests.ps1 -Fresh` 34/34 green (build 184 s, test 181 s); spike
+  rebuilt on the merge, selftest 0 failures. PHYSICS-SPIKE.md final.
+
+## Steps status
+
+1-10 done. Not done (documented in PHYSICS-SPIKE.md): thermal / WP-23 ThrustUpdate / SAS not wired into the spike tick;
+.mu colliders (proxy boxes); spike not built on Linux (not in CI by design); KSP-side captures listed in section 7.
 
 - 2026-10-11: read optimizer.md, CLAUDE.md, PHYSICS-ENGINE-REVIEW.md, PROFILE.md, TIERING.md (WP-12/18/19/20/21/22),
   core/README.md, core/STATUS.md (WP-11/14/18/21 sections), NEXT-STEPS.md. Network reachable; Jolt v5.6.0 pinned.
