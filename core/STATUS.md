@@ -4536,3 +4536,51 @@ maths and prefs, InputSettings listen session, TrackIR.Settings, speed multiplie
 ### Verification
 
 Windows MSVC RelWithDebInfo (`core/build` deleted, `run_tests.ps1 -Fresh`, main `af3798c6`): 34/34 ctest, `unit` 626 doctest cases / 1,012,303 assertions (WP-50: 32 cases / 47,676 assertions); configure 1.8 s, build 138.6 s, test 126.3 s. GCC (WSL g++, `-std=c++20 -fsyntax-only -Wall -Wextra`) over `src/input/*.cpp` and the four `tests/test_input*.cpp`: no errors or warnings in the WP-50 files (it found the nested-struct default-member-initializer rule that MSVC accepts; `FlightInputHost` and `MouseButton` are namespace-level types for it). `check_cites.py` exact mode: 0 mismatches over `src/input/*.cpp` (212 citations); `tools/wp50/header_cites.py`: 0 over `include/ksp/input/*.hpp` (291).
+
+## WP-54: Making History mission runtime, slice 1 (branch `wp54`, from main `af3798c6`, main merged)
+
+State: slice 1 done and unit-gated: flow graph + parser, node / test-group / module bases, DynamicModule(List), scoring, awards, validator, Mission
+(graph init, Load / Save, run-time state machine, objective printing). **No golden or capture exists for missions**, and every stock mission file in the
+mirror (`Squad/Missions/*/persistent.mission`, `*.loadmeta`, the `.craft`) is a **0-byte file** (only `MissionPacks.cfg` and PNG banners are real), so no stock
+mission can be loaded in a test; graphs are synthetic algorithm inputs, labelled as such. Gate = independent Python reference
+`tools/wp54/mission_reference.py` -> `tests/data/wp54_reference.json` (2.2 MB, no kspcore code): **0 differences** (strings / index lists exact, float32 scores bit-exact).
+Spec: `Assembly-CSharp/Expansions/Missions/`. `check_cites.py` (exact mode) over `src/missions/*.cpp`: 482 cites, 0 mismatches (aliases added for C++ destructors / helpers).
+Header member cites (`// :N`) are approximate (no header checker for this package): the .cpp cites are authoritative.
+
+### Gate (`tests/test_missions.cpp`, `test_missions_runtime.cpp`: 14 cases / 22,458 assertions)
+
+| gate | scope | result |
+|---|---|---|
+| graphs | 220 seeded graphs (3-15 nodes, end / catch-all / event / logic / objective nodes, docked nodes, back edges, inconsistent TONODEIDS), 1,999 nodes | fromNodes / toNodes / orphan flags, NodePaths + NodeReversePaths (all paths), Then/Or block tree (1,232 Then, 532 Or blocks), IsReachable, IsHiddenByEvent, root block CountObjectives / HasObjectives / HasReachableObjectives / HasVisibleChildren, SetNextObjectives, GetNodesOrdered (both modes), PrintObjectives x3 (77 graphs), `MENode.Save` of every node, `MissionFlow.Save`, validator failures: all equal |
+| scores | 400 cases: Completion 60, Modifier 120 (4 types), Time 60, Accuracy 80, Resource 80 | AwardScore float32 bits equal (0 ULP, Mono rule), awarded text and ScoreDescription equal through the real `dictionary.cfg` |
+
+The gate caught one reference mistake (MENode.Load sets `category = "Start"` for the start node, the Python had missed it). Mutating `ExtractPathGroups` (`<` to `<=`) makes the graph case hang.
+Unit cases derived from the C#: node module registry + TESTGROUPS / ACTIONS round trip, unknown module dropped, MEBasicNode + Spawn + Clone, the state machine (StartMission, UpdateMission, node switching with the exact event order, end node success / fail, score, awards), Mission Save / Load / Save idempotence (header, situation, tags, mapped vessels, banners, score + award modules, flow), award modules (conditions, PROGRESS only in MISSION mode, subscriptions, definitions), validator (dedupe, Status, modes, second instance discarded), flow blocks / paths Save+Load, MissionPack on the real `MissionPacks.cfg`, MissionSituation vessel list / start type, DynamicModule ids / Clone.
+
+### Ported (C# -> `include/ksp/missions/`, `src/missions/`)
+
+Flow/* (MEPath, MEPathGroup, MEFlowConvergence, MENodePathInfo, MEFlowBlock / Then / Or, MEFlowExtensions, MEFlowParser parse half + UpdateFlowUIItems), MissionFlow, MENode (all data, graph properties, ActivateNode / DeactivateNode / RunTests, AddAction, Spawn x3, Clone, Load, Save, validation wrapper), TestGroup, TestModule + ActionModule bases (events, parameter bookkeeping, Load / Save), ITestModule / IActionModule / IMEFlowBlock / INode* / ITestNodeLabel / IScoreableObjective, MEBasicNode (Load), DisplayParameter, all enums with `[Description]`, DynamicModule, DynamicModuleList, ScoreModule + 5 subclasses, ScoreRange, ScoreInfo, MissionScore, AwardDefinition, Awards, AwardModule + 10 subclasses, MissionAwards, MissionEditorValidator, MissionValidationTestResult, MissionCheckpointValidator (recursion + list compares), Mission (everything except the list under "Not ported"), MissionSituation, MissionInstructor, MissionPartFilter (data), MissionMappedVessel + extension, MissionPack, MissionFileInfo (fields + paths), MissionsUtils (paths, UpdatePartName, GetNodesOrdered + Objectives.Graph / BreadthSearch).
+
+### Seams (static inline hooks, unset = stated default; documented in the headers)
+
+`MissionsEnvironment` (mission_types.hpp: Guid, UT, installed-expansion test, coroutine host, screen messages, MissionSystem.IsActive, validator setting, analytics, craft-file / MissionSystem / FlightGlobals lookups), `AwardEnvironment` (vessels, resource totals, launch pad, crew statuses), `TestModuleRegistry` / `ActionModuleRegistry` / `DynamicModuleRegistry` (WP-55 registers the node library there; an unregistered name is logged and dropped like `Type.GetType` failing, optional `fallback` hook), `IActionCreateVessel / Kerbal / Asteroid / Comet / Flag / LaunchSite` and `IActionMissionScore` (views the WP-55 action classes implement), `IMEGUINode` (editor canvas box), `MissionCheckpointValidator::modulesAreEqual`, loaded part names for `MissionPartFilter`, `VesselSituation` and `MEBannerEntry` stand-ins.
+
+### Findings (C# behaviour kept)
+
+- `Mission.Load` in MISSION mode dereferences `situation.startingActionsNode`: a file with NODES but no SITUATION throws (NullReferenceException); `HighLogic.SaveFolder.Substring(SavesPath.Length)` throws for a short save folder.
+- `MENode.Load` does not unescape `description` / `message` (Save escapes newline and tab); `missionEndOptions` defaults to Fail when the key is missing; the start node's category becomes "Start".
+- `#autoLOC_8100160` (Resource score description) uses `<<0>>..<<2>>`: the Localizer drops `<<0>>`, so the text shows min in slot 1 and max in slot 2 shifted by one (the reference reproduces it).
+- `UpdateMission` calls `DoEndMissionActions` on every call while the active node is an end node (no `isEnded` test): score and awards would re-apply; MissionSystem must stop calling it.
+- `AwardModule_Traveled*` and `AwardModule_Fuel` accumulate on every `EvaluateCondition` call (never reset).
+- `TestModule.UpdateNodeBodyUI` dereferences `node.guiNode` without a null test (ActionModule guards it).
+- `BuildReversePathsByDFS` returns an unregistered empty list for an orphan start node.
+
+### Not ported / deferred
+
+Slice 2 (this package, ~60 files left): VesselSituation / VesselLocation / VesselGroundLocation / LaunchSiteSituation / VesselRestriction* / Crew / MissionKerbal / MissionCraft / MissionOrbit / MissionQuaternion / MissionCelestialBody / SurfaceArea / SurfaceVolume / Asteroid / Comet / ParamChoices_*, the MissionFileInfo constructor (MetaMission, Steam), MissionImporting, MissionParams*, MissionPreflightCheck, MissionBlackListPreFlightCheck, MissionScoreInfo, MissionLocalizer, MissionEditorHistory, Editor/BaseAPField (attribute reflection), MissionSystem (Runtime/MissionSystem.cs, 1,809 lines), PositionMobileLaunchPad. Inside ported files: craft-file bookkeeping (RebuildCraftFileList, ProcessCraftFileFolder, ProcessCraftRenames, GetMissionCraft*, the mapped-vessel event handlers), ProcessMappedVesselNodeMap (casts to WP-55 classes), MENode orbit / map-object code (OnLevelLoaded, HasTestOrbit, GetNodeLocationInWorld), IDiscoverable DiscoveryInfo, GetAppObjectiveInfo / GetNodeBodyParameterString (BaseAPField), the MEFlowParser UI half, MEBasicNode.Initialize, SetLockedCamera, the autosave file copy.
+
+### Unverified / needs data
+
+- `double.ToString("00")` custom format (accuracy / resource descriptions): half-away-from-zero, non-negative only; no tie values in the gate.
+- `MEAwards.prefab` (award definition list) and the Making History basic-node cfgs are not extracted (not in the mirror); award tests use labelled fixtures. Real missions need the 0-byte files re-extracted into `testdata/GameData-mirror`.
+- `AwardModule_LandedOn` uses `facilityTransformPosition` for `facilityTransform.parent.position` (WP-42 stores one position).

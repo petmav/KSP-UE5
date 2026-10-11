@@ -4,8 +4,8 @@
       scoring (ScoreModule*, MissionScore), awards (AwardModule*, MissionAwards, Awards), validator, Mission (init, load/save, run-time FSM, objective
       printing), MissionSituation / Instructor / PartFilter / MappedVessel / Pack / path helpers.
 - [x] Headers + sources compile (include/ksp/missions, src/missions). 
-- [ ] Unit tests (tests/test_missions.cpp), Python reference (tools/wp54/mission_reference.py -> tests/data/wp54_reference.json)
-- [ ] check_cites exact mode, header cite fix, STATUS.md (row 35) + README entry
+- [x] Unit tests + Python reference
+- [x] check_cites 0 mismatches, STATUS row (WP-54 section) + README
 - [ ] Fresh verification, push branch wp54
 
 Findings
