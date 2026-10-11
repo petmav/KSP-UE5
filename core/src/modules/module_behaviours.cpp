@@ -50,6 +50,7 @@ void RegisterExperienceManagementModule();  // kerbals/kerbal_misc.cpp (WP-31)
 void RegisterTripLoggerModule();  // vessel/module_trip_logger.cpp (WP-14)
 void RegisterAeroModules();       // aero/lifting_surface.cpp (WP-21)
 namespace detail {
+void RegisterInventoryModules();  // inventory/inventory_ui.cpp (WP-33)
 void RegisterContractModules();  // contracts/module_test_subject.cpp (WP-37)
 void RegisterSerenityModules();  // serenity/ground_modules.cpp (WP-53)
 void RegisterScienceModules();  // modules/science_modules.cpp (WP-35; its header pulls in game_events.hpp, which would make the ModuleInventoryPart below ambiguous)
@@ -66,6 +67,7 @@ constexpr float kFloatEpsilon = std::numeric_limits<float>::denorm_min();  // Ma
 
 // ModuleToggleCrossfeed (ModuleToggleCrossfeed.cs) moved to WP-15: src/modules/resource_modules.cpp
 
+// ModuleCargoPart / ModuleInventoryPart: WP-33 (inventory/inventory.hpp)
 // ---- ModuleCargoPart.cs: WP-53 (modules/module_cargo_part.hpp, src/modules/module_cargo_part.cpp) ----
 
 // ---- ModuleAnimationSetter: WP-27 (modules/animation_modules.hpp); ModuleAnimateHeat.cs:22 -------------------------------------------
@@ -163,18 +165,6 @@ public:
     float asteroidMass = 1.0f;  // private, set by SetAsteroidMass
 };
 
-class ModuleInventoryPart : public PartModule, public IPartMassModifier, public IPartCostModifier {  // :1928 / :1966
-public:
-    using PartModule::PartModule;
-    IPartMassModifier* AsMassModifier() override { return this; }
-    IPartCostModifier* AsCostModifier() override { return this; }
-    // storedParts is empty on a prefab (stored snapshots come from saves / the inventory UI: WP-13/18)
-    float GetModuleMass(float, ModifierStagingSituation) override { return 0.0f; }
-    ModifierChangeWhen GetModuleMassChangeWhen() override { return ModifierChangeWhen::CONSTANTLY; }
-    float GetModuleCost(float, ModifierStagingSituation) override { return 0.0f; }
-    ModifierChangeWhen GetModuleCostChangeWhen() override { return ModifierChangeWhen::CONSTANTLY; }
-};
-
 class PartStatsUpgradeModule : public PartModule, public IPartMassModifier, public IPartCostModifier {  // :93 / :98
 public:
     using PartModule::PartModule;
@@ -209,6 +199,7 @@ void RegisterBuiltinModules() {
     detail::RegisterGrappleModules();    // WP-25: ModuleGrappleNode
     detail::RegisterStrutModules();      // WP-25: CModuleStrut
     detail::RegisterResourceModules();  // ModuleToggleCrossfeed, ModuleResourceAutoShiftState, CModuleFuelLine, EVAResourceContainer (WP-15)
+    detail::RegisterInventoryModules();  // WP-33: ModuleInventoryPart (inventory/inventory_ui.cpp)
     Reg<ModuleCargoPart>({"ModuleCargoPart"});
     detail::RegisterSerenityModules();  // WP-53: ModuleGroundPart / SciencePart / CommsPart / ExpControl / Experiment (serenity/ground_modules.cpp)
     detail::RegisterAnimationModules();  // WP-27: ModuleAnimationSetter, ModuleAnimateGeneric, ModuleAnimationGroup, ModuleAnimatorLandingGear
@@ -235,7 +226,6 @@ void RegisterBuiltinModules() {
     Reg<ModuleComet>({"ModuleComet"});
     Reg<ModuleAsteroid>({"ModuleAsteroid"});
     detail::RegisterMiscModules();  // WP-30: ModuleGPS, FlagSite, ModulePartFirework (misc_modules.cpp)
-    Reg<ModuleInventoryPart>({"ModuleInventoryPart"});
     Reg<PartStatsUpgradeModule>({"PartStatsUpgradeModule"});
     RegCurves({"ModuleColorChanger"}, {"redCurve", "greenCurve", "blueCurve", "alphaCurve"});
     RegCurves({"ModuleWheelSteering"}, {"steeringCurve", "steeringMaxAngleCurve"});
