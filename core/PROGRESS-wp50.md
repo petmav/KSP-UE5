@@ -7,4 +7,4 @@
 - [x] Python reference tools/wp50/input_reference.py -> tests/data/wp50_reference.json; 32 unit cases / 47,676 assertions, all 0 ULP
 - [x] cites: check_cites.py exact 0 mismatches (193), header_cites.py 0 (269)
 - [x] STATUS.md section + summary row 34, README rows
-- [ ] fresh full verification (delete core/build, run_tests.ps1 -Fresh), push branch wp50
+- [x] fresh full verification (34/34 ctest, unit 626 cases / 1,012,303 assertions), branch pushed

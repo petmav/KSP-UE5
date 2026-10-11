@@ -4421,3 +4421,7 @@ Set `InputEnvironment::device` and update `realtimeSinceStartup`, `Time::deltaTi
 `tests/test_input.cpp` (6 cases: control types, key codes, 400-op lock sequence, ControlLocks, 9 layouts, DetectKeyboardLayout), `tests/test_input_flight.cpp` (13: defaults vs reference, WriteCfg text, ParseCfg, round trip,
 600 axis cases, Save / Load branches, AxisKeyBinding, InputDevices, ExtendedInput, double taps, 360-frame FixedUpdate, FixedUpdate corner cases), `tests/test_input_devices.cpp` (7: Mouse 400 frames, button masks, SpaceNavigator
 maths and prefs, InputSettings listen session, TrackIR.Settings, speed multipliers, ResetSettings hooks), `tests/test_input_ui.cpp` (5: Update toggles, double-tap hold mode / EVA / SpaceNav toggle, control-state helpers, UI locks).
+
+### Verification
+
+Windows MSVC RelWithDebInfo (`core/build` deleted, `run_tests.ps1 -Fresh`, main `af3798c6`): 34/34 ctest, `unit` 626 doctest cases / 1,012,303 assertions (WP-50: 32 cases / 47,676 assertions); configure 1.8 s, build 138.6 s, test 126.3 s. GCC (WSL g++, `-std=c++20 -fsyntax-only -Wall -Wextra`) over `src/input/*.cpp` and the four `tests/test_input*.cpp`: no errors or warnings in the WP-50 files (it found the nested-struct default-member-initializer rule that MSVC accepts; `FlightInputHost` and `MouseButton` are namespace-level types for it). `check_cites.py` exact mode: 0 mismatches over `src/input/*.cpp` (212 citations); `tools/wp50/header_cites.py`: 0 over `include/ksp/input/*.hpp` (291).
