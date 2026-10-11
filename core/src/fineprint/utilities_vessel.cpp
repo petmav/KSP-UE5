@@ -80,6 +80,14 @@ void SaveNodeList(ConfigNode* node, const char* listName, const std::vector<int3
 void SaveNodeList(ConfigNode* node, const char* listName, const std::vector<uint32_t>& list) {
     if (node != nullptr && !list.empty()) node->AddValue(listName, StringUtilities::PackDelimitedString(list));
 }
+// SystemUtilities.cs:199
+void CondenseNodeList(ConfigNode* node, const char* valueName, const char* listName) {
+    if (node != nullptr) {
+        std::vector<std::string> list = node->GetValues(valueName);
+        SaveNodeList(node, listName, list);
+        node->RemoveValues(valueName);
+    }
+}
 
 // SystemUtilities.cs:578
 std::string RandomSplitChoice(std::vector<std::vector<std::string>*>& listOfLists, KSPRandom* generator) {

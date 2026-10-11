@@ -130,6 +130,8 @@ void LoadNodeList(ConfigNode* node, const char* className, const char* valueName
 void SaveNodeList(ConfigNode* node, const char* listName, const std::vector<std::string>& list);
 void SaveNodeList(ConfigNode* node, const char* listName, const std::vector<int32_t>& list);
 void SaveNodeList(ConfigNode* node, const char* listName, const std::vector<uint32_t>& list);
+// :199 CondenseNodeList(node, valueName, listName): the repeated values become one packed list value
+void CondenseNodeList(ConfigNode* node, const char* valueName, const char* listName);
 // :578 RandomSplitChoice<string>(listOfLists, generator) (null lists are removed from the argument)
 std::string RandomSplitChoice(std::vector<std::vector<std::string>*>& listOfLists, KSPRandom* generator = nullptr);
 // :292 ProcessSideRequests(contract, contractNode, targetBody, vesselName, ref funds, ref science, ref reputation, vessel)
