@@ -226,6 +226,14 @@ add_library(kspcore STATIC
     modules/module_procedural_fairing.cpp
     modules/module_structural.cpp
     modules/misc_modules.cpp
+    # WP-53 Breaking Ground: deployed science, ROCs, contracts
+    modules/module_cargo_part.cpp
+    serenity/serenity_env.cpp
+    serenity/ground_modules.cpp
+    serenity/deployed_science.cpp
+    serenity/roc.cpp
+    serenity/serenity_misc.cpp
+    contracts/serenity_contracts.cpp
     parts/part_decouple.cpp
     parts/part_shield.cpp
     parts/compound_part.cpp

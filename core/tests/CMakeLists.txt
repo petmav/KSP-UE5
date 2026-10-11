@@ -44,6 +44,7 @@ add_executable(kspcore_tests
     test_editor.cpp
     test_progress.cpp
     test_contracts.cpp
+    test_serenity.cpp
     test_fineprint.cpp
     test_space_center.cpp
     test_input.cpp
