@@ -48,3 +48,18 @@ for heights. STATUS row 38, README, check_cites exact mode, no subagents.
 ## Log
 
 - (start) read spec, C# (PQ.cs, PQS.cs, PQSCache.cs, mods), WP-11 code; merged origin/main; natives probed.
+- `c0524cfb` C++ port: PQ / PQS quadtree / build / normals / stitching / cache / pool / presets / quad mods; generator
+  emits the quad mods + PQS LOD fields (missing ones: PQS.Reset() FIXTURE, surfaceRelativeQuads FIXTURE true);
+  TRS / OrthoNormalize bit-exact vs C3 (45 / 49 rows). Smoke: Kerbin pad 698 quads, 479 built, levels 0-9.
+- `4e04da65` Python reference tools/wp12 (pqs_ref_math / tree / sphere + pqs_reference.py): natives vs C3 capture
+  (TRS 45, OrthoNormalize 49, FromToRotation 49 rows), x87 model vs libm capture (6,180 Sin/Cos rows); scenarios
+  synth_a (custom normals, stitching, tangents, FlattenArea, coast factors, CBT deactivate/activate, RebuildSphere,
+  counting clock), synth_b (sphere normals, planet-centred vertices, quad UVs, map coords), kerbin_ksc and mun (WP-11
+  heights through tools/wp12/height_oracle.cpp; sampled quads + their stitching sources exact). Replay in
+  tests/test_pqs_quadtree.cpp: 0 mismatches over 24,728 quad rows and 13,051 mesh digests; mutation checks (edge
+  normal 0.5f -> 0.4999f; updating 6 roots instead of 5) fail as expected. Pushed origin/wp12a.
+  Default clock changed to a constant 1 s (KSP: Time.realtimeSinceStartup > maxFrameEnd = 0 during UpdateQuadsInit's
+  pass, so that pass never subdivides).
+  Lesson: bash heredocs here collapse backslashes; use the Edit tool for strings with escapes.
+- next: unit tests (pool, presets, colliders, fades, all-quads heights == WP-11, KSC triangulation vs capture), bench,
+  parallel height prefetch (bit-identical, gated by the replay), docs, check_cites, merge, fresh run.

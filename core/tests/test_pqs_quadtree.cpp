@@ -570,3 +570,269 @@ TEST_CASE("WP-12a reference replay: stock Kerbin at the KSC pad (WP-11 heights t
 TEST_CASE("WP-12a reference replay: stock Mun (WP-11 heights through the oracle)") {
     ReplayScenario(ScenarioNamed("mun"));
 }
+
+namespace {
+
+// Run the first `frames` frames of a reference scenario and keep the scene alive.
+void RunFrames(Scene& sc, const json& s, int frames, GlobalStateGuard& g) {
+    BuildScene(sc, s, g);
+    const json& fr = s.at("frames");
+    for (int f = 0; f < frames && f < static_cast<int>(fr.size()); f++) {
+        const json& tg = fr[static_cast<size_t>(f)].at("target");
+        sc.target.position = Vector3d(tg[0].get<double>(), tg[1].get<double>(), tg[2].get<double>());
+        for (int k = 0; k < fr[static_cast<size_t>(f)].at("fixed").get<int>(); k++) sc.sphere->FixedUpdate();
+        for (const json& a : fr[static_cast<size_t>(f)].at("actions")) {
+            const std::string act = a.get<std::string>();
+            if (act == "start") sc.sphere->Start();
+            if (act == "activate") sc.sphere->ActivateSphere();
+            if (act == "rebuild") sc.sphere->RebuildSphere();
+            if (act == "frame") sc.sphere->FrameUpdate();
+        }
+    }
+}
+
+std::vector<std::array<double, 4>> CaptureSamples(const std::string& body) {
+    static const json cap = json::parse(std::ifstream(kHarness + "/captures/out2/terrain_height.json"));
+    std::vector<std::array<double, 4>> out;  // lat, lon, h_surface, h_override
+    for (const json& t : cap.at("tables")) {
+        if (t.at("name") != "samples") continue;
+        for (const json& r : t.at("rows")) {
+            if (r[0].get<std::string>() != body) continue;
+            out.push_back({FromHexD(r[3]), FromHexD(r[5]), FromHexD(r[7]), FromHexD(r[9])});
+        }
+    }
+    return out;
+}
+
+}  // namespace
+
+TEST_CASE("WP-12a every built quad's vertices are the WP-11 heights at the vertex directions (stock Kerbin, Mun)") {
+    for (const char* name : {"kerbin_ksc", "mun"}) {
+        GlobalStateGuard guard;
+        Scene sc;
+        const json& s = ScenarioNamed(name);
+        RunFrames(sc, s, 3, guard);
+        // an independent stock sphere evaluates the build-state heights (PQS.cs:2249-2262) for every built quad
+        auto builder = terrain::LoadStockPQS(s.at("body").get<std::string>(), Maps());
+        const PQSMeshCache& mc = sc.cache.meshCache;
+        int64_t quads = 0, verts = 0, bad = 0;
+        for (const PQ* q : WalkSphere(*sc.sphere)) {
+            if (!q->isBuilt) continue;
+            PQ probe;  // the quad as the height mods see it in OnQuadPreBuild / OnQuadBuilt
+            probe.positionPlanetRelative = q->positionPlanetRelative;
+            probe.subdivision = q->subdivision;
+            builder->Mod_OnQuadPreBuild(probe);
+            for (int i = 0; i < mc.cacheVertCount; i++) {
+                const Vector3d gv(MultiplyPoint3x4(q->quadMatrix, mc.cacheVerts[static_cast<size_t>(i)]));
+                const double h = builder->GetSurfaceHeight(gv);
+                const Vector3d expect = gv.normalized() * h;
+                const Vector3d& got = q->vertsD[static_cast<size_t>(i)];
+                if (Bits(got.x) != Bits(expect.x) || Bits(got.y) != Bits(expect.y) || Bits(got.z) != Bits(expect.z)) bad++;
+                verts++;
+            }
+            builder->Mod_OnQuadBuilt(probe);
+            quads++;
+        }
+        CHECK(quads > 100);
+        CHECK(bad == 0);
+        MESSAGE(std::string(name) << ": " << quads << " built quads, " << verts << " vertices == WP-11 GetSurfaceHeight in the build state, "
+                     << bad << " differ");
+    }
+}
+
+TEST_CASE("WP-12a the quad-building sphere still returns the in-game surface heights (terrain_height capture, 140,522 points)") {
+    // The capture (FLIGHT, Kerbin's quads built, the Mun's never) is WP-11's gate. Here the SAME sphere that just built
+    // hundreds of quads (mod scratch state, static build scratch, quad-dependent mod state after OnQuadBuilt) answers
+    // GetSurfaceHeight for every capture point: Kerbin bit for bit; the Mun has now built quads, so its three
+    // FlattenArea points take the built-state value, which the capture records as h_override (WP-11 quirk 4).
+    for (const char* name : {"kerbin_ksc", "mun"}) {
+        GlobalStateGuard guard;
+        Scene sc;
+        const json& s = ScenarioNamed(name);
+        RunFrames(sc, s, 3, guard);
+        const std::string body = s.at("body").get<std::string>();
+        const auto samples = CaptureSamples(body);
+        int64_t n = 0, bad = 0, builtState = 0;
+        for (const auto& r : samples) {
+            const Vector3d dir = terrain::GetRelSurfaceNVector(r[0], r[1]);
+            const double h = sc.sphere->GetSurfaceHeight(dir);
+            const double ho = sc.sphere->GetSurfaceHeight(dir, true);
+            double want = r[2];
+            if (Bits(r[2]) != Bits(r[3]) && body == "Mun") {
+                want = r[3];
+                builtState++;
+            }
+            if (Bits(h) != Bits(want) || Bits(ho) != Bits(r[3])) bad++;
+            n++;
+        }
+        CHECK(bad == 0);
+        CHECK(n > 60000);
+        MESSAGE(body << ": " << n << " capture points bit-exact after " << sc.cache.quadsMaterialised() << " quads ("
+                     << builtState << " points in the built-state value), " << bad << " differ");
+    }
+}
+
+TEST_CASE("WP-12a PQSCache pool: Stack semantics, counters, fresh quads materialised on demand") {
+    PQSCache c;
+    c.cachePQInitialCount = 2;
+    c.cachePQIncreasePerFrame = 3;
+    c.CreateCache();
+    CHECK(c.cacheReady);
+    CHECK(c.cachePQTotalCount == 2);
+    CHECK(c.quadsMaterialised() == 0);
+    PQ* a = c.GetQuad();
+    PQ* b = c.GetQuad();
+    CHECK(c.cachePQUnassignedCount == 0);
+    PQ* d = c.GetQuad();  // the stack is empty: IncreasePQCache(3)
+    CHECK(c.cachePQTotalCount == 5);
+    CHECK(c.cachePQAssignedCount == 3);
+    CHECK(c.cachePQUnassignedCount == 2);
+    a->isBuilt = true;
+    a->edgeState = PQS::EdgeState::NorthLerp;
+    a->vertNormals[7] = Vector3f(1.0f, 2.0f, 3.0f);
+    c.DestroyQuad(*a);
+    CHECK(!a->isBuilt);
+    CHECK(a->subdivideThresholdFactor == 1.0);
+    c.DestroyQuad(*b);
+    CHECK(c.GetQuad() == b);  // LIFO
+    PQ* again = c.GetQuad();
+    CHECK(again == a);
+    CHECK(again->edgeState == PQS::EdgeState::NorthLerp);  // not reset by DestroyQuad (PQSCache.cs:448)
+    CHECK(again->vertNormals[7].Equals(Vector3f(1.0f, 2.0f, 3.0f)));
+    CHECK(c.GetQuad() != d);
+    CHECK(c.quadsMaterialised() == 4);
+    CHECK(a->mesh.vertices.size() == 225);
+    CHECK(a->mesh.triangleSet == 0);
+    CHECK(c.meshCache.cacheIndices[0].size() == 1176);
+}
+
+TEST_CASE("WP-12a terrain presets: default list, ConfigNode round trip, GetPreset, SetPreset(string) quirk, cache settings") {
+    PQSCache::CreateDefaultPresetList();
+    REQUIRE(PQSCache::PresetList);
+    CHECK(PQSCache::PresetList->preset == "Default");
+    CHECK(PQSCache::PresetList->presetIndex == 1);
+    const auto* mun = PQSCache::PresetList->GetPreset("Mun");
+    REQUIRE(mun != nullptr);
+    CHECK(mun->minDistance == 6.0);
+    CHECK(mun->maxSubdivision == 8);
+    CHECK(PQSCache::PresetList->GetPreset("Jool") == nullptr);
+    ConfigNode settings("root");
+    PQSCache::SavePresetList(settings);
+    ConfigNode* terrain = settings.GetNode("TERRAIN");
+    REQUIRE(terrain != nullptr);
+    ConfigNode* pqs = terrain->AddNode("PQS");
+    pqs->AddValue("vertCount", "17");
+    pqs->AddValue("cacheMeshSize", "1");
+    pqs->AddValue("cacheQuadSize", "3");
+    PQSMeshCache mc;
+    PQSCache::PresetList.reset();
+    PQSCache::LoadPresetList(settings, &mc);
+    REQUIRE(PQSCache::PresetList);
+    CHECK(PQSCache::PresetList->presets.size() == 3);
+    CHECK(PQSCache::PresetList->presets[2].spherePresets[0].maxSubdivision == 10);  // High / Kerbin
+    CHECK(PQSCache::PresetList->GetPreset("Kerbin")->maxSubdivision == 9);
+    CHECK(mc.cacheSideVertCount == 17);
+    CHECK(mc.cacheQuadSizeDiv2 == 1.5f);
+    // PQSCache.cs:64 compares each preset's name with the CURRENT preset and renames inside the loop: from Default,
+    // "Low" (listed before it) keeps Default's index, "High" (after it) happens to match again and gets its own
+    PQSCache::PresetList->SetPreset(std::string("Low"));
+    CHECK(PQSCache::PresetList->preset == "Low");
+    CHECK(PQSCache::PresetList->presetIndex == 1);
+    PQSCache::PresetList->SetPreset(1);
+    PQSCache::PresetList->SetPreset(std::string("High"));
+    CHECK(PQSCache::PresetList->preset == "High");
+    CHECK(PQSCache::PresetList->presetIndex == 2);
+    PQSCache::PresetList->SetPreset(2);
+    CHECK(PQSCache::PresetList->presetIndex == 2);
+    // an incompatible version reverts to the defaults
+    ConfigNode old("root");
+    ConfigNode* t2 = old.AddNode("TERRAIN");
+    t2->AddValue("preset", "Low");
+    t2->AddValue("version", "1.0.0");
+    t2->AddNode("PRESET")->AddValue("name", "Low");
+    PQSCache::LoadPresetList(old, nullptr);
+    CHECK(PQSCache::PresetList->preset == "Default");
+    CHECK(PQSCache::PresetList->presets.size() == 3);
+    PQSCache::PresetList.reset();
+    // a 17-vertex cache builds
+    mc.CreateCache();
+    CHECK(mc.cacheVertCount == 289);
+    CHECK(mc.cacheIndices[16].size() == static_cast<size_t>(16 * 16 * 6));
+}
+
+TEST_CASE("WP-12a QuadMeshColliders seam, CelestialBodyTransform fades, render handoff of the built quads") {
+    GlobalStateGuard guard;
+    Scene sc;
+    const json& s = ScenarioNamed("synth_a");
+    int enabled = 0, disabled = 0;
+    BuildScene(sc, s, guard);
+    sc.sphere->onQuadColliderEnabled = [&](PQ& q) {
+        enabled++;
+        CHECK(q.subdivision >= sc.sphere->maxLevel - 1);
+    };
+    sc.sphere->onQuadColliderDisabled = [&](PQ&) { disabled++; };
+    const json& fr = s.at("frames");
+    for (size_t f = 0; f < fr.size(); f++) {
+        const json& tg = fr[f].at("target");
+        sc.target.position = Vector3d(tg[0].get<double>(), tg[1].get<double>(), tg[2].get<double>());
+        for (int k = 0; k < fr[f].at("fixed").get<int>(); k++) sc.sphere->FixedUpdate();
+        for (const json& a : fr[f].at("actions")) {
+            const std::string act = a.get<std::string>();
+            if (act == "start") sc.sphere->Start();
+            if (act == "rebuild") sc.sphere->RebuildSphere();
+            if (act == "frame") sc.sphere->FrameUpdate();
+        }
+    }
+    CHECK(enabled > 0);
+    CHECK(disabled > 0);
+    int drawn = 0, bad = 0;
+    double worst = 0.0;
+    for (const PQ* q : WalkSphere(*sc.sphere)) {
+        if (q->meshColliderEnabled && !q->isBuilt) bad++;
+        if (!(q->isBuilt && q->rendererEnabled)) continue;
+        drawn++;
+        // positions: meshOrigin (double) + float vertices = the double vertex to float precision
+        for (size_t i = 0; i < q->vertsD.size(); i++) {
+            const Vector3d p = q->meshOrigin + Vector3d(q->mesh.vertices[i]);
+            worst = std::max({worst, std::fabs(p.x - q->vertsD[i].x), std::fabs(p.y - q->vertsD[i].y), std::fabs(p.z - q->vertsD[i].z)});
+        }
+        for (int idx : sc.cache.meshCache.cacheIndices[static_cast<size_t>(q->mesh.triangleSet)]) bad += idx < 225 ? 0 : 1;
+        bad += q->mesh.normals.size() == 225 && q->mesh.tangents.size() == 225 && q->mesh.uv2.size() == 225 &&
+                       q->mesh.uv4.size() == 225 && q->mesh.colors.size() == 225
+                   ? 0
+                   : 1;
+    }
+    CHECK(drawn > 50);
+    CHECK(bad == 0);
+    CHECK(worst <= 0.0625);  // half the float spacing of the 600 km planet-relative coordinates (KSP's own quantisation)
+    MESSAGE("synth_a: " << drawn << " drawn quads, max |origin + vertex - double vertex| = " << worst << " m");
+    // AltitudeFade.DoFade (PQSMod_CelestialBodyTransform.cs:35)
+    PQSMod_CelestialBodyTransform::AltitudeFade f;
+    f.fadeStart = 20000.0f;
+    f.fadeEnd = 120000.0f;
+    f.valueStart = 0.0f;
+    f.valueEnd = 1.0f;
+    int resets = 0;
+    f.resetTerrainShaderOffset = [&] { resets++; };
+    f.DoFade(10000.0);
+    CHECK(f.a == 0.0f);
+    f.DoFade(70000.0);
+    CHECK(f.a == 0.5f);
+    f.DoFade(130000.0);
+    CHECK(f.a == 1.0f);
+    CHECK(resets == 1);
+    f.DoFade(true);
+    CHECK(f.a == 0.0f);
+}
+
+TEST_CASE("WP-12a PQS frame helpers: LineSphereIntersection, edge rotation") {
+    Vector3d hit;
+    CHECK(PQS::LineSphereIntersection(Vector3d(0, 0, -10), Vector3d(0, 0, 1), 2.0, hit));
+    CHECK(hit.z == -2.0);
+    CHECK(!PQS::LineSphereIntersection(Vector3d(0, 5, -10), Vector3d(0, 0, 1), 2.0, hit));
+    CHECK(PQS::LineSphereIntersection(Vector3d(0, 1, 0), Vector3d(1, 0, 0), 2.0, hit));  // inside: the start point
+    CHECK(hit.y == 1.0);
+    CHECK(PQS::GetEdgeRotatedCounterclockwise(PQS::QuadEdge::North) == PQS::QuadEdge::West);
+    CHECK(PQS::GetEdgeRotatedClockwise(PQS::QuadEdge::North) == PQS::QuadEdge::East);
+    CHECK(PQS::GetEdgeRotatedClockwise(PQS::QuadEdge::Null) == PQS::QuadEdge::Null);
+}
