@@ -116,6 +116,50 @@ int kspcore_floatcurve_key_count(const kspcore_floatcurve* curve);
 float kspcore_floatcurve_min_time(const kspcore_floatcurve* curve);
 float kspcore_floatcurve_max_time(const kspcore_floatcurve* curve);
 
+/* ---- PQS terrain quads (WP-12a; additive, ABI version unchanged: KSPCORE_ABI_TERRAIN marks it) ----------------------
+ *
+ * A stock sphere (the game's prefab mod stack, WP-11 heights) with its own quad pool, driven like KSP's PQS in flight:
+ * the target is the active vessel (or camera) position in the body-fixed frame (metres from the body centre, the
+ * sphere's local axes; no floating origin). Each update returns the quads to draw; their data stays valid until the
+ * next kspcore_pqs_update / kspcore_pqs_destroy. Positions are floats relative to the quad's double `origin`
+ * (camera-relative rendering: subtract the camera's double position from origin, then add the float positions). */
+#define KSPCORE_ABI_TERRAIN 1
+
+typedef struct kspcore_pqs kspcore_pqs;
+
+typedef struct kspcore_pqs_quad {
+    int id;                 /* PQ.id (unique per sphere start) */
+    int subdivision;        /* quadtree level */
+    int vertex_count;       /* 225 (PQS cacheSideVertCount^2) */
+    int index_count;        /* triangle indices (1176): the edge-lerp index set of this quad */
+    double origin[3];       /* the quad's local origin (body-fixed, metres) */
+    const float* positions; /* vertex_count x 3, relative to origin */
+    const float* normals;   /* vertex_count x 3 */
+    const float* tangents;  /* vertex_count x 4 (NULL if the stack builds none) */
+    const float* uv;        /* vertex_count x 2 (NULL if never assigned) */
+    const float* uv2;
+    const float* uv3;
+    const float* uv4;
+    const float* colors;    /* vertex_count x 4 (r, g, b, a) */
+    const int* indices;     /* index_count */
+    int collider;           /* 1: PQSMod_QuadMeshColliders gave this quad a MeshCollider (WP-12b) */
+} kspcore_pqs_quad;
+
+/* `body_name` e.g. "Kerbin"; `terrain_data_dir` = <core>/data/terrain; `height_threads` > 0 evaluates the height pass
+ * of quads about to be built on that many worker threads (bit-identical results). NULL on failure. */
+kspcore_pqs* kspcore_pqs_create_stock(const char* body_name, const char* terrain_data_dir, int height_threads);
+void kspcore_pqs_destroy(kspcore_pqs* pqs);
+void kspcore_pqs_set_target(kspcore_pqs* pqs, const double position_xyz[3]);
+/* The first call starts the sphere (PQS.Start); every call then runs `fixed_updates` physics ticks (PQS.FixedUpdate)
+ * and one frame (the UpdateSphere coroutine) and collects the quads to draw. Returns their number, -1 on failure. */
+int kspcore_pqs_update(kspcore_pqs* pqs, int fixed_updates);
+/* Quad `index` (0 .. count-1) of the last update; 1 on success. */
+int kspcore_pqs_get_quad(const kspcore_pqs* pqs, int index, kspcore_pqs_quad* out);
+/* PQS.radius, PQS.isActive, and the planet fade value PQSMod_CelestialBodyTransform applies to the surface material */
+double kspcore_pqs_radius(const kspcore_pqs* pqs);
+int kspcore_pqs_is_active(const kspcore_pqs* pqs);
+float kspcore_pqs_planet_fade(const kspcore_pqs* pqs);
+
 #ifdef __cplusplus
 }
 #endif

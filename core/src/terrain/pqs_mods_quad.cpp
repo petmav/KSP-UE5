@@ -19,10 +19,10 @@ size_t Z(int i) { return static_cast<size_t>(i); }
 
 // ---- PQSMod_QuadEnhanceCoast.cs ----------------------------------------------------------------------------------------
 
-// PQSMod_QuadEnhanceCoast.cs:20
+// PQSMod_QuadEnhanceCoast.cs:21
 void PQSMod_QuadEnhanceCoast::OnSetup() { coastTest_ = sphere->radius + coastLessThan; }
 
-// PQSMod_QuadEnhanceCoast.cs:25. quad.meshVertMin / meshVertMax are heights above the radius (BuildQuad subtracts it)
+// PQSMod_QuadEnhanceCoast.cs:26. quad.meshVertMin / meshVertMax are heights above the radius (BuildQuad subtracts it)
 // while coastTest = radius + coastLessThan, so every quad of a real planet takes the "ocean" branch: with the stock
 // oceanFactor 1.0 (Kerbin, Eve, Laythe) the mod changes nothing. Kept as written.
 void PQSMod_QuadEnhanceCoast::OnQuadBuilt(PQ& quad) {
@@ -202,7 +202,7 @@ void PQSMod_CelestialBodyTransform::VisitSerialized(const SerializedFieldVisitor
 
 // ---- PQSMod_UVPlanetRelativePosition.cs --------------------------------------------------------------------------------
 
-// PQSMod_UVPlanetRelativePosition.cs:12: rewrites the STATIC PQS.cacheUVs / cacheUV2s from the double scratch vertices
+// PQSMod_UVPlanetRelativePosition.cs:10: rewrites the STATIC PQS.cacheUVs / cacheUV2s from the double scratch vertices
 void PQSMod_UVPlanetRelativePosition::OnQuadBuilt(PQ& quad) {
     if (sphere->cache == nullptr) return;  // a height-only PQS (WP-11 callers drive the quad state with no mesh cache)
     PQSMeshCache& c = sphere->meshCache();
@@ -217,7 +217,7 @@ void PQSMod_UVPlanetRelativePosition::OnQuadBuilt(PQ& quad) {
     quad.mesh.uv2 = c.cacheUV2s;
 }
 
-// PQSMod_UVPlanetRelativePosition.cs:27 (quad.verts[i] + quad.positionPlanet: the float mesh vertex plus the double
+// PQSMod_UVPlanetRelativePosition.cs:24 (quad.verts[i] + quad.positionPlanet: the float mesh vertex plus the double
 // quad position; with surfaceRelativeQuads that is the planet-relative vertex up to the float origin rounding)
 void PQSMod_UVPlanetRelativePosition::OnQuadUpdateNormals(PQ& quad) {
     if (sphere->cache == nullptr) return;
@@ -232,10 +232,10 @@ void PQSMod_UVPlanetRelativePosition::OnQuadUpdateNormals(PQ& quad) {
 
 // ---- PQSMod_AltitudeUV.cs ----------------------------------------------------------------------------------------------
 
-// PQSMod_AltitudeUV.cs:21
+// PQSMod_AltitudeUV.cs:20
 void PQSMod_AltitudeUV::OnSetup() { requirements = PQS::MeshUV3; }
 
-// PQSMod_AltitudeUV.cs:26 (vertHeight is still radius + terrain height here)
+// PQSMod_AltitudeUV.cs:25 (vertHeight is still radius + terrain height here)
 void PQSMod_AltitudeUV::OnVertexBuild(PQSVertexBuildData& vbData) {
     h_ = vbData.vertHeight - sphere->radius;
     if (h_ >= 0.0) {
@@ -256,10 +256,10 @@ void PQSMod_AltitudeUV::VisitSerialized(const SerializedFieldVisitor& v) const {
 
 // ---- PQSMod_AltitudeAlpha.cs -------------------------------------------------------------------------------------------
 
-// PQSMod_AltitudeAlpha.cs:18
+// PQSMod_AltitudeAlpha.cs:17
 void PQSMod_AltitudeAlpha::OnSetup() { requirements = PQS::MeshColorChannel; }
 
-// PQSMod_AltitudeAlpha.cs:23
+// PQSMod_AltitudeAlpha.cs:22
 void PQSMod_AltitudeAlpha::OnVertexBuild(PQSVertexBuildData& vbData) {
     h_ = (vbData.vertHeight - sphere->radius) / atmosphereDepth;
     vbData.vertColor.a = invert ? static_cast<float>(1.0 - h_) : static_cast<float>(h_);

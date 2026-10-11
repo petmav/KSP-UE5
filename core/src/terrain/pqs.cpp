@@ -32,7 +32,7 @@ void PQSMod::VisitSerialized(const SerializedFieldVisitor& v) const {
     v("modExpansionDisabled", SerializedValue::Of(modExpansionDisabled));
 }
 
-// PQS.cs:758-761 (the part of the sphere setup the height path depends on)
+// (PQS.cs:758-761) the part of StartSphere the height path depends on
 void PQS::SetupForHeight() {
     circumference = 6.2831854820251465 * radius;  // PQS.cs:758 (float 2*pi widened)
     radiusSquared = radius * radius;

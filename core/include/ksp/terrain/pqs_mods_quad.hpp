@@ -24,8 +24,8 @@ public:
     double coastLessThan = 1.0;  // Reset() defaults (:13)
     double oceanFactor = 0.5;
     double coastFactor = 1.5;
-    void OnSetup() override;          // :20 (no base call: requirements stay serialized)
-    void OnQuadBuilt(PQ& quad) override;  // :25
+    void OnSetup() override;          // :21 (no base call: requirements stay serialized)
+    void OnQuadBuilt(PQ& quad) override;  // :26
     void VisitSerialized(const SerializedFieldVisitor& v) const override;
 
 private:
@@ -85,8 +85,8 @@ public:
 // PQSMod_UVPlanetRelativePosition.cs
 class PQSMod_UVPlanetRelativePosition : public PQSMod {
 public:
-    void OnQuadBuilt(PQ& quad) override;          // :12
-    void OnQuadUpdateNormals(PQ& quad) override;  // :27
+    void OnQuadBuilt(PQ& quad) override;          // :10
+    void OnQuadUpdateNormals(PQ& quad) override;  // :24
 };
 
 // PQSMod_AltitudeUV.cs
@@ -95,8 +95,8 @@ public:
     double atmosphereHeight = 10000.0;  // Reset() (:15)
     double oceanDepth = 5000.0;
     bool invert = false;
-    void OnSetup() override;                             // :21
-    void OnVertexBuild(PQSVertexBuildData& vbData) override;  // :26
+    void OnSetup() override;                             // :20
+    void OnVertexBuild(PQSVertexBuildData& vbData) override;  // :25
     void VisitSerialized(const SerializedFieldVisitor& v) const override;
 
 private:
@@ -108,8 +108,8 @@ class PQSMod_AltitudeAlpha : public PQSMod {
 public:
     double atmosphereDepth = 10000.0;  // Reset() (:13)
     bool invert = false;
-    void OnSetup() override;                             // :18
-    void OnVertexBuild(PQSVertexBuildData& vbData) override;  // :23
+    void OnSetup() override;                             // :17
+    void OnVertexBuild(PQSVertexBuildData& vbData) override;  // :22
     void VisitSerialized(const SerializedFieldVisitor& v) const override;
 
 private:

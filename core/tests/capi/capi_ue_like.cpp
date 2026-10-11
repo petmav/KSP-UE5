@@ -49,6 +49,19 @@ int main(int argc, char** argv) {
         CHECK(kspcore_confignode_try_get_double(phys, "dragMultiplier", &d) == 1 || d == 0.0);
         kspcore_confignode_release(phys);
     }
+    // WP-12a terrain quads through the C ABI (argv[2] = core/data/terrain): the Mun, inline heights
+    if (argc > 2) {
+        kspcore_pqs* pqs = kspcore_pqs_create_stock("Mun", argv[2], 0);
+        CHECK(pqs != nullptr);
+        const double target[3] = {204000.0, 10000.0, 0.0};
+        kspcore_pqs_set_target(pqs, target);
+        const int n = kspcore_pqs_update(pqs, 1);
+        CHECK(n > 50);
+        kspcore_pqs_quad q{};
+        CHECK(kspcore_pqs_get_quad(pqs, 0, &q) == 1);
+        CHECK(q.vertex_count == 225);
+        kspcore_pqs_destroy(pqs);
+    }
     // a malformed key reports an error instead of throwing across the boundary
     kspcore_confignode* bad = kspcore_confignode_parse("key = 1\n");
     CHECK(kspcore_floatcurve_load(bad) == nullptr);

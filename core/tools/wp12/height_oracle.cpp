@@ -11,6 +11,7 @@
 //
 //   wp12_height_oracle <queries.json> <results.json>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <fstream>
 #include <iostream>

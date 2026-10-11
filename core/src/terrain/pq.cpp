@@ -45,7 +45,7 @@ void PQMesh::RecalculateBounds() {
     bounds.m_Extents = Vector3f((mx.x - mn.x) * 0.5f, (mx.y - mn.y) * 0.5f, (mx.z - mn.z) * 0.5f);
 }
 
-// PQ.cs:169 Awake
+// (PQ.cs:169 Awake)
 PQ::PQ() {
     subNodes = {nullptr, nullptr, nullptr, nullptr};
     isBuilt = false;
@@ -53,7 +53,7 @@ PQ::PQ() {
     edgeState = PQS::EdgeState::Reset;
 }
 
-// PQ.cs:190-193: the non-root quad matrix (shared by SetupQuad and the PQSHeightWorkers prediction)
+// (PQ.cs:190-193) the non-root quad matrix, shared by SetupQuad and the PQSHeightWorkers prediction
 Matrix4x4f PQ::PredictQuadMatrix() const {
     const double factor = 1.0 / dotnet::Math::Pow(2.0, subdivision - 1);
     return UnityNative::TRS(positionPlanePosition.ToVector3f(), Deref(quadRoot).planeRotation.ToQuaternionf(),

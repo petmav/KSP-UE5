@@ -107,8 +107,8 @@ if(MSVC)
     target_compile_options(capi_ue_like PRIVATE /GR- /EHs-c- /fp:fast /W4)
     target_compile_definitions(capi_ue_like PRIVATE _HAS_EXCEPTIONS=0)
 endif()
-add_test(NAME capi.c COMMAND capi_c ${KSP_HARNESS_DIR}/inputs/Physics.cfg)
-add_test(NAME capi.ue_like COMMAND capi_ue_like ${KSP_HARNESS_DIR}/inputs/Physics.cfg)
+add_test(NAME capi.c COMMAND capi_c ${KSP_HARNESS_DIR}/inputs/Physics.cfg ${PROJECT_SOURCE_DIR}/data/terrain)
+add_test(NAME capi.ue_like COMMAND capi_ue_like ${KSP_HARNESS_DIR}/inputs/Physics.cfg ${PROJECT_SOURCE_DIR}/data/terrain)
 
 # ---- golden gates: golden_runner writes candidates, harness/compare/compare.py judges them -----------------------------
 # ksp_golden_gate(<test name> <runner dataset> [GOLDEN <file>] [TOL <file>] [TABLES <t1,t2>] [KEYS <t:c1,c2/...>]

@@ -285,7 +285,7 @@ void PQS::SetupQuad(PQ& quad, const std::string& quadName, QuadPlane plane, PQ* 
     quad.uvDelta = Vector2f(1.0f, 1.0f);
 }
 
-// PQS.cs:1104 UpdateSphere, the loop body
+// (PQS.cs:1104 UpdateSphere) the loop body
 void PQS::UpdateSphereIteration() {
     if (!isDisabled) {
         Mod_OnPreUpdate();
