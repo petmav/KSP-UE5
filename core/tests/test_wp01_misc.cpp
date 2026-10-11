@@ -127,7 +127,7 @@ TEST_CASE("SystemRandom / KSPRandom seeding wrap-around (Random.cs, KSPRandom.cs
         {1999999999, {1250015411, 1511885116, 51968186, 1107261761, 612990673, 107674095, 1363332312, 1224778866}, {1988932029, 493944146, 460553517, 1112323671, 1894071188, 1596095727, 491811073, 1478458027}},
     };
     for (const Row& row : rows) {
-        SystemRandom s(row.seed);
+        dotnet::SystemRandom s(row.seed);
         for (int32_t e : row.sys) CHECK(s.Next() == e);
         if (row.ksp.empty()) continue;
         KSPRandom k(row.seed);
