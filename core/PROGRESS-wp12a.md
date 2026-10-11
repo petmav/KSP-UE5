@@ -72,3 +72,10 @@ for heights. STATUS row 38, README, check_cites exact mode, no subagents.
 - resumed after a rate-limit cut; merged origin/main (wp33, wp38b) cleanly; build + WP-12a tests green.
 - next: replay gate with workers on (bit-identical), bench with workers, docs (STATUS row 38, README), check_cites,
   fresh full run, push.
+- `45125488` worker gates: the 4 replays with 4 workers 0 mismatches; every stock built quad identical inline vs
+  workers (Kerbin 501, Mun 421); StartSphere Kerbin 305-369 ms -> 121-124 ms with 15 workers, Mun 529-542 -> 78-102 ms.
+- `68773105` C ABI kspcore_pqs_* (additive, KSPCORE_ABI_TERRAIN; ABI version stays 1: the UE bridge static_asserts it),
+  capi.c (Kerbin, 2 workers) + capi.ue_like (Mun) exercise it; STATUS section + row 38; README; check_cites exact 164 / 0
+  on the WP-12a .cpp (pqs_mods.cpp keeps 4 pre-existing WP-11 mismatches); header cites 184 / 0 (scratch checker).
+  Incremental full run before the ABI change: 34/34. CI runs on push (Linux + Windows).
+- fresh run (core/build deleted, -Fresh): 34/34, unit 733 / 1,207,865; bench pinned per CCD (frequency CCD: Kerbin 0.64 ms/quad, StartSphere 308 -> 108 ms with 15 workers; Mun 332 -> 90 ms). STATUS perf + verification updated.
