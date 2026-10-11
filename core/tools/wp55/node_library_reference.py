@@ -222,8 +222,8 @@ def extra_cfg(rng, cls, cn):
         if rng.randrange(3):
             cn.values.append(("screenArea", pick(rng, ENUMS["DialogArea"] + ["Bogus"])))
     elif n in ("ActionMissionScore", "ActionModifierScore"):
-        m = Cfg("MODULES")
-        mod = Cfg("MODULE")
+        m = Cfg("SCOREMODULES")
+        mod = Cfg("SCOREMODULE")
         if n == "ActionMissionScore":
             mod.values += [("name", "ScoreModule_Completion"), ("bonusScore", fnum(f32(pick(rng, [0.0, 100.0, 250.0, 1000.0]))))]
         else:
@@ -260,9 +260,9 @@ BODY_FIELDS = {
 
 def body_field(name, gui):
     if name == "traitName":
-        return {"name": name, "guiName": "#autoLOC_8000111", "value": gui, "has": True}
+        return {"name": name, "guiName": "#autoLOC_8000111", "value": gui if gui is not None else "", "has": True}
     if name == "resourceName":
-        return {"name": name, "guiName": "#autoLOC_8000014", "value": gui, "has": True}
+        return {"name": name, "guiName": "#autoLOC_8000014", "value": gui if gui is not None else "", "has": True}
     return {"name": name, "guiName": "#autoLOC_8000052", "value": "VAL", "has": True}
 
 

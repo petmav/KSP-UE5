@@ -15,6 +15,7 @@
 #include "doctest/doctest.h"
 #include "game_root.hpp"
 #include "ksp/career/funding.hpp"
+#include "ksp/celestial/planetarium.hpp"
 #include "ksp/career/scenario_misc.hpp"
 #include "ksp/celestial/celestial_body.hpp"
 #include "ksp/config/config_node.hpp"
@@ -109,10 +110,12 @@ struct Fixture55 : Fixture54 {
     Game game;
     std::vector<std::unique_ptr<CelestialBody>> bodies;
     std::unique_ptr<PartResourceLibrary> lib;
+    Planetarium planetarium;
     Funding funding;
     bool fundingAwake = false;
     uint64_t guidCounter55 = 0;
     Fixture55() {
+        planetarium.Awake();
         GameSettings::KERBIN_TIME = true;
         KSPUtil::CacheLocalStrings();
         NodeLibraryEnvironment::Reset();
@@ -530,4 +533,429 @@ TEST_CASE("WP-55 harness: synthetic ProtoVessel parts and resource snapshots") {
     REQUIRE(pv->protoPartSnapshots[1]->resources.size() == 2);
     CHECK(pv->protoPartSnapshots[1]->resources[0]->amount == 2.0);
     CHECK(pv->protoPartSnapshots[1]->resources[0]->maxAmount == 10.0);
+}
+
+// ---- Actions.* ----------------------------------------------------------------------------------------------------------------------
+
+namespace {
+struct ResourceEventCounter {
+    int count = 0;
+    void On(MENode*, Vessel*, Part*, ProtoPartSnapshot*) { ++count; }
+    ResourceEventCounter() { GameEvents::Mission::onNodeChangedVesselResources.Add(this, &ResourceEventCounter::On); }
+    ~ResourceEventCounter() { GameEvents::Mission::onNodeChangedVesselResources.Remove(this, &ResourceEventCounter::On); }
+};
+
+// runs a coroutine to its end, collecting the WaitForSeconds values
+std::vector<std::string> RunCoroutine(Enumerator e) {
+    std::vector<std::string> waits;
+    while (e.MoveNext()) {
+        if (e.Current().kind == YieldInstruction::Kind::WaitForSeconds) waits.push_back(G(e.Current().seconds));
+    }
+    return waits;
+}
+
+json WaitsJson(const std::vector<std::string>& w) { return json(w); }
+}  // namespace
+
+TEST_CASE("WP-55 reference: Actions.* modules (Awake, Load / Save, Fire effects)") {
+    Fixture55 fx;
+    size_t checked = 0;
+    for (const json& c : Ref55()["actions"]) {
+        const std::string name = c["name"].get<std::string>();
+        Scene scene(fx);
+        scene.BuildMission(c["env"]);
+        scene.SetEnv(c["env"]);
+        ConfigNode cfg("N");
+        const bool hasCfg = !c["cfg"].is_null();
+        if (hasCfg) cfg = CfgFromJson(c["cfg"]);
+        auto make = [&]() {
+            IActionModule* a = scene.subject->AddAction(name, hasCfg ? &cfg : nullptr);
+            REQUIRE_MESSAGE(a != nullptr, c["id"].get<std::string>());
+            return dynamic_cast<ActionModule*>(a);
+        };
+        ActionModule* mod = make();
+        REQUIRE(mod != nullptr);
+        for (const json& op : c["ops"]) {
+            const std::string o = op["op"].get<std::string>();
+            INFO("case ", c["id"].get<std::string>(), " op ", o);
+            ++checked;
+            if (o == "title") {
+                CHECK(mod->title == op["out"].get<std::string>());
+            } else if (o == "displayName") {
+                CHECK(mod->GetDisplayName() == op["out"].get<std::string>());
+            } else if (o == "info") {
+                CHECK(mod->GetInfo() == op["out"].get<std::string>());
+            } else if (o == "saved") {
+                ConfigNode out("N");
+                mod->Save(out);
+                CHECK(Dump(out) == op["out"].get<std::string>());
+            } else if (o == "scoreDescription") {
+                CHECK(dynamic_cast<IActionMissionScore*>(mod)->GetScoreDescription() == op["out"].get<std::string>());
+            } else if (o == "appObjectiveInfo") {
+                CHECK(mod->GetAppObjectiveInfo() == op["out"].get<std::string>());
+            } else if (o == "body") {
+                const json& f = op["field"];
+                Editor::BaseAPField field(f["name"].get<std::string>(), f["guiName"].get<std::string>(), f["value"].get<std::string>(), f["has"].get<bool>());
+                CHECK(mod->GetNodeBodyParameterString(field) == op["out"].get<std::string>());
+            } else if (o == "env") {
+                scene.SetEnv(op["env"]);
+            } else if (o == "fire") {
+                const json& env = op["env"];
+                ActionModule* a = make();  // ActionVessel caches its vessel: a fresh module per scenario
+                NodeLibraryEnvironment::screenMessages.clear();
+                NodeLibraryEnvironment::dialogMessages.clear();
+                NodeLibraryEnvironment::systemMessages.clear();
+                NodeLibraryEnvironment::explodedParts.clear();
+                NodeLibraryEnvironment::stagesActivated = 0;
+                NodeLibraryEnvironment::moduleCalls.clear();
+                scene.mission->isScoreEnabled = env.value("scoreEnabled", true);
+                json out = json::object();
+                World* w = scene.world;
+                auto partIndex = [&](Part* p) -> json {
+                    for (size_t vi = 0; vi < w->vessels.size(); ++vi)
+                        for (size_t pi = 0; pi < w->vessels[vi]->parts.size(); ++pi)
+                            if (w->vessels[vi]->parts[pi] == p) return json::array({vi, pi});
+                    return json(nullptr);
+                };
+                Vessel* active = FlightRegistry::ActiveVessel;
+                if (name == "ActionMessage") {
+                    RunCoroutine(a->Fire());
+                    json arr = json::array();
+                    for (const auto& m : NodeLibraryEnvironment::screenMessages)
+                        arr.push_back({{"text", m.text}, {"duration", G(m.duration)}, {"style", dotnet::EnumToString(m.style)}, {"persist", m.persist}});
+                    out = {{"screen", arr}};
+                } else if (name == "ActionDialogMessage") {
+                    RunCoroutine(a->Fire());
+                    REQUIRE(NodeLibraryEnvironment::dialogMessages.size() == 1);
+                    const auto& d = NodeLibraryEnvironment::dialogMessages[0];
+                    out = {{"isPaused", scene.subject->isPaused},
+                           {"dialog", {{"heading", d.heading}, {"message", d.message}, {"instructor", d.instructorName}, {"button", d.buttonLabel},
+                                       {"textAreaSize", d.textAreaSize},
+                                       {"area", dotnet::EnumToString(static_cast<Actions::ActionDialogMessage::DialogMessageArea>(d.screenArea))},
+                                       {"autoClose", d.autoClose}, {"timeout", d.autoCloseTimeOut}, {"grow", d.autoGrowDialogHeight},
+                                       {"instructor2", d.instructorName2}}},
+                           {"systemMessage", json::array({NodeLibraryEnvironment::systemMessages.at(0).first, NodeLibraryEnvironment::systemMessages.at(0).second})}};
+                } else if (name == "ActionModifierFunds") {
+                    RunCoroutine(a->Fire());
+                    out = {{"funds", Funding::Instance == nullptr ? json(nullptr) : json(GD(Funding::Instance->Funds()))}};
+                } else if (name == "ActionMissionScore" || name == "ActionModifierScore") {
+                    RunCoroutine(a->Fire());
+                    out = {{"score", G(scene.mission->currentScore)}};
+                } else if (name == "ActionVessel") {
+                    RunCoroutine(a->Fire());
+                } else if (name == "ActionVesselActionGroup") {
+                    auto* ag = dynamic_cast<Actions::ActionVesselActionGroup*>(a);
+                    const bool before = active != nullptr ? active->ActionGroups()[ag->actionGroup] : false;
+                    auto waits = RunCoroutine(a->Fire());
+                    const bool after = active != nullptr ? active->ActionGroups()[ag->actionGroup] : false;
+                    out = {{"waits", WaitsJson(waits)}, {"toggled", before != after ? json(dotnet::EnumToString(ag->actionGroup)) : json(nullptr)}};
+                } else if (name == "ActionVesselExplode") {
+                    auto waits = RunCoroutine(a->Fire());
+                    json ex = json::array();
+                    Vessel* target = dynamic_cast<Actions::ActionVesselExplode*>(a)->vessel();
+                    for (Part* p : NodeLibraryEnvironment::explodedParts) {
+                        json ix = partIndex(p);
+                        ex.push_back(ix[1]);
+                    }
+                    out = {{"exploded", ex}, {"waits", WaitsJson(waits)}, {"state", target ? json(dotnet::EnumToString(target->state)) : json(nullptr)},
+                           {"isRunning", a->isRunning}};
+                    if (target != nullptr) out["pid"] = target->persistentId;
+                } else if (name == "ActionVesselStage") {
+                    auto waits = RunCoroutine(a->Fire());
+                    const bool toggled = active != nullptr && active->ActionGroups()[KSPActionGroup::Stage];
+                    out = {{"waits", WaitsJson(waits)}, {"stages", NodeLibraryEnvironment::stagesActivated}, {"toggled", toggled ? json("Stage") : json(nullptr)}};
+                } else if (name == "ActionSetCamera") {
+                    MissionCameraModeOptions m{};
+                    MissionCameraLockOptions l{};
+                    MissionsEnvironment::setLockedCamera = [&](Mission*, MissionCameraModeOptions a1, MissionCameraLockOptions b1) { m = a1; l = b1; };
+                    RunCoroutine(a->Fire());
+                    MissionsEnvironment::setLockedCamera = nullptr;
+                    out = {{"camera", json::array({dotnet::EnumToString(m), dotnet::EnumToString(l)})}};
+                } else if (name == "ActionPartResourceAmount") {
+                    ResourceEventCounter ev;
+                    json requested = nullptr;
+                    const double result = env.value("requestResult", 0.0);
+                    NodeLibraryEnvironment::vesselRequestResource = [&](Vessel*, Part*, int, double demand, bool) {
+                        requested = GD(demand);
+                        return result;
+                    };
+                    bool threw = false;
+                    try {
+                        RunCoroutine(a->Fire());
+                    } catch (const NullReferenceException&) {
+                        threw = true;
+                    }
+                    NodeLibraryEnvironment::vesselRequestResource = nullptr;
+                    Vessel* target = dynamic_cast<Actions::ActionPartResourceAmount*>(a)->vessel();
+                    if (threw) {
+                        out = {{"throws", "NullReferenceException"}};
+                    } else if (target == nullptr) {
+                        out = json::object();
+                    } else if (target->loaded) {
+                        out = {{"requestDemand", requested}, {"event", ev.count}};
+                    } else {
+                        json amounts = json::array();
+                        for (const auto& part : target->protoVessel->protoPartSnapshots) {
+                            json row = json::array();
+                            for (const auto& r : part->resources) row.push_back(GD(r->amount));
+                            amounts.push_back(row);
+                        }
+                        out = {{"events", ev.count}, {"amounts", amounts}};
+                    }
+                } else if (name == "ActionPartExplode") {
+                    NodeLibraryEnvironment::findLoadedPart = [&](uint32_t id) -> Part* {
+                        for (auto& v : w->vessels) {
+                            if (!v->loaded) continue;
+                            for (Part* p : v->parts)
+                                if (p->fields.persistentId == id) return p;
+                        }
+                        return nullptr;
+                    };
+                    bool switched = false;
+                    NodeLibraryEnvironment::findNearestControllableVessel = [&](Vessel* v) { return v; };
+                    NodeLibraryEnvironment::forceSetActiveVessel = [&](Vessel*) { switched = true; };
+                    json rr = nullptr;
+                    NodeLibraryEnvironment::randomRange = [&](int lo, int hi) {
+                        rr = json::array({lo, hi});
+                        return std::min(env.value("randomIndex", lo), hi - 1);
+                    };
+                    try {
+                        RunCoroutine(a->Fire());
+                        json ex = json::array();
+                        for (Part* p : NodeLibraryEnvironment::explodedParts) ex.push_back(partIndex(p));
+                        out = {{"exploded", ex}};
+                        if (switched) out["switched"] = true;
+                        if (!rr.is_null()) out["randomRange"] = rr;
+                    } catch (const KeyNotFoundException&) {
+                        out = {{"throws", "KeyNotFoundException"}};
+                    } catch (const NullReferenceException&) {
+                        out = {{"throws", "NullReferenceException"}};
+                    }
+                    NodeLibraryEnvironment::findLoadedPart = nullptr;
+                    NodeLibraryEnvironment::findNearestControllableVessel = nullptr;
+                    NodeLibraryEnvironment::forceSetActiveVessel = nullptr;
+                    NodeLibraryEnvironment::randomRange = nullptr;
+                } else {
+                    FAIL("no fire executor for " << name);
+                }
+                CHECK(out == op["out"]);
+            } else {
+                FAIL("unknown op " << o);
+            }
+        }
+    }
+    CHECK(checked > 600);
+}
+
+// ---- Adjusters.* ------------------------------------------------------------------------------------------------------------------
+
+namespace {
+struct DummyModule {
+    int x = 0;
+};
+
+Vector3f V3(const json& a) { return Vector3f(a[0].get<float>(), a[1].get<float>(), a[2].get<float>()); }
+json V3Hex(Vector3f v) { return json::array({Hex32(v.x), Hex32(v.y), Hex32(v.z)}); }
+
+std::unique_ptr<Adjusters::AdjusterPartModuleBase> MakeAdjuster(const std::string& name, int ctor) {
+    if (ctor == 1) return Adjusters::AdjusterPartModuleBase::CreateInstanceOfModuleAdjuster(name);
+    // the parameterless constructors
+#define KSP_CTOR0(X) \
+    if (name == #X) return std::make_unique<Adjusters::X>();
+    KSP_CTOR0(AdjusterActiveRadiatorMaxEnergyTransfer) KSP_CTOR0(AdjusterAlternatorOutput) KSP_CTOR0(AdjusterControlSurfaceActuatorSpeed)
+    KSP_CTOR0(AdjusterDataTransmitterPower) KSP_CTOR0(AdjusterDeployableSolarPanelEfficiency) KSP_CTOR0(AdjusterEnginesThrottle)
+    KSP_CTOR0(AdjusterGeneratorEfficiency) KSP_CTOR0(AdjusterGimbalLimitControl) KSP_CTOR0(AdjusterKerbNetAccessDisabled)
+    KSP_CTOR0(AdjusterLiftingSurfaceLiftForce) KSP_CTOR0(AdjusterLightIntensity) KSP_CTOR0(AdjusterReactionWheelTorque)
+    KSP_CTOR0(AdjusterSASServiceLevel) KSP_CTOR0(AdjusterWheelBrakesTorque) KSP_CTOR0(AdjusterWheelMotorTorque)
+    KSP_CTOR0(FailureActiveRadiatorStuck) KSP_CTOR0(FailureAnchoredDecouplerCantDecouple) KSP_CTOR0(FailureCargoBayStuck)
+    KSP_CTOR0(FailureControlSurfaceDisableControl) KSP_CTOR0(FailureCrossfeedStuck) KSP_CTOR0(FailureDataTransmitterBroken)
+    KSP_CTOR0(FailureDecoupleCantDecouple) KSP_CTOR0(FailureDeployablePartStuck) KSP_CTOR0(FailureDockingNodeCantUndock)
+    KSP_CTOR0(FailureEnginesDeadEngine) KSP_CTOR0(FailureFuelLineBlocked) KSP_CTOR0(FailureGPSNoDisplay) KSP_CTOR0(FailureGrappleNodeCantGrapple)
+    KSP_CTOR0(FailureGrappleNodeCantRelease) KSP_CTOR0(FailureLightFlickering) KSP_CTOR0(FailureLightStuck) KSP_CTOR0(FailureProbeControlPointBroken)
+    KSP_CTOR0(FailureRCSFireRandomly) KSP_CTOR0(FailureRCSStopWorking) KSP_CTOR0(FailureReactionWheelBroken) KSP_CTOR0(FailureReactionWheelStuck)
+    KSP_CTOR0(FailureResourceIntakeStuck) KSP_CTOR0(FailureScienceExperimentDisable) KSP_CTOR0(FailureWheelDeploymentStuck)
+#undef KSP_CTOR0
+    return nullptr;
+}
+
+template <class T>
+json StuckState(Adjusters::AdjusterPartModuleBase* a) {
+    auto* t = dynamic_cast<T*>(a);
+    return t ? json(dotnet::EnumToString(t->stuckState)) : json(nullptr);
+}
+json StuckStateOf(Adjusters::AdjusterPartModuleBase* a) {
+    using namespace Adjusters;
+    for (json j : {StuckState<FailureActiveRadiatorStuck>(a), StuckState<FailureCargoBayStuck>(a), StuckState<FailureCrossfeedStuck>(a),
+                   StuckState<FailureDeployablePartStuck>(a), StuckState<FailureLightStuck>(a), StuckState<FailureResourceIntakeStuck>(a),
+                   StuckState<FailureWheelDeploymentStuck>(a)})
+        if (!j.is_null()) return j;
+    return json(nullptr);
+}
+
+// the Apply* maths by class name
+json ApplyOf(Adjusters::AdjusterPartModuleBase* a, const std::string& name, const json& args) {
+    using namespace Adjusters;
+    const auto f = [&] { return args[0].get<float>(); };
+#define KSP_F(X, FN) \
+    if (name == #X) return Hex32(dynamic_cast<X*>(a)->FN(f()));
+    KSP_F(AdjusterAlternatorOutput, ApplyOutputAdjustment) KSP_F(AdjusterControlSurfaceActuatorSpeed, ApplyActuatorSpeedAdjustment)
+    KSP_F(AdjusterDeployableSolarPanelEfficiency, ApplyEfficiencyAdjustment) KSP_F(AdjusterEnginesThrottle, ApplyThrottleAdjustment)
+    KSP_F(AdjusterGeneratorEfficiency, ApplyEfficiencyAdjustment) KSP_F(AdjusterLightIntensity, ApplyIntensityAdjustment)
+    KSP_F(AdjusterWheelBrakesTorque, ApplyTorqueAdjustment) KSP_F(AdjusterWheelMotorTorque, ApplyTorqueAdjustment)
+    KSP_F(FailureControlSurfaceDisableControl, ApplyActuatorSpeedAdjustment)
+#undef KSP_F
+    if (name == "AdjusterActiveRadiatorMaxEnergyTransfer")
+        return Hex64(dynamic_cast<AdjusterActiveRadiatorMaxEnergyTransfer*>(a)->ApplyMaxEnergyTransferAdjustment(args[0].get<double>()));
+    if (name == "AdjusterDataTransmitterPower") return Hex64(dynamic_cast<AdjusterDataTransmitterPower*>(a)->ApplyPowerAdjustment(args[0].get<double>()));
+    if (name == "AdjusterSASServiceLevel")
+        return std::to_string(dynamic_cast<AdjusterSASServiceLevel*>(a)->ApplySASServiceLevelAdjustment(args[0].get<int>()));
+    if (name == "AdjusterLiftingSurfaceLiftForce") return V3Hex(dynamic_cast<AdjusterLiftingSurfaceLiftForce*>(a)->ApplyLiftForceAdjustment(V3(args)));
+    if (name == "AdjusterGimbalLimitControl") return V3Hex(dynamic_cast<AdjusterGimbalLimitControl*>(a)->ApplyControlAdjustment(V3(args)));
+    if (name == "AdjusterReactionWheelTorque") return V3Hex(dynamic_cast<AdjusterReactionWheelTorque*>(a)->ApplyTorqueAdjustment(V3(args)));
+    if (name == "FailureReactionWheelStuck") return V3Hex(dynamic_cast<FailureReactionWheelStuck*>(a)->ApplyTorqueAdjustment(Vector3f()));
+    if (name == "FailureRCSFireRandomly") {
+        size_t i = 0;
+        NodeLibraryEnvironment::randomValue = [&] { return args[i++].get<float>(); };
+        Vector3f r = dynamic_cast<FailureRCSFireRandomly*>(a)->ApplyInputLinearAdjustment(Vector3f());
+        NodeLibraryEnvironment::randomValue = nullptr;
+        return V3Hex(r);
+    }
+    FAIL("no apply executor for " << name);
+    return nullptr;
+}
+
+json FlagOf(Adjusters::AdjusterPartModuleBase* a, const std::string& fn) {
+    using namespace Adjusters;
+#define KSP_FLAG(BASE, FNAME) \
+    if (fn == #FNAME) { auto* b = dynamic_cast<BASE*>(a); REQUIRE(b != nullptr); return b->FNAME(); }
+    KSP_FLAG(AdjusterActiveRadiatorBase, IsBlockingCooling)
+    KSP_FLAG(AdjusterCargoBayBase, IsCargoBayStuck) KSP_FLAG(AdjusterDataTransmitterBase, IsDataTransmitterBroken)
+    KSP_FLAG(AdjusterDeployablePartBase, IsDeployablePartStuck) KSP_FLAG(AdjusterDockingNodeBase, IsBlockingUndock)
+    KSP_FLAG(AdjusterEnginesBase, IsEngineDead) KSP_FLAG(AdjusterGrappleNodeBase, IsBlockingGrappleRelease)
+    KSP_FLAG(AdjusterGrappleNodeBase, IsBlockingGrappleGrab) KSP_FLAG(AdjusterProbeControlPointBase, IsProbeControlPointBroken)
+    KSP_FLAG(AdjusterRCSBase, IsRCSBroken) KSP_FLAG(AdjusterReactionWheelBase, IsReactionWheelBroken)
+#undef KSP_FLAG
+    if (fn == "IsBlockingDecouple") {  // AdjusterDecoupleBase and AdjusterAnchoredDecouplerBase both declare it
+        if (auto* d = dynamic_cast<AdjusterDecoupleBase*>(a)) return d->IsBlockingDecouple();
+        if (auto* d = dynamic_cast<AdjusterAnchoredDecouplerBase*>(a)) return d->IsBlockingDecouple();
+    }
+    FAIL("no flag executor for " << fn);
+    return nullptr;
+}
+
+void SetScenarioHooks(const json& scen) {
+    DummyModule* dummy = new DummyModule;  // never dereferenced: only the hooks look at it
+    (void)dummy;
+}
+}  // namespace
+
+TEST_CASE("WP-55 reference: Adjusters.* dynamic modules (Load / Save, maths, Activate, flags)") {
+    Fixture55 fx;
+    size_t checked = 0;
+    static DummyModule dummy;
+    PartModule* fakeModule = reinterpret_cast<PartModule*>(&dummy);
+    for (const json& c : Ref55()["adjusters"]) {
+        const std::string name = c["name"].get<std::string>();
+        MissionsEnvironment::newGuid = [&fx] {
+            ++fx.guidCounter55;
+            char b[48];
+            std::snprintf(b, sizeof b, "55555555-0000-0000-0000-%012llu", static_cast<unsigned long long>(fx.guidCounter55));
+            return Guid::Parse(b);
+        };
+        fx.guidCounter55 = 0;
+        DynamicModule::ResetObjectIds();
+        auto mod = MakeAdjuster(name, c["ctor"].get<int>());
+        REQUIRE_MESSAGE(mod != nullptr, c["id"].get<std::string>());
+        if (!c["cfg"].is_null()) {
+            ConfigNode cfg = CfgFromJson(c["cfg"]);
+            mod->Load(cfg);
+        }
+        for (const json& op : c["ops"]) {
+            const std::string o = op["op"].get<std::string>();
+            INFO("case ", c["id"].get<std::string>(), " op ", o);
+            ++checked;
+            if (o == "guiName") {
+                auto tmp = MakeAdjuster(name, op["ctor"].get<int>());
+                REQUIRE(tmp != nullptr);
+                CHECK(tmp->guiName == op["out"].get<std::string>());
+            } else if (o == "displayName") {
+                CHECK(mod->GetDisplayName() == op["out"].get<std::string>());
+            } else if (o == "saved") {
+                ConfigNode out("N");
+                mod->Save(out);
+                CHECK(Dump(out) == op["out"].get<std::string>());
+            } else if (o == "flags") {
+                CHECK(json::array({mod->canBeRepaired, mod->disableKSPFields, mod->disableKSPActions, mod->disableKSPEvents}) == op["out"]);
+            } else if (o == "body") {
+                const json& f = op["field"];
+                Editor::BaseAPField field(f["name"].get<std::string>(), f["guiName"].get<std::string>(), f["value"].get<std::string>(), f["has"].get<bool>());
+                CHECK(mod->GetNodeBodyParameterString(field) == op["out"].get<std::string>());
+            } else if (o == "apply") {
+                if (name == "FailureLightFlickering") {
+                    const json& a = op["args"];
+                    NodeLibraryEnvironment::randomRangeFloat = [&](float, float) { return a[1].get<float>(); };
+                    NodeLibraryEnvironment::deltaTime = [&] { return a[2].get<float>(); };
+                    auto* fl = dynamic_cast<Adjusters::FailureLightFlickering*>(mod.get());
+                    const float r = fl->ApplyIntensityAdjustment(a[0].get<float>());
+                    NodeLibraryEnvironment::randomRangeFloat = nullptr;
+                    NodeLibraryEnvironment::deltaTime = nullptr;
+                    CHECK(Hex32(r) == op["out"]["out"].get<std::string>());
+                } else {
+                    CHECK(ApplyOf(mod.get(), name, op["args"]) == op["out"]["out"]);
+                }
+            } else if (o == "activate" || o == "deactivate") {
+                const json& scen = op["scen"];
+                std::unique_ptr<Adjusters::AdjusterPartModuleBase> target;
+                Adjusters::AdjusterPartModuleBase* t = mod.get();
+                if (op.value("fresh", false)) {
+                    target = MakeAdjuster(name, c["ctor"].get<int>());
+                    if (!c["cfg"].is_null()) {
+                        ConfigNode cfg = CfgFromJson(c["cfg"]);
+                        target->Load(cfg);
+                    }
+                    t = target.get();
+                }
+                NodeLibraryEnvironment::moduleCalls.clear();
+                const std::string module = scen.contains("module") && !scen["module"].is_null() ? scen["module"].get<std::string>() : "";
+                NodeLibraryEnvironment::moduleIsA = [module](PartModule*, const std::string& cls) { return cls == module; };
+                NodeLibraryEnvironment::moduleQuery = [scen](PartModule*, const std::string&, const std::string& q) {
+                    return scen.contains("queries") && scen["queries"].contains(q) && scen["queries"][q].get<bool>();
+                };
+                NodeLibraryEnvironment::moduleText = [scen](PartModule*, const std::string&, const std::string& m) {
+                    return scen.contains("text") && scen["text"].contains(m) ? scen["text"][m].get<std::string>() : std::string();
+                };
+                NodeLibraryEnvironment::reactionWheelAppliedTorque = [scen](PartModule*) {
+                    return scen.contains("torque") ? V3(scen["torque"]) : Vector3f();
+                };
+                if (scen.contains("rnd")) NodeLibraryEnvironment::randomRangeFloat = [scen](float, float) { return scen["rnd"].get<float>(); };
+                if (scen.contains("dt")) NodeLibraryEnvironment::deltaTime = [scen] { return scen["dt"].get<float>(); };
+                t->adjustedModule = fakeModule;
+                t->AdjusterState = "#autoLOC_8100276";
+                if (o == "activate") t->Activate();
+                else t->Deactivate();
+                json calls = json::array();
+                for (const auto& s : NodeLibraryEnvironment::moduleCalls) calls.push_back(s);
+                NodeLibraryEnvironment::moduleIsA = nullptr;
+                NodeLibraryEnvironment::moduleQuery = nullptr;
+                NodeLibraryEnvironment::moduleText = nullptr;
+                NodeLibraryEnvironment::reactionWheelAppliedTorque = nullptr;
+                NodeLibraryEnvironment::randomRangeFloat = nullptr;
+                NodeLibraryEnvironment::deltaTime = nullptr;
+                if (o == "deactivate") {
+                    CHECK(calls == op["out"]["calls"]);
+                } else {
+                    const json& exp = op["out"];
+                    const json status = t->AdjusterState == "#autoLOC_8100276" ? json(nullptr) : json(t->AdjusterState);
+                    CHECK(status == exp["status"]);
+                    CHECK(calls == exp["calls"]);
+                    if (exp.contains("stuckState")) CHECK(StuckStateOf(t) == exp["stuckState"]);
+                }
+            } else if (o == "flag") {
+                CHECK(FlagOf(mod.get(), op["fn"].get<std::string>()) == op["out"]);
+            } else {
+                FAIL("unknown op " << o);
+            }
+        }
+    }
+    CHECK(checked > 2000);
 }

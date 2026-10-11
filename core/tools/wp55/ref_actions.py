@@ -138,18 +138,21 @@ class ActionDialogMessage(Mod):
 
     def body(self, field, env):
         if field["name"] == "missionInstructor":
-            return instructor_body(self.instructorName)
+            return instructor_body(self.instructorName, self.vintageSuit)
         return self.base_body(field)
 
 
-def instructor_body(name):
+def instructor_body(name, vintage=False):
     """MissionInstructor.GetNodeBodyParameterString (MissionInstructor.cs:43)."""
     table = {"Instructor_Wernher": "#autoLOC_900000", "Instructor_Gene": "#autoLOC_900001", "Strategy_MechanicGuy": "#autoLOC_900002",
              "Strategy_Mortimer": "#autoLOC_900004", "Strategy_PRGuy": "#autoLOC_900005", "Strategy_ScienceGuy": "#autoLOC_900006",
              "Instructor_Jeb_MaleVeteran": "#autoLOC_20803", "Instructor_Bill_MaleVeteran": "#autoLOC_20811",
              "Instructor_Bob_MaleVeteran": "#autoLOC_20819", "Instructor_Val_FemaleVeteran": "#autoLOC_20827"}
     if name in table:
-        return fmt("#autoLOC_8006002") + ": " + fmt(table[name])
+        text = fmt("#autoLOC_8006002") + ": " + fmt(table[name])
+        if "Veteran" in name:
+            text += chr(10) + fmt("#autoLOC_8002109") + ": " + ("True" if vintage else "False")
+        return text
     return ""
 
 
@@ -209,8 +212,8 @@ class ScoreActionBase(Mod):
         self.modifierScore = 0.0
 
     def load_fields(self, cfg):
-        for modules in [n for n in cfg.nodes if n.name == "MODULES"]:
-            for m in [n for n in modules.nodes if n.name == "MODULE"]:
+        for modules in [n for n in cfg.nodes if n.name == "SCOREMODULES"]:
+            for m in [n for n in modules.nodes if n.name == "SCOREMODULE"]:
                 name = m.get("name")
                 self.module = name
                 if name == "ScoreModule_Completion":
@@ -486,6 +489,8 @@ class ActionPartResourceAmount(ActionVessel):
         if v is None:
             return {}
         if v["loaded"]:
+            if self.resourceName not in env.d.get("resourceDefs", {}):
+                return {"throws": "NullReferenceException"}  # def.id after the non-returning yield (ActionPartResourceAmount.cs:27)
             demand = f32(0.0 - self.adjustAmount)
             got = env.d.get("requestResult", 0.0)
             return {"requestDemand": dnum(demand), "event": 1 if got > 0.0 else 0}
@@ -541,6 +546,9 @@ class ActionPartExplode(Mod):
                     if pid == self.partID:
                         out = {"exploded": [[vi, pi]]}
                         a = env.active()
+                        if a is None:
+                            # partout == FlightGlobals.ActiveVessel.rootPart: NullReferenceException (the part was already exploded)
+                            return {"throws": "NullReferenceException"}
                         if a is not None and a["partIds"][0] == self.partID:
                             out["switched"] = True
                         return out
@@ -551,6 +559,6 @@ class ActionPartExplode(Mod):
         if v["loaded"]:
             n = len(v["partIds"])
             lo = 1 if 1 < n else 0
-            idx = env.d.get("randomIndex", lo)
+            idx = min(env.d.get("randomIndex", lo), n - 1)
             return {"exploded": [[env.vessels.index(v), idx]], "randomRange": [lo, n]}
         return {"exploded": []}
