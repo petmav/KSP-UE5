@@ -9,4 +9,4 @@ Branch wp20a (from jolt-spike b3b70db5), origin/main merged (24 commits, no conf
 - [x] Windows full ctest 34/34, unit 718 / 1,094,123
 - [x] Linux GCC 13.3 (WSL, own build tree ~/wp20a-gcc): builds, WP-20a tests pass. First attempt failed to link (typeinfo for JPH::GroupFilter) -> glue built with -fno-rtti
 - [x] docs: third_party/jolt/README.md, VERSIONS.md, README.md, STATUS.md (section + row 39)
-- [ ] final: delete core/build + -Fresh, push
+- [x] final: core/build deleted + run_tests.ps1 -Fresh: configure 2.1 s, build 169 s, ctest 34/34 pass (187 s)
