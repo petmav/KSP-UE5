@@ -377,3 +377,149 @@ TEST_CASE("WP-38b ARM / Base / Station / ISRU / Satellite contracts: generated t
         CHECK(counts[t].second > 0);
     }
 }
+
+// ---- parameter texts -------------------------------------------------------------------------------------------------------------------------------
+namespace {
+
+std::string ReplaceAgent(std::string s, const std::string& title) {
+    const std::string key = "{AGENT}";
+    for (size_t p = s.find(key); p != std::string::npos; p = s.find(key, p + title.size())) s.replace(p, key.size(), title);
+    return s;
+}
+
+Vessel::Situations SituationOf(const std::string& s) {
+    if (s == "XXX") return static_cast<Vessel::Situations>(0);
+    return dotnet::EnumParseFull<Vessel::Situations>(s);
+}
+
+FP::OrbitType OrbitTypeOf38b(const std::string& s) {
+    for (int i = 0; i < 7; ++i)
+        if (s == OrbitName(static_cast<FP::OrbitType>(i))) return static_cast<FP::OrbitType>(i);
+    FAIL("orbit type " << s);
+    return FP::OrbitType::RANDOM;
+}
+
+std::unique_ptr<ContractParameter> MakeParam(World38b& w, const json& e) {
+    const std::string cls = e["cls"].get<std::string>();
+    auto body = [&](const char* key) -> CelestialBody* { return e[key].is_null() ? nullptr : &w.Body(e[key].get<std::string>()); };
+    if (cls == "Stability") return std::make_unique<P38::StabilityParameter>(F38b(e["hold"]));
+    if (cls == "CrewCapacity") return std::make_unique<P38::CrewCapacityParameter>(e["n"].get<int>());
+    if (cls == "CrewTrait") return std::make_unique<P38::CrewTraitParameter>(e["trait"].get<std::string>(), e["count"].get<int>(), e["desc"].get<std::string>());
+    if (cls == "MobileBase") return std::make_unique<P38::MobileBaseParameter>();
+    if (cls == "LocationAndSituation")
+        return std::make_unique<P38::LocationAndSituationParameter>(body("body"), SituationOf(e["sit"].get<std::string>()), e["noun"].get<std::string>(), e["final"].get<bool>());
+    if (cls == "VesselDestination")
+        return std::make_unique<P38::VesselDestinationParameter>(body("body"), dotnet::EnumParseFull<FlightLog_EntryType>(e["entry"].get<std::string>()));
+    if (cls == "KerbalDestination")
+        return std::make_unique<P38::KerbalDestinationParameter>(body("body"), dotnet::EnumParseFull<FlightLog_EntryType>(e["entry"].get<std::string>()),
+                                                                 e["kerbal"].get<std::string>());
+    if (cls == "KerbalGeeAdventure") return std::make_unique<P38::KerbalGeeAdventureParameter>(e["kerbal"].get<std::string>());
+    if (cls == "KerbalTour")
+        return std::make_unique<P38::KerbalTourParameter>(e["kerbal"].get<std::string>(), dotnet::EnumParseFull<ProtoCrewMember_Gender>(e["gender"].get<std::string>()));
+    if (cls == "VesselSystems") {
+        const std::string m = e["manned"].get<std::string>();
+        return std::make_unique<P38::VesselSystemsParameter>(std::vector<std::string>{}, e["descs"].get<std::vector<std::string>>(), e["vdesc"].get<std::string>(),
+                                                             dotnet::EnumParseFull<L38::MannedStatus>(m), e["requireNew"].get<bool>());
+    }
+    if (cls == "PartRequest") {
+        ConfigNode n("PART_REQUEST");
+        n.AddValue("Article", e["article"].get<std::string>());
+        n.AddValue("PartDescription", e["partDescription"].get<std::string>());
+        n.AddValue("VesselDescription", e["vesselDescription"].get<std::string>());
+        for (const json& p : e["parts"]) n.AddValue("Part", p.get<std::string>());
+        for (const json& p : e["modules"]) n.AddValue("Module", p.get<std::string>());
+        return std::make_unique<P38::PartRequestParameter>(n);
+    }
+    if (cls == "ResourcePossession")
+        return std::make_unique<P38::ResourcePossessionParameter>(e["name"].get<std::string>(), e["rtitle"].get<std::string>(), e["vessel"].get<std::string>(), e["goal"].get<double>());
+    if (cls == "ResourceExtraction")
+        return std::make_unique<P38::ResourceExtractionParameter>(e["name"].get<std::string>(), e["rtitle"].get<std::string>(), e["goal"].get<double>(), body("body"),
+                                                                  std::vector<std::string>{"ModuleResourceHarvester"});
+    if (cls == "Asteroid") return std::make_unique<P38::AsteroidParameter>(e["size"].get<std::string>(), e["forStation"].get<bool>());
+    if (cls == "Comet") return std::make_unique<P38::CometParameter>(e["size"].get<std::string>(), e["forStation"].get<bool>());
+    if (cls == "CometDetection") return std::make_unique<P38::CometDetectionParameter>(e["count"].get<int>(), "sentinel");
+    if (cls == "CometScience") return std::make_unique<P38::CometScienceParameter>(e["id"].get<uint32_t>(), e["name"].get<std::string>(), "subject");
+    if (cls == "Construction")
+        return std::make_unique<P38::ConstructionParameter>(e["part"].get<std::string>(), e["vessel"].get<uint32_t>(), e["vesselName"].get<std::string>(), body("body"));
+    if (cls == "RepairPart")
+        return std::make_unique<P38::RepairPartParameter>(e["partId"].get<uint32_t>(), e["part"].get<std::string>(), e["vessel"].get<uint32_t>(), e["vesselName"].get<std::string>(),
+                                                          body("body"));
+    if (cls == "SpecificOrbit")
+        return std::make_unique<P38::SpecificOrbitParameter>(OrbitTypeOf38b(e["orbitType"].get<std::string>()), 10.0, 0.1, 800000.0, 10.0, 20.0, 0.0, 0.0, body("body"), 10.0);
+    if (cls == "SpecificOrbitNotes")
+        return std::make_unique<P38::SpecificOrbitParameter>(FP::OrbitType::RANDOM, e["inc"].get<double>(), e["ecc"].get<double>(), e["sma"].get<double>(), e["lan"].get<double>(),
+                                                             e["arg"].get<double>(), 0.0, 0.0, body("body"), 10.0);
+    if (cls == "RoverWayPoint") return std::make_unique<P38::RoverWayPointParameter>(1.0, 2.0, 3.0, 4.0, &w.Body("Kerbin"));
+    FAIL("unknown parameter class " << cls);
+    return nullptr;
+}
+
+}  // namespace
+
+TEST_CASE("WP-38b parameters: titles, notes, messages and hashes (tag tables of the dictionary, the managed Lingoona fallback) vs the reference") {
+    World38b w;
+    int rows = 0;
+    std::map<std::string, int> perClass;
+    for (const json& e : Ref38b()["paramTexts"]) {
+        auto root = std::make_unique<C38::ARMContract>();
+        root->agent = w.agents->GetAgent("Kerbodyne");
+        REQUIRE(root->agent != nullptr);
+        root->prestige = e.contains("prestige") ? PrestigeOf38b(e["prestige"].get<int>()) : ContractPrestige::Trivial;
+        ContractParameter* p = root->AddParameter(MakeParam(w, e));
+        INFO(e.dump());
+        const std::string cls = e["cls"].get<std::string>();
+        if (cls == "SpecificOrbitNotes") {
+            CHECK(p->Notes() == e["notes"].get<std::string>());
+        } else {
+            CHECK(p->Title() == e["title"].get<std::string>());
+            if (e.contains("notes") && !e["notes"].is_null()) CHECK(p->Notes() == ReplaceAgent(e["notes"].get<std::string>(), Localizer38b::Format(root->agent->Title())));
+            if (e.contains("notes") && e["notes"].is_null()) CHECK(p->Notes().empty());
+            if (e.contains("complete")) CHECK(p->MessageComplete() == e["complete"].get<std::string>());
+            if (e.contains("hash")) CHECK(p->HashString() == e["hash"].get<std::string>());
+        }
+        ++perClass[cls];
+        ++rows;
+    }
+    CHECK(rows > 200);
+    MESSAGE("parameter text rows: " << rows << " over " << perClass.size() << " classes");
+    CHECK(perClass.size() >= 22);
+}
+
+// ---- StringUtilities ------------------------------------------------------------------------------------------------------------------------------
+TEST_CASE("WP-38b StringUtilities: TitleCase, ThisThisAndThat, pronouns, ValueAndUnits (decimal #,###.#), CardinalDirectionBetween, IsVowel, CalculateReadDuration, Pack / Unpack") {
+    World38b w;
+    const json& su = Ref38b()["stringUtils"];
+    for (const json& e : su["titleCase"]) CHECK(L38::StringUtilities::TitleCase(e["in"].get<std::string>()) == e["out"].get<std::string>());
+    for (const json& e : su["thisThisAndThat"]) CHECK(L38::StringUtilities::ThisThisAndThat(e["in"].get<std::vector<std::string>>()) == e["out"].get<std::string>());
+    for (const json& e : su["pronouns"]) {
+        const auto casing = dotnet::EnumParseFull<L38::PronounCasing>(e["casing"].get<std::string>());
+        const auto gender = dotnet::EnumParseFull<L38::GrammaticalGender>(e["gender"].get<std::string>());
+        CHECK(L38::StringUtilities::AppropriatePronoun(casing, gender, e["post"].get<bool>()) == e["out"].get<std::string>());
+    }
+    for (const json& e : su["valueAndUnits"]) {
+        INFO(e.dump());
+        const std::string t = e["type"].get<std::string>() == "NULL_" ? std::string("NULL") : e["type"].get<std::string>();
+        CHECK(L38::StringUtilities::ValueAndUnits(dotnet::EnumParseFull<L38::RecordTrackType>(t), e["value"].get<double>()) == e["out"].get<std::string>());
+    }
+    for (const json& e : su["cardinal"]) {
+        INFO(e.dump());
+        const auto& a = e["args"];
+        CHECK(L38::StringUtilities::CardinalDirectionBetween(a[0].get<double>(), a[1].get<double>(), a[2].get<double>(), a[3].get<double>()) == e["out"].get<std::string>());
+    }
+    for (const json& e : su["isVowel"]) CHECK(L38::StringUtilities::IsVowel(e["c"].get<std::string>()[0]) == e["out"].get<bool>());
+    for (const json& e : su["readDuration"]) CHECK_F32b(L38::StringUtilities::CalculateReadDuration(e["in"].get<std::string>()), F38b(e["out"]));
+    // PackDelimitedString / UnpackDelimitedString (int, uint, string lists; invalid numbers are dropped)
+    CHECK(L38::StringUtilities::PackDelimitedString(std::vector<int32_t>{3, -4, 15}) == "3|-4|15");
+    CHECK(L38::StringUtilities::PackDelimitedString(std::vector<std::string>{"a", "b c"}) == "a|b c");
+    CHECK(L38::StringUtilities::PackDelimitedString(std::vector<std::string>{}) == "");
+    CHECK(L38::StringUtilities::UnpackDelimitedInt32("3|x|-4||15") == std::vector<int32_t>{3, -4, 15});
+    CHECK(L38::StringUtilities::UnpackDelimitedStrings("a|b c").size() == 2);
+    CHECK(L38::StringUtilities::UnpackDelimitedStrings("").empty());
+    CHECK(L38::StringUtilities::UnpackDelimitedUInt32("7|8") == std::vector<uint32_t>{7u, 8u});
+    // AlphaNumericDesignation over the synthetic alphabet and the site name of the generic branch (allowNamed false)
+    for (const json& e : Ref38b()["alphaNumeric"]) CHECK(L38::StringUtilities::AlphaNumericDesignation(e["seed"].get<int>()) == e["value"].get<std::string>());
+    // IntegerToGreek clamps to 0..23
+    CHECK(L38::StringUtilities::IntegerToGreek(-5) == Ref38b()["greek"][0].get<std::string>());
+    CHECK(L38::StringUtilities::IntegerToGreek(99) == Ref38b()["greek"][23].get<std::string>());
+    CHECK(L38::StringUtilities::IntegerToGreek(7) == Ref38b()["greek"][7].get<std::string>());
+}

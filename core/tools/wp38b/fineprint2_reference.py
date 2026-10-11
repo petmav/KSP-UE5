@@ -1008,6 +1008,180 @@ def weights():
     return W
 
 
+# ---------------------------------------------------------------------------------------------------------------- parameter texts
+SITUATIONS = ["LANDED", "SPLASHED", "PRELAUNCH", "FLYING", "SUB_ORBITAL", "ORBITING", "ESCAPING", "DOCKED"]
+ENTRY_TYPES = ["Land", "Flight", "Flyby", "Orbit", "Suborbit", "Escape"]
+ORBIT_TYPES_ALL = ["SYNCHRONOUS", "STATIONARY", "POLAR", "EQUATORIAL", "KOLNIYA", "TUNDRA", "RANDOM"]
+
+
+def g15(x):
+    """double.ToString() of a value rounded to one decimal (Mono: shortest representation up to 15 digits)"""
+    return "%.15g" % x
+
+
+def round1(x):
+    return float(np.round(np.float64(x), 1))
+
+
+def param_texts():
+    out = []
+    sun_disp = BD_DISPLAY("Sun")
+
+    def add(**kw):
+        out.append(kw)
+
+    for h in (10.0, 0.4, 2.6, 30.0, 1.5):
+        add(cls="Stability", hold=h, title=stab_title(h))
+    for n in (1, 5, 8, 12):
+        add(cls="CrewCapacity", n=n, title=LOC.fmt("#autoLOC_282944", str(n)))
+    # ExperienceTraitConfig.Title is the raw cfg value (GameDatabase translates it in the game; the mirror is untranslated), ToLower() leaves a tag unresolved
+    traits = {}
+    for nd in w37.parse_cfg(os.path.join(w37.SQUAD, "Experience", "Traits.cfg"))["nodes"]:
+        if nd["name"] == "EXPERIENCE_TRAIT":
+            traits[w37.val(nd, "name")] = w37.val(nd, "title")
+    for trait in ("Pilot", "Engineer", "Scientist", "Tourist", "Mystery"):
+        disp = traits.get(trait, trait).lower()
+        for cnt in (1, 3):
+            add(cls="CrewTrait", trait=trait, count=cnt, desc="vessel",
+                title=(LOC.fmt("#autoLOC_6001095", disp, "vessel") if cnt <= 1 else LOC.fmt("#autoLOC_283108", str(cnt), disp, "vessel")))
+    add(cls="MobileBase", title=LOC.fmt("#autoLOC_7001018"))
+    for body in ("Kerbin", "Mun", "Jool"):
+        for sit in SITUATIONS + ["XXX"]:
+            for final in (False, True):
+                add(cls="LocationAndSituation", body=body, sit=sit, final=final, noun="probe", title=las_title(body, sit, "probe", final))
+    add(cls="LocationAndSituation", body=None, sit="ORBITING", final=False, noun="probe", title=LOC.fmt("#autoLOC_283645", sun_disp))
+    tag_vd = {"Land": "#autoLOC_286262", "Flight": "#autoLOC_286266", "Flyby": "#autoLOC_286268", "Orbit": "#autoLOC_286270", "Suborbit": "#autoLOC_286264"}
+    tag_kd = {"Land": "#autoLOC_283270", "Flight": "#autoLOC_283274", "Flyby": "#autoLOC_283276", "Orbit": "#autoLOC_283278", "Suborbit": "#autoLOC_283272"}
+    for et in ENTRY_TYPES:
+        for body in ("Mun", "Kerbin"):
+            add(cls="VesselDestination", body=body, entry=et,
+                title=LOC.fmt(tag_vd[et], BD_DISPLAY(body)) if et in tag_vd else LOC.fmt("#autoLOC_286272"))
+            add(cls="KerbalDestination", body=body, entry=et, kerbal="Jebediah Kerman",
+                title=LOC.fmt(tag_kd[et], BD_DISPLAY(body)) if et in tag_kd else LOC.fmt("#autoLOC_283280"))
+    add(cls="KerbalGeeAdventure", kerbal="Jebediah Kerman", title=LOC.fmt("#autoLOC_283371", "Jebediah"))
+    for gender in ("Male", "Female"):
+        add(cls="KerbalTour", kerbal="Valentina Kerman", gender=gender, title=LOC.fmt("#autoLOC_283467", "Valentina" + ("^M" if gender == "Male" else "^F")))
+    descs3 = [LOC.fmt("#autoLOC_7001075"), LOC.fmt("#autoLOC_7001076"), LOC.fmt("#autoLOC_7001077")]
+    for dd in ([], descs3, descs3[:1]):
+        for manned in ("ANY", "MANNED", "UNMANNED"):
+            for rn in (False, True):
+                mstr = "" if manned == "ANY" else (LOC.fmt("#autoLOC_286382") if manned == "UNMANNED" else LOC.fmt("#autoLOC_286380"))
+                add(cls="VesselSystems", descs=dd, vdesc="probe", manned=manned, requireNew=rn, title=vsp_title(dd, "probe", manned, rn),
+                    notes=(LOC.fmt("#autoLOC_7000009", mstr, "probe", "{AGENT}") if rn else None))
+    add(cls="PartRequest", article="a", partDescription="#autoLOC_500688", vesselDescription="#autoLOC_500028", parts=["Large_Crewed_Lab"], modules=["ModuleScienceLab"],
+        title=LOC.fmt("#autoLOC_7001088", "#autoLOC_500688", "#autoLOC_500028"))
+    for goal in (999.5, 1000.0, 123456.4, 0.2):
+        add(cls="ResourcePossession", goal=goal, name="Ore", rtitle="ore", vessel="base", title=LOC.fmt("#autoLOC_284677", thousands(goal), "ore", "base"))
+        add(cls="ResourceExtraction", goal=goal, name="Ore", rtitle="ore", body="Mun", title=LOC.fmt("#autoLOC_284531", thousands(goal), "ore", BD_DISPLAY("Mun")))
+    for cls_ in ("a", "b", "E"):
+        for fs in (False, True):
+            C = cls_.upper()
+            add(cls="Asteroid", size=cls_, forStation=fs, title=LOC.fmt("#autoLOC_282737" if fs else "#autoLOC_282739", C), notes=LOC.fmt("#autoLOC_282744", "{AGENT}", C))
+            add(cls="Comet", size=cls_, forStation=fs, title=LOC.fmt("#autoLOC_282737" if fs else "#autoLOC_282739", C), notes=LOC.fmt("#autoLOC_282744", "{AGENT}", C))
+    for n in (1, 3):
+        add(cls="CometDetection", count=n, title=LOC.fmt("#autoLOC_6011147", str(n)), notes="\n" + LOC.fmt("#autoLOC_8003406"))
+    add(cls="CometScience", id=77, name="Borrelly", title=LOC.fmt("#autoLOC_8012045", "Borrelly"), hash="Borrelly77")
+    cupola_title = None
+    for dp, _dn, fn in os.walk(os.path.join(w37.SQUAD, "Parts")):
+        for f in fn:
+            if f.endswith(".cfg") and f.startswith("cupola"):
+                n = w37.parse_cfg(os.path.join(dp, f))
+                for pn in n["nodes"]:
+                    if pn["name"] == "PART" and w37.val(pn, "name") == "cupola":
+                        cupola_title = LOC.single(w37.val(pn, "title"))
+    add(cls="Construction", part="cupola", vessel=1234, vesselName="Duna Base", body="Duna", title=LOC.fmt("#autoLOC_6002602", cupola_title, "Duna Base"),
+        hash="cupola1234", complete=LOC.fmt("#autoLOC_6002604"))
+    add(cls="Construction", part="NoSuchPart", vessel=9, vesselName="V", body="Duna", title=LOC.fmt("#autoLOC_6002602", "NoSuchPart", "V"), hash="NoSuchPart9",
+        complete=LOC.fmt("#autoLOC_6002604"))
+    add(cls="RepairPart", part="cupola", partId=55, vessel=1234, vesselName="Duna Base", body="Duna",
+        title=LOC.fmt("#autoLOC_6002578", "Duna Base", cupola_title, BD_DISPLAY("Duna")), hash="cupola55", complete=LOC.fmt("#autoLOC_6002580"))
+    for otype in ORBIT_TYPES_ALL:
+        for p in range(3):
+            for body in ("Kerbin", "Sun", "Mun"):
+                add(cls="SpecificOrbit", orbitType=otype, prestige=p, body=body, title=orbit_title(otype, body, p))
+    # SpecificOrbit notes (HighLogic.LoadedScene == SPACECENTER: a leading line break)
+    for (sma, ecc, inc, lan, arg, body) in ((700000.0, 0.01, 28.61, 123.456, 77.77, "Kerbin"), (1200000.0, 0.3, 90.0, 200.04, 45.55, "Mun"),
+                                           (1.5e7, 0.0, 0.5, 10.0, 10.0, "Sun"), (9e5, 0.1, 180.0, 0.0, 359.99, "Kerbin")):
+        r = BD[body]["radius"]
+        a = sma * (1.0 - ecc) - r
+        a2 = sma * (1.0 + ecc) - r
+        text = "\n"
+        text += (LOC.fmt("#autoLOC_7003228") + ":\n" + LOC.fmt("#autoLOC_7003229", thousands(a2)) + "\n" + LOC.fmt("#autoLOC_7003230", thousands(a)) + "\n" +
+                 LOC.fmt("#autoLOC_7003231", g15(round1(inc))) + "\n")
+        if abs(inc) % 180.0 >= 1.0:
+            text += "\n" + LOC.fmt("#autoLOC_7003232", g15(round1(lan)))
+        if ecc > 0.05:
+            text += "\n" + LOC.fmt("#autoLOC_7003233", g15(round1(arg)))
+        add(cls="SpecificOrbitNotes", sma=sma, ecc=ecc, inc=inc, lan=lan, arg=arg, body=body, notes=text)
+    add(cls="RoverWayPoint", title=LOC.fmt("#autoLOC_6002560"), complete=LOC.fmt("#autoLOC_6002561"))
+    return out
+
+
+def dec_hash(x):
+    """Convert.ToDecimal(x).ToString("#,###.#") (15 significant digits, one decimal, half away from zero, '#' prints no zero)"""
+    from decimal import Decimal, ROUND_HALF_UP
+    d = Decimal("%.14e" % abs(x))
+    d = d.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+    ip = int(d)
+    frac = int((d - ip) * 10)
+    s = "{:,}".format(ip) if ip else ""
+    if frac:
+        s += "." + str(frac)
+    return ("-" if x < 0 and s else "") + s
+
+
+def cardinal(la1, lo1, la2, lo2):
+    k = math.pi / 180.0
+    la1, lo1, la2, lo2 = la1 * k, lo1 * k, la2 * k, lo2 * k
+    d = lo2 - lo1
+    y = math.sin(d) * math.cos(la2)
+    x = math.cos(la1) * math.sin(la2) - math.sin(la1) * math.cos(la2) * math.cos(d)
+    i = int(np.rint((math.atan2(y, x) * (180.0 / math.pi) + 360.0) % 360.0 / 45.0))
+    tags = {1: "#autoLOC_290048", 2: "#autoLOC_290050", 3: "#autoLOC_290052", 4: "#autoLOC_290054", 5: "#autoLOC_290056", 6: "#autoLOC_290058", 7: "#autoLOC_290060"}
+    return LOC.fmt(tags.get(i, "#autoLOC_290062"))
+
+
+def string_utils():
+    out = {}
+    out["titleCase"] = [{"in": t, "out": title_case(t)} for t in ("molniya", "tundra orbit", "HELLO world", "a-b c", "")]
+    out["thisThisAndThat"] = [{"in": l, "out": this_this_and_that(l)} for l in ([], ["a"], ["a", "b"], ["a", "b", "c"], ["a", "b", "c", "d"])]
+    ps = []
+    tbl = {("NEUTRAL", "SUBJECTIVE"): "they", ("NEUTRAL", "OBJECTIVE"): "them", ("NEUTRAL", "POSSESSIVE"): "their", ("FEMININE", "SUBJECTIVE"): "she",
+           ("FEMININE", "OBJECTIVE"): "her", ("FEMININE", "POSSESSIVE"): "her", ("MASCULINE", "SUBJECTIVE"): "he", ("MASCULINE", "OBJECTIVE"): "him",
+           ("MASCULINE", "POSSESSIVE"): "his"}
+    for casing in ("SUBJECTIVE", "OBJECTIVE", "POSSESSIVE"):
+        for gender in ("NEUTRAL", "MASCULINE", "FEMININE"):
+            for post in (False, True):
+                t = tbl[(gender, casing)]
+                if casing == "POSSESSIVE" and post and t[-1] != "s":
+                    t += "s"
+                ps.append({"casing": casing, "gender": gender, "post": post, "out": t})
+    out["pronouns"] = ps
+    vu = []
+    for tt in ("ALTITUDE", "DEPTH", "DISTANCE", "SPEED", "NULL_"):
+        for v in (0.0, 0.5, 123.45, 9999.94, 10000.0, 1234567.89, 15.0):
+            num = v
+            if tt == "SPEED":
+                unit = LOC.fmt("#autoLOC_289933")
+            elif tt in ("ALTITUDE", "DEPTH", "DISTANCE"):
+                if num >= 10000.0:
+                    num /= 1000.0
+                    unit = LOC.fmt("#autoLOC_289926")
+                else:
+                    unit = LOC.fmt("#autoLOC_289929")
+            else:
+                unit = LOC.fmt("#autoLOC_289916")
+            vu.append({"type": tt, "value": v, "out": dec_hash(num) + unit})
+    out["valueAndUnits"] = vu
+    card = []
+    for (la1, lo1, la2, lo2) in ((0, 0, 10, 0), (0, 0, 0, 10), (0, 0, -10, 0), (0, 0, 0, -10), (0, 0, 10, 10), (0, 0, -10, -10), (0, 0, 10, -10), (0, 0, -10, 10), (5, 5, 5, 5)):
+        card.append({"args": [la1, lo1, la2, lo2], "out": cardinal(la1, lo1, la2, lo2)})
+    out["cardinal"] = card
+    out["isVowel"] = [{"c": c, "out": c.lower() in "aeiouy"} for c in "aEiOuYbZx"]
+    out["readDuration"] = [{"in": t, "out": F(F(F(len(t) / 5.0) / 200.0) * 60.0)} for t in ("", "hello", "x" * 117)]
+    return out
+
+
 GENS = {"ARMContract": gen_arm, "BaseContract": gen_base, "StationContract": gen_station, "ISRUContract": gen_isru, "SatelliteContract": gen_satellite}
 
 
@@ -1038,6 +1212,8 @@ def main():
                             r = fn(sd, p, s, W, mult, g, fx)
                             out.append({"type": ctype, "scenario": si, "fixture": fi, "prestige": p, "seed": sd, "mult": mi, "guid": list(g), "result": r})
     ref["contracts"] = out
+    ref["paramTexts"] = param_texts()
+    ref["stringUtils"] = string_utils()
     cnt = {}
     for e in out:
         k = e["type"]

@@ -272,3 +272,21 @@ struct ksp::dotnet::EnumTraits<ksp::FinePrint::OrbitType> {
                                                 {E::EQUATORIAL, "EQUATORIAL"},   {E::KOLNIYA, "KOLNIYA"},     {E::TUNDRA, "TUNDRA"},
                                                 {E::RANDOM, "RANDOM"}};
 };
+template <>
+struct ksp::dotnet::EnumTraits<ksp::Contracts::Lite::PronounCasing> {
+    using E = ksp::Contracts::Lite::PronounCasing;
+    static constexpr bool flags = false;
+    static constexpr EnumMember<E> members[] = {{E::SUBJECTIVE, "SUBJECTIVE"}, {E::OBJECTIVE, "OBJECTIVE"}, {E::POSSESSIVE, "POSSESSIVE"}};
+};
+template <>
+struct ksp::dotnet::EnumTraits<ksp::Contracts::Lite::GrammaticalGender> {
+    using E = ksp::Contracts::Lite::GrammaticalGender;
+    static constexpr bool flags = false;
+    static constexpr EnumMember<E> members[] = {{E::NEUTRAL, "NEUTRAL"}, {E::MASCULINE, "MASCULINE"}, {E::FEMININE, "FEMININE"}};
+};
+template <>
+struct ksp::dotnet::EnumTraits<ksp::Contracts::Lite::RecordTrackType> {
+    using E = ksp::Contracts::Lite::RecordTrackType;
+    static constexpr bool flags = false;
+    static constexpr EnumMember<E> members[] = {{E::NULL_, "NULL"}, {E::ALTITUDE, "ALTITUDE"}, {E::DEPTH, "DEPTH"}, {E::DISTANCE, "DISTANCE"}, {E::SPEED, "SPEED"}};
+};

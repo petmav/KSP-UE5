@@ -190,361 +190,361 @@
    },
    "bodies": {
     "Sun": {
-     "Docking": "completed",
-     "Rendezvous": "completed",
-     "Escape": "completed",
-     "Landing": "completed",
-     "Spacewalk": "completed",
-     "ReturnFromSurface": "completed",
+     "Splashdown": "completed",
      "Science": "completed",
-     "FlagPlant": "completed",
+     "Docking": "completed",
+     "BaseConstruction": "completed",
+     "Flight": "completed",
+     "Orbit": "completed",
+     "Escape": "completed",
      "ReturnFromOrbit": "completed",
+     "Spacewalk": "completed",
+     "SurfaceEVA": "completed",
+     "Rendezvous": "completed",
+     "Suborbit": "completed",
+     "Landing": "completed",
      "CelestialBodyTransfer": "completed",
      "ReturnFromFlyBy": "completed",
-     "SurfaceEVA": "completed",
-     "Suborbit": "completed",
-     "Splashdown": "completed",
-     "Flyby": "completed",
      "StationConstruction": "completed",
-     "Orbit": "completed",
-     "Flight": "completed",
-     "BaseConstruction": "completed"
+     "FlagPlant": "completed",
+     "Flyby": "completed",
+     "ReturnFromSurface": "completed"
     },
     "Kerbin": {
-     "Docking": "completed",
-     "Rendezvous": "completed",
-     "Escape": "completed",
-     "Landing": "completed",
-     "Spacewalk": "completed",
-     "ReturnFromSurface": "completed",
+     "Splashdown": "completed",
      "Science": "completed",
-     "FlagPlant": "completed",
+     "Docking": "completed",
+     "BaseConstruction": "completed",
+     "Flight": "completed",
+     "Orbit": "completed",
+     "Escape": "completed",
      "ReturnFromOrbit": "completed",
+     "Spacewalk": "completed",
+     "SurfaceEVA": "completed",
+     "Rendezvous": "completed",
+     "Suborbit": "completed",
+     "Landing": "completed",
      "CelestialBodyTransfer": "completed",
      "ReturnFromFlyBy": "completed",
-     "SurfaceEVA": "completed",
-     "Suborbit": "completed",
-     "Splashdown": "completed",
-     "Flyby": "completed",
      "StationConstruction": "completed",
-     "Orbit": "completed",
-     "Flight": "completed",
-     "BaseConstruction": "completed"
+     "FlagPlant": "completed",
+     "Flyby": "completed",
+     "ReturnFromSurface": "completed"
     },
     "Mun": {
-     "Docking": "completed",
-     "Rendezvous": "completed",
-     "Escape": "completed",
-     "Landing": "completed",
-     "Spacewalk": "completed",
-     "ReturnFromSurface": "completed",
+     "Splashdown": "completed",
      "Science": "completed",
-     "FlagPlant": "completed",
+     "Docking": "completed",
+     "BaseConstruction": "completed",
+     "Flight": "completed",
+     "Orbit": "completed",
+     "Escape": "completed",
      "ReturnFromOrbit": "completed",
+     "Spacewalk": "completed",
+     "SurfaceEVA": "completed",
+     "Rendezvous": "completed",
+     "Suborbit": "completed",
+     "Landing": "completed",
      "CelestialBodyTransfer": "completed",
      "ReturnFromFlyBy": "completed",
-     "SurfaceEVA": "completed",
-     "Suborbit": "completed",
-     "Splashdown": "completed",
-     "Flyby": "completed",
      "StationConstruction": "completed",
-     "Orbit": "completed",
-     "Flight": "completed",
-     "BaseConstruction": "completed"
+     "FlagPlant": "completed",
+     "Flyby": "completed",
+     "ReturnFromSurface": "completed"
     },
     "Minmus": {
-     "Docking": "completed",
-     "Rendezvous": "completed",
-     "Escape": "completed",
-     "Landing": "completed",
-     "Spacewalk": "completed",
-     "ReturnFromSurface": "completed",
+     "Splashdown": "completed",
      "Science": "completed",
-     "FlagPlant": "completed",
+     "Docking": "completed",
+     "BaseConstruction": "completed",
+     "Flight": "completed",
+     "Orbit": "completed",
+     "Escape": "completed",
      "ReturnFromOrbit": "completed",
+     "Spacewalk": "completed",
+     "SurfaceEVA": "completed",
+     "Rendezvous": "completed",
+     "Suborbit": "completed",
+     "Landing": "completed",
      "CelestialBodyTransfer": "completed",
      "ReturnFromFlyBy": "completed",
-     "SurfaceEVA": "completed",
-     "Suborbit": "completed",
-     "Splashdown": "completed",
-     "Flyby": "completed",
      "StationConstruction": "completed",
-     "Orbit": "completed",
-     "Flight": "completed",
-     "BaseConstruction": "completed"
+     "FlagPlant": "completed",
+     "Flyby": "completed",
+     "ReturnFromSurface": "completed"
     },
     "Moho": {
-     "Docking": "completed",
-     "Rendezvous": "completed",
-     "Escape": "completed",
-     "Landing": "completed",
-     "Spacewalk": "completed",
-     "ReturnFromSurface": "completed",
+     "Splashdown": "completed",
      "Science": "completed",
-     "FlagPlant": "completed",
+     "Docking": "completed",
+     "BaseConstruction": "completed",
+     "Flight": "completed",
+     "Orbit": "completed",
+     "Escape": "completed",
      "ReturnFromOrbit": "completed",
+     "Spacewalk": "completed",
+     "SurfaceEVA": "completed",
+     "Rendezvous": "completed",
+     "Suborbit": "completed",
+     "Landing": "completed",
      "CelestialBodyTransfer": "completed",
      "ReturnFromFlyBy": "completed",
-     "SurfaceEVA": "completed",
-     "Suborbit": "completed",
-     "Splashdown": "completed",
-     "Flyby": "completed",
      "StationConstruction": "completed",
-     "Orbit": "completed",
-     "Flight": "completed",
-     "BaseConstruction": "completed"
+     "FlagPlant": "completed",
+     "Flyby": "completed",
+     "ReturnFromSurface": "completed"
     },
     "Eve": {
-     "Docking": "completed",
-     "Rendezvous": "completed",
-     "Escape": "completed",
-     "Landing": "completed",
-     "Spacewalk": "completed",
-     "ReturnFromSurface": "completed",
+     "Splashdown": "completed",
      "Science": "completed",
-     "FlagPlant": "completed",
+     "Docking": "completed",
+     "BaseConstruction": "completed",
+     "Flight": "completed",
+     "Orbit": "completed",
+     "Escape": "completed",
      "ReturnFromOrbit": "completed",
+     "Spacewalk": "completed",
+     "SurfaceEVA": "completed",
+     "Rendezvous": "completed",
+     "Suborbit": "completed",
+     "Landing": "completed",
      "CelestialBodyTransfer": "completed",
      "ReturnFromFlyBy": "completed",
-     "SurfaceEVA": "completed",
-     "Suborbit": "completed",
-     "Splashdown": "completed",
-     "Flyby": "completed",
      "StationConstruction": "completed",
-     "Orbit": "completed",
-     "Flight": "completed",
-     "BaseConstruction": "completed"
+     "FlagPlant": "completed",
+     "Flyby": "completed",
+     "ReturnFromSurface": "completed"
     },
     "Duna": {
-     "Docking": "completed",
-     "Rendezvous": "completed",
-     "Escape": "completed",
-     "Landing": "completed",
-     "Spacewalk": "completed",
-     "ReturnFromSurface": "completed",
+     "Splashdown": "completed",
      "Science": "completed",
-     "FlagPlant": "completed",
+     "Docking": "completed",
+     "BaseConstruction": "completed",
+     "Flight": "completed",
+     "Orbit": "completed",
+     "Escape": "completed",
      "ReturnFromOrbit": "completed",
+     "Spacewalk": "completed",
+     "SurfaceEVA": "completed",
+     "Rendezvous": "completed",
+     "Suborbit": "completed",
+     "Landing": "completed",
      "CelestialBodyTransfer": "completed",
      "ReturnFromFlyBy": "completed",
-     "SurfaceEVA": "completed",
-     "Suborbit": "completed",
-     "Splashdown": "completed",
-     "Flyby": "completed",
      "StationConstruction": "completed",
-     "Orbit": "completed",
-     "Flight": "completed",
-     "BaseConstruction": "completed"
+     "FlagPlant": "completed",
+     "Flyby": "completed",
+     "ReturnFromSurface": "completed"
     },
     "Ike": {
-     "Docking": "completed",
-     "Rendezvous": "completed",
-     "Escape": "completed",
-     "Landing": "completed",
-     "Spacewalk": "completed",
-     "ReturnFromSurface": "completed",
+     "Splashdown": "completed",
      "Science": "completed",
-     "FlagPlant": "completed",
+     "Docking": "completed",
+     "BaseConstruction": "completed",
+     "Flight": "completed",
+     "Orbit": "completed",
+     "Escape": "completed",
      "ReturnFromOrbit": "completed",
+     "Spacewalk": "completed",
+     "SurfaceEVA": "completed",
+     "Rendezvous": "completed",
+     "Suborbit": "completed",
+     "Landing": "completed",
      "CelestialBodyTransfer": "completed",
      "ReturnFromFlyBy": "completed",
-     "SurfaceEVA": "completed",
-     "Suborbit": "completed",
-     "Splashdown": "completed",
-     "Flyby": "completed",
      "StationConstruction": "completed",
-     "Orbit": "completed",
-     "Flight": "completed",
-     "BaseConstruction": "completed"
+     "FlagPlant": "completed",
+     "Flyby": "completed",
+     "ReturnFromSurface": "completed"
     },
     "Jool": {
-     "Docking": "completed",
-     "Rendezvous": "completed",
-     "Escape": "completed",
-     "Landing": "completed",
-     "Spacewalk": "completed",
-     "ReturnFromSurface": "completed",
+     "Splashdown": "completed",
      "Science": "completed",
-     "FlagPlant": "completed",
+     "Docking": "completed",
+     "BaseConstruction": "completed",
+     "Flight": "completed",
+     "Orbit": "completed",
+     "Escape": "completed",
      "ReturnFromOrbit": "completed",
+     "Spacewalk": "completed",
+     "SurfaceEVA": "completed",
+     "Rendezvous": "completed",
+     "Suborbit": "completed",
+     "Landing": "completed",
      "CelestialBodyTransfer": "completed",
      "ReturnFromFlyBy": "completed",
-     "SurfaceEVA": "completed",
-     "Suborbit": "completed",
-     "Splashdown": "completed",
-     "Flyby": "completed",
      "StationConstruction": "completed",
-     "Orbit": "completed",
-     "Flight": "completed",
-     "BaseConstruction": "completed"
+     "FlagPlant": "completed",
+     "Flyby": "completed",
+     "ReturnFromSurface": "completed"
     },
     "Laythe": {
-     "Docking": "completed",
-     "Rendezvous": "completed",
-     "Escape": "completed",
-     "Landing": "completed",
-     "Spacewalk": "completed",
-     "ReturnFromSurface": "completed",
+     "Splashdown": "completed",
      "Science": "completed",
-     "FlagPlant": "completed",
+     "Docking": "completed",
+     "BaseConstruction": "completed",
+     "Flight": "completed",
+     "Orbit": "completed",
+     "Escape": "completed",
      "ReturnFromOrbit": "completed",
+     "Spacewalk": "completed",
+     "SurfaceEVA": "completed",
+     "Rendezvous": "completed",
+     "Suborbit": "completed",
+     "Landing": "completed",
      "CelestialBodyTransfer": "completed",
      "ReturnFromFlyBy": "completed",
-     "SurfaceEVA": "completed",
-     "Suborbit": "completed",
-     "Splashdown": "completed",
-     "Flyby": "completed",
      "StationConstruction": "completed",
-     "Orbit": "completed",
-     "Flight": "completed",
-     "BaseConstruction": "completed"
+     "FlagPlant": "completed",
+     "Flyby": "completed",
+     "ReturnFromSurface": "completed"
     },
     "Vall": {
-     "Docking": "completed",
-     "Rendezvous": "completed",
-     "Escape": "completed",
-     "Landing": "completed",
-     "Spacewalk": "completed",
-     "ReturnFromSurface": "completed",
+     "Splashdown": "completed",
      "Science": "completed",
-     "FlagPlant": "completed",
+     "Docking": "completed",
+     "BaseConstruction": "completed",
+     "Flight": "completed",
+     "Orbit": "completed",
+     "Escape": "completed",
      "ReturnFromOrbit": "completed",
+     "Spacewalk": "completed",
+     "SurfaceEVA": "completed",
+     "Rendezvous": "completed",
+     "Suborbit": "completed",
+     "Landing": "completed",
      "CelestialBodyTransfer": "completed",
      "ReturnFromFlyBy": "completed",
-     "SurfaceEVA": "completed",
-     "Suborbit": "completed",
-     "Splashdown": "completed",
-     "Flyby": "completed",
      "StationConstruction": "completed",
-     "Orbit": "completed",
-     "Flight": "completed",
-     "BaseConstruction": "completed"
+     "FlagPlant": "completed",
+     "Flyby": "completed",
+     "ReturnFromSurface": "completed"
     },
     "Bop": {
-     "Docking": "completed",
-     "Rendezvous": "completed",
-     "Escape": "completed",
-     "Landing": "completed",
-     "Spacewalk": "completed",
-     "ReturnFromSurface": "completed",
+     "Splashdown": "completed",
      "Science": "completed",
-     "FlagPlant": "completed",
+     "Docking": "completed",
+     "BaseConstruction": "completed",
+     "Flight": "completed",
+     "Orbit": "completed",
+     "Escape": "completed",
      "ReturnFromOrbit": "completed",
+     "Spacewalk": "completed",
+     "SurfaceEVA": "completed",
+     "Rendezvous": "completed",
+     "Suborbit": "completed",
+     "Landing": "completed",
      "CelestialBodyTransfer": "completed",
      "ReturnFromFlyBy": "completed",
-     "SurfaceEVA": "completed",
-     "Suborbit": "completed",
-     "Splashdown": "completed",
-     "Flyby": "completed",
      "StationConstruction": "completed",
-     "Orbit": "completed",
-     "Flight": "completed",
-     "BaseConstruction": "completed"
+     "FlagPlant": "completed",
+     "Flyby": "completed",
+     "ReturnFromSurface": "completed"
     },
     "Tylo": {
-     "Docking": "completed",
-     "Rendezvous": "completed",
-     "Escape": "completed",
-     "Landing": "completed",
-     "Spacewalk": "completed",
-     "ReturnFromSurface": "completed",
+     "Splashdown": "completed",
      "Science": "completed",
-     "FlagPlant": "completed",
+     "Docking": "completed",
+     "BaseConstruction": "completed",
+     "Flight": "completed",
+     "Orbit": "completed",
+     "Escape": "completed",
      "ReturnFromOrbit": "completed",
+     "Spacewalk": "completed",
+     "SurfaceEVA": "completed",
+     "Rendezvous": "completed",
+     "Suborbit": "completed",
+     "Landing": "completed",
      "CelestialBodyTransfer": "completed",
      "ReturnFromFlyBy": "completed",
-     "SurfaceEVA": "completed",
-     "Suborbit": "completed",
-     "Splashdown": "completed",
-     "Flyby": "completed",
      "StationConstruction": "completed",
-     "Orbit": "completed",
-     "Flight": "completed",
-     "BaseConstruction": "completed"
+     "FlagPlant": "completed",
+     "Flyby": "completed",
+     "ReturnFromSurface": "completed"
     },
     "Gilly": {
-     "Docking": "completed",
-     "Rendezvous": "completed",
-     "Escape": "completed",
-     "Landing": "completed",
-     "Spacewalk": "completed",
-     "ReturnFromSurface": "completed",
+     "Splashdown": "completed",
      "Science": "completed",
-     "FlagPlant": "completed",
+     "Docking": "completed",
+     "BaseConstruction": "completed",
+     "Flight": "completed",
+     "Orbit": "completed",
+     "Escape": "completed",
      "ReturnFromOrbit": "completed",
+     "Spacewalk": "completed",
+     "SurfaceEVA": "completed",
+     "Rendezvous": "completed",
+     "Suborbit": "completed",
+     "Landing": "completed",
      "CelestialBodyTransfer": "completed",
      "ReturnFromFlyBy": "completed",
-     "SurfaceEVA": "completed",
-     "Suborbit": "completed",
-     "Splashdown": "completed",
-     "Flyby": "completed",
      "StationConstruction": "completed",
-     "Orbit": "completed",
-     "Flight": "completed",
-     "BaseConstruction": "completed"
+     "FlagPlant": "completed",
+     "Flyby": "completed",
+     "ReturnFromSurface": "completed"
     },
     "Pol": {
-     "Docking": "completed",
-     "Rendezvous": "completed",
-     "Escape": "completed",
-     "Landing": "completed",
-     "Spacewalk": "completed",
-     "ReturnFromSurface": "completed",
+     "Splashdown": "completed",
      "Science": "completed",
-     "FlagPlant": "completed",
+     "Docking": "completed",
+     "BaseConstruction": "completed",
+     "Flight": "completed",
+     "Orbit": "completed",
+     "Escape": "completed",
      "ReturnFromOrbit": "completed",
+     "Spacewalk": "completed",
+     "SurfaceEVA": "completed",
+     "Rendezvous": "completed",
+     "Suborbit": "completed",
+     "Landing": "completed",
      "CelestialBodyTransfer": "completed",
      "ReturnFromFlyBy": "completed",
-     "SurfaceEVA": "completed",
-     "Suborbit": "completed",
-     "Splashdown": "completed",
-     "Flyby": "completed",
      "StationConstruction": "completed",
-     "Orbit": "completed",
-     "Flight": "completed",
-     "BaseConstruction": "completed"
+     "FlagPlant": "completed",
+     "Flyby": "completed",
+     "ReturnFromSurface": "completed"
     },
     "Dres": {
-     "Docking": "completed",
-     "Rendezvous": "completed",
-     "Escape": "completed",
-     "Landing": "completed",
-     "Spacewalk": "completed",
-     "ReturnFromSurface": "completed",
+     "Splashdown": "completed",
      "Science": "completed",
-     "FlagPlant": "completed",
+     "Docking": "completed",
+     "BaseConstruction": "completed",
+     "Flight": "completed",
+     "Orbit": "completed",
+     "Escape": "completed",
      "ReturnFromOrbit": "completed",
+     "Spacewalk": "completed",
+     "SurfaceEVA": "completed",
+     "Rendezvous": "completed",
+     "Suborbit": "completed",
+     "Landing": "completed",
      "CelestialBodyTransfer": "completed",
      "ReturnFromFlyBy": "completed",
-     "SurfaceEVA": "completed",
-     "Suborbit": "completed",
-     "Splashdown": "completed",
-     "Flyby": "completed",
      "StationConstruction": "completed",
-     "Orbit": "completed",
-     "Flight": "completed",
-     "BaseConstruction": "completed"
+     "FlagPlant": "completed",
+     "Flyby": "completed",
+     "ReturnFromSurface": "completed"
     },
     "Eeloo": {
-     "Docking": "completed",
-     "Rendezvous": "completed",
-     "Escape": "completed",
-     "Landing": "completed",
-     "Spacewalk": "completed",
-     "ReturnFromSurface": "completed",
+     "Splashdown": "completed",
      "Science": "completed",
-     "FlagPlant": "completed",
+     "Docking": "completed",
+     "BaseConstruction": "completed",
+     "Flight": "completed",
+     "Orbit": "completed",
+     "Escape": "completed",
      "ReturnFromOrbit": "completed",
+     "Spacewalk": "completed",
+     "SurfaceEVA": "completed",
+     "Rendezvous": "completed",
+     "Suborbit": "completed",
+     "Landing": "completed",
      "CelestialBodyTransfer": "completed",
      "ReturnFromFlyBy": "completed",
-     "SurfaceEVA": "completed",
-     "Suborbit": "completed",
-     "Splashdown": "completed",
-     "Flyby": "completed",
      "StationConstruction": "completed",
-     "Orbit": "completed",
-     "Flight": "completed",
-     "BaseConstruction": "completed"
+     "FlagPlant": "completed",
+     "Flyby": "completed",
+     "ReturnFromSurface": "completed"
     }
    }
   },
@@ -242073,6 +242073,2117 @@
    "result": null
   }
  ],
+ "paramTexts": [
+  {
+   "cls": "Stability",
+   "hold": 10.0,
+   "title": "Maintain stability for 10 seconds"
+  },
+  {
+   "cls": "Stability",
+   "hold": 0.4,
+   "title": "Maintain stability for 0 seconds"
+  },
+  {
+   "cls": "Stability",
+   "hold": 2.6,
+   "title": "Maintain stability for 3 seconds"
+  },
+  {
+   "cls": "Stability",
+   "hold": 30.0,
+   "title": "Maintain stability for 30 seconds"
+  },
+  {
+   "cls": "Stability",
+   "hold": 1.5,
+   "title": "Maintain stability for 2 seconds"
+  },
+  {
+   "cls": "CrewCapacity",
+   "n": 1,
+   "title": "Have a facility supporting at least 1 kerbals"
+  },
+  {
+   "cls": "CrewCapacity",
+   "n": 5,
+   "title": "Have a facility supporting at least 5 kerbals"
+  },
+  {
+   "cls": "CrewCapacity",
+   "n": 8,
+   "title": "Have a facility supporting at least 8 kerbals"
+  },
+  {
+   "cls": "CrewCapacity",
+   "n": 12,
+   "title": "Have a facility supporting at least 12 kerbals"
+  },
+  {
+   "cls": "CrewTrait",
+   "trait": "Pilot",
+   "count": 1,
+   "desc": "vessel",
+   "title": "Have #autoloc_500101 on the vessel"
+  },
+  {
+   "cls": "CrewTrait",
+   "trait": "Pilot",
+   "count": 3,
+   "desc": "vessel",
+   "title": "Have 3 #autoloc_500101s on the vessel"
+  },
+  {
+   "cls": "CrewTrait",
+   "trait": "Engineer",
+   "count": 1,
+   "desc": "vessel",
+   "title": "Have #autoloc_500103 on the vessel"
+  },
+  {
+   "cls": "CrewTrait",
+   "trait": "Engineer",
+   "count": 3,
+   "desc": "vessel",
+   "title": "Have 3 #autoloc_500103s on the vessel"
+  },
+  {
+   "cls": "CrewTrait",
+   "trait": "Scientist",
+   "count": 1,
+   "desc": "vessel",
+   "title": "Have #autoloc_500105 on the vessel"
+  },
+  {
+   "cls": "CrewTrait",
+   "trait": "Scientist",
+   "count": 3,
+   "desc": "vessel",
+   "title": "Have 3 #autoloc_500105s on the vessel"
+  },
+  {
+   "cls": "CrewTrait",
+   "trait": "Tourist",
+   "count": 1,
+   "desc": "vessel",
+   "title": "Have #autoloc_500107 on the vessel"
+  },
+  {
+   "cls": "CrewTrait",
+   "trait": "Tourist",
+   "count": 3,
+   "desc": "vessel",
+   "title": "Have 3 #autoloc_500107s on the vessel"
+  },
+  {
+   "cls": "CrewTrait",
+   "trait": "Mystery",
+   "count": 1,
+   "desc": "vessel",
+   "title": "Have mystery on the vessel"
+  },
+  {
+   "cls": "CrewTrait",
+   "trait": "Mystery",
+   "count": 3,
+   "desc": "vessel",
+   "title": "Have 3 mysterys on the vessel"
+  },
+  {
+   "cls": "MobileBase",
+   "title": "The outpost must be on motorized wheels"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Kerbin",
+   "sit": "LANDED",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, land your /Land your /Land your ]>> probe on Kerbin"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Kerbin",
+   "sit": "LANDED",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, land your /Land your /Land your ]>> probe on Kerbin"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Kerbin",
+   "sit": "SPLASHED",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, splash your /Splash your /Splash your ]>> probe down on Kerbin"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Kerbin",
+   "sit": "SPLASHED",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, splash your /Splash your /Splash your ]>> probe down on Kerbin"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Kerbin",
+   "sit": "PRELAUNCH",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, be ready to launch your /Be ready to launch your /Be ready to launch your ]>> probe from Kerbin"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Kerbin",
+   "sit": "PRELAUNCH",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, be ready to launch your /Be ready to launch your /Be ready to launch your ]>> probe from Kerbin"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Kerbin",
+   "sit": "FLYING",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, fly your /Fly your /Fly your ]>> probe on Kerbin"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Kerbin",
+   "sit": "FLYING",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, fly your /Fly your /Fly your ]>> probe on Kerbin"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Kerbin",
+   "sit": "SUB_ORBITAL",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, set your/Set your/Set your]>> probe on a crash course for Kerbin"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Kerbin",
+   "sit": "SUB_ORBITAL",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, set your/Set your/Set your]>> probe on a crash course for Kerbin"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Kerbin",
+   "sit": "ORBITING",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, put your /Put your /Put your ]>> probe in orbit of Kerbin"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Kerbin",
+   "sit": "ORBITING",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, put your /Put your /Put your ]>> probe in orbit of Kerbin"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Kerbin",
+   "sit": "ESCAPING",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, get your/Get your/Get your]>> probe into an escape trajectory out of Kerbin"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Kerbin",
+   "sit": "ESCAPING",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, get your/Get your/Get your]>> probe into an escape trajectory out of Kerbin"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Kerbin",
+   "sit": "DOCKED",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, dock your /Dock your /Dock your ]>> probe near Kerbin"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Kerbin",
+   "sit": "DOCKED",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, dock your /Dock your /Dock your ]>> probe near Kerbin"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Kerbin",
+   "sit": "XXX",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, have your /Have your /Have your ]>> probe near Kerbin"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Kerbin",
+   "sit": "XXX",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, have your /Have your /Have your ]>> probe near Kerbin"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Mun",
+   "sit": "LANDED",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, land your /Land your /Land your ]>> probe on The Mun"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Mun",
+   "sit": "LANDED",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, land your /Land your /Land your ]>> probe on The Mun"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Mun",
+   "sit": "SPLASHED",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, splash your /Splash your /Splash your ]>> probe down on The Mun"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Mun",
+   "sit": "SPLASHED",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, splash your /Splash your /Splash your ]>> probe down on The Mun"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Mun",
+   "sit": "PRELAUNCH",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, be ready to launch your /Be ready to launch your /Be ready to launch your ]>> probe from The Mun"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Mun",
+   "sit": "PRELAUNCH",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, be ready to launch your /Be ready to launch your /Be ready to launch your ]>> probe from The Mun"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Mun",
+   "sit": "FLYING",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, fly your /Fly your /Fly your ]>> probe on The Mun"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Mun",
+   "sit": "FLYING",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, fly your /Fly your /Fly your ]>> probe on The Mun"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Mun",
+   "sit": "SUB_ORBITAL",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, set your/Set your/Set your]>> probe on a crash course for The Mun"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Mun",
+   "sit": "SUB_ORBITAL",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, set your/Set your/Set your]>> probe on a crash course for The Mun"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Mun",
+   "sit": "ORBITING",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, put your /Put your /Put your ]>> probe in orbit of The Mun"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Mun",
+   "sit": "ORBITING",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, put your /Put your /Put your ]>> probe in orbit of The Mun"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Mun",
+   "sit": "ESCAPING",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, get your/Get your/Get your]>> probe into an escape trajectory out of The Mun"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Mun",
+   "sit": "ESCAPING",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, get your/Get your/Get your]>> probe into an escape trajectory out of The Mun"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Mun",
+   "sit": "DOCKED",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, dock your /Dock your /Dock your ]>> probe near The Mun"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Mun",
+   "sit": "DOCKED",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, dock your /Dock your /Dock your ]>> probe near The Mun"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Mun",
+   "sit": "XXX",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, have your /Have your /Have your ]>> probe near The Mun"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Mun",
+   "sit": "XXX",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, have your /Have your /Have your ]>> probe near The Mun"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Jool",
+   "sit": "LANDED",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, land your /Land your /Land your ]>> probe on Jool"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Jool",
+   "sit": "LANDED",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, land your /Land your /Land your ]>> probe on Jool"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Jool",
+   "sit": "SPLASHED",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, splash your /Splash your /Splash your ]>> probe down on Jool"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Jool",
+   "sit": "SPLASHED",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, splash your /Splash your /Splash your ]>> probe down on Jool"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Jool",
+   "sit": "PRELAUNCH",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, be ready to launch your /Be ready to launch your /Be ready to launch your ]>> probe from Jool"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Jool",
+   "sit": "PRELAUNCH",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, be ready to launch your /Be ready to launch your /Be ready to launch your ]>> probe from Jool"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Jool",
+   "sit": "FLYING",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, fly your /Fly your /Fly your ]>> probe on Jool"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Jool",
+   "sit": "FLYING",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, fly your /Fly your /Fly your ]>> probe on Jool"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Jool",
+   "sit": "SUB_ORBITAL",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, set your/Set your/Set your]>> probe on a crash course for Jool"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Jool",
+   "sit": "SUB_ORBITAL",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, set your/Set your/Set your]>> probe on a crash course for Jool"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Jool",
+   "sit": "ORBITING",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, put your /Put your /Put your ]>> probe in orbit of Jool"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Jool",
+   "sit": "ORBITING",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, put your /Put your /Put your ]>> probe in orbit of Jool"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Jool",
+   "sit": "ESCAPING",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, get your/Get your/Get your]>> probe into an escape trajectory out of Jool"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Jool",
+   "sit": "ESCAPING",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, get your/Get your/Get your]>> probe into an escape trajectory out of Jool"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Jool",
+   "sit": "DOCKED",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, dock your /Dock your /Dock your ]>> probe near Jool"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Jool",
+   "sit": "DOCKED",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, dock your /Dock your /Dock your ]>> probe near Jool"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Jool",
+   "sit": "XXX",
+   "final": false,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, have your /Have your /Have your ]>> probe near Jool"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": "Jool",
+   "sit": "XXX",
+   "final": true,
+   "noun": "probe",
+   "title": "<<n:1[Lastly, have your /Have your /Have your ]>> probe near Jool"
+  },
+  {
+   "cls": "LocationAndSituation",
+   "body": null,
+   "sit": "ORBITING",
+   "final": false,
+   "noun": "probe",
+   "title": "Do something on the surface of The Sun"
+  },
+  {
+   "cls": "VesselDestination",
+   "body": "Mun",
+   "entry": "Land",
+   "title": "Land on The Mun"
+  },
+  {
+   "cls": "KerbalDestination",
+   "body": "Mun",
+   "entry": "Land",
+   "kerbal": "Jebediah Kerman",
+   "title": "Land on The Mun"
+  },
+  {
+   "cls": "VesselDestination",
+   "body": "Kerbin",
+   "entry": "Land",
+   "title": "Land on Kerbin"
+  },
+  {
+   "cls": "KerbalDestination",
+   "body": "Kerbin",
+   "entry": "Land",
+   "kerbal": "Jebediah Kerman",
+   "title": "Land on Kerbin"
+  },
+  {
+   "cls": "VesselDestination",
+   "body": "Mun",
+   "entry": "Flight",
+   "title": "Atmospheric flight on The Mun"
+  },
+  {
+   "cls": "KerbalDestination",
+   "body": "Mun",
+   "entry": "Flight",
+   "kerbal": "Jebediah Kerman",
+   "title": "Atmospheric flight on The Mun"
+  },
+  {
+   "cls": "VesselDestination",
+   "body": "Kerbin",
+   "entry": "Flight",
+   "title": "Atmospheric flight on Kerbin"
+  },
+  {
+   "cls": "KerbalDestination",
+   "body": "Kerbin",
+   "entry": "Flight",
+   "kerbal": "Jebediah Kerman",
+   "title": "Atmospheric flight on Kerbin"
+  },
+  {
+   "cls": "VesselDestination",
+   "body": "Mun",
+   "entry": "Flyby",
+   "title": "Fly by The Mun"
+  },
+  {
+   "cls": "KerbalDestination",
+   "body": "Mun",
+   "entry": "Flyby",
+   "kerbal": "Jebediah Kerman",
+   "title": "Fly by The Mun"
+  },
+  {
+   "cls": "VesselDestination",
+   "body": "Kerbin",
+   "entry": "Flyby",
+   "title": "Fly by Kerbin"
+  },
+  {
+   "cls": "KerbalDestination",
+   "body": "Kerbin",
+   "entry": "Flyby",
+   "kerbal": "Jebediah Kerman",
+   "title": "Fly by Kerbin"
+  },
+  {
+   "cls": "VesselDestination",
+   "body": "Mun",
+   "entry": "Orbit",
+   "title": "Orbit around The Mun"
+  },
+  {
+   "cls": "KerbalDestination",
+   "body": "Mun",
+   "entry": "Orbit",
+   "kerbal": "Jebediah Kerman",
+   "title": "Orbit around The Mun"
+  },
+  {
+   "cls": "VesselDestination",
+   "body": "Kerbin",
+   "entry": "Orbit",
+   "title": "Orbit around Kerbin"
+  },
+  {
+   "cls": "KerbalDestination",
+   "body": "Kerbin",
+   "entry": "Orbit",
+   "kerbal": "Jebediah Kerman",
+   "title": "Orbit around Kerbin"
+  },
+  {
+   "cls": "VesselDestination",
+   "body": "Mun",
+   "entry": "Suborbit",
+   "title": "Suborbital spaceflight on The Mun"
+  },
+  {
+   "cls": "KerbalDestination",
+   "body": "Mun",
+   "entry": "Suborbit",
+   "kerbal": "Jebediah Kerman",
+   "title": "Suborbital spaceflight on The Mun"
+  },
+  {
+   "cls": "VesselDestination",
+   "body": "Kerbin",
+   "entry": "Suborbit",
+   "title": "Suborbital spaceflight on Kerbin"
+  },
+  {
+   "cls": "KerbalDestination",
+   "body": "Kerbin",
+   "entry": "Suborbit",
+   "kerbal": "Jebediah Kerman",
+   "title": "Suborbital spaceflight on Kerbin"
+  },
+  {
+   "cls": "VesselDestination",
+   "body": "Mun",
+   "entry": "Escape",
+   "title": "Things in space"
+  },
+  {
+   "cls": "KerbalDestination",
+   "body": "Mun",
+   "entry": "Escape",
+   "kerbal": "Jebediah Kerman",
+   "title": "Things in space"
+  },
+  {
+   "cls": "VesselDestination",
+   "body": "Kerbin",
+   "entry": "Escape",
+   "title": "Things in space"
+  },
+  {
+   "cls": "KerbalDestination",
+   "body": "Kerbin",
+   "entry": "Escape",
+   "kerbal": "Jebediah Kerman",
+   "title": "Things in space"
+  },
+  {
+   "cls": "KerbalGeeAdventure",
+   "kerbal": "Jebediah Kerman",
+   "title": "Have Jebediah pass out from gee forces"
+  },
+  {
+   "cls": "KerbalTour",
+   "kerbal": "Valentina Kerman",
+   "gender": "Male",
+   "title": "<<1^n>>'s Travel Itinerary"
+  },
+  {
+   "cls": "KerbalTour",
+   "kerbal": "Valentina Kerman",
+   "gender": "Female",
+   "title": "<<1^n>>'s Travel Itinerary"
+  },
+  {
+   "cls": "VesselSystems",
+   "descs": [],
+   "vdesc": "probe",
+   "manned": "ANY",
+   "requireNew": false,
+   "title": "Ensure that the probe exists",
+   "notes": null
+  },
+  {
+   "cls": "VesselSystems",
+   "descs": [],
+   "vdesc": "probe",
+   "manned": "ANY",
+   "requireNew": true,
+   "title": "Ensure that the  probe is newly launched\nThe probe must be fully assembled when launched.",
+   "notes": "Please note that this must be a new  probe built for {AGENT} after the contract is accepted."
+  },
+  {
+   "cls": "VesselSystems",
+   "descs": [],
+   "vdesc": "probe",
+   "manned": "MANNED",
+   "requireNew": false,
+   "title": "Ensure that the probe is manned",
+   "notes": null
+  },
+  {
+   "cls": "VesselSystems",
+   "descs": [],
+   "vdesc": "probe",
+   "manned": "MANNED",
+   "requireNew": true,
+   "title": "Ensure that the manned probe is newly launched\nThe probe must be fully assembled when launched.",
+   "notes": "Please note that this must be a new manned probe built for {AGENT} after the contract is accepted."
+  },
+  {
+   "cls": "VesselSystems",
+   "descs": [],
+   "vdesc": "probe",
+   "manned": "UNMANNED",
+   "requireNew": false,
+   "title": "Ensure that the probe is unmanned",
+   "notes": null
+  },
+  {
+   "cls": "VesselSystems",
+   "descs": [],
+   "vdesc": "probe",
+   "manned": "UNMANNED",
+   "requireNew": true,
+   "title": "Ensure that the unmanned probe is newly launched\nThe probe must be fully assembled when launched.",
+   "notes": "Please note that this must be a new unmanned probe built for {AGENT} after the contract is accepted."
+  },
+  {
+   "cls": "VesselSystems",
+   "descs": [
+    "has an antenna",
+    "has a docking port",
+    "can generate power"
+   ],
+   "vdesc": "probe",
+   "manned": "ANY",
+   "requireNew": false,
+   "title": "Ensure that the probe has an antenna, has a docking port and can generate power",
+   "notes": null
+  },
+  {
+   "cls": "VesselSystems",
+   "descs": [
+    "has an antenna",
+    "has a docking port",
+    "can generate power"
+   ],
+   "vdesc": "probe",
+   "manned": "ANY",
+   "requireNew": true,
+   "title": "Build a new  probe that has an antenna, has a docking port and can generate power.\nThe probe must be fully assembled when launched.",
+   "notes": "Please note that this must be a new  probe built for {AGENT} after the contract is accepted."
+  },
+  {
+   "cls": "VesselSystems",
+   "descs": [
+    "has an antenna",
+    "has a docking port",
+    "can generate power"
+   ],
+   "vdesc": "probe",
+   "manned": "MANNED",
+   "requireNew": false,
+   "title": "Ensure that the probe has an antenna, has a docking port and can generate power",
+   "notes": null
+  },
+  {
+   "cls": "VesselSystems",
+   "descs": [
+    "has an antenna",
+    "has a docking port",
+    "can generate power"
+   ],
+   "vdesc": "probe",
+   "manned": "MANNED",
+   "requireNew": true,
+   "title": "Build a new manned probe that has an antenna, has a docking port and can generate power.\nThe probe must be fully assembled when launched.",
+   "notes": "Please note that this must be a new manned probe built for {AGENT} after the contract is accepted."
+  },
+  {
+   "cls": "VesselSystems",
+   "descs": [
+    "has an antenna",
+    "has a docking port",
+    "can generate power"
+   ],
+   "vdesc": "probe",
+   "manned": "UNMANNED",
+   "requireNew": false,
+   "title": "Ensure that the probe has an antenna, has a docking port and can generate power",
+   "notes": null
+  },
+  {
+   "cls": "VesselSystems",
+   "descs": [
+    "has an antenna",
+    "has a docking port",
+    "can generate power"
+   ],
+   "vdesc": "probe",
+   "manned": "UNMANNED",
+   "requireNew": true,
+   "title": "Build a new unmanned probe that has an antenna, has a docking port and can generate power.\nThe probe must be fully assembled when launched.",
+   "notes": "Please note that this must be a new unmanned probe built for {AGENT} after the contract is accepted."
+  },
+  {
+   "cls": "VesselSystems",
+   "descs": [
+    "has an antenna"
+   ],
+   "vdesc": "probe",
+   "manned": "ANY",
+   "requireNew": false,
+   "title": "Ensure that the probe has an antenna",
+   "notes": null
+  },
+  {
+   "cls": "VesselSystems",
+   "descs": [
+    "has an antenna"
+   ],
+   "vdesc": "probe",
+   "manned": "ANY",
+   "requireNew": true,
+   "title": "Build a new  probe that has an antenna.\nThe probe must be fully assembled when launched.",
+   "notes": "Please note that this must be a new  probe built for {AGENT} after the contract is accepted."
+  },
+  {
+   "cls": "VesselSystems",
+   "descs": [
+    "has an antenna"
+   ],
+   "vdesc": "probe",
+   "manned": "MANNED",
+   "requireNew": false,
+   "title": "Ensure that the probe has an antenna",
+   "notes": null
+  },
+  {
+   "cls": "VesselSystems",
+   "descs": [
+    "has an antenna"
+   ],
+   "vdesc": "probe",
+   "manned": "MANNED",
+   "requireNew": true,
+   "title": "Build a new manned probe that has an antenna.\nThe probe must be fully assembled when launched.",
+   "notes": "Please note that this must be a new manned probe built for {AGENT} after the contract is accepted."
+  },
+  {
+   "cls": "VesselSystems",
+   "descs": [
+    "has an antenna"
+   ],
+   "vdesc": "probe",
+   "manned": "UNMANNED",
+   "requireNew": false,
+   "title": "Ensure that the probe has an antenna",
+   "notes": null
+  },
+  {
+   "cls": "VesselSystems",
+   "descs": [
+    "has an antenna"
+   ],
+   "vdesc": "probe",
+   "manned": "UNMANNED",
+   "requireNew": true,
+   "title": "Build a new unmanned probe that has an antenna.\nThe probe must be fully assembled when launched.",
+   "notes": "Please note that this must be a new unmanned probe built for {AGENT} after the contract is accepted."
+  },
+  {
+   "cls": "PartRequest",
+   "article": "a",
+   "partDescription": "#autoLOC_500688",
+   "vesselDescription": "#autoLOC_500028",
+   "parts": [
+    "Large_Crewed_Lab"
+   ],
+   "modules": [
+    "ModuleScienceLab"
+   ],
+   "title": "Have a Mobile Processing Lab MPL-LG-2 on the outpost"
+  },
+  {
+   "cls": "ResourcePossession",
+   "goal": 999.5,
+   "name": "Ore",
+   "rtitle": "ore",
+   "vessel": "base",
+   "title": "Have 1,000 units of ore in your base"
+  },
+  {
+   "cls": "ResourceExtraction",
+   "goal": 999.5,
+   "name": "Ore",
+   "rtitle": "ore",
+   "body": "Mun",
+   "title": "Acquire 1,000 units of fresh ore from The Mun"
+  },
+  {
+   "cls": "ResourcePossession",
+   "goal": 1000.0,
+   "name": "Ore",
+   "rtitle": "ore",
+   "vessel": "base",
+   "title": "Have 1,000 units of ore in your base"
+  },
+  {
+   "cls": "ResourceExtraction",
+   "goal": 1000.0,
+   "name": "Ore",
+   "rtitle": "ore",
+   "body": "Mun",
+   "title": "Acquire 1,000 units of fresh ore from The Mun"
+  },
+  {
+   "cls": "ResourcePossession",
+   "goal": 123456.4,
+   "name": "Ore",
+   "rtitle": "ore",
+   "vessel": "base",
+   "title": "Have 123,456 units of ore in your base"
+  },
+  {
+   "cls": "ResourceExtraction",
+   "goal": 123456.4,
+   "name": "Ore",
+   "rtitle": "ore",
+   "body": "Mun",
+   "title": "Acquire 123,456 units of fresh ore from The Mun"
+  },
+  {
+   "cls": "ResourcePossession",
+   "goal": 0.2,
+   "name": "Ore",
+   "rtitle": "ore",
+   "vessel": "base",
+   "title": "Have  units of ore in your base"
+  },
+  {
+   "cls": "ResourceExtraction",
+   "goal": 0.2,
+   "name": "Ore",
+   "rtitle": "ore",
+   "body": "Mun",
+   "title": "Acquire  units of fresh ore from The Mun"
+  },
+  {
+   "cls": "Asteroid",
+   "size": "a",
+   "forStation": false,
+   "title": "Have a previously undisturbed Class A asteroid in tow",
+   "notes": "Please note that {AGENT} is looking for a new Class A asteroid that has not been grabbed, clawed, or otherwise disturbed by another agency prior to accepting this contract."
+  },
+  {
+   "cls": "Comet",
+   "size": "a",
+   "forStation": false,
+   "title": "Have a previously undisturbed Class A asteroid in tow",
+   "notes": "Please note that {AGENT} is looking for a new Class A asteroid that has not been grabbed, clawed, or otherwise disturbed by another agency prior to accepting this contract."
+  },
+  {
+   "cls": "Asteroid",
+   "size": "a",
+   "forStation": true,
+   "title": "Build the facility into a previously undisturbed Class A asteroid",
+   "notes": "Please note that {AGENT} is looking for a new Class A asteroid that has not been grabbed, clawed, or otherwise disturbed by another agency prior to accepting this contract."
+  },
+  {
+   "cls": "Comet",
+   "size": "a",
+   "forStation": true,
+   "title": "Build the facility into a previously undisturbed Class A asteroid",
+   "notes": "Please note that {AGENT} is looking for a new Class A asteroid that has not been grabbed, clawed, or otherwise disturbed by another agency prior to accepting this contract."
+  },
+  {
+   "cls": "Asteroid",
+   "size": "b",
+   "forStation": false,
+   "title": "Have a previously undisturbed Class B asteroid in tow",
+   "notes": "Please note that {AGENT} is looking for a new Class B asteroid that has not been grabbed, clawed, or otherwise disturbed by another agency prior to accepting this contract."
+  },
+  {
+   "cls": "Comet",
+   "size": "b",
+   "forStation": false,
+   "title": "Have a previously undisturbed Class B asteroid in tow",
+   "notes": "Please note that {AGENT} is looking for a new Class B asteroid that has not been grabbed, clawed, or otherwise disturbed by another agency prior to accepting this contract."
+  },
+  {
+   "cls": "Asteroid",
+   "size": "b",
+   "forStation": true,
+   "title": "Build the facility into a previously undisturbed Class B asteroid",
+   "notes": "Please note that {AGENT} is looking for a new Class B asteroid that has not been grabbed, clawed, or otherwise disturbed by another agency prior to accepting this contract."
+  },
+  {
+   "cls": "Comet",
+   "size": "b",
+   "forStation": true,
+   "title": "Build the facility into a previously undisturbed Class B asteroid",
+   "notes": "Please note that {AGENT} is looking for a new Class B asteroid that has not been grabbed, clawed, or otherwise disturbed by another agency prior to accepting this contract."
+  },
+  {
+   "cls": "Asteroid",
+   "size": "E",
+   "forStation": false,
+   "title": "Have a previously undisturbed Class E asteroid in tow",
+   "notes": "Please note that {AGENT} is looking for a new Class E asteroid that has not been grabbed, clawed, or otherwise disturbed by another agency prior to accepting this contract."
+  },
+  {
+   "cls": "Comet",
+   "size": "E",
+   "forStation": false,
+   "title": "Have a previously undisturbed Class E asteroid in tow",
+   "notes": "Please note that {AGENT} is looking for a new Class E asteroid that has not been grabbed, clawed, or otherwise disturbed by another agency prior to accepting this contract."
+  },
+  {
+   "cls": "Asteroid",
+   "size": "E",
+   "forStation": true,
+   "title": "Build the facility into a previously undisturbed Class E asteroid",
+   "notes": "Please note that {AGENT} is looking for a new Class E asteroid that has not been grabbed, clawed, or otherwise disturbed by another agency prior to accepting this contract."
+  },
+  {
+   "cls": "Comet",
+   "size": "E",
+   "forStation": true,
+   "title": "Build the facility into a previously undisturbed Class E asteroid",
+   "notes": "Please note that {AGENT} is looking for a new Class E asteroid that has not been grabbed, clawed, or otherwise disturbed by another agency prior to accepting this contract."
+  },
+  {
+   "cls": "CometDetection",
+   "count": 1,
+   "title": "Detect 1 new comets",
+   "notes": "\nThe mapping process will happen passively over a length of time as long as any active sentinels are operating. They do not need to be newly launched. You will receive progress notifications as suitable comets are mapped."
+  },
+  {
+   "cls": "CometDetection",
+   "count": 3,
+   "title": "Detect 3 new comets",
+   "notes": "\nThe mapping process will happen passively over a length of time as long as any active sentinels are operating. They do not need to be newly launched. You will receive progress notifications as suitable comets are mapped."
+  },
+  {
+   "cls": "CometScience",
+   "id": 77,
+   "name": "Borrelly",
+   "title": "Take a surface sample from Borrelly",
+   "hash": "Borrelly77"
+  },
+  {
+   "cls": "Construction",
+   "part": "cupola",
+   "vessel": 1234,
+   "vesselName": "Duna Base",
+   "body": "Duna",
+   "title": "Attach PPD-12 Cupola Module on the Duna Base spacecraft.",
+   "hash": "cupola1234",
+   "complete": "Part Attached."
+  },
+  {
+   "cls": "Construction",
+   "part": "NoSuchPart",
+   "vessel": 9,
+   "vesselName": "V",
+   "body": "Duna",
+   "title": "Attach NoSuchPart on the V spacecraft.",
+   "hash": "NoSuchPart9",
+   "complete": "Part Attached."
+  },
+  {
+   "cls": "RepairPart",
+   "part": "cupola",
+   "partId": 55,
+   "vessel": 1234,
+   "vesselName": "Duna Base",
+   "body": "Duna",
+   "title": "Repair PPD-12 Cupola Module on the Duna Base spacecraft in orbit of Duna.",
+   "hash": "cupola55",
+   "complete": "Vessel Repaired."
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "SYNCHRONOUS",
+   "prestige": 0,
+   "body": "Kerbin",
+   "title": "Reach the designated keosynchronous orbit around Kerbin within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "SYNCHRONOUS",
+   "prestige": 0,
+   "body": "Sun",
+   "title": "Reach the designated keliosynchronous orbit around The Sun within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "SYNCHRONOUS",
+   "prestige": 0,
+   "body": "Mun",
+   "title": "Reach the designated synchronous orbit around The Mun within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "SYNCHRONOUS",
+   "prestige": 1,
+   "body": "Kerbin",
+   "title": "Reach the designated keosynchronous orbit around Kerbin within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "SYNCHRONOUS",
+   "prestige": 1,
+   "body": "Sun",
+   "title": "Reach the designated keliosynchronous orbit around The Sun within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "SYNCHRONOUS",
+   "prestige": 1,
+   "body": "Mun",
+   "title": "Reach the designated synchronous orbit around The Mun within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "SYNCHRONOUS",
+   "prestige": 2,
+   "body": "Kerbin",
+   "title": "Reach the designated keosynchronous orbit around Kerbin within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "SYNCHRONOUS",
+   "prestige": 2,
+   "body": "Sun",
+   "title": "Reach the designated keliosynchronous orbit around The Sun within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "SYNCHRONOUS",
+   "prestige": 2,
+   "body": "Mun",
+   "title": "Reach the designated synchronous orbit around The Mun within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "STATIONARY",
+   "prestige": 0,
+   "body": "Kerbin",
+   "title": "Reach keostationary orbit around Kerbin within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "STATIONARY",
+   "prestige": 0,
+   "body": "Sun",
+   "title": "Reach keliostationary orbit around The Sun within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "STATIONARY",
+   "prestige": 0,
+   "body": "Mun",
+   "title": "Reach stationary orbit around The Mun within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "STATIONARY",
+   "prestige": 1,
+   "body": "Kerbin",
+   "title": "Reach keostationary orbit around Kerbin within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "STATIONARY",
+   "prestige": 1,
+   "body": "Sun",
+   "title": "Reach keliostationary orbit around The Sun within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "STATIONARY",
+   "prestige": 1,
+   "body": "Mun",
+   "title": "Reach stationary orbit around The Mun within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "STATIONARY",
+   "prestige": 2,
+   "body": "Kerbin",
+   "title": "Reach keostationary orbit around Kerbin within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "STATIONARY",
+   "prestige": 2,
+   "body": "Sun",
+   "title": "Reach keliostationary orbit around The Sun within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "STATIONARY",
+   "prestige": 2,
+   "body": "Mun",
+   "title": "Reach stationary orbit around The Mun within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "POLAR",
+   "prestige": 0,
+   "body": "Kerbin",
+   "title": "Reach the designated polar orbit around Kerbin within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "POLAR",
+   "prestige": 0,
+   "body": "Sun",
+   "title": "Reach the designated polar orbit around The Sun within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "POLAR",
+   "prestige": 0,
+   "body": "Mun",
+   "title": "Reach the designated polar orbit around The Mun within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "POLAR",
+   "prestige": 1,
+   "body": "Kerbin",
+   "title": "Reach the designated polar orbit around Kerbin within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "POLAR",
+   "prestige": 1,
+   "body": "Sun",
+   "title": "Reach the designated polar orbit around The Sun within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "POLAR",
+   "prestige": 1,
+   "body": "Mun",
+   "title": "Reach the designated polar orbit around The Mun within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "POLAR",
+   "prestige": 2,
+   "body": "Kerbin",
+   "title": "Reach the designated polar orbit around Kerbin within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "POLAR",
+   "prestige": 2,
+   "body": "Sun",
+   "title": "Reach the designated polar orbit around The Sun within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "POLAR",
+   "prestige": 2,
+   "body": "Mun",
+   "title": "Reach the designated polar orbit around The Mun within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "EQUATORIAL",
+   "prestige": 0,
+   "body": "Kerbin",
+   "title": "Reach the designated equatorial orbit around Kerbin within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "EQUATORIAL",
+   "prestige": 0,
+   "body": "Sun",
+   "title": "Reach the designated equatorial orbit around The Sun within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "EQUATORIAL",
+   "prestige": 0,
+   "body": "Mun",
+   "title": "Reach the designated equatorial orbit around The Mun within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "EQUATORIAL",
+   "prestige": 1,
+   "body": "Kerbin",
+   "title": "Reach the designated equatorial orbit around Kerbin within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "EQUATORIAL",
+   "prestige": 1,
+   "body": "Sun",
+   "title": "Reach the designated equatorial orbit around The Sun within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "EQUATORIAL",
+   "prestige": 1,
+   "body": "Mun",
+   "title": "Reach the designated equatorial orbit around The Mun within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "EQUATORIAL",
+   "prestige": 2,
+   "body": "Kerbin",
+   "title": "Reach the designated equatorial orbit around Kerbin within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "EQUATORIAL",
+   "prestige": 2,
+   "body": "Sun",
+   "title": "Reach the designated equatorial orbit around The Sun within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "EQUATORIAL",
+   "prestige": 2,
+   "body": "Mun",
+   "title": "Reach the designated equatorial orbit around The Mun within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "KOLNIYA",
+   "prestige": 0,
+   "body": "Kerbin",
+   "title": "Reach the designated Kolniya orbit around Kerbin within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "KOLNIYA",
+   "prestige": 0,
+   "body": "Sun",
+   "title": "Reach the designated Kolniya orbit around The Sun within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "KOLNIYA",
+   "prestige": 0,
+   "body": "Mun",
+   "title": "Reach the designated Kolniya orbit around The Mun within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "KOLNIYA",
+   "prestige": 1,
+   "body": "Kerbin",
+   "title": "Reach the designated Kolniya orbit around Kerbin within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "KOLNIYA",
+   "prestige": 1,
+   "body": "Sun",
+   "title": "Reach the designated Kolniya orbit around The Sun within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "KOLNIYA",
+   "prestige": 1,
+   "body": "Mun",
+   "title": "Reach the designated Kolniya orbit around The Mun within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "KOLNIYA",
+   "prestige": 2,
+   "body": "Kerbin",
+   "title": "Reach the designated Kolniya orbit around Kerbin within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "KOLNIYA",
+   "prestige": 2,
+   "body": "Sun",
+   "title": "Reach the designated Kolniya orbit around The Sun within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "KOLNIYA",
+   "prestige": 2,
+   "body": "Mun",
+   "title": "Reach the designated Kolniya orbit around The Mun within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "TUNDRA",
+   "prestige": 0,
+   "body": "Kerbin",
+   "title": "Reach the designated tundra orbit around Kerbin within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "TUNDRA",
+   "prestige": 0,
+   "body": "Sun",
+   "title": "Reach the designated tundra orbit around The Sun within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "TUNDRA",
+   "prestige": 0,
+   "body": "Mun",
+   "title": "Reach the designated tundra orbit around The Mun within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "TUNDRA",
+   "prestige": 1,
+   "body": "Kerbin",
+   "title": "Reach the designated tundra orbit around Kerbin within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "TUNDRA",
+   "prestige": 1,
+   "body": "Sun",
+   "title": "Reach the designated tundra orbit around The Sun within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "TUNDRA",
+   "prestige": 1,
+   "body": "Mun",
+   "title": "Reach the designated tundra orbit around The Mun within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "TUNDRA",
+   "prestige": 2,
+   "body": "Kerbin",
+   "title": "Reach the designated tundra orbit around Kerbin within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "TUNDRA",
+   "prestige": 2,
+   "body": "Sun",
+   "title": "Reach the designated tundra orbit around The Sun within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "TUNDRA",
+   "prestige": 2,
+   "body": "Mun",
+   "title": "Reach the designated tundra orbit around The Mun within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "RANDOM",
+   "prestige": 0,
+   "body": "Kerbin",
+   "title": "Reach the designated orbit around Kerbin within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "RANDOM",
+   "prestige": 0,
+   "body": "Sun",
+   "title": "Reach the designated orbit around The Sun within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "RANDOM",
+   "prestige": 0,
+   "body": "Mun",
+   "title": "Reach the designated orbit around The Mun within reasonable deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "RANDOM",
+   "prestige": 1,
+   "body": "Kerbin",
+   "title": "Reach the designated orbit around Kerbin within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "RANDOM",
+   "prestige": 1,
+   "body": "Sun",
+   "title": "Reach the designated orbit around The Sun within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "RANDOM",
+   "prestige": 1,
+   "body": "Mun",
+   "title": "Reach the designated orbit around The Mun within marginal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "RANDOM",
+   "prestige": 2,
+   "body": "Kerbin",
+   "title": "Reach the designated orbit around Kerbin within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "RANDOM",
+   "prestige": 2,
+   "body": "Sun",
+   "title": "Reach the designated orbit around The Sun within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbit",
+   "orbitType": "RANDOM",
+   "prestige": 2,
+   "body": "Mun",
+   "title": "Reach the designated orbit around The Mun within minimal deviation"
+  },
+  {
+   "cls": "SpecificOrbitNotes",
+   "sma": 700000.0,
+   "ecc": 0.01,
+   "inc": 28.61,
+   "lan": 123.456,
+   "arg": 77.77,
+   "body": "Kerbin",
+   "notes": "\nOrbit Specifics:\nApoapsis:107,000 meters\nPeriapsis:93,000 meters\nInclination:28.6 degrees\n\nLongitude of Ascending Node:123.5 degrees"
+  },
+  {
+   "cls": "SpecificOrbitNotes",
+   "sma": 1200000.0,
+   "ecc": 0.3,
+   "inc": 90.0,
+   "lan": 200.04,
+   "arg": 45.55,
+   "body": "Mun",
+   "notes": "\nOrbit Specifics:\nApoapsis:1,360,000 meters\nPeriapsis:640,000 meters\nInclination:90 degrees\n\nLongitude of Ascending Node:200 degrees\nArgument of Periapsis:45.6 degrees"
+  },
+  {
+   "cls": "SpecificOrbitNotes",
+   "sma": 15000000.0,
+   "ecc": 0.0,
+   "inc": 0.5,
+   "lan": 10.0,
+   "arg": 10.0,
+   "body": "Sun",
+   "notes": "\nOrbit Specifics:\nApoapsis:-246,600,000 meters\nPeriapsis:-246,600,000 meters\nInclination:0.5 degrees\n"
+  },
+  {
+   "cls": "SpecificOrbitNotes",
+   "sma": 900000.0,
+   "ecc": 0.1,
+   "inc": 180.0,
+   "lan": 0.0,
+   "arg": 359.99,
+   "body": "Kerbin",
+   "notes": "\nOrbit Specifics:\nApoapsis:390,000 meters\nPeriapsis:210,000 meters\nInclination:180 degrees\n\nArgument of Periapsis:360 degrees"
+  },
+  {
+   "cls": "RoverWayPoint",
+   "title": "Move the rover",
+   "complete": "Rover has reached its target destination."
+  }
+ ],
+ "stringUtils": {
+  "titleCase": [
+   {
+    "in": "molniya",
+    "out": "Molniya"
+   },
+   {
+    "in": "tundra orbit",
+    "out": "Tundra Orbit"
+   },
+   {
+    "in": "HELLO world",
+    "out": "HELLO World"
+   },
+   {
+    "in": "a-b c",
+    "out": "A-B C"
+   },
+   {
+    "in": "",
+    "out": ""
+   }
+  ],
+  "thisThisAndThat": [
+   {
+    "in": [],
+    "out": "(NO ELEMENTS)"
+   },
+   {
+    "in": [
+     "a"
+    ],
+    "out": "a"
+   },
+   {
+    "in": [
+     "a",
+     "b"
+    ],
+    "out": "a and b"
+   },
+   {
+    "in": [
+     "a",
+     "b",
+     "c"
+    ],
+    "out": "a, b and c"
+   },
+   {
+    "in": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "out": "a, b, c and d"
+   }
+  ],
+  "pronouns": [
+   {
+    "casing": "SUBJECTIVE",
+    "gender": "NEUTRAL",
+    "post": false,
+    "out": "they"
+   },
+   {
+    "casing": "SUBJECTIVE",
+    "gender": "NEUTRAL",
+    "post": true,
+    "out": "they"
+   },
+   {
+    "casing": "SUBJECTIVE",
+    "gender": "MASCULINE",
+    "post": false,
+    "out": "he"
+   },
+   {
+    "casing": "SUBJECTIVE",
+    "gender": "MASCULINE",
+    "post": true,
+    "out": "he"
+   },
+   {
+    "casing": "SUBJECTIVE",
+    "gender": "FEMININE",
+    "post": false,
+    "out": "she"
+   },
+   {
+    "casing": "SUBJECTIVE",
+    "gender": "FEMININE",
+    "post": true,
+    "out": "she"
+   },
+   {
+    "casing": "OBJECTIVE",
+    "gender": "NEUTRAL",
+    "post": false,
+    "out": "them"
+   },
+   {
+    "casing": "OBJECTIVE",
+    "gender": "NEUTRAL",
+    "post": true,
+    "out": "them"
+   },
+   {
+    "casing": "OBJECTIVE",
+    "gender": "MASCULINE",
+    "post": false,
+    "out": "him"
+   },
+   {
+    "casing": "OBJECTIVE",
+    "gender": "MASCULINE",
+    "post": true,
+    "out": "him"
+   },
+   {
+    "casing": "OBJECTIVE",
+    "gender": "FEMININE",
+    "post": false,
+    "out": "her"
+   },
+   {
+    "casing": "OBJECTIVE",
+    "gender": "FEMININE",
+    "post": true,
+    "out": "her"
+   },
+   {
+    "casing": "POSSESSIVE",
+    "gender": "NEUTRAL",
+    "post": false,
+    "out": "their"
+   },
+   {
+    "casing": "POSSESSIVE",
+    "gender": "NEUTRAL",
+    "post": true,
+    "out": "theirs"
+   },
+   {
+    "casing": "POSSESSIVE",
+    "gender": "MASCULINE",
+    "post": false,
+    "out": "his"
+   },
+   {
+    "casing": "POSSESSIVE",
+    "gender": "MASCULINE",
+    "post": true,
+    "out": "his"
+   },
+   {
+    "casing": "POSSESSIVE",
+    "gender": "FEMININE",
+    "post": false,
+    "out": "her"
+   },
+   {
+    "casing": "POSSESSIVE",
+    "gender": "FEMININE",
+    "post": true,
+    "out": "hers"
+   }
+  ],
+  "valueAndUnits": [
+   {
+    "type": "ALTITUDE",
+    "value": 0.0,
+    "out": "m"
+   },
+   {
+    "type": "ALTITUDE",
+    "value": 0.5,
+    "out": ".5m"
+   },
+   {
+    "type": "ALTITUDE",
+    "value": 123.45,
+    "out": "123.5m"
+   },
+   {
+    "type": "ALTITUDE",
+    "value": 9999.94,
+    "out": "9,999.9m"
+   },
+   {
+    "type": "ALTITUDE",
+    "value": 10000.0,
+    "out": "10km"
+   },
+   {
+    "type": "ALTITUDE",
+    "value": 1234567.89,
+    "out": "1,234.6km"
+   },
+   {
+    "type": "ALTITUDE",
+    "value": 15.0,
+    "out": "15m"
+   },
+   {
+    "type": "DEPTH",
+    "value": 0.0,
+    "out": "m"
+   },
+   {
+    "type": "DEPTH",
+    "value": 0.5,
+    "out": ".5m"
+   },
+   {
+    "type": "DEPTH",
+    "value": 123.45,
+    "out": "123.5m"
+   },
+   {
+    "type": "DEPTH",
+    "value": 9999.94,
+    "out": "9,999.9m"
+   },
+   {
+    "type": "DEPTH",
+    "value": 10000.0,
+    "out": "10km"
+   },
+   {
+    "type": "DEPTH",
+    "value": 1234567.89,
+    "out": "1,234.6km"
+   },
+   {
+    "type": "DEPTH",
+    "value": 15.0,
+    "out": "15m"
+   },
+   {
+    "type": "DISTANCE",
+    "value": 0.0,
+    "out": "m"
+   },
+   {
+    "type": "DISTANCE",
+    "value": 0.5,
+    "out": ".5m"
+   },
+   {
+    "type": "DISTANCE",
+    "value": 123.45,
+    "out": "123.5m"
+   },
+   {
+    "type": "DISTANCE",
+    "value": 9999.94,
+    "out": "9,999.9m"
+   },
+   {
+    "type": "DISTANCE",
+    "value": 10000.0,
+    "out": "10km"
+   },
+   {
+    "type": "DISTANCE",
+    "value": 1234567.89,
+    "out": "1,234.6km"
+   },
+   {
+    "type": "DISTANCE",
+    "value": 15.0,
+    "out": "15m"
+   },
+   {
+    "type": "SPEED",
+    "value": 0.0,
+    "out": "m/s"
+   },
+   {
+    "type": "SPEED",
+    "value": 0.5,
+    "out": ".5m/s"
+   },
+   {
+    "type": "SPEED",
+    "value": 123.45,
+    "out": "123.5m/s"
+   },
+   {
+    "type": "SPEED",
+    "value": 9999.94,
+    "out": "9,999.9m/s"
+   },
+   {
+    "type": "SPEED",
+    "value": 10000.0,
+    "out": "10,000m/s"
+   },
+   {
+    "type": "SPEED",
+    "value": 1234567.89,
+    "out": "1,234,567.9m/s"
+   },
+   {
+    "type": "SPEED",
+    "value": 15.0,
+    "out": "15m/s"
+   },
+   {
+    "type": "NULL_",
+    "value": 0.0,
+    "out": "units"
+   },
+   {
+    "type": "NULL_",
+    "value": 0.5,
+    "out": ".5units"
+   },
+   {
+    "type": "NULL_",
+    "value": 123.45,
+    "out": "123.5units"
+   },
+   {
+    "type": "NULL_",
+    "value": 9999.94,
+    "out": "9,999.9units"
+   },
+   {
+    "type": "NULL_",
+    "value": 10000.0,
+    "out": "10,000units"
+   },
+   {
+    "type": "NULL_",
+    "value": 1234567.89,
+    "out": "1,234,567.9units"
+   },
+   {
+    "type": "NULL_",
+    "value": 15.0,
+    "out": "15units"
+   }
+  ],
+  "cardinal": [
+   {
+    "args": [
+     0,
+     0,
+     10,
+     0
+    ],
+    "out": "north"
+   },
+   {
+    "args": [
+     0,
+     0,
+     0,
+     10
+    ],
+    "out": "east"
+   },
+   {
+    "args": [
+     0,
+     0,
+     -10,
+     0
+    ],
+    "out": "south"
+   },
+   {
+    "args": [
+     0,
+     0,
+     0,
+     -10
+    ],
+    "out": "west"
+   },
+   {
+    "args": [
+     0,
+     0,
+     10,
+     10
+    ],
+    "out": "northeast"
+   },
+   {
+    "args": [
+     0,
+     0,
+     -10,
+     -10
+    ],
+    "out": "southwest"
+   },
+   {
+    "args": [
+     0,
+     0,
+     10,
+     -10
+    ],
+    "out": "northwest"
+   },
+   {
+    "args": [
+     0,
+     0,
+     -10,
+     10
+    ],
+    "out": "southeast"
+   },
+   {
+    "args": [
+     5,
+     5,
+     5,
+     5
+    ],
+    "out": "north"
+   }
+  ],
+  "isVowel": [
+   {
+    "c": "a",
+    "out": true
+   },
+   {
+    "c": "E",
+    "out": true
+   },
+   {
+    "c": "i",
+    "out": true
+   },
+   {
+    "c": "O",
+    "out": true
+   },
+   {
+    "c": "u",
+    "out": true
+   },
+   {
+    "c": "Y",
+    "out": true
+   },
+   {
+    "c": "b",
+    "out": false
+   },
+   {
+    "c": "Z",
+    "out": false
+   },
+   {
+    "c": "x",
+    "out": false
+   }
+  ],
+  "readDuration": [
+   {
+    "in": "",
+    "out": 0.0
+   },
+   {
+    "in": "hello",
+    "out": 0.29999998211860657
+   },
+   {
+    "in": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "out": 7.019999980926514
+   }
+  ]
+ },
  "alphaNumeric": [
   {
    "seed": 1,
