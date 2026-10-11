@@ -45,6 +45,7 @@ Updated 2026-10-11 (WP-50, WP-35, WP-36, WP-37, WP-39, WP-40, small fixes wave 5
 | 35. WP-53 Breaking Ground deployed science, ROCs and the Serenity contracts (branch `wp53`, from main `af3798c6`) | done for the engine-agnostic part, unit-gated against an independent Python reference at 0 ULP (no golden or capture exists; the GameData mirror has no SquadExpansion/Serenity data, so every Serenity-specific input is a labelled fixture): the five `ModuleGround*` modules on a `ModuleCargoPart` base, the deployed-science runtime (scenario, cluster, part, experiment: power rules, diminishing returns, science accumulation, R&D transmission, seismic events, save / load), the ROC chain (definitions, manager, `LandClassROC` deterministic seeding and placement, `PQSROCControl`), the three Serenity contracts and their parameters, `ControlledBase` / `RoboticCollisions` / `SerenityUtils`; rendering, physics, PQS quad meshes, EVA inventory and UI are seams. See the WP-53 section |
 | 36. WP-54 Making History mission runtime, slice 1 (branch `wp54`, from main `af3798c6`, main merged) | done for the engine-agnostic part, unit-gated against an independent Python reference at 0 differences (no golden or capture of missions exists; every stock `.mission` / `.loadmeta` / `.craft` in the mirror is a 0-byte file, so graphs are synthetic algorithm inputs): flow graph + parser (MEFlowParser, Then/Or blocks, NodePaths), MENode / TestGroup / TestModule / ActionModule bases and registries (the WP-55 seam), DynamicModule(List), scoring (ScoreModule_* float32 bit-exact), awards, validator, Mission (InitMission, Load / Save, run-time state machine, objective printing), MissionSituation / Instructor / PartFilter / MappedVessel / MissionPack; 14 unit cases / 22,458 assertions; `check_cites.py` exact 482 cites, 0 mismatches. Slice 2 (~60 files: vessel situations, restrictions, crew, MissionImporting, params) and the WP-55 node library are not ported. See the WP-54 section |
 | 37. WP-33 inventory and EVA construction (branch `wp33`, from main `af3798c6`) | done for the engine-agnostic part, unit-gated (no golden or capture covers inventories or EVA construction; every existing gate unchanged): StoredPart, ModuleCargoPart (settle coroutine, weld sparks, construction highlight), ModuleInventoryPart (slots, stacks, variants, store / clear / remove, EVA propellant refill, STOREDPARTS + legacy formats, OnCopy / Instantiate copy, mass / volume / cost maths and limit flags with PreviewLimits / HasCapacity, ground-part placement and deployment), KerbalInventoryScenario + the kerbal inventory glue (`ProtoCrewMember` hooks, SaveInventory), the EVA construction weight limit and assisting kerbals, the Place / Move / Rotate mode machine, CheckAttach (stack and surface pose), attach / detach / backup / restore / drop with the dropped-part vessel node, gizmo callbacks, PartItemTransfer and the headless inventory UI models; compared 0 ULP / exact with the independent `tools/wp33/inventory_reference.py` (36 container fills, 288 previews, 312 HasCapacity, 206 singles, 177 parts, 5,310 weight rows, 35 label texts); the WP-06 stand-ins are replaced by the real classes | see "WP-33" below: kerbalEVA prefab mass and `Quaternion.Euler` / `LookRotation` are not verified, the orbital drop branch is not exercised; Unity widgets / audio / raycasts / colliders / gizmo objects are documented seams (WP-32 / WP-46 / WP-47) |
+| 39. WP-20a physics world, frames, Jolt vendored (branch `wp20a`, from `jolt-spike` head `b3b70db5`, main merged) | done for the engine-agnostic part, analytic-gated (PhysX is not reproducible; no golden or capture exists; every existing gate unchanged): Jolt Physics v5.6.0 vendored in `third_party/jolt` (no network in any build; double precision, the spike's configuration), `PhysicsWorld` (pimpl over one Jolt PhysicsSystem: Static / Moving layers, same-vessel `GroupFilter`, double positions, fixed step from `Time::fixedDeltaTime` at the `PlayerLoop::physicsStep` slot, forces, `StateHash`), Krakensbane.cs (frame velocity as a velocity offset only, `SafeToEngage`, `AddExcess`, `Zero`, events), FloatingOrigin.cs without the world shift (`FrameOffset()`), OrbitPhysicsManager rotating-frame decision and re-expression, `getCentrifugalAcc` / `getCoriolisAcc`; 14 unit cases / 147 assertions incl. determinism at 1 / 2 / 4 / 8 threads and a 1,958 s Kepler orbit held to 22 m (radius) / 0.2 m (end position); vessel rigid bodies, joints, queries and contacts are documented seams (WP-20b..e) |
 
 ## Test results (all 35 ctest tests pass (34 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience)
 
@@ -4705,3 +4706,84 @@ Slice 2 (this package, ~60 files left): VesselSituation / VesselLocation / Vesse
 - `double.ToString("00")` custom format (accuracy / resource descriptions): half-away-from-zero, non-negative only; no tie values in the gate.
 - `MEAwards.prefab` (award definition list) and the Making History basic-node cfgs are not extracted (not in the mirror); award tests use labelled fixtures. Real missions need the 0-byte files re-extracted into `testdata/GameData-mirror`.
 - `AwardModule_LandedOn` uses `facilityTransformPosition` for `facilityTransform.parent.position` (WP-42 stores one position).
+
+## WP-20a: physics world, frame model, Jolt vendored (branch `wp20a`, from `jolt-spike` head `b3b70db5`, PR #14; `origin/main` merged)
+
+State: done for the engine-agnostic part. Scope = `core/PHYSICS-SPIKE.md` package WP-20a (section 7); vessel rigid bodies and joints (WP-20b / WP-20c) are not here.
+**No golden or capture can cover it** (PhysX is a different solver and Jolt is not bit-reproducible against it), so the gate is analytic unit tests
+(`tests/test_physics_world.cpp`, 14 cases / 147 assertions; no ctest test added, they run inside `unit`) and the Linux GCC build. Every existing gate is unchanged;
+`harness/compare/tolerances.json` and `tests/tolerances_capture.json` untouched.
+
+### What is in
+
+| piece | files | KSP source it replaces / ports |
+|---|---|---|
+| Jolt v5.6.0 vendored | `third_party/jolt/{Jolt/,Build/CMakeLists.txt,LICENSE,README.md,SHA256SUMS}`, `cmake/ksp_jolt.cmake` | the spike's FetchContent (network) |
+| `PhysicsWorld` | `include/ksp/physics/physics_world.hpp`, `src/physics/physics_world.cpp` (glue, RTTI-free), `physics_world_loop.cpp` (PlayerLoop hook) | the PhysX scene Unity stepped at FixedUpdate.PhysicsFixedUpdate; `Physics.gravity = 0` kept (gravity is a force); `CollisionManager.cs:126-168` as a `GroupFilter` |
+| Krakensbane | `include/ksp/physics/krakensbane.hpp`, `src/physics/krakensbane.cpp` | `Krakensbane.cs:31-208` statement by statement; the shift consequence moved to `FloatingOrigin::FrameOffset()` |
+| FloatingOrigin | `include/ksp/physics/floating_origin.hpp`, `src/physics/floating_origin.cpp` | `FloatingOrigin.cs:102-164, 166, 315-338` minus the world shift |
+| Reference frame | `include/ksp/physics/reference_frame.hpp`, `src/physics/reference_frame.cpp` | `OrbitPhysicsManager.cs:234-304, 322-343` (decision + rotating-frame velocity re-expression), `FlightGlobals.cs:1356-1373` |
+
+Frame model as implemented (PHYSICS-SPIKE.md 5.1): positions are doubles in the main body's frame, body-fixed below `inverseRotThresholdAltitude`, inertial above (KSP's own
+`checkReferenceFrame` rule, unchanged); nothing is shifted per tick. A body's physics-frame velocity is its true velocity minus `Krakensbane::GetFrameVelocity()`
+(`Vessel.cs` `velocityD = rb_velocityD + Krakensbane.GetFrameVelocity()`, read in the other direction), and its true position is the physics-frame position plus
+`FloatingOrigin::FrameOffset()` = the sum of `FrameVel * fixedDeltaTime` over completed ticks (one double vector instead of the O(objects) shift of `setOffset`).
+`ReferenceFrame::TrueVelocity / PhysicsVelocity / TruePosition / PhysicsPosition` do the conversions. The existing WP-20 seams (the `krakensbaneFrameVelocity` /
+`krakensbaneAddFrameVelocity` hooks in `vessel.hpp`, `misc_modules.hpp`, `parachutes.hpp`, `FlightIntegratorAero::krakensbaneFrameVelocity`) are untouched; WP-19 wires them to `Krakensbane::GetFrameVelocity()`.
+
+### Gate (all pass on MSVC RelWithDebInfo and on Linux GCC 13.3 Release)
+
+| case | assertion | measured |
+|---|---|---|
+| double positions | a body at (600000.001, -3.5e-3, 12345678.125) reads back bit-exactly | exact |
+| free fall, 5 s | equals the semi-implicit Euler solution `y0 - g dt^2 n(n+1)/2` to 5e-4 m, the continuous solution to `g dt t / 2` | within |
+| box on a static floor | rests at y = 0.5 +- 0.05 (penetration slop 0.02), speed < 0.05 m/s, x / z undisturbed at 1e5 / 2e5 m | within |
+| same-vessel filter | same group never collides; both `sameVesselCollision` collide; different group / ungrouped collide | 5 cases |
+| determinism | 96-body pile (boxes, spheres, contacts), 200 steps: the `StateHash` (FNV-1a over the bits of every position, rotation, velocity) is identical twice and at 1, 2, 4, 8 threads, also at step 50 | identical |
+| `Attach` | `PlayerLoop::Frame(.., 5)` steps the world 5 times; after `Detach` no more | exact |
+| `SafeToEngage` | the 150 m / 50 m margins, 3000 m/s descent, landed, dead, two loaded vessels (altThreshold 200), other vessel low / landed (both flags) | all rules |
+| frame velocity | AddExcess moves the whole velocity into `FrameVel`, events fire with the C# arguments, static bodies untouched, 501 ticks: physics-frame position bit-unchanged, `FrameOffset()` = `V dt n` (rel 1e-12), true velocity = 2000 exactly; landing disengages and returns the velocity | exact / 1e-12 |
+| Kepler orbit, 1 revolution (r = 700 km, T = 1958.13 s, 97,906 ticks of 0.02 s, gravity at the true position) | radius error, end position error against the analytic circle | plain (no frame velocity): 23.7 m / 8.0 m; Krakensbane every tick: 22.5 m / 0.20 m; re-centred at 50 m/s: 22.5 m / 0.39 m with 283 instead of 97,906 velocity writes. The 22 m is the O(dt) offset of semi-implicit Euler (the spike measured 23 m); the frame velocity removes the float-velocity part of the end error |
+| body-fixed frame orbit | a quarter orbit integrated in the rotating frame with `getCoriolisAcc` + `getCentrifugalAcc` against the inertial circle rotated back (Rodrigues about the rotation axis) | 42.6 m (the 22 m offset plus rotating-frame terms) |
+| rotating frame switch | decision at, below, above the threshold, non-rotating body; `omega x r` re-expression of two bodies of a group and `krakensbaneAcc`, events, `FlightLogger.IgnoreGeeForces(0.5)` hook, there and back | 1e-6 rel (float velocity) |
+| fictitious accelerations | `getCoriolisAcc`, `getCentrifugalAcc` against hand-derived values for omega = (0, -w, 0) | 1e-14 rel |
+
+On Linux GCC the same numbers (plain end error 9.5 m instead of 8.0 m: a different binary) are inside the same bounds. Clang on Linux was not available locally (CI covers it).
+
+### Build and CI impact
+
+- Vendored Jolt: 5.6 MB source (561 files, `SHA256SUMS`, which lists the repository (LF) content). The `Jolt` static library compiles in about 43 s of CPU (132 objects, about 8 s wall at 6 jobs) against about 1,025 s of CPU for the rest of kspcore + tests (`.ninja_log`): roughly +4 % of a full build; incremental builds do not touch it.
+- No network access: `FetchContent` is gone from the spike too (`spikes/jolt/CMakeLists.txt` now uses the vendored target).
+- Link requirement: `kspcore.lib` now needs `Jolt.lib` / `libJolt.a` (`<build>/third_party/jolt/`) in the link line of every consumer built outside CMake (the Unreal bridge, `ue5/`: not touched here). CMake consumers get it through `$<LINK_ONLY:Jolt>`. Jolt needs an AVX2 CPU (its defaults).
+- The glue `physics_world.cpp` is the only TU with Jolt's flags; it is built without RTTI like Jolt (GCC / Clang fail to link otherwise: `typeinfo for JPH::GroupFilter`), so the PlayerLoop hook (the `Delegate` uses `typeid`) is in `physics_world_loop.cpp`.
+- Jolt warnings never fail the build (`ENABLE_ALL_WARNINGS=OFF`, glue `/wd4100 /wd4324 /wd4127 /external:W0`, GCC `-Wno-class-memaccess -Wno-psabi`); the new files add no warnings of their own on MSVC or GCC.
+
+### Deviations and decisions (all documented in the headers)
+
+1. **No world shift**: `FloatingOrigin` keeps its API and fields, never applies `setOffset` to bodies / vessels / particles; `Offset()` is a one-tick value the host may set with `SetOffset`, and `onFloatingOriginShift` is not fired. `TerrainShaderOffset`, `CollisionEnhancer.bypass`, the threshold / continuous / `bypassAuto` decision are dropped.
+2. **Krakensbane without instance**: the C# throws `NullReferenceException` (`fetch` is null); the static readers return zero here.
+3. **`Krakensbane::recentreSpeed`** (kspcore addition, default 0 = KSP's rule: the whole rb velocity moves into `FrameVel` every tick while the vessel is faster than 5 m/s). With 50 m/s the frame velocity is only re-centred above that physics-frame speed (PHYSICS-SPIKE.md): 283 writes instead of 97,906 per orbit for the same orbit.
+4. **Ordering constraint for WP-19a**: gravity must read the true position before `FloatingOrigin::FixedUpdate` consumes this tick's out-of-frame offset (equivalently the offset is consumed after the step). Consuming it before evaluating gravity put the force one `FrameVel * dt` (45 m) ahead of the body and produced a 565 m radius error in the first test run; the tests document the order.
+5. **Jolt body defaults** (`BodyDesc`): no damping (KSP applies its own drag), no sleeping, `maxLinearVelocity` 1e5 (Jolt's default 500 m/s cap destroys any orbit: found by the orbit test), `maxAngularVelocity` 50 (Physics.cfg).
+6. **Determinism flags**: the spike's configuration (`CROSS_PLATFORM_DETERMINISTIC` OFF: deterministic for one binary and call order, independent of the thread count, not across compilers / OSes). Hashes are compared inside a process only; nothing stores a literal. `-DKSP_JOLT_DETERMINISTIC=ON` builds the cross-platform mode (not gated).
+7. **No std:: maths in ported code**: `krakensbane.cpp`, `floating_origin.cpp`, `reference_frame.cpp` use only Vector3d arithmetic (all `double`, as the C#); there is no float32 statement in the ported functions, so the Mono float rule has nothing to apply to. The glue and the tests use std maths (not ported KSP code). `check_cites.py` exact mode (`--cs-root` Assembly-CSharp) over the three ported `.cpp` files: 15 citations, 0 mismatches.
+
+### Seams (documented; owner)
+
+| seam | owner |
+|---|---|
+| vessel rigid bodies, part / cluster build, `AddForceAtPosition` per part, mass updates, `Flush` | WP-20b |
+| joints, structural graph, breaking, `Decouple` / `Couple` / `Undock` physics | WP-20c |
+| `RayCast` / `LineCast` / `OverlapSphere`, `AddStaticMesh` / `RemoveStaticMesh` (terrain quads, KSC), `CollisionEnhancer` replacement | WP-20d with WP-12b / WP-42 |
+| contact listener -> `Part.HandleCollision`, landed / splashed bookkeeping, wheels, EVA kerbals | WP-20d / WP-20e |
+| `setDominantBody` (SOI change of the bubble), pack / unpack, `HoldVesselUnpack`, `Vessel.ChangeWorldVelocity` itself, `physicalObjects` | WP-19b |
+| wiring of the existing `krakensbaneFrameVelocity` / `krakensbaneAddFrameVelocity` / `krakensbaneFrameSpeed` hooks to `Krakensbane::GetFrameVelocity()` / `AddFrameVelocity()` | WP-19 |
+| `PHYSICS_FRAME_DT_LIMIT` (max ticks per frame) is the `PlayerLoop` step count; not enforced inside `PhysicsWorld` | WP-19 |
+
+### Unit tests
+
+`tests/test_physics_world.cpp`: 14 cases / 147 assertions (list above).
+
+### Verification
+
+Windows MSVC RelWithDebInfo, after merging origin/main (24 commits): ctest 34 / 34 pass, unit 718 cases / 1,094,123 assertions (WP-20a: 14 / 147 of them); Linux GCC 13.3 Release (WSL Ubuntu 24.04, own build tree): the WP-20a cases 14 / 147 pass, the whole tree builds. Final fresh-build verification: see PROGRESS-wp20a.md.
