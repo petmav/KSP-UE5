@@ -45,7 +45,7 @@ Orbit& OrbitOfBody(CelestialBody* b) {
 
 Part* SentinelModule::PartOf() const { return dynamic_cast<Part*>(part); }
 
-// SentinelModule.cs:18
+// SentinelModule.cs:17
 std::string SentinelModule::FocusName() {
     CelestialBody* innerBody = nullptr;
     CelestialBody* outerBody = nullptr;
@@ -59,7 +59,7 @@ void SentinelModule::OnAwake() {
     Events().Bind("StopTracking", BaseEvent::Handler([this] { StopTracking(); }));
 }
 
-// SentinelModule.cs:27
+// SentinelModule.cs:26
 void SentinelModule::OnStart(StartState /*state*/) {
     if (isTracking()) {
         Events()["StartTracking"]->active = false;
@@ -70,7 +70,7 @@ void SentinelModule::OnStart(StartState /*state*/) {
     }
 }
 
-// SentinelModule.cs:42
+// SentinelModule.cs:41
 void SentinelModule::StartTracking() {
     if (TelescopeCanActivate()) {
         ShowMessage(Localizer::Format("#autoLOC_6002285", {SentinelUtilities::SentinelPartTitle(), FocusName()}));
@@ -81,7 +81,7 @@ void SentinelModule::StartTracking() {
     }
 }
 
-// SentinelModule.cs:55
+// SentinelModule.cs:54
 void SentinelModule::StopTracking() {
     ShowMessage(Localizer::Format("#autoLOC_6002287", {SentinelUtilities::SentinelPartTitle(), FocusName()}));
     setIsTracking(false);
@@ -89,7 +89,7 @@ void SentinelModule::StopTracking() {
     Events()["StopTracking"]->active = false;
 }
 
-// SentinelModule.cs:65
+// SentinelModule.cs:63
 void SentinelModule::FixedUpdate() {
     Vessel* vessel = PartOf()->vessel;
     if (isTracking()) {
@@ -105,7 +105,7 @@ void SentinelModule::FixedUpdate() {
     }
 }
 
-// SentinelModule.cs:84
+// SentinelModule.cs:82
 bool SentinelModule::TelescopeCanActivate() {
     Vessel* vessel = PartOf()->vessel;
     const bool flag = L::HasValidContractObjectives(*vessel, {"Antenna"});
@@ -124,12 +124,12 @@ bool SentinelModule::TelescopeCanActivate() {
     return true;
 }
 
-// SentinelModule.cs:109
+// SentinelModule.cs:103
 void SentinelModule::ShowMessage(const std::string& s) {
     L::FinePrintEnvironment::Post(s, SentinelUtilities::CalculateReadDuration(s), L::ScreenMessageStyle::UPPER_CENTER);
 }
 
-// SentinelModule.cs:114
+// SentinelModule.cs:108
 void SentinelModule::CacheLocalStrings() {
     cacheAutoLOC_6002290 = Localizer::Format("#autoLOC_6002290");
     cacheAutoLOC_6002296 = Localizer::Format("#autoLOC_6002296");
@@ -152,7 +152,7 @@ double SentinelScenario::NextSpawnTime() const {
 }
 void SentinelScenario::setNextSpawnTime(double v) { Store()->Set<double>("NextSpawnTime", v); }
 
-// SentinelScenario.cs:27
+// SentinelScenario.cs:29
 void SentinelScenario::OnAwake() {
     if (Instance != nullptr && Instance != this) {
         log::Error("[SentinelScenario]: Instance already exists!");
@@ -162,14 +162,14 @@ void SentinelScenario::OnAwake() {
     deployedSentinels.clear();
 }
 
-// SentinelScenario.cs:39
+// SentinelScenario.cs:40
 void SentinelScenario::Start() {
     if (generator == nullptr) generator = std::make_unique<KSPRandom>(Contracts::ContractsEnvironment::Current().NewRandomSeed());
     deployedSentinels = GetDeployedSentinels();
     routines.push_back(CareerEnvironment::Current().Scheduler().StartCoroutine(SentinelRoutine()));
 }
 
-// SentinelScenario.cs:49
+// SentinelScenario.cs:50
 void SentinelScenario::OnLoad(ConfigNode& /*node*/) {
     std::vector<const ConfigNode*> nodes;
     if (GameDatabase::Instance() != nullptr)
@@ -177,7 +177,7 @@ void SentinelScenario::OnLoad(ConfigNode& /*node*/) {
     LoadGameDBSettings(nodes);
 }
 
-// SentinelScenario.cs:54
+// SentinelScenario.cs:55
 void SentinelScenario::LoadGameDBSettings(const std::vector<const ConfigNode*>& configNodes) {
     const ConfigNode* configNode = nullptr;
     if (!configNodes.empty()) {
@@ -190,7 +190,7 @@ void SentinelScenario::LoadGameDBSettings(const std::vector<const ConfigNode*>& 
         configNode->TryGetValue("perSentinelSpawnGroupMaxLimit", SentinelUtilities::perSentinelObjectLimit);
 }
 
-// SentinelScenario.cs:75
+// SentinelScenario.cs:77
 void SentinelScenario::OnDestroy() {
     for (auto& c : routines) CareerEnvironment::Current().Scheduler().StopCoroutine(c);
     routines.clear();
@@ -198,7 +198,7 @@ void SentinelScenario::OnDestroy() {
     destroyed_ = true;
 }
 
-// SentinelScenario.cs:80
+// SentinelScenario.cs:82
 Enumerator SentinelScenario::SentinelRoutine() {
     while (!destroyed_) {
         if (Planetarium::GetUniversalTime() >= NextSpawnTime()) {
@@ -213,7 +213,7 @@ Enumerator SentinelScenario::SentinelRoutine() {
     }
 }
 
-// SentinelScenario.cs:100
+// SentinelScenario.cs:103
 Enumerator SentinelScenario::ProcessSentinelScan(Vessel* v) {
     if (generator->NextDouble() > static_cast<double>(SentinelUtilities::SpawnChance)) co_return;
     const int dayTime = KSPUtil::dateTimeFormatter().Day();
@@ -257,14 +257,14 @@ void SentinelScenario::SpawnComet() {
     if (!deployedSentinels.empty()) SpawnComet(deployedSentinels[0]);
 }
 
-// SentinelScenario.cs:157
+// SentinelScenario.cs:154
 void SentinelScenario::SpawnComet(Vessel* sentinel) {
     if (!SentinelEnvironment::generateWeightedCometType) return;
     std::shared_ptr<ICometOrbitType> cometType = SentinelEnvironment::generateWeightedCometType();
     if (cometType) SpawnComet(sentinel, *cometType);
 }
 
-// SentinelScenario.cs:163
+// SentinelScenario.cs:167
 void SentinelScenario::SpawnComet(Vessel* sentinel, const std::string& typeName) {
     std::shared_ptr<ICometOrbitType> cometOrbitType = SentinelEnvironment::getCometOrbitType ? SentinelEnvironment::getCometOrbitType(typeName) : nullptr;
     if (cometOrbitType == nullptr)
@@ -273,7 +273,7 @@ void SentinelScenario::SpawnComet(Vessel* sentinel, const std::string& typeName)
         SpawnComet(sentinel, *cometOrbitType);
 }
 
-// SentinelScenario.cs:176
+// SentinelScenario.cs:167
 void SentinelScenario::SpawnComet(Vessel* sentinel, ICometOrbitType& cometType) {
     UnityRandom& rnd = UnityRandom::Global();
     const int seed = rnd.Range(0, 2147483647);
@@ -295,7 +295,7 @@ void SentinelScenario::SpawnComet(Vessel* sentinel, ICometOrbitType& cometType) 
     }
 }
 
-// SentinelScenario.cs:193
+// SentinelScenario.cs:185
 std::vector<Vessel*> SentinelScenario::GetDeployedSentinels() {
     std::vector<Vessel*> list;
     for (size_t i = 0; i < FlightRegistry::Vessels.size(); ++i) {
@@ -339,7 +339,7 @@ std::vector<Vessel*> SentinelScenario::GetDeployedSentinels() {
     return list;
 }
 
-// SentinelScenario.cs:276
+// SentinelScenario.cs:247
 bool SentinelScenario::ActiveSentinelMatchingOrbit(Orbit* orbit, double deviationWindow) {
     std::vector<Vessel*> list = GetDeployedSentinels();
     for (size_t num = 0; num < list.size(); ++num) {
@@ -350,7 +350,7 @@ bool SentinelScenario::ActiveSentinelMatchingOrbit(Orbit* orbit, double deviatio
     return false;
 }
 
-// SentinelScenario.cs:300
+// SentinelScenario.cs:269
 void SentinelScenario::ResetSentinels() {
     std::vector<Vessel*> list = GetDeployedSentinels();
     for (size_t i = 0; i < list.size(); ++i) {
@@ -381,7 +381,7 @@ void SentinelScenario::ResetSentinels() {
     }
 }
 
-// SentinelScenario.cs:348
+// SentinelScenario.cs:312
 Orbit SentinelScenario::SentinelAsteroidOrbit(const Orbit& orbit) {
     Orbit orbit2(orbit.inclination, orbit.eccentricity, orbit.semiMajorAxis, orbit.LAN, orbit.argumentOfPeriapsis, orbit.meanAnomalyAtEpoch, orbit.epoch, orbit.referenceBody);
     orbit2.UpdateFromStateVectors(orbit.pos, orbit.vel, orbit.referenceBody, Planetarium::GetUniversalTime());

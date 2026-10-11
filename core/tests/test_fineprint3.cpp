@@ -943,16 +943,23 @@ TEST_CASE("WP-38c CompatibilityUtilities.CleanUpUnsanitaryEVAKerbals + FindSurve
         ConfigNode* keep = contracts->AddNode("CONTRACT");
         keep->AddValue("type", "SatelliteContract");
         cs.LoadNow(save);
+        for (auto& x : cs.Contracts()) x->Unregister();
         CHECK(cs.Version() == ContractsEnvironment::Current().versionString);
         CHECK(save.GetNode("CONTRACTS")->GetNodes("CONTRACT").size() == 1);  // the RecordTrackContract was removed
         CHECK(save.GetNode("CONTRACTS")->GetNode("CONTRACT")->HasValue("placementMode"));
-        // a current save is not touched
+    }
+    {
+        // a current save is not touched (one ContractSystem per load: LoadNow subscribes the system to the global events each time it runs)
+        ContractSystem cs;
+        cs.Awake();
         ConfigNode save2("SCENARIO");
         save2.AddValue("name", "ContractSystem");
         save2.AddValue("version", "1.12.5");
         save2.AddNode("CONTRACTS")->AddNode("CONTRACT")->AddValue("type", "SatelliteContract");
         cs.LoadNow(save2);
         CHECK_FALSE(save2.GetNode("CONTRACTS")->GetNode("CONTRACT")->HasValue("placementMode"));
+        // the loaded contracts subscribed to the global game events: unregister them before the system goes
+        for (auto& x : cs.Contracts()) x->Unregister();
     }
 }
 
@@ -1374,6 +1381,7 @@ TEST_CASE("WP-38c RoverConstructionContract: OnAccepted spawn request, vessel ev
     vrig.v.persistentId = 888;
     ksp::events::GameEvents::onVesselDestroy.Fire(&vrig.v);
     CHECK(c->ContractState() == Contract::State::Failed);
+    c->Unregister();  // Fail does not unregister: the contract subscribed to the global game events
     Contracts::Lite::PreBuiltEnvironment::spawnPreBuiltShip = nullptr;
 }
 
@@ -1455,6 +1463,7 @@ TEST_CASE("WP-38c OrbitalConstructionContract: OnAccepted spawn request (orbit),
     vrig.v.persistentId = 4712;
     ksp::events::GameEvents::onVesselDestroy.Fire(&vrig.v);
     CHECK(c->ContractState() == Contract::State::Failed);
+    c->Unregister();  // Fail does not unregister: the contract subscribed to the global game events
     Contracts::Lite::PreBuiltEnvironment::spawnPreBuiltShip = nullptr;
 }
 
@@ -1515,6 +1524,7 @@ TEST_CASE("WP-38c VesselRepairContract: OnAccepted (orbit / landed), the broken 
         vrig.v.persistentId = 9200;
         ksp::events::GameEvents::onVesselDestroy.Fire(&vrig.v);
         CHECK(c->ContractState() == Contract::State::Failed);
+        c->Unregister();
     }
     {
         requests.clear();

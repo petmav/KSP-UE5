@@ -87,73 +87,73 @@ struct SentinelUtilities {
     static inline double MinAsteroidInclination = 5.0;
     static inline double MaxAsteroidInclination = 40.0;
     static inline int perSentinelObjectLimit = 10;
-    static inline std::string sentinelPartTitle;   // :39 (always "")
+    static inline std::string sentinelPartTitle;   // :36 (always "")
 
     static void Reset();   // C++ helper: the C# initialisers
-    static std::string SentinelPartTitle();                                                       // :134
-    static bool SentinelCanScan(Vessel& v, CelestialBody* innerBody = nullptr, CelestialBody* outerBody = nullptr);  // :148
-    static bool FindInnerAndOuterBodies(double SMA, CelestialBody*& innerBody, CelestialBody*& outerBody);          // :210
-    static bool FindInnerAndOuterBodies(Orbit& o, CelestialBody*& innerBody, CelestialBody*& outerBody);            // :250
-    static bool FindInnerAndOuterBodies(Vessel& v, CelestialBody*& innerBody, CelestialBody*& outerBody);           // :263
-    static double AdjustedSentinelViewAngle(const Orbit& innerOrbit, const Orbit& outerOrbit);    // :292
-    static double GetEscapeVelocity(CelestialBody* body, double altitude);                        // :316
-    static double GetMinimumOrbitalSpeed(CelestialBody* body);                                    // :330
-    static double GetProgradeBurnAllowance(Orbit& o);                                             // :336
-    static double GetRetrogradeBurnAllowance(Orbit& o);                                           // :341
-    static UntrackedObjectClass GetVesselClass(Vessel& v);                                        // :346
-    static SentinelScanType RandomScanType(KSPRandom* generator = nullptr);                       // :363
-    static UntrackedObjectClass WeightedAsteroidClass(KSPRandom* generator = nullptr);            // :368
-    static double WeightedRandom(KSPRandom* generator);                                           // :389
-    static double WeightedRandom(KSPRandom* generator, double min, double max);                   // :394
-    static double WeightedRandom(KSPRandom* generator, double max);                               // :399
-    static double RandomRange(KSPRandom* generator = nullptr, double min = -1.7976931348623157e308, double max = 1.7976931348623157e308);  // :408
-    static float CalculateReadDuration(const std::string& s);                                     // :418
-    static bool IsOnSolarOrbit(CelestialBody* body);                                              // :427
+    static std::string SentinelPartTitle();                                                       // :122
+    static bool SentinelCanScan(Vessel& v, CelestialBody* innerBody = nullptr, CelestialBody* outerBody = nullptr);  // :139
+    static bool FindInnerAndOuterBodies(double SMA, CelestialBody*& innerBody, CelestialBody*& outerBody);          // :198
+    static bool FindInnerAndOuterBodies(Orbit& o, CelestialBody*& innerBody, CelestialBody*& outerBody);            // :251
+    static bool FindInnerAndOuterBodies(Vessel& v, CelestialBody*& innerBody, CelestialBody*& outerBody);           // :274
+    static double AdjustedSentinelViewAngle(const Orbit& innerOrbit, const Orbit& outerOrbit);    // :277
+    static double GetEscapeVelocity(CelestialBody* body, double altitude);                        // :319
+    static double GetMinimumOrbitalSpeed(CelestialBody* body);                                    // :311
+    static double GetProgradeBurnAllowance(Orbit& o);                                             // :317
+    static double GetRetrogradeBurnAllowance(Orbit& o);                                           // :322
+    static UntrackedObjectClass GetVesselClass(Vessel& v);                                        // :327
+    static SentinelScanType RandomScanType(KSPRandom* generator = nullptr);                       // :344
+    static UntrackedObjectClass WeightedAsteroidClass(KSPRandom* generator = nullptr);            // :349
+    static double WeightedRandom(KSPRandom* generator);                                           // :383
+    static double WeightedRandom(KSPRandom* generator, double min, double max);                   // :383
+    static double WeightedRandom(KSPRandom* generator, double max);                               // :383
+    static double RandomRange(KSPRandom* generator = nullptr, double min = -1.7976931348623157e308, double max = 1.7976931348623157e308);  // :386
+    static float CalculateReadDuration(const std::string& s);                                     // :396
+    static bool IsOnSolarOrbit(CelestialBody* body);                                              // :403
 };
 
 // SentinelParameter.cs:11
 class SentinelParameter : public ContractParameter {
 public:
-    CelestialBody* FocusBody = nullptr;                       // :13
-    int TotalDiscoveries = 0;                                 // :15
-    int RemainingDiscoveries = 0;                             // :17
-    SentinelScanType ScanType = SentinelScanType::NONE;       // :19
-    UntrackedObjectClass TargetSize = UntrackedObjectClass::A;  // :21
-    double MinimumEccentricity = 0.0;                         // :23
-    double MinimumInclination = 0.0;                          // :25
-    SentinelParameter();                                      // :27
+    CelestialBody* FocusBody = nullptr;                       // :12
+    int TotalDiscoveries = 0;                                 // :14
+    int RemainingDiscoveries = 0;                             // :16
+    SentinelScanType ScanType = SentinelScanType::NONE;       // :18
+    UntrackedObjectClass TargetSize = UntrackedObjectClass::A;  // :20
+    double MinimumEccentricity = 0.0;                         // :22
+    double MinimumInclination = 0.0;                          // :24
+    SentinelParameter();                                      // :26
     SentinelParameter(CelestialBody* focusBody, SentinelScanType scanType, UntrackedObjectClass targetSize, double minimumEccentricity,
                       double minimumInclination, int discoveryCount);  // :42
     std::string TypeName() const override { return "SentinelParameter"; }
-    std::string GetHashString() override;                     // :53
-    std::string GetTitle() override;                          // :58
-    std::string GetNotes() override;                          // :75
-    void OnRegister() override;                               // :80
-    void OnSave(ConfigNode& node) override;                   // :85
-    void OnLoad(ConfigNode& node) override;                   // :96
-    void DiscoverAsteroid(UntrackedObjectClass size, double eccentricity, double inclination, CelestialBody* body);  // :107
+    std::string GetHashString() override;                     // :55
+    std::string GetTitle() override;                          // :60
+    std::string GetNotes() override;                          // :76
+    void OnRegister() override;                               // :81
+    void OnSave(ConfigNode& node) override;                   // :86
+    void OnLoad(ConfigNode& node) override;                   // :97
+    void DiscoverAsteroid(UntrackedObjectClass size, double eccentricity, double inclination, CelestialBody* body);  // :108
 };
 
 // SentinelContract.cs:13
 class SentinelContract : public Contract, public FinePrint::IUpdateWaypoints {
 public:
-    std::unique_ptr<KSPRandom> generator;                     // :15
-    CelestialBody* innerBody = nullptr;                       // :17
-    CelestialBody* outerBody = nullptr;                       // :19
-    int asteroidCount = 3;                                    // :21
+    std::unique_ptr<KSPRandom> generator;                     // :16
+    CelestialBody* innerBody = nullptr;                       // :18
+    CelestialBody* outerBody = nullptr;                       // :20
+    int asteroidCount = 3;                                    // :22
     std::string TypeName() const override { return "SentinelContract"; }
-    bool Generate() override;                                 // :23
-    bool CanBeCancelled() override { return true; }           // :237
-    bool CanBeDeclined() override { return true; }            // :242
-    std::string GetHashString() override;                     // :247
-    std::string GetTitle() override;                          // :252
-    std::string GetDescription() override;                    // :262
-    std::string GetSynopsys() override;                       // :267
-    std::string MessageCompleted() override;                  // :279
-    void OnLoad(ConfigNode& node) override;                   // :285
-    void OnSave(ConfigNode& node) override;                   // :292
-    bool MeetRequirements() override;                         // :302
-    void SetFocusBody(CelestialBody* body);                   // :316
+    bool Generate() override;                                 // :24
+    bool CanBeCancelled() override { return true; }           // :170
+    bool CanBeDeclined() override { return true; }            // :175
+    std::string GetHashString() override;                     // :180
+    std::string GetTitle() override;                          // :185
+    std::string GetDescription() override;                    // :195
+    std::string GetSynopsys() override;                       // :200
+    std::string MessageCompleted() override;                  // :211
+    void OnLoad(ConfigNode& node) override;                   // :217
+    void OnSave(ConfigNode& node) override;                   // :224
+    bool MeetRequirements() override;                         // :233
+    void SetFocusBody(CelestialBody* body);                   // :246
 };
 
 // CometDetectionContract.cs:12
@@ -162,38 +162,38 @@ public:
     int cometCount = 3;                                       // :14
     std::string TypeName() const override { return "CometDetectionContract"; }
     bool Generate() override;                                 // :16
-    bool CanBeCancelled() override { return true; }           // :94
-    bool CanBeDeclined() override { return true; }            // :99
-    std::string GetHashString() override;                     // :104
-    std::string GetTitle() override;                          // :109
-    std::string GetDescription() override;                    // :114
-    std::string GetSynopsys() override;                       // :119
-    std::string MessageCompleted() override;                  // :124
-    void OnLoad(ConfigNode& node) override;                   // :129
-    void OnSave(ConfigNode& node) override;                   // :134
-    bool MeetRequirements() override;                         // :139
+    bool CanBeCancelled() override { return true; }           // :82
+    bool CanBeDeclined() override { return true; }            // :87
+    std::string GetHashString() override;                     // :92
+    std::string GetTitle() override;                          // :97
+    std::string GetDescription() override;                    // :102
+    std::string GetSynopsys() override;                       // :107
+    std::string MessageCompleted() override;                  // :112
+    void OnLoad(ConfigNode& node) override;                   // :117
+    void OnSave(ConfigNode& node) override;                   // :122
+    bool MeetRequirements() override;                         // :127
 };
 
 // SentinelModule.cs:6 (PartModule; fields isTracking, status)
 class SentinelModule : public PartModule {
 public:
     explicit SentinelModule(const ModuleClassInfo& cls) : PartModule(cls) {}
-    static inline std::string cacheAutoLOC_6002290;           // :14
-    static inline std::string cacheAutoLOC_6002296;           // :16
+    static inline std::string cacheAutoLOC_6002290;           // :13
+    static inline std::string cacheAutoLOC_6002296;           // :15
     Part* PartOf() const;
     bool isTracking() const { return Get<bool>("isTracking"); }
     void setIsTracking(bool v) { Set<bool>("isTracking", v); }
     std::string status() const { return Get<std::string>("status"); }
-    std::string FocusName();                                  // :18
+    std::string FocusName();                                  // :17
     void OnAwake() override;                                  // (C++ addition) binds the two [KSPEvent] methods
-    void OnStart(StartState state) override;                  // :27
-    void StartTracking();                                     // :42
-    void StopTracking();                                      // :55
-    void FixedUpdate();                                       // :65 (called by the host's FixedUpdate)
+    void OnStart(StartState state) override;                  // :26
+    void StartTracking();                                     // :41
+    void StopTracking();                                      // :54
+    void FixedUpdate();                                       // :63 (called by the host's FixedUpdate)
     void OnFixedUpdate() override { FixedUpdate(); }
-    bool TelescopeCanActivate();                              // :84
-    void ShowMessage(const std::string& s);                   // :109
-    static void CacheLocalStrings();                          // :114
+    bool TelescopeCanActivate();                              // :82
+    void ShowMessage(const std::string& s);                   // :103
+    static void CacheLocalStrings();                          // :108
     static void Register();
 };
 
@@ -202,27 +202,27 @@ class SentinelScenario : public ScenarioModule {
 public:
     SentinelScenario();
     ~SentinelScenario() override;
-    static inline SentinelScenario* Instance = nullptr;       // :27
+    static inline SentinelScenario* Instance = nullptr;       // :25
     double NextSpawnTime() const;                             // :19 (persistent field; double.MinValue initial)
     void setNextSpawnTime(double v);
     std::unique_ptr<KSPRandom> generator;                     // :21
     std::vector<Vessel*> deployedSentinels;                   // :23
-    int MaxSentinelUntrackedSpaceObjects() const { return static_cast<int>(deployedSentinels.size()) * SentinelUtilities::perSentinelObjectLimit; }  // :25
-    void OnAwake() override;                                  // :27
-    void Start();                                             // :39
-    void OnLoad(ConfigNode& node) override;                   // :49
-    void LoadGameDBSettings(const std::vector<const ConfigNode*>& spaceObjectsLimits);  // :54
-    void OnDestroy();                                         // :75
-    Enumerator SentinelRoutine();                             // :80
-    Enumerator ProcessSentinelScan(Vessel* v);                // :100
+    int MaxSentinelUntrackedSpaceObjects() const { return static_cast<int>(deployedSentinels.size()) * SentinelUtilities::perSentinelObjectLimit; }  // :27
+    void OnAwake() override;                                  // :29
+    void Start();                                             // :40
+    void OnLoad(ConfigNode& node) override;                   // :50
+    void LoadGameDBSettings(const std::vector<const ConfigNode*>& spaceObjectsLimits);  // :55
+    void OnDestroy();                                         // :77
+    Enumerator SentinelRoutine();                             // :82
+    Enumerator ProcessSentinelScan(Vessel* v);                // :103
     void SpawnComet();                                        // :148
-    void SpawnComet(Vessel* sentinel);                        // :157
-    void SpawnComet(Vessel* sentinel, const std::string& typeName);  // :163
-    void SpawnComet(Vessel* sentinel, ICometOrbitType& cometType);   // :176
-    std::vector<Vessel*> GetDeployedSentinels();              // :193
-    bool ActiveSentinelMatchingOrbit(Orbit* orbit, double deviationWindow);  // :276
-    void ResetSentinels();                                    // :300
-    Orbit SentinelAsteroidOrbit(const Orbit& orbit);          // :348
+    void SpawnComet(Vessel* sentinel);                        // :154
+    void SpawnComet(Vessel* sentinel, const std::string& typeName);  // :167
+    void SpawnComet(Vessel* sentinel, ICometOrbitType& cometType);   // :167
+    std::vector<Vessel*> GetDeployedSentinels();              // :185
+    bool ActiveSentinelMatchingOrbit(Orbit* orbit, double deviationWindow);  // :247
+    void ResetSentinels();                                    // :269
+    Orbit SentinelAsteroidOrbit(const Orbit& orbit);          // :312
     static void Register();
     std::vector<std::shared_ptr<Coroutine>> routines;         // the coroutines StartCoroutine started (stopped in OnDestroy)
     bool destroyed_ = false;                                  // `(bool)this` of the destroyed component

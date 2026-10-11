@@ -28,12 +28,12 @@ struct CompatibilityUtilities {
     static inline int minorVersion = 2147483647;      // :11
     static inline int revisionVersion = 2147483647;   // :13
     static bool OldCareerSave(Game::Modes mode, int saveMajor, int saveMinor, int saveRevision);   // :15
-    static bool OldCareerSave(Game::Modes mode, const std::string& versionString);                 // :44
-    static void UpdateCareerSave(ConfigNode& node);                                                // :71
-    static std::unique_ptr<SurveyDefinition> FindSurveyDefinition(const std::string& experiment);  // :492
-    static bool SavePriorTo(int major, int minor, int revision);                                   // :538
-    static std::string UpgradeVesselSituation(const std::string& situation);                       // :543
-    static void CleanUpUnsanitaryEVAKerbals(ConfigNode& flightState);                              // :595
+    static bool OldCareerSave(Game::Modes mode, const std::string& versionString);                 // :42
+    static void UpdateCareerSave(ConfigNode& node);                                                // :64
+    static std::unique_ptr<SurveyDefinition> FindSurveyDefinition(const std::string& experiment);  // :479
+    static bool SavePriorTo(int major, int minor, int revision);                                   // :519
+    static std::string UpgradeVesselSituation(const std::string& situation);                       // :524
+    static void CleanUpUnsanitaryEVAKerbals(ConfigNode& flightState);                              // :588
 };
 
 }  // namespace ksp::Contracts::Lite

@@ -51,27 +51,27 @@ struct PreBuiltCraftPosition {
 // PreBuiltCraftDefinition.cs:7
 class PreBuiltCraftDefinition {
 public:
-    std::string craftURL;                                                  // :9
-    ConfigNode::NodePtr craftNode;                                         // :11
-    CraftProfileInfo craftInfo;                                            // :13
-    std::vector<std::string> contractTypes;                                // :15
-    bool allowGround = true;                                               // :17
-    bool allowOrbit = false;                                               // :19
-    bool allowWater = false;                                               // :21
-    bool usePreBuiltPositions = true;                                      // :23
-    std::vector<std::string>& brokenPartNames() { return craftInfo.BrokenShipParts; }   // :25
-    bool ContainsBrokenParts() const { return !craftInfo.BrokenShipParts.empty(); }     // :27
-    PreBuiltCraftDefinition(const std::string& url, ConfigNode::NodePtr node);          // :29
+    std::string craftURL;                                                  // :10
+    ConfigNode::NodePtr craftNode;                                         // :12
+    CraftProfileInfo craftInfo;                                            // :14
+    std::vector<std::string> contractTypes;                                // :16
+    bool allowGround = true;                                               // :18
+    bool allowOrbit = false;                                               // :20
+    bool allowWater = false;                                               // :22
+    bool usePreBuiltPositions = true;                                      // :24
+    std::vector<std::string>& brokenPartNames() { return craftInfo.BrokenShipParts; }   // :26
+    bool ContainsBrokenParts() const { return !craftInfo.BrokenShipParts.empty(); }     // :28
+    PreBuiltCraftDefinition(const std::string& url, ConfigNode::NodePtr node);          // :30
 };
 
 // PreBuiltCraft.cs:8
 class PreBuiltCraft {
 public:
     using List = std::vector<std::shared_ptr<PreBuiltCraftDefinition>>;
-    explicit PreBuiltCraft(List preBuiltDefinitions);                      // :16
+    explicit PreBuiltCraft(List preBuiltDefinitions);                      // :15
     // :22 the list is cached per contract type and handed out by reference (the contracts remove entries from it: sic, the cache changes)
     List& CraftForContractType(const std::string& contractType);
-    std::shared_ptr<PreBuiltCraftDefinition> CraftByURL(std::string url);  // :40
+    std::shared_ptr<PreBuiltCraftDefinition> CraftByURL(std::string url);  // :39
 
 private:
     List preBuiltDefinitions_;
@@ -90,8 +90,8 @@ struct ConstructionPart {
 class ConstructionParts {
 public:
     using List = std::vector<std::shared_ptr<ConstructionPart>>;
-    explicit ConstructionParts(List constructionPartDefinitions);          // :16
-    List& PartsForContractType(const std::string& contractType);           // :22 (cached by reference, as PreBuiltCraft)
+    explicit ConstructionParts(List constructionPartDefinitions);          // :15
+    List& PartsForContractType(const std::string& contractType);           // :21 (cached by reference, as PreBuiltCraft)
 
 private:
     List constructionPartDefinitions_;

@@ -178,7 +178,7 @@ bool RoverConstructionContract::Generate() {
     return false;
 }
 
-// RoverConstructionContract.cs:140
+// RoverConstructionContract.cs:147
 void RoverConstructionContract::CalculateWaypoint(float minRadius, float maxRadius) {
     FinePrint::Waypoint waypoint;
     waypoint.celestialName = TargetBody()->bodyName;
@@ -190,38 +190,38 @@ void RoverConstructionContract::CalculateWaypoint(float minRadius, float maxRadi
     craftEndLongitude = waypoint.longitude;
 }
 
-// RoverConstructionContract.cs:154
+// RoverConstructionContract.cs:161
 void RoverConstructionContract::OnRegister() {
     GE::Contract::onContractPreBuiltVesselSpawned.Add(this, &RoverConstructionContract::OnContractPreBuiltVesselSpawned);
     GE::onVesselPersistentIdChanged.Add(this, &RoverConstructionContract::VesselIdChanged);
     GE::onVesselDestroy.Add(this, &RoverConstructionContract::OnVesselDestroy);
 }
 
-// RoverConstructionContract.cs:161
+// RoverConstructionContract.cs:168
 void RoverConstructionContract::OnUnregister() {
     GE::Contract::onContractPreBuiltVesselSpawned.Remove(this, &RoverConstructionContract::OnContractPreBuiltVesselSpawned);
     GE::onVesselPersistentIdChanged.Remove(this, &RoverConstructionContract::VesselIdChanged);
     GE::onVesselDestroy.Remove(this, &RoverConstructionContract::OnVesselDestroy);
 }
 
-// RoverConstructionContract.cs:178
+// RoverConstructionContract.cs:185
 std::string RoverConstructionContract::GetHashString() { return I(L::SuperSeed(*this)); }
 
-// RoverConstructionContract.cs:183
+// RoverConstructionContract.cs:190
 std::string RoverConstructionContract::GetTitle() { return Fmt("#autoLOC_6002550", {targetBody->displayName()}); }
 
-// RoverConstructionContract.cs:188
+// RoverConstructionContract.cs:195
 std::string RoverConstructionContract::GetDescription() {
     return TextGen::GenerateBackStories("RoverConstruction", Agent()->Title(), targetBody->displayName(), "", MissionSeed(), false, false, false);
 }
 
-// RoverConstructionContract.cs:193
+// RoverConstructionContract.cs:200
 std::string RoverConstructionContract::GetSynopsys() { return Fmt("#autoLOC_6002551"); }
 
-// RoverConstructionContract.cs:198
+// RoverConstructionContract.cs:205
 std::string RoverConstructionContract::MessageCompleted() { return Fmt("#autoLOC_6002552"); }
 
-// RoverConstructionContract.cs:203
+// RoverConstructionContract.cs:210
 void RoverConstructionContract::OnLoad(ConfigNode& node) {
     std::string value;
     if (node.TryGetValue("bodyName", value)) targetBody = BodyByName(value);
@@ -250,7 +250,7 @@ void RoverConstructionContract::OnLoad(ConfigNode& node) {
     if (vessel != nullptr && roverWayPointParameter != nullptr) roverWayPointParameter->UpdateRoverInfo(vessel);
 }
 
-// RoverConstructionContract.cs:254
+// RoverConstructionContract.cs:253
 void RoverConstructionContract::OnSave(ConfigNode& node) {
     node.AddValue("bodyName", targetBody->bodyName);
     if (roverCraftDefinition != nullptr) node.AddValue("roverCraftDef", roverCraftDefinition->craftURL);
@@ -268,7 +268,7 @@ bool RoverConstructionContract::MeetRequirements() {
     return true;
 }
 
-// RoverConstructionContract.cs:284
+// RoverConstructionContract.cs:283
 void RoverConstructionContract::OnAccepted() {
     PreBuiltVesselSituation vesselSituation;
     vesselSituation.targetBody = targetBody;
@@ -284,10 +284,10 @@ void RoverConstructionContract::OnAccepted() {
     SpawnPreBuiltShip(roverCraftDefinition, vesselSituation);
 }
 
-// RoverConstructionContract.cs:305
+// RoverConstructionContract.cs:302
 std::string RoverConstructionContract::CreateVesselName(const std::string& bodyName) { return VesselNameFrom(VesselNameStrings, MissionSeed(), bodyName); }
 
-// RoverConstructionContract.cs:311
+// RoverConstructionContract.cs:308
 void RoverConstructionContract::OnContractPreBuiltVesselSpawned(Vessel* vsl) {
     if (waitingForVslSpawn) {
         roverVesselId = vsl->persistentId;
@@ -296,19 +296,19 @@ void RoverConstructionContract::OnContractPreBuiltVesselSpawned(Vessel* vsl) {
     }
 }
 
-// RoverConstructionContract.cs:324
+// RoverConstructionContract.cs:321
 void RoverConstructionContract::VesselIdChanged(uint32_t oldId, uint32_t newId) {
     if (roverVesselId == oldId) roverVesselId = newId;
 }
 
-// RoverConstructionContract.cs:332
+// RoverConstructionContract.cs:329
 void RoverConstructionContract::OnVesselDestroy(Vessel* vsl) {
     if (vsl->persistentId == roverVesselId) Fail();
 }
 
 // ================================================================================================================================ OrbitalConstructionContract
 
-// OrbitalConstructionContract.cs:58
+// OrbitalConstructionContract.cs:59
 bool OrbitalConstructionContract::Generate() {
     int num = 0;
     int num2 = 0;
@@ -405,14 +405,14 @@ bool OrbitalConstructionContract::Generate() {
     return false;
 }
 
-// OrbitalConstructionContract.cs:201
+// OrbitalConstructionContract.cs:209
 void OrbitalConstructionContract::OnRegister() {
     GE::Contract::onContractPreBuiltVesselSpawned.Add(this, &OrbitalConstructionContract::OnContractPreBuiltVesselSpawned);
     GE::onVesselPersistentIdChanged.Add(this, &OrbitalConstructionContract::VesselIdChanged);
     GE::onVesselDestroy.Add(this, &OrbitalConstructionContract::OnVesselDestroy);
 }
 
-// OrbitalConstructionContract.cs:208
+// OrbitalConstructionContract.cs:216
 void OrbitalConstructionContract::OnUnregister() {
     GE::Contract::onContractPreBuiltVesselSpawned.Remove(this, &OrbitalConstructionContract::OnContractPreBuiltVesselSpawned);
     GE::onVesselPersistentIdChanged.Remove(this, &OrbitalConstructionContract::VesselIdChanged);
@@ -420,18 +420,18 @@ void OrbitalConstructionContract::OnUnregister() {
     CleanupRenderer();
 }
 
-// OrbitalConstructionContract.cs:226
+// OrbitalConstructionContract.cs:234
 std::string OrbitalConstructionContract::GetHashString() { return I(L::SuperSeed(*this)); }
 
-// OrbitalConstructionContract.cs:231
+// OrbitalConstructionContract.cs:239
 std::string OrbitalConstructionContract::GetTitle() { return Fmt("#autoLOC_6002592", {targetBody->displayName()}); }
 
-// OrbitalConstructionContract.cs:236
+// OrbitalConstructionContract.cs:244
 std::string OrbitalConstructionContract::GetDescription() {
     return TextGen::GenerateBackStories("OrbitConstruction", Agent()->Title(), targetBody->displayName(), "", MissionSeed(), false, false, false);
 }
 
-// OrbitalConstructionContract.cs:241
+// OrbitalConstructionContract.cs:249
 std::string OrbitalConstructionContract::GetSynopsys() {
     std::string text;
     if (constructionPart == nullptr) constructionPart = PartInfoByName(constructionPartName);
@@ -439,10 +439,10 @@ std::string OrbitalConstructionContract::GetSynopsys() {
     return Fmt("#autoLOC_6002599", {text});
 }
 
-// OrbitalConstructionContract.cs:256
+// OrbitalConstructionContract.cs:263
 std::string OrbitalConstructionContract::MessageCompleted() { return Fmt("#autoLOC_6002603"); }
 
-// OrbitalConstructionContract.cs:261
+// OrbitalConstructionContract.cs:268
 void OrbitalConstructionContract::OnLoad(ConfigNode& node) {
     std::string value;
     if (node.TryGetValue("bodyName", value)) targetBody = BodyByName(value);
@@ -474,7 +474,7 @@ void OrbitalConstructionContract::OnLoad(ConfigNode& node) {
     if (auto* constructionParameter = GetParameterT<ConstructionParameter>()) constructionParameter->UpdatePartInfo("", constructionVesselId, vesselName, nullptr);
 }
 
-// OrbitalConstructionContract.cs:325
+// OrbitalConstructionContract.cs:317
 void OrbitalConstructionContract::OnSave(ConfigNode& node) {
     node.AddValue("bodyName", targetBody->bodyName);
     if (craftDefinition != nullptr) node.AddValue("constructionCraftDef", craftDefinition->craftURL);
@@ -486,13 +486,13 @@ void OrbitalConstructionContract::OnSave(ConfigNode& node) {
     node.AddValue("vesselName", vesselName);
 }
 
-// OrbitalConstructionContract.cs:347
+// OrbitalConstructionContract.cs:338
 bool OrbitalConstructionContract::MeetRequirements() {
     if (ResearchAndDevelopment::GetTechnologyState(ContractDefs::OrbitalConstruction::TechNodeRequired) != RDTech_State::Available) return false;
     return true;
 }
 
-// OrbitalConstructionContract.cs:357
+// OrbitalConstructionContract.cs:347
 void OrbitalConstructionContract::OnAccepted() {
     PreBuiltVesselSituation vesselSituation;
     orbit = std::make_unique<Orbit>(FinePrint::Utilities::OrbitUtilities::GenerateOrbit(MissionSeed(), targetBody, FinePrint::OrbitType::RANDOM, orbitAltitudeFactor, orbitInclinationFactor,
@@ -509,10 +509,10 @@ void OrbitalConstructionContract::OnAccepted() {
     SpawnPreBuiltShip(craftDefinition, vesselSituation);
 }
 
-// OrbitalConstructionContract.cs:374
+// OrbitalConstructionContract.cs:363
 std::string OrbitalConstructionContract::CreateVesselName(const std::string& bodyName) { return VesselNameFrom(VesselNameStrings, MissionSeed(), bodyName); }
 
-// OrbitalConstructionContract.cs:380
+// OrbitalConstructionContract.cs:369
 void OrbitalConstructionContract::OnContractPreBuiltVesselSpawned(Vessel* vsl) {
     if (waitingForVslSpawn) {
         constructionVesselId = vsl->persistentId;
@@ -521,17 +521,17 @@ void OrbitalConstructionContract::OnContractPreBuiltVesselSpawned(Vessel* vsl) {
     }
 }
 
-// OrbitalConstructionContract.cs:392
+// OrbitalConstructionContract.cs:382
 void OrbitalConstructionContract::VesselIdChanged(uint32_t oldId, uint32_t newId) {
     if (constructionVesselId == oldId) constructionVesselId = newId;
 }
 
-// OrbitalConstructionContract.cs:400
+// OrbitalConstructionContract.cs:390
 void OrbitalConstructionContract::OnVesselDestroy(Vessel* vsl) {
     if (vsl->persistentId == constructionVesselId) Fail();
 }
 
-// OrbitalConstructionContract.cs:408
+// OrbitalConstructionContract.cs:398
 void OrbitalConstructionContract::SetupRenderer() {
     if (!orbitRendererSet && orbit != nullptr && L::FinePrintEnvironment::setupOrbitRenderer) {
         L::FinePrintEnvironment::setupOrbitRenderer(*Root(), *orbit);
@@ -539,7 +539,7 @@ void OrbitalConstructionContract::SetupRenderer() {
     }
 }
 
-// OrbitalConstructionContract.cs:416
+// OrbitalConstructionContract.cs:406
 void OrbitalConstructionContract::CleanupRenderer() {
     if (orbitRendererSet && L::FinePrintEnvironment::cleanupOrbitRenderer) L::FinePrintEnvironment::cleanupOrbitRenderer();
 }
@@ -666,14 +666,14 @@ bool VesselRepairContract::Generate() {
     return false;
 }
 
-// VesselRepairContract.cs:235
+// VesselRepairContract.cs:272
 void VesselRepairContract::OnRegister() {
     GE::Contract::onContractPreBuiltVesselSpawned.Add(this, &VesselRepairContract::OnContractPreBuiltVesselSpawned);
     GE::onVesselPersistentIdChanged.Add(this, &VesselRepairContract::VesselIdChanged);
     GE::onVesselDestroy.Add(this, &VesselRepairContract::OnVesselDestroy);
 }
 
-// VesselRepairContract.cs:242
+// VesselRepairContract.cs:279
 void VesselRepairContract::OnUnregister() {
     GE::Contract::onContractPreBuiltVesselSpawned.Remove(this, &VesselRepairContract::OnContractPreBuiltVesselSpawned);
     GE::onVesselPersistentIdChanged.Remove(this, &VesselRepairContract::VesselIdChanged);
@@ -681,18 +681,18 @@ void VesselRepairContract::OnUnregister() {
     CleanupRenderer();
 }
 
-// VesselRepairContract.cs:260
+// VesselRepairContract.cs:297
 std::string VesselRepairContract::GetHashString() { return I(L::SuperSeed(*this)); }
 
-// VesselRepairContract.cs:265
+// VesselRepairContract.cs:302
 std::string VesselRepairContract::GetTitle() { return Fmt("#autoLOC_6002568", {targetBody->displayName()}); }
 
-// VesselRepairContract.cs:270
+// VesselRepairContract.cs:307
 std::string VesselRepairContract::GetDescription() {
     return TextGen::GenerateBackStories("VesselRepair", Agent()->Title(), targetBody->displayName(), "", MissionSeed(), false, false, false);
 }
 
-// VesselRepairContract.cs:275
+// VesselRepairContract.cs:312
 std::string VesselRepairContract::GetSynopsys() {
     std::string text;
     if (repairPart == nullptr) repairPart = PartInfoByName(repairPartName);
@@ -700,10 +700,10 @@ std::string VesselRepairContract::GetSynopsys() {
     return Fmt("#autoLOC_6002576", {text});
 }
 
-// VesselRepairContract.cs:292
+// VesselRepairContract.cs:326
 std::string VesselRepairContract::MessageCompleted() { return Fmt("#autoLOC_6002579"); }
 
-// VesselRepairContract.cs:297
+// VesselRepairContract.cs:331
 void VesselRepairContract::OnLoad(ConfigNode& node) {
     std::string value;
     if (node.TryGetValue("bodyName", value)) targetBody = BodyByName(value);
@@ -806,7 +806,7 @@ void VesselRepairContract::OnLoad(ConfigNode& node) {
     if (vessel != nullptr && repairPartParameter != nullptr) repairPartParameter->UpdatePartInfo(repairPartId, "", repairVesselId, "", nullptr);
 }
 
-// VesselRepairContract.cs:431
+// VesselRepairContract.cs:455
 void VesselRepairContract::OnSave(ConfigNode& node) {
     node.AddValue("bodyName", targetBody->bodyName);
     if (repairCraftDefinition != nullptr) node.AddValue("roverCraftDef", repairCraftDefinition->craftURL);
@@ -822,14 +822,14 @@ void VesselRepairContract::OnSave(ConfigNode& node) {
     if (spawnOnGround) node.AddValue("spawnOrbit", "Landed");
 }
 
-// VesselRepairContract.cs:466
+// VesselRepairContract.cs:486
 bool VesselRepairContract::MeetRequirements() {
     const AvailablePart* partInfoByName = PartInfoByName("evaRepairKit");
     if (partInfoByName != nullptr && (ContractsEnvironment::Current().partModelPurchased ? ContractsEnvironment::Current().partModelPurchased(partInfoByName->name) : true)) return true;
     return false;
 }
 
-// VesselRepairContract.cs:476
+// VesselRepairContract.cs:496
 void VesselRepairContract::OnAccepted() {
     PreBuiltVesselSituation vesselSituation;
     vesselSituation.targetBody = targetBody;
@@ -854,10 +854,10 @@ void VesselRepairContract::OnAccepted() {
     SpawnPreBuiltShip(repairCraftDefinition, vesselSituation);
 }
 
-// VesselRepairContract.cs:511
+// VesselRepairContract.cs:524
 std::string VesselRepairContract::CreateVesselName(const std::string& bodyName) { return VesselNameFrom(VesselNameStrings, MissionSeed(), bodyName); }
 
-// VesselRepairContract.cs:517
+// VesselRepairContract.cs:530
 void VesselRepairContract::OnContractPreBuiltVesselSpawned(Vessel* vsl) {
     if (!waitingForVslSpawn) return;
     repairVesselId = vsl->protoVessel->persistentId;
@@ -882,17 +882,17 @@ void VesselRepairContract::OnContractPreBuiltVesselSpawned(Vessel* vsl) {
     waitingForVslSpawn = false;
 }
 
-// VesselRepairContract.cs:558
+// VesselRepairContract.cs:570
 void VesselRepairContract::VesselIdChanged(uint32_t oldId, uint32_t newId) {
     if (repairVesselId == oldId) repairVesselId = newId;
 }
 
-// VesselRepairContract.cs:566
+// VesselRepairContract.cs:578
 void VesselRepairContract::OnVesselDestroy(Vessel* vsl) {
     if (vsl->persistentId == repairVesselId) Fail();
 }
 
-// VesselRepairContract.cs:574
+// VesselRepairContract.cs:586
 void VesselRepairContract::SetupRenderer() {
     if (!orbitRendererSet && orbit != nullptr && L::FinePrintEnvironment::setupOrbitRenderer) {
         L::FinePrintEnvironment::setupOrbitRenderer(*Root(), *orbit);
@@ -900,7 +900,7 @@ void VesselRepairContract::SetupRenderer() {
     }
 }
 
-// VesselRepairContract.cs:582
+// VesselRepairContract.cs:594
 void VesselRepairContract::CleanupRenderer() {
     if (orbitRendererSet && L::FinePrintEnvironment::cleanupOrbitRenderer) L::FinePrintEnvironment::cleanupOrbitRenderer();
 }

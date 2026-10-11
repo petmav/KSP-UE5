@@ -64,7 +64,7 @@ Orbit& OrbitOfBody(CelestialBody* b) {
 KSPRandom FreshRandom() { return KSPRandom(Contracts::ContractsEnvironment::Current().NewRandomSeed()); }
 }  // namespace
 
-// SentinelUtilities.cs:134
+// SentinelUtilities.cs:122
 std::string SentinelUtilities::SentinelPartTitle() {
     if (sentinelPartTitle != "") return sentinelPartTitle;
     const AvailablePart* partInfoByName = (SaveEnvironment::Current().getPartInfoByName ? SaveEnvironment::Current().getPartInfoByName(SentinelPartName) : nullptr);
@@ -72,7 +72,7 @@ std::string SentinelUtilities::SentinelPartTitle() {
     return Localizer::Format("#autoLOC_6002284");
 }
 
-// SentinelUtilities.cs:148
+// SentinelUtilities.cs:139
 bool SentinelUtilities::SentinelCanScan(Vessel& v, CelestialBody* innerBody, CelestialBody* outerBody) {
     double inclination;
     double eccentricity;
@@ -104,7 +104,7 @@ bool SentinelUtilities::SentinelCanScan(Vessel& v, CelestialBody* innerBody, Cel
     return true;
 }
 
-// SentinelUtilities.cs:210
+// SentinelUtilities.cs:198
 bool SentinelUtilities::FindInnerAndOuterBodies(double SMA, CelestialBody*& innerBody, CelestialBody*& outerBody) {
     std::vector<std::pair<double, CelestialBody*>> dictionary;
     auto add = [&](double key, CelestialBody* b) {
@@ -147,7 +147,7 @@ bool SentinelUtilities::FindInnerAndOuterBodies(double SMA, CelestialBody*& inne
     return true;
 }
 
-// SentinelUtilities.cs:250
+// SentinelUtilities.cs:251
 bool SentinelUtilities::FindInnerAndOuterBodies(Orbit& o, CelestialBody*& innerBody, CelestialBody*& outerBody) {
     double semiMajorAxis = o.semiMajorAxis;
     if (o.referenceBody != nullptr && o.referenceBody != Sun()) {
@@ -159,7 +159,7 @@ bool SentinelUtilities::FindInnerAndOuterBodies(Orbit& o, CelestialBody*& innerB
     return FindInnerAndOuterBodies(semiMajorAxis, innerBody, outerBody);
 }
 
-// SentinelUtilities.cs:263
+// SentinelUtilities.cs:251
 bool SentinelUtilities::FindInnerAndOuterBodies(Vessel& v, CelestialBody*& innerBody, CelestialBody*& outerBody) {
     double semiMajorAxis;
     CelestialBody* celestialBody;
@@ -179,7 +179,7 @@ bool SentinelUtilities::FindInnerAndOuterBodies(Vessel& v, CelestialBody*& inner
     return FindInnerAndOuterBodies(semiMajorAxis, innerBody, outerBody);
 }
 
-// SentinelUtilities.cs:292
+// SentinelUtilities.cs:277
 double SentinelUtilities::AdjustedSentinelViewAngle(const Orbit& innerOrbit, const Orbit& outerOrbit) {
     const double num = innerOrbit.semiMajorAxis / 2.0;
     const double num2 = outerOrbit.semiMajorAxis / 2.0;
@@ -194,7 +194,7 @@ double SentinelUtilities::AdjustedSentinelViewAngle(const Orbit& innerOrbit, con
     return num6;
 }
 
-// SentinelUtilities.cs:316
+// SentinelUtilities.cs:298
 double SentinelUtilities::GetEscapeVelocity(CelestialBody* body, double altitude) {
     if (body != Sun()) {
         if (altitude <= body->sphereOfInfluence)
@@ -204,21 +204,21 @@ double SentinelUtilities::GetEscapeVelocity(CelestialBody* body, double altitude
     return M::Sqrt(2.0 * body->gravParameter / altitude);
 }
 
-// SentinelUtilities.cs:330
+// SentinelUtilities.cs:311
 double SentinelUtilities::GetMinimumOrbitalSpeed(CelestialBody* body) {
     const double num = (body == Sun()) ? L::CelestialUtilities::GetSolarExtents() : body->sphereOfInfluence;
     return M::Sqrt(body->gravParameter / num);
 }
 
-// SentinelUtilities.cs:336
+// SentinelUtilities.cs:317
 double SentinelUtilities::GetProgradeBurnAllowance(Orbit& o) {
     return GetEscapeVelocity(o.referenceBody, o.altitude + o.referenceBody->Radius) - o.GetRelativeVel().magnitude();
 }
 
-// SentinelUtilities.cs:341
+// SentinelUtilities.cs:322
 double SentinelUtilities::GetRetrogradeBurnAllowance(Orbit& o) { return o.GetRelativeVel().magnitude() - GetMinimumOrbitalSpeed(o.referenceBody); }
 
-// SentinelUtilities.cs:346
+// SentinelUtilities.cs:327
 UntrackedObjectClass SentinelUtilities::GetVesselClass(Vessel& v) {
     UntrackedObjectClass result = UntrackedObjectClass::C;
     if (!v.loaded) {
@@ -233,7 +233,7 @@ UntrackedObjectClass SentinelUtilities::GetVesselClass(Vessel& v) {
     return result;
 }
 
-// SentinelUtilities.cs:363 (`generator as KSPRandom`: a null generator is `new KSPRandom()`)
+// SentinelUtilities.cs:344 (`generator as KSPRandom`: a null generator is `new KSPRandom()`)
 SentinelScanType SentinelUtilities::RandomScanType(KSPRandom* generator) {
     constexpr int names = 4;  // Enum.GetNames(typeof(SentinelScanType)).Length
     if (generator != nullptr) return static_cast<SentinelScanType>(generator->Next(0, names));
@@ -241,7 +241,7 @@ SentinelScanType SentinelUtilities::RandomScanType(KSPRandom* generator) {
     return static_cast<SentinelScanType>(fresh.Next(0, names));
 }
 
-// SentinelUtilities.cs:368
+// SentinelUtilities.cs:349
 UntrackedObjectClass SentinelUtilities::WeightedAsteroidClass(KSPRandom* generator) {
     std::optional<KSPRandom> fresh;
     KSPRandom* kSPRandom = generator;
@@ -260,21 +260,21 @@ UntrackedObjectClass SentinelUtilities::WeightedAsteroidClass(KSPRandom* generat
     return static_cast<UntrackedObjectClass>(num3 + num);
 }
 
-// SentinelUtilities.cs:389
+// SentinelUtilities.cs:377
 double SentinelUtilities::WeightedRandom(KSPRandom* generator) {
     if (generator != nullptr) return M::Pow(generator->NextDouble(), WeightedStability);
     KSPRandom fresh = FreshRandom();
     return M::Pow(fresh.NextDouble(), WeightedStability);
 }
 
-// SentinelUtilities.cs:394
+// SentinelUtilities.cs:377
 double SentinelUtilities::WeightedRandom(KSPRandom* generator, double min, double max) {
     if (generator != nullptr) return min + M::Pow(generator->NextDouble(), WeightedStability) * (max - min);
     KSPRandom fresh = FreshRandom();
     return min + M::Pow(fresh.NextDouble(), WeightedStability) * (max - min);
 }
 
-// SentinelUtilities.cs:399 (a null generator is `new Random()`: a fresh KSPRandom stands in for System.Random)
+// SentinelUtilities.cs:377 (a null generator is `new Random()`: a fresh KSPRandom stands in for System.Random)
 double SentinelUtilities::WeightedRandom(KSPRandom* generator, double max) {
     std::optional<KSPRandom> fresh;
     if (generator == nullptr) {
@@ -284,7 +284,7 @@ double SentinelUtilities::WeightedRandom(KSPRandom* generator, double max) {
     return WeightedRandom(generator, 0.0, max);
 }
 
-// SentinelUtilities.cs:408
+// SentinelUtilities.cs:386
 double SentinelUtilities::RandomRange(KSPRandom* generator, double min, double max) {
     std::optional<KSPRandom> fresh;
     KSPRandom* kSPRandom = generator;
@@ -299,14 +299,14 @@ double SentinelUtilities::RandomRange(KSPRandom* generator, double min, double m
     return min + kSPRandom->NextDouble() * (max - min);
 }
 
-// SentinelUtilities.cs:418
+// SentinelUtilities.cs:396
 float SentinelUtilities::CalculateReadDuration(const std::string& s) {
     const float num = 200.0f;
     const float num2 = 5.0f;
     return f32store(f32store(f32store(static_cast<float>(s.size()) / num2) / num) * 60.0f);
 }
 
-// SentinelUtilities.cs:427
+// SentinelUtilities.cs:403
 bool SentinelUtilities::IsOnSolarOrbit(CelestialBody* body) {
     if (!(body == Sun()) && !(body->referenceBody() == nullptr) && !(body->referenceBody() != Sun())) return true;
     return false;

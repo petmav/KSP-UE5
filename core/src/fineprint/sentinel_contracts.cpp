@@ -51,7 +51,7 @@ int RoundI(float f) { return Mathf::RoundToInt(f); }
 
 // ================================================================================================================================ SentinelParameter
 
-// SentinelParameter.cs:27
+// SentinelParameter.cs:26
 SentinelParameter::SentinelParameter() {
     FocusBody = Home();
     ScanType = SentinelScanType::NONE;
@@ -65,7 +65,7 @@ SentinelParameter::SentinelParameter() {
     RemainingDiscoveries = 3;
 }
 
-// SentinelParameter.cs:42
+// SentinelParameter.cs:44
 SentinelParameter::SentinelParameter(CelestialBody* focusBody, SentinelScanType scanType, UntrackedObjectClass targetSize, double minimumEccentricity,
                                      double minimumInclination, int discoveryCount) {
     FocusBody = focusBody;
@@ -77,10 +77,10 @@ SentinelParameter::SentinelParameter(CelestialBody* focusBody, SentinelScanType 
     RemainingDiscoveries = discoveryCount;
 }
 
-// SentinelParameter.cs:53
+// SentinelParameter.cs:55
 std::string SentinelParameter::GetHashString() { return I(L::SuperSeed(*Root())) + ID(); }
 
-// SentinelParameter.cs:58
+// SentinelParameter.cs:60
 std::string SentinelParameter::GetTitle() {
     const std::string text = (FocusBody == Home()) ? Fmt("#autoLOC_6002303") : Fmt("#autoLOC_6002304");
     switch (ScanType) {
@@ -93,13 +93,13 @@ std::string SentinelParameter::GetTitle() {
     }
 }
 
-// SentinelParameter.cs:75
+// SentinelParameter.cs:76
 std::string SentinelParameter::GetNotes() { return std::string(Scene() == GameScenes::SPACECENTER ? "\n" : "") + Fmt("#autoLOC_6002309"); }
 
-// SentinelParameter.cs:80
+// SentinelParameter.cs:81
 void SentinelParameter::OnRegister() { SetDisableOnStateChange(true); }
 
-// SentinelParameter.cs:85
+// SentinelParameter.cs:86
 void SentinelParameter::OnSave(ConfigNode& node) {
     node.AddValue("FocusBody", static_cast<int32_t>(FocusBody->flightGlobalsIndex));
     node.AddValue("ScanType", dotnet::EnumToString(ScanType));
@@ -110,7 +110,7 @@ void SentinelParameter::OnSave(ConfigNode& node) {
     node.AddValue("RemainingDiscoveries", static_cast<int32_t>(RemainingDiscoveries));
 }
 
-// SentinelParameter.cs:96
+// SentinelParameter.cs:97
 void SentinelParameter::OnLoad(ConfigNode& node) {
     L::LoadNode(node, "SentinelParameter", "FocusBody", FocusBody, Home());
     L::LoadNode(node, "SentinelParameter", "ScanType", ScanType, SentinelScanType::NONE);
@@ -121,7 +121,7 @@ void SentinelParameter::OnLoad(ConfigNode& node) {
     L::LoadNode(node, "SentinelParameter", "RemainingDiscoveries", RemainingDiscoveries, 3);
 }
 
-// SentinelParameter.cs:107
+// SentinelParameter.cs:108
 void SentinelParameter::DiscoverAsteroid(UntrackedObjectClass size, double eccentricity, double inclination, CelestialBody* body) {
     if (Root()->ContractState() != Contract::State::Active || body != FocusBody || (ScanType == SentinelScanType::CLASS && size != TargetSize) ||
         (ScanType == SentinelScanType::ECCENTRICITY && eccentricity < MinimumEccentricity) ||
@@ -146,7 +146,7 @@ void SentinelParameter::DiscoverAsteroid(UntrackedObjectClass size, double eccen
 
 // ================================================================================================================================ SentinelContract
 
-// SentinelContract.cs:23
+// SentinelContract.cs:24
 bool SentinelContract::Generate() {
     if (!L::ProgressUtilities::HavePartTech(SentinelUtilities::SentinelPartName, false)) return false;
     int num = 0;
@@ -274,22 +274,22 @@ bool SentinelContract::Generate() {
     return false;
 }
 
-// SentinelContract.cs:247
+// SentinelContract.cs:180
 std::string SentinelContract::GetHashString() { return I(L::SuperSeed(*this)); }
 
-// SentinelContract.cs:252
+// SentinelContract.cs:185
 std::string SentinelContract::GetTitle() {
     if (outerBody == Home()) return Fmt("#autoLOC_6002297", {I(asteroidCount), outerBody->displayName(), SentinelUtilities::SentinelPartTitle()});
     const std::string text = Fmt("#autoLOC_7001310");
     return Fmt("#autoLOC_6002298", {I(asteroidCount), outerBody->displayName(), text, SentinelUtilities::SentinelPartTitle()});
 }
 
-// SentinelContract.cs:262
+// SentinelContract.cs:195
 std::string SentinelContract::GetDescription() {
     return TextGen::GenerateBackStories(TypeName(), Agent()->Title(), Fmt("#autoLOC_6002299"), outerBody->displayName(), MissionSeed(), true, false, true);
 }
 
-// SentinelContract.cs:267
+// SentinelContract.cs:200
 std::string SentinelContract::GetSynopsys() {
     if (outerBody == Home()) {
         const std::string text = Fmt("#autoLOC_7001311");
@@ -299,20 +299,20 @@ std::string SentinelContract::GetSynopsys() {
     return Fmt("#autoLOC_6002301", {SentinelUtilities::SentinelPartTitle(), Home()->displayName(), text2, outerBody->displayName()});
 }
 
-// SentinelContract.cs:279
+// SentinelContract.cs:211
 std::string SentinelContract::MessageCompleted() {
     const std::string text = Fmt("#autoLOC_7001310");
     return Fmt("#autoLOC_6002302", {outerBody->displayName(), text});
 }
 
-// SentinelContract.cs:285
+// SentinelContract.cs:217
 void SentinelContract::OnLoad(ConfigNode& node) {
     L::LoadNode(node, "SentinelContract", "innerBody", innerBody, Sun());
     L::LoadNode(node, "SentinelContract", "outerBody", outerBody, Home());
     L::LoadNode(node, "SentinelContract", "asteroidCount", asteroidCount, 3);
 }
 
-// SentinelContract.cs:292
+// SentinelContract.cs:224
 void SentinelContract::OnSave(ConfigNode& node) {
     const int flightGlobalsIndex = innerBody->flightGlobalsIndex;
     node.AddValue("innerBody", static_cast<int32_t>(flightGlobalsIndex));
@@ -321,7 +321,7 @@ void SentinelContract::OnSave(ConfigNode& node) {
     node.AddValue("asteroidCount", static_cast<int32_t>(asteroidCount));
 }
 
-// SentinelContract.cs:302
+// SentinelContract.cs:233
 bool SentinelContract::MeetRequirements() {
     if (!ProgressTracking::Instance()->NodeComplete({Sun()->name(), "Orbit"})) return false;
     if (static_cast<int>(GameVariables::Instance->GetOrbitDisplayMode(ScenarioUpgradeableFacilities::GetFacilityLevel(SpaceCenterFacility::TrackingStation))) <
@@ -330,7 +330,7 @@ bool SentinelContract::MeetRequirements() {
     return true;
 }
 
-// SentinelContract.cs:316
+// SentinelContract.cs:246
 void SentinelContract::SetFocusBody(CelestialBody* body) {
     if (!SentinelUtilities::IsOnSolarOrbit(body)) {
         innerBody = Sun();
@@ -398,30 +398,30 @@ bool CometDetectionContract::Generate() {
     return false;
 }
 
-// CometDetectionContract.cs:104
+// CometDetectionContract.cs:92
 std::string CometDetectionContract::GetHashString() { return I(L::SuperSeed(*this)); }
 
-// CometDetectionContract.cs:109
+// CometDetectionContract.cs:97
 std::string CometDetectionContract::GetTitle() { return Fmt("#autoLOC_6011148", {I(cometCount), SentinelUtilities::SentinelPartTitle()}); }
 
-// CometDetectionContract.cs:114
+// CometDetectionContract.cs:102
 std::string CometDetectionContract::GetDescription() {
     return TextGen::GenerateBackStories("CometDetection", Agent()->Title(), Fmt("#autoLOC_6006050"), Sun()->displayName(), MissionSeed(), false, false, false);
 }
 
-// CometDetectionContract.cs:119
+// CometDetectionContract.cs:107
 std::string CometDetectionContract::GetSynopsys() { return Fmt("#autoLOC_6011146", {I(cometCount), SentinelUtilities::SentinelPartTitle()}); }
 
-// CometDetectionContract.cs:124
+// CometDetectionContract.cs:112
 std::string CometDetectionContract::MessageCompleted() { return Fmt("#autoLOC_6011145", {SentinelUtilities::SentinelPartTitle()}); }
 
-// CometDetectionContract.cs:129
+// CometDetectionContract.cs:117
 void CometDetectionContract::OnLoad(ConfigNode& node) { L::LoadNode(node, "CometContract", "cometCount", cometCount, 3); }
 
-// CometDetectionContract.cs:134
+// CometDetectionContract.cs:122
 void CometDetectionContract::OnSave(ConfigNode& node) { node.AddValue("cometCount", static_cast<int32_t>(cometCount)); }
 
-// CometDetectionContract.cs:139
+// CometDetectionContract.cs:127
 bool CometDetectionContract::MeetRequirements() {
     if (!ProgressTracking::Instance()->NodeComplete({Sun()->name(), "Orbit"})) return false;
     if (static_cast<int>(GameVariables::Instance->GetOrbitDisplayMode(ScenarioUpgradeableFacilities::GetFacilityLevel(SpaceCenterFacility::TrackingStation))) <

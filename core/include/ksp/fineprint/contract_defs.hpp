@@ -49,11 +49,11 @@ struct ContractDefs {
         PositionList& operator[](const std::string& key);
         PositionList* TryGetValue(const std::string& key);
     };
-    static inline std::shared_ptr<Contracts::Lite::PreBuiltCraft> PreBuiltCraftDefs;          // :1290
-    static inline PositionDictionary PreBuiltCraftPositions;                                 // :1292
-    static inline std::shared_ptr<Contracts::Lite::ConstructionParts> constructionParts;     // :1294
-    static inline bool loadedContractCraftDefs = false;                                      // :1298
-    static inline bool loadedConstructionPartsList = false;                                  // :1300
+    static inline std::shared_ptr<Contracts::Lite::PreBuiltCraft> PreBuiltCraftDefs;          // :1334
+    static inline PositionDictionary PreBuiltCraftPositions;                                 // :1336
+    static inline std::shared_ptr<Contracts::Lite::ConstructionParts> constructionParts;     // :1338
+    static inline bool loadedContractCraftDefs = false;                                      // :1342
+    static inline bool loadedConstructionPartsList = false;                                  // :1344
     // GameDatabase.Instance.GetConfigNodes(typeName). Unset: the GameDatabase singleton (none: no nodes).
     static inline std::function<std::vector<ConfigNode*>(const std::string& typeName)> gameDatabaseConfigNodes;
     static void LoadContractCraftDefs();                                                    // :1438

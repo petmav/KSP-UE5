@@ -105,13 +105,13 @@ bool CraftProfileInfo::CraftHasErrors() const {
     return false;
 }
 
-// PreBuiltCraftDefinition.cs:29
+// PreBuiltCraftDefinition.cs:30
 PreBuiltCraftDefinition::PreBuiltCraftDefinition(const std::string& url, ConfigNode::NodePtr node) : craftURL(url), craftNode(std::move(node)) {}
 
-// PreBuiltCraft.cs:16
+// PreBuiltCraft.cs:15
 PreBuiltCraft::PreBuiltCraft(List preBuiltDefinitions) : preBuiltDefinitions_(std::move(preBuiltDefinitions)) {}
 
-// PreBuiltCraft.cs:22
+// PreBuiltCraft.cs:21
 PreBuiltCraft::List& PreBuiltCraft::CraftForContractType(const std::string& contractType) {
     auto it = cachedLists_.find(contractType);
     if (it != cachedLists_.end()) return it->second;
@@ -123,7 +123,7 @@ PreBuiltCraft::List& PreBuiltCraft::CraftForContractType(const std::string& cont
     return cachedLists_.emplace(contractType, std::move(list)).first->second;
 }
 
-// PreBuiltCraft.cs:40
+// PreBuiltCraft.cs:39
 std::shared_ptr<PreBuiltCraftDefinition> PreBuiltCraft::CraftByURL(std::string url) {
     const size_t startIndex = url.rfind("GameData");
     if (startIndex == std::string::npos) throw std::out_of_range("StartIndex cannot be less than zero. (Parameter 'startIndex')");
@@ -141,10 +141,10 @@ std::shared_ptr<PreBuiltCraftDefinition> PreBuiltCraft::CraftByURL(std::string u
 ConstructionPart::ConstructionPart(const std::string& name, const AvailablePart* aPart, std::vector<std::string> contractTypes_)
     : partName(name), availablePart(aPart), contractTypes(std::move(contractTypes_)) {}
 
-// ConstructionParts.cs:16
+// ConstructionParts.cs:15
 ConstructionParts::ConstructionParts(List constructionPartDefinitions) : constructionPartDefinitions_(std::move(constructionPartDefinitions)) {}
 
-// ConstructionParts.cs:22
+// ConstructionParts.cs:21
 ConstructionParts::List& ConstructionParts::PartsForContractType(const std::string& contractType) {
     auto it = cachedLists_.find(contractType);
     if (it != cachedLists_.end()) return it->second;
