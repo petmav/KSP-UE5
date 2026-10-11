@@ -124,6 +124,7 @@ add_library(kspcore STATIC
     input/flight_input_handler.cpp
     input/mouse.cpp
     input/input_settings.cpp
+    input/ui_input_locks.cpp
     parts/ksp_enums.cpp
     parts/part_data.cpp
     parts/part_module_data.cpp

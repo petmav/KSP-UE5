@@ -49,6 +49,7 @@ add_executable(kspcore_tests
     test_input.cpp
     test_input_flight.cpp
     test_input_devices.cpp
+    test_input_ui.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
 )
