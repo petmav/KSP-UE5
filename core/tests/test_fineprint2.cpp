@@ -1158,3 +1158,275 @@ TEST_CASE("WP-38b construction / repair parameters, SpecificOrbit validation and
         RoundTrip(*p, "RoverWayPointParameter");
     }
 }
+
+// ---- VesselUtilities, SurveyDefinitions, ScenarioContractEvents, InstallAll seams ------------------------------------------------------------------
+TEST_CASE("WP-38b VesselUtilities: part / module / resource queries, crew, ownership, flight band, classification, orbit match") {
+    World38b w;
+    Career38b career(w);
+    CelestialBody& kerbin = w.Body("Kerbin");
+    CelestialBody& mun = w.Body("Mun");
+    VRig r(w, kerbin, {"mk1pod.v2", "fuelTankSmallFlat", "HighGainAntenna", "solarPanels1"}, Vessel::Situations::LANDED);
+    r.v.Landed = true;
+    r.v.latitude = 10.0;
+    r.v.longitude = -30.0;
+    r.v.altitude = 500.0;
+    r.v.id = Guid::Parse("11111111-2222-3333-4444-555555555555");
+    FlightRegistry::Vessels = {&r.v};
+    // ActiveVesselFallback: no active vessel outside flight, the active vessel inside
+    Vessel* v = nullptr;
+    CHECK_FALSE(L38::ActiveVesselFallback(v, false));
+    {
+        FlightScope fs(&r.v);
+        v = nullptr;
+        CHECK(L38::ActiveVesselFallback(v, false));
+        CHECK(v == &r.v);
+        CHECK(L38::VesselHasPartName("HighGainAntenna"));
+        CHECK(L38::VesselHasPartName("mk1pod_v2"));  // "_" stands for "."
+        CHECK_FALSE(L38::VesselHasPartName("noSuchPart"));
+    }
+    CHECK(L38::VesselHasModuleName("ModuleCommand", &r.v));
+    CHECK_FALSE(L38::VesselHasModuleName("ModuleNothing", &r.v));
+    std::vector<std::string> parts{"noSuch", "solarPanels1"};
+    std::vector<std::string> modules{"ModuleNothing"};
+    CHECK(L38::VesselHasAnyParts(&parts, &r.v));
+    CHECK_FALSE(L38::VesselHasAnyModules(&modules, &r.v));
+    CHECK(L38::VesselHasAnyPartsOrModules(&parts, &modules, &r.v));
+    CHECK_FALSE(L38::VesselHasAnyPartsOrModules(nullptr, nullptr, &r.v));
+    CHECK(L38::VesselHasAnyPartsOrModules(nullptr, &modules, &r.v) == L38::VesselHasAnyModules(&modules, &r.v));
+    CHECK(L38::VesselPartAndModuleCount({"mk1pod_v2", "HighGainAntenna"}, {"ModuleCommand"}, &r.v) >= 3);
+    // part ids
+    for (size_t i = 0; i < r.parts.size(); ++i) r.parts[i]->fields.flightID = 100u + static_cast<uint32_t>(i);
+    std::vector<uint32_t> ids = L38::GetPartIDList(&r.v);
+    CHECK(ids == std::vector<uint32_t>{103u, 102u, 101u, 100u});  // walked from the end
+    CHECK(L38::FindVesselWithPartIDs(&ids) == &r.v);
+    std::vector<uint32_t> none{1u, 2u};
+    CHECK(L38::FindVesselWithPartIDs(&none) == nullptr);
+    CHECK(L38::FindVesselWithPartIDs(nullptr) == nullptr);
+    CHECK(L38::VesselID(&r.v) == 100u);
+    // resources, crew capacity
+    CHECK(L38::ActualCrewCapacity(&r.v) == r.v.GetCrewCapacity());
+    // ownership / discovery
+    CHECK(L38::VesselIsOwned(&r.v));  // DiscoveryInfo defaults to Owned
+    r.v.GetDiscoveryInfo().SetLevel(DiscoveryLevels::Presence);
+    CHECK_FALSE(L38::VesselIsOwned(&r.v));
+    L38::DiscoverVessel(&r.v);
+    CHECK(L38::VesselIsOwned(&r.v));
+    // flight band
+    CHECK(L38::GetFlightBand(1000.0, &r.v) == L38::FlightBand::GROUND);
+    r.v.Landed = false;
+    r.v.situation = Vessel::Situations::FLYING;
+    r.v.altitude = 5000.0;
+    CHECK(L38::GetFlightBand(1000.0, &r.v) == L38::FlightBand::HIGH);
+    CHECK(L38::GetFlightBand(9000.0, &r.v) == L38::FlightBand::LOW);
+    // classification: a command vessel with antenna and generator and no crew is a probe; landed with a big crew capacity and a docking port: a base
+    r.v.CheckControllable();
+    CHECK(L38::ClassifyVesselType(&r.v, false) != VesselType::Station);
+    CHECK(L38::ClassifyVesselType(&r.v, true) == VesselType::Ship);  // the vessel type is returned when nothing else matches
+    // SpecificVesselClassAt walks FlightGlobals.Vessels from the end; here: one vessel at Kerbin, none at Mun
+    CHECK(L38::SpecificVesselClassAt(&mun, VesselType::Base).empty());
+    CHECK(L38::SpecificVesselClassAt(&kerbin, VesselType::Ship, true, false, true).size() == 1);
+    CHECK(L38::SpecificVesselClassAt(&kerbin, VesselType::Ship, true, true, true).size() == 1);  // excludeActive only matters in flight
+    CHECK(L38::SpecificVesselClassAt(nullptr, VesselType::Ship).empty());
+    auto classes = L38::ClassifyAllVesselsAt(&kerbin, true);
+    REQUIRE(classes.size() == 1);
+    CHECK(classes[0].first == &r.v);
+    // VesselAtOrbit: the vessel must orbit the body of the orbit with PeA / ApA / inclination / LAN / argument inside the window
+    r.v.situation = Vessel::Situations::ORBITING;
+    Orbit* vo = r.v.orbitDriver->orbit.get();
+    vo->SetOrbit(10.0, 0.0, 700000.0, 40.0, 20.0, 0.0, 0.0, &kerbin);
+    Orbit same(10.0, 0.0, 700000.0, 40.0, 20.0, 0.0, 0.0, &kerbin);
+    CHECK(L38::VesselAtOrbit(&same, 5.0, &r.v));
+    Orbit higher(10.0, 0.0, 900000.0, 40.0, 20.0, 0.0, 0.0, &kerbin);
+    CHECK_FALSE(L38::VesselAtOrbit(&higher, 5.0, &r.v));
+    Orbit tilted(60.0, 0.0, 700000.0, 40.0, 20.0, 0.0, 0.0, &kerbin);
+    CHECK_FALSE(L38::VesselAtOrbit(&tilted, 5.0, &r.v));
+    Orbit moon(10.0, 0.0, 700000.0, 40.0, 20.0, 0.0, 0.0, &mun);
+    CHECK_FALSE(L38::VesselAtOrbit(&moon, 5.0, &r.v));
+    CHECK_FALSE(L38::VesselAtOrbit(nullptr, 5.0, &r.v));
+    CHECK(L38::VesselAtOrbitAccuracy(&same, 5.0, &r.v) > 0.0);
+    CHECK_F64b(L38::VesselAtOrbitAccuracy(&higher, 5.0, &r.v), 0.0);
+    // GenerateAdjustedVesselOrbit draws from the given generator: same seed, same orbit; the result differs from the vessel's orbit
+    KSPRandom g1(55), g2(55);
+    Orbit a1 = L38::GenerateAdjustedVesselOrbit(7.0, 5.0, 2, &g1, &r.v);
+    Orbit a2 = L38::GenerateAdjustedVesselOrbit(7.0, 5.0, 2, &g2, &r.v);
+    CHECK_F64b(a1.semiMajorAxis, a2.semiMajorAxis);
+    CHECK_F64b(a1.inclination, a2.inclination);
+    CHECK((a1.semiMajorAxis != vo->semiMajorAxis || a1.inclination != vo->inclination || a1.LAN != vo->LAN));
+    // an escape orbit comes back unchanged
+    vo->SetOrbit(10.0, 1.5, -700000.0, 40.0, 20.0, 0.0, 0.0, &kerbin);
+    Orbit a3 = L38::GenerateAdjustedVesselOrbit(7.0, 5.0, 2, &g1, &r.v);
+    CHECK_F64b(a3.eccentricity, 1.5);
+    CHECK(L38::FindFirstPartOrModuleName(nullptr, nullptr) == nullptr);
+    // HighestPodCapacity: the real prefabs of the mirror (mk1-3pod seats 3, the cockpit / cabin seat up to the Mk3 pod)
+    CHECK(L38::HighestPodCapacity() >= 3);
+}
+
+TEST_CASE("WP-38b SurveyDefinition / SurveyDefinitionParameter: the Contracts.cfg survey definitions, copies keep the order, parameters are copied reversed") {
+    World38b w;
+    L38::ResetSurveyDefinitions();
+    ConfigNode* survey = ContractDefsLite::Node("Survey");
+    REQUIRE(survey != nullptr);
+    std::vector<ConfigNode*> nodes = survey->GetNodes("SURVEY_DEFINITION");
+    REQUIRE(nodes.size() > 1);
+    auto defs = L38::SurveyDefinitions();
+    REQUIRE(defs.size() == nodes.size());
+    for (size_t i = 0; i < defs.size(); ++i) {
+        // the getter builds the list from the nodes in reverse and returns a reverse copy: the node order
+        CHECK(defs[i]->DataName == nodes[i]->GetValue("DataName").value_or("generic"));
+        CHECK(defs[i]->Node == nodes[i]);
+        std::vector<ConfigNode*> pnodes = nodes[i]->GetNodes("PARAM");
+        REQUIRE(defs[i]->Parameters.size() == pnodes.size());
+        // SurveyDefinition(node) adds the PARAM nodes from the last; the copy constructor reverses again, the getter copies once more: node order again
+        for (size_t j = 0; j < pnodes.size(); ++j) {
+            CHECK(defs[i]->Parameters[j]->Experiment == pnodes[j]->GetValue("Experiment").value_or("experiment"));
+            CHECK(defs[i]->Parameters[j]->Definition != nullptr);
+        }
+    }
+    // a second call hands out an independent copy
+    defs[0]->Parameters.clear();
+    auto defs2 = L38::SurveyDefinitions();
+    CHECK(defs2[0]->Parameters.size() == nodes[0]->GetNodes("PARAM").size());
+    // defaults of the C# initialisers
+    L38::SurveyDefinitionParameter dp;
+    CHECK(dp.Experiment == "experiment");
+    CHECK(dp.AllowGround);
+    CHECK_FALSE(dp.CrewRequired);
+    ConfigNode pn("PARAM");
+    pn.AddValue("EVARequired", "True");
+    pn.AddValue("Tech", "a");
+    pn.AddValue("Tech", "b");
+    L38::SurveyDefinition sd;
+    L38::SurveyDefinitionParameter ep(&sd, &pn);
+    CHECK(ep.EVARequired);
+    CHECK(ep.CrewRequired);  // EVARequired implies CrewRequired
+    CHECK(ep.Tech == std::vector<std::string>{"a", "b"});
+    L38::SurveyDefinitionParameter cp(ep);
+    CHECK(cp.Tech == std::vector<std::string>{"b", "a"});  // the copy constructor walks the list from the end
+    CHECK_F32b(sd.FundsReward, ContractDefsLite::F("Survey", "Funds", "DefaultReward"));
+    L38::ResetSurveyDefinitions();
+}
+
+TEST_CASE("WP-38b ScenarioContractEvents: game seed, Invoke relay to the SpecificVessel parameters, tourist departures, registration") {
+    World38b w;
+    Career38b career(w);
+    FP::ScenarioContractEvents::gameSeed = -1;
+    FP::ScenarioContractEvents sce;
+    ConfigNode save("SCENARIO");
+    ConfigNode load("SCENARIO");
+    sce.OnLoad(load);  // no id: a seed is drawn and never -1
+    CHECK(FP::ScenarioContractEvents::GameSeed() != -1);
+    const int seed = FP::ScenarioContractEvents::GameSeed();
+    sce.OnSave(save);
+    CHECK(*save.GetValue("id") == std::to_string(seed));
+    ConfigNode again("SCENARIO");
+    again.AddValue("id", "12345");
+    FP::ScenarioContractEvents other;
+    other.OnLoad(again);
+    CHECK(FP::ScenarioContractEvents::GameSeed() == 12345);
+    // events: the cache collects the vessel ids, the timer fires after 0.2 s and clears the cache
+    sce.OnAwake();
+    VRig r(w, w.Body("Kerbin"), {"mk1pod.v2"}, Vessel::Situations::ORBITING);
+    r.v.id = Guid::Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+    events::GameEvents::onVesselWasModified.Fire(&r.v);
+    CHECK(sce.specificVesselCache.size() == 1);
+    CHECK(sce.IsInvoking());
+    sce.AdvanceTime(0.1f);
+    CHECK(sce.IsInvoking());
+    sce.AdvanceTime(0.2f);
+    CHECK_FALSE(sce.IsInvoking());
+    CHECK(sce.specificVesselCache.empty());
+    // the rename relay reaches SpecificVesselRename of the contract's parameters when the contract implements ICheckSpecificVessels
+    w.game.Mode = Game::Modes::CAREER;
+    auto base = std::make_unique<C38::BaseContract>();
+    base->targetBody = &w.Body("Kerbin");
+    base->agent = w.agents->GetAgent("Kerbodyne");
+    auto* sv = dynamic_cast<P38::SpecificVesselParameter*>(base->AddParameter(std::make_unique<P38::SpecificVesselParameter>(&r.v)));
+    sv->tracked = true;
+    Contract* raw = base.get();
+    career.cs.Contracts().push_back(std::move(base));
+    int refreshed = 0;
+    P38::SpecificVesselParameter::refreshContractRequested = [&](Contract& c, bool changePositions) {
+        CHECK(&c == raw);
+        CHECK_FALSE(changePositions);
+        ++refreshed;
+    };
+    events::GameEvents::onVesselRename.Fire(events::GameEvents::HostedFromToAction<Vessel*, std::string>(&r.v, "Test Vessel", "Renamed"));
+    CHECK(sv->targetVesselName == "Renamed");
+    CHECK(refreshed == 1);
+    P38::SpecificVesselParameter::refreshContractRequested = nullptr;
+    // SpecificVesselParameter tracks the vessel by its part ids
+    FlightRegistry::Vessels = {&r.v};
+    sv->targetVessel = nullptr;
+    sv->TargetVesselSearch(false);
+    CHECK(sv->targetVessel == &r.v);
+    CHECK(sv->targetVesselPartCount == 1);
+    CHECK(sv->TargetBody == &w.Body("Kerbin"));
+    // a vanished vessel: the contract is killed on the next frame (the coroutine's second segment)
+    FlightRegistry::Vessels.clear();
+    sv->tracked = true;
+    sv->partIDs = {424242u};
+    sv->TargetVesselSearch(false);
+    CHECK(sv->targetVessel == nullptr);
+    CHECK(L38::FinePrintEnvironment::deferred.size() == 1);
+    L38::FinePrintEnvironment::RunDeferred();  // KillContract: tracked = false, SetIncomplete, then the frame after
+    CHECK_FALSE(sv->tracked);
+    CHECK(L38::FinePrintEnvironment::deferred.size() == 1);
+    // remove the contract from the system before the deferred second segment may delete it
+    L38::FinePrintEnvironment::deferred.clear();
+    sce.OnDestroy();
+    // registration
+    CHECK_NOTHROW(FP::ScenarioContractEvents::Register());
+}
+
+TEST_CASE("WP-38b InstallAll: contract and parameter types are registered, the FinePrint seams answer, ContractDefs values are read from Contracts.cfg") {
+    World38b w;
+    for (const char* t : {"ARMContract", "BaseContract", "CometSampleContract", "ISRUContract", "SatelliteContract", "StationContract", "SurveyContract", "TourismContract",
+                          "ExplorationContract"})
+        CHECK(ContractSystem::HasContractType(t));
+    for (const char* t : {"AsteroidParameter", "CometDetectionParameter", "CometParameter", "CometScienceParameter", "ConstructionParameter", "CrewCapacityParameter",
+                          "CrewTraitParameter", "KerbalDestinationParameter", "KerbalGeeAdventureParameter", "KerbalTourParameter", "LocationAndSituationParameter",
+                          "MobileBaseParameter", "PartRequestParameter", "RepairPartParameter", "ResourceExtractionParameter", "ResourcePossessionParameter",
+                          "RoverWayPointParameter", "SpecificOrbitParameter", "SpecificVesselParameter", "StabilityParameter", "StationaryPointParameter",
+                          "SurveyWaypointParameter", "VesselDestinationParameter", "VesselSystemsParameter", "ProgressTrackingParameter"}) {
+        INFO(t);
+        CHECK(ContractSystem::HasParameterType(t));
+        CHECK(ContractSystem::CreateParameter(t) != nullptr);
+    }
+    // CareerEnvironment::valueAndUnits and the GrandTour factories
+    CHECK(CareerEnvironment::Current().valueAndUnits(static_cast<int>(L38::RecordTrackType::SPEED), 12.0) == L38::StringUtilities::ValueAndUnits(L38::RecordTrackType::SPEED, 12.0));
+    auto vs = Templates::TemplateEnvironment::makeVesselSystemsParameter("probe");
+    REQUIRE(vs != nullptr);
+    CHECK(vs->TypeName() == "VesselSystemsParameter");
+    auto vd = Templates::TemplateEnvironment::makeVesselDestinationParameter(&w.Body("Mun"), static_cast<int>(FlightLog_EntryType::Land));
+    CHECK(vd->Title() == Localizer38b::Format("#autoLOC_286262", {w.Body("Mun").displayName()}));
+    auto ls = Templates::TemplateEnvironment::makeLocationAndSituationParameter(&w.Body("Mun"), Vessel::Situations::LANDED, "probe", true);
+    CHECK(ls->Title() == Localizer38b::Format("#autoLOC_7000013", {"0", "probe", w.Body("Mun").displayName()}));
+    // the real ResearchedValidContractObjectives walks the loaded part prefabs of the mirror (no R&D: every part tech is available)
+    L38::FinePrintEnvironment::researchedValidContractObjectives = nullptr;
+    CHECK(L38::ResearchedValidContractObjectives({"Antenna"}));
+    CHECK(L38::ResearchedValidContractObjectives({"Antenna", "Generator", "Dock", "Wheel"}));
+    CHECK_FALSE(L38::ResearchedValidContractObjectives({"NoSuchObjective"}));
+    CHECK_FALSE(L38::ResearchedValidContractObjectives({}));
+    CHECK(Templates::TemplateEnvironment::researchedValidContractObjectives("Dock"));
+    L38::FinePrintEnvironment::haveModuleTech = nullptr;
+    CHECK(L38::ProgressUtilities::HaveModuleTech("ModuleCommand"));
+    { std::string mc = "ModuleCommand"; CHECK_FALSE(L38::ProgressUtilities::HaveModuleTech("ModuleCommand", &mc)); }
+    CHECK_FALSE(L38::ProgressUtilities::HaveModuleTech("ModuleNoSuchModule"));
+    CHECK(L38::ProgressUtilities::HavePartTech("mk1pod_v2", false));
+    CHECK_FALSE(L38::ProgressUtilities::HavePartTech("noSuchPart", false));
+    L38::FinePrintEnvironment::probeCoresUnlocked = nullptr;
+    CHECK(C38::SatelliteContract::ProbeCoresUnlocked());
+    // the experiment geometry of ExperimentPossibleAt (altitude bands against the body's science thresholds)
+    std::string exp = "crewReport";
+    CelestialBody& kerbin = w.Body("Kerbin");
+    {
+        // an experiment known to the (cfg-less) test world answers through IsAvailableWhile, an unknown one is never possible
+        ScienceExperiment* known = ResearchAndDevelopment::GetExperiment(exp);
+        const bool possible = L38::ProgressUtilities::ExperimentPossibleAt(&exp, &kerbin, 0.0, 0.0, 10.0, 0.0);
+        if (known != nullptr) CHECK(possible == known->IsAvailableWhile(ExperimentSituations::FlyingLow, kerbin));
+        else CHECK_FALSE(possible);
+    }
+    CHECK_FALSE(L38::ProgressUtilities::ExperimentPossibleAt(nullptr, &kerbin, 0.0, 0.0, 10.0, 0.0));
+    std::string nope = "noSuchExperiment";
+    CHECK_FALSE(L38::ProgressUtilities::ExperimentPossibleAt(&nope, &kerbin, 0.0, 0.0, 10.0, 0.0));
+}
