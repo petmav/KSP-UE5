@@ -104,6 +104,14 @@ add_library(kspcore STATIC
     contracts/templates_grandtour.cpp
     contracts/waypoints.cpp
     contracts/contract_register.cpp
+    missions/mission_env.cpp
+    missions/dynamic_module.cpp
+    missions/mission_node.cpp
+    missions/mission_flow.cpp
+    missions/mission_score.cpp
+    missions/mission_awards.cpp
+    missions/mission_validator.cpp
+    missions/mission.cpp
     space_center/pqs_city.cpp
     space_center/pqs_city_data.cpp
     space_center/space_center.cpp
