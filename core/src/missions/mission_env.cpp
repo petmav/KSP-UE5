@@ -75,6 +75,7 @@ void MissionsEnvironment::Reset() {
     postScreenMessage = nullptr;
     screenMessages.clear();
     missionSystemActive = nullptr;
+    editorMission = nullptr;
     validatorSetting = Editor::ValidatorMode::AutoAfterRun;
     createSituationDefaults = true;
     analytics = nullptr;

@@ -175,6 +175,8 @@ struct MissionsEnvironment {
     enum class PartLookup { NotFound, FoundNoVessel, Found };
     static inline std::function<bool(uint32_t persistentVesselId)> persistentVesselIdExists;
     static inline std::function<PartLookup(uint32_t partPersistentId, bool loaded, uint32_t& vesselPersistentId)> partVessel;
+    // MissionEditorLogic.Instance.EditorMission (TestTimeSinceNode.RunValidation :111). Unset: the node's own mission.
+    static inline std::function<Mission*()> editorMission;
     // The vessel world read by the award modules (FlightGlobals / Vessel / PartResourceLibrary), WP-19: see AwardModuleEnvironment.
 
     static Guid NewGuid();

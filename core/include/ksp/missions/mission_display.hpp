@@ -13,9 +13,20 @@
 namespace ksp::Expansions::Missions {
 
 namespace Editor {
-// Editor/BaseAPField.cs: the reflection record of one [MEGUI_*] field (guiName, FieldType, GetValue). Not ported (editor UI); the
-// declaration exists so that the GetNodeBodyParameterString signatures keep their C# shape.
-class BaseAPField;
+// Editor/BaseAPField.cs: the reflection record of one [MEGUI_*] field. The attribute reflection (BaseAPFieldList, MEGUI controls) is the editor
+// UI and is not ported. WP-55 stand-in: only what the node library's GetNodeBodyParameterString overrides read from a field, filled by the
+// caller (the editor host, or a test): `name` (FieldInfo name), `guiName` (the localization tag of the attribute), and `value`, the
+// `GetValue().ToString()` text when the field is not null (`hasValue` false = GetValue() == null).
+class BaseAPField {
+public:
+    std::string name;
+    std::string guiName;
+    std::string value;
+    bool hasValue = true;
+    BaseAPField() = default;
+    BaseAPField(std::string n, std::string gui, std::string v = "", bool has = true)
+        : name(std::move(n)), guiName(std::move(gui)), value(std::move(v)), hasValue(has) {}
+};
 }  // namespace Editor
 
 // IMENodeDisplay.cs:6
