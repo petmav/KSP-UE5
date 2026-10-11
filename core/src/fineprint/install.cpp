@@ -1,10 +1,12 @@
 // WP-38 slice 2: FinePrint::InstallAll(): registers the contract and parameter types of slice 2 on top of FinePrint::Install() and wires the WP-36 /
 // WP-37 seams that the FinePrint ports answer (valueAndUnits, researchedValidContractObjectives, checkTouristRecoveryContractKerbals, the GrandTour
 // parameter factories, discoverVessel, estimatePartSize is left to the part geometry package).
+#include "ksp/contracts/contract_environment.hpp"
 #include "ksp/contracts/contract_system.hpp"
 #include "ksp/contracts/templates.hpp"
 #include "ksp/fineprint/contracts.hpp"
 #include "ksp/fineprint/parameters.hpp"
+#include "ksp/fineprint/compatibility.hpp"
 #include "ksp/fineprint/scenario_contract_events.hpp"
 #include "ksp/fineprint/sentinel.hpp"
 #include "ksp/save/game.hpp"
@@ -59,6 +61,8 @@ void InstallAll() {
     SentinelMission::SentinelScenario::Register();
     SentinelMission::SentinelModule::Register();
     // seams
+    ksp::Contracts::ContractsEnvironment::Current().oldCareerSave = [](const std::string& v) { return L::CompatibilityUtilities::OldCareerSave(Game::Modes::CAREER, v); };
+    ksp::Contracts::ContractsEnvironment::Current().updateCareerSave = [](ConfigNode& n) { L::CompatibilityUtilities::UpdateCareerSave(n); };
     ksp::CareerEnvironment::Current().valueAndUnits = [](int recordTrackType, double value) {
         return L::StringUtilities::ValueAndUnits(static_cast<L::RecordTrackType>(recordTrackType), value);
     };

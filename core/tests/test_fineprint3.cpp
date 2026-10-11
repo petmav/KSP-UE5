@@ -824,3 +824,134 @@ TEST_CASE("WP-38c SentinelParameter.DiscoverAsteroid: scan filters, the orbit ma
     sc.OnDestroy();
     SM::SentinelScenario::Instance = nullptr;
 }
+
+// ================================================================================================================================================
+// CompatibilityUtilities (FinePrint/Utilities/CompatibilityUtilities.cs)
+// ================================================================================================================================================
+#include "ksp/fineprint/compatibility.hpp"
+
+namespace {
+
+const json& RefC() { return Ref3()["compat"]; }
+
+ConfigNode::NodePtr NodeFromJson(const json& j) {
+    auto n = std::make_shared<ConfigNode>(j["name"].get<std::string>());
+    for (const json& v : j["values"]) n->AddValue(v[0].get<std::string>(), v[1].get<std::string>());
+    for (const json& c : j["nodes"]) n->AddNode(NodeFromJson(c));
+    return n;
+}
+
+namespace LC = ksp::Contracts::Lite;
+
+}  // namespace
+
+TEST_CASE("WP-38c CompatibilityUtilities: OldCareerSave, SavePriorTo and UpgradeVesselSituation vs the reference") {
+    World38b w;
+    const json& r = RefC();
+    for (const json& e : r["oldTable"]) {
+        INFO(e.dump());
+        const Game::Modes mode = e["mode"] == "CAREER" ? Game::Modes::CAREER : (e["mode"] == "SANDBOX" ? Game::Modes::SANDBOX : Game::Modes::SCIENCE_SANDBOX);
+        LC::CompatibilityUtilities::majorVersion = LC::CompatibilityUtilities::minorVersion = LC::CompatibilityUtilities::revisionVersion = 2147483647;
+        CHECK(LC::CompatibilityUtilities::OldCareerSave(mode, e["version"].get<std::string>()) == e["old"].get<bool>());
+        // the saved version is remembered (also for a non career game); an unparsable string leaves it alone
+        if (e["ints"][0].get<int>() != 2147483647 || e["old"].get<bool>() == false) {
+            CHECK(LC::CompatibilityUtilities::majorVersion == e["ints"][0].get<int>());
+            CHECK(LC::CompatibilityUtilities::minorVersion == e["ints"][1].get<int>());
+            CHECK(LC::CompatibilityUtilities::revisionVersion == e["ints"][2].get<int>());
+        }
+    }
+    for (const json& e : r["priorTo"]) {
+        const std::string ver = e["version"];
+        int a = 0, b = 0, c = 0;
+        std::sscanf(ver.c_str(), "%d.%d.%d", &a, &b, &c);
+        LC::CompatibilityUtilities::OldCareerSave(Game::Modes::CAREER, a, b, c);
+        for (const json& q : e["p"]) CHECK_MESSAGE(LC::CompatibilityUtilities::SavePriorTo(q[0], q[1], q[2]) == q[3].get<bool>(), ver, " ", q.dump());
+    }
+    size_t n = 0;
+    for (const json& e : r["situations"]) {
+        const std::string ver = e["version"];
+        int a = 0, b = 0, c = 0;
+        std::sscanf(ver.c_str(), "%d.%d.%d", &a, &b, &c);
+        LC::CompatibilityUtilities::OldCareerSave(Game::Modes::CAREER, a, b, c);
+        CHECK_MESSAGE(LC::CompatibilityUtilities::UpgradeVesselSituation(e["in"].get<std::string>()) == e["out"].get<std::string>(), ver, " ", e["in"]);
+        ++n;
+    }
+    CHECK(n > 600);
+}
+
+TEST_CASE("WP-38c CompatibilityUtilities.UpdateCareerSave: every branch over the synthetic old-format contract nodes (byte-exact vs the reference)") {
+    World38b w;
+    const json& r = RefC();
+    int changed = 0, unchanged = 0;
+    for (const json& e : r["cases"]) {
+        INFO(e["label"] << " @ " << e["version"]);
+        ConfigNode::NodePtr node = NodeFromJson(e["input"]);
+        const std::string before = node->SaveToString();
+        const bool old = LC::CompatibilityUtilities::OldCareerSave(Game::Modes::CAREER, e["version"].get<std::string>());
+        if (e["output"].is_null()) {
+            CHECK_THROWS_AS(LC::CompatibilityUtilities::UpdateCareerSave(*node), NullReferenceException);
+            continue;
+        }
+        if (old) LC::CompatibilityUtilities::UpdateCareerSave(*node);
+        const std::string got = node->SaveToString();
+        CHECK(got == e["output"].get<std::string>());
+        (got == before ? unchanged : changed)++;
+    }
+    MESSAGE("cases changed " << changed << ", unchanged " << unchanged);
+    CHECK(changed > 1000);
+    CHECK(unchanged > 100);
+}
+
+TEST_CASE("WP-38c CompatibilityUtilities.CleanUpUnsanitaryEVAKerbals + FindSurveyDefinition + the ContractsEnvironment hooks") {
+    World38b w;
+    const json& r = RefC();
+    for (const json& e : r["eva"]) {
+        INFO(e["label"]);
+        ConfigNode::NodePtr node = NodeFromJson(e["input"]);
+        LC::CompatibilityUtilities::CleanUpUnsanitaryEVAKerbals(*node);
+        CHECK(node->SaveToString() == e["output"].get<std::string>());
+    }
+    // FindSurveyDefinition: the Contracts.cfg survey definitions (via ContractDefsLite when no GameDatabase answers)
+    auto def = LC::CompatibilityUtilities::FindSurveyDefinition("evaReport");
+    REQUIRE(def != nullptr);
+    CHECK(def->DataName == "observational");
+    CHECK(def->ResultName == "reports");
+    CHECK(LC::CompatibilityUtilities::FindSurveyDefinition("noSuchExperiment") == nullptr);
+    // the seam answers instead
+    LC::CompatibilityEnvironment::contractsConfigNodes = [] { return std::vector<ConfigNode*>{}; };
+    CHECK(LC::CompatibilityUtilities::FindSurveyDefinition("evaReport") == nullptr);
+    LC::CompatibilityEnvironment::contractsConfigNodes = nullptr;
+    // FinePrint::InstallAll connects the hooks ContractSystem.OnLoad uses
+    const ContractsEnvironment& env = ContractsEnvironment::Current();
+    REQUIRE(static_cast<bool>(env.oldCareerSave));
+    REQUIRE(static_cast<bool>(env.updateCareerSave));
+    CHECK(env.oldCareerSave("1.0.4"));
+    CHECK_FALSE(env.oldCareerSave("1.12.5"));
+    ConfigNode::NodePtr node = NodeFromJson(RefC()["cases"][0]["input"]);
+    env.updateCareerSave(*node);
+    CHECK(node->SaveToString() != std::string());
+    // ContractSystem.LoadNow runs the upgrade for an old career save (the gameNode is changed in place) and records the current version
+    {
+        ContractSystem cs;
+        cs.Awake();
+        ConfigNode save("SCENARIO");
+        save.AddValue("name", "ContractSystem");
+        save.AddValue("version", "1.0.4");
+        ConfigNode* contracts = save.AddNode("CONTRACTS");
+        ConfigNode* c = contracts->AddNode("CONTRACT");
+        c->AddValue("type", "RecordTrackContract");
+        ConfigNode* keep = contracts->AddNode("CONTRACT");
+        keep->AddValue("type", "SatelliteContract");
+        cs.LoadNow(save);
+        CHECK(cs.Version() == ContractsEnvironment::Current().versionString);
+        CHECK(save.GetNode("CONTRACTS")->GetNodes("CONTRACT").size() == 1);  // the RecordTrackContract was removed
+        CHECK(save.GetNode("CONTRACTS")->GetNode("CONTRACT")->HasValue("placementMode"));
+        // a current save is not touched
+        ConfigNode save2("SCENARIO");
+        save2.AddValue("name", "ContractSystem");
+        save2.AddValue("version", "1.12.5");
+        save2.AddNode("CONTRACTS")->AddNode("CONTRACT")->AddValue("type", "SatelliteContract");
+        cs.LoadNow(save2);
+        CHECK_FALSE(save2.GetNode("CONTRACTS")->GetNode("CONTRACT")->HasValue("placementMode"));
+    }
+}
