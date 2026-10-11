@@ -47,6 +47,7 @@ add_executable(kspcore_tests
     test_fineprint.cpp
     test_space_center.cpp
     test_missions.cpp
+    test_missions_runtime.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
 )

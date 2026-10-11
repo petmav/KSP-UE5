@@ -19,6 +19,7 @@
 #include "ksp/events/game_events.hpp"
 #include "ksp/localization/localizer.hpp"
 #include "ksp/missions/missions.hpp"
+#include "missions_fixture.hpp"
 #include "ksp/save/game.hpp"
 #include "ksp/save/save_environment.hpp"
 #include "ksp/space_center/high_logic.hpp"
@@ -29,6 +30,7 @@ using namespace ksp;
 using namespace ksp::Expansions::Missions;
 using json = nlohmann::json;
 using Loc54 = KSP::Localization::Localizer;
+using namespace ksp::mtest;
 
 namespace {
 
@@ -41,86 +43,7 @@ const json& Ref54() {
     return j;
 }
 
-uint32_t Bits54(float f) {
-    uint32_t u;
-    std::memcpy(&u, &f, 4);
-    return u;
-}
-
-std::string GameData54() { return ksp::testing::GameRoot() + "/GameData"; }
-
-void LoadLocalizer54() {
-    Loc54::Shutdown();
-    Loc54::Init();
-    ConfigNode::NodePtr root = ConfigNode::Load(GameData54() + "/Squad/Localization/dictionary.cfg");
-    REQUIRE(root);
-    std::vector<ConfigNode*> nodes{root->GetNode("Localization")};
-    Loc54::Instance()->AddTagValuesForLanguage(nodes, "en-us");
-}
-
-// canonical dump: name{k=v;k=v;child{...}} (values first, then the child nodes: the order ConfigNode prints them in)
-std::string Dump(const ConfigNode& n) {
-    std::string s = n.name + "{";
-    for (const auto& v : n.values()) s += v.name + "=" + v.value + ";";
-    for (int i = 0; i < n.nodes().Count(); ++i) s += Dump(*n.nodes()[i]);
-    return s + "}";
-}
-
-struct Fixture54 {
-    uint64_t guidCounter = 0;
-    Fixture54() {
-        MissionsEnvironment::Reset();
-        AwardEnvironment::Reset();
-        MissionsEnvironment::createSituationDefaults = false;
-        MissionsEnvironment::makingHistoryInstalled = [] { return true; };
-        MissionsEnvironment::newGuid = [this] {
-            Guid g;
-            ++guidCounter;
-            g.bytes[0] = 0x54;
-            for (int i = 0; i < 8; ++i) g.bytes[8 + i] = static_cast<uint8_t>(guidCounter >> (8 * (7 - i)));
-            return g;
-        };
-        TestModuleRegistry::ResetForTests();
-        ActionModuleRegistry::ResetForTests();
-        DynamicModuleRegistry::ResetForTests();
-        MissionScore::ResetGlobalScoreModules();
-        DynamicModule::ResetObjectIds();
-        RegisterScoreModules();
-        RegisterAwardModules();
-        MENode::ResetPool();
-        SaveEnvironment::Reset();
-        LoadLocalizer54();
-    }
-    ~Fixture54() {
-        MissionsEnvironment::Reset();
-        AwardEnvironment::Reset();
-        TestModuleRegistry::ResetForTests();
-        ActionModuleRegistry::ResetForTests();
-        DynamicModuleRegistry::ResetForTests();
-        MissionScore::ResetGlobalScoreModules();
-        MENode::ResetPool();
-        Loc54::Shutdown();
-        SaveEnvironment::Reset();
-    }
-};
-
 // ---- the graph cases ------------------------------------------------------------------------------------------------------------
-
-std::string Esc(const std::string& s) {
-    std::string t;
-    for (char c : s) {
-        if (c == '\n') t += "\\n";
-        else if (c == '\t') t += "\\t";
-        else t += c;
-    }
-    return t;
-}
-
-std::string GuidOf(int i) {
-    char buf[64];
-    std::snprintf(buf, sizeof buf, "6d650000-0000-0000-0000-%012d", i + 1);
-    return buf;
-}
 
 // The MISSION node of a spec, with the keys MENode.Save / Mission.Save write.
 ConfigNode BuildMission(const json& spec) {

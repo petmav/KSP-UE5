@@ -1614,6 +1614,7 @@ void Mission::Load(const ConfigNode& node, bool simple) {
                     }
                 }
             }
+            if (!situation->startingActionsNode) throw NullReferenceException();  // situation.startingActionsNode.GetNodes(...) with no SITUATION node
             for (const ConfigNode* obj2 : situation->startingActionsNode->GetNodes("STARTINGACTION")) {
                 Guid value7 = Guid::Empty();
                 obj2->TryGetValue("NodeGuid", value7);
