@@ -93,6 +93,8 @@ public:
     std::function<PQSCity2*(const std::string& pqsName, const std::string& path)> findPQSCity2;
     // Expansions bundle prefab of a launch site (BundleLoader.LoadAsset + Instantiate under the PQS): returns the created component, nullptr = none
     std::function<bool(LaunchSite& site, const std::string& pqsName)> instantiateBundlePrefab;
+    // PSystemSetup.cs:511-518: does the instantiated prefab carry a PQSMod_FlattenArea (then forcePQSPosition = true); unset = no
+    std::function<bool(LaunchSite& site)> prefabHasFlattenArea;
     // FloatingOrigin.SetOffset(position) / PQS.SetTarget / ForceInitPQS / Planetarium reset etc. of SetupLaunchSites and the scene modes
     // `position` (when not null) is the world position the C# passes to FloatingOrigin.SetOffset in that step
     std::function<void(const std::string& what, const Vector3d* position)> sceneHook;

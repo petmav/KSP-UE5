@@ -297,7 +297,7 @@ void SpaceCenterBuilding::RepairStructures() {
             SaveGameOverwrite();
         }
     };
-    HighLogic::Scheduler().StartCoroutine(Delayed::Run(f32store(fx(num) + 0.1)), owner);
+    HighLogic::Scheduler().StartCoroutine(Delayed::Run(f32store(fx(num) + 0.1f)), owner);
 }
 
 // SpaceCenterBuilding.cs:736

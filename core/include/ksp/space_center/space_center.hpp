@@ -18,9 +18,9 @@ class PQSCity;
 
 class SpaceCenter {
 public:
-    static inline SpaceCenter* Instance = nullptr;   // :7
+    static inline SpaceCenter* Instance = nullptr;   // :6
 
-    CelestialBody* cb = nullptr;                     // :16 (Part.GetComponentUpwards<CelestialBody>)
+    CelestialBody* cb = nullptr;                     // :18 (Part.GetComponentUpwards<CelestialBody>)
     double AreaRadius = 1500.0;                      // :14
     bool destroyed = false;                          // Object.Destroy(this) of Awake
     bool identityFrame = false;                      // AttachToCity: the body frame is the identity (see the file comment)
@@ -28,16 +28,16 @@ public:
     std::function<Vector3d()> transformPosition;     // trf.position
     std::function<void(bool)> setAreaTriggerActive;  // spaceCenterAreaTrigger.gameObject.SetActive
 
-    double Latitude() const { return latitude_; }    // :32
-    double Longitude() const { return longitude_; }  // :34
-    const Vector3d& SrfNVector() const { return srfNVector_; }   // :36
+    double Latitude() const { return latitude_; }    // :34
+    double Longitude() const { return longitude_; }  // :36
+    const Vector3d& SrfNVector() const { return srfNVector_; }   // :38
 
     void AttachToCity(const PQSCity& city);          // host helper: transformPosition = the city's local position
-    void Awake();                                    // :38
-    void Start();                                    // :48
-    void OnDestroy();                                // :57
-    void OnGameSceneLoaded(GameScenes scn);          // :66
-    double GreatCircleDistance(const Vector3d& fromSrfNrm) const;   // :79
+    void Awake();                                    // :40
+    void Start();                                    // :51
+    void OnDestroy();                                // :61
+    void OnGameSceneLoaded(GameScenes scn);          // :70
+    double GreatCircleDistance(const Vector3d& fromSrfNrm) const;   // :82
     ~SpaceCenter();
 
 private:

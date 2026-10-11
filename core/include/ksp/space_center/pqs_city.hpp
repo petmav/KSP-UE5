@@ -66,6 +66,17 @@ struct PQSCityPrefab {
 };
 const std::vector<PQSCityPrefab>& StockPQSCities();
 
+// The PSystemSetup.SpaceCenterFacility a city is bound to (PQSCity.spaceCenterFacility / PQSCity2.spaceCenterFacility): only the two members
+// Orientate reads, `facilityTransform != null` and SetSpawnPointsLatLonAlt(). Unset (null functions) = spaceCenterFacility == null.
+struct SpaceCenterFacilityLink {
+    std::function<bool()> hasFacilityTransform;
+    std::function<void()> setSpawnPointsLatLonAlt;
+    // PQSCity.cs:341-344 / PQSCity2.cs:251-254
+    void OrientateSetSpawnPoints() const {
+        if (setSpawnPointsLatLonAlt && hasFacilityTransform && hasFacilityTransform()) setSpawnPointsLatLonAlt();
+    }
+};
+
 // PQSCity.cs:11 (the placement part: Orientate, Randomize, seeds). transform.localPosition / localRotation are float32.
 class PQSCity {
 public:
@@ -85,6 +96,7 @@ public:
     bool useIndividualPOIRange = false;
     float individualPOIRange = 100.0f;
     LaunchSite* launchSite = nullptr;         // :99
+    SpaceCenterFacilityLink spaceCenterFacility;   // PQSCity.spaceCenterFacility
     CelestialBody* body = nullptr;            // :129 (celestialBody)
     PQS* sphere = nullptr;
     Vector3d planetRelativePosition;          // PQSSurfaceObject.planetRelativePosition
@@ -130,6 +142,7 @@ public:
     float individualPOIRange = 100.0f;
     double poiRange = 0.0;
     LaunchSite* launchSite = nullptr;  // :46
+    SpaceCenterFacilityLink spaceCenterFacility;   // PQSCity2.spaceCenterFacility
     CelestialBody* body = nullptr;     // :123
     PQS* sphere = nullptr;
     Vector3d planetRelativePosition;

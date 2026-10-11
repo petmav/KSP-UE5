@@ -24,6 +24,7 @@
 #include "ksp/celestial/flight_globals.hpp"
 #include "ksp/celestial/planetarium.hpp"
 #include "ksp/core/coroutine.hpp"
+#include "ksp/dotnet/math.hpp"
 #include "ksp/dotnet/random.hpp"
 #include "ksp/events/game_events.hpp"
 #include "ksp/localization/localizer.hpp"
@@ -206,6 +207,9 @@ TEST_CASE("WP-42 PQSCity / PQSCity2 placement against ksc_reference.py (0 ULP)")
             // cos of the Python reference gives 6.1232e-17: the x component is compared to 1e-9 m, not bit-exact (STATUS.md exclusion)
             const bool polar = std::fabs(std::fabs(r["prefab_lat"].get<double>()) - 90.0) < 1e-9;
             if (polar) {
+                // the game's own Math.Cos(pi/2) (harness/captures/out/libm_mono.json, Math.Cos row i=9: 6.123031769111886e-17, bits
+                // 3C91A60000000000) is what the port's x87 cos must return; the Python reference's C-library cos differs, hence the tolerance below
+                CHECK(Bits42(ksp::dotnet::Math::Cos(1.5707963267948966)) == 0x3C91A60000000000ULL);
                 CHECK(std::fabs(city.localPosition.x - local[0].get<float>()) < 1e-9f);
             } else {
                 CHECK_F42(city.localPosition.x, local[0].get<float>());
@@ -964,4 +968,78 @@ TEST_CASE("WP-42 PQSCity seed and Randomize wiring (KSPRandom draw order)") {
         CHECK(sc.GreatCircleDistance(kerbin.GetRelSurfaceNVector(la, lo)) > 4000.0);
     }
     sc.OnDestroy();
+}
+
+// Gate findings F2 / F3 / F5 (PROGRESS-wp42-gate.md): Orientate re-sets the SpaceCenterFacility spawn points (PQSCity.cs:343, PQSCity2.cs:253),
+// PQSCity2.Orientate leaves inVisibleRange alone (only setVisibility / Reset write it), and a bundle prefab forces the PQS position only
+// when it carries a PQSMod_FlattenArea (PSystemSetup.cs:511-518)
+TEST_CASE("WP-42 gate fixes: Orientate calls SpaceCenterFacility.SetSpawnPointsLatLonAlt, inVisibleRange untouched, forcePQSPosition needs FlattenArea") {
+    World42 w;
+    CelestialBody& kerbin = w.Body("Kerbin");
+    PQS pqs;
+    pqs.radius = kerbin.Radius;
+    pqs.name = "Kerbin";
+    {   // PQSCity.Orientate (PQSCity.cs:341-344)
+        PQSCity ksc(Prefab("Kerbin", "KSC"), &kerbin, &pqs);
+        int calls = 0;
+        bool hasTransform = true;
+        ksc.spaceCenterFacility.hasFacilityTransform = [&] { return hasTransform; };
+        ksc.spaceCenterFacility.setSpawnPointsLatLonAlt = [&] { ++calls; };
+        ksc.Orientate();
+        CHECK(calls == 1);
+        hasTransform = false;   // spaceCenterFacility.facilityTransform == null: not called
+        ksc.Orientate();
+        CHECK(calls == 1);
+        PQSCity bare(Prefab("Kerbin", "KSC"), &kerbin, &pqs);   // spaceCenterFacility == null: no call, no crash
+        bare.Orientate();
+    }
+    {   // PQSCity2.Orientate (PQSCity2.cs:251-254)
+        PQSCity2 c2(Prefab("Kerbin", "Crater_Launch_Site"), &kerbin, &pqs);
+        c2.sphereSurfaceHeight = [&](const Vector3d&) { return pqs.radius; };
+        int calls = 0;
+        c2.spaceCenterFacility.hasFacilityTransform = [] { return true; };
+        c2.spaceCenterFacility.setSpawnPointsLatLonAlt = [&] { ++calls; };
+        c2.inVisibleRange = true;
+        c2.Orientate();
+        CHECK(calls == 1);
+        CHECK(c2.positioningCompleted);
+        CHECK(c2.inVisibleRange);   // F3: no C# counterpart for clearing it at the end of Orientate
+        c2.Reset();
+        CHECK_FALSE(c2.inVisibleRange);   // PQSCity2.Reset (PQSCity2.cs:383) does
+    }
+    // F5: SetupLaunchSites with a MakingHistory bundle prefab
+    SaveEnvironment::Current().SetStockExpansionInstalled("MakingHistory", true);
+    CoroutineScheduler& sched = CareerEnvironment::Current().Scheduler();
+    for (const bool flatten : {false, true}) {
+        PSystemSetup setup;
+        setup.Awake();
+        setup.pqsArray = {{"Kerbin", &pqs}};
+        setup.bodyOfPQS = [&](const space_center::PQSInfo&) { return &kerbin; };
+        space_center::SceneGraph::FindInPQS = [](const std::string&, const std::string&) -> std::optional<Vector3d> { return Vector3d(0, 0, 0); };
+        space_center::SceneGraph::FindChild = [](const std::string&, const std::string&, const std::string&) -> std::optional<Vector3d> {
+            return Vector3d(600000.0, 0.0, 0.0);
+        };
+        PQSCity2 city2(Prefab("Kerbin", "Crater_Launch_Site"), &kerbin, &pqs);
+        city2.sphereSurfaceHeight = [&](const Vector3d&) { return pqs.radius; };
+        setup.instantiateBundlePrefab = [&](LaunchSite& site, const std::string&) {
+            site.pqsCity2 = &city2;
+            return true;
+        };
+        setup.prefabHasFlattenArea = [&](LaunchSite&) { return flatten; };
+        auto site = std::make_unique<LaunchSite>("Crater_Launch_Site", "Kerbin", "#autoLOC_6006117",
+                                                  std::vector<LaunchSite::SpawnPoint>{{"Crater_Launch_Site", "spawn"}}, "Crater_Launch_Site", EditorFacility::VAB);
+        site->BundleName = "makinghistory_assets";
+        site->prefabPath = "Crater_Launch_Site.prefab";
+        setup.stocklaunchsites.push_back(std::move(site));
+        std::vector<std::string> hooks;
+        setup.sceneHook = [&](const std::string& what, const Vector3d*) { hooks.push_back(what); };
+        sched.StartCoroutine(setup.SetupLaunchSites());
+        for (int i = 0; i < 10; ++i) Frame42(sched, 1.0f);
+        REQUIRE(setup.launchsites.size() == 1);
+        const auto has = [&](const char* h) { return std::find(hooks.begin(), hooks.end(), h) != hooks.end(); };
+        CHECK(has("FloatingOrigin.SetOffset"));
+        CHECK(has("ForceInitPQS") == flatten);
+        CHECK(has("PQS.SetTarget(null)") == flatten);
+        CHECK(city2.positioningCompleted);
+    }
 }

@@ -243,7 +243,8 @@ Enumerator PSystemSetup::SetupLaunchSites() {
                         if (launchSite.pqsCity != nullptr) launchSite.pqsCity->launchSite = &launchSite;
                         else launchSite.pqsCity2->launchSite = &launchSite;
                         flag = true;
-                        forcePQSPosition = true;   // a PQSMod_FlattenArea on the instantiated prefab (scene check: the hook decides)
+                        // PSystemSetup.cs:511-518: only a PQSMod_FlattenArea on the instantiated prefab forces the PQS position
+                        if (prefabHasFlattenArea && prefabHasFlattenArea(launchSite)) forcePQSPosition = true;
                     }
                 }
             }
@@ -311,7 +312,7 @@ bool PSystemSetup::IsFacilityOrLaunchSite(const std::string& inputName, bool& is
     return false;
 }
 
-// PSystemSetup.cs:681
+// PSystemSetup.cs:693
 bool PSystemSetup::IsFacility(const std::string& inputName, std::string& displayName) {
     displayName = "";
     for (size_t num = 0; num < facilities.size(); num++) {
@@ -323,7 +324,7 @@ bool PSystemSetup::IsFacility(const std::string& inputName, std::string& display
     return false;
 }
 
-// PSystemSetup.cs:686
+// PSystemSetup.cs:714
 bool PSystemSetup::IsLaunchSite(const std::string& inputName, std::string& displayName) {
     displayName = "";
     for (size_t num = 0; num < launchsites.size(); num++) {

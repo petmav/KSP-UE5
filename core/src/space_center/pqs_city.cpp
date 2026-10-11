@@ -99,6 +99,7 @@ void PQSCity::Orientate(bool allowReposition) {
     } else {
         LatLonAlt(lat, lon, alt);
         if (launchSite != nullptr && launchSite->HasLaunchSiteTransform()) launchSite->SetSpawnPointsLatLonAlt();
+        spaceCenterFacility.OrientateSetSpawnPoints();   // :343 (facilityTransform != null)
     }
     GE::OnPQSCityOrientated.Fire(body, name);
 }
@@ -221,9 +222,10 @@ void PQSCity2::Orientate() {
     } else {
         LatLonAlt(lat, lon, alt);
         if (launchSite != nullptr) launchSite->SetSpawnPointsLatLonAlt();
+        spaceCenterFacility.OrientateSetSpawnPoints();   // :253 (facilityTransform != null)
     }
     positioningCompleted = true;
-    inVisibleRange = false;
+    // setVisibility() (PQSCity2.cs:257 / :258-260) needs the PQS target and is not modelled: inVisibleRange is left as it was
     if (onPositioned) onPositioned();
 }
 
