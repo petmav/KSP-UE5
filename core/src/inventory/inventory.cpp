@@ -259,22 +259,11 @@ ConfigNode::NodePtr ProtoVesselNodes::CreatePartNode(Part* part, const std::stri
 
 // ================================================================ ModuleCargoPart
 
-Part* ModuleCargoPart::PartOf() const { return dynamic_cast<Part*>(part); }
-
-ModuleCargoPart::~ModuleCargoPart() { OnDestroy(); }
-
+// Removes every GameEvents subscription ModuleCargoPart makes (ModuleCargoPart.cs:67 OnDestroy; also run by the destructor so a module that is
+// released without OnDestroy never leaves a dangling handler)
 void ModuleCargoPart::OnAwake() {}
 
-// ModuleCargoPart.cs:55
-float ModuleCargoPart::MassForWeightTesting() const {
-    if (preSettlingPrefabMass > 0.0f) return preSettlingPrefabMass;
-    return part->fields.mass;
-}
-
-// ModuleCargoPart.cs:67
-void ModuleCargoPart::OnDestroy() {
-    if (settleCoroutine && InventoryEnvironment::scheduler) InventoryEnvironment::scheduler->StopCoroutine(settleCoroutine);  // StopCoroutine("MakePartSettle")
-    settleCoroutine.reset();
+void ModuleCargoPart::RemoveEventHandlers() {
     GE::OnEVAConstructionMode.Remove(this, &ModuleCargoPart::OnEVAConstructionMode);
     GE::onPartWillDie.Remove(this, &ModuleCargoPart::OnPartWillDie);
     GE::OnEVAConstructionWeldStart.Remove(this, &ModuleCargoPart::OnWeldStart);
@@ -283,29 +272,6 @@ void ModuleCargoPart::OnDestroy() {
     GE::onShowUI.Remove(this, &ModuleCargoPart::ShowUI);
     GE::OnFlightCompoundPartLinked.Remove(this, &ModuleCargoPart::OnCompoundPartLinked);
     GE::OnFlightCompoundPartDetached.Remove(this, &ModuleCargoPart::OnCompoundPartDetached);
-}
-
-// ModuleCargoPart.cs:84
-void ModuleCargoPart::OnPartUnpack() {
-    if (beingAttached()) {
-        Set<bool>("beingAttached", false);
-    } else {
-        Vessel* v = PartOf() ? PartOf()->vessel : nullptr;
-        const bool landed = v != nullptr && v->parts.size() == 1 && (v->situation == Vessel::Situations::LANDED || v->situation == Vessel::Situations::PRELAUNCH);
-        if (beingSettled() || landed) {
-            if (InventoryEnvironment::scheduler)
-                settleCoroutine = InventoryEnvironment::scheduler->StartCoroutine(MakePartSettle(false), reinterpret_cast<intptr_t>(this) & 0x7fffffff);
-        }
-    }
-}
-
-// ModuleCargoPart.cs:96
-void ModuleCargoPart::OnLoad(const ConfigNode& node) {
-    PartModule::OnLoad(node);
-    if (stackableQuantity() > 1 && part != nullptr && !part->Resources.empty()) {
-        log::Info("[ModuleCargoPart]: Setting stackableQuantity to 1 as " + part->gameObjectName + " contains resources");
-        Set<int32_t>("stackableQuantity", 1);
-    }
 }
 
 // ModuleCargoPart.cs:106 (the FXGroup / AudioSource setup of the welding sparks is the engine's: FX hooks)
@@ -333,32 +299,10 @@ void ModuleCargoPart::OnInitialize() {
     GE::OnEVAConstructionMode.Add(this, &ModuleCargoPart::OnEVAConstructionMode);
 }
 
-// ModuleCargoPart.cs:164
-std::string ModuleCargoPart::GetInfo() {
-    std::string text;
-    text = (!(packedVolume() < 0.0f)) ? Localizer::Format("#autoLOC_8002220") : Localizer::Format("#autoLOC_6002641");
-    text += "\n\n";
-    Part* p = PartOf();
-    Part& prefab = *p->partInfo->partPrefab;
-    const float modMass = PartGetModuleMass(p->Modules(), prefab.fields.mass);  // base.part.GetModuleMass(prefab.mass)
-    text = text + Localizer::Format("#autoLOC_8002186") + " " +
-           dotnet::FormatSingleF(f32store(fx(prefab.fields.mass) + fx(modMass)), 3) + " t\\n";
-    if (packedVolume() > 0.0f)
-        text = text + Localizer::Format("#autoLOC_8004190", {Localizer::Format("#autoLOC_8003414"),
-                                                                                 Localizer::Format("<<1>><<2>>", {dotnet::FormatSingleF(packedVolume(), 1), "L"})}) + "\n";
-    if (stackableQuantity() > 1)
-        text = text + Localizer::Format("#autoLOC_8004190", {Localizer::Format("#autoLOC_8003418"),
-                                                                                 dotnet::FormatInt64(stackableQuantity())}) + "\n";
-    return text;
-}
-
-// ModuleCargoPart.cs:396
-std::string ModuleCargoPart::GetModuleDisplayName() { return Localizer::Format("#autoLOC_8002221"); }
-
 // ModuleCargoPart.cs:181 (the Rigidbody constraint reset is the physics engine's: hook)
 void ModuleCargoPart::OnPartWillDie(Part* p) {
-    if (part != nullptr && p->fields.persistentId == part->fields.persistentId && PartOf()->hasRigidbody) {
-        if (InventoryEnvironment::releasePartRigidbody) InventoryEnvironment::releasePartRigidbody(*PartOf());
+    if (part != nullptr && p->fields.persistentId == part->fields.persistentId && PartPtr()->hasRigidbody) {
+        if (InventoryEnvironment::releasePartRigidbody) InventoryEnvironment::releasePartRigidbody(*PartPtr());
     }
 }
 
@@ -371,38 +315,6 @@ void ModuleCargoPart::HideUI() {
 
 // ModuleCargoPart.cs:197
 void ModuleCargoPart::ShowUI() { UIHidden = false; }
-
-// ModuleCargoPart.cs:202 (WaitForSeconds / yield null replay on the WP-00 scheduler)
-Enumerator ModuleCargoPart::MakePartSettle(bool waitForMotionStop) {
-    bool adjustMass = false;
-    Part* p = PartOf();
-    preSettlingPrefabMass = p->fields.prefabMass;
-    Vessel* v = p->vessel;
-    if (v != nullptr && v->mainBody() != nullptr) {
-        if (v->mainBody()->GeeASL < 0.800000011920929) {
-            Set<bool>("beingSettled", true);
-            adjustMass = true;
-            p->fields.prefabMass = 20.0f;
-        } else if (v->mainBody()->GeeASL < 1.100000023841858) {
-            Set<bool>("beingSettled", true);
-            adjustMass = true;
-            p->fields.prefabMass = 4.0f;
-        }
-    }
-    if (kinematicDelay() > 0.0f) co_yield YieldInstruction::WaitForSeconds(kinematicDelay());
-    if (waitForMotionStop) {
-        const double timeWaitingForSrfVelocity = InventoryEnvironment::UT();
-        const float settleDelay = f32store(fx(kinematicDelay()) * 10.0);
-        while (!(InventoryEnvironment::UT() - timeWaitingForSrfVelocity > static_cast<double>(settleDelay)) &&
-               !(v->srf_velocity.magnitude() < static_cast<double>(placementMaxRivotVelocity())))
-            co_yield YieldInstruction::Null();
-    }
-    if (adjustMass) {
-        p->fields.prefabMass = preSettlingPrefabMass;
-        preSettlingPrefabMass = 0.0f;
-        Set<bool>("beingSettled", false);
-    }
-}
 
 // ModuleCargoPart.cs:258
 void ModuleCargoPart::OnWeldStart(KerbalEVA* kerbalEVA) {
@@ -440,7 +352,7 @@ void ModuleCargoPart::OnEVAConstructionMode(bool opened) {
 void ModuleCargoPart::SetConstructionHighlight(bool state) {
     if (part == nullptr) return;
     constructionHighlightApplied = state;
-    if (setConstructionHighlight) setConstructionHighlight(*PartOf(), state);
+    if (setConstructionHighlight) setConstructionHighlight(*PartPtr(), state);
 }
 
 // ModuleCargoPart.cs:295
@@ -453,7 +365,7 @@ void ModuleCargoPart::OnUpdateHighlight() {
     bool flag = false;
     bool flag2 = false;
     if (!UIHidden && part != nullptr) {
-        Part* p = PartOf();
+        Part* p = PartPtr();
         Vector3f active;
         if (InventoryEnvironment::activeVesselPosition) {
             active = InventoryEnvironment::activeVesselPosition();
@@ -483,22 +395,6 @@ void ModuleCargoPart::OnUpdateHighlight() {
         SetConstructionHighlight(constructionModeHighlight);
     }
 }
-
-// ModuleCargoPart.cs:336
-std::string ModuleCargoPart::GetTooltip() {
-    if (IsNull("inventoryTooltip") || Get<std::string>("inventoryTooltip").empty()) return GetInfo();
-    return Localizer::Format(Get<std::string>("inventoryTooltip"));
-}
-
-// ModuleCargoPart.cs:345
-bool ModuleCargoPart::IsDeployedSciencePart() {
-    const bool serenity = isExpansionInstalled ? isExpansionInstalled("Serenity") : true;
-    if (!serenity) return false;
-    return PartOf()->FindModuleOfClass("ModuleGroundSciencePart") != nullptr;
-}
-
-// ModuleCargoPart.cs:354
-void ModuleCargoPart::EnableModule() { isEnabled = true; }
 
 // ModuleCargoPart.cs:363 (CompoundPart.target is the part the compound part is linked to)
 void ModuleCargoPart::OnCompoundPartLinked(CompoundPart* linkedPart) {

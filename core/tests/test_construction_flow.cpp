@@ -1,6 +1,7 @@
 // WP-33 unit tests: ModuleCargoPart settle / weld sparks / container highlight and the EVA construction attach / detach / backup / restore / gizmo
 // paths. Every expectation is derived from the decompiled C# (the derivation is in the comment above each check).
 #include "inventory_fixture.hpp"
+#include "ksp/science/science.hpp"
 
 #include "ksp/celestial/celestial_system.hpp"
 #include "ksp/celestial/planetarium.hpp"
@@ -57,6 +58,7 @@ TEST_CASE("WP-33 ModuleCargoPart.MakePartSettle: low gravity bodies get a heavy 
     Kerbin33b w;
     SceneScope scene(GameScenes::FLIGHT);
     InventoryEnvironment::scheduler = &w.sched;
+    ScienceEnvironment::scheduler = &w.sched;
     struct Case {
         const char* body;
         float settling;  // 0 = unchanged
@@ -70,7 +72,7 @@ TEST_CASE("WP-33 ModuleCargoPart.MakePartSettle: low gravity bodies get a heavy 
         v->parts.push_back(kit.get());
         kit->vessel = v.get();
         const float original = kit->fields.prefabMass;
-        cargo->settleCoroutine = w.sched.StartCoroutine(cargo->MakePartSettle(false));
+        cargo->settleCoroutine() = w.sched.StartCoroutine(cargo->MakePartSettle(false));
         if (c.settling > 0.0f) {
             CHECK(cargo->beingSettled());
             CHECK(kit->fields.prefabMass == c.settling);
@@ -96,8 +98,9 @@ TEST_CASE("WP-33 ModuleCargoPart.MakePartSettle: low gravity bodies get a heavy 
         kit->vessel = v.get();
         double ut = 0.0;
         InventoryEnvironment::universalTime = [&] { return ut; };
+        ScienceEnvironment::universalTime = [&] { return ut; };
         v->srf_velocity = Vector3d(0.0, 0.0, 5.0);
-        cargo->settleCoroutine = w.sched.StartCoroutine(cargo->MakePartSettle(true));
+        cargo->settleCoroutine() = w.sched.StartCoroutine(cargo->MakePartSettle(true));
         const float original = cargo->preSettlingPrefabMass;
         Run(w.sched, 4.0);  // past kinematicDelay: waiting for the vessel to stop
         CHECK(kit->fields.prefabMass == 20.0f);
@@ -105,7 +108,7 @@ TEST_CASE("WP-33 ModuleCargoPart.MakePartSettle: low gravity bodies get a heavy 
         Run(w.sched, 1.0);
         CHECK(kit->fields.prefabMass == original);
         // a stopped vessel releases at once
-        cargo->settleCoroutine = w.sched.StartCoroutine(cargo->MakePartSettle(true));
+        cargo->settleCoroutine() = w.sched.StartCoroutine(cargo->MakePartSettle(true));
         v->srf_velocity = Vector3d(0.0, 0.0, 0.001);
         Run(w.sched, 4.0);
         CHECK(kit->fields.prefabMass == original);
@@ -122,9 +125,9 @@ TEST_CASE("WP-33 ModuleCargoPart.MakePartSettle: low gravity bodies get a heavy 
         cargo->Set<bool>("beingAttached", true);
         cargo->OnPartUnpack();
         CHECK_FALSE(cargo->beingAttached());
-        CHECK(cargo->settleCoroutine == nullptr);
+        CHECK(cargo->settleCoroutine() == nullptr);
         cargo->OnPartUnpack();
-        CHECK(cargo->settleCoroutine != nullptr);
+        CHECK(cargo->settleCoroutine() != nullptr);
         CHECK(kit->fields.prefabMass == 4.0f);
         Run(w.sched, 4.0);
         // two parts and not settling: nothing starts
@@ -133,15 +136,17 @@ TEST_CASE("WP-33 ModuleCargoPart.MakePartSettle: low gravity bodies get a heavy 
         auto* cargo2 = Mod<ModuleCargoPart>(*other, "ModuleCargoPart");
         other->vessel = v.get();
         cargo2->OnPartUnpack();
-        CHECK(cargo2->settleCoroutine == nullptr);
+        CHECK(cargo2->settleCoroutine() == nullptr);
         cargo2->Set<bool>("beingSettled", true);
         cargo2->OnPartUnpack();
-        CHECK(cargo2->settleCoroutine != nullptr);
+        CHECK(cargo2->settleCoroutine() != nullptr);
         Run(w.sched, 4.0);
         other->vessel = nullptr;
         kit->vessel = nullptr;
     }
     InventoryEnvironment::universalTime = nullptr;
+    ScienceEnvironment::universalTime = nullptr;
+    ScienceEnvironment::scheduler = nullptr;
 }
 
 // ModuleCargoPart.cs:229-246

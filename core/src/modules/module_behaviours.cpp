@@ -36,6 +36,7 @@
 #include "ksp/modules/module_rcs.hpp"
 #include "ksp/modules/module_resource_intake.hpp"
 #include "ksp/modules/misc_modules.hpp"
+#include "ksp/modules/module_cargo_part.hpp"
 #include "ksp/modules/module_structural.hpp"
 #include "ksp/parts/available_part.hpp"
 #include "ksp/parts/cs_parse.hpp"
@@ -51,6 +52,7 @@ void RegisterAeroModules();       // aero/lifting_surface.cpp (WP-21)
 namespace detail {
 void RegisterInventoryModules();  // inventory/inventory_ui.cpp (WP-33)
 void RegisterContractModules();  // contracts/module_test_subject.cpp (WP-37)
+void RegisterSerenityModules();  // serenity/ground_modules.cpp (WP-53)
 void RegisterScienceModules();  // modules/science_modules.cpp (WP-35; its header pulls in game_events.hpp, which would make the ModuleInventoryPart below ambiguous)
 }
 namespace {
@@ -66,6 +68,7 @@ constexpr float kFloatEpsilon = std::numeric_limits<float>::denorm_min();  // Ma
 // ModuleToggleCrossfeed (ModuleToggleCrossfeed.cs) moved to WP-15: src/modules/resource_modules.cpp
 
 // ModuleCargoPart / ModuleInventoryPart: WP-33 (inventory/inventory.hpp)
+// ---- ModuleCargoPart.cs: WP-53 (modules/module_cargo_part.hpp, src/modules/module_cargo_part.cpp) ----
 
 // ---- ModuleAnimationSetter: WP-27 (modules/animation_modules.hpp); ModuleAnimateHeat.cs:22 -------------------------------------------
 class ModuleAnimateHeat : public ModuleAnimationSetter {
@@ -196,7 +199,9 @@ void RegisterBuiltinModules() {
     detail::RegisterGrappleModules();    // WP-25: ModuleGrappleNode
     detail::RegisterStrutModules();      // WP-25: CModuleStrut
     detail::RegisterResourceModules();  // ModuleToggleCrossfeed, ModuleResourceAutoShiftState, CModuleFuelLine, EVAResourceContainer (WP-15)
-    detail::RegisterInventoryModules();  // WP-33: ModuleCargoPart, ModuleInventoryPart (inventory/inventory_ui.cpp)
+    detail::RegisterInventoryModules();  // WP-33: ModuleInventoryPart (inventory/inventory_ui.cpp)
+    Reg<ModuleCargoPart>({"ModuleCargoPart"});
+    detail::RegisterSerenityModules();  // WP-53: ModuleGroundPart / SciencePart / CommsPart / ExpControl / Experiment (serenity/ground_modules.cpp)
     detail::RegisterAnimationModules();  // WP-27: ModuleAnimationSetter, ModuleAnimateGeneric, ModuleAnimationGroup, ModuleAnimatorLandingGear
     detail::RegisterDeployableModules();  // WP-27: ModuleDeployablePart / Antenna / Radiator / SolarPanel
     detail::RegisterParachuteModules();   // WP-27: ModuleParachute, ModuleEvaChute

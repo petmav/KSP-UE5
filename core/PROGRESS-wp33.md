@@ -16,3 +16,7 @@ Branch wp33 from main af3798c6. Worktree core/.worktrees/wp33.
 
 ## Open
 - final fresh verification + push (not main).
+
+## Merge of origin/main (wp50, wp53, wp17b, wp42, wp38)
+- ModuleCargoPart: single class, wp53's `modules/module_cargo_part.hpp/.cpp`; WP-33 members/behaviour added to it (inventory.cpp), `GroundPartSeam` and the duplicate registration removed, `RemoveEventHandlers()` in OnDestroy and the destructor, `settleCoroutine()` accessor + public MakePartSettle for tests (settle tests now drive ScienceEnvironment scheduler/UT).
+- STATUS row renumbered 36 (34 is wp50); check_cites.py aliases unioned; unit 690 cases / 1,071,518 assertions, ctest 34/34, cites 301 / 0 mismatches.

@@ -27,6 +27,7 @@
 #include "ksp/config/config_node.hpp"
 #include "ksp/core/coroutine.hpp"
 #include "ksp/math/vector3d.hpp"
+#include "ksp/modules/module_cargo_part.hpp"
 #include "ksp/modules/part_module.hpp"
 #include "ksp/save/game.hpp"
 #include "ksp/save/proto_vessel.hpp"
@@ -43,7 +44,6 @@ class AvailablePart;
 class ProtoCrewMember;
 class CelestialBody;
 class ModuleInventoryPart;
-class ModuleCargoPart;
 class UIPartActionInventory;
 class KerbalEVA;
 class CompoundPart;
@@ -161,74 +161,7 @@ struct ProtoVesselNodes {
 inline float CargoPackedVolume(PartModule& m) { return m.Get<float>("packedVolume"); }
 inline int CargoStackable(PartModule& m) { return m.Get<int32_t>("stackableQuantity"); }
 
-// ================================================================ ModuleCargoPart (ModuleCargoPart.cs:8)
-
-class ModuleCargoPart : public PartModule {
-public:
-    using PartModule::PartModule;
-    ~ModuleCargoPart() override;
-
-    // [KSPField] values live in the typed store
-    float packedVolume() const { return Get<float>("packedVolume"); }
-    float kinematicDelay() const { return Get<float>("kinematicDelay"); }
-    float placementMaxRivotVelocity() const { return Get<float>("placementMaxRivotVelocity"); }
-    int stackableQuantity() const { return Get<int32_t>("stackableQuantity"); }
-    bool beingAttached() const { return Get<bool>("beingAttached"); }
-    bool beingSettled() const { return Get<bool>("beingSettled"); }
-    bool reinitResourcesOnStoreInVessel() const { return Get<bool>("reinitResourcesOnStoreInVessel"); }
-
-    // state of the C# private / protected fields
-    bool UIHidden = false;
-    float preSettlingPrefabMass = 0.0f;
-    bool inConstructionMode = false;
-    bool constructionModeHighlight = false;
-    float distanceToEngineer = 0.0f;
-    std::vector<Part*> linkedCompoundParts;
-    std::shared_ptr<Coroutine> settleCoroutine;
-    // construction highlight output (Part.SetHighlight*): last applied state (tests / the shell)
-    std::function<void(Part&, bool)> setConstructionHighlight;  // unset: recorded in constructionHighlightApplied
-    std::optional<bool> constructionHighlightApplied;
-
-    float MassForWeightTesting() const;                       // :44 (internal)
-    void OnDestroy();                                         // :64
-    virtual void OnPartPack() {}                              // :76
-    virtual void OnPartUnpack();                              // :80
-    void OnAwake() override;
-    void OnLoad(const ConfigNode& node) override;             // :96
-    void OnStart(StartState state) override;                  // :107
-    void OnInitialize() override;                             // :158
-    std::string GetInfo() override;                           // :164
-    std::string GetModuleDisplayName() override;              // :449
-    void OnPartWillDie(Part* p);                              // :183
-    void HideUI();                                            // :194
-    void ShowUI();                                            // :201
-    virtual Enumerator MakePartSettle(bool waitForMotionStop);  // :206
-    virtual void OnWeldStart(KerbalEVA* kerbalEVA);           // :229
-    virtual void OnWeldFinish(KerbalEVA* kerbalEVA);          // :239
-    bool weldSparksPlaying = false;                           // weldingSparkingsFX.isPlaying
-    void OnEVAConstructionMode(bool opened);                  // :248
-    void OnUpdate() override;                                 // :279
-    void OnUpdateHighlight();                                 // :286
-    void SetConstructionHighlight(bool state);                // :264
-    virtual std::string GetTooltip();                         // :330
-    bool IsDeployedSciencePart();                             // :339
-    virtual void EnableModule();                              // :348
-    void OnCompoundPartLinked(CompoundPart* linkedPart);      // :358
-    void OnCompoundPartDetached(CompoundPart* linkedPart);    // :371
-    bool HasLinkedCompoundParts() const;                      // :384
-    // ExpansionsLoader.IsExpansionInstalled("Serenity"); unset: installed
-    static inline std::function<bool(const std::string&)> isExpansionInstalled;
-
-    Part* PartOf() const;
-};
-
-// The ModuleGroundPart family (ModuleGroundPart.cs:7 : ModuleCargoPart; ModuleGroundSciencePart, ModuleGroundCommsPart, ModuleGroundExpControl,
-// ModuleGroundExperiment) is WP-53 (Breaking Ground). Until then these classes are ModuleCargoPart with its OnLoad / construction logic, so
-// every `FindModuleImplementing<ModuleCargoPart>()` finds them as in C#; the deploy animation / science behaviour is absent.
-class GroundPartSeam : public ModuleCargoPart {
-public:
-    using ModuleCargoPart::ModuleCargoPart;
-};
+// ModuleCargoPart (ModuleCargoPart.cs:8) lives in modules/module_cargo_part.hpp (WP-53); WP-33 adds its EVA-construction side in inventory.cpp.
 
 // ================================================================ ModuleInventoryPart (ModuleInventoryPart.cs:9)
 
