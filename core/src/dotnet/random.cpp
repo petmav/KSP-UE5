@@ -26,7 +26,8 @@ void Seed(int32_t (&seedArray)[56], int32_t mj) {
     }
     for (int k = 1; k < 5; ++k) {
         for (int i = 1; i < 56; ++i) {
-            seedArray[i] -= seedArray[1 + (i + 30) % 55];
+            // C# unchecked int subtraction wraps: compute in uint32_t
+            seedArray[i] = static_cast<int32_t>(static_cast<uint32_t>(seedArray[i]) - static_cast<uint32_t>(seedArray[1 + (i + 30) % 55]));
             if (seedArray[i] < 0) seedArray[i] += MBIG;
         }
     }
@@ -47,7 +48,7 @@ int32_t SystemRandom::InternalSample() {
     int32_t locINextp = inextp_;
     if (++locINext >= 56) locINext = 1;
     if (++locINextp >= 56) locINextp = 1;
-    int32_t retVal = seedArray_[locINext] - seedArray_[locINextp];
+    int32_t retVal = static_cast<int32_t>(static_cast<uint32_t>(seedArray_[locINext]) - static_cast<uint32_t>(seedArray_[locINextp]));
     if (retVal == MBIG) retVal--;
     if (retVal < 0) retVal += MBIG;
     seedArray_[locINext] = retVal;
@@ -109,7 +110,7 @@ KSPRandom::KSPRandom(int32_t seed) {
 double KSPRandom::Sample() {
     if (++inexta_ >= 56) inexta_ = 1;
     if (++inextb_ >= 56) inextb_ = 1;
-    int32_t num = seedArray_[inexta_] - seedArray_[inextb_];
+    int32_t num = static_cast<int32_t>(static_cast<uint32_t>(seedArray_[inexta_]) - static_cast<uint32_t>(seedArray_[inextb_]));
     if (num < 0) num += dotnet::MBIG;
     seedArray_[inexta_] = num;
     return static_cast<double>(num) * 4.6566128752458E-10;
