@@ -79,3 +79,4 @@ for heights. STATUS row 38, README, check_cites exact mode, no subagents.
   on the WP-12a .cpp (pqs_mods.cpp keeps 4 pre-existing WP-11 mismatches); header cites 184 / 0 (scratch checker).
   Incremental full run before the ABI change: 34/34. CI runs on push (Linux + Windows).
 - fresh run (core/build deleted, -Fresh): 34/34, unit 733 / 1,207,865; bench pinned per CCD (frequency CCD: Kerbin 0.64 ms/quad, StartSphere 308 -> 108 ms with 15 workers; Mun 332 -> 90 ms). STATUS perf + verification updated.
+- CI 38178999057 (68773105): windows, linux clang, linux gcc 34/34 green. Done; final report sent.

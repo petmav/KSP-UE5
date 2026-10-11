@@ -4584,7 +4584,7 @@ The height stack (WP-11) is 90-97 % of a quad build; the quadtree and the WP-12a
 
 ### Verification
 
-Windows MSVC RelWithDebInfo, `core/build` deleted, `run_tests.ps1 -Fresh` on the tree with origin/main `6a42b34b` merged: 34/34 ctest (capi.c / capi.ue_like now build terrain quads through the C ABI), `unit` 733 cases / 1,207,865 assertions; configure 2.7 s, build 193.4 s, test 201.4 s (`unit` 160.6 s; the WP-12a cases ~12 s). Linux clang / gcc: the CI run on the pushed branch (no local Linux run). `check_cites.py` exact mode over `src/terrain/{pq,pqs_quadtree,pqs_build,pqs_cache,pqs_mods_quad,pqs_parallel,pqs}.cpp` and `src/unity/matrix_native.cpp`: 164 cites, 0 mismatches (`src/terrain/pqs_mods.cpp` keeps WP-11's 4 known ones: SetupCommon, CreateNoiseMap, two nested Setup).
+Windows MSVC RelWithDebInfo, `core/build` deleted, `run_tests.ps1 -Fresh` on the tree with origin/main `6a42b34b` merged: 34/34 ctest (capi.c / capi.ue_like now build terrain quads through the C ABI), `unit` 733 cases / 1,207,865 assertions; configure 2.7 s, build 193.4 s, test 201.4 s (`unit` 160.6 s; the WP-12a cases ~12 s). CI run 38178999057 on `68773105` (all WP-12a code): windows, linux clang and linux gcc 34/34, green (no local Linux run). `check_cites.py` exact mode over `src/terrain/{pq,pqs_quadtree,pqs_build,pqs_cache,pqs_mods_quad,pqs_parallel,pqs}.cpp` and `src/unity/matrix_native.cpp`: 164 cites, 0 mismatches (`src/terrain/pqs_mods.cpp` keeps WP-11's 4 known ones: SetupCommon, CreateNoiseMap, two nested Setup).
 
 ### Commits (branch `wp12a`)
 
