@@ -123,6 +123,14 @@ add_library(kspcore STATIC
     contracts/templates_grandtour.cpp
     contracts/waypoints.cpp
     contracts/contract_register.cpp
+    missions/mission_env.cpp
+    missions/dynamic_module.cpp
+    missions/mission_node.cpp
+    missions/mission_flow.cpp
+    missions/mission_score.cpp
+    missions/mission_awards.cpp
+    missions/mission_validator.cpp
+    missions/mission.cpp
     space_center/pqs_city.cpp
     space_center/pqs_city_data.cpp
     space_center/space_center.cpp
@@ -245,6 +253,11 @@ add_library(kspcore STATIC
     modules/module_procedural_fairing.cpp
     modules/module_structural.cpp
     modules/misc_modules.cpp
+    # WP-33 inventory and EVA construction
+    inventory/inventory.cpp
+    inventory/module_inventory_part.cpp
+    inventory/construction.cpp
+    inventory/inventory_ui.cpp
     # WP-53 Breaking Ground: deployed science, ROCs, contracts
     modules/module_cargo_part.cpp
     serenity/serenity_env.cpp

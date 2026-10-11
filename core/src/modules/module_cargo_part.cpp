@@ -26,6 +26,7 @@ Vessel* ModuleCargoPart::VesselPtr() const {
 }
 
 ModuleCargoPart::~ModuleCargoPart() {
+    RemoveEventHandlers();
     if (ScienceEnvironment::scheduler != nullptr) ScienceEnvironment::scheduler->StopAllCoroutines(CoroutineOwner());
 }
 
@@ -44,8 +45,11 @@ float ModuleCargoPart::MassForWeightTesting() const {
     return part->fields.mass;
 }
 
-// ModuleCargoPart.cs:67 (the EVA construction / HideUI / compound-part subscriptions are WP-33's and not made here)
-void ModuleCargoPart::OnDestroy() { StopCoroutineRef(settleCoroutine_); }
+// ModuleCargoPart.cs:67
+void ModuleCargoPart::OnDestroy() {
+    StopCoroutineRef(settleCoroutine_);
+    RemoveEventHandlers();
+}
 
 // ModuleCargoPart.cs:84
 void ModuleCargoPart::OnPartUnpack() {
