@@ -28,6 +28,10 @@ using KSP::Localization::Localizer;
 namespace {
 // Localizer.Format arg: Mathf.Round(multiplier / 100f) boxed as a float
 std::string RoundedPercent(float multiplier) { return dotnet::FormatSingleG(Mathf::Round(f32store(fx(multiplier) / 100.0))); }
+// AdjusterEnginesThrottle.Activate: Mathf.Round(multiplier / 10f) / 10f
+std::string RoundedTenth(float multiplier) {
+    return dotnet::FormatSingleG(f32store(fx(Mathf::Round(f32store(fx(multiplier) / 10.0))) / 10.0));
+}
 std::string Tag(const char* t) { return Localizer::Format(t); }
 
 // `adjustedModule as <cls>` != null
@@ -313,7 +317,7 @@ AdjusterEnginesThrottle::AdjusterEnginesThrottle(MENode* node) : DynamicModuleT(
 // AdjusterEnginesThrottle.cs:23
 void AdjusterEnginesThrottle::Activate() {
     AdjusterEnginesBase::Activate();
-    UpdateStatusMessage(Localizer::Format("#autoLOC_8100229", {RoundedPercent(engineThrottleMultiplier)}));
+    UpdateStatusMessage(Localizer::Format("#autoLOC_8100229", {RoundedTenth(engineThrottleMultiplier)}));
 }
 // AdjusterEnginesThrottle.cs:29
 float AdjusterEnginesThrottle::ApplyThrottleAdjustment(float throttle) { return f32store(fx(throttle) * fx(engineThrottleMultiplier) / 100.0); }
