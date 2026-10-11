@@ -6,5 +6,5 @@
 - [x] check_cites exact mode 0 mismatches (226)
 - [x] STATUS.md (row 32, unit row, WP-42 section), README rows, memory note
 - [x] Windows -Fresh: 34/34, unit 576 cases / 936,215 assertions
-- [ ] WSL clang run (log /tmp/wp42_clang.log), fill Linux numbers into STATUS.md
+- [x] WSL clang run 34/34; Linux unit totals measured by the gatekeeper (clang and gcc 576 / 936,199), see PROGRESS-wp42-gate.md
 - [x] main 13750b33 merged
