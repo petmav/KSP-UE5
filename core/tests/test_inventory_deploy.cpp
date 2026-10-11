@@ -100,9 +100,9 @@ TEST_CASE("WP-33 ModuleInventoryPart: DeployInventoryItem -> CreatePartObject ->
     InventoryEnvironment::scheduler = &w.sched;
     UIPartActionControllerInventory ctrl;
     UIPartActionInventory pawGrid;
-    pawGrid.SetupPaw(*inv, inv->InventorySlots());
-    // the kerbal's default inventory (evaChute, evaJetpack) plus a ground anchor in a free slot
+    // the kerbal's default inventory (evaChute, evaJetpack) plus a ground anchor in a free slot; the grid is built for 4 slots
     inv->SetInventorySlots(4);
+    pawGrid.SetupPaw(*inv, inv->InventorySlots());
     REQUIRE(inv->StoreCargoPartAtSlot(&Prefab(w.g, "groundAnchor"), 3));
     CHECK(inv->InventoryItemCanBeDeployed(3));
     CHECK_FALSE(inv->InventoryItemCanBeDeployed(0));  // the chute is not ground-deployable

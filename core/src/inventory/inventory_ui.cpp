@@ -718,7 +718,7 @@ void UIPartActionInventory::OnModuleInventorySlotChanged(ModuleInventoryPart* in
 
 // UIPartActionInventory.cs:224
 void UIPartActionInventory::UpdateSlot(int slotChanged, bool updateStackUI) {
-    const std::string text = slotPartIcon[static_cast<size_t>(slotChanged)];
+    const std::string text = slotPartIcon.at(static_cast<size_t>(slotChanged));
     std::shared_ptr<StoredPart> val;
     if (inventoryPartModule->storedParts.TryGetValue(slotChanged, val)) {
         if (text != val->partName) {
@@ -729,8 +729,8 @@ void UIPartActionInventory::UpdateSlot(int slotChanged, bool updateStackUI) {
         DestroyItem(slotChanged);
     }
     if (updateStackUI) {
-        UIPartActionInventorySlot& s = *slotButton[static_cast<size_t>(slotChanged)];
-        slotStackUI[static_cast<size_t>(slotChanged)] = {s.IsStackable(), s.CurrentStackedAmount(), s.MaxStackedAmount()};
+        UIPartActionInventorySlot& s = *slotButton.at(static_cast<size_t>(slotChanged));
+        slotStackUI.at(static_cast<size_t>(slotChanged)) = {s.IsStackable(), s.CurrentStackedAmount(), s.MaxStackedAmount()};
     }
 }
 
