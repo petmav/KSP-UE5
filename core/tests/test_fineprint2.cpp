@@ -11,6 +11,7 @@
 // crew roster and no vessels (the contextual branches are off), ContractsEnvironment::newRandomSeed = 4242, and a synthetic SiteGeneratorInfo (the text
 // asset is not in the repo; its titles are compared only against the same synthetic tables in the reference).
 #include <cmath>
+#include <cstdio>
 #include <cstring>
 #include <fstream>
 #include <map>
@@ -35,6 +36,8 @@
 #include "ksp/resources/part_resource_library.hpp"
 #include "ksp/save/game.hpp"
 #include "ksp/save/game_parameters.hpp"
+#include "ksp/kerbals/experience.hpp"
+#include "ksp/science/science.hpp"
 #include "ksp/unity/mathf.hpp"
 #include "nlohmann/json.hpp"
 #include "resource_fixture.hpp"
@@ -522,4 +525,636 @@ TEST_CASE("WP-38b StringUtilities: TitleCase, ThisThisAndThat, pronouns, ValueAn
     CHECK(L38::StringUtilities::IntegerToGreek(-5) == Ref38b()["greek"][0].get<std::string>());
     CHECK(L38::StringUtilities::IntegerToGreek(99) == Ref38b()["greek"][23].get<std::string>());
     CHECK(L38::StringUtilities::IntegerToGreek(7) == Ref38b()["greek"][7].get<std::string>());
+}
+
+// ---- parameter behaviour: OnSave / OnLoad round trips, OnUpdate counters, event handlers ------------------------------------------------------------
+// Derived from the decompiled C# (each check names the member it follows). A loaded vessel is built from the real stock part prefabs of the mirror.
+namespace {
+
+struct VRig {
+    Vessel v;
+    std::vector<std::unique_ptr<Part>> parts;
+    VRig(World38b& w, CelestialBody& body, std::initializer_list<const char*> names, Vessel::Situations sit = Vessel::Situations::ORBITING) {
+        v.loaded = true;
+        v.vesselType = VesselType::Ship;
+        v.situation = sit;
+        v.vesselName = "Test Vessel";
+        v.orbitDriver = std::make_unique<OrbitDriver>();
+        v.orbitDriver->orbit->referenceBody = &body;
+        for (const char* n : names) AddPart(w, n);
+        if (!parts.empty()) v.rootPart = parts[0].get();
+    }
+    Part* AddPart(World38b& w, const char* name) {
+        auto p = w.g.New(name);
+        p->vessel = &v;
+        v.parts.push_back(p.get());
+        parts.push_back(std::move(p));
+        return parts.back().get();
+    }
+};
+
+// an active ARM contract owning `target` and a filler parameter that never completes (so the contract itself does not complete)
+struct Root {
+    std::unique_ptr<C38::ARMContract> c = std::make_unique<C38::ARMContract>();
+    ContractParameter* p = nullptr;
+    template <class P>
+    P* Own(World38b& w, std::unique_ptr<P> param, bool active = true) {
+        c->agent = w.agents->GetAgent("Kerbodyne");
+        c->targetBody = &w.Body("Kerbin");  // the contract title reads it
+        P* raw = param.get();
+        p = c->AddParameter(std::move(param));
+        c->AddParameter(std::make_unique<P38::MobileBaseParameter>());  // never completes without a grounded motorized wheel
+        if (active) {
+            c->state = Contract::State::Active;
+            c->Register();
+        }
+        return raw;
+    }
+    ~Root() {
+        if (c) c->Unregister();
+    }
+};
+
+struct FlightScope {
+    SceneScope scene{GameScenes::FLIGHT};
+    explicit FlightScope(Vessel* active) {
+        FlightRegistry::ActiveVessel = active;
+        FlightRegistry::ready = true;
+        L38::FinePrintEnvironment::deltaTime = [] { return 0.5f; };
+    }
+    ~FlightScope() {
+        FlightRegistry::ActiveVessel = nullptr;
+        FlightRegistry::ready = false;
+    }
+};
+
+std::string NodeText(const ConfigNode& n) { return n.ToString(); }
+
+// Funding / Reputation / ContractSystem singletons (as Life37 of test_contracts.cpp)
+struct Career38b {
+    Funding funds;
+    Reputation rep;
+    ContractSystem cs;
+    explicit Career38b(World38b& w) {
+        (void)w;
+        funds.Awake();
+        rep.Awake();
+        rep.Start();
+        funds.SetFunds(1000000.0, TransactionReasons::Cheating);
+        rep.SetReputation(0.0f, TransactionReasons::Cheating);
+        cs.Awake();
+        ConfigNode weights = WeightsNode38b(Ref38b()["weights"]);
+        cs.LoadNow(weights);
+    }
+};
+
+// the crew generator's name tables are text assets that are not in the repo: kerbals are created by name
+std::shared_ptr<ProtoCrewMember> MakeKerbal(World38b& w, const std::string& name, ProtoCrewMember_KerbalType type) {
+    auto k = std::make_shared<ProtoCrewMember>(type, name);
+    w.game.CrewRoster->AddCrewMember(k);
+    return k;
+}
+
+// Save, load into a fresh instance of the registered type, save again: the text of the two nodes agrees
+template <class P>
+void RoundTrip(P& p, const char* typeName) {
+    ConfigNode a("PARAM");
+    p.OnSave(a);
+    // OnLoad runs on a parameter that already belongs to a contract (Root().ContractState is read): a throwaway holder in the Generated state
+    auto holder = std::make_unique<C38::ARMContract>();
+    holder->targetBody = Planetarium::fetch->Home;
+    ContractParameter* fresh = holder->AddParameter(ContractSystem::CreateParameter(typeName));
+    REQUIRE(fresh != nullptr);
+    fresh->OnLoad(a);
+    ConfigNode b("PARAM");
+    fresh->OnSave(b);
+    CHECK(NodeText(a) == NodeText(b));
+}
+
+}  // namespace
+
+TEST_CASE("WP-38b StabilityParameter: hold timer (10 s at 0.5 s per update), the three instability conditions, node format") {
+    World38b w;
+    Career38b career(w);
+    VRig r(w, w.Body("Kerbin"), {"mk1pod.v2"}, Vessel::Situations::LANDED);
+    r.v.Landed = true;
+    FlightScope fs(&r.v);
+    Root root;
+    auto* p = root.Own(w, std::make_unique<P38::StabilityParameter>(10.0f));
+    // StabilityParameter.cs:57 OnUpdate: landed, srf_velocity.sqrMagnitude <= 0.09, geeForce irrelevant when landed
+    for (int i = 0; i < 19; ++i) p->Update();
+    CHECK(p->State() == ParameterState::Incomplete);
+    CHECK_F32b(p->holdTimer, 0.5f);
+    p->Update();
+    CHECK(p->State() == ParameterState::Complete);
+    // moving surface speed 0.4 m/s (0.16 > 0.09): unstable, the complete parameter reverts
+    r.v.srf_velocity = Vector3d(0.4, 0.0, 0.0);
+    p->Update();
+    CHECK(p->State() == ParameterState::Incomplete);
+    // and the timer is reset to holdSeconds while unstable
+    p->Update();
+    CHECK_F32b(p->holdTimer, 10.0f);
+    // flying with g > 0.1 is unstable too; sub-orbital below 500 m height is unstable
+    r.v.srf_velocity = Vector3d(0.0, 0.0, 0.0);
+    r.v.Landed = false;
+    r.v.geeForce = 0.2;
+    p->Update();
+    CHECK_F32b(p->holdTimer, 10.0f);
+    r.v.geeForce = 0.0;
+    r.v.situation = Vessel::Situations::SUB_ORBITAL;
+    r.v.heightFromTerrain = 300.0f;
+    p->Update();
+    CHECK_F32b(p->holdTimer, 10.0f);
+    r.v.heightFromTerrain = -1.0f;
+    p->Update();
+    CHECK_F32b(p->holdTimer, 9.5f);
+    // node: holdSeconds (a float); an unreadable value loads the default 10
+    ConfigNode n("PARAM");
+    p->OnSave(n);
+    CHECK(*n.GetValue("holdSeconds") == "10");
+    ConfigNode bad("PARAM");
+    bad.AddValue("holdSeconds", "abc");
+    P38::StabilityParameter q(3.0f);
+    q.OnLoad(bad);
+    CHECK_F32b(q.holdSeconds, 10.0f);
+    RoundTrip(*p, "StabilityParameter");
+    // the title rounds half up
+    CHECK(P38::StabilityParameter(2.5f).GetTitle() == Localizer38b::Format("#autoLOC_285413", {"3"}));
+}
+
+TEST_CASE("WP-38b CrewCapacityParameter / CrewTraitParameter / MobileBaseParameter / LocationAndSituationParameter: five consecutive successes, dirty-vessel events") {
+    World38b w;
+    Career38b career(w);
+    CelestialBody& mun = w.Body("Mun");
+    VRig r(w, mun, {"mk1-3pod", "mk1pod.v2"}, Vessel::Situations::ORBITING);  // capacity 3 + 1
+    FlightScope fs(&r.v);
+    CHECK(r.v.GetCrewCapacity() == 4);
+    {
+        Root root;
+        auto* p = root.Own(w, std::make_unique<P38::CrewCapacityParameter>(4));
+        for (int i = 0; i < 4; ++i) p->Update();
+        CHECK(p->State() == ParameterState::Incomplete);
+        CHECK(p->successCounter == 4);
+        p->Update();
+        CHECK(p->State() == ParameterState::Complete);
+        // VesselWasModified of the active vessel marks it dirty; a smaller vessel makes the next update revert
+        Part* last = r.parts.back().get();
+        r.v.parts.pop_back();
+        events::GameEvents::onVesselWasModified.Fire(&r.v);
+        CHECK(p->dirtyVessel);
+        p->Update();
+        CHECK(p->State() == ParameterState::Incomplete);
+        r.v.parts.push_back(last);
+        // other vessels do not mark it dirty
+        VRig other(w, mun, {"mk1pod.v2"});
+        p->dirtyVessel = false;
+        events::GameEvents::onVesselWasModified.Fire(&other.v);
+        CHECK_FALSE(p->dirtyVessel);
+        // onPartCouple / onPartDie of a part of the active vessel
+        events::GameEvents::onPartDie.Fire(r.parts[0].get());
+        CHECK(p->dirtyVessel);
+        p->dirtyVessel = false;
+        events::GameEvents::onPartCouple.Fire(events::GameEvents::FromToAction<Part*, Part*>(r.parts[0].get(), other.parts[0].get()));
+        CHECK(p->dirtyVessel);
+        ConfigNode n("PARAM");
+        p->OnSave(n);
+        CHECK(*n.GetValue("targetCapacity") == "4");
+        RoundTrip(*p, "CrewCapacityParameter");
+        // the notes follow the SpecificVessel sibling's vessel (none here): null
+        CHECK(p->Notes().empty());
+    }
+    {
+        Root root;
+        auto* p = root.Own(w, std::make_unique<P38::LocationAndSituationParameter>(&mun, Vessel::Situations::ORBITING, "probe"));
+        for (int i = 0; i < 5; ++i) p->Update();
+        CHECK(p->State() == ParameterState::Complete);
+        r.v.situation = Vessel::Situations::LANDED;
+        events::GameEvents::onVesselSituationChange.Fire(events::GameEvents::HostedFromToAction<Vessel*, Vessel::Situations>(&r.v, Vessel::Situations::ORBITING, Vessel::Situations::LANDED));
+        p->Update();
+        CHECK(p->State() == ParameterState::Incomplete);
+        CHECK(p->successCounter == 5);  // the revert branch does not touch the counter
+        p->Update();
+        CHECK(p->successCounter == 0);  // an incomplete parameter that is not valid resets it
+        r.v.situation = Vessel::Situations::ORBITING;
+        r.v.vesselType = VesselType::EVA;  // an EVA kerbal does not count
+        events::GameEvents::onVesselSOIChanged.Fire(events::GameEvents::HostedFromToAction<Vessel*, CelestialBody*>(&r.v, &mun, &mun));
+        for (int i = 0; i < 5; ++i) p->Update();
+        CHECK(p->State() == ParameterState::Incomplete);
+        r.v.vesselType = VesselType::Ship;
+        events::GameEvents::onVesselSOIChanged.Fire(events::GameEvents::HostedFromToAction<Vessel*, CelestialBody*>(&r.v, &mun, &mun));
+        for (int i = 0; i < 5; ++i) p->Update();
+        CHECK(p->State() == ParameterState::Complete);
+        ConfigNode n("PARAM");
+        p->OnSave(n);
+        CHECK(*n.GetValue("targetBody") == std::to_string(mun.flightGlobalsIndex));
+        CHECK(*n.GetValue("targetSituation") == "ORBITING");
+        CHECK(*n.GetValue("noun") == "probe");
+        CHECK(*n.GetValue("finalObjective") == "False");
+        RoundTrip(*p, "LocationAndSituationParameter");
+    }
+    {
+        // CrewTraitParameter counts crew of the trait; a vessel without crew has none
+        Root root;
+        auto* p = root.Own(w, std::make_unique<P38::CrewTraitParameter>("Pilot", 1, "vessel"));
+        for (int i = 0; i < 6; ++i) p->Update();
+        CHECK(p->State() == ParameterState::Incomplete);
+        ConfigNode n("PARAM");
+        p->OnSave(n);
+        CHECK(*n.GetValue("targetTrait") == "Pilot");
+        CHECK(*n.GetValue("targetCount") == "1");
+        CHECK(*n.GetValue("vesselDescription") == "vessel");
+        RoundTrip(*p, "CrewTraitParameter");
+        auto crew = MakeKerbal(w, "Jeb Kerman", ProtoCrewMember_KerbalType::Crew);
+        crew->trait = "Pilot";
+        KerbalRoster::SetExperienceTrait(*crew, std::string("Pilot"));
+        r.parts[0]->protoModuleCrew.push_back(crew);
+        r.v.CrewListSetDirty();
+        events::GameEvents::onVesselCrewWasModified.Fire(&r.v);
+        for (int i = 0; i < 5; ++i) p->Update();
+        // ExperienceTrait.TypeName is the config title (a localised word in the game; the untranslated mirror leaves the tag): compare with it
+        const std::string typeName = crew->experienceTrait->TypeName();
+        CHECK(r.v.GetVesselCrew().size() == 1);
+        CHECK(L38::VesselCrewWithTraitCount(typeName, &r.v) == 1);
+        CHECK(L38::VesselCrewWithTrait(typeName, &r.v).size() == 1);
+        CHECK(L38::VesselCrewWithTraitCount("Scientist", &r.v) == 0);
+        p->targetTrait = typeName;
+        p->dirtyVessel = true;
+        for (int i = 0; i < 5; ++i) p->Update();
+        CHECK(p->State() == ParameterState::Complete);
+        r.parts[0]->protoModuleCrew.clear();
+    }
+}
+
+TEST_CASE("WP-38b MobileBaseParameter: needs a grounded motorized wheel while landed or pre-launch") {
+    World38b w;
+    Career38b career(w);
+    VRig r(w, w.Body("Mun"), {"roverBody.v2", "roverWheel1"}, Vessel::Situations::LANDED);
+    r.v.Landed = true;
+    FlightScope fs(&r.v);
+    PartModule* wheel = nullptr;
+    for (Part* part : r.v.parts)
+        for (size_t i = 0; i < part->Modules().Count(); ++i)
+            if (part->Modules()[i]->IsA("ModuleWheelBase")) wheel = part->Modules()[i];
+    REQUIRE(wheel != nullptr);
+    CHECK(L38::IsValidContractObjective(*wheel, "Wheel") == (wheel->EnumName("wheelType") == "MOTORIZED"));
+    CHECK_FALSE(L38::VesselHasWheelsOnGround(&r.v, {L38::WheelType::MOTORIZED}));  // isGrounded false
+    wheel->Set<bool>("isGrounded", true);
+    CHECK(L38::VesselHasWheelsOnGround(&r.v, {L38::WheelType::FREE, L38::WheelType::MOTORIZED}) == (wheel->EnumName("wheelType") != "LEG"));
+    // in orbit the check never applies
+    r.v.situation = Vessel::Situations::ORBITING;
+    CHECK_FALSE(L38::VesselHasWheelsOnGround(&r.v, {L38::WheelType::MOTORIZED, L38::WheelType::FREE, L38::WheelType::LEG}));
+    r.v.situation = Vessel::Situations::LANDED;
+    Root root;
+    auto* p = root.Own(w, std::make_unique<P38::MobileBaseParameter>());
+    // the Root's filler is a MobileBaseParameter too; drive the owned one
+    for (int i = 0; i < 5; ++i) p->Update();
+    CHECK(p->State() == (wheel->EnumName("wheelType") == "MOTORIZED" ? ParameterState::Complete : ParameterState::Incomplete));
+}
+
+TEST_CASE("WP-38b ResourcePossession / ResourceExtraction / PartRequest / VesselSystems parameters") {
+    World38b w;
+    Career38b career(w);
+    CelestialBody& mun = w.Body("Mun");
+    VRig r(w, mun, {"mk1pod.v2", "fuelTankSmallFlat", "HighGainAntenna", "solarPanels1"}, Vessel::Situations::ORBITING);
+    FlightScope fs(&r.v);
+    const double fuel = L38::VesselResourceAmount("LiquidFuel", &r.v);
+    CHECK(fuel > 0.0);
+    CHECK(L38::VesselResourceAmount("NoSuchResource", &r.v) == 0.0);
+    {
+        Root root;
+        auto* p = root.Own(w, std::make_unique<P38::ResourcePossessionParameter>("LiquidFuel", "fuel", "ship", std::floor(fuel)));
+        for (int i = 0; i < 5; ++i) p->Update();
+        CHECK(p->State() == ParameterState::Complete);  // Math.Ceiling(current) >= goal
+        CHECK_F64b(p->currentResource, fuel);
+        p->goalResource = fuel + 100.0;
+        p->Update();
+        CHECK(p->State() == ParameterState::Incomplete);
+        ConfigNode n("PARAM");
+        p->OnSave(n);
+        CHECK(*n.GetValue("resourceName") == "LiquidFuel");
+        CHECK(*n.GetValue("vesselName") == "ship");
+        RoundTrip(*p, "ResourcePossessionParameter");
+        // the sibling SpecificVesselParameter supplies the notes
+        auto* sv = root.c->AddParameter(std::make_unique<P38::SpecificVesselParameter>(&r.v));
+        CHECK(root.c->GetParameterT<P38::SpecificVesselParameter>() == dynamic_cast<P38::SpecificVesselParameter*>(sv));
+        CHECK(p->Notes() != "");
+    }
+    {
+        Root root;
+        auto* p = root.Own(w, std::make_unique<P38::ResourceExtractionParameter>("Ore", "ore", 1000.0, &mun, std::vector<std::string>{"ModuleCommand"}));
+        PartModule* cmd = nullptr;
+        for (size_t i = 0; i < r.parts[0]->Modules().Count(); ++i)
+            if (r.parts[0]->Modules()[i]->moduleName == "ModuleCommand") cmd = r.parts[0]->Modules()[i];
+        REQUIRE(cmd != nullptr);
+        L38::FinePrintEnvironment::screenMessages.clear();
+        events::GameEvents::OnResourceConverterOutput.Fire(cmd, std::string("Ore"), 300.0);  // 30 % >= 25 %: first notification, level 0.25 -> 0.5
+        CHECK_F64b(p->totalHarvested, 300.0);
+        CHECK_F32b(p->notifyLevel, 0.5f);
+        CHECK(L38::FinePrintEnvironment::screenMessages.size() == 1);
+        events::GameEvents::OnResourceConverterOutput.Fire(cmd, std::string("Other"), 5000.0);   // wrong resource
+        events::GameEvents::OnResourceConverterOutput.Fire(cmd, std::string("Ore"), -1.0);       // not positive
+        CHECK_F64b(p->totalHarvested, 300.0);
+        events::GameEvents::OnResourceConverterOutput.Fire(cmd, std::string("Ore"), 700.0);
+        CHECK_F64b(p->totalHarvested, 1000.0);
+        for (int i = 0; i < 5; ++i) p->Update();
+        CHECK(p->State() == ParameterState::Complete);
+        ConfigNode n("PARAM");
+        p->OnSave(n);
+        CHECK(*n.GetValue("totalHarvested") == "1000");
+        CHECK(*n.GetValue("modules") == "ModuleCommand");
+        RoundTrip(*p, "ResourceExtractionParameter");
+    }
+    {
+        // PartRequestParameter: existing parts of the vessel at creation are ignored
+        ConfigNode req("PART_REQUEST");
+        req.AddValue("Part", "HighGainAntenna");
+        req.AddValue("Module", "ModuleSolarPanelNoSuchModule");
+        P38::PartRequestParameter fresh(req, &r.v);
+        CHECK(fresh.existingParts.size() == 1);
+        CHECK(fresh.GetTitle() == Localizer38b::Format("#autoLOC_7001087", {"part", "vessel"}));
+        CHECK_FALSE(fresh.VesselHasPartRequest(&r.v));
+        Part* second = r.AddPart(w, "HighGainAntenna");
+        second->fields.flightID = 987654u;
+        CHECK(fresh.VesselHasPartRequest(&r.v));
+        ConfigNode n("PARAM");
+        fresh.OnSave(n);
+        CHECK(n.GetValue("partNames") == std::optional<std::string>("HighGainAntenna"));
+        CHECK(*n.GetValue("moduleNames") == "ModuleSolarPanelNoSuchModule");
+        r.v.parts.pop_back();
+    }
+    {
+        // VesselSystemsParameter: objective modules of the vessel, the launch id, the manned status
+        CHECK(L38::HasValidContractObjectives(r.v, {"Antenna", "Generator"}));
+        CHECK_FALSE(L38::HasValidContractObjectives(r.v, {"Antenna", "Dock"}));
+        CHECK(L38::VesselLaunchedAfterID(0u, &r.v, {}));
+        r.parts[0]->fields.launchID = 5u;
+        r.parts[1]->fields.launchID = 9u;
+        r.parts[2]->fields.launchID = 9u;
+        r.parts[3]->fields.launchID = 9u;
+        CHECK_FALSE(L38::VesselLaunchedAfterID(6u, &r.v, {}));
+        CHECK(L38::VesselLaunchedAfterID(6u, &r.v, {"mk1pod_v2"}));  // the ignored part name has '_' -> '.'
+        CHECK(L38::VesselLaunchedAfterID(5u, &r.v, {}));
+        r.v.CheckControllable();
+        P38::VesselSystemsParameter vsp({"Antenna", "Generator"}, {"a", "b"}, "probe", L38::MannedStatus::UNMANNED, true);
+        vsp.launchID = 5u;
+        CHECK(vsp.isVesselValid(&r.v) == r.v.IsControllable());
+        vsp.launchID = 6u;
+        CHECK_FALSE(vsp.isVesselValid(&r.v));
+        CHECK_FALSE(vsp.isVesselValid(nullptr));
+        ConfigNode n("PARAM");
+        vsp.OnSave(n);
+        CHECK(*n.GetValue("typeString") == "probe");
+        CHECK(*n.GetValue("mannedStatus") == "1");
+        CHECK(*n.GetValue("requireNew") == "True");
+        CHECK(*n.GetValue("checkModuleTypes") == "Antenna|Generator");
+        CHECK(*n.GetValue("launchID") == "6");
+        P38::VesselSystemsParameter back;
+        back.OnLoad(n);
+        CHECK(back.launchID == 6u);
+        CHECK(back.mannedStatus == L38::MannedStatus::UNMANNED);
+        CHECK(back.checkModuleTypes == std::vector<std::string>{"Antenna", "Generator"});
+    }
+}
+
+TEST_CASE("WP-38b kerbal parameters: KerbalDestination flight logs, KerbalGeeAdventure / KerbalTour deaths, tourist flags, recovery") {
+    World38b w;
+    Career38b career(w);
+    CelestialBody& mun = w.Body("Mun");
+    auto k = MakeKerbal(w, "Bob Kerman", ProtoCrewMember_KerbalType::Tourist);
+    const std::string name = k->name().value_or("");
+    REQUIRE(!name.empty());
+    {
+        Root root;
+        auto* p = root.Own(w, std::make_unique<P38::KerbalDestinationParameter>(&mun, FlightLog_EntryType::Orbit, name), false);
+        root.c->state = Contract::State::Active;
+        CHECK_FALSE(p->CheckFlightLogs());  // empty logs
+        k->flightLog.AddEntry(FlightLog_EntryType::Orbit, std::string("Mun"));
+        CHECK(p->CheckFlightLogs());
+        CHECK(p->State() == ParameterState::Complete);
+        ConfigNode n("PARAM");
+        p->OnSave(n);
+        CHECK(*n.GetValue("targetType") == "Orbit");
+        CHECK(*n.GetValue("kerbalName") == name);
+        RoundTrip(*p, "KerbalDestinationParameter");
+        k->flightLog.Clear();
+    }
+    {
+        // KerbalTourParameter.OnCrewKilled: partial failure is switched off, then the parameter fails
+        Root root;
+        auto* p = root.Own(w, std::make_unique<P38::KerbalTourParameter>(name, ProtoCrewMember_Gender::Female));
+        CHECK(p->allowPartialFailure);
+        VRig dead(w, mun, {"mk1pod.v2"});  // the progress tracker reads report.origin.vessel
+        EventReport evt(FlightEvents::CREW_KILLED, dead.parts[0].get(), name);
+        events::GameEvents::onCrewKilled.Fire(&evt);
+        CHECK(p->State() == ParameterState::Failed);
+        CHECK_FALSE(p->allowPartialFailure);
+        CHECK(root.c->ContractState() == Contract::State::Failed);  // allowPartialFailure was cleared before SetFailed: the contract fails
+    }
+    {
+        // KerbalInactiveChange fails with a dedicated message while FailOnInactive is set
+        Root root;
+        auto* tq = root.Own(w, std::make_unique<P38::KerbalTourParameter>(name, ProtoCrewMember_Gender::Male));
+        tq->OnKerbalInactiveChange(k.get(), false, true);
+        CHECK(tq->kerbalInactive);
+        CHECK(k->hasToured);
+        CHECK(tq->State() == ParameterState::Failed);
+        CHECK(tq->MessageFailed() == Localizer38b::Format("#autoLOC_283554", {tq->Title(), name}));
+        ConfigNode n("PARAM");
+        tq->OnSave(n);
+        CHECK(*n.GetValue("kerbalGender") == "Male");
+        RoundTrip(*tq, "KerbalTourParameter");
+        k->hasToured = false;
+    }
+    {
+        Root root;
+        auto* p = root.Own(w, std::make_unique<P38::KerbalGeeAdventureParameter>(name));
+        VRig dead(w, mun, {"mk1pod.v2"});
+        EventReport other(FlightEvents::CREW_KILLED, dead.parts[0].get(), "Somebody Else");
+        events::GameEvents::onCrewKilled.Fire(&other);
+        CHECK(p->State() == ParameterState::Incomplete);
+        // OnKerbalPassedOut completes only when the children are complete (none: AllChildParametersComplete is true)
+        events::GameEvents::onKerbalPassedOutFromGeeForce.Fire(k.get());
+        CHECK(p->State() == ParameterState::Complete);
+        CHECK(k->hasToured);
+        RoundTrip(*p, "KerbalGeeAdventureParameter");
+    }
+}
+
+TEST_CASE("WP-38b asteroid / comet parameters: seeds from docked space objects, tow check, node format; CometDetection; CometScience") {
+    World38b w;
+    Career38b career(w);
+    CelestialBody& sun = w.Body("Sun");
+    VRig r(w, sun, {"mk1pod.v2"}, Vessel::Situations::ORBITING);
+    Part* rock = r.AddPart(w, "mk1pod.v2");
+    rock->AddModule("ModuleAsteroid");
+    PartModule* m = rock->Modules()[rock->Modules().Count() - 1];
+    REQUIRE(m->IsA("ModuleAsteroid"));
+    m->Set<int32_t>("seed", 4711);
+    FlightScope fs(&r.v);
+    Root root;
+    auto* p = root.Own(w, std::make_unique<P38::AsteroidParameter>("c", false));
+    CHECK(p->asteroidClass == "C");
+    // not tracked yet: no seeds
+    CHECK_FALSE(p->VesselTowingAsteroid(&r.v));
+    p->asteroidSeeds.push_back(4711);
+    CHECK(p->VesselTowingAsteroid(&r.v));
+    p->dirtyVessel = true;
+    for (int i = 0; i < 5; ++i) p->Update();
+    CHECK(p->State() == ParameterState::Complete);
+    ConfigNode n("PARAM");
+    p->OnSave(n);
+    CHECK(*n.GetValue("asteroidClass") == "C");
+    CHECK(*n.GetValue("forStation") == "False");
+    CHECK(*n.GetValue("seedList") == "4711");
+    RoundTrip(*p, "AsteroidParameter");
+    // CometDetectionParameter: GameEvents.onSentinelCometDetected counts; the last one completes the parameter and the contract
+    Root root2;
+    auto* cd = root2.Own(w, std::make_unique<P38::CometDetectionParameter>(2, "sentinel"));
+    events::GameEvents::onSentinelCometDetected.Fire(&r.v);
+    CHECK(cd->cometCountDetected == 1);
+    CHECK(cd->RemainingDiscoveries == 1);
+    CHECK(cd->State() == ParameterState::Incomplete);
+    CHECK(L38::FinePrintEnvironment::screenMessages.back() == Localizer38b::Format("#autoLOC_8003397", {"1", "2", Localizer38b::Format(root2.c->Agent()->Title())}));
+    ConfigNode cn("PARAM");
+    cd->OnSave(cn);
+    CHECK(*cn.GetValue("cometCount") == "1");
+    CHECK(*cn.GetValue("cometCountRequired") == "2");
+    RoundTrip(*cd, "CometDetectionParameter");
+    // CometScienceParameter: the subject id changes on rename until the data is collected; OnScience completes the contract
+    Root root3;
+    auto* cs = root3.Own(w, std::make_unique<P38::CometScienceParameter>(77u, "Borrelly", "cometSample_Short@SunInSpaceHigh_Borrelly"));
+    L38::FinePrintEnvironment::cometTypeName = [](Vessel&) { return std::string("Long"); };
+    r.v.persistentId = 77u;
+    events::GameEvents::onVesselRename.Fire(events::GameEvents::HostedFromToAction<Vessel*, std::string>(&r.v, "Borrelly", "Halley"));
+    CHECK(cs->cometName == "Halley");
+    CHECK(cs->scienceSubjectId == "cometSample_Long@SunInSpaceHigh_Halley");
+    events::GameEvents::onVesselPersistentIdChanged.Fire(77u, 78u);
+    CHECK(cs->cometPersistentId == 78u);
+    ScienceData data(5.0f, 1.0f, 0.0f, "cometSample_Long@SunInSpaceHigh_Halley", "Halley");
+    events::GameEvents::OnExperimentDeployed.Fire(&data);
+    CHECK(cs->scienceDataCollected);
+    events::GameEvents::OnTriggeredDataTransmission.Fire(&data, &r.v, true);  // aborted: ignored
+    CHECK(cs->State() == ParameterState::Incomplete);
+    events::GameEvents::OnTriggeredDataTransmission.Fire(&data, &r.v, false);
+    CHECK(cs->State() == ParameterState::Complete);
+    ConfigNode sn("PARAM");
+    cs->OnSave(sn);
+    CHECK(*sn.GetValue("cometName") == "Halley");
+    CHECK(*sn.GetValue("cometPersistentId") == "78");
+    CHECK(*sn.GetValue("scienceDataCollected") == "True");
+    RoundTrip(*cs, "CometScienceParameter");
+    L38::FinePrintEnvironment::cometTypeName = nullptr;
+}
+
+TEST_CASE("WP-38b construction / repair parameters, SpecificOrbit validation and save, Rover and Stationary waypoint parameters") {
+    World38b w;
+    Career38b career(w);
+    CelestialBody& duna = w.Body("Duna");
+    {
+        Root root;
+        auto* p = root.Own(w, std::make_unique<P38::ConstructionParameter>("cupola", 1234u, "Duna Base", &duna));
+        auto* q = root.c->AddParameter(std::make_unique<P38::RepairPartParameter>(55u, "cupola", 1234u, "Duna Base", &duna));
+        q->Register();
+        auto* rp = dynamic_cast<P38::RepairPartParameter*>(q);
+        // vessel / part persistent id changes follow the C# handlers
+        events::GameEvents::onVesselPersistentIdChanged.Fire(1234u, 1235u);
+        CHECK(p->vesselPersistentId == 1235u);
+        CHECK(rp->vesselPersistentId == 1235u);
+        events::GameEvents::onPartPersistentIdChanged.Fire(1235u, 55u, 56u);
+        CHECK(rp->partPersistentId == 56u);
+        events::GameEvents::onPartPersistentIdChanged.Fire(9999u, 56u, 57u);
+        CHECK(rp->partPersistentId == 56u);
+        ConfigNode n("PARAM");
+        rp->OnSave(n);
+        CHECK(*n.GetValue("bodyName") == "Duna");
+        CHECK(*n.GetValue("partName") == "cupola");
+        CHECK(*n.GetValue("partPersistentId") == "56");
+        RoundTrip(*rp, "RepairPartParameter");
+        ConfigNode cn("PARAM");
+        p->OnSave(cn);
+        CHECK(*cn.GetValue("vesselPersistentId") == "1235");
+        RoundTrip(*p, "ConstructionParameter");
+        // wrong vessel / part: nothing happens
+        VRig other(w, duna, {"cupola"}, Vessel::Situations::LANDED);
+        other.v.persistentId = 77u;
+        events::GameEvents::OnEVAConstructionModePartAttached.Fire(&other.v, other.parts[0].get());
+        CHECK(p->State() == ParameterState::Incomplete);
+        events::GameEvents::onPartRepaired.Fire(other.parts[0].get());
+        CHECK(rp->State() == ParameterState::Incomplete);
+    }
+    {
+        // OnConstructionPartAttached (the matching vessel and part name) completes the parameter and then the contract
+        Root root;
+        auto* p = root.Own(w, std::make_unique<P38::ConstructionParameter>("cupola", 1234u, "Duna Base", &duna));
+        VRig r(w, duna, {"cupola"}, Vessel::Situations::LANDED);
+        r.v.persistentId = 1234u;
+        events::GameEvents::OnEVAConstructionModePartAttached.Fire(&r.v, r.parts[0].get());
+        CHECK(p->State() == ParameterState::Complete);
+    }
+    {
+        // OnPartRepaired: the part's persistent id (0 = any part) on the vessel with the persistent id
+        Root root;
+        root.c->prestige = ContractPrestige::Trivial;
+        auto* q = root.Own(w, std::make_unique<P38::RepairPartParameter>(55u, "cupola", 1234u, "Duna Base", &duna));
+        VRig r(w, duna, {"cupola"}, Vessel::Situations::LANDED);
+        r.v.persistentId = 1234u;
+        r.parts[0]->fields.persistentId = 55u;
+        events::GameEvents::onPartRepaired.Fire(r.parts[0].get());
+        CHECK(q->State() == ParameterState::Complete);
+    }
+    {
+        // SpecificOrbitParameter: node format, ValidateOrbit leaves a valid orbit alone
+        Root root;
+        root.c->prestige = ContractPrestige::Significant;
+        auto* p = root.Own(w, std::make_unique<P38::SpecificOrbitParameter>(FP::OrbitType::POLAR, 90.0, 0.01, 800000.0, 12.0, 34.0, 0.5, 100.0, &w.Body("Kerbin"), 5.0));
+        ConfigNode n("PARAM");
+        p->OnSave(n);
+        CHECK(*n.GetValue("TargetBody") == std::to_string(w.Body("Kerbin").flightGlobalsIndex));
+        CHECK(*n.GetValue("deviationWindow") == "5");
+        CHECK(*n.GetValue("orbitType") == "2");
+        CHECK(*n.GetValue("sma") == "800000");
+        CHECK(*n.GetValue("lan") == "12");
+        RoundTrip(*p, "SpecificOrbitParameter");
+        // TriggerRange of the survey parameters follows the ContractDefs trigger ranges
+        const double lo = ContractDefsLite::D("Survey", "", "MinimumTriggerRange");
+        const double hi = ContractDefsLite::D("Survey", "", "MaximumTriggerRange");
+        CHECK_F64b(P38::SurveyWaypointParameter::TriggerRange(L38::FlightBand::GROUND), std::min(lo, hi));
+        CHECK_F64b(P38::SurveyWaypointParameter::TriggerRange(L38::FlightBand::LOW), (lo + hi) / 2.0);
+        CHECK_F64b(P38::SurveyWaypointParameter::TriggerRange(L38::FlightBand::HIGH), hi);
+        CHECK_F64b(P38::SurveyWaypointParameter::TriggerRange(L38::FlightBand::NONE), 0.0);
+    }
+    {
+        // StationaryPointParameter: longitude within deviation / 100 * 360 degrees of the vessel (wrap around 180)
+        VRig r(w, w.Body("Kerbin"), {"mk1pod.v2"}, Vessel::Situations::ORBITING);
+        FlightScope fs(&r.v);
+        Root root;
+        auto* p = root.Own(w, std::make_unique<P38::StationaryPointParameter>(&w.Body("Kerbin"), 179.0, 5.0));
+        p->submittedWaypoint = true;  // OnUpdate acts only once the waypoint was submitted (flight / track station load)
+        r.v.longitude = -179.0;      // 2 degrees away across the date line: within 18 degrees
+        for (int i = 0; i < 5; ++i) p->Update();
+        CHECK(p->State() == ParameterState::Complete);
+        r.v.longitude = 100.0;
+        p->Update();
+        CHECK(p->State() == ParameterState::Incomplete);
+        ConfigNode n("PARAM");
+        p->OnSave(n);
+        CHECK(*n.GetValue("longitude") == "179");
+        CHECK(*n.GetValue("deviation") == "5");
+        RoundTrip(*p, "StationaryPointParameter");
+    }
+    {
+        // RoverWayPointParameter: save format and the persistent id tracking
+        Root root;
+        auto* p = root.Own(w, std::make_unique<P38::RoverWayPointParameter>(1.5, 2.5, 3.5, 4.5, &w.Body("Mun")));
+        p->roverVslId = 11u;
+        events::GameEvents::onVesselPersistentIdChanged.Fire(11u, 12u);
+        CHECK(p->roverVslId == 12u);
+        ConfigNode n("PARAM");
+        p->OnSave(n);
+        CHECK(*n.GetValue("bodyName") == "Mun");
+        CHECK(*n.GetValue("craftEndLat") == "3.5");
+        CHECK(*n.GetValue("roverVslId") == "12");
+        CHECK(n.HasValue("endWPName"));
+        RoundTrip(*p, "RoverWayPointParameter");
+    }
 }
