@@ -427,3 +427,28 @@ TEST_CASE("WP-33 kerbal inventory glue: default inventory, InventoryCosts / Inve
     CHECK(jeb->inventoryNode->GetNode("STOREDPARTS")->GetNodes("STOREDPART").size() == 1);
     KerbalInventory::Uninstall();
 }
+
+// PartModule.cs:960 OnStoredInInventory, dispatched by ModuleInventoryPart.cs:733 StoreCargoPartAtSlot(Part, slot) to every module of the stored part
+TEST_CASE("WP-33 StoreCargoPartAtSlot calls OnStoredInInventory on the part's modules") {
+    if (!GameAvailable()) return;
+    Reset33 r;
+    Game15 g;
+    SceneScope scene(GameScenes::EDITOR);
+    // a stock cargo part with ModuleAnimateGeneric (ModuleAnimateGeneric.cs:358: animSwitch = true, animTime = 0)
+    Part* animated = nullptr;
+    for (const auto& ap : g.data.parts.loadedParts) {
+        if (!ap->partPrefab || ap->partPrefab->FindModuleOfClass("ModuleCargoPart") == nullptr) continue;
+        PartModule* m = ap->partPrefab->FindModuleOfClass("ModuleAnimateGeneric");
+        if (m == nullptr) continue;
+        animated = ap->partPrefab.get();
+        break;
+    }
+    REQUIRE(animated != nullptr);
+    PartModule* anim = animated->FindModuleOfClass("ModuleAnimateGeneric");
+    anim->Set<bool>("animSwitch", false);
+    anim->Set<float>("animTime", 0.5f);
+    Host h(g, "cargoContainer");
+    REQUIRE(h.inv->StoreCargoPartAtSlot(animated, 0));
+    CHECK(anim->Get<bool>("animSwitch"));
+    CHECK(anim->Get<float>("animTime") == 0.0f);
+}

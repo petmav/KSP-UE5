@@ -164,8 +164,8 @@ public:
     virtual void Start();                           // :134 (Unity message)
     void OnStart(StartState state) override;        // :174
     void OnInventoryModeDisable();                  // :181
-    void OnStoredInInventory();                     // :198
-    void OnStoredInInventory(ModuleInventoryPart&) override { OnStoredInInventory(); }  // PartModule.OnStoredInInventory (WP-33)
+    void OnStoredInInventory();                     // :198 (not hooked to PartModule.OnStoredInInventory: SetRetractedState needs the model animators, which a prefab
+                                                    // without a model reader does not have; the shell calls it)
     virtual void OnDestroy();                       // :208
     void LateUpdate();                              // :240
     void OnLoad(const ConfigNode& node) override;   // :271
