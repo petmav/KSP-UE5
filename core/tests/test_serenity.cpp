@@ -1088,3 +1088,443 @@ TEST_CASE("WP-53 deployed science end to end: scan, cluster registration, power,
     GE::onGroundScienceTransmitted.Remove(&n, &Counts::OnTx);
     GE::onGroundScienceGenerated.Remove(&n, &Counts::OnGen);
 }
+
+// =============================================================================================================================
+// ROC definitions, ROCManager, PQSROCControl, ROC
+
+namespace {
+// ROC_DEFINITION fixture nodes: cfg field names of ROCDefinition.Load / RocCBDefinition.Load; NOT game data (the mirror has no Serenity cfgs)
+ConfigNode::NodePtr RocDefNode(const std::string& type, const std::string& prefab, const std::vector<std::pair<std::string, std::vector<std::string>>>& bodies) {
+    auto n = std::make_shared<ConfigNode>("ROC_DEFINITION");
+    n->AddValue("Type", type);
+    n->AddValue("displayName", "Rock " + type);
+    n->AddValue("prefabName", prefab);
+    n->AddValue("modelName", "model");
+    n->AddValue("OrientateUp", true);
+    n->AddValue("Depth", 0.4f);
+    n->AddValue("CanBeTaken", true);
+    n->AddValue("Frequency", 0.5f);
+    n->AddValue("CastShadows", false);
+    n->AddValue("ReceiveShadows", false);
+    n->AddValue("CollisionThreshold", 3.0f);
+    n->AddValue("SmallROC", true);
+    n->AddValue("RandomDepth", false);
+    n->AddValue("RandomOrientation", true);
+    n->AddValue("RandomRotation", false);
+    n->AddValue("burstEmitterMinWait", 10.0f);
+    n->AddValue("burstEmitterMaxWait", 20.0f);
+    n->AddValue("sfxVolume", 0.5f);
+    n->AddValue("idleClip", "Squad/idle");
+    n->AddValue("burstClip", "Squad/burst");
+    n->AddValue("vfxBaseForce", 2.5f);
+    n->AddValue("applyForces", true);
+    n->AddValue("vfxForceRadius", "1.5, 4");
+    n->AddValue("forceDirection", "0, 1, 0");
+    n->AddValue("vfxRadiusCenter", "0.5, 0.25, 0");
+    n->AddValue("Scale", 2.0f);
+    n->AddValue("localSpaceScanPoints", "0, 1, 0");
+    n->AddValue("localSpaceScanPoints", "3, 0, 0");
+    n->AddValue("localSpaceScanPoints", "0, 0, 5");
+    ConfigNode* curve = n->AddNode("VFX_CURVEFORCE");
+    curve->AddValue("key", "0 1 0 0");
+    curve->AddValue("key", "1 0.5 0 0");
+    for (const auto& b : bodies) {
+        ConfigNode* cb = n->AddNode("CELESTIALBODY");
+        cb->AddValue("Name", b.first);
+        for (const std::string& biome : b.second) cb->AddValue("Biome", biome);
+    }
+    return n;
+}
+}  // namespace
+
+TEST_CASE("WP-53 ROCDefinition / RocCBDefinition load, ContainsCBBiome, and the defaults of an empty node") {
+    Clean53 clean;
+    ConfigNode::NodePtr n = RocDefNode("ROC_T1", "ROCT1", {{"Kerbin", {"Grasslands", "Shores"}}, {"Mun", {"Highlands"}}});
+    ROCDefinition d;
+    d.Load(*n);
+    CHECK(d.type == "ROC_T1");
+    CHECK(d.displayName == "Rock ROC_T1");
+    CHECK(d.prefabName == "ROCT1");
+    CHECK(d.orientateUp);
+    CHECK_F32(d.depth, 0.4f);
+    CHECK(d.canBeTaken);
+    CHECK_F32(d.frequency, 0.5f);
+    CHECK(!d.castShadows);
+    CHECK(!d.receiveShadows);
+    CHECK(d.smallRoc);
+    CHECK(!d.randomDepth);
+    CHECK(d.randomOrientation);
+    CHECK(d.idleClipPath == "Squad/idle");
+    CHECK_F32(d.vfxBaseForce, 2.5f);
+    CHECK(d.applyForces);
+    CHECK_F32(d.vfxForceRadius.x, 1.5f);
+    CHECK_F32(d.vfxForceRadius.y, 4.0f);
+    CHECK_F32(d.radiusCenter.y, 0.25f);
+    CHECK_F32(d.scale, 2.0f);
+    REQUIRE(d.localSpaceScanPoints.size() == 3);
+    CHECK_F32(d.localSpaceScanPoints[1].x, 3.0f);
+    REQUIRE(d.vfxCurveForce.has_value());
+    CHECK_F32(d.vfxCurveForce->Evaluate(0.0f), 1.0f);
+    CHECK_F32(d.vfxCurveForce->Evaluate(1.0f), 0.5f);
+    // ContainsCBBiome walks the body list
+    RocCBDefinition k;
+    k.Load(*n->GetNodes("CELESTIALBODY")[0]);
+    CHECK(k.name == "Kerbin");
+    CHECK(k.biomes == std::vector<std::string>({"Grasslands", "Shores"}));
+    d.myCelestialBodies = {k};
+    CHECK(d.ContainsCBBiome("Kerbin", "Shores"));
+    CHECK(!d.ContainsCBBiome("Kerbin", "Mountains"));
+    CHECK(!d.ContainsCBBiome("Mun", "Shores"));
+    // defaults of the C# initialisers
+    ROCDefinition e;
+    ConfigNode none("ROC_DEFINITION");
+    e.Load(none);
+    CHECK(e.castShadows);
+    CHECK(e.receiveShadows);
+    CHECK_F32(e.scale, 1.0f);
+    CHECK(!e.vfxCurveForce.has_value());
+    CHECK(e.localSpaceScanPoints.empty());
+    // an empty VFX_CURVEFORCE node (no values) leaves the curve null
+    ConfigNode withEmptyCurve("ROC_DEFINITION");
+    withEmptyCurve.AddNode("VFX_CURVEFORCE");
+    ROCDefinition f;
+    f.Load(withEmptyCurve);
+    CHECK(!f.vfxCurveForce.has_value());
+    // RocCBDefinition.Load with no Name: GetValue returns null (kept as the empty name here)
+    RocCBDefinition noname;
+    ConfigNode cbEmpty("CELESTIALBODY");
+    noname.Load(cbEmpty);
+    CHECK(noname.name.empty());
+    CHECK(noname.biomes.empty());
+}
+
+TEST_CASE("WP-53 ROCManager: definitions, prefab checks, body / biome validation, PQSROCControl population, ROCSeed switch, removed ROCs, stats") {
+    Clean53 clean;
+    WorldSer w;
+    CelestialBody& kerbin = w.Kerbin();
+    CelestialBody& mun = *w.sys->GetBodyByName("Mun");
+    REQUIRE(kerbin.BiomeMap.has_value());
+    REQUIRE(mun.BiomeMap.has_value());
+    const std::string kb0 = kerbin.BiomeMap->Attributes[0].name, kb1 = kerbin.BiomeMap->Attributes[1].name;
+    const std::string mb0 = mun.BiomeMap->Attributes[0].name;
+    // A: an unknown body first (C# indexes the list again after RemoveAt: an invalid body must not be the last entry), Kerbin with two valid
+    // biomes + one invalid, Mun with only invalid biomes; B: prefab without a ROC component; C: prefab missing, only a Mun entry with an invalid biome
+    std::vector<ConfigNode::NodePtr> defs = {
+        RocDefNode("ROC_A", "PrefabA", {{"NoSuchBody", {"X"}}, {"Kerbin", {kb0, "NoSuchBiome", kb1}}, {"Mun", {"NoSuchBiome"}}}),
+        RocDefNode("ROC_B", "PrefabB", {{"Mun", {mb0}}}),
+        RocDefNode("ROC_C", "PrefabC", {{"Mun", {"NoSuchBiome"}}}),
+        RocDefNode("ROC_D", "PrefabD", {{"Mun", {mb0}}}),
+    };
+    auto prior = ScienceEnvironment::getConfigNodes;
+    ScienceEnvironment::getConfigNodes = [&](std::string_view t) {
+        if (t == "ROC_DEFINITION") {
+            std::vector<ConfigNode*> r;
+            for (auto& d : defs) r.push_back(d.get());
+            return r;
+        }
+        return prior(t);
+    };
+    RocEnvironment::prefabState = [](const std::string& name) { return name == "PrefabB" ? 1 : (name == "PrefabC" ? 0 : 2); };
+
+    ROCManager mgr;
+    mgr.Awake();
+    REQUIRE(ROCManager::Instance == &mgr);
+    CHECK(SaveEnvironment::Current().rocManager == &mgr);  // the save model's removed-ROC list is the manager's
+    mgr.Start();
+    // B had a prefab without ROC component: removed; C had no prefab: kept (warning only)
+    std::vector<ROCDefinition*> list = mgr.rocDefinitions();
+    REQUIRE(list.size() == 3);
+    CHECK(list[0]->type == "ROC_A");
+    CHECK(list[1]->type == "ROC_C");
+    CHECK(list[2]->type == "ROC_D");
+    CHECK(mgr.rocTypeObjects.ContainsKey("ROC_A"));
+    CHECK(!mgr.rocTypeObjects.ContainsKey("ROC_B"));
+    CHECK(!mgr.rocTypeObjects.ContainsKey("ROC_C"));
+    CHECK(mgr.rocTypeObjects["ROC_A"]->name == "PrefabA(Clone)");
+    CHECK(mgr.rocTypeObjects["ROC_A"]->type == "ROC_A");
+    CHECK_F32(mgr.rocTypeObjects["ROC_A"]->scale, 2.0f);
+    CHECK(mgr.rocTypeObjects["ROC_A"]->localSpaceScanPoints.size() == 3);
+
+    // GetROCControlFromCB: ValidateCBBiomeCombos then a LandClassROC per matching definition / body
+    PQSROCControl kerbinControl, munControl;
+    kerbinControl.currentCBName = "Kerbin";
+    munControl.currentCBName = "Mun";
+    RocPqsView view;
+    view.maxLevel = 6;
+    RocEnvironment::bodyRocControl = [&](CelestialBody* b) -> PQSROCControl* {
+        if (b == &kerbin) return &kerbinControl;
+        if (b == &mun) return &munControl;
+        return nullptr;
+    };
+    RocEnvironment::pqsOf = [&](PQSROCControl*) { return std::optional<RocPqsView>(view); };
+    mgr.GetROCControlFromCB();
+    list = mgr.rocDefinitions();
+    REQUIRE(list.size() == 2);  // C lost its only (empty-biome) body entry and was removed; A keeps Kerbin with the 2 valid biomes
+    CHECK(list[0]->type == "ROC_A");
+    CHECK(list[1]->type == "ROC_D");
+    REQUIRE(list[0]->myCelestialBodies.size() == 1);
+    CHECK(list[0]->myCelestialBodies[0].name == "Kerbin");
+    CHECK(list[0]->myCelestialBodies[0].biomes == std::vector<std::string>({kb0, kb1}));
+    REQUIRE(list[1]->myCelestialBodies.size() == 1);
+    CHECK(list[1]->myCelestialBodies[0].name == "Mun");
+    REQUIRE(mgr._pqsRocControls.size() == 2);
+    CHECK(kerbinControl.rocs.size() == 1);  // ROC_A on Kerbin
+    CHECK(munControl.rocs.size() == 1);     // ROC_D on Mun
+    CHECK(kerbinControl.rocs[0]->rocName == "ROC_A");
+    CHECK(kerbinControl.rocs[0]->celestialBody == &kerbin);
+    CHECK(kerbinControl.rocs[0]->minLevel == 6);
+    CHECK(kerbinControl.rocs[0]->maxCache == 120);  // (int)(max(frequency, 1) * maxLevel * 20)
+    CHECK(kerbinControl.rocs[0]->rocObjectName == "PrefabA(Clone)");
+    CHECK(munControl.rocs[0]->rocObjectName == "PrefabD(Clone)");
+
+    // ---- the ROCSeed of the loaded game decides whether ROCs are active (OnGameStateLoad through the event bus)
+    Game game;
+    game.Mode = Game_Modes::CAREER;
+    SaveEnvironment::Current().currentGame = &game;
+    PQS pqsK, pqsM;
+    kerbinControl.sphere = &pqsK;
+    munControl.sphere = &pqsM;
+    kerbinControl.sphereView.isStarted = true;
+    munControl.sphereView.isStarted = false;
+    game.ROCSeed = 5;
+    ConfigNode loadNode("GAME");
+    GE::onGameStateLoad.Fire(&loadNode);
+    CHECK(mgr.RocsEnabledInCurrentGame());
+    CHECK(kerbinControl.modEnabled);
+    CHECK(munControl.modEnabled);
+    CHECK(RocEnvironment::resetModListCalls == 1);  // only the started sphere is reset when enabling
+    game.ROCSeed = -1;
+    GE::onGameStateLoad.Fire(&loadNode);
+    CHECK(!mgr.RocsEnabledInCurrentGame());
+    CHECK(!kerbinControl.modEnabled);
+    CHECK(!munControl.modEnabled);
+    CHECK(RocEnvironment::resetModListCalls == 3);  // disabling resets every sphere
+    GE::onGameNewStart.Fire();
+    CHECK(mgr.RocsEnabledInCurrentGame());
+    mgr.SetROCsStateForGame(false);
+    mgr.onMissionStarted(nullptr);
+    CHECK(mgr.RocsEnabledInCurrentGame());
+
+    // ---- removed ROCs: shared with the save model (Game.Save / Game(ConfigNode) use SaveEnvironment::rocManager)
+    CHECK(!mgr.ROCRemoved(77));
+    mgr.RemoveROC(77);
+    mgr.RemoveROC(77);
+    mgr.RemoveROC(-3);
+    CHECK(mgr.ROCRemoved(77));
+    CHECK(mgr.removedROCs == std::vector<int>({77, -3}));
+    ConfigNode removed("ROCS");
+    mgr.SaveRemoveROCs(removed);
+    CHECK(removed.GetValuesList("ROCId") == std::vector<std::string>({"77", "-3"}));
+    ConfigNode toLoad("ROCS");
+    toLoad.AddValue("ROCId", "5");
+    toLoad.AddValue("ROCId", "x");
+    toLoad.AddValue("ROCId", "5");
+    toLoad.AddValue("ROCId", "12");
+    mgr.LoadRemovedROCs(toLoad);
+    CHECK(mgr.removedROCs == std::vector<int>({5, 12}));
+
+    // ---- PQSROCControl quad flow: area from the mesh bounds, biome gate, AddScatterMeshController, stats
+    kerbinControl.celestialBody = &kerbin;
+    PQSROCControl::quadInfo = nullptr;
+    kerbinControl.OnSetup();
+    CHECK(kerbinControl.rocCount == 1);
+    CHECK(kerbinControl.rocMinSubdev == 6);
+    PQ pq;
+    pq.subdivision = 5;
+    kerbinControl.OnQuadPreBuild(pq);
+    CHECK(!kerbinControl.rocsActive);  // below the minimum subdivision
+    pq.subdivision = 6;
+    kerbinControl.OnQuadPreBuild(pq);
+    CHECK(kerbinControl.rocsActive);
+    PQSVertexBuildData bd;
+    bd.allowScatter = true;
+    kerbinControl.OnVertexBuild(bd);
+    CHECK(kerbinControl.allowROCScatter);
+    RocQuad rq;
+    rq.name = "Kerbin_quad_1";
+    rq.hasMesh = true;
+    rq.meshBoundsSize = Vector3f(2000.0f, 5.0f, 3000.0f);
+    for (int i = 0; i < 225; i++) {
+        rq.verts.push_back(Vector3f(static_cast<float>(i), 600000.0f, static_cast<float>(2 * i)));
+        rq.vertNormals.push_back(Vector3f(0.0f, 1.0f, 0.0f));
+    }
+    PQSROCControl::quadInfo = [&](const PQ&) { return &rq; };
+    ScienceEnvironment::biomeAtt = [&](const CelestialBody& b, double, double) -> const CBAttributeMapSO::MapAttribute* { return &b.BiomeMap->Attributes[0]; };
+    mgr.debugROCStats = true;
+    game.ROCSeed = 5;
+    kerbinControl.OnQuadBuilt(pq);
+    CHECK_F32(kerbinControl.quadArea, 6.0f);  // 2000 / 1000 * 3000 / 1000
+    CHECK(!kerbinControl.rocsActive);         // reset after a build
+    CHECK(kerbinControl.rocs[0]->gameSeed == 5);
+    CHECK(kerbinControl.rocs[0]->quadSeed == StringExtensions::GetHashCode_Net35(rq.name) + StringExtensions::GetHashCode_Net35("ROC_A") + 5);
+    CHECK(kerbinControl.rocs[0]->rocN == 3);  // frequency 0.5 * area 6
+    REQUIRE(mgr.rocStats.ContainsKey("ROC_A"));
+    CHECK(mgr.rocStats["ROC_A"]->activeQuads == 1);
+    CHECK_F32(mgr.rocStats["ROC_A"]->activeQuadArea, 6.0f);
+    CHECK_F32(mgr.rocStats["ROC_A"]->rocTypeFrequency, 0.5f);
+    CHECK(kerbinControl.quadAppliedROCTypes.ContainsKey(StringExtensions::GetHashCode_Net35(rq.name)));
+    // build the ROCs of that quad and count them
+    std::vector<RocPlacement> placed = kerbinControl.rocs[0]->CreateScatterMesh(kerbinControl.rocs[0]->lastAssigned);
+    CHECK(!placed.empty());
+    CHECK(placed.size() <= 3);
+    mgr.AddROCStats_ROCs("ROC_A", static_cast<int>(placed.size()), 0.5f);
+    CHECK(mgr.rocStats["ROC_A"]->activeRocCount == static_cast<int>(placed.size()));
+    CHECK_F32(mgr.rocStats["ROC_A"]->rocCoverage(), f32store(fx(static_cast<float>(placed.size())) / fx(6.0f)));
+    int statChanges = 0;
+    mgr.OnStatsChanged = [&statChanges] { ++statChanges; };
+    // a quad whose biome is not in the definition does nothing
+    ScienceEnvironment::biomeAtt = [&](const CelestialBody& b, double, double) -> const CBAttributeMapSO::MapAttribute* { return &b.BiomeMap->Attributes.back(); };
+    kerbinControl.OnQuadPreBuild(pq);
+    RocQuad rq2;
+    rq2.name = "Kerbin_quad_2";
+    rq2.hasMesh = false;
+    rq2.quadArea = 5.0e10;
+    PQSROCControl::quadInfo = [&](const PQ&) { return &rq2; };
+    kerbinControl.OnQuadBuilt(pq);
+    CHECK(mgr.rocStats["ROC_A"]->activeQuads == 1);  // unchanged
+    // no mesh: the area comes from quad.quadArea / 1e10
+    ScienceEnvironment::biomeAtt = [&](const CelestialBody& b, double, double) -> const CBAttributeMapSO::MapAttribute* { return &b.BiomeMap->Attributes[1]; };
+    kerbinControl.OnQuadPreBuild(pq);
+    kerbinControl.OnVertexBuild(bd);
+    kerbinControl.OnQuadBuilt(pq);
+    CHECK_F32(kerbinControl.quadArea, 5.0f);
+    CHECK(mgr.rocStats["ROC_A"]->activeQuads == 2);
+    CHECK(statChanges >= 1);
+    kerbinControl.OnQuadDestroy(pq);
+    CHECK(mgr.rocStats["ROC_A"]->activeQuads == 1);
+    CHECK_F32(mgr.rocStats["ROC_A"]->activeQuadArea, 6.0f);  // 6 + 5 - 5 (the subtraction uses the control's current quadArea)
+    mgr.SubtractROCStats_ROCs("ROC_A", static_cast<int>(placed.size()));
+    CHECK(mgr.rocStats["ROC_A"]->activeRocCount == 0);
+    // sphere started / reset build and drop the caches
+    kerbinControl.rocs[0]->ClearCache();
+    CHECK(kerbinControl.rocs[0]->cacheUnassignedCount == 0);
+    CHECK(mgr.rocStats.Count() == 0);  // ClearCache clears the stats
+    kerbinControl.OnSphereStarted();
+    CHECK(kerbinControl.rocs[0]->cacheUnassignedCount == kerbinControl.rocs[0]->maxCache);
+    kerbinControl.OnSphereReset();
+    CHECK(kerbinControl.rocs[0]->cacheUnassignedCount == 0);
+    mgr.ClearROCsCache();
+    kerbinControl.rocs.clear();
+    munControl.rocs.clear();
+    PQSROCControl::quadInfo = nullptr;
+    SaveEnvironment::Current().currentGame = nullptr;
+}
+
+TEST_CASE("WP-53 ROC: scan positions, raycast variant, collisions, pick up, and the Perform Experiment hook on a science module") {
+    Clean53 clean;
+    WorldSer w;
+    ResearchAndDevelopment rd;
+    rd.Awake();
+    ConfigNode rdEmpty("ResearchAndDevelopment");
+    rd.OnLoad(rdEmpty);
+    ROCManager mgr;
+    mgr.Awake();
+    ROCDefinition d;
+    d.Load(*RocDefNode("ROC_A", "PrefabA", {{"Kerbin", {"Grasslands"}}}));
+    ROC roc;
+    roc.SetStats(d.type, d.displayName, d.prefabName, d.modelName, d.orientateUp, d.depth, d.canBeTaken, d.frequency, d.myCelestialBodies, d.castShadows,
+                 d.receiveShadows, d.collisionThreshold, d.smallRoc, d.randomDepth, d.randomOrientation, d.localSpaceScanPoints, d.burstEmitterMinWait,
+                 d.burstEmitterMaxWait, d.randomRotation, d.scale, d.sfxVolume, d.idleClipPath, d.burstClipPath, d.vfxCurveForce, d.vfxBaseForce, d.applyForces,
+                 d.vfxForceRadius, d.forceDirection, d.radiusCenter);
+    roc.rocID = 4242;
+    roc.modelTransform.position = Vector3f(10.0f, 0.0f, 0.0f);
+    roc.modelTransform.localScale = Vector3f(2.0f, 2.0f, 2.0f);
+    // GetClosestScanPosition: local points (0,1,0), (3,0,0), (0,0,5) -> world (10,2,0), (16,0,0), (10,0,10)
+    float dist = 0.0f;
+    Vector3f p = roc.GetClosestScanPosition(Vector3f(10.0f, 3.0f, 0.0f), dist);
+    CHECK_F32(p.x, 10.0f);
+    CHECK_F32(p.y, 2.0f);
+    CHECK_F32(dist, 1.0f);
+    p = roc.GetClosestScanPosition(Vector3f(15.0f, 0.5f, 0.0f), dist);
+    CHECK_F32(p.x, 16.0f);
+    CHECK_F32(dist, f32store(std::sqrt(1.0 + 0.25)));
+    roc.localSpaceScanPoints.clear();
+    p = roc.GetClosestScanPosition(Vector3f(10.0f, 3.0f, 4.0f), dist);  // no scan points: the model origin
+    CHECK_F32(p.x, 10.0f);
+    CHECK_F32(dist, 5.0f);
+    // the ray variant: sorted by distance, the first point whose ray hits a ROC-tagged collider wins; none hits -> the plain result
+    roc.localSpaceScanPoints = d.localSpaceScanPoints;
+    int rays = 0;
+    RocEnvironment::raycastHitsRoc = [&](const Vector3f&, const Vector3f&, float maxDistance, float& hit) {
+        ++rays;
+        hit = maxDistance * 0.5f;
+        return rays == 2;  // the second nearest point is the first visible one
+    };
+    p = roc.GetClosestScanPositionWithRaycasts(Vector3f(10.0f, 3.0f, 0.0f), dist);
+    CHECK(rays == 2);
+    CHECK_F32(p.x, 16.0f);  // distance order: (10,2,0) < (16,0,0) < (10,0,10)
+    CHECK_F32(dist, f32store(std::sqrt(6.0 * 6.0 + 3.0 * 3.0)) * 0.5f);
+    rays = -100;
+    p = roc.GetClosestScanPositionWithRaycasts(Vector3f(10.0f, 3.0f, 0.0f), dist);
+    CHECK_F32(p.y, 2.0f);
+    CHECK_F32(dist, 1.0f);
+    // collisions: only fast vessels and small ROCs
+    Vessel slow, fast;
+    slow.speed = 2.0;
+    fast.speed = 3.5;
+    roc.CheckCollision(slow);
+    CHECK(!roc.destroyed);
+    CHECK(!mgr.ROCRemoved(4242));
+    roc.CheckCollision(fast);
+    CHECK(roc.destroyed);
+    CHECK(mgr.ROCRemoved(4242));
+    REQUIRE(RocEnvironment::rocExplosions.size() == 1);
+    CHECK_F64(RocEnvironment::rocExplosions[0].second, 0.30000001192092896);
+    ROC big = roc;
+    big.destroyed = false;
+    big.smallROC = false;
+    big.rocID = 9;
+    big.CheckCollision(fast);
+    CHECK(!big.destroyed);
+    big.PickUpROC();
+    CHECK(big.destroyed);
+    CHECK(mgr.ROCRemoved(9));
+    CHECK_F32(roc.GetVFXForceScale(0.5f), roc.vfxCurveForce->Evaluate(0.5f));
+
+    // Perform Experiment: the experiment "<experimentID>_<ROC type>" must exist
+    auto prior = ScienceEnvironment::getConfigNodes;
+    std::shared_ptr<ConfigNode> synth;
+    ScienceEnvironment::getConfigNodes = [&](std::string_view t) {
+        std::vector<ConfigNode*> r = prior(t);
+        if (t == "EXPERIMENT_DEFINITION") {
+            if (!synth) {
+                for (ConfigNode* n : r)
+                    if (n->GetValue("id") == std::optional<std::string>("mysteryGoo")) synth = n->CreateCopy();
+                REQUIRE(synth != nullptr);
+                synth->SetValue("id", "mysteryGoo_ROC_A");
+            }
+            r.push_back(synth.get());
+        }
+        return r;
+    };
+    ResearchAndDevelopment::ResetStatics();
+    Vessel* v = w.Mk("GooExperiment", 7301, {});
+    FlightRegistry::ActiveVessel = v;
+    auto* exp = WorldSer::Mod<ModuleScienceExperiment>(*v->parts[0], "ModuleScienceExperiment");
+    exp->fxModuleIndices.reset();
+    exp->OnStart(StartState::PreLaunch);
+    exp->Set<int>("usageReqMaskInternal", 0);
+    CHECK(roc.PerformExperiment(exp));
+    CHECK(exp->experiment != nullptr);
+    CHECK(*exp->experiment->id == "mysteryGoo_ROC_A");
+    CHECK(exp->HasExperimentData());
+    CHECK(exp->subject->id.rfind("mysteryGoo_ROC_A@KerbinSrfLanded", 0) == 0);
+    ROC other = roc;
+    other.type = "ROC_Z";
+    ModuleScienceExperiment* none = nullptr;
+    CHECK_THROWS_AS(other.PerformExperiment(none), NullReferenceException);
+    ResearchAndDevelopment::ResetStatics();
+    FlightRegistry::ActiveVessel = nullptr;
+}
+
+TEST_CASE("WP-53 ROCManager.ValidateCBBiomeCombos keeps the C# quirk: an unknown body that is the last entry indexes past the list") {
+    Clean53 clean;
+    WorldSer w;
+    ROCManager mgr;
+    mgr.Awake();
+    mgr._rocDefinitions.push_back(std::make_unique<ROCDefinition>());
+    mgr._rocDefinitions[0]->type = "ROC_Q";
+    mgr._rocDefinitions[0]->myCelestialBodies.push_back(RocCBDefinition("NoSuchBody", {"X"}));
+    // ROCManager.cs:260: RemoveAt(num2) is followed by `myCelestialBodies[num2].biomes.Count` on the same index (ArgumentOutOfRangeException)
+    CHECK_THROWS_AS(mgr.ValidateCBBiomeCombos(), std::out_of_range);
+}
