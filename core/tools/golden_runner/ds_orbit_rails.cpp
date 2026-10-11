@@ -221,8 +221,8 @@ static int RunOrbitRails(const RunnerOptions& opt) {
     TimeWarp::environment = &twEnv;
     PadVessel padVessel(kerbin);
     FlightGlobals::ready = true;
-    FlightGlobals::ActiveVessel = &padVessel;
-    FlightGlobals::VesselsLoaded = {&padVessel};
+    FlightGlobals::ActiveVesselView = &padVessel;
+    FlightGlobals::VesselsLoadedView = {&padVessel};
     FlightGlobals::currentMainBody = kerbin;
     TimeWarp timeWarp;
     timeWarp.LoadStockPrefab();
@@ -372,8 +372,8 @@ static int RunOrbitRails(const RunnerOptions& opt) {
     TimeWarp::fetch = nullptr;
     TimeWarp::environment = nullptr;
     FlightGlobals::ready = false;
-    FlightGlobals::ActiveVessel = nullptr;
-    FlightGlobals::VesselsLoaded.clear();
+    FlightGlobals::ActiveVesselView = nullptr;
+    FlightGlobals::VesselsLoadedView.clear();
     FlightGlobals::currentMainBody = nullptr;
     probes.clear();  // OrbitDriver.OnDestroy: out of Planetarium.Orbits
     return WriteCandidate(opt, g, "orbit_rails/orbit_rails.json");

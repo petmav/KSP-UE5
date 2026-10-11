@@ -26,84 +26,6 @@ namespace ksp {
 using GE = events::GameEvents;
 using Localizer = KSP::Localization::Localizer;
 
-// ============================================================ FlightRegistry (FlightGlobals statics)
-
-namespace {
-template <class T>
-void EraseFirst(std::vector<T>& v, const T& x) {
-    auto it = std::find(v.begin(), v.end(), x);
-    if (it != v.end()) v.erase(it);
-}
-template <class T>
-bool Contains(const std::vector<T>& v, const T& x) {
-    return std::find(v.begin(), v.end(), x) != v.end();
-}
-}  // namespace
-
-// FlightGlobals.cs:272 (the persistentId dictionaries are SaveEnvironment's: not touched here)
-void FlightRegistry::AddVessel(Vessel* v) {
-    Vessels.push_back(v);
-    if (v->loaded) VesselsLoaded.push_back(v);
-    else VesselsUnloaded.push_back(v);
-}
-
-// FlightGlobals.cs:305
-void FlightRegistry::RemoveVessel(Vessel* v) {
-    EraseFirst(Vessels, v);
-    if (v->loaded) EraseFirst(VesselsLoaded, v);
-    else EraseFirst(VesselsUnloaded, v);
-}
-
-// FlightGlobals.cs:335
-void FlightRegistry::SortVessel(Vessel* v, bool loaded) {
-    if (loaded) {
-        if (Contains(VesselsUnloaded, v)) {
-            EraseFirst(VesselsUnloaded, v);
-            VesselsLoaded.push_back(v);
-        }
-    } else if (Contains(VesselsLoaded, v)) {
-        EraseFirst(VesselsLoaded, v);
-        VesselsUnloaded.push_back(v);
-    }
-}
-
-// FlightGlobals.cs:366 (searched from the end)
-Vessel* FlightRegistry::FindVessel(const Guid& id) {
-    int count = static_cast<int>(Vessels.size());
-    while (count-- > 0)
-        if (Vessels[static_cast<size_t>(count)]->id == id) return Vessels[static_cast<size_t>(count)];
-    return nullptr;
-}
-
-// FlightGlobals.cs:1653
-Part* FlightRegistry::FindPartByID(uint32_t flightID) {
-    if (flightID == 0) {
-        log::Warning("Warning: Tried to search for a part with ID 0");
-        return nullptr;
-    }
-    int count = static_cast<int>(VesselsLoaded.size());
-    while (count-- > 0) {
-        Vessel* vessel = VesselsLoaded[static_cast<size_t>(count)];
-        int count2 = static_cast<int>(vessel->parts.size());
-        while (count2-- > 0)
-            if (vessel->parts[static_cast<size_t>(count2)]->fields.flightID == flightID) return vessel->parts[static_cast<size_t>(count2)];
-    }
-    return nullptr;
-}
-
-void FlightRegistry::Clear() {
-    Vessels.clear();
-    VesselsLoaded.clear();
-    VesselsUnloaded.clear();
-    ActiveVessel = nullptr;
-    ready = false;
-}
-
-const std::vector<CelestialBody*>& FlightRegistry::Bodies() {
-    if (FlightGlobals::bodies != nullptr) return *FlightGlobals::bodies;
-    return SaveEnvironment::Current().localBodies;
-}
-
 // ============================================================ FlightMath
 
 // FlightGlobals.cs:1471
@@ -237,6 +159,7 @@ Vessel::~Vessel() {
     GE::onPartVesselNamingChanged.Remove(this, &Vessel::OnPartVesselNamingChanged);
     GE::onVesselWasModified.Remove(this, &Vessel::OnVesselNamingVesselWasModified);
     GE::onCrewTransferred.Remove(this, &Vessel::onCrewTransferred);
+    precalc.OnDestroy();  // VesselPrecalculate.OnDestroy (a component of the same GameObject)
     FlightRegistry::RemoveVessel(this);
     if (FlightRegistry::ActiveVessel == this) FlightRegistry::ActiveVessel = nullptr;
     for (Part* p : parts)
@@ -442,7 +365,7 @@ Orbit* Vessel::GetCurrentOrbit() {
 
 // Vessel.cs:996
 Vector3d Vessel::GetWorldPos3D() {
-    if (!precalc.firstStatsRunComplete) CalculatePhysicsStats();
+    if (!precalc.firstStatsRunComplete) precalc.CalculatePhysicsStats();
     return CoMD;
 }
 
@@ -457,7 +380,7 @@ void Vessel::SetLoaded(bool loaded_) {
 
 // Vessel.cs:1015
 bool Vessel::checkLanded() {
-    if (loaded && !packed && !precalc.isEasingGravity) {
+    if (loaded && !packed && !precalc.isEasingGravity()) {
         Landed = false;
         for (Part* part : parts)
             if (part->fields.GroundContact || part->fields.PermanentGroundContact) {
@@ -550,7 +473,7 @@ void Vessel::updateSituation() {
     } else {
         flag = false;
         if (Landed) {
-            if (situation == Situations::PRELAUNCH && (!(srfSpeed > 2.5) || precalc.isEasingGravity || vesselSpawning))
+            if (situation == Situations::PRELAUNCH && (!(srfSpeed > 2.5) || precalc.isEasingGravity() || vesselSpawning))
                 situation = Situations::PRELAUNCH;
             else
                 situation = Situations::LANDED;
