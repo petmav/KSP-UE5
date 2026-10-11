@@ -41,6 +41,7 @@ Updated 2026-10-11 (WP-35, WP-36, WP-37, WP-39, WP-40, small fixes wave 5; 2026-
 | 31. WP-37 contract system core and stock templates (branch `wp37`, from main `7199d110`, `wp36` merged first, main `dcef6d17` merged) | done for the engine-agnostic part, unit-gated (no contract golden or capture exists, every existing gate unchanged): Contract state machine / rewards / expiry and deadline maths through the WP-36 GameVariables and currency pipeline, ContractParameter tree, ContractSystem (generation, weights, GetContractCounts, WEIGHTS / CONTRACTS save format), Agents + 19 mentalities, TextGen, 19 stock parameters, 5 predicates, PartTestConstraint, the real ModuleTestSubject PartModule, ScenarioCustomWaypoints, templates PlantFlag / CollectScience / PartTest / RecoverAsset / GrandTour; compared 0 ULP / byte-exact with the independent `tools/wp37/contract_reference.py` (rewards, expiry, mentalities, counts, weights, 189 TextGen strings, 284 generated contracts incl. ContractID, 1,426 part CONSTRAINT nodes); deferred: VesselRepair / OrbitalConstruction / RoverConstruction templates (WP-38 dependencies), see the section. |
 | 32. WP-38 FinePrint utilities, waypoints, orbit generation, ExplorationContract (branch `wp38`, from main `85b0085f`, main `13750b33` merged) | a coherent subset, unit-gated (no FinePrint golden or capture exists, every existing gate unchanged): `ProgressUtilities` rest (world-first rewards, prestige, record tracks), `CelestialUtilities`, deviation maths, `OrbitUtilities` complete (`GenerateOrbit`, `ValidateOrbit`, `IdentifyOrbit`), `Waypoint` data side and `WaypointManager.ChooseRandomPosition*`, `ProgressTrackingParameter`, `ExplorationContract` (the mandatory type); compared 0 ULP / byte-exact with the independent `tools/wp38/fineprint_reference.py` (184 KSPRandom values, 2,352 world-first rewards, 90 + 48 random positions, 448 parameter texts, 540 generated or refused ExplorationContracts); the final `GenerateOrbit` orbit agrees with the draw-level elements to 1e-12 relative; deferred: the other 24 FinePrint parameters (so GrandTour's factory seams and the VesselRepair / OrbitalConstruction / RoverConstruction templates stay open), the 8 other FinePrint contracts, Sentinel, VesselUtilities, CompatibilityUtilities, full ContractDefs; see the section. |
 | 33. WP-42 scene flow, KSC, facilities, launch sites (branch `wp42`, from main `85b0085f`, main `13750b33` merged) | done for the engine-agnostic part, unit-gated (no golden or capture covers launch sites / the KSC / facilities, every existing gate unchanged): PQSCity / PQSCity2 placement (float32 `localPosition`, reorient quaternion, lat / lon / alt, Randomize, seeds, `GetRandomLatitudeAndLongitude`), SpaceCenter, LaunchSite / KSCSiteNode, PSystemSetup (facility / launch-site registry, SetupLaunchSites coroutine, scene-mode data effects, `InstallSeams` filling the WP-36 / WP-40 / WP-18 seams), HighLogic scene flow, DestructibleBuilding state machine, SpaceCenterBuilding + 9 facility classes (damage / repair / upgrade / entry rules, LaunchSiteFacility pre-flight test assembly), FlightDriver / EditorDriver state and launch-site validity; compared 0 ULP / byte-exact with the independent `tools/wp42/ksc_reference.py` (KSC position, 247-point great-circle grid, 16 launch-site pairs, 14 city placements, 39 real KSC DestructibleBuilding save nodes); WP-36 recovery test now runs on the real seam (reference KSC corrected by ~6 m); `SpaceCenterFacility` enum de-duplicated into `save_enums.hpp` | see "WP-42" below: the level scene (`PSystemSetup.facilities` / `stocklaunchsites`, DestructibleBuilding / UpgradeableFacility prefab values) is not extracted (fixtures marked), terrain-snapped placement needs an in-game capture, `Quaternion.Lerp` unverified; Unity scene / camera / GUI parts are documented seams (WP-46 / WP-47 / WP-48) |
+| 34. WP-53 Breaking Ground deployed science, ROCs and the Serenity contracts (branch `wp53`, from main `af3798c6`) | done for the engine-agnostic part, unit-gated against an independent Python reference at 0 ULP (no golden or capture exists; the GameData mirror has no SquadExpansion/Serenity data, so every Serenity-specific input is a labelled fixture): the five `ModuleGround*` modules on a `ModuleCargoPart` base, the deployed-science runtime (scenario, cluster, part, experiment: power rules, diminishing returns, science accumulation, R&D transmission, seismic events, save / load), the ROC chain (definitions, manager, `LandClassROC` deterministic seeding and placement, `PQSROCControl`), the three Serenity contracts and their parameters, `ControlledBase` / `RoboticCollisions` / `SerenityUtils`; rendering, physics, PQS quad meshes, EVA inventory and UI are seams. See the WP-53 section |
 
 ## Test results (all 35 ctest tests pass (34 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience)
 
@@ -4291,6 +4292,116 @@ Not ported (documented, scene / GUI only; owners): `DestroyOnSceneSwitch`, `DoNo
 Windows MSVC RelWithDebInfo (`core/build` deleted, `run_tests.ps1 -Fresh`, main `13750b33` merged): 34/34 ctest, `unit` 576 doctest cases / 936,215 assertions (WP-42: 10 cases / 1,044; WP-36 `test_progress.cpp` 31 cases / 36,940, +12 assertions from the RecoveryWorld seam checks); configure 2.7 s, build 188.7 s, test 296.8 s. Linux clang (WSL, `run_tests.sh -f`, shared machine under contention): 34/34 ctest, configure 14 s, build 309 s, test 4,265 s; `kspcore_tests -tc='WP-42*'` 10 cases / 1,044 assertions (same as Windows). Gatekeeper re-run (fresh `core/build`, both toolchains, `kspcore_tests | grep -E "test cases|assertions"`): Windows MSVC 34/34, 576 cases / 936,215 assertions; Linux clang 34/34 (configure 184 s, build 373 s, test 2,890 s), 576 cases / **936,199** assertions = Windows minus the known 16 (wpfix5 item 1); Linux gcc (`run_tests.sh -p linux-gcc-rel -f`): 34/34 (configure 11 s, build 226 s, test 3,044 s), 576 cases / **936,199** assertions. All 27 `compare_report_*.json` are identical to main's on both platforms (max_ulp 0 except `capture.deltav_stages`: stage columns <= 11 ULP, totals rel 1.0196e-6, unchanged). CI on `01e97b5d` (run 38104664000): windows and linux jobs green (linux: clang 34/34 and gcc 34/34).
 Re-gate after fixes F1-F7 (`98a4ba49`) and the main merge (`68c68e06`), Windows MSVC fresh `core/build`: 34/34 ctest, `unit` 577 cases / 936,234 assertions (+1 case, +19 assertions vs the first gate: WP-42 11 cases / 1,063 assertions); configure 1.7 s, build 84 s, test 180 s; 27 compare reports, max_ulp 0 except `capture.deltav_stages` as before; `check_cites.py` exact 226 citations, 0 mismatches. Linux totals are expected 936,218 (Windows minus the known 16) and are not re-measured locally (CI covers the build).
 `check_cites.py` exact mode: 0 mismatches over `src/space_center/*.cpp` (226 citations).
+
+## WP-53: Breaking Ground deployed science, ROCs and the Serenity contracts (branch `wp53`, from main `af3798c6`)
+
+State: done for the engine-agnostic part, unit-gated against an independent Python reference (0 ULP). Ported: the five ground-part modules
+(`ModuleGroundPart` / `ModuleGroundSciencePart` / `ModuleGroundCommsPart` / `ModuleGroundExpControl` / `ModuleGroundExperiment`, on a `ModuleCargoPart` base moved
+out of `module_behaviours.cpp`), the deployed-science runtime (`DeployedScience` scenario, `DeployedScienceCluster`, `DeployedSciencePart`,
+`DeployedScienceExperiment`, `DeployedScienceExtensions`: power rules, diminishing returns, science accumulation, transmission to R&D, seismic events, save / load),
+the ROC chain (`ROCDefinition`, `RocCBDefinition`, `ROC`, `ROCManager`, `ROCScenario`, `LandClassROC` seeding and deterministic placement over UnityEngine.Random,
+`PQSROCControl`), the six contract classes on the WP-37 system (`DeployedScienceContract`, `ROCScienceArmContract`, `ROCScienceRetrievalContract`,
+`CollectDeployedScience`, `CollectROCScienceArm`, `CollectROCScienceRetrieval`), and `ControlledBase`, `RoboticCollisions`, `SerenityUtils`.
+Rendering, physics (Rigidbody / FixedJoint / raycasts), the PQS quad meshes, the EVA kerbal's inventory and the UI are documented seams (below).
+**No golden or capture exists for any of this** (the part-database capture ran with `Serenity=False`); every existing gate is unchanged (34/34 ctest);
+`harness/compare/tolerances.json` and `tests/tolerances_capture.json` untouched.
+
+**DATA: the GameData mirror has no `SquadExpansion/Serenity`.** No `ROC_DEFINITION` cfgs, no deployed-science part cfgs (the 8 `Deployed*` parts), no `DEPLOYEDSCIENCE`
+node, no Serenity experiment definitions (`deployedSeismicSensor` ...), no Serenity `Contracts.cfg` sections, no `DeployedSciencePowerSkill` in the traits. Nothing was
+hand-authored into the mirror. Real game data used by the tests: the stock `groundAnchor` / `groundLight1` (`ModuleGroundPart` + `ModuleAnimationGroup`), `ScienceDefs.cfg`
+(`temperatureScan`, `mysteryGoo`), `Traits.cfg` (the Engineer node), the Kerbol system with the real biome maps (names) of Kerbin / Mun / Minmus / Duna, the physprofile save's vessel
+with a `ModuleScienceContainer`, `Contracts.cfg` / `Agents.cfg` / `StoryDefs.cfg`. Everything Serenity-specific in `tests/test_serenity.cpp` is a fixture written from the cfg field
+names of the decompiled classes (MODULE values, ROC_DEFINITION nodes, the experiment copies, synthetic quad meshes, the appended `DeployedSciencePowerSkill` EFFECT) and is
+labelled as such in the test and in `tools/wp53/serenity_reference.py`. Defaults that live in C# code are ported as written: the diminishing-returns table, the 15 seismic
+energies, delays, `ContractDefs.DeployedScience / ROCScienceArm / ROCScienceRetrieval` initialisers. To run against the real DLC data: add `SquadExpansion/Serenity` to the
+mirror (`tools/mk_gamedata_mirror.py` from a game with the expansion) and extend the tests with the real part cfgs.
+
+### Gate
+
+| gate | result |
+|---|---|
+| golden / capture | none exists; nothing relaxed |
+| `unit` `tests/test_serenity.cpp` | 27 cases, 34,261 assertions; floats / doubles compared bit for bit (`CHECK_F32` / `CHECK_F64`) |
+| independent reference | `tools/wp53/serenity_reference.py` -> `tests/data/wp53_reference.json` (numpy float32 under the Mono rule, no kspcore imports; spec: the decompiled C#, `UnityEngine.Random` xorshift128 as fitted by capture C2, `KSPRandom.cs`, `StringExtensions.GetHashCode_Net35`) |
+
+| table | rows / values compared | max abs | max rel | max ULP |
+|---|---|---|---|---|
+| `DeployedScienceCluster.UpdatePowerState` (+ `SolarPanelUnitsProduced`, power-changed event count): powerRequired / powerAvailable / partial / multiplier / isPowered / controller flag | 600 cases x 8 | 0 | 0 | 0 |
+| `DeployedScience.GetDiminishingReturnsMultiplier` (4 tables incl. insertion order != key order and the empty table) | 4 x 9 | 0 | 0 | 0 |
+| `DeployedScienceExperiment.CalculateScience` / `TimeToSendStoredData` (generated, total, stored, enabled flag, send decision, LastScienceGeneratedUT) | 60 runs x 45 steps (2,700 steps incl. the cap and the part switch-off) x 6 | 0 | 0 | 0 |
+| `DeployedScienceExperiment.ProcessSeismicEvent` maths (joules sum, `(float)totalJoules / impactRate`, distance multiplier, cap, stored) | 160 events (124 processed, 36 below the minimum energy) | 0 | 0 | 0 |
+| `LandClassROC.AddScatterMeshController` seeding (quadSeed with the .NET 3.5 string hash and int wrap, rocN incl. num = 0 -> `(int)inf`, maxROCs, assigned quad) | 840 quads | 0 | 0 | 0 |
+| `LandClassROC.CreateScatterMesh` placements (vertex choice, duplicate suppression with `Mathf.Round`, depth shift, rocPOS float32 vector maths, rocID) | 40 quads / 167 ROC records (8 duplicates) | 0 | 0 | 0 |
+| KSPRandom picks of the three contracts (candidate index, 1/2/3 distinct biomes) | 120 | exact | - | - |
+| contract rewards / expiry / deadline of the three generated contracts vs a probe contract applying the same defaults through the WP-37 `Set*` pipeline | 24 + 30 + 36 contracts x 9 | 0 | 0 | 0 |
+
+### What is ported (C# file -> `include/ksp/serenity/` + `src/serenity/`, `include/ksp/contracts/serenity_contracts.hpp`; every function carries `// File.cs:N`, `check_cites.py` exact mode 0 mismatches over the 6 new `.cpp` files (285 citations), header members snapped by `tools/wp37/fix_header_cites.py`)
+
+| C# | C++ | notes |
+|---|---|---|
+| `ModuleCargoPart.cs` (slice) | `modules/module_cargo_part.hpp/.cpp` | OnLoad (stackable quantity), GetInfo / GetTooltip, EnableModule, OnPartUnpack, `MakePartSettle` coroutine; the EVA-construction highlight, welding FX and compound-part link bookkeeping are WP-33 / audio / UI. The class moved out of `module_behaviours.cpp`; WP-33 extends it |
+| `ModuleGroundPart.cs`, `ModuleGroundSciencePart.cs`, `ModuleGroundCommsPart.cs`, `ModuleGroundExpControl.cs`, `ModuleGroundExperiment.cs` | `serenity/ground_modules.hpp/.cpp` | schema fields stay in the typed store; `ICommAntenna` / `ICommNetControlSource`; deploy (`MakePartKinematic`), retrieve, scan-and-connect coroutine, booster antennas, comm state, info texts (with `DeployedSciencePowerSkill`) |
+| `DeployedScience*.cs` (5 files) | `serenity/deployed_science.hpp/.cpp` | Unity components as `SerenityBehaviour` (registry, Start next frame via `RunPendingStarts`, Destroy at the end of the frame via `FlushDestroyed`); coroutines on `ScienceEnvironment::Scheduler()` |
+| `ROCDefinition.cs`, `RocCBDefinition.cs`, `ROC.cs`, `ROCManager.cs`, `ROCScenario.cs`, `LandClassROC.cs`, `PQSROCControl.cs` | `serenity/roc.hpp/.cpp` | `ROCManager` derives from the save model's `ROCManagerRemovedROCs` and registers as `SaveEnvironment::rocManager`; `RocQuad` / `RocPqsView` carry the PQS data |
+| `Expansions/Serenity/Contracts/*.cs` (6) | `contracts/serenity_contracts.hpp/.cpp` | registered by `Contracts::Install()`; PartLoader's `GetAvailableDeployedScienceExpParts` / `GetAvailableRobotArmScannerParts` derived from `ScienceEnvironment::loadedParts` |
+| `ControlledBase.cs`, `RoboticCollisions.cs`, `SerenityUtils.cs` | `serenity/serenity_misc.hpp/.cpp` | the row base for WP-52 (controller opaque), collision forwarding, bundle asset paths |
+
+### Findings (KSP behaviours the tests pin down; all ported as they are)
+
+- `ModuleGroundPart.UpdateModuleUI` is private and non-virtual; `ModuleGroundSciencePart` declares its own virtual of the same name, so the base class's own calls never reach the science / experiment UI (kept: `UpdateGroundModuleUI` vs `UpdateModuleUI`).
+- `ModuleGroundPart.OnPartUnpack` re-enables the part's `ModuleAnimationGroup` while the part is being deployed (`beingDeployed`) even if it was disabled.
+- A part with `kinematicDelay < 1` that is being deployed waits 3 s (the field is overwritten with 3) and then needs `GroundContact`; without it the part shows "cannot deploy unless on the ground" and stays `beingDeployed`.
+- `ROCManager.ValidateCBBiomeCombos` indexes `myCelestialBodies[num2]` after `RemoveAt(num2)`: a definition whose last body entry is an unknown body throws `ArgumentOutOfRangeException` (tested as `std::out_of_range`).
+- `ROCManager.Start` keeps a definition whose prefab is missing (warning only) and drops one whose prefab has no ROC component.
+- `ROCScenario.Instance` is never assigned (only set to null): always null (kept).
+- `LandClassROC.AddScatterMeshController` draws `Random.Range(1, (int)num2)` even for quads with no ROC; with `num = 0` (`1/0 = inf`) `(int)inf = int.MinValue` and the draw takes the `max < min` branch.
+- `DeployedScienceExperiment.ProcessSeismicEvent` returns without clearing the part list or the pending flag when the impact is below `MinimumSeismicEnergyRequired`: the event stays pending and no further callback is scheduled until a power-state change.
+- `CalculateScience` always fires `onGroundScienceGenerated`, also with `num = 0` (the toggles of a part call it with dt = 0).
+- A new `DeployedScienceCluster` / `Part` / `Experiment` subscribes in `Start` (next frame); `ModuleGroundExpControl` scans only the parts loaded at that moment and does not set `DistanceToController` on the scan path (only the `onGroundSciencePartDeployed` path does).
+- The three contracts' `Next(0, count - 1)` index never reaches the last candidate (`KSPRandom.Next(min, max)` is exclusive at the top).
+- `DeployedScienceContract` / `ROCScienceArmContract` rewards differ from the defaults only through the WP-37 pipeline; the real `Generate` consumes Unity Random in `WeightedBodyChoice` before the agent is chosen, so a probe must make the same draw.
+
+### Seams (documented; owner)
+
+| seam | where | owner |
+|---|---|---|
+| `SerenityEnvironment`: screen messages, vessel-marker / map-object refresh counters, the EVA kerbal's inventory (`KerbalInventory`), `groundContact`, `physicsAction` log (Rigidbody constraints, FixedJoint, FX burst, `autoStrutMode`), `srfVelocityMagnitude`, `partRbVelocityMagnitude`, sun tracking (`trackingLineOfSight`, `hasModelTransform`, `panelAtOrigin`) | `serenity/serenity_env.hpp` | WP-20 physics / WP-33 inventory / WP-48 |
+| `RocEnvironment`: prefab state, instantiated name and renderer bounds, local bodies, body -> `PQSROCControl`, PQS view, ray test, explosions, mission seed | `serenity/roc.hpp` | WP-48 rendering / WP-11 PQS |
+| `PQSROCControl::quadInfo` (the quad mesh data), `RocPqsStatics` (`cacheSideVertCount` 15) | `serenity/roc.hpp` | WP-12 quad builder |
+| `SerenityMiscEnvironment`: `GetPersistenActiontId`, part collision handlers, bundle loader | `serenity/serenity_misc.hpp` | WP-52 / WP-48 |
+| `SerenityContractEnvironment`: overrides of the two PartLoader lists | `contracts/serenity_contracts.hpp` | WP-05 |
+| CommNet (`CommNetScenario::CommNetEnabled`, `Vessel::connection`), R&D, `ScienceEnvironment` (time, scheduler, config nodes, biome map) | existing seams | WP-39 / WP-35 |
+
+### Not ported / deferred
+
+`AxisLimitLine.cs` (79 lines, tier C Unity LineRenderer UI), `PQSMod_ROCScatterQuad` GameObject plumbing, `ROCEmitter` / `ROCsSFX` (WP-48), the debug `ArrowPointer`s of `ROC.UpdateRocArrow` (WP-43),
+UIPartActionWindow handling (only the open / dismiss flag), `Part.OnCollision*` bodies, the sun-tracker pivot rotation maths (`Atan2` / `Quaternion.Lerp` on the pivot's local rotation) and
+`SunTrackerToOrigin`'s `RotateTowards` (one engine step per frame through `panelAtOrigin`), `Object.Instantiate` of the ROC prefab (placement records are returned), the part-upgrade system
+in `CommPowerUnloaded` (`ApplyUpgradeNode`), the `Debug.Log` impact energy line of `CalcSendSeismicScience` (needs `Math.Pow` for a log value only), `ModuleRobotArmScanner` / `ModuleRoboticController`
+(WP-52; the contracts and `ControlledBase` use them by class name / opaque pointer).
+
+### Unverified / assumptions
+
+- UnityEngine.Random: `Random.rotation` consumes 4 draws and `Range(int)` follows the WP-01 model (capture C2); both sides of the gate share these.
+- The instantiated ROC prefab's GameObject name is `prefabName + "(Clone)"` (Unity's rule; the prefab's own name needs the asset bundle `serenity_assets`): it feeds `rocID` through `GetHashCode_Net35(rocObject.name)`. UNVERIFIED against the game.
+- `PQS.cacheSideVertCount` = 15 (the C# initialiser; the PQS settings node `vertCount` is not in the mirror).
+- The Unity frame model (Start one frame after creation, Destroy at the end of the frame, coroutine pass order) is the WP-00 assumption set; nothing here is captured.
+- `ProtoVessel.GetAllProtoPartsIncludingCargo` cargo walk, `FlightGlobals.FindLoadedPart` through `SaveEnvironment::persistentIds` (the WP-19 FlightGlobals port will replace it).
+
+### Needs data (local extraction)
+
+`SquadExpansion/Serenity` into the mirror: the 8 `DeployedXxx` part cfgs, `ROC_DEFINITION` cfgs, `DEPLOYEDSCIENCE` node, Serenity `ScienceDefs` experiments, Contracts.cfg sections, Traits.cfg effects, the `serenity_assets` bundle (ROC prefabs: renderer bounds, names).
+
+### Unit tests
+
+`tests/test_serenity.cpp`: 27 cases / 34,261 assertions: power state, dimret, defaults / save round trip, science accumulation, seismic maths and the seismic integration through a cluster, ROC seeding / placement,
+ROC definition load, ROCManager (prefab checks, validation, population, ROCSeed switch, removed list, stats), PQSROCControl quad flow, ROC scan / collision / perform experiment, module chain, groundAnchor deploy / retrieve,
+end to end (scan, register, power, science, R&D, save / load, retrieval, deregistration), comm boosters, info texts, sun tracking, ControlledBase, contract defaults, the three contract generators and the three parameters.
+
+### Verification
+
+Windows MSVC RelWithDebInfo: 34/34 ctest, `unit` 621 doctest cases / 998,888 assertions (WP-53: 27 / 34,261); g++ 13 (WSL) `-fsyntax-only` clean for the 8 touched sources and `test_serenity.cpp`.
+`check_cites.py` exact mode: 0 mismatches over the new `.cpp` files (name aliases added for the C# property setters). Fresh-build verification: see the final report of the package.
 
 ## Small fixes 2026-10-11 (wave 5, branch `wpfix5`, from main `7199d110`)
 
