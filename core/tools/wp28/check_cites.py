@@ -23,7 +23,10 @@ CLASS_FILE = {
     "ModuleSpaceObjectDrillBase": "ModuleAsteroidDrill", "ModuleSpaceObjectInfoBase": "ModuleAsteroidInfo",
     "ModuleSpaceObjectAnalysisBase": "ModuleAsteroidAnalysis",
 }
-NAME_ALIAS = {"set_currentMassVal": "currentMassVal", "set_massThresholdVal": "massThresholdVal", "set_IsDraining": "IsDraining",
+NAME_ALIAS = {"~Mission": "OnDestroy", "~TestModule": "OnDestroy", "~ActionModule": "OnDestroy", "SetTitle": "title", "SetTitleNoGui": "title",
+              "ActionsContain": "ActionsContainModule", "EqualsObject": "Equals", "craftFileExists": "GetMissionCraftByFileName",
+              "UpdateMissionFlowUIDirect": "UpdateMissionFlowUI", "ModulesAreEqualImpl": "ModulesAreEqual",
+              "set_currentMassVal": "currentMassVal", "set_massThresholdVal": "massThresholdVal", "set_IsDraining": "IsDraining",
               "set_inactive": "inactive", "set_rosterStatus": "rosterStatus", "set_type": "type",
               "SetExtraExperience": "ExtraExperience", "CrewGenerator_GetLastName": "GetLastName",
               "CrewGenerator_RemoveLastName": "RemoveLastName",
