@@ -55,6 +55,9 @@ set(KSP_HARNESS_DIR "${KSP_PROJECT_ROOT}/harness" CACHE PATH "Golden-output harn
 set(KSP_GAMEDATA_ROOT "${PROJECT_SOURCE_DIR}/testdata/GameData-mirror" CACHE PATH "KSP game root the tests read (GameData/, Physics.cfg, PartDatabase.cfg)")
 
 option(KSPCORE_BUILD_TESTS "Build unit tests and the golden gate" ON)
+# The physics spikes under spikes/ (PHYSICS-SPIKE.md). Opt-in, OFF by default: the Jolt spike fetches Jolt Physics at a
+# pinned release over the network at configure time. Presets `spike-jolt` / `spike-jolt-f32` build it in their own tree.
+option(KSPCORE_BUILD_SPIKES "Build the physics spikes (spikes/jolt; fetches Jolt Physics)" OFF)
 # The VS2013 CRT libm functions (cosh, sinh, pow, tanh, asin, atan, exp, atan2, tan, acos, log, log10): on Windows the
 # default is to call msvcr120_clr0400.dll / msvcr120.dll; elsewhere (and with this option ON) the bit-exact portable
 # software lift (src/dotnet/vs2013_libm_gen.cpp) is used. Env KSPCORE_LIBM_PORTABLE=1 forces it at run time.
@@ -78,6 +81,8 @@ function(ksp_set_build_flags target)
     endif()
 endfunction()
 
+include(cmake/ksp_jolt.cmake)
+
 add_subdirectory(src)
 
 if(KSPCORE_BUILD_TESTS)
@@ -88,4 +93,8 @@ if(KSPCORE_BUILD_TESTS)
     target_link_libraries(libm_check PRIVATE kspcore)
     ksp_set_build_flags(libm_check)
     add_subdirectory(tests)
+endif()
+
+if(KSPCORE_BUILD_SPIKES)
+    add_subdirectory(spikes/jolt)
 endif()
