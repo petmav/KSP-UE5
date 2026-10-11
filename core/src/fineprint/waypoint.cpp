@@ -1,5 +1,7 @@
 // WP-38: FinePrint/Waypoint.cs (data side) and the static random-position helpers of FinePrint/WaypointManager.cs.
 #include "ksp/contracts/waypoints.hpp"
+#include "ksp/fineprint/utilities.hpp"
+#include "ksp/localization/localizer.hpp"
 
 #include "ksp/celestial/celestial_body.hpp"
 #include "ksp/contracts/contract_environment.hpp"
@@ -46,8 +48,16 @@ Waypoint::Waypoint(const Waypoint& that)
       altitude(that.altitude), height(that.height), isOccluded(that.isOccluded), isExplored(that.isExplored), isClustered(that.isClustered),
       isOnSurface(that.isOnSurface), isNavigatable(that.isNavigatable), visible(that.visible), landLocked(that.landLocked),
       enableMarker(that.enableMarker), enableTooltip(that.enableTooltip), iconSize(that.iconSize), alphaRatio(that.alphaRatio), iconAlpha(that.iconAlpha),
-      fadeRange(that.fadeRange), navigationId(that.navigationId) {
+      fadeRange(that.fadeRange), navigationId(that.navigationId), contractReference(that.contractReference), orbitPosition(that.orbitPosition) {
     if (navigationId == Guid::Empty()) navigationId = Contracts::ContractsEnvironment::Current().NewGuid();
+}
+
+// Waypoint.cs:165
+void Waypoint::setName(bool uniqueSites, bool allowNamed) {
+    if (celestialBody() != nullptr) {
+        const std::string text = Contracts::Lite::StringUtilities::GenerateSiteName(uniqueSites ? uniqueSeed() : seed, celestialBody(), landLocked, allowNamed);
+        name = KSP::Localization::Localizer::Format("#autoLOC_7001301", {text});
+    }
 }
 
 // Waypoint.cs:100

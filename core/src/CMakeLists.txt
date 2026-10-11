@@ -95,6 +95,12 @@ add_library(kspcore STATIC
     fineprint/orbit_utilities.cpp
     fineprint/waypoint.cpp
     fineprint/exploration_contract.cpp
+    fineprint/utilities.cpp
+    fineprint/utilities_vessel.cpp
+    fineprint/parameters_vessel.cpp
+    fineprint/parameters_log.cpp
+    fineprint/parameters_space.cpp
+    fineprint/parameters_waypoint.cpp
     contracts/parameters.cpp
     contracts/predicates.cpp
     contracts/module_test_subject.cpp
