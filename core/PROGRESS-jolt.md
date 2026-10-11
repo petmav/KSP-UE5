@@ -29,5 +29,12 @@ recommendation in `core/PHYSICS-SPIKE.md`.
 
 ## Log
 
+- 2026-10-11: step 1 done (baseline 34/34 green in the worktree, build 129 s, test 130 s). Steps 2-3 done: spike builds
+  (VS 2022 Community MSVC 14.44, same as run_tests.ps1; build_spike.ps1); `jolt_spike info` reproduces the profile's runtime
+  sub-joint counts exactly (S 24, S-AS 44, M2 168, M2-AS 320, L2-AS 960) and masses (L2-AS 677.3 t). Committed 6d7279b6,
+  pushed `jolt-spike`. Resumed after an API rate-limit cut; main has moved (wp50, wp53): merge before finishing.
+- First flight (S, articulated) runs; radial decouplers break on the pad at 1.26 s and the remaining joints show 0.3-0.5 m
+  anchor separation: investigating (joint error measure, break threshold, mass ratios).
+
 - 2026-10-11: read optimizer.md, CLAUDE.md, PHYSICS-ENGINE-REVIEW.md, PROFILE.md, TIERING.md (WP-12/18/19/20/21/22),
   core/README.md, core/STATUS.md (WP-11/14/18/21 sections), NEXT-STEPS.md. Network reachable; Jolt v5.6.0 pinned.

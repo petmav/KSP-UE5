@@ -32,12 +32,14 @@ struct FlightConfig {
     bool perTickShift = false;          // emulate FloatingOrigin.setOffset every tick (measurement)
     bool gravityEase = true;            // VesselPrecalculate easing: gravity 0 -> 1 in 16 ticks after unpack
     bool breaking = true;
+    int breakGraceTicks = 60;           // Vessel.ignoreCollisionsFrames = 60 after ground placement
     bool stress = true;                 // reduced model: structural loads every tick
     bool inertiaFloor = true;
     int fireDecouplersAtTick = -1;
     bool orbit = false;                 // start in a circular equatorial-plane orbit (inertial frame, no terrain)
     double orbitAltitude = 80000.0;
     int sampleEvery = 10;               // trajectory / joint-error sample period (outside the timed phases)
+    bool debug = false;                 // print break details and the worst joints (stderr)
     WorldConfig world;
 };
 

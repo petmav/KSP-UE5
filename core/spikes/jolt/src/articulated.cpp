@@ -166,7 +166,7 @@ void ArticulatedVessel::Flush() {
 
 std::vector<BreakEvent> ArticulatedVessel::AfterStep(float dt, int tick) {
     std::vector<BreakEvent> out;
-    if (!breakingEnabled) return out;
+    if (!breakingEnabled || !breakAllowed) return out;
     const float inv = 1.0f / dt;
     for (const SubJoint& sj : subJoints_) {
         if (jointBroken_[sj.joint]) continue;

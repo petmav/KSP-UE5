@@ -100,6 +100,7 @@ private:
     std::vector<JPH::Vec3> partExtF_, partExtM_;  // buffered external force per part and its moment about the part CoM
     JPH::Vec3 uniformAccel_ = JPH::Vec3::sZero(), lastUniformAccel_ = JPH::Vec3::sZero();
     std::vector<bool> cut_;                 // attach joints that no longer connect (fired or broken)
+    std::vector<JPH::Vec3> anchorLocal_;    // per joint: centroid of the sub-joint anchors in the child part's frame
     std::vector<JPH::Ref<JPH::TwoBodyConstraint>> interJoints_;  // SplitAtDecouplers
     std::vector<int> interJointOf_;         // attach joint index of each inter-cluster constraint
     std::unique_ptr<SupportListener> listener_;

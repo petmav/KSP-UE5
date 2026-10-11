@@ -92,6 +92,16 @@ void ReducedVessel::Build(World& world, const CraftModel& craft, const Placement
     partExtM_.assign(n, Vec3::sZero());
     cut_.assign(craft.joints.size(), false);
     loads.assign(craft.attachJointCount, EdgeLoad{});
+    anchorLocal_.assign(craft.joints.size(), Vec3::sZero());
+    for (size_t j = 0; j < craft.joints.size(); j++) {
+        const JointSpec& js = craft.joints[j];
+        DVec3 a = DVec3::sZero();
+        for (int q = 0; q < js.internalJoints; q++) a += js.anchors[q];
+        a /= static_cast<double>(js.internalJoints);
+        const PartSpec& cs = craft.parts[js.child];
+        const DVec3 rel = a - cs.pos;
+        anchorLocal_[j] = cs.rot.Conjugated() * Vec3(static_cast<float>(rel.GetX()), static_cast<float>(rel.GetY()), static_cast<float>(rel.GetZ()));
+    }
     for (int j = 0; j < craft.attachJointCount; j++) {
         const JointSpec& js = craft.joints[j];
         loads[j].forceCap = js.breakForceSub * static_cast<float>(js.internalJoints);
@@ -355,11 +365,13 @@ void ReducedVessel::ComputeLoads(float dt) {
     const CraftModel& craft = *craft_;
     const size_t n = craft.parts.size();
     const float inv = 1.0f / dt;
-    // per cluster: CoM acceleration, angular acceleration, angular velocity, residual (contact) force
+    std::vector<RVec3> pcom(n);
+    for (size_t i = 0; i < n; i++) pcom[i] = partPos[i] + partRot[i] * craft.parts[i].comLocal;
+    // ---- per cluster: rigid-body kinematics over the step and the unexplained residual (contacts), force AND moment
     struct Kin {
         Vec3 a, alpha, w;
         RVec3 com;
-        Vec3 contact;
+        Vec3 resF, resM;  // residual force / moment about the cluster CoM: contacts (and solver effects such as angular damping)
         int supports;
     };
     std::vector<Kin> kin(clusters_.size());
@@ -370,26 +382,67 @@ void ReducedVessel::ComputeLoads(float dt) {
         k.a = (cl.body->GetLinearVelocity() - cl.vBefore) * inv;
         k.alpha = (k.w - cl.wBefore) * inv;
         k.com = cl.body->GetCenterOfMassPosition();
-        Vec3 ext = lastUniformAccel_ * static_cast<float>(cl.mass);
-        for (int p : cl.parts) ext += partExtF_[p];
-        k.contact = k.a * static_cast<float>(cl.mass) - ext;  // contacts + inter-cluster joints
+        const Mat44 R = Mat44::sRotation(cl.body->GetRotation());
+        const Mat44 Iw = R * cl.inertiaBody * R.Transposed3x3();
+        const Vec3 H = Iw.Multiply3x3(k.alpha) + k.w.Cross(Iw.Multiply3x3(k.w));
+        Vec3 F = lastUniformAccel_ * static_cast<float>(cl.mass), M = Vec3::sZero();
         k.supports = 0;
-        for (int p : cl.parts) k.supports += listener_->touching[p].load(std::memory_order_relaxed) ? 1 : 0;
+        for (int p : cl.parts) {
+            F += partExtF_[p];
+            M += Vec3(pcom[p] - k.com).Cross(partExtF_[p]) + partExtM_[p];
+            k.supports += listener_->touching[p].load(std::memory_order_relaxed) ? 1 : 0;
+        }
+        k.resF = k.a * static_cast<float>(cl.mass) - F;
+        k.resM = H - M;
     }
-    // inter-cluster joint forces are tree edges, not contacts: remove them from the residual (+lambda on body 2, -lambda on body 1)
+    // inter-cluster joints are tree edges, not contacts: take their force and torque out of the residuals
+    // (Jolt applies the constraint impulse +lambda to body 2 and -lambda to body 1)
     for (size_t i = 0; i < interJoints_.size(); i++) {
+        if (!interJoints_[i]->GetEnabled()) continue;
         const auto* fc = static_cast<const FixedConstraint*>(interJoints_[i].GetPtr());
         const Vec3 f = fc->GetTotalLambdaPosition() * inv;
+        const Vec3 t = fc->GetTotalLambdaRotation() * inv;
+        const Body* b1 = fc->GetBody1();
+        const RVec3 p = b1->GetCenterOfMassTransform() * fc->GetConstraintToBody1Matrix().GetTranslation();
         const int j = interJointOf_[i];
-        const int c1 = clusterOfPart_[craft.joints[j].child], c2 = clusterOfPart_[craft.joints[j].parent];
-        kin[c1].contact += f;  // body 1 = child cluster received -f
-        kin[c2].contact -= f;
+        Kin& k1 = kin[clusterOfPart_[craft.joints[j].child]];   // body 1
+        Kin& k2 = kin[clusterOfPart_[craft.joints[j].parent]];  // body 2
+        k1.resF += f;
+        k1.resM += Vec3(p - k1.com).Cross(f) + t;
+        k2.resF -= f;
+        k2.resM -= Vec3(p - k2.com).Cross(f) + t;
     }
-    // demand per part, accumulated children-first; moments about the vessel-frame origin of each cluster's CoM
+    // contact share per part: equal force over the touching parts plus the couple that makes the moment balance exact
+    // (no touching part: the residual is spread over every part by mass, i.e. treated as a body force)
+    std::vector<Vec3> cf(n, Vec3::sZero()), cm(n, Vec3::sZero());
+    for (size_t c = 0; c < clusters_.size(); c++) {
+        const Cluster& cl = clusters_[c];
+        const Kin& k = kin[c];
+        if (k.supports > 0) {
+            const float share = 1.0f / static_cast<float>(k.supports);
+            Vec3 mf = Vec3::sZero();
+            for (int p : cl.parts)
+                if (listener_->touching[p].load(std::memory_order_relaxed)) {
+                    cf[p] = k.resF * share;
+                    mf += Vec3(pcom[p] - k.com).Cross(cf[p]);
+                }
+            const Vec3 couple = (k.resM - mf) * share;
+            for (int p : cl.parts)
+                if (listener_->touching[p].load(std::memory_order_relaxed)) cm[p] = couple;
+        } else {
+            const float invM = 1.0f / static_cast<float>(cl.mass);
+            Vec3 mf = Vec3::sZero();
+            for (int p : cl.parts) {
+                cf[p] = k.resF * (partMass_[p] * invM);
+                mf += Vec3(pcom[p] - k.com).Cross(cf[p]);
+            }
+            const Vec3 couple = (k.resM - mf) * (1.0f / static_cast<float>(cl.parts.size()));
+            for (int p : cl.parts) cm[p] = couple;
+        }
+    }
+    // ---- demand per part, accumulated children-first; moments about the vessel CoM
     std::vector<Vec3> sf(n, Vec3::sZero()), sm(n, Vec3::sZero());
-    std::vector<RVec3> pcom(n);
-    for (size_t i = 0; i < n; i++) pcom[i] = partPos[i] + partRot[i] * craft.parts[i].comLocal;
-    const RVec3 origin = com;  // a common reference point for every moment (vessel CoM)
+    const RVec3 origin = com;
     maxLoadRatio = 0.0f;
     maxLoadJoint = -1;
     for (int p : postOrder_) {
@@ -397,14 +450,13 @@ void ReducedVessel::ComputeLoads(float dt) {
         const Kin& k = kin[clusterOfPart_[p]];
         const float m = partMass_[p];
         const Vec3 r = Vec3(pcom[p] - k.com);
-        Vec3 d = Vec3::sZero();
-        Vec3 rot = Vec3::sZero();
+        Vec3 d = -partExtF_[p] - cf[p];
+        Vec3 rot = -partExtM_[p] - cm[p];
         if (s.physical) {
             const Vec3 acc = k.a + k.alpha.Cross(r) + k.w.Cross(k.w.Cross(r)) - lastUniformAccel_;
-            d = acc * m - partExtF_[p];
-            if (k.supports > 0 && listener_->touching[p].load(std::memory_order_relaxed)) d -= k.contact / static_cast<float>(k.supports);
+            d += acc * m;
             const Mat44 I = PartInertiaWorld(s.inertiaPerMass * (inertiaFloor ? std::max(1.0f, m) : m), partRot[p]);
-            rot = I.Multiply3x3(k.alpha) + k.w.Cross(I.Multiply3x3(k.w)) - partExtM_[p];
+            rot += I.Multiply3x3(k.alpha) + k.w.Cross(I.Multiply3x3(k.w));
         }
         sf[p] += d;
         sm[p] += Vec3(pcom[p] - origin).Cross(d) + rot;
@@ -415,13 +467,7 @@ void ReducedVessel::ComputeLoads(float dt) {
         // the attach joint of p carries the subtree of p
         const int j = s.attachJoint;
         if (j >= 0 && j < craft.attachJointCount && !cut_[j]) {
-            const JointSpec& js = craft.joints[j];
-            DVec3 a = DVec3::sZero();
-            for (int q = 0; q < js.internalJoints; q++) a += js.anchors[q];
-            a /= static_cast<double>(js.internalJoints);
-            const DVec3 rel = a - s.pos;
-            const Vec3 local = s.rot.Conjugated() * Vec3(static_cast<float>(rel.GetX()), static_cast<float>(rel.GetY()), static_cast<float>(rel.GetZ()));
-            const Vec3 P = Vec3(partPos[p] + partRot[p] * local - origin);
+            const Vec3 P = Vec3(partPos[p] + partRot[p] * anchorLocal_[j] - origin);
             EdgeLoad& L = loads[j];
             L.force = sf[p].Length();
             L.torque = (sm[p] - P.Cross(sf[p])).Length();
@@ -439,7 +485,7 @@ std::vector<BreakEvent> ReducedVessel::AfterStep(float dt, int tick) {
     if (stressEnabled) {
         ReadState();
         ComputeLoads(dt);
-        if (breakingEnabled) {
+        if (breakingEnabled && breakAllowed) {
             std::vector<bool> cut = cut_;
             for (int j = 0; j < craft_->attachJointCount; j++) {
                 if (cut_[j]) continue;

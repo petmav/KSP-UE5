@@ -82,6 +82,7 @@ FlightConfig ConfigFromArgs(const Args& a) {
     c.orbit = a.Has("orbit");
     c.orbitAltitude = a.Num("orbit-alt", c.orbitAltitude);
     c.sampleEvery = static_cast<int>(a.Num("sample-every", c.sampleEvery));
+    c.debug = a.Has("debug");
     c.world.velocitySteps = static_cast<int>(a.Num("vel-steps", c.world.velocitySteps));
     c.world.positionSteps = static_cast<int>(a.Num("pos-steps", c.world.positionSteps));
     c.world.threads = static_cast<int>(a.Num("threads", c.world.threads));

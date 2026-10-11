@@ -76,6 +76,10 @@ public:
     // Largest anchor separation over the live constraints (m): joint stretch, the stability measure of the articulated model
     virtual float MaxJointError() const { return 0.0f; }
 
+    // Joint breaking is suppressed while false (KSP: Vessel.ignoreCollisionsFrames = 60 after the ground placement,
+    // PartJoint.OnJointBreak ignores breaks meanwhile, Vessel.cs:2543-2557, PartJoint.cs:397-401)
+    bool breakAllowed = true;
+
     // ---- state (filled by ReadState) ----
     std::vector<JPH::RVec3> partPos;   // part transform position
     std::vector<JPH::Quat> partRot;    // part transform rotation

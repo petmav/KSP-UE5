@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstdio>
 #include <cmath>
 #include <numeric>
 #include <stdexcept>
@@ -88,7 +89,7 @@ FlightResult RunFlight(KspContext& ctx, CraftModel& craft, const FlightConfig& c
         comCraft /= mSum;
         startPoint = pad.up * (kerbin.Radius + cfg.orbitAltitude - comCraft.GetY()) - pad.east * comCraft.GetX() - pad.north * comCraft.GetZ();
     } else {
-        startPoint = pad.up * (pad.radius + 0.3 - minY);
+        startPoint = pad.up * (pad.radius + 0.05 - minY);
     }
     DVec3 frameOrigin = cfg.originAtBody ? DVec3::sZero() : (cfg.orbit ? startPoint : pad.up * pad.radius);
 
@@ -142,6 +143,7 @@ FlightResult RunFlight(KspContext& ctx, CraftModel& craft, const FlightConfig& c
         model->AddUniformAcceleration(Vec3(g));
         model->Flush();
         const auto t3 = Clock::now();
+        model->breakAllowed = tick >= cfg.breakGraceTicks;
         world.Step(dt, cfg.collisionSteps);
         const auto t4 = Clock::now();
         const std::vector<BreakEvent> br = model->AfterStep(dt, tick);
@@ -166,6 +168,12 @@ FlightResult RunFlight(KspContext& ctx, CraftModel& craft, const FlightConfig& c
             r.maxLoadJoint = craft.parts[js.child].name + "->" + craft.parts[js.parent].name + " t=" + std::to_string(tick * cfg.dt);
         }
         for (const BreakEvent& b : br) {
+            if (cfg.debug) {
+                const JointSpec& js = craft.joints[b.joint];
+                std::fprintf(stderr, "break tick %d joint %d %s->%s mode %d size %d sub %d: F %.1f (cap %.1f) T %.1f (cap %.1f)\n", b.tick, b.joint,
+                             craft.parts[js.child].name.c_str(), craft.parts[js.parent].name.c_str(), js.mode, js.nodeSize, js.internalJoints,
+                             b.force, js.breakForceSub, b.torque, js.breakTorqueSub);
+            }
             if (r.firstBreakTick < 0) {
                 r.firstBreakTick = b.tick;
                 const JointSpec& js = craft.joints[b.joint];
@@ -210,6 +218,16 @@ FlightResult RunFlight(KspContext& ctx, CraftModel& craft, const FlightConfig& c
             }
         }
     }
+    if (cfg.debug)
+        if (auto* art = dynamic_cast<ArticulatedVessel*>(model.get())) {
+            const auto errs = art->JointErrors();
+            for (size_t i = 0; i < std::min<size_t>(8, errs.size()); i++) {
+                const JointSpec& js = craft.joints[errs[i].second];
+                std::fprintf(stderr, "joint err %.4f m: joint %d %s->%s mode %d size %d sub %d autostrut %d k %.0f\n", errs[i].first, errs[i].second,
+                             craft.parts[js.child].name.c_str(), craft.parts[js.parent].name.c_str(), js.mode, js.nodeSize, js.internalJoints,
+                             js.autostrut ? 1 : 0, js.stiffness);
+            }
+        }
     model->ReadState();
     const DVec3 cb = frameOrigin + ToD(model->com);
     r.altitudeEnd = cb.Length() - kerbin.Radius;
