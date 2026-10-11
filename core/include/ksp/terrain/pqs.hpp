@@ -338,8 +338,10 @@ public:
     PQSCache* cache = nullptr;  // PQSCache.Instance (FindObjectOfType): set by the host before Start()
     std::vector<PQS*> childSpheres;  // ChildSpheres (GetComponentsInChildren<PQS> minus this), set by the host
     // Time.realtimeSinceStartup (frame-budget test of PQ.UpdateSubdivision, fixed-frame timing of UpdateVisual).
-    // Unset: always 0 (never out of time; the deterministic default).
+    // Unset: a constant 1 s, i.e. a game running for a while on an infinitely fast machine: UpdateQuadsInit's pass is out
+    // of time as in KSP (maxFrameEnd is still 0 there), UpdateQuads never is (deterministic default).
     std::function<float()> realtimeSinceStartup;
+    float Now() const { return realtimeSinceStartup ? realtimeSinceStartup() : 1.0f; }
     // Camera.main.transform for Mod_OnSphereStart's fallback target (unset: no camera)
     std::function<const PQSTarget*()> mainCamera;
     // Called for every quad whose MeshCollider PQSMod_QuadMeshColliders enables / disables (WP-12b seam)
@@ -486,7 +488,6 @@ private:
     enum class Routine { UpdateSphere, ResetAndWait };
     std::vector<Routine> routines_;
     std::vector<float> routineResumeAt_;  // WaitForSeconds(frameTimeDelta) target time (UpdateSphere with frameTimeDelta > 0)
-    float Now() const { return realtimeSinceStartup ? realtimeSinceStartup() : 0.0f; }
 };
 
 }  // namespace ksp

@@ -67,6 +67,12 @@ target_compile_definitions(kspcore_tests PRIVATE KSPCORE_TEST_DATA_DIR="${CMAKE_
                            KSPCORE_TESTDATA_DIR="${PROJECT_SOURCE_DIR}/testdata"
                            KSPCORE_DEFAULT_GAME_ROOT="${KSP_GAMEDATA_ROOT}")
 add_test(NAME unit COMMAND kspcore_tests)
+# WP-12a: the height oracle tools/wp12/pqs_reference.py calls to regenerate tests/data/wp12_reference.json (not a test)
+add_executable(wp12_height_oracle ${PROJECT_SOURCE_DIR}/tools/wp12/height_oracle.cpp)
+target_link_libraries(wp12_height_oracle PRIVATE kspcore)
+ksp_set_build_flags(wp12_height_oracle)
+target_include_directories(wp12_height_oracle PRIVATE ${PROJECT_SOURCE_DIR}/third_party)
+target_compile_definitions(wp12_height_oracle PRIVATE KSPCORE_DATA_DIR="${PROJECT_SOURCE_DIR}/data")
 # WP-31 data gate: ROSTER of every save in testdata / harness/inputs, experience recomputed from the raw flight logs (also part of `unit`)
 add_test(NAME data.roster_experience COMMAND kspcore_tests "-tc=WP-31 data gate*")
 set_tests_properties(data.roster_experience PROPERTIES LABELS data TIMEOUT 600)

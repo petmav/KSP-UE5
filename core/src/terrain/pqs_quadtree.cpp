@@ -427,9 +427,9 @@ void PQS::UpdateVisual() {
     relativeTargetPosition = targetPosition_;
     relativeTargetPositionNormalized = relativeTargetPosition.normalized();
     if (fixedUpdateFrame_ != 0) {
-        const float now = Now();
-        fixedFrameTime_ = f32store(fx(now) - fx(prevFixedFrameTime_));
-        prevFixedFrameTime_ = now;
+        // two reads of Time.realtimeSinceStartup, as in the C#
+        fixedFrameTime_ = f32store(fx(Now()) - fx(prevFixedFrameTime_));
+        prevFixedFrameTime_ = Now();
         fixedUpdateFrame_ = 0;
         targetVelocity = (relativeTargetPosition - targetPositionPrev_) / static_cast<double>(fixedFrameTime_);
         targetSpeed = targetVelocity.magnitude();

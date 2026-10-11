@@ -108,7 +108,7 @@ void PQ::UpdateVisibility() {
 void PQ::UpdateSubdivision() {
     UpdateTargetRelativity();
     PQS& s = Deref(sphereRoot);
-    outOfTime_ = (s.realtimeSinceStartup ? s.realtimeSinceStartup() : 0.0f) > s.maxFrameEnd;
+    outOfTime_ = s.Now() > s.maxFrameEnd;
     isPendingCollapse = false;
     if (isSubdivided) {
         rendererEnabled = false;

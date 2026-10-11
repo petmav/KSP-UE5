@@ -204,6 +204,7 @@ void PQSMod_CelestialBodyTransform::VisitSerialized(const SerializedFieldVisitor
 
 // PQSMod_UVPlanetRelativePosition.cs:12: rewrites the STATIC PQS.cacheUVs / cacheUV2s from the double scratch vertices
 void PQSMod_UVPlanetRelativePosition::OnQuadBuilt(PQ& quad) {
+    if (sphere->cache == nullptr) return;  // a height-only PQS (WP-11 callers drive the quad state with no mesh cache)
     PQSMeshCache& c = sphere->meshCache();
     for (int i = 0; i < c.cacheVertCount; i++) {
         const Vector3d v = c.verts[Z(i)];
@@ -219,6 +220,7 @@ void PQSMod_UVPlanetRelativePosition::OnQuadBuilt(PQ& quad) {
 // PQSMod_UVPlanetRelativePosition.cs:27 (quad.verts[i] + quad.positionPlanet: the float mesh vertex plus the double
 // quad position; with surfaceRelativeQuads that is the planet-relative vertex up to the float origin rounding)
 void PQSMod_UVPlanetRelativePosition::OnQuadUpdateNormals(PQ& quad) {
+    if (sphere->cache == nullptr) return;
     PQSMeshCache& c = sphere->meshCache();
     for (int i = 0; i < c.cacheVertCount; i++) {
         const Vector3d v = quad.verts[Z(i)] + quad.positionPlanet;
