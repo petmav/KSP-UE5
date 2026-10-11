@@ -44,9 +44,9 @@ struct KeyboardLayout {
     std::string TwoLetterISOLanguageName;    // Locale.TwoLetterISOLanguageName ("en")
     KeyboardLayoutType Type = KeyboardLayoutType::QWERTY;
 
-    static inline std::function<KeyboardLayout()> provider;  // KeyboardLayout.cs:15 GetKeyboardLayout(): unset = en-US QWERTY
-    static KeyboardLayout GetKeyboardLayout();                // :15
-    static KeyboardLayoutType GetKeyboardLayoutType(int64_t layoutCode);  // :32 (protected static in C#)
+    static inline std::function<KeyboardLayout()> provider;  // kspcore seam for KeyboardLayout.cs:14 GetKeyboardLayout(): unset = en-US QWERTY
+    static KeyboardLayout GetKeyboardLayout();                // :14
+    static KeyboardLayoutType GetKeyboardLayoutType(int64_t layoutCode);  // :25 (protected static in C#)
 };
 
 // ---- TrackIR.Settings (TrackIR.cs:58), the IConfigNode GameSettings.TRACKIR holds. The TrackIR component (TrackIR.Instance) is a
@@ -125,33 +125,33 @@ const std::vector<SettingsField>& Fields();      // reflection table
 void LoadLayoutKeyBindings(const std::string& layoutSettings, bool overrideSettings = false);  // :1407
 std::string DetectKeyboardLayout();              // :1432
 void ParseLayoutsCfg(const std::vector<std::string>& layoutFiles);   // :1582
-ConfigNode::NodePtr ParseLayoutRecursive(ConfigNode::NodePtr node, const std::string& layoutFile, int depth = 0);  // :1590
+ConfigNode::NodePtr ParseLayoutRecursive(ConfigNode::NodePtr node, const std::string& layoutFile, int depth = 0);  // :1591
 ConfigNode::NodePtr BuildCfg();                  // WriteCfg minus the file write (:1619)
 bool WriteCfg();                                 // :1619 (writes configFilePath, fires OnGameSettingsWritten)
 enum class ParseResult { Ok, NoFile, Incompatible };
-ParseResult ParseCfg(const ConfigNode::NodePtr& configNode);   // :1690 (the loaded node)
-ParseResult ParseCfgFile();                      // :1690 (ConfigNode.Load(configFilePath))
+ParseResult ParseCfg(const ConfigNode::NodePtr& configNode);   // :1691 (the loaded node)
+ParseResult ParseCfgFile();                      // kspcore split of ParseCfg (1691): ConfigNode.Load(configFilePath)
 void InitializeDefaultValues();                  // :1823
-void SetCollapsedPawGroupNames();                // :1834
-void SetCollapsedPawGroupString();               // :1847
-void SetHighlighterColors();                     // :1852
-void SetLightPresetColors();                     // :1871
-void SetFireworkPresetColors();                  // :1881
-Color LoadColor(const std::string& colorValues, const std::string& name);  // :1891
+void SetCollapsedPawGroupNames();                // :1836
+void SetCollapsedPawGroupString();               // :1849
+void SetHighlighterColors();                     // :1854
+void SetLightPresetColors();                     // :1875
+void SetFireworkPresetColors();                  // :1885
+Color LoadColor(const std::string& colorValues, const std::string& name);  // :1895
 const std::vector<Color>& GetLightPresetColors();     // :1904
 const std::vector<Color>& GetFireworkPresetColors();  // :1909
 void SetUITextColors();                          // :1914
 void SetRDSearchHighlightColors();               // :1921
 bool SetHighlighterColor(Color& c, const std::string& colorValues, const std::string& name);  // :1927
 void SetCPVisualColors();                        // :1938
-void InitializeAxisGroupbindings();              // :1946
+void InitializeAxisGroupbindings();              // :1945
 std::vector<float>* GetAxisIncrementalSpeedMultiplierValues();   // :1963
 void AddIncrementalSpeedMultiplierValue(float value);            // :1968
 float GetAxisSpeedMultiplier(int index);                         // :1979
 int GetAxiSpeedMultiplierIndex(float value);                     // :1989
 void ApplySettings();                            // :2008
 void SaveSettingsOnNextGameSave();               // :2064
-void OnGameSave();                               // :2054
+void OnGameSave();                               // :2055
 void ResetSettings();                            // :1473
 void LoadGameSettingsOnly();                     // :1482
 void SaveGameSettingsOnly();                     // :1487

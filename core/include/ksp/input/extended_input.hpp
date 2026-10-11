@@ -15,9 +15,9 @@ public:
     // ExtendedInput.cs:23 (MonoBehaviour.LateUpdate: once per frame, after every Update)
     void LateUpdate();
 
-    static bool GetKey(const KeyCodeExtended& key);      // :36
-    static bool GetKeyDown(const KeyCodeExtended& key);  // :45
-    static bool GetKeyUp(const KeyCodeExtended& key);    // :58
+    static bool GetKey(const KeyCodeExtended& key);      // :29
+    static bool GetKeyDown(const KeyCodeExtended& key);  // :38
+    static bool GetKeyUp(const KeyCodeExtended& key);    // :53
     // :95 DetectKeyDown(List<KeyCode> keyValues, out KeyCodeExtended key): false (and an empty key) for a null list
     static bool DetectKeyDown(const std::vector<KeyCode>* keyValues, KeyCodeExtended& key);
 
@@ -28,8 +28,8 @@ public:
     static void Reset();
 
 private:
-    static bool WasPressed(const std::string& key);  // :70
-    static bool IsPressed(const std::string& key);   // :80
+    static bool WasPressed(const std::string& key);  // :44
+    static bool IsPressed(const std::string& key);   // :73
 
     float EmtpyFrames = 0.0f;    // :10
     float FrameThreshold = 0.0f;  // :12

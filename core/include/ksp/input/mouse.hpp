@@ -19,22 +19,22 @@ public:
     // Mouse.cs:8
     class MouseButton {
     public:
-        MouseButton(int button) : buttonIndex_(button) {}   // :33 (the owner is the global Mouse)
-        void Update();                                      // :38
-        void ClearMouseState();                             // :104
-        bool GetButtonDown() const { return down_; }        // :116
-        bool GetButtonUp() const { return up_; }            // :121
-        bool GetButton() const { return button_; }          // :126
-        bool GetClick() const { return tap_; }              // :131
+        MouseButton(int button) : buttonIndex_(button) {}   // :35 (the owner is the global Mouse)
+        void Update();                                      // :41
+        void ClearMouseState();                             // :109
+        bool GetButtonDown() const { return down_; }        // :120
+        bool GetButtonUp() const { return up_; }            // :125
+        bool GetButton() const { return button_; }          // :130
+        bool GetClick() const { return tap_; }              // :135
         bool GetDoubleClick(bool isDelegate = false) const; // :140
-        Vector2f GetDragDelta() const { return dragDelta_; }   // :148
-        bool WasDragging(float delta = 400.0f) const;       // :153
-        void ResumeTapRoutine();                            // :61 (the coroutine, after a `yield return null`)
+        Vector2f GetDragDelta() const { return dragDelta_; }   // :149
+        bool WasDragging(float delta = 400.0f) const;       // :154
+        void ResumeTapRoutine();                            // kspcore: the TapRoutine coroutine (Mouse.cs:61), after a `yield return null`
         bool isTapStarted() const { return isTapStarted_; }
 
     private:
         enum class Phase { Done, WaitUp, TapYield, WaitDown };
-        void StartTapRoutine();                             // :61 (StartCoroutine: runs the first segment)
+        void StartTapRoutine();                             // kspcore: the TapRoutine coroutine (Mouse.cs:61), StartCoroutine runs the first segment
         void RunTapRoutine();
 
         bool button_ = false, down_ = false, up_ = false, tap_ = false, doubleTap_ = false, abort_ = false;
@@ -55,22 +55,22 @@ public:
     static inline MouseButton Left{0};     // :186
     static inline MouseButton Right{1};    // :188
     static inline MouseButton Middle{2};   // :190
-    static inline Vector2f screenPos = Vector2f::zero();   // :192
-    static inline Vector2f delta = Vector2f::zero();       // :196
-    static inline Part* HoveredPart = nullptr;             // :202
+    static inline Vector2f screenPos = Vector2f::zero();   // :56
+    static inline Vector2f delta = Vector2f::zero();       // :154
+    static inline Part* HoveredPart = nullptr;             // :192
     static inline std::function<Part*()> hoveredPartProvider;   // Mouse.CheckHoveredPart (:322): unset = no part under the cursor
 
-    static bool IsMoving();                                // :204
-    static void Update();                                  // :228
+    static bool IsMoving();                                // :194
+    static void Update();                                  // :223
     static void ResumeCoroutines();                        // Unity's coroutine pass for the three TapRoutines
-    static Buttons GetAllMouseButtons();                   // :242
-    static Buttons GetAllMouseButtonsUp();                 // :266
-    static Buttons GetAllMouseButtonsDown();               // :290
-    static bool CheckButtons(Buttons buttons, Buttons buttonsToTest, bool strict = true);  // :314
+    static Buttons GetAllMouseButtons();                   // :235
+    static Buttons GetAllMouseButtonsUp();                 // :261
+    static Buttons GetAllMouseButtonsDown();               // :287
+    static bool CheckButtons(Buttons buttons, Buttons buttonsToTest, bool strict = true);  // :313
     static void ResetStatics();
 
 private:
-    static inline Vector2f lastPos_ = Vector2f::zero();    // :194
+    static inline Vector2f lastPos_ = Vector2f::zero();    // :186
 };
 
 constexpr Mouse::Buttons operator|(Mouse::Buttons a, Mouse::Buttons b) {

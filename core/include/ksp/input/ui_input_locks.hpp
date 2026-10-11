@@ -29,26 +29,26 @@ struct CanvasGroup {
 // CanvasGroupInputLock.cs:7
 class CanvasGroupInputLock {
 public:
-    static inline bool disableAllLocking = false;      // :9
+    static inline bool disableAllLocking = false;      // :10
     std::string gameObjectName;                        // base.gameObject.name (log text only)
-    CanvasGroup* canvasGroup = nullptr;                // :19 (GetComponent<CanvasGroup>() in Awake)
+    CanvasGroup* canvasGroup = nullptr;                // :21 (GetComponent<CanvasGroup>() in Awake)
 
-    std::vector<std::string>& InputLockMask() { lockMaskDirty_ = true; return inputLockMask_; }   // :21
-    uint64_t LockMask() const { return lockMask_; }                                              // :31
-    void SetLockMask(uint64_t value) { lockMask_ = value; lockMaskDirty_ = false; }              // :35
+    std::vector<std::string>& InputLockMask() { lockMaskDirty_ = true; return inputLockMask_; }   // :23
+    uint64_t LockMask() const { return lockMask_; }                                              // :32
+    void SetLockMask(uint64_t value) { lockMask_ = value; lockMaskDirty_ = false; }              // :32
 
-    void Awake();                                      // :64
-    void Start();                                      // :91
-    void OnDestroy();                                  // :84
-    void SetInputMaskToDefault();                      // :78
-    void SetInputMask(const std::vector<std::string>& newMask);   // :83
-    void OnInputLocksModified(events::GameEvents::FromToAction<ControlTypes, ControlTypes> fromTo);   // :100
-    static std::string ToBits(ControlTypes lockMask);  // :111
-    static std::string ToBits(uint64_t lockMask);      // :116
+    void Awake();                                      // :65
+    void Start();                                      // :101
+    void OnDestroy();                                  // :96
+    void SetInputMaskToDefault();                      // :81
+    void SetInputMask(const std::vector<std::string>& newMask);   // :86
+    void OnInputLocksModified(events::GameEvents::FromToAction<ControlTypes, ControlTypes> fromTo);   // :110
+    static std::string ToBits(ControlTypes lockMask);  // :122
+    static std::string ToBits(uint64_t lockMask);      // :127
 
 private:
-    void UpdateLockMask();                             // :47
-    void InitializeDefaultMask();                      // :71
+    void UpdateLockMask();                             // :45
+    void InitializeDefaultMask();                      // :72
 
     std::vector<std::string> inputLockMask_;
     std::vector<std::string> defaultMask_;
@@ -60,14 +60,14 @@ private:
 class KSPGraphicRaycaster {
 public:
     std::string gameObjectName;
-    std::vector<std::string>& InputLockMask() { lockMaskDirty_ = true; return inputLockMask_; }   // :14
-    uint64_t LockMask() const { return lockMask_; }                                              // :24
-    void SetLockMask(uint64_t value) { lockMask_ = value; lockMaskDirty_ = false; }              // :28
+    std::vector<std::string>& InputLockMask() { lockMaskDirty_ = true; return inputLockMask_; }   // :20
+    uint64_t LockMask() const { return lockMask_; }                                              // :29
+    void SetLockMask(uint64_t value) { lockMask_ = value; lockMaskDirty_ = false; }              // :29
     // :53 Raycast: true when base.Raycast(eventData, results) must run (no lock mask, or its controls are all unlocked)
     bool Raycast();
 
 private:
-    void UpdateLockMask();                             // :36
+    void UpdateLockMask();                             // :42
     std::vector<std::string> inputLockMask_;
     uint64_t lockMask_ = 0;
     bool lockMaskDirty_ = true;
@@ -90,10 +90,10 @@ public:
 // UIInputExtraMouseButtons.cs:8
 class UIInputExtraMouseButtons {
 public:
-    std::function<void()> leftClick, rightClick, middleClick;   // :14-18 (Button.ButtonClickedEvent.Invoke)
-    void OnMouseEnter() { mouseEntered_ = true; }                // :33
-    void OnMouseExit() { mouseEntered_ = false; }                // :38
-    void Update();                                               // :43
+    std::function<void()> leftClick, rightClick, middleClick;   // :18-18 (Button.ButtonClickedEvent.Invoke)
+    void OnMouseEnter() { mouseEntered_ = true; }                // :31
+    void OnMouseExit() { mouseEntered_ = false; }                // :36
+    void Update();                                               // :41
 
 private:
     bool mouseEntered_ = false;

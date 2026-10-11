@@ -71,12 +71,12 @@ public:
     uint64_t inputLockMask = 0;
 
     virtual ~InputBinding() = default;
-    virtual void Load(const ConfigNode& node);     // :12
-    virtual void Save(ConfigNode& node) const;     // :24
-    bool CompareSwitchState(InputBindingModes switchSt) const;  // :30
-    bool IsLocked() const;                         // :46
-    bool IsUnlocked() const { return !IsLocked(); }  // :51
-    virtual bool IsNeutral() const { return true; }  // :56
+    virtual void Load(const ConfigNode& node);     // :13
+    virtual void Save(ConfigNode& node) const;     // :25
+    bool CompareSwitchState(InputBindingModes switchSt) const;  // :31
+    bool IsLocked() const;                         // :47
+    bool IsUnlocked() const { return !IsLocked(); }  // :52
+    virtual bool IsNeutral() const { return true; }  // :57
 };
 
 // KeyBinding.cs:4
@@ -86,30 +86,30 @@ public:
     KeyCodeExtended secondary;
     InputBindingModes switchStateSecondary = InputBindingModes::Any;
 
-    static constexpr float doubleTapInterval = 0.2f;  // :14
+    static constexpr float doubleTapInterval = 0.2f;  // :12
 
-    std::string name() const;  // :18
+    std::string name() const;  // :26
 
-    KeyBinding();                                                              // :100
-    explicit KeyBinding(ControlTypes lockMask);                                // :106
-    explicit KeyBinding(KeyCode main);                                         // :113
-    KeyBinding(KeyCode main, ControlTypes lockMask);                           // :119
-    KeyBinding(KeyCode main, InputBindingModes useSwitch);                     // :126
-    KeyBinding(KeyCode main, InputBindingModes useSwitch, ControlTypes lockMask);  // :133
-    KeyBinding(KeyCode main, KeyCode alt);                                     // :141
-    KeyBinding(KeyCode main, KeyCode alt, ControlTypes lockMask);              // :147
-    KeyBinding(KeyCode main, KeyCode alt, InputBindingModes useSwitch, InputBindingModes useSwitchSecondary);  // :154
+    KeyBinding();                                                              // :38
+    explicit KeyBinding(ControlTypes lockMask);                                // :44
+    explicit KeyBinding(KeyCode main);                                         // :51
+    KeyBinding(KeyCode main, ControlTypes lockMask);                           // :57
+    KeyBinding(KeyCode main, InputBindingModes useSwitch);                     // :64
+    KeyBinding(KeyCode main, InputBindingModes useSwitch, ControlTypes lockMask);  // :71
+    KeyBinding(KeyCode main, KeyCode alt);                                     // :79
+    KeyBinding(KeyCode main, KeyCode alt, ControlTypes lockMask);              // :85
+    KeyBinding(KeyCode main, KeyCode alt, InputBindingModes useSwitch, InputBindingModes useSwitchSecondary);  // :92
     KeyBinding(KeyCode main, KeyCode alt, InputBindingModes useSwitch, InputBindingModes useSwitchSecondary,
                ControlTypes lockMask);                                         // :162
 
-    void Save(ConfigNode& node) const override;     // :171
-    void Load(const ConfigNode& node) override;     // :181
-    bool GetKey(bool ignoreInputLock = false) const;        // :196
-    bool GetKeyDown(bool ignoreInputLock = false) const;    // :213
-    bool GetDoubleTapDown(bool ignoreInputLock = false);    // :230
-    bool GetKeyUp(bool ignoreInputLock = false) const;      // :249
-    bool GetDoubleTapUp(bool ignoreInputLock = false);      // :266
-    bool IsNeutral() const override;                        // :285
+    void Save(ConfigNode& node) const override;     // :109
+    void Load(const ConfigNode& node) override;     // :119
+    bool GetKey(bool ignoreInputLock = false) const;        // :134
+    bool GetKeyDown(bool ignoreInputLock = false) const;    // :151
+    bool GetDoubleTapDown(bool ignoreInputLock = false);    // :168
+    bool GetKeyUp(bool ignoreInputLock = false) const;      // :187
+    bool GetDoubleTapUp(bool ignoreInputLock = false);      // :204
+    bool IsNeutral() const override;                        // :223
 
 private:
     int lastKeyDownFrameCount_ = 0;
@@ -123,13 +123,13 @@ private:
 // InputDevices.cs:4
 class InputDevices {
 public:
-    InputDevices();                                    // :10
-    void InitializeDevices();                          // :18
-    void Load(const ConfigNode& node);                 // :38
-    void Save(ConfigNode& node) const;                 // :48
-    int GetDeviceIndex(const std::string& deviceName) const;  // :56
-    int GetDeviceListLength() const;                   // :65
-    static std::string TrimDeviceName(const std::string& src);  // :75
+    InputDevices();                                    // :8
+    void InitializeDevices();                          // :17
+    void Load(const ConfigNode& node);                 // :36
+    void Save(ConfigNode& node) const;                 // :46
+    int GetDeviceIndex(const std::string& deviceName) const;  // :54
+    int GetDeviceListLength() const;                   // :63
+    static std::string TrimDeviceName(const std::string& src);  // :73
     const dotnet::Dictionary<std::string, int>& Devices() const { return devices_; }
 
 private:
@@ -151,25 +151,25 @@ public:
     float scale = 1.0f;
     float neutralPoint = 0.0f;
 
-    AxisBinding_Single() = default;                                             // :27
+    AxisBinding_Single() = default;                                             // :31
     explicit AxisBinding_Single(ControlTypes lockMask);                         // :31
-    explicit AxisBinding_Single(float neutral);                                 // :36
-    AxisBinding_Single(float neutral, ControlTypes lockMask);                   // :41
-    explicit AxisBinding_Single(InputBindingModes useSwitch);                   // :47
-    AxisBinding_Single(InputBindingModes useSwitch, ControlTypes lockMask);     // :52
-    AxisBinding_Single(InputBindingModes useSwitch, float neutral);             // :58
-    AxisBinding_Single(InputBindingModes useSwitch, float neutral, ControlTypes lockMask);  // :64
-    AxisBinding_Single(const std::string& Id, const std::string& Name, bool isInverted);   // :71
-    AxisBinding_Single(const std::string& Id, const std::string& Name, bool isInverted, ControlTypes lockMask);  // :78
+    explicit AxisBinding_Single(float neutral);                                 // :40
+    AxisBinding_Single(float neutral, ControlTypes lockMask);                   // :45
+    explicit AxisBinding_Single(InputBindingModes useSwitch);                   // :51
+    AxisBinding_Single(InputBindingModes useSwitch, ControlTypes lockMask);     // :56
+    AxisBinding_Single(InputBindingModes useSwitch, float neutral);             // :62
+    AxisBinding_Single(InputBindingModes useSwitch, float neutral, ControlTypes lockMask);  // :68
+    AxisBinding_Single(const std::string& Id, const std::string& Name, bool isInverted);   // :75
+    AxisBinding_Single(const std::string& Id, const std::string& Name, bool isInverted, ControlTypes lockMask);  // :82
     AxisBinding_Single(const std::string& Id, const std::string& Name, bool isInverted, float sens, float dead_zone,
                        float axisScale);                                        // :86
     AxisBinding_Single(const std::string& Id, const std::string& Name, bool isInverted, float sens, float dead_zone,
                        float axisScale, ControlTypes lockMask);                 // :96
 
-    void Save(ConfigNode& node) const override;     // :107
-    void Load(const ConfigNode& node) override;     // :119
-    float GetAxis();                                // :201
-    bool IsNeutral() const override;                // :246
+    void Save(ConfigNode& node) const override;     // :111
+    void Load(const ConfigNode& node) override;     // :123
+    float GetAxis();                                // :203
+    bool IsNeutral() const override;                // :248
 
 private:
     float value_ = 0.0f;
@@ -229,13 +229,13 @@ public:
     explicit AxisKeyBindingList(int count);              // :25
     AxisKeyBinding& operator[](int index) { return axisKeyBindings_[static_cast<size_t>(index)]; }  // :11
     const AxisKeyBinding& operator[](int index) const { return axisKeyBindings_[static_cast<size_t>(index)]; }
-    int Length() const { return static_cast<int>(axisKeyBindings_.size()); }  // :20
-    void Save(ConfigNode& node) const;                   // :35
-    void Load(const ConfigNode& node);                   // :44
-    AxisKeyBindingList Clone() const;                    // :58
+    int Length() const { return static_cast<int>(axisKeyBindings_.size()); }  // :19
+    void Save(ConfigNode& node) const;                   // :34
+    void Load(const ConfigNode& node);                   // :43
+    AxisKeyBindingList Clone() const;                    // :57
 
 private:
-    AxisKeyBindingList() = default;                      // :22
+    AxisKeyBindingList() = default;                      // :21
     std::vector<AxisKeyBinding> axisKeyBindings_;
 };
 
