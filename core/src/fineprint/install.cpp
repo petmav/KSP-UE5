@@ -6,6 +6,7 @@
 #include "ksp/fineprint/contracts.hpp"
 #include "ksp/fineprint/parameters.hpp"
 #include "ksp/fineprint/scenario_contract_events.hpp"
+#include "ksp/fineprint/sentinel.hpp"
 #include "ksp/save/game.hpp"
 
 namespace ksp::FinePrint {
@@ -25,6 +26,10 @@ void InstallAll() {
     ContractSystem::RegisterContractType("StationContract", [] { return std::make_unique<Contracts::StationContract>(); });
     ContractSystem::RegisterContractType("SurveyContract", [] { return std::make_unique<Contracts::SurveyContract>(); });
     ContractSystem::RegisterContractType("TourismContract", [] { return std::make_unique<Contracts::TourismContract>(); });
+    // SentinelMission/*.cs (namespace SentinelMission)
+    ContractSystem::RegisterContractType("CometDetectionContract", [] { return std::make_unique<SentinelMission::CometDetectionContract>(); });
+    ContractSystem::RegisterContractType("SentinelContract", [] { return std::make_unique<SentinelMission::SentinelContract>(); });
+    ContractSystem::RegisterParameterType("SentinelParameter", [] { return std::make_unique<SentinelMission::SentinelParameter>(); });
     // parameters
     ContractSystem::RegisterParameterType("AsteroidParameter", [] { return std::make_unique<P::AsteroidParameter>(); });
     ContractSystem::RegisterParameterType("CometDetectionParameter", [] { return std::make_unique<P::CometDetectionParameter>(); });
@@ -51,6 +56,8 @@ void InstallAll() {
     ContractSystem::RegisterParameterType("VesselDestinationParameter", [] { return std::make_unique<P::VesselDestinationParameter>(); });
     ContractSystem::RegisterParameterType("VesselSystemsParameter", [] { return std::make_unique<P::VesselSystemsParameter>(); });
     ScenarioContractEvents::Register();
+    SentinelMission::SentinelScenario::Register();
+    SentinelMission::SentinelModule::Register();
     // seams
     ksp::CareerEnvironment::Current().valueAndUnits = [](int recordTrackType, double value) {
         return L::StringUtilities::ValueAndUnits(static_cast<L::RecordTrackType>(recordTrackType), value);

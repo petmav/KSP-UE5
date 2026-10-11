@@ -108,6 +108,9 @@ add_library(kspcore STATIC
     fineprint/scenario_contract_events.cpp
     fineprint/contract_defs.cpp
     fineprint/contract_defs_gen.cpp
+    fineprint/sentinel_utilities.cpp
+    fineprint/sentinel_contracts.cpp
+    fineprint/sentinel_scenario.cpp
     contracts/parameters.cpp
     contracts/predicates.cpp
     contracts/module_test_subject.cpp
