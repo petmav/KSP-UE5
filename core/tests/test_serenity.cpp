@@ -25,11 +25,17 @@
 #include "ksp/celestial/celestial_system.hpp"
 #include "ksp/celestial/planetarium.hpp"
 #include "ksp/contracts/serenity_contracts.hpp"
+#include "ksp/database/game_data.hpp"
+#include "ksp/parts/part.hpp"
+#include "ksp/parts/part_loader.hpp"
+#include "ksp/resources/part_resource_library.hpp"
+#include "ksp/resources/planetary_resources.hpp"
 #include "ksp/core/coroutine.hpp"
 #include "ksp/dotnet/mono_float.hpp"
 #include "ksp/events/game_events.hpp"
 #include "ksp/localization/localizer.hpp"
 #include "ksp/modules/animation_modules.hpp"
+#include "ksp/modules/science_modules.hpp"
 #include "ksp/physics/physics_globals.hpp"
 #include "ksp/save/game.hpp"
 #include "ksp/save/proto_vessel.hpp"
@@ -589,4 +595,496 @@ TEST_CASE("WP-53 LandClassROC.CreateScatterMesh placements vs the reference (40 
     }
     CHECK(total > 100);
     CHECK(dups >= 3);
+}
+
+// =============================================================================================================================
+// The ground-part modules on a real vessel (World with the stock database, the Kerbol system, the WP-00 coroutine scheduler)
+
+namespace {
+struct WorldSer {
+    GameData data;
+    PhysicsGlobals pg;
+    Planetarium planetarium;
+    std::unique_ptr<CelestialSystem> sys;
+    CoroutineScheduler sched;
+    double ut = 100.0;
+    std::vector<std::unique_ptr<Vessel>> vessels;
+    WorldSer() {
+        SaveEnvironment::Reset();
+        FlightRegistry::Clear();
+        Vessel::SpawnedVessels().clear();
+        GameData::Options o;
+        o.gameRoot = ksp::testing::GameRoot();
+        data.Load(o);
+        SaveEnvironment& env = SaveEnvironment::Current();
+        env.getPartInfoByName = [this](std::string_view n) { return data.parts.getPartInfoByName(n); };
+        env.partExists = [this](std::string_view n) { return data.parts.getPartInfoByName(n) != nullptr; };
+        env.newGuidHashCode = [] {
+            static uint32_t s = 4242u;
+            s = s * 1664525u + 1013904223u;
+            return static_cast<int32_t>(s);
+        };
+        support::InstallUpgradeHooks(data);
+        pg.physicsDatabaseFilename = ksp::testing::GameRoot() + "/Physics.cfg";
+        pg.Awake("");
+        REQUIRE(pg.LoadDatabase());
+        planetarium.Awake();
+        sys = CelestialSystem::Spawn(KerbolSystemPrefab(), planetarium);
+        env.localBodies = sys->SpawnOrder();
+        Vessel::env = VesselEnvironment{};
+        VesselModuleManager::CompileModules();
+        InstallSerenity();
+        ResourceSetup::database = &data.database;
+        ResourceSetup::ResetConfig();
+        LoadLocalizer53();
+        ScienceEnvironment::getConfigNodes = [this](std::string_view t) { return data.database.GetConfigNodes(t); };
+        ScienceEnvironment::loadedParts = [this] {
+            std::vector<const AvailablePart*> v;
+            for (const auto& p : data.parts.loadedParts) v.push_back(p.get());
+            return v;
+        };
+        ScienceEnvironment::universalTime = [this] { return ut; };
+        ScienceEnvironment::scheduler = &sched;
+        CelestialBody* k = &Kerbin();
+        CareerEnvironment::Current().getHomeBody = [k] { return k; };
+    }
+    ~WorldSer() {
+        RT::SerenityBehaviour::DestroyAll();
+        vessels.clear();
+        Vessel::SpawnedVessels().clear();
+        FlightRegistry::Clear();
+        FlightRegistry::ActiveVessel = nullptr;
+        ScienceEnvironment::scheduler = nullptr;
+        sys.reset();
+        Planetarium::Zup = Planetarium::AwakeZup(0.0);
+        ResourceSetup::database = nullptr;
+        ResourceSetup::ResetConfig();
+        SaveEnvironment::Reset();
+        Vessel::env = VesselEnvironment{};
+    }
+    CelestialBody& Kerbin() { return *sys->GetBodyByName("Kerbin"); }
+    Vector3f PlaceKerbinAtPad() {
+        CelestialBody& k = Kerbin();
+        k.position = Vector3d();
+        const Vector3d pad = k.GetWorldSurfacePosition(-0.0972077486779459, -74.5576813534722, 75.0);
+        k.position = Vector3d() - pad;
+        return Vector3f();
+    }
+    // One landed single-part vessel; `modules` are added to the part after its prefab modules (Part.AddModule(ConfigNode): Awake + Load)
+    struct ModDef {
+        std::string name;
+        std::vector<std::pair<std::string, std::string>> kv;
+    };
+    Vessel* Mk(const char* partName, uint32_t pid, const std::vector<ModDef>& modules, Vector3f offset = Vector3f()) {
+        const AvailablePart* ap = data.parts.getPartInfoByName(partName);
+        REQUIRE_MESSAGE(ap != nullptr, partName);
+        auto p = Part::Instantiate(*ap->partPrefab);
+        p->partInfo = ap;
+        p->gameObjectName = ap->name;
+        p->fields.flightID = pid + 1;
+        p->fields.persistentId = pid;
+        p->UpdateMass();
+        for (const ModDef& m : modules) {
+            ConfigNode node("MODULE");
+            node.AddValue("name", m.name);
+            for (const auto& kv : m.kv) node.AddValue(kv.first, kv.second);
+            REQUIRE_MESSAGE(p->AddModule(node, true) != nullptr, m.name);
+        }
+        std::vector<std::unique_ptr<Part>> owned;
+        Part* root = p.get();
+        owned.push_back(std::move(p));
+        auto v = std::make_unique<Vessel>();
+        root->partTransform.position = PlaceKerbinAtPad() + offset;
+        v->vesselTransform = root->partTransform;
+        v->AdoptParts(std::move(owned), root);
+        v->vesselName = std::string("Vessel ") + std::to_string(pid);
+        REQUIRE(v->Initialize(true, false, false, false));
+        v->loaded = true;
+        FlightRegistry::AddVessel(v.get());
+        v->packed = false;
+        for (Part* q : v->parts) q->fields.packed = false;
+        SaveEnvironment::Current().persistentIds.persistentLoadedPartIds.Add(pid, root);
+        vessels.push_back(std::move(v));
+        return vessels.back().get();
+    }
+    template <class T>
+    static T* Mod(Part& p, const char* cls) {
+        T* t = dynamic_cast<T*>(p.FindModuleOfClass(cls));
+        REQUIRE(t != nullptr);
+        return t;
+    }
+    // frames of dt seconds on the coroutine scheduler
+    void Frames(int n, float dt = 1.0f) {
+        for (int i = 0; i < n; i++) {
+            sched.AdvanceFrame(dt);
+            sched.RunDelayedFixedFrameRate();
+            sched.RunDelayedDynamicFrameRate();
+            sched.RunEndOfFrame();
+        }
+    }
+};
+}  // namespace
+
+TEST_CASE("WP-53 module chain: the five ground modules are registered, the schema defaults load, ModuleGroundPart on the stock groundAnchor") {
+    Clean53 clean;
+    WorldSer w;
+    const AvailablePart* ap = w.data.parts.getPartInfoByName("groundAnchor");
+    REQUIRE(ap != nullptr);
+    auto* gp = dynamic_cast<ModuleGroundPart*>(ap->partPrefab->FindModuleOfClass("ModuleGroundPart"));
+    REQUIRE(gp != nullptr);
+    // the real cfg values (GameData/Squad/Parts/Cargo/GroundAnchor/groundAnchor.cfg)
+    CHECK(gp->Get<float>("packedVolume") == 40.0f);
+    CHECK(gp->Get<int32_t>("stackableQuantity") == 1);
+    CHECK(gp->Get<float>("kinematicDelay") == 0.0f);
+    CHECK(gp->Get<std::string>("fxGroupDeploy") == "deploy");
+    CHECK(gp->placementAllowXRotation());  // C# initialiser true
+    CHECK(gp->AsAnimatedModule() == gp);
+    CHECK(gp->GetModuleDisplayName() == KSP::Localization::Localizer::Format("#autoLOC_6012033"));
+    CHECK(gp->Events()["RetrievePart"] != nullptr);
+    CHECK(!gp->IsDeployedSciencePart());  // no ModuleGroundSciencePart on the anchor
+    // groundLight1: ModuleGroundPart with packedVolume 20 / stackableQuantity 2
+    auto* gl = dynamic_cast<ModuleGroundPart*>(w.data.parts.getPartInfoByName("groundLight1")->partPrefab->FindModuleOfClass("ModuleGroundPart"));
+    REQUIRE(gl != nullptr);
+    CHECK(gl->Get<float>("packedVolume") == 20.0f);
+    CHECK(gl->Get<int32_t>("stackableQuantity") == 2);
+
+    // the subclass chain, with the fixture MODULE nodes
+    Vessel* v = w.Mk("mk1pod.v2", 7001, {{"ModuleGroundExpControl", {}}, {"ModuleGroundExperiment", {{"experimentId", "temperatureScan"}}},
+                                           {"ModuleGroundCommsPart", {}}, {"ModuleGroundSciencePart", {}}});
+    Part& p = *v->parts[0];
+    auto* ctrl = WorldSer::Mod<ModuleGroundExpControl>(p, "ModuleGroundExpControl");
+    auto* exp = WorldSer::Mod<ModuleGroundExperiment>(p, "ModuleGroundExperiment");
+    auto* comms = WorldSer::Mod<ModuleGroundCommsPart>(p, "ModuleGroundCommsPart");
+    auto* sci = WorldSer::Mod<ModuleGroundSciencePart>(p, "ModuleGroundSciencePart");
+    CHECK(dynamic_cast<ModuleGroundCommsPart*>(ctrl) != nullptr);
+    CHECK(dynamic_cast<ModuleGroundSciencePart*>(exp) != nullptr);
+    CHECK(dynamic_cast<ModuleGroundPart*>(comms) != nullptr);
+    CHECK(dynamic_cast<ModuleCargoPart*>(sci) != nullptr);
+    // schema defaults: ExpControl.OnAwake DistanceToController = 0, Science.OnAwake float.MaxValue; the curves
+    CHECK_F32(ctrl->DistanceToController(), 0.0f);
+    CHECK_F32(exp->DistanceToController(), 3.4028234663852886e+38f);
+    CHECK(ctrl->controlUnitRange() == 20);
+    CHECK_F64(ctrl->antennaPower(), 500000.0);
+    CHECK_F64(ctrl->CommPower(), 500000.0);  // antennaPower + boostedAntennaPower (0)
+    CHECK(ctrl->antennaCombinableExponent() == 0.75);
+    const DoubleCurve* r = ctrl->CommRangeCurve();
+    REQUIRE(r != nullptr);
+    CHECK(r->keys.size() == 2);
+    const DoubleCurve* sc = ctrl->CommScienceCurve();
+    REQUIRE(sc != nullptr);
+    CHECK(sc->keys.size() == 4);
+    CHECK_F32(exp->ScienceModifierRate(), 5.0f);
+    CHECK(exp->Enabled());  // moduleEnabled initialiser true
+    CHECK(!exp->DeployedOnGround());
+    CHECK(exp->experimentId() == "temperatureScan");
+    CHECK(ctrl->antennaType() == AntennaType::DIRECT);
+}
+
+TEST_CASE("WP-53 ModuleGroundPart: deploy on the ground (MakePartKinematic) and retrieve into the EVA kerbal's inventory, stock groundAnchor") {
+    Clean53 clean;
+    WorldSer w;
+    Vessel* v = w.Mk("groundAnchor", 7101, {});
+    Part& p = *v->parts[0];
+    auto* gp = WorldSer::Mod<ModuleGroundPart>(p, "ModuleGroundPart");
+    auto* ag = WorldSer::Mod<ModuleAnimationGroup>(p, "ModuleAnimationGroup");
+    gp->OnStart(StartState::Landed);
+    CHECK(gp->animationGroup == ag);
+    CHECK(gp->groundScienceModule == nullptr);
+    // the deploy / retract animations belong to the part model (DeployablesEnvironment::modelAnimations): the group is switched off like the
+    // code does for DroppedPart vessels, so PlayDeployAnimation / PlayRetractAnimation skip the engine side
+    // (OnPartUnpack re-enables a group of a part being deployed: ModuleGroundPart.cs:162)
+    CHECK(gp->ModuleIsActive());  // isEnabled
+    // deploy: a part being deployed settles for 3 s (kinematicDelay < 1 is raised to 3), then rivets to the ground
+    gp->Set<bool>("beingDeployed", true);
+    v->vesselType = VesselType::Unknown;
+    SerenityEnvironment::srfVelocityMagnitude = [](Vessel&) { return 0.0; };
+    gp->OnPartUnpack();
+    CHECK(ag->isEnabled);  // ModuleGroundPart.cs:164
+    ag->isEnabled = false;
+    CHECK_F32(gp->kinematicDelay(), 3.0f);
+    CHECK(!gp->deployedOnGround());
+    w.Frames(2);
+    CHECK(!gp->deployedOnGround());  // still waiting for the 3 s
+    w.Frames(4);
+    CHECK(gp->deployedOnGround());
+    CHECK(!gp->beingDeployed());
+    CHECK(p.fields.PermanentGroundContact);
+    CHECK(p.fields.autoStrutMode == static_cast<int32_t>(Part_AutoStrutMode::ForceGrandparent));
+    CHECK(v->vesselType == VesselType::DeployedGroundPart);
+    CHECK(gp->hasJoint);
+    CHECK(std::count(SerenityEnvironment::physicsActions.begin(), SerenityEnvironment::physicsActions.end(), "constraints=FreezeAll") == 1);
+
+    // the part cannot deploy off the ground
+    Vessel* v2 = w.Mk("groundAnchor", 7103, {});
+    Part& p2 = *v2->parts[0];
+    auto* gp2 = WorldSer::Mod<ModuleGroundPart>(p2, "ModuleGroundPart");
+    gp2->OnStart(StartState::Landed);
+    gp2->Set<bool>("beingDeployed", true);
+    SerenityEnvironment::groundContact = [](Part&) { return false; };
+    SerenityEnvironment::screenMessages.clear();
+    gp2->OnPartUnpack();
+    w.Frames(6);
+    CHECK(!gp2->deployedOnGround());
+    CHECK(gp2->beingDeployed());
+    REQUIRE(SerenityEnvironment::screenMessages.size() == 1);
+    CHECK(SerenityEnvironment::screenMessages[0] == KSP::Localization::Localizer::Format("#autoLOC_8002326"));
+    CHECK(gp2->isEnabled);  // EnableModule()
+    SerenityEnvironment::groundContact = nullptr;
+
+    // retrieve: needs an EVA kerbal with a free inventory slot
+    Vessel* eva = w.Mk("mk1pod.v2", 7102, {});
+    eva->vesselType = VesselType::EVA;
+    FlightRegistry::ActiveVessel = eva;
+    auto inv = std::make_shared<SerenityEnvironment::KerbalInventory>();
+    int storedSlot = -99;
+    inv->hasCapacity = [](Part&) { return true; };
+    inv->firstEmptySlot = [] { return 2; };
+    inv->storeCargoPartAtSlot = [&storedSlot](Part&, int slot) {
+        storedSlot = slot;
+        return true;
+    };
+    SerenityEnvironment::activeKerbalInventory = inv;
+    gp->OnVesselChange(nullptr);
+    CHECK(gp->kerbalInventoryModule == inv.get());
+    gp->UpdateGroundModuleUI();
+    CHECK(gp->Events()["RetrievePart"]->active);
+    inv->firstEmptySlot = [] { return -1; };
+    gp->UpdateGroundModuleUI();
+    CHECK(!gp->Events()["RetrievePart"]->active);  // a full inventory hides the event
+    inv->firstEmptySlot = [] { return 2; };
+    inv->hasCapacity = [](Part&) { return false; };
+    SerenityEnvironment::screenMessages.clear();
+    gp->RetrievePart();  // no capacity: ScreenMessages, nothing else
+    REQUIRE(SerenityEnvironment::screenMessages.size() == 1);
+    CHECK(!gp->beingRetrieved);
+    inv->hasCapacity = [](Part&) { return true; };
+    gp->RetrievePart();
+    CHECK(gp->beingRetrieved);
+    CHECK(storedSlot == -1);
+    CHECK(!gp->deployedOnGround());
+    CHECK(v->vesselType == VesselType::DeployedSciencePart);
+    // no animation to wait for: OnRetractCompleted ran at once and the part left the world
+    CHECK(!inv->partBeingRetrieved);
+    CHECK(v->state == Vessel::State::DEAD);
+    FlightRegistry::ActiveVessel = nullptr;
+}
+
+TEST_CASE("WP-53 deployed science end to end: scan, cluster registration, power, science generation, transmission to R&D, save / load, retrieval") {
+    Clean53 clean;
+    WorldSer w;
+    ResearchAndDevelopment rd;
+    rd.Awake();
+    ConfigNode rdEmpty("ResearchAndDevelopment");
+    rd.OnLoad(rdEmpty);
+    RT::DeployedScience ds;
+    ds.Awake();
+    ConfigNode empty("SCENARIO");
+    ds.OnLoad(empty);
+    REQUIRE(RT::DeployedScience::Instance == &ds);
+
+    Vessel* A = w.Mk("mk1pod.v2", 7201, {{"ModuleGroundExpControl", {{"deployedOnGround", "True"}, {"powerUnitsProduced", "6"}, {"powerUnitsRequired", "1"}}}});
+    Vessel* B = w.Mk("mk1pod.v2", 7202,
+                     {{"ModuleGroundExperiment", {{"experimentId", "temperatureScan"}, {"deployedOnGround", "True"}, {"powerUnitsRequired", "2"}, {"ScienceModifierRate", "100"}}}},
+                     Vector3f(5.0f, 0.0f, 0.0f));
+    Vessel* C = w.Mk("mk1pod.v2", 7203,
+                     {{"ModuleGroundExperiment", {{"experimentId", "temperatureScan"}, {"deployedOnGround", "True"}, {"powerUnitsRequired", "1"}}}},
+                     Vector3f(30.0f, 0.0f, 0.0f));  // out of range (controlUnitRange 20)
+    auto* ctrl = WorldSer::Mod<ModuleGroundExpControl>(*A->parts[0], "ModuleGroundExpControl");
+    auto* expB = WorldSer::Mod<ModuleGroundExperiment>(*B->parts[0], "ModuleGroundExperiment");
+    auto* expC = WorldSer::Mod<ModuleGroundExperiment>(*C->parts[0], "ModuleGroundExperiment");
+    struct Counts {
+        int registered = 0, updated = 0, powerChanged = 0, transmitted = 0, generated = 0;
+        void OnReg(ModuleGroundExpControl*, RT::DeployedScienceCluster*) { ++registered; }
+        void OnUpd(ModuleGroundExpControl*, RT::DeployedScienceCluster*) { ++updated; }
+        void OnPow(RT::DeployedScienceCluster*) { ++powerChanged; }
+        void OnTx(RT::DeployedScienceExperiment*, RT::DeployedSciencePart*, RT::DeployedScienceCluster*, float) { ++transmitted; }
+        void OnGen(RT::DeployedScienceExperiment*, RT::DeployedSciencePart*, RT::DeployedScienceCluster*, float) { ++generated; }
+    } n;
+    GE::onGroundScienceClusterRegistered.Add(&n, &Counts::OnReg);
+    GE::onGroundScienceClusterUpdated.Add(&n, &Counts::OnUpd);
+    GE::onGroundScienceClusterPowerStateChanged.Add(&n, &Counts::OnPow);
+    GE::onGroundScienceTransmitted.Add(&n, &Counts::OnTx);
+    GE::onGroundScienceGenerated.Add(&n, &Counts::OnGen);
+
+    ctrl->Start();
+    expB->Start();
+    expC->Start();
+    expB->OnStart(StartState::Landed);  // not a controller: the vessel becomes a DeployedScienceController until a controller claims the part
+    expC->OnStart(StartState::Landed);
+    CHECK(B->vesselType == VesselType::DeployedScienceController);
+    ctrl->OnStart(StartState::Landed);
+    CHECK(ctrl->ControlUnitId() == 7201u);
+    w.Frames(8);  // WaitForSeconds(2) + one frame per loaded part, then RegisterCluster
+    REQUIRE(ds.DeployedScienceClusters().Count() == 1);
+    RT::DeployedScienceCluster* cl = ds.DeployedScienceClusters()[7201u];
+    REQUIRE(cl != nullptr);
+    CHECK(cl->DeployedBody == &w.Kerbin());
+    CHECK(n.registered == 1);
+    CHECK(n.updated == 1);
+    CHECK(expB->ControlUnitId() == 7201u);   // in range: connected
+    CHECK(expC->ControlUnitId() == 0u);      // 30 m > controlUnitRange 20
+    CHECK(B->vesselType == VesselType::DeployedSciencePart);
+    REQUIRE(cl->DeployedScienceParts.size() == 2);
+    CHECK(cl->DeployedScienceParts[0]->PartId() == 7201u);
+    CHECK(cl->DeployedScienceParts[1]->PartId() == 7202u);
+    // power: the controller produces 6 units, needs 1; the experiment needs 2
+    CHECK(cl->PowerAvailable() == 6);
+    CHECK(cl->PowerRequired() == 3);
+    CHECK(cl->IsPowered());
+    CHECK(!cl->PartialPower());
+    CHECK(ctrl->GetControlSourceState() == VesselControlState::ProbeFull);
+    CHECK(ctrl->IsCommCapable());
+    CHECK(ctrl->CanComm());
+    // OnSave of the controller module records canComm in flight
+    ConfigNode ctrlSave("MODULE");
+    ctrl->OnSave(ctrlSave);
+    CHECK(*ctrlSave.GetValue("canComm") == "True");
+
+    // the experiment component starts (next frame): R&D subject, science value / limit
+    RT::SerenityBehaviour::RunPendingStarts();
+    RT::DeployedScienceExperiment* exp = cl->DeployedScienceParts[1]->Experiment;
+    REQUIRE(exp != nullptr);
+    REQUIRE(exp->Experiment != nullptr);
+    CHECK(*exp->Experiment->id == "temperatureScan");
+    REQUIRE(exp->subject != nullptr);
+    CHECK(exp->subject->id == "temperatureScan@KerbinSrfLanded");
+    CHECK(exp->ExperimentSituationValid());
+    const float expectSv = f32store(fx(exp->Experiment->baseValue) * fx(exp->Experiment->dataScale) * fx(exp->subject->subjectValue) * (fx(100.0f) / 100.0));
+    CHECK_F32(exp->ScienceValue(), expectSv);
+    CHECK_F32(exp->ScienceLimit(), exp->subject->scienceCap);
+    CHECK_F32(expB->ScienceValue(), expectSv);   // pushed into the module (event)
+    CHECK_F32(expB->ScienceLimit(), exp->subject->scienceCap);
+    CHECK_F32(exp->ScienceDiminishingModifierRate(), 1.0f);
+
+    // toggling the experiment part off drops its power requirement, on restores it (module -> events -> cluster)
+    expB->ToggleActive();
+    CHECK(!expB->Enabled());
+    CHECK(cl->PowerRequired() == 1);
+    CHECK(!cl->DeployedScienceParts[1]->Enabled());
+    expB->ToggleActive();
+    CHECK(expB->Enabled());
+    CHECK(cl->PowerRequired() == 3);
+
+    // time passes: DeployedScience.FixedUpdate starts the cluster's UpdateScience after ScienceTimeDelay (60 s)
+    // (the toggles above already ran CalcScience once with dt = 0: that is the C# behaviour, an event with num = 0)
+    const int gen0 = n.generated;
+    const float scienceBefore = rd.Science();
+    w.ut = 100.0 + 30.0;
+    ds.FixedUpdate();
+    w.Frames(2);
+    CHECK(exp->TotalScienceGenerated() == 0.0f);  // 30 s < 60 s: no cycle
+    CHECK(n.generated == gen0);
+    w.ut = 100.0 + 3600.0;
+    ds.FixedUpdate();
+    w.Frames(3);
+    CHECK(n.generated == gen0 + 1);
+    const float generated = f32store(fx(expectSv) / 60.0 / 60.0 * fx(f32store(3600.0)) * fx(1.0f) * fx(1.0f));
+    CHECK_F32(exp->TotalScienceGenerated(), generated);
+    CHECK_F64(cl->LastScienceGeneratedUT(), w.ut);
+    CHECK(!cl->UpdatingScience());
+    // TimeToSendStoredData: 10 % of the science limit stored sends the data to R&D at the end of the same cycle
+    const float storedNow = f32store(fx(generated) / fx(exp->subject->subjectValue));
+    const bool sentAtOnce = fx(storedNow) * fx(exp->subject->subjectValue) / fx(exp->ScienceLimit()) * 100.0 >= 10.0;
+    if (sentAtOnce) {
+        CHECK(n.transmitted == 1);
+        CHECK(exp->StoredScienceData() == 0.0f);
+        CHECK(rd.Science() > scienceBefore);
+    } else {
+        CHECK(n.transmitted == 0);
+        CHECK_F32(exp->StoredScienceData(), storedNow);
+    }
+    // later cycles accumulate until the science limit: the experiment part switches itself off
+    for (int i = 0; i < 80 && exp->TotalScienceGenerated() < exp->ScienceLimit(); i++) {
+        w.ut += 7200.0;
+        ds.FixedUpdate();
+        w.Frames(3);
+    }
+    CHECK(n.transmitted >= 1);
+    CHECK(rd.Science() > scienceBefore);
+    CHECK(exp->TransmittedScienceData() > 0.0f);
+    CHECK(exp->TotalScienceGenerated() <= exp->ScienceLimit());
+    CHECK(exp->TotalScienceGenerated() >= exp->ScienceLimit());  // capped exactly: the last cycle is clipped to the limit
+    w.ut += 7200.0;
+    ds.FixedUpdate();  // one more cycle: CalculateScience sees total >= limit and disables the part
+    w.Frames(3);
+    CHECK(!cl->DeployedScienceParts[1]->Enabled());
+    CHECK(!expB->Enabled());
+    CHECK(cl->PowerRequired() == 1);
+    expB->Set<bool>("moduleEnabled", true);  // (state for the save below)
+    cl->DeployedScienceParts[1]->moduleEnabled = true;
+    cl->UpdatePowerState();
+    CHECK(SerenityEnvironment::screenMessages.size() >= 1);
+    REQUIRE(ResearchAndDevelopment::GetSubjectByID("temperatureScan@KerbinSrfLanded") != nullptr);
+    CHECK(ResearchAndDevelopment::GetSubjectByID("temperatureScan@KerbinSrfLanded")->science > 0.0f);
+
+    // save / load round trip
+    ConfigNode save1("SCENARIO");
+    ds.OnSave(save1);
+    CHECK(save1.GetNode("SCIENCECLUSTERS")->GetNodes("SCIENCECLUSTER").size() == 1);
+    {
+        const ConfigNode* sc = save1.GetNode("SCIENCECLUSTERS")->GetNode("SCIENCECLUSTER");
+        CHECK(*sc->GetValue("ControlModulePartId") == "7201");
+        CHECK(*sc->GetValue("DeployedBody") == "Kerbin");
+        CHECK(sc->GetNode("MANNEDSCIENCEPARTS")->GetNodes("MANNEDSCIENCEPART").size() == 2);
+        const ConfigNode* second = sc->GetNode("MANNEDSCIENCEPARTS")->GetNodes("MANNEDSCIENCEPART")[1];
+        CHECK(*second->GetValue("PartId") == "7202");
+        REQUIRE(second->GetNode("EXPERIMENT") != nullptr);
+        CHECK(*second->GetNode("EXPERIMENT")->GetValue("ExperimentId") == "temperatureScan");
+        CHECK(second->GetNode("EXPERIMENT")->GetNode("distanceCurve") != nullptr);
+    }
+    {
+        RT::DeployedScience ds2;
+        RT::DeployedScience::Instance = nullptr;
+        ds2.Awake();
+        ds2.OnLoad(save1);
+        REQUIRE(ds2.DeployedScienceClusters().Count() == 1);
+        // the loaded components start next frame: the experiment finds its vessel by the saved VesselId
+        RT::SerenityBehaviour::RunPendingStarts();
+        ConfigNode save2("SCENARIO");
+        ds2.OnSave(save2);
+        CHECK(save1.ToString() == save2.ToString());
+        RT::DeployedScienceCluster* c2 = ds2.DeployedScienceClusters()[7201u];
+        CHECK(c2->DeployedBody == &w.Kerbin());
+        CHECK(c2->IsPowered());
+        CHECK_F32(c2->DeployedScienceParts[1]->Experiment->TotalScienceGenerated(), exp->TotalScienceGenerated());
+        for (auto* c : std::vector<RT::DeployedScienceCluster*>{c2}) c->DestroyGameObject();
+        RT::SerenityBehaviour::FlushDestroyed();
+        RT::DeployedScience::Instance = &ds;
+    }
+
+    // retrieve the experiment into the EVA kerbal's inventory: the science data goes to the container of the active vessel
+    Vessel* eva = w.Mk("mk1pod.v2", 7299, {});
+    eva->vesselType = VesselType::EVA;
+    FlightRegistry::ActiveVessel = eva;
+    auto inv = std::make_shared<SerenityEnvironment::KerbalInventory>();
+    inv->hasCapacity = [](Part&) { return true; };
+    inv->firstEmptySlot = [] { return 0; };
+    inv->storeCargoPartAtSlot = [](Part&, int) { return true; };
+    SerenityEnvironment::activeKerbalInventory = inv;
+    // some data has to be waiting
+    exp->storedScienceData = 1.25f;
+    auto* container = dynamic_cast<ModuleScienceContainer*>(eva->parts[0]->FindModuleOfClass("ModuleScienceContainer"));
+    REQUIRE(container != nullptr);
+    const int before = container->GetScienceCount();
+    expB->OnVesselChange(nullptr);
+    expB->RetrievePart();
+    CHECK(expB->beingRetrieved);
+    CHECK(expB->ControlUnitId() == 0u);
+    CHECK(container->GetScienceCount() == before + 1);
+    CHECK(exp->StoredScienceData() == 0.0f);
+    // the part left the cluster (GroundSciencePartRemoved): one part, power requirement back to the controller's
+    RT::SerenityBehaviour::FlushDestroyed();
+    CHECK(cl->DeployedScienceParts.size() == 1);
+    CHECK(cl->PowerRequired() == 1);
+    FlightRegistry::ActiveVessel = nullptr;
+
+    // the vessel of the controller is destroyed: the cluster is deregistered and destroyed
+    GE::onVesselWillDestroy.Fire(A);
+    CHECK(ds.DeployedScienceClusters().Count() == 0);
+    RT::SerenityBehaviour::FlushDestroyed();
+    GE::onGroundScienceClusterRegistered.Remove(&n, &Counts::OnReg);
+    GE::onGroundScienceClusterUpdated.Remove(&n, &Counts::OnUpd);
+    GE::onGroundScienceClusterPowerStateChanged.Remove(&n, &Counts::OnPow);
+    GE::onGroundScienceTransmitted.Remove(&n, &Counts::OnTx);
+    GE::onGroundScienceGenerated.Remove(&n, &Counts::OnGen);
 }
