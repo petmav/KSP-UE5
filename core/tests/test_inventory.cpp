@@ -5,92 +5,10 @@
 // tools/wp33/inventory_reference.py (independent Python/numpy; tests/data/wp33_reference.json) at 0 ULP, on the stock parts of
 // core/testdata/GameData-mirror. The state machines are checked against the C# line by line (the derivation is in the comment above
 // each check).
-#include <cmath>
-#include <cstring>
-#include <fstream>
-
-#include "doctest/doctest.h"
-#include "nlohmann/json.hpp"
-#include "resource_fixture.hpp"
-
-#include "ksp/core/unity_time.hpp"
-#include "ksp/events/game_events.hpp"
-#include "ksp/inventory/construction.hpp"
-#include "ksp/inventory/inventory.hpp"
-#include "ksp/kerbals/experience.hpp"
-#include "ksp/localization/localizer.hpp"
-#include "ksp/modules/module_part_variants.hpp"
-#include "ksp/physics/physics_globals.hpp"
-#include "ksp/save/save_environment.hpp"
-#include "ksp/vessel/vessel.hpp"
+#include "inventory_fixture.hpp"
 
 using namespace ksp;
-using namespace ksp::rtest;
-using Localizer = ksp::KSP::Localization::Localizer;
-
-namespace {
-
-nlohmann::json LoadRef() {
-    std::ifstream f(std::string(KSPCORE_TEST_DATA_DIR) + "/wp33_reference.json", std::ios::binary);
-    REQUIRE(f.good());
-    return nlohmann::json::parse(f);
-}
-
-uint32_t Bits(float f) {
-    uint32_t u;
-    std::memcpy(&u, &f, 4);
-    return u;
-}
-float FromBits(uint32_t u) {
-    float f;
-    std::memcpy(&f, &u, 4);
-    return f;
-}
-
-struct Reset33 {
-    Reset33() { Clear(); }
-    ~Reset33() { Clear(); }
-    static void Clear() {
-        InventoryEnvironment::Reset();
-        EVAConstructionEnvironment::Reset();
-        KerbalInventoryScenario::ClearStatics();
-        KerbalInventory::ClearAll();
-        KerbalInventory::Uninstall();
-        EVAConstructionModeController::Instance = nullptr;
-        UIPartActionControllerInventory::Instance = nullptr;
-        InventoryPanelController::Instance = nullptr;
-        UIPartActionControllerInventory::heldPartIsStack = false;
-        UIPartActionControllerInventory::stackSize = 0;
-        UIPartActionControllerInventory::amountToStore = 0;
-        PartItemTransfer::Instance = nullptr;
-        FlightRegistry::Clear();
-    }
-};
-
-template <class T>
-T* Mod(Part& p, const char* cls) {
-    auto* m = dynamic_cast<T*>(p.FindModuleOfClass(cls));
-    REQUIRE(m != nullptr);
-    return m;
-}
-
-ModuleInventoryPart* Inv(Part& p) { return Mod<ModuleInventoryPart>(p, "ModuleInventoryPart"); }
-
-// the stock inventory part, started in the editor scene (OnStart: InitializeInventory, event subscriptions)
-struct Host {
-    std::unique_ptr<Part> part;
-    ModuleInventoryPart* inv = nullptr;
-    Host(Game15& g, const char* name) {
-        part = g.New(name);
-        inv = Inv(*part);
-        inv->OnStart(StartState::Editor);
-    }
-};
-
-const AvailablePart& InfoOf(Game15& g, const std::string& n) { return g.Info(n.c_str()); }
-Part& Prefab(Game15& g, const std::string& n) { return *g.Info(n.c_str()).partPrefab; }
-
-}  // namespace
+using namespace ksp::inv33;
 
 // ================================================================ the Python reference
 
@@ -223,32 +141,6 @@ TEST_CASE("WP-33 ModuleInventoryPart: one stored part per stock cargo part (quan
 }
 
 // ================================================================ EVA construction weight limit and info labels
-
-namespace {
-
-struct FakeEva : IEvaController {
-    Part* LadderPart() override { return nullptr; }
-};
-
-// PhysicsGlobals from the game's Physics.cfg (constructionWeightLimit 588.399)
-struct PhysicsWorld {
-    PhysicsGlobals pg;
-    PhysicsWorld() {
-        pg.physicsDatabaseFilename = ksp::testing::GameRoot() + "/Physics.cfg";
-        pg.Awake("");
-        REQUIRE(pg.LoadDatabase());
-    }
-};
-
-// a bare vessel: type, situation flag and the gravity the construction code reads
-std::unique_ptr<Vessel> BareVessel(VesselType type, const Vector3f& pos) {
-    auto v = std::make_unique<Vessel>();
-    v->vesselType = type;
-    v->vesselTransform.position = pos;
-    return v;
-}
-
-}  // namespace
 
 // Part.cs:4060 + EVAConstructionUtil.cs:3 + EVAConstructionModeEditor.cs:1265 against inventory_reference.py: partWeight, the combined limit for
 // 0..4 assisting kerbals and the verdict for every stock cargo part at six gravities
