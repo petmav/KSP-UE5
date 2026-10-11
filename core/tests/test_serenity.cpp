@@ -2767,3 +2767,160 @@ TEST_CASE("WP-53 ControlledBase / RoboticCollisions / SerenityUtils (robotics ro
     CHECK(Expansions::Serenity::SerenityUtils::SerenityTexture("tex.png") != nullptr);
     CHECK(asked == "serenity_assets:Assets/Expansions/Serenity/tex.png");
 }
+
+TEST_CASE("WP-53 DeployedScience game-state load prunes clusters and parts that no longer exist; modules read their saved cluster state; recovery deregisters") {
+    Clean53 clean;
+    WorldSer w;
+    RT::DeployedScience ds;
+    ds.Awake();
+    // two saved clusters: 9001 (control part exists, second part 9002 does not), 9100 (control part missing)
+    ConfigNode scen("SCENARIO");
+    ConfigNode* clusters = scen.AddNode("SCIENCECLUSTERS");
+    {
+        ConfigNode* c1 = clusters->AddNode("SCIENCECLUSTER");
+        c1->AddValue("ControlModulePartId", 9001u);
+        c1->AddValue("DeployedBody", "Kerbin");
+        c1->AddValue("ControlModuleEnabled", true);
+        c1->AddValue("LastScienceGeneratedUT", 55.5);
+        ConfigNode* parts = c1->AddNode("MANNEDSCIENCEPARTS");
+        const auto addPart = [&](uint32_t id, int produced, bool enabled, bool solar) {
+            ConfigNode* p = parts->AddNode("MANNEDSCIENCEPART");
+            p->AddValue("PartId", id);
+            p->AddValue("Enabled", enabled);
+            p->AddValue("DeployedOnGround", true);
+            p->AddValue("PowerUnitsProduced", produced);
+            p->AddValue("ActualPowerUnitsProduced", produced);
+            p->AddValue("PowerUnitsRequired", 2);
+            p->AddValue("IsSolarPanel", solar);
+            p->AddValue("IsAntenna", false);
+        };
+        addPart(9001u, 7, true, false);
+        addPart(9002u, 3, false, true);
+        ConfigNode* c2 = clusters->AddNode("SCIENCECLUSTER");
+        c2->AddValue("ControlModulePartId", 9100u);
+        c2->AddValue("DeployedBody", "Mun");
+        c2->AddNode("MANNEDSCIENCEPARTS");
+    }
+    ds.OnLoad(scen);
+    REQUIRE(ds.DeployedScienceClusters().Count() == 2);
+    RT::DeployedScienceCluster* c1 = ds.DeployedScienceClusters()[9001u];
+    CHECK(c1->DeployedBody == &w.Kerbin());
+    CHECK_F64(c1->LastScienceGeneratedUT(), 55.5);
+    CHECK(c1->DeployedScienceParts.size() == 2);
+    CHECK(c1->SolarPanelParts().size() == 1);
+    CHECK(!RT::DeployedScience::IsActive);
+    // the live part 9001 (the controller) exists in this game; 9002 and 9100 do not
+    Vessel* v = w.Mk("mk1pod.v2", 9001, {});
+    ConfigNode game("GAME");
+    GE::onGameStateLoad.Fire(&game);
+    CHECK(RT::DeployedScience::IsActive);
+    CHECK(ds.DeployedScienceClusters().Count() == 1);
+    CHECK(ds.DeployedScienceClusters().ContainsKey(9001u));
+    CHECK(c1->DeployedScienceParts.size() == 1);
+    CHECK(c1->DeployedScienceParts[0]->PartId() == 9001u);
+    CHECK(c1->SolarPanelParts().empty());  // the removed part left the solar list too
+    RT::SerenityBehaviour::FlushDestroyed();
+
+    // a module loading after the scenario takes its numbers from the saved cluster part (ModuleGroundSciencePart.OnLoad)
+    Vessel* w2 = w.Mk("mk1pod.v2", 9002, {});
+    (void)w2;
+    {
+        Part& p = *v->parts[0];
+        ConfigNode node("MODULE");
+        node.AddValue("name", "ModuleGroundSciencePart");
+        node.AddValue("ControlUnitId", 9001u);
+        node.AddValue("powerUnitsProduced", 1);
+        node.AddValue("powerUnitsRequired", 1);
+        node.AddValue("moduleEnabled", false);
+        PartModuleData* md = p.AddModule(node, true);
+        REQUIRE(md != nullptr);
+        auto* m = dynamic_cast<ModuleGroundSciencePart*>(md->module.get());
+        REQUIRE(m != nullptr);
+        CHECK(m->PowerUnitsProduced() == 7);  // from the saved DeployedSciencePart of part 9001
+        CHECK(m->PowerUnitsRequired() == 2);
+        CHECK(m->Enabled());
+        CHECK(!m->IsSolarPanel());
+        CHECK(m->ScienceClusterData() == c1);
+    }
+
+    // recovery of a vessel carrying the control part deregisters the cluster (OnVesselRecovered / OnVesselTerminated)
+    ConfigNode::NodePtr save = ConfigNode::Load(std::string(KSPCORE_TESTDATA_DIR) + "/saves/physprofile/persistent.sfs");
+    REQUIRE(save);
+    ConfigNode* vnode = save->GetNode("GAME")->GetNode("FLIGHTSTATE")->GetNode("VESSEL");
+    REQUIRE(vnode != nullptr);
+    Game g2;
+    ProtoVessel pv(*vnode, &g2);
+    REQUIRE(!pv.protoPartSnapshots.empty());
+    pv.protoPartSnapshots[0]->persistentId = 9001u;
+    int deregistered = 0;
+    struct L {
+        int* n;
+        void On(uint32_t) { ++*n; }
+    } l{&deregistered};
+    GE::onGroundScienceDeregisterCluster.Add(&l, &L::On);
+    GE::onVesselRecovered.Fire(&pv, false);
+    CHECK(ds.DeployedScienceClusters().Count() == 0);
+    GE::onGroundScienceDeregisterCluster.Remove(&l, &L::On);
+    RT::SerenityBehaviour::FlushDestroyed();
+    // terminating a vessel with no cluster is harmless
+    GE::onVesselTerminated.Fire(&pv);
+    CHECK(ds.DeployedScienceClusters().Count() == 0);
+    (void)deregistered;
+}
+
+TEST_CASE("WP-53 DeployedScience.DeRegisterCluster retypes the other parts' vessels and re-rates the diminishing returns") {
+    Clean53 clean;
+    WorldSer w;
+    ResearchAndDevelopment rd;
+    rd.Awake();
+    ConfigNode rdEmpty("ResearchAndDevelopment");
+    rd.OnLoad(rdEmpty);
+    RT::DeployedScience ds;
+    ds.Awake();
+    ConfigNode empty("SCENARIO");
+    ds.OnLoad(empty);
+    // two clusters on Kerbin with the same experiment: 2 experiments -> the second gets rate 0.2 (default table), after deregistering the first the other is the only one (1.0)
+    Vessel* A = w.Mk("mk1pod.v2", 9201, {{"ModuleGroundExpControl", {{"deployedOnGround", "True"}, {"powerUnitsProduced", "9"}}}});
+    Vessel* B = w.Mk("mk1pod.v2", 9202, {{"ModuleGroundExperiment", {{"experimentId", "temperatureScan"}, {"deployedOnGround", "True"}, {"ScienceModifierRate", "100"}}}},
+                     Vector3f(3.0f, 0.0f, 0.0f));
+    Vessel* C = w.Mk("mk1pod.v2", 9203, {{"ModuleGroundExpControl", {{"deployedOnGround", "True"}, {"powerUnitsProduced", "9"}}}}, Vector3f(500.0f, 0.0f, 0.0f));
+    Vessel* D = w.Mk("mk1pod.v2", 9204, {{"ModuleGroundExperiment", {{"experimentId", "temperatureScan"}, {"deployedOnGround", "True"}, {"ScienceModifierRate", "50"}}}},
+                     Vector3f(503.0f, 0.0f, 0.0f));
+    auto* cA = WorldSer::Mod<ModuleGroundExpControl>(*A->parts[0], "ModuleGroundExpControl");
+    auto* eB = WorldSer::Mod<ModuleGroundExperiment>(*B->parts[0], "ModuleGroundExperiment");
+    auto* cC = WorldSer::Mod<ModuleGroundExpControl>(*C->parts[0], "ModuleGroundExpControl");
+    auto* eD = WorldSer::Mod<ModuleGroundExperiment>(*D->parts[0], "ModuleGroundExperiment");
+    for (auto* m : std::vector<ModuleGroundSciencePart*>{cA, eB, cC, eD}) m->Start();
+    eB->OnStart(StartState::Landed);
+    eD->OnStart(StartState::Landed);
+    cA->OnStart(StartState::Landed);
+    cC->OnStart(StartState::Landed);
+    w.Frames(10);
+    REQUIRE(ds.DeployedScienceClusters().Count() == 2);
+    RT::SerenityBehaviour::RunPendingStarts();
+    RT::DeployedScienceCluster* c1 = ds.DeployedScienceClusters()[9201u];
+    RT::DeployedScienceCluster* c2 = ds.DeployedScienceClusters()[9203u];
+    REQUIRE(c1->DeployedScienceParts.size() == 2);
+    REQUIRE(c2->DeployedScienceParts.size() == 2);
+    RT::DeployedScienceExperiment* e1 = c1->DeployedScienceParts[1]->Experiment;
+    RT::DeployedScienceExperiment* e2 = c2->DeployedScienceParts[1]->Experiment;
+    REQUIRE(e1 != nullptr);
+    REQUIRE(e2 != nullptr);
+    // ExpDimReturnsRate counts the powered clusters' experiments on the body with this id: 2 -> 0.2; the one with the higher ScienceModifierRate keeps 1.0
+    CHECK_F32(ds.ExpDimReturnsRate("temperatureScan", "Kerbin"), 0.2f);
+    RT::DeployedSciencePart* best = ds.ExpMaxScienceMultiplier("temperatureScan", "Kerbin");
+    REQUIRE(best != nullptr);
+    CHECK(best->PartId() == 9202u);  // 100 > 50
+    CHECK_F32(e1->ScienceDiminishingModifierRate(), 1.0f);
+    CHECK_F32(e2->ScienceDiminishingModifierRate(), 0.2f);
+    // deregister the first cluster: the other experiment is alone again
+    ds.DeRegisterCluster(9201u);
+    CHECK(ds.DeployedScienceClusters().Count() == 1);
+    CHECK_F32(e2->ScienceDiminishingModifierRate(), 1.0f);
+    // the experiment part's vessel became a DeployedScienceController
+    CHECK(B->vesselType == VesselType::DeployedScienceController);
+    CHECK(ds.ExpMaxScienceMultiplier("temperatureScan", "Mun") == nullptr);
+    RT::SerenityBehaviour::FlushDestroyed();
+    ds.DeRegisterCluster(12345u);  // unknown id: nothing happens
+    CHECK(ds.DeployedScienceClusters().Count() == 1);
+}
