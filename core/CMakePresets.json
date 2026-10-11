@@ -84,6 +84,30 @@
         "CMAKE_CXX_COMPILER": "g++"
       },
       "binaryDir": "${sourceDir}/build/linux-gcc-rel"
+    },
+    {
+      "name": "spike-jolt",
+      "displayName": "Jolt physics spike, Release, Jolt DOUBLE_PRECISION (PHYSICS-SPIKE.md; no tests, fetches Jolt)",
+      "inherits": "msvc-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "KSPCORE_BUILD_TESTS": "OFF",
+        "KSPCORE_BUILD_SPIKES": "ON",
+        "KSP_JOLT_DOUBLE": "ON"
+      },
+      "binaryDir": "${sourceDir}/build/spike-jolt"
+    },
+    {
+      "name": "spike-jolt-f32",
+      "displayName": "Jolt physics spike, Release, Jolt single precision (PHYSICS-SPIKE.md; no tests, fetches Jolt)",
+      "inherits": "msvc-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "KSPCORE_BUILD_TESTS": "OFF",
+        "KSPCORE_BUILD_SPIKES": "ON",
+        "KSP_JOLT_DOUBLE": "OFF"
+      },
+      "binaryDir": "${sourceDir}/build/spike-jolt-f32"
     }
   ],
   "buildPresets": [
@@ -106,6 +130,14 @@
     {
       "name": "linux-gcc-rel",
       "configurePreset": "linux-gcc-rel"
+    },
+    {
+      "name": "spike-jolt",
+      "configurePreset": "spike-jolt"
+    },
+    {
+      "name": "spike-jolt-f32",
+      "configurePreset": "spike-jolt-f32"
     }
   ],
   "testPresets": [

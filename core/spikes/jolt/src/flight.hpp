@@ -1,0 +1,78 @@
+// Jolt spike: one flight scenario (pad -> ignition -> powered ascent, or a coast in orbit) with per-phase timing. The tick
+// follows KSP's measured order (PHYSICS-ENGINE-REVIEW.md 1.2): VesselPrecalculate (state readback, gravity at the CoM with
+// Coriolis / centrifugal in the rotating frame), the per-part work (mass, atmosphere, aero, engines), the force flush
+// (FlightIntegrator.Integrate), the solver step, then joint loads / breaking. No FloatingOrigin / Krakensbane phase: the frame
+// is body-fixed double (lever 1); `perTickShift` re-adds KSP's every-tick world shift for measurement only.
+#pragma once
+
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "craft_model.hpp"
+#include "jolt_world.hpp"
+#include "part_pipeline.hpp"
+#include "terrain_patch.hpp"
+
+namespace spike {
+
+struct FlightConfig {
+    std::string model = "articulated";  // articulated | reduced-whole | reduced-split
+    int ticks = 1500;                   // 30 s at 0.02 s
+    int settleTicks = 100;              // engines off on the pad first (KSP: 10 s settle, here 2 s)
+    double dt = 0.02;                   // TimeWarp.fixedDeltaTime (0.02 x physics warp rate)
+    int collisionSteps = 1;
+    float throttle = 1.0f;
+    bool aero = true;
+    PartPipeline::AeroKernel kernel = PartPipeline::AeroKernel::Exact;
+    bool terrain = true;
+    TerrainConfig terrainCfg;
+    bool rotatingFrame = true;          // KSP: Kerbin's inverse-rotation frame below 100 km [runtime]
+    bool originAtBody = true;           // physics-frame origin at Kerbin's centre (needs double); false: at the pad
+    bool perTickShift = false;          // emulate FloatingOrigin.setOffset every tick (measurement)
+    bool gravityEase = true;            // VesselPrecalculate easing: gravity 0 -> 1 in 16 ticks after unpack
+    bool breaking = true;
+    bool stress = true;                 // reduced model: structural loads every tick
+    bool inertiaFloor = true;
+    int fireDecouplersAtTick = -1;
+    bool orbit = false;                 // start in a circular equatorial-plane orbit (inertial frame, no terrain)
+    double orbitAltitude = 80000.0;
+    int sampleEvery = 10;               // trajectory / joint-error sample period (outside the timed phases)
+    WorldConfig world;
+};
+
+struct Percentiles {
+    double mean = 0, p50 = 0, p95 = 0, max = 0;
+};
+
+struct Sample {
+    int tick;
+    double t, altitude, speed;
+    double comX, comY, comZ;  // body-fixed
+    float jointError;
+};
+
+struct FlightResult {
+    std::string craft, model;
+    int parts = 0, physicalParts = 0, bodies = 0, constraints = 0, statics = 0, triangles = 0;
+    int bodiesAfterStaging = 0;
+    double buildMs = 0, terrainMs = 0;
+    // per tick (ms), over the measured ticks (after settle)
+    Percentiles precalc, pipeline, flush, step, after, shift, total;
+    PipelineTimes pipelineSum;  // summed over measured ticks
+    int measuredTicks = 0;
+    double altitudeEnd = 0, speedEnd = 0, machMax = 0, qMax = 0;
+    float maxJointError = 0;    // over the samples
+    int breaks = 0, firstBreakTick = -1;
+    std::string firstBreak;
+    double stagingMs = 0;       // cost of the FireDecouplers event
+    float maxLoadRatio = 0;     // reduced: max load / capacity seen
+    std::string maxLoadJoint;
+    long long soaMismatches = 0, soaCompared = 0;
+    bool exploded = false;      // NaN / runaway state
+    std::vector<Sample> samples;
+};
+
+FlightResult RunFlight(KspContext& ctx, CraftModel& craft, const FlightConfig& cfg);
+
+}  // namespace spike
