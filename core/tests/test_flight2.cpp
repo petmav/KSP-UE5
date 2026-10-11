@@ -584,3 +584,31 @@ TEST_CASE("WP-19a VesselPrecalculate easing: the gravity multiplier ramps 0 -> 1
     GE::onPhysicsEaseStart.Remove(hS);
     GE::onPhysicsEaseStop.Remove(hE);
 }
+
+TEST_CASE("WP-19a VesselRanges: a new Vessel copies PhysicsGlobals.VesselRangesDefault (Physics.cfg); the situation picks the range set (DOCKED and ORBITING share `orbit`)") {
+    FlightEnv w;
+    CelestialBody* kerbin = w.Body("Kerbin");
+    Vessel* a = w.MakeVessel("a", kerbin);
+    const VesselRanges& def = PhysicsGlobals::Instance()->VesselRangesDefault;
+    CHECK(a->vesselRanges.flying.pack == def.flying.pack);
+    CHECK(a->vesselRanges.flying.pack == 25000.0f);  // Physics.cfg VesselRanges (the game's values)
+    CHECK(a->vesselRanges.landed.unpack == 200.0f);
+    CHECK(a->vesselRanges.subOrbital.unload == 15000.0f);
+    // the global default changes new vessels only
+    PhysicsGlobals::Instance()->VesselRangesDefault.orbit.pack = 123.0f;
+    Vessel* b = w.MakeVessel("b", kerbin);
+    CHECK(b->vesselRanges.orbit.pack == 123.0f);
+    CHECK(a->vesselRanges.orbit.pack == 350.0f);
+    PhysicsGlobals::Instance()->VesselRangesDefault.orbit.pack = 350.0f;
+    // GetSituationRanges: every situation but the five named ones (and ESCAPING) uses `orbit`
+    CHECK(&a->vesselRanges.GetSituationRanges(Vessel::Situations::DOCKED) == &a->vesselRanges.orbit);
+    CHECK(&a->vesselRanges.GetSituationRanges(Vessel::Situations::ORBITING) == &a->vesselRanges.orbit);
+    CHECK(&a->vesselRanges.GetSituationRanges(Vessel::Situations::ESCAPING) == &a->vesselRanges.escaping);
+    CHECK(&a->vesselRanges.GetSituationRanges(Vessel::Situations::SUB_ORBITAL) == &a->vesselRanges.subOrbital);
+    // the obsolete Vessel.distance*Threshold accessors read / write the orbit and landed sets (Vessel.cs:804-868)
+    a->set_distancePackThreshold(777.0f);
+    CHECK(a->vesselRanges.orbit.pack == 777.0f);
+    CHECK(a->distancePackThreshold() == 777.0f);
+    a->set_distanceLandedUnpackThreshold(55.0f);
+    CHECK(a->vesselRanges.landed.unpack == 55.0f);
+}

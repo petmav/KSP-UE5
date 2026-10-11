@@ -308,7 +308,7 @@ TEST_CASE("WP-19a Vessel.Update / LateUpdate state: PRELAUNCH keeps resetting th
     CHECK(v->partMaxGThresh == 0.9);
 }
 
-TEST_CASE("WP-19a rails <-> physics: GoOnRails applies a pending drift correction and refits the orbit, state vectors are preserved; save/load of a vessel on rails") {
+TEST_CASE("WP-19a rails <-> physics: GoOnRails applies a pending drift correction and refits the orbit; state vectors are preserved") {
     auto part = std::make_unique<Part>();
     part->hasRigidbody = true;
     FlightEnv w;
@@ -471,4 +471,51 @@ TEST_CASE("WP-19a VesselSwitching: a second instance destroys itself; FindCandid
     CHECK(next == std::vector<Vessel*>{vs[0], vs[2]});
     next = a.FindCandidates(1, true, skipped);
     CHECK(next == std::vector<Vessel*>{vs[0], vs[1], vs[2]});
+}
+
+TEST_CASE("WP-19a save_load_cycle on rails: BackupVessel -> VESSEL node -> ProtoVessel -> Vessel reproduces the orbit and the propagated position within 1e-6 m") {
+    FlightEnv w;
+    CelestialBody* kerbin = w.Body("Kerbin");
+    Vessel* other = w.MakeVessel("pad", kerbin, kerbin->Radius + 70.0, 0.0, true, false, OrbitDriver::UpdateMode::IDLE);
+    FlightGlobals::ActiveVessel = other;
+    FlightGlobals::ready = true;
+    Vessel* v = w.MakeVessel("probe", kerbin, 900000.0, 0.35, false, true);
+    v->vesselType = VesselType::Probe;
+    const double ut0 = Planetarium::GetUniversalTime();
+    for (int i = 1; i <= 20; i++) {
+        w.planetarium.time = ut0 + 0.02 * i;
+        v->precalc.FixedUpdate();
+    }
+    ProtoVessel* proto = v->BackupVessel();
+    REQUIRE(proto != nullptr);
+    ConfigNode node("VESSEL");
+    proto->Save(node);
+    ProtoVessel reloaded(node, nullptr);
+    std::unique_ptr<Vessel> v2 = reloaded.Load(nullptr);
+    REQUIRE(v2 != nullptr);
+    v2->orbitDriver->Start();  // Unity starts the OrbitDriver and the Vessel components on the next frame
+    v2->Start();
+    CHECK(v2->packed);
+    CHECK_FALSE(v2->loaded);
+    CHECK(v2->vesselName == "probe");
+    CHECK(v2->orbitDriver->updateMode == OrbitDriver::UpdateMode::UPDATE);
+    // the orbit snapshot is lossless ("G17" text)
+    const Orbit& a = v->orbit();
+    const Orbit& b = v2->orbit();
+    CHECK(SameBits(a.semiMajorAxis, b.semiMajorAxis));
+    CHECK(SameBits(a.eccentricity, b.eccentricity));
+    CHECK(SameBits(a.inclination, b.inclination));
+    CHECK(SameBits(a.LAN, b.LAN));
+    CHECK(SameBits(a.argumentOfPeriapsis, b.argumentOfPeriapsis));
+    CHECK(SameBits(a.meanAnomalyAtEpoch, b.meanAnomalyAtEpoch));
+    CHECK(SameBits(a.epoch, b.epoch));
+    CHECK(b.referenceBody == kerbin);
+    // and both propagate to the same positions (within the Kepler solver tolerance)
+    for (double dt : {10.0, 1000.0, 50000.0}) {
+        w.planetarium.time = ut0 + dt;
+        v->precalc.FixedUpdate();
+        v2->precalc.FixedUpdate();
+        CHECK((v->orbitDriver->pos - v2->orbitDriver->pos).magnitude() < 1e-6);
+    }
+    FlightGlobals::RemoveVessel(v2.get());
 }

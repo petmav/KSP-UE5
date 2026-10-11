@@ -1,6 +1,6 @@
 # kspcore status
 
-Updated 2026-10-11 (WP-50, WP-35, WP-36, WP-37, WP-39, WP-40, small fixes wave 5; 2026-10-10: WP-00, WP-17, WP-22, WP-23, WP-24, WP-25, WP-26, WP-27, WP-28, WP-30, WP-31). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
+Updated 2026-10-12 (WP-19a; 2026-10-11: WP-50, WP-35, WP-36, WP-37, WP-39, WP-40, small fixes wave 5; 2026-10-10: WP-00, WP-17, WP-22, WP-23, WP-24, WP-25, WP-26, WP-27, WP-28, WP-30, WP-31). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core\run_tests.ps1`
 (details in README.md). Local git repository in `core/` only, never pushed.
 
 ## Summary
@@ -47,8 +47,9 @@ Updated 2026-10-11 (WP-50, WP-35, WP-36, WP-37, WP-39, WP-40, small fixes wave 5
 | 36. WP-54 Making History mission runtime, slice 1 (branch `wp54`, from main `af3798c6`, main merged) | done for the engine-agnostic part, unit-gated against an independent Python reference at 0 differences (no golden or capture of missions exists; every stock `.mission` / `.loadmeta` / `.craft` in the mirror is a 0-byte file, so graphs are synthetic algorithm inputs): flow graph + parser (MEFlowParser, Then/Or blocks, NodePaths), MENode / TestGroup / TestModule / ActionModule bases and registries (the WP-55 seam), DynamicModule(List), scoring (ScoreModule_* float32 bit-exact), awards, validator, Mission (InitMission, Load / Save, run-time state machine, objective printing), MissionSituation / Instructor / PartFilter / MappedVessel / MissionPack; 14 unit cases / 22,458 assertions; `check_cites.py` exact 482 cites, 0 mismatches. Slice 2 (~60 files: vessel situations, restrictions, crew, MissionImporting, params) and the WP-55 node library are not ported. See the WP-54 section |
 | 37. WP-33 inventory and EVA construction (branch `wp33`, from main `af3798c6`) | done for the engine-agnostic part, unit-gated (no golden or capture covers inventories or EVA construction; every existing gate unchanged): StoredPart, ModuleCargoPart (settle coroutine, weld sparks, construction highlight), ModuleInventoryPart (slots, stacks, variants, store / clear / remove, EVA propellant refill, STOREDPARTS + legacy formats, OnCopy / Instantiate copy, mass / volume / cost maths and limit flags with PreviewLimits / HasCapacity, ground-part placement and deployment), KerbalInventoryScenario + the kerbal inventory glue (`ProtoCrewMember` hooks, SaveInventory), the EVA construction weight limit and assisting kerbals, the Place / Move / Rotate mode machine, CheckAttach (stack and surface pose), attach / detach / backup / restore / drop with the dropped-part vessel node, gizmo callbacks, PartItemTransfer and the headless inventory UI models; compared 0 ULP / exact with the independent `tools/wp33/inventory_reference.py` (36 container fills, 288 previews, 312 HasCapacity, 206 singles, 177 parts, 5,310 weight rows, 35 label texts); the WP-06 stand-ins are replaced by the real classes | see "WP-33" below: kerbalEVA prefab mass and `Quaternion.Euler` / `LookRotation` are not verified, the orbital drop branch is not exercised; Unity widgets / audio / raycasts / colliders / gizmo objects are documented seams (WP-32 / WP-46 / WP-47) |
 | 39. WP-20a physics world, frames, Jolt vendored (branch `wp20a`, from `jolt-spike` head `b3b70db5`, main merged) | done for the engine-agnostic part, analytic-gated (PhysX is not reproducible; no golden or capture exists; every existing gate unchanged): Jolt Physics v5.6.0 vendored in `third_party/jolt` (no network in any build; double precision, the spike's configuration), `PhysicsWorld` (pimpl over one Jolt PhysicsSystem: Static / Moving layers, same-vessel `GroupFilter`, double positions, fixed step from `Time::fixedDeltaTime` at the `PlayerLoop::physicsStep` slot, forces, `StateHash`), Krakensbane.cs (frame velocity as a velocity offset only, `SafeToEngage`, `AddExcess`, `Zero`, events), FloatingOrigin.cs without the world shift (`FrameOffset()`), OrbitPhysicsManager rotating-frame decision and re-expression, `getCentrifugalAcc` / `getCoriolisAcc`; 14 unit cases / 147 assertions incl. determinism at 1 / 2 / 4 / 8 threads and a 1,958 s Kepler orbit held to 22 m (radius) / 0.2 m (end position); vessel rigid bodies, joints, queries and contacts are documented seams (WP-20b..e) |
+| 40. WP-19a flight registry, on-rails propagation, VesselPrecalculate (branch `wp19a`, from main `308a7fe9`) | done for the engine-agnostic part, gated: `capture.vessel_rails` (the C8 in-game capture through REAL `Vessel`s in the registry: 6 probes, warp 1x-100,000x, 4 SOI changes, real `CheckKill`; 0 ULP on every column, newly `packed` / `loaded` / `update_mode`) and 27 unit cases / 18,711 assertions against an independent Python reference (gee force, Coriolis / centrifugal, drift decision and compensation, gravity integration at 0 ULP; pack / unpack, load / unload, `CheckKill`, `updateSituation`, `VesselSwitching` as identical decisions over 500-800 scenes each); `physics_orbit_hold`: 6.4 mm over 10 orbits with the drift compensation vs 22.8 m radius error per orbit without. FlightGlobals.cs is the ONE registry (`FlightRegistry` is an alias; TimeWarp's view is `ActiveVesselView` / `VesselsLoadedView`, refreshed automatically), VesselPrecalculate.cs, OrbitPhysicsManager pack / unpack / hold, Vessel `Update` / `LateUpdate` / `CheckKill`, VesselSwitching.cs, and `FlightScene` (the script order measured in game: gravity before Krakensbane / FloatingOrigin). CHANGED vs WP-14: `MOI.Zero()` etc. on `Vector3` fields are no-ops in KSP. Seams for WP-19b / WP-20b: `readPhysicsState` (double-frame `VesselPhysics::ReadState`), `offsetVelocity`, `rootRigidbody`, `OrbitPhysicsManager::env`; deferred: QuickSaveLoad, debug orbit setters, navball orientation |
 
-## Test results (all 35 ctest tests pass (34 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience)
+## Test results (all 36 ctest tests pass (35 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience, WP-19a capture.vessel_rails)
 
 Every numeric column of every gate: **max ULP 0, max abs 0** (bit-exact, and the same decimal text). Tolerance files:
 harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture gates use `tests/tolerances_capture.json`
@@ -4852,3 +4853,114 @@ On Linux GCC the same numbers (plain end error 9.5 m instead of 8.0 m: a differe
 ### Verification
 
 Windows MSVC RelWithDebInfo, after merging origin/main (24 commits): ctest 34 / 34 pass, unit 718 cases / 1,094,123 assertions (WP-20a: 14 / 147 of them); Linux GCC 13.3 Release (WSL Ubuntu 24.04, own build tree): the WP-20a cases 14 / 147 pass, the whole tree builds. Final fresh-build verification: see PROGRESS-wp20a.md.
+
+
+## WP-19a: flight-scene vessel registry, on-rails propagation, VesselPrecalculate (branch `wp19a`, from main `308a7fe9`, WP-20a merged)
+
+State: done for the engine-agnostic part. Scope = `core/PHYSICS-SPIKE.md` package WP-19a (section 7); frames and the physics bubble (`setRotatingFrame` /
+`setDominantBody` effects on rigid bodies, `Vessel.ChangeWorldVelocity`, multiple loaded vessels) are WP-19b, rigid bodies are WP-20b. No physics body is
+created or destroyed anywhere in this package: every engine touch is a documented hook of `Vessel::env` (`VesselEnvironment`).
+**Gates.** (1) `capture.vessel_rails` (new ctest, dataset `tools/golden_runner/ds_vessel_rails.cpp`): the in-game C8 capture `orbit_rails_ingame.json` through REAL
+`ksp::Vessel` objects in the FlightGlobals registry (see below). (2) 27 unit cases / 18,711 assertions (`tests/test_flight.cpp`, `test_flight2.cpp`,
+`test_flight3.cpp`) against `tools/wp19a/flight_reference.py`, an independent Python implementation written from the decompiled C# (no kspcore code;
+`tests/data/wp19a_reference.json`, 4.7 MB, regenerated with `python -I tools/wp19a/flight_reference.py`, byte-identical). `harness/compare/tolerances.json` and
+`tests/tolerances_capture.json` are untouched (capture tolerance stays 0 ULP).
+
+### Gate results (Windows MSVC RelWithDebInfo; same on the Linux GCC build, see Verification)
+
+| gate | what | result |
+|---|---|---|
+| `capture.vessel_rails` | C8: 6 probes (3 Kerbin orbits, the e = 0.81 and GTO orbits, the Mun encounter) as unloaded packed Vessels with an OrbitDriver in UPDATE mode, 5 warp segments 1x ... 100,000x, 4 on-rails SOI changes (BSP). Per frame (measured Unity order, `flight_scene.hpp`): Planetarium.FixedUpdate, `VesselPrecalculate.FixedUpdate` (MainPhysics: UpdateOrbit, CalculatePhysicsStats, UpdatePosVel, UpdateAcceleration, **real `Vessel.CheckKill`**), `OrbitDriver.FixedUpdate`, FlightGlobals, TimeWarp. SOI rows come from `GameEvents.onVesselSOIChanged` (what the capture's handler records). | every gated column **max ULP 0**: `initial` 6 rows x 11, `samples` 2,565 vessel rows (UT, warp_rate, updateUT, pos / vel / relpos_at_UT x3, 9 orbital elements, ObT, meanAnomaly, trueAnomaly, update_mode), **newly `samples.packed` and `samples.loaded`** (2,565 each, were excluded in `capture.orbit_rails`), `frames` 450 rows (Zup, inverseRotAngle, frame_is_rotating), `segments` 5, `soi_events` 4 |
+| gee force, Coriolis, centrifugal | `FlightGlobals.getGeeForceAtPosition` (300 cases), `getCentrifugalAcc` / `getCoriolisAcc` (300 cases, FlightGlobals and WP-20a ReferenceFrame versions) | 0 ULP |
+| drift check / compensation | `VesselPrecalculate.cs:278-314`: decision (600 cases incl. exactly-on-threshold), pre / post velocity offsets, gAccel, gravityForPos, `IsInvalid` reset (500 cases, 20 with inf / NaN) | 0 ULP (NaN payload ignored) |
+| gravity integration | rotating and inertial frame, easing multiplier included (500 cases) | 0 ULP |
+| pack / unpack | `OrbitPhysicsManager.LateUpdate` (500 scenes: warp mode, rates, hold, warp drive, per-situation ranges, `BestSituation`), float32 `Vector3.Distance` under the Mono rule | all actions and final `packed` flags equal (536 pack / unpack actions) |
+| load / unload | `Vessel.Update` (500 scenes) incl. the sequential unload-then-load re-check | equal |
+| `CheckKill` | 600 scenes: on-rails pressure kill, crash through terrain (loaded: onCrash; unloaded: Die), pack-range sqrMagnitude in float | equal |
+| `updateSituation` | 800 scenes: LANDED / SPLASHED / PRELAUNCH (speed 2.5, easing, spawning) / FLYING / SUB_ORBITAL / ORBITING / ESCAPING, `PeA` vs atmosphere depth, `ApR` vs SOI | equal (DOCKED is never produced) |
+| `VesselSwitching` | 600 scenes: next / previous loaded vessel, modifier key, packed vessels when not clear to save, its screen messages | equal |
+| `physics_orbit_hold` | coasting vessel, circular 80 km Kerbin orbit, dt 0.02, single rigid body, semi-implicit Euler, the per-frame sequence of KSP (VesselPrecalculate, FlightIntegrator, step, Update, TrackRigidbody refit) | **with compensation: max position error 6.4 mm and max radius error 1.6 mm over 10 orbits (937,405 ticks, 5.6 s); without: 91 m position / 22.8 m radius error over one orbit** (the spike measured 23-24 m); compensation active on every tick but the first |
+| `save_load_cycle` (rails) | BackupVessel -> VESSEL node -> ProtoVessel -> Vessel: orbit elements bit-exact, propagated position within 1e-6 m at +10 s, +1,000 s, +50,000 s | within |
+| rails <-> physics | `GoOnRails` applies the pending post-integration correction, refits the orbit to the physics state (position 1e-6 m, velocity 1e-6 m/s) | within |
+
+Not gated bit-exactly (and why): `samples.world_rel_*` (`GetWorldPos3D() - mainBody.position`): 7,294 of 7,695 values are exact, the rest differ by up to
+3.0e-12 relative (16,384 ULP): the game adds and subtracts its own absolute floating-origin `mainBody.position`, kspcore's body positions are different
+doubles. Compared offline, not a ctest column. Body rows (`body:Mun`, `body:Minmus`) stay in `capture.orbit_rails` (a body has no Vessel state).
+Exact / approximate / changed: everything above is **exact** (0 ULP or identical decisions) against the C# reading; the Kepler solver result depends on the
+call history of an `Orbit` object (Newton from the previous eccentric anomaly), so two Orbit objects agree to its tolerance (4 m on a 2.1 km/s orbit
+at the first tick of the FlightScene test), not bit for bit: the capture gate is exact because the call sequence is the game's.
+
+### What is ported (by C# file)
+
+| C# file | C++ | ported | not ported (and why) |
+|---|---|---|---|
+| FlightGlobals.cs (2,003 lines) | `celestial/flight_globals.hpp`, `src/celestial/flight_globals.cpp` (bodies), `src/vessel/flight_globals_vessels.cpp` (registry, vessels) | the vessel registry (Add / Remove / Sort / Find, Count*, the persistent-id dictionaries kept in `SaveEnvironment` now maintained as in the C#), `SetActiveVessel` / `ForceSetActiveVessel` / `ClearDeadVessels` / `ClearAllVessels` with the events and refusals (`ClearToSave`, discovery level), `ClearToSave`, `FindPartByID`, `FindNearestControllableVessel`, `FindNearestVesselWhere`, `GetBodyByName` / index / home body / comet perturber, `getMainBody`, `getGeeForceAtPosition`, `getCentrifugalAcc`, `getCoriolisAcc`, temperature / pressure / density / altitude / up-axis queries, `SetVesselTarget`, `UpdateInformation` (minus the navball orientation), `Awake` / `Start` / `FixedUpdate` / `Update` / `OnSceneChange`, the part / vessel event hooks, `ToggleVesselEaseIn`, speed display modes, the `ship_*` properties | `SetShipOrbit` / `SetShipOrbitRendezvous` / `SetVesselPosition` / `OnGameUnpaused` (debug-menu orbit setters: need `Vessel.KillPermanentGroundContact`, `FloatingOrigin.SetOffset`, `OrbitPhysicsManager.SetDominantBody` effects: WP-19b), `getFoR` / `GetFoR` and the navball orientation of `UpdateInformation` (native `Quaternion.LookRotation` / `eulerAngles`), the GameObject upward-part caches, `physicalObjects` bodies (WP-19b), `DiscoveryInfo.displayName` text (UI) |
+| VesselPrecalculate.cs (525) | `vessel/vessel_precalculate.hpp`, `src/vessel/vessel_precalculate.cpp` | whole class: MainPhysics, Update, RunFirst, CalculateGravity (gravity, Coriolis, centrifugal, easing with its events and the "PhysicsEase" lock, drift decision and compensation), ApplyVelocityCorrection, GoOnRails, SetLandedPosRot, onDockingComplete; the arithmetic is `PrecalcMath::` (pure functions: the unit under the Python reference) | `CalculatePhysicsStats` is `Vessel::CalculatePhysicsStats` (WP-14) with the new seams below; the ScreenMessage of easing is recorded (`easingMessageSeconds`), not shown |
+| OrbitPhysicsManager.cs (353) | `physics/orbit_physics_manager.hpp`, `src/physics/orbit_physics_manager.cpp` | singleton, Start, HoldVesselUnpack, FixedUpdate (hold counter, reference-frame check), LateUpdate (pack / unpack of every vessel), `checkReferenceFrame` decision chain | what `setDominantBody` / `setRotatingFrame` do to rigid bodies (WP-19b): without a hook they do the state part only (`dominantBody`, `inverseRotation`, events); hooks `OrbitPhysicsManager::env` |
+| Vessel.cs (4,664) | `vessel/vessel.hpp`, `src/vessel/vessel_flight.cpp`, `vessel_motion.cpp`, `vessel_transitions.cpp` | `FixedUpdate`, `Update` (mission time, load / unload by `VesselRanges`, autopilot), `LateUpdate`, `CheckKill`, `OffsetVelocity`, `GoOnRails` / `GoOffRails` now call `precalc` and `FlightInputHandler.SetLaunchCtrlState / ResumeVesselCtrlState` as the C# does | `AddRBAnchor`, `ChangeWorldVelocity` / `SetWorldVelocity` (WP-19b), `SendMessage` |
+| VesselSwitching.cs (130) | `vessel/vessel_switching.hpp`, `src/vessel/vessel_switching.cpp` | whole class (keys, map, pause, camera and messages through `VesselSwitching::env`) | `CameraManager` |
+| VesselRanges.cs, ProtoVessel / FlightState live paths | WP-04 / WP-14 (unchanged) | used by the above | `QuickSaveLoad.cs` (494: UI, file I/O and scene reload; the data path BackupVessel -> VESSEL node -> Load is gated above) and `VesselRetrieval.cs` stay deferred |
+
+New file `vessel/flight_scene.hpp` (`FlightScene::FixedUpdate / Update / LateUpdate`): the script order MEASURED in game
+(`analysis/physics/raw/run1/run1-L_calltrace.csv` seq 6-285, 313-332-578, 879-880), which is the answer to the WP-20a ordering constraint: Planetarium ->
+**VesselPrecalculate (gravity reads the true position) ->** OrbitDriver -> FlightGlobals -> TimeWarp -> Part / module scripts -> FlightIntegrator ->
+OrbitPhysicsManager -> Vessel -> **Krakensbane -> FloatingOrigin** -> physics step (PhysicsFixedUpdate). The steps of other packages are `FlightScene::hooks`.
+
+### The one registry (and what changed in other packages' code)
+
+- `FlightRegistry` (WP-14) is now `using FlightRegistry = FlightGlobals;` (same member names, so the ~60 files that use it are unchanged). The WP-08 / WP-10
+  `FlightGlobals::ActiveVessel` / `VesselsLoaded` (`IFlightVessel*`, read by TimeWarp) are `ActiveVesselView` / `VesselsLoadedView`; every registry
+  mutation refreshes them from `Vessel::FlightView()`, so nobody sets them by hand any more (tests that drive TimeWarp with stand-ins still can).
+  `FlightGlobals::ship_srfVelocity()` is the active Vessel's; `time_warp.cpp` uses the IFlightVessel it already holds.
+- `FlightGlobals::AddVessel / RemoveVessel / SortVessel` now maintain the persistent-id dictionaries (`SaveEnvironment::persistentIds`) and fire
+  `onFlightGlobalsAddVessel / RemoveVessel`, as the C#. `DictionaryValueList.Add` replaces an existing key, so the ProtoVessel-side registrations are harmless.
+- **Event handlers must be instance methods** (`EventData.EvtDelegate` reads `evt.Target.GetType()`: a static method group throws NullReferenceException in KSP and in
+  kspcore): FlightGlobals' hooks are members of one object.
+- CHANGED vs WP-14: `Vessel.CalculatePhysicsStats` ends with `rb_velocity.Zero()`, `angularVelocity.Zero()`, `MOI.Zero()`, `angularMomentum.Zero()` on `Vector3`
+  FIELDS: `VectorExtensions.Zero(this Vector3)` assigns to a copy, so they are no-ops in KSP; WP-14 zeroed them. Only the `Vector3d` fields are cleared now (the
+  MOI of the last unpacked run survives packing, as in the game). `tests/test_vessel.cpp` changed accordingly. WP-14 deviation 1 (packed landed CoM from the
+  transform) is resolved: `CoMD = worldSurfacePos + worldSurfaceRot * localCoM` from `SetLandedPosRot`.
+
+### Seams for WP-19b / WP-20b (all in `VesselEnvironment` unless noted; unset = the C# answer for "no rigid body")
+
+| seam | what the C# does there | owner |
+|---|---|---|
+| `readPhysicsState(vessel)` -> `VesselPhysicsState` | the sums over `part.rb` of `CalculatePhysicsStats` (CoM, velocity, angular velocity, MOI) in the DOUBLE frame: float `Rigidbody.worldCenterOfMass` cannot carry orbital positions (PHYSICS-SPIKE.md 5.3 `ReadState()`). When it returns `totalMass > 0` it replaces the per-part loop; the per-part path (`partRigidbody`) stays as the float oracle | WP-20b |
+| `rootRigidbody(vessel, CoM, ...)` | `rootPart.rb.GetPointVelocity(CoM)` and `angularVelocity` (mass-less branch) | WP-20b |
+| `offsetVelocity(vessel, dv)` | `Vessel.OffsetVelocity`: add dv to every part rigid body (the drift correction) | WP-20b |
+| `explodePart`, `currenciesAvailable` | `Part.explode` (CheckKill), `Game.CurrenciesAvailable` (autoClean) | WP-20b / WP-36 |
+| `packPart / unpackPart / resumePartVelocity` (WP-14) | Part.Pack / Unpack / ResumeVelocity: VesselPhysics `Pack()` / `Unpack()` | WP-20b |
+| `OrbitPhysicsManager::env.setDominantBody / setRotatingFrame` | velocity re-expression at the rotating <-> inertial switch and at an SOI change (WP-20a's `ReferenceFrame::SetRotatingFrame` already does the maths) | WP-19b |
+| `FlightGlobals::env` | camera position, `FlightLogger.IgnoreGeeForces`, screen messages, `FlightDriver.StartAndFocusVessel`, `savePersistent`, `FlightCamera.SetTarget` | host / UE shell |
+| `VesselSwitching::env` | keys, map state, pause, camera, messages | host / UE shell |
+
+`FlightGlobals::Clear()` (tests, scene end) resets the registry, the views, the target, the body-name / home-body caches (validated against the current body list,
+because the C# cache is per scene) and unhooks the event handlers.
+
+### Quirks reproduced / found (a later implementer must keep them)
+
+- `VesselPrecalculate` runs for EVERY vessel (loaded or not) before the OrbitDriver; `MainPhysics` sets `orbitDriver.QueueOnce` so `OrbitDriver.FixedUpdate` does not update
+  the orbit a second time. A vessel destroyed by `CheckKill` earlier in the same frame is skipped by `FlightScene`.
+- The orbit drift compensation works against the orbit refit from the same state in the previous `Update` (`TrackRigidbody(..., -fdtLast)`): it makes the Euler step
+  land on the Kepler step from the CURRENT state each tick (pre-integration velocity offset), and corrects the velocity after the step (post-integration correction,
+  applied in the next MainPhysics or in `Update`). It does nothing in an atmosphere (`altitude > atmosphereDepth`, `staticPressurekPa == 0`) or above
+  `OrbitDriftAltThreshold`. The first tick after creation runs the packed-style stats branch, so compensation starts on the second tick.
+- `DOCKED` appears only in `VesselRanges` masks and contract checks; `updateSituation` never sets it. PRELAUNCH -> LANDED needs `srfSpeed > 2.5` and no easing / spawning.
+- `OrbitPhysicsManager.Start` is a coroutine polling every 0.5 s; here `Start()` is polled by the caller (no 0.5 s granularity).
+- `OrbitPhysicsManager.setDominantBody` fires `onDominantBodyChange(dominantBody, body)` AFTER assigning, so both arguments are the new body.
+- `Vessel.CheckKill` second block (`crashed through terrain`) uses `terrainAltitude`, which is -1 for an unloaded vessel without a PQS: the limit is then -0.1 m (-250 m loaded).
+- `FlightGlobals.getHomeBody` / `getBodyByName` caches in the C# survive nothing but the scene; kspcore validates a cached body against `Bodies()`.
+
+### Deferred / needs
+
+- WP-19b: `setRotatingFrame` / `setDominantBody` effects, `ChangeWorldVelocity`, rebase on vessel switch, multiple loaded vessels (`two_vessels`), `physicalObjects`.
+- WP-20b: everything behind `readPhysicsState`, `offsetVelocity`, `rootRigidbody`, `packPart` ... (the VesselPhysics object per loaded unpacked vessel).
+- `QuickSaveLoad` / `VesselRetrieval` (UI and file orchestration); the debug orbit setters; the navball orientation of `UpdateInformation`.
+- A new in-game capture of `VesselPrecalculate` in / out per tick (pad, ascent, orbit: gAccel, integrationAccel, coriolis, centrifugal, pre / post offsets) would turn the
+  loaded-vessel formulas into a capture gate; today they are gated against the independent Python reference, and `world_rel` needs the game's absolute body positions.
+
+### Verification
+
+Windows MSVC RelWithDebInfo after the final fresh build (core/build deleted, `run_tests.ps1 -Fresh`: configure 2.3 s, build 240 s, ctest 210 s);
+ctest 35 / 35 (`capture.vessel_rails` is new), `unit` 760 cases / 1,211,729 assertions (WP-19a: 27 / 18,711). Linux GCC 13.3 (WSL Ubuntu 24.04, own copy): builds with no warning in the new files, the WP-19a unit cases and `capture.vessel_rails` / `capture.orbit_rails` pass (bit-exact formulas and the capture gate are the same on both compilers).
+`check_cites.py` (exact mode, `--cs-root Assembly-CSharp`) over the seven new / ported `.cpp` files: 106 citations, 0 mismatches.
