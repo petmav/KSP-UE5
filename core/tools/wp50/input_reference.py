@@ -456,6 +456,8 @@ def default_values():
         m = re.match(r"^(\w+) = (.+);$", line)
         name, expr = m.groups()
         ty = fields[name][1]
+        if fields[name][0] != "public":
+            continue  # internal / private (not in settings.cfg, not in the reflection table)
         if expr.startswith("new KeyBinding("):
             keybinds[name] = keybinding_default(expr)
         elif expr.startswith("new "):
