@@ -774,8 +774,8 @@ void VesselRepairContract::OnLoad(ConfigNode& node) {
         if (vessel->loaded) {
             for (size_t j = 0; j < vessel->parts.size(); ++j) {
                 if (vessel->parts[j]->fields.partName.value_or("") == repairPartName) {
-                    for (int k = 0; k < vessel->parts[j]->Modules().Count(); ++k) {
-                        auto* moduleDeployablePart = dynamic_cast<ModuleDeployablePart*>(vessel->parts[j]->Modules()[static_cast<size_t>(k)]);
+                    for (size_t k = 0; k < vessel->parts[j]->Modules().Count(); ++k) {
+                        auto* moduleDeployablePart = dynamic_cast<ModuleDeployablePart*>(vessel->parts[j]->Modules()[k]);
                         if (moduleDeployablePart != nullptr && moduleDeployablePart->deployState() == ModuleDeployablePart::DeployState::BROKEN) {
                             repairPartId = vessel->parts[j]->fields.persistentId;
                             flag = true;

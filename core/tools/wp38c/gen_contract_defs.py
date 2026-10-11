@@ -195,8 +195,6 @@ def emit(sig, cpp_sig, kind, pre=()):
     i, stmts = body(sig)
     gen.append("// FinePrint/ContractDefs.cs:%d" % (i + 1))
     gen.append(cpp_sig + " {")
-    for p in pre:
-        gen.append("    " + p)
     depth = 1
     pending_serenity = False
     for st in stmts:
@@ -216,6 +214,12 @@ def emit(sig, cpp_sig, kind, pre=()):
             depth += 1
     gen.append("}")
     gen.append("")
+    # `using NodePtr` only where the function uses it (-Wunused-local-typedefs)
+    k = len(gen) - 1
+    while not gen[k].startswith("// FinePrint/ContractDefs.cs:"):
+        k -= 1
+    if any("NodePtr" in l for l in gen[k:]):
+        gen.insert(k + 2, "    " + pre[0])
 
 
 emit("private static void CreateDefaultConfig()", "void ContractDefs::CreateDefaultConfig()", "CreateDefaultConfig",

@@ -6,3 +6,6 @@ Build: CMAKE_BUILD_PARALLEL_LEVEL=6 powershell -File run_tests.ps1 -BuildOnly ; 
 - [x] (1) Sentinel: sentinel.hpp + sentinel_{utilities,contracts,scenario}.cpp, ref_sentinel.py; 1,638 contract cases (540 generated) 0 ULP + behaviour tests
 - [x] (3) CompatibilityUtilities: compatibility.{hpp,cpp}, ref_compat.py (3,744 upgrade cases byte-exact, 600+ situation rows); hooks installed by InstallAll
 - [x] (4) prebuilt.{hpp,cpp}, construction_templates.{hpp,cpp}, ContractDefs loaders; ref_templates.py (2,304 generation cases, synthetic craft fixtures), behaviour tests
+- [x] docs: STATUS.md WP-38c section + summary row 38, README rows; cites snapped (159 exact cites, 0 mismatches)
+- merged origin/wp38b (which carries main 3472bc56: wp54, wp33, wp53, wp50) cleanly; full unit run green (746 cases / 1,282,859 assertions before the fresh run)
+- remaining: fresh verification (delete core/build, run_tests.ps1 -Fresh), fill the Verification line, push wp38c

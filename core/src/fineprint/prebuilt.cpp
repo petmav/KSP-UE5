@@ -172,7 +172,7 @@ std::shared_ptr<PreBuiltCraftDefinition> ValidateLoadCraftNode(const std::string
 
 // SystemUtilities.cs:84
 std::shared_ptr<PreBuiltCraftDefinition> ValidateLoadCraftNode(const std::string& url, const std::string& className, bool brokenParts, bool bypassTechCheck) {
-    const bool exists = PreBuiltEnvironment::fileExists ? PreBuiltEnvironment::fileExists(url) : std::filesystem::exists(std::filesystem::u8path(url));
+    const bool exists = PreBuiltEnvironment::fileExists ? PreBuiltEnvironment::fileExists(url) : std::filesystem::exists(std::filesystem::path(url));
     if (exists) {
         ConfigNode::NodePtr configNode = PreBuiltEnvironment::loadConfigNode ? PreBuiltEnvironment::loadConfigNode(url) : ConfigNode::Load(url);
         if (configNode == nullptr) {

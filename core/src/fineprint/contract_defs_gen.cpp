@@ -527,7 +527,6 @@ void ContractDefs::CreateDefaultConfig() {
 
 // FinePrint/ContractDefs.cs:2819
 void ContractDefs::AddSurveyDefinitions(ConfigNode* surveyNode) {
-    using NodePtr = ConfigNode::NodePtr;
     ConfigNode* configNode = surveyNode->AddNode("SURVEY_DEFINITION", std::string("Visual Survey Definition"));
     configNode->AddValueWithComment("DataName", std::string("observational"), std::string("Plain text adjective describing survey data"));
     configNode->AddValueWithComment("AnomalyName", std::string("inconsistencies"), std::string("Plain text description of survey anomalies"));
@@ -681,7 +680,6 @@ void ContractDefs::AddSurveyDefinitions(ConfigNode* surveyNode) {
 
 // FinePrint/ContractDefs.cs:2972
 void ContractDefs::AddPartRequests(ConfigNode* topNode) {
-    using NodePtr = ConfigNode::NodePtr;
     if (topNode != nullptr)
     {
         ConfigNode* node = topNode->GetNode("Base");
