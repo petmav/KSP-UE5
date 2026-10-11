@@ -23,13 +23,17 @@ CLASS_FILE = {
     "ModuleSpaceObjectDrillBase": "ModuleAsteroidDrill", "ModuleSpaceObjectInfoBase": "ModuleAsteroidInfo",
     "ModuleSpaceObjectAnalysisBase": "ModuleAsteroidAnalysis",
 }
-NAME_ALIAS = {"set_currentMassVal": "currentMassVal", "set_massThresholdVal": "massThresholdVal", "set_IsDraining": "IsDraining",
+NAME_ALIAS = {"~Mission": "OnDestroy", "~TestModule": "OnDestroy", "~ActionModule": "OnDestroy", "SetTitle": "title", "SetTitleNoGui": "title",
+              "ActionsContain": "ActionsContainModule", "EqualsObject": "Equals", "craftFileExists": "GetMissionCraftByFileName",
+              "UpdateMissionFlowUIDirect": "UpdateMissionFlowUI", "ModulesAreEqualImpl": "ModulesAreEqual",
+              "set_currentMassVal": "currentMassVal", "set_massThresholdVal": "massThresholdVal", "set_IsDraining": "IsDraining",
               "set_inactive": "inactive", "set_rosterStatus": "rosterStatus", "set_type": "type",
               "SetExtraExperience": "ExtraExperience", "CrewGenerator_GetLastName": "GetLastName",
               "CrewGenerator_RemoveLastName": "RemoveLastName",
               "TransferStep": "transferResources",
               "ApplyJointBreakForce": "SetJoint", "SiteRenameAcceptPressed": "RenameSite", "SiteRenameDismissPressed": "RenameSite",
               "SiteRenameAcceptEnabled": "RenameSite",
+              "UpdatePlacement": "OnUpdate", "SetCurrentCargoPart": "CurrentCargoPart", "SetupPaw": "Setup", "ModuleFor": "kerbalModule",
               # WP-53: C# properties ported as getter / Set* functions, and one renamed private function
               "UpdateGroundModuleUI": "UpdateModuleUI", "SetPowerUnitsProduced": "PowerUnitsProduced", "SetEnabled": "Enabled",
               "SetScienceLimit": "ScienceLimit", "OnDestroyed": "OnDestroy"}
