@@ -1112,7 +1112,7 @@ void EVAConstructionModeEditor::CopyActionGroups(Part* sPart, Part* cPart) {
         PartModule* sm = sPart->Modules()[static_cast<size_t>(count)];
         PartModule* cm = cPart->Modules()[static_cast<size_t>(count)];
         if (sm->Actions().Count() == cm->Actions().Count()) {
-            for (int i = 0; i < cm->Actions().Count(); i++) cm->Actions()[static_cast<size_t>(i)]->actionGroup = sm->Actions()[static_cast<size_t>(i)]->actionGroup;
+            for (size_t i = 0; i < cm->Actions().Count(); i++) cm->Actions()[i]->actionGroup = sm->Actions()[i]->actionGroup;
         }
     }
     int count2 = static_cast<int>(sPart->children.size());

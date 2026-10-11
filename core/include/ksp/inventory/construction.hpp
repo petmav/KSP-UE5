@@ -228,7 +228,8 @@ public:
     ~EVAConstructionModeEditor() override;
     void Awake();                                                // :155
     void OnDestroy();                                            // :244
-    void Update(const UpdateInput& in = {});                     // :180
+    void Update(const UpdateInput& in);                          // :180
+    void Update() { Update(UpdateInput{}); }
     void FixedUpdate();                                          // :232
     void OnCurrentMousePartChanged(Part* p);                     // :256
     void OnConstructionModeChanged(ConstructionMode mode);       // :309

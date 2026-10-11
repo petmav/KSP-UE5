@@ -194,6 +194,7 @@ public:
     virtual bool AllowConstructionDeployState() const;  // :1404
     virtual void OnInventoryModeDisable();         // :771 (the ProtoPartModuleSnapshot value write is the host's)
     void OnStoredInInventory();                    // :801
+    void OnStoredInInventory(ModuleInventoryPart&) override { OnStoredInInventory(); }  // PartModule.OnStoredInInventory (WP-33)
 
     // the tracking frame of the last CalculateTracking (testing / host read)
     std::optional<DeployablesEnvironment::TrackingFrame> lastFrame;

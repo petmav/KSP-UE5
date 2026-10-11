@@ -1095,7 +1095,7 @@ int ModuleInventoryPart::TotalEmptySlots() { return InventorySlots() - storedPar
 // ModuleInventoryPart.cs:1744
 void ModuleInventoryPart::OnCopy(PartModule& fromModule) {
     auto* from = dynamic_cast<ModuleInventoryPart*>(&fromModule);
-    storedParts = DictionaryValueList<int32_t, std::shared_ptr<StoredPart>>();
+    storedParts.Clear();  // storedParts = new DictionaryValueList<int, StoredPart>()
     storedPartsNull = false;
     for (size_t i = 0; i < from->storedParts.ValuesList().size(); i++) {
         const auto& sp = from->storedParts.ValuesList()[i];
@@ -1108,7 +1108,7 @@ void ModuleInventoryPart::CopySerializedFrom(const PartModule& from) {
     PartModule::CopySerializedFrom(from);
     const auto* o = dynamic_cast<const ModuleInventoryPart*>(&from);
     if (o == nullptr) return;
-    storedParts = DictionaryValueList<int32_t, std::shared_ptr<StoredPart>>();
+    storedParts.Clear();  // storedParts = new DictionaryValueList<int, StoredPart>()
     storedPartsNull = o->storedPartsNull;  // a prefab that was loaded has an (empty) list; the clone gets one too
     defaultInventoryParts = o->defaultInventoryParts;
     defaultInventoryPartsNull = o->defaultInventoryPartsNull;

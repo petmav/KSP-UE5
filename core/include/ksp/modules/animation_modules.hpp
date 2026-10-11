@@ -117,6 +117,7 @@ public:
     void FailAnimationForCargoBay(float newDeployPercent, bool freezeMidMovement);   // :708 internal
     void RestartFailedAnimationForCargoBay();          // :721 internal
     void OnStoredInInventory();                        // :358
+    void OnStoredInInventory(ModuleInventoryPart&) override { OnStoredInInventory(); }  // PartModule.OnStoredInInventory (WP-33)
 
     void FindAnimation();                              // :309 (private)
     void CheckForRestrictions();                       // :365 (private)
@@ -164,6 +165,7 @@ public:
     void OnStart(StartState state) override;        // :174
     void OnInventoryModeDisable();                  // :181
     void OnStoredInInventory();                     // :198
+    void OnStoredInInventory(ModuleInventoryPart&) override { OnStoredInInventory(); }  // PartModule.OnStoredInInventory (WP-33)
     virtual void OnDestroy();                       // :208
     void LateUpdate();                              // :240
     void OnLoad(const ConfigNode& node) override;   // :271
