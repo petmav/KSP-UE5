@@ -77,26 +77,26 @@ bool RangesEqual(const std::vector<ScoreRange>& a, const std::vector<ScoreRange>
 
 // ---- ScoreRange --------------------------------------------------------------------------------------------------------------
 
-// ScoreRange.cs:23
+// ScoreRange.cs:20
 bool ScoreRange::isValueInRange(double value) const {
     if (value >= minRange) return value <= maxRange;
     return false;
 }
 
-// ScoreRange.cs:30
+// ScoreRange.cs:29
 bool ScoreRange::Equals(const ScoreRange& other) const {
     if (UtilMath::Approximately(minRange, other.minRange) && UtilMath::Approximately(maxRange, other.maxRange)) return Mathf::Approximately(score, other.score);
     return false;
 }
 
-// ScoreRange.cs:46
+// ScoreRange.cs:47
 void ScoreRange::Load(const ConfigNode& node) {
     node.TryGetValue("minRange", minRange);
     node.TryGetValue("maxRange", maxRange);
     node.TryGetValue("score", score);
 }
 
-// ScoreRange.cs:53
+// ScoreRange.cs:54
 void ScoreRange::Save(ConfigNode& node) const {
     node.AddValue("minRange", minRange);
     node.AddValue("maxRange", maxRange);
@@ -105,7 +105,7 @@ void ScoreRange::Save(ConfigNode& node) const {
 
 // ---- ScoreInfo ---------------------------------------------------------------------------------------------------------------
 
-// ScoreInfo.cs:19
+// ScoreInfo.cs:22
 ScoreInfo::ScoreInfo() {
     id = MissionsEnvironment::NewGuid();
     score = 0.0f;
@@ -113,7 +113,7 @@ ScoreInfo::ScoreInfo() {
     resultsText = "";
 }
 
-// ScoreInfo.cs:28
+// ScoreInfo.cs:32
 void ScoreInfo::Load(const ConfigNode& node) {
     node.TryGetValue("id", id);
     node.TryGetValue("missionId", missionId);
@@ -126,7 +126,7 @@ void ScoreInfo::Load(const ConfigNode& node) {
     awardIds = node.GetValuesList("awardId");
 }
 
-// ScoreInfo.cs:43
+// ScoreInfo.cs:48
 void ScoreInfo::Save(ConfigNode& node) const {
     node.AddValue("id", id.ToString());
     node.AddValue("missionId", missionId.ToString());
@@ -140,28 +140,28 @@ void ScoreInfo::Save(ConfigNode& node) const {
 
 // ---- ScoreModule -------------------------------------------------------------------------------------------------------------
 
-// ScoreModule.cs:10
+// ScoreModule.cs:9
 IScoreableObjective* ScoreModule::scoreableObjective() {
     if (node->dockParentNode != nullptr) return dynamic_cast<IScoreableObjective*>(node->dockParentNode->testGroups[0]->testModules[0].get());
     return nullptr;
 }
 
-// ScoreModule.cs:32
+// ScoreModule.cs:30
 float ScoreModule::AwardScore(float currentScore) { return currentScore; }
 
-// ScoreModule.cs:37
+// ScoreModule.cs:35
 std::string ScoreModule::ScoreDescription() { return ""; }
 
-// ScoreModule.cs:42
+// ScoreModule.cs:40
 std::string ScoreModule::AwarededScoreDescription() { return awardedScoreDescription; }
 
-// ScoreModule.cs:52
+// ScoreModule.cs:50
 void ScoreModule::Load(const ConfigNode& node) {
     DynamicModule::Load(node);
     node.TryGetValue("awardedScoreDescription", awardedScoreDescription);
 }
 
-// ScoreModule.cs:58
+// ScoreModule.cs:56
 void ScoreModule::Save(ConfigNode& node) const {
     DynamicModule::Save(node);
     if (!awardedScoreDescription.empty()) node.AddValue("awardedScoreDescription", awardedScoreDescription);
@@ -169,26 +169,26 @@ void ScoreModule::Save(ConfigNode& node) const {
 
 // ---- ScoreModule_Completion --------------------------------------------------------------------------------------------------
 
-// ScoreModule_Completion.cs:24
+// ScoreModule_Completion.cs:23
 std::string ScoreModule_Completion::GetDisplayName() { return Localizer::Format("#autoLOC_8100148"); }
 
-// ScoreModule_Completion.cs:29
+// ScoreModule_Completion.cs:28
 std::string ScoreModule_Completion::GetDisplayToolTip() { return "#autoLOC_8001025"; }
 
-// ScoreModule_Completion.cs:34
+// ScoreModule_Completion.cs:33
 float ScoreModule_Completion::AwardScore(float currentScore) {
     awardedScoreDescription = Localizer::Format("#autoLOC_8006057", {F(bonusScore)});
     currentScore = f32store(fx(currentScore) + fx(bonusScore));
     return currentScore;
 }
 
-// ScoreModule_Completion.cs:41
+// ScoreModule_Completion.cs:40
 std::string ScoreModule_Completion::ScoreDescription() { return Localizer::Format("#autoLOC_8100149", {GetDisplayName(), F(bonusScore)}); }
 
-// ScoreModule_Completion.cs:46
+// ScoreModule_Completion.cs:45
 std::vector<std::string> ScoreModule_Completion::GetDefaultPinnedParameters() { return {"bonusScore"}; }
 
-// ScoreModule_Completion.cs:51
+// ScoreModule_Completion.cs:50
 bool ScoreModule_Completion::EqualsObject(const DynamicModule& other) const {
     const auto* o = dynamic_cast<const ScoreModule_Completion*>(&other);
     if (o == nullptr) return false;
@@ -196,16 +196,16 @@ bool ScoreModule_Completion::EqualsObject(const DynamicModule& other) const {
     return false;
 }
 
-// ScoreModule_Completion.cs:65
+// ScoreModule_Completion.cs:68
 std::string ScoreModule_Completion::GetInfo() { return Localizer::Format("#autoLOC_8004160"); }
 
-// ScoreModule_Completion.cs:70
+// ScoreModule_Completion.cs:73
 void ScoreModule_Completion::Load(const ConfigNode& node) {
     ScoreModule::Load(node);
     node.TryGetValue("bonusScore", bonusScore);
 }
 
-// ScoreModule_Completion.cs:76
+// ScoreModule_Completion.cs:79
 void ScoreModule_Completion::Save(ConfigNode& node) const {
     ScoreModule::Save(node);
     node.AddValue("bonusScore", bonusScore);
@@ -213,13 +213,13 @@ void ScoreModule_Completion::Save(ConfigNode& node) const {
 
 // ---- ScoreModule_Modifier ----------------------------------------------------------------------------------------------------
 
-// ScoreModule_Modifier.cs:29
+// ScoreModule_Modifier.cs:28
 std::string ScoreModule_Modifier::GetDisplayName() { return "#autoLOC_8100125"; }
 
-// ScoreModule_Modifier.cs:34
+// ScoreModule_Modifier.cs:33
 std::string ScoreModule_Modifier::GetDisplayToolTip() { return "#autoLOC_8001024"; }
 
-// ScoreModule_Modifier.cs:39
+// ScoreModule_Modifier.cs:38
 float ScoreModule_Modifier::AwardScore(float currentScore) {
     switch (modifierType) {
         default:
@@ -239,7 +239,7 @@ float ScoreModule_Modifier::AwardScore(float currentScore) {
     }
 }
 
-// ScoreModule_Modifier.cs:67
+// ScoreModule_Modifier.cs:68
 std::string ScoreModule_Modifier::ScoreDescription() {
     if (modifierType != ScoreModifierType::Multiply && modifierType != ScoreModifierType::Divide) {
         if (modifierType == ScoreModifierType::Substract) {
@@ -263,17 +263,17 @@ bool ScoreModule_Modifier::EqualsObject(const DynamicModule& other) const {
     return false;
 }
 
-// ScoreModule_Modifier.cs:101
+// ScoreModule_Modifier.cs:105
 std::string ScoreModule_Modifier::GetInfo() { return Localizer::Format("#autoLOC_8004158"); }
 
-// ScoreModule_Modifier.cs:106
+// ScoreModule_Modifier.cs:110
 void ScoreModule_Modifier::Load(const ConfigNode& node) {
     ScoreModule::Load(node);
     save_detail::TryGetEnum(node, "type", modifierType, ScoreModifierType::Multiply);
     node.TryGetValue("modifier", modifierScore);
 }
 
-// ScoreModule_Modifier.cs:113
+// ScoreModule_Modifier.cs:117
 void ScoreModule_Modifier::Save(ConfigNode& node) const {
     ScoreModule::Save(node);
     node.AddValue("type", dotnet::EnumToString(modifierType));
@@ -282,10 +282,10 @@ void ScoreModule_Modifier::Save(ConfigNode& node) const {
 
 // ---- ScoreModule_Time --------------------------------------------------------------------------------------------------------
 
-// ScoreModule_Time.cs:28
+// ScoreModule_Time.cs:27
 std::string ScoreModule_Time::GetDisplayName() { return Localizer::Format("#autoLOC_8100161"); }
 
-// ScoreModule_Time.cs:33
+// ScoreModule_Time.cs:32
 float ScoreModule_Time::AwardScore(float currentScore) {
     int num = 0;
     while (true) {
@@ -301,7 +301,7 @@ float ScoreModule_Time::AwardScore(float currentScore) {
     return currentScore;
 }
 
-// ScoreModule_Time.cs:55
+// ScoreModule_Time.cs:61
 std::string ScoreModule_Time::ScoreDescription() {
     KSPUtil::DefaultDateTimeFormatter dateFormatter;
     std::string text = Localizer::Format("#autoLOC_8100157", {GetDisplayName()});
@@ -312,10 +312,10 @@ std::string ScoreModule_Time::ScoreDescription() {
     return text;
 }
 
-// ScoreModule_Time.cs:67
+// ScoreModule_Time.cs:72
 std::vector<std::string> ScoreModule_Time::GetDefaultPinnedParameters() { return {"scoreRanges"}; }
 
-// ScoreModule_Time.cs:72
+// ScoreModule_Time.cs:77
 bool ScoreModule_Time::EqualsObject(const DynamicModule& other) const {
     const auto* o = dynamic_cast<const ScoreModule_Time*>(&other);
     if (o == nullptr) return false;
@@ -323,16 +323,16 @@ bool ScoreModule_Time::EqualsObject(const DynamicModule& other) const {
     return false;
 }
 
-// ScoreModule_Time.cs:86
+// ScoreModule_Time.cs:95
 std::string ScoreModule_Time::GetInfo() { return Localizer::Format("#autoLOC_8004156"); }
 
-// ScoreModule_Time.cs:91
+// ScoreModule_Time.cs:100
 void ScoreModule_Time::Load(const ConfigNode& node) {
     ScoreModule::Load(node);
     LoadRanges(node, scoreRanges);
 }
 
-// ScoreModule_Time.cs:107
+// ScoreModule_Time.cs:115
 void ScoreModule_Time::Save(ConfigNode& node) const {
     ScoreModule::Save(node);
     SaveRanges(node, scoreRanges);
@@ -340,10 +340,10 @@ void ScoreModule_Time::Save(ConfigNode& node) const {
 
 // ---- ScoreModule_Accuracy ----------------------------------------------------------------------------------------------------
 
-// ScoreModule_Accuracy.cs:24
+// ScoreModule_Accuracy.cs:23
 std::string ScoreModule_Accuracy::GetDisplayName() { return Localizer::Format("#autoLOC_8001002"); }
 
-// ScoreModule_Accuracy.cs:29
+// ScoreModule_Accuracy.cs:28
 float ScoreModule_Accuracy::AwardScore(float currentScore) {
     // (double)base.scoreableObjective.GetScoreModifier(GetType()) * 100.0: NullReferenceException without an objective, InvalidCastException
     // when the boxed value is not a double
@@ -366,7 +366,7 @@ float ScoreModule_Accuracy::AwardScore(float currentScore) {
     return currentScore;
 }
 
-// ScoreModule_Accuracy.cs:54
+// ScoreModule_Accuracy.cs:58
 std::string ScoreModule_Accuracy::ScoreDescription() {
     std::string text = Localizer::Format("#autoLOC_8100157", {GetDisplayName()});
     for (size_t i = 0; i < scoreRanges.size(); ++i) {
@@ -375,10 +375,10 @@ std::string ScoreModule_Accuracy::ScoreDescription() {
     return text;
 }
 
-// ScoreModule_Accuracy.cs:66
+// ScoreModule_Accuracy.cs:69
 std::vector<std::string> ScoreModule_Accuracy::GetDefaultPinnedParameters() { return {"scoreRanges"}; }
 
-// ScoreModule_Accuracy.cs:71
+// ScoreModule_Accuracy.cs:74
 bool ScoreModule_Accuracy::EqualsObject(const DynamicModule& other) const {
     const auto* o = dynamic_cast<const ScoreModule_Accuracy*>(&other);
     if (o == nullptr) return false;
@@ -386,16 +386,16 @@ bool ScoreModule_Accuracy::EqualsObject(const DynamicModule& other) const {
     return false;
 }
 
-// ScoreModule_Accuracy.cs:85
+// ScoreModule_Accuracy.cs:92
 std::string ScoreModule_Accuracy::GetInfo() { return Localizer::Format("#autoLOC_8004159"); }
 
-// ScoreModule_Accuracy.cs:90
+// ScoreModule_Accuracy.cs:97
 void ScoreModule_Accuracy::Load(const ConfigNode& node) {
     ScoreModule::Load(node);
     LoadRanges(node, scoreRanges);
 }
 
-// ScoreModule_Accuracy.cs:106
+// ScoreModule_Accuracy.cs:112
 void ScoreModule_Accuracy::Save(ConfigNode& node) const {
     ScoreModule::Save(node);
     SaveRanges(node, scoreRanges);
@@ -403,10 +403,10 @@ void ScoreModule_Accuracy::Save(ConfigNode& node) const {
 
 // ---- ScoreModule_Resource ----------------------------------------------------------------------------------------------------
 
-// ScoreModule_Resource.cs:27
+// ScoreModule_Resource.cs:26
 std::string ScoreModule_Resource::GetDisplayName() { return Localizer::Format("#autoLOC_8100133"); }
 
-// ScoreModule_Resource.cs:32
+// ScoreModule_Resource.cs:31
 float ScoreModule_Resource::AwardScore(float currentScore) {
     IScoreableObjective* objective = scoreableObjective();
     if (objective == nullptr) throw NullReferenceException();
@@ -427,7 +427,7 @@ float ScoreModule_Resource::AwardScore(float currentScore) {
     return currentScore;
 }
 
-// ScoreModule_Resource.cs:64
+// ScoreModule_Resource.cs:66
 std::string ScoreModule_Resource::ScoreDescription() {
     std::string text = Localizer::Format("#autoLOC_8100157", {GetDisplayName()});
     for (size_t i = 0; i < scoreRanges.size(); ++i) {
@@ -436,10 +436,10 @@ std::string ScoreModule_Resource::ScoreDescription() {
     return text;
 }
 
-// ScoreModule_Resource.cs:86
+// ScoreModule_Resource.cs:89
 std::vector<std::string> ScoreModule_Resource::GetDefaultPinnedParameters() { return {"resourceName", "scoreRanges"}; }
 
-// ScoreModule_Resource.cs:91
+// ScoreModule_Resource.cs:94
 bool ScoreModule_Resource::EqualsObject(const DynamicModule& other) const {
     const auto* o = dynamic_cast<const ScoreModule_Resource*>(&other);
     if (o == nullptr) return false;
@@ -447,17 +447,17 @@ bool ScoreModule_Resource::EqualsObject(const DynamicModule& other) const {
     return false;
 }
 
-// ScoreModule_Resource.cs:105
+// ScoreModule_Resource.cs:112
 std::string ScoreModule_Resource::GetInfo() { return Localizer::Format("#autoLOC_8004157"); }
 
-// ScoreModule_Resource.cs:110
+// ScoreModule_Resource.cs:117
 void ScoreModule_Resource::Load(const ConfigNode& node) {
     ScoreModule::Load(node);
     node.TryGetValue("resourceName", resourceName);
     LoadRanges(node, scoreRanges);
 }
 
-// ScoreModule_Resource.cs:126
+// ScoreModule_Resource.cs:133
 void ScoreModule_Resource::Save(ConfigNode& node) const {
     ScoreModule::Save(node);
     node.AddValue("resourceName", resourceName);
@@ -472,14 +472,14 @@ const std::vector<std::string>& MissionScore::globalScoreModules() {
     return GlobalScoreModules();
 }
 
-// MissionScore.cs:27
+// MissionScore.cs:24
 MissionScore::MissionScore(MENode* n) : DynamicModuleList(n) {
     if (!GlobalScoreModulesSet()) SetDefaultGlobalScoreModules();
     rootNodeName = "SCOREMODULES";
     moduleNodeName = "SCOREMODULE";
 }
 
-// MissionScore.cs:69
+// MissionScore.cs:87
 void MissionScore::AddGlobalScoreModule(const std::string& scoreModule) {
     if (!GlobalScoreModulesSet()) SetDefaultGlobalScoreModules();
     const DynamicModuleType* t = DynamicModuleRegistry::GetClassByName(scoreModule);
@@ -504,14 +504,14 @@ IScoreableObjective* MissionScore::scoreableObjective() {
     return nullptr;
 }
 
-// MissionScore.cs:43
+// MissionScore.cs:35
 void MissionScore::AwardScore(Mission* mission) {
     for (size_t i = 0; i < activeModules.size(); ++i) {
         if (auto* scoreModule = dynamic_cast<ScoreModule*>(activeModules[i].get())) mission->currentScore = scoreModule->AwardScore(mission->currentScore);
     }
 }
 
-// MissionScore.cs:53
+// MissionScore.cs:46
 std::string MissionScore::ScoreDescription() {
     std::string text;
     for (size_t i = 0; i < activeModules.size(); ++i) {
@@ -520,7 +520,7 @@ std::string MissionScore::ScoreDescription() {
     return text;
 }
 
-// MissionScore.cs:64
+// MissionScore.cs:59
 std::string MissionScore::AwarededScoreDescription() {
     std::string text;
     for (size_t i = 0; i < activeModules.size(); ++i) {
@@ -533,7 +533,7 @@ std::string MissionScore::AwarededScoreDescription() {
     return text;
 }
 
-// MissionScore.cs:98
+// MissionScore.cs:107
 std::vector<std::string> MissionScore::GetSupportedTypes() {
     IScoreableObjective* objective = scoreableObjective();
     if (objective != nullptr) {
@@ -548,7 +548,7 @@ std::vector<std::string> MissionScore::GetSupportedTypes() {
     return GlobalScoreModules();
 }
 
-// DynamicModuleList.cs:140 Clone (MissionScore has the (MENode) constructor)
+// DynamicModuleList.cs:137 Clone (MissionScore has the (MENode) constructor)
 std::unique_ptr<DynamicModuleList> MissionScore::Clone() const {
     auto list = std::make_unique<MissionScore>(node());
     list->activeModules.clear();

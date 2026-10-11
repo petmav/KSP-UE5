@@ -109,7 +109,7 @@ void Awards::SetupAwards() {
     }
 }
 
-// Awards.cs:35
+// Awards.cs:34
 AwardDefinition* Awards::GetAwardDefinition(const std::string& id) {
     auto it = awardsDictionary_.find(id);
     if (it != awardsDictionary_.end()) return it->second;
@@ -118,10 +118,10 @@ AwardDefinition* Awards::GetAwardDefinition(const std::string& id) {
 
 // ---- AwardModule -------------------------------------------------------------------------------------------------------------
 
-// AwardModule.cs:37
+// AwardModule.cs:35
 AwardModule::AwardModule(std::string typeName, MENode* node) : DynamicModule(std::move(typeName), node) { enabled = false; }
 
-// AwardModule.cs:43
+// AwardModule.cs:41
 AwardModule::AwardModule(std::string typeName, MENode* node, AwardDefinition* definition) : AwardModule(std::move(typeName), node) { awardID = definition->id; }
 
 // AwardModule.cs:19
@@ -133,16 +133,16 @@ AwardDefinition* AwardModule::Definition() {
     return definition_;
 }
 
-// AwardModule.cs:48
+// AwardModule.cs:47
 std::string AwardModule::GetDisplayName() {
     if (Definition() != nullptr) return Definition()->displayName;
     return DynamicModule::GetDisplayName();
 }
 
-// AwardModule.cs:57
+// AwardModule.cs:56
 bool AwardModule::EvaluateCondition(Mission*) { return false; }
 
-// AwardModule.cs:63
+// AwardModule.cs:61
 void AwardModule::EvaluateAward(Mission* mission, std::vector<std::string>& awards) {
     if (EvaluateCondition(mission) && Definition() != nullptr) {
         awards.push_back(Definition()->id);
@@ -150,7 +150,7 @@ void AwardModule::EvaluateAward(Mission* mission, std::vector<std::string>& awar
     }
 }
 
-// AwardModule.cs:85
+// AwardModule.cs:82
 void AwardModule::Load(const ConfigNode& node) {
     DynamicModule::Load(node);
     node.TryGetValue("enabled", enabled);
@@ -158,7 +158,7 @@ void AwardModule::Load(const ConfigNode& node) {
     node.TryGetValue("awardID", awardID);
 }
 
-// AwardModule.cs:93
+// AwardModule.cs:90
 void AwardModule::Save(ConfigNode& node) const {
     DynamicModule::Save(node);
     node.AddValue("awardID", awardID);
@@ -168,17 +168,17 @@ void AwardModule::Save(ConfigNode& node) const {
 
 // ---- AwardModule_Fuel --------------------------------------------------------------------------------------------------------
 
-// AwardModule_Fuel.cs:19
+// AwardModule_Fuel.cs:20
 AwardModule_Fuel::AwardModule_Fuel(MENode* node) : DynamicModuleT(kTypeName, node) {}
 
-// AwardModule_Fuel.cs:24
+// AwardModule_Fuel.cs:26
 AwardModule_Fuel::AwardModule_Fuel(MENode* node, AwardDefinition* definition) : DynamicModuleT(kTypeName, node, definition) {}
 
 AwardModule_Fuel::~AwardModule_Fuel() {
     if (subscribed_) StopTracking();
 }
 
-// AwardModule_Fuel.cs:29
+// AwardModule_Fuel.cs:32
 bool AwardModule_Fuel::EvaluateCondition(Mission*) {
     int i = 0;
     for (int count = vesselResource.Count(); i < count; ++i) {
@@ -188,7 +188,7 @@ bool AwardModule_Fuel::EvaluateCondition(Mission*) {
     return totalSpentResource <= resourceAmount;
 }
 
-// AwardModule_Fuel.cs:37
+// AwardModule_Fuel.cs:43
 void AwardModule_Fuel::StartTracking() {
     resourceDefinitionId = AwardEnvironment::ResourceDefinitionId(resourceName);
     if (resourceDefinitionId != -1) {
@@ -198,21 +198,21 @@ void AwardModule_Fuel::StartTracking() {
     }
 }
 
-// AwardModule_Fuel.cs:47
+// AwardModule_Fuel.cs:53
 void AwardModule_Fuel::StopTracking() {
     GameEvents::onNewVesselCreated.Remove(this, &AwardModule_Fuel::OnVesselCreated);
     GameEvents::onVesselWillDestroy.Remove(this, &AwardModule_Fuel::OnVesselWillDestroy);
     subscribed_ = false;
 }
 
-// AwardModule_Fuel.cs:55
+// AwardModule_Fuel.cs:71
 double AwardModule_Fuel::GetCurrentResourceFromVessel(Vessel* v) {
     double amount = 0.0;
     if (resourceDefinitionId != -1) AwardEnvironment::ConnectedResourceTotal(v, resourceName, amount);
     return amount;
 }
 
-// AwardModule_Fuel.cs:66
+// AwardModule_Fuel.cs:82
 void AwardModule_Fuel::OnVesselWillDestroy(Vessel* data) {
     if (vesselResource.ContainsKey(data)) {
         totalSpentResource += vesselResource[data] - GetCurrentResourceFromVessel(data);
@@ -220,12 +220,12 @@ void AwardModule_Fuel::OnVesselWillDestroy(Vessel* data) {
     }
 }
 
-// AwardModule_Fuel.cs:75
+// AwardModule_Fuel.cs:91
 void AwardModule_Fuel::OnVesselCreated(Vessel* data) {
     if (!vesselResource.ContainsKey(data)) vesselResource.Add(data, GetCurrentResourceFromVessel(data));
 }
 
-// AwardModule_Fuel.cs:82
+// AwardModule_Fuel.cs:99
 void AwardModule_Fuel::Load(const ConfigNode& node) {
     AwardModule::Load(node);
     node.TryGetValue("resourceName", resourceName);
@@ -247,7 +247,7 @@ void AwardModule_Fuel::Load(const ConfigNode& node) {
     }
 }
 
-// AwardModule_Fuel.cs:107
+// AwardModule_Fuel.cs:124
 void AwardModule_Fuel::Save(ConfigNode& node) const {
     AwardModule::Save(node);
     node.AddValue("resourceName", resourceName);
@@ -271,10 +271,10 @@ void AwardModule_Fuel::Save(ConfigNode& node) const {
 // AwardModule_KerbalsDied.cs:5
 AwardModule_KerbalsDied::AwardModule_KerbalsDied(MENode* node) : DynamicModuleT(kTypeName, node) {}
 
-// AwardModule_KerbalsDied.cs:9
+// AwardModule_KerbalsDied.cs:10
 AwardModule_KerbalsDied::AwardModule_KerbalsDied(MENode* node, AwardDefinition* definition) : DynamicModuleT(kTypeName, node, definition) {}
 
-// AwardModule_KerbalsDied.cs:14
+// AwardModule_KerbalsDied.cs:15
 bool AwardModule_KerbalsDied::EvaluateCondition(Mission*) {
     std::vector<int> statuses;
     if (AwardEnvironment::crewRosterStatuses) {
@@ -295,42 +295,42 @@ bool AwardModule_KerbalsDied::EvaluateCondition(Mission*) {
 // AwardModule_KerbalsSurvived.cs:7
 AwardModule_KerbalsSurvived::AwardModule_KerbalsSurvived(MENode* node) : DynamicModuleT(kTypeName, node) {}
 
-// AwardModule_KerbalsSurvived.cs:11
+// AwardModule_KerbalsSurvived.cs:12
 AwardModule_KerbalsSurvived::AwardModule_KerbalsSurvived(MENode* node, AwardDefinition* definition) : DynamicModuleT(kTypeName, node, definition) {}
 
 AwardModule_KerbalsSurvived::~AwardModule_KerbalsSurvived() {
     if (subscribed_) StopTracking();
 }
 
-// AwardModule_KerbalsSurvived.cs:19
+// AwardModule_KerbalsSurvived.cs:17
 bool AwardModule_KerbalsSurvived::EvaluateCondition(Mission*) { return kerbalsAreAlive; }
 
-// AwardModule_KerbalsSurvived.cs:24
+// AwardModule_KerbalsSurvived.cs:22
 void AwardModule_KerbalsSurvived::StartTracking() {
     GameEvents::onCrewKilled.Add(this, &AwardModule_KerbalsSurvived::OnCrewKilled);
     subscribed_ = true;
 }
 
-// AwardModule_KerbalsSurvived.cs:29
+// AwardModule_KerbalsSurvived.cs:27
 void AwardModule_KerbalsSurvived::StopTracking() {
     GameEvents::onCrewKilled.Remove(this, &AwardModule_KerbalsSurvived::OnCrewKilled);
     subscribed_ = false;
 }
 
-// AwardModule_KerbalsSurvived.cs:34
+// AwardModule_KerbalsSurvived.cs:32
 void AwardModule_KerbalsSurvived::OnCrewKilled(EventReport*) {
     kerbalsAreAlive = false;
     StopTracking();
 }
 
-// AwardModule_KerbalsSurvived.cs:40
+// AwardModule_KerbalsSurvived.cs:38
 void AwardModule_KerbalsSurvived::Load(const ConfigNode& node) {
     AwardModule::Load(node);
     ConfigNode* configNode = nullptr;
     if (node.TryGetNode("PROGRESS", configNode)) configNode->TryGetValue("kerbalsAreAlive", kerbalsAreAlive);
 }
 
-// AwardModule_KerbalsSurvived.cs:49
+// AwardModule_KerbalsSurvived.cs:48
 void AwardModule_KerbalsSurvived::Save(ConfigNode& node) const {
     AwardModule::Save(node);
     if (AwardEnvironment::CurrentGameIsMission()) node.AddNode("PROGRESS")->AddValue("kerbalsAreAlive", kerbalsAreAlive);
@@ -338,7 +338,7 @@ void AwardModule_KerbalsSurvived::Save(ConfigNode& node) const {
 
 // ---- AwardModule_LandedOn ----------------------------------------------------------------------------------------------------
 
-// AwardModule_LandedOn.cs:16
+// AwardModule_LandedOn.cs:15
 AwardModule_LandedOn::AwardModule_LandedOn(MENode* node) : DynamicModuleT(kTypeName, node) {}
 
 // AwardModule_LandedOn.cs:20
@@ -379,7 +379,7 @@ bool AwardModule_LandedOn::EvaluateCondition(Mission*) {
     return false;
 }
 
-// AwardModule_LandedOn.cs:40
+// AwardModule_LandedOn.cs:45
 Vessel* AwardModule_LandedOn::GetVessel() {
     if (vesselID == 0) return AwardEnvironment::ActiveVessel();
     const uint32_t key = node->mission->CurrentVesselID(node, vesselID);
@@ -388,14 +388,14 @@ Vessel* AwardModule_LandedOn::GetVessel() {
     return nullptr;
 }
 
-// AwardModule_LandedOn.cs:56
+// AwardModule_LandedOn.cs:61
 void AwardModule_LandedOn::Load(const ConfigNode& node) {
     AwardModule::Load(node);
     node.TryGetValue("vesselID", vesselID);
     node.TryGetValue("distance", distance);
 }
 
-// AwardModule_LandedOn.cs:63
+// AwardModule_LandedOn.cs:68
 void AwardModule_LandedOn::Save(ConfigNode& node) const {
     AwardModule::Save(node);
     node.AddValue("vesselID", vesselID);
@@ -407,19 +407,19 @@ void AwardModule_LandedOn::Save(ConfigNode& node) const {
 // AwardModule_MissionTime.cs:10
 AwardModule_MissionTime::AwardModule_MissionTime(MENode* node) : DynamicModuleT(kTypeName, node) {}
 
-// AwardModule_MissionTime.cs:14
+// AwardModule_MissionTime.cs:15
 AwardModule_MissionTime::AwardModule_MissionTime(MENode* node, AwardDefinition* definition) : DynamicModuleT(kTypeName, node, definition) {}
 
-// AwardModule_MissionTime.cs:19
+// AwardModule_MissionTime.cs:20
 bool AwardModule_MissionTime::EvaluateCondition(Mission*) { return MissionsEnvironment::GameUniversalTime() <= missionTime; }
 
-// AwardModule_MissionTime.cs:24
+// AwardModule_MissionTime.cs:25
 void AwardModule_MissionTime::Load(const ConfigNode& node) {
     AwardModule::Load(node);
     node.TryGetValue("missionTime", missionTime);
 }
 
-// AwardModule_MissionTime.cs:30
+// AwardModule_MissionTime.cs:31
 void AwardModule_MissionTime::Save(ConfigNode& node) const {
     AwardModule::Save(node);
     node.AddValue("missionTime", missionTime);
@@ -427,7 +427,7 @@ void AwardModule_MissionTime::Save(ConfigNode& node) const {
 
 // ---- AwardModule_PlanetsLanded -----------------------------------------------------------------------------------------------
 
-// AwardModule_PlanetsLanded.cs:14
+// AwardModule_PlanetsLanded.cs:13
 AwardModule_PlanetsLanded::AwardModule_PlanetsLanded(MENode* node) : DynamicModuleT(kTypeName, node) {}
 
 // AwardModule_PlanetsLanded.cs:19
@@ -437,27 +437,27 @@ AwardModule_PlanetsLanded::~AwardModule_PlanetsLanded() {
     if (subscribed_) StopTracking();
 }
 
-// AwardModule_PlanetsLanded.cs:24
+// AwardModule_PlanetsLanded.cs:25
 bool AwardModule_PlanetsLanded::EvaluateCondition(Mission*) { return static_cast<int>(landedOn.size()) >= planetsLanded; }
 
-// AwardModule_PlanetsLanded.cs:29
+// AwardModule_PlanetsLanded.cs:30
 void AwardModule_PlanetsLanded::StartTracking() {
     GameEvents::onVesselSituationChange.Add(this, &AwardModule_PlanetsLanded::OnVesselSitutationChange);
     subscribed_ = true;
 }
 
-// AwardModule_PlanetsLanded.cs:34
+// AwardModule_PlanetsLanded.cs:35
 void AwardModule_PlanetsLanded::StopTracking() {
     GameEvents::onVesselSituationChange.Remove(this, &AwardModule_PlanetsLanded::OnVesselSitutationChange);
     subscribed_ = false;
 }
 
-// AwardModule_PlanetsLanded.cs:39
+// AwardModule_PlanetsLanded.cs:40
 void AwardModule_PlanetsLanded::OnVesselSitutationChange(GameEvents::HostedFromToAction<Vessel*, Vessel_Situations> data) {
     if (data.to == Vessel_Situations::LANDED) AddUniqueTo(landedOn, data.host->lastBody->displayName());
 }
 
-// AwardModule_PlanetsLanded.cs:47
+// AwardModule_PlanetsLanded.cs:48
 void AwardModule_PlanetsLanded::Load(const ConfigNode& node) {
     AwardModule::Load(node);
     node.TryGetValue("planetsLanded", planetsLanded);
@@ -465,7 +465,7 @@ void AwardModule_PlanetsLanded::Load(const ConfigNode& node) {
     if (node.TryGetNode("PROGRESS", configNode)) landedOn = configNode->GetValuesList("landedOn");
 }
 
-// AwardModule_PlanetsLanded.cs:58
+// AwardModule_PlanetsLanded.cs:59
 void AwardModule_PlanetsLanded::Save(ConfigNode& node) const {
     AwardModule::Save(node);
     node.AddValue("planetsLanded", planetsLanded);
@@ -497,7 +497,7 @@ void AwardModule_Score::Save(ConfigNode& node) const { AwardModule::Save(node); 
 
 // ---- AwardModule_TraveledLessThan / MoreThan ---------------------------------------------------------------------------------
 
-// AwardModule_TraveledLessThan.cs:13
+// AwardModule_TraveledLessThan.cs:12
 AwardModule_TraveledLessThan::AwardModule_TraveledLessThan(MENode* node) : DynamicModuleT(kTypeName, node) {}
 
 // AwardModule_TraveledLessThan.cs:17
@@ -515,22 +515,22 @@ bool AwardModule_TraveledLessThan::EvaluateCondition(Mission*) {
     return distanceTraveled / 1000.0 < distance;
 }
 
-// AwardModule_TraveledLessThan.cs:34
+// AwardModule_TraveledLessThan.cs:32
 void AwardModule_TraveledLessThan::StartTracking() {
     GameEvents::onVesselWillDestroy.Add(this, &AwardModule_TraveledLessThan::OnVesselWillDestroy);
     subscribed_ = true;
 }
 
-// AwardModule_TraveledLessThan.cs:39
+// AwardModule_TraveledLessThan.cs:37
 void AwardModule_TraveledLessThan::StopTracking() {
     GameEvents::onVesselWillDestroy.Remove(this, &AwardModule_TraveledLessThan::OnVesselWillDestroy);
     subscribed_ = false;
 }
 
-// AwardModule_TraveledLessThan.cs:44
+// AwardModule_TraveledLessThan.cs:42
 void AwardModule_TraveledLessThan::OnVesselWillDestroy(Vessel* data) { distanceTraveled += data->distanceTraveled; }
 
-// AwardModule_TraveledLessThan.cs:49
+// AwardModule_TraveledLessThan.cs:47
 void AwardModule_TraveledLessThan::Load(const ConfigNode& node) {
     AwardModule::Load(node);
     node.TryGetValue("distance", distance);
@@ -538,14 +538,14 @@ void AwardModule_TraveledLessThan::Load(const ConfigNode& node) {
     if (node.TryGetNode("PROGRESS", configNode)) configNode->TryGetValue("distanceTraveled", distanceTraveled);
 }
 
-// AwardModule_TraveledLessThan.cs:59
+// AwardModule_TraveledLessThan.cs:58
 void AwardModule_TraveledLessThan::Save(ConfigNode& node) const {
     AwardModule::Save(node);
     node.AddValue("distance", distance);
     if (AwardEnvironment::CurrentGameIsMission()) node.AddNode("PROGRESS")->AddValue("distanceTraveled", distanceTraveled);
 }
 
-// AwardModule_TraveledMoreThan.cs:13
+// AwardModule_TraveledMoreThan.cs:12
 AwardModule_TraveledMoreThan::AwardModule_TraveledMoreThan(MENode* node) : DynamicModuleT(kTypeName, node) {}
 
 // AwardModule_TraveledMoreThan.cs:17
@@ -563,22 +563,22 @@ bool AwardModule_TraveledMoreThan::EvaluateCondition(Mission*) {
     return distanceTraveled / 1000.0 > distance;
 }
 
-// AwardModule_TraveledMoreThan.cs:34
+// AwardModule_TraveledMoreThan.cs:32
 void AwardModule_TraveledMoreThan::StartTracking() {
     GameEvents::onVesselWillDestroy.Add(this, &AwardModule_TraveledMoreThan::OnVesselWillDestroy);
     subscribed_ = true;
 }
 
-// AwardModule_TraveledMoreThan.cs:39
+// AwardModule_TraveledMoreThan.cs:37
 void AwardModule_TraveledMoreThan::StopTracking() {
     GameEvents::onVesselWillDestroy.Remove(this, &AwardModule_TraveledMoreThan::OnVesselWillDestroy);
     subscribed_ = false;
 }
 
-// AwardModule_TraveledMoreThan.cs:44
+// AwardModule_TraveledMoreThan.cs:42
 void AwardModule_TraveledMoreThan::OnVesselWillDestroy(Vessel* data) { distanceTraveled += data->distanceTraveled; }
 
-// AwardModule_TraveledMoreThan.cs:49
+// AwardModule_TraveledMoreThan.cs:47
 void AwardModule_TraveledMoreThan::Load(const ConfigNode& node) {
     AwardModule::Load(node);
     node.TryGetValue("distance", distance);
@@ -586,7 +586,7 @@ void AwardModule_TraveledMoreThan::Load(const ConfigNode& node) {
     if (node.TryGetNode("PROGRESS", configNode)) configNode->TryGetValue("distanceTraveled", distanceTraveled);
 }
 
-// AwardModule_TraveledMoreThan.cs:59
+// AwardModule_TraveledMoreThan.cs:58
 void AwardModule_TraveledMoreThan::Save(ConfigNode& node) const {
     AwardModule::Save(node);
     node.AddValue("distance", distance);
@@ -595,7 +595,7 @@ void AwardModule_TraveledMoreThan::Save(ConfigNode& node) const {
 
 // ---- AwardModule_VesselsUsed -------------------------------------------------------------------------------------------------
 
-// AwardModule_VesselsUsed.cs:14
+// AwardModule_VesselsUsed.cs:13
 AwardModule_VesselsUsed::AwardModule_VesselsUsed(MENode* node) : DynamicModuleT(kTypeName, node) {}
 
 // AwardModule_VesselsUsed.cs:19
@@ -605,25 +605,25 @@ AwardModule_VesselsUsed::~AwardModule_VesselsUsed() {
     if (subscribed_) StopTracking();
 }
 
-// AwardModule_VesselsUsed.cs:24
+// AwardModule_VesselsUsed.cs:25
 bool AwardModule_VesselsUsed::EvaluateCondition(Mission*) { return vesselsUsed == static_cast<int>(vesselsUsedList.size()); }
 
-// AwardModule_VesselsUsed.cs:29
+// AwardModule_VesselsUsed.cs:30
 void AwardModule_VesselsUsed::StartTracking() {
     GameEvents::onVesselChange.Add(this, &AwardModule_VesselsUsed::OnVesselChange);
     subscribed_ = true;
 }
 
-// AwardModule_VesselsUsed.cs:34
+// AwardModule_VesselsUsed.cs:35
 void AwardModule_VesselsUsed::StopTracking() {
     GameEvents::onVesselChange.Remove(this, &AwardModule_VesselsUsed::OnVesselChange);
     subscribed_ = false;
 }
 
-// AwardModule_VesselsUsed.cs:39
+// AwardModule_VesselsUsed.cs:40
 void AwardModule_VesselsUsed::OnVesselChange(Vessel* data) { AddUniqueTo(vesselsUsedList, data->persistentId); }
 
-// AwardModule_VesselsUsed.cs:44
+// AwardModule_VesselsUsed.cs:45
 void AwardModule_VesselsUsed::Load(const ConfigNode& node) {
     AwardModule::Load(node);
     node.TryGetValue("vesselsUsed", vesselsUsed);
@@ -635,7 +635,7 @@ void AwardModule_VesselsUsed::Load(const ConfigNode& node) {
     }
 }
 
-// AwardModule_VesselsUsed.cs:60
+// AwardModule_VesselsUsed.cs:61
 void AwardModule_VesselsUsed::Save(ConfigNode& node) const {
     AwardModule::Save(node);
     node.AddValue("vesselsUsed", vesselsUsed);
@@ -647,7 +647,7 @@ void AwardModule_VesselsUsed::Save(ConfigNode& node) const {
 
 // ---- MissionAwards -----------------------------------------------------------------------------------------------------------
 
-// MissionAwards.cs:15
+// MissionAwards.cs:14
 MissionAwards::MissionAwards(MENode* n) : DynamicModuleList(n) {
     rootNodeName = "AWARDMODULES";
     moduleNodeName = "AWARDMODULE";
@@ -678,13 +678,13 @@ bool MissionAwards::ContainsDefinition(const AwardDefinition& definition) {
     } while (true);
 }
 
-// MissionAwards.cs:54
+// MissionAwards.cs:55
 std::vector<std::string> MissionAwards::GetSupportedTypes() {
     if (supportedTypes.empty()) supportedTypes = DynamicModuleRegistry::SubclassesOf("AwardModule");
     return supportedTypes;
 }
 
-// MissionAwards.cs:75
+// MissionAwards.cs:77
 void MissionAwards::EvaluateAwards(Mission* mission) {
     StopTracking();
     int i = 0;
@@ -694,7 +694,7 @@ void MissionAwards::EvaluateAwards(Mission* mission) {
     }
 }
 
-// MissionAwards.cs:87
+// MissionAwards.cs:90
 void MissionAwards::StartTracking() {
     int i = 0;
     for (int count = static_cast<int>(activeModules.size()); i < count; ++i) {
@@ -704,7 +704,7 @@ void MissionAwards::StartTracking() {
     log::Info("[MissionAwards]: Awards tracking started.");
 }
 
-// MissionAwards.cs:101
+// MissionAwards.cs:103
 void MissionAwards::StopTracking() {
     int i = 0;
     for (int count = static_cast<int>(activeModules.size()); i < count; ++i) {
@@ -714,7 +714,7 @@ void MissionAwards::StopTracking() {
     log::Info("[MissionAwards]: Awards tracking stopped.");
 }
 
-// DynamicModuleList.cs:140 Clone
+// DynamicModuleList.cs:137 Clone
 std::unique_ptr<DynamicModuleList> MissionAwards::Clone() const {
     auto list = std::make_unique<MissionAwards>(node());
     list->activeModules.clear();

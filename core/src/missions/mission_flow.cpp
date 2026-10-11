@@ -12,29 +12,29 @@ namespace Flow {
 
 // ---- MEPath ------------------------------------------------------------------------------------------------------------------
 
-// MEPath.cs:32
+// MEPath.cs:31
 MEPath::MEPath(Mission* mission) : mission_(mission) {}
 
-// MEPath.cs:38
+// MEPath.cs:31
 MEPath::MEPath(MENode* firstNode) : mission_(firstNode->mission) { Nodes.push_back(firstNode); }
 
-// MEPath.cs:16
+// MEPath.cs:13
 MENode* MEPath::First() const {
     if (!Nodes.empty()) return Nodes[0];
     return nullptr;
 }
 
-// MEPath.cs:43
+// MEPath.cs:37
 std::shared_ptr<MEPath> MEPath::Clone() const {
     auto mEPath = std::make_shared<MEPath>(mission_);
     mEPath->AddNodes(Nodes);
     return mEPath;
 }
 
-// MEPath.cs:50
+// MEPath.cs:44
 void MEPath::AddNodes(const std::vector<MENode*>& addNodes) { Nodes.insert(Nodes.end(), addNodes.begin(), addNodes.end()); }
 
-// MEPath.cs:55
+// MEPath.cs:49
 bool MEPath::GetConvergence(const MEPath& target, std::unique_ptr<MEFlowConvergence>& c, int minHops) const {
     int num = minHops;
     while (true) {
@@ -50,7 +50,7 @@ bool MEPath::GetConvergence(const MEPath& target, std::unique_ptr<MEFlowConverge
     return true;
 }
 
-// MEPath.cs:74
+// MEPath.cs:70
 void MEPath::Load(const ConfigNode& node) {
     Nodes.clear();
     const std::vector<std::string> values = node.GetValuesList("nodeId");
@@ -64,20 +64,20 @@ void MEPath::Load(const ConfigNode& node) {
     }
 }
 
-// MEPath.cs:91
+// MEPath.cs:86
 void MEPath::Save(ConfigNode& node) const {
     for (size_t i = 0; i < Nodes.size(); ++i) node.AddValue("nodeId", Nodes[i]->id().ToString());
 }
 
 // ---- MEPathGroup -------------------------------------------------------------------------------------------------------------
 
-// MEPathGroup.cs:24
+// MEPathGroup.cs:25
 MEPathGroup::MEPathGroup(std::shared_ptr<MEPath> first) {
     Paths.push_back(std::move(first));
     minHops = 0;
 }
 
-// MEPathGroup.cs:15
+// MEPathGroup.cs:13
 MEPath* MEPathGroup::First() const {
     if (!Paths.empty()) return Paths[0].get();
     return nullptr;
@@ -85,16 +85,16 @@ MEPath* MEPathGroup::First() const {
 
 // ---- MENodePathInfo ----------------------------------------------------------------------------------------------------------
 
-// MENodePathInfo.cs:17
+// MENodePathInfo.cs:15
 MENodePathInfo::MENodePathInfo(Mission* mission) : mission_(mission) {}
 
-// MENodePathInfo.cs:23
+// MENodePathInfo.cs:21
 MENodePathInfo::MENodePathInfo(MENode* n) : node(n), mission_(n->mission) {}
 
-// MENodePathInfo.cs:29
+// MENodePathInfo.cs:27
 void MENodePathInfo::AddPath(std::shared_ptr<MEPath> path) { paths.push_back(std::move(path)); }
 
-// MENodePathInfo.cs:34
+// MENodePathInfo.cs:32
 void MENodePathInfo::Load(const ConfigNode& cfg) {
     Guid value = Guid::Empty();
     if (cfg.TryGetValue("startNodeId", value)) {
@@ -113,7 +113,7 @@ void MENodePathInfo::Load(const ConfigNode& cfg) {
     }
 }
 
-// MENodePathInfo.cs:55
+// MENodePathInfo.cs:56
 void MENodePathInfo::Save(ConfigNode& cfg) const {
     cfg.AddValue("startNodeId", node->id().ToString());
     for (size_t i = 0; i < paths.size(); ++i) {
@@ -147,10 +147,10 @@ PathList GetPathsStarting(const PathList& paths, MENode* node) {
 
 // ---- MEFlowBlock -------------------------------------------------------------------------------------------------------------
 
-// MEFlowBlock.cs:90
+// MEFlowBlock.cs:96
 MEFlowBlock::MEFlowBlock(Mission* mission) : mission_(mission) {}
 
-// MEFlowBlock.cs:14
+// MEFlowBlock.cs:13
 int MEFlowBlock::CountObjectives() const {
     int num = 0;
     for (size_t i = 0; i < Blocks.size(); ++i) {
@@ -180,7 +180,7 @@ bool MEFlowBlock::HasReachableObjectives() const {
     return false;
 }
 
-// MEFlowBlock.cs:64
+// MEFlowBlock.cs:67
 bool MEFlowBlock::HasVisibleChildren() const {
     for (size_t num = 0; num < Blocks.size(); ++num) {
         const IMEFlowBlock::Kind k = Blocks[num]->FlowKind();
@@ -193,13 +193,13 @@ bool MEFlowBlock::HasVisibleChildren() const {
     return false;
 }
 
-// MEFlowBlock.cs:96
+// MEFlowBlock.cs:102
 void MEFlowBlock::UpdateMissionFlowUI(MEFlowParser* parser) {
     (void)parser;
     log::Error("[MEFlowBlock]: This method should be hidden by new declaration on child types");
 }
 
-// MEFlowBlock.cs:101
+// MEFlowBlock.cs:107
 void MEFlowBlock::AddBlock(IMEFlowBlock* newBlock) { Blocks.push_back(newBlock); }
 
 void MEFlowBlock::AddOwnedBlock(std::shared_ptr<MEFlowBlock> block) {
@@ -207,7 +207,7 @@ void MEFlowBlock::AddOwnedBlock(std::shared_ptr<MEFlowBlock> block) {
     ownedBlocks_.push_back(std::move(block));
 }
 
-// MEFlowBlock.cs:106
+// MEFlowBlock.cs:112
 void MEFlowBlock::Load(const ConfigNode& node) {
     const std::vector<ConfigNode*> children = node.GetNodes();
     for (size_t i = 0; i < children.size(); ++i) {
@@ -233,7 +233,7 @@ void MEFlowBlock::Load(const ConfigNode& node) {
     }
 }
 
-// MEFlowBlock.cs:139
+// MEFlowBlock.cs:145
 void MEFlowBlock::Save(ConfigNode& node) const {
     for (size_t i = 0; i < Blocks.size(); ++i) {
         const IMEFlowBlock::Kind k = Blocks[i]->FlowKind();
@@ -249,12 +249,12 @@ void MEFlowBlock::Save(ConfigNode& node) const {
     }
 }
 
-// MEFlowThenBlock.cs:11
+// MEFlowThenBlock.cs:12
 void MEFlowThenBlock::UpdateMissionFlowUIDirect(MEFlowParser* parser) {
     if (OnUpdateFlowUI) OnUpdateFlowUI(parser);
 }
 
-// MEFlowOrBlock.cs:11
+// MEFlowOrBlock.cs:12
 void MEFlowOrBlock::UpdateMissionFlowUIDirect(MEFlowParser* parser) {
     if (OnUpdateFlowUI) OnUpdateFlowUI(parser);
 }
@@ -515,10 +515,10 @@ void MEFlowParser::UpdateFlowUIItems(Mission* mission) { UpdateFlowUIItems(missi
 
 // ---- MissionFlow -------------------------------------------------------------------------------------------------------------
 
-// MissionFlow.cs:18
+// MissionFlow.cs:16
 MissionFlow::MissionFlow(Mission* mission) : mission_(mission) { missionBlock = std::make_shared<Flow::MEFlowBlock>(mission); }
 
-// MissionFlow.cs:27
+// MissionFlow.cs:24
 void MissionFlow::Load(const ConfigNode& node) {
     NodePaths = {};
     NodeReversePaths = {};
@@ -527,7 +527,7 @@ void MissionFlow::Load(const ConfigNode& node) {
     if (node.TryGetNode("BLOCKS", node2)) missionBlock->Load(*node2);
 }
 
-// MissionFlow.cs:40
+// MissionFlow.cs:36
 void MissionFlow::Save(ConfigNode& node) const {
     ConfigNode* node2 = node.AddNode("BLOCKS");
     missionBlock->Save(*node2);

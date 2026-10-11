@@ -10,7 +10,7 @@ namespace ksp::Expansions::Missions {
 
 namespace Editor {
 
-// MissionEditorValidator.cs:32 Awake
+// MissionEditorValidator.cs:20 Awake
 MissionEditorValidator::MissionEditorValidator() {
     if (instance_ != nullptr) {
         destroyed_ = true;  // UnityEngine.Object.DestroyImmediate(this): a second validator is discarded
@@ -53,13 +53,13 @@ ValidationStatus MissionEditorValidator::Status() const {
     return result;
 }
 
-// MissionEditorValidator.cs:74
+// MissionEditorValidator.cs:73
 ValidatorMode MissionEditorValidator::Mode() {
     if (instance_ != nullptr) return instance_->mode;
     return ValidatorMode::Manual;
 }
 
-// MissionEditorValidator.cs:127
+// MissionEditorValidator.cs:143
 void MissionEditorValidator::ResetValidator() {
     if (instance_ != nullptr) {
         instance_->mission_ = nullptr;
@@ -67,7 +67,7 @@ void MissionEditorValidator::ResetValidator() {
     }
 }
 
-// MissionEditorValidator.cs:136
+// MissionEditorValidator.cs:152
 void MissionEditorValidator::RunValidationOnParamChange() {
     if (!(instance_ == nullptr) && !(instance_->mission_ == nullptr) && (Mode() == ValidatorMode::AutoAfterRun || Mode() == ValidatorMode::FullAuto) &&
         (Mode() != ValidatorMode::AutoAfterRun || instance_->mission_->hasBeenValidated)) {
@@ -75,7 +75,7 @@ void MissionEditorValidator::RunValidationOnParamChange() {
     }
 }
 
-// MissionEditorValidator.cs:144
+// MissionEditorValidator.cs:160
 void MissionEditorValidator::RunValidation(Mission* mission) {
     if (instance_ == nullptr) {
         log::Error("[MissionEditorValidator] Insatnce is null - unable to run the validator");
@@ -98,19 +98,19 @@ void MissionEditorValidator::RunValidation(Mission* mission) {
     if (MissionsEnvironment::updateValidationLed) MissionsEnvironment::updateValidationLed();
 }
 
-// MissionEditorValidator.cs:181
+// MissionEditorValidator.cs:198
 void MissionEditorValidator::AddResults(const ResultList& results) { results_->insert(results_->end(), results.begin(), results.end()); }
 
-// MissionEditorValidator.cs:186
+// MissionEditorValidator.cs:203
 void MissionEditorValidator::AddNodePass(MENode* node, const std::string& message) { AddNodeResult(node, ValidationStatus::Pass, message); }
 
-// MissionEditorValidator.cs:191
+// MissionEditorValidator.cs:208
 void MissionEditorValidator::AddNodeWarn(MENode* node, const std::string& message) { AddNodeResult(node, ValidationStatus::Warn, message); }
 
-// MissionEditorValidator.cs:196
+// MissionEditorValidator.cs:213
 void MissionEditorValidator::AddNodeFail(MENode* node, const std::string& message) { AddNodeResult(node, ValidationStatus::Fail, message); }
 
-// MissionEditorValidator.cs:201
+// MissionEditorValidator.cs:218
 void MissionEditorValidator::AddNodeResult(MENode* node, ValidationStatus result, const std::string& message) {
     int num = 0;
     while (true) {
@@ -134,7 +134,7 @@ void MissionEditorValidator::AddNodeResult(MENode* node, ValidationStatus result
     }
 }
 
-// MissionEditorValidator.cs:232
+// MissionEditorValidator.cs:249
 ValidatorMode MissionEditorValidator::NextMode() {
     if (instance_ != nullptr) {
         int num = static_cast<int>(instance_->mode);
@@ -150,12 +150,12 @@ ValidatorMode MissionEditorValidator::NextMode() {
 
 // ---- MissionCheckpointValidator ----------------------------------------------------------------------------------------------
 
-// MissionCheckpointValidator.cs:14
+// MissionCheckpointValidator.cs:13
 bool MissionCheckpointValidator::ValidateCheckpoint(Mission* checkpointMission, Mission* mission) {
     return CheckCheckpointPathRecursive(checkpointMission, mission, checkpointMission->startNode(), mission->startNode());
 }
 
-// MissionCheckpointValidator.cs:19
+// MissionCheckpointValidator.cs:18
 bool MissionCheckpointValidator::CheckCheckpointPathRecursive(Mission* checkpointMission, Mission* mission, MENode* checkpointNode, MENode* missionNode) {
     Flow::MENodePathInfo& mENodePathInfo = *checkpointMission->flow->NodePaths.At(checkpointNode);
     Flow::MENodePathInfo& mENodePathInfo2 = *mission->flow->NodePaths.At(missionNode);
@@ -179,14 +179,14 @@ bool MissionCheckpointValidator::CheckCheckpointPathRecursive(Mission* checkpoin
     return result;
 }
 
-// MissionCheckpointValidator.cs:103
+// MissionCheckpointValidator.cs:105
 bool MissionCheckpointValidator::ModulesAreEqualImpl(const void* a, const void* b, const char* typeNameA, const char* typeNameB) {
     if (std::string(typeNameA) != std::string(typeNameB)) return false;  // checkpointModule.GetType() != missionModule.GetType()
     if (modulesAreEqual) return modulesAreEqual(a, b, typeNameA);
     return true;
 }
 
-// MissionCheckpointValidator.cs:53
+// MissionCheckpointValidator.cs:46
 bool MissionCheckpointValidator::IsCheckpointNodeDirty(MENode* checkpointNode, MENode* missionNode) {
     if (!(checkpointNode->id() == missionNode->id())) return true;
     if (!ModulesAreEqualImpl(checkpointNode, missionNode, "MENode", "MENode")) return true;

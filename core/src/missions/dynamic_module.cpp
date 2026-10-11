@@ -61,36 +61,36 @@ void DynamicModule::ResetObjectIds() { g_objectIds = 0; }
 // DynamicModule.cs:37
 std::string DynamicModule::GetModuleInstanceID() { return dotnet::FormatUInt64(NextObjectId()); }
 
-// DynamicModule.cs:21
+// DynamicModule.cs:24
 DynamicModule::DynamicModule(std::string typeName) : name_(std::move(typeName)) {
     id_ = GetModuleInstanceID();
 }
 
-// DynamicModule.cs:28
+// DynamicModule.cs:31
 DynamicModule::DynamicModule(std::string typeName, MENode* n) : DynamicModule(std::move(typeName)) { node = n; }
 
-// DynamicModule.cs:44
+// DynamicModule.cs:43
 std::string DynamicModule::GetDisplayName() { return GetName(); }
 
-// DynamicModule.cs:49
+// DynamicModule.cs:48
 std::string DynamicModule::GetDisplayToolTip() { return ""; }
 
-// DynamicModule.cs:54
+// DynamicModule.cs:53
 std::vector<std::string> DynamicModule::GetDefaultPinnedParameters() { return {}; }
 
-// DynamicModule.cs:59
+// DynamicModule.cs:58
 bool DynamicModule::Equals(const DynamicModule& other) const { return name_ == other.name_; }
 
-// DynamicModule.cs:74
+// DynamicModule.cs:72
 std::string DynamicModule::GetName() { return name_ + "_" + id_; }
 
-// DynamicModule.cs:79
+// DynamicModule.cs:77
 void DynamicModule::AddParameterToSAP(const std::string& parameter) {
     if (std::find(parametersDisplayedInSAP.begin(), parametersDisplayedInSAP.end(), parameter) == parametersDisplayedInSAP.end())
         parametersDisplayedInSAP.push_back(parameter);
 }
 
-// DynamicModule.cs:84
+// DynamicModule.cs:82
 void DynamicModule::RemoveParameterFromSAP(const std::string& parameter) {
     auto it = std::find(parametersDisplayedInSAP.begin(), parametersDisplayedInSAP.end(), parameter);
     if (it != parametersDisplayedInSAP.end()) parametersDisplayedInSAP.erase(it);
@@ -100,12 +100,12 @@ void DynamicModule::RemoveParameterFromSAP(const std::string& parameter) {
     }
 }
 
-// DynamicModule.cs:94
+// DynamicModule.cs:92
 void DynamicModule::AddParameterToNodeBody(const std::string& parameter) {
     if (node != nullptr) node->AddParameterToNodeBody(GetName(), parameter);
 }
 
-// DynamicModule.cs:102
+// DynamicModule.cs:100
 void DynamicModule::AddParameterToNodeBodyAndUpdateUI(const std::string& parameter) {
     if (node != nullptr) {
         node->AddParameterToNodeBody(GetName(), parameter);
@@ -113,12 +113,12 @@ void DynamicModule::AddParameterToNodeBodyAndUpdateUI(const std::string& paramet
     }
 }
 
-// DynamicModule.cs:111
+// DynamicModule.cs:109
 void DynamicModule::RemoveParameterFromNodeBody(const std::string& parameter) {
     if (node != nullptr) node->RemoveParameterFromNodeBody(GetName(), parameter);
 }
 
-// DynamicModule.cs:119
+// DynamicModule.cs:117
 void DynamicModule::RemoveParameterFromNodeBodyAndUpdateUI(const std::string& parameter) {
     if (node != nullptr) {
         node->RemoveParameterFromNodeBody(GetName(), parameter);
@@ -126,53 +126,53 @@ void DynamicModule::RemoveParameterFromNodeBodyAndUpdateUI(const std::string& pa
     }
 }
 
-// DynamicModule.cs:128
+// DynamicModule.cs:126
 bool DynamicModule::HasNodeBodyParameter(const std::string& parameter) {
     if (node != nullptr) return node->HasNodeBodyParameter(GetName(), parameter);
     return false;
 }
 
-// DynamicModule.cs:137
+// DynamicModule.cs:135
 bool DynamicModule::HasSAPParameter(const std::string& parameter) {
     return std::find(parametersDisplayedInSAP.begin(), parametersDisplayedInSAP.end(), parameter) != parametersDisplayedInSAP.end();
 }
 
-// DynamicModule.cs:142
+// DynamicModule.cs:140
 std::string DynamicModule::GetNodeBodyParameterString(const Editor::BaseAPField&) { return ""; }
 
-// DynamicModule.cs:152
+// DynamicModule.cs:150
 void DynamicModule::UpdateNodeBodyUI() {
     if (node != nullptr) node->guiNode->DisplayNodeBodyParameters();
 }
 
-// DynamicModule.cs:160
+// DynamicModule.cs:158
 std::vector<IMENodeDisplay*> DynamicModule::GetInternalParametersToDisplay() { return {}; }
 
-// DynamicModule.cs:165
+// DynamicModule.cs:163
 MENode* DynamicModule::GetNode() { return node; }
 
-// DynamicModule.cs:170
+// DynamicModule.cs:168
 std::string DynamicModule::GetInfo() { return name_; }
 
-// DynamicModule.cs:175
+// DynamicModule.cs:173
 void DynamicModule::SetNode(MENode* n) { node = n; }
 
-// DynamicModule.cs:180
+// DynamicModule.cs:178
 void DynamicModule::Initialize() {}
 
-// DynamicModule.cs:184
+// DynamicModule.cs:182
 void DynamicModule::Destroy() {}
 
-// DynamicModule.cs:188
+// DynamicModule.cs:186
 void DynamicModule::ParameterSetupComplete() {}
 
-// DynamicModule.cs:192
+// DynamicModule.cs:190
 void DynamicModule::Load(const ConfigNode& cfg) {
     std::string value;
     if (cfg.TryGetValue("id", value)) id_ = value;
 }
 
-// DynamicModule.cs:201
+// DynamicModule.cs:199
 void DynamicModule::Save(ConfigNode& cfg) const {
     cfg.AddValue("name", name_);
     cfg.AddValue("id", id_);
@@ -180,20 +180,20 @@ void DynamicModule::Save(ConfigNode& cfg) const {
 
 // ---- DynamicModuleList -------------------------------------------------------------------------------------------------------
 
-// DynamicModuleList.cs:23
+// DynamicModuleList.cs:19
 DynamicModuleList::DynamicModuleList(MENode* n) : node_(n) {}
 
-// DynamicModuleList.cs:30
+// DynamicModuleList.cs:26
 std::vector<std::string> DynamicModuleList::GetSupportedTypes() { return supportedTypes; }
 
-// DynamicModuleList.cs:35
+// DynamicModuleList.cs:31
 std::vector<IMENodeDisplay*> DynamicModuleList::GetInternalParameters() {
     std::vector<IMENodeDisplay*> list;
     for (size_t i = 0; i < activeModules.size(); ++i) list.push_back(activeModules[i].get());
     return list;
 }
 
-// DynamicModuleList.cs:46
+// DynamicModuleList.cs:42
 bool DynamicModuleList::ContainsModule(const std::string& typeName) const {
     int count = static_cast<int>(activeModules.size());
     do {
@@ -202,7 +202,7 @@ bool DynamicModuleList::ContainsModule(const std::string& typeName) const {
     return true;
 }
 
-// DynamicModuleList.cs:60
+// DynamicModuleList.cs:56
 void DynamicModuleList::AddDynamicModule(const ConfigNode& moduleNode) {
     std::string value;
     if (!moduleNode.TryGetValue("name", value)) return;
@@ -217,10 +217,10 @@ void DynamicModuleList::AddDynamicModule(const ConfigNode& moduleNode) {
     }
 }
 
-// DynamicModuleList.cs:84
+// DynamicModuleList.cs:80
 void DynamicModuleList::SetSupportedTypes(std::vector<std::string> supportedModuleTypes) { supportedTypes = std::move(supportedModuleTypes); }
 
-// DynamicModuleList.cs:89
+// DynamicModuleList.cs:85
 bool DynamicModuleList::Equals(const DynamicModuleList& other) const {
     if (activeModules.size() != other.activeModules.size()) return false;
     int count = static_cast<int>(activeModules.size());

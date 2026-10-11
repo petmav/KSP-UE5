@@ -54,7 +54,7 @@ void AddUniqueTo(std::vector<T>& list, const T& item) {
 
 // ---- DisplayParameter --------------------------------------------------------------------------------------------------------
 
-// Editor/DisplayParameter.cs:13
+// Editor/DisplayParameter.cs:12
 void Editor::DisplayParameter::Load(const ConfigNode& node) {
     node.TryGetValue("module", module);
     node.TryGetValue("parameter", parameter);
@@ -83,7 +83,7 @@ void ActionModuleRegistry::ResetForTests() {
 
 // ---- TestModule --------------------------------------------------------------------------------------------------------------
 
-// TestModule.cs:40 Awake (+ :87 SetupPersistentIdEvents)
+// TestModule.cs:9 Awake (+ :87 SetupPersistentIdEvents)
 TestModule::TestModule(std::string typeName) : name_(std::move(typeName)) {
     GameEvents::onPartPersistentIdChanged.Add(this, &TestModule::PartPersistentIdChangedWrapper);
     GameEvents::onVesselPersistentIdChanged.Add(this, &TestModule::VesselPersistentIdChangedWrapper);
@@ -91,7 +91,7 @@ TestModule::TestModule(std::string typeName) : name_(std::move(typeName)) {
     GameEvents::onVesselsUndocking.Add(this, &TestModule::VesselsUndockingWrapper);
 }
 
-// TestModule.cs:80
+// TestModule.cs:66
 TestModule::~TestModule() {
     GameEvents::onPartPersistentIdChanged.Remove(this, &TestModule::PartPersistentIdChangedWrapper);
     GameEvents::onVesselPersistentIdChanged.Remove(this, &TestModule::VesselPersistentIdChangedWrapper);
@@ -99,20 +99,20 @@ TestModule::~TestModule() {
     GameEvents::onVesselsUndocking.Remove(this, &TestModule::VesselsUndockingWrapper);
 }
 
-// TestModule.cs:93
+// TestModule.cs:82
 void TestModule::VesselPersistentIdChangedWrapper(uint32_t oldId, uint32_t newId) {
     if (oldId != 0) OnVesselPersistentIdChanged(oldId, newId);
 }
-// TestModule.cs:104
+// TestModule.cs:94
 void TestModule::PartPersistentIdChangedWrapper(uint32_t vesselID, uint32_t oldId, uint32_t newId) {
     if (vesselID != 0 && oldId != 0) OnPartPersistentIdChanged(vesselID, oldId, newId);
 }
-// TestModule.cs:116
+// TestModule.cs:106
 void TestModule::VesselDockingWrapper(uint32_t oldId, uint32_t newId) { OnVesselDocking(oldId, newId); }
-// TestModule.cs:121
+// TestModule.cs:115
 void TestModule::VesselsUndockingWrapper(Vessel* oldVessel, Vessel* newVessel) { OnVesselsUndocking(oldVessel, newVessel); }
 
-// TestModule.cs:33
+// TestModule.cs:31
 void TestModule::Initialize(TestGroup* group, const std::string& newTitle) {
     if (!newTitle.empty()) title = newTitle;
     testGroup_ = group;
@@ -122,7 +122,7 @@ void TestModule::Initialize(TestGroup* group, const std::string& newTitle) {
     hasOrbit = dynamic_cast<INodeOrbit*>(this) != nullptr;
 }
 
-// TestModule.cs:129
+// TestModule.cs:124
 TestModule* TestModule::InitializeTest() {
     GameEvents::Mission::onTestInitialized.Fire(this);
     if (hasWaypoint) {
@@ -138,7 +138,7 @@ TestModule* TestModule::InitializeTest() {
     return this;
 }
 
-// TestModule.cs:152
+// TestModule.cs:143
 TestModule* TestModule::ClearTest() {
     GameEvents::Mission::onTestCleared.Fire(this);
     if (hasWaypoint && waypoint != nullptr) ScenarioCustomWaypoints::RemoveWaypoint(waypoint);
@@ -149,22 +149,22 @@ TestModule* TestModule::ClearTest() {
     return this;
 }
 
-// TestModule.cs:186
+// TestModule.cs:176
 std::string TestModule::GetAppObjectiveInfo() { return ""; }
 
-// TestModule.cs:203
+// TestModule.cs:192
 void TestModule::RunValidationWrapper(Editor::MissionEditorValidator* validator) { RunValidation(validator); }
 
-// TestModule.cs:212
+// TestModule.cs:201
 std::string TestModule::GetName() { return name_; }
 
-// TestModule.cs:217
+// TestModule.cs:206
 std::string TestModule::GetDisplayName() { return KSP::Localization::Localizer::Format(title); }
 
-// TestModule.cs:222
+// TestModule.cs:211
 void TestModule::AddParameterToSAP(const std::string& parameter) { AddUniqueTo(parametersDisplayedInSAP, parameter); }
 
-// TestModule.cs:227
+// TestModule.cs:216
 void TestModule::RemoveParameterFromSAP(const std::string& parameter) {
     auto it = std::find(parametersDisplayedInSAP.begin(), parametersDisplayedInSAP.end(), parameter);
     if (it != parametersDisplayedInSAP.end()) parametersDisplayedInSAP.erase(it);
@@ -174,54 +174,54 @@ void TestModule::RemoveParameterFromSAP(const std::string& parameter) {
     }
 }
 
-// TestModule.cs:237
+// TestModule.cs:226
 void TestModule::AddParameterToNodeBody(const std::string& parameter) { node_->AddParameterToNodeBody(name_, parameter); }
 
-// TestModule.cs:242
+// TestModule.cs:231
 void TestModule::AddParameterToNodeBodyAndUpdateUI(const std::string& parameter) {
     node_->AddParameterToNodeBody(name_, parameter);
     UpdateNodeBodyUI();
 }
 
-// TestModule.cs:248
+// TestModule.cs:237
 void TestModule::RemoveParameterFromNodeBody(const std::string& parameter) { node_->RemoveParameterFromNodeBody(name_, parameter); }
 
-// TestModule.cs:253
+// TestModule.cs:242
 void TestModule::RemoveParameterFromNodeBodyAndUpdateUI(const std::string& parameter) {
     node_->RemoveParameterFromNodeBody(name_, parameter);
     UpdateNodeBodyUI();
 }
 
-// TestModule.cs:259
+// TestModule.cs:248
 bool TestModule::HasNodeBodyParameter(const std::string& parameter) { return node_->HasNodeBodyParameter(name_, parameter); }
 
-// TestModule.cs:264
+// TestModule.cs:253
 bool TestModule::HasSAPParameter(const std::string& parameter) {
     return std::find(parametersDisplayedInSAP.begin(), parametersDisplayedInSAP.end(), parameter) != parametersDisplayedInSAP.end();
 }
 
-// TestModule.cs:269
+// TestModule.cs:258
 std::string TestModule::GetNodeBodyParameterString(const Editor::BaseAPField&) { return ""; }
 
-// TestModule.cs:289
+// TestModule.cs:280
 void TestModule::UpdateNodeBodyUI() { node_->guiNode->DisplayNodeBodyParameters(); }
 
-// TestModule.cs:294
+// TestModule.cs:285
 std::vector<IMENodeDisplay*> TestModule::GetInternalParametersToDisplay() { return {}; }
 
-// TestModule.cs:299
+// TestModule.cs:290
 MENode* TestModule::GetNode() { return node_; }
 
-// TestModule.cs:304
+// TestModule.cs:295
 std::string TestModule::GetInfo() { return TypeName(); }
 
-// TestModule.cs:314
+// TestModule.cs:304
 void TestModule::Load(const ConfigNode& node) {
     node.TryGetValue("title", title);
     parametersDisplayedInSAP = node.GetValuesList("parametersDisplayedInSAP");
 }
 
-// TestModule.cs:320
+// TestModule.cs:310
 void TestModule::Save(ConfigNode& node) const {
     node.AddValue("name", name_);
     node.AddValue("title", title);
@@ -230,7 +230,7 @@ void TestModule::Save(ConfigNode& node) const {
 
 // ---- ActionModule ------------------------------------------------------------------------------------------------------------
 
-// ActionModule.cs:99 Awake
+// ActionModule.cs:113 Awake
 ActionModule::ActionModule(std::string typeName) : name_(std::move(typeName)) {
     GameEvents::onPartPersistentIdChanged.Add(this, &ActionModule::PartPersistentIdChangedWrapper);
     GameEvents::onVesselPersistentIdChanged.Add(this, &ActionModule::VesselPersistentIdChangedWrapper);
@@ -238,7 +238,7 @@ ActionModule::ActionModule(std::string typeName) : name_(std::move(typeName)) {
     GameEvents::onVesselDocking.Add(this, &ActionModule::VesselDockingWrapper);
 }
 
-// ActionModule.cs:124
+// ActionModule.cs:95
 ActionModule::~ActionModule() {
     GameEvents::onPartPersistentIdChanged.Remove(this, &ActionModule::PartPersistentIdChangedWrapper);
     GameEvents::onVesselPersistentIdChanged.Remove(this, &ActionModule::VesselPersistentIdChangedWrapper);
@@ -250,34 +250,34 @@ ActionModule::~ActionModule() {
 void ActionModule::VesselPersistentIdChangedWrapper(uint32_t oldId, uint32_t newId) {
     if (oldId != 0) OnVesselPersistentIdChanged(oldId, newId);
 }
-// ActionModule.cs:34
+// ActionModule.cs:35
 void ActionModule::PartPersistentIdChangedWrapper(uint32_t vesselID, uint32_t oldId, uint32_t newId) {
     if (vesselID != 0 && oldId != 0) OnPartPersistentIdChanged(vesselID, oldId, newId);
 }
-// ActionModule.cs:55
+// ActionModule.cs:47
 void ActionModule::VesselsUndockingWrapper(Vessel* oldVessel, Vessel* newVessel) { OnVesselsUndocking(oldVessel, newVessel); }
-// ActionModule.cs:59
+// ActionModule.cs:52
 void ActionModule::VesselDockingWrapper(uint32_t oldId, uint32_t newId) { OnVesselsDocking(oldId, newId); }
 
-// ActionModule.cs:93
+// ActionModule.cs:65
 void ActionModule::Initialize(MENode* n) { node = n; }
 
-// ActionModule.cs:133
+// ActionModule.cs:103
 Enumerator ActionModule::Fire() { co_yield YieldInstruction::Null(); }
 
-// ActionModule.cs:147
+// ActionModule.cs:117
 void ActionModule::RunValidationWrapper(Editor::MissionEditorValidator* validator) { RunValidation(validator); }
 
-// ActionModule.cs:156
+// ActionModule.cs:126
 std::string ActionModule::GetName() { return name_; }
 
-// ActionModule.cs:161
+// ActionModule.cs:131
 std::string ActionModule::GetDisplayName() { return KSP::Localization::Localizer::Format(title); }
 
-// ActionModule.cs:166
+// ActionModule.cs:136
 void ActionModule::AddParameterToSAP(const std::string& parameter) { AddUniqueTo(parametersDisplayedInSAP, parameter); }
 
-// ActionModule.cs:171
+// ActionModule.cs:141
 void ActionModule::RemoveParameterFromSAP(const std::string& parameter) {
     auto it = std::find(parametersDisplayedInSAP.begin(), parametersDisplayedInSAP.end(), parameter);
     if (it != parametersDisplayedInSAP.end()) parametersDisplayedInSAP.erase(it);
@@ -287,53 +287,53 @@ void ActionModule::RemoveParameterFromSAP(const std::string& parameter) {
     }
 }
 
-// ActionModule.cs:181
+// ActionModule.cs:151
 void ActionModule::AddParameterToNodeBody(const std::string& parameter) { node->AddParameterToNodeBody(name_, parameter); }
 
-// ActionModule.cs:186
+// ActionModule.cs:156
 void ActionModule::AddParameterToNodeBodyAndUpdateUI(const std::string& parameter) {
     node->AddParameterToNodeBody(name_, parameter);
     UpdateNodeBodyUI();
 }
 
-// ActionModule.cs:192
+// ActionModule.cs:162
 void ActionModule::RemoveParameterFromNodeBody(const std::string& parameter) { node->RemoveParameterFromNodeBody(name_, parameter); }
 
-// ActionModule.cs:197
+// ActionModule.cs:167
 void ActionModule::RemoveParameterFromNodeBodyAndUpdateUI(const std::string& parameter) {
     node->RemoveParameterFromNodeBody(name_, parameter);
     UpdateNodeBodyUI();
 }
 
-// ActionModule.cs:203
+// ActionModule.cs:173
 bool ActionModule::HasNodeBodyParameter(const std::string& parameter) { return node->HasNodeBodyParameter(name_, parameter); }
 
-// ActionModule.cs:208
+// ActionModule.cs:178
 bool ActionModule::HasSAPParameter(const std::string& parameter) {
     return std::find(parametersDisplayedInSAP.begin(), parametersDisplayedInSAP.end(), parameter) != parametersDisplayedInSAP.end();
 }
 
-// ActionModule.cs:213
+// ActionModule.cs:183
 std::string ActionModule::GetNodeBodyParameterString(const Editor::BaseAPField&) { return ""; }
 
-// ActionModule.cs:223
+// ActionModule.cs:193
 void ActionModule::UpdateNodeBodyUI() {
     if (node->guiNode != nullptr) node->guiNode->DisplayNodeBodyParameters();
 }
 
-// ActionModule.cs:231
+// ActionModule.cs:201
 std::vector<IMENodeDisplay*> ActionModule::GetInternalParametersToDisplay() { return {}; }
 
-// ActionModule.cs:236
+// ActionModule.cs:206
 MENode* ActionModule::GetNode() { return node; }
 
-// ActionModule.cs:241
+// ActionModule.cs:211
 std::string ActionModule::GetInfo() { return name_; }
 
-// ActionModule.cs:246
+// ActionModule.cs:216
 std::string ActionModule::GetAppObjectiveInfo() { return ""; }
 
-// ActionModule.cs:267
+// ActionModule.cs:236
 void ActionModule::Load(const ConfigNode& cfg) {
     cfg.TryGetValue("title", title);
     parametersDisplayedInSAP = cfg.GetValuesList("parametersDisplayedInSAP");
@@ -341,7 +341,7 @@ void ActionModule::Load(const ConfigNode& cfg) {
     cfg.TryGetValue("isRunning", isRunning);
 }
 
-// ActionModule.cs:276
+// ActionModule.cs:244
 void ActionModule::Save(ConfigNode& cfg) const {
     cfg.AddValue("name", name_);
     cfg.AddValue("title", title);
@@ -355,10 +355,10 @@ void ActionModule::Save(ConfigNode& cfg) const {
 // TestGroup.cs:26
 TestGroup::TestGroup(MENode* n) : node_(n) {}
 
-// TestGroup.cs:31
+// TestGroup.cs:32
 TestGroup::TestGroup(MENode* n, std::string t) : title(std::move(t)), node_(n) {}
 
-// TestGroup.cs:36
+// TestGroup.cs:38
 bool TestGroup::Test() {
     for (size_t num = 0; num < testModules.size(); ++num) {
         if (!testModules[num]->Test()) return false;
@@ -366,7 +366,7 @@ bool TestGroup::Test() {
     return true;
 }
 
-// TestGroup.cs:54
+// TestGroup.cs:57
 TestGroup* TestGroup::initializeGroup() {
     GameEvents::Mission::onTestGroupInitialized.Fire(this);
     Initialized();
@@ -375,7 +375,7 @@ TestGroup* TestGroup::initializeGroup() {
     return this;
 }
 
-// TestGroup.cs:64
+// TestGroup.cs:66
 TestGroup* TestGroup::ClearGroup() {
     GameEvents::Mission::onTestGroupCleared.Fire(this);
     Cleared();
@@ -384,17 +384,17 @@ TestGroup* TestGroup::ClearGroup() {
     return this;
 }
 
-// TestGroup.cs:74
+// TestGroup.cs:75
 void TestGroup::InitializeTestModules() {
     for (size_t i = 0; i < testModules.size(); ++i) testModules[i]->InitializeTest();
 }
 
-// TestGroup.cs:82
+// TestGroup.cs:83
 void TestGroup::ClearTestModules() {
     for (size_t i = 0; i < testModules.size(); ++i) testModules[i]->ClearTest();
 }
 
-// TestGroup.cs:90
+// TestGroup.cs:91
 void TestGroup::AddTestModule(const std::string& testName, const ConfigNode* cfg) {
     const TestModuleType* type = TestModuleRegistry::Find(testName);
     std::unique_ptr<TestModule> testModule;
@@ -412,13 +412,13 @@ void TestGroup::AddTestModule(const std::string& testName, const ConfigNode* cfg
     }
 }
 
-// TestGroup.cs:117
+// TestGroup.cs:114
 void TestGroup::RunValidationWrapper(Editor::MissionEditorValidator* validator) {
     RunValidation(validator);
     for (size_t i = 0; i < testModules.size(); ++i) testModules[i]->RunValidationWrapper(validator);
 }
 
-// TestGroup.cs:142
+// TestGroup.cs:139
 void TestGroup::Load(const ConfigNode& cfg) {
     cfg.TryGetValue("title", title);
     const std::vector<ConfigNode*> nodes = cfg.GetNodes("TESTMODULE");
@@ -429,7 +429,7 @@ void TestGroup::Load(const ConfigNode& cfg) {
     }
 }
 
-// TestGroup.cs:152
+// TestGroup.cs:149
 void TestGroup::Save(ConfigNode& cfg) const {
     cfg.AddValue("title", title);
     for (const auto& testModule : testModules) {
@@ -440,14 +440,14 @@ void TestGroup::Save(ConfigNode& cfg) const {
 
 // ---- MEBasicNode -------------------------------------------------------------------------------------------------------------
 
-// Editor/MEBasicNode.cs:53
+// Editor/MEBasicNode.cs:55
 MEBasicNode::MEBasicNode() {
     name = KSP::Localization::Localizer::Format("#autoLOC_8100159");
     description = KSP::Localization::Localizer::Format("#autoLOC_8200061");
     headerColor = Color(0.5f, 0.5f, 0.5f, 1.0f);
 }
 
-// Editor/MEBasicNode.cs:151
+// Editor/MEBasicNode.cs:144
 void MEBasicNode::Load(const ConfigNode& node) {
     node.TryGetValue("name", name);
     node.TryGetValue("displayName", displayName);
@@ -495,7 +495,7 @@ void MEBasicNode::Load(const ConfigNode& node) {
 
 // ---- MENode ------------------------------------------------------------------------------------------------------------------
 
-// MENode.cs:413 Awake (+ :456 Spawn(mission) assigns the mission)
+// MENode.cs:424 Awake (+ :456 Spawn(mission) assigns the mission)
 MENode::MENode(Mission* m) : nodeColor(0.5f, 0.5f, 0.5f, 1.0f), mission(m) {
     id_ = MissionsEnvironment::NewGuid();
     editorPosition = Vector2f::zero();
@@ -588,13 +588,13 @@ MENode* MENode::Clone(MENode* nodeRef, const Vector2f& nodePos) {
 
 void MENode::ResetPool() { NodePool().clear(); }
 
-// MENode.cs:144 (title setter: :135 renames the GameObject)
+// MENode.cs:126 (title setter: :135 renames the GameObject)
 void MENode::SetTitleNoGui(const std::string& value) {
     title_ = value;
     gameObjectName = "Node (" + KSP::Localization::Localizer::Format(value) + ")";
 }
 
-// MENode.cs:144
+// MENode.cs:126
 void MENode::SetTitle(const std::string& value) {
     SetTitleNoGui(value);
     if (guiNode != nullptr) guiNode->SetTitleText(value);

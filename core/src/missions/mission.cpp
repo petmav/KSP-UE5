@@ -55,16 +55,16 @@ const char* BannerTypeName(MEBannerType t) {
 
 // ---- MEBannerEntry (WP-56 stand-in) ------------------------------------------------------------------------------------------
 
-// MEBannerEntry.cs:50
+// MEBannerEntry.cs:46
 MEBannerEntry::MEBannerEntry(MEBannerType bannerType) { SetToDefault(bannerType); }
 
-// MEBannerEntry.cs:112
+// MEBannerEntry.cs:117
 std::string MEBannerEntry::GetBannerGameDataPath(MEBannerType bannerType) { return std::string("SquadExpansion/MakingHistory/Banners/") + BannerTypeName(bannerType) + "/"; }
 
 // MEBannerEntry.cs:122
 std::string MEBannerEntry::GetStockBannerGameDataPath(MEBannerType bannerType) { return std::string("Squad/Missions/Banners/") + BannerTypeName(bannerType) + "/"; }
 
-// MEBannerEntry.cs:94
+// MEBannerEntry.cs:97
 void MEBannerEntry::SetToDefault(MEBannerType bannerType) {
     isInMissionFolder = false;
     fileName = "default.png";
@@ -74,7 +74,7 @@ void MEBannerEntry::SetToDefault(MEBannerType bannerType) {
     relativePath = std::filesystem::exists(p, ec) ? GetBannerGameDataPath(bannerType) : GetStockBannerGameDataPath(bannerType);
 }
 
-// MEBannerEntry.cs:55
+// MEBannerEntry.cs:51
 void MEBannerEntry::LoadFromMissionFolder(const std::string& newFileName, MEBannerType bannerType, const Mission* mission) {
     if (!newFileName.empty()) {
         isInMissionFolder = true;
@@ -84,7 +84,7 @@ void MEBannerEntry::LoadFromMissionFolder(const std::string& newFileName, MEBann
     }
 }
 
-// MEBannerEntry.cs:34
+// MEBannerEntry.cs:33
 std::string MEBannerEntry::FullPath(const std::string& applicationRootPath) const {
     if (isInMissionFolder && missionFolderPath != "") return missionFolderPath + relativePath + fileName;
     return applicationRootPath + "GameData/" + relativePath + fileName;
@@ -105,7 +105,7 @@ MissionMappedVessel::MissionMappedVessel(uint32_t partPersistentId_, uint32_t or
     situationVesselName = situationVslName;
 }
 
-// MissionMappedVessel.cs:35
+// MissionMappedVessel.cs:34
 std::vector<MissionMappedVessel> MissionMappedVessel::Load(const ConfigNode& node) {
     std::vector<MissionMappedVessel> list;
     for (const ConfigNode* configNode : node.GetNodes("MAPPEDVESSEL")) {
@@ -132,7 +132,7 @@ std::vector<MissionMappedVessel> MissionMappedVessel::Load(const ConfigNode& nod
     return list;
 }
 
-// MissionMappedVessel.cs:61
+// MissionMappedVessel.cs:68
 ConfigNode* MissionMappedVessel::Save(ConfigNode& node, const std::vector<MissionMappedVessel>& list) {
     if (!list.empty()) {
         ConfigNode* configNode = node.AddNode("MAPPEDVESSELS");
@@ -247,13 +247,13 @@ const MissionMappedVessel* Find(const std::vector<MissionMappedVessel>& list, ui
 
 // ---- MissionInstructor -------------------------------------------------------------------------------------------------------
 
-// MissionInstructor.cs:20
+// MissionInstructor.cs:21
 MissionInstructor::MissionInstructor() {
     instructorName = "Instructor_Gene";
     vintageSuit = false;
 }
 
-// MissionInstructor.cs:43
+// MissionInstructor.cs:49
 std::string MissionInstructor::GetNodeBodyParameterString(const Editor::BaseAPField*) {
     std::string text;
     struct Row {
@@ -276,19 +276,19 @@ std::string MissionInstructor::GetNodeBodyParameterString(const Editor::BaseAPFi
     return "";
 }
 
-// MissionInstructor.cs:103
+// MissionInstructor.cs:105
 bool MissionInstructor::Equals(const MissionInstructor& other) const {
     if (instructorName == other.instructorName) return vintageSuit == other.vintageSuit;
     return false;
 }
 
-// MissionInstructor.cs:123
+// MissionInstructor.cs:117
 void MissionInstructor::Save(ConfigNode& node) const {
     if (!instructorName.empty()) node.AddValue("instructorName", instructorName);
     node.AddValue("vintageSuit", vintageSuit);
 }
 
-// MissionInstructor.cs:132
+// MissionInstructor.cs:126
 void MissionInstructor::Load(const ConfigNode& node) {
     instructorName = "";
     node.TryGetValue("instructorName", instructorName);
@@ -297,7 +297,7 @@ void MissionInstructor::Load(const ConfigNode& node) {
 
 // ---- MissionPartFilter -------------------------------------------------------------------------------------------------------
 
-// MissionPartFilter.cs:44
+// MissionPartFilter.cs:39
 MissionPartFilter::MissionPartFilter(Mission* m, VesselSituation* v) : mission(m), vesselSituation(v) {}
 
 // MissionPartFilter.cs:105
@@ -320,7 +320,7 @@ std::vector<std::string> MissionPartFilter::GetExcludedParts() {
     return list2;
 }
 
-// MissionPartFilter.cs:155
+// MissionPartFilter.cs:160
 bool MissionPartFilter::CheckPartExcludelist(const std::string& partName) const {
     if (filterType == Choices::unavailableParts) {
         if (!unavailableParts.empty() &&
@@ -332,7 +332,7 @@ bool MissionPartFilter::CheckPartExcludelist(const std::string& partName) const 
     return true;
 }
 
-// MissionPartFilter.cs:236
+// MissionPartFilter.cs:261
 void MissionPartFilter::Load(const ConfigNode& node) {
     save_detail::TryGetEnum(node, "filterType", filterType, Choices::unavailableParts);
     if (filterType == Choices::availableParts) {
@@ -344,7 +344,7 @@ void MissionPartFilter::Load(const ConfigNode& node) {
     }
 }
 
-// MissionPartFilter.cs:254
+// MissionPartFilter.cs:276
 void MissionPartFilter::Save(ConfigNode& node) const {
     if (filterType == Choices::availableParts) {
         for (size_t i = 0; i < availableParts.size(); ++i) {
@@ -468,7 +468,7 @@ void MissionSituation::Load(const ConfigNode& node) {
     missionInstructor.Load(node);
 }
 
-// MissionSituation.cs:352
+// MissionSituation.cs:344
 void MissionSituation::setStartType() {
     startType = StartTypeEnum::SpaceCenter;
     std::vector<MENode*>& dockedNodes = StartNode()->dockedNodes;
@@ -523,13 +523,13 @@ void MissionSituation::setStartType() {
     }
 }
 
-// MissionSituation.cs:435
+// MissionSituation.cs:442
 void MissionSituation::SaveVesselsToBuild(ConfigNode& node) {
     if (vesselsToBuildNode) node.AddNode("VESSELSTOBUILDLIST", vesselsToBuildNode);
     if (startingActionsNode) node.AddNode("STARTINGACTIONSLIST", startingActionsNode);
 }
 
-// MissionSituation.cs:447
+// MissionSituation.cs:454
 void MissionSituation::Save(ConfigNode& node) {
     node.AddValue("startType", dotnet::EnumToString(startType));
     node.AddValue("startVessel", startVesselID);
@@ -572,7 +572,7 @@ void MissionSituation::Save(ConfigNode& node) {
     missionInstructor.Save(node);
 }
 
-// MissionSituation.cs:507
+// MissionSituation.cs:509
 VesselSituation* MissionSituation::GetVesselSituationByVesselID(uint32_t PersistentId) {
     int num = 0;
     while (true) {
@@ -586,7 +586,7 @@ VesselSituation* MissionSituation::GetVesselSituationByVesselID(uint32_t Persist
     return vesselSituationList.KeyAt(num);
 }
 
-// MissionSituation.cs:525
+// MissionSituation.cs:528
 bool MissionSituation::VesselSituationListContains(uint32_t persistentId) {
     int num = 0;
     while (true) {
@@ -600,7 +600,7 @@ bool MissionSituation::VesselSituationListContains(uint32_t persistentId) {
     return true;
 }
 
-// MissionSituation.cs:543
+// MissionSituation.cs:547
 void MissionSituation::FillVesselSituationList(MENode* missionStartNode, bool replaceIfFound, bool fillAllNodes) {
     vesselSituationList.Clear();
     startingActions.clear();
@@ -631,13 +631,13 @@ void MissionSituation::FillVesselSituationList(MENode* missionStartNode, bool re
     UpdateVesselBuildValues();
 }
 
-// MissionSituation.cs:595
+// MissionSituation.cs:599
 void MissionSituation::resetVesselsCountsLists() {
     currentVesselToBuildId = 0u;
     vesselsBuilt = 0;
 }
 
-// MissionSituation.cs:601
+// MissionSituation.cs:605
 void MissionSituation::UpdateVesselBuildValues() {
     if (!VesselsArePending()) return;
     vesselsBuilt = 0;
@@ -654,7 +654,7 @@ void MissionSituation::UpdateVesselBuildValues() {
     }
 }
 
-// MissionSituation.cs:626
+// MissionSituation.cs:629
 std::vector<VesselSituation*> MissionSituation::GetAvailableVesselSituations() {
     std::vector<VesselSituation*> list;
     for (MENode* n : mission->nodes.GetListEnumerator()) {
@@ -667,7 +667,7 @@ std::vector<VesselSituation*> MissionSituation::GetAvailableVesselSituations() {
     return list;
 }
 
-// MissionSituation.cs:647
+// MissionSituation.cs:655
 bool MissionSituation::AddNodeWithVesselToBuild(MENode* node) {
     if (AwardEnvironment::CurrentGameIsMission()) {
         if (mission->GetNodeById(node->id()) == nullptr) return false;
@@ -688,7 +688,7 @@ bool MissionSituation::AddNodeWithVesselToBuild(MENode* node) {
     return false;
 }
 
-// MissionSituation.cs:677
+// MissionSituation.cs:682
 bool MissionSituation::VesselSituationReadyToLaunch(VesselSituation* situation) {
     const Guid nodeGuidByVesselID = mission->GetNodeGuidByVesselID(situation->persistentId);
     if (!(nodeGuidByVesselID == Guid::Empty())) {
@@ -704,7 +704,7 @@ bool MissionSituation::VesselSituationReadyToLaunch(VesselSituation* situation) 
     return false;
 }
 
-// MissionSituation.cs:696
+// MissionSituation.cs:701
 bool MissionSituation::VesselSituationRevertLaunch(VesselSituation* situation) {
     const Guid nodeGuidByVesselID = mission->GetNodeGuidByVesselID(situation->persistentId);
     if (!(nodeGuidByVesselID == Guid::Empty())) {
@@ -720,7 +720,7 @@ bool MissionSituation::VesselSituationRevertLaunch(VesselSituation* situation) {
     return false;
 }
 
-// MissionSituation.cs:715
+// MissionSituation.cs:720
 bool MissionSituation::VesselSituationLaunched(VesselSituation* situation) {
     const Guid nodeGuidByVesselID = mission->GetNodeGuidByVesselID(situation->persistentId);
     if (!(nodeGuidByVesselID == Guid::Empty())) {
@@ -736,7 +736,7 @@ bool MissionSituation::VesselSituationLaunched(VesselSituation* situation) {
     return false;
 }
 
-// MissionSituation.cs:734
+// MissionSituation.cs:739
 void MissionSituation::RemoveLaunchedVessels() {
     std::vector<VesselSituation*> list;
     for (int i = 0; i < vesselSituationList.Count(); ++i) {
@@ -745,16 +745,16 @@ void MissionSituation::RemoveLaunchedVessels() {
     for (size_t j = 0; j < list.size(); ++j) vesselSituationList.Remove(list[j]);
 }
 
-// MissionSituation.cs:753
+// MissionSituation.cs:755
 std::string MissionSituation::GetName() { return "MissionSituation"; }
 
-// MissionSituation.cs:758
+// MissionSituation.cs:760
 std::string MissionSituation::GetDisplayName() { return Localizer::Format("#autoLOC_8004154"); }
 
-// MissionSituation.cs:763
+// MissionSituation.cs:765
 void MissionSituation::AddParameterToSAP(const std::string& parameter) { AddUniqueTo(parametersDisplayedInSAP, parameter); }
 
-// MissionSituation.cs:768
+// MissionSituation.cs:770
 void MissionSituation::RemoveParameterFromSAP(const std::string& parameter) {
     ListRemove(parametersDisplayedInSAP, parameter);
     if (StartNode()->HasNodeBodyParameter("MissionSituation", parameter)) {
@@ -763,70 +763,70 @@ void MissionSituation::RemoveParameterFromSAP(const std::string& parameter) {
     }
 }
 
-// MissionSituation.cs:778
+// MissionSituation.cs:780
 void MissionSituation::AddParameterToNodeBody(const std::string& parameter) { StartNode()->AddParameterToNodeBody("MissionSituation", parameter); }
 
-// MissionSituation.cs:783
+// MissionSituation.cs:785
 void MissionSituation::AddParameterToNodeBodyAndUpdateUI(const std::string& parameter) {
     StartNode()->AddParameterToNodeBody("MissionSituation", parameter);
     UpdateNodeBodyUI();
 }
 
-// MissionSituation.cs:789
+// MissionSituation.cs:791
 void MissionSituation::RemoveParameterFromNodeBody(const std::string& parameter) { StartNode()->RemoveParameterFromNodeBody("MissionSituation", parameter); }
 
-// MissionSituation.cs:794
+// MissionSituation.cs:796
 void MissionSituation::RemoveParameterFromNodeBodyAndUpdateUI(const std::string& parameter) {
     StartNode()->RemoveParameterFromNodeBody("MissionSituation", parameter);
     UpdateNodeBodyUI();
 }
 
-// MissionSituation.cs:800
+// MissionSituation.cs:802
 bool MissionSituation::HasNodeBodyParameter(const std::string& parameter) { return StartNode()->HasNodeBodyParameter("MissionSituation", parameter); }
 
-// MissionSituation.cs:805
+// MissionSituation.cs:807
 bool MissionSituation::HasSAPParameter(const std::string& parameter) { return ListContains(parametersDisplayedInSAP, parameter); }
 
-// MissionSituation.cs:810
+// MissionSituation.cs:812
 std::string MissionSituation::GetNodeBodyParameterString(const Editor::BaseAPField&) { return ""; }
 
-// MissionSituation.cs:864
+// MissionSituation.cs:856
 void MissionSituation::UpdateNodeBodyUI() { StartNode()->guiNode->DisplayNodeBodyParameters(); }
 
-// MissionSituation.cs:869
+// MissionSituation.cs:861
 std::vector<IMENodeDisplay*> MissionSituation::GetInternalParametersToDisplay() { return {}; }
 
-// MissionSituation.cs:874
+// MissionSituation.cs:866
 MENode* MissionSituation::GetNode() { return nullptr; }
 
-// MissionSituation.cs:879
+// MissionSituation.cs:871
 std::string MissionSituation::GetInfo() { return Localizer::Format("#autoLOC_8004153"); }
 
-// MissionSituation.cs:884
+// MissionSituation.cs:876
 void MissionSituation::ParameterSetupComplete() {
     // OnShowBriefingChange(showBriefing): instructorControl.gameObject.SetActive(value) (editor UI)
 }
 
 // ---- MissionPack -------------------------------------------------------------------------------------------------------------
 
-// MissionPack.cs:27
+// MissionPack.cs:24
 MissionPack::MissionPack() {
     name = displayName = description = "";
     order = INT32_MAX;
     color = "#5576AEFF";
 }
 
-// MissionPack.cs:35
+// MissionPack.cs:31
 int MissionPack::CompareOrder(const MissionPack& a, const MissionPack& b) {
     int num = (a.order < b.order) ? -1 : (a.order > b.order ? 1 : 0);
     if (num == 0) num = CompareDisplayName(a, b);
     return num;
 }
 
-// MissionPack.cs:45
+// MissionPack.cs:41
 int MissionPack::CompareDisplayName(const MissionPack& a, const MissionPack& b) { return dotnet::CompareCulture(a.displayName, b.displayName); }
 
-// MissionPack.cs:50
+// MissionPack.cs:46
 void MissionPack::Load(const ConfigNode& node) {
     if (!node.TryGetValue("name", name)) name = Localizer::Format("#autoLOC_168872");
     if (!node.TryGetValue("displayName", displayName)) displayName = Localizer::Format("#autoLOC_168872");
@@ -835,7 +835,7 @@ void MissionPack::Load(const ConfigNode& node) {
     node.TryGetValue("color", color);
 }
 
-// MissionPack.cs:72
+// MissionPack.cs:64
 void MissionPack::Save(ConfigNode& node) const {
     node.AddValue("name", name);
     node.AddValue("displayName", displayName);
@@ -960,20 +960,20 @@ std::vector<MENode*> GetNodesOrdered(Mission* m, bool objectivesOnly) {
 
 }  // namespace MissionsUtils
 
-// MissionFileInfo.cs:97
+// MissionFileInfo.cs:98
 std::string MissionFileInfo::FolderPath() const { return MissionsUtils::GetMissionsFolder(missionType) + folderName + "/"; }
-// MissionFileInfo.cs:99
+// MissionFileInfo.cs:100
 std::string MissionFileInfo::ShipFolderPath() const { return FolderPath() + "Ships/"; }
-// MissionFileInfo.cs:101
+// MissionFileInfo.cs:102
 std::string MissionFileInfo::FilePath() const { return FolderPath() + "persistent" + MissionsUtils::fileExtension; }
-// MissionFileInfo.cs:113
+// MissionFileInfo.cs:116
 std::string MissionFileInfo::BannerPath() const { return FolderPath() + "Banners/"; }
-// MissionFileInfo.cs:115
+// MissionFileInfo.cs:118
 std::string MissionFileInfo::SaveFolderPath() const { return MissionsUtils::SavesRootPath() + folderName + "/"; }
 
 // ---- Mission -----------------------------------------------------------------------------------------------------------------
 
-// Mission.cs:254 Awake (+ :314 Spawn)
+// Mission.cs:314 Awake (+ :314 Spawn)
 Mission::Mission() {
     InitSeed();
     id_ = MissionsEnvironment::NewGuid();
@@ -1034,7 +1034,7 @@ std::string Mission::GetGameObjectName(const Mission& mission) {
     return "Mission (" + text + ")";
 }
 
-// Mission.cs:140
+// Mission.cs:137
 void Mission::SetTitle(const std::string& value) {
     title_ = value;
     gameObjectName = GetGameObjectName(*this);
@@ -1173,7 +1173,7 @@ bool Mission::craftFileExists(const std::string& craftFileName) {
     return true;
 }
 
-// Mission.cs:577
+// Mission.cs:602
 bool Mission::BlockPlayMission(bool showDialog) {
     (void)showDialog;
     blockedMessages_.clear();
@@ -1480,7 +1480,7 @@ void Mission::RecursivelyCreateObjectiveScoreString(MENode* currentNode, std::st
     }
 }
 
-// Mission.cs:187
+// Mission.cs:166
 bool Mission::MissionLoadedFromSFS() const {
     Game* g = HighLogic::CurrentGame();
     if (!HighLogic::LoadedSceneIsMissionBuilder && g != nullptr) {
@@ -1493,20 +1493,20 @@ bool Mission::MissionLoadedFromSFS() const {
     return false;
 }
 
-// Mission.cs:174
+// Mission.cs:154
 std::string Mission::PersistentSaveName() const {
     if (MissionLoadedFromSFS()) return dotnet::Replace(HighLogic::SaveFolder(), MissionsUtils::SavesPath(), "");
     return missionInfo->folderName;
 }
 
-// Mission.cs:201
+// Mission.cs:202
 std::string Mission::BannersPath() const {
     if (MissionLoadedFromSFS()) return MissionsUtils::SavesRootPath() + PersistentSaveName() + "/Banners/";
     if (missionInfo == nullptr) return "";
     return missionInfo->BannerPath();
 }
 
-// Mission.cs:187
+// Mission.cs:186
 std::string Mission::ShipsPath() const {
     if (MissionLoadedFromSFS()) return MissionsUtils::SavesRootPath() + PersistentSaveName() + "/Ships/";
     if (missionInfo == nullptr) return "";
