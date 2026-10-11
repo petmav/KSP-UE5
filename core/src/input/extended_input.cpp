@@ -28,39 +28,39 @@ void ExtendedInput::LateUpdate() {
     EmtpyFrames = 0.0f;
 }
 
-// ExtendedInput.cs:36
+// ExtendedInput.cs:31
 bool ExtendedInput::GetKey(const KeyCodeExtended& key) {
     if (InputEnvironment::Input().GetKey(key.code)) return true;
     return IsPressed(key.name);
 }
 
-// ExtendedInput.cs:45
+// ExtendedInput.cs:40
 bool ExtendedInput::GetKeyDown(const KeyCodeExtended& key) {
     if (InputEnvironment::Input().GetKeyDown(key.code)) return true;
     if (!WasPressed(key.name)) return IsPressed(key.name);
     return false;
 }
 
-// ExtendedInput.cs:58
+// ExtendedInput.cs:53
 bool ExtendedInput::GetKeyUp(const KeyCodeExtended& key) {
     if (InputEnvironment::Input().GetKeyUp(key.code)) return true;
     if (WasPressed(key.name)) return !IsPressed(key.name);
     return false;
 }
 
-// ExtendedInput.cs:70
+// ExtendedInput.cs:64
 bool ExtendedInput::WasPressed(const std::string& key) {
     if (!key.empty() && !LastInputString.empty()) return LastInputString.find(ToUpper(dotnet::ToUtf16(key))) != std::u16string::npos;
     return false;
 }
 
-// ExtendedInput.cs:80
+// ExtendedInput.cs:73
 bool ExtendedInput::IsPressed(const std::string& key) {
     if (!key.empty() && !CurrentInputString.empty()) return CurrentInputString.find(ToUpper(dotnet::ToUtf16(key))) != std::u16string::npos;
     return false;
 }
 
-// ExtendedInput.cs:90
+// ExtendedInput.cs:82
 bool ExtendedInput::DetectKeyDown(const std::vector<KeyCode>* keyValues, KeyCodeExtended& key) {
     key = KeyCodeExtended();
     if (keyValues == nullptr) return false;  // Debug.LogError("Key values collection is null.")

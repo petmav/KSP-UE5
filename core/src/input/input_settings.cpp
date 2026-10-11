@@ -9,13 +9,13 @@
 
 namespace ksp {
 
-// InputSettings.cs:383
+// InputSettings.cs:413
 const std::vector<KeyCode>& InputSettings::unbindableKeys() {
     static const std::vector<KeyCode> keys = {KeyCode::Mouse0, KeyCode::Mouse1, KeyCode::Mouse2};
     return keys;
 }
 
-// InputSettings.cs:392
+// InputSettings.cs:420
 const std::vector<KeyCode>& InputSettings::keyValues() {
     static const std::vector<KeyCode> keys = GetValidKeys();
     return keys;

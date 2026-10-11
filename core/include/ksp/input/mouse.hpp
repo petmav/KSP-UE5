@@ -46,6 +46,7 @@ public:
         Phase phase_ = Phase::Done;
         float endTime2_ = 0.0f;
         bool tapped_ = false;
+        bool justStarted_ = false;   // started in this frame's Update: first resumed in the next frame's coroutine pass
     };
 
     // Mouse.cs:164 ([Flags])

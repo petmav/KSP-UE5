@@ -7,7 +7,7 @@
 
 namespace ksp {
 
-// Mouse.cs:38
+// Mouse.cs:41
 void Mouse::MouseButton::Update() {
     if (abort_) {
         if (!isTapStarted_) abort_ = false;
@@ -29,22 +29,27 @@ void Mouse::MouseButton::Update() {
     }
 }
 
-// Mouse.cs:61 (the first segment, up to the first `yield return null`)
+// kspcore state machine for Mouse.cs:61 MouseButton.TapRoutine (the first segment, up to the first `yield return null`)
 void Mouse::MouseButton::StartTapRoutine() {
     isTapStarted_ = true;
     endTime2_ = f32store(fx(InputEnvironment::realtimeSinceStartup) + fx(GameSettings::DOUBLECLICK_MOUSESPEED));
     tapped_ = false;
     phase_ = Phase::WaitUp;
+    justStarted_ = true;
     RunTapRoutine();
 }
 
-// Mouse.cs:61 (a resume after `yield return null`)
+// kspcore state machine for Mouse.cs:61 MouseButton.TapRoutine (a resume after `yield return null`)
 void Mouse::MouseButton::ResumeTapRoutine() {
     if (phase_ == Phase::Done) return;
+    if (justStarted_) {  // `yield return null` resumes in the NEXT frame's coroutine pass
+        justStarted_ = false;
+        return;
+    }
     RunTapRoutine();
 }
 
-// Mouse.cs:61 TapRoutine: while (!abort && !(now >= endTime)) { if (up) { tap = tapped = true; yield; tap = false; break; } yield; }
+// kspcore state machine for Mouse.cs:61 MouseButton.TapRoutine: while (!abort && !(now >= endTime)) { if (up) { tap = tapped = true; yield; tap = false; break; } yield; }
 // then, when tapped, the same wait for a second button down (doubleTap).
 void Mouse::MouseButton::RunTapRoutine() {
     const IInputDevice& input = InputEnvironment::Input();
@@ -105,7 +110,7 @@ void Mouse::MouseButton::RunTapRoutine() {
     }
 }
 
-// Mouse.cs:104
+// Mouse.cs:109
 void Mouse::MouseButton::ClearMouseState() {
     doubleClickTime_ = InputEnvironment::realtimeSinceStartup;
     tap_ = false;
@@ -122,16 +127,16 @@ bool Mouse::MouseButton::GetDoubleClick(bool isDelegate) const {
     return doubleTap_;
 }
 
-// Mouse.cs:153
+// Mouse.cs:154
 bool Mouse::MouseButton::WasDragging(float delta) const {
     if (!button_ && !up_) return false;
     return dragDelta_.sqrMagnitude() > delta;
 }
 
-// Mouse.cs:204
+// Mouse.cs:194
 bool Mouse::IsMoving() { return delta.sqrMagnitude() > 0.01f; }
 
-// Mouse.cs:228
+// Mouse.cs:223
 void Mouse::Update() {
     Left.Update();
     Right.Update();
@@ -150,7 +155,7 @@ void Mouse::ResumeCoroutines() {
     Middle.ResumeTapRoutine();
 }
 
-// Mouse.cs:242
+// Mouse.cs:235
 Mouse::Buttons Mouse::GetAllMouseButtons() {
     const IInputDevice& input = InputEnvironment::Input();
     Buttons buttons = Buttons::None;
@@ -162,7 +167,7 @@ Mouse::Buttons Mouse::GetAllMouseButtons() {
     return buttons;
 }
 
-// Mouse.cs:266
+// Mouse.cs:261
 Mouse::Buttons Mouse::GetAllMouseButtonsUp() {
     const IInputDevice& input = InputEnvironment::Input();
     Buttons buttons = Buttons::None;
@@ -174,7 +179,7 @@ Mouse::Buttons Mouse::GetAllMouseButtonsUp() {
     return buttons;
 }
 
-// Mouse.cs:290
+// Mouse.cs:287
 Mouse::Buttons Mouse::GetAllMouseButtonsDown() {
     const IInputDevice& input = InputEnvironment::Input();
     Buttons buttons = Buttons::None;
@@ -186,7 +191,7 @@ Mouse::Buttons Mouse::GetAllMouseButtonsDown() {
     return buttons;
 }
 
-// Mouse.cs:314
+// Mouse.cs:313
 bool Mouse::CheckButtons(Buttons buttons, Buttons buttonsToTest, bool strict) {
     if (strict) return (buttons & buttonsToTest) == buttonsToTest;
     return (buttons & buttonsToTest) != Buttons::None;

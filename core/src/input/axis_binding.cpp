@@ -10,48 +10,48 @@ namespace ksp {
 
 using namespace input_detail;
 
-// AxisBinding_Single.cs:31
+// AxisBinding_Single.cs:35
 AxisBinding_Single::AxisBinding_Single(ControlTypes lockMask) { inputLockMask = static_cast<uint64_t>(lockMask); }
 
-// AxisBinding_Single.cs:36
+// AxisBinding_Single.cs:40
 AxisBinding_Single::AxisBinding_Single(float neutral) { neutralPoint = neutral; }
 
-// AxisBinding_Single.cs:41
+// AxisBinding_Single.cs:45
 AxisBinding_Single::AxisBinding_Single(float neutral, ControlTypes lockMask) {
     neutralPoint = neutral;
     inputLockMask = static_cast<uint64_t>(lockMask);
 }
 
-// AxisBinding_Single.cs:47
+// AxisBinding_Single.cs:51
 AxisBinding_Single::AxisBinding_Single(InputBindingModes useSwitch) { switchState = useSwitch; }
 
-// AxisBinding_Single.cs:52
+// AxisBinding_Single.cs:56
 AxisBinding_Single::AxisBinding_Single(InputBindingModes useSwitch, ControlTypes lockMask) {
     switchState = useSwitch;
     inputLockMask = static_cast<uint64_t>(lockMask);
 }
 
-// AxisBinding_Single.cs:58
+// AxisBinding_Single.cs:62
 AxisBinding_Single::AxisBinding_Single(InputBindingModes useSwitch, float neutral) {
     switchState = useSwitch;
     neutralPoint = neutral;
 }
 
-// AxisBinding_Single.cs:64
+// AxisBinding_Single.cs:68
 AxisBinding_Single::AxisBinding_Single(InputBindingModes useSwitch, float neutral, ControlTypes lockMask) {
     switchState = useSwitch;
     neutralPoint = neutral;
     inputLockMask = static_cast<uint64_t>(lockMask);
 }
 
-// AxisBinding_Single.cs:71
+// AxisBinding_Single.cs:75
 AxisBinding_Single::AxisBinding_Single(const std::string& Id, const std::string& Name, bool isInverted) {
     idTag = Id;
     name = Name;
     inverted = isInverted;
 }
 
-// AxisBinding_Single.cs:78
+// AxisBinding_Single.cs:82
 AxisBinding_Single::AxisBinding_Single(const std::string& Id, const std::string& Name, bool isInverted, ControlTypes lockMask) {
     idTag = Id;
     name = Name;
@@ -59,7 +59,7 @@ AxisBinding_Single::AxisBinding_Single(const std::string& Id, const std::string&
     inputLockMask = static_cast<uint64_t>(lockMask);
 }
 
-// AxisBinding_Single.cs:86
+// AxisBinding_Single.cs:90
 AxisBinding_Single::AxisBinding_Single(const std::string& Id, const std::string& Name, bool isInverted, float sens, float dead_zone,
                                        float axisScale) {
     idTag = Id;
@@ -70,7 +70,7 @@ AxisBinding_Single::AxisBinding_Single(const std::string& Id, const std::string&
     scale = axisScale;
 }
 
-// AxisBinding_Single.cs:96
+// AxisBinding_Single.cs:100
 AxisBinding_Single::AxisBinding_Single(const std::string& Id, const std::string& Name, bool isInverted, float sens, float dead_zone,
                                        float axisScale, ControlTypes lockMask) {
     idTag = Id;
@@ -82,7 +82,7 @@ AxisBinding_Single::AxisBinding_Single(const std::string& Id, const std::string&
     inputLockMask = static_cast<uint64_t>(lockMask);
 }
 
-// AxisBinding_Single.cs:107
+// AxisBinding_Single.cs:111
 void AxisBinding_Single::Save(ConfigNode& node) const {
     node.AddValue("name", name);
     node.AddValue("axis", static_cast<int32_t>(axisIdx));
@@ -94,7 +94,7 @@ void AxisBinding_Single::Save(ConfigNode& node) const {
     InputBinding::Save(node);
 }
 
-// AxisBinding_Single.cs:119
+// AxisBinding_Single.cs:123
 void AxisBinding_Single::Load(const ConfigNode& node) {
     name = "NULL";
     if (node.HasValue("name")) name = GetValueOrEmpty(node, "name");
@@ -139,7 +139,7 @@ void AxisBinding_Single::Load(const ConfigNode& node) {
     }
 }
 
-// AxisBinding_Single.cs:201 (Mono float rule: every float expression in double, rounded at each store)
+// AxisBinding_Single.cs:203 (Mono float rule: every float expression in double, rounded at each store)
 float AxisBinding_Single::GetAxis() {
     if (idTag == "None") return neutralPoint;
     if (!CompareSwitchState(switchState)) return neutralPoint;
@@ -157,7 +157,7 @@ float AxisBinding_Single::GetAxis() {
     return value_;
 }
 
-// AxisBinding_Single.cs:246
+// AxisBinding_Single.cs:248
 bool AxisBinding_Single::IsNeutral() const { return const_cast<AxisBinding_Single*>(this)->GetAxis() == 0.0f; }
 
 // AxisBinding.cs:14
@@ -255,7 +255,7 @@ void AxisKeyBinding::Load(const ConfigNode& node) {
 // AxisKeyBindingList.cs:25
 AxisKeyBindingList::AxisKeyBindingList(int count) { axisKeyBindings_.resize(static_cast<size_t>(count)); }
 
-// AxisKeyBindingList.cs:35
+// AxisKeyBindingList.cs:34
 void AxisKeyBindingList::Save(ConfigNode& node) const {
     for (size_t i = 0; i < axisKeyBindings_.size(); ++i) {
         ConfigNode* node2 = node.AddNode("AXIS_KEY_BINDING");
@@ -263,7 +263,7 @@ void AxisKeyBindingList::Save(ConfigNode& node) const {
     }
 }
 
-// AxisKeyBindingList.cs:44
+// AxisKeyBindingList.cs:43
 void AxisKeyBindingList::Load(const ConfigNode& node) {
     std::vector<ConfigNode*> nodes = node.GetNodes("AXIS_KEY_BINDING");
     size_t num = nodes.size();
@@ -271,7 +271,7 @@ void AxisKeyBindingList::Load(const ConfigNode& node) {
     for (size_t i = 0; i < num; ++i) axisKeyBindings_[i].Load(*nodes[i]);
 }
 
-// AxisKeyBindingList.cs:58
+// AxisKeyBindingList.cs:57
 AxisKeyBindingList AxisKeyBindingList::Clone() const {
     AxisKeyBindingList list;
     list.axisKeyBindings_.reserve(axisKeyBindings_.size());

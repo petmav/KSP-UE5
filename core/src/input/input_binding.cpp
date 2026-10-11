@@ -53,7 +53,7 @@ std::string KeyCodeExtended::ToString() const {
 
 // ------------------------------------------------------------------------------------------------ InputBinding
 
-// InputBinding.cs:12
+// InputBinding.cs:13
 void InputBinding::Load(const ConfigNode& node) {
     if (node.HasValue("switchState")) {
         switchState = dotnet::EnumParseFull<InputBindingModes>(GetValueOrEmpty(node, "switchState"));
@@ -63,13 +63,13 @@ void InputBinding::Load(const ConfigNode& node) {
     }
 }
 
-// InputBinding.cs:24
+// InputBinding.cs:25
 void InputBinding::Save(ConfigNode& node) const {
     int num = static_cast<int>(switchState);
     node.AddValue("modeMask", dotnet::FormatInt64(num));
 }
 
-// InputBinding.cs:30
+// InputBinding.cs:31
 bool InputBinding::CompareSwitchState(InputBindingModes switchSt) const {
     if (HighLogic::LoadedSceneIsFlight) {
         if (FlightUIModeControllerSeam::present) {
@@ -85,12 +85,12 @@ bool InputBinding::CompareSwitchState(InputBindingModes switchSt) const {
     return true;
 }
 
-// InputBinding.cs:46
+// InputBinding.cs:47
 bool InputBinding::IsLocked() const { return (InputLockManager::LockMask() & inputLockMask) > 0; }
 
 // ------------------------------------------------------------------------------------------------ KeyBinding
 
-// KeyBinding.cs:18
+// KeyBinding.cs:26
 std::string KeyBinding::name() const {
     if (primary.isNone()) return secondary.ToString();
     return primary.ToString();
@@ -99,40 +99,40 @@ std::string KeyBinding::name() const {
 // KeyBinding.cs:100
 KeyBinding::KeyBinding() {}
 
-// KeyBinding.cs:106
+// KeyBinding.cs:100
 KeyBinding::KeyBinding(ControlTypes lockMask) { inputLockMask = static_cast<uint64_t>(lockMask); }
 
-// KeyBinding.cs:113
+// KeyBinding.cs:100
 KeyBinding::KeyBinding(KeyCode main) : primary(main) {}
 
-// KeyBinding.cs:119
+// KeyBinding.cs:100
 KeyBinding::KeyBinding(KeyCode main, ControlTypes lockMask) : primary(main) { inputLockMask = static_cast<uint64_t>(lockMask); }
 
-// KeyBinding.cs:126
+// KeyBinding.cs:100
 KeyBinding::KeyBinding(KeyCode main, InputBindingModes useSwitch) : primary(main) { switchState = useSwitch; }
 
-// KeyBinding.cs:133
+// KeyBinding.cs:100
 KeyBinding::KeyBinding(KeyCode main, InputBindingModes useSwitch, ControlTypes lockMask) : primary(main) {
     switchState = useSwitch;
     inputLockMask = static_cast<uint64_t>(lockMask);
 }
 
-// KeyBinding.cs:141
+// KeyBinding.cs:100
 KeyBinding::KeyBinding(KeyCode main, KeyCode alt) : primary(main), secondary(alt) {}
 
-// KeyBinding.cs:147
+// KeyBinding.cs:100
 KeyBinding::KeyBinding(KeyCode main, KeyCode alt, ControlTypes lockMask) : primary(main), secondary(alt) {
     inputLockMask = static_cast<uint64_t>(lockMask);
 }
 
-// KeyBinding.cs:154
+// KeyBinding.cs:100
 KeyBinding::KeyBinding(KeyCode main, KeyCode alt, InputBindingModes useSwitch, InputBindingModes useSwitchSecondary)
     : primary(main), secondary(alt) {
     switchState = useSwitch;
     switchStateSecondary = useSwitchSecondary;
 }
 
-// KeyBinding.cs:162
+// KeyBinding.cs:100
 KeyBinding::KeyBinding(KeyCode main, KeyCode alt, InputBindingModes useSwitch, InputBindingModes useSwitchSecondary,
                        ControlTypes lockMask)
     : primary(main), secondary(alt) {
@@ -141,7 +141,7 @@ KeyBinding::KeyBinding(KeyCode main, KeyCode alt, InputBindingModes useSwitch, I
     inputLockMask = static_cast<uint64_t>(lockMask);
 }
 
-// KeyBinding.cs:171
+// KeyBinding.cs:109
 void KeyBinding::Save(ConfigNode& node) const {
     node.AddValue("primary", primary.ToString());
     node.AddValue("secondary", secondary.ToString());
@@ -151,7 +151,7 @@ void KeyBinding::Save(ConfigNode& node) const {
     node.AddValue("modeMaskSec", dotnet::FormatInt64(num));
 }
 
-// KeyBinding.cs:181
+// KeyBinding.cs:119
 void KeyBinding::Load(const ConfigNode& node) {
     primary = KeyCodeExtended(GetValueOrEmpty(node, "primary"));
     secondary = KeyCodeExtended(GetValueOrEmpty(node, "secondary"));

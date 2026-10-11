@@ -96,7 +96,7 @@ std::string ConvertToString(const SettingsField& f) {
 
 // ------------------------------------------------------------------------------------------------ KeyboardLayout
 
-// KeyboardLayout.cs:15 (user32.dll GetKeyboardLayout: the host's `provider`; unset = an en-US QWERTY keyboard)
+// KeyboardLayout.cs:14 (user32.dll GetKeyboardLayout: the host's `provider`; unset = an en-US QWERTY keyboard)
 KeyboardLayout KeyboardLayout::GetKeyboardLayout() {
     if (provider) return provider();
     KeyboardLayout k;
@@ -106,7 +106,7 @@ KeyboardLayout KeyboardLayout::GetKeyboardLayout() {
     return k;
 }
 
-// KeyboardLayout.cs:32
+// KeyboardLayout.cs:25
 KeyboardLayoutType KeyboardLayout::GetKeyboardLayoutType(int64_t layoutCode) {
     switch (static_cast<int>(layoutCode >> 16)) {
         case 1062: return KeyboardLayoutType::Latvian;
@@ -233,7 +233,7 @@ ConfigNode::NodePtr GameSettings::ParseLayoutRecursive(ConfigNode::NodePtr node,
     return node;
 }
 
-// GameSettings.cs:1619 (the ConfigNode WriteCfg builds; the C# method then saves it)
+// kspcore split of GameSettings.cs:1619 (the ConfigNode WriteCfg builds; WriteCfg then saves it)
 ConfigNode::NodePtr GameSettings::BuildCfg() {
     SetCollapsedPawGroupString();
     ConfigNode::NodePtr configNode = ConfigNode::Create();
@@ -343,7 +343,7 @@ GameSettings::ParseResult GameSettings::ParseCfg(const ConfigNode::NodePtr& conf
     return ParseResult::Incompatible;
 }
 
-// GameSettings.cs:1691 (ConfigNode.Load(configFilePath))
+// kspcore split of GameSettings.cs:1691 (ParseCfg of ConfigNode.Load(configFilePath))
 GameSettings::ParseResult GameSettings::ParseCfgFile() { return ParseCfg(ConfigNode::Load(configFilePath)); }
 
 // GameSettings.cs:1823

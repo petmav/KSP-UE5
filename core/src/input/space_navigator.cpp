@@ -14,7 +14,7 @@ float QuaternionPitch(const Quaternionf& q) {
                         f32store(fx(q.w) * fx(q.w) - fx(q.x) * fx(q.x) - fx(q.y) * fx(q.y) + fx(q.z) * fx(q.z)));
 }
 
-// QuaternionExtensions.cs:25
+// QuaternionExtensions.cs:27
 float QuaternionYaw(const Quaternionf& q) { return Mathf::Asin(f32store(-2.0 * (fx(q.x) * fx(q.z) - fx(q.w) * fx(q.y)))); }
 
 // QuaternionExtensions.cs:30
@@ -23,24 +23,24 @@ float QuaternionRoll(const Quaternionf& q) {
                         f32store(fx(q.w) * fx(q.w) + fx(q.x) * fx(q.x) - fx(q.y) * fx(q.y) - fx(q.z) * fx(q.z)));
 }
 
-// SpaceNavigator.cs:78
+// SpaceNavigator.cs:91
 bool SpaceNavigator::LockTranslationX() { return lockTranslationX_ && !InputEnvironment::applicationIsPlaying; }
-// SpaceNavigator.cs:94
+// SpaceNavigator.cs:107
 bool SpaceNavigator::LockTranslationY() { return lockTranslationY_ && !InputEnvironment::applicationIsPlaying; }
-// SpaceNavigator.cs:110
+// SpaceNavigator.cs:123
 bool SpaceNavigator::LockTranslationZ() { return lockTranslationZ_ && !InputEnvironment::applicationIsPlaying; }
-// SpaceNavigator.cs:126
+// SpaceNavigator.cs:139
 bool SpaceNavigator::LockTranslationAll() { return lockTranslationAll_ && !InputEnvironment::applicationIsPlaying; }
-// SpaceNavigator.cs:142
+// SpaceNavigator.cs:155
 bool SpaceNavigator::LockRotationX() { return lockRotationX_ && !InputEnvironment::applicationIsPlaying; }
-// SpaceNavigator.cs:158
+// SpaceNavigator.cs:171
 bool SpaceNavigator::LockRotationY() { return lockRotationY_ && !InputEnvironment::applicationIsPlaying; }
-// SpaceNavigator.cs:174
+// SpaceNavigator.cs:187
 bool SpaceNavigator::LockRotationZ() { return lockRotationZ_ && !InputEnvironment::applicationIsPlaying; }
-// SpaceNavigator.cs:190
+// SpaceNavigator.cs:203
 bool SpaceNavigator::LockRotationAll() { return lockRotationAll_ && !InputEnvironment::applicationIsPlaying; }
 
-// SpaceNavigator.cs:210
+// SpaceNavigator.cs:221
 SpaceNavigator* SpaceNavigator::Instance() {
     if (instance_ == nullptr) {
         instance_ = SpaceNavigatorWindows::SubInstance();
@@ -49,20 +49,20 @@ SpaceNavigator* SpaceNavigator::Instance() {
     return instance_;
 }
 
-// SpaceNavigator.cs:234
+// SpaceNavigator.cs:241
 Quaternionf SpaceNavigator::RotationInLocalCoordSys(const Quaternionf& coordSysRotation) {
     // coordSys.rotation * Rotation * Quaternion.Inverse(coordSys.rotation) (the native Inverse: the conjugate)
     const Quaternionf inv = UnityNative::Inverse(coordSysRotation);
     return coordSysRotation * Rotation() * inv;
 }
 
-// SpaceNavigator.cs:240
+// SpaceNavigator.cs:246
 void SpaceNavigator::SetTranslationSensitivity(float newPlayTransSens) { Instance()->PlayTransSens = newPlayTransSens; }
 
-// SpaceNavigator.cs:245
+// SpaceNavigator.cs:251
 void SpaceNavigator::SetRotationSensitivity(float newPlayRotSens) { Instance()->PlayRotSens = newPlayRotSens; }
 
-// SpaceNavigator.cs:256
+// SpaceNavigator.cs:262
 void SpaceNavigator::ReadSettings(const IPlayerPrefs& prefs) {
     for (int i = 0; i < Gears; i++) {
         TransSens[static_cast<size_t>(i)] = prefs.GetFloat("Translation sensitivity" + std::to_string(i), TransSensDefault[static_cast<size_t>(i)]);
@@ -84,7 +84,7 @@ void SpaceNavigator::ReadSettings(const IPlayerPrefs& prefs) {
     lockRotationZ_ = prefs.GetInt("Rotation lock Z", 0) == 1;
 }
 
-// SpaceNavigator.cs:276
+// SpaceNavigator.cs:283
 void SpaceNavigator::WriteSettings(IPlayerPrefs& prefs) const {
     for (int i = 0; i < Gears; i++) {
         prefs.SetFloat("Translation sensitivity" + std::to_string(i), TransSens[static_cast<size_t>(i)]);
@@ -143,7 +143,7 @@ Quaternionf SpaceNavigatorNoDevice::GetRotation() {
                  (SpaceNavigator::LockRotationZ() || SpaceNavigator::LockRotationAll()) ? 0.0f : f32store(fx(fakeRotationInput_.z) * fx(num))));
 }
 
-// SpaceNavigatorWindows.cs:43
+// SpaceNavigatorWindows.cs:40
 SpaceNavigatorWindows::SpaceNavigatorWindows() {
     SpaceNavigator::deviceAvailable_ = false;
     try {
@@ -155,7 +155,7 @@ SpaceNavigatorWindows::SpaceNavigatorWindows() {
     }
 }
 
-// SpaceNavigatorWindows.cs:17
+// SpaceNavigatorWindows.cs:18
 SpaceNavigatorWindows* SpaceNavigatorWindows::SubInstance() {
     if (!g_windows) g_windows.reset(new SpaceNavigatorWindows());
     return g_windows.get();
@@ -163,7 +163,7 @@ SpaceNavigatorWindows* SpaceNavigatorWindows::SubInstance() {
 
 void SpaceNavigatorWindows::ResetSubInstance() { g_windows.reset(); }
 
-// SpaceNavigatorWindows.cs:19
+// SpaceNavigatorWindows.cs:20
 Vector3f SpaceNavigatorWindows::GetTranslation() {
     float num = (InputEnvironment::applicationIsPlaying ? PlayTransSens : TransSens[static_cast<size_t>(CurrentGear)]);
     if (SubInstance()->sensor_) {
@@ -178,7 +178,7 @@ Vector3f SpaceNavigatorWindows::GetTranslation() {
     return Vector3f(0.0f, 0.0f, 0.0f);
 }
 
-// SpaceNavigatorWindows.cs:31
+// SpaceNavigatorWindows.cs:30
 Quaternionf SpaceNavigatorWindows::GetRotation() {
     float num = (InputEnvironment::applicationIsPlaying ? PlayRotSens : RotSens);
     if (SubInstance()->sensor_) {

@@ -9,7 +9,7 @@ namespace ksp {
 
 using namespace input_detail;
 
-// KeyBinding.cs:196
+// KeyBinding.cs:144
 bool KeyBinding::GetKey(bool ignoreInputLock) const {
     if (IsLocked() && !ignoreInputLock) return false;
     if (ExtendedInput::GetKey(primary) && CompareSwitchState(switchState)) return true;
@@ -17,7 +17,7 @@ bool KeyBinding::GetKey(bool ignoreInputLock) const {
     return false;
 }
 
-// KeyBinding.cs:213
+// KeyBinding.cs:175
 bool KeyBinding::GetKeyDown(bool ignoreInputLock) const {
     if (IsLocked() && !ignoreInputLock) return false;
     if (ExtendedInput::GetKeyDown(primary) && CompareSwitchState(switchState)) return true;
@@ -25,7 +25,7 @@ bool KeyBinding::GetKeyDown(bool ignoreInputLock) const {
     return false;
 }
 
-// KeyBinding.cs:230
+// KeyBinding.cs:168
 bool KeyBinding::GetDoubleTapDown(bool ignoreInputLock) {
     doubleDown_ = false;
     if (IsLocked() && !ignoreInputLock) return false;
@@ -40,7 +40,7 @@ bool KeyBinding::GetDoubleTapDown(bool ignoreInputLock) {
     return doubleDown_;
 }
 
-// KeyBinding.cs:249
+// KeyBinding.cs:211
 bool KeyBinding::GetKeyUp(bool ignoreInputLock) const {
     if (IsLocked() && !ignoreInputLock) return false;
     if (ExtendedInput::GetKeyUp(primary) && CompareSwitchState(switchState)) return true;
@@ -48,7 +48,7 @@ bool KeyBinding::GetKeyUp(bool ignoreInputLock) const {
     return false;
 }
 
-// KeyBinding.cs:266
+// KeyBinding.cs:204
 bool KeyBinding::GetDoubleTapUp(bool ignoreInputLock) {
     doubleUp_ = false;
     if (IsLocked() && !ignoreInputLock) return false;
@@ -63,15 +63,15 @@ bool KeyBinding::GetDoubleTapUp(bool ignoreInputLock) {
     return doubleUp_;
 }
 
-// KeyBinding.cs:285
+// KeyBinding.cs:223
 bool KeyBinding::IsNeutral() const { return !GetKey(); }
 
-// InputDevices.cs:10
+// InputDevices.cs:8
 InputDevices::InputDevices() {
     if (InputEnvironment::applicationIsPlaying) InitializeDevices();
 }
 
-// InputDevices.cs:18
+// InputDevices.cs:17
 void InputDevices::InitializeDevices() {
     const std::vector<std::string> joystickNames = InputEnvironment::Input().GetJoystickNames();
     dotnet::Dictionary<std::string, int> dictionary;
@@ -87,7 +87,7 @@ void InputDevices::InitializeDevices() {
     // Debug.Log("[Input Devices]: " + PrintCollection(...)): host log only
 }
 
-// InputDevices.cs:38
+// InputDevices.cs:36
 void InputDevices::Load(const ConfigNode& node) {
     devices_.Clear();
     for (const ConfigNode::Value& value : node.values()) {
@@ -96,22 +96,22 @@ void InputDevices::Load(const ConfigNode& node) {
     InitializeDevices();
 }
 
-// InputDevices.cs:48
+// InputDevices.cs:46
 void InputDevices::Save(ConfigNode& node) const {
     for (const auto& kv : devices_) node.AddValue(kv.first, static_cast<int32_t>(kv.second));
 }
 
-// InputDevices.cs:56
+// InputDevices.cs:54
 int InputDevices::GetDeviceIndex(const std::string& deviceName) const {
     int value = 0;
     if (devices_.TryGetValue(deviceName, value)) return value;
     return -1;
 }
 
-// InputDevices.cs:65
+// InputDevices.cs:63
 int InputDevices::GetDeviceListLength() const { return devices_.Count(); }
 
-// InputDevices.cs:75
+// InputDevices.cs:73
 std::string InputDevices::TrimDeviceName(const std::string& src) { return dotnet::Trim(src); }
 
 }  // namespace ksp
