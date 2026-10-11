@@ -85,6 +85,8 @@ struct ContractsEnvironment {
     std::string versionString = "1.12.5";
     // CelestialBody.BiomeMap.GetAtt(latitude, longitude).name (the biome bitmap decode is a later package). Unset: "" (no biome map).
     std::function<std::string(CelestialBody*, double latitude, double longitude)> biomeNameAt;
+    // ContractDefs.LoadContractCraftDefs() + LoadConstructionPartsList() (ContractSystem.OnAwake, ContractSystem.cs:219; FinePrint::InstallAll connects them). Unset: nothing.
+    std::function<void()> loadContractDefsData;
     // ContractSystem.SpawnPreBuiltShip / ConstructShip (ship construction + vessel spawn; WP-19 / WP-38 / WP-40). Unset: nothing.
     std::function<void(const std::string& craftUrl)> spawnPreBuiltShip;
 

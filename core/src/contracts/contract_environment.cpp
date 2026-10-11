@@ -6,6 +6,7 @@
 #include "ksp/celestial/planetarium.hpp"
 #include "ksp/core/exceptions.hpp"
 #include "ksp/dotnet/number.hpp"
+#include "ksp/fineprint/contract_defs.hpp"
 
 namespace ksp::Contracts {
 
@@ -18,8 +19,15 @@ ConfigNode::NodePtr& DefsRoot() {
 }
 }  // namespace
 
-// C++ helper (see FinePrint/ContractDefs.cs:2072) LoadConfig (the node handed to it is the "Contracts" node of the GameDatabase)
-void ContractDefsLite::Load(const ConfigNode& contractsNode) { DefsRoot() = contractsNode.CreateCopy(); }
+// C++ helper (see FinePrint/ContractDefs.cs:2072) LoadConfig (the node handed to it is the "Contracts" node of the GameDatabase). WP-38 slice 3:
+// the typed members of FinePrint::ContractDefs are reset to the C# initialisers and LoadConfig runs over the node; the accessors below answer from
+// them.
+void ContractDefsLite::Load(const ConfigNode& contractsNode) {
+    DefsRoot() = contractsNode.CreateCopy();
+    FinePrint::ContractDefs::ResetToDefaults();
+    FinePrint::ContractDefs::config = DefsRoot();
+    FinePrint::ContractDefs::LoadConfig();
+}
 
 void ContractDefsLite::Load(const std::string& contractsCfgPath) {
     ConfigNode::NodePtr file = ConfigNode::Load(contractsCfgPath);
@@ -29,8 +37,24 @@ void ContractDefsLite::Load(const std::string& contractsCfgPath) {
     Load(*node);
 }
 
-void ContractDefsLite::Clear() { DefsRoot().reset(); }
+void ContractDefsLite::Clear() {
+    DefsRoot().reset();
+    FinePrint::ContractDefs::config.reset();
+    FinePrint::ContractDefs::ResetToDefaults();
+}
 bool ContractDefsLite::Loaded() { return static_cast<bool>(DefsRoot()); }
+
+// the typed member of FinePrint::ContractDefs behind (section, sub, key) when it has the requested C# type, else nullptr
+namespace {
+template <class T>
+T* Typed(const std::string& section, const std::string& sub, const std::string& key) {
+    if (!DefsRoot()) return nullptr;
+    const FinePrint::ContractDefs::Entry* e = FinePrint::ContractDefs::Find(section, sub, key);
+    if (e == nullptr) return nullptr;
+    T* const* p = std::get_if<T*>(&e->member);
+    return p != nullptr ? *p : nullptr;
+}
+}  // namespace
 
 ConfigNode* ContractDefsLite::Node(const std::string& section, const std::string& sub) {
     if (!DefsRoot()) throw NullReferenceException("ContractDefs is not loaded");
@@ -49,24 +73,29 @@ bool ContractDefsLite::Has(const std::string& section, const std::string& sub, c
 }
 
 std::string ContractDefsLite::S(const std::string& section, const std::string& sub, const std::string& key) {
+    if (const std::string* p = Typed<std::string>(section, sub, key)) return *p;
     ConfigNode* n = Node(section, sub);
     if (n == nullptr || !n->HasValue(key)) throw KeyNotFoundException("ContractDefs " + section + "/" + sub + "/" + key);
     return *n->GetValue(key);
 }
 
 float ContractDefsLite::F(const std::string& section, const std::string& sub, const std::string& key) {
+    if (const float* p = Typed<float>(section, sub, key)) return *p;
     return dotnet::ParseSingle(S(section, sub, key));
 }
 double ContractDefsLite::D(const std::string& section, const std::string& sub, const std::string& key) {
+    if (const double* p = Typed<double>(section, sub, key)) return *p;
     return dotnet::ParseDouble(S(section, sub, key));
 }
 int ContractDefsLite::I(const std::string& section, const std::string& sub, const std::string& key) {
+    if (const int* p = Typed<int>(section, sub, key)) return *p;
     int v = 0;
     const std::string s = S(section, sub, key);
     if (!dotnet::TryParseInt32(s, v)) throw dotnet::FormatException("Input string was not in a correct format.");
     return v;
 }
 bool ContractDefsLite::B(const std::string& section, const std::string& sub, const std::string& key) {
+    if (const bool* p = Typed<bool>(section, sub, key)) return *p;
     bool v = false;
     if (!dotnet::TryParseBool(S(section, sub, key), v)) throw dotnet::FormatException("String was not recognized as a valid Boolean.");
     return v;

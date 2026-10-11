@@ -12,5 +12,5 @@ Branch wp19a (from main 308a7fe9, WP-20a merged). Worktree D:\Projects\KSP-UE5\c
 - [x] physics_orbit_hold: 6.4 mm over 10 orbits with compensation, 22.8 m radius error per orbit without
 - [x] check_cites exact mode: 106 citations, 0 mismatches over the 7 new / ported .cpp files (the 14 old mismatches in vessel.cpp are WP-14's, unchanged)
 - [x] Linux GCC 13.3 (WSL, copy in ~/wp19a, linux-gcc-rel): builds without warnings in the new files; WP-19a unit cases and capture.vessel_rails / capture.orbit_rails pass
-- [x] STATUS.md section + summary row 40, README rows
+- [x] STATUS.md section + summary row 42, README rows
 - [x] final: core/build deleted + run_tests.ps1 -Fresh: configure 2.3 s, build 240 s, ctest 35/35 (210 s); unit 760 cases / 1,211,729 assertions (WP-19a: 27 / 18,711)
