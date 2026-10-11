@@ -29,7 +29,7 @@ Part* FindLoadedPart(uint32_t id) {  // FlightGlobals.FindLoadedPart
 }
 }  // namespace
 
-// ControlledBase.cs:66
+// ControlledBase.cs:67
 ControlledBase::ControlledBase(Part* part, PartModule* module, ModuleRoboticController* controller) {
     partId = part->fields.persistentId;
     part_ = part;
@@ -53,7 +53,7 @@ std::vector<Part*>* ControlledBase::SymmetryParts() const {
     return &part_->symmetryCounterparts;
 }
 
-// ControlledBase.cs:105
+// ControlledBase.cs:102
 bool ControlledBase::AssignReferenceVars() {
     Part* partout = FindLoadedPart(partId);
     if (partout == nullptr) {
@@ -80,7 +80,7 @@ void ControlledBase::RebuildSymmetryList(const std::vector<uint32_t>& excludedPa
         if (std::find(excludedPartIds.begin(), excludedPartIds.end(), (*sym)[i]->fields.persistentId) == excludedPartIds.end()) AddSymmetryPart((*sym)[i]);
 }
 
-// ControlledBase.cs:140
+// ControlledBase.cs:139
 void ControlledBase::ChangeSymmetryMaster(Part* newPart) {
     uint32_t oldPartId = 0;
     std::vector<Part*>* sym = SymmetryParts();
@@ -104,7 +104,7 @@ void ControlledBase::Load(const ConfigNode& node) {
     OnLoad(node);
 }
 
-// ControlledBase.cs:168
+// ControlledBase.cs:167
 void ControlledBase::Save(ConfigNode& node) {
     node.AddValue("persistentId", partId);
     node.AddValue("moduleId", moduleId);
@@ -118,7 +118,7 @@ void ControlledBase::Save(ConfigNode& node) {
     OnSave(node);
 }
 
-// RoboticCollisions.cs:10
+// RoboticCollisions.cs:9
 void RoboticCollisions::Start() {
     if (!SaveEnvironment::Current().IsExpansionInstalled("Serenity") && SaveEnvironment::Current().loadedSceneIsGame) {
         behaviourEnabled = false;

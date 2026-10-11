@@ -59,10 +59,10 @@ public:
     ModuleGroundExpControl* groundExpConModule = nullptr;              // :25
     ModuleAnimationGroup* animationGroup = nullptr;                    // :27
     int firstEmptyInvSlot = 0;                                         // :11
-    bool hasJoint = false;                                             // :31 FixedJoint joint != null
+    bool hasJoint = false;                                             // (C++ addition) FixedJoint joint != null
     DictionaryValueList<uint32_t, float> childMass;                    // :33
     bool childMassValid = false;                                       // childMass != null
-    bool partActionWindowOpen = false;                                 // :29 (UIPartActionWindow != null)
+    bool partActionWindowOpen = false;                                 // (C++ addition) (UIPartActionWindow != null)
 
     // ---- events / lifecycle ----
     void OnAwake() override;                                           // binds [KSPEvent] RetrievePart
@@ -84,7 +84,7 @@ public:
     void OnRetractCompleted(ModuleAnimationGroup* aGroup);             // :363
     void OnPartActionUIShown(Part* p, bool open);                      // :388/:397 (UIPartActionWindow shown / dismissed)
     void OnVesselChange(Vessel* vessel);                               // :405
-    void UpdateGroundModuleUI();                                       // :413 private non-virtual in C#; ModuleGroundSciencePart declares its own virtual UpdateModuleUI
+    void UpdateGroundModuleUI();                                       // (C++ addition) private non-virtual in C#; ModuleGroundSciencePart declares its own virtual UpdateModuleUI
     std::string GetModuleDisplayName() override;                       // :426
     void EnableModule() override;                                      // :431
     void DisableModule() override;                                     // :439 virtual
@@ -136,7 +136,7 @@ public:
     bool sunTrackerRunning = false;         // SunTrackerToOrigin is active
 
     void ToggleActive();                    // :222 [KSPEvent]
-    void ToggleActiveAction();              // :231 [KSPAction]
+    void ToggleActiveAction();              // :232 [KSPAction]
     void Start();                           // :237 (Unity message)
     void OnAwake() override;                // :246
     void OnStart(StartState state) override;  // :252
@@ -189,8 +189,8 @@ protected:
     virtual double CommPowerValue() { return antennaPower(); }  // `public virtual double CommPower => antennaPower` (ExpControl overrides)
 
 private:
-    ModuleGroundExpControl* controllerModule_ = nullptr;  // :26
-    Part* loadedPart_ = nullptr;                          // :28
+    ModuleGroundExpControl* controllerModule_ = nullptr;  // (C++ addition)
+    Part* loadedPart_ = nullptr;                          // (C++ addition)
 };
 
 // ModuleGroundExpControl.cs:11
@@ -203,7 +203,7 @@ public:
     int experimentsConnected() const { return Get<int32_t>("experimentsConnected"); }  // :17
     double boostedAntennaPower() const { return Get<double>("boostedAntennaPower"); }  // :29
     bool beingDestroyed = false;                                                    // :31
-    double CommPowerValue() override { return antennaPower() + boostedAntennaPower(); }  // :39 override CommPower
+    double CommPowerValue() override { return antennaPower() + boostedAntennaPower(); }  // (C++ addition) override CommPower
 
     void SetVesselNaming();            // :42 [KSPEvent] (Part.SetVesselNaming: PAW / naming dialog, recorded)
     int vesselNamingCalls = 0;
@@ -251,7 +251,7 @@ public:
     void SetScienceValue(float v);
     float ScienceModifierRate() const { return Get<float>("ScienceModifierRate"); }  // :29
     void SetScienceModifierRate(float v) { Set<float>("ScienceModifierRate", v); }
-    const FloatCurve* DistanceCurve() const;                                       // :32
+    const FloatCurve* DistanceCurve() const;                                       // (C++ addition)
 
     float scienceValue = 0.0f;                  // :16
     DSExperiment* scienceExperiment = nullptr;  // :34

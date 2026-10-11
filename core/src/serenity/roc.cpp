@@ -69,7 +69,7 @@ void RocCBDefinition::Load(const ConfigNode& node) {
     biomes = node.GetValuesList("Biome");
 }
 
-// ROCDefinition.cs:129
+// ROCDefinition.cs:126
 bool ROCDefinition::ContainsCBBiome(const std::string& cbName, const std::string& biomeName) const {
     for (size_t i = 0; i < myCelestialBodies.size(); i++) {
         if (myCelestialBodies[i].name != cbName) continue;
@@ -79,7 +79,7 @@ bool ROCDefinition::ContainsCBBiome(const std::string& cbName, const std::string
     return false;
 }
 
-// ROCDefinition.cs:146
+// ROCDefinition.cs:145
 void ROCDefinition::Load(const ConfigNode& node) {
     node.TryGetValue("Type", type);
     node.TryGetValue("displayName", displayName);
@@ -119,13 +119,13 @@ void ROCDefinition::Load(const ConfigNode& node) {
 // =============================================================================================================================
 // ROC
 
-// ROC.cs:128
+// ROC.cs:118
 void ROC::Awake() {
     if (!SerenityInstalled()) destroyed = true;
     if (upDirection.x == 0.0f && upDirection.y == 0.0f && upDirection.z == 0.0f) upDirection = transform.up();
 }
 
-// ROC.cs:140
+// ROC.cs:130
 void ROC::Start() {
     started = true;
     if (SaveEnvironment::Current().loadedScene == GameScenes::FLIGHT) {
@@ -135,7 +135,7 @@ void ROC::Start() {
     if (ROCManager::Instance == nullptr) throw NullReferenceException();
 }
 
-// ROC.cs:165
+// ROC.cs:168
 void ROC::SetStats(const std::string& type_, const std::string& displayName_, const std::string& prefabName_, const std::string& modelName_, bool orientateup_,
                    float depth_, bool canbetaken_, float frequency_, const std::vector<RocCBDefinition>& myCelestialBodies_, bool castShadows_, bool recieveShadows_,
                    float collisionthreshold, bool smallroc, bool randomdepth, bool randomorientation, const std::vector<Vector3f>& localSpaceScanPoints_,
@@ -173,7 +173,7 @@ void ROC::SetStats(const std::string& type_, const std::string& displayName_, co
     radiusCenter = radiusCenter_;
 }
 
-// ROC.cs:204
+// ROC.cs:201
 void ROC::OnDestroyed() {
     if (SaveEnvironment::Current().loadedScene == GameScenes::FLIGHT) {
         if (ROCManager::Instance == nullptr) throw NullReferenceException();
@@ -181,12 +181,12 @@ void ROC::OnDestroyed() {
     }
 }
 
-// ROC.cs:330
+// ROC.cs:321
 void ROC::UpdateModelTransform() {
     // modelTransform = transform.Find(modelName): the child lookup is the engine's (`modelTransform` / `modelTransformFound` are set by the host)
 }
 
-// ROC.cs:213
+// ROC.cs:211
 Vector3f ROC::GetClosestScanPosition(const Vector3f& testPosition, float& bestDistanceToPoint) {
     UpdateModelTransform();
     if (!modelTransformFound) throw NullReferenceException();
@@ -206,7 +206,7 @@ Vector3f ROC::GetClosestScanPosition(const Vector3f& testPosition, float& bestDi
     return result;
 }
 
-// ROC.cs:238
+// ROC.cs:236
 Vector3f ROC::GetClosestScanPositionWithRaycasts(const Vector3f& testPosition, float& distanceToPoint) {
     UpdateModelTransform();
     if (!modelTransformFound) throw NullReferenceException();
@@ -243,7 +243,7 @@ Vector3f ROC::GetClosestScanPositionWithRaycasts(const Vector3f& testPosition, f
     return GetClosestScanPosition(testPosition, distanceToPoint);
 }
 
-// ROC.cs:277
+// ROC.cs:273
 void ROC::CheckCollision(Vessel& vessel) {
     if (vessel.speed > static_cast<double>(collisionThreshold) && smallROC) {
         if (ROCManager::Instance != nullptr) ROCManager::Instance->RemoveROC(rocID);
@@ -253,13 +253,13 @@ void ROC::CheckCollision(Vessel& vessel) {
     }
 }
 
-// ROC.cs:294 (the collision bookkeeping of the parts that touched the collider is the engine's)
+// ROC.cs:287 (the collision bookkeeping of the parts that touched the collider is the engine's)
 void ROC::PickUpROC() {
     if (ROCManager::Instance != nullptr) ROCManager::Instance->RemoveROC(rocID);
     destroyed = true;
 }
 
-// ROC.cs:311
+// ROC.cs:305
 bool ROC::PerformExperiment(ModuleScienceExperiment* moduleScienceExperiment) {
     if (moduleScienceExperiment == nullptr) {
         log::Warning("[ROC]: Unable to run Experiment on ROC '" + type + "' ModuleScienceExperiment PartModule is not defined in this Parts cfg file.");
@@ -274,7 +274,7 @@ bool ROC::PerformExperiment(ModuleScienceExperiment* moduleScienceExperiment) {
     return false;
 }
 
-// ROC.cs:424
+// ROC.cs:426
 float ROC::GetVFXForceScale(float burstClipTime) const {
     if (!vfxCurveForce) throw NullReferenceException();
     return vfxCurveForce->Evaluate(burstClipTime);
@@ -283,7 +283,7 @@ float ROC::GetVFXForceScale(float burstClipTime) const {
 // =============================================================================================================================
 // PQSMod_ROCScatterQuad (data only)
 
-// PQSMod_ROCScatterQuad.cs:20 (the PQ delegate registration and the transform placement are WP-48's)
+// PQSMod_ROCScatterQuad.cs:22 (the PQ delegate registration and the transform placement are WP-48's)
 void RocScatterQuad::Setup(RocQuad* q, int quadSeed_, LandClassROC* roc_, int count_, int rocIDCounter) {
     quad = q;
     quadSeed = quadSeed_;
@@ -295,7 +295,7 @@ void RocScatterQuad::Setup(RocQuad* q, int quadSeed_, LandClassROC* roc_, int co
     isBuilt = false;
 }
 
-// PQSMod_ROCScatterQuad.cs:73
+// PQSMod_ROCScatterQuad.cs:81
 void RocScatterQuad::Destroy() {
     spawnedRocIds.clear();
     quad = nullptr;
@@ -306,7 +306,7 @@ void RocScatterQuad::Destroy() {
 // =============================================================================================================================
 // LandClassROC
 
-// LandClassROC.cs:72
+// LandClassROC.cs:74
 LandClassROC::LandClassROC(ROCDefinition* rocDefinition, PQSROCControl* control) {
     rocType = rocDefinition;
     rocName = rocType->type;
@@ -326,7 +326,7 @@ LandClassROC::LandClassROC(ROCDefinition* rocDefinition, PQSROCControl* control)
     }
 }
 
-// LandClassROC.cs:95
+// LandClassROC.cs:98
 void LandClassROC::Setup(const RocPqsView& s) {
     sphere = s;
     minLevel = sphere.maxLevel;
@@ -335,7 +335,7 @@ void LandClassROC::Setup(const RocPqsView& s) {
     CreateCache();
 }
 
-// LandClassROC.cs:103
+// LandClassROC.cs:107
 void LandClassROC::CreateCache() {
     if (!cacheCreated) {
         cacheAssigned.clear();
@@ -346,15 +346,15 @@ void LandClassROC::CreateCache() {
     }
 }
 
-// LandClassROC.cs:113
+// LandClassROC.cs:119
 void LandClassROC::SphereActive() {
     if (RocPqsStatics::Global_AllowScatter && cacheUnassignedCount == 0) BuildCache(maxCache);
 }
 
-// LandClassROC.cs:121
+// LandClassROC.cs:127
 void LandClassROC::SphereInactive() { ClearCache(); }
 
-// LandClassROC.cs:126
+// LandClassROC.cs:132
 void LandClassROC::AddScatterMeshController(RocQuad* quad, int rocIDCounter) {
     SaveEnvironment& env = SaveEnvironment::Current();
     if (env.currentGame != nullptr && env.currentGame->Mode == Game_Modes::MISSION && RocEnvironment::resourceScenarioPresent) {
@@ -393,7 +393,7 @@ void LandClassROC::AddScatterMeshController(RocQuad* quad, int rocIDCounter) {
     }
 }
 
-// LandClassROC.cs:158
+// LandClassROC.cs:181
 void LandClassROC::BuildCache(int countToAdd) {
     rocParentCreated = true;
     for (int i = 0; i < countToAdd; i++) {
@@ -406,7 +406,7 @@ void LandClassROC::BuildCache(int countToAdd) {
     cacheUnassignedCount += countToAdd;
 }
 
-// LandClassROC.cs:183
+// LandClassROC.cs:209
 void LandClassROC::DestroyQuad(RocScatterQuad* q) {
     if (rocControl != nullptr && q->quad != nullptr && rocControl->rocPositionsUsed.ContainsKey(StringExtensions::GetHashCode_Net35(q->quad->name))) {
         RocPositionList list = rocControl->rocPositionsUsed[StringExtensions::GetHashCode_Net35(q->quad->name)];
@@ -426,7 +426,7 @@ void LandClassROC::DestroyQuad(RocScatterQuad* q) {
     q->active = false;
 }
 
-// LandClassROC.cs:210
+// LandClassROC.cs:235
 std::vector<RocPlacement> LandClassROC::CreateScatterMesh(RocScatterQuad* q) {
     std::vector<RocPlacement> placements;
     int num = 0;
@@ -522,7 +522,7 @@ std::vector<RocPlacement> LandClassROC::CreateScatterMesh(RocScatterQuad* q) {
     return placements;
 }
 
-// LandClassROC.cs:338
+// LandClassROC.cs:368
 void LandClassROC::ClearCache() {
     if (cacheCreated) {
         std::vector<RocScatterQuad*> list = cacheAssigned;
@@ -542,14 +542,14 @@ void LandClassROC::ClearCache() {
 
 PQSROCControl::PQSROCControl() { className = "PQSROCControl"; }
 
-// PQSROCControl.cs:36
+// PQSROCControl.cs:40
 void PQSROCControl::Awake() {
     modExpansionDisabled = !SerenityInstalled();
     rocPositionsUsed = DictionaryValueList<int, RocPositionList>();
     quadAppliedROCTypes = DictionaryValueList<int, std::vector<ROCDefinition*>>();
 }
 
-// PQSROCControl.cs:43
+// PQSROCControl.cs:47
 void PQSROCControl::OnSetup() {
     requirements = PQS::VertexMapCoords | PQS::MeshColorChannel;
     if (RocEnvironment::pqsOf) {
@@ -564,15 +564,15 @@ void PQSROCControl::OnSetup() {
     }
 }
 
-// PQSROCControl.cs:62
+// PQSROCControl.cs:69
 void PQSROCControl::OnQuadPreBuild(const PQ& quad) {
     rocsActive = quad.subdivision >= rocMinSubdev && ROCManager::Instance != nullptr && celestialBody != nullptr;
 }
 
-// PQSROCControl.cs:73
+// PQSROCControl.cs:81
 void PQSROCControl::OnVertexBuild(PQSVertexBuildData& data) { allowROCScatter = data.allowScatter; }
 
-// PQSROCControl.cs:78
+// PQSROCControl.cs:86
 void PQSROCControl::OnQuadBuilt(const PQ& pq) {
     int num = 0;
     if (!rocsActive || rocCount <= 0 || !allowROCScatter) return;
@@ -607,17 +607,17 @@ void PQSROCControl::OnQuadBuilt(const PQ& pq) {
     rocsActive = false;
 }
 
-// PQSROCControl.cs:135
+// PQSROCControl.cs:131
 void PQSROCControl::OnSphereStarted() {
     for (size_t i = 0; i < rocs.size(); i++) rocs[i]->SphereActive();
 }
 
-// PQSROCControl.cs:143
+// PQSROCControl.cs:140
 void PQSROCControl::OnSphereReset() {
     for (size_t i = 0; i < rocs.size(); i++) rocs[i]->SphereInactive();
 }
 
-// PQSROCControl.cs:151
+// PQSROCControl.cs:149
 void PQSROCControl::OnQuadDestroy(const PQ& pq) {
     RocQuad* quad = quadInfo ? quadInfo(pq) : nullptr;
     if (quad == nullptr) return;
@@ -632,7 +632,7 @@ void PQSROCControl::OnQuadDestroy(const PQ& pq) {
 // =============================================================================================================================
 // ROCManager
 
-// ROCManager.cs:23
+// ROCManager.cs:22
 float ROCManager::ROCStats::rocCoverage() const {
     if (activeQuadArea <= 0.0f) return 0.0f;
     return f32store(fx(static_cast<float>(activeRocCount)) / fx(activeQuadArea));
@@ -654,7 +654,7 @@ std::vector<ROCDefinition*> ROCManager::rocDefinitions() const {
     return r;
 }
 
-// ROCManager.cs:82
+// ROCManager.cs:85
 void ROCManager::Awake() {
     if (Instance != nullptr) {
         destroyed = true;  // DestroyImmediate(gameObject); Instance = null
@@ -675,7 +675,7 @@ void ROCManager::Awake() {
     rocStats = DictionaryValueList<std::string, std::shared_ptr<ROCStats>>();
 }
 
-// ROCManager.cs:106
+// ROCManager.cs:113
 void ROCManager::Start() {
     std::vector<ConfigNode*> rocDefs = ScienceEnvironment::getConfigNodes ? ScienceEnvironment::getConfigNodes("ROC_DEFINITION") : std::vector<ConfigNode*>();
     for (size_t i = 0; i < rocDefs.size(); i++) {
@@ -716,20 +716,20 @@ void ROCManager::Start() {
     subscribed_ = true;
 }
 
-// ROCManager.cs:168
+// ROCManager.cs:169
 void ROCManager::OnGameStateLoad(ConfigNode*) {
     Game* g = SaveEnvironment::Current().currentGame;
     if (g == nullptr) throw NullReferenceException();
     SetROCsStateForGame(g->ROCSeed > -1);
 }
 
-// ROCManager.cs:180
+// ROCManager.cs:181
 void ROCManager::OnGameNewStart() { SetROCsStateForGame(true); }
 
-// ROCManager.cs:185
+// ROCManager.cs:186
 void ROCManager::onMissionStarted(Expansions::Missions::Mission*) { SetROCsStateForGame(true); }
 
-// ROCManager.cs:190
+// ROCManager.cs:191
 void ROCManager::SetROCsStateForGame(bool active) {
     if (active) {
         EnableAllROCs();
@@ -740,7 +740,7 @@ void ROCManager::SetROCsStateForGame(bool active) {
     }
 }
 
-// ROCManager.cs:204
+// ROCManager.cs:205
 void ROCManager::GetROCControlFromCB() {
     ValidateCBBiomeCombos();
     const std::vector<CelestialBody*> localBodies = LocalBodies();
@@ -750,7 +750,7 @@ void ROCManager::GetROCControlFromCB() {
     }
 }
 
-// ROCManager.cs:218
+// ROCManager.cs:219
 bool ROCManager::PopulateROCControlFromConfig(PQSROCControl* ROCControl) {
     bool result = true;
     for (size_t i = 0; i < _rocDefinitions.size(); i++) {
@@ -809,7 +809,7 @@ void ROCManager::ValidateCBBiomeCombos() {
     }
 }
 
-// ROCManager.cs:302
+// ROCManager.cs:297
 CelestialBody* ROCManager::ValidCelestialBody(const std::string& bodyName) {
     const std::vector<CelestialBody*> bodies = LocalBodies();
     for (size_t num = 0; num < bodies.size(); num++)
@@ -817,7 +817,7 @@ CelestialBody* ROCManager::ValidCelestialBody(const std::string& bodyName) {
     return nullptr;
 }
 
-// ROCManager.cs:318
+// ROCManager.cs:316
 bool ROCManager::ValidCBBiome(CelestialBody* body, const std::string& biomeName) {
     if (!body->BiomeMap) throw NullReferenceException();
     for (size_t num = 0; num < body->BiomeMap->Attributes.size(); num++)
@@ -833,7 +833,7 @@ void ROCManager::DisableAllROCs() {
     }
 }
 
-// ROCManager.cs:348
+// ROCManager.cs:347
 void ROCManager::EnableAllROCs() {
     for (size_t i = 0; i < _pqsRocControls.size(); i++) {
         _pqsRocControls[i]->modEnabled = true;
@@ -844,7 +844,7 @@ void ROCManager::EnableAllROCs() {
 // ROCManager.cs:384
 bool ROCManager::ROCRemoved(int rocId) { return ROCManagerRemovedROCs::ROCRemoved(rocId); }
 
-// ROCManager.cs:405
+// ROCManager.cs:407
 void ROCManager::RemoveROC(int rocId) {
     if (!hasList) {
         removedROCs.clear();
@@ -853,13 +853,13 @@ void ROCManager::RemoveROC(int rocId) {
     AddUnique(removedROCs, rocId);
 }
 
-// ROCManager.cs:414
+// ROCManager.cs:416
 void ROCManager::ClearROCsCache() {
     for (size_t i = 0; i < _pqsRocControls.size(); i++)
         for (size_t j = 0; j < _pqsRocControls[i]->rocs.size(); j++) _pqsRocControls[i]->rocs[j]->ClearCache();
 }
 
-// ROCManager.cs:445
+// ROCManager.cs:440
 void ROCManager::AddROCStats_Quad(PQSROCControl* control, ROCDefinition* r, const RocQuad&) {
     if (!rocStats.ContainsKey(r->type)) {
         rocStats.Add(r->type, std::make_shared<ROCStats>(r->type));
@@ -870,7 +870,7 @@ void ROCManager::AddROCStats_Quad(PQSROCControl* control, ROCDefinition* r, cons
     if (OnStatsChanged) OnStatsChanged();
 }
 
-// ROCManager.cs:458
+// ROCManager.cs:455
 void ROCManager::AddROCStats_ROCs(const std::string& rType, int count, float frequency) {
     if (!rocStats.ContainsKey(rType)) {
         rocStats.Add(rType, std::make_shared<ROCStats>(rType));
@@ -880,10 +880,10 @@ void ROCManager::AddROCStats_ROCs(const std::string& rType, int count, float fre
     if (OnStatsChanged) OnStatsChanged();
 }
 
-// ROCManager.cs:472
+// ROCManager.cs:469
 void ROCManager::ClearStats() { rocStats.Clear(); }
 
-// ROCManager.cs:477
+// ROCManager.cs:474
 void ROCManager::SubtractROCStats_Quad(PQSROCControl* control, ROCDefinition* r) {
     if (rocStats.ContainsKey(r->type)) {
         rocStats[r->type]->activeQuads--;
@@ -892,7 +892,7 @@ void ROCManager::SubtractROCStats_Quad(PQSROCControl* control, ROCDefinition* r)
     }
 }
 
-// ROCManager.cs:489
+// ROCManager.cs:487
 void ROCManager::SubtractROCStats_ROCs(const std::string& rType, int count) {
     if (rocStats.ContainsKey(rType)) {
         rocStats[rType]->activeRocCount -= count;
@@ -905,7 +905,7 @@ void ROCManager::SubtractROCStats_ROCs(const std::string& rType, int count) {
 
 ROCScenario::ROCScenario() : ScenarioModule("ROCScenario") {}
 
-// ROCScenario.cs:13 (sic: Instance is only ever assigned null)
+// ROCScenario.cs:14 (sic: Instance is only ever assigned null)
 void ROCScenario::Start() {
     if (!SerenityInstalled()) {
         destroyed = true;

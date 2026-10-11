@@ -204,14 +204,14 @@ DeployedScienceExperiment* GetExperimentByPartID(const std::vector<DeployedScien
 // =============================================================================================================================
 // DeployedSciencePart
 
-// :89
+// DeployedSciencePart.cs:89
 DeployedSciencePart* DeployedSciencePart::Spawn() {
     DeployedSciencePart* p = SerenityBehaviour::Add(std::shared_ptr<DeployedSciencePart>(new DeployedSciencePart()));
     p->Awake();
     return p;
 }
 
-// :96
+// DeployedSciencePart.cs:96
 DeployedSciencePart* DeployedSciencePart::Spawn(ModuleGroundSciencePart* part, ModuleGroundExpControl* controlUnit, DeployedScienceCluster* cluster) {
     DeployedSciencePart* dsp = Spawn();
     if (cluster != nullptr) dsp->Cluster = cluster;
@@ -223,7 +223,7 @@ DeployedSciencePart* DeployedSciencePart::Spawn(ModuleGroundSciencePart* part, M
     return dsp;
 }
 
-// :117
+// DeployedSciencePart.cs:117
 DeployedSciencePart* DeployedSciencePart::SpawnandLoad(const ConfigNode& node, DeployedScienceCluster* cluster) {
     DeployedSciencePart* dsp = Spawn();
     if (cluster != nullptr) dsp->Cluster = cluster;
@@ -242,19 +242,19 @@ DeployedSciencePart::~DeployedSciencePart() {
     GE::onGroundSciencePartEnabledStateChanged.Remove(this, &DeployedSciencePart::UpdateSciencePart);
 }
 
-// :137
+// DeployedSciencePart.cs:137
 void DeployedSciencePart::Awake() {
     if (!SerenityInstalled()) destroyed = true;  // Object.Destroy(this)
 }
 
-// :145
+// DeployedSciencePart.cs:145
 void DeployedSciencePart::Start() {
     GE::onGroundSciencePartChanged.Add(this, &DeployedSciencePart::UpdateSciencePart);
     GE::onGroundSciencePartRemoved.Add(this, &DeployedSciencePart::OnGroundSciencePartRemoved);
     GE::onGroundSciencePartEnabledStateChanged.Add(this, &DeployedSciencePart::UpdateSciencePart);
 }
 
-// :152
+// DeployedSciencePart.cs:152
 void DeployedSciencePart::OnDestroy() {
     GE::onGroundSciencePartChanged.Remove(this, &DeployedSciencePart::UpdateSciencePart);
     GE::onGroundSciencePartRemoved.Remove(this, &DeployedSciencePart::OnGroundSciencePartRemoved);
@@ -262,16 +262,16 @@ void DeployedSciencePart::OnDestroy() {
     if (Experiment != nullptr) Experiment->DestroyGameObject();
 }
 
-// :163
+// DeployedSciencePart.cs:163
 void DeployedSciencePart::OnGroundSciencePartRemoved(ModuleGroundSciencePart* sciencePartRemoved) {
     if (ControllerId() == sciencePartRemoved->ControlUnitId() && sciencePartRemoved->part->fields.persistentId != sciencePartRemoved->ControlUnitId())
         controllerId = 0u;
 }
 
-// :47 getter
+// DeployedSciencePart.cs:47 getter
 bool DeployedSciencePart::Enabled() { return moduleEnabled; }
 
-// :47 setter
+// DeployedSciencePart.cs:47 setter
 void DeployedSciencePart::SetEnabled(bool value) {
     if (UnityNull(loadedPartModule)) {
         Part* partout = FindLoadedPart(partId);
@@ -284,7 +284,7 @@ void DeployedSciencePart::SetEnabled(bool value) {
         Cluster->UpdatePowerState();
 }
 
-// :171
+// DeployedSciencePart.cs:171
 void DeployedSciencePart::UpdateSciencePart(ModuleGroundSciencePart* part) {
     if (PartId() != part->part->fields.persistentId) return;
     moduleEnabled = part->Enabled();
@@ -318,7 +318,7 @@ void DeployedSciencePart::UpdateSciencePart(ModuleGroundSciencePart* part) {
     }
 }
 
-// :222
+// DeployedSciencePart.cs:222
 Part* DeployedSciencePart::PartIsLoaded() {
     Part* partout = nullptr;
     if (partId != 0) {
@@ -328,7 +328,7 @@ Part* DeployedSciencePart::PartIsLoaded() {
     return partout;
 }
 
-// :233
+// DeployedSciencePart.cs:233
 void DeployedSciencePart::Load(const ConfigNode& node) {
     node.TryGetValue("PartId", partId);
     node.TryGetValue("Enabled", moduleEnabled);
@@ -343,7 +343,7 @@ void DeployedSciencePart::Load(const ConfigNode& node) {
     if (node.TryGetNode("EXPERIMENT", node2)) Experiment = DeployedScienceExperiment::SpawnandLoad(*node2);
 }
 
-// :251
+// DeployedSciencePart.cs:251
 void DeployedSciencePart::Save(ConfigNode& node) {
     node.AddValue("PartId", PartId());
     node.AddValue("Enabled", Enabled());
@@ -363,7 +363,7 @@ void DeployedSciencePart::Save(ConfigNode& node) {
 // =============================================================================================================================
 // DeployedScienceExperiment
 
-// :167
+// DeployedScienceExperiment.cs:167
 DeployedScienceExperiment* DeployedScienceExperiment::Spawn() {
     DeployedScienceExperiment* e = SerenityBehaviour::Add(std::shared_ptr<DeployedScienceExperiment>(new DeployedScienceExperiment()));
     e->Awake();
@@ -375,7 +375,7 @@ DeployedScienceExperiment* DeployedScienceExperiment::Spawn() {
     return e;
 }
 
-// :180
+// DeployedScienceExperiment.cs:180
 DeployedScienceExperiment* DeployedScienceExperiment::Spawn(ModuleGroundExperiment* mge, DeployedScienceCluster* cluster) {
     DeployedScienceExperiment* e = Spawn();
     if (mge != nullptr) {
@@ -392,7 +392,7 @@ DeployedScienceExperiment* DeployedScienceExperiment::Spawn(ModuleGroundExperime
     return e;
 }
 
-// :202
+// DeployedScienceExperiment.cs:202
 DeployedScienceExperiment* DeployedScienceExperiment::SpawnandLoad(const ConfigNode& node) {
     DeployedScienceExperiment* e = Spawn();
     e->Load(node);
@@ -414,12 +414,12 @@ void DeployedScienceExperiment::StopAllCoroutines() {
     if (ScienceEnvironment::scheduler != nullptr) ScienceEnvironment::scheduler->StopAllCoroutines(CoroutineOwner());
 }
 
-// :210
+// DeployedScienceExperiment.cs:210
 void DeployedScienceExperiment::Awake() {
     if (!SerenityInstalled()) destroyed = true;
 }
 
-// :146
+// DeployedScienceExperiment.cs:146
 ModuleGroundExperiment* DeployedScienceExperiment::GroundExperimentModule() {
     if (!UnityNull(moduleGroundExperiment)) return moduleGroundExperiment;
     moduleGroundExperiment = nullptr;
@@ -428,7 +428,7 @@ ModuleGroundExperiment* DeployedScienceExperiment::GroundExperimentModule() {
     return moduleGroundExperiment;
 }
 
-// :218
+// DeployedScienceExperiment.cs:218
 void DeployedScienceExperiment::Start() {
     GE::onGroundScienceExperimentScienceValueChanged.Add(this, &DeployedScienceExperiment::UpdateScienceValueExperiment);
     GE::onGroundScienceExperimentScienceLimitChanged.Add(this, &DeployedScienceExperiment::UpdateScienceLimitExperiment);
@@ -470,12 +470,12 @@ void DeployedScienceExperiment::Start() {
     }
 }
 
-// :274
+// DeployedScienceExperiment.cs:274
 void DeployedScienceExperiment::FixedUpdate() {
     if (FlightRegistry::ready && !ExperimentSituationValid() && !UnityNull(sciencePart) && sciencePart->Enabled()) sciencePart->SetEnabled(false);
 }
 
-// :282
+// DeployedScienceExperiment.cs:282
 void DeployedScienceExperiment::OnDestroy() {
     GE::onGroundScienceExperimentScienceValueChanged.Remove(this, &DeployedScienceExperiment::UpdateScienceValueExperiment);
     GE::onGroundScienceExperimentScienceLimitChanged.Remove(this, &DeployedScienceExperiment::UpdateScienceLimitExperiment);
@@ -484,7 +484,7 @@ void DeployedScienceExperiment::OnDestroy() {
     StopAllCoroutines();
 }
 
-// :291
+// DeployedScienceExperiment.cs:291
 void DeployedScienceExperiment::SeismicDataCalcOverrideAdd(const SeismicDataCalc& method) {
     if (seismicDataCalcOverride.IsNull())
         seismicDataCalcOverride = method;
@@ -492,7 +492,7 @@ void DeployedScienceExperiment::SeismicDataCalcOverrideAdd(const SeismicDataCalc
         seismicDataCalcOverride = seismicDataCalcOverride + method;
 }
 
-// :303
+// DeployedScienceExperiment.cs:303
 void DeployedScienceExperiment::SeismicDataCalcOverrideRemove(const SeismicDataCalc& method) {
     if (seismicDataCalcOverride == method)
         seismicDataCalcOverride = SeismicDataCalc();
@@ -500,7 +500,7 @@ void DeployedScienceExperiment::SeismicDataCalcOverrideRemove(const SeismicDataC
         seismicDataCalcOverride = seismicDataCalcOverride - method;
 }
 
-// :315
+// DeployedScienceExperiment.cs:315
 void DeployedScienceExperiment::GroundScienceClusterPowerStateChanged(DeployedScienceCluster* cluster) {
     if (UnityNull(Cluster) || cluster->ControlModulePartId() != Cluster->ControlModulePartId()) return;
     noPowerMsgPosted = false;
@@ -512,7 +512,7 @@ void DeployedScienceExperiment::GroundScienceClusterPowerStateChanged(DeployedSc
     }
 }
 
-// :336
+// DeployedScienceExperiment.cs:336
 void DeployedScienceExperiment::GroundSciencePartEnabledStateChanged(ModuleGroundSciencePart* sciencePartModule) {
     if (UnityNull(Cluster) || sciencePartModule->part->fields.persistentId != PartId()) return;
     if (sciencePartModule->Enabled() && sciencePartModule->DeployedOnGround()) {
@@ -523,7 +523,7 @@ void DeployedScienceExperiment::GroundSciencePartEnabledStateChanged(ModuleGroun
     }
 }
 
-// :356
+// DeployedScienceExperiment.cs:356
 Enumerator DeployedScienceExperiment::CalcScience() {
     while (Cluster->UpdatingScience()) co_yield YieldInstruction::Null();
     CalculateScience(Cluster->PartialPowerMultiplier());
@@ -531,7 +531,7 @@ Enumerator DeployedScienceExperiment::CalcScience() {
     co_yield YieldInstruction::Null();
 }
 
-// :370
+// DeployedScienceExperiment.cs:370
 void DeployedScienceExperiment::UpdateScienceLimitExperiment(ModuleGroundExperiment* mge) {
     if (!UnityNull(mge) && PartId() == mge->part->fields.persistentId) {
         moduleGroundExperiment = mge;
@@ -539,7 +539,7 @@ void DeployedScienceExperiment::UpdateScienceLimitExperiment(ModuleGroundExperim
     }
 }
 
-// :379
+// DeployedScienceExperiment.cs:379
 void DeployedScienceExperiment::UpdateScienceValueExperiment(ModuleGroundExperiment* mge) {
     if (!UnityNull(mge) && PartId() == mge->part->fields.persistentId) {
         moduleGroundExperiment = mge;
@@ -547,7 +547,7 @@ void DeployedScienceExperiment::UpdateScienceValueExperiment(ModuleGroundExperim
     }
 }
 
-// :388
+// DeployedScienceExperiment.cs:388
 void DeployedScienceExperiment::UpdateScienceExperiment(ModuleGroundExperiment* mge) {
     if (!UnityNull(mge) && PartId() == mge->part->fields.persistentId) {
         moduleGroundExperiment = mge;
@@ -557,7 +557,7 @@ void DeployedScienceExperiment::UpdateScienceExperiment(ModuleGroundExperiment* 
     }
 }
 
-// :399
+// DeployedScienceExperiment.cs:399
 void DeployedScienceExperiment::CalculateScience(float solarMultiplierArg) {
     if (!UnityNull(sciencePart) && sciencePart->Enabled() && !(TotalScienceGenerated() >= ScienceLimit()) && ExperimentSituationValid() && !UnityNull(Cluster) &&
         Cluster->IsPowered()) {
@@ -581,7 +581,7 @@ void DeployedScienceExperiment::CalculateScience(float solarMultiplierArg) {
     }
 }
 
-// :431
+// DeployedScienceExperiment.cs:431
 void DeployedScienceExperiment::CalcSendSeismicScience(Vessel* vessel, Part* part, float solarMultiplierArg) {
     if (!UnityNull(Cluster) && vessel != nullptr && !(experimentId != DeployedScience::SeismicExperimentId)) {
         solarMultiplier = solarMultiplierArg;
@@ -644,7 +644,7 @@ void DeployedScienceExperiment::CalcSendSeismicScience(Vessel* vessel, Part* par
     }
 }
 
-// :534
+// DeployedScienceExperiment.cs:534
 void DeployedScienceExperiment::processImpactVesselPart(Vessel* vessel, Part* part) {
     if (!SeismicListContains(part->fields.persistentId)) {
         auto d = std::make_shared<SeismicPartData>();
@@ -667,7 +667,7 @@ void DeployedScienceExperiment::processImpactVesselPart(Vessel* vessel, Part* pa
     }
 }
 
-// :558
+// DeployedScienceExperiment.cs:558
 bool DeployedScienceExperiment::SeismicListContains(uint32_t pid) {
     size_t num = 0;
     while (true) {
@@ -681,7 +681,7 @@ bool DeployedScienceExperiment::SeismicListContains(uint32_t pid) {
     return true;
 }
 
-// :577
+// DeployedScienceExperiment.cs:577
 void DeployedScienceExperiment::ProcessSeismicEvent() {
     float num = 0.0f;
     totalJoules = 0.0;
@@ -727,7 +727,7 @@ void DeployedScienceExperiment::ProcessSeismicEvent() {
     }
 }
 
-// :638
+// DeployedScienceExperiment.cs:638
 bool DeployedScienceExperiment::TimeToSendStoredData() {
     if (experimentId == DeployedScience::SeismicExperimentId) return true;
     if (subject == nullptr) return false;
@@ -736,7 +736,7 @@ bool DeployedScienceExperiment::TimeToSendStoredData() {
     return false;
 }
 
-// :659
+// DeployedScienceExperiment.cs:659
 bool DeployedScienceExperiment::GatherScienceData(std::shared_ptr<ScienceData>& experimentData) {
     experimentData = nullptr;
     if (Experiment != nullptr && ExperimentVessel != nullptr && subject != nullptr && !UnityNull(Cluster) && !(storedScienceData <= 0.0f) &&
@@ -751,7 +751,7 @@ bool DeployedScienceExperiment::GatherScienceData(std::shared_ptr<ScienceData>& 
     return false;
 }
 
-// :675
+// DeployedScienceExperiment.cs:675
 bool DeployedScienceExperiment::SendDataToComms() {
     if (Experiment != nullptr && ExperimentVessel != nullptr && subject != nullptr && !UnityNull(Cluster) && sciencePart->Enabled() &&
         !(storedScienceData <= 0.0f) && ExperimentSituationValid()) {
@@ -816,7 +816,7 @@ bool DeployedScienceExperiment::SendDataToComms() {
     return false;
 }
 
-// :762
+// DeployedScienceExperiment.cs:762
 void DeployedScienceExperiment::SetControllerVessel() {
     Part* partout = FindLoadedPart(Cluster->ControlModulePartId());
     if (partout != nullptr) {
@@ -827,7 +827,7 @@ void DeployedScienceExperiment::SetControllerVessel() {
     if (partout2 != nullptr && partout2->pVesselRef != nullptr) ControllerVessel = partout2->pVesselRef->vesselRef;
 }
 
-// :777
+// DeployedScienceExperiment.cs:777
 void DeployedScienceExperiment::Load(const ConfigNode& node) {
     node.TryGetValue("PartId", partId);
     node.TryGetValue("ExperimentName", experimentName);
@@ -849,7 +849,7 @@ void DeployedScienceExperiment::Load(const ConfigNode& node) {
     if (node.HasNode("distanceCurve")) distanceCurve.Load(*node.GetNode("distanceCurve"));
 }
 
-// :802
+// DeployedScienceExperiment.cs:802
 void DeployedScienceExperiment::Save(ConfigNode& node) {
     node.AddValue("PartId", PartId());
     if (!ExperimentName().empty()) node.AddValue("ExperimentName", ExperimentName());
@@ -874,7 +874,7 @@ void DeployedScienceExperiment::Save(ConfigNode& node) {
 // =============================================================================================================================
 // DeployedScienceCluster
 
-// :100
+// DeployedScienceCluster.cs:100
 DeployedScienceCluster* DeployedScienceCluster::Spawn() {
     DeployedScienceCluster* c = SerenityBehaviour::Add(std::shared_ptr<DeployedScienceCluster>(new DeployedScienceCluster()));
     c->Awake();
@@ -883,7 +883,7 @@ DeployedScienceCluster* DeployedScienceCluster::Spawn() {
     return c;
 }
 
-// :113
+// DeployedScienceCluster.cs:113
 DeployedScienceCluster* DeployedScienceCluster::Spawn(ModuleGroundExpControl* controlUnit) {
     if (controlUnit == nullptr) return nullptr;
     DeployedScienceCluster* cluster = Spawn();
@@ -900,7 +900,7 @@ DeployedScienceCluster* DeployedScienceCluster::Spawn(ModuleGroundExpControl* co
     return cluster;
 }
 
-// :143
+// DeployedScienceCluster.cs:143
 DeployedScienceCluster* DeployedScienceCluster::SpawnandLoad(const ConfigNode& node) {
     DeployedScienceCluster* c = Spawn();
     c->Load(node);
@@ -914,19 +914,19 @@ DeployedScienceCluster::~DeployedScienceCluster() {
     GE::onGroundSciencePartEnabledStateChanged.Remove(this, &DeployedScienceCluster::GroundSciencePartEnabledStateChanged);
 }
 
-// :152
+// DeployedScienceCluster.cs:152
 void DeployedScienceCluster::Awake() {
     if (!SerenityInstalled()) destroyed = true;
 }
 
-// :160
+// DeployedScienceCluster.cs:160
 void DeployedScienceCluster::Start() {
     GE::onGroundScienceControllerChanged.Add(this, &DeployedScienceCluster::UpdateCluster);
     GE::onGroundSciencePartRemoved.Add(this, &DeployedScienceCluster::GroundScienceModuleRemoved);
     GE::onGroundSciencePartEnabledStateChanged.Add(this, &DeployedScienceCluster::GroundSciencePartEnabledStateChanged);
 }
 
-// :167
+// DeployedScienceCluster.cs:167
 void DeployedScienceCluster::OnDestroy() {
     GE::onGroundScienceControllerChanged.Remove(this, &DeployedScienceCluster::UpdateCluster);
     GE::onGroundSciencePartRemoved.Remove(this, &DeployedScienceCluster::GroundScienceModuleRemoved);
@@ -934,14 +934,14 @@ void DeployedScienceCluster::OnDestroy() {
     for (size_t i = 0; i < DeployedScienceParts.size(); i++) DeployedScienceParts[i]->DestroyGameObject();
 }
 
-// :178
+// DeployedScienceCluster.cs:178
 int DeployedScienceCluster::SolarPanelUnitsProduced() {
     int num = 0;
     for (size_t i = 0; i < solarPanelParts.size(); i++) num += solarPanelParts[i]->PowerUnitsProduced();
     return num;
 }
 
-// :188
+// DeployedScienceCluster.cs:188
 void DeployedScienceCluster::UpdatePowerState() {
     powerRequired = 0;
     powerAvailable = 0;
@@ -991,7 +991,7 @@ void DeployedScienceCluster::UpdatePowerState() {
     }
 }
 
-// :263
+// DeployedScienceCluster.cs:263
 void DeployedScienceCluster::UpdateCluster(ModuleGroundExpControl* controlUnit, bool replaceList, std::vector<ModuleGroundSciencePart*>* scienceParts) {
     if (ControlModulePartId() != controlUnit->part->fields.persistentId) return;
     std::vector<ModuleGroundSciencePart*>& sp = *scienceParts;
@@ -1035,14 +1035,14 @@ void DeployedScienceCluster::UpdateCluster(ModuleGroundExpControl* controlUnit, 
     GE::onGroundScienceClusterUpdated.Fire(controlUnit, this);
 }
 
-// :342
+// DeployedScienceCluster.cs:342
 void DeployedScienceCluster::UpdateExperimentDiminishReturns() {
     for (size_t i = 0; i < DeployedScienceParts.size(); i++)
         if (DeployedScienceParts[i]->Experiment != nullptr)
             DeployedScience::Instance->SetDiminishingScienceRate(DeployedScienceParts[i]->Experiment->ExperimentId(), DeployedBody->name());
 }
 
-// :353
+// DeployedScienceCluster.cs:353
 void DeployedScienceCluster::GroundSciencePartEnabledStateChanged(ModuleGroundSciencePart* sciencePart) {
     if (sciencePart->ControlUnitId() == ControlModulePartId()) {
         if (sciencePart->part->fields.persistentId == ControlModulePartId()) {
@@ -1055,7 +1055,7 @@ void DeployedScienceCluster::GroundSciencePartEnabledStateChanged(ModuleGroundSc
     }
 }
 
-// :370
+// DeployedScienceCluster.cs:370
 void DeployedScienceCluster::GroundScienceModuleRemoved(ModuleGroundSciencePart* part) {
     DeployedSciencePart* dsp = DeployedScienceExtensions::Get(DeployedScienceParts, part->part->fields.persistentId);
     if (dsp != nullptr) {
@@ -1070,7 +1070,7 @@ void DeployedScienceCluster::GroundScienceModuleRemoved(ModuleGroundSciencePart*
     }
 }
 
-// :398
+// DeployedScienceCluster.cs:398
 Enumerator DeployedScienceCluster::UpdateScience() {
     if (IsPowered()) {
         for (size_t i = 0; i < DeployedScienceParts.size(); i++) {
@@ -1093,7 +1093,7 @@ Enumerator DeployedScienceCluster::UpdateScience() {
     co_yield YieldInstruction::Null();
 }
 
-// :435
+// DeployedScienceCluster.cs:435
 void DeployedScienceCluster::Load(const ConfigNode& node) {
     node.TryGetValue("ControlModulePartId", controlModulePartId);
     std::string value;
@@ -1112,7 +1112,7 @@ void DeployedScienceCluster::Load(const ConfigNode& node) {
     }
 }
 
-// :467
+// DeployedScienceCluster.cs:467
 void DeployedScienceCluster::Save(ConfigNode& node) {
     node.AddValue("ControlModulePartId", ControlModulePartId());
     if (DeployedBody != nullptr) node.AddValue("DeployedBody", DeployedBody->name());
@@ -1150,7 +1150,7 @@ void DeployedScience::Register() {
     ScenarioModuleFactory::Register("DeployedScience", [](const std::string&) { return std::unique_ptr<ScenarioModule>(new DeployedScience()); });
 }
 
-// :57
+// DeployedScience.cs:57
 void DeployedScience::OnAwake() {
     if (!SerenityInstalled()) {
         if (Instance != nullptr) Instance->destroyed = true;  // Object.Destroy(Instance)
@@ -1177,13 +1177,13 @@ void DeployedScience::OnAwake() {
     GE::onGameStateLoad.Add(this, &DeployedScience::OnGameStateLoad);
 }
 
-// :451
+// DeployedScience.cs:451
 void DeployedScience::RemoveMannedScienceObjects() {
     // the children of DeployedScienceGameObject that carry a DeployedScienceCluster are destroyed
     for (int i = deployedScienceClusters.Count() - 1; i >= 0; i--) deployedScienceClusters.At(i)->DestroyGameObject();
 }
 
-// :108
+// DeployedScience.cs:108
 void DeployedScience::FixedUpdate() {
     SerenityBehaviour::RunPendingStarts();
     for (size_t i = 0; i < deployedScienceClusters.ValuesList().size(); i++) {
@@ -1213,33 +1213,33 @@ void DeployedScience::FixedUpdate() {
     }
 }
 
-// :141
+// DeployedScience.cs:141
 void DeployedScience::UpdateSciencePart(ModuleGroundSciencePart* sciencePart) {
     ModuleGroundExperiment* component = FindImpl<ModuleGroundExperiment>(static_cast<Part&>(*sciencePart->part));
     if (component != nullptr) SetDiminishingScienceRate(component->experimentId(), static_cast<Part&>(*sciencePart->part).vessel->mainBody()->name());
 }
 
-// :150
+// DeployedScience.cs:150
 void DeployedScience::UpdateCluster(ModuleGroundExpControl* controlUnit, bool, std::vector<ModuleGroundSciencePart*>* deployableScienceParts) {
     if (!deployedScienceClusters.ContainsKey(controlUnit->part->fields.persistentId)) RegisterCluster(controlUnit, deployableScienceParts);
 }
 
-// :158
+// DeployedScience.cs:158
 void DeployedScience::OnVesselRecovered(ProtoVessel* vessel, bool) {
     for (size_t i = 0; i < vessel->protoPartSnapshots.size(); i++)
         if (deployedScienceClusters.ContainsKey(vessel->protoPartSnapshots[i]->persistentId)) DeRegisterCluster(vessel->protoPartSnapshots[i]->persistentId);
 }
 
-// :169
+// DeployedScience.cs:169
 void DeployedScience::OnVesselTerminated(ProtoVessel* vessel) { OnVesselRecovered(vessel, false); }
 
-// :174
+// DeployedScience.cs:174
 void DeployedScience::OnVesselWillDestroy(Vessel* vessel) {
     for (size_t i = 0; i < vessel->parts.size(); i++)
         if (deployedScienceClusters.ContainsKey(vessel->parts[i]->fields.persistentId)) DeRegisterCluster(vessel->parts[i]->fields.persistentId);
 }
 
-// :185
+// DeployedScience.cs:185
 void DeployedScience::OnPartExplodeGroundCollision(Part* part) {
     if (part->vessel != nullptr) {
         if (part->vessel->parts.empty()) part->vessel->parts.push_back(part);
@@ -1250,7 +1250,7 @@ void DeployedScience::OnPartExplodeGroundCollision(Part* part) {
     }
 }
 
-// :201
+// DeployedScience.cs:201
 void DeployedScience::OnVesselExplodeGroundCollision(Vessel* vessel) {
     if (vessel != nullptr && vessel->mainBody() != nullptr)
         ScanAndProcessSeismicEvent(vessel, nullptr);
@@ -1258,7 +1258,7 @@ void DeployedScience::OnVesselExplodeGroundCollision(Vessel* vessel) {
         log::Info("[DeployedScience]: Seismic Event Cannot be processed - no Vessel data.");
 }
 
-// :213
+// DeployedScience.cs:213
 void DeployedScience::ScanAndProcessSeismicEvent(Vessel* vessel, Part* part) {
     if (vessel != nullptr && vessel->mainBody() != nullptr) {
         for (size_t i = 0; i < deployedScienceClusters.ValuesList().size(); i++) {
@@ -1276,7 +1276,7 @@ void DeployedScience::ScanAndProcessSeismicEvent(Vessel* vessel, Part* part) {
     }
 }
 
-// :239
+// DeployedScience.cs:239
 void DeployedScience::OnGameStateLoad(ConfigNode*) {
     for (int num = deployedScienceClusters.Count() - 1; num >= 0; num--) {
         DeployedScienceCluster* cluster = deployedScienceClusters.ValuesList()[static_cast<size_t>(num)];
@@ -1302,7 +1302,7 @@ void DeployedScience::OnGameStateLoad(ConfigNode*) {
     IsActive = true;
 }
 
-// :277
+// DeployedScience.cs:277
 float DeployedScience::ExpDimReturnsRate(const std::string& experimentId, const std::string& celestialBodyName) {
     int num = 0;
     for (size_t i = 0; i < DeployedScienceClusters().ValuesList().size(); i++) {
@@ -1318,7 +1318,7 @@ float DeployedScience::ExpDimReturnsRate(const std::string& experimentId, const 
     return GetDiminishingReturnsMultiplier(num);
 }
 
-// :299
+// DeployedScience.cs:299
 float DeployedScience::GetDiminishingReturnsMultiplier(int numExperiments) {
     float result = 1.0f;
     bool flag = false;
@@ -1335,7 +1335,7 @@ float DeployedScience::GetDiminishingReturnsMultiplier(int numExperiments) {
     return result;
 }
 
-// :321
+// DeployedScience.cs:321
 DeployedSciencePart* DeployedScience::ExpMaxScienceMultiplier(const std::string& experimentId, const std::string& celestialBodyName) {
     float num = 0.0f;
     DeployedSciencePart* result = nullptr;
@@ -1354,7 +1354,7 @@ DeployedSciencePart* DeployedScience::ExpMaxScienceMultiplier(const std::string&
     return result;
 }
 
-// :345
+// DeployedScience.cs:345
 void DeployedScience::SetDiminishingScienceRate(const std::string& experimentId, const std::string& celestialBodyName) {
     const float scienceDiminishingModifierRate = ExpDimReturnsRate(experimentId, celestialBodyName);
     DeployedSciencePart* best = ExpMaxScienceMultiplier(experimentId, celestialBodyName);
@@ -1374,7 +1374,7 @@ void DeployedScience::SetDiminishingScienceRate(const std::string& experimentId,
     }
 }
 
-// :378
+// DeployedScience.cs:378
 void DeployedScience::RegisterCluster(ModuleGroundExpControl* controlUnit, std::vector<ModuleGroundSciencePart*>* deployableScienceParts) {
     if (deployedScienceClusters.ContainsKey(controlUnit->part->fields.persistentId)) {
         log::Info("[DeployedScience]: Already contains Science Cluster " + std::to_string(controlUnit->part->fields.persistentId));
@@ -1390,7 +1390,7 @@ void DeployedScience::RegisterCluster(ModuleGroundExpControl* controlUnit, std::
     GE::onGroundScienceClusterUpdated.Fire(controlUnit, cluster);
 }
 
-// :397
+// DeployedScience.cs:397
 void DeployedScience::DeRegisterCluster(uint32_t controlUnitId) {
     DeployedScienceCluster* val = nullptr;
     if (!deployedScienceClusters.TryGetValue(controlUnitId, val)) return;
@@ -1413,7 +1413,7 @@ void DeployedScience::DeRegisterCluster(uint32_t controlUnitId) {
     for (size_t j = 0; j < experiments.size(); j++) SetDiminishingScienceRate(experiments[j], celestialBodyName);
 }
 
-// :437
+// DeployedScience.cs:437
 void DeployedScience::SetDeployedSciencePartVesselType(Vessel* vessel) {
     vessel->vesselType = VesselType::DeployedScienceController;
     GE::onVesselRename.Fire(GE::HostedFromToAction<Vessel*, std::string>(vessel, vessel->vesselName, vessel->vesselName));
@@ -1421,7 +1421,7 @@ void DeployedScience::SetDeployedSciencePartVesselType(Vessel* vessel) {
     ++SerenityEnvironment::mapObjectRefreshes;
 }
 
-// :467
+// DeployedScience.cs:467
 void DeployedScience::OnLoad(ConfigNode& node) {
     node.TryGetValue("ScienceTimeDelay", ScienceTimeDelay);
     node.TryGetValue("DataSendFailedTimeDelay", DataSendFailedTimeDelay);
@@ -1466,7 +1466,7 @@ void DeployedScience::OnLoad(ConfigNode& node) {
     }
 }
 
-// :529
+// DeployedScience.cs:529
 void DeployedScience::SetupDiminishingReturns(const ConfigNode* node) {
     diminishingReturns = DictionaryValueList<int32_t, float>();
     if (node != nullptr) {
@@ -1487,7 +1487,7 @@ void DeployedScience::SetupDiminishingReturns(const ConfigNode* node) {
     }
 }
 
-// :561
+// DeployedScience.cs:561
 void DeployedScience::SetupSeismicEnergy(const ConfigNode* node) {
     seismicEnergyRates = DictionaryValueList<std::string, float>();
     if (node != nullptr) {
@@ -1522,7 +1522,7 @@ void DeployedScience::SetupSeismicEnergy(const ConfigNode* node) {
     }
 }
 
-// :605
+// DeployedScience.cs:605
 void DeployedScience::OnSave(ConfigNode& node) {
     node.AddValue("ScienceTimeDelay", ScienceTimeDelay);
     node.AddValue("DataSendFailedTimeDelay", DataSendFailedTimeDelay);

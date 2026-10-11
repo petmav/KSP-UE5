@@ -44,33 +44,33 @@ public:
     uint32_t moduleActionsId = 0;              // :26
     uint32_t persistentActionId = 0;           // :28 internal
 
-    Part* PartPtr() const { return part_; }                       // :30 Part
+    Part* PartPtr() const { return part_; }                       // (C++ addition) Part
     ModuleRoboticController* Controller = nullptr;                // :32
     uint32_t PartPersistentId() const;                            // :34
     std::vector<Part*>* SymmetryParts() const;                    // :46
-    const std::string& PartNickName() const { return partNickName; }  // :57
-    PartModule* Module() const { return module_; }                // :60
-    uint32_t PersistentActionId() const { return persistentActionId; }  // :62
-    virtual std::string BaseName() const = 0;                     // :64
+    const std::string& PartNickName() const { return partNickName; }  // :58
+    PartModule* Module() const { return module_; }                // :61
+    uint32_t PersistentActionId() const { return persistentActionId; }  // :63
+    virtual std::string BaseName() const = 0;                     // :65
 
-    ControlledBase(Part* part, PartModule* module, ModuleRoboticController* controller);  // :66
-    ControlledBase() = default;                                   // :79
-    void SetPartNickName(const std::string& newNickName) { partNickName = newNickName; }  // :88
-    bool AssignReferenceVars();                                   // :105 internal
+    ControlledBase(Part* part, PartModule* module, ModuleRoboticController* controller);  // :67
+    ControlledBase() = default;                                   // :80
+    void SetPartNickName(const std::string& newNickName) { partNickName = newNickName; }  // :89
+    bool AssignReferenceVars();                                   // :102 internal
     void RebuildSymmetryList(const std::vector<uint32_t>& excludedPartIds = {});  // :123 internal
-    void ChangeSymmetryMaster(Part* newPart);                     // :140
+    void ChangeSymmetryMaster(Part* newPart);                     // :139
     void Load(const ConfigNode& node);                            // :158
-    void Save(ConfigNode& node);                                  // :168
+    void Save(ConfigNode& node);                                  // :167
 
     std::string partNickName;                                     // :17 (private in C#; the derived rows read it through PartNickName())
 
 protected:
-    virtual bool OnAssignReferenceVars() = 0;                     // :93
-    virtual void ClearSymmetryLists() = 0;                        // :95
-    virtual void AddSymmetryPart(Part* part) = 0;                 // :97
-    virtual bool OnChangeSymmetryMaster(Part* part, uint32_t& oldPartId) = 0;  // :99
-    virtual void OnLoad(const ConfigNode& node) = 0;              // :156
-    virtual void OnSave(ConfigNode& node) = 0;                    // :158
+    virtual bool OnAssignReferenceVars() = 0;                     // :94
+    virtual void ClearSymmetryLists() = 0;                        // :96
+    virtual void AddSymmetryPart(Part* part) = 0;                 // :98
+    virtual bool OnChangeSymmetryMaster(Part* part, uint32_t& oldPartId) = 0;  // :100
+    virtual void OnLoad(const ConfigNode& node) = 0;              // :154
+    virtual void OnSave(ConfigNode& node) = 0;                    // :156
     Part* part_ = nullptr;
     PartModule* module_ = nullptr;
 };
@@ -81,7 +81,7 @@ public:
     Part* part = nullptr;
     bool behaviourEnabled = true;
     bool destroyed = false;
-    void Start();                          // :10
+    void Start();                          // :9
     void OnCollisionEnter();               // :18
     void OnCollisionExit();                // :26
     void OnTriggerEnter();                 // :34

@@ -77,8 +77,8 @@ std::vector<const AvailablePart*> GetAvailableRobotArmScannerParts();     // Par
 // CollectDeployedScience.cs:9
 class CollectDeployedScience : public ::ksp::Contracts::ContractParameter {
 public:
-    CollectDeployedScience() = default;                                                                              // :27
-    CollectDeployedScience(CelestialBody* targetBody, std::string subjectId, std::string scienceTitle, float sciencePercentage);  // :31
+    CollectDeployedScience() = default;                                                                              // :30
+    CollectDeployedScience(CelestialBody* targetBody, std::string subjectId, std::string scienceTitle, float sciencePercentage);  // :30
     ~CollectDeployedScience() override;
     std::string TypeName() const override { return "CollectDeployedScience"; }
     CelestialBody* TargetBody() const { return targetBody; }
@@ -86,10 +86,10 @@ public:
     float SciencePercentage = 0.0f;  // :16 public (separate from the protected field)
     float ScienceCollected = 0.0f;   // :20
     std::string ScienceTitle;        // :24
-    std::string GetHashString() override;     // :44
-    std::string GetTitle() override;          // :49
-    void OnLoad(ConfigNode& node) override;   // :58
-    void OnSave(ConfigNode& node) override;   // :72
+    std::string GetHashString() override;     // :43
+    std::string GetTitle() override;          // :48
+    void OnLoad(ConfigNode& node) override;   // :57
+    void OnSave(ConfigNode& node) override;   // :70
     void OnRegister() override;               // :82
     void OnUnregister() override;             // :87
     void OnScience(float science, ScienceSubject* subject, ProtoVessel* pv, bool reverseEngineered);  // :92
@@ -112,13 +112,13 @@ public:
     const std::string& SubjectId() const { return subjectId; }
     const std::string& ScienceTitle() const { return scienceTitle; }
     float SciencePercentage = 0.0f, ScienceCollected = 0.0f;  // :16 / :20 public
-    std::string GetHashString() override;     // :48
-    std::string GetTitle() override;          // :53
-    void OnLoad(ConfigNode& node) override;   // :62
-    void OnSave(ConfigNode& node) override;   // :95
-    void OnRegister() override;               // :107
-    void OnUnregister() override;             // :112
-    void OnScience(float science, ScienceSubject* subject, ProtoVessel* pv, bool reverseEngineered);  // :117
+    std::string GetHashString() override;     // :46
+    std::string GetTitle() override;          // :51
+    void OnLoad(ConfigNode& node) override;   // :60
+    void OnSave(ConfigNode& node) override;   // :91
+    void OnRegister() override;               // :104
+    void OnUnregister() override;             // :109
+    void OnScience(float science, ScienceSubject* subject, ProtoVessel* pv, bool reverseEngineered);  // :114
     CelestialBody* targetBody = nullptr;
     std::string subjectId;
     float sciencePercentage = 0.0f, scienceCollected = 0.0f;
@@ -128,20 +128,20 @@ public:
 // CollectROCScienceRetrieval.cs:10
 class CollectROCScienceRetrieval : public ::ksp::Contracts::ContractParameter {
 public:
-    CollectROCScienceRetrieval() = default;                                                                       // :24
-    CollectROCScienceRetrieval(CelestialBody* targetBody, std::string subjectId, std::string rocType, std::string scienceTitle);  // :28
+    CollectROCScienceRetrieval() = default;                                                                       // :26
+    CollectROCScienceRetrieval(CelestialBody* targetBody, std::string subjectId, std::string rocType, std::string scienceTitle);  // :26
     ~CollectROCScienceRetrieval() override;
     std::string TypeName() const override { return "CollectROCScienceRetrieval"; }
     CelestialBody* TargetBody() const { return targetBody; }
     const std::string& SubjectId() const { return subjectId; }
     const std::string& ScienceTitle() const { return scienceTitle; }
-    std::string GetHashString() override;     // :36
-    std::string GetTitle() override;          // :41
+    std::string GetHashString() override;     // :38
+    std::string GetTitle() override;          // :43
     void OnLoad(ConfigNode& node) override;   // :56
     void OnSave(ConfigNode& node) override;   // :85
-    void OnRegister() override;               // :95
-    void OnUnregister() override;             // :100
-    void OnVesselRecoveryProcessing(ProtoVessel* pv, KSP::UI::Screens::MissionRecoveryDialog* mrDialog, float recoveryScore);  // :105
+    void OnRegister() override;               // :96
+    void OnUnregister() override;             // :101
+    void OnVesselRecoveryProcessing(ProtoVessel* pv, KSP::UI::Screens::MissionRecoveryDialog* mrDialog, float recoveryScore);  // :106
     CelestialBody* targetBody = nullptr;
     std::string subjectId, rocType, scienceTitle;
 };
@@ -152,15 +152,15 @@ public:
     std::string TypeName() const override { return "DeployedScienceContract"; }
     CelestialBody* TargetBody() const { return targetBody; }
     const std::string& SubjectId() const { return subjectId; }
-    float SciencePercentage = 0.0f;  // :44 public
-    bool MeetRequirements() override;                                        // :46
+    float SciencePercentage = 0.0f;  // :36 public
+    bool MeetRequirements() override;                                        // :44
     std::vector<CelestialBody*> WeightBodies() override { return {targetBody}; }
     bool HasWeightBodies() override { return true; }
-    std::string GetDescription() override;                                   // :64
-    std::string GetSynopsys() override;                                      // :69
-    std::string GetTitle() override;                                         // :74
-    std::string MessageCompleted() override;                                 // :79
-    void OnLoad(ConfigNode& node) override;                                  // :84
+    std::string GetDescription() override;                                   // :66
+    std::string GetSynopsys() override;                                      // :71
+    std::string GetTitle() override;                                         // :76
+    std::string MessageCompleted() override;                                 // :81
+    void OnLoad(ConfigNode& node) override;                                  // :86
     void OnSave(ConfigNode& node) override;                                  // :105
     bool Generate() override;                                                // :115
     CelestialBody* targetBody = nullptr;
@@ -174,7 +174,7 @@ private:
         CelestialBody* body;
     };
     bool GenerateContract_Surface();                                         // :124
-    static bool PotentialsContainBody(CelestialBody* body, const std::vector<PotentialScienceCombo>& potentialCombos, const std::string& id);  // :228
+    static bool PotentialsContainBody(CelestialBody* body, const std::vector<PotentialScienceCombo>& potentialCombos, const std::string& id);  // :203
 };
 
 // ROCScienceArmContract.cs:13
@@ -183,16 +183,16 @@ public:
     std::string TypeName() const override { return "ROCScienceArmContract"; }
     CelestialBody* TargetBody() const { return targetBody; }
     const std::string& SubjectId() const { return subjectId; }
-    bool MeetRequirements() override;                                        // :51
+    bool MeetRequirements() override;                                        // :53
     std::vector<CelestialBody*> WeightBodies() override { return {targetBody}; }
     bool HasWeightBodies() override { return true; }
-    std::string GetDescription() override;                                   // :65
-    std::string GetSynopsys() override;                                      // :80
-    std::string GetTitle() override;                                         // :100
-    std::string MessageCompleted() override;                                 // :114
-    void OnLoad(ConfigNode& node) override;                                  // :119
-    void OnSave(ConfigNode& node) override;                                  // :152
-    bool Generate() override;                                                // :170
+    std::string GetDescription() override;                                   // :71
+    std::string GetSynopsys() override;                                      // :85
+    std::string GetTitle() override;                                         // :103
+    std::string MessageCompleted() override;                                 // :116
+    void OnLoad(ConfigNode& node) override;                                  // :121
+    void OnSave(ConfigNode& node) override;                                  // :155
+    bool Generate() override;                                                // :173
     CelestialBody* targetBody = nullptr;
     std::string subjectId;
     float sciencePercentage = 0.0f;
@@ -206,16 +206,16 @@ public:
     std::string TypeName() const override { return "ROCScienceRetrievalContract"; }
     CelestialBody* TargetBody() const { return targetBody; }
     const std::string& SubjectId() const { return subjectId; }
-    bool MeetRequirements() override;                                        // :45
+    bool MeetRequirements() override;                                        // :46
     std::vector<CelestialBody*> WeightBodies() override { return {targetBody}; }
     bool HasWeightBodies() override { return true; }
-    std::string GetDescription() override;                                   // :64
-    std::string GetSynopsys() override;                                      // :69
-    std::string GetTitle() override;                                         // :89
-    std::string MessageCompleted() override;                                 // :94
-    void OnLoad(ConfigNode& node) override;                                  // :99
+    std::string GetDescription() override;                                   // :68
+    std::string GetSynopsys() override;                                      // :73
+    std::string GetTitle() override;                                         // :91
+    std::string MessageCompleted() override;                                 // :96
+    void OnLoad(ConfigNode& node) override;                                  // :101
     void OnSave(ConfigNode& node) override;                                  // :127
-    bool Generate() override;                                                // :146
+    bool Generate() override;                                                // :142
     CelestialBody* targetBody = nullptr;
     std::string subjectId;
     std::string rocType, scienceTitle;

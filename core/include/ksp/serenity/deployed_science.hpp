@@ -192,7 +192,7 @@ public:
     uint32_t PartId() const { return partId; }
     bool DeployedOnGround() const { return deployedOnGround; }
     bool Enabled();                                    // :47 getter
-    void SetEnabled(bool value);                       // :47 setter
+    void SetEnabled(bool value);                       // (C++ addition) setter
     int PowerUnitsProduced() const { return powerUnitsProduced; }
     int ActualPowerUnitsProduced() const { return actualPowerUnitsProduced; }
     int PowerUnitsRequired() const { return powerUnitsRequired; }

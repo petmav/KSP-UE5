@@ -203,17 +203,17 @@ CollectDeployedScience::CollectDeployedScience(CelestialBody* targetBody_, std::
 
 CollectDeployedScience::~CollectDeployedScience() { GE::OnScienceRecieved.Remove(this, &CollectDeployedScience::OnScience); }
 
-// :44
+// CollectDeployedScience.cs:43
 std::string CollectDeployedScience::GetHashString() { return SubjectId() + " " + targetBody->name(); }
 
-// :49
+// CollectDeployedScience.cs:48
 std::string CollectDeployedScience::GetTitle() {
     if (!StateIsActiveOrFinished(Root()->ContractState()))
         return Fmt("#autoLOC_8002261", {N0(sciencePercentage), scienceTitle, targetBody->displayName()});
     return Fmt("#autoLOC_8002260", {N0(scienceCollected), N0(sciencePercentage), scienceTitle, targetBody->displayName()});
 }
 
-// :58
+// CollectDeployedScience.cs:57
 void CollectDeployedScience::OnLoad(ConfigNode& node) {
     std::string value;
     if (node.TryGetValue("body", value)) targetBody = BodyByName(value);
@@ -223,7 +223,7 @@ void CollectDeployedScience::OnLoad(ConfigNode& node) {
     node.TryGetValue("scienceCollected", scienceCollected);
 }
 
-// :72
+// CollectDeployedScience.cs:70
 void CollectDeployedScience::OnSave(ConfigNode& node) {
     if (targetBody != nullptr) node.AddValue("body", targetBody->name());
     node.AddValue("subjectId", subjectId);
@@ -232,11 +232,11 @@ void CollectDeployedScience::OnSave(ConfigNode& node) {
     node.AddValue("scienceCollected", scienceCollected);
 }
 
-// :82 / :87
+// CollectDeployedScience.cs:82 / :87
 void CollectDeployedScience::OnRegister() { GE::OnScienceRecieved.Add(this, &CollectDeployedScience::OnScience); }
 void CollectDeployedScience::OnUnregister() { GE::OnScienceRecieved.Remove(this, &CollectDeployedScience::OnScience); }
 
-// :92
+// CollectDeployedScience.cs:92
 void CollectDeployedScience::OnScience(float, ScienceSubject* subject, ProtoVessel*, bool reverseEngineered) {
     if (!SerenityInstalled() || reverseEngineered) return;
     const size_t at = subject->id.find('@');
@@ -260,17 +260,17 @@ CollectROCScienceArm::CollectROCScienceArm(CelestialBody* targetBody_, std::stri
 
 CollectROCScienceArm::~CollectROCScienceArm() { GE::OnScienceRecieved.Remove(this, &CollectROCScienceArm::OnScience); }
 
-// :48
+// CollectROCScienceArm.cs:46
 std::string CollectROCScienceArm::GetHashString() { return SubjectId() + " " + targetBody->name(); }
 
-// :53
+// CollectROCScienceArm.cs:51
 std::string CollectROCScienceArm::GetTitle() {
     if (!StateIsActiveOrFinished(Root()->ContractState()))
         return Fmt("#autoLOC_8004394", {N0(sciencePercentage), scienceTitle, targetBody->displayName()});
     return Fmt("#autoLOC_8004395", {N0(scienceCollected), N0(sciencePercentage), scienceTitle, targetBody->displayName()});
 }
 
-// :62
+// CollectROCScienceArm.cs:60
 void CollectROCScienceArm::OnLoad(ConfigNode& node) {
     std::string value;
     if (node.TryGetValue("body", value)) targetBody = BodyByName(value);
@@ -283,7 +283,7 @@ void CollectROCScienceArm::OnLoad(ConfigNode& node) {
     if (def != nullptr) scienceTitle = def->displayName;
 }
 
-// :95
+// CollectROCScienceArm.cs:91
 void CollectROCScienceArm::OnSave(ConfigNode& node) {
     if (targetBody != nullptr) node.AddValue("body", targetBody->name());
     node.AddValue("subjectId", subjectId);
@@ -296,7 +296,7 @@ void CollectROCScienceArm::OnSave(ConfigNode& node) {
 void CollectROCScienceArm::OnRegister() { GE::OnScienceRecieved.Add(this, &CollectROCScienceArm::OnScience); }      // :107
 void CollectROCScienceArm::OnUnregister() { GE::OnScienceRecieved.Remove(this, &CollectROCScienceArm::OnScience); }  // :112
 
-// :117
+// CollectROCScienceArm.cs:114
 void CollectROCScienceArm::OnScience(float, ScienceSubject* subject, ProtoVessel*, bool) {
     if (subject->id == subjectId) {
         scienceCollected = f32store(fx(subject->science) / fx(subject->scienceCap) * 100.0);
@@ -316,10 +316,10 @@ CollectROCScienceRetrieval::CollectROCScienceRetrieval(CelestialBody* targetBody
 
 CollectROCScienceRetrieval::~CollectROCScienceRetrieval() { GE::onVesselRecoveryProcessing.Remove(this, &CollectROCScienceRetrieval::OnVesselRecoveryProcessing); }
 
-// :36
+// CollectROCScienceRetrieval.cs:38
 std::string CollectROCScienceRetrieval::GetHashString() { return SubjectId() + " " + targetBody->name(); }
 
-// :41
+// CollectROCScienceRetrieval.cs:43
 std::string CollectROCScienceRetrieval::GetTitle() {
     using S = ::ksp::Contracts::Contract::State;
     if (Root()->ContractState() == S::Completed) return Fmt("#autoLOC_8004398", {scienceTitle});
@@ -328,7 +328,7 @@ std::string CollectROCScienceRetrieval::GetTitle() {
     return Fmt("#autoLOC_8004399", {scienceTitle});
 }
 
-// :56
+// CollectROCScienceRetrieval.cs:56
 void CollectROCScienceRetrieval::OnLoad(ConfigNode& node) {
     std::string value;
     if (node.TryGetValue("body", value)) targetBody = BodyByName(value);
@@ -339,7 +339,7 @@ void CollectROCScienceRetrieval::OnLoad(ConfigNode& node) {
     if (def != nullptr) scienceTitle = def->displayName;
 }
 
-// :85
+// CollectROCScienceRetrieval.cs:85
 void CollectROCScienceRetrieval::OnSave(ConfigNode& node) {
     if (targetBody != nullptr) node.AddValue("body", targetBody->name());
     node.AddValue("subjectId", subjectId);
@@ -350,7 +350,7 @@ void CollectROCScienceRetrieval::OnSave(ConfigNode& node) {
 void CollectROCScienceRetrieval::OnRegister() { GE::onVesselRecoveryProcessing.Add(this, &CollectROCScienceRetrieval::OnVesselRecoveryProcessing); }      // :95
 void CollectROCScienceRetrieval::OnUnregister() { GE::onVesselRecoveryProcessing.Remove(this, &CollectROCScienceRetrieval::OnVesselRecoveryProcessing); }  // :100
 
-// :105
+// CollectROCScienceRetrieval.cs:106
 void CollectROCScienceRetrieval::OnVesselRecoveryProcessing(ProtoVessel* pv, KSP::UI::Screens::MissionRecoveryDialog*, float) {
     if (pv == nullptr) return;
     std::vector<ProtoPartSnapshot*> allProtoPartsIncludingCargo = pv->GetAllProtoPartsIncludingCargo();
@@ -375,7 +375,7 @@ void CollectROCScienceRetrieval::OnVesselRecoveryProcessing(ProtoVessel* pv, KSP
 // =============================================================================================================================
 // DeployedScienceContract
 
-// :46
+// DeployedScienceContract.cs:44
 bool DeployedScienceContract::MeetRequirements() {
     if (!SerenityInstalled()) return false;
     if (!GameVariables::Instance->UnlockedEVA(ScenarioUpgradeableFacilities::GetFacilityLevel(SpaceCenterFacility::AstronautComplex))) return false;
@@ -383,24 +383,24 @@ bool DeployedScienceContract::MeetRequirements() {
     return true;
 }
 
-// :64
+// DeployedScienceContract.cs:66
 std::string DeployedScienceContract::GetDescription() {
     return TextGen::GenerateBackStories("DeployedScience" + subjectId, Agent()->Title(), targetBody->displayName(), targetBody->displayName() + "Srf", MissionSeed(), false,
                                         false, false);
 }
 
-// :69
+// DeployedScienceContract.cs:71
 std::string DeployedScienceContract::GetSynopsys() { return Fmt("#autoLOC_272436", {targetBody->displayName()}); }
 
-// :74
+// DeployedScienceContract.cs:76
 std::string DeployedScienceContract::GetTitle() { return Fmt("#autoLOC_8002258", {scienceTitle, targetBody->displayName()}); }
 
-// :79
+// DeployedScienceContract.cs:81
 std::string DeployedScienceContract::MessageCompleted() {
     return Fmt("#autoLOC_8002259", {dotnet::FormatSingleF(sciencePercentage, 2), scienceTitle, targetBody->displayName()});
 }
 
-// :84
+// DeployedScienceContract.cs:86
 void DeployedScienceContract::OnLoad(ConfigNode& node) {
     std::string value;
     if (node.TryGetValue("body", value)) targetBody = BodyByName(value);
@@ -412,21 +412,21 @@ void DeployedScienceContract::OnLoad(ConfigNode& node) {
     node.TryGetValue("sciencePercentage", sciencePercentage);
 }
 
-// :105
+// DeployedScienceContract.cs:105
 void DeployedScienceContract::OnSave(ConfigNode& node) {
     if (targetBody != nullptr) node.AddValue("body", targetBody->name());
     node.AddValue("subjectId", subjectId);
     node.AddValue("sciencePercentage", sciencePercentage);
 }
 
-// :115
+// DeployedScienceContract.cs:115
 bool DeployedScienceContract::Generate() {
     const auto defs = SerenityContractDefs::DeployedScience();
     if (static_cast<int>(ContractSystem::Instance->GetCurrentContracts<DeployedScienceContract>().size()) >= defs.MaximumExistent) return false;
     return GenerateContract_Surface();
 }
 
-// :124
+// DeployedScienceContract.cs:124
 bool DeployedScienceContract::GenerateContract_Surface() {
     const auto defs = SerenityContractDefs::DeployedScience();
     if (Prestige() == ContractPrestige::Trivial) return false;
@@ -476,7 +476,7 @@ bool DeployedScienceContract::GenerateContract_Surface() {
     return true;
 }
 
-// :228
+// DeployedScienceContract.cs:203
 bool DeployedScienceContract::PotentialsContainBody(CelestialBody* body, const std::vector<PotentialScienceCombo>& potentialCombos, const std::string& id) {
     size_t num = 0;
     while (true) {
@@ -493,14 +493,14 @@ bool DeployedScienceContract::PotentialsContainBody(CelestialBody* body, const s
 // =============================================================================================================================
 // ROCScienceArmContract
 
-// :51
+// ROCScienceArmContract.cs:53
 bool ROCScienceArmContract::MeetRequirements() {
     if (!SerenityInstalled()) return false;
     if (ROCManager::Instance != nullptr && ROCManager::Instance->RocsEnabledInCurrentGame()) return true;
     return false;
 }
 
-// :65
+// ROCScienceArmContract.cs:71
 std::string ROCScienceArmContract::GetDescription() {
     const auto defs = SerenityContractDefs::ROCScienceArm();
     std::string contractType = "ROCAdvancedArmScience";
@@ -511,10 +511,10 @@ std::string ROCScienceArmContract::GetDescription() {
     return TextGen::GenerateBackStories(contractType, Agent()->Title(), scienceTitle, scienceTitle, MissionSeed(), false, false, false);
 }
 
-// :80
+// ROCScienceArmContract.cs:85
 std::string ROCScienceArmContract::GetSynopsys() { return Fmt("#autoLOC_8004414", {scienceTitle, scannerArmTitle}) + BiomeSuffix(biomes); }
 
-// :100
+// ROCScienceArmContract.cs:103
 std::string ROCScienceArmContract::GetTitle() {
     const auto defs = SerenityContractDefs::ROCScienceArm();
     if (sciencePercentage < defs.SimpleArmPercentage) return Fmt("#autoLOC_8004391", {scienceTitle});
@@ -522,12 +522,12 @@ std::string ROCScienceArmContract::GetTitle() {
     return Fmt("#autoLOC_8004393", {scienceTitle});
 }
 
-// :114
+// ROCScienceArmContract.cs:116
 std::string ROCScienceArmContract::MessageCompleted() {
     return Fmt("#autoLOC_8002259", {dotnet::FormatSingleF(sciencePercentage, 2), scienceTitle, targetBody->displayName()});
 }
 
-// :119
+// ROCScienceArmContract.cs:121
 void ROCScienceArmContract::OnLoad(ConfigNode& node) {
     std::string value;
     if (node.TryGetValue("body", value)) targetBody = BodyByName(value);
@@ -550,7 +550,7 @@ void ROCScienceArmContract::OnLoad(ConfigNode& node) {
     biomes = node.GetValuesList("biomes");
 }
 
-// :152
+// ROCScienceArmContract.cs:155
 void ROCScienceArmContract::OnSave(ConfigNode& node) {
     if (targetBody != nullptr) node.AddValue("body", targetBody->name());
     node.AddValue("subjectId", subjectId);
@@ -562,7 +562,7 @@ void ROCScienceArmContract::OnSave(ConfigNode& node) {
     for (size_t i = 0; i < biomes.size(); i++) node.AddValue("biomes", biomes[i]);
 }
 
-// :170
+// ROCScienceArmContract.cs:173
 bool ROCScienceArmContract::Generate() {
     const auto defs = SerenityContractDefs::ROCScienceArm();
     if (static_cast<int>(ContractSystem::Instance->GetCurrentContracts<ROCScienceArmContract>().size()) >= defs.MaximumExistent) return false;
@@ -668,7 +668,7 @@ bool ROCScienceArmContract::Generate() {
 // =============================================================================================================================
 // ROCScienceRetrievalContract
 
-// :45
+// ROCScienceRetrievalContract.cs:46
 bool ROCScienceRetrievalContract::MeetRequirements() {
     if (!SerenityInstalled()) return false;
     if (ROCManager::Instance != nullptr && ROCManager::Instance->RocsEnabledInCurrentGame()) {
@@ -678,21 +678,21 @@ bool ROCScienceRetrievalContract::MeetRequirements() {
     return false;
 }
 
-// :64
+// ROCScienceRetrievalContract.cs:68
 std::string ROCScienceRetrievalContract::GetDescription() {
     return TextGen::GenerateBackStories("ROCScienceRetrieval", Agent()->Title(), scienceTitle, scienceTitle, MissionSeed(), false, false, false);
 }
 
-// :69
+// ROCScienceRetrievalContract.cs:73
 std::string ROCScienceRetrievalContract::GetSynopsys() { return Fmt("#autoLOC_8004421", {scienceTitle}) + BiomeSuffix(biomes); }
 
-// :89
+// ROCScienceRetrievalContract.cs:91
 std::string ROCScienceRetrievalContract::GetTitle() { return Fmt("#autoLOC_8004396", {scienceTitle}); }
 
-// :94
+// ROCScienceRetrievalContract.cs:96
 std::string ROCScienceRetrievalContract::MessageCompleted() { return Fmt("#autoLOC_8004424", {scienceTitle, targetBody->displayName()}); }
 
-// :99
+// ROCScienceRetrievalContract.cs:101
 void ROCScienceRetrievalContract::OnLoad(ConfigNode& node) {
     std::string value;
     if (node.TryGetValue("body", value)) targetBody = BodyByName(value);
@@ -710,7 +710,7 @@ void ROCScienceRetrievalContract::OnLoad(ConfigNode& node) {
     biomes = node.GetValuesList("biomes");
 }
 
-// :127
+// ROCScienceRetrievalContract.cs:127
 void ROCScienceRetrievalContract::OnSave(ConfigNode& node) {
     if (targetBody != nullptr) node.AddValue("body", targetBody->name());
     node.AddValue("subjectId", subjectId);
@@ -719,7 +719,7 @@ void ROCScienceRetrievalContract::OnSave(ConfigNode& node) {
     for (size_t i = 0; i < biomes.size(); i++) node.AddValue("biomes", biomes[i]);
 }
 
-// :146
+// ROCScienceRetrievalContract.cs:142
 bool ROCScienceRetrievalContract::Generate() {
     const auto defs = SerenityContractDefs::ROCScienceRetrieval();
     if (static_cast<int>(ContractSystem::Instance->GetCurrentContracts<ROCScienceRetrievalContract>().size()) >= defs.MaximumExistent) return false;

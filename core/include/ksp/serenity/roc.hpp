@@ -74,9 +74,9 @@ public:
     Vector2f vfxForceRadius;
     Vector3f forceDirection, radiusCenter;
 
-    ROCDefinition() = default;                                   // :89 internal
-    bool ContainsCBBiome(const std::string& cbName, const std::string& biomeName) const;  // :129
-    void Load(const ConfigNode& node);                           // :146
+    ROCDefinition() = default;                                   // :88 internal
+    bool ContainsCBBiome(const std::string& cbName, const std::string& biomeName) const;  // :126
+    void Load(const ConfigNode& node);                           // :145
 };
 
 // ROC.cs:7 (the MonoBehaviour's data and its engine-independent methods)
@@ -122,15 +122,15 @@ public:
                   float burstEmitterMinWait, float burstEmitterMaxWait, bool randomRotation, float scale, float sfxVolume, const std::string& idleClipPath,
                   const std::string& burstClipPath, const std::optional<FloatCurve>& vfxCurveForce, float vfxBaseForce, bool applyForces,
                   const Vector2f& vfxForceRadius, const Vector3f& forceDirection, const Vector3f& radiusCenter);
-    void OnDestroyed();                                          // ROC.cs:204 OnDestroy
-    Vector3f GetClosestScanPosition(const Vector3f& testPosition, float& bestDistanceToPoint);  // :213
+    void OnDestroyed();                                          // (C++ addition) OnDestroy
+    Vector3f GetClosestScanPosition(const Vector3f& testPosition, float& bestDistanceToPoint);  // :211
     // :238 (Physics.Raycast(testPosition, dir, out hit, distance, 32768, Ignore) && hit.collider.CompareTag("ROC") is `RocEnvironment::raycastHitsRoc`)
     Vector3f GetClosestScanPositionWithRaycasts(const Vector3f& testPosition, float& distanceToPoint);
-    void CheckCollision(Vessel& vessel);                         // :277
-    void PickUpROC();                                            // :294
-    bool PerformExperiment(ModuleScienceExperiment* moduleScienceExperiment);  // :311
-    float GetVFXForceScale(float burstClipTime) const;           // :424
-    void UpdateModelTransform();                                 // :330 protected virtual
+    void CheckCollision(Vessel& vessel);                         // :273
+    void PickUpROC();                                            // :287
+    bool PerformExperiment(ModuleScienceExperiment* moduleScienceExperiment);  // :305
+    float GetVFXForceScale(float burstClipTime) const;           // :426
+    void UpdateModelTransform();                                 // :321 protected virtual
 };
 
 // Spawn-time quad description: the PQ fields LandClassROC / PQSROCControl read (the quad mesh is WP-12's)
@@ -167,7 +167,7 @@ struct RocPqsView {
 // PQS statics the spawn maths read (PQS.cacheSideVertCount / cacheRes / vi, PQS.Global_AllowScatter)
 struct RocPqsStatics {
     static inline int cacheSideVertCount = 15;       // PQS.cs:387 (the PQS settings node `vertCount` overrides it at load; not in the GameData mirror)
-    static int cacheRes() { return cacheSideVertCount - 1; }  // PQS.cs:1519
+    static int cacheRes() { return cacheSideVertCount - 1; }  // PQS.cs:399
     static int vi(int x, int z) { return z * cacheSideVertCount + x; }  // PQS.cs:1724
     static inline bool Global_AllowScatter = true;   // PQS.cs:147
 };
@@ -182,8 +182,8 @@ struct RocScatterQuad {
     LandClassROC* roc = nullptr;
     std::string name = "Unassigned";
     int rocIDForRoc = 0;       // ROC.rocID of the component on the scatter object (PQSMod_ROCScatterQuad.Setup)
-    void Setup(RocQuad* q, int quadSeed_, LandClassROC* roc_, int count_, int rocIDCounter);  // :20
-    void Destroy();                                                                           // :73
+    void Setup(RocQuad* q, int quadSeed_, LandClassROC* roc_, int count_, int rocIDCounter);  // (C++ addition)
+    void Destroy();                                                                           // (C++ addition)
     std::vector<int> spawnedRocIds;                    // the ROC objects instantiated under it (their rocID)
 };
 
@@ -240,15 +240,15 @@ public:
     CelestialBody* celestialBody = nullptr;
     int minLevel = 0;   // private set
 
-    LandClassROC(ROCDefinition* rocDefinition, PQSROCControl* rocControl);  // :72
-    void Setup(const RocPqsView& sphere);                                  // :95
-    void SphereActive();                                                   // :113
-    void SphereInactive();                                                 // :121
-    void AddScatterMeshController(RocQuad* quad, int rocIDCounter);        // :126
-    void DestroyQuad(RocScatterQuad* q);                                   // :183
+    LandClassROC(ROCDefinition* rocDefinition, PQSROCControl* rocControl);  // (C++ addition)
+    void Setup(const RocPqsView& sphere);                                  // (C++ addition)
+    void SphereActive();                                                   // (C++ addition)
+    void SphereInactive();                                                 // (C++ addition)
+    void AddScatterMeshController(RocQuad* quad, int rocIDCounter);        // (C++ addition)
+    void DestroyQuad(RocScatterQuad* q);                                   // :1031
     // :210 CreateScatterMesh: the placements of q.count ROCs (the engine instantiates them); also fills the control's rocPositionsUsed
     std::vector<RocPlacement> CreateScatterMesh(RocScatterQuad* q);
-    void ClearCache();                                                     // :338
+    void ClearCache();                                                     // :1491
 
     // observable cache state
     int cacheUnassignedCount = 0, cacheAssignedCount = 0;
@@ -264,8 +264,8 @@ public:
     bool rocParentCreated = false;
 
 private:
-    void CreateCache();                        // :103
-    void BuildCache(int countToAdd);           // :158
+    void CreateCache();                        // :1517
+    void BuildCache(int countToAdd);           // (C++ addition)
     int rocLoop = 0;
 };
 
@@ -280,14 +280,14 @@ public:
     RocPqsView sphereView;                  // `sphere` (PQS) flags for the LandClassROCs
 
     PQSROCControl();
-    void Awake();                           // :36 modExpansionDisabled = !Serenity; the dictionaries
-    void OnSetup() override;                // :43 (rocMinSubdev from the LandClassROCs)
-    void OnQuadPreBuild(const PQ& quad) override;   // :62
-    void OnVertexBuild(PQSVertexBuildData& data) override;  // :73
-    void OnQuadBuilt(const PQ& quad) override;      // :78 (the quad mesh comes from PQSROCControl::quadInfo)
-    void OnSphereStarted();                 // :135
-    void OnSphereReset();                   // :143
-    void OnQuadDestroy(const PQ& quad);     // :151
+    void Awake();                           // :40 modExpansionDisabled = !Serenity; the dictionaries
+    void OnSetup() override;                // :47 (rocMinSubdev from the LandClassROCs)
+    void OnQuadPreBuild(const PQ& quad) override;   // :69
+    void OnVertexBuild(PQSVertexBuildData& data) override;  // :81
+    void OnQuadBuilt(const PQ& quad) override;      // :86 (the quad mesh comes from PQSROCControl::quadInfo)
+    void OnSphereStarted();                 // :131
+    void OnSphereReset();                   // :140
+    void OnQuadDestroy(const PQ& quad);     // :149
     // The ROC view of a PQ (mesh, name, transform position): installed by the quad builder (WP-12) / tests. Unset: nullptr (no mesh data -> the quad is skipped)
     static inline std::function<RocQuad*(const PQ&)> quadInfo;
 
@@ -311,15 +311,15 @@ public:
         float activeQuadArea = 0.0f;
         int activeRocCount = 0;
         float rocTypeFrequency = 0.0f;
-        float rocCoverage() const;  // :23
-        explicit ROCStats(std::string rocType_) : rocType(std::move(rocType_)) {}  // :35
+        float rocCoverage() const;  // :22
+        explicit ROCStats(std::string rocType_) : rocType(std::move(rocType_)) {}  // :34
     };
 
-    static inline ROCManager* Instance = nullptr;  // :72
+    static inline ROCManager* Instance = nullptr;  // :75
     std::vector<std::unique_ptr<ROCDefinition>> _rocDefinitions;
-    std::vector<ROCDefinition*> rocDefinitions() const;           // :78 (pointers in list order)
+    std::vector<ROCDefinition*> rocDefinitions() const;           // :79 (pointers in list order)
     std::vector<PQSROCControl*> _pqsRocControls;
-    DictionaryValueList<std::string, std::shared_ptr<ROC>> rocTypeObjects;  // :74 (type -> the instantiated, deactivated prefab's ROC component)
+    DictionaryValueList<std::string, std::shared_ptr<ROC>> rocTypeObjects;  // :77 (type -> the instantiated, deactivated prefab's ROC component)
     DictionaryValueList<std::string, std::shared_ptr<ROCStats>> rocStats;
     bool rocsEnabledInCurrentGame = false;
     bool debugROCFinder = false, debugROCScanPoints = false, debugROCStats = false;
@@ -328,31 +328,31 @@ public:
 
     ROCManager() = default;
     ~ROCManager();
-    bool RocsEnabledInCurrentGame() const { return rocsEnabledInCurrentGame; }  // :80
-    void Awake();                                                 // :82
+    bool RocsEnabledInCurrentGame() const { return rocsEnabledInCurrentGame; }  // :83
+    void Awake();                                                 // :85
     // :106 Start: ROC_DEFINITION nodes -> definitions (prefab check); subscribes the events. `getConfigNodes` is ScienceEnvironment::getConfigNodes.
     void Start();
-    void OnGameStateLoad(ConfigNode* node);                       // :168
-    void OnGameNewStart();                                        // :180
-    void onMissionStarted(Expansions::Missions::Mission* mission); // :185
-    void SetROCsStateForGame(bool active);                        // :190
-    void GetROCControlFromCB();                                   // :204 (PSystemManager.OnPSystemReady)
-    bool PopulateROCControlFromConfig(PQSROCControl* ROCControl); // :218
+    void OnGameStateLoad(ConfigNode* node);                       // :169
+    void OnGameNewStart();                                        // :181
+    void onMissionStarted(Expansions::Missions::Mission* mission); // :186
+    void SetROCsStateForGame(bool active);                        // :191
+    void GetROCControlFromCB();                                   // :205 (PSystemManager.OnPSystemReady)
+    bool PopulateROCControlFromConfig(PQSROCControl* ROCControl); // :219
     void ValidateCBBiomeCombos();                                 // :260
-    CelestialBody* ValidCelestialBody(const std::string& bodyName);  // :302
-    bool ValidCBBiome(CelestialBody* body, const std::string& biomeName);  // :318
+    CelestialBody* ValidCelestialBody(const std::string& bodyName);  // :297
+    bool ValidCBBiome(CelestialBody* body, const std::string& biomeName);  // :316
     void DisableAllROCs();                                        // :335
-    void EnableAllROCs();                                         // :348
+    void EnableAllROCs();                                         // :347
     void SaveRemoveROCs(ConfigNode& node) const { ROCManagerRemovedROCs::SaveRemoveROCs(node); }  // :359
     void LoadRemovedROCs(const ConfigNode& node) { ROCManagerRemovedROCs::LoadRemovedROCs(node); }  // :370
     bool ROCRemoved(int rocId);                                   // :384
-    void RemoveROC(int rocId);                                    // :405
-    void ClearROCsCache();                                        // :414
-    void AddROCStats_Quad(PQSROCControl* control, ROCDefinition* r, const RocQuad& quad);  // :445
-    void AddROCStats_ROCs(const std::string& rType, int count, float frequency);  // :458
-    void ClearStats();                                            // :472
-    void SubtractROCStats_Quad(PQSROCControl* control, ROCDefinition* r);  // :477
-    void SubtractROCStats_ROCs(const std::string& rType, int count);  // :489
+    void RemoveROC(int rocId);                                    // :407
+    void ClearROCsCache();                                        // :416
+    void AddROCStats_Quad(PQSROCControl* control, ROCDefinition* r, const RocQuad& quad);  // :440
+    void AddROCStats_ROCs(const std::string& rType, int count, float frequency);  // :455
+    void ClearStats();                                            // :469
+    void SubtractROCStats_Quad(PQSROCControl* control, ROCDefinition* r);  // :474
+    void SubtractROCStats_ROCs(const std::string& rType, int count);  // :487
     std::vector<std::string> rocTypeObjectNames;                  // rocTypeObjects keys in order
 
 private:
@@ -363,11 +363,11 @@ private:
 class ROCScenario : public ScenarioModule {
 public:
     ROCScenario();
-    static inline ROCScenario* Instance = nullptr;  // :11
+    static inline ROCScenario* Instance = nullptr;  // :12
     std::vector<ROC*> currentROCs;                  // :8
     std::map<std::string, ROC*> destroyedROCs;      // :10
     bool destroyed = false;
-    void Start();                                   // :13
+    void Start();                                   // :14
     static void Register();
 };
 

@@ -29,7 +29,10 @@ NAME_ALIAS = {"set_currentMassVal": "currentMassVal", "set_massThresholdVal": "m
               "CrewGenerator_RemoveLastName": "RemoveLastName",
               "TransferStep": "transferResources",
               "ApplyJointBreakForce": "SetJoint", "SiteRenameAcceptPressed": "RenameSite", "SiteRenameDismissPressed": "RenameSite",
-              "SiteRenameAcceptEnabled": "RenameSite"}
+              "SiteRenameAcceptEnabled": "RenameSite",
+              # WP-53: C# properties ported as getter / Set* functions, and one renamed private function
+              "UpdateGroundModuleUI": "UpdateModuleUI", "SetPowerUnitsProduced": "PowerUnitsProduced", "SetEnabled": "Enabled",
+              "SetScienceLimit": "ScienceLimit", "OnDestroyed": "OnDestroy"}
 CITE = re.compile(r"^(\s*)// (?:([A-Za-z0-9_/]+)\.cs)?:(\d+)\b")
 FUNC = re.compile(r"(\w+)::(~?\w+)\s*\(")
 
