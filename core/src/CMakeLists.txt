@@ -120,6 +120,10 @@ add_library(kspcore STATIC
     input/extended_input.cpp
     input/game_settings.cpp
     input/game_settings_defaults.cpp
+    input/space_navigator.cpp
+    input/flight_input_handler.cpp
+    input/mouse.cpp
+    input/input_settings.cpp
     parts/ksp_enums.cpp
     parts/part_data.cpp
     parts/part_module_data.cpp
