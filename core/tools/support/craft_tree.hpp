@@ -5,6 +5,7 @@
 // integration, staging) is WP-18; WP-14 supplies the real Vessel.
 #pragma once
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <string>
@@ -21,6 +22,7 @@
 #include "ksp/save/save_environment.hpp"
 #include "ksp/save/ship_construct.hpp"
 #include "ksp/save/upgrade_pipeline.hpp"
+#include "ksp/vessel/vessel.hpp"
 
 namespace ksp::support {
 
@@ -177,18 +179,25 @@ inline int LinkFuelLines(CraftTree& tree, const ShipConstruct& ship) {
 }
 
 // A Vessel stand-in: owns the parts' PartSets (Vessel.cs resourcePartSet / crossfeedSets) through VesselResourceSets and is what
-// ResourceFlowEnvironment::vesselHost resolves Part.vessel to. WP-14's Vessel replaces it.
+// ResourceFlowEnvironment::vesselHost resolves Part.vessel to. Part.vessel is a real (bare) Vessel owned here, so modules may read
+// Part.vessel->packed / ->parts (wpfix7: it used to be a reinterpret_cast of this object, undefined behaviour).
 class TestVessel : public IResourceVessel {
 public:
     // Vessel.cs:1574-1577: the four events that keep the resource sets current
     TestVessel() {
-        ResourceFlowEnvironment::vesselHost = [](Vessel* v) { return reinterpret_cast<IResourceVessel*>(v); };
+        Registry().push_back(this);
+        ResourceFlowEnvironment::vesselHost = [](Vessel* v) -> IResourceVessel* {
+            for (TestVessel* t : Registry())
+                if (t->real_.get() == v) return t;
+            return nullptr;
+        };
         GameEvents::onPartResourceListChange.Add(this, &TestVessel::UpdateResourceSetsEventCheckPart);
         GameEvents::onPartCrossfeedStateChange.Add(this, &TestVessel::UpdateResourceSetsEventCheckPart);
         GameEvents::onPartFuelLookupStateChange.Add(this, &TestVessel::UpdateCrossfeedResourceSetFL);
         GameEvents::onPartPriorityChanged.Add(this, &TestVessel::UpdateResourceSetsEventCheckPart);
     }
     ~TestVessel() override {
+        Registry().erase(std::remove(Registry().begin(), Registry().end(), this), Registry().end());
         GameEvents::onPartResourceListChange.Remove(this, &TestVessel::UpdateResourceSetsEventCheckPart);
         GameEvents::onPartCrossfeedStateChange.Remove(this, &TestVessel::UpdateResourceSetsEventCheckPart);
         GameEvents::onPartFuelLookupStateChange.Remove(this, &TestVessel::UpdateCrossfeedResourceSetFL);
@@ -199,12 +208,20 @@ public:
             p->simulationCrossfeedPartSet.reset();
         }
     }
-    Vessel* handle() { return reinterpret_cast<Vessel*>(static_cast<IResourceVessel*>(this)); }
+    Vessel* handle() { return real_.get(); }
     std::vector<Part*> parts;
     VesselResourceSets sets;
+private:
+    static std::vector<TestVessel*>& Registry() {
+        static std::vector<TestVessel*> r;
+        return r;
+    }
+    std::unique_ptr<Vessel> real_ = std::make_unique<Vessel>();
+public:
     // Vessel.parts: the craft's parts become this vessel's (Part.vessel = vessel) and the resource sets are built (Vessel.cs:3913)
     void Adopt(const std::vector<Part*>& p) {
         parts = p;
+        real_->parts = p;
         for (Part* q : parts) q->vessel = handle();
         UpdateResourceSets();
     }
