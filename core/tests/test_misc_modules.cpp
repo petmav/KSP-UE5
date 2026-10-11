@@ -186,6 +186,7 @@ TEST_CASE("WP-30 ModulePartFirework: OnStart clamp and option lists, shot counte
     Game15 g;
     SaveEnvironment::Current().loadedScene = GameScenes::EDITOR;
     LoadLocalizer30();
+    bool tertiaryVisible = false;  // outlives the loop: the setTertiaryColorVisible lambda below captures it by reference and stays installed in FireworkEnvironment
     for (const auto& cj : ref["clamp"]) {
         auto p = g.New(cj["part"].get<std::string>().c_str());
         auto* m = Mod<ModulePartFirework>(*p, "ModulePartFirework");
@@ -205,7 +206,6 @@ TEST_CASE("WP-30 ModulePartFirework: OnStart clamp and option lists, shot counte
         CHECK(m->Fields()["primaryBurstColorChanger"]->guiName == "Core");
         CHECK(m->Fields()["secondaryBurstColorChanger"]->guiName == "Rim");
         // :639 with a third color: the Willow burst names it
-        bool tertiaryVisible = false;
         FireworkEnvironment::setTertiaryColorVisible = [&](PartModule&, bool v) { tertiaryVisible = v; };
         m->Set<int32_t>("burstType", 1);
         m->configureColorFields();

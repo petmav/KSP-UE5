@@ -524,7 +524,8 @@ TEST_CASE("WP-00 CallbackUtil.DelayedCallback and CoroutineHost (CallbackUtil.cs
     CHECK(fired == 1);  // 0.06 >= 0.05
 
     fired = 0;
-    auto inner = s.StartCoroutine(Counter(*new std::vector<std::string>(), "i", 1, YieldInstruction::Null()));  // intentionally leaked log
+    static std::vector<std::string> innerLog;  // the coroutine can outlive this scope: static storage instead of a leaked heap log
+    auto inner = s.StartCoroutine(Counter(innerLog, "i", 1, YieldInstruction::Null()));
     s.StartCoroutine(CallbackUtil::DelayedCallback(inner, cb));
     loop.Frame(0.02f, 0);
     CHECK(fired == 1);
