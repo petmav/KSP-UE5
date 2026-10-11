@@ -207,6 +207,7 @@ public:
             p->crossfeedPartSet.reset();
             p->simulationCrossfeedPartSet.reset();
         }
+        real_->parts.clear();  // ~Vessel walks its parts; the fixture's parts may already be gone
     }
     Vessel* handle() { return real_.get(); }
     std::vector<Part*> parts;
