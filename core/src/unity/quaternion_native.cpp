@@ -175,7 +175,7 @@ Quaternionf Normalize(const Quaternionf& q) {
     volatile float s = d0 + d1;
     s = s + d2;
     s = s + d3;
-    const float mag = std::sqrt(s);
+    const float mag = SqrtF(s);
     return Quaternionf(q.x / mag, q.y / mag, q.z / mag, q.w / mag);
 }
 

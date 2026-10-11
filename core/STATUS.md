@@ -3132,7 +3132,7 @@ Needs capture (one editor-scene run of the `profiling` branch, local-only, to cl
     constants), `a_*`, `b_*`, `r_*` as `_hex`, to verify the native multiplication order and the w association directly.
   The runner side (`ds_deltav_stages.cpp`) can then replace the exclusions by a per-part comparison of the replayed rotation against the captured one.
 
-Runs: Windows MSVC `run_tests.ps1 -Fresh`: 33/34, only `capture.deltav_stages` fails; `unit` 569 cases / 935,432 assertions. Linux clang (WSL `./run_tests.sh -f`, 4,275 s test): 33/34, only `capture.deltav_stages` fails with the identical rows and ULPs as Windows; `unit` 569 cases / 935,416 assertions.
+Runs: Windows MSVC `run_tests.ps1 -Fresh` with the exclusion file in place (gatekeeper 2026-10-11): 34/34, `unit` 569 cases / 935,432 assertions. The earlier pre-exclusion run was 33/34 (only `capture.deltav_stages` failed, on the rows now excluded). Linux clang (WSL, pre-exclusion, 4,275 s test): 33/34 with the identical rows and ULPs; `unit` 569 cases / 935,416 assertions; the exclusion-era Linux result is CI's (green).
 
 WP-40's `EditorMarker_CoT` still installs the -Y stand-in (see the WP-40 section, item 6); it can read `core/data/engine_thrust_transforms.json` through
 `support::EngineThrustTransforms` + `EditorHierarchy` (not done: it would change the CoT expectations of the editor test).
