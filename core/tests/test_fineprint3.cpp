@@ -1585,3 +1585,184 @@ TEST_CASE("WP-38c construction templates: VesselRepair removes crafts without ex
     Templates::RoverConstructionContract rc;
     CHECK_THROWS_AS(t.cs.GenerateContract(5, ContractPrestige::Trivial, "RoverConstructionContract"), NullReferenceException);
 }
+
+// ================================================================================================================================================
+// CometSampleContract generation (the CometManager seam: discovered comets are fixtures)
+// ================================================================================================================================================
+namespace {
+
+const json& RefCo() { return Ref3()["comet"]; }
+
+struct CometFixture {
+    std::vector<std::unique_ptr<VRig>> rigs;
+    std::map<std::string, std::string> typeNames;
+    CometFixture(World38b& w) {
+        for (const json& c : RefCo()["comets"]) {
+            auto r = std::make_unique<VRig>(w, w.Body("Sun"), std::initializer_list<const char*>{}, Vessel::Situations::ORBITING);
+            r->v.persistentId = c[0].get<uint32_t>();
+            r->v.vesselName = c[1].get<std::string>();
+            r->v.vesselType = VesselType::SpaceObject;
+            r->v.orbitDriver->orbit->SetOrbit(c[3].get<double>(), c[4].get<double>(), c[5].get<double>(), c[6].get<double>(), c[7].get<double>(), c[8].get<double>(), 0.0, &w.Body("Sun"));
+            typeNames[c[1].get<std::string>()] = c[2].get<std::string>();
+            rigs.push_back(std::move(r));
+        }
+        FlightRegistry::Vessels.clear();
+        for (auto& r : rigs) FlightRegistry::Vessels.push_back(&r->v);
+        C38::CometManagerSeam::discoveredComets = [this] {
+            std::vector<Vessel*> out;
+            for (auto& r : rigs) out.push_back(&r->v);
+            return out;
+        };
+        L38::FinePrintEnvironment::cometTypeName = [this](Vessel& v) { return typeNames[v.vesselName]; };
+    }
+    ~CometFixture() {
+        C38::CometManagerSeam::discoveredComets = nullptr;
+        L38::FinePrintEnvironment::cometTypeName = nullptr;
+        FlightRegistry::Vessels.clear();
+    }
+};
+
+}  // namespace
+
+TEST_CASE("WP-38c CometSampleContract: generated trees over five fixture comets (prestige from the apoapsis, synopsis ranges, science subject, rewards, agent, id) vs the reference") {
+    const json& ref = RefCo();
+    int generated = 0, refused = 0;
+    std::map<std::string, int> byComet;
+    for (size_t si = 0; si < ref["scenarios"].size(); ++si) {
+        World38b w;
+        CometFixture comets(w);
+        ContractSystem cs;
+        cs.Awake();
+        ConfigNode weights = WeightsNode38b(Ref38b()["weights"]);
+        cs.LoadNow(weights);
+        LoadScenario38b(w, ref["scenarios"][si]);
+        int curMult = -1;
+        for (const json& e : ref["contracts"]) {
+            if (e["scenario"].get<size_t>() != si) continue;
+            if (e["mult"].get<int>() != curMult) {
+                curMult = e["mult"].get<int>();
+                w.SetMult(Ref38b()["mult_sets"][static_cast<size_t>(curMult)]);
+            }
+            w.nextGuid = GuidOf38b(e["guid"]);
+            INFO("scenario " << ref["scenarios"][si]["name"] << " prestige " << e["prestige"] << " seed " << e["seed"] << " mult " << e["mult"]);
+            std::unique_ptr<Contract> c = cs.GenerateContract(e["seed"].get<int>(), PrestigeOf38b(e["prestige"].get<int>()), "CometSampleContract");
+            const json& r = e["result"];
+            if (r.is_null()) {
+                INFO("unexpected contract: " << (c ? c->Title() : std::string()));
+                CHECK(c == nullptr);
+                ++refused;
+                continue;
+            }
+            REQUIRE(c != nullptr);
+            ++generated;
+            CHECK(c->Agent()->Name() == r["agent"].get<std::string>());
+            CHECK(c->Agent()->Title() == r["agentTitle"].get<std::string>());
+            CHECK(c->Keywords() == r["keywords"].get<std::vector<std::string>>());
+            CHECK(c->Title() == r["title"].get<std::string>());
+            CHECK(c->Synopsys() == r["synopsis"].get<std::string>());
+            CHECK(c->Description() == r["description"].get<std::string>());
+            CHECK(c->MessageCompleted() == r["completed"].get<std::string>());
+            CHECK(c->ContractID() == r["contractID"].get<long long>());
+            CHECK(dotnet::EnumToString(c->Prestige()) == r["prestige"].get<std::string>());
+            CHECK_F64b(c->FundsAdvance, r["fa"].get<double>());
+            CHECK_F64b(c->FundsCompletion, r["fc"].get<double>());
+            CHECK_F64b(c->FundsFailure, r["ff"].get<double>());
+            CHECK_F32b(c->ReputationCompletion, F38b(r["rc"]));
+            CHECK_F32b(c->ReputationFailure, F38b(r["rf"]));
+            CHECK_F32b(c->ScienceCompletion, F38b(r["sc"]));
+            CHECK_F64b(c->TimeExpiry, r["expiry"].get<double>());
+            CHECK_F64b(c->TimeDeadline, r["deadline"].get<double>());
+            REQUIRE(c->ParameterCount() == static_cast<int>(r["params"].size()));
+            for (int i = 0; i < c->ParameterCount(); ++i) {
+                ContractParameter* p = c->GetParameter(i);
+                const json& pr = r["params"][static_cast<size_t>(i)];
+                CHECK(p->TypeName() == pr["type"].get<std::string>());
+                CHECK(p->HashString() == pr["hash"].get<std::string>());
+                CHECK(p->Title() == pr["title"].get<std::string>());
+            }
+            auto* cc = dynamic_cast<C38::CometSampleContract*>(c.get());
+            REQUIRE(cc != nullptr);
+            CHECK(cc->CometPersistentId() == r["cometId"].get<uint32_t>());
+            CHECK(cc->CometName() == r["cometName"].get<std::string>());
+            CHECK(cc->ScienceSubjectId() == r["subjectId"].get<std::string>());
+            ++byComet[r["cometName"].get<std::string>()];
+        }
+    }
+    MESSAGE("generated " << generated << ", refused " << refused);
+    CHECK(generated > 0);
+    CHECK(refused > 0);
+    CHECK(byComet.size() == 5);
+}
+
+TEST_CASE("WP-38c CometSampleContract: assigned / completed comets are skipped, rename, expiry, id change, node round trip, requirements") {
+    World38b w;
+    // one comet only: Random.Range(0, 1) = 0
+    CometFixture comets(w);
+    while (comets.rigs.size() > 1) comets.rigs.pop_back();
+    FlightRegistry::Vessels = {&comets.rigs[0]->v};
+    LoadScenario38b(w, RefCo()["scenarios"][9]);  // "everything"
+    ContractSystem cs;
+    cs.Awake();
+    ConfigNode weights = WeightsNode38b(Ref38b()["weights"]);
+    cs.LoadNow(weights);
+    w.nextGuid = GuidOf38b(RefCo()["contracts"][0]["guid"]);
+    CHECK(C38::CometSampleContract().MeetRequirements());
+    auto first = cs.GenerateContract(11, ContractPrestige::Trivial, "CometSampleContract");
+    REQUIRE(first != nullptr);
+    auto* cc = dynamic_cast<C38::CometSampleContract*>(first.get());
+    REQUIRE(cc != nullptr);
+    CHECK(cc->CometName() == "Comet Alpha");
+    // an active contract owns the comet: the next generation is refused
+    first->state = Contract::State::Active;
+    first->Register();
+    cs.Contracts().push_back(std::move(first));
+    CHECK(cs.GenerateContract(12, ContractPrestige::Trivial, "CometSampleContract") == nullptr);
+    cc = dynamic_cast<C38::CometSampleContract*>(cs.Contracts()[0].get());
+    REQUIRE(cc != nullptr);
+    // the vessel is renamed before the science is collected: the contract follows (GameEvents.onVesselRename)
+    ksp::events::GameEvents::onVesselRename.Fire(ksp::events::GameEvents::HostedFromToAction<Vessel*, std::string>(&comets.rigs[0]->v, "Comet Alpha", "Renamed Comet"));
+    CHECK(cc->CometName() == "Renamed Comet");
+    CHECK(cc->ScienceSubjectId() == "cometSample_Short@SunInSpaceHigh_Renamed Comet");
+    CHECK(cc->Title() == KSP::Localization::Localizer::Format("#autoLOC_8012043", {"Renamed Comet"}));
+    // persistentId change
+    ksp::events::GameEvents::onVesselPersistentIdChanged.Fire(1101u, 1199u);
+    CHECK(cc->CometPersistentId() == 1199u);
+    // node round trip
+    ConfigNode node("CONTRACT");
+    cc->Save(node);
+    CHECK(*node.GetValue("cometName") == "Renamed Comet");
+    CHECK(*node.GetValue("cometPersistentId") == "1199");
+    CHECK(*node.GetValue("scienceSubjectId") == "cometSample_Short@SunInSpaceHigh_Renamed Comet");
+    {
+        ConfigNode save("SCENARIO");
+        save.AddValue("name", "ContractSystem");
+        save.AddNode("CONTRACTS")->AddNode(node.CreateCopy());
+        ContractSystem cs2;
+        cs2.Awake();
+        cs2.LoadNow(save);
+        REQUIRE(cs2.Contracts().size() == 1);
+        auto* back = dynamic_cast<C38::CometSampleContract*>(cs2.Contracts()[0].get());
+        REQUIRE(back != nullptr);
+        CHECK(back->CometName() == "Renamed Comet");
+        CHECK(back->CometPersistentId() == 1199u);
+        cs2.Contracts()[0]->Unregister();
+    }
+    // the comet vessel expires (GameEvents.OnDiscoverableObjectExpired): the contract fails unless the science is collected; the comet's own id is 1199 now
+    comets.rigs[0]->v.persistentId = 1199;
+    ksp::events::GameEvents::OnDiscoverableObjectExpired.Fire(&comets.rigs[0]->v);
+    CHECK(cs.Contracts()[0]->ContractState() == Contract::State::Failed);
+    cs.Contracts()[0]->Unregister();
+}
+
+TEST_CASE("WP-38c CometSampleContract.MeetRequirements: a body besides the home world must have been landed on") {
+    {
+        World38b w;
+        LoadScenario38b(w, RefCo()["scenarios"][2]);  // "science": nothing landed
+        CHECK_FALSE(C38::CometSampleContract().MeetRequirements());
+    }
+    {
+        World38b w;
+        LoadScenario38b(w, RefCo()["scenarios"][9]);  // "everything"
+        CHECK(C38::CometSampleContract().MeetRequirements());
+    }
+}

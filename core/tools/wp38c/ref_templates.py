@@ -478,7 +478,7 @@ def choose_position_gen_exact(bname, water_allowed, equatorial, g):
 
 def reward_block(c, V, sec, p, num4, body):
     pre = PRESTIGE[p]
-    mm = lambda a, b: F(F(a * num4) * b)
+    mm = lambda a, b: F(a * num4 * b)  # Mono rule: one rounding where RoundToInt takes the float
     r = lambda x: float(w37.round_to_int(F(x)))
     c.set_science(r(mm(V("%s.Science.BaseReward" % sec), V("%s.%s.ScienceMultiplier" % (sec, pre)))), body)
     c.set_rep(r(mm(V("%s.Reputation.BaseReward" % sec), V("%s.%s.ReputationMultiplier" % (sec, pre)))),

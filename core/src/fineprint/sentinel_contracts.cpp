@@ -44,6 +44,8 @@ Orbit& OrbitOfBody(CelestialBody* b) {
     return *o;
 }
 float Mul(float a, float b) { return f32store(fx(a) * fx(b)); }
+// a float expression `a * b * c` evaluated in double and rounded where the C# passes it (Mathf.RoundToInt)
+float Mul3(float a, float b, float c) { return f32store(fx(a) * fx(b) * fx(c)); }
 int RoundI(float f) { return Mathf::RoundToInt(f); }
 }  // namespace
 
@@ -238,28 +240,28 @@ bool SentinelContract::Generate() {
         SetDeadlineDays(static_cast<float>(RoundI(Mul(static_cast<float>(ContractDefs::Sentinel::Expire::DeadlineDays), num4))), innerBody);
         switch (Prestige()) {
             default:
-                SetScience(static_cast<float>(RoundI(Mul(Mul(ContractDefs::Sentinel::Science::BaseReward, num4), ContractDefs::Sentinel::Trivial::ScienceMultiplier))));
-                SetReputation(static_cast<float>(RoundI(Mul(Mul(ContractDefs::Sentinel::Reputation::BaseReward, num4), ContractDefs::Sentinel::Trivial::ReputationMultiplier))),
-                              static_cast<float>(RoundI(Mul(Mul(ContractDefs::Sentinel::Reputation::BaseFailure, num4), ContractDefs::Sentinel::Trivial::ReputationMultiplier))));
-                SetFunds(static_cast<float>(RoundI(Mul(Mul(ContractDefs::Sentinel::Funds::BaseAdvance, num4), ContractDefs::Sentinel::Trivial::FundsMultiplier))),
-                         static_cast<float>(RoundI(Mul(Mul(ContractDefs::Sentinel::Funds::BaseReward, num4), ContractDefs::Sentinel::Trivial::FundsMultiplier))),
-                         static_cast<float>(RoundI(Mul(Mul(ContractDefs::Sentinel::Funds::BaseFailure, num4), ContractDefs::Sentinel::Trivial::FundsMultiplier))), innerBody);
+                SetScience(static_cast<float>(RoundI(Mul3(ContractDefs::Sentinel::Science::BaseReward, num4, ContractDefs::Sentinel::Trivial::ScienceMultiplier))));
+                SetReputation(static_cast<float>(RoundI(Mul3(ContractDefs::Sentinel::Reputation::BaseReward, num4, ContractDefs::Sentinel::Trivial::ReputationMultiplier))),
+                              static_cast<float>(RoundI(Mul3(ContractDefs::Sentinel::Reputation::BaseFailure, num4, ContractDefs::Sentinel::Trivial::ReputationMultiplier))));
+                SetFunds(static_cast<float>(RoundI(Mul3(ContractDefs::Sentinel::Funds::BaseAdvance, num4, ContractDefs::Sentinel::Trivial::FundsMultiplier))),
+                         static_cast<float>(RoundI(Mul3(ContractDefs::Sentinel::Funds::BaseReward, num4, ContractDefs::Sentinel::Trivial::FundsMultiplier))),
+                         static_cast<float>(RoundI(Mul3(ContractDefs::Sentinel::Funds::BaseFailure, num4, ContractDefs::Sentinel::Trivial::FundsMultiplier))), innerBody);
                 break;
             case ContractPrestige::Exceptional:
-                SetScience(static_cast<float>(RoundI(Mul(Mul(ContractDefs::Sentinel::Science::BaseReward, num4), ContractDefs::Sentinel::Exceptional::ScienceMultiplier))));
-                SetReputation(static_cast<float>(RoundI(Mul(Mul(ContractDefs::Sentinel::Reputation::BaseReward, num4), ContractDefs::Sentinel::Exceptional::ReputationMultiplier))),
-                              static_cast<float>(RoundI(Mul(Mul(ContractDefs::Sentinel::Reputation::BaseFailure, num4), ContractDefs::Sentinel::Exceptional::ReputationMultiplier))));
-                SetFunds(static_cast<float>(RoundI(Mul(Mul(ContractDefs::Sentinel::Funds::BaseAdvance, num4), ContractDefs::Sentinel::Exceptional::FundsMultiplier))),
-                         static_cast<float>(RoundI(Mul(Mul(ContractDefs::Sentinel::Funds::BaseReward, num4), ContractDefs::Sentinel::Exceptional::FundsMultiplier))),
-                         static_cast<float>(RoundI(Mul(Mul(ContractDefs::Sentinel::Funds::BaseFailure, num4), ContractDefs::Sentinel::Exceptional::FundsMultiplier))), innerBody);
+                SetScience(static_cast<float>(RoundI(Mul3(ContractDefs::Sentinel::Science::BaseReward, num4, ContractDefs::Sentinel::Exceptional::ScienceMultiplier))));
+                SetReputation(static_cast<float>(RoundI(Mul3(ContractDefs::Sentinel::Reputation::BaseReward, num4, ContractDefs::Sentinel::Exceptional::ReputationMultiplier))),
+                              static_cast<float>(RoundI(Mul3(ContractDefs::Sentinel::Reputation::BaseFailure, num4, ContractDefs::Sentinel::Exceptional::ReputationMultiplier))));
+                SetFunds(static_cast<float>(RoundI(Mul3(ContractDefs::Sentinel::Funds::BaseAdvance, num4, ContractDefs::Sentinel::Exceptional::FundsMultiplier))),
+                         static_cast<float>(RoundI(Mul3(ContractDefs::Sentinel::Funds::BaseReward, num4, ContractDefs::Sentinel::Exceptional::FundsMultiplier))),
+                         static_cast<float>(RoundI(Mul3(ContractDefs::Sentinel::Funds::BaseFailure, num4, ContractDefs::Sentinel::Exceptional::FundsMultiplier))), innerBody);
                 break;
             case ContractPrestige::Significant:
-                SetScience(static_cast<float>(RoundI(Mul(Mul(ContractDefs::Sentinel::Science::BaseReward, num4), ContractDefs::Sentinel::Significant::ScienceMultiplier))));
-                SetReputation(static_cast<float>(RoundI(Mul(Mul(ContractDefs::Sentinel::Reputation::BaseReward, num4), ContractDefs::Sentinel::Significant::ReputationMultiplier))),
-                              static_cast<float>(RoundI(Mul(Mul(ContractDefs::Sentinel::Reputation::BaseFailure, num4), ContractDefs::Sentinel::Significant::ReputationMultiplier))));
-                SetFunds(static_cast<float>(RoundI(Mul(Mul(ContractDefs::Sentinel::Funds::BaseAdvance, num4), ContractDefs::Sentinel::Significant::FundsMultiplier))),
-                         static_cast<float>(RoundI(Mul(Mul(ContractDefs::Sentinel::Funds::BaseReward, num4), ContractDefs::Sentinel::Significant::FundsMultiplier))),
-                         static_cast<float>(RoundI(Mul(Mul(ContractDefs::Sentinel::Funds::BaseFailure, num4), ContractDefs::Sentinel::Significant::FundsMultiplier))), innerBody);
+                SetScience(static_cast<float>(RoundI(Mul3(ContractDefs::Sentinel::Science::BaseReward, num4, ContractDefs::Sentinel::Significant::ScienceMultiplier))));
+                SetReputation(static_cast<float>(RoundI(Mul3(ContractDefs::Sentinel::Reputation::BaseReward, num4, ContractDefs::Sentinel::Significant::ReputationMultiplier))),
+                              static_cast<float>(RoundI(Mul3(ContractDefs::Sentinel::Reputation::BaseFailure, num4, ContractDefs::Sentinel::Significant::ReputationMultiplier))));
+                SetFunds(static_cast<float>(RoundI(Mul3(ContractDefs::Sentinel::Funds::BaseAdvance, num4, ContractDefs::Sentinel::Significant::FundsMultiplier))),
+                         static_cast<float>(RoundI(Mul3(ContractDefs::Sentinel::Funds::BaseReward, num4, ContractDefs::Sentinel::Significant::FundsMultiplier))),
+                         static_cast<float>(RoundI(Mul3(ContractDefs::Sentinel::Funds::BaseFailure, num4, ContractDefs::Sentinel::Significant::FundsMultiplier))), innerBody);
                 break;
         }
         currentContracts = ContractSystem::Instance->GetCurrentContracts<SentinelContract>();

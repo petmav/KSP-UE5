@@ -45,6 +45,8 @@ using GE = events::GameEvents;
 namespace {
 CelestialBody* Home() { return Planetarium::fetch->Home; }
 float Mul(float a, float b) { return f32store(fx(a) * fx(b)); }
+// a float expression `a * b * c` evaluated in double and rounded where the C# passes it (Mathf.RoundToInt)
+float Mul3(float a, float b, float c) { return f32store(fx(a) * fx(b) * fx(c)); }
 int RoundI(float f) { return Mathf::RoundToInt(f); }
 float FI(int v) { return static_cast<float>(v); }
 // `new KSPRandom()`: ContractsEnvironment::newRandomSeed
@@ -77,28 +79,28 @@ std::string VesselNameFrom(const std::vector<std::string>& tags, int missionSeed
 #define KSP_REWARD_BLOCK(Sec, Trivial_, Significant_, Exceptional_, bodyArg)                                                                                          \
     switch (Prestige()) {                                                                                                                                              \
         default:                                                                                                                                                       \
-            SetScience(FI(RoundI(Mul(Mul(ContractDefs::Sec::Science::BaseReward, num4), ContractDefs::Sec::Trivial_::ScienceMultiplier))), bodyArg);                    \
-            SetReputation(FI(RoundI(Mul(Mul(ContractDefs::Sec::Reputation::BaseReward, num4), ContractDefs::Sec::Trivial_::ReputationMultiplier))),                    \
-                          FI(RoundI(Mul(Mul(ContractDefs::Sec::Reputation::BaseFailure, num4), ContractDefs::Sec::Trivial_::ReputationMultiplier))), bodyArg);          \
-            SetFunds(FI(RoundI(Mul(Mul(ContractDefs::Sec::Funds::BaseAdvance, num4), ContractDefs::Sec::Trivial_::FundsMultiplier))),                                  \
-                     FI(RoundI(Mul(Mul(ContractDefs::Sec::Funds::BaseReward, num4), ContractDefs::Sec::Trivial_::FundsMultiplier))),                                    \
-                     FI(RoundI(Mul(Mul(ContractDefs::Sec::Funds::BaseFailure, num4), ContractDefs::Sec::Trivial_::FundsMultiplier))), bodyArg);                         \
+            SetScience(FI(RoundI(Mul3(ContractDefs::Sec::Science::BaseReward, num4, ContractDefs::Sec::Trivial_::ScienceMultiplier))), bodyArg);                    \
+            SetReputation(FI(RoundI(Mul3(ContractDefs::Sec::Reputation::BaseReward, num4, ContractDefs::Sec::Trivial_::ReputationMultiplier))),                    \
+                          FI(RoundI(Mul3(ContractDefs::Sec::Reputation::BaseFailure, num4, ContractDefs::Sec::Trivial_::ReputationMultiplier))), bodyArg);          \
+            SetFunds(FI(RoundI(Mul3(ContractDefs::Sec::Funds::BaseAdvance, num4, ContractDefs::Sec::Trivial_::FundsMultiplier))),                                  \
+                     FI(RoundI(Mul3(ContractDefs::Sec::Funds::BaseReward, num4, ContractDefs::Sec::Trivial_::FundsMultiplier))),                                    \
+                     FI(RoundI(Mul3(ContractDefs::Sec::Funds::BaseFailure, num4, ContractDefs::Sec::Trivial_::FundsMultiplier))), bodyArg);                         \
             break;                                                                                                                                                     \
         case ContractPrestige::Exceptional:                                                                                                                            \
-            SetScience(FI(RoundI(Mul(Mul(ContractDefs::Sec::Science::BaseReward, num4), ContractDefs::Sec::Exceptional_::ScienceMultiplier))), bodyArg);                \
-            SetReputation(FI(RoundI(Mul(Mul(ContractDefs::Sec::Reputation::BaseReward, num4), ContractDefs::Sec::Exceptional_::ReputationMultiplier))),                \
-                          FI(RoundI(Mul(Mul(ContractDefs::Sec::Reputation::BaseFailure, num4), ContractDefs::Sec::Exceptional_::ReputationMultiplier))), bodyArg);      \
-            SetFunds(FI(RoundI(Mul(Mul(ContractDefs::Sec::Funds::BaseAdvance, num4), ContractDefs::Sec::Exceptional_::FundsMultiplier))),                              \
-                     FI(RoundI(Mul(Mul(ContractDefs::Sec::Funds::BaseReward, num4), ContractDefs::Sec::Exceptional_::FundsMultiplier))),                                \
-                     FI(RoundI(Mul(Mul(ContractDefs::Sec::Funds::BaseFailure, num4), ContractDefs::Sec::Exceptional_::FundsMultiplier))), bodyArg);                     \
+            SetScience(FI(RoundI(Mul3(ContractDefs::Sec::Science::BaseReward, num4, ContractDefs::Sec::Exceptional_::ScienceMultiplier))), bodyArg);                \
+            SetReputation(FI(RoundI(Mul3(ContractDefs::Sec::Reputation::BaseReward, num4, ContractDefs::Sec::Exceptional_::ReputationMultiplier))),                \
+                          FI(RoundI(Mul3(ContractDefs::Sec::Reputation::BaseFailure, num4, ContractDefs::Sec::Exceptional_::ReputationMultiplier))), bodyArg);      \
+            SetFunds(FI(RoundI(Mul3(ContractDefs::Sec::Funds::BaseAdvance, num4, ContractDefs::Sec::Exceptional_::FundsMultiplier))),                              \
+                     FI(RoundI(Mul3(ContractDefs::Sec::Funds::BaseReward, num4, ContractDefs::Sec::Exceptional_::FundsMultiplier))),                                \
+                     FI(RoundI(Mul3(ContractDefs::Sec::Funds::BaseFailure, num4, ContractDefs::Sec::Exceptional_::FundsMultiplier))), bodyArg);                     \
             break;                                                                                                                                                     \
         case ContractPrestige::Significant:                                                                                                                            \
-            SetScience(FI(RoundI(Mul(Mul(ContractDefs::Sec::Science::BaseReward, num4), ContractDefs::Sec::Significant_::ScienceMultiplier))), bodyArg);                \
-            SetReputation(FI(RoundI(Mul(Mul(ContractDefs::Sec::Reputation::BaseReward, num4), ContractDefs::Sec::Significant_::ReputationMultiplier))),                \
-                          FI(RoundI(Mul(Mul(ContractDefs::Sec::Reputation::BaseFailure, num4), ContractDefs::Sec::Significant_::ReputationMultiplier))), bodyArg);      \
-            SetFunds(FI(RoundI(Mul(Mul(ContractDefs::Sec::Funds::BaseAdvance, num4), ContractDefs::Sec::Significant_::FundsMultiplier))),                              \
-                     FI(RoundI(Mul(Mul(ContractDefs::Sec::Funds::BaseReward, num4), ContractDefs::Sec::Significant_::FundsMultiplier))),                                \
-                     FI(RoundI(Mul(Mul(ContractDefs::Sec::Funds::BaseFailure, num4), ContractDefs::Sec::Significant_::FundsMultiplier))), bodyArg);                     \
+            SetScience(FI(RoundI(Mul3(ContractDefs::Sec::Science::BaseReward, num4, ContractDefs::Sec::Significant_::ScienceMultiplier))), bodyArg);                \
+            SetReputation(FI(RoundI(Mul3(ContractDefs::Sec::Reputation::BaseReward, num4, ContractDefs::Sec::Significant_::ReputationMultiplier))),                \
+                          FI(RoundI(Mul3(ContractDefs::Sec::Reputation::BaseFailure, num4, ContractDefs::Sec::Significant_::ReputationMultiplier))), bodyArg);      \
+            SetFunds(FI(RoundI(Mul3(ContractDefs::Sec::Funds::BaseAdvance, num4, ContractDefs::Sec::Significant_::FundsMultiplier))),                              \
+                     FI(RoundI(Mul3(ContractDefs::Sec::Funds::BaseReward, num4, ContractDefs::Sec::Significant_::FundsMultiplier))),                                \
+                     FI(RoundI(Mul3(ContractDefs::Sec::Funds::BaseFailure, num4, ContractDefs::Sec::Significant_::FundsMultiplier))), bodyArg);                     \
             break;                                                                                                                                                     \
     }
 

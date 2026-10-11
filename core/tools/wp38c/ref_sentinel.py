@@ -336,7 +336,7 @@ def gen_sentinel(V, seed, p, s, mult, guid):
     w37.add_keywords(kws, "Pioneer", "Scientific")  # adds only the first keyword that is not in the list yet
     c.set_expiry_draw(rng.range_i(V.v(P + "Expire.MinimumExpireDays"), V.v(P + "Expire.MaximumExpireDays")))
     c.set_deadline_days(float(rti(F(F(float(V.v(P + "Expire.DeadlineDays"))) * num4))), inner)
-    mm = lambda a, b: F(F(a * num4) * b)
+    mm = lambda a, b: F(a * num4 * b)  # Mono rule: one rounding where RoundToInt takes the float
     c.set_science(float(rti(mm(V.v(P + "Science.BaseReward"), V.v(P + pre + ".ScienceMultiplier")))))
     c.set_rep(float(rti(mm(V.v(P + "Reputation.BaseReward"), V.v(P + pre + ".ReputationMultiplier")))),
               float(rti(mm(V.v(P + "Reputation.BaseFailure"), V.v(P + pre + ".ReputationMultiplier")))))

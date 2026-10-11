@@ -14,7 +14,7 @@ import ref_contractdefs  # noqa: E402
 
 out = {}
 out["contractDefs"] = ref_contractdefs.build(CS_ROOT, os.path.join(MIRROR, "Squad", "Contracts", "Contracts.cfg"))
-for mod in ("ref_sentinel", "ref_compat", "ref_templates"):
+for mod in ("ref_sentinel", "ref_compat", "ref_templates", "ref_comet"):
     if os.path.exists(os.path.join(HERE, mod + ".py")):
         m = __import__(mod)
         out[m.KEY] = m.build(CS_ROOT, MIRROR)
