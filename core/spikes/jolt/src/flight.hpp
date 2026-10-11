@@ -30,6 +30,7 @@ struct FlightConfig {
     bool rotatingFrame = true;          // KSP: Kerbin's inverse-rotation frame below 100 km [runtime]
     bool originAtBody = true;           // physics-frame origin at Kerbin's centre (needs double); false: at the pad
     bool perTickShift = false;          // emulate FloatingOrigin.setOffset every tick (measurement)
+    double gravityRamp = 0.0;           // capacity test: after the settle, gravity x (1 + gravityRamp * seconds)
     bool gravityEase = true;            // VesselPrecalculate easing: gravity 0 -> 1 in 16 ticks after unpack
     bool breaking = true;
     // Galilean velocity frame for the inertial (orbit) case: the physics frame moves with frameVel (double bookkeeping, no body
@@ -76,6 +77,7 @@ struct FlightResult {
     double altitudeEnd = 0, speedEnd = 0, machMax = 0, qMax = 0;
     float maxJointError = 0;    // over the samples
     int breaks = 0, firstBreakTick = -1;
+    double gravityScaleAtFirstBreak = 0.0;
     int frameRecenters = 0;
     std::string firstBreak;
     double graphMsMean = 0, graphItersMean = 0;  // reduced + graphSolve: per solve

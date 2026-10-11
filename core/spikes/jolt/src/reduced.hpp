@@ -122,6 +122,7 @@ private:
     StructuralGraph graph_;
     void RebuildGraph();
     bool graphDirty_ = true;
+    std::vector<uint8_t> lastTouching_;  // parts touching static geometry at the last graph build
     std::vector<JPH::Vec3> anchorLocal_;    // per joint: centroid of the sub-joint anchors in the child part's frame
     std::vector<JPH::Ref<JPH::TwoBodyConstraint>> interJoints_;  // SplitAtDecouplers
     std::vector<int> interJointOf_;         // attach joint index of each inter-cluster constraint

@@ -94,6 +94,7 @@ FlightConfig ConfigFromArgs(const Args& a) {
     c.orbit = a.Has("orbit");
     c.orbitAltitude = a.Num("orbit-alt", c.orbitAltitude);
     c.frameVelocity = a.Has("frame-velocity");
+    c.gravityRamp = a.Num("gravity-ramp", 0.0);
     c.frameVelThreshold = a.Num("frame-vel-threshold", c.frameVelThreshold);
     c.sampleEvery = static_cast<int>(a.Num("sample-every", c.sampleEvery));
     c.debug = a.Has("debug");
@@ -390,6 +391,91 @@ int RunBench(KspContext& ctx, const std::string& name, const Args& args) {
                     csv.Row(name, r, cfg, rate + (cfg.frameVelocity ? "/fv" : ""));
                 }
         return 0;
+    }
+    if (name == "capacity") {
+        // joint capacity: on the pad, engines off, gravity ramped from 1 g up (quasi-static); the first joint to break and the
+        // gravity scale at that moment, articulated (PhysX-equivalent joints) vs reduced (load solve vs the same capacity)
+        const auto list = args.List("crafts", "PhysProf-S,PhysProf-M2,PhysProf-M2-AS");
+        const double ramp = args.Num("ramp", 1.0);
+        std::printf("| craft | model | load solve | first break: joint | at gravity x | breaks |\n|---|---|---|---|---|---|\n");
+        for (const std::string& c : list)
+            for (int k = 0; k < 3; k++) {
+                FlightConfig cfg = ConfigFromArgs(args);
+                SetModel(cfg, k == 0 ? "articulated" : "reduced-whole", args);
+                cfg.graphSolve = k == 2;
+                cfg.throttle = 0.0f;
+                cfg.aero = false;
+                cfg.gravityRamp = ramp;
+                cfg.settleTicks = 250;
+                cfg.ticks = cfg.settleTicks + static_cast<int>(std::lround(args.Num("ramp-time", 60.0) / cfg.dt));
+                const FlightResult r = RunFlight(ctx, craft(c), cfg);
+                std::printf("| %s | %s | %s | %s | %.2f | %d |\n", c.c_str(), cfg.model.c_str(), k == 0 ? "-" : k == 1 ? "tree" : "graph",
+                            r.firstBreakTick >= 0 ? r.firstBreak.c_str() : "none", r.gravityScaleAtFirstBreak, r.breaks);
+                std::fflush(stdout);
+                csv.Row(name, r, cfg, k == 0 ? "articulated" : k == 1 ? "tree" : "graph");
+            }
+        return 0;
+    }
+    if (name == "selftest") {
+        // the spike's own checks (exit code 1 on failure): what PHYSICS-SPIKE.md proposes as gates for WP-20b / 20c / 20d
+        int fails = 0;
+        auto check = [&](bool ok, const std::string& what) {
+            std::printf("%s  %s\n", ok ? "PASS" : "FAIL", what.c_str());
+            if (!ok) fails++;
+        };
+        // 1. sub-joint counts == the runtime counts of PROFILE.md "Joint counts"
+        const std::vector<std::pair<std::string, int>> counts = {
+            {"PhysProf-S", 24}, {"PhysProf-S-AS", 44}, {"PhysProf-M2", 168}, {"PhysProf-M2-AS", 320}, {"PhysProf-L2-AS", 960}};
+        for (const auto& [c, n] : counts)
+            check(craft(c).SubJointCount() == n, c + " sub-joints " + std::to_string(craft(c).SubJointCount()) + " == runtime " + std::to_string(n));
+        // 2. SoA aero kernel bit-identical to the exact port on a whole ascent
+        {
+            FlightConfig cfg = ConfigFromArgs(args);
+            SetModel(cfg, "reduced-whole", args);
+            cfg.kernel = PartPipeline::AeroKernel::Both;
+            cfg.ticks = 600;
+            const FlightResult r = RunFlight(ctx, craft("PhysProf-M2-AS"), cfg);
+            check(r.soaCompared > 0 && r.soaMismatches == 0,
+                  "SoA aero == exact port: " + std::to_string(r.soaCompared) + " part-ticks, " + std::to_string(r.soaMismatches) + " mismatches");
+        }
+        // 3. tree-solve loads == articulated joint impulses on a tree craft; trajectories agree
+        {
+            std::vector<FlightResult> rr;
+            for (const char* m : {"articulated", "reduced-whole"}) {
+                FlightConfig cfg = ConfigFromArgs(args);
+                SetModel(cfg, m, args);
+                cfg.ticks = 400;
+                rr.push_back(RunFlight(ctx, craft("PhysProf-M2"), cfg));
+            }
+            double worst = 0.0;
+            float fMax = 0.0f;
+            for (const auto& l : rr[0].jointLoads) fMax = std::max(fMax, l.first);
+            for (size_t j = 0; j < rr[0].jointLoads.size(); j++) {
+                const float a = rr[0].jointLoads[j].first, b = rr[1].jointLoads[j].first;
+                if (a < 0 || b < 0 || std::max(a, b) < 0.05f * fMax) continue;
+                worst = std::max(worst, static_cast<double>(std::abs(a - b) / std::max(a, b)));
+            }
+            check(worst < 0.01, "PhysProf-M2 joint force reduced vs articulated: max rel diff " + std::to_string(worst) + " < 1 %");
+            const double gainA = rr[0].altitudeEnd - rr[0].samples.front().altitude, gainB = rr[1].altitudeEnd - rr[1].samples.front().altitude;
+            const double dAlt = std::abs(gainA - gainB) / std::max(1.0, std::abs(gainA));
+            check(dAlt < 0.005, "PhysProf-M2 8 s ascent altitude gain reduced vs articulated: rel diff " + std::to_string(dAlt) + " < 0.5 %");
+        }
+        // 4. determinism: same run twice, and with more threads
+        {
+            std::vector<Sample> last;
+            for (int t : {1, 1, 8}) {
+                FlightConfig cfg = ConfigFromArgs(args);
+                SetModel(cfg, "reduced-whole", args);
+                cfg.ticks = 300;
+                cfg.world.threads = t;
+                last.push_back(RunFlight(ctx, craft("PhysProf-M2-AS"), cfg).samples.back());
+            }
+            const bool same = last[0].comX == last[1].comX && last[0].comY == last[1].comY && last[0].comZ == last[1].comZ &&
+                              last[0].comX == last[2].comX && last[0].comY == last[2].comY && last[0].comZ == last[2].comZ;
+            check(same, "reduced-whole M2-AS: bit-identical final CoM for run 1, run 2 and 8 threads");
+        }
+        std::printf("%d failure(s)\n", fails);
+        return fails == 0 ? 0 : 1;
     }
     if (name == "determinism") {
         // the same flight repeated (same binary): single-threaded twice, then with more worker threads. Jolt promises the same

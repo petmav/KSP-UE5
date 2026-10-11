@@ -2,7 +2,7 @@
 # Run the measurement sets of core/PHYSICS-SPIKE.md one after the other (never in parallel: they are timings) and write
 # results/<set>.md (the printed tables) and results/<set>.csv. Usage, from core/:
 #   bash spikes/jolt/tools/run_benches.sh [build/spike-jolt] [set ...]
-# Sets: scaling scaling_pad threads iterations warp shift precision pipeline staging orbit loads
+# Sets: scaling scaling_pad threads iterations warp shift precision pipeline staging orbit loads determinism capacity selftest
 set -euo pipefail
 BUILD=${1:-build/spike-jolt}
 shift || true
@@ -13,7 +13,7 @@ mkdir -p "$OUT"
 SUFFIX=""
 case "$BUILD" in *f32*) SUFFIX="_f32" ;; esac
 SETS=("$@")
-[ ${#SETS[@]} -eq 0 ] && SETS=(scaling scaling_pad threads iterations warp shift precision pipeline staging orbit loads determinism)
+[ ${#SETS[@]} -eq 0 ] && SETS=(scaling scaling_pad threads iterations warp shift precision pipeline staging orbit loads determinism capacity selftest)
 run() {  # name, args...
     local name=$1; shift
     echo "== $name$SUFFIX: $*"
@@ -34,6 +34,8 @@ for s in "${SETS[@]}"; do
         orbit) run orbit orbit --crafts PhysProf-M2-AS --models articulated,reduced-whole ;;
         loads) run loads loads ;;
         determinism) run determinism determinism ;;
+        capacity) run capacity capacity ;;
+        selftest) run selftest selftest ;;
         *) echo "unknown set $s"; exit 2 ;;
     esac
 done

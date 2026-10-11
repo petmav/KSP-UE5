@@ -468,8 +468,10 @@ void ReducedVessel::ComputeLoads(float dt) {
             const Mat44 I = PartInertiaWorld(s.inertiaPerMass * (inertiaFloor ? std::max(1.0f, m) : m), partRot[p]);
             rot += I.Multiply3x3(k.alpha) + k.w.Cross(I.Multiply3x3(k.w));
         }
-        demandF_[p] = d;
-        demandM_[p] = rot;
+        // the graph solve gets the demand without the equal contact share: its ground supports carry the reaction
+        const bool support = k.supports > 0 && listener_->touching[p].load(std::memory_order_relaxed);
+        demandF_[p] = support ? d + cf[p] : d;
+        demandM_[p] = support ? rot + cm[p] : rot;
         sf[p] += d;
         sm[p] += Vec3(pcom[p] - origin).Cross(d) + rot;
         if (s.parent >= 0) {
@@ -491,6 +493,17 @@ void ReducedVessel::ComputeLoads(float dt) {
         }
     }
     if (!graphSolve) return;
+    {  // the set of parts touching static geometry decides the ground supports of the graph
+        std::vector<uint8_t> touching(n, 0);
+        for (size_t i = 0; i < n; i++) {
+            const Kin& k = kin[clusterOfPart_[i]];
+            touching[i] = k.supports > 0 && listener_->touching[i].load(std::memory_order_relaxed) ? 1 : 0;
+        }
+        if (touching != lastTouching_) {
+            lastTouching_ = touching;
+            RebuildGraph();
+        }
+    }
     // ---- the indeterminate solve: the same demands through every live sub-joint (attach joints and autostruts)
     for (size_t j = 0; j < craft.joints.size(); j++) {
         const JointSpec& js = craft.joints[j];
@@ -619,7 +632,10 @@ void ReducedVessel::RebuildGraph() {
     std::vector<bool> live(craft.joints.size(), false);
     for (size_t j = 0; j < craft.joints.size(); j++)
         live[j] = static_cast<int>(j) < craft.attachJointCount ? !cut_[j] : find(craft.joints[j].child) == find(craft.joints[j].parent);
-    graph_.Build(craft, live, graphKLinear);
+    std::vector<int> ground;
+    for (size_t i = 0; i < lastTouching_.size(); i++)
+        if (lastTouching_[i]) ground.push_back(static_cast<int>(i));
+    graph_.Build(craft, live, graphKLinear, ground);
     graphDirty_ = true;
 }
 

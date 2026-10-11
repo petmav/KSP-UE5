@@ -34,6 +34,12 @@ cmake --build --preset relwithdebinfo
 ctest --preset relwithdebinfo
 ```
 
+### Physics spike (opt-in, not part of the tests)
+
+`spikes/jolt/` is the Jolt Physics spike behind [PHYSICS-SPIKE.md](PHYSICS-SPIKE.md). It is off by default
+(`KSPCORE_BUILD_SPIKES`), builds in its own trees with the presets `spike-jolt` / `spike-jolt-f32` (no tests; fetches Jolt v5.6.0
+pinned by SHA-256 at configure time): `powershell -File spikes\jolt\build_spike.ps1`. Nothing in `run_tests.ps1`, ctest or CI uses it.
+
 ### Linux (and the cloud): one command
 
 ```bash

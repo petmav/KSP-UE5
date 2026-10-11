@@ -144,6 +144,11 @@ FlightResult RunFlight(KspContext& ctx, CraftModel& craft, const FlightConfig& c
         }
         const double ease = cfg.gravityEase && !cfg.orbit ? std::min(1.0, 0.0625 * (tick + 1)) : 1.0;
         g *= ease;
+        double gScale = 1.0;
+        if (cfg.gravityRamp > 0.0 && tick >= cfg.settleTicks) {
+            gScale = 1.0 + cfg.gravityRamp * (tick - cfg.settleTicks) * cfg.dt;
+            g *= gScale;
+        }
         const auto t1 = Clock::now();
         // ---- per-part work (FlightIntegrator: mass, atmosphere, aero; engine modules)
         PipelineTimes pt;
@@ -208,6 +213,7 @@ FlightResult RunFlight(KspContext& ctx, CraftModel& craft, const FlightConfig& c
             }
             if (r.firstBreakTick < 0) {
                 r.firstBreakTick = b.tick;
+                r.gravityScaleAtFirstBreak = gScale;
                 const JointSpec& js = craft.joints[b.joint];
                 r.firstBreak = craft.parts[js.child].name + "->" + craft.parts[js.parent].name;
             }

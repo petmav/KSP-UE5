@@ -128,16 +128,9 @@ StructuralGraph::Stats StructuralGraph::Factor(const std::vector<RVec3>& partCom
                                                JPH::QuatArg clusterRot) {
     const auto t0 = std::chrono::steady_clock::now();
     Stats st;
-    const size_t nn = partOfNode_.size();
+    const size_t nn = nn_;
     factorRot_ = clusterRot;
-    anchorF_.resize(elems_.size());
-    for (size_t i = 0; i < elems_.size(); i++) {
-        Elem& e = elems_[i];
-        const DVec3 p = D(subAnchors[e.joint][e.sub]);
-        anchorF_[i] = p;
-        e.ra = p - D(partCom[partOfNode_[e.a]]);
-        e.rb = p - D(partCom[partOfNode_[e.b]]);
-    }
+    Geometry(partCom, subAnchors);
     // ---- greedy minimum-degree elimination order over the free nodes (symbolic factorisation on the node graph)
     std::vector<std::vector<int>> adj(nn);
     for (const Elem& e : elems_)
@@ -287,25 +280,26 @@ StructuralGraph::Stats StructuralGraph::SolveFactored(const std::vector<RVec3>& 
     }
     for (V6& u : u_) u.fill(0.0);
     for (size_t k = 0; k < nf; k++) u_[order_[k]] = b[k];
-    ElementLoads(nullptr);
+    ElementLoads();
     st.ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
     return st;
 }
 
-void StructuralGraph::ElementLoads(const std::vector<std::array<RVec3, 3>>* subAnchorsWorld) {
+void StructuralGraph::ElementLoads() {
     const CraftModel& craft = *craft_;
     std::vector<DVec3> F(craft.joints.size(), DVec3::sZero()), T(craft.joints.size(), DVec3::sZero());
     std::vector<DVec3> C(craft.joints.size(), DVec3::sZero());
     std::vector<int> cnt(craft.joints.size(), 0);
-    auto anchor = [&](size_t i) { return subAnchorsWorld ? D((*subAnchorsWorld)[elems_[i].joint][elems_[i].sub]) : anchorF_[i]; };
     for (size_t i = 0; i < elems_.size(); i++) {
-        C[elems_[i].joint] += anchor(i);
+        if (elems_[i].joint < 0) continue;  // ground supports carry no joint
+        C[elems_[i].joint] += anchorF_[i];
         cnt[elems_[i].joint]++;
     }
     for (size_t j = 0; j < C.size(); j++)
         if (cnt[j]) C[j] /= static_cast<double>(cnt[j]);
     for (size_t i = 0; i < elems_.size(); i++) {
         const Elem& e = elems_[i];
+        if (e.joint < 0) continue;
         const V6& ua = u_[e.a];
         const V6& ub = u_[e.b];
         const DVec3 xa(ua[0], ua[1], ua[2]), ta(ua[3], ua[4], ua[5]);
@@ -313,7 +307,7 @@ void StructuralGraph::ElementLoads(const std::vector<std::array<RVec3, 3>>* subA
         const DVec3 f = (xb + tb.Cross(e.rb) - xa - ta.Cross(e.ra)) * e.kLin;
         const DVec3 m = (tb - ta) * e.kAng;
         F[e.joint] += f;
-        T[e.joint] += m + (anchor(i) - C[e.joint]).Cross(f);
+        T[e.joint] += m + (anchorF_[i] - C[e.joint]).Cross(f);
     }
     for (size_t j = 0; j < F.size(); j++)
         jointLoads[j] = cnt[j] ? std::make_pair(static_cast<float>(F[j].Length()), static_cast<float>(T[j].Length())) : std::make_pair(-1.0f, -1.0f);

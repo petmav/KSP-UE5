@@ -32,7 +32,8 @@ public:
         double ms = 0.0;
     };
     // `live[j]` per CraftModel joint (attach joints and autostruts): false for cut / dropped joints
-    void Build(const CraftModel& craft, const std::vector<bool>& live, double kLinear);
+    // groundParts: parts touching static geometry, supported by point springs to a fixed ground node
+    void Build(const CraftModel& craft, const std::vector<bool>& live, double kLinear, const std::vector<int>& groundParts = {});
     // nodeCom: per part (only rigidbody owners are nodes), physics frame; anchors: per joint centroid world position; demand:
     // force / moment (about the part CoM) per part, physicsless parts folded into their owner here
     Stats Solve(const std::vector<JPH::RVec3>& partCom, const std::vector<std::array<JPH::RVec3, 3>>& subAnchors,
@@ -55,7 +56,10 @@ private:
         std::vector<M6> L;      // L(row, this)
         M6 Lkk{};               // Cholesky factor of the diagonal block (lower)
     };
-    void ElementLoads(const std::vector<std::array<JPH::RVec3, 3>>* subAnchorsWorld);
+    void Geometry(const std::vector<JPH::RVec3>& partCom, const std::vector<std::array<JPH::RVec3, 3>>& subAnchors);
+    void ElementLoads();
+    size_t nn_ = 0;    // nodes incl. the ground node
+    int ground_ = -1;  // ground node index, -1 without supports
     bool factored_ = false;
     std::vector<int> order_, pos_;  // elimination order over free nodes; pos_[node] = index in order_ (-1: fixed)
     std::vector<Col> cols_;
@@ -64,7 +68,8 @@ private:
     std::vector<JPH::DVec3> anchorF_;  // per element: anchor in the factor frame (for the torque arm about the joint centroid)
     struct Elem {
         int a = -1, b = -1;  // node indices
-        int joint = -1, sub = 0;
+        int joint = -1, sub = 0;  // joint -1: a ground support of part `part`
+        int part = -1;
         double kLin = 0, kAng = 0;
         JPH::DVec3 ra, rb;   // anchor relative to the node CoMs (set per solve)
     };
