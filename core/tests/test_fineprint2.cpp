@@ -37,6 +37,7 @@
 #include "ksp/save/game.hpp"
 #include "ksp/save/game_parameters.hpp"
 #include "ksp/kerbals/experience.hpp"
+#include "ksp/kerbals/crew_generator.hpp"
 #include "ksp/science/science.hpp"
 #include "ksp/unity/mathf.hpp"
 #include "nlohmann/json.hpp"
@@ -1429,4 +1430,71 @@ TEST_CASE("WP-38b InstallAll: contract and parameter types are registered, the F
     CHECK_FALSE(L38::ProgressUtilities::ExperimentPossibleAt(nullptr, &kerbin, 0.0, 0.0, 10.0, 0.0));
     std::string nope = "noSuchExperiment";
     CHECK_FALSE(L38::ProgressUtilities::ExperimentPossibleAt(&nope, &kerbin, 0.0, 0.0, 10.0, 0.0));
+}
+
+// ---- Tourism / CometSample / Survey generation: structural sanity (no independent reference: needs KSP text assets absent from the repo) ---------------
+TEST_CASE("WP-38b Tourism / CometSample / Survey generation: deterministic, structurally valid trees (fixture name tables and site generator are not KSP data)") {
+    const json& ref = Ref38b();
+    std::map<std::string, int> generated;
+    std::map<std::string, int> refused;
+    for (size_t si : {size_t(3), size_t(5), size_t(7), size_t(8)}) {
+        World38b w;
+        // fixture name tables (NOT the KSP CrewGenerator text assets, which are not in the repo)
+        std::vector<std::string> maleNames, femaleNames;
+        for (int i = 0; i < 400; ++i) {
+            maleNames.push_back("Mal" + std::to_string(i));
+            femaleNames.push_back("Fem" + std::to_string(i));
+        }
+        ksp::CrewGenerator::SetNameTables(maleNames, femaleNames, {"Zed"}, {"Zeta"}, "Kerman");
+        ContractSystem cs;
+        cs.Awake();
+        ConfigNode weights = WeightsNode38b(ref["weights"]);
+        cs.LoadNow(weights);
+        LoadScenario38b(w, ref["scenarios"][si]);
+        w.SetFixture(ref["fixtures"][0]);
+        w.SetMult(ref["mult_sets"][0]);
+        // the comet seam: one discovered comet vessel so CometSample has a target
+        C38::CometManagerSeam::discoveredComets = [] { return std::vector<Vessel*>{}; };
+        for (const char* type : {"TourismContract", "CometSampleContract", "SurveyContract"}) {
+            std::fprintf(stderr, "[38b] scenario %zu type %s\n", si, type);
+            for (int seed = 1; seed <= (std::string(type) == "TourismContract" ? 12 : 60); ++seed) {
+                for (int prestige = 0; prestige < 3; ++prestige) {
+                    INFO(type << " scenario " << si << " seed " << seed << " prestige " << prestige);
+                    w.nextGuid = Guid::Parse("01010101-0202-0303-0404-050505050505");
+                    ContractPrestige pr = PrestigeOf38b(prestige);
+                    std::unique_ptr<Contract> a = cs.GenerateContract(seed, pr, type);
+                    w.nextGuid = Guid::Parse("01010101-0202-0303-0404-050505050505");
+                    std::unique_ptr<Contract> b = cs.GenerateContract(seed, pr, type);
+                    CHECK((a == nullptr) == (b == nullptr));
+                    if (!a || !b) {
+                        ++refused[type];
+                        continue;
+                    }
+                    ++generated[type];
+                    CHECK(a->Title() == b->Title());
+                    CHECK(a->Description() == b->Description());
+                    if (std::string(type) != "TourismContract") CHECK(a->Synopsys() == b->Synopsys());  // tourists are drawn from the unseeded roster generator
+                    CHECK(a->ContractID() == b->ContractID());
+                    CHECK_F64b(a->FundsCompletion, b->FundsCompletion);
+                    CHECK_F32b(a->ReputationCompletion, b->ReputationCompletion);
+                    CHECK(a->ParameterCount() == b->ParameterCount());
+                    CHECK(a->ParameterCount() > 0);
+                    CHECK_FALSE(a->Title().empty());
+                    CHECK_FALSE(a->Description().empty());
+                    CHECK(a->Agent() != nullptr);
+                    CHECK(a->FundsCompletion >= 0.0);
+                    // a generated contract serialises and reloads to a contract with the same title, id and parameter count
+                    ConfigNode node("CONTRACT");
+                    a->Save(node);
+                    CHECK(*node.GetValue("type") == std::string(type).substr(0, std::string(type).size()));
+                }
+            }
+        }
+        C38::CometManagerSeam::discoveredComets = nullptr;
+        ksp::CrewGenerator::Reset();
+    }
+    MESSAGE("generated: Tourism " << generated["TourismContract"] << " (refused " << refused["TourismContract"] << "), CometSample " << generated["CometSampleContract"]
+                                  << " (refused " << refused["CometSampleContract"] << "), Survey " << generated["SurveyContract"] << " (refused " << refused["SurveyContract"] << ")");
+    CHECK(generated["TourismContract"] > 0);
+    CHECK(generated["SurveyContract"] > 0);
 }
