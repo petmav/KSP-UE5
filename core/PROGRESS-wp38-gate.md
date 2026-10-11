@@ -10,3 +10,9 @@ Branch wp38 at 65459822 (main 13750b33 merged). Verify only; STATUS edits listed
 - [ ] STATUS verification line, commit, push, CI
 
 STATUS edits by gatekeeper: merge note 13750b33, Sun KOLNIYA+TUNDRA ecc wording, cite claim corrected, reference reproducibility and GenerateOrbit-scope and uniqueSeed UB notes.
+
+## Gate 2 (resumed)
+- [x] Fresh Windows run (build deleted, CMAKE_BUILD_PARALLEL_LEVEL=4; the default parallelism hit C1060 out of heap): 34/34, unit 579 cases / 963,143 assertions, 28 compare reports all pass, max_ulp 0 except capture.deltav_stages (as main).
+- [x] check_cites exact over 4 src files: 43 cites, 0 mismatches. No std:: sin/cos/..., only std::floor/fmod (exact ops).
+- [x] wp37 JSON is not touched by wp38; the "monkeypatch" is w37.NODE_ID["CREWTRANSFER"]="CelestialBodyTransfer" inside the wp38 process only (C# KSPAchievements/CelestialBodyTransfer.cs:11).
+- [x] GenerateOrbit 0 ULP: not a small change; documented in report.
