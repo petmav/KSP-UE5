@@ -8,59 +8,6 @@
 using namespace ksp;
 using namespace ksp::inv33;
 
-namespace {
-
-std::string Msg(const char* tag, const std::string& arg) { return Localizer::Format(tag, {arg}); }
-
-bool Has(const std::vector<std::string>& v, const std::string& s) { return std::find(v.begin(), v.end(), s) != v.end(); }
-
-// the EVA kerbal vessel the construction code asks (seated / engineer answers by pointer)
-struct Kerbals {
-    std::vector<std::unique_ptr<Vessel>> vessels;
-    std::vector<std::unique_ptr<FakeEva>> controllers;
-    std::vector<std::unique_ptr<Part>> rootParts;  // the kerbal's own part
-    std::map<Vessel*, bool> seated;
-    std::map<Vessel*, int> engineers;
-    Vessel* Add(const Vector3f& pos, bool isSeated = false, int engineer = 0) {
-        vessels.push_back(BareVessel(VesselType::EVA, pos));
-        controllers.push_back(std::make_unique<FakeEva>());
-        Vessel* v = vessels.back().get();
-        v->evaController = controllers.back().get();
-        rootParts.push_back(std::make_unique<Part>());
-        v->rootPart = rootParts.back().get();
-        v->parts.push_back(v->rootPart);
-        seated[v] = isSeated;
-        engineers[v] = engineer;
-        FlightRegistry::VesselsLoaded.push_back(v);
-        return v;
-    }
-    Kerbals() {
-        EVAConstructionEnvironment::isSeated = [this](Vessel& v) { return seated[&v]; };
-        EVAConstructionEnvironment::engineerCount = [this](Vessel& v) { return engineers[&v]; };
-    }
-};
-
-struct Weight {
-    int fired = 0;
-    void F() { fired++; }
-    Weight() { GameEvents::OnCombinedConstructionWeightLimitChanged.Add(this, &Weight::F); }
-    ~Weight() { GameEvents::OnCombinedConstructionWeightLimitChanged.Remove(this, &Weight::F); }
-};
-
-struct PartEvents {
-    std::vector<std::pair<ConstructionEventType, Part*>> events;
-    void E(ConstructionEventType t, Part* p) { events.emplace_back(t, p); }
-    PartEvents() { GameEvents::onEditorPartEvent.Add(this, &PartEvents::E); }
-    ~PartEvents() { GameEvents::onEditorPartEvent.Remove(this, &PartEvents::E); }
-    int Count(ConstructionEventType t) const {
-        int n = 0;
-        for (const auto& e : events) n += e.first == t;
-        return n;
-    }
-};
-
-}  // namespace
-
 // ConstructionEventType.cs:1 / ConstructionMode.cs:1 / IConstruction.cs:1 (ported by WP-40 / WP-13; the values are the C# declaration order)
 TEST_CASE("WP-33 ConstructionEventType / ConstructionMode / IConstruction: declaration order and the Part permissions") {
     CHECK(static_cast<int>(ConstructionEventType::Unknown) == 0);
