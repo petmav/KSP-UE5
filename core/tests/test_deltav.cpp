@@ -470,15 +470,15 @@ TEST_CASE("WP-17b engine thrust transforms: loader == an independent re-read of 
     REQUIRE(in);
     const nlohmann::json j = nlohmann::json::parse(in);
     const auto& parts = ThrustData().Parts();
-    CHECK(parts.size() == 18);
-    CHECK(j.at("parts").size() == 18);
+    CHECK(parts.size() == 19);
+    CHECK(j.at("parts").size() == 19);
     // thrust transforms per staged part: the number of `thrustTransform` nodes in the part's model (pre-order search below "model",
     // Part.cs:5147), counted from the chain data (each transform's chain ends with the transform and starts with "model")
     const std::map<std::string, size_t> expected = {
         {"JetEngine", 2}, {"MassiveBooster", 1}, {"SSME", 1}, {"Size3AdvancedEngine", 1}, {"ionEngine", 1}, {"liquidEngine2", 1},
         {"liquidEngine2-2.v2", 3}, {"liquidEngine3.v2", 1}, {"liquidEngineMainsail.v2", 1}, {"microEngine.v2", 1}, {"miniJetEngine", 1},
         {"omsEngine", 1}, {"radialLiquidEngine1-2", 1}, {"solidBooster.sm.v2", 1}, {"solidBooster.v2", 1}, {"toroidalAerospike", 1},
-        {"turboFanEngine", 1}, {"turboFanSize2", 2}};
+        {"sepMotor1", 1}, {"turboFanEngine", 1}, {"turboFanSize2", 2}};
     for (const auto& [name, count] : expected) {
         INFO(name);
         REQUIRE(parts.count(name) == 1);

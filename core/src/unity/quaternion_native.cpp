@@ -141,10 +141,10 @@ Quaternionf FromToRotation(const Vector3f& fromDirection, const Vector3f& toDire
 // Transform.rotation composition of the native Unity code (UnityPlayer.dll): Quaternionf * Quaternionf with one float32 rounding per
 // operation (not the Mono rule of the managed Quaternion.operator*, which rounds a whole expression once). The evaluation order is the
 // one that reproduces the in-game stage delta-v (capture.deltav_stages, WP-17b): cross product first, then the two w * v terms,
-// w = lw * rw - ((lx * rx + ly * ry) + lz * rz):
+// w = (lw * rw - lx * rx) - (ly * ry + lz * rz)  (fitted: ((lx*rx + ly*ry) + lz*rz) leaves 2 rows of Learstar A1 one ULP off):
 //   x = ((ly * rz - lz * ry) + lw * rx) + rw * lx    (y, z cyclic)
 // The orders  lw*rx + lx*rw + ly*rz - lz*ry  (the C# source order) and the other permutations of the three terms do not.
-// WP-17b: world rotation of a thrust transform = (part chain rotation) * (model chain rotation).
+// WP-17b: world rotation of a thrust transform = parentLocal * (... * (partLocal * (modelChain...))), right-nested (EditorHierarchy::World).
 Quaternionf Multiply(const Quaternionf& lhs, const Quaternionf& rhs) {
     const float L[4] = {lhs.x, lhs.y, lhs.z, lhs.w}, R[4] = {rhs.x, rhs.y, rhs.z, rhs.w};
     float out[4];
@@ -157,10 +157,11 @@ Quaternionf Multiply(const Quaternionf& lhs, const Quaternionf& rhs) {
         acc = acc + a1;
         out[c] = acc;
     }
-    volatile float d0 = L[0] * R[0], d1 = L[1] * R[1], d2 = L[2] * R[2], dd = d0 + d1;
-    dd = dd + d2;
+    volatile float d0 = L[0] * R[0], d1 = L[1] * R[1], d2 = L[2] * R[2];
+    volatile float dd = d1 + d2;  // w = (lw * rw - lx * rx) - (ly * ry + lz * rz)
     volatile float ww = L[3] * R[3];
-    out[3] = ww - dd;
+    volatile float wr = ww - d0;
+    out[3] = wr - dd;
     return Quaternionf(out[0], out[1], out[2], out[3]);
 }
 

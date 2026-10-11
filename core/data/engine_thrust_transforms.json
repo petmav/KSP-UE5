@@ -2121,6 +2121,109 @@
     "thrustTransform"
    ]
   },
+  "sepMotor1": {
+   "cfg": {
+    "file": "solidBoosterSep.cfg",
+    "origin": "GameData/Squad/Parts/Engine/solidBoosterSep/solidBoosterSep.cfg",
+    "sha256": "6e5bdea6cc5f52a481f7f8b09a57e5b79f27e52e9966b7107bff557b98346908"
+   },
+   "modelNodes": 0,
+   "mu": {
+    "file": "model.mu",
+    "origin": "GameData/Squad/Parts/Engine/solidBoosterSep/model.mu",
+    "sha256": "c528b82d5167b2e8cd222cbf6504619cb15e41feabef7faea8a4c3b4ee929ebc"
+   },
+   "muVersion": 5,
+   "rescaleFactor": "3fa00000",
+   "thrustTransforms": [
+    {
+     "chain": [
+      {
+       "name": "model",
+       "position": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "rotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "scale": [
+        "3fa00000",
+        "3fa00000",
+        "3fa00000"
+       ]
+      },
+      {
+       "name": "rocket",
+       "position": [
+        "00000000",
+        "32822f1b",
+        "3e022f1c"
+       ],
+       "rotation": [
+        "bf3504f4",
+        "00000000",
+        "00000000",
+        "3f3504f4"
+       ],
+       "scale": [
+        "3f26abfb",
+        "3f26abfb",
+        "3f26abfb"
+       ]
+      },
+      {
+       "name": "thrustTransform",
+       "position": [
+        "00000000",
+        "bd3020c5",
+        "beee147b"
+       ],
+       "rotation": [
+        "3f800000",
+        "00000000",
+        "00000000",
+        "b33bbd2e"
+       ],
+       "scale": [
+        "3fc49a19",
+        "3fc49a17",
+        "3fc49a17"
+       ]
+      }
+     ],
+     "name": "thrustTransform",
+     "partSpaceForward": [
+      "00000000",
+      "bf800001",
+      "b4c00000"
+     ],
+     "partSpaceForwardF": [
+      0.0,
+      -1.0000001192092896,
+      -3.5762786865234375e-07
+     ],
+     "partSpacePosition": [
+      "00000000",
+      "bec1c188",
+      "3e469084"
+     ],
+     "partSpaceRotation": [
+      "3f3504f5",
+      "00000000",
+      "00000000",
+      "3f3504f3"
+     ]
+    }
+   ],
+   "thrustVectorTransformName": [
+    "thrustTransform"
+   ]
+  },
   "solidBooster.sm.v2": {
    "cfg": {
     "file": "solidBoosterRT-5_v2.cfg",

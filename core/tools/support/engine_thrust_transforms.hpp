@@ -46,8 +46,11 @@ struct EditorHierarchy {
     std::map<const ksp::Part*, ksp::Quaternionf> local;
     std::map<const ksp::Part*, const ksp::Part*> parent;
 
-    ksp::Quaternionf World(const ksp::Part* p) const {
+    // `tail` (optional): a rotation below the part (the model chain of a thrust transform); Unity composes the whole chain from the leaf
+    // upward (rot = parentLocal * rot), i.e. right-nested over the part hierarchy AND the model chain, not (part world) * (chain).
+    ksp::Quaternionf World(const ksp::Part* p, const ksp::Quaternionf* tail = nullptr) const {
         ksp::Quaternionf rot = local.at(p);
+        if (tail) rot = ksp::UnityNative::Multiply(rot, *tail);
         for (auto it = parent.find(p); it != parent.end() && it->second != nullptr; it = parent.find(it->second))
             rot = ksp::UnityNative::Multiply(local.at(it->second), rot);
         return rot;
@@ -136,7 +139,8 @@ public:
                 if (t.name != tname) continue;
                 ksp::PartTransform w;
                 w.position = part.partTransform.TransformPoint(t.partSpacePosition);
-                w.rotation = ksp::UnityNative::Multiply(hierarchy ? hierarchy->World(&part) : part.partTransform.rotation, ChainRotation(t));
+                const ksp::Quaternionf chain = ChainRotation(t);
+                w.rotation = hierarchy ? hierarchy->World(&part, &chain) : ksp::UnityNative::Multiply(part.partTransform.rotation, chain);
                 list.push_back(w);
             }
             if (list.empty())
