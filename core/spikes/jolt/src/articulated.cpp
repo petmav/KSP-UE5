@@ -223,6 +223,37 @@ void ArticulatedVessel::DropCrossingAutostruts() {
         }
 }
 
+std::vector<std::pair<float, float>> ArticulatedVessel::AttachJointLoads(float dt) const {
+    // sum the sub-joint impulses of each PartJoint (force on body 2 = +lambda / dt at the sub-joint anchor); torque about the
+    // centroid of the anchors = constraint torques + moments of the ring forces
+    const int na = craft_->attachJointCount;
+    std::vector<Vec3> f(na, Vec3::sZero()), t(na, Vec3::sZero());
+    std::vector<RVec3> centroid(na, RVec3::sZero());
+    std::vector<int> cnt(na, 0);
+    std::vector<RVec3> anchor(subJoints_.size());
+    for (size_t i = 0; i < subJoints_.size(); i++) {
+        const SubJoint& sj = subJoints_[i];
+        anchor[i] = sj.c->GetBody2()->GetCenterOfMassTransform() * sj.localAnchor2;
+        if (sj.joint < na && sj.c->GetEnabled()) {
+            centroid[sj.joint] += anchor[i];
+            cnt[sj.joint]++;
+        }
+    }
+    const float inv = 1.0f / dt;
+    for (size_t i = 0; i < subJoints_.size(); i++) {
+        const SubJoint& sj = subJoints_[i];
+        if (sj.joint >= na || !sj.c->GetEnabled()) continue;
+        const auto* six = static_cast<const SixDOFConstraint*>(sj.c.GetPtr());
+        const Vec3 fi = six->GetTotalLambdaPosition() * inv;
+        const RVec3 c = centroid[sj.joint] / static_cast<Real>(cnt[sj.joint]);
+        f[sj.joint] += fi;
+        t[sj.joint] += (six->GetTotalLambdaRotation() + six->GetTotalLambdaMotorRotation()) * inv + Vec3(anchor[i] - c).Cross(fi);
+    }
+    std::vector<std::pair<float, float>> out(na);
+    for (int j = 0; j < na; j++) out[j] = cnt[j] ? std::make_pair(f[j].Length(), t[j].Length()) : std::make_pair(-1.0f, -1.0f);
+    return out;
+}
+
 int ArticulatedVessel::ConstraintCount() const {
     int c = 0;
     for (const SubJoint& sj : subJoints_) c += sj.c->GetEnabled() ? 1 : 0;

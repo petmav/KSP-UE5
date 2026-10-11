@@ -33,9 +33,13 @@ public:
     void SetLinearVelocity(JPH::Vec3Arg v) override {
         for (JPH::Body* b : bodies_) b->SetLinearVelocity(v);
     }
+    void AddLinearVelocity(JPH::Vec3Arg dv) override {
+        for (JPH::Body* b : bodies_) b->SetLinearVelocity(b->GetLinearVelocity() + dv);
+    }
     int FireDecouplers() override;
     int BodyCount() const override { return static_cast<int>(bodies_.size()); }
     int ConstraintCount() const override;
+    std::vector<std::pair<float, float>> AttachJointLoads(float dt) const override;
     float MaxJointError() const override;
     // (error m, joint index) of every live sub-joint, largest first
     std::vector<std::pair<float, int>> JointErrors() const;

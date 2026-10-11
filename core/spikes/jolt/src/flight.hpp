@@ -32,12 +32,21 @@ struct FlightConfig {
     bool perTickShift = false;          // emulate FloatingOrigin.setOffset every tick (measurement)
     bool gravityEase = true;            // VesselPrecalculate easing: gravity 0 -> 1 in 16 ticks after unpack
     bool breaking = true;
+    // Galilean velocity frame for the inertial (orbit) case: the physics frame moves with frameVel (double bookkeeping, no body
+    // moves); when the vessel's velocity in the frame exceeds the threshold the frame velocity takes it over (every body's
+    // velocity changes once, positions never shift). Keeps Jolt's float velocities small for constrained parts.
+    bool frameVelocity = false;
+    double frameVelThreshold = 50.0;
     int breakGraceTicks = 60;           // Vessel.ignoreCollisionsFrames = 60 after ground placement
     bool stress = true;                 // reduced model: structural loads every tick
     bool inertiaFloor = true;
+    bool graphSolve = false;            // reduced: indeterminate structural solve (struts share load) instead of the tree solve
+    double graphKLinear = 1.0e8;
+    bool graphDirect = true;
     int fireDecouplersAtTick = -1;
     bool orbit = false;                 // start in a circular equatorial-plane orbit (inertial frame, no terrain)
     double orbitAltitude = 80000.0;
+    int loadWindow = 50;                // ticks at the end over which AttachJointLoads are averaged into FlightResult::jointLoads
     int sampleEvery = 10;               // trajectory / joint-error sample period (outside the timed phases)
     bool debug = false;                 // print break details and the worst joints (stderr)
     WorldConfig world;
@@ -67,13 +76,18 @@ struct FlightResult {
     double altitudeEnd = 0, speedEnd = 0, machMax = 0, qMax = 0;
     float maxJointError = 0;    // over the samples
     int breaks = 0, firstBreakTick = -1;
+    int frameRecenters = 0;
     std::string firstBreak;
+    double graphMsMean = 0, graphItersMean = 0;  // reduced + graphSolve: per solve
+    double graphFactorMs = 0;                    // last factorisation (direct method)
+    size_t graphFactorBlocks = 0;
     double stagingMs = 0;       // cost of the FireDecouplers event
     float maxLoadRatio = 0;     // reduced: max load / capacity seen
     std::string maxLoadJoint;
     long long soaMismatches = 0, soaCompared = 0;
     bool exploded = false;      // NaN / runaway state
     std::vector<Sample> samples;
+    std::vector<std::pair<float, float>> jointLoads;  // per attach joint at the last tick (VesselPhysics::AttachJointLoads)
 };
 
 FlightResult RunFlight(KspContext& ctx, CraftModel& craft, const FlightConfig& cfg);

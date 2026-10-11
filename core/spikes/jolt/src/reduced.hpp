@@ -28,6 +28,7 @@
 #include <memory>
 #include <vector>
 
+#include "structure_graph.hpp"
 #include "vessel_physics.hpp"
 
 namespace spike {
@@ -50,12 +51,27 @@ public:
     void SetLinearVelocity(JPH::Vec3Arg v) override {
         for (Cluster& c : clusters_) c.body->SetLinearVelocity(v);
     }
+    void AddLinearVelocity(JPH::Vec3Arg dv) override {
+        for (Cluster& c : clusters_) c.body->SetLinearVelocity(c.body->GetLinearVelocity() + dv);
+    }
     int FireDecouplers() override;
     int BodyCount() const override;
     int ConstraintCount() const override;
+    std::vector<std::pair<float, float>> AttachJointLoads(float dt) const override;
 
     bool stressEnabled = true;
     bool breakingEnabled = true;
+    // statically indeterminate solve (struts / autostruts share load: structure_graph.hpp) instead of the tree solve
+    bool graphSolve = false;
+    bool graphDirect = true;      // sparse block Cholesky factored per structural change (single cluster); else PCG
+    double graphFactorMs = 0.0;   // last factorisation
+    size_t graphFactorBlocks = 0;
+    double graphKLinear = 1.0e8;  // kN/m: quasi-rigid translation of every sub-joint (PhysX: linear drive spring 1e20)
+    int graphMaxIter = 300;
+    double graphTol = 1.0e-6;
+    StructuralGraph::Stats graphStats;  // last solve
+    double graphMsSum = 0.0;
+    long long graphItersSum = 0, graphSolves = 0;
     bool inertiaFloor = true;  // KSP's max(1, mass) per-part tensor scale (Part.cs:4263); droppable (PHYSICS-ENGINE-REVIEW.md 10)
     // per attach joint, filled by AfterStep (kN, kN m) and its capacity
     struct EdgeLoad {
@@ -100,6 +116,12 @@ private:
     std::vector<JPH::Vec3> partExtF_, partExtM_;  // buffered external force per part and its moment about the part CoM
     JPH::Vec3 uniformAccel_ = JPH::Vec3::sZero(), lastUniformAccel_ = JPH::Vec3::sZero();
     std::vector<bool> cut_;                 // attach joints that no longer connect (fired or broken)
+    std::vector<std::array<JPH::Vec3, 3>> subAnchorLocal_;  // per joint: each sub-joint anchor in the child part's frame
+    std::vector<std::array<JPH::RVec3, 3>> subAnchorWorld_;
+    std::vector<JPH::Vec3> demandF_, demandM_;
+    StructuralGraph graph_;
+    void RebuildGraph();
+    bool graphDirty_ = true;
     std::vector<JPH::Vec3> anchorLocal_;    // per joint: centroid of the sub-joint anchors in the child part's frame
     std::vector<JPH::Ref<JPH::TwoBodyConstraint>> interJoints_;  // SplitAtDecouplers
     std::vector<int> interJointOf_;         // attach joint index of each inter-cluster constraint

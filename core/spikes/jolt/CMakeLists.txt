@@ -39,6 +39,8 @@ add_executable(jolt_spike
     src/craft_model.cpp
     src/articulated.cpp
     src/reduced.cpp
+    src/structure_graph.cpp
+    src/structure_graph_direct.cpp
     src/terrain_patch.cpp
     src/part_pipeline.cpp
     src/flight.cpp

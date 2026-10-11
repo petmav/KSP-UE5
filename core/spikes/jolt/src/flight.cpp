@@ -46,6 +46,9 @@ std::unique_ptr<VesselPhysics> MakeModel(const FlightConfig& cfg) {
     m->stressEnabled = cfg.stress;
     m->breakingEnabled = cfg.breaking;
     m->inertiaFloor = cfg.inertiaFloor;
+    m->graphSolve = cfg.graphSolve;
+    m->graphKLinear = cfg.graphKLinear;
+    m->graphDirect = cfg.graphDirect;
     return m;
 }
 
@@ -110,7 +113,12 @@ FlightResult RunFlight(KspContext& ctx, CraftModel& craft, const FlightConfig& c
 
     std::unique_ptr<VesselPhysics> model = MakeModel(cfg);
     model->Build(world, craft, pl, 1u);
-    if (cfg.orbit) model->SetLinearVelocity(Vec3(pad.east * std::sqrt(mu / (kerbin.Radius + cfg.orbitAltitude))));
+    DVec3 frameVel = DVec3::sZero();
+    if (cfg.orbit) {
+        const DVec3 v0 = pad.east * std::sqrt(mu / (kerbin.Radius + cfg.orbitAltitude));
+        if (cfg.frameVelocity) frameVel = v0;
+        model->SetLinearVelocity(Vec3(v0 - frameVel));
+    }
     world.System().OptimizeBroadPhase();
     r.bodies = model->BodyCount();
     r.constraints = model->ConstraintCount();
@@ -119,6 +127,8 @@ FlightResult RunFlight(KspContext& ctx, CraftModel& craft, const FlightConfig& c
     PartPipeline pipe(ctx, craft);
     ReducedVessel* reduced = dynamic_cast<ReducedVessel*>(model.get());
     std::vector<double> tPre, tPipe, tFlush, tStep, tAfter, tShift, tTotal;
+    std::vector<std::pair<double, double>> loadSum;
+    std::vector<int> loadCount;
     const float dt = static_cast<float>(cfg.dt);
     for (int tick = 0; tick < cfg.ticks; tick++) {
         const auto t0 = Clock::now();
@@ -145,6 +155,7 @@ FlightResult RunFlight(KspContext& ctx, CraftModel& craft, const FlightConfig& c
         const auto t3 = Clock::now();
         model->breakAllowed = tick >= cfg.breakGraceTicks;
         world.Step(dt, cfg.collisionSteps);
+        frameOrigin += frameVel * cfg.dt;  // the frame moved with its velocity during the step (double bookkeeping only)
         const auto t4 = Clock::now();
         const std::vector<BreakEvent> br = model->AfterStep(dt, tick);
         const auto t5 = Clock::now();
@@ -156,7 +167,28 @@ FlightResult RunFlight(KspContext& ctx, CraftModel& craft, const FlightConfig& c
             if (!terrain.bodies.empty()) ShiftStatics(world, terrain, delta);
             frameOrigin -= DVec3(delta);
         }
+        if (cfg.frameVelocity) {
+            model->ReadState();
+            if (model->comVel.Length() > cfg.frameVelThreshold) {
+                frameVel += DVec3(model->comVel);
+                model->AddLinearVelocity(-model->comVel);
+                r.frameRecenters++;
+            }
+        }
         const auto t6 = Clock::now();
+        if (cfg.loadWindow > 0 && tick >= cfg.ticks - cfg.loadWindow) {  // outside the timed phases
+            const auto l = model->AttachJointLoads(dt);
+            if (loadSum.empty()) {
+                loadSum.assign(l.size(), {0.0, 0.0});
+                loadCount.assign(l.size(), 0);
+            }
+            for (size_t j = 0; j < l.size(); j++)
+                if (l[j].first >= 0.0f) {
+                    loadSum[j].first += l[j].first;
+                    loadSum[j].second += l[j].second;
+                    loadCount[j]++;
+                }
+        }
         if (tick == cfg.fireDecouplersAtTick) {
             const auto s0 = Clock::now();
             r.bodiesAfterStaging = model->FireDecouplers();
@@ -205,7 +237,7 @@ FlightResult RunFlight(KspContext& ctx, CraftModel& craft, const FlightConfig& c
             s.tick = tick;
             s.t = tick * cfg.dt;
             s.altitude = cb.Length() - kerbin.Radius;
-            s.speed = model->comVel.Length();
+            s.speed = (frameVel + DVec3(model->comVel)).Length();
             s.comX = cb.GetX();
             s.comY = cb.GetY();
             s.comZ = cb.GetZ();
@@ -237,7 +269,7 @@ FlightResult RunFlight(KspContext& ctx, CraftModel& craft, const FlightConfig& c
     model->ReadState();
     const DVec3 cb = frameOrigin + ToD(model->com);
     r.altitudeEnd = cb.Length() - kerbin.Radius;
-    r.speedEnd = model->comVel.Length();
+    r.speedEnd = (frameVel + DVec3(model->comVel)).Length();
     r.measuredTicks = static_cast<int>(tTotal.size());
     r.precalc = Stats(tPre);
     r.pipeline = Stats(tPipe);
@@ -248,6 +280,16 @@ FlightResult RunFlight(KspContext& ctx, CraftModel& craft, const FlightConfig& c
     r.total = Stats(tTotal);
     r.soaMismatches = pipe.soaMismatches;
     r.soaCompared = pipe.soaCompared;
+    if (reduced && reduced->graphSolves > 0) {
+        r.graphMsMean = reduced->graphMsSum / static_cast<double>(reduced->graphSolves);
+        r.graphItersMean = static_cast<double>(reduced->graphItersSum) / static_cast<double>(reduced->graphSolves);
+        r.graphFactorMs = reduced->graphFactorMs;
+        r.graphFactorBlocks = reduced->graphFactorBlocks;
+    }
+    r.jointLoads.assign(loadSum.size(), {-1.0f, -1.0f});
+    for (size_t j = 0; j < loadSum.size(); j++)
+        if (loadCount[j] > 0)
+            r.jointLoads[j] = {static_cast<float>(loadSum[j].first / loadCount[j]), static_cast<float>(loadSum[j].second / loadCount[j])};
     if (r.bodiesAfterStaging == 0) r.bodiesAfterStaging = model->BodyCount();
     return r;
 }

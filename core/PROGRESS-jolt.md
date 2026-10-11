@@ -35,6 +35,24 @@ recommendation in `core/PHYSICS-SPIKE.md`.
   pushed `jolt-spike`. Resumed after an API rate-limit cut; main has moved (wp50, wp53): merge before finishing.
 - First flight (S, articulated) runs; radial decouplers break on the pad at 1.26 s and the remaining joints show 0.3-0.5 m
   anchor separation: investigating (joint error measure, break threshold, mass ratios).
+- Found: the PartJoint chain needs >= 30 Jolt velocity steps (10: joints stretch 1.25 m on the pad, decouplers break; 30: 3 mm;
+  50: 0.3 mm) -- the same reason KSP runs PhysX at 50 iterations. Articulated benches run 50/2, reduced 10/2.
+- Reduced load solve: contact residual now balanced in force AND moment (equal share + couple over the touching parts);
+  inter-cluster joint impulses removed from the residual; 60-tick break grace (Vessel.ignoreCollisionsFrames).
+- Validation (bench loads, 8 s ascent, last 50 ticks averaged): tree craft S / M2: reduced loads == articulated joint impulses
+  (force median 0.0 %, max 0.6 %; max load/capacity identical). Autostrutted M2-AS / L2-AS: tree solve over-predicts attach
+  loads (median +73-76 %, max ratio 0.058 vs 0.033): WP-20 needs the indeterminate (strut-sharing) graph solve.
+- SoA aero kernel: 0 mismatches over 685,500 part-ticks vs the WP-21 exact port; aero 0.68 -> 0.26 us/part.
+- Staging (fire all decouplers): reduced-whole rebuild 0.5 ms one-off at L2-AS (1 -> 49 bodies); fixed a double
+  RemoveConstraint crash in reduced-split; autostruts crossing fired/broken joints are dropped (KSP re-creates them per vessel).
+- Running tools/run_benches.sh (all sets) into spikes/jolt/results/.
+- All sets done (unpinned). Then: graph solve (PCG) in the reduced model: closes the strutted-craft gap (median 73 % -> 20 %)
+  but 170-300 CG iterations = 1.2-6.3 ms per tick; wrote a direct sparse block Cholesky (structure_graph_direct.cpp, factor
+  per structural change in the cluster frame, two triangular solves per tick) -- to measure. Determinism: bit-identical across
+  runs and 1/4/16 threads for all models. Orbit: articulated at 2,279 m/s float velocities -> 193 m orbit error, 0.029 m joint
+  stretch; with a Galilean frame velocity 23 m / 0.00006 m (= rigid). Float build: body-centre origin unusable (13 m drift),
+  double costs nothing measurable. Pinned (`--affinity 4`, `--repeat 3`) scaling: L2-AS articulated 2.83 ms, reduced 0.33 ms.
+- Doc sections drafted in the scratchpad; PHYSICS-SPIKE.md assembled at the end.
 
 - 2026-10-11: read optimizer.md, CLAUDE.md, PHYSICS-ENGINE-REVIEW.md, PROFILE.md, TIERING.md (WP-12/18/19/20/21/22),
   core/README.md, core/STATUS.md (WP-11/14/18/21 sections), NEXT-STEPS.md. Network reachable; Jolt v5.6.0 pinned.

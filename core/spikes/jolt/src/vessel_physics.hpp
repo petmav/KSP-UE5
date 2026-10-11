@@ -65,6 +65,9 @@ public:
     virtual void ShiftOrigin(JPH::Vec3Arg delta) = 0;
     // Every body moves with velocity v (Part.ResumeVelocity on unpack / an orbital start).
     virtual void SetLinearVelocity(JPH::Vec3Arg v) = 0;
+    // Every body's velocity changes by dv (a Galilean change of the physics frame's velocity: KSP's Krakensbane.AddExcess
+    // without the position shift)
+    virtual void AddLinearVelocity(JPH::Vec3Arg dv) = 0;
 
     // ---- one-off structural events ----
     // Fire every decoupler (staging): attach joints whose child is a decoupler are removed. Returns the new body count.
@@ -75,6 +78,10 @@ public:
     virtual int ConstraintCount() const = 0;  // Jolt constraints (sub-joints)
     // Largest anchor separation over the live constraints (m): joint stretch, the stability measure of the articulated model
     virtual float MaxJointError() const { return 0.0f; }
+    // Per attach joint (CraftModel::joints[0, attachJointCount)): load transmitted at the last step, (force kN, torque kN m)
+    // about the joint centroid; (-1, -1) for a joint that no longer exists. Articulated: from the constraint impulses;
+    // reduced: from the structural solve.
+    virtual std::vector<std::pair<float, float>> AttachJointLoads(float dt) const = 0;
 
     // Joint breaking is suppressed while false (KSP: Vessel.ignoreCollisionsFrames = 60 after the ground placement,
     // PartJoint.OnJointBreak ignores breaks meanwhile, Vessel.cs:2543-2557, PartJoint.cs:397-401)

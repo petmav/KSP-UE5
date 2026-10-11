@@ -93,6 +93,10 @@ void ReducedVessel::Build(World& world, const CraftModel& craft, const Placement
     cut_.assign(craft.joints.size(), false);
     loads.assign(craft.attachJointCount, EdgeLoad{});
     anchorLocal_.assign(craft.joints.size(), Vec3::sZero());
+    subAnchorLocal_.assign(craft.joints.size(), {Vec3::sZero(), Vec3::sZero(), Vec3::sZero()});
+    subAnchorWorld_.assign(craft.joints.size(), {RVec3::sZero(), RVec3::sZero(), RVec3::sZero()});
+    demandF_.assign(n, Vec3::sZero());
+    demandM_.assign(n, Vec3::sZero());
     for (size_t j = 0; j < craft.joints.size(); j++) {
         const JointSpec& js = craft.joints[j];
         DVec3 a = DVec3::sZero();
@@ -101,6 +105,10 @@ void ReducedVessel::Build(World& world, const CraftModel& craft, const Placement
         const PartSpec& cs = craft.parts[js.child];
         const DVec3 rel = a - cs.pos;
         anchorLocal_[j] = cs.rot.Conjugated() * Vec3(static_cast<float>(rel.GetX()), static_cast<float>(rel.GetY()), static_cast<float>(rel.GetZ()));
+        for (int q = 0; q < js.internalJoints; q++) {
+            const DVec3 rq = js.anchors[q] - cs.pos;
+            subAnchorLocal_[j][q] = cs.rot.Conjugated() * Vec3(static_cast<float>(rq.GetX()), static_cast<float>(rq.GetY()), static_cast<float>(rq.GetZ()));
+        }
     }
     for (int j = 0; j < craft.attachJointCount; j++) {
         const JointSpec& js = craft.joints[j];
@@ -201,6 +209,7 @@ void ReducedVessel::Recluster(const std::vector<bool>& cut, bool inheritVelocity
         BuildClusterBody(c, RVec3::sZero(), v, w, oc, has);
     }
     RebuildInterClusterJoints();
+    if (graphSolve) RebuildGraph();
     lastSplitMs = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
 }
 
@@ -459,6 +468,8 @@ void ReducedVessel::ComputeLoads(float dt) {
             const Mat44 I = PartInertiaWorld(s.inertiaPerMass * (inertiaFloor ? std::max(1.0f, m) : m), partRot[p]);
             rot += I.Multiply3x3(k.alpha) + k.w.Cross(I.Multiply3x3(k.w));
         }
+        demandF_[p] = d;
+        demandM_[p] = rot;
         sf[p] += d;
         sm[p] += Vec3(pcom[p] - origin).Cross(d) + rot;
         if (s.parent >= 0) {
@@ -477,6 +488,39 @@ void ReducedVessel::ComputeLoads(float dt) {
                 maxLoadRatio = ratio;
                 maxLoadJoint = j;
             }
+        }
+    }
+    if (!graphSolve) return;
+    // ---- the indeterminate solve: the same demands through every live sub-joint (attach joints and autostruts)
+    for (size_t j = 0; j < craft.joints.size(); j++) {
+        const JointSpec& js = craft.joints[j];
+        for (int q = 0; q < js.internalJoints; q++) subAnchorWorld_[j][q] = partPos[js.child] + partRot[js.child] * subAnchorLocal_[j][q];
+    }
+    if (graphDirect && clusters_.size() == 1) {
+        const Quat rot = clusters_[0].body->GetRotation();
+        if (graphDirty_ || !graph_.Factored()) {
+            graphFactorMs = graph_.Factor(pcom, subAnchorWorld_, rot).ms;
+            graphFactorBlocks = graph_.FactorBlocks();
+            graphDirty_ = false;
+        }
+        graphStats = graph_.SolveFactored(pcom, demandF_, demandM_, rot);
+    } else {
+        graphStats = graph_.Solve(pcom, subAnchorWorld_, demandF_, demandM_, graphMaxIter, graphTol);
+    }
+    graphMsSum += graphStats.ms;
+    graphItersSum += graphStats.iterations;
+    graphSolves++;
+    maxLoadRatio = 0.0f;
+    maxLoadJoint = -1;
+    for (int j = 0; j < craft.attachJointCount; j++) {
+        if (cut_[j]) continue;
+        EdgeLoad& L = loads[j];
+        L.force = graph_.jointLoads[j].first;
+        L.torque = graph_.jointLoads[j].second;
+        const float ratio = std::max(L.force / L.forceCap, L.torque / L.torqueCap);
+        if (ratio > maxLoadRatio) {
+            maxLoadRatio = ratio;
+            maxLoadJoint = j;
         }
     }
 }
@@ -540,12 +584,43 @@ int ReducedVessel::FireDecouplers() {
     return BodyCount();
 }
 
+std::vector<std::pair<float, float>> ReducedVessel::AttachJointLoads(float) const {
+    std::vector<std::pair<float, float>> out(loads.size());
+    for (size_t j = 0; j < loads.size(); j++) out[j] = cut_[j] ? std::make_pair(-1.0f, -1.0f) : std::make_pair(loads[j].force, loads[j].torque);
+    return out;
+}
+
 int ReducedVessel::BodyCount() const { return static_cast<int>(clusters_.size()); }
 
 int ReducedVessel::ConstraintCount() const {
     int c = 0;
     for (const auto& ij : interJoints_) c += ij->GetEnabled() ? 1 : 0;
     return c;
+}
+
+}  // namespace spike
+
+namespace spike {
+
+void ReducedVessel::RebuildGraph() {
+    // live elements: attach joints not cut, autostruts whose two ends are still connected through attach joints
+    const CraftModel& craft = *craft_;
+    const size_t n = craft.parts.size();
+    std::vector<int> uf(n);
+    std::iota(uf.begin(), uf.end(), 0);
+    auto find = [&](int x) {
+        while (uf[x] != x) x = uf[x] = uf[uf[x]];
+        return x;
+    };
+    for (size_t i = 0; i < n; i++)
+        if (!craft.parts[i].physical && craft.parts[i].parent >= 0) uf[find(static_cast<int>(i))] = find(craft.parts[i].parent);
+    for (int j = 0; j < craft.attachJointCount; j++)
+        if (!cut_[j]) uf[find(craft.joints[j].child)] = find(craft.joints[j].parent);
+    std::vector<bool> live(craft.joints.size(), false);
+    for (size_t j = 0; j < craft.joints.size(); j++)
+        live[j] = static_cast<int>(j) < craft.attachJointCount ? !cut_[j] : find(craft.joints[j].child) == find(craft.joints[j].parent);
+    graph_.Build(craft, live, graphKLinear);
+    graphDirty_ = true;
 }
 
 }  // namespace spike

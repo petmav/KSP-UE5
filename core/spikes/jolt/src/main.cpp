@@ -13,6 +13,10 @@
 #include <string>
 #include <vector>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "bench.hpp"
 #include "craft_model.hpp"
 #include "flight.hpp"
@@ -51,6 +55,15 @@ int main(int argc, char** argv) {
         JoltInit();
         const std::string cmd = argv[1];
         Args args(argc - 2, argv + 2);
+#ifdef _WIN32
+        // --affinity <hex mask>: pin the process (and Jolt's workers) to these logical processors and raise its priority, so
+        // timings do not wander between the two CCDs of a 7950X3D or across frequency states
+        if (args.Has("affinity")) {
+            const DWORD_PTR mask = static_cast<DWORD_PTR>(std::stoull(args.Str("affinity", "1"), nullptr, 16));
+            SetProcessAffinityMask(GetCurrentProcess(), mask);
+            SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+        }
+#endif
         KspContext ctx(cmd != "info");
         int rc = 0;
         if (cmd == "info") {
