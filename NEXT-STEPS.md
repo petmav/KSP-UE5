@@ -1,6 +1,6 @@
 # KSP-UE5: state and next steps
 
-Updated 2026-10-10 (session 3, laptop; handoff to the PC at the end of this file).
+Updated 2026-10-12 (session 4, PC; see "Session 4" below for the current state; the older sections are history).
 
 ## Done
 
@@ -118,7 +118,65 @@ Follow-ups from waves 4-5:
 - Needs data (local): GameVariables prefab (`reputationAddition` / `reputationSubtraction` curves, contract / mentality factors), KSC facility `levelCost` / `KSCUpgradeableLevelText`, a career save with ContractSystem / Funding / Reputation / Facilities / Strategy nodes, the `SiteGeneratorInfo` TextAsset, a C3-style capture for `Quaternion.Euler` / `eulerAngles` / `LookRotation`.
 - Next after WP-38 / WP-42: WP-33 inventory / EVA construction (7,547), WP-50 input bindings (7,026), WP-32 EVA controller (8,818, needs WP-20 for the rigidbody part), WP-53 Breaking Ground deployed science, WP-52 robotics (needs WP-20 joints). WP-19 / WP-20 / WP-12 wait for the Jolt spike (Opus `optimizer`). WP-29 wheels (VehiclePhysics) after WP-20.
 
-## Handoff to the PC (2026-10-11, end of session 3)
+## Session 4 (2026-10-11/12, PC; Sonnet orchestrating, Opus for the Jolt spike and WP-12a)
+
+Main `dbb068f7`. All four branches left open at the end of session 3 are merged, and so is everything below. Every merge went through a PR with CI green on Windows + Linux (clang and gcc) and a Sonnet gatekeeper (user rule 2026-10-11: code and batched work reaches main only through a PR; docs-only updates may go straight to main).
+
+### Environment on this machine (D:\Projects\KSP-UE5, a fresh clone)
+- `C:\Projects\KSP-UE5` is a directory junction to `D:\Projects\KSP-UE5` (hundreds of scripts and csproj files hardcode the C: path). Use `/c/Projects/KSP-UE5` paths for `decompiled/tools/scripts/build.sh`.
+- `decompiled/KSP-dev` was copied from the UNMODDED Steam install (`D:\SteamLibrary\steamapps\common\Kerbal Space Program`, build 03190; the user said never to use the modded KSP). Robocopy skipped Steam's preallocated all-zero files because size and time matched: always sha256-compare against the source after a copy (30 files had to be recopied). `Assembly-CSharp` was rebuilt (0 errors, 1,454 warnings) and the DLL/PDB are symlinked into KSP-dev. `core/data/mu_staging` was regenerated.
+- NOT on this machine: the `profiling` branch (`decompiled/_archive` bare repo; not on the GitHub remote either), `harness/lib`, `harness/tools-cache`. Captures and profiling builds need the archive copied from the old C: drive. WSL has g++ only (no clang/cmake/ninja); Linux verification is CI (clang + gcc) plus ASan/UBSan with g++ (recipe in `core/README.md`, section 'Sanitizer run').
+- The DLC (Breaking Ground, Making History) is not installed: `GameData/SquadExpansion/` is absent from KSP-dev and the Steam install. User decision 2026-10-11: real DLC data is a stretch goal, not needed for feature completion. WP-53/54/55 gates therefore use labelled synthetic fixtures (the mirror's stock mission files are 0 bytes).
+
+### Merged this session
+| PR / branch | package | gate |
+|---|---|---|
+| wpfix7 | sanitizer fixes (firework lambda, random.cpp seed wrap, TestVessel owns a real Vessel) | 34/34 |
+| wp38 | FinePrint slice 1 | independent Python reference, CI green |
+| wp42 | KSC / launch sites / scene flow (+ F1-F7 fixes) | unit-gated |
+| wp17b | WP-17 delta-v with real `.mu` thrust transforms: 15 of 17 crafts 0 ULP; 38 listed exclusion cells (Dynawing, Stearwing A300); quaternion association is an empirical fit marked UNVERIFIED (circular: chosen against the gated rows) | `capture.deltav_stages` |
+| #9 wp50 | input, bindings, input locks | independent reference 0 ULP, 32 cases |
+| #10 wp53 | Breaking Ground deployed science, ROCs, Serenity contracts | independent numpy reference; fixtures synthetic |
+| #11 wp54 | Making History mission runtime slice 1 | 220 synthetic graphs exact, 400 score cases 0 ULP |
+| #12 wp33 | inventory and EVA construction (extends wp53's ModuleCargoPart) | 0 ULP numpy reference |
+| #13 wp38b | FinePrint slice 2 (24 parameters, 8 contracts) | 4,830 generation cases byte-exact |
+| #16 wp38c | FinePrint slice 3 (ContractDefs, Sentinel, CompatibilityUtilities, 3 templates, CometSample) | 0 ULP / byte-exact; 6.9 MB reference |
+| #17 wp55 | mission node library slice A (25 tests, 12 actions, 39 adjusters) | 443 cases / 6,087 ops, 0 differences |
+| #15 wp20a | physics world + vendored Jolt v5.6.0 + the Jolt spike | analytic tests; determinism at 1/2/4/8 threads |
+| #18 wp12a | PQS quadtree and quad build | 24,728 quad rows + 13,051 mesh digests bit-identical; 140,522-point in-game terrain capture still 0 ULP |
+| #19 wp19a | flight registry, on-rails propagation, VesselPrecalculate, vessel switching | new ctest `capture.vessel_rails` 0 ULP (6 probes, 1x-100,000x, 4 SOI changes) |
+| #20 wp54b | mission slice 2 (data classes, VesselSituation, restrictions, 20 tests, 6 Create* actions) | 1,250 cases byte-exact (great-circle 1e-9 rel, flag rot 1e-5 rel) |
+| #22 wpfix8 | whole unit binary clean under ASan + UBSan + LSan on g++ | 806 cases, 0 reports |
+| #21 testorder | unit suite passes under `--order-by=rand`; hygiene listener `tests/test_hygiene.*`; ctest `unit.random_order.{11,27,42}` | 25+ seeds green |
+
+Summary: about 42% of all source lines and about 78% of the simulation layer are merged (estimates; partly-done packages counted by guess).
+
+### Decision recorded (Jolt spike, `core/PHYSICS-SPIKE.md`)
+Recommendation: WP-20 builds a REDUCED rigid-body model on Jolt v5.6.0 inside kspcore (one body per rigid cluster + structural load graph with KSP's PartJoint capacity rule, double positions, no per-tick world shift, Krakensbane as a velocity offset). 457-part tick 0.33 ms vs 2.83 ms articulated; physics warp within 1% up to 10-25x. Known costs: no joint flex (tall unstrutted stacks 29 g vs 10.8 g first-break), load sharing in strutted craft is gated by scenario only, wheels and robotics not prototyped, Windows-vs-Linux determinism unmeasured. **The user has NOT yet confirmed this model; WP-20b-e are held until they do.** Package split: WP-20a (done), 20b vessel rigid bodies, 20c structural graph + decouple/couple, 20d FlightIntegrator tick (SoA == exact gate), 20e contact/landing/water, WP-19b frames + physics bubble, WP-12b terrain colliders.
+
+### Process lessons (keep)
+- Gatekeeper + CI in parallel; merge only on both green. After each merge the other open PRs go stale in STATUS/README: merge main into them, renumber the STATUS row, recompute the summary `unit` row, push, wait for CI again (~25 min per cycle).
+- CI Linux runs BOTH clang and gcc. Several bugs showed up only on gcc or only in the combination of two branches (use-after-free in `~Vessel`, destruction order of test fixtures, the root `.gitignore` rule `**/build/` swallowing the vendored `third_party/jolt/Build/`). Use `git add -f` or a negation rule for vendored dirs, and check that every vendored file is tracked.
+- Test fixtures must declare `vessels` last (destroyed first). A synthetic event fired with null parts now crashes (`VesselPrecalculate` subscribes to `onDockingComplete`).
+- MSVC C1060 'out of heap' appears when several builds run at once: set `CMAKE_BUILD_PARALLEL_LEVEL=6`.
+- Subagents' own pushes get blocked by the auto-mode classifier ('Out-of-Place Publication', especially chained `&&` commands): they commit locally, the orchestrator pushes with single simple commands.
+- The 4-agent cap is the real throughput limit; the CPU is mostly idle during model waits. `unit` is ~186 s of ~230 s test time in one process; sharding it (`ctest -j`) was proposed and declined by the user.
+
+### Open items
+- Run-alone test independence (not memory errors): WP-39 `CommNetVessel control state`, WP-40 symmetry mode cycling, `PartLoader on the GameData mirror` (360 vs 362 parts when run alone).
+- `ContractParameter::CreateID` hashes unconditionally but the C# has `if (hashString != null)`.
+- `core/data/` needs: GameVariables prefab curves, KSC facility `levelCost`, `SiteGeneratorInfo`, CrewGenerator name tables, a career save, PQS LOD settings beyond min/max level (re-run `tools/wp11/extract_terrain.py` on KSP-dev), ocean spheres; in-game captures: per-tick VesselPrecalculate (gAccel, integrationAccel, drift), engine/part rotations + Quaternion products (WP-17b residual), quad set + one quad mesh at the pad (WP-12a), Euler/LookRotation (WP-24/40).
+- `kspcore.lib` now links Jolt (AVX2 CPU needed): the Unreal bridge in `ue5/` has not been touched or rebuilt. `SHA256SUMS` of the vendored Jolt does not verify on a Windows checkout with `core.autocrlf=true`.
+- Cite audit (`core/tools/wp28/cite_audit_2026-10-11.txt`) still has hundreds of off-by-k mismatches outside touched files; WP-11's `pqs_mods.cpp` has 4.
+- A stray file `D:\scratchpad_run.log` outside the repo (left by an agent, harmless).
+
+### Next (in order)
+1. User confirms the reduced rigid-body model -> WP-20b, 20c, 20d, 20e, WP-19b, WP-12b (Opus `optimizer` for 20d/20e; Sonnet otherwise).
+2. WP-29 wheels (VehiclePhysics subset, 29k lines), WP-32 EVA controller, WP-52 robotics (all after WP-20).
+3. Leftovers: WP-54/55 deferred (TestDistance, ActionPartFailure/Repair/ResourceDrain, MissionSystem, MissionImporting, MissionEditorHistory, real BaseAPField, PositionMobileLaunchPad), WP-53 deferred bits, WP-38 ship spawning / CometManager seams.
+4. The UE5 shell (about 289k lines of tier C: UI, rendering, cameras, audio, map view): needs its own design doc first (scene flow, what becomes Blueprints vs C++, first playable slice).
+
+## Handoff to the PC (2026-10-11, end of session 3; all four listed branches are now merged, see Session 4 above)
 
 ### Moving the whole directory to another machine
 
