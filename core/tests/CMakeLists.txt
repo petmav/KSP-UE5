@@ -40,6 +40,7 @@ add_executable(kspcore_tests
     test_deltav.cpp
     test_timing.cpp
     test_physics_world.cpp
+    test_vessel_physics.cpp
     test_flight.cpp
     test_flight2.cpp
     test_flight3.cpp

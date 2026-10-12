@@ -268,6 +268,31 @@ void Vessel::CalculatePhysicsStats(const std::function<PartRigidbodyState(Part&)
     precalc.firstStatsRunComplete = true;
 }
 
+// VesselPrecalculate.cs:436-453, the loop of CalculatePhysicsStats above with `Vector3d(rb.position) - CoMD` given (WP-20b)
+Vector3f Vessel::MOIFromRigidbodies(const std::vector<PartRigidbodyState>& states, const std::vector<Vector3d>& relPosition,
+                                    const QuaternionD& quaternionD, const PartTransform& referenceTransform) {
+    Matrix4x4f left;  // Matrix4x4.zero
+    Matrix4x4f m = Matrix4x4f::identity(), m2 = Matrix4x4f::identity(), m3 = Matrix4x4f::identity();
+    const Quaternionf quaternion = ToFloat(quaternionD);
+    for (size_t i = 0; i < states.size(); i++) {
+        const PartRigidbodyState& rb = states[i];
+        if (!rb.present) continue;
+        KSPUtil::ToDiagonalMatrix2(rb.inertiaTensor, m);
+        const Quaternionf quaternion2 = quaternion * rb.rotation * rb.inertiaTensorRotation;
+        const Quaternionf q = QInverse(quaternion2);
+        const Matrix4x4f matrix4x = TRSRotation(quaternion2);
+        const Matrix4x4f matrix4x2 = TRSRotation(q);
+        Matrix4x4f right = Mul(Mul(matrix4x, m), matrix4x2);
+        KSPUtil::Add(left, right);
+        const Vector3f vector = referenceTransform.InverseTransformDirection(relPosition[i].ToVector3f());
+        KSPUtil::ToDiagonalMatrix2(rb.mass * vector.sqrMagnitude(), m2);
+        KSPUtil::Add(left, m2);
+        KSPUtil::OuterProduct2(vector, vector * (0.0f - rb.mass), m3);
+        KSPUtil::Add(left, m3);
+    }
+    return KSPUtil::Diag(left).ToVector3f();
+}
+
 // Krakensbane.GetFrameVelocity() (WP-20a): env.krakensbaneFrameVelocity when a host overrides it
 Vector3d Vessel::FrameVelocity() const {
     return env.krakensbaneFrameVelocity ? env.krakensbaneFrameVelocity() : Krakensbane::GetFrameVelocity();
