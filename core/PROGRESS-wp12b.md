@@ -23,4 +23,8 @@ activation decisions + analytic ray/normal tests + KSC pad box drop (1/2/4/8 thr
 - built baseline, added PhysicsWorld::AddStaticMesh/AddStaticShape/RemoveStatic/RayCast/OverlapSphere,
   `ksp/terrain/terrain_colliders.*` (TerrainColliders), `ksp/space_center/city_colliders.*`.
 - `tools/wp12/colliders_reference.py` -> `tests/data/wp12b_reference.json` (events + sets for synth_a/b/c, kerbin_ksc, mun).
-- next: replay gate, sphere-patch / Kerbin / Mun height bound, KSC box drop, bench, STATUS/README, cites, fresh + rand + ASan.
+- `5730c617` replay gate (5 scenarios x plain / budget / workers), flat sphere patch, WP-11 height agreement (Kerbin, Mun), KSC box drop
+  at 1/2/4/8 threads, 17 WP-12b cases; 38/38 ctest. Mutants (rule `>`, float-mesh geometry) detected. bench: cook ~83 us/quad.
+- findings: Jolt CollideShape wants the WORLD transform; acos(dot) of float normals lies by 4.5e-4 rad (use the chord); rays through
+  shared quad-border vertices can miss (retry 2 mm aside); mesh vs WP-11 between vertices = sub-cell relief (1.5 m near the pad, 40 m worst).
+- next: ASan/UBSan in WSL (running), STATUS section + row 47 + README (drafted), fresh build + rand seeds 11 / 27, final report.
