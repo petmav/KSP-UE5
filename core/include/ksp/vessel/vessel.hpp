@@ -50,6 +50,7 @@
 #include "ksp/vessel/discovery_info.hpp"
 #include "ksp/vessel/flight_ctrl_state.hpp"
 #include "ksp/vessel/vessel_types.hpp"
+#include "ksp/vessel/vessel_precalculate.hpp"
 #include "ksp/vessel/vessel_values.hpp"
 
 namespace ksp {
@@ -81,13 +82,6 @@ public:
     virtual bool OnALadder() { return false; }  // KerbalEVA.cs:1205 (false while the FSM has not started)
 };
 
-// VesselPrecalculate.cs (WP-19): the two members the vessel model reads. CalculatePhysicsStats' mass maths is
-// Vessel::CalculatePhysicsStats below.
-struct VesselPrecalculate {
-    bool isEasingGravity = false;       // VesselPrecalculate.isEasingGravity (updateSituation, checkLanded)
-    bool firstStatsRunComplete = false;  // VesselPrecalculate.firstStatsRunComplete (GetWorldPos3D)
-};
-
 // What the physics engine reports for one part's Rigidbody (Part.rb): the inputs of VesselPrecalculate.CalculatePhysicsStats
 // (VesselPrecalculate.cs:387-498). `FromPart` fills what the part tree knows; velocities and the inertia tensor come from the engine.
 struct PartRigidbodyState {
@@ -103,6 +97,16 @@ struct PartRigidbodyState {
     Quaternionf rotation = Quaternionf::identity();               // part.transform.rotation
     // Part.CoMOffset rotated into world space around the part transform (rb.centerOfMass = CoMOffset), no engine involved
     static PartRigidbodyState FromPart(const Part& p);
+};
+
+// VesselPhysics::ReadState() (PHYSICS-SPIKE.md 5.3, WP-20b): the vessel's rigid-body state in the DOUBLE physics frame, which is what
+// VesselPrecalculate.CalculatePhysicsStats (VesselPrecalculate.cs:387-498) derives from the part Rigidbodies' float fields.
+struct VesselPhysicsState {
+    double totalMass = 0.0;       // sum of physicsMass over the parts that have a rigid body; <= 0 selects the mass-less branch
+    Vector3d CoMD;                // world centre of mass (physics frame)
+    Vector3d rb_velocityD;        // CoM velocity in the physics frame (Krakensbane's frame velocity is added by CalculatePhysicsStats)
+    Vector3d angularVelocityD;    // Quaternion.Inverse(ReferenceTransform.rotation) * rb.angularVelocity, mass-weighted
+    Vector3f MOI;                 // diagonal of the summed inertia tensor in the reference frame (KSPUtil.Diag(left))
 };
 
 // Services of other packages / the engine that Vessel.cs reaches through statics. Every hook is optional; the comment says what an
@@ -144,27 +148,28 @@ struct VesselEnvironment {
     std::function<Vector3d()> krakensbaneFrameVelocity;
     // Krakensbane.AddFrameVelocity (GoOffRails of the active vessel): unset = nothing to do
     std::function<void(const Vector3d&)> krakensbaneAddFrameVelocity;
+    // WP-19a physics seams (VesselPhysics, WP-20b; PHYSICS-SPIKE.md 5.3). Unset = the C# answer for "no rigid body" (rb == null).
+    // VesselPhysics::ReadState(): the double-frame state CalculatePhysicsStats reads; when it returns a state with totalMass > 0 it replaces
+    // the per-part loop over partRigidbody (kept as the float oracle and for hosts without a VesselPhysics)
+    std::function<std::optional<VesselPhysicsState>(Vessel&)> readPhysicsState;
+    // Part.rb as the engine reports it for CalculatePhysicsStats (VesselPrecalculate.cs:387): default PartRigidbodyState::FromPart.
+    std::function<PartRigidbodyState(Part&)> partRigidbody;
+    // rootPart.rb.GetPointVelocity(point) and rootPart.rb.angularVelocity (world) for the mass-less / packed branch (VesselPrecalculate.cs:491-498);
+    // returns false when rootPart == null or rootPart.rb == null
+    std::function<bool(Vessel&, const Vector3f& point, Vector3f& pointVelocity, Vector3f& angularVelocity)> rootRigidbody;
+    // Vessel.OffsetVelocity (Vessel.cs:3742): add `dv` to the velocity of every part rigid body (and servo rigid body)
+    std::function<void(Vessel&, const Vector3d& dv)> offsetVelocity;
+    // Part.explode(offset) (Vessel.CheckKill, Vessel.cs:2776): unset = nothing
+    std::function<void(Part&, float offset)> explodePart;
+    // HighLogic.CurrentGame.CurrenciesAvailable (Vessel.Update, Vessel.cs:3002): unset = true
+    std::function<bool()> currenciesAvailable;
     // ShipConstruction.CalculateCraftSize (Vessel.UpdateVesselSize): unset = vesselSize stays
     std::function<Vector3f(const std::vector<Part*>&, Part*)> calculateCraftSize;
 };
 
-// FlightGlobals members the vessel model needs (WP-19 owns FlightGlobals.cs; the WP-08 shim has only getMainBody). One registry per
-// process, like the C# statics. Same names as FlightGlobals.
-struct FlightRegistry {
-    static inline std::vector<Vessel*> Vessels;       // FlightGlobals.Vessels
-    static inline std::vector<Vessel*> VesselsLoaded;  // FlightGlobals.VesselsLoaded
-    static inline std::vector<Vessel*> VesselsUnloaded;
-    static inline Vessel* ActiveVessel = nullptr;      // FlightGlobals.ActiveVessel
-    static inline bool ready = false;                  // FlightGlobals.ready
-
-    static void AddVessel(Vessel* v);                  // FlightGlobals.AddVessel (:1005): appends, registers the persistentId
-    static void RemoveVessel(Vessel* v);               // FlightGlobals.RemoveVessel
-    static void SortVessel(Vessel* v, bool loaded);    // FlightGlobals.SortVessel
-    static Vessel* FindVessel(const Guid& id);         // FlightGlobals.FindVessel(Guid)
-    static Part* FindPartByID(uint32_t flightID);      // FlightGlobals.FindPartByID
-    static void Clear();                               // tests: forget everything
-    static const std::vector<CelestialBody*>& Bodies();  // FlightGlobals.Bodies: FlightGlobals::bodies, else the save environment's list
-};
+// FlightGlobals is the one flight-scene registry (ksp/celestial/flight_globals.hpp, WP-19a). `FlightRegistry` was WP-14's subset of it and
+// is kept as an alias so that the code written against it keeps compiling. FlightRegistry::Clear() resets the registry (tests).
+using FlightRegistry = FlightGlobals;
 
 // FlightGlobals.getAltitudeAtPos / getUpAxis / getStaticPressure(pos, body) (FlightGlobals.cs:1406-1495), the statics Vessel.cs uses
 namespace FlightMath {
@@ -195,7 +200,7 @@ public:
     Part* rootPart = nullptr;
     uint32_t referenceTransformId = 0;
     uint32_t referenceTransformIdRecall = 0;
-    VesselPrecalculate precalc;
+    VesselPrecalculate precalc{this};  // Vessel.precalc (VesselPrecalculate component, WP-19a)
     std::unique_ptr<OrbitDriver> orbitDriver;
     PatchedConicSolver* patchedConicSolver = nullptr;  // attached by AttachPatchedConicsSolver (WP-08 owns the class; set by the host)
     FlightCtrlState ctrlState;
@@ -211,6 +216,7 @@ public:
     ProtoVessel* protoVessel = nullptr;
     bool loaded = false;
     bool easingInToSurface = false;
+    double easeInMultiplier = 1.0;  // Vessel.cs:236 (FlightGlobals.ToggleVesselEaseIn)
     double distanceTraveled = 0.0;
     Vector3f vesselSize;
     AltimeterDisplayState altimeterDisplayState = AltimeterDisplayState::DEFAULT;
@@ -517,9 +523,18 @@ public:
     // IOrbitDriverVessel for OrbitDriver (OrbitDriver.cs): the interface names CoMD() / velocityD() clash with the fields
     IOrbitDriverVessel& OrbitDriverView() { return *orbitDriverView_; }
     // IFlightVessel for TimeWarp's FlightGlobals.ActiveVessel / VesselsLoaded (WP-10): the interface names altitude() / geeForce() /
-    // srf_velocity() clash with the fields and orbit() returns Orbit* there, so it is an adapter like OrbitDriverView. WP-19 merges
-    // FlightRegistry and FlightGlobals; until then the host registers FlightView() in FlightGlobals::ActiveVessel / VesselsLoaded.
+    // srf_velocity() clash with the fields and orbit() returns Orbit* there, so it is an adapter like OrbitDriverView. Since WP-19a the registry
+    // (FlightGlobals) refreshes FlightGlobals::ActiveVesselView / VesselsLoadedView from it on every registry change.
     IFlightVessel& FlightView() { return *flightView_; }
+
+    // ---- the MonoBehaviour tick (WP-19a; Vessel.cs:2730-2790, 2990-3103, 3742) --------------------------------------------------------
+    void FixedUpdate();                                            // :2730 UpdateCaches + the ignore-frame counters
+    void CheckKill();                                              // :2746
+    void Update();                                                 // :2990 mission time, load / unload by range, autopilot
+    void LateUpdate();                                             // :3055 (situation, g / pressure warning thresholds; AddRBAnchor is the physics seam)
+    void OffsetVelocity(const Vector3d& correction);               // :3742 (through env.offsetVelocity)
+    // Krakensbane.GetFrameVelocity() (env.krakensbaneFrameVelocity when set)
+    Vector3d FrameVelocity() const;
 
     // ---- staging and vessel splitting (WP-16; Vessel.cs:2130-2153, and the Vessel components Part.decouple / Couple / Undock create) ----
     void ClearStaging();                                           // :2130 (every part's stack icon is removed, onVesselClearStaging)
