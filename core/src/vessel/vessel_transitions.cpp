@@ -13,6 +13,7 @@
 #include "ksp/save/game.hpp"
 #include "ksp/save/save_environment.hpp"
 #include "ksp/vessel/vessel.hpp"
+#include "ksp/input/flight_input_handler.hpp"
 
 namespace ksp {
 
@@ -251,6 +252,7 @@ void Vessel::MakeInactive() {
 // Vessel.cs:2356
 void Vessel::GoOnRails() {
     if (packed) return;
+    precalc.GoOnRails();
     if (env.precalcGoOnRails) env.precalcGoOnRails(*this);
     for (auto& m : vesselModules) m->OnGoOnRails();
     GE::onVesselGoOnRails.Fire(this);
@@ -282,6 +284,7 @@ void Vessel::GoOffRails() {
     vesselSpawning = false;
     skipGroundPositioningForDroppedPart = false;
     physicsHoldLock_ = false;  // RemovePhysicsHoldLock
+    precalc.GoOffRails();
     if (env.precalcGoOffRails) env.precalcGoOffRails(*this);
     // FlightGlobals.RefFrameIsRotating (FlightGlobals.cs:224): currentMainBody.rotates && currentMainBody.inverseRotation, with
     // currentMainBody the active vessel's body (this vessel's when there is no active vessel)
@@ -308,6 +311,10 @@ void Vessel::GoOffRails() {
     } else {
         int num2 = accelSmoothingLength_;
         while (num2-- > 0) acceleration = graviticAcceleration;
+    }
+    if (FlightRegistry::ActiveVessel == this) {  // Vessel.cs:2480-2488
+        if (situation == Situations::PRELAUNCH) FlightInputHandler::SetLaunchCtrlState();
+        else FlightInputHandler::ResumeVesselCtrlState(this);
     }
     GE::onVesselGoOffRails.Fire(this);
 }

@@ -92,8 +92,8 @@ struct Env {
         TimeWarp::fetch = nullptr;
         TimeWarp::environment = nullptr;
         FlightGlobals::ready = false;
-        FlightGlobals::ActiveVessel = nullptr;
-        FlightGlobals::VesselsLoaded.clear();
+        FlightGlobals::ActiveVesselView = nullptr;
+        FlightGlobals::VesselsLoadedView.clear();
         FlightGlobals::currentMainBody = nullptr;
         GameSettings::ORBIT_WARP_DOWN_AT_SOI = true;
         GameSettings::SHOW_PWARP_WARNING = true;
@@ -380,8 +380,8 @@ TEST_CASE("TimeWarp.SetRate: landed vessel passes every rate, locks controls abo
     pad.body = kerbin;
     pad.landed = true;
     pad.PlaceAt(67.0);
-    FlightGlobals::ActiveVessel = &pad;
-    FlightGlobals::VesselsLoaded = {&pad};
+    FlightGlobals::ActiveVesselView = &pad;
+    FlightGlobals::VesselsLoadedView = {&pad};
     int rateEvents = 0;
     const auto listener = events::EventVoid::OnEvent::Lambda(&rateEvents, [&rateEvents]() { ++rateEvents; });
     GameEvents::onTimeWarpRateChanged.Add(listener);
@@ -432,8 +432,8 @@ TEST_CASE("TimeWarp.getMaxOnRailsRateIdx: atmosphere, acceleration, ladder, surf
     KerbinTerrain terrain(kerbin);
     StubVessel v;
     v.body = kerbin;
-    FlightGlobals::ActiveVessel = &v;
-    FlightGlobals::VesselsLoaded = {&v};
+    FlightGlobals::ActiveVesselView = &v;
+    FlightGlobals::VesselsLoadedView = {&v};
     ClearToSaveStatus reason = ClearToSaveStatus::CLEAR;
 
     SUBCASE("rate 0 is never limited") {
@@ -467,7 +467,7 @@ TEST_CASE("TimeWarp.getMaxOnRailsRateIdx: atmosphere, acceleration, ladder, surf
         eva.body = kerbin;
         eva.eva = true;
         eva.ladder = true;
-        FlightGlobals::VesselsLoaded = {&v, &eva};
+        FlightGlobals::VesselsLoadedView = {&v, &eva};
         v.PlaceAt(100000.0);
         CHECK(w.tw.getMaxOnRailsRateIdx(4, true, reason) == 0);
         CHECK(reason == ClearToSaveStatus::NOT_WHILE_ON_A_LADDER);
@@ -502,8 +502,8 @@ TEST_CASE("TimeWarp.getMaxOnRailsRateIdx: altitude look-ahead on a 100 km circul
     KerbinTerrain terrain(kerbin);
     StubVessel v;
     v.body = kerbin;
-    FlightGlobals::ActiveVessel = &v;
-    FlightGlobals::VesselsLoaded = {&v};
+    FlightGlobals::ActiveVesselView = &v;
+    FlightGlobals::VesselsLoadedView = {&v};
     ClearToSaveStatus reason = ClearToSaveStatus::CLEAR;
 
     SUBCASE("circular 100 km, PeAltitude mode: peA 100 km > minPeAllowed (70 km) + 250 m: no altitude limiting") {
@@ -597,8 +597,8 @@ TEST_CASE("TimeWarp.FixedUpdate: entering the atmosphere under rails warp drops 
     v.body = kerbin;
     v.landed = true;
     v.PlaceAt(67.0);
-    FlightGlobals::ActiveVessel = &v;
-    FlightGlobals::VesselsLoaded = {&v};
+    FlightGlobals::ActiveVesselView = &v;
+    FlightGlobals::VesselsLoadedView = {&v};
     TimeWarp::SetRate(4, true);  // 100x while landed and still
     REQUIRE(TimeWarp::CurrentRate() == 100.0f);
     int rateEvents = 0;
@@ -629,8 +629,8 @@ TEST_CASE("TimeWarp.Update: physics warp (LOW) and rails (HIGH) mode switching, 
     KerbinTerrain terrain(kerbin);
     StubVessel v;
     v.body = kerbin;
-    FlightGlobals::ActiveVessel = &v;
-    FlightGlobals::VesselsLoaded = {&v};
+    FlightGlobals::ActiveVesselView = &v;
+    FlightGlobals::VesselsLoadedView = {&v};
 
     SUBCASE("flying in the atmosphere -> LOW; reaching vacuum -> HIGH") {
         v.PlaceAt(10000.0);
@@ -777,8 +777,8 @@ TEST_CASE("TimeWarp.WarpTo: autoWarpTo plans, warps and warps down to the target
     o.UpdateFromUT(0.0);
     v.orb = &o;
     v.PlaceAt(700000.0);
-    FlightGlobals::ActiveVessel = &v;
-    FlightGlobals::VesselsLoaded = {&v};
+    FlightGlobals::ActiveVesselView = &v;
+    FlightGlobals::VesselsLoadedView = {&v};
     TimeWarpEnvironment& e = env.twEnv;
 
     const double ut0 = Planetarium::GetUniversalTime();
@@ -845,8 +845,8 @@ TEST_CASE("TimeWarp.CancelAutoWarp: stop key and delayed lock release") {
     o.UpdateFromUT(0.0);
     v.orb = &o;
     v.PlaceAt(700000.0);
-    FlightGlobals::ActiveVessel = &v;
-    FlightGlobals::VesselsLoaded = {&v};
+    FlightGlobals::ActiveVesselView = &v;
+    FlightGlobals::VesselsLoadedView = {&v};
     TimeWarpEnvironment& e = env.twEnv;
 
     w.tw.WarpTo(Planetarium::GetUniversalTime() + 1.0e6);

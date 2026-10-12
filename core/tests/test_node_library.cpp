@@ -174,11 +174,13 @@ struct Fixture55 : Fixture54 {
 };
 
 struct World {
-    std::vector<std::unique_ptr<Vessel>> vessels;
     std::vector<std::unique_ptr<Part>> parts;
     std::vector<std::unique_ptr<ProtoVessel>> protos;
     std::map<Vessel*, json> resources;
     std::map<uint32_t, Vessel*> byPid;
+    // declared last = destroyed first: ~Vessel (Vessel.OnDestroy -> FlightGlobals.RemoveVessel) reads its parts' persistent ids and its proto vessel,
+    // so they must outlive it (they were freed first before: a use-after-free that ASan reports, benign on a lucky heap)
+    std::vector<std::unique_ptr<Vessel>> vessels;
 };
 
 // a VESSEL node for a ProtoVessel: pid, one PART per entry of `parts` (resource lists) (synthetic input of the algorithms)
