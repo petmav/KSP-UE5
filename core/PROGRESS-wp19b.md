@@ -54,3 +54,6 @@ Not touched: WP-20c's files (load graph, Cut / Merge internals). Local commits o
   setRotatingFrame / setDominantBody); the WP-20b files still 57 / 0.
 - docs: header comments (vessel_physics.hpp frame paragraph: the decided policy; krakensbane / reference_frame / orbit_physics_manager /
   flight_globals pointers), README (bubble paragraph, unit row, layout rows), STATUS row 51 + WP-19b section.
+- verification: fresh MSVC build (rm -rf core/build, run_tests.ps1 -Fresh): configure 3.3 s, build 289.5 s, ctest 38/38 (508 s); unit random
+  order seeds 11 and 27: 840/840, 1,385,155 assertions each; WSL g++ 13.3 ASan+UBSan+LSan whole unit binary: 840/840, 1,385,139 assertions,
+  no report, no warning in the new files. Done.
