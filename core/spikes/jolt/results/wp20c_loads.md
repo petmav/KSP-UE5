@@ -18,7 +18,7 @@ for 8 s; per attach joint the force and torque magnitudes averaged over the last
 | PhysProf-S | 0 | tree | 14 | 0.0002 / 0.0021 / 0.0053 (spike tree 0.000 / 0.002 / 0.006) | 0.027 / 1.000 | 0.0448 (spike 0.045) | 0.0026 |
 | PhysProf-M2 | 0 | tree | 54 | 0.0002 / 0.0005 / 0.0007 (0.000 / 0.001 / 0.001) | 0.007 / 0.992 | 0.0581 (0.058) | 0.0177 |
 | PhysProf-M2-AS | 152 | graph | 26 | 0.1940 / 0.6271 / 0.6700 (spike graph 0.194 / 0.627 / 0.670) | 0.996 / 0.999 | 0.0389 (0.039) | 0.0407 |
-| PhysProf-L2-AS | 456 | graph | 86 | 0.1987 / 0.6186 / 0.8979 (0.198 / 0.619 / 0.898) | 0.993 / 1.000 | 0.0458 (0.046) | 0.1340 |
+| PhysProf-L2-AS | 456 | graph | 86 | 0.1987 / 0.6186 / 0.8977 (0.198 / 0.619 / 0.898) | 0.993 / 0.999 | 0.0458 (0.046) | 0.1340 |
 
 - Tree craft: the production loads ARE the articulated impulses (the gate's 1 %: max 0.53 % on S, 0.07 % on M2).
 - Strutted craft: the elastic split of the graph solve is not PhysX's (median ~20 %); there is no exact reference (PHYSICS-SPIKE.md R1: PhysX's

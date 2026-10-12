@@ -36,11 +36,21 @@ momentum conservation. Gate: core/PHYSICS-SPIKE.md section 7 row WP-20c, analyti
   M2 Mainsail 29.0 g (spike 29.0), M2-AS (graph) radial decoupler 25.14 g (spike graph 25.1), each the joint and load the 1-g static
   solve predicts (within 0.1 %). Events: decouple / ejection hooks / couple / undock / Die, momentum 1e-6. Break chain with and without
   IgnoreCollisionsFrames. L2-AS staging: 48 decouplers, one rebind 1.05 ms (RelWithDebInfo). Determinism 1/1/2/4/8 threads with breaks.
-- finding: Jolt's manifold reduction merges the contacts of different sub-shapes of a body pair and reports the first sub-shape only:
-  vessel bodies now opt out (CompoundBodyDesc::useManifoldReduction = false when loads are on) so every touching part is a support.
-  The PhysProf crafts still stand on ONE proxy box (the core Mainsail's): L2-AS rocks on it and breaks 10 % below its static prediction.
+- finding: Jolt's manifold reduction merges the contacts of different sub-shapes of a body pair and reports the first sub-shape only.
+  First fix (vessel bodies without manifold reduction) changed the contact solve: the g++ ASan binary's PhysProf-S then crept 1.4 mm in
+  10 s on the pad (WP-20b gate 1e-4 m). Final fix (148d6a84): the supports come from OnContactValidate (per sub-shape hit, before the
+  merge), manifold reduction stays on: WP-20b's contact numbers are back bit for bit; a compound test checks both resting boxes are seen.
+  The PhysProf crafts stand on ONE proxy box (the core Mainsail's): L2-AS rocks on it, its ramp breaks a joint 1.3 % below the static
+  prediction of another one.
 - finding: the 5 cm placement drop of the scenarios breaks L2-AS's Mainsail joint on impact (a one-step acceleration spike in the rigid
   model): the scenarios use the spike's 60-tick grace (KSP: Vessel.ignoreCollisionsFrames = 60 after its exact landed placement).
 - finding: autoStrutExcludeParent defaults to true (Part.cs:829): the Heaviest anchor of a part on the heaviest part is the next one.
 - check_cites exact over vessel_physics*.cpp, structure_graph.cpp, part_decouple.cpp, vessel_motion.cpp: 66 cites, 0 mismatches (3
   older WP-16 cites in part_decouple.cpp fixed on the way; aliases CycleAutoStruts / HandleBreak / StartStaging added).
+- perf (Release, pinned): the load layer costs ~90 ns (tree) / ~200 ns (graph) per part per tick: L2-AS +0.04 / +0.09 ms on 0.35 ms;
+  factorisation 0.24 / 1.14 / 2.2 / 6.4 ms at 153 / 457 / 1,027 / 2,053 parts. Body-frame demands, cached model and scratch buffers did not
+  move the numbers beyond the machine's noise (the graph's triangular solves dominate). spikes/jolt/results/wp20c_loads.md.
+- articulated comparison (wp20c_loads, the spike's articulated model in the same process; JoltInit / JoltShutdown around it): tree craft
+  force within 0.53 % (S) / 0.07 % (M2) of the articulated impulses; strutted craft = the spike's graph solve (median ~20 % off PhysX: R1).
+- verification: full ctest 38/38 (before the listener change; rerun after the docs), unit random order 11 / 27: 841 / 841 cases,
+  1,395,241 assertions each (after the listener change).
