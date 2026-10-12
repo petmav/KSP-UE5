@@ -30,6 +30,7 @@ sys.path.insert(0, HERE)
 import eva_tables  # noqa: E402
 import eva_ref_motion as motion  # noqa: E402
 import eva_ref_conditions as cond  # noqa: E402
+import eva_ref_misc as misc  # noqa: E402
 from eva_math import ROTATIONS  # noqa: E402
 
 
@@ -57,6 +58,14 @@ def main():
     out["pack"] = motion.pack_family()
     out["conditions"] = cond.conditions_family()
     out["decisions"] = cond.decisions_family()
+    out["helmet"] = misc.helmet_family()
+    out["visor"] = misc.visor_family()
+    out["impulse"] = misc.impulse_family()
+    out["lowg"] = misc.lowg_family()
+    out["clamber"] = misc.clamber_family()
+    out["seatcam"] = misc.seatcam_family()
+    out["rules"] = misc.rules_family()
+    out["ladder"] = misc.ladder_family()
     json.dump(out, sys.stdout, indent=None, separators=(",", ":"))
     sys.stdout.write("\n")
 

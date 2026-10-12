@@ -209,3 +209,8 @@ ROTATIONS = [
     (0.0, 0.0, 1.0, 0.0),
     (-0.5, 0.5, -0.5, 0.5),
 ]
+
+
+def F3(t):
+    """a literal vector rounded to float32 (inputs are float32 values)"""
+    return tuple(f32(x) for x in t)

@@ -5,7 +5,7 @@ event's OnCheckCondition delegate (or runs RunEvent and reads the target state).
 comparisons follow the Mono rule (comparisons happen in double; `(double)f` casts are exact widenings).
 """
 from eva_common import cfg_float
-from eva_math import ROTATIONS, axes, bits, dot, f32, magnitude, normalize, sign, sqr_magnitude, v_approx_zero, vmul
+from eva_math import F3, ROTATIONS, axes, bits, dot, f32, magnitude, normalize, sign, sqr_magnitude, v_approx_zero, vmul
 from eva_ref_motion import LCG, b3, rnd_vec
 
 HALF_HEIGHT = f32(0.269 - float(f32(0.01)) * 2.0)   # halfHeight -= Physics.defaultContactOffset * 2f (:3817)
@@ -94,7 +94,7 @@ def make_world(rng):
     gees = [1.0, 0.5, 0.17, 0.1700000017881393, 0.3, 0.0, 2.5, 0.169, 0.171]
     ts = [0.0, 0.05, 0.1, 0.1000000015, 0.2, 0.25, 0.3, 0.5, 0.6, 1.0, 2.0, 5.0]
     w = {}
-    w["tgt"] = rng.pick([(0.0, 0.0, 0.0), (0.0, 0.0, 1.0), (0.0, 0.0, 0.0), rnd_vec(rng), (0.0, 0.0, 3e-6)])
+    w["tgt"] = rng.pick([F3(v) for v in ((0.0, 0.0, 0.0), (0.0, 0.0, 1.0), (0.0, 0.0, 0.0), (0.0, 0.0, 3e-6))] + [rnd_vec(rng)])
     w["dh"] = f32(rng.pick([0.0, 4.9, 5.0, 29.9, 30.0, 59.9, 60.0, 61.0, -61.0, -29.0, 100.0, -4.0, f32(rng.uni(-120, 120))]))
     w["ldh"] = f32(rng.pick([0.0, 10.0, -10.0, 20.0, -25.0, 29.0]))
     w["gee"] = rng.pick(gees)
@@ -120,7 +120,7 @@ def make_world(rng):
     w["cl"] = bool(rng.next() % 4 != 0)
     w["clrot"] = rng.next() % len(ROTATIONS)
     w["inv"] = bool(rng.next() & 1)
-    w["ltr"] = rng.pick([(0.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, -1.0, 0.0), (0.0, 0.0, 1.0), rnd_vec(rng), (1.0, 0.0, 0.0), (0.0, 0.31, 0.0), (0.0, 0.29, 0.0)])
+    w["ltr"] = rng.pick([F3(v) for v in ((0.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, -1.0, 0.0), (0.0, 0.0, 1.0), (1.0, 0.0, 0.0), (0.0, 0.31, 0.0), (0.0, 0.29, 0.0))] + [rnd_vec(rng)])
     w["chk"] = bool(rng.next() & 1)
     w["ccl"] = bool(rng.next() & 1)
     w["cdn"] = bool(rng.next() & 1)
