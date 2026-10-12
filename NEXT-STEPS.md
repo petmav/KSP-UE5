@@ -168,7 +168,6 @@ Recommendation: WP-20 builds a REDUCED rigid-body model on Jolt v5.6.0 inside ks
 - `core/data/` needs: GameVariables prefab curves, KSC facility `levelCost`, `SiteGeneratorInfo`, CrewGenerator name tables, a career save, PQS LOD settings beyond min/max level (re-run `tools/wp11/extract_terrain.py` on KSP-dev), ocean spheres; in-game captures: per-tick VesselPrecalculate (gAccel, integrationAccel, drift), engine/part rotations + Quaternion products (WP-17b residual), quad set + one quad mesh at the pad (WP-12a), Euler/LookRotation (WP-24/40).
 - `kspcore.lib` now links Jolt (AVX2 CPU needed): the Unreal bridge in `ue5/` has not been touched or rebuilt. `SHA256SUMS` of the vendored Jolt does not verify on a Windows checkout with `core.autocrlf=true`.
 - Cite audit (`core/tools/wp28/cite_audit_2026-10-11.txt`) still has hundreds of off-by-k mismatches outside touched files; WP-11's `pqs_mods.cpp` has 4.
-- A stray file `D:\scratchpad_run.log` outside the repo (left by an agent, harmless).
 
 ### Next (in order)
 1. User confirms the reduced rigid-body model -> WP-20b, 20c, 20d, 20e, WP-19b, WP-12b (Opus `optimizer` for 20d/20e; Sonnet otherwise).
