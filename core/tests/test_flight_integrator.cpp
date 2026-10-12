@@ -446,3 +446,202 @@ TEST_CASE("WP-20d SoA kernel against KSP's own numbers: the C10 in-game capture 
     CHECK(nParts > 4000);
     CHECK(nSweep > 24000);
 }
+
+// ===================================================================================================================== flights
+
+namespace {
+
+// One launch from the pad through the whole flight tick (bubble + FlightIntegrator + module slot): settle, ignite the first stage at full
+// throttle, `frames` ticks of flight. Per frame since ignition (0 = the ignition tick) after the tick: the root part's altitude (Vessel.altitude
+// of the capture), the FlightIntegrator's smoothed speed and Mach.
+struct Flight {
+    std::vector<double> alt, spd, mach, aoa;
+    double padAlt = 0.0;  // root altitude at ignition
+    uint64_t hash = 0;
+    AeroKernelStats stats;
+    std::vector<AeroPartOutputs> endAero;
+    std::vector<double> endTemp;
+    int parts = 0, engines = 0;
+    double msTick = 0.0, msFi = 0.0;  // per flight tick: the whole tick, the FlightIntegrator slot
+    double massStart = 0.0, massEnd = 0.0;
+};
+
+Flight Launch(const std::string& craft, AeroKernel kernel, int frames, int settle = 100) {
+    using Clock = std::chrono::steady_clock;
+    Flight out;
+    wp20b::World w(true);
+    wp20d::PadScene pad(w);
+    pad.s.bubble.FlightIntegrators().kernel = kernel;
+    double fiMs = 0.0;
+    const std::function<void()> fiSlot = FlightScene::hooks.afterFlightIntegrator;
+    FlightScene::hooks.afterFlightIntegrator = [&fiMs, fiSlot] {
+        const auto t0 = Clock::now();
+        fiSlot();
+        fiMs += std::chrono::duration<double, std::milli>(Clock::now() - t0).count();
+    };
+    auto v = w.Craft(craft);
+    pad.Place(*v);
+    pad.s.Start(*v);
+    out.parts = static_cast<int>(v->parts.size());
+    double tickMs = 0.0;
+    for (int k = 0; k < settle + frames; ++k) {
+        if (k == settle) {
+            out.engines = static_cast<int>(wp20d::IgniteFirstStage(*v));
+            out.padAlt = pad.RootAltitude(*v);
+            out.massStart = v->totalMass;
+            fiMs = 0.0;
+        }
+        const auto t0 = Clock::now();
+        pad.s.Tick();
+        if (k >= settle) {
+            tickMs += std::chrono::duration<double, std::milli>(Clock::now() - t0).count();
+            const FlightIntegrator* fi = pad.s.bubble.FlightIntegrators().Find(*v);
+            out.alt.push_back(pad.RootAltitude(*v));
+            out.spd.push_back(fi != nullptr ? fi->atm.spd : 0.0);
+            out.mach.push_back(fi != nullptr ? fi->atm.mach : 0.0);
+            // the angle between the vessel's long axis and its air-relative velocity (deg)
+            const Vector3d up = Vector3d(v->vesselTransform.rotation * Vector3f::up());
+            const Vector3d vel = fi != nullptr ? Vector3d(fi->Vel) : Vector3d();
+            out.aoa.push_back(vel.magnitude() > 1.0 ? std::acos(std::max(-1.0, std::min(1.0, Vector3d::Dot(up, vel) / (up.magnitude() * vel.magnitude())))) * 57.29577951308232 : 0.0);
+        }
+    }
+    out.msTick = tickMs / frames;
+    out.msFi = fiMs / frames;
+    out.massEnd = v->totalMass;
+    out.hash = pad.s.world.StateHash();
+    const FlightIntegrator* fi = pad.s.bubble.FlightIntegrators().Find(*v);
+    REQUIRE(fi != nullptr);
+    out.stats = fi->aeroStats;
+    for (Part* p : v->parts) {
+        out.endAero.push_back(AeroPartOutputs::Capture(*p, AeroForces{}));
+        out.endTemp.push_back(p->fields.temperature);
+        out.endTemp.push_back(p->fields.skinTemperature);
+    }
+    return out;
+}
+
+}  // namespace
+
+TEST_CASE("WP-20d SoA == exact over whole flights from the pad: S, M2-AS, L2-AS, every output of every part every tick; the same end state with either kernel") {
+    if (!wp20b::GameAvailable()) return;
+    uint64_t partTicks = 0;
+    for (const char* craft : {"PhysProf-S", "PhysProf-M2-AS", "PhysProf-L2-AS"}) {
+        const int frames = 1500;  // 30 s of powered flight (the spike's window)
+        const Flight both = Launch(craft, AeroKernel::Both, frames);
+        const Flight exact = Launch(craft, AeroKernel::Exact, frames);
+        const Flight soa = Launch(craft, AeroKernel::SoA, frames);
+        size_t sameParts = 0;
+        for (size_t i = 0; i < exact.endAero.size(); ++i) sameParts += exact.endAero[i].BitEqual(soa.endAero[i]);
+        bool sameTemps = exact.endTemp.size() == soa.endTemp.size();
+        for (size_t i = 0; sameTemps && i < exact.endTemp.size(); ++i) sameTemps = SameBits(exact.endTemp[i], soa.endTemp[i]);
+        MESSAGE(std::string(craft) << " (" << both.parts << " parts): Both compared " << both.stats.compared << " part-ticks (of " << both.stats.partTicks
+                      << ", SoA-covered " << both.stats.covered << "), mismatches " << both.stats.mismatches
+                      << (both.stats.firstMismatch.empty() ? "" : " first " + both.stats.firstMismatch) << "; Exact vs SoA: state hash "
+                      << std::string(exact.hash == soa.hash ? "equal" : "DIFFERENT") << ", end aero outputs equal on " << sameParts << " / " << exact.endAero.size()
+                      << " parts, temperatures " << std::string(sameTemps ? "equal" : "DIFFERENT") << "; altitude after 30 s " << exact.alt.back()
+                      << " m; ms per tick: exact " << exact.msTick << " (FI " << exact.msFi << "), SoA " << soa.msTick << " (FI " << soa.msFi << ")");
+        CHECK(both.stats.mismatches == 0);
+        CHECK(both.stats.compared == both.stats.partTicks);
+        CHECK(both.stats.covered == both.stats.partTicks);  // no part fell back to the exact port
+        CHECK(both.stats.partTicks == both.stats.ticks * static_cast<uint64_t>(both.parts));  // every part of the Integrate order, every pass
+        CHECK(both.stats.ticks >= static_cast<uint64_t>(frames));
+        CHECK(exact.hash == soa.hash);
+        CHECK(exact.hash == both.hash);
+        CHECK(sameParts == exact.endAero.size());
+        CHECK(sameTemps);
+        CHECK(exact.alt.back() > exact.padAlt + 1000.0);
+        partTicks += both.stats.compared;
+    }
+    MESSAGE(partTicks << " part-ticks compared in total, 0 mismatches");
+}
+
+namespace {
+
+// C10's flight states of one craft: the frame, altitude, FlightIntegrator speed and Mach at each threshold (alt_* / mach_*)
+struct C10State {
+    std::string state;
+    int frame = 0;
+    double altitude = 0.0, spd = 0.0, mach = 0.0, aoa = 0.0;
+};
+std::vector<C10State> C10States(const std::string& craft) {
+    std::ifstream f(std::string(KSPCORE_HARNESS_DIR) + "/captures/out2/aero_forces_vessel.json", std::ios::binary);
+    REQUIRE(f.good());
+    const json doc = json::parse(f);
+    const CaptureTable t(doc, "states");
+    std::vector<C10State> out;
+    for (const json& r : *t.rows) {
+        if (t.S(r, "craft") != craft) continue;
+        C10State s;
+        s.state = t.S(r, "state");
+        s.frame = static_cast<int>(r.at(t.C("frame")).get<int64_t>());
+        s.altitude = t.Dd(r, "altitude");
+        s.spd = t.Dd(r, "spd");
+        s.mach = t.Dd(r, "mach");
+        s.aoa = static_cast<double>(t.F(r, "aoa_deg"));
+        out.push_back(s);
+    }
+    return out;
+}
+
+}  // namespace
+
+TEST_CASE("WP-20d ascent from the pad vs KSP's own ascent (C10 in-game states): speed and Mach over altitude, climb times, up to Mach 1") {
+    if (!wp20b::GameAvailable()) return;
+    // KSP's C10 ascent (harness/captures/out2/aero_forces_vessel.json "states"): the same crafts, first-stage engines at full throttle,
+    // vertical, SAS on; a state is the first physics frame at an altitude (1 / 2.5 / 5 km) or Mach number (0.5 / 1). This tick has no SAS
+    // (WP-24's FeedInputFeed is not wired): the comparison stops where KSP's own flight still had AoA < 1 deg and ours flies straight
+    // (S and M2 lose their attitude past Mach 1 without SAS; KSP's S did too, with it). The capture's frame 0 is not ours (the offset is
+    // reported below), so only offset-free quantities are gated: the speed at an altitude, the altitude at a Mach number, the frames
+    // between two states.
+    struct Window {
+        const char* craft;
+        double maxAlt;
+        double tolSpeed, tolAlt, tolFrames;
+    };
+    // windows: as long as our AoA stays small (M2 to Mach 1 / 4.7 km, L2-AS to 5 km, S to 1 km: past them the crafts without SAS turn
+    // away, S tumbling at 9 s as in KSP); tolerances on the speed at an altitude, the altitude at a Mach number, the frames between states
+    for (const Window wd : {Window{"PhysProf-M2", 4700.0, 0.01, 0.015, 0.025}, Window{"PhysProf-L2-AS", 5100.0, 0.01, 0.015, 0.025},
+                            Window{"PhysProf-S", 1100.0, 0.01, 0.015, 0.025}}) {
+        const std::vector<C10State> ksp = C10States(wd.craft);
+        REQUIRE(!ksp.empty());
+        const Flight f = Launch(wd.craft, AeroKernel::SoA, 2200);
+
+        int prevKsp = -1, prevOurs = -1;
+        double offset = 0.0;
+        int n = 0;
+        for (const C10State& k : ksp) {
+            const bool isAlt = k.state.rfind("alt_", 0) == 0, isMach = k.state.rfind("mach_", 0) == 0;
+            if (!(isAlt || isMach) || k.altitude > wd.maxAlt) continue;
+            const double threshold = isAlt ? std::stod(k.state.substr(4)) : std::stod(k.state.substr(5));
+            int i = -1;
+            for (size_t j = 0; j < f.alt.size() && i < 0; ++j)
+                if ((isAlt ? f.alt[j] : f.mach[j]) >= threshold) i = static_cast<int>(j);
+            REQUIRE(i >= 0);
+            const size_t u = static_cast<size_t>(i);
+            double maxAoa = 0.0;  // above 30 m/s (the angle of a slow vessel is the direction of its small lateral speeds)
+            for (size_t j = 0; j <= u; ++j)
+                if (f.spd[j] > 30.0) maxAoa = std::max(maxAoa, f.aoa[j]);
+            const double dSpd = f.spd[u] / k.spd - 1.0;
+            const double dAlt = f.alt[u] / k.altitude - 1.0;
+            MESSAGE(std::string(wd.craft) << " " << k.state << ": KSP frame " << k.frame << " alt " << k.altitude << " spd " << k.spd << " mach " << k.mach << " aoa "
+                             << k.aoa << " | ours frame " << i << " alt " << f.alt[u] << " spd " << f.spd[u] << " mach " << f.mach[u]
+                             << " max aoa so far " << maxAoa << " | speed " << dSpd * 100.0 << " %, altitude " << dAlt * 100.0 << " %");
+            if (isAlt) CHECK(std::fabs(dSpd) < wd.tolSpeed);
+            else CHECK(std::fabs(dAlt) < wd.tolAlt);
+            if (prevKsp >= 0 && k.frame - prevKsp >= 100) {  // intervals of 2 s or more (shorter ones are dominated by the 1-frame resolution)
+                const double dFrames = static_cast<double>(i - prevOurs) / static_cast<double>(k.frame - prevKsp) - 1.0;
+                MESSAGE("    frames since the previous state: KSP " << (k.frame - prevKsp) << ", ours " << (i - prevOurs) << " (" << dFrames * 100.0 << " %)");
+                CHECK(std::fabs(dFrames) < wd.tolFrames);
+            }
+            prevKsp = k.frame;
+            prevOurs = i;
+            offset += static_cast<double>(i - k.frame);
+            ++n;
+            CHECK(maxAoa < 3.0);  // ours drifts off the velocity from Mach ~0.9 without SAS (M2: 0.58 deg at 2.5 km, 2.6 deg at Mach 1)
+        }
+        CHECK(n >= 2);
+        MESSAGE(std::string(wd.craft) << ": " << n << " states compared; our frames run " << offset / n
+                         << " frames behind KSP's (a constant: the capture's frame 0 is not our ignition tick); root altitude at ignition "
+                         << f.padAlt << " m (KSP's pad surface is ~7.6 m above the PQS terrain the craft stands on here: PhysProf-S's root is at 79.29 m in C6)");
+    }
+}
