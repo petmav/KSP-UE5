@@ -6,6 +6,7 @@
 #include "ksp/vessel/vessel_autopilot.hpp"
 
 #include <algorithm>
+#include <unordered_set>
 
 #include "ksp/celestial/celestial_body.hpp"
 #include "ksp/celestial/flight_globals.hpp"
@@ -160,10 +161,17 @@ Vessel::~Vessel() {
     GE::onVesselWasModified.Remove(this, &Vessel::OnVesselNamingVesselWasModified);
     GE::onCrewTransferred.Remove(this, &Vessel::onCrewTransferred);
     precalc.OnDestroy();  // VesselPrecalculate.OnDestroy (a component of the same GameObject)
+    // A destroyed Unity Part is `null` in the C# lists; here a Part freed before its Vessel (a host or test that owns them elsewhere) is gone from
+    // Part.allParts, so it is dropped from `parts` before anything reads it
+    {
+        const std::unordered_set<const Part*> live(Part::allParts.begin(), Part::allParts.end());
+        parts.erase(std::remove_if(parts.begin(), parts.end(), [&](Part* p) { return p == nullptr || live.count(p) == 0; }), parts.end());
+        if (rootPart != nullptr && live.count(rootPart) == 0) rootPart = nullptr;
+    }
     FlightRegistry::RemoveVessel(this);
     if (FlightRegistry::ActiveVessel == this) FlightRegistry::ActiveVessel = nullptr;
     for (Part* p : parts)
-        if (p != nullptr && p->vessel == this) p->vessel = nullptr;
+        if (p->vessel == this) p->vessel = nullptr;
 }
 
 // Vessel.cs:1583

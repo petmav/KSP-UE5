@@ -97,9 +97,10 @@ void FlightGlobals::AddVessel(Vessel* vessel) {
 // FlightGlobals.cs:305
 void FlightGlobals::RemoveVessel(Vessel* vessel) {
     if (!Ids().fetch) return;
-    EraseFirst(Vessels, vessel);
-    if (vessel->loaded) EraseFirst(VesselsLoaded, vessel);
-    else EraseFirst(VesselsUnloaded, vessel);
+    // The C# removes the first occurrence from the list matching `vessel.loaded`. A vessel registered twice (a host that adds what Initialize already
+    // added) or whose `loaded` flag changed without SortVessel would stay behind in a list as a dangling pointer once destroyed, so every occurrence is
+    // removed from all three lists (identical for every consistent registry)
+    for (std::vector<Vessel*>* list : {&Vessels, &VesselsLoaded, &VesselsUnloaded}) list->erase(std::remove(list->begin(), list->end(), vessel), list->end());
     Ids().persistentVesselIds.Remove(vessel->persistentId);
     for (Part* p : vessel->parts) Ids().persistentLoadedPartIds.Remove(p->fields.persistentId);
     if (vessel->protoVessel != nullptr)
