@@ -60,7 +60,7 @@ struct DriveResult {
     double vAt[4] = {}, vAtA[4] = {};               // speed at 10, 20, 30, 40 s
     double vMax = 0, vMaxA = 0, vTopAnalytic = 0;   // max reached; analytic asymptote (torque curve zero)
     double maxSlip = 0, maxPitchDeg = 0;
-    double mass = 0;
+    double mass = 0, massEff = 0;  // vessel mass; plus the wheels' I / r^2
     int motors = 0;
     bool exploded = false;
     double tickMs = 0;
@@ -71,7 +71,7 @@ struct BrakeResult {
     std::string craft, native, friction;
     double v0 = 0, distance = 0, time = 0, distanceA = 0, timeA = 0;
     double distanceLocked = 0;  // analytic, wheels locked (sliding at the friction limit)
-    double maxDecel = 0;
+    double maxDecel = 0, maxTiltDeg = 0;  // tilt: body up vs the local vertical (nose-over under hard braking)
     bool exploded = false;
 };
 BrakeResult RunBrake(spike::KspContext& ctx, spike::CraftModel& craft, RoverConfig cfg, double v0);

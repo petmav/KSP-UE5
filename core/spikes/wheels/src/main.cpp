@@ -63,6 +63,21 @@ int Trace(spike::KspContext& ctx, const Args& a) {
         if (mode == "brake" && time >= a.Num("brake-at", 12.0)) c.brake = 1.0f;
         if (mode == "rest" && a.Has("brakes")) c.brake = 1.0f;
         rv.Tick(c);
+        if (a.Has("wheel")) {  // per-tick internals of one wheel
+            const int wi = static_cast<int>(a.Num("wheel", 0));
+            if (time >= a.Num("from", 0.0) && time < a.Num("to", 1e9)) {
+                const KspWheel& w = rv.Wheel(wi);
+                const JPH::Vec3 v = rv.Velocity();
+                const JPH::DVec3 fw = rv.Forward();
+                std::printf("t %6.2f vf %6.3f | drvIn %.3f drvSt %.3f maxT %.3f inTd %.4f inTb %.3f | load %.3f V(%.3f,%.3f) w %.3f wr %.3f "
+                            "slip %.3f | Ty %.4f F(%.3f,%.3f) tf(%.3f,%.3f) adh %d Tr %.4f\n",
+                            time + cfg.dt, v.GetX() * fw.GetX() + v.GetY() * fw.GetY() + v.GetZ() * fw.GetZ(), w.driveInput, w.driveState,
+                            w.maxDriveTorque, w.block.inTd, w.block.inTb, w.block.load, w.block.V.x, w.block.V.y, w.block.w,
+                            w.block.w * w.block.radius, w.block.forwardSlip, w.block.Ty, w.block.F.x, w.block.F.y, w.tireForce.x, w.tireForce.y,
+                            w.block.isAdherent ? 1 : 0, w.block.Tr);
+            }
+            continue;
+        }
         if (t % every != 0) continue;
         const JPH::Vec3 v = rv.Velocity();
         const JPH::DVec3 fw = rv.Forward();

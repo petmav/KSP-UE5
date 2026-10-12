@@ -155,6 +155,17 @@ double RefForce(std::vector<MotorWheelRef>& refs, double v, float throttle, floa
     return f;
 }
 
+// The vessel mass plus the wheels' rotational inertia seen at the contact (sum of I / r^2, VPP Wheel.RecalculateConstants:
+// I = max(0.01, m r^2 / 2): Solver.minInertia floors the small stock wheels' inertia, Wheel.cs:76-84)
+double EffectiveMass(const Rover& rv) {
+    double m = rv.Mass();
+    for (int i = 0; i < rv.WheelCount(); i++) {
+        const KspWheel& w = rv.Wheel(i);
+        m += static_cast<double>(w.block.I) / (static_cast<double>(w.block.radius) * w.block.radius);
+    }
+    return m;
+}
+
 double SlopeAt(const Rover& rv) {
     for (int i = 0; i < rv.WheelCount(); i++)
         if (rv.Wheel(i).hit.grounded) {
@@ -288,6 +299,7 @@ DriveResult RunDrive(spike::KspContext& ctx, spike::CraftModel& craft, RoverConf
     r.native = NativeName(cfg.native);
     r.friction = cfg.friction == TireFriction::Model::Smooth ? "smooth" : "lineal";
     r.mass = rv.Mass();
+    r.massEff = EffectiveMass(rv);
     auto refs = MotorRefs(rv);
     for (const auto& m : refs) r.motors += m.motor ? 1 : 0;
     // analytic top speed: the torque curve's last key (value 0), converted from the module's (unscaled) radius
@@ -325,7 +337,7 @@ DriveResult RunDrive(spike::KspContext& ctx, spike::CraftModel& craft, RoverConf
         const double xf = (rv.Com() - x0).Dot(f0);
         // reference: same tick, same ramp, no slip (m dv/dt = sum T / r)
         const double fa = RefForce(refs, va, 1.0f, 0.0f, dt, rv.Config().gravityScale);
-        va += fa / r.mass * cfg.dt;
+        va += fa / r.massEff * cfg.dt;
         xa += va * cfg.dt;
         if (r.t5 < 0 && vf >= 5.0) r.t5 = ts;
         if (r.t5a < 0 && va >= 5.0) r.t5a = ts;
@@ -339,8 +351,7 @@ DriveResult RunDrive(spike::KspContext& ctx, spike::CraftModel& craft, RoverConf
         r.vMax = std::max(r.vMax, vf);
         r.vMaxA = std::max(r.vMaxA, va);
         for (int i = 0; i < rv.WheelCount(); i++) r.maxSlip = std::max(r.maxSlip, static_cast<double>(std::fabs(rv.Wheel(i).tireSlip.y)));
-        const Vec3 bodyUp = (rv.Craft().parts.empty() ? Vec3::sAxisY() : Vec3::sAxisY());
-        (void)bodyUp;
+        r.maxPitchDeg = std::max(r.maxPitchDeg, rv.TiltDeg());
         if (t % static_cast<int>(std::lround(0.5 / cfg.dt)) == 0) r.samples.push_back({ts, vf, va, xf, xa});
     }
     r.tickMs = tsum / std::max(1, nt);
@@ -384,8 +395,10 @@ BrakeResult RunBrake(spike::KspContext& ctx, spike::CraftModel& craft, RoverConf
             r.exploded = true;
             return r;
         }
-        const double v = vf();
-        r.maxDecel = std::max(r.maxDecel, (vPrev - v) / cfg.dt);
+        const Vec3 vv = rv.Velocity();
+        const double v = static_cast<double>(vv.GetX()) * f0.GetX() + vv.GetY() * f0.GetY() + vv.GetZ() * f0.GetZ();  // fixed axis
+        if (v > 1.0) r.maxDecel = std::max(r.maxDecel, (vPrev - v) / cfg.dt);  // excluding the final stop transient
+        r.maxTiltDeg = std::max(r.maxTiltDeg, rv.TiltDeg());
         vPrev = v;
         if (v < 0.05) {
             r.time = (k + 1) * cfg.dt;
@@ -393,20 +406,24 @@ BrakeResult RunBrake(spike::KspContext& ctx, spike::CraftModel& craft, RoverConf
             break;
         }
     }
-    // reference: brake torque through the wheels without slip (KSP's brake model; torque-limited)
+    // reference: KSP's brake torque (ramp at brakeResponse, then maxBrakeTorqueRest once brakeState >= 1) through rolling wheels,
+    // capped by the tyre curve of locked wheels sliding at slip = v (VPP: force = curve(|slip|) * load, sum of loads = m g; no
+    // load transfer, no suspension)
     auto refs = MotorRefs(rv);
+    const TireFriction& tf = rv.Wheel(0).tire;
+    const double g = rv.Config().gravityScale * 9.81;
     double va = r.v0, xa = 0.0;
     for (int k = 0; k < static_cast<int>(60.0 / cfg.dt) && va > 0.05; k++) {
-        const double fa = RefForce(refs, va, 0.0f, 1.0f, dt, rv.Config().gravityScale);
-        va += fa / rv.Mass() * cfg.dt;
+        const double fa = -RefForce(refs, va, 0.0f, 1.0f, dt, rv.Config().gravityScale);  // brake force (kN, positive)
+        const double fSlide = tf.EvaluateForce(static_cast<float>(va), 1.0f, 1.0f) * rv.Mass() * g;
+        if (fa < fSlide) va -= fa / EffectiveMass(rv) * cfg.dt;  // rolling: the wheels' spin inertia is braked too
+        else va -= fSlide / rv.Mass() * cfg.dt;                  // locked: sliding on the tyre curve
         xa += std::max(0.0, va) * cfg.dt;
         r.timeA = (k + 1) * cfg.dt;
     }
     r.distanceA = xa;
-    // reference: wheels locked, sliding with the tyre curve at slip = v (VPP: force = curve(|slip|) * load, sum of loads = m g)
+    // reference: wheels locked from the first tick, sliding with the tyre curve at slip = v
     double vl = r.v0, xl = 0.0;
-    const TireFriction& tf = rv.Wheel(0).tire;
-    const double g = rv.Config().gravityScale * 9.81;
     for (int k = 0; k < 6000 && vl > 0.05; k++) {
         vl -= tf.EvaluateForce(static_cast<float>(vl), 1.0f, 1.0f) * g * cfg.dt;
         xl += std::max(0.0, vl) * cfg.dt;
@@ -524,21 +541,28 @@ RoverConfig BaseConfig(const Args& a) {
     c.startOffsetNorth = a.Num("north", 0.0);
     c.inertiaFloor = !a.Has("no-inertia-floor");
     c.legGroundOffset = a.Has("leg-offset");
+    c.gravityScale = a.Num("g", 1.0);
     return c;
 }
 
 int BenchRest(spike::KspContext& ctx, const Args& a) {
-    Out o("rest");
+    Out o(a.Str("out", "rest"));
     const double secs = a.Num("seconds", 60.0);
     o.md << "# rest: pad rest stability, " << secs << " s, CoM drift measured from t = 5 s (warp 1x / 4x = dt 0.02 / 0.08)\n\n";
     o.md << "| craft | native | warp | brakes | horiz drift (m) | vert drift (m) | max speed (m/s) | rms vert speed (m/s) | max ang vel (rad/s) | "
             "settle drop (m) | compression mean / max | grounded | bottomed ticks | body touch | slope (deg) | tick (ms) |\n";
     o.md << "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n";
     o.csv << "craft,native,warp,brakes,horiz_drift,vert_drift,max_speed,rms_vz,max_angvel,settle_drop,comp_mean,comp_max,grounded,wheels,bottomed_ticks,body_touch,slope_deg,tick_ms,exploded\n";
+    std::vector<double> warps;
+    {
+        std::stringstream ss(a.Str("warps", "1,4"));
+        std::string s;
+        while (std::getline(ss, s, ',')) warps.push_back(std::stod(s));
+    }
     for (const std::string& cn : Crafts(a, {"bug-e", "prospector", "twostage"})) {
         auto craft = LoadCraft(ctx, cn);
         for (NativeModel nm : Natives(a))
-            for (double warp : {1.0, 4.0})
+            for (double warp : warps)
                 for (bool brakes : {true, false}) {
                     RoverConfig cfg = BaseConfig(a);
                     cfg.native = nm;
@@ -562,11 +586,11 @@ int BenchRest(spike::KspContext& ctx, const Args& a) {
 
 int BenchDrive(spike::KspContext& ctx, const Args& a) {
     Out o(a.Str("out", "drive"));
-    const double secs = a.Num("seconds", 40.0);
+    const double secs = a.Num("seconds", a.Str("ground", "pqs") == "flat" ? 40.0 : 30.0);
     const std::vector<double> warps = a.Has("warp4") ? std::vector<double>{1.0, 4.0} : std::vector<double>{1.0};
     o.md << "# drive: full wheel throttle on " << a.Str("ground", "pqs") << " ground, " << secs
-         << " s after a 2 s settle; reference = the C# motor model without tyre slip (same tick, ramp, torque curve, traction control)\n\n";
-    o.md << "| craft | native | friction | warp | mass (t) | motors | t to 5 m/s sim / ref (s) | t to 10 m/s | v at 10 s | v at 20 s | v at 30 s | v at 40 s | "
+         << " s after a 2 s settle; reference = the C# motor model without tyre slip (same tick, drive ramp, torque curve, traction control, motors enabled per the craft) accelerating the vessel mass plus the wheels' spin inertia (sum I / r^2, VPP floors I at 0.01)\n\n";
+    o.md << "| craft | native | friction | warp | mass / with wheel inertia (t) | motors | t to 5 m/s sim / ref (s) | t to 10 m/s | v at 10 s | v at 20 s | v at 30 s | v at 40 s | "
             "v max sim / ref | ref asymptote | max fwd slip (m/s) | tick (ms) |\n";
     o.md << "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n";
     o.csv << "craft,native,friction,warp,t,v,v_ref,x,x_ref\n";
@@ -578,7 +602,7 @@ int BenchDrive(spike::KspContext& ctx, const Args& a) {
                 cfg.native = nm;
                 cfg.dt = 0.02 * warp;
                 const DriveResult r = RunDrive(ctx, *craft, cfg, secs);
-                o.md << "| " << r.craft << " | " << r.native << " | " << r.friction << " | " << warp << "x | " << F(r.mass, 3) << " | " << r.motors
+                o.md << "| " << r.craft << " | " << r.native << " | " << r.friction << " | " << warp << "x | " << F(r.mass, 3) << " / " << F(r.massEff, 3) << " | " << r.motors
                      << " | " << F(r.t5, 2) << " / " << F(r.t5a, 2) << " | " << F(r.t10, 2) << " / " << F(r.t10a, 2);
                 for (int k = 0; k < 4; k++) o.md << " | " << F(r.vAt[k], 2) << " / " << F(r.vAtA[k], 2);
                 o.md << " | " << F(r.vMax, 2) << " / " << F(r.vMaxA, 2) << " | " << F(r.vTopAnalytic, 2) << " | " << F(r.maxSlip, 2) << " | "
@@ -596,12 +620,13 @@ int BenchDrive(spike::KspContext& ctx, const Args& a) {
 int BenchBrake(spike::KspContext& ctx, const Args& a) {
     Out o(a.Str("out", "brake"));
     o.md << "# brake: accelerate to v0, then wheel throttle 0 and the Brakes action group (brakeTweakable from the craft); "
-         << a.Str("ground", "pqs") << " ground. References: KSP's brake torque through rolling wheels (torque-limited) and fully locked "
-            "wheels sliding on the tyre curve\n\n";
-    o.md << "| craft | native | friction | v0 (m/s) | stop distance sim (m) | stop time sim (s) | ref torque-limited: distance / time | "
-            "ref locked: distance | max decel (m/s2) |\n";
-    o.md << "|---|---|---|---|---|---|---|---|---|\n";
-    o.csv << "craft,native,friction,v0,distance,time,distance_ref,time_ref,distance_locked,max_decel,exploded\n";
+         << a.Str("ground", "pqs") << " ground. Reference = KSP's brake torque (brakeResponse ramp; maxBrakeTorqueRest = 1000 kN m once "
+            "brakeState >= 1, i.e. brakeTweakable >= 100 %) through rolling wheels, capped by locked wheels sliding on the tyre curve "
+            "(no load transfer); 'locked' = wheels locked from the first tick\n\n";
+    o.md << "| craft | native | friction | v0 (m/s) | stop distance sim (m) | stop time sim (s) | ref: distance / time | "
+            "ref locked: distance | max decel above 1 m/s (m/s2) | max tilt (deg) |\n";
+    o.md << "|---|---|---|---|---|---|---|---|---|---|\n";
+    o.csv << "craft,native,friction,v0,distance,time,distance_ref,time_ref,distance_locked,max_decel,max_tilt,exploded\n";
     const std::map<std::string, double> v0s = {{"bug-e", 8.0}, {"prospector", 20.0}, {"crawler", 10.0}};
     for (const std::string& cn : Crafts(a, {"bug-e", "prospector"})) {
         auto craft = LoadCraft(ctx, cn);
@@ -612,9 +637,9 @@ int BenchBrake(spike::KspContext& ctx, const Args& a) {
             const BrakeResult r = RunBrake(ctx, *craft, cfg, v0);
             o.md << "| " << r.craft << " | " << r.native << " | " << r.friction << " | " << F(r.v0, 2) << " | " << F(r.distance, 2) << " | "
                  << F(r.time, 2) << " | " << F(r.distanceA, 2) << " / " << F(r.timeA, 2) << " | " << F(r.distanceLocked, 2) << " | "
-                 << F(r.maxDecel, 2) << (r.exploded ? " EXPLODED" : "") << " |\n";
+                 << F(r.maxDecel, 2) << " | " << F(r.maxTiltDeg, 1) << (r.exploded ? " EXPLODED" : "") << " |\n";
             o.csv << r.craft << "," << r.native << "," << r.friction << "," << r.v0 << "," << r.distance << "," << r.time << "," << r.distanceA
-                  << "," << r.timeA << "," << r.distanceLocked << "," << r.maxDecel << "," << r.exploded << "\n";
+                  << "," << r.timeA << "," << r.distanceLocked << "," << r.maxDecel << "," << r.maxTiltDeg << "," << r.exploded << "\n";
             std::fflush(stdout);
         }
     }

@@ -109,6 +109,7 @@ public:
     JPH::Vec3 Velocity() const;          // physics frame (body-fixed)
     JPH::Vec3 AngularVelocity() const;
     JPH::DVec3 Up() const { return up_; }
+    double TiltDeg() const;              // angle between the vessel's up axis and the local vertical at the spawn
     JPH::DVec3 Forward() const;          // vessel drive forward (physics frame, current)
     double Altitude() const;             // CoM height above the start ground level along the start up axis (m)
     double GroundAltitude() const { return groundRadius_; }

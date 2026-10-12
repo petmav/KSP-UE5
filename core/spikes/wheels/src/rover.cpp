@@ -343,6 +343,11 @@ Vec3 Rover::Velocity() const { return body_->GetLinearVelocity(); }
 Vec3 Rover::AngularVelocity() const { return body_->GetAngularVelocity(); }
 DVec3 Rover::Forward() const { return DVec3(body_->GetRotation() * forwardCraft_); }
 double Rover::Altitude() const { return (Com() - up_ * groundRadius_).Dot(up_); }
+double Rover::TiltDeg() const {
+    const Vec3 bu = body_->GetRotation() * upCraft_;
+    const double c = std::clamp(static_cast<double>(bu.Dot(V(up_))), -1.0, 1.0);
+    return std::acos(c) * 180.0 / JPH_PI;
+}
 
 int Rover::GroundedCount() const {
     int c = 0;
