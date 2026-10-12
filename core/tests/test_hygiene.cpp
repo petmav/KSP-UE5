@@ -16,6 +16,7 @@
 #include "ksp/celestial/flight_globals.hpp"
 #include "ksp/celestial/planetarium.hpp"
 #include "ksp/events/event_data.hpp"
+#include "ksp/inventory/construction.hpp"
 #include "ksp/fineprint/compatibility.hpp"
 #include "ksp/kerbals/experience.hpp"
 #include "ksp/modules/part_module.hpp"
@@ -75,6 +76,9 @@ void Restore(const std::string& test) {
         ++i;
     }
     SaveEnvironment::Reset();
+    // EVAConstructionModeController::hooks is static and test lambdas capture their stack locals: a hook left behind is a
+    // use-after-return in the next case that opens the construction panel (found as a g++ SIGSEGV in test_construction_flow.cpp)
+    ksp::EVAConstructionModeController::hooks = ksp::EVAConstructionModeController::Hooks{};
     // AutopilotSkill / RepairSkill.SkillsReadable (C# static initialisers over Localizer.Format)
     ksp::Experience::Effects::ReadableSkillsCache::ResetForTests();
     // ResearchAndDevelopment.experiments (ResearchAndDevelopment.cs:21) is filled on first use from the GameDatabase of that moment:

@@ -49,6 +49,7 @@ struct Reset33 {
     static void Clear() {
         InventoryEnvironment::Reset();
         EVAConstructionEnvironment::Reset();
+        EVAConstructionModeController::hooks = EVAConstructionModeController::Hooks{};  // static; the lambdas capture the test's stack
         KerbalInventoryScenario::ClearStatics();
         KerbalInventory::ClearAll();
         KerbalInventory::Uninstall();
