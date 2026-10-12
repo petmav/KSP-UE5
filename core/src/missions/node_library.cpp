@@ -9,6 +9,7 @@
 #include "ksp/missions/mission_awards.hpp"
 #include "ksp/missions/mission_score.hpp"
 #include "ksp/missions/mission_tests.hpp"
+#include "ksp/missions/mission_actions2.hpp"
 #include "ksp/missions/mission_tests2.hpp"
 #include "ksp/missions/vessel_restrictions.hpp"
 #include "ksp/save/save_environment.hpp"
@@ -221,6 +222,7 @@ void RegisterNodeLibrary() {
     RegisterTest<TestSOIReached>();
     RegisterTest_TestVessel();
     RegisterNodeLibrarySlice2Tests();
+    RegisterNodeLibrarySlice2Actions();
     RegisterVesselRestrictions();
     using namespace Actions;
     RegisterAction<ActionMessage>();

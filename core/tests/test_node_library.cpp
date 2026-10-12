@@ -393,6 +393,10 @@ TEST_CASE("WP-55 registry: the ported classes (accounting from the C# sources) a
             if (std::string(folder) == "Tests") CHECK_MESSAGE(TestModuleRegistry::Find(n) != nullptr, n);
             else CHECK_MESSAGE(ActionModuleRegistry::Find(n) != nullptr, n);
         }
+        for (const auto& n : reg[folder]["slice2"]) {  // ported by WP-54 slice 2 (gated by test_missions2.cpp)
+            if (std::string(folder) == "Tests") CHECK_MESSAGE(TestModuleRegistry::Find(n.get<std::string>()) != nullptr, n.get<std::string>());
+            else CHECK_MESSAGE(ActionModuleRegistry::Find(n.get<std::string>()) != nullptr, n.get<std::string>());
+        }
         for (const std::string& n : deferred) {
             // unregistered names are dropped like Type.GetType failing
             if (std::string(folder) == "Tests") CHECK_MESSAGE(TestModuleRegistry::Find(n) == nullptr, n);
@@ -416,7 +420,12 @@ TEST_CASE("WP-55 registry: the ported classes (accounting from the C# sources) a
         for (const auto& m : it.value()) expected.push_back(m.get<std::string>());
         CHECK_MESSAGE(found->second == expected, it.key());
     }
-    for (const auto& kv : ScoreModuleAttributes()) CHECK_MESSAGE(attr.contains(kv.first), kv.first);
+    std::set<std::string> slice2Tests;
+    for (const auto& n : reg["Tests"]["slice2"]) slice2Tests.insert(n.get<std::string>());
+    for (const auto& kv : ScoreModuleAttributes()) {
+        const bool known = attr.contains(kv.first) || slice2Tests.count(kv.first) != 0;
+        CHECK_MESSAGE(known, kv.first);
+    }
 }
 
 // ---- Tests.* ------------------------------------------------------------------------------------------------------------------------
