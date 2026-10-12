@@ -7,12 +7,20 @@
 #include <cstring>
 #include <limits>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "ksp/config/config_node.hpp"
 #include "ksp/core/log.hpp"
 #include "ksp/curves/float_curve.hpp"
 #include "ksp/dotnet/math.hpp"
+#include "ksp/save/save_enums.hpp"
+#include "ksp/terrain/pq.hpp"
+#include "ksp/terrain/pqs_cache.hpp"
+#include "ksp/terrain/pqs_mods_quad.hpp"
+#include "ksp/terrain/pqs_parallel.hpp"
+#include "ksp/terrain/pqs_prefab.hpp"
 
 struct kspcore_sim {
     int reserved = 0;  // will own the game state as work packages land
@@ -24,6 +32,19 @@ struct kspcore_confignode {
 
 struct kspcore_floatcurve {
     ksp::FloatCurve curve;
+};
+
+// WP-12a: a stock PQS sphere with its pool (members destroyed in reverse order: the sphere returns its quads to the
+// cache first; the height workers and the maps outlive it)
+struct kspcore_pqs {
+    std::unique_ptr<ksp::terrain::MapLibrary> maps;
+    ksp::PQSCache cache;
+    std::unique_ptr<ksp::PQSHeightWorkers> workers;
+    ksp::PQSTarget target;
+    std::unique_ptr<ksp::PQS> sphere;
+    ksp::PQSMod_CelestialBodyTransform* cbt = nullptr;
+    bool started = false;
+    std::vector<ksp::PQ*> drawable;
 };
 
 namespace {
@@ -333,5 +354,109 @@ float kspcore_floatcurve_evaluate(const kspcore_floatcurve* curve, float time) {
 int kspcore_floatcurve_key_count(const kspcore_floatcurve* curve) { return curve ? curve->curve.Curve().length() : 0; }
 float kspcore_floatcurve_min_time(const kspcore_floatcurve* curve) { return curve ? curve->curve.minTime() : 0.0f; }
 float kspcore_floatcurve_max_time(const kspcore_floatcurve* curve) { return curve ? curve->curve.maxTime() : 0.0f; }
+
+// ---- PQS terrain quads (WP-12a) ----------------------------------------------------------------------------------------
+
+kspcore_pqs* kspcore_pqs_create_stock(const char* body_name, const char* terrain_data_dir, int height_threads) {
+    return Guard("kspcore_pqs_create_stock", static_cast<kspcore_pqs*>(nullptr), [&]() -> kspcore_pqs* {
+        if (!body_name || !terrain_data_dir) throw std::invalid_argument("body_name / terrain_data_dir is NULL");
+        auto h = std::make_unique<kspcore_pqs>();
+        h->maps = std::make_unique<ksp::terrain::MapLibrary>(terrain_data_dir);
+        const std::string body = body_name;
+        if (height_threads > 0) {
+            ksp::terrain::MapLibrary* maps = h->maps.get();
+            h->workers = std::make_unique<ksp::PQSHeightWorkers>([maps, body] { return ksp::terrain::LoadStockPQS(body, *maps); },
+                                                                 height_threads);
+        }
+        h->sphere = ksp::terrain::CreateStockPQS(body, *h->maps);
+        h->sphere->cache = &h->cache;
+        h->sphere->heightWorkers = h->workers.get();
+        // the flight scene: FlightGlobals present, this body is the main body, the active vessel is the target
+        const ksp::PQSTarget* target = &h->target;
+        for (auto& m : h->sphere->childMods) {
+            if (auto* cb = dynamic_cast<ksp::PQSMod_CelestialBodyTransform*>(m.get())) {
+                cb->host.hasBody = [] { return true; };
+                cb->host.flightGlobalsExists = [] { return true; };
+                cb->host.activeVessel = [target] { return target; };
+                cb->host.isCurrentMainBody = [] { return true; };
+                cb->host.loadedScene = [] { return static_cast<int>(ksp::GameScenes::FLIGHT); };
+                cb->host.mapIsEnabled = [] { return false; };
+                h->cbt = cb;
+            }
+        }
+        h->sphere->SetTarget(&h->target);
+        return h.release();
+    });
+}
+
+void kspcore_pqs_destroy(kspcore_pqs* pqs) {
+    Guard("kspcore_pqs_destroy", 0, [&] {
+        delete pqs;
+        return 0;
+    });
+}
+
+void kspcore_pqs_set_target(kspcore_pqs* pqs, const double position_xyz[3]) {
+    if (pqs && position_xyz) pqs->target.position = ksp::Vector3d(position_xyz[0], position_xyz[1], position_xyz[2]);
+}
+
+int kspcore_pqs_update(kspcore_pqs* pqs, int fixed_updates) {
+    return Guard("kspcore_pqs_update", -1, [&]() -> int {
+        if (!pqs) throw std::invalid_argument("pqs is NULL");
+        // PQSCache.PresetList (settings.cfg TERRAIN): the default list unless the host loaded one
+        if (!ksp::PQSCache::PresetList) ksp::PQSCache::CreateDefaultPresetList();
+        if (!pqs->started) {
+            pqs->sphere->Start();
+            pqs->started = true;
+        }
+        for (int i = 0; i < fixed_updates; i++) pqs->sphere->FixedUpdate();
+        pqs->sphere->FrameUpdate();
+        pqs->drawable.clear();
+        std::vector<ksp::PQ*> stack(pqs->sphere->quads.begin(), pqs->sphere->quads.end());
+        while (!stack.empty()) {
+            ksp::PQ* q = stack.back();
+            stack.pop_back();
+            if (q->isSubdivided) {
+                for (ksp::PQ* c : q->subNodes)
+                    if (c != nullptr) stack.push_back(c);
+            } else if (q->isBuilt && q->rendererEnabled) {
+                pqs->drawable.push_back(q);
+            }
+        }
+        return static_cast<int>(pqs->drawable.size());
+    });
+}
+
+int kspcore_pqs_get_quad(const kspcore_pqs* pqs, int index, kspcore_pqs_quad* out) {
+    return Guard("kspcore_pqs_get_quad", 0, [&]() -> int {
+        if (!pqs || !out || index < 0 || index >= static_cast<int>(pqs->drawable.size())) throw std::out_of_range("quad index");
+        const ksp::PQ& q = *pqs->drawable[static_cast<size_t>(index)];
+        const ksp::PQMesh& m = q.mesh;
+        const std::vector<int>& idx = pqs->cache.meshCache.cacheIndices.at(static_cast<size_t>(m.triangleSet));
+        auto f = [](const auto& v) -> const float* { return v.empty() ? nullptr : reinterpret_cast<const float*>(v.data()); };
+        out->id = q.id;
+        out->subdivision = q.subdivision;
+        out->vertex_count = static_cast<int>(m.vertices.size());
+        out->index_count = static_cast<int>(idx.size());
+        out->origin[0] = q.meshOrigin.x;
+        out->origin[1] = q.meshOrigin.y;
+        out->origin[2] = q.meshOrigin.z;
+        out->positions = f(m.vertices);
+        out->normals = f(m.normals);
+        out->tangents = f(m.tangents);
+        out->uv = f(m.uv);
+        out->uv2 = f(m.uv2);
+        out->uv3 = f(m.uv3);
+        out->uv4 = f(m.uv4);
+        out->colors = f(m.colors);
+        out->indices = idx.data();
+        out->collider = q.meshColliderEnabled ? 1 : 0;
+        return 1;
+    });
+}
+
+double kspcore_pqs_radius(const kspcore_pqs* pqs) { return pqs ? pqs->sphere->radius : 0.0; }
+int kspcore_pqs_is_active(const kspcore_pqs* pqs) { return pqs && pqs->sphere->isActive ? 1 : 0; }
+float kspcore_pqs_planet_fade(const kspcore_pqs* pqs) { return pqs && pqs->cbt ? pqs->cbt->planetFade.a : 0.0f; }
 
 }  // extern "C"

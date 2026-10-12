@@ -12,6 +12,9 @@ Outputs:
   src/terrain/pqs_prefab_data.cpp           one factory per body with a PQS; every serialized field of every height
                                             mod; the map table (origin, header, size, sha256)
 
+WP-12a: the quad-side mods of WP12_SPECS (QuadEnhanceCoast, CelestialBodyTransform, UVPlanetRelativePosition, AltitudeUV,
+AltitudeAlpha, QuadMeshColliders) are generated as their real classes (ksp/terrain/pqs_mods_quad.hpp) under the same rule.
+
 Every JSON field of a height mod must be consumed or listed in IGNORED (with the reason) or generation fails, so the
 C++ data cannot silently drop a prefab value. tests/test_terrain.cpp re-reads pqs_prefab.json and compares every
 consumed field with the generated objects bit for bit.
@@ -217,6 +220,25 @@ SPECS = {
     "PQSLandControl": "custom",
     "PQSMod_VertexPlanet": "custom",
 }
+# WP-12a: the PQS component's serialized LOD fields the quadtree reads (emitted when the extraction carries them)
+PQS_LOD_FIELDS = [("minLevel", "i"), ("maxLevel", "i"), ("minDetailDistance", "d"), ("maxDetailDistance", "d"),
+                  ("subdivisionThreshold", "d"), ("collapseSeaLevelValue", "d"), ("collapseAltitudeValue", "d"),
+                  ("collapseAltitudeMax", "d"), ("visRadSeaLevelValue", "d"), ("visRadAltitudeValue", "d"),
+                  ("visRadAltitudeMax", "d"), ("detailSeaLevelQuads", "d"), ("detailAltitudeQuads", "d"),
+                  ("detailAltitudeMax", "d"), ("maxQuadLenghtsPerFrame", "f"), ("frameTimeDelta", "f"),
+                  ("maxFrameTime", "f"), ("surfaceRelativeQuads", "b"), ("seed", "i")]
+# WP-12a: non-height mod classes ported for the quad build (ksp/terrain/pqs_mods_quad.hpp); every JSON field consumed or
+# IGNORED, as for the height mods
+WP12_SPECS = {
+    "PQSMod_QuadEnhanceCoast": S(("coastLessThan", "d"), ("oceanFactor", "d"), ("coastFactor", "d")),
+    "PQSMod_AltitudeUV": S(("atmosphereHeight", "d"), ("oceanDepth", "d"), ("invert", "b")),
+    "PQSMod_AltitudeAlpha": S(("atmosphereDepth", "d"), ("invert", "b")),
+    "PQSMod_UVPlanetRelativePosition": S(),
+    "PQSMod_QuadMeshColliders": S(("maxLevelOffset", "i"), ("physicsMaterial", "objname", "physicsMaterialName")),
+    "PQSMod_CelestialBodyTransform": "custom",
+}
+FADE_FIELDS = [("fadeFloatName", "s"), ("fadeStart", "f"), ("fadeEnd", "f"), ("valueStart", "f"), ("valueEnd", "f"),
+               ("highQualityShaderFadeStart", "f"), ("highQualityShaderFadeEnd", "f")]
 # JSON fields of height mods that this port does not consume (colour output, scatter objects, object references)
 IGNORED = {
     "*": {"sphere": "PQS back-reference (set by SetupMods)"},
@@ -224,6 +246,7 @@ IGNORED = {
     "PQSMod_VoronoiCraters2": {"craterColourRamp": "Gradient (colour output, OnVertexBuild)"},
     "PQSMod_FlattenArea": {"body": "CelestialBody reference (unused by the height path)"},
     "PQSLandControl": {"scatters": "LandClassScatter objects (scatter, materials, meshes)"},
+    "PQSMod_CelestialBodyTransform": {"body": "CelestialBody reference (the host link, PQSMod_CelestialBodyTransform::host)"},
 }
 BASE_FIELDS = ("requirements", "modEnabled", "order", "modExpansionDisabled")
 LANDCLASS_SCALARS = [("landClassName", "s"), ("color", "color"), ("noiseColor", "color"), ("altitudeRange", "lerp"),
@@ -281,6 +304,8 @@ class Gen:
             return lit_str(v["map"]) if v else '""'
         if kind == "texture":
             return lit_str(v.get("name", "")) if v else '""'
+        if kind == "objname":
+            return lit_str(v.get("name", "")) if v else '""'
         raise ValueError(kind)
 
     def assign(self, out, target, kind, v, ind):
@@ -309,7 +334,7 @@ class Gen:
         c = m["class"]
         f = m["fields"]
         ind = "        "
-        spec = SPECS.get(c) if m["height_mod"] else None
+        spec = SPECS.get(c) if m["height_mod"] else WP12_SPECS.get(c)
         if m["height_mod"] and spec is None:
             raise SystemExit("height mod class without a spec: " + c)
         cpp = c if spec is not None else "PQSModPassive"
@@ -366,6 +391,29 @@ class Gen:
         for jf, kind in LANDCONTROL_SCALARS:
             self.assign(out, "m->" + jf, kind, f[jf], ind)
             known.add(jf)
+        return known
+
+    def custom_PQSMod_CelestialBodyTransform(self, f, out, ind):
+        known = {"planetFade", "secondaryFades"}
+        for jf, kind in (("deactivateAltitude", "d"), ("highQualityShaderDeactivateAltitude", "d"),
+                         ("forceRebuildOnTargetChange", "b"), ("forceActivate", "b"), ("overrideFade", "b")):
+            self.assign(out, "m->" + jf, kind, f[jf], ind)
+            known.add(jf)
+
+        def fade(target, v, what):
+            for jf, kind in FADE_FIELDS:
+                self.assign(out, target + "." + jf, kind, v[jf], ind)
+            for r in v["secondaryRenderers"]:
+                out.append("%s%s.secondaryRendererNames.push_back(%s);" % (ind, target, lit_str(r.get("name", "") if r else "")))
+            self.consumed += 1
+            unknown = set(v) - {x[0] for x in FADE_FIELDS} - {"secondaryRenderers"}
+            if unknown:
+                raise SystemExit("PQSMod_CelestialBodyTransform %s: unknown fields %s" % (what, sorted(unknown)))
+
+        fade("m->planetFade", f["planetFade"], "planetFade")
+        for i, sf in enumerate(f["secondaryFades"]):
+            out.append("%sm->secondaryFades.emplace_back();" % ind)
+            fade("m->secondaryFades.back()", sf, "secondaryFades[%d]" % i)
         return known
 
     def custom_PQSMod_VertexPlanet(self, f, out, ind):
@@ -443,13 +491,15 @@ def main():
     out.append("// core/data/terrain/manifest.json (tools/wp11/extract_terrain.py: the PSystem prefab in")
     out.append("// decompiled/KSP-dev/KSP_x64_Data/sharedassets9.assets, sha256 %s); do not edit." % sha9)
     out.append("// One factory per body with a PQS: the PQSMod components under the PQS GameObject in PQS.GetChildMods order")
-    out.append("// with every serialized field the height path consumes; other mod classes are PQSModPassive (order,")
-    out.append("// modEnabled, GameObject state and the requirements their OnSetup assigns).")
+    out.append("// with every serialized field the height path consumes, the WP-12a quad mods (ksp/terrain/pqs_mods_quad.hpp) with")
+    out.append("// theirs; other mod classes are PQSModPassive (order, modEnabled, GameObject state and the requirements their")
+    out.append("// OnSetup assigns).")
     out.append('#include "ksp/terrain/pqs_prefab.hpp"')
     out.append("")
     out.append("#include <limits>")
     out.append("")
     out.append('#include "ksp/terrain/pqs_mods.hpp"')
+    out.append('#include "ksp/terrain/pqs_mods_quad.hpp"')
     out.append("")
     out.append("namespace ksp::terrain {")
     out.append("")
@@ -501,6 +551,19 @@ def main():
         out.append("    pqs->buildTangents = %s;" % lit_bool(q.get("buildTangents", 0)))
         out.append("    pqs->isFakeBuild = %s;" % lit_bool(q.get("isFakeBuild", 0)))
         out.append("    pqs->childModListCapacity = %d;  // List<PQSMod> after AddRange batches %s" % (cap, batches))
+        # WP-12a: the PQS component's LOD fields (PQS.cs:188-260) where the extraction has them
+        missing = []
+        for jf, kind in PQS_LOD_FIELDS:
+            if jf in q:
+                out.append("    pqs->%s = %s;" % (jf, g.value(kind, q[jf])))
+            else:
+                missing.append(jf)
+        if missing:
+            out.append("    // not in pqs_prefab.json (extract_terrain.py PQS_FIELDS before WP-12a): %s" % ", ".join(missing))
+            out.append("    // -> PQS.Reset() defaults (PQS.cs:565); surfaceRelativeQuads FIXTURE true (see STATUS WP-12a)")
+            if "surfaceRelativeQuads" in missing:
+                out.append("    pqs->surfaceRelativeQuads = true;")
+        out.append("    pqs->lodSettingsFromPrefab = %s;" % lit_bool(not missing))
         for m in b["mods"]:
             g.mod(name, m, out)
         out.append("    return pqs;")
