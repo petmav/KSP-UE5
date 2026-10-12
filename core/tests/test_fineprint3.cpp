@@ -3,6 +3,7 @@
 //
 // Expectations come from tools/wp38c/wp38c_reference.py (tests/data/wp38c_reference.json): an independent Python model that reads the decompiled C#
 // and the mirror cfgs and does not import kspcore.
+#include <random>
 #include <filesystem>
 
 #include "world38b.hpp"
@@ -124,7 +125,7 @@ TEST_CASE("WP-38c ContractDefs: CreateDefaultConfig writes the node the referenc
     ContractDefsFixture fx;
     const json& r = Ref3()["contractDefs"];
     namespace fs = std::filesystem;
-    const fs::path dir = fs::temp_directory_path() / "kspcore_wp38c_contractdefs";
+    const fs::path dir = fs::temp_directory_path() / ("kspcore_wp38c_contractdefs_" + std::to_string(std::random_device{}()));
     fs::remove_all(dir);
     fs::create_directories(dir / "GameData" / "Squad" / "Contracts");
     FP3::ContractDefs::ResetToDefaults();
@@ -996,7 +997,7 @@ struct PreBuiltFixture {
     ConfigNode::NodePtr craftCfg, positions, constructionParts;
     PreBuiltFixture() {
         namespace fs = std::filesystem;
-        dir = fs::temp_directory_path() / "kspcore_wp38c_prebuilt";
+        dir = fs::temp_directory_path() / ("kspcore_wp38c_prebuilt_" + std::to_string(std::random_device{}()));
         fs::remove_all(dir);
         for (auto it = RefT()["crafts"].begin(); it != RefT()["crafts"].end(); ++it) {
             const fs::path p = dir / it.key();

@@ -65,6 +65,7 @@ add_executable(kspcore_tests
     test_input_ui.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
+    test_hygiene.cpp
 )
 target_link_libraries(kspcore_tests PRIVATE kspcore)
 ksp_set_build_flags(kspcore_tests)
@@ -76,6 +77,13 @@ target_compile_definitions(kspcore_tests PRIVATE KSPCORE_TEST_DATA_DIR="${CMAKE_
                            KSPCORE_TESTDATA_DIR="${PROJECT_SOURCE_DIR}/testdata"
                            KSPCORE_DEFAULT_GAME_ROOT="${KSP_GAMEDATA_ROOT}")
 add_test(NAME unit COMMAND kspcore_tests)
+# Test hygiene: the cases must not depend on the order they run in (tests/test_hygiene.cpp resets the shared state between cases).
+# A full run takes ~2 min, so each of three fixed seeds shuffles the whole suite and runs its first 190 cases (a different quarter of
+# the suite per seed, ~100 s in all). The complete sweep, any seed:  kspcore_tests --order-by=rand -rs=<seed>
+foreach(seed 11 27 42)
+    add_test(NAME unit.random_order.${seed} COMMAND kspcore_tests --order-by=rand -rs=${seed} -f=1 -l=190)
+    set_tests_properties(unit.random_order.${seed} PROPERTIES LABELS unit TIMEOUT 600)
+endforeach()
 # WP-31 data gate: ROSTER of every save in testdata / harness/inputs, experience recomputed from the raw flight logs (also part of `unit`)
 add_test(NAME data.roster_experience COMMAND kspcore_tests "-tc=WP-31 data gate*")
 set_tests_properties(data.roster_experience PROPERTIES LABELS data TIMEOUT 600)

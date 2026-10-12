@@ -8,6 +8,7 @@
 #include <random>
 #include <string>
 
+#include "test_hygiene.hpp"
 #include "game_root.hpp"
 #include "doctest/doctest.h"
 #include "ksp/database/game_data.hpp"
@@ -355,6 +356,7 @@ TEST_CASE("PartLoader on the GameData mirror (or the real install via KSP_GAMEDA
         MESSAGE(root.string() << "/GameData not present: skipped");
         return;
     }
+    kspcore_tests::LocalizerScope localizer;  // the stock dictionary, as the game has it loaded when PartLoader runs
     GameData data;
     GameData::Options o;
     o.gameRoot = root.string();

@@ -188,6 +188,8 @@ public:
     // `ModuleAttributes.isStageable = value` (PartModule.cs:25): ModuleAttributes is the per-TYPE ReflectedAttributes (PartModule.cs:746
     // GetReflectedAttributes(GetType())), so this writes the flag shared by every instance of this module class.
     void SetModuleAttributesIsStageable(bool value);
+    // C++ only (tests): forget every per-type ReflectedAttributes.isStageable (the next query re-evaluates the OnActive rule), like a fresh process.
+    static void ResetReflectedAttributesForTests();
     virtual bool StagingEnabled();                                 // :277
     virtual void UpdateStagingToggle();                            // :282
     virtual void SetStaging(bool newValue);                        // :296

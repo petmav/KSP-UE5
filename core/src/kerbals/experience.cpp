@@ -198,10 +198,12 @@ std::string Fmt1(const char* tag, const std::string& a) { return Localizer::Form
 // ---- AutopilotSkill.cs ----
 
 // AutopilotSkill.cs:20
+// (the static list is an optional so that ReadableSkillsCache::ResetForTests can forget it, like a fresh process)
+static std::optional<std::vector<std::string>> g_autopilotReadable;
 std::vector<std::string>& AutopilotSkill::SkillsReadable() {
-    static std::vector<std::string> v = {Fmt("#autoLOC_18284"), Fmt("#autoLOC_18285"), Fmt("#autoLOC_18286"),
-                                         Fmt("#autoLOC_18287")};
-    return v;
+    if (!g_autopilotReadable)
+        g_autopilotReadable = std::vector<std::string>{Fmt("#autoLOC_18284"), Fmt("#autoLOC_18285"), Fmt("#autoLOC_18286"), Fmt("#autoLOC_18287")};
+    return *g_autopilotReadable;
 }
 AutopilotSkill::AutopilotSkill(ExperienceTrait* parent) : ExperienceEffect(parent) { SkillsReadable(); }
 // AutopilotSkill.cs:44
@@ -391,9 +393,16 @@ float GeeForceTolerance::GeeTolerance() {
 
 // ---- RepairSkill.cs ----
 // RepairSkill.cs:16
+static std::optional<std::vector<std::string>> g_repairReadable;
 std::vector<std::string>& RepairSkill::SkillsReadable() {
-    static std::vector<std::string> v = {Fmt("#autoLOC_18738"), Fmt("#autoLOC_18739"), Fmt("#autoLOC_18740")};
-    return v;
+    if (!g_repairReadable) g_repairReadable = std::vector<std::string>{Fmt("#autoLOC_18738"), Fmt("#autoLOC_18739"), Fmt("#autoLOC_18740")};
+    return *g_repairReadable;
+}
+
+// C++ only (tests)
+void ReadableSkillsCache::ResetForTests() {
+    g_autopilotReadable.reset();
+    g_repairReadable.reset();
 }
 RepairSkill::RepairSkill(ExperienceTrait* parent) : ExperienceEffect(parent) { SkillsReadable(); }
 // RepairSkill.cs:36 (Enum.GetNames / GetValues sort by value: Parachutes 1, LandingLegs 2, Wheels 3; SkillsReadable is indexed

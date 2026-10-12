@@ -37,6 +37,7 @@
 #include <cmath>
 #include <cstdint>
 #include <exception>
+#include <functional>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -64,6 +65,12 @@ public:
     BaseGameEvent& operator=(const BaseGameEvent&) = delete;
 
     const std::string& EventName() const { return eventName_; }
+
+    // kspcore additions for tests (no KSP equivalent): the listener count, dropping the listeners added after the first N, and a walk over the
+    // global name table (the events that are alive). Used by the test hygiene listener (tests/test_hygiene.cpp).
+    virtual size_t ListenerCount() const { return 0; }
+    virtual void TruncateListenersForTests(size_t keep) { (void)keep; }
+    static void ForEachRegistered(const std::function<void(BaseGameEvent&)>& fn);
 
     // public bool debugEvent
     bool debugEvent = false;
@@ -168,6 +175,9 @@ public:
     // kspcore additions for tests and diagnostics (no KSP equivalent)
     size_t Count() const { return events_.size(); }
     int NumEventsFiring() const { return numEventsFiring_; }
+    void Truncate(size_t keep) {  // tests: drop the listeners added after the first `keep` (not while the event is firing)
+        if (events_.size() > keep) events_.resize(keep);
+    }
 
 private:
     static void RemoveFirst(std::vector<Ptr>& list, const Ptr& item) {
@@ -207,6 +217,10 @@ public:
 
     size_t Count() const { return core_.Count(); }  // kspcore addition
 
+    size_t ListenerCount() const override { return core_.Count(); }
+
+    void TruncateListenersForTests(size_t keep) override { core_.Truncate(keep); }
+
 private:
     detail::EventListeners<OnEvent> core_;
 };
@@ -231,6 +245,10 @@ public:
     }
 
     size_t Count() const { return core_.Count(); }  // kspcore addition
+
+    size_t ListenerCount() const override { return core_.Count(); }
+
+    void TruncateListenersForTests(size_t keep) override { core_.Truncate(keep); }
 
 private:
     detail::EventListeners<OnEvent> core_;
@@ -260,6 +278,10 @@ public:
     }
 
     size_t Count() const { return core_.Count(); }  // kspcore addition
+
+    size_t ListenerCount() const override { return core_.Count(); }
+
+    void TruncateListenersForTests(size_t keep) override { core_.Truncate(keep); }
 
 private:
     T DefaultModifier(T d1, U /*d2*/) { return d1; }  // EventDataModifier.cs:38
@@ -315,6 +337,10 @@ public:
 
     size_t Count() const { return core_.Count(); }  // kspcore addition
 
+    size_t ListenerCount() const override { return core_.Count(); }
+
+    void TruncateListenersForTests(size_t keep) override { core_.Truncate(keep); }
+
 private:
     detail::EventListeners<OnEvent> core_;
 };
@@ -356,6 +382,10 @@ public:
     }
 
     size_t Count() const { return core_.Count(); }      // kspcore addition
+
+    size_t ListenerCount() const override { return core_.Count(); }
+
+    void TruncateListenersForTests(size_t keep) override { core_.Truncate(keep); }
     int NumEventsFiring() const { return core_.NumEventsFiring(); }  // kspcore addition
 
 private:
@@ -398,6 +428,10 @@ public:
     }
 
     size_t Count() const { return core_.Count(); }      // kspcore addition
+
+    size_t ListenerCount() const override { return core_.Count(); }
+
+    void TruncateListenersForTests(size_t keep) override { core_.Truncate(keep); }
     int NumEventsFiring() const { return core_.NumEventsFiring(); }  // kspcore addition
 
 private:
