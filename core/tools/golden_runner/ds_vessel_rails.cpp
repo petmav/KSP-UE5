@@ -7,7 +7,8 @@
 //   CalculatePhysicsStats, UpdatePosVel, UpdateAcceleration, Vessel.CheckKill), OrbitDriver.FixedUpdate, FlightGlobals.FixedUpdate,
 //   TimeWarp.FixedUpdate, Vessel.FixedUpdate.
 // SOI changes are recorded from GameEvents.onVesselSOIChanged like the capture's handler (HarnessCapture2Flight.cs:434); the probe's death is the
-// real Vessel.CheckKill (WP-19a), not a stand-in. The active vessel is a landed Vessel on Kerbin (the capture's PhysProf-S on the pad).
+// real Vessel.CheckKill (WP-19a), not a stand-in; the runner advances Vessel::env.frameCount per fixed frame so PhysicsHoldExpired() lets its crash branch fire.
+// The active vessel is a landed Vessel on Kerbin (the capture's PhysProf-S on the pad).
 //
 // What this adds to orbit_rails: `packed` and `loaded` (Vessel state), `world_rel_*` (vessel.GetWorldPos3D() - mainBody.position, reported
 // in Unity world axes) are written for comparison. Inputs (read from the capture, none of them a gated output): provenance.ut0, initial.req_*,
@@ -242,6 +243,7 @@ static int RunVesselRails(const RunnerOptions& opt) {
         FlightScene::FixedUpdate();  // VesselPrecalculate / OrbitDriver / FlightGlobals / Vessel (seq 7-281)
         timeWarp.FixedUpdate();      // TimeWarp.FixedUpdate (seq 19; a no-op once SetRate(instant) has been applied)
         Time::time = Time::time + Time::fixedDeltaTime;
+        ++Vessel::env.frameCount;  // Time.frameCount: Vessel.PhysicsHoldExpired() (25 frames, 75 landed) gates the crash branch of CheckKill
         for (Probe& p : probes)
             if (p.v->orbitDriver) p.v->orbitDriver->RunDelayedCalls();
     };
