@@ -11,6 +11,7 @@
 #include <map>
 #include <set>
 #include <sstream>
+#include <variant>
 
 #include "doctest/doctest.h"
 #include "game_root.hpp"
@@ -26,6 +27,7 @@
 #include "ksp/missions/mission_system.hpp"
 #include "ksp/missions/mission_tests4.hpp"
 #include "ksp/missions/missions.hpp"
+#include "ksp/missions/mission_validator.hpp"
 #include "ksp/resources/part_resource_library.hpp"
 #include "ksp/save/crew.hpp"
 #include "ksp/save/game.hpp"
@@ -1291,4 +1293,274 @@ TEST_CASE("WP-54c reference: GetHashCode overrides (ScoreRange, VesselPartIDPair
     }
     CHECK(classes.size() == 11);
     CHECK(n > 300);
+}
+
+// ---- BaseAPField / BaseAPFieldList (the real reflection record) ----------------------------------------------------------------------------------------------------
+
+#include "ksp/missions/mission_apfield.hpp"
+
+namespace {
+
+using Editor::Boxed;
+
+Boxed ToBoxed(const json& tv) {
+    const std::string t = tv["t"].get<std::string>();
+    if (t == "int") return Boxed(tv["v"].get<int>());
+    if (t == "double") return Boxed(tv["v"].get<double>());
+    if (t == "bool") return Boxed(tv["v"].get<bool>());
+    return Boxed(tv["v"].get<std::string>());
+}
+json FromBoxed(const std::string& t, const Boxed& b) {
+    if (!b.has_value()) return json(nullptr);
+    if (t == "int") return json{{"t", t}, {"v", std::any_cast<int>(b)}};
+    if (t == "double") return json{{"t", t}, {"v", std::any_cast<double>(b)}};
+    if (t == "bool") return json{{"t", t}, {"v", std::any_cast<bool>(b)}};
+    return json{{"t", t}, {"v", std::any_cast<std::string>(b)}};
+}
+std::string FmtBoxed(const Boxed& b) {
+    if (b.type() == typeid(bool)) return std::any_cast<bool>(b) ? "True" : "False";
+    if (b.type() == typeid(int)) return std::to_string(std::any_cast<int>(b));
+    if (b.type() == typeid(double)) return dotnet::FormatDoubleG(std::any_cast<double>(b), 15);
+    return std::any_cast<std::string>(b);
+}
+bool TypeOk(const std::string& t, const Boxed& b) {
+    if (t == "int") return b.type() == typeid(int);
+    if (t == "double") return b.type() == typeid(double);
+    if (t == "bool") return b.type() == typeid(bool);
+    return b.type() == typeid(std::string);
+}
+
+struct ScriptHost : Editor::IAPFieldHost {
+    const json* methods = nullptr;
+    std::vector<std::string>* log = nullptr;
+    std::function<void(const Boxed&)> FindValueMethod(const std::string& name, const std::string& fieldType) override {
+        if (!methods->contains(name)) return {};
+        const json& m = (*methods)[name];
+        if (m["kind"].get<std::string>() != "value" || m["param"].get<std::string>() != fieldType) return {};
+        const bool throws = m["throws"].get<bool>();
+        auto* l = log;
+        return [name, throws, l](const Boxed& v) {
+            l->push_back("vm:" + name + "(" + FmtBoxed(v) + ")");
+            if (throws) throw std::runtime_error("onValueChange");
+        };
+    }
+    std::function<void(void*)> FindControlMethod(const std::string& name) override {
+        if (!methods->contains(name) || (*methods)[name]["kind"].get<std::string>() != "control") return {};
+        auto* l = log;
+        return [name, l](void*) { l->push_back("ctl:" + name); };
+    }
+    std::optional<Editor::IAPFieldHost::CompareMethod> FindCompareMethod(const std::string& name, const std::string& fieldType) override {
+        if (!methods->contains(name)) return std::nullopt;
+        const json& m = (*methods)[name];
+        if (m["kind"].get<std::string>() != "compare" || m["param"].get<std::string>() != fieldType) return std::nullopt;
+        const bool result = m["result"].get<bool>();
+        return Editor::IAPFieldHost::CompareMethod{[result](const Boxed&) { return result; }, m["returnsBool"].get<bool>()};
+    }
+};
+
+Editor::MEGUI_Control AttrOf(const json& a) {
+    Editor::MEGUI_Control c;
+    c.set_guiName(a["guiName"].get<std::string>());
+    c.set_Tooltip(a["tooltip"].get<std::string>());
+    c.gapDisplay = a["gapDisplay"].get<bool>();
+    c.onValueChange = a["onValueChange"].get<std::string>();
+    c.onControlCreated = a["onControlCreated"].get<std::string>();
+    if (!a["onControlSetupComplete"].is_null()) c.onControlSetupComplete = a["onControlSetupComplete"].get<std::string>();
+    c.group = a["group"].get<std::string>();
+    if (!a["groupDisplayName"].is_null()) c.groupDisplayName = a["groupDisplayName"].get<std::string>();
+    c.order = a["order"].get<int>();
+    c.tabStop = a["tabStop"].get<bool>();
+    c.groupStartCollapsed = a["groupStartCollapsed"].get<bool>();
+    if (!a["compare"].is_null()) c.compareValuesForCheckpoint = a["compare"].get<std::string>();
+    c.canBeReset = a["canBeReset"].get<bool>();
+    c.canBePinned = a["canBePinned"].get<bool>();
+    if (!a["resetValue"].is_null()) c.resetValue = a["resetValue"].get<std::string>();
+    const std::string cp = a["checkpoint"].get<std::string>();
+    c.checkpointValidation = cp == "None" ? Editor::CheckpointValidationType::None
+                             : cp == "Equals" ? Editor::CheckpointValidationType::Equals
+                             : cp == "CustomMethod" ? Editor::CheckpointValidationType::CustomMethod
+                                                    : Editor::CheckpointValidationType::Controls;
+    c.hideWhenSiblingsExist = a["hideWhenSiblingsExist"].get<bool>();
+    c.hideWhenStartNode = a["hideWhenStartNode"].get<bool>();
+    c.hideWhenDocked = a["hideWhenDocked"].get<bool>();
+    c.hideWhenInputConnected = a["hideWhenInputConnected"].get<bool>();
+    c.hideWhenOutputConnected = a["hideWhenOutputConnected"].get<bool>();
+    c.hideWhenNoTestModules = a["hideWhenNoTestModules"].get<bool>();
+    c.hideWhenNoActionModules = a["hideWhenNoActionModules"].get<bool>();
+    c.hideOnSetup = a["hideOnSetup"].get<bool>();
+    return c;
+}
+
+json PropsOf(Editor::BaseAPField& f) {
+    const Editor::MEGUI_Control& a = f.Attribute();
+    json hide = json::array({f.HideWhenSiblingsExist(), f.HideWhenStartNode(), f.HideWhenDocked(), f.HideWhenInputConnected(), f.HideWhenOutputConnected(), f.HideWhenNoTestModules(),
+                             f.HideWhenNoActionModules(), f.HideOnSetup()});
+    const char* cps[] = {"None", "Equals", "CustomMethod", "Controls"};
+    return json{{"name", f.name}, {"guiName", f.guiName}, {"gap", f.gapDisplay()}, {"group", f.Group()},
+                {"groupDisplayName", f.GroupDisplayName().has_value() ? json(*f.GroupDisplayName()) : json(nullptr)}, {"order", f.Order()}, {"tabStop", f.TabStop()}, {"hide", hide},
+                {"groupStartCollapsed", f.GroupStartCollapsed()}, {"hasOvc", static_cast<bool>(f.OnValueChange())}, {"hasOcc", static_cast<bool>(f.OnControlCreated())},
+                {"hasOcsc", static_cast<bool>(f.OnControlSetupComplete())}, {"hasCmp", static_cast<bool>(f.CompareValuesForCheckpoint())}, {"fieldID", f.FieldID()},
+                {"fieldType", f.FieldTypeName()}, {"hasInterface", f.hasInterface()}, {"isProperty", f.IsProperty()}, {"original", FromBoxed(f.FieldTypeName(), f.originalValue())},
+                {"canBeReset", a.canBeReset}, {"canBePinned", a.canBePinned}, {"tooltip", a.Tooltip()}, {"resetValue", a.resetValue.has_value() ? json(*a.resetValue) : json(nullptr)},
+                {"checkpoint", cps[static_cast<int>(a.checkpointValidation)]}};
+}
+
+}  // namespace
+
+TEST_CASE("WP-54c reference: BaseAPField / BaseAPFieldList (attribute copy, callback resolution, SetValue field and property paths, validation, original value)") {
+    Fixture54b world;
+    size_t checked = 0, cases = 0;
+    for (const json& c : Ref3()["cases"]) {
+        if (c["kind"].get<std::string>() != "apfield") continue;
+        ++cases;
+        // the host: values by member name
+        std::map<std::string, Boxed> values;
+        std::vector<Editor::BaseAPFieldList::ReflectedMember> fields, props;
+        for (const json& m : c["members"]) {
+            Editor::BaseAPFieldList::ReflectedMember rm;
+            rm.attribute = AttrOf(m["attr"]);
+            const std::string name = m["name"].get<std::string>();
+            const std::string type = m["type"].get<std::string>();
+            const bool isProp = m["kind"].get<std::string>() == "property";
+            values[name] = ToBoxed({{"t", type}, {"v", m["init"]}});
+            Editor::MemberInfo mi;
+            mi.kind = isProp ? Editor::MemberInfo::Kind::Property : Editor::MemberInfo::Kind::Field;
+            mi.name = name;
+            mi.declaringType = m["declaring"].get<std::string>();
+            mi.valueType = type;
+            mi.valueTypeHasIConfigNode = m["iconfig"].get<bool>();
+            mi.valueIsBool = type == "bool";
+            const bool readonly = m.value("readonly", false);
+            const json throwOn = m.value("throwOn", json::array());
+            mi.get = [&values, name](void*) { return values[name]; };
+            mi.set = [&values, name, type, isProp, readonly, throwOn](void*, const Boxed& v) {
+                if (!TypeOk(type, v)) throw std::invalid_argument("type");
+                if (isProp) {
+                    if (readonly) throw std::runtime_error("readonly");
+                    for (const json& t : throwOn)
+                        if (FromBoxed(type, v)["v"] == t) throw std::runtime_error("setter");
+                }
+                values[name] = v;
+            };
+            mi.toString = [](const Boxed& b) { return FmtBoxed(b); };
+            rm.member = mi;
+            (isProp ? props : fields).push_back(rm);
+        }
+        // reflection order: fields (declaration order), then properties
+        Editor::BaseAPFieldList::ResetReflectedTypes();
+        Editor::BaseAPFieldList::RegisterReflectedType("HostX", fields, props);
+        std::vector<std::string> log;
+        ScriptHost host;
+        host.methods = &c["methods"];
+        host.log = &log;
+        int validations = 0;
+        MissionsEnvironment::updateValidationLed = [&validations] { ++validations; };
+        std::unique_ptr<Editor::MissionEditorValidator> validator;
+        Mission mission;
+        const json& vs = c["validator"];
+        if (!vs.is_null()) {
+            validator = std::make_unique<Editor::MissionEditorValidator>();
+            validator->mode = vs["mode"].get<std::string>() == "FullAuto"        ? Editor::ValidatorMode::FullAuto
+                              : vs["mode"].get<std::string>() == "AutoAfterRun" ? Editor::ValidatorMode::AutoAfterRun
+                                                                                : Editor::ValidatorMode::Manual;
+            Editor::MissionEditorValidator::RunValidation(&mission);
+            mission.hasBeenValidated = vs["validated"].get<bool>();
+            validations = 0;
+        }
+        void* hostPtr = c["hostNull"].get<bool>() ? nullptr : static_cast<void*>(&values);
+        Editor::BaseAPFieldList list("HostX", &host, hostPtr);
+        std::vector<int> modified(static_cast<size_t>(c["hostNull"].get<bool>() ? 0 : list.Count()), 0);
+        if (!c["hostNull"].get<bool>()) {
+            for (int i = 0; i < list.Count(); ++i) list[i]->OnValueModified.push_back([&modified, i](const Boxed&) { ++modified[static_cast<size_t>(i)]; });
+        }
+        // the reference lists fields in member order; the list is fields first, then properties: map names to the list
+        for (const json& op : c["ops"]) {
+            const std::string o = op["op"].get<std::string>();
+            INFO("apfield op ", o);
+            ++checked;
+            try {
+                if (o == "countThrows") {
+                    CHECK_THROWS(list.Count());
+                    continue;
+                }
+                if (o == "props") {
+                    // compare as a set keyed by member name (the reference lists them in member order)
+                    std::map<std::string, json> got;
+                    for (int i = 0; i < list.Count(); ++i) got[list[i]->name] = PropsOf(*list[i]);
+                    for (const json& want : op["out"]) CHECK(got[want["name"].get<std::string>()] == want);
+                    CHECK(got.size() == op["out"].size());
+                } else if (o == "count") {
+                    CHECK(list.Count() == op["out"].get<int>());
+                } else if (o == "set") {
+                    log.clear();
+                    const int before = validations;
+                    Editor::BaseAPField* f = list[op["name"].get<std::string>()];
+                    REQUIRE(f != nullptr);
+                    std::variant<bool, std::string> res;
+                    try {
+                        res = f->SetValue(ToBoxed(op["value"]));
+                    } catch (const std::exception&) {
+                        res = std::string("throws");
+                    }
+                    if (std::holds_alternative<bool>(res)) CHECK(json(std::get<bool>(res)) == op["out"]);
+                    else CHECK(json(std::get<std::string>(res)) == op["out"]);
+                    CHECK(json(log) == op["log"]);
+                    CHECK(validations - before == op["validations"].get<int>());
+                    CHECK(FromBoxed(f->FieldTypeName(), f->GetValue()) == op["after"]);
+                    int idx = 0;
+                    for (int i = 0; i < list.Count(); ++i)
+                        if (list[i] == f) idx = i;
+                    CHECK(modified[static_cast<size_t>(idx)] == op["modified"].get<int>());
+                } else if (o == "listSet") {
+                    Editor::BaseAPField* f = list[op["name"].get<std::string>()];
+                    CHECK(list.SetValue(op["name"].get<std::string>(), ToBoxed(op["value"])) == op["out"].get<bool>());
+                    CHECK(FromBoxed(f->FieldTypeName(), f->GetValue()) == op["after"]);
+                    int idx = 0;
+                    for (int i = 0; i < list.Count(); ++i)
+                        if (list[i] == f) idx = i;
+                    CHECK(modified[static_cast<size_t>(idx)] == op["modified"].get<int>());
+                } else if (o == "get") {
+                    Editor::BaseAPField* f = list[op["name"].get<std::string>()];
+                    CHECK(FromBoxed(f->FieldTypeName(), f->GetValue()) == op["out"]);
+                } else if (o == "listGet") {
+                    Editor::BaseAPField* f = list[op["name"].get<std::string>()];
+                    CHECK(FromBoxed(f->FieldTypeName(), list.GetValue(op["name"].get<std::string>())) == op["out"]);
+                } else if (o == "orig") {
+                    list.SetOriginalValue();
+                    std::map<std::string, json> got;
+                    for (int i = 0; i < list.Count(); ++i) got[list[i]->name] = FromBoxed(list[i]->FieldTypeName(), list[i]->originalValue());
+                    json want = json::object();
+                    // the reference lists them in member order: compare per name
+                    size_t k = 0;
+                    for (const json& m : c["members"]) want[m["name"].get<std::string>()] = op["out"][k++];
+                    for (const auto& kv : got) CHECK(kv.second == want[kv.first]);
+                } else if (o == "index") {
+                    CHECK(list[op["name"].get<std::string>()] == nullptr);
+                } else if (o == "ctl") {
+                    log.clear();
+                    Editor::BaseAPField* f = list[op["name"].get<std::string>()];
+                    if (f->OnControlCreated()) f->OnControlCreated()(nullptr);
+                    if (f->OnControlSetupComplete()) f->OnControlSetupComplete()(nullptr);
+                    CHECK(json(log) == op["out"]);
+                } else if (o == "cmp") {
+                    Editor::BaseAPField* f = list[op["name"].get<std::string>()];
+                    if (f->CompareValuesForCheckpoint()) CHECK(json(f->CompareValuesForCheckpoint()(ToBoxed(op["value"]))) == op["out"]);
+                    else CHECK(op["out"].is_null());
+                } else if (o == "display") {
+                    Editor::BaseAPField* f = list[op["name"].get<std::string>()];
+                    if (op["out"].get<std::string>() == "throws") CHECK_THROWS(f->GetFieldValueForDisplay());
+                    else CHECK(f->GetFieldValueForDisplay() == op["out"].get<std::string>());
+                } else {
+                    FAIL("unknown op " << o);
+                }
+            } catch (const std::exception& e) {
+                FAIL_CHECK("exception in apfield op " << o << ": " << e.what());
+            }
+        }
+        MissionsEnvironment::updateValidationLed = nullptr;
+        validator.reset();
+        Editor::BaseAPFieldList::ResetReflectedTypes();
+    }
+    CHECK(cases >= 200);
+    CHECK(checked > 1500);
 }
