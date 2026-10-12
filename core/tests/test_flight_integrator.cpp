@@ -887,6 +887,19 @@ TEST_CASE("WP-20d FlightIntegrator.FixedUpdate in the bubble: Setup waits for Pa
         CHECK(p->fields.atmDensity == fi->atm.density);
         CHECK(p->fields.machNumber == fi->atm.mach);
     }
+    // FlightIntegrator.cs:400-450: a part or vessel event of this vessel asks for a new thermal graph (subscribed in the constructor)
+    fi->recreateThermalGraph = false;
+    events::GameEvents::onVesselWasModified.Fire(v.get());
+    CHECK(fi->recreateThermalGraph);
+    fi->recreateThermalGraph = false;
+    fi->OnPartEvent(tank);
+    CHECK(fi->recreateThermalGraph);
+    fi->recreateThermalGraph = false;
+    fi->OnPartEventFromToAction(events::GameEvents::FromToAction<Part*, Part*>(nullptr, tank));
+    CHECK(fi->recreateThermalGraph);
+    fi->recreateThermalGraph = false;
+    fi->OnPartEventTargetAction(events::GameEvents::HostTargetAction<Part*, Part*>(nullptr, tank));  // the C# tests data.host first
+    CHECK_FALSE(fi->recreateThermalGraph);
     // on the pad the drag vector of every part is (almost) zero: no aero force; rb.angularDrag is the FlightIntegrator's (q ~ 0)
     VesselPhysics* vp = pad.s.bubble.Host().Find(*v);
     REQUIRE(vp != nullptr);

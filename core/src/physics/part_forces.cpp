@@ -2,6 +2,7 @@
 // to decompiled/KSP-Decompiled/Assembly-CSharp/.
 #include "ksp/physics/part_forces.hpp"
 
+#include <algorithm>
 #include <vector>
 
 #include "ksp/aero/float_eval.hpp"
@@ -89,7 +90,9 @@ void PartModuleForces::FixedUpdate(VesselPhysicsHost& host) {
     engineForces = rcsForces = surfaceForces = wheelTorques = 0;
     const std::vector<Vessel*> vessels = FlightGlobals::Vessels;
     for (Vessel* v : vessels) {
-        if (v == nullptr || !v->loaded || v->state == Vessel::State::DEAD) continue;
+        // (a vessel destroyed by an earlier one's modules in this pass gets no further callbacks, as in FlightScene)
+        if (v == nullptr || std::find(FlightGlobals::Vessels.begin(), FlightGlobals::Vessels.end(), v) == FlightGlobals::Vessels.end()) continue;
+        if (!v->loaded || v->state == Vessel::State::DEAD) continue;
         FixedUpdateVessel(*v, host.Find(*v));
     }
 }

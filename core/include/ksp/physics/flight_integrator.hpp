@@ -51,6 +51,7 @@
 #include <vector>
 
 #include "ksp/aero/flight_integrator_aero.hpp"
+#include "ksp/events/game_events.hpp"
 #include "ksp/physics/aero_soa.hpp"
 #include "ksp/physics/vessel_physics.hpp"
 #include "ksp/thermal/flight_integrator_thermal.hpp"
@@ -84,7 +85,10 @@ struct AeroKernelStats {
 
 class FlightIntegrator : public FlightIntegratorThermal {
 public:
-    explicit FlightIntegrator(Vessel& vessel);
+    explicit FlightIntegrator(Vessel& vessel);  // OnStart's HookVesselEvents (FlightIntegrator.cs:374, :400)
+    ~FlightIntegrator() override;                // OnDestroy's UnhookVesselEvents (:395, :410)
+    FlightIntegrator(const FlightIntegrator&) = delete;
+    FlightIntegrator& operator=(const FlightIntegrator&) = delete;
 
     static inline FlightIntegrator* ActiveVesselFI = nullptr;  // FlightIntegrator.cs:7
 
@@ -134,6 +138,12 @@ public:
 
     // :669 Integrate(partRef) (:715 recursion) over `binding` (FixedUpdate calls it; public for the gates)
     void Integrate(VesselPhysics& binding);
+
+    // :420-450: a part or vessel event of this vessel rebuilds the thermal graph (recreateThermalGraph)
+    void OnPartEvent(Part* part);
+    void OnVesselEvent(Vessel* v);
+    void OnPartEventTargetAction(events::GameEvents::HostTargetAction<Part*, Part*> data);
+    void OnPartEventFromToAction(events::GameEvents::FromToAction<Part*, Part*> data);
 
     // ---- results ----------------------------------------------------------------------------------------------------------
     AeroKernelStats aeroStats;

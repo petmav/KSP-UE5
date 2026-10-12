@@ -53,6 +53,7 @@ NAME_ALIAS = {"~Mission": "OnDestroy", "~TestModule": "OnDestroy", "~ActionModul
               "PhysicalObjectDrag": "IntegratePhysicalObjects", "SurfaceDragDirection": "AddSurfaceDragDirection",
               "CubeDragScalar": "UpdateAerodynamics", "CubeBodyLiftScalar": "UpdateAerodynamics", "PartScalars": "UpdateAerodynamics",
               "EngineFixedUpdate": "FixedUpdate", "RcsFixedUpdate": "FixedUpdate", "RunFlightIntegrators": "FixedUpdate",
+              "~FlightIntegrator": "UnhookVesselEvents",
               # WP-14 helpers factored out of a C# function (cited at that function)
               "UpdateSurfaceSpeeds": "UpdatePosVel", "ApplyFlightIntegratorAtmosphere": "FixedUpdate"}
 CITE = re.compile(r"^(\s*)// (?:([A-Za-z0-9_/]+)\.cs)?:(\d+)\b")

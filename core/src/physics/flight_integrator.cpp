@@ -65,11 +65,52 @@ void StartPartsInFlight(Vessel& vessel) {
 
 FlightIntegrator::FlightIntegrator(Vessel& v) {
     vessel = &v;
+    // FlightIntegrator.cs:400 HookVesselEvents
+    using GE = events::GameEvents;
+    GE::onPartAttach.Add(this, &FlightIntegrator::OnPartEventTargetAction);
+    GE::onPartRemove.Add(this, &FlightIntegrator::OnPartEventTargetAction);
+    GE::onPartCouple.Add(this, &FlightIntegrator::OnPartEventFromToAction);
+    GE::onPartDie.Add(this, &FlightIntegrator::OnPartEvent);
+    GE::onPartUndock.Add(this, &FlightIntegrator::OnPartEvent);
+    GE::onVesselWasModified.Add(this, &FlightIntegrator::OnVesselEvent);
     // part.partTransform.localToWorldMatrix of the occlusion passes: the part transform is a world transform here (Unity composes the
     // hierarchy's local matrices natively; the TRS of the world pose is that up to float rounding)
     localToWorld = [](const Part& p) {
         return UnityNative::TRS(p.partTransform.position, p.partTransform.rotation, p.partTransform.localScale);
     };
+}
+
+// FlightIntegrator.cs:410 UnhookVesselEvents
+FlightIntegrator::~FlightIntegrator() {
+    using GE = events::GameEvents;
+    GE::onPartAttach.Remove(this, &FlightIntegrator::OnPartEventTargetAction);
+    GE::onPartRemove.Remove(this, &FlightIntegrator::OnPartEventTargetAction);
+    GE::onPartCouple.Remove(this, &FlightIntegrator::OnPartEventFromToAction);
+    GE::onPartDie.Remove(this, &FlightIntegrator::OnPartEvent);
+    GE::onPartUndock.Remove(this, &FlightIntegrator::OnPartEvent);
+    GE::onVesselWasModified.Remove(this, &FlightIntegrator::OnVesselEvent);
+    if (ActiveVesselFI == this) ActiveVesselFI = nullptr;
+}
+
+// FlightIntegrator.cs:420
+void FlightIntegrator::OnPartEvent(Part* part) {
+    if (part != nullptr && part->vessel == vessel) recreateThermalGraph = true;
+}
+
+// FlightIntegrator.cs:428
+void FlightIntegrator::OnVesselEvent(Vessel* v) {
+    if (vessel == v) recreateThermalGraph = true;
+}
+
+// FlightIntegrator.cs:436 (the C#'s second test reads data.target.vessel behind a host null check: a null target is skipped here)
+void FlightIntegrator::OnPartEventTargetAction(events::GameEvents::HostTargetAction<Part*, Part*> data) {
+    if ((data.host != nullptr && data.host->vessel == vessel) || (data.host != nullptr && data.target != nullptr && data.target->vessel == vessel))
+        recreateThermalGraph = true;
+}
+
+// FlightIntegrator.cs:444
+void FlightIntegrator::OnPartEventFromToAction(events::GameEvents::FromToAction<Part*, Part*> data) {
+    if ((data.from != nullptr && data.from->vessel == vessel) || (data.to != nullptr && data.to->vessel == vessel)) recreateThermalGraph = true;
 }
 
 // ===================================================================================== Setup
@@ -523,7 +564,9 @@ void FlightIntegrator::Update() {
     }
     ThermoPrecalculate();
     deltaTime += static_cast<double>(TimeWarp::deltaTime());
-    if (deltaTime > PhysicsGlobals::OcclusionMinStep()) {
+    // (kspcore: not while the thermal graph waits for its rebuild: a part that died since the last FixedUpdate is freed memory here, a
+    // destroyed but live object in the C#; the round-robin pass resumes after the next CheckThermalGraph)
+    if (deltaTime > PhysicsGlobals::OcclusionMinStep() && !recreateThermalGraph) {
         UpdateOcclusion(false);
         deltaTime = 0.0;
     }
@@ -566,10 +609,15 @@ void FlightIntegratorHost::OnVesselUnloaded(const Vessel& vessel) {
     if (FlightIntegrator* fi = Find(vessel)) fi->OnUnloadVessel();
 }
 
+namespace {
+// a vessel destroyed by an earlier vessel's step of the same pass gets no further callbacks (as FlightScene)
+bool Registered(const Vessel* v) { return std::find(FlightGlobals::Vessels.begin(), FlightGlobals::Vessels.end(), v) != FlightGlobals::Vessels.end(); }
+}  // namespace
+
 void FlightIntegratorHost::FixedUpdate(VesselPhysicsHost& host) {
     const std::vector<Vessel*> vessels = FlightGlobals::Vessels;
     for (Vessel* v : vessels) {
-        if (v == nullptr || !v->loaded || v->state == Vessel::State::DEAD) continue;  // FlightIntegrator.ShouldBeActive: vessel.loaded
+        if (v == nullptr || !Registered(v) || !v->loaded || v->state == Vessel::State::DEAD) continue;  // FlightIntegrator.ShouldBeActive: vessel.loaded
         For(*v).FixedUpdate(v->packed ? nullptr : host.Find(*v));
     }
 }
@@ -577,7 +625,7 @@ void FlightIntegratorHost::FixedUpdate(VesselPhysicsHost& host) {
 void FlightIntegratorHost::Update() {
     const std::vector<Vessel*> vessels = FlightGlobals::Vessels;
     for (Vessel* v : vessels) {
-        if (v == nullptr || !v->loaded || v->state == Vessel::State::DEAD) continue;
+        if (v == nullptr || !Registered(v) || !v->loaded || v->state == Vessel::State::DEAD) continue;
         For(*v).Update();
     }
 }
