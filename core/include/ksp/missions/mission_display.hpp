@@ -14,6 +14,8 @@
 namespace ksp::Expansions::Missions {
 
 class MissionCelestialBody;
+class ParamChoices_CelestialBodySurface;
+class MissionKerbal;
 
 namespace Editor {
 // Editor/BaseAPField.cs: the reflection record of one [MEGUI_*] field. The attribute reflection (BaseAPFieldList, MEGUI controls) is the editor
@@ -29,6 +31,10 @@ public:
     // TestModule.GetNodeBodyParameterString :258 looks at the field's type: MissionCelestialBody (pointer to the value) and the slice-2 types
     // ParamChoices_CelestialBodySurface / MissionKerbal (the text their branch returns, precomputed by the caller)
     const MissionCelestialBody* celestialBody = nullptr;
+    // WP-54 slice 2: `field.FieldType == typeof(X)` and `field.GetValue() is X`: the type name and the value, for the slice-2 data classes
+    const ParamChoices_CelestialBodySurface* paramChoices = nullptr;   // TestModule.cs:259
+    const MissionKerbal* missionKerbal = nullptr;                      // TestModule.cs:267
+    std::string fieldType;                                                   // FieldType.Name ("SurfaceArea", "MissionOrbit", ...)
     std::optional<std::string> typedText;
     BaseAPField() = default;
     BaseAPField(std::string n, std::string gui, std::string v = "", bool has = true)

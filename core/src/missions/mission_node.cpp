@@ -1,5 +1,6 @@
 // WP-54: MENode.cs, TestGroup.cs, TestModule.cs, ActionModule.cs, Editor/MEBasicNode.cs (Load), Editor/DisplayParameter.cs. See mission_node.hpp.
 #include "ksp/missions/mission_node.hpp"
+#include "ksp/missions/mission_data.hpp"
 
 #include <algorithm>
 #include <map>
@@ -204,6 +205,8 @@ bool TestModule::HasSAPParameter(const std::string& parameter) {
 // TestModule.cs:258
 std::string TestModule::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     // ParamChoices_CelestialBodySurface / MissionKerbal fields: the caller passes the text of their branch
+    if (field.paramChoices != nullptr) return field.paramChoices->NodeBodyParameterString();
+    if (field.missionKerbal != nullptr) return KSP::Localization::Localizer::Format("#autoLOC_8004190", {field.guiName, field.missionKerbal->Name()});
     if (field.typedText.has_value()) return *field.typedText;
     if (field.celestialBody != nullptr) {
         return KSP::Localization::Localizer::Format("#autoLOC_8004190", {field.guiName, field.celestialBody->DisplayName()});

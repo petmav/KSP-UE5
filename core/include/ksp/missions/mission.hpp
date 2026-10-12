@@ -405,6 +405,7 @@ public:
     Guid GetNodeGuidByVesselID(uint32_t persistentId, bool processMappedVessels);  // :2320
     bool PendingVesselLaunch(MENode* node);                 // :2344
     VesselSituation* GetVesselSituationByVesselID(uint32_t persistentId);  // :2349
+    bool UpdateFromMappedVesselIDs(uint32_t vesselId, std::string& vesselName, VesselSituation*& vesselSituation);  // :1375 (internal)
     VesselSituation* GetVesselSituationByVesselID(uint32_t persistentId, bool processMappedVessels);  // :2354
     Asteroid* GetAsteroidByPersistentID(uint32_t persistentId);  // :2372
     Comet* GetCometByPersistentID(uint32_t PersistentId);   // :2392

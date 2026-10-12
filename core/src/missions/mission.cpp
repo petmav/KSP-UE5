@@ -1989,3 +1989,16 @@ MENode* Mission::AdoptNode(std::unique_ptr<MENode> node) {
 }
 
 }  // namespace ksp::Expansions::Missions
+
+namespace ksp::Expansions::Missions {
+// Mission.cs:1375
+bool Mission::UpdateFromMappedVesselIDs(uint32_t vesselId, std::string& vesselName, VesselSituation*& vesselSituation) {
+    const int num = MappedVessels::IndexMappedVesselId(mappedVessels, vesselId);
+    if (num != -1) {
+        vesselName = mappedVessels[static_cast<size_t>(num)].partVesselName;
+        vesselSituation = GetVesselSituationByVesselID(mappedVessels[static_cast<size_t>(num)].currentVesselPersistentId);
+        return true;
+    }
+    return false;
+}
+}  // namespace ksp::Expansions::Missions

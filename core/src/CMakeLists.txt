@@ -140,6 +140,8 @@ add_library(kspcore STATIC
     missions/vessel_situation.cpp
     missions/node_library.cpp
     missions/mission_tests.cpp
+    missions/mission_tests2.cpp
+    missions/mission_tests3.cpp
     missions/mission_actions.cpp
     missions/mission_adjusters.cpp
     space_center/pqs_city.cpp
