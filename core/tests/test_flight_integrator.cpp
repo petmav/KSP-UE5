@@ -22,6 +22,9 @@
 #include "doctest/doctest.h"
 #include "flight_integrator_fixture.hpp"
 #include "ksp/aero/aero_interfaces.hpp"
+#include "ksp/aero/lifting_surface.hpp"
+#include "ksp/modules/module_reaction_wheel.hpp"
+#include "ksp/save/save_environment.hpp"
 #include "nlohmann/json.hpp"
 
 using namespace ksp;
@@ -644,4 +647,324 @@ TEST_CASE("WP-20d ascent from the pad vs KSP's own ascent (C10 in-game states): 
                          << " frames behind KSP's (a constant: the capture's frame 0 is not our ignition tick); root altitude at ignition "
                          << f.padAlt << " m (KSP's pad surface is ~7.6 m above the PQS terrain the craft stands on here: PhysProf-S's root is at 79.29 m in C6)");
     }
+}
+
+// ===================================================================================================================== burn, coast
+
+namespace {
+
+// A craft in a 120 km circular Kerbin orbit (inertial frame, vacuum) in the bubble with the engines' models and the resource sets.
+struct OrbitScene {
+    wp20b::World& w;
+    wp19b::BubbleScene s;
+    wp20d::EngineModels engines;
+    wp20d::ResourceSets resources;
+    explicit OrbitScene(wp20b::World& w_) : w(w_), s(w_) {
+        wp20d::StartPhysicsGlobals(w);
+        SaveEnvironment::Current().loadedScene = GameScenes::FLIGHT;
+        engines.Install(s.bubble.ModuleForces());
+    }
+    void Place(Vessel& v, double altitude) {
+        CelestialBody& kerbin = w.Kerbin();
+        Vector3d pos, vel;
+        wp19b::CircularStateAt(kerbin, kerbin.Radius + altitude, Vector3d(0.6, 0.48, -0.64), Vector3d(0.3, -0.9, 0.2), pos, vel);
+        wp19b::PlaceOnOrbit(v, kerbin, pos, vel, true);
+        v.UpdateResourceSets();
+        s.Start(v);
+    }
+};
+
+}  // namespace
+
+namespace {
+
+struct BurnResult {
+    double m0 = 0, m1 = 0, dm = 0, posErr = 0, velErr = 0, dvThrust = 0, tickSum = 0, tsiolkovsky = 0, maxAxisDev = 0, comShiftAxial = 0;
+    Vector3d comShift;
+    int N = 0, driftTicks = 0;
+};
+
+// PhysProf-S's core (probe, Rockomax X200-32, Mainsail) in a 120 km orbit, the Mainsail at full throttle for N ticks, and the burn replayed
+// independently (double; no kspcore code, only the engine's cfg values and the initial state). The engine drains before
+// FlightIntegrator.UpdateMassStats, so a tick runs at the mass after its own drain; thrust along the engine axis; the physics step is
+// semi-implicit Euler. Gravity: with orbit-drift compensation off, the acceleration at the CoM of the tick start (VesselPrecalculate
+// gravity mode); with it on (KSP's default), the compensation stays engaged while the engine burns (the orbit is refitted to the rigid
+// body every frame, so the drift check passes: VesselPrecalculate.cs:303-343) and gravity is the tick's exact Kepler step instead of a
+// force, the thrust integrated on top of it (the Kepler step is the WP-19b fixture's independent two-body propagator).
+BurnResult Burn(bool driftCompensation, int N) {
+    BurnResult b;
+    b.N = N;
+    wp20b::World w;
+    OrbitScene sc(w);
+    GameSettings::ORBIT_DRIFT_COMPENSATION = driftCompensation;
+    auto v = w.CraftHead("PhysProf-S", 3);
+    sc.Place(*v, 120000.0);
+    CelestialBody& kerbin = w.Kerbin();
+    for (int k = 0; k < 50; ++k) sc.s.Tick();
+    REQUIRE_FALSE(v->packed);
+    REQUIRE(FindPart(*v, "liquidEngineMainsail.v2") != nullptr);
+    REQUIRE(wp20d::EnginesOf(*v).size() == 1);
+    ModuleEngines* e = wp20d::EnginesOf(*v).front();
+    const double maxThrust = static_cast<double>(e->maxThrust);
+    const double ispVac = static_cast<double>(e->Get<FloatCurve>("atmosphereCurve").Evaluate(0.0f));
+    const double g0 = static_cast<double>(e->g);
+    const double mdot = static_cast<double>(e->maxFuelFlow);  // OnLoad: maxThrust / (Isp(0) g), float
+    CHECK(mdot == doctest::Approx(maxThrust / (ispVac * g0)).epsilon(1e-6));
+    const double dt = static_cast<double>(Time::fixedDeltaTime);
+    REQUIRE(wp20d::IgniteFirstStage(*v) == 1);
+    // the reference is a point moving rigidly with the vessel: the root part (the centre of mass itself moves inside the vessel as the
+    // tank drains, VesselPhysics::UpdateMassProperties: the parts keep their motion), with the velocity of the centre of mass
+    const Vector3d x0 = v->CoMD - kerbin.position, v0 = v->velocityD;
+    const Vector3d root0 = Vector3d(v->vesselTransform.position) - kerbin.position;
+    b.m0 = static_cast<double>(v->GetTotalMass());
+    const Vector3d axis0 = Vector3d(v->vesselTransform.rotation * Vector3f::up()).normalized();
+    for (int k = 0; k < N; ++k) {
+        sc.s.Tick();
+        b.driftTicks += v->precalc.wasCorrectingDrift;
+        const Vector3d axis = Vector3d(v->vesselTransform.rotation * Vector3f::up()).normalized();
+        b.maxAxisDev = std::max(b.maxAxisDev, std::acos(std::min(1.0, Vector3d::Dot(axis, axis0))) * 57.29577951308232);
+    }
+    const Vector3d root1 = Vector3d(v->vesselTransform.position) - kerbin.position, v1 = v->velocityD;
+    b.comShift = ((v->CoMD - kerbin.position) - root1) - (x0 - root0);
+    b.comShiftAxial = Vector3d::Dot(b.comShift, axis0);
+    b.m1 = static_cast<double>(v->GetTotalMass());
+    b.dm = mdot * static_cast<double>(static_cast<float>(dt));  // RequiredPropellantMass: (float)requestedMassFlow * (float)dt, widened
+    const double mu = kerbin.gravParameter;
+    Vector3d x = x0, vel = v0, gSum;
+    for (int k = 0; k < N; ++k) {
+        const double m = b.m0 - (k + 1) * b.dm;
+        const Vector3d a = axis0 * (maxThrust / m);
+        if (driftCompensation) {
+            const wp19b::TwoBody kep{mu, 0.0, x, vel};
+            const Vector3d xK = kep.At(dt), vK = kep.VelAt(dt);
+            gSum += vK - vel;
+            vel = vK + a * dt;
+            x = xK + a * (dt * dt);
+        } else {
+            const double r = x.magnitude();
+            const Vector3d g = x * (-mu / (r * r * r));
+            gSum += g * dt;
+            vel = vel + (a + g) * dt;
+            x = x + vel * dt;
+        }
+    }
+    b.posErr = ((root1 - root0) - (x - x0)).magnitude();
+    b.velErr = (v1 - vel).magnitude();
+    b.dvThrust = Vector3d::Dot(v1 - v0 - gSum, axis0);
+    b.tsiolkovsky = ispVac * g0 * std::log(b.m0 / b.m1);
+    for (int k = 0; k < N; ++k) b.tickSum += maxThrust / (b.m0 - (k + 1) * b.dm) * dt;
+    GameSettings::ORBIT_DRIFT_COMPENSATION = true;
+    return b;
+}
+
+}  // namespace
+
+TEST_CASE("WP-20d burn: a vacuum burn with the real engine vs an independent replay of KSP's tick and the rocket equation") {
+    if (!wp20b::GameAvailable()) return;
+    for (const bool drift : {false, true}) {
+        const BurnResult b = Burn(drift, 500);  // 10 s
+        MESSAGE("burn 10 s, drift compensation " << std::string(drift ? "on" : "off") << ": mass " << b.m0 << " -> " << b.m1 << " t ("
+                                                 << (b.m0 - b.m1) / (b.N * b.dm) - 1.0 << " rel. vs " << b.N << " x " << b.dm << " t); vs the tick replay: position "
+                                                 << b.posErr << " m, velocity " << b.velErr << " m/s; thrust dv " << b.dvThrust << " m/s vs the tick sum "
+                                                 << b.tickSum << " (" << b.dvThrust / b.tickSum - 1.0 << ") and Tsiolkovsky " << b.tsiolkovsky << " ("
+                                                 << b.dvThrust / b.tsiolkovsky - 1.0 << "); the axis turned " << b.maxAxisDev << " deg; drift compensation on "
+                                                 << b.driftTicks << " / " << b.N << " ticks; the centre of mass moved " << b.comShiftAxial << " m along the axis inside the vessel");
+        CHECK((b.m0 - b.m1) == doctest::Approx(b.N * b.dm).epsilon(1e-6));
+        CHECK(std::fabs(b.dvThrust / b.tickSum - 1.0) < 1e-5);
+        CHECK(std::fabs(b.dvThrust / b.tsiolkovsky - 1.0) < 5e-4);  // the tick's discrete sum vs the continuous rocket equation
+        CHECK(b.maxAxisDev < 0.01);
+        CHECK(b.velErr < 5e-3);
+        if (drift) {
+            CHECK(b.driftTicks == b.N);
+            CHECK(b.posErr < 0.01);
+        } else {
+            CHECK(b.driftTicks == 0);
+            CHECK(b.posErr < 0.01);
+        }
+    }
+}
+
+TEST_CASE("WP-20d coast: a full craft coasting in orbit through the whole tick (thermal, modules, aero in vacuum) stays on its Kepler orbit") {
+    if (!wp20b::GameAvailable()) return;
+    wp20b::World w;
+    OrbitScene sc(w);
+    auto v = w.Craft("PhysProf-S");
+    CelestialBody& kerbin = w.Kerbin();
+    Vector3d pos, vel;
+    wp19b::CircularStateAt(kerbin, kerbin.Radius + 120000.0, Vector3d(0.6, 0.48, -0.64), Vector3d(0.3, -0.9, 0.2), pos, vel);
+    sc.Place(*v, 120000.0);
+    const double ut0 = Planetarium::GetUniversalTime();
+    const wp19b::TwoBody ref{kerbin.gravParameter, ut0, pos, vel};
+    const double dtf = static_cast<double>(Time::fixedDeltaTime);
+    double maxErr = 0.0;
+    double utA0 = 0.0;
+    const int N = 3000;  // 60 s
+    double t0 = 0.0, tEnd = 0.0;
+    for (int k = 0; k < N; ++k) {
+        sc.s.Tick();
+        if (k == 0) {
+            utA0 = Planetarium::GetUniversalTime();
+            t0 = v->rootPart->fields.temperature;
+        }
+        if (k >= 1) maxErr = std::max(maxErr, ((v->CoMD - kerbin.position) - ref.At(utA0 + k * dtf)).magnitude());
+    }
+    tEnd = v->rootPart->fields.temperature;
+    const FlightIntegrator* fi = sc.s.bubble.FlightIntegrators().Find(*v);
+    REQUIRE(fi != nullptr);
+    bool finite = true;
+    size_t radiating = 0;
+    for (Part* p : v->parts) {
+        finite = finite && std::isfinite(p->fields.temperature) && std::isfinite(p->fields.skinTemperature);
+        radiating += p->fields.thermalRadiationFlux != 0.0;
+    }
+    MESSAGE("coast 60 s at 120 km: CoM vs the Kepler orbit <= " << maxErr << " m; FlightIntegrator ran " << fi->FixedUpdates()
+                                                               << " integrating ticks, thermal graph " << fi->partThermalDataCount << " parts (" << radiating
+                                                               << " radiating), root temperature " << std::to_string(t0) << " -> " << std::to_string(tEnd)
+                                                               << " K, density " << fi->atm.density << ", mach " << v->mach);
+    CHECK(maxErr < 1e-3);
+    CHECK(fi->FixedUpdates() >= static_cast<uint64_t>(N - 1));
+    CHECK(fi->partThermalDataCount == static_cast<int>(v->parts.size()));
+    CHECK(finite);
+    CHECK(radiating == v->parts.size());
+    CHECK(tEnd != t0);
+    CHECK(fi->atm.density == 0.0);
+    CHECK(v->mach == 0.0);
+}
+
+// ===================================================================================================================== FixedUpdate, module slot
+
+TEST_CASE("WP-20d FlightIntegrator.FixedUpdate in the bubble: Setup waits for Part.Start, the packed branch, the vessel mirrors, per-part pressure") {
+    if (!wp20b::GameAvailable()) return;
+    wp20b::World w(true);
+    wp20d::PadScene pad(w);
+    auto v = w.Craft("PhysProf-S");
+    // FlightIntegrator.Setup (:255) returns until the root part has started: nothing runs
+    {
+        FlightIntegrator fi(*v);
+        FlightGlobals::ready = true;
+        fi.FixedUpdate(nullptr);
+        CHECK_FALSE(fi.setupRun);
+        CHECK_FALSE(fi.isRunning);
+        FlightGlobals::ready = false;
+    }
+    pad.Place(*v);
+    pad.s.Start(*v);
+    Part* tank = FindPart(*v, "Rockomax32.BW");
+    REQUIRE(tank != nullptr);
+    tank->fields.force = Vector3d(1.0, 2.0, 3.0);
+    tank->forces.emplace_back(Vector3d(1.0, 0.0, 0.0), Vector3d());
+    // tick 0: the vessel is still packed in FixedUpdate (OrbitPhysicsManager unpacks it in LateUpdate): FlightIntegrator.FixedUpdate runs
+    // its thermal half, then the packed branch clears every buffer and stops (:649-660)
+    pad.s.Tick();
+    FlightIntegrator* fi = pad.s.bubble.FlightIntegrators().Find(*v);
+    REQUIRE(fi != nullptr);
+    CHECK(fi->setupRun);
+    CHECK(fi->isRunning);
+    CHECK(fi->FixedUpdates() == 0);
+    CHECK(fi->partThermalDataCount == static_cast<int>(v->parts.size()));
+    CHECK(tank->fields.force.IsZero());
+    CHECK(tank->forces.empty());
+    CHECK_FALSE(v->packed);
+    CHECK(FlightIntegrator::ActiveVesselFI == fi);
+    // tick 1: unpacked, Integrate ran; the vessel mirrors of :621-641 and the per-part static pressure of DragCubeSetupAndPartAeroStats
+    pad.s.Tick();
+    CHECK(fi->FixedUpdates() == 1);
+    CHECK(v->staticPressurekPa == fi->atm.staticPressurekPa);
+    CHECK(v->speed == fi->atm.spd);
+    CHECK(v->indicatedAirSpeed == fi->atm.spd * fi->atm.staticPressureAtm);
+    CHECK(v->atmDensity == fi->atm.density);
+    CHECK(v->mach == fi->atm.mach);
+    CHECK(v->atmosphericTemperature == fi->atm.atmosphericTemperature);
+    CHECK(v->externalTemperature == fi->atm.externalTemperature);
+    CHECK(fi->atm.staticPressurekPa > 99.0);  // on the pad (65-90 m above sea level)
+    CHECK(fi->atm.altitude == FlightGlobals::getAltitudeAtPos(fi->CoMd, &w.Kerbin()));
+    // the FlightIntegrator slot once more between two ticks (the transforms are those it reads): DragCubeSetupAndPartAeroStats' static
+    // pressure at every part's own position (FlightIntegrator.cs:2528-2541)
+    pad.s.bubble.FlightIntegrators().FixedUpdate(pad.s.bubble.Host());
+    for (Part* p : v->parts) {
+        const double alt = FlightGlobals::getAltitudeAtPos(Vector3d(p->partTransform.position), &w.Kerbin());
+        CHECK(p->fields.staticPressureAtm == w.Kerbin().GetPressure(alt) * 0.009869232667160128);
+        CHECK(p->fields.atmDensity == fi->atm.density);
+        CHECK(p->fields.machNumber == fi->atm.mach);
+    }
+    // on the pad the drag vector of every part is (almost) zero: no aero force; rb.angularDrag is the FlightIntegrator's (q ~ 0)
+    VesselPhysics* vp = pad.s.bubble.Host().Find(*v);
+    REQUIRE(vp != nullptr);
+    for (Part* p : v->parts)
+        if (p->hasRigidbody && p->fields.angularDragByFI) CHECK(vp->AngularDrag(*p) < 1e-3f);
+}
+
+TEST_CASE("WP-20d module slot: lifting / control surfaces and reaction wheels hand their records to the part buffers as Part.AddForceAtPosition / AddTorque") {
+    if (!wp20b::GameAvailable()) return;
+    wp20b::World w;
+    wp20d::StartPhysicsGlobals(w);
+    SaveEnvironment::Current().loadedScene = GameScenes::FLIGHT;
+    wp20d::ResourceSets resources;
+    auto v = w.Craft(std::string(KSPCORE_HARNESS_DIR) + "/inputs/Ships/SPH/Aeris 3A.craft");  // stock: delta wings, elevons, winglets, Mk1 cockpit
+    StartPartsInFlight(*v);
+    // the surfaces' OnStart in flight (ModuleLiftingSurface.cs:128: the lift / drag curves from PhysicsGlobals' liftingSurfaceCurve);
+    // the module lifecycle (Part.ModulesOnStart) is the host's, not the tick's
+    for (Part* p : v->parts)
+        for (size_t i = 0; i < p->Modules().Count(); ++i)
+            if (auto* ls = dynamic_cast<ModuleLiftingSurface*>(p->Modules().GetModule(i))) ls->OnStart(StartState::Flying);
+    v->UpdateResourceSets();
+    v->packed = false;  // off rails (the bodies below are its)
+    PhysicsWorld world;
+    VesselPhysics vp(world, *v, VesselPose{}, {});
+    // flying at 150 m/s with an angle of attack; the part air state FlightIntegrator would have left (q 10 kPa, Mach 0.45)
+    const Vector3d vel(0.0, 150.0, 20.0);
+    vp.SetLinearVelocity(vel);
+    for (Part* p : v->parts) {
+        p->fields.dynamicPressurekPa = 10.0;
+        p->fields.machNumber = 0.45;
+        p->fields.submergedPortion = 0.0;
+    }
+    v->ctrlState.pitch = 0.5f;
+    FlightGlobals::ready = true;
+    PartModuleForces slot;
+    slot.engines = false;  // the jet's intake / spool are not this test's subject
+    slot.FixedUpdateVessel(*v, &vp);
+    FlightGlobals::ready = false;
+    // the expected buffer entries, in the slot's order: every lifting surface's record (lift at CoL, then drag at CoP) on its RigidBodyPart
+    std::map<Part*, std::vector<Part_ForceHolder>> expected;
+    std::map<Part*, Vector3d> torque;
+    size_t surfaces = 0, wheels = 0;
+    for (Part* p : v->parts)
+        for (size_t i = 0; i < p->Modules().Count(); ++i) {
+            PartModule* m = p->Modules().GetModule(i);
+            if (auto* ls = dynamic_cast<ModuleLiftingSurface*>(m)) {
+                // Rigidbody.GetPointVelocity of a non-rotating body: its velocity; no frame velocity here
+                CHECK(SameBits(ls->pointVelocity, vel.ToVector3f()));
+                Part* owner = RigidBodyPart(p);
+                expected[owner].emplace_back(Vector3d(ls->liftForce), Vector3d(p->partTransform.TransformPoint(p->fields.CoLOffset)));
+                if (ls->Get<bool>("useInternalDragModel"))
+                    expected[owner].emplace_back(Vector3d(ls->dragForce), Vector3d(p->partTransform.TransformPoint(p->fields.CoPOffset)));
+                ++surfaces;
+            } else if (auto* rw = dynamic_cast<ModuleReactionWheel*>(m)) {
+                if (rw->torqueApplied) {
+                    torque[RigidBodyPart(p)] += Vector3d(rw->lastTorque);
+                    ++wheels;
+                }
+            }
+        }
+    size_t entries = 0;
+    for (const auto& [owner, list] : expected) {
+        REQUIRE(owner->forces.size() == list.size());
+        for (size_t i = 0; i < list.size(); ++i) {
+            CHECK(SameBits(owner->forces[i].force, list[i].force));
+            CHECK(SameBits(owner->forces[i].pos, list[i].pos));
+            ++entries;
+        }
+    }
+    for (const auto& [owner, t] : torque) CHECK(SameBits(owner->fields.torque, t));
+    double liftMag = 0.0;
+    for (const auto& [owner, list] : expected)
+        for (const Part_ForceHolder& h : list) liftMag += h.force.magnitude();
+    MESSAGE(surfaces << " lifting / control surfaces -> " << entries << " buffered forces (" << slot.surfaceForces << " counted by the slot, |F| sum "
+                     << liftMag << " kN); " << wheels << " reaction wheels -> torque");
+    CHECK(surfaces >= 8);
+    CHECK(entries == slot.surfaceForces);
+    CHECK(liftMag > 1.0);
+    CHECK(wheels >= 1);
+    CHECK(slot.wheelTorques == wheels);
 }

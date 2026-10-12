@@ -143,6 +143,7 @@ struct PadScene {
     double padRadius = 0.0;
     explicit PadScene(World& w_, const PhysicsBubbleOptions& o = {}) : w(w_), s(w_, o) {
         StartPhysicsGlobals(w);
+        SaveEnvironment::Current().loadedScene = GameScenes::FLIGHT;  // HighLogic.LoadedSceneIsFlight (module FixedUpdates check it)
         CelestialBody& kerbin = w.Kerbin();
         kerbin.inverseRotation = true;  // the rotating frame (OrbitPhysicsManager.checkReferenceFrame below the threshold)
         w.planetarium.UpdateCBs();
