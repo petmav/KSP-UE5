@@ -448,6 +448,7 @@ void KerbalEVA::OnStart(StartState state) {
     }
     SetupEVAScienceSoundFX();
     EvaEnvironment::Effect("SetupSoundFX");
+    SyncEvaChuteHost();
 }
 
 // KerbalEVA.cs:1673
@@ -590,9 +591,29 @@ void KerbalEVA::OnPartEvent(Part* p) {
     if (currentAirlockPart != nullptr && p->fields.persistentId == currentAirlockPart->fields.persistentId) currentAirlockPart = nullptr;
 }
 
+// the ModuleEvaChute asks the KerbalEVA (IsChuteState, JetpackDeployed, IsSeated, IsKerbalInStateAbleToDeployParachute, OnParachute*): its host struct
+void KerbalEVA::SyncEvaChuteHost() {
+    if (evaChute == nullptr) return;
+    auto& h = evaChute->kerbalEVA;
+    const bool started = fsm != nullptr && fsm->CurrentState() != nullptr;
+    h.IsChuteState = started && IsChuteState();
+    h.JetpackDeployed = JetpackDeployed();
+    h.seated = started && IsSeated();
+    h.ableToDeployParachute = started && IsKerbalInStateAbleToDeployParachute();
+    if (Part* p = PartPtr()) {
+        h.up = p->partTransform.up();
+        h.right = p->partTransform.right();
+        h.forward = p->partTransform.forward();
+    }
+    h.onSemiDeployed = [this] { OnParachuteSemiDeployed(); };
+    h.onFullyDeployed = [this] { OnParachuteFullyDeployed(); };
+    h.onCut = [this] { OnParachuteCut(); };
+}
+
 // KerbalEVA.cs:1900
 void KerbalEVA::UpdateInventoryPaw(KFSMState*, KFSMState*, KFSMEvent*) {
     if (moduleInventoryPartReference != nullptr) moduleInventoryPartReference->KerbalStateChanged();
+    SyncEvaChuteHost();
 }
 
 // KerbalEVA.cs:1908
@@ -642,6 +663,7 @@ void KerbalEVA::FixedUpdate() {
         packTgtRPos = Vector3f::zero();
         packRRot = Vector3f::zero();
         HandleMovementInput();
+        SyncEvaChuteHost();
         fsm->FixedUpdateFSM();
         JetpackIsThrusting = fx(fuelFlowRate) > fx(PropellantConsumption()) / 2.0 * (fx(thrustPercentage()) * fx(0.01f));
         UpdatePackFuel();

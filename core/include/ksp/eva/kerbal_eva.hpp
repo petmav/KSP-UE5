@@ -424,6 +424,7 @@ public:
     void SetPortraitCameraDistance(float newDistance);             // :1908
     void SetVisibleInPortrait(bool visible);                       // :1948
     void CacheLocalStrings();                                      // :6979
+    void SyncEvaChuteHost();                                       // C++: refreshes ModuleEvaChute::kerbalEVA (the KerbalEVA queries the chute makes)
 
     // ======================================================================== state callbacks (:1973-:3266)
     void idle_OnEnter(KFSMState* st);

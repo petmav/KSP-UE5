@@ -176,8 +176,7 @@ TEST_CASE("WP-32 jetpack: UpdatePackLinear / UpdatePackAngular forces, torques a
     if (!GameAvailable()) return;
     nlohmann::json ref = LoadRef();
     EvaWorld w;
-    PartResourceLibrary lib;
-    lib.LoadDefinitions(w.g.data.database);
+    PartResourceLibrary& lib = w.resourceLibrary;
     EvaKerbal k(w, true);
     KerbalEVA& e = *k.eva;
     // EVA propellant resource (off the part's list, like StartEVA leaves it): the definition of the game's ResourcesGeneric.cfg

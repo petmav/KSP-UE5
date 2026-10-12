@@ -7,12 +7,6 @@ using namespace ksp::eva32;
 
 namespace {
 
-struct World {
-    nlohmann::json w;
-    std::vector<EvaCollider> colliders;
-    Part otherPart;
-};
-
 KFSMEvent* FindEvent(KerbalEVA& e, const std::string& name) {
     for (KFSMState* st : e.fsm->GetStates())
         for (KFSMEvent* ev : st->StateEvents())
@@ -26,73 +20,7 @@ KFSMState* FindState(KerbalEVA& e, const std::string& name) {
     return nullptr;
 }
 
-// the world of the Python reference applied to a live kerbal (inputs only; the delegates run unmodified)
-void Apply(EvaWorld& ew, EvaKerbal& k, World& wd, const nlohmann::json& ref) {
-    KerbalEVA& e = *k.eva;
-    const nlohmann::json& w = wd.w;
-    e.tgtRpos = V3(w["tgt"]);
-    e.deltaHdg = F(w["dh"]);
-    e.lastDeltaHdg = F(w["ldh"]);
-    ew.Kerbin().GeeASL = w["gee"].get<double>();
-    e.CharacterFrameMode = w["cf"].get<bool>();
-    k.vessel->Landed = w["landed"].get<bool>();
-    k.vessel->Splashed = w["splashed"].get<bool>();
-    k.vessel->packed = w["packed"].get<bool>();
-    k.vessel->state = w["active"].get<bool>() ? Vessel::State::ACTIVE : Vessel::State::INACTIVE;
-    k.vessel->heightFromTerrain = F(w["hft"]);
-    k.vessel->heightFromSurface = F(w["hfs"]);
-    Time::time = F(w["t"]);
-    e.fsm->CurrentState()->TimeAtStateEnter = 0.0;
-    Time::frameCount = w["frames"].get<int>();
-    e.fsm->CurrentState()->FrameCountAtStateEnter = 0;
-    e.set_lastBoundStep(F(w["lbs"]));
-    e.set_JetpackDeployed(w["jet"].get<bool>());
-    e.partPlacementMode = w["pm"].get<bool>();
-    const nlohmann::json keys = w["keys"];
-    EvaEnvironment::key = [keys](EvaKey kk, KeyQuery q) {
-        static const char* names[] = {"Forward", "Back", "Left", "Right", "YawLeft", "YawRight", "PackForward", "PackBack", "PackLeft", "PackRight", "PackUp", "PackDown",
-                                      "Jump", "Run", "TogglePack", "Use", "Board", "Orient", "Lights", "Helmet", "ChuteDeploy", "ToggleMovementMode"};
-        const std::string n = names[static_cast<int>(kk)];
-        if (!keys.contains(n)) return false;
-        return keys[n][q == KeyQuery::Held ? "held" : (q == KeyQuery::Down ? "down" : "up")].get<bool>();
-    };
-    k.part->parent = w["noparent"].get<bool>() ? nullptr : &wd.otherPart;
-    // ladder
-    wd.colliders.assign(4, EvaCollider());
-    e.currentLadderTriggers.clear();
-    for (int i = 0; i < w["ntrig"].get<int>(); i++) e.currentLadderTriggers.push_back(&wd.colliders[static_cast<size_t>(i) + 1]);
-    if (w["cl"].get<bool>()) {
-        EvaCollider& c = wd.colliders[0];
-        c.pose.rotation = Rot(ref, w["clrot"].get<int>());
-        c.activeInHierarchy = w["lad_active"].get<bool>();
-        c.enabled = w["lad_enabled"].get<bool>();
-        e.currentLadder = &c;
-    } else {
-        e.currentLadder = nullptr;
-    }
-    e.invLadderAxis = w["inv"].get<bool>();
-    e.ladderTgtRPos = V3(w["ltr"]);
-    GameSettings::EVA_LADDER_CHECK_END = w["chk"].get<bool>();
-    e.canClimb = w["ccl"].get<bool>();
-    e.canDescend = w["cdn"].get<bool>();
-    e.currentSpd = F(w["spd"]);
-    // clamber
-    if (w["cpath"].get<bool>()) e.clamberPath = std::make_unique<ClamberPath>(Vector3f(), Vector3f(), Vector3f(), Vector3f(), Vector3f(), 0.0f, 0.0f);
-    else e.clamberPath.reset();
-    e.Animations().clamber.State()->normalizedTime = F(w["cnt"]);
-    e.Animations().clamber.end = F(w["cend"]);
-    e.Animations().clamber.State()->length = F(w["clen"]);
-    e.InConstructionMode = w["inconstr"].get<bool>();
-    if (w["weldfx"].get<bool>()) {
-        e.weldFX = std::make_unique<EvaWeldFx>();
-        e.weldFX->meshEnabled = w["weldmesh"].get<bool>();
-    } else {
-        e.weldFX.reset();
-    }
-}
-
 }  // namespace
-
 
 TEST_CASE("WP-32 KerbalEVA event conditions: 2,880 worlds equal the Python predicates") {
     if (!GameAvailable()) return;
@@ -101,12 +29,11 @@ TEST_CASE("WP-32 KerbalEVA event conditions: 2,880 worlds equal the Python predi
     EvaKerbal k(ew, true);
     KerbalEVA& e = *k.eva;
     // the Python predicates read the clamber flag through the keys of the event; Ladder Grab Start / Boarding Part / Semi-Deploy post messages (checked elsewhere)
-    World wd;
+    WorldState wd;
     int n = 0;
     std::map<std::string, int> perEvent;
     for (const auto& c : ref["conditions"]) {
-        wd.w = c["world"];
-        Apply(ew, k, wd, ref);
+        ApplyWorld(ew, k, wd, ref, c["world"], true);
         const std::string name = c["event"].get<std::string>();
         KFSMEvent* ev = FindEvent(e, name);
         REQUIRE_MESSAGE(ev != nullptr, name);
@@ -164,4 +91,54 @@ TEST_CASE("WP-32 KerbalEVA OnEvent target decisions (Landing, Feet Wet, Feet Dry
     }
     CHECK(n == 300);
     EvaEnvironment::universalTime = nullptr;
+}
+
+// Scripted scenarios: the live FSM (callbacks, OnEvent bodies, timers, per-state event lists) against a second FSM runtime over the parsed tables
+// (tools/wp32/eva_ref_scenarios.py). SYNTHETIC world: the inputs are scripted (identity rotation, tgtFwd = forward, fUp = up keep the callbacks inert).
+TEST_CASE("WP-32 scenarios: walk, run, jump, swim, ladder, flag, ragdoll, low gravity, construction, jetpack traces equal the reference FSM runtime") {
+    if (!GameAvailable()) return;
+    nlohmann::json ref = LoadRef();
+    EvaWorld ew;
+    EvaEnvironment::upAxis = [] { return Vector3f(0.0f, 1.0f, 0.0f); };
+    int total = 0;
+    for (const auto& sc : ref["scenarios"]) {
+        const std::string sname = sc["name"].get<std::string>();
+        EvaKerbal k(ew, true);
+        KerbalEVA& e = *k.eva;
+        WorldState ws;
+        Time::time = 100.0f;
+        Time::frameCount = 1000;
+        e.HasJetpack = true;
+        e.heightFromSurfaceHitNormal = Vector3f(0.0f, 1.0f, 0.0f);
+        e.tgtFwd = Vector3f(0.0f, 0.0f, 1.0f);
+        ApplyWorld(ew, k, ws, ref, sc["base"], false);
+        KFSMState* start = FindState(e, sc["start"].get<std::string>());
+        REQUIRE_MESSAGE(start != nullptr, sname);
+        e.fsm->StartFSM(start);
+        size_t i = 0;
+        for (const auto& st : sc["steps"]) {
+            ApplyWorld(ew, k, ws, ref, st["set"], false);
+            Time::time = f32store(fx(Time::time) + fx(F(st["dt"])));
+            Time::frameCount++;
+            if (!st["event"].is_null()) {
+                KFSMEvent* ev = FindEvent(e, st["event"].get<std::string>());
+                REQUIRE_MESSAGE(ev != nullptr, st["event"].get<std::string>());
+                e.fsm->RunEvent(ev);
+            } else {
+                switch (st["mode"].get<int>()) {
+                    case 1: e.fsm->UpdateFSM(); break;
+                    case 2: e.fsm->FixedUpdateFSM(); break;
+                    default: e.fsm->LateUpdateFSM(); break;
+                }
+            }
+            INFO("scenario " << sname << " step " << i);
+            CHECK(e.fsm->currentStateName == sc["trace"][i][0].get<std::string>());
+            CHECK(e.fsm->lastEventName == sc["trace"][i][1].get<std::string>());
+            i++;
+            total++;
+        }
+    }
+    CHECK(total == 83);
+    EvaEnvironment::Reset();
+    GameSettings::EVA_LADDER_CHECK_END = false;
 }

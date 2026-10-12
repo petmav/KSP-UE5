@@ -18,6 +18,11 @@
 #include "ksp/eva/kerbal.hpp"
 #include "ksp/eva/kerbal_eva.hpp"
 #include "ksp/eva/retractable_ladder.hpp"
+#include "ksp/kerbals/crew_generator.hpp"
+#include "ksp/kerbals/experience.hpp"
+#include "ksp/save/crew.hpp"
+#include "ksp/save/game.hpp"
+#include "ksp/resources/part_resource_library.hpp"
 #include "ksp/science/science.hpp"
 
 namespace ksp::eva32 {
@@ -63,6 +68,8 @@ struct EvaWorld {
     Planetarium planetarium;
     std::unique_ptr<CelestialSystem> sys;
     CoroutineScheduler sched;
+    Game game;
+    PartResourceLibrary resourceLibrary;
     EvaWorld() {
         pg.physicsDatabaseFilename = ksp::testing::GameRoot() + "/Physics.cfg";
         pg.Awake("");
@@ -70,6 +77,17 @@ struct EvaWorld {
         planetarium.Awake();
         sys = CelestialSystem::Spawn(KerbolSystemPrefab(), planetarium);
         SaveEnvironment::Current().localBodies = sys->SpawnOrder();
+        {
+            // the CAREER game with a roster and the Squad experience traits (ProtoCrewMember.UpdateExperience reads HighLogic.CurrentGame)
+            SaveEnvironment& env = SaveEnvironment::Current();
+            std::vector<const ConfigNode*> traits;
+            for (ConfigNode* n : g.data.database.GetConfigNodes("EXPERIENCE_TRAIT")) traits.push_back(n);
+            env.experienceConfigs = std::make_shared<Experience::ExperienceSystemConfig>(traits);
+            game.Mode = Game_Modes::CAREER;
+            game.CrewRoster = std::make_shared<KerbalRoster>(Game_Modes::CAREER);
+            env.currentGame = &game;
+        }
+        resourceLibrary.LoadDefinitions(g.data.database);
         ScienceEnvironment::scheduler = &sched;
         EvaEnvironment::Reset();
         FlightEvaEnvironment::Reset();
@@ -79,6 +97,7 @@ struct EvaWorld {
         Time::fixedDeltaTime = 0.02f;
     }
     ~EvaWorld() {
+        SaveEnvironment::Current().currentGame = nullptr;
         FlightRegistry::Clear();
         KerbalEVA::UninstallHostHooks();
         EvaEnvironment::Reset();
@@ -170,6 +189,103 @@ inline void Pump(CoroutineScheduler& s, int frames = 3) {
         s.AdvanceFrame(0.02f);
         s.RunDelayedDynamicFrameRate();
     }
+}
+
+
+// The scripted world of the conditions / scenario families (tools/wp32/eva_ref_conditions.py, eva_ref_scenarios.py) applied to a live kerbal.
+struct WorldState {
+    std::vector<EvaCollider> colliders = std::vector<EvaCollider>(4);   // [0] the current ladder, [1..3] the triggers
+    Part otherPart;
+    nlohmann::json keys = nlohmann::json::object();
+    int clrot = 0;
+};
+
+inline void ApplyWorld(EvaWorld& ew, EvaKerbal& k, WorldState& ws, const nlohmann::json& ref, const nlohmann::json& w, bool times) {
+    KerbalEVA& e = *k.eva;
+    static const char* order[] = {"tgt", "dh", "ldh", "gee", "cf", "landed", "splashed", "packed", "active", "hft", "hfs", "lbs", "jet", "pm", "keys",
+                                  "noparent", "clrot", "lad_active", "lad_enabled", "cl", "ntrig", "inv", "ltr", "chk", "ccl", "cdn", "spd", "cpath", "cnt",
+                                  "cend", "clen", "inconstr", "weldfx", "weldmesh", "airlock", "rbv", "vrb", "lcd", "lcn", "fup", "rot", "ut", "lct", "hss"};
+    auto has = [&](const char* n) { return w.contains(n); };
+    if (has("tgt")) e.tgtRpos = V3(w["tgt"]);
+    if (has("dh")) e.deltaHdg = F(w["dh"]);
+    if (has("ldh")) e.lastDeltaHdg = F(w["ldh"]);
+    if (has("gee")) ew.Kerbin().GeeASL = w["gee"].get<double>();
+    if (has("cf")) e.CharacterFrameMode = w["cf"].get<bool>();
+    if (has("landed")) k.vessel->Landed = w["landed"].get<bool>();
+    if (has("splashed")) k.vessel->Splashed = w["splashed"].get<bool>();
+    if (has("packed")) k.vessel->packed = w["packed"].get<bool>();
+    if (has("active")) k.vessel->state = w["active"].get<bool>() ? Vessel::State::ACTIVE : Vessel::State::INACTIVE;
+    if (has("hft")) k.vessel->heightFromTerrain = F(w["hft"]);
+    if (has("hfs")) k.vessel->heightFromSurface = F(w["hfs"]);
+    if (times && has("t")) {
+        Time::time = F(w["t"]);
+        e.fsm->CurrentState()->TimeAtStateEnter = 0.0;
+        Time::frameCount = w["frames"].get<int>();
+        e.fsm->CurrentState()->FrameCountAtStateEnter = 0;
+    }
+    if (has("lbs")) e.set_lastBoundStep(F(w["lbs"]));
+    if (has("jet")) e.set_JetpackDeployed(w["jet"].get<bool>());
+    if (has("pm")) e.partPlacementMode = w["pm"].get<bool>();
+    if (has("keys")) {
+        ws.keys = w["keys"];
+        const nlohmann::json* kp = &ws.keys;
+        EvaEnvironment::key = [kp](EvaKey kk, KeyQuery q) {
+            static const char* names[] = {"Forward", "Back", "Left", "Right", "YawLeft", "YawRight", "PackForward", "PackBack", "PackLeft", "PackRight", "PackUp",
+                                          "PackDown", "Jump", "Run", "TogglePack", "Use", "Board", "Orient", "Lights", "Helmet", "ChuteDeploy", "ToggleMovementMode"};
+            const std::string n = names[static_cast<int>(kk)];
+            if (!kp->contains(n)) return false;
+            const char* f = q == KeyQuery::Held ? "held" : (q == KeyQuery::Down ? "down" : "up");
+            return (*kp)[n].contains(f) && (*kp)[n][f].get<bool>();
+        };
+    }
+    if (has("noparent")) k.part->parent = w["noparent"].get<bool>() ? nullptr : &ws.otherPart;
+    if (has("clrot")) {
+        ws.clrot = w["clrot"].get<int>();
+        for (auto& c : ws.colliders) c.pose.rotation = Rot(ref, ws.clrot);
+    }
+    if (has("lad_active")) for (auto& c : ws.colliders) c.activeInHierarchy = w["lad_active"].get<bool>();
+    if (has("lad_enabled")) for (auto& c : ws.colliders) c.enabled = w["lad_enabled"].get<bool>();
+    if (has("cl")) e.currentLadder = w["cl"].get<bool>() ? &ws.colliders[0] : nullptr;
+    if (has("ntrig")) {
+        e.currentLadderTriggers.clear();
+        for (int i = 0; i < w["ntrig"].get<int>(); i++) e.currentLadderTriggers.push_back(&ws.colliders[static_cast<size_t>(i) + 1]);
+    }
+    if (has("inv")) e.invLadderAxis = w["inv"].get<bool>();
+    if (has("ltr")) e.ladderTgtRPos = V3(w["ltr"]);
+    if (has("chk")) GameSettings::EVA_LADDER_CHECK_END = w["chk"].get<bool>();
+    if (has("ccl")) e.canClimb = w["ccl"].get<bool>();
+    if (has("cdn")) e.canDescend = w["cdn"].get<bool>();
+    if (has("spd")) e.currentSpd = F(w["spd"]);
+    if (has("cpath")) {
+        if (w["cpath"].get<bool>()) e.clamberPath = std::make_unique<ClamberPath>(Vector3f(), Vector3f(), Vector3f(), Vector3f(), Vector3f(), 0.0f, 0.0f);
+        else e.clamberPath.reset();
+    }
+    if (has("cnt")) e.Animations().clamber.State()->normalizedTime = F(w["cnt"]);
+    if (has("cend")) e.Animations().clamber.end = F(w["cend"]);
+    if (has("clen")) e.Animations().clamber.State()->length = F(w["clen"]);
+    if (has("inconstr")) e.InConstructionMode = w["inconstr"].get<bool>();
+    if (has("weldfx")) {
+        if (w["weldfx"].get<bool>()) {
+            if (!e.weldFX) e.weldFX = std::make_unique<EvaWeldFx>();
+        } else {
+            e.weldFX.reset();
+        }
+    }
+    if (has("weldmesh") && e.weldFX) e.weldFX->meshEnabled = w["weldmesh"].get<bool>();
+    if (has("airlock")) e.currentAirlockPart = w["airlock"].get<bool>() ? &ws.otherPart : nullptr;
+    if (has("rbv")) k.engine.velocity = V3(w["rbv"]);
+    if (has("vrb")) k.vessel->rb_velocity = V3(w["vrb"]);
+    if (has("lcd")) e.lastCollisionDirection = V3(w["lcd"]);
+    if (has("lcn")) e.lastCollisionNormal = V3(w["lcn"]);
+    if (has("fup")) e.fUp = V3(w["fup"]);
+    if (has("rot")) k.part->partTransform.rotation = Rot(ref, w["rot"].get<int>());
+    if (has("ut")) {
+        const double ut = w["ut"].get<double>();
+        EvaEnvironment::universalTime = [ut] { return ut; };
+    }
+    if (has("lct")) e.lastCollisionTime = w["lct"].get<double>();
+    if (has("hss")) k.vessel->horizontalSrfSpeed = w["hss"].get<double>();
+    (void)order;
 }
 
 }  // namespace ksp::eva32

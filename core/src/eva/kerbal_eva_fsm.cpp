@@ -886,6 +886,7 @@ void KerbalEVA::SetupFSMEvents2() {
         vessel->SetPosition(Vector3d(kerbalSeat->SeatPivotPosition().x, kerbalSeat->SeatPivotPosition().y, kerbalSeat->SeatPivotPosition().z), true);
         vessel->IgnoreGForces(10);
         p->Couple(kerbalSeat->SeatPart());
+        vessel = VesselPtr();  // `base.vessel` after Part.Couple: the seat's vessel (the kerbal's own was merged into it)
         FlightGlobals::ForceSetActiveVessel(vessel);
         EvaEnvironment::Effect("FlightInputHandler.ResumeVesselCtrlState");
         if (FlightRegistry::ActiveVessel != nullptr && FlightRegistry::ActiveVessel->id == vessel->id) {

@@ -31,6 +31,7 @@ import eva_tables  # noqa: E402
 import eva_ref_motion as motion  # noqa: E402
 import eva_ref_conditions as cond  # noqa: E402
 import eva_ref_misc as misc  # noqa: E402
+import eva_ref_scenarios as scen  # noqa: E402
 from eva_math import ROTATIONS  # noqa: E402
 
 
@@ -66,6 +67,7 @@ def main():
     out["seatcam"] = misc.seatcam_family()
     out["rules"] = misc.rules_family()
     out["ladder"] = misc.ladder_family()
+    out["scenarios"] = scen.all_scenarios()
     json.dump(out, sys.stdout, indent=None, separators=(",", ":"))
     sys.stdout.write("\n")
 
