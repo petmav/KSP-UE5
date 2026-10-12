@@ -226,6 +226,7 @@ VesselPhysics::~VesselPhysics() { DestroyBodies(); }
 
 void VesselPhysics::Init(const std::vector<PartPhysicsState>& states, uint32_t group) {
     group_ = group != 0 ? group : (vessel_->persistentId != 0 ? vessel_->persistentId : NextGroupId());
+    vessel_->UpdateMassStats();  // FlightIntegrator.cs:452 (physicsMass of every part, the physicsless children folded in)
     IndexParts();
     // PartJoint data measured in the vessel frame (relative poses only)
     std::vector<PartTransform> vf(parts_.size());
@@ -928,6 +929,35 @@ size_t VesselPhysics::Cut(const std::vector<Part*>& children) {
     BuildClusters(states);
     SyncPartTransforms();
     return clusters_.size();
+}
+
+void VesselPhysics::Rebuild() {
+    std::unordered_map<const Part*, PartPhysicsState> byPart;
+    for (size_t i = 0; i < parts_.size(); ++i) byPart[parts_[i]->part] = StateAt(static_cast<int>(i));
+    // a part new to the binding: its vessel-frame pose relative to the root's current pose, at rest
+    const auto rootIt = vessel_->rootPart != nullptr ? byPart.find(vessel_->rootPart) : byPart.end();
+    std::vector<PartPhysicsState> states(vessel_->parts.size());
+    for (size_t i = 0; i < vessel_->parts.size(); ++i) {
+        const Part* p = vessel_->parts[i];
+        const auto it = byPart.find(p);
+        if (it != byPart.end()) {
+            states[i] = it->second;
+        } else if (rootIt != byPart.end()) {
+            const PartPhysicsState& root = rootIt->second;
+            const QuaternionD rootOrg = QuaternionD(vessel_->rootPart->fields.orgRot);
+            const QuaternionD rot = root.rotation * QuaternionD::Inverse(rootOrg);  // vessel transform rotation
+            const Vector3d origin = root.position - rot * Vector3d(vessel_->rootPart->fields.orgPos);
+            PartTransform t;
+            t.position = p->fields.orgPos;
+            t.rotation = p->fields.orgRot;
+            t.localScale = p->partTransform.localScale;
+            states[i].position = origin + rot * Vector3d(t.position);
+            states[i].rotation = rot * QuaternionD(t.rotation);
+            states[i].centerOfMass = origin + rot * Vector3d(t.TransformPoint(p->fields.CoMOffset));
+        }
+    }
+    DestroyBodies();
+    Init(states, group_);
 }
 
 std::unique_ptr<VesselPhysics> VesselPhysics::SplitOff(Vessel& other) {

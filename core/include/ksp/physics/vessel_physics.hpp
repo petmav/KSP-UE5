@@ -292,7 +292,9 @@ class VesselPhysics final : public ForceAccumulator {
 public:
     // Builds the clusters of `vessel` at `pose` (parts placed by orgPos / orgRot relative to the root: the pristine coordinates of
     // Vessel.SetPosition / SetRotation, Vessel.cs:3683-3740). Bodies start at rest. `group` is the same-vessel collision group
-    // (0: the vessel's persistentId, or a fresh id when that is 0). The PhysicsWorld must outlive the VesselPhysics.
+    // (0: the vessel's persistentId, or a fresh id when that is 0). The PhysicsWorld must outlive the VesselPhysics. Both constructors
+    // first run Vessel::UpdateMassStats (FlightIntegrator.UpdateMassStats runs every FixedUpdate in KSP, packed or not): rb.mass
+    // follows from physicsMass.
     VesselPhysics(PhysicsWorld& world, Vessel& vessel, const VesselPose& pose, const VesselPhysicsOptions& options = {},
                   uint32_t group = 0);
     // Builds from given part states (one per vessel part, physics frame): the general path of re-clustering, splits and merges.
@@ -403,6 +405,10 @@ public:
     // binding: a new VesselPhysics for `other` is built from them (momentum-conserving per cluster), this one is rebuilt over the
     // parts it still has. The caller (VesselPhysicsHost::OnVesselSplit) owns the result.
     std::unique_ptr<VesselPhysics> SplitOff(Vessel& other);
+    // The vessel's part list or a part's physical significance changed (Part.PromoteToPhysicalPart / DemoteToPhysicslessPart, parts
+    // added or removed by the host): re-read the parts and their joints and rebuild the clusters from the current part states
+    // (momentum-conserving per new cluster; parts new to the binding start at their vessel-frame pose relative to the root and at rest).
+    void Rebuild();
     // Part.Couple / docking: `merged` now holds the parts of a and b (the WP-16 / WP-25 tree operation is done); a new VesselPhysics
     // over `merged` from the part states of both, joints rebuilt; momentum of both conserved (an inelastic weld).
     static std::unique_ptr<VesselPhysics> Merge(VesselPhysics& a, VesselPhysics& b, Vessel& merged);

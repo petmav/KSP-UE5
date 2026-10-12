@@ -993,3 +993,31 @@ TEST_CASE("WP-20b vessel split and merge: Part.decouple / Part.Couple through th
     host.DestroyAll();
     Vessel::SpawnedVessels().clear();
 }
+
+TEST_CASE("WP-20b Rebuild: a part demoted to physicsless folds into its parent's Rigidbody; the motion and the total mass are kept") {
+    if (!GameAvailable()) return;
+    World w;
+    auto v = w.Craft("PhysProf-S");
+    PhysicsWorld world;
+    VesselPhysics vp(world, *v, VesselPose{}, {});
+    vp.SetLinearVelocity(Vector3d(0.0, 10.0, 0.0));
+    world.SetAngularVelocity(vp.ClusterBody(0), Vector3d(0.0, 0.3, 0.0));
+    vp.AfterStep();
+    const double mass = vp.ClusterMass(0);
+    const size_t joints = vp.Joints().size();
+    const Vector3d v0 = vp.ClusterVelocity(0), w0 = vp.ClusterAngularVelocity(0), c0 = vp.ClusterCenterOfMass(0);
+    Part* cone = FindPart(*v, "pointyNoseConeB");
+    REQUIRE(cone != nullptr);
+    cone->DemoteToPhysicslessPart();  // Part.cs:2990: physicalSignificance NONE, the Rigidbody goes
+    CHECK_FALSE(cone->hasRigidbody);
+    vp.Rebuild();
+    CHECK(vp.PartMass(*cone) == 0.0f);
+    CHECK(vp.Joints().size() == joints - 1);  // the cone's attach joint is gone (only FULL parts make one)
+    CHECK(vp.ClusterMass(0) == doctest::Approx(mass).epsilon(1e-9));  // its mass rides in its parent's physicsMass
+    // the same rigid motion: the parts' momentum (with the cone's mass now at its parent's centre of mass, as KSP's rb.mass has it)
+    // gives back the angular velocity, and the new centre of mass moves with v0 + w0 x (c1 - c0)
+    const Vector3d c1 = vp.ClusterCenterOfMass(0);
+    CHECK((c1 - c0).magnitude() > 1e-4);  // the cone's mass moved down to its parent's centre of mass
+    CHECK((vp.ClusterAngularVelocity(0) - w0).magnitude() < 1e-6);
+    CHECK((vp.ClusterVelocity(0) - (v0 + Vector3d::Cross(w0, c1 - c0))).magnitude() < 1e-5);
+}
