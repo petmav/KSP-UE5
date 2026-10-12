@@ -91,13 +91,13 @@ namespace Editor {
 // MissionBiome.cs:14
 MissionBiome::MissionBiome(CelestialBody* celestialBody, std::string name) : body(celestialBody), biomeName(std::move(name)) {}
 
-// MissionBiome.cs:21
+// MissionBiome.cs:20
 void MissionBiome::Save(ConfigNode& node) const {
     node.AddValue("bodyName", Need(body)->name());
     if (!biomeName.empty()) node.AddValue("biomeName", biomeName);
 }
 
-// MissionBiome.cs:30
+// MissionBiome.cs:29
 void MissionBiome::Load(const ConfigNode& node) {
     std::string value;
     std::string value2;
@@ -107,10 +107,10 @@ void MissionBiome::Load(const ConfigNode& node) {
     if (value2 != "") biomeName = value2;
 }
 
-// MissionBiome.cs:71
+// MissionBiome.cs:70
 bool MissionBiome::Equals(const MissionBiome& other) const { return biomeName == other.biomeName && body == other.body; }
 
-// MissionBiome.cs:90
+// MissionBiome.cs:88
 std::string MissionBiome::GetNodeBodyParameterString() const {
     const std::string text = biomeName.empty() ? Localizer::Format("#autoLOC_8002051") : ScienceUtil::GetBiomedisplayName(body, biomeName);
     return Localizer::Format("#autoLOC_8000268", {BodyDisplayName(body), text});
@@ -120,7 +120,7 @@ std::string MissionBiome::GetNodeBodyParameterString() const {
 
 // ---- MissionOrbit.cs -------------------------------------------------------------------------------------------------------------
 
-// MissionOrbit.cs:180 / :188 / :196: `Orbit = Load(); degreesMNA = ...; bodyRotationEditor = ...`
+// helper of the MissionOrbit constructors (MissionOrbit.cs lines 180 / 188 / 196): `Orbit = Load(); degreesMNA = ...; bodyRotationEditor = ...`
 void MissionOrbit::Construct() {
     orbit_ = std::make_unique<Orbit>(OrbitSnapshot::Load(NodeLibraryEnvironment::Bodies()));
     degreesMNA = meanAnomalyAtEpoch * (180.0 / kPi);
@@ -142,7 +142,7 @@ MissionOrbit& MissionOrbit::operator=(const MissionOrbit& other) {
     return *this;
 }
 
-// MissionOrbit.cs:20
+// MissionOrbit.cs:21
 CelestialBody* MissionOrbit::Body() const { return orbit_->referenceBody; }
 void MissionOrbit::set_Body(CelestialBody* value) {
     orbit_->referenceBody = value;
@@ -151,7 +151,7 @@ void MissionOrbit::set_Body(CelestialBody* value) {
     ReferenceBodyIndex = it == bodies.end() ? -1 : static_cast<int>(it - bodies.begin());
 }
 
-// MissionOrbit.cs:33
+// MissionOrbit.cs:35
 void MissionOrbit::set_SemiMajorAxis(double value) {
     if ((1.0 + eccentricity) * value - Body()->Radius <= Body()->sphereOfInfluence && value >= Body()->Radius / 2.0) {
         semiMajorAxis = value;
@@ -177,7 +177,7 @@ void MissionOrbit::set_Apoapsis(double value) {
     set_Eccentricity((value - semiMajorAxis + Body()->Radius) / semiMajorAxis);
 }
 
-// MissionOrbit.cs:80
+// MissionOrbit.cs:82
 double MissionOrbit::Periapsis() const { return (1.0 - eccentricity) * semiMajorAxis - Body()->Radius; }
 void MissionOrbit::set_Periapsis(double value) {
     const double num = 0.0 - Body()->Radius;
@@ -194,7 +194,7 @@ void MissionOrbit::set_Periapsis(double value) {
     set_Eccentricity((semiMajorAxis - Body()->Radius - value) / semiMajorAxis);
 }
 
-// MissionOrbit.cs:107
+// MissionOrbit.cs:108
 void MissionOrbit::set_Eccentricity(double value) {
     if ((1.0 + value) * semiMajorAxis - Body()->Radius <= Body()->sphereOfInfluence) {
         eccentricity = value;
@@ -206,32 +206,32 @@ void MissionOrbit::set_Inclination(double value) {
     inclination = value;
     orbit_->inclination = value;
 }
-// MissionOrbit.cs:140
+// MissionOrbit.cs:139
 void MissionOrbit::set_Lan(double value) {
     LAN = value;
     orbit_->LAN = value;
 }
-// MissionOrbit.cs:155
+// MissionOrbit.cs:153
 void MissionOrbit::set_ArgumentOfPeriapsis(double value) {
     argOfPeriapsis = value;
     orbit_->argumentOfPeriapsis = value;
 }
-// MissionOrbit.cs:170
+// MissionOrbit.cs:166
 void MissionOrbit::set_Epoch(double value) {
     epoch = value;
     orbit_->epoch = value;
 }
-// MissionOrbit.cs:185
+// MissionOrbit.cs:180
 void MissionOrbit::set_MeanAnomalyAtEpoch(double value) {
     degreesMNA = value;
     meanAnomalyAtEpoch = value * (kPi / 180.0);
     orbit_->meanAnomalyAtEpoch = value * (kPi / 180.0);
 }
 
-// MissionOrbit.cs:228
+// MissionOrbit.cs:227
 double MissionOrbit::GetUTOrbitRotation(const Orbit& orbit, double UT) { return UT * 360.0 / orbit.period; }
 
-// MissionOrbit.cs:219
+// MissionOrbit.cs:218
 Orbit MissionOrbit::RelativeOrbit(Mission* mission) const {
     Orbit orbit = Orbit::CopyOf(*orbit_);
     const double lAN = LAN;
@@ -240,7 +240,7 @@ Orbit MissionOrbit::RelativeOrbit(Mission* mission) const {
     return orbit;
 }
 
-// MissionOrbit.cs:236
+// MissionOrbit.cs:232
 void MissionOrbit::Reset() {
     set_Eccentricity(0.0);
     set_SemiMajorAxis(Body()->Radius + 100000.0);
@@ -251,13 +251,13 @@ void MissionOrbit::Reset() {
     set_Epoch(0.0);
 }
 
-// MissionOrbit.cs:246
+// MissionOrbit.cs:243
 void MissionOrbit::Save(ConfigNode& node) const {
     OrbitSnapshot::Save(node);
     node.AddValue("editorRotation", bodyRotationEditor);
 }
 
-// MissionOrbit.cs:252
+// MissionOrbit.cs:249
 void MissionOrbit::Load(const ConfigNode& node) {
     const auto& values = node.values();
     for (int i = 0; i < values.Count(); ++i) {
@@ -290,7 +290,7 @@ void MissionOrbit::Load(const ConfigNode& node) {
     orbit_->Init();
 }
 
-// MissionOrbit.cs:299
+// MissionOrbit.cs:298
 bool MissionOrbit::Equals(const MissionOrbit& o) const {
     return ReferenceBodyIndex == o.ReferenceBodyIndex && UtilMath::Approximately(semiMajorAxis, o.semiMajorAxis) &&
            UtilMath::Approximately(eccentricity, o.eccentricity) && UtilMath::Approximately(inclination, o.inclination) &&
@@ -298,10 +298,10 @@ bool MissionOrbit::Equals(const MissionOrbit& o) const {
            UtilMath::Approximately(epoch, o.epoch) && UtilMath::Approximately(meanAnomalyAtEpoch, o.meanAnomalyAtEpoch);
 }
 
-// MissionOrbit.cs:321
+// MissionOrbit.cs:313
 std::string MissionOrbit::GetNodeBodyParameterString() const { return Localizer::Format("#autoLOC_8004192", {RemoveGender(BodyDisplayName(Body()))}); }
 
-// MissionOrbit.cs:326
+// MissionOrbit.cs:318
 double MissionOrbit::GetEditorMaxOrbitRadius(CelestialBody* body) {
     if (std::isinf(body->sphereOfInfluence)) {
         double num = 0.0;
@@ -320,10 +320,10 @@ double MissionOrbit::GetEditorMaxOrbitRadius(CelestialBody* body) {
 
 // ---- VesselGroundLocation.cs -----------------------------------------------------------------------------------------------------
 
-// VesselGroundLocation.cs:88
+// VesselGroundLocation.cs:86
 VesselGroundLocation::VesselGroundLocation() : rotation(std::make_unique<MissionQuaternion>()) {}
 
-// VesselGroundLocation.cs:93
+// VesselGroundLocation.cs:86
 VesselGroundLocation::VesselGroundLocation(MENode* node, GizmoIcon icon) : VesselGroundLocation() {
     (void)node;
     targetBody = NodeLibraryEnvironment::HomeBody();
@@ -334,13 +334,13 @@ VesselGroundLocation::VesselGroundLocation(MENode* node, GizmoIcon icon) : Vesse
     gizmoIcon = icon;
 }
 
-// VesselGroundLocation.cs:69
+// VesselGroundLocation.cs:65
 void VesselGroundLocation::set_GAPGizmoIcon(GizmoIcon value) {
     gizmoIcon = value;
     if (OnGizmoIconChange) OnGizmoIconChange(value);
 }
 
-// VesselGroundLocation.cs:117
+// VesselGroundLocation.cs:115
 std::unique_ptr<FinePrint::Waypoint> VesselGroundLocation::GetWaypoint() const {
     auto w = std::make_unique<FinePrint::Waypoint>();
     w->celestialName = Need(targetBody)->name();
@@ -350,20 +350,20 @@ std::unique_ptr<FinePrint::Waypoint> VesselGroundLocation::GetWaypoint() const {
     return w;
 }
 
-// VesselGroundLocation.cs:132
+// VesselGroundLocation.cs:131
 Vector3f VesselGroundLocation::GetWorldPosition() const { return ToV3(Need(targetBody)->GetWorldSurfacePosition(latitude, longitude, 0.0)); }
 
-// VesselGroundLocation.cs:137
+// VesselGroundLocation.cs:136
 std::string VesselGroundLocation::GetExtraText() const { return Localizer::Format("#autoLOC_8002000"); }
 
-// VesselGroundLocation.cs:142
+// VesselGroundLocation.cs:141
 std::string VesselGroundLocation::GetNodeBodyParameterString() const {
     const std::string text = FormatD(longitude, "0.##");
     const std::string text2 = FormatD(latitude, "0.##");
     return Localizer::Format("#autoLOC_8004191", {BodyDisplayName(targetBody), text, text2});
 }
 
-// VesselGroundLocation.cs:150
+// VesselGroundLocation.cs:148
 bool VesselGroundLocation::Equals(const VesselGroundLocation& o) const {
     if (targetBody == o.targetBody && DEq(altitude, o.altitude) && DEq(latitude, o.latitude) && DEq(longitude, o.longitude)) {
         return rotation->Equals(*o.rotation);
@@ -396,7 +396,7 @@ void VesselGroundLocation::Load(const ConfigNode& node) {
     if (targetBody == nullptr) targetBody = NodeLibraryEnvironment::HomeBody();
 }
 
-// VesselGroundLocation.cs:227
+// VesselGroundLocation.cs:225
 void VesselGroundLocation::Save(ConfigNode& node) const {
     if (targetBody == nullptr) {
         node.AddValue("bodyName", "");
@@ -413,16 +413,16 @@ void VesselGroundLocation::Save(ConfigNode& node) const {
 
 // ---- VesselLocation.cs -----------------------------------------------------------------------------------------------------------
 
-// VesselLocation.cs:30
+// VesselLocation.cs:28
 VesselLocation::VesselLocation() {
     launchSite = "LaunchPad";
     brakesOn = true;
 }
 
-// VesselLocation.cs:56
+// VesselLocation.cs:44
 std::unique_ptr<MissionOrbit> VesselLocation::createZeroOrbit() const { return std::make_unique<MissionOrbit>(NodeLibraryEnvironment::HomeBody()); }
 
-// VesselLocation.cs:36
+// VesselLocation.cs:34
 VesselLocation::VesselLocation(MENode* node) : VesselLocation() {
     orbitSnapShot = createZeroOrbit();
     vesselGroundLocation = std::make_unique<VesselGroundLocation>(node, VesselGroundLocation::GizmoIcon::Rocket);
@@ -431,7 +431,7 @@ VesselLocation::VesselLocation(MENode* node) : VesselLocation() {
     vesselGroundLocation->splashed = true;
 }
 
-// VesselLocation.cs:70
+// VesselLocation.cs:71
 void VesselLocation::Load(const ConfigNode& node) {
     const auto& values = node.values();
     for (int i = 0; i < values.Count(); ++i) {
@@ -462,7 +462,7 @@ void VesselLocation::Load(const ConfigNode& node) {
     }
 }
 
-// VesselLocation.cs:105
+// VesselLocation.cs:113
 void VesselLocation::Save(ConfigNode& node) {
     node.AddValue("sit", save_detail::EnumName(situation));
     node.AddValue("launchSite", launchSite);
@@ -475,7 +475,7 @@ void VesselLocation::Save(ConfigNode& node) {
 
 // ---- Crew.cs ---------------------------------------------------------------------------------------------------------------------
 
-// Crew.cs:17
+// Crew.cs:16
 void Crew::Load(const ConfigNode& node) {
     crewNames.clear();
     const auto& values = node.values();
@@ -492,7 +492,7 @@ void Crew::Load(const ConfigNode& node) {
     }
 }
 
-// Crew.cs:38
+// Crew.cs:37
 std::string Crew::LocalizeCrewMember(int nameIndex) const {
     const std::string& n = crewNames.at(static_cast<size_t>(nameIndex));
     if (n == "Valentina Kerman") return Localizer::Format("#autoLOC_1100005");
@@ -511,19 +511,19 @@ void Crew::Save(ConfigNode& node) const {
 
 // ---- LaunchSiteSituation.cs ------------------------------------------------------------------------------------------------------
 
-// LaunchSiteSituation.cs:52
+// LaunchSiteSituation.cs:46
 LaunchSiteSituation::LaunchSiteSituation(MENode* node)
     : launchSiteName(Localizer::Format("#autoLOC_8100066")),
       launchSiteGroundLocation(std::make_unique<VesselGroundLocation>(node, VesselGroundLocation::GizmoIcon::LaunchSite)) {}
 
-// LaunchSiteSituation.cs:40
+// LaunchSiteSituation.cs:36
 std::string LaunchSiteSituation::LaunchSiteObjectName() const {
     std::string name = KSPUtil::SanitizeString(launchSiteName, '_', false);
     std::replace(name.begin(), name.end(), ' ', '_');
     return name;
 }
 
-// LaunchSiteSituation.cs:78 (the coroutine: yields are the scene's; the decision tree is kept)
+// LaunchSiteSituation.cs:51 (the coroutine: yields are the scene's; the decision tree is kept)
 void LaunchSiteSituation::AddLaunchSite(bool createObject) {
     const SceneHooks& s = scene;
     if (!(MissionsEnvironment::MakingHistoryInstalled() && s.mobileLaunchSitePrefabExists && s.mobileLaunchSitePrefabExists())) return;
@@ -555,14 +555,14 @@ void LaunchSiteSituation::AddLaunchSite(bool createObject) {
     }
 }
 
-// LaunchSiteSituation.cs:174
+// LaunchSiteSituation.cs:198
 void LaunchSiteSituation::RemoveLaunchSite() {
     if (MissionsEnvironment::MakingHistoryInstalled() && scene.launchSiteExists && scene.launchSiteExists(LaunchSiteObjectName())) {
         if (scene.removeLaunchSite) scene.removeLaunchSite(LaunchSiteObjectName());
     }
 }
 
-// LaunchSiteSituation.cs:194
+// LaunchSiteSituation.cs:206
 void LaunchSiteSituation::Load(const ConfigNode& node) {
     const auto& values = node.values();
     for (int i = 0; i < values.Count(); ++i) {
@@ -591,7 +591,7 @@ void LaunchSiteSituation::Load(const ConfigNode& node) {
     }
 }
 
-// LaunchSiteSituation.cs:241
+// LaunchSiteSituation.cs:247
 void LaunchSiteSituation::Save(ConfigNode& node) const {
     ConfigNode* configNode = node.AddNode("LAUNCHSITESITUATION");
     configNode->AddValue("launchSiteName", launchSiteName);
@@ -604,12 +604,12 @@ void LaunchSiteSituation::Save(ConfigNode& node) const {
 
 // ---- SurfaceArea.cs --------------------------------------------------------------------------------------------------------------
 
-// SurfaceArea.cs:30
+// SurfaceArea.cs:28
 SurfaceArea::SurfaceArea() : body(NodeLibraryEnvironment::HomeBody()) {}
-// SurfaceArea.cs:35
+// SurfaceArea.cs:33
 SurfaceArea::SurfaceArea(CelestialBody* targetBody, double lon, double lat, float r) : body(targetBody), latitude(lat), longitude(lon), radius(r) {}
 
-// SurfaceArea.cs:48
+// SurfaceArea.cs:46
 std::unique_ptr<FinePrint::Waypoint> SurfaceArea::GetWaypoint() const {
     auto w = std::make_unique<FinePrint::Waypoint>();
     w->celestialName = Need(body)->name();
@@ -621,13 +621,13 @@ std::unique_ptr<FinePrint::Waypoint> SurfaceArea::GetWaypoint() const {
     return w;
 }
 
-// SurfaceArea.cs:70
+// SurfaceArea.cs:68
 Vector3f SurfaceArea::GetWorldPosition() const { return ToV3(Need(body)->GetWorldSurfacePosition(latitude, longitude, altitude)); }
 
-// SurfaceArea.cs:75
+// SurfaceArea.cs:73
 std::string SurfaceArea::GetExtraText() const { return Localizer::Format("#autoLOC_8000274", {dotnet::FormatSingleG(radius)}); }
 
-// SurfaceArea.cs:80
+// SurfaceArea.cs:78
 bool SurfaceArea::Equals(const SurfaceArea& o) const {
     if (body->name() == o.body->name() && UtilMath::Approximately(latitude, o.latitude) && UtilMath::Approximately(longitude, o.longitude))
         return Mathf::Approximately(radius, o.radius);
@@ -655,7 +655,7 @@ void SurfaceArea::Load(const ConfigNode& node) {
     if (body == nullptr) body = NodeLibraryEnvironment::HomeBody();
 }
 
-// SurfaceArea.cs:135
+// SurfaceArea.cs:129
 void SurfaceArea::Save(ConfigNode& node) const {
     if (body == nullptr) {
         node.AddValue("bodyName", "");
@@ -668,18 +668,18 @@ void SurfaceArea::Save(ConfigNode& node) const {
     node.AddValue("radius", radius);
 }
 
-// SurfaceArea.cs:155
+// SurfaceArea.cs:145
 bool SurfaceArea::IsPointInCircle(double lat, double lon) const {
     return Contracts::Lite::CelestialUtilities::GreatCircleDistance(body, lat, lon, latitude, longitude) <= static_cast<double>(radius);
 }
 
-// SurfaceArea.cs:160
+// SurfaceArea.cs:150
 double SurfaceArea::PointInCircleAccuracy(double lat, double lon) const {
     const double num = Contracts::Lite::CelestialUtilities::GreatCircleDistance(body, lat, lon, latitude, longitude);
     return 1.0 - UtilMath::Clamp(num / static_cast<double>(radius), 0.0, 1.0);
 }
 
-// SurfaceArea.cs:166
+// SurfaceArea.cs:156
 std::string SurfaceArea::GetNodeBodyParameterString() const {
     const std::string text = FormatD(longitude, "0.##");
     const std::string text2 = FormatD(latitude, "0.##");
@@ -689,11 +689,11 @@ std::string SurfaceArea::GetNodeBodyParameterString() const {
 
 // ---- SurfaceVolume.cs ------------------------------------------------------------------------------------------------------------
 
-// SurfaceVolume.cs:56
+// SurfaceVolume.cs:51
 SurfaceVolume::SurfaceVolume(CelestialBody* targetBody, double lon, double lat, float r, VolumeShape s, float hSphere, float hConeMin, float hConeMax)
     : body(targetBody), latitude(lat), longitude(lon), shape(s), radius(r), heightSphere(hSphere), heightConeMin(hConeMin), heightConeMax(hConeMax) {}
 
-// SurfaceVolume.cs:68
+// SurfaceVolume.cs:63
 SurfaceVolume::SurfaceVolume() {
     body = NodeLibraryEnvironment::HomeBody();
     longitude = 0.0;
@@ -702,7 +702,7 @@ SurfaceVolume::SurfaceVolume() {
     ResetBodyToDefaultValues();
 }
 
-// SurfaceVolume.cs:77
+// SurfaceVolume.cs:73
 void SurfaceVolume::ResetBodyToDefaultValues() {
     heightSphere = 0.0f;
     radius = f32store(fx(f32store(body->Radius)) / 4.0);
@@ -710,7 +710,7 @@ void SurfaceVolume::ResetBodyToDefaultValues() {
     heightConeMin = 0.0f;
 }
 
-// SurfaceVolume.cs:85
+// SurfaceVolume.cs:81
 void SurfaceVolume::AjustToBody(float r, float hSphere, float hConeMin, float hConeMax, CelestialBody* newBody, CelestialBody* pastBody) {
     const double num = static_cast<double>(r) / pastBody->Radius;
     radius = static_cast<float>(newBody->Radius * num);
@@ -722,7 +722,7 @@ void SurfaceVolume::AjustToBody(float r, float hSphere, float hConeMin, float hC
     heightConeMax = static_cast<float>(newBody->Radius * num4);
 }
 
-// SurfaceVolume.cs:105
+// SurfaceVolume.cs:98
 std::unique_ptr<FinePrint::Waypoint> SurfaceVolume::GetWaypoint() const {
     auto w = std::make_unique<FinePrint::Waypoint>();
     w->celestialName = Need(body)->name();
@@ -740,7 +740,7 @@ std::unique_ptr<FinePrint::Waypoint> SurfaceVolume::GetWaypoint() const {
     return w;
 }
 
-// SurfaceVolume.cs:120
+// SurfaceVolume.cs:112
 std::string SurfaceVolume::GetNodeBodyParameterString() const {
     const std::string text = FormatD(longitude, "0.##");
     const std::string text2 = FormatD(latitude, "0.##");
@@ -752,23 +752,23 @@ std::string SurfaceVolume::GetNodeBodyParameterString() const {
                                                   FormatF(f32store(fx(heightConeMax) / fx(1000.0f)), "0.##")});
 }
 
-// SurfaceVolume.cs:130
+// SurfaceVolume.cs:124
 bool SurfaceVolume::HasNodeLabel() const { return showNodeLabel ? HasWorldPosition() : false; }
 
-// SurfaceVolume.cs:144
+// SurfaceVolume.cs:138
 Vector3f SurfaceVolume::GetWorldPosition() const { return ToV3(Need(body)->GetWorldSurfacePosition(latitude, longitude, altitude)); }
 
-// SurfaceVolume.cs:159
+// SurfaceVolume.cs:151
 std::string SurfaceVolume::GetExtraText() const { return Localizer::Format("#autoLOC_8000274", {dotnet::FormatSingleG(radius)}); }
 
-// SurfaceVolume.cs:164
+// SurfaceVolume.cs:162
 bool SurfaceVolume::Equals(const SurfaceVolume& o) const {
     return body == o.body && UtilMath::Approximately(latitude, o.latitude) && UtilMath::Approximately(longitude, o.longitude) &&
            Mathf::Approximately(radius, o.radius) && shape == o.shape && Mathf::Approximately(heightSphere, o.heightSphere) &&
            Mathf::Approximately(heightConeMin, o.heightConeMin) && Mathf::Approximately(heightConeMax, o.heightConeMax);
 }
 
-// SurfaceVolume.cs:183
+// SurfaceVolume.cs:174
 void SurfaceVolume::Load(const ConfigNode& node) {
     bool flag = false;
     bool flag2 = false;
@@ -811,7 +811,7 @@ void SurfaceVolume::Load(const ConfigNode& node) {
     if (body == nullptr) body = NodeLibraryEnvironment::HomeBody();
 }
 
-// SurfaceVolume.cs:250
+// SurfaceVolume.cs:240
 void SurfaceVolume::Save(ConfigNode& node) const {
     if (body == nullptr) {
         node.AddValue("targetBody", "");
@@ -828,7 +828,7 @@ void SurfaceVolume::Save(ConfigNode& node) const {
     node.AddValue("hConeMax", heightConeMax);
 }
 
-// SurfaceVolume.cs:270
+// SurfaceVolume.cs:260
 bool SurfaceVolume::IsInsideVolume(float targetLatitude, float targetLongitude, float targetAltitude) const {
     bool result = false;
     switch (shape) {
@@ -861,19 +861,19 @@ void TryParseUIntOut(const std::string& text, uint32_t& out) {
 }
 }  // namespace
 
-// Asteroid.cs:95 (UnityEngine.Random.Range(0, int.MaxValue))
+// Asteroid.cs:93 (UnityEngine.Random.Range(0, int.MaxValue))
 uint32_t Asteroid::GetAsteroidSeed() {
     return static_cast<uint32_t>(MissionDataEnvironment::randomSeed ? MissionDataEnvironment::randomSeed() : 0);
 }
 
-// Asteroid.cs:42
+// Asteroid.cs:41
 void Asteroid::Randomize() {
     name = MissionDataEnvironment::generateAsteroidName ? MissionDataEnvironment::generateAsteroidName() : "Asteroid";
     persistentId = MissionDataEnvironment::UniquePersistentId();
     seed = GetAsteroidSeed();
 }
 
-// Asteroid.cs:49
+// Asteroid.cs:48
 void Asteroid::Load(const ConfigNode& node) {
     const auto& values = node.values();
     for (int i = 0; i < values.Count(); ++i) {
@@ -893,7 +893,7 @@ void Asteroid::Load(const ConfigNode& node) {
     }
 }
 
-// Asteroid.cs:87
+// Asteroid.cs:84
 void Asteroid::Save(ConfigNode& node) const {
     node.AddValue("asteroidName", name);
     node.AddValue("asteroidSeed", seed);
@@ -902,7 +902,7 @@ void Asteroid::Save(ConfigNode& node) const {
     node.AddValue("persistentId", persistentId);
 }
 
-// Comet.cs:29
+// Comet.cs:28
 Comet::Comet() {
     const auto defs = MissionDataEnvironment::cometDefinitions ? MissionDataEnvironment::cometDefinitions() : std::nullopt;
     if (defs.has_value() && !defs->empty()) {
@@ -913,17 +913,17 @@ Comet::Comet() {
     }
 }
 
-// Comet.cs:55
+// Comet.cs:53
 uint32_t Comet::GetRandomCometSeed() { return static_cast<uint32_t>(MissionDataEnvironment::randomSeed ? MissionDataEnvironment::randomSeed() : 0); }
 
-// Comet.cs:48
+// Comet.cs:46
 void Comet::Randomize() {
     name = MissionDataEnvironment::generateCometName ? MissionDataEnvironment::generateCometName() : "Comet";
     persistentId = MissionDataEnvironment::UniquePersistentId();
     seed = GetRandomCometSeed();
 }
 
-// Comet.cs:70
+// Comet.cs:68
 void Comet::OnCometTypeChanged() {
     if (!MissionDataEnvironment::cometDefinitions) return;
     const auto defs = MissionDataEnvironment::cometDefinitions();
@@ -937,7 +937,7 @@ void Comet::OnCometTypeChanged() {
     }
 }
 
-// Comet.cs:111
+// Comet.cs:106
 void Comet::Load(const ConfigNode& node) {
     const auto& values = node.values();
     for (int i = 0; i < values.Count(); ++i) {
@@ -962,7 +962,7 @@ void Comet::Load(const ConfigNode& node) {
     }
 }
 
-// Comet.cs:145
+// Comet.cs:136
 void Comet::Save(ConfigNode& node) const {
     node.AddValue("cometName", name);
     node.AddValue("cometSeed", seed);
@@ -981,26 +981,26 @@ MissionKerbal::MissionKerbal(PCM k, MENode* n, UpdateNodeBodyUI update, ProtoCre
     anyTextIsActiveKerbal = anyTextIsActive;
 }
 
-// MissionKerbal.cs:43
+// MissionKerbal.cs:41
 std::string MissionKerbal::Name() const {
     if (kerbal != nullptr) return kerbal->name().value_or("");
     return Localizer::Format("#autoLOC_8000152");
 }
 
-// MissionKerbal.cs:54
+// MissionKerbal.cs:53
 void MissionKerbal::set_Kerbal(PCM value) {
     kerbal = std::move(value);
     if (updateNodeBodyUI) updateNodeBodyUI();
 }
 
-// MissionKerbal.cs:104
+// MissionKerbal.cs:108
 void MissionKerbal::Initialize(PCM k, MENode* n) {
     kerbal = k;
     selectedKerbal = k;
     node = n;
 }
 
-// MissionKerbal.cs:111
+// MissionKerbal.cs:115
 bool MissionKerbal::IsValid(const ProtoCrewMember& targetKerbal) const {
     if (AnyValid()) {
         if (!showAnyKerbal) return false;
@@ -1009,17 +1009,17 @@ bool MissionKerbal::IsValid(const ProtoCrewMember& targetKerbal) const {
     return kerbal->name() == targetKerbal.name() && kerbal->type() == targetKerbal.type();
 }
 
-// MissionKerbal.cs:132 / :137 / :142 / :147 (RebuildDropDownOnChange is the dropdown's: UI)
+// MissionKerbal.cs:134 / :137 / :142 / :147 (RebuildDropDownOnChange is the dropdown's: UI)
 void MissionKerbal::onKerbalStatusChange(const PCM&, ProtoCrewMember::RosterStatus, ProtoCrewMember::RosterStatus) {}
 void MissionKerbal::onKerbalAdded(const PCM&) {}
 void MissionKerbal::onKerbalTypeChange(const PCM&, ProtoCrewMember::KerbalType, ProtoCrewMember::KerbalType) {}
 void MissionKerbal::onKerbalNameChange(const PCM&, const std::string&, const std::string&) {}
-// MissionKerbal.cs:152
+// MissionKerbal.cs:154
 void MissionKerbal::onKerbalRemoved(const PCM& crew) {
     if (selectedKerbal != nullptr && selectedKerbal->name() == crew->name()) selectedKerbal = nullptr;
 }
 
-// MissionKerbal.cs:287
+// MissionKerbal.cs:296
 void MissionKerbal::setcurrentKerbalAvailable() {
     if (selectedKerbal != nullptr) {
         selectedKerbal->set_rosterStatus(ProtoCrewMember::RosterStatus::Available);
@@ -1027,14 +1027,14 @@ void MissionKerbal::setcurrentKerbalAvailable() {
     }
 }
 
-// MissionKerbal.cs:298
+// MissionKerbal.cs:305
 std::string MissionKerbal::GetNodeBodyParameterString() const {
     if (kerbal != nullptr) return Localizer::Format("#autoLOC_8002022", {kerbal->displayName()});
     if (typeToShow == ProtoCrewMember::KerbalType::Tourist) return Localizer::Format("#autoLOC_8002022", {Localizer::Format("#autoLOC_8002021")});
     return Localizer::Format("#autoLOC_8002022", {Localizer::Format("#autoLOC_8000152")});
 }
 
-// MissionKerbal.cs:315
+// MissionKerbal.cs:318
 bool MissionKerbal::Equals(const MissionKerbal& o) const {
     if (typeToShow == o.typeToShow) {
         if (kerbal == nullptr) throw NullReferenceException();
@@ -1043,13 +1043,13 @@ bool MissionKerbal::Equals(const MissionKerbal& o) const {
     return false;
 }
 
-// MissionKerbal.cs:331
+// MissionKerbal.cs:336
 void MissionKerbal::Save(ConfigNode& n) const {
     if (kerbal != nullptr) n.AddValue("kerbalName", kerbal->name().value_or(""));
     n.AddValue("kerbalType", save_detail::EnumName(typeToShow));
 }
 
-// MissionKerbal.cs:341
+// MissionKerbal.cs:345
 void MissionKerbal::Load(const ConfigNode& n) {
     std::string value;
     kerbal = nullptr;
@@ -1073,26 +1073,26 @@ void MissionKerbal::Load(const ConfigNode& n) {
 ParamChoices_CelestialBodySurface::ParamChoices_CelestialBodySurface() = default;
 ParamChoices_CelestialBodySurface::~ParamChoices_CelestialBodySurface() = default;
 
-// ParamChoices_CelestialBodySurface.cs:41
+// ParamChoices_CelestialBodySurface.cs:40
 bool ParamChoices_CelestialBodySurface::HasWaypoint() const { return locationChoice == Choices::areaData ? areaData->HasWaypoint() : false; }
-// :51
+// ParamChoices_CelestialBodySurface.cs:50
 std::unique_ptr<FinePrint::Waypoint> ParamChoices_CelestialBodySurface::GetWaypoint() const {
     if (locationChoice == Choices::areaData) return areaData->GetWaypoint();
     return nullptr;
 }
-// :66
+// ParamChoices_CelestialBodySurface.cs:65
 bool ParamChoices_CelestialBodySurface::HasWorldPosition() const { return locationChoice == Choices::areaData ? areaData->HasNodeLabel() : false; }
-// :76
+// ParamChoices_CelestialBodySurface.cs:75
 Vector3f ParamChoices_CelestialBodySurface::GetWorldPosition() const {
     if (locationChoice == Choices::areaData) return areaData->GetWorldPosition();
     return Vector3f();
 }
-// :86
+// ParamChoices_CelestialBodySurface.cs:85
 std::string ParamChoices_CelestialBodySurface::GetExtraText() const {
     if (locationChoice == Choices::areaData) return areaData->GetExtraText();
     return "";
 }
-// :96
+// ParamChoices_CelestialBodySurface.cs:95
 std::string ParamChoices_CelestialBodySurface::NodeBodyParameterString() const {
     switch (locationChoice) {
         default: return Localizer::Format("#autoLOC_8000272");
@@ -1105,7 +1105,7 @@ std::string ParamChoices_CelestialBodySurface::NodeBodyParameterString() const {
                                       MissionDataEnvironment::launchSiteDisplayName ? MissionDataEnvironment::launchSiteDisplayName(launchSiteName) : launchSiteName});
     }
 }
-// :114
+// ParamChoices_CelestialBodySurface.cs:112
 void ParamChoices_CelestialBodySurface::Load(const ConfigNode& node) {
     save_detail::TryGetEnum(node, "locationChoice", locationChoice, Choices::bodyData);
     ConfigNode* node2 = nullptr;
@@ -1123,7 +1123,7 @@ void ParamChoices_CelestialBodySurface::Load(const ConfigNode& node) {
     }
     node.TryGetValue("LAUNCHSITEDATA", launchSiteName);
 }
-// :134
+// ParamChoices_CelestialBodySurface.cs:131
 void ParamChoices_CelestialBodySurface::Save(ConfigNode& node) const {
     node.AddValue("locationChoice", save_detail::EnumName(locationChoice));
     if (bodyData != nullptr) bodyData->Save(*node.AddNode("BODYDATA"));
@@ -1132,7 +1132,7 @@ void ParamChoices_CelestialBodySurface::Save(ConfigNode& node) const {
     node.AddValue("LAUNCHSITEDATA", launchSiteName);
 }
 
-// ParamChoices_VesselSimpleLocation.cs:26
+// ParamChoices_VesselSimpleLocation.cs:25
 std::string ParamChoices_VesselSimpleLocation::GetNodeBodyParameterString() const {
     switch (locationChoice) {
         default: return "";
@@ -1140,7 +1140,7 @@ std::string ParamChoices_VesselSimpleLocation::GetNodeBodyParameterString() cons
         case Choices::landed: return landed->GetNodeBodyParameterString();
     }
 }
-// :40
+// ParamChoices_VesselSimpleLocation.cs:38
 void ParamChoices_VesselSimpleLocation::Load(const ConfigNode& node) {
     save_detail::TryGetEnum(node, "locationChoice", locationChoice, Choices::orbit);
     ConfigNode* node2 = nullptr;
@@ -1153,7 +1153,7 @@ void ParamChoices_VesselSimpleLocation::Load(const ConfigNode& node) {
         orbit->Load(*node2);
     }
 }
-// :53
+// ParamChoices_VesselSimpleLocation.cs:52
 void ParamChoices_VesselSimpleLocation::Save(ConfigNode& node) const {
     node.AddValue("locationChoice", save_detail::EnumName(locationChoice));
     if (landed != nullptr) landed->Save(*node.AddNode("LANDEDDATA"));
@@ -1179,7 +1179,7 @@ std::string TrimEndSlash(const std::string& s) {
 }
 }  // namespace
 
-// MissionCraft.cs:71
+// MissionCraft.cs:73
 MissionCraft::MissionCraft(const std::string& folder, const std::string& file) : craftFile(file), craftFolder(folder), facility("") {
     configNodeCache = nullptr;
     const std::string trimmed = TrimEndSlash(folder);
@@ -1193,7 +1193,7 @@ MissionCraft::MissionCraft(const std::string& folder, const std::string& file) :
     checkPersistentIds();
 }
 
-// MissionCraft.cs:27
+// MissionCraft.cs:25
 ConfigNode* MissionCraft::CraftNode() {
     if (configNodeCache == nullptr) {
         const std::string baseFolder = TrimEndSlash(craftFolder);
@@ -1210,14 +1210,14 @@ ConfigNode* MissionCraft::CraftNode() {
     return configNodeCache.get();
 }
 
-// MissionCraft.cs:52
+// MissionCraft.cs:50
 std::string MissionCraft::VesselName() {
     std::string value;
     if (CraftNode() != nullptr) CraftNode()->TryGetValue("ship", value);
     return value;
 }
 
-// MissionCraft.cs:61
+// MissionCraft.cs:63
 uint32_t MissionCraft::persistentId() {
     uint32_t value = 0;
     if (CraftNode() == nullptr) throw NullReferenceException();
@@ -1225,7 +1225,7 @@ uint32_t MissionCraft::persistentId() {
     return value;
 }
 
-// MissionCraft.cs:87
+// MissionCraft.cs:90
 std::string MissionCraft::GetPartNameInVessel(uint32_t id) {
     if (CraftNode() == nullptr) return "No part selected";
     const std::vector<ConfigNode*> nodes = CraftNode()->GetNodes("PART");
@@ -1236,7 +1236,7 @@ std::string MissionCraft::GetPartNameInVessel(uint32_t id) {
     return GetPartName(nodes[static_cast<size_t>(num)]);
 }
 
-// MissionCraft.cs:107
+// MissionCraft.cs:109
 uint32_t MissionCraft::GetPartPersistentId(ConfigNode* node) {
     if (node == nullptr) return 0;
     std::string value;
@@ -1246,7 +1246,7 @@ uint32_t MissionCraft::GetPartPersistentId(ConfigNode* node) {
     return uniquepersistentId;
 }
 
-// MissionCraft.cs:123
+// MissionCraft.cs:125
 std::string MissionCraft::GetPartName(ConfigNode* node) {
     if (node == nullptr) return "";
     std::string value;
@@ -1257,7 +1257,7 @@ std::string MissionCraft::GetPartName(ConfigNode* node) {
     return value;
 }
 
-// MissionCraft.cs:137
+// MissionCraft.cs:140
 void MissionCraft::checkPersistentIds() {
     if (CraftNode() == nullptr) return;
     bool flag = false;

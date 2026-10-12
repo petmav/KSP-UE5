@@ -144,14 +144,14 @@ std::unique_ptr<ParamChoices_VesselSimpleLocation> NewLocation(VesselGroundLocat
 
 // ---- ActionCreateVessel ----------------------------------------------------------------------------------------------------------
 
-// ActionCreateVessel.cs:@Awake
+// ActionCreateVessel.cs:23
 ActionCreateVessel::ActionCreateVessel() : ActionModule(kTypeName) { title = Tag("#autoLOC_8000028"); }
-// ActionCreateVessel.cs:@Initialize
+// ActionCreateVessel.cs:29
 void ActionCreateVessel::Initialize(MENode* n) {
     ActionModule::Initialize(n);
     vesselSituation = std::make_unique<VesselSituation>(n->mission, n);
 }
-// ActionCreateVessel.cs:@Fire
+// ActionCreateVessel.cs:35
 Enumerator ActionCreateVessel::Fire() {
     if (vesselSituation->launched) co_return;
     if (vesselSituation->playerCreated) {
@@ -174,7 +174,7 @@ Enumerator ActionCreateVessel::Fire() {
     }
     co_return;
 }
-// ActionCreateVessel.cs:@CreateVesselScreenMessage
+// ActionCreateVessel.cs:133
 void ActionCreateVessel::CreateVesselScreenMessage() {
     if (!screenMessageActive) {
         const std::string message = Localizer::Format("#autoLOC_8000302", {vesselSituation->vesselName});
@@ -192,7 +192,7 @@ void ActionCreateVessel::CreateVesselScreenMessage() {
     }
     if (Env::updateLauncherButtonPlayAnim) Env::updateLauncherButtonPlayAnim();
 }
-// ActionCreateVessel.cs:@ActionLocation
+// ActionCreateVessel.cs:146
 Vector3f ActionCreateVessel::ActionLocation() {
     switch (vesselSituation->location->situation) {
         case VesselLocation::VesselStartSituations::LANDED: return vesselSituation->location->vesselGroundLocation->GetWorldPosition();
@@ -205,12 +205,12 @@ Vector3f ActionCreateVessel::ActionLocation() {
     }
     return Vector3f();
 }
-// ActionCreateVessel.cs:@OnCloned
+// ActionCreateVessel.cs:176
 void ActionCreateVessel::OnCloned(ActionModule*& actionModuleBase) {
     ActionModule::OnCloned(actionModuleBase);
     vesselSituation->persistentId = MissionDataEnvironment::UniquePersistentId();
 }
-// ActionCreateVessel.cs:@GetNodeOrbit
+// ActionCreateVessel.cs:187
 Orbit* ActionCreateVessel::GetNodeOrbit() {
     Orbit* orbit = vesselSituation->location->orbitSnapShot->orbit();
     switch (vesselSituation->location->situation) {
@@ -220,11 +220,11 @@ Orbit* ActionCreateVessel::GetNodeOrbit() {
     }
     return orbit;
 }
-// ActionCreateVessel.cs:@CreatePlaceholderCraft
+// ActionCreateVessel.cs:201
 void ActionCreateVessel::CreatePlaceholderCraft() {
     if (Env::createPlaceholderCraft) Env::createPlaceholderCraft(*this);
 }
-// ActionCreateVessel.cs:@GetNodeBodyParameterString
+// ActionCreateVessel.cs:243
 std::string ActionCreateVessel::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (field.name == "vesselSituation") {
         std::string text;
@@ -279,9 +279,9 @@ std::string ActionCreateVessel::GetNodeBodyParameterString(const Editor::BaseAPF
     }
     return ActionModule::GetNodeBodyParameterString(field);
 }
-// ActionCreateVessel.cs:@GetInfo
+// ActionCreateVessel.cs:336
 std::string ActionCreateVessel::GetInfo() { return Tag("#autoLOC_8004010"); }
-// ActionCreateVessel.cs:@RunValidation
+// ActionCreateVessel.cs:341
 void ActionCreateVessel::RunValidation(Editor::MissionEditorValidator* validator) {
     VesselLocation& loc = *vesselSituation->location;
     auto displayName = [&](const std::string& site) { return MissionDataEnvironment::launchSiteDisplayName ? MissionDataEnvironment::launchSiteDisplayName(site) : site; };
@@ -375,12 +375,12 @@ void ActionCreateVessel::RunValidation(Editor::MissionEditorValidator* validator
         }
     }
 }
-// ActionCreateVessel.cs:@Save
+// ActionCreateVessel.cs:523
 void ActionCreateVessel::Save(ConfigNode& cfg) const {
     ActionModule::Save(cfg);
     vesselSituation->Save(cfg);
 }
-// ActionCreateVessel.cs:@Load
+// ActionCreateVessel.cs:529
 void ActionCreateVessel::Load(const ConfigNode& cfg) {
     ActionModule::Load(cfg);
     ConfigNode* configNode = cfg.GetNode("VESSELSITUATION");
@@ -389,7 +389,7 @@ void ActionCreateVessel::Load(const ConfigNode& cfg) {
 
 // ---- ActionCreateKerbal ----------------------------------------------------------------------------------------------------------
 
-// ActionCreateKerbal.cs:@Awake
+// ActionCreateKerbal.cs:38
 ActionCreateKerbal::ActionCreateKerbal() : ActionModule(kTypeName) {
     isHelmetEnabled = Env::evaDefaultHelmetOn ? Env::evaDefaultHelmetOn() : false;
     isNeckRingEnabled = Env::evaDefaultNeckRingOn ? Env::evaDefaultNeckRingOn() : false;
@@ -403,12 +403,12 @@ ActionCreateKerbal::ActionCreateKerbal() : ActionModule(kTypeName) {
     persistentId = MissionDataEnvironment::UniquePersistentId();
     location->locationChoice = ParamChoices_VesselSimpleLocation::Choices::landed;
 }
-// ActionCreateKerbal.cs:@Initialize
+// ActionCreateKerbal.cs:52
 void ActionCreateKerbal::Initialize(MENode* n) {
     ActionModule::Initialize(n);
     missionKerbal->Initialize(nullptr, n);
 }
-// ActionCreateKerbal.cs:@Fire
+// ActionCreateKerbal.cs:58
 Enumerator ActionCreateKerbal::Fire() {
     if (!kerbalName.empty()) {
         missionKerbal->set_Kerbal(nullptr);
@@ -420,7 +420,7 @@ Enumerator ActionCreateKerbal::Fire() {
     SpawnKerbal();
     co_return;
 }
-// ActionCreateKerbal.cs:@SpawnKerbal
+// ActionCreateKerbal.cs:83
 ConfigNode::NodePtr ActionCreateKerbal::SpawnKerbal(bool addtoCurrentGame) {
     if (missionKerbal->Kerbal() == nullptr || missionKerbal->Kerbal()->name().value_or("").empty()) {
         log::Info("Unable to find kerbal " + kerbalName + " in mission roster, generating a random Kerbal of type " + dotnet::EnumToString(missionKerbal->TypeToShow()));
@@ -438,15 +438,15 @@ ConfigNode::NodePtr ActionCreateKerbal::SpawnKerbal(bool addtoCurrentGame) {
     if (addtoCurrentGame) AddVessel(*protoVesselNode);
     return protoVesselNode;
 }
-// ActionCreateKerbal.cs:@GetProtoVesselNode
+// ActionCreateKerbal.cs:115
 ConfigNode::NodePtr ActionCreateKerbal::GetProtoVesselNode() { return GetProtoVesselNode(defaultKerbalFeetToPivotDist); }
-// ActionCreateKerbal.cs:@CreateKerbalPartNode
+// ActionCreateKerbal.cs:191
 ConfigNode::NodePtr ActionCreateKerbal::CreateKerbalPartNode(uint32_t id, const PCM& crew) {
     ConfigNode::NodePtr configNode = CreatePartNode(crew->GetKerbalEVAPartName(), id, {crew});
     configNode->SetValue("flag", node->mission->flagURL, true);
     return configNode;
 }
-// ActionCreateKerbal.cs:@GetProtoVesselNode#2
+// ActionCreateKerbal.cs:120
 ConfigNode::NodePtr ActionCreateKerbal::GetProtoVesselNode(float feetToPivotDistance) {
     const uint32_t uniqueFlightID = UniqueFlightID();
     bool flag = location->locationChoice == ParamChoices_VesselSimpleLocation::Choices::landed;
@@ -509,49 +509,49 @@ ConfigNode::NodePtr ActionCreateKerbal::GetProtoVesselNode(float feetToPivotDist
     }
     return configNode;
 }
-// ActionCreateKerbal.cs:@ActionLocation
+// ActionCreateKerbal.cs:198
 Vector3f ActionCreateKerbal::ActionLocation() { return LocationActionLocation(*location); }
-// ActionCreateKerbal.cs:@OnCloned
+// ActionCreateKerbal.cs:212
 void ActionCreateKerbal::OnCloned(ActionModule*& actionModuleBase) {
     ActionModule::OnCloned(actionModuleBase);
     persistentId = MissionDataEnvironment::UniquePersistentId();
     missionKerbal->set_Kerbal(nullptr);
 }
-// ActionCreateKerbal.cs:@GetNodeOrbit
+// ActionCreateKerbal.cs:224
 Orbit* ActionCreateKerbal::GetNodeOrbit() { return NodeOrbit(*location); }
-// ActionCreateKerbal.cs:@GetInfo
+// ActionCreateKerbal.cs:262
 std::string ActionCreateKerbal::GetInfo() { return Tag("#autoLOC_8004008"); }
-// ActionCreateKerbal.cs:@NodeDeleted
+// ActionCreateKerbal.cs:267
 void ActionCreateKerbal::NodeDeleted() {
     if (missionKerbal != nullptr) missionKerbal->setcurrentKerbalAvailable();
 }
-// ActionCreateKerbal.cs:@KerbalRosterStatusChange
+// ActionCreateKerbal.cs:275
 void ActionCreateKerbal::KerbalRosterStatusChange(const PCM& kerbal, ProtoCrewMember::RosterStatus oldStatus, ProtoCrewMember::RosterStatus newStatus) {
     if (missionKerbal != nullptr) missionKerbal->onKerbalStatusChange(kerbal, oldStatus, newStatus);
 }
-// ActionCreateKerbal.cs:@KerbalAdded
+// ActionCreateKerbal.cs:283
 void ActionCreateKerbal::KerbalAdded(const PCM& kerbal) {
     if (missionKerbal != nullptr) missionKerbal->onKerbalAdded(kerbal);
 }
-// ActionCreateKerbal.cs:@KerbalTypeChange
+// ActionCreateKerbal.cs:291
 void ActionCreateKerbal::KerbalTypeChange(const PCM& kerbal, ProtoCrewMember::KerbalType oldType, ProtoCrewMember::KerbalType newType) {
     if (missionKerbal != nullptr) missionKerbal->onKerbalTypeChange(kerbal, oldType, newType);
 }
-// ActionCreateKerbal.cs:@KerbalNameChange
+// ActionCreateKerbal.cs:299
 void ActionCreateKerbal::KerbalNameChange(const PCM& kerbal, const std::string& oldName, const std::string& newName) {
     if (missionKerbal != nullptr) missionKerbal->onKerbalNameChange(kerbal, oldName, newName);
 }
-// ActionCreateKerbal.cs:@KerbalRemoved
+// ActionCreateKerbal.cs:307
 void ActionCreateKerbal::KerbalRemoved(const PCM& kerbal) {
     if (missionKerbal != nullptr) missionKerbal->onKerbalRemoved(kerbal);
 }
-// ActionCreateKerbal.cs:@GetNodeBodyParameterString
+// ActionCreateKerbal.cs:315
 std::string ActionCreateKerbal::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (field.name == "location") return location->GetNodeBodyParameterString();
     if (field.name == "missionKerbal") return missionKerbal->GetNodeBodyParameterString();
     return ActionModule::GetNodeBodyParameterString(field);
 }
-// ActionCreateKerbal.cs:@Save
+// ActionCreateKerbal.cs:328
 void ActionCreateKerbal::Save(ConfigNode& cfg) const {
     ActionModule::Save(cfg);
     missionKerbal->Save(cfg);
@@ -561,7 +561,7 @@ void ActionCreateKerbal::Save(ConfigNode& cfg) const {
     cfg.AddValue("persistentId", persistentId);
     location->Save(cfg);
 }
-// ActionCreateKerbal.cs:@Load
+// ActionCreateKerbal.cs:339
 void ActionCreateKerbal::Load(const ConfigNode& cfg) {
     ActionModule::Load(cfg);
     location->Load(cfg);
@@ -575,29 +575,29 @@ void ActionCreateKerbal::Load(const ConfigNode& cfg) {
 
 // ---- ActionCreateAsteroid / ActionCreateComet ------------------------------------------------------------------------------------
 
-// ActionCreateAsteroid.cs:@Awake
+// ActionCreateAsteroid.cs:18
 ActionCreateAsteroid::ActionCreateAsteroid() : ActionModule(kTypeName) {
     title = Tag("#autoLOC_8000045");
     asteroid = std::make_unique<Asteroid>();
     location = NewLocation(VesselGroundLocation::GizmoIcon::Asteroid, node, ParamChoices_VesselSimpleLocation::Choices::orbit);
     location->landed->splashed = true;
 }
-// ActionCreateAsteroid.cs:@Fire
+// ActionCreateAsteroid.cs:30
 Enumerator ActionCreateAsteroid::Fire() {
     SpawnAsteroid();
     co_return;
 }
-// ActionCreateAsteroid.cs:@ActionLocation
+// ActionCreateAsteroid.cs:36
 Vector3f ActionCreateAsteroid::ActionLocation() { return LocationActionLocation(*location); }
-// ActionCreateAsteroid.cs:@OnCloned
+// ActionCreateAsteroid.cs:50
 void ActionCreateAsteroid::OnCloned(ActionModule*& actionModuleBase) {
     ActionModule::OnCloned(actionModuleBase);
     asteroid->seed = Asteroid::GetAsteroidSeed();
     asteroid->persistentId = MissionDataEnvironment::UniquePersistentId();
 }
-// ActionCreateAsteroid.cs:@GetNodeOrbit
+// ActionCreateAsteroid.cs:62
 Orbit* ActionCreateAsteroid::GetNodeOrbit() { return NodeOrbit(*location); }
-// ActionCreateAsteroid.cs:@GetNodeBodyParameterString
+// ActionCreateAsteroid.cs:75
 std::string ActionCreateAsteroid::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (field.fieldType == "Asteroid") {
         return Localizer::Format("#autoLOC_8000139", {field.guiName, Localizer::Format(EnumDescription(asteroid->asteroidType)), Localizer::Format(EnumDescription(asteroid->asteroidClass))});
@@ -605,21 +605,21 @@ std::string ActionCreateAsteroid::GetNodeBodyParameterString(const Editor::BaseA
     if (field.name == "location") return location->GetNodeBodyParameterString();
     return ActionModule::GetNodeBodyParameterString(field);
 }
-// ActionCreateAsteroid.cs:@GetInfo
+// ActionCreateAsteroid.cs:88
 std::string ActionCreateAsteroid::GetInfo() { return Tag("#autoLOC_8004007"); }
-// ActionCreateAsteroid.cs:@Save
+// ActionCreateAsteroid.cs:93
 void ActionCreateAsteroid::Save(ConfigNode& cfg) const {
     ActionModule::Save(cfg);
     asteroid->Save(cfg);
     location->Save(cfg);
 }
-// ActionCreateAsteroid.cs:@Load
+// ActionCreateAsteroid.cs:100
 void ActionCreateAsteroid::Load(const ConfigNode& cfg) {
     ActionModule::Load(cfg);
     asteroid->Load(cfg);
     location->Load(cfg);
 }
-// ActionCreateAsteroid.cs:@SpawnAsteroid
+// ActionCreateAsteroid.cs:107
 void ActionCreateAsteroid::SpawnAsteroid() {
     ConfigNode::NodePtr protoVesselNode = GetProtoVesselNode();
     Vessel* vesselRef = AddVessel(*protoVesselNode);
@@ -671,7 +671,7 @@ ConfigNode::NodePtr SpaceObjectNode(ParamChoices_VesselSimpleLocation& location,
 }
 }  // namespace
 
-// ActionCreateAsteroid.cs:@GetProtoVesselNode
+// ActionCreateAsteroid.cs:114
 ConfigNode::NodePtr ActionCreateAsteroid::GetProtoVesselNode() {
     ConfigNode::NodePtr configNode = CreatePartNode("PotatoRoid", asteroid->seed, {});
     auto configNode2 = std::make_shared<ConfigNode>("MODULE");
@@ -687,55 +687,55 @@ ConfigNode::NodePtr ActionCreateAsteroid::GetProtoVesselNode() {
     return SpaceObjectNode(*location, node->mission, asteroid->name, PersistentID(), static_cast<double>(classRadius), {configNode, configNode3});
 }
 
-// ActionCreateComet.cs:@Awake
+// ActionCreateComet.cs:18
 ActionCreateComet::ActionCreateComet() : ActionModule(kTypeName) {
     title = Tag("#autoLOC_8005445");
     comet = std::make_unique<Comet>();
     location = NewLocation(VesselGroundLocation::GizmoIcon::Comet, node, ParamChoices_VesselSimpleLocation::Choices::orbit);
     location->landed->splashed = true;
 }
-// ActionCreateComet.cs:@Fire
+// ActionCreateComet.cs:30
 Enumerator ActionCreateComet::Fire() {
     SpawnComet();
     co_return;
 }
-// ActionCreateComet.cs:@ActionLocation
+// ActionCreateComet.cs:36
 Vector3f ActionCreateComet::ActionLocation() { return LocationActionLocation(*location); }
-// ActionCreateComet.cs:@OnCloned
+// ActionCreateComet.cs:50
 void ActionCreateComet::OnCloned(ActionModule*& actionModuleBase) {
     ActionModule::OnCloned(actionModuleBase);
     comet->seed = Comet::GetRandomCometSeed();
     comet->persistentId = MissionDataEnvironment::UniquePersistentId();
 }
-// ActionCreateComet.cs:@GetNodeOrbit
+// ActionCreateComet.cs:62
 Orbit* ActionCreateComet::GetNodeOrbit() { return NodeOrbit(*location); }
-// ActionCreateComet.cs:@GetNodeBodyParameterString
+// ActionCreateComet.cs:75
 std::string ActionCreateComet::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (field.fieldType == "Comet") return Localizer::Format("#autoLOC_8000139", {field.guiName, comet->cometDisplayType, Localizer::Format(EnumDescription(comet->cometClass))});
     if (field.name == "location") return location->GetNodeBodyParameterString();
     return ActionModule::GetNodeBodyParameterString(field);
 }
-// ActionCreateComet.cs:@GetInfo
+// ActionCreateComet.cs:88
 std::string ActionCreateComet::GetInfo() { return Tag("#autoLOC_8005446"); }
-// ActionCreateComet.cs:@Save
+// ActionCreateComet.cs:93
 void ActionCreateComet::Save(ConfigNode& cfg) const {
     ActionModule::Save(cfg);
     comet->Save(cfg);
     location->Save(cfg);
 }
-// ActionCreateComet.cs:@Load
+// ActionCreateComet.cs:100
 void ActionCreateComet::Load(const ConfigNode& cfg) {
     ActionModule::Load(cfg);
     comet->Load(cfg);
     location->Load(cfg);
 }
-// ActionCreateComet.cs:@SpawnComet
+// ActionCreateComet.cs:107
 void ActionCreateComet::SpawnComet() {
     ConfigNode::NodePtr protoVesselNode = GetProtoVesselNode();
     Vessel* vesselRef = AddVessel(*protoVesselNode);
     GameEvents::onCometSpawned.Fire(vesselRef);
 }
-// ActionCreateComet.cs:@GetProtoVesselNode
+// ActionCreateComet.cs:114
 ConfigNode::NodePtr ActionCreateComet::GetProtoVesselNode() {
     ConfigNode::NodePtr configNode = CreatePartNode("PotatoComet", comet->seed, {});
     std::string pidText;
@@ -761,7 +761,7 @@ ConfigNode::NodePtr ActionCreateComet::GetProtoVesselNode() {
 
 // ---- ActionCreateFlag ------------------------------------------------------------------------------------------------------------
 
-// ActionCreateFlag.cs:@Awake
+// ActionCreateFlag.cs:23
 ActionCreateFlag::ActionCreateFlag() : ActionModule(kTypeName) {
     title = Tag("#autoLOC_8004174");
     siteName = Tag("#autoLOC_8100159");
@@ -769,13 +769,13 @@ ActionCreateFlag::ActionCreateFlag() : ActionModule(kTypeName) {
     location = std::make_unique<VesselGroundLocation>(node, VesselGroundLocation::GizmoIcon::Flag);
     persistentID = MissionDataEnvironment::UniquePersistentId();
 }
-// ActionCreateFlag.cs:@Fire
+// ActionCreateFlag.cs:33
 Enumerator ActionCreateFlag::Fire() {
     ConfigNode::NodePtr protoVesselNode = GetProtoVesselNode();
     AddVessel(*protoVesselNode);
     co_return;
 }
-// ActionCreateFlag.cs:@CreateFlagPartNode
+// ActionCreateFlag.cs:71
 ConfigNode::NodePtr ActionCreateFlag::CreateFlagPartNode(uint32_t id) {
     ConfigNode::NodePtr configNode = CreatePartNode("flag", id, {});
     configNode->SetValue("flag", node->mission->flagURL, true);
@@ -786,7 +786,7 @@ ConfigNode::NodePtr ActionCreateFlag::CreateFlagPartNode(uint32_t id) {
     configNode->AddNode(configNode2);
     return configNode;
 }
-// ActionCreateFlag.cs:@GetProtoVesselNode
+// ActionCreateFlag.cs:40
 ConfigNode::NodePtr ActionCreateFlag::GetProtoVesselNode() {
     if (siteName.empty()) siteName = Tag("#autoLOC_8100159");
     const uint32_t uniqueFlightID = UniqueFlightID();
@@ -812,21 +812,21 @@ ConfigNode::NodePtr ActionCreateFlag::GetProtoVesselNode() {
     }
     return configNode;
 }
-// ActionCreateFlag.cs:@ActionLocation
+// ActionCreateFlag.cs:83
 Vector3f ActionCreateFlag::ActionLocation() { return location->GetWorldPosition(); }
-// ActionCreateFlag.cs:@OnCloned
+// ActionCreateFlag.cs:88
 void ActionCreateFlag::OnCloned(ActionModule*& actionModuleBase) {
     ActionModule::OnCloned(actionModuleBase);
     persistentID = MissionDataEnvironment::UniquePersistentId();
 }
-// ActionCreateFlag.cs:@GetInfo
+// ActionCreateFlag.cs:94
 std::string ActionCreateFlag::GetInfo() { return Tag("#autoLOC_8004175"); }
-// ActionCreateFlag.cs:@GetNodeBodyParameterString
+// ActionCreateFlag.cs:99
 std::string ActionCreateFlag::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (field.name == "location") return location->GetNodeBodyParameterString();
     return ActionModule::GetNodeBodyParameterString(field);
 }
-// ActionCreateFlag.cs:@Save
+// ActionCreateFlag.cs:108
 void ActionCreateFlag::Save(ConfigNode& cfg) const {
     ActionModule::Save(cfg);
     cfg.AddValue("siteName", siteName);
@@ -834,7 +834,7 @@ void ActionCreateFlag::Save(ConfigNode& cfg) const {
     cfg.AddValue("persistentId", persistentID);
     location->Save(cfg);
 }
-// ActionCreateFlag.cs:@Load
+// ActionCreateFlag.cs:117
 void ActionCreateFlag::Load(const ConfigNode& cfg) {
     ActionModule::Load(cfg);
     cfg.TryGetValue("siteName", siteName);
@@ -845,14 +845,14 @@ void ActionCreateFlag::Load(const ConfigNode& cfg) {
 
 // ---- ActionCreateLaunchSite ------------------------------------------------------------------------------------------------------
 
-// ActionCreateLaunchSite.cs:@Awake
+// ActionCreateLaunchSite.cs:14
 ActionCreateLaunchSite::ActionCreateLaunchSite() : ActionModule(kTypeName) { title = Tag("#autoLOC_8000066"); }
-// ActionCreateLaunchSite.cs:@Initialize
+// ActionCreateLaunchSite.cs:20
 void ActionCreateLaunchSite::Initialize(MENode* n) {
     ActionModule::Initialize(n);
     launchSiteSituation = std::make_unique<LaunchSiteSituation>(n);
 }
-// ActionCreateLaunchSite.cs:@Fire
+// ActionCreateLaunchSite.cs:26
 Enumerator ActionCreateLaunchSite::Fire() {
     if (!node->IsDockedToStartNode()) {
         log::Warning("[MissionSystem]: Cannot spawn LaunchSites if they are not docked to the start node.");
@@ -860,7 +860,7 @@ Enumerator ActionCreateLaunchSite::Fire() {
     }
     co_return;
 }
-// ActionCreateLaunchSite.cs:@GetNodeBodyParameterString
+// ActionCreateLaunchSite.cs:35
 std::string ActionCreateLaunchSite::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (field.name == "launchSiteSituation") {
         std::string empty;
@@ -870,7 +870,7 @@ std::string ActionCreateLaunchSite::GetNodeBodyParameterString(const Editor::Bas
     }
     return ActionModule::GetNodeBodyParameterString(field);
 }
-// ActionCreateLaunchSite.cs:@RunValidation
+// ActionCreateLaunchSite.cs:50
 void ActionCreateLaunchSite::RunValidation(Editor::MissionEditorValidator* validator) {
     if (!node->IsDockedToStartNode()) validator->AddNodeFail(node, Tag("#autoLOC_8006041"));
     if (launchSiteSituation->launchSiteName == "Unnamed LaunchSite") validator->AddNodeWarn(node, Tag("#autoLOC_8006042"));
@@ -885,14 +885,14 @@ void ActionCreateLaunchSite::RunValidation(Editor::MissionEditorValidator* valid
         launchSiteSituation->launchSiteGroundLocation->longitude == 0.0)
         validator->AddNodeFail(node, Tag("#autoLOC_8006044"));
 }
-// ActionCreateLaunchSite.cs:@GetInfo
+// ActionCreateLaunchSite.cs:78
 std::string ActionCreateLaunchSite::GetInfo() { return Tag("#autoLOC_8004009"); }
-// ActionCreateLaunchSite.cs:@Save
+// ActionCreateLaunchSite.cs:83
 void ActionCreateLaunchSite::Save(ConfigNode& cfg) const {
     ActionModule::Save(cfg);
     launchSiteSituation->Save(cfg);
 }
-// ActionCreateLaunchSite.cs:@Load
+// ActionCreateLaunchSite.cs:89
 void ActionCreateLaunchSite::Load(const ConfigNode& cfg) {
     ActionModule::Load(cfg);
     ConfigNode* configNode = cfg.GetNode("LAUNCHSITESITUATION");

@@ -16,7 +16,7 @@ namespace ksp::Expansions::Missions {
 
 using KSP::Localization::Localizer;
 
-// VesselSituation.cs:61
+// VesselSituation.cs:57
 VesselSituation::VesselSituation() {
     persistentId = 0;
     vesselCrew.clear();
@@ -26,7 +26,7 @@ VesselSituation::VesselSituation() {
     requiredParts.clear();
 }
 
-// VesselSituation.cs:71 (partFilter.SetUpdatePartnerExcludedPartFilterCallback is the part picker's)
+// VesselSituation.cs:67 (partFilter.SetUpdatePartnerExcludedPartFilterCallback is the part picker's)
 VesselSituation::VesselSituation(Mission* m, MENode* n) : VesselSituation() {
     persistentId = MissionDataEnvironment::UniquePersistentId();
     vesselName = Localizer::Format("#autoLOC_8100086");
@@ -39,7 +39,7 @@ VesselSituation::VesselSituation(Mission* m, MENode* n) : VesselSituation() {
 
 VesselSituation::~VesselSituation() = default;
 
-// VesselSituation.cs:86 (MissionEditorLogic.Instance.Unlock("missionBuilder_SetVesselCrew") is an editor input lock: UI)
+// VesselSituation.cs:80 (MissionEditorLogic.Instance.Unlock("missionBuilder_SetVesselCrew") is an editor input lock: UI)
 void VesselSituation::SetVesselCrew(KerbalRoster& crewRoster, VesselCrewManifest& newCrew) {
     std::vector<std::string> list;
     for (size_t i = 0; i < vesselCrew.size(); ++i)
@@ -79,7 +79,7 @@ void VesselSituation::SetVesselCrew(KerbalRoster& crewRoster, VesselCrewManifest
     vesselCrew = std::move(list2);
 }
 
-// VesselSituation.cs:143
+// VesselSituation.cs:137
 void VesselSituation::SetCrewAvailable(KerbalRoster& crewRoster) {
     for (size_t i = 0; i < vesselCrew.size(); ++i) {
         for (size_t j = 0; j < vesselCrew[i].crewNames.size(); ++j) {
@@ -89,22 +89,22 @@ void VesselSituation::SetCrewAvailable(KerbalRoster& crewRoster) {
     }
 }
 
-// VesselSituation.cs:157 (the Dictionary<string, List<string>> in insertion order)
+// VesselSituation.cs:152 (the Dictionary<string, List<string>> in insertion order)
 std::vector<std::pair<std::string, std::vector<std::string>>> VesselSituation::GetRequiredExcludedParts() {
     return {{Localizer::Format("#autoLOC_8000261"), mission->situation->partFilter->GetExcludedParts()},
             {Localizer::Format("#autoLOC_8000262"), partFilter->GetExcludedParts()}};
 }
 
-// VesselSituation.cs:177 / :182
+// VesselSituation.cs:167 / :182
 void VesselSituation::StartEditorEvents() { vesselRestrictionList->StartAppEvents(); }
 void VesselSituation::ClearEditorEvents() { vesselRestrictionList->ClearAppEvents(); }
 
-// VesselSituation.cs:219
+// VesselSituation.cs:207
 bool VesselSituation::OnRequieredPartsCheckpointValidator(const std::vector<std::string>& value) {
     return MissionCheckpointValidator::CompareObjectLists(&requiredParts, &value);
 }
 
-// VesselSituation.cs:224
+// VesselSituation.cs:212
 void VesselSituation::Load(const ConfigNode& node_) {
     const auto& values = node_.values();
     for (int i = 0; i < values.Count(); ++i) {
@@ -156,7 +156,7 @@ void VesselSituation::Load(const ConfigNode& node_) {
     }
 }
 
-// VesselSituation.cs:287
+// VesselSituation.cs:279
 void VesselSituation::Save(ConfigNode& node_) {
     ConfigNode* configNode = node_.AddNode("VESSELSITUATION");
     configNode->AddValue("ship", vesselName);

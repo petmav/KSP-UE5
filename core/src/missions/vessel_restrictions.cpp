@@ -65,10 +65,10 @@ struct Msg {
 
 // ---- VesselRestriction.cs --------------------------------------------------------------------------------------------------------
 
-// VesselRestriction.cs:37
+// VesselRestriction.cs:35
 std::string VesselRestriction::GetDisplayName() { return Localizer::Format("#autoLOC_8100211"); }
 
-// VesselRestriction.cs:55
+// VesselRestriction.cs:53
 void VesselRestriction::UpdateAppEntry() {
     if (UIEntry.present) {
         UIEntry.text = GetStateMessage();
@@ -80,7 +80,7 @@ void VesselRestriction::UpdateAppEntry() {
     }
 }
 
-// VesselRestriction.cs:42
+// VesselRestriction.cs:40
 void VesselRestriction::AddAppUIReference(bool dataIsVesselInfo, VesselSituation* vesselSituation) {
     UIEntry.present = true;
     UIEntry.dataIsVesselInfo = dataIsVesselInfo;
@@ -88,21 +88,21 @@ void VesselRestriction::AddAppUIReference(bool dataIsVesselInfo, VesselSituation
     UpdateAppEntry();
 }
 
-// VesselRestriction.cs:49
+// VesselRestriction.cs:47
 void VesselRestriction::ClearAppUIREference() { UIEntry = UIEntryRef{}; }
 
-// VesselRestriction.cs:70
+// VesselRestriction.cs:68
 std::string VesselRestriction::GetStateMessage() {
     return Localizer::Format("#autoLOC_8100212", {FloatText(R::time ? R::time() : 0.0f)});
 }
 
-// VesselRestriction.cs:80
+// VesselRestriction.cs:78
 bool VesselRestriction::SameComparatorWrapper(VesselRestriction& otherRestriction) {
     if (TypeName() == otherRestriction.TypeName()) return SameComparator(otherRestriction);
     return false;
 }
 
-// VesselRestriction.cs:99 (float Mathf.Abs(target - current) argument is stored)
+// VesselRestriction.cs:97 (float Mathf.Abs(target - current) argument is stored)
 bool VesselRestriction::TestFloat(float currentValue, float targetValue, TestComparisonLessGreaterEqual comparisonOperator) {
     switch (comparisonOperator) {
         default: return true;
@@ -112,7 +112,7 @@ bool VesselRestriction::TestFloat(float currentValue, float targetValue, TestCom
     }
 }
 
-// VesselRestriction.cs:115
+// VesselRestriction.cs:112
 bool VesselRestriction::TestInt(int currentValue, int targetValue, TestComparisonLessGreaterEqual comparisonOperator) {
     switch (comparisonOperator) {
         default: return true;
@@ -124,14 +124,14 @@ bool VesselRestriction::TestInt(int currentValue, int targetValue, TestCompariso
 
 // ---- VesselRestrictionList.cs ----------------------------------------------------------------------------------------------------
 
-// VesselRestrictionList.cs:9
+// VesselRestrictionList.cs:10
 std::vector<VesselRestriction*> VesselRestrictionList::ActiveRestrictions() {
     std::vector<VesselRestriction*> list;
     for (size_t i = 0; i < activeModules.size(); ++i) list.push_back(dynamic_cast<VesselRestriction*>(activeModules[i].get()));
     return list;
 }
 
-// VesselRestrictionList.cs:37: every VesselRestriction subclass (assembly order) unless [VesselRestrictionOptions(listedInSAP = false)]
+// VesselRestrictionList.cs:28: every VesselRestriction subclass (assembly order) unless [VesselRestrictionOptions(listedInSAP = false)]
 std::vector<std::string> VesselRestrictionList::GetSupportedTypes() {
     std::vector<std::string> out;
     for (const std::string& n : DynamicModuleRegistry::SubclassesOf("VesselRestriction"))
@@ -139,19 +139,19 @@ std::vector<std::string> VesselRestrictionList::GetSupportedTypes() {
     return out;
 }
 
-// VesselRestrictionList.cs:60
+// VesselRestrictionList.cs:55
 void VesselRestrictionList::StartAppEvents() {
     std::vector<VesselRestriction*> activeRestrictions = ActiveRestrictions();
     for (size_t i = 0; i < activeRestrictions.size(); ++i) activeRestrictions[i]->SuscribeToEvents();
 }
 
-// VesselRestrictionList.cs:70
+// VesselRestrictionList.cs:64
 void VesselRestrictionList::ClearAppEvents() {
     std::vector<VesselRestriction*> activeRestrictions = ActiveRestrictions();
     for (size_t i = 0; i < activeRestrictions.size(); ++i) activeRestrictions[i]->ClearEvents();
 }
 
-// DynamicModuleList.cs:140 Clone
+// DynamicModuleList.cs:137 Clone
 std::unique_ptr<DynamicModuleList> VesselRestrictionList::Clone() const {
     auto list = std::make_unique<VesselRestrictionList>(node());
     list->activeModules.clear();
@@ -162,30 +162,30 @@ std::unique_ptr<DynamicModuleList> VesselRestrictionList::Clone() const {
 
 // ---- VesselRestriction_Cost.cs ---------------------------------------------------------------------------------------------------
 
-// VesselRestriction_Cost.cs:26
+// VesselRestriction_Cost.cs:24
 void VesselRestriction_Cost::SuscribeToEvents() {
     GameEvents::onEditorPartPlaced.Add(self(), &VesselRestriction::CbPart);
     GameEvents::onEditorPodPicked.Add(self(), &VesselRestriction::CbPart);
     GameEvents::onEditorStarted.Add(self(), &VesselRestriction::CbVoid);
     GameEvents::onEditorLoad.Add(self(), &VesselRestriction::CbLoad);
 }
-// :34
+// VesselRestriction_Cost.cs:32
 void VesselRestriction_Cost::ClearEvents() {
     GameEvents::onEditorPartPlaced.Remove(self(), &VesselRestriction::CbPart);
     GameEvents::onEditorPodPicked.Remove(self(), &VesselRestriction::CbPart);
     GameEvents::onEditorStarted.Remove(self(), &VesselRestriction::CbVoid);
     GameEvents::onEditorLoad.Remove(self(), &VesselRestriction::CbLoad);
 }
-// :42 (returns the raw tag)
+// VesselRestriction_Cost.cs:40 (returns the raw tag)
 std::string VesselRestriction_Cost::GetDisplayName() { return "#autoLOC_8100136"; }
-// :74
+// VesselRestriction_Cost.cs:70
 float VesselRestriction_Cost::GetShipCurrentCost() {
     if (R::shipCost) return R::shipCost();
     float dryCost = 0.0f;
     float fuelCost = 0.0f;
     return Ship()->GetShipCosts(dryCost, fuelCost, ShipConstruction::ShipManifest);
 }
-// :47
+// VesselRestriction_Cost.cs:45
 std::string VesselRestriction_Cost::GetStateMessage() {
     switch (comparisonOperator) {
         default: return "";
@@ -194,13 +194,13 @@ std::string VesselRestriction_Cost::GetStateMessage() {
         case TestComparisonLessGreaterEqual::GreaterOrEqual: return Localizer::Format("#autoLOC_8100139", {FloatText(targetCost), FloatText(GetShipCurrentCost())});
     }
 }
-// :64
+// VesselRestriction_Cost.cs:60
 bool VesselRestriction_Cost::SameComparator(VesselRestriction& other) {
     return comparisonOperator == dynamic_cast<VesselRestriction_Cost&>(other).comparisonOperator;
 }
-// :69
+// VesselRestriction_Cost.cs:65
 bool VesselRestriction_Cost::IsComplete() { return VesselRestriction::TestFloat(GetShipCurrentCost(), targetCost, comparisonOperator); }
-// :80
+// VesselRestriction_Cost.cs:77
 void VesselRestriction_Cost::Load(const ConfigNode& node) {
     VesselRestriction::Load(node);
     const auto& values = node.values();
@@ -215,7 +215,7 @@ void VesselRestriction_Cost::Load(const ConfigNode& node) {
         }
     }
 }
-// :101
+// VesselRestriction_Cost.cs:98
 void VesselRestriction_Cost::Save(ConfigNode& node) const {
     VesselRestriction::Save(node);
     node.AddValue("cost", targetCost);
@@ -224,21 +224,21 @@ void VesselRestriction_Cost::Save(ConfigNode& node) const {
 
 // ---- VesselRestriction_Crew.cs ---------------------------------------------------------------------------------------------------
 
-// VesselRestriction_Crew.cs:46
+// VesselRestriction_Crew.cs:44
 void VesselRestriction_Crew::SuscribeToEvents() {
     R::onCrewDialogChange.Add(self(), &VesselRestriction::CbCrew);
     GameEvents::onEditorStarted.Add(self(), &VesselRestriction::CbVoid);
     GameEvents::onEditorLoad.Add(self(), &VesselRestriction::CbLoad);
 }
-// :53
+// VesselRestriction_Crew.cs:51
 void VesselRestriction_Crew::ClearEvents() {
     R::onCrewDialogChange.Remove(self(), &VesselRestriction::CbCrew);
     GameEvents::onEditorStarted.Remove(self(), &VesselRestriction::CbVoid);
     GameEvents::onEditorLoad.Remove(self(), &VesselRestriction::CbLoad);
 }
-// :60
+// VesselRestriction_Crew.cs:58
 std::string VesselRestriction_Crew::GetDisplayName() { return Localizer::Format("#autoLOC_8100143"); }
-// :65
+// VesselRestriction_Crew.cs:63
 void VesselRestriction_Crew::Load(const ConfigNode& node) {
     VesselRestriction::Load(node);
     const auto& values = node.values();
@@ -255,21 +255,21 @@ void VesselRestriction_Crew::Load(const ConfigNode& node) {
         }
     }
 }
-// :87
+// VesselRestriction_Crew.cs:84
 void VesselRestriction_Crew::Save(ConfigNode& node) const {
     VesselRestriction::Save(node);
     node.AddValue("crewType", save_detail::EnumName(crewType));
     node.AddValue("comparisonOperator", save_detail::EnumName(comparisonOperator));
     node.AddValue("crewCount", targetCrew);
 }
-// :95 `((VesselRestriction_Mass)otherRestriction).comparisonOperator`: SameComparatorWrapper only calls it with another Crew -> InvalidCastException
+// VesselRestriction_Crew.cs:92 `((VesselRestriction_Mass)otherRestriction).comparisonOperator`: SameComparatorWrapper only calls it with another Crew -> InvalidCastException
 bool VesselRestriction_Crew::SameComparator(VesselRestriction& other) {
     if (dynamic_cast<VesselRestriction_Mass*>(&other) == nullptr) throw InvalidCastException("Unable to cast object to type 'VesselRestriction_Mass'.");
     return comparisonOperator == dynamic_cast<VesselRestriction_Mass&>(other).comparisonOperator;
 }
-// :100
+// VesselRestriction_Crew.cs:97
 bool VesselRestriction_Crew::IsComplete() { return VesselRestriction::TestInt(GetCrewCount(), targetCrew, comparisonOperator); }
-// :105
+// VesselRestriction_Crew.cs:102
 int VesselRestriction_Crew::GetCrewCount() {
     int result = 0;
     switch (crewType) {
@@ -286,7 +286,7 @@ int VesselRestriction_Crew::GetCrewCount() {
     }
     return result;
 }
-// :123
+// VesselRestriction_Crew.cs:126
 int VesselRestriction_Crew::GetCrewTraitCount(const std::string& kerbalTrait) {
     int num = 0;
     if (R::crewTraits) {
@@ -302,7 +302,7 @@ int VesselRestriction_Crew::GetCrewTraitCount(const std::string& kerbalTrait) {
     }
     return num;
 }
-// :138
+// VesselRestriction_Crew.cs:143
 std::string VesselRestriction_Crew::GetStateMessage() {
     switch (comparisonOperator) {
         default: return "";
@@ -317,7 +317,7 @@ std::string VesselRestriction_Crew::GetStateMessage() {
 
 // ---- VesselRestriction_Mass.cs ---------------------------------------------------------------------------------------------------
 
-// VesselRestriction_Mass.cs:26
+// VesselRestriction_Mass.cs:24
 void VesselRestriction_Mass::SuscribeToEvents() {
     GameEvents::onEditorPartPlaced.Add(self(), &VesselRestriction::CbPart);
     GameEvents::onEditorShipModified.Add(self(), &VesselRestriction::CbShip);
@@ -325,7 +325,7 @@ void VesselRestriction_Mass::SuscribeToEvents() {
     GameEvents::onEditorStarted.Add(self(), &VesselRestriction::CbVoid);
     GameEvents::onEditorLoad.Add(self(), &VesselRestriction::CbLoad);
 }
-// :36
+// VesselRestriction_Mass.cs:33
 void VesselRestriction_Mass::ClearEvents() {
     GameEvents::onEditorPartPlaced.Remove(self(), &VesselRestriction::CbPart);
     GameEvents::onEditorShipModified.Remove(self(), &VesselRestriction::CbShip);
@@ -333,9 +333,9 @@ void VesselRestriction_Mass::ClearEvents() {
     GameEvents::onEditorStarted.Remove(self(), &VesselRestriction::CbVoid);
     GameEvents::onEditorLoad.Remove(self(), &VesselRestriction::CbLoad);
 }
-// :46
+// VesselRestriction_Mass.cs:42
 std::string VesselRestriction_Mass::GetDisplayName() { return Localizer::Format("#autoLOC_8100169"); }
-// :51
+// VesselRestriction_Mass.cs:47
 void VesselRestriction_Mass::Load(const ConfigNode& node) {
     VesselRestriction::Load(node);
     const auto& values = node.values();
@@ -350,24 +350,24 @@ void VesselRestriction_Mass::Load(const ConfigNode& node) {
         }
     }
 }
-// :71
+// VesselRestriction_Mass.cs:68
 void VesselRestriction_Mass::Save(ConfigNode& node) const {
     VesselRestriction::Save(node);
     node.AddValue("mass", targetMass);
     node.AddValue("comparisonOperator", save_detail::EnumName(comparisonOperator));
 }
-// :78
+// VesselRestriction_Mass.cs:75
 bool VesselRestriction_Mass::SameComparator(VesselRestriction& other) {
     return comparisonOperator == dynamic_cast<VesselRestriction_Mass&>(other).comparisonOperator;
 }
-// :83
+// VesselRestriction_Mass.cs:80
 bool VesselRestriction_Mass::IsComplete() { return VesselRestriction::TestFloat(GetCurrentMass(), targetMass, comparisonOperator); }
-// :88
+// VesselRestriction_Mass.cs:85
 float VesselRestriction_Mass::GetCurrentMass() {
     if (R::shipTotalMass) return R::shipTotalMass();
     return Ship()->GetTotalMass();
 }
-// :93
+// VesselRestriction_Mass.cs:90
 std::string VesselRestriction_Mass::GetStateMessage() {
     switch (comparisonOperator) {
         default: return Localizer::Format("#autoLOC_8100173");
@@ -386,16 +386,16 @@ void VesselRestriction_PartCount::SuscribeToEvents() {
     GameEvents::onEditorStarted.Add(self(), &VesselRestriction::CbVoid);
     GameEvents::onEditorLoad.Add(self(), &VesselRestriction::CbLoad);
 }
-// :32
+// VesselRestriction_PartCount.cs:32
 void VesselRestriction_PartCount::ClearEvents() {
     GameEvents::onEditorPartPlaced.Remove(self(), &VesselRestriction::CbPart);
     GameEvents::onEditorPodPicked.Remove(self(), &VesselRestriction::CbPart);
     GameEvents::onEditorStarted.Remove(self(), &VesselRestriction::CbVoid);
     GameEvents::onEditorLoad.Remove(self(), &VesselRestriction::CbLoad);
 }
-// :40
+// VesselRestriction_PartCount.cs:40
 std::string VesselRestriction_PartCount::GetDisplayName() { return Localizer::Format("#autoLOC_8100177"); }
-// :45
+// VesselRestriction_PartCount.cs:45
 void VesselRestriction_PartCount::Load(const ConfigNode& node) {
     VesselRestriction::Load(node);
     const auto& values = node.values();
@@ -410,24 +410,24 @@ void VesselRestriction_PartCount::Load(const ConfigNode& node) {
         }
     }
 }
-// :65
+// VesselRestriction_PartCount.cs:66
 void VesselRestriction_PartCount::Save(ConfigNode& node) const {
     VesselRestriction::Save(node);
     node.AddValue("numberOfParts", targetParts);
     node.AddValue("comparisonOperator", save_detail::EnumName(comparisonOperator));
 }
-// :72
+// VesselRestriction_PartCount.cs:73
 bool VesselRestriction_PartCount::SameComparator(VesselRestriction& other) {
     return comparisonOperator == dynamic_cast<VesselRestriction_PartCount&>(other).comparisonOperator;
 }
-// :77
+// VesselRestriction_PartCount.cs:78
 bool VesselRestriction_PartCount::IsComplete() { return VesselRestriction::TestInt(GetCurrentParts(), targetParts, comparisonOperator); }
-// :82
+// VesselRestriction_PartCount.cs:83
 int VesselRestriction_PartCount::GetCurrentParts() {
     if (R::shipPartCount) return R::shipPartCount();
     return static_cast<int>(Ship()->liveParts.size());
 }
-// :87
+// VesselRestriction_PartCount.cs:88
 std::string VesselRestriction_PartCount::GetStateMessage() {
     switch (comparisonOperator) {
         default: return Localizer::Format("#autoLOC_8100173");
@@ -446,19 +446,19 @@ void VesselRestriction_RequiredParts::SuscribeToEvents() {
     GameEvents::onEditorStarted.Add(self(), &VesselRestriction::CbVoid);
     GameEvents::onEditorLoad.Add(self(), &VesselRestriction::CbLoad);
 }
-// :30
+// VesselRestriction_RequiredParts.cs:30
 void VesselRestriction_RequiredParts::ClearEvents() {
     GameEvents::onEditorPartPlaced.Remove(self(), &VesselRestriction::CbPart);
     GameEvents::onEditorPodPicked.Remove(self(), &VesselRestriction::CbPart);
     GameEvents::onEditorStarted.Remove(self(), &VesselRestriction::CbVoid);
     GameEvents::onEditorLoad.Remove(self(), &VesselRestriction::CbLoad);
 }
-// :38 (a literal, not a tag)
+// VesselRestriction_RequiredParts.cs:38 (a literal, not a tag)
 std::string VesselRestriction_RequiredParts::GetDisplayName() { return Localizer::Format("Required Parts"); }
-// :43 / :47
+// VesselRestriction_RequiredParts.cs:43 / :47
 void VesselRestriction_RequiredParts::Load(const ConfigNode&) {}
 void VesselRestriction_RequiredParts::Save(ConfigNode&) const {}
-// :51
+// VesselRestriction_RequiredParts.cs:51
 bool VesselRestriction_RequiredParts::IsComplete() {
     if (!UIEntry.present) throw NullReferenceException();  // UIEntry.Data
     if (UIEntry.dataIsVesselInfo) {
@@ -484,7 +484,7 @@ bool VesselRestriction_RequiredParts::IsComplete() {
     }
     return false;
 }
-// :75
+// VesselRestriction_RequiredParts.cs:76
 std::string VesselRestriction_RequiredParts::GetStateMessage() {
     VesselSituation* vs = R::appCurrentVesselSituation ? R::appCurrentVesselSituation() : nullptr;
     if (vs != nullptr) {
@@ -500,7 +500,7 @@ std::string VesselRestriction_RequiredParts::GetStateMessage() {
 
 // ---- VesselRestriction_Resource.cs -----------------------------------------------------------------------------------------------
 
-// VesselRestriction_Resource.cs:21 / :28: the first resource definition of the library
+// helper of the constructors of VesselRestriction_Resource (lines 21 / 28): the first resource definition of the library
 void VesselRestriction_Resource::Init() {
     if (R::firstResourceName) {
         resourceName = R::firstResourceName();
@@ -512,7 +512,7 @@ void VesselRestriction_Resource::Init() {
     if (it == lib->resourceDefinitions.end()) throw NullReferenceException();  // enumerator.Current of an empty list
     resourceName = (*it)->name();
 }
-// :36
+// VesselRestriction_Resource.cs:34
 void VesselRestriction_Resource::SuscribeToEvents() {
     GameEvents::onEditorPartPlaced.Add(self(), &VesselRestriction::CbPart);
     GameEvents::onEditorShipModified.Add(self(), &VesselRestriction::CbShip);
@@ -520,7 +520,7 @@ void VesselRestriction_Resource::SuscribeToEvents() {
     GameEvents::onEditorStarted.Add(self(), &VesselRestriction::CbVoid);
     GameEvents::onEditorLoad.Add(self(), &VesselRestriction::CbLoad);
 }
-// :46
+// VesselRestriction_Resource.cs:43
 void VesselRestriction_Resource::ClearEvents() {
     GameEvents::onEditorPartPlaced.Remove(self(), &VesselRestriction::CbPart);
     GameEvents::onEditorShipModified.Remove(self(), &VesselRestriction::CbShip);
@@ -528,9 +528,9 @@ void VesselRestriction_Resource::ClearEvents() {
     GameEvents::onEditorStarted.Remove(self(), &VesselRestriction::CbVoid);
     GameEvents::onEditorLoad.Remove(self(), &VesselRestriction::CbLoad);
 }
-// :56
+// VesselRestriction_Resource.cs:52
 std::string VesselRestriction_Resource::GetDisplayName() { return Localizer::Format("#autoLOC_8100186"); }
-// :61
+// VesselRestriction_Resource.cs:57
 void VesselRestriction_Resource::Load(const ConfigNode& node) {
     VesselRestriction::Load(node);
     const auto& values = node.values();
@@ -547,22 +547,22 @@ void VesselRestriction_Resource::Load(const ConfigNode& node) {
         }
     }
 }
-// :84
+// VesselRestriction_Resource.cs:78
 void VesselRestriction_Resource::Save(ConfigNode& node) const {
     VesselRestriction::Save(node);
     node.AddValue("amount", targetAmount);
     node.AddValue("resourceName", resourceName);
     node.AddValue("comparisonOperator", save_detail::EnumName(comparisonOperator));
 }
-// :92
+// VesselRestriction_Resource.cs:86
 bool VesselRestriction_Resource::SameComparator(VesselRestriction& other) {
     return comparisonOperator == dynamic_cast<VesselRestriction_Resource&>(other).comparisonOperator;
 }
-// :97
+// VesselRestriction_Resource.cs:91
 bool VesselRestriction_Resource::IsComplete() {
     return VesselRestriction::TestFloat(static_cast<float>(GetCurrentResourceValue()), targetAmount, comparisonOperator);
 }
-// :102
+// VesselRestriction_Resource.cs:96
 double VesselRestriction_Resource::GetCurrentResourceValue() {
     double num = 0.0;
     if (R::shipResources) {
@@ -578,7 +578,7 @@ double VesselRestriction_Resource::GetCurrentResourceValue() {
     }
     return num;
 }
-// :120
+// VesselRestriction_Resource.cs:114
 std::string VesselRestriction_Resource::GetStateMessage() {
     switch (comparisonOperator) {
         default: return "";
@@ -593,30 +593,30 @@ std::string VesselRestriction_Resource::GetStateMessage() {
 
 // ---- VesselRestriction_Size.cs ---------------------------------------------------------------------------------------------------
 
-// VesselRestriction_Size.cs:26 / :31
+// helper of the constructors of VesselRestriction_Size (lines 26 / 31)
 void VesselRestriction_Size::Init() {
     tempInputX = 0.0f;
     tempInputY = 0.0f;
     tempInputZ = 0.0f;
     targetSize = Vector3f(tempInputX, tempInputY, tempInputZ);
 }
-// :36
+// VesselRestriction_Size.cs:41
 void VesselRestriction_Size::SuscribeToEvents() {
     GameEvents::onEditorPartPlaced.Add(self(), &VesselRestriction::CbPart);
     GameEvents::onEditorPodPicked.Add(self(), &VesselRestriction::CbPart);
     GameEvents::onEditorStarted.Add(self(), &VesselRestriction::CbVoid);
     GameEvents::onEditorLoad.Add(self(), &VesselRestriction::CbLoad);
 }
-// :44
+// VesselRestriction_Size.cs:49
 void VesselRestriction_Size::ClearEvents() {
     GameEvents::onEditorPartPlaced.Remove(self(), &VesselRestriction::CbPart);
     GameEvents::onEditorPodPicked.Remove(self(), &VesselRestriction::CbPart);
     GameEvents::onEditorStarted.Remove(self(), &VesselRestriction::CbVoid);
     GameEvents::onEditorLoad.Remove(self(), &VesselRestriction::CbLoad);
 }
-// :52
+// VesselRestriction_Size.cs:57
 std::string VesselRestriction_Size::GetDisplayName() { return Localizer::Format("#autoLOC_8100194"); }
-// :57
+// VesselRestriction_Size.cs:62
 void VesselRestriction_Size::Load(const ConfigNode& node) {
     VesselRestriction::Load(node);
     const auto& values = node.values();
@@ -639,7 +639,7 @@ void VesselRestriction_Size::Load(const ConfigNode& node) {
     }
     targetSize = Vector3f(tempInputX, tempInputY, tempInputZ);
 }
-// :86
+// VesselRestriction_Size.cs:87
 void VesselRestriction_Size::Save(ConfigNode& node) const {
     VesselRestriction::Save(node);
     node.AddValue("sizeX", tempInputX);
@@ -647,31 +647,31 @@ void VesselRestriction_Size::Save(ConfigNode& node) const {
     node.AddValue("sizeZ", tempInputZ);
     node.AddValue("comparisonOperator", save_detail::EnumName(comparisonOperator));
 }
-// :95
+// VesselRestriction_Size.cs:96
 bool VesselRestriction_Size::SameComparator(VesselRestriction& other) {
     return comparisonOperator == dynamic_cast<VesselRestriction_Size&>(other).comparisonOperator;
 }
-// :114
+// VesselRestriction_Size.cs:115
 Vector3f VesselRestriction_Size::GetShipSize() {
     if (R::shipSize) return R::shipSize();
     return ShipConstruction::CalculateCraftSize(*Ship());
 }
-// :105
+// VesselRestriction_Size.cs:106
 bool VesselRestriction_Size::Check(const Vector3f& currentSize, const Vector3f& target, TestComparisonLessGreaterEqual op) {
     if (VesselRestriction::TestFloat(currentSize.x, target.x, op) && VesselRestriction::TestFloat(currentSize.y, target.y, op))
         return VesselRestriction::TestFloat(currentSize.z, target.z, op);
     return false;
 }
-// :100
+// VesselRestriction_Size.cs:101
 bool VesselRestriction_Size::IsComplete() { return Check(GetShipSize(), targetSize, comparisonOperator); }
-// :138 (XKCDColors.HexFormat.KSPBadassGreen = "#b4d455", XKCDColors.cs:34)
+// VesselRestriction_Size.cs:135 (XKCDColors.HexFormat.KSPBadassGreen = "#b4d455", VesselRestriction_Size.cs:135)
 std::string VesselRestriction_Size::GetShipDimensionsString(const Vector3f& d) {
     std::string empty;
     empty = empty + "\t<color=#b4d455>" + Localizer::Format("#autoLOC_8100191") + ":</color> " + N2(d.y) + Localizer::Format("#autoLOC_7001411") + "\n";
     empty = empty + "\t<color=#b4d455>" + Localizer::Format("#autoLOC_8100192") + ":</color> " + N2(d.x) + Localizer::Format("#autoLOC_7001411") + "\n";
     return empty + "\t<color=#b4d455>" + Localizer::Format("#autoLOC_8100193") + ":</color> " + N2(d.z) + Localizer::Format("#autoLOC_7001411") + "\n";
 }
-// :119
+// VesselRestriction_Size.cs:120
 std::string VesselRestriction_Size::GetStateMessage() {
     switch (comparisonOperator) {
         default: return Localizer::Format("#autoLOC_8100173");
@@ -695,7 +695,7 @@ void VesselRestriction_Stages::SuscribeToEvents() {
     GameEvents::StageManager::OnGUIStageRemoved.Add(self(), &VesselRestriction::CbInt);
     GameEvents::onEditorStarted.Add(self(), &VesselRestriction::CbVoid);
 }
-// :35
+// VesselRestriction_Stages.cs:34
 void VesselRestriction_Stages::ClearEvents() {
     GameEvents::onEditorPartPlaced.Remove(self(), &VesselRestriction::CbPart);
     GameEvents::onEditorPartPicked.Remove(self(), &VesselRestriction::CbPart);
@@ -704,9 +704,9 @@ void VesselRestriction_Stages::ClearEvents() {
     GameEvents::StageManager::OnGUIStageRemoved.Remove(self(), &VesselRestriction::CbInt);
     GameEvents::onEditorStarted.Remove(self(), &VesselRestriction::CbVoid);
 }
-// :46
+// VesselRestriction_Stages.cs:44
 std::string VesselRestriction_Stages::GetDisplayName() { return Localizer::Format("#autoLOC_8100204"); }
-// :51
+// VesselRestriction_Stages.cs:49
 void VesselRestriction_Stages::Load(const ConfigNode& node) {
     VesselRestriction::Load(node);
     const auto& values = node.values();
@@ -721,21 +721,21 @@ void VesselRestriction_Stages::Load(const ConfigNode& node) {
         }
     }
 }
-// :71
+// VesselRestriction_Stages.cs:70
 void VesselRestriction_Stages::Save(ConfigNode& node) const {
     VesselRestriction::Save(node);
     node.AddValue("stages", targetStages);
     node.AddValue("comparisonOperator", save_detail::EnumName(comparisonOperator));
 }
-// :78
+// VesselRestriction_Stages.cs:77
 bool VesselRestriction_Stages::SameComparator(VesselRestriction& other) {
     return comparisonOperator == dynamic_cast<VesselRestriction_Stages&>(other).comparisonOperator;
 }
-// :83
+// VesselRestriction_Stages.cs:82
 bool VesselRestriction_Stages::IsComplete() { return VesselRestriction::TestInt(GetCurrentStageCount(), targetStages, comparisonOperator); }
-// :88
+// VesselRestriction_Stages.cs:87
 int VesselRestriction_Stages::GetCurrentStageCount() { return R::stageCount ? R::stageCount() : StageManager::StageCount(); }
-// :93
+// VesselRestriction_Stages.cs:92
 std::string VesselRestriction_Stages::GetStateMessage() {
     switch (comparisonOperator) {
         default: return "";
@@ -749,18 +749,18 @@ std::string VesselRestriction_Stages::GetStateMessage() {
 
 // MissionPreflightCheck.cs:15
 bool MissionPreflightCheck::Test() { return vesselRestriction->IsComplete(); }
-// :20
+// MissionPreflightCheck.cs:20
 std::string MissionPreflightCheck::GetWarningTitle() { return Localizer::Format("#autoLOC_8100208"); }
-// :25
+// MissionPreflightCheck.cs:25
 std::string MissionPreflightCheck::GetWarningDescription() { return Localizer::Format("#autoLOC_8100209"); }
-// :30
+// MissionPreflightCheck.cs:30
 std::string MissionPreflightCheck::GetProceedOption() { return ""; }
-// :35
+// MissionPreflightCheck.cs:35
 std::string MissionPreflightCheck::GetAbortOption() { return Localizer::Format("#autoLOC_8100210"); }
 
 // ---- MissionBlackListPreFlightCheck.cs -------------------------------------------------------------------------------------------
 
-// MissionBlackListPreFlightCheck.cs:17
+// MissionBlackListPreFlightCheck.cs:18
 MissionBlackListPreFlightCheck::MissionBlackListPreFlightCheck(VesselSituation* situation, const std::vector<std::string>& shipPartNames,
                                                                MissionSituation* firstMissionSituation)
     : vesselSituation(situation) {
@@ -788,11 +788,11 @@ MissionBlackListPreFlightCheck::MissionBlackListPreFlightCheck(VesselSituation* 
         }
     }
 }
-// :70
+// MissionBlackListPreFlightCheck.cs:59
 bool MissionBlackListPreFlightCheck::Test() { return blackListedPartsOnShip.empty(); }
-// :79
+// MissionBlackListPreFlightCheck.cs:68
 std::string MissionBlackListPreFlightCheck::GetWarningTitle() { return Localizer::Format("#autoLOC_8100208"); }
-// :84
+// MissionBlackListPreFlightCheck.cs:73
 std::string MissionBlackListPreFlightCheck::GetWarningDescription() {
     std::string text = Localizer::Format("#autoLOC_8002063") + "\n\n";
     for (const auto& p : blackListedPartsOnShip) {
@@ -801,9 +801,9 @@ std::string MissionBlackListPreFlightCheck::GetWarningDescription() {
     }
     return text;
 }
-// :95
+// MissionBlackListPreFlightCheck.cs:85
 std::string MissionBlackListPreFlightCheck::GetProceedOption() { return ""; }
-// :100
+// MissionBlackListPreFlightCheck.cs:90
 std::string MissionBlackListPreFlightCheck::GetAbortOption() { return Localizer::Format("#autoLOC_253243"); }
 
 // ---- registration ----------------------------------------------------------------------------------------------------------------

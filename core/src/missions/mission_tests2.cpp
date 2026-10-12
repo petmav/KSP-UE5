@@ -115,7 +115,7 @@ E ParseEnumIC(const std::string& text) {
 
 // ---- TestVesselSituation ---------------------------------------------------------------------------------------------------------
 
-// TestVesselSituation.cs:@Awake
+// TestVesselSituation.cs:40
 TestVesselSituation::TestVesselSituation(std::string typeName) : TestVessel(std::move(typeName)) {
     title = Tag("#autoLOC_8000118");
     situation = Vessel::Situations::PRELAUNCH;
@@ -125,7 +125,7 @@ TestVesselSituation::TestVesselSituation(std::string typeName) : TestVessel(std:
 // the Awake lines of the three subclasses that fill `locationSituation`
 void TestVesselSituation::InitLocationSituation(ParamChoices_CelestialBodySurface& p) { InitSurfaceChoices(p, nullptr); }
 
-// TestVesselSituation.cs:@Initialized
+// TestVesselSituation.cs:48
 void TestVesselSituation::Initialized() {
     TestModule::Initialized();
     locationSuccess = false;
@@ -133,7 +133,7 @@ void TestVesselSituation::Initialized() {
     speedSuccess = false;
 }
 
-// TestVesselSituation.cs:@Test
+// TestVesselSituation.cs:56
 bool TestVesselSituation::Test() {
     TestVessel::Test();
     situationSuccess = vessel != nullptr && vessel->situation == situation;
@@ -175,20 +175,20 @@ bool TestVesselSituation::Test() {
     return successStartTime + stabilizationTime < MissionsEnvironment::UniversalTime();
 }
 
-// TestVesselSituation.cs:@HasNodeWaypoint
+// TestVesselSituation.cs:122
 bool TestVesselSituation::HasNodeWaypoint() { return LocationSituation()->HasWaypoint(); }
-// TestVesselSituation.cs:@GetNodeWaypoint
+// TestVesselSituation.cs:127
 FinePrint::Waypoint* TestVesselSituation::GetNodeWaypoint() { return NamedWaypoint(*LocationSituation(), nodeWaypoint_, title); }
-// TestVesselSituation.cs:@HasNodeLabel
+// TestVesselSituation.cs:138
 bool TestVesselSituation::HasNodeLabel() { return LocationSituation()->HasNodeLabel(); }
-// TestVesselSituation.cs:@HasWorldPosition
+// TestVesselSituation.cs:143
 bool TestVesselSituation::HasWorldPosition() { return LocationSituation()->HasWorldPosition(); }
-// TestVesselSituation.cs:@GetWorldPosition
+// TestVesselSituation.cs:148
 Vector3f TestVesselSituation::GetWorldPosition() { return LocationSituation()->GetWorldPosition(); }
-// TestVesselSituation.cs:@GetExtraText
+// TestVesselSituation.cs:153
 std::string TestVesselSituation::GetExtraText() { return LocationSituation()->GetExtraText(); }
 
-// TestVesselSituation.cs:@GetNodeBodyParameterString
+// TestVesselSituation.cs:158
 std::string TestVesselSituation::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (field.name == "surfaceVelocity") {
         if (IgnoreSurfaceVelocity()) return Localizer::Format("#autoLOC_8004190", {field.guiName, Tag("#autoLOC_8001004")});
@@ -198,29 +198,29 @@ std::string TestVesselSituation::GetNodeBodyParameterString(const Editor::BaseAP
     return TestVessel::GetNodeBodyParameterString(field);
 }
 
-// TestVesselSituation.cs:@HasNodeBody
+// TestVesselSituation.cs:175
 bool TestVesselSituation::HasNodeBody() {
     if (LocationSituation() != nullptr) return LocationSituation()->bodyData->Body() != nullptr;
     return false;
 }
-// TestVesselSituation.cs:@GetNodeBody
+// TestVesselSituation.cs:184
 CelestialBody* TestVesselSituation::GetNodeBody() {
     if (LocationSituation() != nullptr && LocationSituation()->bodyData->Body() != nullptr) return LocationSituation()->bodyData->Body();
     return nullptr;
 }
-// TestVesselSituation.cs:@GetInfo
+// TestVesselSituation.cs:193
 std::string TestVesselSituation::GetInfo() { return Tag("#autoLOC_8004031"); }
-// TestVesselSituation.cs:@Save
+// TestVesselSituation.cs:198
 void TestVesselSituation::Save(ConfigNode& node) const {
     TestVessel::Save(node);
     node.AddValue("stabilizationTime", stabilizationTime);
 }
-// TestVesselSituation.cs:@Load
+// TestVesselSituation.cs:204
 void TestVesselSituation::Load(const ConfigNode& node) {
     TestVessel::Load(node);
     node.TryGetValue("stabilizationTime", stabilizationTime);
 }
-// TestVesselSituation.cs:@GetScoreModifier
+// TestVesselSituation.cs:210
 ScoreModifier TestVesselSituation::GetScoreModifier(const std::string& scoreModule) {
     ScoreModifier r;
     if (scoreModule == "ScoreModule_Resource") {
@@ -237,69 +237,69 @@ ScoreModifier TestVesselSituation::GetScoreModifier(const std::string& scoreModu
 
 // ---- TestVesselSituationFlying / Landed / Splashed -------------------------------------------------------------------------------
 
-// TestVesselSituationFlying.cs:@Awake
+// TestVesselSituationFlying.cs:29
 TestVesselSituationFlying::TestVesselSituationFlying() : TestVesselSituation(kTypeName) {
     situation = Vessel::Situations::FLYING;
     title = Tag("#autoLOC_8000180");
     locationSituation = std::make_unique<ParamChoices_CelestialBodySurface>();
     InitLocationSituation(*locationSituation);
 }
-// TestVesselSituationFlying.cs:@Save
+// TestVesselSituationFlying.cs:47
 void TestVesselSituationFlying::Save(ConfigNode& node) const {
     TestVesselSituation::Save(node);
     locationSituation->Save(node);
     node.AddValue("surfaceVelocity", surfaceVelocity);
     node.AddValue("ignoreSurfaceVelocity", ignoreSurfaceVelocity);
 }
-// TestVesselSituationFlying.cs:@Load
+// TestVesselSituationFlying.cs:55
 void TestVesselSituationFlying::Load(const ConfigNode& node) {
     TestVesselSituation::Load(node);
     locationSituation->Load(node);
     node.TryGetValue("surfaceVelocity", surfaceVelocity);
     node.TryGetValue("ignoreSurfaceVelocity", ignoreSurfaceVelocity);
 }
-// TestVesselSituationFlying.cs:@GetInfo
+// TestVesselSituationFlying.cs:63
 std::string TestVesselSituationFlying::GetInfo() { return Tag("#autoLOC_8004015"); }
 
-// TestVesselSituationLanded.cs:@Awake
+// TestVesselSituationLanded.cs:30
 TestVesselSituationLanded::TestVesselSituationLanded() : TestVesselSituation(kTypeName) {
     situation = Vessel::Situations::LANDED;
     title = Tag("#autoLOC_8000183");
     locationSituation = std::make_unique<ParamChoices_CelestialBodySurface>();
     InitLocationSituation(*locationSituation);
 }
-// TestVesselSituationLanded.cs:@Save
+// TestVesselSituationLanded.cs:48
 void TestVesselSituationLanded::Save(ConfigNode& node) const {
     TestVesselSituation::Save(node);
     locationSituation->Save(node);
     node.AddValue("surfaceVelocity", surfaceVelocity);
     node.AddValue("ignoreSurfaceVelocity", ignoreSurfaceVelocity);
 }
-// TestVesselSituationLanded.cs:@Load
+// TestVesselSituationLanded.cs:56
 void TestVesselSituationLanded::Load(const ConfigNode& node) {
     TestVesselSituation::Load(node);
     locationSituation->Load(node);
     node.TryGetValue("surfaceVelocity", surfaceVelocity);
     node.TryGetValue("ignoreSurfaceVelocity", ignoreSurfaceVelocity);
 }
-// TestVesselSituationLanded.cs:@GetInfo
+// TestVesselSituationLanded.cs:64
 std::string TestVesselSituationLanded::GetInfo() { return Tag("#autoLOC_8004020"); }
 
-// TestVesselSituationSplashed.cs:@Awake
+// TestVesselSituationSplashed.cs:30
 TestVesselSituationSplashed::TestVesselSituationSplashed() : TestVesselSituation(kTypeName) {
     situation = Vessel::Situations::SPLASHED;
     title = Tag("#autoLOC_8003052");
     locationSituation = std::make_unique<ParamChoices_CelestialBodySurface>();
     InitLocationSituation(*locationSituation);
 }
-// TestVesselSituationSplashed.cs:@Save
+// TestVesselSituationSplashed.cs:48
 void TestVesselSituationSplashed::Save(ConfigNode& node) const {
     TestVesselSituation::Save(node);
     locationSituation->Save(node);
     node.AddValue("surfaceVelocity", surfaceVelocity);
     node.AddValue("ignoreSurfaceVelocity", ignoreSurfaceVelocity);
 }
-// TestVesselSituationSplashed.cs:@Load
+// TestVesselSituationSplashed.cs:56
 void TestVesselSituationSplashed::Load(const ConfigNode& node) {
     TestVesselSituation::Load(node);
     locationSituation->Load(node);
@@ -309,7 +309,7 @@ void TestVesselSituationSplashed::Load(const ConfigNode& node) {
 
 // ---- TestVesselStateCrashed ------------------------------------------------------------------------------------------------------
 
-// TestVesselStateCrashed.cs:@Awake
+// TestVesselStateCrashed.cs:20
 TestVesselStateCrashed::TestVesselStateCrashed() : TestVessel(kTypeName) {
     title = Tag("#autoLOC_8000242");
     eventFound = false;
@@ -321,27 +321,27 @@ TestVesselStateCrashed::TestVesselStateCrashed() : TestVessel(kTypeName) {
 TestVesselStateCrashed::~TestVesselStateCrashed() {
     if (subscribed) GameEvents::onVesselWillDestroy.Remove(this, &TestVesselStateCrashed::OnVesselToBeDestroyed);
 }
-// TestVesselStateCrashed.cs:@Initialized
+// TestVesselStateCrashed.cs:34
 void TestVesselStateCrashed::Initialized() {
     eventFound = false;
     GameEvents::onVesselWillDestroy.Add(this, &TestVesselStateCrashed::OnVesselToBeDestroyed);
     subscribed = true;
 }
-// TestVesselStateCrashed.cs:@Cleared
+// TestVesselStateCrashed.cs:40
 void TestVesselStateCrashed::Cleared() {
     GameEvents::onVesselWillDestroy.Remove(this, &TestVesselStateCrashed::OnVesselToBeDestroyed);
     subscribed = false;
 }
-// TestVesselStateCrashed.cs:@OnVesselToBeDestroyed
+// TestVesselStateCrashed.cs:45
 void TestVesselStateCrashed::OnVesselToBeDestroyed(Vessel* vesselDestroyed) {
     if (!eventFound) {
         TestVessel::Test();
         if (vessel == vesselDestroyed && TestVesselLocation()) eventFound = true;
     }
 }
-// TestVesselStateCrashed.cs:@Test
+// TestVesselStateCrashed.cs:57
 bool TestVesselStateCrashed::Test() { return eventFound; }
-// TestVesselStateCrashed.cs:@TestVesselLocation
+// TestVesselStateCrashed.cs:50
 bool TestVesselStateCrashed::TestVesselLocation() {
     bool result = false;
     switch (locationSituation->locationChoice) {
@@ -365,19 +365,19 @@ bool TestVesselStateCrashed::TestVesselLocation() {
     }
     return result;
 }
-// TestVesselStateCrashed.cs:@GetInfo
+// TestVesselStateCrashed.cs:92
 std::string TestVesselStateCrashed::GetInfo() { return Tag("#autoLOC_8004006"); }
-// TestVesselStateCrashed.cs:@Save
+// TestVesselStateCrashed.cs:97
 void TestVesselStateCrashed::Save(ConfigNode& node) const {
     TestVessel::Save(node);
     locationSituation->Save(node);
 }
-// TestVesselStateCrashed.cs:@Load
+// TestVesselStateCrashed.cs:103
 void TestVesselStateCrashed::Load(const ConfigNode& node) {
     TestVessel::Load(node);
     locationSituation->Load(node);
 }
-// TestVesselStateCrashed.cs:@GetScoreModifier
+// TestVesselStateCrashed.cs:109
 ScoreModifier TestVesselStateCrashed::GetScoreModifier(const std::string& scoreModule) {
     ScoreModifier r;
     if (scoreModule == "ScoreModule_Resource") r.vessel = ScoreModifierVessel("TestVesselStateCrashed");
@@ -386,18 +386,18 @@ ScoreModifier TestVesselStateCrashed::GetScoreModifier(const std::string& scoreM
 
 // ---- TestVesselVelocity ----------------------------------------------------------------------------------------------------------
 
-// TestVesselVelocity.cs:@Awake
+// TestVesselVelocity.cs:77
 TestVesselVelocity::TestVesselVelocity() : TestVessel(kTypeName) {
     title = Tag("#autoLOC_8004164");
     velocityKerbal = std::make_unique<MissionKerbal>(nullptr, node(), [this] { UpdateNodeBodyUI(); }, ProtoCrewMember::KerbalType::Crew, false);
     useActiveVessel = true;
 }
-// TestVesselVelocity.cs:@Initialize
+// TestVesselVelocity.cs:184
 void TestVesselVelocity::Initialize(TestGroup* testGroup, const std::string& newTitle) {
     TestVessel::Initialize(testGroup, newTitle);
     velocityKerbal->Initialize(nullptr, testGroup->node());
 }
-// TestVesselVelocity.cs:@CheckCrew
+// TestVesselVelocity.cs:234
 bool TestVesselVelocity::CheckCrew(Vessel* v, MissionKerbal& missionKerbal) {
     if (v == nullptr) return false;
     const auto& vesselCrew = v->GetVesselCrew();
@@ -407,7 +407,7 @@ bool TestVesselVelocity::CheckCrew(Vessel* v, MissionKerbal& missionKerbal) {
     } while (!missionKerbal.IsValid(*vesselCrew[static_cast<size_t>(count)]));
     return true;
 }
-// TestVesselVelocity.cs:@Test
+// TestVesselVelocity.cs:195
 bool TestVesselVelocity::Test() {
     TestVessel::Test();
     if (vessel == nullptr) return true;
@@ -455,9 +455,9 @@ bool TestVesselVelocity::Test() {
     if (comparisonOperator == TestComparisonLessGreaterOnly::LessThan) return num <= static_cast<double>(velocity);
     return false;
 }
-// TestVesselVelocity.cs:@GetInfo
+// TestVesselVelocity.cs:287
 std::string TestVesselVelocity::GetInfo() { return Tag("#autoLOC_8004165"); }
-// TestVesselVelocity.cs:@GetNodeBodyParameterString
+// TestVesselVelocity.cs:292
 std::string TestVesselVelocity::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (field.name == "velocity") {
         return Localizer::Format("#autoLOC_8100154", {field.guiName, comparisonOperator == TestComparisonLessGreaterOnly::LessThan ? "<" : ">",
@@ -485,7 +485,7 @@ std::string TestVesselVelocity::GetNodeBodyParameterString(const Editor::BaseAPF
     }
     return TestVessel::GetNodeBodyParameterString(field);
 }
-// TestVesselVelocity.cs:@Save
+// TestVesselVelocity.cs:327
 void TestVesselVelocity::Save(ConfigNode& node) const {
     TestVessel::Save(node);
     node.AddValue("velocity", velocity);
@@ -499,7 +499,7 @@ void TestVesselVelocity::Save(ConfigNode& node) const {
     velocityKerbal->Save(*configNode);
     node.AddNode(configNode);
 }
-// TestVesselVelocity.cs:@Load
+// TestVesselVelocity.cs:342
 void TestVesselVelocity::Load(const ConfigNode& node) {
     TestVessel::Load(node);
     node.TryGetValue("velocity", velocity);
@@ -516,22 +516,22 @@ void TestVesselVelocity::Load(const ConfigNode& node) {
 
 // ---- TestGoTo --------------------------------------------------------------------------------------------------------------------
 
-// TestGoTo.cs:@Awake
+// TestGoTo.cs:32
 TestGoTo::TestGoTo() : TestVessel(kTypeName) {
     title = Tag("#autoLOC_8000145");
     areaData = std::make_unique<SurfaceArea>(Home(), 0.0, 0.0, 150000.0f);
     passed = false;
     useActiveVessel = true;
 }
-// TestGoTo.cs:@HasNodeWaypoint
+// TestGoTo.cs:41
 bool TestGoTo::HasNodeWaypoint() { return areaData->HasWaypoint(); }
-// TestGoTo.cs:@GetNodeWaypoint
+// TestGoTo.cs:46
 FinePrint::Waypoint* TestGoTo::GetNodeWaypoint() {
     nodeWaypoint_ = areaData->GetWaypoint();
     nodeWaypoint_->name = title;
     return nodeWaypoint_.get();
 }
-// TestGoTo.cs:@Test
+// TestGoTo.cs:53
 bool TestGoTo::Test() {
     TestVessel::Test();
     speedSuccess = ignoreSurfaceVelocity || (vessel != nullptr && vessel->srfSpeed <= surfaceVelocity + 1.401298464324817E-45);
@@ -542,36 +542,36 @@ bool TestGoTo::Test() {
     }
     return false;
 }
-// TestGoTo.cs:@GetNodeBodyParameterString
+// TestGoTo.cs:88
 std::string TestGoTo::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (field.fieldType == "SurfaceArea") return areaData->GetNodeBodyParameterString();
     return TestVessel::GetNodeBodyParameterString(field);
 }
-// TestGoTo.cs:@HasNodeLabel
+// TestGoTo.cs:97
 bool TestGoTo::HasNodeLabel() { return areaData->HasNodeLabel(); }
-// TestGoTo.cs:@HasWorldPosition
+// TestGoTo.cs:102
 bool TestGoTo::HasWorldPosition() { return areaData->HasWorldPosition(); }
-// TestGoTo.cs:@GetWorldPosition
+// TestGoTo.cs:107
 Vector3f TestGoTo::GetWorldPosition() { return areaData->GetWorldPosition(); }
-// TestGoTo.cs:@GetExtraText
+// TestGoTo.cs:112
 std::string TestGoTo::GetExtraText() { return areaData->GetExtraText(); }
-// TestGoTo.cs:@GetInfo
+// TestGoTo.cs:117
 std::string TestGoTo::GetInfo() { return Tag("#autoLOC_8004035"); }
-// TestGoTo.cs:@Save
+// TestGoTo.cs:122
 void TestGoTo::Save(ConfigNode& node) const {
     TestVessel::Save(node);
     areaData->Save(node);
     node.AddValue("surfaceVelocity", surfaceVelocity);
     node.AddValue("ignoreSurfaceVelocity", ignoreSurfaceVelocity);
 }
-// TestGoTo.cs:@Load
+// TestGoTo.cs:130
 void TestGoTo::Load(const ConfigNode& node) {
     TestVessel::Load(node);
     areaData->Load(node);
     node.TryGetValue("surfaceVelocity", surfaceVelocity);
     node.TryGetValue("ignoreSurfaceVelocity", ignoreSurfaceVelocity);
 }
-// TestGoTo.cs:@GetScoreModifier
+// TestGoTo.cs:138
 ScoreModifier TestGoTo::GetScoreModifier(const std::string& scoreModule) {
     ScoreModifier r;
     if (scoreModule == "ScoreModule_Resource") {
@@ -585,26 +585,26 @@ ScoreModifier TestGoTo::GetScoreModifier(const std::string& scoreModule) {
 
 // ---- TestFlyThrough --------------------------------------------------------------------------------------------------------------
 
-// TestFlyThrough.cs:@Awake
+// TestFlyThrough.cs:27
 TestFlyThrough::TestFlyThrough() : TestVessel(kTypeName) {
     title = Tag("#autoLOC_8000133");
     volumeData = std::make_unique<SurfaceVolume>();
     passed = false;
     useActiveVessel = true;
 }
-// TestFlyThrough.cs:@OnShowLabelChanged
+// TestFlyThrough.cs:36
 void TestFlyThrough::OnShowLabelChanged(bool) { volumeData->showNodeLabel = showNodeLabel; }
-// TestFlyThrough.cs:@HasNodeLabel
+// TestFlyThrough.cs:41
 bool TestFlyThrough::HasNodeLabel() { return volumeData->HasNodeLabel(); }
-// TestFlyThrough.cs:@HasWorldPosition
+// TestFlyThrough.cs:46
 bool TestFlyThrough::HasWorldPosition() { return volumeData->HasWorldPosition(); }
-// TestFlyThrough.cs:@GetWorldPosition
+// TestFlyThrough.cs:51
 Vector3f TestFlyThrough::GetWorldPosition() { return volumeData->GetWorldPosition(); }
-// TestFlyThrough.cs:@GetExtraText
+// TestFlyThrough.cs:56
 std::string TestFlyThrough::GetExtraText() { return volumeData->GetExtraText(); }
-// TestFlyThrough.cs:@HasNodeWaypoint
+// TestFlyThrough.cs:61
 bool TestFlyThrough::HasNodeWaypoint() { return volumeData->HasWaypoint(); }
-// TestFlyThrough.cs:@GetNodeWaypoint
+// TestFlyThrough.cs:66
 FinePrint::Waypoint* TestFlyThrough::GetNodeWaypoint() {
     if (showMapNode) {
         nodeWaypoint_ = volumeData->GetWaypoint();
@@ -613,7 +613,7 @@ FinePrint::Waypoint* TestFlyThrough::GetNodeWaypoint() {
     }
     return nullptr;
 }
-// TestFlyThrough.cs:@Test
+// TestFlyThrough.cs:77
 bool TestFlyThrough::Test() {
     TestVessel::Test();
     if (vessel != nullptr) {
@@ -622,21 +622,21 @@ bool TestFlyThrough::Test() {
     }
     return false;
 }
-// TestFlyThrough.cs:@GetNodeBodyParameterString
+// TestFlyThrough.cs:91
 std::string TestFlyThrough::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (field.fieldType == "SurfaceVolume") return volumeData->GetNodeBodyParameterString();
     return TestVessel::GetNodeBodyParameterString(field);
 }
-// TestFlyThrough.cs:@GetInfo
+// TestFlyThrough.cs:100
 std::string TestFlyThrough::GetInfo() { return Tag("#autoLOC_8004034"); }
-// TestFlyThrough.cs:@Save
+// TestFlyThrough.cs:105
 void TestFlyThrough::Save(ConfigNode& node) const {
     TestVessel::Save(node);
     volumeData->Save(node);
     node.AddValue("showNodeLabel", showNodeLabel);
     node.AddValue("showMapNode", showMapNode);
 }
-// TestFlyThrough.cs:@Load
+// TestFlyThrough.cs:113
 void TestFlyThrough::Load(const ConfigNode& node) {
     TestVessel::Load(node);
     volumeData->Load(node);
@@ -644,7 +644,7 @@ void TestFlyThrough::Load(const ConfigNode& node) {
     node.TryGetValue("showMapNode", showMapNode);
     volumeData->showNodeLabel = showNodeLabel;
 }
-// TestFlyThrough.cs:@GetScoreModifier
+// TestFlyThrough.cs:122
 ScoreModifier TestFlyThrough::GetScoreModifier(const std::string& scoreModule) {
     ScoreModifier r;
     if (scoreModule == "ScoreModule_Resource") r.vessel = ScoreModifierVessel("TestFlyThrough");
@@ -653,7 +653,7 @@ ScoreModifier TestFlyThrough::GetScoreModifier(const std::string& scoreModule) {
 
 // ---- TestPlantFlag ---------------------------------------------------------------------------------------------------------------
 
-// TestPlantFlag.cs:@Awake
+// TestPlantFlag.cs:24
 TestPlantFlag::TestPlantFlag() : TestModule(kTypeName) {
     title = Tag("#autoLOC_8000192");
     eventFound = false;
@@ -664,21 +664,21 @@ TestPlantFlag::TestPlantFlag() : TestModule(kTypeName) {
 TestPlantFlag::~TestPlantFlag() {
     if (subscribed) GameEvents::afterFlagPlanted.Remove(this, &TestPlantFlag::AfterFlagPlanted);
 }
-// TestPlantFlag.cs:@Initialized
+// TestPlantFlag.cs:37
 void TestPlantFlag::Initialized() {
     eventFound = false;
     GameEvents::afterFlagPlanted.Add(this, &TestPlantFlag::AfterFlagPlanted);
     subscribed = true;
 }
-// TestPlantFlag.cs:@Cleared
+// TestPlantFlag.cs:43
 void TestPlantFlag::Cleared() {
     TestModule::Cleared();
     GameEvents::afterFlagPlanted.Remove(this, &TestPlantFlag::AfterFlagPlanted);
     subscribed = false;
 }
-// TestPlantFlag.cs:@Test
+// TestPlantFlag.cs:49
 bool TestPlantFlag::Test() { return eventFound; }
-// TestPlantFlag.cs:@AfterFlagPlanted
+// TestPlantFlag.cs:54
 void TestPlantFlag::AfterFlagPlanted(FlagSite* flagSite) {
     v = Env::flagSiteVessel ? Env::flagSiteVessel(flagSite) : nullptr;
     if (v == nullptr) throw NullReferenceException();
@@ -699,35 +699,35 @@ void TestPlantFlag::AfterFlagPlanted(FlagSite* flagSite) {
             break;
     }
 }
-// TestPlantFlag.cs:@HasNodeWaypoint
+// TestPlantFlag.cs:88
 bool TestPlantFlag::HasNodeWaypoint() { return situation->HasWaypoint(); }
-// TestPlantFlag.cs:@GetNodeWaypoint
+// TestPlantFlag.cs:93
 FinePrint::Waypoint* TestPlantFlag::GetNodeWaypoint() { return NamedWaypoint(*situation, nodeWaypoint_, title); }
-// TestPlantFlag.cs:@GetNodeBody
+// TestPlantFlag.cs:109
 CelestialBody* TestPlantFlag::GetNodeBody() { return situation->bodyData->Body(); }
-// TestPlantFlag.cs:@HasNodeLabel
+// TestPlantFlag.cs:114
 bool TestPlantFlag::HasNodeLabel() { return situation->HasNodeLabel(); }
-// TestPlantFlag.cs:@HasWorldPosition
+// TestPlantFlag.cs:119
 bool TestPlantFlag::HasWorldPosition() { return situation->HasWorldPosition(); }
-// TestPlantFlag.cs:@GetWorldPosition
+// TestPlantFlag.cs:124
 Vector3f TestPlantFlag::GetWorldPosition() { return situation->GetWorldPosition(); }
-// TestPlantFlag.cs:@GetExtraText
+// TestPlantFlag.cs:129
 std::string TestPlantFlag::GetExtraText() { return situation->GetExtraText(); }
-// TestPlantFlag.cs:@GetInfo
+// TestPlantFlag.cs:134
 std::string TestPlantFlag::GetInfo() { return Tag("#autoLOC_8004026"); }
-// TestPlantFlag.cs:@Save
+// TestPlantFlag.cs:139
 void TestPlantFlag::Save(ConfigNode& node) const {
     TestModule::Save(node);
     situation->Save(node);
     node.AddValue("eventFound", eventFound);
 }
-// TestPlantFlag.cs:@Load
+// TestPlantFlag.cs:146
 void TestPlantFlag::Load(const ConfigNode& node) {
     TestModule::Load(node);
     situation->Load(node);
     node.TryGetValue("eventFound", eventFound);
 }
-// TestPlantFlag.cs:@GetScoreModifier
+// TestPlantFlag.cs:153
 ScoreModifier TestPlantFlag::GetScoreModifier(const std::string& scoreModule) {
     ScoreModifier r;
     if (scoreModule == "ScoreModule_Resource") {
@@ -745,30 +745,30 @@ ScoreModifier TestPlantFlag::GetScoreModifier(const std::string& scoreModule) {
 
 // ---- TestOrbit -------------------------------------------------------------------------------------------------------------------
 
-// TestOrbit.cs:@Awake
+// TestOrbit.cs:44
 TestOrbit::TestOrbit() : TestVessel(kTypeName) {
     title = Tag("#autoLOC_8000158");
     orbitAccuracy = 90.0;
     missionOrbit = std::make_unique<MissionOrbit>(Home());
     useActiveVessel = true;
 }
-// TestOrbit.cs:@OrbitDeviation
+// TestOrbit.cs:42
 double TestOrbit::OrbitDeviation() const {
     return Mathf::Clamp(f32store(100.0 - fx(static_cast<float>(orbitAccuracy))), 0.0f, 100.0f);
 }
-// TestOrbit.cs:@Initialized
+// TestOrbit.cs:53
 void TestOrbit::Initialized() {
     TestModule::Initialized();
     relativeOrbit = std::make_unique<Orbit>(missionOrbit->RelativeOrbit(node()->mission));
     // initializeorbitRenderer = StartCoroutine(initializeDrawOrbit()): DrawOrbit() (the renderer is UI)
     DrawOrbit();
 }
-// TestOrbit.cs:@OnOrbitAccuracyChanged
+// TestOrbit.cs:60
 void TestOrbit::OnOrbitAccuracyChanged(double newValue) {
     orbitAccuracy = Mathf::Clamp(static_cast<float>(newValue), 0.0f, 100.0f);
     UpdateNodeBodyUI();
 }
-// TestOrbit.cs:@DrawOrbit
+// TestOrbit.cs:75
 void TestOrbit::DrawOrbit() {
     Game* g = HighLogic::CurrentGame();
     if (g != nullptr && HighLogic::LoadedScene() != GameScenes::SPACECENTER && (g->Mode == Game_Modes::MISSION || g->Mode == Game_Modes::MISSION_BUILDER)) {
@@ -791,9 +791,9 @@ void TestOrbit::DrawOrbit() {
         relativeOrbit = std::make_unique<Orbit>(missionOrbit->RelativeOrbit(node()->mission));
     }
 }
-// TestOrbit.cs:@Cleared
+// TestOrbit.cs:84
 void TestOrbit::Cleared() { TestModule::Cleared(); }
-// TestOrbit.cs:@Test
+// TestOrbit.cs:130
 bool TestOrbit::Test() {
     DrawOrbit();  // `if (orbitRenderer == null) DrawOrbit();` (the renderer handle is never kept here)
     TestVessel::Test();
@@ -815,7 +815,7 @@ bool TestOrbit::Test() {
     if (successStartTime < 0.0) successStartTime = MissionsEnvironment::UniversalTime();
     return successStartTime + stabilizationTime < MissionsEnvironment::UniversalTime();
 }
-// TestOrbit.cs:@GetNodeBodyParameterString
+// TestOrbit.cs:165
 std::string TestOrbit::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (field.fieldType == "MissionOrbit") {
         std::string s = Localizer::Format("#autoLOC_8100316", {field.guiName, RemoveGender(missionOrbit->Body()->displayName())}) + "\n";
@@ -832,11 +832,11 @@ std::string TestOrbit::GetNodeBodyParameterString(const Editor::BaseAPField& fie
     if (field.name == "orbitAccuracy") return Localizer::Format("#autoLOC_8004190", {field.guiName, D2h(orbitAccuracy) + "%"});
     return TestVessel::GetNodeBodyParameterString(field);
 }
-// TestOrbit.cs:@GetNodeOrbit
+// TestOrbit.cs:183
 Orbit* TestOrbit::GetNodeOrbit() { return missionOrbit->orbit(); }
-// TestOrbit.cs:@GetInfo
+// TestOrbit.cs:188
 std::string TestOrbit::GetInfo() { return Tag("#autoLOC_8004023"); }
-// TestOrbit.cs:@Save
+// TestOrbit.cs:193
 void TestOrbit::Save(ConfigNode& node) const {
     TestVessel::Save(node);
     node.AddValue("orbitAccuracy", orbitAccuracy);
@@ -844,7 +844,7 @@ void TestOrbit::Save(ConfigNode& node) const {
     node.AddValue("underThrust", underThrust);
     missionOrbit->Save(*node.AddNode("ORBIT"));
 }
-// TestOrbit.cs:@Load
+// TestOrbit.cs:202
 void TestOrbit::Load(const ConfigNode& node) {
     TestVessel::Load(node);
     if (!node.TryGetValue("orbitAccuracy", orbitAccuracy)) {
@@ -860,7 +860,7 @@ void TestOrbit::Load(const ConfigNode& node) {
         if (missionOrbit->orbit() != nullptr) missionOrbit->orbit()->Init();
     }
 }
-// TestOrbit.cs:@GetScoreModifier
+// TestOrbit.cs:224
 ScoreModifier TestOrbit::GetScoreModifier(const std::string& scoreModule) {
     ScoreModifier r;
     if (scoreModule == "ScoreModule_Resource") {
@@ -877,7 +877,7 @@ ScoreModifier TestOrbit::GetScoreModifier(const std::string& scoreModule) {
 
 // ---- TestOrbitParams -------------------------------------------------------------------------------------------------------------
 
-// TestOrbitParams.cs:@Awake
+// TestOrbitParams.cs:92
 TestOrbitParams::TestOrbitParams() : TestVessel(kTypeName) {
     title = Tag("#autoLOC_8003152");
     body = std::make_unique<MissionCelestialBody>();
@@ -891,12 +891,12 @@ TestOrbitParams::TestOrbitParams() : TestVessel(kTypeName) {
     LANAccuracy = 90.0;
     useActiveVessel = true;
 }
-// TestOrbitParams.cs:@InclinationDeviation
+// TestOrbitParams.cs:88
 double TestOrbitParams::InclinationDeviation() const { return Mathf::Clamp(f32store(100.0 - fx(static_cast<float>(inclinationAccuracy))), 0.0f, 100.0f); }
-// TestOrbitParams.cs:@LANDeviation
+// TestOrbitParams.cs:90
 double TestOrbitParams::LANDeviation() const { return Mathf::Clamp(f32store(100.0 - fx(static_cast<float>(LANAccuracy))), 0.0f, 100.0f); }
 
-// TestOrbitParams.cs:@GetMaxAp
+// TestOrbitParams.cs:310
 double TestOrbitParams::GetMaxAp(CelestialBody* b) {
     if (std::isinf(b->sphereOfInfluence)) {
         double num = 0.0;
@@ -922,7 +922,7 @@ Orbit VesselOrbit(Vessel* vessel) {
 Vessel::Situations VesselSit(Vessel* vessel) { return vessel->loaded ? vessel->situation : vessel->protoVessel->situation; }
 }  // namespace
 
-// TestOrbitParams.cs:@Test
+// TestOrbitParams.cs:390
 bool TestOrbitParams::Test() {
     TestVessel::Test();
     situationSuccess = vessel != nullptr;
@@ -978,7 +978,7 @@ bool TestOrbitParams::Test() {
     if (successStartTime < 0.0) successStartTime = MissionsEnvironment::UniversalTime();
     return successStartTime + stabilizationTime < MissionsEnvironment::UniversalTime();
 }
-// TestOrbitParams.cs:@GetNodeBodyParameterString
+// TestOrbitParams.cs:483
 std::string TestOrbitParams::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (field.name == "checkApoapsis") {
         if (checkApoapsis) return Localizer::Format("#autoLOC_8002086", {N0(apMinValue), N0(apMaxValue)});
@@ -1006,15 +1006,15 @@ std::string TestOrbitParams::GetNodeBodyParameterString(const Editor::BaseAPFiel
     }
     return "";
 }
-// TestOrbitParams.cs:@GetInfo
+// TestOrbitParams.cs:529
 std::string TestOrbitParams::GetInfo() { return Tag("#autoLOC_8003153"); }
-// TestOrbitParams.cs:@RunValidation
+// TestOrbitParams.cs:534
 void TestOrbitParams::RunValidation(Editor::MissionEditorValidator* validator) {
     if (checkApoapsis && apMinValue > apMaxValue) validator->AddNodeWarn(node(), Tag("#autoLOC_8002090"));
     if (checkPeriapsis && peMinValue > peMaxValue) validator->AddNodeWarn(node(), Tag("#autoLOC_8002091"));
     if (!checkApoapsis && !checkPeriapsis && !checkInclination && !checkLAN) validator->AddNodeFail(node(), Tag("#autoLOC_8002092"));
 }
-// TestOrbitParams.cs:@Save
+// TestOrbitParams.cs:550
 void TestOrbitParams::Save(ConfigNode& node) const {
     TestVessel::Save(node);
     node.AddValue("checkApoapsis", checkApoapsis);
@@ -1033,7 +1033,7 @@ void TestOrbitParams::Save(ConfigNode& node) const {
     node.AddValue("underThrust", underThrust);
     body->Save(node);
 }
-// TestOrbitParams.cs:@Load
+// TestOrbitParams.cs:570
 void TestOrbitParams::Load(const ConfigNode& node) {
     TestVessel::Load(node);
     node.TryGetValue("checkApoapsis", checkApoapsis);
@@ -1052,7 +1052,7 @@ void TestOrbitParams::Load(const ConfigNode& node) {
     node.TryGetValue("underThrust", underThrust);
     body->Load(node);
 }
-// TestOrbitParams.cs:@GetScoreModifier
+// TestOrbitParams.cs:590
 ScoreModifier TestOrbitParams::GetScoreModifier(const std::string& scoreModule) {
     ScoreModifier r;
     if (scoreModule == "ScoreModule_Resource") {
@@ -1111,7 +1111,7 @@ ScoreModifier TestOrbitParams::GetScoreModifier(const std::string& scoreModule) 
 
 // ---- TestScienceExperiment -------------------------------------------------------------------------------------------------------
 
-// TestScienceExperiment.cs:@Awake
+// TestScienceExperiment.cs:32
 TestScienceExperiment::TestScienceExperiment() : TestModule(kTypeName) {
     title = Tag("#autoLOC_8000132");
     testsSuccessful = false;
@@ -1126,31 +1126,31 @@ TestScienceExperiment::~TestScienceExperiment() {
         GameEvents::OnExperimentStored.Remove(this, &TestScienceExperiment::OnExperimentDeployed);
     }
 }
-// TestScienceExperiment.cs:@Initialized
+// TestScienceExperiment.cs:43
 void TestScienceExperiment::Initialized() {
     TestModule::Initialized();
     GameEvents::OnScienceRecieved.Add(this, &TestScienceExperiment::OnScienceReceived);
     GameEvents::OnExperimentStored.Add(this, &TestScienceExperiment::OnExperimentDeployed);
     subscribed = true;
 }
-// TestScienceExperiment.cs:@Cleared
+// TestScienceExperiment.cs:50
 void TestScienceExperiment::Cleared() {
     TestModule::Cleared();
     GameEvents::OnScienceRecieved.Remove(this, &TestScienceExperiment::OnScienceReceived);
     GameEvents::OnExperimentStored.Remove(this, &TestScienceExperiment::OnExperimentDeployed);
     subscribed = false;
 }
-// TestScienceExperiment.cs:@OnScienceReceived
+// TestScienceExperiment.cs:57
 void TestScienceExperiment::OnScienceReceived(float, ScienceSubject* scienceSubjectIn, ProtoVessel*, bool) {
     if (!(DeployorReceived != "Received")) ConductScienceTest(scienceSubjectIn->id);
 }
-// TestScienceExperiment.cs:@OnExperimentDeployed
+// TestScienceExperiment.cs:65
 void TestScienceExperiment::OnExperimentDeployed(ScienceData* scienceDataIn) {
     if (!(DeployorReceived != "Deployed")) ConductScienceTest(scienceDataIn->subjectID);
 }
-// TestScienceExperiment.cs:@Test
+// TestScienceExperiment.cs:73
 bool TestScienceExperiment::Test() { return testsSuccessful; }
-// TestScienceExperiment.cs:@ConductScienceTest
+// TestScienceExperiment.cs:78
 void TestScienceExperiment::ConductScienceTest(const std::string& inputExperimentId) {
     passedTests = true;
     const std::string first = inputExperimentId.substr(0, inputExperimentId.find('@'));  // inputExperimentId.Split('@')[0]
@@ -1162,16 +1162,16 @@ void TestScienceExperiment::ConductScienceTest(const std::string& inputExperimen
     }
     testsSuccessful = passedTests;
 }
-// TestScienceExperiment.cs:@HasNodeBody
+// TestScienceExperiment.cs:136
 bool TestScienceExperiment::HasNodeBody() { return biomeData != nullptr ? biomeData->body != nullptr : false; }
-// TestScienceExperiment.cs:@GetNodeBody
+// TestScienceExperiment.cs:145
 CelestialBody* TestScienceExperiment::GetNodeBody() {
     if (biomeData != nullptr && biomeData->body != nullptr) return biomeData->body;
     return nullptr;
 }
-// TestScienceExperiment.cs:@GetInfo
+// TestScienceExperiment.cs:154
 std::string TestScienceExperiment::GetInfo() { return Tag("#autoLOC_8004030"); }
-// TestScienceExperiment.cs:@Save
+// TestScienceExperiment.cs:159
 void TestScienceExperiment::Save(ConfigNode& node) const {
     TestModule::Save(node);
     if (!experimentID.empty()) node.AddValue("experimentID", experimentID);
@@ -1180,7 +1180,7 @@ void TestScienceExperiment::Save(ConfigNode& node) const {
     node.AddValue("DeployorReceived", DeployorReceived);
     if (biomeData != nullptr) biomeData->Save(*node.AddNode("BIOMEDATA"));
 }
-// TestScienceExperiment.cs:@Load
+// TestScienceExperiment.cs:178
 void TestScienceExperiment::Load(const ConfigNode& node) {
     TestModule::Load(node);
     experimentID = "";
@@ -1192,7 +1192,7 @@ void TestScienceExperiment::Load(const ConfigNode& node) {
     ConfigNode* configNode = nullptr;
     if (node.TryGetNode("BIOMEDATA", configNode)) biomeData->Load(*configNode);
 }
-// TestScienceExperiment.cs:@GetNodeBodyParameterString
+// TestScienceExperiment.cs:194
 std::string TestScienceExperiment::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (field.name == "biomeData") {
         if (!biomeData->biomeName.empty()) {
@@ -1219,7 +1219,7 @@ std::string TestScienceExperiment::GetNodeBodyParameterString(const Editor::Base
     }
     return TestModule::GetNodeBodyParameterString(field);
 }
-// TestScienceExperiment.cs:@GetAppObjectiveInfo
+// TestScienceExperiment.cs:232
 std::string TestScienceExperiment::GetAppObjectiveInfo() {
     if (biomeData != nullptr && !experimentID.empty()) {
         ScienceExperiment* experiment = ResearchAndDevelopment::GetExperiment(experimentID);
@@ -1234,7 +1234,7 @@ std::string TestScienceExperiment::GetAppObjectiveInfo() {
     }
     return TestModule::GetAppObjectiveInfo();
 }
-// TestScienceExperiment.cs:@RunValidation
+// TestScienceExperiment.cs:252
 void TestScienceExperiment::RunValidation(Editor::MissionEditorValidator* validator) {
     if (experimentID.empty()) return;
     ScienceExperiment* experiment = ResearchAndDevelopment::GetExperiment(experimentID);
@@ -1249,7 +1249,7 @@ void TestScienceExperiment::RunValidation(Editor::MissionEditorValidator* valida
         }
     }
 }
-// TestScienceExperiment.cs:@GetScoreModifier
+// TestScienceExperiment.cs:273
 ScoreModifier TestScienceExperiment::GetScoreModifier(const std::string& scoreModule) {
     ScoreModifier r;
     if (scoreModule == "ScoreModule_Resource") r.vessel = AwardEnvironment::ActiveVessel();

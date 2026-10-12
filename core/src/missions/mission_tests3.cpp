@@ -106,7 +106,7 @@ std::unique_ptr<MissionKerbal> NewMissionKerbal(TestModule* self, MENode* node, 
 
 // ---- TestKerbalKilled ------------------------------------------------------------------------------------------------------------
 
-// TestKerbalKilled.cs:@Awake
+// TestKerbalKilled.cs:13
 TestKerbalKilled::TestKerbalKilled() : TestModule(kTypeName) {
     title = Tag("#autoLOC_8007400");
     missionKerbal = NewMissionKerbal(this, node());
@@ -114,12 +114,12 @@ TestKerbalKilled::TestKerbalKilled() : TestModule(kTypeName) {
 TestKerbalKilled::~TestKerbalKilled() {
     if (subscribed) GameEvents::onCrewKilled.Remove(this, &TestKerbalKilled::OnKilled);
 }
-// TestKerbalKilled.cs:@Initialize
+// TestKerbalKilled.cs:20
 void TestKerbalKilled::Initialize(TestGroup* testGroup, const std::string& newTitle) {
     TestModule::Initialize(testGroup, newTitle);
     missionKerbal->Initialize(nullptr, testGroup->node());
 }
-// TestKerbalKilled.cs:@Initialized
+// TestKerbalKilled.cs:26
 void TestKerbalKilled::Initialized() {
     eventFound = false;
     GameEvents::onCrewKilled.Add(this, &TestKerbalKilled::OnKilled);
@@ -133,12 +133,12 @@ void TestKerbalKilled::Initialized() {
         }
     }
 }
-// TestKerbalKilled.cs:@Cleared
+// TestKerbalKilled.cs:40
 void TestKerbalKilled::Cleared() {
     GameEvents::onCrewKilled.Remove(this, &TestKerbalKilled::OnKilled);
     subscribed = false;
 }
-// TestKerbalKilled.cs:@OnKilled
+// TestKerbalKilled.cs:45
 void TestKerbalKilled::OnKilled(EventReport* report) {
     const std::string sender = Env::eventReportSender ? Env::eventReportSender(report) : std::string();
     if (missionKerbal->Kerbal() == nullptr) {
@@ -149,23 +149,23 @@ void TestKerbalKilled::OnKilled(EventReport* report) {
         eventFound = true;
     }
 }
-// TestKerbalKilled.cs:@Test
+// TestKerbalKilled.cs:60
 bool TestKerbalKilled::Test() { return eventFound; }
-// TestKerbalKilled.cs:@GetInfo
+// TestKerbalKilled.cs:65
 std::string TestKerbalKilled::GetInfo() { return Tag("#autoLOC_8007401"); }
-// TestKerbalKilled.cs:@GetNodeBodyParameterString
+// TestKerbalKilled.cs:70
 std::string TestKerbalKilled::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (field.name == "missionKerbal") return missionKerbal->GetNodeBodyParameterString();
     return TestModule::GetNodeBodyParameterString(field);
 }
-// TestKerbalKilled.cs:@RunValidation
+// TestKerbalKilled.cs:79
 void TestKerbalKilled::RunValidation(Editor::MissionEditorValidator* validator) { ValidateKerbal(validator, node(), *missionKerbal); }
-// TestKerbalKilled.cs:@Save
+// TestKerbalKilled.cs:87
 void TestKerbalKilled::Save(ConfigNode& node) const {
     TestModule::Save(node);
     missionKerbal->Save(node);
 }
-// TestKerbalKilled.cs:@Load
+// TestKerbalKilled.cs:93
 void TestKerbalKilled::Load(const ConfigNode& node) {
     TestModule::Load(node);
     if (missionKerbal == nullptr) missionKerbal = NewMissionKerbal(this, this->node());
@@ -174,7 +174,7 @@ void TestKerbalKilled::Load(const ConfigNode& node) {
 
 // ---- TestKerbalRecovery ----------------------------------------------------------------------------------------------------------
 
-// TestKerbalRecovery.cs:@Awake
+// TestKerbalRecovery.cs:22
 TestKerbalRecovery::TestKerbalRecovery() : TestModule(kTypeName) {
     title = Tag("#autoLOC_8000150");
     missionKerbal = NewMissionKerbal(this, node());
@@ -182,19 +182,19 @@ TestKerbalRecovery::TestKerbalRecovery() : TestModule(kTypeName) {
 TestKerbalRecovery::~TestKerbalRecovery() {
     if (subscribed) GameEvents::onVesselRecovered.Remove(this, &TestKerbalRecovery::OnRecovered);
 }
-// TestKerbalRecovery.cs:@Initialize
+// TestKerbalRecovery.cs:29
 void TestKerbalRecovery::Initialize(TestGroup* testGroup, const std::string& newTitle) {
     TestModule::Initialize(testGroup, newTitle);
     missionKerbal->Initialize(nullptr, testGroup->node());
 }
-// TestKerbalRecovery.cs:@checkAlreadyRecovered
+// TestKerbalRecovery.cs:53
 void TestKerbalRecovery::checkAlreadyRecovered() {
     if (HighLogic::CurrentGame() != nullptr) {
         PCM protoCrewMember = Roster()[missionKerbal->Kerbal()->name().value_or("")];
         if (protoCrewMember != nullptr && protoCrewMember->rosterStatus() == ProtoCrewMember::RosterStatus::Available) eventFound = true;
     }
 }
-// TestKerbalRecovery.cs:@Initialized
+// TestKerbalRecovery.cs:35
 void TestKerbalRecovery::Initialized() {
     eventFound = false;
     if (missionKerbal != nullptr && missionKerbal->Kerbal() != nullptr) checkAlreadyRecovered();
@@ -203,12 +203,12 @@ void TestKerbalRecovery::Initialized() {
         subscribed = true;
     }
 }
-// TestKerbalRecovery.cs:@Cleared
+// TestKerbalRecovery.cs:48
 void TestKerbalRecovery::Cleared() {
     GameEvents::onVesselRecovered.Remove(this, &TestKerbalRecovery::OnRecovered);
     subscribed = false;
 }
-// TestKerbalRecovery.cs:@OnRecovered
+// TestKerbalRecovery.cs:65
 void TestKerbalRecovery::OnRecovered(ProtoVessel* pv, bool) {
     const std::vector<PCM> pcm = pv->GetVesselCrew();
     if (pcm.empty()) return;
@@ -221,29 +221,29 @@ void TestKerbalRecovery::OnRecovered(ProtoVessel* pv, bool) {
         eventFound = true;
     }
 }
-// TestKerbalRecovery.cs:@Test
+// TestKerbalRecovery.cs:89
 bool TestKerbalRecovery::Test() { return eventFound; }
-// TestKerbalRecovery.cs:@GetInfo
+// TestKerbalRecovery.cs:94
 std::string TestKerbalRecovery::GetInfo() { return Tag("#autoLOC_8004018"); }
-// TestKerbalRecovery.cs:@GetNodeBodyParameterString
+// TestKerbalRecovery.cs:99
 std::string TestKerbalRecovery::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (field.name == "missionKerbal") return missionKerbal->GetNodeBodyParameterString();
     return TestModule::GetNodeBodyParameterString(field);
 }
-// TestKerbalRecovery.cs:@RunValidation
+// TestKerbalRecovery.cs:108
 void TestKerbalRecovery::RunValidation(Editor::MissionEditorValidator* validator) { ValidateKerbal(validator, node(), *missionKerbal); }
-// TestKerbalRecovery.cs:@Save
+// TestKerbalRecovery.cs:116
 void TestKerbalRecovery::Save(ConfigNode& node) const {
     TestModule::Save(node);
     missionKerbal->Save(node);
 }
-// TestKerbalRecovery.cs:@Load
+// TestKerbalRecovery.cs:122
 void TestKerbalRecovery::Load(const ConfigNode& node) {
     TestModule::Load(node);
     if (missionKerbal == nullptr) missionKerbal = NewMissionKerbal(this, this->node());
     missionKerbal->Load(node);
 }
-// TestKerbalRecovery.cs:@GetScoreModifier
+// TestKerbalRecovery.cs:132
 ScoreModifier TestKerbalRecovery::GetScoreModifier(const std::string& scoreModule) {
     ScoreModifier r;
     if (scoreModule == "ScoreModule_Resource") r.vessel = AwardEnvironment::ActiveVessel();
@@ -252,19 +252,19 @@ ScoreModifier TestKerbalRecovery::GetScoreModifier(const std::string& scoreModul
 
 // ---- TestKerbalRescue ------------------------------------------------------------------------------------------------------------
 
-// TestKerbalRescue.cs:@Awake
+// TestKerbalRescue.cs:25
 TestKerbalRescue::TestKerbalRescue() : TestModule(kTypeName) {
     title = Tag("#autoLOC_8000154");
     missionKerbal = NewMissionKerbal(this, node());
 }
 TestKerbalRescue::~TestKerbalRescue() { Cleared(); }
-// TestKerbalRescue.cs:@Initialize
+// TestKerbalRescue.cs:32
 void TestKerbalRescue::Initialize(TestGroup* testGroup, const std::string& newTitle) {
     TestModule::Initialize(testGroup, newTitle);
     missionKerbal->Initialize(nullptr, testGroup->node());
     mustBoardVessel = false;
 }
-// TestKerbalRescue.cs:@Initialized
+// TestKerbalRescue.cs:39
 void TestKerbalRescue::Initialized() {
     eventFound = false;
     const std::vector<Vessel*> vessels = AwardEnvironment::Vessels();
@@ -290,22 +290,22 @@ void TestKerbalRescue::Initialized() {
         }
     }
 }
-// TestKerbalRescue.cs:@Cleared
+// TestKerbalRescue.cs:73
 void TestKerbalRescue::Cleared() {
     GameEvents::onCrewBoardVessel.Remove(this, &TestKerbalRescue::OnCrewBoardVessel);
     GameEvents::onCrewTransferred.Remove(this, &TestKerbalRescue::OnCrewTransferred);
     GameEvents::onKnowledgeChanged.Remove(this, &TestKerbalRescue::onKnowledgeChanged);
     subscribedBoard = subscribedKnowledge = false;
 }
-// TestKerbalRescue.cs:@OnCrewBoardVessel
+// TestKerbalRescue.cs:80
 void TestKerbalRescue::OnCrewBoardVessel(GameEvents::FromToAction<Part*, Part*> action) { CheckNewKerbal(action.from->vessel->vesselName); }
-// TestKerbalRescue.cs:@OnCrewTransferred
+// TestKerbalRescue.cs:85
 void TestKerbalRescue::OnCrewTransferred(GameEvents::HostedFromToAction<ProtoCrewMember*, Part*> action) { CheckNewKerbal(action.host->name().value_or("")); }
-// TestKerbalRescue.cs:@CheckNewKerbal
+// TestKerbalRescue.cs:90
 void TestKerbalRescue::CheckNewKerbal(const std::string& rescuedName) {
     if (missionKerbal == nullptr || missionKerbal->Kerbal() == nullptr || missionKerbal->Kerbal()->name().value_or("") == rescuedName) eventFound = true;
 }
-// TestKerbalRescue.cs:@onKnowledgeChanged
+// TestKerbalRescue.cs:98
 void TestKerbalRescue::onKnowledgeChanged(GameEvents::HostedFromToAction<IDiscoverable*, DiscoveryLevels> kChg) {
     Vessel* vessel = dynamic_cast<Vessel*>(kChg.host);
     if (!(vessel != nullptr)) return;
@@ -315,31 +315,31 @@ void TestKerbalRescue::onKnowledgeChanged(GameEvents::HostedFromToAction<IDiscov
         if (vesselCrew[i]->name() == missionKerbal->Kerbal()->name() && kChg.to == DiscoveryLevels::Owned) eventFound = true;
     }
 }
-// TestKerbalRescue.cs:@Test
+// TestKerbalRescue.cs:115
 bool TestKerbalRescue::Test() { return eventFound; }
-// TestKerbalRescue.cs:@GetInfo
+// TestKerbalRescue.cs:120
 std::string TestKerbalRescue::GetInfo() { return Tag("#autoLOC_8004019"); }
-// TestKerbalRescue.cs:@GetNodeBodyParameterString
+// TestKerbalRescue.cs:125
 std::string TestKerbalRescue::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (field.name == "missionKerbal") return missionKerbal->GetNodeBodyParameterString();
     return TestModule::GetNodeBodyParameterString(field);
 }
-// TestKerbalRescue.cs:@RunValidation
+// TestKerbalRescue.cs:134
 void TestKerbalRescue::RunValidation(Editor::MissionEditorValidator* validator) { ValidateKerbal(validator, node(), *missionKerbal); }
-// TestKerbalRescue.cs:@Save
+// TestKerbalRescue.cs:142
 void TestKerbalRescue::Save(ConfigNode& node) const {
     TestModule::Save(node);
     missionKerbal->Save(node);
     node.AddValue("mustBoardVessel", mustBoardVessel);
 }
-// TestKerbalRescue.cs:@Load
+// TestKerbalRescue.cs:149
 void TestKerbalRescue::Load(const ConfigNode& node) {
     TestModule::Load(node);
     if (missionKerbal == nullptr) missionKerbal = NewMissionKerbal(this, this->node());
     missionKerbal->Load(node);
     node.TryGetValue("mustBoardVessel", mustBoardVessel);
 }
-// TestKerbalRescue.cs:@GetScoreModifier
+// TestKerbalRescue.cs:160
 ScoreModifier TestKerbalRescue::GetScoreModifier(const std::string& scoreModule) {
     ScoreModifier r;
     if (scoreModule == "ScoreModule_Resource") r.vessel = AwardEnvironment::ActiveVessel();
@@ -348,7 +348,7 @@ ScoreModifier TestKerbalRescue::GetScoreModifier(const std::string& scoreModule)
 
 // ---- TestKerbalEVA ---------------------------------------------------------------------------------------------------------------
 
-// TestKerbalEVA.cs:@Awake
+// TestKerbalEVA.cs:29
 TestKerbalEVA::TestKerbalEVA() : TestModule(kTypeName) {
     title = Tag("#autoLOC_8000185");
     missionKerbal = NewMissionKerbal(this, node());
@@ -359,23 +359,23 @@ TestKerbalEVA::TestKerbalEVA() : TestModule(kTypeName) {
 TestKerbalEVA::~TestKerbalEVA() {
     if (subscribed) GameEvents::onCrewOnEva.Remove(this, &TestKerbalEVA::OnEVA);
 }
-// TestKerbalEVA.cs:@Initialize
+// TestKerbalEVA.cs:45
 void TestKerbalEVA::Initialize(TestGroup* testGroup, const std::string& newTitle) {
     TestModule::Initialize(testGroup, newTitle);
     missionKerbal->Initialize(nullptr, testGroup->node());
 }
-// TestKerbalEVA.cs:@Initialized
+// TestKerbalEVA.cs:51
 void TestKerbalEVA::Initialized() {
     eventFound = false;
     GameEvents::onCrewOnEva.Add(this, &TestKerbalEVA::OnEVA);
     subscribed = true;
 }
-// TestKerbalEVA.cs:@Cleared
+// TestKerbalEVA.cs:57
 void TestKerbalEVA::Cleared() {
     GameEvents::onCrewOnEva.Remove(this, &TestKerbalEVA::OnEVA);
     subscribed = false;
 }
-// TestKerbalEVA.cs:@OnEVA
+// TestKerbalEVA.cs:62
 void TestKerbalEVA::OnEVA(GameEvents::FromToAction<Part*, Part*> fromTo) {
     if (!fromTo.to->vessel->isEVA() || !missionKerbal->IsValid(*fromTo.to->protoModuleCrew.at(0))) return;
     vessel = fromTo.from->vessel;
@@ -385,43 +385,43 @@ void TestKerbalEVA::OnEVA(GameEvents::FromToAction<Part*, Part*> fromTo) {
     }
     CheckLocation(*situation, vessel, eventFound);
 }
-// TestKerbalEVA.cs:@Test
+// TestKerbalEVA.cs:107
 bool TestKerbalEVA::Test() { return eventFound; }
-// TestKerbalEVA.cs:@OnVesselPersistentIdChanged
+// TestKerbalEVA.cs:117
 void TestKerbalEVA::OnVesselPersistentIdChanged(uint32_t oldId, uint32_t newId) {
     if (vesselID == oldId) vesselID = newId;
 }
-// TestKerbalEVA.cs:@HasNodeWaypoint
+// TestKerbalEVA.cs:125
 bool TestKerbalEVA::HasNodeWaypoint() { return situation->HasWaypoint(); }
-// TestKerbalEVA.cs:@GetNodeWaypoint
+// TestKerbalEVA.cs:130
 FinePrint::Waypoint* TestKerbalEVA::GetNodeWaypoint() { return NamedWaypoint(*situation, nodeWaypoint_, title); }
-// TestKerbalEVA.cs:@HasNodeLabel
+// TestKerbalEVA.cs:141
 bool TestKerbalEVA::HasNodeLabel() { return situation->HasNodeLabel(); }
-// TestKerbalEVA.cs:@HasWorldPosition
+// TestKerbalEVA.cs:146
 bool TestKerbalEVA::HasWorldPosition() { return situation->HasWorldPosition(); }
-// TestKerbalEVA.cs:@GetWorldPosition
+// TestKerbalEVA.cs:151
 Vector3f TestKerbalEVA::GetWorldPosition() { return situation->GetWorldPosition(); }
-// TestKerbalEVA.cs:@GetExtraText
+// TestKerbalEVA.cs:156
 std::string TestKerbalEVA::GetExtraText() { return situation->GetExtraText(); }
-// TestKerbalEVA.cs:@GetInfo
+// TestKerbalEVA.cs:161
 std::string TestKerbalEVA::GetInfo() { return Tag("#autoLOC_8004014"); }
-// TestKerbalEVA.cs:@GetNodeBodyParameterString
+// TestKerbalEVA.cs:166
 std::string TestKerbalEVA::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (node() != nullptr) node()->UpdateInfoOnRefresh = true;
     if (field.name == "missionKerbal" && node()->mission != nullptr) return missionKerbal->GetNodeBodyParameterString();
     if (field.name == "vesselID") return VesselIdText(node()->mission, vesselID);
     return TestModule::GetNodeBodyParameterString(field);
 }
-// TestKerbalEVA.cs:@RunValidation
+// TestKerbalEVA.cs:203
 void TestKerbalEVA::RunValidation(Editor::MissionEditorValidator* validator) { ValidateKerbal(validator, node(), *missionKerbal); }
-// TestKerbalEVA.cs:@Save
+// TestKerbalEVA.cs:211
 void TestKerbalEVA::Save(ConfigNode& node) const {
     TestModule::Save(node);
     missionKerbal->Save(node);
     situation->Save(node);
     node.AddValue("vesselID", vesselID);
 }
-// TestKerbalEVA.cs:@Load
+// TestKerbalEVA.cs:219
 void TestKerbalEVA::Load(const ConfigNode& node) {
     TestModule::Load(node);
     if (missionKerbal == nullptr) missionKerbal = NewMissionKerbal(this, this->node());
@@ -429,7 +429,7 @@ void TestKerbalEVA::Load(const ConfigNode& node) {
     situation->Load(node);
     node.TryGetValue("vesselID", vesselID);
 }
-// TestKerbalEVA.cs:@GetScoreModifier
+// TestKerbalEVA.cs:231
 ScoreModifier TestKerbalEVA::GetScoreModifier(const std::string& scoreModule) {
     ScoreModifier r;
     if (scoreModule == "ScoreModule_Resource") r.vessel = vessel != nullptr ? vessel : AwardEnvironment::ActiveVessel();
@@ -438,7 +438,7 @@ ScoreModifier TestKerbalEVA::GetScoreModifier(const std::string& scoreModule) {
 
 // ---- TestKerbalBoarded -----------------------------------------------------------------------------------------------------------
 
-// TestKerbalBoarded.cs:@Awake
+// TestKerbalBoarded.cs:29
 TestKerbalBoarded::TestKerbalBoarded() : TestModule(kTypeName) {
     title = Tag("#autoLOC_8000148");
     missionKerbal = NewMissionKerbal(this, node());
@@ -451,37 +451,38 @@ TestKerbalBoarded::~TestKerbalBoarded() {
         GameEvents::onCommandSeatInteraction.Remove(this, &TestKerbalBoarded::OnSeatedEvent);
     }
 }
-// TestKerbalBoarded.cs:@Initialize
+// TestKerbalBoarded.cs:41
 void TestKerbalBoarded::Initialize(TestGroup* testGroup, const std::string& newTitle) {
     TestModule::Initialize(testGroup, newTitle);
     missionKerbal->Initialize(nullptr, testGroup->node());
 }
-// TestKerbalBoarded.cs:@Initialized
+// TestKerbalBoarded.cs:47
 void TestKerbalBoarded::Initialized() {
     eventFound = false;
     GameEvents::onCrewTransferred.Add(this, &TestKerbalBoarded::OnBoarded);
     GameEvents::onCommandSeatInteraction.Add(this, &TestKerbalBoarded::OnSeatedEvent);
     subscribed = true;
 }
-// TestKerbalBoarded.cs:@Cleared
+// TestKerbalBoarded.cs:54
 void TestKerbalBoarded::Cleared() {
     GameEvents::onCrewTransferred.Remove(this, &TestKerbalBoarded::OnBoarded);
     GameEvents::onCommandSeatInteraction.Remove(this, &TestKerbalBoarded::OnSeatedEvent);
     subscribed = false;
 }
-// TestKerbalBoarded.cs:@OnBoarded
+// TestKerbalBoarded.cs:60
 void TestKerbalBoarded::OnBoarded(GameEvents::HostedFromToAction<ProtoCrewMember*, Part*> hostedFromTo) {
     if (hostedFromTo.from->vessel->isEVA() && missionKerbal->IsValid(*hostedFromTo.host)) {
         vessel = hostedFromTo.to->vessel;
         CheckSituation();
     }
 }
-// TestKerbalBoarded.cs:@OnSeated
+// the GameEvents entry of TestKerbalBoarded.OnSeated (the seam supplies eva.part.protoModuleCrew and the vessel)
 void TestKerbalBoarded::OnSeatedEvent(KerbalEVA* eva, bool) {
     std::pair<std::vector<PCM>, Vessel*> info;
     if (Env::kerbalEvaCrew) info = Env::kerbalEvaCrew(eva);
     OnSeated(info.first, info.second);
 }
+// TestKerbalBoarded.cs:69
 void TestKerbalBoarded::OnSeated(const std::vector<PCM>& evaPartCrew, Vessel* evaVessel) {
     size_t num = 0;
     while (true) {
@@ -495,7 +496,7 @@ void TestKerbalBoarded::OnSeated(const std::vector<PCM>& evaPartCrew, Vessel* ev
     vessel = evaVessel;
     CheckSituation();
 }
-// TestKerbalBoarded.cs:@CheckSituation
+// TestKerbalBoarded.cs:89
 void TestKerbalBoarded::CheckSituation() {
     if (vesselID != 0) {
         const uint32_t num = node()->mission->CurrentVesselID(node(), vesselID);
@@ -503,43 +504,43 @@ void TestKerbalBoarded::CheckSituation() {
     }
     CheckLocation(*situation, vessel, eventFound);
 }
-// TestKerbalBoarded.cs:@Test
+// TestKerbalBoarded.cs:129
 bool TestKerbalBoarded::Test() { return eventFound; }
-// TestKerbalBoarded.cs:@OnVesselPersistentIdChanged
+// TestKerbalBoarded.cs:134
 void TestKerbalBoarded::OnVesselPersistentIdChanged(uint32_t oldId, uint32_t newId) {
     if (vesselID == oldId) vesselID = newId;
 }
-// TestKerbalBoarded.cs:@HasNodeWaypoint
+// TestKerbalBoarded.cs:142
 bool TestKerbalBoarded::HasNodeWaypoint() { return situation->HasWaypoint(); }
-// TestKerbalBoarded.cs:@GetNodeWaypoint
+// TestKerbalBoarded.cs:147
 FinePrint::Waypoint* TestKerbalBoarded::GetNodeWaypoint() { return NamedWaypoint(*situation, nodeWaypoint_, title); }
-// TestKerbalBoarded.cs:@HasNodeLabel
+// TestKerbalBoarded.cs:158
 bool TestKerbalBoarded::HasNodeLabel() { return situation->HasNodeLabel(); }
-// TestKerbalBoarded.cs:@HasWorldPosition
+// TestKerbalBoarded.cs:163
 bool TestKerbalBoarded::HasWorldPosition() { return situation->HasWorldPosition(); }
-// TestKerbalBoarded.cs:@GetWorldPosition
+// TestKerbalBoarded.cs:168
 Vector3f TestKerbalBoarded::GetWorldPosition() { return situation->GetWorldPosition(); }
-// TestKerbalBoarded.cs:@GetExtraText
+// TestKerbalBoarded.cs:173
 std::string TestKerbalBoarded::GetExtraText() { return situation->GetExtraText(); }
-// TestKerbalBoarded.cs:@GetInfo
+// TestKerbalBoarded.cs:178
 std::string TestKerbalBoarded::GetInfo() { return Tag("#autoLOC_8004017"); }
-// TestKerbalBoarded.cs:@GetNodeBodyParameterString
+// TestKerbalBoarded.cs:183
 std::string TestKerbalBoarded::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (node() != nullptr) node()->UpdateInfoOnRefresh = true;
     if (field.name == "missionKerbal") return missionKerbal->GetNodeBodyParameterString();
     if (field.name == "vesselID" && node()->mission != nullptr) return VesselIdText(node()->mission, vesselID);
     return TestModule::GetNodeBodyParameterString(field);
 }
-// TestKerbalBoarded.cs:@RunValidation
+// TestKerbalBoarded.cs:220
 void TestKerbalBoarded::RunValidation(Editor::MissionEditorValidator* validator) { ValidateKerbal(validator, node(), *missionKerbal); }
-// TestKerbalBoarded.cs:@Save
+// TestKerbalBoarded.cs:228
 void TestKerbalBoarded::Save(ConfigNode& node) const {
     TestModule::Save(node);
     missionKerbal->Save(node);
     situation->Save(node);
     node.AddValue("vesselID", vesselID);
 }
-// TestKerbalBoarded.cs:@Load
+// TestKerbalBoarded.cs:236
 void TestKerbalBoarded::Load(const ConfigNode& node) {
     TestModule::Load(node);
     if (missionKerbal == nullptr) missionKerbal = NewMissionKerbal(this, this->node());
@@ -547,7 +548,7 @@ void TestKerbalBoarded::Load(const ConfigNode& node) {
     situation->Load(node);
     node.TryGetValue("vesselID", vesselID);
 }
-// TestKerbalBoarded.cs:@GetScoreModifier
+// TestKerbalBoarded.cs:248
 ScoreModifier TestKerbalBoarded::GetScoreModifier(const std::string& scoreModule) {
     ScoreModifier r;
     if (scoreModule == "ScoreModule_Resource") r.vessel = vessel != nullptr ? vessel : AwardEnvironment::ActiveVessel();
@@ -556,7 +557,7 @@ ScoreModifier TestKerbalBoarded::GetScoreModifier(const std::string& scoreModule
 
 // ---- TestTakeKerbal --------------------------------------------------------------------------------------------------------------
 
-// TestTakeKerbal.cs:@Awake
+// TestTakeKerbal.cs:42
 TestTakeKerbal::TestTakeKerbal() : TestModule(kTypeName) {
     title = Tag("#autoLOC_8000174");
     missionKerbal = NewMissionKerbal(this, node(), ProtoCrewMember::KerbalType::Tourist);
@@ -565,12 +566,12 @@ TestTakeKerbal::TestTakeKerbal() : TestModule(kTypeName) {
     targetVessel = nullptr;
 }
 TestTakeKerbal::~TestTakeKerbal() { Cleared(); }
-// TestTakeKerbal.cs:@Initialize
+// TestTakeKerbal.cs:56
 void TestTakeKerbal::Initialize(TestGroup* testGroup, const std::string& newTitle) {
     TestModule::Initialize(testGroup, newTitle);
     missionKerbal->Initialize(nullptr, testGroup->node());
 }
-// TestTakeKerbal.cs:@Initialized
+// TestTakeKerbal.cs:62
 void TestTakeKerbal::Initialized() {
     testPassed = false;
     if (vesselID != 0) {
@@ -605,23 +606,23 @@ void TestTakeKerbal::Initialized() {
     }
     targetVessel = AwardEnvironment::ActiveVessel();
 }
-// TestTakeKerbal.cs:@Cleared
+// TestTakeKerbal.cs:106
 void TestTakeKerbal::Cleared() {
     GameEvents::onVesselCrewWasModified.Remove(this, &TestTakeKerbal::onVesselCrewWasModified);
     GameEvents::onVesselChange.Remove(this, &TestTakeKerbal::onVesselChange);
     subscribedCrew = subscribedChange = false;
 }
-// TestTakeKerbal.cs:@onVesselChange
+// TestTakeKerbal.cs:112
 void TestTakeKerbal::onVesselChange(Vessel*) { targetVessel = AwardEnvironment::ActiveVessel(); }
-// TestTakeKerbal.cs:@scanVessels
+// TestTakeKerbal.cs:117
 void TestTakeKerbal::scanVessels() {
     targetVessel = nullptr;
     const std::vector<Vessel*> vessels = AwardEnvironment::Vessels();
     for (size_t i = 0; i < vessels.size(); ++i) CheckCrew(vessels[i]);
 }
-// TestTakeKerbal.cs:@onVesselCrewWasModified
+// TestTakeKerbal.cs:127
 void TestTakeKerbal::onVesselCrewWasModified(Vessel* v) { CheckCrew(v); }
-// TestTakeKerbal.cs:@CheckCrew
+// TestTakeKerbal.cs:132
 bool TestTakeKerbal::CheckCrew(Vessel* v) {
     if (v != nullptr) {
         const std::vector<PCM>& pcm = v->GetVesselCrew();
@@ -635,9 +636,9 @@ bool TestTakeKerbal::CheckCrew(Vessel* v) {
     }
     return false;
 }
-// TestTakeKerbal.cs:@targetVesselStillValid
+// TestTakeKerbal.cs:150
 bool TestTakeKerbal::targetVesselStillValid(Vessel* vessel) { return CheckCrew(vessel); }
-// TestTakeKerbal.cs:@testLocation
+// TestTakeKerbal.cs:155
 void TestTakeKerbal::testLocation(Vessel* vessel) {
     switch (locationSituation->locationChoice) {
         case ParamChoices_CelestialBodySurface::Choices::bodyData:
@@ -658,7 +659,7 @@ void TestTakeKerbal::testLocation(Vessel* vessel) {
         default: break;
     }
 }
-// TestTakeKerbal.cs:@Test
+// TestTakeKerbal.cs:184
 bool TestTakeKerbal::Test() {
     if (targetVessel != nullptr) {
         if (vesselID != 0 && targetVessel->persistentId != vesselID) return testPassed;
@@ -666,37 +667,37 @@ bool TestTakeKerbal::Test() {
     }
     return testPassed;
 }
-// TestTakeKerbal.cs:@GetInfo
+// TestTakeKerbal.cs:197
 std::string TestTakeKerbal::GetInfo() { return Tag("#autoLOC_8004033"); }
-// TestTakeKerbal.cs:@GetNodeBodyParameterString
+// TestTakeKerbal.cs:202
 std::string TestTakeKerbal::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (node() != nullptr) node()->UpdateInfoOnRefresh = true;
     if (field.name == "missionKerbal") return missionKerbal->GetNodeBodyParameterString();
     if (field.name == "vesselID" && node()->mission != nullptr) return VesselIdText(node()->mission, vesselID);
     return TestModule::GetNodeBodyParameterString(field);
 }
-// TestTakeKerbal.cs:@RunValidation
+// TestTakeKerbal.cs:239
 void TestTakeKerbal::RunValidation(Editor::MissionEditorValidator* validator) { ValidateKerbal(validator, node(), *missionKerbal); }
-// TestTakeKerbal.cs:@HasNodeWaypoint
+// TestTakeKerbal.cs:247
 bool TestTakeKerbal::HasNodeWaypoint() { return locationSituation->HasWaypoint(); }
-// TestTakeKerbal.cs:@GetNodeWaypoint
+// TestTakeKerbal.cs:252
 FinePrint::Waypoint* TestTakeKerbal::GetNodeWaypoint() { return NamedWaypoint(*locationSituation, nodeWaypoint_, title); }
-// TestTakeKerbal.cs:@HasNodeLabel
+// TestTakeKerbal.cs:263
 bool TestTakeKerbal::HasNodeLabel() { return locationSituation->HasNodeLabel(); }
-// TestTakeKerbal.cs:@HasWorldPosition
+// TestTakeKerbal.cs:268
 bool TestTakeKerbal::HasWorldPosition() { return locationSituation->HasWorldPosition(); }
-// TestTakeKerbal.cs:@GetWorldPosition
+// TestTakeKerbal.cs:273
 Vector3f TestTakeKerbal::GetWorldPosition() { return locationSituation->GetWorldPosition(); }
-// TestTakeKerbal.cs:@GetExtraText
+// TestTakeKerbal.cs:278
 std::string TestTakeKerbal::GetExtraText() { return locationSituation->GetExtraText(); }
-// TestTakeKerbal.cs:@Save
+// TestTakeKerbal.cs:283
 void TestTakeKerbal::Save(ConfigNode& node) const {
     TestModule::Save(node);
     missionKerbal->Save(node);
     locationSituation->Save(node);
     node.AddValue("vesselID", vesselID);
 }
-// TestTakeKerbal.cs:@Load
+// TestTakeKerbal.cs:291
 void TestTakeKerbal::Load(const ConfigNode& node) {
     TestModule::Load(node);
     if (missionKerbal == nullptr) missionKerbal = NewMissionKerbal(this, this->node());
@@ -704,7 +705,7 @@ void TestTakeKerbal::Load(const ConfigNode& node) {
     locationSituation->Load(node);
     node.TryGetValue("vesselID", vesselID);
 }
-// TestTakeKerbal.cs:@GetScoreModifier
+// TestTakeKerbal.cs:303
 ScoreModifier TestTakeKerbal::GetScoreModifier(const std::string& scoreModule) {
     ScoreModifier r;
     if (scoreModule == "ScoreModule_Resource") r.vessel = targetVessel != nullptr ? targetVessel : AwardEnvironment::ActiveVessel();
@@ -713,19 +714,19 @@ ScoreModifier TestTakeKerbal::GetScoreModifier(const std::string& scoreModule) {
 
 // ---- TestCrewAssignment ----------------------------------------------------------------------------------------------------------
 
-// TestCrewAssignment.cs:@Awake
+// TestCrewAssignment.cs:24
 TestCrewAssignment::TestCrewAssignment() : TestModule(kTypeName) {
     title = Tag("#autoLOC_8000070");
     vesselPartIDs = std::make_unique<VesselPartIDPair>();
     vesselPartIDs->partID = 0;
     missionKerbal = NewMissionKerbal(this, node());
 }
-// TestCrewAssignment.cs:@Initialize
+// TestCrewAssignment.cs:33
 void TestCrewAssignment::Initialize(TestGroup* testGroup, const std::string& newTitle) {
     TestModule::Initialize(testGroup, newTitle);
     missionKerbal->Initialize(nullptr, testGroup->node());
 }
-// TestCrewAssignment.cs:@partContainsKerbal
+// TestCrewAssignment.cs:58
 bool TestCrewAssignment::partContainsKerbal(const std::vector<PCM>& crew) {
     size_t num = 0;
     while (true) {
@@ -738,7 +739,7 @@ bool TestCrewAssignment::partContainsKerbal(const std::vector<PCM>& crew) {
     }
     return true;
 }
-// TestCrewAssignment.cs:@Test
+// TestCrewAssignment.cs:39
 bool TestCrewAssignment::Test() {
     if (vesselPartIDs->partID == 0) {
         const uint32_t key = node()->mission->CurrentVesselID(node(), vesselPartIDs->VesselID);
@@ -767,21 +768,21 @@ bool TestCrewAssignment::Test() {
     log::Warning("[TestCrewAssignment]: Unable to find Vessel PartID (" + std::to_string(vesselPartIDs->partID) + "). Skipping..");
     return true;
 }
-// TestCrewAssignment.cs:@OnPartPersistentIdChanged
+// TestCrewAssignment.cs:110
 void TestCrewAssignment::OnPartPersistentIdChanged(uint32_t vesselID, uint32_t oldId, uint32_t newId) {
     if (vesselPartIDs->VesselID == vesselID && vesselPartIDs->partID == oldId) {
         vesselPartIDs->partID = newId;
         log::Info("[TestCrewAssignment]: Node (" + node()->id().ToString() + ") PartId changed from " + std::to_string(oldId) + " to " + std::to_string(newId));
     }
 }
-// TestCrewAssignment.cs:@OnVesselPersistentIdChanged
+// TestCrewAssignment.cs:119
 void TestCrewAssignment::OnVesselPersistentIdChanged(uint32_t oldId, uint32_t newId) {
     if (vesselPartIDs->VesselID == oldId) {
         vesselPartIDs->VesselID = newId;
         log::Info("[TestCrewAssignment]: Node (" + node()->id().ToString() + ") VesselId changed from " + std::to_string(oldId) + " to " + std::to_string(newId));
     }
 }
-// TestCrewAssignment.cs:@OnVesselsUndocking
+// TestCrewAssignment.cs:128
 void TestCrewAssignment::OnVesselsUndocking(Vessel* oldVessel, Vessel* newVessel) {
     if (vesselPartIDs->VesselID != oldVessel->persistentId && vesselPartIDs->VesselID != newVessel->persistentId) return;
     size_t num = 0;
@@ -797,9 +798,9 @@ void TestCrewAssignment::OnVesselsUndocking(Vessel* oldVessel, Vessel* newVessel
     log::Info("[TestCrewAssignment]: Node (" + node()->id().ToString() + ") VesselId changed on undocking from " + std::to_string(oldVessel->persistentId) + " to " +
               std::to_string(newVessel->persistentId));
 }
-// TestCrewAssignment.cs:@GetInfo
+// TestCrewAssignment.cs:152
 std::string TestCrewAssignment::GetInfo() { return Tag("#autoLOC_8004011"); }
-// TestCrewAssignment.cs:@GetNodeBodyParameterString
+// TestCrewAssignment.cs:157
 std::string TestCrewAssignment::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (node() != nullptr) node()->UpdateInfoOnRefresh = true;
     if (field.name == "missionKerbal") return missionKerbal->GetNodeBodyParameterString();
@@ -821,25 +822,25 @@ std::string TestCrewAssignment::GetNodeBodyParameterString(const Editor::BaseAPF
     if (field.name == "vesselPartIDs") return Localizer::Format("#autoLOC_8006061", {Localizer::Format(vesselPartIDs->partName)});
     return TestModule::GetNodeBodyParameterString(field);
 }
-// TestCrewAssignment.cs:@RunValidation
+// TestCrewAssignment.cs:202
 void TestCrewAssignment::RunValidation(Editor::MissionEditorValidator* validator) {
     ValidateKerbal(validator, node(), *missionKerbal);
     if (vesselPartIDs != nullptr) vesselPartIDs->ValidatePartAgainstCraft(node(), validator);
 }
-// TestCrewAssignment.cs:@Save
+// TestCrewAssignment.cs:214
 void TestCrewAssignment::Save(ConfigNode& node) const {
     TestModule::Save(node);
     vesselPartIDs->Save(node);
     missionKerbal->Save(node);
 }
-// TestCrewAssignment.cs:@Load
+// TestCrewAssignment.cs:221
 void TestCrewAssignment::Load(const ConfigNode& node) {
     TestModule::Load(node);
     vesselPartIDs->Load(node);
     if (missionKerbal == nullptr) missionKerbal = NewMissionKerbal(this, this->node());
     missionKerbal->Load(node);
 }
-// TestCrewAssignment.cs:@GetScoreModifier
+// TestCrewAssignment.cs:232
 ScoreModifier TestCrewAssignment::GetScoreModifier(const std::string& scoreModule) {
     ScoreModifier r;
     if (scoreModule == "ScoreModule_Resource") {
@@ -855,7 +856,7 @@ ScoreModifier TestCrewAssignment::GetScoreModifier(const std::string& scoreModul
 
 // ---- TestGrapple -----------------------------------------------------------------------------------------------------------------
 
-// TestGrapple.cs:@Awake
+// TestGrapple.cs:61
 TestGrapple::TestGrapple() : TestModule(kTypeName) {
     title = "#autoLOC_8002013";
     firstRunTest = true;
@@ -864,7 +865,7 @@ TestGrapple::TestGrapple() : TestModule(kTypeName) {
 TestGrapple::~TestGrapple() {
     if (subscribed) Cleared();
 }
-// TestGrapple.cs:@Initialized
+// TestGrapple.cs:148
 void TestGrapple::Initialized() {
     testSuccess = false;
     if (dockedUndocked == "Docked") {
@@ -876,7 +877,7 @@ void TestGrapple::Initialized() {
     }
     subscribed = true;
 }
-// TestGrapple.cs:@Cleared
+// TestGrapple.cs:163
 void TestGrapple::Cleared() {
     GameEvents::onDockingComplete.Remove(this, &TestGrapple::onPartCouple);
     GameEvents::onPartCoupleComplete.Remove(this, &TestGrapple::onPartCouple);
@@ -884,11 +885,11 @@ void TestGrapple::Cleared() {
     GameEvents::onPartDeCoupleComplete.Remove(this, &TestGrapple::onPartUndock);
     subscribed = false;
 }
-// TestGrapple.cs:@onPartCouple
+// TestGrapple.cs:171
 void TestGrapple::onPartCouple(GameEvents::FromToAction<Part*, Part*>) { testPartVessels(); }
-// TestGrapple.cs:@onPartUndock
+// TestGrapple.cs:176
 void TestGrapple::onPartUndock(Part*) { testPartVessels(); }
-// TestGrapple.cs:@testPartVessels
+// TestGrapple.cs:181
 void TestGrapple::testPartVessels() {
     uint32_t num = 0;
     uint32_t num2 = 0;
@@ -940,7 +941,7 @@ void TestGrapple::testPartVessels() {
         if (grappleSOPartID != 0 && state.has_value() && (state->find("Grappled") != std::string::npos || state->find("Ready") != std::string::npos)) testSuccess = true;
     }
 }
-// TestGrapple.cs:@Test
+// TestGrapple.cs:260
 bool TestGrapple::Test() {
     if (firstRunTest) {
         testPartVessels();
@@ -948,7 +949,7 @@ bool TestGrapple::Test() {
     }
     return testSuccess;
 }
-// TestGrapple.cs:@OnVesselPersistentIdChanged
+// TestGrapple.cs:270
 void TestGrapple::OnVesselPersistentIdChanged(uint32_t oldId, uint32_t newId) {
     if (grapplingVesselID == oldId) {
         grapplingVesselID = newId;
@@ -967,16 +968,16 @@ void TestGrapple::OnVesselPersistentIdChanged(uint32_t oldId, uint32_t newId) {
         log::Info("[TestPartDocking]: Node (" + node()->id().ToString() + ") Grappled Vessel VesselId changed from " + std::to_string(oldId) + " to " + std::to_string(newId));
     }
 }
-// TestGrapple.cs:@OnVesselDocking
+// TestGrapple.cs:294
 void TestGrapple::OnVesselDocking(uint32_t oldId, uint32_t newId) {
     if (grapplingVesselID == oldId) {
         grapplingVesselID = newId;
         log::Info("[TestPartDocking]: Node (" + node()->id().ToString() + ") Grappling VesselId changed from " + std::to_string(oldId) + " to " + std::to_string(newId));
     }
 }
-// TestGrapple.cs:@GetInfo
+// TestGrapple.cs:303
 std::string TestGrapple::GetInfo() { return Tag("#autoLOC_8005462"); }
-// TestGrapple.cs:@GetNodeBodyParameterString
+// TestGrapple.cs:308
 std::string TestGrapple::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (node() != nullptr) node()->UpdateInfoOnRefresh = true;
     if (field.name == "grapplingVesselID" && field.hasValue) {
@@ -1023,7 +1024,7 @@ std::string TestGrapple::GetNodeBodyParameterString(const Editor::BaseAPField& f
     }
     return TestModule::GetNodeBodyParameterString(field);
 }
-// TestGrapple.cs:@RunValidation
+// TestGrapple.cs:380
 void TestGrapple::RunValidation(Editor::MissionEditorValidator* validator) {
     VesselSituation* vesselSituationByVesselID = node()->mission->GetVesselSituationByVesselID(grapplingVesselID);
     if (vesselSituationByVesselID != nullptr) {
@@ -1038,7 +1039,7 @@ void TestGrapple::RunValidation(Editor::MissionEditorValidator* validator) {
         validator->AddNodeFail(node(), Tag("#autoLOC_6002526"));
     }
 }
-// TestGrapple.cs:@Save
+// TestGrapple.cs:404
 void TestGrapple::Save(ConfigNode& node) const {
     TestModule::Save(node);
     node.AddValue("grapplingVesselID", grapplingVesselID);
@@ -1048,7 +1049,7 @@ void TestGrapple::Save(ConfigNode& node) const {
     node.AddValue("grappledSpaceObject", dotnet::EnumToString(grappledSpaceObject));
     node.AddValue("dockedUndocked", dockedUndocked);
 }
-// TestGrapple.cs:@Load
+// TestGrapple.cs:415
 void TestGrapple::Load(const ConfigNode& node) {
     TestModule::Load(node);
     ConfigNode* configNode = nullptr;
@@ -1068,7 +1069,7 @@ void TestGrapple::Load(const ConfigNode& node) {
 
 // ---- TestPartDocking -------------------------------------------------------------------------------------------------------------
 
-// TestPartDocking.cs:@Awake
+// TestPartDocking.cs:29
 TestPartDocking::TestPartDocking() : TestModule(kTypeName) {
     title = "#autoLOC_8002013";
     partOnevesselPartIDs = std::make_unique<VesselPartIDPair>();
@@ -1079,7 +1080,7 @@ TestPartDocking::TestPartDocking() : TestModule(kTypeName) {
 TestPartDocking::~TestPartDocking() {
     if (subscribed) Cleared();
 }
-// TestPartDocking.cs:@Initialized
+// TestPartDocking.cs:48
 void TestPartDocking::Initialized() {
     testSuccess = false;
     if (dockedUndocked == "Docked") {
@@ -1091,7 +1092,7 @@ void TestPartDocking::Initialized() {
     }
     subscribed = true;
 }
-// TestPartDocking.cs:@setPlayerCreatedRootParts
+// TestPartDocking.cs:63
 void TestPartDocking::setPlayerCreatedRootParts() {
     if (partOnevesselPartIDs->partID == 0) {
         bool flag = false;
@@ -1128,7 +1129,7 @@ void TestPartDocking::setPlayerCreatedRootParts() {
         testSuccess = true;
     }
 }
-// TestPartDocking.cs:@Cleared
+// TestPartDocking.cs:122
 void TestPartDocking::Cleared() {
     GameEvents::onDockingComplete.Remove(this, &TestPartDocking::onPartCouple);
     GameEvents::onPartCoupleComplete.Remove(this, &TestPartDocking::onPartCouple);
@@ -1136,11 +1137,11 @@ void TestPartDocking::Cleared() {
     GameEvents::onPartDeCoupleComplete.Remove(this, &TestPartDocking::onPartUndock);
     subscribed = false;
 }
-// TestPartDocking.cs:@onPartCouple
+// TestPartDocking.cs:130
 void TestPartDocking::onPartCouple(GameEvents::FromToAction<Part*, Part*>) { testPartVessels(); }
-// TestPartDocking.cs:@onPartUndock
+// TestPartDocking.cs:135
 void TestPartDocking::onPartUndock(Part*) { testPartVessels(); }
-// TestPartDocking.cs:@testPartVessels
+// TestPartDocking.cs:140
 void TestPartDocking::testPartVessels() {
     uint32_t vesselId = 0;
     uint32_t vesselId2 = 0;
@@ -1154,7 +1155,7 @@ void TestPartDocking::testPartVessels() {
         testSuccess = true;
     }
 }
-// TestPartDocking.cs:@findPartVesselId
+// TestPartDocking.cs:148
 bool TestPartDocking::findPartVesselId(uint32_t partId, uint32_t& vesselId) {
     vesselId = 0;
     bool result = false;
@@ -1170,7 +1171,7 @@ bool TestPartDocking::findPartVesselId(uint32_t partId, uint32_t& vesselId) {
     }
     return result;
 }
-// TestPartDocking.cs:@Test
+// TestPartDocking.cs:183
 bool TestPartDocking::Test() {
     if (firstRunTest) {
         testPartVessels();
@@ -1178,7 +1179,7 @@ bool TestPartDocking::Test() {
     }
     return testSuccess;
 }
-// TestPartDocking.cs:@OnPartPersistentIdChanged
+// TestPartDocking.cs:193
 void TestPartDocking::OnPartPersistentIdChanged(uint32_t vesselID, uint32_t oldId, uint32_t newId) {
     if (partOnevesselPartIDs->VesselID == vesselID && partOnevesselPartIDs->partID == oldId) {
         partOnevesselPartIDs->partID = newId;
@@ -1189,7 +1190,7 @@ void TestPartDocking::OnPartPersistentIdChanged(uint32_t vesselID, uint32_t oldI
         log::Info("[TestPartDocking]: Node (" + node()->id().ToString() + ") Part Two PartId changed from " + std::to_string(oldId) + " to " + std::to_string(newId));
     }
 }
-// TestPartDocking.cs:@OnVesselPersistentIdChanged
+// TestPartDocking.cs:207
 void TestPartDocking::OnVesselPersistentIdChanged(uint32_t oldId, uint32_t newId) {
     if (partOnevesselPartIDs->VesselID == oldId) {
         partOnevesselPartIDs->VesselID = newId;
@@ -1200,14 +1201,14 @@ void TestPartDocking::OnVesselPersistentIdChanged(uint32_t oldId, uint32_t newId
         log::Info("[TestPartDocking]: Node (" + node()->id().ToString() + ") Part Two VesselId changed from " + std::to_string(oldId) + " to " + std::to_string(newId));
     }
 }
-// TestPartDocking.cs:@OnVesselDocking
+// TestPartDocking.cs:221
 void TestPartDocking::OnVesselDocking(uint32_t oldId, uint32_t) {
     if ((partOnevesselPartIDs->VesselID == oldId && partOnevesselPartIDs->partID == 0) || (partTwovesselPartIDs->VesselID == oldId && partTwovesselPartIDs->partID == 0))
         setPlayerCreatedRootParts();
 }
-// TestPartDocking.cs:@GetInfo
+// TestPartDocking.cs:229
 std::string TestPartDocking::GetInfo() { return Tag("#autoLOC_8002016"); }
-// TestPartDocking.cs:@GetNodeBodyParameterString
+// TestPartDocking.cs:234
 std::string TestPartDocking::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (node() != nullptr) node()->UpdateInfoOnRefresh = true;
     auto partText = [&](VesselPartIDPair& ids, const char* partTag, bool useOneName) {
@@ -1238,7 +1239,7 @@ std::string TestPartDocking::GetNodeBodyParameterString(const Editor::BaseAPFiel
     }
     return TestModule::GetNodeBodyParameterString(field);
 }
-// TestPartDocking.cs:@RunValidation
+// TestPartDocking.cs:309
 void TestPartDocking::RunValidation(Editor::MissionEditorValidator* validator) {
     if (partOnevesselPartIDs != nullptr && partTwovesselPartIDs != nullptr) {
         VesselSituation* vesselSituationByVesselID = node()->mission->GetVesselSituationByVesselID(partOnevesselPartIDs->VesselID);
@@ -1255,7 +1256,7 @@ void TestPartDocking::RunValidation(Editor::MissionEditorValidator* validator) {
     if (partOnevesselPartIDs != nullptr) partOnevesselPartIDs->ValidatePartAgainstCraft(node(), validator);
     if (partTwovesselPartIDs != nullptr) partTwovesselPartIDs->ValidatePartAgainstCraft(node(), validator);
 }
-// TestPartDocking.cs:@Save
+// TestPartDocking.cs:346
 void TestPartDocking::Save(ConfigNode& node) const {
     TestModule::Save(node);
     auto configNode = std::make_shared<ConfigNode>("PARTONE");
@@ -1266,7 +1267,7 @@ void TestPartDocking::Save(ConfigNode& node) const {
     node.AddNode(configNode2);
     node.AddValue("dockedUndocked", dockedUndocked);
 }
-// TestPartDocking.cs:@Load
+// TestPartDocking.cs:358
 void TestPartDocking::Load(const ConfigNode& node) {
     TestModule::Load(node);
     ConfigNode* configNode = nullptr;
