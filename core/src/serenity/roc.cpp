@@ -565,7 +565,7 @@ void PQSROCControl::OnSetup() {
 }
 
 // PQSROCControl.cs:69
-void PQSROCControl::OnQuadPreBuild(const PQ& quad) {
+void PQSROCControl::OnQuadPreBuild(PQ& quad) {
     rocsActive = quad.subdivision >= rocMinSubdev && ROCManager::Instance != nullptr && celestialBody != nullptr;
 }
 
@@ -573,7 +573,7 @@ void PQSROCControl::OnQuadPreBuild(const PQ& quad) {
 void PQSROCControl::OnVertexBuild(PQSVertexBuildData& data) { allowROCScatter = data.allowScatter; }
 
 // PQSROCControl.cs:86
-void PQSROCControl::OnQuadBuilt(const PQ& pq) {
+void PQSROCControl::OnQuadBuilt(PQ& pq) {
     int num = 0;
     if (!rocsActive || rocCount <= 0 || !allowROCScatter) return;
     num++;
@@ -618,7 +618,7 @@ void PQSROCControl::OnSphereReset() {
 }
 
 // PQSROCControl.cs:149
-void PQSROCControl::OnQuadDestroy(const PQ& pq) {
+void PQSROCControl::OnQuadDestroy(PQ& pq) {
     RocQuad* quad = quadInfo ? quadInfo(pq) : nullptr;
     if (quad == nullptr) return;
     const int key = StringExtensions::GetHashCode_Net35(quad->name);

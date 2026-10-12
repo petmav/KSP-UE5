@@ -73,6 +73,36 @@ int main(int argc, char** argv) {
             kspcore_confignode_release(phys);
         }
     }
+    /* WP-12a terrain quads: stock Kerbin at the KSC pad (argv[2] = core/data/terrain) */
+    if (argc > 2) {
+        kspcore_pqs* pqs = kspcore_pqs_create_stock("Kerbin", argv[2], 2);
+        CHECK(pqs != NULL);
+        if (pqs) {
+            /* lat -0.0972, lon -74.5577 (the KSC pad), 70 m above the 600 km radius */
+            const double ksc[3] = {159779.09595781608, -1017.9942836712727, -578406.0935731413};
+            kspcore_pqs_set_target(pqs, ksc);
+            int n = kspcore_pqs_update(pqs, 0);
+            n = kspcore_pqs_update(pqs, 1);
+            CHECK(n > 100);
+            CHECK(kspcore_pqs_is_active(pqs) == 1);
+            CHECK(kspcore_pqs_radius(pqs) == 600000.0);
+            {
+                kspcore_pqs_quad q;
+                int colliders = 0, i;
+                for (i = 0; i < n; i++) {
+                    CHECK(kspcore_pqs_get_quad(pqs, i, &q) == 1);
+                    colliders += q.collider;
+                }
+                CHECK(colliders > 0);
+                CHECK(q.vertex_count == 225 && q.index_count == 1176);
+                CHECK(q.positions != NULL && q.normals != NULL && q.indices != NULL && q.colors != NULL);
+                CHECK(q.origin[0] * q.origin[0] + q.origin[1] * q.origin[1] + q.origin[2] * q.origin[2] > 5.9e5 * 5.9e5);
+                CHECK(kspcore_pqs_get_quad(pqs, n, &q) == 0);
+            }
+            kspcore_pqs_destroy(pqs);
+        }
+        CHECK(kspcore_pqs_create_stock("NoSuchBody", argv[2], 0) == NULL);
+    }
     /* errors do not escape */
     CHECK(kspcore_confignode_load("Z:/does/not/exist.cfg") == NULL);
     CHECK(strlen(kspcore_last_error()) > 0);

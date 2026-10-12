@@ -123,8 +123,8 @@ public:
     std::string bodyName;
     double lat = 0.0, lon = 0.0, alt = 0.0;
     void OnSetup() override;
-    void OnQuadPreBuild(const PQ& quad) override;
-    void OnQuadBuilt(const PQ& quad) override;
+    void OnQuadPreBuild(PQ& quad) override;
+    void OnQuadBuilt(PQ& quad) override;
     void OnVertexBuildHeight(PQSVertexBuildData& data) override;
     bool AffectsHeight() const override { return true; }
     void VisitSerialized(const SerializedFieldVisitor& v) const override;
@@ -143,8 +143,8 @@ public:
     double flattenTo = 0.0, smoothStart = 0.0, smoothEnd = 0.0;
     bool DEBUG_showColors = false;
     void OnSetup() override;
-    void OnQuadPreBuild(const PQ& quad) override;
-    void OnQuadBuilt(const PQ& quad) override;
+    void OnQuadPreBuild(PQ& quad) override;
+    void OnQuadBuilt(PQ& quad) override;
     void OnVertexBuildHeight(PQSVertexBuildData& data) override;
     bool AffectsHeight() const override { return true; }
     void VisitSerialized(const SerializedFieldVisitor& v) const override;
@@ -180,7 +180,7 @@ public:
     float smoothHeight = 0.0f, smoothColor = 0.0f;
     bool removeScatter = false, DEBUG_HighlightInclusion = false;
 
-    void OnQuadBuilt(const PQ& quad) override;  // MapDecal.cs:273 / MapDecalTangent.cs:271
+    void OnQuadBuilt(PQ& quad) override;  // MapDecal.cs:273 / MapDecalTangent.cs:271
     bool AffectsHeight() const override { return true; }
     static double Lerp(double v2, double v1, double dt);
 
@@ -206,7 +206,7 @@ class PQSMod_MapDecal : public PQSMod_MapDecalBase {
 public:
     float absoluteOffset = 0.0f;
     void OnSetup() override;
-    void OnQuadPreBuild(const PQ& quad) override;
+    void OnQuadPreBuild(PQ& quad) override;
     void OnVertexBuildHeight(PQSVertexBuildData& data) override;
     void VisitSerialized(const SerializedFieldVisitor& v) const override;
 };
@@ -215,7 +215,7 @@ class PQSMod_MapDecalTangent : public PQSMod_MapDecalBase {
 public:
     double absoluteOffset = 0.0;
     void OnSetup() override;
-    void OnQuadPreBuild(const PQ& quad) override;
+    void OnQuadPreBuild(PQ& quad) override;
     void OnVertexBuildHeight(PQSVertexBuildData& data) override;
     void VisitSerialized(const SerializedFieldVisitor& v) const override;
 };

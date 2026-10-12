@@ -70,13 +70,13 @@ void PQSMod_FlattenArea::OnSetup() {
 }
 
 // PQSMod_FlattenArea.cs:89
-void PQSMod_FlattenArea::OnQuadPreBuild(const PQ& quad) {
+void PQSMod_FlattenArea::OnQuadPreBuild(PQ& quad) {
     testAngle = dotnet::Math::Acos(Vector3d::Dot(quad.positionPlanetRelative, posNorm));
     quadActive = testAngle < angleQuadInclusion;
 }
 
 // PQSMod_FlattenArea.cs:102
-void PQSMod_FlattenArea::OnQuadBuilt(const PQ&) { quadActive = true; }
+void PQSMod_FlattenArea::OnQuadBuilt(PQ&) { quadActive = true; }
 
 // PQSMod_FlattenArea.cs:107
 void PQSMod_FlattenArea::OnVertexBuildHeight(PQSVertexBuildData& vbData) {
@@ -134,13 +134,13 @@ void PQSMod_FlattenAreaTangential::OnSetup() {
 }
 
 // PQSMod_FlattenAreaTangential.cs:63
-void PQSMod_FlattenAreaTangential::OnQuadPreBuild(const PQ& quad) {
+void PQSMod_FlattenAreaTangential::OnQuadPreBuild(PQ& quad) {
     testAngle = dotnet::Math::Acos(Vector3d::Dot(quad.positionPlanetRelative, posNorm));
     quadActive = testAngle < angleQuadInclusion;
 }
 
 // PQSMod_FlattenAreaTangential.cs:76
-void PQSMod_FlattenAreaTangential::OnQuadBuilt(const PQ&) { quadActive = true; }
+void PQSMod_FlattenAreaTangential::OnQuadBuilt(PQ&) { quadActive = true; }
 
 // PQSMod_FlattenAreaTangential.cs:81 (sic: no overrideQuadBuildCheck test; inactive until a quad was built)
 void PQSMod_FlattenAreaTangential::OnVertexBuildHeight(PQSVertexBuildData& vbData) {
@@ -230,7 +230,7 @@ float PQSMod_MapDecalBase::GetHeightSmoothing(float u_, float v_) {
 }
 
 // PQSMod_MapDecal.cs:273 / PQSMod_MapDecalTangent.cs:271
-void PQSMod_MapDecalBase::OnQuadBuilt(const PQ&) {
+void PQSMod_MapDecalBase::OnQuadBuilt(PQ&) {
     quadActive = true;
     buildHeight = false;
 }
@@ -261,7 +261,7 @@ void PQSMod_MapDecalBase::VisitCommon(const SerializedFieldVisitor& vis) const {
 void PQSMod_MapDecal::OnSetup() { SetupCommon(); }
 
 // PQSMod_MapDecal.cs:100
-void PQSMod_MapDecal::OnQuadPreBuild(const PQ& quad) {
+void PQSMod_MapDecal::OnQuadPreBuild(PQ& quad) {
     quadAngle = dotnet::Math::Acos(Vector3d::Dot(quad.positionPlanetRelative, posNorm));
     quadActive = quadAngle < inclusionAngle;
     buildHeight = true;
@@ -316,7 +316,7 @@ void PQSMod_MapDecal::VisitSerialized(const SerializedFieldVisitor& vis) const {
 void PQSMod_MapDecalTangent::OnSetup() { SetupCommon(); }
 
 // PQSMod_MapDecalTangent.cs:104 (<= where MapDecal has <)
-void PQSMod_MapDecalTangent::OnQuadPreBuild(const PQ& quad) {
+void PQSMod_MapDecalTangent::OnQuadPreBuild(PQ& quad) {
     quadAngle = dotnet::Math::Acos(Vector3d::Dot(quad.positionPlanetRelative, posNorm));
     quadActive = quadAngle <= inclusionAngle;
     buildHeight = true;
