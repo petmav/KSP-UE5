@@ -434,3 +434,212 @@ TEST_CASE("WP-19b SOI change in physics: the dominant body follows the active ve
     CHECK(errKerbin < 1e-3);
     CHECK(errMun < 1e-3);
 }
+
+namespace {
+
+struct FoldRun {
+    double trueYDrift = 0;    // max |true y - 5| while the frame drifts (the object is at rest in the true frame)
+    double physMinY = 1e9;    // lowest physics-frame y during the drift (it passes the floor's physics position)
+    bool staticOffWhileDrifting = true;
+    size_t folds = 0;
+    double restY = 0, restSpeed = 0;
+};
+
+// A free body at rest 5 m above a static floor; Krakensbane's frame velocity (50 m/s up) makes it move DOWN in the physics frame while it
+// stays put in the true frame; then the frame velocity goes back to zero (Krakensbane.Zero) and gravity pulls it onto the floor.
+FoldRun RunFold(bool fold) {
+    FoldRun r;
+    World w;
+    PhysicsBubbleOptions opt;
+    opt.foldFrameOffset = fold;
+    BubbleScene s(w, opt);
+    FlightGlobals::ready = true;  // no active vessel: Krakensbane.FixedUpdate returns, the host drives the frame velocity below
+    PhysicsBubble& b = s.bubble;
+    const Vector3d floorWorld = b.FrameOriginWorld() + Vector3d(0.0, -0.5, 0.0);
+    BodyDesc floor;
+    floor.motion = MotionType::Static;
+    floor.shape = ShapeDesc::Box(Vector3f(50.0f, 0.5f, 50.0f));
+    floor.position = b.StaticPhysicsFromWorld(floorWorld);  // static geometry is in the body frame (no FrameOffset)
+    s.world.CreateBody(floor);
+    BodyDesc box;
+    box.shape = ShapeDesc::Box(Vector3f(0.5f, 0.5f, 0.5f));
+    box.mass = 1.0f;
+    physicalObject& o = b.CreatePhysicalObject(box, b.FrameOriginWorld() + Vector3d(0.0, 5.0, 0.0), Vector3d());
+    Krakensbane& kb = b.KrakensbaneInstance();
+    kb.AddExcess(Vector3d(0.0, 50.0, 0.0));  // Krakensbane.cs:121: the physical object gets -50 m/s, FrameVel +50 m/s
+    for (int k = 0; k < 25; ++k) {
+        FloatingOrigin::SetOutOfFrameOffset(kb.FrameVel * static_cast<double>(Time::fixedDeltaTime));  // Krakensbane.cs:83
+        b.FrameUpdate();
+        r.staticOffWhileDrifting = r.staticOffWhileDrifting && !s.world.StaticCollisions();
+        b.PhysicsStep();
+        r.trueYDrift = std::max(r.trueYDrift, std::fabs((b.PhysicalObjectPosition(o) - b.FrameOriginWorld()).y - 5.0));
+        r.physMinY = std::min(r.physMinY, s.world.GetPosition(o.rb).y);
+    }
+    kb.Zero();  // Krakensbane.cs:150: the frame velocity goes back into the object
+    for (int k = 0; k < 250; ++k) {
+        b.FrameUpdate();  // the first one folds the drift into the dynamic bodies (with the option)
+        s.world.AddForce(o.rb, Vector3d(0.0, -9.81, 0.0));
+        b.PhysicsStep();
+    }
+    r.folds = b.FoldCount();
+    r.restY = (b.PhysicalObjectPosition(o) - b.FrameOriginWorld()).y;
+    r.restSpeed = s.world.GetLinearVelocity(o.rb).magnitude();
+    return r;
+}
+
+}  // namespace
+
+// The static geometry (terrain quads, KSC) lives in the body frame, the dynamic bodies in Krakensbane's Galilean frame (FrameOffset):
+// while the two differ no contact between them is real (KSP's SafeToEngage keeps every loaded vessel >= 150-200 m above the terrain while
+// Krakensbane is engaged), so the bubble gates them; when the frame velocity is zero again the drift is folded into the dynamic bodies.
+TEST_CASE("WP-19b Krakensbane frame drift and static geometry: no false contact while FrameOffset != 0, folded back at disengagement, then the floor holds") {
+    if (!wp20b::GameAvailable()) return;
+    const FoldRun with = RunFold(true);
+    const FoldRun without = RunFold(false);
+    MESSAGE("with the gate: true y kept within " << with.trueYDrift << " m while the physics y went down to " << with.physMinY << " m; folds "
+                                                 << with.folds << "; rests at y " << with.restY << " m (" << with.restSpeed
+                                                 << " m/s). Without: true y disturbed by " << without.trueYDrift << " m");
+    CHECK(with.staticOffWhileDrifting);
+    CHECK(with.physMinY < -5.0);        // the body passed the floor's physics position ...
+    CHECK(with.trueYDrift < 1e-3);      // ... without touching it: it stayed at rest in the true frame
+    CHECK(with.folds == 1);
+    CHECK(std::fabs(with.restY - 0.5) < 0.05);  // on the floor where the floor really is
+    CHECK(with.restSpeed < 0.05);
+    CHECK(without.trueYDrift > 1.0);    // without the gate the stale floor hits it
+}
+
+// Re-centring the physics origin (PHYSICS-SPIKE.md R3) moves every Jolt body, static ones included, by the same double vector and the
+// anchor the other way: no world position changes, the coast continues as without it.
+TEST_CASE("WP-19b physics-origin rebase: every body moved, the world unchanged, the trajectory as without it") {
+    if (!wp20b::GameAvailable()) return;
+    auto run = [](bool rebase, double& staticWorldErr) {
+        std::vector<Vector3d> rel;
+        World w;
+        PhysicsBubbleOptions opt;
+        opt.physicsOriginRebaseDistance = 0.0;  // only the explicit rebase below
+        BubbleScene s(w, opt);
+        auto v = w.Craft("PhysProf-S");
+        CelestialBody& kerbin = w.Kerbin();
+        Vector3d p0, v0;
+        CircularStateAt(kerbin, kerbin.Radius + 120000.0, Vector3d(0.6, 0.48, -0.64), Vector3d(0.3, -0.9, 0.2), p0, v0);
+        PlaceOnOrbit(*v, kerbin, p0, v0, true);
+        s.Start(*v);
+        BodyDesc slab;  // a static body far below (a terrain quad's stand-in)
+        slab.motion = MotionType::Static;
+        slab.shape = ShapeDesc::Box(Vector3f(5.0f, 0.5f, 5.0f));
+        const Vector3d slabRel = p0 * 0.9;
+        slab.position = s.bubble.StaticPhysicsFromWorld(kerbin.position + slabRel);
+        const BodyId slabId = s.world.CreateBody(slab);
+        for (int k = 0; k < 300; ++k) {
+            if (rebase && k == 150) s.bubble.RebasePhysicsOrigin(Vector3d(123456.5, -87654.25, 432101.0));
+            s.Tick();
+            rel.push_back(v->CoMD - kerbin.position);
+        }
+        staticWorldErr = ((s.bubble.FrameOriginWorld() + s.world.GetPosition(slabId)) - (kerbin.position + slabRel)).magnitude();
+        CHECK(s.bubble.PhysicsRebaseCount() == (rebase ? 1u : 0u));
+        return rel;
+    };
+    double e1 = 0, e2 = 0;
+    const std::vector<Vector3d> a = run(false, e1), b = run(true, e2);
+    double maxDiff = 0;
+    for (size_t i = 0; i < a.size(); ++i) maxDiff = std::max(maxDiff, (a[i] - b[i]).magnitude());
+    MESSAGE("trajectories with / without a physics-origin rebase differ by " << maxDiff << " m; the static body's world position after it: "
+                                                                              << e2 << " m off");
+    CHECK(maxDiff < 1e-5);
+    CHECK(e1 < 1e-6);
+    CHECK(e2 < 1e-6);
+}
+
+// A binding leaves the bubble with its vessel: Vessel.Unload (the parts are destroyed before GoOnRails), Die of a vessel that is not the
+// active one (FlightGlobals.RemoveVessel), the Vessel object's destruction. Uninstall restores every seam.
+TEST_CASE("WP-19b lifecycle: bindings dropped on unload, death and destruction; Uninstall restores the seams") {
+    if (!wp20b::GameAvailable()) return;
+    World w;
+    BubbleScene s(w);
+    auto a = w.Craft("PhysProf-S");
+    auto b = w.CraftHead("PhysProf-S", 3);
+    auto c = w.CraftHead("PhysProf-S", 3);
+    auto d = w.CraftHead("PhysProf-S", 3);
+    CelestialBody& kerbin = w.Kerbin();
+    Vector3d p0, v0;
+    CircularStateAt(kerbin, kerbin.Radius + 120000.0, Vector3d(0.6, 0.48, -0.64), Vector3d(0.3, -0.9, 0.2), p0, v0);
+    const Vector3d along = v0.normalized();
+    PlaceOnOrbit(*a, kerbin, p0, v0, true);
+    PlaceOnOrbit(*b, kerbin, p0 + along * 60.0, v0, true);
+    PlaceOnOrbit(*c, kerbin, p0 + along * 120.0, v0, true);
+    PlaceOnOrbit(*d, kerbin, p0 + along * 180.0, v0, true);
+    s.Start(*a);
+    for (int k = 0; k < 3; ++k) s.Tick();  // OrbitPhysicsManager.LateUpdate unpacks all four (within 200 m)
+    REQUIRE(s.bubble.Host().Count() == 4);
+    const size_t bodies = s.world.BodyCount();
+    b->Unload();
+    CHECK(s.bubble.Host().Find(*b) == nullptr);
+    CHECK(s.bubble.Host().Count() == 3);
+    c->Die();
+    CHECK(s.bubble.Host().Find(*c) == nullptr);
+    d.reset();
+    CHECK(s.bubble.Host().Count() == 1);
+    CHECK(s.world.BodyCount() < bodies);
+    for (int k = 0; k < 5; ++k) s.Tick();  // nothing left points at the freed parts; B (unloaded, 60 m away) loads and unpacks again
+    CHECK(b->loaded);
+    CHECK_FALSE(b->packed);
+    CHECK(s.bubble.Host().Find(*b) != nullptr);
+    CHECK(s.bubble.Host().Count() == 2);
+    s.bubble.Uninstall();
+    CHECK(Krakensbane::Instance() == nullptr);
+    CHECK(FloatingOrigin::Instance() == nullptr);
+    CHECK_FALSE(static_cast<bool>(Vessel::env.readPhysicsState));
+    CHECK_FALSE(static_cast<bool>(Vessel::env.setWorldVelocity));
+    CHECK_FALSE(static_cast<bool>(OrbitPhysicsManager::env.setRotatingFrame));
+    CHECK_FALSE(static_cast<bool>(FlightScene::hooks.afterFlightIntegrator));
+}
+
+// physicalObject (physicalObject.cs): registered with FlightGlobals, its rigid body moved by Krakensbane (float VelocityChange), its
+// velocity re-expressed at the frame switch, and the Update rule (high warp, maxDistance from the active vessel).
+TEST_CASE("WP-19b physicalObject: registry, Krakensbane velocity change, frame switch, self-destruction rule") {
+    if (!wp20b::GameAvailable()) return;
+    World w;
+    BubbleScene s(w);
+    auto v = w.Craft("PhysProf-S");
+    CelestialBody& kerbin = w.Kerbin();
+    Vector3d p0, v0;
+    CircularStateAt(kerbin, kerbin.Radius + 120000.0, Vector3d(0.6, 0.48, -0.64), Vector3d(0.3, -0.9, 0.2), p0, v0);
+    PlaceOnOrbit(*v, kerbin, p0, v0, true);
+    s.Start(*v);
+    s.Tick();
+    BodyDesc box;
+    box.shape = ShapeDesc::Box(Vector3f(0.3f, 0.3f, 0.3f));
+    box.mass = 0.05f;
+    const Vector3d objWorld = Vector3d(v->vesselTransform.position) + Vector3d(0.0, 0.0, 30.0);
+    const Vector3d trueVel = v0 + Vector3d(1.0, 2.0, -3.0);
+    physicalObject& o = s.bubble.CreatePhysicalObject(box, objWorld, trueVel);
+    REQUIRE(FlightGlobals::physicalObjects.size() == 1);
+    CHECK(FlightGlobals::physicalObjects[0] == &o);
+    CHECK((s.bubble.PhysicalObjectPosition(o) - objWorld).magnitude() < 1e-6);
+    // true velocity = physics velocity + frame velocity (Krakensbane is engaged: the vessel orbits at 2.2 km/s)
+    CHECK((s.world.GetLinearVelocity(o.rb) + Krakensbane::GetFrameVelocity() - trueVel).magnitude() < 1e-3);
+    for (int k = 0; k < 20; ++k) s.Tick();
+    // every Krakensbane re-centring moved the object with the vessels: its true velocity only changed by gravity (the bubble's
+    // FlightIntegrator stand-in applies IntegratePhysicalObjects' gravity at the active vessel's CoM to it)
+    const Vector3d tv = s.world.GetLinearVelocity(o.rb) + Krakensbane::GetFrameVelocity();
+    CHECK((tv - trueVel).magnitude() < 21 * 0.02 * 7.5);
+    // the frame switch moves it like the vessels (OrbitPhysicsManager.cs:286-300)
+    const Vector3d before = s.world.GetLinearVelocity(o.rb);
+    const Vector3d rFrm = kerbin.getRFrmVel(Vector3d(s.bubble.PhysicalObjectPosition(o).ToVector3f()));
+    s.bubble.SetRotatingFrame(*s.opm, true);
+    CHECK((s.world.GetLinearVelocity(o.rb) - (before - rFrm)).magnitude() < 1e-3);
+    s.bubble.SetRotatingFrame(*s.opm, false);
+    CHECK((s.world.GetLinearVelocity(o.rb) - before).magnitude() < 1e-3);
+    // physicalObject.Update: 30 m away is fine, 1 km away it destroys itself; and at high warp
+    s.bubble.Update();
+    CHECK(s.bubble.PhysicalObjectCount() == 1);
+    CHECK(o.UpdateWantsDestroy(Vector3f(0.0f, 0.0f, 1001.0f), true, Vector3f()));
+    CHECK_FALSE(o.UpdateWantsDestroy(Vector3f(0.0f, 0.0f, 999.0f), true, Vector3f()));
+    s.tw.curr_rate = 5.0f;  // HIGH mode above 1x
+    CHECK(o.UpdateWantsDestroy(Vector3f(), true, Vector3f()));
+    s.tw.curr_rate = 1.0f;
+    s.world.SetPosition(o.rb, s.world.GetPosition(o.rb) + Vector3d(0.0, 2000.0, 0.0));
+    s.bubble.Update();
+    CHECK(s.bubble.PhysicalObjectCount() == 0);
+    CHECK(FlightGlobals::physicalObjects.empty());
+}
