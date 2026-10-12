@@ -362,3 +362,21 @@ def ladder_family():
         out["position"].append(dict(rot=rot, lpos=b3(lpos), pivot=b3(pivot), pos=b3(pos), dt=bits(dt), hasRb=has_rb, rbv=b3(rbv), rba=b3(rba), rbc=b3(rbc),
                                     com=b3(com), vtgt=b3(vtgt), ladderPos=b3(ladder_pos), newPos=b3(new_pos)))
     return out
+
+
+def ragdoll_family():
+    """KerbalRagdollNode.updateVelocity (KerbalRagdollNode.cs:18): vector = go - root; velocity = (vector - lastPos) * fdtRecip + rootVel
+    (Vector3 ops store float per component; the + with Vector3d is in double and the result narrows to Vector3)"""
+    rng = LCG(32777)
+    cases = []
+    for _ in range(60):
+        go = F3((rng.uni(-5, 5), rng.uni(-5, 5), rng.uni(-5, 5)))
+        last = F3((rng.uni(-5, 5), rng.uni(-5, 5), rng.uni(-5, 5)))
+        root = F3((rng.uni(-5, 5), rng.uni(-5, 5), rng.uni(-5, 5)))
+        rv = tuple(rng.uni(-50, 50) for _ in range(3))
+        fdt = f32(rng.pick([50.0, 1.0 / 0.02, 60.0, 100.0, 33.333]))
+        vector = vsub(go, root)
+        diff = vmul(vsub(vector, last), fdt)
+        vel = tuple(f32(diff[i] + rv[i]) for i in range(3))
+        cases.append(dict(go=b3(go), last=b3(last), root=b3(root), rv=list(rv), fdt=bits(fdt), vel=b3(vel), lastOut=b3(vector)))
+    return cases

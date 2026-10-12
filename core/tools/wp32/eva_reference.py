@@ -66,6 +66,7 @@ def main():
     out["clamber"] = misc.clamber_family()
     out["seatcam"] = misc.seatcam_family()
     out["rules"] = misc.rules_family()
+    out["ragdoll"] = misc.ragdoll_family()
     out["ladder"] = misc.ladder_family()
     out["scenarios"] = scen.all_scenarios()
     json.dump(out, sys.stdout, indent=None, separators=(",", ":"))

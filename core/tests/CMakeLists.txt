@@ -71,6 +71,7 @@ add_executable(kspcore_tests
     test_eva_conditions.cpp
     test_eva_misc.cpp
     test_eva_behaviour.cpp
+    test_eva_behaviour2.cpp
     test_input.cpp
     test_input_flight.cpp
     test_input_devices.cpp
