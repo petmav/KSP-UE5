@@ -1,5 +1,6 @@
 // WP-16: Part.cs tree operations that split and join vessels (decouple, Couple, Undock, disconnect, SetVessel), the staging block of
-// Part.Start, CheckBodyLiftAttachment, and DockedVesselInfo.cs. Every function cites Part.cs:<line> (decompiled/KSP-Decompiled/
+// Part.Start, CheckBodyLiftAttachment, and DockedVesselInfo.cs; WP-20c added OnPartJointBreak and the data side of Die (the physics host,
+// ksp/physics/vessel_physics.hpp, reacts to their GameEvents). Every function cites Part.cs:<line> (decompiled/KSP-Decompiled/
 // Assembly-CSharp/) unless it names another file. Not ported (physics / render / FX packages): attachJoint.DestroyJoint /
 // CreateAttachJoint / ResetJoints (CycleAutoStrut), SetCollisionIgnores, CreateRendererLists, ReleaseAutoStruts, the map object.
 #include <algorithm>
@@ -13,7 +14,9 @@
 #include "ksp/modules/part_module.hpp"
 #include "ksp/parts/docked_vessel_info.hpp"
 #include "ksp/parts/part.hpp"
+#include "ksp/save/game.hpp"
 #include "ksp/save/save_environment.hpp"
+#include "ksp/space_center/high_logic.hpp"
 #include "ksp/staging/stage_manager.hpp"
 #include "ksp/vessel/vessel.hpp"
 
@@ -143,6 +146,68 @@ Vessel* Part::decouple(float breakForce) {
     oldVessel->CheckAirstreamShields();
     vessel2->CheckAirstreamShields();
     return vessel2;
+}
+
+// Part.cs:3159 (WP-20c: called by the physics host for a broken attach joint, PartJoint.cs:408)
+void Part::OnPartJointBreak(float breakForce) {
+    if (vessel == nullptr) throw Nre();
+    if (vessel->rootPart == this) return;
+    if (breakForce > 0.0f && parent != nullptr) {
+        const std::string title = partInfo != nullptr ? partInfo->title : std::string();
+        const std::string parentTitle = parent->partInfo != nullptr ? parent->partInfo->title : std::string();
+        EventReport report(FlightEvents::JOINTBREAK, this, title, parentTitle);
+        GE::onJointBreak.Fire(&report);
+    }
+    decouple(breakForce);
+}
+
+// Part.cs:4409 (WP-20c; the data side, see part.hpp)
+void Part::Die() {
+    if (state_ == PartStates::DEAD) return;
+    GE::onPartWillDie.Fire(this);
+    const std::vector<Part*> array(children);  // children.ToArray()
+    for (size_t i = 0, num = array.size(); i < num; i++) {
+        Part* part = array[i];
+        if (part->fields.physicalSignificance == static_cast<int32_t>(Part_PhysicalSignificance::FULL)) {
+            if (part->State() != PartStates::DEAD) part->decouple();
+        } else {
+            part->Die();
+        }
+    }
+    disconnect();
+    GE::onVesselPartCountChanged.Fire(vessel);
+    if (FindAttachNodeByPart(parent) != nullptr) FindAttachNodeByPart(parent)->attachedPart = nullptr;
+    if (parent != nullptr && parent->FindAttachNodeByPart(this) != nullptr) parent->FindAttachNodeByPart(this)->attachedPart = nullptr;
+    vessel->checkLanded();
+    vessel->FallBackReferenceTransform();
+    setParent();
+    CleanSymmetryReferences();
+    deactivate();
+    attached_ = false;
+    OnJustAboutToDie();
+    // BroadcastMessage("OnPartDie") (KerbalEVA.OnPartDie): the engine's components
+    GE::onVesselWasModified.Fire(vessel);
+    if (vessel->rootPart == this) vessel->Die();
+    // FlightCamera.ClearTarget, gameObject.SetActive(false), onPartExplode(), stackIcon.ClearInfoBoxes: engine / UI
+    RemoveStageIcon();  // stackIcon.RemoveIcon()
+    GE::onPartDie.Fire(this);
+    // FULL: CollisionEnhancer / terrainCollider / PartBuoyancy destroyed, attachJoint.DestroyJoint(): the physics host's (onPartDie)
+    if (!protoModuleCrew.empty()) {
+        Game* game = HighLogic::CurrentGame();
+        for (size_t j = 0, count = protoModuleCrew.size(); j < count; j++) {
+            ProtoCrewMember& protoCrewMember = *protoModuleCrew[j];
+            protoCrewMember.UnregisterExperienceTraits(*this);
+            protoCrewMember.Die();
+            if (game == nullptr || game->Parameters == nullptr) throw Nre();
+            if (game->Parameters->Difficulty.MissingCrewsRespawn) {
+                if (fields.crewRespawnTime > 0.0) protoCrewMember.StartRespawnPeriod(fields.crewRespawnTime);
+                else if (fields.crewRespawnTime == 0.0) protoCrewMember.StartRespawnPeriod();
+            }
+        }
+        Vessel::CrewWasModified(vessel);
+    }
+    // DespawnIVA(), IOUtils.RemoveFlightData(vessel.id), Object.Destroy(gameObject) (not the root): engine
+    state_ = PartStates::DEAD;
 }
 
 // Part.cs:3171

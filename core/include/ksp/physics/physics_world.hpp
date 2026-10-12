@@ -14,6 +14,7 @@
 //     offset only (ksp/physics/krakensbane.hpp): velocities stored here are physics-frame velocities, i.e. the true velocity
 //     minus Krakensbane::GetFrameVelocity().
 //
+// WP-20c added the static-contact record of the last step (StaticContacts) for the ground supports of the load solve.
 // Not here (documented seams): vessel rigid bodies, clusters, joints and structural loads (WP-20b / WP-20c), ray / overlap
 // queries and the static mesh interface AddStaticMesh(id, centre, vertices, triangles) of WP-12b, the contact listener that
 // feeds Part.HandleCollision (WP-20d), EVA kerbals and wheels (WP-20e). CollisionEnhancer.cs (anti-tunnelling) is replaced by
@@ -197,6 +198,21 @@ public:
     // Total impulse of the last step on a fixed constraint: position (linear, kN s) and rotation (angular, kN m s) parts,
     // applied to body b (and the opposite to a). Zero for unknown ids. (The input of WP-20c's load solve between clusters.)
     void GetConstraintImpulse(ConstraintId id, Vector3d& linear, Vector3d& angular) const;
+
+    // ---- WP-20c: contacts with static geometry (the ground supports of the structural load solve) ----------------------------
+    // With tracking on, a Jolt contact listener records every (dynamic body, sub-shape user data) that touched a Static-layer body
+    // during the last Step (contacts added or persisted); StaticContacts() lists them sorted by (body id, user data), without
+    // duplicates: the same set whatever the thread count. Off by default (one mutex per contact callback). The full contact events
+    // (Part.OnCollisionEnter / HandleCollision) are WP-20e's.
+    struct StaticContact {
+        BodyId body = kInvalidBody;
+        uint32_t subShapeUserData = 0;
+        bool operator==(const StaticContact& o) const { return body == o.body && subShapeUserData == o.subShapeUserData; }
+        bool operator<(const StaticContact& o) const { return body != o.body ? body < o.body : subShapeUserData < o.subShapeUserData; }
+    };
+    void SetStaticContactTracking(bool on);
+    bool StaticContactTracking() const;
+    const std::vector<StaticContact>& StaticContacts() const;
 
     // ---- determinism ----------------------------------------------------------------------------------------------------
     // FNV-1a 64 over the raw bits of every body's position, rotation and both velocities, in creation order.

@@ -24,6 +24,7 @@
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
+#include <Jolt/Physics/Collision/ContactListener.h>
 #include <Jolt/Physics/Constraints/FixedConstraint.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/RegisterTypes.h>
@@ -82,6 +83,32 @@ public:
     bool CanCollide(const JPH::CollisionGroup& a, const JPH::CollisionGroup& b) const override {
         if (a.GetGroupID() != b.GetGroupID()) return true;
         return a.GetSubGroupID() == 1 && b.GetSubGroupID() == 1;
+    }
+};
+
+// WP-20c: records which sub-shapes of dynamic bodies touch static geometry (the spike's SupportListener,
+// core/spikes/jolt/src/reduced.cpp). Jolt calls it from its worker threads: a mutex guards the record list; the order of the list is
+// made deterministic by sorting after the step.
+class StaticContactListener final : public JPH::ContactListener {
+public:
+    std::mutex mutex;
+    std::vector<PhysicsWorld::StaticContact> records;
+    void OnContactAdded(const JPH::Body& b1, const JPH::Body& b2, const JPH::ContactManifold& m, JPH::ContactSettings&) override { Handle(b1, b2, m); }
+    void OnContactPersisted(const JPH::Body& b1, const JPH::Body& b2, const JPH::ContactManifold& m, JPH::ContactSettings&) override {
+        Handle(b1, b2, m);
+    }
+
+private:
+    void Record(const JPH::Body& b, const JPH::SubShapeID& id) {
+        PhysicsWorld::StaticContact c;
+        c.body = b.GetID().GetIndexAndSequenceNumber();
+        c.subShapeUserData = static_cast<uint32_t>(b.GetShape()->GetSubShapeUserData(id));
+        std::lock_guard<std::mutex> lock(mutex);
+        records.push_back(c);
+    }
+    void Handle(const JPH::Body& b1, const JPH::Body& b2, const JPH::ContactManifold& m) {
+        if (b1.IsStatic() && !b2.IsStatic()) Record(b2, m.mSubShapeID2);
+        else if (b2.IsStatic() && !b1.IsStatic()) Record(b1, m.mSubShapeID1);
     }
 };
 
@@ -198,6 +225,9 @@ struct PhysicsWorld::Impl {
     };
     std::vector<ConstraintSlot> constraints;  // index = ConstraintId; a removed slot has c == nullptr
     size_t liveConstraints = 0;
+    // WP-20c: static contacts of the last step (tracking on: the listener is installed)
+    std::unique_ptr<StaticContactListener> contactListener;
+    std::vector<PhysicsWorld::StaticContact> staticContacts;
 
     JPH::BodyInterface& Bi() { return system.GetBodyInterfaceNoLock(); }
     const JPH::BodyInterface& Bi() const { return system.GetBodyInterfaceNoLock(); }
@@ -247,9 +277,34 @@ PhysicsWorld::~PhysicsWorld() {
 const PhysicsWorldConfig& PhysicsWorld::Config() const { return impl_->cfg; }
 
 void PhysicsWorld::Step(float dt, int collisionSteps) {
-    impl_->system.Update(dt, collisionSteps, impl_->temp.get(), impl_->jobs.get());
-    ++impl_->steps;
+    Impl& m = *impl_;
+    if (m.contactListener) m.contactListener->records.clear();
+    m.system.Update(dt, collisionSteps, m.temp.get(), m.jobs.get());
+    ++m.steps;
+    if (m.contactListener) {
+        std::vector<StaticContact>& r = m.contactListener->records;
+        std::sort(r.begin(), r.end());
+        r.erase(std::unique(r.begin(), r.end()), r.end());
+        m.staticContacts = r;
+    }
 }
+
+void PhysicsWorld::SetStaticContactTracking(bool on) {
+    Impl& m = *impl_;
+    if (on == static_cast<bool>(m.contactListener)) return;
+    if (on) {
+        m.contactListener = std::make_unique<StaticContactListener>();
+        m.system.SetContactListener(m.contactListener.get());
+    } else {
+        m.system.SetContactListener(nullptr);
+        m.contactListener.reset();
+    }
+    m.staticContacts.clear();
+}
+
+bool PhysicsWorld::StaticContactTracking() const { return static_cast<bool>(impl_->contactListener); }
+
+const std::vector<PhysicsWorld::StaticContact>& PhysicsWorld::StaticContacts() const { return impl_->staticContacts; }
 
 void PhysicsWorld::FixedStep() { Step(Time::fixedDeltaTime); }
 
