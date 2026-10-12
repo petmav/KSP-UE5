@@ -5,7 +5,9 @@ name: ci
 # core/testdata/GameData-mirror. See CLOUD-TASKS.md.
 
 on:
+  # Branches are tested by their pull request; push runs only on main (post-merge check).
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
