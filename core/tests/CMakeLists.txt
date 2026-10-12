@@ -69,6 +69,7 @@ add_executable(kspcore_tests
     test_input_flight.cpp
     test_input_devices.cpp
     test_input_ui.cpp
+    test_wheels.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
     test_hygiene.cpp
@@ -103,6 +104,9 @@ foreach(seed 11 27 42)
 endforeach()
 # WP-31 data gate: ROSTER of every save in testdata / harness/inputs, experience recomputed from the raw flight logs (also part of `unit`)
 add_test(NAME data.roster_experience COMMAND kspcore_tests "-tc=WP-31 data gate*")
+# WP-29a: the VPP wheel core and KSPWheelController against the independent Python reference (tools/wp29a/vpp_reference.py): 0 ULP
+add_test(NAME wheels.vpp COMMAND kspcore_tests "-tc=WP-29a*")
+set_tests_properties(wheels.vpp PROPERTIES LABELS unit TIMEOUT 600)
 set_tests_properties(data.roster_experience PROPERTIES LABELS data TIMEOUT 600)
 
 # ---- portable libm vs the real VS2013 / UCRT DLLs (Windows only; skips elsewhere): 300k inputs per function
