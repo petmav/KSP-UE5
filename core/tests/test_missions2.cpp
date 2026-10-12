@@ -8,6 +8,7 @@
 // double libm (acos / cos / sin / pow of the great-circle distance and the sphere test): booleans are compared exactly (the scenarios keep a margin
 // to the boundary) and the accuracy values within 1e-9 relative.
 #include <cmath>
+#include <iostream>
 #include <cstring>
 #include <fstream>
 #include <map>
@@ -27,6 +28,7 @@
 #include "ksp/missions/mission_data.hpp"
 #include "ksp/missions/mission_tests2.hpp"
 #include "ksp/missions/vessel_restrictions.hpp"
+#include "ksp/orbit/orbit_driver.hpp"
 #include "ksp/parts/part.hpp"
 #include "ksp/resources/part_resource_library.hpp"
 #include "ksp/resources/planetary_resources.hpp"
@@ -405,4 +407,199 @@ TEST_CASE("WP-54b reference: VesselRestriction* (Load / Save, IsComplete, GetSta
     }
     CHECK(restrictions > 100);
     CHECK(situations > 40);
+}
+
+// ---- Tests.* (the slice-2 set) -----------------------------------------------------------------------------------------------------
+
+namespace {
+
+Vessel::Situations SitOf(const std::string& n) {
+    if (n == "LANDED") return Vessel::Situations::LANDED;
+    if (n == "SPLASHED") return Vessel::Situations::SPLASHED;
+    if (n == "PRELAUNCH") return Vessel::Situations::PRELAUNCH;
+    if (n == "FLYING") return Vessel::Situations::FLYING;
+    if (n == "SUB_ORBITAL") return Vessel::Situations::SUB_ORBITAL;
+    if (n == "ORBITING") return Vessel::Situations::ORBITING;
+    if (n == "ESCAPING") return Vessel::Situations::ESCAPING;
+    return Vessel::Situations::DOCKED;
+}
+
+// the synthetic ScienceUtil.GetExperimentBiome stand-in (the real one needs a biome map): the same lat bands as the reference
+std::string BiomeAt(double lat) { return lat < -30.0 ? "Shores" : (lat < 30.0 ? "Grasslands" : "Highlands"); }
+
+struct World54 {
+    std::vector<std::unique_ptr<Vessel>> vessels;
+    std::vector<std::unique_ptr<Part>> parts;
+    std::vector<std::shared_ptr<ProtoCrewMember>> crew;
+    std::map<uint32_t, Vessel*> byPid;
+    std::map<Vessel*, std::string> crash;
+    std::vector<Vessel*> unloadedOrbitHolders;
+    std::vector<std::unique_ptr<ProtoVessel>> protos;
+    Vessel* active = nullptr;
+    json env;
+};
+
+struct Scene54 {
+    Fixture54b& fx;
+    std::unique_ptr<Mission> mission;
+    MENode* subject = nullptr;
+    std::vector<std::unique_ptr<World54>> worlds;
+    World54* world = nullptr;
+    double ut = 0.0;
+    explicit Scene54(Fixture54b& f) : fx(f) { fx.game.Mode = Game::Modes::CAREER; }  // Mission.Load in MISSION mode needs a SITUATION node
+    ~Scene54() {
+        FlightRegistry::Clear();
+        fx.game.Mode = Game::Modes::MISSION;
+    }
+
+    void BuildMission() {
+        mission = std::make_unique<Mission>();
+        ConfigNode cfg("MISSION");
+        cfg.AddValue("title", "slice 2");
+        ConfigNode* nodes = cfg.AddNode("NODES");
+        ConfigNode* s = nodes->AddNode("NODE");
+        s->AddValue("title", "Subject");
+        s->AddValue("id", GuidOf(98));
+        s->AddValue("isStartNode", true);
+        s->AddValue("missionEndOptions", "Success");
+        mission->Load(cfg, false);
+        subject = mission->GetNodeById(Guid::Parse(GuidOf(98)));
+        REQUIRE(subject != nullptr);
+        MissionsEnvironment::universalTime = [this] { return ut; };
+    }
+
+    void SetEnv(const json& env) {
+        FlightRegistry::Clear();
+        worlds.push_back(std::make_unique<World54>());
+        world = worlds.back().get();
+        world->env = env;
+        ut = env["ut"].get<double>();
+        for (const json& vj : env["vessels"]) {
+            auto v = std::make_unique<Vessel>();
+            v->persistentId = vj["pid"].get<uint32_t>();
+            v->id = Guid::Parse(vj["id"].get<std::string>());
+            v->vesselType = dotnet::EnumParse<ksp::VesselType>(vj["type"].get<std::string>());
+            v->situation = SitOf(vj["sit"].get<std::string>());
+            v->latitude = vj["lat"].get<double>();
+            v->longitude = vj["lon"].get<double>();
+            v->altitude = vj["alt"].get<double>();
+            v->srfSpeed = vj["srf"].get<double>();
+            v->obt_speed = vj["obt"].get<double>();
+            v->geeForce = vj["gee"].get<double>();
+            v->loaded = vj["loaded"].get<bool>();
+            v->landedAt = vj["landedAt"].get<std::string>();
+            const auto& ov = vj["obtVel"];
+            v->obt_velocity = Vector3d(ov[0].get<double>(), ov[1].get<double>(), ov[2].get<double>());
+            const json& o = vj["orbit"];
+            v->orbitDriver = std::make_unique<OrbitDriver>();
+            v->orbitDriver->orbit = std::make_shared<Orbit>(o["inc"].get<double>(), o["ecc"].get<double>(), o["sma"].get<double>(), o["lan"].get<double>(), o["argpe"].get<double>(),
+                                                           o["mna"].get<double>(), o["epoch"].get<double>(), fx.B(o["ref"].get<int>()));
+            v->GetDiscoveryInfo().SetLevel(vj["disc"].get<std::string>() == "Owned" ? DiscoveryLevels::Owned : DiscoveryLevels::Unowned);
+            for (const json& pj : vj["parts"]) {
+                auto p = std::make_unique<Part>();
+                p->fields.persistentId = pj["pid"].get<uint32_t>();
+                p->fields.CrewCapacity = pj["cap"].get<int>();
+                p->vessel = v.get();
+                for (const json& nj : pj["crew"]) {
+                    auto pcm = std::make_shared<ProtoCrewMember>(ProtoCrewMember::KerbalType::Crew, nj.get<std::string>());
+                    p->protoModuleCrew.push_back(pcm);
+                    world->crew.push_back(pcm);
+                }
+                v->parts.push_back(p.get());
+                world->parts.push_back(std::move(p));
+            }
+            if (!v->parts.empty()) v->rootPart = v->parts.front();
+            if (!vj["crash"].is_null()) world->crash[v.get()] = vj["crash"].get<std::string>();
+            world->byPid[v->persistentId] = v.get();
+            FlightRegistry::Vessels.push_back(v.get());
+            FlightRegistry::VesselsLoaded.push_back(v.get());
+            world->vessels.push_back(std::move(v));
+        }
+        const int act = env["active"].get<int>();
+        FlightRegistry::ActiveVessel = (act >= 0 && act < static_cast<int>(world->vessels.size())) ? world->vessels[static_cast<size_t>(act)].get() : nullptr;
+        World54* w = world;
+        MissionTestsEnvironment::vesselCrashObjectName = [w](Vessel* v) -> std::optional<std::string> {
+            auto it = w->crash.find(v);
+            if (it == w->crash.end()) return std::nullopt;
+            return it->second;
+        };
+        MissionTestsEnvironment::experimentBiome = [](CelestialBody*, double lat, double) { return BiomeAt(lat); };
+        const json mb = env["mainBody"];
+        Fixture54b* f = &fx;
+        MissionTestsEnvironment::currentMainBody = [mb, f]() -> CelestialBody* { return mb.is_null() ? nullptr : f->B(mb.get<int>()); };
+        const json sv = env["shipObtVel"];
+        MissionTestsEnvironment::shipObtVelocity = [sv] { return Vector3d(sv[0].get<double>(), sv[1].get<double>(), sv[2].get<double>()); };
+    }
+};
+
+json PidOrNull54(Vessel* v) { return v == nullptr ? json(nullptr) : json(v->persistentId); }
+
+}  // namespace
+
+TEST_CASE("WP-54b reference: the deferred Tests.* modules (Awake, Load / Save, Test, GetScoreModifier, events)") {
+    Fixture54b world;
+    size_t checked = 0;
+    for (const json& c : Ref()["cases"]) {
+        if (c["kind"].get<std::string>() != "test") continue;
+        const std::string name = c["cls"].get<std::string>();
+        Scene54 scene(world);
+        scene.BuildMission();
+        TestGroup* tg = new TestGroup(scene.subject);
+        scene.subject->testGroups.emplace_back(tg);
+        ConfigNode cfg = CfgFromJson(c["cfg"]);
+        try {
+            tg->AddTestModule(name, &cfg);
+        } catch (const std::exception& e) {
+            FAIL("AddTestModule(" << name << ") threw " << e.what());
+        }
+        REQUIRE_MESSAGE(tg->testModules.size() == 1, name);
+        TestModule* mod = dynamic_cast<TestModule*>(tg->testModules[0].get());
+        REQUIRE(mod != nullptr);
+        for (const json& op : c["ops"]) {
+            const std::string o = op["op"].get<std::string>();
+            INFO("case ", name, " op ", o);
+            ++checked;
+            try {
+            if (o == "title") {
+                CHECK(mod->title == op["out"].get<std::string>());
+            } else if (o == "info") {
+                CHECK(mod->GetInfo() == op["out"].get<std::string>());
+            } else if (o == "saved") {
+                ConfigNode out("N");
+                mod->Save(out);
+                CHECK(Dump(out) == op["out"].get<std::string>());
+            } else if (o == "body") {
+                const json& f = op["field"];
+                Editor::BaseAPField field(f["name"].get<std::string>(), f["guiName"].get<std::string>(), f["value"].get<std::string>(), f["has"].get<bool>());
+                CHECK(mod->GetNodeBodyParameterString(field) == op["out"].get<std::string>());
+            } else if (o == "env") {
+                scene.SetEnv(op["env"]);
+            } else if (o == "setUT") {
+                scene.ut = op["ut"].get<double>();
+            } else if (o == "test") {
+                CHECK(mod->Test() == op["out"].get<bool>());
+            } else if (o == "scoreMod") {
+                auto* s = dynamic_cast<IScoreableObjective*>(mod);
+                REQUIRE(s != nullptr);
+                ScoreModifier r = s->GetScoreModifier(op["module"].get<std::string>());
+                const json& out = op["out"];
+                CHECK(PidOrNull54(r.vessel) == out["vessel"]);
+                CHECK(r.number.has_value() == !out["number"].is_null());
+                if (r.number.has_value() && !out["number"].is_null()) {
+                    if (op.value("approx", false)) CHECK(Near(*r.number, out["number"].get<double>()));
+                    else CHECK(*r.number == out["number"].get<double>());
+                }
+            } else if (o == "init") {
+                mod->InitializeTest();
+            } else if (o == "clear") {
+                mod->ClearTest();
+            } else {
+                FAIL("unknown op " << o);
+            }
+            } catch (const std::exception& e) {
+                FAIL_CHECK("exception in " << name << " op " << o << ": " << e.what());
+            }
+        }
+    }
+    CHECK(checked > 300);
 }
