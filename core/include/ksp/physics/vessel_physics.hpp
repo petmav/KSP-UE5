@@ -379,6 +379,7 @@ public:
     // The force half of FlightIntegrator.Integrate (FlightIntegrator.cs:715-745), in its order (depth first from the root over
     // attached children): for each part with a Rigidbody integrationAccel (ForceMode.Acceleration), part.force, part.torque and
     // part.forces (last first); then every part's buffers are cleared. `integrationAccel` is vessel.precalc.integrationAccel.
+    // Runs UpdateMassProperties first (FlightIntegrator.FixedUpdate runs UpdateMassStats before Integrate).
     void IntegratePartBuffers(const Vector3d& integrationAccel);
     // External force and moment buffered for each part this tick (force, moment about the part's centre of mass), for WP-20c's
     // structural solve; cleared by Flush.
