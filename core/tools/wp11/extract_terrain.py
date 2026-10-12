@@ -40,7 +40,14 @@ SA9 = "sharedassets9.assets"
 MAP_CLASSES = {"MapSO", "CBAttributeMapSO", "CBTextureAtlasSO"}
 PQS_FIELDS = ["radius", "maxLevel", "minLevel", "maxQTAngle", "subdivisionThresholds", "collapseThresholds",
               "mapFilename", "mapMaxHeight", "mapOcean", "mapOceanHeight", "mapOceanColor", "isFakeBuild",
-              "buildTangents", "parentSphere"]
+              "buildTangents", "parentSphere",
+              # WP-12a: the LOD fields the quadtree reads (PQS.cs:188-260); not in the WP-11 extraction yet, so the
+              # generated stacks use PQS.Reset() defaults until this script is re-run locally on KSP-dev
+              "seed", "frameTimeDelta", "maxFrameTime", "maxQuadLenghtsPerFrame", "minDetailDistance",
+              "maxDetailDistance", "subdivisionThreshold", "collapseSeaLevelValue", "collapseAltitudeValue",
+              "collapseAltitudeMax", "visRadSeaLevelValue", "visRadAltitudeValue", "visRadAltitudeMax",
+              "detailSeaLevelQuads", "detailAltitudeQuads", "detailAltitudeMax", "surfaceRelativeQuads",
+              "meshCastShadows", "meshRecieveShadows"]
 CB_FIELDS = ["bodyName", "Radius", "ocean", "pqsController", "Density", "GeeASL"]
 
 
