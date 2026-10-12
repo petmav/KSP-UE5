@@ -5337,3 +5337,20 @@ trajectories with the spike's damping: +0.005 % / +0.02 % and +0.002 % / +0.001 
 `tests/test_vessel_physics.cpp`: 16 cases / 529 assertions (MSVC RelWithDebInfo; about 12 s: the spike regression 4.4 s, determinism 2.1 s,
 the orbit coast 2.3 s, the pad 1.4 s). The fixture `World` restores the Simplex / UnityEngine.Random state its PQS build rewrites (the WP-03
 Simplex reference failed after it otherwise).
+
+### Verification
+
+- Windows MSVC RelWithDebInfo, fresh (`core/build` deleted, `run_tests.ps1 -Fresh`, `CMAKE_BUILD_PARALLEL_LEVEL=6`): configure 2.4 s, build 228.5 s,
+  ctest 478 s; **38 / 38 pass** in the worktree (`corpus.saves` is not registered without decompiled/KSP-dev); `unit` 242 s.
+- `kspcore_tests --order-by=rand -rs=11` and `-rs=27`: 826 / 826 cases, 1,367,060 assertions, both green.
+- Linux g++ 13.3 with `-fsanitize=address,undefined` (WSL Ubuntu 24.04, README "Sanitizer run", whole unit binary in one process,
+  `detect_leaks=1`): 826 / 826 cases, 1,367,044 assertions (the usual 16 fewer of WP-03's NaN fallback on Linux), **no ASan, LSan or UBSan
+  report**. The WP-20b numbers of that (different) binary: spike regression within 0.20 % (spike damping) / 0.58 % (per-part vs
+  articulated, M2-AS speed), pad L2-AS 0.041 m / 0.123 m/s, S and M2-AS < 4e-9 m, the orbit coast 1.41 mm / 0.33 mm (as MSVC).
+- `check_cites.py` exact mode: 46 citations, 0 mismatches (above).
+
+### Commits (branch `wp20b`, from main `b9119103`)
+
+`fc5431b8` first version (PhysicsWorld additions, VesselPhysics, PartJoint data, host, tests), `a12e450c` orbit coast / host / mass / forces /
+split-merge tests, pose cache, flat part index, diagonal MOI, checkable cites, Simplex state guard, `97daca3e` Rebuild, `8adcdccd` STATUS /
+README / regression results, then this verification note.

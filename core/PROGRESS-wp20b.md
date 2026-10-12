@@ -37,3 +37,6 @@ Optimizer-tier package. Scope: `core/PHYSICS-SPIKE.md` section 7 row WP-20b, as 
   session: 0.017 / 0.105 / 0.312 / 0.854 / 1.484).
 - fix: World(loadPqs) restores the Simplex / UnityEngine.Random global state (WP-03 SIMPLEX reference failed after it otherwise).
 - check_cites exact: 46 cites over the WP-20b files + vessel_motion.cpp, 0 mismatches (aliases added to tools/wp28/check_cites.py).
+- docs: STATUS section WP-20b + summary row 46, README (physics paragraph, unit row, layout, tools/wp20b), spikes/jolt/results/wp20b_regression.md.
+- verification: fresh MSVC build, ctest 38/38; unit random order seeds 11 and 27: 826/826 each; WSL g++ ASan+UBSan+LSan whole unit binary:
+  826/826, no report. Done.
