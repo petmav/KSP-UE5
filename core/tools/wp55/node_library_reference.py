@@ -38,12 +38,17 @@ GUID_FMT = "6d650000-0000-0000-0000-%012d"
 
 # ---- the accounting of the C# classes ------------------------------------------------------------------------------------------
 DEFERRED = {
-    "Tests": ["TestCrewAssignment", "TestDistance", "TestFlyThrough", "TestGoTo", "TestGrapple", "TestKerbalBoarded", "TestKerbalEVA",
-              "TestKerbalKilled", "TestKerbalRecovery", "TestKerbalRescue", "TestOrbit", "TestOrbitParams", "TestPartDocking", "TestPlantFlag",
-              "TestScienceExperiment", "TestTakeKerbal", "TestVesselSituationFlying", "TestVesselSituationLanded", "TestVesselSituationSplashed",
-              "TestVesselStateCrashed", "TestVesselVelocity"],
-    "Actions": ["ActionCreateAsteroid", "ActionCreateComet", "ActionCreateFlag", "ActionCreateKerbal", "ActionCreateLaunchSite", "ActionCreateVessel",
-                "ActionPartFailure", "ActionPartRepair", "ActionPartResourceDrain"],
+    "Tests": ["TestDistance"],
+    "Actions": ["ActionPartFailure", "ActionPartRepair", "ActionPartResourceDrain"],
+    "Adjusters": [],
+}
+# ported by WP-54 slice 2 (tools/wp54b): registered in the same registries, gated by tests/test_missions2.cpp
+SLICE2 = {
+    "Tests": ["TestCrewAssignment", "TestFlyThrough", "TestGoTo", "TestGrapple", "TestKerbalBoarded", "TestKerbalEVA", "TestKerbalKilled",
+              "TestKerbalRecovery", "TestKerbalRescue", "TestOrbit", "TestOrbitParams", "TestPartDocking", "TestPlantFlag", "TestScienceExperiment",
+              "TestTakeKerbal", "TestVesselSituationFlying", "TestVesselSituationLanded", "TestVesselSituationSplashed", "TestVesselStateCrashed",
+              "TestVesselVelocity"],
+    "Actions": ["ActionCreateAsteroid", "ActionCreateComet", "ActionCreateFlag", "ActionCreateKerbal", "ActionCreateLaunchSite", "ActionCreateVessel"],
     "Adjusters": [],
 }
 
@@ -69,11 +74,12 @@ def registry_section():
         cls = concrete_classes(folder)
         concrete = sorted(n for n, abstract in cls.items() if not abstract)
         deferred = sorted(DEFERRED[folder])
-        for d in deferred:
+        slice2 = sorted(SLICE2[folder])
+        for d in deferred + slice2:
             assert d in concrete, (folder, d)
-        ported = sorted(n for n in concrete if n not in deferred)
+        ported = sorted(n for n in concrete if n not in deferred and n not in slice2)
         assert ported == sorted(table.keys()), (folder, set(ported) ^ set(table.keys()))
-        reg[folder] = {"ported": ported, "deferred": deferred, "abstract": sorted(n for n, a in cls.items() if a)}
+        reg[folder] = {"ported": ported, "deferred": deferred, "slice2": slice2, "abstract": sorted(n for n, a in cls.items() if a)}
     return reg
 
 

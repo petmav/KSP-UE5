@@ -56,6 +56,7 @@ add_executable(kspcore_tests
     test_space_center.cpp
     test_missions.cpp
     test_missions_runtime.cpp
+    test_missions2.cpp
     test_node_library.cpp
     test_inventory.cpp
     test_inventory_rules.cpp

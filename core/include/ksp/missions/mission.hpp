@@ -24,11 +24,14 @@
 #include "ksp/missions/mission_display.hpp"
 #include "ksp/missions/mission_flow.hpp"
 #include "ksp/missions/mission_node.hpp"
+#include "ksp/missions/mission_data.hpp"
 #include "ksp/missions/mission_types.hpp"
+#include "ksp/missions/vessel_restrictions.hpp"
 #include "ksp/util/collections.hpp"
 
 namespace ksp {
 class KerbalRoster;
+class VesselCrewManifest;
 class GameParameters;
 }  // namespace ksp
 
@@ -117,21 +120,43 @@ public:
     VesselSituation* vesselSituation = nullptr;
 };
 
-// ---- VesselSituation.cs:11 (stand-in: the members Mission / MissionSituation / MENode read; Load / Save / crew / restrictions /
-// location are slice 2, they reach VesselLocation, VesselRestrictionList, Crew, MissionOrbit ...) -----------------------------------
+// ---- VesselSituation.cs:11 ---------------------------------------------------------------------------------------------------
+// (the editor controls: requiredPartsParameter / autoGenerateCrewParameter, UpdateRequiredPartsDisplayedParts, OnRequiredPartsParameterCreated,
+// OnAutoGenerateCrewControlCreated and GetRequiredExcludedParts' dictionary are the MEGUI panel's)
 class VesselSituation {
 public:
+    VesselSituation();                                      // :61
+    VesselSituation(Mission* mission, MENode* node);        // :71
+    ~VesselSituation();
+    VesselSituation(const VesselSituation&) = delete;
+    VesselSituation& operator=(const VesselSituation&) = delete;
+
     bool playerCreated = true;                              // :14
     std::string craftFile;                                  // :16
     uint32_t persistentId = 0;                              // :18
     std::string vesselName = "#autoLOC_8100086";            // :20
+    std::string vesselDescription;                          // :23
+    std::unique_ptr<VesselLocation> location;               // :26
+    std::unique_ptr<VesselRestrictionList> vesselRestrictionList;  // :29
     Mission* mission = nullptr;                             // :32
     MENode* node = nullptr;                                 // :34
-    bool readyToLaunch = false;                             // :44 (internal)
-    bool launched = false;                                  // :47 (internal)
-    std::unique_ptr<MissionPartFilter> partFilter;          // :50
-    std::vector<std::string> requiredParts;                 // :53
-    bool locationFacilitySPH = false;                       // location.facility == EditorFacility.SPH (setStartType :367)
+    std::vector<Crew> vesselCrew;                           // :37
+    bool focusonSpawn = false;                              // :40
+    bool autoGenerateCrew = false;                          // :43
+    bool readyToLaunch = false;                             // :46 (internal)
+    bool launched = false;                                  // :49 (internal)
+    std::unique_ptr<MissionPartFilter> partFilter;          // :52
+    std::vector<std::string> requiredParts;                 // :55
+
+    void SetVesselCrew(KerbalRoster& crewRoster, VesselCrewManifest& newCrew);  // :86
+    void SetCrewAvailable(KerbalRoster& crewRoster);        // :143
+    void StartEditorEvents();                               // :177
+    void ClearEditorEvents();                               // :182
+    void UpdateAutoGenerateCrewSettings(bool newValue) { autoGenerateCrew = newValue; }  // :191 (the toggle is the panel's)
+    std::vector<std::pair<std::string, std::vector<std::string>>> GetRequiredExcludedParts();  // :157
+    bool OnRequieredPartsCheckpointValidator(const std::vector<std::string>& value);  // :219
+    void Load(const ConfigNode& node);                      // :224
+    void Save(ConfigNode& node);                            // :287
 };
 
 // ---- MissionSituation.cs:13 --------------------------------------------------------------------------------------------------
@@ -380,6 +405,7 @@ public:
     Guid GetNodeGuidByVesselID(uint32_t persistentId, bool processMappedVessels);  // :2320
     bool PendingVesselLaunch(MENode* node);                 // :2344
     VesselSituation* GetVesselSituationByVesselID(uint32_t persistentId);  // :2349
+    bool UpdateFromMappedVesselIDs(uint32_t vesselId, std::string& vesselName, VesselSituation*& vesselSituation);  // :1375 (internal)
     VesselSituation* GetVesselSituationByVesselID(uint32_t persistentId, bool processMappedVessels);  // :2354
     Asteroid* GetAsteroidByPersistentID(uint32_t persistentId);  // :2372
     Comet* GetCometByPersistentID(uint32_t PersistentId);   // :2392

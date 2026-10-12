@@ -79,6 +79,8 @@ std::string EnumFieldText(E v) {
 struct NodeLibraryEnvironment {
     // FlightGlobals.GetHomeBody(). Unset: the first body with isHomeWorld in SaveEnvironment::Current().localBodies.
     static inline std::function<CelestialBody*()> homeBody;
+    // FlightGlobals.Bodies (WP-54 slice 2). Unset: SaveEnvironment::Current().localBodies.
+    static inline std::function<std::vector<CelestialBody*>()> bodies;
     // FlightGlobals.GetBodyByName(name). Unset: AwardEnvironment::getBodyByName, else SaveEnvironment::Current().localBodies by bodyName.
     static inline std::function<CelestialBody*(const std::string&)> bodyByName;
     // KerbalRoster.GetLocalizedExperienceTraitName(traitName) (TestVesselCrewCount :96). Unset: the trait name itself.
@@ -155,6 +157,7 @@ struct NodeLibraryEnvironment {
     static void Reset();
 
     static CelestialBody* HomeBody();
+    static std::vector<CelestialBody*> Bodies();
     static CelestialBody* BodyByName(const std::string& name);
 };
 

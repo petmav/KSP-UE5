@@ -9,6 +9,9 @@
 #include "ksp/missions/mission_awards.hpp"
 #include "ksp/missions/mission_score.hpp"
 #include "ksp/missions/mission_tests.hpp"
+#include "ksp/missions/mission_actions2.hpp"
+#include "ksp/missions/mission_tests2.hpp"
+#include "ksp/missions/vessel_restrictions.hpp"
 #include "ksp/save/save_environment.hpp"
 
 namespace ksp::Expansions::Missions {
@@ -19,6 +22,7 @@ using KSP::Localization::Localizer;
 
 void NodeLibraryEnvironment::Reset() {
     homeBody = nullptr;
+    bodies = nullptr;
     bodyByName = nullptr;
     localizedTraitName = nullptr;
     postScreenMessage = nullptr;
@@ -149,6 +153,25 @@ const std::map<std::string, std::vector<std::string>>& ScoreModuleAttributes() {
         {"TestResourcesRecovery", {"ScoreModule_Resource", "ScoreModule_Time"}},
         {"TestSOILeft", {"ScoreModule_Resource", "ScoreModule_Time"}},
         {"TestSOIReached", {"ScoreModule_Resource", "ScoreModule_Time"}},
+        {"TestVesselSituationFlying", {"ScoreModule_Resource", "ScoreModule_Time"}},
+        {"TestVesselSituationLanded", {"ScoreModule_Resource", "ScoreModule_Time", "ScoreModule_Accuracy"}},
+        {"TestVesselSituationSplashed", {"ScoreModule_Resource", "ScoreModule_Time", "ScoreModule_Accuracy"}},
+        {"TestVesselStateCrashed", {"ScoreModule_Resource", "ScoreModule_Time"}},
+        {"TestVesselVelocity", {"ScoreModule_Resource", "ScoreModule_Time"}},
+        {"TestGoTo", {"ScoreModule_Resource", "ScoreModule_Time", "ScoreModule_Accuracy"}},
+        {"TestFlyThrough", {"ScoreModule_Resource", "ScoreModule_Time"}},
+        {"TestPlantFlag", {"ScoreModule_Resource", "ScoreModule_Time", "ScoreModule_Accuracy"}},
+        {"TestKerbalRecovery", {"ScoreModule_Resource", "ScoreModule_Time"}},
+        {"TestKerbalRescue", {"ScoreModule_Resource", "ScoreModule_Time"}},
+        {"TestKerbalEVA", {"ScoreModule_Resource", "ScoreModule_Time"}},
+        {"TestKerbalBoarded", {"ScoreModule_Resource", "ScoreModule_Time"}},
+        {"TestTakeKerbal", {"ScoreModule_Resource", "ScoreModule_Time"}},
+        {"TestCrewAssignment", {"ScoreModule_Resource", "ScoreModule_Time"}},
+        {"TestOrbit", {"ScoreModule_Resource", "ScoreModule_Time", "ScoreModule_Accuracy"}},
+        {"TestOrbitParams", {"ScoreModule_Resource", "ScoreModule_Time", "ScoreModule_Accuracy"}},
+        {"TestScienceExperiment", {"ScoreModule_Resource", "ScoreModule_Time"}},
+        {"TestGrapple", {"ScoreModule_Resource", "ScoreModule_Time"}},
+        {"TestPartDocking", {"ScoreModule_Resource", "ScoreModule_Time"}},
     };
     return table;
 }
@@ -198,6 +221,9 @@ void RegisterNodeLibrary() {
     RegisterTest<TestSOILeft>();
     RegisterTest<TestSOIReached>();
     RegisterTest_TestVessel();
+    RegisterNodeLibrarySlice2Tests();
+    RegisterNodeLibrarySlice2Actions();
+    RegisterVesselRestrictions();
     using namespace Actions;
     RegisterAction<ActionMessage>();
     RegisterAction<ActionDialogMessage>();

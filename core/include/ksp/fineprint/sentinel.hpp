@@ -241,5 +241,7 @@ template <>
 struct ksp::dotnet::EnumTraits<ksp::UntrackedObjectClass> {
     using E = ksp::UntrackedObjectClass;
     static constexpr bool flags = false;
-    static constexpr EnumMember<E> members[] = {{E::A, "A"}, {E::B, "B"}, {E::C, "C"}, {E::D, "D"}, {E::E, "E"}, {E::F, "F"}, {E::G, "G"}, {E::H, "H"}, {E::I, "I"}};
+    static constexpr EnumMember<E> members[] = {{E::A, "A", "#autoLOC_184791"}, {E::B, "B", "#autoLOC_184793"}, {E::C, "C", "#autoLOC_184795"},
+                                                {E::D, "D", "#autoLOC_184797"}, {E::E, "E", "#autoLOC_184799"}, {E::F, "F", "#autoLOC_6011124"},
+                                                {E::G, "G", "#autoLOC_6011125"}, {E::H, "H", "#autoLOC_6011126"}, {E::I, "I", "#autoLOC_6011129"}};  // UntrackedObjectClass.cs [Description]
 };
