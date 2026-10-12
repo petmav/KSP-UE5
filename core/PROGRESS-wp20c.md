@@ -25,3 +25,22 @@ momentum conservation. Gate: core/PHYSICS-SPIKE.md section 7 row WP-20c, analyti
 - start: read CLAUDE.md, PHYSICS-SPIKE.md, PROGRESS-wp20b.md, STATUS WP-20b, the spike's reduced.cpp / structure_graph*.cpp /
   articulated.cpp / bench capacity + loads, PartJoint.cs, Part.cs (decouple, Couple, Undock, Die, OnPartJointBreak, autostruts,
   GetMassivePart), CModuleStrut.cs. Worktree core/.worktrees/wp20c created from wp20b; baseline RelWithDebInfo build 284 s.
+- steps 1-7 done (commit fa218bb3): StaticContacts in PhysicsWorld; structure_graph (RigidPartDemand, TreeSolve, JointSplit,
+  StructuralGraph); GetMassivePart port with the per-part cache (Part fields autoStrutHighMass / CacheVessel / CacheTick); attach /
+  autostrut / strut builders split; VesselPhysics: step snapshot at Flush, ComputeLoads in AfterStep, autostrut countdown, welds with
+  their impulses in the residual, Rebind; Part::OnPartJointBreak / Part::Die; host events, deferred ProcessStructuralChanges, HandleBreak,
+  module force hooks. tools/wp20c/loads_reference.py (26 structures) and capacity_reference.py (in-game part_database capture).
+- tests (commit aa857d2e): 15 cases. Reference: demands 3.5e-16, tree 1.1e-15, split 5e-16, graph 2.1e-11 (rel.); capacity table
+  1,256 joints / 1,392 sub-joints bit for bit (twice). Analytic payload breaks at 1.000-1.005 a* (size 0/1/2, axial / lateral); strut
+  sharing (4 variants) at 1.000-1.005 a*, the joint the elastic split predicts. Pad ramps: S radial decoupler 33.72 g (spike 33.7),
+  M2 Mainsail 29.0 g (spike 29.0), M2-AS (graph) radial decoupler 25.14 g (spike graph 25.1), each the joint and load the 1-g static
+  solve predicts (within 0.1 %). Events: decouple / ejection hooks / couple / undock / Die, momentum 1e-6. Break chain with and without
+  IgnoreCollisionsFrames. L2-AS staging: 48 decouplers, one rebind 1.05 ms (RelWithDebInfo). Determinism 1/1/2/4/8 threads with breaks.
+- finding: Jolt's manifold reduction merges the contacts of different sub-shapes of a body pair and reports the first sub-shape only:
+  vessel bodies now opt out (CompoundBodyDesc::useManifoldReduction = false when loads are on) so every touching part is a support.
+  The PhysProf crafts still stand on ONE proxy box (the core Mainsail's): L2-AS rocks on it and breaks 10 % below its static prediction.
+- finding: the 5 cm placement drop of the scenarios breaks L2-AS's Mainsail joint on impact (a one-step acceleration spike in the rigid
+  model): the scenarios use the spike's 60-tick grace (KSP: Vessel.ignoreCollisionsFrames = 60 after its exact landed placement).
+- finding: autoStrutExcludeParent defaults to true (Part.cs:829): the Heaviest anchor of a part on the heaviest part is the next one.
+- check_cites exact over vessel_physics*.cpp, structure_graph.cpp, part_decouple.cpp, vessel_motion.cpp: 66 cites, 0 mismatches (3
+  older WP-16 cites in part_decouple.cpp fixed on the way; aliases CycleAutoStruts / HandleBreak / StartStaging added).

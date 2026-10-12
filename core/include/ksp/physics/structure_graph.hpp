@@ -75,6 +75,16 @@ NodeDemand RigidPartDemand(double m, const Vector3d& x, const double I[3][3], co
 // (= the sum of that subtree's demands, moment about jointCentroid[j]); joints that are no tree edge keep zero.
 void TreeSolve(const std::vector<int>& parentNode, const std::vector<int>& parentJoint, const std::vector<Vector3d>& nodeCom,
                const std::vector<NodeDemand>& demand, const std::vector<Vector3d>& jointCentroid, std::vector<JointResultant>& out);
+// The two halves of TreeSolve: the children-first order of a forest (TreeSolve's), computed once per structure, and the accumulation over
+// it (an edge whose parent is not deeper-first in `order` is skipped, as a cycle is in TreeOrder)
+std::vector<int> TreeOrder(const std::vector<int>& parentNode);
+struct TreeScratch {  // the working storage of TreeSolveOrdered (reused across calls: no allocation per tick)
+    std::vector<int> rank;
+    std::vector<Vector3d> sf, sm;
+};
+void TreeSolveOrdered(const std::vector<int>& order, const std::vector<int>& parentNode, const std::vector<int>& parentJoint,
+                      const std::vector<Vector3d>& nodeCom, const std::vector<NodeDemand>& demand, const std::vector<Vector3d>& jointCentroid,
+                      std::vector<JointResultant>& out, TreeScratch* scratch = nullptr);
 
 // The sub-joints of one joint sharing a resultant between two rigid sides by their stiffness (the local 6x6 system of the elements;
 // translation and rotation decouple when the anchors are centred on the centroid, as KSP's 120-degree rings are).

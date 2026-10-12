@@ -20,10 +20,6 @@ double MsSince(std::chrono::steady_clock::time_point t0) {
     return std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
 }
 uint8_t FullMask(const PartJointSpec& j) { return static_cast<uint8_t>((1u << j.internalJoints) - 1u); }
-void ToArray(const Mat3& m, double out[3][3]) {
-    for (int a = 0; a < 3; ++a)
-        for (int b = 0; b < 3; ++b) out[a][b] = m.m[a][b];
-}
 }  // namespace
 
 // ===================================================================================== autostruts
@@ -44,6 +40,7 @@ void VesselPhysics::SecureAutoStruts() {
         subAlive_.push_back(FullMask(j));
     }
     structureDirty_ = true;
+    jointLoads_.assign(joints_.size(), JointLoad{});
     if (!autos.empty()) RebuildWelds();
 }
 
@@ -53,6 +50,7 @@ void VesselPhysics::ReleaseAutoStruts() {
     joints_.resize(autoStrutBegin_);
     cut_.resize(autoStrutBegin_);
     subAlive_.resize(autoStrutBegin_);
+    jointLoads_.assign(joints_.size(), JointLoad{});
     structureDirty_ = true;
     RebuildWelds();
 }
@@ -91,8 +89,8 @@ Vector3d VesselPhysics::FactorFrameOrigin() const {
 }
 
 // The nodes (parts with a Rigidbody in a cluster with a body), every live sub-joint as an element at its anchor (the child part's
-// reference pose, factor frame), the tree edges of the attach joints with their JointSplit, and for the graph solve the ground supports
-// and the factorisation.
+// reference pose, factor frame), the tree edges of the attach joints with their JointSplit and the children-first order, and for the
+// graph solve the ground supports and the factorisation.
 void VesselPhysics::BuildLoadModel(const std::vector<int>& supports) {
     const auto t0 = std::chrono::steady_clock::now();
     const size_t n = parts_.size();
@@ -100,13 +98,17 @@ void VesselPhysics::BuildLoadModel(const std::vector<int>& supports) {
     nodeOfPart_.assign(n, -1);
     partOfNode_.clear();
     nodeCom0_.clear();
+    nodeCluster_.clear();
     std::vector<double> nodeMass;
+    clusterNodes_.assign(clusters_.size(), std::vector<int>{});
     for (size_t i = 0; i < n; ++i) {
         const PartRec& r = *parts_[i];
         if (!r.rb || clusters_[static_cast<size_t>(r.cluster)].body == kInvalidBody) continue;
         nodeOfPart_[i] = static_cast<int>(partOfNode_.size());
+        clusterNodes_[static_cast<size_t>(r.cluster)].push_back(static_cast<int>(partOfNode_.size()));
         partOfNode_.push_back(static_cast<int>(i));
         nodeCom0_.push_back(r.com0 - O);
+        nodeCluster_.push_back(r.cluster);
         nodeMass.push_back(static_cast<double>(r.rbMass));
     }
     for (size_t i = 0; i < n; ++i)
@@ -117,6 +119,7 @@ void VesselPhysics::BuildLoadModel(const std::vector<int>& supports) {
     anchor0_.assign(J, std::array<Vector3d, 3>{});
     splits_.assign(J, JointSplit{});
     splitSub_.assign(J, std::array<int, 3>{-1, -1, -1});
+    jointHostCluster_.assign(J, -1);
     treeParentNode_.assign(nn, -1);
     treeParentJoint_.assign(nn, -1);
     elements_.clear();
@@ -128,6 +131,7 @@ void VesselPhysics::BuildLoadModel(const std::vector<int>& supports) {
         if (ia < 0 || ib < 0 || ic < 0) continue;
         const int a = nodeOfPart_[static_cast<size_t>(ia)], b = nodeOfPart_[static_cast<size_t>(ib)];
         if (a < 0 || b < 0 || a == b) continue;
+        jointHostCluster_[j] = nodeCluster_[static_cast<size_t>(b)];
         // PartJoint.SetJointLimits (PartJoint.cs:359): the angular drives are locked (+inf) when rigid || forceRigid
         const double ka = (js.rigid || js.forceRigid) ? kl : static_cast<double>(js.stiffness);
         const PartRec& cr = *parts_[static_cast<size_t>(ic)];
@@ -163,6 +167,7 @@ void VesselPhysics::BuildLoadModel(const std::vector<int>& supports) {
             splits_[j].Setup(rel, std::vector<double>(rel.size(), kl), std::vector<double>(rel.size(), ka));
         }
     }
+    treeOrder_ = TreeOrder(treeParentNode_);
     modelSupports_ = supports;
     structureDirty_ = false;
     if (modelGraph_) {
@@ -186,7 +191,22 @@ void VesselPhysics::BuildLoadModel(const std::vector<int>& supports) {
     }
 }
 
-// The loads of the last step and the capacity check (PartJoint.cs:340-341: each ConfigurableJoint breaks on its own force / torque).
+// whether a live strut / autostruts joins two different rigid bodies (the graph solve's reason in the Auto mode); kept until the joints change
+bool VesselPhysics::StrutLinked() {
+    if (strutLinkedValid_) return strutLinked_;
+    strutLinked_ = false;
+    for (size_t j = 0; j < joints_.size() && !strutLinked_; ++j) {
+        const PartJointSpec& js = joints_[j];
+        if (js.kind == JointKind::Attach || cut_[j] || subAlive_[j] == 0) continue;
+        const int ia = index_.Find(js.targetBody), ib = index_.Find(js.hostBody);
+        if (ia >= 0 && ib >= 0 && ia != ib && parts_[static_cast<size_t>(ia)]->rb && parts_[static_cast<size_t>(ib)]->rb) strutLinked_ = true;
+    }
+    strutLinkedValid_ = true;
+    return strutLinked_;
+}
+
+// The loads of the last step and the capacity check (PartJoint.cs:340-341: each ConfigurableJoint breaks on its own force / torque). The
+// demands are formed directly in each cluster's body frame, which is the factor frame (the body axes were the physics axes at creation).
 void VesselPhysics::ComputeLoads() {
     const auto t0 = std::chrono::steady_clock::now();
     maxRatio_ = 0.0f;
@@ -195,10 +215,11 @@ void VesselPhysics::ComputeLoads() {
     const double inv = 1.0 / dt;
     const size_t n = parts_.size();
     // ---- the ground supports: parts (their RigidBodyPart) whose colliders touched static geometry during the step
-    std::vector<int> supports;
+    std::vector<int>& supports = scratchSupports_;
+    supports.clear();
     for (const PhysicsWorld::StaticContact& sc : world_->StaticContacts()) {
         int cl = -1;
-        for (size_t c = 0; c < clusters_.size(); ++c)
+        for (size_t c = 0; c < clusters_.size() && cl < 0; ++c)
             if (clusters_[c].body == sc.body) cl = static_cast<int>(c);
         if (cl < 0 || sc.subShapeUserData >= n) continue;
         const PartRec& r = *parts_[sc.subShapeUserData];
@@ -210,40 +231,43 @@ void VesselPhysics::ComputeLoads() {
     supports.erase(std::unique(supports.begin(), supports.end()), supports.end());
     supportParts_ = supports;
     // ---- which solve
+    if (structureDirty_) strutLinkedValid_ = false;
     bool graph = options_.loadSolve == LoadSolve::Graph;
-    if (options_.loadSolve == LoadSolve::Auto) {
-        graph = supports.size() >= 2;
-        for (size_t j = 0; j < joints_.size() && !graph; ++j) {
-            const PartJointSpec& js = joints_[j];
-            if (js.kind == JointKind::Attach || cut_[j] || subAlive_[j] == 0) continue;
-            const int ia = index_.Find(js.targetBody), ib = index_.Find(js.hostBody);
-            if (ia >= 0 && ib >= 0 && parts_[static_cast<size_t>(ia)]->rb && parts_[static_cast<size_t>(ib)]->rb && ia != ib) graph = true;
-        }
-    }
+    if (options_.loadSolve == LoadSolve::Auto) graph = supports.size() >= 2 || StrutLinked();
     if (structureDirty_ || graph != modelWantGraph_ || (graph && supports != modelSupports_)) {
         modelWantGraph_ = graph;
         modelGraph_ = graph;
         BuildLoadModel(supports);
     }
     graph = modelGraph_;
-    // ---- cluster kinematics over the step and the residual (what neither the part forces nor the welds explain: contacts, the
-    // gyroscopic term the solver omits, clamps)
+    // ---- per cluster, body frame: the kinematics over the step and the residual (what neither the part forces nor the welds explain:
+    // contacts, the gyroscopic term the solver omits, clamps)
     const size_t C = clusters_.size();
-    std::vector<Vector3d> ca(C), calpha(C), resF(C), resM(C);
+    kin_.resize(C);
+    nodeF_.resize(partOfNode_.size());
+    nodeM_.resize(partOfNode_.size());
     for (size_t c = 0; c < C; ++c) {
         const ClusterRec& cl = clusters_[c];
+        ClusterKin& k = kin_[c];
         if (cl.body == kInvalidBody) continue;
-        ca[c] = (cl.v - clusterVBefore_[c]) * inv;
-        calpha[c] = (cl.w - clusterWBefore_[c]) * inv;
-        const Mat3 Ic = cl.inertia.Rotated(Mat3::Rotation(cl.q));
-        Vector3d F = stepAccel_ * cl.mass, M;
-        for (int i : cl.parts) {
-            const PartRec& r = *parts_[static_cast<size_t>(i)];
-            F += stepForce_[static_cast<size_t>(i)];
-            M += Cross(r.comNow - cl.com, stepForce_[static_cast<size_t>(i)]) + stepMoment_[static_cast<size_t>(i)];
+        k.qi = QuaternionD::Inverse(cl.q);
+        k.a = k.qi * ((cl.v - clusterVBefore_[c]) * inv);
+        k.alpha = k.qi * ((cl.w - clusterWBefore_[c]) * inv);
+        k.w = k.qi * cl.w;
+        k.g = k.qi * stepAccel_;
+        Vector3d F = k.g * cl.mass, M;
+        for (int node : clusterNodes_[c]) {
+            const size_t i = static_cast<size_t>(partOfNode_[static_cast<size_t>(node)]);
+            const PartRec& r = *parts_[i];
+            const Vector3d fb = stepForce_[i].IsZero() ? Vector3d() : k.qi * stepForce_[i];
+            const Vector3d mb = stepMoment_[i].IsZero() ? Vector3d() : k.qi * stepMoment_[i];
+            nodeF_[static_cast<size_t>(node)] = fb;
+            nodeM_[static_cast<size_t>(node)] = mb;
+            F += fb;
+            M += Cross(r.localCom - cl.comBody, fb) + mb;
         }
-        resF[c] = ca[c] * cl.mass - F;
-        resM[c] = Ic * calpha[c] + Cross(cl.w, Ic * cl.w) - M;
+        k.resF = k.a * cl.mass - F;
+        k.resM = cl.inertia * k.alpha + Cross(k.w, cl.inertia * k.w) - M;
     }
     for (const Weld& w : welds_) {  // the weld impulse applies to b, its opposite to a (PhysicsWorld::GetConstraintImpulse)
         Vector3d lin, ang;
@@ -252,99 +276,87 @@ void VesselPhysics::ComputeLoads() {
         const ClusterRec& A = clusters_[static_cast<size_t>(w.a)];
         const ClusterRec& B = clusters_[static_cast<size_t>(w.b)];
         const Vector3d p = A.origin + A.q * w.pointBodyA;
-        resF[static_cast<size_t>(w.b)] -= f;
-        resM[static_cast<size_t>(w.b)] -= Cross(p - B.com, f) + t;
-        resF[static_cast<size_t>(w.a)] += f;
-        resM[static_cast<size_t>(w.a)] += Cross(p - A.com, f) + t;
+        ClusterKin& ka = kin_[static_cast<size_t>(w.a)];
+        ClusterKin& kb = kin_[static_cast<size_t>(w.b)];
+        kb.resF -= kb.qi * f;
+        kb.resM -= kb.qi * (Cross(p - B.com, f) + t);
+        ka.resF += ka.qi * f;
+        ka.resM += ka.qi * (Cross(p - A.com, f) + t);
     }
-    // ---- node demands (physics frame), the residual shared out: in the graph solve the ground supports carry it where the cluster
-    // touches static geometry; otherwise the supporting parts take equal shares and a common couple (tree solve), or every part its mass
-    // share and a common couple (no support: a body force)
+    // ---- node demands, the residual shared out: in the graph solve the ground supports carry it where the cluster touches static
+    // geometry; otherwise the supporting parts take equal shares and a common couple (tree solve), or every part its mass share and a
+    // common couple (no support: a body force)
     const size_t nn = partOfNode_.size();
-    demand_.assign(nn, NodeDemand{});
-    std::vector<int> nodeSupport(nn, 0);
+    demand_.resize(nn);
+    nodeSupport_.assign(nn, 0);
     for (int s : supports) {
         const int node = nodeOfPart_[static_cast<size_t>(s)];
-        if (node >= 0) nodeSupport[static_cast<size_t>(node)] = 1;
-    }
-    for (size_t k = 0; k < nn; ++k) {
-        const PartRec& r = *parts_[static_cast<size_t>(partOfNode_[k])];
-        const ClusterRec& cl = clusters_[static_cast<size_t>(r.cluster)];
-        const size_t c = static_cast<size_t>(r.cluster);
-        double I[3][3];
-        ToArray(r.ownBody.Rotated(Mat3::Rotation(cl.q)), I);
-        demand_[k] = RigidPartDemand(static_cast<double>(r.rbMass), r.comNow, I, cl.com, ca[c], calpha[c], cl.w, stepAccel_,
-                                     stepForce_[static_cast<size_t>(partOfNode_[k])], stepMoment_[static_cast<size_t>(partOfNode_[k])]);
+        if (node >= 0) nodeSupport_[static_cast<size_t>(node)] = 1;
     }
     for (size_t c = 0; c < C; ++c) {
         const ClusterRec& cl = clusters_[c];
-        if (cl.body == kInvalidBody) continue;
-        std::vector<int> members, touching;
-        for (int i : cl.parts) {
-            const int node = nodeOfPart_[static_cast<size_t>(i)];
-            if (node < 0 || partOfNode_[static_cast<size_t>(node)] != i) continue;
-            members.push_back(node);
-            if (nodeSupport[static_cast<size_t>(node)]) touching.push_back(node);
-        }
-        if (members.empty()) continue;
-        if (!touching.empty() && graph) continue;  // the ground elements carry the residual
-        const std::vector<int>& share = touching.empty() ? members : touching;
-        Vector3d mf;
-        for (int node : share) {
+        const std::vector<int>& members = clusterNodes_[c];
+        if (cl.body == kInvalidBody || members.empty()) continue;
+        const ClusterKin& k = kin_[c];
+        int touching = 0;
+        for (int node : members) {
             const PartRec& r = *parts_[static_cast<size_t>(partOfNode_[static_cast<size_t>(node)])];
-            const double w = touching.empty() ? static_cast<double>(r.rbMass) / cl.mass : 1.0 / static_cast<double>(share.size());
-            const Vector3d cf = resF[c] * w;
-            demand_[static_cast<size_t>(node)].force -= cf;
-            mf += Cross(r.comNow - cl.com, cf);
+            demand_[static_cast<size_t>(node)] = RigidPartDemand(static_cast<double>(r.rbMass), r.localCom, r.ownBody.m, cl.comBody, k.a, k.alpha, k.w, k.g,
+                                                                 nodeF_[static_cast<size_t>(node)], nodeM_[static_cast<size_t>(node)]);
+            touching += nodeSupport_[static_cast<size_t>(node)];
         }
-        const Vector3d couple = (resM[c] - mf) * (1.0 / static_cast<double>(share.size()));
-        for (int node : share) demand_[static_cast<size_t>(node)].moment -= couple;
-    }
-    // ---- into the factor frame (each cluster's rotation since its creation undone)
-    for (size_t k = 0; k < nn; ++k) {
-        const ClusterRec& cl = clusters_[static_cast<size_t>(parts_[static_cast<size_t>(partOfNode_[k])]->cluster)];
-        const QuaternionD qi = QuaternionD::Inverse(cl.q);
-        demand_[k].force = qi * demand_[k].force;
-        demand_[k].moment = qi * demand_[k].moment;
+        if (touching > 0 && graph) continue;  // the ground elements carry the residual
+        const int shares = touching > 0 ? touching : static_cast<int>(members.size());
+        Vector3d mf;
+        for (int node : members) {
+            if (touching > 0 && !nodeSupport_[static_cast<size_t>(node)]) continue;
+            const PartRec& r = *parts_[static_cast<size_t>(partOfNode_[static_cast<size_t>(node)])];
+            const double w = touching > 0 ? 1.0 / static_cast<double>(shares) : static_cast<double>(r.rbMass) / cl.mass;
+            const Vector3d cf = k.resF * w;
+            demand_[static_cast<size_t>(node)].force -= cf;
+            mf += Cross(r.localCom - cl.comBody, cf);
+        }
+        const Vector3d couple = (k.resM - mf) * (1.0 / static_cast<double>(shares));
+        for (int node : members)
+            if (touching == 0 || nodeSupport_[static_cast<size_t>(node)]) demand_[static_cast<size_t>(node)].moment -= couple;
     }
     // ---- solve
     const size_t J = joints_.size();
-    subLoads_.assign(J, std::array<ElementLoad, 3>{});
-    jointLoads_.assign(J, JointLoad{});
-    std::vector<uint8_t> solved(J, 0);
+    subLoads_.resize(J);  // every solved joint's live sub-joints are written below; the rest is not read
+    jointLoads_.resize(J);
+    solved_.assign(J, 0);
     if (graph) {
         graph_.Solve(demand_, elementLoads_);
         for (size_t e = 0; e < elements_.size(); ++e) {
             const StructElement& el = elements_[e];
             if (el.joint < 0) continue;
             subLoads_[static_cast<size_t>(el.joint)][static_cast<size_t>(el.sub)] = elementLoads_[e];
-            solved[static_cast<size_t>(el.joint)] = 1;
+            solved_[static_cast<size_t>(el.joint)] = 1;
         }
         lastSolve_ = LoadSolve::Graph;
     } else {
-        std::vector<JointResultant> res;
-        TreeSolve(treeParentNode_, treeParentJoint_, nodeCom0_, demand_, centroid0_, res);
+        TreeSolveOrdered(treeOrder_, treeParentNode_, treeParentJoint_, nodeCom0_, demand_, centroid0_, resultants_, &treeScratch_);
         std::array<ElementLoad, 3> tmp{};
         for (size_t k = 0; k < nn; ++k) {
             const int j = treeParentJoint_[k];
             if (j < 0) continue;
             const JointSplit& sp = splits_[static_cast<size_t>(j)];
-            sp.Apply(res[static_cast<size_t>(j)].force, res[static_cast<size_t>(j)].moment, tmp.data());
+            sp.Apply(resultants_[static_cast<size_t>(j)].force, resultants_[static_cast<size_t>(j)].moment, tmp.data());
             for (size_t e = 0; e < sp.Count(); ++e)
                 subLoads_[static_cast<size_t>(j)][static_cast<size_t>(splitSub_[static_cast<size_t>(j)][e])] = tmp[e];
-            solved[static_cast<size_t>(j)] = 1;
+            solved_[static_cast<size_t>(j)] = 1;
         }
         lastSolve_ = LoadSolve::Tree;
     }
     // ---- per joint: resultant (physics frame), the largest sub-joint loads and the capacity (PhysX: force > breakForce || torque >
     // breakTorque on each ConfigurableJoint; autostruts / struts have +inf limits, CheatOptions.UnbreakableJoints makes all unbreakable)
     for (size_t j = 0; j < J; ++j) {
-        if (!solved[j]) continue;
-        const PartJointSpec& js = joints_[j];
         JointLoad& L = jointLoads_[j];
+        L = JointLoad{};
+        if (!solved_[j]) continue;
+        const PartJointSpec& js = joints_[j];
         L.valid = true;
-        const int ih = index_.Find(js.hostBody);
-        const ClusterRec& hc = clusters_[static_cast<size_t>(parts_[static_cast<size_t>(ih)]->cluster)];
+        const ClusterRec& hc = clusters_[static_cast<size_t>(jointHostCluster_[j])];
         const bool breakable = options_.breakJoints && !options_.unbreakableJoints && js.kind == JointKind::Attach;
         JointBreak br;
         br.joint = j;

@@ -4,8 +4,8 @@
 # Jolt itself is the vendored copy built by the root CMakeLists (cmake/ksp_jolt.cmake, third_party/jolt): since WP-20a the spike
 # no longer fetches it. KSP_JOLT_DOUBLE / KSP_JOLT_DETERMINISTIC are the root options.
 
-add_executable(jolt_spike
-    src/main.cpp
+# the spike's model sources as a library: jolt_spike and the WP-20c comparison bench (tools/wp20c/loads_vs_articulated.cpp) share them
+add_library(jolt_spike_lib STATIC
     src/bench.cpp
     src/jolt_world.cpp
     src/ksp_context.cpp
@@ -18,20 +18,24 @@ add_executable(jolt_spike
     src/part_pipeline.cpp
     src/flight.cpp
 )
-target_link_libraries(jolt_spike PRIVATE kspcore Jolt)
-ksp_set_build_flags(jolt_spike)
-target_include_directories(jolt_spike PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(jolt_spike_lib PUBLIC kspcore Jolt)
+ksp_set_build_flags(jolt_spike_lib)
+target_include_directories(jolt_spike_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 if(MSVC)
     # Jolt headers: unreferenced parameters, padding, conversions under /W4 (not our code)
-    target_compile_options(jolt_spike PRIVATE /wd4100 /wd4324 /wd4127)
+    target_compile_options(jolt_spike_lib PUBLIC /wd4100 /wd4324 /wd4127)
 endif()
-target_compile_definitions(jolt_spike PRIVATE
+target_compile_definitions(jolt_spike_lib PUBLIC
     KSPCORE_DEFAULT_GAME_ROOT="${KSP_GAMEDATA_ROOT}"
     KSPCORE_HARNESS_DIR="${KSP_HARNESS_DIR}"
     KSPCORE_PROJECT_ROOT="${KSP_PROJECT_ROOT}"
     KSPCORE_DATA_DIR="${PROJECT_SOURCE_DIR}/data"
     SPIKE_CRAFT_DIR="${KSP_PROJECT_ROOT}/analysis/physics/craft"
     SPIKE_GEN_CRAFT_DIR="${CMAKE_CURRENT_BINARY_DIR}/craft")
+
+add_executable(jolt_spike src/main.cpp)
+target_link_libraries(jolt_spike PRIVATE jolt_spike_lib)
+ksp_set_build_flags(jolt_spike)
 
 # Larger crafts for the scaling curve, generated at configure time by the profile's own generator
 # (analysis/physics/scripts/gen_craft.py, same booster design) into the build tree; never committed.
@@ -51,3 +55,10 @@ ksp_set_build_flags(wp20b_bench)
 target_include_directories(wp20b_bench PRIVATE ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/tools/golden_runner)
 target_compile_definitions(wp20b_bench PRIVATE KSPCORE_HARNESS_DIR="${KSP_HARNESS_DIR}" KSPCORE_DATA_DIR="${PROJECT_SOURCE_DIR}/data"
                            KSPCORE_DEFAULT_GAME_ROOT="${KSP_GAMEDATA_ROOT}")
+
+# WP-20c: the production binding's structural loads against the spike's articulated model (PHYSICS-SPIKE.md 7, joint_loads):
+# wp20c_loads [crafts...] [--time s]
+add_executable(wp20c_loads ${PROJECT_SOURCE_DIR}/tools/wp20c/loads_vs_articulated.cpp)
+target_link_libraries(wp20c_loads PRIVATE jolt_spike_lib)
+ksp_set_build_flags(wp20c_loads)
+target_include_directories(wp20c_loads PRIVATE ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/tools/golden_runner)

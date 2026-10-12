@@ -165,10 +165,8 @@ NodeDemand RigidPartDemand(double m, const Vector3d& x, const double I[3][3], co
     return d;
 }
 
-void TreeSolve(const std::vector<int>& parentNode, const std::vector<int>& parentJoint, const std::vector<Vector3d>& nodeCom,
-               const std::vector<NodeDemand>& demand, const std::vector<Vector3d>& jointCentroid, std::vector<JointResultant>& out) {
+std::vector<int> TreeOrder(const std::vector<int>& parentNode) {
     const size_t n = parentNode.size();
-    out.assign(jointCentroid.size(), JointResultant{});
     // depth of every node (roots 0); a cycle (not expected) is cut where it closes
     std::vector<int> depth(n, -1);
     std::vector<int> chain;
@@ -190,15 +188,31 @@ void TreeSolve(const std::vector<int>& parentNode, const std::vector<int>& paren
         if (depth[static_cast<size_t>(x)] != depth[static_cast<size_t>(y)]) return depth[static_cast<size_t>(x)] > depth[static_cast<size_t>(y)];
         return x > y;
     });
+    return order;
+}
+
+void TreeSolveOrdered(const std::vector<int>& order, const std::vector<int>& parentNode, const std::vector<int>& parentJoint,
+                      const std::vector<Vector3d>& nodeCom, const std::vector<NodeDemand>& demand, const std::vector<Vector3d>& jointCentroid,
+                      std::vector<JointResultant>& out, TreeScratch* scratch) {
+    const size_t n = parentNode.size();
+    out.assign(jointCentroid.size(), JointResultant{});
+    TreeScratch local;
+    TreeScratch& t = scratch != nullptr ? *scratch : local;
+    std::vector<int>& rank = t.rank;  // position in `order`: a parent must come later than its child
+    rank.assign(n, 0);
+    for (size_t k = 0; k < order.size(); ++k) rank[static_cast<size_t>(order[k])] = static_cast<int>(k);
     // subtree sums, the moment about each node's own centre of mass (short lever arms)
-    std::vector<Vector3d> sf(n), sm(n);
+    std::vector<Vector3d>& sf = t.sf;
+    std::vector<Vector3d>& sm = t.sm;
+    sf.resize(n);
+    sm.resize(n);
     for (size_t i = 0; i < n; ++i) {
         sf[i] = demand[i].force;
         sm[i] = demand[i].moment;
     }
     for (int i : order) {
         const int p = parentNode[static_cast<size_t>(i)];
-        if (p < 0 || depth[static_cast<size_t>(p)] >= depth[static_cast<size_t>(i)]) continue;
+        if (p < 0 || rank[static_cast<size_t>(p)] <= rank[static_cast<size_t>(i)]) continue;
         const size_t ui = static_cast<size_t>(i), up = static_cast<size_t>(p);
         const int j = parentJoint[ui];
         if (j >= 0 && static_cast<size_t>(j) < out.size()) {
@@ -208,6 +222,11 @@ void TreeSolve(const std::vector<int>& parentNode, const std::vector<int>& paren
         sf[up] += sf[ui];
         sm[up] += sm[ui] + Vector3d::Cross(nodeCom[ui] - nodeCom[up], sf[ui]);
     }
+}
+
+void TreeSolve(const std::vector<int>& parentNode, const std::vector<int>& parentJoint, const std::vector<Vector3d>& nodeCom,
+               const std::vector<NodeDemand>& demand, const std::vector<Vector3d>& jointCentroid, std::vector<JointResultant>& out) {
+    TreeSolveOrdered(TreeOrder(parentNode), parentNode, parentJoint, nodeCom, demand, jointCentroid, out);
 }
 
 // ===================================================================================== JointSplit

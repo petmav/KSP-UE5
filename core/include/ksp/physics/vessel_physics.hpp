@@ -488,7 +488,7 @@ public:
     };
     // per joint (Joints() order), from the last AfterStep that followed a Flush
     const std::vector<JointLoad>& JointLoads() const { return jointLoads_; }
-    // the element loads of the last solve: per joint, per live sub-joint (physics frame, on the host side)
+    // the element loads of the last solve: per joint, per live sub-joint (factor frame, on the host side; meaningful where JointLoads()[j].valid)
     const std::vector<std::array<ElementLoad, 3>>& SubJointLoads() const { return subLoads_; }
     // the sub-joints over capacity at the last AfterStep (options.breakJoints); the host acts on them (VesselPhysicsHost::AfterStepAll)
     const std::vector<JointBreak>& Breaks() const { return breaks_; }
@@ -537,6 +537,7 @@ private:
     void RebuildWelds();  // the inter-cluster fixed constraints from the live joints
     void ComputeLoads();
     void BuildLoadModel(const std::vector<int>& supports);
+    bool StrutLinked();
     Vector3d FactorFrameOrigin() const;
 
     PhysicsWorld* world_;
@@ -593,6 +594,22 @@ private:
     std::vector<StructElement> elements_;
     std::vector<ElementLoad> elementLoads_;
     std::vector<NodeDemand> demand_;
+    std::vector<int> nodeCluster_;                // node -> cluster
+    std::vector<std::vector<int>> clusterNodes_;  // cluster -> its nodes
+    std::vector<int> jointHostCluster_;           // joint -> the cluster of its host body (-1: not in the model)
+    std::vector<int> treeOrder_;                  // nodes children-first (TreeOrder of treeParentNode_)
+    bool strutLinked_ = false, strutLinkedValid_ = false;
+    // per-tick scratch of ComputeLoads (no allocation once sized)
+    struct ClusterKin {
+        QuaternionD qi = QuaternionD::identity();  // body <- physics
+        Vector3d a, alpha, w, g, resF, resM;        // body frame
+    };
+    std::vector<ClusterKin> kin_;
+    std::vector<Vector3d> nodeF_, nodeM_;
+    std::vector<uint8_t> nodeSupport_, solved_;
+    std::vector<int> scratchSupports_;
+    std::vector<JointResultant> resultants_;
+    TreeScratch treeScratch_;
     // scratch of ReadState (not thread-safe: one reader at a time per binding)
     mutable std::vector<int> scratchIdx_;
     mutable std::vector<PartRigidbodyState> scratchStates_;

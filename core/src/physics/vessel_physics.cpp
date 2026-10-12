@@ -138,6 +138,7 @@ void VesselPhysics::Init(const std::vector<PartPhysicsState>& states, uint32_t g
     stepValid_ = false;
     structureDirty_ = true;
     breaks_.clear();
+    jointLoads_.assign(joints_.size(), JointLoad{});
     BuildClusters(states);
     SyncPartTransforms();
     autoStrutCountdown_ = 0;
