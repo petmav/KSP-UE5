@@ -44,11 +44,6 @@ bool ParseBool(const std::string& s) {
     return b;
 }
 
-void PostScreenMessage(const std::string& text, float duration, int style = 1 /*UPPER_CENTER*/) {
-    EvaEnvironment::postedMessages.push_back(text);
-    if (EvaEnvironment::postScreenMessage) EvaEnvironment::postScreenMessage(text, duration, style);
-}
-
 std::string KeyName(const std::shared_ptr<KeyBinding>& k) { return k ? k->name() : std::string(); }
 }  // namespace
 
