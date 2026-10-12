@@ -13,7 +13,13 @@
 #include <set>
 
 #include "doctest/doctest.h"
+#include "ksp/core/unity_time.hpp"
 #include "ksp/dotnet/mono_float.hpp"
+#include "ksp/aero/lifting_surface.hpp"
+#include "ksp/input/game_settings.hpp"
+#include "ksp/modules/module_rcs.hpp"
+#include "ksp/orbit/orbit_driver.hpp"
+#include "ksp/orbit/time_warp.hpp"
 #include "ksp/physics/floating_origin.hpp"
 #include "ksp/physics/krakensbane.hpp"
 #include "ksp/physics/reference_frame.hpp"
@@ -541,4 +547,449 @@ TEST_CASE("WP-20b scenario: a vessel at rest on the pad for 10 s does not drift"
         CHECK(res.maxDriftAfterSettle < b.drift);
         CHECK(res.maxSpeedAfterSettle < b.speed);
     }
+}
+
+namespace {
+// The flight-scene globals tests/flight_fixture.hpp sets for VesselPrecalculate (TimeWarp, Planetarium time, the frame flags), on top of
+// a wp20b::World. Restores them on exit.
+struct FlightGlobalsScope {
+    TimeWarp tw;
+    TimeWarpEnvironment twEnv;
+    explicit FlightGlobalsScope(World& w) {
+        w.pg.CalculateValues(w.sys->Bodies(), w.planetarium.Sun);
+        for (CelestialBody* b : w.sys->Bodies()) b->inverseRotation = false;
+        twEnv.LoadedSceneValue = GameScenes::FLIGHT;
+        TimeWarp::environment = &twEnv;
+        FlightGlobals::currentMainBody = &w.Kerbin();
+        w.planetarium.fixedDeltaTime = 0.02;
+        w.planetarium.timeScale = 1.0;
+        w.planetarium.time = 1000.0;
+        Time::fixedDeltaTime = 0.02f;
+        TimeWarp::fetch = &tw;
+        tw.warpRates = {1.0f, 5.0f, 10.0f, 50.0f, 100.0f, 1000.0f, 10000.0f, 100000.0f};
+        tw.physicsWarpRates = {1.0f, 2.0f, 3.0f, 4.0f};
+        tw.maxPhysicsRate_index = 3;
+        tw.Mode = TimeWarp::Modes::HIGH;
+        tw.curr_rate = 1.0f;
+        w.planetarium.UpdateCBs();
+    }
+    ~FlightGlobalsScope() {
+        TimeWarp::fetch = nullptr;
+        TimeWarp::environment = nullptr;
+        Time::fixedDeltaTime = 0.02f;
+        GameSettings::PHYSICS_EASE = true;
+        GameSettings::ORBIT_DRIFT_COMPENSATION = true;
+        FlightGlobals::ready = false;
+        FlightGlobals::ActiveVessel = nullptr;
+    }
+};
+
+// A real craft vessel unpacked on a circular orbit of the body: the orbit driver in TRACK_Phys (FlightEnv::MakeVessel's recipe)
+void PutInOrbit(Vessel& v, CelestialBody& body, double sma) {
+    v.orbitDriver->orbit = std::make_shared<Orbit>(0.0, 0.0, sma, 0.0, 0.0, 0.0, Planetarium::GetUniversalTime(), &body);
+    v.orbitDriver->updateMode = OrbitDriver::UpdateMode::TRACK_Phys;
+    v.orbitDriver->Start();
+    v.orbitDriver->orbit = std::make_shared<Orbit>(0.0, 0.0, sma, 0.0, 0.0, 0.0, Planetarium::GetUniversalTime(), &body);
+    v.lastBody = &body;
+    v.Landed = false;
+    v.Splashed = false;
+    v.situation = Vessel::Situations::ORBITING;
+    v.packed = false;
+    v.loaded = true;
+    v.staticPressurekPa = 0.0;
+}
+
+// the vessel-frame centre of mass of a vessel (rb.mass weights, KSP's rb.worldCenterOfMass of every part with a Rigidbody)
+Vector3d VesselFrameCom(Vessel& v) {
+    Vector3d s;
+    double m = 0;
+    for (Part* p : v.parts) {
+        if (!p->hasRigidbody) continue;
+        const double pm = PartRigidbodyMass(*p);
+        s += Vector3d(p->fields.orgPos + p->fields.orgRot * p->fields.CoMOffset) * pm;
+        m += pm;
+    }
+    return s * (1.0 / m);
+}
+
+struct CoastResult {
+    double maxErr = 0, maxRadiusErr = 0, maxFrameSpeed = 0;
+    int ticks = 0, corrections = 0;
+    size_t recentres = 0;
+};
+
+// physics_orbit_hold (tests/test_flight3.cpp RunOrbitHold) on the reduced-model bodies: VesselPrecalculate.FixedUpdate (CalculatePhysicsStats
+// through readPhysicsState, gravity, drift compensation), FlightIntegrator.Integrate (OffsetVelocity, integrationAccel through
+// IntegratePartBuffers), Krakensbane (the Galilean frame velocity), the Jolt step, FloatingOrigin, VesselPrecalculate.Update. The error is
+// the vessel CoM against the Kepler orbit the vessel started on.
+CoastResult RunCoast(World& w, double orbits, bool krakensbane) {
+    FlightGlobalsScope scope(w);
+    CelestialBody& kerbin = w.Kerbin();
+    for (CelestialBody* b : w.sys->Bodies())
+        if (b->orbitDriver) b->orbitDriver->reverse = false;
+    kerbin.orbitDriver->reverse = true;
+    GameSettings::PHYSICS_EASE = false;
+    GameSettings::ORBIT_DRIFT_COMPENSATION = true;
+    Vessel::env.frameCount = 1000;
+    const double r = kerbin.Radius + 80000.0;
+    const double ut0 = Planetarium::GetUniversalTime();
+    Orbit ref(0.0, 0.0, r, 0.0, 0.0, 0.0, ut0, &kerbin);
+    Vector3d p0, v0;
+    ref.GetOrbitalStateVectorsAtUT(ut0, p0, v0);
+    auto v = w.Craft("PhysProf-S");
+    PutInOrbit(*v, kerbin, r);
+    FlightGlobals::ActiveVessel = v.get();
+    FlightGlobals::ready = true;
+    PhysicsWorld world;
+    VesselPhysicsHost host(world);
+    host.frameOriginWorld = [&kerbin](const Vessel&) { return kerbin.position; };
+    host.Install();
+    Krakensbane kb;
+    FloatingOrigin fo;
+    if (krakensbane) {
+        REQUIRE(kb.Awake());
+        fo.Awake();
+        fo.ready = [] { return true; };
+        kb.host.snapshot = [&] {
+            FrameSnapshot s;
+            s.ready = true;
+            s.hasActiveVessel = true;
+            s.activeHasRigidbody = true;
+            s.active.isActive = true;
+            s.active.packed = v->packed;
+            s.active.radarAltitude = (v->CoMD - kerbin.position).magnitude() - kerbin.Radius;
+            s.velocityD = v->velocityD;
+            s.rb_velocityD = v->rb_velocityD;
+            s.upAxis = (v->CoMD - kerbin.position).normalized();
+            s.loaded.push_back(s.active);
+            return s;
+        };
+        kb.host.changeWorldVelocity = [&](size_t, const Vector3d& dv) {
+            if (VesselPhysics* p = host.Find(*v)) p->ChangeWorldVelocity(dv);  // Vessel.ChangeWorldVelocity (packed: nothing)
+        };
+        // Vessel.GoOffRails of the active vessel: Krakensbane.AddFrameVelocity(orbit velocity) before the parts unpack (Vessel.cs:2440),
+        // then Part.ResumeVelocity sets rb.velocity = orbit velocity - frame velocity (Part.cs:3827): the orbital speed stays a double
+        v->CoMD = kerbin.position + p0.xzy();  // the packed state (VesselPrecalculate's rails CoMD) the snapshot reads
+        Krakensbane::AddFrameVelocity(v0.xzy());
+        REQUIRE(SameBits(Krakensbane::GetFrameVelocity(), v0.xzy()));
+    }
+    // the vessel transform where its centre of mass is on the orbit (physics frame = Kerbin's inertial frame, origin at its centre)
+    VesselPose pose;
+    pose.position = p0.xzy() - VesselFrameCom(*v);
+    VesselPhysics& vp = host.Create(*v, pose);
+    vp.SetLinearVelocity(v0.xzy() - Krakensbane::GetFrameVelocity());
+    vp.AfterStep();
+    for (Part* p : v->parts) vp.SetAngularDrag(*p, 0.0f);  // FlightIntegrator in vacuum
+    const double dt = static_cast<double>(TimeWarp::fixedDeltaTime());  // 0.02f: the step of the solver, Krakensbane and the UT alike
+    CoastResult res;
+    res.ticks = static_cast<int>(orbits * ref.period / dt);
+    for (int k = 1; k <= res.ticks; k++) {
+        w.planetarium.time += dt;
+        v->precalc.FixedUpdate();
+        if (v->precalc.wasCorrectingDrift) res.corrections++;
+        if (!v->precalc.preIntegrationVelocityOffset.IsZero()) v->OffsetVelocity(v->precalc.preIntegrationVelocityOffset);  // FlightIntegrator.cs:665
+        host.IntegrateAll();  // integrationAccel on every Rigidbody, the part force buffers
+        if (krakensbane) {
+            kb.FixedUpdate();
+            res.maxFrameSpeed = std::max(res.maxFrameSpeed, vp.ClusterVelocity(0).magnitude());
+        }
+        host.Step(static_cast<float>(dt));
+        if (krakensbane) fo.FixedUpdate();
+        v->precalc.Update();
+        Vector3d rp, rv;
+        ref.GetOrbitalStateVectorsAtUT(Planetarium::GetUniversalTime(), rp, rv);
+        const Vector3d x = v->CoMD - kerbin.position;
+        res.maxErr = std::max(res.maxErr, (x - rp.xzy()).magnitude());
+        res.maxRadiusErr = std::max(res.maxRadiusErr, std::fabs(x.magnitude() - r));
+    }
+    host.Uninstall();
+    if (krakensbane) {
+        kb.OnDestroy();
+        fo.OnDestroy();
+    }
+    return res;
+}
+}  // namespace
+
+// WP-19a's physics_orbit_hold (6.4 mm over 10 orbits with an exact double single-body integrator) with the vessel's real bodies: a
+// 21-part craft as one Jolt body, its state read through Vessel::env.readPhysicsState, the drift correction written through
+// offsetVelocity, gravity through IntegratePartBuffers. Jolt keeps velocities in float: with Krakensbane's frame velocity (KSP's rule:
+// the whole rb velocity moves into FrameVel every tick) the physics-frame velocity stays at a few m/s; without it the 2,279 m/s orbital
+// velocity has a 2.4e-4 m/s float ulp whose rounding the drift compensation refits into the orbit every tick.
+TEST_CASE("WP-20b scenario: 80 km orbit coast on the reduced-model bodies through VesselPrecalculate (WP-19a physics_orbit_hold)") {
+    if (!GameAvailable()) return;
+    World w;
+#ifdef NDEBUG
+    const double orbits = 1.0;
+#else
+    const double orbits = 0.1;  // the Debug build is ten times slower
+#endif
+    const CoastResult kb = RunCoast(w, orbits, true);
+    const CoastResult plain = RunCoast(w, orbits, false);
+    MESSAGE(orbits << " orbit(s), " << kb.ticks << " ticks: with Krakensbane max position error " << kb.maxErr << " m (radius " << kb.maxRadiusErr
+                   << " m, physics-frame speed <= " << kb.maxFrameSpeed << " m/s, " << kb.corrections << " drift corrections); without "
+                   << plain.maxErr << " m (radius " << plain.maxRadiusErr << " m)");
+    // measured (RelWithDebInfo, one orbit): 1.4 mm / 0.33 mm with Krakensbane (WP-19a's exact double single body: 3 mm per orbit), 5.2 m /
+    // 1.4 m without it (float velocities at orbital speed)
+    CHECK(kb.corrections >= kb.ticks - 1);
+    CHECK(kb.maxErr < 0.01);
+    CHECK(kb.maxRadiusErr < 0.005);
+    CHECK(kb.maxFrameSpeed < 1.0);
+    CHECK(plain.maxErr < 20.0);
+    CHECK(kb.maxErr * 100.0 < plain.maxErr);
+}
+
+TEST_CASE("WP-20b host: GoOffRails builds the bodies at the rails state (CoM within 1e-6 m, orbit velocity), the seams read them, GoOnRails removes them") {
+    if (!GameAvailable()) return;
+    World w;
+    FlightGlobalsScope scope(w);
+    CelestialBody& kerbin = w.Kerbin();
+    const double r = kerbin.Radius + 120000.0;
+    auto v = w.Craft("PhysProf-S");
+    PutInOrbit(*v, kerbin, r);
+    v->packed = true;
+    Vessel::env.frameCount = 1000;  // Vessel.PhysicsHoldExpired
+    FlightGlobals::ActiveVessel = v.get();
+    FlightGlobals::ready = true;
+    // the rails state: CoMD on the orbit (VesselPrecalculate's packed branch), localCoM from the vessel frame
+    Vector3d p0, v0;
+    v->orbit().GetOrbitalStateVectorsAtUT(Planetarium::GetUniversalTime(), p0, v0);
+    v->CoMD = kerbin.position + p0.xzy();
+    v->localCoM = VesselFrameCom(*v).ToVector3f();
+    PhysicsWorld world;
+    VesselPhysicsHost host(world);
+    host.frameOriginWorld = [&kerbin](const Vessel&) { return kerbin.position; };
+    host.Install();
+    REQUIRE(host.Find(*v) == nullptr);
+    v->GoOffRails();
+    CHECK_FALSE(v->packed);
+    VesselPhysics* vp = host.Find(*v);
+    REQUIRE(vp != nullptr);
+    CHECK(vp->ClusterCount() == 1);
+    CHECK(world.BodyCount() == 1);
+    // the bodies stand where the rails put the vessel: CoM (rb.mass weights) at CoMD
+    const Vector3d com = vp->WorldFromPhysics(vp->ClusterCenterOfMass(0));
+    CHECK((com - v->CoMD).magnitude() < 1e-6);
+    // Part.ResumeVelocity: the orbit velocity (no rotating frame, no frame velocity), float in the solver
+    CHECK((vp->ClusterVelocity(0) - v->orbit().GetVel(&kerbin)).magnitude() < 1e-3);
+    // CalculatePhysicsStats now reads the bodies through readPhysicsState
+    v->CalculatePhysicsStats();
+    CHECK((v->CoMD - com).magnitude() < 1e-6);
+    CHECK((v->rb_velocityD - vp->ClusterVelocity(0)).magnitude() < 1e-9);
+    // partRigidbody: the float Rigidbody of a part; rootRigidbody: the point velocity at the CoM
+    const PartRigidbodyState rs = Vessel::env.partRigidbody(*v->rootPart);
+    CHECK(rs.present);
+    CHECK(rs.mass == vp->PartMass(*v->rootPart));
+    Vector3f pv, av;
+    REQUIRE(Vessel::env.rootRigidbody(*v, v->CoMD.ToVector3f(), pv, av));
+    CHECK((Vector3d(pv) - vp->ClusterVelocity(0)).magnitude() < 1e-2);
+    // Vessel.OffsetVelocity -> every body
+    const Vector3d before = vp->ClusterVelocity(0);
+    v->OffsetVelocity(Vector3d(0.5, 0.0, -0.25));
+    CHECK((vp->ClusterVelocity(0) - (before + Vector3d(0.5, 0.0, -0.25))).magnitude() < 1e-3);
+    // GoOnRails: Part.Pack -> the bodies go
+    v->GoOnRails();
+    CHECK(v->packed);
+    CHECK(host.Find(*v) == nullptr);
+    CHECK(world.BodyCount() == 0);
+    host.Uninstall();
+    CHECK_FALSE(static_cast<bool>(Vessel::env.readPhysicsState));
+}
+
+TEST_CASE("WP-20b mass update: rb.mass changes move the centre of mass inside the body, the parts keep their velocities") {
+    if (!GameAvailable()) return;
+    World w;
+    auto v = w.Craft("PhysProf-S");
+    PhysicsWorld world;
+    VesselPhysics vp(world, *v, VesselPose{}, {});
+    vp.SetLinearVelocity(Vector3d(1.0, 2.0, 3.0));
+    world.SetAngularVelocity(vp.ClusterBody(0), Vector3d(0.0, 0.0, 0.4));
+    vp.AfterStep();
+    const std::vector<PartPhysicsState> before = vp.PartStates();
+    CHECK(vp.UpdateMassProperties() == 0);  // nothing changed
+    // drain half of every resource of the Rockomax tank (FlightIntegrator.UpdateMassStats -> physicsMass -> rb.mass)
+    Part* tank = FindPart(*v, "Rockomax32.BW");
+    REQUIRE(tank != nullptr);
+    const double massBefore = vp.ClusterMass(0);
+    const float tankBefore = vp.PartMass(*tank);
+    for (size_t k = 0; k < tank->Resources.size(); ++k) tank->Resources[k].amount *= 0.5;
+    v->UpdateMassStats();
+    CHECK(vp.UpdateMassProperties() == 1);
+    CHECK(vp.PartMass(*tank) < tankBefore);
+    CHECK(vp.ClusterMass(0) == doctest::Approx(massBefore - (tankBefore - vp.PartMass(*tank))).epsilon(1e-9));
+    // the new centre of mass = the rb.mass-weighted mean of the parts' centres of mass; its velocity = the parts' momentum / mass
+    Vector3d s, P;
+    double m = 0;
+    for (size_t i = 0; i < v->parts.size(); ++i) {
+        const double pm = vp.PartMass(*v->parts[i]);
+        s += before[i].centerOfMass * pm;
+        P += before[i].velocity * pm;
+        m += pm;
+    }
+    CHECK((vp.ClusterCenterOfMass(0) - s * (1.0 / m)).magnitude() < 1e-6);
+    CHECK((vp.ClusterVelocity(0) - P * (1.0 / m)).magnitude() < 1e-5);
+    // the parts did not move, the solver's mass is the new one
+    const std::vector<PartPhysicsState> after = vp.PartStates();
+    for (size_t i = 0; i < after.size(); ++i) CHECK((after[i].position - before[i].position).magnitude() < 1e-9);
+    CHECK(world.GetMass(vp.ClusterBody(0)) == doctest::Approx(vp.ClusterMass(0)).epsilon(1e-6));
+    // the inertia equals a fresh build from the same part states
+    PhysicsWorld world2;
+    VesselPhysics fresh(world2, *v, vp.PartStates(), {});
+    double I1[3][3], I2[3][3];
+    vp.ClusterInertia(0, I1);
+    fresh.ClusterInertia(0, I2);
+    for (int a = 0; a < 3; ++a)
+        for (int b = 0; b < 3; ++b) CHECK(I1[a][b] == doctest::Approx(I2[a][b]).epsilon(1e-9).scale(1.0));
+}
+
+TEST_CASE("WP-20b forces: Part.AddForce* semantics, FlightIntegrator.Integrate's buffers, ForceMode, the module force records") {
+    if (!GameAvailable()) return;
+    World w;
+    auto v = w.Craft("PhysProf-S");
+    Part* cone = FindPart(*v, "pointyNoseConeB");
+    REQUIRE(cone != nullptr);
+    cone->fields.PhysicsSignificance = 1;  // a physicsless part: its forces go to its RigidBodyPart
+    StartPartRigidbodies(*v);
+    v->UpdateMassStats();
+    PhysicsWorld world;
+    VesselPhysics vp(world, *v, VesselPose{}, {});
+    for (Part* p : v->parts) vp.SetAngularDrag(*p, 0.0f);
+    const double M = vp.ClusterMass(0);
+    double I[3][3];
+    vp.ClusterInertia(0, I);
+    const Vector3d c = vp.ClusterCenterOfMass(0);
+    const float dt = 0.02f;
+    const double h = static_cast<double>(dt);
+    // (1) Part.AddForce on the physicsless cone: applied at its RigidBodyPart's centre of mass
+    const Vector3d F(10.0, 0.0, 0.0);
+    vp.AddForce(*cone, F);
+    const Vector3d ownerCom = vp.PartState(*cone->parent).centerOfMass;
+    CHECK(vp.PartExternalForces()[static_cast<size_t>(vp.PartIndex(*cone->parent))].x == 10.0);
+    StepAll(vp, world, dt);
+    CHECK(vp.ClusterVelocity(0).x == doctest::Approx(F.x / M * h).epsilon(1e-5));
+    const Vector3d alpha = Solve3(I, Vector3d::Cross(ownerCom - c, F));
+    const Vector3d w1 = vp.ClusterAngularVelocity(0);
+    CHECK(w1.z == doctest::Approx(alpha.z * h).epsilon(1e-4));
+    // (2) FlightIntegrator.Integrate: integrationAccel on every Rigidbody, part.force / torque / forces consumed and cleared
+    vp.SetLinearVelocity(Vector3d());
+    world.SetAngularVelocity(vp.ClusterBody(0), Vector3d());
+    vp.AfterStep();
+    Part* tank = FindPart(*v, "Rockomax32.BW");
+    tank->fields.force = Vector3d(0.0, 50.0, 0.0);
+    tank->fields.torque = Vector3d(0.0, 3.0, 0.0);
+    const Vector3f tankPos = tank->partTransform.position;
+    tank->forces.push_back(Part_ForceHolder(Vector3d(0.0, 0.0, 7.0), Vector3d(tankPos)));
+    cone->forces.push_back(Part_ForceHolder(Vector3d(1.0, 0.0, 0.0), Vector3d(tankPos)));  // a physicsless part's buffer is dropped (Integrate :735)
+    vp.IntegratePartBuffers(Vector3d(0.0, -9.0, 0.0));
+    CHECK(tank->forces.empty());
+    CHECK(tank->fields.force.IsZero());
+    CHECK(tank->fields.torque.IsZero());
+    CHECK(cone->forces.empty());
+    StepAll(vp, world, dt);
+    const Vector3d vNow = vp.ClusterVelocity(0);
+    CHECK(vNow.x == doctest::Approx(0.0).epsilon(1e-9).scale(1e-6));
+    CHECK(vNow.y == doctest::Approx((50.0 / M - 9.0) * h).epsilon(1e-5));
+    CHECK(vNow.z == doctest::Approx(7.0 / M * h).epsilon(1e-5));
+    // (3) ForceMode: Acceleration scales by the RigidBodyPart's rb.mass, Impulse / VelocityChange spread over the tick
+    vp.SetLinearVelocity(Vector3d());
+    world.SetAngularVelocity(vp.ClusterBody(0), Vector3d());
+    vp.AfterStep();
+    const double mt = vp.PartMass(*tank);
+    const Vector3d tc = vp.PartState(*tank).centerOfMass;
+    vp.AddRigidbodyForceAtPosition(*tank, Vector3d(2.0, 0.0, 0.0), Vector3d(vp.TransformFromPhysics(tc)), ForceMode::Acceleration);
+    vp.AddRigidbodyForce(*tank, Vector3d(0.0, 0.0, 0.1), ForceMode::VelocityChange);
+    vp.AddImpulse(*tank, Vector3d(0.0, 0.4, 0.0));
+    StepAll(vp, world, dt);
+    CHECK(vp.ClusterVelocity(0).x == doctest::Approx(2.0 * mt / M * h).epsilon(1e-4));
+    CHECK(vp.ClusterVelocity(0).z == doctest::Approx(0.1 * mt / M).epsilon(1e-4));
+    CHECK(vp.ClusterVelocity(0).y == doctest::Approx(0.4 / M).epsilon(1e-4));
+    // (4) the module records: aero drag / lift with rb.angularDrag, engine thrust, RCS, lifting surface
+    AeroForces af;
+    af.setAngularDrag = true;
+    af.angularDrag = 0.75f;
+    af.applyDrag = true;
+    af.dragForce = Vector3f(-1.0f, 0.0f, 0.0f);
+    af.dragPosition = tank->partTransform.position;
+    af.mode = AeroForceMode::Acceleration;
+    ApplyAeroForces(vp, *tank, af);
+    CHECK(vp.AngularDrag(*tank) == 0.75f);
+    ApplyAeroForces(vp, *cone, af);  // part.rb == null: the drag goes to part.Rigidbody, rb.angularDrag is not touched
+    CHECK(vp.AngularDrag(*cone) == 0.05f);
+    const size_t ti = static_cast<size_t>(vp.PartIndex(*tank));
+    const size_t oi = static_cast<size_t>(vp.PartIndex(*cone->parent));
+    CHECK(vp.PartExternalForces()[ti].x == doctest::Approx(-mt));                                    // Acceleration * rb.mass
+    CHECK(vp.PartExternalForces()[oi].x == doctest::Approx(-static_cast<double>(vp.PartMass(*cone->parent))));
+    EngineThrustResult et;
+    et.forces.push_back({Vector3f(0.0f, 100.0f, 0.0f), tank->partTransform.position});
+    et.forces.push_back({Vector3f(0.0f, 50.0f, 0.0f), tank->partTransform.position});
+    ApplyEngineForces(vp, *tank, et);
+    CHECK(vp.PartExternalForces()[ti].y == doctest::Approx(150.0));
+    ApplyRcsForces(vp, *tank, {RCSForce{Vector3f(0.0f, 0.0f, 2.0f), tank->partTransform.position}});
+    SurfaceForces sf;
+    sf.applied = true;
+    sf.liftForce = Vector3f(0.0f, 0.0f, 3.0f);
+    sf.liftPosition = tank->partTransform.position;
+    sf.applyDrag = true;
+    sf.dragForce = Vector3f(0.0f, 0.0f, -1.0f);
+    sf.dragPosition = tank->partTransform.position;
+    ApplySurfaceForces(vp, *tank, sf);
+    CHECK(vp.PartExternalForces()[ti].z == doctest::Approx(4.0));
+    vp.Flush(dt);
+    CHECK(vp.PartExternalForces()[ti].IsZero());  // cleared by Flush
+}
+
+TEST_CASE("WP-20b vessel split and merge: Part.decouple / Part.Couple through the host keep the momentum of the parts") {
+    if (!GameAvailable()) return;
+    World w;
+    Vessel::SpawnedVessels().clear();
+    auto v = w.Craft("PhysProf-S");
+    PhysicsWorld world;
+    VesselPhysicsHost host(world);
+    VesselPhysics& vp = host.Create(*v, VesselPose{});
+    vp.SetLinearVelocity(Vector3d(0.0, 0.0, 50.0));
+    world.SetAngularVelocity(vp.ClusterBody(0), Vector3d(0.05, 0.2, 0.0));
+    vp.AfterStep();
+    const Vector3d C = CompositeCom(vp);
+    Vector3d P0, L0;
+    Momentum(vp, C, P0, L0);
+    const double massBefore = vp.ClusterMass(0);
+    Part* d12 = nullptr;
+    for (Part* p : v->parts)
+        if (p->gameObjectName == "radialDecoupler1-2") d12 = p;
+    REQUIRE(d12 != nullptr);
+    Part* parentTank = d12->parent;
+    Vessel* booster = d12->decouple();  // WP-16 Part.decouple: the decoupler and its subtree become a new Vessel
+    REQUIRE(booster != nullptr);
+    VesselPhysics* bp = host.OnVesselSplit(*v, *booster);
+    REQUIRE(bp != nullptr);
+    VesselPhysics* cp = host.Find(*v);
+    REQUIRE(cp != nullptr);
+    CHECK(host.Count() == 2);
+    CHECK(cp->ClusterCount() == 1);
+    CHECK(bp->ClusterCount() == 1);
+    CHECK(world.BodyCount() == 2);
+    CHECK(bp->ClusterMass(0) + cp->ClusterMass(0) == doctest::Approx(massBefore).epsilon(1e-12));
+    Vector3d Pa, La, Pb, Lb;
+    Momentum(*cp, C, Pa, La);
+    Momentum(*bp, C, Pb, Lb);
+    CHECK(((Pa + Pb) - P0).magnitude() < 1e-6 * P0.magnitude());
+    CHECK(((La + Lb) - L0).magnitude() < 1e-6 * L0.magnitude());
+    // a few free ticks, then dock the booster back (Part.Couple): one body again, the momentum of both kept
+    for (int k = 0; k < 10; ++k) host.Step(0.02f);
+    Vector3d P1a, L1a, P1b, L1b;
+    const Vector3d C1 = (CompositeCom(*cp) * cp->ClusterMass(0) + CompositeCom(*bp) * bp->ClusterMass(0)) * (1.0 / (cp->ClusterMass(0) + bp->ClusterMass(0)));
+    Momentum(*cp, C1, P1a, L1a);
+    Momentum(*bp, C1, P1b, L1b);
+    d12->Couple(parentTank);  // the booster Vessel is destroyed by Couple: the bindings were looked up before
+    VesselPhysics* merged = host.OnVesselMerge(bp, cp, *v);
+    REQUIRE(merged != nullptr);
+    CHECK(host.Count() == 1);
+    CHECK(merged->ClusterCount() == 1);
+    CHECK(world.BodyCount() == 1);
+    Vector3d P2, L2;
+    Momentum(*merged, C1, P2, L2);
+    CHECK((P2 - (P1a + P1b)).magnitude() < 1e-6 * P2.magnitude());
+    CHECK((L2 - (L1a + L1b)).magnitude() < 1e-5 * L2.magnitude());
+    host.DestroyAll();
+    Vessel::SpawnedVessels().clear();
 }

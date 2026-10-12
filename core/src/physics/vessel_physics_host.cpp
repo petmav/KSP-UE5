@@ -72,13 +72,14 @@ VesselPhysics* VesselPhysicsHost::OnVesselSplit(Vessel& original, Vessel& split)
     return &Adopt(std::move(part));
 }
 
-VesselPhysics* VesselPhysicsHost::OnVesselMerge(Vessel& a, Vessel& b, Vessel& merged) {
-    VesselPhysics* pa = Find(a);
-    VesselPhysics* pb = Find(b);
+VesselPhysics* VesselPhysicsHost::OnVesselMerge(Vessel& a, Vessel& b, Vessel& merged) { return OnVesselMerge(Find(a), Find(b), merged); }
+
+VesselPhysics* VesselPhysicsHost::OnVesselMerge(VesselPhysics* pa, VesselPhysics* pb, Vessel& merged) {
     if (pa == nullptr || pb == nullptr) return nullptr;
     std::unique_ptr<VesselPhysics> m = VesselPhysics::Merge(*pa, *pb, merged);
-    Destroy(a);
-    Destroy(b);
+    vessels_.erase(std::remove_if(vessels_.begin(), vessels_.end(),
+                                  [&](const std::unique_ptr<VesselPhysics>& vp) { return vp.get() == pa || vp.get() == pb; }),
+                   vessels_.end());
     return &Adopt(std::move(m));
 }
 

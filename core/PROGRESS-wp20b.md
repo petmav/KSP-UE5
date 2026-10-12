@@ -29,3 +29,11 @@ Optimizer-tier package. Scope: `core/PHYSICS-SPIKE.md` section 7 row WP-20b, as 
 - finding: on a 4 x 4 terrain patch M2-AS limit-cycles on the pad (7 cm/s) where the spike's 30 x 30 patch gives exact rest:
   Jolt's contact order follows body ids. Fixture now builds the spike's 30 x 30 patch (heights cached per World).
 - bench tools/wp20b/bench.cpp is built in the spike tree (Release) for timings comparable with the spike's tables.
+- tests added: orbit coast (1 orbit: 1.4 mm / 0.33 mm with Krakensbane started as GoOffRails does; 5.2 m without), host wiring
+  (GoOffRails / GoOnRails, seams), mass update (CoM shift), forces (Part.AddForce*, Integrate buffers, ForceMode, module records),
+  vessel split / merge through Part.decouple / Part.Couple (momentum kept).
+- perf: per-part pose cache, flat part index map, bit-identical diagonal-only MOI loop (Vessel::MOIFromRigidbodies 0.036 -> 0.021 ms
+  at 457 parts); Release pinned (mask 0x4) ticks: S 0.017, M2-AS 0.112, L2-AS 0.337, XL1-AS 0.788, XL2-AS 1.619 ms (spike same
+  session: 0.017 / 0.105 / 0.312 / 0.854 / 1.484).
+- fix: World(loadPqs) restores the Simplex / UnityEngine.Random global state (WP-03 SIMPLEX reference failed after it otherwise).
+- check_cites exact: 46 cites over the WP-20b files + vessel_motion.cpp, 0 mismatches (aliases added to tools/wp28/check_cites.py).

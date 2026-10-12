@@ -139,7 +139,7 @@ double Vessel::GetUnloadedVesselMass() {
     return num;
 }
 
-// VesselPrecalculate.cs:387
+// VesselPrecalculate.cs:388
 void Vessel::CalculatePhysicsStats(const std::function<PartRigidbodyState(Part&)>& rbOfArg) {
     const std::function<PartRigidbodyState(Part&)>& rbOf = rbOfArg ? rbOfArg : env.partRigidbody;  // WP-19a: the seam when no override
     bool flag = true;
@@ -268,29 +268,51 @@ void Vessel::CalculatePhysicsStats(const std::function<PartRigidbodyState(Part&)
     precalc.firstStatsRunComplete = true;
 }
 
-// VesselPrecalculate.cs:436-453, the loop of CalculatePhysicsStats above with `Vector3d(rb.position) - CoMD` given (WP-20b)
+// VesselPrecalculate.cs:388 CalculatePhysicsStats, its MOI loop (:436-453) as above with `Vector3d(rb.position) - CoMD` given (WP-20b).
+// Only KSPUtil.Diag(left) is returned, so only the diagonal of `left` and the matrix entries that feed it are evaluated, each with the
+// same float statements in the same order as the 4 x 4 loop above (Matrix4x4.TRS, operator* incl. the products with the zero and unit
+// entries, KSPUtil.Add / ToDiagonalMatrix2 / OuterProduct2): the result is bit-identical (tests/test_vessel_physics.cpp checks it).
 Vector3f Vessel::MOIFromRigidbodies(const std::vector<PartRigidbodyState>& states, const std::vector<Vector3d>& relPosition,
                                     const QuaternionD& quaternionD, const PartTransform& referenceTransform) {
-    Matrix4x4f left;  // Matrix4x4.zero
-    Matrix4x4f m = Matrix4x4f::identity(), m2 = Matrix4x4f::identity(), m3 = Matrix4x4f::identity();
+    float left00 = 0.0f, left11 = 0.0f, left22 = 0.0f;  // the diagonal of Matrix4x4.zero
     const Quaternionf quaternion = ToFloat(quaternionD);
+    auto rows = [](const Matrix4x4f& t, float r[4][4]) {
+        r[0][0] = t.m00; r[0][1] = t.m01; r[0][2] = t.m02; r[0][3] = t.m03;
+        r[1][0] = t.m10; r[1][1] = t.m11; r[1][2] = t.m12; r[1][3] = t.m13;
+        r[2][0] = t.m20; r[2][1] = t.m21; r[2][2] = t.m22; r[2][3] = t.m23;
+        r[3][0] = t.m30; r[3][1] = t.m31; r[3][2] = t.m32; r[3][3] = t.m33;
+    };
     for (size_t i = 0; i < states.size(); i++) {
         const PartRigidbodyState& rb = states[i];
         if (!rb.present) continue;
-        KSPUtil::ToDiagonalMatrix2(rb.inertiaTensor, m);
+        // m: Matrix4x4.identity with ToDiagonalMatrix2(rb.inertiaTensor) (off-diagonal 0, m33 = 1)
+        const float m[4][4] = {{rb.inertiaTensor.x, 0.0f, 0.0f, 0.0f}, {0.0f, rb.inertiaTensor.y, 0.0f, 0.0f},
+                               {0.0f, 0.0f, rb.inertiaTensor.z, 0.0f}, {0.0f, 0.0f, 0.0f, 1.0f}};
         const Quaternionf quaternion2 = quaternion * rb.rotation * rb.inertiaTensorRotation;
         const Quaternionf q = QInverse(quaternion2);
-        const Matrix4x4f matrix4x = TRSRotation(quaternion2);
-        const Matrix4x4f matrix4x2 = TRSRotation(q);
-        Matrix4x4f right = Mul(Mul(matrix4x, m), matrix4x2);
-        KSPUtil::Add(left, right);
+        float a[4][4], b[4][4];
+        rows(TRSRotation(quaternion2), a);
+        rows(TRSRotation(q), b);
+        float d[3];
+        for (int r = 0; r < 3; r++) {
+            float t[4];  // row r of matrix4x * m
+            for (int k = 0; k < 4; k++) t[k] = a[r][0] * m[0][k] + a[r][1] * m[1][k] + a[r][2] * m[2][k] + a[r][3] * m[3][k];
+            d[r] = t[0] * b[0][r] + t[1] * b[1][r] + t[2] * b[2][r] + t[3] * b[3][r];  // (matrix4x * m * matrix4x2)[r][r]
+        }
+        left00 += d[0];  // KSPUtil.Add(ref left, ref right)
+        left11 += d[1];
+        left22 += d[2];
         const Vector3f vector = referenceTransform.InverseTransformDirection(relPosition[i].ToVector3f());
-        KSPUtil::ToDiagonalMatrix2(rb.mass * vector.sqrMagnitude(), m2);
-        KSPUtil::Add(left, m2);
-        KSPUtil::OuterProduct2(vector, vector * (0.0f - rb.mass), m3);
-        KSPUtil::Add(left, m3);
+        const float s = rb.mass * vector.sqrMagnitude();  // ToDiagonalMatrix2(rb.mass * vector.sqrMagnitude, ref m2); Add
+        left00 += s;
+        left11 += s;
+        left22 += s;
+        const Vector3f vm = vector * (0.0f - rb.mass);  // OuterProduct2(vector, -m vector, ref m3); Add
+        left00 += vector.x * vm.x;
+        left11 += vector.y * vm.y;
+        left22 += vector.z * vm.z;
     }
-    return KSPUtil::Diag(left).ToVector3f();
+    return Vector3d(left00, left11, left22).ToVector3f();
 }
 
 // Krakensbane.GetFrameVelocity() (WP-20a): env.krakensbaneFrameVelocity when a host overrides it
@@ -382,7 +404,7 @@ void Vessel::SyncVesselTransform() {
 
 // ================================================================== kinematics
 
-// Vessel.cs:2845-2865 (the srf_velocity block of UpdatePosVel)
+// Vessel.cs:2786 UpdatePosVel, its srf_velocity block (:2845-2865)
 void Vessel::UpdateSurfaceSpeeds() {
     const double sqrMagnitude = srf_velocity.sqrMagnitude();
     if (sqrMagnitude > 0.0) {
@@ -535,8 +557,8 @@ void Vessel::UpdateCaches() {
 
 // ================================================================== atmosphere (FlightIntegrator.cs)
 
-// FlightIntegrator.cs:621-623 and CalculateConstantsAtmosphere / CalculateConstantsVacuum (:861-914): the values the integrator
-// copies onto its vessel
+// FlightIntegrator.cs:544 FixedUpdate, its lines :621-623, and CalculateConstantsAtmosphere / CalculateConstantsVacuum (:861-914): the
+// values the integrator copies onto its vessel
 void Vessel::ApplyFlightIntegratorAtmosphere(const FlightIntegratorAtmosphere& fi) {
     speed = fi.spd;
     staticPressurekPa = fi.staticPressurekPa;

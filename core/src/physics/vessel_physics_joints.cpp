@@ -42,9 +42,24 @@ struct BuildCtx {
 
 bool IsDockingNode(PartModule& m) { return dynamic_cast<ModuleDockingNode*>(&m) != nullptr; }
 
-// Part.HasFreePivot (Part.cs:8510): a module that is an IJointLockState with IsJointUnlocked(). kspcore's ported implementers are
+// The Part.cs / PartJoint.cs members ported here, as static functions of one file-local class (the C# instance is the first argument)
+struct PartJointRules {
+    static bool HasFreePivot(Part& p);
+    static AttachNode* AttachedPartNode(Part* previousPart, Part* currentPart, bool& srfAttached);
+    static bool HasFreePivotBetweenRoot(Part& self, Part*& lastPart, AttachNode*& nodeToParent, AttachNode*& nodeFromParent, bool& srfAttached);
+    static bool HasFreePivotBetweenParentPart(Part& self, Part* endPart, Part*& lastPart, AttachNode*& nodeToParent, AttachNode*& nodeFromParent,
+                                              bool& srfAttached);
+    static Part* GetAutoStrutAnchor(Vessel& vessel, Part& self, AttachNode*& nodeToParent, AttachNode*& nodeFromParent, bool& srfAttached);
+    static bool SetupJoint(PartJointSpec& j, const Vector3f& jointPos, int size, const BuildCtx& ctx);
+    static bool Create(PartJointSpec& j, Part& owner, Part& parent, AttachNode* nodeToParent, AttachNode* nodeFromParent, int mode, const BuildCtx& ctx);
+    static void SetUnbreakable(PartJointSpec& j);
+    static bool SecureAutoStrut(PartJointSpec& j, Part& self, Part& anchor, AttachNode* nodeToParent, AttachNode* nodeFromParent, bool srfAttached,
+                                const BuildCtx& ctx, AttachNode& storage);
+};
+
+// Part.cs:8511 HasFreePivot: a module that is an IJointLockState with IsJointUnlocked(). kspcore's ported implementers are
 // ModuleDockingNode and ModuleGrappleNode (BaseServo / ModuleJointMotor, the robotics, are not ported: WP-52).
-bool HasFreePivot(Part& p) {
+bool PartJointRules::HasFreePivot(Part& p) {
     PartModuleList& modules = p.Modules();
     size_t count = modules.Count();
     while (count-- > 0) {
@@ -58,8 +73,8 @@ bool HasFreePivot(Part& p) {
     return false;
 }
 
-// Part.AttachedPartNode (Part.cs:8551)
-AttachNode* AttachedPartNode(Part* previousPart, Part* currentPart, bool& srfAttached) {
+// Part.cs:8551 AttachedPartNode
+AttachNode* PartJointRules::AttachedPartNode(Part* previousPart, Part* currentPart, bool& srfAttached) {
     AttachNode* result = nullptr;
     srfAttached = false;
     if (previousPart == nullptr || currentPart == nullptr) return result;
@@ -82,8 +97,8 @@ AttachNode* AttachedPartNode(Part* previousPart, Part* currentPart, bool& srfAtt
     return result;
 }
 
-// Part.HasFreePivotBetweenRoot (Part.cs:8525)
-bool HasFreePivotBetweenRoot(Part& self, Part*& lastPart, AttachNode*& nodeToParent, AttachNode*& nodeFromParent, bool& srfAttached) {
+// Part.cs:8525 HasFreePivotBetweenRoot
+bool PartJointRules::HasFreePivotBetweenRoot(Part& self, Part*& lastPart, AttachNode*& nodeToParent, AttachNode*& nodeFromParent, bool& srfAttached) {
     Part* previousPart = &self;
     srfAttached = false;
     nodeToParent = nodeFromParent = nullptr;
@@ -105,8 +120,8 @@ bool HasFreePivotBetweenRoot(Part& self, Part*& lastPart, AttachNode*& nodeToPar
     return false;
 }
 
-// Part.HasFreePivotBetweenParentPart (Part.cs:8580)
-bool HasFreePivotBetweenParentPart(Part& self, Part* endPart, Part*& lastPart, AttachNode*& nodeToParent, AttachNode*& nodeFromParent,
+// Part.cs:8580 HasFreePivotBetweenParentPart
+bool PartJointRules::HasFreePivotBetweenParentPart(Part& self, Part* endPart, Part*& lastPart, AttachNode*& nodeToParent, AttachNode*& nodeFromParent,
                                    bool& srfAttached) {
     Part* previousPart = &self;
     srfAttached = false;
@@ -137,8 +152,8 @@ bool HasFreePivotBetweenParentPart(Part& self, Part* endPart, Part*& lastPart, A
     return false;
 }
 
-// Part.GetAutoStrutAnchor (Part.cs:8290). Heaviest / ForceHeaviest: the spike's rule (see the header), not GetMassivePart.
-Part* GetAutoStrutAnchor(Vessel& vessel, Part& self, AttachNode*& nodeToParent, AttachNode*& nodeFromParent, bool& srfAttached) {
+// Part.cs:8280 GetAutoStrutAnchor. Heaviest / ForceHeaviest: the spike's rule (see the header), not GetMassivePart.
+Part* PartJointRules::GetAutoStrutAnchor(Vessel& vessel, Part& self, AttachNode*& nodeToParent, AttachNode*& nodeFromParent, bool& srfAttached) {
     nodeToParent = nodeFromParent = nullptr;
     srfAttached = false;
     Part* lastPart = nullptr;
@@ -185,10 +200,9 @@ Part* GetAutoStrutAnchor(Vessel& vessel, Part& self, AttachNode*& nodeToParent, 
     }
 }
 
-// PartJoint.SetupJoint (PartJoint.cs:215-305): the connected body and the joint numbers. Returns false where the C# returns
-// null (no ConfigurableJoint). Robotic servo rigid bodies (:220-243) are WP-52's: kspcore has no servo, the target's
-// Rigidbody is used.
-bool SetupJoint(PartJointSpec& j, const Vector3f& jointPos, int size, const BuildCtx& ctx) {
+// PartJoint.cs:215 SetupJoint (to :305): the connected body and the joint numbers. Returns false where the C# returns null (no
+// ConfigurableJoint). Robotic servo rigid bodies (:220-243) are WP-52's: kspcore has no servo, the target's Rigidbody is used.
+bool PartJointRules::SetupJoint(PartJointSpec& j, const Vector3f& jointPos, int size, const BuildCtx& ctx) {
     Part* rigidbody = RigidBodyPart(j.target);  // target.Rigidbody
     Part* hostRb = RigidBodyPart(j.host);
     Part* connected = nullptr;
@@ -220,9 +234,9 @@ bool SetupJoint(PartJointSpec& j, const Vector3f& jointPos, int size, const Buil
     return true;
 }
 
-// PartJoint.Create (PartJoint.cs:96) + create (:138). Returns false when no joint results (create's error branch, or no
+// PartJoint.cs:96 Create, with create (:139) inlined. Returns false when no joint results (create's error branch, or no
 // ConfigurableJoint could be set up).
-bool CreatePartJoint(PartJointSpec& j, Part& owner, Part& parent, AttachNode* nodeToParent, AttachNode* nodeFromParent, int mode,
+bool PartJointRules::Create(PartJointSpec& j, Part& owner, Part& parent, AttachNode* nodeToParent, AttachNode* nodeFromParent, int mode,
                      const BuildCtx& ctx) {
     const TransformOf& tf = ctx.tf;
     AttachNode* attachNode = nodeToParent;
@@ -297,8 +311,8 @@ bool CreatePartJoint(PartJointSpec& j, Part& owner, Part& parent, AttachNode* no
     return j.internalJoints > 0;  // goodSetup; a PartJoint without ConfigurableJoints holds nothing
 }
 
-// PartJoint.SetUnbreakable(false, forceRigid) (PartJoint.cs:323-342): the PhysX break limits in flight (Part.ResetJoints, Part.cs:3815)
-void SetBreakable(PartJointSpec& j) {
+// PartJoint.cs:315 SetUnbreakable(false, forceRigid) (the branch :332-342): the PhysX break limits in flight (Part.ResetJoints, Part.cs:3815)
+void PartJointRules::SetUnbreakable(PartJointSpec& j) {
     const bool flag = j.rigid || j.forceRigid;
     if (PhysicsGlobals::Instance() == nullptr) {  // no Physics.cfg loaded: the factors' C# defaults are not known here
         j.breakForce = j.breakingForce;
@@ -311,8 +325,8 @@ void SetBreakable(PartJointSpec& j) {
                              fx(flag ? PhysicsGlobals::RigidJointBreakTorqueFactor() : 1.0f));
 }
 
-// Part.SecureAutoStrut (Part.cs:8098): the AutoStrut node and PartJoint.Create(this, anchor, node, nodeFromParent, SRF_ATTACH)
-bool SecureAutoStrut(PartJointSpec& j, Part& self, Part& anchor, AttachNode* nodeToParent, AttachNode* nodeFromParent, bool srfAttached,
+// Part.cs:8098 SecureAutoStrut: the AutoStrut node and PartJoint.Create(this, anchor, node, nodeFromParent, SRF_ATTACH)
+bool PartJointRules::SecureAutoStrut(PartJointSpec& j, Part& self, Part& anchor, AttachNode* nodeToParent, AttachNode* nodeFromParent, bool srfAttached,
                      const BuildCtx& ctx, AttachNode& storage) {
     const TransformOf& tf = ctx.tf;
     AttachNode attachNode;
@@ -337,7 +351,7 @@ bool SecureAutoStrut(PartJointSpec& j, Part& self, Part& anchor, AttachNode* nod
     attachNode.owner = &self;
     attachNode.size = 1;
     storage = attachNode;
-    return CreatePartJoint(j, self, anchor, &storage, nodeFromParent, kSrfAttach, ctx);
+    return Create(j, self, anchor, &storage, nodeFromParent, kSrfAttach, ctx);
 }
 
 }  // namespace
@@ -355,9 +369,9 @@ std::vector<PartJointSpec> BuildPartJoints(Vessel& vessel, const JointGlobals& g
         AttachNode* nodeFromParent = p->parent->FindAttachNodeByPart(p);
         PartJointSpec j;
         j.kind = JointKind::Attach;
-        if (!CreatePartJoint(j, *p, *p->parent, nodeToParent, nodeFromParent, p->fields.attachMode, ctx)) continue;
+        if (!PartJointRules::Create(j, *p, *p->parent, nodeToParent, nodeFromParent, p->fields.attachMode, ctx)) continue;
         j.forceRigid = p->fields.rigidAttachment;
-        SetBreakable(j);
+        PartJointRules::SetUnbreakable(j);
         out.push_back(j);
     }
     // ---- autostruts: Part.CycleAutoStrut -> SecureAutoStruts (Part.cs:8044-8091) for every part with autoStrutMode != Off
@@ -367,12 +381,12 @@ std::vector<PartJointSpec> BuildPartJoints(Vessel& vessel, const JointGlobals& g
         AttachNode* nodeToParent = nullptr;
         AttachNode* nodeFromParent = nullptr;
         bool srfAttached = false;
-        Part* anchor = GetAutoStrutAnchor(vessel, *p, nodeToParent, nodeFromParent, srfAttached);
+        Part* anchor = PartJointRules::GetAutoStrutAnchor(vessel, *p, nodeToParent, nodeFromParent, srfAttached);
         if (anchor == nullptr || anchor == p) continue;
         AttachNode node;
         PartJointSpec j;
         j.kind = JointKind::AutoStrut;
-        if (SecureAutoStrut(j, *p, *anchor, nodeToParent, nodeFromParent, srfAttached, ctx, node)) {
+        if (PartJointRules::SecureAutoStrut(j, *p, *anchor, nodeToParent, nodeFromParent, srfAttached, ctx, node)) {
             j.breakForce = j.breakTorque = std::numeric_limits<float>::infinity();  // SetupJoint's +inf; autostruts are never SetUnbreakable'd
             out.push_back(j);
         }
@@ -382,13 +396,13 @@ std::vector<PartJointSpec> BuildPartJoints(Vessel& vessel, const JointGlobals& g
             while (count-- > 0) {
                 Part* cp = anchor->symmetryCounterparts[count];
                 Part* lastPart = nullptr;
-                if (!HasFreePivotBetweenParentPart(*p, cp, lastPart, nodeToParent, nodeFromParent, srfAttached)) {
+                if (!PartJointRules::HasFreePivotBetweenParentPart(*p, cp, lastPart, nodeToParent, nodeFromParent, srfAttached)) {
                     if (p->symmetryCounterparts.size() >= count && cp->isRobotic() && count < p->symmetryCounterparts.size())
-                        nodeToParent = AttachedPartNode(p->symmetryCounterparts[count], cp, srfAttached);
+                        nodeToParent = PartJointRules::AttachedPartNode(p->symmetryCounterparts[count], cp, srfAttached);
                     AttachNode node2;
                     PartJointSpec j2;
                     j2.kind = JointKind::AutoStrut;
-                    if (SecureAutoStrut(j2, *p, *cp, nodeToParent, nodeFromParent, srfAttached, ctx, node2)) {
+                    if (PartJointRules::SecureAutoStrut(j2, *p, *cp, nodeToParent, nodeFromParent, srfAttached, ctx, node2)) {
                         j2.breakForce = j2.breakTorque = std::numeric_limits<float>::infinity();
                         out.push_back(j2);
                     }
@@ -406,7 +420,7 @@ std::vector<PartJointSpec> BuildPartJoints(Vessel& vessel, const JointGlobals& g
             if (node == nullptr) continue;
             PartJointSpec j;
             j.kind = JointKind::Strut;
-            if (CreatePartJoint(j, *strut->jointRoot, *strut->jointTarget, node, nullptr, kSrfAttach, ctx)) {
+            if (PartJointRules::Create(j, *strut->jointRoot, *strut->jointTarget, node, nullptr, kSrfAttach, ctx)) {
                 j.breakForce = j.breakTorque = std::numeric_limits<float>::infinity();
                 out.push_back(j);
             }

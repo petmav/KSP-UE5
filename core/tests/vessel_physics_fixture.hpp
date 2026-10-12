@@ -43,6 +43,8 @@
 #include "ksp/save/ship_construct.hpp"
 #include "ksp/terrain/pqs.hpp"
 #include "ksp/terrain/pqs_prefab.hpp"
+#include "ksp/unity/random.hpp"
+#include "ksp/util/simplex.hpp"
 #include "ksp/vessel/vessel.hpp"
 #include "ksp/vessel/vessel_assembly.hpp"
 
@@ -59,8 +61,22 @@ inline bool GameAvailable() { return std::filesystem::exists(std::filesystem::pa
 constexpr double kPadLat = -0.0972077486779459;
 constexpr double kPadLon = -74.5576813534722;
 
+// Building a PQS reseeds UnityEngine.Random and rewrites the static Simplex permutation tables (Simplex.cs:155, as in KSP): the
+// process-wide state later test cases (WP-03's Simplex reference) depend on is restored when the World goes (tests/test_terrain.cpp).
+struct SimplexStateGuard {
+    std::array<int, 256> simplexP = Simplex::StaticPermutation();
+    std::array<int, 256> simplexNoiseP = SimplexNoise::StaticPermutation();
+    UnityRandom::State random = UnityRandom::Global().state();
+    ~SimplexStateGuard() {
+        Simplex::StaticPermutation() = simplexP;
+        SimplexNoise::StaticPermutation() = simplexNoiseP;
+        UnityRandom::Global().SetState(random);
+    }
+};
+
 // Game data + PhysicsGlobals + Planetarium + the Kerbol system (as tests/test_vessel.cpp World14), Kerbin's PQS on demand.
 struct World {
+    SimplexStateGuard simplexGuard;  // first member: restored last
     GameData data;
     PhysicsGlobals pg;
     Planetarium planetarium;
@@ -274,6 +290,7 @@ struct AscentConfig {
     // contact constraints by body id, and on a statically indeterminate support (9-49 engine bells) a different order can leave the
     // contact solver in a small limit cycle (M2-AS on a 4 x 4 patch: 7 cm/s, 9 mm) instead of exact rest (30 x 30, as the spike)
     int terrainQuads = 30;
+    bool fineTiming = false;  // time the pipeline's parts per part (adds three clock reads per part: only for the bench's split)
 };
 
 struct AscentSample {
@@ -393,7 +410,7 @@ inline AscentResult RunAscent(World& w, Vessel& v, const AscentConfig& cfg) {
             });
             tb = Clock::now();
             for (Part* p : v.parts) {
-                const auto u0 = Clock::now();
+                const auto u0 = cfg.fineTiming ? Clock::now() : t0;
                 Part* owner = RigidBodyPart(p);
                 if (owner == nullptr) continue;
                 const PartRigidbodyState ors = vp.RigidbodyState(*owner);
@@ -403,14 +420,16 @@ inline AscentResult RunAscent(World& w, Vessel& v, const AscentConfig& cfg) {
                 rb.partHasRb = p->hasRigidbody;
                 rb.velocity = ors.velocity;
                 rb.worldCenterOfMass = ors.worldCenterOfMass;
-                const auto u1 = Clock::now();
+                const auto u1 = cfg.fineTiming ? Clock::now() : t0;
                 const AeroForces af = fi.UpdateAerodynamics<aero::MonoFloat>(*p, rb);
-                const auto u2 = Clock::now();
+                const auto u2 = cfg.fineTiming ? Clock::now() : t0;
                 ApplyAeroForces(vp, *p, af);
-                const auto u3 = Clock::now();
-                rbRead += ms(u0, u1);
-                aeroT += ms(u1, u2);
-                apply += ms(u2, u3);
+                if (cfg.fineTiming) {
+                    const auto u3 = Clock::now();
+                    rbRead += ms(u0, u1);
+                    aeroT += ms(u1, u2);
+                    apply += ms(u2, u3);
+                }
             }
         }
         if (tick >= cfg.settleTicks && cfg.throttle > 0.0f)

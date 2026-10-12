@@ -20,9 +20,9 @@
 
 namespace ksp::physics {
 
-namespace {
-
 constexpr int kFull = 0;  // Part.PhysicalSignificance.FULL
+
+namespace {
 
 // ---- 3x3 double algebra (engine glue) ------------------------------------------------------------------------------------
 struct Mat3 {
@@ -110,55 +110,6 @@ uint32_t NextGroupId() {
 }
 
 }  // namespace
-
-// ===================================================================================== Part.Start rules
-
-// Part.cs:1788-1834 (PhysicsSignificance -> physicalSignificance, the robotic parent promotion, the root is FULL) and
-// :1868-1885 (a Rigidbody for FULL parts). Idempotent on the same tree.
-void StartPartRigidbodies(Vessel& vessel) {
-    for (Part* p : vessel.parts) {
-        if (p->fields.PhysicsSignificance != -1) {
-            if (p->parent != nullptr && p->parent->isRobotic()) {  // HighLogic.LoadedSceneIsFlight && parent.isRobotic()
-                p->PromoteToPhysicalPart();
-                if (p->fields.prefabMass < 0.0065f) {
-                    p->fields.prefabMass = 0.0065f;
-                    p->fields.mass = 0.0065f;
-                }
-            } else {
-                p->fields.PhysicsSignificance = Mathf::Max(0, p->fields.PhysicsSignificance);
-                p->fields.physicalSignificance = p->fields.PhysicsSignificance;
-                p->fields.previousPhysicalSignificance = p->fields.physicalSignificance;
-            }
-        }
-        if (p->fields.physicalSignificance != kFull && p->vessel != nullptr && p->vessel->rootPart == p) {  // :1830
-            p->fields.physicalSignificance = kFull;
-            p->fields.previousPhysicalSignificance = p->fields.physicalSignificance;
-        }
-        p->hasRigidbody = p->fields.physicalSignificance == kFull;  // :1868-1872 rb = AddComponent<Rigidbody>()
-    }
-}
-
-// FlightIntegrator.cs:476-489
-float PartRigidbodyMass(const Part& part) {
-    if (!part.hasRigidbody) return 0.0f;
-    const float num = static_cast<float>(part.fields.physicsMass);  // `float num` of UpdateMassStats, stored in physicsMass
-    const float minimum = part.partInfo != nullptr ? part.partInfo->minimumRBMass : PhysicsGlobals::PartRBMassMin();
-    return Mathf::Max(minimum, num);
-}
-
-// Part.cs:4263-4268
-Vector3f PartInertiaTensor(const Vector3f& perUnitMass, float rbMass, bool floor) {
-    if (perUnitMass.x > 1E-06f && perUnitMass.y > 1E-06f && perUnitMass.z > 1E-06f)
-        return perUnitMass * (floor ? Mathf::Max(1.0f, rbMass) : rbMass);
-    return perUnitMass * rbMass;  // no override: PhysX's tensor scales with the mass
-}
-
-// Part.cs:1184
-Part* RigidBodyPart(Part* part) {
-    if (part == nullptr) return nullptr;
-    if (!part->hasRigidbody) return part->parent != nullptr ? RigidBodyPart(part->parent) : nullptr;
-    return part;
-}
 
 // ===================================================================================== collider proxies
 
@@ -280,8 +231,8 @@ void VesselPhysics::Init(const std::vector<PartPhysicsState>& states, uint32_t g
     std::vector<PartTransform> vf(parts_.size());
     for (size_t i = 0; i < parts_.size(); ++i) vf[i] = VesselFrameTransform(*parts_[i]->part);
     joints_ = BuildPartJoints(*vessel_, options_.jointGlobals, [this, &vf](const Part& p) -> const PartTransform& {
-        const auto it = index_.find(&p);
-        return it != index_.end() ? vf[static_cast<size_t>(it->second)] : p.partTransform;
+        const int k = index_.Find(&p);
+        return k >= 0 ? vf[static_cast<size_t>(k)] : p.partTransform;
     });
     cut_.assign(joints_.size(), false);
     BuildClusters(states);
@@ -290,12 +241,12 @@ void VesselPhysics::Init(const std::vector<PartPhysicsState>& states, uint32_t g
 
 void VesselPhysics::IndexParts() {
     parts_.clear();
-    index_.clear();
+    index_.Reserve(vessel_->parts.size());
     const size_t n = vessel_->parts.size();
     for (size_t i = 0; i < n; ++i) {
         auto r = std::make_unique<PartRec>();
         r->part = vessel_->parts[i];
-        index_[r->part] = static_cast<int>(i);
+        index_.Insert(r->part, static_cast<int>(i));
         parts_.push_back(std::move(r));
     }
     sameVesselCollisionAll_ = n > 0;
@@ -304,7 +255,7 @@ void VesselPhysics::IndexParts() {
         Part& p = *r.part;
         r.rb = p.hasRigidbody;
         Part* owner = RigidBodyPart(&p);
-        r.owner = owner != nullptr && index_.count(owner) ? index_[owner] : -1;
+        r.owner = index_.Find(owner);
         r.colliders = options_.colliders ? options_.colliders(p) : DragCubeColliderProxy(p);
         r.inertiaPerUnit = ProxyInertiaPerUnitMass(r.colliders);
         r.rbMass = PartRigidbodyMass(p);
@@ -340,8 +291,8 @@ void VesselPhysics::BuildClusters(const std::vector<PartPhysicsState>& states) {
         bool art = options_.policy == ClusterPolicy::SplitAtDecouplers && IsDecouplerPart(*js.child);
         if (!art && options_.isArticulation) art = options_.isArticulation(js);
         if (art) continue;
-        const auto a = index_.find(js.hostBody), b = index_.find(js.targetBody);
-        if (a != index_.end() && b != index_.end()) unite(a->second, b->second);
+        const int a = index_.Find(js.hostBody), b = index_.Find(js.targetBody);
+        if (a >= 0 && b >= 0) unite(a, b);
     }
     // ---- clusters in order of their first part
     clusters_.clear();
@@ -443,9 +394,9 @@ void VesselPhysics::BuildClusters(const std::vector<PartPhysicsState>& states) {
     for (size_t j = 0; j < joints_.size(); ++j) {
         const PartJointSpec& js = joints_[j];
         if (cut_[j]) continue;
-        const auto a = index_.find(js.hostBody), b = index_.find(js.targetBody), ch = index_.find(js.child);
-        if (a == index_.end() || b == index_.end() || ch == index_.end()) continue;
-        int ca = parts_[static_cast<size_t>(a->second)]->cluster, cb = parts_[static_cast<size_t>(b->second)]->cluster;
+        const int a = index_.Find(js.hostBody), b = index_.Find(js.targetBody), ch = index_.Find(js.child);
+        if (a < 0 || b < 0 || ch < 0) continue;
+        const int ca = parts_[static_cast<size_t>(a)]->cluster, cb = parts_[static_cast<size_t>(b)]->cluster;
         if (ca == cb) continue;
         if (clusters_[static_cast<size_t>(ca)].body == kInvalidBody || clusters_[static_cast<size_t>(cb)].body == kInvalidBody) continue;
         const std::pair<int, int> key(std::min(ca, cb), std::max(ca, cb));
@@ -454,7 +405,7 @@ void VesselPhysics::BuildClusters(const std::vector<PartPhysicsState>& states) {
         Vector3d anchor;
         for (int k = 0; k < js.internalJoints; ++k) anchor += Vector3d(js.anchors[static_cast<size_t>(k)]);
         anchor = anchor * (1.0 / static_cast<double>(std::max(1, js.internalJoints)));
-        const PartRec& cr = *parts_[static_cast<size_t>(ch->second)];
+        const PartRec& cr = *parts_[static_cast<size_t>(ch)];
         const Vector3d point = cr.pos0 + cr.rot0 * anchor;
         const ConstraintId id = world_->CreateFixedConstraint(clusters_[static_cast<size_t>(ca)].body, clusters_[static_cast<size_t>(cb)].body, point);
         if (id != kInvalidConstraint) constraints_.push_back(id);
@@ -476,10 +427,7 @@ void VesselPhysics::DestroyBodies() {
 Vector3d VesselPhysics::WorldFromPhysics(const Vector3d& p) const { return frameOriginWorld + ReferenceFrame::TruePosition(p); }
 Vector3d VesselPhysics::PhysicsFromWorld(const Vector3d& w) const { return ReferenceFrame::PhysicsPosition(w - frameOriginWorld); }
 
-int VesselPhysics::PartIndex(const Part& part) const {
-    const auto it = index_.find(&part);
-    return it == index_.end() ? -1 : it->second;
-}
+int VesselPhysics::PartIndex(const Part& part) const { return index_.Find(&part); }
 
 int VesselPhysics::ClusterOf(const Part& part) const {
     const int i = PartIndex(part);
@@ -557,9 +505,12 @@ float VesselPhysics::AngularDrag(const Part& part) const {
 }
 
 PartPhysicsState VesselPhysics::PartState(const Part& part) const {
-    PartPhysicsState s;
     const int i = PartIndex(part);
-    if (i < 0) return s;
+    return i < 0 ? PartPhysicsState{} : StateAt(i);
+}
+
+PartPhysicsState VesselPhysics::StateAt(int i) const {
+    PartPhysicsState s;
     const PartRec& r = *parts_[static_cast<size_t>(i)];
     const ClusterRec& c = clusters_[static_cast<size_t>(r.cluster)];
     s.position = PartPositionNow(i);
@@ -573,8 +524,16 @@ PartPhysicsState VesselPhysics::PartState(const Part& part) const {
 
 std::vector<PartPhysicsState> VesselPhysics::PartStates() const {
     std::vector<PartPhysicsState> out(parts_.size());
-    for (size_t i = 0; i < parts_.size(); ++i) out[i] = PartState(*parts_[i]->part);
+    for (size_t i = 0; i < parts_.size(); ++i) out[i] = StateAt(static_cast<int>(i));
     return out;
+}
+
+void VesselPhysics::MapVesselParts() const {
+    const size_t count = vessel_->parts.size();
+    scratchIdx_.resize(count);
+    bool same = count == parts_.size();
+    for (size_t k = 0; same && k < count; ++k) same = vessel_->parts[k] == parts_[k]->part;
+    for (size_t k = 0; k < count; ++k) scratchIdx_[k] = same ? static_cast<int>(k) : PartIndex(*vessel_->parts[k]);
 }
 
 void VesselPhysics::SyncPartTransforms() {
@@ -592,7 +551,7 @@ void VesselPhysics::SyncPartTransforms() {
 
 // ===================================================================================== state readback
 
-// VesselPrecalculate.cs:388-460 (the loaded branch of CalculatePhysicsStats) over the rigid-body states of the reduced model, in
+// VesselPrecalculate.cs:388 CalculatePhysicsStats, its loaded branch (:388-460) over the rigid-body states of the reduced model, in
 // the double frame: rb.worldCenterOfMass / rb.position are the parts' double world positions, rb.velocity the cluster's velocity
 // at the part's centre of mass, rb.angularVelocity the cluster's (all parts of a rigid cluster share it).
 VesselPhysicsState VesselPhysics::ReadState() const {
@@ -602,8 +561,12 @@ VesselPhysicsState VesselPhysics::ReadState() const {
     Vector3d zero, zero2, zero3;
     double num = 0.0;
     const int count = static_cast<int>(vessel_->parts.size());
-    std::vector<int> idx(static_cast<size_t>(count));
-    for (int i = 0; i < count; ++i) idx[static_cast<size_t>(i)] = PartIndex(*vessel_->parts[static_cast<size_t>(i)]);
+    MapVesselParts();
+    const std::vector<int>& idx = scratchIdx_;
+    // quaternionD * rb.angularVelocity: the same for every part of a cluster (one rigid body), evaluated once per cluster
+    std::vector<Vector3d>& wRef = scratchRel_;
+    wRef.resize(clusters_.size());
+    for (size_t c = 0; c < clusters_.size(); ++c) wRef[c] = quaternionD * clusters_[c].w;
     int index = count;
     while (index-- > 0) {
         const int pi = idx[static_cast<size_t>(index)];
@@ -616,7 +579,7 @@ VesselPhysicsState VesselPhysics::ReadState() const {
         zero += WorldFromPhysics(comPhys) * physicsMass;
         const Vector3d vector3d = (c.v + Cross(c.w, comPhys - c.com)) * physicsMass;
         zero2 += vector3d;
-        zero3 += (quaternionD * c.w) * physicsMass;
+        zero3 += wRef[static_cast<size_t>(parts_[static_cast<size_t>(pi)]->cluster)] * physicsMass;
         num += physicsMass;
     }
     if (!(num > 0.0)) return out;
@@ -627,8 +590,10 @@ VesselPhysicsState VesselPhysics::ReadState() const {
     out.angularVelocityD = zero3 * num2;
     // MOI (VesselPrecalculate.cs:436-453): rb.inertiaTensor, part.transform.rotation (the synced transform), identity
     // rb.inertiaTensorRotation (the proxies are axis-aligned boxes), rb.position - CoMD and rb.mass, part order
-    std::vector<PartRigidbodyState> states(static_cast<size_t>(count));
-    std::vector<Vector3d> rel(static_cast<size_t>(count));
+    std::vector<PartRigidbodyState>& states = scratchStates_;
+    std::vector<Vector3d>& rel = scratchRel_;  // (wRef is no longer needed)
+    states.assign(static_cast<size_t>(count), PartRigidbodyState{});
+    rel.assign(static_cast<size_t>(count), Vector3d());
     for (int i = 0; i < count; ++i) {
         const int pi = idx[static_cast<size_t>(i)];
         if (pi < 0) continue;
@@ -650,7 +615,7 @@ PartRigidbodyState VesselPhysics::RigidbodyState(const Part& part) const {
     const int i = PartIndex(part);
     if (i < 0) return PartRigidbodyState::FromPart(part);
     const PartRec& r = *parts_[static_cast<size_t>(i)];
-    const PartPhysicsState st = PartState(part);
+    const PartPhysicsState st = StateAt(i);
     s.present = r.rb;
     s.physicsMass = part.fields.physicsMass;
     s.mass = r.rbMass;
@@ -680,6 +645,8 @@ bool VesselPhysics::RootRigidbody(const Vector3f& point, Vector3f& pointVelocity
 
 // ===================================================================================== velocities
 
+// Vessel.cs:3197 ChangeWorldVelocity: every Rigidbody's velocity += dv (also Vessel.OffsetVelocity, Vessel.cs:3742, and Krakensbane's
+// AddExcess); the Vessel's krakensbaneAcc bookkeeping of the C# is the caller's (WP-19b)
 void VesselPhysics::ChangeWorldVelocity(const Vector3d& dv) {
     for (ClusterRec& c : clusters_) {
         if (c.body == kInvalidBody) continue;
@@ -696,7 +663,7 @@ void VesselPhysics::SetLinearVelocity(const Vector3d& v) {
     }
 }
 
-// Part.ResumeVelocity (Part.cs:3827-3843) for the part's cluster, evaluated at the cluster's centre of mass
+// Part.cs:3827 ResumeVelocity (to :3843) for the part's cluster, evaluated at the cluster's centre of mass
 void VesselPhysics::ResumePartVelocity(Part& part) {
     const int i = PartIndex(part);
     if (i < 0) return;
@@ -793,7 +760,7 @@ void VesselPhysics::SetAngularDrag(Part& part, float angularDrag) {
 
 void VesselPhysics::AddUniformAcceleration(const Vector3d& acceleration) { uniformAccel_ += acceleration; }
 
-// FlightIntegrator.cs:715-745 Integrate(part), the force half (UpdateAerodynamics is WP-20d's), recursion from the root over the
+// FlightIntegrator.cs:715 Integrate(part) (to :745), the force half (UpdateAerodynamics is WP-20d's), recursion from the root over the
 // attached children in child order
 void VesselPhysics::IntegratePartBuffers(const Vector3d& integrationAccel) {
     UpdateMassProperties();
@@ -948,13 +915,13 @@ size_t VesselPhysics::Cut(const std::vector<Part*>& children) {
         if (!parts_[i]->rb && parts_[i]->owner >= 0) uf[static_cast<size_t>(find(static_cast<int>(i)))] = find(parts_[i]->owner);
     for (size_t j = 0; j < joints_.size(); ++j) {
         if (cut_[j] || joints_[j].kind != JointKind::Attach) continue;
-        const auto a = index_.find(joints_[j].hostBody), b = index_.find(joints_[j].targetBody);
-        if (a != index_.end() && b != index_.end()) uf[static_cast<size_t>(find(a->second))] = find(b->second);
+        const int a = index_.Find(joints_[j].hostBody), b = index_.Find(joints_[j].targetBody);
+        if (a >= 0 && b >= 0) uf[static_cast<size_t>(find(a))] = find(b);
     }
     for (size_t j = 0; j < joints_.size(); ++j) {
         if (cut_[j] || joints_[j].kind == JointKind::Attach) continue;
-        const auto a = index_.find(joints_[j].hostBody), b = index_.find(joints_[j].targetBody);
-        if (a == index_.end() || b == index_.end() || find(a->second) != find(b->second)) cut_[j] = true;
+        const int a = index_.Find(joints_[j].hostBody), b = index_.Find(joints_[j].targetBody);
+        if (a < 0 || b < 0 || find(a) != find(b)) cut_[j] = true;
     }
     const std::vector<PartPhysicsState> states = PartStates();
     DestroyBodies();
@@ -1002,3 +969,58 @@ std::unique_ptr<VesselPhysics> VesselPhysics::Merge(VesselPhysics& a, VesselPhys
 }
 
 }  // namespace ksp::physics
+
+// ===================================================================================== Part.Start rules (ksp::physics free functions)
+
+namespace ksp {
+
+using physics::kFull;
+
+// Part.cs:1663 Start, its flight-scene block: :1788-1834 (PhysicsSignificance -> physicalSignificance, the robotic parent promotion, the
+// root is FULL) and :1868-1885 (a Rigidbody for FULL parts). Idempotent on the same tree.
+void physics::StartPartRigidbodies(Vessel& vessel) {
+    for (Part* p : vessel.parts) {
+        if (p->fields.PhysicsSignificance != -1) {
+            if (p->parent != nullptr && p->parent->isRobotic()) {  // HighLogic.LoadedSceneIsFlight && parent.isRobotic()
+                p->PromoteToPhysicalPart();
+                if (p->fields.prefabMass < 0.0065f) {
+                    p->fields.prefabMass = 0.0065f;
+                    p->fields.mass = 0.0065f;
+                }
+            } else {
+                p->fields.PhysicsSignificance = Mathf::Max(0, p->fields.PhysicsSignificance);
+                p->fields.physicalSignificance = p->fields.PhysicsSignificance;
+                p->fields.previousPhysicalSignificance = p->fields.physicalSignificance;
+            }
+        }
+        if (p->fields.physicalSignificance != kFull && p->vessel != nullptr && p->vessel->rootPart == p) {  // :1830
+            p->fields.physicalSignificance = kFull;
+            p->fields.previousPhysicalSignificance = p->fields.physicalSignificance;
+        }
+        p->hasRigidbody = p->fields.physicalSignificance == kFull;  // :1868-1872 rb = AddComponent<Rigidbody>()
+    }
+}
+
+// FlightIntegrator.cs:452 UpdateMassStats, the rb.mass statements :476-489
+float physics::PartRigidbodyMass(const Part& part) {
+    if (!part.hasRigidbody) return 0.0f;
+    const float num = static_cast<float>(part.fields.physicsMass);  // `float num` of UpdateMassStats, stored in physicsMass
+    const float minimum = part.partInfo != nullptr ? part.partInfo->minimumRBMass : PhysicsGlobals::PartRBMassMin();
+    return Mathf::Max(minimum, num);
+}
+
+// Part.cs:4263 ValidateInertiaTensor (:4265-4268)
+Vector3f physics::PartInertiaTensor(const Vector3f& perUnitMass, float rbMass, bool floor) {
+    if (perUnitMass.x > 1E-06f && perUnitMass.y > 1E-06f && perUnitMass.z > 1E-06f)
+        return perUnitMass * (floor ? Mathf::Max(1.0f, rbMass) : rbMass);
+    return perUnitMass * rbMass;  // no override: PhysX's tensor scales with the mass
+}
+
+// Part.cs:1184 RigidBodyPart
+Part* physics::RigidBodyPart(Part* part) {
+    if (part == nullptr) return nullptr;
+    if (!part->hasRigidbody) return part->parent != nullptr ? RigidBodyPart(part->parent) : nullptr;
+    return part;
+}
+
+}  // namespace ksp

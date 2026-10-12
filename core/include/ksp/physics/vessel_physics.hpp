@@ -47,6 +47,7 @@
 #include <functional>
 #include <memory>
 #include <unordered_map>
+#include <cstddef>
 #include <vector>
 
 #include "ksp/math/quaterniond.hpp"
@@ -234,6 +235,59 @@ struct VesselPose {
     QuaternionD rotation = QuaternionD::identity();
 };
 
+namespace detail {
+// Part* -> index: open addressing over a power-of-two table (the per-part calls of a tick look parts up several times each)
+class PartIndexMap {
+public:
+    void Clear() {
+        slots_.clear();
+        size_ = 0;
+    }
+    void Reserve(size_t n) {
+        size_t cap = 16;
+        while (cap < 2 * n) cap <<= 1;
+        slots_.assign(cap, Slot{});
+        mask_ = cap - 1;
+        size_ = 0;
+    }
+    void Insert(const Part* p, int index) {
+        if (slots_.empty() || 2 * (size_ + 1) > slots_.size()) Grow();
+        size_t h = Hash(p) & mask_;
+        while (slots_[h].key != nullptr && slots_[h].key != p) h = (h + 1) & mask_;
+        if (slots_[h].key == nullptr) ++size_;
+        slots_[h] = Slot{p, index};
+    }
+    int Find(const Part* p) const {
+        if (slots_.empty() || p == nullptr) return -1;
+        size_t h = Hash(p) & mask_;
+        while (slots_[h].key != nullptr) {
+            if (slots_[h].key == p) return slots_[h].index;
+            h = (h + 1) & mask_;
+        }
+        return -1;
+    }
+
+private:
+    struct Slot {
+        const Part* key = nullptr;
+        int index = -1;
+    };
+    static size_t Hash(const Part* p) {
+        const uint64_t x = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(p)) >> 4;
+        return static_cast<size_t>((x * 0x9E3779B97F4A7C15ull) >> 20);
+    }
+    void Grow() {
+        std::vector<Slot> old;
+        old.swap(slots_);
+        Reserve(old.empty() ? 8 : old.size());
+        for (const Slot& s : old)
+            if (s.key != nullptr) Insert(s.key, s.index);
+    }
+    std::vector<Slot> slots_;
+    size_t mask_ = 0, size_ = 0;
+};
+}  // namespace detail
+
 class VesselPhysics final : public ForceAccumulator {
 public:
     // Builds the clusters of `vessel` at `pose` (parts placed by orgPos / orgRot relative to the root: the pristine coordinates of
@@ -364,6 +418,8 @@ private:
     void RefreshPartPoses();
     void AccumulateAt(int partIndex, const Vector3d& force, const Vector3d& pointPhysics);
     int OwnerIndex(const Part& part) const;  // index of the part's RigidBodyPart, -1 without one
+    PartPhysicsState StateAt(int i) const;
+    void MapVesselParts() const;  // scratchIdx_[k] = record of vessel.parts[k] (identity while the part list is unchanged)
     Vector3d PartPositionNow(int i) const;
     QuaternionD PartRotationNow(int i) const;
     Vector3d PartComNow(int i) const;
@@ -374,13 +430,17 @@ private:
     uint32_t group_ = 0;
     bool sameVesselCollisionAll_ = false;
     std::vector<std::unique_ptr<PartRec>> parts_;  // vessel part order at build
-    std::unordered_map<const Part*, int> index_;
+    detail::PartIndexMap index_;
     std::vector<PartJointSpec> joints_;
     std::vector<bool> cut_;
     std::vector<ClusterRec> clusters_;
     std::vector<ConstraintId> constraints_;
     std::vector<Vector3d> partForce_, partMoment_;
     Vector3d uniformAccel_;
+    // scratch of ReadState (not thread-safe: one reader at a time per binding)
+    mutable std::vector<int> scratchIdx_;
+    mutable std::vector<PartRigidbodyState> scratchStates_;
+    mutable std::vector<Vector3d> scratchRel_;
 };
 
 // ===================================================================================== the host: Vessel::env wiring
@@ -424,6 +484,8 @@ public:
     // vessel split / merge (the seams of WP-16's Part.decouple / Undock and WP-25's Couple): see VesselPhysics::SplitOff / Merge
     VesselPhysics* OnVesselSplit(Vessel& original, Vessel& split);
     VesselPhysics* OnVesselMerge(Vessel& a, Vessel& b, Vessel& merged);
+    // the same with the bindings themselves (Part.Couple destroys the source Vessel: look its binding up before the tree operation)
+    VesselPhysics* OnVesselMerge(VesselPhysics* a, VesselPhysics* b, Vessel& merged);
 
     // ---- per tick, in creation order (deterministic) ----------------------------------------------------------------------
     void RefreshFrames();     // frameOriginWorld / floatOrigin of every binding

@@ -11,6 +11,12 @@
 #include <string>
 #include <vector>
 
+#ifdef _WIN32
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+
 #include "vessel_physics_fixture.hpp"
 
 using namespace wp20b;
@@ -23,6 +29,7 @@ int main(int argc, char** argv) {
     AscentConfig cfg;
     int repeat = 1;
     int samples = 0;  // print every n-th sample (0: none)
+    unsigned long long affinity = 0;  // --affinity <hex mask>: pin to these logical CPUs at high priority (the spike's option)
     std::vector<std::string> crafts;
     for (int i = 2; i < argc; ++i) {
         const std::string a = argv[i];
@@ -37,9 +44,17 @@ int main(int argc, char** argv) {
         else if (a == "--repeat") repeat = std::stoi(next());
         else if (a == "--drag") cfg.defaultAngularDrag = std::stof(next());
         else if (a == "--quads") cfg.terrainQuads = std::stoi(next());
+        else if (a == "--fine-timing") cfg.fineTiming = true;
+        else if (a == "--affinity") affinity = std::stoull(next(), nullptr, 16);
         else if (a == "--samples") samples = std::stoi(next());
         else crafts.push_back(a);
     }
+#ifdef _WIN32
+    if (affinity != 0) {
+        SetProcessAffinityMask(GetCurrentProcess(), static_cast<DWORD_PTR>(affinity));
+        SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+    }
+#endif
     World w(true);
     std::printf("| craft | parts | bodies | constr. | tick mean | p95 | pipeline | ReadState+gravity | Flush | step | AfterStep | alt end (m) | v end | "
                 "pad drift (m) | pad speed (m/s) |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n");
@@ -56,7 +71,7 @@ int main(int argc, char** argv) {
         std::printf("| %s | %d | %d | %d | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.2f | %.3f | %.3g | %.3g |%s\n", name.c_str(), best.parts,
                     best.bodies, best.constraints, best.total.mean, best.total.p95, best.pipeline.mean, best.precalc.mean, best.flush.mean, best.step.mean,
                     best.after.mean, best.altitudeEnd, best.speedEnd, best.maxDriftAfterSettle, best.maxSpeedAfterSettle, best.exploded ? " EXPLODED" : "");
-        std::printf("    pipeline split (ms/tick): transforms+mass %.4f, aero setup %.4f, rb reads %.4f, UpdateAerodynamics %.4f, apply %.4f\n",
+        if (cfg.fineTiming) std::printf("    pipeline split (ms/tick): transforms+mass %.4f, aero setup %.4f, rb reads %.4f, UpdateAerodynamics %.4f, apply %.4f\n",
                     best.tTransforms, best.tAeroSetup, best.tRbRead, best.tAero, best.tApply);
         if (samples > 0)
             for (size_t k = 0; k < best.samples.size(); k += static_cast<size_t>(samples))
