@@ -3,6 +3,7 @@
 // below is the WP-38 class reduced to those members), the manager calls are seams (WaypointManagerSeam). WP-38 replaces both.
 #pragma once
 
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
@@ -60,7 +61,11 @@ public:
     Waypoint();                                 // :126 (navigationId = Guid.NewGuid(): ContractsEnvironment::NewGuid)
     Waypoint(const Waypoint& that);             // :131 (also draws a Guid when that.navigationId is empty)
     CelestialBody* celestialBody();             // :100 (cachedBody walk over FlightGlobals.Bodies by GetName(), falls back to Bodies[0])
-    int uniqueSeed() const { return (index + seed) * (index + seed + 1) / 2 + seed; }  // :122 (int arithmetic, wraps like C#)
+    int uniqueSeed() const {  // :122 (unchecked int arithmetic: computed in uint32_t, the signed overflow is undefined in C++)
+        const uint32_t a = static_cast<uint32_t>(index) + static_cast<uint32_t>(seed);
+        const int32_t prod = static_cast<int32_t>(a * (a + 1u));
+        return static_cast<int32_t>(static_cast<uint32_t>(prod / 2) + static_cast<uint32_t>(seed));
+    }
     // :174 SetFadeRange(referenceAltitude): the fade range is map-icon geometry (ScaledSpace.InverseScaleFactor, WP-46); recorded as a no-op
     void SetFadeRange(double referenceAltitude = -1.0) { (void)referenceAltitude; }
     // :165 setName(uniqueSites, allowNamed): StringUtilities.GenerateSiteName + #autoLOC_7001301

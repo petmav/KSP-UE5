@@ -498,6 +498,18 @@ Tolerances for harness goldens are owned by the harness (`harness/compare/tolera
 here. Capture tolerances are in `tests/tolerances_capture.json`: float32 columns may go up to 64 ULP / rel 5e-6 if
 bit-exactness is out of reach, and every such relaxation must be listed in STATUS.md.
 
+## Sanitizer run (ASan + UBSan + LSan)
+
+The whole unit binary is clean under `-fsanitize=address,undefined` (g++ 13, Linux/WSL; last run 2026-10-12, see STATUS.md "Sanitizer run 2026-10-12" for the findings and fixes). Reproduce on a Linux filesystem (not `/mnt`):
+
+```bash
+cmake -S core -B asan -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc   "-DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer -O1 -g"
+CMAKE_BUILD_PARALLEL_LEVEL=6 ninja -C asan -j6 kspcore_tests
+cd asan/tests && ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=print_stacktrace=1 ./kspcore_tests
+```
+
+The first ASan report aborts the process; to list every finding run one process per case (`./kspcore_tests -f=N -l=N`, N = 1..806). Three cases (WP-39 CommNetVessel control state, WP-40 symmetry mode cycling, PartLoader on the GameData mirror) depend on an earlier case and fail when run alone; use the whole binary. Use the same `core/testdata/` as the Windows tree, otherwise several game-data cases fail for lack of data.
+
 ## Regenerating the .NET reference data
 
 ```powershell

@@ -925,7 +925,7 @@ TEST_CASE("WP-42 PQSCity seed and Randomize wiring (KSPRandom draw order)") {
         w.game.Seed = seed;
         const int32_t a = static_cast<int32_t>(static_cast<uint32_t>(seed) + static_cast<uint32_t>(h));
         const int32_t prod = static_cast<int32_t>(static_cast<uint32_t>(a) * static_cast<uint32_t>(a + 1));
-        CHECK(PQSCity::GetPQSCitySeed("Randolith", "Kerbin") == prod / 2 + h);
+        CHECK(PQSCity::GetPQSCitySeed("Randolith", "Kerbin") == static_cast<int32_t>(static_cast<uint32_t>(prod / 2) + static_cast<uint32_t>(h)));
     }
     w.game.Seed = 12345;
     PQSCity c(Prefab("Kerbin", "Randolith"), &kerbin, &pqs);

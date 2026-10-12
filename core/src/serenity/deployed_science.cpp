@@ -94,6 +94,12 @@ std::vector<std::shared_ptr<SerenityBehaviour>>& SerenityBehaviour::live() {
 
 void SerenityBehaviour::DestroyGameObject() { destroyed = true; }
 
+bool SerenityBehaviour::IsLive(const SerenityBehaviour* b) {
+    for (const auto& p : live())
+        if (p.get() == b) return true;
+    return false;
+}
+
 void SerenityBehaviour::RunPendingStarts() {
     for (size_t i = 0; i < live().size(); i++) {
         std::shared_ptr<SerenityBehaviour> b = live()[i];
@@ -1180,7 +1186,11 @@ void DeployedScience::OnAwake() {
 // DeployedScience.cs:451
 void DeployedScience::RemoveMannedScienceObjects() {
     // the children of DeployedScienceGameObject that carry a DeployedScienceCluster are destroyed
-    for (int i = deployedScienceClusters.Count() - 1; i >= 0; i--) deployedScienceClusters.At(i)->DestroyGameObject();
+    // (C# walks the live children of the game object: a cluster whose Object.Destroy already ran is no longer a child, here it is gone from the registry)
+    for (int i = deployedScienceClusters.Count() - 1; i >= 0; i--) {
+        DeployedScienceCluster* cluster = deployedScienceClusters.At(i);
+        if (SerenityBehaviour::IsLive(cluster)) cluster->DestroyGameObject();
+    }
 }
 
 // DeployedScience.cs:108
