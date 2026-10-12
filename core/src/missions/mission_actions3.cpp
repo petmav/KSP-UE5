@@ -676,6 +676,7 @@ void ActionPartResourceDrain::OnVesselsUndocking(Vessel* oldVessel, Vessel* newV
 // ActionPartResourceDrain.cs:@Fire
 Enumerator ActionPartResourceDrain::Fire() {
     isRunning = true;
+    if (std::getenv("KSP_DBG")) std::fprintf(stderr, "DRAIN fire setup=%d\n", (int)setup);
     if (!setup) {
         if (!Setup()) {
             isRunning = false;
@@ -711,6 +712,7 @@ Enumerator ActionPartResourceDrain::Fire() {
 
 // ActionPartResourceDrain.cs:@Setup
 bool ActionPartResourceDrain::Setup() {
+    if (std::getenv("KSP_DBG")) std::fprintf(stderr, "DRAIN Setup enter\n");
     if (vesselPartIDs.VesselID != 0 && amountToDrain != 0.0f && !(resourceName == "") && SaveEnvironment::Current().persistentIds.fetch) {
         if (vesselPartIDs.VesselID != 0 && vesselPartIDs.partID == 0) {
             vesselDrain = true;
@@ -724,6 +726,7 @@ bool ActionPartResourceDrain::Setup() {
         PartResourceLibrary* lib = PartResourceLibrary::Instance();
         if (lib == nullptr) throw NullReferenceException();
         resourcedef = lib->GetDefinition(resourceName);
+        if (std::getenv("KSP_DBG")) std::fprintf(stderr, "DRAIN got def\n");
         if (resourcedef == nullptr) return false;  // Debug.LogWarning("[MissionExpansions] ActionPartResourceDrain failed to find resource")
         if (timePeriod <= 0.0f) {
             drainPerSecond = amountToDrain;
@@ -731,6 +734,7 @@ bool ActionPartResourceDrain::Setup() {
             drainPerSecond = f32store(fx(amountToDrain) / fx(timePeriod));
         }
         leftToDrain = amountToDrain;
+        if (std::getenv("KSP_DBG")) std::fprintf(stderr, "DRAIN setup done\n");
         return true;
     }
     // Debug.LogWarning("[ActionPartResourceDrain] Failed to initialize ...")
@@ -739,6 +743,7 @@ bool ActionPartResourceDrain::Setup() {
 
 // ActionPartResourceDrain.cs:@findVessel
 bool ActionPartResourceDrain::findVessel() {
+    if (std::getenv("KSP_DBG")) std::fprintf(stderr, "DRAIN findVessel enter\n");
     vesselFound = false;
     const uint32_t key = node->mission->CurrentVesselID(node, vesselPartIDs.VesselID);
     Vessel* v = AwardEnvironment::VesselByPersistentId(key);
@@ -751,10 +756,13 @@ bool ActionPartResourceDrain::findVessel() {
 
 // ActionPartResourceDrain.cs:@findPart
 bool ActionPartResourceDrain::findPart() {
+    if (std::getenv("KSP_DBG")) std::fprintf(stderr, "DRAIN findPart enter\n");
     part = FindLoadedPart(vesselPartIDs.partID);
+    if (std::getenv("KSP_DBG")) std::fprintf(stderr, "DRAIN found loaded %p id=%u\n", (void*)part, vesselPartIDs.partID);
     partLoaded = part != nullptr;
     if (!partLoaded) {
         protopart = FindUnloadedPart(vesselPartIDs.partID);
+        if (std::getenv("KSP_DBG")) std::fprintf(stderr, "DRAIN found proto %p\n", (void*)protopart);
         return protopart != nullptr;
     }
     return true;
@@ -762,8 +770,10 @@ bool ActionPartResourceDrain::findPart() {
 
 // ActionPartResourceDrain.cs:@drainVessel
 void ActionPartResourceDrain::drainVessel() {
+    if (std::getenv("KSP_DBG")) std::fprintf(stderr, "DRAIN drainVessel loaded=%d proto=%p\n", (int)vessel->loaded, (void*)vessel->protoVessel);
     float num = f32store(fx(drainPerSecond) * fx(drainEveryXSecs));
     if (vessel->loaded) {
+        if (resourcedef == nullptr) throw NullReferenceException();  // resourcedef.id
         double num2 = 0.0;
         if (NLE::vesselRequestResource) num2 = NLE::vesselRequestResource(vessel, vessel->rootPart, resourcedef->id(), fx(num), false);
         if (num2 <= 0.0) {
@@ -788,8 +798,10 @@ void ActionPartResourceDrain::drainVessel() {
 
 // ActionPartResourceDrain.cs:@drainPart
 void ActionPartResourceDrain::drainPart() {
+    if (std::getenv("KSP_DBG")) std::fprintf(stderr, "DRAIN drainPart\n");
     float num = f32store(fx(drainPerSecond) * fx(drainEveryXSecs));
     if (partLoaded) {
+        if (resourcedef == nullptr) throw NullReferenceException();  // resourcedef.id
         double num2 = 0.0;
         if (NLE::partRequestResource) {
             num2 = NLE::partRequestResource(part, resourcedef->id(), fx(num));
