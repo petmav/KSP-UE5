@@ -168,6 +168,7 @@ public:
     virtual void PromoteToPhysicalPart() {}                                        // :948
     virtual void DemoteToPhysicslessPart() {}                                      // :952
     // WP-33 (PartModule.cs:932-962): the inventory / EVA-construction hooks; every one is an empty virtual in C#
+    virtual void ResetWheelGroundCheck() {}                                        // PartModule.cs:1253 (internal; ModuleWheelBase)
     virtual void OnInventoryModeDisable() {}                                       // :932
     virtual void OnInventoryModeEnable() {}                                        // :936
     virtual void OnConstructionModeUpdate() {}                                     // :940

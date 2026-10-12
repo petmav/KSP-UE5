@@ -39,7 +39,13 @@ NAME_ALIAS = {"~Mission": "OnDestroy", "~TestModule": "OnDestroy", "~ActionModul
               "WeightBodies": "GetWeightBodies", "min": "IntegerToGreek",
               # WP-53: C# properties ported as getter / Set* functions, and one renamed private function
               "UpdateGroundModuleUI": "UpdateModuleUI", "SetPowerUnitsProduced": "PowerUnitsProduced", "SetEnabled": "Enabled",
-              "SetScienceLimit": "ScienceLimit", "OnDestroyed": "OnDestroy"}
+              "SetScienceLimit": "ScienceLimit", "OnDestroyed": "OnDestroy",
+              # WP-29b: C# camelCase members of the wheel modules ported with an upper-case first letter; RemoveAdjuster = OnModuleAdjusterRemoved
+              "WheelSetup": "wheelSetup", "OnPartPack": "onPartPack", "OnPartUnpack": "onPartUnpack", "OnDockingComplete": "onDockingComplete",
+              "OnVesselUndocking": "onVesselUndocking", "ToggleRbConstraints": "toggleRbConstraints", "HoldWheelDamage": "holdWheelDamage",
+              "UpdateDriftFix": "updateDriftFix", "GetFixFwd": "getFixFwd", "GetFixTorque": "getFixTorque", "RemoveAdjuster": "OnModuleAdjusterRemoved",
+              "OnVesselPartCountChanged": "onVesselPartCountChanged", "UpdateCoordFrame": "updateCoordFrame", "UpdateSteering": "updateSteering",
+              "FindCoMfwdLength": "findCoMfwdLength", "FindTurnCenter": "findTurnCenter"}
 CITE = re.compile(r"^(\s*)// (?:([A-Za-z0-9_/]+)\.cs)?:(\d+)\b")
 FUNC = re.compile(r"(\w+)::(~?\w+)\s*\(")
 
