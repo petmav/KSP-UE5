@@ -30,6 +30,9 @@ struct FlightScene {
         std::function<void()> afterPrecalc;        // between seq 7-9 and 15 (nothing of the 19a set runs there)
         std::function<void()> beforeFlightIntegrator;  // seq 15-278: Part / module FixedUpdate, FlightInputHandler, TimeWarp
         std::function<void()> afterFlightIntegrator;   // seq 278: FlightIntegrator.FixedUpdate (WP-20d)
+        // Update, between FlightGlobals.Update (332) and Vessel.Update (578): Part.Update / ModulesOnUpdate (ModuleRCS.Update) and
+        // FlightIntegrator.Update (WP-20d; PHYSICS-ENGINE-REVIEW.md 1.2's Update group)
+        std::function<void()> beforeVesselUpdate;
     };
     static inline Hooks hooks;
 

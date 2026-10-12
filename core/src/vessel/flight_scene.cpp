@@ -36,6 +36,7 @@ void FlightScene::Update() {
     for (Vessel* v : vessels)
         if (Registered(v)) v->precalc.Update();  // seq 313
     FlightGlobals::Update();                      // seq 332
+    if (hooks.beforeVesselUpdate) hooks.beforeVesselUpdate();
     for (Vessel* v : vessels)
         if (Registered(v)) v->Update();  // seq 578
 }

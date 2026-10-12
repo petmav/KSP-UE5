@@ -41,6 +41,9 @@ add_library(kspcore STATIC
     physics/vessel_physics_joints.cpp
     physics/physical_object.cpp
     physics/physics_bubble.cpp
+    physics/flight_integrator.cpp
+    physics/aero_soa.cpp
+    physics/part_forces.cpp
     celestial/celestial_body.cpp
     celestial/planetarium.cpp
     celestial/celestial_system.cpp
