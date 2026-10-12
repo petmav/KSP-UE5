@@ -577,7 +577,11 @@ struct Scene54 {
             v->orbitDriver = std::make_unique<OrbitDriver>();
             v->orbitDriver->orbit = std::make_shared<Orbit>(o["inc"].get<double>(), o["ecc"].get<double>(), o["sma"].get<double>(), o["lan"].get<double>(), o["argpe"].get<double>(),
                                                            o["mna"].get<double>(), o["epoch"].get<double>(), fx.B(o["ref"].get<int>()));
-            v->GetDiscoveryInfo().SetLevel(vj["disc"].get<std::string>() == "Owned" ? DiscoveryLevels::Owned : DiscoveryLevels::Unowned);
+            {   // DiscoveryInfo.Load (SetLevel would fire onKnowledgeChanged for a half-built vessel)
+                ConfigNode dn("DISCOVERY");
+                dn.AddValue("state", static_cast<int32_t>(vj["disc"].get<std::string>() == "Owned" ? DiscoveryLevels::Owned : DiscoveryLevels::Unowned));
+                v->GetDiscoveryInfo().Load(dn);
+            }
             for (const json& pj : vj["parts"]) {
                 auto p = std::make_unique<Part>();
                 p->fields.persistentId = pj["pid"].get<uint32_t>();
@@ -688,6 +692,8 @@ TEST_CASE("WP-54b reference: the deferred Tests.* modules (Awake, Load / Save, T
         const std::string name = c["cls"].get<std::string>();
         classes.insert(name);
         if (std::getenv("KSP_DBG")) std::fprintf(stderr, "CASE %s\n", name.c_str());
+        for (const char* n : {"Jebediah Kerman", "Bill Kerman", "Bob Kerman", "Valentina Kerman", "Gus Kerman", "Tourist A", "Tourist B"})
+            (*world.roster)[std::string(n)]->set_rosterStatus(ProtoCrewMember::RosterStatus::Available);
         Scene54 scene(world);
         scene.BuildMission();
         TestGroup* tg = new TestGroup(scene.subject);
@@ -720,6 +726,12 @@ TEST_CASE("WP-54b reference: the deferred Tests.* modules (Awake, Load / Save, T
                     Editor::BaseAPField field(f["name"].get<std::string>(), f["guiName"].get<std::string>(), f["value"].get<std::string>(), f["has"].get<bool>());
                     field.fieldType = f.value("fieldType", "");
                     CHECK(mod->GetNodeBodyParameterString(field) == op["out"].get<std::string>());
+                } else if (o == "roster") {
+                    const std::string st = op["status"].get<std::string>();
+                    (*world.roster)[op["name"].get<std::string>()]->set_rosterStatus(st == "Available"  ? ProtoCrewMember::RosterStatus::Available
+                                                                                      : st == "Assigned" ? ProtoCrewMember::RosterStatus::Assigned
+                                                                                      : st == "Dead"     ? ProtoCrewMember::RosterStatus::Dead
+                                                                                                         : ProtoCrewMember::RosterStatus::Missing);
                 } else if (o == "env") {
                     scene.SetEnv(op["env"]);
                 } else if (o == "setUT") {
@@ -753,12 +765,29 @@ TEST_CASE("WP-54b reference: the deferred Tests.* modules (Awake, Load / Save, T
                     mod->ClearTest();
                 } else if (o == "event") {
                     const std::string en = op["name"].get<std::string>();
+                    if (std::getenv("KSP_DBG")) std::fprintf(stderr, "  event %s\n", en.c_str());
                     if (en == "flagPlanted") {
                         static int dummy[16];
                         FlagSite* fs = reinterpret_cast<FlagSite*>(&dummy[op["vessel"].get<uint32_t>() % 16]);
                         Vessel* fv = scene.ByPid(op["vessel"].get<uint32_t>());
                         MissionTestsEnvironment::flagSiteVessel = [fv](FlagSite*) { return fv; };
                         GameEvents::afterFlagPlanted.Fire(fs);
+                    } else if (en == "crewKilled") {
+                        const std::string sender = op["sender"].get<std::string>();
+                        MissionTestsEnvironment::eventReportSender = [sender](EventReport*) { return sender; };
+                        GameEvents::onCrewKilled.Fire(nullptr);
+                    } else if (en == "vesselRecovered") {
+                        json vj = scene.world->env["vessels"].empty() ? json(nullptr) : scene.world->env["vessels"][0];
+                        auto pv = MakeProto54(vj.is_null() ? json::parse(R"({"id":"00000000-0000-0000-0000-000000000001","pid":9001,"protoSit":"ORBITING","parts":[],"orbit":{"inc":0.0,"ecc":0.0,"sma":900000.0,"lan":0.0,"argpe":0.0,"mna":0.0,"epoch":0.0,"ref":0}})") : vj);
+                        for (const json& n : op["crew"]) pv->AddCrew((*world.roster)[n.get<std::string>()]);
+                        GameEvents::onVesselRecovered.Fire(pv.get(), false);
+                    } else if (en == "knowledgeChanged") {
+                        Vessel* kv = scene.ByPid(op["vessel"].get<uint32_t>());
+                        GameEvents::onKnowledgeChanged.Fire(GameEvents::HostedFromToAction<IDiscoverable*, DiscoveryLevels>(
+                            kv, kv->GetDiscoveryInfo().Level(), op["to"].get<std::string>() == "Owned" ? DiscoveryLevels::Owned : DiscoveryLevels::Unowned));
+                    } else if (en == "crewTransferred") {
+                        std::shared_ptr<ProtoCrewMember> pcm = (*world.roster)[op["sender"].get<std::string>()];
+                        GameEvents::onCrewTransferred.Fire(GameEvents::HostedFromToAction<ProtoCrewMember*, Part*>(pcm.get(), nullptr, nullptr));
                     } else if (en == "vesselWillDestroy") {
                         GameEvents::onVesselWillDestroy.Fire(scene.ByPid(op["vessel"].get<uint32_t>()));
                     } else if (en == "partCouple") {
@@ -803,7 +832,7 @@ TEST_CASE("WP-54b reference: the deferred Tests.* modules (Awake, Load / Save, T
             }
         }
         // scene teardown: a test initialised twice holds two event registrations (as in C#); drop them before the module dies
-        for (int k = 0; k < 4; ++k) {
+        for (int k = 0; k < 24; ++k) {
             try { mod->ClearTest(); } catch (const std::exception&) {}
         }
     }

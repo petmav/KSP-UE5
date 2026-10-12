@@ -28,7 +28,7 @@ def main():
     for _, fn, n in gens:
         for _ in range(n):
             cases.append(fn(r))
-    for mod in ("ref_restrict", "ref_tests2", "ref_tests3", "ref_actions2"):
+    for mod in ("ref_restrict", "ref_tests2", "ref_tests3", "ref_tests4", "ref_actions2"):
         if os.path.exists(os.path.join(HERE, mod + ".py")):
             m = __import__(mod)
             cases += m.generate(r)
