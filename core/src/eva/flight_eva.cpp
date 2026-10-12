@@ -158,6 +158,7 @@ KerbalEVA* FlightEVA::onGoForEVA() {
     } else {
         evaPart->partTransform.position = fromPart->partTransform.position + fromPart->partTransform.rotation * Vector3f::right() * 2.0f;
     }
+    if (vessel->evaController == nullptr) vessel->evaController = kerbalEVA;  // Vessel.cs:1662 evaController = GetComponent<KerbalEVA>()
     vessel->id = FlightEvaEnvironment::newGuid ? FlightEvaEnvironment::newGuid() : Guid::Empty();
     if (fromAirlock_ != nullptr) {
         const Vector3f pv = FlightEvaEnvironment::pointVelocity ? FlightEvaEnvironment::pointVelocity(*fromPart, fromAirlock_->position) : Vector3f::zero();

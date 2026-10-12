@@ -9,6 +9,7 @@
 #include "ksp/celestial/flight_globals.hpp"
 #include "ksp/core/exceptions.hpp"
 #include "ksp/core/log.hpp"
+#include "ksp/dotnet/collections.hpp"
 #include "ksp/dotnet/number.hpp"
 #include "ksp/eva/kerbal_eva.hpp"
 #include "ksp/events/game_events.hpp"
@@ -165,10 +166,10 @@ void KerbalEVA::ProcessEVAFuel() {
             }
         }
     }
-    // List<T>.Sort((x, y) => x.priority.CompareTo(y.priority)): an unstable introsort; for the tiny lists here (<= 16) it is an insertion sort
-    // over the comparer, which is stable for CompareTo (equal elements keep their order)
-    std::stable_sort(inventoryPropellantResources.begin(), inventoryPropellantResources.end(),
-                     [](const EvaResourceListItem& x, const EvaResourceListItem& y) { return x.priority < y.priority; });
+    // inventoryPropellantResources.Sort((x, y) => x.priority.CompareTo(y.priority)): the runtime's (unstable) introspective sort
+    dotnet::ListSort(inventoryPropellantResources, [](const EvaResourceListItem& x, const EvaResourceListItem& y) {
+        return x.priority < y.priority ? -1 : (x.priority > y.priority ? 1 : 0);
+    });
 }
 
 // ============================================================================================ weld / visor

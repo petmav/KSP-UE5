@@ -291,6 +291,7 @@ void KerbalEVA::OnAwake() {
 
 // KerbalEVA.cs:6979
 void KerbalEVA::CacheLocalStrings() {
+    if (Localizer::Instance() == nullptr) return;  // (C#: Localizer.Instance always exists in a running game)
     auto fmt = [](const char* tag, std::vector<std::string> args) { return Localizer::Format(tag, args); };
     cacheAutoLOC_114130 = fmt("#autoLOC_114130", {KeyName(GameSettings::EVA_Use)});
     cacheAutoLOC_114293 = fmt("#autoLOC_114293", {KeyName(GameSettings::EVA_Use)});
@@ -406,7 +407,10 @@ void KerbalEVA::OnStart(StartState state) {
     }
     if (!p->Modules().Contains("ModuleTripLogger")) p->AddModule("ModuleTripLogger");
     p->fields.waterAngularDragMultiplier = waterAngularDragMultiplier();
-    if (PhysicsGlobals::Instance() != nullptr) p->fields.buoyancy = PhysicsGlobals::BuoyancyKerbals();
+    if (PhysicsGlobals::Instance() != nullptr) {
+        p->fields.buoyancy = PhysicsGlobals::BuoyancyKerbals();
+        p->DragCubes.LoadCubes(*PhysicsGlobals::KerbalEVADragCube());  // :1532
+    }
     moduleInventoryPartReference = dynamic_cast<ModuleInventoryPart*>(p->FindModuleOfClass("ModuleInventoryPart"));
     evaChute = dynamic_cast<ModuleEvaChute*>(p->FindModuleOfClass("ModuleEvaChute"));
     GE::onModuleInventoryChanged.Add(this, &KerbalEVA::OnModuleInventoryChanged);
@@ -523,8 +527,6 @@ Enumerator KerbalEVA::StartEVA(StartState state) {
 
 // KerbalEVA.cs:6915
 void KerbalEVA::OnDestroy() {
-    static thread_local bool inDestroy = false;
-    (void)inDestroy;
     if (fsm && fsm->CurrentState() != nullptr && fsm->CurrentState() == st_flagPlant) {
         Vessel* v = VesselPtr();
         if (v != nullptr) {

@@ -553,7 +553,7 @@ void KerbalEVA::SetupFSMEvents() {
     On_bound_fall = NewEvent("Low G Bound Fall");
     On_bound_fall->GoToStateOnEvent = st_idle_fl;
     On_bound_fall->updateMode = KFSMUpdateMode::FIXEDUPDATE;
-    On_bound_fall->OnCheckCondition = COND(return !SurfaceOrSplashed() && fsm->TimeAtCurrentState() > fx(f32store(fx(lastBoundStep()) * fx(boundFallThreshold()))) &&
+    On_bound_fall->OnCheckCondition = COND(return !SurfaceOrSplashed() && fsm->TimeAtCurrentState() > fx(lastBoundStep()) * fx(boundFallThreshold()) &&
                                                   !EVAConstructionModeController::MovementRestricted(););
     On_bound_fall->OnEvent = ONEV({ ModifyBodyColliderHeight(0.0f); });
     fsm->AddEvent(On_bound_fall, {st_bound_fl});
@@ -838,7 +838,7 @@ void KerbalEVA::SetupFSMEvents() {
     On_clamberP3 = NewEvent("Clamber Reach P3");
     On_clamberP3->GoToStateOnEvent = st_idle_gr;
     On_clamberP3->OnCheckCondition = COND(return clamberPath != nullptr && (fx(Animations().clamber.State()->normalizedTime) >= fx(Animations().clamber.end) ||
-                                                                           fsm->TimeAtCurrentState() > fx(f32store(fx(Animations().clamber.State()->length) * fx(0.5f)))););
+                                                                           fsm->TimeAtCurrentState() > fx(Animations().clamber.State()->length) * fx(0.5f)););
     fsm->AddEvent(On_clamberP3, {st_clamber_acquireP3});
 
     On_boardPart = NewEvent("Boarding Part");

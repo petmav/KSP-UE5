@@ -8,6 +8,7 @@
 #include "ksp/celestial/flight_globals.hpp"
 #include "ksp/core/exceptions.hpp"
 #include "ksp/core/log.hpp"
+#include "ksp/dotnet/collections.hpp"
 #include "ksp/core/unity_time.hpp"
 #include "ksp/eva/kerbal_eva.hpp"
 #include "ksp/events/game_events.hpp"
@@ -464,18 +465,9 @@ void KerbalEVA::OnCollisionEnter(EvaCollision& c) {
     EvaEnvironment::Effect("part.HandleCollision");
     RemoveRBAnchor();
     if (c.layer == 0 || c.layer == 15 || c.layer == 19) {
-        // Array.Sort(c.contacts, CompareContactsByNormalToSurface): an insertion sort in the runtime for < 16 elements; the comparison never
-        // returns 0 (-1 / 1), so the order of equal elements is the runtime's introsort. Reproduced with the same comparer over a stable insertion sort.
+        // Array.Sort(c.contacts, CompareContactsByNormalToSurface): the runtime's introspective sort (the comparer never returns 0)
         std::vector<EvaContact>& cs = c.contacts;
-        for (size_t i = 1; i < cs.size(); i++) {
-            EvaContact key = cs[i];
-            size_t j = i;
-            while (j > 0 && CompareContactsByNormalToSurface(cs[j - 1], key) > 0) {
-                cs[j] = cs[j - 1];
-                j--;
-            }
-            cs[j] = key;
-        }
+        dotnet::ListSort(cs, [this](const EvaContact& a, const EvaContact& b) { return CompareContactsByNormalToSurface(a, b); });
         lastCollisionDirection = (cs.at(0).point - transform().position).normalized();
         lastCollisionNormal = cs.at(0).normal;
         if (!isSelfCollision(c)) lastCollisionTime = UT();
@@ -976,24 +968,7 @@ void KerbalEVA::AutoTransition() {
     }
 }
 
-namespace {
-// List<Collider>.Sort(Comparison): the runtime's introsort; for n <= 16 elements it is an insertion sort over the comparer (the comparers never
-// return 0, so ties follow insertion sort's rules). Reproduced exactly for n <= 16 (ladder trigger lists are tiny).
-template <class T, class Cmp>
-void InsertionSortLikeRuntime(std::vector<T>& v, Cmp cmp) {
-    // ArraySortHelper.IntrospectiveSort -> InsertionSort for partitions <= 16: for (i = 0; i < n - 1; i++) { t = a[i+1]; j = i; while (j >= 0 && cmp(t, a[j]) < 0) { a[j+1] = a[j]; j--; } a[j+1] = t; }
-    const int n = static_cast<int>(v.size());
-    for (int i = 0; i < n - 1; i++) {
-        T t = v[static_cast<size_t>(i + 1)];
-        int j = i;
-        while (j >= 0 && cmp(t, v[static_cast<size_t>(j)]) < 0) {
-            v[static_cast<size_t>(j + 1)] = v[static_cast<size_t>(j)];
-            j--;
-        }
-        v[static_cast<size_t>(j + 1)] = t;
-    }
-}
-}  // namespace
+
 
 // KerbalEVA.cs:5858
 void KerbalEVA::UpdateCurrentLadder() {
@@ -1001,7 +976,7 @@ void KerbalEVA::UpdateCurrentLadder() {
     PostInteractionScreenMessage(cacheAutoLOC_115662);
     AutoTransition();
     if (NotZero(ladderTgtRPos) && !ladderTransition) {
-        InsertionSortLikeRuntime(currentLadderTriggers, [this](EvaCollider* a, EvaCollider* b) { return SortTriggersByAlignment(a, b); });
+        dotnet::ListSort(currentLadderTriggers, [this](EvaCollider* a, EvaCollider* b) { return SortTriggersByAlignment(a, b); });
         EvaCollider* collider = currentLadderTriggers[0];
         if (currentLadder != collider && fx(Mathf::Abs(Vector3f::Dot(ladderTgtRPos, collider->pose.up()))) > fx(0.3f)) {
             currentLadder = collider;
@@ -1026,7 +1001,7 @@ void KerbalEVA::UpdateCurrentLadderIdle() {
     AutoTransition();
     if (fx(Mathf::Abs(Vector3f::Dot(ladderTgtRPos, transform().right()))) > fx(0.9f) && !ladderTransition) {
         ladderTgtRPos = Vector3f::ProjectOnPlane(ladderTgtRPos, transform().up());
-        InsertionSortLikeRuntime(currentLadderTriggers, [this](EvaCollider* a, EvaCollider* b) { return SortTriggersByAlignment(a, b); });
+        dotnet::ListSort(currentLadderTriggers, [this](EvaCollider* a, EvaCollider* b) { return SortTriggersByAlignment(a, b); });
         EvaCollider* collider = currentLadderTriggers[0];
         if (currentLadder != collider && fx(Mathf::Abs(Vector3f::Dot(ladderTgtRPos, collider->pose.up()))) > fx(0.3f)) {
             currentLadder = collider;
@@ -1109,7 +1084,7 @@ void KerbalEVA::OnTriggerStay(EvaCollider* o) {
         Part* partUpwardsCached = o->part;
         if ((partUpwardsCached == nullptr || o->partIsAttached) && std::find(currentLadderTriggers.begin(), currentLadderTriggers.end(), o) == currentLadderTriggers.end()) {
             currentLadderTriggers.push_back(o);
-            InsertionSortLikeRuntime(currentLadderTriggers, [this](EvaCollider* a, EvaCollider* b) { return SortTriggersByDistance(a, b); });
+            dotnet::ListSort(currentLadderTriggers, [this](EvaCollider* a, EvaCollider* b) { return SortTriggersByDistance(a, b); });
         }
     }
     if (o->tag == "Airlock") {
@@ -1123,7 +1098,7 @@ void KerbalEVA::OnTriggerExit(EvaCollider* o) {
     if (o->tag == "Ladder") {
         auto it = std::find(currentLadderTriggers.begin(), currentLadderTriggers.end(), o);
         if (it != currentLadderTriggers.end()) currentLadderTriggers.erase(it);
-        if (currentLadderTriggers.size() > 0) InsertionSortLikeRuntime(currentLadderTriggers, [this](EvaCollider* a, EvaCollider* b) { return SortTriggersByDistance(a, b); });
+        if (currentLadderTriggers.size() > 0) dotnet::ListSort(currentLadderTriggers, [this](EvaCollider* a, EvaCollider* b) { return SortTriggersByDistance(a, b); });
     }
     if (o->tag == "Airlock" && o == currentAirlockTrigger) {
         currentAirlockTrigger = nullptr;

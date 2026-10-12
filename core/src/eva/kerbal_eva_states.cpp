@@ -291,7 +291,7 @@ void KerbalEVA::bound_gr_fps_OnUpdate() {
         boundStepSpeed = Mathf::Clamp(f32store(fx(animationState->length) * fx(0.5f) / fx(lastBoundStep())), 0.0f, 1.0f);
         animationState->speed = boundStepSpeed;
         if (animationState2 != nullptr) {
-            Engine().AnimBlend(animationState2->name, 1.0f, f32store(fx(boundAttack()) * fx(0.5f)));
+            Engine().AnimBlend(animationState2->name, f32store(fx(boundAttack()) * fx(0.5f)), 0.3f);  // Blend(name, targetWeight) -- the second argument is the WEIGHT
             animationState2->normalizedSpeed = animationState->normalizedSpeed;
             animationState2->normalizedTime = animationState->normalizedTime;
         }
