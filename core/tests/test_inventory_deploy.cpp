@@ -393,6 +393,8 @@ TEST_CASE("WP-33 EVAConstructionModeEditor.UpdatePartPlacementPosition: ground a
     Kerbin33 w;
     SceneScope scene(GameScenes::FLIGHT);
     EvaKerbal k(w);
+    // the parts are declared before the editor: its destructor (OnDestroy -> RemoveAttachNodes) still reads the selected part
+    std::unique_ptr<Part> held, other, stranger;
     UIPartActionControllerInventory ctrl;
     EVAConstructionModeController controller;
     EVAConstructionModeEditor editor;
@@ -404,7 +406,7 @@ TEST_CASE("WP-33 EVAConstructionModeEditor.UpdatePartPlacementPosition: ground a
         c = 0.0f;
         return 0.4f;
     };
-    auto held = w.g.New("evaRepairKit");
+    held = w.g.New("evaRepairKit");
     held->fields.attachRules = AttachRules{false, true, false, false, false, false, false, false};
     held->fields.persistentId = 55;
     editor.SetSelectedPartForTest(held.get());
@@ -441,7 +443,7 @@ TEST_CASE("WP-33 EVAConstructionModeEditor.UpdatePartPlacementPosition: ground a
     editor.UpdatePartPlacementPosition();
     CHECK(editor.IsPlacementValid());  // the final assignment overrides: isPlacementValid = !hovered || rules (no hover)
     // ---- hovering a part that allows neither surface attach nor stacking makes the spot invalid
-    auto other = w.g.New("evaChute");
+    other = w.g.New("evaChute");
     other->fields.attachRules = AttachRules{};
     EVAConstructionEnvironment::hoveredPart = other.get();
     held->fields.attachRules = AttachRules{};  // the held part itself allows neither
@@ -452,7 +454,7 @@ TEST_CASE("WP-33 EVAConstructionModeEditor.UpdatePartPlacementPosition: ground a
     CHECK(editor.IsPlacementValid());
     EVAConstructionEnvironment::hoveredPart = nullptr;
     // ---- cargo colliders: a collider that belongs to no part (or to a part other than the parent / itself) invalidates the placement
-    auto stranger = w.g.New("evaJetpack");
+    stranger = w.g.New("evaJetpack");
     stranger->fields.persistentId = 99;
     EVAConstructionEnvironment::cargoColliderCount = [](Part&) { return size_t(2); };
     EVAConstructionEnvironment::cargoColliderPart = [&](Part&, size_t i) -> Part* { return i == 1 ? stranger.get() : nullptr; };

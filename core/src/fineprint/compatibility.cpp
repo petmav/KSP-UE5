@@ -78,7 +78,9 @@ void CompatibilityUtilities::UpdateCareerSave(ConfigNode& node) {
     bool flag = false;
     int count = node2->nodes().Count();
     while (count-- > 0) {
-        ConfigNode* configNode = node2->nodes()[count];
+        // C# keeps the removed node alive (RecordTrackContract removes it, then the PARAM pass below still reads it)
+        const ConfigNode::NodePtr keepAlive = node2->nodes().Shared(count);
+        ConfigNode* configNode = keepAlive.get();
         if ((configNode->name != "CONTRACT" && configNode->name != "CONTRACT_FINISHED") || !configNode->HasValue("type")) continue;
         const std::string value = *configNode->GetValue("type");
         if (value == "BaseContract") {

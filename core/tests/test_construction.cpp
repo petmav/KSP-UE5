@@ -151,6 +151,9 @@ TEST_CASE("WP-33 EVAConstructionModeEditor: Place / Move / Rotate transitions, g
     if (!GameAvailable()) return;
     Reset33 r;
     Game15 g;
+    // the parts are declared before the editor: its destructor (OnDestroy -> RemoveAttachNodes) still reads the selected part
+    auto kit = g.New("evaRepairKit");
+    auto holder = g.New("cargoContainer");  // DemoteToPhysicslessPart needs a parent
     PhysicsWorld phys;
     SceneScope scene(GameScenes::FLIGHT);
     UIPartActionControllerInventory ctrl;
@@ -158,8 +161,6 @@ TEST_CASE("WP-33 EVAConstructionModeEditor: Place / Move / Rotate transitions, g
     EVAConstructionModeEditor editor;
     controller.evaEditor = &editor;
     EVAConstructionModeController::Instance = &controller;
-    auto kit = g.New("evaRepairKit");
-    auto holder = g.New("cargoContainer");  // DemoteToPhysicslessPart needs a parent
     kit->parent = holder.get();
     editor.SetSelectedPartForTest(kit.get());
     // same mode: nothing
@@ -271,10 +272,6 @@ TEST_CASE("WP-33 EVAConstructionModeEditor.CheckAttach: stack node matching and 
     PhysicsWorld phys;
     SceneScope scene(GameScenes::FLIGHT);
     UIPartActionControllerInventory ctrl;
-    EVAConstructionModeController controller;
-    EVAConstructionModeEditor editor;
-    controller.evaEditor = &editor;
-    EVAConstructionModeController::Instance = &controller;
     Kerbals k;
     Vessel* active = k.Add(Vector3f(0.0f, 0.0f, 0.0f));
     FlightRegistry::ActiveVessel = active;
@@ -290,6 +287,11 @@ TEST_CASE("WP-33 EVAConstructionModeEditor.CheckAttach: stack node matching and 
     // the part in hand
     auto held = g.New("cargoContainer");
     held->partTransform.position = Vector3f(3.0f, 3.0f, 0.0f);
+    // declared after every part and vessel it points at: its destructor (OnDestroy -> RemoveAttachNodes) still reads them
+    EVAConstructionModeController controller;
+    EVAConstructionModeEditor editor;
+    controller.evaEditor = &editor;
+    EVAConstructionModeController::Instance = &controller;
     editor.SetSelectedPartForTest(held.get());
     AttachNode* top = parent->FindAttachNode("top");
     AttachNode* bottom = held->FindAttachNode("bottom");

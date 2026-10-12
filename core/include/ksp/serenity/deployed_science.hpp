@@ -62,6 +62,8 @@ public:
     static void FlushDestroyed();     // end of frame: OnDestroy + release of every destroyed behaviour (children destroyed in OnDestroy too)
     static void DestroyAll();         // scene teardown / test reset: OnDestroy of everything
     static size_t LiveCount() { return live().size(); }
+    // True while the registry still owns `b` (an object released by FlushDestroyed reads as Unity null; never dereference it then).
+    static bool IsLive(const SerenityBehaviour* b);
 
 private:
     static std::vector<std::shared_ptr<SerenityBehaviour>>& live();
