@@ -106,6 +106,10 @@ struct CompoundBodyDesc {
     uint32_t vesselGroup = 0;
     bool sameVesselCollision = false;
     uint64_t userData = 0;
+    // WP-20c: Jolt merges the contact manifolds of different sub-shapes of a body pair that share a normal (manifold reduction) and then
+    // reports only the first sub-shape; off, every touching part's collider gets its own manifold (as every part has its own contacts in
+    // KSP) and StaticContacts() sees every supporting part
+    bool useManifoldReduction = true;
 };
 
 // Jolt constraint id (index into the world's constraint table); kInvalidConstraint when absent.

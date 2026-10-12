@@ -124,6 +124,7 @@ std::function<const PartTransform&(const Part&)> VesselPhysics::VesselFrameTrans
 void VesselPhysics::Init(const std::vector<PartPhysicsState>& states, uint32_t group) {
     group_ = group != 0 ? group : (vessel_->persistentId != 0 ? vessel_->persistentId : NextGroupId());
     vessel_->UpdateMassStats();  // FlightIntegrator.cs:452 (physicsMass of every part, the physicsless children folded in)
+    if (options_.loadSolve != LoadSolve::None) world_->SetStaticContactTracking(true);  // the ground supports of the load solve
     IndexParts();
     // the attach joints (Part.Start -> CreateAttachJoint) and the struts (CModuleStrut.OnTargetSet) now; the autostruts are secured by
     // the SecureAutoStruts coroutine after the next physics step (CycleAutoStrut on Part.Unpack -> ResetJoints, Part.cs:3824 / :8043)
@@ -286,6 +287,7 @@ void VesselPhysics::BuildClusters(const std::vector<PartPhysicsState>& states) {
         d.maxAngularVelocity = maxAngular;  // rb.maxAngularVelocity = PhysicsGlobals.MaxAngularVelocity (Part.cs:1880)
         d.vesselGroup = group_;
         d.sameVesselCollision = sameVesselCollisionAll_;
+        d.useManifoldReduction = options_.loadSolve == LoadSolve::None;  // WP-20c: every supporting part reported (PhysicsWorld::StaticContacts)
         d.userData = static_cast<uint64_t>(c.parts.front());
         c.body = world_->CreateCompoundBody(d);
         c.origin = c.origin0;

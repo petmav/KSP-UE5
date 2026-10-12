@@ -489,6 +489,7 @@ BodyId PhysicsWorld::CreateCompoundBody(const CompoundBodyDesc& d) {
     bcs.mMaxAngularVelocity = d.maxAngularVelocity;
     bcs.mAllowSleeping = d.allowSleeping;
     bcs.mGravityFactor = 0.0f;
+    bcs.mUseManifoldReduction = d.useManifoldReduction;
     bcs.mUserData = d.userData;
     if (d.vesselGroup != 0) {
         bcs.mCollisionGroup.SetGroupFilter(m.filter);

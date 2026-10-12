@@ -493,6 +493,9 @@ public:
     // the sub-joints over capacity at the last AfterStep (options.breakJoints); the host acts on them (VesselPhysicsHost::AfterStepAll)
     const std::vector<JointBreak>& Breaks() const { return breaks_; }
     LoadSolve LastSolve() const { return lastSolve_; }  // the solve that ran (None when no loads were computed)
+    // options.breakJoints at run time (a host's grace period: the spike skipped breaks for the 60 ticks of Vessel.ignoreCollisionsFrames
+    // after its approximate ground placement, which drops the vessel a few cm onto the pad)
+    void SetBreakJoints(bool on) { options_.breakJoints = on; }
     float MaxLoadRatio() const { return maxRatio_; }
     int MaxLoadJoint() const { return maxRatioJoint_; }
     // the parts touching static geometry in the last step (vessel part indices of the nodes that got a ground support)

@@ -304,3 +304,296 @@ TEST_CASE("WP-20c PartJoint capacity table of the six PhysProf crafts == the ref
     CHECK(joints == 20 + 20 + 152 + 152 + 456 + 456);
     CHECK(subJoints == 24 + 24 + 168 + 168 + 504 + 504);
 }
+
+// ===================================================================================== autostruts: the Heaviest walk and the cycle timing
+
+TEST_CASE("WP-20c autostruts: Heaviest anchors through GetMassivePart (argmax of rb.mass over the tree, ties to the nearer part, the cache)") {
+    if (!GameAvailable()) return;
+    World w;
+    auto v = w.Craft("PhysProf-S");
+    v->UpdateMassStats();
+    Part* mainsail = FindPart(*v, "liquidEngineMainsail.v2");
+    Part* tank = FindPart(*v, "Rockomax32.BW");
+    REQUIRE(mainsail->parent == tank);
+    std::vector<Part*> engines;
+    for (Part* p : v->parts)
+        if (p->partInfo->name == "liquidEngine2") engines.push_back(p);
+    REQUIRE(engines.size() == 2);
+    engines[0]->fields.mass += 0.25f;  // break the symmetric tie of the two booster engines
+    v->UpdateMassStats();
+    // (1) every part Heaviest: its anchor is the part of largest rb.mass other than itself and, with autoStrutExcludeParent (true by
+    // default, Part.cs:829), its parent (no free pivot: the walk reaches every part)
+    int checked = 0;
+    for (Part* self : v->parts) {
+        self->fields.autoStrutMode = 2;
+        Part* best = nullptr;
+        float bestMass = -1.0f, second = -1.0f;
+        for (Part* p : v->parts) {
+            if (p == self || (self->fields.autoStrutExcludeParent && p == self->parent)) continue;
+            const float m = PartRigidbodyMass(*p);
+            if (m > bestMass) {
+                second = bestMass;
+                bestMass = m;
+                best = p;
+            } else if (m > second) {
+                second = m;
+            }
+        }
+        REQUIRE(bestMass > second);  // a unique heaviest part
+        Part* got = GetAutoStrutAnchor(*v, *self);
+        INFO(self->partInfo->name << ": anchor " << (got ? got->partInfo->name : std::string("none")) << ", heaviest " << best->partInfo->name);
+        CHECK(got == best);
+        ++checked;
+    }
+    CHECK(checked == 21);
+    // autoStrutExcludeParent on the Mainsail: its parent, the Rockomax tank, is the heaviest part
+    mainsail->fields.autoStrutExcludeParent = false;
+    CHECK(GetAutoStrutAnchor(*v, *mainsail) == tank);
+    mainsail->fields.autoStrutExcludeParent = true;
+    CHECK(GetAutoStrutAnchor(*v, *mainsail) == engines[0]);
+    // (2) a tie (Mathf.Approximately) goes to the part nearer to the strutted one, whatever the walk order (Part.cs:8459-8488): with
+    // the tank, the Mainsail and the probe made light, the two equal booster engines are the heaviest; each booster's nose cone picks
+    // its own booster's engine
+    engines[0]->fields.mass -= 0.25f;
+    for (size_t k = 0; k < tank->Resources.size(); ++k) tank->Resources[k].amount = 0.0;
+    tank->fields.mass = 0.1f;
+    mainsail->fields.mass = 0.1f;
+    v->UpdateMassStats();
+    REQUIRE(PartRigidbodyMass(*engines[0]) == PartRigidbodyMass(*engines[1]));
+    auto boosterOf = [](const Part* p) {  // the radial decoupler a booster part hangs from
+        while (p->parent != nullptr && !const_cast<Part*>(p)->isAnchoredDecoupler() && !const_cast<Part*>(p)->isDecoupler()) p = p->parent;
+        return p;
+    };
+    int cones = 0;
+    for (Part* p : v->parts) {
+        if (p->partInfo->name != "pointyNoseConeB") continue;
+        p->fields.autoStrutMode = 2;
+        Part* own = boosterOf(engines[0]) == boosterOf(p) ? engines[0] : engines[1];
+        REQUIRE(boosterOf(own) == boosterOf(p));
+        CHECK(GetAutoStrutAnchor(*v, *p) == own);
+        ++cones;
+    }
+    CHECK(cones == 2);
+    // (3) the per-part cache (Part.cs:8349-8376): a second walk in the same fixed step starts from the last highest mass with no
+    // highestPart, and MassivePartCheck's tie test dereferences it: the C# throws (the SecureAutoStruts coroutine dies)
+    Part* probe = v->rootPart;
+    probe->fields.autoStrutMode = 2;
+    const double t1 = 100.0, t2 = 101.0;
+    Part* first = GetAutoStrutAnchor(*v, *probe, nullptr, &t1);
+    REQUIRE(first != nullptr);
+    CHECK_THROWS_AS(GetAutoStrutAnchor(*v, *probe, nullptr, &t1), NullReferenceException);
+    CHECK(GetAutoStrutAnchor(*v, *probe, nullptr, &t2) == first);  // the next step: a fresh walk
+    // BuildAutoStruts: one autostrut per Heaviest part (no symmetry counterparts in the craft); a thrown walk drops that part's autostrut
+    const size_t all = BuildAutoStruts(*v).size();
+    CHECK(all == v->parts.size());
+    const double t3 = 102.0;
+    (void)GetAutoStrutAnchor(*v, *probe, nullptr, &t3);
+    CHECK(BuildAutoStruts(*v, {}, nullptr, &t3).size() == all - 1);
+}
+
+TEST_CASE("WP-20c autostruts: CycleAutoStrut timing - none at build, secured after the first step, released by onVesselWasModified for one step") {
+    if (!GameAvailable()) return;
+    World w;
+    auto v = w.Craft("PhysProf-M2-AS");
+    PhysicsWorld world;
+    VesselPhysicsHost host(world);
+    host.Install();
+    VesselPhysics& vp = host.Create(*v, VesselPose{});
+    const size_t expected = BuildAutoStruts(*v).size();
+    CHECK(expected == 152);
+    CHECK(vp.AutoStrutJointCount() == 0);
+    CHECK(vp.AutoStrutsPending());
+    host.Step(0.02f);
+    CHECK(vp.AutoStrutJointCount() == expected);
+    events::GameEvents::onVesselWasModified.Fire(v.get());  // Part.VesselModified -> CycleAutoStrut of every part
+    VesselPhysics* same = host.Find(*v);
+    REQUIRE(same == &vp);  // the parts did not change: no rebind
+    CHECK_FALSE(host.StructuralChangesPending());
+    CHECK(vp.AutoStrutJointCount() == 0);
+    host.Step(0.02f);
+    CHECK(vp.AutoStrutJointCount() == expected);
+    host.Uninstall();
+}
+
+// ===================================================================================== analytic breaks
+
+namespace {
+
+// The break acceleration of a payload riding on one joint (the joint the base's push goes through), from the closed form of the elastic
+// split (translation and rotation decouple on a centred ring): F = m a shared equally, the moment M = m (x_p - c) x a against the ring's
+// rotational stiffness K = sum kl (|r|^2 I - r r^T) + n ka I; per sub-joint f_i = F / n + kl th x r_i, t = ka th, th = K^-1 M. Returns the
+// acceleration magnitude at which the first sub-joint reaches breakForce or breakTorque (PartJoint.cs:340-341).
+double AnalyticBreakAcceleration(const PartJointSpec& j, const PartPhysicsState& child, double payloadMass, const Vector3d& payloadCom,
+                                 const Vector3d& dir, double kLinear) {
+    std::vector<Vector3d> anchors;
+    Vector3d c;
+    for (int s = 0; s < j.internalJoints; ++s) {
+        anchors.push_back(child.position + child.rotation * Vector3d(j.anchors[static_cast<size_t>(s)]));
+        c += anchors.back();
+    }
+    c = c * (1.0 / static_cast<double>(anchors.size()));
+    const double ka = (j.rigid || j.forceRigid) ? kLinear : static_cast<double>(j.stiffness);
+    const double n = static_cast<double>(anchors.size());
+    double K[3][3] = {{n * ka, 0, 0}, {0, n * ka, 0}, {0, 0, n * ka}};
+    for (const Vector3d& a : anchors) {
+        const Vector3d r = a - c;
+        const double rv[3] = {r.x, r.y, r.z}, rr = r.x * r.x + r.y * r.y + r.z * r.z;
+        for (int p = 0; p < 3; ++p)
+            for (int q = 0; q < 3; ++q) K[p][q] += kLinear * ((p == q ? rr : 0.0) - rv[p] * rv[q]);
+    }
+    const Vector3d F = dir * payloadMass;  // per unit acceleration
+    const Vector3d M = Vector3d::Cross(payloadCom - c, F);
+    auto det3 = [](const double A[3][3]) {
+        return A[0][0] * (A[1][1] * A[2][2] - A[1][2] * A[2][1]) - A[0][1] * (A[1][0] * A[2][2] - A[1][2] * A[2][0]) +
+               A[0][2] * (A[1][0] * A[2][1] - A[1][1] * A[2][0]);
+    };
+    const double D = det3(K);
+    double th[3];
+    const double m[3] = {M.x, M.y, M.z};
+    for (int k = 0; k < 3; ++k) {  // th = K^-1 M (Cramer)
+        double A[3][3];
+        for (int p = 0; p < 3; ++p)
+            for (int q = 0; q < 3; ++q) A[p][q] = q == k ? m[p] : K[p][q];
+        th[k] = det3(A) / D;
+    }
+    const Vector3d theta(th[0], th[1], th[2]);
+    double ratio = 0.0;
+    for (const Vector3d& a : anchors) {
+        const Vector3d f = F * (1.0 / n) + Vector3d::Cross(theta, a - c) * kLinear;
+        ratio = std::max({ratio, f.magnitude() / static_cast<double>(j.breakForce), (theta * ka).magnitude() / static_cast<double>(j.breakTorque)});
+    }
+    return 1.0 / ratio;
+}
+
+struct RampResult {
+    int breakTick = -1;
+    double aBreak = 0.0, aPrev = 0.0;
+    std::vector<VesselPhysics::JointBreak> breaks;
+    LoadSolve solve = LoadSolve::None;
+};
+
+// Pushes `base` with F = M a(t) through the composite centre of mass (a pure translation), a(t) = rate t, until a sub-joint breaks.
+RampResult RunPushRamp(VesselPhysics& vp, PhysicsWorld& world, Part& base, const Vector3d& dir, double rate, int maxTicks) {
+    RampResult r;
+    const float dt = 0.02f;
+    double M = 0.0;
+    for (size_t c = 0; c < vp.ClusterCount(); ++c) M += vp.ClusterMass(c);
+    for (int k = 1; k <= maxTicks; ++k) {
+        const double a = rate * k * static_cast<double>(dt);
+        vp.AddForceAtPhysicsPoint(base, dir * (M * a), CompositeCom({&vp}));
+        Step(vp, world, dt);
+        if (!vp.Breaks().empty()) {
+            r.breakTick = k;
+            r.aBreak = a;
+            r.aPrev = rate * (k - 1) * static_cast<double>(dt);
+            r.breaks = vp.Breaks();
+            r.solve = vp.LastSolve();
+            return r;
+        }
+    }
+    return r;
+}
+
+}  // namespace
+
+TEST_CASE("WP-20c capacity: a payload on a size-0 / 1 / 2 node breaks at 1.00-1.05x of the analytic load, axially and laterally, not below") {
+    if (!GameAvailable()) return;
+    World w;
+    int runs = 0;
+    for (int size : {0, 1, 2}) {
+        for (int lateral = 0; lateral < 2; ++lateral) {
+            INFO("node size " << size << std::string(lateral ? " lateral" : " axial"));
+            auto v = w.CraftHead("PhysProf-S", 2);  // the probe core (root, the payload) on the Rockomax tank (the base)
+            REQUIRE(v->parts.size() == 2);
+            Part* probe = v->rootPart;
+            Part* tank = v->parts[1];
+            for (Part* p : v->parts)
+                for (AttachNode& n : p->attachNodes) n.size = size;
+            PhysicsWorld world;
+            VesselPhysicsOptions opt;
+            opt.autoStrutDelaySteps = 0;
+            VesselPhysics vp(world, *v, VesselPose{}, opt);
+            for (Part* p : v->parts) vp.SetAngularDrag(*p, 0.0f);
+            REQUIRE(vp.Joints().size() == 1);
+            const PartJointSpec& j = vp.Joints()[0];
+            CHECK(j.internalJoints == (size >= 2 ? 3 : 1));
+            const Vector3d dir = lateral ? Vector3d(1, 0, 0) : Vector3d(0, 1, 0);
+            const double aStar = AnalyticBreakAcceleration(j, vp.PartState(*tank), vp.PartMass(*probe), vp.PartState(*probe).centerOfMass, dir, opt.kLinear);
+            const double rate = aStar / (200.0 * 0.02);  // a* reached at tick 200
+            const RampResult r = RunPushRamp(vp, world, *tank, dir, rate, 400);
+            MESSAGE("size " << size << std::string(lateral ? " lateral" : " axial") << ": sub-joints " << j.internalJoints << ", breakForce " << j.breakForce
+                            << " kN, analytic a* " << aStar << " m/s^2, broke at tick " << r.breakTick << " a " << r.aBreak << " (" << r.aBreak / aStar << " a*)");
+            REQUIRE(r.breakTick > 0);
+            CHECK(r.breaks.size() == 1);
+            CHECK(r.breaks[0].joint == 0);
+            CHECK(r.solve == LoadSolve::Tree);
+            CHECK(r.aBreak >= aStar * (1.0 - 1e-6));  // not below the capacity
+            CHECK(r.aPrev < aStar * (1.0 + 1e-6));    // and at the first tick above it
+            CHECK(r.aBreak <= 1.05 * aStar);
+            ++runs;
+        }
+    }
+    CHECK(runs == 6);
+}
+
+TEST_CASE("WP-20c strut sharing: a 3-part stack with and without a Grandparent autostrut breaks the joint and at the load the elastic sharing predicts") {
+    if (!GameAvailable()) return;
+    World w;
+    for (int drained = 0; drained < 2; ++drained) {
+        for (int strut = 0; strut < 2; ++strut) {
+            INFO(std::string(drained ? "empty" : "full") << " tank, " << std::string(strut ? "with" : "without") << " the autostrut");
+            auto v = w.CraftHead("PhysProf-S", 3);  // probe (root, top) - Rockomax tank - Mainsail (pushed)
+            REQUIRE(v->parts.size() == 3);
+            Part* probe = v->parts[0];
+            Part* tank = v->parts[1];
+            Part* engine = v->parts[2];
+            REQUIRE(engine->parent == tank);
+            REQUIRE(tank->parent == probe);
+            if (drained)
+                for (size_t k = 0; k < tank->Resources.size(); ++k) tank->Resources[k].amount = 0.0;
+            engine->fields.autoStrutMode = strut ? 3 : 0;  // Grandparent: the probe core
+            PhysicsWorld world;
+            VesselPhysicsOptions opt;
+            VesselPhysics vp(world, *v, VesselPose{}, opt);
+            for (Part* p : v->parts) vp.SetAngularDrag(*p, 0.0f);
+            const PartJointSpec* jT = nullptr;  // tank -> probe
+            const PartJointSpec* jE = nullptr;  // Mainsail -> tank
+            for (const PartJointSpec& j : vp.Joints()) {
+                if (j.child == tank) jT = &j;
+                if (j.child == engine) jE = &j;
+            }
+            REQUIRE(jT != nullptr);
+            REQUIRE(jE != nullptr);
+            const double nT = jT->internalJoints, nE = jE->internalJoints;
+            const double fP = vp.PartMass(*probe), fT = vp.PartMass(*tank);  // demands per unit acceleration (axial)
+            // per-sub-joint axial loads per unit acceleration: without the strut the tree; with it the 2-node elastic system
+            // [[nT + 1, -nT], [-nT, nT + nE]] (u_P, u_T) = (fP, fT) (units kLinear, u_E = 0): strut u_P, Mainsail joint u_T, tank joint u_P - u_T
+            double perT = 0, perE = 0;
+            if (!strut) {
+                perT = fP / nT;
+                perE = (fP + fT) / nE;
+            } else {
+                const double a11 = nT + 1, a12 = -nT, a22 = nT + nE, det = a11 * a22 - a12 * a12;
+                const double uP = (a22 * fP - a12 * fT) / det, uT = (a11 * fT - a12 * fP) / det;
+                perT = std::fabs(uP - uT);
+                perE = std::fabs(uT);
+            }
+            const double ratioT = perT / jT->breakForce, ratioE = perE / jE->breakForce;
+            const double aStar = 1.0 / std::max(ratioT, ratioE);
+            const Part* expectChild = ratioT > ratioE ? tank : engine;
+            const RampResult r = RunPushRamp(vp, world, *engine, Vector3d(0, 1, 0), aStar / (200.0 * 0.02), 400);
+            MESSAGE(std::string(drained ? "empty" : "full") << " tank, " << std::string(strut ? "with" : "without") << " autostrut: per-sub-joint load per m/s^2 tank joint " << perT
+                                                 << " / Mainsail joint " << perE << " -> " << expectChild->partInfo->name << " joint first at a* " << aStar
+                                                 << "; broke at " << r.aBreak << " (" << r.aBreak / aStar << " a*), solve "
+                                                 << std::string(r.solve == LoadSolve::Graph ? "graph" : "tree"));
+            REQUIRE(r.breakTick > 0);
+            REQUIRE(r.breaks.size() == 1);
+            CHECK(vp.Joints()[r.breaks[0].joint].child == expectChild);
+            CHECK(r.solve == (strut ? LoadSolve::Graph : LoadSolve::Tree));
+            CHECK(vp.AutoStrutJointCount() == (strut ? 1u : 0u));
+            CHECK(r.aBreak >= aStar * (1.0 - 1e-4));
+            CHECK(r.aPrev < aStar * (1.0 + 1e-4));
+            CHECK(r.aBreak <= 1.05 * aStar);
+        }
+    }
+}

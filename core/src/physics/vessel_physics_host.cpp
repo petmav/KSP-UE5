@@ -191,7 +191,7 @@ void VesselPhysicsHost::RequestRebind(Vessel& vessel) {
     if (VesselPhysics* vp = Find(vessel)) MarkRebind(vp, &vessel);
 }
 
-// Part.cs:2833 onPartDeCoupleNewVesselComplete(original, new): both vessels are rebound from the original's binding (or from the
+// The handler of onPartDeCoupleNewVesselComplete(original, new) (fired at Part.cs:2833): both vessels are rebound from the original's binding (or from the
 // pending rebind the original is already part of: several decouples in one frame)
 void VesselPhysicsHost::OnDecoupleNewVessel(Vessel* original, Vessel* created) {
     if (original == nullptr) return;
@@ -202,10 +202,10 @@ void VesselPhysicsHost::OnDecoupleNewVessel(Vessel* original, Vessel* created) {
     MarkRebind(nullptr, created);
 }
 
-// Part.cs:3352 onVesselsUndocking(old, new)
+// The handler of onVesselsUndocking(old, new) (fired at Part.cs:3352)
 void VesselPhysicsHost::OnVesselsUndocking(Vessel* original, Vessel* created) { OnDecoupleNewVessel(original, created); }
 
-// Part.cs:3173 onPartCouple(from, to), fired before the tree operation: from.vessel is destroyed by Couple (:3201), so its binding lets
+// The handler of onPartCouple(from, to), fired before the tree operation (Part.cs:3173): from.vessel is destroyed by Couple (:3201), so its binding lets
 // go of the Vessel now; both bindings are rebound into to.vessel, which then holds every part
 void VesselPhysicsHost::OnPartCouple(GE::FromToAction<Part*, Part*> action) {
     if (action.from == nullptr || action.to == nullptr || action.from->vessel == nullptr || action.to->vessel == nullptr) return;
@@ -224,7 +224,7 @@ void VesselPhysicsHost::OnPartCouple(GE::FromToAction<Part*, Part*> action) {
     MarkRebind(b, target);
 }
 
-// Part.cs:4464 onPartDie: the part has left its vessel; the vessel is rebound without it
+// The handler of onPartDie (fired at Part.cs:4464): the part has left its vessel; the vessel is rebound without it
 void VesselPhysicsHost::OnPartDie(Part* part) {
     if (part == nullptr || part->vessel == nullptr) return;
     if (VesselPhysics* vp = Find(*part->vessel)) MarkRebind(vp, part->vessel);

@@ -47,7 +47,7 @@ bool ParsesAsDefaultIcon(const std::string& s) {
 }
 }  // namespace
 
-// Part.cs:1727-1747 (the staging block of Start; the modules' OnStart ran before it at :1727)
+// Part.cs:1663 Start, its staging block :1727-1747 (the modules' OnStart ran before it at :1727)
 void Part::StartStaging() {
     if (fields.stagingIcon != std::string()) {
         if (!fields.stagingIcon || !ParsesAsDefaultIcon(*fields.stagingIcon)) {
@@ -304,7 +304,7 @@ Vessel* Part::Undock(const DockedVesselInfo* newVesselInfo) {
 
 // ---- DockedVesselInfo.cs ------------------------------------------------------------------------------------------------------
 
-// DockedVesselInfo.cs:31
+// DockedVesselInfo.cs:30
 void DockedVesselInfo::Load(const ConfigNode& node) {
     if (node.HasValue("vesselName")) name = *node.GetValue("vesselName");
     if (node.HasValue("rootUId")) {
@@ -337,7 +337,7 @@ void DockedVesselInfo::Load(const ConfigNode& node) {
     }
 }
 
-// DockedVesselInfo.cs:96
+// DockedVesselInfo.cs:101
 void DockedVesselInfo::Save(ConfigNode& node) const {
     node.AddValue("vesselName", name);
     node.AddValue("vesselType", dotnet::EnumToString(vesselType));
