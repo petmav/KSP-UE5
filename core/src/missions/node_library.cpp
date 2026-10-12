@@ -19,6 +19,7 @@ using KSP::Localization::Localizer;
 
 void NodeLibraryEnvironment::Reset() {
     homeBody = nullptr;
+    bodies = nullptr;
     bodyByName = nullptr;
     localizedTraitName = nullptr;
     postScreenMessage = nullptr;

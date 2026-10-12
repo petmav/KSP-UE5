@@ -135,6 +135,9 @@ add_library(kspcore STATIC
     missions/mission_awards.cpp
     missions/mission_validator.cpp
     missions/mission.cpp
+    missions/mission_data.cpp
+    missions/vessel_restrictions.cpp
+    missions/vessel_situation.cpp
     missions/node_library.cpp
     missions/mission_tests.cpp
     missions/mission_actions.cpp

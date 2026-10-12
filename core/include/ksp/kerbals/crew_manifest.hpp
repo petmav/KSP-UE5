@@ -24,11 +24,16 @@ class ShipConstruct;
 class VesselCrewManifest;
 
 namespace Expansions::Missions {
-// Expansions/Missions/Crew.cs (only the data VesselCrewManifest.AddCrewMembers reads / writes)
-struct Crew {
-    uint32_t partPersistentID = 0;
-    uint32_t vesselPersistentID = 0;
-    std::vector<std::string> crewNames;
+// Expansions/Missions/Crew.cs (the data VesselCrewManifest.AddCrewMembers reads / writes; Load / Save / LocalizeCrewMember are WP-54 slice 2,
+// implemented in src/missions/mission_data.cpp)
+class Crew {
+public:
+    uint32_t partPersistentID = 0;                          // Crew.cs:11
+    uint32_t vesselPersistentID = 0;                        // :13
+    std::vector<std::string> crewNames;                     // :15
+    void Load(const ConfigNode& node);                      // :17
+    std::string LocalizeCrewMember(int nameIndex) const;    // :38
+    void Save(ConfigNode& node) const;                      // :55
 };
 }  // namespace Expansions::Missions
 

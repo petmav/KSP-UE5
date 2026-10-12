@@ -482,7 +482,7 @@ void MissionSituation::setStartType() {
                 VesselSituation* vs = actionCreateVessel->GetVesselSituation();
                 if (vs->playerCreated) {
                     if (startType == StartTypeEnum::SpaceCenter || startType == StartTypeEnum::VesselList)
-                        startType = vs->locationFacilitySPH ? StartTypeEnum::SPH : StartTypeEnum::VAB;
+                        startType = (vs->location != nullptr && vs->location->facility == EditorFacility::SPH) ? StartTypeEnum::SPH : StartTypeEnum::VAB;
                 } else if (startType == StartTypeEnum::SpaceCenter) {
                     startType = StartTypeEnum::VesselList;
                 }
