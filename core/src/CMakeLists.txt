@@ -30,6 +30,7 @@ add_library(kspcore STATIC
     config/kspparseable.cpp
     physics/physics_globals.cpp
     physics/vessel_ranges.cpp
+    physics/orbit_physics_manager.cpp
     physics/physics_world_loop.cpp
     physics/krakensbane.cpp
     physics/floating_origin.cpp
@@ -223,6 +224,11 @@ add_library(kspcore STATIC
     vessel/vessel.cpp
     vessel/vessel_assembly.cpp
     vessel/vessel_motion.cpp
+    vessel/vessel_flight.cpp
+    vessel/flight_scene.cpp
+    vessel/vessel_switching.cpp
+    vessel/vessel_precalculate.cpp
+    vessel/flight_globals_vessels.cpp
     vessel/vessel_transitions.cpp
     vessel/vessel_values.cpp
     save/upgrade_pipeline.cpp
