@@ -4,6 +4,7 @@
 
 #include <vector>
 
+#include "ksp/aero/float_eval.hpp"
 #include "ksp/aero/lifting_surface.hpp"
 #include "ksp/celestial/celestial_body.hpp"
 #include "ksp/celestial/flight_globals.hpp"
@@ -174,6 +175,13 @@ void PartModuleForces::Engine(Part& part, ModuleEngines& e, Vessel& v, VesselPhy
             e.thrustTransforms.resize(local.size());
             for (size_t i = 0; i < local.size(); ++i) e.thrustTransforms[i] = ChildTransform(part.partTransform, local[i]);
         }
+    }
+    // ModuleEngines.cs:681-697 (OnLoad): without a multiplier per thrust transform every transform gets 1 / count (a module whose
+    // transforms were found after OnLoad, e.g. a host that installs the model reader late)
+    if (e.thrustTransformMultipliers.size() != e.thrustTransforms.size()) {
+        using E = aero::FE<aero::MonoFloat>;
+        const float item = aero::S(E(1.0f) / E(static_cast<float>(e.thrustTransforms.size())));
+        e.thrustTransformMultipliers.assign(e.thrustTransforms.size(), item);
     }
     EngineFlightInput in;
     in.flightReady = FlightGlobals::ready;

@@ -88,6 +88,11 @@ public:
     // the part's BodyLiftCurve.liftCurve (evaluated per windward face).
     static DragCubeList::CubeData SurfaceDrag(const AeroMachCurves& m, const AeroFaceRow& row, const FloatCurve& liftCurve,
                                               const Vector3f& dragVectorDirLocal);
+    // FlightIntegrator.cs:2371-2380 for the cube model: num6 = CalculateDragValue_Cube (AreaDrag * cacheDragCubeMultiplier, :2429) *
+    // pseudoReDragMult; dragScalar = (float)(q * num6 * num2) * cacheDragMultiplier, 0 when num6 is NaN or 0. `num6` is returned too.
+    static float DragScalar(const FlightIntegratorAero& fi, float areaDrag, double q, double num2, double& num6);
+    // FlightIntegrator.cs:2383: (float)q * bodyLiftMultiplier * cacheBodyLiftMultiplier * liftMach
+    static float BodyLiftScalar(const FlightIntegratorAero& fi, const AeroMachCurves& m, float bodyLiftMultiplier, double q);
     // The scalar statements of UpdateAerodynamics after SetDrag (FlightIntegrator.cs:2309-2389) for a covered part, given the CubeData
     // SetDrag produced: writes the part's fields (aerodynamicArea, the dynamic pressures, dragScalar, bodyLiftScalar, the body-lift
     // locals) and returns the force record. `flag3` = dragVectorSqrMag != 0; `out` already holds the angular-drag reset.

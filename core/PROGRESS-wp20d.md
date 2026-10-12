@@ -23,3 +23,17 @@ internals). Local commits only, no push.
 - start: read CLAUDE.md, README, PHYSICS-SPIKE.md, STATUS WP-20b / WP-19b, PROGRESS-wp20b / wp19b, PHYSICS-ENGINE-REVIEW.md 1.2 / 3,
   FlightIntegrator.cs (whole FixedUpdate path), Part.cs:8663-8688, the WP-09 / 21 / 22 / 23 ports, the spike's part_pipeline (SoA kernel).
   Worktree `core/.worktrees/wp20d` created from wp19b cd99f577; baseline build running.
+- step 1-3 done (first version, commit dd9c59f9): FlightIntegrator (physics/flight_integrator.*), the SoA kernel (physics/aero_soa.*),
+  the part buffers + module slot (physics/part_forces.*), the bubble runs the real FlightIntegrator of every loaded vessel (the stand-in
+  is gone), FlightScene::hooks.beforeVesselUpdate (FI.Update / ModuleRCS.Update), StartPartsInFlight (Part.Start's flight block; the
+  bubble runs it on onVesselLoaded; FlightIntegrator.Setup waits for `started` like the C#). WP-19b / WP-20b suites green with it
+  (two_vessels 0.49 mm, frame_switch 0.27 mm, SOI 4.8e-6 m).
+- finding: kspcore has no flight-scene resource-flow host (ResourceFlowEnvironment::vesselHost / Vessel::env.updateResourceSets are
+  seams; tests wire VesselResourceSets as test_staging does); engines need it for RequestPropellant.
+- finding: a module whose thrust transforms are installed after OnLoad has no multipliers -> ThrustUpdate's .at(i) throws; the slot
+  applies OnLoad's 1 / count rule (ModuleEngines.cs:681-697) when the counts differ.
+- first full launch: PhysProf-M2 from the pad through the bubble, 17 engines, real thrust transforms, fuel drain, drag, Krakensbane
+  engaging: 2.5 km at 230 m/s (KSP C10: 2,502 m at 230.4 m/s).
+- independent reference tools/wp20d/fi_reference.py (SmoothVelocity 3,200 steps incl. 417 spike states, IntegratePhysicalObjects 300
+  cases): 0 ULP (after fixing the reference's own unary minus: Vector3d.operator- is 0.0 - x, +0 for zeros). Integrate's force half ==
+  IntegratePartBuffers bit for bit (21 / 21 parts).

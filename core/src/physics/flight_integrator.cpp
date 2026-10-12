@@ -363,7 +363,7 @@ void FlightIntegrator::FixedUpdate(VesselPhysics* binding) {
     if (FlightGlobals::ActiveVessel == vessel && !FlightGlobals::physicalObjects.empty())
         IntegratePhysicalObjects(FlightGlobals::physicalObjects, atm.density);  // :661
     if (!vessel->precalc.preIntegrationVelocityOffset.IsZero()) vessel->OffsetVelocity(vessel->precalc.preIntegrationVelocityOffset);
-    Integrate();  // :669
+    Integrate(*vp_);  // :669
     ++fixedUpdates_;
 }
 
@@ -432,7 +432,10 @@ void FlightIntegrator::AeroBatch() {
 }
 
 // FlightIntegrator.cs:715 Integrate(part), from partRef: depth first, children in order, attached children only
-void FlightIntegrator::Integrate() {
+void FlightIntegrator::Integrate(VesselPhysics& binding) {
+    vp_ = &binding;
+    if (partRef == nullptr) partRef = vessel->rootPart;
+    if (partRef == nullptr) return;
     order_.clear();
     std::vector<Part*> stack{partRef};
     while (!stack.empty()) {
@@ -470,28 +473,41 @@ void FlightIntegrator::Integrate() {
     }
 }
 
+// FlightIntegrator.cs:752
+Vector3f FlightIntegrator::PhysicalObjectGravity() const {
+    const CelestialBody& body = *atm.currentMainBody;
+    return ((FlightGlobals::getGeeForceAtPosition(CoMd, body) + FlightGlobals::getCoriolisAcc(Veld, body) +
+             FlightGlobals::getCentrifugalAcc(CoMd, body)) *
+            PhysicsGlobals::GraviticForceMultiplier)
+        .ToVector3f();
+}
+
+// FlightIntegrator.cs:767-780 (`rb.velocity + Krakensbane.GetFrameVelocity()`: a float velocity plus the double frame velocity)
+bool FlightIntegrator::PhysicalObjectDrag(const Vector3f& rbVelocity, const Vector3d& frameVelocity, float origDrag, double atmDensity,
+                                          Vector3f& drag) const {
+    if (!PhysicsGlobals::ApplyDrag() || !(atmDensity > 0.0)) return false;
+    const Vector3d v = Vector3d(rbVelocity) + frameVelocity;
+    const double num = static_cast<double>(origDrag);
+    const double num2 = 0.0005 * atm.pseudoReDragMult * atmDensity * num * v.sqrMagnitude() * static_cast<double>(PhysicsGlobals::DragMultiplier());
+    if (std::isnan(num2) || std::isinf(num2)) return false;
+    drag = (-v.normalized() * num2).ToVector3f();
+    return true;
+}
+
 // FlightIntegrator.cs:747
 void FlightIntegrator::IntegratePhysicalObjects(const std::vector<physicalObject*>& pObjs, double atmDensity) {
-    const CelestialBody& body = *atm.currentMainBody;
-    const Vector3f force = ((FlightGlobals::getGeeForceAtPosition(CoMd, body) + FlightGlobals::getCoriolisAcc(Veld, body) +
-                             FlightGlobals::getCentrifugalAcc(CoMd, body)) *
-                            PhysicsGlobals::GraviticForceMultiplier)
-                               .ToVector3f();
+    const Vector3f force = PhysicalObjectGravity();
     size_t count = pObjs.size();
     while (count-- > 0) {
         physicalObject* o = pObjs[count];
         if (o == nullptr || !o->HasRigidbody()) continue;
         const double mass = static_cast<double>(o->world->GetMass(o->rb));
         o->world->AddForce(o->rb, Vector3d(force) * mass);  // :762 rb.AddForce(force, ForceMode.Acceleration)
-        if (!PhysicsGlobals::ApplyDrag() || !(atmDensity > 0.0)) continue;
-        // :767-780 (rb.velocity is the float velocity of the body)
-        const Vector3d v = Vector3d(o->world->GetLinearVelocity(o->rb).ToVector3f()) + Krakensbane::GetFrameVelocity();
-        const double num = static_cast<double>(o->origDrag);
-        const double num2 = 0.0005 * atm.pseudoReDragMult * atmDensity * num * v.sqrMagnitude() * static_cast<double>(PhysicsGlobals::DragMultiplier());
-        if (std::isnan(num2) || std::isinf(num2)) continue;
-        const Vector3f zero = (-v.normalized() * num2).ToVector3f();
-        if (PhysicsGlobals::DragUsesAcceleration()) o->world->AddForce(o->rb, Vector3d(zero) * mass);
-        else o->world->AddForce(o->rb, Vector3d(zero));
+        Vector3f zero;
+        if (!PhysicalObjectDrag(o->world->GetLinearVelocity(o->rb).ToVector3f(), Krakensbane::GetFrameVelocity(), o->origDrag, atmDensity, zero))
+            continue;
+        if (PhysicsGlobals::DragUsesAcceleration()) o->world->AddForce(o->rb, Vector3d(zero) * mass);  // :774 Acceleration
+        else o->world->AddForce(o->rb, Vector3d(zero));                                             // :778 Force
     }
 }
 

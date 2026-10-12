@@ -223,6 +223,18 @@ DragCubeList::CubeData AeroSoaKernel::SurfaceDrag(const AeroMachCurves& m, const
     return retData;
 }
 
+// FlightIntegrator.cs:2371-2380 (cube model)
+float AeroSoaKernel::DragScalar(const FlightIntegratorAero& fi, float areaDrag, double q, double num2, double& num6) {
+    num6 = aero::D(E(areaDrag) * E(fi.cacheDragCubeMultiplier)) * fi.pseudoReDragMult;
+    if (!std::isnan(num6) && num6 != 0.0) return S(E(static_cast<float>(q * num6 * num2)) * E(fi.cacheDragMultiplier));
+    return 0.0f;
+}
+
+// FlightIntegrator.cs:2383
+float AeroSoaKernel::BodyLiftScalar(const FlightIntegratorAero& fi, const AeroMachCurves& m, float bodyLiftMultiplier, double q) {
+    return S(E(static_cast<float>(q)) * E(bodyLiftMultiplier) * E(fi.cacheBodyLiftMultiplier) * E(m.liftMach));
+}
+
 // FlightIntegrator.cs:2309-2389 for a covered part (the cube list is not None and the drag model is the cube model)
 void AeroSoaKernel::PartScalars(const FlightIntegratorAero& fi, const AeroMachCurves& m, Part& part, const AeroRigidbody& rigidbody,
                                 bool flag3, AeroForces& out) {
@@ -276,9 +288,10 @@ void AeroSoaKernel::PartScalars(const FlightIntegratorAero& fi, const AeroMachCu
     }
     out.mode = fi.cacheDragUsesAcceleration ? AeroForceMode::Acceleration : AeroForceMode::Force;
     // :2371 CalculateDragValue -> CalculateDragValue_Cube (:2429): AreaDrag * cacheDragCubeMultiplier (float product widened)
-    const double num6 = aero::D(E(part.DragCubes.AreaDrag()) * E(fi.cacheDragCubeMultiplier)) * fi.pseudoReDragMult;
+    double num6 = 0.0;
+    const float dragScalar = DragScalar(fi, part.DragCubes.AreaDrag(), f.dynamicPressurekPa, num2, num6);
     if (!std::isnan(num6) && num6 != 0.0) {
-        f.dragScalar = S(E(static_cast<float>(f.dynamicPressurekPa * num6 * num2)) * E(fi.cacheDragMultiplier));
+        f.dragScalar = dragScalar;
         out.applyDrag = true;  // ApplyAeroDrag (:2243)
         out.dragPosition = (rigidbody.isPartRb || !PhysicsGlobals::ApplyDragToNonPhysicsPartsAtParentCoM())
                                ? part.partTransform.TransformPoint(f.CoPOffset)
@@ -292,7 +305,7 @@ void AeroSoaKernel::PartScalars(const FlightIntegratorAero& fi, const AeroMachCu
         const double q = flag4 ? (f.dynamicPressurekPa * num2 + f.submergedDynamicPressurekPa * f.submergedLiftScalar * submergedPortion)
                                : f.dynamicPressurekPa;
         // :2383 (BodyLiftScalar with the hoisted liftMach)
-        f.bodyLiftScalar = S(E(static_cast<float>(q)) * E(f.bodyLiftMultiplier) * E(fi.cacheBodyLiftMultiplier) * E(m.liftMach));
+        f.bodyLiftScalar = BodyLiftScalar(fi, m, f.bodyLiftMultiplier, q);
         if (f.bodyLiftScalar != 0.0f && part.DragCubes.LiftForce() != Vector3f::zero() && !VectorExtensions::IsInvalid(part.DragCubes.LiftForce())) {
             // ApplyAeroLift (:2249)
             const Vector3f zero = (rigidbody.isPartRb || !PhysicsGlobals::ApplyDragToNonPhysicsPartsAtParentCoM())

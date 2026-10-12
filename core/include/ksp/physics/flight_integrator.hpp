@@ -126,6 +126,14 @@ public:
     void SmoothVelocity();                 // :495
     float GetPhysicslessChildMass(const Part& part) const;  // :700
     void IntegratePhysicalObjects(const std::vector<physicalObject*>& pObjs, double atmDensity);  // :747
+    // its two expressions: :752 the acceleration of every object (gravity, Coriolis and centrifugal at CoMd / Veld, float), and :767-780
+    // the drag of one object with float velocity `rbVelocity` (false: none applied: drag off, no atmosphere, NaN / infinity)
+    Vector3f PhysicalObjectGravity() const;
+    bool PhysicalObjectDrag(const Vector3f& rbVelocity, const Vector3d& frameVelocity, float origDrag, double atmDensity,
+                            Vector3f& drag) const;
+
+    // :669 Integrate(partRef) (:715 recursion) over `binding` (FixedUpdate calls it; public for the gates)
+    void Integrate(VesselPhysics& binding);
 
     // ---- results ----------------------------------------------------------------------------------------------------------
     AeroKernelStats aeroStats;
@@ -135,7 +143,6 @@ public:
     uint64_t FixedUpdates() const { return fixedUpdates_; }  // FixedUpdates that reached Integrate
 
 private:
-    void Integrate();  // :669 Integrate(partRef) (:715 recursion)
     void ClearPartBuffers();
     AeroRigidbody RigidbodyOf(Part& part) const;
     void AeroBatch();  // SoA / Both before the recursion

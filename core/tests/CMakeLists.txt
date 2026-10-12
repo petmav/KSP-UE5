@@ -43,6 +43,7 @@ add_executable(kspcore_tests
     test_vessel_physics.cpp
     test_physics_bubble.cpp
     test_physics_bubble_ref.cpp
+    test_flight_integrator.cpp
     test_flight.cpp
     test_flight2.cpp
     test_flight3.cpp
