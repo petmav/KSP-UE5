@@ -5517,7 +5517,7 @@ FlightIntegrator in the bubble.
 | bubble wiring | `physics/physics_bubble.hpp/.cpp`, `vessel/flight_scene.hpp/.cpp` | the FlightIntegrator slot runs `FlightIntegratorHost` (WP-19b's `DefaultFlightIntegrator` stand-in removed; `flightIntegrator` still overrides it), FlightScene::hooks.beforeFlightIntegrator = the module slot, new FlightScene::hooks.beforeVesselUpdate (Update: Part.Update's ModuleRCS.Update and FlightIntegrator.Update before Vessel.Update, PHYSICS-ENGINE-REVIEW.md 1.2), onVesselLoaded -> StartPartsInFlight |
 | `DragCubeList::SetCubeData` | `parts/part_data.hpp` | the SoA kernel's store of SetDrag's CubeData |
 
-### Gate (`tests/test_flight_integrator.cpp` + `tests/flight_integrator_fixture.hpp`: 11 cases / 27,751 assertions)
+### Gate (`tests/test_flight_integrator.cpp` + `tests/flight_integrator_fixture.hpp`: 11 cases / 27,755 assertions)
 
 | case | what | result |
 |---|---|---|
@@ -5602,5 +5602,28 @@ did not run (its pipeline: 0.29-0.43 ms without thermal).
 
 ### Unit tests
 
-`tests/test_flight_integrator.cpp`: 11 cases / 27,751 assertions, about 50 s in RelWithDebInfo (the nine launches of the flight SoA gate ~25 s, the
-three ascents ~10 s). `tests/physics_bubble_fixture.hpp`: PlaceOnOrbit runs StartPartsInFlight.
+`tests/test_flight_integrator.cpp`: 11 cases / 27,755 assertions, 27 s in RelWithDebInfo (the nine launches of the flight SoA gate 17 s, the
+three ascents 7 s). `tests/physics_bubble_fixture.hpp`: PlaceOnOrbit runs StartPartsInFlight. `tests/test_hygiene.cpp` now also resets FlightGlobals'
+speed modes (a flight scene with a vessel in orbit left Orbit, and WP-19a's FlightGlobals tick case failed under `--order-by=rand` with the new
+cases) and FlightIntegrator.ActiveVesselFI between cases.
+
+### Verification
+
+- Windows MSVC RelWithDebInfo, fresh (`core/build` deleted, `run_tests.ps1 -Fresh`, `CMAKE_BUILD_PARALLEL_LEVEL=6`) at `5dcf2a02`: configure 4.5 s, build
+  253.9 s, ctest 383.6 s; **38 / 38 pass** in the worktree (`corpus.saves` is not registered without decompiled/KSP-dev); `unit` 208.6 s. The final
+  commit (the vessel-event hooks) rebuilt incrementally: ctest 38 / 38 again (350 s).
+- `kspcore_tests` on the final code, default order and `--order-by=rand -rs=11` / `-rs=27`: 851 / 851 cases, 1,412,910 assertions each, all green
+  (the first random runs exposed a FlightGlobals speed-mode leak between cases: now reset by the hygiene listener).
+- Linux g++ 13.3 with `-fsanitize=address,undefined` (WSL Ubuntu 24.04, README "Sanitizer run", the worktree's core / harness / analysis and
+  decompiled/KSP-dev's data copied to a Linux filesystem, whole unit binary in one process, `detect_leaks=1`): 851 / 851 cases, 1,412,894 assertions
+  (the usual 16 fewer of WP-03's NaN fallback on Linux), **no ASan, LSan or UBSan report**; no compiler warning in the new files. The WP-20d gates
+  hold on that binary too (SoA == exact 1,008,969 part-ticks, 0 mismatches, equal hashes; ascents within the same tolerances; burn 1.7 / 4.4 mm;
+  coast 1.8e-5 m); trajectories differ from MSVC's in the last digits (S tumbles: 3,914 vs 3,907 m after 30 s), as expected across compilers.
+- `check_cites.py` exact mode: 31 citations over the WP-20d files, 0 mismatches; the WP-20b / WP-19b physics files 71 / 0.
+- The reference JSON regenerates byte-identically (`python -I core/tools/wp20d/fi_reference.py`, fixed seed).
+
+### Commits (branch `wp20d`, from local `wp19b` cd99f577; not pushed)
+
+`dd9c59f9` FlightIntegrator, SoA kernel, part buffers and module slot, bubble wiring, StartPartsInFlight; `c7432020` reference / buffers / random SoA /
+C10 tests, pad fixture; `1ad84e54` flights (SoA == exact, ascent vs C10); `3f22807c` burn, coast, FixedUpdate mechanics, module slot tests; `a907dca6`
+checkable cites; `5dcf2a02` STATUS / README / progress, test hygiene; `7071db3e` the vessel-event hooks; then this verification note.

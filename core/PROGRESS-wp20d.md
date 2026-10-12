@@ -51,3 +51,10 @@ internals). Local commits only, no push.
 - note: the session scratchpad is shared with other agents (a `rand11.log` of another worktree overwrote mine): WP-20d's files now live in
   scratchpad/wp20d/.
 - docs: STATUS row 54 + section, README (tick paragraph, unit row, layout, tools/wp20d).
+- random order (first try): WP-19a's FlightGlobals tick case failed for seeds 11 / 27: the speed modes leak from any flight scene with an orbiting
+  active vessel; fixed in the hygiene listener (FlightGlobals::ResetSpeedModesForTests) -> 851 / 851 for default / 11 / 27.
+- added FlightIntegrator's HookVesselEvents (:400-450) and an Update guard (memory safety while the thermal graph waits for its rebuild), registry
+  checks in the tick loops; cites 31 / 0.
+- verification: fresh MSVC at 5dcf2a02 38 / 38 (build 254 s, ctest 384 s), final commit ctest 38 / 38; unit default / rand 11 / rand 27 851 / 851
+  (1,412,910 assertions); WSL g++ ASan + UBSan + LSan 851 / 851 (1,412,894), no report (note: an incremental WSL rebuild after rsync -a kept stale
+  objects of files edited during the first build: touched and rebuilt, then rerun). Done.
