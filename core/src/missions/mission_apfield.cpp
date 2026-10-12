@@ -24,22 +24,22 @@ std::map<std::string, std::pair<std::vector<BaseAPFieldList::ReflectedMember>, s
 
 // ---- MEGUI_Control.cs / FieldAttribute.cs ---------------------------------------------------------------------------------------------------------------------
 
-// MEGUI_Control.cs:@MEGUI_Control (FieldAttribute() first: guiName = "")
+// MEGUI_Control.cs:84 (FieldAttribute() first: guiName = "")
 MEGUI_Control::MEGUI_Control() {
     set_guiName("");
     set_Tooltip("");
 }
-// FieldAttribute.cs:@guiName
+// FieldAttribute.cs, guiName setter (line 11)
 void MEGUI_Control::set_guiName(const std::string& value) { guiName_ = Localizer::Format(value); }
-// MEGUI_Control.cs:@Tooltip
+// MEGUI_Control.cs, Tooltip setter (line 72)
 void MEGUI_Control::set_Tooltip(const std::string& value) { tooltip_ = Localizer::Format(value); }
 
 // ---- BaseAPField ----------------------------------------------------------------------------------------------------------------------------------------------
 
-// BaseAPField.cs:@BaseAPField (BaseField<K>.BaseField(fieldAttrib, memberInfo, host) first)
+// BaseAPField.cs:258 (BaseField<K>.BaseField(fieldAttrib, memberInfo, host) first)
 BaseAPField::BaseAPField(const MEGUI_Control& fieldAttrib, const MemberInfo& memberInfo, IAPFieldHost* hostType, void* host)
     : attribute_(fieldAttrib), member_(memberInfo), host_(host) {
-    // BaseField.cs:@BaseField#2
+    // BaseField.cs:125
     name = member_.name;
     propertyInfo_ = member_.kind == MemberInfo::Kind::Property;
     hasInterface_ = !propertyInfo_ && member_.valueTypeHasIConfigNode;
@@ -78,16 +78,16 @@ BaseAPField::BaseAPField(const MEGUI_Control& fieldAttrib, const MemberInfo& mem
     groupStartCollapsed_ = fieldAttrib.groupStartCollapsed;
 }
 
-// BaseAPField.cs:@FieldID  (string.Concat(MemberInfo.DeclaringType, ".", name))
+// BaseAPField.cs:84  (string.Concat(MemberInfo.DeclaringType, ".", name))
 std::string BaseAPField::FieldID() const { return member_.declaringType + "." + name; }
 
-// BaseAPField.cs:@FieldType
+// BaseAPField.cs, FieldType getter (line 86)
 std::string BaseAPField::FieldTypeName() const {
     if (propertyInfo_ || member_.kind == MemberInfo::Kind::Field) return member_.valueType;
     return "";
 }
 
-// BaseField.cs:@SetValue
+// BaseField.cs:140
 bool BaseAPField::SetValue(const Boxed& newValue, void* host) {
     try {
         if (propertyInfo_ || !member_.set) throw NullReferenceException();  // _fieldInfo is null for a property member
@@ -100,7 +100,7 @@ bool BaseAPField::SetValue(const Boxed& newValue, void* host) {
     }
 }
 
-// BaseField.cs:@GetValue
+// BaseField.cs:156
 Boxed BaseAPField::GetValue(void* host) {
     try {
         if (propertyInfo_ || !member_.get) throw NullReferenceException();
@@ -111,7 +111,7 @@ Boxed BaseAPField::GetValue(void* host) {
     }
 }
 
-// BaseAPField.cs:@SetValue
+// BaseAPField.cs:299
 bool BaseAPField::SetValue(const Boxed& newValue) {
     if (!propertyInfo_) {
         if (SetValue(newValue, host_)) {
@@ -132,7 +132,7 @@ bool BaseAPField::SetValue(const Boxed& newValue) {
     }
 }
 
-// BaseAPField.cs:@GetValue
+// BaseAPField.cs:332
 Boxed BaseAPField::GetValue() {
     if (!propertyInfo_) return GetValue(host_);
     try {
@@ -143,17 +143,17 @@ Boxed BaseAPField::GetValue() {
     }
 }
 
-// BaseAPField.cs:@SetOriginalValue
+// BaseAPField.cs:354
 void BaseAPField::SetOriginalValue() {
     if (!propertyInfo_) {
-        // BaseField.cs:@SetOriginalValue: _originalValue = _fieldInfo.GetValue(_host)
+        // BaseField.cs:174: _originalValue = _fieldInfo.GetValue(_host)
         originalValue_ = member_.get(host_);
     } else {
         originalValue_ = member_.get(host_);
     }
 }
 
-// MissionsUtils.cs:@GetFieldValueForDisplay
+// MissionsUtils.cs:565
 std::string BaseAPField::GetFieldValueForDisplay() {
     if (member_.valueIsEnum) return member_.enumDescription(GetValue());
     if (member_.valueIsBool) {
@@ -173,10 +173,10 @@ void BaseAPFieldList::RegisterReflectedType(const std::string& typeName, std::ve
 }
 void BaseAPFieldList::ResetReflectedTypes() { Registry().clear(); }
 
-// BaseFieldList.cs:@BaseFieldList
+// BaseFieldList.cs:125
 BaseAPFieldList::BaseAPFieldList() : fields_(std::vector<std::unique_ptr<BaseAPField>>()) {}
 
-// BaseFieldList.cs:@BaseFieldList#3
+// BaseFieldList.cs:135
 BaseAPFieldList::BaseAPFieldList(const std::string& hostTypeName, IAPFieldHost* hostType, void* host) {
     if (host == nullptr) {
         // PDebug.Error("Field: Host is null")
@@ -188,7 +188,7 @@ BaseAPFieldList::BaseAPFieldList(const std::string& hostTypeName, IAPFieldHost* 
     CreateList(hostTypeName, hostType, host);
 }
 
-// BaseFieldList.cs:@CreateList
+// BaseFieldList.cs:159
 void BaseAPFieldList::CreateList(const std::string& typeName, IAPFieldHost* hostType, void* instance) {
     auto it = Registry().find(typeName);
     if (it == Registry().end()) return;
@@ -201,13 +201,13 @@ void BaseAPFieldList::CreateList(const std::string& typeName, IAPFieldHost* host
     for (const ReflectedMember& m : it->second.second) create(m);
 }
 
-// BaseFieldList.cs:@Count
+// BaseFieldList.cs:86
 int BaseAPFieldList::Count() const {
     if (!fields_.has_value()) throw NullReferenceException();
     return static_cast<int>(fields_->size());
 }
 
-// BaseFieldList.cs:@this[]
+// BaseFieldList.cs:131[]
 BaseAPField* BaseAPFieldList::operator[](const std::string& fieldName) {
     if (!fields_.has_value()) throw NullReferenceException();
     for (auto& f : *fields_)
@@ -215,7 +215,7 @@ BaseAPField* BaseAPFieldList::operator[](const std::string& fieldName) {
     return nullptr;
 }
 
-// BaseFieldList.cs:@this[]#2
+// BaseFieldList.cs:131[]#2
 BaseAPField* BaseAPFieldList::operator[](int index) {
     if (!fields_.has_value()) throw NullReferenceException();
     if (index < 0 || index >= static_cast<int>(fields_->size())) throw std::out_of_range("index");
@@ -228,7 +228,7 @@ void BaseAPFieldList::SetAt(int index, std::unique_ptr<BaseAPField> value) {
     (*fields_)[static_cast<size_t>(index)] = std::move(value);
 }
 
-// BaseFieldList.cs:@GetValue
+// BaseFieldList.cs:186
 Boxed BaseAPFieldList::GetValue(const std::string& fieldName) {
     BaseAPField* f = (*this)[fieldName];
     if (f == nullptr) return Boxed();
@@ -236,20 +236,20 @@ Boxed BaseAPFieldList::GetValue(const std::string& fieldName) {
     return f->GetValue(host_);
 }
 
-// BaseFieldList.cs:@SetValue
+// BaseFieldList.cs:201
 bool BaseAPFieldList::SetValue(const std::string& fieldName, const Boxed& value) {
     BaseAPField* f = (*this)[fieldName];
     if (f == nullptr) return false;
     return f->SetValue(value, host_);
 }
 
-// BaseFieldList.cs:@SetOriginalValue
+// BaseFieldList.cs:211
 void BaseAPFieldList::SetOriginalValue() {
     if (!fields_.has_value()) throw NullReferenceException();
     for (auto& f : *fields_) f->SetOriginalValue();
 }
 
-// BaseFieldList.cs:@Add
+// BaseFieldList.cs:220
 void BaseAPFieldList::Add(std::unique_ptr<BaseAPField> element) {
     if (!fields_.has_value()) throw NullReferenceException();
     fields_->push_back(std::move(element));

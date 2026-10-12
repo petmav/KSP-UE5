@@ -66,15 +66,15 @@ const std::vector<std::string>* AdjustersFor(const std::string& partModuleName) 
 }
 bool Contains(const std::vector<std::string>& list, const std::string& v) { return std::find(list.begin(), list.end(), v) != list.end(); }
 
-// ProtoPartModuleSnapshot.cs:@AddPartModuleAdjuster + :@AddPartModuleAdjusterList + ProtoPartSnapshot.cs:@AddProtoPartModuleAdjusters
+// ProtoPartModuleSnapshot.cs:92 + :@AddPartModuleAdjusterList + ProtoPartSnapshot.cs:@AddProtoPartModuleAdjusters
 void ProtoAddAdjusters(ProtoPartSnapshot* part, const std::vector<Adjusters::AdjusterPartModuleBase*>& adjusters) {
     if (!MissionsEnvironment::MakingHistoryInstalled()) return;
     for (size_t m = 0; m < part->modules.size(); ++m) {
         ProtoPartModuleSnapshot* module = part->modules[m].get();
-        // ProtoPartModuleSnapshot.cs:@AddPartModuleAdjusterList
+        // ProtoPartModuleSnapshot.cs, MakingHistoryInstalled check (line 81)
         if (!MissionsEnvironment::MakingHistoryInstalled()) continue;
         for (size_t i = 0; i < adjusters.size(); ++i) {
-            // ProtoPartModuleSnapshot.cs:@AddPartModuleAdjuster
+            // ProtoPartModuleSnapshot.cs:92
             if (!module->moduleName.has_value()) throw ArgumentNullException("key");
             const std::vector<std::string>* list = AdjustersFor(*module->moduleName);
             if (list == nullptr) continue;
@@ -123,7 +123,7 @@ std::string VesselPartText(MENode* node, const VesselPartIDPair& ids, const Edit
 
 // ---- ActionPartFailure -------------------------------------------------------------------------------------------------------
 
-// ActionPartFailure.cs:@Awake
+// ActionPartFailure.cs:101
 ActionPartFailure::ActionPartFailure() : ActionModule(kTypeName) {
     title = Tag("#autoLOC_8000002");
     vesselPartIDs = VesselPartIDPair();
@@ -133,42 +133,42 @@ ActionPartFailure::ActionPartFailure() : ActionModule(kTypeName) {
     }
 }
 
-// ActionPartFailure.cs:@OnDestroy
+// ActionPartFailure.cs:123
 ActionPartFailure::~ActionPartFailure() {
     GameEvents::Mission::onVesselSituationChanged.Remove(this, &ActionPartFailure::onVesselSituationChanged);
     GameEvents::Mission::onMissionLoaded.Remove(this, &ActionPartFailure::onVesselSituationChanged);
 }
 
-// ActionPartFailure.cs:@OnVesselPersistentIdChanged
+// ActionPartFailure.cs:23
 void ActionPartFailure::OnVesselPersistentIdChanged(uint32_t oldId, uint32_t newId) {
     if (vesselPartIDs.VesselID == oldId) vesselPartIDs.VesselID = newId;
 }
 
-// ActionPartFailure.cs:@OnPartPersistentIdChanged
+// ActionPartFailure.cs:32
 void ActionPartFailure::OnPartPersistentIdChanged(uint32_t vesselID, uint32_t oldId, uint32_t newId) {
     if (vesselPartIDs.VesselID == vesselID && vesselPartIDs.partID == oldId) vesselPartIDs.partID = newId;
 }
 
-// ActionPartFailure.cs:@OnVesselsUndocking
+// ActionPartFailure.cs:45
 void ActionPartFailure::OnVesselsUndocking(Vessel* oldVessel, Vessel* newVessel) { RemapUndocking(vesselPartIDs, oldVessel, newVessel); }
 
-// ActionPartFailure.cs:@VesselPartSelectorControlCreated
+// ActionPartFailure.cs:69
 void ActionPartFailure::VesselPartSelectorControlCreated(Editor::IMEGUIVesselPartSelector* sender) {
     partSelectorRef = sender;
     OnPartIDChanged(vesselPartIDs);
 }
 
-// ActionPartFailure.cs:@DynamicModuleListControlCreated
+// ActionPartFailure.cs:75
 void ActionPartFailure::DynamicModuleListControlCreated(Editor::IMEGUIDynamicModuleListControl* sender) {
     dynamicModuleListRef = sender;
     dynamicModuleListRef->SetAddButtonText(Tag("#autoLOC_8002056"));
     OnPartIDChanged(vesselPartIDs);
 }
 
-// ActionPartFailure.cs:@OnAdjusterListModified
+// ActionPartFailure.cs:82
 void ActionPartFailure::OnAdjusterListModified(DynamicModuleList*) { GameEvents::Mission::onFailureListChanged.Fire(); }
 
-// ActionPartFailure.cs:@onVesselSituationChanged
+// ActionPartFailure.cs:87
 void ActionPartFailure::onVesselSituationChanged() {
     if (node != nullptr && node->mission != nullptr && vesselPartIDs.partID != 0 && node->mission->GetSituationsIndexByPart(vesselPartIDs.partID) < 0) {
         vesselPartIDs = VesselPartIDPair();
@@ -178,14 +178,14 @@ void ActionPartFailure::onVesselSituationChanged() {
     if (partSelectorRef != nullptr) partSelectorRef->RefreshUI();
 }
 
-// ActionPartFailure.cs:@Initialize
+// ActionPartFailure.cs:113
 void ActionPartFailure::Initialize(MENode* n) {
     ActionModule::Initialize(n);
     Modules = std::make_unique<DynamicModuleList>(n);
     if (n != nullptr) n->UpdateInfoOnRefresh = true;
 }
 
-// ActionPartFailure.cs:@OnPartIDChanged
+// ActionPartFailure.cs:130
 void ActionPartFailure::OnPartIDChanged(const VesselPartIDPair&) {
     if (partSelectorRef == nullptr || dynamicModuleListRef == nullptr) return;
     Part* selectedPart = partSelectorRef->GetSelectedPart();
@@ -203,13 +203,13 @@ void ActionPartFailure::OnPartIDChanged(const VesselPartIDPair&) {
     dynamicModuleListRef->RefreshUI();
 }
 
-// ActionPartFailure.cs:@GetInternalParametersToDisplay
+// ActionPartFailure.cs:160
 std::vector<IMENodeDisplay*> ActionPartFailure::GetInternalParametersToDisplay() {
     if (Modules == nullptr) throw NullReferenceException();
     return Modules->GetInternalParameters();
 }
 
-// ActionPartFailure.cs:@Fire
+// ActionPartFailure.cs:165
 Enumerator ActionPartFailure::Fire() {
     if (!MissionsEnvironment::MakingHistoryInstalled()) co_yield YieldInstruction::Null();
     if (vesselPartIDs.partID == 0) {
@@ -254,7 +254,7 @@ Enumerator ActionPartFailure::Fire() {
     co_yield YieldInstruction::Null();
 }
 
-// ActionPartFailure.cs:@addAdjustersVessel
+// ActionPartFailure.cs:227
 void ActionPartFailure::addAdjustersVessel(Vessel* vessel) {
     for (size_t i = 0; i < vessel->parts.size(); ++i) {
         std::vector<Adjusters::AdjusterPartModuleBase*> list;
@@ -277,10 +277,10 @@ void ActionPartFailure::addAdjustersVessel(Vessel* vessel) {
     }
 }
 
-// ActionPartFailure.cs:@GetInfo
+// ActionPartFailure.cs:253
 std::string ActionPartFailure::GetInfo() { return Tag("#autoLOC_8004024"); }
 
-// ActionPartFailure.cs:@GetNodeBodyParameterString
+// ActionPartFailure.cs:258
 std::string ActionPartFailure::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (node != nullptr) node->UpdateInfoOnRefresh = true;
     std::string text;
@@ -305,10 +305,10 @@ std::string ActionPartFailure::GetNodeBodyParameterString(const Editor::BaseAPFi
     return ActionModule::GetNodeBodyParameterString(field);
 }
 
-// ActionPartFailure.cs:@RunValidation
+// ActionPartFailure.cs:316
 void ActionPartFailure::RunValidation(Editor::MissionEditorValidator* validator) { vesselPartIDs.ValidatePartAgainstCraft(node, validator); }
 
-// ActionPartFailure.cs:@Save
+// ActionPartFailure.cs:324
 void ActionPartFailure::Save(ConfigNode& cfg) const {
     ActionModule::Save(cfg);
     vesselPartIDs.Save(cfg);
@@ -316,7 +316,7 @@ void ActionPartFailure::Save(ConfigNode& cfg) const {
     Modules->Save(cfg);
 }
 
-// ActionPartFailure.cs:@Load
+// ActionPartFailure.cs:331
 void ActionPartFailure::Load(const ConfigNode& cfg) {
     ActionModule::Load(cfg);
     vesselPartIDs.Load(cfg);
@@ -326,7 +326,7 @@ void ActionPartFailure::Load(const ConfigNode& cfg) {
 
 // ---- ActionPartRepair --------------------------------------------------------------------------------------------------------
 
-// ActionPartRepair.cs:@Awake
+// ActionPartRepair.cs:48
 ActionPartRepair::ActionPartRepair() : ActionModule(kTypeName) {
     title = Tag("#autoLOC_8000063");
     vesselPartIDs = VesselPartIDPair();
@@ -339,26 +339,26 @@ ActionPartRepair::ActionPartRepair() : ActionModule(kTypeName) {
     }
 }
 
-// ActionPartRepair.cs:@OnDestroy
+// ActionPartRepair.cs:63
 ActionPartRepair::~ActionPartRepair() {
     GameEvents::Mission::onFailureListChanged.Remove(this, &ActionPartRepair::onFailureListChanged);
     GameEvents::Mission::onVesselSituationChanged.Remove(this, &ActionPartRepair::onVesselSituationChanged);
     GameEvents::Mission::onMissionLoaded.Remove(this, &ActionPartRepair::onVesselSituationChanged);
 }
 
-// ActionPartRepair.cs:@VesselPartSelectorControlCreated
+// ActionPartRepair.cs:71
 void ActionPartRepair::VesselPartSelectorControlCreated(Editor::IMEGUIVesselPartSelector*) { OnPartIDChanged(&vesselPartIDs); }
 
-// ActionPartRepair.cs:@OnRepairTypeControlCreated
+// ActionPartRepair.cs:76
 void ActionPartRepair::OnRepairTypeControlCreated(Editor::IMEGUIDropdownList* parameter) { RepairTypeDropdown = parameter; }
 
-// ActionPartRepair.cs:@OnPartModuleDropdownControlCreated
+// ActionPartRepair.cs:81
 void ActionPartRepair::OnPartModuleDropdownControlCreated(Editor::IMEGUIDropdownList* parameter) { PartModuleDropdown = parameter; }
 
-// ActionPartRepair.cs:@OnFailureDropdownControlCreated
+// ActionPartRepair.cs:86
 void ActionPartRepair::OnFailureDropdownControlCreated(Editor::IMEGUIDropdownList* parameter) { FailureDropdown = parameter; }
 
-// ActionPartRepair.cs:@SetRepairTypeDropdown
+// ActionPartRepair.cs:91
 std::vector<Editor::MEGUIDropDownItem> ActionPartRepair::SetRepairTypeDropdown() {
     std::vector<Editor::MEGUIDropDownItem> list;
     vesselSituation = node->mission->GetVesselSituationByVesselID(vesselPartIDs.VesselID);
@@ -372,7 +372,7 @@ std::vector<Editor::MEGUIDropDownItem> ActionPartRepair::SetRepairTypeDropdown()
     return list;
 }
 
-// ActionPartRepair.cs:@SetPartModuleNamesForDropdown
+// ActionPartRepair.cs:113
 std::vector<Editor::MEGUIDropDownItem> ActionPartRepair::SetPartModuleNamesForDropdown() {
     std::vector<std::string> list;
     MissionCraft* craftBySituationsVesselID = node->mission->GetCraftBySituationsVesselID(vesselPartIDs.VesselID);
@@ -405,7 +405,7 @@ std::vector<Editor::MEGUIDropDownItem> ActionPartRepair::SetPartModuleNamesForDr
     return list2;
 }
 
-// ActionPartRepair.cs:@SetFailureNamesForDropdown
+// ActionPartRepair.cs:160
 std::vector<Editor::MEGUIDropDownItem> ActionPartRepair::SetFailureNamesForDropdown() {
     std::vector<Editor::MEGUIDropDownItem> list;
     std::vector<ActionPartFailure*> allActionModules = node->mission->GetAllActionModules<ActionPartFailure>();
@@ -421,7 +421,7 @@ std::vector<Editor::MEGUIDropDownItem> ActionPartRepair::SetFailureNamesForDropd
     return list;
 }
 
-// ActionPartRepair.cs:@OnRepairTypeValueChange
+// ActionPartRepair.cs:185
 void ActionPartRepair::OnRepairTypeValueChange(Editor::IMEGUIDropdownList* sender, int) {
     std::optional<int> selected = sender->SelectedValueInt();
     if (selected.has_value() && node != nullptr) {
@@ -453,12 +453,12 @@ void ActionPartRepair::OnRepairTypeValueChange(Editor::IMEGUIDropdownList* sende
     UpdateNodeBodyUI();
 }
 
-// ActionPartRepair.cs:@onFailureListChanged
+// ActionPartRepair.cs:238
 void ActionPartRepair::onFailureListChanged() {
     if (FailureDropdown != nullptr) FailureDropdown->RebuildDropDown();
 }
 
-// ActionPartRepair.cs:@OnPartIDChanged
+// ActionPartRepair.cs:246
 void ActionPartRepair::OnPartIDChanged(const VesselPartIDPair* newVesselPartIDs) {
     if (newVesselPartIDs != nullptr) {
         vesselPartIDs = *newVesselPartIDs;
@@ -466,7 +466,7 @@ void ActionPartRepair::OnPartIDChanged(const VesselPartIDPair* newVesselPartIDs)
     }
 }
 
-// ActionPartRepair.cs:@onVesselSituationChanged
+// ActionPartRepair.cs:255
 void ActionPartRepair::onVesselSituationChanged() {
     if (node != nullptr && node->mission != nullptr) {
         vesselSituation = node->mission->GetVesselSituationByVesselID(vesselPartIDs.VesselID);
@@ -480,7 +480,7 @@ void ActionPartRepair::onVesselSituationChanged() {
     }
 }
 
-// ActionPartRepair.cs:@Fire
+// ActionPartRepair.cs:277
 Enumerator ActionPartRepair::Fire() {
     if (!MissionsEnvironment::MakingHistoryInstalled()) co_yield YieldInstruction::Null();
     Vessel* vessel = nullptr;
@@ -526,12 +526,12 @@ Enumerator ActionPartRepair::Fire() {
     co_yield YieldInstruction::Null();
 }
 
-// ActionPartRepair.cs:@RepairFailures
+// ActionPartRepair.cs:342
 void ActionPartRepair::RepairFailures(Vessel* vessel, const std::string& repairpartModule, bool useGuid) {
     for (size_t i = 0; i < vessel->Parts().size(); ++i) RepairFailures(vessel->Parts()[i], repairpartModule, useGuid);
 }
 
-// ActionPartRepair.cs:@RepairFailures#2
+// ActionPartRepair.cs:350
 void ActionPartRepair::RepairFailures(Part* part, const std::string& repairpartModule, bool useGuid) {
     const std::vector<std::string> names = ModuleNames(part);
     for (size_t i = 0; i < names.size(); ++i) {
@@ -549,12 +549,12 @@ void ActionPartRepair::RepairFailures(Part* part, const std::string& repairpartM
     }
 }
 
-// ActionPartRepair.cs:@RepairFailures#3
+// ActionPartRepair.cs:369
 void ActionPartRepair::RepairFailures(ProtoVessel* vessel, const std::string& repairpartModule, bool useGuid) {
     for (size_t i = 0; i < vessel->protoPartSnapshots.size(); ++i) RepairFailures(vessel->protoPartSnapshots[i].get(), repairpartModule, useGuid);
 }
 
-// ActionPartRepair.cs:@RepairFailures#4
+// ActionPartRepair.cs:377
 void ActionPartRepair::RepairFailures(ProtoPartSnapshot* part, const std::string& repairpartModule, bool useGuid) {
     for (size_t i = 0; i < part->modules.size(); ++i) {
         ProtoPartModuleSnapshot* protoPartModuleSnapshot = part->modules[i].get();
@@ -568,10 +568,10 @@ void ActionPartRepair::RepairFailures(ProtoPartSnapshot* part, const std::string
     }
 }
 
-// ActionPartRepair.cs:@GetInfo
+// ActionPartRepair.cs:396
 std::string ActionPartRepair::GetInfo() { return Tag("#autoLOC_8004025"); }
 
-// ActionPartRepair.cs:@GetNodeBodyParameterString
+// ActionPartRepair.cs:401
 std::string ActionPartRepair::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (node != nullptr) node->UpdateInfoOnRefresh = true;
     if (field.name == "vesselPartIDs") {
@@ -624,10 +624,10 @@ std::string ActionPartRepair::GetNodeBodyParameterString(const Editor::BaseAPFie
     return "";
 }
 
-// ActionPartRepair.cs:@RunValidation
+// ActionPartRepair.cs:481
 void ActionPartRepair::RunValidation(Editor::MissionEditorValidator* validator) { vesselPartIDs.ValidatePartAgainstCraft(node, validator); }
 
-// ActionPartRepair.cs:@Save
+// ActionPartRepair.cs:489
 void ActionPartRepair::Save(ConfigNode& cfg) const {
     ActionModule::Save(cfg);
     vesselPartIDs.Save(cfg);
@@ -637,7 +637,7 @@ void ActionPartRepair::Save(ConfigNode& cfg) const {
     if (!(failureID == Guid::Empty())) cfg.AddValue("failureID", failureID.ToString());
 }
 
-// ActionPartRepair.cs:@Load
+// ActionPartRepair.cs:505
 void ActionPartRepair::Load(const ConfigNode& cfg) {
     ActionModule::Load(cfg);
     vesselPartIDs.Load(cfg);
@@ -652,7 +652,7 @@ void ActionPartRepair::Load(const ConfigNode& cfg) {
 
 // ---- ActionPartResourceDrain -------------------------------------------------------------------------------------------------
 
-// ActionPartResourceDrain.cs:@Awake
+// ActionPartResourceDrain.cs:49
 ActionPartResourceDrain::ActionPartResourceDrain() : ActionModule(kTypeName) {
     title = Tag("#autoLOC_8000007");
     vesselPartIDs = VesselPartIDPair();
@@ -660,20 +660,20 @@ ActionPartResourceDrain::ActionPartResourceDrain() : ActionModule(kTypeName) {
     leftToDrain = amountToDrain;
 }
 
-// ActionPartResourceDrain.cs:@OnVesselPersistentIdChanged
+// ActionPartResourceDrain.cs:58
 void ActionPartResourceDrain::OnVesselPersistentIdChanged(uint32_t oldId, uint32_t newId) {
     if (vesselPartIDs.VesselID == oldId) vesselPartIDs.VesselID = newId;
 }
 
-// ActionPartResourceDrain.cs:@OnPartPersistentIdChanged
+// ActionPartResourceDrain.cs:67
 void ActionPartResourceDrain::OnPartPersistentIdChanged(uint32_t vesselID, uint32_t oldId, uint32_t newId) {
     if (vesselPartIDs.VesselID == vesselID && vesselPartIDs.partID == oldId) vesselPartIDs.partID = newId;
 }
 
-// ActionPartResourceDrain.cs:@OnVesselsUndocking
+// ActionPartResourceDrain.cs:76
 void ActionPartResourceDrain::OnVesselsUndocking(Vessel* oldVessel, Vessel* newVessel) { RemapUndocking(vesselPartIDs, oldVessel, newVessel); }
 
-// ActionPartResourceDrain.cs:@Fire
+// ActionPartResourceDrain.cs:100
 Enumerator ActionPartResourceDrain::Fire() {
     isRunning = true;
     if (std::getenv("KSP_DBG")) std::fprintf(stderr, "DRAIN fire setup=%d\n", (int)setup);
@@ -710,7 +710,7 @@ Enumerator ActionPartResourceDrain::Fire() {
     // Debug.LogWarning("[MissionExpansions] ActionPartResourceDrain failed to find part id")
 }
 
-// ActionPartResourceDrain.cs:@Setup
+// ActionPartResourceDrain.cs:105
 bool ActionPartResourceDrain::Setup() {
     if (std::getenv("KSP_DBG")) std::fprintf(stderr, "DRAIN Setup enter\n");
     if (vesselPartIDs.VesselID != 0 && amountToDrain != 0.0f && !(resourceName == "") && SaveEnvironment::Current().persistentIds.fetch) {
@@ -741,7 +741,7 @@ bool ActionPartResourceDrain::Setup() {
     return false;
 }
 
-// ActionPartResourceDrain.cs:@findVessel
+// ActionPartResourceDrain.cs:197
 bool ActionPartResourceDrain::findVessel() {
     if (std::getenv("KSP_DBG")) std::fprintf(stderr, "DRAIN findVessel enter\n");
     vesselFound = false;
@@ -754,7 +754,7 @@ bool ActionPartResourceDrain::findVessel() {
     return vesselFound;
 }
 
-// ActionPartResourceDrain.cs:@findPart
+// ActionPartResourceDrain.cs:209
 bool ActionPartResourceDrain::findPart() {
     if (std::getenv("KSP_DBG")) std::fprintf(stderr, "DRAIN findPart enter\n");
     part = FindLoadedPart(vesselPartIDs.partID);
@@ -768,7 +768,7 @@ bool ActionPartResourceDrain::findPart() {
     return true;
 }
 
-// ActionPartResourceDrain.cs:@drainVessel
+// ActionPartResourceDrain.cs:220
 void ActionPartResourceDrain::drainVessel() {
     if (std::getenv("KSP_DBG")) std::fprintf(stderr, "DRAIN drainVessel loaded=%d proto=%p\n", (int)vessel->loaded, (void*)vessel->protoVessel);
     float num = f32store(fx(drainPerSecond) * fx(drainEveryXSecs));
@@ -796,7 +796,7 @@ void ActionPartResourceDrain::drainVessel() {
     leftToDrain = f32store(fx(leftToDrain) - fx(num3));
 }
 
-// ActionPartResourceDrain.cs:@drainPart
+// ActionPartResourceDrain.cs:254
 void ActionPartResourceDrain::drainPart() {
     if (std::getenv("KSP_DBG")) std::fprintf(stderr, "DRAIN drainPart\n");
     float num = f32store(fx(drainPerSecond) * fx(drainEveryXSecs));
@@ -825,7 +825,7 @@ void ActionPartResourceDrain::drainPart() {
     }
 }
 
-// ActionPartResourceDrain.cs:@drainUnloadedPart
+// ActionPartResourceDrain.cs:285
 float ActionPartResourceDrain::drainUnloadedPart(ProtoPartSnapshot* InProtoPart) {
     float num = f32store(fx(drainPerSecond) * fx(drainEveryXSecs));
     size_t num2 = 0;
@@ -845,7 +845,7 @@ float ActionPartResourceDrain::drainUnloadedPart(ProtoPartSnapshot* InProtoPart)
     return 0.0f;
 }
 
-// ActionPartResourceDrain.cs:@APRD_SetDropDownValues
+// ActionPartResourceDrain.cs:310
 std::vector<Editor::MEGUIDropDownItem> ActionPartResourceDrain::APRD_SetDropDownValues() {
     std::vector<Editor::MEGUIDropDownItem> list;
     PartResourceLibrary* lib = PartResourceLibrary::Instance();
@@ -854,7 +854,7 @@ std::vector<Editor::MEGUIDropDownItem> ActionPartResourceDrain::APRD_SetDropDown
     return list;
 }
 
-// ActionPartResourceDrain.cs:@GetNodeBodyParameterString
+// ActionPartResourceDrain.cs:323
 std::string ActionPartResourceDrain::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (node != nullptr) node->UpdateInfoOnRefresh = true;
     if (field.name == "vesselPartIDs") {
@@ -874,13 +874,13 @@ std::string ActionPartResourceDrain::GetNodeBodyParameterString(const Editor::Ba
     return ActionModule::GetNodeBodyParameterString(field);
 }
 
-// ActionPartResourceDrain.cs:@GetInfo
+// ActionPartResourceDrain.cs:373
 std::string ActionPartResourceDrain::GetInfo() { return Tag("#autoLOC_8004004"); }
 
-// ActionPartResourceDrain.cs:@RunValidation
+// ActionPartResourceDrain.cs:378
 void ActionPartResourceDrain::RunValidation(Editor::MissionEditorValidator* validator) { vesselPartIDs.ValidatePartAgainstCraft(node, validator); }
 
-// ActionPartResourceDrain.cs:@Save
+// ActionPartResourceDrain.cs:386
 void ActionPartResourceDrain::Save(ConfigNode& cfg) const {
     ActionModule::Save(cfg);
     cfg.AddValue("timePeriod", timePeriod);
@@ -890,7 +890,7 @@ void ActionPartResourceDrain::Save(ConfigNode& cfg) const {
     vesselPartIDs.Save(cfg);
 }
 
-// ActionPartResourceDrain.cs:@Load
+// ActionPartResourceDrain.cs:396
 void ActionPartResourceDrain::Load(const ConfigNode& cfg) {
     ActionModule::Load(cfg);
     cfg.TryGetValue("timePeriod", timePeriod);

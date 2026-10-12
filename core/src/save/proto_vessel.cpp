@@ -203,7 +203,7 @@ void ProtoPartModuleSnapshot::RemovePartModuleAdjuster(const Guid& removeAdjuste
     GE::onProtoPartModuleAdjusterRemoved.Fire(this);
 }
 
-// ProtoPartModuleSnapshot.cs:94 (body after the MakingHistory / supported-type tests)
+// ProtoPartModuleSnapshot.cs line 94, AddPartModuleAdjuster (body after the MakingHistory / supported-type tests)
 void ProtoPartModuleSnapshot::AddPartModuleAdjusterNode(const std::function<void(ConfigNode&)>& saveAdjuster) {
     EnsureModuleValuesIsInitialized();
     ConfigNode::NodePtr node = std::make_shared<ConfigNode>("ADJUSTERS");
@@ -213,7 +213,7 @@ void ProtoPartModuleSnapshot::AddPartModuleAdjusterNode(const std::function<void
     GE::onProtoPartModuleAdjusterAdded.Fire(this);
 }
 
-// ProtoPartModuleSnapshot.cs:133 (body after the MakingHistory test)
+// ProtoPartModuleSnapshot.cs line 133, RemovePartModuleAdjuster (body after the MakingHistory test)
 void ProtoPartModuleSnapshot::RemovePartModuleAdjusterNode(const std::function<void(ConfigNode&)>& saveAdjuster) {
     EnsureModuleValuesIsInitialized();
     ConfigNode::NodePtr node = std::make_shared<ConfigNode>("ADJUSTERSTOREMOVE");

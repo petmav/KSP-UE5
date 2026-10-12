@@ -36,7 +36,7 @@ Vector3d V3d(const Vector3d& v) { return v; }
 
 }  // namespace
 
-// TestDistance.cs:@Awake
+// TestDistance.cs:143
 TestDistance::TestDistance() : TestModule(kTypeName) {
     title = Tag("#autoLOC_8000176");
     distanceFromKerbal = std::make_unique<MissionKerbal>(nullptr, node(), [this] { UpdateNodeBodyUI(); }, ProtoCrewMember::KerbalType::Crew, false, true);
@@ -46,7 +46,7 @@ TestDistance::TestDistance() : TestModule(kTypeName) {
     if (node() != nullptr) node()->UpdateInfoOnRefresh = true;
 }
 
-// TestDistance.cs:@OnVesselPersistentIdChanged
+// TestDistance.cs:157
 void TestDistance::OnVesselPersistentIdChanged(uint32_t oldId, uint32_t newId) {
     if (distanceFromVesselID == oldId) distanceFromVesselID = newId;
     if (distanceToVesselID == oldId) distanceToVesselID = newId;
@@ -55,7 +55,7 @@ void TestDistance::OnVesselPersistentIdChanged(uint32_t oldId, uint32_t newId) {
     if (distanceToFlagID == oldId) distanceToFlagID = newId;
 }
 
-// TestDistance.cs:@OnDistanceFromValueChange
+// TestDistance.cs:196
 void TestDistance::OnDistanceFromValueChange(Editor::IMEGUIDropdownList* sender, int) {
     const std::optional<int> selected = sender->SelectedValueInt();
     if (selected.has_value() && node() != nullptr) {
@@ -73,7 +73,7 @@ void TestDistance::OnDistanceFromValueChange(Editor::IMEGUIDropdownList* sender,
     UpdateNodeBodyUI();
 }
 
-// TestDistance.cs:@OnDistanceToValueChange
+// TestDistance.cs:286
 void TestDistance::OnDistanceToValueChange(Editor::IMEGUIDropdownList* sender, int) {
     for (Editor::IMEGUIControl* c : {distanceToKerbalParameterReference, distanceToVesselParameterReference, distanceToLocationParameterReference,
                                      distanceToCelestialBodyParameterReference, distanceToAsteroidParameterReference, distanceToCometParameterReference,
@@ -98,21 +98,21 @@ void TestDistance::OnDistanceToValueChange(Editor::IMEGUIDropdownList* sender, i
     UpdateNodeBodyUI();
 }
 
-// TestDistance.cs:@Initialize
+// TestDistance.cs:387
 void TestDistance::Initialize(TestGroup* testGroup, const std::string& newTitle) {
     TestModule::Initialize(testGroup, newTitle);
     distanceFromKerbal->Initialize(nullptr, testGroup->node());
     distanceToKerbal->Initialize(nullptr, testGroup->node());
 }
 
-// TestDistance.cs:@ParameterSetupComplete
+// TestDistance.cs:394
 void TestDistance::ParameterSetupComplete() {
     if (distanceFromTargetParameterReference == nullptr || distanceToTargetParameterReference == nullptr) throw NullReferenceException();
     OnDistanceFromValueChange(distanceFromTargetParameterReference, distanceFromTargetParameterReference->GetItemIndex(distanceFromTargetParameterReference->SelectedValueInt()));
     OnDistanceToValueChange(distanceToTargetParameterReference, distanceToTargetParameterReference->GetItemIndex(distanceToTargetParameterReference->SelectedValueInt()));
 }
 
-// TestDistance.cs:@Test
+// TestDistance.cs:400
 bool TestDistance::Test() {
     bool result = false;
     if (AwardEnvironment::ActiveVessel() != nullptr) {
@@ -196,7 +196,7 @@ bool TestDistance::Test() {
     return result;
 }
 
-// TestDistance.cs:@TestPointsDistance
+// TestDistance.cs:520
 bool TestDistance::TestPointsDistance(const Vector3d& pointA, const Vector3d& pointB, CelestialBody* body) {
     double num = 0.0;
     switch (calculationType) {
@@ -220,7 +220,7 @@ bool TestDistance::TestPointsDistance(const Vector3d& pointA, const Vector3d& po
     return result;
 }
 
-// TestDistance.cs:@GetVesselLocation
+// TestDistance.cs:549
 bool TestDistance::GetVesselLocation(uint32_t vesselID, Vector3d& location, CelestialBody*& celestialBody) {
     if (vesselID != 0) {
         vesselID = node()->mission->CurrentVesselID(node(), vesselID);
@@ -235,7 +235,7 @@ bool TestDistance::GetVesselLocation(uint32_t vesselID, Vector3d& location, Cele
     return false;
 }
 
-// TestDistance.cs:@GetKerbalLocation
+// TestDistance.cs:569
 bool TestDistance::GetKerbalLocation(MissionKerbal& missionKerbal, Vessel*& currentVessel, Vector3d& location, CelestialBody*& celestialBody) {
     if (!CheckCrew(currentVessel, missionKerbal) || (missionKerbal.Kerbal() == nullptr && currentVessel != AwardEnvironment::ActiveVessel())) currentVessel = nullptr;
     if (currentVessel == nullptr) {
@@ -258,7 +258,7 @@ bool TestDistance::GetKerbalLocation(MissionKerbal& missionKerbal, Vessel*& curr
     return false;
 }
 
-// TestDistance.cs:@CheckCrew
+// TestDistance.cs:571
 bool TestDistance::CheckCrew(Vessel* v, MissionKerbal& missionKerbal) {
     if (v == nullptr) return false;
     const std::vector<PCM>& vesselCrew = v->GetVesselCrew();
@@ -269,7 +269,7 @@ bool TestDistance::CheckCrew(Vessel* v, MissionKerbal& missionKerbal) {
     return true;
 }
 
-// TestDistance.cs:@RunValidation
+// TestDistance.cs:629
 void TestDistance::RunValidation(Editor::MissionEditorValidator* validator) {
     if (distanceFromTarget == DistanceFromChoices::Kerbal && distanceToTarget == DistanceToChoices::Kerbal && distanceFromKerbal->Name() == distanceToKerbal->Name())
         validator->AddNodeFail(node(), Tag("#autoLOC_8004219"));
@@ -302,7 +302,7 @@ void TestDistance::RunValidation(Editor::MissionEditorValidator* validator) {
     }
 }
 
-// TestDistance.cs:@GetNodeBodyParameterString
+// TestDistance.cs:679
 std::string TestDistance::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
     if (node() != nullptr) node()->UpdateInfoOnRefresh = true;
     if (field.name == "distanceFromTarget") {
@@ -391,10 +391,10 @@ std::string TestDistance::GetNodeBodyParameterString(const Editor::BaseAPField& 
     return "";
 }
 
-// TestDistance.cs:@GetInfo
+// TestDistance.cs:791
 std::string TestDistance::GetInfo() { return Tag("#autoLOC_8004141"); }
 
-// TestDistance.cs:@Save
+// TestDistance.cs:796
 void TestDistance::Save(ConfigNode& cfg) const {
     TestModule::Save(cfg);
     cfg.AddValue("distanceFromTarget", dotnet::EnumToString(distanceFromTarget));
@@ -419,7 +419,7 @@ void TestDistance::Save(ConfigNode& cfg) const {
     cfg.AddValue("distance", distance);
 }
 
-// TestDistance.cs:@Load
+// TestDistance.cs:824
 void TestDistance::Load(const ConfigNode& cfg) {
     TestModule::Load(cfg);
     save_detail::TryGetEnum(cfg, "distanceFromTarget", distanceFromTarget, DistanceFromChoices::Vessel);
@@ -449,7 +449,7 @@ void TestDistance::Load(const ConfigNode& cfg) {
     cfg.TryGetValue("distance", distance);
 }
 
-// TestDistance.cs:@GetScoreModifier
+// TestDistance.cs:866
 ScoreModifier TestDistance::GetScoreModifier(const std::string& scoreModule) {
     ScoreModifier r;
     if (scoreModule == "ScoreModule_Resource") r.vessel = AwardEnvironment::ActiveVessel();

@@ -159,10 +159,10 @@ void MissionExtrasEnvironment::Reset() {
 
 // ---- MissionScoreInfo ---------------------------------------------------------------------------------------------------------------
 
-// MissionScoreInfo.cs:@MissionScoreInfo
+// MissionScoreInfo.cs:12
 MissionScoreInfo::MissionScoreInfo() = default;
 
-// MissionScoreInfo.cs:@AddScore
+// MissionScoreInfo.cs:17
 void MissionScoreInfo::AddScore(Mission& mission) {
     if (mission.isScoreEnabled) {
         auto info = std::make_shared<ScoreInfo>();
@@ -178,7 +178,7 @@ void MissionScoreInfo::AddScore(Mission& mission) {
     }
 }
 
-// MissionScoreInfo.cs:@DeleteScore
+// MissionScoreInfo.cs:34
 void MissionScoreInfo::DeleteScore(const Guid& scoreId) {
     const auto& entries = scoreInfoDictionary.GetEnumerator();
     for (const auto& kv : entries) {
@@ -193,24 +193,24 @@ void MissionScoreInfo::DeleteScore(const Guid& scoreId) {
     }
 }
 
-// MissionScoreInfo.cs:@DeleteMissionScores
+// MissionScoreInfo.cs:60
 void MissionScoreInfo::DeleteMissionScores(Mission* mission) {
     if (mission != nullptr) scoreInfoDictionary.Remove(mission->id());
 }
 
-// MissionScoreInfo.cs:@GetMissionScores
+// MissionScoreInfo.cs:68
 std::shared_ptr<MissionScoreInfo::ScoreList> MissionScoreInfo::GetMissionScores(Mission* mission) {
     if (mission == nullptr) return std::make_shared<ScoreList>();
     return scoreInfoDictionary[mission->id()];
 }
 
-// MissionScoreInfo.cs:@GetMissionScore
+// MissionScoreInfo.cs:77
 std::shared_ptr<ScoreInfo> MissionScoreInfo::GetMissionScore(Mission* mission, int index) {
     if (mission == nullptr) return nullptr;
     return GetMissionScore(mission->id(), index);
 }
 
-// MissionScoreInfo.cs:@GetMissionScore#2
+// MissionScoreInfo.cs:86
 std::shared_ptr<ScoreInfo> MissionScoreInfo::GetMissionScore(const Guid& missionId, int index) {
     std::shared_ptr<ScoreList> val;
     if (scoreInfoDictionary.TryGetValue(missionId, val) && index < static_cast<int>(val->size())) {
@@ -220,7 +220,7 @@ std::shared_ptr<ScoreInfo> MissionScoreInfo::GetMissionScore(const Guid& mission
     return nullptr;
 }
 
-// MissionScoreInfo.cs:@CompareScoreInfo
+// MissionScoreInfo.cs:95
 int MissionScoreInfo::CompareScoreInfo(const ScoreInfo& a, const ScoreInfo& b) {
     if (a.score > b.score) return -1;
     if (a.score < b.score) return 1;
@@ -229,7 +229,7 @@ int MissionScoreInfo::CompareScoreInfo(const ScoreInfo& a, const ScoreInfo& b) {
     return 0;
 }
 
-// MissionScoreInfo.cs:@GetMissionAwards
+// MissionScoreInfo.cs:116
 std::vector<std::string> MissionScoreInfo::GetMissionAwards(Mission* mission) {
     if (mission == nullptr) return {};
     std::shared_ptr<ScoreList> list = scoreInfoDictionary[mission->id()];
@@ -241,7 +241,7 @@ std::vector<std::string> MissionScoreInfo::GetMissionAwards(Mission* mission) {
     return list2;
 }
 
-// MissionScoreInfo.cs:@SaveScores
+// MissionScoreInfo.cs:132
 void MissionScoreInfo::SaveScores() {
     const std::string fileFullName = MissionsUtils::UsersMissionsPath() + saveFileName;
     ConfigNode configNode;
@@ -250,7 +250,7 @@ void MissionScoreInfo::SaveScores() {
     SaveConfig(configNode, fileFullName);
 }
 
-// MissionScoreInfo.cs:@LoadScores
+// MissionScoreInfo.cs:141
 std::unique_ptr<MissionScoreInfo> MissionScoreInfo::LoadScores() {
     ConfigNode::NodePtr configNode = LoadConfig(MissionsUtils::UsersMissionsPath() + saveFileName);
     auto missionScoreInfo = std::make_unique<MissionScoreInfo>();
@@ -261,7 +261,7 @@ std::unique_ptr<MissionScoreInfo> MissionScoreInfo::LoadScores() {
     return missionScoreInfo;
 }
 
-// MissionScoreInfo.cs:@Load
+// MissionScoreInfo.cs:156
 void MissionScoreInfo::Load(const ConfigNode& node) {
     for (const ConfigNode* node2 : node.GetNodes("SCOREINFO")) {
         auto scoreInfo = std::make_shared<ScoreInfo>();
@@ -270,7 +270,7 @@ void MissionScoreInfo::Load(const ConfigNode& node) {
     }
 }
 
-// MissionScoreInfo.cs:@Save
+// MissionScoreInfo.cs:167
 void MissionScoreInfo::Save(ConfigNode& node) const {
     for (const auto& kv : scoreInfoDictionary.GetEnumerator()) {
         for (size_t i = 0, count = kv.second->size(); i < count; ++i) (*kv.second)[i]->Save(*node.AddNode("SCOREINFO"));
@@ -279,7 +279,7 @@ void MissionScoreInfo::Save(ConfigNode& node) const {
 
 // ---- MissionLocalizer -----------------------------------------------------------------------------------------------------------------
 
-// MissionLocalizer.cs:@LoadMissionLocalizationFiles
+// MissionLocalizer.cs:8
 std::vector<ConfigNode::NodePtr> MissionLocalizer::LoadMissionLocalizationFiles() {
     std::vector<ConfigNode::NodePtr> list;
     const std::string folder = MissionsUtils::GetMissionsFolder(MissionTypes::User);
@@ -303,7 +303,7 @@ std::vector<ConfigNode::NodePtr> MissionLocalizer::LoadMissionLocalizationFiles(
 
 // ---- MissionImporting -------------------------------------------------------------------------------------------------------------------
 
-// MissionImporting.cs:@ImportNewZips
+// MissionImporting.cs:11
 void MissionImporting::ImportNewZips() {
     const std::string users = MissionsUtils::UsersMissionsPath();
     if (!DirectoryExists(users)) {
@@ -323,7 +323,7 @@ void MissionImporting::ImportNewZips() {
     }
 }
 
-// MissionImporting.cs:@ImportZip
+// MissionImporting.cs:36
 bool MissionImporting::ImportZip(const std::string& filePath, const std::string& moveDestination, int fileNumber) {
     std::vector<std::string> directories;
     try {
@@ -370,7 +370,7 @@ bool MissionImporting::ImportZip(const std::string& filePath, const std::string&
     return true;
 }
 
-// MissionImporting.cs:@ImportZipConfirmed
+// MissionImporting.cs:91
 void MissionImporting::ImportZipConfirmed(const std::string& filePath, const std::vector<std::string>& directories, const std::string& moveDestination) {
     for (size_t i = 0; i < directories.size(); ++i) {
         if (DirectoryExists(MissionsUtils::UsersMissionsPath() + directories[i])) DeleteDirectory(MissionsUtils::UsersMissionsPath() + directories[i]);
@@ -388,7 +388,7 @@ void MissionImporting::ImportZipConfirmed(const std::string& filePath, const std
     }
 }
 
-// MissionImporting.cs:@MoveImportedFile
+// MissionImporting.cs:117
 void MissionImporting::MoveImportedFile(const std::string& filePath, const std::string& destinationPath) {
     if (FileExists(destinationPath)) {
         const std::string text = destinationPath.substr(destinationPath.rfind('/') + 1);
@@ -423,7 +423,7 @@ void MissionEditorHistory::Environment::Reset() {
     destroyedTargets.clear();
 }
 
-// MissionEditorHistory.cs:@HistoryAction
+// MissionEditorHistory.cs:11
 struct MissionEditorHistory::HistoryAction {
     IMEHistoryTarget* target;
     ConfigNode::NodePtr data;
@@ -432,27 +432,27 @@ struct MissionEditorHistory::HistoryAction {
     std::vector<DestroyHandle> destroyTargets;
     Guid StateId;
 
-    // MissionEditorHistory.cs:@HistoryAction#1
+    // MissionEditorHistory.cs:11
     HistoryAction(IMEHistoryTarget* t, ActionCallback cb, bool destroyOnClear_, const Guid& currentHistoryStateID, std::vector<DestroyHandle> destroyTargets_)
         : target(t), callback(std::move(cb)), destroyOnClear(destroyOnClear_), destroyTargets(std::move(destroyTargets_)) {
         if (t == nullptr) throw NullReferenceException();
         data = t->GetState();
         StateId = currentHistoryStateID;
     }
-    // MissionEditorHistory.cs:@HistoryAction#2
+    // MissionEditorHistory.cs:25
     explicit HistoryAction(const HistoryAction& action) : target(action.target), callback(action.callback), destroyOnClear(action.destroyOnClear), destroyTargets(action.destroyTargets) {
         data = target->GetState();
         StateId = action.StateId;
     }
 };
 
-// MissionEditorHistory.cs:@ActionStack
+// MissionEditorHistory.cs:46
 class MissionEditorHistory::ActionStack {
 public:
-    // MissionEditorHistory.cs:@ActionStack#1
+    // MissionEditorHistory.cs:46
     explicit ActionStack(int stackLimit = -1) : limit(stackLimit < 0 ? 0x7FFFFFFF : stackLimit) {}
     int Count() const { return static_cast<int>(items.size()); }  // :@Count
-    // MissionEditorHistory.cs:@Push
+    // MissionEditorHistory.cs:62
     void Push(std::shared_ptr<HistoryAction> item) {
         const int frame = Environment::frameCount ? Environment::frameCount() : 0;
         if (lastFramePush != frame) {
@@ -464,7 +464,7 @@ public:
             items.back().push_back(std::move(item));
         }
     }
-    // MissionEditorHistory.cs:@Pop
+    // MissionEditorHistory.cs:88
     std::vector<std::shared_ptr<HistoryAction>> Pop() {
         if (items.size() > 0) {
             auto result = std::move(items.back());
@@ -473,7 +473,7 @@ public:
         }
         throw NullReferenceException();  // the C# returns null; every caller dereferences it
     }
-    // MissionEditorHistory.cs:@Clear
+    // MissionEditorHistory.cs:99
     void Clear() {
         lastFramePush = -1;
         items.clear();
@@ -483,7 +483,7 @@ public:
     int lastFramePush = -1;
 };
 
-// MissionEditorHistory.cs:@Awake
+// MissionEditorHistory.cs:132
 MissionEditorHistory::MissionEditorHistory() {
     if (instance_ != nullptr) {
         duplicate_ = true;  // UnityEngine.Object.DestroyImmediate(this)
@@ -497,13 +497,13 @@ MissionEditorHistory::~MissionEditorHistory() {
     if (instance_ == this) instance_ = nullptr;
 }
 
-// MissionEditorHistory.cs:@HasHistory
+// MissionEditorHistory.cs:114
 bool MissionEditorHistory::HasHistory() {
     if (instance_ == nullptr) throw NullReferenceException();
     return instance_->UndoActions->Count() > 0;
 }
 
-// MissionEditorHistory.cs:@HistoryStateId
+// MissionEditorHistory.cs:116
 Guid MissionEditorHistory::HistoryStateId() {
     Mission* m = MissionsEnvironment::editorMission ? MissionsEnvironment::editorMission() : nullptr;
     if (m != nullptr) return m->historyId;
@@ -516,10 +516,10 @@ void MissionEditorHistory::SetHistoryStateId(const Guid& value) {
     m->historyId = value;
 }
 
-// MissionEditorHistory.cs:@PushUndoAction
+// MissionEditorHistory.cs:144
 void MissionEditorHistory::PushUndoAction(IMEHistoryTarget* target, ActionCallback callback) { PushUndoAction(target, std::move(callback), false); }
 
-// MissionEditorHistory.cs:@PushUndoAction#2
+// MissionEditorHistory.cs:149
 void MissionEditorHistory::PushUndoAction(IMEHistoryTarget* target, ActionCallback callback, bool destroyOnClear, std::vector<DestroyHandle> destroyTargets) {
     if (instance_ == nullptr) throw NullReferenceException();
     Mission* m = MissionsEnvironment::editorMission ? MissionsEnvironment::editorMission() : nullptr;
@@ -533,7 +533,7 @@ void MissionEditorHistory::PushUndoAction(IMEHistoryTarget* target, ActionCallba
     }
 }
 
-// MissionEditorHistory.cs:@Undo
+// MissionEditorHistory.cs:159
 void MissionEditorHistory::Undo() {
     if (instance_ == nullptr) throw NullReferenceException();
     if (instance_->UndoActions->Count() <= 0) return;
@@ -554,7 +554,7 @@ void MissionEditorHistory::Undo() {
     instance_->ActionInProgress = false;
 }
 
-// MissionEditorHistory.cs:@Redo
+// MissionEditorHistory.cs:187
 void MissionEditorHistory::Redo() {
     if (instance_ == nullptr) throw NullReferenceException();
     if (instance_->RedoActions->Count() <= 0) return;
@@ -575,21 +575,21 @@ void MissionEditorHistory::Redo() {
     instance_->ActionInProgress = false;
 }
 
-// MissionEditorHistory.cs:@SelectAffectedObject
+// MissionEditorHistory.cs:215
 void MissionEditorHistory::SelectAffectedObject(HistoryAction& action) {
     // the MEGUINode / MEGUIParameter selection of the editor (a seam: with no editor nothing is selected)
     if (Environment::selectAffectedObject) Environment::selectAffectedObject(action.target);
     else Environment::selected.push_back(action.target);
 }
 
-// MissionEditorHistory.cs:@Clear
+// MissionEditorHistory.cs:99
 void MissionEditorHistory::Clear() {
     if (instance_ == nullptr) throw NullReferenceException();
     instance_->UndoActions->Clear();
     instance_->ClearRedoActions();
 }
 
-// MissionEditorHistory.cs:@ClearRedoActions
+// MissionEditorHistory.cs:241
 void MissionEditorHistory::ClearRedoActions() {
     while (RedoActions->Count() > 0) {
         std::vector<std::shared_ptr<HistoryAction>> list = RedoActions->Pop();

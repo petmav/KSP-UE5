@@ -67,7 +67,7 @@ void Mission::ClearCraftFiles() {
     }
 }
 
-// Mission.cs:1392
+// Mission.cs:1387
 void Mission::ClearMappedVessels() {
     int count = static_cast<int>(mappedVessels.size());
     while (count-- > 0) {
@@ -124,7 +124,7 @@ void Mission::ProcessCraftRenames(const std::string& craftFileName, MissionCraft
     }
 }
 
-// Mission.cs:1465
+// Mission.cs:1474
 MissionMappedVessel Mission::AddMappedPartVesselName(uint32_t partId, uint32_t vslPersistentId, const std::string& craftFileName, MissionCraft* craftFile, bool mappedItem,
                                                       VesselSituation* vesselSituation) {
     const std::string text = mappedItem ? craftFileName : craftFile->VesselName();
@@ -140,7 +140,7 @@ MissionMappedVessel Mission::AddMappedPartVesselName(uint32_t partId, uint32_t v
     return missionMappedVessel;
 }
 
-// Mission.cs:1493
+// Mission.cs:1497
 void Mission::AddMappedCraft(const std::string& craftFileName, MissionCraft* craftFile) {
     const std::string vesselName = craftFile->VesselName();
     auto missionCraft = std::make_shared<MissionCraft>(craftFile->craftFolder, craftFile->craftFile);
@@ -174,7 +174,7 @@ MissionCraft* Mission::GetMissionCraftByFileName(const std::string& craftFileNam
     return val.get();
 }
 
-// Mission.cs:1543
+// Mission.cs:1542
 VesselSituation* Mission::GetMissionSituationByCraftFileName(const std::string& craftFileName) {
     std::vector<VesselSituation*> allVesselSituations = GetAllVesselSituations();
     size_t num = 0;
@@ -203,7 +203,7 @@ MissionCraft* Mission::GetMissionCraftByName(const std::string& vesselName) {
     return craftFileList.At(num).get();
 }
 
-// Mission.cs:1583
+// Mission.cs:1581
 int Mission::GetSituationsIndexByVessel(uint32_t persistentId) {
     persistentId = MappedVessels::ConvertMappedId(mappedVessels, persistentId);
     std::vector<VesselSituation*> allVesselSituations = GetAllVesselSituations();
@@ -248,7 +248,7 @@ int Mission::GetCraftFileIndexByPart(uint32_t persistentId) {
 
 // ---- the vessel / part event handlers (Mission.cs:1217-1348) ---------------------------------------------------------------------
 
-// Mission.cs:1217
+// Mission.cs:1210
 void Mission::OnPartVesselNamingChanged(Part* part) {
     if (part == nullptr) return;
     bool flag = false;
@@ -263,7 +263,7 @@ void Mission::OnPartVesselNamingChanged(Part* part) {
     if (flag) RefreshMissionRequested();
 }
 
-// Mission.cs:1244
+// Mission.cs:1235
 void Mission::OnVesselRename(GameEvents::HostedFromToAction<Vessel*, std::string> hostedFromTo) {
     if (hostedFromTo.host == nullptr) return;
     bool flag = false;
@@ -283,7 +283,7 @@ void Mission::OnVesselRename(GameEvents::HostedFromToAction<Vessel*, std::string
     if (flag) RefreshMissionRequested();
 }
 
-// Mission.cs:1262
+// Mission.cs:1265
 void Mission::OnPartDecoupleNewVesselComplete(Vessel* oldVessel, Vessel* newVessel) {
     bool flag = false;
     for (size_t i = 0; i < mappedVessels.size(); ++i) {
@@ -295,7 +295,7 @@ void Mission::OnPartDecoupleNewVesselComplete(Vessel* oldVessel, Vessel* newVess
     if (flag) RefreshMissionRequested();
 }
 
-// Mission.cs:1281
+// Mission.cs:1282
 void Mission::OnVesselPersistentIdChanged(uint32_t oldId, uint32_t newId) {
     bool flag = false;
     for (size_t i = 0; i < mappedVessels.size(); ++i) {
@@ -307,7 +307,7 @@ void Mission::OnVesselPersistentIdChanged(uint32_t oldId, uint32_t newId) {
     if (flag) RefreshMissionRequested();
 }
 
-// Mission.cs:1297
+// Mission.cs:1299
 void Mission::OnPartPersistentIdChanged(uint32_t vesselID, uint32_t oldId, uint32_t newId) {
     bool flag = false;
     for (size_t i = 0; i < mappedVessels.size(); ++i) {
@@ -319,7 +319,7 @@ void Mission::OnPartPersistentIdChanged(uint32_t vesselID, uint32_t oldId, uint3
     if (flag) RefreshMissionRequested();
 }
 
-// Mission.cs:1313
+// Mission.cs:1316
 void Mission::OnVesselDocking(uint32_t oldId, uint32_t newId) {
     bool flag = false;
     for (size_t i = 0; i < mappedVessels.size(); ++i) {
@@ -331,7 +331,7 @@ void Mission::OnVesselDocking(uint32_t oldId, uint32_t newId) {
     if (flag) RefreshMissionRequested();
 }
 
-// Mission.cs:1329
+// Mission.cs:1333
 void Mission::OnVesselsUndocking(Vessel* oldVessel, Vessel* newVessel) {
     bool flag = false;
     for (size_t i = 0; i < mappedVessels.size(); ++i) {
@@ -405,7 +405,7 @@ void Mission::RemapVesselId(uint32_t currentVslId) {
     }
 }
 
-// Mission.cs:2164
+// Mission.cs:2163
 uint32_t Mission::UpgradeMappedVesselId(uint32_t currentVslId, MENode* currentNode) {
     (void)currentNode;  // only used by the Debug.LogFormat line
     const int num = MappedVessels::IndexCurrentVesselId(mappedVessels, currentVslId);
