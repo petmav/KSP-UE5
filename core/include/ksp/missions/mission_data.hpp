@@ -62,6 +62,10 @@ struct MissionDataEnvironment {
     static inline std::function<bool(const std::string& path)> fileExists;
     static inline std::function<ConfigNode::NodePtr(const std::string& path)> loadConfigNode;
     static inline std::function<void(const ConfigNode&, const std::string& path)> saveConfigNode;
+    // UnityEngine.Object.GetHashCode() (the instance id) / object.GetHashCode() of a plain reference (GetHashCode overrides of MissionBiome, SurfaceVolume,
+    // VesselGroundLocation, DynamicModuleList). Not reproducible values. Unset: the low 32 bits of the address.
+    static inline std::function<int32_t(const void*)> objectHashCode;
+    static int32_t ObjectHash(const void* p);
     // Directory.Exists(path) / Directory.GetFiles(path, "*.craft") (Mission.ProcessCraftFileFolder) and Path.GetFileName. Unset: std::filesystem (files in
     // ordinal name order, which is the NTFS enumeration order of .NET on Windows).
     static inline std::function<bool(const std::string& path)> directoryExists;
@@ -105,6 +109,7 @@ public:
     void Save(ConfigNode& node) const;                      // :21
     void Load(const ConfigNode& node);                      // :30
     bool Equals(const MissionBiome& other) const;           // :71
+    int32_t GetHashCode() const;                            // :83
     std::string GetNodeBodyParameterString() const;         // :90
 };
 }  // namespace Editor
@@ -146,6 +151,7 @@ public:
     void Save(ConfigNode& node) const override;             // :246
     void Load(const ConfigNode& node);                      // :252
     bool Equals(const MissionOrbit& other) const;           // :299
+    int32_t GetHashCode() const;                            // :308
     std::string GetNodeBodyParameterString() const;         // :321
     static double GetEditorMaxOrbitRadius(CelestialBody* body);  // :326
 
@@ -189,6 +195,7 @@ public:
     std::string GetExtraText() const;                       // :137
     std::string GetNodeBodyParameterString() const;         // :142
     bool Equals(const VesselGroundLocation& other) const;   // :150
+    int32_t GetHashCode() const;                            // :161
     void Load(const ConfigNode& node);                      // :186
     void Save(ConfigNode& node) const;                      // :227
 };
@@ -266,6 +273,7 @@ public:
     Vector3f GetWorldPosition() const;                      // :70
     std::string GetExtraText() const;                       // :75
     bool Equals(const SurfaceArea& other) const;            // :80
+    int32_t GetHashCode() const;                            // :91
     void Load(const ConfigNode& node);                      // :96
     void Save(ConfigNode& node) const;                      // :135
     bool IsPointInCircle(double lat, double lon) const;     // :155
@@ -301,6 +309,7 @@ public:
     Vector3f GetWorldPosition() const;                      // :144
     std::string GetExtraText() const;                       // :159
     bool Equals(const SurfaceVolume& other) const;          // :164
+    int32_t GetHashCode() const;                            // :169
     void Load(const ConfigNode& node);                      // :183
     void Save(ConfigNode& node) const;                      // :250
     bool IsInsideVolume(float targetLatitude, float targetLongitude, float targetAltitude) const;  // :270
@@ -374,6 +383,7 @@ public:
     void setcurrentKerbalAvailable();                       // :287
     std::string GetNodeBodyParameterString() const;        // :298
     bool Equals(const MissionKerbal& other) const;          // :315
+    int32_t GetHashCode() const;                            // :331
     void Save(ConfigNode& node) const;                      // :331
     void Load(const ConfigNode& node);                      // :341
     PCM kerbal;                                             // :17 (private field `kerbal`; ActionCreateKerbal reads it)

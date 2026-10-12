@@ -100,6 +100,7 @@ public:
     bool vintageSuit = false;                               // :15
     std::string GetNodeBodyParameterString(const Editor::BaseAPField* field);  // :43 (the field argument is unused by the C#)
     bool Equals(const MissionInstructor& other) const;      // :103
+    int32_t GetHashCode() const;                            // :112
     void Save(ConfigNode& node) const;                      // :123
     void Load(const ConfigNode& node);                      // :132
 };

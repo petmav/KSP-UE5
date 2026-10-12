@@ -66,6 +66,7 @@ public:
     virtual std::string GetDisplayToolTip();                                      // :49
     virtual std::vector<std::string> GetDefaultPinnedParameters();                // :54
     bool Equals(const DynamicModule& other) const;                                // :59 (name equality; subclasses add fields)
+    int32_t GetHashCode() const;                                                  // :67 (name.GetHashCode())
     virtual bool EqualsObject(const DynamicModule& other) const { return Equals(other); }
     std::string GetName() override;                                               // :74
     void AddParameterToSAP(const std::string& parameter) override;                // :79
@@ -134,6 +135,7 @@ public:
     bool ContainsModule(const std::string& typeName) const;             // :46 (GetType() == module)
     void SetSupportedTypes(std::vector<std::string> supportedModuleTypes);  // :84
     bool Equals(const DynamicModuleList& other) const;                  // :89
+    int32_t GetHashCode() const;                                        // :107 (activeModules.GetHashCode(): the reference hash of the list)
     void Load(const ConfigNode& node);                                  // :112
     void Save(ConfigNode& node) const;                                  // :126
     // :140 Clone: Activator.CreateInstance(GetType(), node) + a Clone() of every module + a copy of supportedTypes

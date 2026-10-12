@@ -1183,3 +1183,112 @@ TEST_CASE("WP-54c reference: MissionEditorHistory (undo / redo stacks, frame gro
     CHECK(cases >= 70);
     CHECK(checked > 1000);
 }
+
+// ---- GetHashCode overrides -------------------------------------------------------------------------------------------------------------------------------------
+
+TEST_CASE("WP-54c reference: GetHashCode overrides (ScoreRange, VesselPartIDPair, MissionInstructor, MissionBiome, MissionOrbit, VesselGroundLocation, SurfaceArea, SurfaceVolume, MissionKerbal, DynamicModule(List))") {
+    Fixture54b world;
+    size_t n = 0;
+    std::set<std::string> classes;
+    for (const json& c : Ref3()["cases"]) {
+        if (c["kind"].get<std::string>() != "hash") continue;
+        const std::string cls = c["cls"].get<std::string>();
+        const json& a = c["args"];
+        classes.insert(cls);
+        ++n;
+        INFO("hash case ", cls);
+        const void* bodies[4] = {};
+        for (size_t i = 0; i < world.bodies.size() && i < 4; ++i) bodies[i] = world.bodies[i].get();
+        const void* rotationPtr = nullptr;
+        const void* listPtr = nullptr;
+        MissionDataEnvironment::objectHashCode = [&](const void* p) -> int32_t {
+            for (int i = 0; i < 4; ++i)
+                if (p == bodies[i]) return 1000 + i;
+            if (p == rotationPtr) return 7777;
+            if (p == listPtr) return 4242;
+            return -1;
+        };
+        const int32_t want = c["out"].is_number() ? c["out"].get<int32_t>() : 0;
+        if (cls == "ScoreRange") {
+            ScoreRange s;
+            s.minRange = a["min"].get<double>();
+            s.maxRange = a["max"].get<double>();
+            s.score = a["score"].get<float>();
+            CHECK(s.GetHashCode() == want);
+        } else if (cls == "VesselPartIDPair") {
+            VesselPartIDPair p;
+            p.VesselID = a["v"].get<uint32_t>();
+            p.partID = a["p"].get<uint32_t>();
+            CHECK(p.GetHashCode() == want);
+        } else if (cls == "MissionInstructor") {
+            MissionInstructor m;
+            m.instructorName = a["name"].get<std::string>();
+            m.vintageSuit = a["vintage"].get<bool>();
+            CHECK(m.GetHashCode() == want);
+        } else if (cls == "MissionBiome") {
+            Editor::MissionBiome b(world.B(a["body"].get<int>()), a["name"].get<std::string>());
+            CHECK(b.GetHashCode() == want);
+        } else if (cls == "MissionOrbit") {
+            ConfigNode cfg("ORBIT");
+            for (const char* k : {"SMA", "ECC", "INC", "LPE", "LAN", "MNA", "EPH"}) cfg.AddValue(k, a[k].get<double>());
+            cfg.AddValue("REF", a["REF"].get<int>());
+            MissionOrbit o(cfg);
+            CHECK(o.GetHashCode() == want);
+        } else if (cls == "VesselGroundLocation") {
+            VesselGroundLocation g;
+            g.targetBody = world.B(a["body"].get<int>());
+            g.altitude = a["alt"].get<double>();
+            g.latitude = a["lat"].get<double>();
+            g.longitude = a["lon"].get<double>();
+            rotationPtr = g.rotation.get();
+            CHECK(g.GetHashCode() == want);
+        } else if (cls == "SurfaceArea") {
+            SurfaceArea s(world.B(a["body"].get<int>()), 0.0, 0.0, a["radius"].get<float>());
+            s.latitude = a["lat"].get<double>();
+            s.longitude = a["lon"].get<double>();
+            CHECK(s.GetHashCode() == want);
+        } else if (cls == "SurfaceVolume") {
+            SurfaceVolume v;
+            v.body = world.B(a["body"].get<int>());
+            v.latitude = a["lat"].get<double>();
+            v.longitude = a["lon"].get<double>();
+            v.radius = a["radius"].get<float>();
+            v.shape = a["shape"].get<int>() == 0 ? SurfaceVolume::VolumeShape::Cone : SurfaceVolume::VolumeShape::Sphere;
+            v.heightSphere = a["hs"].get<float>();
+            v.heightConeMin = a["hmin"].get<float>();
+            v.heightConeMax = a["hmax"].get<float>();
+            CHECK(v.GetHashCode() == want);
+        } else if (cls == "MissionKerbal") {
+            if (a.is_null()) {
+                MissionKerbal mk;
+                CHECK_THROWS(mk.GetHashCode());
+            } else {
+                auto pcm = std::make_shared<ProtoCrewMember>(ProtoCrewMember::KerbalType::Crew, a["name"].get<std::string>());
+                pcm->stupidity = a["stupidity"].get<float>();
+                pcm->courage = a["courage"].get<float>();
+                pcm->isBadass = a["bad"].get<bool>();
+                pcm->veteran = a["vet"].get<bool>();
+                pcm->hasToured = a["toured"].get<bool>();
+                pcm->UTaR = a["utar"].get<double>();
+                const ProtoCrewMember::KerbalType types[] = {ProtoCrewMember::KerbalType::Crew, ProtoCrewMember::KerbalType::Applicant, ProtoCrewMember::KerbalType::Unowned,
+                                                             ProtoCrewMember::KerbalType::Tourist};
+                MissionKerbal mk(pcm, nullptr, nullptr, types[a["type"].get<int>()]);
+                CHECK(mk.GetHashCode() == want);
+            }
+        } else if (cls == "DynamicModule") {
+            const DynamicModuleType* t = DynamicModuleRegistry::GetClassByName(a["name"].get<std::string>());
+            REQUIRE(t != nullptr);
+            std::unique_ptr<DynamicModule> m = t->create(nullptr);
+            CHECK(m->GetHashCode() == want);
+        } else if (cls == "DynamicModuleList") {
+            DynamicModuleList l(nullptr);
+            listPtr = &l.activeModules;
+            CHECK(l.GetHashCode() == want);
+        } else {
+            FAIL("unknown class " << cls);
+        }
+        MissionDataEnvironment::objectHashCode = nullptr;
+    }
+    CHECK(classes.size() == 11);
+    CHECK(n > 300);
+}
