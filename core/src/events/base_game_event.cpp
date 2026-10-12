@@ -1,6 +1,8 @@
 // BaseGameEvent.cs: the global name -> event table behind GameEvents.FindEvent<T>.
+#include <algorithm>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "ksp/events/event_data.hpp"
 
@@ -26,6 +28,13 @@ BaseGameEvent::~BaseGameEvent() {
     auto& map = EventsByName();
     auto it = map.find(eventName_);
     if (it != map.end() && it->second == this) map.erase(it);
+}
+
+// C++ only (tests): visits the live events in a stable order (by name)
+void BaseGameEvent::ForEachRegistered(const std::function<void(BaseGameEvent&)>& fn) {
+    std::vector<std::pair<std::string, BaseGameEvent*>> all(EventsByName().begin(), EventsByName().end());
+    std::sort(all.begin(), all.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
+    for (auto& e : all) fn(*e.second);
 }
 
 BaseGameEvent* BaseGameEvent::Lookup(const std::string& eventName) {

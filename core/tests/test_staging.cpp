@@ -368,7 +368,7 @@ TEST_CASE("WP-16 PartModule.IsStageable / StagingEnabled / StagingToggleEnabled*
     // ReflectedAttributes.isStageable (PartModule.cs:27-50): the class (or a base) declares a public OnActive. Without an override of
     // IsStageable() the answer is that flag.
     for (const char* cls : {"ModuleParachute", "ModuleProceduralFairing", "ModuleOrbitalScanner", "ModuleServiceModule", "LaunchClamp"})
-        CHECK_MESSAGE(MakeModule(cls)->IsStageable(), cls);
+        CHECK_MESSAGE(MakeModule(cls)->IsStageable(), std::string(cls));
     for (const char* cls : {"ModuleCommand", "ModuleResourceIntake", "ModuleReactionWheel", "ModuleDataTransmitter", "ModuleToggleCrossfeed"})
         CHECK_FALSE_MESSAGE(MakeModule(cls)->IsStageable(), cls);
     // classes that override IsStageable(): ModuleEngines true (:2137), ModuleGimbal false (:326), ModuleTestSubject false (:200),

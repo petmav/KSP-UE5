@@ -1,6 +1,7 @@
 // WP-04 unit tests: GameParameters defaults and presets (GameParameters.cs constants, and the PARAMETERS / SCENARIO
 // blocks of the original physprofile save), the save upgrade pipeline on synthetic old saves and crafts, save model
 // quirks, System.Version / Enum.Parse, GamePersistence naming and backups.
+#include <random>
 #include <chrono>
 #include <cmath>
 #include <filesystem>
@@ -542,7 +543,7 @@ TEST_CASE("ShipConstruct: craft file form (description U+00A8, srfN position twi
 
 TEST_CASE("GamePersistence: file names, APPEND / BACKUP rules, quicksave naming, new game scenarios") {
     FreshEnvironment();
-    const fs::path tmp = fs::temp_directory_path() / "kspcore_wp04_persistence";
+    const fs::path tmp = fs::temp_directory_path() / ("kspcore_wp04_persistence_" + std::to_string(std::random_device{}()));
     fs::remove_all(tmp);
     fs::create_directories(tmp / "data");
     KSPUtil::ApplicationDataPath = (tmp / "data").generic_string();  // ApplicationRootPath = data + "/../"

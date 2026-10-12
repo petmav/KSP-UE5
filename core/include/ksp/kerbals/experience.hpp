@@ -392,6 +392,12 @@ private:
     float GetValue();
 };
 
+// C++ only (tests): AutopilotSkill / RepairSkill keep their SkillsReadable() lists, filled by Localizer.Format at the first use (C# static
+// initialisers); this forgets them so a test that runs before the dictionary is loaded cannot freeze empty strings for the next one.
+struct ReadableSkillsCache {
+    static void ResetForTests();
+};
+
 }  // namespace ksp::Experience::Effects
 
 namespace ksp {

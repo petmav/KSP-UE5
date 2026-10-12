@@ -13,6 +13,7 @@
 #include <set>
 #include <sstream>
 
+#include "test_hygiene.hpp"
 #include "ksp/editor/editor_geometry.hpp"
 #include "ksp/editor/editor_gizmos.hpp"
 #include "ksp/editor/editor_logic.hpp"
@@ -956,6 +957,7 @@ TEST_CASE("WP-40 EditorLogic placement flow: stack attach, radial symmetry, drop
 // ====================================================================================================================================
 
 TEST_CASE("WP-40 EditorLogic symmetry mode cycling (nextSymMode / prevSymMode / symButton / onSymMethodChange)") {
+    kspcore_tests::LocalizerScope localizer;  // GetSymmetryMethodName formats #autoLOC_6004039 / 6004040
     EditorScope scope;
     EditorLogic editor;
     // Radial: 0 1 2 3 5 7 (4 and 6 are skipped), then wraps

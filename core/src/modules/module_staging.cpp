@@ -76,6 +76,9 @@ bool PartModule::IsStageable() {
     return ModuleAttributesIsStageable(cls);
 }
 
+// C++ only (tests)
+void PartModule::ResetReflectedAttributesForTests() { ReflectedAttributesIsStageable().clear(); }
+
 // ModuleDecouplerBase.cs:116 `base.ModuleAttributes.isStageable = value`
 void PartModule::SetModuleAttributesIsStageable(bool value) { ModuleAttributesIsStageable(Class()) = value; }
 
