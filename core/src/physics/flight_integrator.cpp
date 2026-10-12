@@ -118,8 +118,8 @@ void FlightIntegrator::Setup() {
     recreateThermalGraph = true;
 }
 
-// FlightIntegrator.cs:299-363: a root part whose six weighted areas are all zero gets its cubes reloaded (the EVA cube for a kerbal,
-// the prefab's cubes otherwise)
+// FlightIntegrator.cs:235 Setup, its lines 299-363: a root part whose six weighted areas are all zero gets its cubes reloaded (the EVA
+// cube for a kerbal, the prefab's cubes otherwise)
 void FlightIntegrator::SetupReloadRootCubes(Part& part) {
     auto zeroed = [&part] {
         bool flag = true;
@@ -367,7 +367,7 @@ void FlightIntegrator::FixedUpdate(VesselPhysics* binding) {
     ++fixedUpdates_;
 }
 
-// FlightIntegrator.cs:649-660
+// FlightIntegrator.cs:544 FixedUpdate, its packed branch (lines 649-660)
 void FlightIntegrator::ClearPartBuffers() {
     size_t count2 = vessel->parts.size();
     while (count2-- > 0) {
@@ -400,7 +400,7 @@ AeroRigidbody FlightIntegrator::RigidbodyOf(Part& part) const {
 void FlightIntegrator::AeroBatch() {
     const size_t n = order_.size();
     if (kernel == AeroKernel::SoA) {
-        soa_.Run(aero, order_, rbs_, aeroOut_);
+        soa_.UpdateAerodynamics(aero, order_, rbs_, aeroOut_);
         aeroStats.covered += soa_.CoveredParts();
         return;
     }
@@ -414,7 +414,7 @@ void FlightIntegrator::AeroBatch() {
         exactSnap_[i] = AeroPartOutputs::Capture(*order_[i], exactOut_[i]);
     }
     for (size_t i = 0; i < n; ++i) order_[i]->DragCubes.SetCubeData(prevCube_[i]);
-    soa_.Run(aero, order_, rbs_, aeroOut_);
+    soa_.UpdateAerodynamics(aero, order_, rbs_, aeroOut_);
     aeroStats.covered += soa_.CoveredParts();
     for (size_t i = 0; i < n; ++i) {
         const AeroPartOutputs s = AeroPartOutputs::Capture(*order_[i], aeroOut_[i]);
@@ -473,7 +473,7 @@ void FlightIntegrator::Integrate(VesselPhysics& binding) {
     }
 }
 
-// FlightIntegrator.cs:752
+// FlightIntegrator.cs:747 IntegratePhysicalObjects, its acceleration (line 752)
 Vector3f FlightIntegrator::PhysicalObjectGravity() const {
     const CelestialBody& body = *atm.currentMainBody;
     return ((FlightGlobals::getGeeForceAtPosition(CoMd, body) + FlightGlobals::getCoriolisAcc(Veld, body) +
@@ -482,7 +482,8 @@ Vector3f FlightIntegrator::PhysicalObjectGravity() const {
         .ToVector3f();
 }
 
-// FlightIntegrator.cs:767-780 (`rb.velocity + Krakensbane.GetFrameVelocity()`: a float velocity plus the double frame velocity)
+// FlightIntegrator.cs:747 IntegratePhysicalObjects, its drag (lines 767-780; `rb.velocity + Krakensbane.GetFrameVelocity()`: a float
+// velocity plus the double frame velocity)
 bool FlightIntegrator::PhysicalObjectDrag(const Vector3f& rbVelocity, const Vector3d& frameVelocity, float origDrag, double atmDensity,
                                           Vector3f& drag) const {
     if (!PhysicsGlobals::ApplyDrag() || !(atmDensity > 0.0)) return false;

@@ -86,13 +86,13 @@ class AeroSoaKernel {
 public:
     // DragCubeList.AddSurfaceDragDirection(-dirLocal, mach) on a row with the hoisted curves (DragCubeList.cs:367-419). `liftCurve` is
     // the part's BodyLiftCurve.liftCurve (evaluated per windward face).
-    static DragCubeList::CubeData SurfaceDrag(const AeroMachCurves& m, const AeroFaceRow& row, const FloatCurve& liftCurve,
+    static DragCubeList::CubeData SurfaceDragDirection(const AeroMachCurves& m, const AeroFaceRow& row, const FloatCurve& liftCurve,
                                               const Vector3f& dragVectorDirLocal);
     // FlightIntegrator.cs:2371-2380 for the cube model: num6 = CalculateDragValue_Cube (AreaDrag * cacheDragCubeMultiplier, :2429) *
     // pseudoReDragMult; dragScalar = (float)(q * num6 * num2) * cacheDragMultiplier, 0 when num6 is NaN or 0. `num6` is returned too.
-    static float DragScalar(const FlightIntegratorAero& fi, float areaDrag, double q, double num2, double& num6);
+    static float CubeDragScalar(const FlightIntegratorAero& fi, float areaDrag, double q, double num2, double& num6);
     // FlightIntegrator.cs:2383: (float)q * bodyLiftMultiplier * cacheBodyLiftMultiplier * liftMach
-    static float BodyLiftScalar(const FlightIntegratorAero& fi, const AeroMachCurves& m, float bodyLiftMultiplier, double q);
+    static float CubeBodyLiftScalar(const FlightIntegratorAero& fi, const AeroMachCurves& m, float bodyLiftMultiplier, double q);
     // The scalar statements of UpdateAerodynamics after SetDrag (FlightIntegrator.cs:2309-2389) for a covered part, given the CubeData
     // SetDrag produced: writes the part's fields (aerodynamicArea, the dynamic pressures, dragScalar, bodyLiftScalar, the body-lift
     // locals) and returns the force record. `flag3` = dragVectorSqrMag != 0; `out` already holds the angular-drag reset.
@@ -101,7 +101,7 @@ public:
 
     // One tick over `parts` (FlightIntegrator.Integrate's order) with their rigid bodies; out[i] is the force record of parts[i].
     // Covered parts run the kernel, the others FlightIntegratorAero::UpdateAerodynamics<MonoFloat> (listed in Fallback()).
-    void Run(const FlightIntegratorAero& fi, const std::vector<Part*>& parts, const std::vector<AeroRigidbody>& rbs,
+    void UpdateAerodynamics(const FlightIntegratorAero& fi, const std::vector<Part*>& parts, const std::vector<AeroRigidbody>& rbs,
              std::vector<AeroForces>& out);
     size_t CoveredParts() const { return covered_; }
     const std::vector<const Part*>& Fallback() const { return fallback_; }

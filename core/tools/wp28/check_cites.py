@@ -48,6 +48,11 @@ NAME_ALIAS = {"~Mission": "OnDestroy", "~TestModule": "OnDestroy", "~ActionModul
               # WP-19b: the physics bubble's ports (ShiftWorld is setOffset's shift, the FlightIntegrator stand-in its FixedUpdate slice)
               "ShiftWorld": "setOffset", "DefaultFlightIntegrator": "FixedUpdate", "physicalObject": "Awake", "~physicalObject": "OnDestroy",
               "UpdateWantsDestroy": "Update",
+              # WP-20d: the FlightIntegrator tick's helpers (cited at the C# member they are a part of) and the SoA kernel's ports
+              "SetupReloadRootCubes": "Setup", "ClearPartBuffers": "FixedUpdate", "PhysicalObjectGravity": "IntegratePhysicalObjects",
+              "PhysicalObjectDrag": "IntegratePhysicalObjects", "SurfaceDragDirection": "AddSurfaceDragDirection",
+              "CubeDragScalar": "UpdateAerodynamics", "CubeBodyLiftScalar": "UpdateAerodynamics", "PartScalars": "UpdateAerodynamics",
+              "EngineFixedUpdate": "FixedUpdate", "RcsFixedUpdate": "FixedUpdate", "RunFlightIntegrators": "FixedUpdate",
               # WP-14 helpers factored out of a C# function (cited at that function)
               "UpdateSurfaceSpeeds": "UpdatePosVel", "ApplyFlightIntegratorAtmosphere": "FixedUpdate"}
 CITE = re.compile(r"^(\s*)// (?:([A-Za-z0-9_/]+)\.cs)?:(\d+)\b")

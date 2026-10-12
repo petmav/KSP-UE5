@@ -233,7 +233,7 @@ struct SoaCompare {
         for (size_t i = 0; i < n; ++i) exact[i] = AeroPartOutputs::Capture(*parts[i], fi.UpdateAerodynamics<aero::MonoFloat>(*parts[i], rbs[i]));
         for (size_t i = 0; i < n; ++i) parts[i]->DragCubes.SetCubeData(prev[i]);
         std::vector<AeroForces> out;
-        soa.Run(fi, parts, rbs, out);
+        soa.UpdateAerodynamics(fi, parts, rbs, out);
         fallback += soa.Fallback().size();
         for (size_t i = 0; i < n; ++i) {
             const AeroPartOutputs s = AeroPartOutputs::Capture(*parts[i], out[i]);
@@ -419,17 +419,17 @@ TEST_CASE("WP-20d SoA kernel against KSP's own numbers: the C10 in-game capture 
         const float mach = static_cast<float>(parts.Dd(r, "machNumber"));
         const AeroMachCurves m = AeroMachCurves::Evaluate(mach);
         const Vector3f dirLocal(parts.F(r, "dragVectorDirLocal_x"), parts.F(r, "dragVectorDirLocal_y"), parts.F(r, "dragVectorDirLocal_z"));
-        const DragCubeList::CubeData c = AeroSoaKernel::SurfaceDrag(m, row, liftCurve, dirLocal);
+        const DragCubeList::CubeData c = AeroSoaKernel::SurfaceDragDirection(m, row, liftCurve, dirLocal);
         cmpCube(c, parts, r, aero::D(aero::FE<aero::MonoFloat>(c.areaDrag) * aero::FE<aero::MonoFloat>(fi.cacheDragCubeMultiplier)), key);
         // UpdateAerodynamics' scalars on the part's dynamic pressure (FlightIntegrator.cs:2371-2383)
         fi.pseudoReDragMult = pseudoRe.at(parts.S(r, "craft") + "|" + parts.S(r, "state"));
         const double q = parts.Dd(r, "dynamicPressurekPa");
         double num6 = 0.0;
-        const float dragScalar = AeroSoaKernel::DragScalar(fi, c.areaDrag, q, 1.0, num6);
+        const float dragScalar = AeroSoaKernel::CubeDragScalar(fi, c.areaDrag, q, 1.0, num6);
         cmpF(dragScalar, parts.F(r, "dragScalar"), key + " dragScalar");
         const AvailablePart* ap = w.data.parts.getPartInfoByName(parts.S(r, "part"));
         REQUIRE(ap != nullptr);
-        cmpF(AeroSoaKernel::BodyLiftScalar(fi, m, ap->partPrefab->fields.bodyLiftMultiplier, q), parts.F(r, "bodyLiftScalar"), key + " bodyLiftScalar");
+        cmpF(AeroSoaKernel::CubeBodyLiftScalar(fi, m, ap->partPrefab->fields.bodyLiftMultiplier, q), parts.F(r, "bodyLiftScalar"), key + " bodyLiftScalar");
         scalars += 2;
         ++nParts;
     }
@@ -439,7 +439,7 @@ TEST_CASE("WP-20d SoA kernel against KSP's own numbers: the C10 in-game capture 
         if (it == rowsByPart.end()) continue;  // a shielded / cube-less part
         const AeroMachCurves m = AeroMachCurves::Evaluate(sweep.F(r, "mach"));
         const Vector3f flow(sweep.F(r, "flow_local_x"), sweep.F(r, "flow_local_y"), sweep.F(r, "flow_local_z"));
-        const DragCubeList::CubeData c = AeroSoaKernel::SurfaceDrag(m, it->second, liftCurve, flow);
+        const DragCubeList::CubeData c = AeroSoaKernel::SurfaceDragDirection(m, it->second, liftCurve, flow);
         cmpCube(c, sweep, r, aero::D(aero::FE<aero::MonoFloat>(c.areaDrag) * aero::FE<aero::MonoFloat>(fi.cacheDragCubeMultiplier)), key + " aoa");
         ++nSweep;
     }

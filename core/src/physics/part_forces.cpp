@@ -101,9 +101,9 @@ void PartModuleForces::FixedUpdateVessel(Vessel& v, VesselPhysics* vp) {
         for (size_t i = 0; i < part->Modules().Count(); ++i) {
             PartModule* m = part->Modules().GetModule(i);
             if (auto* e = dynamic_cast<ModuleEngines*>(m)) {
-                if (engines) Engine(*part, *e, v, vp);
+                if (engines) EngineFixedUpdate(*part, *e, v, vp);
             } else if (auto* r = dynamic_cast<ModuleRCS*>(m)) {
-                if (rcs) Rcs(*part, *r, v, vp);
+                if (rcs) RcsFixedUpdate(*part, *r, v, vp);
             } else if (auto* ls = dynamic_cast<ModuleLiftingSurface*>(m)) {
                 if (!liftingSurfaces) continue;
                 // the Unity state of ModuleLiftingSurface.FixedUpdate (:170-176): baseTransform = the part transform (OnStart :133-149
@@ -166,7 +166,7 @@ void PartModuleForces::FixedUpdateVessel(Vessel& v, VesselPhysics* vp) {
 }
 
 // ModuleEngines.cs:1587 FixedUpdate (Unity's FixedUpdate: runs whatever the PartModule.isEnabled flag says)
-void PartModuleForces::Engine(Part& part, ModuleEngines& e, Vessel& v, VesselPhysics* vp) {
+void PartModuleForces::EngineFixedUpdate(Part& part, ModuleEngines& e, Vessel& v, VesselPhysics* vp) {
     (void)vp;
     // the thrust transforms are children of the part: their world pose follows the part's (Unity's transform hierarchy)
     if (hooks.engineThrustTransforms) {
@@ -211,7 +211,7 @@ void PartModuleForces::Engine(Part& part, ModuleEngines& e, Vessel& v, VesselPhy
 }
 
 // ModuleRCS.cs:277 FixedUpdate
-void PartModuleForces::Rcs(Part& part, ModuleRCS& r, Vessel& v, VesselPhysics* vp) {
+void PartModuleForces::RcsFixedUpdate(Part& part, ModuleRCS& r, Vessel& v, VesselPhysics* vp) {
     (void)vp;
     if (hooks.rcsThrusters) {
         const std::vector<RCSThruster> local = hooks.rcsThrusters(part, r);

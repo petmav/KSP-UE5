@@ -172,8 +172,8 @@ bool AeroFaceRow::Matches(const DragCubeList& cubes) const {
 
 // ===================================================================================== the face loop
 
-// DragCubeList.cs:352 SetDrag(vector, mach) -> :367 AddSurfaceDragDirection(-vector, mach, ref cubeData), with the Mach curves hoisted
-DragCubeList::CubeData AeroSoaKernel::SurfaceDrag(const AeroMachCurves& m, const AeroFaceRow& row, const FloatCurve& liftCurve,
+// DragCubeList.cs:367 AddSurfaceDragDirection(-vector, mach, ref cubeData) as SetDrag (:352) calls it, with the Mach curves hoisted
+DragCubeList::CubeData AeroSoaKernel::SurfaceDragDirection(const AeroMachCurves& m, const AeroFaceRow& row, const FloatCurve& liftCurve,
                                                   const Vector3f& dragVectorDirLocal) {
     DragCubeList::CubeData retData;
     const Vector3f direction = -dragVectorDirLocal;
@@ -186,7 +186,7 @@ DragCubeList::CubeData AeroSoaKernel::SurfaceDrag(const AeroMachCurves& m, const
         const Vector3f& vector = faces[k];
         const float num2 = U::Dot(direction, vector);
         const float dotNormalized = S((E(num2) + E(1.0f)) * E(0.5f));
-        // PhysicsGlobals.cs:2692 DragCurveValue with the hoisted curve values
+        // DragCurveValue (PhysicsGlobals.cs:2692) with the hoisted curve values
         const float num3 = dotNormalized <= 0.5f ? S(E(U::Lerp(m.tail, m.surface, S(E(dotNormalized) * E(2.0f)))) * E(m.multiplier))
                                                  : S(E(U::Lerp(m.surface, m.tip, S((E(dotNormalized) - E(0.5f)) * E(2.0f)))) * E(m.multiplier));
         const float num4 = S(E(row.areaOccluded[k]) * E(num3));
@@ -223,19 +223,19 @@ DragCubeList::CubeData AeroSoaKernel::SurfaceDrag(const AeroMachCurves& m, const
     return retData;
 }
 
-// FlightIntegrator.cs:2371-2380 (cube model)
-float AeroSoaKernel::DragScalar(const FlightIntegratorAero& fi, float areaDrag, double q, double num2, double& num6) {
+// FlightIntegrator.cs:2260 UpdateAerodynamics, its lines 2371-2380 (cube model)
+float AeroSoaKernel::CubeDragScalar(const FlightIntegratorAero& fi, float areaDrag, double q, double num2, double& num6) {
     num6 = aero::D(E(areaDrag) * E(fi.cacheDragCubeMultiplier)) * fi.pseudoReDragMult;
     if (!std::isnan(num6) && num6 != 0.0) return S(E(static_cast<float>(q * num6 * num2)) * E(fi.cacheDragMultiplier));
     return 0.0f;
 }
 
-// FlightIntegrator.cs:2383
-float AeroSoaKernel::BodyLiftScalar(const FlightIntegratorAero& fi, const AeroMachCurves& m, float bodyLiftMultiplier, double q) {
+// FlightIntegrator.cs:2260 UpdateAerodynamics, its line 2383
+float AeroSoaKernel::CubeBodyLiftScalar(const FlightIntegratorAero& fi, const AeroMachCurves& m, float bodyLiftMultiplier, double q) {
     return S(E(static_cast<float>(q)) * E(bodyLiftMultiplier) * E(fi.cacheBodyLiftMultiplier) * E(m.liftMach));
 }
 
-// FlightIntegrator.cs:2309-2389 for a covered part (the cube list is not None and the drag model is the cube model)
+// FlightIntegrator.cs:2260 UpdateAerodynamics, its lines 2309-2389 for a covered part (the cube list is not None and the drag model is the cube model)
 void AeroSoaKernel::PartScalars(const FlightIntegratorAero& fi, const AeroMachCurves& m, Part& part, const AeroRigidbody& rigidbody,
                                 bool flag3, AeroForces& out) {
     PartFields& f = part.fields;
@@ -289,7 +289,7 @@ void AeroSoaKernel::PartScalars(const FlightIntegratorAero& fi, const AeroMachCu
     out.mode = fi.cacheDragUsesAcceleration ? AeroForceMode::Acceleration : AeroForceMode::Force;
     // :2371 CalculateDragValue -> CalculateDragValue_Cube (:2429): AreaDrag * cacheDragCubeMultiplier (float product widened)
     double num6 = 0.0;
-    const float dragScalar = DragScalar(fi, part.DragCubes.AreaDrag(), f.dynamicPressurekPa, num2, num6);
+    const float dragScalar = CubeDragScalar(fi, part.DragCubes.AreaDrag(), f.dynamicPressurekPa, num2, num6);
     if (!std::isnan(num6) && num6 != 0.0) {
         f.dragScalar = dragScalar;
         out.applyDrag = true;  // ApplyAeroDrag (:2243)
@@ -305,7 +305,7 @@ void AeroSoaKernel::PartScalars(const FlightIntegratorAero& fi, const AeroMachCu
         const double q = flag4 ? (f.dynamicPressurekPa * num2 + f.submergedDynamicPressurekPa * f.submergedLiftScalar * submergedPortion)
                                : f.dynamicPressurekPa;
         // :2383 (BodyLiftScalar with the hoisted liftMach)
-        f.bodyLiftScalar = BodyLiftScalar(fi, m, f.bodyLiftMultiplier, q);
+        f.bodyLiftScalar = CubeBodyLiftScalar(fi, m, f.bodyLiftMultiplier, q);
         if (f.bodyLiftScalar != 0.0f && part.DragCubes.LiftForce() != Vector3f::zero() && !VectorExtensions::IsInvalid(part.DragCubes.LiftForce())) {
             // ApplyAeroLift (:2249)
             const Vector3f zero = (rigidbody.isPartRb || !PhysicsGlobals::ApplyDragToNonPhysicsPartsAtParentCoM())
@@ -329,7 +329,7 @@ void AeroSoaKernel::Clear() {
 }
 
 // FlightIntegrator.cs:2260 UpdateAerodynamics over a batch of parts
-void AeroSoaKernel::Run(const FlightIntegratorAero& fi, const std::vector<Part*>& parts, const std::vector<AeroRigidbody>& rbs,
+void AeroSoaKernel::UpdateAerodynamics(const FlightIntegratorAero& fi, const std::vector<Part*>& parts, const std::vector<AeroRigidbody>& rbs,
                         std::vector<AeroForces>& out) {
     const size_t n = parts.size();
     out.assign(n, AeroForces{});
@@ -390,7 +390,7 @@ void AeroSoaKernel::Run(const FlightIntegratorAero& fi, const std::vector<Part*>
         const double submergedPortion = f.submergedPortion;
         if (part.ShieldedFromAirstream() || (!(f.atmDensity > 0.0) && !(submergedPortion > 0.0))) continue;
         // :2307 SetDrag (the face loop over the row)
-        part.DragCubes.SetCubeData(SurfaceDrag(m, slot.row, part.DragCubes.BodyLiftCurve->liftCurve, f.dragVectorDirLocal));
+        part.DragCubes.SetCubeData(SurfaceDragDirection(m, slot.row, part.DragCubes.BodyLiftCurve->liftCurve, f.dragVectorDirLocal));
         PartScalars(fi, m, part, rigidbody, flag3, o);
     }
 }

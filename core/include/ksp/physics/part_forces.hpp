@@ -94,8 +94,8 @@ public:
     size_t engineForces = 0, rcsForces = 0, surfaceForces = 0, wheelTorques = 0;
 
 private:
-    void Engine(Part& part, ModuleEngines& e, Vessel& v, VesselPhysics* vp);
-    void Rcs(Part& part, ModuleRCS& r, Vessel& v, VesselPhysics* vp);
+    void EngineFixedUpdate(Part& part, ModuleEngines& e, Vessel& v, VesselPhysics* vp);
+    void RcsFixedUpdate(Part& part, ModuleRCS& r, Vessel& v, VesselPhysics* vp);
 };
 
 }  // namespace ksp::physics
