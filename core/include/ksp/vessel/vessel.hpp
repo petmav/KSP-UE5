@@ -157,8 +157,11 @@ struct VesselEnvironment {
     // rootPart.rb.GetPointVelocity(point) and rootPart.rb.angularVelocity (world) for the mass-less / packed branch (VesselPrecalculate.cs:491-498);
     // returns false when rootPart == null or rootPart.rb == null
     std::function<bool(Vessel&, const Vector3f& point, Vector3f& pointVelocity, Vector3f& angularVelocity)> rootRigidbody;
-    // Vessel.OffsetVelocity (Vessel.cs:3742): add `dv` to the velocity of every part rigid body (and servo rigid body)
+    // Vessel.OffsetVelocity (Vessel.cs:3742): add `dv` to the velocity of every part rigid body (and servo rigid body).
+    // Vessel.ChangeWorldVelocity (Vessel.cs:3197, WP-19b) uses the same hook for its rigid-body loop.
     std::function<void(Vessel&, const Vector3d& dv)> offsetVelocity;
+    // Vessel.SetWorldVelocity (Vessel.cs:3219, WP-19b): set every part rigid body's velocity to `v` (unset: nothing)
+    std::function<void(Vessel&, const Vector3d& v)> setWorldVelocity;
     // Part.explode(offset) (Vessel.CheckKill, Vessel.cs:2776): unset = nothing
     std::function<void(Part&, float offset)> explodePart;
     // HighLogic.CurrentGame.CurrenciesAvailable (Vessel.Update, Vessel.cs:3002): unset = true
@@ -539,6 +542,9 @@ public:
     void Update();                                                 // :2990 mission time, load / unload by range, autopilot
     void LateUpdate();                                             // :3055 (situation, g / pressure warning thresholds; AddRBAnchor is the physics seam)
     void OffsetVelocity(const Vector3d& correction);               // :3742 (through env.offsetVelocity)
+    // WP-19b: :3197 (not DEAD / packed: every rigid body += velOffset through env.offsetVelocity, krakensbaneAcc += velOffset / dt)
+    void ChangeWorldVelocity(const Vector3d& velOffset);
+    void SetWorldVelocity(const Vector3d& vel);                    // :3219 (not DEAD / packed: through env.setWorldVelocity)
     // Krakensbane.GetFrameVelocity() (env.krakensbaneFrameVelocity when set)
     Vector3d FrameVelocity() const;
 

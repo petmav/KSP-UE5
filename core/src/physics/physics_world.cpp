@@ -65,14 +65,23 @@ public:
 #endif
 };
 
+// WP-19b: `staticOn` is the static-collision gate (PhysicsWorld::SetStaticCollisions); it is only changed between steps.
 class ObjVsBP final : public JPH::ObjectVsBroadPhaseLayerFilter {
 public:
-    bool ShouldCollide(JPH::ObjectLayer l, JPH::BroadPhaseLayer b) const override { return l == Layers::STATIC ? b == BPL::MOVING : true; }
+    bool staticOn = true;
+    bool ShouldCollide(JPH::ObjectLayer l, JPH::BroadPhaseLayer b) const override {
+        if (l == Layers::STATIC) return staticOn && b == BPL::MOVING;
+        return b == BPL::MOVING || staticOn;
+    }
 };
 
 class ObjPair final : public JPH::ObjectLayerPairFilter {
 public:
-    bool ShouldCollide(JPH::ObjectLayer a, JPH::ObjectLayer b) const override { return a == Layers::STATIC ? b == Layers::MOVING : true; }
+    bool staticOn = true;
+    bool ShouldCollide(JPH::ObjectLayer a, JPH::ObjectLayer b) const override {
+        if (a == Layers::STATIC) return staticOn && b == Layers::MOVING;
+        return b == Layers::MOVING || staticOn;
+    }
 };
 
 // Bodies of the same vessel (same CollisionGroup group id) never collide, unless both carry sub-group flag 1
@@ -511,6 +520,34 @@ void PhysicsWorld::GetConstraintImpulse(ConstraintId id, Vector3d& linear, Vecto
     linear = FromVec3(fc->GetTotalLambdaPosition());
     angular = FromVec3(fc->GetTotalLambdaRotation());
 }
+
+// ---- WP-19b: frames of the physics bubble ---------------------------------------------------------------------------------
+
+bool PhysicsWorld::IsStatic(BodyId id) const {
+    if (!IsValid(id)) return false;
+    return impl_->Bi().GetMotionType(JPH::BodyID(id)) == JPH::EMotionType::Static;
+}
+
+size_t PhysicsWorld::TranslateBodies(const Vector3d& delta, bool moving, bool statics) {
+    Impl& m = *impl_;
+    size_t n = 0;
+    for (BodyId id : m.order) {
+        const JPH::BodyID b(id);
+        const bool isStatic = m.Bi().GetMotionType(b) == JPH::EMotionType::Static;
+        if (isStatic ? !statics : !moving) continue;
+        // the body origin in double (Body::GetPosition), moved by the double delta: no float rounding of the position
+        m.Bi().SetPosition(b, m.Bi().GetPosition(b) + ToRVec3(delta), JPH::EActivation::DontActivate);
+        ++n;
+    }
+    return n;
+}
+
+void PhysicsWorld::SetStaticCollisions(bool enabled) {
+    impl_->ovb.staticOn = enabled;
+    impl_->olp.staticOn = enabled;
+}
+
+bool PhysicsWorld::StaticCollisions() const { return impl_->olp.staticOn; }
 
 uint64_t PhysicsWorld::StateHash() const {
     uint64_t h = 1469598103934665603ull;

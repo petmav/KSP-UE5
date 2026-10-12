@@ -39,6 +39,8 @@ add_library(kspcore STATIC
     physics/vessel_physics_forces.cpp
     physics/vessel_physics_host.cpp
     physics/vessel_physics_joints.cpp
+    physics/physical_object.cpp
+    physics/physics_bubble.cpp
     celestial/celestial_body.cpp
     celestial/planetarium.cpp
     celestial/celestial_system.cpp

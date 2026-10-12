@@ -488,6 +488,7 @@ public:
     void Destroy(const Vessel& vessel);
     void DestroyAll();
     size_t Count() const { return vessels_.size(); }
+    const std::vector<std::unique_ptr<VesselPhysics>>& Bindings() const { return vessels_; }  // creation order (WP-19b)
     // vessel split / merge (the seams of WP-16's Part.decouple / Undock and WP-25's Couple): see VesselPhysics::SplitOff / Merge
     VesselPhysics* OnVesselSplit(Vessel& original, Vessel& split);
     VesselPhysics* OnVesselMerge(Vessel& a, Vessel& b, Vessel& merged);
