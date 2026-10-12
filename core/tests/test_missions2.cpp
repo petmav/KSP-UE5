@@ -839,3 +839,131 @@ TEST_CASE("WP-54b reference: the deferred Tests.* modules (Awake, Load / Save, T
     CHECK(checked > 3000);
     CHECK(classes.size() >= 11);
 }
+
+// ---- the create actions (ActionCreateAsteroid / Comet / Kerbal / Flag): Awake defaults, Load / Save, GetInfo, body text; GetProtoVesselNode of ActionCreateFlag ---------
+
+TEST_CASE("WP-54b reference: Actions.ActionCreate{Asteroid,Comet,Kerbal,Flag} (Awake, Load / Save, GetInfo, body text, flag proto node)") {
+    Fixture54b world;
+    size_t checked = 0;
+    std::set<std::string> names;
+    using Env = ActionCreateEnvironment;
+    // the rot component goes through libm sin / cos (the lat / lon of the case): compared per component with 1e-12 + 1e-5 relative; the rest exactly
+    auto CmpApproxRot = [](const std::string& got, const std::string& want) {
+        auto split = [](const std::string& t, std::string& before, std::vector<double>& rot, std::string& after) {
+            const size_t a = t.find("rot=");
+            const size_t e = t.find(';', a);
+            before = t.substr(0, a);
+            after = t.substr(e);
+            std::stringstream ss(t.substr(a + 4, e - a - 4));
+            std::string tok;
+            rot.clear();
+            while (std::getline(ss, tok, ',')) rot.push_back(std::stod(tok));
+        };
+        std::string b1, a1, b2, a2;
+        std::vector<double> r1, r2;
+        split(got, b1, r1, a1);
+        split(want, b2, r2, a2);
+        CHECK(b1 == b2);
+        CHECK(a1 == a2);
+        REQUIRE(r1.size() == 4);
+        REQUIRE(r2.size() == 4);
+        for (size_t k = 0; k < 4; ++k) CHECK(std::fabs(r1[k] - r2[k]) <= 1e-12 + 1e-5 * std::fabs(r2[k]));
+    };
+    auto Cmp = [](const std::string& got, const std::string& want) {
+        if (got != want && std::getenv("KSP_DBG")) std::fprintf(stderr, "GOT  %s\nWANT %s\n", got.c_str(), want.c_str());
+        CHECK(got == want);
+    };
+    for (const json& c : Ref()["cases"]) {
+        if (c["kind"].get<std::string>() != "action") continue;
+        const std::string name = c["name"].get<std::string>();
+        names.insert(name);
+        for (const char* n : {"Jebediah Kerman", "Bill Kerman", "Bob Kerman", "Valentina Kerman", "Gus Kerman", "Tourist A", "Tourist B"})
+            (*world.roster)[std::string(n)]->set_rosterStatus(ProtoCrewMember::RosterStatus::Available);
+        Scene54 scene(world);
+        scene.BuildMission();
+        MissionMappedVessel::getUniquePersistentId = [] { return 424242u; };
+        ResourceEnvironment::tickCount = [] { return 12345; };  // new KSPRandom(): the position of a new VesselGroundLocation
+        // labelled-synthetic stand-ins for the ProtoVessel node builders and the Unity natives (both sides of the gate use the same ones)
+        Env::createRandomOrbitAround = [](CelestialBody* b) { return Orbit(1.0, 0.5, b->Radius * 3.0, 2.0, 3.0, 4.0, 5.0, b); };
+        Env::createVesselNode = [](const std::string& vname, VesselType type, const Orbit& orbit, int rootIdx, const std::vector<ConfigNode::NodePtr>& parts,
+                                   const std::vector<ConfigNode::NodePtr>& extra) {
+            auto v = std::make_shared<ConfigNode>("VESSEL");
+            v->AddValue("name", vname);
+            v->AddValue("type", dotnet::EnumToString(type));
+            v->AddValue("orbitRef", orbit.referenceBody->name());
+            v->AddValue("orbitSma", orbit.semiMajorAxis);
+            v->AddValue("rootIdx", rootIdx);
+            v->AddValue("persistentId", 0);
+            v->AddValue("landedAt", "");
+            v->AddValue("lat", 0);
+            v->AddValue("lon", 0);
+            v->AddValue("sit", "");
+            v->AddValue("alt", 0);
+            v->AddValue("skipGroundPositioning", true);
+            v->AddValue("landed", false);
+            v->AddValue("splashed", false);
+            v->AddValue("vesselSpawning", false);
+            v->AddValue("PQSMin", -1);
+            v->AddValue("PQSMax", -1);
+            for (const auto& p : parts) v->AddNode(p);
+            for (const auto& p : extra) v->AddNode(p);
+            return v;
+        };
+        Env::createPartNode = [](const std::string& partName, uint32_t id, const std::vector<std::shared_ptr<ProtoCrewMember>>&) {
+            auto p = std::make_shared<ConfigNode>("PART");
+            p->AddValue("name", partName);
+            p->AddValue("id", id);
+            return p;
+        };
+        Env::uniqueFlightID = [] { return 7777u; };
+        Env::fromToRotation = [](const Vector3f& a, const Vector3f& b) {
+            return Quaternionf(f32store(fx(a.x) + fx(b.x)), f32store(fx(a.y) + fx(b.y)), f32store(fx(a.z) + fx(b.z)), 1.0f);
+        };
+        Env::angleAxis = [](float angle, const Vector3f& axis) {
+            return Quaternionf(f32store(fx(axis.x) * fx(angle)), f32store(fx(axis.y) * fx(angle)), f32store(fx(axis.z) * fx(angle)), angle);
+        };
+        if (c.contains("flagUrl")) scene.mission->flagURL = c["flagUrl"].get<std::string>();
+        ConfigNode cfg = CfgFromJson(c["cfg"]);
+        IActionModule* a = scene.subject->AddAction(name, &cfg);
+        REQUIRE_MESSAGE(a != nullptr, name);
+        ActionModule* mod = dynamic_cast<ActionModule*>(a);
+        REQUIRE(mod != nullptr);
+        for (const json& op : c["ops"]) {
+            const std::string o = op["op"].get<std::string>();
+            INFO("case ", name, " op ", o);
+            ++checked;
+            try {
+                if (o == "title") {
+                    CHECK(mod->title == op["out"].get<std::string>());
+                } else if (o == "info") {
+                    CHECK(mod->GetInfo() == op["out"].get<std::string>());
+                } else if (o == "saved") {
+                    ConfigNode out("N");
+                    mod->Save(out);
+                    Cmp(Dump(out), op["out"].get<std::string>());
+                } else if (o == "body") {
+                    const json& f = op["field"];
+                    Editor::BaseAPField field(f["name"].get<std::string>(), f["guiName"].get<std::string>(), f["value"].get<std::string>(), f["has"].get<bool>());
+                    field.fieldType = f.value("fieldType", "");
+                    Cmp(mod->GetNodeBodyParameterString(field), op["out"].get<std::string>());
+                } else if (o == "proto") {
+                    Env::hasPQS = [pqs = op["pqs"].get<bool>()](CelestialBody*) { return pqs; };
+                    auto* flag = dynamic_cast<Actions::ActionCreateFlag*>(mod);
+                    REQUIRE(flag != nullptr);
+                    ConfigNode::NodePtr node = flag->GetProtoVesselNode();
+                    if (op["approxRot"].get<bool>()) CmpApproxRot(Dump(*node), op["out"].get<std::string>());
+                    else Cmp(Dump(*node), op["out"].get<std::string>());
+                } else {
+                    FAIL("unknown op " << o);
+                }
+            } catch (const std::exception& e) {
+                FAIL_CHECK("exception in " << name << " op " << o << ": " << e.what());
+            }
+        }
+        MissionMappedVessel::getUniquePersistentId = nullptr;
+        ResourceEnvironment::tickCount = nullptr;
+        Env::Reset();
+    }
+    CHECK(checked > 800);
+    CHECK(names.size() == 4);
+}
