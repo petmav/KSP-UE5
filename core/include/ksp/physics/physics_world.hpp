@@ -106,9 +106,8 @@ struct CompoundBodyDesc {
     uint32_t vesselGroup = 0;
     bool sameVesselCollision = false;
     uint64_t userData = 0;
-    // WP-20c: Jolt merges the contact manifolds of different sub-shapes of a body pair that share a normal (manifold reduction) and then
-    // reports only the first sub-shape; off, every touching part's collider gets its own manifold (as every part has its own contacts in
-    // KSP) and StaticContacts() sees every supporting part
+    // Jolt's manifold reduction (merging the contact manifolds of different sub-shapes of a body pair that share a normal; on by default).
+    // StaticContacts() reports every touching sub-shape either way.
     bool useManifoldReduction = true;
 };
 
@@ -204,10 +203,10 @@ public:
     void GetConstraintImpulse(ConstraintId id, Vector3d& linear, Vector3d& angular) const;
 
     // ---- WP-20c: contacts with static geometry (the ground supports of the structural load solve) ----------------------------
-    // With tracking on, a Jolt contact listener records every (dynamic body, sub-shape user data) that touched a Static-layer body
-    // during the last Step (contacts added or persisted); StaticContacts() lists them sorted by (body id, user data), without
-    // duplicates: the same set whatever the thread count. Off by default (one mutex per contact callback). The full contact events
-    // (Part.OnCollisionEnter / HandleCollision) are WP-20e's.
+    // With tracking on, a Jolt contact listener records every (dynamic body, sub-shape user data) that touched (within 1 mm) a
+    // Static-layer body during the last Step, from the per-sub-shape validation callback (so manifold reduction hides none); StaticContacts()
+    // lists them sorted by (body id, user data), without duplicates: the same set whatever the thread count. Off by default (one mutex per
+    // contact callback). The full contact events (Part.OnCollisionEnter / HandleCollision) are WP-20e's.
     struct StaticContact {
         BodyId body = kInvalidBody;
         uint32_t subShapeUserData = 0;

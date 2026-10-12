@@ -597,3 +597,50 @@ TEST_CASE("WP-20c strut sharing: a 3-part stack with and without a Grandparent a
         }
     }
 }
+
+// ===================================================================================== ground contacts
+
+TEST_CASE("WP-20c PhysicsWorld::StaticContacts: every touching sub-shape of a compound body, not only the first of a merged manifold") {
+    // A compound of three boxes on a static floor: two resting side by side (user data 1 and 2: Jolt's manifold reduction merges their
+    // manifolds, same normal, and reports only one sub-shape in OnContactAdded), one 0.5 m up (3: no support). Gravity as a force.
+    std::vector<PhysicsWorld::StaticContact> first;
+    for (int threads : {1, 4}) {
+        PhysicsWorldConfig cfg;
+        cfg.threads = threads;
+        PhysicsWorld world(cfg);
+        world.SetStaticContactTracking(true);
+        BodyDesc floor;
+        floor.motion = MotionType::Static;
+        floor.shape = ShapeDesc::Box(Vector3f(20.0f, 0.5f, 20.0f));
+        floor.position = Vector3d(0.0, -0.5, 0.0);
+        const BodyId ground = world.CreateBody(floor);
+        REQUIRE(ground != kInvalidBody);
+        CompoundBodyDesc d;
+        for (int k = 0; k < 3; ++k) {
+            CompoundChild ch;
+            ch.shape = ShapeDesc::Box(Vector3f(0.5f, 0.5f, 0.5f));
+            ch.position = k < 2 ? Vector3f(k == 0 ? -1.5f : 1.5f, 0.0f, 0.0f) : Vector3f(0.0f, 1.0f, 0.0f);
+            ch.userData = static_cast<uint32_t>(k + 1);
+            d.children.push_back(ch);
+        }
+        d.position = Vector3d(0.0, 0.5, 0.0);  // the lower boxes' bottoms on the floor
+        d.mass = 3.0;
+        const BodyId body = world.CreateCompoundBody(d);
+        REQUIRE(body != kInvalidBody);
+        for (int s = 0; s < 50; ++s) {
+            world.AddForce(body, Vector3d(0.0, -9.81 * 3.0, 0.0));
+            world.Step(0.02f);
+        }
+        const std::vector<PhysicsWorld::StaticContact>& c = world.StaticContacts();
+        INFO("threads " << threads);
+        REQUIRE(c.size() == 2);
+        CHECK(c[0].body == body);
+        CHECK(c[0].subShapeUserData == 1u);
+        CHECK(c[1].subShapeUserData == 2u);
+        if (threads == 1) first = c;
+        else CHECK(c == first);
+        world.SetStaticContactTracking(false);
+        world.Step(0.02f);
+        CHECK(world.StaticContacts().empty());
+    }
+}

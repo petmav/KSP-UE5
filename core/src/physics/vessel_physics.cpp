@@ -288,7 +288,6 @@ void VesselPhysics::BuildClusters(const std::vector<PartPhysicsState>& states) {
         d.maxAngularVelocity = maxAngular;  // rb.maxAngularVelocity = PhysicsGlobals.MaxAngularVelocity (Part.cs:1880)
         d.vesselGroup = group_;
         d.sameVesselCollision = sameVesselCollisionAll_;
-        d.useManifoldReduction = options_.loadSolve == LoadSolve::None;  // WP-20c: every supporting part reported (PhysicsWorld::StaticContacts)
         d.userData = static_cast<uint64_t>(c.parts.front());
         c.body = world_->CreateCompoundBody(d);
         c.origin = c.origin0;
