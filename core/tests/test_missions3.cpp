@@ -22,6 +22,7 @@
 #include "ksp/localization/localizer.hpp"
 #include "ksp/missions/mission_actions2.hpp"
 #include "ksp/missions/mission_actions3.hpp"
+#include "ksp/missions/mission_extras.hpp"
 #include "ksp/missions/mission_system.hpp"
 #include "ksp/missions/mission_tests4.hpp"
 #include "ksp/missions/missions.hpp"
@@ -531,4 +532,654 @@ TEST_CASE("WP-54c reference: ActionPartFailure / ActionPartRepair / ActionPartRe
     }
     CHECK(counts.size() == 3);
     CHECK(checked > 8000);
+}
+
+// ---- Mission craft-file bookkeeping (RebuildCraftFileList, lookups, vessel / part event handlers) and ProcessMappedVesselNodeMap ------------------------------------------
+
+namespace {
+
+ConfigNode::NodePtr NodeFromJson(const json& j) {
+    auto n = std::make_shared<ConfigNode>(j["name"].get<std::string>());
+    for (const auto& kv : j["values"]) n->AddValue(kv[0].get<std::string>(), kv[1].get<std::string>());
+    for (const auto& c : j["nodes"]) AddCfgJson(n.get(), c);
+    return n;
+}
+
+// the in-memory file system of a case: paths are the symbolic "SHIPS/..." names of the reference
+struct MemFs {
+    std::map<std::string, ConfigNode::NodePtr> files;
+    std::set<std::string> dirs;
+    std::string ships;  // Mission::ShipsPath() (the prefix the seams translate)
+    std::string Sym(const std::string& p) const { return p.rfind(ships, 0) == 0 ? "SHIPS/" + p.substr(ships.size()) : p; }
+};
+
+json CraftSnapshot(Mission& m, MemFs& fs, uint32_t uid, int refresh, bool keys) {
+    json craft = json::array();
+    for (int i = 0; i < m.craftFileList.Count(); ++i) {
+        const MissionCraft& c = *m.craftFileList.At(i);
+        craft.push_back(json::array({m.craftFileList.KeyAt(i), c.craftFile, fs.Sym(c.craftFolder), c.facility, c.mappedItem, c.mappedVesselName, c.craftPersistentId, c.rootPartPersistentId}));
+    }
+    auto dumpMapped = [](const MissionMappedVessel& v) {
+        return json::array({v.partPersistentId, v.originalVesselPersistentId, v.currentVesselPersistentId, v.partVesselName, v.craftFileName, v.situationVesselName, v.mappedVesselPersistentId});
+    };
+    json mapped = json::array();
+    for (const auto& v : m.mappedVessels) mapped.push_back(dumpMapped(v));
+    json files = json::object();
+    for (const auto& kv : fs.files) files[kv.first] = Dump(*kv.second);
+    json vessels = json::array();
+    for (VesselSituation* v : m.GetAllVesselSituations()) vessels.push_back(json::array({v->persistentId, v->craftFile, v->vesselName}));
+    json out = {{"craft", craft}, {"mapped", mapped}, {"fs", files}, {"uid", uid}, {"refresh", refresh}, {"vessels", vessels}};
+    if (keys) {
+        // mappedVesselKeys is private: compared through the ClearMappedVessels result only (the entries that survive); the reference dumps the keys too
+        // (see the "keys" check below, which reads them through the friend-free accessor)
+    }
+    return out;
+}
+
+}  // namespace
+
+TEST_CASE("WP-54c reference: Mission craft-file bookkeeping (RebuildCraftFileList, MissionCraft ids, lookups, vessel / part event handlers, ProcessMappedVesselNodeMap)") {
+    Fixture54b world;
+    MissionsEnvironment::craftFileBookkeeping = true;
+    size_t checked = 0, craftCases = 0, nodeMaps = 0;
+    for (const json& c : Ref3()["cases"]) {
+        const std::string kind = c["kind"].get<std::string>();
+        if (kind == "craft") {
+            ++craftCases;
+            const json& spec = c["spec"];
+            MemFs fs;
+            auto uid = std::make_shared<uint32_t>(spec["uid"].get<uint32_t>());
+            auto refresh = std::make_shared<int>(0);
+            std::vector<std::unique_ptr<Vessel>> vessels;  // declared last among the case's fixtures that own Vessels: destroyed first
+            std::vector<std::unique_ptr<Part>> parts;
+            auto mission = std::make_unique<Mission>();
+            fs.ships = mission->ShipsPath();
+            for (const auto& kv : spec["files"].items()) fs.files[kv.key()] = NodeFromJson(kv.value());
+            for (const json& d : spec["dirs"]) fs.dirs.insert(d.get<std::string>());
+            MemFs* fsp = &fs;
+            MissionDataEnvironment::directoryExists = [fsp](const std::string& p) { return fsp->dirs.count(fsp->Sym(p)) != 0; };
+            MissionDataEnvironment::getFiles = [fsp](const std::string& p, const std::string&) {
+                std::vector<std::string> out;
+                const std::string sym = fsp->Sym(p);
+                for (const auto& kv : fsp->files) {
+                    if (kv.first.rfind(sym, 0) == 0 && kv.first.find('/', sym.size()) == std::string::npos && kv.first.size() > 6 && kv.first.substr(kv.first.size() - 6) == ".craft")
+                        out.push_back(p + kv.first.substr(sym.size()));
+                }
+                return out;
+            };
+            MissionDataEnvironment::fileExists = [fsp](const std::string& p) { return fsp->files.count(fsp->Sym(p)) != 0; };
+            MissionDataEnvironment::loadConfigNode = [fsp](const std::string& p) -> ConfigNode::NodePtr {
+                auto it = fsp->files.find(fsp->Sym(p));
+                return it == fsp->files.end() ? nullptr : it->second->CreateCopy();
+            };
+            MissionDataEnvironment::saveConfigNode = [fsp](const ConfigNode& n, const std::string& p) { fsp->files[fsp->Sym(p)] = n.CreateCopy(); };
+            MissionMappedVessel::getUniquePersistentId = [uid] { return (*uid)++; };
+            MissionsEnvironment::refreshMissionRequested = [refresh](Mission&, bool) { ++*refresh; };
+            int k = 0;
+            for (const json& vj : spec["vessels"]) {
+                auto* a = dynamic_cast<Actions::ActionCreateVessel*>(SpawnActionNode(*mission, k++)->AddAction("ActionCreateVessel", nullptr));
+                REQUIRE(a != nullptr);
+                a->vesselSituation->persistentId = vj["pid"].get<uint32_t>();
+                a->vesselSituation->vesselName = vj["name"].get<std::string>();
+                a->vesselSituation->craftFile = vj["craft"].get<std::string>();
+            }
+            for (const json& mj : spec["mapped"]) {
+                MissionMappedVessel mv(mj["part"].get<uint32_t>(), mj["orig"].get<uint32_t>(), mj["cur"].get<uint32_t>(), mj["pvn"].get<std::string>(), mj["craft"].get<std::string>(),
+                                       mj["sit"].get<std::string>());
+                mv.mappedVesselPersistentId = mj["mapped"].get<uint32_t>();
+                mission->mappedVessels.push_back(mv);
+            }
+            *uid = spec["uid"].get<uint32_t>();  // the VesselSituation / MissionMappedVessel constructors above consumed ids: the reference starts counting here
+            auto vesselOf = [&](uint32_t pid) -> Vessel* {
+                for (auto& v : vessels)
+                    if (v->persistentId == pid) return v.get();
+                vessels.push_back(std::make_unique<Vessel>());
+                vessels.back()->persistentId = pid;
+                return vessels.back().get();
+            };
+            for (const json& op : c["ops"]) {
+                const std::string o = op["op"].get<std::string>();
+                INFO("craft case op ", o);
+                ++checked;
+                try {
+                    if (o == "rebuild") {
+                        if (op["out"].is_string()) {
+                            CHECK_THROWS(mission->RebuildCraftFileList());
+                            break;
+                        }
+                        mission->RebuildCraftFileList();
+                        const json got = CraftSnapshot(*mission, fs, *uid, *refresh, false);
+                        json want = op["out"];
+                        want.erase("keys");
+                        CHECK(got == want);
+                    } else if (o == "craftByVessel") {
+                        MissionCraft* mc = mission->GetCraftBySituationsVesselID(op["pid"].get<uint32_t>());
+                        CHECK((mc == nullptr ? json(nullptr) : json(mc->craftFile)) == op["out"]);
+                    } else if (o == "craftByFile") {
+                        MissionCraft* mc = mission->GetMissionCraftByFileName(op["name"].get<std::string>());
+                        CHECK((mc == nullptr ? json(nullptr) : json::array({mc->craftFile, fs.Sym(mc->craftFolder), mc->mappedVesselName, mc->mappedItem})) == op["out"]);
+                    } else if (o == "sitByCraft") {
+                        VesselSituation* s = mission->GetMissionSituationByCraftFileName(op["name"].get<std::string>());
+                        CHECK((s == nullptr ? json(nullptr) : json(s->persistentId)) == op["out"]);
+                    } else if (o == "craftByName") {
+                        MissionCraft* mc = mission->GetMissionCraftByName(op["name"].get<std::string>());
+                        CHECK((mc == nullptr ? json(nullptr) : json(mc->craftFile)) == op["out"]);
+                    } else if (o == "sitIndexByVessel") {
+                        CHECK(mission->GetSituationsIndexByVessel(op["pid"].get<uint32_t>()) == op["out"].get<int>());
+                    } else if (o == "sitIndexByPart") {
+                        if (op["out"].is_string()) CHECK_THROWS(mission->GetSituationsIndexByPart(op["pid"].get<uint32_t>()));
+                        else CHECK(mission->GetSituationsIndexByPart(op["pid"].get<uint32_t>()) == op["out"].get<int>());
+                    } else if (o == "craftIndexByPart") {
+                        CHECK(mission->GetCraftFileIndexByPart(op["pid"].get<uint32_t>()) == op["out"].get<int>());
+                    } else if (o == "addFile") {
+                        fs.files[op["path"].get<std::string>()] = NodeFromJson(op["cfg"]);
+                        fs.dirs.insert("SHIPS/VAB/");
+                    } else if (o == "evNaming") {
+                        auto part = std::make_unique<Part>();
+                        part->fields.persistentId = op["part"].get<uint32_t>();
+                        part->vesselNaming = std::make_shared<VesselNaming>();
+                        part->vesselNaming->vesselName = op["name"].get<std::string>();
+                        part->vessel = op["vessel"].is_null() ? nullptr : vesselOf(op["vessel"].get<uint32_t>());
+                        GameEvents::onPartVesselNamingChanged.Fire(part.get());
+                        part->vessel = nullptr;
+                        parts.push_back(std::move(part));
+                        CHECK(CraftSnapshot(*mission, fs, *uid, *refresh, false) == [&] { json w = op["out"]; w.erase("keys"); return w; }());
+                    } else if (o == "evRename") {
+                        Vessel* v = vesselOf(op["vessel"].get<uint32_t>());
+                        GameEvents::onVesselRename.Fire(GameEvents::HostedFromToAction<Vessel*, std::string>(v, "old", op["to"].get<std::string>()));
+                        CHECK(CraftSnapshot(*mission, fs, *uid, *refresh, false) == op["out"]);
+                    } else if (o == "evDecouple" || o == "evUndocking") {
+                        Vessel* oldV = vesselOf(op["old"].get<uint32_t>());
+                        Vessel* newV = vesselOf(op["new"].get<uint32_t>());
+                        newV->parts.clear();
+                        std::vector<std::unique_ptr<Part>> mine;
+                        for (const json& pp : op["parts"]) {
+                            mine.push_back(std::make_unique<Part>());
+                            mine.back()->fields.persistentId = pp.get<uint32_t>();
+                            newV->parts.push_back(mine.back().get());
+                        }
+                        if (o == "evDecouple") GameEvents::onPartDeCoupleNewVesselComplete.Fire(oldV, newV);
+                        else GameEvents::onVesselsUndocking.Fire(oldV, newV);
+                        newV->parts.clear();
+                        CHECK(CraftSnapshot(*mission, fs, *uid, *refresh, false) == op["out"]);
+                    } else if (o == "evVesselId") {
+                        GameEvents::onVesselPersistentIdChanged.Fire(op["old"].get<uint32_t>(), op["new"].get<uint32_t>());
+                        CHECK(CraftSnapshot(*mission, fs, *uid, *refresh, false) == op["out"]);
+                    } else if (o == "evDocking") {
+                        GameEvents::onVesselDocking.Fire(op["old"].get<uint32_t>(), op["new"].get<uint32_t>());
+                        CHECK(CraftSnapshot(*mission, fs, *uid, *refresh, false) == op["out"]);
+                    } else if (o == "evPartId") {
+                        GameEvents::onPartPersistentIdChanged.Fire(op["vessel"].get<uint32_t>(), op["old"].get<uint32_t>(), op["new"].get<uint32_t>());
+                        CHECK(CraftSnapshot(*mission, fs, *uid, *refresh, false) == op["out"]);
+                    } else {
+                        FAIL("unknown op " << o);
+                    }
+                } catch (const std::exception& e) {
+                    FAIL_CHECK("exception in craft op " << o << ": " << e.what());
+                }
+            }
+            MissionDataEnvironment::Reset();
+            MissionMappedVessel::getUniquePersistentId = nullptr;
+            MissionsEnvironment::refreshMissionRequested = nullptr;
+            mission.reset();
+            vessels.clear();
+        } else if (kind == "nodemap") {
+            ++nodeMaps;
+            auto mission = std::make_unique<Mission>();
+            for (const json& mj : c["mapped"]) {
+                MissionMappedVessel mv(mj["part"].get<uint32_t>(), mj["orig"].get<uint32_t>(), mj["cur"].get<uint32_t>(), mj["pvn"].get<std::string>(), mj["craft"].get<std::string>(),
+                                       mj["sit"].get<std::string>());
+                mv.mappedVesselPersistentId = mj["mapped"].get<uint32_t>();
+                mission->mappedVessels.push_back(mv);
+            }
+            std::vector<std::function<uint32_t&()>> fields;  // one id field per module entry, in the order of the reference
+            int k = 0;
+            for (const json& mj : c["mods"]) {
+                MENode* n = SpawnActionNode(*mission, k++);
+                const std::string kindStr = mj["kind"].get<std::string>();
+                const uint32_t value = mj["value"].get<uint32_t>();
+                const bool isTest = kindStr.rfind("test:", 0) == 0;
+                std::string rest = kindStr.substr(isTest ? 5 : 7);
+                std::string sub;
+                if (const size_t colon = rest.find(':'); colon != std::string::npos) {
+                    sub = rest.substr(colon + 1);
+                    rest = rest.substr(0, colon);
+                }
+                if (isTest) {
+                    TestGroup* tg = new TestGroup(n);
+                    n->testGroups.emplace_back(tg);
+                    tg->AddTestModule(rest, nullptr);
+                    ITestModule* tm = tg->testModules.back().get();
+                    if (auto* d = dynamic_cast<Tests::TestDistance*>(tm)) {
+                        d->distanceToTarget = Tests::TestDistance::DistanceToChoices::Vessel;
+                        d->distanceFromTarget = Tests::TestDistance::DistanceFromChoices::Vessel;
+                        uint32_t& f = sub == "to" ? d->distanceToVesselID : d->distanceFromVesselID;
+                        f = value;
+                        fields.push_back([&f]() -> uint32_t& { return f; });
+                    } else if (auto* pd = dynamic_cast<Tests::TestPartDocking*>(tm)) {
+                        uint32_t& f = sub == "one" ? pd->partOnevesselPartIDs->VesselID : pd->partTwovesselPartIDs->VesselID;
+                        f = value;
+                        fields.push_back([&f]() -> uint32_t& { return f; });
+                    } else if (auto* ca = dynamic_cast<Tests::TestCrewAssignment*>(tm)) {
+                        uint32_t& f = ca->vesselPartIDs->VesselID;
+                        f = value;
+                        fields.push_back([&f]() -> uint32_t& { return f; });
+                    } else if (auto* tv = dynamic_cast<Tests::TestVessel*>(tm)) {
+                        uint32_t& f = tv->vesselID;
+                        f = value;
+                        fields.push_back([&f]() -> uint32_t& { return f; });
+                    } else {
+                        FAIL("unexpected test " << rest);
+                    }
+                } else {
+                    IActionModule* am = n->AddAction(rest, nullptr);
+                    REQUIRE(am != nullptr);
+                    uint32_t* f = nullptr;
+                    if (auto* a1 = dynamic_cast<Actions::ActionPartExplode*>(am)) f = &a1->vesselPartIDs.VesselID;
+                    else if (auto* a2 = dynamic_cast<Actions::ActionPartFailure*>(am)) f = &a2->vesselPartIDs.VesselID;
+                    else if (auto* a3 = dynamic_cast<Actions::ActionPartRepair*>(am)) f = &a3->vesselPartIDs.VesselID;
+                    else if (auto* a4 = dynamic_cast<Actions::ActionPartResourceDrain*>(am)) f = &a4->vesselPartIDs.VesselID;
+                    REQUIRE(f != nullptr);
+                    *f = value;
+                    fields.push_back([f]() -> uint32_t& { return *f; });
+                }
+            }
+            auto read = [&] {
+                json v = json::array();
+                for (auto& f : fields) v.push_back(f());
+                return v;
+            };
+            for (const json& op : c["ops"]) {
+                const std::string o = op["op"].get<std::string>();
+                ++checked;
+                if (o == "process") {
+                    mission->ProcessMappedVesselNodeMap(op["mapped"].get<uint32_t>(), op["new"].get<uint32_t>());
+                    CHECK(read() == op["out"]);
+                } else {
+                    mission->RemapVesselId(op["cur"].get<uint32_t>());
+                    CHECK(read() == op["out"]);
+                    json mapped = json::array();
+                    for (const auto& v : mission->mappedVessels)
+                        mapped.push_back(json::array({v.partPersistentId, v.originalVesselPersistentId, v.currentVesselPersistentId, v.partVesselName, v.craftFileName, v.situationVesselName,
+                                                      v.mappedVesselPersistentId}));
+                    CHECK(mapped == op["mapped"]);
+                }
+            }
+        }
+    }
+    MissionsEnvironment::craftFileBookkeeping = false;
+    CHECK(craftCases >= 100);
+    CHECK(nodeMaps >= 50);
+    CHECK(checked > 2000);
+}
+
+// ---- MissionScoreInfo, MissionLocalizer, MissionImporting, MissionEditorHistory --------------------------------------------------------------------------------
+
+namespace {
+
+json ScoreView(const MissionScoreInfo::ScoreList& l) {
+    json out = json::array();
+    for (const auto& s : l)
+        out.push_back(json::array({s->id.ToString(), s->missionId.ToString(), s->score, s->timeTaken, s->awardIds, s->completedAt.has_value() ? json(*s->completedAt) : json(nullptr)}));
+    return out;
+}
+std::string DumpScores(const MissionScoreInfo& m) {
+    ConfigNode n("N");
+    m.Save(n);
+    return Dump(n);
+}
+std::string RStrip(std::string s) {
+    while (!s.empty() && s.back() == '/') s.pop_back();
+    return s;
+}
+
+struct ImportedCounter {
+    int n = 0;
+    void On() { ++n; }
+};
+
+struct MockTarget : Editor::IMEHistoryTarget {
+    int id = 0;
+    int calls = 0;
+    ConfigNode::NodePtr GetState() override {
+        auto n = std::make_shared<ConfigNode>("S");
+        n->AddValue("v", ++calls);
+        return n;
+    }
+};
+
+}  // namespace
+
+TEST_CASE("WP-54c reference: MissionScoreInfo (AddScore, sort, delete, queries, Load / Save, score file)") {
+    Fixture54b world;
+    size_t checked = 0;
+    for (const json& c : Ref3()["cases"]) {
+        if (c["kind"].get<std::string>() != "scoreinfo") continue;
+        uint64_t gcounter = c["spec"]["guid0"].get<uint64_t>();
+        MissionsEnvironment::newGuid = [&gcounter] { return Guid::Parse(GuidOf(static_cast<int>(gcounter++))); };
+        double ut = 0.0;
+        MissionsEnvironment::gameUniversalTime = [&ut] { return ut; };
+        int64_t now = 0;
+        MissionExtrasEnvironment::dateTimeNowFileTimeUtc = [&now] { return now; };
+        std::map<std::string, std::unique_ptr<Mission>> missions;
+        auto missionOf = [&](const std::string& g) {
+            auto it = missions.find(g);
+            if (it == missions.end()) {
+                auto m = std::make_unique<Mission>();
+                m->SetIdForTests(Guid::Parse(g));
+                it = missions.emplace(g, std::move(m)).first;
+            }
+            return it->second.get();
+        };
+        for (int k = 10; k <= 12; ++k) missionOf(GuidOf(k));  // the Missions consume Guid.NewGuid() in their constructors: create them first, then pin the counter
+        const uint64_t g0 = c["spec"]["guid0"].get<uint64_t>();
+        gcounter = g0;
+        auto info = std::make_unique<MissionScoreInfo>();
+        std::string savedRoot;
+        std::string savedPath;
+        MissionExtrasEnvironment::saveConfigNode = [&](const ConfigNode& n, const std::string& p) {
+            savedRoot = Dump(n);
+            savedPath = p;
+        };
+        ConfigNode::NodePtr fileNode;
+        MissionExtrasEnvironment::loadConfigNode = [&](const std::string&) -> ConfigNode::NodePtr { return fileNode; };
+        for (const json& op : c["ops"]) {
+            const std::string o = op["op"].get<std::string>();
+            INFO("scoreinfo op ", o);
+            ++checked;
+            if (o == "load") {
+                ConfigNode cfg = CfgFromJson(op["cfg"]);
+                info->Load(cfg);
+            } else if (o == "save") {
+                CHECK(DumpScores(*info) == op["out"].get<std::string>());
+                CHECK(gcounter == op["guid"].get<uint64_t>());
+            } else if (o == "add") {
+                Mission* m = missionOf(op["mission"].get<std::string>());
+                m->currentScore = op["score"].get<float>();
+                m->isScoreEnabled = op["enabled"].get<bool>();
+                m->awards->awardedAwards = op["awards"].get<std::vector<std::string>>();
+                ut = op["ut"].get<double>();
+                now = op["now"].get<int64_t>();
+                const uint64_t before = gcounter;
+                gcounter = op["guid"].get<uint64_t>() - (op["enabled"].get<bool>() ? 1 : 0);  // the reference counter before this add
+                (void)before;
+                info->AddScore(*m);
+                CHECK(gcounter == op["guid"].get<uint64_t>());
+                CHECK(ScoreView(*info->GetMissionScores(m)) == op["scores"]);
+            } else if (o == "query") {
+                Mission* m = missionOf(op["mission"].get<std::string>());
+                CHECK(ScoreView(*info->GetMissionScores(m)) == op["scores"]);
+                auto s0 = info->GetMissionScore(m, 0);
+                auto s1 = info->GetMissionScore(m, 1);
+                auto s5 = info->GetMissionScore(m, 5);
+                CHECK((s0 ? json(s0->id.ToString()) : json(nullptr)) == op["score0"]);
+                CHECK((s1 ? json(s1->id.ToString()) : json(nullptr)) == op["score1"]);
+                CHECK((s5 ? json(s5->id.ToString()) : json(nullptr)) == op["score5"]);
+                CHECK(json(info->GetMissionAwards(m)) == op["awards"]);
+            } else if (o == "delete") {
+                info->DeleteScore(Guid::Parse(op["id"].get<std::string>()));
+                CHECK(DumpScores(*info) == op["dump"].get<std::string>());
+            } else if (o == "deleteMission") {
+                info->DeleteMissionScores(missionOf(op["mission"].get<std::string>()));
+                CHECK(DumpScores(*info) == op["dump"].get<std::string>());
+            } else if (o == "saveFile") {
+                info->SaveScores();
+                CHECK(savedRoot == op["out"].get<std::string>());
+                CHECK(savedPath == op["path"].get<std::string>());
+                ConfigNode::NodePtr root = std::make_shared<ConfigNode>("");
+                // the file the C# would read back: the saved node
+                ConfigNode* ms = root->AddNode("MISSIONSCORES");
+                info->Save(*ms);
+                fileNode = root;
+            } else if (o == "loadFile") {
+                gcounter = op["guid"].get<uint64_t>() - fileNode->GetNode("MISSIONSCORES")->GetNodes("SCOREINFO").size();
+                std::unique_ptr<MissionScoreInfo> m2 = MissionScoreInfo::LoadScores();
+                CHECK(gcounter == op["guid"].get<uint64_t>());
+                CHECK(DumpScores(*m2) == op["dump"].get<std::string>());
+                info = std::move(m2);
+            } else if (o == "nullMission") {
+                CHECK(info->GetMissionScores(nullptr)->empty());
+                CHECK(info->GetMissionScore(nullptr, 0) == nullptr);
+                CHECK(info->GetMissionAwards(nullptr).empty());
+                info->DeleteMissionScores(nullptr);
+            } else {
+                FAIL("unknown op " << o);
+            }
+        }
+        MissionsEnvironment::newGuid = nullptr;
+        MissionsEnvironment::gameUniversalTime = nullptr;
+        MissionExtrasEnvironment::Reset();
+    }
+    CHECK(checked > 500);
+}
+
+TEST_CASE("WP-54c reference: MissionLocalizer.LoadMissionLocalizationFiles") {
+    Fixture54b world;
+    size_t cases = 0;
+    for (const json& c : Ref3()["cases"]) {
+        if (c["kind"].get<std::string>() != "localizer") continue;
+        ++cases;
+        const json& spec = c["spec"];
+        MissionsUtils::Paths::applicationRootPath = spec["root"].get<std::string>();
+        std::set<std::string> dirs;
+        std::map<std::string, ConfigNode::NodePtr> files;
+        for (const json& d : spec["dirs"]) dirs.insert(d.get<std::string>());
+        if (!spec["missionsExists"].get<bool>()) dirs.erase("ROOT/Missions");
+        for (const auto& kv : spec["files"].items()) files[kv.key()] = NodeFromJson(kv.value());
+        MissionExtrasEnvironment::directoryExists = [&](const std::string& p) { return dirs.count(RStrip(p)) != 0; };
+        MissionExtrasEnvironment::getDirectories = [&](const std::string& dir) {
+            std::vector<std::string> out;
+            for (const auto& d : dirs)
+                if (d.rfind(dir, 0) == 0 && d.find('/', dir.size()) == std::string::npos) out.push_back(d);
+            return out;
+        };
+        MissionExtrasEnvironment::getFiles = [&](const std::string& dir, const std::string& ext) {
+            std::vector<std::string> out;
+            for (const auto& kv : files)
+                if (kv.first.rfind(dir, 0) == 0 && kv.first.find('/', dir.size()) == std::string::npos && kv.first.size() > ext.size() &&
+                    kv.first.compare(kv.first.size() - ext.size(), ext.size(), ext) == 0)
+                    out.push_back(kv.first);
+            return out;
+        };
+        MissionExtrasEnvironment::loadConfigNode = [&](const std::string& p) -> ConfigNode::NodePtr {
+            auto it = files.find(p);
+            return it == files.end() ? nullptr : it->second->CreateCopy();
+        };
+        const std::vector<ConfigNode::NodePtr> got = MissionLocalizer::LoadMissionLocalizationFiles();
+        json dumps = json::array();
+        for (const auto& n : got) dumps.push_back(Dump(*n));
+        CHECK(dumps == c["out"]);
+        MissionExtrasEnvironment::Reset();
+        MissionsUtils::Paths::applicationRootPath = "";
+    }
+    CHECK(cases >= 40);
+}
+
+TEST_CASE("WP-54c reference: MissionImporting (zip import, overwrite popups, move / rename of the imported archive)") {
+    Fixture54b world;
+    size_t cases = 0, popups = 0;
+    for (const json& c : Ref3()["cases"]) {
+        if (c["kind"].get<std::string>() != "importing") continue;
+        ++cases;
+        MissionsUtils::Paths::applicationRootPath = "ROOT/";
+        const json& w = c["world"];
+        std::set<std::string> dirs(w["dirs"].begin(), w["dirs"].end());
+        std::set<std::string> files(w["files"].begin(), w["files"].end());
+        std::set<std::string> moveFails(w["moveFails"].begin(), w["moveFails"].end());
+        const json& zips = w["zips"];
+        int fires = 0;
+        std::vector<std::string> parses;
+        MissionExtrasEnvironment::directoryExists = [&](const std::string& p) { return dirs.count(RStrip(p)) != 0; };
+        MissionExtrasEnvironment::createDirectory = [&](const std::string& p) { dirs.insert(RStrip(p)); };
+        MissionExtrasEnvironment::deleteDirectory = [&](const std::string& p0) {
+            const std::string p = RStrip(p0);
+            for (auto it = dirs.begin(); it != dirs.end();) it = (*it == p || it->rfind(p + "/", 0) == 0) ? dirs.erase(it) : std::next(it);
+            for (auto it = files.begin(); it != files.end();) it = it->rfind(p + "/", 0) == 0 ? files.erase(it) : std::next(it);
+        };
+        MissionExtrasEnvironment::getFiles = [&](const std::string& dir, const std::string& ext) {
+            std::vector<std::string> out;
+            for (const auto& f : files)
+                if (f.rfind(dir, 0) == 0 && f.find('/', dir.size()) == std::string::npos && f.size() > ext.size() && f.compare(f.size() - ext.size(), ext.size(), ext) == 0) out.push_back(f);
+            return out;
+        };
+        MissionExtrasEnvironment::fileExists = [&](const std::string& p) { return files.count(p) != 0; };
+        MissionExtrasEnvironment::moveFile = [&](const std::string& src, const std::string& dst, bool overwrite) {
+            if (moveFails.count(src) || !files.count(src)) return false;
+            if (overwrite && files.count(dst)) files.erase(dst);
+            files.erase(src);
+            files.insert(dst);
+            return true;
+        };
+        MissionExtrasEnvironment::dateTimeStamp = [] { return std::string("2026_10_12_09_30_00"); };
+        MissionExtrasEnvironment::zipFilesAtRoot = [&](const std::string& z) {
+            if (zips[z].value("throwRoot", false)) throw std::runtime_error("zip");
+            return zips[z]["rootFiles"].get<bool>();
+        };
+        MissionExtrasEnvironment::zipTopLevelDirectories = [&](const std::string& z) {
+            if (zips[z].value("throwDirs", false)) throw std::runtime_error("zip");
+            return zips[z]["dirs"].get<std::vector<std::string>>();
+        };
+        MissionExtrasEnvironment::zipDecompress = [&](const std::string& z, const std::string& dest) {
+            if (zips[z].value("throwDecompress", false)) throw std::runtime_error("zip");
+            for (const json& d : zips[z]["creates"]) dirs.insert(dest + d.get<std::string>());
+        };
+        MissionExtrasEnvironment::parseMissionPacksCFG = [&](const std::string& p) { parses.push_back(p); };
+        ImportedCounter imported;
+        GameEvents::Mission::onMissionImported.Add(&imported, &ImportedCounter::On);
+        MissionImporting::ImportNewZips();
+        // the host answers the popups in order; a click may spawn another popup
+        json popupLog = json::array();
+        const json& answers = c["answers"];
+        size_t ai = 0;
+        while (!MissionExtrasEnvironment::popups.empty()) {
+            MissionExtrasEnvironment::PopupDialog p = std::move(MissionExtrasEnvironment::popups.front());
+            MissionExtrasEnvironment::popups.pop_front();
+            json labels = json::array();
+            for (const auto& b : p.buttons) labels.push_back(b.label);
+            popupLog.push_back(json::array({p.name, p.message, p.title, labels}));
+            const json& a = answers[ai % answers.size()];
+            ++ai;
+            if (!a.is_null()) p.buttons[a.get<size_t>()].callback();
+        }
+        ++popups;
+        const json& out = c["out"];
+        CHECK(json(std::vector<std::string>(files.begin(), files.end())) == out["files"]);
+        CHECK(json(std::vector<std::string>(dirs.begin(), dirs.end())) == out["dirs"]);
+        CHECK(imported.n == out["fires"].get<int>());
+        (void)fires;
+        CHECK(json(parses) == out["parses"]);
+        CHECK(popupLog == out["popups"]);
+        json msgs = json::array();
+        for (const auto& m : NodeLibraryEnvironment::screenMessages) msgs.push_back(json::array({m.text, m.duration, dotnet::EnumToString(m.style)}));
+        CHECK(msgs == out["msgs"]);
+        NodeLibraryEnvironment::Reset();
+        MissionExtrasEnvironment::Reset();
+        GameEvents::Mission::onMissionImported.Remove(&imported, &ImportedCounter::On);
+        MissionsUtils::Paths::applicationRootPath = "";
+    }
+    CHECK(cases >= 100);
+}
+
+TEST_CASE("WP-54c reference: MissionEditorHistory (undo / redo stacks, frame grouping, state ids, destroy-on-clear, exception flush)") {
+    Fixture54b world;
+    size_t checked = 0, cases = 0;
+    for (const json& c : Ref3()["cases"]) {
+        if (c["kind"].get<std::string>() != "history") continue;
+        ++cases;
+        uint64_t gcounter = c["ops"][0]["guid0"].get<uint64_t>();
+        auto mission = std::make_unique<Mission>();
+        MissionsEnvironment::newGuid = [&gcounter] { return Guid::Parse(GuidOf(static_cast<int>(gcounter++))); };
+        MissionsEnvironment::editorMission = [m = mission.get()]() -> Mission* { return m; };
+        int frame = 0;
+        Editor::MissionEditorHistory::Environment::frameCount = [&frame] { return frame; };
+        std::map<int, MockTarget> targets;
+        auto history = std::make_unique<Editor::MissionEditorHistory>();
+        REQUIRE(Editor::MissionEditorHistory::Instance() == history.get());
+        json callbacks = json::array();
+        int throwOn = 0;
+        bool editorPresent = true;
+        auto target = [&](int id) {
+            MockTarget& t = targets[id];
+            t.id = id;
+            return &t;
+        };
+        auto view = [&] {
+            auto grp = [&](const std::vector<std::vector<Editor::MissionEditorHistory::ActionView>>& g) {
+                json out = json::array();
+                for (const auto& group : g) {
+                    json gj = json::array();
+                    for (const auto& a : group)
+                        gj.push_back(json::array({static_cast<MockTarget*>(a.target)->id, Dump(*a.data), a.stateId.ToString(), a.destroyOnClear, a.destroyTargets}));
+                    out.push_back(gj);
+                }
+                return out;
+            };
+            json selected = json::array();
+            for (auto* t : Editor::MissionEditorHistory::Environment::selected) selected.push_back(static_cast<MockTarget*>(t)->id);
+            json dt = json::array();
+            for (auto* t : Editor::MissionEditorHistory::Environment::destroyedTargets) dt.push_back(static_cast<MockTarget*>(t)->id);
+            return json{{"undo", grp(history->UndoView())},
+                        {"redo", grp(history->RedoView())},
+                        {"inProgress", history->ActionInProgress},
+                        {"hasHistory", Editor::MissionEditorHistory::HasHistory()},
+                        {"state", mission->historyId.ToString()},
+                        {"selected", selected},
+                        {"destroyed", json(Editor::MissionEditorHistory::Environment::destroyed)},
+                        {"destroyedTargets", dt},
+                        {"callbacks", callbacks}};
+        };
+        for (const json& op : c["ops"]) {
+            const std::string o = op["op"].get<std::string>();
+            INFO("history op ", o);
+            ++checked;
+            if (o == "init") {
+                // Instance, the default state id (Guid.Empty)
+                CHECK(mission->historyId == Guid());
+            } else if (o == "push") {
+                const int id = op["target"].get<int>();
+                const auto cb = [id, &callbacks, &throwOn](ConfigNode& data, Editor::HistoryType t) {
+                    callbacks.push_back(json::array({id, Dump(data), t == Editor::HistoryType::Undo ? "undo" : "redo"}));
+                    if (throwOn == id) throw std::runtime_error("callback");
+                };
+                if (op["out"].is_string()) {
+                    CHECK_THROWS(Editor::MissionEditorHistory::PushUndoAction(target(id), cb, op["destroyOnClear"].get<bool>(), op["destroyTargets"].get<std::vector<int>>()));
+                } else {
+                    Editor::MissionEditorHistory::PushUndoAction(target(id), cb, op["destroyOnClear"].get<bool>(), op["destroyTargets"].get<std::vector<int>>());
+                    CHECK(view() == op["out"]);
+                }
+            } else if (o == "undo") {
+                Editor::MissionEditorHistory::Undo();
+                CHECK(view() == op["out"]);
+            } else if (o == "redo") {
+                Editor::MissionEditorHistory::Redo();
+                CHECK(view() == op["out"]);
+            } else if (o == "frame") {
+                frame = op["value"].get<int>();
+            } else if (o == "clear") {
+                Editor::MissionEditorHistory::Clear();
+                CHECK(view() == op["out"]);
+            } else if (o == "mission") {
+                const std::string v = op["value"].get<std::string>();
+                editorPresent = v != "none";
+                mission->packName = v == "tutorial" ? "squad_MakingHistory_Tutorial" : "";
+                Mission* mp = mission.get();
+                MissionsEnvironment::editorMission = [mp, &editorPresent]() -> Mission* { return editorPresent ? mp : nullptr; };
+            } else if (o == "throwOn") {
+                throwOn = op["target"].is_null() ? 0 : op["target"].get<int>();
+            } else {
+                FAIL("unknown op " << o);
+            }
+        }
+        // a second instance is destroyed on Awake
+        Editor::MissionEditorHistory second;
+        CHECK(second.destroyedAsDuplicate());
+        CHECK(Editor::MissionEditorHistory::Instance() == history.get());
+        history.reset();
+        CHECK(Editor::MissionEditorHistory::Instance() == nullptr);
+        MissionsEnvironment::newGuid = nullptr;
+        MissionsEnvironment::editorMission = nullptr;
+        Editor::MissionEditorHistory::Environment::Reset();
+    }
+    CHECK(cases >= 70);
+    CHECK(checked > 1000);
 }

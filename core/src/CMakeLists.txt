@@ -155,6 +155,7 @@ add_library(kspcore STATIC
     missions/mission_actions3.cpp
     missions/mission_tests4.cpp
     missions/mission_craft.cpp
+    missions/mission_extras.cpp
     missions/mission_adjusters.cpp
     space_center/pqs_city.cpp
     space_center/pqs_city_data.cpp
