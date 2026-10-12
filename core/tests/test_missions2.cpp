@@ -507,7 +507,6 @@ std::unique_ptr<ProtoVessel> MakeProto54(const json& vj) {
 }
 
 struct World54 {
-    std::vector<std::unique_ptr<Vessel>> vessels;
     std::vector<std::unique_ptr<Part>> parts;
     std::vector<std::shared_ptr<ProtoCrewMember>> crew;
     std::map<uint32_t, Vessel*> byPid;
@@ -516,6 +515,8 @@ struct World54 {
     std::map<Part*, std::string> grapple;
     std::vector<std::unique_ptr<ProtoVessel>> protos;
     json env;
+    // declared last = destroyed first: ~Vessel (FlightGlobals.RemoveVessel) reads its parts and proto vessel, which must outlive it
+    std::vector<std::unique_ptr<Vessel>> vessels;
 };
 
 struct Scene54 {
@@ -791,9 +792,11 @@ TEST_CASE("WP-54b reference: the deferred Tests.* modules (Awake, Load / Save, T
                     } else if (en == "vesselWillDestroy") {
                         GameEvents::onVesselWillDestroy.Fire(scene.ByPid(op["vessel"].get<uint32_t>()));
                     } else if (en == "partCouple") {
-                        GameEvents::onDockingComplete.Fire(GameEvents::FromToAction<Part*, Part*>(nullptr, nullptr));
+                        // real parts: VesselPrecalculate.onDockingComplete (every vessel subscribes) reads from.vessel / to.vessel
+                        REQUIRE(!scene.world->parts.empty());
+                        GameEvents::onDockingComplete.Fire(GameEvents::FromToAction<Part*, Part*>(scene.world->parts.front().get(), scene.world->parts.back().get()));
                     } else if (en == "partUndock") {
-                        GameEvents::onPartUndockComplete.Fire(nullptr);
+                        GameEvents::onPartUndockComplete.Fire(scene.world->parts.front().get());
                     } else if (en == "scienceReceived") {
                         ScienceSubject subject(op["id"].get<std::string>(), "title", 1.0f, 1.0f, 100.0f);
                         GameEvents::OnScienceRecieved.Fire(0.0f, &subject, nullptr, false);
