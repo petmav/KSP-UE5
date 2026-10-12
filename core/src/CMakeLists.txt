@@ -77,6 +77,7 @@ add_library(kspcore STATIC
     terrain/pqs_mods_quad.cpp
     terrain/pqs_quadtree.cpp
     terrain/pqs_parallel.cpp
+    terrain/terrain_colliders.cpp
     io/url_dir.cpp
     database/game_database.cpp
     resources/part_resource_library.cpp
@@ -154,6 +155,7 @@ add_library(kspcore STATIC
     missions/mission_actions2.cpp
     missions/mission_adjusters.cpp
     space_center/pqs_city.cpp
+    space_center/city_colliders.cpp
     space_center/pqs_city_data.cpp
     space_center/space_center.cpp
     space_center/launch_site.cpp

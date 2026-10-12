@@ -135,6 +135,45 @@ public:
     // work for bodies owned by the world ("one velocity write per body", Krakensbane.cs:121-173). Returns the bodies touched.
     size_t AddVelocityChangeToAllMoving(const Vector3d& dv);
 
+    // ---- static geometry (WP-12b terrain colliders, WP-42 KSC / PQSCity objects) ------------------------------------------
+    // Static bodies live in the Static layer (they only collide with Moving ones) and are addressed by a caller-chosen 64-bit
+    // key (a quad collider, a city object ...); adding a key that exists replaces the body (the MeshCollider.sharedMesh
+    // re-assignment of an OnQuadBuilt on an already enabled collider). Positions are doubles in the physics frame; mesh
+    // vertices are floats relative to `centre`, the layout Jolt's MeshShape keeps (PHYSICS-SPIKE.md 5.2
+    // AddStaticMesh(id, centre, vertices, triangles)). `triangles` are index triples into `vertices`, wound as the Unity mesh
+    // (cacheIndices): the numeric normal cross(b - a, c - a) points to the front face in both Unity and Jolt, so no flip is made.
+    // Returns kInvalidBody when the shape cannot be cooked (no valid triangle) or the body limit is reached.
+    BodyId AddStaticMesh(uint64_t key, const Vector3d& centre, const std::vector<Vector3f>& vertices, const std::vector<int>& triangles,
+                         float friction = 0.6f, float restitution = 0.0f);
+    // A primitive static collider (BoxCollider / SphereCollider / CapsuleCollider of a scenery object).
+    BodyId AddStaticShape(uint64_t key, const ShapeDesc& shape, const Vector3d& position, const QuaternionD& rotation,
+                          float friction = 0.6f, float restitution = 0.0f);
+    bool RemoveStatic(uint64_t key);              // false when the key is unknown
+    BodyId StaticBody(uint64_t key) const;        // kInvalidBody when unknown
+    size_t StaticCount() const;
+    std::vector<uint64_t> StaticKeys() const;     // every static collider's key, ascending
+    // Rebalances the broad phase after a batch of insertions (Jolt keeps newly added bodies in an unbalanced part of the tree
+    // until then); no effect on results, only on query / step speed.
+    void OptimizeBroadPhase();
+
+    // ---- queries (WP-12b; the general RayCast / LineCast / OverlapSphere users are WP-20d and the vessel ground height) ---------
+    // Layer bits for the `layers` argument (the two object layers of this world).
+    static constexpr uint32_t kLayerStatic = 1u, kLayerMoving = 2u, kLayerAll = 3u;
+    struct RayHit {
+        bool hit = false;
+        BodyId body = kInvalidBody;
+        uint64_t userData = 0;     // BodyDesc::userData of the body hit (static colliders: their key)
+        double distance = 0.0;     // from the origin along the (normalised) direction
+        Vector3d point;            // hit point (physics frame, double)
+        Vector3d normal;           // unit surface normal on the side of the ray origin
+    };
+    // Closest hit of origin + t * direction, 0 <= t <= maxDistance (direction is normalised; both sides of a triangle are hit,
+    // so a ray started under the terrain finds it too). Precision: Jolt returns a float fraction of maxDistance, so the point
+    // is good to about 6e-8 * maxDistance.
+    RayHit RayCast(const Vector3d& origin, const Vector3d& direction, double maxDistance, uint32_t layers = kLayerAll) const;
+    // Every body whose shape overlaps the sphere, ascending by body id.
+    size_t OverlapSphere(const Vector3d& centre, double radius, std::vector<BodyId>& out, uint32_t layers = kLayerAll) const;
+
     // ---- determinism ----------------------------------------------------------------------------------------------------
     // FNV-1a 64 over the raw bits of every body's position, rotation and both velocities, in creation order.
     uint64_t StateHash() const;
