@@ -282,12 +282,12 @@ public:
     PQSROCControl();
     void Awake();                           // :40 modExpansionDisabled = !Serenity; the dictionaries
     void OnSetup() override;                // :47 (rocMinSubdev from the LandClassROCs)
-    void OnQuadPreBuild(const PQ& quad) override;   // :69
+    void OnQuadPreBuild(PQ& quad) override;   // :69
     void OnVertexBuild(PQSVertexBuildData& data) override;  // :81
-    void OnQuadBuilt(const PQ& quad) override;      // :86 (the quad mesh comes from PQSROCControl::quadInfo)
-    void OnSphereStarted();                 // :131
-    void OnSphereReset();                   // :140
-    void OnQuadDestroy(const PQ& quad);     // :149
+    void OnQuadBuilt(PQ& quad) override;      // :86 (the quad mesh comes from PQSROCControl::quadInfo)
+    void OnSphereStarted() override;        // :131
+    void OnSphereReset() override;          // :140
+    void OnQuadDestroy(PQ& quad) override;  // :149
     // The ROC view of a PQ (mesh, name, transform position): installed by the quad builder (WP-12) / tests. Unset: nullptr (no mesh data -> the quad is skipped)
     static inline std::function<RocQuad*(const PQ&)> quadInfo;
 

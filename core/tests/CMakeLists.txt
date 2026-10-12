@@ -19,6 +19,7 @@ add_executable(kspcore_tests
     test_patched_conics.cpp
     test_timewarp.cpp
     test_terrain.cpp
+    test_pqs_quadtree.cpp
     test_partloader.cpp
     test_modules.cpp
     test_part.cpp
@@ -39,6 +40,9 @@ add_executable(kspcore_tests
     test_deltav.cpp
     test_timing.cpp
     test_physics_world.cpp
+    test_flight.cpp
+    test_flight2.cpp
+    test_flight3.cpp
     test_command.cpp
     test_science.cpp
     test_commnet.cpp
@@ -52,6 +56,7 @@ add_executable(kspcore_tests
     test_space_center.cpp
     test_missions.cpp
     test_missions_runtime.cpp
+    test_node_library.cpp
     test_inventory.cpp
     test_inventory_rules.cpp
     test_construction.cpp
@@ -77,6 +82,17 @@ target_compile_definitions(kspcore_tests PRIVATE KSPCORE_TEST_DATA_DIR="${CMAKE_
                            KSPCORE_TESTDATA_DIR="${PROJECT_SOURCE_DIR}/testdata"
                            KSPCORE_DEFAULT_GAME_ROOT="${KSP_GAMEDATA_ROOT}")
 add_test(NAME unit COMMAND kspcore_tests)
+# WP-12a: the height oracle tools/wp12/pqs_reference.py calls to regenerate tests/data/wp12_reference.json (not a test)
+add_executable(wp12_height_oracle ${PROJECT_SOURCE_DIR}/tools/wp12/height_oracle.cpp)
+target_link_libraries(wp12_height_oracle PRIVATE kspcore)
+ksp_set_build_flags(wp12_height_oracle)
+target_include_directories(wp12_height_oracle PRIVATE ${PROJECT_SOURCE_DIR}/third_party)
+target_compile_definitions(wp12_height_oracle PRIVATE KSPCORE_DATA_DIR="${PROJECT_SOURCE_DIR}/data")
+# WP-12a: quad build / tree update benchmark (not a test): wp12_bench [repeats]
+add_executable(wp12_bench ${PROJECT_SOURCE_DIR}/tools/wp12/bench.cpp)
+target_link_libraries(wp12_bench PRIVATE kspcore)
+ksp_set_build_flags(wp12_bench)
+target_compile_definitions(wp12_bench PRIVATE KSPCORE_DATA_DIR="${PROJECT_SOURCE_DIR}/data")
 # Test hygiene: the cases must not depend on the order they run in (tests/test_hygiene.cpp resets the shared state between cases).
 # A full run takes ~2 min, so each of three fixed seeds shuffles the whole suite and runs its first 190 cases (a different quarter of
 # the suite per seed, ~100 s in all). The complete sweep, any seed:  kspcore_tests --order-by=rand -rs=<seed>
@@ -105,8 +121,8 @@ if(MSVC)
     target_compile_options(capi_ue_like PRIVATE /GR- /EHs-c- /fp:fast /W4)
     target_compile_definitions(capi_ue_like PRIVATE _HAS_EXCEPTIONS=0)
 endif()
-add_test(NAME capi.c COMMAND capi_c ${KSP_HARNESS_DIR}/inputs/Physics.cfg)
-add_test(NAME capi.ue_like COMMAND capi_ue_like ${KSP_HARNESS_DIR}/inputs/Physics.cfg)
+add_test(NAME capi.c COMMAND capi_c ${KSP_HARNESS_DIR}/inputs/Physics.cfg ${PROJECT_SOURCE_DIR}/data/terrain)
+add_test(NAME capi.ue_like COMMAND capi_ue_like ${KSP_HARNESS_DIR}/inputs/Physics.cfg ${PROJECT_SOURCE_DIR}/data/terrain)
 
 # ---- golden gates: golden_runner writes candidates, harness/compare/compare.py judges them -----------------------------
 # ksp_golden_gate(<test name> <runner dataset> [GOLDEN <file>] [TOL <file>] [TABLES <t1,t2>] [KEYS <t:c1,c2/...>]
@@ -197,6 +213,15 @@ ksp_golden_gate(golden.patched_conics patched_conics)
 ksp_golden_gate(capture.orbit_rails orbit_rails GOLDEN ${KSP_CAPTURES2_DIR}/orbit_rails_ingame.json DROP_HEX
                 TOL ${KSP_CAPTURE_TOL} KEEP_ROWS "soi_events:vessel^HC8" KEYS "soi_events:vessel,UT"
                 COLUMNS "initial:id,body,inclination,eccentricity,semiMajorAxis,LAN,argumentOfPeriapsis,meanAnomalyAtEpoch,epoch,meanMotion,period,ObTAtEpoch,mu,spawned/samples:id,frame,segment,UT,warp_rate,ref_body,updateUT,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z,relpos_at_UT_x,relpos_at_UT_y,relpos_at_UT_z,semiMajorAxis,eccentricity,inclination,LAN,argumentOfPeriapsis,meanAnomalyAtEpoch,epoch,ObT,meanAnomaly,trueAnomaly,update_mode/segments:segment,rate_index,requested_rate,achieved_rate,frames,UT_start,UT_end,Time_fixedDeltaTime,TimeWarp_fixedDeltaTime,timeScale")
+
+# WP-19a on-rails propagation through REAL vessels vs the same in-game capture C8: probes are unloaded, packed Vessels in the FlightGlobals
+# registry; every frame runs Planetarium.FixedUpdate, VesselPrecalculate.MainPhysics (OrbitDriver.UpdateOrbit, CalculatePhysicsStats, UpdatePosVel,
+# UpdateAcceleration, Vessel.CheckKill) and OrbitDriver.FixedUpdate in the order measured in game; SOI changes come from GameEvents.onVesselSOIChanged.
+# Adds to capture.orbit_rails: samples.packed and samples.loaded (Vessel state) for the vessel rows (the two body rows "body:Mun" / "body:Minmus"
+# are gated by capture.orbit_rails and dropped here because a body has no Vessel state). Exclusions as in capture.orbit_rails: initial.note, initial.req_*.
+ksp_golden_gate(capture.vessel_rails vessel_rails GOLDEN ${KSP_CAPTURES2_DIR}/orbit_rails_ingame.json DROP_HEX
+                TOL ${KSP_CAPTURE_TOL} KEEP_ROWS "soi_events:vessel^HC8" DROP_ROWS "samples:id^body:" KEYS "soi_events:vessel,UT"
+                COLUMNS "initial:id,body,inclination,eccentricity,semiMajorAxis,LAN,argumentOfPeriapsis,meanAnomalyAtEpoch,epoch,meanMotion,period,ObTAtEpoch,mu,spawned/samples:id,frame,segment,UT,warp_rate,ref_body,updateUT,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z,relpos_at_UT_x,relpos_at_UT_y,relpos_at_UT_z,semiMajorAxis,eccentricity,inclination,LAN,argumentOfPeriapsis,meanAnomalyAtEpoch,epoch,ObT,meanAnomaly,trueAnomaly,packed,loaded,update_mode/frames:frame,UT,Zup_X_x,Zup_X_y,Zup_X_z,Zup_Y_x,Zup_Y_y,Zup_Y_z,Zup_Z_x,Zup_Z_y,Zup_Z_z,inverseRotAngle,frame_is_rotating/segments:segment,rate_index,requested_rate,achieved_rate,frames,UT_start,UT_end,Time_fixedDeltaTime,TimeWarp_fixedDeltaTime,timeScale")
 
 # WP-11 terrain: PQS.GetSurfaceHeight for Kerbin and Mun (140,522 samples: 1-degree grids, the 0.01-degree KSC patch,
 # the pad) vs the in-game batch-2 capture, plus the per-scene probe heights and the PQS radii. Kept columns: the

@@ -17,6 +17,7 @@ add_executable(golden_runner
     ds_orbit_propagation.cpp
     ds_patched_conics.cpp
     ds_orbit_rails.cpp
+    ds_vessel_rails.cpp
     ds_terrain_height.cpp
     ds_part_database.cpp
     ds_resource_mass.cpp

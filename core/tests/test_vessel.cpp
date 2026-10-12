@@ -649,7 +649,7 @@ TEST_CASE("WP-14 situation determination: checkLanded / checkSplashed / updateSi
     v->srfSpeed = 2.5;
     v->updateSituation();
     CHECK(v->situation == Vessel::Situations::PRELAUNCH);  // `srfSpeed > 2.5` is false at 2.5
-    v->precalc.isEasingGravity = false;
+    v->precalc.set_isEasingGravity(false);
     v->vesselSpawning = false;
     v->srfSpeed = 2.6;
     v->updateSituation();
@@ -826,9 +826,12 @@ TEST_CASE("WP-14 mass properties of the PhysProf-S vessel: GetTotalMass, UpdateM
     CHECK(v->angularMomentum.x == 0.0f);  // angular velocity 0: no angular momentum
     // unpacked with no angular velocity the MOI is still summed (parallel axes of the point masses: m * r^2 per part)
     CHECK(v->MOI.x > 0.0f);
-    v->packed = true;  // packed and not rotating: zero (VesselPrecalculate.cs:433)
-    v->CalculatePhysicsStats();
-    CHECK(v->MOI.x == 0.0f);
+    const Vector3f moiBefore = v->MOI;
+    v->packed = true;  // packed and not rotating: `MOI.Zero()` / `angularMomentum.Zero()` (VesselPrecalculate.cs:421-424) are VectorExtensions.Zero(this Vector3)
+    v->CalculatePhysicsStats();  // on a COPY, i.e. no-ops: the MOI of the last unpacked run stays (WP-19a; WP-14 zeroed it)
+    CHECK(v->MOI.x == moiBefore.x);
+    CHECK(v->MOI.y == moiBefore.y);
+    CHECK(v->MOI.z == moiBefore.z);
     CHECK(v->angularMomentum.x == 0.0f);
     v->packed = false;
     // with an engine-reported inertia tensor and angular velocity the MOI is the parallel-axis sum

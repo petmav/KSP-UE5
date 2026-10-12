@@ -217,7 +217,7 @@ void TimeWarp::Update() {
     }
     if (env.timewarpInputLocked) return;
     if (env.LoadedSceneIsFlight() && FlightGlobals::ready && current_rate_index <= maxModeSwitchRate_index && curr_rate == tgt_rate_) {
-        IFlightVessel* activeVessel = FlightGlobals::ActiveVessel;
+        IFlightVessel* activeVessel = FlightGlobals::ActiveVesselView;
         if (activeVessel == nullptr) throw NullReferenceException("TimeWarp.Update: FlightGlobals.ActiveVessel");
         CelestialBody* mainBody = activeVessel->mainBody();
         if (Mode == Modes::HIGH) {
@@ -225,14 +225,14 @@ void TimeWarp::Update() {
                 const double num = FlightGlobals::getAltitudeAtPos(activeVessel->TransformPosition(), mainBody);
                 // if (double.IsInfinity(num)) Debug.Break();  (editor pause)
                 if (FlightGlobals::getStaticPressure(num, mainBody) > 0.0) setMode(Modes::LOW);
-            } else if (FlightGlobals::ship_srfVelocity().sqrMagnitude() > GThreshold) {
+            } else if (activeVessel->srf_velocity().sqrMagnitude() > GThreshold) {
                 setMode(Modes::LOW);
             }
         }
         if (Mode == Modes::LOW) {
             const double num2 = FlightGlobals::getAltitudeAtPos(activeVessel->TransformPosition(), activeVessel->mainBody());
             const double staticPressure = FlightGlobals::getStaticPressure(num2);
-            if ((activeVessel->LandedOrSplashed() && FlightGlobals::ship_srfVelocity().sqrMagnitude() < GThreshold) ||
+            if ((activeVessel->LandedOrSplashed() && activeVessel->srf_velocity().sqrMagnitude() < GThreshold) ||
                 staticPressure == 0.0)
                 setMode(Modes::HIGH);
         }
@@ -304,7 +304,7 @@ void TimeWarp::OnPWarpWarningDismiss() {
 
 // TimeWarp.cs:405
 void TimeWarp::FixedUpdate() {
-    IFlightVessel* activeVessel = FlightGlobals::ActiveVessel;
+    IFlightVessel* activeVessel = FlightGlobals::ActiveVesselView;
     if (Env().LoadedSceneIsFlight() && Mode == Modes::HIGH &&
         curr_rate > warpRates.at(static_cast<size_t>(maxPhysicsRate_index))) {
         if (activeVessel == nullptr) throw NullReferenceException("TimeWarp.FixedUpdate: FlightGlobals.ActiveVessel");
@@ -391,15 +391,15 @@ bool TimeWarp::setRate(int rateIdx, bool instantChange, bool instantIfLower, boo
 // TimeWarp.cs:503
 int TimeWarp::getMaxOnRailsRateIdx(int tgtRateIdx, bool lookAhead, ClearToSaveStatus& reason) {
     reason = ClearToSaveStatus::CLEAR;
-    if (tgtRateIdx > 0 && Env().LoadedSceneIsFlight() && FlightGlobals::ActiveVessel != nullptr) {
-        for (size_t i = 0; i < FlightGlobals::VesselsLoaded.size(); ++i) {
-            IFlightVessel* vessel = FlightGlobals::VesselsLoaded[i];
+    if (tgtRateIdx > 0 && Env().LoadedSceneIsFlight() && FlightGlobals::ActiveVesselView != nullptr) {
+        for (size_t i = 0; i < FlightGlobals::VesselsLoadedView.size(); ++i) {
+            IFlightVessel* vessel = FlightGlobals::VesselsLoadedView[i];
             if (vessel->isEVA() && vessel->OnALadder()) {
                 reason = ClearToSaveStatus::NOT_WHILE_ON_A_LADDER;
                 return 0;
             }
         }
-        IFlightVessel* activeVessel = FlightGlobals::ActiveVessel;
+        IFlightVessel* activeVessel = FlightGlobals::ActiveVesselView;
         CelestialBody* mainBody = activeVessel->mainBody();
         if (!activeVessel->LandedOrSplashed()) {
             // double altitude = FlightGlobals.getAltitudeAtPos(activeVessel.transform.position, mainBody): the Vector3

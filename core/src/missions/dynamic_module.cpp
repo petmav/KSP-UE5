@@ -138,7 +138,11 @@ bool DynamicModule::HasSAPParameter(const std::string& parameter) {
 }
 
 // DynamicModule.cs:140
-std::string DynamicModule::GetNodeBodyParameterString(const Editor::BaseAPField&) { return ""; }
+std::string DynamicModule::GetNodeBodyParameterString(const Editor::BaseAPField& field) {
+    std::string text = "None";
+    if (field.hasValue) text = field.value;
+    return KSP::Localization::Localizer::Format("#autoLOC_8004190", {field.guiName, text});
+}
 
 // DynamicModule.cs:150
 void DynamicModule::UpdateNodeBodyUI() {
