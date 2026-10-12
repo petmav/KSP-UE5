@@ -52,5 +52,6 @@ momentum conservation. Gate: core/PHYSICS-SPIKE.md section 7 row WP-20c, analyti
   move the numbers beyond the machine's noise (the graph's triangular solves dominate). spikes/jolt/results/wp20c_loads.md.
 - articulated comparison (wp20c_loads, the spike's articulated model in the same process; JoltInit / JoltShutdown around it): tree craft
   force within 0.53 % (S) / 0.07 % (M2) of the articulated impulses; strutted craft = the spike's graph solve (median ~20 % off PhysX: R1).
-- verification: full ctest 38/38 (before the listener change; rerun after the docs), unit random order 11 / 27: 841 / 841 cases,
-  1,395,241 assertions each (after the listener change).
+- verification (final code): full ctest 38/38 (MSVC RelWithDebInfo, test 418 s); unit random order 11 / 27: 841 / 841 cases, 1,395,241
+  assertions each; WSL g++ 13.3 ASan + UBSan + LSan, whole unit binary: 841 / 841, 1,395,225 assertions, no report; check_cites exact
+  66 / 0. STATUS section WP-20c + summary row 50, README. Done (local commits only, not pushed).
