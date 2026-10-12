@@ -232,6 +232,8 @@ struct FlightGlobals {
     static void CycleSpeedModes();                  // :1965
     static double GetDisplaySpeed();                // :1978
     static Vector3d GetDisplayVelocity();           // :1991
+    // tests: the speed modes back to their initialisers (:128-130; FlightGlobals.Update moves them with the active vessel's altitude)
+    static void ResetSpeedModesForTests() { speedMode = commandedSpeedMode = SpeedDisplayModes::Surface; }
 
     // ---- the persistent-id dictionaries are SaveEnvironment's (WP-04, FlightGlobals.cs:473-660) -------------------------------------------------
 

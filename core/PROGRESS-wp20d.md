@@ -37,3 +37,17 @@ internals). Local commits only, no push.
 - independent reference tools/wp20d/fi_reference.py (SmoothVelocity 3,200 steps incl. 417 spike states, IntegratePhysicalObjects 300
   cases): 0 ULP (after fixing the reference's own unary minus: Vector3d.operator- is 0.0 - x, +0 for zeros). Integrate's force half ==
   IntegratePartBuffers bit for bit (21 / 21 parts).
+- gates: SoA == exact on 30,600 random part states (every branch; body lift needed PhysicsGlobals.Start's BodyLift curve, which the WP-20b
+  World fixture never sets: finding), against the C10 in-game capture (4,224 live + 25,344 AoA states, 0 ULP), over S / M2-AS / L2-AS flights
+  from the pad (1,008,969 part-ticks, 0 mismatches, Exact and SoA runs end in the same Jolt hash). FlightIntegrator slot 2.2x faster with SoA.
+- ascent vs C10's own in-game states (KSP, SAS on): speed at altitude within 1 % for M2 / L2-AS / S while our AoA is small (to Mach 1 / 5 km;
+  past that the crafts without SAS turn away, S tumbles at 9 s as KSP's did). C10's frame 0 is ~26-32 frames before our ignition at equal
+  altitudes (pad structure 7.6 m above the PQS terrain); only offset-free quantities gated.
+- burn: the first replay missed two KSP facts (findings): drift compensation stays engaged while burning in vacuum (gravity = Kepler step), and
+  the CoM moves inside the draining vessel (0.167 m in 10 s): with both, the root part follows the independent replay within 1.7 / 4.4 mm.
+- coast: Kepler within 1.8e-5 m over 60 s with thermal running (21 parts radiating). Module slot: Aeris 3A surfaces / reaction wheel records ==
+  buffers. FixedUpdate mechanics (Setup / started, packed branch, mirrors, per-part pressure).
+- check_cites exact: 26 / 0 (helpers renamed apart and aliased); WP-20b / 19b physics files 71 / 0.
+- note: the session scratchpad is shared with other agents (a `rand11.log` of another worktree overwrote mine): WP-20d's files now live in
+  scratchpad/wp20d/.
+- docs: STATUS row 54 + section, README (tick paragraph, unit row, layout, tools/wp20d).

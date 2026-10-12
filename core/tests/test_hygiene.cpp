@@ -15,6 +15,7 @@
 #include "ksp/contracts/templates.hpp"
 #include "ksp/celestial/flight_globals.hpp"
 #include "ksp/celestial/planetarium.hpp"
+#include "ksp/physics/flight_integrator.hpp"
 #include "ksp/events/event_data.hpp"
 #include "ksp/inventory/construction.hpp"
 #include "ksp/fineprint/compatibility.hpp"
@@ -100,6 +101,12 @@ void Restore(const std::string& test) {
         FlightGlobals::currentMainBody = nullptr;
         FlightGlobals::overrideOrbit = false;
     }
+    // FlightGlobals' navball speed modes (FlightGlobals.cs:128-130) follow the active vessel's altitude in every FlightGlobals.Update (a flight
+    // scene with a vessel in orbit leaves Orbit; WP-19a's FlightGlobals tick case expects the Surface default); FlightIntegrator.ActiveVesselFI
+    // (WP-20d) is a static pointer to a vessel module of the last scene
+    if (FlightGlobals::speedDisplayMode() != FlightGlobals_SpeedDisplayModes::Surface) Report("FlightGlobals speed mode", test);
+    FlightGlobals::ResetSpeedModesForTests();
+    ksp::physics::FlightIntegrator::ActiveVesselFI = nullptr;
     // GameEvents / any named event: a listener holds a raw pointer to its target, so one left behind by a destroyed
     // object is a dangling call for every later test that fires the event (and a live one changes what it sees)
     ksp::events::BaseGameEvent::ForEachRegistered([&](ksp::events::BaseGameEvent& e) {
