@@ -16,3 +16,4 @@ Branch wp32 from local wp20b (950c1d94). Worktree core/.worktrees/wp32. Local on
 - check_cites exact: 334 cites, 0 mismatches (NAME_ALIAS additions in tools/wp28/check_cites.py).
 - STATUS row 53 + "WP-32" section, README entries written.
 - deferred: see STATUS "WP-32" (physics bubble WP-19b/20d, animation rig, UE5); untested beyond tables: FlightEVA hatch/spawn, CrewTransfer flows, CrewHatchController, RetractableLadder extend/retract, Kerbal start/die.
+- WSL g++ ASan/UBSan/LSan whole binary: 858 cases / 1,396,103 assertions clean.

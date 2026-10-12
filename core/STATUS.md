@@ -5389,3 +5389,5 @@ only for its hold counter), animation clips / rig / mixing transforms, `Quaterni
 Not Python-covered: the `startEVA` temperature branch of the helmet check; NaN PID inputs were excluded (NaN bit patterns are not portable). Not unit-tested beyond the table checks:
 `FlightEVA` hatch obstruction / spawn bookkeeping, `CrewTransfer` flows, `CrewHatchController`, `RetractableLadder` extend / retract behaviours, `Kerbal` start / die.
 
+
+Verification (g++ 13 / WSL, ASan + UBSan + LeakSanitizer, README "Sanitizer run"): the whole unit binary, 858 cases / 1,396,103 assertions, no sanitizer report, no compiler warning in the EVA sources.
