@@ -43,7 +43,7 @@ void RetractableLadder::OnAwake() {
     Actions().Bind("RetractAction", [this](KSPActionParam& p) { RetractAction(p); });
 }
 
-// RetractableLadder.cs:50 `param.type != 0 && (param.type != Toggle || ladderFSM == null || ladderFSM.CurrentState != st_retracted)` -> Retract
+// RetractableLadder.cs:49 `param.type != 0 && (param.type != Toggle || ladderFSM == null || ladderFSM.CurrentState != st_retracted)` -> Retract
 void RetractableLadder::ToggleAction(KSPActionParam& param) {
     if (param.type != 0 && (param.type != static_cast<int>(KSPActionType::Toggle) || ladderFSM == nullptr || ladderFSM->CurrentState() != st_retracted))
         Retract();
@@ -54,7 +54,7 @@ void RetractableLadder::ToggleAction(KSPActionParam& param) {
 void RetractableLadder::ExtendAction(KSPActionParam&) { Extend(); }     // :62
 void RetractableLadder::RetractAction(KSPActionParam&) { Retract(); }   // :68
 
-// RetractableLadder.cs:75
+// RetractableLadder.cs:74
 void RetractableLadder::Extend() {
     if (ladderFSM == nullptr || !ladderFSM->Started() || ladderFSM->CurrentState() != st_retracted) return;
     const bool editor = loadedSceneIsEditor ? loadedSceneIsEditor() : ResourceFlowEnvironment::LoadedSceneIsEditor();
@@ -72,7 +72,7 @@ void RetractableLadder::Extend() {
     }
 }
 
-// RetractableLadder.cs:101
+// RetractableLadder.cs:98
 void RetractableLadder::Retract() {
     if (ladderFSM == nullptr || !ladderFSM->Started() || ladderFSM->CurrentState() != st_extended) return;
     const bool editor = loadedSceneIsEditor ? loadedSceneIsEditor() : ResourceFlowEnvironment::LoadedSceneIsEditor();
@@ -90,7 +90,7 @@ void RetractableLadder::Retract() {
     }
 }
 
-// RetractableLadder.cs:126
+// RetractableLadder.cs:121
 void RetractableLadder::OnStart(StartState state) {
     const bool missionBuilder = loadedSceneIsMissionBuilder ? loadedSceneIsMissionBuilder() : false;
     if (missionBuilder) {
@@ -191,7 +191,7 @@ void RetractableLadder::OnStart(StartState state) {
     ladderFSM->StartFSM(StateName());
 }
 
-// RetractableLadder.cs:246
+// RetractableLadder.cs:242
 void RetractableLadder::OnInventoryModeDisable() {
     if (ResourceFlowEnvironment::LoadedSceneIsFlight()) {
         Part* p = PartPtr();
@@ -202,7 +202,7 @@ void RetractableLadder::OnInventoryModeDisable() {
     }
 }
 
-// RetractableLadder.cs:262
+// RetractableLadder.cs:258
 void RetractableLadder::OnStoredInInventory(ModuleInventoryPart& moduleInventoryPart) {
     PartModule::OnStoredInInventory(moduleInventoryPart);
     Part* p = PartPtr();
@@ -215,18 +215,18 @@ void RetractableLadder::OnStoredInInventory(ModuleInventoryPart& moduleInventory
     }
 }
 
-// RetractableLadder.cs:282
+// RetractableLadder.cs:278
 void RetractableLadder::OnPartCreatedFomInventory(ModuleInventoryPart&) { SetAnimationToRetracted(); }
 
-// RetractableLadder.cs:288
+// RetractableLadder.cs:283
 void RetractableLadder::DemoteToPhysicslessPart() { PartModule::DemoteToPhysicslessPart(); }
 
-// RetractableLadder.cs:293
+// RetractableLadder.cs:288
 void RetractableLadder::Update() {
     if (ladderFSM != nullptr) ladderFSM->UpdateFSM();
 }
 
-// RetractableLadder.cs:302
+// RetractableLadder.cs:296
 void RetractableLadder::FixedUpdate() {
     if (ladderFSM != nullptr) {
         ladderFSM->FixedUpdateFSM();
@@ -234,7 +234,7 @@ void RetractableLadder::FixedUpdate() {
     }
 }
 
-// RetractableLadder.cs:311
+// RetractableLadder.cs:305
 void RetractableLadder::SetDragState(float b) {
     Part* p = PartPtr();
     if (p == nullptr) throw Nre();
@@ -242,7 +242,7 @@ void RetractableLadder::SetDragState(float b) {
     p->DragCubes.SetCubeWeight("B", f32store(1.0 - fx(b)));
 }
 
-// RetractableLadder.cs:322
+// RetractableLadder.cs:316
 void RetractableLadder::AssumeDragCubePosition(const std::string& name) {
     if (!rig.animationFound) {
         errors.push_back("RetractableLadder: No animation component found for ladder module.");
@@ -262,7 +262,7 @@ void RetractableLadder::AssumeDragCubePosition(const std::string& name) {
     }
 }
 
-// RetractableLadder.cs:355
+// RetractableLadder.cs:350
 void RetractableLadder::SetAnimationToRetracted() {
     if (rig.rootTransformFound && rig.animationFound && rig.clipFound) {
         rig.clip.enabled = true;

@@ -24,20 +24,20 @@ using KSP::Localization::Localizer;
 
 Vessel* Kerbal::InVessel() const { return InPart != nullptr ? InPart->vessel : nullptr; }
 
-// Kerbal.cs:116
+// Kerbal.cs:7
 Kerbal::Kerbal() {
     running = false;
     GE::onVesselSituationChange.Add(this, &Kerbal::onVesselSitChange);
 }
 
-// Kerbal.cs:135 (DestroyAvatarTexture / gallery unregister are the shell's)
+// Kerbal.cs:131 (DestroyAvatarTexture / gallery unregister are the shell's)
 Kerbal::~Kerbal() {
     if (KerbalEnvironment::portraitGallery && portraitRegistered) KerbalEnvironment::portraitGallery(*this, false);
     GE::onVesselSituationChange.Remove(this, &Kerbal::onVesselSitChange);
     headRendererEnabled.clear();
 }
 
-// Kerbal.cs:153
+// Kerbal.cs:143
 void Kerbal::Start() {
     running = true;
     state = States::NO_SIGNAL;
@@ -66,7 +66,7 @@ bool Kerbal::UsesVeteranTexture() const {
     return protoCrewMember->veteran;
 }
 
-// Kerbal.cs:200
+// Kerbal.cs:186
 void Kerbal::SetupKerbalModel() {
     int num = textureTargets;
     textureTargetUsesVeteran.assign(static_cast<size_t>(std::max(0, num)), false);
@@ -77,7 +77,7 @@ void Kerbal::SetupKerbalModel() {
     }
 }
 
-// Kerbal.cs:222
+// Kerbal.cs:206
 void Kerbal::ShowHelmet(bool show) {
     if (show) {
         showHelmet = true;
@@ -87,7 +87,7 @@ void Kerbal::ShowHelmet(bool show) {
     if (helmetTransformPresent) helmetDestroyed = true;
 }
 
-// Kerbal.cs:240 (the Euler angles of the camera bob; Mathf.PerlinNoise is native and the shell's)
+// Kerbal.cs:260 (the Euler angles of the camera bob; Mathf.PerlinNoise is native and the shell's)
 Vector3f Kerbal::SeatCamBobEuler(float perlinX, float perlinY, float perlinZ, double shipAccelerationMagnitude, double shipAngularVelocityMagnitude, float camBobAmount) {
     const float num = f32store(fx(perlinX) - fx(0.5f));
     const float num2 = f32store(fx(perlinY) - fx(0.5f));
@@ -98,14 +98,14 @@ Vector3f Kerbal::SeatCamBobEuler(float perlinX, float perlinY, float perlinZ, do
     return Vector3f(x, y, z);
 }
 
-// Kerbal.cs:269
+// Kerbal.cs:306
 void Kerbal::die() {
     if (KerbalEnvironment::portraitCrewDie && portraitRegistered) KerbalEnvironment::portraitCrewDie(*this);
     state = States::DEAD;
     rosterStatus = ProtoCrewMember::RosterStatus::Dead;
 }
 
-// Kerbal.cs:279
+// Kerbal.cs:316
 void Kerbal::onVesselSitChange(GE::HostedFromToAction<Vessel*, Vessel_Situations> evt) {
     if (evt.host == FlightRegistry::ActiveVessel) {
         CheckEVAUnlocked();
@@ -113,7 +113,7 @@ void Kerbal::onVesselSitChange(GE::HostedFromToAction<Vessel*, Vessel_Situations
     }
 }
 
-// Kerbal.cs:288
+// Kerbal.cs:325
 void Kerbal::CheckEVAUnlocked() {
     GameVariables* gv = GameVariables::Instance;
     if (gv == nullptr) throw NullReferenceException("Object reference not set to an instance of an object");
@@ -121,21 +121,21 @@ void Kerbal::CheckEVAUnlocked() {
     EVAisUnlocked = gv->EVAIsPossible(EVAisUnlocked, FlightRegistry::ActiveVessel);
 }
 
-// Kerbal.cs:294
+// Kerbal.cs:331
 void Kerbal::IVAEnable(bool setIVAMode) {
     size_t num = headRendererEnabled.size();
     while (num-- > 0) headRendererEnabled[num] = false;
     if (setIVAMode) ivaMode = true;
 }
 
-// Kerbal.cs:308
+// Kerbal.cs:344
 void Kerbal::IVADisable(bool setIVAMode) {
     size_t num = headRendererEnabled.size();
     while (num-- > 0) headRendererEnabled[num] = true;
     if (setIVAMode) ivaMode = false;
 }
 
-// Kerbal.cs:322
+// Kerbal.cs:357
 void Kerbal::SetVisibleInPortrait(bool visible) {
     if (visible) {
         if (!visibleInPortrait) {
@@ -150,7 +150,7 @@ void Kerbal::SetVisibleInPortrait(bool visible) {
 
 // ============================================================================================ CrewTransfer
 
-// CrewTransfer.cs:21
+// CrewTransfer.cs:24
 std::unique_ptr<CrewTransfer> CrewTransfer::Create(Part& srcPart, std::shared_ptr<ProtoCrewMember> crewMember,
                                                     std::function<void(DismissAction, Part*)> onDialogDismiss) {
     auto crewTransfer = std::make_unique<CrewTransfer>();
@@ -163,7 +163,7 @@ CrewTransfer::~CrewTransfer() {
     if (completion && ScienceEnvironment::scheduler != nullptr) ScienceEnvironment::scheduler->StopCoroutine(completion);
 }
 
-// CrewTransfer.cs:29 / :35
+// CrewTransfer.cs:32 / :35
 void CrewTransfer::HookAdditionalEvents() {
     GE::onCrewTransferred.Add(this, &CrewTransfer::onGoForEva);
     GE::onKerbalInactiveChange.Add(this, &CrewTransfer::onChangeInactive);
@@ -173,24 +173,24 @@ void CrewTransfer::UnhookAdditionalEvents() {
     GE::onKerbalInactiveChange.Remove(this, &CrewTransfer::onChangeInactive);
 }
 
-// CrewTransfer.cs:41
+// CrewTransfer.cs:44
 bool CrewTransfer::IsSemiValidPart(Part& p) {
     if (p.fields.CrewCapacity > 0 && static_cast<int>(p.protoModuleCrew.size()) >= p.fields.CrewCapacity) return p.fields.crewTransferAvailable;
     return false;
 }
 
-// CrewTransfer.cs:49
+// CrewTransfer.cs:53
 bool CrewTransfer::IsValidPart(Part& p) {
     if (p.fields.CrewCapacity > 0 && static_cast<int>(p.protoModuleCrew.size()) < p.fields.CrewCapacity) return p.fields.crewTransferAvailable;
     return false;
 }
 
-// CrewTransfer.cs:55
+// CrewTransfer.cs:62
 void CrewTransfer::AfterPartsFound() {
     GE::onCrewTransferPartListCreated.Fire(GE::HostedFromToAction<Part*, std::vector<Part*>*>(srcPart, &validParts, &semiValidParts));
 }
 
-// CrewTransfer.cs:56
+// CrewTransfer.cs:67
 void CrewTransfer::OnPartSelect(Part* p) {
     CrewTransferData data;
     data.canTransfer = true;
@@ -202,17 +202,17 @@ void CrewTransfer::OnPartSelect(Part* p) {
     if (data.canTransfer) MoveCrewTo(p);
 }
 
-// CrewTransfer.cs:70
+// CrewTransfer.cs:82
 void CrewTransfer::onGoForEva(GE::HostedFromToAction<ProtoCrewMember*, Part*> fromto) {
     if (fromto.host == crew.get() && fromto.to != nullptr && KerbalEVA::Of(fromto.to) != nullptr) DismissInterrupted();
 }
 
-// CrewTransfer.cs:78
+// CrewTransfer.cs:90
 void CrewTransfer::onChangeInactive(ProtoCrewMember* pcm, bool, bool to) {
     if (pcm == crew.get() && to) DismissInterrupted();
 }
 
-// CrewTransfer.cs:86
+// CrewTransfer.cs:98
 void CrewTransfer::MoveCrewTo(Part* p) {
     srcPart->RemoveCrewmember(crew);
     p->AddCrewmember(crew);
@@ -225,7 +225,7 @@ void CrewTransfer::MoveCrewTo(Part* p) {
         CallbackUtil::DelayedCallback(1, Callback<>::Lambda(this, [this] { waitAndCompleteTransfer(); })), static_cast<int>(reinterpret_cast<uintptr_t>(this) >> 4));
 }
 
-// CrewTransfer.cs:104
+// CrewTransfer.cs:110
 void CrewTransfer::waitAndCompleteTransfer() {
     if (spawnCrew && FlightRegistry::ActiveVessel != nullptr) spawnCrew(*FlightRegistry::ActiveVessel);
     Dismiss(DismissAction::ItemMoved, tgtPart);
@@ -238,7 +238,7 @@ void CrewHatchEnvironment::Reset() {
     spawnDialog = nullptr; terminateDialog = nullptr; dialogPart = nullptr; messages.clear();
 }
 
-// CrewHatchController.cs:57
+// CrewHatchController.cs:72
 CrewHatchController::CrewHatchController() {
     if (fetch != nullptr) log::Error("[CrewHatchController]: Attempting to create another instance of singleton");
     fetch = this;
@@ -249,7 +249,7 @@ CrewHatchController::CrewHatchController() {
     interfaceEnabled = true;
 }
 
-// CrewHatchController.cs:71
+// CrewHatchController.cs:83
 CrewHatchController::~CrewHatchController() {
     GE::onGameUnpause.Remove(this, &CrewHatchController::DespawnUIs);
     GE::onGamePause.Remove(this, &CrewHatchController::DespawnUIs);
@@ -259,7 +259,7 @@ CrewHatchController::~CrewHatchController() {
     if (fetch != nullptr && fetch == this) fetch = nullptr;
 }
 
-// CrewHatchController.cs:85
+// CrewHatchController.cs:96
 void CrewHatchController::LateUpdate() {
     if (CrewHatchEnvironment::flightDriverPause && CrewHatchEnvironment::flightDriverPause()) return;
     const bool pointerOver = CrewHatchEnvironment::pointerOverUI && CrewHatchEnvironment::pointerOverUI();
@@ -279,7 +279,7 @@ void CrewHatchController::LateUpdate() {
     }
 }
 
-// CrewHatchController.cs:112
+// CrewHatchController.cs:125
 void CrewHatchController::ShowTooltip() {
     if (!tooltipVisible) {
         tooltipVisible = true;
@@ -287,12 +287,12 @@ void CrewHatchController::ShowTooltip() {
     }
 }
 
-// CrewHatchController.cs:121
+// CrewHatchController.cs:133
 void CrewHatchController::TooltipUpdate(Part& hp) {
     if (CrewHatchEnvironment::mouseLeftClick && CrewHatchEnvironment::mouseLeftClick()) SpawnCrewDialog(hp, true, true);
 }
 
-// CrewHatchController.cs:134
+// CrewHatchController.cs:142
 void CrewHatchController::HideTooltip() {
     if (tooltipVisible) {
         tooltipVisible = false;
@@ -300,14 +300,14 @@ void CrewHatchController::HideTooltip() {
     }
 }
 
-// CrewHatchController.cs:143
+// CrewHatchController.cs:156
 void CrewHatchController::SpawnCrewDialog(Part& part, bool showEVA, bool showTransfer) {
     dialogPart = &part;
     crewDialogOpen = true;
     if (CrewHatchEnvironment::spawnDialog) CrewHatchEnvironment::spawnDialog(part, showEVA, showTransfer);
 }
 
-// CrewHatchController.cs:150
+// CrewHatchController.cs:162
 void CrewHatchController::OnEVABtn(std::shared_ptr<ProtoCrewMember> crew) {
     GameVariables* gv = GameVariables::Instance;
     if (gv == nullptr) throw NullReferenceException("Object reference not set to an instance of an object");
@@ -329,7 +329,7 @@ void CrewHatchController::OnEVABtn(std::shared_ptr<ProtoCrewMember> crew) {
     }
 }
 
-// CrewHatchController.cs:174
+// CrewHatchController.cs:185
 void CrewHatchController::OnTransferBtn(std::shared_ptr<ProtoCrewMember> crew) {
     overrideTransfer = false;
     GE::onAttemptTransfer.Fire(crew.get(), dialogPart, this);
@@ -339,7 +339,7 @@ void CrewHatchController::OnTransferBtn(std::shared_ptr<ProtoCrewMember> crew) {
     DismissDialog();
 }
 
-// CrewHatchController.cs:184
+// CrewHatchController.cs:196
 void CrewHatchController::DismissDialog() {
     if (crewDialogOpen) {
         crewDialogOpen = false;
@@ -347,27 +347,27 @@ void CrewHatchController::DismissDialog() {
     }
 }
 
-// CrewHatchController.cs:196
+// CrewHatchController.cs:208
 void CrewHatchController::DespawnUIs() {
     DismissDialog();
     HideTooltip();
 }
 
-// CrewHatchController.cs:202
+// CrewHatchController.cs:214
 void CrewHatchController::OnVesselSwitch(Vessel*) { DespawnUIs(); }
 
-// CrewHatchController.cs:207
+// CrewHatchController.cs:219
 void CrewHatchController::onVesselSitChange(GE::HostedFromToAction<Vessel*, Vessel_Situations> evt) {
     if (evt.host == FlightRegistry::ActiveVessel) DismissDialog();
 }
 
-// CrewHatchController.cs:215
+// CrewHatchController.cs:227
 void CrewHatchController::OnCrewTransferDone(PartItemTransfer::DismissAction, Part*) {
     crewTransfer.reset();
     DismissDialog();
 }
 
-// CrewHatchController.cs:222 / :228 / :234
+// CrewHatchController.cs:233 / :228 / :234
 void CrewHatchController::EnableInterface() {
     DismissDialog();
     interfaceEnabled = true;

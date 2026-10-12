@@ -82,7 +82,7 @@ void KerbalEVA::SetupFSM() {
     RecordEventWiring();
 }
 
-// KerbalEVA.cs:3275-3766
+// KerbalEVA.cs:3268 SetupFSM, body lines 3275-3766 (states)
 void KerbalEVA::SetupFSMStates() {
     const bool serenity = EvaEnvironment::IsInstalled("Serenity");
 
@@ -473,7 +473,7 @@ inline bool NotZero(const Vector3f& v) { return v != Vector3f::zero(); }
 inline bool IsZero(const Vector3f& v) { return v == Vector3f::zero(); }
 }  // namespace
 
-// KerbalEVA.cs:3767-4147
+// KerbalEVA.cs:3268 SetupFSM, body lines 3767-4147 (events)
 void KerbalEVA::SetupFSMEvents() {
     On_hdgAcquireStart = NewEvent("Hdg Acquire Start");
     On_hdgAcquireStart->GoToStateOnEvent = st_heading_acquire;
@@ -873,7 +873,7 @@ void KerbalEVA::SetupFSMEvents() {
     fsm->AddEvent(On_flagPlantComplete, {st_flagPlant});
 }
 
-// KerbalEVA.cs:4190-4352
+// KerbalEVA.cs:3268 SetupFSM, body lines 4190-4352 (event wiring)
 void KerbalEVA::SetupFSMEvents2() {
     On_seatBoard = NewEvent("Seat Board");
     On_seatBoard->updateMode = KFSMUpdateMode::MANUAL_TRIGGER;

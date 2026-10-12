@@ -23,7 +23,10 @@ CLASS_FILE = {
     "ModuleSpaceObjectDrillBase": "ModuleAsteroidDrill", "ModuleSpaceObjectInfoBase": "ModuleAsteroidInfo",
     "ModuleSpaceObjectAnalysisBase": "ModuleAsteroidAnalysis",
 }
-NAME_ALIAS = {"~Mission": "OnDestroy", "~TestModule": "OnDestroy", "~ActionModule": "OnDestroy", "SetTitle": "title", "SetTitleNoGui": "title",
+NAME_ALIAS = {
+              # WP-32: C# properties / destructors / split SetupFSM
+              "~Kerbal": "OnDestroy", "~CrewHatchController": "OnDestroy", "SeatCamBobEuler": "kerbalSeatCamUpdate", "set_flagItems": "flagItems", "set_currentLadderPart": "currentLadderPart", "OnALadder_": "OnALadder", "SetupFSMStates": "SetupFSM", "SetupFSMEvents": "SetupFSM", "SetupFSMEvents2": "SetupFSM", "GetCurrentColor_": "GetCurrentColor",
+              "~Mission": "OnDestroy", "~TestModule": "OnDestroy", "~ActionModule": "OnDestroy", "SetTitle": "title", "SetTitleNoGui": "title",
               "ActionsContain": "ActionsContainModule", "EqualsObject": "Equals", "craftFileExists": "GetMissionCraftByFileName",
               "UpdateMissionFlowUIDirect": "UpdateMissionFlowUI", "ModulesAreEqualImpl": "ModulesAreEqual",
               "set_currentMassVal": "currentMassVal", "set_massThresholdVal": "massThresholdVal", "set_IsDraining": "IsDraining",

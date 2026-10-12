@@ -36,7 +36,7 @@ void FlightEvaEnvironment::Reset() {
     kerbalBailedOut = nullptr; collisionEnhancerBypass = false; mainBodyAt = nullptr; setNeutralControls = nullptr; messages.clear();
 }
 
-// FlightEVA.cs:24 Awake / :35 OnDestroy
+// FlightEVA.cs:10 Awake / :35 OnDestroy
 FlightEVA::FlightEVA() {
     if (fetch != nullptr) return;  // Object.Destroy(this)
     fetch = this;
@@ -46,13 +46,13 @@ FlightEVA::~FlightEVA() {
     if (fetch != nullptr && fetch == this) fetch = nullptr;
 }
 
-// FlightEVA.cs:51
+// FlightEVA.cs:49
 KerbalEVA* FlightEVA::_Spawn(ProtoCrewMember& pcm) {
     if (!FlightEvaEnvironment::instantiateKerbalEVA) throw Nre();
     return FlightEvaEnvironment::instantiateKerbalEVA(pcm);
 }
 
-// FlightEVA.cs:87
+// FlightEVA.cs:89
 bool FlightEVA::HatchIsObstructed(Part& fromPart, const PartTransform& fromAirlock) {
     if (!FlightEvaEnvironment::raycast) return false;
     const Vector3f dir = (fromAirlock.position - fromPart.partTransform.position).normalized();
@@ -60,7 +60,7 @@ bool FlightEVA::HatchIsObstructed(Part& fromPart, const PartTransform& fromAirlo
     return FlightEvaEnvironment::raycast(origin, dir, f32store(fx(fromPart.fields.hatchObstructionCheckOutwardDistance) + fx(0.5f)), kHatchMask).hit;
 }
 
-// FlightEVA.cs:93
+// FlightEVA.cs:87
 bool FlightEVA::HatchIsObstructedMore(Part& fromPart, const PartTransform& fromAirlock) {
     if (HatchIsObstructed(fromPart, fromAirlock)) return true;
     Vector3f normalized = (fromPart.partTransform.position - fromAirlock.position).normalized();
@@ -83,7 +83,7 @@ bool FlightEVA::HatchIsObstructedMore(Part& fromPart, const PartTransform& fromA
     return false;
 }
 
-// FlightEVA.cs:130
+// FlightEVA.cs:122
 bool FlightEVA::hatchInsideFairing(Part& fromPart) {
     if (fromPart.ShieldedFromAirstream() && fromPart.airstreamShields.size() > 0) {
         Part* shieldPart = fromPart.airstreamShields[0]->GetPart();
@@ -92,7 +92,7 @@ bool FlightEVA::hatchInsideFairing(Part& fromPart) {
     return false;
 }
 
-// FlightEVA.cs:144
+// FlightEVA.cs:135
 KerbalEVA* FlightEVA::spawnEVA(std::shared_ptr<ProtoCrewMember> pCrew, Part* fromPart, const PartTransform* fromAirlock, bool tryAllHatches) {
     auto it = std::find(fromPart->protoModuleCrew.begin(), fromPart->protoModuleCrew.end(), pCrew);
     if (it == fromPart->protoModuleCrew.end()) {
@@ -139,7 +139,7 @@ KerbalEVA* FlightEVA::spawnEVA(std::shared_ptr<ProtoCrewMember> pCrew, Part* fro
     return onGoForEVA();
 }
 
-// FlightEVA.cs:218
+// FlightEVA.cs:197
 KerbalEVA* FlightEVA::onGoForEVA() {
     ProtoCrewMember& pCrew = *pCrew_;
     Part* fromPart = fromPart_;
@@ -214,13 +214,13 @@ KerbalEVA* FlightEVA::onGoForEVA() {
     return kerbalEVA;
 }
 
-// FlightEVA.cs:290
+// FlightEVA.cs:279
 void FlightEVA::onEVAAborted() {
     pCrew_.reset();
     fromPart_ = nullptr;
 }
 
-// FlightEVA.cs:299
+// FlightEVA.cs:285
 Enumerator FlightEVA::SwitchToEVAVesselWhenReady(KerbalEVA* eva) {
     while (!eva->Ready) co_yield YieldInstruction::Null();
     if (FlightGlobals::ForceSetActiveVessel(eva->VesselPtr())) {

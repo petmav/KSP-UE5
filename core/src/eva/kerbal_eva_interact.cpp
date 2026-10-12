@@ -622,7 +622,7 @@ void KerbalEVA::ResetPhysicMaterial() {
     set_useGlobalPhysicMaterial(true);
 }
 
-// KerbalEVA.cs:7290: see kerbal_eva_states.cpp (ReturnToIdle)
+// KerbalEVA.cs:7296: see kerbal_eva_states.cpp (ReturnToIdle)
 
 // KerbalEVA.cs:7296
 bool KerbalEVA::SetPartPlacementMode(bool mode, ModuleInventoryPart* moduleInventoryPartReference_) {

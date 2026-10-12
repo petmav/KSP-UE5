@@ -54,20 +54,20 @@ std::string KeyName(const std::shared_ptr<KeyBinding>& k) { return k ? k->name()
 
 // ============================================================================================ KerbalAnimationState / Manager / small types
 
-// KerbalAnimationState.cs:52
+// KerbalAnimationState.cs:46
 EvaAnimState* KerbalAnimationState::State() const {
     if (manager == nullptr || manager->evaController == nullptr) throw Nre();
     return manager->evaController->Engine().AnimState(GetAnimationString());
 }
 
-// KerbalAnimationState.cs:66
+// KerbalAnimationState.cs:58
 std::string KerbalAnimationState::GetAnimationString() const {
     if (manager == nullptr || manager->evaController == nullptr) throw Nre();
     if (manager->evaController->JetpackDeployed() && hasJpVariant) return "jp_" + animationName;
     return animationName;
 }
 
-// KerbalAnimationManager.cs:199
+// KerbalAnimationManager.cs:218
 std::vector<KerbalAnimationState*> KerbalAnimationManager::GetAllAnimations() {
     std::vector<KerbalAnimationState*> list;
 #define KSP_KERBAL_ANIM(n) list.push_back(&n);
@@ -76,7 +76,7 @@ std::vector<KerbalAnimationState*> KerbalAnimationManager::GetAllAnimations() {
     return list;
 }
 
-// KerbalAnimationManager.cs:150
+// KerbalAnimationManager.cs:151
 void KerbalAnimationManager::Start(KerbalEVA* eva) {
     evaController = eva;
     // evaController.GetComponent<Animation>().wrapMode = WrapMode.Loop: the engine's default wrap mode (named effect)
@@ -113,7 +113,7 @@ void KerbalAnimationManager::Start(KerbalEVA* eva) {
     controlPanelAnims.push_back(&controlpanel_c);
 }
 
-// KerbalAnimationManager.cs:189
+// KerbalAnimationManager.cs:209
 void KerbalAnimationManager::SyncAnimationLayers() {
     size_t num = syncLayers.size();
     while (num-- > 0) evaController->Engine().AnimSyncLayer(syncLayers[num]);
@@ -130,7 +130,7 @@ ClamberPath::ClamberPath(const Vector3f& edgeFaceNormal_, const Vector3f& srfNor
     p3 = p3_ + srfNormal_ * standOff;
 }
 
-// KerbalRagdollNode.cs:18
+// KerbalRagdollNode.cs:17
 void KerbalRagdollNode::updateVelocity(const Vector3f& rootPos, const Vector3d& rootVel, float fdtRecip) {
     Vector3f vector = goPosition - rootPos;
     // `velocity = (vector - lastPos) * fdtRecip + rootVel`: Vector3 * float (float per component), then Vector3d + Vector3d (the Vector3 widens

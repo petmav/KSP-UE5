@@ -2,7 +2,7 @@
 // KerbalRagdollNode.cs. Companion headers: retractable_ladder.hpp (RetractableLadder.cs), flight_eva.hpp (FlightEVA.cs), kerbal.hpp (Kerbal.cs).
 //
 // What is ported (decompiled/KSP-Decompiled/Assembly-CSharp/KerbalEVA.cs, 7,368 lines, every method; line numbers are cited at each definition):
-//   * SetupFSM: all 41 states, all 76 events (conditions, OnEvent bodies, GoToStateOnEvent, update modes) and the exact callback lists of every
+//   * SetupFSM: all 42 states, all 72 events (conditions, OnEvent bodies, GoToStateOnEvent, update modes) and the exact callback lists of every
 //     state, in registration order (wiring() reports them by name; the unit gate compares them with a table parsed from the C# source)
 //   * ground movement: UpdateMovement, UpdateHeading, correctGroundedRotation, walk / run / low-g bound animation blending, jump, landing, recover
 //   * jetpack: ToggleJetpack, UpdatePackLinear / Angular, the orientation PID, UpdatePackFuel, EVA propellant bookkeeping (ProcessEVAFuel,
