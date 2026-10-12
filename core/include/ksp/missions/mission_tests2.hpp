@@ -55,6 +55,9 @@ struct MissionTestsEnvironment {
     static inline std::function<std::optional<std::string>(Part*)> grappleNodeState;
     // KerbalEVA.part.protoModuleCrew and KerbalEVA.vessel (TestKerbalBoarded.OnSeated). Unset: no crew, no vessel.
     static inline std::function<std::pair<std::vector<std::shared_ptr<ProtoCrewMember>>, Vessel*>(KerbalEVA*)> kerbalEvaCrew;
+    // VesselUtilities.VesselAtOrbit(orbit, deviation, vessel) / VesselAtOrbitAccuracy (FinePrint, gated by WP-38). Unset: Contracts::Lite::VesselAtOrbit*.
+    static inline std::function<bool(Orbit*, double, Vessel*)> vesselAtOrbit;
+    static inline std::function<double(Orbit*, double, Vessel*)> vesselAtOrbitAccuracy;
     // TestOrbit.CreateOrbitRenderer / MissionOrbitRenderer.Setup (UI): unset: not created.
     static inline std::function<bool(MENode*, Vessel*, Orbit*)> setupOrbitRenderer;
     static void Reset();

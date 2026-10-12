@@ -8,7 +8,6 @@
 // double libm (acos / cos / sin / pow of the great-circle distance and the sphere test): booleans are compared exactly (the scenarios keep a margin
 // to the boundary) and the accuracy values within 1e-9 relative.
 #include <cmath>
-#include <iostream>
 #include <cstring>
 #include <fstream>
 #include <map>
@@ -28,6 +27,11 @@
 #include "ksp/missions/mission_data.hpp"
 #include "ksp/missions/mission_tests2.hpp"
 #include "ksp/missions/vessel_restrictions.hpp"
+#include "ksp/missions/mission_validator.hpp"
+#include "ksp/modules/misc_modules.hpp"
+#include "ksp/save/proto_vessel.hpp"
+#include "ksp/science/science.hpp"
+#include "ksp/parts/available_part.hpp"
 #include "ksp/orbit/orbit_driver.hpp"
 #include "ksp/parts/part.hpp"
 #include "ksp/resources/part_resource_library.hpp"
@@ -86,6 +90,7 @@ struct Fixture54b : Fixture54 {
     Game game;
     std::vector<std::unique_ptr<CelestialBody>> bodies;
     std::unique_ptr<PartResourceLibrary> lib;
+    std::shared_ptr<KerbalRoster> roster;
     Fixture54b() {
         KSPUtil::CacheLocalStrings();
         NodeLibraryEnvironment::Reset();
@@ -114,10 +119,23 @@ struct Fixture54b : Fixture54 {
         for (ConfigNode* d : root->GetNodes("RESOURCE_DEFINITION")) lib->resourceDefinitions.Add(*d);
         game.Mode = Game::Modes::MISSION;
         SaveEnvironment::Current().currentGame = &game;
+        // PartLoader.getPartInfoByName: any part name resolves to one synthetic AvailablePart (the ProtoVessel snapshots only carry ids)
+        SaveEnvironment::Current().partExists = [](std::string_view) { return true; };
+        SaveEnvironment::Current().getPartInfoByName = [](std::string_view) -> const AvailablePart* {
+            static AvailablePart synthetic;
+            return &synthetic;
+        };
+        // the mission roster of the Kerbal tests: five crew and two tourists (labelled synthetic)
+        roster = std::make_shared<KerbalRoster>(Game_Modes::MISSION);
+        for (const char* n : {"Jebediah Kerman", "Bill Kerman", "Bob Kerman", "Valentina Kerman", "Gus Kerman"})
+            roster->AddCrewMember(std::make_shared<ProtoCrewMember>(ProtoCrewMember::KerbalType::Crew, n));
+        for (const char* n : {"Tourist A", "Tourist B"}) roster->AddCrewMember(std::make_shared<ProtoCrewMember>(ProtoCrewMember::KerbalType::Tourist, n));
+        game.CrewRoster = roster;
         RegisterNodeLibrary();
         RegisterVesselRestrictions();
     }
     ~Fixture54b() {
+        game.CrewRoster = nullptr;
         SaveEnvironment::Current().currentGame = nullptr;
         SaveEnvironment::Current().localBodies.clear();
         NodeLibraryEnvironment::Reset();
@@ -427,15 +445,76 @@ Vessel::Situations SitOf(const std::string& n) {
 // the synthetic ScienceUtil.GetExperimentBiome stand-in (the real one needs a biome map): the same lat bands as the reference
 std::string BiomeAt(double lat) { return lat < -30.0 ? "Shores" : (lat < 30.0 ? "Grasslands" : "Highlands"); }
 
+// a VESSEL node for the ProtoVessel of an unloaded vessel: its orbit, situation and one PART per part of the world vessel (synthetic input)
+std::unique_ptr<ProtoVessel> MakeProto54(const json& vj) {
+    ConfigNode v("VESSEL");
+    v.AddValue("pid", vj["id"].get<std::string>());
+    v.AddValue("persistentId", vj["pid"].get<uint32_t>());
+    v.AddValue("name", "Synthetic");
+    v.AddValue("type", "Ship");
+    v.AddValue("sit", vj["protoSit"].get<std::string>());
+    v.AddValue("landed", false);
+    v.AddValue("landedAt", "");
+    v.AddValue("splashed", false);
+    v.AddValue("met", 0.0);
+    v.AddValue("lct", 0.0);
+    v.AddValue("root", 0);
+    v.AddValue("lat", 0.0);
+    v.AddValue("lon", 0.0);
+    v.AddValue("alt", 0.0);
+    v.AddValue("hgt", 0.0);
+    v.AddValue("nrm", Vector3f(0, 0, 1));
+    v.AddValue("rot", Quaternionf(0, 0, 0, 1));
+    v.AddValue("CoM", Vector3f(0, 0, 0));
+    v.AddValue("stg", 0);
+    v.AddValue("prst", false);
+    v.AddValue("ref", 0);
+    v.AddValue("ctrl", false);
+    const json& o = vj["orbit"];
+    ConfigNode* orbit = v.AddNode("ORBIT");
+    orbit->AddValue("SMA", o["sma"].get<double>());
+    orbit->AddValue("ECC", o["ecc"].get<double>());
+    orbit->AddValue("INC", o["inc"].get<double>());
+    orbit->AddValue("LPE", o["argpe"].get<double>());
+    orbit->AddValue("LAN", o["lan"].get<double>());
+    orbit->AddValue("MNA", o["mna"].get<double>());
+    orbit->AddValue("EPH", o["epoch"].get<double>());
+    orbit->AddValue("REF", o["ref"].get<int>());
+    int idx = 0;
+    for (const json& pj : vj["parts"]) {
+        ConfigNode* p = v.AddNode("PART");
+        p->AddValue("name", "synthetic" + std::to_string(idx));
+        p->AddValue("uid", 4000u + static_cast<uint32_t>(idx));
+        p->AddValue("persistentId", pj["pid"].get<uint32_t>());
+        p->AddValue("parent", 0);
+        p->AddValue("position", Vector3f(0, 0, 0));
+        p->AddValue("rotation", Quaternionf(0, 0, 0, 1));
+        p->AddValue("mirror", Vector3f(1, 1, 1));
+        p->AddValue("istg", 0);
+        p->AddValue("dstg", 0);
+        p->AddValue("sqor", 0);
+        p->AddValue("sidx", -1);
+        p->AddValue("attm", 0);
+        p->AddValue("mass", 1.0);
+        p->AddValue("temp", 300.0);
+        p->AddValue("expt", 0.5);
+        p->AddValue("state", 0);
+        p->AddValue("attached", true);
+        p->AddValue("crew", "");
+        ++idx;
+    }
+    return std::make_unique<ProtoVessel>(v, nullptr);
+}
+
 struct World54 {
     std::vector<std::unique_ptr<Vessel>> vessels;
     std::vector<std::unique_ptr<Part>> parts;
     std::vector<std::shared_ptr<ProtoCrewMember>> crew;
     std::map<uint32_t, Vessel*> byPid;
     std::map<Vessel*, std::string> crash;
-    std::vector<Vessel*> unloadedOrbitHolders;
+    std::map<Part*, bool> asteroid;
+    std::map<Part*, std::string> grapple;
     std::vector<std::unique_ptr<ProtoVessel>> protos;
-    Vessel* active = nullptr;
     json env;
 };
 
@@ -449,6 +528,7 @@ struct Scene54 {
     explicit Scene54(Fixture54b& f) : fx(f) { fx.game.Mode = Game::Modes::CAREER; }  // Mission.Load in MISSION mode needs a SITUATION node
     ~Scene54() {
         FlightRegistry::Clear();
+        SaveEnvironment::Current().persistentIds.ClearpersistentIdDictionaries();
         fx.game.Mode = Game::Modes::MISSION;
     }
 
@@ -466,10 +546,13 @@ struct Scene54 {
         subject = mission->GetNodeById(Guid::Parse(GuidOf(98)));
         REQUIRE(subject != nullptr);
         MissionsEnvironment::universalTime = [this] { return ut; };
+        // the mission roster of the Kerbal tests: crew and tourists (labelled synthetic)
+        if (mission->situation != nullptr) mission->situation->crewRoster = fx.roster;
     }
 
     void SetEnv(const json& env) {
         FlightRegistry::Clear();
+        SaveEnvironment::Current().persistentIds.ClearpersistentIdDictionaries();
         worlds.push_back(std::make_unique<World54>());
         world = worlds.back().get();
         world->env = env;
@@ -505,10 +588,19 @@ struct Scene54 {
                     p->protoModuleCrew.push_back(pcm);
                     world->crew.push_back(pcm);
                 }
+                world->asteroid[p.get()] = pj.value("ast", false);
+                if (pj.contains("grapple") && !pj["grapple"].is_null()) world->grapple[p.get()] = pj["grapple"].get<std::string>();
                 v->parts.push_back(p.get());
                 world->parts.push_back(std::move(p));
             }
             if (!v->parts.empty()) v->rootPart = v->parts.front();
+            if (!v->loaded) {
+                world->protos.push_back(MakeProto54(vj));
+                v->protoVessel = world->protos.back().get();
+                // ProtoVessel.protoVessel crew: the crew the Python scenario put in the vessel's parts
+                for (Part* p : v->parts)
+                    for (const auto& pcm : p->protoModuleCrew) v->protoVessel->AddCrew(pcm);
+            }
             if (!vj["crash"].is_null()) world->crash[v.get()] = vj["crash"].get<std::string>();
             world->byPid[v->persistentId] = v.get();
             FlightRegistry::Vessels.push_back(v.get());
@@ -529,7 +621,58 @@ struct Scene54 {
         MissionTestsEnvironment::currentMainBody = [mb, f]() -> CelestialBody* { return mb.is_null() ? nullptr : f->B(mb.get<int>()); };
         const json sv = env["shipObtVel"];
         MissionTestsEnvironment::shipObtVelocity = [sv] { return Vector3d(sv[0].get<double>(), sv[1].get<double>(), sv[2].get<double>()); };
+        MissionTestsEnvironment::vesselAtOrbit = [](Orbit* o, double dev, Vessel* v) {
+            Orbit& vo = v->orbit();
+            if (vo.referenceBody != o->referenceBody) return false;
+            return std::fabs(vo.semiMajorAxis - o->semiMajorAxis) <= dev / 100.0 * std::fabs(o->semiMajorAxis);
+        };
+        MissionTestsEnvironment::vesselAtOrbitAccuracy = [](Orbit* o, double dev, Vessel* v) {
+            Orbit& vo = v->orbit();
+            if (vo.referenceBody != o->referenceBody) return 0.0;
+            if (!(std::fabs(vo.semiMajorAxis - o->semiMajorAxis) <= dev / 100.0 * std::fabs(o->semiMajorAxis))) return 0.0;
+            return 1.0 - std::fabs(vo.semiMajorAxis - o->semiMajorAxis) / std::fabs(o->semiMajorAxis);
+        };
+        MissionTestsEnvironment::persistentLoadedPart = [w](uint32_t id) -> Part* {
+            for (auto& v : w->vessels)
+                if (v->loaded)
+                    for (Part* p : v->parts)
+                        if (p->fields.persistentId == id) return p;
+            return nullptr;
+        };
+        MissionTestsEnvironment::persistentUnloadedPart = [w](uint32_t id) -> std::optional<MissionTestsEnvironment::UnloadedPart> {
+            for (auto& v : w->vessels)
+                if (!v->loaded)
+                    for (Part* p : v->parts)
+                        if (p->fields.persistentId == id) return MissionTestsEnvironment::UnloadedPart{p->protoModuleCrew, v->persistentId};
+            return std::nullopt;
+        };
+        NodeLibraryEnvironment::findLoadedPart = [w](uint32_t id) -> Part* {
+            if (id == 0) return nullptr;
+            for (auto& v : w->vessels)
+                if (v->loaded)
+                    for (Part* p : v->parts)
+                        if (p->fields.persistentId == id) return p;
+            return nullptr;
+        };
+        MissionTestsEnvironment::findUnloadedPartVessel = [w](uint32_t id) -> std::optional<uint32_t> {
+            if (id == 0) return std::nullopt;
+            for (auto& v : w->vessels)
+                if (!v->loaded)
+                    for (Part* p : v->parts)
+                        if (p->fields.persistentId == id) return v->persistentId;
+            return std::nullopt;
+        };
+        MissionTestsEnvironment::partIsAsteroidOrComet = [w](Part* p) { return w->asteroid.count(p) != 0 && w->asteroid[p]; };
+        // TestGrapple caches its ModuleGrappleNode for good, so the state lookup spans every world this scene has built
+        MissionTestsEnvironment::grappleNodeState = [this](Part* p) -> std::optional<std::string> {
+            for (auto& wd : worlds) {
+                auto it = wd->grapple.find(p);
+                if (it != wd->grapple.end()) return it->second;
+            }
+            return std::nullopt;
+        };
     }
+    Vessel* ByPid(uint32_t pid) { return world->byPid.count(pid) ? world->byPid[pid] : nullptr; }
 };
 
 json PidOrNull54(Vessel* v) { return v == nullptr ? json(nullptr) : json(v->persistentId); }
@@ -539,9 +682,12 @@ json PidOrNull54(Vessel* v) { return v == nullptr ? json(nullptr) : json(v->pers
 TEST_CASE("WP-54b reference: the deferred Tests.* modules (Awake, Load / Save, Test, GetScoreModifier, events)") {
     Fixture54b world;
     size_t checked = 0;
+    std::set<std::string> classes;
     for (const json& c : Ref()["cases"]) {
         if (c["kind"].get<std::string>() != "test") continue;
         const std::string name = c["cls"].get<std::string>();
+        classes.insert(name);
+        if (std::getenv("KSP_DBG")) std::fprintf(stderr, "CASE %s\n", name.c_str());
         Scene54 scene(world);
         scene.BuildMission();
         TestGroup* tg = new TestGroup(scene.subject);
@@ -558,48 +704,109 @@ TEST_CASE("WP-54b reference: the deferred Tests.* modules (Awake, Load / Save, T
         for (const json& op : c["ops"]) {
             const std::string o = op["op"].get<std::string>();
             INFO("case ", name, " op ", o);
+            if (std::getenv("KSP_DBG")) std::fprintf(stderr, "  op %s\n", o.c_str());
             ++checked;
             try {
-            if (o == "title") {
-                CHECK(mod->title == op["out"].get<std::string>());
-            } else if (o == "info") {
-                CHECK(mod->GetInfo() == op["out"].get<std::string>());
-            } else if (o == "saved") {
-                ConfigNode out("N");
-                mod->Save(out);
-                CHECK(Dump(out) == op["out"].get<std::string>());
-            } else if (o == "body") {
-                const json& f = op["field"];
-                Editor::BaseAPField field(f["name"].get<std::string>(), f["guiName"].get<std::string>(), f["value"].get<std::string>(), f["has"].get<bool>());
-                CHECK(mod->GetNodeBodyParameterString(field) == op["out"].get<std::string>());
-            } else if (o == "env") {
-                scene.SetEnv(op["env"]);
-            } else if (o == "setUT") {
-                scene.ut = op["ut"].get<double>();
-            } else if (o == "test") {
-                CHECK(mod->Test() == op["out"].get<bool>());
-            } else if (o == "scoreMod") {
-                auto* s = dynamic_cast<IScoreableObjective*>(mod);
-                REQUIRE(s != nullptr);
-                ScoreModifier r = s->GetScoreModifier(op["module"].get<std::string>());
-                const json& out = op["out"];
-                CHECK(PidOrNull54(r.vessel) == out["vessel"]);
-                CHECK(r.number.has_value() == !out["number"].is_null());
-                if (r.number.has_value() && !out["number"].is_null()) {
-                    if (op.value("approx", false)) CHECK(Near(*r.number, out["number"].get<double>()));
-                    else CHECK(*r.number == out["number"].get<double>());
+                if (o == "title") {
+                    CHECK(mod->title == op["out"].get<std::string>());
+                } else if (o == "info") {
+                    CHECK(mod->GetInfo() == op["out"].get<std::string>());
+                } else if (o == "saved") {
+                    ConfigNode out("N");
+                    mod->Save(out);
+                    CHECK(Dump(out) == op["out"].get<std::string>());
+                } else if (o == "body") {
+                    const json& f = op["field"];
+                    Editor::BaseAPField field(f["name"].get<std::string>(), f["guiName"].get<std::string>(), f["value"].get<std::string>(), f["has"].get<bool>());
+                    field.fieldType = f.value("fieldType", "");
+                    CHECK(mod->GetNodeBodyParameterString(field) == op["out"].get<std::string>());
+                } else if (o == "env") {
+                    scene.SetEnv(op["env"]);
+                } else if (o == "setUT") {
+                    scene.ut = op["ut"].get<double>();
+                } else if (o == "test") {
+                    if (op["out"].is_string()) {
+                        CHECK_THROWS(mod->Test());
+                    } else {
+                        const bool gotT = mod->Test();
+                        if (gotT != op["out"].get<bool>() && std::getenv("KSP_DBG")) std::fprintf(stderr, "MISMATCH %s ops=%zu cfg=%s\n", name.c_str(), checked, c["cfg"].dump().c_str());
+                        CHECK(gotT == op["out"].get<bool>());
+                    }
+                } else if (o == "scoreMod") {
+                    auto* s = dynamic_cast<IScoreableObjective*>(mod);
+                    REQUIRE(s != nullptr);
+                    if (op.value("throws", false)) {
+                        CHECK_THROWS(s->GetScoreModifier(op["module"].get<std::string>()));
+                    } else {
+                        ScoreModifier r = s->GetScoreModifier(op["module"].get<std::string>());
+                        const json& out = op["out"];
+                        CHECK(PidOrNull54(r.vessel) == out["vessel"]);
+                        CHECK(r.number.has_value() == !out["number"].is_null());
+                        if (r.number.has_value() && !out["number"].is_null()) {
+                            if (op.value("approx", false)) CHECK(Near(*r.number, out["number"].get<double>()));
+                            else CHECK(*r.number == out["number"].get<double>());
+                        }
+                    }
+                } else if (o == "init") {
+                    mod->InitializeTest();
+                } else if (o == "clear") {
+                    mod->ClearTest();
+                } else if (o == "event") {
+                    const std::string en = op["name"].get<std::string>();
+                    if (en == "flagPlanted") {
+                        static int dummy[16];
+                        FlagSite* fs = reinterpret_cast<FlagSite*>(&dummy[op["vessel"].get<uint32_t>() % 16]);
+                        Vessel* fv = scene.ByPid(op["vessel"].get<uint32_t>());
+                        MissionTestsEnvironment::flagSiteVessel = [fv](FlagSite*) { return fv; };
+                        GameEvents::afterFlagPlanted.Fire(fs);
+                    } else if (en == "vesselWillDestroy") {
+                        GameEvents::onVesselWillDestroy.Fire(scene.ByPid(op["vessel"].get<uint32_t>()));
+                    } else if (en == "partCouple") {
+                        GameEvents::onDockingComplete.Fire(GameEvents::FromToAction<Part*, Part*>(nullptr, nullptr));
+                    } else if (en == "partUndock") {
+                        GameEvents::onPartUndockComplete.Fire(nullptr);
+                    } else if (en == "scienceReceived") {
+                        ScienceSubject subject(op["id"].get<std::string>(), "title", 1.0f, 1.0f, 100.0f);
+                        GameEvents::OnScienceRecieved.Fire(0.0f, &subject, nullptr, false);
+                    } else if (en == "experimentStored") {
+                        ScienceData data(1.0f, 1.0f, 1.0f, op["id"].get<std::string>(), "data");
+                        GameEvents::OnExperimentStored.Fire(&data);
+                    } else {
+                        FAIL("unknown event " << en);
+                    }
+                } else if (o == "call") {
+                    const std::string fn = op["fn"].get<std::string>();
+                    const json& a = op["a"];
+                    if (fn == "OnVesselPersistentIdChanged") {
+                        mod->OnVesselPersistentIdChanged(a[0].get<uint32_t>(), a[1].get<uint32_t>());
+                    } else if (fn == "OnPartPersistentIdChanged") {
+                        mod->OnPartPersistentIdChanged(a[0].get<uint32_t>(), a[1].get<uint32_t>(), a[2].get<uint32_t>());
+                    } else if (fn == "OnVesselDocking") {
+                        mod->OnVesselDocking(a[0].get<uint32_t>(), a[1].get<uint32_t>());
+                    } else if (fn == "OnVesselsUndocking") {
+                        mod->OnVesselsUndocking(scene.ByPid(a[0].get<uint32_t>()), scene.ByPid(a[1].get<uint32_t>()));
+                    } else {
+                        FAIL("unknown call " << fn);
+                    }
+                } else if (o == "validate") {
+                    Editor::MissionEditorValidator validator;
+                    validator.EnsureResultsForTest();
+                    mod->RunValidation(&validator);
+                    json got = json::array();
+                    for (const auto& r : *validator.Results()) got.push_back(json::array({r.status == Editor::ValidationStatus::Fail ? "fail" : "warn", r.message}));
+                    CHECK(got == op["out"]);
+                } else {
+                    FAIL("unknown op " << o);
                 }
-            } else if (o == "init") {
-                mod->InitializeTest();
-            } else if (o == "clear") {
-                mod->ClearTest();
-            } else {
-                FAIL("unknown op " << o);
-            }
             } catch (const std::exception& e) {
                 FAIL_CHECK("exception in " << name << " op " << o << ": " << e.what());
             }
         }
+        // scene teardown: a test initialised twice holds two event registrations (as in C#); drop them before the module dies
+        for (int k = 0; k < 4; ++k) {
+            try { mod->ClearTest(); } catch (const std::exception&) {}
+        }
     }
-    CHECK(checked > 300);
+    CHECK(checked > 3000);
+    CHECK(classes.size() >= 11);
 }

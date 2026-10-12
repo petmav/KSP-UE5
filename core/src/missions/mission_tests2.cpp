@@ -44,6 +44,8 @@ void MissionTestsEnvironment::Reset() {
     setupOrbitRenderer = nullptr;
     kerbalEvaCrew = nullptr;
     flagSiteVessel = nullptr;
+    vesselAtOrbit = nullptr;
+    vesselAtOrbitAccuracy = nullptr;
 }
 
 namespace Tests {
@@ -805,7 +807,7 @@ bool TestOrbit::Test() {
         return false;
     }
     orbitSuccess = false;
-    if (relativeOrbit != nullptr) orbitSuccess = Contracts::Lite::VesselAtOrbit(relativeOrbit.get(), OrbitDeviation(), vessel);
+    if (relativeOrbit != nullptr) orbitSuccess = Env::vesselAtOrbit ? Env::vesselAtOrbit(relativeOrbit.get(), OrbitDeviation(), vessel) : Contracts::Lite::VesselAtOrbit(relativeOrbit.get(), OrbitDeviation(), vessel);
     if (!orbitSuccess) {
         successStartTime = -1.0;
         return false;
@@ -868,7 +870,7 @@ ScoreModifier TestOrbit::GetScoreModifier(const std::string& scoreModule) {
             r.vessel = AwardEnvironment::ActiveVessel();
         }
     } else if (scoreModule == "ScoreModule_Accuracy" && relativeOrbit != nullptr) {
-        r.number = Contracts::Lite::VesselAtOrbitAccuracy(relativeOrbit.get(), OrbitDeviation(), vessel);
+        r.number = Env::vesselAtOrbitAccuracy ? Env::vesselAtOrbitAccuracy(relativeOrbit.get(), OrbitDeviation(), vessel) : Contracts::Lite::VesselAtOrbitAccuracy(relativeOrbit.get(), OrbitDeviation(), vessel);
     }
     return r;
 }
