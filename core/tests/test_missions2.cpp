@@ -28,6 +28,8 @@
 #include "ksp/missions/mission_tests2.hpp"
 #include "ksp/missions/vessel_restrictions.hpp"
 #include "ksp/parts/part.hpp"
+#include "ksp/resources/part_resource_library.hpp"
+#include "ksp/resources/planetary_resources.hpp"
 #include "ksp/save/crew.hpp"
 #include "ksp/save/game.hpp"
 #include "ksp/save/save_environment.hpp"
@@ -81,6 +83,7 @@ std::string SaveDump(const std::function<void(ConfigNode&)>& save) {
 struct Fixture54b : Fixture54 {
     Game game;
     std::vector<std::unique_ptr<CelestialBody>> bodies;
+    std::unique_ptr<PartResourceLibrary> lib;
     Fixture54b() {
         KSPUtil::CacheLocalStrings();
         NodeLibraryEnvironment::Reset();
@@ -103,6 +106,10 @@ struct Fixture54b : Fixture54 {
             SaveEnvironment::Current().localBodies.push_back(b.get());
             bodies.push_back(std::move(b));
         }
+        lib = std::make_unique<PartResourceLibrary>();
+        ConfigNode::NodePtr root = ConfigNode::Load(GameData54() + "/Squad/Resources/ResourcesGeneric.cfg");
+        REQUIRE(root);
+        for (ConfigNode* d : root->GetNodes("RESOURCE_DEFINITION")) lib->resourceDefinitions.Add(*d);
         game.Mode = Game::Modes::MISSION;
         SaveEnvironment::Current().currentGame = &game;
         RegisterNodeLibrary();
@@ -305,4 +312,97 @@ TEST_CASE("WP-54b reference: data classes (VesselGroundLocation, SurfaceArea, Su
         counts[kind]++;
     }
     CHECK(counts.size() >= 10);
+}
+
+// ---- vessel restrictions ---------------------------------------------------------------------------------------------------------
+
+namespace {
+std::unique_ptr<VesselRestriction> MakeRestriction(const std::string& type) {
+    const DynamicModuleType* t = DynamicModuleRegistry::GetClassByName(type);
+    REQUIRE_MESSAGE(t != nullptr, type);
+    std::unique_ptr<DynamicModule> m = t->create(nullptr);
+    auto* raw = dynamic_cast<VesselRestriction*>(m.get());
+    REQUIRE(raw != nullptr);
+    m.release();
+    return std::unique_ptr<VesselRestriction>(raw);
+}
+
+void InstallEnv(const json& e) {
+    RestrictionEnvironment::shipCost = [v = e["cost"].get<float>()] { return v; };
+    RestrictionEnvironment::shipTotalMass = [v = e["mass"].get<float>()] { return v; };
+    RestrictionEnvironment::shipPartCount = [v = e["parts"].get<int>()] { return v; };
+    RestrictionEnvironment::shipSize = [s = e["size"]] { return Vector3f(s[0].get<float>(), s[1].get<float>(), s[2].get<float>()); };
+    RestrictionEnvironment::stageCount = [v = e["stages"].get<int>()] { return v; };
+    std::vector<std::pair<std::string, double>> res;
+    for (const auto& r : e["resources"]) res.emplace_back(r[0].get<std::string>(), r[1].get<double>());
+    RestrictionEnvironment::shipResources = [res] { return res; };
+    const json cc = e["crewCount"];
+    RestrictionEnvironment::crewCount = [cc]() -> std::optional<int> {
+        if (cc.is_null()) return std::nullopt;
+        return cc.get<int>();
+    };
+    const json ct = e["crewTraits"];
+    RestrictionEnvironment::crewTraits = [ct]() -> std::optional<std::vector<std::string>> {
+        if (ct.is_null()) return std::nullopt;
+        std::vector<std::string> v;
+        for (const auto& t : ct) v.push_back(t.get<std::string>());
+        return v;
+    };
+    RestrictionEnvironment::time = [v = e["time"].get<float>()] { return v; };
+}
+}  // namespace
+
+TEST_CASE("WP-54b reference: VesselRestriction* (Load / Save, IsComplete, GetStateMessage, UI entry, SameComparator) and VesselSituation Load / Save") {
+    Fixture54b world;
+    int restrictions = 0, situations = 0;
+    for (const json& c : Ref()["cases"]) {
+        const std::string kind = c["kind"].get<std::string>();
+        if (kind == "restriction") {
+            ++restrictions;
+            std::unique_ptr<VesselRestriction> m = MakeRestriction(c["type"].get<std::string>());
+            const ConfigNode cfg = CfgFromJson(c["cfg"]);
+            m->Load(cfg);
+            CHECK(SaveDump([&](ConfigNode& n) { m->Save(n); }) == c["save"].get<std::string>());
+            CHECK(m->GetDisplayName() == c["display"].get<std::string>());
+            for (const json& sc : c["scenarios"]) {
+                InstallEnv(sc["env"]);
+                CHECK(m->IsComplete() == sc["complete"].get<bool>());
+                CHECK(m->GetStateMessage() == sc["message"].get<std::string>());
+                // the app list entry: text, state image and the readyToLaunch reset of the situation
+                VesselSituation vs;
+                vs.readyToLaunch = true;
+                m->AddAppUIReference(true, &vs);
+                CHECK(m->UIEntry.text == sc["ui"]["text"].get<std::string>());
+                CHECK(m->UIEntry.state == sc["ui"]["state"].get<int>());
+                CHECK(vs.readyToLaunch == !sc["ui"]["readyReset"].get<bool>());
+                m->ClearAppUIREference();
+                CHECK_FALSE(m->UIEntry.present);
+            }
+            std::unique_ptr<VesselRestriction> other = MakeRestriction(c["type"].get<std::string>());
+            other->Load(CfgFromJson(c["otherCfg"]));
+            if (c["same"].is_string()) {
+                CHECK_THROWS(m->SameComparatorWrapper(*other));
+            } else {
+                CHECK(m->SameComparatorWrapper(*other) == c["same"].get<bool>());
+            }
+            // a restriction of another type is never "the same"
+            std::unique_ptr<VesselRestriction> stages = MakeRestriction(c["type"].get<std::string>() == "VesselRestriction_Stages" ? "VesselRestriction_Cost" : "VesselRestriction_Stages");
+            CHECK_FALSE(m->SameComparatorWrapper(*stages));
+            RestrictionEnvironment::Reset();
+        } else if (kind == "situation") {
+            ++situations;
+            ResourceEnvironment::tickCount = [t = c["tick"].get<int32_t>()] { return t; };
+            MissionMappedVessel::getUniquePersistentId = [v = c["defaultPid"].get<uint32_t>()] { return v; };
+            std::unique_ptr<Mission> mission = std::make_unique<Mission>();
+            MENode* node = MENode::Spawn(mission.get());
+            VesselSituation vs(mission.get(), node);
+            vs.Load(CfgFromJson(c["cfg"]));
+            const std::string got = SaveDump([&](ConfigNode& n) { vs.Save(n); });
+            CHECK(got == c["save"].get<std::string>());
+            ResourceEnvironment::tickCount = nullptr;
+            MissionMappedVessel::getUniquePersistentId = nullptr;
+        }
+    }
+    CHECK(restrictions > 100);
+    CHECK(situations > 40);
 }

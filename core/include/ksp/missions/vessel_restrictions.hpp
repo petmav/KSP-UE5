@@ -10,6 +10,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -41,6 +42,10 @@ struct RestrictionEnvironment {
     static inline std::function<std::vector<std::string>()> shipPartNames;  // parts[i].name
     // parts[i].Resources[j]: (resourceName, amount) in part order then resource order
     static inline std::function<std::vector<std::pair<std::string, double>>()> shipResources;
+    // CrewAssignmentDialog.Instance.CurrentManifestUnsafe?.CrewCount / ?.GetAllCrew(includeNulls: false) traits (nullopt = dialog or manifest null). Unset: derived
+    // from crewManifest.
+    static inline std::function<std::optional<int>()> crewCount;
+    static inline std::function<std::optional<std::vector<std::string>>()> crewTraits;
     // CrewAssignmentDialog.Instance.CurrentManifestUnsafe (nullptr = dialog or manifest null)
     static inline std::function<VesselCrewManifest*()> crewManifest;
     // PartResourceLibrary.Instance.resourceDefinitions first entry's name (VesselRestriction_Resource constructors)

@@ -10,10 +10,33 @@ CORE = os.path.abspath(os.path.join(HERE, "..", ".."))
 OUT = os.path.join(CORE, "tests", "data", "wp54b_reference.json")
 sys.path.insert(0, os.path.join(CORE, "tools", "wp55"))
 
-from ref_base import Cfg, f32, fnum, dnum, fmt, tag, vtext, parse, MISSIONS, ENUMS, CS_ROOT  # noqa: E402,F401
+from ref_base import Cfg, f32, fnum, dnum, tag, vtext, parse, MISSIONS, ENUMS, CS_ROOT  # noqa: E402,F401
 import ref_base  # noqa: E402
 
 g9 = ref_base.r54.g9
+
+import re as _re
+
+
+def fmt(template, *args):
+    """Localizer.Format with the managed Lingoona fallback: <<N>> and the gender-modified <<m:N>> insert argument N (text from the first '^' removed);
+    arguments that are tags are translated first; an out of range N is removed; the result is unescaped (backslash-n, -quote, -t)."""
+    tpl = ref_base.tag(template)
+    if not args:
+        out = tpl
+    else:
+        params = [ref_base.tag(a) for a in args]
+
+        def sub(m):
+            n = int(m.group(1))
+            if 1 <= n <= len(params):
+                return params[n - 1].split("^")[0]
+            return ""
+
+        out = _re.sub(r"<<(?:[A-Za-z]+:)?(\d+)(\^[^>]*)?>>", sub, tpl)
+    return out.replace("\\n", "\n").replace('\\"', '"').replace("\\t", "\t")
+
+
 f32bits = ref_base.f32bits
 
 

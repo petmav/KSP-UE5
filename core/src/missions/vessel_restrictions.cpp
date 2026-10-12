@@ -34,6 +34,8 @@ void RestrictionEnvironment::Reset() {
     shipPartNames = nullptr;
     shipResources = nullptr;
     crewManifest = nullptr;
+    crewCount = nullptr;
+    crewTraits = nullptr;
     firstResourceName = nullptr;
     partTitle = nullptr;
     time = nullptr;
@@ -272,7 +274,11 @@ int VesselRestriction_Crew::GetCrewCount() {
     int result = 0;
     switch (crewType) {
         case CrewRestrictionType::TotalCrew:
-            if (R::crewManifest && R::crewManifest() != nullptr) result = R::crewManifest()->CrewCount();
+            if (R::crewCount) {
+                if (std::optional<int> n = R::crewCount(); n.has_value()) result = *n;
+            } else if (R::crewManifest && R::crewManifest() != nullptr) {
+                result = R::crewManifest()->CrewCount();
+            }
             break;
         case CrewRestrictionType::Engineers: result = GetCrewTraitCount(KerbalRoster::engineerTrait); break;
         case CrewRestrictionType::Scientists: result = GetCrewTraitCount(KerbalRoster::scientistTrait); break;
@@ -283,7 +289,12 @@ int VesselRestriction_Crew::GetCrewCount() {
 // :123
 int VesselRestriction_Crew::GetCrewTraitCount(const std::string& kerbalTrait) {
     int num = 0;
-    if (R::crewManifest && R::crewManifest() != nullptr) {
+    if (R::crewTraits) {
+        if (std::optional<std::vector<std::string>> traits = R::crewTraits(); traits.has_value()) {
+            for (const std::string& t : *traits)
+                if (t == kerbalTrait) ++num;
+        }
+    } else if (R::crewManifest && R::crewManifest() != nullptr) {
         std::vector<std::shared_ptr<ProtoCrewMember>> allCrew = R::crewManifest()->GetAllCrew(false);
         for (size_t i = 0; i < allCrew.size(); ++i) {
             if (allCrew[i] != nullptr && allCrew[i]->trait == kerbalTrait) ++num;
