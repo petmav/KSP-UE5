@@ -285,10 +285,6 @@ TEST_CASE("WP-33 EVAConstructionModeEditor: AttachInput / AttachPart, DetachInpu
     SceneScope scene(GameScenes::FLIGHT);
     LoadLocalizer();
     UIPartActionControllerInventory ctrl;
-    EVAConstructionModeController controller;
-    EVAConstructionModeEditor editor;
-    controller.evaEditor = &editor;
-    EVAConstructionModeController::Instance = &controller;
     Kerbals k;
     FlightRegistry::ActiveVessel = k.Add(Vector3f(0.0f, 0.0f, 0.0f));
     EVAConstructionEnvironment::activeVesselWorldPos = [] { return Vector3f(0.0f, 0.0f, 0.0f); };
@@ -320,6 +316,11 @@ TEST_CASE("WP-33 EVAConstructionModeEditor: AttachInput / AttachPart, DetachInpu
     made->partInfo = &g.Info("cargoContainer");
     made->gameObjectName = "cargoContainer";
     made->protoPartSnapshot = &snap;
+    // declared after every part and vessel it points at: its destructor (OnDestroy -> RemoveAttachNodes) still reads them
+    EVAConstructionModeController controller;
+    EVAConstructionModeEditor editor;
+    controller.evaEditor = &editor;
+    EVAConstructionModeController::Instance = &controller;
     Part* held = editor.AdoptPart(std::move(made));
     held->partTransform.position = Vector3f(3.0f, 3.0f, 0.0f);
     editor.SetSelectedPartForTest(held);
@@ -430,13 +431,14 @@ TEST_CASE("WP-33 EVAConstructionModeEditor: rotate and offset gizmo callbacks") 
     Game15 g;
     PhysicsWorld phys;
     SceneScope scene(GameScenes::FLIGHT);
-    EVAConstructionModeEditor editor;
     PartEvents events;
     auto parent = g.New("cargoContainer");
     parent->partTransform.position = Vector3f(0.0f, 0.0f, 0.0f);
     auto child = g.New("cargoContainer");
     child->parent = parent.get();
     child->partTransform.position = Vector3f(0.0f, 0.6f, 0.0f);
+    // declared after every part and vessel it points at: its destructor (OnDestroy -> RemoveAttachNodes) still reads them
+    EVAConstructionModeEditor editor;
     editor.SetSelectedPartForTest(child.get());
     // ---- rotate: Self -> rotation = gizmo.rotation * initRotation, World -> dRot * hostRot0; attRotation0 = localRotation,
     //      attRotation = gizmoAttRotate * Inverse(gizmoAttRotate0) * localRotation

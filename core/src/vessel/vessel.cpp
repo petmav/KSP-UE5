@@ -239,8 +239,9 @@ Vessel::~Vessel() {
     GE::onCrewTransferred.Remove(this, &Vessel::onCrewTransferred);
     FlightRegistry::RemoveVessel(this);
     if (FlightRegistry::ActiveVessel == this) FlightRegistry::ActiveVessel = nullptr;
+    // A part destroyed before its vessel reads as Unity null: only parts still in Part.allParts are dereferenced.
     for (Part* p : parts)
-        if (p != nullptr && p->vessel == this) p->vessel = nullptr;
+        if (p != nullptr && std::find(Part::allParts.begin(), Part::allParts.end(), p) != Part::allParts.end() && p->vessel == this) p->vessel = nullptr;
 }
 
 // Vessel.cs:1583

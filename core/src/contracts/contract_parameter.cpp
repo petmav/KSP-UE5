@@ -400,11 +400,15 @@ long long ContractParameter::CreateID() {
     long long num = 17;
     num = 391LL + static_cast<long long>(StringExtensions::GetHashCode_Net35(TypeName()));
     std::string hashString = HashString();
-    num = num * 23LL + static_cast<long long>(StringExtensions::GetHashCode_Net35(hashString));
+    // unchecked `long` arithmetic in C# (wraps): computed in unsigned long long, the signed overflow is undefined in C++
+    auto mulAdd23 = [](long long n, int h) {
+        return static_cast<long long>(static_cast<unsigned long long>(n) * 23ULL + static_cast<unsigned long long>(static_cast<long long>(h)));
+    };
+    num = mulAdd23(num, StringExtensions::GetHashCode_Net35(hashString));
     for (size_t i = 0; i < parameters_.size(); ++i) {
         ContractParameter* contractParameter = parameters_[i].get();
         hashString = contractParameter->HashString();
-        num = num * 23LL + static_cast<long long>(StringExtensions::GetHashCode_Net35(contractParameter->TypeName() + hashString));
+        num = mulAdd23(num, StringExtensions::GetHashCode_Net35(contractParameter->TypeName() + hashString));
     }
     return num;
 }

@@ -387,17 +387,23 @@ void Contract::SetupSeed(int seed) {
     UnityRandom::Global().InitState(missionSeed);
 }
 
+// The C# `num * 23L + hash` is unchecked 64-bit arithmetic that wraps; signed overflow is undefined in C++, so the
+// product and sum are computed in uint64_t (two's complement wrap, bit-identical result).
+static long long wrapMulAdd23(long long num, long long hash) {
+    return static_cast<long long>(static_cast<unsigned long long>(num) * 23ULL + static_cast<unsigned long long>(hash));
+}
+
 // Contract.cs:1190
 void Contract::SetupID() {
     long long num = 17;
     num = 391LL + static_cast<long long>(StringExtensions::GetHashCode_Net35(TypeName()));
     const std::string hashString = GetHashString();
-    if (!hashString.empty()) num = num * 23LL + static_cast<long long>(StringExtensions::GetHashCode_Net35(GetHashString()));
+    if (!hashString.empty()) num = wrapMulAdd23(num, StringExtensions::GetHashCode_Net35(GetHashString()));
     for (size_t i = 0; i < parameters_.size(); ++i) {
         ContractParameter* contractParameter = parameters_[i].get();
         const std::string hs = contractParameter->HashString();
-        num = num * 23LL + static_cast<long long>(StringExtensions::GetHashCode_Net35(contractParameter->TypeName()));
-        if (!hs.empty()) num = num * 23LL + static_cast<long long>(StringExtensions::GetHashCode_Net35(hs));
+        num = wrapMulAdd23(num, StringExtensions::GetHashCode_Net35(contractParameter->TypeName()));
+        if (!hs.empty()) num = wrapMulAdd23(num, StringExtensions::GetHashCode_Net35(hs));
     }
     contractID = num;
 }
