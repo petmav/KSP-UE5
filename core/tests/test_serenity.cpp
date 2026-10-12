@@ -2367,7 +2367,7 @@ TEST_CASE("WP-53 seismic sensor: a ground impact on the same body feeds the seis
     GE::onVesselExplodeGroundCollision.Fire(X);
     REQUIRE(exp->seismicEventDataSendPending);
     REQUIRE(exp->seismicPartList.size() == 1);
-    const auto& d = *exp->seismicPartList[0];
+    const auto d = *exp->seismicPartList[0];  // a copy: ProcessSeismicEvent clears the list (and frees the shared data) later in this case
     Part& xp = *X->parts[0];
     CHECK(d.partId == xp.fields.persistentId);
     CHECK_F32(d.velocity, 50.0f);  // no Rigidbody on the part: the event's vessel velocity
