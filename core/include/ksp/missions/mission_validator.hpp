@@ -39,6 +39,8 @@ public:
     bool IsValid() const;                                            // :22
     ValidationStatus Status() const;                                 // :44
     Mission* GetMission() const { return mission_; }                 // :70
+    // seam for the unit gate: the result list that RunValidation of a node/test appends to (MissionEditorValidator.cs:85 creates it per run)
+    void EnsureResultsForTest() { if (!results_) results_ = std::make_shared<ResultList>(); }
     std::shared_ptr<ResultList> Results() const { return results_; }  // :72 (null before the first run)
     static ValidatorMode Mode();                                     // :74
     static void ResetValidator();                                    // :127
