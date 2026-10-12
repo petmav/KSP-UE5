@@ -3,11 +3,11 @@
 // MissionPack.cs, the path / part-rename helpers of MissionsUtils.cs, and the stand-ins for the types other packages own
 // (MEBannerEntry: WP-56, VesselSituation + the create actions: WP-54 slice 2 / WP-55, MissionFileInfo: slice 2).
 //
-// Not ported here (see STATUS.md WP-54 "Not ported"): the craft-file bookkeeping that needs the file system and MissionCraft
-// (RebuildCraftFileList, ProcessCraftFileFolder, ProcessCraftRenames, AddMappedPartVesselName, the Get*Craft* lookups), the vessel-event
-// handlers that feed it (OnPartVesselNamingChanged, OnVesselRename, OnPartDecoupleNewVesselComplete, OnVesselPersistentIdChanged,
-// OnPartPersistentIdChanged, OnVesselDocking, OnVesselsUndocking), ProcessMappedVesselNodeMap (casts to the WP-55 test / action classes),
-// BlockPlayMission's dialog, MissionCriticalError / ContinueCriticalError (UI + scene reset), OnEditorStarted (R&D cheat), SetLockedCamera,
+// WP-54c ported the craft-file bookkeeping (RebuildCraftFileList, ProcessCraftFileFolder, ProcessCraftRenames, AddMappedPartVesselName, the Get*Craft*
+// lookups), the vessel-event handlers that feed it (OnPartVesselNamingChanged, OnVesselRename, OnPartDecoupleNewVesselComplete, OnVesselPersistentIdChanged,
+// OnPartPersistentIdChanged, OnVesselDocking, OnVesselsUndocking) and ProcessMappedVesselNodeMap / RemapVesselId; they are active when
+// MissionsEnvironment::craftFileBookkeeping is true (the WP-54 hooks otherwise).
+// Not ported here (see STATUS.md WP-54 "Not ported"): BlockPlayMission's dialog, MissionCriticalError / ContinueCriticalError (UI + scene reset), OnEditorStarted (R&D cheat), SetLockedCamera,
 // the UpdateMission autosave file copy and the Steam / file lookup of Load (:1976-2012).
 #pragma once
 
@@ -354,6 +354,7 @@ public:
     MEBannerEntry bannerSuccess{MEBannerType::Success};     // :53
     MEBannerEntry bannerFail{MEBannerType::Fail};           // :55
     std::shared_ptr<MissionFileInfo> missionInfo;           // :61 _missionInfo
+    DictionaryValueList<std::string, std::shared_ptr<MissionCraft>> craftFileList;  // :61 (WP-54c; filled by RebuildCraftFileList)
 
     // ---- properties ----
     const Guid& id() const { return id_; }                  // :132
@@ -382,6 +383,17 @@ public:
     static std::string GetGameObjectName(const MissionFileInfo& info);       // :347
     static std::string GetGameObjectName(const Mission& mission);            // :354
     void RegenerateMissionID();                             // :375 (internal)
+    // ---- WP-54c: craft-file bookkeeping, public part ----
+    void RebuildCraftFileList();                            // :1350
+    MissionCraft* GetCraftBySituationsVesselID(uint32_t persistentId);  // :1510
+    MissionCraft* GetMissionCraftByFileName(const std::string& craftFileName);  // :1535
+    VesselSituation* GetMissionSituationByCraftFileName(const std::string& craftFileName);  // :1543
+    MissionCraft* GetMissionCraftByName(const std::string& vesselName);  // :1562
+    int GetSituationsIndexByVessel(uint32_t persistentId);  // :1584
+    int GetSituationsIndexByPart(uint32_t persistentId);    // :1602
+    int GetCraftFileIndexByPart(uint32_t persistentId);     // :1625
+    void ProcessMappedVesselNodeMap(uint32_t mappedPersistentId = 0, uint32_t newPersistentId = 0);  // :1964 (internal)
+    void RemapVesselId(uint32_t currentVslId);              // :2144 (internal)
     void InitMission();                                     // :401
     bool BlockPlayMission(bool showDialog = false);         // :577 (dialog skipped); returns the C# bool
     const std::vector<std::string>& BlockedMessages() const { return blockedMessages_; }
@@ -454,6 +466,22 @@ private:
     void InitSeed();                                        // :342
     void OnEditorStarted();                                 // :1195
     bool craftFileExists(const std::string& craftFileName);  // GetMissionCraftByFileName(name) != null
+    // ---- WP-54c: craft-file bookkeeping (Mission.cs) ----
+    void ClearCraftFiles();                                 // :1363
+    void ClearMappedVessels();                              // :1392
+    void ProcessCraftFileFolder(const std::string& saveShipFolderPath);  // :1399
+    void ProcessCraftRenames(const std::string& craftFileName, MissionCraft* craftFile);  // :1413
+    MissionMappedVessel AddMappedPartVesselName(uint32_t partId, uint32_t vslPersistentId, const std::string& craftFileName, MissionCraft* craftFile, bool mappedItem, VesselSituation* vesselSituation);  // :1465
+    void AddMappedCraft(const std::string& craftFileName, MissionCraft* craftFile);  // :1493
+    uint32_t UpgradeMappedVesselId(uint32_t currentVslId, MENode* currentNode);  // :2154
+    void RefreshMissionRequested();                         // `if (MissionsApp.Instance) MissionsApp.Instance.RefreshMissionRequested(this, false)`
+    void OnPartVesselNamingChanged(Part* part);             // :1217
+    void OnVesselRename(GameEvents::HostedFromToAction<Vessel*, std::string> hostedFromTo);  // :1244
+    void OnPartDecoupleNewVesselComplete(Vessel* oldVessel, Vessel* newVessel);  // :1262
+    void OnVesselPersistentIdChanged(uint32_t oldId, uint32_t newId);  // :1281
+    void OnPartPersistentIdChanged(uint32_t vesselID, uint32_t oldId, uint32_t newId);  // :1297
+    void OnVesselDocking(uint32_t oldId, uint32_t newId);   // :1313
+    void OnVesselsUndocking(Vessel* oldVessel, Vessel* newVessel);  // :1329
     bool CheckHash();                                       // :361
     void OnGameSceneSwitchRequested(GameEvents::FromToAction<GameScenes, GameScenes> scenes);  // :381
     void RegisterGameEvents();                              // :389

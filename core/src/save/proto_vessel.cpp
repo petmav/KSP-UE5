@@ -203,6 +203,26 @@ void ProtoPartModuleSnapshot::RemovePartModuleAdjuster(const Guid& removeAdjuste
     GE::onProtoPartModuleAdjusterRemoved.Fire(this);
 }
 
+// ProtoPartModuleSnapshot.cs:94 (body after the MakingHistory / supported-type tests)
+void ProtoPartModuleSnapshot::AddPartModuleAdjusterNode(const std::function<void(ConfigNode&)>& saveAdjuster) {
+    EnsureModuleValuesIsInitialized();
+    ConfigNode::NodePtr node = std::make_shared<ConfigNode>("ADJUSTERS");
+    if (auto n = save_detail::FirstChildShared(*moduleValues, "ADJUSTERS")) node = n;
+    saveAdjuster(*node->AddNode("ADJUSTERMODULE"));
+    moduleValues->SetNode("ADJUSTERS", node, true);
+    GE::onProtoPartModuleAdjusterAdded.Fire(this);
+}
+
+// ProtoPartModuleSnapshot.cs:133 (body after the MakingHistory test)
+void ProtoPartModuleSnapshot::RemovePartModuleAdjusterNode(const std::function<void(ConfigNode&)>& saveAdjuster) {
+    EnsureModuleValuesIsInitialized();
+    ConfigNode::NodePtr node = std::make_shared<ConfigNode>("ADJUSTERSTOREMOVE");
+    if (auto n = save_detail::FirstChildShared(*moduleValues, "ADJUSTERSTOREMOVE")) node = n;
+    saveAdjuster(*node->AddNode("ADJUSTERMODULE"));
+    moduleValues->SetNode("ADJUSTERSTOREMOVE", node, true);
+    GE::onProtoPartModuleAdjusterRemoved.Fire(this);
+}
+
 // ProtoPartModuleSnapshot.cs:197
 void ProtoPartModuleSnapshot::ProtoPartModuleRepair() {
     if (!SaveEnvironment::Current().IsExpansionInstalled("MakingHistory")) return;
@@ -459,6 +479,15 @@ ProtoPartModuleSnapshot* ProtoPartSnapshot::FindModule(const std::string& module
     for (const auto& m : modules)
         if (m->moduleName == moduleName) return m.get();
     return nullptr;
+}
+
+// ProtoPartSnapshot.cs:1300
+void ProtoPartSnapshot::ProtoPartRepair() {
+    if (SaveEnvironment::Current().IsExpansionInstalled("MakingHistory")) {
+        state = PreFailState;
+        for (size_t i = 0; i < modules.size(); ++i) modules[i]->ProtoPartModuleRepair();
+        GE::onProtoPartRepair.Fire(this);
+    }
 }
 
 // ==================================================== ProtoVessel ===================================================

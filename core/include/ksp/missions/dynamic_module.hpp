@@ -137,7 +137,8 @@ public:
     void Load(const ConfigNode& node);                                  // :112
     void Save(ConfigNode& node) const;                                  // :126
     // :140 Clone: Activator.CreateInstance(GetType(), node) + a Clone() of every module + a copy of supportedTypes
-    virtual std::unique_ptr<DynamicModuleList> Clone() const = 0;
+    // (WP-54c: the base class is concrete in C# - ActionPartFailure keeps a plain DynamicModuleList - so the base Clone is real; subclasses override)
+    virtual std::unique_ptr<DynamicModuleList> Clone() const;
 
 protected:
     void AddDynamicModule(const ConfigNode& moduleNode);                // :60

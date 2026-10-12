@@ -31,6 +31,7 @@
 namespace ksp {
 class CelestialBody;
 class ProtoVessel;
+class ProtoPartSnapshot;
 class Part;
 class PartModule;
 class Vessel;
@@ -154,6 +155,31 @@ struct NodeLibraryEnvironment {
     static inline std::function<float()> deltaTime;
     // Funding.Instance (ActionModifierFunds, TestMissionFunds): the live Funding scenario module (Funding::Instance). No seam needed.
     // ModuleAsteroid / ModuleComet part modules of a vessel (TestVesselActiveCount): found by class name through Vessel.
+    // ---- WP-54c: ActionPartFailure / ActionPartRepair / ActionPartResourceDrain / TestDistance ----------------------------------------------------
+    // FlightGlobals.FindUnloadedPart(partId, out snapshot). Unset: SaveEnvironment::Current().persistentIds.persistentUnloadedPartIds.
+    static inline std::function<ProtoPartSnapshot*(uint32_t)> findUnloadedPart;
+    // Part.AddPartModuleAdjusterList(list) (PartModule.cs:1012 per module; the PartModule adjuster list is the part-module port's). Unset: recorded in
+    // adjusterCalls as "AddPartModuleAdjusterList(<part persistentId>,<adjuster ids>)".
+    static inline std::function<void(Part*, const std::vector<Adjusters::AdjusterPartModuleBase*>&)> partAddModuleAdjusters;
+    // part.Modules[i].GetType().Name. Unset: Part::Modules()[i]->ClassName().
+    static inline std::function<std::vector<std::string>(Part*)> partModuleNames;
+    // part.Modules[i].CurrentModuleAdjusterList adjusterIDs (PartModule.cs:221). Unset: empty.
+    static inline std::function<std::vector<Guid>(Part*, int moduleIndex)> partModuleAdjusterIds;
+    // part.Modules[i].RemovePartModuleAdjuster(the adjuster with that id). Unset: recorded in adjusterCalls.
+    static inline std::function<void(Part*, int moduleIndex, const Guid&)> partRemoveModuleAdjuster;
+    static inline std::vector<std::string> adjusterCalls;
+    // Part.RequestResource(resourceId, demand, ResourceFlowMode.NO_FLOW). Unset: Part::RequestResource.
+    static inline std::function<double(Part*, int resourceId, double demand)> partRequestResource;
+    // gameObject.AddComponent(AssemblyLoader.GetClassByName(typeof(PartModule), cls)).GetModuleDisplayName() (ActionPartRepair.SetPartModuleNamesForDropdown).
+    // nullopt = the class was not found (the C# then dereferences null). Unset: nullopt.
+    static inline std::function<std::optional<std::string>(const std::string& cls)> partModuleDisplayName;
+    // PSystemSetup.Instance.GetSpaceCenterFacility(name) -> a live accessor of facilityTransform.position (empty function = null facility),
+    // GetLaunchSite(name) -> accessor of GetWorldPos().position (TestDistance caches the object, reads the position every Test()). Unset: null.
+    static inline std::function<std::function<Vector3d()>(const std::string& name)> getSpaceCenterFacility;
+    static inline std::function<std::function<Vector3d()>(const std::string& name)> getLaunchSite;
+    // PSystemSetup.Instance.GetLaunchSiteDisplayName(name) (TestDistance body text). Unset: MissionDataEnvironment::launchSiteDisplayName, else the name.
+    static inline std::function<std::string(const std::string& name)> launchSiteDisplayName;
+
     static void Reset();
 
     static CelestialBody* HomeBody();

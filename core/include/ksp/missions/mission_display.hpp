@@ -42,6 +42,50 @@ public:
 };
 }  // namespace Editor
 
+// Forward declarations for the editor control seams below
+}  // namespace ksp::Expansions::Missions
+namespace ksp {
+class Part;
+}
+namespace ksp::Expansions::Missions {
+
+namespace Editor {
+
+// Editor/MEGUIDropDownItem.cs:3 (a drop-down entry: key, boxed value, display text). The boxed value is kept as its text (enum member name / guid).
+struct MEGUIDropDownItem {
+    std::string key;
+    std::string value;
+    std::string text;
+};
+
+// The editor controls the actions / tests keep a reference to (OnXControlCreated callbacks). Seams: a host that has the mission editor implements
+// them; with no control (play mode, tests without a UI) every `!= null` test of the C# is false.
+class IMEGUIVesselPartSelector {  // MEGUIParameterVesselPartSelector
+public:
+    virtual ~IMEGUIVesselPartSelector() = default;
+    virtual Part* GetSelectedPart() = 0;
+    virtual void RefreshUI() = 0;
+};
+class IMEGUIDynamicModuleListControl {  // MEGUIParameterDynamicModuleList
+public:
+    virtual ~IMEGUIDynamicModuleListControl() = default;
+    virtual void RefreshUI() = 0;
+    virtual void SetAddButtonText(const std::string& text) = 0;  // addButtonText.text = ...
+};
+class IMEGUIControl {  // any MEGUIParameter* control: the gameObject.SetActive(value) the visibility callbacks call
+public:
+    virtual ~IMEGUIControl() = default;
+    virtual void SetActive(bool value) = 0;
+};
+class IMEGUIDropdownList : public IMEGUIControl {  // MEGUIParameterDropdownList
+public:
+    virtual void RebuildDropDown() = 0;
+    virtual std::optional<int> SelectedValueInt() = 0;            // (int)SelectedValue for an enum drop-down, nullopt = SelectedValue == null
+    virtual int GetItemIndex(std::optional<int> value) = 0;       // GetItemIndex(SelectedValue)
+};
+
+}  // namespace Editor
+
 // IMENodeDisplay.cs:6
 class IMENodeDisplay {
 public:

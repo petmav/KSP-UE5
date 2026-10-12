@@ -62,6 +62,10 @@ struct MissionDataEnvironment {
     static inline std::function<bool(const std::string& path)> fileExists;
     static inline std::function<ConfigNode::NodePtr(const std::string& path)> loadConfigNode;
     static inline std::function<void(const ConfigNode&, const std::string& path)> saveConfigNode;
+    // Directory.Exists(path) / Directory.GetFiles(path, "*.craft") (Mission.ProcessCraftFileFolder) and Path.GetFileName. Unset: std::filesystem (files in
+    // ordinal name order, which is the NTFS enumeration order of .NET on Windows).
+    static inline std::function<bool(const std::string& path)> directoryExists;
+    static inline std::function<std::vector<std::string>(const std::string& path, const std::string& extension)> getFiles;
     // PartLoader.getPartInfoByName(name).title (MissionCraft.GetPartName). Unset: the name.
     static inline std::function<std::string(const std::string& partName)> partTitle;
     // MissionsUtils.UsersMissionsPath (MissionScoreInfo.saveFileName is appended). Unset: "".

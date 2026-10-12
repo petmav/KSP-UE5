@@ -1006,6 +1006,17 @@ Mission::~Mission() {
     if (g != nullptr && g->Mode == Game::Modes::MISSION && (HighLogic::LoadedScene() == GameScenes::FLIGHT || HighLogic::LoadedScene() == GameScenes::SPACECENTER))
         awards->StopTracking();
     GameEvents::onGameSceneSwitchRequested.Remove(this, &Mission::OnGameSceneSwitchRequested);
+    if (registeredGameEvents) {
+        // Mission.cs:286 OnDestroy removes these (not onVesselDocking / onVesselsUndocking: the C# leaks those two; a dead Mission must not be called here)
+        GameEvents::onPartVesselNamingChanged.Remove(this, &Mission::OnPartVesselNamingChanged);
+        GameEvents::onVesselPersistentIdChanged.Remove(this, &Mission::OnVesselPersistentIdChanged);
+        GameEvents::onPartPersistentIdChanged.Remove(this, &Mission::OnPartPersistentIdChanged);
+        GameEvents::onPartDeCoupleNewVesselComplete.Remove(this, &Mission::OnPartDecoupleNewVesselComplete);
+        GameEvents::onVesselDocking.Remove(this, &Mission::OnVesselDocking);
+        GameEvents::onVesselsUndocking.Remove(this, &Mission::OnVesselsUndocking);
+        GameEvents::onVesselRename.Remove(this, &Mission::OnVesselRename);
+    }
+    ClearCraftFiles();
 }
 
 // Mission.cs:331
@@ -1061,7 +1072,15 @@ void Mission::OnGameSceneSwitchRequested(GameEvents::FromToAction<GameScenes, Ga
 
 // Mission.cs:389
 void Mission::RegisterGameEvents() {
-    // the vessel / part event handlers (OnPartVesselNamingChanged ... OnVesselsUndocking) belong to the craft-file bookkeeping (deferred)
+    if (MissionsEnvironment::craftFileBookkeeping) {
+        GameEvents::onPartVesselNamingChanged.Add(this, &Mission::OnPartVesselNamingChanged);
+        GameEvents::onVesselPersistentIdChanged.Add(this, &Mission::OnVesselPersistentIdChanged);
+        GameEvents::onPartPersistentIdChanged.Add(this, &Mission::OnPartPersistentIdChanged);
+        GameEvents::onPartDeCoupleNewVesselComplete.Add(this, &Mission::OnPartDecoupleNewVesselComplete);
+        GameEvents::onVesselDocking.Add(this, &Mission::OnVesselDocking);
+        GameEvents::onVesselsUndocking.Add(this, &Mission::OnVesselsUndocking);
+        GameEvents::onVesselRename.Add(this, &Mission::OnVesselRename);
+    }
     registeredGameEvents = true;
 }
 
@@ -1169,6 +1188,7 @@ void Mission::OnEditorStarted() {
 
 // Mission.cs:1535 GetMissionCraftByFileName(name) != null (MissionCraft and the craft-file list are deferred: the host provides the test)
 bool Mission::craftFileExists(const std::string& craftFileName) {
+    if (MissionsEnvironment::craftFileBookkeeping) return GetMissionCraftByFileName(craftFileName) != nullptr;
     if (MissionsEnvironment::craftFileExists) return MissionsEnvironment::craftFileExists(*this, craftFileName);
     return true;
 }
@@ -1638,9 +1658,11 @@ void Mission::Load(const ConfigNode& node, bool simple) {
             }
         }
         if (!simple) {
-            if (MissionsEnvironment::rebuildCraftFileList) MissionsEnvironment::rebuildCraftFileList(*this);  // RebuildCraftFileList (:1350)
+            if (MissionsEnvironment::craftFileBookkeeping) RebuildCraftFileList();  // :1350 (WP-54c)
+            else if (MissionsEnvironment::rebuildCraftFileList) MissionsEnvironment::rebuildCraftFileList(*this);  // RebuildCraftFileList (:1350)
             if (KSPUtil::CheckVersion(expansionVersion, 1, 10, 0) == VersionCompareResult::INCOMPATIBLE_TOO_EARLY) {
-                if (MissionsEnvironment::processMappedVesselNodeMap) MissionsEnvironment::processMappedVesselNodeMap(*this);  // :1860
+                if (MissionsEnvironment::craftFileBookkeeping) ProcessMappedVesselNodeMap();  // :1964 (WP-54c)
+                else if (MissionsEnvironment::processMappedVesselNodeMap) MissionsEnvironment::processMappedVesselNodeMap(*this);  // :1860
             }
         }
         SetStartNode();
