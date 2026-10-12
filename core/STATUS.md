@@ -55,6 +55,7 @@ Updated 2026-10-12 (WP-54b, WP-19a, WP-55, WP-38c; 2026-10-11: WP-50, WP-35, WP-
 | 44. Test hygiene: unit tests independent of order (branch `testorder`, from main `121e0a75`) | done (unit 806 cases / 1,326,293 assertions measured on the tree merged with main `1f570809`+ (wp19a, wp12a, wp55, wp54 ...), fresh build, ctest 38 / 38 in a worktree: main's 35 + 3 `unit.random_order`; +2 assertions over main = the two `REQUIRE`s of `LoadStockLocalizer`): the `unit` binary passes under `--order-by=rand` for 25 seeds on the original base (1-3, 9-28, 42, 777) and for 14 seeds on the merged tree (1-3, 5, 7, 9, 10, 13, 17, 21, 99, 123, 777, 4242), `--order-by=name` and the default order (it failed on every seed before: 3 to 9 cases); a doctest listener (`tests/test_hygiene.cpp`) resets the shared state around every case, plus nine test-side fixes; 3 ctest entries `unit.random_order.{11,27,42}`; see "Test hygiene: random order" |
 | 45. WP-54b Making History mission runtime, slice 2 (branch `wp54b`, from wp55 `283a712c`, main `3abcff94` merged) | done for the engine-agnostic part, gated against an independent Python reference at 0 differences (`tools/wp54b/` -> `tests/data/wp54b_reference.json`, 1,250 cases / 24,992 ops, no kspcore code; labelled synthetic scenarios, every stock mission file is 0 bytes): VesselSituation (whole), VesselRestriction* (9 classes), MissionPreflightCheck / BlackList, MissionOrbit / VesselGroundLocation / VesselLocation / LaunchSiteSituation / Crew / SurfaceArea / SurfaceVolume / Asteroid / Comet / MissionKerbal / ParamChoices_* / MissionCraft, 20 Tests the WP-55 deferred (Situation*, StateCrashed, Velocity, GoTo, FlyThrough, PlantFlag, Orbit, OrbitParams, Grapple, PartDocking, ScienceExperiment, CrewAssignment, Kerbal*, TakeKerbal; Kerbal EVA / Boarded / TakeKerbal gated for Save / texts only), ActionCreateVessel / Kerbal / Asteroid / Comet / Flag / LaunchSite (Asteroid / Comet / Kerbal / Flag gated, Flag incl. GetProtoVesselNode); 4 unit cases / 40,149 assertions; `check_cites` exact 565 cites, 0 mismatches. Not ported: TestDistance, ActionPartFailure / Repair / ResourceDrain, MissionSystem, MissionImporting, MissionEditorHistory, real BaseAPField, PositionMobileLaunchPad, MissionScoreInfo, MissionLocalizer, craft-file bookkeeping. See the WP-54b section |
 | 46. WP-20b vessel rigid bodies on the reduced rigid-body model (branch `wp20b`, from main `b9119103`) | done for the engine-agnostic part (the model the user adopted 2026-10-12: one Jolt body per rigid cluster, double positions, no per-tick shift, Krakensbane a velocity offset), gated by rules, bit-identity, analytic dynamics, the spike's numbers and scenarios (no golden or capture can cover rigid-body dynamics; every existing gate unchanged): `VesselPhysics` builds the clusters of a Vessel from KSP's Part.Start / PartJoint.Create / SetupJoint / autostrut / strut rules (sub-joint counts == PROFILE.md's runtime counts 24 / 44 / 168 / 320 / 960), cluster mass / CoM / inertia from rb.mass = Max(MinimumRBMass, physicsMass) and ValidateInertiaTensor's Max(1, m) rule over proxy colliders, `ReadState` == CalculatePhysicsStats (bit-identical to the WP-14 port on S / M2 / L2-AS), the ForceAccumulator (Part.AddForce* / ForceMode / FlightIntegrator.Integrate buffers / angular drag) and the aero / engine / RCS / lifting-surface record adapters, mass updates, `Cut` / `SplitOff` / `Merge` / `Rebuild` with momentum conserved; `VesselPhysicsHost` wires the WP-14 / WP-19a `Vessel::env` seams (bodies on GoOffRails, gone on GoOnRails, readPhysicsState, partRigidbody, rootRigidbody, offsetVelocity); `PhysicsWorld` gained compound bodies, mass updates, fixed constraints and `AddStaticMesh`. Gate: 16 cases / 529 assertions: closed forms, two welded clusters vs the analytic rigid body, momentum at a decouple / split / merge, the spike's ascents (spike damping vs reduced-whole: within 0.23 %; KSP's per-part damping vs the articulated model: within 0.51 %), determinism at 1 / 2 / 4 / 8 threads, 10 s on the pad (S / M2-AS 1e-9 m, L2-AS 0.036 m), an 80 km orbit coast through VesselPrecalculate with Krakensbane (1.4 mm per orbit); Release ticks S / M2-AS / L2-AS / XL1-AS / XL2-AS 0.017 / 0.113 / 0.340 / 0.793 / 1.617 ms (spike 0.017 / 0.105 / 0.312 / 0.854 / 1.484). See the WP-20b section |
+| 51. WP-19b frames and the physics bubble (branch `wp19b`, from local `wp20b` 950c1d94) | done for the engine-agnostic part, gated by an independent Python reference at 0 ULP and analytic scenarios (no golden or capture covers rigid bodies in the flight scene; every existing gate unchanged): `PhysicsBubble` (physics/physics_bubble.hpp) owns the flight scene's physics wiring on the reduced model. **Frame policy (resolves WP-20b R1):** one world frame for float and double positions (floatOrigin 0, KSP's convention), its origin kept near the active vessel by FloatingOrigin's own 500 m / continuous rule shifting the NON-physics state only (bodies, vessels' transforms / CoMD; Jolt bodies never move: one double anchor), Krakensbane's frame drift folded back into the dynamic bodies at disengagement with static geometry gated while it is nonzero, the physics origin re-centred past 1,000 km. OrbitPhysicsManager setRotatingFrame / setDominantBody with the bodies (reverse chain, velocity resume, physical objects), Vessel.ChangeWorldVelocity / SetWorldVelocity with krakensbaneAcc, the Krakensbane host (registry snapshot, VesselsLoaded, physical objects), physicalObject, several vessels in one bubble (load / unload, pack / unpack, rails transitions) and the bindings' lifecycle. Gate: 14 cases: setRotatingFrame (300 scenes), ChangeWorldVelocity (300), Krakensbane through the host (400), FloatingOrigin decision and shift (300) at 0 ULP; `two_vessels` (load 2.25 km, unpack 200 m, relative position within 0.65 mm of independent two-body orbits, pack 350 m), `frame_switch` both ways and the SOI change into the Mun in physics (KSP's one-tick frame displacement matched within 0.3 mm / 5e-6 m, Kepler motion before and after), localCoM 1.3 cm -> 1e-7 m with the rebase, the frame-drift fold vs a static floor, physics-origin rebase invariance (1.4e-7 m), lifecycle. Findings: KSP's two clocks (UT 0.02 vs physics 0.02f: 1 um per tick at orbital speed), frame changes reach the bodies' frame one tick late. See the WP-19b section |
 
 ## Test results (all 36 ctest tests pass (35 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience, WP-19a capture.vessel_rails)
 
@@ -5354,3 +5355,130 @@ Simplex reference failed after it otherwise).
 `fc5431b8` first version (PhysicsWorld additions, VesselPhysics, PartJoint data, host, tests), `a12e450c` orbit coast / host / mass / forces /
 split-merge tests, pose cache, flat part index, diagonal MOI, checkable cites, Simplex state guard, `97daca3e` Rebuild, `8adcdccd` STATUS /
 README / regression results, then this verification note.
+
+
+## WP-19b: frames and the physics bubble (branch `wp19b`, from local `wp20b` 950c1d94)
+
+State: done for the engine-agnostic part. Scope = the WP-20b "Deferred to WP-19b" list (frame-origin policy and the R1 frame-mixing risk, the
+rotating / inertial switch of the bodies, Vessel.ChangeWorldVelocity incl. krakensbaneAcc, the Krakensbane host, FloatingOrigin consistent with
+the reduced model, several vessels in one bubble, the bindings' lifecycle) and PHYSICS-SPIKE.md section 7 row WP-19b (`frame_switch`,
+`two_vessels`). **No golden or capture covers rigid bodies in the flight scene** (PhysX is not reproducible): the gate is an independent Python
+reference for every bit-exact piece (0 ULP), analytic scenarios against an independent two-body propagator (not kspcore's Orbit), and invariance
+checks. Every existing gate is unchanged (`harness/compare/tolerances.json`, `tests/tolerances_capture.json` untouched). WP-20c's files (load
+graph, Cut / Merge internals) are not touched.
+
+### The frame policy (resolves WP-20b risk R1)
+
+kspcore's world had the dominant body at the origin (Kerbin's reversed orbit driver, position 0), so a vessel in orbit had float fields 700 km
+from the origin (6 cm ulp) and CalculatePhysicsStats' `CoM = CoMD; localCoM = vesselTransform.InverseTransformPoint(CoM)` either lost 1-6 cm
+(`floatOrigin` 0) or mixed frames (`floatOrigin` near the vessel). Decided:
+
+1. **One world frame** for every float and double world position, KSP's convention (`floatOrigin` stays 0): transforms, Vessel.CoM,
+   rb.worldCenterOfMass, AddForceAtPosition's position, CelestialBody.position, Vessel.CoMD. Every ported statement runs unchanged.
+2. **Its origin follows the active vessel** by FloatingOrigin's own decision (FloatingOrigin.cs:131-145: `continuous`, or the active vessel
+   farther than `threshold` 500 m, while canEngageThisFrame) and setOffset's own shift (FloatingOrigin.cs:181-206: bodies, vessels'
+   SetPosition, CoMD / CoM) applied to the **non-physics** state only (`PhysicsBubble::ShiftWorld`). Jolt bodies never move for it: they are tied
+   to the world by one double, `FrameOriginWorld` (the world position of the physics origin), which the shift moves with everything else.
+   Measured: localCoM 1.3 cm off with the vessel 720 km from the origin, 1e-7 m after the rebase; in orbit the rebase happens every ~12 ticks
+   (50 in 12 s), the transform stays within 532 m of the origin, the trajectory equals a run without rebases to 1.2e-6 m.
+3. **Krakensbane's frame drift** stays WP-20a's FrameOffset (no per-tick shift: KSP's per-tick branch FloatingOrigin.cs:146-150 is not a trigger).
+   Dynamic bodies are at world = FrameOriginWorld + p + FrameOffset, **static geometry at FrameOriginWorld + s** (the body frame). The two agree
+   only while FrameOffset is zero, so: static collisions are OFF while it is not (`PhysicsWorld::SetStaticCollisions`; KSP's SafeToEngage keeps
+   every loaded vessel 150-200 m above the terrain while Krakensbane is engaged), and the drift is FOLDED into the dynamic bodies (one SetPosition
+   per body) as soon as the frame velocity is zero again (Krakensbane.Zero, packed active vessel). Without the gate a body at rest 5 m above a
+   static floor while the frame drifts 20 m was hit by the stale floor (20.5 m of disturbance); with it: 6e-7 m, then it lands on the real floor.
+4. **The physics origin** is re-centred on the active vessel (every Jolt body moved once, O(bodies)) only past `physicsOriginRebaseDistance`
+   1,000 km (PHYSICS-SPIKE.md R3, Jolt's float broad phase); trajectories equal to 1.4e-7 m with / without, static bodies' world positions exact.
+5. Rotating <-> inertial and the SOI change do not move the physics origin: the world axes are KSP's (body-fixed in the rotating frame, inertial
+   otherwise) and the dominant body stays still in the world (the reversed orbit-driver chain): only velocities change, as the C# changes them.
+
+Static meshes (WP-12b terrain quads, WP-42 KSC) must be added at `PhysicsBubble::StaticPhysicsFromWorld(world)`; terrain colliders are valid in the
+rotating frame of their body (in the inertial regime the body turns under them: rebuild them on onRotatingFrameTransition, WP-12b).
+
+### What is in
+
+| piece | files | KSP source |
+|---|---|---|
+| `PhysicsBubble` | `physics/physics_bubble.hpp`, `src/physics/physics_bubble.cpp` | Install / Uninstall of every seam (VesselPhysicsHost hooks + `setWorldVelocity`, `krakensbaneAddFrameVelocity` (Vessel.cs:2440), OrbitPhysicsManager::env, FlightScene's FlightIntegrator slot, the owned Krakensbane / FloatingOrigin singletons and their hooks, onVesselUnloaded / onFlightGlobalsRemoveVessel); `ShiftWorld` (FloatingOrigin.cs:166 setOffset's shift), `FoldFrameOffset`, `RebasePhysicsOrigin`; `setRotatingFrame` (OrbitPhysicsManager.cs:235-302) and `setDominantBody` (:155-216: Planetarium.Orbits / body drivers' reverse flags, SetReverseOrbit :226, IgnoreGeeForces, IgnoreGForces(20), velocity resume `orbit.GetVel() - FrameVel`, the physical objects' relative velocities as floats) with the bodies; the Krakensbane snapshot from FlightGlobals; the minimal FlightIntegrator stand-in until WP-20d (FlightIntegrator.cs:661-669: IntegratePhysicalObjects' gravity, OffsetVelocity of the pre-integration offset, Integrate); FixedUpdate / FrameUpdate / PhysicsStep / Update / LateUpdate |
+| FloatingOrigin rule | `physics/floating_origin.hpp/.cpp` | FloatingOrigin.cs:6-34 fields, :125 FixedUpdate (continuous / threshold / canEngage decision), :166 setOffset through the new `shiftWorld` hook, onFloatingOriginShift when a shift happened; hooks unset = WP-20a's behaviour |
+| `Vessel::ChangeWorldVelocity` / `SetWorldVelocity` | `vessel/vessel.hpp`, `src/vessel/vessel_flight.cpp` | Vessel.cs:3197 (krakensbaneAcc += velOffset / TimeWarp.fixedDeltaTime), :3219; the rigid-body loops are the `offsetVelocity` / new `setWorldVelocity` seams |
+| `physicalObject` | `physics/physical_object.hpp/.cpp` | physicalObject.cs: fields, Awake / OnDestroy registration, the Update rule (high warp, maxDistance); a Jolt body of the bubble |
+| PhysicsWorld | `physics/physics_world.hpp/.cpp` | `IsStatic`, `TranslateBodies` (double SetPosition per body), `SetStaticCollisions` (the layer filters) |
+| VesselPhysicsHost | `physics/vessel_physics.hpp` | `Bindings()` (read-only list, creation order) |
+
+### Gate (`tests/test_physics_bubble.cpp`, `test_physics_bubble_ref.cpp`, `physics_bubble_fixture.hpp`: 14 cases / @ASSERTS@ assertions)
+
+| case | what | result |
+|---|---|---|
+| reference: setRotatingFrame | `tools/wp19b/frames_reference.py` (independent, from the C#): 300 scenes x 3 one-part vessels (dead / packed / living, float transforms, float rb velocities, krakensbaneAcc), body position and angular velocity, both directions | **0 ULP** (640 velocities re-expressed) |
+| reference: ChangeWorldVelocity | 300 scenes: DEAD / packed early-outs, float store of `(Vector3d)rb.velocity + dv`, krakensbaneAcc with TimeWarp.fixedDeltaTime 0.02f .. 0.1f | **0 ULP** |
+| reference: Krakensbane through the host | 400 scenes over the real registry (1-3 loaded vessels, active / packed / DEAD / landed / radar altitude, velocityD, rb_velocityD, upAxis, FrameVel): SafeToEngage, AddExcess (50), Zero (174), the packed branch (59), Vessel.ChangeWorldVelocity on VesselsLoaded[i] | **0 ULP** (FrameVel, excessV, lastCorrection, outOfFrameAdditional, canEngageThisFrame, every velocity and krakensbaneAcc) |
+| reference: FloatingOrigin | 300 scenes: continuous (warp rate vs MaxPhysicsRate, HIGH / LOW, landed, ship_velocity > 5 km/s), the 500 m float threshold (Mono rule sqrMagnitude), canEngage, out-of-frame offsets; the shift of 17 bodies, 4 unloaded vessels (DEAD skipped), the anchor | **0 ULP** (@SHIFTS@ shifts) |
+| setDominantBody chain | every body with an orbit driver as the dominant body: exactly it and its ancestors reversed; Planetarium's root body follows | as the C# |
+| frame policy | PhysProf-S at 120 km, tilted orbit and vessel: CalculatePhysicsStats' localCoM before / after FloatingOrigin.SetOffset; no Jolt body moved (StateHash), body / anchor shifted bit-exactly, read-back state unchanged (1e-8 m, velocity bit-identical) | 1.3 cm -> 1e-7 m |
+| rebases in the tick | 600 ticks at 2.2 km/s with KSP's 500 m rule vs without | 50 rebases, transform <= 532 m, trajectories 1.2e-6 m apart |
+| **`two_vessels`** | A active, B unloaded 3 km behind on a Clohessy-Wiltshire transfer passing 40 m from A after 300 s; Vessel.Update loads B, OrbitPhysicsManager.LateUpdate unpacks / packs it; both coast with drift compensation and Krakensbane; reference: two-body propagation of both initial states on the physics clock | B loads at 2,249.9 m, unpacks at 199.8 m, packs at 350.0 m; **relative position within 0.65 mm** of the Kepler orbits over 2,567 ticks in physics together; A within 0.17 mm over 16,761 ticks; B's rails orbit continues 2e-10 m from its last physics state |
+| **`frame_switch`** | PhysProf-S (tilted) coasting through Kerbin's 100 km threshold both ways in the full bubble tick; reference: two-body propagation in the inertial frame (Planetarium.Zup maps the world axes) | the bodies get exactly KSP's -/+ getRFrmVel(vessel.transform.position) (164 / 201 m/s; omega x (r_root - r_com) = 6e-4 m/s is KSP's rule); no position jump in the world; before: 7.5 mm (ascending: the first 5 ticks before the drift compensation engages) / 1e-6 m; the switch tick displaces the trajectory by omega x r dt (3.3 / 4.0 m) **matched within 0.3 mm**; afterwards a Kepler orbit within 1.3e-6 / 7e-5 m for 16 s |
+| **SOI change** | the active vessel enters the Mun's SOI in physics 9,600 km from Kerbin (the physics origin is re-centred on the way) | velocity relative to the Mun continuous (2e-4 m/s); KSP's order displaces the vessel - Mun distance by -V_Mun dt once (10.8 m) **matched within 5e-6 m**; two-body around Kerbin before 2.5e-7 m, around the Mun after 2.8e-4 m; onDominantBodyChange(Mun, Mun); the Mun / Kerbin chain reversed, Planetarium's root is the Mun and it stays still |
+| frame drift vs static geometry | a free body at rest 5 m above a static floor while Krakensbane's frame velocity (50 m/s) moves it 20 m down in the physics frame; then Krakensbane.Zero and gravity | gate off while drifting, true position within 6e-7 m, one fold, rests on the real floor (y 0.48 m, 4e-9 m/s); without the gate: hit by the stale floor (20.5 m) |
+| physics-origin rebase | a coast with / without RebasePhysicsOrigin at tick 150, plus a static body | 1.4e-7 m; static body exact |
+| lifecycle | four vessels in physics: Unload, Die (not active), destruction drop their bindings; ticks continue; the unloaded one reloads and unpacks again; Uninstall restores every seam and singleton | as stated |
+| physicalObject | registry, Krakensbane's VelocityChange (true velocity kept), the frame switch both ways, the Update rule (high warp, 1 km) | as stated |
+
+### Findings (KSP behaviour reproduced; a later implementer must keep or knowingly change them)
+
+- **Two clocks.** UT advances by Planetarium.fixedDeltaTime = 0.02 (double, Planetarium.cs:82 / :205), physics by Time.fixedDeltaTime = 0.02f
+  (TimeWarp.cs:423), and VesselPrecalculate's drift compensation moves a vessel by TimeWarp.fixedDeltaTime along its Kepler orbit per tick: a
+  vessel in physics runs 4.47e-10 s per tick behind the UT-clocked rails position (1 um per tick at 2.2 km/s, 1.7 cm in 335 s). The gates use
+  the physics clock; it cancels between vessels.
+- **Frame changes take one tick to reach the bodies' frame.** OrbitPhysicsManager.FixedUpdate (seq 280) switches the frame after Planetarium /
+  CelestialBody.CBUpdate (seq 6) computed this tick's frame; the step (seq 291) then runs the new velocities in the old axes. The rotating <->
+  inertial switch therefore turns the trajectory by omega dt about the body's axis once (-/+ (omega x r) dt: 3-4 m at 100 km on Kerbin), the SOI
+  change leaves the vessel - new body distance one tick of the body's motion behind (-V dt: 10.8 m for the Mun). Both reproduced and gated as such.
+- setRotatingFrame moves every part by omega x r_root (vessel.transform.position) and leaves angular velocities alone; krakensbaneAcc changes by
+  rFrmVel itself (not / dt) there, by velOffset / dt in ChangeWorldVelocity. krakensbaneAcc is never read in Assembly-CSharp (mods only).
+- The first orbitDriftFramesToWait (5) ticks after an unpack run without drift compensation (1.2 mm per tick of Euler error in the rotating frame,
+  7.5 mm total), then the vessel is held on its orbit.
+
+### Exact / approximate / changed
+
+| choice | class | notes |
+|---|---|---|
+| setRotatingFrame, ChangeWorldVelocity, Krakensbane through the host, FloatingOrigin's decision and shift arithmetic | exact | 0 ULP against the reference |
+| setRotatingFrame / ChangeWorldVelocity on a cluster | exact | the C# adds the same vector to every part's rb.velocity: the cluster's velocity gets it (one float store, as each part's) |
+| setDominantBody's velocity resume: every part rb = orbit.GetVel() - FrameVel | approximate | the cluster's centre-of-mass velocity gets it, angular velocity kept (KSP: every part the same linear velocity, joints sort out the rotation) |
+| world rebase by KSP's rule, non-physics state only | changed (decided) | Jolt bodies never shift; the frame drift is FrameOffset, not a per-tick shift (Krakensbane branch of FloatingOrigin.cs:146-150 dropped) |
+| frame-drift fold at disengagement, static collisions gated while it is nonzero | kspcore addition | KSP shifts the terrain with everything else every tick |
+| physics-origin rebase past 1,000 km | kspcore addition | PHYSICS-SPIKE.md R3 |
+| onFloatingOriginShift | fired only when a shift happens (now: every world rebase) | WP-20a fired none |
+| physicalObject collider delay (Start, 0.05 s), renderer cleanup, IntegratePhysicalObjects' drag | not ported | the shell / WP-20d |
+| the FlightIntegrator slot | stand-in (pre-integration offset + Integrate) | WP-20d replaces it (`PhysicsBubble::flightIntegrator`) |
+
+### Seams and what is left
+
+| seam | owner |
+|---|---|
+| `PhysicsBubble::flightIntegrator` (the whole FlightIntegrator.FixedUpdate per vessel) | WP-20d |
+| static meshes at `StaticPhysicsFromWorld`, rebuilt on onRotatingFrameTransition / when the dominant body changes; `preciseUpdateQuadPositions` | WP-12b |
+| ground contact / landed anchor in the bubble (the gate is off only while Krakensbane is engaged) | WP-20e |
+| vessel switching beyond the bubble (FlightDriver.StartAndFocusVessel: a scene reload, i.e. a new bubble); QuickSaveLoad | host / later |
+| structural events (Cut / OnVesselSplit / OnVesselMerge through GameEvents) | WP-20c |
+
+### Risks
+
+- R1: the `two_vessels` relative error (0.65 mm of the 1 mm bound) is dominated by the float rounding of the other vessel's physics-frame velocity
+  (~10 m/s relative, KSP's Krakensbane rule re-centres on the active vessel only); another compiler / platform may land closer to the bound.
+- R2: the gate on static collisions relies on KSP's SafeToEngage (150-200 m clearance); a host that engages the frame velocity near terrain (the
+  kspcore `recentreSpeed` option does not change when it engages) would lose ground contact while engaged.
+- R3: the world rebase uses the active vessel's float transform (as KSP): after a rebase the vessel sits within the float rounding of its old
+  position (1-2 cm at 700 km) of the origin, not exactly at it.
+- R4: frame changes and their one-tick displacement are KSP's (findings above); an engine that wants them exact must change the tick order, not
+  the bubble.
+
+### Verification
+
+@VERIFICATION@
+
+### Commits (branch `wp19b`, from local `wp20b` 950c1d94; not pushed)
+
+@COMMITS@

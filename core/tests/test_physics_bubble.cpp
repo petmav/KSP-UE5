@@ -626,9 +626,9 @@ TEST_CASE("WP-19b physicalObject: registry, Krakensbane velocity change, frame s
     // the frame switch moves it like the vessels (OrbitPhysicsManager.cs:286-300)
     const Vector3d before = s.world.GetLinearVelocity(o.rb);
     const Vector3d rFrm = kerbin.getRFrmVel(Vector3d(s.bubble.PhysicalObjectPosition(o).ToVector3f()));
-    s.bubble.SetRotatingFrame(*s.opm, true);
+    s.bubble.setRotatingFrame(*s.opm, true);
     CHECK((s.world.GetLinearVelocity(o.rb) - (before - rFrm)).magnitude() < 1e-3);
-    s.bubble.SetRotatingFrame(*s.opm, false);
+    s.bubble.setRotatingFrame(*s.opm, false);
     CHECK((s.world.GetLinearVelocity(o.rb) - before).magnitude() < 1e-3);
     // physicalObject.Update: 30 m away is fine, 1 km away it destroys itself; and at high warp
     s.bubble.Update();

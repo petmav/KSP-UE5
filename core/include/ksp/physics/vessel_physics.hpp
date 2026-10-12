@@ -36,6 +36,10 @@
 // position) are written / read in the TRANSFORM frame:  transform = (float)(world - floatOrigin). floatOrigin = 0 is KSP's own
 // convention (part transforms, Vessel.CoM and CelestialBody.position share one frame); a host that keeps the world origin far away
 // sets floatOrigin near the vessel (the spike's vessel-local frame) and must then hand the ported code consistent references.
+// WP-19b decided (ksp/physics/physics_bubble.hpp): floatOrigin stays 0 and the bubble keeps the WORLD origin near the active vessel
+// (FloatingOrigin's own rule, applied to the non-physics state and to frameOriginWorld; Jolt bodies never move for it), so every
+// ported statement that mixes float transforms with double world positions (CalculatePhysicsStats' localCoM) is consistent and
+// precise. floatOrigin != 0 is for standalone pipelines that run none of the Vessel code (the WP-20b bench / spike).
 //
 // Units are KSP's: tonnes, metres, seconds, kN. Not here: the structural load solve and breaking (WP-20c), the per-part
 // FlightIntegrator pipeline (WP-20d), contacts / landing / water / the landed anchor (WP-20e), frames and the physics bubble
@@ -471,7 +475,8 @@ public:
 
     PhysicsWorld& World() const { return *world_; }
     VesselPhysicsOptions options;
-    // world position of the physics frame's origin for a vessel (WP-19b: the bubble's dominant body); unset = vessel.mainBody()->position
+    // world position of the physics frame's origin for a vessel (WP-19b: one anchor for the whole bubble, PhysicsBubble::FrameOriginWorld);
+    // unset = vessel.mainBody()->position
     std::function<Vector3d(const Vessel&)> frameOriginWorld;
     Vector3d floatOrigin;  // the transform frame origin given to every VesselPhysics (default 0, KSP's convention)
     // the pose a vessel is built at on unpack; unset = the rails state: vessel transform = CoMD - rotation * localCoM

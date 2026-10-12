@@ -50,8 +50,8 @@ void PhysicsBubble::Install() {
     savedKrakensbaneAddFrameVelocity_ = env.krakensbaneAddFrameVelocity;
     env.krakensbaneAddFrameVelocity = [](const Vector3d& vel) { Krakensbane::AddFrameVelocity(vel); };
     savedOpm_ = OrbitPhysicsManager::env;
-    OrbitPhysicsManager::env.setDominantBody = [this](OrbitPhysicsManager& opm, CelestialBody* body) { SetDominantBody(opm, body); };
-    OrbitPhysicsManager::env.setRotatingFrame = [this](OrbitPhysicsManager& opm, bool rotating) { SetRotatingFrame(opm, rotating); };
+    OrbitPhysicsManager::env.setDominantBody = [this](OrbitPhysicsManager& opm, CelestialBody* body) { setDominantBody(opm, body); };
+    OrbitPhysicsManager::env.setRotatingFrame = [this](OrbitPhysicsManager& opm, bool rotating) { setRotatingFrame(opm, rotating); };
     savedAfterFlightIntegrator_ = FlightScene::hooks.afterFlightIntegrator;
     FlightScene::hooks.afterFlightIntegrator = [this] { RunFlightIntegrators(); };
 
@@ -143,7 +143,7 @@ void PhysicsBubble::RefreshBindings() {
     for (const auto& vp : host_.Bindings()) vp->AfterStep();  // the cluster caches and the part transforms from the bodies
 }
 
-// FloatingOrigin.cs:181-206 (setOffset's shift of the bodies and the vessels). kspcore's offsets are equal (the Galilean drift is
+// FloatingOrigin.cs:166 setOffset, its shift of the bodies and the vessels (lines 181-206). kspcore's offsets are equal (the Galilean drift is
 // FrameOffset, never a `nonFrame` part). The vessels with bodies are re-derived from the unchanged Jolt bodies (their transforms
 // are a function of frameOriginWorld): the same shift as the C#'s `SetPosition(transform.position - offset)`, from doubles.
 void PhysicsBubble::ShiftWorld(const Vector3d& offset, const Vector3d& offsetNonKrakensbane) {
@@ -195,15 +195,15 @@ void PhysicsBubble::MaybeRebasePhysicsOrigin() {
 // ===================================================================================== OrbitPhysicsManager with the bodies
 
 // OrbitPhysicsManager.cs:235
-void PhysicsBubble::SetRotatingFrame(OrbitPhysicsManager& opm, bool rotatingFrameState) {
+void PhysicsBubble::setRotatingFrame(OrbitPhysicsManager& opm, bool rotatingFrameState) {
     FlightLogger::IgnoreGeeForces(0.5f);                    // :237
     opm.dominantBody->inverseRotation = rotatingFrameState;  // :238
     for (Vessel* vessel : FlightGlobals::Vessels) {          // :240-285
         if (vessel == nullptr || vessel->state == Vessel::State::DEAD || vessel->packed) continue;
         const Vector3d rFrmVel = opm.dominantBody->getRFrmVel(Vector3d(vessel->vesselTransform.position));
-        // :248-276 every rb (and servoRb) of the parts: rb.velocity = (Vector3d)rb.velocity -/+ rFrmVel, one rigid-body change per cluster
+        // C# lines 248-276: every rb (and servoRb) of the parts: rb.velocity = (Vector3d)rb.velocity -/+ rFrmVel, one rigid-body change per cluster
         if (VesselPhysics* vp = host_.Find(*vessel)) vp->ChangeWorldVelocity(rotatingFrameState ? -rFrmVel : rFrmVel);
-        if (rotatingFrameState) vessel->krakensbaneAcc -= rFrmVel;  // :277-284 (rFrmVel itself, not divided by dt: as the C#)
+        if (rotatingFrameState) vessel->krakensbaneAcc -= rFrmVel;  // lines 277-284 (rFrmVel itself, not divided by dt: as the C#)
         else vessel->krakensbaneAcc += rFrmVel;
     }
     for (physicalObject* o : FlightGlobals::physicalObjects) {  // :286-300
@@ -225,11 +225,11 @@ void SetReverseOrbit(CelestialBody& body) {
 }  // namespace
 
 // OrbitPhysicsManager.cs:155
-void PhysicsBubble::SetDominantBody(OrbitPhysicsManager& opm, CelestialBody* body) {
+void PhysicsBubble::setDominantBody(OrbitPhysicsManager& opm, CelestialBody* body) {
     opm.dominantBody = body;  // :157
-    // :158 `Vector3[] array`: the physical objects' velocities relative to the active vessel's orbit, stored as floats
+    // C# line 158: `Vector3[] array`: the physical objects' velocities relative to the active vessel's orbit, stored as floats
     std::vector<Vector3f> array(FlightGlobals::physicalObjects.size());
-    // :160-164 Planetarium.Orbits[i].reverse = false: the vessels' OrbitDrivers and the bodies' (kspcore keeps the bodies' drivers on
+    // C# lines 160-164: Planetarium.Orbits[i].reverse = false: the vessels' OrbitDrivers and the bodies' (kspcore keeps the bodies' drivers on
     // the CelestialBody, not in Planetarium.Orbits)
     if (std::vector<OrbitDriver*>* orbits = Planetarium::Orbits())
         for (OrbitDriver* od : *orbits)
@@ -240,7 +240,7 @@ void PhysicsBubble::SetDominantBody(OrbitPhysicsManager& opm, CelestialBody* bod
     FlightLogger::IgnoreGeeForces(0.5f);                                     // :169
     const Vessel* active = FlightGlobals::ActiveVessel;
     const CelestialBody* activeRef = active != nullptr ? active->mainBody() : nullptr;
-    // :170-180 (FlightGlobals.ActiveVessel.orbit: the C# throws without an active vessel; here the objects are then left alone)
+    // C# lines 170-180 (FlightGlobals.ActiveVessel.orbit: the C# throws without an active vessel; here the objects are then left alone)
     const size_t count2 = active != nullptr ? FlightGlobals::physicalObjects.size() : 0;
     for (size_t j = 0; j < count2; ++j) {
         physicalObject* o = FlightGlobals::physicalObjects[j];
@@ -252,7 +252,7 @@ void PhysicsBubble::SetDominantBody(OrbitPhysicsManager& opm, CelestialBody* bod
         if (vessel == nullptr || vessel->state == Vessel::State::DEAD || vessel->packed) continue;
         vessel->IgnoreGForces(20);
         const Vector3d vector3d = vessel->orbit().GetVel(activeRef) - frameVelocity;
-        // :191-202 every part rb (and servoRb) = vector3d: every cluster's centre-of-mass velocity (angular velocities kept)
+        // C# lines 191-202: every part rb (and servoRb) = vector3d: every cluster's centre-of-mass velocity (angular velocities kept)
         if (VesselPhysics* vp = host_.Find(*vessel)) vp->SetLinearVelocity(vector3d);
     }
     for (size_t m = 0; m < count2; ++m) {  // :205-214
@@ -260,7 +260,7 @@ void PhysicsBubble::SetDominantBody(OrbitPhysicsManager& opm, CelestialBody* bod
         if (o == nullptr || !o->HasRigidbody()) continue;
         o->world->SetLinearVelocity(o->rb, active->orbit().GetVel(activeRef) - Krakensbane::GetFrameVelocity() + Vector3d(array[m]));
     }
-    // :215 (both arguments are the new body: dominantBody was assigned first)
+    // C# line 215 (both arguments are the new body: dominantBody was assigned first)
     GE::onDominantBodyChange.Fire(GE::FromToAction<CelestialBody*, CelestialBody*>(opm.dominantBody, body));
 }
 
@@ -329,7 +329,7 @@ void PhysicsBubble::RunFlightIntegrators() {
     }
 }
 
-// FlightIntegrator.cs:661-669 (the rest of FlightIntegrator.FixedUpdate is WP-20d's)
+// FlightIntegrator.cs:544 FixedUpdate, its lines 661-669 (the rest of FlightIntegrator.FixedUpdate is WP-20d's)
 void PhysicsBubble::DefaultFlightIntegrator(Vessel& v, VesselPhysics& vp) {
     if (FlightGlobals::ActiveVessel == &v && !FlightGlobals::physicalObjects.empty()) {
         // IntegratePhysicalObjects (:747), its gravity (:752, :762): the acceleration at the vessel's CoM on every object (the drag

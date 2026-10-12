@@ -647,7 +647,7 @@ bool VesselPhysics::RootRigidbody(const Vector3f& point, Vector3f& pointVelocity
 // ===================================================================================== velocities
 
 // Vessel.cs:3197 ChangeWorldVelocity: every Rigidbody's velocity += dv (also Vessel.OffsetVelocity, Vessel.cs:3742, and Krakensbane's
-// AddExcess); the Vessel's krakensbaneAcc bookkeeping of the C# is the caller's (WP-19b)
+// AddExcess); the Vessel's krakensbaneAcc bookkeeping of the C# is the caller's (WP-19b: Vessel::ChangeWorldVelocity)
 void VesselPhysics::ChangeWorldVelocity(const Vector3d& dv) {
     for (ClusterRec& c : clusters_) {
         if (c.body == kInvalidBody) continue;

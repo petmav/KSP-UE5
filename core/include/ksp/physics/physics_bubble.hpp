@@ -24,10 +24,12 @@
 //   * The physics origin itself is re-centred (every Jolt body, static ones included, moved once: O(bodies)) only when the active
 //     vessel is farther than physicsOriginRebaseDistance (1,000 km) from it: Jolt's broad phase is float (PHYSICS-SPIKE.md R3).
 //   * Rotating <-> inertial (OrbitPhysicsManager.cs:235 setRotatingFrame) and SOI change of the bubble (:155 setDominantBody) are ported
-//     with their rigid-body effects (SetRotatingFrame / SetDominantBody below): the world frame's axes are KSP's (body-fixed while the
-//     dominant body is in the rotating frame, inertial otherwise), positions are continuous across both, only velocities change as the
-//     C# changes them. The dominant body stays fixed in the world (the reversed orbit-driver chain, Planetarium.UpdateCBsRecursive), so
-//     neither event moves the physics origin.
+//     with their rigid-body effects (setRotatingFrame / setDominantBody below): the world frame's axes are KSP's (body-fixed while the
+//     dominant body is in the rotating frame, inertial otherwise), world positions are continuous across both, only velocities change as
+//     the C# changes them. The dominant body stays fixed in the world (the reversed orbit-driver chain, Planetarium.UpdateCBsRecursive), so
+//     neither event moves the physics origin. (KSP's tick order switches after this tick's frame was set: the step of the switch tick runs
+//     the new velocities in the old axes, which displaces the trajectory once by one tick of the frame's motion, -/+ (omega x r) dt or
+//     -V_body dt; reproduced, STATUS.md WP-19b.)
 //
 // SEVERAL VESSELS: one VesselPhysics per loaded unpacked vessel in one PhysicsWorld (VesselPhysicsHost, WP-20b), all in this bubble's
 // one frame; load / unload by Vessel.Update (VesselRanges, WP-19a), pack / unpack by OrbitPhysicsManager.LateUpdate (WP-19a) drive
@@ -124,8 +126,9 @@ public:
     size_t PhysicsRebaseCount() const { return physicsRebases_; }
 
     // ---- OrbitPhysicsManager with the rigid bodies (OrbitPhysicsManager::env) ---------------------------------------------------
-    void SetRotatingFrame(OrbitPhysicsManager& opm, bool rotatingFrameState);  // OrbitPhysicsManager.cs:235
-    void SetDominantBody(OrbitPhysicsManager& opm, CelestialBody* body);       // OrbitPhysicsManager.cs:155
+    // (the C# names of the private methods they port; OrbitPhysicsManager::env calls them)
+    void setRotatingFrame(OrbitPhysicsManager& opm, bool rotatingFrameState);  // OrbitPhysicsManager.cs:235
+    void setDominantBody(OrbitPhysicsManager& opm, CelestialBody* body);       // OrbitPhysicsManager.cs:155
 
     // ---- Krakensbane host ---------------------------------------------------------------------------------------------------
     FrameSnapshot KrakensbaneSnapshot() const;

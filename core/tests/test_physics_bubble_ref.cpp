@@ -103,7 +103,7 @@ TEST_CASE("WP-19b reference: setRotatingFrame on the bodies (OrbitPhysicsManager
             t.vessels[i]->vesselTransform.position = V3f(jv["pos"]);
         }
         const bool rotating = sc["rotating"].get<bool>();
-        t.s.bubble.SetRotatingFrame(*t.s.opm, rotating);
+        t.s.bubble.setRotatingFrame(*t.s.opm, rotating);
         CHECK(kerbin.inverseRotation == rotating);
         for (size_t i = 0; i < 3; ++i) {
             const json& o = sc["out"][i];
@@ -263,7 +263,7 @@ TEST_CASE("WP-19b setDominantBody: the reversed orbit-driver chain for every bod
     const std::vector<CelestialBody*>& bodies = FlightGlobals::Bodies();
     for (CelestialBody* dominant : bodies) {
         if (!dominant->orbitDriver) continue;  // the Sun cannot be the dominant body of a vessel in KSP's system
-        s.bubble.SetDominantBody(*s.opm, dominant);
+        s.bubble.setDominantBody(*s.opm, dominant);
         CHECK(s.opm->dominantBody == dominant);
         std::vector<CelestialBody*> chain;
         for (CelestialBody* b = dominant; b != nullptr && b->orbitDriver; b = b->orbitDriver->referenceBody) chain.push_back(b);
@@ -276,6 +276,6 @@ TEST_CASE("WP-19b setDominantBody: the reversed orbit-driver chain for every bod
         w.planetarium.FixedUpdate();
         CHECK(w.planetarium.CurrentMainBody == dominant);
     }
-    s.bubble.SetDominantBody(*s.opm, &w.Kerbin());  // back to the system's home configuration
+    s.bubble.setDominantBody(*s.opm, &w.Kerbin());  // back to the system's home configuration
     CHECK(w.Kerbin().orbitDriver->reverse);
 }

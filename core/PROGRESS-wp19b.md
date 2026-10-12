@@ -45,3 +45,12 @@ Not touched: WP-20c's files (load graph, Cut / Merge internals). Local commits o
   (10.8 m, matched within 5e-6 m); before and after, the vessel follows its Kepler orbit (1e-6 .. 7e-5 m over 16 s).
 - finding: the first orbitDriftFramesToWait (5) ticks after an unpack in the rotating frame run without drift compensation: 1.2 mm per
   tick of Euler error (7.5 mm total), then held.
+- independent reference tools/wp19b/frames_reference.py -> tests/data/wp19b_reference.json (setRotatingFrame 300, ChangeWorldVelocity 300,
+  Krakensbane through the host 400, FloatingOrigin 300 scenes): 0 ULP on the first run; setDominantBody reverse chain for every body.
+- tests added: fold / static gate (6e-7 m at rest in the true frame while drifting; without the gate 20.5 m), physics-origin rebase invariance
+  (1.4e-7 m), lifecycle (unload / die / destruction, reload), physicalObject.
+- check_cites exact: 29 cites over physics_bubble / physical_object / floating_origin / vessel_flight / krakensbane / physics_world, 0 mismatches
+  (aliases ShiftWorld, DefaultFlightIntegrator, physicalObject ctor / dtor, UpdateWantsDestroy; the bubble's ports keep the C# names
+  setRotatingFrame / setDominantBody); the WP-20b files still 57 / 0.
+- docs: header comments (vessel_physics.hpp frame paragraph: the decided policy; krakensbane / reference_frame / orbit_physics_manager /
+  flight_globals pointers), README (bubble paragraph, unit row, layout rows), STATUS row 51 + WP-19b section.

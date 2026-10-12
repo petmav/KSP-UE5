@@ -15,7 +15,8 @@
 //     FloatingOrigin::FrameOffset() (floating_origin.hpp), not a write to every object.
 //   * Every dependency on Unity objects (FlightGlobals.ready / ActiveVessel / VesselsLoaded / physicalObjects, Vessel
 //     velocities, Rigidbody.AddForce) is the KrakensbaneHost below; the physics world implements the velocity write
-//     (PhysicsWorld::AddVelocityChangeToAllMoving) and WP-19/WP-20b wire the vessels.
+//     (PhysicsWorld::AddVelocityChangeToAllMoving) and WP-19b's physics bubble (ksp/physics/physics_bubble.hpp) is the host of the
+//     flight scene: the snapshot from FlightGlobals, Vessel.ChangeWorldVelocity on VesselsLoaded, the physical objects.
 //
 // Everything here is double arithmetic (the C# is double: Vector3d, `(double)Time.fixedDeltaTime`); there is no float32 statement
 // in Krakensbane.cs, so the Mono float rule has nothing to apply to.
