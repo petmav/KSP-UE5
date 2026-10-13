@@ -187,9 +187,9 @@ Next, in order:
    WP-20d's module slot (gimbal transform chains from the model reader). Then extend the WP-20d ascent gate past Mach 1 / 5 km to C10's
    20 km / 36.7 km states.
 2. Impact compliance in WP-20c's load model: a 6 m/s touchdown of PhysProf-S loads a joint to 0.98 of capacity (one-step spike); KSP's joints flex.
-3. KSC / launch-site collider data and tags (LaunchPad, Runway ...) for `ContactHost::RegisterStatic`; PhysicMaterial "Ground" values
-   (both FIXTURE today; WP-12b / WP-42).
-4. Model colliders from the .mu files instead of proxy boxes (CheckCollision's asteroid / fairing branches, getLowestPoint's radius corrections);
+3. KSC / launch-site collider data (WP-mucol's scenery loader, extraction not run) registered with their tags (LaunchPad, Runway ...) through
+   `ContactHost::RegisterStatic`; PhysicMaterial "Ground" values (both FIXTURE today; WP-12b / WP-42).
+4. With WP-mucol's real part colliders: CheckCollision's asteroid / fairing branches and the colliders' layer / tag in the contact records;
    wheels' ground contact (WP-29c).
 5. An in-game capture of a drop / splashdown / pad settle would turn the scenario gates into capture gates.
 

@@ -39,3 +39,6 @@ Not touched: decompiled/KSP-Decompiled (read only).
 - 9f37e587: GCC include fix. Verification: ctest 47 / 47 (146 s), whole suite default order and `--order-by=rand -rs=11` / `-rs=27`
   (963 cases) green, g++ 13 -fsyntax-only clean, check_cites 54 / 0.
 - docs: STATUS row 55 + section, README (paragraph, unit row, layout, tools row), NEXT-STEPS block. PR to main (not merged).
+- merge with origin/main ccf3ffc9 (WP-mucol, WP-52): conflicts in STATUS.md only (WP-mucol took row 55: this package is row 58). WP-mucol's
+  sphere / capsule / hull proxies: getLowestPoint's ClosestPoint hook now handles every kind (new scenario case, analytic). Every WP-20e number
+  unchanged after the merge; reference JSON regenerates byte-identically.
