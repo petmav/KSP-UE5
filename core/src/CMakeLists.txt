@@ -274,6 +274,14 @@ add_library(kspcore STATIC
     modules/module_decouplers.cpp
     modules/module_docking_node.cpp
     modules/module_grapple_node.cpp
+    eva/kerbal_eva_core.cpp
+    eva/kerbal_eva_fsm.cpp
+    eva/kerbal_eva_states.cpp
+    eva/kerbal_eva_motion.cpp
+    eva/kerbal_eva_interact.cpp
+    eva/retractable_ladder.cpp
+    eva/flight_eva.cpp
+    eva/kerbal.cpp
     modules/module_strut.cpp
     modules/module_engines.cpp
     modules/module_gimbal.cpp

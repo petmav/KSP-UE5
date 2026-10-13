@@ -765,7 +765,10 @@ void ModuleEvaChute::SetEVAChuteActive(bool active) {
 // ModuleEvaChute.cs:263
 void ModuleEvaChute::OnParachuteSemiDeployed() {
     if (hasKerbalEVA) {
-        if (!kerbalEVA.IsChuteState) kerbalEVA.onParachuteSemiDeployedCalls++;
+        if (!kerbalEVA.IsChuteState) {
+            kerbalEVA.onParachuteSemiDeployedCalls++;
+            if (kerbalEVA.onSemiDeployed) kerbalEVA.onSemiDeployed();
+        }
     }
     // canopy.rotation / lastRot: the engine's
     ModuleParachute::OnParachuteSemiDeployed();
@@ -773,7 +776,10 @@ void ModuleEvaChute::OnParachuteSemiDeployed() {
 
 // ModuleEvaChute.cs:279
 void ModuleEvaChute::OnParachuteFullyDeployed() {
-    if (hasKerbalEVA) kerbalEVA.onParachuteFullyDeployedCalls++;
+    if (hasKerbalEVA) {
+        kerbalEVA.onParachuteFullyDeployedCalls++;
+        if (kerbalEVA.onFullyDeployed) kerbalEVA.onFullyDeployed();
+    }
     ModuleParachute::OnParachuteFullyDeployed();
 }
 
@@ -793,7 +799,10 @@ bool ModuleEvaChute::PassedAdditionalDeploymentChecks() {
 void ModuleEvaChute::CutParachute() {
     if (deploymentState != deploymentStates::CUT && deploymentState != deploymentStates::ACTIVE) {
         ModuleParachute::CutParachute();
-        if (kerbalEVA.IsChuteState || kerbalEVA.seated) kerbalEVA.onParachuteCutCalls++;
+        if (kerbalEVA.IsChuteState || kerbalEVA.seated) {
+            kerbalEVA.onParachuteCutCalls++;
+            if (kerbalEVA.onCut) kerbalEVA.onCut();
+        }
     }
 }
 

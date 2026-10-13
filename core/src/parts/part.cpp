@@ -39,6 +39,7 @@ Vector3f PartTransform::InverseTransformPoint(const Vector3f& p) const {
 Vector3f PartTransform::TransformDirection(const Vector3f& d) const { return rotation * d; }
 Vector3f PartTransform::InverseTransformDirection(const Vector3f& d) const { return Conjugate(rotation) * d; }
 Vector3f PartTransform::up() const { return rotation * Vector3f::up(); }
+Vector3f PartTransform::right() const { return rotation * Vector3f::right(); }
 Vector3f PartTransform::forward() const { return rotation * Vector3f::forward(); }
 
 // ---- PartValues.cs ---------------------------------------------------------------------------------------------------------
