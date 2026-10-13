@@ -28,3 +28,14 @@ Not touched: decompiled/KSP-Decompiled (read only).
   3.6 / 7.4; C#: Part.cs:3355-3745 (collisions, checkLanded / Splashed), :4373 explode, Vessel.cs:1015-1183 (checkLanded, anchor, SetLandedAt),
   :2356-2730 (rails, CheckGroundCollision, getLowestPoint, heights), :3055 LateUpdate, :3133-3195 (situation), PartBuoyancy.cs (whole),
   CollisionEnhancer.cs (whole). Worktree core/.worktrees/wp20e from origin/main cd5e4df4; baseline build 208 s.
+- 140923e5: first version (plan steps 1-6): PhysicsWorld contact events + fixed-to-world weld, collision.hpp, part_contact.cpp,
+  vessel_ground.cpp, PartBuoyancy, CollisionEnhancer, VesselPhysics additions, ContactHost in the bubble, terrain per body; 10 scenario cases.
+  D: ran full (other agents' worktrees): the build tree moved to C: (scratchpad), same preset and flags.
+- 119fd67e: tools/wp20e/contact_reference.py (independent Python, seed 2005) and its replay (5 cases, 0 mismatches). Found: the Jolt anchor
+  carried the support in contacts, not in the joint -> joint.currentForce = the cluster's support force; the anchor stops the cluster when it
+  forms (the quasi-static impulse spiked L2-AS's WP-20c loads otherwise).
+- a3787d14: craft touchdown (PhysProf-S at 1 / 3 / 6 m/s) and input-seam scenarios; SAS / FeedInputFeed judged too large (FeedInputFeed port +
+  FlightInputHandler in the bubble + ModuleGimbal actuation): labelled seam `PhysicsBubble::inputFeed`.
+- 9f37e587: GCC include fix. Verification: ctest 47 / 47 (146 s), whole suite default order and `--order-by=rand -rs=11` / `-rs=27`
+  (963 cases) green, g++ 13 -fsyntax-only clean, check_cites 54 / 0.
+- docs: STATUS row 55 + section, README (paragraph, unit row, layout, tools row), NEXT-STEPS block. PR to main (not merged).

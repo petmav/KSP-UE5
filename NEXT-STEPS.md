@@ -175,6 +175,24 @@ Recommendation: WP-20 builds a REDUCED rigid-body model on Jolt v5.6.0 inside ks
 3. Leftovers: WP-54/55 deferred (TestDistance, ActionPartFailure/Repair/ResourceDrain, MissionSystem, MissionImporting, MissionEditorHistory, real BaseAPField, PositionMobileLaunchPad), WP-53 deferred bits, WP-38 ship spawning / CometManager seams.
 4. The UE5 shell (about 289k lines of tier C: UI, rendering, cameras, audio, map view): needs its own design doc first (scene flow, what becomes Blueprints vs C++, first playable slice).
 
+## WP-20e contact, landing and water (2026-10-13, branch `wp20e`, PR open)
+
+State: contacts -> Part.OnCollisionEnter / Stay / Exit, Landed / Splashed / landedAt / situation, HandleCollision's crash tolerance, the landed RB
+anchor (ends the pad rocking of WP-20b R2), CheckGroundCollision, PartBuoyancy, CollisionEnhancer, terrain colliders per body in the bubble
+(`ContactHost`, `core/STATUS.md` "WP-20e"). Gated by an independent Python reference (0 mismatches) and scenarios.
+
+Next, in order:
+1. **SAS / Vessel.FeedInputFeed in the tick** (seam `PhysicsBubble::inputFeed`): port Vessel.FeedInputFeed (OnPre / OnAutopilotUpdate /
+   OnPost / OnFlyByWire, Part.propagateControlUpdate), drive WP-50's FlightInputHandler.FixedUpdate from the bubble, actuate ModuleGimbal in
+   WP-20d's module slot (gimbal transform chains from the model reader). Then extend the WP-20d ascent gate past Mach 1 / 5 km to C10's
+   20 km / 36.7 km states.
+2. Impact compliance in WP-20c's load model: a 6 m/s touchdown of PhysProf-S loads a joint to 0.98 of capacity (one-step spike); KSP's joints flex.
+3. KSC / launch-site collider data and tags (LaunchPad, Runway ...) for `ContactHost::RegisterStatic`; PhysicMaterial "Ground" values
+   (both FIXTURE today; WP-12b / WP-42).
+4. Model colliders from the .mu files instead of proxy boxes (CheckCollision's asteroid / fairing branches, getLowestPoint's radius corrections);
+   wheels' ground contact (WP-29c).
+5. An in-game capture of a drop / splashdown / pad settle would turn the scenario gates into capture gates.
+
 ## Handoff to the PC (2026-10-11, end of session 3; all four listed branches are now merged, see Session 4 above)
 
 ### Moving the whole directory to another machine
