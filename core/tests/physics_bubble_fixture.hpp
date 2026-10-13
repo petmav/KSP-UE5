@@ -143,6 +143,8 @@ inline void PlaceOnOrbit(Vessel& v, CelestialBody& body, const Vector3d& relPosW
     // (Vessel.Initialize of the craft assembly registered it already: a second AddVessel would list it twice)
     if (std::find(FlightGlobals::Vessels.begin(), FlightGlobals::Vessels.end(), &v) == FlightGlobals::Vessels.end()) FlightGlobals::AddVessel(&v);
     FlightGlobals::SortVessel(&v, true);
+    // WP-20d: Part.Start of the flight scene (FlightIntegrator.Setup waits for the root part's `started`, FlightIntegrator.cs:255)
+    StartPartsInFlight(v);
 }
 
 // circular orbit state at radius r (in the orbit's reference plane: position on +x, velocity on +z of the Unity frame)

@@ -12,7 +12,6 @@
 #include "ksp/orbit/orbit_driver.hpp"
 #include "ksp/orbit/time_warp.hpp"
 #include "ksp/physics/physical_object.hpp"
-#include "ksp/physics/physics_globals.hpp"
 #include "ksp/physics/reference_frame.hpp"
 #include "ksp/vessel/flight_logger.hpp"
 #include "ksp/vessel/vessel.hpp"
@@ -54,6 +53,15 @@ void PhysicsBubble::Install() {
     OrbitPhysicsManager::env.setRotatingFrame = [this](OrbitPhysicsManager& opm, bool rotating) { setRotatingFrame(opm, rotating); };
     savedAfterFlightIntegrator_ = FlightScene::hooks.afterFlightIntegrator;
     FlightScene::hooks.afterFlightIntegrator = [this] { RunFlightIntegrators(); };
+    // WP-20d: the part-module FixedUpdates before FlightIntegrator (seq 22-276), the frame's ModuleRCS.Update / FlightIntegrator.Update
+    // before Vessel.Update
+    savedBeforeFlightIntegrator_ = FlightScene::hooks.beforeFlightIntegrator;
+    FlightScene::hooks.beforeFlightIntegrator = [this] { moduleForces_.FixedUpdate(host_); };
+    savedBeforeVesselUpdate_ = FlightScene::hooks.beforeVesselUpdate;
+    FlightScene::hooks.beforeVesselUpdate = [this] {
+        moduleForces_.Update();
+        fiHost_.Update();
+    };
 
     // Krakensbane (Krakensbane.cs:31 Awake, :50 Start) and its host
     krakensbane_.Awake();
@@ -100,6 +108,7 @@ void PhysicsBubble::Install() {
 
     GE::onVesselUnloaded.Add(this, &PhysicsBubble::OnVesselUnloaded);
     GE::onFlightGlobalsRemoveVessel.Add(this, &PhysicsBubble::OnRemoveVessel);
+    GE::onVesselLoaded.Add(this, &PhysicsBubble::OnVesselLoaded);
     installed_ = true;
 }
 
@@ -107,9 +116,13 @@ void PhysicsBubble::Uninstall() {
     if (!installed_) return;
     GE::onVesselUnloaded.Remove(this, &PhysicsBubble::OnVesselUnloaded);
     GE::onFlightGlobalsRemoveVessel.Remove(this, &PhysicsBubble::OnRemoveVessel);
+    GE::onVesselLoaded.Remove(this, &PhysicsBubble::OnVesselLoaded);
     floatingOrigin_.OnDestroy();
     krakensbane_.OnDestroy();
     FlightScene::hooks.afterFlightIntegrator = savedAfterFlightIntegrator_;
+    FlightScene::hooks.beforeFlightIntegrator = savedBeforeFlightIntegrator_;
+    FlightScene::hooks.beforeVesselUpdate = savedBeforeVesselUpdate_;
+    fiHost_.Clear();
     OrbitPhysicsManager::env = savedOpm_;
     Vessel::env.krakensbaneAddFrameVelocity = savedKrakensbaneAddFrameVelocity_;
     Vessel::env.setWorldVelocity = savedSetWorldVelocity_;
@@ -120,11 +133,20 @@ void PhysicsBubble::Uninstall() {
 // A binding leaves with its vessel's parts (Vessel.Unload destroys them before GoOnRails, Vessel.cs:1882-1961) or with the vessel
 // (FlightGlobals.RemoveVessel: Die, destruction)
 void PhysicsBubble::OnVesselUnloaded(Vessel* v) {
-    if (v != nullptr) host_.Destroy(*v);
+    if (v == nullptr) return;
+    host_.Destroy(*v);
+    fiHost_.OnVesselUnloaded(*v);  // FlightIntegrator.OnUnloadVessel (FlightIntegrator.cs:390): Setup again on the next load
+}
+
+// Vessel.Load (Vessel.cs:1813) instantiated the parts: Unity runs their Part.Start before the next FixedUpdate (WP-20d)
+void PhysicsBubble::OnVesselLoaded(Vessel* v) {
+    if (v != nullptr) StartPartsInFlight(*v);
 }
 
 void PhysicsBubble::OnRemoveVessel(Vessel* v) {
-    if (v != nullptr) host_.Destroy(*v);
+    if (v == nullptr) return;
+    host_.Destroy(*v);
+    fiHost_.Remove(*v);  // the VesselModule goes with its vessel
 }
 
 // ===================================================================================== frames
@@ -318,36 +340,19 @@ Vector3d PhysicsBubble::PhysicalObjectPosition(const physicalObject& o) const {
 
 // ===================================================================================== per tick
 
+// seq 278: FlightIntegrator.FixedUpdate (FlightIntegrator.cs:544) of every loaded vessel (WP-20d), or the host's override per unpacked vessel
 void PhysicsBubble::RunFlightIntegrators() {
+    if (!flightIntegrator) {
+        fiHost_.FixedUpdate(host_);
+        return;
+    }
     const std::vector<Vessel*> vessels = FlightGlobals::Vessels;
     for (Vessel* v : vessels) {
         if (v == nullptr || v->packed) continue;
         VesselPhysics* vp = host_.Find(*v);
         if (vp == nullptr) continue;
-        if (flightIntegrator) flightIntegrator(*v, *vp);
-        else DefaultFlightIntegrator(*v, *vp);
+        flightIntegrator(*v, *vp);
     }
-}
-
-// FlightIntegrator.cs:544 FixedUpdate, its lines 661-669 (the rest of FlightIntegrator.FixedUpdate is WP-20d's)
-void PhysicsBubble::DefaultFlightIntegrator(Vessel& v, VesselPhysics& vp) {
-    if (FlightGlobals::ActiveVessel == &v && !FlightGlobals::physicalObjects.empty()) {
-        // IntegratePhysicalObjects (:747), its gravity (:752, :762): the acceleration at the vessel's CoM on every object (the drag
-        // half needs FlightIntegrator's pseudoReDragMult: WP-20d)
-        const CelestialBody& body = *v.mainBody();
-        const Vector3f force = ((FlightGlobals::getGeeForceAtPosition(v.CoMD, body) + FlightGlobals::getCoriolisAcc(v.velocityD, body) +
-                                 FlightGlobals::getCentrifugalAcc(v.CoMD, body)) *
-                                PhysicsGlobals::GraviticForceMultiplier)
-                                   .ToVector3f();
-        size_t count = FlightGlobals::physicalObjects.size();
-        while (count-- > 0) {
-            physicalObject* o = FlightGlobals::physicalObjects[count];
-            if (o == nullptr || !o->HasRigidbody()) continue;
-            o->world->AddForce(o->rb, Vector3d(force) * static_cast<double>(o->world->GetMass(o->rb)));  // rb.AddForce(force, Acceleration)
-        }
-    }
-    if (!v.precalc.preIntegrationVelocityOffset.IsZero()) v.OffsetVelocity(v.precalc.preIntegrationVelocityOffset);  // :665-668
-    vp.IntegratePartBuffers(v.precalc.integrationAccel);                                                             // :669 Integrate
 }
 
 void PhysicsBubble::FixedUpdate() {

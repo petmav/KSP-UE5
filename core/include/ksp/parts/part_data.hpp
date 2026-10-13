@@ -246,6 +246,8 @@ public:
     bool RotateDragVector() const { return rotateDragVector_; }
     const Quaternionf& DragVectorRotation() const { return dragVectorRotation_; }
     const CubeData& GetCubeData() const { return cubeData_; }
+    // WP-20d: the store of the SoA aero kernel (ksp/physics/aero_soa.hpp), which computes SetDrag's CubeData outside the list
+    void SetCubeData(const CubeData& data) { cubeData_ = data; }
     bool WeightsRequireUpdate() const { return weightsRequireUpdate_; }
     bool OcclusionRequireUpdate() const { return occlusionRequireUpdate_; }
 

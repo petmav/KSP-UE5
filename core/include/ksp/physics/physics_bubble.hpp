@@ -35,6 +35,7 @@
 // one frame; load / unload by Vessel.Update (VesselRanges, WP-19a), pack / unpack by OrbitPhysicsManager.LateUpdate (WP-19a) drive
 // GoOffRails / GoOnRails -> the host builds / drops the bodies. A binding also goes when its vessel unloads (Vessel.Unload destroys the
 // parts before GoOnRails, Vessel.cs:1882-1961) or leaves the registry (Die, destruction): onVesselUnloaded / onFlightGlobalsRemoveVessel.
+// The parts a Vessel.Load instantiates get Part.Start's flight block (StartPartsInFlight) on onVesselLoaded (WP-20d).
 //
 // KRAKENSBANE HOST: the snapshot from FlightGlobals (ActiveVessel, VesselsLoaded: packed, DEAD, LandedOrSplashed, radarAltitude,
 // velocityD, rb_velocityD, upAxis), Vessel.ChangeWorldVelocity (Vessel.cs:3197, with krakensbaneAcc) on VesselsLoaded[i], the
@@ -42,10 +43,13 @@
 // drifts metres per orbit from Jolt's float velocities); the bubble's FixedUpdate does.
 //
 // PER TICK (FixedUpdate, the order measured in game, flight_scene.hpp): FlightScene::FixedUpdate (VesselPrecalculate, OrbitDriver,
-// FlightGlobals, the FlightIntegrator slot = `flightIntegrator` per unpacked vessel, OrbitPhysicsManager.FixedUpdate -> setRotatingFrame /
-// setDominantBody, Vessel.FixedUpdate), Krakensbane.FixedUpdate, FloatingOrigin.FixedUpdate (frame drift, world rebase), the frame-offset
-// fold / static gate, the physics-origin rebase, then the physics step (Flush, PhysicsWorld::Step, AfterStep: transforms).
-// Planetarium.FixedUpdate (body positions, UT) is the host's and runs before it.
+// FlightGlobals, the part-module slot = PartModuleForces (WP-20d: engines / RCS / lifting surfaces / reaction wheels into the part force
+// buffers), the FlightIntegrator slot = FlightIntegrator.FixedUpdate of every loaded vessel (WP-20d, ksp/physics/flight_integrator.hpp;
+// `flightIntegrator` overrides it per unpacked vessel), OrbitPhysicsManager.FixedUpdate -> setRotatingFrame / setDominantBody,
+// Vessel.FixedUpdate), Krakensbane.FixedUpdate, FloatingOrigin.FixedUpdate (frame drift, world rebase), the frame-offset fold / static
+// gate, the physics-origin rebase, then the physics step (Flush, PhysicsWorld::Step, AfterStep: transforms). Planetarium.FixedUpdate
+// (body positions, UT) is the host's and runs before it. Update: FlightScene::Update with ModuleRCS.Update and FlightIntegrator.Update
+// before Vessel.Update (the measured frame order).
 #pragma once
 
 #include <cstddef>
@@ -54,9 +58,11 @@
 #include <vector>
 
 #include "ksp/math/vector3d.hpp"
+#include "ksp/physics/flight_integrator.hpp"
 #include "ksp/physics/floating_origin.hpp"
 #include "ksp/physics/krakensbane.hpp"
 #include "ksp/physics/orbit_physics_manager.hpp"
+#include "ksp/physics/part_forces.hpp"
 #include "ksp/physics/physics_world.hpp"
 #include "ksp/physics/vessel_physics.hpp"
 #include "ksp/vessel/flight_scene.hpp"
@@ -94,17 +100,18 @@ public:
 
     // Installs every seam (and saves what it replaces; Uninstall / the destructor restore it): the VesselPhysicsHost hooks of
     // Vessel::env plus setWorldVelocity, OrbitPhysicsManager::env (setRotatingFrame / setDominantBody), FlightScene::hooks
-    // .afterFlightIntegrator, the Krakensbane and FloatingOrigin singletons (owned; Awake / Start) with their host hooks, and the
+    // .beforeFlightIntegrator / .afterFlightIntegrator / .beforeVesselUpdate, the Krakensbane and FloatingOrigin singletons (owned; Awake / Start) with their host hooks, and the
     // lifecycle listeners. Throws std::logic_error when another Krakensbane or FloatingOrigin instance is alive.
     void Install();
     void Uninstall();
     bool Installed() const { return installed_; }
 
-    // The FlightIntegrator slot of one unpacked vessel (FlightIntegrator.FixedUpdate, FlightIntegrator.cs:544). Unset: the minimal
-    // stand-in until WP-20d: `vessel.OffsetVelocity(precalc.preIntegrationVelocityOffset)` (:665-668) and Integrate (:669, :715:
-    // integrationAccel and the part force buffers, VesselPhysics::IntegratePartBuffers); for the active vessel the gravity half of
-    // IntegratePhysicalObjects (:661-663, :752-762) first.
+    // Overrides the FlightIntegrator slot of one unpacked vessel (FlightIntegrator.FixedUpdate, FlightIntegrator.cs:544). Unset (the
+    // default): WP-20d's FlightIntegrator of every loaded vessel (FlightIntegrators(); the WP-19b stand-in it replaces is gone).
     std::function<void(Vessel&, VesselPhysics&)> flightIntegrator;
+    // WP-20d: the FlightIntegrator of every loaded vessel and the part-module force slot (kernel, hooks, statistics)
+    FlightIntegratorHost& FlightIntegrators() { return fiHost_; }
+    PartModuleForces& ModuleForces() { return moduleForces_; }
     // FloatingOrigin's PreciseUpdateQuadPositions after a rebase (the PQS host, WP-12): unset = nothing
     std::function<void()> preciseUpdateQuadPositions;
 
@@ -148,20 +155,22 @@ public:
     void FrameUpdate();
     // seq 291 PhysicsFixedUpdate: Flush of every binding, PhysicsWorld::Step(Time.fixedDeltaTime), AfterStep (transforms)
     void PhysicsStep();
-    void Update();       // FlightScene::Update, physicalObject.Update (self-destruction rule)
+    void Update();       // FlightScene::Update (with ModuleRCS.Update and FlightIntegrator.Update), physicalObject.Update
     void LateUpdate();   // FlightScene::LateUpdate (pack / unpack, situations)
 
 private:
     void OnVesselUnloaded(Vessel* v);
+    void OnVesselLoaded(Vessel* v);
     void OnRemoveVessel(Vessel* v);
     void RunFlightIntegrators();
-    void DefaultFlightIntegrator(Vessel& v, VesselPhysics& vp);
     void RefreshBindings();  // host frames + every binding's caches / transforms
     void MaybeRebasePhysicsOrigin();
 
     PhysicsWorld* world_;
     PhysicsBubbleOptions options_;
     VesselPhysicsHost host_;
+    FlightIntegratorHost fiHost_;
+    PartModuleForces moduleForces_;
     Krakensbane krakensbane_;
     FloatingOrigin floatingOrigin_;
     Vector3d frameOriginWorld_;
@@ -173,6 +182,8 @@ private:
     std::function<void(const Vector3d&)> savedKrakensbaneAddFrameVelocity_;
     OrbitPhysicsManager::Environment savedOpm_;
     std::function<void()> savedAfterFlightIntegrator_;
+    std::function<void()> savedBeforeFlightIntegrator_;
+    std::function<void()> savedBeforeVesselUpdate_;
 };
 
 }  // namespace ksp::physics

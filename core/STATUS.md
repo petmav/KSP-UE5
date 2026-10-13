@@ -64,6 +64,7 @@ Updated 2026-10-13 (WP-20c, local branch); 2026-10-12 (WP-54b, WP-19a, WP-55, WP
 | 51. WP-19b frames and the physics bubble (branch `wp19b`, from local `wp20b` 950c1d94) | done for the engine-agnostic part, gated by an independent Python reference at 0 ULP and analytic scenarios (no golden or capture covers rigid bodies in the flight scene; every existing gate unchanged): `PhysicsBubble` (physics/physics_bubble.hpp) owns the flight scene's physics wiring on the reduced model. **Frame policy (resolves WP-20b R1):** one world frame for float and double positions (floatOrigin 0, KSP's convention), its origin kept near the active vessel by FloatingOrigin's own 500 m / continuous rule shifting the NON-physics state only (bodies, vessels' transforms / CoMD; Jolt bodies never move: one double anchor), Krakensbane's frame drift folded back into the dynamic bodies at disengagement with static geometry gated while it is nonzero, the physics origin re-centred past 1,000 km. OrbitPhysicsManager setRotatingFrame / setDominantBody with the bodies (reverse chain, velocity resume, physical objects), Vessel.ChangeWorldVelocity / SetWorldVelocity with krakensbaneAcc, the Krakensbane host (registry snapshot, VesselsLoaded, physical objects), physicalObject, several vessels in one bubble (load / unload, pack / unpack, rails transitions) and the bindings' lifecycle. Gate: 14 cases: setRotatingFrame (300 scenes), ChangeWorldVelocity (300), Krakensbane through the host (400), FloatingOrigin decision and shift (300) at 0 ULP; `two_vessels` (load 2.25 km, unpack 200 m, relative position within 0.65 mm of independent two-body orbits, pack 350 m), `frame_switch` both ways and the SOI change into the Mun in physics (KSP's one-tick frame displacement matched within 0.3 mm / 5e-6 m, Kepler motion before and after), localCoM 1.3 cm -> 1e-7 m with the rebase, the frame-drift fold vs a static floor, physics-origin rebase invariance (1.4e-7 m), lifecycle. Findings: KSP's two clocks (UT 0.02 vs physics 0.02f: 1 um per tick at orbital speed), frame changes reach the bodies' frame one tick late. See the WP-19b section |
 | 52. WP-29b KSP wheel part modules (branch `wp29b`, from local `wp29a` `2d90e6fe`; unpushed) | done and gated: ModuleWheelBase (gee bias and friction, set-up, slip displacement, landing detection -> GroundContacts / landedAt, schloompa freeze, drift fix, OnPutToGround, pack / docking / SOI handlers, sub-system cascade), Motor (torque curve, 0.01 rounding, traction control, EC draw) / MotorSteering, Steering (Ackermann), Brakes, Lock, Suspension (auto spring / damper, boost), Damage, Deployment (KerbalFSM over the Animation), Bogey, SuspensionLoadBalancer; the M1 collider-vs-motor radius quirk kept; 0 ULP against the independent `tools/wp29b/wheel_reference.py` (`tests/data/wp29b_reference.json`: 39 runs x 200 ticks over every stock wheel part, 2,340 gee-bias rows, 400 load-balancer vessels, > 500k values), 10 unit cases, ctest `wheels.modules`, check_cites 155 cites 0 mismatches; `capture.part_database` unchanged (the WP-06 curve registration is replaced by the real classes' `OnAwake`); natives UNVERIFIED (AnimationCurve smoothing / Hermite transcribed from the WP-01 port, Transform maths, Animation clock, script order R5); SOIChange never applies and `ActAutoFrictionToggle` is inverted in the C# (kept). See the WP-29b section |
 | 53. WP-32 EVA kerbal controller (branch `wp32`, from local `wp20b` `950c1d94`, local only) | done for the engine-agnostic part, unit-gated against an independent Python reference (no golden or capture covers the EVA kerbal): `KerbalEVA` (42 FSM states / 72 events with their guards, enter / update / leave callbacks, timers and wiring records), `KerbalAnimationManager`, `KerbalRagdollNode`, `RetractableLadder` (FSM + ladder alignment / triggers), `FlightEVA`, `Kerbal`, `CrewTransfer`, `CrewHatchController`; movement / heading / PID / jetpack / pack drains / helmet / visor / jump and bound impulses / low-g curve / clamber path / seat-camera bob / flag, boarding and weld rules, compared 0 ULP / exact with `tools/wp32/eva_reference.py` (state-machine tables machine-parsed from the C#; 2,880 event-condition worlds, 300 OnEvent decisions, 11 scripted scenarios / 83 steps against a second FSM runtime, 252 fps-animation, 180 movement, 180 heading, 150 PID, 180 pack, 600 helmet, 144 impulse, 60 ragdoll rows); Unity animation / Transform / Collider / Rigidbody / raycast access goes through `include/ksp/eva/eva_engine.hpp` (`IEvaEngine`, `HeadlessEvaEngine`, `EvaEnvironment`) | see "WP-32" below: physics-bubble and animation-rig parts are deferred to WP-19b / 20d / UE5 | pass |
+| 54. WP-20d the FlightIntegrator tick over the rigid bodies (branch `wp20d`, from local `wp19b` cd99f577) | done for the engine-agnostic part, gated by an independent Python reference at 0 ULP, bit-identity of the SoA kernel to the exact port (random states, whole flights and KSP's own C10 capture) and scenarios against independent references (every existing gate unchanged): `FlightIntegrator` (physics/flight_integrator.hpp) runs FlightIntegrator.FixedUpdate for every loaded vessel in the C#'s order over the WP-20b bodies, replacing WP-19b's stand-in: Setup, the caches, UpdateMassStats (WP-22 thermal half, physicsMass, rb.mass through the binding), SmoothVelocity, the WP-09 atmosphere with the vessel mirrors, DragCubeSetupAndPartAeroStats, the WP-22 thermal half, the packed branch, IntegratePhysicalObjects, the drift-compensation offset and Integrate with UpdateAerodynamics per part in the recursion; FlightIntegrator.Update per frame; `physics/part_forces.hpp`: Part.AddForce* buffers and the module FixedUpdate slot (engines with their thrust transforms following the part, RCS, lifting / control surfaces, reaction wheels -> the buffers); `physics/aero_soa.hpp`: the SoA aero kernel; `StartPartsInFlight`. Gate: 11 cases: SmoothVelocity (3,200 steps) and IntegratePhysicalObjects (300) 0 ULP vs `tools/wp20d/fi_reference.py`; Integrate == IntegratePartBuffers bit for bit; **SoA == exact: 30,600 random part states, 1,008,969 part-ticks of S / M2-AS / L2-AS flights from the pad (0 mismatches, the same end state with either kernel), and 0 ULP against the C10 in-game capture (4,224 live + 25,344 AoA states)**; ascents of M2 / L2-AS / S vs C10's in-game flight states: speed at altitude within 1 % (to Mach 1 / 5 km: no SAS in this tick); a vacuum burn vs an independent tick replay (1.7 mm / 4.4 mm over 10 s) and the rocket equation; an orbit coast with thermal running (Kepler within 2e-5 m). FlightIntegrator slot 2.2x faster with the SoA kernel (L2-AS 0.73 -> 0.33 ms per tick). Findings: drift compensation stays on while burning in vacuum, the CoM moves inside a draining vessel, the WP-20b fixture never set the BodyLift curve (no body lift in WP-20b / WP-19b scenarios), no flight resource-flow host. Merge with main (WP-20c's loads and breaks now in the tick): the pad fixture's 5 cm drop at full gravity broke L2-AS's Mainsail and five radial decouplers at touchdown; it now launches as KSP does (OrbitDriver started -> physics easing, lowest collider point on the ground): no break, flight loads 0.044-0.148 of capacity; a WP-32 test's leaked InputLockManager lock (the `-rs=27` VesselSwitching failure) is reset by the hygiene listener. See the WP-20d section |
 
 ## Test results (all 36 ctest tests pass (35 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience, WP-19a capture.vessel_rails)
 
@@ -5907,3 +5908,189 @@ Verification (g++ 13 / WSL, ASan + UBSan + LeakSanitizer, README "Sanitizer run"
 
 `dea7ecf7` the bubble, FloatingOrigin rule, ChangeWorldVelocity, physicalObject, scenario tests; `67285cab` the Python reference and the
 remaining tests; `82a94605` STATUS / README / header notes / check_cites aliases; then this verification note.
+
+
+## WP-20d: the FlightIntegrator tick over the rigid bodies (branch `wp20d`, from local `wp19b` cd99f577)
+
+State: done for the engine-agnostic part. Scope = PHYSICS-SPIKE.md section 7 row WP-20d on the WP-20b binding and the WP-19b bubble: the real
+FlightIntegrator.FixedUpdate per loaded vessel in the C#'s order, replacing WP-19b's minimal stand-in; the part force buffers and the part-module
+FixedUpdate slot that feeds the existing force records into them; an SoA aero kernel bit-identical to the exact path. Ground height, landed /
+splashed and buoyancy are WP-20e's; WP-20c's files (structure graph, loads, Cut / Merge internals) are not touched. **Gates**: an independent Python
+reference for the FlightIntegrator statements this package adds (0 ULP); SoA == exact on every output of every part (random states, whole flights,
+and KSP's own in-game numbers from the C10 capture, 0 ULP); scenarios against independent references: the ascent against KSP's own C10 flight
+states, a vacuum burn against an independent replay of the tick and the rocket equation, an orbit coast against the Kepler orbit. Every existing
+gate is unchanged (`harness/compare/tolerances.json`, `tests/tolerances_capture.json` untouched); the WP-19b / WP-20b suites pass with the real
+FlightIntegrator in the bubble.
+
+### What is in
+
+| piece | files | KSP source |
+|---|---|---|
+| `FlightIntegrator` (one per loaded vessel) | `physics/flight_integrator.hpp`, `src/physics/flight_integrator.cpp` | FlightIntegrator.cs:235 Setup (incl. the zeroed-root drag-cube reload :299-363, asteroids / comets), :381 OnLoadVessel, :390 OnUnloadVessel, :400 / :410 Hook / UnhookVesselEvents and the :420-450 handlers (a part or vessel event of the vessel rebuilds the thermal graph), :452 UpdateMassStats (WP-22's thermal half + WP-14's physicsMass + rb.mass / centre of mass through `VesselPhysics::UpdateMassProperties`, not while packed), :495 SmoothVelocity, :544 FixedUpdate (every statement: caches, partCount, rbVeld / Veld / Vel / CoMd / CoM, spd / nVel, altitude, CalculatePressure and the vessel mirrors, the first-frame density quirk + ThermoPrecalculate, CalculateConstantsAtmosphere / Vacuum with their vessel mirrors, densityThermalLerp, background radiation, DragCubeSetupAndPartAeroStats, CheckThermalGraph, UpdateOcclusion(all), UpdateThermodynamics, the packed branch, IntegratePhysicalObjects, the drift-compensation offset, Integrate), :672 Update, :695 ThermoPrecalculate, :700 GetPhysicslessChildMass, :715 Integrate (depth first over attached children: integrationAccel, part.force / torque / forces (last first) through the binding's public calls in IntegratePartBuffers' order, buffers cleared, UpdateAerodynamics + ApplyAeroDrag / ApplyAeroLift / angular drag before the children), :747 IntegratePhysicalObjects (gravity, Coriolis, centrifugal; drag with pseudoReDragMult). FlightIntegrator derives from WP-22's `FlightIntegratorThermal` (its fields and `atm` are the C# class's), holds WP-21's `FlightIntegratorAero` |
+| `FlightIntegratorHost` | same | the VesselModule's life: made on a vessel's first loaded tick, `OnUnloadVessel` on onVesselUnloaded, dropped on onFlightGlobalsRemoveVessel; `FixedUpdate` = every loaded vessel in registry order with its binding |
+| `StartPartsInFlight` | same | Part.cs:1663 Start's flight-scene statements the tick reads: `Part::StartData` (flight context: external temperature of a part at -1, thermal masses, `started`), hasLiftModule (:1857-1866), CheckBodyLiftAttachment (:1867), the Rigidbodies (WP-20b). The bubble runs it on onVesselLoaded (Vessel.Load instantiates parts; Unity runs their Start before the next FixedUpdate) |
+| SoA aero kernel | `physics/aero_soa.hpp`, `src/physics/aero_soa.cpp` | UpdateAerodynamics (FlightIntegrator.cs:2260-2389) with SetDrag / AddSurfaceDragDirection (DragCubeList.cs:352-419): the six Mach-only curves and BodyLift.liftMach once per tick, per-part rows of the SetDragWeights / SetPartOcclusion arrays with DRAG_CD of the weighted drag and 1 / weightedDrag precomputed, rows rebuilt whenever an array changed bit-wise; the scalar statements as the exact port's; `AeroPartOutputs` (every output, bit comparison). Parts outside the cube model / with a rotated drag vector / other curves take the exact port (counted) |
+| part buffers + module slot | `physics/part_forces.hpp`, `src/physics/part_forces.cpp` | Part.cs:8663-8688 AddForce / AddImpulse / AddForceAtPosition / AddTorque into RigidBodyPart's buffers; `PartBufferForces` (a ForceAccumulator on them); `PartModuleForces` (seq 22-276): ModuleEngines.cs:1587 FixedUpdate (thrust transforms re-posed from their part-space pose each tick, CheckTransformsUnderwater :1516, TimeWarping :1530, ModuleEnginesFX FXUpdate, the OnLoad multiplier rule :681-697 when transforms came late) -> AddForceAtPosition + AddThermalFlux; ModuleRCS.cs:277 (thrusters from a part-space hook) and :211 Update per frame; ModuleLiftingSurface.cs:170 / ModuleControlSurface.cs:366 with baseTransform = the part transform -> AddForceAtPosition lift then drag; ModuleReactionWheel.cs:158 -> AddTorque |
+| bubble wiring | `physics/physics_bubble.hpp/.cpp`, `vessel/flight_scene.hpp/.cpp` | the FlightIntegrator slot runs `FlightIntegratorHost` (WP-19b's `DefaultFlightIntegrator` stand-in removed; `flightIntegrator` still overrides it), FlightScene::hooks.beforeFlightIntegrator = the module slot, new FlightScene::hooks.beforeVesselUpdate (Update: Part.Update's ModuleRCS.Update and FlightIntegrator.Update before Vessel.Update, PHYSICS-ENGINE-REVIEW.md 1.2), onVesselLoaded -> StartPartsInFlight |
+| `DragCubeList::SetCubeData` | `parts/part_data.hpp` | the SoA kernel's store of SetDrag's CubeData |
+
+### Gate (`tests/test_flight_integrator.cpp` + `tests/flight_integrator_fixture.hpp`: 11 cases / 27,783 assertions)
+
+| case | what | result |
+|---|---|---|
+| reference: SmoothVelocity | `tools/wp20d/fi_reference.py` (independent, from the C#): 40 sequences x 80 ticks of velocities with 1-3-frame spikes and jumps, dt 0.02-0.08 s: the ring, the provisional / spiking states, Vel, VelUnsmoothed, spd, nVel (FlightIntegrator.cs:495-616) | **0 ULP** (3,200 steps, 417 in a spike state) |
+| reference: IntegratePhysicalObjects | 300 cases: the objects' acceleration at CoMd / Veld (gee + Coriolis + centrifugal, rotating or not, GraviticForceMultiplier) and one object's drag (origDrag, density, pseudoReDragMult, frame velocity, zero velocity, ApplyDrag off) | **0 ULP** (136 with drag) |
+| buffers | Part.AddForce* of a physicsless part land on its RigidBodyPart; random buffers through IntegratePartBuffers (WP-20b) and through FlightIntegrator.Integrate | the binding's per-part force and moment **bit-identical** (21 / 21), buffers cleared |
+| **SoA == exact, random** | PhysProf-M2-AS's real cubes (weighted / occluded), 200 rounds x 153 parts: random pose, air velocity (0-2,200 m/s, zero), Mach 0-4, density, submerged 0 / partial / full (Kerbin's ocean), shielded, physicsless parts with and without drag at the parent's CoM, angularDragByFI, hasLiftModule, DragUsesAcceleration, cube weights changed in flight | **0 mismatches** over 30,600 part states (drag 25,312, body lift 18,658, submerged 5,470, shielded 1,053, on a parent's Rigidbody 3,021; 158 row rebuilds; no fallback) |
+| **SoA vs KSP (C10)** | `harness/captures/out2/aero_forces_vessel.json` (in game): the kernel's face loop on the captured live arrays and drag directions, CalculateDragValue, dragScalar and bodyLiftScalar on the captured q / pseudoReDragMult; the AoA sweep | **0 ULP** on 4,224 live part states and 25,344 sweep states (AreaDrag, Area, ExposedArea, CrossSectionalArea, Depth, DragCoeff, TaperDot, LiftForce) |
+| **SoA == exact, flights** | S / M2-AS / L2-AS from the pad, 30 s at full throttle through the whole tick (bubble, FlightIntegrator with thermal, module slot, real thrust transforms, fuel drain, Krakensbane, FloatingOrigin; since the merge with main also WP-20c's load solve and break rule in every AfterStep): `Both` every tick, then an `Exact` run and a `SoA` run | **0 mismatches over 1,008,969 part-ticks** (every part covered by the kernel); Exact and SoA end in the **same Jolt state hash**, the same aero outputs on every part and the same temperatures; no joint breaks on the pad or in flight, every part kept; largest sub-joint load / capacity on the pad 0.030 / 0.041 / 0.371, in flight 0.148 / 0.044 / 0.044 (S / M2-AS / L2-AS) |
+| **ascent vs KSP (C10)** | M2, L2-AS, S launched from the pad (first stage, full throttle) vs C10's in-game states of the same crafts (first frame at 1 / 2.5 / 5 km, Mach 0.5 / 1); windows while our AoA stays small (no SAS here: M2 to Mach 1, L2-AS to 5 km, S to 1 km) | **speed at an altitude within 1 %** (M2 +0.23 / -0.07 %, L2-AS +0.38 / -0.15 / -0.53 %, S 0.004 %), altitude at a Mach number within 1.5 % (M2 -0.13 / +0.77 %, L2-AS +0.28 %, S +0.67 %), frames between states within 2.5 % (M2 -0.6 / 0 / +1.6 %, L2-AS -0.2 / 0 %, S -1.7 %); no joint broke up to the last state compared |
+| **burn** | PhysProf-S's core stack (probe, Rockomax X200-32, Mainsail) in a 120 km orbit, 10 s at full throttle; an independent replay of the tick (the engine drains before UpdateMassStats; thrust along the axis; semi-implicit Euler; gravity at the tick-start CoM, or with drift compensation the exact Kepler step of the tick) from the cfg values and the initial state; the rocket equation | mass exactly 500 x 0.00987 t; root-part displacement vs the replay **1.7 mm (compensation off) / 4.4 mm (on)**, velocity 0.3 / 1.2 mm/s; thrust dv = the tick's discrete sum to 1e-7, Tsiolkovsky to 2.3e-4 (the discrete sum vs the continuous integral) |
+| **coast** | full PhysProf-S, 60 s in a 120 km orbit through the whole tick (thermal graph of 21 parts radiating, aero in vacuum, module slot) | CoM vs the independent Kepler orbit **1.8e-5 m** |
+| FixedUpdate mechanics | Setup waits for the root's `started`; tick 0 packed (thermal ran, buffers cleared, no Integrate, the OrbitDriver's lastMode IDLE); then physics easing (gravityMultiplier 1 / 16), the vessel mirrors, the per-part static pressure at each part's position, ActiveVesselFI, the vessel / part events (onVesselWasModified fired, the handlers), the FlightIntegrator's angular drag on the pad | as the C# |
+| module slot | the stock Aeris 3A (delta wings, elevons, winglets, Mk1 cockpit) at 150 m/s with an angle of attack and pitch input | 10 surfaces -> 20 buffered forces bit-identical to their records (235 kN), the cockpit's reaction-wheel torque in the buffer |
+
+`check_cites.py` (exact mode, `--cs-root` Assembly-CSharp) over `src/physics/flight_integrator.cpp`, `aero_soa.cpp`, `part_forces.cpp`,
+`physics_bubble.cpp`: 31 citations, 0 mismatches (helpers cited at the C# member they are part of, aliased in the tool); the WP-20b / WP-19b
+physics files 71 / 0.
+
+### Measurements (MSVC RelWithDebInfo, unpinned, one thread; the whole bubble tick of a powered ascent, ms per tick)
+
+| craft | parts | tick, exact kernel (FlightIntegrator slot) | tick, SoA kernel (FlightIntegrator slot) |
+|---|---|---|---|
+| PhysProf-S | 21 | 0.121 (0.033) | 0.103 (0.015) |
+| PhysProf-M2-AS | 153 | 0.535 (0.240) | 0.391 (0.105) |
+| PhysProf-L2-AS | 457 | 1.518 (0.731) | 1.113 (0.334) |
+
+The SoA kernel makes the FlightIntegrator slot 2.2x faster; its remaining cost at 457 parts is mostly the WP-22 thermal half, which the spike
+did not run (its pipeline: 0.29-0.43 ms without thermal).
+
+### Exact / approximate / changed
+
+| choice | class | notes |
+|---|---|---|
+| FixedUpdate / Update / Integrate / IntegratePhysicalObjects / SmoothVelocity / UpdateMassStats statements and order | exact | the reference and the bit-identity gates above |
+| SoA aero kernel | exact (bit-identical) | the same float statements on the same operands; Mach-only curves per tick instead of per face |
+| SoA evaluated before the recursion, applied at each part's place | exact | UpdateAerodynamics of a part reads nothing the recursion or another part's call writes (`Both` proves it every tick) |
+| integrationAccel added once per vessel (the binding sums it over the clusters' rb.mass) | approximate (rounding) | the C# adds it per Rigidbody; WP-20b's IntegratePartBuffers does the same |
+| part.Rigidbody.velocity / worldCenterOfMass | reduced model | the cluster's velocity at the part's centre of mass |
+| `partRef.packed` / `part.packed` | changed | kspcore does not maintain Part.packed through Part.Pack / Unpack: the vessel's `packed` stands for it |
+| servoRb | not modelled | robotics (WP-52) |
+| occlusion passes' localToWorldMatrix | approximate | the TRS of the part's world pose (Unity composes the hierarchy's local matrices natively) |
+| CalculateSunBodyFlux's scene input (default) | approximate | no scaled space in kspcore: world positions / 6000, Physics.Raycast as an analytic ray / sphere test against the bodies; hosts can supply the real one (`sunBodyFlux`) |
+| HighLogic ReentryHeatScale | seam | `atm.reentryHeatScale` (default 1) |
+| FlightIntegrator.Update's occlusion round-robin | changed (memory safety) | skipped while the thermal graph waits for its rebuild (a part event since the last FixedUpdate): a part that died meanwhile is freed memory in kspcore (a destroyed but live object in the C#); the pass resumes after the next CheckThermalGraph |
+| OnPartEventTargetAction with a null target | changed | the C# reads `data.target.vessel` behind a host null check (a null target would throw); skipped here |
+| module slot | partial | engines / RCS / lifting and control surfaces / reaction wheels only; not Part.FixedUpdate, ModuleGimbal actuation (thrust transforms at the neutral pose), exhaust damage, buoyancy (WP-20e); baseTransform of a surface = the part transform; RCS thrusters and thrust transforms need the model reader's part-space poses (hooks) |
+| SAS | not in the tick | VesselAutopilot runs from Vessel.FeedInputFeed (FlightInputHandler), not wired here: the ascents are compared while the craft flies straight without it |
+
+### Findings (a later implementer must know)
+
+- **KSP's orbit-drift compensation stays engaged while an engine burns in vacuum**: the orbit is refitted to the rigid body every frame, so the
+  drift check passes; gravity is the exact Kepler step of the tick, the thrust is integrated on top (burn test: 500 / 500 ticks).
+- **The centre of mass moves inside a vessel as its tanks drain** (VesselPhysics keeps the parts' motion): -0.167 m along the axis in 10 s for the
+  Mainsail stack. A point-mass reference must follow a rigid point (the root part), not CoMD.
+- **The WP-20b `World` fixture never runs PhysicsGlobals.Start**, so `bodyLiftCurve` is the empty default and every DragCubeList made afterwards has
+  no body lift: the WP-20b / WP-19b scenarios ran without body lift. WP-20d's fixtures set it (`StartPhysicsGlobals`) before making crafts.
+- kspcore has **no flight-scene resource-flow host**: ResourceFlowEnvironment::vesselHost and Vessel::env.updateResourceSets are seams (the tests
+  wire VesselResourceSets as test_staging.cpp does); without them the engines throw at UpdatePropellantStatus.
+- Module FixedUpdates check `loadedScene == FLIGHT` (SaveEnvironment); the WP-19b `BubbleScene` leaves MAINMENU. WP-20d's scenes set FLIGHT.
+- Part.Start's 288 K block never fires for a part whose temperature is -1: the external-temperature assignment just above it replaces it first
+  (Part.cs:1825-1849); kept.
+- CalculateConstantsAtmosphere multiplies `solarFlux` by the atmospheric multiplier every FixedUpdate and only FlightIntegrator.Update resets it
+  (two ticks in one frame compound it); kept.
+- PhysProf-S and -M2 are aerodynamically unstable past Mach ~0.9 without SAS (AoA 0.6 deg at 2.5 km, 2.6 deg at Mach 1, tumbling after; S tumbles
+  at 9 s, as it did in KSP's own capture with SAS on).
+- C10's frame 0 is not our ignition tick: our states come 26-30 frames later at the same altitudes with the same speeds (the KSC launch pad
+  surface is ~7.6 m above the PQS terrain the craft stands on here: PhysProf-S's root is at 79.29 m in C6, 71.65 m here; there are no KSC
+  colliders yet: WP-42 / WP-12b). Only offset-free quantities are gated.
+- With the real FlightIntegrator the WP-19b scenarios move slightly (rb.angularDrag 0 in vacuum, set by UpdateAerodynamics): two_vessels 0.49 mm
+  (was 0.65), frame_switch residual 0.27 mm (was 0.3).
+
+### Merge with main (WP-20c, WP-19b, WP-12b, WP-29b, WP-32): WP-20c's loads in the tick, the L2-AS pad failures
+
+With `origin/main` merged, WP-20c's load solve and PhysX break rule run in every `VesselPhysics::AfterStep` of the bubble, under the
+FlightIntegrator's forces. `unit.shard.2` and `unit.random_order.27` then failed on the two L2-AS launches from the pad: SoA == exact
+`partTicks 657,511 != 730,743` (= 7 ticks x 457 parts + 1,592 x 411), 1,089 m after 30 s (pad + 1,000 m required), the C10 ascent -24.5 % speed at
+1 km with 10.5 deg AoA and no 2.5 km state.
+
+- **Not the flight loads.** The engines' thrust reaches the load solve as KSP's PartJoints carry it (ModuleEngines -> Part.AddForceAtPosition at the
+  thrust transforms on the engine part -> Integrate's buffers -> that part's node, carried by its attach joint), the aero forces likewise on every
+  part. Over the 30 s powered flights the largest sub-joint load is 0.148 of capacity (S, its radial decoupler, tumbling) and 0.044 (M2-AS and
+  L2-AS, the radial decouplers at the end of the burn): WP-20c's own ascents gave 0.046 for L2-AS.
+- **The pad touchdown.** L2-AS broke at tick 7 of the 100-tick settle, 93 ticks before ignition: the core Mainsail's attach sub-joint at 28,861 kN
+  (breakForce 20,000) and five radial decouplers at 1,912-2,502 kN (1,760); 46 of 457 parts (the core Mainsail, five boosters) left as debris and
+  the rest flew without its core engine. The WP-20d `PadScene` dropped the craft 5 cm onto the pad at full gravity (about 1 m/s at contact); the
+  contact stops the 680 t vessel in one 20 ms step and WP-20c's quasi-static loads, which have no joint compliance (WP-20c's "Impacts" deviation),
+  put that impulse through the one supporting proxy box (0.82 of capacity the tick before the break; M2 / M2-AS took 0.47 / 0.35 at their
+  touchdown). KSP's launch has no such impact; the fixture differed from it twice:
+  1. its OrbitDriver was never started. Unity runs OrbitDriver.Start (OrbitDriver.cs:98) before the vessel's first FixedUpdate (the WP-19b
+     PlaceOnOrbit does it, PadScene::Place did not); without `ready` UpdateOrbit returns at once (:152), lastMode never records IDLE (:156, the
+     packed frame's call VesselPrecalculate.cs:186), so CalculateGravity's physics easing (VesselPrecalculate.cs:290-302, PHYSICS_EASE on: gravity
+     0 -> 1 in steps of 1 / 16 after IDLE -> TRACK_Phys) never started, and in flight the orbit was not tracked from the bodies;
+  2. it put the lowest proxy corner 5 cm above the pad point, where Vessel.GoOffRails of a spawning landed vessel runs CheckGroundCollision
+     (Vessel.cs:2418, :2493-2576) and puts the lowest collider point on the ground below.
+  Easing alone still broke the Mainsail joint (27,842 kN at tick 12: the same drop under the ramp); the exact placement alone left 0.66 of
+  capacity; both: 0.37, which is L2-AS's static 1 g load on its single support (WP-20c's pad ramp breaks that joint at 2.98 g).
+- **Fix (tests only, `tests/flight_integrator_fixture.hpp`)**: Place sets the lowest proxy point on the pad and starts the OrbitDriver (CoMD set
+  first to CalculatePhysicsStats' packed landed value, VesselPrecalculate.cs:469-480). No grace period, no tolerance or gate changed. New checks:
+  no joint break and every part kept on the pad and in the nine 30 s flights and up to the last C10 state compared; flight max load / capacity < 1
+  (reported); lastMode IDLE after the packed tick and gravityMultiplier 1 / 16 in the first unpacked one. `~PadScene` clears
+  `Vessel::SpawnedVessels` (a break's debris would otherwise outlive the World whose part database its parts use).
+- Effect: the settled crafts sit 1.9 cm lower (Jolt's 2 cm penetration slop without an impact: S root 71.649 m, was 71.668); the C10 numbers moved
+  by at most 0.3 percentage points (Gate table); after 30 s S 3,837 m (tumbling; was 3,907), M2-AS 4,782 m, L2-AS 2,468 m.
+- Not modelled: CheckGroundCollision also sets ignoreCollisionsFrames = 60 on some branches (Vessel.cs:2543 / :2551 / :2557), during which the host
+  keeps a broken part in its vessel (PartJoint.cs:399); nothing comes near capacity on the pad now, so the fixture does not set it.
+- **`test_flight3.cpp:382` in the `-rs=27` failure list** (WP-19a VesselSwitching.Update returned nothing in 5 scenes): an order dependence, not this
+  package's. Bisected to `WP-32 parachute states` (tests/test_eva_behaviour2.cpp:254): its walk over the KerbalEVA states sets
+  `ControlPanelLock_<id>` (every control but UI / camera, KerbalEVA.cs:2419) without the state's OnLeave, and VesselSwitching.Update returns at the
+  VESSEL_SWITCHING lock (VesselSwitching.cs:37) in every later case; the two cases alone reproduce it. The hygiene listener now resets
+  InputLockManager's lock stack between cases (`KSP_HYGIENE_TRACE=1` names the case that left a lock).
+
+### Risks
+
+- R1: the ascent gate is KSP's own flight but only up to Mach 1 / 5 km (no SAS in this tick); beyond that our crafts turn away. Wiring
+  FeedInputFeed (WP-24 / WP-50) would extend it to C10's 20 km / 36.7 km states.
+- R2: `StartPartsInFlight` is the subset of Part.Start the tick reads; module OnStart (ModulesOnStart) is the host's module lifecycle (the module-slot
+  test starts its surfaces itself).
+- R3: the default sun input of the thermal half is analytic (no scaled-space colliders): direct-sunlight decisions near a limb may differ by the
+  collider shapes.
+- R4: Windows vs Linux bit identity of the whole tick is not measured (each platform's own runs are compared).
+
+### Unit tests
+
+`tests/test_flight_integrator.cpp`: 11 cases / 27,783 assertions, 27 s in RelWithDebInfo before the merge with main, 34 s with WP-20c's load
+solve in the tick (the nine launches of the flight SoA gate, the three ascents). `tests/physics_bubble_fixture.hpp`: PlaceOnOrbit runs
+StartPartsInFlight. `tests/test_hygiene.cpp` now also resets FlightGlobals' speed modes (a flight scene with a vessel in orbit left Orbit, and
+WP-19a's FlightGlobals tick case failed under `--order-by=rand` with the new cases), FlightIntegrator.ActiveVesselFI and (since the merge with main)
+InputLockManager's locks between cases.
+
+### Verification
+
+- After the merge with main (`9581f0d6`) and the pad-fixture / hygiene fix: Windows MSVC RelWithDebInfo, fresh (`core/build` deleted,
+  `run_tests.ps1 -Fresh`, `CMAKE_BUILD_PARALLEL_LEVEL=6`): configure 2.4 s, build 175.8 s, ctest 111.6 s, **47 / 47 pass** (was 45 / 47:
+  `unit.shard.2`, `unit.random_order.27`). `kspcore_tests --order-by=rand -rs=11` and `-rs=27` (whole suite): 946 / 946 cases, 1,542,710
+  assertions each, green (before the fix `-rs=27` failed 3 cases: the two L2-AS launches and WP-19a VesselSwitching.Update). The WP-20d cases
+  alone: 11 / 11, 27,783 assertions. `check_cites.py` exact: the touched test files carry no function cites (0 / 0); the WP-20d sources 31 / 0,
+  the WP-20c sources 66 / 0.
+- Windows MSVC RelWithDebInfo, fresh (`core/build` deleted, `run_tests.ps1 -Fresh`, `CMAKE_BUILD_PARALLEL_LEVEL=6`) at `5dcf2a02`: configure 4.5 s, build
+  253.9 s, ctest 383.6 s; **38 / 38 pass** in the worktree (`corpus.saves` is not registered without decompiled/KSP-dev); `unit` 208.6 s. The final
+  commit (the vessel-event hooks) rebuilt incrementally: ctest 38 / 38 again (350 s).
+- `kspcore_tests` on the final code, default order and `--order-by=rand -rs=11` / `-rs=27`: 851 / 851 cases, 1,412,910 assertions each, all green
+  (the first random runs exposed a FlightGlobals speed-mode leak between cases: now reset by the hygiene listener).
+- Linux g++ 13.3 with `-fsanitize=address,undefined` (WSL Ubuntu 24.04, README "Sanitizer run", the worktree's core / harness / analysis and
+  decompiled/KSP-dev's data copied to a Linux filesystem, whole unit binary in one process, `detect_leaks=1`): 851 / 851 cases, 1,412,894 assertions
+  (the usual 16 fewer of WP-03's NaN fallback on Linux), **no ASan, LSan or UBSan report**; no compiler warning in the new files. The WP-20d gates
+  hold on that binary too (SoA == exact 1,008,969 part-ticks, 0 mismatches, equal hashes; ascents within the same tolerances; burn 1.7 / 4.4 mm;
+  coast 1.8e-5 m); trajectories differ from MSVC's in the last digits (S tumbles: 3,914 vs 3,907 m after 30 s), as expected across compilers.
+- `check_cites.py` exact mode: 31 citations over the WP-20d files, 0 mismatches; the WP-20b / WP-19b physics files 71 / 0.
+- The reference JSON regenerates byte-identically (`python -I core/tools/wp20d/fi_reference.py`, fixed seed).
+
+### Commits (branch `wp20d`, from local `wp19b` cd99f577; on origin since the merge with main)
+
+`dd9c59f9` FlightIntegrator, SoA kernel, part buffers and module slot, bubble wiring, StartPartsInFlight; `c7432020` reference / buffers / random SoA /
+C10 tests, pad fixture; `1ad84e54` flights (SoA == exact, ascent vs C10); `3f22807c` burn, coast, FixedUpdate mechanics, module slot tests; `a907dca6`
+checkable cites; `5dcf2a02` STATUS / README / progress, test hygiene; `7071db3e` the vessel-event hooks; then this verification note.
+After the merge with main (`814c5d34`, `9581f0d6`; `8f0ce719` the fixture's keyed AddStaticMesh): the pad fixture launches as KSP (OrbitDriver
+started, exact ground placement), structure checks in the flight cases, InputLockManager reset in the hygiene listener, this section's
+"Merge with main" note.
