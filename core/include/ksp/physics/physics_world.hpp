@@ -14,6 +14,7 @@
 //     offset only (ksp/physics/krakensbane.hpp): velocities stored here are physics-frame velocities, i.e. the true velocity
 //     minus Krakensbane::GetFrameVelocity().
 //
+// WP-20c added the static-contact record of the last step (StaticContacts) for the ground supports of the load solve.
 // Not here (documented seams): vessel rigid bodies, clusters, joints and structural loads (WP-20b / WP-20c), ray / overlap
 // queries and the static mesh interface AddStaticMesh(id, centre, vertices, triangles) of WP-12b, the contact listener that
 // feeds Part.HandleCollision (WP-20d), EVA kerbals and wheels (WP-20e). CollisionEnhancer.cs (anti-tunnelling) is replaced by
@@ -105,6 +106,9 @@ struct CompoundBodyDesc {
     uint32_t vesselGroup = 0;
     bool sameVesselCollision = false;
     uint64_t userData = 0;
+    // Jolt's manifold reduction (merging the contact manifolds of different sub-shapes of a body pair that share a normal; on by default).
+    // StaticContacts() reports every touching sub-shape either way.
+    bool useManifoldReduction = true;
 };
 
 // Jolt constraint id (index into the world's constraint table); kInvalidConstraint when absent.
@@ -230,6 +234,20 @@ public:
     // applied to body b (and the opposite to a). Zero for unknown ids. (The input of WP-20c's load solve between clusters.)
     void GetConstraintImpulse(ConstraintId id, Vector3d& linear, Vector3d& angular) const;
 
+    // ---- WP-20c: contacts with static geometry (the ground supports of the structural load solve) ----------------------------
+    // With tracking on, a Jolt contact listener records every (dynamic body, sub-shape user data) that touched (within 1 mm) a
+    // Static-layer body during the last Step, from the per-sub-shape validation callback (so manifold reduction hides none); StaticContacts()
+    // lists them sorted by (body id, user data), without duplicates: the same set whatever the thread count. Off by default (one mutex per
+    // contact callback). The full contact events (Part.OnCollisionEnter / HandleCollision) are WP-20e's.
+    struct StaticContact {
+        BodyId body = kInvalidBody;
+        uint32_t subShapeUserData = 0;
+        bool operator==(const StaticContact& o) const { return body == o.body && subShapeUserData == o.subShapeUserData; }
+        bool operator<(const StaticContact& o) const { return body != o.body ? body < o.body : subShapeUserData < o.subShapeUserData; }
+    };
+    void SetStaticContactTracking(bool on);
+    bool StaticContactTracking() const;
+    const std::vector<StaticContact>& StaticContacts() const;
     // ---- WP-19b: frames of the physics bubble -----------------------------------------------------------------------------
     bool IsStatic(BodyId id) const;  // false for unknown ids
     // Moves every body of the chosen kinds by `delta` (double, in creation order; SetPosition, no activation): the fold of
