@@ -20,6 +20,7 @@ add_executable(kspcore_tests
     test_timewarp.cpp
     test_terrain.cpp
     test_pqs_quadtree.cpp
+    test_terrain_colliders.cpp
     test_partloader.cpp
     test_modules.cpp
     test_part.cpp
