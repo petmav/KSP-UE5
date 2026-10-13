@@ -15,7 +15,10 @@ param(
     [ValidateSet('relwithdebinfo', 'debug')] [string] $Preset = 'relwithdebinfo',
     [switch] $Fresh,
     [string] $TestFilter = '',
-    [switch] $BuildOnly
+    [switch] $BuildOnly,
+    # CI mode: skip the developer-only executables (wp12_height_oracle, wp12_bench: no ctest test uses them) and, when ccache
+    # is on PATH, use it as the compiler launcher (the PCH switches itself off then, see KSPCORE_PCH) and print its stats.
+    [switch] $Ci
 )
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
@@ -48,11 +51,22 @@ Write-Host "cl:     $((Get-Command cl.exe).Source)"
 Write-Host "cmake:  $cmake ($((& $cmake --version | Select-Object -First 1)))"
 Write-Host "ninja:  $((Get-Command ninja.exe).Source)"
 
+$ccache = $null
+if ($Ci) {
+    $ccache = Get-Command ccache -ErrorAction SilentlyContinue
+    if ($ccache) {
+        if (-not $env:CMAKE_C_COMPILER_LAUNCHER)   { $env:CMAKE_C_COMPILER_LAUNCHER   = 'ccache' }
+        if (-not $env:CMAKE_CXX_COMPILER_LAUNCHER) { $env:CMAKE_CXX_COMPILER_LAUNCHER = 'ccache' }
+        Write-Host "ccache: $($ccache.Source)"
+    }
+}
+
 Push-Location $root
 try {
     $sw = [Diagnostics.Stopwatch]::StartNew()
     $cfgArgs = @('--preset', $Preset)
     if ($Fresh) { $cfgArgs += '--fresh' }
+    if ($Ci) { $cfgArgs += '-DKSPCORE_BUILD_DEV_TOOLS=OFF' }
     & $cmake @cfgArgs
     if ($LASTEXITCODE -ne 0) { throw "configure failed ($LASTEXITCODE)" }
     $tCfg = $sw.Elapsed.TotalSeconds
@@ -60,6 +74,7 @@ try {
     & $cmake --build --preset $Preset
     if ($LASTEXITCODE -ne 0) { throw "build failed ($LASTEXITCODE)" }
     $tBuild = $sw.Elapsed.TotalSeconds - $tCfg
+    if ($ccache) { & ccache -s }
     if ($BuildOnly) { Write-Host ("configure {0:N1}s, build {1:N1}s" -f $tCfg, $tBuild); return }
 
     $testArgs = @('--preset', $Preset)

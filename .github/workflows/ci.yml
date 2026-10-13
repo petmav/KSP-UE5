@@ -42,12 +42,26 @@ jobs:
 
   windows:
     runs-on: windows-latest
+    env:
+      # ccache as the MSVC compiler launcher. The objects embed their debug info (/Z7: core/CMakeLists.txt sets
+      # CMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded, CMP0141 is NEW via cmake_minimum_required 3.28), so no .pdb blocks
+      # caching. run_tests.ps1 -Ci picks ccache up and turns the (uncacheable) PCH off, see core/README.md "CI speed".
+      CCACHE_BASEDIR: ${{ github.workspace }}
+      CCACHE_MAXSIZE: 1G
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2.22
+        with:
+          key: windows-msvc-relwithdebinfo
+          max-size: 1G
       - name: Build and test (MSVC, RelWithDebInfo; msvcr120 DLL libm)
         working-directory: core
         shell: powershell
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File run_tests.ps1 -Fresh
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File run_tests.ps1 -Fresh -Ci
+      - name: ccache stats
+        if: always()
+        run: ccache -s
