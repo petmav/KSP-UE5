@@ -158,6 +158,13 @@ struct MissionsEnvironment {
     static inline std::function<void(Mission&)> processMappedVesselNodeMap;
     // Mission.GetMissionCraftByFileName(name) != null (InitMission :524). Unset: true (nothing is removed).
     static inline std::function<bool(Mission&, const std::string& craftFileName)> craftFileExists;
+    // WP-54c: true = the craft-file bookkeeping of Mission.cs (RebuildCraftFileList :1350, GetMissionCraft* lookups, ProcessMappedVesselNodeMap :1964,
+    // the vessel / part event handlers :1217-:1348) is the real port and the three hooks above (rebuildCraftFileList, processMappedVesselNodeMap,
+    // craftFileExists) are not consulted. false (default) = the WP-54 behaviour (hooks; craft files assumed present), kept so the WP-54 / WP-54b / WP-55 gates
+    // that never built a craft-file list stay bit-identical.
+    static inline bool craftFileBookkeeping = false;
+    // MissionsApp.Instance.RefreshMissionRequested(mission, changePositions) (the mapped-vessel event handlers). Unset: no MissionsApp.
+    static inline std::function<void(Mission&, bool changePositions)> refreshMissionRequested;
     // MissionEditorLogic.MissionToTest (Mission.Load :1982). Unset: "".
     static inline std::function<std::string()> missionToTest;
     // Mission.UpdateMissionFileInfo(path) = MissionFileInfo.CreateFromPath (reads the .mission through MissionSystem: slice 2). Unset: not run.
