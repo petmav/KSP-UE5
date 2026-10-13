@@ -12,6 +12,7 @@
 // host's scene graph.
 #pragma once
 
+#include "ksp/editor/editor_types.hpp"  // ConstructionEventType
 #include "ksp/serenity/base_servo.hpp"
 
 namespace ksp::Expansions::Serenity {
