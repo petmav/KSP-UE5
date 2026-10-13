@@ -648,3 +648,80 @@ TEST_CASE("WP-20e terrain colliders per body: the bubble hosts Kerbin's PQS quad
     ch.DropTerrain(kerbin);
 }
 
+TEST_CASE("WP-20e craft touchdown: PhysProf-S set down on the terrain at 1 / 3 / 6 m/s (the Mainsail bell first): lands or crashes by its crashTolerance") {
+    if (!wp20b::GameAvailable()) return;
+    for (const double v0 : {1.0, 3.0, 6.0}) {
+        AnchorSettings settings;
+        World w(true);
+        PadScene pad(w);
+        GameSettings::PHYSICS_EASE = false;
+        EventLog log;
+        auto v = w.Craft("PhysProf-S");
+        const Site site = SiteAt(pad, kPadLat, kPadLon, false);
+        PlaceAt(pad, *v, site, 0.05, false);
+        pad.s.Start(*v);
+        v->MakeActive();
+        ResetLevelClock();
+        ContactHost& ch = pad.s.bubble.Contacts();
+        ch.recordDispatch = true;
+        REQUIRE(TickUntilUnpacked(pad, *v));
+        pad.s.bubble.Host().Find(*v)->SetLinearVelocity(site.up * -v0);
+        float impact = 0.0f, tolerance = 0.0f;
+        size_t breaks = 0;
+        float maxLoad = 0.0f;
+        for (int k = 0; k < 200; ++k) {
+            Tick(pad);
+            breaks += pad.s.bubble.Host().LastBreaks().size();
+            if (VesselPhysics* vp = pad.s.bubble.Host().Find(*v)) maxLoad = std::max(maxLoad, vp->MaxLoadRatio());
+            for (const ContactHost::DispatchRecord& d : ch.LastDispatch())
+                if (d.kind == PhysicsWorld::ContactEvent::Kind::Enter && impact == 0.0f) {
+                    impact = d.collision.relativeVelocity.magnitude();
+                    tolerance = d.colliderPart->fields.crashTolerance;
+                }
+        }
+        MESSAGE("touchdown at " << v0 << " m/s: first contact " << impact << " m/s on a part of crashTolerance " << tolerance << "; explosions " << log.explosions
+                                << ", joint breaks " << breaks << " (largest sub-joint load / capacity " << maxLoad << "), landed " << v->Landed << ", parts "
+                                << v->parts.size() << ", situation " << static_cast<int>(v->situation));
+        CHECK(impact > 0.0f);
+        CHECK((log.explosions > 0) == (impact > tolerance));  // Part.HandleCollision on the touching part
+        if (impact <= tolerance) {
+            CHECK(v->Landed);
+            CHECK(v->situation == Vessel::Situations::LANDED);
+        }
+    }
+}
+
+TEST_CASE("WP-20e input seam: PhysicsBubble::inputFeed runs at FlightInputHandler.FixedUpdate's slot, before the part modules and the FlightIntegrator") {
+    if (!wp20b::GameAvailable()) return;
+    World w(true);
+    PadScene pad(w);
+    auto v = w.Craft("PhysProf-S");
+    pad.Place(*v);
+    pad.s.Start(*v);
+    std::vector<std::string> order;
+    pad.s.bubble.inputFeed = [&] { order.push_back("input"); };
+    const std::function<void()> fi = FlightScene::hooks.afterFlightIntegrator;
+    FlightScene::hooks.afterFlightIntegrator = [&] {
+        order.push_back("fi");
+        fi();
+    };
+    // the module slot ran after the input: an engine ignited by the input slot produces thrust in the same tick
+    for (int k = 0; k < 3; ++k) Tick(pad);
+    wp20d::IgniteFirstStage(*v);
+    v->ctrlState.mainThrottle = 0.0f;  // the input slot sets it
+    pad.s.bubble.inputFeed = [&] {
+        order.push_back("input");
+        v->ctrlState.mainThrottle = 1.0f;  // what FlightInputHandler.FixedUpdate / FeedInputFeed would have put there
+    };
+    order.clear();
+    Tick(pad);
+    MESSAGE("slot order of one tick: " << (order.size() > 1 ? order[0] + ", " + order[1] : std::string("?")) << "; engine forces handed to the buffers "
+                                       << pad.s.bubble.ModuleForces().engineForces);
+    REQUIRE(order.size() == 2);
+    CHECK(order[0] == "input");
+    CHECK(order[1] == "fi");
+    CHECK(pad.s.bubble.ModuleForces().engineForces > 0);
+    FlightScene::hooks.afterFlightIntegrator = fi;
+    pad.s.bubble.inputFeed = nullptr;
+}
+

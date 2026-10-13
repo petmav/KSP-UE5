@@ -253,7 +253,7 @@ void Part::explode(float offset) {
     if (srf > 1000.0 && srf < 200.0) num = 0.12f;  // sic (never true)
     else if (srf >= 2000.0) num = 0.25f;
     (void)offset;
-    // :4387 ModuleComet with canSpawnFragments: the fragments are the comet package's; FX otherwise
+    // (C# line 4387: a ModuleComet that can spawn fragments makes them instead of the FX: the comet package)
     if (PartContactEnvironment::explodeFx) PartContactEnvironment::explodeFx(*this, partTransform.position, f32store(fx(fields.explosionPotential) + fx(num)));
     log::Info(gameObjectName + " Exploded!! - blast awesomeness: " + std::to_string(fields.explosionPotential));
     const Vessel* active = FlightGlobals::ActiveVessel;
