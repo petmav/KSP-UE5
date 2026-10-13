@@ -38,6 +38,12 @@ GUID_FMT = "6d650000-0000-0000-0000-%012d"
 
 # ---- the accounting of the C# classes ------------------------------------------------------------------------------------------
 DEFERRED = {
+    "Tests": [],
+    "Actions": [],
+    "Adjusters": [],
+}
+# ported by WP-54c (tools/wp54c): registered through RegisterNodeLibrary(), gated by tests/test_missions3.cpp
+SLICE3 = {
     "Tests": ["TestDistance"],
     "Actions": ["ActionPartFailure", "ActionPartRepair", "ActionPartResourceDrain"],
     "Adjusters": [],
@@ -75,11 +81,12 @@ def registry_section():
         concrete = sorted(n for n, abstract in cls.items() if not abstract)
         deferred = sorted(DEFERRED[folder])
         slice2 = sorted(SLICE2[folder])
-        for d in deferred + slice2:
+        slice3 = sorted(SLICE3[folder])
+        for d in deferred + slice2 + slice3:
             assert d in concrete, (folder, d)
-        ported = sorted(n for n in concrete if n not in deferred and n not in slice2)
+        ported = sorted(n for n in concrete if n not in deferred and n not in slice2 and n not in slice3)
         assert ported == sorted(table.keys()), (folder, set(ported) ^ set(table.keys()))
-        reg[folder] = {"ported": ported, "deferred": deferred, "slice2": slice2, "abstract": sorted(n for n, a in cls.items() if a)}
+        reg[folder] = {"ported": ported, "deferred": deferred, "slice2": slice2, "slice3": slice3, "abstract": sorted(n for n, a in cls.items() if a)}
     return reg
 
 

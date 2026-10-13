@@ -10,6 +10,8 @@
 #include "ksp/missions/mission_score.hpp"
 #include "ksp/missions/mission_tests.hpp"
 #include "ksp/missions/mission_actions2.hpp"
+#include "ksp/missions/mission_actions3.hpp"
+#include "ksp/missions/mission_tests4.hpp"
 #include "ksp/missions/mission_tests2.hpp"
 #include "ksp/missions/vessel_restrictions.hpp"
 #include "ksp/save/save_environment.hpp"
@@ -53,6 +55,17 @@ void NodeLibraryEnvironment::Reset() {
     randomRangeFloat = nullptr;
     randomValue = nullptr;
     deltaTime = nullptr;
+    findUnloadedPart = nullptr;
+    partAddModuleAdjusters = nullptr;
+    partModuleNames = nullptr;
+    partModuleAdjusterIds = nullptr;
+    partRemoveModuleAdjuster = nullptr;
+    adjusterCalls.clear();
+    partRequestResource = nullptr;
+    partModuleDisplayName = nullptr;
+    getSpaceCenterFacility = nullptr;
+    getLaunchSite = nullptr;
+    launchSiteDisplayName = nullptr;
 }
 
 // FlightGlobals.GetHomeBody() (FlightGlobals.cs:1813)
@@ -159,6 +172,7 @@ const std::map<std::string, std::vector<std::string>>& ScoreModuleAttributes() {
         {"TestVesselStateCrashed", {"ScoreModule_Resource", "ScoreModule_Time"}},
         {"TestVesselVelocity", {"ScoreModule_Resource", "ScoreModule_Time"}},
         {"TestGoTo", {"ScoreModule_Resource", "ScoreModule_Time", "ScoreModule_Accuracy"}},
+        {"TestDistance", {"ScoreModule_Resource", "ScoreModule_Time"}},
         {"TestFlyThrough", {"ScoreModule_Resource", "ScoreModule_Time"}},
         {"TestPlantFlag", {"ScoreModule_Resource", "ScoreModule_Time", "ScoreModule_Accuracy"}},
         {"TestKerbalRecovery", {"ScoreModule_Resource", "ScoreModule_Time"}},
@@ -222,6 +236,7 @@ void RegisterNodeLibrary() {
     RegisterTest<TestSOIReached>();
     RegisterTest_TestVessel();
     RegisterNodeLibrarySlice2Tests();
+    RegisterTest<TestDistance>();  // WP-54c
     RegisterNodeLibrarySlice2Actions();
     RegisterVesselRestrictions();
     using namespace Actions;
@@ -237,6 +252,9 @@ void RegisterNodeLibrary() {
     RegisterAction<ActionSetCamera>();
     RegisterAction<ActionPartResourceAmount>();
     RegisterAction<ActionPartExplode>();
+    RegisterAction<ActionPartFailure>();  // WP-54c
+    RegisterAction<ActionPartRepair>();
+    RegisterAction<ActionPartResourceDrain>();
     Adjusters::RegisterAdjusters();
     // MissionScore.GetSupportedTypes reads [MEScoreModule] of the objective's own class (inherit: false)
     MissionScore::allowedSystemsOf = [](IScoreableObjective* objective) -> std::vector<std::string> {

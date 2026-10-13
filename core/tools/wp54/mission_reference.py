@@ -88,7 +88,8 @@ def g17(x):
 # arguments that are tags are translated first (Localizer.ReplaceTags); the result is unescaped (\n \" \t).
 def load_dictionary():
     tags = {}
-    pat = re.compile(r"^\s*(#autoLOC_\d+)\s*=\s*(.*?)\s*$")
+    # WP-54c: also the keys the dictionary spells `#autoLoc_` (the C# looks tags up by exact string; "#autoLoc_6002179" is one of the dictionary's own keys)
+    pat = re.compile(r"^\s*(#auto[Ll][Oo][Cc]_\d+)\s*=\s*(.*?)\s*$")
     for line in open(DICT, encoding="utf-8-sig"):
         m = pat.match(line)
         if m and m.group(1) not in tags:
