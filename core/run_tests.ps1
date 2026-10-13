@@ -64,6 +64,7 @@ try {
 
     $testArgs = @('--preset', $Preset)
     if ($TestFilter) { $testArgs += @('-R', $TestFilter) }
+    $testArgs += @('-j', [string]([Math]::Max(2, [int]$env:NUMBER_OF_PROCESSORS)))
     & $ctest @testArgs
     $rc = $LASTEXITCODE
     $tTest = $sw.Elapsed.TotalSeconds - $tCfg - $tBuild
