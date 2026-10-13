@@ -31,4 +31,10 @@ set(JPH_USE_MTL OFF CACHE BOOL "" FORCE)
 set(JPH_USE_CPU_COMPUTE OFF CACHE BOOL "" FORCE)
 
 # Jolt's Build/CMakeLists.txt defines the `Jolt` static library when it is not the top-level project.
+# Jolt's Build/CMakeLists.txt precompiles Jolt.h; ccache cannot cache /Yu compilations, so with an MSVC compiler launcher the Jolt PCH
+# is disabled (a cache hit is far cheaper than a PCH). Affects build time only, not code generation.
+if(KSP_MSVC_LAUNCHER)
+    set(CMAKE_DISABLE_PRECOMPILE_HEADERS ON)
+endif()
 add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/jolt/Build ${CMAKE_BINARY_DIR}/third_party/jolt EXCLUDE_FROM_ALL)
+unset(CMAKE_DISABLE_PRECOMPILE_HEADERS)

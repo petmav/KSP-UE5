@@ -15,15 +15,18 @@
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
+#include <numeric>
 #include <string>
 #include <vector>
 
+#include "ksp/physics/physics_world.hpp"
 #include "ksp/save/save_enums.hpp"
 #include "ksp/terrain/pq.hpp"
 #include "ksp/terrain/pqs_cache.hpp"
 #include "ksp/terrain/pqs_mods_quad.hpp"
 #include "ksp/terrain/pqs_parallel.hpp"
 #include "ksp/terrain/pqs_prefab.hpp"
+#include "ksp/terrain/terrain_colliders.hpp"
 #include "ksp/unity/matrix_native.hpp"
 
 using namespace ksp;
@@ -119,6 +122,40 @@ void Bench(const char* label, std::unique_ptr<PQS> sphere, std::unique_ptr<PQS> 
             perQuadHeights.push_back(Ms(Clock::now() - a) * 1000.0);
             if (sink == 1.2345) std::printf("!");
         }
+    }
+    // WP-12b: the colliders of the built maximum-level quads: Jolt MeshShape cook + insert per quad (TerrainColliders), the
+    // replacement of an enabled collider (a rebuilt quad), and radial ray casts against them
+    {
+        physics::PhysicsWorld world;
+        TerrainCollidersOptions copt;
+        TerrainColliders tc(world, *sphere, copt);
+        const size_t adopted = tc.AdoptExisting();
+        std::vector<double> cook;
+        const auto c0 = Clock::now();
+        for (int r = 0; r < repeats; r++)
+            for (PQ* q : leaves) {
+                if (!q->meshColliderEnabled) continue;
+                const auto a = Clock::now();
+                sphere->onQuadColliderEnabled(*q);
+                cook.push_back(Ms(Clock::now() - a) * 1000.0);
+            }
+        const double cookTotal = Ms(Clock::now() - c0);
+        std::vector<double> rays;
+        const Vector3d pos = target.position;
+        double sink = 0.0;
+        const int nRays = 2000;
+        const auto r0 = Clock::now();
+        for (int i = 0; i < nRays; i++) {
+            const Vector3d p = pos + Vector3d(0.37 * i - 300.0, 0.0, 0.21 * i - 200.0);
+            sink += tc.SurfaceAt(p, 200.0, 200.0).distance;
+        }
+        const double rayUs = Ms(Clock::now() - r0) * 1000.0 / nRays;
+        if (sink == 1.2345) std::printf("!");
+        std::printf("%-26s colliders: %zu quads adopted, cook+insert per quad: mean %8.1f us, median %8.1f us, max %8.1f us (%zu cooks, %.1f ms);"
+                    " first cook of all: %.1f us per quad; SurfaceAt ray cast %.2f us\n",
+                    label, adopted, cook.empty() ? 0.0 : std::accumulate(cook.begin(), cook.end(), 0.0) / static_cast<double>(cook.size()),
+                    Median(cook), cook.empty() ? 0.0 : *std::max_element(cook.begin(), cook.end()), cook.size(), cookTotal,
+                    adopted > 0 ? tc.Stats().cookSeconds * 1.0e6 / static_cast<double>(tc.Stats().cooked) : 0.0, rayUs);
     }
     // steady-state frames (target at rest)
     std::vector<double> frame;
