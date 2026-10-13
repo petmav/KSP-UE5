@@ -17,6 +17,7 @@
 #include "ksp/celestial/planetarium.hpp"
 #include "ksp/physics/flight_integrator.hpp"
 #include "ksp/events/event_data.hpp"
+#include "ksp/input/input_lock_manager.hpp"
 #include "ksp/inventory/construction.hpp"
 #include "ksp/fineprint/compatibility.hpp"
 #include "ksp/kerbals/experience.hpp"
@@ -107,6 +108,13 @@ void Restore(const std::string& test) {
     if (FlightGlobals::speedDisplayMode() != FlightGlobals_SpeedDisplayModes::Surface) Report("FlightGlobals speed mode", test);
     FlightGlobals::ResetSpeedModesForTests();
     ksp::physics::FlightIntegrator::ActiveVesselFI = nullptr;
+    // InputLockManager's lock stack and mask (InputLockManager.cs:8-10) are static: a lock a case leaves behind (WP-32's parachute-state walk
+    // enters KerbalEVA states that set ControlPanelLock_<id> without their OnLeave) blocks VESSEL_SWITCHING and the ship controls in every
+    // later case (WP-19a's VesselSwitching.Update returned nothing after it under --order-by=rand -rs=27)
+    if (InputLockManager::lockMask != 0 || InputLockManager::lockStack.Count() != 0) {
+        if (Trace()) std::fprintf(stderr, "[hygiene] InputLockManager locks %s left by: %s\n", InputLockManager::PrintLockStack().c_str(), test.c_str());
+        InputLockManager::Reset();
+    }
     // GameEvents / any named event: a listener holds a raw pointer to its target, so one left behind by a destroyed
     // object is a dangling call for every later test that fires the event (and a live one changes what it sees)
     ksp::events::BaseGameEvent::ForEachRegistered([&](ksp::events::BaseGameEvent& e) {

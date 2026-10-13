@@ -10,6 +10,7 @@
 //     against KSP's own numbers: the in-game capture C10 (harness/captures/out2/aero_forces_vessel.json), 0 ULP;
 //   * scenarios against independent references: the ascent of PhysProf-M2 / -S / -L2-AS from the pad against KSP's own ascent (C10's flight
 //     states), a vacuum burn against an independent integrator and the rocket equation, an orbit coast against the Kepler orbit.
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -467,6 +468,14 @@ struct Flight {
     int parts = 0, engines = 0;
     double msTick = 0.0, msFi = 0.0;  // per flight tick: the whole tick, the FlightIntegrator slot
     double massStart = 0.0, massEnd = 0.0;
+    // WP-20c's structural layer under the whole tick: joint breaks on the pad (settle) and in flight (per frame, cumulative), the largest
+    // sub-joint load / capacity on the pad and per flight frame (VesselPhysics::MaxLoadRatio of the vessel's binding) and its joint
+    int padBreaks = 0;
+    float padMaxLoad = 0.0f;
+    std::vector<int> breaks;
+    std::vector<float> load;
+    std::vector<std::string> loadJoint;
+    size_t partsEnd = 0;
 };
 
 Flight Launch(const std::string& craft, AeroKernel kernel, int frames, int settle = 100) {
@@ -487,17 +496,29 @@ Flight Launch(const std::string& craft, AeroKernel kernel, int frames, int settl
     pad.s.Start(*v);
     out.parts = static_cast<int>(v->parts.size());
     double tickMs = 0.0;
+    int nBreaks = 0;
     for (int k = 0; k < settle + frames; ++k) {
         if (k == settle) {
             out.engines = static_cast<int>(wp20d::IgniteFirstStage(*v));
             out.padAlt = pad.RootAltitude(*v);
             out.massStart = v->totalMass;
+            out.padBreaks = nBreaks;
             fiMs = 0.0;
         }
         const auto t0 = Clock::now();
         pad.s.Tick();
+        const double dtTick = std::chrono::duration<double, std::milli>(Clock::now() - t0).count();
+        nBreaks += static_cast<int>(pad.s.bubble.Host().LastBreaks().size());
+        const VesselPhysics* vp = pad.s.bubble.Host().Find(*v);
+        const float load = vp != nullptr ? vp->MaxLoadRatio() : 0.0f;
+        if (k < settle) out.padMaxLoad = std::max(out.padMaxLoad, load);
         if (k >= settle) {
-            tickMs += std::chrono::duration<double, std::milli>(Clock::now() - t0).count();
+            tickMs += dtTick;
+            out.breaks.push_back(nBreaks - out.padBreaks);
+            out.load.push_back(load);
+            const int j = vp != nullptr ? vp->MaxLoadJoint() : -1;
+            const PartJointSpec* js = j >= 0 ? &vp->Joints()[static_cast<size_t>(j)] : nullptr;
+            out.loadJoint.push_back(js != nullptr && js->child != nullptr && js->child->partInfo != nullptr ? js->child->partInfo->name : std::string("-"));
             const FlightIntegrator* fi = pad.s.bubble.FlightIntegrators().Find(*v);
             out.alt.push_back(pad.RootAltitude(*v));
             out.spd.push_back(fi != nullptr ? fi->atm.spd : 0.0);
@@ -511,6 +532,7 @@ Flight Launch(const std::string& craft, AeroKernel kernel, int frames, int settl
     out.msTick = tickMs / frames;
     out.msFi = fiMs / frames;
     out.massEnd = v->totalMass;
+    out.partsEnd = v->parts.size();
     out.hash = pad.s.world.StateHash();
     const FlightIntegrator* fi = pad.s.bubble.FlightIntegrators().Find(*v);
     REQUIRE(fi != nullptr);
@@ -553,6 +575,17 @@ TEST_CASE("WP-20d SoA == exact over whole flights from the pad: S, M2-AS, L2-AS,
         CHECK(sameParts == exact.endAero.size());
         CHECK(sameTemps);
         CHECK(exact.alt.back() > exact.padAlt + 1000.0);
+        // WP-20c's structural layer under the whole tick (the engines' thrust on the engine parts at their thrust transforms, the aero forces
+        // on every part, carried by the joints): nothing breaks on the pad or in 30 s of powered flight, and the craft keeps every part
+        const auto peak = std::max_element(exact.load.begin(), exact.load.end());
+        const size_t peakAt = static_cast<size_t>(peak - exact.load.begin());
+        MESSAGE(std::string(craft) << " structure: pad max sub-joint load / capacity " << exact.padMaxLoad << ", flight max " << *peak << " ("
+                                   << exact.loadJoint[peakAt] << " joint, frame " << peakAt << "); breaks: pad " << exact.padBreaks << ", flight "
+                                   << exact.breaks.back() << "; parts " << exact.partsEnd << " / " << exact.parts);
+        CHECK(both.padBreaks + exact.padBreaks + soa.padBreaks == 0);
+        CHECK(both.breaks.back() + exact.breaks.back() + soa.breaks.back() == 0);
+        CHECK(exact.partsEnd == static_cast<size_t>(exact.parts));
+        CHECK(*peak < 1.0f);
         partTicks += both.stats.compared;
     }
     MESSAGE(partTicks << " part-ticks compared in total, 0 mismatches");
@@ -641,8 +674,13 @@ TEST_CASE("WP-20d ascent from the pad vs KSP's own ascent (C10 in-game states): 
             offset += static_cast<double>(i - k.frame);
             ++n;
             CHECK(maxAoa < 3.0);  // ours drifts off the velocity from Mach ~0.9 without SAS (M2: 0.58 deg at 2.5 km, 2.6 deg at Mach 1)
+            CHECK(f.breaks[u] == 0);  // the craft KSP flew: no joint broke (WP-20c) up to this state
         }
         CHECK(n >= 2);
+        CHECK(f.padBreaks == 0);
+        if (prevOurs >= 0)
+            MESSAGE(std::string(wd.craft) << " structure: pad max sub-joint load / capacity " << f.padMaxLoad << ", flight max (up to the last state compared) "
+                                          << *std::max_element(f.load.begin(), f.load.begin() + (prevOurs + 1)));
         MESSAGE(std::string(wd.craft) << ": " << n << " states compared; our frames run " << offset / n
                          << " frames behind KSP's (a constant: the capture's frame 0 is not our ignition tick); root altitude at ignition "
                          << f.padAlt << " m (KSP's pad surface is ~7.6 m above the PQS terrain the craft stands on here: PhysProf-S's root is at 79.29 m in C6)");
@@ -866,9 +904,13 @@ TEST_CASE("WP-20d FlightIntegrator.FixedUpdate in the bubble: Setup waits for Pa
     CHECK(tank->forces.empty());
     CHECK_FALSE(v->packed);
     CHECK(FlightIntegrator::ActiveVesselFI == fi);
+    CHECK(v->orbitDriver->lastMode == OrbitDriver::UpdateMode::IDLE);  // the packed frame's UpdateOrbit (VesselPrecalculate.cs:186)
     // tick 1: unpacked, Integrate ran; the vessel mirrors of :621-641 and the per-part static pressure of DragCubeSetupAndPartAeroStats
     pad.s.Tick();
     CHECK(fi->FixedUpdates() == 1);
+    // KSP's physics easing after IDLE -> TRACK_Phys (VesselPrecalculate.cs:290-302): gravity 1 / 16 in this first unpacked tick
+    CHECK(v->precalc.isEasingGravity());
+    CHECK(v->gravityMultiplier == 0.0625);
     CHECK(v->staticPressurekPa == fi->atm.staticPressurekPa);
     CHECK(v->speed == fi->atm.spd);
     CHECK(v->indicatedAirSpeed == fi->atm.spd * fi->atm.staticPressureAtm);

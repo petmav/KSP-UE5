@@ -132,7 +132,8 @@ inline size_t IgniteFirstStage(Vessel& v, int stage = 1) {
 
 // A craft on the LaunchPad in the bubble: Kerbin in its rotating frame (below 100 km, as in KSP), the terrain patch of the spike (30 x 30
 // quads of 50 m from Kerbin's PQS heights) as static meshes in the world's axes, the craft upright (craft X, Y, Z -> east, up, north)
-// with its lowest proxy collider corner 5 cm above the pad, landed (PRELAUNCH), packed until FlightDriver.Start's frame.
+// with its lowest proxy collider point on the pad, landed (PRELAUNCH), packed until FlightDriver.Start's frame, its OrbitDriver started:
+// KSP's launch, which sets the craft down without an impact (exact ground placement, then physics easing; see Place).
 struct PadScene {
     World& w;
     BubbleScene s;
@@ -160,6 +161,9 @@ struct PadScene {
         AddTerrain(30);
     }
     ~PadScene() {
+        // the vessels Part.decouple spawned (a joint break, WP-20c) go with the scene, before the bubble, like the craft (they own parts of
+        // the World's part database and would outlive it in Vessel::SpawnedVessels)
+        Vessel::SpawnedVessels().clear();
         GameSettings::PHYSICS_EASE = true;
         w.Kerbin().inverseRotation = false;
     }
@@ -202,7 +206,16 @@ struct PadScene {
             }
         s.world.OptimizeBroadPhase();
     }
-    // the craft on the pad, landed and packed (VesselPrecalculate.SetLandedPosRot keeps it there until GoOffRails)
+    // the craft on the pad, landed and packed (VesselPrecalculate.SetLandedPosRot keeps it there until GoOffRails), placed as KSP spawns a
+    // launch (WP-20d integration finding: a 5 cm drop at full gravity, this fixture's earlier placement, is a one-step contact impulse
+    // that WP-20c's quasi-static loads, which have no joint compliance, turned into 28,861 kN on L2-AS's 20,000 kN Mainsail sub-joint):
+    //  * Vessel.GoOffRails of a spawning landed vessel runs CheckGroundCollision (Vessel.cs:2418, :2493-2576), which moves the vessel so
+    //    that its lowest collider point (getLowestPoint, :2578) lies on the ground hit below it: here the lowest proxy corner on the
+    //    pad point (no raycast; the pad normal is padUp);
+    //  * Unity runs OrbitDriver.Start (OrbitDriver.cs:98) before the vessel's first FixedUpdate: without it UpdateOrbit returns at
+    //    `!ready` (:152), lastMode never records IDLE (:156; the packed frames call it, VesselPrecalculate.cs:186), and CalculateGravity's
+    //    physics easing (VesselPrecalculate.cs:290-302: gravityMultiplier 0 -> 1 in steps of 0.0625 after IDLE -> TRACK_Phys, with
+    //    GameSettings.PHYSICS_EASE, set above) never starts.
     void Place(Vessel& v) {
         CelestialBody& kerbin = w.Kerbin();
         double minY = 1e30;
@@ -219,7 +232,7 @@ struct PadScene {
         v.loaded = true;
         v.packed = true;
         v.SetRotation(rot.ToQuaternionf(), true);
-        v.SetPosition(padWorld + padUp * (0.05 - minY), true);
+        v.SetPosition(padWorld + padUp * -minY, true);
         v.Landed = true;
         v.Splashed = false;
         v.situation = Vessel::Situations::PRELAUNCH;
@@ -238,6 +251,10 @@ struct PadScene {
         FlightGlobals::SortVessel(&v, true);
         StartPartsInFlight(v);
         v.UpdateResourceSets();
+        // OrbitDriver.Start in IDLE: TrackRigidbody from CoMD, the packed vessel's CalculatePhysicsStats value (VesselPrecalculate.cs:469-480:
+        // worldSurfacePos + worldSurfaceRot * localCoM)
+        v.CoMD = padWorld + padUp * -minY + rot * Vector3d(v.localCoM);
+        v.orbitDriver->Start();
     }
     // the root part's altitude above sea level (Vessel.altitude of the capture: the vessel transform's)
     double RootAltitude(const Vessel& v) const {

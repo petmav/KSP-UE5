@@ -58,3 +58,15 @@ internals). Local commits only, no push.
 - verification: fresh MSVC at 5dcf2a02 38 / 38 (build 254 s, ctest 384 s), final commit ctest 38 / 38; unit default / rand 11 / rand 27 851 / 851
   (1,412,910 assertions); WSL g++ ASan + UBSan + LSan 851 / 851 (1,412,894), no report (note: an incremental WSL rebuild after rsync -a kept stale
   objects of files edited during the first build: touched and rebuilt, then rerun). Done.
+- merge with origin/main (WP-20c / WP-19b / WP-12b / WP-29b / WP-32; fixture AddStaticMesh keyed): 2 / 47 ctest failures, `unit.shard.2` and
+  `unit.random_order.27` (L2-AS: partTicks 657,511 != 730,743, 1,089 m after 30 s, C10 -24.5 % at 1 km).
+- diagnosis (temporary per-tick break / load log over the PadScene launch): not the thrust / aero loads (flight max 0.044 of capacity for L2-AS,
+  as WP-20c's 0.046); L2-AS broke at tick 7 of the settle: Mainsail sub-joint 28,861 / 20,000 kN, five radial decouplers 1,912-2,502 / 1,760 kN,
+  46 parts lost. Cause: PadScene dropped the craft 5 cm at full gravity (WP-20c's documented impact deviation turns the one-step contact into
+  a quasi-static load). The fixture never started the OrbitDriver (OrbitDriver.cs:98: no `ready`, lastMode never IDLE, so no physics easing,
+  VesselPrecalculate.cs:290) and did not place the craft as CheckGroundCollision does. Variants: easing only still breaks (27,842 kN), exact
+  placement only 0.66, both 0.37 (= the static 1 g load).
+- fix in the fixture (OrbitDriver started, lowest proxy point on the pad), new structure checks in the flight / ascent / mechanics cases;
+  WP-20d cases 11 / 11 (27,783 assertions).
+- `test_flight3.cpp:382` under rand 27: bisected with `--first/--last` to `WP-32 parachute states` leaking `ControlPanelLock_<id>`
+  (VesselSwitching.Update returns at the VESSEL_SWITCHING lock); the two cases alone reproduce it. Hygiene listener resets InputLockManager.
