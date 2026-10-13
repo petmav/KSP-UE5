@@ -38,6 +38,7 @@
 #include "ksp/modules/misc_modules.hpp"
 #include "ksp/modules/module_cargo_part.hpp"
 #include "ksp/modules/module_structural.hpp"
+#include "ksp/wheels/wheel_modules.hpp"
 #include "ksp/parts/available_part.hpp"
 #include "ksp/parts/cs_parse.hpp"
 #include "ksp/parts/part_loader.hpp"
@@ -234,8 +235,7 @@ void RegisterBuiltinModules() {
     detail::RegisterMiscModules();  // WP-30: ModuleGPS, FlagSite, ModulePartFirework (misc_modules.cpp)
     Reg<PartStatsUpgradeModule>({"PartStatsUpgradeModule"});
     RegCurves({"ModuleColorChanger"}, {"redCurve", "greenCurve", "blueCurve", "alphaCurve"});
-    RegCurves({"ModuleWheelSteering"}, {"steeringCurve", "steeringMaxAngleCurve"});
-    RegCurves({"ModuleWheelMotor", "ModuleWheelMotorSteering"}, {"torqueCurve"});
+    detail::RegisterWheelModules();  // WP-29b: ModuleWheelBase + ModuleWheels.* (their OnAwake creates the empty curves RegCurves did for WP-06)
 }
 }  // namespace detail
 

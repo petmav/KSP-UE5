@@ -302,6 +302,9 @@ add_library(kspcore STATIC
     wheels/vp_wheel_collider.cpp
     wheels/vehicle_base.cpp
     wheels/ksp_wheel_controller.cpp
+    wheels/wheel_modules.cpp
+    wheels/wheel_base.cpp
+    wheels/wheel_submodules.cpp
     modules/module_resource_intake.cpp
     # WP-26 fairings, cargo bays, jettison, shielding, launch clamps
     modules/fairing_panel.cpp
