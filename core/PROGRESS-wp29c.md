@@ -34,3 +34,5 @@ WP-29a/29b managed port; wheels as force elements on the WP-20b cluster bodies, 
   behaviours first). check_cites (wp28 + wp55) on every touched file: 59 cites, 0 mismatches (5 stale WP-14 cites in vessel_module.cpp and
   one comment form in the steer test fixed). ctest 48/48 passed (153.7 s); unit 959 cases / 1,548,340 assertions pass in default order and
   with --order-by=rand -rs=11 / -rs=27.
+- 2026-10-13: merged origin/main (WP-mucol 02a0f218; STATUS rows / sections kept both, massOnly sits in mucol's collider-kind loop):
+  ctest 48/48 (140.3 s); unit 969 cases / 1,551,159 assertions pass in default order and with -rs=11 / -rs=27.

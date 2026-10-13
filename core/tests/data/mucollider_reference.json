@@ -1,0 +1,5390 @@
+{
+ "about": "WP-mucol: collider chunks of the staged stock engine models and their part-space shapes (floats = binary32 bit patterns, mesh data as FNV-1a 64 of the raw little-endian bytes). The reduced .mu files next to this file are the originals with everything but the transform tree, TagAndLayer and collider chunks removed. Produced by core/tools/mucollider/mu_colliders_reference.py.",
+ "parts": {
+  "JetEngine": {
+   "cfg": {
+    "file": "jetEngineBasic.cfg",
+    "origin": "GameData/Squad/Parts/Engine/jetEngines/jetEngineBasic.cfg",
+    "sha256": "da7f3bf5981fdb8d5a568d64b33053c03e2dcaabc1f284dbc5a7328195d8185a"
+   },
+   "colliders": [
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 63,
+      "triangleLists": [
+       {
+        "count": 144,
+        "fnv1a64": "42257e88f4b35a9a"
+       }
+      ],
+      "vertsFnv1a64": "aeb1f43e04894ce0"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "-8.3910056969509e-10",
+        "0.5496178932656827",
+        "-3.0775730970745873e-07"
+       ],
+       "hullFaces": 46,
+       "inertiaPerUnitMass": [
+        [
+         "0.14766773068858072",
+         "-1.6015503454223052e-08",
+         "1.4532953602666323e-08"
+        ],
+        [
+         "-1.6015503454154495e-08",
+         "0.13305705426184297",
+         "-2.6686492295741947e-08"
+        ],
+        [
+         "1.4532953604380216e-08",
+         "-2.668649229903262e-08",
+         "0.14766773134319364"
+        ]
+       ],
+       "qhullVolume": "0.790745163959055",
+       "volume": "0.7907451639590553"
+      },
+      "meshSolidVolume": "0.7907451365776355",
+      "nodePosition": [
+       "262dd0f1",
+       "3f790e56",
+       "82800000"
+      ],
+      "nodeRotation": [
+       "3f000003",
+       "bf000003",
+       "3efffffe",
+       "3efffffe"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "0bb3c9aa2a954a16"
+     },
+     "path": "model/BJE/TurboFanSize1/TF1COL",
+     "tag": "Untagged",
+     "trigger": false
+    }
+   ],
+   "model": {
+    "model": "Squad/Parts/Engine/jetEngines/turboFanSize1"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "bytes": 110910,
+    "file": "turboFanSize1.mu",
+    "origin": "GameData/Squad/Parts/Engine/jetEngines/turboFanSize1.mu",
+    "sha256": "a7ac60a2c5e67d92f177d128c0ebbf1d7eb725273fb7ac331e13be2d7ab482d5"
+   },
+   "muVersion": 4,
+   "nodes": 10,
+   "reduced": {
+    "bytes": 2177,
+    "file": "mucollider/JetEngine.mu"
+   },
+   "rescaleFactor": "3f800000"
+  },
+  "MassiveBooster": {
+   "cfg": {
+    "file": "part.cfg",
+    "origin": "GameData/Squad/Parts/Engine/MassiveSRB/part.cfg",
+    "sha256": "50ece12eef08355a1e227550a3e2817620b17cb35f563e51bf324396d5d3c86c"
+   },
+   "colliders": [
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 74,
+      "triangleLists": [
+       {
+        "count": 144,
+        "fnv1a64": "33aa185ba5ab0a86"
+       }
+      ],
+      "vertsFnv1a64": "89227e4c3d8606ad"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "1.3215459015421488e-17",
+        "0.015431404113769195",
+        "-7.551690865955135e-18"
+       ],
+       "hullFaces": 44,
+       "inertiaPerUnitMass": [
+        [
+         "18.351032783956175",
+         "5.396470297728458e-06",
+         "-1.273547359087266e-07"
+        ],
+        [
+         "5.3964702977334925e-06",
+         "0.11849934305022822",
+         "1.7763010994978981e-06"
+        ],
+        [
+         "-1.2735473590715332e-07",
+         "1.7763010994928638e-06",
+         "18.35103271906733"
+        ]
+       ],
+       "qhullVolume": "11.026236153584284",
+       "volume": "11.026236153584286"
+      },
+      "meshSolidVolume": "11.02621037159799",
+      "nodePosition": [
+       "00000000",
+       "3c7cd400",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "00000000",
+       "3f3504f4",
+       "00000000",
+       "3f3504f4"
+      ],
+      "nodeScale": [
+       "3f571973",
+       "3f800000",
+       "3f571973"
+      ],
+      "vertexFnv1a64": "feb69257c3718eff"
+     },
+     "path": "model/MassiveSRB/MassiveSRBCollider",
+     "tag": "Untagged",
+     "trigger": false
+    }
+   ],
+   "model": null,
+   "modelNodes": 0,
+   "mu": {
+    "bytes": 132820,
+    "file": "MassiveSRB.mu",
+    "origin": "GameData/Squad/Parts/Engine/MassiveSRB/MassiveSRB.mu",
+    "sha256": "2e1025e4e3a056ea7e8a41be85a917fcb3d64cd80f03320296d71afe808426a0"
+   },
+   "muVersion": 5,
+   "nodes": 7,
+   "reduced": {
+    "bytes": 2070,
+    "file": "mucollider/MassiveBooster.mu"
+   },
+   "rescaleFactor": "3f800000"
+  },
+  "SSME": {
+   "cfg": {
+    "file": "SSME.cfg",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineSSME/SSME.cfg",
+    "sha256": "c45ae6f768ddad2a41d87f2e6c800f38d336eb24ad87d3c747bd92df5985b8e2"
+   },
+   "colliders": [
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 49,
+      "triangleLists": [
+       {
+        "count": 72,
+        "fnv1a64": "f4d2af2c412b72da"
+       }
+      ],
+      "vertsFnv1a64": "5bd2b60e0921c69d"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "-5.378436882121401e-08",
+        "-0.17594407498834427",
+        "-1.9513634543010392e-16"
+       ],
+       "hullFaces": 22,
+       "inertiaPerUnitMass": [
+        [
+         "0.0701622252355776",
+         "-1.0738234296189583e-09",
+         "-2.958537784537237e-18"
+        ],
+        [
+         "-1.0738234313306822e-09",
+         "0.10317686944293886",
+         "-1.891527877526827e-17"
+        ],
+        [
+         "-2.530607202362926e-18",
+         "-1.934320935744258e-17",
+         "0.07016222523557882"
+        ]
+       ],
+       "qhullVolume": "0.25335935725291825",
+       "volume": "0.2533593572529182"
+      },
+      "meshSolidVolume": "0.2533593572528882",
+      "nodePosition": [
+       "00000000",
+       "00000000",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "00000000",
+       "00000000",
+       "3337d37e",
+       "3f800000"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "6e01406ae28f9310"
+     },
+     "path": "model/SSME/Base/BaseCOL",
+     "tag": "Untagged",
+     "trigger": false
+    },
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 49,
+      "triangleLists": [
+       {
+        "count": 72,
+        "fnv1a64": "f4d2af2c412b72da"
+       }
+      ],
+      "vertsFnv1a64": "0e5496b5e0f28072"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "-1.5297391372274525e-18",
+        "-1.181250035762787",
+        "0.0"
+       ],
+       "hullFaces": 22,
+       "inertiaPerUnitMass": [
+        [
+         "0.14461187785410554",
+         "1.807004410557663e-18",
+         "0.0"
+        ],
+        [
+         "-4.311952138352147e-18",
+         "0.10317686944293382",
+         "1.5297391372274525e-18"
+        ],
+        [
+         "0.0",
+         "7.648695686137262e-19",
+         "0.14461187785410554"
+        ]
+       ],
+       "qhullVolume": "0.5669997693596551",
+       "volume": "0.5669997693596552"
+      },
+      "meshSolidVolume": "0.5669997693596552",
+      "nodePosition": [
+       "00000000",
+       "3e266667",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "00000000",
+       "00000000",
+       "00000000",
+       "3f800000"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "2786ccbb02d405ed"
+     },
+     "path": "model/SSME/Nozzle/NozzleCOL",
+     "tag": "Untagged",
+     "trigger": false
+    }
+   ],
+   "model": null,
+   "modelNodes": 0,
+   "mu": {
+    "bytes": 155390,
+    "file": "SSME.mu",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineSSME/SSME.mu",
+    "sha256": "0c1d1ca53b7cee3da8880e49917dd838ee5cb23853fadd4d9efa29c4e55a5278"
+   },
+   "muVersion": 4,
+   "nodes": 12,
+   "reduced": {
+    "bytes": 2754,
+    "file": "mucollider/SSME.mu"
+   },
+   "rescaleFactor": "3f800000"
+  },
+  "Size3AdvancedEngine": {
+   "cfg": {
+    "file": "part.cfg",
+    "origin": "GameData/Squad/Parts/Engine/Size3AdvancedEngine/part.cfg",
+    "sha256": "60c51142c841e40a714ca697b20d78ae8ae1813fc5054229b682e8e5755f4ded"
+   },
+   "colliders": [
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 98,
+      "triangleLists": [
+       {
+        "count": 276,
+        "fnv1a64": "83803e0d695165c2"
+       }
+      ],
+      "vertsFnv1a64": "c10215da0e427504"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "-2.082692268355936e-07",
+        "-0.22648679601356947",
+        "-1.3060370063248638e-07"
+       ],
+       "hullFaces": 92,
+       "inertiaPerUnitMass": [
+        [
+         "1.9034181899376816",
+         "-1.8738055196573494e-07",
+         "2.581100345245597e-08"
+        ],
+        [
+         "-1.8738055196029416e-07",
+         "1.290819099128316",
+         "-1.0190022301446594e-08"
+        ],
+        [
+         "2.5811003453532793e-08",
+         "-1.0190022305073795e-08",
+         "1.9034178473598258"
+        ]
+       ],
+       "qhullVolume": "30.608270832407946",
+       "volume": "30.608270832407953"
+      },
+      "meshSolidVolume": "30.608264232604753",
+      "nodePosition": [
+       "00000000",
+       "3fb67e9d",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "3f3504f4",
+       "00000000",
+       "00000000",
+       "3f3504f4"
+      ],
+      "nodeScale": [
+       "3fbd9f37",
+       "3fbd9f37",
+       "3fbd9f37"
+      ],
+      "vertexFnv1a64": "fea1acdc54468de8"
+     },
+     "path": "model/Size3AdvancedEngine/engineCollider",
+     "tag": "Untagged",
+     "trigger": false
+    },
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 50,
+      "triangleLists": [
+       {
+        "count": 132,
+        "fnv1a64": "bcdf754932e436f0"
+       }
+      ],
+      "vertsFnv1a64": "e75963fe5e96bcb5"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "1.572407162684651e-07",
+        "-0.5305981636045858",
+        "2.9120249394007444e-07"
+       ],
+       "hullFaces": 44,
+       "inertiaPerUnitMass": [
+        [
+         "2.1947985272589587",
+         "5.115063961525194e-15",
+         "3.7046476418669783e-07"
+        ],
+        [
+         "5.115063961525194e-15",
+         "1.7062883491504106",
+         "2.79477549207182e-07"
+        ],
+        [
+         "3.704647641892798e-07",
+         "2.7947754921751e-07",
+         "2.1947986904478562"
+        ]
+       ],
+       "qhullVolume": "42.998752392598",
+       "volume": "42.99875239259799"
+      },
+      "meshSolidVolume": "42.99875133312243",
+      "nodePosition": [
+       "00000000",
+       "bf07d548",
+       "35000000"
+      ],
+      "nodeRotation": [
+       "33f76526",
+       "3f3504f4",
+       "3f3504f4",
+       "b3f76526"
+      ],
+      "nodeScale": [
+       "4071eb85",
+       "4071eb85",
+       "4034ae76"
+      ],
+      "vertexFnv1a64": "20050e6aba921782"
+     },
+     "path": "model/obj_fairing/node_collider",
+     "tag": "Untagged",
+     "trigger": false
+    }
+   ],
+   "model": null,
+   "modelNodes": 0,
+   "mu": {
+    "bytes": 176803,
+    "file": "Size3AdvancedEngine.mu",
+    "origin": "GameData/Squad/Parts/Engine/Size3AdvancedEngine/Size3AdvancedEngine.mu",
+    "sha256": "33b77b285a63a10510f4275d33872c6be3ea079cf3c15f4b800c75e180d595cd"
+   },
+   "muVersion": 3,
+   "nodes": 11,
+   "reduced": {
+    "bytes": 4375,
+    "file": "mucollider/Size3AdvancedEngine.mu"
+   },
+   "rescaleFactor": "3f800000"
+  },
+  "ionEngine": {
+   "cfg": {
+    "file": "ionEngine.cfg",
+    "origin": "GameData/Squad/Parts/Engine/ionEngine/ionEngine.cfg",
+    "sha256": "7cb74db78d742a8722c9073773451e9d903569ec65d872946316d95eba1f1988"
+   },
+   "colliders": [
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 50,
+      "triangleLists": [
+       {
+        "count": 132,
+        "fnv1a64": "12625437b298ed12"
+       }
+      ],
+      "vertsFnv1a64": "04d18cee5b6b33f5"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "-2.450330075903489e-08",
+        "0.015002131462116984",
+        "2.8939736366482614e-08"
+       ],
+       "hullFaces": 44,
+       "inertiaPerUnitMass": [
+        [
+         "0.028575536331349075",
+         "7.697024305781743e-16",
+         "8.956190749048519e-09"
+        ],
+        [
+         "7.696179775086639e-16",
+         "0.04084751347711077",
+         "-1.22562705377917e-09"
+        ],
+        [
+         "8.956190749132972e-09",
+         "-1.2256270537580568e-09",
+         "0.028575530099082272"
+        ]
+       ],
+       "qhullVolume": "0.08023703125671208",
+       "volume": "0.08023703125671207"
+      },
+      "meshSolidVolume": "0.08023702713667641",
+      "nodePosition": [
+       "00000000",
+       "3c75cb82",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "bf3504f4",
+       "00000000",
+       "00000000",
+       "3f3504f4"
+      ],
+      "nodeScale": [
+       "3f15b914",
+       "3f15b914",
+       "3e615732"
+      ],
+      "vertexFnv1a64": "36de398d7a3ade16"
+     },
+     "path": "model/ionEngine/collider",
+     "tag": "Untagged",
+     "trigger": false
+    }
+   ],
+   "model": null,
+   "modelNodes": 0,
+   "mu": {
+    "bytes": 63996,
+    "file": "model.mu",
+    "origin": "GameData/Squad/Parts/Engine/ionEngine/model.mu",
+    "sha256": "74374c728809b8b44cd2012a85aac5769bcd47e7cbb6f4fcff7f968a2e97b48e"
+   },
+   "muVersion": 1,
+   "nodes": 6,
+   "reduced": {
+    "bytes": 1639,
+    "file": "mucollider/ionEngine.mu"
+   },
+   "rescaleFactor": "3f800000"
+  },
+  "liquidEngine2": {
+   "cfg": {
+    "file": "liquidEngineLV-T45.cfg",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineLV-T45/liquidEngineLV-T45.cfg",
+    "sha256": "d5fce4619ebd1c65fc0d92599d4124e72592498c2fa4fbea6ad7b69b0b243c05"
+   },
+   "colliders": [
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 50,
+      "triangleLists": [
+       {
+        "count": 132,
+        "fnv1a64": "a7f91807aa58a23a"
+       }
+      ],
+      "vertsFnv1a64": "4af0b84131b0a016"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "-2.7420671717202965e-08",
+        "0.17163487578717088",
+        "-2.3620186951905554e-08"
+       ],
+       "hullFaces": 44,
+       "inertiaPerUnitMass": [
+        [
+         "0.25665672927843114",
+         "-5.638149295686803e-10",
+         "1.8783575050133314e-10"
+        ],
+        [
+         "-5.638149295686803e-10",
+         "0.13699371623352227",
+         "3.349467643173711e-08"
+        ],
+        [
+         "1.8783575119316948e-10",
+         "3.349467643277487e-08",
+         "0.2566567483360037"
+        ]
+       ],
+       "qhullVolume": "1.2537094155343846",
+       "volume": "1.2537094155343844"
+      },
+      "meshSolidVolume": "1.2537093657817582",
+      "nodePosition": [
+       "00000000",
+       "bc820780",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "3dbd05a9",
+       "3f337880",
+       "3f337880",
+       "bdbd05a6"
+      ],
+      "nodeScale": [
+       "3e000000",
+       "3e000000",
+       "3df4cd96"
+      ],
+      "vertexFnv1a64": "97a95620fb542d8a"
+     },
+     "path": "model/liquidEngine/node_collider",
+     "tag": "Untagged",
+     "trigger": false
+    }
+   ],
+   "model": null,
+   "modelNodes": 0,
+   "mu": {
+    "bytes": 157089,
+    "file": "model.mu",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineLV-T45/model.mu",
+    "sha256": "7fa671ffa480caf5539e8160aae7a7fceaeed3b009e33158f0ba553eb860ece1"
+   },
+   "muVersion": 1,
+   "nodes": 7,
+   "reduced": {
+    "bytes": 1733,
+    "file": "mucollider/liquidEngine2.mu"
+   },
+   "rescaleFactor": "3fa00000"
+  },
+  "liquidEngine2-2.v2": {
+   "cfg": {
+    "file": "liquidEnginePoodle_v2.cfg",
+    "origin": "GameData/Squad/Parts/Engine/liquidEnginePoodle_v2/liquidEnginePoodle_v2.cfg",
+    "sha256": "951246680f07e1491bb81853284f63aa42876540dac6f146757fdd751d065121"
+   },
+   "colliders": [
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 72,
+      "triangleLists": [
+       {
+        "count": 132,
+        "fnv1a64": "b7fc4b880811e0c7"
+       }
+      ],
+      "vertsFnv1a64": "fe2edae7ee62c669"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "8.736791590467302e-07",
+        "-0.758507668958012",
+        "2.569206582194087e-07"
+       ],
+       "hullFaces": 44,
+       "inertiaPerUnitMass": [
+        [
+         "0.26742617356238957",
+         "-7.666712055956277e-08",
+         "4.670378024166819e-09"
+        ],
+        [
+         "-7.666712057226751e-08",
+         "0.32020906316885067",
+         "8.451180794278922e-09"
+        ],
+        [
+         "4.6703780248354894e-09",
+         "8.451180786254874e-09",
+         "0.3644298564393937"
+        ]
+       ],
+       "qhullVolume": "2.5942869614121236",
+       "volume": "2.594286961412123"
+      },
+      "meshSolidVolume": "2.545274692766248",
+      "nodePosition": [
+       "00000000",
+       "00000000",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "bf3504f4",
+       "00000000",
+       "00000000",
+       "3f3504f2"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "d22fc78a71b6b375"
+     },
+     "path": "model/Poodle_v2/Mesh/EngineFixed/Gimbal/Col1",
+     "tag": "Untagged",
+     "trigger": false
+    },
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 72,
+      "triangleLists": [
+       {
+        "count": 132,
+        "fnv1a64": "483a23b8152e06a1"
+       }
+      ],
+      "vertsFnv1a64": "c82798dc3f00a308"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "5.089988895785161e-07",
+        "-0.4508304614688309",
+        "-5.8542587233660756e-08"
+       ],
+       "hullFaces": 44,
+       "inertiaPerUnitMass": [
+        [
+         "0.3151062351445912",
+         "-2.6143968043878736e-07",
+         "4.5081447657700474e-10"
+        ],
+        [
+         "-2.6143968043984054e-07",
+         "0.5375653308011766",
+         "-5.238389563721534e-08"
+        ],
+        [
+         "4.5081447657700474e-10",
+         "-5.238389564682571e-08",
+         "0.4036466824577198"
+        ]
+       ],
+       "qhullVolume": "3.2942231523917154",
+       "volume": "3.2942231523917163"
+      },
+      "meshSolidVolume": "3.2378025003057362",
+      "nodePosition": [
+       "00000000",
+       "00000000",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "bf3504f4",
+       "00000000",
+       "00000000",
+       "3f3504f2"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "e52b68e1c9ca883d"
+     },
+     "path": "model/Poodle_v2/Mesh/Shroud/Col3",
+     "tag": "Untagged",
+     "trigger": false
+    },
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 72,
+      "triangleLists": [
+       {
+        "count": 132,
+        "fnv1a64": "0c3dde3107a19556"
+       }
+      ],
+      "vertsFnv1a64": "8d472c08a5584a99"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "3.090885661199661e-06",
+        "-2.0054002396166664",
+        "1.0795144530915094e-06"
+       ],
+       "hullFaces": 44,
+       "inertiaPerUnitMass": [
+        [
+         "0.2721179231294587",
+         "-3.407257830651787e-08",
+         "3.896070007909427e-10"
+        ],
+        [
+         "-3.4072578294453264e-08",
+         "0.07554501531138325",
+         "2.531743250661737e-08"
+        ],
+        [
+         "3.8960699957689385e-10",
+         "2.5317432510259516e-08",
+         "0.27211784617090085"
+        ]
+       ],
+       "qhullVolume": "0.7144372589860413",
+       "volume": "0.7144372589860409"
+      },
+      "meshSolidVolume": "0.7144371753295786",
+      "nodePosition": [
+       "00000000",
+       "00000000",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "bf3504f4",
+       "00000000",
+       "00000000",
+       "3f3504f2"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "f0e2bc9e4a39e597"
+     },
+     "path": "model/Poodle_v2/Mesh/Shroud/Gimbal/Engine/Col2",
+     "tag": "Untagged",
+     "trigger": false
+    }
+   ],
+   "model": {
+    "model": "Squad/Parts/Engine/liquidEnginePoodle_v2/LqdEnginePoodle_v2"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "bytes": 1624565,
+    "file": "LqdEnginePoodle_v2.mu",
+    "origin": "GameData/Squad/Parts/Engine/liquidEnginePoodle_v2/LqdEnginePoodle_v2.mu",
+    "sha256": "ceab1868ca9f6576dacc9c1bc10679886185a7529bb5e607e5191f4cac43d0d4"
+   },
+   "muVersion": 5,
+   "nodes": 28,
+   "reduced": {
+    "bytes": 6370,
+    "file": "mucollider/liquidEngine2-2.v2.mu"
+   },
+   "rescaleFactor": "3f800000"
+  },
+  "liquidEngine3.v2": {
+   "cfg": {
+    "file": "liquidEngineLV-909_v2.cfg",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineLV-909_v2/liquidEngineLV-909_v2.cfg",
+    "sha256": "fce8aed52b8b7a11e6b6cf1a815c096389adef1ff800a4fe40cef7c8618e385e"
+   },
+   "colliders": [
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 72,
+      "triangleLists": [
+       {
+        "count": 132,
+        "fnv1a64": "641a55fd702c12b4"
+       }
+      ],
+      "vertsFnv1a64": "e9799d028a003745"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "-3.6752825775947334e-08",
+        "-0.13230150612071157",
+        "-9.953823438848057e-08"
+       ],
+       "hullFaces": 44,
+       "inertiaPerUnitMass": [
+        [
+         "0.10556953222844742",
+         "-1.693641713907107e-18",
+         "4.252583522996497e-08"
+        ],
+        [
+         "-1.693641713907107e-18",
+         "0.19998678796956476",
+         "4.0873592924794237e-19"
+        ],
+        [
+         "4.2525835229297566e-08",
+         "9.09288759485008e-19",
+         "0.10556955518874578"
+        ]
+       ],
+       "qhullVolume": "0.32490142108636705",
+       "volume": "0.3249014210863671"
+      },
+      "meshSolidVolume": "0.3249014210863671",
+      "nodePosition": [
+       "00000000",
+       "00000000",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "00000000",
+       "00000000",
+       "00000000",
+       "3f800000"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "e9799d028a003745"
+     },
+     "path": "model/Terrier/TerrierNew/Engine/COL_Toroid",
+     "tag": "Untagged",
+     "trigger": false
+    },
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 72,
+      "triangleLists": [
+       {
+        "count": 132,
+        "fnv1a64": "c9d0ea3188f39ba5"
+       }
+      ],
+      "vertsFnv1a64": "01d3c53528737c34"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "-3.179874987625862e-08",
+        "-0.40897556048900424",
+        "-6.232389220568561e-08"
+       ],
+       "hullFaces": 44,
+       "inertiaPerUnitMass": [
+        [
+         "0.07452746752647217",
+         "-4.136385188208132e-09",
+         "5.308734155419442e-09"
+        ],
+        [
+         "-4.136385190266866e-09",
+         "0.05670899525019674",
+         "-4.806953904632265e-09"
+        ],
+        [
+         "5.308734155110631e-09",
+         "-4.8069539050440115e-09",
+         "0.07452745652154243"
+        ]
+       ],
+       "qhullVolume": "0.26331768123868243",
+       "volume": "0.2633176812386825"
+      },
+      "meshSolidVolume": "0.26331758250308324",
+      "nodePosition": [
+       "2fd55553",
+       "bdb4aaa3",
+       "31fffffe"
+      ],
+      "nodeRotation": [
+       "3f3504f4",
+       "00000000",
+       "00000000",
+       "3f3504f4"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "31e0f29758d2fdb4"
+     },
+     "path": "model/Terrier/TerrierNew/Engine/gimbal/COL_BELL",
+     "tag": "Untagged",
+     "trigger": false
+    }
+   ],
+   "model": {
+    "model": "Squad/Parts/Engine/liquidEngineLV-909_v2/TerrierV2"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "bytes": 358161,
+    "file": "TerrierV2.mu",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineLV-909_v2/TerrierV2.mu",
+    "sha256": "266b59e898812bdb6fbdb35fec755affe2105d697809bf5828154706ca89b6e3"
+   },
+   "muVersion": 5,
+   "nodes": 13,
+   "reduced": {
+    "bytes": 3853,
+    "file": "mucollider/liquidEngine3.v2.mu"
+   },
+   "rescaleFactor": "3f800000"
+  },
+  "liquidEngineMainsail.v2": {
+   "cfg": {
+    "file": "liquidEngineMainsail_v2.cfg",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineMainsail_v2/liquidEngineMainsail_v2.cfg",
+    "sha256": "f98cbf8ed36bb745927b6b45c09596c9d08adc9fbc6e97eb34065af0cd1e98a2"
+   },
+   "colliders": [
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 72,
+      "triangleLists": [
+       {
+        "count": 132,
+        "fnv1a64": "21d18d00ce51bd47"
+       }
+      ],
+      "vertsFnv1a64": "284ef71e9f79e5ba"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "2.651924427150784e-08",
+        "-0.7572850290322554",
+        "-2.276123759486186e-07"
+       ],
+       "hullFaces": 44,
+       "inertiaPerUnitMass": [
+        [
+         "0.6602573841482164",
+         "5.9423901370085226e-08",
+         "-5.326210926800176e-09"
+        ],
+        [
+         "5.94239013575658e-08",
+         "0.32551474509300066",
+         "-2.7510217352562892e-08"
+        ],
+        [
+         "-5.326210927321819e-09",
+         "-2.7510217366995007e-08",
+         "0.6602574018516498"
+        ]
+       ],
+       "qhullVolume": "4.988252010152092",
+       "volume": "4.988252010152093"
+      },
+      "meshSolidVolume": "4.988251753469697",
+      "nodePosition": [
+       "00000000",
+       "bfa37d1b",
+       "b453f017"
+      ],
+      "nodeRotation": [
+       "00000000",
+       "00000000",
+       "00000000",
+       "3f800001"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "646fbff2e9341209"
+     },
+     "path": "model/liquidEngineMainsail_v2/gimbal/COL 1",
+     "tag": "Untagged",
+     "trigger": false
+    },
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 72,
+      "triangleLists": [
+       {
+        "count": 132,
+        "fnv1a64": "38e0f9e930854887"
+       }
+      ],
+      "vertsFnv1a64": "a26f1b98d1ca75cd"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "-2.9595406080668412e-08",
+        "0.6534377412421758",
+        "1.1483244975768865e-07"
+       ],
+       "hullFaces": 44,
+       "inertiaPerUnitMass": [
+        [
+         "0.35069248613800497",
+         "5.337043097336413e-10",
+         "-2.1852601466964325e-09"
+        ],
+        [
+         "5.337043085117458e-10",
+         "0.6066012334192977",
+         "4.4159832610118665e-08"
+        ],
+        [
+         "-2.1852601491402235e-09",
+         "4.4159832619970194e-08",
+         "0.3506925247120192"
+        ]
+       ],
+       "qhullVolume": "2.8393973816238613",
+       "volume": "2.839397381623862"
+      },
+      "meshSolidVolume": "2.8393970890456512",
+      "nodePosition": [
+       "00000000",
+       "3f805239",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "00000000",
+       "00000000",
+       "00000000",
+       "3f800000"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "2efb01eb3b66fde0"
+     },
+     "path": "model/liquidEngineMainsail_v2/UpperCowl/COL",
+     "tag": "Untagged",
+     "trigger": false
+    }
+   ],
+   "model": null,
+   "modelNodes": 0,
+   "mu": {
+    "bytes": 713033,
+    "file": "liquidEngineMainsail_v2.mu",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineMainsail_v2/liquidEngineMainsail_v2.mu",
+    "sha256": "5abe17785214e1f454c20eab93f2195674147b990522c53e8f4acc176944b461"
+   },
+   "muVersion": 5,
+   "nodes": 19,
+   "reduced": {
+    "bytes": 4346,
+    "file": "mucollider/liquidEngineMainsail.v2.mu"
+   },
+   "rescaleFactor": "3f800000"
+  },
+  "microEngine.v2": {
+   "cfg": {
+    "file": "liquidEngineLV-1_v2.cfg",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineLV-1_v2/liquidEngineLV-1_v2.cfg",
+    "sha256": "52793c9a71269a7b9f6065e710774e26d83c256e8f42d90fa3c462d4ad4e1493"
+   },
+   "colliders": [
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 48,
+      "triangleLists": [
+       {
+        "count": 84,
+        "fnv1a64": "8735e8377607027d"
+       }
+      ],
+      "vertsFnv1a64": "0524a761c92b1e95"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "-1.5152255132500428e-18",
+        "-0.2507003136195458",
+        "2.7609389313568835e-08"
+       ],
+       "hullFaces": 28,
+       "inertiaPerUnitMass": [
+        [
+         "0.0019869236119823943",
+         "3.124622587646321e-19",
+         "1.782614067437294e-20"
+        ],
+        [
+         "3.119051905612314e-19",
+         "0.0010464978743954102",
+         "1.7112171377029664e-10"
+        ],
+        [
+         "3.5652323183196976e-20",
+         "1.7112171419868208e-10",
+         "0.001986923492350353"
+        ]
+       ],
+       "qhullVolume": "0.0007424410579380705",
+       "volume": "0.0007424410579380705"
+      },
+      "meshSolidVolume": "0.0007424408484098729",
+      "nodePosition": [
+       "a07114c6",
+       "bc985f07",
+       "af000001"
+      ],
+      "nodeRotation": [
+       "bf3504f4",
+       "a4b8f8ca",
+       "a4b8f8c8",
+       "3f3504f4"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "3e4d24fe1ae4cb19"
+     },
+     "path": "model/microEngine/base/engine/EngCol",
+     "tag": "Untagged",
+     "trigger": false
+    },
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 24,
+      "triangleLists": [
+       {
+        "count": 36,
+        "fnv1a64": "743392961a476025"
+       }
+      ],
+      "vertsFnv1a64": "6b954ec68c49b995"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "-0.0013700053095817546",
+        "-0.06530400086194328",
+        "1.7607573814189394e-08"
+       ],
+       "hullFaces": 12,
+       "inertiaPerUnitMass": [
+        [
+         "0.006179698821069101",
+         "-5.491381169314063e-20",
+         "-3.958909409240939e-19"
+        ],
+        [
+         "3.294828701588438e-20",
+         "0.011638733935584903",
+         "-1.044503843329962e-09"
+        ],
+        [
+         "-3.958909409240939e-19",
+         "-1.0445038433079964e-09",
+         "0.00880580067497087"
+        ]
+       ],
+       "qhullVolume": "0.009640481614938875",
+       "volume": "0.009640481614938875"
+      },
+      "meshSolidVolume": "0.009640481614938877",
+      "nodePosition": [
+       "00000000",
+       "bc985f07",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "bf3504f5",
+       "a4b8f8c9",
+       "24b8f8c3",
+       "3f3504f3"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "c29da624627497ad"
+     },
+     "path": "model/microEngine/base/CaseCol",
+     "tag": "Untagged",
+     "trigger": false
+    }
+   ],
+   "model": {
+    "model": "Squad/Parts/Engine/liquidEngineLV-1_v2/Assets/Ant"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "bytes": 104446,
+    "file": "Ant.mu",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineLV-1_v2/Assets/Ant.mu",
+    "sha256": "f51f26ed082a7419d30e987910e398fbef71fdbe13a0854cb62d85db176d34ed"
+   },
+   "muVersion": 5,
+   "nodes": 10,
+   "reduced": {
+    "bytes": 2180,
+    "file": "mucollider/microEngine.v2.mu"
+   },
+   "rescaleFactor": "3f800000"
+  },
+  "miniJetEngine": {
+   "cfg": {
+    "file": "SmallJetEngine.cfg",
+    "origin": "GameData/Squad/Parts/Engine/miniJet/SmallJetEngine.cfg",
+    "sha256": "7cdba73fcd0c8315a8320391be5856fba3cc5a96afa3cb76c564e33cad570a85"
+   },
+   "colliders": [
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 52,
+      "triangleLists": [
+       {
+        "count": 144,
+        "fnv1a64": "aadceda941fb7f05"
+       }
+      ],
+      "vertsFnv1a64": "e2e011d72577f625"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "-2.2160923425543507e-16",
+        "-0.20132530474221053",
+        "2.8919233223881056e-07"
+       ],
+       "hullFaces": 44,
+       "inertiaPerUnitMass": [
+        [
+         "0.03477535329370845",
+         "4.560339692985905e-17",
+         "-1.4931907714339555e-17"
+        ],
+        [
+         "4.514746277332017e-17",
+         "0.0316462007740212",
+         "4.610463029790263e-09"
+        ],
+        [
+         "-1.49129104578171e-17",
+         "4.610463030474163e-09",
+         "0.03477535026832275"
+        ]
+       ],
+       "qhullVolume": "0.08917423905427359",
+       "volume": "0.0891742390542734"
+      },
+      "meshSolidVolume": "0.08917422971499223",
+      "nodePosition": [
+       "00000000",
+       "a5ccccc3",
+       "24dc9d1c"
+      ],
+      "nodeRotation": [
+       "3f3504fc",
+       "00000000",
+       "00000000",
+       "bf3504ec"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "ce429e7f2f075e0d"
+     },
+     "path": "model/MiniNozzle/MiniNozzle/NozzleCOL",
+     "tag": "Untagged",
+     "trigger": false
+    }
+   ],
+   "model": {
+    "model": "Squad/Parts/Engine/miniJet/SmallJet"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "bytes": 47231,
+    "file": "SmallJet.mu",
+    "origin": "GameData/Squad/Parts/Engine/miniJet/SmallJet.mu",
+    "sha256": "6e23f7efe838289bfee63ff6b7558e2047ba00bef9e1c4e5d945919c3331beae"
+   },
+   "muVersion": 3,
+   "nodes": 5,
+   "reduced": {
+    "bytes": 1649,
+    "file": "mucollider/miniJetEngine.mu"
+   },
+   "rescaleFactor": "3f800000"
+  },
+  "omsEngine": {
+   "cfg": {
+    "file": "omsEngine.cfg",
+    "origin": "GameData/Squad/Parts/Engine/OMSEngine/omsEngine.cfg",
+    "sha256": "b4924ad1f29d99f71b2ab8bf421dc909fbbe8b592de8eea745f38064c9570421"
+   },
+   "colliders": [
+    {
+     "entry": "CapsuleCollider2",
+     "isShape": true,
+     "layer": 0,
+     "params": {
+      "center": [
+       "00000000",
+       "00000000",
+       "00000000"
+      ],
+      "direction": 1,
+      "height": [
+       "3ecccccd"
+      ],
+      "radius": [
+       "3d8f5c29"
+      ]
+     },
+     "partSpace": {
+      "axis": 1,
+      "center": [
+       "b24f5ae9",
+       "be773d86",
+       "3e2aa413"
+      ],
+      "halfCylinder": "3e9fbe77",
+      "height": "3f75c290",
+      "nodePosition": [
+       "b24f5ae9",
+       "be773d86",
+       "3e2aa413"
+      ],
+      "nodeRotation": [
+       "b3f12314",
+       "3db27eb7",
+       "3f7f069e",
+       "a9ae0000"
+      ],
+      "nodeScale": [
+       "4019999a",
+       "4019999a",
+       "4019999a"
+      ],
+      "radius": "3e2c0832"
+     },
+     "path": "model/OMSEngine/Puff_Body/COL",
+     "tag": "Untagged",
+     "trigger": false
+    }
+   ],
+   "model": {
+    "model": "Squad/Parts/Engine/OMSEngine/Puff_v2",
+    "scale": "2.4, 2.4, 2.4"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "bytes": 55197,
+    "file": "Puff_v2.mu",
+    "origin": "GameData/Squad/Parts/Engine/OMSEngine/Puff_v2.mu",
+    "sha256": "836ae4b3cb7d43568b4856ca61666b1f600cd2bed05a0f00ce17040dbd6a0b5f"
+   },
+   "muVersion": 5,
+   "nodes": 7,
+   "reduced": {
+    "bytes": 580,
+    "file": "mucollider/omsEngine.mu"
+   },
+   "rescaleFactor": "3f800000"
+  },
+  "radialLiquidEngine1-2": {
+   "cfg": {
+    "file": "liquidEngineMk55.cfg",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineMk55/liquidEngineMk55.cfg",
+    "sha256": "189cfdca80fc76b7371152b6c4918b37235b38b7ebd4918a403aab29210c4290"
+   },
+   "colliders": [
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 87,
+      "triangleLists": [
+       {
+        "count": 132,
+        "fnv1a64": "cdb58fb9cb15e438"
+       }
+      ],
+      "vertsFnv1a64": "df2b693251b2622c"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "5.0343670347733843e-08",
+        "0.003692590282339163",
+        "0.1487941685104221"
+       ],
+       "hullFaces": 44,
+       "inertiaPerUnitMass": [
+        [
+         "0.14726026615970073",
+         "6.809888121381728e-09",
+         "4.824432097660622e-09"
+        ],
+        [
+         "6.809888122787891e-09",
+         "0.06313095535910984",
+         "0.015338996280247987"
+        ],
+        [
+         "4.824432097021457e-09",
+         "0.015338996280247987",
+         "0.16438619397223683"
+        ]
+       ],
+       "qhullVolume": "0.4240698694242048",
+       "volume": "0.42406986942420477"
+      },
+      "meshSolidVolume": "0.42397168489236275",
+      "nodePosition": [
+       "00000000",
+       "00000000",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "00000000",
+       "3f800000",
+       "00000000",
+       "b42eef4c"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "23b0ddd9f26dbf28"
+     },
+     "path": "model/Thud/THUD/THUDCol",
+     "tag": "Untagged",
+     "trigger": false
+    },
+    {
+     "entry": "BoxCollider2",
+     "isShape": true,
+     "layer": 0,
+     "params": {
+      "center": [
+       "00000000",
+       "00000000",
+       "00000000"
+      ],
+      "size": [
+       "3e99999a",
+       "3f000000",
+       "3e99999a"
+      ]
+     },
+     "partSpace": {
+      "center": [
+       "2a5aa78e",
+       "bf2bd4fe",
+       "3e93333f"
+      ],
+      "halfExtents": [
+       "3e19999a",
+       "3e800000",
+       "3e19999a"
+      ],
+      "nodePosition": [
+       "2a5aa78e",
+       "bf2bd4fe",
+       "3e93333f"
+      ],
+      "nodeRotation": [
+       "29e00000",
+       "bf800000",
+       "34b00000",
+       "342eef48"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ]
+     },
+     "path": "model/Thud/THUD/Gimbal/GimbalCol",
+     "tag": "Untagged",
+     "trigger": false
+    }
+   ],
+   "model": null,
+   "modelNodes": 0,
+   "mu": {
+    "bytes": 44637,
+    "file": "Thud.mu",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineMk55/Thud.mu",
+    "sha256": "fb64f979f426dcdcc0bbf4400c3865a5d0b24d09529f79fb15c0c4d93455ae18"
+   },
+   "muVersion": 4,
+   "nodes": 7,
+   "reduced": {
+    "bytes": 2176,
+    "file": "mucollider/radialLiquidEngine1-2.mu"
+   },
+   "rescaleFactor": "3f800000"
+  },
+  "sepMotor1": {
+   "cfg": {
+    "file": "solidBoosterSep.cfg",
+    "origin": "GameData/Squad/Parts/Engine/solidBoosterSep/solidBoosterSep.cfg",
+    "sha256": "6e5bdea6cc5f52a481f7f8b09a57e5b79f27e52e9966b7107bff557b98346908"
+   },
+   "colliders": [
+    {
+     "entry": "CapsuleCollider2",
+     "isShape": true,
+     "layer": 0,
+     "params": {
+      "center": [
+       "00000000",
+       "bd23d70a",
+       "00000000"
+      ],
+      "direction": 2,
+      "height": [
+       "3f28f5c3"
+      ],
+      "radius": [
+       "3da3d70a"
+      ]
+     },
+     "partSpace": {
+      "axis": 2,
+      "center": [
+       "00000000",
+       "32c4107a",
+       "3e44107c"
+      ],
+      "halfCylinder": "3e5056fb",
+      "height": "3f098116",
+      "nodePosition": [
+       "00000000",
+       "32a2bae2",
+       "3e22bae3"
+      ],
+      "nodeRotation": [
+       "bf3504f4",
+       "00000000",
+       "00000000",
+       "3f3504f4"
+      ],
+      "nodeScale": [
+       "3f5056fa",
+       "3f5056fa",
+       "3f5056fa"
+      ],
+      "radius": "3d855662"
+     },
+     "path": "model/rocket",
+     "tag": "Untagged",
+     "trigger": false
+    }
+   ],
+   "model": null,
+   "modelNodes": 0,
+   "mu": {
+    "bytes": 9190,
+    "file": "model.mu",
+    "origin": "GameData/Squad/Parts/Engine/solidBoosterSep/model.mu",
+    "sha256": "c528b82d5167b2e8cd222cbf6504619cb15e41feabef7faea8a4c3b4ee929ebc"
+   },
+   "muVersion": 5,
+   "nodes": 3,
+   "reduced": {
+    "bytes": 287,
+    "file": "mucollider/sepMotor1.mu"
+   },
+   "rescaleFactor": "3fa00000"
+  },
+  "solidBooster.sm.v2": {
+   "cfg": {
+    "file": "solidBoosterRT-5_v2.cfg",
+    "origin": "GameData/Squad/Parts/Engine/Size1_SRBs/solidBoosterRT-5_v2.cfg",
+    "sha256": "bf73a17e5b2dff129c4a6b26e800fe9929d6367f2e6380cd5850117c486cd6c7"
+   },
+   "colliders": [
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 72,
+      "triangleLists": [
+       {
+        "count": 132,
+        "fnv1a64": "c9d0ea3188f39ba5"
+       }
+      ],
+      "vertsFnv1a64": "c9087c6d2c810e69"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "-1.3362263484432724e-18",
+        "0.1287395060062409",
+        "-1.737094252976254e-17"
+       ],
+       "hullFaces": 44,
+       "inertiaPerUnitMass": [
+        [
+         "0.19556703830112723",
+         "5.796022009882307e-19",
+         "2.321151110556254e-35"
+        ],
+        [
+         "9.136587880990488e-19",
+         "0.18659024614702707",
+         "-2.77916851419951e-18"
+        ],
+        [
+         "-1.6702829355540904e-19",
+         "-3.280253394865737e-18",
+         "0.19556703830112723"
+        ]
+       ],
+       "qhullVolume": "1.298225766912762",
+       "volume": "1.2982257669127621"
+      },
+      "meshSolidVolume": "1.2982257669127621",
+      "nodePosition": [
+       "00000000",
+       "00000000",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "00000000",
+       "00000000",
+       "00000000",
+       "3f800000"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "c9087c6d2c810e69"
+     },
+     "path": "model/SRB5/SRB5/COL",
+     "tag": "Untagged",
+     "trigger": false
+    },
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 72,
+      "triangleLists": [
+       {
+        "count": 132,
+        "fnv1a64": "2929e280a9cfbbfa"
+       }
+      ],
+      "vertsFnv1a64": "35388584fabac029"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "-4.198130040289526e-08",
+        "-0.7524127257147059",
+        "-1.3226547101345675e-07"
+       ],
+       "hullFaces": 44,
+       "inertiaPerUnitMass": [
+        [
+         "0.05303731057612649",
+         "-2.5426131325633097e-09",
+         "8.902103049444103e-09"
+        ],
+        [
+         "-2.542613133285013e-09",
+         "0.06347153538372614",
+         "2.349818540841858e-08"
+        ],
+        [
+         "8.902103049804954e-09",
+         "2.349818540841858e-08",
+         "0.05303727820312682"
+        ]
+       ],
+       "qhullVolume": "0.1877854115255492",
+       "volume": "0.18778541152554915"
+      },
+      "meshSolidVolume": "0.18778521089288547",
+      "nodePosition": [
+       "00000000",
+       "00000000",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "00000000",
+       "00000000",
+       "00000000",
+       "3f800000"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "35388584fabac029"
+     },
+     "path": "model/SRB5/SRB5/COL2",
+     "tag": "NoAttach",
+     "trigger": false
+    }
+   ],
+   "model": {
+    "model": "Squad/Parts/Engine/Size1_SRBs/SRB5",
+    "texture": "SRB_O, Squad/Parts/Engine/Size1_SRBs/SRB_W"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "bytes": 165840,
+    "file": "SRB5.mu",
+    "origin": "GameData/Squad/Parts/Engine/Size1_SRBs/SRB5.mu",
+    "sha256": "c78ae46952b20266b33d8aed106d1888840a08b63724ff505fc2692d9b78c890"
+   },
+   "muVersion": 5,
+   "nodes": 6,
+   "reduced": {
+    "bytes": 3317,
+    "file": "mucollider/solidBooster.sm.v2.mu"
+   },
+   "rescaleFactor": "3f800000"
+  },
+  "solidBooster.v2": {
+   "cfg": {
+    "file": "solidBoosterRT-10_v2.cfg",
+    "origin": "GameData/Squad/Parts/Engine/Size1_SRBs/solidBoosterRT-10_v2.cfg",
+    "sha256": "c8ec1a9f595383b328a87130b6c2a36b4ed054487b14f9ba498c733cd811608d"
+   },
+   "colliders": [
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 72,
+      "triangleLists": [
+       {
+        "count": 132,
+        "fnv1a64": "c9d0ea3188f39ba5"
+       }
+      ],
+      "vertsFnv1a64": "686c94ba314d6981"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "-7.142599314794895e-18",
+        "0.1398699680964106",
+        "-2.506363572148532e-08"
+       ],
+       "hullFaces": 44,
+       "inertiaPerUnitMass": [
+        [
+         "0.5263962498643505",
+         "2.2476009138936915e-18",
+         "-2.5973086627240906e-18"
+        ],
+        [
+         "2.996192825859928e-19",
+         "0.18659022656688895",
+         "4.231750326474629e-08"
+        ],
+        [
+         "-4.22062668881384e-18",
+         "4.231750325955167e-08",
+         "0.5263962693093854"
+        ]
+       ],
+       "qhullVolume": "2.671570585825705",
+       "volume": "2.6715705858257053"
+      },
+      "meshSolidVolume": "2.671570524569722",
+      "nodePosition": [
+       "00000000",
+       "00000000",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "bf3504f4",
+       "00000000",
+       "00000000",
+       "3f3504f2"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "255968e5cbcb5b9d"
+     },
+     "path": "model/SRB10/SRB10/COL",
+     "tag": "Untagged",
+     "trigger": false
+    },
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 72,
+      "triangleLists": [
+       {
+        "count": 132,
+        "fnv1a64": "2929e280a9cfbbfa"
+       }
+      ],
+      "vertsFnv1a64": "35388584fabac029"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "-4.1981306809181337e-08",
+        "-1.3363143470048324",
+        "-1.362538459056705e-07"
+       ],
+       "hullFaces": 44,
+       "inertiaPerUnitMass": [
+        [
+         "0.05303730790461251",
+         "-2.542614373950126e-09",
+         "8.902102618440535e-09"
+        ],
+        [
+         "-2.542614370774633e-09",
+         "0.06347153487626153",
+         "2.1395990267006664e-08"
+        ],
+        [
+         "8.902102618151852e-09",
+         "2.139599026704275e-08",
+         "0.0530372747768393"
+        ]
+       ],
+       "qhullVolume": "0.18778539588760318",
+       "volume": "0.18778539588760312"
+      },
+      "meshSolidVolume": "0.18778520488207537",
+      "nodePosition": [
+       "00000000",
+       "bf157a94",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "00000000",
+       "00000000",
+       "00000000",
+       "3f800000"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "ef2c8960607e086c"
+     },
+     "path": "model/SRB10/SRB10/COL2",
+     "tag": "NoAttach",
+     "trigger": false
+    }
+   ],
+   "model": {
+    "model": "Squad/Parts/Engine/Size1_SRBs/SRB10",
+    "texture": "SRB_O, Squad/Parts/Engine/Size1_SRBs/SRB_W"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "bytes": 186451,
+    "file": "SRB10.mu",
+    "origin": "GameData/Squad/Parts/Engine/Size1_SRBs/SRB10.mu",
+    "sha256": "fcfd638e5ade7e23d2558cab6c5b11a0ab9539276e325b7f4c444d7732419d01"
+   },
+   "muVersion": 5,
+   "nodes": 6,
+   "reduced": {
+    "bytes": 3319,
+    "file": "mucollider/solidBooster.v2.mu"
+   },
+   "rescaleFactor": "3f800000"
+  },
+  "toroidalAerospike": {
+   "cfg": {
+    "file": "liquidEngineAerospike.cfg",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineAerospike/liquidEngineAerospike.cfg",
+    "sha256": "26a479723edf6d02c74abb063281f1c4c7fb3b45197879038ad3c0b935675fbc"
+   },
+   "colliders": [
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 40,
+      "triangleLists": [
+       {
+        "count": 156,
+        "fnv1a64": "361adab0157e884c"
+       }
+      ],
+      "vertsFnv1a64": "d32b164afe65acf5"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "8.156362202384263e-18",
+        "-0.23042551640754944",
+        "-4.8938173214305574e-18"
+       ],
+       "hullFaces": 52,
+       "inertiaPerUnitMass": [
+        [
+         "0.09035434081624645",
+         "-4.105441156892116e-18",
+         "2.718787400794754e-19"
+        ],
+        [
+         "-4.105441156892116e-18",
+         "0.12345387237414433",
+         "1.5864557573789614e-18"
+        ],
+        [
+         "5.437574801589508e-19",
+         "2.639985875186929e-18",
+         "0.09035434081624641"
+        ]
+       ],
+       "qhullVolume": "0.3987815200881727",
+       "volume": "0.3987815200881728"
+      },
+      "meshSolidVolume": "0.3987815200881727",
+      "nodePosition": [
+       "00000000",
+       "bf200000",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "00000000",
+       "00000000",
+       "00000000",
+       "3f800000"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "dfd389c45bee7341"
+     },
+     "path": "model/AeroSpike/COL",
+     "tag": "Untagged",
+     "trigger": false
+    }
+   ],
+   "model": null,
+   "modelNodes": 0,
+   "mu": {
+    "bytes": 70527,
+    "file": "AeroSpike.mu",
+    "origin": "GameData/Squad/Parts/Engine/liquidEngineAerospike/AeroSpike.mu",
+    "sha256": "54dc358e5c13ef9a79d828234869e2a0502be734f566906314ffd34a10beca8a"
+   },
+   "muVersion": 3,
+   "nodes": 6,
+   "reduced": {
+    "bytes": 1619,
+    "file": "mucollider/toroidalAerospike.mu"
+   },
+   "rescaleFactor": "3f800000"
+  },
+  "turboFanEngine": {
+   "cfg": {
+    "file": "jetEngineTurbo.cfg",
+    "origin": "GameData/Squad/Parts/Engine/jetEngines/jetEngineTurbo.cfg",
+    "sha256": "994413e9652614e3733db80284c7fd133b9efb7bb7753ed6c9f6a50519b3496e"
+   },
+   "colliders": [
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 37,
+      "triangleLists": [
+       {
+        "count": 108,
+        "fnv1a64": "ae76e77086dc2fbd"
+       }
+      ],
+      "vertsFnv1a64": "bc99591c831e2e48"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "3.4384191779345626e-18",
+        "-0.16645560724479522",
+        "-9.432276737582468e-07"
+       ],
+       "hullFaces": 44,
+       "inertiaPerUnitMass": [
+        [
+         "0.12957337060074153",
+         "-1.0916887155591133e-18",
+         "-3.008620023904865e-18"
+        ],
+        [
+         "-8.767875169382031e-19",
+         "0.150311605399477",
+         "1.5630851418888863e-08"
+        ],
+        [
+         "-1.7192128321794038e-18",
+         "1.563085141688312e-08",
+         "0.1295733536433149"
+        ]
+       ],
+       "qhullVolume": "0.7567678864356112",
+       "volume": "0.7567678864356112"
+      },
+      "meshSolidVolume": "0.677047147874538",
+      "nodePosition": [
+       "00000000",
+       "3fb33333",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "3f3504f7",
+       "9887c3b7",
+       "8d800000",
+       "3f3504f1"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "fd148c79cf05cb1c"
+     },
+     "path": "model/TRJ/TurboRamjet/Gimbal/TRJCOL2",
+     "tag": "NoAttach",
+     "trigger": false
+    },
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 39,
+      "triangleLists": [
+       {
+        "count": 108,
+        "fnv1a64": "9edde089f94565a4"
+       }
+      ],
+      "vertsFnv1a64": "721dbc6408b71d8c"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "-4.736950148695987e-18",
+        "0.774999916553494",
+        "-3.700455036277085e-07"
+       ],
+       "hullFaces": 44,
+       "inertiaPerUnitMass": [
+        [
+         "0.22350349163068362",
+         "3.9523931756001534e-18",
+         "2.479499096345159e-18"
+        ],
+        [
+         "4.8405713284806515e-18",
+         "0.186590223542311",
+         "-1.6891181149555933e-08"
+        ],
+        [
+         "1.2582541361344748e-18",
+         "-1.689118115429288e-08",
+         "0.22350347050832908"
+        ]
+       ],
+       "qhullVolume": "1.4648441900570568",
+       "volume": "1.464844190057057"
+      },
+      "meshSolidVolume": "1.5234378178520456",
+      "nodePosition": [
+       "00000000",
+       "3fb33333",
+       "273cce03"
+      ],
+      "nodeRotation": [
+       "3f3504f7",
+       "00000000",
+       "00000000",
+       "3f3504f1"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "c39c8fea79a832f5"
+     },
+     "path": "model/TRJ/TurboRamjet/TRJCOL1",
+     "tag": "Untagged",
+     "trigger": false
+    }
+   ],
+   "model": {
+    "model": "Squad/Parts/Engine/jetEngines/turboRamJet"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "bytes": 172915,
+    "file": "turboRamJet.mu",
+    "origin": "GameData/Squad/Parts/Engine/jetEngines/turboRamJet.mu",
+    "sha256": "d8610092ba54313a325310a1e26033a374eb3bcaf959c20b72c715f9b978b379"
+   },
+   "muVersion": 4,
+   "nodes": 12,
+   "reduced": {
+    "bytes": 2774,
+    "file": "mucollider/turboFanEngine.mu"
+   },
+   "rescaleFactor": "3f800000"
+  },
+  "turboFanSize2": {
+   "cfg": {
+    "file": "jetEngineBig.cfg",
+    "origin": "GameData/Squad/Parts/Engine/jetEngines/jetEngineBig.cfg",
+    "sha256": "73071b4952ae2eb3c4606744b636883b4d2e1ea01171d33c19af1d4817d9e01f"
+   },
+   "colliders": [
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 145,
+      "triangleLists": [
+       {
+        "count": 216,
+        "fnv1a64": "d4c8b6fb68a659e1"
+       }
+      ],
+      "vertsFnv1a64": "baac80e31ab5e927"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "1.048760525402009e-09",
+        "0.059134826207260814",
+        "0.0005275453013328427"
+       ],
+       "hullFaces": 70,
+       "inertiaPerUnitMass": [
+        [
+         "1.4645736432933318",
+         "-8.040080391540467e-10",
+         "1.094276757687575e-10"
+        ],
+        [
+         "-8.040080293911649e-10",
+         "0.6047653606231443",
+         "0.0011059869704918585"
+        ],
+        [
+         "1.0942767435725652e-10",
+         "0.001105986970491863",
+         "1.4649374703057314"
+        ]
+       ],
+       "qhullVolume": "14.747904465931958",
+       "volume": "14.747904465931953"
+      },
+      "meshSolidVolume": "14.744909908388664",
+      "nodePosition": [
+       "00000000",
+       "00000000",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "b2ec2271",
+       "bf3504f2",
+       "3f3504f5",
+       "b2fdb430"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "4b53cfb8faf38935"
+     },
+     "path": "model/TurboFanSize2/TurboFanSize2/TF2COL1",
+     "tag": "Untagged",
+     "trigger": false
+    },
+    {
+     "convex": true,
+     "entry": "MeshCollider2",
+     "isShape": true,
+     "layer": 0,
+     "mesh": {
+      "count": 62,
+      "triangleLists": [
+       {
+        "count": 72,
+        "fnv1a64": "d577a41de1d63160"
+       }
+      ],
+      "vertsFnv1a64": "73f84831f85b6dbf"
+     },
+     "params": {
+      "convexFlag": true
+     },
+     "partSpace": {
+      "massProps": {
+       "centroid": [
+        "7.647027287275479e-08",
+        "-1.6553577549648824",
+        "-0.962785997099838"
+       ],
+       "hullFaces": 24,
+       "inertiaPerUnitMass": [
+        [
+         "1.2937952119447351",
+         "-5.857973927479008e-09",
+         "3.0380837579591416e-09"
+        ],
+        [
+         "-5.857973938226483e-09",
+         "0.06689695909786099",
+         "0.0610449403141759"
+        ],
+        [
+         "3.0380837525854037e-09",
+         "0.06104494031417607",
+         "1.2716101847070198"
+        ]
+       ],
+       "qhullVolume": "1.291260272187394",
+       "volume": "1.2912602721873943"
+      },
+      "meshSolidVolume": "1.2912602515206806",
+      "nodePosition": [
+       "00000000",
+       "00000000",
+       "00000000"
+      ],
+      "nodeRotation": [
+       "b2ec2271",
+       "bf3504f2",
+       "3f3504f5",
+       "b2fdb430"
+      ],
+      "nodeScale": [
+       "3f800000",
+       "3f800000",
+       "3f800000"
+      ],
+      "vertexFnv1a64": "699533e3e169e240"
+     },
+     "path": "model/TurboFanSize2/TurboFanSize2/TF2COL2",
+     "tag": "Untagged",
+     "trigger": false
+    }
+   ],
+   "model": {
+    "model": "Squad/Parts/Engine/jetEngines/turboFanSize2"
+   },
+   "modelNodes": 1,
+   "mu": {
+    "bytes": 204638,
+    "file": "turboFanSize2.mu",
+    "origin": "GameData/Squad/Parts/Engine/jetEngines/turboFanSize2.mu",
+    "sha256": "b4e668440002cabf10f65bd0a73e6acc3d9187af310972d0bf0a12939a6d8e10"
+   },
+   "muVersion": 4,
+   "nodes": 15,
+   "reduced": {
+    "bytes": 4888,
+    "file": "mucollider/turboFanSize2.mu"
+   },
+   "rescaleFactor": "3f800000"
+  }
+ },
+ "synthetic": {
+  "bytes": 3351,
+  "cases": [
+   {
+    "colliders": [
+     {
+      "entry": "BoxCollider",
+      "isShape": true,
+      "layer": 0,
+      "params": {
+       "center": [
+        "3dcccccd",
+        "3e4ccccd",
+        "3e99999a"
+       ],
+       "size": [
+        "3f800000",
+        "40000000",
+        "40400000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "3e000000",
+        "3e800000",
+        "3ec00000"
+       ],
+       "halfExtents": [
+        "3f200000",
+        "3fa00000",
+        "3ff00000"
+       ],
+       "nodePosition": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "nodeScale": [
+        "3fa00000",
+        "3fa00000",
+        "3fa00000"
+       ]
+      },
+      "path": "model",
+      "tag": "Untagged",
+      "trigger": false
+     },
+     {
+      "entry": "SphereCollider",
+      "isShape": true,
+      "layer": 0,
+      "params": {
+       "center": [
+        "00000000",
+        "3f800000",
+        "00000000"
+       ],
+       "radius": [
+        "3f400000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "00000000",
+        "3fa00000",
+        "00000000"
+       ],
+       "nodePosition": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "nodeScale": [
+        "3fa00000",
+        "3fa00000",
+        "3fa00000"
+       ],
+       "radius": "3f700000"
+      },
+      "path": "model",
+      "tag": "Untagged",
+      "trigger": false
+     },
+     {
+      "entry": "CapsuleCollider",
+      "isShape": true,
+      "layer": 0,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "3f000000"
+       ],
+       "direction": 2,
+       "height": [
+        "40000000"
+       ],
+       "radius": [
+        "3e99999a"
+       ]
+      },
+      "partSpace": {
+       "axis": 2,
+       "center": [
+        "00000000",
+        "00000000",
+        "3f200000"
+       ],
+       "halfCylinder": "3f600000",
+       "height": "40200000",
+       "nodePosition": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "nodeScale": [
+        "3fa00000",
+        "3fa00000",
+        "3fa00000"
+       ],
+       "radius": "3ec00000"
+      },
+      "path": "model",
+      "tag": "Untagged",
+      "trigger": false
+     },
+     {
+      "entry": "BoxCollider2",
+      "isShape": true,
+      "layer": null,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "size": [
+        "3f000000",
+        "3f000000",
+        "40800000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "3fa00000",
+        "40200000",
+        "40700000"
+       ],
+       "halfExtents": [
+        "3ea00000",
+        "3f200000",
+        "40200000"
+       ],
+       "nodePosition": [
+        "3fa00000",
+        "40200000",
+        "40700000"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "3f3504f3",
+        "00000000",
+        "3f3504f3"
+       ],
+       "nodeScale": [
+        "3fa00000",
+        "40200000",
+        "3fa00000"
+       ]
+      },
+      "path": "model/Arm",
+      "tag": null,
+      "trigger": false
+     },
+     {
+      "entry": "BoxCollider2",
+      "isShape": true,
+      "layer": null,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "size": [
+        "41100000",
+        "41100000",
+        "41100000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "3fa00000",
+        "40200000",
+        "40700000"
+       ],
+       "halfExtents": [
+        "40b40000",
+        "41340000",
+        "40b40000"
+       ],
+       "nodePosition": [
+        "3fa00000",
+        "40200000",
+        "40700000"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "3f3504f3",
+        "00000000",
+        "3f3504f3"
+       ],
+       "nodeScale": [
+        "3fa00000",
+        "40200000",
+        "3fa00000"
+       ]
+      },
+      "path": "model/Arm",
+      "tag": null,
+      "trigger": true
+     },
+     {
+      "entry": "WheelCollider",
+      "isShape": false,
+      "layer": null,
+      "path": "model/Arm",
+      "tag": null,
+      "trigger": false
+     },
+     {
+      "entry": "SphereCollider2",
+      "isShape": true,
+      "layer": 15,
+      "params": {
+       "center": [
+        "3dcccccd",
+        "3e4ccccd",
+        "3e99999a"
+       ],
+       "radius": [
+        "3f000000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "402c0000",
+        "3fb80000",
+        "40500000"
+       ],
+       "nodePosition": [
+        "400c0000",
+        "3fa00000",
+        "405c0000"
+       ],
+       "nodeRotation": [
+        "3f3504f3",
+        "3f3504f3",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "3ff00000",
+        "40200000",
+        "3f200000"
+       ],
+       "radius": "3fa00000"
+      },
+      "path": "model/Arm/Hand",
+      "tag": "NoAttach",
+      "trigger": false
+     },
+     {
+      "entry": "CapsuleCollider2",
+      "isShape": true,
+      "layer": 15,
+      "params": {
+       "center": [
+        "00000000",
+        "3f000000",
+        "00000000"
+       ],
+       "direction": 0,
+       "height": [
+        "40400000"
+       ],
+       "radius": [
+        "3e800000"
+       ]
+      },
+      "partSpace": {
+       "axis": 0,
+       "center": [
+        "405c0000",
+        "3fa00001",
+        "405c0000"
+       ],
+       "halfCylinder": "400c0000",
+       "height": "40b40000",
+       "nodePosition": [
+        "400c0000",
+        "3fa00000",
+        "405c0000"
+       ],
+       "nodeRotation": [
+        "3f3504f3",
+        "3f3504f3",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "3ff00000",
+        "40200000",
+        "3f200000"
+       ],
+       "radius": "3f200000"
+      },
+      "path": "model/Arm/Hand",
+      "tag": "NoAttach",
+      "trigger": false
+     },
+     {
+      "entry": "CapsuleCollider2",
+      "isShape": true,
+      "layer": 15,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "direction": 1,
+       "height": [
+        "3f800000"
+       ],
+       "radius": [
+        "3e800000"
+       ]
+      },
+      "partSpace": {
+       "axis": 1,
+       "center": [
+        "400c0000",
+        "3fa00000",
+        "405c0000"
+       ],
+       "halfCylinder": "3f480000",
+       "height": "40200000",
+       "nodePosition": [
+        "400c0000",
+        "3fa00000",
+        "405c0000"
+       ],
+       "nodeRotation": [
+        "3f3504f3",
+        "3f3504f3",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "3ff00000",
+        "40200000",
+        "3f200000"
+       ],
+       "radius": "3ef00000"
+      },
+      "path": "model/Arm/Hand",
+      "tag": "NoAttach",
+      "trigger": false
+     },
+     {
+      "entry": "CapsuleCollider2",
+      "isShape": true,
+      "layer": 15,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "direction": 2,
+       "height": [
+        "3f800000"
+       ],
+       "radius": [
+        "3f400000"
+       ]
+      },
+      "partSpace": {
+       "axis": 2,
+       "center": [
+        "400c0000",
+        "3fa00000",
+        "405c0000"
+       ],
+       "halfCylinder": "00000000",
+       "height": "3f200000",
+       "nodePosition": [
+        "400c0000",
+        "3fa00000",
+        "405c0000"
+       ],
+       "nodeRotation": [
+        "3f3504f3",
+        "3f3504f3",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "3ff00000",
+        "40200000",
+        "3f200000"
+       ],
+       "radius": "3ff00000"
+      },
+      "path": "model/Arm/Hand",
+      "tag": "NoAttach",
+      "trigger": false
+     },
+     {
+      "convex": true,
+      "entry": "MeshCollider2",
+      "isShape": true,
+      "layer": null,
+      "mesh": {
+       "count": 8,
+       "triangleLists": [
+        {
+         "count": 36,
+         "fnv1a64": "b763a74749370ca5"
+        }
+       ],
+       "vertsFnv1a64": "8105f905a240a9e5"
+      },
+      "params": {
+       "convexFlag": true
+      },
+      "partSpace": {
+       "massProps": {
+        "centroid": [
+         "2.1875",
+         "-0.6249999403953552",
+         "3.125"
+        ],
+        "hullFaces": 12,
+        "inertiaPerUnitMass": [
+         [
+          "2.2135409712792016",
+          "-6.063299023741718e-16",
+          "0.0"
+         ],
+         [
+          "-6.063299023741718e-16",
+          "1.3020833333333333",
+          "-3.031649511870859e-16"
+         ],
+         [
+          "0.0",
+          "-3.031649511870859e-16",
+          "3.255207637945868"
+         ]
+        ],
+        "qhullVolume": "23.437496088445187",
+        "volume": "23.437496088445187"
+       },
+       "meshSolidVolume": "23.437496088445187",
+       "nodePosition": [
+        "400c0000",
+        "bf1ffffe",
+        "40480000"
+       ],
+       "nodeRotation": [
+        "3f7fffff",
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "3ff00000",
+        "40200000",
+        "3f200000"
+       ],
+       "vertexFnv1a64": "62eca3e84222cecd"
+      },
+      "path": "model/Arm/Hand/Fingertip",
+      "tag": null,
+      "trigger": false
+     },
+     {
+      "convex": true,
+      "entry": "MeshCollider2",
+      "isShape": true,
+      "layer": null,
+      "mesh": {
+       "count": 8,
+       "triangleLists": [
+        {
+         "count": 36,
+         "fnv1a64": "b763a74749370ca5"
+        }
+       ],
+       "vertsFnv1a64": "8105f905a240a9e5"
+      },
+      "params": {
+       "convexFlag": false
+      },
+      "partSpace": {
+       "massProps": {
+        "centroid": [
+         "2.1875",
+         "-0.6249999403953552",
+         "3.125"
+        ],
+        "hullFaces": 12,
+        "inertiaPerUnitMass": [
+         [
+          "2.2135409712792016",
+          "-6.063299023741718e-16",
+          "0.0"
+         ],
+         [
+          "-6.063299023741718e-16",
+          "1.3020833333333333",
+          "-3.031649511870859e-16"
+         ],
+         [
+          "0.0",
+          "-3.031649511870859e-16",
+          "3.255207637945868"
+         ]
+        ],
+        "qhullVolume": "23.437496088445187",
+        "volume": "23.437496088445187"
+       },
+       "meshSolidVolume": "23.437496088445187",
+       "nodePosition": [
+        "400c0000",
+        "bf1ffffe",
+        "40480000"
+       ],
+       "nodeRotation": [
+        "3f7fffff",
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "3ff00000",
+        "40200000",
+        "3f200000"
+       ],
+       "vertexFnv1a64": "62eca3e84222cecd"
+      },
+      "path": "model/Arm/Hand/Fingertip",
+      "tag": null,
+      "trigger": true
+     },
+     {
+      "convex": true,
+      "entry": "MeshCollider",
+      "isShape": true,
+      "layer": null,
+      "mesh": {
+       "count": 8,
+       "triangleLists": [
+        {
+         "count": 18,
+         "fnv1a64": "7f20f44b7b17a610"
+        },
+        {
+         "count": 18,
+         "fnv1a64": "a9bfbe377b420670"
+        }
+       ],
+       "vertsFnv1a64": "8105f905a240a9e5"
+      },
+      "params": {
+       "convexFlag": false
+      },
+      "partSpace": {
+       "massProps": {
+        "centroid": [
+         "-2.5",
+         "0.625",
+         "0.0"
+        ],
+        "hullFaces": 12,
+        "inertiaPerUnitMass": [
+         [
+          "4.166665871938144",
+          "-6.821211564339693e-16",
+          "2.131628613856154e-16"
+         ],
+         [
+          "-2.273737188113231e-16",
+          "4.166666269302405",
+          "-5.684342970283077e-17"
+         ],
+         [
+          "1.5631943168278462e-16",
+          "-4.263257227712308e-17",
+          "4.166666269302403"
+         ]
+        ],
+        "qhullVolume": "124.99997615814435",
+        "volume": "124.99997615814436"
+       },
+       "meshSolidVolume": "124.99997615814436",
+       "nodePosition": [
+        "c0200000",
+        "3f200000",
+        "00000000"
+       ],
+       "nodeRotation": [
+        "3f3504f3",
+        "00000000",
+        "00000000",
+        "3f3504f3"
+       ],
+       "nodeScale": [
+        "40200000",
+        "40200000",
+        "40200000"
+       ],
+       "vertexFnv1a64": "14696aac544fe5e5"
+      },
+      "path": "model/Side",
+      "tag": null,
+      "trigger": false
+     },
+     {
+      "entry": "BoxCollider",
+      "isShape": true,
+      "layer": null,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "size": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "c0200000",
+        "3f200000",
+        "00000000"
+       ],
+       "halfExtents": [
+        "3fa00000",
+        "3fa00000",
+        "3fa00000"
+       ],
+       "nodePosition": [
+        "c0200000",
+        "3f200000",
+        "00000000"
+       ],
+       "nodeRotation": [
+        "3f3504f3",
+        "00000000",
+        "00000000",
+        "3f3504f3"
+       ],
+       "nodeScale": [
+        "40200000",
+        "40200000",
+        "40200000"
+       ]
+      },
+      "path": "model/Side",
+      "tag": null,
+      "trigger": false
+     }
+    ],
+    "models": [],
+    "name": "no MODEL node, rescaleFactor 1.25",
+    "rescaleFactor": "3fa00000"
+   },
+   {
+    "colliders": [
+     {
+      "entry": "BoxCollider",
+      "isShape": true,
+      "layer": 0,
+      "params": {
+       "center": [
+        "3dcccccd",
+        "3e4ccccd",
+        "3e99999a"
+       ],
+       "size": [
+        "3f800000",
+        "40000000",
+        "40400000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "3f2147ae",
+        "3fa147ae",
+        "bf4f5c27"
+       ],
+       "halfExtents": [
+        "3f666666",
+        "3fe66666",
+        "402ccccc"
+       ],
+       "nodePosition": [
+        "3ee66666",
+        "3f666666",
+        "bfaccccc"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "nodeScale": [
+        "3fe66666",
+        "3fe66666",
+        "3fe66666"
+       ]
+      },
+      "path": "model/SynthRoot",
+      "tag": "Untagged",
+      "trigger": false
+     },
+     {
+      "entry": "SphereCollider",
+      "isShape": true,
+      "layer": 0,
+      "params": {
+       "center": [
+        "00000000",
+        "3f800000",
+        "00000000"
+       ],
+       "radius": [
+        "3f400000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "3ee66666",
+        "402ccccc",
+        "bfaccccc"
+       ],
+       "nodePosition": [
+        "3ee66666",
+        "3f666666",
+        "bfaccccc"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "nodeScale": [
+        "3fe66666",
+        "3fe66666",
+        "3fe66666"
+       ],
+       "radius": "3faccccc"
+      },
+      "path": "model/SynthRoot",
+      "tag": "Untagged",
+      "trigger": false
+     },
+     {
+      "entry": "CapsuleCollider",
+      "isShape": true,
+      "layer": 0,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "3f000000"
+       ],
+       "direction": 2,
+       "height": [
+        "40000000"
+       ],
+       "radius": [
+        "3e99999a"
+       ]
+      },
+      "partSpace": {
+       "axis": 2,
+       "center": [
+        "3ee66666",
+        "3f666666",
+        "bee66664"
+       ],
+       "halfCylinder": "3fa147ae",
+       "height": "40666666",
+       "nodePosition": [
+        "3ee66666",
+        "3f666666",
+        "bfaccccc"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "nodeScale": [
+        "3fe66666",
+        "3fe66666",
+        "3fe66666"
+       ],
+       "radius": "3f0a3d71"
+      },
+      "path": "model/SynthRoot",
+      "tag": "Untagged",
+      "trigger": false
+     },
+     {
+      "entry": "BoxCollider2",
+      "isShape": true,
+      "layer": null,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "size": [
+        "3f000000",
+        "3f000000",
+        "40800000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "40100000",
+        "40900000",
+        "40819999"
+       ],
+       "halfExtents": [
+        "3ee66666",
+        "3f666666",
+        "40666666"
+       ],
+       "nodePosition": [
+        "40100000",
+        "40900000",
+        "40819999"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "3f3504f3",
+        "00000000",
+        "3f3504f3"
+       ],
+       "nodeScale": [
+        "3fe66666",
+        "40666666",
+        "3fe66666"
+       ]
+      },
+      "path": "model/SynthRoot/Arm",
+      "tag": null,
+      "trigger": false
+     },
+     {
+      "entry": "BoxCollider2",
+      "isShape": true,
+      "layer": null,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "size": [
+        "41100000",
+        "41100000",
+        "41100000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "40100000",
+        "40900000",
+        "40819999"
+       ],
+       "halfExtents": [
+        "41019999",
+        "41819999",
+        "41019999"
+       ],
+       "nodePosition": [
+        "40100000",
+        "40900000",
+        "40819999"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "3f3504f3",
+        "00000000",
+        "3f3504f3"
+       ],
+       "nodeScale": [
+        "3fe66666",
+        "40666666",
+        "3fe66666"
+       ]
+      },
+      "path": "model/SynthRoot/Arm",
+      "tag": null,
+      "trigger": true
+     },
+     {
+      "entry": "WheelCollider",
+      "isShape": false,
+      "layer": null,
+      "path": "model/SynthRoot/Arm",
+      "tag": null,
+      "trigger": false
+     },
+     {
+      "entry": "SphereCollider2",
+      "isShape": true,
+      "layer": 15,
+      "params": {
+       "center": [
+        "3dcccccd",
+        "3e4ccccd",
+        "3e99999a"
+       ],
+       "radius": [
+        "3f000000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "408a3d70",
+        "403e147b",
+        "40551eb8"
+       ],
+       "nodePosition": [
+        "40666666",
+        "402ccccd",
+        "40666666"
+       ],
+       "nodeRotation": [
+        "3f3504f3",
+        "3f3504f3",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "402ccccc",
+        "40666666",
+        "3f666666"
+       ],
+       "radius": "3fe66666"
+      },
+      "path": "model/SynthRoot/Arm/Hand",
+      "tag": "NoAttach",
+      "trigger": false
+     },
+     {
+      "entry": "CapsuleCollider2",
+      "isShape": true,
+      "layer": 15,
+      "params": {
+       "center": [
+        "00000000",
+        "3f000000",
+        "00000000"
+       ],
+       "direction": 0,
+       "height": [
+        "40400000"
+       ],
+       "radius": [
+        "3e800000"
+       ]
+      },
+      "partSpace": {
+       "axis": 0,
+       "center": [
+        "40accccc",
+        "402ccccd",
+        "40666666"
+       ],
+       "halfCylinder": "40499998",
+       "height": "41019999",
+       "nodePosition": [
+        "40666666",
+        "402ccccd",
+        "40666666"
+       ],
+       "nodeRotation": [
+        "3f3504f3",
+        "3f3504f3",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "402ccccc",
+        "40666666",
+        "3f666666"
+       ],
+       "radius": "3f666666"
+      },
+      "path": "model/SynthRoot/Arm/Hand",
+      "tag": "NoAttach",
+      "trigger": false
+     },
+     {
+      "entry": "CapsuleCollider2",
+      "isShape": true,
+      "layer": 15,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "direction": 1,
+       "height": [
+        "3f800000"
+       ],
+       "radius": [
+        "3e800000"
+       ]
+      },
+      "partSpace": {
+       "axis": 1,
+       "center": [
+        "40666666",
+        "402ccccd",
+        "40666666"
+       ],
+       "halfCylinder": "3f900000",
+       "height": "40666666",
+       "nodePosition": [
+        "40666666",
+        "402ccccd",
+        "40666666"
+       ],
+       "nodeRotation": [
+        "3f3504f3",
+        "3f3504f3",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "402ccccc",
+        "40666666",
+        "3f666666"
+       ],
+       "radius": "3f2ccccc"
+      },
+      "path": "model/SynthRoot/Arm/Hand",
+      "tag": "NoAttach",
+      "trigger": false
+     },
+     {
+      "entry": "CapsuleCollider2",
+      "isShape": true,
+      "layer": 15,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "direction": 2,
+       "height": [
+        "3f800000"
+       ],
+       "radius": [
+        "3f400000"
+       ]
+      },
+      "partSpace": {
+       "axis": 2,
+       "center": [
+        "40666666",
+        "402ccccd",
+        "40666666"
+       ],
+       "halfCylinder": "00000000",
+       "height": "3f666666",
+       "nodePosition": [
+        "40666666",
+        "402ccccd",
+        "40666666"
+       ],
+       "nodeRotation": [
+        "3f3504f3",
+        "3f3504f3",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "402ccccc",
+        "40666666",
+        "3f666666"
+       ],
+       "radius": "402ccccc"
+      },
+      "path": "model/SynthRoot/Arm/Hand",
+      "tag": "NoAttach",
+      "trigger": false
+     },
+     {
+      "convex": true,
+      "entry": "MeshCollider2",
+      "isShape": true,
+      "layer": null,
+      "mesh": {
+       "count": 8,
+       "triangleLists": [
+        {
+         "count": 36,
+         "fnv1a64": "b763a74749370ca5"
+        }
+       ],
+       "vertsFnv1a64": "8105f905a240a9e5"
+      },
+      "params": {
+       "convexFlag": true
+      },
+      "partSpace": {
+       "massProps": {
+        "centroid": [
+         "3.599999547004699",
+         "4.768371581717558e-07",
+         "3.150000095367431"
+        ],
+        "hullFaces": 12,
+        "inertiaPerUnitMass": [
+         [
+          "4.589997253418386",
+          "-3.166054539562292e-17",
+          "-1.6244703373258973e-15"
+         ],
+         [
+          "1.7139824677011424e-16",
+          "2.6999992132187733",
+          "8.34800656349015e-17"
+         ],
+         [
+          "-1.6244703373258973e-15",
+          "1.8500946171777008e-16",
+          "6.74999692440073"
+         ]
+        ],
+        "qhullVolume": "69.98394190980444",
+        "volume": "69.98394190980444"
+       },
+       "meshSolidVolume": "69.98394190980443",
+       "nodePosition": [
+        "40666665",
+        "35000000",
+        "4049999a"
+       ],
+       "nodeRotation": [
+        "3f7fffff",
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "402ccccc",
+        "40666666",
+        "3f666666"
+       ],
+       "vertexFnv1a64": "dec481ded6fdf245"
+      },
+      "path": "model/SynthRoot/Arm/Hand/Fingertip",
+      "tag": null,
+      "trigger": false
+     },
+     {
+      "convex": true,
+      "entry": "MeshCollider2",
+      "isShape": true,
+      "layer": null,
+      "mesh": {
+       "count": 8,
+       "triangleLists": [
+        {
+         "count": 36,
+         "fnv1a64": "b763a74749370ca5"
+        }
+       ],
+       "vertsFnv1a64": "8105f905a240a9e5"
+      },
+      "params": {
+       "convexFlag": false
+      },
+      "partSpace": {
+       "massProps": {
+        "centroid": [
+         "3.599999547004699",
+         "4.768371581717558e-07",
+         "3.150000095367431"
+        ],
+        "hullFaces": 12,
+        "inertiaPerUnitMass": [
+         [
+          "4.589997253418386",
+          "-3.166054539562292e-17",
+          "-1.6244703373258973e-15"
+         ],
+         [
+          "1.7139824677011424e-16",
+          "2.6999992132187733",
+          "8.34800656349015e-17"
+         ],
+         [
+          "-1.6244703373258973e-15",
+          "1.8500946171777008e-16",
+          "6.74999692440073"
+         ]
+        ],
+        "qhullVolume": "69.98394190980444",
+        "volume": "69.98394190980444"
+       },
+       "meshSolidVolume": "69.98394190980443",
+       "nodePosition": [
+        "40666665",
+        "35000000",
+        "4049999a"
+       ],
+       "nodeRotation": [
+        "3f7fffff",
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "402ccccc",
+        "40666666",
+        "3f666666"
+       ],
+       "vertexFnv1a64": "dec481ded6fdf245"
+      },
+      "path": "model/SynthRoot/Arm/Hand/Fingertip",
+      "tag": null,
+      "trigger": true
+     },
+     {
+      "convex": true,
+      "entry": "MeshCollider",
+      "isShape": true,
+      "layer": null,
+      "mesh": {
+       "count": 8,
+       "triangleLists": [
+        {
+         "count": 18,
+         "fnv1a64": "7f20f44b7b17a610"
+        },
+        {
+         "count": 18,
+         "fnv1a64": "a9bfbe377b420670"
+        }
+       ],
+       "vertsFnv1a64": "8105f905a240a9e5"
+      },
+      "params": {
+       "convexFlag": false
+      },
+      "partSpace": {
+       "massProps": {
+        "centroid": [
+         "-3.149999976158141",
+         "1.79999995231628",
+         "-1.349999944368998"
+        ],
+        "hullFaces": 12,
+        "inertiaPerUnitMass": [
+         [
+          "8.639998397827247",
+          "2.436703919118855e-15",
+          "-1.2183519595594275e-15"
+         ],
+         [
+          "2.436703919118855e-15",
+          "8.639999256134091",
+          "1.4305113380418534e-07"
+         ],
+         [
+          "-6.091759797797138e-16",
+          "1.4305113380418534e-07",
+          "8.639999256134084"
+         ]
+        ],
+        "qhullVolume": "373.24793325806024",
+        "volume": "373.24793325806024"
+       },
+       "meshSolidVolume": "373.24793325806013",
+       "nodePosition": [
+        "c0499999",
+        "3fe66666",
+        "bfaccccc"
+       ],
+       "nodeRotation": [
+        "3f3504f3",
+        "00000000",
+        "00000000",
+        "3f3504f3"
+       ],
+       "nodeScale": [
+        "40666666",
+        "40666666",
+        "40666666"
+       ],
+       "vertexFnv1a64": "ab658a776f311dd5"
+      },
+      "path": "model/SynthRoot/Side",
+      "tag": null,
+      "trigger": false
+     },
+     {
+      "entry": "BoxCollider",
+      "isShape": true,
+      "layer": null,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "size": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "c0499999",
+        "3fe66666",
+        "bfaccccc"
+       ],
+       "halfExtents": [
+        "3fe66666",
+        "3fe66666",
+        "3fe66666"
+       ],
+       "nodePosition": [
+        "c0499999",
+        "3fe66666",
+        "bfaccccc"
+       ],
+       "nodeRotation": [
+        "3f3504f3",
+        "00000000",
+        "00000000",
+        "3f3504f3"
+       ],
+       "nodeScale": [
+        "40666666",
+        "40666666",
+        "40666666"
+       ]
+      },
+      "path": "model/SynthRoot/Side",
+      "tag": null,
+      "trigger": false
+     }
+    ],
+    "models": [
+     {
+      "position": [
+       0.5,
+       1.0,
+       -1.5
+      ],
+      "scale": [
+       2.0,
+       2.0,
+       2.0
+      ]
+     }
+    ],
+    "name": "one MODEL, scale and position",
+    "rescaleFactor": "3f666666"
+   },
+   {
+    "colliders": [
+     {
+      "entry": "BoxCollider",
+      "isShape": true,
+      "layer": 0,
+      "params": {
+       "center": [
+        "3dcccccd",
+        "3e4ccccd",
+        "3e99999a"
+       ],
+       "size": [
+        "3f800000",
+        "40000000",
+        "40400000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "3dcccccd",
+        "3e99999a",
+        "3e99999a"
+       ],
+       "halfExtents": [
+        "3f000000",
+        "3fc00000",
+        "3fc00000"
+       ],
+       "nodePosition": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "nodeScale": [
+        "3f800000",
+        "3fc00000",
+        "3f800000"
+       ]
+      },
+      "path": "model/first",
+      "tag": "Untagged",
+      "trigger": false
+     },
+     {
+      "entry": "SphereCollider",
+      "isShape": true,
+      "layer": 0,
+      "params": {
+       "center": [
+        "00000000",
+        "3f800000",
+        "00000000"
+       ],
+       "radius": [
+        "3f400000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "00000000",
+        "3fc00000",
+        "00000000"
+       ],
+       "nodePosition": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "nodeScale": [
+        "3f800000",
+        "3fc00000",
+        "3f800000"
+       ],
+       "radius": "3f900000"
+      },
+      "path": "model/first",
+      "tag": "Untagged",
+      "trigger": false
+     },
+     {
+      "entry": "CapsuleCollider",
+      "isShape": true,
+      "layer": 0,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "3f000000"
+       ],
+       "direction": 2,
+       "height": [
+        "40000000"
+       ],
+       "radius": [
+        "3e99999a"
+       ]
+      },
+      "partSpace": {
+       "axis": 2,
+       "center": [
+        "00000000",
+        "00000000",
+        "3f000000"
+       ],
+       "halfCylinder": "3f0ccccc",
+       "height": "40000000",
+       "nodePosition": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "00000000",
+        "00000000",
+        "3f800000"
+       ],
+       "nodeScale": [
+        "3f800000",
+        "3fc00000",
+        "3f800000"
+       ],
+       "radius": "3ee66667"
+      },
+      "path": "model/first",
+      "tag": "Untagged",
+      "trigger": false
+     },
+     {
+      "entry": "BoxCollider2",
+      "isShape": true,
+      "layer": null,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "size": [
+        "3f000000",
+        "3f000000",
+        "40800000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "3f800000",
+        "40400000",
+        "40400000"
+       ],
+       "halfExtents": [
+        "3e800000",
+        "3f400000",
+        "40000000"
+       ],
+       "nodePosition": [
+        "3f800000",
+        "40400000",
+        "40400000"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "3f3504f3",
+        "00000000",
+        "3f3504f3"
+       ],
+       "nodeScale": [
+        "3f800000",
+        "40400000",
+        "3f800000"
+       ]
+      },
+      "path": "model/first/Arm",
+      "tag": null,
+      "trigger": false
+     },
+     {
+      "entry": "BoxCollider2",
+      "isShape": true,
+      "layer": null,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "size": [
+        "41100000",
+        "41100000",
+        "41100000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "3f800000",
+        "40400000",
+        "40400000"
+       ],
+       "halfExtents": [
+        "40900000",
+        "41580000",
+        "40900000"
+       ],
+       "nodePosition": [
+        "3f800000",
+        "40400000",
+        "40400000"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "3f3504f3",
+        "00000000",
+        "3f3504f3"
+       ],
+       "nodeScale": [
+        "3f800000",
+        "40400000",
+        "3f800000"
+       ]
+      },
+      "path": "model/first/Arm",
+      "tag": null,
+      "trigger": true
+     },
+     {
+      "entry": "WheelCollider",
+      "isShape": false,
+      "layer": null,
+      "path": "model/first/Arm",
+      "tag": null,
+      "trigger": false
+     },
+     {
+      "entry": "SphereCollider2",
+      "isShape": true,
+      "layer": 15,
+      "params": {
+       "center": [
+        "3dcccccd",
+        "3e4ccccd",
+        "3e99999a"
+       ],
+       "radius": [
+        "3f000000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "40166666",
+        "3fd33333",
+        "40266666"
+       ],
+       "nodePosition": [
+        "3fe00000",
+        "3fc00000",
+        "40300000"
+       ],
+       "nodeRotation": [
+        "3f3504f3",
+        "3f3504f3",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "3fc00000",
+        "40400000",
+        "3f000000"
+       ],
+       "radius": "3fc00000"
+      },
+      "path": "model/first/Arm/Hand",
+      "tag": "NoAttach",
+      "trigger": false
+     },
+     {
+      "entry": "CapsuleCollider2",
+      "isShape": true,
+      "layer": 15,
+      "params": {
+       "center": [
+        "00000000",
+        "3f000000",
+        "00000000"
+       ],
+       "direction": 0,
+       "height": [
+        "40400000"
+       ],
+       "radius": [
+        "3e800000"
+       ]
+      },
+      "partSpace": {
+       "axis": 0,
+       "center": [
+        "40500000",
+        "3fc00001",
+        "40300000"
+       ],
+       "halfCylinder": "3fc00000",
+       "height": "40900000",
+       "nodePosition": [
+        "3fe00000",
+        "3fc00000",
+        "40300000"
+       ],
+       "nodeRotation": [
+        "3f3504f3",
+        "3f3504f3",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "3fc00000",
+        "40400000",
+        "3f000000"
+       ],
+       "radius": "3f400000"
+      },
+      "path": "model/first/Arm/Hand",
+      "tag": "NoAttach",
+      "trigger": false
+     },
+     {
+      "entry": "CapsuleCollider2",
+      "isShape": true,
+      "layer": 15,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "direction": 1,
+       "height": [
+        "3f800000"
+       ],
+       "radius": [
+        "3e800000"
+       ]
+      },
+      "partSpace": {
+       "axis": 1,
+       "center": [
+        "3fe00000",
+        "3fc00000",
+        "40300000"
+       ],
+       "halfCylinder": "3f900000",
+       "height": "40400000",
+       "nodePosition": [
+        "3fe00000",
+        "3fc00000",
+        "40300000"
+       ],
+       "nodeRotation": [
+        "3f3504f3",
+        "3f3504f3",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "3fc00000",
+        "40400000",
+        "3f000000"
+       ],
+       "radius": "3ec00000"
+      },
+      "path": "model/first/Arm/Hand",
+      "tag": "NoAttach",
+      "trigger": false
+     },
+     {
+      "entry": "CapsuleCollider2",
+      "isShape": true,
+      "layer": 15,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "direction": 2,
+       "height": [
+        "3f800000"
+       ],
+       "radius": [
+        "3f400000"
+       ]
+      },
+      "partSpace": {
+       "axis": 2,
+       "center": [
+        "3fe00000",
+        "3fc00000",
+        "40300000"
+       ],
+       "halfCylinder": "00000000",
+       "height": "3f000000",
+       "nodePosition": [
+        "3fe00000",
+        "3fc00000",
+        "40300000"
+       ],
+       "nodeRotation": [
+        "3f3504f3",
+        "3f3504f3",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "3fc00000",
+        "40400000",
+        "3f000000"
+       ],
+       "radius": "40100000"
+      },
+      "path": "model/first/Arm/Hand",
+      "tag": "NoAttach",
+      "trigger": false
+     },
+     {
+      "convex": true,
+      "entry": "MeshCollider2",
+      "isShape": true,
+      "layer": null,
+      "mesh": {
+       "count": 8,
+       "triangleLists": [
+        {
+         "count": 36,
+         "fnv1a64": "b763a74749370ca5"
+        }
+       ],
+       "vertsFnv1a64": "8105f905a240a9e5"
+      },
+      "params": {
+       "convexFlag": true
+      },
+      "partSpace": {
+       "massProps": {
+        "centroid": [
+         "1.7499999403953548",
+         "2.384185791015647e-07",
+         "2.4999999999999996"
+        ],
+        "hullFaces": 12,
+        "inertiaPerUnitMass": [
+         [
+          "3.083331902822028",
+          "4.9345984671448196e-17",
+          "-1.5789841709606505e-15"
+         ],
+         [
+          "2.467190060415295e-16",
+          "0.8333333929379787",
+          "2.46716182597811e-16"
+         ],
+         [
+          "-1.5789841709606505e-15",
+          "2.46716182597811e-16",
+          "3.7499986290933416"
+         ]
+        ],
+        "qhullVolume": "17.999996423721143",
+        "volume": "17.999996423721146"
+       },
+       "meshSolidVolume": "17.999996423721143",
+       "nodePosition": [
+        "3fdfffff",
+        "34000000",
+        "40200000"
+       ],
+       "nodeRotation": [
+        "3f7fffff",
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "3fc00000",
+        "40400000",
+        "3f000000"
+       ],
+       "vertexFnv1a64": "73e4216230540595"
+      },
+      "path": "model/first/Arm/Hand/Fingertip",
+      "tag": null,
+      "trigger": false
+     },
+     {
+      "convex": true,
+      "entry": "MeshCollider2",
+      "isShape": true,
+      "layer": null,
+      "mesh": {
+       "count": 8,
+       "triangleLists": [
+        {
+         "count": 36,
+         "fnv1a64": "b763a74749370ca5"
+        }
+       ],
+       "vertsFnv1a64": "8105f905a240a9e5"
+      },
+      "params": {
+       "convexFlag": false
+      },
+      "partSpace": {
+       "massProps": {
+        "centroid": [
+         "1.7499999403953548",
+         "2.384185791015647e-07",
+         "2.4999999999999996"
+        ],
+        "hullFaces": 12,
+        "inertiaPerUnitMass": [
+         [
+          "3.083331902822028",
+          "4.9345984671448196e-17",
+          "-1.5789841709606505e-15"
+         ],
+         [
+          "2.467190060415295e-16",
+          "0.8333333929379787",
+          "2.46716182597811e-16"
+         ],
+         [
+          "-1.5789841709606505e-15",
+          "2.46716182597811e-16",
+          "3.7499986290933416"
+         ]
+        ],
+        "qhullVolume": "17.999996423721143",
+        "volume": "17.999996423721146"
+       },
+       "meshSolidVolume": "17.999996423721143",
+       "nodePosition": [
+        "3fdfffff",
+        "34000000",
+        "40200000"
+       ],
+       "nodeRotation": [
+        "3f7fffff",
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "3fc00000",
+        "40400000",
+        "3f000000"
+       ],
+       "vertexFnv1a64": "73e4216230540595"
+      },
+      "path": "model/first/Arm/Hand/Fingertip",
+      "tag": null,
+      "trigger": true
+     },
+     {
+      "entry": "BoxCollider",
+      "isShape": true,
+      "layer": 0,
+      "params": {
+       "center": [
+        "3dcccccd",
+        "3e4ccccd",
+        "3e99999a"
+       ],
+       "size": [
+        "3f800000",
+        "40000000",
+        "40400000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "3f933333",
+        "4081999a",
+        "403ccccd"
+       ],
+       "halfExtents": [
+        "3e800000",
+        "3fc00000",
+        "3f400000"
+       ],
+       "nodePosition": [
+        "3f800000",
+        "40700000",
+        "40400000"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "3f3504f3",
+        "00000000",
+        "3f3504f3"
+       ],
+       "nodeScale": [
+        "3f000000",
+        "3fc00000",
+        "3f000000"
+       ]
+      },
+      "path": "model/first/Arm/second",
+      "tag": "Untagged",
+      "trigger": false
+     },
+     {
+      "entry": "SphereCollider",
+      "isShape": true,
+      "layer": 0,
+      "params": {
+       "center": [
+        "00000000",
+        "3f800000",
+        "00000000"
+       ],
+       "radius": [
+        "3f400000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "3f800000",
+        "40a80000",
+        "40400000"
+       ],
+       "nodePosition": [
+        "3f800000",
+        "40700000",
+        "40400000"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "3f3504f3",
+        "00000000",
+        "3f3504f3"
+       ],
+       "nodeScale": [
+        "3f000000",
+        "3fc00000",
+        "3f000000"
+       ],
+       "radius": "3f900000"
+      },
+      "path": "model/first/Arm/second",
+      "tag": "Untagged",
+      "trigger": false
+     },
+     {
+      "entry": "CapsuleCollider",
+      "isShape": true,
+      "layer": 0,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "3f000000"
+       ],
+       "direction": 2,
+       "height": [
+        "40000000"
+       ],
+       "radius": [
+        "3e99999a"
+       ]
+      },
+      "partSpace": {
+       "axis": 2,
+       "center": [
+        "3fa00000",
+        "40700000",
+        "40400000"
+       ],
+       "halfCylinder": "3d4cccc8",
+       "height": "3f800000",
+       "nodePosition": [
+        "3f800000",
+        "40700000",
+        "40400000"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "3f3504f3",
+        "00000000",
+        "3f3504f3"
+       ],
+       "nodeScale": [
+        "3f000000",
+        "3fc00000",
+        "3f000000"
+       ],
+       "radius": "3ee66667"
+      },
+      "path": "model/first/Arm/second",
+      "tag": "Untagged",
+      "trigger": false
+     },
+     {
+      "entry": "BoxCollider2",
+      "isShape": true,
+      "layer": null,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "size": [
+        "3f000000",
+        "3f000000",
+        "40800000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "40200000",
+        "40d80000",
+        "40200000"
+       ],
+       "halfExtents": [
+        "3e000000",
+        "3f400000",
+        "3f800000"
+       ],
+       "nodePosition": [
+        "40200000",
+        "40d80000",
+        "40200000"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "3f7fffff",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "3f000000",
+        "40400000",
+        "3f000000"
+       ]
+      },
+      "path": "model/first/Arm/second/Arm",
+      "tag": null,
+      "trigger": false
+     },
+     {
+      "entry": "BoxCollider2",
+      "isShape": true,
+      "layer": null,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "size": [
+        "41100000",
+        "41100000",
+        "41100000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "40200000",
+        "40d80000",
+        "40200000"
+       ],
+       "halfExtents": [
+        "40100000",
+        "41580000",
+        "40100000"
+       ],
+       "nodePosition": [
+        "40200000",
+        "40d80000",
+        "40200000"
+       ],
+       "nodeRotation": [
+        "00000000",
+        "3f7fffff",
+        "00000000",
+        "00000000"
+       ],
+       "nodeScale": [
+        "3f000000",
+        "40400000",
+        "3f000000"
+       ]
+      },
+      "path": "model/first/Arm/second/Arm",
+      "tag": null,
+      "trigger": true
+     },
+     {
+      "entry": "WheelCollider",
+      "isShape": false,
+      "layer": null,
+      "path": "model/first/Arm/second/Arm",
+      "tag": null,
+      "trigger": false
+     },
+     {
+      "entry": "SphereCollider2",
+      "isShape": true,
+      "layer": 15,
+      "params": {
+       "center": [
+        "3dcccccd",
+        "3e4ccccd",
+        "3e99999a"
+       ],
+       "radius": [
+        "3f000000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "40133333",
+        "40aa6667",
+        "3fc33334"
+       ],
+       "nodePosition": [
+        "40180000",
+        "40a80000",
+        "40080000"
+       ],
+       "nodeRotation": [
+        "3effffff",
+        "3effffff",
+        "beffffff",
+        "beffffff"
+       ],
+       "nodeScale": [
+        "3f400000",
+        "40400000",
+        "3e800000"
+       ],
+       "radius": "3fc00000"
+      },
+      "path": "model/first/Arm/second/Arm/Hand",
+      "tag": "NoAttach",
+      "trigger": false
+     },
+     {
+      "entry": "CapsuleCollider2",
+      "isShape": true,
+      "layer": 15,
+      "params": {
+       "center": [
+        "00000000",
+        "3f000000",
+        "00000000"
+       ],
+       "direction": 0,
+       "height": [
+        "40400000"
+       ],
+       "radius": [
+        "3e800000"
+       ]
+      },
+      "partSpace": {
+       "axis": 0,
+       "center": [
+        "40180000",
+        "40a80000",
+        "3f200004"
+       ],
+       "halfCylinder": "3ec00000",
+       "height": "40100000",
+       "nodePosition": [
+        "40180000",
+        "40a80000",
+        "40080000"
+       ],
+       "nodeRotation": [
+        "3effffff",
+        "3effffff",
+        "beffffff",
+        "beffffff"
+       ],
+       "nodeScale": [
+        "3f400000",
+        "40400000",
+        "3e800000"
+       ],
+       "radius": "3f400000"
+      },
+      "path": "model/first/Arm/second/Arm/Hand",
+      "tag": "NoAttach",
+      "trigger": false
+     },
+     {
+      "entry": "CapsuleCollider2",
+      "isShape": true,
+      "layer": 15,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "direction": 1,
+       "height": [
+        "3f800000"
+       ],
+       "radius": [
+        "3e800000"
+       ]
+      },
+      "partSpace": {
+       "axis": 1,
+       "center": [
+        "40180000",
+        "40a80000",
+        "40080000"
+       ],
+       "halfCylinder": "3fa80000",
+       "height": "40400000",
+       "nodePosition": [
+        "40180000",
+        "40a80000",
+        "40080000"
+       ],
+       "nodeRotation": [
+        "3effffff",
+        "3effffff",
+        "beffffff",
+        "beffffff"
+       ],
+       "nodeScale": [
+        "3f400000",
+        "40400000",
+        "3e800000"
+       ],
+       "radius": "3e400000"
+      },
+      "path": "model/first/Arm/second/Arm/Hand",
+      "tag": "NoAttach",
+      "trigger": false
+     },
+     {
+      "entry": "CapsuleCollider2",
+      "isShape": true,
+      "layer": 15,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "direction": 2,
+       "height": [
+        "3f800000"
+       ],
+       "radius": [
+        "3f400000"
+       ]
+      },
+      "partSpace": {
+       "axis": 2,
+       "center": [
+        "40180000",
+        "40a80000",
+        "40080000"
+       ],
+       "halfCylinder": "00000000",
+       "height": "3e800000",
+       "nodePosition": [
+        "40180000",
+        "40a80000",
+        "40080000"
+       ],
+       "nodeRotation": [
+        "3effffff",
+        "3effffff",
+        "beffffff",
+        "beffffff"
+       ],
+       "nodeScale": [
+        "3f400000",
+        "40400000",
+        "3e800000"
+       ],
+       "radius": "40100000"
+      },
+      "path": "model/first/Arm/second/Arm/Hand",
+      "tag": "NoAttach",
+      "trigger": false
+     },
+     {
+      "convex": true,
+      "entry": "MeshCollider2",
+      "isShape": true,
+      "layer": null,
+      "mesh": {
+       "count": 8,
+       "triangleLists": [
+        {
+         "count": 36,
+         "fnv1a64": "b763a74749370ca5"
+        }
+       ],
+       "vertsFnv1a64": "8105f905a240a9e5"
+      },
+      "params": {
+       "convexFlag": true
+      },
+      "partSpace": {
+       "massProps": {
+        "centroid": [
+         "2.249999970197673",
+         "4.499999999999998",
+         "2.1250000298023273"
+        ],
+        "hullFaces": 12,
+        "inertiaPerUnitMass": [
+         [
+          "3.187498033047055",
+          "1.5789851748523733e-15",
+          "4.718700008508806e-08"
+         ],
+         [
+          "1.5789851748523733e-15",
+          "0.20833325882754775",
+          "-3.1579703497047466e-15"
+         ],
+         [
+          "4.718700008508806e-08",
+          "-6.315940699409493e-15",
+          "3.020831411083864"
+         ]
+        ],
+        "qhullVolume": "4.499996244907949",
+        "volume": "4.499996244907949"
+       },
+       "meshSolidVolume": "4.4999962449079485",
+       "nodePosition": [
+        "40100000",
+        "40900000",
+        "40080000"
+       ],
+       "nodeRotation": [
+        "3f3504f2",
+        "00000000",
+        "bf3504f2",
+        "00000000"
+       ],
+       "nodeScale": [
+        "3f400000",
+        "40400000",
+        "3e800000"
+       ],
+       "vertexFnv1a64": "dca405716fbabc0d"
+      },
+      "path": "model/first/Arm/second/Arm/Hand/Fingertip",
+      "tag": null,
+      "trigger": false
+     },
+     {
+      "convex": true,
+      "entry": "MeshCollider2",
+      "isShape": true,
+      "layer": null,
+      "mesh": {
+       "count": 8,
+       "triangleLists": [
+        {
+         "count": 36,
+         "fnv1a64": "b763a74749370ca5"
+        }
+       ],
+       "vertsFnv1a64": "8105f905a240a9e5"
+      },
+      "params": {
+       "convexFlag": false
+      },
+      "partSpace": {
+       "massProps": {
+        "centroid": [
+         "2.249999970197673",
+         "4.499999999999998",
+         "2.1250000298023273"
+        ],
+        "hullFaces": 12,
+        "inertiaPerUnitMass": [
+         [
+          "3.187498033047055",
+          "1.5789851748523733e-15",
+          "4.718700008508806e-08"
+         ],
+         [
+          "1.5789851748523733e-15",
+          "0.20833325882754775",
+          "-3.1579703497047466e-15"
+         ],
+         [
+          "4.718700008508806e-08",
+          "-6.315940699409493e-15",
+          "3.020831411083864"
+         ]
+        ],
+        "qhullVolume": "4.499996244907949",
+        "volume": "4.499996244907949"
+       },
+       "meshSolidVolume": "4.4999962449079485",
+       "nodePosition": [
+        "40100000",
+        "40900000",
+        "40080000"
+       ],
+       "nodeRotation": [
+        "3f3504f2",
+        "00000000",
+        "bf3504f2",
+        "00000000"
+       ],
+       "nodeScale": [
+        "3f400000",
+        "40400000",
+        "3e800000"
+       ],
+       "vertexFnv1a64": "dca405716fbabc0d"
+      },
+      "path": "model/first/Arm/second/Arm/Hand/Fingertip",
+      "tag": null,
+      "trigger": true
+     },
+     {
+      "convex": true,
+      "entry": "MeshCollider",
+      "isShape": true,
+      "layer": null,
+      "mesh": {
+       "count": 8,
+       "triangleLists": [
+        {
+         "count": 18,
+         "fnv1a64": "7f20f44b7b17a610"
+        },
+        {
+         "count": 18,
+         "fnv1a64": "a9bfbe377b420670"
+        }
+       ],
+       "vertsFnv1a64": "8105f905a240a9e5"
+      },
+      "params": {
+       "convexFlag": false
+      },
+      "partSpace": {
+       "massProps": {
+        "centroid": [
+         "0.9999999403953542",
+         "4.499999960263562",
+         "4.000000059604645"
+        ],
+        "hullFaces": 12,
+        "inertiaPerUnitMass": [
+         [
+          "0.6666665077210058",
+          "-2.9802317473104697e-07",
+          "-5.921191817537455e-16"
+         ],
+         [
+          "-2.9802317532316615e-07",
+          "3.3333323399226726",
+          "1.986820860919133e-08"
+         ],
+         [
+          "0.0",
+          "1.986820860919133e-08",
+          "3.3333322604498528"
+         ]
+        ],
+        "qhullVolume": "23.999990463258058",
+        "volume": "23.99999046325797"
+       },
+       "meshSolidVolume": "23.999990463257976",
+       "nodePosition": [
+        "3f7fffff",
+        "40900000",
+        "40800000"
+       ],
+       "nodeRotation": [
+        "3effffff",
+        "3effffff",
+        "beffffff",
+        "3effffff"
+       ],
+       "nodeScale": [
+        "3f800000",
+        "40400000",
+        "3f800000"
+       ],
+       "vertexFnv1a64": "5f1ad054ee2dce19"
+      },
+      "path": "model/first/Arm/second/Side",
+      "tag": null,
+      "trigger": false
+     },
+     {
+      "entry": "BoxCollider",
+      "isShape": true,
+      "layer": null,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "size": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "3f7fffff",
+        "40900000",
+        "40800000"
+       ],
+       "halfExtents": [
+        "3f000000",
+        "3fc00000",
+        "3f000000"
+       ],
+       "nodePosition": [
+        "3f7fffff",
+        "40900000",
+        "40800000"
+       ],
+       "nodeRotation": [
+        "3effffff",
+        "3effffff",
+        "beffffff",
+        "3effffff"
+       ],
+       "nodeScale": [
+        "3f800000",
+        "40400000",
+        "3f800000"
+       ]
+      },
+      "path": "model/first/Arm/second/Side",
+      "tag": null,
+      "trigger": false
+     },
+     {
+      "convex": true,
+      "entry": "MeshCollider",
+      "isShape": true,
+      "layer": null,
+      "mesh": {
+       "count": 8,
+       "triangleLists": [
+        {
+         "count": 18,
+         "fnv1a64": "7f20f44b7b17a610"
+        },
+        {
+         "count": 18,
+         "fnv1a64": "a9bfbe377b420670"
+        }
+       ],
+       "vertsFnv1a64": "8105f905a240a9e5"
+      },
+      "params": {
+       "convexFlag": false
+      },
+      "partSpace": {
+       "massProps": {
+        "centroid": [
+         "-1.9999999999999998",
+         "0.7499999999999999",
+         "3.700743930107383e-17"
+        ],
+        "hullFaces": 12,
+        "inertiaPerUnitMass": [
+         [
+          "4.333332697550502",
+          "2.9605951440859065e-16",
+          "-1.3877789737902687e-16"
+         ],
+         [
+          "2.9605951440859065e-16",
+          "4.333332856496213",
+          "3.973642990885515e-08"
+         ],
+         [
+          "-1.3877789737902687e-16",
+          "3.9736429871847704e-08",
+          "2.6666665077209566"
+         ]
+        ],
+        "qhullVolume": "95.99998664856048",
+        "volume": "95.9999866485605"
+       },
+       "meshSolidVolume": "95.99998664856047",
+       "nodePosition": [
+        "c0000000",
+        "3f400000",
+        "00000000"
+       ],
+       "nodeRotation": [
+        "3f3504f3",
+        "00000000",
+        "00000000",
+        "3f3504f3"
+       ],
+       "nodeScale": [
+        "40000000",
+        "40400000",
+        "40000000"
+       ],
+       "vertexFnv1a64": "14053fa40d8f1895"
+      },
+      "path": "model/first/Side",
+      "tag": null,
+      "trigger": false
+     },
+     {
+      "entry": "BoxCollider",
+      "isShape": true,
+      "layer": null,
+      "params": {
+       "center": [
+        "00000000",
+        "00000000",
+        "00000000"
+       ],
+       "size": [
+        "3f800000",
+        "3f800000",
+        "3f800000"
+       ]
+      },
+      "partSpace": {
+       "center": [
+        "c0000000",
+        "3f400000",
+        "00000000"
+       ],
+       "halfExtents": [
+        "3f800000",
+        "3fc00000",
+        "3f800000"
+       ],
+       "nodePosition": [
+        "c0000000",
+        "3f400000",
+        "00000000"
+       ],
+       "nodeRotation": [
+        "3f3504f3",
+        "00000000",
+        "00000000",
+        "3f3504f3"
+       ],
+       "nodeScale": [
+        "40000000",
+        "40400000",
+        "40000000"
+       ]
+      },
+      "path": "model/first/Side",
+      "tag": null,
+      "trigger": false
+     }
+    ],
+    "models": [
+     {
+      "name": "first",
+      "scale": [
+       1.0,
+       1.5,
+       1.0
+      ]
+     },
+     {
+      "name": "second",
+      "parent": "first/Arm",
+      "position": [
+       0.0,
+       0.25,
+       0.0
+      ],
+      "scale": [
+       0.5,
+       0.5,
+       0.5
+      ]
+     }
+    ],
+    "name": "two MODELs, parent path and name",
+    "rescaleFactor": "3f800000"
+   }
+  ],
+  "file": "mucollider/synthetic.mu",
+  "version": 5
+ }
+}

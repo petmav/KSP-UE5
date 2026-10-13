@@ -50,8 +50,73 @@ std::vector<ColliderProxy> DragCubeColliderProxy(const Part& part) {
     return {c};
 }
 
+namespace {
+
+// WP-mucol: volume, centroid and inertia (about the centroid, per unit mass) of one collider in PART space, rotated into the part axes.
+// Boxes use the same expressions as the box-only path below (so a mixed set containing boxes agrees with it).
+struct CollMass {
+    double volume = 0.0;
+    Vector3d centroid;
+    Mat3 inertia;  // per unit mass about the centroid, part axes
+};
+
+CollMass CollMassOf(const ColliderProxy& c) {
+    CollMass r;
+    const Mat3 R = Mat3::Rotation(QuaternionD(c.rotation));
+    Vector3d local;  // centroid in the collider frame
+    Mat3 I;          // about the centroid, collider axes
+    if (c.mass) {
+        r.volume = c.mass->volume;
+        local = c.mass->centroid;
+        for (int i = 0; i < 3; ++i)
+            for (int j = 0; j < 3; ++j) I.m[i][j] = c.mass->inertia[i][j];
+    } else if (c.kind == ShapeKind::Sphere) {
+        r.volume = 4.0 / 3.0 * 3.14159265358979323846 * static_cast<double>(c.radius) * c.radius * c.radius;
+        const double k = 0.4 * static_cast<double>(c.radius) * c.radius;
+        I.m[0][0] = I.m[1][1] = I.m[2][2] = k;
+    } else {
+        const Vector3d h(c.halfExtents);
+        r.volume = 8.0 * h.x * h.y * h.z;
+        const Vector3d d((h.y * h.y + h.z * h.z) / 3.0, (h.x * h.x + h.z * h.z) / 3.0, (h.x * h.x + h.y * h.y) / 3.0);
+        I.m[0][0] = d.x;
+        I.m[1][1] = d.y;
+        I.m[2][2] = d.z;
+    }
+    r.centroid = Vector3d(c.center) + R * local;
+    r.inertia = I.Rotated(R);
+    return r;
+}
+
+bool AllBoxes(const std::vector<ColliderProxy>& cs) {
+    for (const ColliderProxy& c : cs)
+        if (c.kind != ShapeKind::Box || c.mass) return false;
+    return true;
+}
+
+}  // namespace
+
 Vector3f ProxyInertiaPerUnitMass(const std::vector<ColliderProxy>& colliders) {
     if (colliders.empty()) return Vector3f(1.0f, 1.0f, 1.0f);
+    if (!AllBoxes(colliders)) {
+        double vol = 0.0;
+        Vector3d c;
+        std::vector<CollMass> ms;
+        for (const ColliderProxy& p : colliders) {
+            ms.push_back(CollMassOf(p));
+            if (!(ms.back().volume > 0.0)) { ms.pop_back(); continue; }
+            vol += ms.back().volume;
+            c += ms.back().centroid * ms.back().volume;
+        }
+        if (!(vol > 0.0)) return Vector3f(1.0f, 1.0f, 1.0f);
+        c = c * (1.0 / vol);
+        Mat3 I;
+        for (const CollMass& m : ms) {
+            const double w = m.volume / vol;
+            I += m.inertia * w;
+            I += Mat3::ParallelAxis(w, m.centroid - c);
+        }
+        return Vector3f(static_cast<float>(I.m[0][0]), static_cast<float>(I.m[1][1]), static_cast<float>(I.m[2][2]));
+    }
     if (colliders.size() == 1) {
         const Vector3f h = colliders.front().halfExtents;
         return Vector3f((h.y * h.y + h.z * h.z) / 3.0f, (h.x * h.x + h.z * h.z) / 3.0f, (h.x * h.x + h.y * h.y) / 3.0f);
@@ -272,7 +337,12 @@ void VesselPhysics::BuildClusters(const std::vector<PartPhysicsState>& states) {
             if (pass == 0 && options_.massOnly && options_.massOnly(*r.part)) continue;
             for (const ColliderProxy& box : r.colliders) {
                 CompoundChild ch;
-                ch.shape = ShapeDesc::Box(box.halfExtents);
+                switch (box.kind) {  // WP-mucol: the .mu collider kinds
+                    case ShapeKind::Sphere: ch.shape = ShapeDesc::Sphere(box.radius); break;
+                    case ShapeKind::Capsule: ch.shape = ShapeDesc::Capsule(box.halfHeight, box.radius); break;
+                    case ShapeKind::ConvexHull: ch.shape = ShapeDesc::ConvexHull(box.hull); break;
+                    default: ch.shape = ShapeDesc::Box(box.halfExtents); break;
+                }
                 ch.position = (r.localPos + r.rot0 * Vector3d(box.center)).ToVector3f();
                 ch.rotation = (r.rot0 * QuaternionD(box.rotation)).ToQuaternionf();
                 ch.userData = static_cast<uint32_t>(i);

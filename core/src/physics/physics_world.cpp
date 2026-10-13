@@ -23,6 +23,7 @@
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/Shape/OffsetCenterOfMassShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
@@ -213,6 +214,28 @@ JPH::Ref<JPH::Shape> MakeShape(const ShapeDesc& s) {
             return new JPH::SphereShape(s.radius);
         case ShapeDesc::Kind::Capsule:
             return new JPH::CapsuleShape(s.halfHeight, s.radius);
+        case ShapeDesc::Kind::ConvexHull: {
+            // WP-mucol: Unity's convex MeshCollider = the hull of the mesh vertices (PartReader.cs:233 forces convex). A hull Jolt
+            // cannot build (fewer than 4 non-coplanar points) falls back to the axis-aligned box of the points.
+            JPH::Array<JPH::Vec3> pts;
+            Vector3f lo(1e30f, 1e30f, 1e30f), hi(-1e30f, -1e30f, -1e30f);
+            if (s.hullPoints)
+                for (const Vector3f& p : *s.hullPoints) {
+                    pts.push_back(JPH::Vec3(p.x, p.y, p.z));
+                    lo = Vector3f(std::min(lo.x, p.x), std::min(lo.y, p.y), std::min(lo.z, p.z));
+                    hi = Vector3f(std::max(hi.x, p.x), std::max(hi.y, p.y), std::max(hi.z, p.z));
+                }
+            if (pts.size() >= 4) {
+                JPH::ConvexHullShapeSettings hs(pts, JPH::cDefaultConvexRadius * 0.0f);
+                JPH::ShapeSettings::ShapeResult r = hs.Create();
+                if (r.IsValid()) return r.Get();
+            }
+            if (pts.empty()) return new JPH::BoxShape(JPH::Vec3(0.05f, 0.05f, 0.05f), 0.01f);
+            // box of the points around their centre: wrap in an offset (RotatedTranslatedShape)
+            JPH::Vec3 h(std::max(0.5f * (hi.x - lo.x), 0.01f), std::max(0.5f * (hi.y - lo.y), 0.01f), std::max(0.5f * (hi.z - lo.z), 0.01f));
+            JPH::Ref<JPH::Shape> box = new JPH::BoxShape(h, std::min(0.01f, std::min(h.GetX(), std::min(h.GetY(), h.GetZ()))));
+            return new JPH::RotatedTranslatedShape(JPH::Vec3(0.5f * (lo.x + hi.x), 0.5f * (lo.y + hi.y), 0.5f * (lo.z + hi.z)), JPH::Quat::sIdentity(), box);
+        }
         case ShapeDesc::Kind::Box:
         default: {
             JPH::Vec3 h(s.halfExtents.x, s.halfExtents.y, s.halfExtents.z);
@@ -221,6 +244,35 @@ JPH::Ref<JPH::Shape> MakeShape(const ShapeDesc& s) {
         }
     }
 }
+
+}  // namespace
+
+HullMassProps HullMassProperties(const std::vector<Vector3f>& points) {
+    HullMassProps out;
+    if (points.size() < 4) return out;
+    // Jolt's allocator / factory must be registered while any Jolt object lives (no PhysicsWorld need exist)
+    struct Guard {
+        Guard() { JoltAcquire(); }
+        ~Guard() { JoltRelease(); }
+    } guard;
+    JPH::Array<JPH::Vec3> pts;
+    for (const Vector3f& p : points) pts.push_back(JPH::Vec3(p.x, p.y, p.z));
+    JPH::ConvexHullShapeSettings hs(pts, 0.0f);
+    JPH::ShapeSettings::ShapeResult r = hs.Create();
+    if (!r.IsValid()) return out;
+    const JPH::ConvexHullShape* shape = static_cast<const JPH::ConvexHullShape*>(r.Get().GetPtr());
+    const JPH::MassProperties mp = shape->GetMassProperties();
+    if (!(mp.mMass > 0.0f)) return out;
+    out.valid = true;
+    out.volume = static_cast<double>(mp.mMass) / static_cast<double>(shape->GetDensity());
+    const JPH::Vec3 c = shape->GetCenterOfMass();
+    out.centroid = Vector3d(c.GetX(), c.GetY(), c.GetZ());
+    for (int i = 0; i < 3; ++i)
+        for (int j = 0; j < 3; ++j) out.inertia[i][j] = static_cast<double>(mp.mInertia(i, j)) / static_cast<double>(mp.mMass);
+    return out;
+}
+
+namespace {
 
 // WP-20b: a child collider of a cluster compound. Boxes keep a small convex radius (at most half the thinnest half extent,
 // as the spike's part proxies: core/spikes/jolt/src/shapes.hpp) so thin proxies stay box-like.
