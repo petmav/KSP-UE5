@@ -6457,7 +6457,9 @@ KSP defaults, RAII), EventLog, KerbinScene (the real PQS), level clock. `tests/t
   with main: ctest **47 / 47 pass** (146 s), `kspcore_tests` (963 cases, 1,542,998 assertions) default order and `--order-by=rand -rs=11` /
   `-rs=27` all green. After the merge with main `ccf3ffc9` (incremental build): ctest **48 / 48 pass** (143 s; incl.
   `unit.random_order.{11,27,42}` and the 8 shards); `kspcore_tests` whole suite, default order and `--order-by=rand -rs=11` / `-rs=27`: **1,008 /
-  1,008 cases, 1,564,511 assertions each, all green**; the WP-20e cases 18 / 18, 295 assertions.
+  1,008 cases, 1,564,511 assertions each, all green**; the WP-20e cases 18 / 18, 295 assertions. Final tree (`f421c2b5`'s code), fresh (build
+  directory deleted, `--fresh`, dev tools on as `run_tests.ps1` builds them): configure 4.0 s, build 221.3 s, ctest 160.2 s, **48 / 48 pass**;
+  then the whole suite default order and `--order-by=rand -rs=11` / `-rs=27`: 1,008 / 1,008 cases, 1,564,511 assertions each, green.
 - g++ 13 (WSL) `-std=c++20 -Wall -Wextra -fsyntax-only` over every WP-20e translation unit and the touched ones (physics_world with the Jolt
   defines): no error, no warning.
 - `check_cites.py` exact (after the merge): 54 / 0. The reference JSON regenerates byte-identically (`python -I core/tools/wp20e/contact_reference.py`, seed 2005).
