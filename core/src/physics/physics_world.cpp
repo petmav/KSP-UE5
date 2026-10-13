@@ -771,6 +771,41 @@ void PhysicsWorld::SetStaticCollisions(bool enabled) {
 
 bool PhysicsWorld::StaticCollisions() const { return impl_->olp.staticOn; }
 
+// ---- WP-29c: the wheel suspension ray (RayCast with an ignore list and the sub-shape user data of the hit) ------------------------------
+PhysicsWorld::RayHitShape PhysicsWorld::RayCastIgnoring(const Vector3d& origin, const Vector3d& direction, double maxDistance, uint32_t layers,
+                                                        const std::vector<BodyId>& ignore) const {
+    RayHitShape out;
+    const double len = direction.magnitude();
+    if (!(len > 0.0) || !(maxDistance > 0.0)) return out;
+    const Vector3d dir = direction * (1.0 / len);
+    const JPH::RRayCast ray(ToRVec3(origin), JPH::Vec3(static_cast<float>(dir.x * maxDistance), static_cast<float>(dir.y * maxDistance),
+                                                       static_cast<float>(dir.z * maxDistance)));
+    JPH::RayCastSettings settings;
+    settings.SetBackFaceMode(JPH::EBackFaceMode::CollideWithBackFaces);
+    JPH::ClosestHitCollisionCollector<JPH::CastRayCollector> collector;
+    const MaskLayerFilter olf(layers);
+    JPH::IgnoreMultipleBodiesFilter bf;
+    bf.Reserve(static_cast<JPH::uint>(ignore.size()));
+    for (BodyId id : ignore) bf.IgnoreBody(JPH::BodyID(id));
+    impl_->system.GetNarrowPhaseQueryNoLock().CastRay(ray, settings, collector, {}, olf, bf);
+    if (!collector.HadHit()) return out;
+    const JPH::RayCastResult& h = collector.mHit;
+    out.hit = true;
+    out.body = h.mBodyID.GetIndexAndSequenceNumber();
+    out.distance = static_cast<double>(h.mFraction) * maxDistance;
+    out.point = origin + dir * out.distance;
+    JPH::BodyLockRead lock(impl_->system.GetBodyLockInterfaceNoLock(), h.mBodyID);
+    if (lock.Succeeded()) {
+        const JPH::Body& b = lock.GetBody();
+        out.userData = b.GetUserData();
+        out.subShapeUserData = static_cast<uint32_t>(b.GetShape()->GetSubShapeUserData(h.mSubShapeID2));
+        JPH::Vec3 n = b.GetWorldSpaceSurfaceNormal(h.mSubShapeID2, ray.GetPointOnRay(h.mFraction));
+        if (n.Dot(JPH::Vec3(static_cast<float>(dir.x), static_cast<float>(dir.y), static_cast<float>(dir.z))) > 0.0f) n = -n;
+        out.normal = Vector3d(n.GetX(), n.GetY(), n.GetZ());
+    }
+    return out;
+}
+
 uint64_t PhysicsWorld::StateHash() const {
     uint64_t h = 1469598103934665603ull;
     const JPH::BodyInterface& bi = impl_->Bi();

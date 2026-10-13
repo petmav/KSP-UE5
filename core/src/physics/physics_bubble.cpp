@@ -372,7 +372,10 @@ void PhysicsBubble::FrameUpdate() {
 }
 
 // seq 291 PhysicsFixedUpdate (Time.fixedDeltaTime: TimeWarp sets it during physical warp)
-void PhysicsBubble::PhysicsStep() { host_.Step(Time::fixedDeltaTime); }
+void PhysicsBubble::PhysicsStep() {
+    if (physicsStep) physicsStep(Time::fixedDeltaTime);  // WP-29c: the wheels' native step and physics-warp substeps
+    else host_.Step(Time::fixedDeltaTime);
+}
 
 void PhysicsBubble::Update() {
     FlightScene::Update();

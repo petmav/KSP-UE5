@@ -114,6 +114,9 @@ public:
     PartModuleForces& ModuleForces() { return moduleForces_; }
     // FloatingOrigin's PreciseUpdateQuadPositions after a rebase (the PQS host, WP-12): unset = nothing
     std::function<void()> preciseUpdateQuadPositions;
+    // WP-29c: replaces the physics step (seq 291) of one tick of `dt` seconds; unset: Host().Step(dt). The wheels' host
+    // (ksp/physics/vessel_wheels.hpp) puts its native suspension step and the physics-warp substeps here (each substep is a Host().Step).
+    std::function<void(float dt)> physicsStep;
 
     // ---- frames (see the header comment) -----------------------------------------------------------------------------------
     Vector3d FrameOriginWorld() const { return frameOriginWorld_; }
