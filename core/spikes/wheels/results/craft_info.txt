@@ -1,0 +1,60 @@
+bug-e: parts 26 (physical 18), vessel mass 1.287 t, rb mass sum 1.287 t, wheels 8, spawn terrain height 64.78 m, patch heights 55.64..64.79 m
+  lowest drag-cube boxes below the CoM (m): roverWheel2 -0.617, roverWheel2 -0.617, roverWheel2 -0.617, roverWheel2 -0.617, roverWheel2 -0.617, roverWheel2 -0.617,
+  [0] tyre bottom at full extension 0.617 m below the CoM (part origin 0.434 below)
+  [0] roverWheel2    type 1 rescale 1.00 r 0.157 (cfg 0.157) D 0.195 anchor 0.20 springRatio 24 damperRatio 1.0 distrib 1 maxLoad 8 | motor 1 T 0.17 resp 2.0 | brakes 1 T 0.34 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.050 | transform (body) -0.92 0.52 0.42
+  [1] tyre bottom at full extension 0.617 m below the CoM (part origin 0.434 below)
+  [1] roverWheel2    type 1 rescale 1.00 r 0.157 (cfg 0.157) D 0.195 anchor 0.20 springRatio 24 damperRatio 1.0 distrib 1 maxLoad 8 | motor 1 T 0.17 resp 2.0 | brakes 1 T 0.34 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.050 | transform (body) -0.92 0.10 0.42
+  [2] tyre bottom at full extension 0.617 m below the CoM (part origin 0.434 below)
+  [2] roverWheel2    type 1 rescale 1.00 r 0.157 (cfg 0.157) D 0.195 anchor 0.20 springRatio 24 damperRatio 1.0 distrib 1 maxLoad 8 | motor 1 T 0.17 resp 2.0 | brakes 1 T 0.34 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.050 | transform (body) -0.92 -0.75 0.42
+  [3] tyre bottom at full extension 0.617 m below the CoM (part origin 0.434 below)
+  [3] roverWheel2    type 1 rescale 1.00 r 0.157 (cfg 0.157) D 0.195 anchor 0.20 springRatio 24 damperRatio 1.0 distrib 1 maxLoad 8 | motor 1 T 0.17 resp 2.0 | brakes 1 T 0.34 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.050 | transform (body) -0.92 -0.32 0.42
+  [4] tyre bottom at full extension 0.617 m below the CoM (part origin 0.434 below)
+  [4] roverWheel2    type 1 rescale 1.00 r 0.157 (cfg 0.157) D 0.195 anchor 0.20 springRatio 24 damperRatio 1.0 distrib 1 maxLoad 8 | motor 1 T 0.17 resp 2.0 | brakes 1 T 0.34 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.050 | transform (body) 0.92 0.52 0.42
+  [5] tyre bottom at full extension 0.617 m below the CoM (part origin 0.434 below)
+  [5] roverWheel2    type 1 rescale 1.00 r 0.157 (cfg 0.157) D 0.195 anchor 0.20 springRatio 24 damperRatio 1.0 distrib 1 maxLoad 8 | motor 1 T 0.17 resp 2.0 | brakes 1 T 0.34 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.050 | transform (body) 0.92 0.10 0.42
+  [6] tyre bottom at full extension 0.617 m below the CoM (part origin 0.434 below)
+  [6] roverWheel2    type 1 rescale 1.00 r 0.157 (cfg 0.157) D 0.195 anchor 0.20 springRatio 24 damperRatio 1.0 distrib 1 maxLoad 8 | motor 1 T 0.17 resp 2.0 | brakes 1 T 0.34 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.050 | transform (body) 0.92 -0.75 0.42
+  [7] tyre bottom at full extension 0.617 m below the CoM (part origin 0.434 below)
+  [7] roverWheel2    type 1 rescale 1.00 r 0.157 (cfg 0.157) D 0.195 anchor 0.20 springRatio 24 damperRatio 1.0 distrib 1 maxLoad 8 | motor 1 T 0.17 resp 2.0 | brakes 1 T 0.34 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.050 | transform (body) 0.92 -0.32 0.42
+prospector: parts 19 (physical 16), vessel mass 1.249 t, rb mass sum 1.249 t, wheels 4, spawn terrain height 64.78 m, patch heights 55.64..64.79 m
+  lowest drag-cube boxes below the CoM (m): roverWheel1 -0.815, roverWheel1 -0.815, roverWheel1 -0.815, roverWheel1 -0.815, miniFuelTank -0.366, Decoupler.0 -0.366,
+  [0] tyre bottom at full extension 0.815 m below the CoM (part origin 0.454 below)
+  [0] roverWheel1    type 1 rescale 1.25 r 0.472 (cfg 0.378) D 0.250 anchor 0.50 springRatio 28 damperRatio 2.0 distrib 1 maxLoad 10 | motor 1 T 1.00 resp 2.0 | brakes 1 T 2.00 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.075 | transform (body) -0.59 0.79 0.22
+  [1] tyre bottom at full extension 0.815 m below the CoM (part origin 0.454 below)
+  [1] roverWheel1    type 1 rescale 1.25 r 0.472 (cfg 0.378) D 0.250 anchor 0.50 springRatio 28 damperRatio 2.0 distrib 1 maxLoad 10 | motor 1 T 1.00 resp 2.0 | brakes 1 T 2.00 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.075 | transform (body) 0.60 0.79 0.22
+  [2] tyre bottom at full extension 0.815 m below the CoM (part origin 0.454 below)
+  [2] roverWheel1    type 1 rescale 1.25 r 0.472 (cfg 0.378) D 0.250 anchor 0.50 springRatio 28 damperRatio 2.0 distrib 1 maxLoad 10 | motor 1 T 1.00 resp 2.0 | brakes 1 T 2.00 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.075 | transform (body) -0.59 -0.41 0.22
+  [3] tyre bottom at full extension 0.815 m below the CoM (part origin 0.454 below)
+  [3] roverWheel1    type 1 rescale 1.25 r 0.472 (cfg 0.378) D 0.250 anchor 0.50 springRatio 28 damperRatio 2.0 distrib 1 maxLoad 10 | motor 1 T 1.00 resp 2.0 | brakes 1 T 2.00 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.075 | transform (body) 0.60 -0.41 0.22
+twostage: parts 45 (physical 35), vessel mass 11.222 t, rb mass sum 11.222 t, wheels 4, spawn terrain height 64.78 m, patch heights 55.64..64.79 m
+  lowest drag-cube boxes below the CoM (m): telescopicLadderBay -1.686, liquidEngine3.v2 -1.568, liquidEngine3.v2 -1.414, liquidEngine3.v2 -1.414, liquidEngine3.v2 -1.414, liquidEngine3.v2 -1.414,
+  [0] tyre bottom at full extension 2.402 m below the CoM (part origin 0.493 below)
+  [0] landingLeg1-2  type 2 rescale 1.25 r 0.150 (cfg 0.120) D 1.188 anchor 1.00 springRatio 33 damperRatio 2.2 distrib 1 maxLoad 40 | motor 0 T 0.00 resp 3.0 | brakes 0 T 500.00 resp 1000.0 tweak 50 | lock 1 500 | minDown 10.0 fm-> adh 0.10 peak 1.00 lim 1.00 | rbMass 0.100 | transform (body) 2.55 -1.06 -2.54
+  [1] tyre bottom at full extension 2.402 m below the CoM (part origin 0.493 below)
+  [1] landingLeg1-2  type 2 rescale 1.25 r 0.150 (cfg 0.120) D 1.188 anchor 1.00 springRatio 33 damperRatio 2.2 distrib 1 maxLoad 40 | motor 0 T 0.00 resp 3.0 | brakes 0 T 500.00 resp 1000.0 tweak 50 | lock 1 500 | minDown 10.0 fm-> adh 0.10 peak 1.00 lim 1.00 | rbMass 0.100 | transform (body) -2.54 -1.06 -2.54
+  [2] tyre bottom at full extension 2.402 m below the CoM (part origin 0.493 below)
+  [2] landingLeg1-2  type 2 rescale 1.25 r 0.150 (cfg 0.120) D 1.188 anchor 1.00 springRatio 33 damperRatio 2.2 distrib 1 maxLoad 40 | motor 0 T 0.00 resp 3.0 | brakes 0 T 500.00 resp 1000.0 tweak 50 | lock 1 500 | minDown 10.0 fm-> adh 0.10 peak 1.00 lim 1.00 | rbMass 0.100 | transform (body) -2.54 -1.06 2.55
+  [3] tyre bottom at full extension 2.402 m below the CoM (part origin 0.493 below)
+  [3] landingLeg1-2  type 2 rescale 1.25 r 0.150 (cfg 0.120) D 1.188 anchor 1.00 springRatio 33 damperRatio 2.2 distrib 1 maxLoad 40 | motor 0 T 0.00 resp 3.0 | brakes 0 T 500.00 resp 1000.0 tweak 50 | lock 1 500 | minDown 10.0 fm-> adh 0.10 peak 1.00 lim 1.00 | rbMass 0.100 | transform (body) 2.55 -1.06 2.55
+crawler: parts 115 (physical 46), vessel mass 12.405 t, rb mass sum 12.405 t, wheels 10, spawn terrain height 64.78 m, patch heights 55.64..64.79 m
+  lowest drag-cube boxes below the CoM (m): telescopicLadder -2.039, telescopicLadder -2.039, wheelMed -1.780, wheelMed -1.780, wheelMed -1.780, wheelMed -1.780,
+  [0] tyre bottom at full extension 1.780 m below the CoM (part origin 0.999 below)
+  [0] wheelMed       type 1 rescale 1.00 r 0.580 (cfg 0.580) D 0.125 anchor 0.50 springRatio 40 damperRatio 1.0 distrib 1 maxLoad 30 | motor 1 T 2.00 resp 2.0 | brakes 1 T 3.00 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.105 | transform (body) -1.40 -2.76 1.14
+  [1] tyre bottom at full extension 1.780 m below the CoM (part origin 0.999 below)
+  [1] wheelMed       type 1 rescale 1.00 r 0.580 (cfg 0.580) D 0.125 anchor 0.50 springRatio 40 damperRatio 1.0 distrib 1 maxLoad 30 | motor 1 T 2.00 resp 2.0 | brakes 1 T 3.00 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.105 | transform (body) -1.40 -1.56 1.14
+  [2] tyre bottom at full extension 1.780 m below the CoM (part origin 0.999 below)
+  [2] wheelMed       type 1 rescale 1.00 r 0.580 (cfg 0.580) D 0.125 anchor 0.50 springRatio 40 damperRatio 1.0 distrib 1 maxLoad 30 | motor 1 T 2.00 resp 2.0 | brakes 1 T 3.00 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.105 | transform (body) -1.40 2.59 1.14
+  [3] tyre bottom at full extension 1.780 m below the CoM (part origin 0.999 below)
+  [3] wheelMed       type 1 rescale 1.00 r 0.580 (cfg 0.580) D 0.125 anchor 0.50 springRatio 40 damperRatio 1.0 distrib 1 maxLoad 30 | motor 1 T 2.00 resp 2.0 | brakes 1 T 3.00 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.105 | transform (body) -1.40 1.39 1.14
+  [4] tyre bottom at full extension 1.780 m below the CoM (part origin 0.999 below)
+  [4] wheelMed       type 1 rescale 1.00 r 0.580 (cfg 0.580) D 0.125 anchor 0.50 springRatio 40 damperRatio 1.0 distrib 1 maxLoad 30 | motor 1 T 2.00 resp 2.0 | brakes 1 T 3.00 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.105 | transform (body) -1.40 0.19 1.14
+  [5] tyre bottom at full extension 1.780 m below the CoM (part origin 0.999 below)
+  [5] wheelMed       type 1 rescale 1.00 r 0.580 (cfg 0.580) D 0.125 anchor 0.50 springRatio 40 damperRatio 1.0 distrib 1 maxLoad 30 | motor 1 T 2.00 resp 2.0 | brakes 1 T 3.00 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.105 | transform (body) 1.40 -2.76 1.14
+  [6] tyre bottom at full extension 1.780 m below the CoM (part origin 0.999 below)
+  [6] wheelMed       type 1 rescale 1.00 r 0.580 (cfg 0.580) D 0.125 anchor 0.50 springRatio 40 damperRatio 1.0 distrib 1 maxLoad 30 | motor 1 T 2.00 resp 2.0 | brakes 1 T 3.00 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.105 | transform (body) 1.40 -1.56 1.14
+  [7] tyre bottom at full extension 1.780 m below the CoM (part origin 0.999 below)
+  [7] wheelMed       type 1 rescale 1.00 r 0.580 (cfg 0.580) D 0.125 anchor 0.50 springRatio 40 damperRatio 1.0 distrib 1 maxLoad 30 | motor 1 T 2.00 resp 2.0 | brakes 1 T 3.00 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.105 | transform (body) 1.40 2.59 1.14
+  [8] tyre bottom at full extension 1.780 m below the CoM (part origin 0.999 below)
+  [8] wheelMed       type 1 rescale 1.00 r 0.580 (cfg 0.580) D 0.125 anchor 0.50 springRatio 40 damperRatio 1.0 distrib 1 maxLoad 30 | motor 1 T 2.00 resp 2.0 | brakes 1 T 3.00 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.105 | transform (body) 1.40 1.39 1.14
+  [9] tyre bottom at full extension 1.780 m below the CoM (part origin 0.999 below)
+  [9] wheelMed       type 1 rescale 1.00 r 0.580 (cfg 0.580) D 0.125 anchor 0.50 springRatio 40 damperRatio 1.0 distrib 1 maxLoad 30 | motor 1 T 2.00 resp 2.0 | brakes 1 T 3.00 resp 1.0 tweak 100 | lock 0 1000 | minDown 0.5 fm-> adh 0.60 peak 3.00 lim 2.60 | rbMass 0.105 | transform (body) 1.40 0.19 1.14
