@@ -190,15 +190,15 @@ struct PadScene {
                 const int cx = qx * (V - 1) + (V - 1) / 2, cz = qz * (V - 1) + (V - 1) / 2;
                 const Vector3d centre = grid[static_cast<size_t>(cz) * G + cx];
                 std::vector<Vector3f> verts;
-                std::vector<uint32_t> tris;
+                std::vector<int> tris;
                 for (int z = 0; z < V; z++)
                     for (int x = 0; x < V; x++) verts.push_back((grid[static_cast<size_t>(qz * (V - 1) + z) * G + (qx * (V - 1) + x)] - centre).ToVector3f());
                 for (int z = 0; z < V - 1; z++)
                     for (int x = 0; x < V - 1; x++) {
-                        const uint32_t a = static_cast<uint32_t>(z * V + x), b = a + 1, c = a + 1 + static_cast<uint32_t>(V), d = a + static_cast<uint32_t>(V);
+                        const int a = z * V + x, b = a + 1, c = a + 1 + V, d = a + V;
                         tris.insert(tris.end(), {a, c, b, a, d, c});
                     }
-                s.world.AddStaticMesh(s.bubble.StaticPhysicsFromWorld(centre), verts, tris, 0.6f);
+                s.world.AddStaticMesh(static_cast<uint64_t>(qz) * static_cast<uint64_t>(Q) + static_cast<uint64_t>(qx), s.bubble.StaticPhysicsFromWorld(centre), verts, tris, 0.6f);
             }
         s.world.OptimizeBroadPhase();
     }
