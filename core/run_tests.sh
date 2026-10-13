@@ -27,6 +27,7 @@ cmake --build --preset "$preset"
 t2=$SECONDS
 if [ $buildonly = 1 ]; then echo "configure $((t1-t0))s, build $((t2-t1))s"; exit 0; fi
 targs=(--preset "$preset"); [ -n "$filter" ] && targs+=(-R "$filter")
+targs+=(-j "$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)")
 rc=0; ctest "${targs[@]}" || rc=$?
 echo "configure $((t1-t0))s, build $((t2-t1))s, test $((SECONDS-t2))s"
 [ $rc = 0 ] || { echo "tests failed ($rc)"; exit $rc; }

@@ -6,6 +6,7 @@
 #include "ksp/physics/vessel_physics.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <numeric>
 
@@ -17,6 +18,7 @@
 #include "ksp/physics/physics_globals.hpp"
 #include "ksp/physics/reference_frame.hpp"
 #include "ksp/unity/mathf.hpp"
+#include "vessel_physics_internal.hpp"
 
 namespace ksp::physics {
 
@@ -24,85 +26,9 @@ constexpr int kFull = 0;  // Part.PhysicalSignificance.FULL
 
 namespace {
 
-// ---- 3x3 double algebra (engine glue) ------------------------------------------------------------------------------------
-struct Mat3 {
-    double m[3][3] = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
-    static Mat3 Zero() { return {}; }
-    static Mat3 Rotation(const QuaternionD& q) {
-        const double x = q.x, y = q.y, z = q.z, w = q.w;
-        Mat3 r;
-        r.m[0][0] = 1.0 - 2.0 * (y * y + z * z);
-        r.m[0][1] = 2.0 * (x * y - z * w);
-        r.m[0][2] = 2.0 * (x * z + y * w);
-        r.m[1][0] = 2.0 * (x * y + z * w);
-        r.m[1][1] = 1.0 - 2.0 * (x * x + z * z);
-        r.m[1][2] = 2.0 * (y * z - x * w);
-        r.m[2][0] = 2.0 * (x * z - y * w);
-        r.m[2][1] = 2.0 * (y * z + x * w);
-        r.m[2][2] = 1.0 - 2.0 * (x * x + y * y);
-        return r;
-    }
-    // R diag(d) R^T
-    static Mat3 RotatedDiagonal(const Mat3& R, const Vector3d& d) {
-        Mat3 o;
-        for (int i = 0; i < 3; ++i)
-            for (int j = 0; j < 3; ++j) o.m[i][j] = R.m[i][0] * d.x * R.m[j][0] + R.m[i][1] * d.y * R.m[j][1] + R.m[i][2] * d.z * R.m[j][2];
-        return o;
-    }
-    // m (|r|^2 E - r r^T): the parallel-axis term
-    static Mat3 ParallelAxis(double mass, const Vector3d& r) {
-        const double v[3] = {r.x, r.y, r.z};
-        const double r2 = r.x * r.x + r.y * r.y + r.z * r.z;
-        Mat3 o;
-        for (int i = 0; i < 3; ++i)
-            for (int j = 0; j < 3; ++j) o.m[i][j] = mass * ((i == j ? r2 : 0.0) - v[i] * v[j]);
-        return o;
-    }
-    Mat3& operator+=(const Mat3& b) {
-        for (int i = 0; i < 3; ++i)
-            for (int j = 0; j < 3; ++j) m[i][j] += b.m[i][j];
-        return *this;
-    }
-    Mat3 operator*(double s) const {
-        Mat3 o;
-        for (int i = 0; i < 3; ++i)
-            for (int j = 0; j < 3; ++j) o.m[i][j] = m[i][j] * s;
-        return o;
-    }
-    Vector3d operator*(const Vector3d& v) const {
-        return {m[0][0] * v.x + m[0][1] * v.y + m[0][2] * v.z, m[1][0] * v.x + m[1][1] * v.y + m[1][2] * v.z,
-                m[2][0] * v.x + m[2][1] * v.y + m[2][2] * v.z};
-    }
-    // R A R^T
-    Mat3 Rotated(const Mat3& R) const {
-        Mat3 t;
-        for (int i = 0; i < 3; ++i)
-            for (int j = 0; j < 3; ++j) t.m[i][j] = m[i][0] * R.m[j][0] + m[i][1] * R.m[j][1] + m[i][2] * R.m[j][2];  // A R^T
-        Mat3 o;
-        for (int i = 0; i < 3; ++i)
-            for (int j = 0; j < 3; ++j) o.m[i][j] = R.m[i][0] * t.m[0][j] + R.m[i][1] * t.m[1][j] + R.m[i][2] * t.m[2][j];
-        return o;
-    }
-    // A^-1 b for a symmetric positive (semi)definite A (cofactor inverse); 0 when A is singular
-    Vector3d Solve(const Vector3d& b) const {
-        const double a = m[0][0], bb = m[0][1], c = m[0][2], d = m[1][0], e = m[1][1], f = m[1][2], g = m[2][0], h = m[2][1], k = m[2][2];
-        const double A = e * k - f * h, B = -(d * k - f * g), C = d * h - e * g;
-        const double det = a * A + bb * B + c * C;
-        if (!(std::fabs(det) > 0.0)) return {};
-        const double D = -(bb * k - c * h), E = a * k - c * g, F = -(a * h - bb * g);
-        const double G = bb * f - c * e, H = -(a * f - c * d), K = a * e - bb * d;
-        const double inv = 1.0 / det;
-        return {(A * b.x + D * b.y + G * b.z) * inv, (B * b.x + E * b.y + H * b.z) * inv, (C * b.x + F * b.y + K * b.z) * inv};
-    }
-};
-
-Vector3d Cross(const Vector3d& a, const Vector3d& b) { return Vector3d::Cross(a, b); }
-
-QuaternionD Normalized(const QuaternionD& q) {
-    const double n = std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
-    if (n == 1.0 || !(n > 0.0)) return q;
-    return {q.x / n, q.y / n, q.z / n, q.w / n};
-}
+using detail::Cross;
+using detail::Mat3;
+using detail::Normalized;
 
 uint32_t NextGroupId() {
     static uint32_t next = 0x40000000u;  // above typical persistent ids; only used when a vessel has none
@@ -149,43 +75,6 @@ Vector3f ProxyInertiaPerUnitMass(const std::vector<ColliderProxy>& colliders) {
     return Vector3f(static_cast<float>(I.m[0][0]), static_cast<float>(I.m[1][1]), static_cast<float>(I.m[2][2]));
 }
 
-// ===================================================================================== VesselPhysics: records
-
-struct VesselPhysics::PartRec {
-    Part* part = nullptr;
-    int owner = -1;               // RigidBodyPart (Part.cs:1184) index, -1 without one
-    bool rb = false;              // part.rb != null
-    float rbMass = 0.0f;          // rb.mass
-    Vector3f inertiaPerUnit;      // Part.inertiaTensor (per unit mass)
-    Vector3f inertia;             // rb.inertiaTensor
-    float angularDrag = 0.05f;    // rb.angularDrag
-    bool sameVesselCollision = false;
-    std::vector<ColliderProxy> colliders;
-    int cluster = -1;
-    // reference pose at the cluster's creation (physics frame; the body axes are the physics axes then)
-    Vector3d pos0, com0;
-    QuaternionD rot0 = QuaternionD::identity();
-    Vector3d localPos, localCom;  // pos0 / com0 relative to the body origin, body space
-    Mat3 ownBody;                 // rot0 diag(inertia) rot0^T: the part's own tensor in body space
-    // the pose now (refreshed after every step / rebuild: RefreshPartPoses)
-    Vector3d posNow, comNow;
-    QuaternionD rotNow = QuaternionD::identity();
-};
-
-struct VesselPhysics::ClusterRec {
-    BodyId body = kInvalidBody;
-    std::vector<int> parts;  // vessel part order
-    Vector3d origin0;        // body origin at creation (physics frame)
-    double mass = 0.0;
-    Vector3d comBody;        // centre of mass relative to the origin, body space (0 at creation)
-    Mat3 inertia;            // about the centre of mass, body axes
-    // cached after each step
-    Vector3d origin, com, v, w;
-    QuaternionD q = QuaternionD::identity();
-    // accumulated this tick: force and moment about `com`
-    Vector3d force, moment;
-};
-
 // ===================================================================================== construction
 
 namespace {
@@ -224,20 +113,37 @@ VesselPhysics::VesselPhysics(PhysicsWorld& world, Vessel& vessel, const std::vec
 
 VesselPhysics::~VesselPhysics() { DestroyBodies(); }
 
+// PartJoint data measured in the vessel frame (relative poses only): the binding's parts by their orgPos / orgRot
+std::function<const PartTransform&(const Part&)> VesselPhysics::VesselFrameTransforms() {
+    return [this](const Part& p) -> const PartTransform& {
+        const int k = index_.Find(&p);
+        return k >= 0 ? parts_[static_cast<size_t>(k)]->vesselFrame : p.partTransform;
+    };
+}
+
 void VesselPhysics::Init(const std::vector<PartPhysicsState>& states, uint32_t group) {
     group_ = group != 0 ? group : (vessel_->persistentId != 0 ? vessel_->persistentId : NextGroupId());
     vessel_->UpdateMassStats();  // FlightIntegrator.cs:452 (physicsMass of every part, the physicsless children folded in)
+    if (options_.loadSolve != LoadSolve::None) world_->SetStaticContactTracking(true);  // the ground supports of the load solve
     IndexParts();
-    // PartJoint data measured in the vessel frame (relative poses only)
-    std::vector<PartTransform> vf(parts_.size());
-    for (size_t i = 0; i < parts_.size(); ++i) vf[i] = VesselFrameTransform(*parts_[i]->part);
-    joints_ = BuildPartJoints(*vessel_, options_.jointGlobals, [this, &vf](const Part& p) -> const PartTransform& {
-        const int k = index_.Find(&p);
-        return k >= 0 ? vf[static_cast<size_t>(k)] : p.partTransform;
-    });
+    // the attach joints (Part.Start -> CreateAttachJoint) and the struts (CModuleStrut.OnTargetSet) now; the autostruts are secured by
+    // the SecureAutoStruts coroutine after the next physics step (CycleAutoStrut on Part.Unpack -> ResetJoints, Part.cs:3824 / :8043)
+    joints_ = BuildAttachJoints(*vessel_, options_.jointGlobals, VesselFrameTransforms());
+    const std::vector<PartJointSpec> struts = BuildStrutJoints(*vessel_, options_.jointGlobals, VesselFrameTransforms());
+    joints_.insert(joints_.end(), struts.begin(), struts.end());
+    autoStrutBegin_ = joints_.size();
     cut_.assign(joints_.size(), false);
+    subAlive_.assign(joints_.size(), 0);
+    for (size_t j = 0; j < joints_.size(); ++j) subAlive_[j] = static_cast<uint8_t>((1u << joints_[j].internalJoints) - 1u);
+    stepValid_ = false;
+    structureDirty_ = true;
+    breaks_.clear();
+    jointLoads_.assign(joints_.size(), JointLoad{});
     BuildClusters(states);
     SyncPartTransforms();
+    autoStrutCountdown_ = 0;
+    if (options_.autoStrutDelaySteps <= 0) SecureAutoStruts();
+    else autoStrutCountdown_ = options_.autoStrutDelaySteps;
 }
 
 void VesselPhysics::IndexParts() {
@@ -264,9 +170,12 @@ void VesselPhysics::IndexParts() {
         r.angularDrag = options_.defaultAngularDrag;
         r.sameVesselCollision = p.fields.sameVesselCollision;
         if (!r.sameVesselCollision) sameVesselCollisionAll_ = false;
+        r.vesselFrame = VesselFrameTransform(p);
     }
     partForce_.assign(n, Vector3d());
     partMoment_.assign(n, Vector3d());
+    stepForce_.assign(n, Vector3d());
+    stepMoment_.assign(n, Vector3d());
 }
 
 namespace {
@@ -388,13 +297,25 @@ void VesselPhysics::BuildClusters(const std::vector<PartPhysicsState>& states) {
         c.w = world_->GetAngularVelocity(c.body);
     }
     RefreshPartPoses();
-    // ---- inter-cluster welds: one fixed constraint per pair of clusters joined by a live joint (articulation points, and struts /
-    // autostruts between clusters), at the joint's anchor centroid
+    clusterVBefore_.assign(clusters_.size(), Vector3d());
+    clusterWBefore_.assign(clusters_.size(), Vector3d());
+    structureDirty_ = true;
+    stepValid_ = false;
+    welds_.clear();
     constraints_.clear();
+    RebuildWelds();
+}
+
+// The inter-cluster welds: one fixed constraint per pair of clusters joined by a live joint (articulation points, and struts / autostruts
+// between clusters), at the joint's anchor centroid as the parts stand now. Removed and re-created whenever the live joints change.
+void VesselPhysics::RebuildWelds() {
+    for (ConstraintId id : constraints_) world_->RemoveConstraint(id);
+    constraints_.clear();
+    welds_.clear();
     std::vector<std::pair<int, int>> linked;
     for (size_t j = 0; j < joints_.size(); ++j) {
         const PartJointSpec& js = joints_[j];
-        if (cut_[j]) continue;
+        if (cut_[j] || subAlive_[j] == 0) continue;
         const int a = index_.Find(js.hostBody), b = index_.Find(js.targetBody), ch = index_.Find(js.child);
         if (a < 0 || b < 0 || ch < 0) continue;
         const int ca = parts_[static_cast<size_t>(a)]->cluster, cb = parts_[static_cast<size_t>(b)]->cluster;
@@ -407,15 +328,24 @@ void VesselPhysics::BuildClusters(const std::vector<PartPhysicsState>& states) {
         for (int k = 0; k < js.internalJoints; ++k) anchor += Vector3d(js.anchors[static_cast<size_t>(k)]);
         anchor = anchor * (1.0 / static_cast<double>(std::max(1, js.internalJoints)));
         const PartRec& cr = *parts_[static_cast<size_t>(ch)];
-        const Vector3d point = cr.pos0 + cr.rot0 * anchor;
-        const ConstraintId id = world_->CreateFixedConstraint(clusters_[static_cast<size_t>(ca)].body, clusters_[static_cast<size_t>(cb)].body, point);
-        if (id != kInvalidConstraint) constraints_.push_back(id);
+        const Vector3d point = cr.posNow + cr.rotNow * anchor;
+        const ClusterRec& A = clusters_[static_cast<size_t>(ca)];
+        const ConstraintId id = world_->CreateFixedConstraint(A.body, clusters_[static_cast<size_t>(cb)].body, point);
+        if (id == kInvalidConstraint) continue;
+        constraints_.push_back(id);
+        Weld w;
+        w.id = id;
+        w.a = ca;
+        w.b = cb;
+        w.pointBodyA = QuaternionD::Inverse(A.q) * (point - A.origin);
+        welds_.push_back(w);
     }
 }
 
 void VesselPhysics::DestroyBodies() {
     for (ConstraintId id : constraints_) world_->RemoveConstraint(id);
     constraints_.clear();
+    welds_.clear();
     for (ClusterRec& c : clusters_)
         if (c.body != kInvalidBody) {
             world_->RemoveBody(c.body);
@@ -429,6 +359,7 @@ Vector3d VesselPhysics::WorldFromPhysics(const Vector3d& p) const { return frame
 Vector3d VesselPhysics::PhysicsFromWorld(const Vector3d& w) const { return ReferenceFrame::PhysicsPosition(w - frameOriginWorld); }
 
 int VesselPhysics::PartIndex(const Part& part) const { return index_.Find(&part); }
+bool VesselPhysics::PartHasRigidbody(size_t index) const { return index < parts_.size() && parts_[index]->rb; }
 
 int VesselPhysics::ClusterOf(const Part& part) const {
     const int i = PartIndex(part);
@@ -544,7 +475,7 @@ void VesselPhysics::SyncPartTransforms() {
         t.rotation = PartRotationNow(static_cast<int>(i)).ToQuaternionf();
     }
     // the Vessel component sits on the root part's GameObject: vessel.transform == rootPart.transform
-    if (vessel_->loaded && vessel_->rootPart != nullptr) {
+    if (vessel_ != nullptr && vessel_->loaded && vessel_->rootPart != nullptr) {
         vessel_->vesselTransform.position = vessel_->rootPart->partTransform.position;
         vessel_->vesselTransform.rotation = vessel_->rootPart->partTransform.rotation;
     }
@@ -557,6 +488,7 @@ void VesselPhysics::SyncPartTransforms() {
 // at the part's centre of mass, rb.angularVelocity the cluster's (all parts of a rigid cluster share it).
 VesselPhysicsState VesselPhysics::ReadState() const {
     VesselPhysicsState out;
+    if (vessel_ == nullptr) return out;
     PartTransform& referenceTransform = vessel_->ReferenceTransform();
     const QuaternionD quaternionD = QuaternionD::Inverse(QuaternionD(referenceTransform.rotation));
     Vector3d zero, zero2, zero3;
@@ -764,6 +696,7 @@ void VesselPhysics::AddUniformAcceleration(const Vector3d& acceleration) { unifo
 // FlightIntegrator.cs:715 Integrate(part) (to :745), the force half (UpdateAerodynamics is WP-20d's), recursion from the root over the
 // attached children in child order
 void VesselPhysics::IntegratePartBuffers(const Vector3d& integrationAccel) {
+    if (vessel_ == nullptr) return;
     UpdateMassProperties();
     bool any = false;
     for (const auto& r : parts_) any = any || r->rb;
@@ -852,10 +785,21 @@ size_t VesselPhysics::UpdateMassProperties() {
 // m r x v of a part is not damped by angular drag in KSP either).
 void VesselPhysics::Flush(float dt) {
     const double h = static_cast<double>(dt);
-    for (ClusterRec& c : clusters_) {
+    // WP-20c: the step the load solve of AfterStep explains: the part forces of this tick (kept), the velocities before it
+    const bool loads = options_.loadSolve != LoadSolve::None;
+    if (loads) {
+        stepForce_.swap(partForce_);
+        stepMoment_.swap(partMoment_);
+    }
+    for (size_t ci = 0; ci < clusters_.size(); ++ci) {
+        ClusterRec& c = clusters_[ci];
         if (c.body == kInvalidBody) {
             c.force = c.moment = Vector3d();
             continue;
+        }
+        if (loads) {
+            clusterVBefore_[ci] = world_->GetLinearVelocity(c.body);
+            clusterWBefore_[ci] = world_->GetAngularVelocity(c.body);
         }
         Vector3d force = c.force + uniformAccel_ * c.mass;
         Vector3d torque = c.moment;
@@ -874,7 +818,9 @@ void VesselPhysics::Flush(float dt) {
                 const PartRec& r = *parts_[static_cast<size_t>(i)];
                 if (!r.rb || !(r.angularDrag > 0.0f)) continue;
                 const double f = std::max(0.0, 1.0 - h * static_cast<double>(r.angularDrag));
-                tb += (r.ownBody * wb) * (-(1.0 - f) / h);
+                const Vector3d ti = (r.ownBody * wb) * (-(1.0 - f) / h);
+                tb += ti;
+                if (loads) stepMoment_[static_cast<size_t>(i)] += R * ti;  // the drag acts on each part's own body
             }
             torque += R * tb;
         }
@@ -882,14 +828,26 @@ void VesselPhysics::Flush(float dt) {
         if (!torque.IsZero()) world_->AddTorque(c.body, torque);
         c.force = c.moment = Vector3d();
     }
+    if (loads) {
+        stepAccel_ = uniformAccel_;
+        stepDt_ = dt;
+        stepValid_ = dt > 0.0f;
+    }
     uniformAccel_ = Vector3d();
     std::fill(partForce_.begin(), partForce_.end(), Vector3d());
     std::fill(partMoment_.begin(), partMoment_.end(), Vector3d());
 }
 
+// After the world step: the cluster states and part transforms, then (WP-20c) the structural loads of the step and the sub-joints over
+// capacity, then the autostrut countdown (SecureAutoStruts resumes after the fixed update, Part.cs:8067).
 void VesselPhysics::AfterStep() {
     CacheClusterStates();
     SyncPartTransforms();
+    breaks_.clear();
+    lastSolve_ = LoadSolve::None;
+    if (stepValid_ && options_.loadSolve != LoadSolve::None) ComputeLoads();
+    stepValid_ = false;
+    if (autoStrutCountdown_ > 0 && --autoStrutCountdown_ == 0) SecureAutoStruts();
 }
 
 // ===================================================================================== structural seams

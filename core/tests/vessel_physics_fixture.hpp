@@ -245,16 +245,17 @@ inline void AddTerrainPatch(World& w, PhysicsWorld& world, const PadFrame& f, in
             const int cx = qx * (V - 1) + (V - 1) / 2, cz = qz * (V - 1) + (V - 1) / 2;
             const Vector3d centre = grid[static_cast<size_t>(cz) * G + cx];
             std::vector<Vector3f> verts;
-            std::vector<uint32_t> tris;
+            std::vector<int> tris;
             for (int z = 0; z < V; z++)
                 for (int x = 0; x < V; x++) verts.push_back((grid[static_cast<size_t>(qz * (V - 1) + z) * G + (qx * (V - 1) + x)] - centre).ToVector3f());
             for (int z = 0; z < V - 1; z++)
                 for (int x = 0; x < V - 1; x++) {
-                    const uint32_t a = static_cast<uint32_t>(z * V + x), b = a + 1, c = a + 1 + static_cast<uint32_t>(V), d = a + static_cast<uint32_t>(V);
+                    const int a = z * V + x, b = a + 1, c = a + 1 + V, d = a + V;
                     // winding: normals pointing away from the body centre (the spike's Triangle(a, c, b), Triangle(a, d, c))
                     tris.insert(tris.end(), {a, c, b, a, d, c});
                 }
-            world.AddStaticMesh(centre, verts, tris, 0.6f);
+            // keyed static collider (PhysicsWorld's static-geometry interface): one key per quad of this patch
+            world.AddStaticMesh(static_cast<uint64_t>(qz) * static_cast<uint64_t>(Q) + static_cast<uint64_t>(qx), centre, verts, tris, 0.6f);
         }
 }
 
@@ -291,6 +292,8 @@ struct AscentConfig {
     // contact solver in a small limit cycle (M2-AS on a 4 x 4 patch: 7 cm/s, 9 mm) instead of exact rest (30 x 30, as the spike)
     int terrainQuads = 30;
     bool fineTiming = false;  // time the pipeline's parts per part (adds three clock reads per part: only for the bench's split)
+    LoadSolve loads = LoadSolve::Auto;  // WP-20c: the structural solve of AfterStep (breaks are reported, not acted on)
+    std::function<void(int tick, VesselPhysics&)> onTick;  // after AfterStep (benches: per-tick joint loads)
 };
 
 struct AscentSample {
@@ -311,6 +314,12 @@ struct AscentResult {
     // ms per tick inside the pipeline (measured ticks): transforms + masses, DragCubeSetupAndPartAeroStats, the per-part
     // Rigidbody reads, UpdateAerodynamics, applying the aero forces
     double tTransforms = 0, tAeroSetup = 0, tRbRead = 0, tAero = 0, tApply = 0;
+    // WP-20c: the load solve inside AfterStep (ms per measured tick), the largest load / capacity after the settle and the solve used
+    double tLoads = 0, maxLoadRatio = 0;
+    std::string maxLoadJoint;
+    LoadSolve lastSolve = LoadSolve::None;
+    size_t factorisations = 0, breaksReported = 0;
+    double factorMs = 0;  // the last factorisation of the graph solve
     std::vector<AscentSample> samples;
 };
 
@@ -348,6 +357,7 @@ inline AscentResult RunAscent(World& w, Vessel& v, const AscentConfig& cfg) {
     opt.policy = cfg.policy;
     opt.angularDragModel = cfg.angularDrag;
     opt.defaultAngularDrag = cfg.defaultAngularDrag;
+    opt.loadSolve = cfg.loads;
     VesselPhysics vp(world, v, pose, opt);
     vp.frameOriginWorld = bodyPos;
     world.OptimizeBroadPhase();  // as the spike after its build
@@ -446,6 +456,7 @@ inline AscentResult RunAscent(World& w, Vessel& v, const AscentConfig& cfg) {
         const auto t4 = Clock::now();
         vp.AfterStep();
         const auto t5 = Clock::now();
+        if (cfg.onTick) cfg.onTick(tick, vp);
         if (tick >= cfg.settleTicks) {
             const double nm = static_cast<double>(cfg.ticks - cfg.settleTicks);
             res.tTransforms += ms(t1, ta) / nm;
@@ -459,6 +470,14 @@ inline AscentResult RunAscent(World& w, Vessel& v, const AscentConfig& cfg) {
             tFlush.push_back(ms(t2, t3));
             tStep.push_back(ms(t3, t4));
             tAfter.push_back(ms(t4, t5));
+            res.tLoads += vp.LastLoadSolveMs() / static_cast<double>(cfg.ticks - cfg.settleTicks);
+            if (vp.MaxLoadRatio() > res.maxLoadRatio) {
+                res.maxLoadRatio = vp.MaxLoadRatio();
+                const PartJointSpec& js = vp.Joints()[static_cast<size_t>(vp.MaxLoadJoint())];
+                res.maxLoadJoint = js.child->partInfo != nullptr ? js.child->partInfo->name : std::string("?");
+            }
+            res.lastSolve = vp.LastSolve();
+            res.breaksReported += vp.Breaks().size();
         }
         if (tick == cfg.settleTicks) settleCom = com;
         if (tick > cfg.settleTicks) {
@@ -483,6 +502,8 @@ inline AscentResult RunAscent(World& w, Vessel& v, const AscentConfig& cfg) {
     res.altitudeEnd = res.comEnd.magnitude() - kerbin.Radius;
     res.speedEnd = st.rb_velocityD.magnitude();
     res.stateHash = world.StateHash();
+    res.factorisations = vp.FactorCount();
+    res.factorMs = vp.LastFactorMs();
     res.total = Stats(tTotal);
     res.precalc = Stats(tPre);
     res.pipeline = Stats(tPipe);

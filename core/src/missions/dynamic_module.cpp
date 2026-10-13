@@ -243,6 +243,15 @@ void DynamicModuleList::Load(const ConfigNode& cfg) {
     }
 }
 
+// DynamicModuleList.cs:137 Clone
+std::unique_ptr<DynamicModuleList> DynamicModuleList::Clone() const {
+    auto list = std::make_unique<DynamicModuleList>(node_);
+    list->activeModules.clear();
+    for (size_t i = 0; i < activeModules.size(); ++i) list->activeModules.push_back(activeModules[i]->Clone());
+    list->supportedTypes = supportedTypes;
+    return list;
+}
+
 // DynamicModuleList.cs:126
 void DynamicModuleList::Save(ConfigNode& cfg) const {
     ConfigNode* configNode = cfg.AddNode(rootNodeName);

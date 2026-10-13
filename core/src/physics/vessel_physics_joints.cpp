@@ -38,6 +38,7 @@ using TransformOf = std::function<const PartTransform&(const Part&)>;
 struct BuildCtx {
     JointGlobals globals;
     TransformOf tf;
+    const double* fixedTime = nullptr;  // Time.fixedTime for GetMassivePart's per-part cache (null: no cache)
 };
 
 bool IsDockingNode(PartModule& m) { return dynamic_cast<ModuleDockingNode*>(&m) != nullptr; }
@@ -49,7 +50,16 @@ struct PartJointRules {
     static bool HasFreePivotBetweenRoot(Part& self, Part*& lastPart, AttachNode*& nodeToParent, AttachNode*& nodeFromParent, bool& srfAttached);
     static bool HasFreePivotBetweenParentPart(Part& self, Part* endPart, Part*& lastPart, AttachNode*& nodeToParent, AttachNode*& nodeFromParent,
                                               bool& srfAttached);
-    static Part* GetAutoStrutAnchor(Vessel& vessel, Part& self, AttachNode*& nodeToParent, AttachNode*& nodeFromParent, bool& srfAttached);
+    static Part* GetAutoStrutAnchor(Vessel& vessel, Part& self, AttachNode*& nodeToParent, AttachNode*& nodeFromParent, bool& srfAttached,
+                                    const BuildCtx& ctx);
+    static Part* GetMassivePart(Part& self, Part& start, Part*& lastPart, AttachNode*& nodeToParent, AttachNode*& nodeFromParent, bool& srfAttached,
+                                const std::vector<Part*>& excluded, const BuildCtx& ctx);
+    static void GetMassiveParentPart(Part& original, Part* child, Part*& highestPart, float& highestMass, Part*& lastPart, AttachNode*& nodeToParent,
+                                     AttachNode*& nodeFromParent, bool& srfAttached, const std::vector<Part*>& excluded, const BuildCtx& ctx);
+    static void GetMassiveChildPart(Part& original, Part& parent, const std::vector<Part*>& children, Part*& highestPart, float& highestMass,
+                                    Part*& lastPart, AttachNode*& nodeToParent, AttachNode*& nodeFromParent, bool& srfAttached, const Part* ignoredChild,
+                                    const std::vector<Part*>& excluded, const BuildCtx& ctx);
+    static void MassivePartCheck(Part& original, Part& p, Part*& highestPart, float& highestMass, const std::vector<Part*>& excluded, const BuildCtx& ctx);
     static bool SetupJoint(PartJointSpec& j, const Vector3f& jointPos, int size, const BuildCtx& ctx);
     static bool Create(PartJointSpec& j, Part& owner, Part& parent, AttachNode* nodeToParent, AttachNode* nodeFromParent, int mode, const BuildCtx& ctx);
     static void SetUnbreakable(PartJointSpec& j);
@@ -152,8 +162,147 @@ bool PartJointRules::HasFreePivotBetweenParentPart(Part& self, Part* endPart, Pa
     return false;
 }
 
-// Part.cs:8280 GetAutoStrutAnchor. Heaviest / ForceHeaviest: the spike's rule (see the header), not GetMassivePart.
-Part* PartJointRules::GetAutoStrutAnchor(Vessel& vessel, Part& self, AttachNode*& nodeToParent, AttachNode*& nodeFromParent, bool& srfAttached) {
+// Part.cs:8456 MassivePartCheck. The weight is rb.mass in flight (p.mass + p.GetResourceMass() without a Rigidbody); an approximately
+// equal weight goes to the part nearer to `original`, and between equidistant ones (0.05 m) to the smaller Dot(original.up, lhs x position).
+// highestMass = -1 (the new part wins) is set BEFORE the exclusion test, as in the C#: an excluded part that ties and wins leaves -1, so
+// the next part of any weight is taken. A cache hit (GetMassivePart) with highestPart still null throws, as the C# does
+// (highestPart.transform): the SecureAutoStruts coroutine dies and the part gets no autostrut this cycle.
+void PartJointRules::MassivePartCheck(Part& original, Part& p, Part*& highestPart, float& highestMass, const std::vector<Part*>& excluded,
+                                      const BuildCtx& ctx) {
+    const TransformOf& tf = ctx.tf;
+    float num = !p.hasRigidbody ? f32store(fx(p.fields.mass) + fx(p.GetResourceMass())) : PartRigidbodyMass(p);  // !LoadedSceneIsEditor
+    if (Mathf::Approximately(num, highestMass)) {
+        if (highestPart == nullptr) throw NullReferenceException("Object reference not set to an instance of an object");
+        const Vector3f position = tf(original).position;
+        const Vector3f position2 = tf(*highestPart).position;
+        const Vector3f position3 = tf(p).position;
+        const float num2 = Vector3f::Distance(position2, position);
+        const float num3 = Vector3f::Distance(position3, position);
+        if (static_cast<double>(Mathf::Abs(f32store(fx(num2) - fx(num3)))) < 0.05 && original.parent != nullptr) {
+            const Vector3f lhs = position - tf(*original.parent).position;
+            const Vector3f rhs = Vector3f::Cross(lhs, position2);
+            const Vector3f rhs2 = Vector3f::Cross(lhs, position3);
+            const float num4 = Vector3f::Dot(tf(original).up(), rhs);
+            if (Vector3f::Dot(tf(original).up(), rhs2) < num4) highestMass = -1.0f;
+            else num = -1.0f;
+        } else if (num3 < num2) {
+            highestMass = -1.0f;
+        } else {
+            num = -1.0f;
+        }
+    }
+    if (!(num > highestMass)) return;
+    bool flag = false;
+    size_t num5 = excluded.size();
+    while (num5-- > 0) {
+        if (excluded[num5] == &p) {
+            flag = true;
+            break;
+        }
+    }
+    if (!flag) {
+        highestMass = num;
+        highestPart = &p;
+    }
+}
+
+// Part.cs:8421 GetMassiveChildPart (children in reverse order, the subtrees below a free pivot are not entered)
+void PartJointRules::GetMassiveChildPart(Part& original, Part& parent, const std::vector<Part*>& children, Part*& highestPart, float& highestMass,
+                                         Part*& lastPart, AttachNode*& nodeToParent, AttachNode*& nodeFromParent, bool& srfAttached,
+                                         const Part* ignoredChild, const std::vector<Part*>& excluded, const BuildCtx& ctx) {
+    if (children.empty()) return;
+    size_t count = children.size();
+    while (count-- > 0) {
+        Part* part = children[count];
+        if (original.isRobotic() && parent.fields.persistentId == original.fields.persistentId)
+            nodeFromParent = AttachedPartNode(&original, part, srfAttached);
+        if (part->fields.persistentId == original.fields.persistentId || part == ignoredChild) continue;
+        MassivePartCheck(original, *part, highestPart, highestMass, excluded, ctx);
+        if (HasFreePivot(*part)) {
+            if (part->isRobotic()) {
+                nodeFromParent = AttachedPartNode(part->parent, part, srfAttached);
+                lastPart = part;
+            }
+        } else {
+            GetMassiveChildPart(original, *part, part->children, highestPart, highestMass, lastPart, nodeToParent, nodeFromParent, srfAttached, nullptr,
+                                excluded, ctx);
+        }
+    }
+}
+
+// Part.cs:8380 GetMassiveParentPart (up to the root, each ancestor's other children walked too; a free pivot ends the walk)
+void PartJointRules::GetMassiveParentPart(Part& original, Part* child, Part*& highestPart, float& highestMass, Part*& lastPart, AttachNode*& nodeToParent,
+                                          AttachNode*& nodeFromParent, bool& srfAttached, const std::vector<Part*>& excluded, const BuildCtx& ctx) {
+    if (child == nullptr || child->parent == nullptr) return;
+    MassivePartCheck(original, *child->parent, highestPart, highestMass, excluded, ctx);
+    if (HasFreePivot(*child->parent)) {
+        if (child->parent->isRobotic()) {
+            nodeFromParent = AttachedPartNode(child, child->parent, srfAttached);
+            lastPart = child->parent;
+        }
+        return;
+    }
+    GetMassiveParentPart(original, child->parent, highestPart, highestMass, lastPart, nodeToParent, nodeFromParent, srfAttached, excluded, ctx);
+    Part* highestPart2 = highestPart;
+    float highestMass2 = highestMass;
+    Part* lastPart2 = nullptr;
+    AttachNode* nodeToParent2 = nullptr;
+    AttachNode* nodeFromParent2 = nullptr;
+    bool srfAttached2 = false;
+    GetMassiveChildPart(original, *child->parent, child->parent->children, highestPart2, highestMass2, lastPart2, nodeToParent2, nodeFromParent2,
+                        srfAttached2, child, excluded, ctx);
+    if ((highestPart2 != nullptr && highestPart == nullptr) ||
+        (highestPart != nullptr && highestPart2->fields.persistentId != highestPart->fields.persistentId)) {
+        highestPart = highestPart2;
+        highestMass = highestMass2;
+        lastPart = lastPart2;
+        if (nodeToParent2 != nullptr) nodeToParent = nodeToParent2;
+        if (nodeFromParent2 != nullptr) nodeFromParent = nodeFromParent2;
+        srfAttached = srfAttached2;
+    }
+}
+
+// Part.cs:8342 GetMassivePart (`self` is the C# `this`, whose cache fields are read and written; start == this in every call of the C#).
+// The cache (:8349) is used only when the builder has a Time.fixedTime (ctx.fixedTime).
+Part* PartJointRules::GetMassivePart(Part& self, Part& start, Part*& lastPart, AttachNode*& nodeToParent, AttachNode*& nodeFromParent, bool& srfAttached,
+                                     const std::vector<Part*>& excluded, const BuildCtx& ctx) {
+    float highestMass = -std::numeric_limits<float>::max();  // float.MinValue
+    Part* highestPart = nullptr;
+    lastPart = nullptr;
+    nodeToParent = nodeFromParent = nullptr;
+    srfAttached = false;
+    if (ctx.fixedTime != nullptr && self.autoStrutCacheVessel == start.vessel && self.autoStrutCacheTick == *ctx.fixedTime)
+        highestMass = self.autoStrutHighMass;
+    if (start.isRobotic() && self.parent != nullptr) nodeToParent = AttachedPartNode(self.parent, &start, srfAttached);
+    GetMassiveParentPart(start, &start, highestPart, highestMass, lastPart, nodeToParent, nodeFromParent, srfAttached, excluded, ctx);
+    Part* highestPart2 = highestPart;
+    float highestMass2 = highestMass;
+    Part* lastPart2 = nullptr;
+    AttachNode* nodeToParent2 = nullptr;
+    AttachNode* nodeFromParent2 = nullptr;
+    bool srfAttached2 = false;
+    GetMassiveChildPart(start, start, start.children, highestPart2, highestMass2, lastPart2, nodeToParent2, nodeFromParent2, srfAttached2, nullptr,
+                        excluded, ctx);
+    if ((highestPart2 != nullptr && highestPart == nullptr) ||
+        (highestPart != nullptr && highestPart2->fields.persistentId != highestPart->fields.persistentId)) {
+        highestPart = highestPart2;
+        highestMass = highestMass2;
+        lastPart = lastPart2;
+        nodeToParent = nodeToParent2;
+        nodeFromParent = nodeFromParent2;
+        srfAttached = srfAttached2;
+    }
+    if (ctx.fixedTime != nullptr) {
+        self.autoStrutHighMass = highestMass;
+        self.autoStrutCacheTick = *ctx.fixedTime;
+        self.autoStrutCacheVessel = start.vessel;
+    }
+    return highestPart;
+}
+
+// Part.cs:8280 GetAutoStrutAnchor
+Part* PartJointRules::GetAutoStrutAnchor(Vessel& vessel, Part& self, AttachNode*& nodeToParent, AttachNode*& nodeFromParent, bool& srfAttached,
+                                         const BuildCtx& ctx) {
     nodeToParent = nodeFromParent = nullptr;
     srfAttached = false;
     Part* lastPart = nullptr;
@@ -169,19 +318,9 @@ Part* PartJointRules::GetAutoStrutAnchor(Vessel& vessel, Part& self, AttachNode*
             return lastPart;
         }
         case 2:    // Heaviest
-        case 5: {  // ForceHeaviest: the heaviest rigid body (rb.mass, MassivePartCheck's in-flight weight), first in vessel order on a tie
-            Part* best = nullptr;
-            float bestMass = 0.0f;
-            for (Part* p : vessel.parts) {
-                if (p == &self || !p->hasRigidbody) continue;
-                if (self.fields.autoStrutExcludeParent && p == self.parent) continue;
-                const float m = PartRigidbodyMass(*p);
-                if (best == nullptr || m > bestMass) {
-                    best = p;
-                    bestMass = m;
-                }
-            }
-            return best;
+        case 5: {  // ForceHeaviest
+            if (!self.fields.autoStrutExcludeParent) return GetMassivePart(self, self, lastPart, nodeToParent, nodeFromParent, srfAttached, {}, ctx);
+            return GetMassivePart(self, self, lastPart, nodeToParent, nodeFromParent, srfAttached, {self.parent}, ctx);
         }
         case 3:    // Grandparent
         case 6: {  // ForceGrandparent
@@ -356,11 +495,37 @@ bool PartJointRules::SecureAutoStrut(PartJointSpec& j, Part& self, Part& anchor,
 
 }  // namespace
 
-std::vector<PartJointSpec> BuildPartJoints(Vessel& vessel, const JointGlobals& globals,
-                                           const std::function<const PartTransform&(const Part&)>& transformOf) {
+namespace {
+BuildCtx MakeCtx(const JointGlobals& globals, const std::function<const PartTransform&(const Part&)>& transformOf, const double* fixedTime) {
     BuildCtx ctx;
     ctx.globals = globals;
     ctx.tf = transformOf ? transformOf : TransformOf([](const Part& p) -> const PartTransform& { return p.partTransform; });
+    ctx.fixedTime = fixedTime;
+    return ctx;
+}
+}  // namespace
+
+Part* GetAutoStrutAnchor(Vessel& vessel, Part& part, const std::function<const PartTransform&(const Part&)>& transformOf, const double* fixedTime) {
+    const BuildCtx ctx = MakeCtx({}, transformOf, fixedTime);
+    AttachNode* nodeToParent = nullptr;
+    AttachNode* nodeFromParent = nullptr;
+    bool srfAttached = false;
+    return PartJointRules::GetAutoStrutAnchor(vessel, part, nodeToParent, nodeFromParent, srfAttached, ctx);
+}
+
+std::vector<PartJointSpec> BuildPartJoints(Vessel& vessel, const JointGlobals& globals,
+                                           const std::function<const PartTransform&(const Part&)>& transformOf) {
+    std::vector<PartJointSpec> out = BuildAttachJoints(vessel, globals, transformOf);
+    std::vector<PartJointSpec> autostruts = BuildAutoStruts(vessel, globals, transformOf);
+    std::vector<PartJointSpec> struts = BuildStrutJoints(vessel, globals, transformOf);
+    out.insert(out.end(), autostruts.begin(), autostruts.end());
+    out.insert(out.end(), struts.begin(), struts.end());
+    return out;
+}
+
+std::vector<PartJointSpec> BuildAttachJoints(Vessel& vessel, const JointGlobals& globals,
+                                             const std::function<const PartTransform&(const Part&)>& transformOf) {
+    const BuildCtx ctx = MakeCtx(globals, transformOf, nullptr);
     std::vector<PartJointSpec> out;
     // ---- attach joints: Part.Start -> CreateAttachJoint(attachMode) for FULL parts (Part.cs:1893-1896, 2197-2209)
     for (Part* p : vessel.parts) {
@@ -374,6 +539,13 @@ std::vector<PartJointSpec> BuildPartJoints(Vessel& vessel, const JointGlobals& g
         PartJointRules::SetUnbreakable(j);
         out.push_back(j);
     }
+    return out;
+}
+
+std::vector<PartJointSpec> BuildAutoStruts(Vessel& vessel, const JointGlobals& globals,
+                                           const std::function<const PartTransform&(const Part&)>& transformOf, const double* fixedTime) {
+    const BuildCtx ctx = MakeCtx(globals, transformOf, fixedTime);
+    std::vector<PartJointSpec> out;
     // ---- autostruts: Part.CycleAutoStrut -> SecureAutoStruts (Part.cs:8044-8091) for every part with autoStrutMode != Off
     // (the EVA-construction exclusion of :8066 does not apply outside construction mode)
     for (Part* p : vessel.parts) {
@@ -381,7 +553,12 @@ std::vector<PartJointSpec> BuildPartJoints(Vessel& vessel, const JointGlobals& g
         AttachNode* nodeToParent = nullptr;
         AttachNode* nodeFromParent = nullptr;
         bool srfAttached = false;
-        Part* anchor = PartJointRules::GetAutoStrutAnchor(vessel, *p, nodeToParent, nodeFromParent, srfAttached);
+        Part* anchor = nullptr;
+        try {
+            anchor = PartJointRules::GetAutoStrutAnchor(vessel, *p, nodeToParent, nodeFromParent, srfAttached, ctx);
+        } catch (const NullReferenceException&) {
+            continue;  // MassivePartCheck's null highestPart on a cache hit: the coroutine of this part dies, no autostrut this cycle
+        }
         if (anchor == nullptr || anchor == p) continue;
         AttachNode node;
         PartJointSpec j;
@@ -410,6 +587,13 @@ std::vector<PartJointSpec> BuildPartJoints(Vessel& vessel, const JointGlobals& g
             }
         }
     }
+    return out;
+}
+
+std::vector<PartJointSpec> BuildStrutJoints(Vessel& vessel, const JointGlobals& globals,
+                                            const std::function<const PartTransform&(const Part&)>& transformOf) {
+    const BuildCtx ctx = MakeCtx(globals, transformOf, nullptr);
+    std::vector<PartJointSpec> out;
     // ---- struts: CModuleStrut.OnTargetSet (CompoundParts/CModuleStrut.cs:26-49): PartJoint.Create(jointRoot, jointTarget,
     // targetNode, null, SRF_ATTACH) when both sides are different rigid bodies (WP-25 fills jointRoot / jointTarget / targetNode)
     for (Part* p : vessel.parts) {

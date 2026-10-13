@@ -24,6 +24,7 @@
 #include "doctest/doctest.h"
 #include "ksp/config/config_node.hpp"
 #include "ksp/dotnet/math.hpp"
+#include "ksp/physics/physics_world.hpp"
 #include "ksp/save/save_enums.hpp"
 #include "ksp/terrain/pq.hpp"
 #include "ksp/terrain/pqs_cache.hpp"
@@ -31,6 +32,7 @@
 #include "ksp/terrain/pqs_mods_quad.hpp"
 #include "ksp/terrain/pqs_parallel.hpp"
 #include "ksp/terrain/pqs_prefab.hpp"
+#include "ksp/terrain/terrain_colliders.hpp"
 #include "ksp/unity/matrix_native.hpp"
 #include "ksp/unity/random.hpp"
 #include "ksp/util/simplex.hpp"
@@ -924,4 +926,518 @@ TEST_CASE("WP-12a PQS frame helpers: LineSphereIntersection, edge rotation") {
     CHECK(PQS::GetEdgeRotatedCounterclockwise(PQS::QuadEdge::North) == PQS::QuadEdge::West);
     CHECK(PQS::GetEdgeRotatedClockwise(PQS::QuadEdge::North) == PQS::QuadEdge::East);
     CHECK(PQS::GetEdgeRotatedClockwise(PQS::QuadEdge::Null) == PQS::QuadEdge::Null);
+}
+
+// =====================================================================================================================
+// WP-12b: terrain colliders. Gate: tests/data/wp12b_reference.json from tools/wp12/colliders_reference.py (independent Python:
+// the activation decisions of PQSMod_QuadMeshColliders as the target moves, the collider geometry hash, the collider set per
+// frame), analytic ray-triangle checks on a flat-height sphere (every quad of the patch), the measured agreement with WP-11
+// GetSurfaceHeight on stock Kerbin and Mun, and the box dropped on the KSC pad.
+// =====================================================================================================================
+
+namespace {
+
+const json& Reference12b() {
+    static const json ref = json::parse(std::ifstream(kTestData + "/wp12b_reference.json"));
+    return ref;
+}
+
+const json& Scenario12b(const std::string& name) {
+    for (const json& s : Reference12b().at("scenarios"))
+        if (s.at("name") == name) return s;
+    FAIL("scenario " << name << " missing from wp12b_reference.json");
+    static json none;
+    return none;
+}
+
+std::string Hex64(uint64_t v) {
+    char b[24];
+    std::snprintf(b, sizeof b, "%016llx", static_cast<unsigned long long>(v));
+    return b;
+}
+
+// One frame of a scenario (the same actions as ReplayScenario)
+void RunFrame(Scene& sc, const json& fr) {
+    const json& tg = fr.at("target");
+    sc.target.position = Vector3d(tg[0].get<double>(), tg[1].get<double>(), tg[2].get<double>());
+    for (int k = 0; k < fr.at("fixed").get<int>(); k++) sc.sphere->FixedUpdate();
+    for (const json& a : fr.at("actions")) {
+        const std::string act = a.get<std::string>();
+        if (act == "start") {
+            sc.sphere->Start();
+        } else if (act == "activate") {
+            sc.sphere->ActivateSphere();
+        } else if (act == "rebuild") {
+            sc.sphere->RebuildSphere();
+        } else if (act == "frame") {
+            sc.sphere->FrameUpdate();
+        } else {
+            FAIL("unknown action " << act);
+        }
+    }
+}
+
+std::vector<int> CollidersByFlags(const PQS& p) {
+    std::vector<int> ids;
+    for (const PQ* q : WalkSphere(p))
+        if (q->meshColliderEnabled) ids.push_back(q->id);
+    std::sort(ids.begin(), ids.end());
+    return ids;
+}
+
+// Replays a collider scenario against the reference: per frame the ordered enable / disable events (seq, kind, quad id, name,
+// subdivision, geometry hash where the reference has one) and the set of quads holding a collider in the PhysicsWorld.
+void ReplayColliders(const json& s, int workerThreads, int cookBudget) {
+    GlobalStateGuard guard;
+    Scene sc;
+    BuildScene(sc, s, guard, workerThreads);
+    physics::PhysicsWorld world;
+    TerrainCollidersOptions opt;
+    opt.recordEvents = true;
+    opt.maxCooksPerUpdate = cookBudget;
+    TerrainColliders tc(world, *sc.sphere, opt);
+    const json& frames = s.at("frames");
+    const json& refs = s.at("colliders");
+    REQUIRE(frames.size() == refs.size());
+    int64_t events = 0, hashes = 0, mismatches = 0, setChecks = 0, flagChecks = 0;
+    uint32_t nextSeq = 0;
+    const std::string name = s.at("name").get<std::string>() + (workerThreads > 0 ? " (workers)" : "") + (cookBudget > 0 ? " (budget)" : "");
+    for (size_t f = 0; f < frames.size(); f++) {
+        RunFrame(sc, frames[f]);
+        const json& rf = refs[f];
+        const json& rev = rf.at("events");
+        const std::vector<ColliderEvent>& mine = tc.Events();
+        if (mine.size() != rev.size()) {
+            if (++mismatches <= 20) FAIL_CHECK(name << " frame " << f << ": " << mine.size() << " events, reference " << rev.size());
+        } else {
+            for (size_t i = 0; i < mine.size(); i++) {
+                const json& r = rev[i];
+                const ColliderEvent& e = mine[i];
+                events++;
+                bool ok = r[0].get<uint32_t>() == e.seq && r[0].get<uint32_t>() == nextSeq && (r[1].get<std::string>() == "E") == e.enabled &&
+                          r[2].get<int>() == e.quadId && r[3].get<std::string>() == e.name && r[4].get<int>() == e.subdivision;
+                nextSeq++;
+                if (!r[5].get<std::string>().empty()) {
+                    hashes++;
+                    ok = ok && r[5].get<std::string>() == Hex64(e.geometryHash);
+                }
+                if (!ok && ++mismatches <= 20) FAIL_CHECK(name << " frame " << f << " event #" << i << " " << r.dump() << " != quad " << e.quadId << " " << e.name);
+            }
+        }
+        tc.ClearEvents();
+        while (tc.PendingCount() > 0) tc.Update();
+        setChecks++;
+        if (tc.WorldQuadIds() != rf.at("ids").get<std::vector<int>>()) {
+            if (++mismatches <= 20) FAIL_CHECK(name << " frame " << f << ": the world's collider set differs from the reference");
+        }
+        flagChecks++;
+        if (tc.WorldQuadIds() != CollidersByFlags(*sc.sphere)) {
+            if (++mismatches <= 20) FAIL_CHECK(name << " frame " << f << ": the world's collider set differs from the quads' meshColliderEnabled");
+        }
+    }
+    CHECK(mismatches == 0);
+    CHECK(events == s.at("event_count").get<int64_t>());
+    MESSAGE(name << ": " << frames.size() << " frames, " << events << " enable / disable events (" << hashes << " geometry hashes), " << setChecks
+                 << " collider sets vs the reference and " << flagChecks << " vs the quad flags, " << mismatches << " mismatches; " << world.StaticCount()
+                 << " colliders at the end, " << tc.Stats().cooked << " cooked, " << tc.Stats().dropped << " dropped");
+}
+
+}  // namespace
+
+TEST_CASE("WP-12b collider activation vs the independent reference: synth_a (maxLevelOffset 1, CBT deactivation, rebuild)") {
+    ReplayColliders(Scenario12b("synth_a"), 0, 0);
+}
+TEST_CASE("WP-12b collider activation vs the independent reference: synth_b") { ReplayColliders(Scenario12b("synth_b"), 0, 0); }
+TEST_CASE("WP-12b collider activation vs the independent reference: synth_c (ground walk, climb above the deactivation altitude, rebuild)") {
+    ReplayColliders(Scenario12b("synth_c"), 0, 0);
+}
+TEST_CASE("WP-12b collider activation vs the independent reference: stock Kerbin at the KSC pad") {
+    ReplayColliders(Scenario12b("kerbin_ksc"), 0, 0);
+}
+TEST_CASE("WP-12b collider activation vs the independent reference: stock Mun") { ReplayColliders(Scenario12b("mun"), 0, 0); }
+
+TEST_CASE("WP-12b the cook budget and the height workers do not change the activation decisions") {
+    // events are recorded at event time; with a budget of 7 cooks per Update the set is compared after draining the queue
+    for (const char* n : {"synth_a", "synth_c"}) ReplayColliders(Scenario12b(n), 0, 7);
+    for (const char* n : {"synth_a", "kerbin_ksc"}) ReplayColliders(Scenario12b(n), 4, 0);
+}
+
+namespace {
+
+// ray - triangle (Moller-Trumbore) in double: distance t > 0 along d from the origin, or -1
+double RayTriangle(const Vector3d& o, const Vector3d& d, const Vector3d& a, const Vector3d& b, const Vector3d& c, Vector3d& normal) {
+    const Vector3d e1 = b - a, e2 = c - a;
+    const Vector3d p = Vector3d::Cross(d, e2);
+    const double det = Vector3d::Dot(e1, p);
+    if (std::fabs(det) < 1e-300) return -1.0;
+    const Vector3d tv = o - a;
+    const double u = Vector3d::Dot(tv, p) / det;
+    if (u < -1e-12 || u > 1.0 + 1e-12) return -1.0;
+    const Vector3d q = Vector3d::Cross(tv, e1);
+    const double v = Vector3d::Dot(d, q) / det;
+    if (v < -1e-12 || u + v > 1.0 + 1e-12) return -1.0;
+    const double t = Vector3d::Dot(e2, q) / det;
+    normal = Vector3d::Cross(e1, e2).normalized();
+    return t;
+}
+
+// the cell sample points of a quad: bilinear positions of the 4 corners at (u, v) fractions
+const double kSamples[5][2] = {{0.45, 0.4}, {0.2, 0.3}, {0.8, 0.6}, {0.5, 0.1}, {0.1, 0.5}};
+
+Vector3d CellPoint(const PQ& q, int i, int j, const double* uv) {
+    const int s = 15;
+    const Vector3d& a = q.vertsD[static_cast<size_t>(i * s + j)];
+    const Vector3d& b = q.vertsD[static_cast<size_t>(i * s + j + 1)];
+    const Vector3d& c = q.vertsD[static_cast<size_t>((i + 1) * s + j)];
+    const Vector3d& d = q.vertsD[static_cast<size_t>((i + 1) * s + j + 1)];
+    return (a * ((1 - uv[0]) * (1 - uv[1]))) + (b * (uv[0] * (1 - uv[1]))) + (c * ((1 - uv[0]) * uv[1])) + (d * (uv[0] * uv[1]));
+}
+
+}  // namespace
+
+TEST_CASE("WP-12b sphere patch: radial ray cast and normals against ray-triangle intersection of the collider triangles (analytic)") {
+    // A sphere whose height stack is a constant zero: every vertex lies exactly on the sphere of radius R, the collider
+    // facets are chords. For every quad with a collider and 5 sample directions per cell the answer of the world's ray cast is
+    // compared with the intersection of the same radial line with the quad's own triangles, in double, and with the sphere:
+    // R - r is the chord deficit (0 <= R - r <= R (1 - cos e), e = the longest angular edge of the quad).
+    const json spec = json::parse(R"({
+      "name":"flat","kind":"synth",
+      "sphere":{"name":"Flat","radius":600000.0,"surfaceRelativeQuads":true,"buildTangents":false,"preset":[6.0,1,9],"clockStep":0.0},
+      "stack":[{"type":"SynthHeight","order":10,"req":0,"A":0.0,"B":0.0,"C":0.0,"D":0.0,"E":0.0,"K1":1.0,"K2":1.0,"F":0.0,"hmax":100.0},
+               {"type":"QuadMeshColliders","order":70,"maxLevelOffset":0}],
+      "frames":[{"target":[0,0,0],"fixed":0,"actions":["start","activate"]},{"target":[0,0,0],"fixed":1,"actions":["frame"]},{"target":[0,0,0],"fixed":1,"actions":["frame"]}]})");
+    json s = spec;
+    const double R = 600000.0;
+    const Vector3d tgt = Vector3d(0.17, 0.98, 0.1).normalized() * (R + 300.0);
+    for (json& f : s["frames"]) f["target"] = json::array({tgt.x, tgt.y, tgt.z});
+    GlobalStateGuard guard;
+    Scene sc;
+    BuildScene(sc, s, guard);
+    physics::PhysicsWorld world;
+    TerrainCollidersOptions opt;
+    TerrainColliders tc(world, *sc.sphere, opt);
+    for (const json& f : s["frames"]) RunFrame(sc, f);
+    REQUIRE(tc.CookedCount() >= 9);
+    const std::vector<int>& idx = sc.cache.meshCache.cacheIndices[0];
+    int64_t samples = 0, misses = 0, normalBad = 0, boundBad = 0;
+    double worstDist = 0.0, worstAng = 0.0, worstDeficit = 0.0, worstRatio = 0.0;
+    for (const PQ* q : WalkSphere(*sc.sphere)) {
+        if (!q->meshColliderEnabled) continue;
+        double eMax = 0.0;
+        for (size_t t = 0; t + 2 < idx.size(); t += 3)
+            for (int e = 0; e < 3; e++) {
+                const Vector3d a = q->vertsD[static_cast<size_t>(idx[t + static_cast<size_t>(e)])].normalized();
+                const Vector3d b = q->vertsD[static_cast<size_t>(idx[t + static_cast<size_t>((e + 1) % 3)])].normalized();
+                eMax = std::max(eMax, std::acos(std::min(1.0, Vector3d::Dot(a, b))));
+            }
+        const double deficitBound = R * (1.0 - std::cos(eMax));
+        for (int i = 0; i < 14; i++)
+            for (int j = 0; j < 14; j++)
+                for (const auto& uv : kSamples) {
+                    const Vector3d dir = CellPoint(*q, i, j, uv).normalized();
+                    // analytic: the nearest triangle of this quad along the radial line
+                    double tBest = 1e300;
+                    Vector3d nBest;
+                    for (size_t t = 0; t + 2 < idx.size(); t += 3) {
+                        Vector3d n;
+                        const double tt = RayTriangle(Vector3d(), dir, q->vertsD[static_cast<size_t>(idx[t])], q->vertsD[static_cast<size_t>(idx[t + 1])],
+                                                      q->vertsD[static_cast<size_t>(idx[t + 2])], n);
+                        if (tt > 0.0 && tt < tBest) {
+                            tBest = tt;
+                            nBest = n;
+                        }
+                    }
+                    if (tBest > 1e299) continue;
+                    samples++;
+                    const TerrainHit h = tc.SurfaceAt(dir * R, 300.0, 300.0);
+                    if (!h.hit) {
+                        misses++;
+                        continue;
+                    }
+                    worstDist = std::max(worstDist, std::fabs(h.radius - tBest));
+                    // the facet normal (the numeric cross of the Unity winding points outward)
+                    const double ang = (h.normal.normalized() - nBest).magnitude();   // chord of the angle (acos of a dot near 1 amplifies float rounding)
+                    worstAng = std::max(worstAng, ang);
+                    if (ang > 1.0e-5) normalBad++;
+                    const double deficit = R - h.radius;
+                    worstDeficit = std::max(worstDeficit, deficit);
+                    worstRatio = std::max(worstRatio, deficit / deficitBound);
+                    if (deficit < -1.0e-3 || deficit > deficitBound + 1.0e-3) boundBad++;
+                }
+    }
+    CHECK(samples > 9 * 14 * 14 * 4);
+    CHECK(misses == 0);
+    CHECK(worstDist < 1.0e-3);
+    CHECK(normalBad == 0);
+    CHECK(boundBad == 0);
+    MESSAGE("flat sphere patch: " << tc.CookedCount() << " collider quads, " << samples << " radial rays, ray vs analytic triangle intersection max |dr| "
+                                  << worstDist << " m, max normal angle error " << worstAng << " rad, max chord deficit R - r " << worstDeficit
+                                  << " m (" << worstRatio * 100.0 << " % of the sagitta bound), " << misses << " misses");
+}
+
+namespace {
+
+struct HeightStats {
+    int64_t quads = 0, samples = 0, misses = 0, vertexMisses = 0, vertexSamples = 0;
+    double maxAbs = 0.0, sumAbs = 0.0, p99 = 0.0, maxVertex = 0.0, maxSlopeAngle = 0.0, spacingMax = 0.0, spacingMin = 1e30;
+    std::vector<double> errs;
+    struct Worst {
+        double err, relief, dist;
+        int level;
+        std::string quad;
+    };
+    std::vector<Worst> worst;
+    double maxOverRelief = 0.0;
+    // by distance of the sample from the target: < 200 m, < 500 m, < 1 km, < 3 km, everything
+    static constexpr double kRing[5] = {200.0, 500.0, 1000.0, 3000.0, 1e30};
+    int64_t ringN[5] = {0, 0, 0, 0, 0};
+    double ringMax[5] = {0, 0, 0, 0, 0}, ringSum[5] = {0, 0, 0, 0, 0};
+};
+
+// Collider-vs-WP-11 agreement of every collider quad of a scenario's last frame: the radial ray through sample points of every
+// cell against GetSurfaceHeight in the build state on an independent sphere, and through the vertices themselves.
+HeightStats MeasureHeights(const char* scenario, int frames, double* terrainSlope = nullptr) {
+    HeightStats st;
+    GlobalStateGuard guard;
+    Scene sc;
+    const json& s = Scenario12b(scenario);
+    BuildScene(sc, s, guard, 4);
+    physics::PhysicsWorld world;
+    TerrainCollidersOptions opt;
+    TerrainColliders tc(world, *sc.sphere, opt);
+    const json& fr = s.at("frames");
+    for (int f = 0; f < frames && f < static_cast<int>(fr.size()); f++) RunFrame(sc, fr[static_cast<size_t>(f)]);
+    auto builder = terrain::LoadStockPQS(s.at("body").get<std::string>(), Maps());
+    const json& t0 = fr[0].at("target");
+    const Vector3d pad(t0[0].get<double>(), t0[1].get<double>(), t0[2].get<double>());
+    for (const PQ* q : WalkSphere(*sc.sphere)) {
+        if (!q->meshColliderEnabled) continue;
+        st.quads++;
+        PQ probe;
+        probe.positionPlanetRelative = q->positionPlanetRelative;
+        probe.subdivision = q->subdivision;
+        builder->Mod_OnQuadPreBuild(probe);
+        {
+            const Vector3d a = q->vertsD[0].normalized(), b = q->vertsD[1].normalized();
+            const double sp = std::acos(std::min(1.0, Vector3d::Dot(a, b))) * sc.sphere->radius;
+            st.spacingMax = std::max(st.spacingMax, sp);
+            st.spacingMin = std::min(st.spacingMin, sp);
+        }
+        auto test = [&](const Vector3d& dir, bool vertex, double relief) {
+            const double h = builder->GetSurfaceHeight(dir);
+            const TerrainHit hit = tc.SurfaceAt(dir * h, 400.0, 400.0);
+            if (!hit.hit) {
+                (vertex ? st.vertexMisses : st.misses)++;
+                return;
+            }
+            const double err = hit.radius - h;
+            if (vertex) {
+                st.vertexSamples++;
+                st.maxVertex = std::max(st.maxVertex, std::fabs(err));
+            } else {
+                st.samples++;
+                const double dist = (dir * h - pad).magnitude();
+                st.worst.push_back({std::fabs(err), relief, dist, q->subdivision, q->name});
+                if (relief > 1.0) st.maxOverRelief = std::max(st.maxOverRelief, std::fabs(err) / relief);
+                for (int rg = 0; rg < 5; rg++)
+                    if (dist < HeightStats::kRing[rg]) {
+                        st.ringN[rg]++;
+                        st.ringMax[rg] = std::max(st.ringMax[rg], std::fabs(err));
+                        st.ringSum[rg] += std::fabs(err);
+                    }
+                st.maxAbs = std::max(st.maxAbs, std::fabs(err));
+                st.sumAbs += std::fabs(err);
+                st.errs.push_back(std::fabs(err));
+            }
+        };
+        for (const Vector3d& v : q->vertsD) test(v.normalized(), true, 0.0);
+        for (int i = 0; i < 14; i++)
+            for (int j = 0; j < 14; j++) {
+                double lo = 1e300, hi = -1e300;
+                for (int di = 0; di < 2; di++)
+                    for (int dj = 0; dj < 2; dj++) {
+                        const double r = q->vertsD[static_cast<size_t>((i + di) * 15 + j + dj)].magnitude();
+                        lo = std::min(lo, r);
+                        hi = std::max(hi, r);
+                    }
+                for (const auto& uv : kSamples) test(CellPoint(*q, i, j, uv).normalized(), false, hi - lo);
+            }
+        builder->Mod_OnQuadBuilt(probe);
+    }
+    std::sort(st.errs.begin(), st.errs.end());
+    if (!st.errs.empty()) st.p99 = st.errs[static_cast<size_t>(static_cast<double>(st.errs.size() - 1) * 0.99)];
+    (void)terrainSlope;
+    return st;
+}
+
+}  // namespace
+
+TEST_CASE("WP-12b collider ray heights vs WP-11 GetSurfaceHeight: stock Kerbin (KSC) and Mun (measured bound)") {
+    // The collider mesh interpolates the terrain linearly between the 15 x 15 vertices of a maximum-level quad (the vertices are
+    // WP-11 heights bit for bit, WP-12a): at a vertex the ray must return the vertex height to float precision, between the
+    // vertices the difference is the terrain's own curvature over one cell plus the chord of the sphere. Bound = measured.
+    struct Case {
+        const char* name;
+        int frames;
+        double bound;       // asserted maximum |ray height - GetSurfaceHeight| over the cell samples
+        double vertexBound;
+    };
+    for (const Case c : {Case{"kerbin_ksc", 7, 0.0, 0.0}, Case{"mun", 4, 0.0, 0.0}}) {
+        HeightStats st = MeasureHeights(c.name, c.frames);
+        REQUIRE(st.quads > 0);
+        MESSAGE(c.name << ": " << st.quads << " collider quads, vertex spacing " << st.spacingMin << " - " << st.spacingMax << " m, " << st.vertexSamples
+                       << " vertex rays: max |dr| " << st.maxVertex << " m; " << st.samples << " cell samples: max |dr| " << st.maxAbs << " m, mean "
+                       << (st.samples > 0 ? st.sumAbs / static_cast<double>(st.samples) : 0.0) << " m, p99 " << st.p99 << " m");
+        std::sort(st.worst.begin(), st.worst.end(), [](const HeightStats::Worst& a, const HeightStats::Worst& b) { return a.err > b.err; });
+        for (size_t k = 0; k < 6 && k < st.worst.size(); k++)
+            MESSAGE(c.name << " worst #" << k << ": |dr| " << st.worst[k].err << " m, cell relief " << st.worst[k].relief << " m, " << st.worst[k].dist
+                           << " m from the pad, level " << st.worst[k].level << " quad " << st.worst[k].quad);
+        MESSAGE(c.name << " max |dr| / cell relief (cells with relief > 1 m): " << st.maxOverRelief);
+        for (int rg = 0; rg < 5; rg++)
+            MESSAGE(c.name << " samples within " << HeightStats::kRing[rg] << " m of the target: " << st.ringN[rg] << ", max |dr| " << st.ringMax[rg]
+                           << " m, mean " << (st.ringN[rg] > 0 ? st.ringSum[rg] / static_cast<double>(st.ringN[rg]) : 0.0) << " m");
+        CHECK(st.misses == 0);   // no cell sample falls through
+        CHECK(st.vertexMisses * 200 < st.vertexSamples);   // rays through the outermost border vertices of the collider region
+        MESSAGE(c.name << ": " << st.vertexMisses << " of " << st.vertexSamples + st.vertexMisses << " vertex rays and " << st.misses << " cell rays found no collider");
+        CHECK(st.maxVertex < 2.0e-3);   // float vertices relative to a double centre + the float ray fraction
+    }
+}
+
+// ---- the KSC pad: a box dropped from 10 m ---------------------------------------------------------------------------------------
+
+namespace {
+
+struct DropResult {
+    double restCentreRadius = 0.0;   // |box centre| at the end
+    double wp11Radius = 0.0;         // GetSurfaceHeight (build state) at the box's direction
+    double terrainRayRadius = 0.0;   // the collider mesh under the box's direction
+    double minCentreHeight = 1e30;   // over the run: |centre| - mesh radius below it (must stay >= half the box minus the slop)
+    double endSpeed = 0.0;
+    double impactSpeed = 0.0;
+    uint64_t hash = 0, hashMid = 0;
+    size_t statics = 0;
+    int steps = 0;
+};
+
+// The box drops onto the quads of `sc` (Kerbin at the KSC pad, frames 0-2 of kerbin_ksc run). PhysicsWorld with `threads`.
+DropResult DropBox(Scene& sc, int threads, bool updatePQS, physics::PhysicsWorld::RayHit* lastHit = nullptr) {
+    using namespace physics;
+    PhysicsWorldConfig cfg;
+    cfg.threads = threads;
+    PhysicsWorld world(cfg);
+    TerrainCollidersOptions opt;
+    TerrainColliders tc(world, *sc.sphere, opt);
+    tc.AdoptExisting();
+    DropResult r;
+    r.statics = world.StaticCount();
+    auto builder = terrain::LoadStockPQS("Kerbin", Maps());
+    // the pad: frame 0 of kerbin_ksc is lat -0.0972, lon -74.5577 at 70 m
+    const json& fr0 = Scenario12b("kerbin_ksc").at("frames")[0];
+    const Vector3d padPos(fr0.at("target")[0].get<double>(), fr0.at("target")[1].get<double>(), fr0.at("target")[2].get<double>());
+    const Vector3d up0 = padPos.normalized();
+    // WP-11 height in the build state of the quad under the pad
+    const TerrainHit under = tc.SurfaceAt(padPos, 300.0, 300.0);
+    REQUIRE(under.hit);
+    const PQ* quadUnder = nullptr;
+    for (const PQ* q : WalkSphere(*sc.sphere))
+        if (q->id == under.quadId) quadUnder = q;
+    REQUIRE(quadUnder != nullptr);
+    PQ probe;
+    probe.positionPlanetRelative = quadUnder->positionPlanetRelative;
+    probe.subdivision = quadUnder->subdivision;
+    builder->Mod_OnQuadPreBuild(probe);
+    const double h0 = builder->GetSurfaceHeight(up0);
+    const Vector3d start = up0 * (h0 + 10.0 + 0.5);
+    BodyDesc d;
+    d.shape = ShapeDesc::Box(Vector3f(0.5f, 0.5f, 0.5f));
+    d.position = start;
+    d.mass = 100.0f;
+    // align the box's y axis with the local vertical
+    const Vector3d ax = Vector3d::Cross(Vector3d(0, 1, 0), up0);
+    const double ang = std::acos(Vector3d::Dot(Vector3d(0, 1, 0), up0));
+    d.rotation = QuaternionD::AngleAxis(ang * 57.29577951308232, ax.normalized());
+    const BodyId box = world.CreateBody(d);
+    REQUIRE(box != kInvalidBody);
+    const double mu = 3.5316e12;
+    const int steps = 150;   // 3 s at 50 Hz: the fall takes 1.43 s
+    for (int i = 0; i < steps; i++) {
+        const Vector3d p = world.GetPosition(box);
+        const double rr = p.magnitude();
+        world.AddForce(box, p * (-mu * 100.0 / (rr * rr * rr)));   // gravity as a force toward the planet centre (Physics.gravity = 0)
+        world.Step(0.02f);
+        if (updatePQS) {
+            sc.target.position = world.GetPosition(box);
+            sc.sphere->FixedUpdate();
+            sc.sphere->FrameUpdate();
+            tc.Update();
+        }
+        const Vector3d np = world.GetPosition(box);
+        const TerrainHit th = tc.SurfaceAt(np, 50.0, 50.0);
+        if (th.hit) r.minCentreHeight = std::min(r.minCentreHeight, np.magnitude() - th.radius);
+        r.impactSpeed = std::max(r.impactSpeed, world.GetLinearVelocity(box).magnitude());
+        if (i == 74) r.hashMid = world.StateHash();
+    }
+    r.steps = steps;
+    const Vector3d p = world.GetPosition(box);
+    r.restCentreRadius = p.magnitude();
+    r.endSpeed = world.GetLinearVelocity(box).magnitude();
+    r.hash = world.StateHash();
+    const Vector3d dirEnd = p.normalized();
+    r.wp11Radius = builder->GetSurfaceHeight(dirEnd);
+    r.terrainRayRadius = tc.SurfaceAt(p, 50.0, 50.0).radius;
+    if (lastHit != nullptr) *lastHit = world.RayCast(p, p * -1.0, 5.0, PhysicsWorld::kLayerStatic);
+    return r;
+}
+
+}  // namespace
+
+TEST_CASE("WP-12b KSC pad: a box dropped from 10 m rests at the WP-11 surface height, no tunnelling, deterministic at 1/2/4/8 threads") {
+    GlobalStateGuard guard;
+    Scene sc;
+    const json& s = Scenario12b("kerbin_ksc");
+    BuildScene(sc, s, guard, 4);
+    for (size_t f = 0; f < 3; f++) RunFrame(sc, s.at("frames")[f]);   // start + two frames at the pad
+    // the terrain under the pad is flattened (FlattenArea), the same sphere serves every world
+    DropResult ref;
+    for (int threads : {1, 2, 4, 8}) {
+        const DropResult r = DropBox(sc, threads, false);
+        if (threads == 1) {
+            ref = r;
+            // 0.5 = half the box. WP-11's surface height is the mesh-free truth under the box.
+            const double centreAbove = r.restCentreRadius - r.wp11Radius;
+            MESSAGE("pad drop, " << r.statics << " terrain colliders: rest centre " << centreAbove << " m above the WP-11 surface (box half 0.5), mesh under the box "
+                                 << r.terrainRayRadius - r.wp11Radius << " m from WP-11, centre " << r.restCentreRadius - r.terrainRayRadius << " m above the mesh, end speed " << r.endSpeed << " m/s, max speed " << r.impactSpeed
+                                 << " m/s, lowest centre height over the run " << r.minCentreHeight << " m");
+            CHECK(r.statics >= 9);
+            // the collider mesh interpolates the terrain linearly between vertices 154 m apart: under the box it is 0.32 m below the
+            // WP-11 surface (the flattened pad still has sub-cell relief); within 200 m of the pad the measured bound is 1.51 m
+            CHECK(std::fabs(r.terrainRayRadius - r.wp11Radius) < 1.51);
+            CHECK(std::fabs(centreAbove - 0.5 + (r.wp11Radius - r.terrainRayRadius)) < 0.05);   // rests ON THE MESH (Jolt penetration slop 0.02 m)
+            CHECK(std::fabs(centreAbove - 0.5) < 1.51 + 0.05);                                 // hence on the WP-11 surface within the stated bound
+            CHECK(r.endSpeed < 0.05);
+            CHECK(r.minCentreHeight > 0.4);                                   // never below the surface: no tunnelling
+            CHECK(r.impactSpeed > 13.0);                                      // it really fell 10 m (sqrt(2 g 10) = 14.0 m/s)
+            CHECK(r.impactSpeed < 15.0);
+        } else {
+            CHECK(r.hash == ref.hash);
+            CHECK(r.hashMid == ref.hashMid);
+            CHECK(r.restCentreRadius == ref.restCentreRadius);
+        }
+    }
+    // run-to-run
+    const DropResult again = DropBox(sc, 1, false);
+    CHECK(again.hash == ref.hash);
+}
+
+TEST_CASE("WP-12b KSC pad: the same drop while the PQS keeps updating (target = the box) rests at the same height") {
+    GlobalStateGuard guard;
+    Scene sc;
+    const json& s = Scenario12b("kerbin_ksc");
+    BuildScene(sc, s, guard, 4);
+    for (size_t f = 0; f < 3; f++) RunFrame(sc, s.at("frames")[f]);
+    const DropResult still = DropBox(sc, 2, false);
+    const DropResult live = DropBox(sc, 2, true);
+    CHECK(std::fabs(live.restCentreRadius - still.restCentreRadius) < 0.02);
+    CHECK(live.endSpeed < 0.05);
+    CHECK(live.minCentreHeight > 0.4);
 }

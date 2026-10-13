@@ -39,6 +39,8 @@ add_library(kspcore STATIC
     physics/vessel_physics_forces.cpp
     physics/vessel_physics_host.cpp
     physics/vessel_physics_joints.cpp
+    physics/vessel_physics_loads.cpp
+    physics/structure_graph.cpp
     physics/physical_object.cpp
     physics/physics_bubble.cpp
     physics/flight_integrator.cpp
@@ -86,6 +88,7 @@ add_library(kspcore STATIC
     terrain/pqs_mods_quad.cpp
     terrain/pqs_quadtree.cpp
     terrain/pqs_parallel.cpp
+    terrain/terrain_colliders.cpp
     io/url_dir.cpp
     database/game_database.cpp
     resources/part_resource_library.cpp
@@ -161,8 +164,15 @@ add_library(kspcore STATIC
     missions/mission_tests3.cpp
     missions/mission_actions.cpp
     missions/mission_actions2.cpp
+    missions/mission_actions3.cpp
+    missions/mission_tests4.cpp
+    missions/mission_craft.cpp
+    missions/mission_extras.cpp
+    missions/mission_hash.cpp
+    missions/mission_apfield.cpp
     missions/mission_adjusters.cpp
     space_center/pqs_city.cpp
+    space_center/city_colliders.cpp
     space_center/pqs_city_data.cpp
     space_center/space_center.cpp
     space_center/launch_site.cpp
@@ -269,6 +279,14 @@ add_library(kspcore STATIC
     modules/module_decouplers.cpp
     modules/module_docking_node.cpp
     modules/module_grapple_node.cpp
+    eva/kerbal_eva_core.cpp
+    eva/kerbal_eva_fsm.cpp
+    eva/kerbal_eva_states.cpp
+    eva/kerbal_eva_motion.cpp
+    eva/kerbal_eva_interact.cpp
+    eva/retractable_ladder.cpp
+    eva/flight_eva.cpp
+    eva/kerbal.cpp
     modules/module_strut.cpp
     modules/module_engines.cpp
     modules/module_gimbal.cpp
@@ -283,6 +301,15 @@ add_library(kspcore STATIC
     commnet/commnet_scene.cpp
     commnet/comm_net_vessel.cpp
     modules/module_reaction_wheel.cpp
+    wheels/wheel_native.cpp
+    wheels/tire_friction.cpp
+    wheels/wheel_blocks.cpp
+    wheels/vp_wheel_collider.cpp
+    wheels/vehicle_base.cpp
+    wheels/ksp_wheel_controller.cpp
+    wheels/wheel_modules.cpp
+    wheels/wheel_base.cpp
+    wheels/wheel_submodules.cpp
     modules/module_resource_intake.cpp
     # WP-26 fairings, cargo bays, jettison, shielding, launch clamps
     modules/fairing_panel.cpp
@@ -316,6 +343,9 @@ add_library(ksp::core ALIAS kspcore)
 target_include_directories(kspcore PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_compile_features(kspcore PUBLIC cxx_std_20)
 ksp_set_build_flags(kspcore)
+if(KSPCORE_PCH)
+    target_precompile_headers(kspcore PRIVATE pch.hpp)
+endif()
 # WP-12a: PQSHeightWorkers (std::thread)
 find_package(Threads REQUIRED)
 target_link_libraries(kspcore PUBLIC Threads::Threads)

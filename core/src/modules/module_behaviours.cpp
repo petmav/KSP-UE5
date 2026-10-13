@@ -38,6 +38,7 @@
 #include "ksp/modules/misc_modules.hpp"
 #include "ksp/modules/module_cargo_part.hpp"
 #include "ksp/modules/module_structural.hpp"
+#include "ksp/wheels/wheel_modules.hpp"
 #include "ksp/parts/available_part.hpp"
 #include "ksp/parts/cs_parse.hpp"
 #include "ksp/parts/part_loader.hpp"
@@ -46,6 +47,10 @@
 #include "ksp/thermal/thermal_modules.hpp"
 
 namespace ksp {
+namespace detail {
+void RegisterEvaModules();  // eva/kerbal_eva_interact.cpp (WP-32)
+void RegisterRetractableLadder();  // eva/retractable_ladder.cpp (WP-32)
+}
 void RegisterExperienceManagementModule();  // kerbals/kerbal_misc.cpp (WP-31)
 void RegisterTripLoggerModule();  // vessel/module_trip_logger.cpp (WP-14)
 void RegisterAeroModules();       // aero/lifting_surface.cpp (WP-21)
@@ -197,6 +202,8 @@ void RegisterBuiltinModules() {
     detail::RegisterDecouplerModules();  // ModuleDecouplerBase / ModuleDecouple / ModuleAnchoredDecoupler (WP-16)
     detail::RegisterDockingModules();    // WP-25: ModuleDockingNode
     detail::RegisterGrappleModules();    // WP-25: ModuleGrappleNode
+    detail::RegisterEvaModules();        // WP-32: KerbalEVA
+    detail::RegisterRetractableLadder(); // WP-32: RetractableLadder
     detail::RegisterStrutModules();      // WP-25: CModuleStrut
     detail::RegisterResourceModules();  // ModuleToggleCrossfeed, ModuleResourceAutoShiftState, CModuleFuelLine, EVAResourceContainer (WP-15)
     detail::RegisterInventoryModules();  // WP-33: ModuleInventoryPart (inventory/inventory_ui.cpp)
@@ -228,8 +235,7 @@ void RegisterBuiltinModules() {
     detail::RegisterMiscModules();  // WP-30: ModuleGPS, FlagSite, ModulePartFirework (misc_modules.cpp)
     Reg<PartStatsUpgradeModule>({"PartStatsUpgradeModule"});
     RegCurves({"ModuleColorChanger"}, {"redCurve", "greenCurve", "blueCurve", "alphaCurve"});
-    RegCurves({"ModuleWheelSteering"}, {"steeringCurve", "steeringMaxAngleCurve"});
-    RegCurves({"ModuleWheelMotor", "ModuleWheelMotorSteering"}, {"torqueCurve"});
+    detail::RegisterWheelModules();  // WP-29b: ModuleWheelBase + ModuleWheels.* (their OnAwake creates the empty curves RegCurves did for WP-06)
 }
 }  // namespace detail
 

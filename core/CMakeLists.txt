@@ -55,6 +55,23 @@ set(KSP_HARNESS_DIR "${KSP_PROJECT_ROOT}/harness" CACHE PATH "Golden-output harn
 set(KSP_GAMEDATA_ROOT "${PROJECT_SOURCE_DIR}/testdata/GameData-mirror" CACHE PATH "KSP game root the tests read (GameData/, Physics.cfg, PartDatabase.cfg)")
 
 option(KSPCORE_BUILD_TESTS "Build unit tests and the golden gate" ON)
+# Developer-only executables that no ctest test needs (tools/wp12 height oracle + benchmark). CI configures with OFF
+# (run_tests.ps1 -Ci); golden_runner, save_corpus, libm_check and the capi_* programs are used by tests and always build.
+option(KSPCORE_BUILD_DEV_TOOLS "Build the developer-only oracle/benchmark executables (wp12_height_oracle, wp12_bench)" ON)
+# Precompiled headers (MSVC only; the Linux builds are untouched). Only a build-time speedup, no effect on code generation
+# (/fp, /O, /arch and the rest come from ksp_set_build_flags). Default ON, except when a compiler launcher (ccache/sccache)
+# is configured: ccache cannot cache /Yu//Yc compilations, so with a launcher the PCH is OFF and the cache does the work.
+set(KSP_MSVC_LAUNCHER OFF)  # MSVC + ccache/sccache (CMake variable or the env var that initialises it)
+if(MSVC AND (CMAKE_CXX_COMPILER_LAUNCHER OR CMAKE_C_COMPILER_LAUNCHER
+             OR NOT "$ENV{CMAKE_CXX_COMPILER_LAUNCHER}" STREQUAL "" OR NOT "$ENV{CMAKE_C_COMPILER_LAUNCHER}" STREQUAL ""))
+    set(KSP_MSVC_LAUNCHER ON)
+endif()
+if(MSVC AND NOT KSP_MSVC_LAUNCHER)
+    set(_ksp_pch_default ON)
+else()
+    set(_ksp_pch_default OFF)
+endif()
+option(KSPCORE_PCH "Use precompiled headers for kspcore and kspcore_tests (MSVC)" ${_ksp_pch_default})
 # The physics spikes under spikes/ (PHYSICS-SPIKE.md). Opt-in, OFF by default: the Jolt spike fetches Jolt Physics at a
 # pinned release over the network at configure time. Presets `spike-jolt` / `spike-jolt-f32` build it in their own tree.
 option(KSPCORE_BUILD_SPIKES "Build the physics spikes (spikes/jolt; fetches Jolt Physics)" OFF)
@@ -97,4 +114,5 @@ endif()
 
 if(KSPCORE_BUILD_SPIKES)
     add_subdirectory(spikes/jolt)
+    add_subdirectory(spikes/wheels)  # WHEEL-SPIKE.md: wheels / landing legs on the reduced model
 endif()

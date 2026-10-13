@@ -350,6 +350,8 @@ public:
     Situations BestSituation() const;         // Vessel.cs:691
     bool IgnoreSpeedActive() const { return ignoreSpeedFrames_ > 0; }  // Vessel.cs:731
     int IgnoreCollisionsFrames() const { return ignoreCollisionsFrames; }
+    // the C# field is `internal` (Vessel.cs:248; written by the landed placement :2543-2557 and CometManager.cs:658)
+    void SetIgnoreCollisionsFrames(int frames) { ignoreCollisionsFrames = frames; }
     const Vector3f& CurrentCoM() const { return CoM; }                 // Vessel.cs:735
     bool isEVA() const { return vesselType == VesselType::EVA; }       // Vessel.cs:737
     Vessel* EVALadderVessel();                // Vessel.cs:739

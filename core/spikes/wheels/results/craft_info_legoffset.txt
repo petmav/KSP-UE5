@@ -1,0 +1,10 @@
+twostage: parts 45 (physical 35), vessel mass 11.222 t, rb mass sum 11.222 t, wheels 4, spawn terrain height 64.78 m, patch heights 55.64..64.79 m
+  lowest drag-cube boxes below the CoM (m): telescopicLadderBay -1.686, liquidEngine3.v2 -1.568, liquidEngine3.v2 -1.414, liquidEngine3.v2 -1.414, liquidEngine3.v2 -1.414, liquidEngine3.v2 -1.414,
+  [0] tyre bottom at full extension 1.863 m below the CoM (part origin 0.493 below)
+  [0] landingLeg1-2  type 2 rescale 1.25 r 0.150 (cfg 0.120) D 1.188 anchor 1.00 springRatio 33 damperRatio 2.2 distrib 1 maxLoad 40 | motor 0 T 0.00 resp 3.0 | brakes 0 T 500.00 resp 1000.0 tweak 50 | lock 1 500 | minDown 10.0 fm-> adh 0.10 peak 1.00 lim 1.00 | rbMass 0.100 | transform (body) 2.55 -0.53 -2.54
+  [1] tyre bottom at full extension 1.863 m below the CoM (part origin 0.493 below)
+  [1] landingLeg1-2  type 2 rescale 1.25 r 0.150 (cfg 0.120) D 1.188 anchor 1.00 springRatio 33 damperRatio 2.2 distrib 1 maxLoad 40 | motor 0 T 0.00 resp 3.0 | brakes 0 T 500.00 resp 1000.0 tweak 50 | lock 1 500 | minDown 10.0 fm-> adh 0.10 peak 1.00 lim 1.00 | rbMass 0.100 | transform (body) -2.54 -0.53 -2.54
+  [2] tyre bottom at full extension 1.863 m below the CoM (part origin 0.493 below)
+  [2] landingLeg1-2  type 2 rescale 1.25 r 0.150 (cfg 0.120) D 1.188 anchor 1.00 springRatio 33 damperRatio 2.2 distrib 1 maxLoad 40 | motor 0 T 0.00 resp 3.0 | brakes 0 T 500.00 resp 1000.0 tweak 50 | lock 1 500 | minDown 10.0 fm-> adh 0.10 peak 1.00 lim 1.00 | rbMass 0.100 | transform (body) -2.54 -0.53 2.55
+  [3] tyre bottom at full extension 1.863 m below the CoM (part origin 0.493 below)
+  [3] landingLeg1-2  type 2 rescale 1.25 r 0.150 (cfg 0.120) D 1.188 anchor 1.00 springRatio 33 damperRatio 2.2 distrib 1 maxLoad 40 | motor 0 T 0.00 resp 3.0 | brakes 0 T 500.00 resp 1000.0 tweak 50 | lock 1 500 | minDown 10.0 fm-> adh 0.10 peak 1.00 lim 1.00 | rbMass 0.100 | transform (body) 2.55 -0.53 2.55

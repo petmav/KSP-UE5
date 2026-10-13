@@ -14,6 +14,7 @@
 //     offset only (ksp/physics/krakensbane.hpp): velocities stored here are physics-frame velocities, i.e. the true velocity
 //     minus Krakensbane::GetFrameVelocity().
 //
+// WP-20c added the static-contact record of the last step (StaticContacts) for the ground supports of the load solve.
 // Not here (documented seams): vessel rigid bodies, clusters, joints and structural loads (WP-20b / WP-20c), ray / overlap
 // queries and the static mesh interface AddStaticMesh(id, centre, vertices, triangles) of WP-12b, the contact listener that
 // feeds Part.HandleCollision (WP-20d), EVA kerbals and wheels (WP-20e). CollisionEnhancer.cs (anti-tunnelling) is replaced by
@@ -105,6 +106,9 @@ struct CompoundBodyDesc {
     uint32_t vesselGroup = 0;
     bool sameVesselCollision = false;
     uint64_t userData = 0;
+    // Jolt's manifold reduction (merging the contact manifolds of different sub-shapes of a body pair that share a normal; on by default).
+    // StaticContacts() reports every touching sub-shape either way.
+    bool useManifoldReduction = true;
 };
 
 // Jolt constraint id (index into the world's constraint table); kInvalidConstraint when absent.
@@ -170,13 +174,45 @@ public:
     // work for bodies owned by the world ("one velocity write per body", Krakensbane.cs:121-173). Returns the bodies touched.
     size_t AddVelocityChangeToAllMoving(const Vector3d& dv);
 
-    // ---- static triangle meshes (PHYSICS-SPIKE.md 5.2 AddStaticMesh: the WP-12b terrain-quad interface, here early for WP-20b's
-    // pad scenarios): vertices relative to `centre` (double, physics frame), triangles as index triples, outward faces counter-
-    // clockwise seen from outside (Jolt's winding). Static layer. RemoveBody removes it.
-    BodyId AddStaticMesh(const Vector3d& centre, const std::vector<Vector3f>& vertices, const std::vector<uint32_t>& triangles,
-                         float friction = 0.6f, uint64_t userData = 0);
-    // Jolt PhysicsSystem::OptimizeBroadPhase: rebuilds the broad-phase trees after many bodies were added (terrain patches)
+    // ---- static geometry (WP-12b terrain colliders, WP-42 KSC / PQSCity objects, WP-20b's pad terrain patch) ----------------
+    // Static bodies live in the Static layer (they only collide with Moving ones) and are addressed by a caller-chosen 64-bit
+    // key (a quad collider, a city object ...); adding a key that exists replaces the body (the MeshCollider.sharedMesh
+    // re-assignment of an OnQuadBuilt on an already enabled collider). The key is also the body's user data. Positions are
+    // doubles in the physics frame; mesh vertices are floats relative to `centre`, the layout Jolt's MeshShape keeps
+    // (PHYSICS-SPIKE.md 5.2 AddStaticMesh(id, centre, vertices, triangles)). `triangles` are index triples into `vertices`,
+    // wound as the Unity mesh (cacheIndices): the numeric normal cross(b - a, c - a) points to the front face in both Unity and
+    // Jolt (counter-clockwise seen from the front), so no flip is made. RemoveBody removes a static body too (and its key).
+    // Returns kInvalidBody when the shape cannot be cooked (no valid triangle, logged) or the body limit is reached.
+    BodyId AddStaticMesh(uint64_t key, const Vector3d& centre, const std::vector<Vector3f>& vertices, const std::vector<int>& triangles,
+                         float friction = 0.6f, float restitution = 0.0f);
+    // A primitive static collider (BoxCollider / SphereCollider / CapsuleCollider of a scenery object).
+    BodyId AddStaticShape(uint64_t key, const ShapeDesc& shape, const Vector3d& position, const QuaternionD& rotation,
+                          float friction = 0.6f, float restitution = 0.0f);
+    bool RemoveStatic(uint64_t key);              // false when the key is unknown
+    BodyId StaticBody(uint64_t key) const;        // kInvalidBody when unknown
+    size_t StaticCount() const;
+    std::vector<uint64_t> StaticKeys() const;     // every static collider's key, ascending
+    // Rebalances the broad phase after a batch of insertions (Jolt keeps newly added bodies in an unbalanced part of the tree
+    // until then); no effect on results, only on query / step speed.
     void OptimizeBroadPhase();
+
+    // ---- queries (WP-12b; the general RayCast / LineCast / OverlapSphere users are WP-20d and the vessel ground height) ---------
+    // Layer bits for the `layers` argument (the two object layers of this world).
+    static constexpr uint32_t kLayerStatic = 1u, kLayerMoving = 2u, kLayerAll = 3u;
+    struct RayHit {
+        bool hit = false;
+        BodyId body = kInvalidBody;
+        uint64_t userData = 0;     // BodyDesc::userData of the body hit (static colliders: their key)
+        double distance = 0.0;     // from the origin along the (normalised) direction
+        Vector3d point;            // hit point (physics frame, double)
+        Vector3d normal;           // unit surface normal on the side of the ray origin
+    };
+    // Closest hit of origin + t * direction, 0 <= t <= maxDistance (direction is normalised; both sides of a triangle are hit,
+    // so a ray started under the terrain finds it too). Precision: Jolt returns a float fraction of maxDistance, so the point
+    // is good to about 6e-8 * maxDistance.
+    RayHit RayCast(const Vector3d& origin, const Vector3d& direction, double maxDistance, uint32_t layers = kLayerAll) const;
+    // Every body whose shape overlaps the sphere, ascending by body id.
+    size_t OverlapSphere(const Vector3d& centre, double radius, std::vector<BodyId>& out, uint32_t layers = kLayerAll) const;
 
     // ---- WP-20b: compound (cluster) bodies -----------------------------------------------------------------------------------
     // A compound body (see CompoundBodyDesc); kInvalidBody when the limit is reached or the description is invalid.
@@ -198,6 +234,20 @@ public:
     // applied to body b (and the opposite to a). Zero for unknown ids. (The input of WP-20c's load solve between clusters.)
     void GetConstraintImpulse(ConstraintId id, Vector3d& linear, Vector3d& angular) const;
 
+    // ---- WP-20c: contacts with static geometry (the ground supports of the structural load solve) ----------------------------
+    // With tracking on, a Jolt contact listener records every (dynamic body, sub-shape user data) that touched (within 1 mm) a
+    // Static-layer body during the last Step, from the per-sub-shape validation callback (so manifold reduction hides none); StaticContacts()
+    // lists them sorted by (body id, user data), without duplicates: the same set whatever the thread count. Off by default (one mutex per
+    // contact callback). The full contact events (Part.OnCollisionEnter / HandleCollision) are WP-20e's.
+    struct StaticContact {
+        BodyId body = kInvalidBody;
+        uint32_t subShapeUserData = 0;
+        bool operator==(const StaticContact& o) const { return body == o.body && subShapeUserData == o.subShapeUserData; }
+        bool operator<(const StaticContact& o) const { return body != o.body ? body < o.body : subShapeUserData < o.subShapeUserData; }
+    };
+    void SetStaticContactTracking(bool on);
+    bool StaticContactTracking() const;
+    const std::vector<StaticContact>& StaticContacts() const;
     // ---- WP-19b: frames of the physics bubble -----------------------------------------------------------------------------
     bool IsStatic(BodyId id) const;  // false for unknown ids
     // Moves every body of the chosen kinds by `delta` (double, in creation order; SetPosition, no activation): the fold of

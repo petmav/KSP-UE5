@@ -23,7 +23,10 @@ CLASS_FILE = {
     "ModuleSpaceObjectDrillBase": "ModuleAsteroidDrill", "ModuleSpaceObjectInfoBase": "ModuleAsteroidInfo",
     "ModuleSpaceObjectAnalysisBase": "ModuleAsteroidAnalysis",
 }
-NAME_ALIAS = {"~Mission": "OnDestroy", "~TestModule": "OnDestroy", "~ActionModule": "OnDestroy", "SetTitle": "title", "SetTitleNoGui": "title",
+NAME_ALIAS = {
+              # WP-32: C# properties / destructors / split SetupFSM
+              "~Kerbal": "OnDestroy", "~CrewHatchController": "OnDestroy", "SeatCamBobEuler": "kerbalSeatCamUpdate", "set_flagItems": "flagItems", "set_currentLadderPart": "currentLadderPart", "OnALadder_": "OnALadder", "SetupFSMStates": "SetupFSM", "SetupFSMEvents": "SetupFSM", "SetupFSMEvents2": "SetupFSM", "GetCurrentColor_": "GetCurrentColor",
+              "~Mission": "OnDestroy", "~TestModule": "OnDestroy", "~ActionModule": "OnDestroy", "SetTitle": "title", "SetTitleNoGui": "title",
               "ActionsContain": "ActionsContainModule", "EqualsObject": "Equals", "craftFileExists": "GetMissionCraftByFileName",
               "UpdateMissionFlowUIDirect": "UpdateMissionFlowUI", "ModulesAreEqualImpl": "ModulesAreEqual",
               "set_currentMassVal": "currentMassVal", "set_massThresholdVal": "massThresholdVal", "set_IsDraining": "IsDraining",
@@ -40,11 +43,20 @@ NAME_ALIAS = {"~Mission": "OnDestroy", "~TestModule": "OnDestroy", "~ActionModul
               # WP-53: C# properties ported as getter / Set* functions, and one renamed private function
               "UpdateGroundModuleUI": "UpdateModuleUI", "SetPowerUnitsProduced": "PowerUnitsProduced", "SetEnabled": "Enabled",
               "SetScienceLimit": "ScienceLimit", "OnDestroyed": "OnDestroy",
+              # WP-29b: C# camelCase members of the wheel modules ported with an upper-case first letter; RemoveAdjuster = OnModuleAdjusterRemoved
+              "WheelSetup": "wheelSetup", "OnPartPack": "onPartPack", "OnPartUnpack": "onPartUnpack", "OnDockingComplete": "onDockingComplete",
+              "OnVesselUndocking": "onVesselUndocking", "ToggleRbConstraints": "toggleRbConstraints", "HoldWheelDamage": "holdWheelDamage",
+              "UpdateDriftFix": "updateDriftFix", "GetFixFwd": "getFixFwd", "GetFixTorque": "getFixTorque", "RemoveAdjuster": "OnModuleAdjusterRemoved",
+              "OnVesselPartCountChanged": "onVesselPartCountChanged", "UpdateCoordFrame": "updateCoordFrame", "UpdateSteering": "updateSteering",
+              "FindCoMfwdLength": "findCoMfwdLength", "FindTurnCenter": "findTurnCenter",
               # WP-20b: the reduced rigid-body binding names its ports after what they compute
               "StartPartRigidbodies": "Start", "PartRigidbodyMass": "UpdateMassStats", "PartInertiaTensor": "ValidateInertiaTensor",
               "ReadState": "CalculatePhysicsStats", "MOIFromRigidbodies": "CalculatePhysicsStats", "IntegratePartBuffers": "Integrate",
               "ResumePartVelocity": "ResumeVelocity", "ApplyAeroForces": "ApplyAeroDrag", "ApplyEngineForces": "ThrustUpdate",
               "ApplyRcsForces": "FixedUpdate", "ApplySurfaceForces": "FixedUpdate",
+              # WP-20c: the structural layer (a vessel-wide CycleAutoStrut, PartJoint.OnJointBreak acted on by the host); WP-16 Part.Start's
+              # staging block
+              "CycleAutoStruts": "CycleAutoStrut", "HandleBreak": "OnJointBreak", "StartStaging": "Start",
               # WP-19b: the physics bubble's ports (ShiftWorld is setOffset's shift, the FlightIntegrator stand-in its FixedUpdate slice)
               "ShiftWorld": "setOffset", "DefaultFlightIntegrator": "FixedUpdate", "physicalObject": "Awake", "~physicalObject": "OnDestroy",
               "UpdateWantsDestroy": "Update",
