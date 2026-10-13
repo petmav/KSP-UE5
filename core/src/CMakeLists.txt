@@ -276,6 +276,14 @@ add_library(kspcore STATIC
     modules/module_decouplers.cpp
     modules/module_docking_node.cpp
     modules/module_grapple_node.cpp
+    eva/kerbal_eva_core.cpp
+    eva/kerbal_eva_fsm.cpp
+    eva/kerbal_eva_states.cpp
+    eva/kerbal_eva_motion.cpp
+    eva/kerbal_eva_interact.cpp
+    eva/retractable_ladder.cpp
+    eva/flight_eva.cpp
+    eva/kerbal.cpp
     modules/module_strut.cpp
     modules/module_engines.cpp
     modules/module_gimbal.cpp
@@ -296,6 +304,9 @@ add_library(kspcore STATIC
     wheels/vp_wheel_collider.cpp
     wheels/vehicle_base.cpp
     wheels/ksp_wheel_controller.cpp
+    wheels/wheel_modules.cpp
+    wheels/wheel_base.cpp
+    wheels/wheel_submodules.cpp
     modules/module_resource_intake.cpp
     # WP-26 fairings, cargo bays, jettison, shielding, launch clamps
     modules/fairing_panel.cpp

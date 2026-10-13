@@ -66,6 +66,7 @@ struct PartTransform {
     Vector3f TransformDirection(const Vector3f& d) const;
     Vector3f InverseTransformDirection(const Vector3f& d) const;
     Vector3f up() const;       // rotation * Vector3.up
+    Vector3f right() const;    // rotation * Vector3.right (WP-32)
     Vector3f forward() const;  // rotation * Vector3.forward
 };
 

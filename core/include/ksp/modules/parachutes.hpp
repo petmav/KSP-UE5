@@ -163,6 +163,8 @@ public:
         bool seated = false;
         bool ableToDeployParachute = true;               // IsKerbalInStateAbleToDeployParachute
         int onParachuteSemiDeployedCalls = 0, onParachuteFullyDeployedCalls = 0, onParachuteCutCalls = 0;
+        // WP-32: the real KerbalEVA.OnParachuteSemiDeployed / FullyDeployed / Cut (KerbalEVA.cs:4690 / :4715 / :4762); unset: only the counters
+        std::function<void()> onSemiDeployed, onFullyDeployed, onCut;
         // kerbalEVA.transform.up / right / forward
         Vector3f up{0, 1, 0}, right{1, 0, 0}, forward{0, 0, 1};
     };
