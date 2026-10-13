@@ -44,15 +44,28 @@ constexpr BodyId kInvalidBody = 0xFFFFFFFFu;
 enum class MotionType : uint8_t { Static, Kinematic, Dynamic };
 
 struct ShapeDesc {
-    enum class Kind : uint8_t { Box, Sphere, Capsule };
+    enum class Kind : uint8_t { Box, Sphere, Capsule, ConvexHull };
     Kind kind = Kind::Box;
     Vector3f halfExtents{0.5f, 0.5f, 0.5f};  // Box
     float radius = 0.5f;                     // Sphere, Capsule
     float halfHeight = 0.5f;                 // Capsule (half of the cylinder part, along local Y)
+    // ConvexHull (WP-mucol: a Unity convex MeshCollider, the hull of the vertices; shared so ShapeDesc stays cheap to copy)
+    std::shared_ptr<const std::vector<Vector3f>> hullPoints;
+    static ShapeDesc ConvexHull(std::shared_ptr<const std::vector<Vector3f>> points) { ShapeDesc s; s.kind = Kind::ConvexHull; s.hullPoints = std::move(points); return s; }
     static ShapeDesc Box(Vector3f halfExtents_) { ShapeDesc s; s.kind = Kind::Box; s.halfExtents = halfExtents_; return s; }
     static ShapeDesc Sphere(float radius_) { ShapeDesc s; s.kind = Kind::Sphere; s.radius = radius_; return s; }
     static ShapeDesc Capsule(float halfHeight_, float radius_) { ShapeDesc s; s.kind = Kind::Capsule; s.halfHeight = halfHeight_; s.radius = radius_; return s; }
 };
+
+// WP-mucol: solid properties of the convex hull of a point set, as Jolt builds it (ConvexHullShape: its volume, centre of mass and
+// inertia integrals; the hull tolerance is Jolt's default 1e-3 m). Inertia is about the centroid, per unit mass, in the point set's axes.
+struct HullMassProps {
+    bool valid = false;  // false: fewer than 4 non-coplanar points
+    double volume = 0.0;
+    Vector3d centroid;
+    double inertia[3][3] = {};
+};
+HullMassProps HullMassProperties(const std::vector<Vector3f>& points);
 
 struct BodyDesc {
     ShapeDesc shape;

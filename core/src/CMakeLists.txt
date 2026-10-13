@@ -36,6 +36,7 @@ add_library(kspcore STATIC
     physics/floating_origin.cpp
     physics/reference_frame.cpp
     physics/vessel_physics.cpp
+    physics/mu_part_colliders.cpp
     physics/vessel_physics_forces.cpp
     physics/vessel_physics_host.cpp
     physics/vessel_physics_joints.cpp
@@ -173,6 +174,7 @@ add_library(kspcore STATIC
     missions/mission_adjusters.cpp
     space_center/pqs_city.cpp
     space_center/city_colliders.cpp
+    space_center/scenery_colliders.cpp
     space_center/pqs_city_data.cpp
     space_center/space_center.cpp
     space_center/launch_site.cpp
@@ -197,6 +199,8 @@ add_library(kspcore STATIC
     parts/part_data.cpp
     parts/part_module_data.cpp
     parts/part_loader.cpp
+    parts/mu_model.cpp
+    parts/part_colliders.cpp
     parts/part.cpp
     parts/part_modules.cpp
     parts/part_resource_flow.cpp
@@ -351,6 +355,7 @@ add_library(kspcore STATIC
 )
 add_library(ksp::core ALIAS kspcore)
 target_include_directories(kspcore PUBLIC ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(kspcore PRIVATE ${PROJECT_SOURCE_DIR}/third_party)  # nlohmann/json for the scenery collider loader (WP-mucol)
 target_compile_features(kspcore PUBLIC cxx_std_20)
 ksp_set_build_flags(kspcore)
 if(KSPCORE_PCH)
