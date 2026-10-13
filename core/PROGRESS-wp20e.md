@@ -42,3 +42,11 @@ Not touched: decompiled/KSP-Decompiled (read only).
 - merge with origin/main ccf3ffc9 (WP-mucol, WP-52): conflicts in STATUS.md only (WP-mucol took row 55: this package is row 58). WP-mucol's
   sphere / capsule / hull proxies: getLowestPoint's ClosestPoint hook now handles every kind (new scenario case, analytic). Every WP-20e number
   unchanged after the merge; reference JSON regenerates byte-identically.
+- merge with origin/main 0d9fd73c (WP-29c): PhysicsStep resolved as physicsStep-or-host.Step then the contact block. Substeps: the host read
+  only the last world step's events (a contact beginning in an earlier substep never sent OnCollisionEnter); PhysicsWorld now logs every
+  step's events (TakeContactEventLog, last 64 steps) and the host dispatches them step by step, Stay once per FixedUpdate. Tests: contact
+  event log (world alone) and the 4x physics-warp drop (all 4 root Enters fall in non-last substeps). WP-29c's rover fixture sits at sea
+  level (no PQS): PartBuoyancy floated the wheels (3 WP-29c cases failed); RoverScene turns the buoyancy slot off.
+- random orders 27 / 42 crashed in WP-29c physics warp: after a WP-50 InputFixture (GameSettings.SetDefaultValues) the 4x no-substep drive
+  exploded the Prospector's root decoupler (7.1 m/s > crashTolerance) and the test's Healthy() dereferenced the dead vessel's binding.
+  Bisected (63 cases -> WP-50 AxisBinding_Single), traced (the library tick completes). RoverScene: NoCrashDamage; Healthy(): no binding = false.
