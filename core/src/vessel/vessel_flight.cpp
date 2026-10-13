@@ -115,4 +115,19 @@ void Vessel::OffsetVelocity(const Vector3d& correction) {
     if (env.offsetVelocity) env.offsetVelocity(*this, correction);
 }
 
+// Vessel.cs:3197 (WP-19b). The part loop (rb and servoRb of every part that is not DEAD) is the offsetVelocity seam: the reduced model
+// moves every cluster body by velOffset, which is the same rigid-body change for every part (VesselPhysics::ChangeWorldVelocity).
+void Vessel::ChangeWorldVelocity(const Vector3d& velOffset) {
+    if (state == State::DEAD || packed) return;
+    if (env.offsetVelocity) env.offsetVelocity(*this, velOffset);
+    krakensbaneAcc += velOffset * (1.0 / static_cast<double>(TimeWarp::fixedDeltaTime()));
+}
+
+// Vessel.cs:3219 (WP-19b). Every part rb (and servoRb) = vel: the reduced model sets every cluster's centre-of-mass velocity
+// (VesselPhysics::SetLinearVelocity; angular velocities kept).
+void Vessel::SetWorldVelocity(const Vector3d& vel) {
+    if (state == State::DEAD || packed) return;
+    if (env.setWorldVelocity) env.setWorldVelocity(*this, vel);
+}
+
 }  // namespace ksp

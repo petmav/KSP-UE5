@@ -36,6 +36,10 @@
 // position) are written / read in the TRANSFORM frame:  transform = (float)(world - floatOrigin). floatOrigin = 0 is KSP's own
 // convention (part transforms, Vessel.CoM and CelestialBody.position share one frame); a host that keeps the world origin far away
 // sets floatOrigin near the vessel (the spike's vessel-local frame) and must then hand the ported code consistent references.
+// WP-19b decided (ksp/physics/physics_bubble.hpp): floatOrigin stays 0 and the bubble keeps the WORLD origin near the active vessel
+// (FloatingOrigin's own rule, applied to the non-physics state and to frameOriginWorld; Jolt bodies never move for it), so every
+// ported statement that mixes float transforms with double world positions (CalculatePhysicsStats' localCoM) is consistent and
+// precise. floatOrigin != 0 is for standalone pipelines that run none of the Vessel code (the WP-20b bench / spike).
 //
 // WP-20c adds the structural layer (ksp/physics/structure_graph.hpp): every tick AfterStep turns the clusters' motion and the parts'
 // forces into the load of every PartJoint sub-joint (tree solve, or the indeterminate graph solve where struts / autostruts / several
@@ -652,7 +656,8 @@ public:
 
     PhysicsWorld& World() const { return *world_; }
     VesselPhysicsOptions options;
-    // world position of the physics frame's origin for a vessel (WP-19b: the bubble's dominant body); unset = vessel.mainBody()->position
+    // world position of the physics frame's origin for a vessel (WP-19b: one anchor for the whole bubble, PhysicsBubble::FrameOriginWorld);
+    // unset = vessel.mainBody()->position
     std::function<Vector3d(const Vessel&)> frameOriginWorld;
     Vector3d floatOrigin;  // the transform frame origin given to every VesselPhysics (default 0, KSP's convention)
     // the pose a vessel is built at on unpack; unset = the rails state: vessel transform = CoMD - rotation * localCoM
@@ -669,6 +674,7 @@ public:
     void Destroy(const Vessel& vessel);
     void DestroyAll();
     size_t Count() const { return vessels_.size(); }
+    const std::vector<std::unique_ptr<VesselPhysics>>& Bindings() const { return vessels_; }  // creation order (WP-19b)
     // vessel split / merge (the seams of WP-16's Part.decouple / Undock and WP-25's Couple): see VesselPhysics::SplitOff / Merge
     VesselPhysics* OnVesselSplit(Vessel& original, Vessel& split);
     VesselPhysics* OnVesselMerge(Vessel& a, Vessel& b, Vessel& merged);

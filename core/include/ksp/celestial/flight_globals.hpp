@@ -92,7 +92,7 @@ struct FlightGlobals {
     static inline double ship_tgtSpeed = 0.0;
     static inline FoRModes FoRMode = FoRModes::SRF_NORTH;  // :108
     static inline float TargetSwitchSqrThresh = 3.6E+09f;  // :126
-    static inline std::vector<physicalObject*> physicalObjects;  // :98 (WP-19b owns the bodies behind them)
+    static inline std::vector<physicalObject*> physicalObjects;  // :98 (ksp/physics/physical_object.hpp; WP-19b's bubble owns the bodies)
 
     // ---- target (FlightGlobals.cs:82-92, 236-238) -------------------------------------------------------------------------------
     static inline ITargetable* _vesselTarget = nullptr;
@@ -232,6 +232,8 @@ struct FlightGlobals {
     static void CycleSpeedModes();                  // :1965
     static double GetDisplaySpeed();                // :1978
     static Vector3d GetDisplayVelocity();           // :1991
+    // tests: the speed modes back to their initialisers (:128-130; FlightGlobals.Update moves them with the active vessel's altitude)
+    static void ResetSpeedModesForTests() { speedMode = commandedSpeedMode = SpeedDisplayModes::Surface; }
 
     // ---- the persistent-id dictionaries are SaveEnvironment's (WP-04, FlightGlobals.cs:473-660) -------------------------------------------------
 

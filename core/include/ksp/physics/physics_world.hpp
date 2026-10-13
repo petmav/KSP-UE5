@@ -248,6 +248,15 @@ public:
     void SetStaticContactTracking(bool on);
     bool StaticContactTracking() const;
     const std::vector<StaticContact>& StaticContacts() const;
+    // ---- WP-19b: frames of the physics bubble -----------------------------------------------------------------------------
+    bool IsStatic(BodyId id) const;  // false for unknown ids
+    // Moves every body of the chosen kinds by `delta` (double, in creation order; SetPosition, no activation): the fold of
+    // Krakensbane's frame drift into the dynamic bodies, the rare re-centring of the physics origin. Returns the bodies moved.
+    size_t TranslateBodies(const Vector3d& delta, bool moving, bool statics);
+    // Static bodies collide with moving ones only while this is on (default). The physics bubble switches it off while the moving
+    // bodies are in a Galilean frame that has drifted away from the body frame the static geometry lives in (FrameOffset != 0).
+    void SetStaticCollisions(bool enabled);
+    bool StaticCollisions() const;
 
     // ---- determinism ----------------------------------------------------------------------------------------------------
     // FNV-1a 64 over the raw bits of every body's position, rotation and both velocities, in creation order.

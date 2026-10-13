@@ -100,6 +100,9 @@ void Restore(const std::string& test) {
         FlightGlobals::currentMainBody = nullptr;
         FlightGlobals::overrideOrbit = false;
     }
+    // FlightGlobals' navball speed modes (FlightGlobals.cs:128-130) follow the active vessel's altitude in every FlightGlobals.Update (a flight
+    // scene with a vessel in orbit leaves Orbit; WP-19a's FlightGlobals tick case expects the Surface default)
+    FlightGlobals::ResetSpeedModesForTests();
     // GameEvents / any named event: a listener holds a raw pointer to its target, so one left behind by a destroyed
     // object is a dangling call for every later test that fires the event (and a live one changes what it sees)
     ksp::events::BaseGameEvent::ForEachRegistered([&](ksp::events::BaseGameEvent& e) {

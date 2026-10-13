@@ -12,7 +12,8 @@
 //
 // This header is the WP-20a half of "frame switch": the decision, the velocity re-expression of all bodies at the switch
 // (+-omega x r, as KSP does), the fictitious accelerations and the physics-frame <-> true conversions. The rest of
-// OrbitPhysicsManager (setDominantBody on SOI change, vessel pack / unpack, HoldVesselUnpack) is WP-19b.
+// OrbitPhysicsManager (setDominantBody on SOI change, vessel pack / unpack, HoldVesselUnpack) is WP-19a / WP-19b; with vessel rigid bodies
+// the physics bubble (ksp/physics/physics_bubble.hpp) ports setRotatingFrame itself (velocity changes through the VesselPhysics bindings).
 #pragma once
 
 #include <functional>

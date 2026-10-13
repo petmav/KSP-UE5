@@ -6,7 +6,8 @@
 // outcome is `Vessel::GoOnRails()` / `Vessel::GoOffRails()` calls on the registry (flags, orbit-driver modes, events) and no physics body is created
 // or destroyed here (the VesselPhysics objects follow GoOffRails / GoOnRails through Vessel::env.packPart / unpackPart: WP-20b).
 //
-// WP-19b ("frames and bubble") owns what `setRotatingFrame` / `setDominantBody` do to the physics bodies (re-expressing every body's velocity at
+// WP-19b ("frames and bubble", ksp/physics/physics_bubble.hpp: PhysicsBubble::setRotatingFrame / setDominantBody, installed into `env`) ports what
+// `setRotatingFrame` / `setDominantBody` do to the physics bodies (re-expressing every body's velocity at
 // the rotating <-> inertial switch, the dominant-body velocity resume). WP-20a already has the maths (ksp/physics/reference_frame.hpp:
 // ReferenceFrame::SetRotatingFrame / CheckReferenceFrame). Here `checkReferenceFrame` is the C# decision chain (dominant body vs the active
 // vessel's reference body, the rotating-frame altitude threshold) and the two actions are the seams `Environment::setDominantBody` /
