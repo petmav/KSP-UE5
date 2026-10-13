@@ -432,6 +432,9 @@ public:
     bool HasRBAnchor() const { return rbAnchor_; }                 // joint != null
     float AnchorTimeCounter() const { return anchorTimeCounter_; }
     float AnchorForceAngle() const { return anchorForceAngle_; }
+    float AnchorDeltaAngleTimeCounter() const { return anchorDeltaAngleTimeCounter_; }
+    float PrevAnchorForceAngle() const { return prevAnchorForceAngle_; }
+    float AnchorDeltaAngle() const { return deltaAngle_; }
     // ---- WP-20e: CheckGroundCollision (Vessel.cs:2493) and getLowestPoint (:2578) -------------------------------------------------
     bool CheckGroundCollision();
     float getLowestPoint();

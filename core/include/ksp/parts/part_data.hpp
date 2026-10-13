@@ -243,6 +243,11 @@ public:
     const std::array<float, 6>& AreaOccluded() const { return areaOccluded_; }
     const Vector3f& WeightedCenter() const { return weightedCenter_; }
     const Vector3f& WeightedSize() const { return weightedSize_; }
+    // WP-20e test seam: the weighted cube box SetDragWeights computes (PartBuoyancy's bounds), set directly by the reference replays
+    void SetWeightedBounds(const Vector3f& center, const Vector3f& size) {
+        weightedCenter_ = center;
+        weightedSize_ = size;
+    }
     bool RotateDragVector() const { return rotateDragVector_; }
     const Quaternionf& DragVectorRotation() const { return dragVectorRotation_; }
     const CubeData& GetCubeData() const { return cubeData_; }

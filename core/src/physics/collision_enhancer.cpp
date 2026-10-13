@@ -36,7 +36,7 @@ void CollisionEnhancer::FixedUpdate(const Env& env) {
         framesToSkip--;
         return;
     }
-    if (!wasPacked) lastPos = lastPos - env.worldShift().ToVector3f();  // :63 lastPos -= FloatingOrigin.Offset (header comment)
+    if (!wasPacked) lastPos = (Vector3d(lastPos) - env.worldShift()).ToVector3f();  // :63 lastPos -= FloatingOrigin.Offset (Vector3 - Vector3d; header comment)
     wasPacked = false;
     if (!bypass && p.State() != PartStates::DEAD &&
         fx((lastPos - position).sqrMagnitude()) > fx(instanceMinDistSqr > 0.0f ? instanceMinDistSqr : minDistSqr)) {

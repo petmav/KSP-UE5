@@ -246,6 +246,7 @@ void Part::explode() { explode(0.0f); }
 // PartContactEnvironment::explodeFx. onPartExplode's distance: `this == FlightGlobals.ActiveVessel` compares a Part with a Vessel and is
 // never true, so the distance to the active vessel is always taken (0 without an active vessel: the C# would throw).
 void Part::explode(float offset) {
+    if (PartContactEnvironment::explodeOverride && PartContactEnvironment::explodeOverride(*this, offset)) return;
     if (state_ == PartStates::DEAD) return;
     float num = 0.0f;
     const double srf = FlightGlobals::ship_srfSpeed();

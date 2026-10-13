@@ -87,6 +87,9 @@ struct PartContactEnvironment {
     static inline std::function<void(Part&, const Vector3f& position, float power)> explodeFx;
     // Part.Rigidbody.velocity (Part.cs:1049: the part's rb or its parent's; Part.checkLanded); unset: zero
     static inline std::function<Vector3f(Part&)> rigidbodyVelocity;
+    // a host or test taking over Part.explode(offset) (true: handled, the C# body is not run): the reference replays record the call and
+    // keep the part alive. Unset: KSP's explode
+    static inline std::function<bool(Part&, float offset)> explodeOverride;
     static void Reset() {
         noCrashDamage = false;
         serenityInstalled = false;
@@ -94,6 +97,7 @@ struct PartContactEnvironment {
         rocCollision = nullptr;
         explodeFx = nullptr;
         rigidbodyVelocity = nullptr;
+        explodeOverride = nullptr;
     }
 };
 
