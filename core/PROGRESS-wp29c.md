@@ -36,3 +36,6 @@ WP-29a/29b managed port; wheels as force elements on the WP-20b cluster bodies, 
   with --order-by=rand -rs=11 / -rs=27.
 - 2026-10-13: merged origin/main (WP-mucol 02a0f218; STATUS rows / sections kept both, massOnly sits in mucol's collider-kind loop):
   ctest 48/48 (140.3 s); unit 969 cases / 1,551,159 assertions pass in default order and with -rs=11 / -rs=27.
+- 2026-10-13: merged origin/main again (WP-52 ccf3ffc9; conflicts only in STATUS rows / sections and tests/CMakeLists.txt, both kept;
+  rows 54 wp20d, 55 mucol, 56 wp29c, 57 wp52): run_tests.ps1 -Fresh ctest 49/49 (124.9 s); unit 1,003 cases / 1,569,846 assertions pass in
+  default order and with -rs=11 / -rs=27; check_cites 59 cites 0 mismatches.

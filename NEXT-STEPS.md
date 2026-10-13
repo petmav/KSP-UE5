@@ -224,6 +224,24 @@ Next packages (history; WP-38 slices 2 and 3, WP-33, WP-50, WP-53, WP-54 and WP-
 
 Repo-wide follow-ups: cite audit `core/tools/wp28/cite_audit_2026-10-11.txt` (668 mismatches, exact-line mode); needs-data list in the waves 4-5 section above (GameVariables prefab, KSC facility `levelCost`, career save, `SiteGeneratorInfo`, Euler / LookRotation / Lerp quaternion captures).
 
+## WP-52 robotics (Breaking Ground servos and controller; branch `wp52`, 2026-10-13)
+
+Ported (see core/STATUS.md "WP-52"): BaseServo, the hinge / piston / rotor / rotation servos, ModuleRoboticController with ControlledAxis / ControlledAction /
+RoboticControllerManager, ConfigurableJointExtensions. Gate: `tools/wp52/servo_reference.py` (independent Python) at 0 ULP over 92 servo runs, 60 controller runs,
+80 preset curves; derived cases for the rest. No SquadExpansion data exists locally: every servo MODULE value is a labelled synthetic fixture.
+
+Follow-ups:
+- **Joint drive backend (the seam).** The servos write `ConfigurableJointData` (core/include/ksp/serenity/servo_joint.hpp); the reduced rigid-body model has only fixed
+  constraints. A Jolt hinge / slider / motor constraint (PhysicsWorld constraint types, WP-20e style) that reads that struct each step and honours
+  `VesselPhysicsOptions::isArticulation = ServoArticulation` replaces `HeadlessServoPlant`; the sign conventions and the limit/spring behaviour in servo_joint.cpp are
+  UNVERIFIED until an in-game capture of one hinge, one piston and one rotor (target steps, `ConfigurableJoint` drive values, Transform angle per fixed tick).
+- Data (local, needs SquadExpansion): the servo part cfgs (resource rates, hard limits, transform names), the model hierarchy for `ServoRig`; then replace the
+  synthetic fixtures in `tests/test_robotics*.cpp` and add the `part_database` module_fields for the five classes.
+- Not ported: `ModuleRobotArmScanner` (+ RobotArmFX), the controller window / curve panel UI, PAW control limits (all UI); `BaseServo.SetChildParentTransform` (editor scene graph).
+- Host wiring: the Unity messages (`FixedUpdate`, `Update`, `LateUpdate`, `Start`) are explicit calls on the servo modules; `ModuleRoboticController::FixedUpdate` / `Update`
+  and `RoboticControllerManager::Update` likewise; WP-00's PlayerLoop/part host should call them in the measured phase order.
+- `Part.servoRb`/`partHasServoRb` (FlightIntegrator drag/angular drag of the servo body) stays false until the joint backend creates the servo body.
+
 ## Handoff to the PC (2026-10-10)
 
 Local-only tasks (need `decompiled/KSP-dev`, which no worktree or cloud VM has):

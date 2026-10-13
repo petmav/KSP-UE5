@@ -58,6 +58,7 @@ namespace detail {
 void RegisterInventoryModules();  // inventory/inventory_ui.cpp (WP-33)
 void RegisterContractModules();  // contracts/module_test_subject.cpp (WP-37)
 void RegisterSerenityModules();  // serenity/ground_modules.cpp (WP-53)
+void RegisterRoboticsModules();  // serenity/servo_register.cpp (WP-52)
 void RegisterScienceModules();  // modules/science_modules.cpp (WP-35; its header pulls in game_events.hpp, which would make the ModuleInventoryPart below ambiguous)
 }
 namespace {
@@ -208,6 +209,7 @@ void RegisterBuiltinModules() {
     detail::RegisterResourceModules();  // ModuleToggleCrossfeed, ModuleResourceAutoShiftState, CModuleFuelLine, EVAResourceContainer (WP-15)
     detail::RegisterInventoryModules();  // WP-33: ModuleInventoryPart (inventory/inventory_ui.cpp)
     Reg<ModuleCargoPart>({"ModuleCargoPart"});
+    detail::RegisterRoboticsModules();  // WP-52: ModuleRoboticServoHinge / Piston / Rotor / RotationServo, ModuleRoboticController (serenity/servo_register.cpp)
     detail::RegisterSerenityModules();  // WP-53: ModuleGroundPart / SciencePart / CommsPart / ExpControl / Experiment (serenity/ground_modules.cpp)
     detail::RegisterAnimationModules();  // WP-27: ModuleAnimationSetter, ModuleAnimateGeneric, ModuleAnimationGroup, ModuleAnimatorLandingGear
     detail::RegisterDeployableModules();  // WP-27: ModuleDeployablePart / Antenna / Radiator / SolarPanel
