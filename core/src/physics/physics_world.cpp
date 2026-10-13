@@ -15,8 +15,12 @@
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyInterface.h>
-#include <Jolt/Physics/Collision/GroupFilter.h>
 #include <Jolt/Physics/Body/BodyLock.h>
+#include <Jolt/Physics/Collision/CastResult.h>
+#include <Jolt/Physics/Collision/CollideShape.h>
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/GroupFilter.h>
+#include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
@@ -34,6 +38,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
+#include <map>
 #include <mutex>
 #include <unordered_map>
 #include <unordered_set>
@@ -254,6 +259,7 @@ struct PhysicsWorld::Impl {
     std::vector<BodyId> order;           // live bodies in creation order
     std::unordered_set<BodyId> live;
     uint64_t steps = 0;
+    std::map<uint64_t, BodyId> statics;  // WP-12b: static colliders by caller key
     // WP-20b: compound bodies keep their inner compound (without the centre-of-mass offset) and its volume centre, so that
     // SetMassProperties can move the centre of mass by swapping only the OffsetCenterOfMassShape decorator.
     struct CompoundInfo {
@@ -392,6 +398,10 @@ void PhysicsWorld::RemoveBody(BodyId id) {
     m.compounds.erase(id);
     m.order.erase(std::find(m.order.begin(), m.order.end(), id));
     JPH::BodyID b(id);
+    if (m.Bi().GetMotionType(b) == JPH::EMotionType::Static) {  // a static collider removed by body id leaves no stale key behind
+        auto it = m.statics.find(m.Bi().GetUserData(b));
+        if (it != m.statics.end() && it->second == id) m.statics.erase(it);
+    }
     m.Bi().RemoveBody(b);
     m.Bi().DestroyBody(b);
 }
@@ -440,34 +450,153 @@ size_t PhysicsWorld::AddVelocityChangeToAllMoving(const Vector3d& dv) {
     return n;
 }
 
-BodyId PhysicsWorld::AddStaticMesh(const Vector3d& centre, const std::vector<Vector3f>& vertices, const std::vector<uint32_t>& triangles,
-                                   float friction, uint64_t userData) {
+// ---- static geometry (WP-12b; WP-20b's pad terrain patch uses AddStaticMesh too) ------------------------------------------------
+
+namespace {
+
+// Query layer mask (PhysicsWorld::kLayer*) -> Jolt object layers
+class MaskLayerFilter final : public JPH::ObjectLayerFilter {
+public:
+    explicit MaskLayerFilter(uint32_t mask) : mask_(mask) {}
+    bool ShouldCollide(JPH::ObjectLayer l) const override {
+        return ((l == Layers::STATIC ? PhysicsWorld::kLayerStatic : PhysicsWorld::kLayerMoving) & mask_) != 0;
+    }
+
+private:
+    uint32_t mask_;
+};
+
+}  // namespace
+
+BodyId PhysicsWorld::AddStaticMesh(uint64_t key, const Vector3d& centre, const std::vector<Vector3f>& vertices,
+                                   const std::vector<int>& triangles, float friction, float restitution) {
     Impl& m = *impl_;
-    if (m.order.size() >= m.cfg.maxBodies || triangles.size() < 3) return kInvalidBody;
-    JPH::VertexList verts;
-    verts.reserve(vertices.size());
-    for (const Vector3f& v : vertices) verts.push_back(JPH::Float3(v.x, v.y, v.z));
-    JPH::IndexedTriangleList tris;
-    tris.reserve(triangles.size() / 3);
-    for (size_t i = 0; i + 2 < triangles.size(); i += 3) tris.push_back(JPH::IndexedTriangle(triangles[i], triangles[i + 1], triangles[i + 2]));
-    JPH::MeshShapeSettings ms(std::move(verts), std::move(tris));
-    JPH::ShapeSettings::ShapeResult r = ms.Create();
-    if (r.HasError()) {
-        log::Warning(std::string("PhysicsWorld::AddStaticMesh: ") + r.GetError().c_str());
+    RemoveStatic(key);
+    if (triangles.size() < 3 || m.order.size() >= m.cfg.maxBodies) return kInvalidBody;
+    JPH::VertexList vl;
+    vl.reserve(vertices.size());
+    for (const Vector3f& v : vertices) vl.push_back(JPH::Float3(v.x, v.y, v.z));
+    JPH::IndexedTriangleList tl;
+    tl.reserve(triangles.size() / 3);
+    for (size_t i = 0; i + 2 < triangles.size(); i += 3) {
+        const int a = triangles[i], b = triangles[i + 1], c = triangles[i + 2];
+        if (a < 0 || b < 0 || c < 0 || static_cast<size_t>(a) >= vertices.size() || static_cast<size_t>(b) >= vertices.size() ||
+            static_cast<size_t>(c) >= vertices.size())
+            return kInvalidBody;
+        tl.push_back(JPH::IndexedTriangle(static_cast<JPH::uint32>(a), static_cast<JPH::uint32>(b), static_cast<JPH::uint32>(c)));
+    }
+    JPH::MeshShapeSettings ms(std::move(vl), std::move(tl));
+    JPH::ShapeSettings::ShapeResult res = ms.Create();
+    if (res.HasError()) {
+        log::Warning(std::string("PhysicsWorld::AddStaticMesh: ") + res.GetError().c_str());
         return kInvalidBody;
     }
-    JPH::BodyCreationSettings bcs(r.Get(), ToRVec3(centre), JPH::Quat::sIdentity(), JPH::EMotionType::Static, Layers::STATIC);
+    JPH::BodyCreationSettings bcs(res.Get(), ToRVec3(centre), JPH::Quat::sIdentity(), JPH::EMotionType::Static, Layers::STATIC);
     bcs.mFriction = friction;
-    bcs.mUserData = userData;
+    bcs.mRestitution = restitution;
+    bcs.mUserData = key;
     JPH::BodyID id = m.Bi().CreateAndAddBody(bcs, JPH::EActivation::DontActivate);
     if (id.IsInvalid()) return kInvalidBody;
-    BodyId raw = id.GetIndexAndSequenceNumber();
+    const BodyId raw = id.GetIndexAndSequenceNumber();
     m.order.push_back(raw);
     m.live.insert(raw);
+    m.statics[key] = raw;
     return raw;
 }
 
+BodyId PhysicsWorld::AddStaticShape(uint64_t key, const ShapeDesc& shape, const Vector3d& position, const QuaternionD& rotation,
+                                    float friction, float restitution) {
+    Impl& m = *impl_;
+    RemoveStatic(key);
+    if (m.order.size() >= m.cfg.maxBodies) return kInvalidBody;
+    JPH::BodyCreationSettings bcs(MakeShape(shape), ToRVec3(position),
+                                  JPH::Quat(static_cast<float>(rotation.x), static_cast<float>(rotation.y), static_cast<float>(rotation.z),
+                                            static_cast<float>(rotation.w)),
+                                  JPH::EMotionType::Static, Layers::STATIC);
+    bcs.mFriction = friction;
+    bcs.mRestitution = restitution;
+    bcs.mUserData = key;
+    JPH::BodyID id = m.Bi().CreateAndAddBody(bcs, JPH::EActivation::DontActivate);
+    if (id.IsInvalid()) return kInvalidBody;
+    const BodyId raw = id.GetIndexAndSequenceNumber();
+    m.order.push_back(raw);
+    m.live.insert(raw);
+    m.statics[key] = raw;
+    return raw;
+}
+
+bool PhysicsWorld::RemoveStatic(uint64_t key) {
+    Impl& m = *impl_;
+    auto it = m.statics.find(key);
+    if (it == m.statics.end()) return false;
+    const BodyId id = it->second;
+    m.statics.erase(it);
+    RemoveBody(id);
+    return true;
+}
+
+BodyId PhysicsWorld::StaticBody(uint64_t key) const {
+    auto it = impl_->statics.find(key);
+    return it == impl_->statics.end() ? kInvalidBody : it->second;
+}
+
+size_t PhysicsWorld::StaticCount() const { return impl_->statics.size(); }
+
+std::vector<uint64_t> PhysicsWorld::StaticKeys() const {
+    std::vector<uint64_t> k;
+    k.reserve(impl_->statics.size());
+    for (const auto& kv : impl_->statics) k.push_back(kv.first);
+    return k;
+}
+
 void PhysicsWorld::OptimizeBroadPhase() { impl_->system.OptimizeBroadPhase(); }
+
+PhysicsWorld::RayHit PhysicsWorld::RayCast(const Vector3d& origin, const Vector3d& direction, double maxDistance, uint32_t layers) const {
+    RayHit out;
+    const double len = direction.magnitude();
+    if (!(len > 0.0) || !(maxDistance > 0.0)) return out;
+    const Vector3d dir = direction * (1.0 / len);
+    const JPH::RRayCast ray(ToRVec3(origin), JPH::Vec3(static_cast<float>(dir.x * maxDistance), static_cast<float>(dir.y * maxDistance),
+                                                       static_cast<float>(dir.z * maxDistance)));
+    JPH::RayCastSettings settings;
+    settings.SetBackFaceMode(JPH::EBackFaceMode::CollideWithBackFaces);
+    JPH::ClosestHitCollisionCollector<JPH::CastRayCollector> collector;
+    const MaskLayerFilter olf(layers);
+    impl_->system.GetNarrowPhaseQueryNoLock().CastRay(ray, settings, collector, {}, olf);
+    if (!collector.HadHit()) return out;
+    const JPH::RayCastResult& h = collector.mHit;
+    out.hit = true;
+    out.body = h.mBodyID.GetIndexAndSequenceNumber();
+    out.distance = static_cast<double>(h.mFraction) * maxDistance;
+    out.point = origin + dir * out.distance;
+    JPH::BodyLockRead lock(impl_->system.GetBodyLockInterfaceNoLock(), h.mBodyID);
+    if (lock.Succeeded()) {
+        const JPH::Body& b = lock.GetBody();
+        out.userData = b.GetUserData();
+        JPH::Vec3 n = b.GetWorldSpaceSurfaceNormal(h.mSubShapeID2, ray.GetPointOnRay(h.mFraction));
+        // face the ray origin (a back-face hit reports the triangle normal of its front side)
+        if (n.Dot(JPH::Vec3(static_cast<float>(dir.x), static_cast<float>(dir.y), static_cast<float>(dir.z))) > 0.0f) n = -n;
+        out.normal = Vector3d(n.GetX(), n.GetY(), n.GetZ());
+    }
+    return out;
+}
+
+size_t PhysicsWorld::OverlapSphere(const Vector3d& centre, double radius, std::vector<BodyId>& out, uint32_t layers) const {
+    out.clear();
+    JPH::Ref<JPH::SphereShape> sphere = new JPH::SphereShape(static_cast<float>(radius));
+    JPH::CollideShapeSettings settings;
+    settings.mBackFaceMode = JPH::EBackFaceMode::CollideWithBackFaces;
+    JPH::AllHitCollisionCollector<JPH::CollideShapeCollector> collector;
+    const MaskLayerFilter olf(layers);
+    // the transform is the shape's WORLD transform; the base offset (also `centre`, for precision) only moves the origin of the
+    // returned contact data
+    impl_->system.GetNarrowPhaseQueryNoLock().CollideShape(sphere, JPH::Vec3::sReplicate(1.0f), JPH::RMat44::sTranslation(ToRVec3(centre)),
+                                                           settings, ToRVec3(centre), collector, {}, olf);
+    for (const JPH::CollideShapeResult& r : collector.mHits) out.push_back(r.mBodyID2.GetIndexAndSequenceNumber());
+    std::sort(out.begin(), out.end());
+    out.erase(std::unique(out.begin(), out.end()), out.end());
+    return out.size();
+}
 
 // ---- WP-20b: compound cluster bodies and fixed constraints ------------------------------------------------------------------
 
