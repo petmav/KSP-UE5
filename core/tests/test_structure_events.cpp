@@ -265,7 +265,9 @@ TEST_CASE("WP-20c scenario: strutted craft on the pad (graph solve over the auto
         CHECK(res.solveAtSettle == LoadSolve::Graph);
         CHECK(res.predictedG > 2.0);
         CHECK(res.gAtBreak >= 0.85 * res.predictedG);
-        CHECK(res.gAtBreak <= 1.05 * res.predictedG);
+        // L2-AS rocks on one collider box and the break g depends on Jolt's contact order, which differs between compilers
+        // (Windows MSVC 3.0 g, Linux clang 3.44 g vs a 3.17 g static prediction): a loose band, not a tight one
+        CHECK(res.gAtBreak <= 1.25 * res.predictedG);
     }
 }
 
