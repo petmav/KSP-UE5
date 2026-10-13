@@ -35,6 +35,10 @@ add_library(kspcore STATIC
     physics/krakensbane.cpp
     physics/floating_origin.cpp
     physics/reference_frame.cpp
+    physics/vessel_physics.cpp
+    physics/vessel_physics_forces.cpp
+    physics/vessel_physics_host.cpp
+    physics/vessel_physics_joints.cpp
     celestial/celestial_body.cpp
     celestial/planetarium.cpp
     celestial/celestial_system.cpp

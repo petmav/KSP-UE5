@@ -40,6 +40,7 @@ add_executable(kspcore_tests
     test_deltav.cpp
     test_timing.cpp
     test_physics_world.cpp
+    test_vessel_physics.cpp
     test_flight.cpp
     test_flight2.cpp
     test_flight3.cpp
@@ -83,7 +84,23 @@ target_compile_definitions(kspcore_tests PRIVATE KSPCORE_TEST_DATA_DIR="${CMAKE_
                            KSPCORE_DATA_DIR="${PROJECT_SOURCE_DIR}/data"
                            KSPCORE_TESTDATA_DIR="${PROJECT_SOURCE_DIR}/testdata"
                            KSPCORE_DEFAULT_GAME_ROOT="${KSP_GAMEDATA_ROOT}")
-add_test(NAME unit COMMAND kspcore_tests)
+# The unit suite (~860 doctest cases, one process, ~3 min) is split into fixed-size shards by case index (this doctest
+# has no --shard-count; -f/-l take the 1-based range of the filtered, in-file-order list) so `ctest -j` overlaps them.
+# The last shard is open-ended, so cases added later are never skipped. Cases must not share state across shards
+# (tests/test_hygiene.cpp, unique temp dirs). Whole suite in one process:  kspcore_tests
+set(KSP_UNIT_SHARDS 8)
+set(KSP_UNIT_SHARD_SIZE 120)
+math(EXPR _last_shard "${KSP_UNIT_SHARDS} - 1")
+foreach(shard RANGE 0 ${_last_shard})
+    math(EXPR _first "${shard} * ${KSP_UNIT_SHARD_SIZE} + 1")
+    math(EXPR _last "(${shard} + 1) * ${KSP_UNIT_SHARD_SIZE}")
+    if(shard EQUAL _last_shard)
+        add_test(NAME unit.shard.${shard} COMMAND kspcore_tests -f=${_first})
+    else()
+        add_test(NAME unit.shard.${shard} COMMAND kspcore_tests -f=${_first} -l=${_last})
+    endif()
+    set_tests_properties(unit.shard.${shard} PROPERTIES LABELS unit TIMEOUT 1200)
+endforeach()
 # WP-12a: the height oracle tools/wp12/pqs_reference.py calls to regenerate tests/data/wp12_reference.json (not a test)
 add_executable(wp12_height_oracle ${PROJECT_SOURCE_DIR}/tools/wp12/height_oracle.cpp)
 target_link_libraries(wp12_height_oracle PRIVATE kspcore)
