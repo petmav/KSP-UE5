@@ -1,6 +1,6 @@
 # KSP-UE5: state and next steps
 
-Updated 2026-10-12 (session 4, PC; see "Session 4" below for the current state; the older sections are history).
+Updated 2026-10-14 (session 5, PC; see "Session 5" below for the current state; the older sections are history).
 
 ## Done
 
@@ -118,6 +118,70 @@ Follow-ups from waves 4-5:
 - Needs data (local): GameVariables prefab (`reputationAddition` / `reputationSubtraction` curves, contract / mentality factors), KSC facility `levelCost` / `KSCUpgradeableLevelText`, a career save with ContractSystem / Funding / Reputation / Facilities / Strategy nodes, the `SiteGeneratorInfo` TextAsset, a C3-style capture for `Quaternion.Euler` / `eulerAngles` / `LookRotation`.
 - Next (WP-38 slices 1-3, WP-42, WP-33, WP-50, WP-53 are merged): WP-33 inventory / EVA construction (7,547), WP-50 input bindings (7,026), WP-32 EVA controller (8,818, needs WP-20 for the rigidbody part), WP-53 Breaking Ground deployed science, WP-52 robotics (needs WP-20 joints). WP-19 / WP-20 / WP-12 wait for the Jolt spike (Opus `optimizer`). WP-29 wheels (VehiclePhysics) after WP-20.
 
+## Session 5 (2026-10-12/14, PC; Sonnet 5.5 orchestrating, Opus for the physics packages) - CURRENT STATE
+
+Main `703e3d6d` (after PR #39). Everything below reached main through a PR with CI green on Linux (clang + gcc) and Windows, except the three CI-infrastructure PRs (#33-#35), which the user told me to merge after local testing (user rule 2026-10-12, CI changes only). Docs-only updates go straight to main. No PR is open, no agent is running, the agent worktrees and local branches are deleted (the merged remote branches still exist on origin; delete them on request).
+
+### Merged this session
+| PR | package | what it is |
+|---|---|---|
+| #23 | wp20b | vessel rigid bodies on the reduced model: one Jolt body per rigid cluster, double positions, no per-tick shift, Krakensbane as a velocity offset |
+| #24 | wp12b | terrain colliders (ground friction 0.6 / restitution 0 are labelled fixture values; city scenery collider shapes are not extracted) |
+| #25 | wp54c | mission leftovers (PositionMobileLaunchPad, scene-bound MissionSystem pieces and the ActionCreateVessel scene branch are NOT ported) |
+| #26 | wp29a | VehiclePhysics wheel core (managed code 1:1) |
+| #27 | wheelspike | wheel spike: port VPP 1:1 + a small native WheelCollider; Jolt's WheeledVehicleController rejected (`WHEEL-SPIKE.md`) |
+| #28 | wp20c | structural load graph: PartJoint capacity, Heaviest autostrut walk, joint breaking (no joint flex: M2 stack breaks at 29 g vs 10.8 g articulated) |
+| #29 | wp19b | PhysicsBubble, frame policy, FloatingOrigin rule |
+| #30 | wp32 | EVA controller, engine-agnostic part |
+| #31 | wp20d | FlightIntegrator tick over the rigid bodies: SoA == exact (0 mismatches), C10 capture 0 ULP, ascent within 1 % to Mach 1 / 5 km |
+| #32 | wp29b | wheel part modules (ModuleWheelBase and submodules, SuspensionLoadBalancer) |
+| #33-#35 | CI | push trigger only on main; Linux clang/gcc matrix + ccache; `unit` split into 8 doctest shards (`unit.shard.0..7`, `ctest -j`); Windows ccache + PCH (`KSPCORE_PCH`) |
+| #36 | mucol | real `.mu` collider chunks (box/sphere/capsule/convex mesh) feed the part colliders; scenery collider loader (synthetic fixture only) |
+| #37 | wp52 | robotics: BaseServo, hinge / rotation / piston / rotor, ModuleRoboticController; servo logic writes `ConfigurableJointData` (no Jolt hinge backend yet) |
+| #38 | wp29c | native WheelCollider (PhysX 4.1 law, 0 ULP vs Python), wheels in the tick (`WheelPhysicsHost`), 0.02 s physics-warp substeps for wheeled vessels, fix of the WP-39 run-alone case |
+| #39 | wp20e | contacts, landed/splashed/landedAt, crash tolerance, landed RB anchor, PartBuoyancy, CollisionEnhancer, terrain colliders per body in the bubble (`ContactHost`) |
+
+WP-38 slices 2 and 3 (wp38b, wp38c) were already merged in session 4.
+
+### Measured on main `703e3d6d` (Windows MSVC RelWithDebInfo, this PC)
+- Fresh-from-incremental build 174 s (`CMAKE_BUILD_PARALLEL_LEVEL=6`), `run_tests.ps1`: **ctest 50/50 pass in 122 s** (15 unit entries: 8 shards + 3 random-order + others).
+- Whole unit binary: **1,023 cases / 1,571,049 assertions, all pass** in default order and with `--order-by=rand -rs=11` and `-rs=27`.
+
+### CI
+- Linux (clang + gcc matrix): ~4 min with a warm ccache (was ~37 min). Windows: 12-15 min (was 27-31) with ccache + PCH; first run after a cache miss is slower. Test phase: `unit` runs as 8 shards under `ctest -j`; local ctest ~85-125 s.
+- Windows-only local builds hide missing includes (the PCH): PR #37 failed on Linux for a missing `editor_types.hpp` include. Build with g++ `-fsyntax-only` in WSL (or push the branch early) before a PR.
+- A conflicting PR gets no CI run at all (GitHub skips it): merge main into the branch first.
+
+### Decisions recorded
+- Reduced rigid-body model ADOPTED by the user (the Session 4 "pending" note is resolved); it is what main runs.
+- Wheels: managed VPP code 1:1 + native WheelCollider in kspcore. Wheeled vessels use 0.02 s substeps under physics warp (delegated to the orchestrator, adopted in WP-29c). The Smooth-vs-Lineal tyre curve is an explicit switch (`WheelPhysicsOptions::tyreCurve`, default `AsDecompiled`), UNVERIFIED until capture C11.
+- The repo is PUBLIC on purpose (needed for CI). `CLAUDE.md` still says "Private, local-only project. Nothing here is ever published." and the repo tracks 26,556 files under `decompiled/`: the line is stale or the content must change; the user decides.
+
+### Process lessons (additions to Session 4's list)
+- Agents cannot push (auto-mode classifier, 'Out-of-Place Publication' / 'Auto-Mode Bypass'), and neither can the orchestrator in auto mode; the user ran `git push origin <branch>` with `!`. A `Bash(git push origin *)` permission rule would remove this step (settings are the user's to change).
+- Agents were denied reads of `decompiled/KSP-dev/**` in some sessions (mucol, wp29c): the sweeps that need it are listed below as local-only follow-ups.
+- Merge order for a stack: chain branches or merge parent into child; every merge into main makes other open PRs stale in STATUS / README (keep both sides, renumber the summary row).
+- Test fixtures leak global state across cases (found this session: InputFixture's `GameSettings::SetDefaultValues`, FlightGlobals speed modes, InputLockManager locks). Keep `unit.random_order.{11,27,42}` in CI; run `--order-by=rand` before every PR.
+- D: filled to 99 % with ~33k-file worktrees plus per-worktree builds: remove a worktree as soon as its PR merges (`rd /s /q` then `git worktree prune`); a hung `cmd.exe` can lock a build folder.
+
+### Open items
+- Run-alone test independence: WP-40 symmetry mode cycling, `PartLoader on the GameData mirror` (360 vs 362 parts alone). (WP-39 CommNetVessel was fixed in #38.) InputFixture leaves `GameSettings` at KSP defaults, which changes the rover ride height (compression 0.493 vs 0.508), so WP-29c's absolute numbers depend on test order.
+- Windows-vs-Linux determinism is unmeasured (S craft differs ~7 m after 30 s).
+- `ContractParameter::CreateID` hashes unconditionally; the C# has `if (hashString != null)`.
+- Not ported / seams (all in the packages' STATUS sections): ship spawning and CometManager (WP-38), SAS / `Vessel.FeedInputFeed` (seam `PhysicsBubble::inputFeed`), impact compliance of the load model (a 6 m/s touchdown loads a joint to 0.98 of capacity), joint drive backend for servos, `Part.packed` on rails (host mirrors it for wheels only), landed anchor reads only the last substep.
+- Needs a machine / session that can read `decompiled/KSP-dev` (local only): `python -I core/tools/mucollider/sweep_stock_parts.py --game decompiled/KSP-dev --out core/data/mucollider_stock_counts.json`; `core/tools/mucollider/extract_scenery_colliders.py` (harness venv; unrun, expect UnityPy accessor fixes and the PQSCity `lod` table); stage wheel / leg `.mu` WheelCollider values and feed `WheelPhysicsOptions::geometry`.
+- Needs the profiling build (not on this PC): capture C11 (a-d: Unity WheelCollider glue, Smooth vs Lineal, script order, sticky tyres), servo captures (one hinge / piston / rotor), a drop / splashdown / pad-settle capture, the data/captures list in Session 4's open items.
+- The DLC is not installed (stretch goal): WP-52 / 53 / 54 / 55 gates use labelled synthetic fixtures.
+- `kspcore.lib` links Jolt (AVX2 needed): the Unreal bridge in `ue5/` has not been rebuilt against it. Cite audit backlog (`core/tools/wp28/cite_audit_2026-10-11.txt`).
+
+### Next (in order)
+1. SAS / FeedInputFeed in the tick (port Vessel.FeedInputFeed, drive WP-50's FlightInputHandler from the bubble, ModuleGimbal actuation); then extend the WP-20d ascent gate past Mach 1 / 5 km toward C10's 20 km / 36.7 km states. This makes a full headless ascent flyable.
+2. WP-29d: landing gear / legs, steering circle, runway; brake "schloompa" anchor with the WP-20e landed anchor; vessel placement with wheel colliders (Vessel.cs:2600-2640).
+3. Host wiring still missing for a flyable core: hosting `Part.packed`, `Part.Update` PartValues refresh for all parts, `GameSettings.SetDefaultValues` at startup, KSC / launch-site collider data registered through `ContactHost::RegisterStatic`.
+4. Joint drive backend for robotics (a Jolt hinge / slider / motor constraint reading `ConfigurableJointData`).
+5. Leftovers: WP-53 / 54 / 55 / 38 seams (scene-bound MissionSystem, ship spawning, CometManager), WP-23 exhaust FX / KSC colliders.
+6. The UE5 shell (~289k lines of tier C: UI, rendering, cameras, audio, map view): write the design doc first (scene flow, Blueprint vs C++ split, first playable slice), then rebuild the Unreal bridge against the Jolt-linked kspcore.
+
 ## Session 4 (2026-10-11/12, PC; Sonnet orchestrating, Opus for the Jolt spike and WP-12a)
 
 Main `dbb068f7`. All four branches left open at the end of session 3 are merged, and so is everything below. Every merge went through a PR with CI green on Windows + Linux (clang and gcc) and a Sonnet gatekeeper (user rule 2026-10-11: code and batched work reaches main only through a PR; docs-only updates may go straight to main).
@@ -152,7 +216,7 @@ Main `dbb068f7`. All four branches left open at the end of session 3 are merged,
 Summary: about 42% of all source lines and about 78% of the simulation layer are merged (estimates; partly-done packages counted by guess).
 
 ### Decision recorded (Jolt spike, `core/PHYSICS-SPIKE.md`)
-Recommendation: WP-20 builds a REDUCED rigid-body model on Jolt v5.6.0 inside kspcore (one body per rigid cluster + structural load graph with KSP's PartJoint capacity rule, double positions, no per-tick world shift, Krakensbane as a velocity offset). 457-part tick 0.33 ms vs 2.83 ms articulated; physics warp within 1% up to 10-25x. Known costs: no joint flex (tall unstrutted stacks 29 g vs 10.8 g first-break), load sharing in strutted craft is gated by scenario only, wheels and robotics not prototyped, Windows-vs-Linux determinism unmeasured. **The user has NOT yet confirmed this model; WP-20b-e are held until they do.** Package split: WP-20a (done), 20b vessel rigid bodies, 20c structural graph + decouple/couple, 20d FlightIntegrator tick (SoA == exact gate), 20e contact/landing/water, WP-19b frames + physics bubble, WP-12b terrain colliders.
+Recommendation: WP-20 builds a REDUCED rigid-body model on Jolt v5.6.0 inside kspcore (one body per rigid cluster + structural load graph with KSP's PartJoint capacity rule, double positions, no per-tick world shift, Krakensbane as a velocity offset). 457-part tick 0.33 ms vs 2.83 ms articulated; physics warp within 1% up to 10-25x. Known costs: no joint flex (tall unstrutted stacks 29 g vs 10.8 g first-break), load sharing in strutted craft is gated by scenario only, wheels and robotics not prototyped, Windows-vs-Linux determinism unmeasured. **The user adopted this model (session 5); WP-20b-e, WP-19b, WP-12b are merged, see Session 5.** Package split: WP-20a (done), 20b vessel rigid bodies, 20c structural graph + decouple/couple, 20d FlightIntegrator tick (SoA == exact gate), 20e contact/landing/water, WP-19b frames + physics bubble, WP-12b terrain colliders.
 
 ### Process lessons (keep)
 - Gatekeeper + CI in parallel; merge only on both green. After each merge the other open PRs go stale in STATUS/README: merge main into them, renumber the STATUS row, recompute the summary `unit` row, push, wait for CI again (~25 min per cycle).
@@ -160,7 +224,7 @@ Recommendation: WP-20 builds a REDUCED rigid-body model on Jolt v5.6.0 inside ks
 - Test fixtures must declare `vessels` last (destroyed first). A synthetic event fired with null parts now crashes (`VesselPrecalculate` subscribes to `onDockingComplete`).
 - MSVC C1060 'out of heap' appears when several builds run at once: set `CMAKE_BUILD_PARALLEL_LEVEL=6`.
 - Subagents' own pushes get blocked by the auto-mode classifier ('Out-of-Place Publication', especially chained `&&` commands): they commit locally, the orchestrator pushes with single simple commands.
-- The 4-agent cap is the real throughput limit; the CPU is mostly idle during model waits. `unit` is ~186 s of ~230 s test time in one process; sharding it (`ctest -j`) was proposed and declined by the user.
+- The 4-agent cap is the real throughput limit; the CPU is mostly idle during model waits. `unit` is ~186 s of ~230 s test time in one process; sharding it (`ctest -j`) was proposed and declined then, and done in session 5 (PR #34: 8 shards).
 
 ### Open items
 - Run-alone test independence (not memory errors): WP-40 symmetry mode cycling, `PartLoader on the GameData mirror` (360 vs 362 parts when run alone).
@@ -169,13 +233,13 @@ Recommendation: WP-20 builds a REDUCED rigid-body model on Jolt v5.6.0 inside ks
 - `kspcore.lib` now links Jolt (AVX2 CPU needed): the Unreal bridge in `ue5/` has not been touched or rebuilt. `SHA256SUMS` of the vendored Jolt does not verify on a Windows checkout with `core.autocrlf=true`.
 - Cite audit (`core/tools/wp28/cite_audit_2026-10-11.txt`) still has hundreds of off-by-k mismatches outside touched files; WP-11's `pqs_mods.cpp` has 4.
 
-### Next (in order)
+### Next (in order; superseded by Session 5's list, items 1-2 are done)
 1. User confirms the reduced rigid-body model -> WP-20b, 20c, 20d, 20e, WP-19b, WP-12b (Opus `optimizer` for 20d/20e; Sonnet otherwise).
 2. WP-29 wheels (VehiclePhysics subset, 29k lines), WP-32 EVA controller, WP-52 robotics (all after WP-20).
 3. Leftovers: WP-54/55 deferred (TestDistance, ActionPartFailure/Repair/ResourceDrain, MissionSystem, MissionImporting, MissionEditorHistory, real BaseAPField, PositionMobileLaunchPad), WP-53 deferred bits. Remaining WP-38 seams (slices 1-3 are merged: wp38, wp38b #13, wp38c #16): `ContractSystem.ConstructShip` / `SpawnPreBuiltShip` (ship spawning), and the comet / asteroid package (`CometManager`, `DiscoverableObjectsUtil`, `ScenarioDiscoverableObjects`).
 4. The UE5 shell (about 289k lines of tier C: UI, rendering, cameras, audio, map view): needs its own design doc first (scene flow, what becomes Blueprints vs C++, first playable slice).
 
-### WP-29c notes (2026-10-13, branch `wp29c`; details in `core/STATUS.md` "WP-29c" and `core/PROGRESS-wp29c.md`)
+### WP-29c notes (2026-10-13, merged as PR #38; details in `core/STATUS.md` "WP-29c" and `core/PROGRESS-wp29c.md`)
 - Done: the native WheelCollider (PhysX 4.1 law, 0 ULP vs `core/tools/wp29c/suspension_reference.py`), the wheels in the WP-19b / 20d tick
   (`WheelPhysicsHost`), 0.02 s physics-warp substeps for wheeled vessels (the user's delegated decision; without them the stock rovers drift 2.5-12.5 m
   at 4x). Scenarios on the stock Prospector Rover and Bug-E Buggy reproduce the wheel spike's numbers (ride height, drive, brakes) and steer the way
@@ -193,7 +257,7 @@ Recommendation: WP-20 builds a REDUCED rigid-body model on Jolt v5.6.0 inside ks
 - Next for wheels: WP-29d (landing gear, runway, steering circle) and landing legs (`leg_touchdown`, deployment animation, stand-in spheres) after
   the geometry; the brake "schloompa" anchor with WP-20e's landed anchor.
 
-## WP-20e contact, landing and water (2026-10-13, branch `wp20e`, PR open)
+## WP-20e contact, landing and water (2026-10-13, merged as PR #39)
 
 State: contacts -> Part.OnCollisionEnter / Stay / Exit, Landed / Splashed / landedAt / situation, HandleCollision's crash tolerance, the landed RB
 anchor (ends the pad rocking of WP-20b R2), CheckGroundCollision, PartBuoyancy, CollisionEnhancer, terrain colliders per body in the bubble
@@ -242,7 +306,7 @@ Next packages (history; WP-38 slices 2 and 3, WP-33, WP-50, WP-53, WP-54 and WP-
 
 Repo-wide follow-ups: cite audit `core/tools/wp28/cite_audit_2026-10-11.txt` (668 mismatches, exact-line mode); needs-data list in the waves 4-5 section above (GameVariables prefab, KSC facility `levelCost`, career save, `SiteGeneratorInfo`, Euler / LookRotation / Lerp quaternion captures).
 
-## WP-52 robotics (Breaking Ground servos and controller; branch `wp52`, 2026-10-13)
+## WP-52 robotics (Breaking Ground servos and controller; merged as PR #37, 2026-10-13)
 
 Ported (see core/STATUS.md "WP-52"): BaseServo, the hinge / piston / rotor / rotation servos, ModuleRoboticController with ControlledAxis / ControlledAction /
 RoboticControllerManager, ConfigurableJointExtensions. Gate: `tools/wp52/servo_reference.py` (independent Python) at 0 ULP over 92 servo runs, 60 controller runs,
