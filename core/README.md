@@ -84,6 +84,10 @@ compares the two on 300,000 inputs per function.
 lists counts and SHA-256s) and `testdata/logs/*.log`. Set env `KSP_GAMEDATA_ROOT=<game root>` (the directory with `GameData/`, e.g.
 `decompiled/KSP-dev`) to run the same tests against a real install; `-DKSP_GAMEDATA_ROOT=...` changes the compiled-in default.
 
+### CI speed (Windows)
+
+The Windows CI job (`run_tests.ps1 -Fresh -Ci`) uses ccache as the MSVC compiler launcher, restored/saved through `hendrikmuhs/ccache-action` (pinned). Objects embed their debug info (`/Z7`: `CMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded`, set unconditionally in `CMakeLists.txt`, CMP0141 NEW through `cmake_minimum_required 3.28`), which is what lets ccache cache MSVC objects; no floating-point, `/O` or `/arch` flag changes. `-Ci` also sets `KSPCORE_BUILD_DEV_TOOLS=OFF` so `wp12_height_oracle` and `wp12_bench` (used by no ctest test) are not built. Local builds default to precompiled headers (`KSPCORE_PCH`, MSVC only: `src/pch.hpp` for kspcore, `tests/pch.hpp` for kspcore_tests, `test_main.cpp` excluded). ccache cannot cache `/Yu` compilations, so whenever a compiler launcher is set (`CMAKE_CXX_COMPILER_LAUNCHER`, also via the env var) `KSPCORE_PCH` defaults to OFF and Jolt's own PCH is disabled too (`cmake/ksp_jolt.cmake`). Linux presets are unaffected. Measurements: `PROGRESS-ciwin.md`.
+
 ### Toolchain on this machine
 
 | tool | path / version |
