@@ -104,7 +104,7 @@ void Vessel::LateUpdate() {
         } else {
             presThresh = 0.0f;
         }
-        // AddRBAnchor (the landed FixedJoint anchor): WP-20b/WP-20c, "a landed, still cluster is set kinematic" (PHYSICS-SPIKE.md R7)
+        AddRBAnchor();  // WP-20e: the landed FixedJoint anchor (src/vessel/vessel_ground.cpp; the joint itself through Vessel::env.rbAnchor*)
     }
     partMaxPresThresh = 0.0;
     partMaxGThresh = 0.0;

@@ -21,7 +21,7 @@ namespace ksp::physics {
 using GE = events::GameEvents;
 
 PhysicsBubble::PhysicsBubble(PhysicsWorld& world, const PhysicsBubbleOptions& options)
-    : world_(&world), options_(options), host_(world, options.vessel) {
+    : world_(&world), options_(options), host_(world, options.vessel), contacts_(*this, options.contacts) {
     // one frame for the whole bubble: every binding gets the same physics origin; the transform frame is the world (floatOrigin 0)
     host_.frameOriginWorld = [this](const Vessel&) { return frameOriginWorld_; };
     host_.floatOrigin = Vector3d();
@@ -56,7 +56,18 @@ void PhysicsBubble::Install() {
     // WP-20d: the part-module FixedUpdates before FlightIntegrator (seq 22-276), the frame's ModuleRCS.Update / FlightIntegrator.Update
     // before Vessel.Update
     savedBeforeFlightIntegrator_ = FlightScene::hooks.beforeFlightIntegrator;
-    FlightScene::hooks.beforeFlightIntegrator = [this] { moduleForces_.FixedUpdate(host_); };
+    // seq 11 (FlightInputHandler.FixedUpdate -> Vessel.FeedInputFeed: the seam `inputFeed`), seq 13 (the part modules, then PartBuoyancy)
+    FlightScene::hooks.beforeFlightIntegrator = [this] {
+        if (inputFeed) inputFeed();
+        moduleForces_.FixedUpdate(host_);
+        if (options_.contactHost) contacts_.BuoyancyFixedUpdate();
+    };
+    // WP-20e: seq 7 CollisionEnhancer.FixedUpdate (after VesselPrecalculate / OrbitDriver)
+    savedAfterPrecalc_ = FlightScene::hooks.afterPrecalc;
+    FlightScene::hooks.afterPrecalc = [this] {
+        if (options_.contactHost) contacts_.CollisionEnhancerFixedUpdate();
+    };
+    if (options_.contactHost) contacts_.Install();
     savedBeforeVesselUpdate_ = FlightScene::hooks.beforeVesselUpdate;
     FlightScene::hooks.beforeVesselUpdate = [this] {
         moduleForces_.Update();
@@ -119,6 +130,8 @@ void PhysicsBubble::Uninstall() {
     GE::onVesselLoaded.Remove(this, &PhysicsBubble::OnVesselLoaded);
     floatingOrigin_.OnDestroy();
     krakensbane_.OnDestroy();
+    contacts_.Uninstall();
+    FlightScene::hooks.afterPrecalc = savedAfterPrecalc_;
     FlightScene::hooks.afterFlightIntegrator = savedAfterFlightIntegrator_;
     FlightScene::hooks.beforeFlightIntegrator = savedBeforeFlightIntegrator_;
     FlightScene::hooks.beforeVesselUpdate = savedBeforeVesselUpdate_;
@@ -186,6 +199,7 @@ void PhysicsBubble::ShiftWorld(const Vector3d& offset, const Vector3d& offsetNon
     // world position derives from frameOriginWorld like every other body's)
     frameOriginWorld_ -= offsetNonKrakensbane;
     RefreshBindings();
+    contacts_.AddWorldShift(offsetNonKrakensbane);  // WP-20e: CollisionEnhancer's `lastPos -= FloatingOrigin.Offset`
 }
 
 bool PhysicsBubble::FoldFrameOffset() {
@@ -203,6 +217,7 @@ void PhysicsBubble::RebasePhysicsOrigin(const Vector3d& delta) {
     frameOriginWorld_ += delta;
     RefreshBindings();
     ++physicsRebases_;
+    contacts_.RefreshTerrain();  // WP-20e: the hosted terrain colliders' frame moved with the static bodies
 }
 
 void PhysicsBubble::MaybeRebasePhysicsOrigin() {
@@ -363,7 +378,11 @@ void PhysicsBubble::FixedUpdate() {
 
 void PhysicsBubble::FrameUpdate() {
     krakensbane_.FixedUpdate();     // seq 284
+    const Vector3d drift0 = floatingOrigin_.FrameOffset();
     floatingOrigin_.FixedUpdate();  // seq 285: frame drift; world rebase by KSP's threshold rule
+    // WP-20e: KSP's world moved with the Galilean frame every tick (setOffset), so CollisionEnhancer measured the part's motion in that
+    // frame: the frame drift of the tick is part of its FloatingOrigin.Offset
+    contacts_.AddWorldShift(floatingOrigin_.FrameOffset() - drift0);
     if (options_.foldFrameOffset) {
         if (krakensbane_.FrameVel.IsZero()) FoldFrameOffset();
         world_->SetStaticCollisions(floatingOrigin_.FrameOffset().IsZero());
@@ -372,7 +391,15 @@ void PhysicsBubble::FrameUpdate() {
 }
 
 // seq 291 PhysicsFixedUpdate (Time.fixedDeltaTime: TimeWarp sets it during physical warp)
-void PhysicsBubble::PhysicsStep() { host_.Step(Time::fixedDeltaTime); }
+void PhysicsBubble::PhysicsStep() {
+    host_.Step(Time::fixedDeltaTime);
+    // WP-20e: PhysX's callbacks after simulate (the RB anchor's force and break, OnCollisionEnter / Stay / Exit), then the structural
+    // changes they caused (an explosion's Part.Die)
+    if (options_.contactHost && contacts_.Installed()) {
+        contacts_.AfterPhysicsStep(Time::fixedDeltaTime);
+        host_.ProcessStructuralChanges();
+    }
+}
 
 void PhysicsBubble::Update() {
     FlightScene::Update();

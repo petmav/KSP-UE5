@@ -1,0 +1,650 @@
+// WP-20e scenarios: contact, landing and water through the whole flight tick (physics bubble + FlightIntegrator + contact host).
+// See STATUS.md WP-20e. Fixtures: tests/contact_fixture.hpp (over the WP-20d pad scene). No golden or capture covers Jolt contacts; each
+// scenario names its reference (KSP's rule evaluated on the reported contact, an analytic equilibrium, the scene's own geometry).
+#include <cmath>
+
+#include "contact_fixture.hpp"
+
+using namespace ksp;
+using namespace ksp::physics;
+using namespace wp20e;
+
+namespace {
+constexpr double kPadLat = wp20b::kPadLat, kPadLon = wp20b::kPadLon;
+
+struct PadRun {
+    int anchoredAt = -1;
+    double maxSpeedAnchored = 0.0, maxDriftAnchored = 0.0;   // after anchoring (m/s, m)
+    double maxSpeedLate = 0.0, maxDriftLate = 0.0;           // ticks 200-300 whatever the anchor
+    uint64_t enters = 0;
+    size_t groundContacts = 0;
+    bool landed = false;
+    Vessel::Situations situation = Vessel::Situations::PRELAUNCH;
+    float anchorForce = 0.0f;
+    double weight = 0.0;
+    int anchorResets = 0;
+};
+
+PadRun RunPad(const std::string& craft, bool anchor, int ticks = 300) {
+    PadRun r;
+    AnchorSettings settings;
+    World w(true);
+    PhysicsBubbleOptions o;
+    o.contacts.rbAnchor = anchor;
+    PadScene pad(w, o);
+    auto v = w.Craft(craft);
+    pad.Place(*v);
+    pad.s.Start(*v);
+    ResetLevelClock();
+    ContactHost& ch = pad.s.bubble.Contacts();
+    Vector3d comAnchored, comLate;
+    bool had = false;
+    for (int k = 0; k < ticks; ++k) {
+        Tick(pad);
+        VesselPhysics* vp = pad.s.bubble.Host().Find(*v);
+        if (vp == nullptr) continue;
+        const VesselPhysicsState st = vp->ReadState();
+        if (v->HasRBAnchor() && r.anchoredAt < 0) {
+            r.anchoredAt = k;
+            comAnchored = st.CoMD;
+        }
+        if (had && !v->HasRBAnchor()) ++r.anchorResets;
+        had = v->HasRBAnchor();
+        if (r.anchoredAt >= 0) {
+            r.maxSpeedAnchored = std::max(r.maxSpeedAnchored, st.rb_velocityD.magnitude());
+            r.maxDriftAnchored = std::max(r.maxDriftAnchored, (st.CoMD - comAnchored).magnitude());
+        }
+        if (k == 200) comLate = st.CoMD;
+        if (k > 200) {
+            r.maxSpeedLate = std::max(r.maxSpeedLate, st.rb_velocityD.magnitude());
+            r.maxDriftLate = std::max(r.maxDriftLate, (st.CoMD - comLate).magnitude());
+        }
+    }
+    r.enters = ch.EnterCount();
+    r.groundContacts = v->GroundContacts.size();
+    r.landed = v->Landed;
+    r.situation = v->situation;
+    r.anchorForce = ch.AnchorForce(*v).magnitude();
+    r.weight = v->totalMass * v->graviticAcceleration.magnitude();
+    return r;
+}
+}  // namespace
+
+TEST_CASE("WP-20e pad: the contacts keep the craft landed, the RB anchor (KSP's 1.5 s rule) ends the pad rocking (S, M2-AS, L2-AS)") {
+    if (!wp20b::GameAvailable()) return;
+    for (const char* craft : {"PhysProf-S", "PhysProf-M2-AS", "PhysProf-L2-AS"}) {
+        const PadRun a = RunPad(craft, true);
+        const PadRun n = RunPad(craft, false);
+        MESSAGE(std::string(craft) << ": " << a.enters << " contact enters, " << a.groundContacts << " ground-contact parts, landed " << a.landed << "; anchored at tick "
+                      << a.anchoredAt << " (" << a.anchorResets << " resets), anchor force " << a.anchorForce << " kN vs weight " << a.weight
+                      << " kN; after anchoring max speed " << a.maxSpeedAnchored << " m/s, drift " << a.maxDriftAnchored << " m; without the anchor (ticks 200-300) "
+                      << n.maxSpeedLate << " m/s, " << n.maxDriftLate << " m");
+        CHECK(a.enters > 0);
+        CHECK(a.groundContacts > 0);
+        CHECK(a.landed);
+        CHECK(a.situation == Vessel::Situations::PRELAUNCH);
+        // the anchor: KSP's rule (Vessel.cs:1159): landed, unpacked, not easing, v^2 < 0.05, 1.5 s -> 16 easing ticks + 75 ticks after them
+        CHECK(a.anchoredAt > 0);
+        CHECK(a.anchoredAt < 120);
+        CHECK(a.anchorResets == 0);
+        CHECK(std::fabs(a.anchorForce - a.weight) < 0.01 * a.weight);  // the anchor carries the support (see contact_host.cpp)
+        CHECK(a.maxSpeedAnchored < 1e-4);
+        CHECK(a.maxDriftAnchored < 1e-4);
+    }
+}
+
+TEST_CASE("WP-20e launch: ignition releases the anchor of the active vessel, liftoff ends the ground contact (PRELAUNCH -> FLYING)") {
+    if (!wp20b::GameAvailable()) return;
+    AnchorSettings settings;
+    World w(true);
+    PadScene pad(w);
+    EventLog log;
+    auto v = w.Craft("PhysProf-S");
+    pad.Place(*v);
+    pad.s.Start(*v);
+    v->MakeActive();
+    ResetLevelClock();
+    for (int k = 0; k < 120; ++k) Tick(pad);
+    REQUIRE(v->HasRBAnchor());
+    REQUIRE(v->situation == Vessel::Situations::PRELAUNCH);
+    wp20d::IgniteFirstStage(*v);
+    Tick(pad);
+    CHECK_FALSE(v->HasRBAnchor());  // Vessel.cs:1125: ACTIVE and mainThrottle > 0
+    int liftoff = -1;
+    for (int k = 0; k < 300; ++k) {
+        Tick(pad);
+        if (liftoff < 0 && !v->Landed) liftoff = k;
+    }
+    const ContactHost& ch = pad.s.bubble.Contacts();
+    MESSAGE("liftoff (not Landed) " << liftoff << " ticks after ignition; exits " << ch.ExitCount() << ", situation changes " << log.situations.size()
+                                    << ", altitude " << pad.RootAltitude(*v) << " m, crashes " << log.crashes.size());
+    CHECK(liftoff > 0);
+    CHECK(ch.ExitCount() > 0);
+    CHECK(v->GroundContacts.empty());
+    CHECK(v->situation == Vessel::Situations::FLYING);
+    REQUIRE_FALSE(log.situations.empty());
+    CHECK(log.situations.back().first == Vessel::Situations::PRELAUNCH);
+    CHECK(log.situations.back().second == Vessel::Situations::FLYING);
+    CHECK(log.crashes.empty());
+    CHECK(log.explosions == 0);
+}
+
+namespace {
+// One probeStackLarge (the root part of PhysProf-S: crashTolerance 9) released `clearance` above a site with a speed `v0` towards the ground
+struct DropRun {
+    std::vector<float> impacts;  // |Collision.relativeVelocity| of the part's Enter messages
+    bool exploded = false, landed = false, splashed = false, anchored = false, enhancerHit = false;
+    Vessel::Situations situation = Vessel::Situations::FLYING;
+    std::string landedAt;
+    double endSpeed = 0.0;
+    double minHeight = 1e30;  // lowest root height above the site's surface over the run
+    int explosions = 0, crashes = 0, splashCrashes = 0, groundExplosions = 0;
+    uint64_t hash = 0;
+    double depth = 0.0, submerged = 0.0;
+    Quaternionf rotation;
+    std::vector<std::pair<Vessel_Situations, Vessel_Situations>> situations;
+};
+
+DropRun Drop(double lat, double lon, bool sea, double clearance, double v0, int ticks, const std::string& tag = "", int threads = 1) {
+    DropRun r;
+    AnchorSettings settings;
+    World w(true);
+    PhysicsWorldConfig cfg;
+    cfg.threads = threads;
+    PadScene pad(w, PhysicsBubbleOptions{}, cfg);
+    if (!tag.empty()) {
+        StaticColliderInfo info;
+        info.tag = tag;  // FIXTURE: the KSC pad collider's tag (KSC scenery colliders are not extracted, WP-12b "Needs data" 2)
+        info.name = tag;
+        pad.s.bubble.Contacts().RegisterStaticRange(0, 900, info);
+    }
+    GameSettings::PHYSICS_EASE = false;  // the release speed is the impact speed's start, without the 16-tick gravity ramp
+    EventLog log;
+    auto v = w.CraftHead("PhysProf-S", 1);
+    const Site site = SiteAt(pad, lat, lon, sea);
+    PlaceAt(pad, *v, site, clearance, false);
+    pad.s.Start(*v);
+    v->MakeActive();
+    ResetLevelClock();
+    ContactHost& ch = pad.s.bubble.Contacts();
+    ch.recordDispatch = true;
+    REQUIRE(TickUntilUnpacked(pad, *v));
+    VesselPhysics* vp = pad.s.bubble.Host().Find(*v);
+    REQUIRE(vp != nullptr);
+    vp->SetLinearVelocity(site.up * -v0);
+    Part* root = v->rootPart;
+    for (int k = 0; k < ticks; ++k) {
+        Tick(pad);
+        for (float s : ImpactSpeeds(ch, root)) r.impacts.push_back(s);
+        if (CollisionEnhancer* e = ch.Enhancer(*root)) r.enhancerHit = r.enhancerHit || e->lastHit;
+        if (root->State() == PartStates::DEAD) break;
+        r.minHeight = std::min(r.minHeight, (Vector3d(root->partTransform.position) - w.Kerbin().position).magnitude() - site.surfaceRadius);
+    }
+    r.exploded = root->State() == PartStates::DEAD;
+    r.landed = v->Landed;
+    r.splashed = v->Splashed;
+    r.anchored = v->HasRBAnchor();
+    r.situation = v->situation;
+    r.landedAt = v->landedAt;
+    r.endSpeed = r.exploded ? 0.0 : VesselVelocity(pad, *v).magnitude();
+    r.explosions = log.explosions;
+    r.crashes = static_cast<int>(log.crashes.size());
+    r.splashCrashes = static_cast<int>(log.splashCrashes.size());
+    r.groundExplosions = static_cast<int>(log.groundExplosions.size());
+    r.hash = pad.s.world.StateHash();
+    r.depth = root->fields.depth;
+    r.submerged = root->fields.submergedPortion;
+    r.rotation = root->partTransform.rotation;
+    r.situations = log.situations;
+    return r;
+}
+}  // namespace
+
+TEST_CASE("WP-20e crash tolerance: the part hits the ground at 0.9x / 1.1x its crashTolerance: survives and lands / explodes (Part.HandleCollision)") {
+    if (!wp20b::GameAvailable()) return;
+    const double tol = 9.0;  // probeStackLarge.cfg crashTolerance
+    const double g = 9.80;   // Kerbin at the pad, for the release speed only
+    const double d = 0.30;
+    for (const double f : {0.9, 1.1}) {
+        const double vt = f * tol;
+        const double v0 = std::sqrt(vt * vt - 2.0 * g * d);
+        const DropRun r = Drop(kPadLat, kPadLon, false, d, v0, 300);
+        REQUIRE_FALSE(r.impacts.empty());
+        MESSAGE(f << " x crashTolerance: target " << vt << " m/s, reported impact " << r.impacts.front() << " m/s; exploded " << r.exploded << " (explosions "
+                  << r.explosions << ", crash events " << r.crashes << "), landed " << r.landed << ", situation " << static_cast<int>(r.situation)
+                  << ", anchored " << r.anchored << ", end speed " << r.endSpeed << " m/s, lowest root height " << r.minHeight << " m, landedAt '" << r.landedAt << "'");
+        CHECK(std::fabs(r.impacts.front() - vt) < 0.03 * vt);  // the impact KSP's rule saw is the one aimed at
+        CHECK(r.exploded == (f > 1.0));
+        CHECK(r.exploded == (r.impacts.front() > tol));  // HandleCollision's own threshold (the reference covers the rule bit for bit)
+        if (f < 1.0) {
+            CHECK(r.landed);
+            CHECK(r.situation == Vessel::Situations::LANDED);
+            CHECK(r.landedAt.empty());  // untagged terrain (PQS quads are "Untagged")
+            CHECK(r.endSpeed < 1e-3);
+            CHECK(r.anchored);
+            CHECK(r.explosions == 0);
+            REQUIRE_FALSE(r.situations.empty());
+            CHECK(r.situations.back().second == Vessel::Situations::LANDED);
+        } else {
+            CHECK(r.explosions == 1);
+            CHECK(r.crashes == 1);
+        }
+    }
+}
+
+TEST_CASE("WP-20e landedAt: a tagged static collider names the landing site (Part.LandedCollisionChecks -> Vessel.SetLandedAt)") {
+    if (!wp20b::GameAvailable()) return;
+    const DropRun r = Drop(kPadLat, kPadLon, false, 0.2, 1.0, 150, "LaunchPad");
+    MESSAGE("landedAt " << r.landedAt << ", landed " << r.landed);
+    CHECK(r.landed);
+    CHECK(r.landedAt == "LaunchPad");
+}
+
+namespace {
+// A point of Kerbin's ocean east of the KSC: the first longitude (0.25 deg steps from the pad) whose PQS terrain is 50 m below sea level
+bool OceanSite(World& w, double& lat, double& lon) {
+    lat = kPadLat;
+    for (double l = kPadLon + 0.5; l < kPadLon + 20.0; l += 0.25) {
+        const Vector3d rel = terrain::GetRelSurfaceNVector(lat, l).normalized();
+        if (w.pqs->GetSurfaceHeight(rel, true) < w.Kerbin().Radius - 50.0) {
+            lon = l;
+            return true;
+        }
+    }
+    return false;
+}
+
+// KSP's buoyancy equilibrium for the part's settled attitude (PartBuoyancy.cs:171-229, 497-534 with the part's own cube data, independent of
+// the port): the draft (depth of the lowest cube corner) at which the buoyant force equals the part's weight in the rotating frame
+double EquilibriumDraft(Part& p, double mass, double gUp, double gBuoy, const Quaternionf& rot) {
+    const DragCubeList& dc = p.DragCubes;
+    const Vector3f sz = dc.WeightedSize(), c = dc.WeightedCenter();
+    const std::array<float, 6>& a = dc.WeightedArea();
+    const double xp = a[0] / (double(sz.y) * sz.z), yp = a[2] / (double(sz.x) * sz.z), zp = a[4] / (double(sz.x) * sz.y);
+    const double xz = (std::min(xp, zp) + 2.0 * xp * zp) / 3.0;
+    const double V = double(sz.x) * sz.y * sz.z * xz * yp;
+    const double target = mass * gUp / (V * 1.0 /* oceanDensity */ * PhysicsGlobals::BuoyancyScalar() * p.fields.buoyancy * gBuoy);
+    // corner heights above the centre of displacement (the part origin) along the local up, part attitude `rot` (craft up = world up here)
+    double lo = 1e30, hi = -1e30;
+    const QuaternionD q(rot);
+    for (int i = 0; i < 8; ++i) {
+        const Vector3d corner((i & 4) ? c.x + 0.5 * sz.x : c.x - 0.5 * sz.x, (i & 2) ? c.y + 0.5 * sz.y : c.y - 0.5 * sz.y,
+                              (i & 1) ? c.z + 0.5 * sz.z : c.z - 0.5 * sz.z);
+        const double up = (q * corner).y;  // the world up of the craft frame is +y of the attitude given (relative attitude)
+        lo = std::min(lo, up);
+        hi = std::max(hi, up);
+    }
+    // depth d of the centre of displacement: maxDepth = d - lo, minDepth = d - hi
+    auto portion = [&](double d) {
+        const double maxD = d - lo, minD = d - hi;
+        if (!(minD < 0.0 && minD < maxD)) return 1.0;
+        double s = (d <= 0.0 && d != maxD) ? maxD / (maxD - d) * 0.5 : 0.5 + d / (d - minD) * 0.5;
+        s = std::sin(s * 3.14159265358979323846 - 3.14159265358979323846 / 2.0) * 0.5 + 0.5;
+        const double ramp = maxD < 0.2 ? maxD / 0.2 : 1.0;
+        return s * ramp;
+    };
+    double a0 = lo, b0 = hi;  // portion(a0) = 0 .. portion(b0) = 1
+    for (int it = 0; it < 200; ++it) {
+        const double m = 0.5 * (a0 + b0);
+        if (portion(m) < target) a0 = m;
+        else b0 = m;
+    }
+    return 0.5 * (a0 + b0) - lo;
+}
+}  // namespace
+
+TEST_CASE("WP-20e splashdown: a part dropped into Kerbin's ocean floats at KSP's buoyancy equilibrium (within 2 %), SPLASHED; a fast one crashes") {
+    if (!wp20b::GameAvailable()) return;
+    double lat = 0.0, lon = 0.0;
+    {
+        World probe(true);
+        REQUIRE(probe.Kerbin().ocean);
+        REQUIRE(OceanSite(probe, lat, lon));
+    }
+    // gentle: 2 m/s from 1 m
+    {
+        AnchorSettings settings;
+        World w(true);
+        PadScene pad(w);
+        GameSettings::PHYSICS_EASE = false;
+        EventLog log;
+        auto v = w.CraftHead("PhysProf-S", 1);
+        const Site site = SiteAt(pad, lat, lon, true);
+        PlaceAt(pad, *v, site, 1.0, false);
+        pad.s.Start(*v);
+        v->MakeActive();
+        ResetLevelClock();
+        REQUIRE(TickUntilUnpacked(pad, *v));
+        VesselPhysics* vp = pad.s.bubble.Host().Find(*v);
+        vp->SetLinearVelocity(site.up * -2.0);
+        Part* root = v->rootPart;
+        double draftSum = 0.0, speedMax = 0.0;
+        int n = 0;
+        const int ticks = 1000;
+        for (int k = 0; k < ticks; ++k) {
+            Tick(pad);
+            if (k >= ticks - 100) {
+                draftSum += root->fields.maxDepth;
+                ++n;
+                speedMax = std::max(speedMax, VesselVelocity(pad, *v).magnitude());
+            }
+        }
+        const double draft = draftSum / n;
+        const CelestialBody& k = w.Kerbin();
+        const Vector3d com = vp->ReadState().CoMD;
+        const Vector3d up = (com - k.position).normalized();
+        const double gBuoy = -Vector3d::Dot(FlightGlobals::getGeeForceAtPosition(com, k), up);
+        const double gUp = gBuoy - Vector3d::Dot(FlightGlobals::getCentrifugalAcc(com, k), up);
+        // the part's attitude relative to the site's frame (craft x, y, z = east, up, north)
+        const QuaternionD siteRot = wp20b::BasisRotation(site.east, site.up, site.north);
+        const Quaternionf rel = (QuaternionD::Inverse(siteRot) * QuaternionD(root->partTransform.rotation)).ToQuaternionf();
+        const double expected = EquilibriumDraft(*root, vp->PartMass(*root), gUp, gBuoy, rel);
+        MESSAGE("splashdown at lon " << lon << ": draft (lowest cube corner depth) " << draft << " m vs KSP's equilibrium " << expected << " m ("
+                                     << (draft - expected) / expected * 100.0 << " %), submerged portion " << root->fields.submergedPortion << ", max speed (last 2 s) "
+                                     << speedMax << " m/s, situation " << static_cast<int>(v->situation) << ", WaterContact " << root->fields.WaterContact);
+        CHECK(root->State() != PartStates::DEAD);
+        CHECK(v->Splashed);
+        CHECK_FALSE(v->Landed);
+        CHECK(v->situation == Vessel::Situations::SPLASHED);
+        CHECK(root->fields.WaterContact);
+        CHECK(log.splashCrashes.empty());
+        CHECK(std::fabs(draft - expected) < 0.02 * expected);
+        CHECK(speedMax < 0.05);
+    }
+    // fast: 20 m/s into the water: max(BuoyancyMinCrashMult |v|, v_down) > crashTolerance * BuoyancyCrashToleranceMult = 10.8 m/s
+    {
+        AnchorSettings settings;
+        World w(true);
+        PadScene pad(w);
+        GameSettings::PHYSICS_EASE = false;
+        EventLog log;
+        auto v = w.CraftHead("PhysProf-S", 1);
+        const Site site = SiteAt(pad, lat, lon, true);
+        PlaceAt(pad, *v, site, 1.0, false);
+        pad.s.Start(*v);
+        v->MakeActive();
+        ResetLevelClock();
+        REQUIRE(TickUntilUnpacked(pad, *v));
+        pad.s.bubble.Host().Find(*v)->SetLinearVelocity(site.up * -20.0);
+        Part* root = v->rootPart;
+        for (int k = 0; k < 50 && root->State() != PartStates::DEAD; ++k) Tick(pad);
+        MESSAGE("20 m/s splashdown: onCrashSplashdown " << log.splashCrashes.size() << ", part dead " << (root->State() == PartStates::DEAD));
+        CHECK(log.splashCrashes.size() == 1);
+        CHECK(root->State() == PartStates::DEAD);
+    }
+}
+
+TEST_CASE("WP-20e high-speed crash: 80 m/s into the terrain, the part explodes and nothing tunnels through (CollisionEnhancer, HandleCollision)") {
+    if (!wp20b::GameAvailable()) return;
+    const DropRun r = Drop(kPadLat, kPadLon, false, 5.0, 80.0, 60);
+    MESSAGE("exploded " << r.exploded << " (enhancer hit " << r.enhancerHit << ", contact impacts " << r.impacts.size() << "), lowest root height "
+                        << r.minHeight << " m, explosions " << r.explosions);
+    CHECK(r.exploded);
+    CHECK(r.explosions == 1);
+    CHECK(r.minHeight > -3.0);  // the root never got far below the surface: the step it crossed it, it died
+}
+
+TEST_CASE("WP-20e determinism: the drop's contact messages, impact speed and end state are the same at 1 and 4 Jolt threads") {
+    if (!wp20b::GameAvailable()) return;
+    const double v0 = std::sqrt(8.1 * 8.1 - 2.0 * 9.80 * 0.30);
+    const DropRun a = Drop(kPadLat, kPadLon, false, 0.30, v0, 200, "", 1);
+    const DropRun b = Drop(kPadLat, kPadLon, false, 0.30, v0, 200, "", 4);
+    REQUIRE_FALSE(a.impacts.empty());
+    CHECK(a.impacts.size() == b.impacts.size());
+    CHECK(wp19b::SameBits(a.impacts.front(), b.impacts.front()));
+    CHECK(a.hash == b.hash);
+    CHECK(a.landed == b.landed);
+}
+
+namespace {
+double HighestProxyY(const Vessel& v) {
+    double maxY = -1e30;
+    for (Part* p : v.parts) {
+        if (!p->hasRigidbody) continue;
+        for (const ColliderProxy& b : DragCubeColliderProxy(*p))
+            for (int c = 0; c < 8; ++c) {
+                const Vector3f corner = b.center + Vector3f((c & 1) ? b.halfExtents.x : -b.halfExtents.x, (c & 2) ? b.halfExtents.y : -b.halfExtents.y,
+                                                            (c & 4) ? b.halfExtents.z : -b.halfExtents.z);
+                maxY = std::max(maxY, static_cast<double>(p->fields.orgPos.y) + static_cast<double>((p->fields.orgRot * corner).y));
+            }
+    }
+    return maxY;
+}
+
+struct StackRun {
+    bool aDead = false, bDead = false, bLanded = false, aLanded = false;
+    std::string aLandedAt, bLandedAt;
+    float impactB = 0.0f, impactA = 0.0f, massSeenByB = 0.0f;
+    int collisions = 0, layer = -1;
+    Part* otherPart = nullptr;
+    Part* aRoot = nullptr;
+};
+
+// vessel A (one probeStackLarge) standing on the pad, vessel B (another) dropped onto it at v0
+StackRun DropOnVessel(double v0) {
+    StackRun r;
+    AnchorSettings settings;
+    World w(true);
+    PadScene pad(w);
+    GameSettings::PHYSICS_EASE = false;
+    EventLog log;
+    auto a = w.CraftHead("PhysProf-S", 1);
+    auto b = w.CraftHead("PhysProf-S", 1);
+    const Site site = SiteAt(pad, kPadLat, kPadLon, false);
+    PlaceAt(pad, *a, site, 0.0, true);
+    PlaceAt(pad, *b, site, (HighestProxyY(*a) - LowestProxyY(*a)) + 0.30, false);
+    pad.s.Start(*b);
+    b->MakeActive();
+    ResetLevelClock();
+    ContactHost& ch = pad.s.bubble.Contacts();
+    ch.recordDispatch = true;
+    REQUIRE(TickUntilUnpacked(pad, *b));
+    REQUIRE(TickUntilUnpacked(pad, *a));
+    pad.s.bubble.Host().Find(*b)->SetLinearVelocity(site.up * -v0);
+    r.aRoot = a->rootPart;
+    Part* aRoot = a->rootPart;
+    Part* bRoot = b->rootPart;
+    for (int k = 0; k < 150; ++k) {
+        Tick(pad);
+        for (const ContactHost::DispatchRecord& d : ch.LastDispatch()) {
+            if (d.kind != PhysicsWorld::ContactEvent::Kind::Enter || d.collision.layer != 0) continue;
+            if (d.receiver == bRoot && r.impactB == 0.0f) {
+                r.impactB = d.collision.relativeVelocity.magnitude();
+                r.massSeenByB = d.collision.otherRigidbodyMass;
+                r.layer = d.collision.layer;
+                r.otherPart = d.collision.otherPart;
+            }
+            if (d.receiver == aRoot && r.impactA == 0.0f) r.impactA = d.collision.relativeVelocity.magnitude();
+        }
+        if (aRoot->State() == PartStates::DEAD || bRoot->State() == PartStates::DEAD) {
+            Tick(pad);
+            break;
+        }
+    }
+    r.aDead = aRoot->State() == PartStates::DEAD;
+    r.bDead = bRoot->State() == PartStates::DEAD;
+    r.aLanded = a->Landed;
+    r.bLanded = b->Landed;
+    r.aLandedAt = a->landedAt;
+    r.bLandedAt = b->landedAt;
+    r.collisions = static_cast<int>(log.collisions.size());
+    return r;
+}
+}  // namespace
+
+TEST_CASE("WP-20e vessel on vessel: a part landing on a landed vessel is landed (LandedCollisionChecks' part branch); at speed both parts explode") {
+    if (!wp20b::GameAvailable()) return;
+    {
+        const StackRun r = DropOnVessel(1.0);
+        MESSAGE("1 m/s: B's impact " << r.impactB << " m/s (layer " << r.layer << ", other rb mass " << r.massSeenByB << " t), A's " << r.impactA << "; B landed "
+                                     << r.bLanded << " at '" << r.bLandedAt << "' (A at '" << r.aLandedAt << "'), dead " << r.aDead << " / " << r.bDead);
+        CHECK(r.layer == 0);
+        CHECK(r.otherPart == r.aRoot);
+        CHECK(r.massSeenByB == doctest::Approx(0.5).epsilon(1e-6));
+        CHECK(r.impactB == doctest::Approx(r.impactA).epsilon(1e-6));  // the two sides of one collision
+        CHECK(r.bLanded);
+        CHECK(r.bLandedAt == r.aLandedAt);
+        CHECK_FALSE(r.aDead);
+        CHECK_FALSE(r.bDead);
+        CHECK(r.collisions == 0);
+    }
+    {
+        const StackRun r = DropOnVessel(25.0);
+        MESSAGE("25 m/s: B's impact " << r.impactB << " m/s x A's rb mass " << r.massSeenByB << " t; dead " << r.aDead << " / " << r.bDead << ", onCollision "
+                                      << r.collisions);
+        CHECK(r.impactB > 20.0f);  // 25 m/s at release, the drag of the 2.5 m disc on the way
+        CHECK(r.aDead);
+        CHECK(r.bDead);
+        CHECK(r.collisions == 2);
+    }
+}
+
+TEST_CASE("WP-20e CheckGroundCollision: a landed craft spawned 2 m above / 0.4 m into the pad is put on it at GoOffRails (Vessel.cs:2493)") {
+    if (!wp20b::GameAvailable()) return;
+    for (const double clearance : {2.0, -0.4}) {
+        AnchorSettings settings;
+        World w(true);
+        PadScene pad(w);
+        EventLog log;
+        auto v = w.Craft("PhysProf-S");
+        const Site site = SiteAt(pad, kPadLat, kPadLon, false);
+        PlaceAt(pad, *v, site, clearance, true);
+        REQUIRE(v->vesselSpawning);
+        pad.s.Start(*v);
+        ResetLevelClock();
+        ContactHost& ch = pad.s.bubble.Contacts();
+        ch.recordDispatch = true;
+        REQUIRE(TickUntilUnpacked(pad, *v));
+        const int ignore = v->IgnoreCollisionsFrames();
+        // the lowest proxy corner of the craft over the terrain right after the unpack (rays from 5 m above every lowest corner)
+        double gap = 1e30;
+        for (Part* p : v->parts) {
+            if (!p->hasRigidbody) continue;
+            for (const ColliderProxy& b : DragCubeColliderProxy(*p))
+                for (int c = 0; c < 8; ++c) {
+                    const Vector3f corner = b.center + Vector3f((c & 1) ? b.halfExtents.x : -b.halfExtents.x, (c & 2) ? b.halfExtents.y : -b.halfExtents.y,
+                                                                (c & 4) ? b.halfExtents.z : -b.halfExtents.z);
+                    const Vector3d world = Vector3d(p->partTransform.TransformPoint(corner));
+                    const PhysicsWorld::RayHit h = pad.s.world.RayCast(pad.s.bubble.StaticPhysicsFromWorld(world + site.up * 5.0), site.up * -1.0, 20.0,
+                                                                       PhysicsWorld::kLayerStatic);
+                    if (h.hit) gap = std::min(gap, h.distance - 5.0);
+                }
+        }
+        float maxImpact = 0.0f;
+        for (int k = 0; k < 100; ++k) {
+            Tick(pad);
+            for (const ContactHost::DispatchRecord& d : ch.LastDispatch())
+                if (d.kind == PhysicsWorld::ContactEvent::Kind::Enter) maxImpact = std::max(maxImpact, d.collision.relativeVelocity.magnitude());
+        }
+        MESSAGE("spawned " << clearance << " m from the pad: after CheckGroundCollision the lowest corner is " << gap << " m above the terrain; ignore-collision frames "
+                           << ignore << "; largest impact speed " << maxImpact << " m/s; joint breaks " << pad.s.bubble.Host().LastBreaks().size() << ", parts "
+                           << v->parts.size() << ", landed " << v->Landed);
+        CHECK(std::fabs(gap) < 0.05);
+        CHECK(maxImpact < 0.5f);
+        CHECK(v->parts.size() == 21);
+        CHECK(v->Landed);
+        CHECK(log.explosions == 0);
+        // moved up out of the ground: CollisionEnhancer.bypass and 60 frames without collision messages (Vessel.cs:2542-2543)
+        if (clearance < 0.0) CHECK(ignore >= 58);
+        else CHECK(ignore == 0);
+    }
+}
+
+namespace {
+// Kerbin's stock PQS sphere built around the pad as KSP's flight scene does (PQS.Start, two frames; the WP-12b kerbin_ksc scenario's actions)
+struct KerbinSphere {
+    PQSCache cache;
+    std::unique_ptr<PQS> sphere;
+    PQSTarget target;
+    explicit KerbinSphere(World& w) {
+        cache.cachePQInitialCount = 64;
+        sphere = terrain::CreateStockPQS("Kerbin", *w.maps);
+        for (auto& m : sphere->childMods)
+            if (auto* cb = dynamic_cast<PQSMod_CelestialBodyTransform*>(m.get())) {
+                cb->host.hasBody = [] { return true; };
+                cb->host.flightGlobalsExists = [] { return true; };
+                cb->host.activeVessel = [this] { return &target; };
+                cb->host.isCurrentMainBody = [] { return true; };
+                cb->host.loadedScene = [] { return static_cast<int>(GameScenes::FLIGHT); };
+                cb->host.mapIsEnabled = [] { return false; };
+            }
+        PQSCache::CreateDefaultPresetList();
+        sphere->cache = &cache;
+        target.position = terrain::GetRelSurfaceNVector(kPadLat, kPadLon).normalized() * (w.Kerbin().Radius + 70.0);
+        sphere->SetTarget(&target);
+        sphere->Start();
+        for (int f = 0; f < 2; ++f) {
+            sphere->FixedUpdate();
+            sphere->FrameUpdate();
+        }
+    }
+    ~KerbinSphere() { PQSCache::PresetList.reset(); }
+};
+}  // namespace
+
+TEST_CASE("WP-20e terrain colliders per body: the bubble hosts Kerbin's PQS quads (WP-12b) in its frame, a part lands on a PQ, frame changes rebuild them") {
+    if (!wp20b::GameAvailable()) return;
+    AnchorSettings settings;
+    World w(true);
+    KerbinSphere ks(w);
+    KerbinScene sc(w);
+    GameSettings::PHYSICS_EASE = false;
+    EventLog log;
+    CelestialBody& kerbin = w.Kerbin();
+    ContactHost& ch = sc.s.bubble.Contacts();
+    TerrainColliders* tc = ch.HostTerrain(kerbin, *ks.sphere);
+    REQUIRE(tc != nullptr);
+    const size_t colliders = tc->CookedCount();
+    // the frame: body.rotation maps the sphere's local frame to the world as GetWorldSurfacePosition does
+    const Vector3d rel = terrain::GetRelSurfaceNVector(kPadLat, kPadLon).normalized();
+    const Vector3d viaFrame = kerbin.GetWorldSurfacePosition(kPadLat, kPadLon, 70.0);
+    const Vector3d viaRotation = kerbin.position + kerbin.rotation * (rel * (kerbin.Radius + 70.0));
+    // the pad from above: the ray hits a PQ collider of Kerbin at the WP-11 height
+    const double wp11 = w.pqs->GetSurfaceHeight(rel, true);
+    const Vector3d padWorld = kerbin.GetWorldSurfacePosition(kPadLat, kPadLon, wp11 - kerbin.Radius);
+    const Vector3d up = (padWorld - kerbin.position).normalized();
+    const PhysicsWorld::RayHit h = sc.s.world.RayCast(sc.s.bubble.StaticPhysicsFromWorld(padWorld + up * 50.0), up * -1.0, 100.0, PhysicsWorld::kLayerStatic);
+    REQUIRE(h.hit);
+    const Vector3d hitWorld = h.point + sc.s.bubble.FrameOriginWorld();
+    const StaticColliderInfo& info = ch.StaticInfo(h.userData);
+    MESSAGE(colliders << " PQ colliders hosted; frame: rotation vs BodyFrame " << (viaFrame - viaRotation).magnitude() << " m; the pad ray hits " << info.name
+                      << " (PQ " << info.isPQ << ") " << (hitWorld - padWorld).magnitude() << " m from the WP-11 surface point");
+    CHECK(colliders >= 9);
+    CHECK((viaFrame - viaRotation).magnitude() < 1e-6);
+    CHECK(info.isPQ);
+    CHECK(info.pqBody == &kerbin);
+    CHECK((hitWorld - padWorld).magnitude() < 1.51);  // WP-12b's measured collider-vs-WP-11 bound within 200 m of the pad
+    // a part dropped on it lands on the PQ
+    Site site = SiteAt(sc, kPadLat, kPadLon, false);
+    site.surfaceRadius = (hitWorld - kerbin.position).magnitude();
+    auto v = w.CraftHead("PhysProf-S", 1);
+    PlaceAt(sc, *v, site, 0.3, false);
+    sc.s.Start(*v);
+    v->MakeActive();
+    ResetLevelClock();
+    ch.recordDispatch = true;
+    REQUIRE(TickUntilUnpacked(sc, *v));
+    sc.s.bubble.Host().Find(*v)->SetLinearVelocity(site.up * -1.0);
+    bool onPQ = false;
+    for (int k = 0; k < 150; ++k) {
+        Tick(sc);
+        for (const ContactHost::DispatchRecord& d : ch.LastDispatch())
+            if (d.kind == PhysicsWorld::ContactEvent::Kind::Enter && d.collision.isPQ && d.collision.pqBody == &kerbin) onPQ = true;
+    }
+    MESSAGE("landed on a PQ " << onPQ << ", Landed " << v->Landed << ", situation " << static_cast<int>(v->situation));
+    CHECK(onPQ);
+    CHECK(v->Landed);
+    CHECK(v->situation == Vessel::Situations::LANDED);
+    // rotating -> inertial: the body turns under the quads, they go; back: rebuilt where they were
+    sc.s.bubble.setRotatingFrame(*sc.s.opm, false);
+    CHECK(ch.Terrain(kerbin) == nullptr);
+    size_t inRange = 0;
+    for (uint64_t key : sc.s.world.StaticKeys())
+        if (ch.StaticInfo(key).pqBody == &kerbin) ++inRange;
+    CHECK(inRange == 0);
+    sc.s.bubble.setRotatingFrame(*sc.s.opm, true);
+    REQUIRE(ch.Terrain(kerbin) != nullptr);
+    CHECK(ch.Terrain(kerbin)->CookedCount() == colliders);
+    ch.DropTerrain(kerbin);
+}
+

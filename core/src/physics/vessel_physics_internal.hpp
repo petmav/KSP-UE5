@@ -101,6 +101,7 @@ struct VesselPhysics::PartRec {
     Vector3f inertiaPerUnit;      // Part.inertiaTensor (per unit mass)
     Vector3f inertia;             // rb.inertiaTensor
     float angularDrag = 0.05f;    // rb.angularDrag
+    float drag = 0.0f;            // rb.drag (WP-20e: PartBuoyancy's water drag; Part.Start sets 0, Part.cs:1877)
     bool sameVesselCollision = false;
     std::vector<ColliderProxy> colliders;
     int cluster = -1;

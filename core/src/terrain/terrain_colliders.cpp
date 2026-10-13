@@ -117,12 +117,15 @@ void TerrainColliders::OnEnabled(PQ& quad) {
     e->quadId = quad.id;
     e->key = opt_.keyBase + static_cast<uint32_t>(quad.id);
     // geometry: the quad mesh as of now (Unity bakes sharedMesh at the assignment): triangles = cacheIndices[0]
-    e->centre = quad.positionPlanet + opt_.origin;
+    // WP-20e: a rotated frame (the body's orientation in the physics frame of a host) turns the quad's planet-relative geometry in double
+    // before the vertices are narrowed; the identity (WP-12b's body-fixed frame) keeps the statements as they were
+    const bool rotated = !(opt_.rotation.x == 0.0 && opt_.rotation.y == 0.0 && opt_.rotation.z == 0.0 && opt_.rotation.w == 1.0);
+    e->centre = rotated ? opt_.rotation * quad.positionPlanet + opt_.origin : quad.positionPlanet + opt_.origin;
     e->indices = sphere_.meshCache().cacheIndices[0];
     const size_t n = quad.vertsD.size();
     e->vertices.reserve(n);
     for (size_t i = 0; i < n; ++i) {
-        const Vector3d d = quad.vertsD[i] - quad.positionPlanet;
+        const Vector3d d = rotated ? opt_.rotation * (quad.vertsD[i] - quad.positionPlanet) : quad.vertsD[i] - quad.positionPlanet;
         e->vertices.push_back(Vector3f(static_cast<float>(d.x), static_cast<float>(d.y), static_cast<float>(d.z)));
     }
     if (opt_.recordEvents) {

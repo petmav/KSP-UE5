@@ -6,6 +6,7 @@
 
 #include "ksp/events/game_events.hpp"
 #include "ksp/math/mathfx.hpp"
+#include "ksp/physics/collision_enhancer.hpp"
 
 namespace ksp {
 
@@ -45,9 +46,11 @@ void FloatingOrigin::FixedUpdate() {
         consumed = outOfFrameAdditional;
     }
     if (flag2) {
+        physics::CollisionEnhancer::bypass = true;  // WP-20e (:138)
         setOffset(Vector3d(activeVesselPosition()), Vector3d::zero());  // C#: (position, outOfFrameAdditional): the drift is FrameOffset
         offsetNonKrakensbane = offset + consumed;
     } else {
+        physics::CollisionEnhancer::bypass = false;  // WP-20e (:143 / :148)
         offset.Zero();
         reverseoffset.Zero();
         if (canEngageThisFrame && flag) offsetNonKrakensbane = consumed;

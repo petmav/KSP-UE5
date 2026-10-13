@@ -36,6 +36,7 @@
 #include "ksp/parts/available_part.hpp"
 #include "ksp/parts/part_types.hpp"
 #include "ksp/save/crew.hpp"
+#include "ksp/physics/collision.hpp"
 #include "ksp/physics/vessel_ranges.hpp"
 #include "ksp/resources/resource_types.hpp"
 #include "ksp/save/proto_vessel.hpp"
@@ -436,6 +437,34 @@ public:
     // on onPartDie). The Part object stays owned by its Vessel (kspcore frees parts with their vessel).
     void Die();
     void CheckBodyLiftAttachment();                       // :1964
+
+    // ---- WP-20e: contacts (Part.cs:3355-3745, 3941-3969, 4368-4407; src/parts/part_contact.cpp) -------------------------------------
+    // Part.currentCollisions (:583, a DictionaryValueList<Collider, int>: insertion order, per other collider the number of this part's
+    // colliders touching it), checkAfterResetCollisions (:597 private), crashObjectName (:597, the CrashObjectName component's objectName;
+    // empty = null). The contact host calls the three messages on the part whose Rigidbody owns the touching collider.
+    std::vector<std::pair<UnityEngine::ColliderRef, int>> currentCollisions;
+    bool checkAfterResetCollisions = false;
+    std::string crashObjectName;
+    void OnCollisionEnter(const UnityEngine::Collision& c);            // :3355
+    void LandedCollisionChecks(const UnityEngine::Collision& c);       // :3417
+    void OnCollisionExit(const UnityEngine::Collision& c);             // :3471
+    bool CheckOtherGroundContact(const UnityEngine::Collision& c) const;  // :3520 (private in C#)
+    bool CheckCollision(const UnityEngine::Collision& c);              // :3539
+    void HandleCollision(const UnityEngine::Collision& c);             // :3613
+    void OnTouchDown() { onPartTouchdown(); }             // :3657
+    void OnSplashDown() { onPartSplashdown(); }           // :3662
+    void OnLiftOff() { onPartLiftOff(); }                 // :3667
+    bool checkLanded();                                   // :3672
+    bool checkSplashed();                                 // :3697
+    void checkPermanentLandedAt(const std::string& objectUnderVesselTag);  // :3722 (vessel.objectUnderVessel's tag; "" = none)
+    void OnCollisionStay(const UnityEngine::Collision& c);             // :3941
+    void ResetCollisions();                               // :3949 (the 3-frame DelayedCallback: the host calls ResetCollisionsCheck)
+    void ResetCollisionsCheck() { checkAfterResetCollisions = false; }  // :3966
+    void explode();                                       // :4368
+    void explode(float offset);                           // :4373 (FX through PartContactEnvironment::explodeFx; then Die)
+    virtual void onPartLiftOff() {}                       // :4609 protected virtual
+    virtual void onPartTouchdown() {}                     // :4613
+    virtual void onPartSplashdown() {}                    // :4617
     void SetVessel(Vessel* v);                            // :3263 private SetVessel: v.parts.Add + vessel = v, recursive
     virtual void onDecouple(float /*breakForce*/) {}      // :4585 protected virtual
     virtual void onDisconnect() {}                        // :4589 protected virtual

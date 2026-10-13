@@ -15,6 +15,7 @@
 #include "ksp/contracts/templates.hpp"
 #include "ksp/celestial/flight_globals.hpp"
 #include "ksp/celestial/planetarium.hpp"
+#include "ksp/physics/collision_enhancer.hpp"
 #include "ksp/physics/flight_integrator.hpp"
 #include "ksp/events/event_data.hpp"
 #include "ksp/input/input_lock_manager.hpp"
@@ -108,6 +109,9 @@ void Restore(const std::string& test) {
     if (FlightGlobals::speedDisplayMode() != FlightGlobals_SpeedDisplayModes::Surface) Report("FlightGlobals speed mode", test);
     FlightGlobals::ResetSpeedModesForTests();
     ksp::physics::FlightIntegrator::ActiveVesselFI = nullptr;
+    // WP-20e: the collision statics (CheatOptions.NoCrashDamage, the FX / wheel-damage hooks, CollisionEnhancer.bypass)
+    ksp::PartContactEnvironment::Reset();
+    ksp::physics::CollisionEnhancer::bypass = false;
     // InputLockManager's lock stack and mask (InputLockManager.cs:8-10) are static: a lock a case leaves behind (WP-32's parachute-state walk
     // enters KerbalEVA states that set ControlPanelLock_<id> without their OnLeave) blocks VESSEL_SWITCHING and the ship controls in every
     // later case (WP-19a's VesselSwitching.Update returned nothing after it under --order-by=rand -rs=27)

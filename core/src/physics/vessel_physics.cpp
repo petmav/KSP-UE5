@@ -360,6 +360,12 @@ Vector3d VesselPhysics::PhysicsFromWorld(const Vector3d& w) const { return Refer
 
 int VesselPhysics::PartIndex(const Part& part) const { return index_.Find(&part); }
 bool VesselPhysics::PartHasRigidbody(size_t index) const { return index < parts_.size() && parts_[index]->rb; }
+Part* VesselPhysics::PartAt(size_t index) const { return index < parts_.size() ? parts_[index]->part : nullptr; }
+int VesselPhysics::ClusterOfBody(BodyId body) const {
+    for (size_t c = 0; c < clusters_.size(); ++c)
+        if (clusters_[c].body == body && body != kInvalidBody) return static_cast<int>(c);
+    return -1;
+}
 
 int VesselPhysics::ClusterOf(const Part& part) const {
     const int i = PartIndex(part);
@@ -596,6 +602,16 @@ void VesselPhysics::SetLinearVelocity(const Vector3d& v) {
     }
 }
 
+void VesselPhysics::StopMotion() {
+    for (ClusterRec& c : clusters_) {
+        if (c.body == kInvalidBody) continue;
+        world_->SetLinearVelocity(c.body, Vector3d());
+        world_->SetAngularVelocity(c.body, Vector3d());
+        c.v = world_->GetLinearVelocity(c.body);
+        c.w = world_->GetAngularVelocity(c.body);
+    }
+}
+
 // Part.cs:3827 ResumeVelocity (to :3843) for the part's cluster, evaluated at the cluster's centre of mass
 void VesselPhysics::ResumePartVelocity(Part& part) {
     const int i = PartIndex(part);
@@ -692,6 +708,38 @@ void VesselPhysics::SetAngularDrag(Part& part, float angularDrag) {
 }
 
 void VesselPhysics::AddUniformAcceleration(const Vector3d& acceleration) { uniformAccel_ += acceleration; }
+
+void VesselPhysics::SetDrag(Part& part, float drag) {
+    const int i = PartIndex(part);
+    if (i >= 0 && parts_[static_cast<size_t>(i)]->rb) parts_[static_cast<size_t>(i)]->drag = drag;
+}
+
+float VesselPhysics::Drag(const Part& part) const {
+    const int i = PartIndex(part);
+    return i < 0 ? 0.0f : parts_[static_cast<size_t>(i)]->drag;
+}
+
+void VesselPhysics::TranslatePartCluster(Part& part, const Vector3d& deltaPhysics) {
+    const int i = PartIndex(part);
+    if (i < 0) return;
+    ClusterRec& c = clusters_[static_cast<size_t>(parts_[static_cast<size_t>(i)]->cluster)];
+    if (c.body == kInvalidBody) return;
+    world_->SetPosition(c.body, world_->GetPosition(c.body) + deltaPhysics);
+    CacheClusterStates();
+    SyncPartTransforms();
+}
+
+Vector3d VesselPhysics::ClusterSupportForce(size_t cluster) const { return cluster < supportF_.size() ? supportF_[cluster] : Vector3d(); }
+Vector3d VesselPhysics::ClusterSupportTorque(size_t cluster) const { return cluster < supportT_.size() ? supportT_[cluster] : Vector3d(); }
+
+void VesselPhysics::SetPartVelocity(Part& part, const Vector3d& v) {
+    const int o = OwnerIndex(part);
+    if (o < 0) return;
+    ClusterRec& c = clusters_[static_cast<size_t>(parts_[static_cast<size_t>(o)]->cluster)];
+    if (c.body == kInvalidBody) return;
+    world_->SetLinearVelocity(c.body, v - Cross(c.w, PartComNow(o) - c.com));
+    c.v = world_->GetLinearVelocity(c.body);
+}
 
 // FlightIntegrator.cs:715 Integrate(part) (to :745), the force half (UpdateAerodynamics is WP-20d's), recursion from the root over the
 // attached children in child order
@@ -791,6 +839,12 @@ void VesselPhysics::Flush(float dt) {
         stepForce_.swap(partForce_);
         stepMoment_.swap(partMoment_);
     }
+    const size_t nc = clusters_.size();
+    appliedF_.assign(nc, Vector3d());
+    appliedT_.assign(nc, Vector3d());
+    flushV_.assign(nc, Vector3d());
+    flushW_.assign(nc, Vector3d());
+    flushDt_ = dt;
     for (size_t ci = 0; ci < clusters_.size(); ++ci) {
         ClusterRec& c = clusters_[ci];
         if (c.body == kInvalidBody) {
@@ -803,6 +857,18 @@ void VesselPhysics::Flush(float dt) {
         }
         Vector3d force = c.force + uniformAccel_ * c.mass;
         Vector3d torque = c.moment;
+        // WP-20e: rb.drag (PhysX linear damping of each part body) as a force at each part's centre of mass
+        if (h > 0.0)
+            for (int i : c.parts) {
+                const PartRec& r = *parts_[static_cast<size_t>(i)];
+                if (!r.rb || !(r.drag > 0.0f)) continue;
+                const double f = std::max(0.0, 1.0 - h * static_cast<double>(r.drag));
+                const Vector3d arm = r.comNow - c.com;
+                const Vector3d fd = (c.v + Cross(c.w, arm)) * (-(1.0 - f) / h * static_cast<double>(r.rbMass));
+                force += fd;
+                torque += Cross(arm, fd);
+                if (loads) stepForce_[static_cast<size_t>(i)] += fd;
+            }
         if (options_.angularDragModel == AngularDragModel::ClusterMassAverage) {
             double drag = 0.0;
             for (int i : c.parts) {
@@ -826,6 +892,10 @@ void VesselPhysics::Flush(float dt) {
         }
         if (!force.IsZero()) world_->AddForce(c.body, force);
         if (!torque.IsZero()) world_->AddTorque(c.body, torque);
+        appliedF_[ci] = force;
+        appliedT_[ci] = torque;
+        flushV_[ci] = world_->GetLinearVelocity(c.body);
+        flushW_[ci] = world_->GetAngularVelocity(c.body);
         c.force = c.moment = Vector3d();
     }
     if (loads) {
@@ -843,6 +913,20 @@ void VesselPhysics::Flush(float dt) {
 void VesselPhysics::AfterStep() {
     CacheClusterStates();
     SyncPartTransforms();
+    // WP-20e: the support of the step (contacts and anchors): m dv / dt - F_applied, I dw / dt - T_applied
+    supportF_.assign(clusters_.size(), Vector3d());
+    supportT_.assign(clusters_.size(), Vector3d());
+    if (flushDt_ > 0.0f && flushV_.size() == clusters_.size()) {
+        const double h = static_cast<double>(flushDt_);
+        for (size_t ci = 0; ci < clusters_.size(); ++ci) {
+            const ClusterRec& c = clusters_[ci];
+            if (c.body == kInvalidBody) continue;
+            supportF_[ci] = (c.v - flushV_[ci]) * (c.mass / h) - appliedF_[ci];
+            const Mat3 Iw = c.inertia.Rotated(Mat3::Rotation(c.q));
+            supportT_[ci] = Iw * ((c.w - flushW_[ci]) * (1.0 / h)) - appliedT_[ci];
+        }
+    }
+    flushDt_ = 0.0f;
     breaks_.clear();
     lastSolve_ = LoadSolve::None;
     if (stepValid_ && options_.loadSolve != LoadSolve::None) ComputeLoads();
