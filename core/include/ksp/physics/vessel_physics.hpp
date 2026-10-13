@@ -37,9 +37,17 @@
 // convention (part transforms, Vessel.CoM and CelestialBody.position share one frame); a host that keeps the world origin far away
 // sets floatOrigin near the vessel (the spike's vessel-local frame) and must then hand the ported code consistent references.
 //
-// Units are KSP's: tonnes, metres, seconds, kN. Not here: the structural load solve and breaking (WP-20c), the per-part
-// FlightIntegrator pipeline (WP-20d), contacts / landing / water / the landed anchor (WP-20e), frames and the physics bubble
-// (WP-19b), wheels (WP-29), robotic motors (WP-52).
+// WP-20c adds the structural layer (ksp/physics/structure_graph.hpp): every tick AfterStep turns the clusters' motion and the parts'
+// forces into the load of every PartJoint sub-joint (tree solve, or the indeterminate graph solve where struts / autostruts / several
+// ground supports share the load), checks it against KSP's capacity (the PhysX break limits PartJoint.SetUnbreakable gives each
+// ConfigurableJoint, PartJoint.cs:340-341) and reports the sub-joints over capacity; the host turns a break into PartJoint.OnJointBreak
+// (PartJoint.cs:397) -> Part.OnPartJointBreak -> Part.decouple, and every structural game event (decouple, undock, couple / dock, part
+// death, vessel modified) into one deferred Rebind of the bindings concerned (momentum conserved per new cluster). Autostruts follow
+// Part.CycleAutoStrut: released at the event, secured after the next physics step (the SecureAutoStruts coroutine's WaitForFixedUpdate),
+// Heaviest anchors from the GetMassivePart walk (Part.cs:8342).
+//
+// Units are KSP's: tonnes, metres, seconds, kN. Not here: the per-part FlightIntegrator pipeline (WP-20d), contacts / landing / water /
+// the landed anchor (WP-20e), frames and the physics bubble (WP-19b), wheels (WP-29), robotic motors (WP-52).
 #pragma once
 
 #include <array>
@@ -53,6 +61,7 @@
 #include "ksp/math/quaterniond.hpp"
 #include "ksp/math/vector3d.hpp"
 #include "ksp/physics/physics_world.hpp"
+#include "ksp/physics/structure_graph.hpp"
 #include "ksp/vessel/vessel.hpp"
 
 namespace ksp {
@@ -140,13 +149,27 @@ struct JointGlobals {
 // The joints of a vessel in KSP's creation order: the attach joint of every FULL attached part with a parent (vessel part order),
 // then the autostruts (Part.SecureAutoStruts for every part with autoStrutMode != Off), then the struts (CModuleStrut with a target).
 // Joints SetupJoint cannot connect (both ends on one Rigidbody, :255-260) are not created (as in KSP).
-// Autostrut anchors: Root / Grandparent (and Force*) as Part.GetAutoStrutAnchor (Part.cs:8290-8338) with HasFreePivotBetween*
-// (:8525-8615), the symmetry-counterpart loop of SecureAutoStruts (:8068-8086); Heaviest is the spike's rule (heaviest rb.mass,
-// excluding the part itself and, with autoStrutExcludeParent, its parent): the GetMassivePart tree walk is WP-20c's.
-// `transformOf` gives the Transform each part is measured in (default: Part::partTransform); only relative poses matter, so
-// VesselPhysics passes the vessel-frame transforms (orgPos / orgRot), which stay precise wherever the vessel is.
+// Autostrut anchors: Part.GetAutoStrutAnchor (Part.cs:8280): Root / Grandparent (and Force*) with HasFreePivotBetween* (:8525-8615),
+// Heaviest / ForceHeaviest through GetMassivePart (:8342: the walk up the parents and through every subtree, stopping at free pivots,
+// MassivePartCheck's rb.mass weights and tie rules, autoStrutExcludeParent), and the symmetry-counterpart loop of SecureAutoStruts
+// (:8068-8086). `transformOf` gives the Transform each part is measured in (default: Part::partTransform); only relative poses matter,
+// so VesselPhysics passes the vessel-frame transforms (orgPos / orgRot), which stay precise wherever the vessel is.
 std::vector<PartJointSpec> BuildPartJoints(Vessel& vessel, const JointGlobals& globals = {},
                                            const std::function<const PartTransform&(const Part&)>& transformOf = nullptr);
+// The three groups separately (BuildPartJoints = attach + autostruts + struts). BuildAutoStruts is one round of SecureAutoStruts over the
+// vessel: `fixedTime` is Time.fixedTime, the key of GetMassivePart's per-part cache (Part.cs:8349-8376: a part walking twice in one fixed
+// step starts from its last result); null: no cache (read or written).
+std::vector<PartJointSpec> BuildAttachJoints(Vessel& vessel, const JointGlobals& globals = {},
+                                             const std::function<const PartTransform&(const Part&)>& transformOf = nullptr);
+std::vector<PartJointSpec> BuildAutoStruts(Vessel& vessel, const JointGlobals& globals = {},
+                                           const std::function<const PartTransform&(const Part&)>& transformOf = nullptr,
+                                           const double* fixedTime = nullptr);
+std::vector<PartJointSpec> BuildStrutJoints(Vessel& vessel, const JointGlobals& globals = {},
+                                            const std::function<const PartTransform&(const Part&)>& transformOf = nullptr);
+// Part.GetAutoStrutAnchor (Part.cs:8280) of one part: the part its autostrut goes to (nullptr: none). Throws NullReferenceException
+// where the C# does (MassivePartCheck after a cache hit, Part.cs:8462).
+Part* GetAutoStrutAnchor(Vessel& vessel, Part& part, const std::function<const PartTransform&(const Part&)>& transformOf = nullptr,
+                         const double* fixedTime = nullptr);
 
 // ===================================================================================== force accumulator
 
@@ -204,6 +227,15 @@ enum class ClusterPolicy : uint8_t {
     SplitAtDecouplers,  // one body per piece between decouplers, pieces welded by fixed constraints (the spike's "reduced-split")
 };
 
+// WP-20c: which structural solve AfterStep runs (structure_graph.hpp).
+enum class LoadSolve : uint8_t {
+    None,   // no loads, no breaking
+    Tree,   // the statically determinate solve over the attach-joint tree (struts / autostruts ignored: conservative); supports share the
+            // residual equally (the spike's rule)
+    Graph,  // the indeterminate solve over every live sub-joint and ground support
+    Auto,   // Graph when a live strut / autostrut joins two rigid bodies or two or more parts touch static geometry, else Tree (default)
+};
+
 struct VesselPhysicsOptions {
     ClusterPolicy policy = ClusterPolicy::Whole;
     // extra articulation points (robotics, "flexible" joints): the attach joint of `child` is a fixed constraint between clusters
@@ -217,6 +249,17 @@ struct VesselPhysicsOptions {
     float restitution = 0.0f;
     float defaultAngularDrag = 0.05f;  // Rigidbody.angularDrag of a new Rigidbody (Unity default) until FlightIntegrator sets it
     AngularDragModel angularDragModel = AngularDragModel::PerPart;
+    // ---- WP-20c: the structural layer ------------------------------------------------------------------------------------
+    LoadSolve loadSolve = LoadSolve::Auto;
+    bool breakJoints = true;          // report the sub-joints over capacity (PhysX's joint break); false: loads only
+    bool unbreakableJoints = false;   // CheatOptions.UnbreakableJoints: Part.ResetJoints makes every attach joint unbreakable (Part.cs:3815)
+    // kN/m: the sub-joints' linear drive. PhysX's is PhysicsGlobals.JointForce (rigid in practice); a finite quasi-rigid value keeps the
+    // elastic model well conditioned against the angular drives (PartJoint.stiffness, 2.4e4..1.4e5 kN m/rad). The spike's value.
+    double kLinear = 1.0e8;
+    double kSupportAngular = 1.0e8;   // kN m/rad: a ground support's rotational stiffness (kLinear x 1 m^2: a contact patch carries moments)
+    // Part.CycleAutoStrut releases the autostruts at once and SecureAutoStruts re-creates them after `yield return new WaitForFixedUpdate()`
+    // (Part.cs:8043-8067): the steps a new or modified binding runs without autostruts. 0: secured at once (no GetMassivePart cache).
+    int autoStrutDelaySteps = 1;
 };
 
 // The pose and motion of one part as the reduced model sees it (physics frame).
@@ -306,6 +349,7 @@ public:
     VesselPhysics& operator=(const VesselPhysics&) = delete;
 
     Vessel& GetVessel() const { return *vessel_; }
+    Vessel* VesselPtr() const { return vessel_; }  // nullptr after DetachVessel
     PhysicsWorld& World() const { return *world_; }
     const VesselPhysicsOptions& Options() const { return options_; }
 
@@ -337,6 +381,8 @@ public:
     float PartMass(const Part& part) const;
     Vector3f PartInertia(const Part& part) const;
     int PartIndex(const Part& part) const;  // index in vessel.parts at build time (-1 when not a part of this vessel)
+    size_t PartCount() const { return parts_.size(); }
+    bool PartHasRigidbody(size_t index) const;  // part.rb != null as the binding was built
 
     // ---- state ------------------------------------------------------------------------------------------------------------
     PartPhysicsState PartState(const Part& part) const;
@@ -413,6 +459,60 @@ public:
     // Part.Couple / docking: `merged` now holds the parts of a and b (the WP-16 / WP-25 tree operation is done); a new VesselPhysics
     // over `merged` from the part states of both, joints rebuilt; momentum of both conserved (an inelastic weld).
     static std::unique_ptr<VesselPhysics> Merge(VesselPhysics& a, VesselPhysics& b, Vessel& merged);
+    // WP-20c, the general form of SplitOff / Merge / Rebuild: the parts of the `sources` bindings now belong to the `targets` vessels
+    // (any mix of split, merge, part death, demotion). One new binding per target vessel that holds at least one part the sources know,
+    // built from the current states of its parts (each new cluster takes the linear and angular momentum of its parts); parts no source
+    // knows are placed at their vessel-frame pose relative to a known part of their vessel, at that part's rigid motion. Parts of the
+    // sources that are in no target (destroyed) leave with their momentum. The sources are left as they are (the caller destroys them);
+    // their Part pointers are only used as keys (a part may be gone).
+    static std::vector<std::unique_ptr<VesselPhysics>> Rebind(PhysicsWorld& world, const std::vector<VesselPhysics*>& sources,
+                                                              const std::vector<Vessel*>& targets, const VesselPhysicsOptions& options);
+    // The Vessel is about to go (Part.Couple destroys the source vessel, Part.cs:3201): the binding never touches it again (it is then
+    // only a Rebind source and must be destroyed).
+    void DetachVessel() { vessel_ = nullptr; }
+
+    // ---- WP-20c: structural loads and breaking ------------------------------------------------------------------------------
+    struct JointLoad {
+        bool valid = false;        // the joint is live and was part of the last solve
+        Vector3d force, moment;    // resultant on the joint's host side (physics frame; moment about the anchor centroid)
+        float maxForce = 0.0f;     // largest sub-joint linear force (kN) and angular-drive torque (kN m) magnitudes
+        float maxTorque = 0.0f;
+        float ratio = 0.0f;        // max over the live sub-joints of max(|f| / breakForce, |t| / breakTorque) (0 for unbreakable joints)
+        int critical = -1;         // the sub-joint of `ratio`
+    };
+    // a sub-joint over its PhysX limit: |f| > breakForce or |t| > breakTorque (PartJoint.cs:340-341)
+    struct JointBreak {
+        size_t joint = 0;
+        uint8_t mask = 0;          // the sub-joints that broke (bit k = sub-joint k)
+        float force = 0.0f, torque = 0.0f;  // the worst of them
+    };
+    // per joint (Joints() order), from the last AfterStep that followed a Flush
+    const std::vector<JointLoad>& JointLoads() const { return jointLoads_; }
+    // the element loads of the last solve: per joint, per live sub-joint (factor frame, on the host side; meaningful where JointLoads()[j].valid)
+    const std::vector<std::array<ElementLoad, 3>>& SubJointLoads() const { return subLoads_; }
+    // the sub-joints over capacity at the last AfterStep (options.breakJoints); the host acts on them (VesselPhysicsHost::AfterStepAll)
+    const std::vector<JointBreak>& Breaks() const { return breaks_; }
+    LoadSolve LastSolve() const { return lastSolve_; }  // the solve that ran (None when no loads were computed)
+    // options.breakJoints at run time (a host's grace period: the spike skipped breaks for the 60 ticks of Vessel.ignoreCollisionsFrames
+    // after its approximate ground placement, which drops the vessel a few cm onto the pad)
+    void SetBreakJoints(bool on) { options_.breakJoints = on; }
+    float MaxLoadRatio() const { return maxRatio_; }
+    int MaxLoadJoint() const { return maxRatioJoint_; }
+    // the parts touching static geometry in the last step (vessel part indices of the nodes that got a ground support)
+    const std::vector<int>& SupportParts() const { return supportParts_; }
+    double LastLoadSolveMs() const { return lastSolveMs_; }
+    double LastFactorMs() const { return lastFactorMs_; }
+    size_t FactorCount() const { return factorCount_; }  // graph factorisations so far
+    // live sub-joints of a joint (bit k = sub-joint k); all bits of internalJoints while the PartJoint stands
+    uint8_t SubJointMask(size_t joint) const { return subAlive_[joint]; }
+    // Unity removed these ConfigurableJoints (a PhysX break): the rest of the PartJoint carries on; when none is left the joint is cut
+    // (Cut of its child: the clusters split, the vessel does not - PartJoint.OnJointBreak returned early, PartJoint.cs:399)
+    void DestroySubJoints(size_t joint, uint8_t mask);
+    // Part.CycleAutoStrut for every part (Part.cs:8043, :8217): the autostruts go now, SecureAutoStruts re-creates them after
+    // options.autoStrutDelaySteps steps (at once when 0)
+    void CycleAutoStruts();
+    size_t AutoStrutJointCount() const;
+    bool AutoStrutsPending() const { return autoStrutCountdown_ > 0; }
 
 private:
     struct PartRec;
@@ -430,6 +530,15 @@ private:
     Vector3d PartPositionNow(int i) const;
     QuaternionD PartRotationNow(int i) const;
     Vector3d PartComNow(int i) const;
+    // WP-20c (src/physics/vessel_physics_loads.cpp)
+    std::function<const PartTransform&(const Part&)> VesselFrameTransforms();  // orgPos / orgRot of the binding's parts
+    void SecureAutoStruts();
+    void ReleaseAutoStruts();
+    void RebuildWelds();  // the inter-cluster fixed constraints from the live joints
+    void ComputeLoads();
+    void BuildLoadModel(const std::vector<int>& supports);
+    bool StrutLinked();
+    Vector3d FactorFrameOrigin() const;
 
     PhysicsWorld* world_;
     Vessel* vessel_;
@@ -438,12 +547,69 @@ private:
     bool sameVesselCollisionAll_ = false;
     std::vector<std::unique_ptr<PartRec>> parts_;  // vessel part order at build
     detail::PartIndexMap index_;
-    std::vector<PartJointSpec> joints_;
+    std::vector<PartJointSpec> joints_;  // attach joints, struts, then the secured autostruts (at the end)
     std::vector<bool> cut_;
+    std::vector<uint8_t> subAlive_;      // live sub-joints per joint
     std::vector<ClusterRec> clusters_;
+    struct Weld {
+        ConstraintId id = kInvalidConstraint;
+        int a = -1, b = -1;              // clusters (the impulse applies to b, its opposite to a)
+        Vector3d pointBodyA;             // the weld point in cluster a's body frame (relative to its origin at creation)
+    };
+    std::vector<Weld> welds_;
     std::vector<ConstraintId> constraints_;
     std::vector<Vector3d> partForce_, partMoment_;
     Vector3d uniformAccel_;
+    // ---- WP-20c state
+    int autoStrutCountdown_ = 0;         // steps until SecureAutoStruts (0: none pending)
+    size_t autoStrutBegin_ = 0;          // index of the first autostrut in joints_ (== joints_.size() without autostruts)
+    bool stepValid_ = false;             // Flush captured a step (AfterStep may compute loads)
+    float stepDt_ = 0.0f;
+    Vector3d stepAccel_;
+    std::vector<Vector3d> stepForce_, stepMoment_;  // per part: the external force / moment (about its centre of mass) of the step
+    std::vector<Vector3d> clusterVBefore_, clusterWBefore_;
+    std::vector<JointLoad> jointLoads_;
+    std::vector<std::array<ElementLoad, 3>> subLoads_;
+    std::vector<JointBreak> breaks_;
+    LoadSolve lastSolve_ = LoadSolve::None;
+    float maxRatio_ = 0.0f;
+    int maxRatioJoint_ = -1;
+    double lastSolveMs_ = 0.0, lastFactorMs_ = 0.0;
+    size_t factorCount_ = 0;
+    std::vector<int> supportParts_;
+    // the load model, rebuilt when the structure or the support set changes (structureDirty_)
+    bool structureDirty_ = true;
+    std::vector<int> modelSupports_;     // the supports the model was built for
+    bool modelGraph_ = false;            // the model's solve (graph or tree)
+    bool modelWantGraph_ = false;        // the solve the model was built for (a failed factorisation falls back to the tree)
+    std::vector<std::array<Vector3d, 3>> anchor0_;  // per joint, per sub-joint: the anchor in the factor frame
+    std::vector<int> nodeOfPart_;        // part index -> node (its RigidBodyPart's), -1 without one
+    std::vector<int> partOfNode_;
+    std::vector<int> treeParentNode_, treeParentJoint_;
+    std::vector<Vector3d> nodeCom0_;     // node centres of mass in the factor frame (the clusters' creation frame, FactorFrameOrigin())
+    std::vector<Vector3d> centroid0_;    // joint anchor centroids, factor frame
+    std::vector<JointSplit> splits_;     // per joint (tree solve)
+    std::vector<std::array<int, 3>> splitSub_;  // per joint: the sub-joint index of each JointSplit element
+    StructuralGraph graph_;
+    std::vector<StructElement> elements_;
+    std::vector<ElementLoad> elementLoads_;
+    std::vector<NodeDemand> demand_;
+    std::vector<int> nodeCluster_;                // node -> cluster
+    std::vector<std::vector<int>> clusterNodes_;  // cluster -> its nodes
+    std::vector<int> jointHostCluster_;           // joint -> the cluster of its host body (-1: not in the model)
+    std::vector<int> treeOrder_;                  // nodes children-first (TreeOrder of treeParentNode_)
+    bool strutLinked_ = false, strutLinkedValid_ = false;
+    // per-tick scratch of ComputeLoads (no allocation once sized)
+    struct ClusterKin {
+        QuaternionD qi = QuaternionD::identity();  // body <- physics
+        Vector3d a, alpha, w, g, resF, resM;        // body frame
+    };
+    std::vector<ClusterKin> kin_;
+    std::vector<Vector3d> nodeF_, nodeM_;
+    std::vector<uint8_t> nodeSupport_, solved_;
+    std::vector<int> scratchSupports_;
+    std::vector<JointResultant> resultants_;
+    TreeScratch treeScratch_;
     // scratch of ReadState (not thread-safe: one reader at a time per binding)
     mutable std::vector<int> scratchIdx_;
     mutable std::vector<PartRigidbodyState> scratchStates_;
@@ -462,6 +628,21 @@ private:
 //   rootRigidbody       VesselPhysics::RootRigidbody
 //   offsetVelocity      VesselPhysics::ChangeWorldVelocity (Vessel.OffsetVelocity)
 // Install() saves the hooks it replaces and Uninstall() (or the destructor) restores them.
+//
+// WP-20c: Install() also adds GameEvents listeners and the module force hooks, and AfterStepAll acts on joint breaks:
+//   onPartDeCoupleNewVesselComplete (Part.decouple, Part.cs:2833)   the original and the new vessel are rebound
+//   onVesselsUndocking (Part.Undock, :3352)                          the same
+//   onPartCouple (Part.Couple / docking, :3173)                      the source vessel's binding lets go of its Vessel (Couple destroys it);
+//                                                                    both bindings are rebound into the target vessel
+//   onPartDie (Part.Die, :4464)                                      the part's vessel is rebound (the dead part leaves with its momentum)
+//   onVesselWasModified (:2613, 2708, 2831, 3209, 3350, 4451)        Part.VesselModified -> CycleAutoStrut (Part.cs:7214); a vessel
+//                                                                    whose part list or rigid bodies changed is rebound
+//   ModuleDecouplerBase::addForce / addForceAtPosition, DockingEnvironment::addTorque / partVelocity: Part.AddForce* / rb.velocity
+// Rebinds are DEFERRED: the events only collect the bindings and vessels concerned; ProcessStructuralChanges() rebinds them all at once
+// from the part states (every tick method and every env hook runs it first, so staging N decouplers in one frame costs one rebind).
+// A joint break (VesselPhysics::Breaks) is PartJoint.OnJointBreak (PartJoint.cs:397): the broken ConfigurableJoints are gone; unless the
+// host vessel ignores collisions (IgnoreCollisionsFrames > 0) GameEvents.onPartJointBreak fires and the child part's
+// OnPartJointBreak (Part.cs:3159) decouples it - the decouple event then rebinds.
 class VesselPhysicsHost {
 public:
     explicit VesselPhysicsHost(PhysicsWorld& world, const VesselPhysicsOptions& options = {});
@@ -498,17 +679,78 @@ public:
     void RefreshFrames();     // frameOriginWorld / floatOrigin of every binding
     void IntegrateAll();      // IntegratePartBuffers(vessel.precalc.integrationAccel) for every binding
     void FlushAll(float dt);
+    // AfterStep of every binding, then the joint breaks (see the class comment), then ProcessStructuralChanges
     void AfterStepAll();
     // FlushAll, PhysicsWorld::Step(dt), AfterStepAll (the tick's physics half for hosts and tests)
     void Step(float dt);
+
+    // ---- WP-20c: structural events -------------------------------------------------------------------------------------------
+    // the deferred rebinds of the events since the last call (see the class comment); no-op when none is pending
+    void ProcessStructuralChanges();
+    bool StructuralChangesPending() const { return !pendingSources_.empty() || !pendingTargets_.empty(); }
+    // a change the events do not report (Part.DemoteToPhysicslessPart / PromoteToPhysicalPart, parts added by the host): `vessel` is rebound
+    void RequestRebind(Vessel& vessel);
+    struct BreakRecord {
+        Part* child = nullptr;     // PartJoint.child (the part that decouples)
+        Part* parent = nullptr;
+        size_t joint = 0;
+        uint8_t mask = 0;
+        float breakForce = 0.0f;   // what OnJointBreak received (the broken sub-joint's breakForce)
+        float force = 0.0f, torque = 0.0f;  // the sub-joint load that broke it
+        bool decoupled = false;    // false: IgnoreCollisionsFrames kept the part in its vessel
+    };
+    const std::vector<BreakRecord>& LastBreaks() const { return lastBreaks_; }  // the breaks of the last AfterStepAll
+    size_t RebindCount() const { return rebinds_; }
+    double LastRebindMs() const { return lastRebindMs_; }
 
 private:
     PhysicsWorld* world_;
     std::vector<std::unique_ptr<VesselPhysics>> vessels_;  // creation order
     bool installed_ = false;
     VesselEnvironment saved_;
+    struct SavedHooks;
+    std::unique_ptr<SavedHooks> savedHooks_;
+    std::vector<VesselPhysics*> pendingSources_;  // event order
+    std::vector<Vessel*> pendingTargets_;
+    std::vector<BreakRecord> lastBreaks_;
+    size_t rebinds_ = 0;
+    double lastRebindMs_ = 0.0;
     VesselPose DefaultUnpackPose(Vessel& v) const;
     void ApplyFrame(VesselPhysics& vp) const;
+    VesselPhysics* BindingForPart(Part& p);  // ProcessStructuralChanges, then the binding of p.vessel
+    void MarkRebind(VesselPhysics* source, Vessel* target);
+    void Forget(const VesselPhysics* vp);  // a binding goes: no longer a pending source
+    void HandleBreak(VesselPhysics& vp, const VesselPhysics::JointBreak& b);
+    // GameEvents listeners
+    void OnDecoupleNewVessel(Vessel* original, Vessel* created);
+    void OnVesselsUndocking(Vessel* original, Vessel* created);
+    void OnPartCouple(events::GameEvents::FromToAction<Part*, Part*> action);
+    void OnPartDie(Part* part);
+    void OnVesselWasModified(Vessel* vessel);
 };
+
+}  // namespace ksp::physics
+
+namespace ksp {
+
+// PartJoint.cs as the payload of GameEvents.onPartJointBreak (PartJoint.cs:407): kspcore keeps the joints as data (physics::PartJointSpec)
+// in the vessel's binding, so the host hands the listeners a PartJoint made from that record for the duration of the event.
+class PartJoint {
+public:
+    explicit PartJoint(const physics::PartJointSpec& spec) : spec_(spec) {}
+    const physics::PartJointSpec& Spec() const { return spec_; }
+    Part* Child() const { return spec_.child; }    // PartJoint.Child
+    Part* Parent() const { return spec_.parent; }  // PartJoint.Parent
+    Part* Host() const { return spec_.host; }      // PartJoint.Host
+    Part* Target() const { return spec_.target; }  // PartJoint.Target
+    float stiffness() const { return spec_.stiffness; }
+
+private:
+    physics::PartJointSpec spec_;
+};
+
+}  // namespace ksp
+
+namespace ksp::physics {
 
 }  // namespace ksp::physics
