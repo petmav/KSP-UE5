@@ -16,9 +16,15 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyInterface.h>
 #include <Jolt/Physics/Collision/GroupFilter.h>
+#include <Jolt/Physics/Body/BodyLock.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
+#include <Jolt/Physics/Collision/Shape/OffsetCenterOfMassShape.h>
+#include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
+#include <Jolt/Physics/Constraints/FixedConstraint.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/RegisterTypes.h>
 
@@ -27,6 +33,7 @@
 #include <cstdio>
 #include <cstring>
 #include <mutex>
+#include <unordered_map>
 #include <unordered_set>
 
 #include "ksp/core/log.hpp"
@@ -132,6 +139,29 @@ JPH::Ref<JPH::Shape> MakeShape(const ShapeDesc& s) {
     }
 }
 
+// WP-20b: a child collider of a cluster compound. Boxes keep a small convex radius (at most half the thinnest half extent,
+// as the spike's part proxies: core/spikes/jolt/src/shapes.hpp) so thin proxies stay box-like.
+JPH::Ref<JPH::Shape> MakeChildShape(const ShapeDesc& s, uint32_t userData) {
+    JPH::Ref<JPH::Shape> shape;
+    if (s.kind == ShapeDesc::Kind::Box) {
+        JPH::Vec3 h(s.halfExtents.x, s.halfExtents.y, s.halfExtents.z);
+        const float cr = std::min(0.05f, 0.5f * std::min(h.GetX(), std::min(h.GetY(), h.GetZ())));
+        shape = new JPH::BoxShape(h, cr);
+    } else {
+        shape = MakeShape(s);
+    }
+    shape->SetUserData(userData);
+    return shape;
+}
+
+JPH::Mat44 InertiaMat(const double I[3][3]) {
+    JPH::Mat44 m = JPH::Mat44::sZero();
+    for (int c = 0; c < 3; ++c)
+        m.SetColumn3(c, JPH::Vec3(static_cast<float>(I[0][c]), static_cast<float>(I[1][c]), static_cast<float>(I[2][c])));
+    m.SetColumn4(3, JPH::Vec4(0, 0, 0, 1));
+    return m;
+}
+
 uint64_t Fnv(uint64_t h, const void* data, size_t n) {
     const unsigned char* p = static_cast<const unsigned char*>(data);
     for (size_t i = 0; i < n; ++i) {
@@ -155,9 +185,30 @@ struct PhysicsWorld::Impl {
     std::vector<BodyId> order;           // live bodies in creation order
     std::unordered_set<BodyId> live;
     uint64_t steps = 0;
+    // WP-20b: compound bodies keep their inner compound (without the centre-of-mass offset) and its volume centre, so that
+    // SetMassProperties can move the centre of mass by swapping only the OffsetCenterOfMassShape decorator.
+    struct CompoundInfo {
+        JPH::Ref<JPH::Shape> inner;
+        JPH::Vec3 innerCom;
+    };
+    std::unordered_map<BodyId, CompoundInfo> compounds;
+    struct ConstraintSlot {
+        JPH::Ref<JPH::TwoBodyConstraint> c;
+        BodyId a = kInvalidBody, b = kInvalidBody;
+    };
+    std::vector<ConstraintSlot> constraints;  // index = ConstraintId; a removed slot has c == nullptr
+    size_t liveConstraints = 0;
 
     JPH::BodyInterface& Bi() { return system.GetBodyInterfaceNoLock(); }
     const JPH::BodyInterface& Bi() const { return system.GetBodyInterfaceNoLock(); }
+
+    void RemoveConstraintSlot(ConstraintSlot& s) {
+        if (!s.c) return;
+        system.RemoveConstraint(s.c);
+        s.c = nullptr;
+        s.a = s.b = kInvalidBody;
+        --liveConstraints;
+    }
 };
 
 PhysicsWorld::PhysicsWorld(const PhysicsWorldConfig& cfg) {
@@ -180,7 +231,8 @@ PhysicsWorld::PhysicsWorld(const PhysicsWorldConfig& cfg) {
 
 PhysicsWorld::~PhysicsWorld() {
     if (impl_) {
-        // Bodies must be removed before the system dies (Jolt asserts on leaked bodies).
+        // Constraints first (they reference bodies), then the bodies, before the system dies (Jolt asserts on leaked bodies).
+        for (Impl::ConstraintSlot& s : impl_->constraints) impl_->RemoveConstraintSlot(s);
         JPH::BodyInterface& bi = impl_->Bi();
         for (BodyId id : impl_->order) {
             JPH::BodyID b(id);
@@ -243,6 +295,9 @@ BodyId PhysicsWorld::CreateBody(const BodyDesc& d) {
 void PhysicsWorld::RemoveBody(BodyId id) {
     Impl& m = *impl_;
     if (m.live.erase(id) == 0) return;
+    for (Impl::ConstraintSlot& s : m.constraints)
+        if (s.c && (s.a == id || s.b == id)) m.RemoveConstraintSlot(s);
+    m.compounds.erase(id);
     m.order.erase(std::find(m.order.begin(), m.order.end(), id));
     JPH::BodyID b(id);
     m.Bi().RemoveBody(b);
@@ -291,6 +346,170 @@ size_t PhysicsWorld::AddVelocityChangeToAllMoving(const Vector3d& dv) {
         ++n;
     }
     return n;
+}
+
+BodyId PhysicsWorld::AddStaticMesh(const Vector3d& centre, const std::vector<Vector3f>& vertices, const std::vector<uint32_t>& triangles,
+                                   float friction, uint64_t userData) {
+    Impl& m = *impl_;
+    if (m.order.size() >= m.cfg.maxBodies || triangles.size() < 3) return kInvalidBody;
+    JPH::VertexList verts;
+    verts.reserve(vertices.size());
+    for (const Vector3f& v : vertices) verts.push_back(JPH::Float3(v.x, v.y, v.z));
+    JPH::IndexedTriangleList tris;
+    tris.reserve(triangles.size() / 3);
+    for (size_t i = 0; i + 2 < triangles.size(); i += 3) tris.push_back(JPH::IndexedTriangle(triangles[i], triangles[i + 1], triangles[i + 2]));
+    JPH::MeshShapeSettings ms(std::move(verts), std::move(tris));
+    JPH::ShapeSettings::ShapeResult r = ms.Create();
+    if (r.HasError()) {
+        log::Warning(std::string("PhysicsWorld::AddStaticMesh: ") + r.GetError().c_str());
+        return kInvalidBody;
+    }
+    JPH::BodyCreationSettings bcs(r.Get(), ToRVec3(centre), JPH::Quat::sIdentity(), JPH::EMotionType::Static, Layers::STATIC);
+    bcs.mFriction = friction;
+    bcs.mUserData = userData;
+    JPH::BodyID id = m.Bi().CreateAndAddBody(bcs, JPH::EActivation::DontActivate);
+    if (id.IsInvalid()) return kInvalidBody;
+    BodyId raw = id.GetIndexAndSequenceNumber();
+    m.order.push_back(raw);
+    m.live.insert(raw);
+    return raw;
+}
+
+void PhysicsWorld::OptimizeBroadPhase() { impl_->system.OptimizeBroadPhase(); }
+
+// ---- WP-20b: compound cluster bodies and fixed constraints ------------------------------------------------------------------
+
+BodyId PhysicsWorld::CreateCompoundBody(const CompoundBodyDesc& d) {
+    Impl& m = *impl_;
+    if (m.order.size() >= m.cfg.maxBodies || d.children.empty()) return kInvalidBody;
+    // the inner shape: one child as a RotatedTranslatedShape (Jolt's compounds need two or more), else a StaticCompoundShape
+    JPH::Ref<JPH::Shape> inner;
+    if (d.children.size() == 1) {
+        const CompoundChild& c = d.children.front();
+        JPH::RotatedTranslatedShapeSettings rts(JPH::Vec3(c.position.x, c.position.y, c.position.z),
+                                                JPH::Quat(c.rotation.x, c.rotation.y, c.rotation.z, c.rotation.w).Normalized(),
+                                                MakeChildShape(c.shape, c.userData));
+        JPH::ShapeSettings::ShapeResult r = rts.Create();
+        if (r.HasError()) {
+            log::Warning(std::string("PhysicsWorld::CreateCompoundBody: ") + r.GetError().c_str());
+            return kInvalidBody;
+        }
+        inner = r.Get();
+    } else {
+        JPH::StaticCompoundShapeSettings sc;
+        for (const CompoundChild& c : d.children)
+            sc.AddShape(JPH::Vec3(c.position.x, c.position.y, c.position.z),
+                        JPH::Quat(c.rotation.x, c.rotation.y, c.rotation.z, c.rotation.w).Normalized(), MakeChildShape(c.shape, c.userData),
+                        c.userData);
+        JPH::ShapeSettings::ShapeResult r = sc.Create();
+        if (r.HasError()) {
+            log::Warning(std::string("PhysicsWorld::CreateCompoundBody: ") + r.GetError().c_str());
+            return kInvalidBody;
+        }
+        inner = r.Get();
+    }
+    // the centre of mass is the caller's, not the volume centre of the colliders: c_vol + (com - c_vol); com == 0 gives exactly 0
+    const JPH::Vec3 innerCom = inner->GetCenterOfMass();
+    const JPH::Vec3 com(d.centerOfMass.x, d.centerOfMass.y, d.centerOfMass.z);
+    JPH::Ref<JPH::Shape> shape = new JPH::OffsetCenterOfMassShape(inner, com - innerCom);
+    const bool isStatic = d.motion == MotionType::Static;
+    const JPH::EMotionType mt = isStatic ? JPH::EMotionType::Static
+                                         : (d.motion == MotionType::Kinematic ? JPH::EMotionType::Kinematic : JPH::EMotionType::Dynamic);
+    JPH::BodyCreationSettings bcs(shape, ToRVec3(d.position),
+                                  JPH::Quat(static_cast<float>(d.rotation.x), static_cast<float>(d.rotation.y),
+                                            static_cast<float>(d.rotation.z), static_cast<float>(d.rotation.w)),
+                                  mt, isStatic ? Layers::STATIC : Layers::MOVING);
+    if (mt == JPH::EMotionType::Dynamic) {
+        bcs.mOverrideMassProperties = JPH::EOverrideMassProperties::MassAndInertiaProvided;
+        bcs.mMassPropertiesOverride.mMass = static_cast<float>(d.mass);
+        bcs.mMassPropertiesOverride.mInertia = InertiaMat(d.inertia);
+    }
+    bcs.mLinearVelocity = ToVec3(d.linearVelocity);
+    bcs.mAngularVelocity = ToVec3(d.angularVelocity);
+    bcs.mFriction = d.friction;
+    bcs.mRestitution = d.restitution;
+    bcs.mLinearDamping = 0.0f;
+    bcs.mAngularDamping = 0.0f;
+    bcs.mMaxLinearVelocity = d.maxLinearVelocity;
+    bcs.mMaxAngularVelocity = d.maxAngularVelocity;
+    bcs.mAllowSleeping = d.allowSleeping;
+    bcs.mGravityFactor = 0.0f;
+    bcs.mUserData = d.userData;
+    if (d.vesselGroup != 0) {
+        bcs.mCollisionGroup.SetGroupFilter(m.filter);
+        bcs.mCollisionGroup.SetGroupID(d.vesselGroup);
+        bcs.mCollisionGroup.SetSubGroupID(d.sameVesselCollision ? 1u : 0u);
+    }
+    JPH::BodyID id = m.Bi().CreateAndAddBody(bcs, isStatic ? JPH::EActivation::DontActivate : JPH::EActivation::Activate);
+    if (id.IsInvalid()) return kInvalidBody;
+    BodyId raw = id.GetIndexAndSequenceNumber();
+    m.order.push_back(raw);
+    m.live.insert(raw);
+    m.compounds[raw] = Impl::CompoundInfo{inner, innerCom};
+    return raw;
+}
+
+Vector3d PhysicsWorld::GetCenterOfMassPosition(BodyId id) const {
+    return FromRVec3(impl_->Bi().GetCenterOfMassPosition(JPH::BodyID(id)));
+}
+
+void PhysicsWorld::SetMassProperties(BodyId id, double mass, const double inertia[3][3], const Vector3f& centerOfMass) {
+    Impl& m = *impl_;
+    auto it = m.compounds.find(id);
+    if (it == m.compounds.end()) return;
+    const JPH::Vec3 com(centerOfMass.x, centerOfMass.y, centerOfMass.z);
+    JPH::Ref<JPH::Shape> shape = new JPH::OffsetCenterOfMassShape(it->second.inner, com - it->second.innerCom);
+    // keeps the body origin in place and moves the centre of mass (Body::UpdateCenterOfMassInternal)
+    m.Bi().SetShape(JPH::BodyID(id), shape, false, JPH::EActivation::DontActivate);
+    JPH::BodyLockWrite lock(m.system.GetBodyLockInterfaceNoLock(), JPH::BodyID(id));
+    if (!lock.Succeeded() || !lock.GetBody().IsDynamic()) return;
+    JPH::MassProperties props;
+    props.mMass = static_cast<float>(mass);
+    props.mInertia = InertiaMat(inertia);
+    lock.GetBody().GetMotionProperties()->SetMassProperties(JPH::EAllowedDOFs::All, props);
+}
+
+void PhysicsWorld::SetAngularDamping(BodyId id, float damping) {
+    JPH::BodyLockWrite lock(impl_->system.GetBodyLockInterfaceNoLock(), JPH::BodyID(id));
+    if (!lock.Succeeded() || !lock.GetBody().IsDynamic()) return;
+    lock.GetBody().GetMotionProperties()->SetAngularDamping(damping);
+}
+
+ConstraintId PhysicsWorld::CreateFixedConstraint(BodyId a, BodyId b, const Vector3d& point) {
+    Impl& m = *impl_;
+    if (!IsValid(a) || !IsValid(b) || a == b) return kInvalidConstraint;
+    JPH::FixedConstraintSettings s;
+    s.mSpace = JPH::EConstraintSpace::WorldSpace;
+    s.mAutoDetectPoint = false;
+    s.mPoint1 = s.mPoint2 = ToRVec3(point);
+    JPH::TwoBodyConstraint* c = m.Bi().CreateConstraint(&s, JPH::BodyID(a), JPH::BodyID(b));
+    if (c == nullptr) return kInvalidConstraint;
+    m.system.AddConstraint(c);
+    Impl::ConstraintSlot slot;
+    slot.c = c;
+    slot.a = a;
+    slot.b = b;
+    m.constraints.push_back(slot);
+    ++m.liveConstraints;
+    return static_cast<ConstraintId>(m.constraints.size() - 1);
+}
+
+void PhysicsWorld::RemoveConstraint(ConstraintId id) {
+    Impl& m = *impl_;
+    if (id >= m.constraints.size()) return;
+    m.RemoveConstraintSlot(m.constraints[id]);
+}
+
+size_t PhysicsWorld::ConstraintCount() const { return impl_->liveConstraints; }
+
+void PhysicsWorld::GetConstraintImpulse(ConstraintId id, Vector3d& linear, Vector3d& angular) const {
+    linear = Vector3d();
+    angular = Vector3d();
+    const Impl& m = *impl_;
+    if (id >= m.constraints.size() || !m.constraints[id].c) return;
+    const auto* fc = static_cast<const JPH::FixedConstraint*>(m.constraints[id].c.GetPtr());
+    linear = FromVec3(fc->GetTotalLambdaPosition());
+    angular = FromVec3(fc->GetTotalLambdaRotation());
 }
 
 uint64_t PhysicsWorld::StateHash() const {
