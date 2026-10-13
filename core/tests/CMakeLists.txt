@@ -20,6 +20,7 @@ add_executable(kspcore_tests
     test_timewarp.cpp
     test_terrain.cpp
     test_pqs_quadtree.cpp
+    test_terrain_colliders.cpp
     test_partloader.cpp
     test_modules.cpp
     test_part.cpp
@@ -104,6 +105,13 @@ foreach(shard RANGE 0 ${_last_shard})
     endif()
     set_tests_properties(unit.shard.${shard} PROPERTIES LABELS unit TIMEOUT 1200)
 endforeach()
+if(KSPCORE_PCH)
+    # doctest + nlohmann + the std/ksp headers most test files include (tests/pch.hpp). test_main.cpp defines
+    # DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN before including doctest, so it must not get the PCH.
+    target_precompile_headers(kspcore_tests PRIVATE pch.hpp)
+    set_source_files_properties(test_main.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+endif()
+if(KSPCORE_BUILD_DEV_TOOLS)
 # WP-12a: the height oracle tools/wp12/pqs_reference.py calls to regenerate tests/data/wp12_reference.json (not a test)
 add_executable(wp12_height_oracle ${PROJECT_SOURCE_DIR}/tools/wp12/height_oracle.cpp)
 target_link_libraries(wp12_height_oracle PRIVATE kspcore)
@@ -115,6 +123,7 @@ add_executable(wp12_bench ${PROJECT_SOURCE_DIR}/tools/wp12/bench.cpp)
 target_link_libraries(wp12_bench PRIVATE kspcore)
 ksp_set_build_flags(wp12_bench)
 target_compile_definitions(wp12_bench PRIVATE KSPCORE_DATA_DIR="${PROJECT_SOURCE_DIR}/data")
+endif()
 # Test hygiene: the cases must not depend on the order they run in (tests/test_hygiene.cpp resets the shared state between cases).
 # A full run takes ~2 min, so each of three fixed seeds shuffles the whole suite and runs its first 190 cases (a different quarter of
 # the suite per seed, ~100 s in all). The complete sweep, any seed:  kspcore_tests --order-by=rand -rs=<seed>
