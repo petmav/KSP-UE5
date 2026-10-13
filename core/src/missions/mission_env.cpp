@@ -86,6 +86,8 @@ void MissionsEnvironment::Reset() {
     addNodeLabel = nullptr;
     removeNodeLabel = nullptr;
     loadedPartNames = nullptr;
+    craftFileBookkeeping = false;
+    refreshMissionRequested = nullptr;
 }
 
 }  // namespace ksp::Expansions::Missions

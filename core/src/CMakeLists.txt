@@ -156,6 +156,12 @@ add_library(kspcore STATIC
     missions/mission_tests3.cpp
     missions/mission_actions.cpp
     missions/mission_actions2.cpp
+    missions/mission_actions3.cpp
+    missions/mission_tests4.cpp
+    missions/mission_craft.cpp
+    missions/mission_extras.cpp
+    missions/mission_hash.cpp
+    missions/mission_apfield.cpp
     missions/mission_adjusters.cpp
     space_center/pqs_city.cpp
     space_center/pqs_city_data.cpp
@@ -286,6 +292,12 @@ add_library(kspcore STATIC
     commnet/commnet_scene.cpp
     commnet/comm_net_vessel.cpp
     modules/module_reaction_wheel.cpp
+    wheels/wheel_native.cpp
+    wheels/tire_friction.cpp
+    wheels/wheel_blocks.cpp
+    wheels/vp_wheel_collider.cpp
+    wheels/vehicle_base.cpp
+    wheels/ksp_wheel_controller.cpp
     modules/module_resource_intake.cpp
     # WP-26 fairings, cargo bays, jettison, shielding, launch clamps
     modules/fairing_panel.cpp
