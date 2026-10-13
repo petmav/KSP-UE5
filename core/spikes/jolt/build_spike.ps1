@@ -42,7 +42,7 @@ try {
     if ($Fresh) { $cfgArgs += '--fresh' }
     & $cmake @cfgArgs
     if ($LASTEXITCODE -ne 0) { throw "configure failed ($LASTEXITCODE)" }
-    & $cmake --build --preset $Preset --target jolt_spike
+    & $cmake --build --preset $Preset --target jolt_spike wp20b_bench
     if ($LASTEXITCODE -ne 0) { throw "build failed ($LASTEXITCODE)" }
     if ($Run) {
         $exe = Join-Path $core "build\$Preset\spikes\jolt\jolt_spike.exe"

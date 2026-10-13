@@ -76,6 +76,41 @@ struct BodyDesc {
     uint64_t userData = 0;                         // opaque to the world (the part / quad id of the caller)
 };
 
+// WP-20b: a rigid body made of several collider shapes (one vessel cluster: the colliders of every part welded into it).
+// The body's ORIGIN is a reference point the caller chooses (the cluster's centre of mass at creation, PHYSICS-SPIKE.md 5.3);
+// children are placed relative to it in body space. Mass, inertia (about the centre of mass, body axes) and the centre of mass
+// (body space, relative to the origin) are given explicitly: they are KSP's per-part sums, not the volumes of the proxy colliders.
+struct CompoundChild {
+    ShapeDesc shape;
+    Vector3f position;                              // body space, relative to the body origin
+    Quaternionf rotation = Quaternionf::identity();
+    uint32_t userData = 0;                          // sub-shape user data (the part index of the caller)
+};
+
+struct CompoundBodyDesc {
+    std::vector<CompoundChild> children;            // at least one
+    MotionType motion = MotionType::Dynamic;
+    Vector3d position;                              // physics-frame position of the body origin, double
+    QuaternionD rotation = QuaternionD::identity();
+    Vector3d linearVelocity;                        // physics-frame velocity of the centre of mass
+    Vector3d angularVelocity;
+    double mass = 1.0;
+    double inertia[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};  // about the centre of mass, body axes (row-major, symmetric)
+    Vector3f centerOfMass;                          // body space, relative to the origin (0: the origin is the centre of mass)
+    float friction = 0.6f;
+    float restitution = 0.0f;
+    float maxLinearVelocity = 1.0e5f;
+    float maxAngularVelocity = 50.0f;
+    bool allowSleeping = false;
+    uint32_t vesselGroup = 0;
+    bool sameVesselCollision = false;
+    uint64_t userData = 0;
+};
+
+// Jolt constraint id (index into the world's constraint table); kInvalidConstraint when absent.
+using ConstraintId = uint32_t;
+constexpr ConstraintId kInvalidConstraint = 0xFFFFFFFFu;
+
 struct PhysicsWorldConfig {
     // Jolt's default is 10 velocity steps; PhysX in KSP ran 50 position iterations / 1 velocity iteration ([runtime], PHYSICS-SPIKE.md).
     int velocitySteps = 10;
@@ -135,14 +170,15 @@ public:
     // work for bodies owned by the world ("one velocity write per body", Krakensbane.cs:121-173). Returns the bodies touched.
     size_t AddVelocityChangeToAllMoving(const Vector3d& dv);
 
-    // ---- static geometry (WP-12b terrain colliders, WP-42 KSC / PQSCity objects) ------------------------------------------
+    // ---- static geometry (WP-12b terrain colliders, WP-42 KSC / PQSCity objects, WP-20b's pad terrain patch) ----------------
     // Static bodies live in the Static layer (they only collide with Moving ones) and are addressed by a caller-chosen 64-bit
     // key (a quad collider, a city object ...); adding a key that exists replaces the body (the MeshCollider.sharedMesh
-    // re-assignment of an OnQuadBuilt on an already enabled collider). Positions are doubles in the physics frame; mesh
-    // vertices are floats relative to `centre`, the layout Jolt's MeshShape keeps (PHYSICS-SPIKE.md 5.2
-    // AddStaticMesh(id, centre, vertices, triangles)). `triangles` are index triples into `vertices`, wound as the Unity mesh
-    // (cacheIndices): the numeric normal cross(b - a, c - a) points to the front face in both Unity and Jolt, so no flip is made.
-    // Returns kInvalidBody when the shape cannot be cooked (no valid triangle) or the body limit is reached.
+    // re-assignment of an OnQuadBuilt on an already enabled collider). The key is also the body's user data. Positions are
+    // doubles in the physics frame; mesh vertices are floats relative to `centre`, the layout Jolt's MeshShape keeps
+    // (PHYSICS-SPIKE.md 5.2 AddStaticMesh(id, centre, vertices, triangles)). `triangles` are index triples into `vertices`,
+    // wound as the Unity mesh (cacheIndices): the numeric normal cross(b - a, c - a) points to the front face in both Unity and
+    // Jolt (counter-clockwise seen from the front), so no flip is made. RemoveBody removes a static body too (and its key).
+    // Returns kInvalidBody when the shape cannot be cooked (no valid triangle, logged) or the body limit is reached.
     BodyId AddStaticMesh(uint64_t key, const Vector3d& centre, const std::vector<Vector3f>& vertices, const std::vector<int>& triangles,
                          float friction = 0.6f, float restitution = 0.0f);
     // A primitive static collider (BoxCollider / SphereCollider / CapsuleCollider of a scenery object).
@@ -173,6 +209,26 @@ public:
     RayHit RayCast(const Vector3d& origin, const Vector3d& direction, double maxDistance, uint32_t layers = kLayerAll) const;
     // Every body whose shape overlaps the sphere, ascending by body id.
     size_t OverlapSphere(const Vector3d& centre, double radius, std::vector<BodyId>& out, uint32_t layers = kLayerAll) const;
+
+    // ---- WP-20b: compound (cluster) bodies -----------------------------------------------------------------------------------
+    // A compound body (see CompoundBodyDesc); kInvalidBody when the limit is reached or the description is invalid.
+    BodyId CreateCompoundBody(const CompoundBodyDesc& desc);
+    // Physics-frame centre of mass (Jolt keeps it in double: Body::GetCenterOfMassPosition).
+    Vector3d GetCenterOfMassPosition(BodyId id) const;
+    // New mass properties of a compound body: mass, inertia about the centre of mass (body axes) and the centre of mass in body
+    // space. The body origin keeps its place (Jolt moves its centre of mass, Body::SetShapeInternal); the velocities are left as
+    // they are (the caller adds omega x shift when the centre of mass moves).
+    void SetMassProperties(BodyId id, double mass, const double inertia[3][3], const Vector3f& centerOfMass);
+    // Jolt's own angular damping of a body (w *= max(0, 1 - c dt) each step, after the forces): the spike's cluster damping model
+    void SetAngularDamping(BodyId id, float damping);
+    // A rigid weld between two bodies at a physics-frame point (Jolt FixedConstraint): the inter-cluster joint of the reduced
+    // model (decouplers in the split clustering, robotics / flexible joints until WP-20c / WP-52 give them their own constraints).
+    ConstraintId CreateFixedConstraint(BodyId a, BodyId b, const Vector3d& point);
+    void RemoveConstraint(ConstraintId id);   // unknown ids are ignored
+    size_t ConstraintCount() const;
+    // Total impulse of the last step on a fixed constraint: position (linear, kN s) and rotation (angular, kN m s) parts,
+    // applied to body b (and the opposite to a). Zero for unknown ids. (The input of WP-20c's load solve between clusters.)
+    void GetConstraintImpulse(ConstraintId id, Vector3d& linear, Vector3d& angular) const;
 
     // ---- determinism ----------------------------------------------------------------------------------------------------
     // FNV-1a 64 over the raw bits of every body's position, rotation and both velocities, in creation order.

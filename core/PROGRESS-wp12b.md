@@ -28,3 +28,7 @@ activation decisions + analytic ray/normal tests + KSC pad box drop (1/2/4/8 thr
 - findings: Jolt CollideShape wants the WORLD transform; acos(dot) of float normals lies by 4.5e-4 rad (use the chord); rays through
   shared quad-border vertices can miss (retry 2 mm aside); mesh vs WP-11 between vertices = sub-cell relief (1.5 m near the pad, 40 m worst).
 - next: ASan/UBSan in WSL (running), STATUS section + row 47 + README (drafted), fresh build + rand seeds 11 / 27, final report.
+- merged main `a883a8ca` (WP-20b, PR #23): one `AddStaticMesh` (the keyed WP-12b one; body-limit check before the cook, WP-20b's cook-error
+  warning kept) and one `OptimizeBroadPhase`; WP-20b's terrain-patch fixture passes a key per quad + int indices. Fresh build
+  (`run_tests.ps1 -Fresh`, CMAKE_BUILD_PARALLEL_LEVEL=6): 45/45 ctest; unit 843 / 1,367,413 in default order, -rs=11, -rs=27;
+  check_cites exact 85 cites / 0 mismatches. STATUS rows 46 (wp20b) + 47 (wp12b), sections and unit row merged; README physics row union.
