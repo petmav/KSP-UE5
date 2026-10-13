@@ -17,8 +17,8 @@ WP-29a/29b managed port; wheels as force elements on the WP-20b cluster bodies, 
 - [x] vessel integration (include/ksp/physics/vessel_wheels.hpp, src/physics/vessel_wheels.cpp): WheelPhysicsHost / VesselWheels
 - [x] substep policy + test
 - [x] scenarios (tests/test_vessel_wheels.cpp): settle ride height, accelerate, brake, steer, no jitter, 4x substeps, determinism
-- [ ] full suite, random order 11/27, ctest, check_cites
-- [ ] STATUS section + row 56, README row, NEXT-STEPS notes; commit, push, PR
+- [x] full suite, random order 11/27, ctest, check_cites
+- [x] STATUS section + row 56, README row, NEXT-STEPS notes; commit, push, PR (not merged)
 
 ## Log
 - 2026-10-13: native law written from the PhysX statements, Python reference first run: 2,000 cases 0 ULP on the first build.
@@ -29,3 +29,8 @@ WP-29a/29b managed port; wheels as force elements on the WP-20b cluster bodies, 
 - 2026-10-13: scenarios on the stock Prospector Rover / Bug-E Buggy reproduce the spike's numbers (rest 0.26 / 0.34 mm drift, compression
   0.509 / 0.531, drive 19.42 / 7.95 m/s at 10 s, brake 7.38 / 8.30 m) and the warp findings (4x without substeps: 2.5 / 12.5 m drift); with
   substeps 2x-4x equal 1x. 13 WP-29c cases, 5,630 assertions, 18 s.
+- 2026-10-13: first full ctest 47/48: unit.random_order.11 crashed (0xc0000374) in the pre-existing WP-39 run-alone case "CommNetVessel control
+  state" (a VesselModule made before any PartModule came out as the base class); fixed in VesselModuleFactory::Create (registers the built-in
+  behaviours first). check_cites (wp28 + wp55) on every touched file: 59 cites, 0 mismatches (5 stale WP-14 cites in vessel_module.cpp and
+  one comment form in the steer test fixed). ctest 48/48 passed (153.7 s); unit 959 cases / 1,548,340 assertions pass in default order and
+  with --order-by=rand -rs=11 / -rs=27.

@@ -211,6 +211,8 @@ TEST_CASE("WP-29c native WheelCollider: geometry and the PhysX suspension / tyre
         if (d.bad > 0) break;
     }
     INFO(d.first);
+    MESSAGE(ref["cases"].size() << " cases, " << d.total << " values compared: " << grounded << " grounded, " << limits << " on the travel limit, "
+                                << reactions << " reactions on a dynamic actor, " << tyres << " with a PhysX tyre force");
     CHECK(d.bad == 0);
     CHECK(d.total > 100000);
     const json& st = ref["stats"];

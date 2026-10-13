@@ -163,7 +163,7 @@ Recommendation: WP-20 builds a REDUCED rigid-body model on Jolt v5.6.0 inside ks
 - The 4-agent cap is the real throughput limit; the CPU is mostly idle during model waits. `unit` is ~186 s of ~230 s test time in one process; sharding it (`ctest -j`) was proposed and declined by the user.
 
 ### Open items
-- Run-alone test independence (not memory errors): WP-39 `CommNetVessel control state`, WP-40 symmetry mode cycling, `PartLoader on the GameData mirror` (360 vs 362 parts when run alone).
+- Run-alone test independence (not memory errors): WP-40 symmetry mode cycling, `PartLoader on the GameData mirror` (360 vs 362 parts when run alone).
 - `ContractParameter::CreateID` hashes unconditionally but the C# has `if (hashString != null)`.
 - `core/data/` needs: GameVariables prefab curves, KSC facility `levelCost`, `SiteGeneratorInfo`, CrewGenerator name tables, a career save, PQS LOD settings beyond min/max level (re-run `tools/wp11/extract_terrain.py` on KSP-dev), ocean spheres; in-game captures: per-tick VesselPrecalculate (gAccel, integrationAccel, drift), engine/part rotations + Quaternion products (WP-17b residual), quad set + one quad mesh at the pad (WP-12a), Euler/LookRotation (WP-24/40).
 - `kspcore.lib` now links Jolt (AVX2 CPU needed): the Unreal bridge in `ue5/` has not been touched or rebuilt. `SHA256SUMS` of the vendored Jolt does not verify on a Windows checkout with `core.autocrlf=true`.
@@ -174,6 +174,24 @@ Recommendation: WP-20 builds a REDUCED rigid-body model on Jolt v5.6.0 inside ks
 2. WP-29 wheels (VehiclePhysics subset, 29k lines), WP-32 EVA controller, WP-52 robotics (all after WP-20).
 3. Leftovers: WP-54/55 deferred (TestDistance, ActionPartFailure/Repair/ResourceDrain, MissionSystem, MissionImporting, MissionEditorHistory, real BaseAPField, PositionMobileLaunchPad), WP-53 deferred bits, WP-38 ship spawning / CometManager seams.
 4. The UE5 shell (about 289k lines of tier C: UI, rendering, cameras, audio, map view): needs its own design doc first (scene flow, what becomes Blueprints vs C++, first playable slice).
+
+### WP-29c notes (2026-10-13, branch `wp29c`; details in `core/STATUS.md` "WP-29c" and `core/PROGRESS-wp29c.md`)
+- Done: the native WheelCollider (PhysX 4.1 law, 0 ULP vs `core/tools/wp29c/suspension_reference.py`), the wheels in the WP-19b / 20d tick
+  (`WheelPhysicsHost`), 0.02 s physics-warp substeps for wheeled vessels (the user's delegated decision; without them the stock rovers drift 2.5-12.5 m
+  at 4x). Scenarios on the stock Prospector Rover and Bug-E Buggy reproduce the wheel spike's numbers (ride height, drive, brakes) and steer the way
+  KSP's keys do.
+- Needs a machine with `decompiled/KSP-dev` readable (it was not in that session): the wheel and leg `.mu` geometry (wheel collider / pivot /
+  suspension / deployTgt transforms, hub colliders, leg stand-ins): extend `core/tools/wp17/mu_transforms.py` to the WheelCollider entry and stage
+  the wheel models, then feed `WheelPhysicsOptions::geometry`; the scenarios currently use the spike's drag-cube proxy.
+- Needs capture C11 (profiling branch): the Unity glue of the native WheelCollider, the Smooth-vs-Lineal tyre curve (an explicit switch,
+  `TyreCurve::AsDecompiled` default, UNVERIFIED), the script order, the sticky-tyre question (an unbraked rover's creep).
+- Host findings that concern other packages: kspcore never sets Part.packed in GoOnRails / GoOffRails (Part.Pack / Unpack and their events), a
+  host must run GameSettings.SetDefaultValues (the wheel block is 0 otherwise), and Part.Update's PartValues refresh (overrideSkillUpdate:
+  ModuleWheelSteering, ModuleSAS) is not run by the bubble; WP-29c covers the wheel parts only.
+- Fixed on the way: `VesselModuleFactory::Create` registers the built-in behaviours first (the open run-alone item "WP-39 CommNetVessel control
+  state": a VesselModule made before any PartModule came out as the base class; `--order-by=rand -rs=11` hit it once the case count changed).
+- Next for wheels: WP-29d (landing gear, runway, steering circle) and landing legs (`leg_touchdown`, deployment animation, stand-in spheres) after
+  the geometry; the brake "schloompa" anchor with WP-20e's landed anchor.
 
 ## Handoff to the PC (2026-10-11, end of session 3; all four listed branches are now merged, see Session 4 above)
 

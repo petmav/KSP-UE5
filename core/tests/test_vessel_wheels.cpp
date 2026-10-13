@@ -391,7 +391,7 @@ TEST_CASE("WP-29c rover steers: wheelSteer +1 (KSP's left key) turns left at the
         }
         run.V().ctrlState.wheelThrottle = 0.0f;
         const Vector3d f0 = run.Forward();
-        // FlightInputHandler.cs:585: WHEEL_STEER_LEFT -> +1 (a quarter of it for the Prospector: a wider turn)
+        // KSP's left key WHEEL_STEER_LEFT -> +1 (FlightInputHandler.cs:585); a quarter of it for the Prospector: a wider turn
         const bool prospector = std::string(craft) == "Prospector Rover";
         run.V().ctrlState.wheelSteer = prospector ? 0.25f : 1.0f;
         run.Ticks(prospector ? 150 : 100, [&] { FillElectricCharge(run.V()); });
