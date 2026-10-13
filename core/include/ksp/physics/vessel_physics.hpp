@@ -99,11 +99,28 @@ Part* RigidBodyPart(Part* part);
 
 // ===================================================================================== collider proxies
 
+using ShapeKind = ShapeDesc::Kind;
+
 // One collider of a part in PART space (the transform's local frame). Until the model reader exists: boxes.
 struct ColliderProxy {
     Vector3f center;
     Vector3f halfExtents{0.25f, 0.25f, 0.25f};
     Quaternionf rotation = Quaternionf::identity();
+    // WP-mucol: real .mu colliders (BoxCollider / SphereCollider / CapsuleCollider / convex MeshCollider, physics/mu_part_colliders.hpp).
+    // `kind` Box keeps the fields above (the drag-cube proxy is a Box). Sphere: `radius`. Capsule: `radius`, `halfHeight` (the
+    // cylinder's half length along the collider's local Y; a Z / X capsule is rotated into place by `rotation`). ConvexHull: `hull`
+    // (points in the collider frame; `center` / `rotation` place that frame in part space). `mass` = the analytic mass properties
+    // per unit mass (set by the .mu conversion; unset for boxes, whose tensor ProxyInertiaPerUnitMass derives).
+    ShapeKind kind = ShapeKind::Box;
+    float radius = 0.5f;
+    float halfHeight = 0.0f;
+    std::shared_ptr<const std::vector<Vector3f>> hull;
+    struct MassProps {
+        double volume = 0.0;
+        Vector3d centroid;          // collider frame
+        double inertia[3][3] = {};  // about the centroid, collider axes, per unit mass
+    };
+    std::shared_ptr<const MassProps> mass;
 };
 // The spike's proxy (core/spikes/jolt/src/craft_model.cpp): the box of the part's first drag cube (DragCube center / size), half
 // extents at least 0.05 m; a part without drag cubes gets a 0.5 m cube at its origin.

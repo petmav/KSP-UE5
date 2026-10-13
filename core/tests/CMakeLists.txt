@@ -42,6 +42,7 @@ add_executable(kspcore_tests
     test_timing.cpp
     test_physics_world.cpp
     test_vessel_physics.cpp
+    test_mu_colliders.cpp
     test_structure.cpp
     test_structure_events.cpp
     test_physics_bubble.cpp
@@ -59,6 +60,12 @@ add_executable(kspcore_tests
     test_progress.cpp
     test_contracts.cpp
     test_serenity.cpp
+    test_robotics.cpp
+    test_robotics_controller.cpp
+    test_robotics_joint.cpp
+    test_robotics_derived.cpp
+    test_robotics_behaviour.cpp
+    test_robotics_controller_derived.cpp
     test_fineprint.cpp
     test_fineprint2.cpp
     test_fineprint3.cpp
@@ -152,6 +159,9 @@ set_tests_properties(wheels.vpp PROPERTIES LABELS unit TIMEOUT 600)
 # WP-29b: the wheel part modules against the independent Python reference (tools/wp29b/wheel_reference.py): 0 ULP
 add_test(NAME wheels.modules COMMAND kspcore_tests "-tc=WP-29b*")
 set_tests_properties(wheels.modules PROPERTIES LABELS unit TIMEOUT 900)
+# WP-52: Breaking Ground robotics (servos, controller) against the independent Python reference (tools/wp52/servo_reference.py): 0 ULP
+add_test(NAME robotics COMMAND kspcore_tests "-tc=WP-52*")
+set_tests_properties(robotics PROPERTIES LABELS unit TIMEOUT 900)
 set_tests_properties(data.roster_experience PROPERTIES LABELS data TIMEOUT 600)
 
 # ---- portable libm vs the real VS2013 / UCRT DLLs (Windows only; skips elsewhere): 300k inputs per function

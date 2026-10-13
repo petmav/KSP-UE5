@@ -66,7 +66,9 @@ un_tests.ps1`
 | 52. WP-29b KSP wheel part modules (branch `wp29b`, from local `wp29a` `2d90e6fe`; unpushed) | done and gated: ModuleWheelBase (gee bias and friction, set-up, slip displacement, landing detection -> GroundContacts / landedAt, schloompa freeze, drift fix, OnPutToGround, pack / docking / SOI handlers, sub-system cascade), Motor (torque curve, 0.01 rounding, traction control, EC draw) / MotorSteering, Steering (Ackermann), Brakes, Lock, Suspension (auto spring / damper, boost), Damage, Deployment (KerbalFSM over the Animation), Bogey, SuspensionLoadBalancer; the M1 collider-vs-motor radius quirk kept; 0 ULP against the independent `tools/wp29b/wheel_reference.py` (`tests/data/wp29b_reference.json`: 39 runs x 200 ticks over every stock wheel part, 2,340 gee-bias rows, 400 load-balancer vessels, > 500k values), 10 unit cases, ctest `wheels.modules`, check_cites 155 cites 0 mismatches; `capture.part_database` unchanged (the WP-06 curve registration is replaced by the real classes' `OnAwake`); natives UNVERIFIED (AnimationCurve smoothing / Hermite transcribed from the WP-01 port, Transform maths, Animation clock, script order R5); SOIChange never applies and `ActAutoFrictionToggle` is inverted in the C# (kept). See the WP-29b section |
 | 53. WP-32 EVA kerbal controller (branch `wp32`, from local `wp20b` `950c1d94`, local only) | done for the engine-agnostic part, unit-gated against an independent Python reference (no golden or capture covers the EVA kerbal): `KerbalEVA` (42 FSM states / 72 events with their guards, enter / update / leave callbacks, timers and wiring records), `KerbalAnimationManager`, `KerbalRagdollNode`, `RetractableLadder` (FSM + ladder alignment / triggers), `FlightEVA`, `Kerbal`, `CrewTransfer`, `CrewHatchController`; movement / heading / PID / jetpack / pack drains / helmet / visor / jump and bound impulses / low-g curve / clamber path / seat-camera bob / flag, boarding and weld rules, compared 0 ULP / exact with `tools/wp32/eva_reference.py` (state-machine tables machine-parsed from the C#; 2,880 event-condition worlds, 300 OnEvent decisions, 11 scripted scenarios / 83 steps against a second FSM runtime, 252 fps-animation, 180 movement, 180 heading, 150 PID, 180 pack, 600 helmet, 144 impulse, 60 ragdoll rows); Unity animation / Transform / Collider / Rigidbody / raycast access goes through `include/ksp/eva/eva_engine.hpp` (`IEvaEngine`, `HeadlessEvaEngine`, `EvaEnvironment`) | see "WP-32" below: physics-bubble and animation-rig parts are deferred to WP-19b / 20d / UE5 | pass |
 | 54. WP-20d the FlightIntegrator tick over the rigid bodies (branch `wp20d`, from local `wp19b` cd99f577) | done for the engine-agnostic part, gated by an independent Python reference at 0 ULP, bit-identity of the SoA kernel to the exact port (random states, whole flights and KSP's own C10 capture) and scenarios against independent references (every existing gate unchanged): `FlightIntegrator` (physics/flight_integrator.hpp) runs FlightIntegrator.FixedUpdate for every loaded vessel in the C#'s order over the WP-20b bodies, replacing WP-19b's stand-in: Setup, the caches, UpdateMassStats (WP-22 thermal half, physicsMass, rb.mass through the binding), SmoothVelocity, the WP-09 atmosphere with the vessel mirrors, DragCubeSetupAndPartAeroStats, the WP-22 thermal half, the packed branch, IntegratePhysicalObjects, the drift-compensation offset and Integrate with UpdateAerodynamics per part in the recursion; FlightIntegrator.Update per frame; `physics/part_forces.hpp`: Part.AddForce* buffers and the module FixedUpdate slot (engines with their thrust transforms following the part, RCS, lifting / control surfaces, reaction wheels -> the buffers); `physics/aero_soa.hpp`: the SoA aero kernel; `StartPartsInFlight`. Gate: 11 cases: SmoothVelocity (3,200 steps) and IntegratePhysicalObjects (300) 0 ULP vs `tools/wp20d/fi_reference.py`; Integrate == IntegratePartBuffers bit for bit; **SoA == exact: 30,600 random part states, 1,008,969 part-ticks of S / M2-AS / L2-AS flights from the pad (0 mismatches, the same end state with either kernel), and 0 ULP against the C10 in-game capture (4,224 live + 25,344 AoA states)**; ascents of M2 / L2-AS / S vs C10's in-game flight states: speed at altitude within 1 % (to Mach 1 / 5 km: no SAS in this tick); a vacuum burn vs an independent tick replay (1.7 mm / 4.4 mm over 10 s) and the rocket equation; an orbit coast with thermal running (Kepler within 2e-5 m). FlightIntegrator slot 2.2x faster with the SoA kernel (L2-AS 0.73 -> 0.33 ms per tick). Findings: drift compensation stays on while burning in vacuum, the CoM moves inside a draining vessel, the WP-20b fixture never set the BodyLift curve (no body lift in WP-20b / WP-19b scenarios), no flight resource-flow host. Merge with main (WP-20c's loads and breaks now in the tick): the pad fixture's 5 cm drop at full gravity broke L2-AS's Mainsail and five radial decouplers at touchdown; it now launches as KSP does (OrbitDriver started -> physics easing, lowest collider point on the ground): no break, flight loads 0.044-0.148 of capacity; a WP-32 test's leaked InputLockManager lock (the `-rs=27` VesselSwitching failure) is reset by the hygiene listener. See the WP-20d section |
-| 55. WP-20e contact, landing and water (branch `wp20e`, from origin/main `cd5e4df4`) | done for the engine-agnostic part, gated by an independent Python reference at 0 ULP / exact and scenarios against analytic values and KSP's own rules (no golden or capture covers contacts; every existing gate unchanged): `PhysicsWorld` contact events per collider pair (Enter / Stay / Exit, pre-solve kinematics, Unity's 0.01 m contact offset) and a fixed-to-world weld; Part.OnCollisionEnter / Stay / Exit, LandedCollisionChecks, HandleCollision's crash tolerance, checkLanded / checkSplashed, landedAt, explode (Part.cs:3355-3745, :4373); Vessel.AddRBAnchor (the landed anchor) and CheckGroundCollision / getLowestPoint; PartBuoyancy and CollisionEnhancer (whole); `ContactHost` in the bubble (static collider registry, dispatch, buoyancy / enhancer slots, anchors, ground probes, WP-12b terrain colliders hosted per body in the bubble's frame, rebuilt on frame changes). Gate: 17 cases: reference replays HandleCollision 1,200 collisions, 300 message sequences / 3,045 messages, PartBuoyancy 110 parts / 6,300 ticks, CollisionEnhancer 400 parts / 1,404 ticks, AddRBAnchor 90 timelines / 10,200 frames: 0 mismatches; **pad: S / M2-AS / L2-AS anchor after 1.5 s and then rest at exactly zero speed (L2-AS rocked 0.091 m/s without it, WP-20b R2)**, anchor force = weight; ignition releases it, PRELAUNCH -> FLYING; a part at 0.9x / 1.1x crashTolerance survives (LANDED) / explodes; splashdown in Kerbin's ocean floats at KSP's buoyancy equilibrium (draft -0.001 %), SPLASHED, at 20 m/s it crashes; 80 m/s into the terrain is caught by CollisionEnhancer; vessel on vessel (landed with the other's landedAt / both explode); CheckGroundCollision at spawn; Kerbin's PQS colliders hosted per body; determinism 1 / 4 threads. **SAS / FeedInputFeed not wired**: labelled seam `PhysicsBubble::inputFeed`. See the WP-20e section |
+| 55. WP-mucol real part colliders from .mu models + scenery collider loader (branch `mucol`, from main `cd5e4df4`) | done for the 19 stock engine models, gated bit for bit against an independent python parse of the original files (31 colliders, 1,156 comparisons on reduced real + synthetic models, 879 assertions on the full originals when staged) plus numeric / analytic checks of the hull and capsule mass properties; the `.mu` reader consumes the whole PartReader grammar, colliders go through CompileModel placement and lossyScale to Box / Sphere / Capsule / Jolt ConvexHull proxies in the WP-20b/20c compound (`MuPartColliders::Hook()`, fixture only where no model data exists); scenery colliders have a documented JSON format and a loader into `CityColliderSet`; every existing gate unchanged | see "WP-mucol" below: the all-parts sweep and the KSC extraction are written but unrun (`decompiled/KSP-dev` was unreadable in the session), 4 collider meshes are not convex solids (hull != mesh), gimbal colliders are static |
+| 57. WP-52 Breaking Ground robotics (branch `wp52`, from main `cd5e4df4`) | done for the engine-agnostic part, gated by an independent Python reference at 0 ULP (every existing gate unchanged): `BaseServo` (motor / lock / brake state, the 20-reading rate-of-motion average, power draw, drive target stepping, axis field limits, mass and cost, attach node bookkeeping), `ModuleRoboticServoHinge` / `ModuleRoboticRotationServo` / `ModuleRoboticServoPiston` / `ModuleRoboticServoRotor` (targets, soft / hard limits, traverse-velocity ramp, joint drive configuration, power-loss lock, mirrored / symmetric hinges, rotor spool / brake / ratchet, drag cubes), `ModuleRoboticController` (sequencer: Once / Repeat / PingPong / OnceRestart, direction, action windows, controlled axes / actions with symmetry transfer, persistence), `ControlledAxis` (time -> value curve, presets, helpers), `ControlledAction`, `RoboticControllerManager` (priority-averaged update queue), `ConfigurableJointExtensions.SetTargetRotationLocal`. Joint drive: WP-20b has no articulated bodies, so the servos write a `ConfigurableJointData` (the seam contract), `HeadlessServoPlant` is a documented reference plant (not PhysX), `ServoArticulation` is the `isArticulation` hook (PhysProf-S: 2 clusters, 1 constraint) and `BaseServo` is an `IJointLockState` for `Part.HasFreePivot`. Gate: 92 servo runs x 120 ticks (404,308 comparisons), 60 controller runs (47,854), 80 preset curves (1,799 keys bit for bit, 213 native-evaluated keys at a stated tolerance), 72 joint-rotation cases, 40 drive sets, 27 labelled derived cases; `tests/test_robotics*.cpp` 34 cases / 18,687 assertions. The GameData mirror has no SquadExpansion/Serenity: every servo MODULE value is a labelled synthetic fixture; UI / PAW / audio / FX / `ModuleRobotArmScanner` deferred; see the section below |
+| 58. WP-20e contact, landing and water (branch `wp20e`, from origin/main `cd5e4df4`, main `ccf3ffc9` merged) | done for the engine-agnostic part, gated by an independent Python reference at 0 ULP / exact and scenarios against analytic values and KSP's own rules (no golden or capture covers contacts; every existing gate unchanged): `PhysicsWorld` contact events per collider pair (Enter / Stay / Exit, pre-solve kinematics, Unity's 0.01 m contact offset) and a fixed-to-world weld; Part.OnCollisionEnter / Stay / Exit, LandedCollisionChecks, HandleCollision's crash tolerance, checkLanded / checkSplashed, landedAt, explode (Part.cs:3355-3745, :4373); Vessel.AddRBAnchor (the landed anchor) and CheckGroundCollision / getLowestPoint (every WP-mucol collider kind); PartBuoyancy and CollisionEnhancer (whole); `ContactHost` in the bubble (static collider registry, dispatch, buoyancy / enhancer slots, anchors, ground probes, WP-12b terrain colliders hosted per body in the bubble's frame, rebuilt on frame changes). Gate: 18 cases: reference replays HandleCollision 1,200 collisions, 300 message sequences / 3,045 messages, PartBuoyancy 110 parts / 6,300 ticks, CollisionEnhancer 400 parts / 1,404 ticks, AddRBAnchor 90 timelines / 10,200 frames: 0 mismatches; **pad: S / M2-AS / L2-AS anchor after 1.5 s and then rest at exactly zero speed (L2-AS rocked 0.091 m/s without it, WP-20b R2)**, anchor force = weight; ignition releases it, PRELAUNCH -> FLYING; a part at 0.9x / 1.1x crashTolerance survives (LANDED) / explodes; splashdown in Kerbin's ocean floats at KSP's buoyancy equilibrium (draft -0.001 %), SPLASHED, at 20 m/s it crashes; 80 m/s into the terrain is caught by CollisionEnhancer; vessel on vessel (landed with the other's landedAt / both explode); CheckGroundCollision at spawn; Kerbin's PQS colliders hosted per body; determinism 1 / 4 threads. **SAS / FeedInputFeed not wired**: labelled seam `PhysicsBubble::inputFeed`. See the WP-20e section |
 
 ## Test results (all 36 ctest tests pass (35 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience, WP-19a capture.vessel_rails)
 
@@ -6097,7 +6099,209 @@ After the merge with main (`814c5d34`, `9581f0d6`; `8f0ce719` the fixture's keye
 started, exact ground placement), structure checks in the flight cases, InputLockManager reset in the hygiene listener, this section's
 "Merge with main" note.
 
-## WP-20e: contact, landing and water (branch `wp20e`, from origin/main cd5e4df4)
+## WP-mucol: real part colliders from .mu models, scenery collider loader (branch `mucol`, from main `cd5e4df4`)
+
+State: the part-collider side is done and gated on the 19 stock engine models; the stock-part sweep and the KSC scenery extraction are NOT done because this session could not read `decompiled/KSP-dev/**` (see "Blocker"). Every existing gate is unchanged (47 / 47 ctest).
+
+### What is in
+
+| piece | files | KSP source |
+|---|---|---|
+| `.mu` reader (every PartReader chunk consumed, so the stream stays aligned; collider chunks and their meshes kept) | `include/ksp/parts/mu_model.hpp`, `src/parts/mu_model.cpp` | `PartReader.cs:140` Read, `:205` ReadChild; colliders `:229` MeshCollider (convex forced true `:233`), `:240` Sphere, `:247` Capsule (no height field: Unity's 2), `:255` Box, `:301` MeshCollider2 (isTrigger, convex, forced `:307`), `:314` / `:322` / `:332` Sphere / Capsule / Box 2 (isTrigger first), `:340` WheelCollider (marker only, enabled = false), `:298` TagAndLayer; skipped with the exact grammar: `:495` meshes, `:441` / `:468` renderers, `:646` / `:758` materials, `:385` textures (the TextureError throw), `:802` animation, `:950` light, `:970` camera, `:985` particles |
+| part-space shapes | `include/ksp/parts/part_colliders.hpp`, `src/parts/part_colliders.cpp` | `PartLoader.cs:1765` CompileModel placement (synthetic `model` with `rescaleFactor`, MODEL `parent` / `name` / `scale` / `position` / `rotation`, no-MODEL case renamed `model`), collider geometry x lossyScale (component-wise product down the chain, native float per operation, `UnityNative::Multiply`) |
+| physics bridge | `include/ksp/physics/mu_part_colliders.hpp`, `src/physics/mu_part_colliders.cpp`; `ColliderProxy` extended (kind Box / Sphere / Capsule / ConvexHull, analytic mass properties); `ShapeDesc::ConvexHull` and `HullMassProperties` in `physics_world`; `ProxyInertiaPerUnitMass` generalised (box-only sets take the old code path unchanged) | `Part.cs:1890` (collider tensor), `PartReader.cs:233` |
+| scenery collider loader | `include/ksp/space_center/scenery_colliders.hpp`, `src/space_center/scenery_colliders.cpp` | JSON `kspcore-scenery-colliders/1` -> `CityObject`s for `CityColliderSet` / `PQSCityColliders` / `PQSCity2Colliders` |
+| independent reference + data | `tools/mucollider/mu_colliders_reference.py` -> `tests/data/mucollider_reference.json` (86 KB), `tests/data/mucollider/*.mu` (20 files, 94 KB: the 19 originals reduced to transform tree + TagAndLayer + collider chunks, and a synthetic coverage model) | origins and sha256 of the originals in the JSON (`GameData/Squad/Parts/Engine/**`) |
+| tools (local) | `tools/mucollider/sweep_stock_parts.py` (all-parts sanity sweep), `tools/mucollider/extract_scenery_colliders.py` (UnityPy, NOT RUN) | |
+
+How the proxies map: BoxCollider -> Box (|size x lossyScale| / 2, the node's rotation), SphereCollider -> Sphere (radius x largest |scale|), CapsuleCollider -> Capsule (radius x larger non-axis |scale|, height x axis |scale|, an X / Z capsule rotated into Jolt's Y by -90 / +90 degrees), MeshCollider -> Jolt `ConvexHullShape` of the part-space vertices (KSP forces every mesh collider convex), triggers and wheel markers dropped (a trigger has no contact response and PhysX leaves it out of the mass properties). Mass properties for the per-part inertia tensor (`Part.cs:1890` stand-in) are the analytic capsule integrals and Jolt's hull integrals (volume, centroid, full tensor); a set of boxes keeps the previous code path bit for bit. `MuPartColliders::Hook()` plugs into `VesselPhysicsOptions::colliders`: parts with readable model data get their real colliders, every other part keeps the labelled FIXTURE (`DragCubeColliderProxy`); `stats()` counts both paths. Models are read from `Part::models[i].file->fullPath()` (the files PartLoader resolved); the test GameData mirror holds 0-byte `.mu` placeholders, so on the mirror every part takes the fixture path.
+
+### Gate (`tests/test_mu_colliders.cpp`: 10 cases, 2,819 assertions; plus 879 more when `core/data/mu_staging` is present)
+
+| check | reference | compared | result |
+|---|---|---|---|
+| 19 reduced stock engine models (.mu versions 1, 3, 4, 5; 28 mesh, 1 box, 2 capsule colliders): every chunk's raw values (radius / height / direction / size / centre bits, the mesh vertex and triangle-list counts and FNV-1a 64 of the raw bytes, the stored convex flag, trigger, tag, layer) then the part-space shape (node position / rotation / scale, centre, half extents, radius, height, half cylinder, axis, FNV of the part-space vertices) | independent python reference parsing the ORIGINAL files | 400 bit comparisons | 0 mismatches |
+| synthetic coverage model (all nine collider chunk layouts, triggers, the legacy capsule height, a wheel marker, a 4-deep chain with non-uniform scales and rotations, tag / layer, every chunk type the reader must skip: mesh filter with normals / uv / tangents, renderer, version-5 material, textures, light, camera, animation) under 3 CompileModel placements (no MODEL; one MODEL with scale + position; two MODELs with `name` and a `parent` path) | python reference (own writer, own parse of the written file, own chain builder) | 756 bit comparisons | 0 mismatches |
+| the unreduced originals (local, `core/data/mu_staging`): the full PartReader grammar on the real files | same JSON | 879 assertions | 0 mismatches |
+| defaults the chunks do not carry: mesh colliders convex even when stored false (2 cases), legacy capsule height 2, 2 triggers, 1 wheel marker; shapes 13 / proxies 11 | `PartReader.cs` | exact | pass |
+| malformed input: wrong file type, 4 truncations, TextureError, bad mesh start throw; a root-only file is a valid empty model | `PartReader.cs:155`, `:388` | exact | pass |
+| mass properties: cube hull V = 8, I/m = 2/3 (1e-6); duplicate / interior points change nothing; coplanar points have no hull; capsule V and tensor vs a 160^3 grid integral (2e-3 / 5e-3), zero-length capsule = sphere (1e-12); X / Z capsule rotations; the 28 real engine hulls (Jolt) vs the python reference (scipy Qhull hull, float64 tetrahedra): volume, centroid, full tensor | analytic / numeric / python | 28 hulls | within 3e-3 (Jolt hull tolerance 1e-3 m, float32 integrals) |
+| Jolt hull shapes: 100 vertical rays at 4 real engines vs the topmost mesh triangle (Moller-Trumbore, double) | geometry | 100 rays | worst 1.0e-5 m |
+| `MuPartColliders` on a PartLoader part (the Mainsail of PhysProf-S, model handed through the loader seam; mirror placeholders fall back to the fixture with `modelErrors` counted); real hull proxies through `VesselPhysics` (cluster inertia = sum of the proxies' per-unit tensor x Max(1, m) + parallel axis, 1e-6; Jolt mass equals the cluster mass) | closed forms | | pass |
+| scenery loader on a documented-format SYNTHETIC fixture (trigger dropped; box / capsule / sphere / mesh composed through a rotated + scaled chain; `PQSCityColliders` takes children and lod; 4 static bodies, ray hit; 3 malformed documents refused) | hand-derived | | pass |
+| mutation checks (not kept): capsule radius uses min of the non-axis scales; BoxCollider2 reads centre before size; legacy capsule height 1 | | | 24, 84 and 10 failed assertions |
+
+Whole suite: `core/run_tests.ps1` 47 / 47 ctest (Windows MSVC RelWithDebInfo, fresh build in the worktree, `CMAKE_BUILD_PARALLEL_LEVEL=6`); `kspcore_tests --order-by=rand -rs=11` and `-rs=27`: 956 / 956 cases, 1,546,407 assertions each. `check_cites.py` exact mode over the touched C++ files: 12 cites, 0 mismatches (the reader's own `PartReader.cs:N` comments were checked against the decompile by hand: the file-type check is `:155`). Linux (clang / gcc, sanitizers) not run locally: CI.
+
+### Findings
+
+- **Meshes are not all convex solids.** Qhull's hull of the collider vertices differs from the volume of the mesh triangles by 1.7 to 12 % for four colliders (Poodle `Col1` / `Col2`, turboFanEngine `TRJCOL1` / `TRJCOL2`; one hull is 4 % smaller than the mesh solid: the mesh is open or inverted in places), so the triangle solid is the wrong mass model; PhysX / Unity use the hull, and so does this port (Jolt hull integrals).
+- Tags: `NoAttach` (SRB5 / SRB10 `COL2`, turboFanEngine `TRJCOL2`) only matters to the editor's attach raycasts; the colliders still collide. Layer is 0 on every stock engine collider. Triggers: none among the 19 engines.
+- Native quaternion product: `UnityNative::Multiply` associates `w` as `(lw*rw - lx*rx) - (ly*ry + lz*rz)` (the WP-17b empirical fit, UNVERIFIED); the WP-17b python `qmul` associates it `lw*rw - ((lx*rx + ly*ry) + lz*rz)`. They differ only in rounding (a 7e-14 noise `w` of the omsEngine collider moved by 58,000 float ULP of that tiny number). The mucollider reference carries its own `qmul` with the C++ association; WP-17's python is untouched.
+- Gimbal colliders: `liquidEngine*` colliders sit under gimbal transforms; the cluster compound holds them at the rest pose (no animation in the rigid-body model).
+
+### Blocker (precise)
+
+The permission layer denied every read of `decompiled/KSP-dev/**` in this session (Read, Glob and Bash all refused). Only the 19 engine models staged earlier into `core/data/mu_staging` (WP-17b, sha256 manifest) could be used. Consequences:
+
+1. **Stock-part collider counts for all 362 parts were NOT checked.** The 19 engines are checked (31 colliders, 1 to 3 per part, no part without a body collider, no trigger). Next step: `python -I core/tools/mucollider/sweep_stock_parts.py --game decompiled/KSP-dev --out core/data/mucollider_stock_counts.json` (resolves MODEL nodes or the directory's first `.mu`, parses with the python reference, fails on parts without a non-trigger collider or with a mesh collider Qhull cannot hull; directories with several `.mu` and no MODEL node are listed as AMBIGUOUS because the file order is `UrlDir`'s; MODEL `rotation` is noted, not applied). The sweep logic was exercised on the 19 staged parts in a fake tree (9 resolvable parts passed; the others need the real directory layout).
+2. **KSC / city scenery colliders were NOT extracted.** `tools/mucollider/extract_scenery_colliders.py` is written and unrun (and `harness/lib`, `harness/tools-cache` are not on this machine). Colliders are native Unity classes, so UnityPy reads them without type trees; the city objects are not in `sharedassets9.assets` alone (the PQSCity prefab's `renderers` / `objects` resolve to null with only that file loaded), so the script loads the whole `KSP_x64_Data`. Next step: run it with the harness venv (`<harness>/tools-cache/venv/Scripts/python.exe -I tools/mucollider/extract_scenery_colliders.py <KSP_x64_Data> <harness lib> core/data/scenery/scenery_colliders.json`), fix what the first run reports (UnityPy mesh accessors differ by version), add the `lod` table from the PQSCity / PQSCity2 MonoBehaviours (extract_terrain.py's type-tree method; the script writes `lod: []` and says so), then the existing test picks the file up (`data/scenery/scenery_colliders.json`: loads, builds, non-empty) and hosts call `ApplySceneryLod(PQSCityColliders&, city)` / `ApplySceneryLod(PQSCity2Colliders&, city)`.
+
+### Exact / approximate / changed
+
+| choice | class | notes |
+|---|---|---|
+| chunk layouts, defaults, forced convex, trigger flag, the part placement of CompileModel | exact | bit-compared with an independent parse |
+| collider geometry in part space (centre, extents, radii, vertices) | exact for lossyScale without shear | float per operation, native Transform maths; rotated parents with non-uniform scale (shear) are approximated by lossyScale like Unity; MODEL `rotation` uses `UnityNative::Euler` (UNVERIFIED, unused by the 19 parts) |
+| mesh collider shape | Jolt hull of the vertices (hull tolerance 1e-3 m, convex radius 0) | PhysX hulls have their own vertex limit (255) and tolerance: not modelled |
+| inertia of non-box colliders | analytic / Jolt hull integrals, volume-weighted over a part's colliders, diagonal kept | `Part.cs:1890` uses PhysX's tensor; same family of approximation as the box proxies (R5) |
+| triggers | dropped from bodies | Airlock / Ladder-tagged triggers of kerbals and hatches are WP-32's |
+| PhysicMaterial of part colliders | default (0.6 / 0) | not extracted |
+| gimbal / animated colliders | static at the rest pose | |
+| fixtures left | `DragCubeColliderProxy` for parts without model data; `CityCollider::friction` 0.6; the scenery loader test document is synthetic | labelled |
+
+### Commits
+
+See `git log mucol`; progress notes in `core/PROGRESS-mucol.md`.
+
+## WP-52: Breaking Ground robotics (branch `wp52`, from main `cd5e4df4`)
+
+State: done for the engine-agnostic part; the joint drive is a documented seam (decision below). Scope = `Assembly-CSharp/Expansions/Serenity/` BaseServo.cs,
+ModuleRoboticServoHinge.cs, ModuleRoboticServoPiston.cs, ModuleRoboticServoRotor.cs, ModuleRoboticRotationServo.cs, ModuleRoboticController.cs,
+ControlledAxis.cs, ControlledAction.cs, RoboticControllerManager.cs (7,390 C# lines with ControlledBase / RoboticCollisions / IRoboticServo, which WP-53 had
+ported), plus `ConfigurableJointExtensions.cs`. **No golden or capture covers a servo** (the SquadExpansion servo parts are not installed in the GameData
+mirror or the dev copy: no `ModuleRoboticServo*` cfg exists, no in-game log of a servo): the gate is an independent Python reference at 0 ULP for every
+piece of managed float maths, a double-precision algebra for the one joint formula, and labelled derived cases. Every existing gate is unchanged
+(`harness/compare/tolerances.json`, `tests/tolerances_capture.json` untouched).
+
+### Decision: the joint drive (WP-20b has no articulated bodies)
+
+KSP drives a servo with a PhysX `ConfigurableJoint` that `BaseServo.OnJointInit` adds to the moving transform's GameObject (a D6 joint between the servo
+`Rigidbody` and the part's): the module writes motions, limits, limit springs, drives (`positionSpring`, `positionDamper`, `maximumForce`),
+`targetRotation` / `targetPosition` / `targetAngularVelocity` and PhysX integrates it. The reduced rigid-body model (WP-20b / c) has one Jolt body per
+rigid cluster and **fixed** constraints between clusters only. Decided (2026-10-13):
+
+1. The module logic is ported 1:1 and writes the joint's properties into **`ConfigurableJointData`** (`servo_joint.hpp`: the properties the five classes
+   use, with the Unity defaults), the contract of the seam: an engine backend (a Jolt hinge / slider / motor constraint, the UE5 shell) reads it every
+   physics step and drives the moving body. `SetTargetRotationLocal` (ConfigurableJointExtensions.cs, the only managed joint maths) is ported.
+2. `HeadlessServoPlant` (`servo_modules.hpp`, `servo_plant.cpp`) is a **reference plant**, not PhysX: a 1-DOF model of the D6 drive (implicit spring /
+   damper, force clamp `maximumForce`, hard limits, a vanishing limit spring means no limit, the shortest arc for unlimited joints; velocity drive for the
+   rotor; linear drive for the piston) that moves the moving transform. SYNTHETIC inertia. It exists so the servo logic can be run closed loop in tests and
+   headless, and it documents the drive law a backend must reproduce.
+3. `ServoArticulation(PartJointSpec)` is the `VesselPhysicsOptions::isArticulation` hook: the joint a servo's moving side uses (`AttachServoRigidBody` /
+   `NodeRigidBody` answer "servo body", PartJoint.SetupJoint cs:213-258) becomes an articulation point of the reduced model (tested on PhysProf-S: 2
+   clusters and 1 constraint instead of 1 and 0). Until a backend gives that constraint a real hinge, the two bodies stay welded.
+4. `BaseServo` is an `IJointLockState` and `Part.HasFreePivot` (`vessel_physics_joints.cpp`) asks it (IsJointUnlocked = !servoIsLocked, cs:1790).
+5. The Unity side the modules touch is plain data supplied by the host: `ServoNode` (a Transform: local position / rotation, parent, world pose),
+   `ServoBody` (the servo Rigidbody), `ServoRig` (the named model transforms `GameObject.GetChild(name)` finds). `BaseServo::angleSource` /
+   `positionSource` let an engine that tracks the joint coordinate directly replace `currentTransformAngle()` (the native `localEulerAngles`); the gate
+   uses them to feed scripted coordinates.
+
+### Ported (`include/ksp/serenity/`, `src/serenity/`; every function carries a `File.cs:line` cite, `check_cites.py` exact: 289 cites, 0 mismatches)
+
+- `BaseServo`: the whole class but the UI (below): OnAwake / OnLoad / OnSave / OnStart (transform lookups, `servoParentTransform` and its inverse,
+  motorOutput, attach node transforms, the editor part sets, InitJoint), OnStartBeforePartAttachJoint (PostStartInitJoint), Promote / Demote, the
+  FixedUpdate chain (rate-of-motion average over 20 readings, power draw `baseResourceConsumptionRate * motorOutput * rate / referenceConsumptionVelocity`
+  or the velocity limit, `CalculateResourceDrain` with the power-loss disengage, the auto-restart on `HasEnoughResourcesToAutoStart`), Update (stopped-moving
+  timer, `ApplyCoordsUpdate`), engage / disengage lock and motor, `ModifyServo` / `ModifyLocked` / `ManuallyModifyEngaged` (the events fire twice through
+  the field event and the explicit call, as in C#), the axis field limits (`IAxisFieldLimits`), `GetModuleMass` / `GetModuleCost`, `AttachServoRigidBody`,
+  `NodeRigidBody`, `ServoTransformCollider`, `VisualizeServo`, the editor part sets and spanning compound parts.
+- `ModuleRoboticServoHinge` and `ModuleRoboticRotationServo`: target angle with soft / hard limits, `JointTargetAngle` (mirror, model offset, inverted), the
+  per-tick `MoveTowards` (`MoveTowardsAngle` for full rotation) of the drive target at `traverseVelocity * fixedDeltaTime`, the joint drive and limit
+  configuration (`driveSpringMutliplier` / `driveDampingMutliplier` from the motor output), the lock angle bookkeeping, power-loss lock, warp branches, mirror /
+  symmetric handling (`CheckSymmetry`, `mirrorRotation`, `OnEditorPartEvent` + `OnVisualizeServo`), drag-cube weights (hinge), `ModifyLimitsMode`.
+- `ModuleRoboticServoPiston`: extension / slave transforms / drag cubes / `UpdateCurrentExtension` through `servoParentTransformInverse` / `connectedAnchor`.
+- `ModuleRoboticServoRotor`: RPM spool-up (`rotorSpoolTime`), brake mode, `SetJointDrive` in XYAndZ and slerp modes, direction / inversion, `RatchetLock`, load mass,
+  the readout refresh.
+- `ModuleRoboticController` (the sequencer): sequence position / length / play speed, direction, loop modes Once / Repeat / PingPong / OnceRestart with the
+  action firing windows, the controlled axes and actions (add / remove / transfer to a symmetry partner / other-vessel cleanup / persistent id changes),
+  the priority, persistence, play / stop / direction / loop events. `ControlledAxis` (time -> value `FloatCurve`, reverse / invert / rescale / align / clamp,
+  the five stock presets Sine / Square / Triangle / Saw / RevSaw through `GenerateCurveFromReference`, `UpdateFieldValue`, symmetry fields),
+  `ControlledAction` (times), `RoboticControllerManager` (the per-frame, priority-averaged axis update queue).
+- Registration: `detail::RegisterRoboticsModules()` (servo_register.cpp) from `RegisterBuiltinModules`.
+
+### Gate
+
+- Reference: `tools/wp52/servo_reference.py` -> `tests/data/wp52_reference.json` (10 MB, fixed seeds; regenerate with
+  `python -I tools/wp52/servo_reference.py > tests/data/wp52_reference.json`, byte-identical). Written from the C# only, before the port, no shared code: its own
+  object model (a dict of KSPFields, handler lists, one hand-written state machine per class), the Mono float rule (`st()` at the C# stores).
+  Its inputs are replayed by the C++ tests.
+- Servos: 92 runs (26 hinge, 20 rotation servo, 22 piston, 24 rotor) x 120 fixed ticks, scripted coordinates with standing-still stretches (so the lock
+  is accepted), random set / lock / unlock / motor / limit / brake / extend ops, PAW open or closed, auto-start on or off: per tick the rate-of-motion
+  average, `currentFrameVelocity`, the double `rate`, `motorOutput`, the drive target, the joint drive spring / damper / force, limits, lock angle, mass and
+  cost, drag-cube weights, `IsMoving`, the lock events: **all bit for bit (NaN == NaN, the sign of zero)**.
+- Controller: 60 runs x 60 ticks (all four loop modes, direction toggles, play / stop events, action windows incl. the exact-end rule of Once, axis updates
+  with multipliers 1 / 100 / length).
+- Presets: 80 cases x 2 calls (cached reference, phase, soft-limit override, controller 0..1 range): every key (time, value, tangents) bit for bit; the up to
+  two keys per curve that the C# derives from `AnimationCurve.Evaluate` (native) against the reference's double Hermite at a stated tolerance. The Python
+  reproduces `FloatCurve(Keyframe[])` rejecting a key at an existing time (the synthetic start key and the first reference key share time 0 for whole-key phases).
+- Joint: 72 `SetTargetRotationLocal` cases (6 axes x 12) against a double-precision quaternion algebra (<= 1e-5 per component; `Quaternion.LookRotation` is
+  an UNVERIFIED native), the physical angle read back; 40 D6 drive parameter sets x 100 steps against the Python twin.
+- Derived cases (labelled, expectations hand-derived from the cited C#): registration and every C# initialiser, lifecycle / OnSave / OnLoad, locks and
+  their double events, power loss (the charge running out disengages, then locks), warp, `IsJointUnlocked` / `ServoArticulation` / the 2-cluster split,
+  closed loops on the plant (hinge tracking lag = c / k * rate, settle, soft clamp; mirrored hinge; rotor spool-up to `rpmLimit` rpm measured from the Transform,
+  brake, direction; piston ramp; rotation servo through 180 degrees), symmetric / mirrored decisions in Radial and Mirror modes, editor visualisation
+  of the base, the rotor ratchet, power-loss braking of the rotor, slave transforms, attach node updates, controller bookkeeping (symmetry partner axes,
+  transfer on delete, other-vessel cleanup, id changes), the manager's priority queue, persistence, the curve helpers (hand-computed keys), the quirks below.
+
+### Findings kept from the C# (quirks)
+
+- `ModuleRoboticServoPiston.ModifyLimits` looks up `Fields["TargetExtension"]` (capital T): no such field, its min / max update never runs.
+- `ModuleRoboticController.SetSequencePositionNextKey` tests the ACTION times with `<` (like the previous-key search); `SequencePlay` / `SequenceStop` fire their
+  event when the state did NOT change; `CycleLoopMode` fires the loop event a second time; `RemovePartAxis` / `RemovePartAction` call `RemoveAt(count)` once per
+  same-vessel symmetry partner, so a part with two or more partners removes other rows (List.RemoveAt out of range throws; reproduced, tested for one partner only).
+- `ControlledAxis.ClampPointValue(index)` accepts `index == length` (IndexOutOfRange).
+- `BaseServo.GetModuleMass` reads `driveUnit`, refreshed only by `SetDriveUnit` (GetModuleCost, ModifyServo, GetInfo): stale (0) before.
+- `HasEnoughResourcesToAutoStart` is false unless the input RESOURCE has a start-up handler: a servo whose cfg has none never restarts after a power loss;
+  `IsResourceBelowShutOffLimit` without a shut-off handler is true while `currentAmount >= 0.01` of the first input.
+- The hinge and the rotation servo read `servoJoint.xDrive` (the LINEAR drive) and write `angularXDrive`; the rotor does the same in XYAndZ mode.
+- Mirrored hinges: `OnJointInit` sets the joint limits from the unmirrored soft range (the module's limits only match when `mirrorRotation` is false and
+  `modelInitialAngle` 0); the plant (physical angle = minus the joint coordinate) therefore stops a mirrored hinge at 0.
+- `OnPartMenuOpen` gates `UpdatePAWUI`, which writes `currentAngle` / `currentRPM`: with the PAW closed the hinge's "ignore tiny motion at the stops" test reads a stale
+  `currentAngle` (reproduced; the gate runs PAW open and closed).
+
+### Natives and seams (UNVERIFIED, no C# source exists)
+
+- `ConfigurableJoint` property defaults (`maximumForce = float.MaxValue`, zero springs), the PhysX D6 drive law of `HeadlessServoPlant`, and the sign convention
+  between `targetRotation` / `targetPosition` and the physical coordinate (derived from the algebra of SetTargetRotationInternal, `servo_joint.cpp`).
+- `Quaternion.LookRotation` (WP-40's UNVERIFIED shim), `Quaternion.ToAngleAxis` (the rotor's free-spin ratchet), `Quaternion.eulerAngles` of the moving
+  transform (`currentTransformAngle`; the gate bypasses it with `angleSource`), `Matrix4x4.inverse` (double Gauss-Jordan rounded to float), `AnimationCurve.MoveKey`
+  (the curve helpers keep key order, tangents as given), the Transform hierarchy (`ServoNode`: the host fills it from the `.mu` hierarchy, not in the repo).
+- `TimeWarp::CurrentRateIndex()` is 1 without a TimeWarp instance (kspcore's default), which reads as "physics warp" in the servo drive branches: tests install one.
+- Module order of `FixedUpdate` / `Update` / `OnUpdate` between the servo and the part module hooks is the host's (as WP-29b R5); the Unity messages are explicit calls.
+
+### Not ported (UI / PAW / audio / FX / editor GUI)
+
+`UpdatePAWUI`'s control visibility and every `UI_FloatRange` / `UI_MinMaxRange` / `UI_Cycle` limit (min, max, step, `SetSceneVisibility`), the part-action-window
+items, `GetInfo` / `GetModuleDisplayName` text, `Localizer` string caches (`CacheLocalStrings`), `RoboticControllerWindow*` (the editor window, rows, axis graph),
+`CurvePanel*`, `AxisLimitLine`, `ModuleRobotArmScanner` (a ModuleDeployablePart with the arm-scan FX: separate package) and its `RobotArmFX`, the editor re-parenting of
+child GameObjects (`BaseServo.SetChildParentTransform`), `Debug.Log`, the servo audio / animation clips. `SerenityUtils` assets are WP-53's seam.
+
+### Residual risks
+
+- The servo behaviour in motion has no game truth: only the formulas that the C# computes in managed float32 are bit-gated; PhysX's response is replaced by the documented
+  plant. A capture of one hinge, one piston and one rotor (target steps, `ConfigurableJoint` drives, Transform angle per fixed tick) would validate the plant's sign
+  conventions and the lag model.
+- The synthetic MODULE fixtures use the C# defaults; real part cfg values (servoMotorSize, traverse limits, resource rates, the model's transform names) are not available.
+- The Python reference was written from the same C# by the same author as the port; the quirks list above is where a reading error would hide (independent re-derivation
+  of the UpdateCurrentExtension matrix path, CheckSymmetry's reflection and the preset key generation is what the gate covers).
+
+### Verification
+
+- Windows MSVC RelWithDebInfo, fresh (`core/build` deleted, `run_tests.ps1 -Fresh`, `CMAKE_BUILD_PARALLEL_LEVEL=6`): configure 3.9 s, build 271.5 s, ctest 145.2 s,
+  **48 / 48 pass** (before: 47 + the new `robotics` entry; `unit.random_order.11 / .27 / .42` and the eight `unit.shard.N` included); no compiler warning in any WP-52 file.
+  The WP-52 cases alone: 34 / 34, 18,687 assertions (404,308 servo + 47,854 controller + 8,208 preset reference comparisons inside them).
+- `check_cites.py` exact: 289 citations over the WP-52 sources, 0 mismatches (`ServoFixedUpdate` is aliased to `OnFixedUpdate` in the checker); `tools/wp55/check_cites.py` 165 / 0.
+- The reference JSON regenerates byte-identically (`python -I core/tools/wp52/servo_reference.py`, fixed seeds, sha256 prefix 6e9ebec66176a6e9).
+- Mutation check: the rotor spool step on `Time.deltaTime`, or a scaled PingPong fold, fails the scripted servo / controller gates at the first affected scenario.
+- Linux was not run locally (WSL clang / gcc, README "Sanitizer run"); CI covers it.
+
+### Commits (branch `wp52`, from main `cd5e4df4`)
+
+`e29ce422` BaseServo, the four servos, the joint seam, the controller, 0-ULP servo gate; then the controller / preset / joint gates, 27 derived cases, citations,
+STATUS / README / NEXT-STEPS and this note.
+
+## WP-20e: contact, landing and water (branch `wp20e`, from origin/main cd5e4df4; main `ccf3ffc9` merged: WP-mucol, WP-52)
 
 State: done for the engine-agnostic part. Scope = PHYSICS-SPIKE.md section 7 row WP-20e on the WP-20b binding, the WP-19b bubble and the WP-20d
 tick: what KSP did through Unity's collision callbacks, its per-part MonoBehaviours (PartBuoyancy, CollisionEnhancer) and its raycasts. The
@@ -6135,7 +6339,7 @@ in every bubble (their numbers did not move: GameSettings' anchor values are 0 i
 | CollisionEnhancer | 400 parts, 1,404 FixedUpdates: the 0.1 m rule, the linecast, explode / translate back, the reflected velocity, the hit event, bypass | **0 mismatches** (977 linecasts) |
 | AddRBAnchor | 90 vessel timelines, 10,200 LateUpdates: still / landed timer, ACTIVE + throttle, the force-angle rule, downward force, break force / torque, OnJointBreak | **0 mismatches** (94 anchors made), largest angle difference 0 deg |
 
-### Gate, scenarios (`tests/test_contact_scenarios.cpp`, 12 cases; `tests/contact_fixture.hpp`)
+### Gate, scenarios (`tests/test_contact_scenarios.cpp`, 13 cases; `tests/contact_fixture.hpp`)
 
 | case | what | result |
 |---|---|---|
@@ -6151,6 +6355,7 @@ in every bubble (their numbers did not move: GameSettings' anchor values are 0 i
 | terrain per body | Kerbin's real PQS (WP-11 / 12a) hosted by the bubble | 72 PQ colliders, the body frame vs BodyFrame 3e-10 m, the pad ray hits a PQ of Kerbin 0.32 m from WP-11's surface point (WP-12b's bound 1.5 m), a part lands on it (LANDED); the switch to the inertial frame removes the colliders, back rebuilds the same 72 |
 | craft touchdown | PhysProf-S set down at 1 / 3 / 6 m/s (Mainsail bell first, crashTolerance 7) | first contact 0.72 / 3.39 / 6.39 m/s, no explosion, no joint break, LANDED; largest sub-joint load / capacity 0.13 / 0.52 / 0.98 (WP-20c's impact deviation, see Risks) |
 | input seam | `PhysicsBubble::inputFeed` | runs before the module slot and the FlightIntegrator; the engines see its throttle |
+| collider closest points | getLowestPoint's Collider.ClosestPoint hook over a box, a sphere, a rotated capsule and a convex hull proxy (WP-mucol's kinds, through `VesselPhysicsOptions::colliders`), the measure point 1,000 m below and off the axis; a point inside | the analytic closest heights to 1e-5 m (29.5 / 31.3 / 26.6 / 24.5 m); inside: the point itself |
 
 `check_cites.py` exact mode over the WP-20e sources, headers and tests (part_contact, vessel_ground, part_buoyancy, collision_enhancer,
 contact_host, vessel_physics, physics_bubble, floating_origin, terrain_colliders, vessel_flight + headers + tests): **54 cites, 0 mismatches**
@@ -6181,7 +6386,8 @@ contact_host, vessel_physics, physics_bubble, floating_origin, terrain_colliders
 | physicsless / asteroid / fairing collider branches of CheckCollision, wheel damage | seam | they compare model colliders the proxies do not have (`PartContactEnvironment`) |
 | PhysicMaterial "Ground", KSC collider tags | FIXTURE | not extracted (WP-12b's open item; the tests label them) |
 | ROC branch (Breaking Ground) | not ported | DLC |
-| getLowestPoint's wheel-radius corrections | not modelled | proxy boxes only (WP-29 wheels) |
+| getLowestPoint's wheel-radius corrections | not modelled | the wheel colliders are WP-29c's |
+| Collider.ClosestPoint (getLowestPoint) | exact / approximate | box, sphere, capsule proxies exact; a convex hull (WP-mucol's mesh colliders): the hull vertex furthest towards the measure point, which is 1,000 m away (Vessel.cs:2587): the same height as the true closest point to within extent^2 / 1,000 m |
 | CheckGroundCollision's PQS surface height | seam | `Vessel::env.pqsSurfaceHeight`, unset = the body radius |
 | Unity Vector3 unary minus (`0f - x`) | noted | kspcore's `Vector3f` uses `-x`: differs only in the sign of zero; not changed here |
 
@@ -6208,13 +6414,23 @@ contact_host, vessel_physics, physics_bubble, floating_origin, terrain_colliders
   (`FlightInputHandler`'s `feedInputFeed` hook), and ModuleGimbal actuation in WP-20d's module slot with the gimbal transform chains from the model
   reader (today the thrust transforms stay at the neutral pose). Reaction-wheel torque already flows. That is what lets the WP-20d ascent gate go past
   Mach 1 / 5 km.
-- KSC / launch-site colliders and their tags (LaunchPad, Runway ...): `ContactHost::RegisterStatic` takes them; the prefab data is not extracted
-  (WP-12b / WP-42).
+- KSC / launch-site colliders and their tags (LaunchPad, Runway ...): WP-mucol's scenery collider loader builds their static bodies, but the data is
+  not extracted yet (WP-mucol "Blocker" 2); a host registers each body's key with its GameObject's tag / name through
+  `ContactHost::RegisterStatic` (unregistered statics read as untagged terrain).
 - PhysicMaterial "Ground" friction / bounce: FIXTURE (WP-12b).
-- Model colliders (meshes from the .mu files) instead of the proxy boxes: CheckCollision's asteroid / fairing branches, getLowestPoint's radius
-  corrections.
+- Part colliders: WP-mucol's real .mu colliders reach the contact host through `VesselPhysicsOptions::colliders` (one contact pair per sub-shape,
+  getLowestPoint over every shape kind); the stock-part sweep is WP-mucol's open item. Still seams: CheckCollision's asteroid / fairing branches
+  (they compare the touching collider with the part's own model colliders by identity), the colliders' layer / tag (every proxy reads as layer 0).
 - Wheels (WP-29c): ModuleWheelBase's ground contact goes through its own WheelCollider; wheel damage is a `PartContactEnvironment` hook.
 - FX: `PartContactEnvironment::explodeFx`, `ContactHost::splashFx` (FXMonger), recorded only.
+
+### Merge with main (`ccf3ffc9`: WP-mucol, WP-52)
+
+Textual conflicts only in STATUS.md (rows / sections; WP-mucol took row 55, so this package is row 58). `physics_world`, `vessel_physics`,
+the CMake lists merged cleanly. WP-mucol's `ColliderProxy` kinds (sphere, capsule, convex hull) reach the contact host's getLowestPoint hook,
+which handled boxes only: it now computes Collider.ClosestPoint for every kind (new case `WP-20e collider closest points`, analytic answers);
+the contact events need no change (they are per sub-shape, whatever its shape). With the default proxies (drag-cube boxes) every WP-20e number
+above is unchanged after the merge.
 
 ### Risks
 
@@ -6230,23 +6446,26 @@ contact_host, vessel_physics, physics_bubble, floating_origin, terrain_colliders
 
 ### Unit tests
 
-`tests/test_contact_reference.cpp` (5 cases) + `tests/test_contact_scenarios.cpp` (12 cases) = **17 cases / 288 assertions** (the reference
+`tests/test_contact_reference.cpp` (5 cases) + `tests/test_contact_scenarios.cpp` (13 cases) = **18 cases / 295 assertions** (the reference
 cases count mismatches per replay), ~31 s in RelWithDebInfo (the pad case 8.7 s). `tests/contact_fixture.hpp`: AnchorSettings (GameSettings'
 KSP defaults, RAII), EventLog, KerbinScene (the real PQS), level clock. `tests/test_hygiene.cpp` resets `PartContactEnvironment` and
 `CollisionEnhancer::bypass` between cases; `BubbleScene` / `PadScene` take a PhysicsWorldConfig.
 
 ### Verification
 
-- Windows MSVC RelWithDebInfo (binary dir on C:, D: full; `run_tests.ps1`'s preset and flags, `CMAKE_BUILD_PARALLEL_LEVEL=6`): fresh build ~380 s;
-  final incremental build + ctest: **47 / 47 pass** (146 s; incl. `unit.random_order.{11,27,42}` and the 8 shards). `kspcore_tests` (whole
-  suite, 963 cases) default order and `--order-by=rand -rs=11` / `-rs=27`: 963 / 963 cases, 1,542,998 assertions each, all green.
+- Windows MSVC RelWithDebInfo (binary dir on C:, D: full; `run_tests.ps1`'s preset and flags, `CMAKE_BUILD_PARALLEL_LEVEL=6`). Before the merge
+  with main: ctest **47 / 47 pass** (146 s), `kspcore_tests` (963 cases, 1,542,998 assertions) default order and `--order-by=rand -rs=11` /
+  `-rs=27` all green. After the merge with main `ccf3ffc9` (incremental build): ctest **48 / 48 pass** (143 s; incl.
+  `unit.random_order.{11,27,42}` and the 8 shards); `kspcore_tests` whole suite, default order and `--order-by=rand -rs=11` / `-rs=27`: **1,008 /
+  1,008 cases, 1,564,511 assertions each, all green**; the WP-20e cases 18 / 18, 295 assertions.
 - g++ 13 (WSL) `-std=c++20 -Wall -Wextra -fsyntax-only` over every WP-20e translation unit and the touched ones (physics_world with the Jolt
   defines): no error, no warning.
-- `check_cites.py` exact: 54 / 0. The reference JSON regenerates byte-identically (`python -I core/tools/wp20e/contact_reference.py`, seed 2005).
+- `check_cites.py` exact (after the merge): 54 / 0. The reference JSON regenerates byte-identically (`python -I core/tools/wp20e/contact_reference.py`, seed 2005).
 - Not run: the ASan / UBSan run on Linux (no room on D: / C: for the Linux copy of the data); CI runs clang and gcc.
 
 ### Commits (branch `wp20e`, from origin/main cd5e4df4)
 
 `140923e5` first version (contact events, Part messages, landed / splashed, RB anchor, CheckGroundCollision, PartBuoyancy, CollisionEnhancer,
 contact host, terrain per body, scenarios); `119fd67e` the independent Python reference and its replay, the anchor carries the support force and
-stops the vessel; `a3787d14` craft touchdown and input-seam scenarios, cite wording; `9f37e587` a missing include (GCC); then this documentation.
+stops the vessel; `a3787d14` craft touchdown and input-seam scenarios, cite wording; `9f37e587` a missing include (GCC); `57ab720f` documentation; then the
+merge with main `ccf3ffc9` (STATUS row 58), getLowestPoint's ClosestPoint over every WP-mucol collider kind, and the verification note.
