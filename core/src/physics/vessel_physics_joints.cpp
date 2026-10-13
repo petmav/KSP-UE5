@@ -69,7 +69,7 @@ struct PartJointRules {
 };
 
 // Part.cs:8511 HasFreePivot: a module that is an IJointLockState with IsJointUnlocked(). kspcore's ported implementers are
-// ModuleDockingNode, ModuleGrappleNode and BaseServo (the robotic servos, WP-52; ModuleJointMotor is the only other C# implementer, not ported).
+// ModuleDockingNode, ModuleGrappleNode and BaseServo (the robotic servos, WP-52); ModuleJointMotor / ModuleJointMotorTest, the other C# implementers, are not ported.
 bool PartJointRules::HasFreePivot(Part& p) {
     PartModuleList& modules = p.Modules();
     size_t count = modules.Count();

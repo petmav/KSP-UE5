@@ -6217,3 +6217,18 @@ child GameObjects (`BaseServo.SetChildParentTransform`), `Debug.Log`, the servo 
 - The synthetic MODULE fixtures use the C# defaults; real part cfg values (servoMotorSize, traverse limits, resource rates, the model's transform names) are not available.
 - The Python reference was written from the same C# by the same author as the port; the quirks list above is where a reading error would hide (independent re-derivation
   of the UpdateCurrentExtension matrix path, CheckSymmetry's reflection and the preset key generation is what the gate covers).
+
+### Verification
+
+- Windows MSVC RelWithDebInfo, fresh (`core/build` deleted, `run_tests.ps1 -Fresh`, `CMAKE_BUILD_PARALLEL_LEVEL=6`): configure 3.9 s, build 271.5 s, ctest 145.2 s,
+  **48 / 48 pass** (before: 47 + the new `robotics` entry; `unit.random_order.11 / .27 / .42` and the eight `unit.shard.N` included); no compiler warning in any WP-52 file.
+  The WP-52 cases alone: 34 / 34, 18,687 assertions (404,308 servo + 47,854 controller + 8,208 preset reference comparisons inside them).
+- `check_cites.py` exact: 289 citations over the WP-52 sources, 0 mismatches (`ServoFixedUpdate` is aliased to `OnFixedUpdate` in the checker); `tools/wp55/check_cites.py` 165 / 0.
+- The reference JSON regenerates byte-identically (`python -I core/tools/wp52/servo_reference.py`, fixed seeds, sha256 prefix 6e9ebec66176a6e9).
+- Mutation check: the rotor spool step on `Time.deltaTime`, or a scaled PingPong fold, fails the scripted servo / controller gates at the first affected scenario.
+- Linux was not run locally (WSL clang / gcc, README "Sanitizer run"); CI covers it.
+
+### Commits (branch `wp52`, from main `cd5e4df4`)
+
+`e29ce422` BaseServo, the four servos, the joint seam, the controller, 0-ULP servo gate; then the controller / preset / joint gates, 27 derived cases, citations,
+STATUS / README / NEXT-STEPS and this note.
