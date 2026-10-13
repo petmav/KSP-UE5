@@ -25,6 +25,7 @@ public:
     std::string partName = "#autoLOC_8001004";               // :17
     VesselPartIDPair() = default;                            // :19
     bool Equals(const VesselPartIDPair& other) const;        // :26
+    int32_t GetHashCode() const;                             // :38
     void ValidatePartAgainstCraft(MENode* node, Editor::MissionEditorValidator* validator);  // :45
     void Save(ConfigNode& node) const;                       // :72
     void Load(const ConfigNode& node);                       // :79

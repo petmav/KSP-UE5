@@ -39,7 +39,14 @@ NAME_ALIAS = {"~Mission": "OnDestroy", "~TestModule": "OnDestroy", "~ActionModul
               "WeightBodies": "GetWeightBodies", "min": "IntegerToGreek",
               # WP-53: C# properties ported as getter / Set* functions, and one renamed private function
               "UpdateGroundModuleUI": "UpdateModuleUI", "SetPowerUnitsProduced": "PowerUnitsProduced", "SetEnabled": "Enabled",
-              "SetScienceLimit": "ScienceLimit", "OnDestroyed": "OnDestroy"}
+              "SetScienceLimit": "ScienceLimit", "OnDestroyed": "OnDestroy",
+              # WP-20b: the reduced rigid-body binding names its ports after what they compute
+              "StartPartRigidbodies": "Start", "PartRigidbodyMass": "UpdateMassStats", "PartInertiaTensor": "ValidateInertiaTensor",
+              "ReadState": "CalculatePhysicsStats", "MOIFromRigidbodies": "CalculatePhysicsStats", "IntegratePartBuffers": "Integrate",
+              "ResumePartVelocity": "ResumeVelocity", "ApplyAeroForces": "ApplyAeroDrag", "ApplyEngineForces": "ThrustUpdate",
+              "ApplyRcsForces": "FixedUpdate", "ApplySurfaceForces": "FixedUpdate",
+              # WP-14 helpers factored out of a C# function (cited at that function)
+              "UpdateSurfaceSpeeds": "UpdatePosVel", "ApplyFlightIntegratorAtmosphere": "FixedUpdate"}
 CITE = re.compile(r"^(\s*)// (?:([A-Za-z0-9_/]+)\.cs)?:(\d+)\b")
 FUNC = re.compile(r"(\w+)::(~?\w+)\s*\(")
 

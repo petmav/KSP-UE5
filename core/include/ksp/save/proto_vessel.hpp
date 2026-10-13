@@ -19,6 +19,7 @@
 
 #include <cstdint>
 #include <map>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -150,6 +151,10 @@ public:
     // ProtoPartModuleSnapshot.cs:156 / 197 (MakingHistory adjuster bookkeeping on the module node)
     void RemovePartModuleAdjuster(const Guid& removeAdjusterID);
     void ProtoPartModuleRepair();
+    // WP-54c: the node half of ProtoPartModuleSnapshot.cs:94 AddPartModuleAdjuster / :132 RemovePartModuleAdjuster(AdjusterPartModuleBase): the caller
+    // (Missions layer, which owns the adjuster type tables) has done the MakingHistory / supported-type tests; `saveAdjuster` is newAdjuster.Save(node).
+    void AddPartModuleAdjusterNode(const std::function<void(ConfigNode&)>& saveAdjuster);
+    void RemovePartModuleAdjusterNode(const std::function<void(ConfigNode&)>& saveAdjuster);
 
 private:
     void EnsureModuleValuesIsInitialized();  // :67
@@ -248,6 +253,7 @@ public:
     void RemoveCrew(int index);                    // :1217
     void RemoveCrew(const PCM& pcm);               // :1223
     ProtoPartModuleSnapshot* FindModule(const std::string& moduleName) const;  // :1244
+    void ProtoPartRepair();                        // :1300 (WP-54c)
 };
 
 // ProtoVessel.cs (data side)

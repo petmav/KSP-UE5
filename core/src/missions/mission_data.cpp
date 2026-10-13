@@ -67,6 +67,9 @@ void MissionDataEnvironment::Reset() {
     fileExists = nullptr;
     loadConfigNode = nullptr;
     saveConfigNode = nullptr;
+    directoryExists = nullptr;
+    getFiles = nullptr;
+    objectHashCode = nullptr;
     partTitle = nullptr;
     usersMissionsPath = nullptr;
     LaunchSiteSituation::scene = LaunchSiteSituation::SceneHooks{};

@@ -474,6 +474,12 @@ public:
     // CoMD / CoM / localCoM, rb velocity, angular velocity, MOI and angular momentum. `rb(part)` is the engine's answer (default:
     // PartRigidbodyState::FromPart with zero velocities and no inertia tensor).
     void CalculatePhysicsStats(const std::function<PartRigidbodyState(Part&)>& rb = nullptr);
+    // WP-20b: the MOI loop of CalculatePhysicsStats (VesselPrecalculate.cs:436-453) over given part rigid-body states, for
+    // VesselPhysics::ReadState in the double frame: `states[i]` / `relPosition[i]` = (Vector3d)rb.position - CoMD of the i-th entry
+    // (entries with !present are skipped), `inverseReference` = QuaternionD.Inverse(ReferenceTransform.rotation). The same float
+    // statements as the loop inside CalculatePhysicsStats (which is left untouched); returns KSPUtil.Diag of the sum.
+    static Vector3f MOIFromRigidbodies(const std::vector<PartRigidbodyState>& states, const std::vector<Vector3d>& relPosition,
+                                       const QuaternionD& inverseReference, const PartTransform& referenceTransform);
 
     // ---- atmosphere (mirror of FlightIntegrator.cs:621-623, 863-864, 886-914) ----------------------------------------------------
     void ApplyFlightIntegratorAtmosphere(const FlightIntegratorAtmosphere& fi);

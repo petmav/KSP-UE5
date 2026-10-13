@@ -42,3 +42,12 @@ if(Python3_FOUND)
                     RESULT_VARIABLE _spike_gen_rc OUTPUT_VARIABLE _spike_gen_out ERROR_VARIABLE _spike_gen_err)
     message(STATUS "jolt_spike: gen_xl_crafts rc=${_spike_gen_rc} ${_spike_gen_out}${_spike_gen_err}")
 endif()
+
+# WP-20b: the spike's ascent / pad scenarios on the PRODUCTION vessel binding (ksp/physics/vessel_physics.hpp), built here so that its
+# timings come from the same Release configuration as the spike's tables (STATUS.md WP-20b): wp20b_bench ascent <craft>... [options]
+add_executable(wp20b_bench ${PROJECT_SOURCE_DIR}/tools/wp20b/bench.cpp)
+target_link_libraries(wp20b_bench PRIVATE kspcore)
+ksp_set_build_flags(wp20b_bench)
+target_include_directories(wp20b_bench PRIVATE ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/tools/golden_runner)
+target_compile_definitions(wp20b_bench PRIVATE KSPCORE_HARNESS_DIR="${KSP_HARNESS_DIR}" KSPCORE_DATA_DIR="${PROJECT_SOURCE_DIR}/data"
+                           KSPCORE_DEFAULT_GAME_ROOT="${KSP_GAMEDATA_ROOT}")
