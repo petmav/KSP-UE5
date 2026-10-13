@@ -152,6 +152,11 @@ public:
     float kerbalMass = 0.0f, kerbalInventoryMass = 0.0f, kerbalResourceMass = 0.0f;  // :310-314
     double partWeight = 0.0;                       // :580 internal
     Vector3f inertiaTensor{};                      // :446 private
+    // :819-823 private: GetMassivePart's cache of this part's last Heaviest walk (WP-20c, physics/vessel_physics_joints.cpp). The tick
+    // is Time.fixedTime in KSP; kspcore keys it by the physics step count (both advance exactly once per fixed step).
+    float autoStrutHighMass = 0.0f;
+    const Vessel* autoStrutCacheVessel = nullptr;
+    double autoStrutCacheTick = -1.0;
     PartValues partValues;                         // :552 private; PartValues property
 
     // ---- properties -------------------------------------------------------------------------------------------------------
@@ -423,6 +428,13 @@ public:
     // Part.cs:3274 Undock: this part's subtree leaves its vessel as a new Vessel (or, with a DockedVesselInfo, the part it names)
     Vessel* Undock(const DockedVesselInfo* newVesselInfo);
     void disconnect(bool controlledSeparation = false);   // :3084
+    // WP-20c: Part.cs:3159 OnPartJointBreak (PartJoint.OnJointBreak's call: a broken attach joint decouples its child; the root never)
+    void OnPartJointBreak(float breakForce);
+    // WP-20c: Part.cs:4409 Die, the data side: FULL children decouple, physicsless children die too, the part leaves its vessel (attach
+    // nodes, symmetry, staging icon, crew killed / respawn timers), onPartWillDie / onVesselWasModified / onPartDie fire, the vessel dies
+    // with its root. FX, camera, IVA, the Unity object and the part's joints / bodies are the engine's (the physics host drops the part
+    // on onPartDie). The Part object stays owned by its Vessel (kspcore frees parts with their vessel).
+    void Die();
     void CheckBodyLiftAttachment();                       // :1964
     void SetVessel(Vessel* v);                            // :3263 private SetVessel: v.parts.Add + vessel = v, recursive
     virtual void onDecouple(float /*breakForce*/) {}      // :4585 protected virtual

@@ -48,6 +48,9 @@ NAME_ALIAS = {
               "ReadState": "CalculatePhysicsStats", "MOIFromRigidbodies": "CalculatePhysicsStats", "IntegratePartBuffers": "Integrate",
               "ResumePartVelocity": "ResumeVelocity", "ApplyAeroForces": "ApplyAeroDrag", "ApplyEngineForces": "ThrustUpdate",
               "ApplyRcsForces": "FixedUpdate", "ApplySurfaceForces": "FixedUpdate",
+              # WP-20c: the structural layer (a vessel-wide CycleAutoStrut, PartJoint.OnJointBreak acted on by the host); WP-16 Part.Start's
+              # staging block
+              "CycleAutoStruts": "CycleAutoStrut", "HandleBreak": "OnJointBreak", "StartStaging": "Start",
               # WP-14 helpers factored out of a C# function (cited at that function)
               "UpdateSurfaceSpeeds": "UpdatePosVel", "ApplyFlightIntegratorAtmosphere": "FixedUpdate"}
 CITE = re.compile(r"^(\s*)// (?:([A-Za-z0-9_/]+)\.cs)?:(\d+)\b")
