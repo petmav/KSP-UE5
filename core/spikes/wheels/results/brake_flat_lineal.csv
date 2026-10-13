@@ -1,0 +1,5 @@
+craft,native,friction,v0,distance,time,distance_ref,time_ref,distance_locked,max_decel,max_tilt,exploded
+bug-e,explicit,lineal,8.00361,8.29654,1.3,8.02625,1.36,1.21623,28.8232,12.2445,0
+bug-e,jolt-vc,lineal,8.00362,8.20235,1.32,8.02626,1.36,1.21623,26.8142,15.5973,0
+prospector,explicit,lineal,20.0161,23.5582,2.1,21.643,1.66,7.6904,71.1354,53.2659,0
+prospector,jolt-vc,lineal,20.0185,31.3664,6.56,21.6467,1.66,7.69228,63.6031,179.526,0

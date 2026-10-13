@@ -114,4 +114,5 @@ endif()
 
 if(KSPCORE_BUILD_SPIKES)
     add_subdirectory(spikes/jolt)
+    add_subdirectory(spikes/wheels)  # WHEEL-SPIKE.md: wheels / landing legs on the reduced model
 endif()
