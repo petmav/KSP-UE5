@@ -332,6 +332,16 @@ add_library(kspcore STATIC
     serenity/deployed_science.cpp
     serenity/roc.cpp
     serenity/serenity_misc.cpp
+    serenity/servo_joint.cpp
+    serenity/base_servo.cpp
+    serenity/servo_hinge.cpp
+    serenity/servo_piston.cpp
+    serenity/servo_rotor.cpp
+    serenity/servo_rotation.cpp
+    serenity/servo_plant.cpp
+    serenity/controlled_axis.cpp
+    serenity/robotic_controller.cpp
+    serenity/servo_register.cpp
     contracts/serenity_contracts.cpp
     parts/part_decouple.cpp
     parts/part_shield.cpp
