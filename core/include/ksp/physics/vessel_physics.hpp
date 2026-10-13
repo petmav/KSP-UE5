@@ -264,6 +264,9 @@ struct VesselPhysicsOptions {
     std::function<bool(const PartJointSpec&)> isArticulation;
     // colliders of a part (part space); unset = DragCubeColliderProxy
     std::function<std::vector<ColliderProxy>(const Part&)> colliders;
+    // WP-29c: parts whose colliders give the inertia tensor but no collision shape (a wheel / leg part: its tyre is the WheelCollider's
+    // suspension ray, not a collider, until the model reader supplies the hub colliders). A cluster of such parts only keeps their shapes.
+    std::function<bool(const Part&)> massOnly;
     JointGlobals jointGlobals;
     bool inertiaFloor = true;     // Part.ValidateInertiaTensor's Max(1, rb.mass)
     float friction = 0.6f;        // Unity's default PhysicMaterial (dynamic / static friction 0.6, bounciness 0)
@@ -452,6 +455,16 @@ public:
     // structural solve; cleared by Flush.
     const std::vector<Vector3d>& PartExternalForces() const { return partForce_; }
     const std::vector<Vector3d>& PartExternalMoments() const { return partMoment_; }
+    // WP-29c: the forces buffered for the coming Flush: per cluster (force, moment about its centre of mass), per part (WP-20c's external
+    // loads) and the uniform acceleration. A host that splits one tick into several physics substeps (physics warp with wheels) takes them
+    // once and adds them back before every later substep's Flush, so the tick's forces act as constant forces over the whole tick; the
+    // wheels' travel-limit rows read them to predict the step. AddBufferedForces ignores a copy whose cluster / part counts differ (a rebind).
+    struct BufferedForces {
+        std::vector<Vector3d> clusterForce, clusterMoment, partForce, partMoment;
+        Vector3d uniformAcceleration;
+    };
+    BufferedForces PeekBufferedForces() const;
+    void AddBufferedForces(const BufferedForces& f);
 
     // ---- per tick ---------------------------------------------------------------------------------------------------------
     // FlightIntegrator.UpdateMassStats changed rb.mass (resource drain): new cluster mass, centre of mass (the body origin stays,

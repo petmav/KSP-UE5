@@ -267,7 +267,11 @@ NativeWheelCollider* VPWheelCollider::ResetWheelCollider() {
 
 // VehiclePhysics/VPWheelCollider.cs:397
 NativeWheelCollider* VPWheelCollider::SetupWheelCollider() {
-    // GetComponent<WheelCollider>() or AddComponent: wheelColliderData is that component; frictionStiffness 0 on both axes is PhysX-side
+    // GetComponent<WheelCollider>() or AddComponent: wheelColliderData is that component
+    WheelFrictionCurve wheelFrictionCurve;  // default(WheelFrictionCurve): every field 0, then stiffness = 0
+    wheelFrictionCurve.stiffness = 0.0f;
+    wheelColliderData.sidewaysFriction = wheelFrictionCurve;
+    wheelColliderData.forwardFriction = wheelFrictionCurve;
     wheelColliderData.mass = 1.0f;
     wheelColliderData.enabled = enabled();
     return &wheelColliderData;

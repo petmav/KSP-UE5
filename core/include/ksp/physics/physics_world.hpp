@@ -271,6 +271,16 @@ public:
     void SetStaticCollisions(bool enabled);
     bool StaticCollisions() const;
 
+    // ---- WP-29c: the wheel suspension ray --------------------------------------------------------------------------------------
+    // RayCast that skips the bodies in `ignore` (a vessel's own clusters: KSP's wheel colliders never see their own vessel,
+    // CollisionManager.IgnoreCollidersOnVessel, ModuleWheelBase.cs:627) and reports the user data of the sub-shape it hit (the part index of
+    // a VesselPhysics cluster child; 0 for a single-shape body).
+    struct RayHitShape : RayHit {
+        uint32_t subShapeUserData = 0;
+    };
+    RayHitShape RayCastIgnoring(const Vector3d& origin, const Vector3d& direction, double maxDistance, uint32_t layers,
+                                const std::vector<BodyId>& ignore) const;
+
     // ---- determinism ----------------------------------------------------------------------------------------------------
     // FNV-1a 64 over the raw bits of every body's position, rotation and both velocities, in creation order.
     uint64_t StateHash() const;
