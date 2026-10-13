@@ -29,6 +29,7 @@ public:
     float score = 0.0f;                                      // :12
     bool isValueInRange(double value) const;                 // :23
     bool Equals(const ScoreRange& other) const;              // :30
+    int32_t GetHashCode() const;                             // :42
     void Load(const ConfigNode& node);                       // :46
     void Save(ConfigNode& node) const;                       // :53
 };

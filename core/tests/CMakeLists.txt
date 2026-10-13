@@ -60,6 +60,7 @@ add_executable(kspcore_tests
     test_missions.cpp
     test_missions_runtime.cpp
     test_missions2.cpp
+    test_missions3.cpp
     test_node_library.cpp
     test_inventory.cpp
     test_inventory_rules.cpp
@@ -72,6 +73,7 @@ add_executable(kspcore_tests
     test_input_flight.cpp
     test_input_devices.cpp
     test_input_ui.cpp
+    test_wheels.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
     test_hygiene.cpp
@@ -85,7 +87,23 @@ target_compile_definitions(kspcore_tests PRIVATE KSPCORE_TEST_DATA_DIR="${CMAKE_
                            KSPCORE_DATA_DIR="${PROJECT_SOURCE_DIR}/data"
                            KSPCORE_TESTDATA_DIR="${PROJECT_SOURCE_DIR}/testdata"
                            KSPCORE_DEFAULT_GAME_ROOT="${KSP_GAMEDATA_ROOT}")
-add_test(NAME unit COMMAND kspcore_tests)
+# The unit suite (~860 doctest cases, one process, ~3 min) is split into fixed-size shards by case index (this doctest
+# has no --shard-count; -f/-l take the 1-based range of the filtered, in-file-order list) so `ctest -j` overlaps them.
+# The last shard is open-ended, so cases added later are never skipped. Cases must not share state across shards
+# (tests/test_hygiene.cpp, unique temp dirs). Whole suite in one process:  kspcore_tests
+set(KSP_UNIT_SHARDS 8)
+set(KSP_UNIT_SHARD_SIZE 120)
+math(EXPR _last_shard "${KSP_UNIT_SHARDS} - 1")
+foreach(shard RANGE 0 ${_last_shard})
+    math(EXPR _first "${shard} * ${KSP_UNIT_SHARD_SIZE} + 1")
+    math(EXPR _last "(${shard} + 1) * ${KSP_UNIT_SHARD_SIZE}")
+    if(shard EQUAL _last_shard)
+        add_test(NAME unit.shard.${shard} COMMAND kspcore_tests -f=${_first})
+    else()
+        add_test(NAME unit.shard.${shard} COMMAND kspcore_tests -f=${_first} -l=${_last})
+    endif()
+    set_tests_properties(unit.shard.${shard} PROPERTIES LABELS unit TIMEOUT 1200)
+endforeach()
 # WP-12a: the height oracle tools/wp12/pqs_reference.py calls to regenerate tests/data/wp12_reference.json (not a test)
 add_executable(wp12_height_oracle ${PROJECT_SOURCE_DIR}/tools/wp12/height_oracle.cpp)
 target_link_libraries(wp12_height_oracle PRIVATE kspcore)
@@ -106,6 +124,9 @@ foreach(seed 11 27 42)
 endforeach()
 # WP-31 data gate: ROSTER of every save in testdata / harness/inputs, experience recomputed from the raw flight logs (also part of `unit`)
 add_test(NAME data.roster_experience COMMAND kspcore_tests "-tc=WP-31 data gate*")
+# WP-29a: the VPP wheel core and KSPWheelController against the independent Python reference (tools/wp29a/vpp_reference.py): 0 ULP
+add_test(NAME wheels.vpp COMMAND kspcore_tests "-tc=WP-29a*")
+set_tests_properties(wheels.vpp PROPERTIES LABELS unit TIMEOUT 600)
 set_tests_properties(data.roster_experience PROPERTIES LABELS data TIMEOUT 600)
 
 # ---- portable libm vs the real VS2013 / UCRT DLLs (Windows only; skips elsewhere): 300k inputs per function
