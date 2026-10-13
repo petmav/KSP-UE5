@@ -14,6 +14,7 @@
 
 #include "contact_fixture.hpp"
 #include "ksp/dotnet/math.hpp"
+#include "ksp/localization/localizer.hpp"
 #include "nlohmann/json.hpp"
 
 using namespace ksp;
