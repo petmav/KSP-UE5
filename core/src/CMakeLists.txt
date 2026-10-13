@@ -48,6 +48,9 @@ add_library(kspcore STATIC
     physics/flight_integrator.cpp
     physics/aero_soa.cpp
     physics/part_forces.cpp
+    physics/part_buoyancy.cpp
+    physics/collision_enhancer.cpp
+    physics/contact_host.cpp
     physics/vessel_wheels.cpp
     celestial/celestial_body.cpp
     celestial/planetarium.cpp
@@ -256,6 +259,7 @@ add_library(kspcore STATIC
     vessel/vessel_assembly.cpp
     vessel/vessel_motion.cpp
     vessel/vessel_flight.cpp
+    vessel/vessel_ground.cpp
     vessel/flight_scene.cpp
     vessel/vessel_switching.cpp
     vessel/vessel_precalculate.cpp
@@ -347,6 +351,7 @@ add_library(kspcore STATIC
     serenity/servo_register.cpp
     contracts/serenity_contracts.cpp
     parts/part_decouple.cpp
+    parts/part_contact.cpp
     parts/part_shield.cpp
     parts/compound_part.cpp
     vessel/vessel_staging.cpp

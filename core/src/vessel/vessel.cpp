@@ -390,6 +390,7 @@ void Vessel::SetLoaded(bool loaded_) {
 bool Vessel::checkLanded() {
     if (loaded && !packed && !precalc.isEasingGravity()) {
         Landed = false;
+        anchorTimeCounter_ = 0.0f;  // WP-20e (the RB anchor's timer, Vessel.cs:1020)
         for (Part* part : parts)
             if (part->fields.GroundContact || part->fields.PermanentGroundContact) {
                 Landed = true;

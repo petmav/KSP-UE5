@@ -39,8 +39,10 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
+#include <deque>
 #include <map>
 #include <mutex>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -102,6 +104,9 @@ public:
     }
 };
 
+Vector3d FromVec3(JPH::Vec3 v);
+Vector3d FromRVec3(JPH::RVec3 v);
+
 // WP-20c: records which sub-shapes (parts) of dynamic bodies touch static geometry (the spike's SupportListener,
 // core/spikes/jolt/src/reduced.cpp, made exact): Jolt merges the contact manifolds of different sub-shapes of a body pair (manifold reduction)
 // and reports only the first sub-shape in OnContactAdded / Persisted, so the touching sub-shapes are taken from OnContactValidate, which
@@ -109,16 +114,34 @@ public:
 // touch within 1 mm (speculative contacts further apart do not support). Jolt reuses a body pair's manifolds without a new collision test
 // while the pair barely moves (its body-pair cache): such a pair, active without validation this step, keeps its last set. Jolt calls in
 // from its worker threads: a mutex guards the records; the result is sorted after the step.
+//
+// WP-20e: the same listener also records the contact EVENTS per collider pair (PhysicsWorld::ContactEvents) when event tracking is on: a
+// sub-shape pair touches when a validated contact is closer than the contact offset, or (body-pair cache, no validation this step) when the
+// body pair still has a manifold and the sub-shape pair touched in the last step. Enter / Stay / Exit are the set differences between steps.
+// Both record sets are independent: StaticContacts() is exactly WP-20c's whatever the event tracking does.
 class StaticContactListener final : public JPH::ContactListener {
 public:
     static constexpr float kTouch = 1.0e-3f;  // m: penetration depth above -kTouch (touching or penetrating)
     std::mutex mutex;
+    bool staticOn = false;  // WP-20c's StaticContacts
     std::unordered_map<uint64_t, std::vector<uint32_t>> validated;   // this step: (dynamic, static) pair -> touching sub-shape user data
     std::unordered_map<uint64_t, uint32_t> active;                   // this step: pairs with a contact manifold -> the manifold's sub-shape
     std::unordered_map<uint64_t, std::vector<uint32_t>> lastParts;   // per pair: the last validated set (for cached manifolds)
+    // ---- WP-20e events
+    bool eventsOn = false;
+    float contactOffset = 0.01f;
+    using SubKey = std::pair<uint32_t, uint64_t>;                     // (sub1, other)
+    struct PairRec {
+        BodyId body1 = kInvalidBody, body2 = kInvalidBody;
+        bool otherStatic = false;
+        std::map<SubKey, PhysicsWorld::ContactEvent> subs;            // touching sub-shape pairs with their data (kind unused)
+    };
+    std::unordered_map<uint64_t, PairRec> evValidated;               // this step: body pair -> validated touching sub-shape pairs
+    std::unordered_map<uint64_t, std::pair<BodyId, BodyId>> evActive;  // this step: body pairs with a manifold
+    std::unordered_map<uint64_t, PairRec> evLast;                    // the last step's touching sets
 
-    JPH::ValidateResult OnContactValidate(const JPH::Body& b1, const JPH::Body& b2, JPH::RVec3Arg, const JPH::CollideShapeResult& r) override {
-        if (b1.IsStatic() != b2.IsStatic() && r.mPenetrationDepth > -kTouch) {
+    JPH::ValidateResult OnContactValidate(const JPH::Body& b1, const JPH::Body& b2, JPH::RVec3Arg base, const JPH::CollideShapeResult& r) override {
+        if (staticOn && b1.IsStatic() != b2.IsStatic() && r.mPenetrationDepth > -kTouch) {
             const JPH::Body& dyn = b1.IsStatic() ? b2 : b1;
             const JPH::Body& stat = b1.IsStatic() ? b1 : b2;
             const JPH::SubShapeID& id = b1.IsStatic() ? r.mSubShapeID2 : r.mSubShapeID1;
@@ -126,6 +149,7 @@ public:
             std::lock_guard<std::mutex> lock(mutex);
             validated[Key(dyn, stat)].push_back(ud);
         }
+        if (eventsOn && !(b1.IsStatic() && b2.IsStatic()) && r.mPenetrationDepth > -contactOffset) RecordEvent(b1, b2, base, r);
         return JPH::ValidateResult::AcceptContact;
     }
     void OnContactAdded(const JPH::Body& b1, const JPH::Body& b2, const JPH::ContactManifold& m, JPH::ContactSettings&) override { Handle(b1, b2, m); }
@@ -135,10 +159,16 @@ public:
     void BeginStep() {
         validated.clear();
         active.clear();
+        evValidated.clear();
+        evActive.clear();
     }
     // after the step: the union of the active pairs' touching parts, sorted (body id, user data), no duplicates
     void EndStep(std::vector<PhysicsWorld::StaticContact>& out) {
         out.clear();
+        if (!staticOn) {
+            lastParts.clear();
+            return;
+        }
         std::unordered_map<uint64_t, std::vector<uint32_t>> keep;
         for (const auto& [key, manifoldPart] : active) {
             std::vector<uint32_t> parts;
@@ -153,13 +183,110 @@ public:
         std::sort(out.begin(), out.end());
         out.erase(std::unique(out.begin(), out.end()), out.end());
     }
+    // WP-20e: this step's touching sets (validated, or the last set of a cached active pair) against the last step's -> events
+    void EndStepEvents(std::vector<PhysicsWorld::ContactEvent>& out) {
+        using Kind = PhysicsWorld::ContactEvent::Kind;
+        out.clear();
+        if (!eventsOn) {
+            evLast.clear();
+            return;
+        }
+        std::unordered_map<uint64_t, PairRec> now;
+        for (const auto& [key, bodies] : evActive) {
+            const auto v = evValidated.find(key);
+            if (v != evValidated.end()) now[key] = v->second;
+            else if (const auto l = evLast.find(key); l != evLast.end()) now[key] = l->second;
+        }
+        for (const auto& [key, rec] : now) {
+            const auto l = evLast.find(key);
+            for (const auto& [sk, ev] : rec.subs) {
+                PhysicsWorld::ContactEvent e = ev;
+                e.kind = (l != evLast.end() && l->second.subs.count(sk) != 0) ? Kind::Stay : Kind::Enter;
+                out.push_back(e);
+            }
+        }
+        for (const auto& [key, rec] : evLast) {
+            const auto n = now.find(key);
+            for (const auto& [sk, ev] : rec.subs)
+                if (n == now.end() || n->second.subs.count(sk) == 0) {
+                    PhysicsWorld::ContactEvent e = ev;
+                    e.kind = Kind::Exit;
+                    out.push_back(e);
+                }
+        }
+        evLast.swap(now);
+        std::sort(out.begin(), out.end(), [](const PhysicsWorld::ContactEvent& a, const PhysicsWorld::ContactEvent& b) {
+            if (a.body1 != b.body1) return a.body1 < b.body1;
+            if (a.sub1 != b.sub1) return a.sub1 < b.sub1;
+            if (a.body2 != b.body2) return a.body2 < b.body2;
+            if (a.other != b.other) return a.other < b.other;
+            return a.kind < b.kind;
+        });
+    }
+    // a removed body leaves no touching record (its pairs exit on the next step's comparison anyway; dropping them here would hide the
+    // Exit, so nothing is done: Jolt reports no manifold for a removed body and the Exit follows)
 
 private:
     static uint64_t Key(const JPH::Body& dyn, const JPH::Body& stat) {
         return (static_cast<uint64_t>(dyn.GetID().GetIndexAndSequenceNumber()) << 32) | stat.GetID().GetIndexAndSequenceNumber();
     }
+    // (body1, body2) of an event: the non-static body first, of two non-static bodies the lower id
+    static bool Flip(const JPH::Body& b1, const JPH::Body& b2) {
+        return b1.IsStatic() || (!b2.IsStatic() && b2.GetID().GetIndexAndSequenceNumber() < b1.GetID().GetIndexAndSequenceNumber());
+    }
+    static uint64_t PairKey(const JPH::Body& a, const JPH::Body& b) {
+        return (static_cast<uint64_t>(a.GetID().GetIndexAndSequenceNumber()) << 32) | b.GetID().GetIndexAndSequenceNumber();
+    }
+    static void Kinematics(const JPH::Body& b, Vector3d& v, Vector3d& w, Vector3d& com) {
+        if (b.IsStatic()) {
+            v = w = com = Vector3d();
+            return;
+        }
+        v = FromVec3(b.GetLinearVelocity());
+        w = FromVec3(b.GetAngularVelocity());
+        com = FromRVec3(b.GetCenterOfMassPosition());
+    }
+    void RecordEvent(const JPH::Body& b1, const JPH::Body& b2, JPH::RVec3Arg base, const JPH::CollideShapeResult& r) {
+        const bool flip = Flip(b1, b2);
+        const JPH::Body& A = flip ? b2 : b1;
+        const JPH::Body& B = flip ? b1 : b2;
+        PhysicsWorld::ContactEvent e;
+        e.body1 = A.GetID().GetIndexAndSequenceNumber();
+        e.body2 = B.GetID().GetIndexAndSequenceNumber();
+        e.sub1 = static_cast<uint32_t>(A.GetShape()->GetSubShapeUserData(flip ? r.mSubShapeID2 : r.mSubShapeID1));
+        e.otherStatic = B.IsStatic();
+        e.other = e.otherStatic ? B.GetUserData() : B.GetShape()->GetSubShapeUserData(flip ? r.mSubShapeID1 : r.mSubShapeID2);
+        e.point = FromRVec3(base + (flip ? r.mContactPointOn2 : r.mContactPointOn1));
+        const JPH::Vec3 axis = r.mPenetrationAxis.NormalizedOr(JPH::Vec3::sZero());
+        e.normal = FromVec3(flip ? axis : -axis);  // Jolt's axis moves shape 2 out: shape 1 goes along -axis
+        e.depth = r.mPenetrationDepth;
+        Kinematics(A, e.v1, e.w1, e.com1);
+        Kinematics(B, e.v2, e.w2, e.com2);
+        const SubKey sk(e.sub1, e.other);
+        std::lock_guard<std::mutex> lock(mutex);
+        PairRec& rec = evValidated[PairKey(A, B)];
+        rec.body1 = e.body1;
+        rec.body2 = e.body2;
+        rec.otherStatic = e.otherStatic;
+        auto it = rec.subs.find(sk);
+        // several validations of one sub-shape pair in a step (collision steps, manifolds): the deepest is kept, ties by the point
+        // (an order-independent choice, so the result does not depend on the worker threads)
+        if (it == rec.subs.end()) {
+            rec.subs.emplace(sk, e);
+        } else if (e.depth > it->second.depth ||
+                   (e.depth == it->second.depth && std::make_tuple(e.point.x, e.point.y, e.point.z) < std::make_tuple(it->second.point.x, it->second.point.y, it->second.point.z))) {
+            it->second = e;
+        }
+    }
     void Handle(const JPH::Body& b1, const JPH::Body& b2, const JPH::ContactManifold& m) {
-        if (b1.IsStatic() == b2.IsStatic()) return;
+        if (eventsOn && !(b1.IsStatic() && b2.IsStatic())) {
+            const bool flip = Flip(b1, b2);
+            const JPH::Body& A = flip ? b2 : b1;
+            const JPH::Body& B = flip ? b1 : b2;
+            std::lock_guard<std::mutex> lock(mutex);
+            evActive.emplace(PairKey(A, B), std::make_pair(A.GetID().GetIndexAndSequenceNumber(), B.GetID().GetIndexAndSequenceNumber()));
+        }
+        if (!staticOn || b1.IsStatic() == b2.IsStatic()) return;
         const JPH::Body& dyn = b1.IsStatic() ? b2 : b1;
         const JPH::Body& stat = b1.IsStatic() ? b1 : b2;
         const JPH::SubShapeID& id = b1.IsStatic() ? m.mSubShapeID2 : m.mSubShapeID1;
@@ -337,6 +464,38 @@ struct PhysicsWorld::Impl {
     // WP-20c: static contacts of the last step (tracking on: the listener is installed)
     std::unique_ptr<StaticContactListener> contactListener;
     std::vector<PhysicsWorld::StaticContact> staticContacts;
+    std::vector<PhysicsWorld::ContactEvent> contactEvents;  // WP-20e
+    std::deque<std::vector<PhysicsWorld::ContactEvent>> contactEventLog;  // WP-20e: the steps' events since TakeContactEventLog
+    static constexpr size_t kContactEventLogSteps = 64;
+    // the listener lives while static-contact tracking or event tracking is on
+    void SyncListener(bool staticOn, bool eventsOn, float offset) {
+        if (!staticOn && !eventsOn) {
+            if (contactListener) {
+                system.SetContactListener(nullptr);
+                contactListener.reset();
+            }
+            staticContacts.clear();
+            contactEvents.clear();
+            contactEventLog.clear();
+            return;
+        }
+        if (!contactListener) {
+            contactListener = std::make_unique<StaticContactListener>();
+            system.SetContactListener(contactListener.get());
+        }
+        if (contactListener->staticOn != staticOn) {
+            contactListener->staticOn = staticOn;
+            contactListener->lastParts.clear();
+            staticContacts.clear();
+        }
+        if (contactListener->eventsOn != eventsOn) {
+            contactListener->eventsOn = eventsOn;
+            contactListener->evLast.clear();
+            contactEvents.clear();
+            contactEventLog.clear();
+        }
+        contactListener->contactOffset = offset;
+    }
 
     JPH::BodyInterface& Bi() { return system.GetBodyInterfaceNoLock(); }
     const JPH::BodyInterface& Bi() const { return system.GetBodyInterfaceNoLock(); }
@@ -390,25 +549,44 @@ void PhysicsWorld::Step(float dt, int collisionSteps) {
     if (m.contactListener) m.contactListener->BeginStep();
     m.system.Update(dt, collisionSteps, m.temp.get(), m.jobs.get());
     ++m.steps;
-    if (m.contactListener) m.contactListener->EndStep(m.staticContacts);
+    if (m.contactListener) {
+        m.contactListener->EndStep(m.staticContacts);
+        m.contactListener->EndStepEvents(m.contactEvents);
+        if (m.contactListener->eventsOn && !m.contactEvents.empty()) {
+            m.contactEventLog.push_back(m.contactEvents);
+            if (m.contactEventLog.size() > Impl::kContactEventLogSteps) m.contactEventLog.pop_front();
+        }
+    }
 }
 
 void PhysicsWorld::SetStaticContactTracking(bool on) {
     Impl& m = *impl_;
-    if (on == static_cast<bool>(m.contactListener)) return;
-    if (on) {
-        m.contactListener = std::make_unique<StaticContactListener>();
-        m.system.SetContactListener(m.contactListener.get());
-    } else {
-        m.system.SetContactListener(nullptr);
-        m.contactListener.reset();
-    }
-    m.staticContacts.clear();
+    const bool events = m.contactListener && m.contactListener->eventsOn;
+    const float offset = m.contactListener ? m.contactListener->contactOffset : 0.01f;
+    if (on == StaticContactTracking()) return;
+    m.SyncListener(on, events, offset);
 }
 
-bool PhysicsWorld::StaticContactTracking() const { return static_cast<bool>(impl_->contactListener); }
+bool PhysicsWorld::StaticContactTracking() const { return impl_->contactListener && impl_->contactListener->staticOn; }
 
 const std::vector<PhysicsWorld::StaticContact>& PhysicsWorld::StaticContacts() const { return impl_->staticContacts; }
+
+// WP-20e
+void PhysicsWorld::SetContactEventTracking(bool on, float contactOffset) {
+    Impl& m = *impl_;
+    m.SyncListener(StaticContactTracking(), on, contactOffset);
+}
+
+bool PhysicsWorld::ContactEventTracking() const { return impl_->contactListener && impl_->contactListener->eventsOn; }
+
+const std::vector<PhysicsWorld::ContactEvent>& PhysicsWorld::ContactEvents() const { return impl_->contactEvents; }
+
+std::vector<std::vector<PhysicsWorld::ContactEvent>> PhysicsWorld::TakeContactEventLog() {
+    std::vector<std::vector<ContactEvent>> out(std::make_move_iterator(impl_->contactEventLog.begin()),
+                                               std::make_move_iterator(impl_->contactEventLog.end()));
+    impl_->contactEventLog.clear();
+    return out;
+}
 
 void PhysicsWorld::FixedStep() { Step(Time::fixedDeltaTime); }
 
@@ -772,6 +950,27 @@ ConstraintId PhysicsWorld::CreateFixedConstraint(BodyId a, BodyId b, const Vecto
     slot.c = c;
     slot.a = a;
     slot.b = b;
+    m.constraints.push_back(slot);
+    ++m.liveConstraints;
+    return static_cast<ConstraintId>(m.constraints.size() - 1);
+}
+
+// WP-20e: the RB anchor's FixedJoint to the world (Vessel.cs:1162). Body 1 is Jolt's static sFixedToWorld, so the constraint's lambda is
+// the impulse on `body` (GetConstraintImpulse's convention: applied to body b).
+ConstraintId PhysicsWorld::CreateFixedToWorldConstraint(BodyId body, const Vector3d& point) {
+    Impl& m = *impl_;
+    if (!IsValid(body) || IsStatic(body)) return kInvalidConstraint;
+    JPH::FixedConstraintSettings s;
+    s.mSpace = JPH::EConstraintSpace::WorldSpace;
+    s.mAutoDetectPoint = false;
+    s.mPoint1 = s.mPoint2 = ToRVec3(point);
+    JPH::TwoBodyConstraint* c = m.Bi().CreateConstraint(&s, JPH::BodyID(), JPH::BodyID(body));
+    if (c == nullptr) return kInvalidConstraint;
+    m.system.AddConstraint(c);
+    Impl::ConstraintSlot slot;
+    slot.c = c;
+    slot.a = kInvalidBody;
+    slot.b = body;
     m.constraints.push_back(slot);
     ++m.liveConstraints;
     return static_cast<ConstraintId>(m.constraints.size() - 1);

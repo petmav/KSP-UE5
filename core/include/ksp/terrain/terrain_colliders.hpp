@@ -44,6 +44,7 @@
 #include <string>
 #include <vector>
 
+#include "ksp/math/quaterniond.hpp"
 #include "ksp/math/vector3d.hpp"
 #include "ksp/physics/physics_world.hpp"
 
@@ -57,6 +58,9 @@ struct TerrainCollidersOptions {
     uint64_t keyBase = 0x5451000000000000ull;
     // the planet centre in the physics frame (body-fixed frame: zero)
     Vector3d origin;
+    // WP-20e: the orientation of the sphere's local frame in the physics frame (physics = origin + rotation * planet-relative); identity in
+    // the body-fixed frame. A host whose physics axes are not the body's (the physics bubble: the world axes) passes the body's rotation.
+    QuaternionD rotation = QuaternionD::identity();
     // 0 = cook inside the hook (KSP: synchronous bake); N > 0 = at most N per Update(), oldest first
     int maxCooksPerUpdate = 0;
     // PhysicMaterial "Ground" is not extracted yet (FIXTURE: the spike's value)

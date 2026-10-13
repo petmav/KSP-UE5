@@ -56,7 +56,8 @@ struct BubbleScene {
     PhysicsWorld world;
     PhysicsBubble bubble;
     std::unique_ptr<OrbitPhysicsManager> opm;
-    explicit BubbleScene(World& w_, const PhysicsBubbleOptions& options = {}) : w(w_), bubble(world, options) {
+    explicit BubbleScene(World& w_, const PhysicsBubbleOptions& options = {}, const PhysicsWorldConfig& cfg = {})
+        : w(w_), world(cfg), bubble(world, options) {
         w.pg.CalculateValues(w.sys->Bodies(), w.planetarium.Sun);
         for (CelestialBody* b : w.sys->Bodies()) b->inverseRotation = false;
         twEnv.LoadedSceneValue = GameScenes::FLIGHT;

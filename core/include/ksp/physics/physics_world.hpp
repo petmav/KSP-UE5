@@ -14,11 +14,11 @@
 //     offset only (ksp/physics/krakensbane.hpp): velocities stored here are physics-frame velocities, i.e. the true velocity
 //     minus Krakensbane::GetFrameVelocity().
 //
-// WP-20c added the static-contact record of the last step (StaticContacts) for the ground supports of the load solve.
-// Not here (documented seams): vessel rigid bodies, clusters, joints and structural loads (WP-20b / WP-20c), ray / overlap
-// queries and the static mesh interface AddStaticMesh(id, centre, vertices, triangles) of WP-12b, the contact listener that
-// feeds Part.HandleCollision (WP-20d), EVA kerbals and wheels (WP-20e). CollisionEnhancer.cs (anti-tunnelling) is replaced by
-// Jolt's motion quality (LinearCast) on those bodies.
+// WP-20c added the static-contact record of the last step (StaticContacts) for the ground supports of the load solve; WP-20e the
+// contact events per collider pair (ContactEvents: what feeds Part.OnCollisionEnter / Stay / Exit) and the fixed-to-world weld of the
+// landed RB anchor. Not here (documented seams): vessel rigid bodies, clusters, joints and structural loads (WP-20b / WP-20c), the
+// Part / Vessel side of contacts (WP-20e: ksp/physics/contact_host.hpp), EVA kerbals and wheels. CollisionEnhancer.cs (anti-tunnelling)
+// is ported as KSP's own linecast rule (WP-20e) over RayCast.
 //
 // The header includes no Jolt header: the implementation is a pimpl, so consumers need no Jolt include paths or ISA flags.
 #pragma once
@@ -261,6 +261,41 @@ public:
     void SetStaticContactTracking(bool on);
     bool StaticContactTracking() const;
     const std::vector<StaticContact>& StaticContacts() const;
+
+    // ---- WP-20e: contact events (what PhysX handed Unity for Part.OnCollisionEnter / OnCollisionStay / OnCollisionExit) ----------
+    // With tracking on, every step reports the collider pairs that started, kept or stopped touching. A collider pair is (a sub-shape of
+    // a non-static body, a sub-shape of another non-static body or a static body): Unity / PhysX report per shape pair, and the reduced
+    // model's compound children are the parts' colliders. A pair TOUCHES in a step when Jolt validated a contact for it with a separation
+    // below `contactOffset` (Unity's Physics.defaultContactOffset is 0.01 m: PhysX reports a pair as touching once its shapes are within
+    // the contact offset), or when Jolt reused the body pair's cached manifold and the pair touched before (the body-pair cache skips the
+    // validation, as in WP-20c's StaticContacts). The kinematics are the two bodies' velocities and centres of mass when Jolt found the
+    // contact: after this step's force integration, before the contact solve (PhysX's pre-solver velocities, which Unity turns into
+    // Collision.relativeVelocity). Events are sorted (body1, sub1, body2, other, kind): the same list at any thread count.
+    struct ContactEvent {
+        enum class Kind : uint8_t { Exit = 0, Enter = 1, Stay = 2 };
+        Kind kind = Kind::Enter;
+        BodyId body1 = kInvalidBody;   // a non-static body (the lower id of two non-static ones)
+        uint32_t sub1 = 0;             // its sub-shape user data (the part index of a VesselPhysics cluster)
+        BodyId body2 = kInvalidBody;   // the other body
+        uint64_t other = 0;            // static body2: its user data (the static key); else body2's sub-shape user data
+        bool otherStatic = false;
+        Vector3d point;                // physics frame: the deepest contact point on body1 (Exit: the last one)
+        Vector3d normal;               // unit, pointing from body2 towards body1 (the direction body1 is pushed out)
+        float depth = 0.0f;            // penetration (negative: separation within the contact offset)
+        Vector3d v1, w1, com1;         // body1's linear / angular velocity and centre of mass when the contact was found
+        Vector3d v2, w2, com2;         // body2's (zero for a static body)
+    };
+    void SetContactEventTracking(bool on, float contactOffset = 0.01f);
+    bool ContactEventTracking() const;
+    const std::vector<ContactEvent>& ContactEvents() const;  // the last step's
+    // Every step's events since the last call, oldest step first (one entry per step that reported any; the last 64 such steps are kept).
+    // A caller that steps the world several times per frame (WP-29c's physics-warp substeps: one Unity FixedUpdate, several world steps)
+    // dispatches the events of all of them: ContactEvents() holds only the last step's.
+    std::vector<std::vector<ContactEvent>> TakeContactEventLog();
+    // A rigid weld of a non-static body to the world at a physics-frame point (Jolt FixedConstraint with Body::sFixedToWorld): the
+    // Vessel's RB anchor (Vessel.cs:1162 `base.gameObject.AddComponent<FixedJoint>()`, connectedBody null). GetConstraintImpulse returns
+    // the impulse the constraint applied to `body` in the last step; RemoveConstraint / RemoveBody remove it.
+    ConstraintId CreateFixedToWorldConstraint(BodyId body, const Vector3d& point);
     // ---- WP-19b: frames of the physics bubble -----------------------------------------------------------------------------
     bool IsStatic(BodyId id) const;  // false for unknown ids
     // Moves every body of the chosen kinds by `delta` (double, in creation order; SetPosition, no activation): the fold of

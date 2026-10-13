@@ -109,6 +109,17 @@ struct VesselPhysicsState {
     Vector3f MOI;                 // diagonal of the summed inertia tensor in the reference frame (KSPUtil.Diag(left))
 };
 
+// WP-20e: a Physics.Raycast hit as Vessel.CheckGroundCollision reads it (world frame, Unity floats)
+struct VesselRayHit {
+    bool hit = false;
+    float distance = 0.0f;
+    Vector3f point;
+    Vector3f normal;
+    bool isPart = false;               // FlightGlobals.GetPartUpwardsCached(hit.collider.transform.gameObject) != null
+    bool isMobileLaunchPad = false;    // hit.transform.GetComponentInParent<PositionMobileLaunchPad>() != null
+    std::string tag;                   // hit.collider.gameObject.tag (objectUnderVessel)
+};
+
 // Services of other packages / the engine that Vessel.cs reaches through statics. Every hook is optional; the comment says what an
 // unset hook means.
 struct VesselEnvironment {
@@ -130,8 +141,22 @@ struct VesselEnvironment {
     std::function<double(CelestialBody&, const Vector3d& relSurfaceNVector)> pqsSurfaceHeight;
     // Physics raycast of Vessel.GetHeightFromTerrain (WP-20): unset = no hit (heightFromTerrain stays -1)
     std::function<std::optional<float>(Vessel&, float maxDistance, Vector3f& hitNormalWorld)> heightFromTerrainProbe;
-    // Vessel.CheckGroundCollision (WP-20): unset = true (the vessel is on the ground)
+    // Vessel.CheckGroundCollision (WP-20): unset = true (the vessel is on the ground). WP-20e's contact host sets it to
+    // Vessel::CheckGroundCollision, which reads the two hooks below.
     std::function<bool(Vessel&)> checkGroundCollision;
+    // WP-20e: Physics.Raycast(origin, direction, out hit, maxDistance, 0x8000 | LayerUtil.DefaultEquivalent) (terrain and parts, world
+    // frame) of CheckGroundCollision: unset = no hit
+    std::function<VesselRayHit(Vessel&, const Vector3f& origin, const Vector3f& direction, float maxDistance)> groundRaycast;
+    // WP-20e: getLowestPoint's collider scan (Vessel.cs:2589-2621): the z of collider.ClosestPoint(point) for every collider of the part (the
+    // non-trigger, enabled colliders on the layers getLowestPoint keeps), in the vessel's current pose. Unset: none (getLowestPoint = +inf)
+    std::function<std::vector<float>(Part&, const Vector3f& point)> colliderClosestPointsZ;
+    // WP-20e: the RB anchor (Vessel.AddRBAnchor's FixedJoint on the vessel's GameObject = the root part's Rigidbody, Vessel.cs:1162):
+    // create (false: no Rigidbody to fix), destroy, joint.currentForce (world, the force the joint applies to the vessel), joint.breakForce.
+    // Unset: no joint is ever made (AddRBAnchor only counts its time).
+    std::function<bool(Vessel&, float breakForce, float breakTorque)> rbAnchorCreate;
+    std::function<void(Vessel&)> rbAnchorDestroy;
+    std::function<Vector3f(Vessel&)> rbAnchorCurrentForce;
+    std::function<void(Vessel&, float breakForce)> rbAnchorSetBreakForce;
     // Part.Pack / Part.Unpack / Part.ResumeVelocity (physics): unset = nothing to do
     std::function<void(Part&)> packPart, unpackPart, resumePartVelocity;
     // VesselPrecalculate.GoOnRails / GoOffRails, Krakensbane.AddFrameVelocity: unset = nothing to do
@@ -304,6 +329,10 @@ public:
     double pqsAltitude = 0.0;
     Vector3f terrainNormal;
     PartTransform vesselTransform;  // Vessel.vesselTransform (the GameObject's transform; position and rotation are Unity floats)
+    // WP-20e: Vessel.cs:132 crashObjectName (internal, the CrashObjectName component's objectName; "" = null) and :408 objectUnderVessel
+    // (the GameObject under the vessel: its tag, "" = null; set by the GetHeightFromTerrain probe)
+    std::string crashObjectName;
+    std::string objectUnderVesselTag;
     bool initialPosVelSet = false;
     float gThresh = 0.0f;
     float presThresh = 0.0f;
@@ -395,6 +424,21 @@ public:
     static std::string GetSituationString(Vessel& v);              // :3491 (localisation keys resolved through Localizer)
     static std::string GetLandedAtString(const std::string& landedAt);  // :3532 MiniBiome.ConvertTagtoLandedAt
     static Vessel* GetDominantVessel(Vessel* v1, Vessel* v2);      // :2235
+
+    // ---- WP-20e: the landed RB anchor (Vessel.cs:1105-1183; src/vessel/vessel_ground.cpp) ----------------------------------------
+    void AddRBAnchor();                                            // :1105 (private in C#; LateUpdate calls it)
+    void ResetRBAnchor();                                          // :1169
+    void OnJointBreak(float breakForce);                           // :1180 (the anchor joint broke: PhysX's OnJointBreak message)
+    bool HasRBAnchor() const { return rbAnchor_; }                 // joint != null
+    float AnchorTimeCounter() const { return anchorTimeCounter_; }
+    float AnchorForceAngle() const { return anchorForceAngle_; }
+    float AnchorDeltaAngleTimeCounter() const { return anchorDeltaAngleTimeCounter_; }
+    float PrevAnchorForceAngle() const { return prevAnchorForceAngle_; }
+    float AnchorDeltaAngle() const { return deltaAngle_; }
+    // ---- WP-20e: CheckGroundCollision (Vessel.cs:2493) and getLowestPoint (:2578) -------------------------------------------------
+    bool CheckGroundCollision();
+    float getLowestPoint();
+    const VesselRayHit& GroundCollisionHit() const { return groundCollisionHit_; }
 
     // ---- crew (Vessel.cs:1234-1376) ------------------------------------------------------------------------------------------
     using PCM = std::shared_ptr<ProtoCrewMember>;
@@ -617,6 +661,14 @@ private:
     int ignoreGeeforceFrames_ = 0;
     int ignoreSpeedFrames_ = 0;
     int ignoreCollisionsFrames = 0;
+    // WP-20e: Vessel.cs:136-146 (joint != null, the anchor timers and angles) and :392 groundCollisionHit
+    bool rbAnchor_ = false;
+    float anchorTimeCounter_ = 0.0f;
+    float anchorForceAngle_ = 0.0f;
+    float prevAnchorForceAngle_ = -1.0f;
+    float deltaAngle_ = 0.0f;
+    float anchorDeltaAngleTimeCounter_ = 0.0f;
+    VesselRayHit groundCollisionHit_;
     int oldPartCount_ = -1;
     bool bouncedOffCheck_ = false;
     Part* vesselNamedBy_ = nullptr;

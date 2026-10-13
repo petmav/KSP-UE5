@@ -2,7 +2,8 @@
 
 Updated 2026-10-13 (WP-29b; 2026-10-12: WP-29a, WP-54b, WP-19a, WP-55, WP-38c; 2026-10-11: WP-50, WP-35, WP-36, WP-37, WP-39, WP-40, small fixes wave 5; 2026-10-10: WP-00, WP-17, WP-22, WP-23, WP-24, WP-25, WP-26, WP-27, WP-28, WP-30, WP-31). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core
 un_tests.ps1`
-Updated 2026-10-13 (WP-20c, local branch); 2026-10-12 (WP-54b, WP-19a, WP-55, WP-38c; 2026-10-11: WP-50, WP-35, WP-36, WP-37, WP-39, WP-40, small fixes wave 5; 2026-10-10: WP-00, WP-17, WP-22, WP-23, WP-24, WP-25, WP-26, WP-27, WP-28, WP-30, WP-31). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\coreun_tests.ps1`
+Updated 2026-10-13 (WP-20c, local branch); 2026-10-12 (WP-54b, WP-19a, WP-55, WP-38c; 2026-10-11: WP-50, WP-35, WP-36, WP-37, WP-39, WP-40, small fixes wave 5; 2026-10-10: WP-00, WP-17, WP-22, WP-23, WP-24, WP-25, WP-26, WP-27, WP-28, WP-30, WP-31). One command: `powershell -NoProfile -ExecutionPolicy Bypass -File C:\Projects\KSP-UE5\core
+un_tests.ps1`
 (details in README.md). Local git repository in `core/` only, never pushed.
 
 ## Summary
@@ -68,6 +69,7 @@ Updated 2026-10-13 (WP-20c, local branch); 2026-10-12 (WP-54b, WP-19a, WP-55, WP
 | 55. WP-mucol real part colliders from .mu models + scenery collider loader (branch `mucol`, from main `cd5e4df4`) | done for the 19 stock engine models, gated bit for bit against an independent python parse of the original files (31 colliders, 1,156 comparisons on reduced real + synthetic models, 879 assertions on the full originals when staged) plus numeric / analytic checks of the hull and capsule mass properties; the `.mu` reader consumes the whole PartReader grammar, colliders go through CompileModel placement and lossyScale to Box / Sphere / Capsule / Jolt ConvexHull proxies in the WP-20b/20c compound (`MuPartColliders::Hook()`, fixture only where no model data exists); scenery colliders have a documented JSON format and a loader into `CityColliderSet`; every existing gate unchanged | see "WP-mucol" below: the all-parts sweep and the KSC extraction are written but unrun (`decompiled/KSP-dev` was unreadable in the session), 4 collider meshes are not convex solids (hull != mesh), gimbal colliders are static |
 | 56. WP-29c native WheelCollider and the wheels in the vessel tick (branch `wp29c`, from main `cd5e4df4`) | done for the engine-agnostic part, gated against an independent Python reference (0 ULP) and by scenarios on KSP's stock rovers through the whole tick (no golden or capture covers wheel dynamics, WHEEL-SPIKE.md 5; every existing gate unchanged): the native half of KSP's wheels under the WP-29a/29b managed port, as the spike recommended (option A, not Jolt's WheeledVehicleController). `ksp/wheels/native_wheel_collider.hpp` is UnityEngine.WheelCollider over PhysX 4.1 (the suspension ray, intersectRayPlane's jounce, the travel limit, the spring / damper law projected on the hit normal with KSP's zero gravity, the reaction on a dynamic hit actor, PhysX's tyre axes and slips, Unity's friction curves (inert: KSP sets stiffness 0), motor / brake torque and the wheel spin, steer angle, WheelHit / GetGroundHit / isGrounded / rpm / sprungMass); `ksp/physics/vessel_wheels.hpp` (`WheelPhysicsHost`) runs the managed wheel tick in the module slot of the WP-19b/20d tick and the native step in the physics step (ray against the Jolt world without the own vessel: WP-12b terrain and other vessels; suspension, tyre and travel-limit forces on the wheel parts of the WP-20b cluster, seen by WP-20c as joint loads), welds the wheel parts without collision shapes, and splits a physics-warp tick into 0.02 s substeps for wheeled vessels (the user's decision). Gate: 2,000 synthetic law cases + 400 curve evaluations 0 ULP vs `tools/wp29c/suspension_reference.py`; Prospector Rover / Bug-E Buggy on flat ground: ride height = the law's equilibrium on the analytic ground within 0.2 mm, wheel forces = weight within 0.07 %, 55 s braked drift 0.26 / 0.34 mm, no jitter (rms vz 0.007 / 0.06 mm/s), full-throttle speed at 10 / 20 s within 0.04 % / 0.2 % (Prospector) and 8 % / 2 % (Bug-E) of the C# motor model without slip, braking from 8 m/s 7.38 / 8.30 m (reference 6.09 / 8.04 m), a left turn for KSP's left key at the kinematic yaw rate within 0.4 %; physics warp 2x-4x with substeps = 1x (drift < 0.5 mm, drive identical to 5 digits), without substeps at 4x the rovers drift 2.5 / 12.5 m (the spike's finding); deterministic. Smooth-vs-Lineal tyre curve an explicit switch, UNVERIFIED pending capture C11b. Geometry: the spike's drag-cube proxy (the .mu models were not readable in this session). Also fixes the WP-39 run-alone crash (VesselModuleFactory registers the built-ins). See the WP-29c section |
 | 57. WP-52 Breaking Ground robotics (branch `wp52`, from main `cd5e4df4`) | done for the engine-agnostic part, gated by an independent Python reference at 0 ULP (every existing gate unchanged): `BaseServo` (motor / lock / brake state, the 20-reading rate-of-motion average, power draw, drive target stepping, axis field limits, mass and cost, attach node bookkeeping), `ModuleRoboticServoHinge` / `ModuleRoboticRotationServo` / `ModuleRoboticServoPiston` / `ModuleRoboticServoRotor` (targets, soft / hard limits, traverse-velocity ramp, joint drive configuration, power-loss lock, mirrored / symmetric hinges, rotor spool / brake / ratchet, drag cubes), `ModuleRoboticController` (sequencer: Once / Repeat / PingPong / OnceRestart, direction, action windows, controlled axes / actions with symmetry transfer, persistence), `ControlledAxis` (time -> value curve, presets, helpers), `ControlledAction`, `RoboticControllerManager` (priority-averaged update queue), `ConfigurableJointExtensions.SetTargetRotationLocal`. Joint drive: WP-20b has no articulated bodies, so the servos write a `ConfigurableJointData` (the seam contract), `HeadlessServoPlant` is a documented reference plant (not PhysX), `ServoArticulation` is the `isArticulation` hook (PhysProf-S: 2 clusters, 1 constraint) and `BaseServo` is an `IJointLockState` for `Part.HasFreePivot`. Gate: 92 servo runs x 120 ticks (404,308 comparisons), 60 controller runs (47,854), 80 preset curves (1,799 keys bit for bit, 213 native-evaluated keys at a stated tolerance), 72 joint-rotation cases, 40 drive sets, 27 labelled derived cases; `tests/test_robotics*.cpp` 34 cases / 18,687 assertions. The GameData mirror has no SquadExpansion/Serenity: every servo MODULE value is a labelled synthetic fixture; UI / PAW / audio / FX / `ModuleRobotArmScanner` deferred; see the section below |
+| 58. WP-20e contact, landing and water (branch `wp20e`, from origin/main `cd5e4df4`, main `0d9fd73c` merged) | done for the engine-agnostic part, gated by an independent Python reference at 0 ULP / exact and scenarios against analytic values and KSP's own rules (no golden or capture covers contacts; every existing gate unchanged): `PhysicsWorld` contact events per collider pair (Enter / Stay / Exit, pre-solve kinematics, Unity's 0.01 m contact offset) and a fixed-to-world weld; Part.OnCollisionEnter / Stay / Exit, LandedCollisionChecks, HandleCollision's crash tolerance, checkLanded / checkSplashed, landedAt, explode (Part.cs:3355-3745, :4373); Vessel.AddRBAnchor (the landed anchor) and CheckGroundCollision / getLowestPoint (every WP-mucol collider kind); PartBuoyancy and CollisionEnhancer (whole); `ContactHost` in the bubble (static collider registry, dispatch, buoyancy / enhancer slots, anchors, ground probes, WP-12b terrain colliders hosted per body in the bubble's frame, rebuilt on frame changes). Gate: 20 cases: reference replays HandleCollision 1,200 collisions, 300 message sequences / 3,045 messages, PartBuoyancy 110 parts / 6,300 ticks, CollisionEnhancer 400 parts / 1,404 ticks, AddRBAnchor 90 timelines / 10,200 frames: 0 mismatches; **pad: S / M2-AS / L2-AS anchor after 1.5 s and then rest at exactly zero speed (L2-AS rocked 0.091 m/s without it, WP-20b R2)**, anchor force = weight; ignition releases it, PRELAUNCH -> FLYING; a part at 0.9x / 1.1x crashTolerance survives (LANDED) / explodes; splashdown in Kerbin's ocean floats at KSP's buoyancy equilibrium (draft -0.001 %), SPLASHED, at 20 m/s it crashes; 80 m/s into the terrain is caught by CollisionEnhancer; vessel on vessel (landed with the other's landedAt / both explode); CheckGroundCollision at spawn; Kerbin's PQS colliders hosted per body; determinism 1 / 4 threads; the contact messages of every WP-29c physics-warp substep reach the parts. **SAS / FeedInputFeed not wired**: labelled seam `PhysicsBubble::inputFeed`. See the WP-20e section |
 
 ## Test results (all 36 ctest tests pass (35 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience, WP-19a capture.vessel_rails)
 
@@ -6404,3 +6406,208 @@ child GameObjects (`BaseServo.SetChildParentTransform`), `Debug.Log`, the servo 
 
 `e29ce422` BaseServo, the four servos, the joint seam, the controller, 0-ULP servo gate; then the controller / preset / joint gates, 27 derived cases, citations,
 STATUS / README / NEXT-STEPS and this note.
+
+## WP-20e: contact, landing and water (branch `wp20e`, from origin/main cd5e4df4; main `ccf3ffc9` (WP-mucol, WP-52) and `0d9fd73c` (WP-29c) merged)
+
+State: done for the engine-agnostic part. Scope = PHYSICS-SPIKE.md section 7 row WP-20e on the WP-20b binding, the WP-19b bubble and the WP-20d
+tick: what KSP did through Unity's collision callbacks, its per-part MonoBehaviours (PartBuoyancy, CollisionEnhancer) and its raycasts. The
+contacts Jolt finds become Part.OnCollisionEnter / Stay / Exit with a `Collision` record; the Part.cs collision code decides ground contact,
+Landed / Splashed / landedAt, the situation and the crash tolerance; the landed RB anchor ends the pad rocking; PartBuoyancy floats parts in the
+ocean; CollisionEnhancer catches fast parts before they tunnel; WP-12b's terrain colliders are hosted per celestial body in the bubble's frame.
+SAS / Vessel.FeedInputFeed is NOT wired (too large for this package, see Seams): `PhysicsBubble::inputFeed` is the labelled slot. **Gates**: an
+independent Python reference (`tools/wp20e/contact_reference.py`, no kspcore code) for every decision and float statement ported (0 ULP / exact),
+and scenarios against analytic values and KSP's own rules (no golden or capture covers contacts). Every existing gate is unchanged
+(`harness/compare/tolerances.json`, `tests/tolerances_capture.json` untouched); the WP-20b / 19b / 20c / 20d suites pass with the contact host on
+in every bubble (their numbers did not move: GameSettings' anchor values are 0 in those fixtures, so no anchor forms there).
+
+### What is in
+
+| piece | files | KSP source |
+|---|---|---|
+| contact events | `physics/physics_world.hpp`, `src/physics/physics_world.cpp` | Unity / PhysX's OnCollisionEnter / Stay / Exit (native): `SetContactEventTracking(on, contactOffset)`, `ContactEvents()` per collider pair (a cluster sub-shape = a part's proxy collider, against a static body or another body's sub-shape): Enter / Stay / Exit, point, normal, depth, the two bodies' velocities and centres of mass when Jolt found the contact (pre-solve: PhysX's relativeVelocity); a pair touches when Jolt validated a contact within `contactOffset` (Unity's default 0.01 m) or reused the cached manifold of a pair that touched; sorted, identical at any thread count. WP-20c's StaticContacts share the listener, unchanged. `CreateFixedToWorldConstraint` (the anchor's FixedJoint, Vessel.cs:1162) |
+| collision records | `physics/collision.hpp` | UnityEngine.Collision / ContactPoint / RaycastHit / the collider's GameObject (layer, tag, name, PQ, CrashObjectName); `PartContactEnvironment`: CheatOptions.NoCrashDamage, Serenity installed, wheel damage, the ROC collision hook, the FX hook, Part.Rigidbody.velocity, a test seam for explode |
+| Part collision messages | `parts/part.hpp`, `src/parts/part_contact.cpp` | Part.cs:3355 OnCollisionEnter, :3417 LandedCollisionChecks (GroundContact, vessel.Landed, landedAt via Vessel.SetLandedAt / the other vessel's landedAt, objectUnderVessel), :3471 OnCollisionExit, :3520 CheckOtherGroundContact, :3539 CheckCollision, :3613 HandleCollision (the crash-tolerance decision in Mono float / double, onCrash / onCollision / onPartExplodeGroundCollision, crashObjectName), :3672 checkLanded, :3697 checkSplashed, :3722 checkPermanentLandedAt, :3941 OnCollisionStay, :3949 ResetCollisions, :4368 / :4373 explode (FX hook, onPartExplode, Die); OnTouchDown / OnSplashDown / OnLiftOff and their module callbacks |
+| Vessel ground side | `vessel/vessel.hpp`, `src/vessel/vessel_ground.cpp`, `vessel.cpp`, `vessel_flight.cpp` | Vessel.cs:1105 AddRBAnchor (the 1.5 s still-and-landed rule, release on ACTIVE + throttle / anchor-force angle change / downward force, breakForce / breakTorque from GameSettings), :1169 ResetRBAnchor, :1180 OnJointBreak, LateUpdate's call; :2493 CheckGroundCollision (GoOffRails' placement of a landed vessel, ignoreCollisionsFrames) and :2578 getLowestPoint; checkLanded resets the anchor timer; crashObjectName / objectUnderVessel tag. Engine access through `Vessel::env` hooks (groundRaycast, colliderClosestPointsZ, rbAnchorCreate / Destroy / CurrentForce / SetBreakForce) |
+| PartBuoyancy | `physics/part_buoyancy.hpp`, `src/physics/part_buoyancy.cpp` | PartBuoyancy.cs (whole): :98 Start, :147 FindOverrideCube, :171 UpdateDisplacement, :231 FixedUpdate (depth, submerged portion, buoyant force through Part.AddForceAtPosition, rb.drag / angularDrag in water, splashdown and onCrashSplashdown, the splash FX, the Invoke timer), :672 ReportSplashDown; Mono float rule; Unity state through `PartBuoyancy::Env` |
+| CollisionEnhancer | `physics/collision_enhancer.hpp`, `src/physics/collision_enhancer.cpp` | CollisionEnhancer.cs (whole): :32 Start, :47 FixedUpdate (the 0.1 m rule, the terrain linecast, explode or translate back with the reflected velocity, OnCollisionEnhancerHit); the static `bypass` FloatingOrigin.FixedUpdate sets; lastPos follows the world shift |
+| `ContactHost` (one per bubble) | `physics/contact_host.hpp`, `src/physics/contact_host.cpp` | the Unity side of all of the above on the reduced model: static collider registry (layer 15 / "Untagged" / "Terrain" by default; tags and names for KSC objects), dispatch after the step (Enter, Stay, Exit; both sides of a vessel-vessel pair; pair memory for Exit; no Exit for a destroyed collider), PartBuoyancy after the module slot (seq 13), CollisionEnhancer at afterPrecalc (seq 7), the RB anchor as a fixed-to-world weld of the root cluster with its force and PhysX's break rule, the ground probes (GetHeightFromTerrain's ray, CheckGroundCollision's ray and closest points over the proxies), terrain per body (`HostTerrain(body, sphere)`: a WP-12b TerrainColliders placed with the body's origin / rotation in the bubble's static frame, built only while the body is the dominant body in its rotating frame, rebuilt on onRotatingFrameTransition / onDominantBodyChange / physics-origin rebase), `AddWorldShift` |
+| bubble wiring | `physics/physics_bubble.hpp/.cpp`, `src/physics/floating_origin.cpp` | `PhysicsBubbleOptions::contactHost` (on) / `contacts` (per piece), `Contacts()`; the tick: inputFeed (seq 11), part modules, PartBuoyancy, FlightIntegrator ... step, AfterStep (loads), the contact host (anchors, then the messages), ProcessStructuralChanges |
+| `VesselPhysics` additions | `physics/vessel_physics.hpp`, `src/physics/vessel_physics.cpp` | `PartAt`, `ClusterOfBody`, rb.drag per part (`SetDrag` / `Drag`: PhysX's linear damping as a per-part force in Flush, first order), `TranslatePartCluster` / `SetPartVelocity` (Unity writes to one part's Rigidbody), `StopMotion`, `ClusterSupportForce` / `Torque` (what contacts and the anchor did in the last step) |
+| `TerrainCollidersOptions::rotation` | `terrain/terrain_colliders.hpp` | the sphere's orientation in the physics frame (identity keeps the WP-12b path bit-identical) |
+
+### Gate, reference (`tests/test_contact_reference.cpp`, 5 cases; `tools/wp20e/contact_reference.py` -> `tests/data/wp20e_reference.json`, seed 2005)
+
+| case | what | result |
+|---|---|---|
+| HandleCollision | 1,200 collisions incl. the float boundaries of `relativeVelocity.magnitude > crashTolerance` (Mono float vs double), NoCrashDamage, layer / tag / name / PQ / CrashObjectName of the other collider, the event and its param | **0 mismatches** (600 explode) |
+| collision message sequences | 300 random sequences of OnCollisionEnter / Stay / Exit over terrain, tagged statics (LaunchPad, Runway ...), other vessels and water, with checkLanded / checkSplashed / updateSituation between ticks: GroundContact, Landed, Splashed, landedAt, situation, every event | **exact** (3,045 messages) |
+| PartBuoyancy | 110 parts, 6,300 FixedUpdates: Start, depths, submerged portion, buoyant force and point, rb.drag / angularDrag, splashdown, crash, FX | **0 mismatches** (4,603 buoyant forces, 16 splashdown crashes, 40 splash FX); Math.Sin of the C++ (Mono's) and Python's libm differ in the last bit in 32 ticks of 13 parts: the values that depend on it are compared to 1e-12 relative / 4 ulps |
+| CollisionEnhancer | 400 parts, 1,404 FixedUpdates: the 0.1 m rule, the linecast, explode / translate back, the reflected velocity, the hit event, bypass | **0 mismatches** (977 linecasts) |
+| AddRBAnchor | 90 vessel timelines, 10,200 LateUpdates: still / landed timer, ACTIVE + throttle, the force-angle rule, downward force, break force / torque, OnJointBreak | **0 mismatches** (94 anchors made), largest angle difference 0 deg |
+
+### Gate, scenarios (`tests/test_contact_scenarios.cpp`, 15 cases; `tests/contact_fixture.hpp`)
+
+| case | what | result |
+|---|---|---|
+| **pad, no rocking** | PhysProf-S / M2-AS / L2-AS launched from the pad (WP-20d's placement), GameSettings' KSP anchor values | landed, PRELAUNCH, **anchored at tick 75** (= 1.5 s) with 0 resets; anchor force = the craft's weight (343.4 / 2,127.9 / 6,607.3 kN, within 1 %); **after anchoring max speed 0, drift 0**; without the anchor L2-AS rocks at 0.091 m/s / 0.036 m (WP-20b R2), S / M2-AS 2e-9 / 5e-9 m/s |
+| launch | ignition (ACTIVE, throttle 1) | anchor released at once (Vessel.cs:1125), liftoff 2 ticks after ignition, 4 contact exits, no ground contacts, PRELAUNCH -> FLYING, no crash |
+| **crash tolerance** | a part (crashTolerance 9 m/s) dropped onto the terrain at 0.9x / 1.1x | 0.9x: impact reported 8.30 m/s (aimed 8.1), survives, LANDED, anchored, at rest; 1.1x: 10.16 m/s (aimed 9.9), explodes, onCrash once |
+| landedAt | a static collider tagged "LaunchPad" (FIXTURE tag) | landedAt "LaunchPad" |
+| **splashdown** | a part dropped into Kerbin's real ocean (WP-11 PQS ocean site) | floats: draft 0.142047 m vs the analytic equilibrium of KSP's buoyancy 0.142048 m (**-0.001 %**), at rest (4e-5 m/s), SPLASHED, WaterContact; at 20 m/s: onCrashSplashdown, part dead |
+| **high-speed crash** | 80 m/s into the terrain | CollisionEnhancer's linecast catches it, the part explodes, the root never more than 0.98 m below the surface (no tunnelling) |
+| determinism | the drop at 1 and 4 Jolt threads | the same messages, bit-identical impact speed, the same state hash |
+| vessel on vessel | a part set down on a landed vessel at 1 m/s / 25 m/s | 1 m/s: both sides see 0.99989 m/s, layer 0, the other rb's mass 0.5 t, landed with the other vessel's landedAt; 25 m/s: both explode, onCollision twice |
+| CheckGroundCollision | landed S spawned 2 m above / 0.4 m into the pad, GoOffRails | lowest corner on the terrain (-6e-5 / -2e-5 m), ignoreCollisionsFrames 0 / 60, no impact (< 0.013 m/s), no break, 21 parts |
+| terrain per body | Kerbin's real PQS (WP-11 / 12a) hosted by the bubble | 72 PQ colliders, the body frame vs BodyFrame 3e-10 m, the pad ray hits a PQ of Kerbin 0.32 m from WP-11's surface point (WP-12b's bound 1.5 m), a part lands on it (LANDED); the switch to the inertial frame removes the colliders, back rebuilds the same 72 |
+| craft touchdown | PhysProf-S set down at 1 / 3 / 6 m/s (Mainsail bell first, crashTolerance 7) | first contact 0.72 / 3.39 / 6.39 m/s, no explosion, no joint break, LANDED; largest sub-joint load / capacity 0.13 / 0.52 / 0.98 (WP-20c's impact deviation, see Risks) |
+| input seam | `PhysicsBubble::inputFeed` | runs before the module slot and the FlightIntegrator; the engines see its throttle |
+| collider closest points | getLowestPoint's Collider.ClosestPoint hook over a box, a sphere, a rotated capsule and a convex hull proxy (WP-mucol's kinds, through `VesselPhysicsOptions::colliders`), the measure point 1,000 m below and off the axis; a point inside | the analytic closest heights to 1e-5 m (29.5 / 31.3 / 26.6 / 24.5 m); inside: the point itself |
+| contact event log | `PhysicsWorld` alone: a box onto a static floor, four 5 ms steps between two reads | the contact begins in step 0, the last step reports only its Stay; `TakeContactEventLog` holds all four steps' events (none twice), is empty once taken, keeps at most 64 steps |
+| **physics-warp substeps** | the 0.9x / 1.1x crash-tolerance drop at 4x physics warp (fixedDeltaTime 0.08 s) with WP-29c's 0.02 s substeps through `PhysicsBubble::physicsStep` (forces held over the substeps as WheelPhysicsHost does) | the root's 4 Enter events all fall in non-last substeps (a last-substep-only dispatch sends none): 0.9x all 4 dispatched, impact 8.30 m/s, LANDED; 1.1x 10.16 m/s, explodes on the first (the part, DEAD, takes no more); OnCollisionStay once per FixedUpdate and pair; up to 4 steps per dispatch |
+
+`check_cites.py` exact mode over the WP-20e sources, headers and tests (part_contact, vessel_ground, part_buoyancy, collision_enhancer,
+contact_host, vessel_physics, physics_bubble, floating_origin, terrain_colliders, vessel_flight + headers + tests): **54 cites, 0 mismatches**
+(`src/vessel/vessel.cpp` keeps its 9 pre-existing mismatches, the same on main).
+
+### Measurements (MSVC RelWithDebInfo, one thread; the contact host's share of the whole bubble tick of a craft on the pad)
+
+| craft | parts | contact host per tick | of the tick |
+|---|---|---|---|
+| PhysProf-S | 21 | +0.018 ms | ~9 % |
+| PhysProf-M2-AS | 153 | +0.089 ms | ~9 % |
+| PhysProf-L2-AS | 457 | +0.23 ms | ~9 % |
+
+(contact events, dispatch, 457 PartBuoyancy / CollisionEnhancer updates, anchors; temporary timing, removed.)
+
+### Exact / approximate / changed
+
+| choice | class | notes |
+|---|---|---|
+| Part / Vessel / PartBuoyancy / CollisionEnhancer statements and decisions | exact | the reference above (Mono float rule) |
+| Collision.relativeVelocity | approximate | the two clusters' velocities at the parts' centres of mass from Jolt's pre-solve (post-force) state with the post-step lever arms; PhysX reports its own pre-solver velocities |
+| contact offset 0.01 m | approximate | Unity's Physics.defaultContactOffset; KSP's DynamicsManager asset is not extracted |
+| dispatch order | changed | PhysX's report order is not observable: new contacts, kept ones, then lost ones, each sorted (a part sliding from one quad to the next never reads as airborne) |
+| RB anchor | reduced model | a fixed-to-world weld of the root's cluster; joint.currentForce = the cluster's support force (Jolt carries the support in contacts, PhysX in the joint: the C# reads the joint's force); the cluster's motion is stopped when the anchor forms (else Jolt's anchor takes the quasi-static impulse and the WP-20c loads of L2-AS spike) |
+| rb.drag | approximate | PhysX's per-step damping as a per-part force, first order in dt |
+| CollisionEnhancer's world shift | reduced model | FloatingOrigin.Offset = the bubble's ShiftWorld plus the frame drift of the tick |
+| PartBuoyancy's Invoke timer | approximate | Unity's Invoke fires between frames; here at the next FixedUpdate past its time |
+| physicsless / asteroid / fairing collider branches of CheckCollision, wheel damage | seam | they compare model colliders the proxies do not have (`PartContactEnvironment`) |
+| PhysicMaterial "Ground", KSC collider tags | FIXTURE | not extracted (WP-12b's open item; the tests label them) |
+| ROC branch (Breaking Ground) | not ported | DLC |
+| getLowestPoint's wheel-radius corrections | not modelled | the wheel colliders are WP-29c's |
+| Collider.ClosestPoint (getLowestPoint) | exact / approximate | box, sphere, capsule proxies exact; a convex hull (WP-mucol's mesh colliders): the hull vertex furthest towards the measure point, which is 1,000 m away (Vessel.cs:2587): the same height as the true closest point to within extent^2 / 1,000 m |
+| CheckGroundCollision's PQS surface height | seam | `Vessel::env.pqsSurfaceHeight`, unset = the body radius |
+| several world steps per FixedUpdate (WP-29c's physics-warp substeps) | changed | Unity runs one PhysX simulate per FixedUpdate (KSP's physics warp is one 0.08 s step); with substeps every step's Enter / Exit is dispatched in step order (an impact inside any substep runs HandleCollision), OnCollisionStay once per pair; the RB anchor's force and break check read the last substep |
+| Unity Vector3 unary minus (`0f - x`) | noted | kspcore's `Vector3f` uses `-x`: differs only in the sign of zero; not changed here |
+
+### Findings (a later implementer must know)
+
+- **The pad rocking of WP-20b R2 is KSP's anchor's job**: KSP never lets a landed vessel rest on contacts for long; after 1.5 s still and
+  landed it welds the vessel to the world (Vessel.cs:1105) and releases the weld at ignition, on a change of the force direction or on a downward
+  force. With the anchor the three crafts rest at exactly zero speed.
+- **`Vessel::env.timeSinceLevelLoad` defaults to 10 s (WP-19a)**: in a scene that does not advance it, Vessel.LateUpdate's bounce check
+  (Vessel.cs:3061: once the level is 5 s old, UpdateLandedSplashed once) runs in the first frame, before any contact, and PRELAUNCH becomes
+  LANDED. The WP-20e fixtures model the level clock (`ResetLevelClock`, `Tick` advances it by the frame time); the WP-19b / 20d fixtures are
+  unchanged (their gates do not read the situation).
+- The pre-solve velocity of a contact already has this step's gravity: the reported impact of a drop is the speed aimed at plus about g dt
+  (0.196 m/s: 8.30 vs 8.1 m/s). KSP sees the same kind of number (PhysX's pre-solver velocity).
+- Jolt's body-pair cache skips the contact callbacks of a pair whose relative pose did not change: the pair is still touching (Stay), as
+  WP-20c's StaticContacts already handled.
+- A part landing on another vessel takes that vessel's landedAt (LandedCollisionChecks' part branch), not the static's tag.
+
+### Seams (named, with what a host or a later package does)
+
+- **SAS / Vessel.FeedInputFeed (not wired)**: `PhysicsBubble::inputFeed` runs at FlightInputHandler.FixedUpdate's slot (seq 11, before the part
+  modules); unset = nothing. Wiring needs a port of Vessel.FeedInputFeed (OnPreAutopilotUpdate, OnAutopilotUpdate: WP-24's VesselSAS is already
+  connected there, OnPostAutopilotUpdate, OnFlyByWire, Part.propagateControlUpdate), WP-50's FlightInputHandler.FixedUpdate driven by the bubble
+  (`FlightInputHandler`'s `feedInputFeed` hook), and ModuleGimbal actuation in WP-20d's module slot with the gimbal transform chains from the model
+  reader (today the thrust transforms stay at the neutral pose). Reaction-wheel torque already flows. That is what lets the WP-20d ascent gate go past
+  Mach 1 / 5 km.
+- KSC / launch-site colliders and their tags (LaunchPad, Runway ...): WP-mucol's scenery collider loader builds their static bodies, but the data is
+  not extracted yet (WP-mucol "Blocker" 2); a host registers each body's key with its GameObject's tag / name through
+  `ContactHost::RegisterStatic` (unregistered statics read as untagged terrain).
+- PhysicMaterial "Ground" friction / bounce: FIXTURE (WP-12b).
+- Part colliders: WP-mucol's real .mu colliders reach the contact host through `VesselPhysicsOptions::colliders` (one contact pair per sub-shape,
+  getLowestPoint over every shape kind); the stock-part sweep is WP-mucol's open item. Still seams: CheckCollision's asteroid / fairing branches
+  (they compare the touching collider with the part's own model colliders by identity), the colliders' layer / tag (every proxy reads as layer 0).
+- Wheels (WP-29c): ModuleWheelBase's ground contact goes through its own WheelCollider; wheel damage is a `PartContactEnvironment` hook.
+- FX: `PartContactEnvironment::explodeFx`, `ContactHost::splashFx` (FXMonger), recorded only.
+
+### Merge with main (`ccf3ffc9`: WP-mucol, WP-52)
+
+Textual conflicts only in STATUS.md (rows / sections; WP-mucol took row 55, so this package is row 58). `physics_world`, `vessel_physics`,
+the CMake lists merged cleanly. WP-mucol's `ColliderProxy` kinds (sphere, capsule, convex hull) reach the contact host's getLowestPoint hook,
+which handled boxes only: it now computes Collider.ClosestPoint for every kind (new case `WP-20e collider closest points`, analytic answers);
+the contact events need no change (they are per sub-shape, whatever its shape). With the default proxies (drag-cube boxes) every WP-20e number
+above is unchanged after the merge.
+
+### Merge with main (`0d9fd73c`: WP-29c wheels)
+
+- Conflicts: `PhysicsBubble::PhysicsStep` (WP-29c's `physicsStep` override, then the contact host after it), the CMake source lists and the
+  docs (both sides kept; STATUS rows 56 WP-29c, 57 WP-52, 58 WP-20e).
+- **Substeps**: WheelPhysicsHost::PhysicsStep steps the world `ceil(dt / 0.02)` times per FixedUpdate in physics warp; the contact host read
+  `PhysicsWorld::ContactEvents()`, the LAST step's only, so a contact that began in an earlier substep never sent OnCollisionEnter (no crash
+  check, no landing). `PhysicsWorld` now also keeps a log of every step's events until `TakeContactEventLog()`; the contact host dispatches
+  them step by step (Enter / Stay / Exit each step, OnCollisionStay once per FixedUpdate and pair). One step per FixedUpdate dispatches
+  exactly as before (every WP-20e number unchanged). New cases: `contact event log`, `physics-warp substeps` (above).
+- **WP-29c's rover fixture**: its flat ground is at Kerbin's sea level (no PQS), where KSP's PartBuoyancy finds the wheels below the water line
+  (depth -0.07 to -0.23 m at the wheel centres, maxDepth +0.09 to +0.21 m): with the contact host on, the wheels floated with water drag 2
+  (BuoyancyWaterDragSlow), the vessel read Splashed and 3 of 13 WP-29c cases failed (rest forces 7 % short of the weight, drive -26 % at 10 s).
+  `RoverScene` now turns the PartBuoyancy slot off (`tests/vessel_wheels_fixture.hpp`, commented); every WP-29c case passes. With the rest of the
+  contact host on, the WP-29c numbers are unchanged to the digits STATUS shows (drive 19.4188 / 28.3923 m/s, brake 7.38 / 8.30 m, steer, warp
+  with substeps) except the braked rest drift (Prospector 0.60 mm, was 0.26; Bug-E 0.34 mm, unchanged; gate 5 mm) and the chaotic 4x runs
+  without substeps (Prospector 2.19 m, was 2.51; Bug-E 5.34 m, was 12.5; gate > 0.1 m). The wheel parts are in Vessel.GroundContacts through
+  ModuleWheelBase, so Vessel.VesselAnchorExceptions keeps a rover from anchoring (Vessel.cs:1111-1121), as in KSP.
+- **Crash damage in the rover cases**: `unit.random_order.27` / `.42` crashed (SIGSEGV) in `WP-29c physics warp`: after an earlier WP-50
+  InputFixture case (it runs GameSettings.SetDefaultValues; bisected over the 63 preceding cases) the 4x drive WITHOUT substeps (KSP's single
+  0.08 s step) bounced the Prospector's root decoupler onto the ground at 7.1 m/s, Part.HandleCollision exploded it (KSP's crash tolerance:
+  a faithful outcome, and one more reason for WP-29c's substeps), the vessel died and the test's `Healthy()` dereferenced the missing
+  binding. The library did not crash (the tick finished; traced). `RoverScene` sets CheatOptions.NoCrashDamage
+  (`PartContactEnvironment::noCrashDamage`) since those cases measure the wheels, and `Healthy()` returns false once the vessel has no rigid
+  bodies. Default-order numbers unchanged (nothing exploded there).
+
+### Risks
+
+- R1: impacts load the WP-20c joints as one-step spikes (no compliance): PhysProf-S touching down at 6 m/s reaches 0.98 of a sub-joint's
+  capacity although its Mainsail survives the contact (crashTolerance 7). KSP's joints would flex; a harder touchdown would break a joint here that
+  KSP keeps. A compliance term in the load model (or an impact filter) is the fix.
+- R2: Collision.relativeVelocity is not PhysX's number bit for bit (pre-solve velocities of a different solver): impacts near a crashTolerance can
+  decide differently from KSP by a few cm/s. The decision itself is KSP's (reference).
+- R3: no in-game capture of contacts, landing or buoyancy exists: the scenarios are analytic or KSP-rule checks (a capture of a drop / splashdown
+  would close it).
+- R4: the anchor zeroes the cluster's velocity when it forms; KSP's FixedJoint removes it through the joint solve. The rule anchors only a vessel
+  slower than sqrt(VESSEL_ANCHOR_VELOCITY_THRESHOLD) = 0.22 m/s (GameSettings.cs:1121), so the jump is below that; on the pad it is ~1e-9 m/s.
+
+### Unit tests
+
+`tests/test_contact_reference.cpp` (5 cases) + `tests/test_contact_scenarios.cpp` (15 cases) = **20 cases / 325 assertions** (the reference
+cases count mismatches per replay), ~31 s in RelWithDebInfo (the pad case 8.7 s). `tests/contact_fixture.hpp`: AnchorSettings (GameSettings'
+KSP defaults, RAII), EventLog, KerbinScene (the real PQS), level clock. `tests/test_hygiene.cpp` resets `PartContactEnvironment` and
+`CollisionEnhancer::bypass` between cases; `BubbleScene` / `PadScene` take a PhysicsWorldConfig.
+
+### Verification
+
+- Windows MSVC RelWithDebInfo (binary dir on C:, D: full; `run_tests.ps1`'s preset and flags, `CMAKE_BUILD_PARALLEL_LEVEL=6`). Before the merge
+  with main: ctest **47 / 47 pass** (146 s), `kspcore_tests` (963 cases, 1,542,998 assertions) default order and `--order-by=rand -rs=11` /
+  `-rs=27` all green. After the merge with main `ccf3ffc9` (incremental build): ctest **48 / 48 pass** (143 s; incl.
+  `unit.random_order.{11,27,42}` and the 8 shards); `kspcore_tests` whole suite, default order and `--order-by=rand -rs=11` / `-rs=27`: **1,008 /
+  1,008 cases, 1,564,511 assertions each, all green**; the WP-20e cases 18 / 18, 295 assertions. Final tree (`f421c2b5`'s code), fresh (build
+  directory deleted, `--fresh`, dev tools on as `run_tests.ps1` builds them): configure 4.0 s, build 221.3 s, ctest 160.2 s, **48 / 48 pass**;
+  then the whole suite default order and `--order-by=rand -rs=11` / `-rs=27`: 1,008 / 1,008 cases, 1,564,511 assertions each, green.
+  After the merge with main `0d9fd73c` (WP-29c), the substep dispatch and the rover-fixture fixes (`632c2b70`'s code), fresh (build directory
+  deleted, `--fresh`, dev tools on): configure 2.9 s, build 207.3 s, ctest 120.6 s, **49 / 49 pass** (incl. `unit.random_order.{11,27,42}`);
+  the whole suite default order and `--order-by=rand -rs=11` / `-rs=27` / `-rs=42`: **1,023 / 1,023 cases, 1,570,171 assertions each, green**;
+  the WP-20e cases 20 / 20, 325 assertions; WP-29c 13 / 13.
+- g++ 13 (WSL) `-std=c++20 -Wall -Wextra -fsyntax-only` over every WP-20e translation unit and the touched ones (physics_world with the Jolt
+  defines, test_vessel_wheels with the rover fixture): no error, no warning.
+- `check_cites.py` exact (after the merge): 54 / 0. The reference JSON regenerates byte-identically (`python -I core/tools/wp20e/contact_reference.py`, seed 2005).
+- Not run: the ASan / UBSan run on Linux (no room on D: / C: for the Linux copy of the data); CI runs clang and gcc.
+
+### Commits (branch `wp20e`, from origin/main cd5e4df4)
+
+`140923e5` first version (contact events, Part messages, landed / splashed, RB anchor, CheckGroundCollision, PartBuoyancy, CollisionEnhancer,
+contact host, terrain per body, scenarios); `119fd67e` the independent Python reference and its replay, the anchor carries the support force and
+stops the vessel; `a3787d14` craft touchdown and input-seam scenarios, cite wording; `9f37e587` a missing include (GCC); `57ab720f` documentation; then the
+merge with main `ccf3ffc9` (STATUS row 58), getLowestPoint's ClosestPoint over every WP-mucol collider kind, and the verification note; the merge
+with main `0d9fd73c` (WP-29c) with the rover fixture's PartBuoyancy slot off, the contact messages of every substep (event log), the rover
+fixture's crash damage off, and this note.

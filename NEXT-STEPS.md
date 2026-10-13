@@ -193,6 +193,24 @@ Recommendation: WP-20 builds a REDUCED rigid-body model on Jolt v5.6.0 inside ks
 - Next for wheels: WP-29d (landing gear, runway, steering circle) and landing legs (`leg_touchdown`, deployment animation, stand-in spheres) after
   the geometry; the brake "schloompa" anchor with WP-20e's landed anchor.
 
+## WP-20e contact, landing and water (2026-10-13, branch `wp20e`, PR open)
+
+State: contacts -> Part.OnCollisionEnter / Stay / Exit, Landed / Splashed / landedAt / situation, HandleCollision's crash tolerance, the landed RB
+anchor (ends the pad rocking of WP-20b R2), CheckGroundCollision, PartBuoyancy, CollisionEnhancer, terrain colliders per body in the bubble
+(`ContactHost`, `core/STATUS.md` "WP-20e"). Gated by an independent Python reference (0 mismatches) and scenarios.
+
+Next, in order:
+1. **SAS / Vessel.FeedInputFeed in the tick** (seam `PhysicsBubble::inputFeed`): port Vessel.FeedInputFeed (OnPre / OnAutopilotUpdate /
+   OnPost / OnFlyByWire, Part.propagateControlUpdate), drive WP-50's FlightInputHandler.FixedUpdate from the bubble, actuate ModuleGimbal in
+   WP-20d's module slot (gimbal transform chains from the model reader). Then extend the WP-20d ascent gate past Mach 1 / 5 km to C10's
+   20 km / 36.7 km states.
+2. Impact compliance in WP-20c's load model: a 6 m/s touchdown of PhysProf-S loads a joint to 0.98 of capacity (one-step spike); KSP's joints flex.
+3. KSC / launch-site collider data (WP-mucol's scenery loader, extraction not run) registered with their tags (LaunchPad, Runway ...) through
+   `ContactHost::RegisterStatic`; PhysicMaterial "Ground" values (both FIXTURE today; WP-12b / WP-42).
+4. With WP-mucol's real part colliders: CheckCollision's asteroid / fairing branches and the colliders' layer / tag in the contact records;
+   wheels' ground contact (WP-29c).
+5. An in-game capture of a drop / splashdown / pad settle would turn the scenario gates into capture gates.
+
 ## Handoff to the PC (2026-10-11, end of session 3; all four listed branches are now merged, see Session 4 above)
 
 ### Moving the whole directory to another machine

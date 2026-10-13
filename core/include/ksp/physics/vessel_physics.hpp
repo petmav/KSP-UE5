@@ -407,6 +407,9 @@ public:
     int PartIndex(const Part& part) const;  // index in vessel.parts at build time (-1 when not a part of this vessel)
     size_t PartCount() const { return parts_.size(); }
     bool PartHasRigidbody(size_t index) const;  // part.rb != null as the binding was built
+    // WP-20e: the part of an index (the sub-shape user data of the cluster bodies), the cluster of a body (-1: not this binding's)
+    Part* PartAt(size_t index) const;
+    int ClusterOfBody(BodyId body) const;
 
     // ---- state ------------------------------------------------------------------------------------------------------------
     PartPhysicsState PartState(const Part& part) const;
@@ -433,6 +436,7 @@ public:
     // every body's velocity += dv: Vessel.OffsetVelocity (Vessel.cs:3742), Vessel.ChangeWorldVelocity (:3197), Krakensbane
     void ChangeWorldVelocity(const Vector3d& dv);
     void SetLinearVelocity(const Vector3d& v);  // every cluster (centre of mass), angular velocities unchanged
+    void StopMotion();                          // WP-20e: every cluster's linear and angular velocity zero (physics frame)
 
     // ---- forces (ForceAccumulator) ----------------------------------------------------------------------------------------
     void AddForce(Part& part, const Vector3d& force) override;
@@ -443,6 +447,20 @@ public:
     void AddRigidbodyForceAtPosition(Part& part, const Vector3d& force, const Vector3d& position, ForceMode mode) override;
     void SetAngularDrag(Part& part, float angularDrag) override;
     void AddUniformAcceleration(const Vector3d& acceleration) override;
+    // WP-20e: part.rb.drag (PartBuoyancy's water drag): PhysX damps each part body's linear velocity by max(0, 1 - dt drag) per step;
+    // Flush applies the equivalent per part, a force -(1 - max(0, 1 - dt d)) m v / dt at the part's centre of mass (v its velocity
+    // before the step: first order in dt, as the angular-drag torque). 0 (Part.Start's rb.drag = 0, Part.cs:1877) adds nothing.
+    void SetDrag(Part& part, float drag);
+    float Drag(const Part& part) const;
+    // WP-20e: Unity writes to ONE part's Rigidbody (CollisionEnhancer: transform.position / rb.velocity), on the reduced model to the part's
+    // cluster: the cluster moves by the part's displacement / gets the linear velocity that gives the part's centre of mass `v` (angular
+    // velocity kept). Both refresh the cluster caches and the part transforms.
+    void TranslatePartCluster(Part& part, const Vector3d& deltaPhysics);
+    void SetPartVelocity(Part& part, const Vector3d& v);
+    // WP-20e: what the world's constraints (contacts, a fixed-to-world anchor) did to a cluster in the last step: force and torque (about its
+    // centre of mass, physics axes) = what its motion over the step needs (m dv / dt, I dw / dt) minus what Flush applied. Zero before a step.
+    Vector3d ClusterSupportForce(size_t cluster) const;
+    Vector3d ClusterSupportTorque(size_t cluster) const;
     // physics-frame variants (no transform frame involved)
     void AddForceAtPhysicsPoint(Part& part, const Vector3d& force, const Vector3d& point);
     float AngularDrag(const Part& part) const;
@@ -592,6 +610,9 @@ private:
     };
     std::vector<Weld> welds_;
     std::vector<ConstraintId> constraints_;
+    // WP-20e: per cluster, the applied force / torque and the velocities of the last Flush, the support of the step after it
+    std::vector<Vector3d> appliedF_, appliedT_, flushV_, flushW_, supportF_, supportT_;
+    float flushDt_ = 0.0f;
     std::vector<Vector3d> partForce_, partMoment_;
     Vector3d uniformAccel_;
     // ---- WP-20c state

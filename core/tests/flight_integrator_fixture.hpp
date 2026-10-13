@@ -142,7 +142,7 @@ struct PadScene {
     Vector3d padUp, padEast, padNorth;  // world axes at the pad
     Vector3d padWorld;                  // the pad surface point (world)
     double padRadius = 0.0;
-    explicit PadScene(World& w_, const PhysicsBubbleOptions& o = {}) : w(w_), s(w_, o) {
+    explicit PadScene(World& w_, const PhysicsBubbleOptions& o = {}, const PhysicsWorldConfig& cfg = {}) : w(w_), s(w_, o, cfg) {
         StartPhysicsGlobals(w);
         SaveEnvironment::Current().loadedScene = GameScenes::FLIGHT;  // HighLogic.LoadedSceneIsFlight (module FixedUpdates check it)
         CelestialBody& kerbin = w.Kerbin();

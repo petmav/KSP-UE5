@@ -58,6 +58,7 @@
 #include <vector>
 
 #include "ksp/math/vector3d.hpp"
+#include "ksp/physics/contact_host.hpp"
 #include "ksp/physics/flight_integrator.hpp"
 #include "ksp/physics/floating_origin.hpp"
 #include "ksp/physics/krakensbane.hpp"
@@ -83,6 +84,9 @@ struct PhysicsBubbleOptions {
     bool foldFrameOffset = true;
     // Krakensbane::recentreSpeed (0 = KSP's rule: the whole rb velocity moves into FrameVel every tick above MaxV)
     double krakensbaneRecentreSpeed = 0.0;
+    // WP-20e: contact, landing and water (ksp/physics/contact_host.hpp): on by default (KSP's behaviour); `contacts` selects the pieces
+    bool contactHost = true;
+    ContactHostOptions contacts;
 };
 
 class PhysicsBubble {
@@ -112,6 +116,11 @@ public:
     // WP-20d: the FlightIntegrator of every loaded vessel and the part-module force slot (kernel, hooks, statistics)
     FlightIntegratorHost& FlightIntegrators() { return fiHost_; }
     PartModuleForces& ModuleForces() { return moduleForces_; }
+    // WP-20e: contacts -> Part.OnCollision*, landed / splashed, PartBuoyancy, CollisionEnhancer, the RB anchor, ground probes, terrain per body
+    ContactHost& Contacts() { return contacts_; }
+    // WP-20e seam: Vessel.FeedInputFeed of the measured order (FlightInputHandler.FixedUpdate, seq 11, before the part modules): unset =
+    // nothing (WP-50's FlightInputHandler and WP-24's VesselAutopilot are not driven by the bubble yet; a host / test sets it)
+    std::function<void()> inputFeed;
     // FloatingOrigin's PreciseUpdateQuadPositions after a rebase (the PQS host, WP-12): unset = nothing
     std::function<void()> preciseUpdateQuadPositions;
     // WP-29c: replaces the physics step (seq 291) of one tick of `dt` seconds; unset: Host().Step(dt). The wheels' host
@@ -174,6 +183,7 @@ private:
     VesselPhysicsHost host_;
     FlightIntegratorHost fiHost_;
     PartModuleForces moduleForces_;
+    ContactHost contacts_;
     Krakensbane krakensbane_;
     FloatingOrigin floatingOrigin_;
     Vector3d frameOriginWorld_;
@@ -187,6 +197,7 @@ private:
     std::function<void()> savedAfterFlightIntegrator_;
     std::function<void()> savedBeforeFlightIntegrator_;
     std::function<void()> savedBeforeVesselUpdate_;
+    std::function<void()> savedAfterPrecalc_;
 };
 
 }  // namespace ksp::physics
