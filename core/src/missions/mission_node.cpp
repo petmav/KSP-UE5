@@ -217,7 +217,11 @@ std::string TestModule::GetNodeBodyParameterString(const Editor::BaseAPField& fi
 }
 
 // TestModule.cs:280
-void TestModule::UpdateNodeBodyUI() { node_->guiNode->DisplayNodeBodyParameters(); }
+void TestModule::UpdateNodeBodyUI() {
+    // node.guiNode is dereferenced without a null test (NullReferenceException in C#)
+    if (node_ == nullptr || node_->guiNode == nullptr) throw NullReferenceException();
+    node_->guiNode->DisplayNodeBodyParameters();
+}
 
 // TestModule.cs:285
 std::vector<IMENodeDisplay*> TestModule::GetInternalParametersToDisplay() { return {}; }
