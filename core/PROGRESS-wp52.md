@@ -19,9 +19,14 @@ slider / motor constraint is the follow-up (needs PhysicsWorld constraint types,
 - tools/wp52/servo_reference.py -> tests/data/wp52_reference.json, tests/test_robotics.cpp
 
 ## Milestones
-- [x] M0 baseline build
+- [x] M0 baseline build (full 213 s)
 - [x] M1 port compiles (joint model, BaseServo, 4 servos, plant, controller, axis / action, manager)
-- [ ] M2 Python reference + 0-ULP gate for the servo motion math
-- [ ] M3 controller sequencer gate, presets, persistence, symmetry, manager queue
-- [ ] M4 joint seam tests (SetTargetRotationLocal vs double reference, plant vs Python drive law, HasFreePivot, ServoArticulation)
-- [ ] M5 check_cites exact, full ctest, random order 11 / 27, STATUS / NEXT-STEPS, push, PR
+- [x] M2 Python reference + 0-ULP gate for the servo motion math (92 runs, 404,308 comparisons)
+- [x] M3 controller sequencer gate (60 runs, 47,854), presets (80 cases, 1,799 keys bit for bit)
+- [x] M4 joint seam tests (SetTargetRotationLocal vs double algebra, drive model vs Python twin, articulation hook on PhysProf-S, closed loops on the plant)
+- [x] M5 derived cases (27), check_cites exact (289 / 0), docs (STATUS section + row 57, README, NEXT-STEPS)
+- [ ] M6 full ctest (48 incl. random order 11 / 27 / 42), push, PR
+
+## Notes
+- The mutation check: changing the rotor spool step to Time.deltaTime or the PingPong fold fails the scripted gates on the first scenario.
+- Findings kept from the C# are listed in STATUS.md "Findings kept from the C# (quirks)".

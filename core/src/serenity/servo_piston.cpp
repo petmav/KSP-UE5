@@ -13,11 +13,11 @@ namespace ksp::Expansions::Serenity {
 using namespace detail;
 using GE = GameEvents;
 
-// :99
+// ModuleRoboticServoPiston.cs:99
 void ModuleRoboticServoPiston::OnStart(StartState state) {
     Actions()["ResetPosition"]->SetGuiName(KSP::Localization::Localizer::Format("#autoLOC_6012045"));
     Events()["ResetPosition"]->SetGuiName(KSP::Localization::Localizer::Format("#autoLOC_6012045"));
-    // :103-:112 the soft-range control exists (UI_MinMaxRange on softMinMaxExtension): its limits clamp the stored soft range
+    // ModuleRoboticServoPiston.cs:103-:112 the soft-range control exists (UI_MinMaxRange on softMinMaxExtension): its limits clamp the stored soft range
     {
         const Vector2f hard = hardMinMaxLimits();
         const float step = F((fx(hard.y) - fx(hard.x)) / 100.0);
@@ -80,13 +80,13 @@ void ModuleRoboticServoPiston::OnStart(StartState state) {
     }
 }
 
-// :190
+// ModuleRoboticServoPiston.cs:190
 void ModuleRoboticServoPiston::OnDestroy() {
     BaseServo::OnDestroy();
     GE::onPartResourceNonemptyEmpty.Remove(this, &ModuleRoboticServoPiston::OnResourceNonemptyEmpty);
 }
 
-// :205
+// ModuleRoboticServoPiston.cs:205
 void ModuleRoboticServoPiston::ModifyLimits(const ModuleValue* field) {
     const Vector2f soft0 = softMinMaxExtension();
     if (auto* baseAxisField = dynamic_cast<BaseAxisField*>(Fields()["TargetExtension"])) {  // sic: the C# looks up "TargetExtension", which no field has
@@ -113,7 +113,7 @@ void ModuleRoboticServoPiston::ModifyLimits(const ModuleValue* field) {
     ModifyServo(field);
 }
 
-// :241
+// ModuleRoboticServoPiston.cs:241
 void ModuleRoboticServoPiston::UpdateTargetPosition(const ModuleValue* field) {
     const Vector2f soft = softMinMaxExtension();
     Set<float>("targetExtension", Mathf::Min(Mathf::Max(soft.x, targetExtension()), soft.y));
@@ -121,13 +121,13 @@ void ModuleRoboticServoPiston::UpdateTargetPosition(const ModuleValue* field) {
     ModifyServo(field);
 }
 
-// :248
+// ModuleRoboticServoPiston.cs:248
 void ModuleRoboticServoPiston::UpdateTraverseVelocity(const ModuleValue* field) {
     currentVelocityLimit = traverseVelocity();
     ModifyServo(field);
 }
 
-// :254
+// ModuleRoboticServoPiston.cs:254
 void ModuleRoboticServoPiston::OnJointInit(bool) {
     const std::string servoTransformName = Get<std::string>("servoTransformName");
     const std::string baseTransformName = Get<std::string>("baseTransformName");
@@ -158,7 +158,7 @@ void ModuleRoboticServoPiston::OnJointInit(bool) {
     }
 }
 
-// :298
+// ModuleRoboticServoPiston.cs:298
 void ModuleRoboticServoPiston::OnPostStartJointInit() {
     if (ServoEnvironment::SceneIsFlight()) {
         initComplete = true;
@@ -171,7 +171,7 @@ void ModuleRoboticServoPiston::OnPostStartJointInit() {
     }
 }
 
-// :317
+// ModuleRoboticServoPiston.cs:317
 void ModuleRoboticServoPiston::OnVisualizeServo(bool moveBase) {
     if (movingPartObject == nullptr) throw Nre();
     const Vector2f soft = softMinMaxExtension();
@@ -189,7 +189,7 @@ void ModuleRoboticServoPiston::OnVisualizeServo(bool moveBase) {
     if (previousTargetPosition != num) previousTargetPosition = num;
 }
 
-// :339
+// ModuleRoboticServoPiston.cs:339
 void ModuleRoboticServoPiston::LateUpdate() {
     if (slaveTransformsSet) {
         if (movingPartObject == nullptr || basePartObject == nullptr) throw Nre();
@@ -203,7 +203,7 @@ void ModuleRoboticServoPiston::LateUpdate() {
     }
 }
 
-// :354
+// ModuleRoboticServoPiston.cs:354
 void ModuleRoboticServoPiston::ServoFixedUpdate() {
     const bool paused = ServoEnvironment::flightDriverPause && ServoEnvironment::flightDriverPause();
     if (!initComplete || !ServoEnvironment::SceneIsFlight() || paused) return;
@@ -224,7 +224,7 @@ void ModuleRoboticServoPiston::ServoFixedUpdate() {
     if (num2 != currentExtension()) SetDragCubes(currentExtension());
 }
 
-// :393
+// ModuleRoboticServoPiston.cs:393
 void ModuleRoboticServoPiston::SetJointTargetPosition() {
     const Vector2f soft = softMinMaxExtension();
     const Vector3f vector = Vector3f::right() * F((fx(soft.y) + fx(soft.x)) / 2.0 - fx(driveTargetPosition));
@@ -232,7 +232,7 @@ void ModuleRoboticServoPiston::SetJointTargetPosition() {
     servoJoint->targetPosition = vector;
 }
 
-// :399
+// ModuleRoboticServoPiston.cs:399
 void ModuleRoboticServoPiston::OnModifyServo() {
     if (HighWarp()) {
         jointDrive = servoJoint->xDrive;
@@ -265,7 +265,7 @@ void ModuleRoboticServoPiston::OnModifyServo() {
     servoJoint->xDrive = jointDrive;
 }
 
-// :436
+// ModuleRoboticServoPiston.cs:436
 void ModuleRoboticServoPiston::UpdateCurrentExtension() {
     if (servoJoint != nullptr) {
         if (movingPartObject == nullptr) throw Nre();
@@ -275,47 +275,47 @@ void ModuleRoboticServoPiston::UpdateCurrentExtension() {
     }
 }
 
-// :446
+// ModuleRoboticServoPiston.cs:446
 void ModuleRoboticServoPiston::OnServoLockApplied() {
     UpdateCurrentExtension();
     lockAngle = currentExtension();
     driveTargetPosition = currentExtension();
 }
 
-// :453
+// ModuleRoboticServoPiston.cs:453
 void ModuleRoboticServoPiston::OnServoLockRemoved() {
     UpdateCurrentExtension();
     Set<float>("currentExtension", lockAngle);
     driveTargetPosition = currentExtension();
 }
 
-// :460
+// ModuleRoboticServoPiston.cs:460
 void ModuleRoboticServoPiston::OnServoMotorEngaged() {
     UpdateCurrentExtension();
     driveTargetPosition = currentExtension();
     motorManualDisengaged = false;
 }
 
-// :477
+// ModuleRoboticServoPiston.cs:477
 float ModuleRoboticServoPiston::GetFrameDisplacement() {
     positionDiff = Mathf::Abs(F(fx(currentTransformPosition()) - fx(previousDisplacement)));
     return positionDiff;
 }
 
-// :488
+// ModuleRoboticServoPiston.cs:488
 void ModuleRoboticServoPiston::ResetLaunchPosition() {
     const Vector2f soft = softMinMaxExtension();
     Fields()["targetExtension"]->SetValue(ModuleValue(Mathf::Min(Mathf::Max(soft.x, launchPosition()), soft.y)));
     targetPosition = targetExtension();
 }
 
-// :494
+// ModuleRoboticServoPiston.cs:494
 void ModuleRoboticServoPiston::OnSaveShip() {
     SetLaunchPosition(targetExtension());
     BaseServo::OnSaveShip();
 }
 
-// :500
+// ModuleRoboticServoPiston.cs:500
 void ModuleRoboticServoPiston::UpdatePAWUI(UI_Scene currentScene) {
     if (initComplete) {
         if (servoJoint != nullptr) UpdateCurrentExtension();
@@ -331,7 +331,7 @@ void ModuleRoboticServoPiston::UpdatePAWUI(UI_Scene currentScene) {
     }
 }
 
-// :531
+// ModuleRoboticServoPiston.cs:531
 Vector3f ModuleRoboticServoPiston::CalcTargetPosition(const Vector3f& startingPosition, float offset, bool relative) {
     Vector3f vector;
     const std::string a = mainAxis();
@@ -345,7 +345,7 @@ Vector3f ModuleRoboticServoPiston::CalcTargetPosition(const Vector3f& startingPo
     return vector * offset;
 }
 
-// :566
+// ModuleRoboticServoPiston.cs:566
 void ModuleRoboticServoPiston::TogglePistonAction(KSPActionParam&) {
     const Vector2f soft = softMinMaxExtension();
     if (fx(targetExtension()) - fx(soft.x) < (fx(soft.y) - fx(soft.x)) / 2.0)
@@ -354,7 +354,7 @@ void ModuleRoboticServoPiston::TogglePistonAction(KSPActionParam&) {
         RetractPiston();
 }
 
-// :578
+// ModuleRoboticServoPiston.cs:578
 void ModuleRoboticServoPiston::ExtendPiston() {
     if (!servoIsLocked()) {
         Fields()["targetExtension"]->SetValue(ModuleValue(softMinMaxExtension().y));
@@ -364,7 +364,7 @@ void ModuleRoboticServoPiston::ExtendPiston() {
     }
 }
 
-// :591
+// ModuleRoboticServoPiston.cs:591
 void ModuleRoboticServoPiston::RetractPiston() {
     if (!servoIsLocked()) {
         Fields()["targetExtension"]->SetValue(ModuleValue(softMinMaxExtension().x));
@@ -374,7 +374,7 @@ void ModuleRoboticServoPiston::RetractPiston() {
     }
 }
 
-// :604
+// ModuleRoboticServoPiston.cs:604
 void ModuleRoboticServoPiston::OnResourceNonemptyEmpty(PartResource* resource) {
     if (!ResourceEventApplies(*this, resource)) return;
     for (size_t i = 0; i < resHandler.inputResources.size(); i++) {
@@ -385,7 +385,7 @@ void ModuleRoboticServoPiston::OnResourceNonemptyEmpty(PartResource* resource) {
     }
 }
 
-// :620
+// ModuleRoboticServoPiston.cs:620
 void ModuleRoboticServoPiston::InitAxisFieldLimits() {
     AxisFieldLimit l;
     l.limitedField = targetExtensionAxisField;
@@ -394,7 +394,7 @@ void ModuleRoboticServoPiston::InitAxisFieldLimits() {
     AddAxisFieldLimit("targetExtension", l);
 }
 
-// :630
+// ModuleRoboticServoPiston.cs:630
 void ModuleRoboticServoPiston::UpdateAxisFieldHardLimit(const std::string& fieldName, const Vector2f& newlimits) {
     if (fieldName == "targetExtension") {
         Set<Vector2f>("hardMinMaxLimits", newlimits);
@@ -402,7 +402,7 @@ void ModuleRoboticServoPiston::UpdateAxisFieldHardLimit(const std::string& field
     }
 }
 
-// :639
+// ModuleRoboticServoPiston.cs:639
 void ModuleRoboticServoPiston::UpdateAxisFieldSoftLimit(const std::string& fieldName, const Vector2f& newlimits) {
     if (fieldName == "targetExtension") {
         Set<Vector2f>("softMinMaxExtension", newlimits);
@@ -410,7 +410,7 @@ void ModuleRoboticServoPiston::UpdateAxisFieldSoftLimit(const std::string& field
     }
 }
 
-// :662
+// ModuleRoboticServoPiston.cs:662
 void ModuleRoboticServoPiston::SetDragCubes(float extension) {
     const Vector2f hard = hardMinMaxLimits();
     const float x = hard.x;

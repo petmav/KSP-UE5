@@ -56,13 +56,13 @@ const FloatCurve& ControlledAxis::RefRevSaw() {  // :113
     return c;
 }
 
-// :55
+// ControlledAxis.cs:55
 ControlledAxis::ControlledAxis(const ControlledAxis& sourceAxis)
     : ControlledAxis(sourceAxis.PartPtr(), sourceAxis.Module(), sourceAxis.AxisField, sourceAxis.Controller) {
     timeValue = FloatCurve(sourceAxis.timeValue.Curve().keys());
 }
 
-// :61
+// ControlledAxis.cs:61
 ControlledAxis::ControlledAxis(Part* part, PartModule* module, BaseAxisField* axisField, ModuleRoboticController* controller)
     : ControlledBase(part, module, controller) {
     if (axisField == nullptr) throw Nre();
@@ -72,14 +72,14 @@ ControlledAxis::ControlledAxis(Part* part, PartModule* module, BaseAxisField* ax
     RebuildSymmetryList();
 }
 
-// :74
+// ControlledAxis.cs:74
 ControlledAxis::ControlledAxis() {
     AxisField = nullptr;
     timeValue = FloatCurve(std::vector<Keyframe>{Keyframe(0.0f, 0.0f), Keyframe(1.0f, 0.0f)});
     SymmetryFields.clear();
 }
 
-// :121
+// ControlledAxis.cs:121
 void ControlledAxis::ReverseCurve() {
     std::vector<Keyframe> array(static_cast<size_t>(timeValue.Curve().length()));
     for (int i = 0; i < timeValue.Curve().length(); i++) {
@@ -92,7 +92,7 @@ void ControlledAxis::ReverseCurve() {
     timeValue = FloatCurve(array);
 }
 
-// :135
+// ControlledAxis.cs:135
 void ControlledAxis::InvertCurve() {
     for (int i = 0; i < timeValue.Curve().length(); i++) {
         Keyframe tempKeyframe = timeValue.Curve()[i];
@@ -103,7 +103,7 @@ void ControlledAxis::InvertCurve() {
     }
 }
 
-// :147
+// ControlledAxis.cs:147
 void ControlledAxis::RescaleCurveTime(float adjustmentRatio, float minSpace) {
     const float maxTime = timeValue.maxTime();
     for (int i = 0; i < timeValue.Curve().length(); i++) {
@@ -124,7 +124,7 @@ void ControlledAxis::RescaleCurveTime(float adjustmentRatio, float minSpace) {
     }
 }
 
-// :172
+// ControlledAxis.cs:172
 void ControlledAxis::AlignCurveEnds() {
     Keyframe key = timeValue.Curve()[timeValue.Curve().length() - 1];
     key.value = timeValue.Curve()[0].value;
@@ -132,7 +132,7 @@ void ControlledAxis::AlignCurveEnds() {
     MoveKey(timeValue.Curve(), timeValue.Curve().length() - 1, key);
 }
 
-// :180
+// ControlledAxis.cs:180
 void ControlledAxis::ClampAllPointValues() {
     for (int i = 0; i < timeValue.Curve().length(); i++) {
         Keyframe tempKeyframe = timeValue.Curve()[i];
@@ -141,7 +141,7 @@ void ControlledAxis::ClampAllPointValues() {
     }
 }
 
-// :190 (sic: `index <= length`, so index == length reads past the end: IndexOutOfRange in C#)
+// ControlledAxis.cs:190 (sic: `index <= length`, so index == length reads past the end: IndexOutOfRange in C#)
 void ControlledAxis::ClampPointValue(int index) {
     if (index >= 0 && index <= timeValue.Curve().length()) {
         if (index >= timeValue.Curve().length()) throw std::out_of_range("Index was outside the bounds of the array.");
@@ -151,7 +151,7 @@ void ControlledAxis::ClampPointValue(int index) {
     }
 }
 
-// :200
+// ControlledAxis.cs:200
 void ControlledAxis::PresetFlat() {
     const float maxTime = timeValue.maxTime();
     float value = F((fx(axisMax()) - fx(axisMin())) / 2.0);
@@ -164,45 +164,45 @@ void ControlledAxis::PresetFlat() {
     lastUsedRefName = "stockFlat";
 }
 
-// :217
+// ControlledAxis.cs:217
 void ControlledAxis::PresetSine(float cycles, float phase) {
     FloatCurve generated;
     if (GenerateCurveFromReference("stockSine", cycles, phase, &RefSine(), generated)) timeValue = generated;
 }
-// :225
+// ControlledAxis.cs:225
 void ControlledAxis::PresetSquare(float cycles, float phase) {
     FloatCurve generated;
     if (GenerateCurveFromReference("stockSquare", cycles, phase, &RefSquare(), generated)) timeValue = generated;
 }
-// :233
+// ControlledAxis.cs:233
 void ControlledAxis::PresetTriangle(float cycles, float phase) {
     FloatCurve generated;
     if (GenerateCurveFromReference("stockTriangle", cycles, phase, &RefTriangle(), generated)) timeValue = generated;
 }
-// :241
+// ControlledAxis.cs:241
 void ControlledAxis::PresetSaw(float cycles, float phase) {
     FloatCurve generated;
     if (GenerateCurveFromReference("stockSaw", cycles, phase, &RefSaw(), generated)) timeValue = generated;
 }
-// :249
+// ControlledAxis.cs:249
 void ControlledAxis::PresetRevSaw(float cycles, float phase) {
     FloatCurve generated;
     if (GenerateCurveFromReference("stockRevSaw", cycles, phase, &RefRevSaw(), generated)) timeValue = generated;
 }
 
-// :257
+// ControlledAxis.cs:257
 void ControlledAxis::UpdatePreset(float cycles, float phase) {
     FloatCurve generated;
     if (!(lastUsedRefName == "stockFlat") && GenerateCurveFromReference(lastUsedRefName, cycles, phase, nullptr, generated)) timeValue = generated;
 }
 
-// :265
+// ControlledAxis.cs:265
 void ControlledAxis::ClearPresetRefs() {
     lastUsedRefName = "";
     lastUsedRefCurve = nullptr;
 }
 
-// :271
+// ControlledAxis.cs:271
 bool ControlledAxis::GenerateCurveFromReference(const std::string& refCurveID, float cycles, float phase, const FloatCurve* referenceCurve,
                                                 FloatCurve& generatedCurve) {
     if (lastUsedRefCurve == nullptr && referenceCurve == nullptr) {
@@ -281,7 +281,7 @@ bool ControlledAxis::GenerateCurveFromReference(const std::string& refCurveID, f
     return true;
 }
 
-// :355
+// ControlledAxis.cs:355
 bool ControlledAxis::OnChangeSymmetryMaster(Part* newPart, uint32_t& oldPartId) {
     oldPartId = 0u;
     BaseAxisField* baseAxisField = nullptr;
@@ -298,7 +298,7 @@ bool ControlledAxis::OnChangeSymmetryMaster(Part* newPart, uint32_t& oldPartId) 
     return true;
 }
 
-// :377
+// ControlledAxis.cs:377
 void ControlledAxis::UpdateFieldValue(float time, float valueMultiple, bool updateSymmetryPartners) {
     if (AxisField == nullptr) return;
     const float num = F(fx(timeValue.Evaluate(time)) * fx(valueMultiple));
@@ -314,7 +314,7 @@ void ControlledAxis::UpdateFieldValue(float time, float valueMultiple, bool upda
         for (size_t j = 0; j < SymmetryFields.size(); j++) SymmetryFields[j]->SetValue(ModuleValue(num));
 }
 
-// :406
+// ControlledAxis.cs:406
 void ControlledAxis::UpdateSoftLimits(const Vector2f& newLimits, bool updateSymmetryPartners) {
     auto* limits = dynamic_cast<IAxisFieldLimits*>(ModuleOf(AxisField));
     if (AxisField == nullptr || limits == nullptr) return;
@@ -324,7 +324,7 @@ void ControlledAxis::UpdateSoftLimits(const Vector2f& newLimits, bool updateSymm
         if (auto* l2 = dynamic_cast<IAxisFieldLimits*>(ModuleOf(SymmetryFields[i]))) l2->SetSoftLimits(axisName, newLimits);
 }
 
-// :426
+// ControlledAxis.cs:426
 bool ControlledAxis::OnAssignReferenceVars() {
     if (module_ != nullptr) {
         if (auto* axisField = dynamic_cast<BaseAxisField*>(module_->Fields()[axisName])) AxisField = axisField;
@@ -350,10 +350,10 @@ bool ControlledAxis::OnAssignReferenceVars() {
     return true;
 }
 
-// :460
+// ControlledAxis.cs:460
 void ControlledAxis::ClearSymmetryLists() { SymmetryFields.clear(); }
 
-// :472
+// ControlledAxis.cs:472
 void ControlledAxis::AddSymmetryPart(Part* part) {
     PartModule* own = ModuleOf(AxisField);
     if (own == nullptr) throw Nre();
@@ -362,7 +362,7 @@ void ControlledAxis::AddSymmetryPart(Part* part) {
     }
 }
 
-// :480
+// ControlledAxis.cs:480
 void ControlledAxis::OnLoad(const ConfigNode& node) {
     node.TryGetValue("axisName", axisName);
     ConfigNode* node2 = nullptr;
@@ -373,7 +373,7 @@ void ControlledAxis::OnLoad(const ConfigNode& node) {
     }
 }
 
-// :495
+// ControlledAxis.cs:495
 void ControlledAxis::OnSave(ConfigNode& node) {
     node.AddValue("axisName", axisName);
     timeValue.Save(*node.AddNode("timeValueCurve"));
@@ -381,12 +381,12 @@ void ControlledAxis::OnSave(ConfigNode& node) {
 
 // ---------------------------------------------------------------------------------------------------------------- ControlledAction
 
-// :25
+// ControlledAction.cs:25
 ControlledAction::ControlledAction(const ControlledAction& sourceAction) : ControlledAction(sourceAction.PartPtr(), sourceAction.Module(), sourceAction.Action, sourceAction.Controller) {
     times = sourceAction.times;
 }
 
-// :31
+// ControlledAction.cs:31
 ControlledAction::ControlledAction(Part* part, PartModule* module, BaseAction* action, ModuleRoboticController* controller)
     : ControlledBase(part, module, controller) {
     if (action == nullptr) throw Nre();
@@ -396,14 +396,14 @@ ControlledAction::ControlledAction(Part* part, PartModule* module, BaseAction* a
     RebuildSymmetryList();
 }
 
-// :41
+// ControlledAction.cs:40
 ControlledAction::ControlledAction() {
     Action = nullptr;
     times.clear();
     SymmetryActions.clear();
 }
 
-// :48
+// ControlledAction.cs:47
 void ControlledAction::ReverseTimes() {
     std::vector<float> list;
     size_t count = times.size();
@@ -411,7 +411,7 @@ void ControlledAction::ReverseTimes() {
     times = list;
 }
 
-// :60
+// ControlledAction.cs:58
 void ControlledAction::RescaleTimes(float adjustmentRatio, float minSpace) {
     std::vector<float> list;
     for (size_t i = 0; i < times.size(); i++) {
@@ -428,7 +428,7 @@ namespace {
 BaseAction* PartAction(Part& p, const std::string& name) { return ControllerEnvironment::partAction ? ControllerEnvironment::partAction(p, name) : nullptr; }
 }  // namespace
 
-// :78
+// ControlledAction.cs:74
 bool ControlledAction::OnChangeSymmetryMaster(Part* newPart, uint32_t& oldPartId) {
     oldPartId = 0u;
     BaseAction* baseAction = nullptr;
@@ -443,7 +443,7 @@ bool ControlledAction::OnChangeSymmetryMaster(Part* newPart, uint32_t& oldPartId
     return true;
 }
 
-// :100
+// ControlledAction.cs:96
 bool ControlledAction::OnAssignReferenceVars() {
     if (module_ != nullptr) {
         BaseAction* baseAction = module_->Actions()[actionName];
@@ -469,10 +469,10 @@ bool ControlledAction::OnAssignReferenceVars() {
     return true;
 }
 
-// :130
+// ControlledAction.cs:133
 void ControlledAction::ClearSymmetryLists() { SymmetryActions.clear(); }
 
-// :141
+// ControlledAction.cs:145
 void ControlledAction::AddSymmetryPart(Part* part) {
     if (BaseAction* a = PartAction(*part, actionName)) {
         SymmetryActions.push_back(a);
@@ -487,7 +487,7 @@ void ControlledAction::AddSymmetryPart(Part* part) {
     }
 }
 
-// :162
+// ControlledAction.cs:171
 void ControlledAction::OnLoad(const ConfigNode& node) {
     node.TryGetValue("actionName", actionName);
     ConfigNode* node2 = nullptr;
@@ -500,7 +500,7 @@ void ControlledAction::OnLoad(const ConfigNode& node) {
     }
 }
 
-// :186
+// ControlledAction.cs:194
 void ControlledAction::OnSave(ConfigNode& node) {
     node.AddValue("actionName", actionName);
     ConfigNode* configNode = node.AddNode("TIMES");
@@ -509,7 +509,7 @@ void ControlledAction::OnSave(ConfigNode& node) {
 
 // ---------------------------------------------------------------------------------------------------------------- RoboticControllerManager
 
-// :46
+// RoboticControllerManager.cs:38
 void RoboticControllerManager::Awake() {
     if (!SaveEnvironment::Current().IsExpansionInstalled("Serenity")) {
         destroyed = true;
@@ -525,13 +525,13 @@ void RoboticControllerManager::Awake() {
     GameEvents::onGameSceneLoadRequested.Add(this, &RoboticControllerManager::OnSceneLoad);
 }
 
-// :63 (a destroyed UnityEngine.Object compares equal to null: Instance reads as null afterwards)
+// RoboticControllerManager.cs:57 (a destroyed UnityEngine.Object compares equal to null: Instance reads as null afterwards)
 void RoboticControllerManager::OnDestroy() {
     GameEvents::onGameSceneLoadRequested.Remove(this, &RoboticControllerManager::OnSceneLoad);
     if (Instance == this) Instance = nullptr;
 }
 
-// :107
+// RoboticControllerManager.cs:106
 void RoboticControllerManager::QueueFieldUpdate(BaseAxisField* axisField, float newValue, int priority) {
     auto it = std::find_if(queue_.begin(), queue_.end(), [&](const auto& e) { return e.first == axisField; });
     if (it == queue_.end()) {
@@ -551,7 +551,7 @@ void RoboticControllerManager::QueueFieldUpdate(BaseAxisField* axisField, float 
     }
 }
 
-// :138
+// RoboticControllerManager.cs:134
 void RoboticControllerManager::UpdateFieldValues() {
     for (size_t i = 0; i < queue_.size(); i++) {
         BaseAxisField* baseAxisField = queue_[i].first;

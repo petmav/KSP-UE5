@@ -228,6 +228,7 @@ TEST_CASE("WP-52 servo modules over 92 scripted runs (hinge, rotation servo, pis
     }
     INFO(d.first);
     CHECK(d.bad == 0);
+    MESSAGE("servo comparisons: " << d.total);
     CHECK(d.total > 100000);
     CHECK(perKind["hinge"] == 26);
     CHECK(perKind["rotation"] == 20);

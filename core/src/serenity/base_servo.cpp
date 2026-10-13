@@ -94,7 +94,7 @@ Part* BaseServo::PartOf() const { return dynamic_cast<Part*>(part); }
 
 bool BaseServo::PartIsFlightScene() const { return ServoEnvironment::SceneIsFlight(); }
 
-// :277
+// BaseServo.cs:277
 void BaseServo::ToggleServoLockedAction(KSPActionParam&) {
     if (servoIsLocked()) {
         DisengageServoLock();
@@ -102,25 +102,25 @@ void BaseServo::ToggleServoLockedAction(KSPActionParam&) {
         ServoEnvironment::PostScreenMessage("#autoLOC_8003335");
     }
 }
-// :290
+// BaseServo.cs:290
 void BaseServo::ServoEngageLockAction(KSPActionParam&) {
     if (!EngageServoLock()) ServoEnvironment::PostScreenMessage("#autoLOC_8003335");
 }
-// :299
+// BaseServo.cs:299
 void BaseServo::ServoDisgageLockAction(KSPActionParam&) { DisengageServoLock(); }
-// :305
+// BaseServo.cs:305
 void BaseServo::ToggleMotorAction(KSPActionParam&) {
     if (servoMotorIsEngaged())
         DisengageMotor();
     else
         EngageMotor();
 }
-// :318
+// BaseServo.cs:318
 void BaseServo::MotorOnAction(KSPActionParam&) { EngageMotor(); }
-// :324
+// BaseServo.cs:324
 void BaseServo::MotorOffAction(KSPActionParam&) { DisengageMotor(); }
 
-// :364
+// BaseServo.cs:364
 double BaseServo::CalculatePower() {
     if (!ServoInitComplete()) return 0.0;
     double result = 0.0;
@@ -133,7 +133,7 @@ double BaseServo::CalculatePower() {
     return result;
 }
 
-// :392
+// BaseServo.cs:392
 void BaseServo::CalculateAverageRateOfMovement() {
     currentFrameVelocity = F(fx(GetFrameDisplacement()) / fx(Time::fixedDeltaTime));
     const size_t i = static_cast<size_t>(velocityReadingIndex);
@@ -144,7 +144,7 @@ void BaseServo::CalculateAverageRateOfMovement() {
     transformRateOfMotion = F(fx(velocityReadingsSum) / fx(static_cast<float>(velocityAverageReadings)));
 }
 
-// :404
+// BaseServo.cs:404
 void BaseServo::CalculateResourceDrain() {
     if (ServoEnvironment::SceneIsEditor()) return;
     rate = CalculatePower() / fx(Get<float>("efficiency"));
@@ -170,13 +170,13 @@ void BaseServo::CalculateResourceDrain() {
     }
 }
 
-// :439 (the OnValueModified unsubscriptions go with the field objects, which the module owns)
+// BaseServo.cs:439 (the OnValueModified unsubscriptions go with the field objects, which the module owns)
 void BaseServo::OnDestroy() {
     destroyed = true;
     GE::onVesselWasModified.Remove(this, &BaseServo::OnVesselModified);
 }
 
-// :454 (the ShipConstruct argument is not read)
+// BaseServo.cs:454 (the ShipConstruct argument is not read)
 void BaseServo::OnSaveShip() {
     if (ServoInitComplete()) {
         ApplyCoordsUpdate();
@@ -187,7 +187,7 @@ void BaseServo::OnSaveShip() {
     }
 }
 
-// :465
+// BaseServo.cs:465
 void BaseServo::ApplyCoordsUpdate() {
     Part* p = PartOf();
     if (p == nullptr) return;
@@ -203,14 +203,14 @@ void BaseServo::ApplyCoordsUpdate() {
     }
 }
 
-// :479
+// BaseServo.cs:479
 void BaseServo::RecurseCoordUpdate(Part* p, Part* rootPart) {
     if (p == nullptr || rootPart == nullptr) return;
     p->UpdateOrgPosAndRot(rootPart);
     for (size_t i = 0; i < p->children.size(); i++) RecurseCoordUpdate(p->children[i], rootPart);
 }
 
-// :491
+// BaseServo.cs:491
 void BaseServo::RecurseAttachNodeUpdate(Part* p) {
     if (!ServoInitComplete() || p == nullptr) return;
     if (auto* servo = dynamic_cast<BaseServo*>(p->FindModuleOfClass("BaseServo"))) {  // Part.isBaseServo
@@ -225,12 +225,12 @@ void BaseServo::RecurseAttachNodeUpdate(Part* p) {
     for (size_t j = 0; j < p->children.size(); j++) RecurseAttachNodeUpdate(p->children[j]);
 }
 
-// :514
+// BaseServo.cs:514
 void BaseServo::SetLaunchPosition(float val) {
     if (ServoEnvironment::SceneIsEditor()) Set<float>("launchPosition", val);
 }
 
-// :524
+// BaseServo.cs:524
 void BaseServo::OnAwake() {
     consumedResources_.clear();
     for (size_t i = 0, count = resHandler.inputResources.size(); i < count; i++) {
@@ -254,7 +254,7 @@ void BaseServo::OnAwake() {
     Events().Bind("ResetPosition", BaseEvent::Handler([this] { ResetPositionEvent(); }));
 }
 
-// :546
+// BaseServo.cs:546
 void BaseServo::OnLoad(const ConfigNode& node) {
     servoTransformRotLoaded = false;
     servoTransformPosLoaded = false;
@@ -263,7 +263,7 @@ void BaseServo::OnLoad(const ConfigNode& node) {
     if (node.HasValue("jointParentRotation")) jointParentRotationLoaded = true;
 }
 
-// :564
+// BaseServo.cs:564
 void BaseServo::OnSave(ConfigNode& node) {
     Part* p = PartOf();
     const bool flightLoaded = ServoEnvironment::SceneIsFlight() && p != nullptr && p->vessel != nullptr && p->vessel->loaded;
@@ -280,7 +280,7 @@ void BaseServo::OnSave(ConfigNode& node) {
     if (jointParent != nullptr) node.SetValue("jointParentRotation", jointParent->localRotation);
 }
 
-// :587
+// BaseServo.cs:587
 void BaseServo::OnStart(StartState) {
     OutputUnit = KSP::Localization::Localizer::Format("#autoLOC_6013039");
     if (!ServoEnvironment::SceneIsFlight() && !ServoEnvironment::SceneIsEditor()) return;
@@ -314,7 +314,7 @@ void BaseServo::OnStart(StartState) {
     servoParentTransformInverse = MatrixInverse(servoParentTransform);                 // :636
     motorOutput = F(fx(servoMotorSize()) * fx(0.01f) * fx(maxMotorOutput()));          // :637
     if (ServoEnvironment::SceneIsFlight()) motorOutput = F(fx(motorOutput) * (fx(servoMotorLimit()) * fx(0.01f)));  // :640
-    // :642-:661 the servo's attach nodes and their transforms
+    // BaseServo.cs:642-:661 the servo's attach nodes and their transforms
     const std::string servoAttachNodes = Get<std::string>("servoAttachNodes");
     if (!servoAttachNodes.empty()) {
         size_t begin = 0;
@@ -404,7 +404,7 @@ void BaseServo::OnStart(StartState) {
     CalculateResourceDrain();
 }
 
-// :741
+// BaseServo.cs:741
 void BaseServo::RecurseBuildPartSets(Part* p, std::set<uint32_t>* partSet) {
     if (p == PartOf()) {
         partSet = &downstreamParts;
@@ -416,7 +416,7 @@ void BaseServo::RecurseBuildPartSets(Part* p, std::set<uint32_t>* partSet) {
     while (count-- > 0) RecurseBuildPartSets(p->children[count], partSet);
 }
 
-// :762
+// BaseServo.cs:762
 void BaseServo::RecurseRemovePartSets(Part* p, std::set<uint32_t>* partSet) {
     if (p == PartOf()) {
         partSet = &downstreamParts;
@@ -428,7 +428,7 @@ void BaseServo::RecurseRemovePartSets(Part* p, std::set<uint32_t>* partSet) {
     while (count-- > 0) RecurseRemovePartSets(p->children[count], partSet);
 }
 
-// :783
+// BaseServo.cs:783
 void BaseServo::BuildPartSets() {
     upstreamParts.clear();
     downstreamParts.clear();
@@ -436,7 +436,7 @@ void BaseServo::BuildPartSets() {
     RecurseBuildPartSets(PartOf()->localRoot(), &upstreamParts);
 }
 
-// :791 WaitAndVisualizeServo
+// BaseServo.cs:791 WaitAndVisualizeServo
 Enumerator BaseServo::WaitAndVisualizeServo() {
     co_yield YieldInstruction::Null();
     servoInitComplete = true;
@@ -444,7 +444,7 @@ Enumerator BaseServo::WaitAndVisualizeServo() {
     VisualizeServo(false);
 }
 
-// :799
+// BaseServo.cs:799
 void BaseServo::OnStartBeforePartAttachJoint(StartState modStartState) {
     if (ServoEnvironment::SceneIsFlight() || ServoEnvironment::SceneIsEditor()) {
         if (movingPartRB != nullptr && movingPartRB->isKinematic) {
@@ -458,18 +458,18 @@ void BaseServo::OnStartBeforePartAttachJoint(StartState modStartState) {
     }
 }
 
-// :818
+// BaseServo.cs:818
 void BaseServo::PromoteToPhysicalPart() {
     if (servoJoint == nullptr) InitJoint();
 }
 
-// :826
+// BaseServo.cs:826
 void BaseServo::DemoteToPhysicslessPart() {
     if (movingPartRB != nullptr) movingPartRB->isKinematic = true;
     partIsPhysicsLess = true;
 }
 
-// :850
+// BaseServo.cs:850
 void BaseServo::OnCopy(PartModule&) {
     Part* p = PartOf();
     for (size_t i = 0; i < attachNodes.size(); i++) {
@@ -480,7 +480,7 @@ void BaseServo::OnCopy(PartModule&) {
     RecurseAttachNodeUpdate(p);
 }
 
-// :865
+// BaseServo.cs:865
 void BaseServo::Start() {
     if (!SerenityInstalled() && SaveEnvironment::Current().loadedSceneIsGame) {
         behaviourEnabled = false;
@@ -488,7 +488,7 @@ void BaseServo::Start() {
     }
 }
 
-// :873
+// BaseServo.cs:873
 void BaseServo::FixedUpdate() {
     if (!ServoInitComplete() || partIsPhysicsLess) return;
     if (ServoEnvironment::SceneIsFlight() && !Paused()) {
@@ -509,7 +509,7 @@ void BaseServo::FixedUpdate() {
     if (ServoEnvironment::SceneIsFlight() && !Paused()) RecurseAttachNodeUpdate(PartOf());
 }
 
-// :911
+// BaseServo.cs:911
 void BaseServo::Update() {
     if (partIsPhysicsLess) return;
     if (partActionMenuOpen) {
@@ -535,7 +535,7 @@ void BaseServo::Update() {
     }
 }
 
-// :960
+// BaseServo.cs:960
 bool BaseServo::EngageServoLock() {
     if (servoIsLocked()) return true;
     if (!servoIsLocked() && !IsMoving()) {
@@ -546,7 +546,7 @@ bool BaseServo::EngageServoLock() {
     return false;
 }
 
-// :975
+// BaseServo.cs:975
 void BaseServo::DisengageServoLock() {
     if (servoIsLocked()) {
         Fields()["servoIsLocked"]->SetValue(ModuleValue(false));
@@ -554,7 +554,7 @@ void BaseServo::DisengageServoLock() {
     }
 }
 
-// :984
+// BaseServo.cs:984
 void BaseServo::EngageMotor() {
     if (!servoMotorIsEngaged()) {
         Fields()["servoMotorIsEngaged"]->SetValue(ModuleValue(true));
@@ -562,7 +562,7 @@ void BaseServo::EngageMotor() {
     }
 }
 
-// :993
+// BaseServo.cs:993
 void BaseServo::DisengageMotor() {
     if (servoMotorIsEngaged()) {
         Fields()["servoMotorIsEngaged"]->SetValue(ModuleValue(false));
@@ -570,7 +570,7 @@ void BaseServo::DisengageMotor() {
     }
 }
 
-// :1002
+// BaseServo.cs:1002
 void BaseServo::OnPartMenuOpen(Part* inpPart) {
     Part* p = PartOf();
     if (inpPart->fields.persistentId == p->fields.persistentId) {
@@ -579,12 +579,12 @@ void BaseServo::OnPartMenuOpen(Part* inpPart) {
     }
 }
 
-// :1018
+// BaseServo.cs:1018
 void BaseServo::OnPartMenuClose(Part* inpPart) {
     if (inpPart->fields.persistentId == PartOf()->fields.persistentId) partActionMenuOpen = false;
 }
 
-// :1026
+// BaseServo.cs:1026
 void BaseServo::OnEditorPartPlaced(Part* placedPart) {
     if (placedPart == nullptr || placedPart->parent == nullptr) return;
     if (placedPart == PartOf()) {
@@ -598,7 +598,7 @@ void BaseServo::OnEditorPartPlaced(Part* placedPart) {
     }
 }
 
-// :1050
+// BaseServo.cs:1050
 void BaseServo::OnEditorPartPicked(Part* pickedPart) {
     if (pickedPart == PartOf()) {
         upstreamParts.clear();
@@ -611,7 +611,7 @@ void BaseServo::OnEditorPartPicked(Part* pickedPart) {
     }
 }
 
-// :1070
+// BaseServo.cs:1070
 void BaseServo::OnEditorCompoundPartLinked(CompoundPart* linkedPart) {
     if (linkedPart == nullptr) return;
     if (linkedPart->target != nullptr && linkedPart->parent != nullptr) {
@@ -627,7 +627,7 @@ void BaseServo::OnEditorCompoundPartLinked(CompoundPart* linkedPart) {
     }
 }
 
-// :1091
+// BaseServo.cs:1091
 void BaseServo::InitJoint() {
     Part* p = PartOf();
     std::shared_ptr<ConfigurableJointData> attachJoint;
@@ -648,7 +648,7 @@ void BaseServo::InitJoint() {
     if (ServoEnvironment::SceneIsEditor()) VisualizeServo(false);
 }
 
-// :1132
+// BaseServo.cs:1132
 void BaseServo::PostStartInitJoint() {
     Part* p = PartOf();
     std::shared_ptr<ConfigurableJointData> attachJoint;
@@ -672,7 +672,7 @@ void BaseServo::PostStartInitJoint() {
     OnPostStartJointInit();
 }
 
-// :1187
+// BaseServo.cs:1187
 void BaseServo::SetServoMass() {
     if (movingPartRB != nullptr) {
         movingPartRB->mass = Get<float>("servoMass");
@@ -680,7 +680,7 @@ void BaseServo::SetServoMass() {
     }
 }
 
-// :1196
+// BaseServo.cs:1196
 void BaseServo::CreateServoRigidbody() {
     if (movingPartObject != nullptr) {
         if (movingPartRB == nullptr) movingPartRB = std::make_shared<ServoBody>();  // GetComponent<Rigidbody>() ?? AddComponent
@@ -692,7 +692,7 @@ void BaseServo::CreateServoRigidbody() {
     }
 }
 
-// :1213
+// BaseServo.cs:1213
 void BaseServo::ModifyServo(const ModuleValue*) {
     OnPreModifyServo();
     SetDriveUnit();
@@ -704,10 +704,10 @@ void BaseServo::ModifyServo(const ModuleValue*) {
         OnModifyServo();
 }
 
-// :1232
+// BaseServo.cs:1232
 void BaseServo::SetDriveUnit() { driveUnit = F(fx(servoMotorSize()) * fx(0.01f) * fx(maxMotorOutput())); }
 
-// :1237
+// BaseServo.cs:1237
 void BaseServo::ModifyLocked(const ModuleValue* field) {
     bool flag = false;
     Part* p = PartOf();
@@ -749,7 +749,7 @@ void BaseServo::ModifyLocked(const ModuleValue* field) {
     if (flag) GE::onRoboticPartLockChanged.Fire(p, servoIsLocked());
 }
 
-// :1280
+// BaseServo.cs:1280
 void BaseServo::ModifyEngaged(const ModuleValue* field) {
     if (servoMotorIsEngaged() && !prevServoMotorIsEngaged)
         CalculateResourceDrain();
@@ -758,7 +758,7 @@ void BaseServo::ModifyEngaged(const ModuleValue* field) {
     ModifyServo(field);
 }
 
-// :1293
+// BaseServo.cs:1293
 void BaseServo::ManuallyModifyEngaged(const ModuleValue* field) {
     if (servoMotorIsEngaged() && !prevServoMotorIsEngaged) {
         OnServoMotorEngaged();
@@ -769,7 +769,7 @@ void BaseServo::ManuallyModifyEngaged(const ModuleValue* field) {
     ModifyServo(field);
 }
 
-// :1307
+// BaseServo.cs:1307
 void BaseServo::OnVesselModified(Vessel* v) {
     Part* p = PartOf();
     if (p != nullptr && p->State() != PartStates::DEAD) {
@@ -779,7 +779,7 @@ void BaseServo::OnVesselModified(Vessel* v) {
     }
 }
 
-// :1322
+// BaseServo.cs:1322
 void BaseServo::SaveSpanningPartTargets() {
     size_t count = spanningParts.size();
     while (count-- > 0) {
@@ -790,13 +790,13 @@ void BaseServo::SaveSpanningPartTargets() {
     }
 }
 
-// :1342
+// BaseServo.cs:1342
 void BaseServo::RestoreSpanningPartTargets() {
     size_t count = spanningParts.size();
     while (count-- > 0) spanningParts[count]->UpdateTargetCoords();
 }
 
-// :1354 (SetChildParentTransform, the editor's GameObject re-parenting of the children, is the host's scene graph)
+// BaseServo.cs:1354 (SetChildParentTransform, the editor's GameObject re-parenting of the children, is the host's scene graph)
 void BaseServo::VisualizeServo(bool /*moveChildren*/) {
     const std::string servoTransformName = Get<std::string>("servoTransformName");
     const std::string baseTransformName = Get<std::string>("baseTransformName");
@@ -819,7 +819,7 @@ void BaseServo::VisualizeServo(bool /*moveChildren*/) {
     RecurseAttachNodeUpdate(p);
 }
 
-// :1460
+// BaseServo.cs:1460
 Vector3f BaseServo::GetMainAxis() const {
     const std::string a = mainAxis();
     if (a == "Z-") return Vector3f::back();
@@ -830,7 +830,7 @@ Vector3f BaseServo::GetMainAxis() const {
     return Vector3f::forward();
 }
 
-// :1524
+// BaseServo.cs:1524
 float BaseServo::StartingRotationOffset() {
     float num = 0.0f;
     const Vector3f e = UnityNative::EulerAngles(cachedStartingRotation);
@@ -845,7 +845,7 @@ float BaseServo::StartingRotationOffset() {
     return num;
 }
 
-// :1546
+// BaseServo.cs:1546
 float BaseServo::currentTransformAngle() {
     if (angleSource) return angleSource();
     float num = 0.0f;
@@ -862,7 +862,7 @@ float BaseServo::currentTransformAngle() {
     return num;
 }
 
-// :1572
+// BaseServo.cs:1572
 float BaseServo::currentTransformPosition() {
     if (positionSource) return positionSource();
     float result = 0.0f;
@@ -877,14 +877,14 @@ float BaseServo::currentTransformPosition() {
     return result;
 }
 
-// :1590 (the UI_FloatRange half of the C# is UI)
+// BaseServo.cs:1590 (the UI_FloatRange half of the C# is UI)
 float BaseServo::UpdateFieldLimits(BaseAxisField& axisField, const Vector2f& newlimits, float currentValue) {
     axisField.minValue = newlimits.x;
     axisField.maxValue = newlimits.y;
     return Mathf::Clamp(currentValue, newlimits.x, newlimits.y);
 }
 
-// :1602
+// BaseServo.cs:1602
 BaseServo::BodyOwner BaseServo::AttachServoRigidBody(const AttachNode& node) {
     if (movingPartRB != nullptr) {
         if (node.nodeType == AttachNodeType::Surface && !node.srfAttachMeshName.empty()) {
@@ -898,7 +898,7 @@ BaseServo::BodyOwner BaseServo::AttachServoRigidBody(const AttachNode& node) {
     return BodyOwner::Part;
 }
 
-// :1627
+// BaseServo.cs:1627
 BaseServo::BodyOwner BaseServo::NodeRigidBody(const AttachNode& node) {
     if (movingPartRB != nullptr) {
         for (size_t i = 0; i < attachNodes.size(); i++)
@@ -907,7 +907,7 @@ BaseServo::BodyOwner BaseServo::NodeRigidBody(const AttachNode& node) {
     return BodyOwner::Part;
 }
 
-// :1642
+// BaseServo.cs:1642
 bool BaseServo::ServoTransformCollider(const std::string& colName) {
     if (!servoSrfMeshesSet_) throw Nre();
     for (size_t i = 0; i < servoSrfMeshes.size(); i++)
@@ -915,7 +915,7 @@ bool BaseServo::ServoTransformCollider(const std::string& colName) {
     return false;
 }
 
-// :1480 (state side: the text and the field flags; the UI_* controls' scene visibility is not ported)
+// BaseServo.cs:1480 (state side: the text and the field flags; the UI_* controls' scene visibility is not ported)
 void BaseServo::UpdatePAWUI(UI_Scene) {
     using KSP::Localization::Localizer;
     Set<std::string>("motorState", (!servoIsMotorized() || !servoMotorIsEngaged()) ? Localizer::Format("#autoLOC_8002352") : Localizer::Format("#autoLOC_8002351"));
@@ -941,7 +941,7 @@ void BaseServo::UpdatePAWUI(UI_Scene) {
     }
 }
 
-// :1671
+// BaseServo.cs:1671
 float BaseServo::GetModuleCost(float, ModifierStagingSituation) {
     if (servoIsMotorized()) {
         SetDriveUnit();
@@ -950,14 +950,14 @@ float BaseServo::GetModuleCost(float, ModifierStagingSituation) {
     return 0.0f;
 }
 
-// :1686
+// BaseServo.cs:1686
 float BaseServo::GetModuleMass(float, ModifierStagingSituation) {
     float result = 0.0f;
     if (servoIsMotorized()) result = F(fx(Get<float>("motorizedMassPerKN")) * fx(driveUnit));
     return result;
 }
 
-// :1703
+// BaseServo.cs:1703
 void BaseServo::UpdateAxisFieldLimit(const std::string& fieldName, const Vector2f& hardLimits, const Vector2f& softLimits) {
     if (AxisFieldLimit* l = GetAxisFieldLimit(fieldName)) {
         l->hardLimits = hardLimits;
@@ -972,10 +972,10 @@ void BaseServo::AddAxisFieldLimit(const std::string& name, const AxisFieldLimit&
     axisFieldLimitList_.push_back(limit);
 }
 
-// :1716
+// BaseServo.cs:1716
 void BaseServo::SetHardLimits(const std::string& fieldName, const Vector2f& newLimits) { UpdateAxisFieldHardLimit(fieldName, newLimits); }
 
-// :1721
+// BaseServo.cs:1721
 void BaseServo::SetSoftLimits(const std::string& fieldName, const Vector2f& newLimits) {
     if (HasAxisFieldLimit(fieldName)) {
         Vector2f nl = newLimits;
@@ -986,28 +986,28 @@ void BaseServo::SetSoftLimits(const std::string& fieldName, const Vector2f& newL
     }
 }
 
-// :1732
+// BaseServo.cs:1732
 bool BaseServo::HasAxisFieldLimits() { return !axisFieldLimitList_.empty(); }
 
-// :1741
+// BaseServo.cs:1741
 bool BaseServo::HasAxisFieldLimit(const std::string& fieldName) {
     return !axisFieldLimitList_.empty() && std::find(axisFieldNames_.begin(), axisFieldNames_.end(), fieldName) != axisFieldNames_.end();
 }
 
-// :1759
+// BaseServo.cs:1759
 AxisFieldLimit* BaseServo::GetAxisFieldLimit(const std::string& fieldName) {
     auto it = std::find(axisFieldNames_.begin(), axisFieldNames_.end(), fieldName);
     if (it == axisFieldNames_.end()) return nullptr;
     return &axisFieldLimitList_[static_cast<size_t>(it - axisFieldNames_.begin())];
 }
 
-// :1772
+// BaseServo.cs:1772
 Vector2f BaseServo::GetHardLimits(const std::string& fieldName) {
     if (AxisFieldLimit* l = GetAxisFieldLimit(fieldName)) return l->hardLimits;
     return Vector2f(1.0f, 1.0f);  // Vector2.one
 }
 
-// :1781
+// BaseServo.cs:1781
 Vector2f BaseServo::GetSoftLimits(const std::string& fieldName) {
     if (AxisFieldLimit* l = GetAxisFieldLimit(fieldName)) return l->softLimits;
     return Vector2f(1.0f, 1.0f);

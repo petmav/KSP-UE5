@@ -65,6 +65,7 @@ Updated 2026-10-13 (WP-20c, local branch); 2026-10-12 (WP-54b, WP-19a, WP-55, WP
 | 52. WP-29b KSP wheel part modules (branch `wp29b`, from local `wp29a` `2d90e6fe`; unpushed) | done and gated: ModuleWheelBase (gee bias and friction, set-up, slip displacement, landing detection -> GroundContacts / landedAt, schloompa freeze, drift fix, OnPutToGround, pack / docking / SOI handlers, sub-system cascade), Motor (torque curve, 0.01 rounding, traction control, EC draw) / MotorSteering, Steering (Ackermann), Brakes, Lock, Suspension (auto spring / damper, boost), Damage, Deployment (KerbalFSM over the Animation), Bogey, SuspensionLoadBalancer; the M1 collider-vs-motor radius quirk kept; 0 ULP against the independent `tools/wp29b/wheel_reference.py` (`tests/data/wp29b_reference.json`: 39 runs x 200 ticks over every stock wheel part, 2,340 gee-bias rows, 400 load-balancer vessels, > 500k values), 10 unit cases, ctest `wheels.modules`, check_cites 155 cites 0 mismatches; `capture.part_database` unchanged (the WP-06 curve registration is replaced by the real classes' `OnAwake`); natives UNVERIFIED (AnimationCurve smoothing / Hermite transcribed from the WP-01 port, Transform maths, Animation clock, script order R5); SOIChange never applies and `ActAutoFrictionToggle` is inverted in the C# (kept). See the WP-29b section |
 | 53. WP-32 EVA kerbal controller (branch `wp32`, from local `wp20b` `950c1d94`, local only) | done for the engine-agnostic part, unit-gated against an independent Python reference (no golden or capture covers the EVA kerbal): `KerbalEVA` (42 FSM states / 72 events with their guards, enter / update / leave callbacks, timers and wiring records), `KerbalAnimationManager`, `KerbalRagdollNode`, `RetractableLadder` (FSM + ladder alignment / triggers), `FlightEVA`, `Kerbal`, `CrewTransfer`, `CrewHatchController`; movement / heading / PID / jetpack / pack drains / helmet / visor / jump and bound impulses / low-g curve / clamber path / seat-camera bob / flag, boarding and weld rules, compared 0 ULP / exact with `tools/wp32/eva_reference.py` (state-machine tables machine-parsed from the C#; 2,880 event-condition worlds, 300 OnEvent decisions, 11 scripted scenarios / 83 steps against a second FSM runtime, 252 fps-animation, 180 movement, 180 heading, 150 PID, 180 pack, 600 helmet, 144 impulse, 60 ragdoll rows); Unity animation / Transform / Collider / Rigidbody / raycast access goes through `include/ksp/eva/eva_engine.hpp` (`IEvaEngine`, `HeadlessEvaEngine`, `EvaEnvironment`) | see "WP-32" below: physics-bubble and animation-rig parts are deferred to WP-19b / 20d / UE5 | pass |
 | 54. WP-20d the FlightIntegrator tick over the rigid bodies (branch `wp20d`, from local `wp19b` cd99f577) | done for the engine-agnostic part, gated by an independent Python reference at 0 ULP, bit-identity of the SoA kernel to the exact port (random states, whole flights and KSP's own C10 capture) and scenarios against independent references (every existing gate unchanged): `FlightIntegrator` (physics/flight_integrator.hpp) runs FlightIntegrator.FixedUpdate for every loaded vessel in the C#'s order over the WP-20b bodies, replacing WP-19b's stand-in: Setup, the caches, UpdateMassStats (WP-22 thermal half, physicsMass, rb.mass through the binding), SmoothVelocity, the WP-09 atmosphere with the vessel mirrors, DragCubeSetupAndPartAeroStats, the WP-22 thermal half, the packed branch, IntegratePhysicalObjects, the drift-compensation offset and Integrate with UpdateAerodynamics per part in the recursion; FlightIntegrator.Update per frame; `physics/part_forces.hpp`: Part.AddForce* buffers and the module FixedUpdate slot (engines with their thrust transforms following the part, RCS, lifting / control surfaces, reaction wheels -> the buffers); `physics/aero_soa.hpp`: the SoA aero kernel; `StartPartsInFlight`. Gate: 11 cases: SmoothVelocity (3,200 steps) and IntegratePhysicalObjects (300) 0 ULP vs `tools/wp20d/fi_reference.py`; Integrate == IntegratePartBuffers bit for bit; **SoA == exact: 30,600 random part states, 1,008,969 part-ticks of S / M2-AS / L2-AS flights from the pad (0 mismatches, the same end state with either kernel), and 0 ULP against the C10 in-game capture (4,224 live + 25,344 AoA states)**; ascents of M2 / L2-AS / S vs C10's in-game flight states: speed at altitude within 1 % (to Mach 1 / 5 km: no SAS in this tick); a vacuum burn vs an independent tick replay (1.7 mm / 4.4 mm over 10 s) and the rocket equation; an orbit coast with thermal running (Kepler within 2e-5 m). FlightIntegrator slot 2.2x faster with the SoA kernel (L2-AS 0.73 -> 0.33 ms per tick). Findings: drift compensation stays on while burning in vacuum, the CoM moves inside a draining vessel, the WP-20b fixture never set the BodyLift curve (no body lift in WP-20b / WP-19b scenarios), no flight resource-flow host. Merge with main (WP-20c's loads and breaks now in the tick): the pad fixture's 5 cm drop at full gravity broke L2-AS's Mainsail and five radial decouplers at touchdown; it now launches as KSP does (OrbitDriver started -> physics easing, lowest collider point on the ground): no break, flight loads 0.044-0.148 of capacity; a WP-32 test's leaked InputLockManager lock (the `-rs=27` VesselSwitching failure) is reset by the hygiene listener. See the WP-20d section |
+| 57. WP-52 Breaking Ground robotics (branch `wp52`, from main `cd5e4df4`) | done for the engine-agnostic part, gated by an independent Python reference at 0 ULP (every existing gate unchanged): `BaseServo` (motor / lock / brake state, the 20-reading rate-of-motion average, power draw, drive target stepping, axis field limits, mass and cost, attach node bookkeeping), `ModuleRoboticServoHinge` / `ModuleRoboticRotationServo` / `ModuleRoboticServoPiston` / `ModuleRoboticServoRotor` (targets, soft / hard limits, traverse-velocity ramp, joint drive configuration, power-loss lock, mirrored / symmetric hinges, rotor spool / brake / ratchet, drag cubes), `ModuleRoboticController` (sequencer: Once / Repeat / PingPong / OnceRestart, direction, action windows, controlled axes / actions with symmetry transfer, persistence), `ControlledAxis` (time -> value curve, presets, helpers), `ControlledAction`, `RoboticControllerManager` (priority-averaged update queue), `ConfigurableJointExtensions.SetTargetRotationLocal`. Joint drive: WP-20b has no articulated bodies, so the servos write a `ConfigurableJointData` (the seam contract), `HeadlessServoPlant` is a documented reference plant (not PhysX), `ServoArticulation` is the `isArticulation` hook (PhysProf-S: 2 clusters, 1 constraint) and `BaseServo` is an `IJointLockState` for `Part.HasFreePivot`. Gate: 92 servo runs x 120 ticks (404,308 comparisons), 60 controller runs (47,854), 80 preset curves (1,799 keys bit for bit, 213 native-evaluated keys at a stated tolerance), 72 joint-rotation cases, 40 drive sets, 27 labelled derived cases; `tests/test_robotics*.cpp` 34 cases / 18,687 assertions. The GameData mirror has no SquadExpansion/Serenity: every servo MODULE value is a labelled synthetic fixture; UI / PAW / audio / FX / `ModuleRobotArmScanner` deferred; see the section below |
 
 ## Test results (all 36 ctest tests pass (35 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience, WP-19a capture.vessel_rails)
 
@@ -6094,3 +6095,125 @@ checkable cites; `5dcf2a02` STATUS / README / progress, test hygiene; `7071db3e`
 After the merge with main (`814c5d34`, `9581f0d6`; `8f0ce719` the fixture's keyed AddStaticMesh): the pad fixture launches as KSP (OrbitDriver
 started, exact ground placement), structure checks in the flight cases, InputLockManager reset in the hygiene listener, this section's
 "Merge with main" note.
+
+## WP-52: Breaking Ground robotics (branch `wp52`, from main `cd5e4df4`)
+
+State: done for the engine-agnostic part; the joint drive is a documented seam (decision below). Scope = `Assembly-CSharp/Expansions/Serenity/` BaseServo.cs,
+ModuleRoboticServoHinge.cs, ModuleRoboticServoPiston.cs, ModuleRoboticServoRotor.cs, ModuleRoboticRotationServo.cs, ModuleRoboticController.cs,
+ControlledAxis.cs, ControlledAction.cs, RoboticControllerManager.cs (7,390 C# lines with ControlledBase / RoboticCollisions / IRoboticServo, which WP-53 had
+ported), plus `ConfigurableJointExtensions.cs`. **No golden or capture covers a servo** (the SquadExpansion servo parts are not installed in the GameData
+mirror or the dev copy: no `ModuleRoboticServo*` cfg exists, no in-game log of a servo): the gate is an independent Python reference at 0 ULP for every
+piece of managed float maths, a double-precision algebra for the one joint formula, and labelled derived cases. Every existing gate is unchanged
+(`harness/compare/tolerances.json`, `tests/tolerances_capture.json` untouched).
+
+### Decision: the joint drive (WP-20b has no articulated bodies)
+
+KSP drives a servo with a PhysX `ConfigurableJoint` that `BaseServo.OnJointInit` adds to the moving transform's GameObject (a D6 joint between the servo
+`Rigidbody` and the part's): the module writes motions, limits, limit springs, drives (`positionSpring`, `positionDamper`, `maximumForce`),
+`targetRotation` / `targetPosition` / `targetAngularVelocity` and PhysX integrates it. The reduced rigid-body model (WP-20b / c) has one Jolt body per
+rigid cluster and **fixed** constraints between clusters only. Decided (2026-10-13):
+
+1. The module logic is ported 1:1 and writes the joint's properties into **`ConfigurableJointData`** (`servo_joint.hpp`: the properties the five classes
+   use, with the Unity defaults), the contract of the seam: an engine backend (a Jolt hinge / slider / motor constraint, the UE5 shell) reads it every
+   physics step and drives the moving body. `SetTargetRotationLocal` (ConfigurableJointExtensions.cs, the only managed joint maths) is ported.
+2. `HeadlessServoPlant` (`servo_modules.hpp`, `servo_plant.cpp`) is a **reference plant**, not PhysX: a 1-DOF model of the D6 drive (implicit spring /
+   damper, force clamp `maximumForce`, hard limits, a vanishing limit spring means no limit, the shortest arc for unlimited joints; velocity drive for the
+   rotor; linear drive for the piston) that moves the moving transform. SYNTHETIC inertia. It exists so the servo logic can be run closed loop in tests and
+   headless, and it documents the drive law a backend must reproduce.
+3. `ServoArticulation(PartJointSpec)` is the `VesselPhysicsOptions::isArticulation` hook: the joint a servo's moving side uses (`AttachServoRigidBody` /
+   `NodeRigidBody` answer "servo body", PartJoint.SetupJoint cs:213-258) becomes an articulation point of the reduced model (tested on PhysProf-S: 2
+   clusters and 1 constraint instead of 1 and 0). Until a backend gives that constraint a real hinge, the two bodies stay welded.
+4. `BaseServo` is an `IJointLockState` and `Part.HasFreePivot` (`vessel_physics_joints.cpp`) asks it (IsJointUnlocked = !servoIsLocked, cs:1790).
+5. The Unity side the modules touch is plain data supplied by the host: `ServoNode` (a Transform: local position / rotation, parent, world pose),
+   `ServoBody` (the servo Rigidbody), `ServoRig` (the named model transforms `GameObject.GetChild(name)` finds). `BaseServo::angleSource` /
+   `positionSource` let an engine that tracks the joint coordinate directly replace `currentTransformAngle()` (the native `localEulerAngles`); the gate
+   uses them to feed scripted coordinates.
+
+### Ported (`include/ksp/serenity/`, `src/serenity/`; every function carries a `File.cs:line` cite, `check_cites.py` exact: 289 cites, 0 mismatches)
+
+- `BaseServo`: the whole class but the UI (below): OnAwake / OnLoad / OnSave / OnStart (transform lookups, `servoParentTransform` and its inverse,
+  motorOutput, attach node transforms, the editor part sets, InitJoint), OnStartBeforePartAttachJoint (PostStartInitJoint), Promote / Demote, the
+  FixedUpdate chain (rate-of-motion average over 20 readings, power draw `baseResourceConsumptionRate * motorOutput * rate / referenceConsumptionVelocity`
+  or the velocity limit, `CalculateResourceDrain` with the power-loss disengage, the auto-restart on `HasEnoughResourcesToAutoStart`), Update (stopped-moving
+  timer, `ApplyCoordsUpdate`), engage / disengage lock and motor, `ModifyServo` / `ModifyLocked` / `ManuallyModifyEngaged` (the events fire twice through
+  the field event and the explicit call, as in C#), the axis field limits (`IAxisFieldLimits`), `GetModuleMass` / `GetModuleCost`, `AttachServoRigidBody`,
+  `NodeRigidBody`, `ServoTransformCollider`, `VisualizeServo`, the editor part sets and spanning compound parts.
+- `ModuleRoboticServoHinge` and `ModuleRoboticRotationServo`: target angle with soft / hard limits, `JointTargetAngle` (mirror, model offset, inverted), the
+  per-tick `MoveTowards` (`MoveTowardsAngle` for full rotation) of the drive target at `traverseVelocity * fixedDeltaTime`, the joint drive and limit
+  configuration (`driveSpringMutliplier` / `driveDampingMutliplier` from the motor output), the lock angle bookkeeping, power-loss lock, warp branches, mirror /
+  symmetric handling (`CheckSymmetry`, `mirrorRotation`, `OnEditorPartEvent` + `OnVisualizeServo`), drag-cube weights (hinge), `ModifyLimitsMode`.
+- `ModuleRoboticServoPiston`: extension / slave transforms / drag cubes / `UpdateCurrentExtension` through `servoParentTransformInverse` / `connectedAnchor`.
+- `ModuleRoboticServoRotor`: RPM spool-up (`rotorSpoolTime`), brake mode, `SetJointDrive` in XYAndZ and slerp modes, direction / inversion, `RatchetLock`, load mass,
+  the readout refresh.
+- `ModuleRoboticController` (the sequencer): sequence position / length / play speed, direction, loop modes Once / Repeat / PingPong / OnceRestart with the
+  action firing windows, the controlled axes and actions (add / remove / transfer to a symmetry partner / other-vessel cleanup / persistent id changes),
+  the priority, persistence, play / stop / direction / loop events. `ControlledAxis` (time -> value `FloatCurve`, reverse / invert / rescale / align / clamp,
+  the five stock presets Sine / Square / Triangle / Saw / RevSaw through `GenerateCurveFromReference`, `UpdateFieldValue`, symmetry fields),
+  `ControlledAction` (times), `RoboticControllerManager` (the per-frame, priority-averaged axis update queue).
+- Registration: `detail::RegisterRoboticsModules()` (servo_register.cpp) from `RegisterBuiltinModules`.
+
+### Gate
+
+- Reference: `tools/wp52/servo_reference.py` -> `tests/data/wp52_reference.json` (10 MB, fixed seeds; regenerate with
+  `python -I tools/wp52/servo_reference.py > tests/data/wp52_reference.json`, byte-identical). Written from the C# only, before the port, no shared code: its own
+  object model (a dict of KSPFields, handler lists, one hand-written state machine per class), the Mono float rule (`st()` at the C# stores).
+  Its inputs are replayed by the C++ tests.
+- Servos: 92 runs (26 hinge, 20 rotation servo, 22 piston, 24 rotor) x 120 fixed ticks, scripted coordinates with standing-still stretches (so the lock
+  is accepted), random set / lock / unlock / motor / limit / brake / extend ops, PAW open or closed, auto-start on or off: per tick the rate-of-motion
+  average, `currentFrameVelocity`, the double `rate`, `motorOutput`, the drive target, the joint drive spring / damper / force, limits, lock angle, mass and
+  cost, drag-cube weights, `IsMoving`, the lock events: **all bit for bit (NaN == NaN, the sign of zero)**.
+- Controller: 60 runs x 60 ticks (all four loop modes, direction toggles, play / stop events, action windows incl. the exact-end rule of Once, axis updates
+  with multipliers 1 / 100 / length).
+- Presets: 80 cases x 2 calls (cached reference, phase, soft-limit override, controller 0..1 range): every key (time, value, tangents) bit for bit; the up to
+  two keys per curve that the C# derives from `AnimationCurve.Evaluate` (native) against the reference's double Hermite at a stated tolerance. The Python
+  reproduces `FloatCurve(Keyframe[])` rejecting a key at an existing time (the synthetic start key and the first reference key share time 0 for whole-key phases).
+- Joint: 72 `SetTargetRotationLocal` cases (6 axes x 12) against a double-precision quaternion algebra (<= 1e-5 per component; `Quaternion.LookRotation` is
+  an UNVERIFIED native), the physical angle read back; 40 D6 drive parameter sets x 100 steps against the Python twin.
+- Derived cases (labelled, expectations hand-derived from the cited C#): registration and every C# initialiser, lifecycle / OnSave / OnLoad, locks and
+  their double events, power loss (the charge running out disengages, then locks), warp, `IsJointUnlocked` / `ServoArticulation` / the 2-cluster split,
+  closed loops on the plant (hinge tracking lag = c / k * rate, settle, soft clamp; mirrored hinge; rotor spool-up to `rpmLimit` rpm measured from the Transform,
+  brake, direction; piston ramp; rotation servo through 180 degrees), symmetric / mirrored decisions in Radial and Mirror modes, editor visualisation
+  of the base, the rotor ratchet, power-loss braking of the rotor, slave transforms, attach node updates, controller bookkeeping (symmetry partner axes,
+  transfer on delete, other-vessel cleanup, id changes), the manager's priority queue, persistence, the curve helpers (hand-computed keys), the quirks below.
+
+### Findings kept from the C# (quirks)
+
+- `ModuleRoboticServoPiston.ModifyLimits` looks up `Fields["TargetExtension"]` (capital T): no such field, its min / max update never runs.
+- `ModuleRoboticController.SetSequencePositionNextKey` tests the ACTION times with `<` (like the previous-key search); `SequencePlay` / `SequenceStop` fire their
+  event when the state did NOT change; `CycleLoopMode` fires the loop event a second time; `RemovePartAxis` / `RemovePartAction` call `RemoveAt(count)` once per
+  same-vessel symmetry partner, so a part with two or more partners removes other rows (List.RemoveAt out of range throws; reproduced, tested for one partner only).
+- `ControlledAxis.ClampPointValue(index)` accepts `index == length` (IndexOutOfRange).
+- `BaseServo.GetModuleMass` reads `driveUnit`, refreshed only by `SetDriveUnit` (GetModuleCost, ModifyServo, GetInfo): stale (0) before.
+- `HasEnoughResourcesToAutoStart` is false unless the input RESOURCE has a start-up handler: a servo whose cfg has none never restarts after a power loss;
+  `IsResourceBelowShutOffLimit` without a shut-off handler is true while `currentAmount >= 0.01` of the first input.
+- The hinge and the rotation servo read `servoJoint.xDrive` (the LINEAR drive) and write `angularXDrive`; the rotor does the same in XYAndZ mode.
+- Mirrored hinges: `OnJointInit` sets the joint limits from the unmirrored soft range (the module's limits only match when `mirrorRotation` is false and
+  `modelInitialAngle` 0); the plant (physical angle = minus the joint coordinate) therefore stops a mirrored hinge at 0.
+- `OnPartMenuOpen` gates `UpdatePAWUI`, which writes `currentAngle` / `currentRPM`: with the PAW closed the hinge's "ignore tiny motion at the stops" test reads a stale
+  `currentAngle` (reproduced; the gate runs PAW open and closed).
+
+### Natives and seams (UNVERIFIED, no C# source exists)
+
+- `ConfigurableJoint` property defaults (`maximumForce = float.MaxValue`, zero springs), the PhysX D6 drive law of `HeadlessServoPlant`, and the sign convention
+  between `targetRotation` / `targetPosition` and the physical coordinate (derived from the algebra of SetTargetRotationInternal, `servo_joint.cpp`).
+- `Quaternion.LookRotation` (WP-40's UNVERIFIED shim), `Quaternion.ToAngleAxis` (the rotor's free-spin ratchet), `Quaternion.eulerAngles` of the moving
+  transform (`currentTransformAngle`; the gate bypasses it with `angleSource`), `Matrix4x4.inverse` (double Gauss-Jordan rounded to float), `AnimationCurve.MoveKey`
+  (the curve helpers keep key order, tangents as given), the Transform hierarchy (`ServoNode`: the host fills it from the `.mu` hierarchy, not in the repo).
+- `TimeWarp::CurrentRateIndex()` is 1 without a TimeWarp instance (kspcore's default), which reads as "physics warp" in the servo drive branches: tests install one.
+- Module order of `FixedUpdate` / `Update` / `OnUpdate` between the servo and the part module hooks is the host's (as WP-29b R5); the Unity messages are explicit calls.
+
+### Not ported (UI / PAW / audio / FX / editor GUI)
+
+`UpdatePAWUI`'s control visibility and every `UI_FloatRange` / `UI_MinMaxRange` / `UI_Cycle` limit (min, max, step, `SetSceneVisibility`), the part-action-window
+items, `GetInfo` / `GetModuleDisplayName` text, `Localizer` string caches (`CacheLocalStrings`), `RoboticControllerWindow*` (the editor window, rows, axis graph),
+`CurvePanel*`, `AxisLimitLine`, `ModuleRobotArmScanner` (a ModuleDeployablePart with the arm-scan FX: separate package) and its `RobotArmFX`, the editor re-parenting of
+child GameObjects (`BaseServo.SetChildParentTransform`), `Debug.Log`, the servo audio / animation clips. `SerenityUtils` assets are WP-53's seam.
+
+### Residual risks
+
+- The servo behaviour in motion has no game truth: only the formulas that the C# computes in managed float32 are bit-gated; PhysX's response is replaced by the documented
+  plant. A capture of one hinge, one piston and one rotor (target steps, `ConfigurableJoint` drives, Transform angle per fixed tick) would validate the plant's sign
+  conventions and the lag model.
+- The synthetic MODULE fixtures use the C# defaults; real part cfg values (servoMotorSize, traverse limits, resource rates, the model's transform names) are not available.
+- The Python reference was written from the same C# by the same author as the port; the quirks list above is where a reading error would hide (independent re-derivation
+  of the UpdateCurrentExtension matrix path, CheckSymmetry's reflection and the preset key generation is what the gate covers).

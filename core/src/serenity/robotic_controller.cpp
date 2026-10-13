@@ -61,13 +61,13 @@ ModuleRoboticController::~ModuleRoboticController() {
 
 Part* ModuleRoboticController::PartOf() const { return dynamic_cast<Part*>(part); }
 
-// :129
+// ModuleRoboticController.cs:129
 uint32_t ModuleRoboticController::PartPersistentId() const {
     Part* p = PartOf();
     return p == nullptr ? 0u : p->fields.persistentId;
 }
 
-// :297
+// ModuleRoboticController.cs:297
 void ModuleRoboticController::Start() {
     if (!SaveEnvironment::Current().IsExpansionInstalled("Serenity") && SaveEnvironment::Current().loadedSceneIsGame) {
         behaviourEnabled = false;
@@ -75,7 +75,7 @@ void ModuleRoboticController::Start() {
     }
 }
 
-// :306
+// ModuleRoboticController.cs:306
 void ModuleRoboticController::OnAwake() {
     PartModule::OnAwake();
     controlledAxes.clear();
@@ -105,7 +105,7 @@ void ModuleRoboticController::OnAwake() {
     Events().Bind("OpenControllerEditor", BaseEvent::Handler([this] { OpenControllerEditor(); }));
 }
 
-// :333
+// ModuleRoboticController.cs:333
 void ModuleRoboticController::OnDestroy() {
     destroyed = true;
     GE::onPartPersistentIdChanged.Remove(this, &ModuleRoboticController::PartPersistentIdChanged);
@@ -116,7 +116,7 @@ void ModuleRoboticController::OnDestroy() {
     GE::onVesselWasModified.Remove(this, &ModuleRoboticController::VesselModified);
 }
 
-// :355
+// ModuleRoboticController.cs:355
 void ModuleRoboticController::OnStart(StartState state) {
     PartModule::OnStart(state);
     const bool flight = ServoEnvironment::SceneIsFlight();
@@ -160,19 +160,19 @@ void ModuleRoboticController::OnStart(StartState state) {
     UpdateUIElements();
 }
 
-// :418
+// ModuleRoboticController.cs:418
 void ModuleRoboticController::OnUpdate() {
     PartModule::OnUpdate();
     if (!leavingScene && SequenceIsPlaying() && !pausedInWarp) UpdatePlayingSequencePosition();
 }
 
-// :427
+// ModuleRoboticController.cs:427
 void ModuleRoboticController::Update() {
     sequenceWasPlaying = SequenceIsPlaying();
     if (ServoEnvironment::SceneIsEditor() && SequenceIsPlaying()) UpdatePlayingSequencePosition();
 }
 
-// :436
+// ModuleRoboticController.cs:436
 void ModuleRoboticController::FixedUpdate() {
     if (SequenceIsPlaying() && controllerEnabled()) {
         if (ServoEnvironment::SceneIsEditor())
@@ -182,7 +182,7 @@ void ModuleRoboticController::FixedUpdate() {
     }
 }
 
-// :451
+// ModuleRoboticController.cs:451
 void ModuleRoboticController::UpdatePlayingSequencePosition() {
     if (hasEnoughResources) {
         updateTime = Time::deltaTime;
@@ -193,7 +193,7 @@ void ModuleRoboticController::UpdatePlayingSequencePosition() {
     }
 }
 
-// :466
+// ModuleRoboticController.cs:466
 void ModuleRoboticController::CheckAndFireActions() {
     for (size_t i = 0; i < controlledActions.size(); i++) {
         for (size_t j = 0; j < controlledActions[i]->times.size(); j++) {
@@ -218,7 +218,7 @@ void ModuleRoboticController::CheckAndFireActions() {
     if (!actionsToFire.empty()) actionsToFire.clear();
 }
 
-// :518
+// ModuleRoboticController.cs:518
 void ModuleRoboticController::OnWarpRateChanged() {
     if (TimeWarp::CurrentRateIndex() > 0 && TimeWarp::WarpMode() == TimeWarp::Modes::HIGH)
         pausedInWarp = true;
@@ -226,10 +226,10 @@ void ModuleRoboticController::OnWarpRateChanged() {
         pausedInWarp = false;
 }
 
-// :535
+// ModuleRoboticController.cs:535
 void ModuleRoboticController::ToggleControllerEnabled(bool enabled) { Set<bool>("controllerEnabled", enabled); }
 
-// :545
+// ModuleRoboticController.cs:545
 void ModuleRoboticController::TogglePlay(bool play) {
     if (!play)
         SequenceStop();
@@ -237,7 +237,7 @@ void ModuleRoboticController::TogglePlay(bool play) {
         SequencePlay();
 }
 
-// :557 (sic: the played event fires when the sequence WAS already playing)
+// ModuleRoboticController.cs:557 (sic: the played event fires when the sequence WAS already playing)
 void ModuleRoboticController::SequencePlay() {
     const bool num = !SequenceIsPlaying();
     if (num && SequenceLoop() == SequenceLoopOptions::OnceRestart && SequencePosition() >= SequenceLength()) SetSequencePositionStart();
@@ -246,7 +246,7 @@ void ModuleRoboticController::SequencePlay() {
     UpdateUIElements();
 }
 
-// :572 (same quirk for the stopped event)
+// ModuleRoboticController.cs:572 (same quirk for the stopped event)
 void ModuleRoboticController::SequenceStop() {
     const bool sequenceIsPlaying = SequenceIsPlaying();
     Set<int32_t>("sequencePlayingIndex", 1);
@@ -254,7 +254,7 @@ void ModuleRoboticController::SequenceStop() {
     UpdateUIElements();
 }
 
-// :583
+// ModuleRoboticController.cs:583
 void ModuleRoboticController::ToggleDirection() {
     const SequenceDirectionOptions d = SequenceDirection();
     if (d != SequenceDirectionOptions::Forward && d == SequenceDirectionOptions::Reverse)
@@ -263,7 +263,7 @@ void ModuleRoboticController::ToggleDirection() {
         SetDirection(SequenceDirectionOptions::Reverse);
 }
 
-// :596
+// ModuleRoboticController.cs:596
 void ModuleRoboticController::SetDirection(SequenceDirectionOptions newDirection) {
     const bool num = SequenceDirection() != newDirection;
     Set<int32_t>("sequenceDirectionIndex", static_cast<int32_t>(newDirection));
@@ -271,7 +271,7 @@ void ModuleRoboticController::SetDirection(SequenceDirectionOptions newDirection
     UpdateUIElements();
 }
 
-// :607
+// ModuleRoboticController.cs:607
 void ModuleRoboticController::CycleLoopMode() {
     switch (SequenceLoop()) {
     case SequenceLoopOptions::Once: SetLoopMode(SequenceLoopOptions::Repeat); break;
@@ -283,7 +283,7 @@ void ModuleRoboticController::CycleLoopMode() {
     UpdateUIElements();
 }
 
-// :628
+// ModuleRoboticController.cs:628
 void ModuleRoboticController::SetLoopMode(SequenceLoopOptions newMode) {
     const bool num = SequenceLoop() != newMode;
     Set<int32_t>("sequenceLoopIndex", static_cast<int32_t>(newMode));
@@ -291,13 +291,13 @@ void ModuleRoboticController::SetLoopMode(SequenceLoopOptions newMode) {
     UpdateUIElements();
 }
 
-// :639
+// ModuleRoboticController.cs:639
 void ModuleRoboticController::SetDisplayName(const std::string& newName) {
     Set<std::string>("displayName", newName);
     UpdateUIElements();
 }
 
-// :645
+// ModuleRoboticController.cs:645
 void ModuleRoboticController::SetLength(float newLength) {
     if (newLength < 0.01f) newLength = 0.01f;
     float num = SequencePosition();
@@ -309,7 +309,7 @@ void ModuleRoboticController::SetLength(float newLength) {
     UpdateUIElements();
 }
 
-// :662
+// ModuleRoboticController.cs:662
 void ModuleRoboticController::SetLength(float newLength, bool maintainPointsTime) {
     if (maintainPointsTime) {
         for (size_t i = 0; i < controlledAxes.size(); i++) controlledAxes[i]->RescaleCurveTime(F(fx(SequenceLength()) / fx(newLength)), F(fx(0.01f) / fx(newLength)));
@@ -318,7 +318,7 @@ void ModuleRoboticController::SetLength(float newLength, bool maintainPointsTime
     SetLength(newLength);
 }
 
-// :678
+// ModuleRoboticController.cs:678
 void ModuleRoboticController::SetSequencePosition(float newPosition) {
     actionCheck2EndTime = -1.0f;
     actionCheck2StartTime = -1.0f;
@@ -398,13 +398,13 @@ void ModuleRoboticController::SetSequencePosition(float newPosition) {
     UpdateUIElements();
 }
 
-// :790
+// ModuleRoboticController.cs:790
 void ModuleRoboticController::SetPlaySpeed(float newSpeed) {
     Set<float>("sequencePlaySpeed", Mathf::Clamp(newSpeed, 0.0f, 100.0f));
     UpdateUIElements();
 }
 
-// :806
+// ModuleRoboticController.cs:806
 void ModuleRoboticController::SetSequencePositionPrevKey() {
     float a = 0.0f;
     float num = 0.0f;
@@ -425,7 +425,7 @@ void ModuleRoboticController::SetSequencePositionPrevKey() {
     SetSequencePosition(a);
 }
 
-// :837 (sic: the action loop tests `num < SequencePosition` like the previous-key one)
+// ModuleRoboticController.cs:837 (sic: the action loop tests `num < SequencePosition` like the previous-key one)
 void ModuleRoboticController::SetSequencePositionNextKey() {
     float a = SequenceLength();
     float num = 0.0f;
@@ -446,22 +446,22 @@ void ModuleRoboticController::SetSequencePositionNextKey() {
     SetSequencePosition(a);
 }
 
-// :884 (the part-action window and the controller window are UI; the counters the PAW shows are state)
+// ModuleRoboticController.cs:884 (the part-action window and the controller window are UI; the counters the PAW shows are state)
 void ModuleRoboticController::UpdateUIElements() {
     Set<int32_t>("fieldsCount", static_cast<int32_t>(controlledAxes.size()));
     Set<int32_t>("actionsCount", static_cast<int32_t>(controlledActions.size()));
 }
 
-// :912
+// ModuleRoboticController.cs:912
 void ModuleRoboticController::sequenceFieldChanged() {
     if (!sequenceWasPlaying && SequenceIsPlaying() && SequenceLoop() == SequenceLoopOptions::OnceRestart && SequencePosition() >= SequenceLength()) SetSequencePositionStart();
     SetSequencePosition(SequencePosition());
 }
 
-// :921
+// ModuleRoboticController.cs:921
 void ModuleRoboticController::PriorityChanged() { priority = static_cast<int>(Mathf::Clamp(Get<float>("priorityField"), 1.0f, 5.0f)); }
 
-// :930
+// ModuleRoboticController.cs:930
 void ModuleRoboticController::PartPersistentIdChanged(uint32_t, uint32_t oldId, uint32_t newId) {
     for (size_t i = 0; i < controlledAxes.size(); i++) {
         if (controlledAxes[i]->partId == oldId) {
@@ -477,7 +477,7 @@ void ModuleRoboticController::PartPersistentIdChanged(uint32_t, uint32_t oldId, 
     }
 }
 
-// :957
+// ModuleRoboticController.cs:957
 void ModuleRoboticController::UpdatePersistentIDs(const std::map<uint32_t, uint32_t>& changedIDs) {
     for (size_t i = 0; i < controlledAxes.size(); i++) {
         auto it = changedIDs.find(controlledAxes[i]->partId);
@@ -489,7 +489,7 @@ void ModuleRoboticController::UpdatePersistentIDs(const std::map<uint32_t, uint3
     }
 }
 
-// :975
+// ModuleRoboticController.cs:975
 void ModuleRoboticController::onEditorPartEvent(ConstructionEventType evt, Part* targetPart) {
     switch (evt) {
     case ConstructionEventType::PartDeleted: PartDeleted(targetPart); break;
@@ -499,14 +499,14 @@ void ModuleRoboticController::onEditorPartEvent(ConstructionEventType evt, Part*
     }
 }
 
-// :1008
+// ModuleRoboticController.cs:1008
 void ModuleRoboticController::SetWindowSizeAndPosition(const Vector2f& position, const Vector2f& size) {
     Set<Vector2f>("windowPosition", position);
     Set<Vector2f>("windowSize", size);
     HasWindowDimensions = true;
 }
 
-// :1015
+// ModuleRoboticController.cs:1015
 void ModuleRoboticController::AddPartAxis(Part* targetPart, PartModule* module, BaseAxisField* axisField) {
     if (!HasPartAxisField(targetPart, axisField) && !HasPartSymmetryAxisField(targetPart, axisField)) {
         auto controlledAxis = std::make_shared<ControlledAxis>(targetPart, module, axisField, this);
@@ -517,7 +517,7 @@ void ModuleRoboticController::AddPartAxis(Part* targetPart, PartModule* module, 
     }
 }
 
-// :1027
+// ModuleRoboticController.cs:1027
 void ModuleRoboticController::AddPartAction(Part* targetPart, PartModule* module, BaseAction* action) {
     if (!HasPartAction(targetPart, action) && !HasPartSymmetryAction(targetPart, action)) {
         auto controlledAction = std::make_shared<ControlledAction>(targetPart, module, action, this);
@@ -528,14 +528,14 @@ void ModuleRoboticController::AddPartAction(Part* targetPart, PartModule* module
     }
 }
 
-// :1039
+// ModuleRoboticController.cs:1039
 void ModuleRoboticController::PartDeleted(Part* targetPart) {
     RemovePartAxis(targetPart, nullptr, true);
     RemovePartAction(targetPart, nullptr, true);
     RemovePartSymmetry(targetPart->fields.persistentId);
 }
 
-// :1046
+// ModuleRoboticController.cs:1046
 void ModuleRoboticController::RemovePartAxis(Part* targetPart, BaseAxisField* axisField, bool transferToSymPartner) {
     bool flag = false;
     size_t count = controlledAxes.size();
@@ -571,7 +571,7 @@ void ModuleRoboticController::RemovePartAxis(Part* targetPart, BaseAxisField* ax
     UpdateUIElements();
 }
 
-// :1091
+// ModuleRoboticController.cs:1091
 void ModuleRoboticController::RemovePartAction(Part* targetPart, BaseAction* action, bool transferToSymPartner) {
     bool flag = false;
     size_t count = controlledActions.size();
@@ -609,13 +609,13 @@ void ModuleRoboticController::RemovePartAction(Part* targetPart, BaseAction* act
     UpdateUIElements();
 }
 
-// :1136
+// ModuleRoboticController.cs:1136
 void ModuleRoboticController::RemovePartAxis(ControlledAxis& axis, bool transferToSymPartner) { RemovePartAxis(axis.PartPtr(), axis.AxisField, transferToSymPartner); }
 
-// :1141
+// ModuleRoboticController.cs:1141
 void ModuleRoboticController::RemovePartAction(ControlledAction& action, bool transferToSymPartner) { RemovePartAction(action.PartPtr(), action.Action, transferToSymPartner); }
 
-// :1146
+// ModuleRoboticController.cs:1146
 void ModuleRoboticController::AddPartAxisForSymmetryPartner(ControlledAxis& oldAxis, Part* newPart) {
     if (oldAxis.AxisField == nullptr || dynamic_cast<PartModule*>(oldAxis.AxisField->host()) == nullptr) return;
     BaseAxisField* baseAxisField = nullptr;
@@ -638,7 +638,7 @@ void ModuleRoboticController::AddPartAxisForSymmetryPartner(ControlledAxis& oldA
     }
 }
 
-// :1177
+// ModuleRoboticController.cs:1177
 void ModuleRoboticController::AddPartActionForSymmetryPartner(ControlledAction& oldAction, Part* newPart) {
     BaseAction* baseAction = nullptr;
     PartModule* partModule = nullptr;
@@ -658,20 +658,20 @@ void ModuleRoboticController::AddPartActionForSymmetryPartner(ControlledAction& 
     }
 }
 
-// :1206
+// ModuleRoboticController.cs:1206
 bool ModuleRoboticController::HasPartAxisField(Part* testPart, BaseAxisField* testAxisField) {
     ControlledAxis* axis = nullptr;
     return TryGetPartAxisField(testPart, testAxisField, axis);
 }
 
-// :1212
+// ModuleRoboticController.cs:1212
 bool ModuleRoboticController::HasPartSymmetryAxisField(Part* testPart, BaseAxisField* testAxisField) {
     bool symmetryPartner = false;
     ControlledAxis* action = nullptr;
     return TryGetPartAxisField(testPart, testAxisField, action, symmetryPartner) && symmetryPartner;
 }
 
-// :1219
+// ModuleRoboticController.cs:1219
 bool ModuleRoboticController::TryGetPartAxisField(Part* testPart, BaseAxisField* testAxisField, ControlledAxis*& axis) {
     bool symmetryPartner = false;
     const bool result = TryGetPartAxisField(testPart, testAxisField, axis, symmetryPartner);
@@ -682,7 +682,7 @@ bool ModuleRoboticController::TryGetPartAxisField(Part* testPart, BaseAxisField*
     return result;
 }
 
-// :1231 (the C# do { ... continue; ... } while (cond): `continue` evaluates the loop condition)
+// ModuleRoboticController.cs:1231 (the C# do { ... continue; ... } while (cond): `continue` evaluates the loop condition)
 bool ModuleRoboticController::TryGetPartAxisField(Part* testPart, BaseAxisField* testAction, ControlledAxis*& action, bool& symmetryPartner) {
     int count = static_cast<int>(controlledAxes.size());
     ControlledAxis* controlledAxis = nullptr;
@@ -715,13 +715,13 @@ bool ModuleRoboticController::TryGetPartAxisField(Part* testPart, BaseAxisField*
     return true;
 }
 
-// :1262
+// ModuleRoboticController.cs:1262
 bool ModuleRoboticController::HasPartAction(Part* testPart, BaseAction* testAction) {
     ControlledAction* action = nullptr;
     return TryGetPartAction(testPart, testAction, action);
 }
 
-// :1268
+// ModuleRoboticController.cs:1268
 bool ModuleRoboticController::TryGetPartAction(Part* testPart, BaseAction* testAction, ControlledAction*& action) {
     bool symmetryPartner = false;
     const bool result = TryGetPartAction(testPart, testAction, action, symmetryPartner);
@@ -732,14 +732,14 @@ bool ModuleRoboticController::TryGetPartAction(Part* testPart, BaseAction* testA
     return result;
 }
 
-// :1280
+// ModuleRoboticController.cs:1280
 bool ModuleRoboticController::HasPartSymmetryAction(Part* testPart, BaseAction* testAction) {
     bool symmetryPartner = false;
     ControlledAction* action = nullptr;
     return TryGetPartAction(testPart, testAction, action, symmetryPartner) && symmetryPartner;
 }
 
-// :1287
+// ModuleRoboticController.cs:1287
 bool ModuleRoboticController::TryGetPartAction(Part* testPart, BaseAction* testAction, ControlledAction*& action, bool& symmetryPartner) {
     int count = static_cast<int>(controlledActions.size());
     ControlledAction* controlledAction = nullptr;
@@ -772,7 +772,7 @@ bool ModuleRoboticController::TryGetPartAction(Part* testPart, BaseAction* testA
     return true;
 }
 
-// :1321
+// ModuleRoboticController.cs:1321
 bool ModuleRoboticController::HasPart(const std::vector<Part*>& testParts) {
     size_t count = controlledAxes.size();
     while (count-- > 0) {
@@ -783,7 +783,7 @@ bool ModuleRoboticController::HasPart(const std::vector<Part*>& testParts) {
     return false;
 }
 
-// :1338
+// ModuleRoboticController.cs:1338
 bool ModuleRoboticController::HasPart(Part* testPart) {
     size_t count = controlledAxes.size();
     while (count-- > 0) {
@@ -793,7 +793,7 @@ bool ModuleRoboticController::HasPart(Part* testPart) {
     return false;
 }
 
-// :1355
+// ModuleRoboticController.cs:1355
 void ModuleRoboticController::UpdatePartSymmetry(Part* targetPart) {
     size_t count = controlledAxes.size();
     while (count-- > 0) {
@@ -808,7 +808,7 @@ void ModuleRoboticController::UpdatePartSymmetry(Part* targetPart) {
     UpdateUIElements();
 }
 
-// :1378
+// ModuleRoboticController.cs:1378
 void ModuleRoboticController::RemovePartSymmetry(uint32_t oldPartId) {
     size_t count = controlledAxes.size();
     while (count-- > 0) controlledAxes[count]->RebuildSymmetryList({oldPartId});
@@ -817,7 +817,7 @@ void ModuleRoboticController::RemovePartSymmetry(uint32_t oldPartId) {
     UpdateUIElements();
 }
 
-// :1393
+// ModuleRoboticController.cs:1393
 bool ModuleRoboticController::isSameActionId(Part* testPart, ControlledAction& cAction) {
     auto* component = dynamic_cast<ModuleRoboticController*>(testPart->FindModuleOfClass("ModuleRoboticController"));
     if (component == nullptr) throw Nre();
@@ -826,14 +826,14 @@ bool ModuleRoboticController::isSameActionId(Part* testPart, ControlledAction& c
     return false;
 }
 
-// :1413
+// ModuleRoboticController.cs:1413
 void ModuleRoboticController::VesselModified(Vessel* modifiedVessel) {
     Part* p = PartOf();
     if (ServoEnvironment::SceneIsFlight() && modifiedVessel != nullptr && p != nullptr && p->vessel != nullptr && modifiedVessel->persistentId == p->vessel->persistentId)
         RemoveOtherVesselItems();
 }
 
-// :1421
+// ModuleRoboticController.cs:1421
 void ModuleRoboticController::RemoveOtherVesselItems() {
     if (GameSettings::SERENITY_CONTROLLER_IGNORES_VESSEL) return;
     Part* p = PartOf();
@@ -858,7 +858,7 @@ void ModuleRoboticController::RemoveOtherVesselItems() {
     }
 }
 
-// :1447
+// ModuleRoboticController.cs:1447
 void ModuleRoboticController::OnSave(ConfigNode& node) {
     PartModule::OnSave(node);
     node.AddValue("sequenceIsPlaying", SequenceIsPlaying());
@@ -870,7 +870,7 @@ void ModuleRoboticController::OnSave(ConfigNode& node) {
     for (size_t j = 0; j < controlledActions.size(); j++) controlledActions[j]->Save(*configNode2->AddNode("ACTION"));
 }
 
-// :1471
+// ModuleRoboticController.cs:1471
 void ModuleRoboticController::OnLoad(const ConfigNode& node) {
     PartModule::OnLoad(node);
     HasWindowDimensions = node.HasValue("windowPosition");
@@ -905,7 +905,7 @@ void ModuleRoboticController::OnLoad(const ConfigNode& node) {
     }
 }
 
-// :1524
+// ModuleRoboticController.cs:1524
 void ModuleRoboticController::AssignReferenceVars_Debug() {
     size_t count = controlledAxes.size();
     while (count-- > 0) {

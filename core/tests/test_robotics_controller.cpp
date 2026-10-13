@@ -148,6 +148,7 @@ TEST_CASE("WP-52 controller sequencer over 60 scripted runs (loop modes, directi
     for (const json& sc : ref["controller"]) RunControllerScenario(rig, sc, idx++, d, ticks);
     INFO(d.first);
     CHECK(d.bad == 0);
+    MESSAGE("controller comparisons: " << d.total);
     CHECK(d.total > 20000);
     CHECK(ticks == 60 * 60);
 }

@@ -57,6 +57,8 @@ NAME_ALIAS = {
               # WP-20c: the structural layer (a vessel-wide CycleAutoStrut, PartJoint.OnJointBreak acted on by the host); WP-16 Part.Start's
               # staging block
               "CycleAutoStruts": "CycleAutoStrut", "HandleBreak": "OnJointBreak", "StartStaging": "Start",
+              # WP-52: BaseServo declares `protected new abstract void OnFixedUpdate()`; the C++ name is ServoFixedUpdate (it hides PartModule.OnFixedUpdate)
+              "ServoFixedUpdate": "OnFixedUpdate",
               # WP-19b: the physics bubble's ports (ShiftWorld is setOffset's shift, the FlightIntegrator stand-in its FixedUpdate slice)
               "ShiftWorld": "setOffset", "DefaultFlightIntegrator": "FixedUpdate", "physicalObject": "Awake", "~physicalObject": "OnDestroy",
               "UpdateWantsDestroy": "Update",

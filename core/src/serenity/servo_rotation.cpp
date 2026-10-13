@@ -27,7 +27,7 @@ std::vector<std::string> SplitComma(const std::string& s) {
 }
 }  // namespace
 
-// :121
+// ModuleRoboticRotationServo.cs:121
 float ModuleRoboticRotationServo::JointTargetAngle() {
     const Vector2f soft = softMinMaxAngles();
     workingJointTargetAngle = Mathf::Clamp(targetAngle(), soft.x, soft.y);
@@ -36,7 +36,7 @@ float ModuleRoboticRotationServo::JointTargetAngle() {
     return workingJointTargetAngle;
 }
 
-// :148
+// ModuleRoboticRotationServo.cs:148
 void ModuleRoboticRotationServo::ToggleServoAction(KSPActionParam&) {
     const Vector2f soft = softMinMaxAngles();
     if (fx(targetAngle()) - fx(soft.x) < (fx(soft.y) - fx(soft.x)) / 2.0)
@@ -45,7 +45,7 @@ void ModuleRoboticRotationServo::ToggleServoAction(KSPActionParam&) {
         SetMinimumAngle();
 }
 
-// :160
+// ModuleRoboticRotationServo.cs:160
 void ModuleRoboticRotationServo::SetMinimumAngle() {
     if (!servoIsLocked()) {
         Fields()["targetAngle"]->SetValue(ModuleValue(softMinMaxAngles().x));
@@ -55,7 +55,7 @@ void ModuleRoboticRotationServo::SetMinimumAngle() {
     }
 }
 
-// :173
+// ModuleRoboticRotationServo.cs:173
 void ModuleRoboticRotationServo::SetMaximumAngle() {
     if (!servoIsLocked()) {
         Fields()["targetAngle"]->SetValue(ModuleValue(softMinMaxAngles().y));
@@ -65,7 +65,7 @@ void ModuleRoboticRotationServo::SetMaximumAngle() {
     }
 }
 
-// :186
+// ModuleRoboticRotationServo.cs:186
 void ModuleRoboticRotationServo::CheckSymmetry() {
     Part& p = PartRef(*this);
     ModuleRoboticRotationServo* other = SymmetryModule(*this);
@@ -86,7 +86,7 @@ void ModuleRoboticRotationServo::CheckSymmetry() {
     }
 }
 
-// :212
+// ModuleRoboticRotationServo.cs:212
 void ModuleRoboticRotationServo::OnEditorPartEvent(ConstructionEventType evt, Part* p) {
     Part* parent = PartOf();
     while (parent != nullptr) {
@@ -100,7 +100,7 @@ void ModuleRoboticRotationServo::OnEditorPartEvent(ConstructionEventType evt, Pa
     }
 }
 
-// :235
+// ModuleRoboticRotationServo.cs:235
 void ModuleRoboticRotationServo::OnStart(StartState state) {
     Actions()["ResetPosition"]->SetGuiName(KSP::Localization::Localizer::Format("#autoLOC_6012043"));
     Events()["ResetPosition"]->SetGuiName(KSP::Localization::Localizer::Format("#autoLOC_6012043"));
@@ -136,20 +136,20 @@ void ModuleRoboticRotationServo::OnStart(StartState state) {
         if (std::shared_ptr<ServoNode> child = rig.Find(n)) child->active = false;
 }
 
-// :298
+// ModuleRoboticRotationServo.cs:298
 void ModuleRoboticRotationServo::OnDestroy() {
     BaseServo::OnDestroy();
     GE::onEditorPartEvent.Remove(this, &ModuleRoboticRotationServo::OnEditorPartEvent);
     GE::onPartResourceNonemptyEmpty.Remove(this, &ModuleRoboticRotationServo::OnResourceNonemptyEmpty);
 }
 
-// :316
+// ModuleRoboticRotationServo.cs:316
 void ModuleRoboticRotationServo::OnCopy(PartModule& fromModule) {
     if (ServoEnvironment::SceneIsEditor()) checkSymmetry = true;
     BaseServo::OnCopy(fromModule);
 }
 
-// :325
+// ModuleRoboticRotationServo.cs:325
 void ModuleRoboticRotationServo::OnJointInit(bool) {
     const std::string servoTransformName = Get<std::string>("servoTransformName");
     const std::string baseTransformName = Get<std::string>("baseTransformName");
@@ -182,7 +182,7 @@ void ModuleRoboticRotationServo::OnJointInit(bool) {
     }
 }
 
-// :371
+// ModuleRoboticRotationServo.cs:371
 void ModuleRoboticRotationServo::SetJointHighLowLimits() {
     if (servoJoint == nullptr) throw Nre();
     lowerLimit = servoJoint->lowAngularXLimit;
@@ -202,7 +202,7 @@ void ModuleRoboticRotationServo::SetJointHighLowLimits() {
     servoJoint->lowAngularXLimit = lowerLimit;
 }
 
-// :391
+// ModuleRoboticRotationServo.cs:391
 void ModuleRoboticRotationServo::OnPostStartJointInit() {
     if (ServoEnvironment::SceneIsFlight()) {
         SetTargetRotationLocal(*servoJoint, targetRotation, cachedStartingRotation);
@@ -214,13 +214,13 @@ void ModuleRoboticRotationServo::OnPostStartJointInit() {
     }
 }
 
-// :404
+// ModuleRoboticRotationServo.cs:404
 void ModuleRoboticRotationServo::OnPreModifyServo() {
     const Vector2f soft = softMinMaxAngles();
     Set<float>("targetAngle", Mathf::Clamp(targetAngle(), soft.x, soft.y));
 }
 
-// :418
+// ModuleRoboticRotationServo.cs:418
 void ModuleRoboticRotationServo::OnVisualizeServo(bool rotateBase) {
     if (movingPartObject == nullptr) throw Nre();
     const float jointTargetAngle = JointTargetAngle();
@@ -239,7 +239,7 @@ void ModuleRoboticRotationServo::OnVisualizeServo(bool rotateBase) {
     if (previousTargetAngle != jointTargetAngle) Set<float>("previousTargetAngle", jointTargetAngle);
 }
 
-// :440
+// ModuleRoboticRotationServo.cs:440
 void ModuleRoboticRotationServo::OnModifyServo() {
     if (HighWarp()) {
         xDrive = servoJoint->xDrive;
@@ -276,7 +276,7 @@ void ModuleRoboticRotationServo::OnModifyServo() {
     servoJoint->angularXDrive = xDrive;
 }
 
-// :485
+// ModuleRoboticRotationServo.cs:485
 void ModuleRoboticRotationServo::ServoFixedUpdate() {
     const bool paused = ServoEnvironment::flightDriverPause && ServoEnvironment::flightDriverPause();
     if (!ServoEnvironment::SceneIsFlight() || paused) return;
@@ -301,7 +301,7 @@ void ModuleRoboticRotationServo::ServoFixedUpdate() {
     previousDisplacement = currentTransformAngle();
 }
 
-// :525
+// ModuleRoboticRotationServo.cs:525
 float ModuleRoboticRotationServo::GetFrameDisplacement() {
     angleDiff = F(fx(currentTransformAngle()) - fx(previousDisplacement));
     if (angleDiff >= 180.0f)
@@ -312,7 +312,7 @@ float ModuleRoboticRotationServo::GetFrameDisplacement() {
     return angleDiff;
 }
 
-// :545
+// ModuleRoboticRotationServo.cs:545
 void ModuleRoboticRotationServo::UpdatePAWUI(UI_Scene currentScene) {
     const float num = currentTransformAngle();
     Set<float>("currentAngle", num);
@@ -331,25 +331,25 @@ void ModuleRoboticRotationServo::UpdatePAWUI(UI_Scene currentScene) {
     BaseServo::UpdatePAWUI(currentScene);
 }
 
-// :582
+// ModuleRoboticRotationServo.cs:582
 void ModuleRoboticRotationServo::OnServoMotorEngaged() {
     driveTargetAngle = currentTransformAngle();
     motorManualDisengaged = false;
 }
 
-// :593
+// ModuleRoboticRotationServo.cs:593
 void ModuleRoboticRotationServo::ResetLaunchPosition() {
     Fields()["targetAngle"]->SetValue(ModuleValue(launchPosition()));
     ModifyServo(nullptr);
 }
 
-// :599
+// ModuleRoboticRotationServo.cs:599
 void ModuleRoboticRotationServo::OnSaveShip() {
     SetLaunchPosition(currentAngle());
     BaseServo::OnSaveShip();
 }
 
-// :612
+// ModuleRoboticRotationServo.cs:612
 void ModuleRoboticRotationServo::ModifyTargetAngle(const ModuleValue* field) {
     const Vector2f soft = softMinMaxAngles();
     if (!allowFullRotation()) {
@@ -362,7 +362,7 @@ void ModuleRoboticRotationServo::ModifyTargetAngle(const ModuleValue* field) {
     ModifyServo(field);
 }
 
-// :629
+// ModuleRoboticRotationServo.cs:629
 void ModuleRoboticRotationServo::ModifyLimitsMode(const ModuleValue* field) {
     if (!allowFullRotation()) {
         SetHardLimits("targetAngle", configHardMinMaxLimits);
@@ -380,7 +380,7 @@ void ModuleRoboticRotationServo::ModifyLimitsMode(const ModuleValue* field) {
     ModifyServo(field);
 }
 
-// :653
+// ModuleRoboticRotationServo.cs:653
 void ModuleRoboticRotationServo::ModifyLimits(const ModuleValue* field) {
     const Vector2f soft = softMinMaxAngles();
     if (targetAngleAxisField == nullptr) throw Nre();
@@ -395,12 +395,12 @@ void ModuleRoboticRotationServo::ModifyLimits(const ModuleValue* field) {
     ModifyServo(field);
 }
 
-// :678
+// ModuleRoboticRotationServo.cs:678
 void ModuleRoboticRotationServo::ModifyInverted(const ModuleValue*) {
     if (ServoEnvironment::SceneIsFlight()) SetJointHighLowLimits();
 }
 
-// :686
+// ModuleRoboticRotationServo.cs:686
 void ModuleRoboticRotationServo::ModifyTraverseLimits(const ModuleValue* field) {
     const Vector2f tvl = traverseVelocityLimits();
     if (traverseVelocityAxisField == nullptr) throw Nre();
@@ -411,14 +411,14 @@ void ModuleRoboticRotationServo::ModifyTraverseLimits(const ModuleValue* field) 
     ModifyServo(field);
 }
 
-// :700
+// ModuleRoboticRotationServo.cs:700
 Quaternionf ModuleRoboticRotationServo::SetTargetRotation(const Quaternionf& startingRotation, float rotationAngle, bool setRotation) {
     const Quaternionf quaternion = startingRotation;
     if (setRotation) return UnityNative::AngleAxis(rotationAngle, GetMainAxis());
     return quaternion * UnityNative::AngleAxis(rotationAngle, GetMainAxis());
 }
 
-// :710
+// ModuleRoboticRotationServo.cs:710
 void ModuleRoboticRotationServo::OnResourceNonemptyEmpty(PartResource* resource) {
     if (!ResourceEventApplies(*this, resource)) return;
     for (size_t i = 0; i < resHandler.inputResources.size(); i++) {
@@ -430,7 +430,7 @@ void ModuleRoboticRotationServo::OnResourceNonemptyEmpty(PartResource* resource)
     }
 }
 
-// :726
+// ModuleRoboticRotationServo.cs:726
 void ModuleRoboticRotationServo::InitAxisFieldLimits() {
     AxisFieldLimit l;
     l.limitedField = targetAngleAxisField;
@@ -439,7 +439,7 @@ void ModuleRoboticRotationServo::InitAxisFieldLimits() {
     AddAxisFieldLimit("targetAngle", l);
 }
 
-// :736
+// ModuleRoboticRotationServo.cs:736
 void ModuleRoboticRotationServo::UpdateAxisFieldHardLimit(const std::string& fieldName, const Vector2f& newlimits) {
     if (fieldName == "targetAngle") {
         Set<Vector2f>("hardMinMaxLimits", newlimits);
@@ -447,7 +447,7 @@ void ModuleRoboticRotationServo::UpdateAxisFieldHardLimit(const std::string& fie
     }
 }
 
-// :745
+// ModuleRoboticRotationServo.cs:745
 void ModuleRoboticRotationServo::UpdateAxisFieldSoftLimit(const std::string& fieldName, const Vector2f& newlimits) {
     if (fieldName == "targetAngle") {
         Set<Vector2f>("softMinMaxAngles", newlimits);

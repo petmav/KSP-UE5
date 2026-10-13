@@ -21,6 +21,7 @@ namespace ksp::Expansions::Serenity {
 class ModuleRoboticServoHinge : public BaseServo {
 public:
     explicit ModuleRoboticServoHinge(const ModuleClassInfo& cls) : BaseServo(cls) {}
+    ~ModuleRoboticServoHinge() override { if (!destroyed) OnDestroy(); }  // the event subscriptions of this class go before the object does (BaseServo's destructor cannot reach the override)
 
     // [KSPField] accessors
     Vector2f softMinMaxAngles() const { return Get<Vector2f>("softMinMaxAngles"); }   // :10
@@ -101,6 +102,7 @@ public:
 class ModuleRoboticServoPiston : public BaseServo {
 public:
     explicit ModuleRoboticServoPiston(const ModuleClassInfo& cls) : BaseServo(cls) {}
+    ~ModuleRoboticServoPiston() override { if (!destroyed) OnDestroy(); }  // the event subscriptions of this class go before the object does (BaseServo's destructor cannot reach the override)
 
     Vector2f softMinMaxExtension() const { return Get<Vector2f>("softMinMaxExtension"); }  // :10
     float targetExtension() const { return Get<float>("targetExtension"); }                // :18
@@ -166,6 +168,7 @@ public:
 class ModuleRoboticServoRotor : public BaseServo {
 public:
     explicit ModuleRoboticServoRotor(const ModuleClassInfo& cls) : BaseServo(cls) {}
+    ~ModuleRoboticServoRotor() override { if (!destroyed) OnDestroy(); }  // the event subscriptions of this class go before the object does (BaseServo's destructor cannot reach the override)
 
     float rpmLimit() const { return Get<float>("rpmLimit"); }                          // :11
     float currentRPM() const { return Get<float>("currentRPM"); }                      // :14
@@ -243,6 +246,7 @@ public:
 class ModuleRoboticRotationServo : public BaseServo {
 public:
     explicit ModuleRoboticRotationServo(const ModuleClassInfo& cls) : BaseServo(cls) {}
+    ~ModuleRoboticRotationServo() override { if (!destroyed) OnDestroy(); }  // the event subscriptions of this class go before the object does (BaseServo's destructor cannot reach the override)
 
     Vector2f softMinMaxAngles() const { return Get<Vector2f>("softMinMaxAngles"); }   // :11
     bool allowFullRotation() const { return Get<bool>("allowFullRotation"); }         // :19

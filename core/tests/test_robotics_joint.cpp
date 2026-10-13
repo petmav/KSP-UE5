@@ -93,6 +93,7 @@ TEST_CASE("WP-52 ControlledAxis presets (Sine, Square, Triangle, Saw, RevSaw) vs
     }
     INFO(d.first);
     CHECK(d.bad == 0);
+    MESSAGE("preset comparisons: " << d.total << " keys " << keysChecked << " synth " << synthChecked);
     CHECK(keysChecked > 1000);
     CHECK(synthChecked > 20);
 }

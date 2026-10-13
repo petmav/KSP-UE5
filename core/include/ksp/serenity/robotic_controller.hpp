@@ -46,12 +46,13 @@ struct ControllerEnvironment {
 class RoboticControllerManager {
 public:
     static inline RoboticControllerManager* Instance = nullptr;  // :20
-    // Awake (:46): Serenity not installed -> Destroy(this); a second instance is destroyed; else Instance = this
+    ~RoboticControllerManager() { OnDestroy(); }
+    // Awake (:38): Serenity not installed -> Destroy(this); a second instance is destroyed; else Instance = this
     void Awake();
-    void OnDestroy();                                // :63 (the onGameSceneLoadRequested subscription)
+    void OnDestroy();                                // :57 (the onGameSceneLoadRequested subscription)
     void Update() { UpdateFieldValues(); }           // :68
     void OnSceneLoad(GameScenes) { ClearUpdateQueue(); }  // :73 (CloseAllWindows is UI)
-    void QueueFieldUpdate(BaseAxisField* axisField, float newValue, int priority);  // :107
+    void QueueFieldUpdate(BaseAxisField* axisField, float newValue, int priority);  // :106
     bool destroyed = false;                          // Object.Destroy(this)
     size_t QueueSize() const { return queue_.size(); }
 
@@ -62,7 +63,7 @@ private:
         int values = 0;
     };
     void ClearUpdateQueue() { queue_.clear(); }      // :133
-    void UpdateFieldValues();                        // :138
+    void UpdateFieldValues();                        // :134
     std::vector<std::pair<BaseAxisField*, AxisUpdate>> queue_;  // DictionaryValueList<BaseAxisField, AxisUpdate> (insertion order)
     float updateValueAverage = 0.0f;                 // :39
     friend struct ControllerTestAccess;
@@ -140,17 +141,17 @@ public:
 
     ControlledAction(const ControlledAction& sourceAction);  // :25 (a new action on the same part / module / action with a copy of the times)
     ControlledAction(Part* part, PartModule* module, BaseAction* action, ModuleRoboticController* controller);  // :31
-    ControlledAction();                            // :41
-    void ReverseTimes();                           // :48
-    void RescaleTimes(float adjustmentRatio, float minSpace = 0.01f);  // :60
+    ControlledAction();                            // :40
+    void ReverseTimes();                           // :47
+    void RescaleTimes(float adjustmentRatio, float minSpace = 0.01f);  // :58
 
 protected:
-    bool OnChangeSymmetryMaster(Part* newPart, uint32_t& oldPartId) override;  // :78
-    bool OnAssignReferenceVars() override;         // :100
-    void ClearSymmetryLists() override;            // :130
-    void AddSymmetryPart(Part* part) override;     // :141
-    void OnLoad(const ConfigNode& node) override;  // :162
-    void OnSave(ConfigNode& node) override;        // :186
+    bool OnChangeSymmetryMaster(Part* newPart, uint32_t& oldPartId) override;  // :74
+    bool OnAssignReferenceVars() override;         // :96
+    void ClearSymmetryLists() override;            // :133
+    void AddSymmetryPart(Part* part) override;     // :145
+    void OnLoad(const ConfigNode& node) override;  // :171
+    void OnSave(ConfigNode& node) override;        // :194
 
 private:
     float tempTime = 0.0f;                         // :19

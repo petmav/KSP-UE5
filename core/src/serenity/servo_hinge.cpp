@@ -27,7 +27,7 @@ std::vector<std::string> SplitComma(const std::string& s) {
 }
 }  // namespace
 
-// :126
+// ModuleRoboticServoHinge.cs:126
 float ModuleRoboticServoHinge::JointTargetAngle() {
     const Vector2f soft = softMinMaxAngles();
     workingJointTargetAngle = Mathf::Clamp(targetAngle(), soft.x, soft.y);
@@ -36,7 +36,7 @@ float ModuleRoboticServoHinge::JointTargetAngle() {
     return workingJointTargetAngle;
 }
 
-// :152
+// ModuleRoboticServoHinge.cs:152
 void ModuleRoboticServoHinge::ToggleHingeAction(KSPActionParam&) {
     const Vector2f soft = softMinMaxAngles();
     if (fx(targetAngle()) - fx(soft.x) < (fx(soft.y) - fx(soft.x)) / 2.0)
@@ -45,7 +45,7 @@ void ModuleRoboticServoHinge::ToggleHingeAction(KSPActionParam&) {
         SetMinimumAngle();
 }
 
-// :164
+// ModuleRoboticServoHinge.cs:164
 void ModuleRoboticServoHinge::SetMinimumAngle() {
     if (!servoIsLocked()) {
         Fields()["targetAngle"]->SetValue(ModuleValue(softMinMaxAngles().x));
@@ -55,7 +55,7 @@ void ModuleRoboticServoHinge::SetMinimumAngle() {
     }
 }
 
-// :177
+// ModuleRoboticServoHinge.cs:177
 void ModuleRoboticServoHinge::SetMaximumAngle() {
     if (!servoIsLocked()) {
         Fields()["targetAngle"]->SetValue(ModuleValue(softMinMaxAngles().y));
@@ -65,7 +65,7 @@ void ModuleRoboticServoHinge::SetMaximumAngle() {
     }
 }
 
-// :190
+// ModuleRoboticServoHinge.cs:190
 void ModuleRoboticServoHinge::CheckSymmetry() {
     Part& p = PartRef(*this);
     ModuleRoboticServoHinge* other = SymmetryModule(*this);
@@ -86,7 +86,7 @@ void ModuleRoboticServoHinge::CheckSymmetry() {
     }
 }
 
-// :216
+// ModuleRoboticServoHinge.cs:216
 void ModuleRoboticServoHinge::OnEditorPartEvent(ConstructionEventType evt, Part* p) {
     Part* parent = PartOf();
     while (parent != nullptr) {
@@ -101,7 +101,7 @@ void ModuleRoboticServoHinge::OnEditorPartEvent(ConstructionEventType evt, Part*
     }
 }
 
-// :239
+// ModuleRoboticServoHinge.cs:239
 void ModuleRoboticServoHinge::OnStart(StartState state) {
     Actions()["ResetPosition"]->SetGuiName(KSP::Localization::Localizer::Format("#autoLOC_6012043"));
     Events()["ResetPosition"]->SetGuiName(KSP::Localization::Localizer::Format("#autoLOC_6012043"));
@@ -130,7 +130,7 @@ void ModuleRoboticServoHinge::OnStart(StartState state) {
     lastDragCubeAngle = FLT_MAX;
 }
 
-// :287
+// ModuleRoboticServoHinge.cs:287
 void ModuleRoboticServoHinge::TogglePistons(bool active) {
     const std::vector<std::string> names = SplitComma(pistonTransforms);
     for (const std::string& n : names) {
@@ -141,32 +141,32 @@ void ModuleRoboticServoHinge::TogglePistons(bool active) {
     }
 }
 
-// :300
+// ModuleRoboticServoHinge.cs:300
 void ModuleRoboticServoHinge::OnInventoryModeDisable() {
     PartModule::OnInventoryModeDisable();
     TogglePistons(false);
 }
 
-// :306
+// ModuleRoboticServoHinge.cs:306
 void ModuleRoboticServoHinge::OnInventoryModeEnable() {
     PartModule::OnInventoryModeEnable();
     TogglePistons(false);
 }
 
-// :312
+// ModuleRoboticServoHinge.cs:312
 void ModuleRoboticServoHinge::OnDestroy() {
     BaseServo::OnDestroy();
     GE::onEditorPartEvent.Remove(this, &ModuleRoboticServoHinge::OnEditorPartEvent);
     GE::onPartResourceNonemptyEmpty.Remove(this, &ModuleRoboticServoHinge::OnResourceNonemptyEmpty);
 }
 
-// :328
+// ModuleRoboticServoHinge.cs:328
 void ModuleRoboticServoHinge::OnCopy(PartModule& fromModule) {
     if (ServoEnvironment::SceneIsEditor()) checkSymmetry = true;
     BaseServo::OnCopy(fromModule);
 }
 
-// :337
+// ModuleRoboticServoHinge.cs:337
 void ModuleRoboticServoHinge::OnJointInit(bool) {
     const std::string servoTransformName = Get<std::string>("servoTransformName");
     const std::string baseTransformName = Get<std::string>("baseTransformName");
@@ -205,7 +205,7 @@ void ModuleRoboticServoHinge::OnJointInit(bool) {
     }
 }
 
-// :388
+// ModuleRoboticServoHinge.cs:388
 void ModuleRoboticServoHinge::OnPostStartJointInit() {
     if (ServoEnvironment::SceneIsFlight()) {
         SetTargetRotationLocal(*servoJoint, targetRotation, cachedStartingRotation);
@@ -217,13 +217,13 @@ void ModuleRoboticServoHinge::OnPostStartJointInit() {
     }
 }
 
-// :401
+// ModuleRoboticServoHinge.cs:401
 void ModuleRoboticServoHinge::OnPreModifyServo() {
     const Vector2f soft = softMinMaxAngles();
     Set<float>("targetAngle", Mathf::Clamp(targetAngle(), soft.x, soft.y));
 }
 
-// :415
+// ModuleRoboticServoHinge.cs:415
 void ModuleRoboticServoHinge::OnVisualizeServo(bool rotateBase) {
     if (movingPartObject == nullptr) throw Nre();
     const float jointTargetAngle = JointTargetAngle();
@@ -241,7 +241,7 @@ void ModuleRoboticServoHinge::OnVisualizeServo(bool rotateBase) {
     if (previousTargetAngle() != jointTargetAngle) Set<float>("previousTargetAngle", jointTargetAngle);
 }
 
-// :437
+// ModuleRoboticServoHinge.cs:437
 void ModuleRoboticServoHinge::OnModifyServo() {
     if (HighWarp()) {
         xDrive = servoJoint->xDrive;
@@ -273,13 +273,13 @@ void ModuleRoboticServoHinge::OnModifyServo() {
     servoJoint->angularXDrive = xDrive;
 }
 
-// :474
+// ModuleRoboticServoHinge.cs:474
 void ModuleRoboticServoHinge::ResetLaunchPosition() {
     Fields()["targetAngle"]->SetValue(ModuleValue(launchPosition()));
     ModifyServo(nullptr);
 }
 
-// :480
+// ModuleRoboticServoHinge.cs:480
 void ModuleRoboticServoHinge::ServoFixedUpdate() {
     const bool paused = ServoEnvironment::flightDriverPause && ServoEnvironment::flightDriverPause();
     if (!ServoEnvironment::SceneIsFlight() || paused) return;
@@ -300,7 +300,7 @@ void ModuleRoboticServoHinge::ServoFixedUpdate() {
     if (useMultipleDragCubes()) SetDragCubes(currentTransformAngle());
 }
 
-// :522
+// ModuleRoboticServoHinge.cs:522
 float ModuleRoboticServoHinge::GetFrameDisplacement() {
     angleDiff = Mathf::Abs(F(fx(currentTransformAngle()) - fx(previousDisplacement)));
     if (angleDiff < displacementLimitIgnoreFrameDistance) {
@@ -315,7 +315,7 @@ float ModuleRoboticServoHinge::GetFrameDisplacement() {
     return angleDiff;
 }
 
-// :546 (the part-action-window controls are UI; the state writes stay)
+// ModuleRoboticServoHinge.cs:546 (the part-action-window controls are UI; the state writes stay)
 void ModuleRoboticServoHinge::UpdatePAWUI(UI_Scene currentScene) {
     const float num = F(fx(currentTransformAngle()) + fx(modelInitialAngle()));
     Set<float>("currentAngle", num);
@@ -334,25 +334,25 @@ void ModuleRoboticServoHinge::UpdatePAWUI(UI_Scene currentScene) {
     BaseServo::UpdatePAWUI(currentScene);
 }
 
-// :573
+// ModuleRoboticServoHinge.cs:573
 void ModuleRoboticServoHinge::OnServoLockApplied() { lockAngle = F(fx(currentTransformAngle()) + fx(modelInitialAngle())); }
 
-// :578
+// ModuleRoboticServoHinge.cs:578
 void ModuleRoboticServoHinge::OnServoLockRemoved() { driveTargetAngle = currentTransformAngle(); }
 
-// :583
+// ModuleRoboticServoHinge.cs:583
 void ModuleRoboticServoHinge::OnServoMotorEngaged() {
     driveTargetAngle = currentTransformAngle();
     motorManualDisengaged = false;
 }
 
-// :594
+// ModuleRoboticServoHinge.cs:594
 void ModuleRoboticServoHinge::OnSaveShip() {
     SetLaunchPosition(targetAngle());
     BaseServo::OnSaveShip();
 }
 
-// :607
+// ModuleRoboticServoHinge.cs:607
 void ModuleRoboticServoHinge::ModifyLimits(const ModuleValue* field) {
     const Vector2f soft = softMinMaxAngles();
     if (targetAngleAxisField == nullptr) throw Nre();
@@ -366,7 +366,7 @@ void ModuleRoboticServoHinge::ModifyLimits(const ModuleValue* field) {
     ModifyServo(field);
 }
 
-// :628
+// ModuleRoboticServoHinge.cs:628
 void ModuleRoboticServoHinge::ModifyTraverseLimits(const ModuleValue* field) {
     const Vector2f tvl = traverseVelocityLimits();
     if (traverseVelocityAxisField == nullptr) throw Nre();
@@ -377,14 +377,14 @@ void ModuleRoboticServoHinge::ModifyTraverseLimits(const ModuleValue* field) {
     ModifyServo(field);
 }
 
-// :642
+// ModuleRoboticServoHinge.cs:642
 Quaternionf ModuleRoboticServoHinge::SetTargetRotation(const Quaternionf& startingRotation, float rotationAngle, bool setRotation) {
     const Quaternionf quaternion = startingRotation;
     if (setRotation) return UnityNative::AngleAxis(rotationAngle, GetMainAxis());
     return quaternion * UnityNative::AngleAxis(rotationAngle, GetMainAxis());
 }
 
-// :652
+// ModuleRoboticServoHinge.cs:652
 void ModuleRoboticServoHinge::OnResourceNonemptyEmpty(PartResource* resource) {
     if (!ResourceEventApplies(*this, resource)) return;
     for (size_t i = 0; i < resHandler.inputResources.size(); i++) {
@@ -397,7 +397,7 @@ void ModuleRoboticServoHinge::OnResourceNonemptyEmpty(PartResource* resource) {
     }
 }
 
-// :669 (limitedField is the axis field the module has found by now: null in OnAwake, as in C#)
+// ModuleRoboticServoHinge.cs:669 (limitedField is the axis field the module has found by now: null in OnAwake, as in C#)
 void ModuleRoboticServoHinge::InitAxisFieldLimits() {
     AxisFieldLimit l;
     l.limitedField = targetAngleAxisField;
@@ -406,7 +406,7 @@ void ModuleRoboticServoHinge::InitAxisFieldLimits() {
     AddAxisFieldLimit("targetAngle", l);
 }
 
-// :679
+// ModuleRoboticServoHinge.cs:679
 void ModuleRoboticServoHinge::UpdateAxisFieldHardLimit(const std::string& fieldName, const Vector2f& newlimits) {
     if (fieldName == "targetAngle") {
         Set<Vector2f>("hardMinMaxLimits", newlimits);
@@ -414,7 +414,7 @@ void ModuleRoboticServoHinge::UpdateAxisFieldHardLimit(const std::string& fieldN
     }
 }
 
-// :688
+// ModuleRoboticServoHinge.cs:688
 void ModuleRoboticServoHinge::UpdateAxisFieldSoftLimit(const std::string& fieldName, const Vector2f& newlimits) {
     if (fieldName == "targetAngle") {
         Set<Vector2f>("softMinMaxAngles", newlimits);
@@ -422,13 +422,13 @@ void ModuleRoboticServoHinge::UpdateAxisFieldSoftLimit(const std::string& fieldN
     }
 }
 
-// :697
+// ModuleRoboticServoHinge.cs:697
 std::vector<std::string> ModuleRoboticServoHinge::GetDragCubeNames() const {
     if (useMultipleDragCubes()) return {"0", "50", "100"};
     return {};
 }
 
-// :719
+// ModuleRoboticServoHinge.cs:719
 void ModuleRoboticServoHinge::SetDragCubes(float angle) {
     if (!FloatEquals(angle, lastDragCubeAngle)) {
         float num = angle;

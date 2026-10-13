@@ -20,7 +20,7 @@ namespace {
 bool IsSlerp(const std::string& text) { return text == "slerp"; }
 }  // namespace
 
-// :122
+// ModuleRoboticServoRotor.cs:122
 void ModuleRoboticServoRotor::OnStart(StartState state) {
     Actions()["ResetPosition"]->SetGuiName(KSP::Localization::Localizer::Format("#autoLOC_6012044"));
     Events()["ResetPosition"]->SetGuiName(KSP::Localization::Localizer::Format("#autoLOC_6012044"));
@@ -39,14 +39,14 @@ void ModuleRoboticServoRotor::OnStart(StartState state) {
     if (servoIsMotorized()) GE::onPartResourceNonemptyEmpty.Add(this, &ModuleRoboticServoRotor::OnResourceNonemptyEmpty);
 }
 
-// :153
+// ModuleRoboticServoRotor.cs:153
 void ModuleRoboticServoRotor::OnDestroy() {
     BaseServo::OnDestroy();
     GE::onVesselChange.Remove(this, &ModuleRoboticServoRotor::OnVesselChange);
     GE::onPartResourceNonemptyEmpty.Remove(this, &ModuleRoboticServoRotor::OnResourceNonemptyEmpty);
 }
 
-// :165
+// ModuleRoboticServoRotor.cs:165
 void ModuleRoboticServoRotor::ModifyRPMLimits(const ModuleValue* field) {
     const Vector2f tvl = traverseVelocityLimits();
     if (rpmLimitAxisField == nullptr) throw Nre();
@@ -57,17 +57,17 @@ void ModuleRoboticServoRotor::ModifyRPMLimits(const ModuleValue* field) {
     ModifyServo(field);
 }
 
-// :179
+// ModuleRoboticServoRotor.cs:179
 void ModuleRoboticServoRotor::ModifyDirection(const ModuleValue* field) {
     if (ServoEnvironment::SceneIsFlight()) ModifyServo(field);
 }
 
-// :187
+// ModuleRoboticServoRotor.cs:187
 void ModuleRoboticServoRotor::OnUpdate() {
     if (ServoEnvironment::SceneIsFlight()) RatchetLock();
 }
 
-// :201
+// ModuleRoboticServoRotor.cs:201
 void ModuleRoboticServoRotor::BrakeAction(KSPActionParam& kPar) {
     KSPActionType kSPActionType = kPar.Type();
     if (kSPActionType == KSPActionType::Toggle) kSPActionType = brakingMode ? KSPActionType::Deactivate : KSPActionType::Activate;
@@ -88,7 +88,7 @@ void ModuleRoboticServoRotor::BrakeAction(KSPActionParam& kPar) {
     ModifyServo(nullptr);
 }
 
-// :236
+// ModuleRoboticServoRotor.cs:236
 void ModuleRoboticServoRotor::ToggleMotorPower() {
     if (!servoIsLocked()) {
         if (servoMotorLimit() > 0.0f)
@@ -101,7 +101,7 @@ void ModuleRoboticServoRotor::ToggleMotorPower() {
     }
 }
 
-// :256
+// ModuleRoboticServoRotor.cs:256
 void ModuleRoboticServoRotor::ToggleMotorDirection() {
     if (!servoIsLocked()) {
         Fields()["rotateCounterClockwise"]->SetValue(ModuleValue(!rotateCounterClockwise()));
@@ -111,7 +111,7 @@ void ModuleRoboticServoRotor::ToggleMotorDirection() {
     }
 }
 
-// :269
+// ModuleRoboticServoRotor.cs:269
 void ModuleRoboticServoRotor::OnJointInit(bool) {
     const std::string servoTransformName = Get<std::string>("servoTransformName");
     if (movingPartObject == nullptr && !servoTransformName.empty()) movingPartObject = rig.Find(servoTransformName);
@@ -149,7 +149,7 @@ void ModuleRoboticServoRotor::OnJointInit(bool) {
     }
 }
 
-// :316
+// ModuleRoboticServoRotor.cs:316
 void ModuleRoboticServoRotor::OnPostStartJointInit() {
     if (ServoEnvironment::SceneIsFlight()) {
         OnServoLockApplied();
@@ -158,7 +158,7 @@ void ModuleRoboticServoRotor::OnPostStartJointInit() {
     }
 }
 
-// :330
+// ModuleRoboticServoRotor.cs:330
 void ModuleRoboticServoRotor::OnVisualizeServo(bool) {
     if (servoIsMotorized() && initComplete) {
         if (movingPartObject == nullptr) throw Nre();
@@ -173,7 +173,7 @@ void ModuleRoboticServoRotor::OnVisualizeServo(bool) {
     }
 }
 
-// :346
+// ModuleRoboticServoRotor.cs:346
 void ModuleRoboticServoRotor::OnModifyServo() {
     Set<float>("maxTorque", F(fx(maxMotorOutput()) * (fx(servoMotorSize()) * fx(0.01f))));
     if (!servoIsBraking) brakingMode = false;
@@ -209,7 +209,7 @@ void ModuleRoboticServoRotor::OnModifyServo() {
     }
 }
 
-// :426
+// ModuleRoboticServoRotor.cs:426
 void ModuleRoboticServoRotor::ServoFixedUpdate() {
     if (!ServoEnvironment::SceneIsFlight() || !initComplete) return;
     timeSinceRPMRefresh = F(fx(timeSinceRPMRefresh) + fx(Time::deltaTime));
@@ -261,7 +261,7 @@ void ModuleRoboticServoRotor::ServoFixedUpdate() {
     previousDisplacement = currentTransformAngle();
 }
 
-// :502
+// ModuleRoboticServoRotor.cs:502
 void ModuleRoboticServoRotor::RatchetLock() {
     if (servoMotorIsEngaged()) return;
     if (servoJoint == nullptr || movingPartRB == nullptr || movingPartObject == nullptr) throw Nre();
@@ -311,7 +311,7 @@ void ModuleRoboticServoRotor::RatchetLock() {
     freespinPreviousRotation = freespinCurrentRotation;
 }
 
-// :573
+// ModuleRoboticServoRotor.cs:573
 float ModuleRoboticServoRotor::GetFrameDisplacement() {
     rotationDiff = F(fx(currentTransformAngle()) - fx(previousDisplacement));
     if (rotationDiff >= 180.0f)
@@ -322,25 +322,25 @@ float ModuleRoboticServoRotor::GetFrameDisplacement() {
     return rotationDiff;
 }
 
-// :593
+// ModuleRoboticServoRotor.cs:593
 void ModuleRoboticServoRotor::OnSaveShip() {
     SetLaunchPosition(rpmLimit());
     BaseServo::OnSaveShip();
 }
 
-// :599
+// ModuleRoboticServoRotor.cs:599
 void ModuleRoboticServoRotor::ResetLaunchPosition() {
     Fields()["rpmLimit"]->SetValue(ModuleValue(launchPosition()));
     ModifyServo(nullptr);
 }
 
-// :612
+// ModuleRoboticServoRotor.cs:612
 void ModuleRoboticServoRotor::OnVesselChange(Vessel* vsl) {
     Part* p = PartOf();
     if (p != nullptr && p->vessel != nullptr && vsl != nullptr && vsl->persistentId == p->vessel->persistentId) UpdateLoadMass();
 }
 
-// :620
+// ModuleRoboticServoRotor.cs:620
 void ModuleRoboticServoRotor::UpdateLoadMass() {
     loadMass = 0.0f;
     Part& p = PartRef(*this);
@@ -350,7 +350,7 @@ void ModuleRoboticServoRotor::UpdateLoadMass() {
     }
 }
 
-// :630
+// ModuleRoboticServoRotor.cs:630
 void ModuleRoboticServoRotor::SetJointDrive(float torque) {
     if (servoJoint == nullptr) throw Nre();
     const std::string text = angularDriveMode();
@@ -371,7 +371,7 @@ void ModuleRoboticServoRotor::SetJointDrive(float torque) {
     }
 }
 
-// :653
+// ModuleRoboticServoRotor.cs:653
 Quaternionf ModuleRoboticServoRotor::RotateOnMainAxis(const Quaternionf& originalRotation, float rotationAngle) {
     const float half = F(fx(rotationAngle) * 0.5 * fx(Mathf::Deg2Rad));
     const Vector3f vector = GetMainAxis() * Mathf::Sin(half);
@@ -383,7 +383,7 @@ Quaternionf ModuleRoboticServoRotor::RotateOnMainAxis(const Quaternionf& origina
     return originalRotation * quaternion;
 }
 
-// :664 (the field visibility is UI; the readout refresh and the prev* bookkeeping stay)
+// ModuleRoboticServoRotor.cs:664 (the field visibility is UI; the readout refresh and the prev* bookkeeping stay)
 void ModuleRoboticServoRotor::UpdatePAWUI(UI_Scene currentScene) {
     const bool num = (prevServoMotorIsEngaged != servoMotorIsEngaged() && currentScene == UI_Scene::Flight) ||
                      (prevServoIsMotorized != servoIsMotorized() && currentScene == UI_Scene::Editor) || prevServoIsLocked != servoIsLocked();
@@ -401,7 +401,7 @@ void ModuleRoboticServoRotor::UpdatePAWUI(UI_Scene currentScene) {
     BaseServo::UpdatePAWUI(currentScene);
 }
 
-// :721
+// ModuleRoboticServoRotor.cs:721
 void ModuleRoboticServoRotor::OnResourceNonemptyEmpty(PartResource* resource) {
     if (!ResourceEventApplies(*this, resource)) return;
     for (size_t i = 0; i < resHandler.inputResources.size(); i++)
