@@ -330,59 +330,80 @@ Collision ContactHost::MakeCollision(const PhysicsWorld::ContactEvent& e, bool m
 
 void ContactHost::DispatchContacts() {
     if (recordDispatch) lastDispatch_.clear();
-    const std::vector<PhysicsWorld::ContactEvent>& events = bubble_->World().ContactEvents();
-    if (events.empty()) return;
-    // new contacts, kept ones, then lost ones (see the header comment)
-    for (const Kind pass : {Kind::Enter, Kind::Stay, Kind::Exit}) {
-        for (const PhysicsWorld::ContactEvent& e : events) {
-            if (e.kind != pass) continue;
-            const auto key = std::make_tuple(e.body1, e.sub1, e.body2, e.other);
-            Part *c1 = nullptr, *c2 = nullptr;
-            VesselPhysics *vp1 = nullptr, *vp2 = nullptr;
-            if (pass != Kind::Exit) {
-                int cl1 = -1, cl2 = -1;
-                vp1 = BindingOfBody(e.body1, cl1);
-                if (e.otherStatic) {
-                    if (vp1 == nullptr) continue;  // a physical object on the ground: no part
-                    c1 = vp1->PartAt(e.sub1);
-                } else {
-                    vp2 = BindingOfBody(e.body2, cl2);
-                    if (vp1 != nullptr) c1 = vp1->PartAt(e.sub1);
-                    if (vp2 != nullptr) c2 = vp2->PartAt(static_cast<size_t>(e.other));
-                    if (c1 == nullptr && c2 == nullptr) continue;
-                }
-                PairMemory& m = pairs_[key];
-                m.colliderPart1 = c1;
-                m.colliderPart2 = c2;
-                m.otherKey = e.other;
-                m.otherStatic = e.otherStatic;
-            } else {
-                const auto it = pairs_.find(key);
-                if (it == pairs_.end()) continue;
-                c1 = it->second.colliderPart1;
-                c2 = it->second.colliderPart2;
-                pairs_.erase(it);
-                // Unity sends no OnCollisionExit for a collider that was destroyed or disabled: a dead part / a removed static collider
-                if (c1 != nullptr && !Alive(c1)) c1 = nullptr;
-                if (c2 != nullptr && !Alive(c2)) c2 = nullptr;
-                if (e.otherStatic && bubble_->World().StaticBody(e.other) == kInvalidBody) continue;
-                if (!e.otherStatic && (c1 == nullptr || c2 == nullptr)) continue;
-                if (c1 != nullptr && c1->vessel != nullptr) vp1 = BindingOf(*c1->vessel);
-                if (c2 != nullptr && c2->vessel != nullptr) vp2 = BindingOf(*c2->vessel);
-            }
-            auto send = [&](Part* receiver, const Collision& col, Part* colliderPart) {
-                if (receiver == nullptr || receiver->vessel == nullptr) return;
-                if (recordDispatch) lastDispatch_.push_back(DispatchRecord{pass, receiver, colliderPart, col});
-                switch (pass) {
-                    case Kind::Enter: ++enters_; receiver->OnCollisionEnter(col); break;
-                    case Kind::Stay: ++stays_; receiver->OnCollisionStay(col); break;
-                    case Kind::Exit: ++exits_; receiver->OnCollisionExit(col); break;
-                }
-            };
-            if (c1 != nullptr && c1->State() != PartStates::DEAD) send(OwnerOf(c1), MakeCollision(e, false, c1, c2, vp1, vp2), c1);
-            if (!e.otherStatic && c2 != nullptr && Alive(c2) && c2->State() != PartStates::DEAD)
-                send(OwnerOf(c2), MakeCollision(e, true, c2, c1, vp2, vp1), c2);
+    // Every world step since the last dispatch, in order: one step per FixedUpdate as in Unity, or WP-29c's physics-warp substeps (several
+    // world steps in one FixedUpdate, PhysicsBubble::physicsStep). A contact that begins or ends inside any substep reaches the parts
+    // (its Enter carries that substep's impact); OnCollisionStay goes once per FixedUpdate and pair, as Unity calls it, in the last step
+    // that reported the pair as kept.
+    const std::vector<std::vector<PhysicsWorld::ContactEvent>> log = bubble_->World().TakeContactEventLog();
+    if (log.empty()) return;
+    using PairKey = std::tuple<BodyId, uint32_t, BodyId, uint64_t>;
+    std::map<PairKey, size_t> lastStay;
+    if (log.size() > 1)
+        for (size_t s = 0; s < log.size(); ++s)
+            for (const PhysicsWorld::ContactEvent& e : log[s])
+                if (e.kind == Kind::Stay) lastStay[std::make_tuple(e.body1, e.sub1, e.body2, e.other)] = s;
+    for (size_t step = 0; step < log.size(); ++step) {
+        const std::vector<PhysicsWorld::ContactEvent>& events = log[step];
+        // new contacts, kept ones, then lost ones (see the header comment)
+        for (const Kind pass : {Kind::Enter, Kind::Stay, Kind::Exit}) DispatchPass(events, pass, step, lastStay);
+    }
+    substepsDispatched_ = log.size();
+}
+
+void ContactHost::DispatchPass(const std::vector<PhysicsWorld::ContactEvent>& events, PhysicsWorld::ContactEvent::Kind pass, size_t step,
+                               const std::map<std::tuple<BodyId, uint32_t, BodyId, uint64_t>, size_t>& lastStay) {
+    for (const PhysicsWorld::ContactEvent& e : events) {
+        if (e.kind != pass) continue;
+        const auto key = std::make_tuple(e.body1, e.sub1, e.body2, e.other);
+        if (pass == Kind::Stay && !lastStay.empty()) {
+            const auto ls = lastStay.find(key);
+            if (ls == lastStay.end() || ls->second != step) continue;  // OnCollisionStay once per FixedUpdate
         }
+        Part *c1 = nullptr, *c2 = nullptr;
+        VesselPhysics *vp1 = nullptr, *vp2 = nullptr;
+        if (pass != Kind::Exit) {
+            int cl1 = -1, cl2 = -1;
+            vp1 = BindingOfBody(e.body1, cl1);
+            if (e.otherStatic) {
+                if (vp1 == nullptr) continue;  // a physical object on the ground: no part
+                c1 = vp1->PartAt(e.sub1);
+            } else {
+                vp2 = BindingOfBody(e.body2, cl2);
+                if (vp1 != nullptr) c1 = vp1->PartAt(e.sub1);
+                if (vp2 != nullptr) c2 = vp2->PartAt(static_cast<size_t>(e.other));
+                if (c1 == nullptr && c2 == nullptr) continue;
+            }
+            PairMemory& m = pairs_[key];
+            m.colliderPart1 = c1;
+            m.colliderPart2 = c2;
+            m.otherKey = e.other;
+            m.otherStatic = e.otherStatic;
+        } else {
+            const auto it = pairs_.find(key);
+            if (it == pairs_.end()) continue;
+            c1 = it->second.colliderPart1;
+            c2 = it->second.colliderPart2;
+            pairs_.erase(it);
+            // Unity sends no OnCollisionExit for a collider that was destroyed or disabled: a dead part / a removed static collider
+            if (c1 != nullptr && !Alive(c1)) c1 = nullptr;
+            if (c2 != nullptr && !Alive(c2)) c2 = nullptr;
+            if (e.otherStatic && bubble_->World().StaticBody(e.other) == kInvalidBody) continue;
+            if (!e.otherStatic && (c1 == nullptr || c2 == nullptr)) continue;
+            if (c1 != nullptr && c1->vessel != nullptr) vp1 = BindingOf(*c1->vessel);
+            if (c2 != nullptr && c2->vessel != nullptr) vp2 = BindingOf(*c2->vessel);
+        }
+        auto send = [&](Part* receiver, const Collision& col, Part* colliderPart) {
+            if (receiver == nullptr || receiver->vessel == nullptr) return;
+            if (recordDispatch) lastDispatch_.push_back(DispatchRecord{pass, receiver, colliderPart, col});
+            switch (pass) {
+                case Kind::Enter: ++enters_; receiver->OnCollisionEnter(col); break;
+                case Kind::Stay: ++stays_; receiver->OnCollisionStay(col); break;
+                case Kind::Exit: ++exits_; receiver->OnCollisionExit(col); break;
+            }
+        };
+        if (c1 != nullptr && c1->State() != PartStates::DEAD) send(OwnerOf(c1), MakeCollision(e, false, c1, c2, vp1, vp2), c1);
+        if (!e.otherStatic && c2 != nullptr && Alive(c2) && c2->State() != PartStates::DEAD)
+            send(OwnerOf(c2), MakeCollision(e, true, c2, c1, vp2, vp1), c2);
     }
 }
 
@@ -439,6 +460,7 @@ void ContactHost::UpdateAnchors(float dt) {
 void ContactHost::AfterPhysicsStep(float dt) {
     UpdateAnchors(dt);
     if (options.collisions) DispatchContacts();
+    else bubble_->World().TakeContactEventLog();  // drained: no messages
 }
 
 // ===================================================================================== PartBuoyancy

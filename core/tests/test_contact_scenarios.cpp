@@ -1,7 +1,9 @@
 // WP-20e scenarios: contact, landing and water through the whole flight tick (physics bubble + FlightIntegrator + contact host).
 // See STATUS.md WP-20e. Fixtures: tests/contact_fixture.hpp (over the WP-20d pad scene). No golden or capture covers Jolt contacts; each
 // scenario names its reference (KSP's rule evaluated on the reported contact, an analytic equilibrium, the scene's own geometry).
+#include <algorithm>
 #include <cmath>
+#include <tuple>
 
 #include "contact_fixture.hpp"
 
@@ -143,9 +145,16 @@ struct DropRun {
     double depth = 0.0, submerged = 0.0;
     Quaternionf rotation;
     std::vector<std::pair<Vessel_Situations, Vessel_Situations>> situations;
+    // physics-warp substeps (Drop's `substeps` > 1)
+    int rawRootEnters = 0;       // the root's Enter events over every world substep (PhysicsWorld::ContactEvents after each)
+    int lastStepRootEnters = 0;  // of those, the ones in a tick's last substep (all a last-step-only dispatch would have seen)
+    int dispatchedRootEnters = 0;
+    int stayDuplicates = 0;      // OnCollisionStay sent twice in one FixedUpdate for one collider pair
+    size_t maxStepsPerDispatch = 0;
 };
 
-DropRun Drop(double lat, double lon, bool sea, double clearance, double v0, int ticks, const std::string& tag = "", int threads = 1) {
+DropRun Drop(double lat, double lon, bool sea, double clearance, double v0, int ticks, const std::string& tag = "", int threads = 1,
+             int substeps = 1) {
     DropRun r;
     AnchorSettings settings;
     World w(true);
@@ -173,12 +182,60 @@ DropRun Drop(double lat, double lon, bool sea, double clearance, double v0, int 
     REQUIRE(vp != nullptr);
     vp->SetLinearVelocity(site.up * -v0);
     Part* root = v->rootPart;
+    const float savedFixed = Time::fixedDeltaTime, savedDelta = Time::deltaTime;
+    if (substeps > 1) {
+        // physics warp (TimeWarp.cs:423: Time.fixedDeltaTime = 0.02 x rate) with WP-29c's 0.02 s substeps through PhysicsBubble::physicsStep, as
+        // WheelPhysicsHost::PhysicsStep runs them for a wheeled vessel (src/physics/vessel_wheels.cpp: the tick's buffered forces held over
+        // every substep); the raw events of every substep are counted here
+        pad.s.tw.Mode = TimeWarp::Modes::LOW;
+        pad.s.tw.curr_rate = static_cast<float>(substeps);
+        Time::fixedDeltaTime = 0.02f * static_cast<float>(substeps);
+        Time::deltaTime = Time::fixedDeltaTime;
+        w.planetarium.fixedDeltaTime = static_cast<double>(Time::fixedDeltaTime);
+        pad.s.bubble.physicsStep = [&, substeps](float dt) {
+            VesselPhysicsHost& host = pad.s.bubble.Host();
+            const float h = dt / static_cast<float>(substeps);
+            std::vector<std::pair<VesselPhysics*, VesselPhysics::BufferedForces>> held;
+            for (const auto& b : host.Bindings()) held.emplace_back(b.get(), b->PeekBufferedForces());
+            for (int k = 0; k < substeps; ++k) {
+                if (k > 0)
+                    for (auto& [hp, f] : held)
+                        for (const auto& b : host.Bindings())
+                            if (b.get() == hp) hp->AddBufferedForces(f);
+                host.Step(h);
+                VesselPhysics* b = host.Find(*v);
+                if (b == nullptr) continue;
+                for (const PhysicsWorld::ContactEvent& e : pad.s.world.ContactEvents())
+                    if (e.kind == PhysicsWorld::ContactEvent::Kind::Enter && e.otherStatic && b->ClusterOfBody(e.body1) >= 0 && b->PartAt(e.sub1) == root) {
+                        ++r.rawRootEnters;
+                        if (k == substeps - 1) ++r.lastStepRootEnters;
+                    }
+            }
+        };
+    }
     for (int k = 0; k < ticks; ++k) {
         Tick(pad);
+        r.maxStepsPerDispatch = std::max(r.maxStepsPerDispatch, ch.SubstepsDispatched());
+        std::vector<std::tuple<const Part*, const Part*, uint64_t>> stays;
+        for (const ContactHost::DispatchRecord& d : ch.LastDispatch()) {
+            if (d.kind == PhysicsWorld::ContactEvent::Kind::Enter && d.receiver == root) ++r.dispatchedRootEnters;
+            if (d.kind != PhysicsWorld::ContactEvent::Kind::Stay) continue;
+            const auto key = std::make_tuple(static_cast<const Part*>(d.receiver), static_cast<const Part*>(d.colliderPart), d.collision.collider.id);
+            if (std::find(stays.begin(), stays.end(), key) != stays.end()) ++r.stayDuplicates;
+            stays.push_back(key);
+        }
         for (float s : ImpactSpeeds(ch, root)) r.impacts.push_back(s);
         if (CollisionEnhancer* e = ch.Enhancer(*root)) r.enhancerHit = r.enhancerHit || e->lastHit;
         if (root->State() == PartStates::DEAD) break;
         r.minHeight = std::min(r.minHeight, (Vector3d(root->partTransform.position) - w.Kerbin().position).magnitude() - site.surfaceRadius);
+    }
+    if (substeps > 1) {
+        pad.s.bubble.physicsStep = nullptr;
+        pad.s.tw.Mode = TimeWarp::Modes::HIGH;
+        pad.s.tw.curr_rate = 1.0f;
+        Time::fixedDeltaTime = savedFixed;
+        Time::deltaTime = savedDelta;
+        w.planetarium.fixedDeltaTime = static_cast<double>(savedFixed);
     }
     r.exploded = root->State() == PartStates::DEAD;
     r.landed = v->Landed;
@@ -776,4 +833,82 @@ TEST_CASE("WP-20e collider closest points: getLowestPoint's Collider.ClosestPoin
     // a point inside a collider is its own closest point (Unity's Collider.ClosestPoint)
     const std::vector<float> inside = Vessel::env.colliderClosestPointsZ(p, Vector3f(10.0f, 20.0f, 32.1f));
     CHECK(inside[1] == doctest::Approx(32.1).epsilon(1e-6));
+}
+
+TEST_CASE("WP-20e contact event log: several world steps between two dispatches keep every step's events (PhysicsWorld::TakeContactEventLog)") {
+    // a box moving onto a static floor, four steps of 5 ms per "FixedUpdate" (no gravity: the world has none): the contact begins in the
+    // tick's first step and the last step reports only its Stay; the log holds the Enter of the step it happened in
+    PhysicsWorld world;
+    world.SetContactEventTracking(true);
+    REQUIRE(world.AddStaticShape(7, ShapeDesc::Box(Vector3f(10.0f, 0.5f, 10.0f)), Vector3d(0.0, -0.5, 0.0), QuaternionD::identity()) != kInvalidBody);
+    BodyDesc d;
+    d.shape = ShapeDesc::Box(Vector3f(0.5f, 0.5f, 0.5f));
+    d.position = Vector3d(0.0, 0.5 + 0.005, 0.0);  // 5 mm above the floor: within Unity's 0.01 m contact offset at the first step
+    d.linearVelocity = Vector3d(0.0, -3.0, 0.0);
+    d.mass = 1.0f;
+    const BodyId box = world.CreateBody(d);
+    REQUIRE(box != kInvalidBody);
+    std::vector<std::vector<PhysicsWorld::ContactEvent::Kind>> perStep;
+    for (int k = 0; k < 4; ++k) {
+        world.Step(0.005f);
+        perStep.emplace_back();
+        for (const PhysicsWorld::ContactEvent& e : world.ContactEvents()) perStep.back().push_back(e.kind);
+    }
+    const std::vector<std::vector<PhysicsWorld::ContactEvent>> log = world.TakeContactEventLog();
+    int enterStep = -1;
+    for (int k = 0; k < 4 && enterStep < 0; ++k)
+        for (PhysicsWorld::ContactEvent::Kind kind : perStep[static_cast<size_t>(k)])
+            if (kind == PhysicsWorld::ContactEvent::Kind::Enter) enterStep = k;
+    size_t logged = 0;
+    bool logEnter = false;
+    for (const auto& step : log) {
+        logged += step.size();
+        for (const PhysicsWorld::ContactEvent& e : step) logEnter = logEnter || (e.kind == PhysicsWorld::ContactEvent::Kind::Enter && e.body1 == box && e.otherStatic && e.other == 7);
+    }
+    size_t raw = 0;
+    for (const auto& s : perStep) raw += s.size();
+    MESSAGE("contact begins in step " << enterStep << " of 4; the last step reports " << perStep.back().size() << " event(s); the log holds " << log.size()
+                                     << " step(s), " << logged << " event(s)");
+    REQUIRE(enterStep >= 0);
+    CHECK(enterStep < 3);  // inside the tick: a last-step-only dispatch would never send its OnCollisionEnter
+    for (PhysicsWorld::ContactEvent::Kind kind : perStep.back()) CHECK(kind != PhysicsWorld::ContactEvent::Kind::Enter);
+    CHECK(logEnter);
+    CHECK(logged == raw);  // every step's events, none twice
+    CHECK(world.TakeContactEventLog().empty());  // taken
+    // the log keeps the last 64 steps that reported events, so an undrained world stays bounded
+    for (int k = 0; k < 100; ++k) world.Step(0.005f);
+    CHECK(world.TakeContactEventLog().size() == 64);
+    world.SetContactEventTracking(false);
+    world.Step(0.005f);
+    CHECK(world.TakeContactEventLog().empty());
+}
+
+TEST_CASE("WP-20e physics-warp substeps: every substep's contact messages reach the parts (WP-29c's PhysicsBubble::physicsStep, 4x)") {
+    if (!wp20b::GameAvailable()) return;
+    const double tol = 9.0;  // probeStackLarge.cfg crashTolerance
+    const double g = 9.80;
+    const double d = 0.30;
+    for (const double f : {0.9, 1.1}) {
+        const double vt = f * tol;
+        const double v0 = std::sqrt(vt * vt - 2.0 * g * d);
+        const DropRun r = Drop(kPadLat, kPadLon, false, d, v0, 100, "", 1, 4);
+        MESSAGE(f << " x crashTolerance at 4x physics warp (4 substeps of 0.02 s): the root's Enter events over all substeps " << r.rawRootEnters
+                  << " (in a tick's last substep " << r.lastStepRootEnters << "), dispatched " << r.dispatchedRootEnters << "; steps per dispatch up to "
+                  << r.maxStepsPerDispatch << ", duplicate Stays " << r.stayDuplicates << "; impact " << (r.impacts.empty() ? 0.0f : r.impacts.front())
+                  << " m/s (aimed " << vt << "), exploded " << r.exploded << ", landed " << r.landed);
+        REQUIRE(r.rawRootEnters > 0);
+        // every substep's Enter reaches the part (none lost, none twice); at 1.1x the first explodes it and the part, DEAD, takes no more
+        // messages (the same rule as at 1x). Here the contact begins inside the tick: a last-substep-only dispatch would have sent none.
+        if (f < 1.0) CHECK(r.dispatchedRootEnters == r.rawRootEnters);
+        else CHECK(r.dispatchedRootEnters >= 1);
+        CHECK(r.maxStepsPerDispatch > 1);
+        CHECK(r.stayDuplicates == 0);                       // OnCollisionStay once per FixedUpdate and pair
+        REQUIRE_FALSE(r.impacts.empty());
+        CHECK(std::fabs(r.impacts.front() - vt) < 0.03 * vt);
+        CHECK(r.exploded == (f > 1.0));
+        if (f < 1.0) {
+            CHECK(r.landed);
+            CHECK(r.situation == Vessel::Situations::LANDED);
+        }
+    }
 }

@@ -288,6 +288,10 @@ public:
     void SetContactEventTracking(bool on, float contactOffset = 0.01f);
     bool ContactEventTracking() const;
     const std::vector<ContactEvent>& ContactEvents() const;  // the last step's
+    // Every step's events since the last call, oldest step first (one entry per step that reported any; the last 64 such steps are kept).
+    // A caller that steps the world several times per frame (WP-29c's physics-warp substeps: one Unity FixedUpdate, several world steps)
+    // dispatches the events of all of them: ContactEvents() holds only the last step's.
+    std::vector<std::vector<ContactEvent>> TakeContactEventLog();
     // A rigid weld of a non-static body to the world at a physics-frame point (Jolt FixedConstraint with Body::sFixedToWorld): the
     // Vessel's RB anchor (Vessel.cs:1162 `base.gameObject.AddComponent<FixedJoint>()`, connectedBody null). GetConstraintImpulse returns
     // the impulse the constraint applied to `body` in the last step; RemoveConstraint / RemoveBody remove it.

@@ -39,6 +39,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
+#include <deque>
 #include <map>
 #include <mutex>
 #include <tuple>
@@ -464,6 +465,8 @@ struct PhysicsWorld::Impl {
     std::unique_ptr<StaticContactListener> contactListener;
     std::vector<PhysicsWorld::StaticContact> staticContacts;
     std::vector<PhysicsWorld::ContactEvent> contactEvents;  // WP-20e
+    std::deque<std::vector<PhysicsWorld::ContactEvent>> contactEventLog;  // WP-20e: the steps' events since TakeContactEventLog
+    static constexpr size_t kContactEventLogSteps = 64;
     // the listener lives while static-contact tracking or event tracking is on
     void SyncListener(bool staticOn, bool eventsOn, float offset) {
         if (!staticOn && !eventsOn) {
@@ -473,6 +476,7 @@ struct PhysicsWorld::Impl {
             }
             staticContacts.clear();
             contactEvents.clear();
+            contactEventLog.clear();
             return;
         }
         if (!contactListener) {
@@ -488,6 +492,7 @@ struct PhysicsWorld::Impl {
             contactListener->eventsOn = eventsOn;
             contactListener->evLast.clear();
             contactEvents.clear();
+            contactEventLog.clear();
         }
         contactListener->contactOffset = offset;
     }
@@ -547,6 +552,10 @@ void PhysicsWorld::Step(float dt, int collisionSteps) {
     if (m.contactListener) {
         m.contactListener->EndStep(m.staticContacts);
         m.contactListener->EndStepEvents(m.contactEvents);
+        if (m.contactListener->eventsOn && !m.contactEvents.empty()) {
+            m.contactEventLog.push_back(m.contactEvents);
+            if (m.contactEventLog.size() > Impl::kContactEventLogSteps) m.contactEventLog.pop_front();
+        }
     }
 }
 
@@ -571,6 +580,13 @@ void PhysicsWorld::SetContactEventTracking(bool on, float contactOffset) {
 bool PhysicsWorld::ContactEventTracking() const { return impl_->contactListener && impl_->contactListener->eventsOn; }
 
 const std::vector<PhysicsWorld::ContactEvent>& PhysicsWorld::ContactEvents() const { return impl_->contactEvents; }
+
+std::vector<std::vector<PhysicsWorld::ContactEvent>> PhysicsWorld::TakeContactEventLog() {
+    std::vector<std::vector<ContactEvent>> out(std::make_move_iterator(impl_->contactEventLog.begin()),
+                                               std::make_move_iterator(impl_->contactEventLog.end()));
+    impl_->contactEventLog.clear();
+    return out;
+}
 
 void PhysicsWorld::FixedStep() { Step(Time::fixedDeltaTime); }
 

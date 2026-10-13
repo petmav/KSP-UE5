@@ -10,6 +10,8 @@
 //                       contact, before the contact solve (PhysX's pre-solver velocities). Unity's dispatch order is PhysX's report order;
 //                       here: the new contacts (Enter), the kept ones (Stay), then the lost ones (Exit), each sorted (deterministic; new
 //                       contacts first, so a part sliding from one terrain quad to the next never reads as airborne for a moment).
+//                       Several world steps in one FixedUpdate (WP-29c's physics-warp substeps): every step's Enter / Exit in step order,
+//                       OnCollisionStay once per pair (PhysicsWorld::TakeContactEventLog).
 //   static colliders    every static body of the world is a collider with a GameObject: layer (15 Local Scenery for terrain and KSC, the
 //                       default), tag ("Untagged", or LaunchPad / Runway ... of KSC objects: Vessel.SetLandedAt), name, a PQ (terrain
 //                       quad: the body), CrashObjectName. RegisterStatic / RegisterStaticRange; TerrainColliders hosted per body register
@@ -133,6 +135,8 @@ public:
     uint64_t EnterCount() const { return enters_; }
     uint64_t ExitCount() const { return exits_; }
     uint64_t StayCount() const { return stays_; }
+    // world steps whose contact events the last dispatch delivered (1 per FixedUpdate; WP-29c's physics-warp substeps: more)
+    size_t SubstepsDispatched() const { return substepsDispatched_; }
     PartBuoyancy* Buoyancy(const Part& part) const;
     CollisionEnhancer* Enhancer(const Part& part) const;
     size_t AnchorCount() const { return anchors_.size(); }
@@ -166,6 +170,8 @@ private:
     UnityEngine::Collision MakeCollision(const PhysicsWorld::ContactEvent& e, bool mirrored, Part* thisColliderPart, Part* otherColliderPart,
                             VesselPhysics* vp1, VesselPhysics* vp2) const;
     void DispatchContacts();
+    void DispatchPass(const std::vector<PhysicsWorld::ContactEvent>& events, PhysicsWorld::ContactEvent::Kind pass, size_t step,
+                      const std::map<std::tuple<BodyId, uint32_t, BodyId, uint64_t>, size_t>& lastStay);
     void UpdateAnchors(float dt);
     PartBuoyancy::Env BuoyancyEnv();
     CollisionEnhancer::Env EnhancerEnv();
@@ -190,6 +196,7 @@ private:
     std::vector<HostedTerrain> terrain_;
     std::vector<DispatchRecord> lastDispatch_;
     uint64_t enters_ = 0, exits_ = 0, stays_ = 0;
+    size_t substepsDispatched_ = 0;
     Vector3d pendingShift_;
     size_t terrainRefreshes_ = 0;
 };
