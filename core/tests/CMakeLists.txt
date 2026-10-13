@@ -95,6 +95,8 @@ add_executable(kspcore_tests
     test_wheels.cpp
     test_wheel_modules.cpp
     test_wheel_modules_derived.cpp
+    test_wheel_collider.cpp
+    test_vessel_wheels.cpp
     ${PROJECT_SOURCE_DIR}/tools/golden_runner/sha256.cpp
     test_save.cpp
     test_hygiene.cpp
@@ -159,6 +161,10 @@ set_tests_properties(wheels.vpp PROPERTIES LABELS unit TIMEOUT 600)
 # WP-29b: the wheel part modules against the independent Python reference (tools/wp29b/wheel_reference.py): 0 ULP
 add_test(NAME wheels.modules COMMAND kspcore_tests "-tc=WP-29b*")
 set_tests_properties(wheels.modules PROPERTIES LABELS unit TIMEOUT 900)
+# WP-29c: the native WheelCollider against the independent Python reference (tools/wp29c/suspension_reference.py, 0 ULP), the vessel
+# integration, the physics-warp substeps and the rover scenarios
+add_test(NAME wheels.native COMMAND kspcore_tests "-tc=WP-29c*")
+set_tests_properties(wheels.native PROPERTIES LABELS unit TIMEOUT 900)
 # WP-52: Breaking Ground robotics (servos, controller) against the independent Python reference (tools/wp52/servo_reference.py): 0 ULP
 add_test(NAME robotics COMMAND kspcore_tests "-tc=WP-52*")
 set_tests_properties(robotics PROPERTIES LABELS unit TIMEOUT 900)

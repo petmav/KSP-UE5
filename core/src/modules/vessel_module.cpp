@@ -4,6 +4,7 @@
 #include <map>
 
 #include "ksp/core/log.hpp"
+#include "ksp/modules/part_module.hpp"
 #include "ksp/vessel/axis_groups_module.hpp"
 
 namespace ksp {
@@ -13,25 +14,25 @@ namespace ksp {
 VesselModule::VesselModule(const ModuleClassInfo& cls) : FieldStore(cls) {}
 VesselModule::~VesselModule() = default;
 
-// VesselModule.cs:54 (vessel = GetComponent<Vessel>() is the caller's `vessel` assignment)
+// VesselModule.cs:49 (vessel = GetComponent<Vessel>() is the caller's `vessel` assignment)
 void VesselModule::Awake() {
     fields_ = std::make_unique<BaseFieldList>(*this);
     OnAwake();
 }
 
-// VesselModule.cs:68
+// VesselModule.cs:61
 void VesselModule::Load(const ConfigNode& node) {
     Fields().Load(node);
     OnLoad(node);
 }
 
-// VesselModule.cs:74
+// VesselModule.cs:67
 void VesselModule::Save(ConfigNode& node) {
     Fields().Save(node);
     OnSave(node);
 }
 
-// VesselModule.cs:99
+// VesselModule.cs:105
 bool VesselModule::ShouldBeActive(bool loadedSceneIsFlight, bool vesselLoaded) {
     const Activation activation = GetActivation();
     if (activation == Always) return true;
@@ -78,6 +79,9 @@ std::map<std::string, VesselModuleFactory::Creator>& Creators() {
 void VesselModuleFactory::Register(const std::string& className, Creator creator) { Creators()[className] = std::move(creator); }
 
 std::shared_ptr<VesselModule> VesselModuleFactory::Create(const ModuleClassInfo& cls) {
+    // the built-in behaviours (VesselModules such as CommNetVessel included) register on the first factory use
+    // (RegisterBuiltinModules): without this a VesselModule made before any PartModule came out as the plain base class
+    (void)ModuleFactory::IsRegistered(cls.name);
     auto it = Creators().find(cls.name);
     if (it != Creators().end()) return it->second(cls);
     return std::make_shared<VesselModule>(cls);
@@ -144,7 +148,7 @@ void VesselModuleManager::SetWrapperActive(std::string_view name, bool isActive)
         if (name == w.type->name) w.active = isActive;
 }
 
-// VesselModuleManager.cs:178
+// VesselModuleManager.cs:143
 void VesselModuleManager::AddModulesToVessel(void* vessel, std::vector<std::shared_ptr<VesselModule>>& modules,
                                              const std::function<bool(const ModuleClassInfo&)>& vesselHasComponent,
                                              bool loadedSceneIsFlight, bool vesselLoaded) {

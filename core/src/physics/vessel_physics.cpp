@@ -330,8 +330,11 @@ void VesselPhysics::BuildClusters(const std::vector<PartPhysicsState>& states) {
         c.w = I.Solve(L);
         // the compound of every part's colliders (physicsless parts included: their colliders belong to the parent's Rigidbody)
         CompoundBodyDesc d;
+        // WP-29c: mass-only parts (options_.massOnly: wheels) give no shape, unless the cluster would have none (second pass)
+        for (int pass = 0; pass < 2 && d.children.empty(); ++pass)
         for (int i : c.parts) {
             const PartRec& r = *parts_[static_cast<size_t>(i)];
+            if (pass == 0 && options_.massOnly && options_.massOnly(*r.part)) continue;
             for (const ColliderProxy& box : r.colliders) {
                 CompoundChild ch;
                 switch (box.kind) {  // WP-mucol: the .mu collider kinds

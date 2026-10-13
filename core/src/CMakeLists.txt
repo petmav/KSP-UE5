@@ -38,6 +38,7 @@ add_library(kspcore STATIC
     physics/vessel_physics.cpp
     physics/mu_part_colliders.cpp
     physics/vessel_physics_forces.cpp
+    physics/vessel_physics_substeps.cpp
     physics/vessel_physics_host.cpp
     physics/vessel_physics_joints.cpp
     physics/vessel_physics_loads.cpp
@@ -50,6 +51,7 @@ add_library(kspcore STATIC
     physics/part_buoyancy.cpp
     physics/collision_enhancer.cpp
     physics/contact_host.cpp
+    physics/vessel_wheels.cpp
     celestial/celestial_body.cpp
     celestial/planetarium.cpp
     celestial/celestial_system.cpp
@@ -310,6 +312,7 @@ add_library(kspcore STATIC
     commnet/comm_net_vessel.cpp
     modules/module_reaction_wheel.cpp
     wheels/wheel_native.cpp
+    wheels/native_wheel_collider.cpp
     wheels/tire_friction.cpp
     wheels/wheel_blocks.cpp
     wheels/vp_wheel_collider.cpp

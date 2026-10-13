@@ -6,7 +6,8 @@
 //                         ModuleWheelBase.cs:293-297, so the lossy scale of the host is 1 for every stock part)
 //   NativeWheelCollider   UnityEngine.WheelCollider (PhysX): what VPWheelCollider writes (spring, damper, target position, centre, radius,
 //                         steer angle, motor torque, force application point) and what it reads (GetGroundHit, sprungMass). The suspension
-//                         ray / force law itself is WP-29c: a host (or a test) fills `groundHit` before every FixedUpdate.
+//                         ray / force law itself is WP-29c's native step (ksp/wheels/native_wheel_collider.hpp, driven per vessel by
+//                         ksp/physics/vessel_wheels.hpp): it fills `groundHit` (or a test does) before every FixedUpdate.
 //   WheelHit / Collider   UnityEngine.WheelHit / Collider (only attachedRigidbody and sharedMaterial are read by VPP)
 //
 // Numerics: the managed parts of Unity (Vector3 / Quaternion operators) follow the Mono float rule through ksp/unity/vector.hpp. The native
@@ -97,6 +98,28 @@ struct JointSpring {
     float targetPosition = 0.0f;
 };
 
+// UnityEngine.WheelFrictionCurve (a struct: `default(WheelFrictionCurve)` is all zeros, which is what VPWheelCollider gives the collider,
+// VPWheelCollider.cs:405-408; the .mu WheelCollider entry carries real curves, PartReader.cs:353-368)
+struct WheelFrictionCurve {
+    float extremumSlip = 0.0f;
+    float extremumValue = 0.0f;
+    float asymptoteSlip = 0.0f;
+    float asymptoteValue = 0.0f;
+    float stiffness = 0.0f;
+};
+
+// WP-29c: PhysX's dynamic state of one vehicle wheel (PxVehicleWheels4DynData: mJounces, mWheelSpeeds), owned by the native step
+// (ksp/wheels/native_wheel_collider.hpp). setToRestState: jounce PX_MAX_F32 (no previous step), wheel speed 0.
+struct PhysxWheelDyn {
+    static constexpr float kNoJounce = 3.40282347e+38f;  // PX_MAX_F32
+    float jounce = kNoJounce;
+    float wheelSpeed = 0.0f;  // rad/s
+    void SetToRestState() {
+        jounce = kNoJounce;
+        wheelSpeed = 0.0f;
+    }
+};
+
 // UnityEngine.WheelCollider. Defaults are Unity's documented ones (mass 20, radius 0.5, suspensionDistance 0.3, spring 35000, damper 4500,
 // targetPosition 0.5); VPWheelCollider overwrites the ones it cares about before the first tick.
 class NativeWheelCollider {
@@ -118,6 +141,14 @@ public:
     // WP-29c fills these before each FixedUpdate: the WheelHit of the last Physics.Simulate
     bool groundHitValid = false;
     WheelHit groundHit;
+    // ---- WP-29c: the rest of the Unity WheelCollider the native step reads / reports ----------------------------------------------------
+    WheelFrictionCurve forwardFriction{0.0f, 0.0f, 0.0f, 0.0f, 0.0f};   // Unity's default curves differ; KSP assigns these (stiffness 0)
+    WheelFrictionCurve sidewaysFriction{0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+    float brakeTorque = 0.0f;
+    float wheelDampingRate = 0.25f;  // WheelCollider.wheelDampingRate (Unity's documented default; VPP / KSP never set it)
+    bool isGrounded = false;         // WheelCollider.isGrounded
+    float rpm = 0.0f;                // WheelCollider.rpm
+    PhysxWheelDyn physx;             // the PhysX vehicle wheel behind the component
 
     bool GetGroundHit(WheelHit& hit) const {  // WheelCollider.GetGroundHit
         hit = groundHit;

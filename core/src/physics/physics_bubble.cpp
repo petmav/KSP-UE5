@@ -392,9 +392,11 @@ void PhysicsBubble::FrameUpdate() {
 
 // seq 291 PhysicsFixedUpdate (Time.fixedDeltaTime: TimeWarp sets it during physical warp)
 void PhysicsBubble::PhysicsStep() {
-    host_.Step(Time::fixedDeltaTime);
+    if (physicsStep) physicsStep(Time::fixedDeltaTime);  // WP-29c: the wheels' native step and physics-warp substeps
+    else host_.Step(Time::fixedDeltaTime);
     // WP-20e: PhysX's callbacks after simulate (the RB anchor's force and break, OnCollisionEnter / Stay / Exit), then the structural
-    // changes they caused (an explosion's Part.Die)
+    // changes they caused (an explosion's Part.Die). With WP-29c's substeps the world stepped several times: the contact host dispatches
+    // the events of every one of them (PhysicsWorld::TakeContactEventLog)
     if (options_.contactHost && contacts_.Installed()) {
         contacts_.AfterPhysicsStep(Time::fixedDeltaTime);
         host_.ProcessStructuralChanges();
