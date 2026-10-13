@@ -122,7 +122,10 @@ struct RoverScene {
     WheelPhysicsHost wheels;
     // WP-20e: this flat ground lies at Kerbin's sea level (no PQS: PadScene's pad radius is the body radius), where KSP's PartBuoyancy
     // (PartBuoyancy.cs:231) finds the wheels below the water line and floats / drags them as in the ocean. The rover tests are about
-    // ground, so the bubble's PartBuoyancy slot is off here; every other piece of the contact host runs.
+    // ground, so the bubble's PartBuoyancy slot is off here; every other piece of the contact host runs. Crash damage is off too
+    // (CheatOptions.NoCrashDamage, Part.cs:3613 HandleCollision): at 4x physics warp WITHOUT substeps (KSP's single 0.08 s step) the
+    // Prospector's body bounces onto the ground at up to 7.1 m/s and KSP's crash tolerance explodes its root decoupler, which these wheel
+    // measurements do not follow.
     static PhysicsBubbleOptions BubbleOptions() {
         PhysicsBubbleOptions b;
         b.contacts.buoyancy = false;
@@ -130,11 +133,13 @@ struct RoverScene {
     }
     explicit RoverScene(World& w_, const WheelPhysicsOptions& o = {}) : w(w_), pad(w_, BubbleOptions()), wheels(pad.s.bubble, o) {
         PhysicsGlobals::SetApplyDrag(false);  // the references below have no aero (the spike's); drag is FlightIntegrator's, gated in WP-20d
+        PartContactEnvironment::noCrashDamage = true;
         wheels.Install();
     }
     ~RoverScene() {
         wheels.Uninstall();
         PhysicsGlobals::SetApplyDrag(true);
+        PartContactEnvironment::noCrashDamage = false;
     }
     // the rover on the pad, its craft up along the local vertical, its drive direction `headingDeg` from north, the lowest proxy point
     // `clearance` above the ground (the wheels at full extension touch it at 0); then as wp20d::PadScene::Place (landed, packed, orbit driver)

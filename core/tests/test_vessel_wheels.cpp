@@ -72,6 +72,7 @@ struct Run {
 };
 
 bool Healthy(Run& run) {
+    if (run.Vp() == nullptr) return false;  // the vessel lost its rigid bodies (it died)
     const Vector3d v = run.Vel();
     return std::isfinite(v.x) && std::isfinite(v.y) && std::isfinite(v.z) && v.magnitude() < 200.0;
 }
