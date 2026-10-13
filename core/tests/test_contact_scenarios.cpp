@@ -725,3 +725,55 @@ TEST_CASE("WP-20e input seam: PhysicsBubble::inputFeed runs at FlightInputHandle
     pad.s.bubble.inputFeed = nullptr;
 }
 
+
+TEST_CASE("WP-20e collider closest points: getLowestPoint's Collider.ClosestPoint over box / sphere / capsule / hull proxies (WP-mucol shapes)") {
+    if (!wp20b::GameAvailable()) return;
+    // the part proxies of WP-mucol's real .mu colliders (VesselPhysicsOptions::colliders); synthetic shapes with analytic answers
+    ColliderProxy box;  // kind Box
+    box.center = Vector3f(0.0f, 1.0f, 0.0f);
+    box.halfExtents = Vector3f(0.5f, 0.5f, 0.5f);
+    ColliderProxy sphere;
+    sphere.kind = ShapeKind::Sphere;
+    sphere.center = Vector3f(0.0f, 0.0f, 2.0f);
+    sphere.radius = 0.7f;
+    ColliderProxy capsule;  // its local Y (the cylinder axis) turned onto the part's Z
+    capsule.kind = ShapeKind::Capsule;
+    capsule.center = Vector3f(0.0f, 0.0f, -2.0f);
+    capsule.rotation = Quaternionf(0.70710678f, 0.0f, 0.0f, 0.70710678f);
+    capsule.radius = 0.4f;
+    capsule.halfHeight = 1.0f;
+    ColliderProxy hull;
+    hull.kind = ShapeKind::ConvexHull;
+    hull.center = Vector3f(0.0f, 0.0f, -5.0f);
+    auto pts = std::make_shared<std::vector<Vector3f>>();
+    for (int c = 0; c < 8; ++c) pts->push_back(Vector3f((c & 1) ? 0.5f : -0.5f, (c & 2) ? 0.5f : -0.5f, (c & 4) ? 0.5f : -0.5f));
+    hull.hull = pts;
+    World w(true);
+    PhysicsBubbleOptions o;
+    o.vessel.colliders = [&](const Part&) { return std::vector<ColliderProxy>{box, sphere, capsule, hull}; };
+    PadScene pad(w, o);
+    auto v = w.Craft("PhysProf-S");
+    Part& p = *v->rootPart;
+    p.partTransform.position = Vector3f(10.0f, 20.0f, 30.0f);
+    p.partTransform.rotation = Quaternionf::identity();
+    // getLowestPoint's measure point: 1,000 m along -forward from the vessel (Vessel.cs:2587), here slightly off the part's axis
+    const Vector3f m(10.3f, 19.8f, -970.0f);
+    REQUIRE(Vessel::env.colliderClosestPointsZ);
+    const std::vector<float> zs = Vessel::env.colliderClosestPointsZ(p, m);
+    REQUIRE(zs.size() == 4);
+    const Vector3d M(m), P(p.partTransform.position);
+    auto towards = [&](const Vector3d& c, double r) { return c.z + r * (M.z - c.z) / (M - c).magnitude(); };
+    const double expected[4] = {
+        P.z - 0.5,                                    // the box's bottom face (M is below it)
+        towards(P + Vector3d(0.0, 0.0, 2.0), 0.7),     // the sphere's point towards M
+        towards(P + Vector3d(0.0, 0.0, -3.0), 0.4),    // the lower hemisphere of the capsule (axis end at -2 - 1)
+        P.z - 5.5,                                    // the hull's bottom face (M projects inside it)
+    };
+    for (int i = 0; i < 4; ++i) {
+        MESSAGE("proxy " << i << ": ClosestPoint z " << zs[i] << " vs " << expected[i]);
+        CHECK(std::fabs(zs[i] - expected[i]) < 1e-5);
+    }
+    // a point inside a collider is its own closest point (Unity's Collider.ClosestPoint)
+    const std::vector<float> inside = Vessel::env.colliderClosestPointsZ(p, Vector3f(10.0f, 20.0f, 32.1f));
+    CHECK(inside[1] == doctest::Approx(32.1).epsilon(1e-6));
+}

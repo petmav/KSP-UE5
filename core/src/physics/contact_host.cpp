@@ -89,20 +89,52 @@ void ContactHost::Install() {
             }
             return out;
         };
-        // Vessel.cs:2596-2614: collider.ClosestPoint(measure).z of every proxy collider of the part, in the part's current pose
+        // Vessel.cs:2596-2614: collider.ClosestPoint(measure).z of every proxy collider of the part, in the part's current pose. Unity's
+        // ClosestPoint returns the point itself when it is inside the collider. Box / sphere / capsule: exact. Convex hull (WP-mucol's mesh
+        // colliders): the hull vertex furthest towards the measure point (its support point); getLowestPoint's measure point is 1,000 m
+        // away (Vessel.cs:2587), where the closest point of a polytope is that vertex or lies on a face through it at the same height to
+        // within (extent^2 / 1,000 m).
         env.colliderClosestPointsZ = [this](Part& p, const Vector3f& point) {
             std::vector<float> zs;
             const auto& fn = bubble_->Options().vessel.colliders;
-            const std::vector<ColliderProxy> boxes = fn ? fn(p) : DragCubeColliderProxy(p);
+            const std::vector<ColliderProxy> proxies = fn ? fn(p) : DragCubeColliderProxy(p);
             const QuaternionD pr(p.partTransform.rotation);
             const Vector3d pp(p.partTransform.position);
-            for (const ColliderProxy& b : boxes) {
+            for (const ColliderProxy& b : proxies) {
                 const QuaternionD r = pr * QuaternionD(b.rotation);
                 const Vector3d c = pp + pr * Vector3d(b.center);
                 Vector3d local = QuaternionD::Inverse(r) * (Vector3d(point) - c);
-                local.x = std::max(-static_cast<double>(b.halfExtents.x), std::min(static_cast<double>(b.halfExtents.x), local.x));
-                local.y = std::max(-static_cast<double>(b.halfExtents.y), std::min(static_cast<double>(b.halfExtents.y), local.y));
-                local.z = std::max(-static_cast<double>(b.halfExtents.z), std::min(static_cast<double>(b.halfExtents.z), local.z));
+                switch (b.kind) {
+                case ShapeKind::Sphere: {
+                    const double m = local.magnitude();
+                    if (m > b.radius) local = local * (static_cast<double>(b.radius) / m);
+                    break;
+                }
+                case ShapeKind::Capsule: {
+                    const double hh = b.halfHeight;
+                    const Vector3d axis(0.0, std::max(-hh, std::min(hh, local.y)), 0.0);
+                    const Vector3d off = local - axis;
+                    const double m = off.magnitude();
+                    if (m > b.radius) local = axis + off * (static_cast<double>(b.radius) / m);
+                    break;
+                }
+                case ShapeKind::ConvexHull: {
+                    if (!b.hull || b.hull->empty()) continue;
+                    const Vector3f* best = &b.hull->front();
+                    double bestDot = Vector3d::Dot(Vector3d(*best), local);
+                    for (const Vector3f& v : *b.hull) {
+                        const double d = Vector3d::Dot(Vector3d(v), local);
+                        if (d > bestDot) bestDot = d, best = &v;
+                    }
+                    local = Vector3d(*best);
+                    break;
+                }
+                default:
+                    local.x = std::max(-static_cast<double>(b.halfExtents.x), std::min(static_cast<double>(b.halfExtents.x), local.x));
+                    local.y = std::max(-static_cast<double>(b.halfExtents.y), std::min(static_cast<double>(b.halfExtents.y), local.y));
+                    local.z = std::max(-static_cast<double>(b.halfExtents.z), std::min(static_cast<double>(b.halfExtents.z), local.z));
+                    break;
+                }
                 zs.push_back(static_cast<float>((c + r * local).z));
             }
             return zs;
