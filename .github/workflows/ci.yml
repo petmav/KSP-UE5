@@ -13,18 +13,32 @@ on:
 
 jobs:
   linux:
+    name: linux (${{ matrix.preset }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: [linux-rel, linux-gcc-rel]
+    env:
+      CMAKE_C_COMPILER_LAUNCHER: ccache
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
     steps:
       - uses: actions/checkout@v4
         # with: { lfs: true }   # only if the LFS lines in .gitattributes are enabled
       - name: Tools
-        run: sudo apt-get update && sudo apt-get install -y ninja-build clang cmake python3
-      - name: Build and test (linux-rel, clang)
+        run: sudo apt-get install -y ninja-build clang cmake python3 ccache
+      - name: ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-${{ matrix.preset }}-${{ github.sha }}
+          restore-keys: ccache-${{ matrix.preset }}-
+      - name: Build and test (${{ matrix.preset }})
         working-directory: core
-        run: ./run_tests.sh -f
-      - name: Build and test (linux-gcc-rel, g++)
-        working-directory: core
-        run: ./run_tests.sh -p linux-gcc-rel -f
+        run: ./run_tests.sh -p ${{ matrix.preset }} -f
+      - name: ccache stats
+        if: always()
+        run: ccache -s
 
   windows:
     runs-on: windows-latest
