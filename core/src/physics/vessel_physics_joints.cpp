@@ -14,6 +14,7 @@
 #include "ksp/modules/module_strut.hpp"
 #include "ksp/physics/physics_globals.hpp"
 #include "ksp/physics/vessel_physics.hpp"
+#include "ksp/serenity/base_servo.hpp"
 #include "ksp/unity/mathf.hpp"
 #include "ksp/unity/matrix_native.hpp"
 #include "ksp/unity/quaternion_native.hpp"
@@ -68,7 +69,7 @@ struct PartJointRules {
 };
 
 // Part.cs:8511 HasFreePivot: a module that is an IJointLockState with IsJointUnlocked(). kspcore's ported implementers are
-// ModuleDockingNode and ModuleGrappleNode (BaseServo / ModuleJointMotor, the robotics, are not ported: WP-52).
+// ModuleDockingNode, ModuleGrappleNode and BaseServo (the robotic servos, WP-52; ModuleJointMotor is the only other C# implementer, not ported).
 bool PartJointRules::HasFreePivot(Part& p) {
     PartModuleList& modules = p.Modules();
     size_t count = modules.Count();
@@ -78,6 +79,8 @@ bool PartJointRules::HasFreePivot(Part& p) {
             if (d->IsJointUnlocked()) return true;
         } else if (auto* g = dynamic_cast<ModuleGrappleNode*>(m)) {
             if (g->IsJointUnlocked()) return true;
+        } else if (auto* servo = dynamic_cast<Expansions::Serenity::BaseServo*>(m)) {
+            if (servo->IsJointUnlocked()) return true;  // BaseServo.IsJointUnlocked: !servoIsLocked (BaseServo.cs:1790)
         }
     }
     return false;
