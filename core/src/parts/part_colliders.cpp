@@ -66,69 +66,72 @@ World Compose(const World& p, const TNode& n) {
 }
 
 Vector3f Scaled(const Vector3f& s, const Vector3f& v) { return Vector3f(s.x * v.x, s.y * v.y, s.z * v.z); }
-Vector3f Placed(const World& w, const Vector3f& local) {
-    const Vector3f r = RotateNative(w.rot, Scaled(w.scl, local));
-    return Vector3f(w.pos.x + r.x, w.pos.y + r.y, w.pos.z + r.z);
+Vector3f PlacedAt(const Vector3f& pos, const Quaternionf& rot, const Vector3f& scl, const Vector3f& local) {
+    const Vector3f r = RotateNative(rot, Scaled(scl, local));
+    return Vector3f(pos.x + r.x, pos.y + r.y, pos.z + r.z);
 }
 
 void Walk(const TNode& n, const World& parent, const std::string& parentPath, std::vector<PartColliderShape>& out) {
     const World w = Compose(parent, n);
     const std::string path = parentPath.empty() ? n.name : parentPath + "/" + n.name;
-    if (n.src) {
-        for (const ColliderChunk& c : n.src->colliders) {
-            if (c.kind == ColliderKind::Wheel) continue;
-            PartColliderShape s;
-            s.path = path;
-            s.entry = c.entry;
-            s.kind = c.kind;
-            s.trigger = c.trigger;
-            s.tag = n.src->tag;
-            s.layer = n.src->layer;
-            s.nodePosition = w.pos;
-            s.nodeRotation = w.rot;
-            s.nodeScale = w.scl;
-            const float ax = std::fabs(w.scl.x), ay = std::fabs(w.scl.y), az = std::fabs(w.scl.z);
-            const float a[3] = {ax, ay, az};
-            switch (c.kind) {
-                case ColliderKind::Box: {
-                    s.center = Placed(w, c.center);
-                    const Vector3f sz = Scaled(w.scl, c.size);
-                    s.halfExtents = Vector3f(std::fabs(sz.x) * 0.5f, std::fabs(sz.y) * 0.5f, std::fabs(sz.z) * 0.5f);
-                    break;
-                }
-                case ColliderKind::Sphere:
-                    s.center = Placed(w, c.center);
-                    s.radius = c.radius * std::max(ax, std::max(ay, az));
-                    break;
-                case ColliderKind::Capsule: {
-                    s.center = Placed(w, c.center);
-                    const int d = c.direction;
-                    s.axis = d;
-                    const int di = (d < 0 || d > 2) ? 1 : d;
-                    float other = 0.0f;
-                    for (int i = 0; i < 3; ++i)
-                        if (i != di) other = std::max(other, a[i]);
-                    s.radius = c.radius * other;
-                    s.height = c.height * a[di];
-                    s.halfCylinder = std::max(0.0f, s.height * 0.5f - s.radius);
-                    break;
-                }
-                case ColliderKind::Mesh: {
-                    s.vertices.reserve(c.mesh.vertices.size());
-                    for (const Vector3f& v : c.mesh.vertices) s.vertices.push_back(Placed(w, v));
-                    for (const auto& t : c.mesh.triangleLists) s.triangles.insert(s.triangles.end(), t.begin(), t.end());
-                    break;
-                }
-                default:
-                    break;
-            }
-            out.push_back(std::move(s));
-        }
-    }
+    if (n.src) AppendNodeColliderShapes(*n.src, path, w.pos, w.rot, w.scl, out);
     for (const auto& ch : n.children) Walk(*ch, w, path, out);
 }
 
 }  // namespace
+
+void AppendNodeColliderShapes(const Node& node, const std::string& path, const Vector3f& pos, const Quaternionf& rot, const Vector3f& scl,
+                              std::vector<PartColliderShape>& out) {
+    for (const ColliderChunk& c : node.colliders) {
+        if (c.kind == ColliderKind::Wheel) continue;
+        PartColliderShape s;
+        s.path = path;
+        s.entry = c.entry;
+        s.kind = c.kind;
+        s.trigger = c.trigger;
+        s.tag = node.tag;
+        s.layer = node.layer;
+        s.nodePosition = pos;
+        s.nodeRotation = rot;
+        s.nodeScale = scl;
+        const float ax = std::fabs(scl.x), ay = std::fabs(scl.y), az = std::fabs(scl.z);
+        const float a[3] = {ax, ay, az};
+        switch (c.kind) {
+            case ColliderKind::Box: {
+                s.center = PlacedAt(pos, rot, scl, c.center);
+                const Vector3f sz = Scaled(scl, c.size);
+                s.halfExtents = Vector3f(std::fabs(sz.x) * 0.5f, std::fabs(sz.y) * 0.5f, std::fabs(sz.z) * 0.5f);
+                break;
+            }
+            case ColliderKind::Sphere:
+                s.center = PlacedAt(pos, rot, scl, c.center);
+                s.radius = c.radius * std::max(ax, std::max(ay, az));
+                break;
+            case ColliderKind::Capsule: {
+                s.center = PlacedAt(pos, rot, scl, c.center);
+                const int d = c.direction;
+                s.axis = d;
+                const int di = (d < 0 || d > 2) ? 1 : d;
+                float other = 0.0f;
+                for (int i = 0; i < 3; ++i)
+                    if (i != di) other = std::max(other, a[i]);
+                s.radius = c.radius * other;
+                s.height = c.height * a[di];
+                s.halfCylinder = std::max(0.0f, s.height * 0.5f - s.radius);
+                break;
+            }
+            case ColliderKind::Mesh: {
+                s.vertices.reserve(c.mesh.vertices.size());
+                for (const Vector3f& v : c.mesh.vertices) s.vertices.push_back(PlacedAt(pos, rot, scl, v));
+                for (const auto& t : c.mesh.triangleLists) s.triangles.insert(s.triangles.end(), t.begin(), t.end());
+                break;
+            }
+            default:
+                break;
+        }
+        out.push_back(std::move(s));
+    }
+}
 
 Vector3f RotateNative(const Quaternionf& q, const Vector3f& v) {
     // Quaternion.operator*(Quaternion, Vector3) (Quaternion.cs), float per operation

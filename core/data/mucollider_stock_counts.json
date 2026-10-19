@@ -1,0 +1,5040 @@
+{
+ "failures": [
+  "smallCargoContainer: no non-trigger collider",
+  "flag: no model",
+  "kerbalEVA: no model",
+  "kerbalEVASlimSuit: no model",
+  "kerbalEVASlimSuitFemale: no model",
+  "kerbalEVAfemale: no model",
+  "MiniDrill: no non-trigger collider",
+  "vernierEngine: no non-trigger collider",
+  "largeAdapter: no non-trigger collider",
+  "solidBooster_sm: [Errno 2] No such file or directory: 'C:/Projects/KSP-UE5/decompiled/KSP-dev\\\\GameData\\\\Squad\\\\Parts\\\\Engine\\\\solidBoosterRT-5\\\\SRB_RT5.mu'",
+  "ServiceBay_125: [Errno 2] No such file or directory: 'C:/Projects/KSP-UE5/decompiled/KSP-dev\\\\GameData\\\\Squad\\\\Parts\\\\Utility\\\\ServiceBay\\\\ServiceBay_125.mu'",
+  "ServiceBay_250: [Errno 2] No such file or directory: 'C:/Projects/KSP-UE5/decompiled/KSP-dev\\\\GameData\\\\Squad\\\\Parts\\\\Utility\\\\ServiceBay\\\\ServiceBay_250.mu'"
+ ],
+ "notes": [
+  "fairingSize1: MODEL rotation (Quaternion.Euler) not applied",
+  "fairingSize2: MODEL rotation (Quaternion.Euler) not applied",
+  "fairingSize3: MODEL rotation (Quaternion.Euler) not applied"
+ ],
+ "parts": {
+  "AdvancedCanard": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\airplaneFins\\advancedCanard.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\airplaneFins\\AdvCanard.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "CanardController": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\airplaneFins\\standardCanard.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\airplaneFins\\Canard.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "CargoStorageUnit": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Cargo\\StorageUnits\\CargoStorageUnit.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Cargo\\StorageUnits\\Assets\\CargoStorageUnit.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "CircularIntake": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\circularIntake\\circularIntake.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\circularIntake\\CircularIntake.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Clydesdale": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\solidBoosterS2-33\\solidBoosterS2-33.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\solidBoosterS2-33\\solidBoosterS2-33.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "ConformalStorageUnit": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Cargo\\StorageUnits\\ConformalStorageUnit.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Cargo\\StorageUnits\\Assets\\ConformalStorageUnit.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Decoupler_0": {
+   "bodyShapes": 4,
+   "cfg": "GameData\\Squad\\Parts\\Coupling\\Decoupler_0.cfg",
+   "colliders": 4,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Coupling\\Assets\\Decoupler_0.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Decoupler_1": {
+   "bodyShapes": 4,
+   "cfg": "GameData\\Squad\\Parts\\Coupling\\Decoupler_1.cfg",
+   "colliders": 4,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Coupling\\Assets\\Decoupler_1.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Decoupler_2": {
+   "bodyShapes": 4,
+   "cfg": "GameData\\Squad\\Parts\\Coupling\\Decoupler_2.cfg",
+   "colliders": 4,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Coupling\\Assets\\Decoupler_2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Decoupler_3": {
+   "bodyShapes": 4,
+   "cfg": "GameData\\Squad\\Parts\\Coupling\\Decoupler_3.cfg",
+   "colliders": 4,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Coupling\\Assets\\Decoupler_3.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "FuelCell": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Resources\\FuelCell\\FuelCell.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Resources\\FuelCell\\FuelCell.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "FuelCellArray": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Resources\\FuelCell\\FuelCellArray.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Resources\\FuelCell\\FuelCellArray.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "GearFixed": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Wheel\\LandingGear\\GearFixed.cfg",
+   "colliders": 2,
+   "kinds": [
+    "CapsuleCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Wheel\\LandingGear\\GearFixed.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 1
+  },
+  "GearFree": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Wheel\\LandingGear\\GearFree.cfg",
+   "colliders": 2,
+   "kinds": [
+    "CapsuleCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Wheel\\LandingGear\\GearFree.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 1
+  },
+  "GearLarge": {
+   "bodyShapes": 4,
+   "cfg": "GameData\\Squad\\Parts\\Wheel\\LandingGear\\GearExtraLarge.cfg",
+   "colliders": 5,
+   "kinds": [
+    "CapsuleCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Wheel\\LandingGear\\GearExtraLarge.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 1
+  },
+  "GearMedium": {
+   "bodyShapes": 3,
+   "cfg": "GameData\\Squad\\Parts\\Wheel\\LandingGear\\GearLarge.cfg",
+   "colliders": 4,
+   "kinds": [
+    "BoxCollider2",
+    "CapsuleCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Wheel\\LandingGear\\GearLarge.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 1
+  },
+  "GearSmall": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Wheel\\LandingGear\\GearMedium.cfg",
+   "colliders": 3,
+   "kinds": [
+    "BoxCollider2",
+    "CapsuleCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Wheel\\LandingGear\\GearMedium.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 1
+  },
+  "GooExperiment": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Science\\GooExperiment\\gooExperiment.cfg",
+   "colliders": 2,
+   "kinds": [
+    "BoxCollider2",
+    "CapsuleCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Science\\GooExperiment\\GooExperiment.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "GrapplingDevice": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\GrapplingDevice\\part.cfg",
+   "colliders": 2,
+   "kinds": [
+    "CapsuleCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\GrapplingDevice\\GrapplingArm.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "HECS2_ProbeCore": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Misc\\AsteroidDay\\HECS2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Misc\\AsteroidDay\\HECS2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "HeatShield0": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\HeatShield\\HeatShield0.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\HeatShield\\HeatShield0.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "HeatShield1": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\HeatShield\\HeatShield1.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\HeatShield\\HeatShield1.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "HeatShield2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\HeatShield\\HeatShield2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\HeatShield\\HeatShield2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "HeatShield3": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\HeatShield\\HeatShield3.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\HeatShield\\HeatShield3.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "HighGainAntenna": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Misc\\AsteroidDay\\HighGainAntenna.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Misc\\AsteroidDay\\HighGainAntenna.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "HighGainAntenna5": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\DirectAntennas\\HG-5.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\DirectAntennas\\HGAntenna.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "HighGainAntenna5_v2": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\DirectAntennas\\HG-5_v2.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\DirectAntennas\\HGAntenna_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "ISRU": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Resources\\ISRU\\ISRU.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Resources\\ISRU\\ISRU.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "InflatableHeatShield": {
+   "bodyShapes": 14,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\InflatableHeatShield\\HeatShield.cfg",
+   "colliders": 14,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\InflatableHeatShield\\HeatShield.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "InfraredTelescope": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Misc\\AsteroidDay\\CamSat.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Misc\\AsteroidDay\\CamSat.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "IntakeRadialLong": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\intakeRadialLong\\intakeRadialLong.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\intakeRadialLong\\IntakeRadial.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "JetEngine": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\jetEngines\\jetEngineBasic.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\jetEngines\\turboFanSize1.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "LargeTank": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Resources\\LargeTank\\LargeTank.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Resources\\LargeTank\\LargeTank.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Large_Crewed_Lab": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Science\\LargeCrewedLab\\largeCrewedLab.cfg",
+   "colliders": 5,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Science\\LargeCrewedLab\\large_crewed_lab.mu"
+   ],
+   "triggers": 4,
+   "wheelMarkers": 0
+  },
+  "LaunchEscapeSystem": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\launchEscapeSystem\\part.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\launchEscapeSystem\\LaunchEscapeSystem.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "LgRadialSolarPanel": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Misc\\AsteroidDay\\LgRadialSolar.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Misc\\AsteroidDay\\LgRadialSolar.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "MK1CrewCabin": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Command\\mk1Cockpits\\mk1CrewCabin.cfg",
+   "colliders": 3,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\mk1Cockpits\\Cabin.mu"
+   ],
+   "triggers": 2,
+   "wheelMarkers": 0
+  },
+  "MK1Fuselage": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\mk1Parts\\mk1Fuselage.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\mk1Parts\\Fuselage.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "MK1IntakeFuselage": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\mk1Parts\\mk1FuselageIntake.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\mk1Parts\\IntakeFuselage.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Magnetometer": {
+   "bodyShapes": 39,
+   "cfg": "GameData\\Squad\\Parts\\Science\\Magnetometer\\Magnetometer.cfg",
+   "colliders": 39,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Science\\Magnetometer\\Magnetometer.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Mark1-2Pod": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Command\\Mk1-2Pod\\mk1-2CommandPod.cfg",
+   "colliders": 3,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Command\\Mk1-2Pod\\model.mu"
+   ],
+   "triggers": 2,
+   "wheelMarkers": 0
+  },
+  "Mark1Cockpit": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Command\\mk1Cockpits\\mk1Cockpit.cfg",
+   "colliders": 4,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\mk1Cockpits\\CockpitStandard.mu"
+   ],
+   "triggers": 2,
+   "wheelMarkers": 0
+  },
+  "Mark2Cockpit": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Command\\mk1Cockpits\\mk1InlineCockpit.cfg",
+   "colliders": 6,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\mk1Cockpits\\CockpitInline.mu"
+   ],
+   "triggers": 5,
+   "wheelMarkers": 0
+  },
+  "MassiveBooster": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\MassiveSRB\\part.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\MassiveSRB\\MassiveSRB.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "MiniDrill": {
+   "bodyShapes": 0,
+   "cfg": "GameData\\Squad\\Parts\\Resources\\MiniDrill\\MiniDrill.cfg",
+   "colliders": 1,
+   "kinds": [],
+   "mu": [
+    "GameData\\Squad\\Parts\\Resources\\MiniDrill\\MiniDrill.mu"
+   ],
+   "triggers": 1,
+   "wheelMarkers": 0
+  },
+  "MiniISRU": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Resources\\MiniISRU\\MiniISRU.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Resources\\MiniISRU\\MiniISRU.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Mite": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\SolidBoostersF\\SolidBoosterFM1.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\SolidBoostersF\\Assets\\SolidBoosterFM1.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Mk1FuselageStructural": {
+   "bodyShapes": 12,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\mk1Parts\\mk1Structural.cfg",
+   "colliders": 12,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\mk1Parts\\StructuralHollow.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "MpoProbe": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Command\\MpoProbe\\MpoProbe.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\MpoProbe\\MpoProbe.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "MtmStage": {
+   "bodyShapes": 6,
+   "cfg": "GameData\\Squad\\Parts\\Command\\MtmStage\\MTM_Stage.cfg",
+   "colliders": 6,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\MtmStage\\MTM_Stage.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "OrbitalScanner": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Resources\\OrbitalScanner\\OrbitalScanner.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Resources\\OrbitalScanner\\OrbitalScanner.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "PotatoComet": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Misc\\PotatoComet\\part.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Misc\\PotatoComet\\Cube.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "PotatoRoid": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Misc\\PotatoRoid\\part.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Misc\\PotatoRoid\\Cube.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "R8winglet": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wingletAV-R8\\wingletAV-R8.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wingletAV-R8\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "RAPIER": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\rapierEngine\\rapierEngine.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\rapierEngine\\rapier.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "RCSBlock": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Utility\\rcsBlockRV-105_v1\\rcsBlockRV-105.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Utility\\rcsBlockRV-105_v1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "RCSBlock_v2": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\rcsBlockRV-105_v2\\rcsBlockRV-105.cfg",
+   "colliders": 2,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\rcsBlockRV-105_v2\\rcsBlock105.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "RCSFuelTank": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\RCSFuelTankR25\\RCSFuelTankR25.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\RCSFuelTankR25\\RCSFuelTankR25.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "RCSLinearSmall": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\rcsSmallLinear\\RCSLinearSmall.cfg",
+   "colliders": 1,
+   "kinds": [
+    "CapsuleCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\rcsSmallLinear\\Assets\\RCSLinearSmall.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "RCSTank1-2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\RCSFuelTankR1\\RCSFuelTankR1.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\RCSFuelTankR1\\RCSFuelTankR1_01.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "RCSblock_01_small": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\rcsBlockRV-105_v2\\RCSblock_01_small.cfg",
+   "colliders": 2,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\rcsBlockRV-105_v2\\rcsBlock105.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "RadialDrill": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Resources\\RadialDrill\\RadialDrill.cfg",
+   "colliders": 2,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Resources\\RadialDrill\\TriBitDrill.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "RadialOreTank": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Resources\\RadialTank\\RadialTank.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Resources\\RadialTank\\RadialOreTank.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "RelayAntenna100": {
+   "bodyShapes": 3,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\RelayAntennas\\RA-100.cfg",
+   "colliders": 3,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\RelayAntennas\\RA-100.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "RelayAntenna5": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\RelayAntennas\\RA-5.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\RelayAntennas\\RA-5.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "RelayAntenna50": {
+   "bodyShapes": 3,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\RelayAntennas\\RA-50.cfg",
+   "colliders": 3,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\RelayAntennas\\RA-50.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "ReleaseValve": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\drainTankFTE-1\\ReleaseValve.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\drainTankFTE-1\\fuelValve.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Rockomax16_BW": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\RockomaxTanks\\Rockomax16.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\RockomaxTanks\\Assets\\Rockomax16.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Rockomax32_BW": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\RockomaxTanks\\Rockomax32.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\RockomaxTanks\\Assets\\Rockomax32.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Rockomax64_BW": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\RockomaxTanks\\Rockomax64.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\RockomaxTanks\\Assets\\Rockomax64.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Rockomax8BW": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\RockomaxTanks\\Rockomax8.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\RockomaxTanks\\Assets\\Rockomax8.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "SSME": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\liquidEngineSSME\\SSME.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\liquidEngineSSME\\SSME.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "ScienceBox": {
+   "bodyShapes": 4,
+   "cfg": "GameData\\Squad\\Parts\\Science\\ScienceBox\\ScienceBox.cfg",
+   "colliders": 4,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Science\\ScienceBox\\ScienceBox.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Separator_0": {
+   "bodyShapes": 4,
+   "cfg": "GameData\\Squad\\Parts\\Coupling\\Separator_0.cfg",
+   "colliders": 4,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Coupling\\Assets\\Separator_0.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Separator_1": {
+   "bodyShapes": 4,
+   "cfg": "GameData\\Squad\\Parts\\Coupling\\Separator_1.cfg",
+   "colliders": 4,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Coupling\\Assets\\Separator_1.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Separator_2": {
+   "bodyShapes": 4,
+   "cfg": "GameData\\Squad\\Parts\\Coupling\\Separator_2.cfg",
+   "colliders": 4,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Coupling\\Assets\\Separator_2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Separator_3": {
+   "bodyShapes": 4,
+   "cfg": "GameData\\Squad\\Parts\\Coupling\\Separator_3.cfg",
+   "colliders": 4,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Coupling\\Assets\\Separator_3.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "ServiceBay_125_v2": {
+   "bodyShapes": 16,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\ServiceBay_v2\\ServiceBay_125_v2.cfg",
+   "colliders": 16,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\ServiceBay_v2\\Assets\\ServiceBay_125_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "ServiceBay_250_v2": {
+   "bodyShapes": 16,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\ServiceBay_v2\\ServiceBay_250_v2.cfg",
+   "colliders": 16,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\ServiceBay_v2\\Assets\\ServiceBay_250_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Shrimp": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\SolidBoostersF\\SolidBoosterF3S0.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\SolidBoostersF\\Assets\\SolidBoosterF3S0.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Size2LFB": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\Size2LFB\\part.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\Size2LFB\\Size2LFB.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Size2LFB_v2": {
+   "bodyShapes": 4,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\Size2LFB_v2\\part.cfg",
+   "colliders": 4,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\Size2LFB_v2\\Size2LFB_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Size3AdvancedEngine": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\Size3AdvancedEngine\\part.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\Size3AdvancedEngine\\Size3AdvancedEngine.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Size3EngineCluster": {
+   "bodyShapes": 5,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\Size3EngineCluster\\part.cfg",
+   "colliders": 5,
+   "kinds": [
+    "CapsuleCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\Size3EngineCluster\\Size3EngineCluster.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Size3LargeTank": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\Size3Tanks\\large.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\Size3Tanks\\Size3LargeTank.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Size3MediumTank": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\Size3Tanks\\medium.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\Size3Tanks\\Size3MediumTank.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Size3SmallTank": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\Size3Tanks\\small.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\Size3Tanks\\Size3SmallTank.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Size3To2Adapter_v2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\Size3To2Adapter_v2\\Size2to3_v2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\Size3To2Adapter_v2\\Size2to3_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Size3to2Adapter": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Structural\\Size3To2Adapter_v1\\part.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Structural\\Size3To2Adapter_v1\\Size3Adapter.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "SmallGearBay": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Wheel\\LandingGear\\GearSmall.cfg",
+   "colliders": 3,
+   "kinds": [
+    "BoxCollider2",
+    "CapsuleCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Wheel\\LandingGear\\GearSmall.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 1
+  },
+  "SmallTank": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Resources\\SmallTank\\SmallTank.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Resources\\SmallTank\\SmallTank.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "StandardCtrlSrf": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wings\\elevon1.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wings\\elevon1.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "SurfAntenna": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\DirectAntennas\\C16S.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\DirectAntennas\\SurfAntenna.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "SurfaceScanner": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Resources\\SurfaceScanner\\SurfaceScanner.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Resources\\SurfaceScanner\\SurfaceScanner.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "SurveyScanner": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Resources\\SurveyScanner\\SurveyScanner.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Resources\\SurveyScanner\\SurveyScanner.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "Thoroughbred": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\solidBoosterS2-17\\solidBoosterS2-17.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\solidBoosterS2-17\\solidBoosterS2-17.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "adapterEngines": {
+   "bodyShapes": 6,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\adapterTanks\\Mk3-ShuttleAdapter.cfg",
+   "colliders": 6,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\adapterTanks\\ShuttleAdapter.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "adapterLargeSmallBi": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\stackAdapters\\adapterLargeSmallBi.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\stackAdapters\\Assets\\adapterLargeSmallBi.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "adapterLargeSmallQuad": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\stackAdapters\\adapterLargeSmallQuad.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\stackAdapters\\Assets\\adapterLargeSmallQuad.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "adapterLargeSmallTri": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\stackAdapters\\adapterLargeSmallTri.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\stackAdapters\\Assets\\adapterLargeSmallTri.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "adapterMk3-Mk2": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\adapterTanks\\Mk3-Mk2.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\adapterTanks\\Mk3-Mk2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "adapterMk3-Size2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\adapterTanks\\Mk3-Size2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\adapterTanks\\Mk3-Size2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "adapterMk3-Size2Slant": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\adapterTanks\\Mk3-Size2Slant.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\adapterTanks\\Mk3-Size2Slant.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "adapterSize2-Mk2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\adapterTanks\\Size2-Mk2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\adapterTanks\\Size2-Mk2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "adapterSize2-Size1": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\adapterTanks\\Size2-Size1.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\adapterTanks\\Size2-Size1.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "adapterSize2-Size1Slant": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\adapterTanks\\Size2-Size1Slant.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\adapterTanks\\Size2-Size1Slant.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "adapterSize3-Mk3": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\adapterTanks\\Size3-Mk3.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\adapterTanks\\Size3-Mk3.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "adapterSmallMiniShort": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\FLAdapters\\adapterSmallMiniShort.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\FLAdapters\\Assets\\adapterSmallMiniShort_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "adapterSmallMiniTall": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\FLAdapters\\adapterSmallMiniTall.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\FLAdapters\\Assets\\adapterSmallMiniTall_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "advSasModule": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Command\\inlineAdvancedStabilizer\\inlineAdvancedStabilizer.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\inlineAdvancedStabilizer\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "airScoop": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\airIntakeRadialXM-G50\\airIntakeRadialXM-G50.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\airIntakeRadialXM-G50\\RadialIntake.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "airbrake1": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\airbrake\\Airbrake.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\airbrake\\Airbrake.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "airlinerCtrlSrf": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\airlinerWings\\ControlSurface.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\airlinerWings\\ControlSurface.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "airlinerMainWing": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\airlinerWings\\MainWing.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\airlinerWings\\MainWing.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "airlinerTailFin": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\airlinerWings\\TailFin.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\airlinerWings\\TailFin.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "airplaneTail": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\cones\\tailConnectorA.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\cones\\Assets\\TailA.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "airplaneTailB": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\cones\\tailConnectorB.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\cones\\Assets\\TailB.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "asasmodule1-2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Command\\advancedSasModuleLarge\\advSasModuleLarge.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\advancedSasModuleLarge\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "avionicsNoseCone": {
+   "bodyShapes": 3,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\cones\\avionicsNoseCone.cfg",
+   "colliders": 3,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\cones\\Assets\\AvioCone.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "basicFin": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\basicFin\\basicFin.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\basicFin\\basicFin.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "batteryBank": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Electrical\\z-1kBattery\\z-1kBattery.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Electrical\\z-1kBattery\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "batteryBankLarge": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Electrical\\z-4kBattery\\z-4kBattery.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Electrical\\z-4kBattery\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "batteryBankMini": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Electrical\\z-200Battery\\z-200Battery.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Electrical\\z-200Battery\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "batteryPack": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Electrical\\z-100Battery\\z-100Battery.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Electrical\\z-100Battery\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "cargoContainer": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Cargo\\CargoContainers\\cargoContainer.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Cargo\\CargoContainers\\cargoContainer.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "commDish": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\commDish88-88\\commDish88-88.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\commDish88-88\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "crewCabin": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Command\\hitchhikerStorageContainer\\hitchikerStorageContainer.cfg",
+   "colliders": 5,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\hitchhikerStorageContainer\\model.mu"
+   ],
+   "triggers": 4,
+   "wheelMarkers": 0
+  },
+  "cupola": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Command\\cupola\\cupola.cfg",
+   "colliders": 4,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\cupola\\model.mu"
+   ],
+   "triggers": 2,
+   "wheelMarkers": 0
+  },
+  "decoupler1-2": {
+   "bodyShapes": 6,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Utility\\decouplerStack2m\\decouplerStack2m.cfg",
+   "colliders": 6,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Utility\\decouplerStack2m\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "deltaWing": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wings\\delta.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wings\\delta.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "delta_small": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wings\\delta_small.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wings\\delta_small.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "dockingPort1": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\dockingPortShielded\\dockingPortShielded.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\dockingPortShielded\\dockingPortShielded.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "dockingPort2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\dockingPort\\dockingPort.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\dockingPort\\dockingPort.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "dockingPort3": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\dockingPortJr\\dockingPortJr.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\dockingPortJr\\dockingPortJr.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "dockingPortLarge": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\dockingPortSr\\dockingPortSr.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\dockingPortSr\\dockingPortSr.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "dockingPortLateral": {
+   "bodyShapes": 4,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\dockingPortInline\\dockingPortInline.cfg",
+   "colliders": 4,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\dockingPortInline\\dockingPortInline.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "domeLight1": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\Lights\\domeLight1.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\Lights\\Assets\\light_04.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "elevon2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wings\\elevon2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wings\\elevon2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "elevon3": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wings\\elevon3.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wings\\elevon3.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "elevon5": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wings\\elevon5.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wings\\elevon5.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "engineLargeSkipper": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Engine\\liquidEngineSkipper_v1\\skipperLiquidEngine.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Engine\\liquidEngineSkipper_v1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "engineLargeSkipper_v2": {
+   "bodyShapes": 3,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\liquidEngineSkipper_v2\\skipperLiquidEngine_v2.cfg",
+   "colliders": 3,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\liquidEngineSkipper_v2\\skipper_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "evaChute": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Cargo\\Parachute\\Parachute.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Cargo\\Parachute\\Parachute.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "evaCylinder": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Cargo\\Cylinder\\Cylinder.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Cargo\\Cylinder\\EVAcylinder.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "evaJetpack": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Cargo\\Jetpack\\Jetpack.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Cargo\\Jetpack\\Jetpack.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "evaRepairKit": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Cargo\\RepairKit\\RepairKit.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Cargo\\RepairKit\\RepairKit.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "evaScienceKit": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Cargo\\ScienceKit\\evaScienceKit.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Cargo\\ScienceKit\\ExperimentKit.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "externalTankCapsule": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\FoilTanks\\RadialTank_Capsule.cfg",
+   "colliders": 1,
+   "kinds": [
+    "CapsuleCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\FoilTanks\\RadialTank_Capsule.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "externalTankRound": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\FoilTanks\\RadialTank_Round.cfg",
+   "colliders": 1,
+   "kinds": [
+    "SphereCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\FoilTanks\\RadialTank_Round.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "externalTankToroid": {
+   "bodyShapes": 6,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\FoilTanks\\ToroidTank.cfg",
+   "colliders": 6,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\FoilTanks\\ToroidTank.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "fairingSize1": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\fairings\\fairingSize1.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\fairings\\fairingSize1.mu",
+    "GameData\\Squad\\Parts\\Aero\\fairings\\AutoTruss.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "fairingSize2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\fairings\\fairingSize2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\fairings\\fairingSize2.mu",
+    "GameData\\Squad\\Parts\\Aero\\fairings\\AutoTruss.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "fairingSize3": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\fairings\\fairingSize3.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\fairings\\fairingSize3.mu",
+    "GameData\\Squad\\Parts\\Aero\\fairings\\AutoTruss.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "fireworksLauncherBig": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\Fireworks\\fireworksLauncherBig.cfg",
+   "colliders": 2,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\Fireworks\\Assets\\fireworksLauncherBig.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "fireworksLauncherSmall": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\Fireworks\\fireworksLauncherSmall.cfg",
+   "colliders": 2,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\Fireworks\\Assets\\fireworksLauncherSmall.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "flagPartFlat": {
+   "bodyShapes": 8,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\flags\\flagFlat\\flagFlat.cfg",
+   "colliders": 8,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\flags\\flagFlat\\flagFlatMeshes.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "flagPartSize0": {
+   "bodyShapes": 34,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\flags\\flagSize0\\flagSize0.cfg",
+   "colliders": 34,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\flags\\flagSize0\\flagSize0Meshes.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "flagPartSize1": {
+   "bodyShapes": 30,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\flags\\flagSize1\\flagSize1.cfg",
+   "colliders": 30,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\flags\\flagSize1\\flagSize1Meshes.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "flagPartSize2": {
+   "bodyShapes": 30,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\flags\\flagSize2\\flagSize2.cfg",
+   "colliders": 30,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\flags\\flagSize2\\flagSize2Meshes.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "flagPartSize3": {
+   "bodyShapes": 30,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\flags\\flagSize3\\flagSize3.cfg",
+   "colliders": 30,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\flags\\flagSize3\\flagSize3Meshes.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "foldingRadLarge": {
+   "bodyShapes": 25,
+   "cfg": "GameData\\Squad\\Parts\\Thermal\\FoldingRadiators\\foldingRadLarge.cfg",
+   "colliders": 25,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Thermal\\FoldingRadiators\\foldingRadLarge.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "foldingRadMed": {
+   "bodyShapes": 9,
+   "cfg": "GameData\\Squad\\Parts\\Thermal\\FoldingRadiators\\foldingRadMed.cfg",
+   "colliders": 9,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Thermal\\FoldingRadiators\\foldingRadMed.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "foldingRadSmall": {
+   "bodyShapes": 9,
+   "cfg": "GameData\\Squad\\Parts\\Thermal\\FoldingRadiators\\foldingRadSmall.cfg",
+   "colliders": 9,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Thermal\\FoldingRadiators\\foldingRadSmall.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "fuelLine": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\CompoundParts\\FuelLine\\fuelLine.cfg",
+   "colliders": 2,
+   "kinds": [
+    "SphereCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\CompoundParts\\FuelLine\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "fuelTank": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\Size1_Tanks\\fuelTankT400.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\Size1_Tanks\\Size1Tank_03.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "fuelTank1-2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\FuelTank\\fuelTankX200-32\\fuelTankX200-32.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\FuelTank\\fuelTankX200-32\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "fuelTank2-2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\FuelTank\\fuelTankX200-16\\fuelTankX200-16.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\FuelTank\\fuelTankX200-16\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "fuelTank3-2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\FuelTank\\fuelTankJumbo-64\\fuelTankJumbo-64.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\FuelTank\\fuelTankJumbo-64\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "fuelTank4-2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\FuelTank\\fuelTankX200-8\\fuelTankX200-8.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\FuelTank\\fuelTankX200-8\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "fuelTankSmall": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\Size1_Tanks\\fuelTankT200.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\Size1_Tanks\\Size1Tank_02.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "fuelTankSmallFlat": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\Size1_Tanks\\fuelTankT100.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\Size1_Tanks\\Size1Tank_01.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "fuelTank_long": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\Size1_Tanks\\fuelTankT800.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\Size1_Tanks\\Size1Tank_04.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "groundAnchor": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Cargo\\GroundAnchor\\groundAnchor.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Cargo\\GroundAnchor\\groundAnchor.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "groundLight1": {
+   "bodyShapes": 3,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\Lights\\groundLight1.cfg",
+   "colliders": 3,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\Lights\\Assets\\light_12.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "groundLight2": {
+   "bodyShapes": 3,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\Lights\\groundLight2.cfg",
+   "colliders": 3,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\Lights\\Assets\\light_07.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "ionEngine": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\ionEngine\\ionEngine.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\ionEngine\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "ksp_r_largeBatteryPack": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Electrical\\z-400Battery\\z-400Battery.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Electrical\\z-400Battery\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "ladder1": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\ladderRadial\\ladderRadial.cfg",
+   "colliders": 2,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\ladderRadial\\model.mu"
+   ],
+   "triggers": 1,
+   "wheelMarkers": 0
+  },
+  "landerCabinSmall": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Command\\mk1LanderCan\\mk1LanderCan.cfg",
+   "colliders": 4,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\mk1LanderCan\\model.mu"
+   ],
+   "triggers": 2,
+   "wheelMarkers": 0
+  },
+  "landingLeg1": {
+   "bodyShapes": 3,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\landingLegLT-1\\landingLegLT-1.cfg",
+   "colliders": 3,
+   "kinds": [
+    "BoxCollider2",
+    "CapsuleCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\landingLegLT-1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "landingLeg1-2": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\landingLegLT-2\\landingLegLT-2.cfg",
+   "colliders": 2,
+   "kinds": [
+    "CapsuleCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\landingLegLT-2\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "largeAdapter": {
+   "bodyShapes": 0,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\rockomaxAdapters\\largeAdapter.cfg",
+   "colliders": 1,
+   "kinds": [],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\rockomaxAdapters\\Assets\\brandAdapter.mu"
+   ],
+   "triggers": 1,
+   "wheelMarkers": 0
+  },
+  "largeAdapter2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\rockomaxAdapters\\largeAdapterShort.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\rockomaxAdapters\\Assets\\brandAdapter02.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "largeSolarPanel": {
+   "bodyShapes": 3,
+   "cfg": "GameData\\Squad\\Parts\\Electrical\\gigantorXlSolarArray\\gigantorXlSolarArray.cfg",
+   "colliders": 4,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Electrical\\gigantorXlSolarArray\\model.mu"
+   ],
+   "triggers": 1,
+   "wheelMarkers": 0
+  },
+  "launchClamp1": {
+   "bodyShapes": 3,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\launchClamp1\\launchClamp1.cfg",
+   "colliders": 3,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\launchClamp1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "linearRcs": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\linearVernorRCS\\linearRCS.cfg",
+   "colliders": 1,
+   "kinds": [
+    "SphereCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\linearVernorRCS\\Assets\\linearRCS.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "liquidEngine": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\liquidEngineLV-T30\\liquidEngineLV-T30.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\liquidEngineLV-T30\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "liquidEngine1-2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Engine\\liquidEngineMainsail_v1\\liquidEngineMainsail.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Engine\\liquidEngineMainsail_v1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "liquidEngine2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\liquidEngineLV-T45\\liquidEngineLV-T45.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\liquidEngineLV-T45\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "liquidEngine2-2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Engine\\liquidEnginePoodle_v1\\liquidEnginePoodle.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Engine\\liquidEnginePoodle_v1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "liquidEngine2-2_v2": {
+   "bodyShapes": 3,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\liquidEnginePoodle_v2\\liquidEnginePoodle_v2.cfg",
+   "colliders": 3,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\liquidEnginePoodle_v2\\LqdEnginePoodle_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "liquidEngine2_v2": {
+   "bodyShapes": 5,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\liquidEngineLV-T45_v2\\liquidEngineLV-T45_v2.cfg",
+   "colliders": 5,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\liquidEngineLV-T45_v2\\Swivel_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "liquidEngine3": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Engine\\liquidEngineLV-909_v1\\liquidEngineLV-909.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Engine\\liquidEngineLV-909_v1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "liquidEngine3_v2": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\liquidEngineLV-909_v2\\liquidEngineLV-909_v2.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\liquidEngineLV-909_v2\\TerrierV2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "liquidEngineMainsail_v2": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\liquidEngineMainsail_v2\\liquidEngineMainsail_v2.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\liquidEngineMainsail_v2\\liquidEngineMainsail_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "liquidEngineMini": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Engine\\liquidEngine48-7S_v1\\liquidEngine48-7S.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Engine\\liquidEngine48-7S_v1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "liquidEngineMini_v2": {
+   "bodyShapes": 3,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\liquidEngine48-7S_v2\\liquidEngine48-7S_v2.cfg",
+   "colliders": 3,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\liquidEngine48-7S_v2\\SparkV2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "liquidEngine_v2": {
+   "bodyShapes": 7,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\liquidEngineLV-T30_v2\\liquidEngineLV-T30_v2.cfg",
+   "colliders": 7,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\liquidEngineLV-T30_v2\\Reliant_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "longAntenna": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\commsDish16\\commsAntenna16.cfg",
+   "colliders": 1,
+   "kinds": [
+    "CapsuleCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\commsDish16\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mediumDishAntenna": {
+   "bodyShapes": 17,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\commsAntennaDTS-M1\\commsAntennaDTS-M1.cfg",
+   "colliders": 17,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\commsAntennaDTS-M1\\mediumDishAntenna.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "microEngine": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Engine\\liquidEngineLV-1_v1\\liquidEngineLV-1.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Engine\\liquidEngineLV-1_v1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "microEngine_v2": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\liquidEngineLV-1_v2\\liquidEngineLV-1_v2.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\liquidEngineLV-1_v2\\Assets\\Ant.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "miniFuelTank": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\fuelTankOscarB\\fuelTankOscarB.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\fuelTankOscarB\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "miniFuselage": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\miniFuselage\\miniFuselage.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\miniFuselage\\Fuselage.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "miniIntake": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\miniIntake\\SmallIntake.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\miniIntake\\SmallIntake.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "miniJetEngine": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\miniJet\\SmallJetEngine.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\miniJet\\SmallJet.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "miniLandingLeg": {
+   "bodyShapes": 3,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\landingLegLT-5\\landingLegLT-5.cfg",
+   "colliders": 4,
+   "kinds": [
+    "BoxCollider2",
+    "CapsuleCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\landingLegLT-5\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 1
+  },
+  "mk1-3pod": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Command\\Mk1-3Pod\\mk1-3.cfg",
+   "colliders": 3,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\Mk1-3Pod\\Mk1-3.mu"
+   ],
+   "triggers": 2,
+   "wheelMarkers": 0
+  },
+  "mk1pod": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Command\\mk1pod_v1\\mk1Pod.cfg",
+   "colliders": 3,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Command\\mk1pod_v1\\model.mu"
+   ],
+   "triggers": 2,
+   "wheelMarkers": 0
+  },
+  "mk1pod_v2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Command\\mk1pod_v2\\mk1Pod_v2.cfg",
+   "colliders": 3,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\mk1pod_v2\\Mk1Pod_v2.mu"
+   ],
+   "triggers": 2,
+   "wheelMarkers": 0
+  },
+  "mk2CargoBayL": {
+   "bodyShapes": 8,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\mk2CargoBay\\BayL.cfg",
+   "colliders": 8,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\mk2CargoBay\\BayLarge.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk2CargoBayS": {
+   "bodyShapes": 8,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\mk2CargoBay\\BayS.cfg",
+   "colliders": 8,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\mk2CargoBay\\BaySmall.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk2Cockpit_Inline": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Command\\mk2CockpitInline\\mk2CockpitInline.cfg",
+   "colliders": 6,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\mk2CockpitInline\\model.mu"
+   ],
+   "triggers": 4,
+   "wheelMarkers": 0
+  },
+  "mk2Cockpit_Standard": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Command\\mk2CockpitStandard\\mk2CockpitStandard.cfg",
+   "colliders": 4,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\mk2CockpitStandard\\model.mu"
+   ],
+   "triggers": 3,
+   "wheelMarkers": 0
+  },
+  "mk2CrewCabin": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\mk2CrewCabin\\mk2CrewCabin.cfg",
+   "colliders": 3,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\mk2CrewCabin\\model.mu"
+   ],
+   "triggers": 2,
+   "wheelMarkers": 0
+  },
+  "mk2DockingPort": {
+   "bodyShapes": 4,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\mk2DockingPort\\mk2DockingPort.cfg",
+   "colliders": 4,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\mk2DockingPort\\mk2Dockingport.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk2DroneCore": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Command\\mk2DroneCore\\mk2Dronecore.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\mk2DroneCore\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk2Fuselage": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\mk2FuselageLong\\L_long.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\mk2FuselageLong\\FuselageLongLiquid.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk2FuselageLongLFO": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\mk2FuselageLong\\LFO_long.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\mk2FuselageLong\\FuselageLongLFO.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk2FuselageShortLFO": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\mk2FuselageShort\\LFO_short.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\mk2FuselageShort\\FuselageShortLFO.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk2FuselageShortLiquid": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\mk2FuselageShort\\L_short.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\mk2FuselageShort\\FuselageShortLiquid.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk2FuselageShortMono": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\mk2FuselageShort\\Mono_short.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\mk2FuselageShort\\FuselageShortMono.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk2LanderCabin": {
+   "bodyShapes": 3,
+   "cfg": "GameData\\Squad\\Parts\\Command\\mk2LanderCan\\mk2LanderCan.cfg",
+   "colliders": 5,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\mk2LanderCan\\model.mu"
+   ],
+   "triggers": 2,
+   "wheelMarkers": 0
+  },
+  "mk2LanderCabin_v2": {
+   "bodyShapes": 5,
+   "cfg": "GameData\\Squad\\Parts\\Command\\mk2LanderCan_v2\\mk2LanderCan_v2.cfg",
+   "colliders": 9,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\mk2LanderCan_v2\\mk2LanderCan.mu"
+   ],
+   "triggers": 4,
+   "wheelMarkers": 0
+  },
+  "mk2SpacePlaneAdapter": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\mk2Adapters\\standard.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\mk2Adapters\\standard.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk2_1m_AdapterLong": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\mk2Adapters\\long.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\mk2Adapters\\long.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk2_1m_Bicoupler": {
+   "bodyShapes": 3,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\mk2Adapters\\bicoupler.cfg",
+   "colliders": 3,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\mk2Adapters\\bicoupler.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk3CargoBayL": {
+   "bodyShapes": 17,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\mk3CargoBay\\long.cfg",
+   "colliders": 17,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\mk3CargoBay\\long.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk3CargoBayM": {
+   "bodyShapes": 17,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\mk3CargoBay\\medium.cfg",
+   "colliders": 17,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\mk3CargoBay\\medium.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk3CargoBayS": {
+   "bodyShapes": 17,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\mk3CargoBay\\short.cfg",
+   "colliders": 17,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\mk3CargoBay\\short.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk3CargoRamp": {
+   "bodyShapes": 21,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\mk3CargoBay\\ramp.cfg",
+   "colliders": 21,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\mk3CargoBay\\ramp.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk3Cockpit_Shuttle": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Command\\mk3CockpitShuttle\\mk3CockpitShuttle.cfg",
+   "colliders": 8,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\mk3CockpitShuttle\\model.mu"
+   ],
+   "triggers": 6,
+   "wheelMarkers": 0
+  },
+  "mk3CrewCabin": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\mk3Fuselage\\CREW.cfg",
+   "colliders": 9,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\mk3Fuselage\\CREW.mu"
+   ],
+   "triggers": 8,
+   "wheelMarkers": 0
+  },
+  "mk3FuselageLFO_100": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\mk3Fuselage\\LFO_100.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\mk3Fuselage\\LFO_100.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk3FuselageLFO_25": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\mk3Fuselage\\LFO_25.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\mk3Fuselage\\LFO_25.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk3FuselageLFO_50": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\mk3Fuselage\\LFO_50.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\mk3Fuselage\\LFO_50.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk3FuselageLF_100": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\mk3Fuselage\\LF_100.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\mk3Fuselage\\LF_100.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk3FuselageLF_25": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\mk3Fuselage\\LF_25.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\mk3Fuselage\\LF_25.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk3FuselageLF_50": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\mk3Fuselage\\LF_50.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\mk3Fuselage\\LF_50.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "mk3FuselageMONO": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\mk3Fuselage\\MONO.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\mk3Fuselage\\MONO.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "nacelleBody": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\mk1Parts\\engineNacelle.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\mk1Parts\\Nacelle1.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "navLight1": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\Lights\\navLight1.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\Lights\\Assets\\light_03.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "noseCone": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\aerodynamicNoseCone\\aerodynamicNoseCone.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\aerodynamicNoseCone\\aerodynamicNoseCone.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "noseConeAdapter": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\cones\\noseConeAdapter.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\cones\\Assets\\NCS.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "nuclearEngine": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\liquidEngineLV-N\\liquidEngineLV-N.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\liquidEngineLV-N\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "omsEngine": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\OMSEngine\\omsEngine.cfg",
+   "colliders": 1,
+   "kinds": [
+    "CapsuleCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\OMSEngine\\Puff_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "parachuteDrogue": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\parachuteMk25\\parachuteMk25.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\parachuteMk25\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "parachuteLarge": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\parachuteMk16-XL\\parachuteMk16-XL.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\parachuteMk16-XL\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "parachuteRadial": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\parachuteMk2-R\\parachuteMk2-R.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\parachuteMk2-R\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "parachuteSingle": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\parachuteMk1\\parachuteMk1.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\parachuteMk1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "pointyNoseConeA": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\cones\\ConeA.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\cones\\Assets\\ConeA.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "pointyNoseConeB": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\cones\\ConeB.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\cones\\Assets\\ConeB.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "probeCoreCube": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Command\\probeCoreCube\\probeCoreCube.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\probeCoreCube\\probeCoreCube.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "probeCoreHex": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Command\\probeCoreHex\\probeCoreHex.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\probeCoreHex\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "probeCoreHex_v2": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Command\\probeCoreHex_v2\\probeCoreHex_v2.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\probeCoreHex_v2\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "probeCoreOcto": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Command\\probeCoreOcto_v1\\probeCoreOcto.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Command\\probeCoreOcto_v1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "probeCoreOcto2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Command\\probeCoreOcto2_v1\\probeCoreOcto2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Command\\probeCoreOcto2_v1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "probeCoreOcto2_v2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Command\\probeCoreOcto2_v2\\probeCoreOcto2_v2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\probeCoreOcto2_v2\\probeCoreOcto2_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "probeCoreOcto_v2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Command\\probeCoreOcto_v2\\probeCoreOcto_v2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\probeCoreOcto_v2\\probeCoreOcto_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "probeCoreSphere": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Command\\probeStackSphere_v1\\probeStackSphere.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2",
+    "SphereCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Command\\probeStackSphere_v1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "probeCoreSphere_v2": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Command\\probeStackSphere_v2\\probeStackSphere_v2.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2",
+    "SphereCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\probeStackSphere_v2\\probeStackSphere_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "probeStackLarge": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Command\\probeStackLarge\\probeStackLarge.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\probeStackLarge\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "probeStackSmall": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Command\\probeStackSmall\\probeStackSmall.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\probeStackSmall\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "radPanelEdge": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Thermal\\RadiatorPanels\\radPanelEdge.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Thermal\\RadiatorPanels\\radPanelEdge.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "radPanelLg": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Thermal\\RadiatorPanels\\radPanelLg.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Thermal\\RadiatorPanels\\radPanelLg.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "radPanelSm": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Thermal\\RadiatorPanels\\radPanelSm.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Thermal\\RadiatorPanels\\radPanelSm.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "radialDecoupler": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\decouplerRadialTT-38K\\decouplerRadialTT-38K.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\decouplerRadialTT-38K\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "radialDecoupler1-2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\decouplerRadialHDM\\decouplerRadialHDM.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\decouplerRadialHDM\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "radialDecoupler2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\decouplerRadialTT-70\\decouplerRadialTT-70.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\decouplerRadialTT-70\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "radialDrogue": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\parachuteMk12-R\\parachuteMk12-R.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\parachuteMk12-R\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "radialEngineBody": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\mk1Parts\\engineBodyRadial.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\mk1Parts\\Nacelle2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "radialEngineMini": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Engine\\liquidEngineLV-1R_v1\\liquidEngineLV-1R.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Engine\\liquidEngineLV-1R_v1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "radialEngineMini_v2": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\liquidEngineLV-1_v2\\liquidEngineLV-1R _v2.cfg",
+   "colliders": 2,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\liquidEngineLV-1_v2\\Assets\\Spider.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "radialLiquidEngine1-2": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\liquidEngineMk55\\liquidEngineMk55.cfg",
+   "colliders": 2,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\liquidEngineMk55\\Thud.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "radialRCSTank": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\RCSTankRadial\\radialRCSTank.cfg",
+   "colliders": 1,
+   "kinds": [
+    "CapsuleCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\RCSTankRadial\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "ramAirIntake": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\ramAirIntake\\ramAirIntake.cfg",
+   "colliders": 2,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\ramAirIntake\\RampIntake.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "rcsTankMini": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\RCSFuelTankR10\\RCSFuelTankR10.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\RCSFuelTankR10\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "rcsTankRadialLong": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\RCStankRadialLong\\RCSTankRadialLong.cfg",
+   "colliders": 1,
+   "kinds": [
+    "CapsuleCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\RCStankRadialLong\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "rocketNoseCone": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Aero\\protectiveRocketNoseMk7_v1\\protectiveRocketNoseMk7.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Aero\\protectiveRocketNoseMk7_v1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "rocketNoseConeSize3": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\cones\\rocketNoseCone_size3.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\cones\\Assets\\orangeNoseCone.mu",
+    "GameData\\Squad\\Parts\\Aero\\cones\\Assets\\rocketNoseCone.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "rocketNoseCone_v2": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\cones\\protectiveRocketNoseMk7_v2.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\cones\\Assets\\orangeNoseCone.mu",
+    "GameData\\Squad\\Parts\\Aero\\cones\\Assets\\rocketNoseCone_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "rocketNoseCone_v3": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\cones\\protectiveRocketNoseMk7_v3.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\cones\\Assets\\orangeNoseCone.mu",
+    "GameData\\Squad\\Parts\\Aero\\cones\\Assets\\rocketNoseCone_v3.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "roverBody": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Command\\probeRoverBody\\probeRoverBody.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\probeRoverBody\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "roverBody_v2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Command\\probeRoverBody_v2\\probeRoverBody_v2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\probeRoverBody_v2\\probeRoverBody_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "roverWheel1": {
+   "bodyShapes": 4,
+   "cfg": "GameData\\Squad\\Parts\\Wheel\\roverWheelM1\\roverWheelM1.cfg",
+   "colliders": 5,
+   "kinds": [
+    "BoxCollider2",
+    "SphereCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Wheel\\roverWheelM1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 1
+  },
+  "roverWheel2": {
+   "bodyShapes": 3,
+   "cfg": "GameData\\Squad\\Parts\\Wheel\\roverWheelS2\\roverWheelS2.cfg",
+   "colliders": 4,
+   "kinds": [
+    "MeshCollider2",
+    "SphereCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Wheel\\roverWheelS2\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 1
+  },
+  "roverWheel3": {
+   "bodyShapes": 8,
+   "cfg": "GameData\\Squad\\Parts\\Wheel\\roverWheelXL3\\roverWheelXL3.cfg",
+   "colliders": 9,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2",
+    "SphereCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Wheel\\roverWheelXL3\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 1
+  },
+  "rtg": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Electrical\\RTG\\RTG.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Electrical\\RTG\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "sasModule": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Command\\inlineReactionWheel\\inlineReactionWheel.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\inlineReactionWheel\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "science_module": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Science\\MaterialBay\\materialBay.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Science\\MaterialBay\\science_module_small.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "seatExternalCmd": {
+   "bodyShapes": 3,
+   "cfg": "GameData\\Squad\\Parts\\Command\\externalCommandSeat\\externalCommandSeat.cfg",
+   "colliders": 3,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Command\\externalCommandSeat\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "sensorAccelerometer": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Science\\sensorAccelerometer\\sensorAccelerometer.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Science\\sensorAccelerometer\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "sensorAtmosphere": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Science\\AtmosphereSensor\\sensorAtmosphere.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Science\\AtmosphereSensor\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "sensorBarometer": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Science\\sensorBarometer\\sensorBarometer.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Science\\sensorBarometer\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "sensorGravimeter": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Science\\sensorGravimeter\\sensorGravimeter.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Science\\sensorGravimeter\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "sensorThermometer": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Science\\sensorThermometer\\sensorThermometer.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Science\\sensorThermometer\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "sepMotor1": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\solidBoosterSep\\solidBoosterSep.cfg",
+   "colliders": 1,
+   "kinds": [
+    "CapsuleCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\solidBoosterSep\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "shockConeIntake": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\circularIntake\\intakeShockCone.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\circularIntake\\ConeIntake.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "size3Decoupler": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Structural\\Size3Decoupler\\part.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Structural\\Size3Decoupler\\size3Decoupler.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "smallCargoContainer": {
+   "bodyShapes": 0,
+   "cfg": "GameData\\Squad\\Parts\\Cargo\\CargoContainers\\smallCargoContainer.cfg",
+   "colliders": 1,
+   "kinds": [],
+   "mu": [
+    "GameData\\Squad\\Parts\\Cargo\\CargoContainers\\smallCargoContainer.mu"
+   ],
+   "triggers": 1,
+   "wheelMarkers": 0
+  },
+  "smallClaw": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\smallClaw\\smallClaw.cfg",
+   "colliders": 2,
+   "kinds": [
+    "CapsuleCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\smallClaw\\smallClaw.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "smallCtrlSrf": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wings\\elevon4.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wings\\elevon4.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "smallHardpoint": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\structuralPylons\\smallHardpoint.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\structuralPylons\\PylonSmall.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "smallRadialEngine": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\liquidEngine24-77\\liquidEngine24-77.cfg",
+   "colliders": 1,
+   "kinds": [
+    "CapsuleCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\liquidEngine24-77\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "smallRadialEngine_v2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\liquidEngine24-77_v2\\liquidEngine24-77_v2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "CapsuleCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\liquidEngine24-77_v2\\Twitch_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "solarPanelOX10C": {
+   "bodyShapes": 15,
+   "cfg": "GameData\\Squad\\Parts\\Electrical\\10CSolarPanels\\OX-10C.cfg",
+   "colliders": 15,
+   "kinds": [
+    "BoxCollider2",
+    "CapsuleCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Electrical\\10CSolarPanels\\assets\\OX-10C.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "solarPanelOX10L": {
+   "bodyShapes": 7,
+   "cfg": "GameData\\Squad\\Parts\\Electrical\\10LSolarPanels\\OX-10L.cfg",
+   "colliders": 7,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Electrical\\10LSolarPanels\\assets\\OX-10L.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "solarPanelSP10C": {
+   "bodyShapes": 16,
+   "cfg": "GameData\\Squad\\Parts\\Electrical\\10CSolarPanels\\SP-10C.cfg",
+   "colliders": 16,
+   "kinds": [
+    "BoxCollider2",
+    "CapsuleCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Electrical\\10CSolarPanels\\assets\\SP-10C.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "solarPanelSP10L": {
+   "bodyShapes": 10,
+   "cfg": "GameData\\Squad\\Parts\\Electrical\\10LSolarPanels\\SP-10L.cfg",
+   "colliders": 10,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Electrical\\10LSolarPanels\\assets\\SP-10L.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "solarPanels1": {
+   "bodyShapes": 8,
+   "cfg": "GameData\\Squad\\Parts\\Electrical\\3x2ShroudSolarPanels\\3x2ShroudSolarPanels.cfg",
+   "colliders": 8,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Electrical\\3x2ShroudSolarPanels\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "solarPanels2": {
+   "bodyShapes": 8,
+   "cfg": "GameData\\Squad\\Parts\\Electrical\\1x6ShroudSolarPanels\\1x6ShroudSolarPanels.cfg",
+   "colliders": 8,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Electrical\\1x6ShroudSolarPanels\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "solarPanels3": {
+   "bodyShapes": 7,
+   "cfg": "GameData\\Squad\\Parts\\Electrical\\3x2SolarPanels\\3x2SolarPanels.cfg",
+   "colliders": 7,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Electrical\\3x2SolarPanels\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "solarPanels4": {
+   "bodyShapes": 7,
+   "cfg": "GameData\\Squad\\Parts\\Electrical\\1x6SolarPanels\\1x6SolarPanels.cfg",
+   "colliders": 7,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Electrical\\1x6SolarPanels\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "solarPanels5": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Electrical\\radialFlatSolarPanel\\radialFlatSolarPanel.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Electrical\\radialFlatSolarPanel\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "solidBooster": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Engine\\solidBoosterRT-10_v1\\solidBoosterRT-10.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Engine\\solidBoosterRT-10_v1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "solidBooster1-1": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\solidBoosterBACC\\solidBoosterBACC.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\solidBoosterBACC\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "solidBooster_sm_v2": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\Size1_SRBs\\solidBoosterRT-5_v2.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\Size1_SRBs\\SRB5.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "solidBooster_v2": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\Size1_SRBs\\solidBoosterRT-10_v2.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\Size1_SRBs\\SRB10.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "spotLight1": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\spotLightMk1\\spotLightMk1.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\spotLightMk1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "spotLight1_v2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\spotLightMk1_v2\\spotLightMk1_v2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\spotLightMk1_v2\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "spotLight2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\spotLightMk2\\spotLightMk2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\spotLightMk2\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "spotLight2_v2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\spotLightMk2_v2\\spotLightMk2_v2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\spotLightMk2_v2\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "spotLight3": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\Lights\\spotLight1.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\Lights\\Assets\\light_08.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "stackBiCoupler": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Utility\\stackBiCoupler_v1\\stackBiCoupler.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Utility\\stackBiCoupler_v1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "stackBiCoupler_v2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\stackCouplers\\stackBiCoupler_v2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\stackCouplers\\Assets\\stackBiCoupler_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "stackDecoupler": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Utility\\decouplerStackTR-18A\\decouplerStackTR-18A.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Utility\\decouplerStackTR-18A\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "stackDecouplerMini": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Utility\\decouplerStackTR-2V\\decouplerStackTR-2V.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Utility\\decouplerStackTR-2V\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "stackPoint1": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\radialAttachmentPoint\\radialAttachmentPoint.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\radialAttachmentPoint\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "stackQuadCoupler": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\stackCouplers\\stackQuadCoupler.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\stackCouplers\\Assets\\stackQuadCoupler.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "stackSeparator": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Utility\\decouplerSeparatorTR-18D\\decouplerSeparatorTR-18D.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Utility\\decouplerSeparatorTR-18D\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "stackSeparatorBig": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Utility\\decouplerSeparatorTR-XL\\decouplerSeparatorTR-XL.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Utility\\decouplerSeparatorTR-XL\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "stackSeparatorMini": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Utility\\decouplerSeparatorTR-2C\\decouplerSeparatorTR-2C.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Utility\\decouplerSeparatorTR-2C\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "stackTriCoupler": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\Utility\\stackTriCoupler_v1\\stackTriCoupler.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\Utility\\stackTriCoupler_v1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "stackTriCoupler_v2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\stackCouplers\\stackTriCoupler_v2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\stackCouplers\\Assets\\stackTriCoupler_v2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "standardNoseCone": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\cones\\smallNoseCone.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\cones\\Assets\\TinyCone.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "stationHub": {
+   "bodyShapes": 3,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\stationHub\\stationHub.cfg",
+   "colliders": 3,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\stationHub\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "stripLight1": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\Lights\\stripLight1.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\Lights\\Assets\\light_02.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "structuralIBeam1": {
+   "bodyShapes": 3,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\structuralIBeam650\\structuralIBeam650.cfg",
+   "colliders": 3,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\structuralIBeam650\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "structuralIBeam2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\structuralIBeam200\\structuralIBeam200.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\structuralIBeam200\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "structuralIBeam3": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\structuralIBeam200Pocket\\structuralIBeam200Pocket.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\structuralIBeam200Pocket\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "structuralMiniNode": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\structuralMicronode\\structuralMicronode.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\structuralMicronode\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "structuralPanel1": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\structuralPanel1x1\\structuralPanel1x1.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\structuralPanel1x1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "structuralPanel2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\structuralPanel2x2\\structuralPanel2x2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\structuralPanel2x2\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "structuralPylon": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\structuralPylons\\structuralPylon.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\structuralPylons\\PylonBig.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "structuralWing": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wings\\structural1.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wings\\structural1.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "structuralWing2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wings\\structural2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wings\\structural2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "structuralWing3": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wings\\structural3.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wings\\structural3.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "structuralWing4": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wings\\structural4.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wings\\structural4.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "strutConnector": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\CompoundParts\\strutConnector\\strutConnector.cfg",
+   "colliders": 2,
+   "kinds": [
+    "SphereCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\CompoundParts\\strutConnector\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "strutCube": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\strutCubicOcto\\strutCubicOcto.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\strutCubicOcto\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "strutOcto": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\strutOcto\\strutOcto.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\strutOcto\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "sweptWing": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\airplaneFins\\sweptWing.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\airplaneFins\\Swept.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "sweptWing1": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wings\\swept1.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wings\\swept1.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "sweptWing2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wings\\swept2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wings\\swept2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "tailfin": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\airplaneFins\\tailfin.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\airplaneFins\\TailFin.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "telescopicLadder": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\ladderTelescopic\\ladderTelescopic.cfg",
+   "colliders": 2,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\ladderTelescopic\\model.mu"
+   ],
+   "triggers": 1,
+   "wheelMarkers": 0
+  },
+  "telescopicLadderBay": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\ladderTelescopicBay\\ladderTelescopicBay.cfg",
+   "colliders": 2,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\ladderTelescopicBay\\model.mu"
+   ],
+   "triggers": 1,
+   "wheelMarkers": 0
+  },
+  "toroidalAerospike": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\liquidEngineAerospike\\liquidEngineAerospike.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\liquidEngineAerospike\\AeroSpike.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "toroidalFuelTank": {
+   "bodyShapes": 7,
+   "cfg": "GameData\\Squad\\zDeprecated\\Parts\\FuelTank\\fuelTankToroidal\\fuelTankToroidal.cfg",
+   "colliders": 7,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\zDeprecated\\Parts\\FuelTank\\fuelTankToroidal\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "trussAdapter": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\trussGirderAdapter\\trussGirderAdapter.cfg",
+   "colliders": 2,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\trussGirderAdapter\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "trussPiece1x": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\trussGirderL\\trussGirderL.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\trussGirderL\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "trussPiece3x": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Structural\\trussGirderXL\\trussGirderXL.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Structural\\trussGirderXL\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "turboFanEngine": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\jetEngines\\jetEngineTurbo.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\jetEngines\\turboRamJet.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "turboFanSize2": {
+   "bodyShapes": 2,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\jetEngines\\jetEngineBig.cfg",
+   "colliders": 2,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\jetEngines\\turboFanSize2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "turboJet": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Engine\\jetEngines\\jetEngineAfterburning.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Engine\\jetEngines\\turboJet.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "vernierEngine": {
+   "bodyShapes": 0,
+   "cfg": "GameData\\Squad\\Parts\\Utility\\linearVernorRCS\\vernorEngine.cfg",
+   "colliders": 1,
+   "kinds": [],
+   "mu": [
+    "GameData\\Squad\\Parts\\Utility\\linearVernorRCS\\Assets\\vernorEngine.mu"
+   ],
+   "triggers": 1,
+   "wheelMarkers": 0
+  },
+  "wheelMed": {
+   "bodyShapes": 4,
+   "cfg": "GameData\\Squad\\Parts\\Wheel\\roverWheelTR-2L\\roverWheelTR-2L.cfg",
+   "colliders": 5,
+   "kinds": [
+    "BoxCollider2",
+    "MeshCollider2",
+    "SphereCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Wheel\\roverWheelTR-2L\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 1
+  },
+  "wingConnector": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wings\\connector1.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wings\\connector1.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "wingConnector2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wings\\connector2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wings\\connector2.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "wingConnector3": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wings\\connector3.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wings\\connector3.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "wingConnector4": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wings\\connector4.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wings\\connector4.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "wingConnector5": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wings\\connector5.cfg",
+   "colliders": 1,
+   "kinds": [
+    "BoxCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wings\\connector5.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "wingShuttleDelta": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\shuttleWings\\delta.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\shuttleWings\\ShuttleDeltaWing.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "wingShuttleElevon1": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\shuttleWings\\elevon1.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\shuttleWings\\ShuttleElevonA.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "wingShuttleElevon2": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\shuttleWings\\elevon2.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\shuttleWings\\ShuttleElevonB.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "wingShuttleRudder": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\shuttleWings\\rudder.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\shuttleWings\\ShuttleRudder.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "wingShuttleStrake": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\shuttleWings\\strake.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\shuttleWings\\ShuttleStrake.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "wingStrake": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wings\\strake.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wings\\strake.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "winglet": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wingletAV-T1\\wingletAV-T1.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wingletAV-T1\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "winglet3": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\Aero\\wingletDeltaDeluxe\\wingletDeltaDeluxe.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\Aero\\wingletDeltaDeluxe\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "xenonTank": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\xenonTank\\xenonTank.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\xenonTank\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "xenonTankLarge": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\xenonTankLarge\\xenonTankLarge.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\xenonTankLarge\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  },
+  "xenonTankRadial": {
+   "bodyShapes": 1,
+   "cfg": "GameData\\Squad\\Parts\\FuelTank\\xenonTankRadial\\xenonTankRadial.cfg",
+   "colliders": 1,
+   "kinds": [
+    "MeshCollider2"
+   ],
+   "mu": [
+    "GameData\\Squad\\Parts\\FuelTank\\xenonTankRadial\\model.mu"
+   ],
+   "triggers": 0,
+   "wheelMarkers": 0
+  }
+ }
+}
