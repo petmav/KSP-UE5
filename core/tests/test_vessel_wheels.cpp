@@ -331,11 +331,11 @@ TEST_CASE("WP-29c rover drive at full throttle vs the C# motor model without sli
     }
 }
 
-TEST_CASE("WP-29c rover brakes from 8 m/s: stops within 25 % of the C# brake model capped by the locked-tyre curve, no flip") {
+void BrakeCase(const WheelPhysicsOptions& opts, const char* tag) {
     if (!wp20b::GameAvailable()) return;
     for (const char* craft : {"Prospector Rover", "Bug-E Buggy"}) {
         INFO(craft);
-        Run run(craft);
+        Run run(craft, opts);
         run.Ticks(100);
         run.V().ctrlState.wheelThrottle = 1.0f;
         for (int k = 0; k < 3000 && run.ForwardSpeed() < 8.0; ++k) {
@@ -371,18 +371,20 @@ TEST_CASE("WP-29c rover brakes from 8 m/s: stops within 25 % of the C# brake mod
             xa += std::max(0.0, va) * 0.02;
             ta = (j + 1) * 0.02;
         }
-        MESSAGE(std::string(craft) << ": from " << v0 << " m/s: " << dist << " m in " << t << " s (reference " << xa << " m in " << ta << " s), max tilt " << tilt << " deg");
+        MESSAGE(std::string(tag) << " " << craft << ": from " << v0 << " m/s: " << dist << " m in " << t << " s (reference " << xa << " m in " << ta << " s), max tilt " << tilt << " deg");
         CHECK(dist > 0.0);
         CHECK(dist == doctest::Approx(xa).epsilon(0.25));
         CHECK(tilt < 30.0);
     }
 }
 
-TEST_CASE("WP-29c rover steers: wheelSteer +1 (KSP's left key) turns left at the kinematic rate of the steered wheels (Prospector), Bug-E turns left") {
+TEST_CASE("WP-29c rover brakes from 8 m/s: stops within 25 % of the C# brake model capped by the locked-tyre curve, no flip") { BrakeCase({}, "proxy"); }
+
+void SteerCase(const WheelPhysicsOptions& opts, const char* tag) {
     if (!wp20b::GameAvailable()) return;
     for (const char* craft : {"Prospector Rover", "Bug-E Buggy"}) {
         INFO(craft);
-        Run run(craft);
+        Run run(craft, opts);
         run.Ticks(100);
         // to 2.5 m/s, then coast: the kinematic model holds while the lateral acceleration stays low (the tyres in their adherent range)
         run.V().ctrlState.wheelThrottle = 0.4f;
@@ -426,14 +428,16 @@ TEST_CASE("WP-29c rover steers: wheelSteer +1 (KSP's left key) turns left at the
             REQUIRE(nr > 0);
             const double delta = sumDelta / nf * kRad, L = front / nf - rear / nr;
             const double kinematic = -v * std::tan(std::fabs(delta)) / L;  // a left turn: negative about the Unity up axis
-            MESSAGE(std::string(craft) << ": " << heading << " deg in 3 s at " << v << " m/s, yaw rate " << yawRate << " rad/s vs kinematic " << kinematic
+            MESSAGE(std::string(tag) << " " << craft << ": " << heading << " deg in 3 s at " << v << " m/s, yaw rate " << yawRate << " rad/s vs kinematic " << kinematic
                           << " (steer " << delta / kRad << " deg, wheelbase " << L << " m), tilt " << tilt << " deg");
             CHECK(yawRate == doctest::Approx(kinematic).epsilon(0.15));
         } else {
-            MESSAGE(std::string(craft) << ": " << heading << " deg in 2 s at " << v << " m/s, yaw rate " << yawRate << " rad/s (all-wheel steering), tilt " << tilt << " deg");
+            MESSAGE(std::string(tag) << " " << craft << ": " << heading << " deg in 2 s at " << v << " m/s, yaw rate " << yawRate << " rad/s (all-wheel steering), tilt " << tilt << " deg");
         }
     }
 }
+
+TEST_CASE("WP-29c rover steers: wheelSteer +1 (KSP's left key) turns left at the kinematic rate of the steered wheels (Prospector), Bug-E turns left") { SteerCase({}, "proxy"); }
 
 TEST_CASE("WP-29c physics-warp substeps: the policy (a tick longer than 0.02 s with a set-up wheel in the bubble runs ceil(dt / 0.02) substeps)") {
     if (!wp20b::GameAvailable()) return;
@@ -550,4 +554,36 @@ TEST_CASE("WP-29c the wheel parts in the cluster: welded with their rb.mass, spr
         CHECK(wc.forwardFriction.stiffness == 0.0f);
         CHECK(w->Controller()->wheelCollider->springSlerpRate == w->base->Get<float>("springSlerpRate"));
     }
+}
+
+// =================================================================================================================================================
+// WP-29d: the same rovers with the wheel collider transforms, hub colliders and animations of the parts' real .mu models
+// (core/data/wheel_models; WheelPhysicsOptions::models) instead of the spike's drag-cube proxy.
+TEST_CASE("WP-29d rover rest with the real wheel models (numbers vs the proxy geometry)") {
+    if (!wp20b::GameAvailable()) return;
+    for (const char* craft : {"Prospector Rover", "Bug-E Buggy"}) {
+        INFO(craft);
+        const RestResult proxy = Rest(craft, 20.0, 1.0f);
+        const RestResult real = Rest(craft, 20.0, 1.0f, RealGeometry());
+        MESSAGE(std::string(craft) << " REAL: drift " << real.horizDrift * 1e3 << " mm (vertical " << real.vertDrift * 1e3 << " mm), rms vz " << real.rmsVz * 1e3 << " mm/s, max w "
+                      << real.maxW << ", compression " << real.meanCompression << " (proxy " << proxy.meanCompression << "), wheel forces " << real.forceSum << " kN vs weight "
+                      << real.weight << ", tyre-bottom error " << real.maxBottomError * 1e3 << " mm, body clearance " << real.minBodyClearance << " m (proxy " << proxy.minBodyClearance
+                      << "), grounded " << real.grounded << "/" << real.wheels << ", bottomed " << real.bottomedTicks << ", joint error " << real.maxJointForceError << ", healthy " << real.healthy);
+    }
+}
+
+TEST_CASE("WP-29d rover drive with the real wheel models") {
+    if (!wp20b::GameAvailable()) return;
+    for (const char* craft : {"Prospector Rover", "Bug-E Buggy"}) {
+        const DriveResult proxy = Drive(craft);
+        const DriveResult r = Drive(craft, 1.0f, RealGeometry());
+        MESSAGE(std::string(craft) << " REAL: v(10 s) " << r.vAt[0] << " (ref " << r.vRef[0] << ", proxy " << proxy.vAt[0] << "), v(20 s) " << r.vAt[1] << " (ref " << r.vRef[1] << ", proxy "
+                      << proxy.vAt[1] << "), tilt " << r.maxTilt << " (proxy " << proxy.maxTilt << ")");
+    }
+}
+
+TEST_CASE("WP-29d rover brake and steer with the real wheel models") {
+    if (!wp20b::GameAvailable()) return;
+    BrakeCase(RealGeometry(), "REAL");
+    SteerCase(RealGeometry(), "REAL");
 }

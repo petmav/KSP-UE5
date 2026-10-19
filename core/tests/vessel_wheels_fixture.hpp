@@ -30,6 +30,13 @@ using namespace ksp;
 using namespace ksp::physics;
 using wp20b::World;
 
+// WP-29d: the stock wheel / gear / leg models (core/data/wheel_models) as the geometry source of the wheel host
+inline WheelPhysicsOptions RealGeometry(WheelPhysicsOptions o = {}) {
+    static const auto lib = std::make_shared<const WheelModelLibrary>(std::string(KSPCORE_DATA_DIR) + "/wheel_models");
+    o.models = lib;
+    return o;
+}
+
 inline std::string StockCraftPath(const std::string& name) { return std::string(KSPCORE_HARNESS_DIR) + "/inputs/Ships/SPH/" + name + ".craft"; }
 
 struct LoadedRover {
@@ -73,6 +80,7 @@ inline QuaternionD Columns(const Vector3d& x, const Vector3d& y, const Vector3d&
 
 // The wheel parts' proxy geometry with the craft's up and each part's own forward (see the file header)
 inline WheelPhysicsOptions RoverOptions(const LoadedRover& r, WheelPhysicsOptions o = {}) {
+    if (o.models || o.modelRig) return o;  // WP-29d: the wheel collider transforms come from the model data, no proxy
     const Vector3f up = r.craftUp;
     o.geometry = [up](const Part& part, const ModuleWheelBase& base, WheelPartGeometry& g) {
         const Vector3d u = Vector3d(up).normalized();
