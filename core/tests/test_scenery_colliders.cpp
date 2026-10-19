@@ -299,3 +299,98 @@ TEST_CASE("WP-12c levels and activation vs the independent reference: presence f
     CHECK(n2 < ksc.objects.size());
     CHECK(n0 != n2);
 }
+
+// ---- PhysX material combine (PhysicsWorldConfig::physxMaterials) ---------------------------------------------------------------------------
+namespace {
+
+std::shared_ptr<const physics::PhysicMaterialDesc> Mat(float f, int frictionCombine, float bounce = 0.0f, int bounceCombine = 0) {
+    auto m = std::make_shared<physics::PhysicMaterialDesc>();
+    m->dynamicFriction = m->staticFriction = f;
+    m->bounciness = bounce;
+    m->frictionCombine = frictionCombine;
+    m->bounceCombine = bounceCombine;
+    return m;
+}
+
+// A 100 kg cube slides at 8 m/s on a static floor under a downward force m * g each step; the speed lost in 0.5 s is mu * g * 0.5
+double SlideLoss(bool physx, std::shared_ptr<const physics::PhysicMaterialDesc> boxMat, std::shared_ptr<const physics::PhysicMaterialDesc> floorMat,
+                 float boxBodyFriction, float floorBodyFriction, double* heightAfter = nullptr) {
+    physics::PhysicsWorldConfig cfg;
+    cfg.physxMaterials = physx;
+    cfg.defaultMaterial = *Mat(0.25f, 3, 0.0f, 2);
+    physics::PhysicsWorld world(cfg);
+    physics::ShapeDesc floorShape = physics::ShapeDesc::Box(Vector3f(50.0f, 50.0f, 50.0f));
+    floorShape.material = floorMat;
+    world.AddStaticShape(1, floorShape, Vector3d(0.0, -50.0, 0.0), QuaternionD::identity(), floorBodyFriction, 0.0f);
+    physics::BodyDesc d;
+    d.shape = physics::ShapeDesc::Box(Vector3f(0.5f, 0.5f, 0.5f));
+    d.shape.material = boxMat;
+    d.position = Vector3d(0.0, 0.5, 0.0);
+    d.mass = 100.0f;
+    d.friction = boxBodyFriction;
+    d.restitution = 0.0f;
+    d.linearVelocity = Vector3d(8.0, 0.0, 0.0);
+    const physics::BodyId id = world.CreateBody(d);
+    const double g = 9.80665;
+    const float dt = 1.0f / 60.0f;
+    for (int k = 0; k < 30; ++k) {
+        world.AddForce(id, Vector3d(0.0, -100.0 * g, 0.0));
+        world.Step(dt);
+    }
+    if (heightAfter != nullptr) *heightAfter = world.GetPosition(id).y;
+    return 8.0 - world.GetLinearVelocity(id).x;
+}
+
+}  // namespace
+
+TEST_CASE("WP-12c PhysX material combine: the sliding deceleration is mu_combined * g for the combine-mode priority rules (Maximum > Multiply > Minimum > Average)") {
+    const double g = 9.80665, t = 0.5;
+    struct Case {
+        const char* what;
+        std::shared_ptr<const physics::PhysicMaterialDesc> box, floor;
+        double mu;
+    };
+    const SceneryColliders& doc = Doc();
+    const auto ground = std::make_shared<const physics::PhysicMaterialDesc>(doc.materials[0].Desc());
+    const auto metal = std::make_shared<const physics::PhysicMaterialDesc>(doc.defaultMaterial->Desc());
+    const Case cases[] = {
+        {"part (Metal) on Kerbin's Ground: Maximum / Maximum -> 0.9", metal, ground, 0.9},
+        {"part (Metal) on a KSC collider (default Metal): Maximum -> 0.25", metal, metal, 0.25},
+        {"Average 0.8 vs Average 0.4 -> 0.6", Mat(0.8f, 0), Mat(0.4f, 0), 0.6},
+        {"Minimum 0.8 vs Average 0.4: Minimum has priority -> 0.4", Mat(0.8f, 2), Mat(0.4f, 0), 0.4},
+        {"Multiply 0.8 vs Minimum 0.5: Multiply has priority -> 0.4", Mat(0.8f, 1), Mat(0.5f, 2), 0.4},
+        {"Maximum 0.2 vs Multiply 0.9: Maximum has priority -> 0.9", Mat(0.2f, 3), Mat(0.9f, 1), 0.9},
+        {"Minimum 0.7 vs Minimum 0.3 -> 0.3", Mat(0.7f, 2), Mat(0.3f, 2), 0.3},
+    };
+    for (const Case& c : cases) {
+        const double loss = SlideLoss(true, c.box, c.floor, 0.5f, 0.5f);
+        const double want = c.mu * g * t;
+        MESSAGE(c.what << ": speed lost " << loss << " m/s, analytic " << want);
+        CHECK(std::fabs(loss - want) < 0.002 * want + 0.002);   // Jolt's solver reproduces mu * g * t to 4 digits
+    }
+    // the legacy rule (physxMaterials off): Jolt's sqrt(f1 * f2) of the bodies' friction
+    const double legacy = SlideLoss(false, nullptr, nullptr, 0.25f, 0.9f);
+    CHECK(std::fabs(legacy - std::sqrt(0.25 * 0.9) * g * t) < 0.002 * std::sqrt(0.25 * 0.9) * g * t + 0.002);
+    // and the two rules differ for the stock pair by the factor 0.9 / 0.474
+    const double px = SlideLoss(true, metal, ground, 0.25f, 0.9f);
+    CHECK(px > 1.8 * legacy);
+}
+
+TEST_CASE("WP-12c materials: the scenery host gives static bodies the game's materials; a world without the config keeps the old rule") {
+    const SceneryColliders& doc = Doc();
+    physics::PhysicsWorldConfig cfg;
+    doc.ApplyTo(cfg);
+    CHECK(cfg.physxMaterials);
+    CHECK(cfg.defaultMaterial.dynamicFriction == 0.25f);
+    CHECK(cfg.defaultMaterial.frictionCombine == 3);
+    CHECK(cfg.defaultMaterial.bounceCombine == 2);
+    CHECK(cfg.minVelocityForRestitution == 0.2f);
+    const auto kerbin = doc.TerrainMaterialDesc("Kerbin");
+    REQUIRE(kerbin != nullptr);
+    CHECK(kerbin->dynamicFriction == doctest::Approx(0.9f));
+    const auto mun = doc.TerrainMaterialDesc("Mun");   // no material on the collider: Physics.defaultMaterial
+    REQUIRE(mun != nullptr);
+    CHECK(mun->dynamicFriction == 0.25f);
+    physics::PhysicsWorldConfig plain;
+    CHECK(!plain.physxMaterials);
+}

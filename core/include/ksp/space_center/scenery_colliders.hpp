@@ -177,6 +177,8 @@ struct SceneryColliders {
     // PhysX's way of combining a contact pair's materials with the game's Physics.defaultMaterial / bounceThreshold / defaultContactOffset
     // (PhysicsManager): physxMaterials on, defaultMaterial = the document's, minVelocityForRestitution = Physics.bounceThreshold
     void ApplyTo(physics::PhysicsWorldConfig& config) const;
+    // TerrainColliders options for a body: opt.material = TerrainMaterial(body) (null when the document has none)
+    std::shared_ptr<const physics::PhysicMaterialDesc> TerrainMaterialDesc(const std::string& body) const;
 };
 
 // Throws std::runtime_error on a malformed document (wrong schema, bad index, parent after child, ...). `meshBlob` is the content of the

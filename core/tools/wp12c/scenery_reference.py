@@ -277,6 +277,15 @@ def main():
                 for t in idx:
                     tris.append((p[t[0]], p[t[1]], p[t[2]]))
         rays[tag] = {"triangles": len(tris), "samples": []}
+        leaf = {"LaunchPad": "LaunchPad_spawn", "Runway": "SpawnPoint"}[tag]
+        for i, o in enumerate(objs):
+            if pres[i] and o["path"].endswith("/" + leaf) and (tag != "Runway" or "End09" in o["path"]):
+                sp = chain[i][0]   # the spawn transform in the city frame (level-0 selection)
+                rays[tag]["spawn"] = {"path": o["path"], "x": float(sp[0]), "z": float(sp[2]), "y": float(sp[1])}
+                break
+        if tris and "spawn" in rays[tag]:
+            sx, sz = rays[tag]["spawn"]["x"], rays[tag]["spawn"]["z"]
+            rays[tag]["spawn"]["surface"] = ray_down(tris, sx, sz)
         if tris:
             allv = np.array([v for t in tris for v in t])
             xs = np.linspace(allv[:, 0].min(), allv[:, 0].max(), 9)[1:-1]
@@ -287,6 +296,60 @@ def main():
                     if y is not None:
                         rays[tag]["samples"].append([float(x), float(z), y])
     ref["rays"] = rays
+
+    # the other stock launch sites: the surface under their SpawnPoint from the mesh colliders tagged with the site's name (level 0, active
+    # objects: the subtrees of the switched roots plus the objects no callback switches)
+    sites = {"Kerbin/IslandAirfield": "Island_Airfield", "Kerbin/Crater_Launch_Site": "Crater_Launch_Site", "Kerbin/MahiMahi_Launch_Site": "MahiMahi_Launch_Site",
+             "Kerbin/Cove_Launch_Site": "Cove_Launch_Site", "Kerbin/GlacierLake_Launch_Site": "GlacierLake_Launch_Site"}
+    ref["siteRays"] = {}
+    for city in doc["cities"]:
+        if city["name"] not in sites or city.get("additionalPrefabOf"):
+            continue
+        objs = city["objects"]
+        chain = world_chain(objs)
+        pres = presence(objs, 0, {})
+        roots = ([] if city.get("class") == "PQSCity2" else list(city["children"])) + [r for l in city["lod"] for r in l["objects"]]
+        act = set(initially_active(city, pres))
+        for r in roots:
+            act.update(subtree(objs, r, pres))
+        tris = []
+        for i in sorted(act):
+            o = objs[i]
+            if o["tag"] != sites[city["name"]]:
+                continue
+            for c in o["colliders"]:
+                if c["trigger"] or not c["enabled"] or c["type"] not in ("Mesh", "Box"):
+                    continue
+                pos, rot, scl = chain[i]
+                if c["type"] == "Box":
+                    # the 12 triangles of the oriented box: centre placed, half extents |scale * size| / 2 rotated by the world rotation
+                    ctr = place(chain[i], [F(x) for x in c["center"]])
+                    hx = [F(F(abs(float(F(scl[k]) * F(c["size"][k])))) * F(0.5)) for k in range(3)]
+                    corners = []
+                    for sx in (-1, 1):
+                        for sy in (-1, 1):
+                            for sz in (-1, 1):
+                                r = rotate(rot, (F(sx) * hx[0], F(sy) * hx[1], F(sz) * hx[2]))
+                                corners.append(np.array([float(F(ctr[0] + r[0])), float(F(ctr[1] + r[1])), float(F(ctr[2] + r[2]))]))
+                    faces = [(0, 1, 3, 2), (4, 6, 7, 5), (0, 4, 5, 1), (2, 3, 7, 6), (0, 2, 6, 4), (1, 5, 7, 3)]
+                    for a, b, cc, d in faces:
+                        tris += [(corners[a], corners[b], corners[cc]), (corners[a], corners[cc], corners[d])]
+                    continue
+                m = doc["meshes"][c["mesh"]]
+                nv, ni, off = m["vertexCount"], m["indexCount"], m["offset"]
+                verts = np.frombuffer(blob, dtype="<f4", count=nv * 3, offset=off).reshape(nv, 3)
+                idx = np.frombuffer(blob, dtype="<u4", count=ni, offset=off + nv * 12).reshape(-1, 3)
+                r = rotate(rot, (F(scl[0]) * verts[:, 0], F(scl[1]) * verts[:, 1], F(scl[2]) * verts[:, 2]))
+                p = np.stack([F(pos[0]) + r[0], F(pos[1]) + r[1], F(pos[2]) + r[2]], axis=1).astype("<f4").astype(np.float64)
+                tris += [(p[t[0]], p[t[1]], p[t[2]]) for t in idx]
+        entry = {"tag": sites[city["name"]], "triangles": len(tris)}
+        for i, o in enumerate(objs):
+            if pres[i] and o["path"].rsplit("/", 1)[-1] == "SpawnPoint":
+                sp = chain[i][0]
+                entry["spawn"] = {"path": o["path"], "x": float(sp[0]), "z": float(sp[2]), "y": float(sp[1]),
+                                  "surface": ray_down(tris, float(sp[0]), float(sp[2])) if tris else None}
+                break
+        ref["siteRays"][city["name"]] = entry
     json.dump(ref, open(out, "w", encoding="utf-8", newline="\n"), separators=(",", ":"))
     n = sum(len(e["objects"]) for e in ref["cities"].values())
     print("cities", len(ref["cities"]), "objects", n, "ray samples", {k: len(v["samples"]) for k, v in rays.items()})

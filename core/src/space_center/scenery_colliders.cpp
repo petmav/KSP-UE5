@@ -139,6 +139,11 @@ std::optional<SceneryMaterial> SceneryColliders::TerrainMaterial(const std::stri
     return defaultMaterial;
 }
 
+std::shared_ptr<const physics::PhysicMaterialDesc> SceneryColliders::TerrainMaterialDesc(const std::string& body) const {
+    const std::optional<SceneryMaterial> m = TerrainMaterial(body);
+    return m ? std::make_shared<const physics::PhysicMaterialDesc>(m->Desc()) : nullptr;
+}
+
 void SceneryColliders::ApplyTo(physics::PhysicsWorldConfig& config) const {
     if (!defaultMaterial) return;
     config.physxMaterials = true;
