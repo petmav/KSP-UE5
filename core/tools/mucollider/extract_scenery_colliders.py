@@ -89,6 +89,8 @@ class Node:
         self.behaviours = []        # (class name, dict-form fields) of the MonoBehaviours we replay
         self.level_group = None     # UpgradeableObject id the node belongs to
         self.level = -1
+        self.crash = None           # CrashObjectName (objectName, displayName)
+        self.mobile_pad = False     # PositionMobileLaunchPad component
         self.destructible = None    # list of (collapse Node, replacement Node | None, extra) for a DestructibleBuilding component
         self.index = -1
 
@@ -194,6 +196,27 @@ class Extractor:
         for c in n.m_Children:
             self._fix_string_arrays(c)
 
+    def components(self, go_key):
+        go = self.objs[go_key].read()
+        return [(p.type.name, self.key_of(p.deref())) for p in go.m_Components]
+
+    def find_prefab_by_name(self, name):
+        hits = []
+        for k, o in self.objs.items():
+            if o.type.name == "GameObject" and o.read().m_Name == name:
+                hits.append(k)
+        if len(hits) != 1:
+            self.warn("prefab name %s resolves to %d GameObjects" % (name, len(hits)))
+        return hits[0] if hits else None
+
+    def psystem_setup(self):
+        for k, o in self.objs.items():
+            if o.type.name == "MonoBehaviour" and self.mb_class(o) == "PSystemSetup":
+                f = self.mb_fields(o, "PSystemSetup")
+                self.setup_origin = k
+                return f
+        raise RuntimeError("no PSystemSetup")
+
     # ---- PhysicMaterial -------------------------------------------------------------------------------------------------------
     def material_id(self, ptr):
         key = self.ptr_key(ptr)
@@ -298,6 +321,11 @@ class Extractor:
                     self.warn("%s: %s without a mesh" % (go.m_Name, n))
             elif n == "MonoBehaviour":
                 cls = self.mb_class(r)
+                if cls == "CrashObjectName":
+                    f = self.mb_fields(r, cls)
+                    node.crash = (f["objectName"], f["displayName"])
+                elif cls.endswith("PositionMobileLaunchPad"):
+                    node.mobile_pad = True
                 if cls in ("NestedPrefabSpawner", "Upgradeables.UpgradeableFacility", "Upgradeables.UpgradeableSlave", "DestructibleBuilding"):
                     mbs.append((node, cls, self.mb_fields(r, cls), r))
         for ch in trd.m_Children:
@@ -455,6 +483,38 @@ def main():
             ncol = sum(len(n.colliders) for n in nodes)
             print("%-34s %-8s pid %5d: %5d objects, %4d colliders" % (mod["gameObject"], mod["class"], go_key[1], len(nodes), ncol))
 
+    # PSystemSetup (level9): the stock launch sites and facilities; the "stock" bundle's additional prefabs are the set dressings
+    setup = ex.psystem_setup()
+    for ls in setup["stocklaunchsites"]:
+        if ls["BundleName"] != "stock":
+            continue
+        for path in ls["additionalprefabPaths"]:
+            leaf = path.split("/")[-1]
+            go_key = ex.find_prefab_by_name(leaf)
+            if go_key is None:
+                ex.warn("additional prefab %s not found" % leaf)
+                continue
+            keymap, mbs = {}, []
+            root = ex.build(go_key, keymap, mbs)
+            ex.replay(root, keymap, mbs, 0)
+            nodes = ex.flatten(root, leaf)
+            mbk = [k for n_, k in ex.components(go_key) if n_ == "MonoBehaviour" and ex.mb_class(ex.objs[k]).endswith("PQSCity2")][0]
+            fields = ex.mb_fields(ex.objs[mbk], "PQSCity2")
+            ents = []
+            for e in fields["objects"]:
+                ents.append({"visibleRange": e["visibleRange"], "KeepActive": e["KeepActive"],
+                             "objects": [{"file": k_[0], "pathID": k_[1], "name": ""} for k_ in
+                                         (ex.dptr_key(go_key[0], r) for r in e["objects"]) if k_ is not None]})
+            fields = dict(fields)
+            fields["objects"] = ents
+            mod = {"class": "PQSCity2", "gameObject": ls["pqsName"] + "/" + leaf, "fields": fields, "additionalPrefabOf": ls["name"]}
+            by_key = {}
+            for n in nodes:
+                by_key.setdefault(n.key, n)
+            lods = lod_from_prefab(ex, fields, by_key)
+            cities.append((ls["pqsName"], mod, go_key, nodes, lods))
+            print("%-34s %-8s pid %5d: %5d objects, %4d colliders (additional prefab of %s)" % (mod["gameObject"], "PQSCity2", go_key[1], len(nodes), sum(len(n.colliders) for n in nodes), ls["name"]))
+
     print("meshes %d (%d bytes), materials %d, warnings %d" % (len(ex.meshes), len(ex.mesh_blob), len(ex.materials), len(ex.warnings)))
     for w in ex.warnings[:40]:
         print("WARN", w)
@@ -467,6 +527,10 @@ def main():
         for n in nodes:
             o = {"path": n._path, "parent": n._parent_idx, "src": list(n.src), "active": n.active, "layer": n.layer, "tag": n.tag,
                  "position": n.pos, "rotation": n.rot, "scale": n.scl, "colliders": n.colliders}
+            if n.crash is not None:
+                o["crashObjectName"], o["crashDisplayName"] = n.crash
+            if n.mobile_pad:
+                o["mobileLaunchPad"] = True
             if n.via is not None:
                 o["via"] = list(n.via)
             if n.level_group is not None:
@@ -483,6 +547,7 @@ def main():
                                                 "collapseBehaviour": co["collapseBehaviour"]}
                                                for c, r, co in n.destructible["collapsibles"]]})
         cities_entry = {"name": mod["gameObject"], "class": mod["class"], "gameObjectPathID": go_key[1],
+                        **({"additionalPrefabOf": mod["additionalPrefabOf"], "placement": {k: v for k, v in mod["fields"].items() if k not in ("objects", "sphere", "m_GameObject", "m_Script", "positionMobileLaunchPad", "crashObjectName", "PositioningPoint")}} if "additionalPrefabOf" in mod else {}),
                         "objects": objs, "children": [c.index for c in root.children],
                         "lod": [{"visibleRange": l["visibleRange"], "keepActive": l["keepActive"], "objects": [n.index for n in l["objects"]]} for l in lods],
                         "destructibles": destr}
@@ -540,7 +605,15 @@ def main():
            "source": {"tool": "core/tools/mucollider/extract_scenery_colliders.py", "unityPy": UnityPy.__version__, "unityVersion": UNITY_VERSION,
                       "gameRoot": "decompiled/KSP-dev", "files": files},
            "meshFile": "scenery_meshes.bin", "meshes": ex.meshes, "materials": ex.materials, "terrainMaterial": terrain,
-           "physicsManager": physics, "tags": ex.tags, "cities": objs_json_cities, "warnings": ex.warnings}
+           "physicsManager": physics, "tags": ex.tags,
+           "launchSites": [{k: ls[k] for k in ("name", "pqsName", "launchSiteTransformURL", "prefabPath", "additionalprefabPaths", "BundleName",
+                                             "launchSiteName", "editorFacility", "nodeType", "requiresPOIVisit", "poiName")} |
+                           {"spawnPoints": [{"name": sp["name"], "spawnTransformURL": sp["spawnTransformURL"]} for sp in ls["spawnPoints"]]}
+                           for ls in setup["stocklaunchsites"]],
+           "facilities": [{k: fa[k] for k in ("name", "pqsName", "facilityTransformName", "facilityName", "editorFacility")} |
+                          {"spawnPoints": [{"name": sp["name"], "spawnTransformURL": sp["spawnTransformURL"]} for sp in fa["spawnPoints"]]}
+                          for fa in setup["facilities"]],
+           "psystemSetupOrigin": {"file": ex.setup_origin[0], "pathID": ex.setup_origin[1]}, "cities": objs_json_cities, "warnings": ex.warnings}
     os.makedirs(args.out_dir, exist_ok=True)
     with open(os.path.join(args.out_dir, "scenery_colliders.json"), "w", encoding="utf-8", newline="\n") as f:
         json.dump(doc, f, separators=(",", ":"))
