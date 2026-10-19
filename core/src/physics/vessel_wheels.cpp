@@ -141,6 +141,17 @@ struct WheelPhysicsHost::Saved {
 
 WheelPhysicsHost::WheelPhysicsHost(PhysicsBubble& bubble, const WheelPhysicsOptions& opts) : options(opts), bubble_(&bubble) {}
 
+VehiclePhysics::Collider* WheelPhysicsHost::StaticColliderFor(const StaticColliderInfo& info) {
+    const std::string key = std::to_string(info.layer) + "|" + info.tag + "|" + info.crashObjectName;
+    auto it = staticColliders_.find(key);
+    if (it == staticColliders_.end()) {
+        auto sc = std::make_unique<StaticCollider>();
+        sc->info = info;
+        it = staticColliders_.emplace(key, std::move(sc)).first;
+    }
+    return &it->second->collider;
+}
+
 WheelPhysicsHost::~WheelPhysicsHost() {
     Uninstall();
     // the wheel modules keep raw pointers into the records: detach them from the parts that are still alive
@@ -172,9 +183,16 @@ void WheelPhysicsHost::Install() {
         WheelColliderInfo info;
         info.tag = "Untagged";
         if (c == &terrain_) {
-            info.layer = 15;  // the PQS quads' layer "Local Scenery" (PQS.cs:1015); KSC scenery tags are not modelled
+            info.layer = 15;  // the PQS quads' layer "Local Scenery" (PQS.cs:1015)
             return info;
         }
+        for (const auto& kv : staticColliders_)   // WP-12c: a tagged static collider (the KSC runway, the launch pad ...)
+            if (&kv.second->collider == c) {
+                info.layer = kv.second->info.layer;
+                info.tag = kv.second->info.tag;
+                info.hasCrashObjectName = !kv.second->info.crashObjectName.empty();
+                return info;
+            }
         for (const auto& kv : others_)
             if (&kv.second->collider == c) {
                 info.layer = 0;  // a part collider
@@ -618,7 +636,11 @@ void WheelPhysicsHost::NativeStepVessel(VesselWheels& vw, VesselPhysics& vp, flo
             q.point = vp.TransformFromPhysics(hit.point);
             q.normal = hit.normal.ToVector3f();
             q.collider = &terrain_;
-            if (!world.IsStatic(hit.body)) {
+            if (world.IsStatic(hit.body)) {
+                // WP-12c: a registered scenery collider answers with its own layer / tag; the PQS quads and unregistered keys stay `terrain_`
+                const StaticColliderInfo& si = bubble_->Contacts().StaticInfo(hit.userData);
+                if (!si.isPQ && (si.tag != "Untagged" || si.layer != 15 || !si.crashObjectName.empty())) q.collider = StaticColliderFor(si);
+            } else {
                 for (const auto& b : host.Bindings()) {
                     if (b.get() == &vp) continue;
                     for (size_t c = 0; c < b->ClusterCount() && otherVp == nullptr; ++c)

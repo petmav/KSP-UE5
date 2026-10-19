@@ -175,7 +175,7 @@ void TerrainColliders::OnDisabled(PQ& quad) {
 
 void TerrainColliders::Cook(Entry& e) {
     const auto t0 = std::chrono::steady_clock::now();
-    const physics::BodyId id = world_.AddStaticMesh(e.key, e.centre, e.vertices, e.indices, opt_.friction, opt_.restitution);
+    const physics::BodyId id = world_.AddStaticMesh(e.key, e.centre, e.vertices, e.indices, opt_.friction, opt_.restitution, opt_.material);
     const double s = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
     stats_.cookSeconds += s;
     stats_.maxCookSeconds = std::max(stats_.maxCookSeconds, s);

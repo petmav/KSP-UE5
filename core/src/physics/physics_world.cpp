@@ -335,12 +335,54 @@ JPH::RVec3 ToRVec3(const Vector3d& v) {
 Vector3d FromVec3(JPH::Vec3 v) { return Vector3d(v.GetX(), v.GetY(), v.GetZ()); }
 Vector3d FromRVec3(JPH::RVec3 v) { return Vector3d(static_cast<double>(v.GetX()), static_cast<double>(v.GetY()), static_cast<double>(v.GetZ())); }
 
-JPH::Ref<JPH::Shape> MakeShape(const ShapeDesc& s) {
+// WP-12c: a UnityEngine.PhysicMaterial on a Jolt shape. Identified by its debug-name pointer (no RTTI needed).
+const char* const kPxMaterialName = "kspcore.PhysicMaterial";
+struct PxMaterial final : public JPH::PhysicsMaterial {
+    explicit PxMaterial(const PhysicMaterialDesc& d_) : d(d_) {}
+    const char* GetDebugName() const override { return kPxMaterialName; }
+    PhysicMaterialDesc d;
+};
+const PxMaterial* AsPx(const JPH::PhysicsMaterial* m) { return m != nullptr && m->GetDebugName() == kPxMaterialName ? static_cast<const PxMaterial*>(m) : nullptr; }
+
+// PxsMaterialCombiner (PhysX): the combine mode of higher priority wins. Unity enum: Average 0, Multiply 1, Minimum 2, Maximum 3;
+// PhysX priority: Average < Minimum < Multiply < Maximum.
+int CombineRank(int unityMode) {
+    switch (unityMode) {
+        case 2: return 1;  // Minimum
+        case 1: return 2;  // Multiply
+        case 3: return 3;  // Maximum
+        default: return 0; // Average
+    }
+}
+float CombineValue(int unityMode, float a, float b) {
+    switch (unityMode) {
+        case 2: return std::min(a, b);
+        case 1: return a * b;
+        case 3: return std::max(a, b);
+        default: return 0.5f * (a + b);
+    }
+}
+int CombineMode(int a, int b) { return CombineRank(a) >= CombineRank(b) ? a : b; }
+
+float PxCombineFriction(const JPH::Body& b1, const JPH::SubShapeID& s1, const JPH::Body& b2, const JPH::SubShapeID& s2) {
+    const PxMaterial* m1 = AsPx(b1.GetShape()->GetMaterial(s1));
+    const PxMaterial* m2 = AsPx(b2.GetShape()->GetMaterial(s2));
+    if (m1 == nullptr || m2 == nullptr) return JPH::Sqrt(b1.GetFriction() * b2.GetFriction());
+    return CombineValue(CombineMode(m1->d.frictionCombine, m2->d.frictionCombine), m1->d.dynamicFriction, m2->d.dynamicFriction);
+}
+float PxCombineRestitution(const JPH::Body& b1, const JPH::SubShapeID& s1, const JPH::Body& b2, const JPH::SubShapeID& s2) {
+    const PxMaterial* m1 = AsPx(b1.GetShape()->GetMaterial(s1));
+    const PxMaterial* m2 = AsPx(b2.GetShape()->GetMaterial(s2));
+    if (m1 == nullptr || m2 == nullptr) return std::max(b1.GetRestitution(), b2.GetRestitution());
+    return CombineValue(CombineMode(m1->d.bounceCombine, m2->d.bounceCombine), m1->d.bounciness, m2->d.bounciness);
+}
+
+JPH::Ref<JPH::Shape> MakeShape(const ShapeDesc& s, const JPH::PhysicsMaterial* mat = nullptr) {
     switch (s.kind) {
         case ShapeDesc::Kind::Sphere:
-            return new JPH::SphereShape(s.radius);
+            return new JPH::SphereShape(s.radius, mat);
         case ShapeDesc::Kind::Capsule:
-            return new JPH::CapsuleShape(s.halfHeight, s.radius);
+            return new JPH::CapsuleShape(s.halfHeight, s.radius, mat);
         case ShapeDesc::Kind::ConvexHull: {
             // WP-mucol: Unity's convex MeshCollider = the hull of the mesh vertices (PartReader.cs:233 forces convex). A hull Jolt
             // cannot build (fewer than 4 non-coplanar points) falls back to the axis-aligned box of the points.
@@ -354,20 +396,21 @@ JPH::Ref<JPH::Shape> MakeShape(const ShapeDesc& s) {
                 }
             if (pts.size() >= 4) {
                 JPH::ConvexHullShapeSettings hs(pts, JPH::cDefaultConvexRadius * 0.0f);
+                hs.mMaterial = mat;
                 JPH::ShapeSettings::ShapeResult r = hs.Create();
                 if (r.IsValid()) return r.Get();
             }
-            if (pts.empty()) return new JPH::BoxShape(JPH::Vec3(0.05f, 0.05f, 0.05f), 0.01f);
+            if (pts.empty()) return new JPH::BoxShape(JPH::Vec3(0.05f, 0.05f, 0.05f), 0.01f, mat);
             // box of the points around their centre: wrap in an offset (RotatedTranslatedShape)
             JPH::Vec3 h(std::max(0.5f * (hi.x - lo.x), 0.01f), std::max(0.5f * (hi.y - lo.y), 0.01f), std::max(0.5f * (hi.z - lo.z), 0.01f));
-            JPH::Ref<JPH::Shape> box = new JPH::BoxShape(h, std::min(0.01f, std::min(h.GetX(), std::min(h.GetY(), h.GetZ()))));
+            JPH::Ref<JPH::Shape> box = new JPH::BoxShape(h, std::min(0.01f, std::min(h.GetX(), std::min(h.GetY(), h.GetZ()))), mat);
             return new JPH::RotatedTranslatedShape(JPH::Vec3(0.5f * (lo.x + hi.x), 0.5f * (lo.y + hi.y), 0.5f * (lo.z + hi.z)), JPH::Quat::sIdentity(), box);
         }
         case ShapeDesc::Kind::Box:
         default: {
             JPH::Vec3 h(s.halfExtents.x, s.halfExtents.y, s.halfExtents.z);
             float convexRadius = std::min(JPH::cDefaultConvexRadius, std::min(h.GetX(), std::min(h.GetY(), h.GetZ())));
-            return new JPH::BoxShape(h, convexRadius);
+            return new JPH::BoxShape(h, convexRadius, mat);
         }
     }
 }
@@ -403,14 +446,14 @@ namespace {
 
 // WP-20b: a child collider of a cluster compound. Boxes keep a small convex radius (at most half the thinnest half extent,
 // as the spike's part proxies: core/spikes/jolt/src/shapes.hpp) so thin proxies stay box-like.
-JPH::Ref<JPH::Shape> MakeChildShape(const ShapeDesc& s, uint32_t userData) {
+JPH::Ref<JPH::Shape> MakeChildShape(const ShapeDesc& s, uint32_t userData, const JPH::PhysicsMaterial* mat = nullptr) {
     JPH::Ref<JPH::Shape> shape;
     if (s.kind == ShapeDesc::Kind::Box) {
         JPH::Vec3 h(s.halfExtents.x, s.halfExtents.y, s.halfExtents.z);
         const float cr = std::min(0.05f, 0.5f * std::min(h.GetX(), std::min(h.GetY(), h.GetZ())));
-        shape = new JPH::BoxShape(h, cr);
+        shape = new JPH::BoxShape(h, cr, mat);
     } else {
-        shape = MakeShape(s);
+        shape = MakeShape(s, mat);
     }
     shape->SetUserData(userData);
     return shape;
@@ -448,6 +491,18 @@ struct PhysicsWorld::Impl {
     std::unordered_set<BodyId> live;
     uint64_t steps = 0;
     std::map<uint64_t, BodyId> statics;  // WP-12b: static colliders by caller key
+    // WP-12c: PhysicMaterial shapes (cfg.physxMaterials): one per distinct value set, the default for shapes without one
+    std::vector<JPH::Ref<PxMaterial>> materials;
+    const JPH::PhysicsMaterial* MaterialFor(const std::shared_ptr<const PhysicMaterialDesc>& d) {
+        if (!cfg.physxMaterials) return nullptr;
+        const PhysicMaterialDesc& v = d ? *d : cfg.defaultMaterial;
+        for (const JPH::Ref<PxMaterial>& m : materials)
+            if (m->d.dynamicFriction == v.dynamicFriction && m->d.staticFriction == v.staticFriction && m->d.bounciness == v.bounciness &&
+                m->d.frictionCombine == v.frictionCombine && m->d.bounceCombine == v.bounceCombine)
+                return m.GetPtr();
+        materials.push_back(new PxMaterial(v));
+        return materials.back().GetPtr();
+    }
     // WP-20b: compound bodies keep their inner compound (without the centre-of-mass offset) and its volume centre, so that
     // SetMassProperties can move the centre of mass by swapping only the OffsetCenterOfMassShape decorator.
     struct CompoundInfo {
@@ -523,7 +578,12 @@ PhysicsWorld::PhysicsWorld(const PhysicsWorldConfig& cfg) {
     JPH::PhysicsSettings s = m.system.GetPhysicsSettings();
     s.mNumVelocitySteps = static_cast<unsigned>(cfg.velocitySteps);
     s.mNumPositionSteps = static_cast<unsigned>(cfg.positionSteps);
+    if (cfg.minVelocityForRestitution >= 0.0f) s.mMinVelocityForRestitution = cfg.minVelocityForRestitution;
     m.system.SetPhysicsSettings(s);
+    if (cfg.physxMaterials) {
+        m.system.SetCombineFriction(&PxCombineFriction);
+        m.system.SetCombineRestitution(&PxCombineRestitution);
+    }
     m.filter = new SameVesselGroupFilter();
 }
 
@@ -598,7 +658,7 @@ BodyId PhysicsWorld::CreateBody(const BodyDesc& d) {
     const bool isStatic = d.motion == MotionType::Static;
     const JPH::EMotionType mt = isStatic ? JPH::EMotionType::Static
                                          : (d.motion == MotionType::Kinematic ? JPH::EMotionType::Kinematic : JPH::EMotionType::Dynamic);
-    JPH::BodyCreationSettings bcs(MakeShape(d.shape), ToRVec3(d.position),
+    JPH::BodyCreationSettings bcs(MakeShape(d.shape, m.MaterialFor(d.shape.material)), ToRVec3(d.position),
                                   JPH::Quat(static_cast<float>(d.rotation.x), static_cast<float>(d.rotation.y),
                                             static_cast<float>(d.rotation.z), static_cast<float>(d.rotation.w)),
                                   mt, isStatic ? Layers::STATIC : Layers::MOVING);
@@ -708,7 +768,8 @@ private:
 }  // namespace
 
 BodyId PhysicsWorld::AddStaticMesh(uint64_t key, const Vector3d& centre, const std::vector<Vector3f>& vertices,
-                                   const std::vector<int>& triangles, float friction, float restitution) {
+                                   const std::vector<int>& triangles, float friction, float restitution,
+                                   std::shared_ptr<const PhysicMaterialDesc> material) {
     Impl& m = *impl_;
     RemoveStatic(key);
     if (triangles.size() < 3 || m.order.size() >= m.cfg.maxBodies) return kInvalidBody;
@@ -725,6 +786,7 @@ BodyId PhysicsWorld::AddStaticMesh(uint64_t key, const Vector3d& centre, const s
         tl.push_back(JPH::IndexedTriangle(static_cast<JPH::uint32>(a), static_cast<JPH::uint32>(b), static_cast<JPH::uint32>(c)));
     }
     JPH::MeshShapeSettings ms(std::move(vl), std::move(tl));
+    if (const JPH::PhysicsMaterial* pm = m.MaterialFor(material)) ms.mMaterials.push_back(pm);
     JPH::ShapeSettings::ShapeResult res = ms.Create();
     if (res.HasError()) {
         log::Warning(std::string("PhysicsWorld::AddStaticMesh: ") + res.GetError().c_str());
@@ -748,7 +810,7 @@ BodyId PhysicsWorld::AddStaticShape(uint64_t key, const ShapeDesc& shape, const 
     Impl& m = *impl_;
     RemoveStatic(key);
     if (m.order.size() >= m.cfg.maxBodies) return kInvalidBody;
-    JPH::BodyCreationSettings bcs(MakeShape(shape), ToRVec3(position),
+    JPH::BodyCreationSettings bcs(MakeShape(shape, m.MaterialFor(shape.material)), ToRVec3(position),
                                   JPH::Quat(static_cast<float>(rotation.x), static_cast<float>(rotation.y), static_cast<float>(rotation.z),
                                             static_cast<float>(rotation.w)),
                                   JPH::EMotionType::Static, Layers::STATIC);
@@ -848,7 +910,7 @@ BodyId PhysicsWorld::CreateCompoundBody(const CompoundBodyDesc& d) {
         const CompoundChild& c = d.children.front();
         JPH::RotatedTranslatedShapeSettings rts(JPH::Vec3(c.position.x, c.position.y, c.position.z),
                                                 JPH::Quat(c.rotation.x, c.rotation.y, c.rotation.z, c.rotation.w).Normalized(),
-                                                MakeChildShape(c.shape, c.userData));
+                                                MakeChildShape(c.shape, c.userData, m.MaterialFor(c.shape.material)));
         JPH::ShapeSettings::ShapeResult r = rts.Create();
         if (r.HasError()) {
             log::Warning(std::string("PhysicsWorld::CreateCompoundBody: ") + r.GetError().c_str());
@@ -859,7 +921,7 @@ BodyId PhysicsWorld::CreateCompoundBody(const CompoundBodyDesc& d) {
         JPH::StaticCompoundShapeSettings sc;
         for (const CompoundChild& c : d.children)
             sc.AddShape(JPH::Vec3(c.position.x, c.position.y, c.position.z),
-                        JPH::Quat(c.rotation.x, c.rotation.y, c.rotation.z, c.rotation.w).Normalized(), MakeChildShape(c.shape, c.userData),
+                        JPH::Quat(c.rotation.x, c.rotation.y, c.rotation.z, c.rotation.w).Normalized(), MakeChildShape(c.shape, c.userData, m.MaterialFor(c.shape.material)),
                         c.userData);
         JPH::ShapeSettings::ShapeResult r = sc.Create();
         if (r.HasError()) {
