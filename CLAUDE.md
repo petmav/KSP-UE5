@@ -28,6 +28,7 @@ Rules:
 ## Other files
 
 - `FEASIBILITY.md` — the UE5 port feasibility assessment (2026-10-08).
+- `analysis/tiering/progress.csv` — done fraction (0-1) per work package. Update it in every package PR; on push to main `.github/workflows/progress.yml` publishes it to the public progress page (petmav.github.io/port/, generic names only; the site's script lives in that repo, outside this project).
 
 ## Agent roles and models
 
