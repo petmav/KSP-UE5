@@ -201,13 +201,13 @@ std::vector<ModuleWheels::ModuleWheelDeployment*> Deployments(Vessel& v, std::ve
 }
 }  // namespace
 
-TEST_CASE("WP-29d lander legs retract and deploy: the animation over the model rig, TsubSys, the stand-in sphere, the wheel on and off") {
+void RetractDeploy(const std::string& craft, size_t expectedParts, bool expectStandIn) {
     if (!wp20b::GameAvailable()) return;
-    GearRun run("Two-Stage Lander", 400.0, 0.0, RealGeometry(), 0.0, true);  // high above the ground: only the legs are under test
+    GearRun run(craft, 3000.0, 0.0, RealGeometry(), 0.0, true);  // high above the ground (24 s of free fall): only the gear is under test
     for (int k = 0; k < 8; ++k) run.Tick();
     std::vector<Part*> depParts;
     auto deps = Deployments(run.V(), &depParts);
-    REQUIRE(deps.size() == 4);
+    REQUIRE(deps.size() == expectedParts);
     for (auto* d : deps) {
         CHECK(d->Position() == doctest::Approx(1.0f));
         CHECK(!d->StandInColliderActive());
@@ -221,7 +221,7 @@ TEST_CASE("WP-29d lander legs retract and deploy: the animation over the model r
     std::vector<Vector3d> footDeployed;
     for (size_t i = 0; i < deps.size(); ++i) footDeployed.push_back(foot(i));
     for (auto* d : deps) d->ActionToggle(KSPActionType::Deactivate);  // the Gear action group: retract
-    bool standIn = false, wheelOffSeen = false;
+    bool standIn = false, wheelOffSeen = false, standInBuilt = false;
     double minPos = 1.0;
     for (int k = 0; k < 400; ++k) {  // 8 s
         run.Tick();
@@ -229,12 +229,16 @@ TEST_CASE("WP-29d lander legs retract and deploy: the animation over the model r
             standIn = standIn || d->StandInColliderActive();
             minPos = std::min(minPos, static_cast<double>(d->Position()));
         }
-        for (auto& w : run.Wheels().Wheels()) wheelOffSeen = wheelOffSeen || !w->nativeOn;
+        for (auto& w : run.Wheels().Wheels()) {
+            wheelOffSeen = wheelOffSeen || !w->nativeOn;
+            standInBuilt = standInBuilt || w->standInBuilt;
+        }
     }
     MESSAGE("retracted: position " << deps[0]->Position() << " (min " << minPos << "), stand-in seen " << standIn << ", wheel off seen " << wheelOffSeen << ", state "
                                    << deps[0]->Get<std::string>("stateString") << ", foot y " << foot(0).y << " (deployed " << footDeployed[0].y << ")");
     CHECK(deps[0]->Position() < 0.05f);
-    CHECK(!standIn);  // LT-2 has no useStandInCollider (the LY gear bays do)
+    CHECK(standIn == expectStandIn);        // useStandInCollider: the LY gear bays have one, the LT-2 legs do not
+    CHECK(standInBuilt == expectStandIn);   // ... and it is a sphere in the cluster compound while the gear is not deployed
     CHECK(wheelOffSeen);
     CHECK(deps[0]->Get<std::string>("stateString") == "Retracted");
     CHECK(foot(0).y > footDeployed[0].y + 0.3);  // the foot came up in the part frame
@@ -244,46 +248,26 @@ TEST_CASE("WP-29d lander legs retract and deploy: the animation over the model r
     CHECK(deps[0]->Position() > 0.95f);
     CHECK(!deps[0]->StandInColliderActive());
     CHECK(deps[0]->Get<std::string>("stateString") == "Deployed");
+    for (auto& w : run.Wheels().Wheels()) CHECK(!w->standInBuilt);
     CHECK((foot(0) - footDeployed[0]).magnitude() < 0.01);
 }
 
-TEST_CASE("WP-29d aircraft gear diag" * doctest::skip(true)) {
+TEST_CASE("WP-29d lander legs retract and deploy: the animation over the model rig, TsubSys, the wheel on and off (no stand-in on the LT-2)") { RetractDeploy("Two-Stage Lander", 4, false); }
+
+TEST_CASE("WP-29d gear bays retract and deploy: the animation, TsubSys, the stand-in sphere in the cluster compound, the wheel on and off (LY-01 on the VTOL craft)") { RetractDeploy("Rocket-power VTOL", 4, true); }
+
+// Vessel.CheckGroundCollision / getLowestPoint (Vessel.cs:2578-2640) on a landed craft with legs: the lowest collider decides, a WheelCollider
+// component by its centre minus its radius minus 0.15. The lander is placed landed (PRELAUNCH) and the host moves it to the ground: its foot
+// colliders (the piston colliders ModuleWheelSuspension disables are enabled for the measure) rest within a few centimetres of the ground,
+// where the first port of the C# (no collider roles, no disabled colliders) left the tyre bottoms 0.53 m below it.
+TEST_CASE("WP-29d landed placement: the lander is put on the ground by its foot colliders (getLowestPoint), the tyre bottom a few centimetres below it") {
     if (!wp20b::GameAvailable()) return;
-    WheelPhysicsOptions opt;  // the proxy geometry: is the tumble mine?
-    auto runp = Dropped("Rocket-power VTOL", 0.03, 0.0, opt);
-    GearRun& run = *runp;
-    std::string s;
-    MESSAGE("clusters " << run.Vp()->ClusterCount() << " parts " << run.V().parts.size());
-    for (auto& d : Deployments(run.V())) MESSAGE("deployment: position " << d->Position() << " standIn " << d->StandInColliderActive() << " state " << d->Get<std::string>("stateString") << " TsubSys " << d->Get<float>("TsubSys"));
-    for (int k = 0; k < 60; ++k) {
-        run.Tick();
-        if (k < 6) MESSAGE("tick " << k << " |w| " << run.Vp()->ClusterAngularVelocity(0).magnitude() << " v " << run.Vp()->ClusterVelocity(0).magnitude() << " clusters " << run.Vp()->ClusterCount());
-        if (k % 4) continue;
-        char b[300];
-        std::snprintf(b, sizeof b, "[%d vz %.3f low %.3f gr %d up0 %.3f up2 %.3f]", k, run.VerticalSpeed(), run.LowestTyreBottom(), run.Wheels().GroundedCount(),
-                      Vector3d::Dot(Vector3d(run.Wheels().Wheels()[0]->colliderHost.up()), run.Up()), Vector3d::Dot(Vector3d(run.Wheels().Wheels()[3]->colliderHost.up()), run.Up()));
-        s += b;
-    }
-    MESSAGE(s);
-    for (auto& w : run.Wheels().Wheels()) {
-        const auto& g = w->lastGeometry;
-        MESSAGE(w->part->partInfo->name << " up.pad " << Vector3d::Dot(Vector3d(w->colliderHost.up()), run.Up()) << " D " << g.maxDroop + g.maxCompression << " droop " << g.maxDroop);
-    }
+    GearRun run("Two-Stage Lander", 0.0, 0.0);
+    for (int k = 0; k < kWheelsUp + 4; ++k) run.Tick();
+    const double low = run.LowestTyreBottom();
+    MESSAGE("landed placement: tyre bottom at full extension " << low << " m from the ground, speed " << run.Vel().magnitude());
+    CHECK(low < 0.0);
+    CHECK(low > -0.15);
+    CHECK(run.Wheels().GroundedCount() == 4);
 }
 
-TEST_CASE("WP-29d craft load diag" * doctest::skip(true)) {
-    if (!wp20b::GameAvailable()) return;
-    for (const char* c : {"Learstar A1", "Slim Shuttle", "Dynawing", "Aeris 3A", "Stratolauncher", "Dove", "Mallard", "Gull", "Osprey", "Thunderbird", "Velociteze", "Ravenspear Mk1", "Satellite Launcher"}) {
-        try {
-            World w;
-            LoadedRover r = LoadRover(w, c);
-            int gear = 0;
-            for (Part* p : r.vessel->parts)
-                if (p->partInfo && (p->partInfo->name.find("Gear") != std::string::npos)) ++gear;
-            MESSAGE(std::string(c) << ": loaded, parts " << r.vessel->parts.size() << " gear " << gear);
-            r.vessel.reset();
-        } catch (const std::exception& e) {
-            MESSAGE(std::string(c) << ": FAILED " << std::string(e.what()));
-        }
-    }
-}
