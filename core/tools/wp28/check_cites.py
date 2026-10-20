@@ -69,7 +69,7 @@ NAME_ALIAS = {
               "EngineFixedUpdate": "FixedUpdate", "RcsFixedUpdate": "FixedUpdate", "RunFlightIntegrators": "FixedUpdate",
               "~FlightIntegrator": "UnhookVesselEvents",
               # WP-20f: the module slot runs ModuleGimbal.FixedUpdate as GimbalFixedUpdate
-              "GimbalFixedUpdate": "FixedUpdate",
+              "GimbalFixedUpdate": "FixedUpdate", "PartValuesUpdate": "Update",
               # WP-14 helpers factored out of a C# function (cited at that function)
               "UpdateSurfaceSpeeds": "UpdatePosVel", "ApplyFlightIntegratorAtmosphere": "FixedUpdate"}
 CITE = re.compile(r"^(\s*)// (?:([A-Za-z0-9_/]+)\.cs)?:(\d+)\b")

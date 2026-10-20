@@ -37,4 +37,5 @@ Branch `wp20f` (worktree `.worktrees/wp20f`, from main 51530d89). Optimizer (Opu
    alt_10000 + apex (-0.16 %), S to Mach 1 (alt +1.40 %); past Mach 1 S tumbles in both (KSP aoa 172.7 deg at 2.5 km, ours 57.7 deg).
 5. PERF: UsePortable() called getenv on every NativeSinf/Cosf/Powf (Windows): AngleAxis 2.3 us -> 0.007 us; cached once per process.
    SAS path on L2-AS ~0.24 ms per tick (UpdateVesselTorque 0.155, PoseGimbalTransforms 0.08); gimbal re-posing gated to FBW vessels.
-6. Next: ctest (running), random orders, WSL syntax check, merge main, from-scratch build, docs (STATUS WP-20f, README rows), commit.
+6. Done: merged main eb1fe876; fresh build 433.5 s, ctest 49/49 (162 s); unit 1,031 cases / 1,571,829 assertions green default, rs11, rs27;
+   WSL g++ -fsyntax-only clean; check_cites 38/0 on the WP-20f sources; STATUS WP-20f + row 59, README rows, progress.csv WP-20 0.9.

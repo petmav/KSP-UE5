@@ -6731,8 +6731,21 @@ frame intervals by up to 3.2 %: the cube weights, not SAS, were the largest rema
 
 ### Verification
 
-(filled in below)
+- After the merge with main (`eb1fe876`: progress feed, CLAUDE.md; no core change), Windows MSVC RelWithDebInfo, fresh (`core/build` deleted,
+  `run_tests.ps1 -Fresh`, `CMAKE_BUILD_PARALLEL_LEVEL=4`): configure 6.1 s, build 433.5 s, ctest 162.2 s, **49 / 49 pass** (the worktree has no
+  `corpus.saves`: decompiled/KSP-dev is absent).
+- Whole unit binary `kspcore_tests`: **1,031 cases / 1,571,829 assertions, all pass** with `--order-by=rand -rs=11` and `-rs=27` on the fresh
+  binary, and in default order and both seeds on the pre-merge build (the same core sources). The WP-20f cases alone: 8 / 8.
+- WP-20d / WP-20e / WP-19b / WP-50 / WP-24 / WP-23 / WP-29c cases (114) green; WP-20d's ascent messages are bit for bit the main numbers
+  (M2 +0.23 / -0.07 %, L2-AS +0.38 / -0.15 / -0.53 %, S 0.0034 % speed at the altitudes).
+- WSL Ubuntu 24.04 g++ 13.3 `-std=c++20 -fsyntax-only -Wall -Wextra` over every changed .cpp (vessel, part, flight_input_handler, part_forces,
+  physics_bubble, vessel_physics, flight_integrator, module_gimbal, math, tests/test_flight_input_feed.cpp): clean, no warning in the changed files.
+- `check_cites.py` (exact): the WP-20f physics / module sources 38 cites, 0 mismatches (aliases GimbalFixedUpdate -> FixedUpdate,
+  PartValuesUpdate -> Update); over every touched source 242 cites, 15 mismatches, all pre-existing in unchanged lines of vessel.cpp / part.cpp.
+- `harness/compare/tolerances.json` and `tests/tolerances_capture.json` untouched; no game data hand-authored (the chains are core/data's WP-17b
+  extraction of the .mu files, the cube weights and ascent states C10's).
 
 ### Commits (branch `wp20f`, from main `51530d89`)
 
-(filled in below)
+`76299059` FeedInputFeed, the input slot, the control modules and gimbal actuation in the module slot, PartValues refresh, the libm switch read
+once, the WP-20f tests; `5062bc87` merge main (`eb1fe876`); `9dcab02d` STATUS / README / progress.csv; then this verification note.
