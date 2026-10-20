@@ -622,3 +622,111 @@ TEST_CASE("WP-29d the brake schloompa: a braked rover at rest freezes the wheel 
     CHECK(released > firstFrozen);
     CHECK(run.Host().FreezeWeldCount() == 0);               // released, and not frozen again while the brakes stay on
 }
+
+// ---- WP-29d: the runway roll and the steering circle ----------------------------------------------------------------------------------------
+// A KSC runway is a flat strip tagged "Runway" (the scenery colliders are WP-12b / WP-42 work; this fixture is the pad scene 1.5 km terrain patch
+// with that tag). The Prospector rolls east at full throttle: it stays on the line, its heading holds, the wheels report the runway (landedAt).
+TEST_CASE("WP-29d runway roll: the rover accelerates along a straight strip tagged Runway (line held, heading held, landedAt Runway)") {
+    if (!wp20b::GameAvailable()) return;
+    WheelPhysicsOptions o = RealGeometry();
+    o.groundTag = "Runway";
+    bool seenTag = false;
+    Run run("Prospector Rover", o, 90.0);
+    auto saved = WheelModuleEnvironment::trace;
+    WheelModuleEnvironment::trace = [&](const std::string& s) {
+        if (s.find("SetLandedAt:Runway|Runway|") != std::string::npos) seenTag = true;
+        if (saved) saved(s);
+    };
+    run.Ticks(100);
+    const Vector3d f0 = run.Forward(), x0 = run.Com();
+    run.V().ctrlState.wheelThrottle = 1.0f;
+    double maxLateral = 0.0, maxHeading = 0.0;
+    int ticks = 0;
+    for (; ticks < 1600; ++ticks) {  // up to 32 s
+        FillElectricCharge(run.V());
+        run.Tick();
+        REQUIRE(Healthy(run));
+        const Vector3d d = run.Com() - x0;
+        const double along = Vector3d::Dot(d, f0);
+        maxLateral = std::max(maxLateral, std::fabs(Vector3d::Dot(Vector3d::Cross(f0, d), run.Up())));
+        const Vector3d f = run.Forward();
+        maxHeading = std::max(maxHeading, std::fabs(std::atan2(Vector3d::Dot(Vector3d::Cross(f0, f), run.Up()), Vector3d::Dot(f0, f))) / kRad);
+        if (along > 1000.0) break;
+    }
+    WheelModuleEnvironment::trace = saved;
+    const double along = Vector3d::Dot(run.Com() - x0, f0);
+    MESSAGE("runway roll: " << along << " m in " << ticks * 0.02 << " s, speed " << run.ForwardSpeed() << " m/s, lateral deviation " << maxLateral << " m, heading drift " << maxHeading
+                             << " deg, landedAt '" << run.V().landedAt << "', tag seen " << seenTag);
+    CHECK(along > 300.0);
+    CHECK(maxLateral < 0.015 * along);  // the line is held to 1.5 % of the distance (heading drift 0.6 deg over the roll)
+    CHECK(maxHeading < 1.0);
+    CHECK(seenTag);
+    CHECK(run.V().landedAt == "Runway");
+}
+
+// The steering circle: the Prospector with the front axle steered (wheelSteer 0.25: about 5 degrees) rolls a circle of radius L / tan(delta) at the
+// rear axle (the kinematic bicycle); the CoM path is a circle of nearly the same radius. The radius is fitted through the CoM path (three points)
+// and compared with v / yaw rate (the same circle) and with the analytic one from the steered wheels collider angles and the wheelbase.
+TEST_CASE("WP-29d steering circle: the CoM path of the steered Prospector is a circle of the radius L / tan(steer angle) (within 5 %)") {
+    if (!wp20b::GameAvailable()) return;
+    Run run("Prospector Rover", RealGeometry());
+    run.Ticks(100);
+    run.V().ctrlState.wheelThrottle = 0.4f;
+    for (int k = 0; k < 1000 && run.ForwardSpeed() < 2.5; ++k) {
+        FillElectricCharge(run.V());
+        run.Tick();
+    }
+    run.V().ctrlState.wheelThrottle = 0.0f;
+    run.V().ctrlState.wheelSteer = 0.25f;
+    run.Ticks(60, [&] { FillElectricCharge(run.V()); });  // the steering ramp and the transient
+    std::vector<Vector3d> path;
+    double sumDelta = 0, front = 0, rear = 0, speed = 0, yaw = 0;
+    int nf = 0, nr = 0, n = 0;
+    for (int k = 0; k < 150; ++k) {  // 3 s of the steady turn
+        FillElectricCharge(run.V());
+        run.Tick();
+        REQUIRE(Healthy(run));
+        path.push_back(run.Com());
+        speed += run.ForwardSpeed();
+        yaw += std::fabs(Vector3d::Dot(run.Vp()->ClusterAngularVelocity(0), run.Up()));
+        ++n;
+    }
+    const Vector3d f = run.Forward(), com = Vector3d(run.V().CoM);
+    for (auto& w : run.Wheels().Wheels()) {
+        const float steer = w->Controller()->wheelCollider->steerAngle();
+        const double along = Vector3d::Dot(Vector3d(w->colliderHost.position) - com, f);
+        if (steer != 0.0f) {
+            sumDelta += std::fabs(steer);
+            front += along;
+            ++nf;
+        } else {
+            rear += along;
+            ++nr;
+        }
+    }
+    REQUIRE(nf > 0);
+    REQUIRE(nr > 0);
+    const double delta = sumDelta / nf * kRad, L = front / nf - rear / nr, lr = std::fabs(rear / nr);
+    // the circle through the first, middle and last CoM positions projected on the ground plane (2-D)
+    const Vector3d up = run.Up();
+    const Vector3d e1 = Vector3d::Cross(up, (path[path.size() / 2] - path[0]).normalized()).normalized();
+    const Vector3d e0 = Vector3d::Cross(e1, up).normalized();
+    auto proj = [&](const Vector3d& p) {
+        const Vector3d d = p - path[0];
+        return std::pair<double, double>(Vector3d::Dot(d, e0), Vector3d::Dot(d, e1));
+    };
+    const auto a = proj(path.front()), b = proj(path[path.size() / 2]), c = proj(path.back());
+    const double d2 = 2.0 * (a.first * (b.second - c.second) + b.first * (c.second - a.second) + c.first * (a.second - b.second));
+    const double ux = ((a.first * a.first + a.second * a.second) * (b.second - c.second) + (b.first * b.first + b.second * b.second) * (c.second - a.second) +
+                       (c.first * c.first + c.second * c.second) * (a.second - b.second)) / d2;
+    const double uy = ((a.first * a.first + a.second * a.second) * (c.first - b.first) + (b.first * b.first + b.second * b.second) * (a.first - c.first) +
+                       (c.first * c.first + c.second * c.second) * (b.first - a.first)) / d2;
+    const double rFit = std::hypot(a.first - ux, a.second - uy);
+    const double rYaw = (speed / n) / (yaw / n);
+    const double rRear = L / std::tan(delta);
+    const double rCom = std::sqrt(rRear * rRear + lr * lr);  // the CoM is lr ahead of the rear axle
+    MESSAGE("steering circle: steer " << delta / kRad << " deg, wheelbase " << L << " m, fitted radius " << rFit << " m, v/yaw " << rYaw << " m, kinematic rear-axle radius " << rRear
+                                       << " m, CoM radius " << rCom << " m");
+    CHECK(rFit == doctest::Approx(rCom).epsilon(0.05));
+    CHECK(rYaw == doctest::Approx(rCom).epsilon(0.05));
+}

@@ -67,6 +67,26 @@ bool Healthy(GearRun& run) {
     return std::isfinite(v.x) && std::isfinite(v.y) && std::isfinite(v.z) && v.magnitude() < 200.0;
 }
 
+// A craft placed airborne with its lowest tyre bottom (at full extension) `fall` above the ground and `downSpeed` m/s down: the clearance comes from
+// a measuring scene (Place puts the lowest drag-cube point at the clearance, the tyre bottoms hang below it)
+std::unique_ptr<GearRun> Dropped(const std::string& craft, double fall, double downSpeed, const WheelPhysicsOptions& o = RealGeometry(), double heading = 0.0) {
+    double bottom0 = 0.0;
+    {
+        GearRun m(craft, 0.0, 0.0, o, heading, true);
+        for (int k = 0; k < 40; ++k) {
+            m.Tick();
+            if (k >= kWheelsUp && m.Vp() != nullptr && m.Wheels().SetUpCount() == static_cast<int>(m.Wheels().Wheels().size())) break;
+        }
+        m.Tick();
+        bottom0 = m.LowestTyreBottom();
+    }
+    auto run = std::make_unique<GearRun>(craft, fall - bottom0, 0.0, o, heading, true);
+    for (int k = 0; k < 10 && run->Vp() == nullptr; ++k) run->Tick();  // the vessel unpacks in the first ticks
+    REQUIRE(run->Vp() != nullptr);
+    if (downSpeed != 0.0) run->Vp()->ChangeWorldVelocity(run->Up() * -downSpeed);
+    return run;
+}
+
 struct Touchdown {
     double touchSpeed = 0, maxCompression = 0, maxRebound = 0, settleTime = -1, finalCompression = 0, finalTilt = 0, finalSpeed = 0;
     int legsGrounded = 0, legs = 0, bottomedTicks = 0;
@@ -225,4 +245,45 @@ TEST_CASE("WP-29d lander legs retract and deploy: the animation over the model r
     CHECK(!deps[0]->StandInColliderActive());
     CHECK(deps[0]->Get<std::string>("stateString") == "Deployed");
     CHECK((foot(0) - footDeployed[0]).magnitude() < 0.01);
+}
+
+TEST_CASE("WP-29d aircraft gear diag" * doctest::skip(true)) {
+    if (!wp20b::GameAvailable()) return;
+    WheelPhysicsOptions opt;  // the proxy geometry: is the tumble mine?
+    auto runp = Dropped("Rocket-power VTOL", 0.03, 0.0, opt);
+    GearRun& run = *runp;
+    std::string s;
+    MESSAGE("clusters " << run.Vp()->ClusterCount() << " parts " << run.V().parts.size());
+    for (auto& d : Deployments(run.V())) MESSAGE("deployment: position " << d->Position() << " standIn " << d->StandInColliderActive() << " state " << d->Get<std::string>("stateString") << " TsubSys " << d->Get<float>("TsubSys"));
+    for (int k = 0; k < 60; ++k) {
+        run.Tick();
+        if (k < 6) MESSAGE("tick " << k << " |w| " << run.Vp()->ClusterAngularVelocity(0).magnitude() << " v " << run.Vp()->ClusterVelocity(0).magnitude() << " clusters " << run.Vp()->ClusterCount());
+        if (k % 4) continue;
+        char b[300];
+        std::snprintf(b, sizeof b, "[%d vz %.3f low %.3f gr %d up0 %.3f up2 %.3f]", k, run.VerticalSpeed(), run.LowestTyreBottom(), run.Wheels().GroundedCount(),
+                      Vector3d::Dot(Vector3d(run.Wheels().Wheels()[0]->colliderHost.up()), run.Up()), Vector3d::Dot(Vector3d(run.Wheels().Wheels()[3]->colliderHost.up()), run.Up()));
+        s += b;
+    }
+    MESSAGE(s);
+    for (auto& w : run.Wheels().Wheels()) {
+        const auto& g = w->lastGeometry;
+        MESSAGE(w->part->partInfo->name << " up.pad " << Vector3d::Dot(Vector3d(w->colliderHost.up()), run.Up()) << " D " << g.maxDroop + g.maxCompression << " droop " << g.maxDroop);
+    }
+}
+
+TEST_CASE("WP-29d craft load diag" * doctest::skip(true)) {
+    if (!wp20b::GameAvailable()) return;
+    for (const char* c : {"Learstar A1", "Slim Shuttle", "Dynawing", "Aeris 3A", "Stratolauncher", "Dove", "Mallard", "Gull", "Osprey", "Thunderbird", "Velociteze", "Ravenspear Mk1", "Satellite Launcher"}) {
+        try {
+            World w;
+            LoadedRover r = LoadRover(w, c);
+            int gear = 0;
+            for (Part* p : r.vessel->parts)
+                if (p->partInfo && (p->partInfo->name.find("Gear") != std::string::npos)) ++gear;
+            MESSAGE(std::string(c) << ": loaded, parts " << r.vessel->parts.size() << " gear " << gear);
+            r.vessel.reset();
+        } catch (const std::exception& e) {
+            MESSAGE(std::string(c) << ": FAILED " << std::string(e.what()));
+        }
+    }
 }

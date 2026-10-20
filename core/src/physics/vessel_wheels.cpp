@@ -202,6 +202,7 @@ void WheelPhysicsHost::Install() {
         WheelColliderInfo info;
         info.tag = "Untagged";
         if (c == &terrain_) {
+            info.tag = options.groundTag;
             info.layer = 15;  // the PQS quads' layer "Local Scenery" (PQS.cs:1015); KSC scenery tags are not modelled
             return info;
         }
