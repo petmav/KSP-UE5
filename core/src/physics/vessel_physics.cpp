@@ -475,7 +475,7 @@ void VesselPhysics::BuildServoJoints() {
         d.normal = (t - d.axis * Vector3d::Dot(t, d.axis)).normalized();
         double c0 = s.spec.coordinate;
         if (!s.spec.prismatic) {  // Jolt's hinge angle lives in (-pi, pi]
-            c0 = std::fmod(c0, 2.0 * kPi);
+            c0 = std::fmod(c0, 2.0 * kPi);  // std-math-ok: engine glue: wraps the Jolt hinge angle, not a managed KSP statement
             if (c0 > kPi) c0 -= 2.0 * kPi;
             if (c0 <= -kPi) c0 += 2.0 * kPi;
         }

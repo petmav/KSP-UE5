@@ -1123,7 +1123,7 @@ ConstraintId PhysicsWorld::CreateArticulatedConstraint(BodyId a, BodyId b, const
         s.mPoint1 = s.mPoint2 = ToRVec3(d.point);
         s.mHingeAxis1 = s.mHingeAxis2 = ToVec3(axis);
         // body b is turned by coordinate0 from its zero: its normal is body a's zero normal turned by coordinate0 about the axis
-        const double ca = std::cos(d.coordinate0), sa = std::sin(d.coordinate0);
+        const double ca = std::cos(d.coordinate0), sa = std::sin(d.coordinate0);  // std-math-ok: the Jolt side: the hinge zero turned by coordinate0 in double, not a managed KSP statement
         const Vector3d n2 = normal * ca + Vector3d::Cross(axis, normal) * sa;
         s.mNormalAxis1 = ToVec3(normal);
         s.mNormalAxis2 = ToVec3(n2.normalized());
@@ -1201,7 +1201,7 @@ void PhysicsWorld::SetArticulatedDrive(ConstraintId id, const ArticulatedDrive& 
         }
         hc->GetMotorSettings() = DriveMotor(d, true);
         hc->SetMotorState(driven ? JPH::EMotorState::PositionAndVelocity : JPH::EMotorState::Off);
-        double t = std::fmod(d.target, 2.0 * kPi);  // the motor's error is CenterAngleAroundZero(theta - target): any representative
+        double t = std::fmod(d.target, 2.0 * kPi);  // the motor's error is CenterAngleAroundZero(theta - target): any representative std-math-ok: the Jolt side: wraps the motor target into (-pi, pi]
         if (t > kPi) t -= 2.0 * kPi;
         if (t < -kPi) t += 2.0 * kPi;
         hc->SetTargetAngle(static_cast<float>(t));

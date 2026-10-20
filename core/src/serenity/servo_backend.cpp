@@ -79,7 +79,7 @@ void WriteServoCoordinate(BaseServo& servo, double coordinate) {
     if (!Ready(servo)) return;
     ServoNode& moving = *servo.movingPartObject;
     if (dynamic_cast<ModuleRoboticServoRotor*>(&servo) != nullptr) {
-        double deg = std::fmod(coordinate / kDeg2Rad, 360.0);
+        double deg = std::fmod(coordinate / kDeg2Rad, 360.0);  // std-math-ok: engine glue (the plant's own write-back, moved here unchanged): the PhysX-side joint angle, not a managed statement
         if (deg > 180.0) deg -= 360.0;
         if (deg < -180.0) deg += 360.0;
         moving.localRotation = UnityNative::AngleAxis(static_cast<float>(deg), servo.GetMainAxis());
@@ -114,7 +114,7 @@ bool ServoBodySpecOf(const Part& part, physics::ServoBodySpec& spec) {
     } else {
         const Quaternionf& q = moving.localRotation;
         const double dot = static_cast<double>(q.x) * an.x + static_cast<double>(q.y) * an.y + static_cast<double>(q.z) * an.z;
-        double th = 2.0 * std::atan2(dot, static_cast<double>(q.w));
+        double th = 2.0 * std::atan2(dot, static_cast<double>(q.w));  // std-math-ok: engine glue: reads the joint coordinate back from the moving transform, not a managed statement
         if (th > kPi) th -= 2.0 * kPi;
         if (th <= -kPi) th += 2.0 * kPi;
         spec.coordinate = th;
