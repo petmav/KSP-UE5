@@ -153,6 +153,7 @@ WP-38 slices 2 and 3 (wp38b, wp38c) were already merged in session 4.
 - A conflicting PR gets no CI run at all (GitHub skips it): merge main into the branch first.
 
 ### Decisions recorded
+- 2026-10-20 (user): the gatekeeper agent is retired. Implementing agents self-verify (checklist in `.claude/agents/implementer.md`); CI is the merge gate, including the new `review` job (`core/tools/ci/pr_review.py`: golden tolerances unchanged, capture-tolerance changes documented in STATUS, no std:: maths on added lines of ported code, C# cites exact on changed sources, progress.csv bumped).
 - Reduced rigid-body model ADOPTED by the user (the Session 4 "pending" note is resolved); it is what main runs.
 - Wheels: managed VPP code 1:1 + native WheelCollider in kspcore. Wheeled vessels use 0.02 s substeps under physics warp (delegated to the orchestrator, adopted in WP-29c). The Smooth-vs-Lineal tyre curve is an explicit switch (`WheelPhysicsOptions::tyreCurve`, default `AsDecompiled`), UNVERIFIED until capture C11.
 - The repo is PUBLIC on purpose (needed for CI). `CLAUDE.md` still says "Private, local-only project. Nothing here is ever published." and the repo tracks 26,556 files under `decompiled/`: the line is stale or the content must change; the user decides.
