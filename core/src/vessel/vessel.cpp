@@ -760,6 +760,15 @@ void Vessel::SetControlState(const FlightCtrlState& st) {
 // Vessel.cs:2030
 void Vessel::GetControlState(FlightCtrlState& st) { st.CopyFrom(*setControlStates.at(static_cast<size_t>(GroupOverride))); }
 
+// Vessel.cs:2035
+void Vessel::FeedInputFeed() {
+    OnPreAutopilotUpdate(ctrlState);
+    OnAutopilotUpdate(ctrlState);
+    OnPostAutopilotUpdate(ctrlState);
+    OnFlyByWire(ctrlState);
+    if (loaded && !packed && !physicsHoldLock_ && isControllable_) rootPart->propagateControlUpdate(ctrlState);
+}
+
 // Vessel.cs:4045
 bool Vessel::ActionControlBlocked(KSPActionGroup actionGroup) const {
     if (GroupOverride > 0 && GroupOverride <= static_cast<int>(OverrideActionControl.size()))

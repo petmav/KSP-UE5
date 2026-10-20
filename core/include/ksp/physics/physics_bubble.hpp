@@ -43,8 +43,9 @@
 // drifts metres per orbit from Jolt's float velocities); the bubble's FixedUpdate does.
 //
 // PER TICK (FixedUpdate, the order measured in game, flight_scene.hpp): FlightScene::FixedUpdate (VesselPrecalculate, OrbitDriver,
-// FlightGlobals, the part-module slot = PartModuleForces (WP-20d: engines / RCS / lifting surfaces / reaction wheels into the part force
-// buffers), the FlightIntegrator slot = FlightIntegrator.FixedUpdate of every loaded vessel (WP-20d, ksp/physics/flight_integrator.hpp;
+// FlightGlobals, WP-20f: the input slot = FlightInputHandler.FixedUpdate -> Vessel.FeedInputFeed (SetFlightInputHandler / inputFeed), the
+// part-module slot = PartModuleForces (WP-20d: engines / RCS / lifting surfaces / reaction wheels into the part force buffers; WP-20f: ModuleCommand,
+// ModuleSAS, ModuleGimbal), the FlightIntegrator slot = FlightIntegrator.FixedUpdate of every loaded vessel (WP-20d, ksp/physics/flight_integrator.hpp;
 // `flightIntegrator` overrides it per unpacked vessel), OrbitPhysicsManager.FixedUpdate -> setRotatingFrame / setDominantBody,
 // Vessel.FixedUpdate), Krakensbane.FixedUpdate, FloatingOrigin.FixedUpdate (frame drift, world rebase), the frame-offset fold / static
 // gate, the physics-origin rebase, then the physics step (Flush, PhysicsWorld::Step, AfterStep: transforms). Planetarium.FixedUpdate
@@ -70,6 +71,7 @@
 
 namespace ksp {
 class CelestialBody;
+class FlightInputHandler;
 class Vessel;
 class physicalObject;
 }  // namespace ksp
@@ -118,9 +120,19 @@ public:
     PartModuleForces& ModuleForces() { return moduleForces_; }
     // WP-20e: contacts -> Part.OnCollision*, landed / splashed, PartBuoyancy, CollisionEnhancer, the RB anchor, ground probes, terrain per body
     ContactHost& Contacts() { return contacts_; }
-    // WP-20e seam: Vessel.FeedInputFeed of the measured order (FlightInputHandler.FixedUpdate, seq 11, before the part modules): unset =
-    // nothing (WP-50's FlightInputHandler and WP-24's VesselAutopilot are not driven by the bubble yet; a host / test sets it)
+    // WP-20e seam: the slot of FlightInputHandler.FixedUpdate in the measured order (run1-L_calltrace.csv seq 18: after FlightGlobals
+    // (15), before TimeWarp (19) and the part modules (22-276)). When set it replaces the slot; unset: the FlightInputHandler below.
     std::function<void()> inputFeed;
+    // WP-20f: the flight scene's FlightInputHandler (a MonoBehaviour of the scene: the host makes it and runs Awake / Start / Update /
+    // OnDestroy). The bubble runs its FixedUpdate (FlightInputHandler.cs:377: the pilot state into the active vessel, then
+    // Vessel.FeedInputFeed of every unpacked loaded vessel: OnPreAutopilotUpdate, OnAutopilotUpdate = VesselSAS, OnPostAutopilotUpdate,
+    // OnFlyByWire, Part.propagateControlUpdate) in the slot above, before the part modules read vessel.ctrlState. While one is set, the
+    // scene inputs the C# reads from it are wired: ReactionWheelEnvironment::activeVesselPYR (FlightInputHandler.state.GetPYR()),
+    // AutopilotEnvironment::pitchInput / rollInput / yawInput (VesselSAS.CheckPitch / Roll / YawInput through GameSettings),
+    // AutopilotEnvironment::precisionMode and the module slot's precisionMode (FlightInputHandler.fetch.precisionMode).
+    // nullptr (default): no input feed (vessel.ctrlState is what the host / test writes).
+    void SetFlightInputHandler(FlightInputHandler* handler) { flightInputHandler_ = handler; }
+    FlightInputHandler* GetFlightInputHandler() const { return flightInputHandler_; }
     // FloatingOrigin's PreciseUpdateQuadPositions after a rebase (the PQS host, WP-12): unset = nothing
     std::function<void()> preciseUpdateQuadPositions;
     // WP-29c: replaces the physics step (seq 291) of one tick of `dt` seconds; unset: Host().Step(dt). The wheels' host
@@ -175,6 +187,8 @@ private:
     void OnVesselLoaded(Vessel* v);
     void OnRemoveVessel(Vessel* v);
     void RunFlightIntegrators();
+    void InputFeed();         // WP-20f: the seq 18 slot
+    void PartValuesUpdate();  // WP-20f: Part.Update's PartValues refresh, before Vessel.Update
     void RefreshBindings();  // host frames + every binding's caches / transforms
     void MaybeRebasePhysicsOrigin();
 
@@ -190,6 +204,7 @@ private:
     std::vector<std::unique_ptr<physicalObject>> objects_;
     bool installed_ = false;
     size_t folds_ = 0, physicsRebases_ = 0;
+    FlightInputHandler* flightInputHandler_ = nullptr;  // WP-20f
     // saved seams
     std::function<void(Vessel&, const Vector3d&)> savedSetWorldVelocity_;
     std::function<void(const Vector3d&)> savedKrakensbaneAddFrameVelocity_;
@@ -198,6 +213,11 @@ private:
     std::function<void()> savedBeforeFlightIntegrator_;
     std::function<void()> savedBeforeVesselUpdate_;
     std::function<void()> savedAfterPrecalc_;
+    // WP-20f
+    std::function<void(Vessel&)> savedKillAngularVelocity_;
+    std::function<Vector3f()> savedActiveVesselPYR_;
+    std::function<bool(float)> savedPitchInput_, savedRollInput_, savedYawInput_;
+    std::function<bool()> savedPrecisionMode_;
 };
 
 }  // namespace ksp::physics

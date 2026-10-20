@@ -814,6 +814,16 @@ void VesselPhysics::SetPartVelocity(Part& part, const Vector3d& v) {
     c.v = world_->GetLinearVelocity(c.body);
 }
 
+// WP-20f: rb.angularVelocity = w on the part's Rigidbody (VesselAutopilot.cs:682), the part's cluster on the reduced model
+void VesselPhysics::SetPartAngularVelocity(Part& part, const Vector3d& w) {
+    const int o = OwnerIndex(part);
+    if (o < 0) return;
+    ClusterRec& c = clusters_[static_cast<size_t>(parts_[static_cast<size_t>(o)]->cluster)];
+    if (c.body == kInvalidBody) return;
+    world_->SetAngularVelocity(c.body, w);
+    c.w = world_->GetAngularVelocity(c.body);
+}
+
 // FlightIntegrator.cs:715 Integrate(part) (to :745), the force half (UpdateAerodynamics is WP-20d's), recursion from the root over the
 // attached children in child order
 void VesselPhysics::IntegratePartBuffers(const Vector3d& integrationAccel) {

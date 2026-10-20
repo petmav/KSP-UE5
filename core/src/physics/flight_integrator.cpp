@@ -12,6 +12,7 @@
 #include "ksp/celestial/celestial_body.hpp"
 #include "ksp/celestial/flight_globals.hpp"
 #include "ksp/celestial/planetarium.hpp"
+#include "ksp/config/parse_extensions.hpp"
 #include "ksp/dotnet/text.hpp"
 #include "ksp/orbit/time_warp.hpp"
 #include "ksp/parts/available_part.hpp"
@@ -61,6 +62,15 @@ void StartPartsInFlight(Vessel& vessel) {
         p->CheckBodyLiftAttachment();  // :1867
     }
     StartPartRigidbodies(vessel);  // :1868-1885
+    // WP-20f, :1915-1923: overrideSkillUpdate for a part with one of overrideSkillUpdateModules (default "ModuleSAS, ModuleWheelSteering"):
+    // Part.Update then refreshes its PartValues every frame (Part.cs:4328), which is how a probe's ModuleSAS service level reaches
+    // VesselValues.AutopilotSASSkill (the SAS skill rule, APSkillExtensions.cs:6)
+    for (Part* p : vessel.parts) {
+        const std::vector<std::string> array = ParseExtensions::ParseArray(p->fields.overrideSkillUpdateModules.value_or(std::string()));
+        size_t num4 = array.size();
+        while (num4-- > 0)
+            if (p->Modules().Contains(array[num4])) p->fields.overrideSkillUpdate = true;
+    }
 }
 
 FlightIntegrator::FlightIntegrator(Vessel& v) {

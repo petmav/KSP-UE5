@@ -4,6 +4,7 @@
 #include "ksp/core/unity_time.hpp"
 #include "ksp/dotnet/mono_float.hpp"
 #include "ksp/events/game_events.hpp"
+#include "ksp/input/extended_input.hpp"
 #include "ksp/input/input_lock_manager.hpp"
 #include "ksp/input/space_navigator.hpp"
 #include "ksp/localization/localizer.hpp"
@@ -418,9 +419,65 @@ void FlightInputHandler::FixedUpdate() {
                 vessel->ctrlState.Y = 0.0f;
                 vessel->ctrlState.Z = 0.0f;
             }
+            // Vessel.FeedInputFeed (WP-20f: the real one unless a host replaces it)
             if (host.feedInputFeed) host.feedInputFeed(vessel);
+            else vessel->FeedInputFeed();
         }
     }
+}
+
+// VesselAutopilot.cs:288 CheckPitchInput (after the ActiveVessel test)
+bool AutopilotPitchInput(float controlDetectionThreshold) {
+    using namespace GameSettings;
+    bool result = false;
+    if (AXIS_PITCH->deadzone() == 0.0f) {
+        if (Mathf::Abs(AXIS_PITCH->GetAxis()) > controlDetectionThreshold) result = true;
+    } else if (AXIS_PITCH->GetAxis() != 0.0f) {
+        result = true;
+    }
+    if (FlightInputHandler::SPACENAV_USE_AS_FLIGHT_CONTROL && SpaceNavHasDevice() &&
+        Mathf::Abs(f32store(fx(QuaternionPitch(SpaceNavigator::Rotation())) * fx(SPACENAV_FLIGHT_SENS_ROT))) > controlDetectionThreshold)
+        result = true;
+    if (ExtendedInput::GetKey(PITCH_UP->primary) || ExtendedInput::GetKey(PITCH_UP->secondary) || ExtendedInput::GetKey(PITCH_DOWN->primary) ||
+        ExtendedInput::GetKey(PITCH_DOWN->secondary))
+        result = true;
+    return result;
+}
+
+// VesselAutopilot.cs:259 CheckRollInput (after the ActiveVessel test)
+bool AutopilotRollInput(float controlDetectionThreshold) {
+    using namespace GameSettings;
+    bool result = false;
+    if (AXIS_ROLL->deadzone() == 0.0f) {
+        if (Mathf::Abs(AXIS_ROLL->GetAxis()) > controlDetectionThreshold) result = true;
+    } else if (AXIS_ROLL->GetAxis() != 0.0f) {
+        result = true;
+    }
+    if (FlightInputHandler::SPACENAV_USE_AS_FLIGHT_CONTROL && SpaceNavHasDevice() &&
+        Mathf::Abs(f32store(fx(QuaternionRoll(SpaceNavigator::Rotation())) * fx(SPACENAV_FLIGHT_SENS_ROT))) > controlDetectionThreshold)
+        result = true;
+    if (ExtendedInput::GetKey(ROLL_LEFT->primary) || ExtendedInput::GetKey(ROLL_LEFT->secondary) || ExtendedInput::GetKey(ROLL_RIGHT->primary) ||
+        ExtendedInput::GetKey(ROLL_RIGHT->secondary))
+        result = true;
+    return result;
+}
+
+// VesselAutopilot.cs:230 CheckYawInput (after the ActiveVessel test)
+bool AutopilotYawInput(float controlDetectionThreshold) {
+    using namespace GameSettings;
+    bool result = false;
+    if (AXIS_YAW->deadzone() == 0.0f) {
+        if (Mathf::Abs(AXIS_YAW->GetAxis()) > controlDetectionThreshold) result = true;
+    } else if (AXIS_YAW->GetAxis() != 0.0f) {
+        result = true;
+    }
+    if (FlightInputHandler::SPACENAV_USE_AS_FLIGHT_CONTROL && SpaceNavHasDevice() &&
+        Mathf::Abs(f32store(fx(QuaternionYaw(SpaceNavigator::Rotation())) * fx(SPACENAV_FLIGHT_SENS_ROT))) > controlDetectionThreshold)
+        result = true;
+    if (ExtendedInput::GetKey(YAW_LEFT->primary) || ExtendedInput::GetKey(YAW_LEFT->secondary) || ExtendedInput::GetKey(YAW_RIGHT->primary) ||
+        ExtendedInput::GetKey(YAW_RIGHT->secondary))
+        result = true;
+    return result;
 }
 
 // FlightInputHandler.cs:695

@@ -457,6 +457,9 @@ public:
     // velocity kept). Both refresh the cluster caches and the part transforms.
     void TranslatePartCluster(Part& part, const Vector3d& deltaPhysics);
     void SetPartVelocity(Part& part, const Vector3d& v);
+    // WP-20f: `part.rb.angularVelocity = w` (VesselSAS.KillAngularVelocity): the angular velocity of the part's cluster, its centre-of-mass
+    // velocity kept (Unity's Rigidbody.angularVelocity setter); physics axes. Refreshes the cluster caches.
+    void SetPartAngularVelocity(Part& part, const Vector3d& w);
     // WP-20e: what the world's constraints (contacts, a fixed-to-world anchor) did to a cluster in the last step: force and torque (about its
     // centre of mass, physics axes) = what its motion over the step needs (m dv / dt, I dw / dt) minus what Flush applied. Zero before a step.
     Vector3d ClusterSupportForce(size_t cluster) const;
