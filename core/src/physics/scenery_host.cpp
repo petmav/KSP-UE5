@@ -88,7 +88,7 @@ void SceneryCityHost::Deactivate() {
     else pqsCity2_->OnSphereInactive();
 }
 
-// DestructibleBuilding.cs:163 CollapsibleObject.SetDestroyed
+// CollapsibleObject.SetDestroyed (DestructibleBuilding.cs, declaration at line 163) applied to a whole building
 void SceneryCityHost::SetBuildingDestroyed(size_t index, bool destroyed) {
     const SceneryDestructible& d = city_.destructibles.at(index);
     const std::vector<bool> present = SceneryPresence(city_, levels_);
