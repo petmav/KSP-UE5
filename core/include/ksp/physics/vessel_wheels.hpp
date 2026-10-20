@@ -51,6 +51,7 @@
 #include "ksp/parts/part_model_rig.hpp"
 #include "ksp/unity/animation.hpp"
 #include "ksp/math/vector3d.hpp"
+#include "ksp/physics/contact_host.hpp"
 #include "ksp/physics/physics_world.hpp"
 #include "ksp/physics/vessel_physics.hpp"
 #include "ksp/physics/wheel_models.hpp"
@@ -255,6 +256,14 @@ private:
     };
     std::map<VesselPhysics*, Freeze> freezes_;
     VehiclePhysics::Collider terrain_;
+    // WP-12c: the static colliders a wheel ray can hit with a tag / layer of their own (KSC runway, launch pad ...; ContactHost::RegisterStatic):
+    // one native Collider per distinct GameObject description, so that describeCollider can answer layer / tag / CrashObjectName for them
+    struct StaticCollider {
+        VehiclePhysics::Collider collider;
+        StaticColliderInfo info;
+    };
+    std::map<std::string, std::unique_ptr<StaticCollider>> staticColliders_;
+    VehiclePhysics::Collider* StaticColliderFor(const StaticColliderInfo& info);
     CoroutineScheduler scheduler_;
     bool installed_ = false;
     int lastSubsteps_ = 1;

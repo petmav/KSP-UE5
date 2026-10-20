@@ -115,6 +115,9 @@ public:
     // after moving a body's frame themselves). A body that is not the dominant body in its rotating frame has its colliders removed.
     void RefreshTerrain();
     size_t TerrainRefreshCount() const { return terrainRefreshes_; }
+    // WP-12c: other static colliders that live in a body frame (the KSC scenery, SceneryCityHost) re-place themselves with RefreshTerrain
+    uint64_t AddRefreshHook(std::function<void()> hook);
+    void RemoveRefreshHook(uint64_t id);
 
     // ---- per tick (PhysicsBubble calls these) ----------------------------------------------------------------------------------
     void CollisionEnhancerFixedUpdate();  // FlightScene::hooks.afterPrecalc (seq 7)
@@ -194,6 +197,8 @@ private:
     std::map<const Part*, std::pair<uint32_t, std::unique_ptr<CollisionEnhancer>>> enhancers_;
     std::map<const Vessel*, Anchor> anchors_;
     std::vector<HostedTerrain> terrain_;
+    std::map<uint64_t, std::function<void()>> refreshHooks_;
+    uint64_t nextHook_ = 1;
     std::vector<DispatchRecord> lastDispatch_;
     uint64_t enters_ = 0, exits_ = 0, stays_ = 0;
     size_t substepsDispatched_ = 0;

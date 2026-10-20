@@ -45,6 +45,8 @@ add_executable(kspcore_tests
     test_mu_colliders.cpp
     test_wheel_models.cpp
     test_wheel_gear.cpp
+    test_scenery_colliders.cpp
+    test_scenery_scenarios.cpp
     test_structure.cpp
     test_structure_events.cpp
     test_physics_bubble.cpp

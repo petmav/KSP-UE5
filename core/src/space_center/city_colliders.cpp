@@ -35,16 +35,22 @@ void CityColliderSet::Place(size_t index) {
                 const Vector3d r = rot * Vector3d(p);
                 v.push_back(Vector3f(static_cast<float>(r.x), static_cast<float>(r.y), static_cast<float>(r.z)));
             }
-            world_.AddStaticMesh(key, pos, v, col.triangles, col.friction);
+            world_.AddStaticMesh(key, pos, v, col.triangles, col.friction, 0.0f, col.material);
         } else {
-            world_.AddStaticShape(key, col.shape, pos, rot, col.friction);
+            physics::ShapeDesc shape = col.shape;
+            shape.material = col.material;
+            world_.AddStaticShape(key, shape, pos, rot, col.friction);
         }
+        if (onPlaced) onPlaced(key, s.object);
     }
 }
 
 void CityColliderSet::Remove(size_t index) {
     Slot& s = objects_[index];
-    for (size_t c = 0; c < s.object.colliders.size(); ++c) world_.RemoveStatic(KeyOf(index, c));
+    for (size_t c = 0; c < s.object.colliders.size(); ++c) {
+        const uint64_t key = KeyOf(index, c);
+        if (world_.RemoveStatic(key) && onRemoved) onRemoved(key);
+    }
 }
 
 void CityColliderSet::SetPose(const Vector3d& position, const QuaternionD& rotation) {

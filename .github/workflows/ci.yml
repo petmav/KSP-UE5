@@ -1,6 +1,6 @@
 name: ci
 
-# Private repo. Builds core/ (kspcore) and runs every gate: unit tests, golden gates against harness/golden, capture gates
+# Builds core/ (kspcore) and runs every gate: unit tests, golden gates against harness/golden, capture gates
 # against harness/captures, and the portable-libm checks. No KSP install and no Unreal are needed: the tests read
 # core/testdata/GameData-mirror. See CLOUD-TASKS.md.
 
@@ -12,6 +12,18 @@ on:
   workflow_dispatch:
 
 jobs:
+  # The merge gate together with the build jobs (no separate reviewer agent): the scripted checks of
+  # core/tools/ci/pr_review.py on the lines this pull request changes.
+  review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: "Scripted review: tolerances, std maths, C# cites, progress.csv"
+        run: python3 -I core/tools/ci/pr_review.py --base origin/${{ github.base_ref }}
+
   linux:
     name: linux (${{ matrix.preset }})
     runs-on: ubuntu-latest

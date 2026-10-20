@@ -263,7 +263,7 @@ void PartModelRig::SampleClip(int animation, int clip, float time) {
     touchedRot.erase(std::unique(touchedRot.begin(), touchedRot.end()), touchedRot.end());
     for (int ni : touchedRot) {
         Quaternionf& q = nodes_[static_cast<size_t>(ni)].lr;
-        const float m = std::sqrt(((q.x * q.x + q.y * q.y) + q.z * q.z) + q.w * q.w);
+        const float m = std::sqrt(((q.x * q.x + q.y * q.y) + q.z * q.z) + q.w * q.w);  // std-math-ok: native Unity Animation rotation blend normalisation (IEEE sqrt, correctly rounded; not managed code)
         if (m > 1e-6f) {
             q.x /= m;
             q.y /= m;
