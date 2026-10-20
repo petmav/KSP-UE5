@@ -6322,7 +6322,7 @@ Findings from the data (cfg and models, all 13 parts):
 | rover brake from 8 m/s | the locked-tyre-capped C# brake model | Prospector 7.50 m in 1.56 s (reference 6.08 m; proxy 7.38 m), Bug-E 8.33 m in 1.48 s (reference 8.04 m; proxy 8.30 m); max tilt 20.1 / 17.5 deg (proxy 11.6 / 13.0, gate 30): the real wheels sit lower relative to the body |
 | rover steering | kinematic bicycle model | Prospector yaw rate -0.1925 vs -0.1935 rad/s (0.5 %), Bug-E -80 deg in 2 s |
 | **steering circle** | circle through three CoM points vs `L / tan(delta)` | steer 4.989 deg, wheelbase 1.20 m: fitted radius 13.82 m, v / yaw rate 13.81 m, kinematic 13.75 m (CoM radius 13.75 m): within 0.5 % (gate 5 %) |
-| **runway roll** (a flat 1.5 km strip tagged `Runway`, FIXTURE) | straight line, landedAt | 729.7 m in 32 s to 34.3 m/s, lateral deviation 6.05 m (0.8 %), heading drift 0.57 deg, `vessel.landedAt == "Runway"` through `SetLandedAt` (`WheelPhysicsOptions::groundTag`) |
+| **runway roll** (the real KSC runway collider of WP-12c, `SceneryCityHost`, tag `Runway`) | straight line, landedAt | 734.4 m in 32 s to 34.4 m/s, lateral deviation 6.11 m (0.8 %), heading drift 0.57 deg, `vessel.landedAt` contains `Runway` (the earlier flat-strip fixture gave 729.7 m / 6.05 m / 0.57 deg: the runway is flat enough that nothing moved) |
 | **leg touchdown** (Two-Stage Lander, 4 x LT-2, 3 m/s on Kerbin) | the spike's numbers (WHEEL-SPIKE.md 4.4: 50 % of the travel, rebound 1.87 m/s, settles 1.4 s) | touch 2.91 m/s, compression 0.546 of the travel (gate 0.35-0.75), rebound 1.46 m/s (< touch speed: no bounce-launch), settles in 1.98 s (< 3), never on the limit, all 4 legs grounded, tilt 0.006 deg |
 | **landing leg / gear deployment** (airborne) | the animation: the deploy target in the part frame | LT-2: -0.8349 -> +1.0038 (retracted, Position 0, wheel off, state "Retracted") -> -0.83486 m (deployed again); LY-01 bay: -0.9208 -> 0.0320 -> -0.9208 m, stand-in sphere seen and built while not deployed, gone when deployed |
 | **brake anchor** (the "schloompa", `ModuleWheelBase.toggleRbConstraints`) | held while frozen | the braked Prospector freezes 0.4 s after the brakes, 4 wheel parts, one weld to the world, 2.0 s, drift 0 um, released, not frozen again while the brakes stay on |
@@ -6350,7 +6350,7 @@ Windows MSVC RelWithDebInfo, from-scratch build (`core/build` deleted, `CMAKE_BU
 | hub colliders | changed | static compound at the sampled pose; suspension / wheel / caliper subtrees and the module-disabled collider left out |
 | stand-in sphere | approximate | rebuilt in 5 cm steps while it moves |
 | brake freeze | changed | cluster weld |
-| runway | FIXTURE | flat patch with tag `Runway` |
+| runway | real (WP-12c) | the KSC runway collider through `SceneryCityHost` |
 | aircraft | not covered | control surfaces not ported |
 
 ## WP-52: Breaking Ground robotics (branch `wp52`, from main `cd5e4df4`)

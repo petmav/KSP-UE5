@@ -115,8 +115,7 @@ with Unity's Hermite cubic, collider shapes at the sampled pose; `mu_model.hpp` 
 transform, `deployTgt`, the suspension / steering transforms and the animations come from it; the hub colliders weld into the cluster at the part's
 deployment state; a retracted gear has its stand-in sphere (`ModuleWheelDeployment.useStandInCollider`); a braked vessel at rest is held by the
 "schloompa" freeze (a weld to the world); `Vessel.getLowestPoint` places a landed wheeled vessel with the WheelCollider branch
-(`VesselEnvironment::colliderClosestPoints`). `WheelPhysicsOptions::groundTag` tags the terrain collider the wheels report ("Runway": a FIXTURE until the
-scenery colliders land). Stage the models with `python -I core/tools/wp29d/stage_wheel_models.py --game decompiled/KSP-dev` (local, needs the game).
+(`VesselEnvironment::colliderClosestPoints`).
 
 ### Contact, landing and water (WP-20e)
 

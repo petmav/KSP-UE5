@@ -92,9 +92,6 @@ struct WheelPhysicsOptions {
     // or any source of PartModelRigs (the real GameData's .mu files). With neither, the WP-29c drag-cube proxy below.
     std::shared_ptr<const WheelModelLibrary> models;
     std::function<std::shared_ptr<mu::PartModelRig>(const Part&)> modelRig;
-    // WP-29d: the tag of the terrain collider a wheel reports (ModuleWheelBase.LandingDetectionUpdate reads collider.tag: a KSC runway
-    // collider is tagged Runway). The default is the PQS quads: Untagged. A FIXTURE until WP-12b / WP-42 register the scenery colliders.
-    std::string groundTag = "Untagged";
     bool modelColliders = true;    // the hub colliders from the models weld into the cluster (else the wheel parts stay mass-only)
     // the geometry of a wheel part (true: answered); unset or false: the model rig, then the drag-cube proxy below
     std::function<bool(const Part&, const ModuleWheelBase&, WheelPartGeometry&)> geometry;

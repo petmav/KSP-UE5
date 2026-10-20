@@ -324,3 +324,61 @@ TEST_CASE("WP-12c runway: a rover on the real runway collider, the wheel ray mee
     CHECK(v.landedAt == hitInfo.tag);
     CHECK(v.landedAt.find("Runway") != std::string::npos);
 }
+
+// WP-29d: the runway roll on the real KSC runway collider (WP-12c): the Prospector on the real wheel models rolls east from the 09 threshold at
+// full throttle; the line and the heading hold, the wheels report the runway tag (Vessel.landedAt).
+TEST_CASE("WP-29d runway roll on the real KSC runway collider (line held, heading held, landedAt Runway)") {
+    if (!wp20b::GameAvailable()) return;
+    wp29c::WheelSettingsScope settings;
+    World w;
+    wp29c::LoadedRover r = wp29c::LoadRover(w, "Prospector Rover");
+    wp29c::RoverScene scene(w, wp29c::RealGeometry());
+    CelestialBody& kerbin = w.Kerbin();
+    const SceneryCity& ksc = *Scenery().Find("Kerbin/KSC");
+    SceneryLevels lv;
+    const CityPose pose = KscPose(kerbin);
+    SceneryCityHost host(scene.pad.s.bubble, ksc, 0x5343000000000000ull, lv);
+    host.PlaceOnBody(kerbin, pose.localPosition, pose.localRotation);
+    host.ActivateAll();
+    scene.pad.s.world.OptimizeBroadPhase();
+    const int spawnIdx = FindPresent(ksc, lv, "SpawnPoint", "End09");
+    REQUIRE(spawnIdx >= 0);
+    const Vector3d spawnLocal = pose.localPosition + pose.localRotation * NodeInCityFrame(ksc, static_cast<size_t>(spawnIdx));
+    const Vector3d spawnWorld = kerbin.position + kerbin.rotation * spawnLocal;
+    const Vector3d up = (spawnWorld - kerbin.position).normalized();
+    const PhysicsWorld::RayHit h = scene.pad.s.world.RayCast(scene.pad.s.bubble.StaticPhysicsFromWorld(spawnWorld + up * 40.0), up * -1.0, 80.0, PhysicsWorld::kLayerStatic);
+    REQUIRE(h.hit);
+    scene.pad.padWorld = h.point + scene.pad.s.bubble.FrameOriginWorld();
+    scene.pad.padUp = up;
+    const Vector3d polar = (kerbin.rotation * Vector3d(0.0, 1.0, 0.0)).normalized();
+    scene.pad.padNorth = (polar - up * Vector3d::Dot(polar, up)).normalized();
+    scene.pad.padEast = Vector3d::Cross(up, scene.pad.padNorth);
+    scene.Place(r, 90.0);
+    scene.pad.s.Start(*r.vessel);
+    Vessel& v = *r.vessel;
+    for (int k = 0; k < 150; ++k) scene.Tick();
+    VesselPhysics* vp = scene.pad.s.bubble.Host().Find(v);
+    REQUIRE(vp != nullptr);
+    const auto forward = [&] { return Vector3d(v.vesselTransform.rotation * r.craftFwd).normalized(); };
+    const Vector3d f0 = forward(), x0 = wp29c::VesselCoM(*vp);
+    v.ctrlState.wheelThrottle = 1.0f;
+    double maxLateral = 0.0, maxHeading = 0.0, along = 0.0;
+    int ticks = 0;
+    for (; ticks < 1600 && along < 800.0; ++ticks) {
+        wp29c::FillElectricCharge(v);
+        scene.Tick();
+        vp = scene.pad.s.bubble.Host().Find(v);
+        REQUIRE(vp != nullptr);
+        const Vector3d d = wp29c::VesselCoM(*vp) - x0;
+        along = Vector3d::Dot(d, f0);
+        maxLateral = std::max(maxLateral, std::fabs(Vector3d::Dot(Vector3d::Cross(f0, d), up)));
+        const Vector3d f = forward();
+        maxHeading = std::max(maxHeading, std::fabs(std::atan2(Vector3d::Dot(Vector3d::Cross(f0, f), up), Vector3d::Dot(f0, f))) * 180.0 / 3.14159265358979323846);
+    }
+    MESSAGE("runway roll (real collider): " << along << " m in " << ticks * 0.02 << " s, speed " << wp29c::VesselVelocity(*vp).magnitude() << " m/s, lateral deviation " << maxLateral
+                                            << " m, heading drift " << maxHeading << " deg, landedAt \"" << v.landedAt << "\"");
+    CHECK(along > 500.0);
+    CHECK(maxLateral < 0.02 * along);
+    CHECK(maxHeading < 1.5);
+    CHECK(v.landedAt.find("Runway") != std::string::npos);
+}

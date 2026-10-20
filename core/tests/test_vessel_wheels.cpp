@@ -627,46 +627,7 @@ TEST_CASE("WP-29d the brake schloompa: a frozen wheel part holds its cluster wit
 }
 
 // ---- WP-29d: the runway roll and the steering circle ----------------------------------------------------------------------------------------
-// A KSC runway is a flat strip tagged "Runway" (the scenery colliders are WP-12b / WP-42 work; this fixture is the pad scene 1.5 km terrain patch
-// with that tag). The Prospector rolls east at full throttle: it stays on the line, its heading holds, the wheels report the runway (landedAt).
-TEST_CASE("WP-29d runway roll: the rover accelerates along a straight strip tagged Runway (line held, heading held, landedAt Runway)") {
-    if (!wp20b::GameAvailable()) return;
-    WheelPhysicsOptions o = RealGeometry();
-    o.groundTag = "Runway";
-    bool seenTag = false;
-    Run run("Prospector Rover", o, 90.0);
-    auto saved = WheelModuleEnvironment::trace;
-    WheelModuleEnvironment::trace = [&](const std::string& s) {
-        if (s.find("SetLandedAt:Runway|Runway|") != std::string::npos) seenTag = true;
-        if (saved) saved(s);
-    };
-    run.Ticks(100);
-    const Vector3d f0 = run.Forward(), x0 = run.Com();
-    run.V().ctrlState.wheelThrottle = 1.0f;
-    double maxLateral = 0.0, maxHeading = 0.0;
-    int ticks = 0;
-    for (; ticks < 1600; ++ticks) {  // up to 32 s
-        FillElectricCharge(run.V());
-        run.Tick();
-        REQUIRE(Healthy(run));
-        const Vector3d d = run.Com() - x0;
-        const double along = Vector3d::Dot(d, f0);
-        maxLateral = std::max(maxLateral, std::fabs(Vector3d::Dot(Vector3d::Cross(f0, d), run.Up())));
-        const Vector3d f = run.Forward();
-        maxHeading = std::max(maxHeading, std::fabs(std::atan2(Vector3d::Dot(Vector3d::Cross(f0, f), run.Up()), Vector3d::Dot(f0, f))) / kRad);
-        if (along > 1000.0) break;
-    }
-    WheelModuleEnvironment::trace = saved;
-    const double along = Vector3d::Dot(run.Com() - x0, f0);
-    MESSAGE("runway roll: " << along << " m in " << ticks * 0.02 << " s, speed " << run.ForwardSpeed() << " m/s, lateral deviation " << maxLateral << " m, heading drift " << maxHeading
-                             << " deg, landedAt '" << run.V().landedAt << "', tag seen " << seenTag);
-    CHECK(along > 300.0);
-    CHECK(maxLateral < 0.015 * along);  // the line is held to 1.5 % of the distance (heading drift 0.6 deg over the roll)
-    CHECK(maxHeading < 1.0);
-    CHECK(seenTag);
-    CHECK(run.V().landedAt == "Runway");
-}
-
+// (the runway roll runs on the real KSC runway collider: tests/test_scenery_scenarios.cpp)
 // The steering circle: the Prospector with the front axle steered (wheelSteer 0.25: about 5 degrees) rolls a circle of radius L / tan(delta) at the
 // rear axle (the kinematic bicycle); the CoM path is a circle of nearly the same radius. The radius is fitted through the CoM path (three points)
 // and compared with v / yaw rate (the same circle) and with the analytic one from the steered wheels collider angles and the wheelbase.

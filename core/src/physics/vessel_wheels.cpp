@@ -213,7 +213,6 @@ void WheelPhysicsHost::Install() {
         WheelColliderInfo info;
         info.tag = "Untagged";
         if (c == &terrain_) {
-            info.tag = options.groundTag;  // WP-29d fixture tag for the PQS terrain (the real KSC colliders carry their own, below)
             info.layer = 15;  // the PQS quads' layer "Local Scenery" (PQS.cs:1015)
             return info;
         }
