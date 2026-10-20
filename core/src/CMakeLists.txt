@@ -346,6 +346,7 @@ add_library(kspcore STATIC
     serenity/servo_rotor.cpp
     serenity/servo_rotation.cpp
     serenity/servo_plant.cpp
+    serenity/servo_backend.cpp
     serenity/controlled_axis.cpp
     serenity/robotic_controller.cpp
     serenity/servo_register.cpp

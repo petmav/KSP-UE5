@@ -32,6 +32,8 @@
 #include <Jolt/Physics/Collision/ContactListener.h>
 #include <Jolt/Physics/Collision/CollideShape.h>
 #include <Jolt/Physics/Constraints/FixedConstraint.h>
+#include <Jolt/Physics/Constraints/HingeConstraint.h>
+#include <Jolt/Physics/Constraints/SliderConstraint.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/RegisterTypes.h>
 
@@ -458,6 +460,9 @@ struct PhysicsWorld::Impl {
     struct ConstraintSlot {
         JPH::Ref<JPH::TwoBodyConstraint> c;
         BodyId a = kInvalidBody, b = kInvalidBody;
+        // WP-52b: 0 fixed, 1 hinge, 2 slider; the bodies' rotations when the last step set the constraint up (the basis of its lambdas)
+        uint8_t kind = 0;
+        JPH::Quat q1Pre = JPH::Quat::sIdentity(), q2Pre = JPH::Quat::sIdentity();
     };
     std::vector<ConstraintSlot> constraints;  // index = ConstraintId; a removed slot has c == nullptr
     size_t liveConstraints = 0;
@@ -546,6 +551,12 @@ const PhysicsWorldConfig& PhysicsWorld::Config() const { return impl_->cfg; }
 
 void PhysicsWorld::Step(float dt, int collisionSteps) {
     Impl& m = *impl_;
+    // WP-52b: the articulated joints' lambdas are in bases Jolt derives from the bodies' rotations at the set-up of the step
+    for (Impl::ConstraintSlot& s : m.constraints)
+        if (s.c && s.kind != 0) {
+            s.q1Pre = m.Bi().GetRotation(JPH::BodyID(s.a));
+            s.q2Pre = m.Bi().GetRotation(JPH::BodyID(s.b));
+        }
     if (m.contactListener) m.contactListener->BeginStep();
     m.system.Update(dt, collisionSteps, m.temp.get(), m.jobs.get());
     ++m.steps;
@@ -989,9 +1000,196 @@ void PhysicsWorld::GetConstraintImpulse(ConstraintId id, Vector3d& linear, Vecto
     angular = Vector3d();
     const Impl& m = *impl_;
     if (id >= m.constraints.size() || !m.constraints[id].c) return;
-    const auto* fc = static_cast<const JPH::FixedConstraint*>(m.constraints[id].c.GetPtr());
+    const Impl::ConstraintSlot& slot = m.constraints[id];
+    if (slot.kind == 1) {  // WP-52b hinge
+        const auto* hc = static_cast<const JPH::HingeConstraint*>(slot.c.GetPtr());
+        // the basis of HingeRotationConstraintPart::CalculateConstraintProperties, recomputed from the set-up rotations with its operations
+        const JPH::Mat44 r1 = JPH::Mat44::sRotation(slot.q1Pre), r2 = JPH::Mat44::sRotation(slot.q2Pre);
+        const JPH::Vec3 a1 = r1.Multiply3x3(hc->GetConstraintToBody1Matrix().GetAxisX());
+        JPH::Vec3 a2 = r2.Multiply3x3(hc->GetConstraintToBody2Matrix().GetAxisX());
+        const float dot = a1.Dot(a2);
+        if (dot <= 1.0e-3f) {
+            JPH::Vec3 perp = a2 - dot * a1;
+            if (perp.LengthSq() < 1.0e-6f) perp = a1.GetNormalizedPerpendicular();
+            a2 = (0.99f * perp.Normalized() + 0.01f * a1).Normalized();
+        }
+        const JPH::Vec3 b2 = a2.GetNormalizedPerpendicular();
+        const JPH::Vec3 c2 = a2.Cross(b2);
+        const JPH::Vector<2> lr = hc->GetTotalLambdaRotation();
+        const JPH::Vec3 rot = b2.Cross(a1) * lr[0] + c2.Cross(a1) * lr[1];
+        // the AngleConstraintParts (limits, motor) act along body 1's hinge axis (CalculateA1AndTheta: rotation1 * local axis)
+        const JPH::Vec3 a1q = slot.q1Pre * hc->GetConstraintToBody1Matrix().GetAxisX();
+        const double along = static_cast<double>(hc->GetTotalLambdaRotationLimits()) + static_cast<double>(hc->GetTotalLambdaMotor());
+        linear = FromVec3(hc->GetTotalLambdaPosition());
+        angular = FromVec3(rot) + FromVec3(a1q) * along;
+        return;
+    }
+    if (slot.kind == 2) {  // WP-52b slider: the slider axis and mN1 / mN2 = rotation1 * the local axes (SliderConstraint::CalculateR1R2U and after)
+        const auto* sc = static_cast<const JPH::SliderConstraint*>(slot.c.GetPtr());
+        const JPH::Mat44 r1 = JPH::Mat44::sRotation(slot.q1Pre);
+        const JPH::Mat44 f1 = sc->GetConstraintToBody1Matrix();
+        const JPH::Vec3 ax = r1.Multiply3x3(f1.GetAxisX()), n1 = r1.Multiply3x3(f1.GetAxisY()), n2 = r1.Multiply3x3(f1.GetAxisZ());
+        const JPH::Vector<2> lp = sc->GetTotalLambdaPosition();
+        const double along = static_cast<double>(sc->GetTotalLambdaPositionLimits()) + static_cast<double>(sc->GetTotalLambdaMotor());
+        linear = FromVec3(n1 * lp[0] + n2 * lp[1]) + FromVec3(ax) * along;
+        angular = FromVec3(sc->GetTotalLambdaRotation());
+        return;
+    }
+    const auto* fc = static_cast<const JPH::FixedConstraint*>(slot.c.GetPtr());
     linear = FromVec3(fc->GetTotalLambdaPosition());
     angular = FromVec3(fc->GetTotalLambdaRotation());
+}
+
+// ---- WP-52b: articulated joints ----------------------------------------------------------------------------------------------------
+// The servo's ConfigurableJoint on the reduced model (the motions of ModuleRoboticServoHinge.cs:357-384, ModuleRoboticServoPiston.cs:284-289,
+// the rotor's :296-311 and the rotation servo's :353-365): a Jolt hinge / slider whose zero is the caller's coordinate zero.
+ConstraintId PhysicsWorld::CreateArticulatedConstraint(BodyId a, BodyId b, const ArticulatedJointDesc& d) {
+    Impl& m = *impl_;
+    if (!IsValid(a) || !IsValid(b) || a == b) return kInvalidConstraint;
+    const Vector3d axis = d.axis.normalized();
+    Vector3d normal = d.normal - axis * Vector3d::Dot(d.normal, axis);
+    if (normal.sqrMagnitude() < 1e-12) {
+        normal = Vector3d(axis.y, -axis.x, 0.0);
+        if (normal.sqrMagnitude() < 1e-12) normal = Vector3d(0.0, axis.z, -axis.y);
+    }
+    normal = normal.normalized();
+    JPH::TwoBodyConstraint* c = nullptr;
+    uint8_t kind = 0;
+    if (d.kind == ArticulatedJointDesc::Kind::Hinge) {
+        JPH::HingeConstraintSettings s;
+        s.mSpace = JPH::EConstraintSpace::WorldSpace;
+        s.mPoint1 = s.mPoint2 = ToRVec3(d.point);
+        s.mHingeAxis1 = s.mHingeAxis2 = ToVec3(axis);
+        // body b is turned by coordinate0 from its zero: its normal is body a's zero normal turned by coordinate0 about the axis
+        const double ca = std::cos(d.coordinate0), sa = std::sin(d.coordinate0);
+        const Vector3d n2 = normal * ca + Vector3d::Cross(axis, normal) * sa;
+        s.mNormalAxis1 = ToVec3(normal);
+        s.mNormalAxis2 = ToVec3(n2.normalized());
+        s.mNumVelocityStepsOverride = static_cast<JPH::uint>(std::clamp(d.velocitySteps, 0, 255));
+        s.mNumPositionStepsOverride = static_cast<JPH::uint>(std::clamp(d.positionSteps, 0, 255));
+        c = m.Bi().CreateConstraint(&s, JPH::BodyID(a), JPH::BodyID(b));
+        kind = 1;
+    } else {
+        JPH::SliderConstraintSettings s;
+        s.mSpace = JPH::EConstraintSpace::WorldSpace;
+        s.mAutoDetectPoint = false;
+        s.mPoint1 = ToRVec3(d.point - axis * d.coordinate0);  // body a's coordinate origin
+        s.mPoint2 = ToRVec3(d.point);
+        s.mSliderAxis1 = s.mSliderAxis2 = ToVec3(axis);
+        s.mNormalAxis1 = s.mNormalAxis2 = ToVec3(normal);
+        s.mNumVelocityStepsOverride = static_cast<JPH::uint>(std::clamp(d.velocitySteps, 0, 255));
+        s.mNumPositionStepsOverride = static_cast<JPH::uint>(std::clamp(d.positionSteps, 0, 255));
+        c = m.Bi().CreateConstraint(&s, JPH::BodyID(a), JPH::BodyID(b));
+        kind = 2;
+    }
+    if (c == nullptr) return kInvalidConstraint;
+    m.system.AddConstraint(c);
+    Impl::ConstraintSlot slot;
+    slot.c = c;
+    slot.a = a;
+    slot.b = b;
+    slot.kind = kind;
+    slot.q1Pre = m.Bi().GetRotation(JPH::BodyID(a));
+    slot.q2Pre = m.Bi().GetRotation(JPH::BodyID(b));
+    m.constraints.push_back(slot);
+    ++m.liveConstraints;
+    return static_cast<ConstraintId>(m.constraints.size() - 1);
+}
+
+bool PhysicsWorld::IsArticulated(ConstraintId id) const {
+    const Impl& m = *impl_;
+    return id < m.constraints.size() && m.constraints[id].c && m.constraints[id].kind != 0;
+}
+
+namespace {
+JPH::MotorSettings DriveMotor(const PhysicsWorld::ArticulatedDrive& d, bool angular) {
+    JPH::MotorSettings ms;
+    ms.mSpringSettings.mMode = JPH::ESpringMode::StiffnessAndDamping;
+    ms.mSpringSettings.mStiffness = static_cast<float>(std::max(0.0, d.spring));
+    ms.mSpringSettings.mDamping = static_cast<float>(std::max(0.0, d.damper));
+    const float f = static_cast<float>(std::min(std::max(0.0, d.maxForce), 3.4028234663852886e38));
+    if (angular) ms.SetTorqueLimit(f);
+    else ms.SetForceLimit(f);
+    return ms;
+}
+JPH::SpringSettings LimitSpring(const PhysicsWorld::ArticulatedDrive& d) {
+    JPH::SpringSettings ss;  // the default (frequency 0) is a hard limit
+    if (d.limitSpring > 0.0) {
+        ss.mMode = JPH::ESpringMode::StiffnessAndDamping;
+        ss.mStiffness = static_cast<float>(d.limitSpring);
+        ss.mDamping = static_cast<float>(std::max(0.0, d.limitDamper));
+    }
+    return ss;
+}
+}  // namespace
+
+void PhysicsWorld::SetArticulatedDrive(ConstraintId id, const ArticulatedDrive& d) {
+    Impl& m = *impl_;
+    if (!IsArticulated(id)) return;
+    Impl::ConstraintSlot& slot = m.constraints[id];
+    const bool driven = d.spring > 0.0 || d.damper > 0.0;
+    if (slot.kind == 1) {
+        auto* hc = static_cast<JPH::HingeConstraint*>(slot.c.GetPtr());
+        constexpr double kPi = 3.14159265358979323846;
+        if (d.limited) {
+            hc->SetLimits(static_cast<float>(std::min(0.0, std::max(-kPi, d.limitLo))), static_cast<float>(std::max(0.0, std::min(kPi, d.limitHi))));
+            hc->SetLimitsSpringSettings(LimitSpring(d));
+        } else {
+            hc->SetLimits(-JPH::JPH_PI, JPH::JPH_PI);  // HingeConstraint::SetLimits: [-pi, pi] is no limit
+        }
+        hc->GetMotorSettings() = DriveMotor(d, true);
+        hc->SetMotorState(driven ? JPH::EMotorState::PositionAndVelocity : JPH::EMotorState::Off);
+        double t = std::fmod(d.target, 2.0 * kPi);  // the motor's error is CenterAngleAroundZero(theta - target): any representative
+        if (t > kPi) t -= 2.0 * kPi;
+        if (t < -kPi) t += 2.0 * kPi;
+        hc->SetTargetAngle(static_cast<float>(t));
+        hc->SetTargetAngularVelocity(static_cast<float>(d.targetVelocity));
+    } else {
+        auto* sc = static_cast<JPH::SliderConstraint*>(slot.c.GetPtr());
+        if (d.limited) {
+            sc->SetLimits(static_cast<float>(std::min(0.0, d.limitLo)), static_cast<float>(std::max(0.0, d.limitHi)));
+            sc->SetLimitsSpringSettings(LimitSpring(d));
+        } else {
+            sc->SetLimits(-FLT_MAX, FLT_MAX);  // SliderConstraint::SetLimits: +-FLT_MAX is no limit
+        }
+        sc->GetMotorSettings() = DriveMotor(d, false);
+        sc->SetMotorState(driven ? JPH::EMotorState::PositionAndVelocity : JPH::EMotorState::Off);
+        sc->SetTargetPosition(static_cast<float>(d.target));
+        sc->SetTargetVelocity(static_cast<float>(d.targetVelocity));
+    }
+}
+
+double PhysicsWorld::ArticulatedCoordinate(ConstraintId id) const {
+    const Impl& m = *impl_;
+    if (!IsArticulated(id)) return 0.0;
+    const Impl::ConstraintSlot& slot = m.constraints[id];
+    if (slot.kind == 1) return static_cast<double>(static_cast<const JPH::HingeConstraint*>(slot.c.GetPtr())->GetCurrentAngle());
+    // SliderConstraint::GetCurrentPosition in double: (p2 - p1) . (rotation1 * axis1), the points on the bodies in double
+    const JPH::RMat44 t1 = m.Bi().GetCenterOfMassTransform(JPH::BodyID(slot.a));
+    const JPH::RMat44 t2 = m.Bi().GetCenterOfMassTransform(JPH::BodyID(slot.b));
+    const JPH::Mat44 f1 = slot.c->GetConstraintToBody1Matrix(), f2 = slot.c->GetConstraintToBody2Matrix();
+    const Vector3d p1 = FromRVec3(t1 * f1.GetTranslation()), p2 = FromRVec3(t2 * f2.GetTranslation());
+    const Vector3d ax = FromVec3(t1.Multiply3x3(f1.GetAxisX()));
+    return Vector3d::Dot(p2 - p1, ax);
+}
+
+double PhysicsWorld::ArticulatedRate(ConstraintId id) const {
+    const Impl& m = *impl_;
+    if (!IsArticulated(id)) return 0.0;
+    const Impl::ConstraintSlot& slot = m.constraints[id];
+    const JPH::BodyID b1(slot.a), b2(slot.b);
+    const JPH::RMat44 t1 = m.Bi().GetCenterOfMassTransform(b1);
+    const JPH::Mat44 f1 = slot.c->GetConstraintToBody1Matrix();
+    const Vector3d ax = FromVec3(t1.Multiply3x3(f1.GetAxisX()));
+    const Vector3d w1 = FromVec3(m.Bi().GetAngularVelocity(b1)), w2 = FromVec3(m.Bi().GetAngularVelocity(b2));
+    if (slot.kind == 1) return Vector3d::Dot(w2 - w1, ax);
+    // d/dt (p2 - p1) . axis1 = (v(p2) - v(p1)) . axis1 + (p2 - p1) . (w1 x axis1)
+    const JPH::RMat44 t2 = m.Bi().GetCenterOfMassTransform(b2);
+    const Vector3d c1 = FromRVec3(t1.GetTranslation()), c2 = FromRVec3(t2.GetTranslation());
+    const Vector3d p1 = FromRVec3(t1 * f1.GetTranslation()), p2 = FromRVec3(t2 * slot.c->GetConstraintToBody2Matrix().GetTranslation());
+    const Vector3d vp1 = FromVec3(m.Bi().GetLinearVelocity(b1)) + Vector3d::Cross(w1, p1 - c1);
+    const Vector3d vp2 = FromVec3(m.Bi().GetLinearVelocity(b2)) + Vector3d::Cross(w2, p2 - c2);
+    return Vector3d::Dot(vp2 - vp1, ax) + Vector3d::Dot(p2 - p1, Vector3d::Cross(w1, ax));
 }
 
 // ---- WP-19b: frames of the physics bubble ---------------------------------------------------------------------------------
