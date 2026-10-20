@@ -24,6 +24,9 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <memory>
+#include <string>
 #include <vector>
 
 #include "ksp/math/quaterniond.hpp"
@@ -41,12 +44,22 @@ struct CityCollider {
     QuaternionD localRotation = QuaternionD::identity();
     std::vector<Vector3f> vertices;                 // Mesh: local-frame vertices
     std::vector<int> triangles;                     // Mesh: index triples
-    float friction = 0.6f;                          // FIXTURE (the PhysicMaterial of the prefab collider is not extracted)
+    float friction = 0.6f;                          // body friction when no material is given (Jolt's own combine); with a material see below
+    // WP-12c: the collider's PhysicMaterial (data/scenery: null in every stock scenery collider, i.e. Physics.defaultMaterial); null =
+    // the world's default material
+    std::shared_ptr<const physics::PhysicMaterialDesc> material;
 };
 
 // A GameObject of the city subtree with its colliders. Index = order of Add.
 struct CityObject {
     std::vector<CityCollider> colliders;
+    // WP-12c: the GameObject the colliders belong to, as the contact records read it (layer, tag, name; CrashObjectName found upwards;
+    // PositionMobileLaunchPad in the parents)
+    int layer = 15;
+    std::string tag = "Untagged";
+    std::string name;
+    std::string crashObjectName;
+    bool mobileLaunchPad = false;
 };
 
 // The engine side of GameObject.SetActive for colliders: places an object's colliders into the world at the city pose.
@@ -71,6 +84,10 @@ public:
     uint64_t KeyOf(size_t objectIndex, size_t colliderIndex) const {
         return keyBase_ + (static_cast<uint64_t>(objectIndex) << 16) + static_cast<uint64_t>(colliderIndex);
     }
+    const CityObject& Object(size_t index) const { return objects_[index].object; }
+    // WP-12c: called after a collider's static body is created / before it is removed (the ContactHost registration of layer and tag)
+    std::function<void(uint64_t key, const CityObject& object)> onPlaced;
+    std::function<void(uint64_t key)> onRemoved;
 
 private:
     struct Slot {

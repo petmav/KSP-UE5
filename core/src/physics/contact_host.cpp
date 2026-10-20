@@ -665,8 +665,17 @@ TerrainColliders* ContactHost::Terrain(const CelestialBody& body) const {
 
 void ContactHost::RefreshTerrain() {
     for (HostedTerrain& t : terrain_) BuildTerrain(t);
+    for (auto& [id, hook] : refreshHooks_) hook();
     ++terrainRefreshes_;
 }
+
+uint64_t ContactHost::AddRefreshHook(std::function<void()> hook) {
+    const uint64_t id = nextHook_++;
+    refreshHooks_[id] = std::move(hook);
+    return id;
+}
+
+void ContactHost::RemoveRefreshHook(uint64_t id) { refreshHooks_.erase(id); }
 
 void ContactHost::OnRotatingFrameTransition(events::GameEvents::HostTargetAction<CelestialBody*, bool>) { RefreshTerrain(); }
 void ContactHost::OnDominantBodyChange(events::GameEvents::FromToAction<CelestialBody*, CelestialBody*>) { RefreshTerrain(); }

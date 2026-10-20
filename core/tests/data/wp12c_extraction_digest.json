@@ -1,0 +1,14 @@
+{
+ "scenery_colliders.json": "6ac31c614972a323b0f0a368dc0d4c95f3b443e758b3f948f201fbc7dd6a6626",
+ "scenery_meshes.bin": "806f63a7bc1f0460827e9071919af09138a5e71ebc8920af11636600beb1cbc3",
+ "verified": {
+  "cities": 59,
+  "objects": 4463,
+  "colliders": 2585,
+  "meshColliders": 2001,
+  "tagsRewritten": 808
+ },
+ "meshesVerified": 712,
+ "mismatches": 0,
+ "tool": "core/tools/wp12c/verify_scenery_extraction.py"
+}

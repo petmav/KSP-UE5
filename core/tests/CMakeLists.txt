@@ -43,6 +43,8 @@ add_executable(kspcore_tests
     test_physics_world.cpp
     test_vessel_physics.cpp
     test_mu_colliders.cpp
+    test_scenery_colliders.cpp
+    test_scenery_scenarios.cpp
     test_structure.cpp
     test_structure_events.cpp
     test_physics_bubble.cpp
