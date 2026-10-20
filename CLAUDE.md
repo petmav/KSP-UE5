@@ -1,6 +1,6 @@
 # KSP-UE5
 
-Private, local-only project. Nothing here is ever published.
+Personal project. The GitHub repo `petmav/KSP-UE5` is public by the user's decision (2026-10-12, for CI), and the user accepts (2026-10-20) that it publishes everything committed here: the decompilation, the ported code, and data derived from the game's assets (config mirror, extracted collider meshes, captures). The game copy `decompiled/KSP-dev/` itself stays local (gitignored).
 
 ## Decompiled KSP reference (use it)
 
@@ -16,11 +16,11 @@ The main assembly is buildable: `bash decompiled/tools/scripts/build.sh <tag>` r
 
 ## Original game assets (use them)
 
-This private build uses KSP's own assets, not placeholders or re-creations: part meshes (.mu via the PartTools format in the decompile), textures (.dds/.png/.mbm), part and resource .cfg files, planet heightmaps, biome maps, colour maps, scaled-space textures, sounds, fonts, UI sprites, and the Unity asset bundles (extract with AssetStudio or UnityPy; the harness `tools/extract_assets.py` already does this for prefab values). Source of truth is the dev copy at `decompiled/KSP-dev/` (GameData/, KSP_x64_Data/). Load from there at runtime or import from there at build time; never hand-author a substitute for something the game ships. Record each asset's origin path next to where it is consumed. Nothing derived from these assets is ever distributed.
+This private build uses KSP's own assets, not placeholders or re-creations: part meshes (.mu via the PartTools format in the decompile), textures (.dds/.png/.mbm), part and resource .cfg files, planet heightmaps, biome maps, colour maps, scaled-space textures, sounds, fonts, UI sprites, and the Unity asset bundles (extract with AssetStudio or UnityPy; the harness `tools/extract_assets.py` already does this for prefab values). Source of truth is the dev copy at `decompiled/KSP-dev/` (GameData/, KSP_x64_Data/). Load from there at runtime or import from there at build time; never hand-author a substitute for something the game ships. Record each asset's origin path next to where it is consumed. Derived data that tests or CI need may be committed (public, accepted 2026-10-20); bulky staging copies stay in gitignored dirs.
 
 Rules:
 - Cite decompiled files by relative path when explaining KSP behaviour.
-- Do not copy decompiled code into any artefact intended for distribution. This project is private; keep it that way.
+- Do not copy decompiled code into any artefact intended for distribution (builds, releases).
 - Keep all decompilation work inside `decompiled/`.
 - `decompiled/KSP-Decompiled/` must always have `main` checked out and clean, because every agent reads it as the spec. Profiling and capture instrumentation lives on branch `profiling`, checked out in the worktree `decompiled/KSP-Decompiled-profiling/`. Build there (`tools/scripts/build_opt.sh`) and copy the DLL over the symlink target; never switch branches in the main checkout.
 - In-game captures: `harness/captures/` (batch 1: `out/`, batch 2: `out2/`; one-command reruns via `run_capture.sh`). For float32 code paths the captures, not the .NET harness goldens, are truth.
@@ -28,6 +28,7 @@ Rules:
 ## Other files
 
 - `FEASIBILITY.md` — the UE5 port feasibility assessment (2026-10-08).
+- `analysis/tiering/progress.csv` — done fraction (0-1) per work package. Update it in every package PR; on push to main `.github/workflows/progress.yml` publishes it to the public progress page (petmav.github.io/port/, generic names only; the site's script lives in that repo, outside this project).
 
 ## Agent roles and models
 
