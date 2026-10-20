@@ -27,7 +27,9 @@
 //     Update(), oldest event first, at most that many per call (a deterministic count budget, not a time budget).
 //
 // Changed vs KSP (documented, measured in STATUS.md): the collision mesh uses the double vertices (KSP: the float quad mesh);
-// the PhysicMaterial "Ground" values are not extracted yet (friction is a FIXTURE option, 0.6 as in the spike).
+// the PhysicMaterial of the quads (PQSMod_QuadMeshColliders.physicsMaterial: "Ground" 0.9 / 0.9 / 0, Maximum / Minimum combine on Kerbin,
+// Minmus, Moho, Eve, Laythe, Dres; none = Physics.defaultMaterial elsewhere) is `material` (data/scenery, WP-12c); friction / restitution are
+// the body values used when the world does not run PhysX material combining (PhysicsWorldConfig::physxMaterials).
 //
 // Not here: PQSCity / PQSCity2 object colliders (ksp/space_center/city_colliders.hpp), PQS_Collider / PQS_ColliderAdvanced /
 // PQS_PartCollider (never instantiated by any shipped code: only Part.cs destroys a `terrainCollider` that nothing creates),
@@ -66,6 +68,7 @@ struct TerrainCollidersOptions {
     // PhysicMaterial "Ground" is not extracted yet (FIXTURE: the spike's value)
     float friction = 0.6f;
     float restitution = 0.0f;
+    std::shared_ptr<const physics::PhysicMaterialDesc> material;   // WP-12c: null = the world's default material
     // keep the ordered event log (the activation gate)
     bool recordEvents = false;
 };

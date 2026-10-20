@@ -43,6 +43,17 @@ constexpr BodyId kInvalidBody = 0xFFFFFFFFu;
 
 enum class MotionType : uint8_t { Static, Kinematic, Dynamic };
 
+// WP-12c: UnityEngine.PhysicMaterial as PhysX 4.1 combines it (PxMaterial: the pair's friction / restitution follow the combine mode of
+// higher priority, Average < Minimum < Multiply < Maximum). Unity's PhysicMaterialCombine values: Average 0, Multiply 1, Minimum 2, Maximum 3.
+// Jolt has one friction coefficient per contact: the dynamic friction is used (stock Ground and Metal have static == dynamic).
+struct PhysicMaterialDesc {
+    float dynamicFriction = 0.6f;   // Unity's default material (DynamicsManager when m_DefaultMaterial is null)
+    float staticFriction = 0.6f;
+    float bounciness = 0.0f;
+    int frictionCombine = 0;
+    int bounceCombine = 0;
+};
+
 struct ShapeDesc {
     enum class Kind : uint8_t { Box, Sphere, Capsule, ConvexHull };
     Kind kind = Kind::Box;
@@ -51,6 +62,9 @@ struct ShapeDesc {
     float halfHeight = 0.5f;                 // Capsule (half of the cylinder part, along local Y)
     // ConvexHull (WP-mucol: a Unity convex MeshCollider, the hull of the vertices; shared so ShapeDesc stays cheap to copy)
     std::shared_ptr<const std::vector<Vector3f>> hullPoints;
+    // WP-12c: the collider's PhysicMaterial; null = the world's default material (Physics.defaultMaterial). Ignored unless the world
+    // runs PhysicsWorldConfig::physxMaterials.
+    std::shared_ptr<const PhysicMaterialDesc> material;
     static ShapeDesc ConvexHull(std::shared_ptr<const std::vector<Vector3f>> points) { ShapeDesc s; s.kind = Kind::ConvexHull; s.hullPoints = std::move(points); return s; }
     static ShapeDesc Box(Vector3f halfExtents_) { ShapeDesc s; s.kind = Kind::Box; s.halfExtents = halfExtents_; return s; }
     static ShapeDesc Sphere(float radius_) { ShapeDesc s; s.kind = Kind::Sphere; s.radius = radius_; return s; }
@@ -137,6 +151,12 @@ struct PhysicsWorldConfig {
     unsigned maxBodyPairs = 65536;
     unsigned maxContacts = 65536;
     unsigned tempAllocatorBytes = 32u * 1024u * 1024u;
+    // WP-12c: combine the contact pair's friction and restitution as PhysX does (PhysicMaterialDesc), from the materials of the two shapes;
+    // a shape without one has `defaultMaterial` (Physics.defaultMaterial: the PhysicsManager's "Metal" in KSP, see data/scenery). Off (the
+    // default): Jolt's own rule (sqrt(f1 * f2), max(r1, r2)) from the bodies' friction / restitution, as before.
+    bool physxMaterials = false;
+    PhysicMaterialDesc defaultMaterial;
+    float minVelocityForRestitution = -1.0f;  // >= 0: PxSceneDesc.bounceThresholdVelocity (Unity's Physics.bounceThreshold 0.2); < 0: Jolt's 1.0
 };
 
 class PhysicsWorld {
@@ -197,10 +217,10 @@ public:
     // Jolt (counter-clockwise seen from the front), so no flip is made. RemoveBody removes a static body too (and its key).
     // Returns kInvalidBody when the shape cannot be cooked (no valid triangle, logged) or the body limit is reached.
     BodyId AddStaticMesh(uint64_t key, const Vector3d& centre, const std::vector<Vector3f>& vertices, const std::vector<int>& triangles,
-                         float friction = 0.6f, float restitution = 0.0f);
+                         float friction = 0.6f, float restitution = 0.0f, std::shared_ptr<const PhysicMaterialDesc> material = nullptr);
     // A primitive static collider (BoxCollider / SphereCollider / CapsuleCollider of a scenery object).
     BodyId AddStaticShape(uint64_t key, const ShapeDesc& shape, const Vector3d& position, const QuaternionD& rotation,
-                          float friction = 0.6f, float restitution = 0.0f);
+                          float friction = 0.6f, float restitution = 0.0f);   // the material is shape.material
     bool RemoveStatic(uint64_t key);              // false when the key is unknown
     BodyId StaticBody(uint64_t key) const;        // kInvalidBody when unknown
     size_t StaticCount() const;

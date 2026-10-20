@@ -1,6 +1,6 @@
 # KSP-UE5
 
-Private, local-only project. Nothing here is ever published.
+Personal project. The GitHub repo `petmav/KSP-UE5` is public by the user's decision (2026-10-12, for CI), and the user accepts (2026-10-20) that it publishes everything committed here: the decompilation, the ported code, and data derived from the game's assets (config mirror, extracted collider meshes, captures). The game copy `decompiled/KSP-dev/` itself stays local (gitignored).
 
 ## Decompiled KSP reference (use it)
 
@@ -16,11 +16,11 @@ The main assembly is buildable: `bash decompiled/tools/scripts/build.sh <tag>` r
 
 ## Original game assets (use them)
 
-This private build uses KSP's own assets, not placeholders or re-creations: part meshes (.mu via the PartTools format in the decompile), textures (.dds/.png/.mbm), part and resource .cfg files, planet heightmaps, biome maps, colour maps, scaled-space textures, sounds, fonts, UI sprites, and the Unity asset bundles (extract with AssetStudio or UnityPy; the harness `tools/extract_assets.py` already does this for prefab values). Source of truth is the dev copy at `decompiled/KSP-dev/` (GameData/, KSP_x64_Data/). Load from there at runtime or import from there at build time; never hand-author a substitute for something the game ships. Record each asset's origin path next to where it is consumed. Nothing derived from these assets is ever distributed.
+This private build uses KSP's own assets, not placeholders or re-creations: part meshes (.mu via the PartTools format in the decompile), textures (.dds/.png/.mbm), part and resource .cfg files, planet heightmaps, biome maps, colour maps, scaled-space textures, sounds, fonts, UI sprites, and the Unity asset bundles (extract with AssetStudio or UnityPy; the harness `tools/extract_assets.py` already does this for prefab values). Source of truth is the dev copy at `decompiled/KSP-dev/` (GameData/, KSP_x64_Data/). Load from there at runtime or import from there at build time; never hand-author a substitute for something the game ships. Record each asset's origin path next to where it is consumed. Derived data that tests or CI need may be committed (public, accepted 2026-10-20); bulky staging copies stay in gitignored dirs.
 
 Rules:
 - Cite decompiled files by relative path when explaining KSP behaviour.
-- Do not copy decompiled code into any artefact intended for distribution. This project is private; keep it that way.
+- Do not copy decompiled code into any artefact intended for distribution (builds, releases).
 - Keep all decompilation work inside `decompiled/`.
 - `decompiled/KSP-Decompiled/` must always have `main` checked out and clean, because every agent reads it as the spec. Profiling and capture instrumentation lives on branch `profiling`, checked out in the worktree `decompiled/KSP-Decompiled-profiling/`. Build there (`tools/scripts/build_opt.sh`) and copy the DLL over the symlink target; never switch branches in the main checkout.
 - In-game captures: `harness/captures/` (batch 1: `out/`, batch 2: `out2/`; one-command reruns via `run_capture.sh`). For float32 code paths the captures, not the .NET harness goldens, are truth.
@@ -39,9 +39,10 @@ The main session orchestrates (Fable when available; otherwise the strongest mod
 | `implementer` | Sonnet | most work packages: port, gate, tests |
 | `optimizer` | Opus | performance/physics tier, bit-exactness forensics, hard merges, architecture |
 | `classifier` | Haiku | read-only locate/classify/identify questions |
-| `gatekeeper` | Sonnet | verify a finished branch before merge |
 
-Rules: at most 4 concurrent subagents; subagents do not spawn subagents (depth limit set in `.claude/settings.json`); every long task writes progress to a `PROGRESS-*.md`; escalate a package from `implementer` to `optimizer` only after two failed gate attempts.
+There is no reviewer agent (retired 2026-10-20): the implementing agent verifies its own branch (checklist in `implementer.md` / `optimizer.md`), and CI is the merge gate: the build-and-test jobs plus the `review` job (`core/tools/ci/pr_review.py`). Merge a PR when CI is green.
+
+Rules: at most 4 concurrent subagents; subagents do not spawn subagents (depth limit set in `.claude/settings.json`); every long task writes progress to a `PROGRESS-*.md`; escalate a package from `implementer` to `optimizer` only after two failed CI / gate attempts.
 
 ## Cloud sessions (claude.ai/code)
 
