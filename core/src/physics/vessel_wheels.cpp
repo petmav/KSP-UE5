@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cstring>
 #include <limits>
+#include <optional>
 
 #include "ksp/celestial/celestial_body.hpp"
 #include "ksp/celestial/flight_globals.hpp"
@@ -156,6 +157,7 @@ struct WheelPhysicsHost::Saved {
     std::function<std::vector<ColliderProxy>(const Part&)> colliders;
     std::function<Animation*(Part&, const std::string&, const std::string&)> findModelAnimator;
     std::function<void(Animation&)> sampleAnimation;
+    std::function<void(Part&, bool)> setRigidbodyFrozen;
     std::function<std::vector<VesselEnvironment::ColliderPoint>(Part&, const Vector3f&)> colliderClosestPoints;
 };
 
@@ -182,7 +184,12 @@ void WheelPhysicsHost::Install() {
     s.findModelAnimator = WheelModuleEnvironment::findModelAnimator;
     s.sampleAnimation = WheelModuleEnvironment::sampleAnimation;
     s.colliderClosestPoints = Vessel::env.colliderClosestPoints;
+    s.setRigidbodyFrozen = WheelModuleEnvironment::setRigidbodyFrozen;
     WheelModuleEnvironment::scheduler = &scheduler_;
+    WheelModuleEnvironment::setRigidbodyFrozen = [this](Part& p, bool freeze) {
+        if (freeze) frozen_.insert(&p);
+        else frozen_.erase(&p);
+    };
     // PSystemManager.cs:239-245 MaximumSurfaceGeeASL: the largest GeeASL of the system's bodies
     WheelModuleEnvironment::maximumSurfaceGeeASL = [] {
         double m = 0.0;
@@ -269,6 +276,10 @@ void WheelPhysicsHost::Uninstall() {
     WheelModuleEnvironment::findModelAnimator = s.findModelAnimator;
     WheelModuleEnvironment::sampleAnimation = s.sampleAnimation;
     Vessel::env.colliderClosestPoints = s.colliderClosestPoints;
+    WheelModuleEnvironment::setRigidbodyFrozen = s.setRigidbodyFrozen;
+    for (auto& kv : freezes_) bubble_->World().RemoveConstraint(kv.second.id);
+    freezes_.clear();
+    frozen_.clear();
     bubble_->Host().options.massOnly = s.massOnly;
     bubble_->Host().options.colliders = s.colliders;
     FlightScene::hooks.beforeFlightIntegrator = s.beforeFlightIntegrator;
@@ -666,7 +677,85 @@ std::vector<ColliderProxy> WheelPhysicsHost::HubColliders(const Part& part) {
                                     return false;
                                 }),
                  shapes.end());
-    return ProxiesFromShapes(shapes);
+    std::vector<ColliderProxy> out = ProxiesFromShapes(shapes);
+    if (const std::optional<ColliderProxy> si = StandInProxy(part)) out.push_back(*si);
+    return out;
+}
+
+// ModuleWheelBase.toggleRbConstraints (ModuleWheelBase.cs:785): the wheel part Rigidbody is FreezeAll for schloompaTime. The reduced model
+// has one body per rigid cluster with the wheel part welded into it: a frozen wheel part holds its cluster, a weld to the world at the
+// cluster centre of mass (as WP-20e RB anchor), made after the cluster stopped (the freeze only starts below 1e-5 m/s srfSpeed)
+void WheelPhysicsHost::ApplyFreezes() {
+    VesselPhysicsHost& host = bubble_->Host();
+    for (auto& vw : vessels_) {
+        VesselPhysics* vp = host.Find(*vw->vessel_);
+        if (vp == nullptr) continue;
+        int cluster = -1;
+        for (auto& w : vw->wheels_)
+            if (frozen_.count(w->part) != 0) {
+                cluster = vp->ClusterOf(*w->part);
+                break;
+            }
+        auto it = freezes_.find(vp);
+        if (it != freezes_.end() && (cluster < 0 || vp->ClusterBody(static_cast<size_t>(cluster)) != it->second.body)) {
+            bubble_->World().RemoveConstraint(it->second.id);  // unknown ids are ignored (a rebuilt cluster took its constraints with it)
+            freezes_.erase(it);
+            it = freezes_.end();
+        }
+        if (cluster >= 0 && it == freezes_.end()) {
+            const BodyId body = vp->ClusterBody(static_cast<size_t>(cluster));
+            if (body == kInvalidBody) continue;
+            vp->StopMotion();
+            Freeze f;
+            f.body = body;
+            f.id = bubble_->World().CreateFixedToWorldConstraint(body, vp->ClusterCenterOfMass(static_cast<size_t>(cluster)));
+            if (f.id != kInvalidConstraint) freezes_[vp] = f;
+        }
+    }
+    // a binding that is gone drops its weld record (the world removed the constraint with the body)
+    for (auto it = freezes_.begin(); it != freezes_.end();) {
+        bool alive = false;
+        for (const auto& b : host.Bindings()) alive = alive || b.get() == it->first;
+        it = alive ? std::next(it) : freezes_.erase(it);
+    }
+}
+
+// ModuleWheelDeployment.CreateStandInCollider (ModuleWheelDeployment.cs:394): while the wheel is retracted or deploying (Position < TsubSys) a
+// SphereCollider of the wheel collider radius sits at deployTgt.position under the part model; the module keeps it on deployTgt
+std::optional<ColliderProxy> WheelPhysicsHost::StandInProxy(const Part& part) const {
+    auto* d = dynamic_cast<ModuleWheelDeployment*>(const_cast<Part&>(part).FindModuleOfClass("ModuleWheelDeployment"));
+    if (d == nullptr || !d->StandInColliderActive() || d->DeployTarget() == nullptr) return std::nullopt;
+    NativeTransform pt;
+    pt.position = part.partTransform.position;
+    pt.rotation = part.partTransform.rotation;
+    ColliderProxy c;
+    c.kind = ShapeKind::Sphere;
+    c.center = pt.InverseTransformPoint(d->DeployTarget()->position);
+    ModuleWheelBase* b = WheelBaseOf(part);
+    c.radius = b != nullptr ? b->Get<float>("radius") * static_cast<float>(part.fields.rescaleFactor) : 0.1f;  // w.wheelCollider.radius
+    return c;
+}
+
+// The stand-in of a part changed (created, destroyed, or moved with the deploy target): rebuild the cluster shapes from the part states
+// (VesselPhysics::Rebuild keeps the momentum); a moving stand-in is followed in steps of kStandInStep
+void WheelPhysicsHost::UpdateStandIns() {
+    constexpr double kStandInStep = 0.05;
+    for (auto& vw : vessels_) {
+        if (vw->vessel_->packed) continue;
+        VesselPhysics* vp = bubble_->Host().Find(*vw->vessel_);
+        if (vp == nullptr) continue;
+        bool rebuild = false;
+        for (auto& w : vw->wheels_) {
+            const std::optional<ColliderProxy> si = StandInProxy(*w->part);
+            const bool had = w->standInBuilt;
+            if (si.has_value() != had || (si && (Vector3d(si->center) - Vector3d(w->standInCenter)).magnitude() > kStandInStep)) {
+                w->standInBuilt = si.has_value();
+                if (si) w->standInCenter = si->center;
+                rebuild = true;
+            }
+        }
+        if (rebuild && options.modelColliders) vp->Rebuild();
+    }
 }
 
 // Vessel.getLowestPoint scan of a wheel part (Vessel.cs:2589-2637): every non-trigger collider of the part on a layer other than 21 / 16 / 20,
@@ -1024,6 +1113,8 @@ void WheelPhysicsHost::PhysicsStep(float dt) {
     lastSubsteps_ = n;
     const float h = dt / static_cast<float>(n);
     std::vector<std::pair<VesselPhysics*, VesselPhysics::BufferedForces>> held;
+    UpdateStandIns();
+    ApplyFreezes();
     const size_t rebinds0 = host.RebindCount();
     if (n > 1)
         for (const auto& b : host.Bindings()) held.emplace_back(b.get(), b->PeekBufferedForces());

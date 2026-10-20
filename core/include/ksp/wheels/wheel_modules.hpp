@@ -152,6 +152,8 @@ struct WheelModuleEnvironment {
     static inline std::function<IWheelStatusLight*(Part&)> findLightModule;
     // suspensionCollider.enabled = true; part.ScheduleSetCollisionIgnores() (ResetSuspensionCollider's delayed callback)
     static inline std::function<void(Part&)> suspensionColliderEnable;
+    // WP-29d: part.Rigidbody.constraints = FreezeAll / None of ModuleWheelBase.toggleRbConstraints (the brake "schloompa", ModuleWheelBase.cs:785)
+    static inline std::function<void(Part&, bool freeze)> setRigidbodyFrozen;
     // CheatOptions.NoCrashDamage
     static inline bool noCrashDamage = false;
     // FlightGlobals.ActiveVessel == vessel (CheckSubsteps)
@@ -536,6 +538,9 @@ public:
     KFSMEvent *on_deploy = nullptr, *on_deployed = nullptr, *on_retract = nullptr, *on_retracted = nullptr, *on_inoperable = nullptr;
 
     float Position() const;                                  // :139
+    // WP-29d: the host reads the stand-in collider (ModuleWheelDeployment.standInCollider != null) and the deploy target transform
+    bool StandInColliderActive() const { return standInCollider_; }
+    VehiclePhysics::NativeTransform* DeployTarget() const { return deployTgt_; }
     void OnLoad(const ConfigNode& node) override;            // :153
     void OnSave(ConfigNode& node) override;                  // :166
     void OnStart(StartState state) override;                 // :175

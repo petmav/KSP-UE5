@@ -587,3 +587,38 @@ TEST_CASE("WP-29d rover brake and steer with the real wheel models") {
     BrakeCase(RealGeometry(), "REAL");
     SteerCase(RealGeometry(), "REAL");
 }
+
+TEST_CASE("WP-29d the brake schloompa: a braked rover at rest freezes the wheel part (a weld to the world) for schloompaTime, once per brake press") {
+    if (!wp20b::GameAvailable()) return;
+    Run run("Prospector Rover", RealGeometry());
+    run.Ticks(300);  // 6 s: set up and settled (timeSinceLevelLoad > 3 s)
+    CHECK(run.Host().FrozenPartCount() == 0);
+    SetBrakes(run.V(), true);
+    int firstFrozen = -1, released = -1, maxFrozen = 0, welds = 0, frozenTicks = 0;
+    Vector3d posAtFreeze;
+    double driftWhileFrozen = 0.0;
+    for (int k = 0; k < 500; ++k) {
+        run.Tick();
+        const size_t f = run.Host().FrozenPartCount();
+        maxFrozen = std::max(maxFrozen, static_cast<int>(f));
+        if (f > 0 && firstFrozen < 0) {
+            firstFrozen = k;
+            posAtFreeze = run.Com();
+        }
+        if (f > 0) {
+            ++frozenTicks;
+            welds = std::max(welds, static_cast<int>(run.Host().FreezeWeldCount()));
+            driftWhileFrozen = std::max(driftWhileFrozen, (run.Com() - posAtFreeze).magnitude());
+        }
+        if (firstFrozen >= 0 && f == 0 && released < 0) released = k;
+    }
+    MESSAGE("schloompa: frozen at tick " << firstFrozen << " (" << firstFrozen * 0.02 << " s after the brakes), " << frozenTicks * 0.02 << " s frozen, " << maxFrozen
+                                         << " wheel parts, welds " << welds << ", drift while frozen " << driftWhileFrozen * 1e6 << " um, released at tick " << released);
+    CHECK(firstFrozen >= 0);
+    CHECK(maxFrozen == 4);                                  // every braked wheel part freezes (each has its own FixedUpdate)
+    CHECK(welds == 1);                                      // one weld per vessel binding
+    CHECK(frozenTicks * 0.02 == doctest::Approx(2.0).epsilon(0.1));  // schloompaTime = 2 s
+    CHECK(driftWhileFrozen < 1e-6);                         // held
+    CHECK(released > firstFrozen);
+    CHECK(run.Host().FreezeWeldCount() == 0);               // released, and not frozen again while the brakes stay on
+}

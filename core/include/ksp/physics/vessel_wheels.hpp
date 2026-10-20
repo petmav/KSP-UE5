@@ -42,6 +42,8 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <set>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -120,6 +122,8 @@ struct WheelPart {
     };
     std::vector<AnimBinding> animations;
     VehiclePhysics::NativeTransform colliderSet;          // the pose the host last gave the collider host (a module write is a difference)
+    bool standInBuilt = false;                            // the cluster compound holds the part stand-in sphere
+    Vector3f standInCenter;                               // ... at this part-space point
     bool geometryLocked = false;                          // ModuleWheelBase.wheelSetup re-parented the collider transform to the part
     bool started = false;                                // the wheel modules' OnStart ran
     bool nativeOn = false;                               // the PhysX wheel exists (collider enabled)
@@ -186,6 +190,9 @@ public:
     VesselWheels* Find(const Vessel& v) const;
     const std::vector<std::unique_ptr<VesselWheels>>& Vessels() const { return vessels_; }
     CoroutineScheduler& Scheduler() { return scheduler_; }
+    // WP-29d: the wheel parts whose Rigidbody is frozen (ModuleWheelBase.toggleRbConstraints, FreezeAll) and the welds that hold them
+    size_t FrozenPartCount() const { return frozen_.size(); }
+    size_t FreezeWeldCount() const { return freezes_.size(); }
     // the collider the terrain / static geometry hits report (layer 15 "Local Scenery", tag "Untagged", no rigidbody)
     VehiclePhysics::Collider& TerrainCollider() { return terrain_; }
 
@@ -222,6 +229,10 @@ private:
     Animation* FindAnimator(Part& p, const std::string& trf, const std::string& state);
     void SampleAnimation(Animation& a);
     std::vector<ColliderProxy> HubColliders(const Part& part);
+    std::optional<ColliderProxy> StandInProxy(const Part& part) const;      // the retracted gear sphere (ModuleWheelDeployment.standInCollider)
+    void UpdateStandIns();
+    void ApplyFreezes();   // the brake "schloompa": a frozen wheel part holds its cluster (a weld to the world) for the freeze time
+                                                  // rebuild the cluster shapes when a stand-in appears, goes or moves
     std::shared_ptr<mu::PartModelRig> SampledRig(const Part& part) const;   // the rig posed at the part ModuleWheelDeployment state
     // getLowestPoint collider scan for a wheel part (Vessel.cs:2589-2637, VesselEnvironment::colliderClosestPoints)
     std::vector<VesselEnvironment::ColliderPoint> PlacementPoints(Part& part, const Vector3f& measure);
@@ -234,6 +245,12 @@ private:
     std::vector<std::unique_ptr<WheelPart>> dormant_;  // records of wheel parts in no loaded vessel (kept while the Part lives)
     std::map<const Part*, std::unique_ptr<OtherPart>> others_;
     std::vector<PendingForce> pending_;
+    std::set<const Part*> frozen_;
+    struct Freeze {
+        ConstraintId id = kInvalidConstraint;
+        BodyId body = kInvalidBody;
+    };
+    std::map<VesselPhysics*, Freeze> freezes_;
     VehiclePhysics::Collider terrain_;
     CoroutineScheduler scheduler_;
     bool installed_ = false;

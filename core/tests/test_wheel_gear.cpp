@@ -167,15 +167,62 @@ TEST_CASE("WP-29d lander legs: 3 m/s touchdown on Kerbin (no bounce-launch, comp
     CHECK(t.finalSpeed < 0.1);
 }
 
-TEST_CASE("WP-29d diag lander" * doctest::skip(true)) {
+
+namespace {
+std::vector<ModuleWheels::ModuleWheelDeployment*> Deployments(Vessel& v, std::vector<Part*>* parts = nullptr) {
+    std::vector<ModuleWheels::ModuleWheelDeployment*> out;
+    for (Part* p : v.parts)
+        for (size_t i = 0; i < p->Modules().Count(); ++i)
+            if (auto* d = dynamic_cast<ModuleWheels::ModuleWheelDeployment*>(p->Modules()[i])) {
+                out.push_back(d);
+                if (parts) parts->push_back(p);
+            }
+    return out;
+}
+}  // namespace
+
+TEST_CASE("WP-29d lander legs retract and deploy: the animation over the model rig, TsubSys, the stand-in sphere, the wheel on and off") {
     if (!wp20b::GameAvailable()) return;
-    GearRun run("Two-Stage Lander", 1.0, 0.0, RealGeometry(), 0.0, true);
-    std::string s;
-    for (int k = 0; k < 40; ++k) {
-        run.Tick();
-        char b[200];
-        std::snprintf(b, sizeof b, "[%d vz=%.3f low=%.3f gr=%d]", k, run.Vp() ? run.VerticalSpeed() : 0.0, run.Vp() ? run.LowestTyreBottom() : 0.0, run.Vp() ? run.Wheels().GroundedCount() : -1);
-        s += b;
+    GearRun run("Two-Stage Lander", 400.0, 0.0, RealGeometry(), 0.0, true);  // high above the ground: only the legs are under test
+    for (int k = 0; k < 8; ++k) run.Tick();
+    std::vector<Part*> depParts;
+    auto deps = Deployments(run.V(), &depParts);
+    REQUIRE(deps.size() == 4);
+    for (auto* d : deps) {
+        CHECK(d->Position() == doctest::Approx(1.0f));
+        CHECK(!d->StandInColliderActive());
     }
-    MESSAGE(s);
+    auto foot = [&](size_t i) {  // the deploy target in the part frame (the model rig answers in part space)
+        VehiclePhysics::NativeTransform pt;
+        pt.position = depParts[i]->partTransform.position;
+        pt.rotation = depParts[i]->partTransform.rotation;
+        return Vector3d(pt.InverseTransformPoint(deps[i]->DeployTarget()->position));
+    };
+    std::vector<Vector3d> footDeployed;
+    for (size_t i = 0; i < deps.size(); ++i) footDeployed.push_back(foot(i));
+    for (auto* d : deps) d->ActionToggle(KSPActionType::Deactivate);  // the Gear action group: retract
+    bool standIn = false, wheelOffSeen = false;
+    double minPos = 1.0;
+    for (int k = 0; k < 400; ++k) {  // 8 s
+        run.Tick();
+        for (auto* d : deps) {
+            standIn = standIn || d->StandInColliderActive();
+            minPos = std::min(minPos, static_cast<double>(d->Position()));
+        }
+        for (auto& w : run.Wheels().Wheels()) wheelOffSeen = wheelOffSeen || !w->nativeOn;
+    }
+    MESSAGE("retracted: position " << deps[0]->Position() << " (min " << minPos << "), stand-in seen " << standIn << ", wheel off seen " << wheelOffSeen << ", state "
+                                   << deps[0]->Get<std::string>("stateString") << ", foot y " << foot(0).y << " (deployed " << footDeployed[0].y << ")");
+    CHECK(deps[0]->Position() < 0.05f);
+    CHECK(!standIn);  // LT-2 has no useStandInCollider (the LY gear bays do)
+    CHECK(wheelOffSeen);
+    CHECK(deps[0]->Get<std::string>("stateString") == "Retracted");
+    CHECK(foot(0).y > footDeployed[0].y + 0.3);  // the foot came up in the part frame
+    for (auto* d : deps) d->ActionToggle(KSPActionType::Activate);  // deploy again
+    for (int k = 0; k < 400; ++k) run.Tick();
+    MESSAGE("deployed again: position " << deps[0]->Position() << ", state " << deps[0]->Get<std::string>("stateString") << ", foot y " << foot(0).y);
+    CHECK(deps[0]->Position() > 0.95f);
+    CHECK(!deps[0]->StandInColliderActive());
+    CHECK(deps[0]->Get<std::string>("stateString") == "Deployed");
+    CHECK((foot(0) - footDeployed[0]).magnitude() < 0.01);
 }

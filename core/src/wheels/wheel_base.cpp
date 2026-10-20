@@ -492,8 +492,10 @@ void ModuleWheelBase::ToggleRbConstraints(bool freeze) {
         HoldWheelDamage(f32store(fx(schloompaTime) * 1.5));
         WheelModuleEnvironment::Trace("ignoreColliders");
         WheelModuleEnvironment::Trace("rb:FreezeAll");
+        if (WheelModuleEnvironment::setRigidbodyFrozen) WheelModuleEnvironment::setRigidbodyFrozen(*PartPtr(), true);
     } else {
         WheelModuleEnvironment::Trace("rb:None");
+        if (WheelModuleEnvironment::setRigidbodyFrozen) WheelModuleEnvironment::setRigidbodyFrozen(*PartPtr(), false);
         InputLockManager::RemoveControlLock("WheelRBConstraints");
         WheelModuleEnvironment::Trace("lock:remove");
     }
