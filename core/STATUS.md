@@ -70,6 +70,7 @@ un_tests.ps1`
 | 56. WP-29c native WheelCollider and the wheels in the vessel tick (branch `wp29c`, from main `cd5e4df4`) | done for the engine-agnostic part, gated against an independent Python reference (0 ULP) and by scenarios on KSP's stock rovers through the whole tick (no golden or capture covers wheel dynamics, WHEEL-SPIKE.md 5; every existing gate unchanged): the native half of KSP's wheels under the WP-29a/29b managed port, as the spike recommended (option A, not Jolt's WheeledVehicleController). `ksp/wheels/native_wheel_collider.hpp` is UnityEngine.WheelCollider over PhysX 4.1 (the suspension ray, intersectRayPlane's jounce, the travel limit, the spring / damper law projected on the hit normal with KSP's zero gravity, the reaction on a dynamic hit actor, PhysX's tyre axes and slips, Unity's friction curves (inert: KSP sets stiffness 0), motor / brake torque and the wheel spin, steer angle, WheelHit / GetGroundHit / isGrounded / rpm / sprungMass); `ksp/physics/vessel_wheels.hpp` (`WheelPhysicsHost`) runs the managed wheel tick in the module slot of the WP-19b/20d tick and the native step in the physics step (ray against the Jolt world without the own vessel: WP-12b terrain and other vessels; suspension, tyre and travel-limit forces on the wheel parts of the WP-20b cluster, seen by WP-20c as joint loads), welds the wheel parts without collision shapes, and splits a physics-warp tick into 0.02 s substeps for wheeled vessels (the user's decision). Gate: 2,000 synthetic law cases + 400 curve evaluations 0 ULP vs `tools/wp29c/suspension_reference.py`; Prospector Rover / Bug-E Buggy on flat ground: ride height = the law's equilibrium on the analytic ground within 0.2 mm, wheel forces = weight within 0.07 %, 55 s braked drift 0.26 / 0.34 mm, no jitter (rms vz 0.007 / 0.06 mm/s), full-throttle speed at 10 / 20 s within 0.04 % / 0.2 % (Prospector) and 8 % / 2 % (Bug-E) of the C# motor model without slip, braking from 8 m/s 7.38 / 8.30 m (reference 6.09 / 8.04 m), a left turn for KSP's left key at the kinematic yaw rate within 0.4 %; physics warp 2x-4x with substeps = 1x (drift < 0.5 mm, drive identical to 5 digits), without substeps at 4x the rovers drift 2.5 / 12.5 m (the spike's finding); deterministic. Smooth-vs-Lineal tyre curve an explicit switch, UNVERIFIED pending capture C11b. Geometry: the spike's drag-cube proxy (the .mu models were not readable in this session). Also fixes the WP-39 run-alone crash (VesselModuleFactory registers the built-ins). See the WP-29c section |
 | 57. WP-52 Breaking Ground robotics (branch `wp52`, from main `cd5e4df4`) | done for the engine-agnostic part, gated by an independent Python reference at 0 ULP (every existing gate unchanged): `BaseServo` (motor / lock / brake state, the 20-reading rate-of-motion average, power draw, drive target stepping, axis field limits, mass and cost, attach node bookkeeping), `ModuleRoboticServoHinge` / `ModuleRoboticRotationServo` / `ModuleRoboticServoPiston` / `ModuleRoboticServoRotor` (targets, soft / hard limits, traverse-velocity ramp, joint drive configuration, power-loss lock, mirrored / symmetric hinges, rotor spool / brake / ratchet, drag cubes), `ModuleRoboticController` (sequencer: Once / Repeat / PingPong / OnceRestart, direction, action windows, controlled axes / actions with symmetry transfer, persistence), `ControlledAxis` (time -> value curve, presets, helpers), `ControlledAction`, `RoboticControllerManager` (priority-averaged update queue), `ConfigurableJointExtensions.SetTargetRotationLocal`. Joint drive: WP-20b has no articulated bodies, so the servos write a `ConfigurableJointData` (the seam contract), `HeadlessServoPlant` is a documented reference plant (not PhysX), `ServoArticulation` is the `isArticulation` hook (PhysProf-S: 2 clusters, 1 constraint) and `BaseServo` is an `IJointLockState` for `Part.HasFreePivot`. Gate: 92 servo runs x 120 ticks (404,308 comparisons), 60 controller runs (47,854), 80 preset curves (1,799 keys bit for bit, 213 native-evaluated keys at a stated tolerance), 72 joint-rotation cases, 40 drive sets, 27 labelled derived cases; `tests/test_robotics*.cpp` 34 cases / 18,687 assertions. The GameData mirror has no SquadExpansion/Serenity: every servo MODULE value is a labelled synthetic fixture; UI / PAW / audio / FX / `ModuleRobotArmScanner` deferred; see the section below |
 | 58. WP-20e contact, landing and water (branch `wp20e`, from origin/main `cd5e4df4`, main `0d9fd73c` merged) | done for the engine-agnostic part, gated by an independent Python reference at 0 ULP / exact and scenarios against analytic values and KSP's own rules (no golden or capture covers contacts; every existing gate unchanged): `PhysicsWorld` contact events per collider pair (Enter / Stay / Exit, pre-solve kinematics, Unity's 0.01 m contact offset) and a fixed-to-world weld; Part.OnCollisionEnter / Stay / Exit, LandedCollisionChecks, HandleCollision's crash tolerance, checkLanded / checkSplashed, landedAt, explode (Part.cs:3355-3745, :4373); Vessel.AddRBAnchor (the landed anchor) and CheckGroundCollision / getLowestPoint (every WP-mucol collider kind); PartBuoyancy and CollisionEnhancer (whole); `ContactHost` in the bubble (static collider registry, dispatch, buoyancy / enhancer slots, anchors, ground probes, WP-12b terrain colliders hosted per body in the bubble's frame, rebuilt on frame changes). Gate: 20 cases: reference replays HandleCollision 1,200 collisions, 300 message sequences / 3,045 messages, PartBuoyancy 110 parts / 6,300 ticks, CollisionEnhancer 400 parts / 1,404 ticks, AddRBAnchor 90 timelines / 10,200 frames: 0 mismatches; **pad: S / M2-AS / L2-AS anchor after 1.5 s and then rest at exactly zero speed (L2-AS rocked 0.091 m/s without it, WP-20b R2)**, anchor force = weight; ignition releases it, PRELAUNCH -> FLYING; a part at 0.9x / 1.1x crashTolerance survives (LANDED) / explodes; splashdown in Kerbin's ocean floats at KSP's buoyancy equilibrium (draft -0.001 %), SPLASHED, at 20 m/s it crashes; 80 m/s into the terrain is caught by CollisionEnhancer; vessel on vessel (landed with the other's landedAt / both explode); CheckGroundCollision at spawn; Kerbin's PQS colliders hosted per body; determinism 1 / 4 threads; the contact messages of every WP-29c physics-warp substep reach the parts. **SAS / FeedInputFeed not wired**: labelled seam `PhysicsBubble::inputFeed`. See the WP-20e section |
+| 59. WP-52b the joint drive backend of the servos (branch `wp52b`, from main `51530d89`, main `e43c8576` merged) | done for the engine-agnostic part: the servo body (Part.servoRb) is a mass element of the moving side's cluster (rb / servoRb halves, FlightIntegrator.cs:476-480), the servo joint a Jolt hinge / slider with a PositionAndVelocity drive motor reading ConfigurableJointData every step (`UseServoBackend`, `serenity/servo_backend.hpp`), FlightIntegrator's partHasServoRb, the WP-20c loads across the servo. Gated by an independent Python drive-law reference (1.6e-5 / 4.9e-5 relative over 50 runs) and closed loops on a real craft (hinge 4.6e-4 rad and piston 4.3 mm from the reference plant of the same inertia, rotor at rpmLimit under its torque limit, locked servo offset tau / k, loads = the applied load, orbit bubble with the FlightIntegrator, 1 / 4 threads bit-identical). Sign conventions and limit / spring behaviour UNVERIFIED (no capture); servo MODULE values SYNTHETIC. See "WP-52b" below |
 
 ## Test results (main 703e3d6d: all 50 ctest tests pass, measured 2026-10-14; the list below was written at 36 tests, since then added: unit shards, unit.random_order, robotics, wheels.*; all 36 ctest tests pass (35 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience, WP-19a capture.vessel_rails)
 
@@ -6279,7 +6280,7 @@ patch, i.e. keyed static meshes through `PhysicsWorld::AddStaticMesh`, the path 
 
 ## WP-52: Breaking Ground robotics (branch `wp52`, from main `cd5e4df4`)
 
-State: done for the engine-agnostic part; the joint drive is a documented seam (decision below). Scope = `Assembly-CSharp/Expansions/Serenity/` BaseServo.cs,
+State: done for the engine-agnostic part; the joint drive is a documented seam (decision below; WP-52b built its Jolt backend, see "WP-52b"). Scope = `Assembly-CSharp/Expansions/Serenity/` BaseServo.cs,
 ModuleRoboticServoHinge.cs, ModuleRoboticServoPiston.cs, ModuleRoboticServoRotor.cs, ModuleRoboticRotationServo.cs, ModuleRoboticController.cs,
 ControlledAxis.cs, ControlledAction.cs, RoboticControllerManager.cs (7,390 C# lines with ControlledBase / RoboticCollisions / IRoboticServo, which WP-53 had
 ported), plus `ConfigurableJointExtensions.cs`. **No golden or capture covers a servo** (the SquadExpansion servo parts are not installed in the GameData
@@ -6618,3 +6619,140 @@ stops the vessel; `a3787d14` craft touchdown and input-seam scenarios, cite word
 merge with main `ccf3ffc9` (STATUS row 58), getLowestPoint's ClosestPoint over every WP-mucol collider kind, and the verification note; the merge
 with main `0d9fd73c` (WP-29c) with the rover fixture's PartBuoyancy slot off, the contact messages of every substep (event log), the rover
 fixture's crash damage off, and this note.
+
+## WP-52b: the joint drive backend of the servos on the reduced Jolt model (branch `wp52b`, from main `51530d89`; main `e43c8576` merged)
+
+State: done for the engine-agnostic part. Scope = NEXT-STEPS.md "WP-52 robotics", follow-up 1: the servos wrote `ConfigurableJointData` (WP-52) and
+the reduced rigid-body model had only fixed constraints. Now a servo has its own servo body (Part.servoRb), the servo's moving side is a cluster of its
+own, and a Jolt hinge / slider with a drive motor reads the joint data every physics step and moves the moving transform after it:
+`HeadlessServoPlant` is no longer in the loop (it stays as the reference plant of the gate). **Gates**: an independent Python reference of the drive
+law (`tools/wp52b/drive_reference.py`, no kspcore code), closed loops of the four servo kinds on a real two-part craft against the reference plant with
+the same effective inertia and against closed forms, the structural loads across the servo, a physics-bubble scenario with the FlightIntegrator, and
+determinism at 1 / 4 threads. **No capture of a servo exists** (the SquadExpansion parts are not installed): the sign conventions (servo_joint.cpp's
+derivation), the PhysX drive law and its limit / limit-spring behaviour stay **UNVERIFIED**; every servo MODULE value in the tests is a labelled
+SYNTHETIC fixture (no part data was invented). Every existing gate is unchanged (`harness/compare/tolerances.json`, `tests/tolerances_capture.json`
+untouched); a vessel without servo hooks runs exactly the code it ran before (the servo loops are empty).
+
+### What KSP does (the spec)
+
+- BaseServo.CreateServoRigidbody (Expansions/Serenity/BaseServo.cs:1196): a second Rigidbody on the moving transform, `part.servoRb`; each servo's
+  OnJointInit (ModuleRoboticServoHinge.cs:337 and the other three) adds a ConfigurableJoint to the moving GameObject (one axis free / limited, five
+  locked), PostStartInitJoint connects it to `part.Rigidbody` (BaseServo.cs:1158). The parts on the servo's moving nodes are jointed to the servo
+  body (AttachServoRigidBody / NodeRigidBody, BaseServo.cs:1602 / :1627, through PartJoint.SetupJoint).
+- FlightIntegrator.UpdateMassStats (FlightIntegrator.cs:476-480): with a servoRb, `rb.mass = servoRb.mass = num2 / 2f`; Part.ValidateInertiaTensor
+  (Part.cs:4263-4271): both get `inertiaTensor * Max(1, mass)`; FlightIntegrator.Integrate (:728-731): `servoRb.AddForce(integrationAccel,
+  Acceleration)`; UpdateAerodynamics (:2268-2281, :2366-2369): `servoRb.angularDrag = rb.angularDrag`; PartBuoyancy (:550-555, :571-586) the same in water.
+- The drive: positionSpring k, positionDamper c, maximumForce F and the targets (targetRotation / targetPosition / targetAngularVelocity), written by
+  ModuleRoboticServoHinge.cs:442-469, ModuleRoboticRotationServo.cs:445-480, ModuleRoboticServoPiston.cs:396-431, ModuleRoboticServoRotor.cs:465-481 /
+  :637-648; PhysX integrates F = k (xt - x) + c (vt - v), |F| <= F, implicitly (native: UNVERIFIED).
+
+### What is in
+
+| piece | files | what |
+|---|---|---|
+| articulated constraints | `physics/physics_world.hpp`, `src/physics/physics_world.cpp` | `CreateArticulatedConstraint(a, b, desc)`: a Jolt HingeConstraint / SliderConstraint whose zero is the caller's coordinate zero (the bodies read `coordinate0` at creation); `SetArticulatedDrive`: the motor in `PositionAndVelocity` mode with a `StiffnessAndDamping` spring (k, c), the torque / force limit, limits and limit springs (soft when spring > 0); `ArticulatedCoordinate` / `ArticulatedRate`; `GetConstraintImpulse` returns the world impulse on b (the hinge's two-row rotation lambdas rebuilt in the basis HingeRotationConstraintPart derived from the set-up rotations, which Step records); per-joint solver iterations (`velocitySteps`, Jolt's per-constraint override) |
+| servo bodies | `physics/vessel_physics.hpp`, `src/physics/vessel_physics.cpp`, `vessel_physics_internal.hpp` | `VesselPhysicsOptions::servoBody / servoBodyEnd / servoDrive / servoMoved / servoVelocitySteps`, `ServoBodySpec`; the servo body is a mass element (`ServoRec`) of the cluster of what is attached to it (union-find over parts + servo bodies; a servo with nothing attached is a body of its own with a 1 cm sphere); the rb / servoRb mass halves (also in UpdateMassProperties), servoRb's inertia and angular drag (mirrors `SetAngularDrag`); the joint built with the bodies at the servo's current coordinate and kept across autostrut changes; per step the drive before the world step, the coordinate (a hinge's unwrapped) and `servoMoved` after it; ResumeVelocity / Rebuild / Cut / SplitOff / Merge / Rebind carry the servo body's own velocity (`PartPhysicsState::servo*`); the servo joint is not a support (ClusterSupportForce); queries `PartHasServoBody`, `ServoCluster`, `ServoJoint`, `ServoCoordinate`, `ServoRate`, `ServoBodyMass`, `ServoAngularDrag`, `ServoBodyCenterOfMass`, `ServoJointLoad`; `ConstraintCount` counts the servo joints |
+| loads across the servo (WP-20c) | `src/physics/vessel_physics_loads.cpp` | the servo body is a node of the load model; a PartJoint whose end is a servo body uses that node (the PartJoint's Rigidbody is servoRb), so the capacity rule applies to the moving-side parts' joints as to any PartJoint; the servo joint's impulse is an external force / moment on its two nodes (each side balances by itself, also when the two clusters have turned against each other); its load is reported per servo (`ServoJointLoad`; unbreakable, as the C# never sets its breakForce) |
+| the backend | `serenity/servo_backend.hpp`, `src/serenity/servo_backend.cpp` | `ServoDriveLaw`: the one mapping ConfigurableJointData -> 1-DOF drive (rad / m), shared with HeadlessServoPlant; `WriteServoCoordinate` (the moving transform); `ServoBodySpecOf` (part space: servoParentTransform, the moving transform, servoRb.centerOfMass, the coordinate read back with the plant's convention); `ServoBodyEnd` (ServoArticulation's test, refactored in base_servo.cpp to answer which end); `ServoJointDrive`, `ServoJointMoved`, `UseServoBackend(options)` (all hooks + `isArticulation = ServoArticulation`) |
+| the plant | `src/serenity/servo_plant.cpp` | refactored onto ServoDriveLaw / WriteServoCoordinate, arithmetic unchanged (every WP-52 gate passes unchanged) |
+| FlightIntegrator | `src/physics/flight_integrator.cpp` | `AeroRigidbody::partHasServoRb = binding->PartHasServoBody(part)` (FlightIntegrator.cs:2268, flag2) |
+
+A host (the physics bubble included) gets the backend with `UseServoBackend(bubbleOptions.vessel)`: no change to the bubble tick. The servo modules'
+FixedUpdate / Update stay explicit calls (WP-52's host-wiring item); the tests call them at the module slot.
+
+### Gate, the drive law (`tests/test_servo_backend.cpp`, 3 cases; `tools/wp52b/drive_reference.py` -> `tests/data/wp52b_reference.json`, seed 5252)
+
+| case | what | result |
+|---|---|---|
+| coordinate and locks | a hinge / slider reads its creation coordinate (0, 0.7, -2.5); a +axis spin reads as a positive rate; pushes across the axis are held | to 1e-6; locked rates < 1e-3 rad/s, pivot drift < 1 mm |
+| **drive law** | the 28 reference cases (12 position drives, 6 MoveTowards ramps, 6 torque-limited velocity drives = the rotor, 4 holds against a load) as hinge and as slider on a body with the axis through its centre of mass (50 runs of 200-400 steps) against the Python implicit D6 law v1 = (v0 + dt/I (k (xt - x0) + c vt + L)) / (1 + dt/I (c + dt k)) with the force clamp | worst relative \|dx\| **1.6e-5**, \|dv\| **4.9e-5** (Jolt's float velocities; gate 2e-4); the analytic markers: ramp lag c / k * rate (5 %), torque-limited spool time I vt / F (3 %), hold offset L / k (0.1 %) |
+| solver characterisation | a velocity drive on a body hinged 2.4 m from its centre of mass | the steady rate falls short by 0.0028 rad/s of 3.14 (predicted m r^2 w (1 - cos w dt) / (c dt) = 0.0032; gate 20 %); 0 without the arm (Findings) |
+
+Jolt's PositionAndVelocity motor solves J v + s lambda + b = 0 with s = 1 / (dt (c + dt k)), b = -vt + dt k s C: the implicit law above with the target
+extrapolated by vt dt, i.e. the same law for the hinge / rotation servo / piston (vt = 0) and different by k dt vt for the rotor (k = 1e-10: nil).
+
+### Gate, closed loops (`tests/test_servo_scenarios.cpp`, 7 cases)
+
+The craft: the first two parts of PhysProf-S, a probeStackLarge root carrying the SYNTHETIC servo module with its "bottom" node on the moving side, a
+full Rockomax32 (18.25 t with the servo body) on it; the root's cluster welded to the world unless noted.
+
+| case | what | result |
+|---|---|---|
+| servo split | clusters, joints, masses | 2 clusters, 1 articulated joint, the tank on the servo body's cluster; rb.mass = servoRb.mass = num2 / 2f exactly; the cluster masses sum to the rb masses (1e-12); with `isArticulation` only (WP-52) still the welded split |
+| **hinge to a target** | targetAngle 40 deg at traverseVelocity 10 deg/s (k 1e4, c 2e3, F 100 kN m from the hinge's formulas); I_eff = 107.2 t m^2 (the moving side about the axis through the anchor) vs HeadlessServoPlant with that inertia | worst \|Jolt - plant\| **4.6e-4 rad** at the production iterations (50), **3.0e-5 rad** at 200; settles on 40 deg (0.1 %); ramp lag 0.03493 rad vs c / k * rate = 0.03491; the module's Transform angle = the joint coordinate (1e-3 deg) |
+| **piston extension** | targetExtension 1.5 m at 0.5 m/s, M = 18.25 t vs the plant | worst \|Jolt - plant\| **4.3 mm** at 50 iterations (the axis passes 2.4 m from the tank's centre of mass), **0.5 mm** at 200; extension 1.5 m (0.1 %); the tank moved 1.500 m along the axis, < 1 mm across it |
+| **rotor at rpm** | rpmLimit 30, maxTorque 40 x 2.5 = 100 kN m, damper 1e4 (SYNTHETIC: the torque limit binds), mainAxis Y (through the tank's centre of mass), I_eff 19.9 t m^2 | torque-limited spool-up: the rate at 0.2 s = tau / I * 0.2 (0.5 %); worst \|Jolt - plant\| 3.5e-3 rad/s (0.11 % of 3.14, at the corner where the limit lets go; gate 0.2 %); steady **3.14159 rad/s = rpmLimit** (1e-4), the module measures 30 rpm, IsMoving; with Unity's angularDrag 0.05 on rb and servoRb: steady 3.14128 = vt c / (c + d I_own) (2e-5); free floating: the base counter-rotates, total angular momentum **4.9e-7 of I w = 62.5** |
+| **locked servo** | after EngageServoLock, a constant 24.39 kN load on the tank's centre of mass across the axis (50 kN m about it), 1,500 ticks, Tree solve | offset **0.004993 rad = tau / k (0.005)**; the tank's attach joint (to the servo body) carries **24.3902 kN** = the load, the servo joint 24.3902 kN along the load; the tank joint's capacity ratio is computed (WP-20c's rule) |
+| physics bubble | the craft in a 120 km Kerbin orbit in the WP-19b bubble with WP-20d's FlightIntegrator and `UseServoBackend(options.vessel)` | servoRb.angularDrag = rb.angularDrag after the FlightIntegrator (not the default 0.05); the servo body falls with the rest (integrationAccel on servoRb): the servo joint force stays 0 (gate < 1 % of servoRb.mass g = 1.70 kN), the hinge at its angle; the load solve ran every tick |
+| determinism | the hinge closed loop at 1 and 4 Jolt threads | identical `StateHash` and coordinate |
+
+### Measurements (MSVC RelWithDebInfo, one thread, Flush + Step + AfterStep, no FlightIntegrator; a temporary bench, removed)
+
+| craft | parts | whole | welded split (WP-52) | servo joint, world iterations (10) | servo joint, 50 (default) |
+|---|---|---|---|---|---|
+| PhysProf-S head | 2 | 0.0052 ms | 0.0068 ms | 0.0088 ms | 0.0085 ms |
+| PhysProf-L2-AS (the servo on the root) | 457 | 0.100 ms | 0.121 ms | 0.134 ms | 0.129 ms |
+
+A servo joint costs ~0.01 ms per tick over a weld; the 50 iterations of a servo's island are within the noise (a vessel is a handful of bodies).
+
+### Exact / approximate / changed
+
+| choice | class | notes |
+|---|---|---|
+| rb / servoRb masses, inertia tensors, servoRb angular drag, integrationAccel on servoRb | exact | FlightIntegrator.cs:476-480, Part.cs:4263-4271, FlightIntegrator.cs:728-731 / :2268-2281 / :2366-2369 |
+| which attach joints ride on the servo body | exact | ServoArticulation's test (AttachServoRigidBody / NodeRigidBody), unchanged |
+| the drive law | approximate | Jolt's soft constraint = the implicit D6 law (2e-4 relative, float); its Gauss-Seidel coupling with the locked axes converges with the iterations (50 per servo island: 4.6e-4 rad / 4.3 mm on the 18 t arm; 200: 3e-5 rad / 0.5 mm) |
+| the hinge's target clamped to its limits | changed | Jolt's HingeConstraint::SetTargetAngle clamps; PhysX's drive pushes into the limit: the same rest pose, a different load at the stop |
+| a hinge range that excludes 0 | changed | Jolt's hinge limits must hold 0 (SetLimits): the range is widened to 0 (only a quirk configuration has it) |
+| limit springs | approximate | soft when the spring > 0 (PhysX's SoftJointLimitSpring) in the backend, hard in the plant; a vanishing spring (0 < spring <= 1e-8: the rotation servo's full rotation, the rotor) is no limit in both (ServoDriveLaw) |
+| connectedMassScale | not modelled | BaseServo.cs:1159 (default 1: exact at the default) |
+| a servo body with nothing attached | approximate | a body of its own with a 1 cm sphere at its centre of mass: the moving mesh's colliders (ServoTransformCollider) stay the part's proxies on the part's cluster |
+| PartBuoyancy's servoRb.drag (linear) | not wired | PartBuoyancy.cs:555 / :592 / :611 / :623: the port has no servoRb branch; servoRb.angularDrag follows rb's |
+| the servo joint in the load model | reduced model | an external force on both of its nodes, not an element: no capacity (the C# never sets its breakForce), each side balanced by itself |
+
+### Findings (a later implementer must know)
+
+- **A velocity-level solver dissipates rotation about an off-centre pivot**: the first-order step moves the centre of mass along the old tangent and
+  the point constraint removes the radial part, so the tangential speed loses (1 - cos(w dt)) per step. A rotor turning an 18 t tank 2.4 m off its
+  axis at 3 rad/s loses ~30 kN m (characterised in `test_servo_backend.cpp`); PhysX in KSP solves at the same level, so KSP's servos see the same kind
+  of loss (magnitude UNVERIFIED). The rotor scenario therefore spins the tank about its own axis.
+- **A light body welded to the world between a heavy arm and the anchor converges badly** (mass ratio 72:1: the halved probe core under the 18 t
+  tank): the plant comparisons hold because the arm is slow; a fast rotor on such a base overshot its rate by 0.16 % at any iteration count. Real
+  craft put servos between comparable masses; the RB anchor of a landed vessel (WP-20e) is such a weld.
+- A servo test fixture must install the resource host BEFORE the servo module is added (`AddServo` / OnStart raise a NullReference otherwise).
+
+### UNVERIFIED (no capture)
+
+The sign convention between targetRotation / targetPosition / targetAngularVelocity and the physical coordinate (servo_joint.cpp's derivation, now
+also the orientation of the backend's hinge / slider: + coordinate = the servo body turned about / moved along +GetMainAxis() in the joint parent's
+frame), PhysX's D6 drive law and its limit / limit-spring behaviour, the Unity ConfigurableJoint defaults. A capture of one hinge, one piston and one
+rotor (target steps, the ConfigurableJoint drive values, the Transform angle / position per fixed tick, servoRb.velocity) closes them.
+
+### Deferred
+
+- The servo modules' FixedUpdate / Update in the bubble's module slot (WP-52's host-wiring item; the tests call them; the module-slot work of the
+  FeedInputFeed / gimbal package is the natural place).
+- PartBuoyancy's servoRb.drag; the moving mesh's own colliders (needs the servo part models: SquadExpansion); `connectedMassScale` != 1.
+- Real servo part data (SquadExpansion not installed): every MODULE value stays a SYNTHETIC fixture.
+
+### Unit tests
+
+`tests/test_servo_backend.cpp` (3 cases) + `tests/test_servo_scenarios.cpp` (7 cases) = 10 cases (the `robotics` ctest runs them with WP-52's,
+`-tc=WP-52*`).
+
+### Verification
+
+Windows MSVC RelWithDebInfo, `core/build` deleted and `run_tests.ps1 -Fresh` (`CMAKE_BUILD_PARALLEL_LEVEL=4`, four agents building at once, so the
+build time is slow), after merging main `e43c8576` (docs / CI only): configure 5.4 s, build 731.9 s, ctest 244.2 s, **49 / 49 pass** (incl. `robotics`,
+`unit.random_order.{11,27,42}`, the shards). `kspcore_tests` whole suite, default order and `--order-by=rand -rs=11` / `-rs=27`: **1,033 / 1,033 cases,
+1,599,617 assertions each, all green** (the WP-52b cases 10, WP-52 34 unchanged, WP-20b/c/d/e, WP-19b, WP-29c unchanged). `check_cites.py` exact over the
+touched sources, headers and tests: 105 cites, 0 mismatches. g++ 13.3 (WSL) `-std=c++20 -Wall -Wextra -fsyntax-only` over servo_backend, servo_plant,
+base_servo, vessel_physics, vessel_physics_loads, flight_integrator, physics_world (with the Jolt AVX2 / double defines) and the two new test files:
+no error; the only warning is the pre-existing `Part::DrainFuel` unused parameter. The reference JSON regenerates byte-identically
+(`python -I core/tools/wp52b/drive_reference.py`, sha256 prefix f65346bd8da35550). Not run: the ASan / UBSan run on Linux (CI covers clang / gcc).
+
+### Commits (branch `wp52b`, from main `51530d89`)
+
+`47cea203` the backend (articulated constraints, servo bodies, loads, serenity backend, FlightIntegrator flag, the Python drive-law reference, the
+scenario gates); `445d842f` merge of main `e43c8576`; then the documentation commit (STATUS section and row 59, README rows,
+`analysis/tiering/progress.csv` WP-52 0.75 -> 0.85, `core/PROGRESS-wp52b.md`).
