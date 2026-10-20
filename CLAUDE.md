@@ -39,9 +39,10 @@ The main session orchestrates (Fable when available; otherwise the strongest mod
 | `implementer` | Sonnet | most work packages: port, gate, tests |
 | `optimizer` | Opus | performance/physics tier, bit-exactness forensics, hard merges, architecture |
 | `classifier` | Haiku | read-only locate/classify/identify questions |
-| `gatekeeper` | Sonnet | verify a finished branch before merge |
 
-Rules: at most 4 concurrent subagents; subagents do not spawn subagents (depth limit set in `.claude/settings.json`); every long task writes progress to a `PROGRESS-*.md`; escalate a package from `implementer` to `optimizer` only after two failed gate attempts.
+There is no reviewer agent (retired 2026-10-20): the implementing agent verifies its own branch (checklist in `implementer.md` / `optimizer.md`), and CI is the merge gate: the build-and-test jobs plus the `review` job (`core/tools/ci/pr_review.py`). Merge a PR when CI is green.
+
+Rules: at most 4 concurrent subagents; subagents do not spawn subagents (depth limit set in `.claude/settings.json`); every long task writes progress to a `PROGRESS-*.md`; escalate a package from `implementer` to `optimizer` only after two failed CI / gate attempts.
 
 ## Cloud sessions (claude.ai/code)
 
