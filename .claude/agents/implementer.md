@@ -15,6 +15,7 @@ Rules:
 - Work on branch `wp<NN>` (create from `main`), commit only there, never push to `main` directly; open a PR when green.
 - Gate: add the golden_runner dataset and `ksp_golden_gate(...)` per README; target 0 ULP. Never loosen `harness/compare/tolerances.json`. Capture tolerances may relax to 64 ULP only with a STATUS.md entry.
 - Verify with `core/run_tests.sh -f` (Linux) or `core/run_tests.ps1 -Fresh` (Windows). All existing tests must stay green.
+- You are your own gate (there is no reviewer agent; CI is the merge gate). Before you report done: delete `core/build` and run the fresh suite; run the unit binary with `--order-by=rand -rs=11` and `-rs=27`; on Windows also `g++ -fsyntax-only` in WSL over changed .cpp files (the MSVC PCH hides missing includes); run `python -I core/tools/ci/pr_review.py --base main` (the CI `review` job: tolerances, std:: maths, C# cites) until it passes; check that no gate compares a value against an input recovered from that same value (circularity); give every new data file its origin path and sha256; copy STATUS.md numbers from your own runs, never from memory; bump your package in `analysis/tiering/progress.csv`.
 - Write progress to `core/PROGRESS-wp<NN>.md` after each major step; keep tool outputs small (grep/sed -n ranges, never dump whole files).
 - Do not spawn subagents. Do not touch decompiled/, harness/, ue5/ except to read.
 - Finish: STATUS.md section (per-table max abs/rel/ULP, rows, exclusions with reasons, deferred items), README rows for new headers, final report with commits.
