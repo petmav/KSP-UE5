@@ -68,6 +68,8 @@ add_executable(kspcore_tests
     test_robotics_derived.cpp
     test_robotics_behaviour.cpp
     test_robotics_controller_derived.cpp
+    test_servo_backend.cpp
+    test_servo_scenarios.cpp
     test_fineprint.cpp
     test_fineprint2.cpp
     test_fineprint3.cpp
