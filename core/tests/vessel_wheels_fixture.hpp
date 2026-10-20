@@ -37,7 +37,11 @@ inline WheelPhysicsOptions RealGeometry(WheelPhysicsOptions o = {}) {
     return o;
 }
 
-inline std::string StockCraftPath(const std::string& name) { return std::string(KSPCORE_HARNESS_DIR) + "/inputs/Ships/SPH/" + name + ".craft"; }
+inline std::string StockCraftPath(const std::string& name) {  // the SPH craft, else the VAB ones (the lander)
+    const std::string sph = std::string(KSPCORE_HARNESS_DIR) + "/inputs/Ships/SPH/" + name + ".craft";
+    if (std::filesystem::exists(sph)) return sph;
+    return std::string(KSPCORE_HARNESS_DIR) + "/inputs/Ships/VAB/" + name + ".craft";
+}
 
 struct LoadedRover {
     std::unique_ptr<Vessel> vessel;
@@ -151,7 +155,7 @@ struct RoverScene {
     }
     // the rover on the pad, its craft up along the local vertical, its drive direction `headingDeg` from north, the lowest proxy point
     // `clearance` above the ground (the wheels at full extension touch it at 0); then as wp20d::PadScene::Place (landed, packed, orbit driver)
-    void Place(const LoadedRover& r, double headingDeg = 0.0, double clearance = 0.0) {
+    void Place(const LoadedRover& r, double headingDeg = 0.0, double clearance = 0.0, bool airborne = false) {
         Vessel& v = *r.vessel;
         CelestialBody& kerbin = w.Kerbin();
         const Vector3d upC = Vector3d(r.craftUp).normalized(), fwdC = Vector3d(r.craftFwd).normalized();
@@ -176,9 +180,9 @@ struct RoverScene {
         v.SetRotation(rot.ToQuaternionf(), true);
         const Vector3d rootWorld = pad.padWorld + pad.padUp * (clearance - minY);
         v.SetPosition(rootWorld, true);
-        v.Landed = true;
+        v.Landed = !airborne;  // airborne: a drop (WP-29d), no landed placement (Vessel.CheckGroundCollision) moves it to the ground
         v.Splashed = false;
-        v.situation = Vessel::Situations::PRELAUNCH;
+        v.situation = airborne ? Vessel::Situations::FLYING : Vessel::Situations::PRELAUNCH;
         kerbin.GetLatLonAlt(Vector3d(v.vesselTransform.position), v.latitude, v.longitude, v.altitude);
         v.srfRelRotation = QuaternionExtensions::Inverse(kerbin.rotation.ToQuaternionf()) * v.vesselTransform.rotation;
         v.localCoM = wp19b::VesselFrameCom(v).ToVector3f();

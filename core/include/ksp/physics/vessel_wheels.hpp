@@ -222,6 +222,9 @@ private:
     Animation* FindAnimator(Part& p, const std::string& trf, const std::string& state);
     void SampleAnimation(Animation& a);
     std::vector<ColliderProxy> HubColliders(const Part& part);
+    std::shared_ptr<mu::PartModelRig> SampledRig(const Part& part) const;   // the rig posed at the part ModuleWheelDeployment state
+    // getLowestPoint collider scan for a wheel part (Vessel.cs:2589-2637, VesselEnvironment::colliderClosestPoints)
+    std::vector<VesselEnvironment::ColliderPoint> PlacementPoints(Part& part, const Vector3f& measure);
     OtherPart* OtherPartFor(VesselPhysics& owner, uint32_t partIndex);
     bool AnyWheelSetUp() const;
     VehiclePhysics::NativeTransform* FindModelTransform(Part& p, const std::string& name);

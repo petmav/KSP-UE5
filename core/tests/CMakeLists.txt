@@ -44,6 +44,7 @@ add_executable(kspcore_tests
     test_vessel_physics.cpp
     test_mu_colliders.cpp
     test_wheel_models.cpp
+    test_wheel_gear.cpp
     test_structure.cpp
     test_structure_events.cpp
     test_physics_bubble.cpp
@@ -166,6 +167,8 @@ set_tests_properties(wheels.modules PROPERTIES LABELS unit TIMEOUT 900)
 # integration, the physics-warp substeps and the rover scenarios
 add_test(NAME wheels.native COMMAND kspcore_tests "-tc=WP-29c*")
 set_tests_properties(wheels.native PROPERTIES LABELS unit TIMEOUT 900)
+add_test(NAME wheels.geometry COMMAND kspcore_tests "-tc=WP-29d*")
+set_tests_properties(wheels.geometry PROPERTIES LABELS unit TIMEOUT 1800)
 # WP-52: Breaking Ground robotics (servos, controller) against the independent Python reference (tools/wp52/servo_reference.py): 0 ULP
 add_test(NAME robotics COMMAND kspcore_tests "-tc=WP-52*")
 set_tests_properties(robotics PROPERTIES LABELS unit TIMEOUT 900)
