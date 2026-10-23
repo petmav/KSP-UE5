@@ -144,6 +144,9 @@ add_library(kspcore STATIC
     fineprint/compatibility.cpp
     fineprint/prebuilt.cpp
     fineprint/construction_templates.cpp
+    fineprint/space_objects.cpp
+    fineprint/discoverable_objects.cpp
+    fineprint/prebuilt_spawn.cpp
     contracts/parameters.cpp
     contracts/predicates.cpp
     contracts/module_test_subject.cpp

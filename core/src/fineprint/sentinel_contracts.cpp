@@ -55,8 +55,8 @@ int RoundI(float f) { return Mathf::RoundToInt(f); }
 SentinelParameter::SentinelParameter() {
     FocusBody = Home();
     ScanType = SentinelScanType::NONE;
-    if (SentinelEnvironment::discoverableObjects.has_value())
-        TargetSize = SentinelEnvironment::discoverableObjects->maxAsteroidClass;
+    if (SentinelEnvironment::GetDiscoverableObjects().has_value())
+        TargetSize = SentinelEnvironment::GetDiscoverableObjects()->maxAsteroidClass;
     else
         TargetSize = static_cast<UntrackedObjectClass>(9 - 1);  // Enum.GetNames(typeof(UntrackedObjectClass)).Length - 1
     MinimumEccentricity = 0.0;
@@ -165,7 +165,7 @@ bool SentinelContract::Generate() {
         generator = std::make_unique<KSPRandom>(seed);
         float num4 = 1.0f;
         SentinelScanType sentinelScanType = SentinelScanType::NONE;
-        UntrackedObjectClass untrackedObjectClass = SentinelEnvironment::discoverableObjects.has_value() ? SentinelEnvironment::discoverableObjects->maxAsteroidClass
+        UntrackedObjectClass untrackedObjectClass = SentinelEnvironment::GetDiscoverableObjects().has_value() ? SentinelEnvironment::GetDiscoverableObjects()->maxAsteroidClass
                                                                                                           : static_cast<UntrackedObjectClass>(9 - 1);
         double num5 = 0.0;
         double num6 = 0.0;
