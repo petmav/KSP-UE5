@@ -271,3 +271,45 @@ TEST_CASE("WP-29d landed placement: the lander is put on the ground by its foot 
     CHECK(run.Wheels().GroundedCount() == 4);
 }
 
+
+TEST_CASE("WP-21b probe VTOL attitude") {
+    if (!wp20b::GameAvailable()) return;
+    GearRun run("Rocket-power VTOL", 3000.0, 0.0, RealGeometry(), 0.0, true);
+    Vessel& v = run.V();
+    const auto angle = [](const Quaternionf& a, const Quaternionf& b) {
+        return 2.0 * std::acos(std::min(1.0, std::fabs(static_cast<double>(a.x) * b.x + static_cast<double>(a.y) * b.y + static_cast<double>(a.z) * b.z + static_cast<double>(a.w) * b.w))) * 57.29578;
+    };
+    Vector3d prevUp[4], firstUp[4];
+    for (int k = 0; k < 10; ++k) {
+        run.Tick();
+        std::string line;
+        int wi = 0;
+        for (auto& w : run.Wheels().Wheels()) {
+            const Part& p = *w->part;
+            const Quaternionf expect = v.vesselTransform.rotation * p.fields.orgRot;
+            const Vector3d wup(w->lastGeometry.up);
+            const Vector3d eup = Vector3d(p.partTransform.rotation * (w->geometry.rotation * Vector3f(0.0f, 1.0f, 0.0f)));
+            const double ang = std::acos(std::clamp(Vector3d::Dot(wup.normalized(), eup.normalized()), -1.0, 1.0)) * 57.29578;
+            const double dAng = std::acos(std::clamp(Vector3d::Dot(wup.normalized(), prevUp[wi].normalized()), -1.0, 1.0)) * 57.29578;
+            prevUp[wi++] = wup;
+            line += " [dWorldUp " + std::to_string(dAng).substr(0, 6) + " partRot-vs-vesselRot*orgRot " + std::to_string(angle(p.partTransform.rotation, expect)).substr(0, 5) + " colliderUp-vs-part*geometry " + std::to_string(ang).substr(0, 6) + " grounded " + std::to_string(w->last.grounded) + " colliderHost.up.dot(geom.up) " + std::to_string(Vector3d::Dot(Vector3d(w->colliderHost.rotation * Vector3f(0, 1, 0)), eup)).substr(0, 6) + "]";
+        }
+        {
+            std::string all;
+            int wi2 = 0;
+            for (auto& wx : run.Wheels().Wheels()) {
+                const Vector3d u(wx->geometry.rotation * Vector3f(0, 1, 0));
+                if (k == 0) firstUp[wi2] = u;
+                all += " w" + std::to_string(wi2) + ":" + std::to_string(std::acos(std::clamp(Vector3d::Dot(u, firstUp[wi2]), -1.0, 1.0)) * 57.29578).substr(0, 5) + "deg";
+                ++wi2;
+            }
+            MESSAGE("tick " << k << " collider up vs tick 0:" << all);
+            auto& w0 = run.Wheels().Wheels().front();
+            const Vector3d gu(w0->geometry.rotation * Vector3f(0, 1, 0)), gf(w0->geometry.rotation * Vector3f(0, 0, 1));
+            MESSAGE("tick " << k << " wheel0 part-space collider up " << gu.x << "," << gu.y << "," << gu.z << " fwd " << gf.x << "," << gf.y << "," << gf.z << " pos " << w0->geometry.position.x << "," << w0->geometry.position.y << "," << w0->geometry.position.z
+                            << " started " << w0->started << " colliderNode " << w0->colliderNode << " nativeOn " << w0->nativeOn);
+        }
+        VesselPhysics* vp = run.Vp();
+        MESSAGE("tick " << k << " vp " << (vp != nullptr) << " packed " << v.packed << " vesselRot " << v.vesselTransform.rotation.x << "," << v.vesselTransform.rotation.y << "," << v.vesselTransform.rotation.z << "," << v.vesselTransform.rotation.w << " omega " << (vp ? 0.0 : 0.0) << line);
+    }
+}

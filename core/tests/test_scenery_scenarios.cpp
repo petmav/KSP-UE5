@@ -15,7 +15,18 @@
 
 #include "contact_fixture.hpp"
 #include "doctest/doctest.h"
+#include "ksp/aero/lifting_surface.hpp"
+#include "ksp/input/flight_input_handler.hpp"
+#include "ksp/input/game_settings.hpp"
+#include "ksp/modules/module_resource_intake.hpp"
+#include "ksp/save/crew.hpp"
+#include "ksp/save/game.hpp"
+#include "ksp/save/game_parameters.hpp"
+#include "ksp/space_center/high_logic.hpp"
+#include "ksp/space_center/scene_drivers.hpp"
+#include "ksp/vessel/vessel_autopilot.hpp"
 #include "ksp/physics/scenery_host.hpp"
+#include "ksp/physics/wheel_models.hpp"
 #include "ksp/space_center/pqs_city.hpp"
 #include "ksp/space_center/scenery_colliders.hpp"
 #include "ksp/terrain/pqs.hpp"
@@ -381,4 +392,224 @@ TEST_CASE("WP-29d runway roll on the real KSC runway collider (line held, headin
     CHECK(maxLateral < 0.02 * along);
     CHECK(maxHeading < 1.5);
     CHECK(v.landedAt.find("Runway") != std::string::npos);
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------------------
+// WP-21b: a stock aircraft on the real KSC runway (WP-12c collider) with WP-29d's gear geometry: the Aeris 3A (3 x LY-01 SmallGearBay, one
+// turbojet, an intake fuselage, delta wings with elevons) set down at the 09 threshold facing east.
+namespace {
+
+const physics::WheelModelLibrary& AeroLibrary() {
+    static const physics::WheelModelLibrary lib(std::string(KSPCORE_DATA_DIR) + "/aero_models");
+    return lib;
+}
+
+// The flight scene's input side (tests/test_flight_input_feed.cpp InputScene): GameSettings at their defaults, HighLogic.LoadedSceneIsFlight, the
+// scene's FlightInputHandler (FixedUpdate by the bubble), a sandbox Game (VesselAutopilot's skill rule reads HighLogic.CurrentGame)
+struct AircraftInput {
+    PhysicsBubble* bubble;
+    FlightInputHandler fih;
+    Game game;
+    explicit AircraftInput(PhysicsBubble& b) : bubble(&b) {
+        GameSettings::SetDefaultValues();
+        HighLogic::LoadedSceneIsFlight = true;
+        FlightDriver::pause = false;
+        FlightInputHandler::host = FlightInputHost{};
+        Time::deltaTime = Time::fixedDeltaTime;  // Time.deltaTime inside FixedUpdate
+        fih.Awake();
+        fih.Start();
+        game.Mode = Game_Modes::SANDBOX;
+        game.CrewRoster = std::make_shared<KerbalRoster>(Game_Modes::SANDBOX);
+        SaveEnvironment::Current().currentGame = &game;
+        b.SetFlightInputHandler(&fih);
+    }
+    ~AircraftInput() {
+        bubble->SetFlightInputHandler(nullptr);
+        fih.OnDestroy();
+        FlightInputHandler::fetch = nullptr;
+        FlightInputHandler::state = FlightCtrlState();
+        FlightInputHandler::host = FlightInputHost{};
+        HighLogic::LoadedSceneIsFlight = false;
+        SaveEnvironment::Current().currentGame = nullptr;
+    }
+};
+
+// The stick: an OnFlyByWire callback (Vessel.FeedInputFeed's last callback, the way the C10 capture sets its throttle, HarnessCapture2Flight.cs:332)
+// writing the pilot's pitch / yaw / roll after FlightInputHandler's own axis reading (which has no input device here)
+struct Pilot {
+    float pitch = 0.0f, yaw = 0.0f, roll = 0.0f;
+    void Fbw(FlightCtrlState& s) {
+        s.pitch = pitch;
+        s.yaw = yaw;
+        s.roll = roll;
+    }
+};
+
+struct AircraftRun {
+    World w;
+    wp29c::LoadedRover r;
+    std::unique_ptr<wp29c::RoverScene> scene;
+    SceneryLevels lv;
+    std::unique_ptr<SceneryCityHost> host;
+    std::unique_ptr<AircraftInput> input;
+    Pilot pilot;
+    Vector3d up, east, north, hit, hitPhys;  // hitPhys: the runway point in the physics frame (the world frame shifts with the floating origin)
+    double runwayRadius = 0.0;  // |runway point - Kerbin centre|: the world frame shifts with the floating origin, a radius does not
+    explicit AircraftRun(const std::string& craft, double clearance = 0.0, bool airborne = false, double headingDeg = 90.0) {
+        r = wp29c::LoadRover(w, craft);
+        // the nose direction in the vessel frame: from the engine to the root cockpit, on the ground plane
+        {
+            Vessel& v = *r.vessel;
+            Vector3d ePos, rPos(v.parts.front()->fields.orgPos);
+            for (Part* p : v.parts)
+                if (p->FindModuleOfClass("ModuleEngines") != nullptr) {
+                    ePos = Vector3d(p->fields.orgPos);
+                    break;
+                }
+            const Vector3d u = Vector3d(r.craftUp).normalized();
+            Vector3d f = rPos - ePos;
+            f = f - u * Vector3d::Dot(f, u);
+            r.craftFwd = f.normalized().ToVector3f();
+        }
+        const auto lookup = AeroLibrary().ModelTransformLookup();
+        ModuleResourceIntake::findModelTransform = [lookup](Part& p, const std::string& n) {
+            PartTransform t;
+            return lookup(p, n, t);
+        };
+        scene = std::make_unique<wp29c::RoverScene>(w, wp29c::RealGeometry(), AeroLibrary().ColliderHook());
+        input = std::make_unique<AircraftInput>(scene->pad.s.bubble);
+        PhysicsGlobals::SetApplyDrag(true);  // RoverScene turns the aero off for the rover references; an aircraft flies in the air
+        scene->pad.s.bubble.ModuleForces().hooks.modelTransform = lookup;
+        CelestialBody& kerbin = w.Kerbin();
+        const SceneryCity& ksc = *Scenery().Find("Kerbin/KSC");
+        const CityPose pose = KscPose(kerbin);
+        host = std::make_unique<SceneryCityHost>(scene->pad.s.bubble, ksc, 0x5343000000000000ull, lv);
+        host->PlaceOnBody(kerbin, pose.localPosition, pose.localRotation);
+        host->ActivateAll();
+        scene->pad.s.world.OptimizeBroadPhase();
+        const int spawnIdx = FindPresent(ksc, lv, "SpawnPoint", "End09");
+        REQUIRE(spawnIdx >= 0);
+        const Vector3d spawnLocal = pose.localPosition + pose.localRotation * NodeInCityFrame(ksc, static_cast<size_t>(spawnIdx));
+        const Vector3d spawnWorld = kerbin.position + kerbin.rotation * spawnLocal;
+        up = (spawnWorld - kerbin.position).normalized();
+        const PhysicsWorld::RayHit h = scene->pad.s.world.RayCast(scene->pad.s.bubble.StaticPhysicsFromWorld(spawnWorld + up * 40.0), up * -1.0, 80.0, PhysicsWorld::kLayerStatic);
+        REQUIRE(h.hit);
+        hitPhys = h.point;
+        hit = h.point + scene->pad.s.bubble.FrameOriginWorld();
+        runwayRadius = (hit - kerbin.position).magnitude();
+        scene->pad.padWorld = hit;
+        scene->pad.padUp = up;
+        const Vector3d polar = (kerbin.rotation * Vector3d(0.0, 1.0, 0.0)).normalized();
+        north = (polar - up * Vector3d::Dot(polar, up)).normalized();
+        east = Vector3d::Cross(up, north);
+        scene->pad.padNorth = north;
+        scene->pad.padEast = east;
+        scene->Place(r, headingDeg, clearance, airborne);
+        // the module lifecycle of the non-wheel modules (the wheel host starts its own): Part.ModulesOnStart / ModulesOnStartFinished
+        for (Part* p : r.vessel->parts)
+            for (size_t i = 0; i < p->Modules().Count(); ++i) {
+                PartModule* m = p->Modules().GetModule(i);
+                if (dynamic_cast<ModuleWheelBase*>(m) != nullptr) continue;
+                m->OnStart(StartState::Landed);
+            }
+        for (Part* p : r.vessel->parts)
+            for (size_t i = 0; i < p->Modules().Count(); ++i) {
+                PartModule* m = p->Modules().GetModule(i);
+                if (dynamic_cast<ModuleWheelBase*>(m) != nullptr) continue;
+                m->OnStartFinished(StartState::Landed);
+            }
+        r.vessel->OnFlyByWire += Delegate<void(FlightCtrlState&)>::Bind(&pilot, &Pilot::Fbw);
+        scene->pad.s.Start(*r.vessel);
+    }
+    ~AircraftRun() {
+        r.vessel.reset();
+        ModuleResourceIntake::findModelTransform = nullptr;
+        input.reset();
+        host.reset();
+        scene.reset();
+    }
+    Vessel& V() { return *r.vessel; }
+    VesselPhysics* Vp() { return scene->pad.s.bubble.Host().Find(V()); }
+    void Tick() { scene->Tick(); }
+    // the distance from the CoM down to the static collider below it (the runway), along the local vertical; -1 when there is none within 100 m
+    double GroundBelow(VesselPhysics& vp) {
+        const Vector3d com = wp29c::VesselCoM(vp);
+        const PhysicsWorld::RayHit h = scene->pad.s.world.RayCast(com + up * 20.0, up * -1.0, 120.0, PhysicsWorld::kLayerStatic);
+        return h.hit ? Vector3d::Dot(com - h.point, up) : -1.0;
+    }
+    Vector3d Fwd() { return Vector3d(V().vesselTransform.rotation * r.craftFwd).normalized(); }
+    VesselWheels& Wheels() { return *scene->wheels.Find(V()); }
+    // the height of a world point above the runway (the sphere through the runway point: the runway is flat to 0.1 mm over a craft's span)
+    double Height(const Vector3d& worldPoint) { return (worldPoint - w.Kerbin().position).magnitude() - runwayRadius; }
+    // the lowest tyre bottom (wheel at full extension) above the runway point, along the runway normal
+    double LowestTyreBottom() {
+        double lo = 1e9;
+        for (auto& wh : Wheels().Wheels()) {
+            if (wh->Controller() == nullptr || wh->Controller()->wheelCollider == nullptr) continue;
+            const auto& g = wh->lastGeometry;
+            const auto& wc = wh->Controller()->wheelCollider->wheelColliderData;
+            const Vector3d bottom = Vector3d(g.top) - Vector3d(g.up) * (static_cast<double>(wc.suspensionDistance) + static_cast<double>(wc.radius));
+            lo = std::min(lo, Height(bottom));
+        }
+        return lo;
+    }
+    // the height of the lowest tyre bottom above the runway when the craft is placed at clearance 0 (a measuring scene: Place puts the lowest
+    // collider point at the clearance, the tyres hang below it)
+    static double MeasureTyreBottom(const std::string& craft) {
+        AircraftRun m(craft, 0.0, true);
+        for (int k = 0; k < 60; ++k) {
+            m.Tick();
+            if (k >= 4 && m.Vp() != nullptr && m.Wheels().SetUpCount() == static_cast<int>(m.Wheels().Wheels().size())) break;
+        }
+        m.Tick();
+        const double bottom = m.LowestTyreBottom();
+        MESSAGE("measure: vp " << (m.Vp() != nullptr) << " packed " << m.V().packed << " setup " << (m.Vp() ? m.Wheels().SetUpCount() : -1) << " bottom " << bottom);
+        REQUIRE(std::fabs(bottom) < 100.0);
+        return bottom;
+    }
+    Vector3d CraftUp() { return Vector3d(V().vesselTransform.rotation * r.craftUp).normalized(); }
+};
+
+}  // namespace
+
+TEST_CASE("WP-21b probe: the Aeris 3A roll and rotation") {
+    if (!wp20b::GameAvailable()) return;
+    wp29c::WheelSettingsScope settings;
+    const double bottom0 = AircraftRun::MeasureTyreBottom("Aeris 3A");
+    AircraftRun a("Aeris 3A", -bottom0);
+    Vessel& v = a.V();
+    wp29c::FillElectricCharge(v);
+    wp29c::SetBrakes(v, true);
+    for (int k = 0; k < 150; ++k) a.Tick();
+    wp29c::SetBrakes(v, false);
+    wp20d::IgniteFirstStage(v, -1);
+    FlightInputHandler::state.mainThrottle = 1.0f;
+    ModuleEngines* eng = nullptr;
+    for (Part* p : v.parts)
+        for (size_t i = 0; i < p->Modules().Count(); ++i)
+            if (auto* e = dynamic_cast<ModuleEngines*>(p->Modules().GetModule(i))) eng = e;
+    const double thetaT = 10.0 * 3.14159265358979323846 / 180.0;
+    Vector3d com0 = wp29c::VesselCoM(*a.Vp());
+    const Vector3d f0 = a.Fwd();
+    double liftoffT = -1.0, liftoffV = 0.0, thetaPrev = 0.03;
+    for (int k = 0; k < 1600; ++k) {
+        const double theta = std::asin(std::clamp(Vector3d::Dot(a.Fwd(), a.up), -1.0, 1.0));
+        const double q = (theta - thetaPrev) / 0.02;
+        thetaPrev = theta;
+        a.pilot.pitch = v.srfSpeed > 70.0 ? static_cast<float>(std::clamp(2.0 * (thetaT - theta) - 0.6 * q, -0.5, 0.5)) : 0.0f;
+        a.Tick();
+        VesselPhysics* vp = a.Vp();
+        if (vp == nullptr) continue;
+        if (liftoffT < 0.0 && a.Wheels().GroundedCount() == 0) {
+            liftoffT = k * 0.02;
+            liftoffV = v.srfSpeed;
+        }
+        if (k % 50 == 0) {
+            const Vector3d com = wp29c::VesselCoM(*vp);
+            MESSAGE("t " << k * 0.02 << ": along " << Vector3d::Dot(com - com0, f0) << " ground " << a.GroundBelow(*vp) << " srfSpeed " << v.srfSpeed << " vspeed " << v.verticalSpeed << " pitch deg " << theta * 57.29578 << " in " << a.pilot.pitch
+                         << " thrust " << eng->finalThrust() << " grounded " << a.Wheels().GroundedCount() << " landed " << v.Landed);
+        }
+        if (liftoffT > 0.0 && k * 0.02 > liftoffT + 12.0) break;
+    }
+    MESSAGE("lift-off at " << liftoffT << " s, " << liftoffV << " m/s");
 }

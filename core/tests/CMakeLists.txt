@@ -45,6 +45,7 @@ add_executable(kspcore_tests
     test_mu_colliders.cpp
     test_wheel_models.cpp
     test_wheel_gear.cpp
+    test_aircraft.cpp
     test_scenery_colliders.cpp
     test_scenery_scenarios.cpp
     test_structure.cpp
@@ -174,6 +175,9 @@ add_test(NAME wheels.native COMMAND kspcore_tests "-tc=WP-29c*")
 set_tests_properties(wheels.native PROPERTIES LABELS unit TIMEOUT 900)
 add_test(NAME wheels.geometry COMMAND kspcore_tests "-tc=WP-29d*")
 set_tests_properties(wheels.geometry PROPERTIES LABELS unit TIMEOUT 1800)
+# WP-21b: stock aircraft: the SPH crafts load, control surfaces / intakes in the module slot, the Aeris 3A on the real KSC runway
+add_test(NAME aircraft COMMAND kspcore_tests "-tc=WP-21b*")
+set_tests_properties(aircraft PROPERTIES LABELS unit TIMEOUT 1800)
 # WP-52: Breaking Ground robotics (servos, controller) against the independent Python reference (tools/wp52/servo_reference.py): 0 ULP
 add_test(NAME robotics COMMAND kspcore_tests "-tc=WP-52*")
 set_tests_properties(robotics PROPERTIES LABELS unit TIMEOUT 900)

@@ -384,6 +384,44 @@ SurfaceForces ModuleControlSurface::FixedUpdateAero(const ControlSurfaceFrame& f
     return out;
 }
 
+// ModuleControlSurface.cs:469
+Vector3f ModuleControlSurface::GetPotentialLift(bool positiveDeflection, const LiftingSurfaceFrame& frame) {
+    const Part* p = PartOf(*this);
+    if (p == nullptr) throw NullReferenceException();
+    const float ctrlSurfaceArea = Get<float>("ctrlSurfaceArea");
+    const Vector3f vector = baseLiftForce * ctrlSurfaceArea;
+    const float num = positiveDeflection ? 1.0f : -1.0f;
+    const float angle = S(E(currentDeployAngle) + E(num) * E(Get<float>("ctrlSurfaceRange")) * E(Get<float>("authorityLimiter")) * E(0.01f));
+    const Vector3f rhs = UnityNative::AngleAxis(angle, frame.baseRotation * Vector3f::right()) * frame.baseForward;
+    const float f = Vector3f::Dot(nVel, rhs);
+    const float num2 = Mathf::Abs(f);
+    return GetLiftVector(rhs, f, num2, Qlift, static_cast<float>(p->fields.machNumber)) * ctrlSurfaceArea - vector;
+}
+
+// ModuleControlSurface.cs:476
+void ModuleControlSurface::GetPotentialTorque(Vector3f& pos, Vector3f& neg, const Vector3d& rigidbodyCoM, const Vector3f& currentCoM,
+                                              const PartTransform& referenceTransform, const LiftingSurfaceFrame& frame) {
+    pos = neg = Vector3f::zero();
+    const bool ignorePitch = Get<bool>("ignorePitch"), ignoreYaw = Get<bool>("ignoreYaw"), ignoreRoll = Get<bool>("ignoreRoll");
+    if (Qlift == 0.0 || (ignorePitch && ignoreYaw && ignoreRoll)) return;
+    if (Get<bool>("displaceVelocity")) return;  // vesselBladeLiftReference: robotic rotor blades (the robotics package)
+    // Vector3d vector3d = rb.worldCenterOfMass - currentCoM; the Vector3d -> Vector3 conversions are the float casts
+    const Vector3f vector3d = (rigidbodyCoM - Vector3d(currentCoM)).ToVector3f();
+    const Vector3f b = referenceTransform.InverseTransformDirection(vector3d);
+    const Vector3f potentialLift = GetPotentialLift(true, frame);
+    const Vector3f potentialLift2 = GetPotentialLift(false, frame);
+    pos = Vector3f::Scale(referenceTransform.InverseTransformDirection(Vector3f::Cross(vector3d, potentialLift)), b);
+    neg = Vector3f::Scale(referenceTransform.InverseTransformDirection(Vector3f::Cross(vector3d, potentialLift2)), b);
+    if (ignorePitch) neg.x = pos.x = 0.0f;
+    if (ignoreRoll) {
+        neg.y = pos.y = 0.0f;
+    } else {
+        pos.y = 0.0f - pos.y;
+        neg.y = 0.0f - neg.y;
+    }
+    if (ignoreYaw) neg.z = pos.z = 0.0f;
+}
+
 // ModuleControlSurface.cs:896
 void ModuleControlSurface::AssumeDragCubePosition(const std::string& name) {
     if (name == "fullDeflectionNeg") action = S((E(0.0f) - E(maxAuthority)) * E(0.01f));

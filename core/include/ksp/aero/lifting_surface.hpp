@@ -10,7 +10,7 @@
 // :364-367 GetInfo, :392-426 module adjusters (Missions adjusters: ApplyLiftForceAdjustments is the identity without them) and
 // display-name localisation; ModuleControlSurface.cs:198-253 OnDestroy / editor / PAW / variant events, :360-364
 // onVesselReferenceTransformSwitch, :382-393 and :451-462 the displaceVelocity (rotor blade) branches and blade info display,
-// :464-467 CalcAngleOfAttack, :469-524 GetPotentialLift / GetPotentialTorque (ITorqueProvider for SAS: WP-24), :526-532
+// :464-467 CalcAngleOfAttack, :526-532
 // LateUpdate, :544-702 RotatingCtrlSurfaceUpdate and :971-993 CalculateCoM (robotic rotor blades: the Serenity robotics
 // package), :757-801 CtrlSurfaceEditorUpdate (EditorLogic), :802-889 KSPActions (they only flip the bool fields), :933-962
 // adjusters / GetInfo / display names; ModuleAeroSurface.cs:40-43 Start (action activity), :112-151 inventory callbacks,
@@ -25,6 +25,7 @@
 #include "ksp/aero/aero_interfaces.hpp"
 #include "ksp/aero/float_eval.hpp"
 #include "ksp/curves/float_curve.hpp"
+#include "ksp/math/vector3d.hpp"
 #include "ksp/modules/part_module.hpp"
 #include "ksp/unity/quaternion.hpp"
 #include "ksp/unity/vector.hpp"
@@ -33,6 +34,7 @@ namespace ksp {
 
 class FlightCtrlState;
 class Part;
+struct PartTransform;
 
 namespace aero {
 
@@ -164,6 +166,13 @@ public:
     // :704 FixedCtrlSurfaceUpdate (deflection maths; ctrlSurfaceLocalRotation = AngleAxis(deflection, right) * neutral)
     virtual void CtrlSurfaceUpdate(const ControlSurfaceFrame& frame);  // :745 (displaceVelocity -> rotating update: not ported)
     void FixedCtrlSurfaceUpdate(const ControlSurfaceFrame& frame);
+    // :469 GetPotentialLift: the lift change of a full deflection (positive / negative authority) at the last tick's Qlift / nVel
+    Vector3f GetPotentialLift(bool positiveDeflection, const LiftingSurfaceFrame& frame);
+    // :476 GetPotentialTorque (ITorqueProvider, VesselSAS's torque sum). `rigidbodyCoM` = part.Rigidbody.worldCenterOfMass (transform frame),
+    // `currentCoM` = vessel.CurrentCoM, `referenceTransform` = vessel.ReferenceTransform. The displaceVelocity (rotor blade) branch is the
+    // robotics package's: it leaves pos / neg zero here.
+    void GetPotentialTorque(Vector3f& pos, Vector3f& neg, const Vector3d& rigidbodyCoM, const Vector3f& currentCoM,
+                            const PartTransform& referenceTransform, const LiftingSurfaceFrame& frame);
     // IMultipleDragCube (:891-931)
     bool IsMultipleCubesActive() const override { return true; }
     std::vector<std::string> GetDragCubeNames() const override { return {"neutral", "fullDeflectionPos", "fullDeflectionNeg"}; }
