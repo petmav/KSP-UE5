@@ -272,44 +272,57 @@ TEST_CASE("WP-29d landed placement: the lander is put on the ground by its foot 
 }
 
 
-TEST_CASE("WP-21b probe VTOL attitude") {
+// WP-21b: WP-29d reported an "attitude jump" of the Rocket-power VTOL (its wheel colliders rotating ~25 degrees in the first ticks while the cluster
+// barely rotates). Measured: the VESSEL does not rotate (the root part's rotation moves by < 0.01 degrees over the first 40 ticks, airborne and on
+// the ground); the wheel colliders' part-space pose changes ONCE, between tick 0 and tick 1, by the gear-bay deployment pose: the LY-01 model's
+// collider node is posed by the Animation sample ModuleWheelDeployment.OnStart applies (the deployed state; the prefab pose is the stowed one), 5.0
+// degrees and 0.1 m for all four bays. The pose is then constant, in the part frame and in the world.
+TEST_CASE("WP-21b Rocket-power VTOL spawn: the vessel keeps its attitude, the wheel colliders take the deployed gear pose once (tick 0 -> 1)") {
     if (!wp20b::GameAvailable()) return;
-    GearRun run("Rocket-power VTOL", 3000.0, 0.0, RealGeometry(), 0.0, true);
-    Vessel& v = run.V();
-    const auto angle = [](const Quaternionf& a, const Quaternionf& b) {
-        return 2.0 * std::acos(std::min(1.0, std::fabs(static_cast<double>(a.x) * b.x + static_cast<double>(a.y) * b.y + static_cast<double>(a.z) * b.z + static_cast<double>(a.w) * b.w))) * 57.29578;
-    };
-    Vector3d prevUp[4], firstUp[4];
-    for (int k = 0; k < 10; ++k) {
-        run.Tick();
-        std::string line;
-        int wi = 0;
-        for (auto& w : run.Wheels().Wheels()) {
-            const Part& p = *w->part;
-            const Quaternionf expect = v.vesselTransform.rotation * p.fields.orgRot;
-            const Vector3d wup(w->lastGeometry.up);
-            const Vector3d eup = Vector3d(p.partTransform.rotation * (w->geometry.rotation * Vector3f(0.0f, 1.0f, 0.0f)));
-            const double ang = std::acos(std::clamp(Vector3d::Dot(wup.normalized(), eup.normalized()), -1.0, 1.0)) * 57.29578;
-            const double dAng = std::acos(std::clamp(Vector3d::Dot(wup.normalized(), prevUp[wi].normalized()), -1.0, 1.0)) * 57.29578;
-            prevUp[wi++] = wup;
-            line += " [dWorldUp " + std::to_string(dAng).substr(0, 6) + " partRot-vs-vesselRot*orgRot " + std::to_string(angle(p.partTransform.rotation, expect)).substr(0, 5) + " colliderUp-vs-part*geometry " + std::to_string(ang).substr(0, 6) + " grounded " + std::to_string(w->last.grounded) + " colliderHost.up.dot(geom.up) " + std::to_string(Vector3d::Dot(Vector3d(w->colliderHost.rotation * Vector3f(0, 1, 0)), eup)).substr(0, 6) + "]";
-        }
-        {
-            std::string all;
-            int wi2 = 0;
-            for (auto& wx : run.Wheels().Wheels()) {
-                const Vector3d u(wx->geometry.rotation * Vector3f(0, 1, 0));
-                if (k == 0) firstUp[wi2] = u;
-                all += " w" + std::to_string(wi2) + ":" + std::to_string(std::acos(std::clamp(Vector3d::Dot(u, firstUp[wi2]), -1.0, 1.0)) * 57.29578).substr(0, 5) + "deg";
-                ++wi2;
+    for (const bool airborne : {true, false}) {
+        GearRun run("Rocket-power VTOL", airborne ? 3000.0 : 0.0, 0.0, RealGeometry(), 0.0, airborne);
+        Vessel& v = run.V();
+        const Quaternionf rot0 = v.vesselTransform.rotation;
+        const auto angleDeg = [](const Quaternionf& a, const Quaternionf& b) {  // the angle of a^-1 b: 2 atan2(|vector part|, |w|) (exact for tiny angles)
+            const double aw = a.w, ax = -static_cast<double>(a.x), ay = -static_cast<double>(a.y), az = -static_cast<double>(a.z);
+            const double w = aw * b.w - ax * b.x - ay * b.y - az * b.z;
+            const double x = aw * b.x + ax * b.w + ay * b.z - az * b.y;
+            const double y = aw * b.y - ax * b.z + ay * b.w + az * b.x;
+            const double z = aw * b.z + ax * b.y - ay * b.x + az * b.w;
+            return 2.0 * std::atan2(std::sqrt(x * x + y * y + z * z), std::fabs(w)) * 180.0 / 3.14159265358979323846;
+        };
+        std::vector<Vector3d> up0;
+        double maxVessel = 0.0, changeAt1 = 0.0, changeAfter1 = 0.0, shiftAt1 = 0.0;
+        std::vector<Vector3d> pos0;
+        for (int k = 0; k < 40; ++k) {
+            run.Tick();
+            maxVessel = std::max(maxVessel, angleDeg(rot0, v.vesselTransform.rotation));
+            size_t i = 0;
+            for (auto& w : run.Wheels().Wheels()) {
+                const Vector3d u(w->geometry.rotation * Vector3f(0, 1, 0));
+                const Vector3d p(w->geometry.position);
+                if (k == 0) {
+                    up0.push_back(u);
+                    pos0.push_back(p);
+                } else {
+                    const double d = std::acos(std::clamp(Vector3d::Dot(u, up0[i]), -1.0, 1.0)) * 180.0 / 3.14159265358979323846;
+                    if (k == 1) {
+                        changeAt1 = std::max(changeAt1, d);
+                        shiftAt1 = std::max(shiftAt1, (p - pos0[i]).magnitude());
+                        up0[i] = u;  // the reference for the later ticks is the deployed pose
+                    } else {
+                        changeAfter1 = std::max(changeAfter1, d);
+                    }
+                }
+                ++i;
             }
-            MESSAGE("tick " << k << " collider up vs tick 0:" << all);
-            auto& w0 = run.Wheels().Wheels().front();
-            const Vector3d gu(w0->geometry.rotation * Vector3f(0, 1, 0)), gf(w0->geometry.rotation * Vector3f(0, 0, 1));
-            MESSAGE("tick " << k << " wheel0 part-space collider up " << gu.x << "," << gu.y << "," << gu.z << " fwd " << gf.x << "," << gf.y << "," << gf.z << " pos " << w0->geometry.position.x << "," << w0->geometry.position.y << "," << w0->geometry.position.z
-                            << " started " << w0->started << " colliderNode " << w0->colliderNode << " nativeOn " << w0->nativeOn);
         }
-        VesselPhysics* vp = run.Vp();
-        MESSAGE("tick " << k << " vp " << (vp != nullptr) << " packed " << v.packed << " vesselRot " << v.vesselTransform.rotation.x << "," << v.vesselTransform.rotation.y << "," << v.vesselTransform.rotation.z << "," << v.vesselTransform.rotation.w << " omega " << (vp ? 0.0 : 0.0) << line);
+        MESSAGE(std::string(airborne ? "airborne" : "on the ground") << ": vessel rotation over 40 ticks " << maxVessel << " deg; wheel collider pose tick 0 -> 1: " << changeAt1 << " deg, " << shiftAt1 << " m; ticks 2-39: "
+                                                      << changeAfter1 << " deg");
+        CHECK(maxVessel < 0.05);
+        CHECK(changeAt1 > 4.9);
+        CHECK(changeAt1 < 5.1);
+        CHECK(shiftAt1 > 0.05);
+        CHECK(changeAfter1 < 0.05);
     }
 }

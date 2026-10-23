@@ -253,6 +253,7 @@ void PartModuleForces::FixedUpdateVessel(Vessel& v, VesselPhysics* vp) {
                         ++surfaceForces;
                     }
                 }
+                if (hooks.afterSurface) hooks.afterSurface(*part, *ls, v, vp);
             } else if (auto* in = dynamic_cast<ModuleResourceIntake*>(m)) {
                 if (intakes) IntakeFixedUpdate(*part, *in, v);
             } else if (auto* c = dynamic_cast<ModuleCommand*>(m)) {

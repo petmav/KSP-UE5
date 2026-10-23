@@ -5,7 +5,9 @@
 // (labelled where they are asserted).
 #include <cmath>
 #include <cstdio>
+#include <algorithm>
 #include <filesystem>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -69,11 +71,25 @@ TEST_CASE("WP-21b the stock SPH crafts load through the craft path (control surf
         if (e.path().extension() == ".craft") names.push_back(e.path().stem().string());
     std::sort(names.begin(), names.end());
     size_t loaded = 0;
+    std::vector<std::string> failed;
+    // the crafts that need parts of other mods (FAR-less stock parts load; these name mod parts the stock game data does not have)
+    const std::set<std::string> modded = {"Aeris 4A N", "Pwings Test Aircraft", "Pwings Test FAR Aircraft"};
+    std::printf("| craft | result | PART nodes | parts | control surfaces | other lifting surfaces | engines | wheel modules |\n|---|---|---|---|---|---|---|---|\n");
     for (const std::string& n : names) {
         const LoadResult r = TryLoad(w, std::string(KSPCORE_HARNESS_DIR) + "/inputs/Ships/SPH/" + n + ".craft");
-        std::printf("| %s | %s | %zu | %zu | %zu | %zu | %zu | %zu | %s |\n", n.c_str(), r.ok ? "loads" : "FAILS", r.partNodes, r.parts, r.controlSurfaces,
-                    r.liftingSurfaces, r.engines, r.wheels, r.error.c_str());
-        loaded += r.ok ? 1 : 0;
+        std::printf("| %s | %s | %zu | %zu | %zu | %zu | %zu | %zu |\n", n.c_str(), r.ok ? "loads" : "fails (parts of other mods)", r.partNodes, r.parts, r.controlSurfaces, r.liftingSurfaces, r.engines,
+                    r.wheels);
+        if (!r.ok) {
+            failed.push_back(n);
+            CHECK(modded.count(n) == 1);
+            CHECK(r.error.find("parts missing") != std::string::npos);
+            continue;
+        }
+        ++loaded;
+        CHECK(r.parts == r.partNodes);
+        CHECK(r.error.empty());
+        if (n == "Aeris 3A" || n == "Aeris 4A" || n == "Ravenspear Mk1" || n == "Stearwing A300") CHECK(r.controlSurfaces > 0);
     }
-    CHECK(loaded > 0);
+    CHECK(loaded == names.size() - modded.size());
+    CHECK(failed.size() == modded.size());
 }

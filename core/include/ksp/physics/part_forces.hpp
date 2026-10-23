@@ -55,6 +55,7 @@ class Vessel;
 class ModuleEngines;
 class ModuleGimbal;
 class ModuleRCS;
+class ModuleLiftingSurface;
 class ModuleResourceIntake;
 class PartModule;
 struct PartTransform;
@@ -143,6 +144,9 @@ public:
         // false when the part's model has no such transform. Used for a control surface's ctrlSurface and an intake's transform. Unset:
         // the control surface is present and the intake's transform is the part's own.
         std::function<bool(Part&, const std::string& name, PartTransform& local)> modelTransform;
+        // WP-21b: called after every ModuleLiftingSurface / ModuleControlSurface / ModuleAeroSurface FixedUpdate of the slot, with the part's
+        // forces already in the buffers (a trace for the reference gates: nothing in kspcore reads it)
+        std::function<void(Part&, ModuleLiftingSurface&, Vessel&, VesselPhysics*)> afterSurface;
     };
     Hooks hooks;
     bool engines = true, rcs = true, liftingSurfaces = true, reactionWheels = true;

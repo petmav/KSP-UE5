@@ -8,6 +8,7 @@
 // References: tools/wp12c/scenery_reference.py (vertical rays onto the placed pad / runway triangles in double, the spawn transforms' surface
 // heights), analytic sliding decelerations.
 #include <algorithm>
+#include <map>
 #include <cmath>
 #include <fstream>
 #include <set>
@@ -18,6 +19,7 @@
 #include "ksp/aero/lifting_surface.hpp"
 #include "ksp/input/flight_input_handler.hpp"
 #include "ksp/input/game_settings.hpp"
+#include "ksp/kerbals/experience.hpp"
 #include "ksp/modules/module_resource_intake.hpp"
 #include "ksp/save/crew.hpp"
 #include "ksp/save/game.hpp"
@@ -478,6 +480,7 @@ struct AircraftRun {
         };
         scene = std::make_unique<wp29c::RoverScene>(w, wp29c::RealGeometry(), AeroLibrary().ColliderHook());
         input = std::make_unique<AircraftInput>(scene->pad.s.bubble);
+        SeatPilot();
         PhysicsGlobals::SetApplyDrag(true);  // RoverScene turns the aero off for the rover references; an aircraft flies in the air
         scene->pad.s.bubble.ModuleForces().hooks.modelTransform = lookup;
         CelestialBody& kerbin = w.Kerbin();
@@ -509,24 +512,121 @@ struct AircraftRun {
         for (Part* p : r.vessel->parts)
             for (size_t i = 0; i < p->Modules().Count(); ++i) {
                 PartModule* m = p->Modules().GetModule(i);
-                if (dynamic_cast<ModuleWheelBase*>(m) != nullptr) continue;
+                if (m->ClassName().rfind("ModuleWheel", 0) == 0) continue;  // the wheel host starts ModuleWheelBase and its sub-modules itself
                 m->OnStart(StartState::Landed);
             }
         for (Part* p : r.vessel->parts)
             for (size_t i = 0; i < p->Modules().Count(); ++i) {
                 PartModule* m = p->Modules().GetModule(i);
-                if (dynamic_cast<ModuleWheelBase*>(m) != nullptr) continue;
+                if (m->ClassName().rfind("ModuleWheel", 0) == 0) continue;  // the wheel host starts ModuleWheelBase and its sub-modules itself
                 m->OnStartFinished(StartState::Landed);
             }
+        InstallTrace();
         r.vessel->OnFlyByWire += Delegate<void(FlightCtrlState&)>::Bind(&pilot, &Pilot::Fbw);
         scene->pad.s.Start(*r.vessel);
     }
     ~AircraftRun() {
         r.vessel.reset();
         ModuleResourceIntake::findModelTransform = nullptr;
+        crew.reset();
         input.reset();
+        SaveEnvironment::Current().experienceConfigs = nullptr;
         host.reset();
         scene.reset();
+    }
+    // The cockpit's ModuleCommand (minimumCrew 1) needs a Kerbal to be a control source (ModuleCommand.cs:504 UpdateControlSourceState): a pilot
+    // of the stock EXPERIENCE_TRAIT configs sits in the first part with a command module (the craft file carries no crew)
+    void SeatPilot() {
+        SaveEnvironment& env = SaveEnvironment::Current();
+        std::vector<const ConfigNode*> traits;
+        for (ConfigNode* n : w.data.database.GetConfigNodes("EXPERIENCE_TRAIT")) traits.push_back(n);
+        env.experienceConfigs = std::make_shared<Experience::ExperienceSystemConfig>(traits);
+        auto pcm = std::make_shared<ProtoCrewMember>(ProtoCrewMember::KerbalType::Crew, "Jebediah Kerman");
+        pcm->trait = "Pilot";
+        for (const auto& cfg : env.experienceConfigs->Categories())
+            if (cfg->Name() == "Pilot") pcm->experienceTrait = Experience::ExperienceTrait::Create(cfg->Name(), cfg.get(), pcm.get());
+        for (Part* p : r.vessel->parts)
+            if (p->FindModuleOfClass("ModuleCommand") != nullptr) {
+                p->protoModuleCrew.push_back(pcm);
+                break;
+            }
+        crew = pcm;
+    }
+    std::shared_ptr<ProtoCrewMember> crew;
+    // ---- the reference trace (tools/wp21b/lift_reference.py): every lifting / control surface FixedUpdate of the slot, with the state it read ----
+    bool traceNow = false;
+    int traceTick = 0;
+    std::vector<json> records;
+    std::map<const void*, float> prevDeflection;
+    static json Vec(const Vector3f& v) { return json::array({static_cast<double>(v.x), static_cast<double>(v.y), static_cast<double>(v.z)}); }
+    static json Vec(const Vector3d& v) { return json::array({v.x, v.y, v.z}); }
+    static json Quat(const Quaternionf& q) { return json::array({static_cast<double>(q.x), static_cast<double>(q.y), static_cast<double>(q.z), static_cast<double>(q.w)}); }
+    void InstallTrace() {
+        scene->pad.s.bubble.ModuleForces().hooks.afterSurface = [this](Part& p, ModuleLiftingSurface& ls, Vessel& vsl, VesselPhysics* vp) {
+            auto* cs = dynamic_cast<ModuleControlSurface*>(&ls);
+            const float prev = prevDeflection.count(&ls) ? prevDeflection[&ls] : 0.0f;
+            if (cs != nullptr) prevDeflection[&ls] = cs->deflection;
+            if (!traceNow || vp == nullptr) return;
+            Part* owner = RigidBodyPart(&p);
+            if (owner == nullptr) return;
+            const PartPhysicsState st = vp->PartState(*owner);
+            json j;
+            j["tick"] = traceTick;
+            j["part"] = p.partInfo->name;
+            j["craftID"] = static_cast<uint64_t>(p.fields.craftID);
+            j["module"] = cs != nullptr ? "ModuleControlSurface" : "ModuleLiftingSurface";
+            j["partPos"] = Vec(p.partTransform.position);
+            j["partRot"] = Quat(p.partTransform.rotation);
+            j["colOffset"] = Vec(p.fields.CoLOffset);
+            j["copOffset"] = Vec(p.fields.CoPOffset);
+            j["rbVelocity"] = Vec(st.velocity);
+            j["rbAngularVelocity"] = Vec(st.angularVelocity);
+            j["rbCoM"] = Vec(Vector3d(vp->TransformFromPhysics(st.centerOfMass)));
+            j["rbCoMPhysics"] = Vec(st.centerOfMass);
+            j["frameVelocity"] = Vec(Krakensbane::GetFrameVelocityV3f());
+            j["dynamicPressurekPa"] = p.fields.dynamicPressurekPa;
+            j["machNumber"] = p.fields.machNumber;
+            j["currentCoM"] = Vec(vsl.CurrentCoM());
+            j["refRot"] = Quat(vsl.ReferenceTransform().rotation);
+            j["ctrl"] = json::array({vsl.ctrlState.pitch, vsl.ctrlState.yaw, vsl.ctrlState.roll});
+            j["fixedDeltaTime"] = TimeWarp::fixedDeltaTime();
+            j["curve"] = ls.Get<std::string>("liftingSurfaceCurve");
+            j["deflectionLiftCoeff"] = ls.Get<float>("deflectionLiftCoeff");
+            j["transformSign"] = ls.Get<float>("transformSign");
+            j["transformDir"] = static_cast<int>(ls.Get<EnumValue>("transformDir").value);
+            j["omnidirectional"] = ls.Get<bool>("omnidirectional");
+            j["useInternalDragModel"] = ls.Get<bool>("useInternalDragModel");
+            j["Qlift"] = ls.Qlift;
+            j["Qdrag"] = ls.Qdrag;
+            j["pointVelocity"] = Vec(ls.pointVelocity);
+            j["liftForce"] = Vec(ls.liftForce);
+            j["dragForce"] = Vec(ls.dragForce);
+            if (cs != nullptr) {
+                j["ctrlSurfaceRange"] = cs->Get<float>("ctrlSurfaceRange");
+                j["ctrlSurfaceArea"] = cs->Get<float>("ctrlSurfaceArea");
+                j["actuatorSpeed"] = cs->Get<float>("actuatorSpeed");
+                j["authorityLimiter"] = cs->Get<float>("authorityLimiter");
+                j["ignore"] = json::array({cs->Get<bool>("ignorePitch"), cs->Get<bool>("ignoreYaw"), cs->Get<bool>("ignoreRoll")});
+                j["deploy"] = cs->Get<bool>("deploy");
+                j["useExponentialSpeed"] = cs->Get<bool>("useExponentialSpeed");
+                j["prevDeflection"] = prev;
+                j["deflection"] = cs->deflection;
+                j["action"] = cs->action;
+                j["baseLiftForce"] = Vec(cs->baseLiftForce);
+                j["nVel"] = Vec(cs->nVel);
+                j["currentDeployAngle"] = cs->currentDeployAngle;
+                Vector3f pos, neg;
+                const LiftingSurfaceFrame fr = [&] {
+                    LiftingSurfaceFrame f;
+                    f.baseRotation = p.partTransform.rotation;
+                    f.baseForward = p.partTransform.forward();
+                    return f;
+                }();
+                cs->GetPotentialTorque(pos, neg, Vector3d(vp->TransformFromPhysics(st.centerOfMass)), vsl.CurrentCoM(), vsl.ReferenceTransform(), fr);
+                j["potentialTorque"] = json::array({Vec(pos), Vec(neg)});
+            }
+            records.push_back(std::move(j));
+        };
     }
     Vessel& V() { return *r.vessel; }
     VesselPhysics* Vp() { return scene->pad.s.bubble.Host().Find(V()); }
@@ -572,7 +672,94 @@ struct AircraftRun {
 
 }  // namespace
 
-TEST_CASE("WP-21b probe: the Aeris 3A roll and rotation") {
+
+namespace {
+
+// the dump the Python reference reads (tools/wp21b/lift_reference.py): written when KSPCORE_AIRCRAFT_DUMP names a file
+void WriteDump(const json& doc) {
+    const char* path = std::getenv("KSPCORE_AIRCRAFT_DUMP");
+    if (path == nullptr || *path == '\0') return;
+    std::ofstream f(path, std::ios::binary);
+    f << doc.dump();
+}
+
+double PhysicsMass(VesselPhysics& vp) {
+    double m = 0.0;
+    for (size_t c = 0; c < vp.ClusterCount(); ++c) m += vp.ClusterMass(c);
+    return m;
+}
+
+ModuleEngines* FirstEngine(Vessel& v) {
+    for (Part* p : v.parts)
+        for (size_t i = 0; i < p->Modules().Count(); ++i)
+            if (auto* e = dynamic_cast<ModuleEngines*>(p->Modules().GetModule(i))) return e;
+    return nullptr;
+}
+
+constexpr double kPi = 3.14159265358979323846;
+
+}  // namespace
+
+// WP-21b: the Aeris 3A parked on the real KSC runway (WP-12c collider) on its three LY-01 gear bays (WP-29d geometry from the .mu models),
+// brakes on (the brake anchor holds it): the static equilibrium, as the WP-29d rover rest numbers. Reference: the weight, Vessel.landedAt.
+TEST_CASE("WP-21b Aeris 3A on the real runway: rests on its three LY-01 gear bays, braked 20 s (landedAt Runway, no drift, wheel forces = weight)") {
+    if (!wp20b::GameAvailable()) return;
+    wp29c::WheelSettingsScope settings;
+    const double bottom0 = AircraftRun::MeasureTyreBottom("Aeris 3A");
+    AircraftRun a("Aeris 3A", -bottom0);
+    Vessel& v = a.V();
+    wp29c::FillElectricCharge(v);
+    wp29c::SetBrakes(v, true);
+    // the module lifecycle found the model transforms (the aero library: Part.FindModelTransform)
+    size_t surfaces = 0, withTransform = 0, intakes = 0, intakesWithTransform = 0;
+    const auto lookup = AeroLibrary().ModelTransformLookup();
+    for (Part* p : v.parts)
+        for (size_t i = 0; i < p->Modules().Count(); ++i) {
+            PartTransform t;
+            if (auto* cs = dynamic_cast<ModuleControlSurface*>(p->Modules().GetModule(i))) {
+                ++surfaces;
+                withTransform += lookup(*p, cs->Get<std::string>("transformName"), t) ? 1 : 0;
+            }
+            if (auto* in = dynamic_cast<ModuleResourceIntake*>(p->Modules().GetModule(i))) {
+                ++intakes;
+                intakesWithTransform += in->hasIntakeTransform ? 1 : 0;
+            }
+        }
+    CHECK(surfaces == 8);
+    CHECK(withTransform == surfaces);
+    CHECK(intakes >= 1);
+    CHECK(intakesWithTransform == intakes);
+    Vector3d com0;
+    double maxDrift = 0.0, fsum = 0.0, mass = 0.0;
+    for (int k = 0; k < 1000; ++k) {
+        a.Tick();
+        VesselPhysics* vp = a.Vp();
+        REQUIRE(vp != nullptr);
+        if (k == 100) com0 = wp29c::VesselCoM(*vp);
+        if (k > 100) maxDrift = std::max(maxDrift, (wp29c::VesselCoM(*vp) - com0).magnitude());
+    }
+    VesselPhysics* vp = a.Vp();
+    mass = PhysicsMass(*vp);
+    for (auto& wh : a.Wheels().Wheels()) fsum += wh->last.suspensionForce;
+    const double weight = mass * 9.81;
+    const double speed = wp29c::VesselVelocity(*vp).magnitude();
+    const double nose = std::asin(Vector3d::Dot(a.Fwd(), a.up)) * 180.0 / kPi;
+    MESSAGE("Aeris 3A braked 20 s: " << a.Wheels().GroundedCount() << " of 3 wheels grounded, max drift " << maxDrift * 1000.0 << " mm after 2 s, speed " << speed << " m/s, wheel forces " << fsum << " kN vs weight " << weight
+                                     << " kN (" << mass << " t), nose up " << nose << " deg, landed " << v.Landed << " \"" << v.landedAt << "\"");
+    CHECK(a.Wheels().GroundedCount() == 3);
+    CHECK(v.Landed);
+    CHECK(v.landedAt.find("Runway") != std::string::npos);
+    CHECK(maxDrift < 0.02);
+    CHECK(speed < 0.01);
+    CHECK(std::fabs(fsum / weight - 1.0) < 0.02);
+    CHECK(std::fabs(nose) < 5.0);
+}
+
+// The roll, the rotation and the lift-off: no capture covers an aircraft flight, so the values are analytic / reference-gated (labelled): the
+// speed gained in the first 4 s equals the integral of the engine's thrust over the mass (drag at < 15 m/s is 0.1 % of the thrust); the line and
+// the heading hold; the surfaces' lift, drag and deflection of every sampled tick are recomputed by tools/wp21b/lift_reference.py from the
+// recorded kinematics (ctest `aircraft.reference`, KSPCORE_AIRCRAFT_DUMP), which also brackets the lift-off against the weight.
+TEST_CASE("WP-21b Aeris 3A: full-throttle roll on the real runway, rotation with the elevons, lift-off and climb (reference trace)") {
     if (!wp20b::GameAvailable()) return;
     wp29c::WheelSettingsScope settings;
     const double bottom0 = AircraftRun::MeasureTyreBottom("Aeris 3A");
@@ -584,32 +771,157 @@ TEST_CASE("WP-21b probe: the Aeris 3A roll and rotation") {
     wp29c::SetBrakes(v, false);
     wp20d::IgniteFirstStage(v, -1);
     FlightInputHandler::state.mainThrottle = 1.0f;
-    ModuleEngines* eng = nullptr;
-    for (Part* p : v.parts)
-        for (size_t i = 0; i < p->Modules().Count(); ++i)
-            if (auto* e = dynamic_cast<ModuleEngines*>(p->Modules().GetModule(i))) eng = e;
-    const double thetaT = 10.0 * 3.14159265358979323846 / 180.0;
-    Vector3d com0 = wp29c::VesselCoM(*a.Vp());
+    ModuleEngines* eng = FirstEngine(v);
+    REQUIRE(eng != nullptr);
+    const double thetaT = 10.0 * kPi / 180.0;
+    const Vector3d com0 = wp29c::VesselCoM(*a.Vp());
     const Vector3d f0 = a.Fwd();
-    double liftoffT = -1.0, liftoffV = 0.0, thetaPrev = 0.03;
+    json series = json::array(), sasTorque;
+    double thetaPrev = std::asin(Vector3d::Dot(a.Fwd(), a.up)), liftoffT = -1.0, liftoffV = 0.0, rotateT = -1.0;
+    double maxLateral = 0.0, maxHeading = 0.0, impulse4 = 0.0, v0 = 0.0, v4 = 0.0;
     for (int k = 0; k < 1600; ++k) {
         const double theta = std::asin(std::clamp(Vector3d::Dot(a.Fwd(), a.up), -1.0, 1.0));
         const double q = (theta - thetaPrev) / 0.02;
         thetaPrev = theta;
-        a.pilot.pitch = v.srfSpeed > 70.0 ? static_cast<float>(std::clamp(2.0 * (thetaT - theta) - 0.6 * q, -0.5, 0.5)) : 0.0f;
+        const bool rotating = v.srfSpeed > 70.0;
+        if (rotating && rotateT < 0.0) rotateT = k * 0.02;
+        a.pilot.pitch = rotating ? static_cast<float>(std::clamp(2.0 * (thetaT - theta) - 0.6 * q, -0.5, 0.5)) : 0.0f;
+        a.traceNow = (k % 10 == 0);
+        a.traceTick = k;
+        if (k == 0) v0 = v.srfSpeed;
         a.Tick();
         VesselPhysics* vp = a.Vp();
-        if (vp == nullptr) continue;
-        if (liftoffT < 0.0 && a.Wheels().GroundedCount() == 0) {
+        REQUIRE(vp != nullptr);
+        const Vector3d com = wp29c::VesselCoM(*vp);
+        const double mass = PhysicsMass(*vp);
+        const int grounded = a.Wheels().GroundedCount();
+        if (liftoffT < 0.0 && grounded == 0) {
             liftoffT = k * 0.02;
             liftoffV = v.srfSpeed;
         }
-        if (k % 50 == 0) {
-            const Vector3d com = wp29c::VesselCoM(*vp);
-            MESSAGE("t " << k * 0.02 << ": along " << Vector3d::Dot(com - com0, f0) << " ground " << a.GroundBelow(*vp) << " srfSpeed " << v.srfSpeed << " vspeed " << v.verticalSpeed << " pitch deg " << theta * 57.29578 << " in " << a.pilot.pitch
-                         << " thrust " << eng->finalThrust() << " grounded " << a.Wheels().GroundedCount() << " landed " << v.Landed);
+        if (liftoffT < 0.0) {
+            const Vector3d d = com - com0;
+            maxLateral = std::max(maxLateral, std::fabs(Vector3d::Dot(Vector3d::Cross(f0, d), a.up)));
+            const Vector3d fw = a.Fwd();
+            maxHeading = std::max(maxHeading, std::fabs(std::atan2(Vector3d::Dot(Vector3d::Cross(f0, fw), a.up), Vector3d::Dot(f0, fw))) * 180.0 / kPi);
+        }
+        if (k < 200) {  // the first 4 s of the full-throttle roll: thrust acts along the roll at 1.7 degrees nose up
+            impulse4 += static_cast<double>(eng->finalThrust()) * 0.02 / mass;
+            v4 = v.srfSpeed;
+        }
+        if (k % 10 == 0 && liftoffT > 0.0 && sasTorque.empty() && k * 0.02 > liftoffT + 4.0) {
+            // VesselSAS's torque sum (VesselAutopilot.cs:474) with and without AutopilotEnvironment::torqueProviderHook (the control surfaces' ITorqueProvider)
+            VesselAutopilot::VesselSAS& sas = v.Autopilot().SAS();
+            sas.ConnectFlyByWire(true);
+            FlightCtrlState scratch = v.ctrlState;
+            v.OnAutopilotUpdate(scratch);  // VesselSAS.UpdateVesselTorque -> GetTotalVesselTorque (the stick is not touched)
+            const Vector3f wp = sas.posTorque, wn = sas.negTorque;
+            const auto hook = AutopilotEnvironment::torqueProviderHook;
+            AutopilotEnvironment::torqueProviderHook = nullptr;
+            scratch = v.ctrlState;
+            v.OnAutopilotUpdate(scratch);
+            const Vector3f np = sas.posTorque, nn = sas.negTorque;
+            AutopilotEnvironment::torqueProviderHook = hook;
+            sas.DisconnectFlyByWire();
+            sasTorque = {{"tick", k}, {"with", {AircraftRun::Vec(wp), AircraftRun::Vec(wn)}}, {"without", {AircraftRun::Vec(np), AircraftRun::Vec(nn)}}};
+            MESSAGE("SAS torque sum at " << k * 0.02 << " s: with the control surfaces " << wp.x << "/" << wn.x << " (pitch pos/neg), without " << np.x << "/" << nn.x);
+            CHECK((wp - np).magnitude() > 0.0f);
+            CHECK((wn - nn).magnitude() > 0.0f);
+        }
+        if (k % 10 == 0) {
+            const Vector3d thrustDir = eng->thrustTransforms.empty() ? Vector3d() : Vector3d(eng->thrustTransforms[0].forward()) * -1.0;
+            json e;
+            e["tick"] = k;
+            e["t"] = k * 0.02;
+            e["grounded"] = grounded;
+            e["srfSpeed"] = v.srfSpeed;
+            e["verticalSpeed"] = v.verticalSpeed;
+            e["mass"] = mass;
+            e["thrust"] = eng->finalThrust();
+            e["thrustDir"] = AircraftRun::Vec(thrustDir);
+            e["up"] = AircraftRun::Vec(a.up);
+            e["pitchDeg"] = theta * 180.0 / kPi;
+            e["radius"] = (vp->WorldFromPhysics(com) - a.w.Kerbin().position).magnitude();
+            series.push_back(std::move(e));
         }
         if (liftoffT > 0.0 && k * 0.02 > liftoffT + 12.0) break;
     }
-    MESSAGE("lift-off at " << liftoffT << " s, " << liftoffV << " m/s");
+    MESSAGE("roll: speed gained in 4 s " << v4 - v0 << " m/s vs thrust impulse / mass " << impulse4 << " m/s; until lift-off: heading drift " << maxHeading << " deg, lateral deviation " << maxLateral
+                                         << " m; rotation from " << rotateT << " s; lift-off at " << liftoffT << " s, " << liftoffV << " m/s");
+    double verticalAt10 = 0.0;
+    for (const json& e : series)
+        if (std::fabs(e["t"].get<double>() - (rotateT + 10.0)) < 0.11) verticalAt10 = e["verticalSpeed"].get<double>();
+    MESSAGE("climb rate 10 s after the start of the rotation: " << verticalAt10 << " m/s");
+    // the thrust reaches the vessel (the in-air check of this engine: 0.8 % at 0.5 s); the gear takes the rolling resistance of WP-29c's tyre model
+    // (UNVERIFIED, capture C11): between 0 and 12 % of the weight over the 4 s
+    const double crr = (impulse4 - (v4 - v0)) / (9.81 * 4.0);
+    MESSAGE("implied mean rolling resistance of the gear over the first 4 s: " << crr << " of the weight");
+    CHECK(v4 - v0 < impulse4);
+    CHECK(crr < 0.12);
+    CHECK(maxHeading < 1.5);
+    CHECK(maxLateral < 3.0);
+    REQUIRE(liftoffT > 0.0);
+    CHECK(liftoffV > 60.0);
+    CHECK(liftoffV < 100.0);
+    CHECK(verticalAt10 > 8.0);
+    json doc;
+    doc["craft"] = "Aeris 3A";
+    doc["records"] = a.records;
+    doc["series"] = series;
+    doc["sasTorque"] = sasTorque;
+    doc["events"] = {{"liftoffT", liftoffT}, {"liftoffSpeed", liftoffV}, {"rotateT", rotateT}, {"speedGain4s", v4 - v0}, {"thrustImpulseOverMass4s", impulse4}, {"impliedRollingResistance", crr}, {"climbRate10s", verticalAt10}};
+    WriteDump(doc);
+}
+
+// Brake to a stop: the Aeris 3A rolls to 40 m/s, the throttle goes to zero and the brakes (action group) come on. Analytic bounds: the friction of
+// a tyre cannot exceed ~2 g on the stock curves, so the stopping distance is at least v^2 / (2 * 2 g); the brake anchor (ModuleWheelBase.
+// toggleRbConstraints) then holds the stopped aircraft (WP-29d).
+TEST_CASE("WP-21b Aeris 3A: roll to 40 m/s on the real runway, throttle off, brakes on: stops on the line and is held by the brake anchor") {
+    if (!wp20b::GameAvailable()) return;
+    wp29c::WheelSettingsScope settings;
+    const double bottom0 = AircraftRun::MeasureTyreBottom("Aeris 3A");
+    AircraftRun a("Aeris 3A", -bottom0);
+    Vessel& v = a.V();
+    wp29c::FillElectricCharge(v);
+    wp29c::SetBrakes(v, true);
+    for (int k = 0; k < 150; ++k) a.Tick();
+    wp29c::SetBrakes(v, false);
+    wp20d::IgniteFirstStage(v, -1);
+    FlightInputHandler::state.mainThrottle = 1.0f;
+    const Vector3d f0 = a.Fwd();
+    Vector3d com0 = wp29c::VesselCoM(*a.Vp());
+    int k = 0;
+    for (; k < 1000 && v.srfSpeed < 40.0; ++k) a.Tick();
+    REQUIRE(v.srfSpeed >= 40.0);
+    const double speed0 = v.srfSpeed;
+    FlightInputHandler::state.mainThrottle = 0.0f;
+    wp29c::SetBrakes(v, true);
+    const Vector3d comB = wp29c::VesselCoM(*a.Vp());
+    int stopTick = -1;
+    Vector3d comHeld;
+    double maxHeading = 0.0, maxLateral = 0.0;
+    for (int j = 0; j < 2000; ++j) {
+        a.Tick();
+        VesselPhysics* vp = a.Vp();
+        REQUIRE(vp != nullptr);
+        const Vector3d fw = a.Fwd();
+        maxHeading = std::max(maxHeading, std::fabs(std::atan2(Vector3d::Dot(Vector3d::Cross(f0, fw), a.up), Vector3d::Dot(f0, fw))) * 180.0 / kPi);
+        maxLateral = std::max(maxLateral, std::fabs(Vector3d::Dot(Vector3d::Cross(f0, wp29c::VesselCoM(*vp) - com0), a.up)));
+        if (stopTick < 0 && v.srfSpeed < 0.05) stopTick = j;
+        if (stopTick >= 0 && j == stopTick + 1250) comHeld = wp29c::VesselCoM(*vp);
+    }
+    VesselPhysics* vp = a.Vp();
+    const double distance = Vector3d::Dot(wp29c::VesselCoM(*vp) - comB, f0);
+    const double heldDrift = (wp29c::VesselCoM(*vp) - comHeld).magnitude();  // from 25 s after the stop (the jet has spooled down and the anchor holds) to the end
+    MESSAGE("braking from " << speed0 << " m/s: stopped after " << stopTick * 0.02 << " s over " << distance << " m (mean deceleration " << speed0 * speed0 / (2.0 * distance) << " m/s^2), heading drift " << maxHeading
+                            << " deg, lateral deviation " << maxLateral << " m, held drift " << heldDrift * 1000.0 << " mm, final speed " << v.srfSpeed << " m/s, landedAt \"" << v.landedAt << "\"");
+    REQUIRE(stopTick >= 0);
+    CHECK(stopTick * 0.02 < 10.0);
+    CHECK(heldDrift < 0.01);
+    CHECK(distance > speed0 * speed0 / (2.0 * 2.0 * 9.81));
+    CHECK(distance < 400.0);
+    CHECK(maxHeading < 3.0);
+    CHECK(maxLateral < 3.0);
+    CHECK(v.srfSpeed < 0.05);
+    CHECK(v.landedAt.find("Runway") != std::string::npos);
 }
