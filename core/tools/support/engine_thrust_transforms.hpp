@@ -25,6 +25,8 @@ struct EngineThrustTransform {
     ksp::Quaternionf partSpaceRotation;  // world rotation relative to the part (right-nested product of the chain, model first)
     ksp::Vector3f partSpacePosition;
     std::vector<ksp::Quaternionf> chainRotations;  // local rotations, model first
+    std::vector<std::string> chainNames;            // WP-20f: the chain's transform names, local positions and scales (model first)
+    std::vector<ksp::Vector3f> chainPositions, chainScales;
     ksp::Vector3f partSpaceForward;      // as written by the python tool (independent computation, cross-checked by the unit test)
 };
 
@@ -96,6 +98,11 @@ public:
                 for (auto& c : t.at("chain")) {
                     const auto cr = Bits(c.at("rotation"), 4);
                     et.chainRotations.push_back(ksp::Quaternionf(cr[0], cr[1], cr[2], cr[3]));
+                    et.chainNames.push_back(c.at("name").get<std::string>());
+                    const auto cp = Bits(c.at("position"), 3);
+                    et.chainPositions.push_back(ksp::Vector3f(cp[0], cp[1], cp[2]));
+                    const auto cs = Bits(c.at("scale"), 3);
+                    et.chainScales.push_back(ksp::Vector3f(cs[0], cs[1], cs[2]));
                 }
                 const auto q = Bits(t.at("partSpaceRotation"), 4);
                 et.partSpaceRotation = ksp::Quaternionf(q[0], q[1], q[2], q[3]);

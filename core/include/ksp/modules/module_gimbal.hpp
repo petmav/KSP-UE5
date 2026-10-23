@@ -58,6 +58,10 @@ public:
     static inline std::function<std::vector<std::pair<PartTransform, Quaternionf>>(Part&, const std::string&)> findModelTransforms;
     // Part.FindTransformInChildrenExplicit(parent, find) != null (default: the same transform)
     static inline std::function<bool(const PartTransform& parent, const PartTransform& find)> isTransformInChildren;
+    // WP-20f: the same question by identity, for a host that knows the model hierarchy (gimbal transform `gimbalIndex` of this module,
+    // thrust transform `thrustIndex` of `engine`); asked first when set (physics/part_forces.hpp ThrustBelowGimbalHook)
+    static inline std::function<bool(Part&, const ModuleGimbal&, size_t gimbalIndex, const ModuleEngines& engine, size_t thrustIndex)>
+        isThrustTransformInChildren;
 
     // ---- lifecycle ----
     void OnAwake() override;                           // binds the [KSPEvent] / [KSPAction] methods
