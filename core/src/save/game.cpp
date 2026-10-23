@@ -571,7 +571,7 @@ std::string Game::ToString() {
     return configNode.ToString();
 }
 
-// Game.cs:759 (uses HighLogic.CurrentGame's dictionary, not this game's -- sic)
+// Game.cs:745 (uses HighLogic.CurrentGame's dictionary, not this game's -- sic)
 std::string Game::GetCometNumberedName(const std::string& nameArg) {
     // C# strings are values: `name` may be an element of cometNames.KeysList (DiscoverableObjectsUtil.GenerateCometName passes one), which the indexer set below
     // erases and re-appends. A reference parameter would dangle (WP-38d), so the text is copied first.

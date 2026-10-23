@@ -54,7 +54,7 @@ public:
     CraftProfileInfo& LoadDetailsFromCraftFile(const ConfigNode& root, const std::string& filePath, bool brokenParts, bool bypassTechCheck);
     bool CraftHasErrors() const;                                           // :393
     std::string GetErrorMessage() const;                                   // :375
-    bool shipPartsUnlocked() const { return UnavailableShipParts.empty() && !duplicatedParts; }  // :59
+    bool shipPartsUnlocked() const { return UnavailableShipParts.empty() && !duplicatedParts; }  // :57
     bool shipPartModulesAvailable() const { return UnavailableShipPartModules.empty(); }          // :69
     void Load(const ConfigNode& node);                                     // :172
     void Save(ConfigNode& node) const;                                     // :223

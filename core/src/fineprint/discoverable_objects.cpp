@@ -88,7 +88,7 @@ ConfigNode::NodePtr SpaceObjectNodes::CreateVesselNode(const std::string& vessel
     return configNode;
 }
 
-// ProtoVessel.cs:903 (public CreatePartNode(partName, id, params crew): the prefab path). ProtoVesselNodes::CreatePartNode takes the persistentId from the WP-33
+// ProtoVessel.cs:902 (public CreatePartNode(partName, id, params crew): the prefab path). ProtoVesselNodes::CreatePartNode takes the persistentId from the WP-33
 // InventoryEnvironment seam (unset: 0); FlightGlobals.GetUniquepersistentId() is drawn here and replaces the value in place (same position in the node).
 ConfigNode::NodePtr SpaceObjectNodes::CreatePartNode(const std::string& partName, uint32_t id) {
     ConfigNode::NodePtr configNode = ProtoVesselNodes::CreatePartNode(nullptr, partName, id, {});
@@ -144,16 +144,16 @@ AddedVessel AddVessel(const ConfigNode& protoVesselNode) {
 // DiscoverableObjectsUtil.cs:9
 std::string DiscoverableObjectsUtil::GenerateAsteroidName() {
     std::string text;
-    text += RandomLetter(true);
-    text += RandomLetter(true);
-    text += RandomLetter(true);
+    text += randomLetter(true);
+    text += randomLetter(true);
+    text += randomLetter(true);
     text += "-";
-    text += RandomNumber(3);
+    text += randomNumber(3);
     return Localizer::Format("#autoLOC_6001923", {text});
 }
 
 // DiscoverableObjectsUtil.cs:20
-char DiscoverableObjectsUtil::RandomLetter(bool uppercase) {
+char DiscoverableObjectsUtil::randomLetter(bool uppercase) {
     const int num = Rnd().Range(0, 26);
     char c = static_cast<char>(97 + num);
     if (uppercase) return static_cast<char>(c - 32);  // char.ToUpper of a-z
@@ -161,14 +161,14 @@ char DiscoverableObjectsUtil::RandomLetter(bool uppercase) {
 }
 
 // DiscoverableObjectsUtil.cs:31 (int.ToString("000"): zero padded to `digits`)
-std::string DiscoverableObjectsUtil::RandomNumber(int digits) {
+std::string DiscoverableObjectsUtil::randomNumber(int digits) {
     const int max = dotnet::ConvToInt32(M::Pow(10.0, static_cast<double>(digits)));
     std::string text = std::to_string(Rnd().Range(0, max));
     while (static_cast<int>(text.size()) < digits) text = "0" + text;
     return text;
 }
 
-// DiscoverableObjectsUtil.cs:39
+// DiscoverableObjectsUtil.cs:42
 AddedVessel DiscoverableObjectsUtil::SpawnAsteroid(const std::string& asteroidName, const Orbit& o, uint32_t seed, UntrackedObjectClass objClass, double lifeTime,
                                                    double lifeTimeMax) {
     // C# argument order: the part node array, new ConfigNode("ACTIONGROUPS"), then the discovery node
@@ -181,7 +181,7 @@ AddedVessel DiscoverableObjectsUtil::SpawnAsteroid(const std::string& asteroidNa
     return protoVessel;
 }
 
-// DiscoverableObjectsUtil.cs:48
+// DiscoverableObjectsUtil.cs:50
 AddedVessel DiscoverableObjectsUtil::SpawnComet(const std::string& cometName, const Orbit& o, const CometDefinition& cometDef, uint32_t seed, UntrackedObjectClass objClass,
                                                 double lifeTime, double lifeTimeMax, bool optimizedCollider, float fragmentDynamicPressureModifier) {
     ConfigNode::NodePtr configNode = cometDef.CreateVesselNode(optimizedCollider, fragmentDynamicPressureModifier, false);
@@ -199,7 +199,7 @@ AddedVessel DiscoverableObjectsUtil::SpawnComet(const std::string& cometName, co
     return protoVessel;
 }
 
-// DiscoverableObjectsUtil.cs:64 (the C# `generator as KSPRandom`: a non-KSPRandom generator would be null there; the parameter is a KSPRandom already)
+// DiscoverableObjectsUtil.cs:65 (the C# `generator as KSPRandom`: a non-KSPRandom generator would be null there; the parameter is a KSPRandom already)
 std::string DiscoverableObjectsUtil::GenerateCometName(KSPRandom* generator) {
     std::unique_ptr<KSPRandom> own;
     KSPRandom* kSPRandom = generator;
@@ -255,14 +255,14 @@ ScenarioDiscoverableObjects::~ScenarioDiscoverableObjects() {
     if (!destroyed_) OnDestroy();
 }
 
-// ScenarioDiscoverableObjects.cs:29 (the persistent FloatCurve field; monostate = null before OnAwake)
+// (C++ accessors of the persistent FloatCurve field sizeCurve; monostate = null before OnAwake)
 bool ScenarioDiscoverableObjects::hasSizeCurve() { return std::holds_alternative<FloatCurve>(*Store()->Value("sizeCurve")); }
 FloatCurve& ScenarioDiscoverableObjects::sizeCurve() { return std::get<FloatCurve>(*Store()->Value("sizeCurve")); }
-// :32
+// ScenarioDiscoverableObjects.cs:31
 int ScenarioDiscoverableObjects::lastSeed() { return Store()->Get<int32_t>("lastSeed"); }
 void ScenarioDiscoverableObjects::setLastSeed(int v) { Store()->Set<int32_t>("lastSeed", static_cast<int32_t>(v)); }
 
-// ScenarioDiscoverableObjects.cs:61
+// ScenarioDiscoverableObjects.cs:57
 void ScenarioDiscoverableObjects::OnLoad(ConfigNode& node) {
     std::vector<const ConfigNode*> nodes;
     for (ConfigNode* n : CometManager::GetConfigNodes("SPACEOBJECTS_LIMITS")) nodes.push_back(n);
@@ -271,7 +271,7 @@ void ScenarioDiscoverableObjects::OnLoad(ConfigNode& node) {
     discoveredObjectIDs = loadIDList(node, "discoveredIDs");
 }
 
-// ScenarioDiscoverableObjects.cs:68
+// ScenarioDiscoverableObjects.cs:64
 void ScenarioDiscoverableObjects::LoadGameDBSettings(const std::vector<const ConfigNode*>& configNodes) {
     const ConfigNode* configNode = nullptr;
     if (!configNodes.empty()) {
@@ -290,7 +290,7 @@ void ScenarioDiscoverableObjects::LoadGameDBSettings(const std::vector<const Con
     spawnGroupMaxLimit = v;
 }
 
-// ScenarioDiscoverableObjects.cs:90 (uint.TryParse of each comma separated item; the C# keeps the last parsed text in fields)
+// ScenarioDiscoverableObjects.cs:85 (uint.TryParse of each comma separated item; the C# keeps the last parsed text in fields)
 std::vector<uint32_t> ScenarioDiscoverableObjects::loadIDList(const ConfigNode& node, const std::string& listName) {
     std::vector<uint32_t> list;
     std::string tmpIDs;
@@ -303,13 +303,13 @@ std::vector<uint32_t> ScenarioDiscoverableObjects::loadIDList(const ConfigNode& 
     return list;
 }
 
-// ScenarioDiscoverableObjects.cs:108
+// ScenarioDiscoverableObjects.cs:102
 void ScenarioDiscoverableObjects::OnSave(ConfigNode& node) {
     SaveIDList(node, "untrackedIDs", untrackedObjectIDs);
     SaveIDList(node, "discoveredIDs", discoveredObjectIDs);
 }
 
-// ScenarioDiscoverableObjects.cs:114
+// ScenarioDiscoverableObjects.cs:108
 void ScenarioDiscoverableObjects::SaveIDList(ConfigNode& node, const std::string& name, const std::vector<uint32_t>& loadList) {
     std::string tmpIDs;
     for (size_t i = 0; i < loadList.size(); ++i) {
@@ -319,7 +319,7 @@ void ScenarioDiscoverableObjects::SaveIDList(ConfigNode& node, const std::string
     node.AddValue(name, tmpIDs);
 }
 
-// ScenarioDiscoverableObjects.cs:121
+// ScenarioDiscoverableObjects.cs:114
 void ScenarioDiscoverableObjects::OnAwake() {
     if (Instance != nullptr && Instance != this) {
         log::Error("[ScenarioDiscoverableObjects]: Instance already exists!");
@@ -341,7 +341,7 @@ void ScenarioDiscoverableObjects::OnAwake() {
     GE::onVesselDestroy.Add(this, &ScenarioDiscoverableObjects::OnVesselDestroy);
 }
 
-// ScenarioDiscoverableObjects.cs:145
+// ScenarioDiscoverableObjects.cs:137
 void ScenarioDiscoverableObjects::OnKnowledgeChanged(GE::HostedFromToAction<IDiscoverable*, DiscoveryLevels> kChg) {
     Vessel* vessel = dynamic_cast<Vessel*>(kChg.host);
     if (vessel == nullptr) return;
@@ -354,7 +354,7 @@ void ScenarioDiscoverableObjects::OnKnowledgeChanged(GE::HostedFromToAction<IDis
     }
 }
 
-// ScenarioDiscoverableObjects.cs:163
+// ScenarioDiscoverableObjects.cs:153
 void ScenarioDiscoverableObjects::OnVesselDestroy(Vessel* v) {
     auto it = std::find(discoveredObjectIDs.begin(), discoveredObjectIDs.end(), v->persistentId);
     if (it != discoveredObjectIDs.end()) discoveredObjectIDs.erase(it);
@@ -362,7 +362,7 @@ void ScenarioDiscoverableObjects::OnVesselDestroy(Vessel* v) {
     if (it != untrackedObjectIDs.end()) untrackedObjectIDs.erase(it);
 }
 
-// ScenarioDiscoverableObjects.cs:169
+// ScenarioDiscoverableObjects.cs:159
 void ScenarioDiscoverableObjects::Start() {
     Rnd().InitState(lastSeed());
     discoveryUnlocked_ = SpaceObjectsEnvironment::discoveryUnlocked
@@ -378,7 +378,7 @@ void ScenarioDiscoverableObjects::Start() {
     routines.push_back(CareerEnvironment::Current().Scheduler().StartCoroutine(SpawnDaemon()));
 }
 
-// ScenarioDiscoverableObjects.cs:188
+// ScenarioDiscoverableObjects.cs:174
 void ScenarioDiscoverableObjects::OnDestroy() {
     if (Instance == this) Instance = nullptr;  // a destroyed Unity object compares equal to null (`Instance != null` in the next OnAwake)
     GE::onKnowledgeChanged.Remove(this, &ScenarioDiscoverableObjects::OnKnowledgeChanged);
@@ -390,7 +390,7 @@ void ScenarioDiscoverableObjects::OnDestroy() {
     destroyed_ = true;
 }
 
-// ScenarioDiscoverableObjects.cs:197
+// ScenarioDiscoverableObjects.cs:182
 Enumerator ScenarioDiscoverableObjects::SpawnDaemon() {
     while (!destroyed_) {
         if (!ExpireDiscoveredObjects(Planetarium::GetUniversalTime())) UpdateSpaceObjects();
@@ -398,7 +398,7 @@ Enumerator ScenarioDiscoverableObjects::SpawnDaemon() {
     }
 }
 
-// ScenarioDiscoverableObjects.cs:210
+// ScenarioDiscoverableObjects.cs:194
 void ScenarioDiscoverableObjects::UpdateSpaceObjects() {
     if (!discoveryUnlocked_) return;
     rndGroupSize_ = Rnd().Range(spawnGroupMinLimit, spawnGroupMaxLimit);
@@ -414,7 +414,7 @@ void ScenarioDiscoverableObjects::UpdateSpaceObjects() {
     }
 }
 
-// ScenarioDiscoverableObjects.cs:248
+// ScenarioDiscoverableObjects.cs:219
 bool ScenarioDiscoverableObjects::ExpireDiscoveredObjects(double UT_) {
     bool flag = false;
     int num = 0;
@@ -439,7 +439,7 @@ bool ScenarioDiscoverableObjects::ExpireDiscoveredObjects(double UT_) {
     return flag;
 }
 
-// ScenarioDiscoverableObjects.cs:284
+// ScenarioDiscoverableObjects.cs:250
 void ScenarioDiscoverableObjects::SpawnAsteroid() {
     const int num = Rnd().Range(0, 2147483647);
     Rnd().InitState(num);
@@ -450,7 +450,7 @@ void ScenarioDiscoverableObjects::SpawnAsteroid() {
         SpawnHomeAsteroid(num);
 }
 
-// ScenarioDiscoverableObjects.cs:299
+// ScenarioDiscoverableObjects.cs:266
 void ScenarioDiscoverableObjects::SpawnLastAsteroid() {
     Rnd().InitState(lastSeed());
     if (ReachedBody("Dres") && std::abs(lastSeed() % 3) == 0)
@@ -459,7 +459,7 @@ void ScenarioDiscoverableObjects::SpawnLastAsteroid() {
         SpawnHomeAsteroid(lastSeed());
 }
 
-// ScenarioDiscoverableObjects.cs:312
+// ScenarioDiscoverableObjects.cs:279
 void ScenarioDiscoverableObjects::SpawnHomeAsteroid(int asteroidSeed) {
     CelestialBody* homeBody = FlightGlobals::GetHomeBody();
     if (homeBody == nullptr) return;
@@ -475,7 +475,7 @@ void ScenarioDiscoverableObjects::SpawnHomeAsteroid(int asteroidSeed) {
     log::Info("[AsteroidSpawner]: New object found near " + homeBody->name() + ": " + text + "!");
 }
 
-// ScenarioDiscoverableObjects.cs:332
+// ScenarioDiscoverableObjects.cs:296
 UntrackedObjectClass ScenarioDiscoverableObjects::GetSizeCurveBasedClass(float minRange, float maxRange) {
     const int num = static_cast<int>(maxAsteroidClass) - static_cast<int>(minAsteroidClass);
     const float time = Mathf::Clamp01(Rnd().Range(minRange, maxRange));
@@ -483,7 +483,7 @@ UntrackedObjectClass ScenarioDiscoverableObjects::GetSizeCurveBasedClass(float m
     return static_cast<UntrackedObjectClass>(static_cast<int>(minAsteroidClass) + Mathf::RoundToInt(f32store(num2 * static_cast<float>(num))));
 }
 
-// ScenarioDiscoverableObjects.cs:340
+// ScenarioDiscoverableObjects.cs:304
 void ScenarioDiscoverableObjects::SpawnDresAsteroid(int asteroidSeed) {
     CelestialBody* bodyByName = FlightGlobals::GetBodyByName("Dres");
     if (bodyByName == nullptr) return;
@@ -500,14 +500,14 @@ void ScenarioDiscoverableObjects::SpawnDresAsteroid(int asteroidSeed) {
     log::Info("[AsteroidSpawner]: New object found near Dres: " + text + "!");
 }
 
-// ScenarioDiscoverableObjects.cs:366
+// ScenarioDiscoverableObjects.cs:343
 void ScenarioDiscoverableObjects::SpawnComet() {
     std::shared_ptr<CometOrbitType> cometType = CometManager::GenerateWeightedCometType();
     if (cometType == nullptr) throw NullReferenceException("cometType");
     SpawnComet(*cometType);
 }
 
-// ScenarioDiscoverableObjects.cs:373
+// ScenarioDiscoverableObjects.cs:343
 void ScenarioDiscoverableObjects::SpawnComet(const std::string& typeName) {
     std::shared_ptr<CometOrbitType> cometOrbitType = CometManager::GetCometOrbitType(typeName);
     if (cometOrbitType == nullptr)
@@ -516,7 +516,7 @@ void ScenarioDiscoverableObjects::SpawnComet(const std::string& typeName) {
         SpawnComet(*cometOrbitType);
 }
 
-// ScenarioDiscoverableObjects.cs:386
+// ScenarioDiscoverableObjects.cs:343
 void ScenarioDiscoverableObjects::SpawnComet(CometOrbitType& cometType) {
     const int seed = Rnd().Range(0, 2147483647);
     Rnd().InitState(seed);
@@ -530,10 +530,10 @@ void ScenarioDiscoverableObjects::SpawnComet(CometOrbitType& cometType) {
     log::Info("[CometSpawner]: New object found near " + FlightGlobals::GetHomeBodyName());
 }
 
-// ScenarioDiscoverableObjects.cs:421
+// ScenarioDiscoverableObjects.cs:373
 double ScenarioDiscoverableObjects::GetRandomDuration() { return static_cast<double>(Rnd().Range(15.0f, 60.0f)); }
 
-// ScenarioDiscoverableObjects.cs:426
+// ScenarioDiscoverableObjects.cs:378
 bool ScenarioDiscoverableObjects::ReachedBody(const std::string& bodyName) {
     if (SpaceObjectsEnvironment::bodyReached) return SpaceObjectsEnvironment::bodyReached(bodyName);
     if (ProgressTracking::Instance() != nullptr) {

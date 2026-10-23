@@ -70,7 +70,7 @@ ConfigNode::NodePtr CometDefinition::CreateVesselNode(bool optimizedCollider, fl
 
 // ================================================================================================================================ CometOrbitType
 
-// CometOrbitType.cs:72
+// CometOrbitType.cs:71
 CometOrbitType::CometOrbitType(std::string name_, float inclination1Min_, float inclination1Max_, float inclination2Min_, float inclination2Max_,
                                float inclination1Chance_, float PEMin, float PEMax, float APMin, float APMax, bool UseEcc, float EccMin, float EccMax,
                                UntrackedObjectClass minCometClass_, UntrackedObjectClass maxCometClass_) {
@@ -91,18 +91,18 @@ CometOrbitType::CometOrbitType(std::string name_, float inclination1Min_, float 
     maxCometClass = maxCometClass_;
 }
 
-// CometOrbitType.cs:90
+// CometOrbitType.cs:91
 Orbit CometOrbitType::CalculateHomeOrbit() {
     bool validOrbit = false;
     return CalculateOrbit(true, nullptr, std::numeric_limits<double>::max(), validOrbit);
 }
 
-// CometOrbitType.cs:96
+// CometOrbitType.cs:97
 Orbit CometOrbitType::CalculateSentinelOrbit(const Orbit& sentinelOrbit, double minDiscoveryDistance, bool& validOrbit) {
     return CalculateOrbit(false, &sentinelOrbit, minDiscoveryDistance, validOrbit);
 }
 
-// CometOrbitType.cs:101
+// CometOrbitType.cs:102
 Orbit CometOrbitType::CalculateOrbit(bool homeOrbit, const Orbit* sentinelOrbit, double minDiscoveryDistance, bool& validOrbit) {
     validOrbit = true;
     Orbit orbit;
@@ -171,12 +171,12 @@ Orbit CometOrbitType::CalculateOrbit(bool homeOrbit, const Orbit* sentinelOrbit,
     return orbit;
 }
 
-// CometOrbitType.cs:189
+// CometOrbitType.cs:185
 UntrackedObjectClass CometOrbitType::GetRandomObjClass() {
     return static_cast<UntrackedObjectClass>(Rnd().Range(static_cast<int>(minCometClass), static_cast<int>(maxCometClass) + 1));
 }
 
-// CometOrbitType.cs:194
+// CometOrbitType.cs:190
 void CometOrbitType::Load(const ConfigNode& node) {
     node.TryGetValue("name", name);
     node.TryGetValue("displayName", displayName);
@@ -219,7 +219,7 @@ CometManager::~CometManager() {
     if (Instance == this) Instance = nullptr;
 }
 
-// CometManager.cs:241
+// CometManager.cs:254
 std::vector<Vessel*> CometManager::DiscoveredComets() const {
     std::vector<Vessel*> list;
     for (size_t i = 0; i < comets_.size(); ++i)
@@ -227,25 +227,25 @@ std::vector<Vessel*> CometManager::DiscoveredComets() const {
     return list;
 }
 
-// CometManager.cs:257
+// CometManager.cs:270
 float CometManager::SentinelDiscoveryArc() {
     if (Instance == nullptr) throw NullReferenceException("CometManager.Instance");
     return Instance->sentinelAngle;
 }
 
-// CometManager.cs:259
+// CometManager.cs:272
 double CometManager::VFXUpdateFrequency() {
     if (Instance != nullptr) return Instance->vFXUpdateFrequency;
     return 10.0;
 }
 
-// CometManager.cs:272
+// CometManager.cs:284
 double CometManager::VFXUpdateFrequencyInAtmosphere() {
     if (Instance != nullptr) return Instance->vFXUpdateFrequencyInAtmosphere;
     return 0.029999999329447746;
 }
 
-// CometManager.cs:285
+// CometManager.cs:296
 void CometManager::Awake() {
     if (Instance != nullptr) {
         // UnityEngine.Object.DestroyImmediate(base.gameObject); Instance = null
@@ -263,14 +263,14 @@ void CometManager::Awake() {
     subscribed_ = true;
 }
 
-// CometManager.cs:302
+// CometManager.cs:313
 void CometManager::Start() {
     LoadManagerDefinitions();
     LoadCometTypes();
     GE::OnGameDatabaseLoaded.Add(this, &CometManager::OnGameDatabaseLoaded);
 }
 
-// CometManager.cs:309 (the C# only removes OnGameDatabaseLoaded; the two vessel handlers are never unsubscribed, which would leave a dangling delegate here)
+// CometManager.cs:320 (the C# only removes OnGameDatabaseLoaded; the two vessel handlers are never unsubscribed, which would leave a dangling delegate here)
 void CometManager::OnDestroy() {
     if (Instance == this) Instance = nullptr;  // a destroyed Unity object compares equal to null
     GE::OnGameDatabaseLoaded.Remove(this, &CometManager::OnGameDatabaseLoaded);
@@ -280,19 +280,19 @@ void CometManager::OnDestroy() {
     subscribed_ = false;
 }
 
-// CometManager.cs:314
+// CometManager.cs:325
 void CometManager::OnGameDatabaseLoaded() {
     LoadManagerDefinitions();
     LoadCometTypes();
 }
 
-// CometManager.cs:320
+// CometManager.cs:331
 void CometManager::OnVesselAdded(Vessel* v) {
     if (v->vesselType == VesselType::SpaceObject && Contracts::Lite::VesselHasPartName("PotatoComet", v))
         if (std::find(comets_.begin(), comets_.end(), v) == comets_.end()) comets_.push_back(v);  // AddUnique
 }
 
-// CometManager.cs:328
+// CometManager.cs:339
 void CometManager::OnVesselRemoved(Vessel* v) {
     int count = static_cast<int>(comets_.size());
     do {
@@ -301,7 +301,7 @@ void CometManager::OnVesselRemoved(Vessel* v) {
     comets_.erase(comets_.begin() + count);
 }
 
-// CometManager.cs:343
+// CometManager.cs:353
 float CometManager::GetSpawnChance() {
     int num = 0;
     if (ScenarioDiscoverableObjects::Instance != nullptr) num += ScenarioDiscoverableObjects::Instance->spawnGroupMaxLimit;
@@ -312,13 +312,13 @@ float CometManager::GetSpawnChance() {
     return cometChance;
 }
 
-// CometManager.cs:361
+// CometManager.cs:370
 bool CometManager::ShouldSpawnComet() {
     if (Instance == nullptr) return false;
     return Rnd().Range(0.0f, 1.0f) < Instance->GetSpawnChance();
 }
 
-// CometManager.cs:371
+// CometManager.cs:379
 std::shared_ptr<CometOrbitType> CometManager::GenerateWeightedCometType() {
     if (Instance == nullptr) return nullptr;
     int num = 0;
@@ -339,7 +339,7 @@ std::shared_ptr<CometOrbitType> CometManager::GenerateWeightedCometType() {
     return Instance->cometDefinitions[static_cast<size_t>(num2)];
 }
 
-// CometManager.cs:401
+// CometManager.cs:408
 double CometManager::GenerateHomeSpawnDistance() {
     CelestialBody* homeBody = FlightGlobals::GetHomeBody();
     if (Instance == nullptr) {
@@ -349,13 +349,13 @@ double CometManager::GenerateHomeSpawnDistance() {
     return OrbitOfBody(homeBody).semiMajorAxis * static_cast<double>(Rnd().Range(Instance->minSpawnDistance, Instance->maxSpawnDistance));
 }
 
-// CometManager.cs:418
+// CometManager.cs:422
 double CometManager::GenerateSentinelSpawnDistance(double distance) {
     if (Instance == nullptr) return distance * static_cast<double>(Rnd().Range(minSentinelSpawnDefault, maxSentinelSpawnDefault));
     return distance * static_cast<double>(Rnd().Range(Instance->minSentinelSpawnDistance, Instance->maxSentinelSpawnDistance));
 }
 
-// CometManager.cs:427
+// CometManager.cs:431
 std::shared_ptr<CometOrbitType> CometManager::GetCometOrbitType(const std::string& name) {
     if (Instance == nullptr) return nullptr;
     for (size_t num = 0; num < Instance->cometDefinitions.size(); ++num)
@@ -370,7 +370,7 @@ std::vector<ConfigNode*> CometManager::GetConfigNodes(const std::string& type) {
     return GameDatabase::Instance()->GetConfigNodes(type);
 }
 
-// CometManager.cs:448
+// CometManager.cs:454
 void CometManager::LoadManagerDefinitions() {
     std::vector<ConfigNode*> configNodes = GetConfigNodes("COMET_MANAGER");
     managerDef_ = nullptr;
@@ -440,7 +440,7 @@ void CometManager::LoadManagerDefinitions() {
     LoadTailColorLists();
 }
 
-// CometManager.cs:546
+// CometManager.cs:565
 void CometManager::LoadCometTypes() {
     cometDefinitions.clear();
     std::vector<ConfigNode*> cometDefs = GetConfigNodes("COMET_ORBIT_TYPE");
@@ -451,7 +451,7 @@ void CometManager::LoadCometTypes() {
     }
 }
 
-// CometManager.cs:558 (the C# builds `Instance.generator = new KSPRandom(seed)` BEFORE it tests Instance for null: a missing instance is a NullReferenceException)
+// CometManager.cs:577 (the C# builds `Instance.generator = new KSPRandom(seed)` BEFORE it tests Instance for null: a missing instance is a NullReferenceException)
 CometDefinition CometManager::GenerateDefinition(CometOrbitType& cometType, UntrackedObjectClass objClass, int seed) {
     CometDefinition cometDefinition;
     cometDefinition.typeName = cometType.name;
@@ -477,7 +477,7 @@ CometDefinition CometManager::GenerateDefinition(CometOrbitType& cometType, Untr
     return cometDefinition;
 }
 
-// CometManager.cs:588
+// CometManager.cs:604
 void CometManager::SpawnCometFragments(const CometVesselSeam& cometVessel) {
     if (cometVessel.Vessel_ == nullptr) return;
     const std::string displayName = cometVessel.Vessel_->GetDisplayName();
@@ -496,7 +496,7 @@ void CometManager::SpawnCometFragments(const CometVesselSeam& cometVessel) {
                           objectToFollow);
 }
 
-// CometManager.cs:614
+// CometManager.cs:630
 AddedVessel CometManager::SpawnCometFragment(const std::string& cometName, Vessel& originalComet, CometOrbitType& cometOrbitType,
                                               UntrackedObjectClass explodeCometClass, float cometRadius, bool focusAfterSpawned) {
     UntrackedObjectClass untrackedObjectClass = UntrackedObjectClass::A;
@@ -548,7 +548,7 @@ AddedVessel CometManager::SpawnCometFragment(const std::string& cometName, Vesse
     return AddedVessel();
 }
 
-// CometManager.cs:713
+// CometManager.cs:737
 void CometManager::LoadTailColorLists() {
     managerDef_->TryGetValue("ionTailColorP67", ionTailColorP67);
     if (managerDef_->HasNode("ionTailColors")) {
@@ -571,7 +571,7 @@ void CometManager::LoadTailColorLists() {
     dustTailColors.push_back(c);
 }
 
-// CometManager.cs:737
+// CometManager.cs:766
 std::vector<CometManager::CometTailColor> CometManager::LoadColorsList(const ConfigNode& colorsNode) {
     std::vector<CometTailColor> list;
     std::vector<ConfigNode*> nodes = colorsNode.GetNodes("weightedColor");
@@ -605,7 +605,7 @@ size_t WeightedColorIndex(const std::vector<CometManager::CometTailColor>& color
 }
 }  // namespace
 
-// CometManager.cs:743 (a null comet with a populated list is the NullReferenceException of `comet.seed`)
+// CometManager.cs:784 (a null comet with a populated list is the NullReferenceException of `comet.seed`)
 Color CometManager::GenerateWeightedIonTailColor(std::optional<int> cometSeed) {
     if (!(Instance == nullptr) && !Instance->ionTailColors.empty()) {
         if (cometSeed.has_value() && *cometSeed == 1633779195) return Instance->ionTailColorP67;
@@ -617,7 +617,7 @@ Color CometManager::GenerateWeightedIonTailColor(std::optional<int> cometSeed) {
     return Color(0.04313725f, 0.2906635f, 13.0f / 15.0f, 23.0f / 51.0f);
 }
 
-// CometManager.cs:776
+// CometManager.cs:817
 Color CometManager::GenerateWeightedDustTailColor(int cometSeed) {
     if (Instance == nullptr) return Color(105.0f / 106.0f, 0.9433554f, 0.7429245f, 0.03137255f);
     const size_t num2 = WeightedColorIndex(Instance->dustTailColors, cometSeed);
