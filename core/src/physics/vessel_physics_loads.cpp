@@ -82,6 +82,17 @@ void VesselPhysics::DestroySubJoints(size_t joint, uint8_t mask) {
 // ===================================================================================== the load model
 
 // the factor frame: the clusters' creation frame (body axes = physics axes then), positions relative to the first body's origin there
+double VesselPhysics::NodeMass(int node) const {
+    const int sv = servoOfNode_[static_cast<size_t>(node)];
+    return sv < 0 ? static_cast<double>(parts_[static_cast<size_t>(partOfNode_[static_cast<size_t>(node)])]->rbMass)
+                  : static_cast<double>(servos_[static_cast<size_t>(sv)].mass);
+}
+
+Vector3d VesselPhysics::NodeLocalCom(int node) const {
+    const int sv = servoOfNode_[static_cast<size_t>(node)];
+    return sv < 0 ? parts_[static_cast<size_t>(partOfNode_[static_cast<size_t>(node)])]->localCom : servos_[static_cast<size_t>(sv)].localCom;
+}
+
 Vector3d VesselPhysics::FactorFrameOrigin() const {
     for (const ClusterRec& c : clusters_)
         if (c.body != kInvalidBody) return c.origin0;
@@ -113,6 +124,21 @@ void VesselPhysics::BuildLoadModel(const std::vector<int>& supports) {
     }
     for (size_t i = 0; i < n; ++i)
         if (!parts_[i]->rb && parts_[i]->owner >= 0) nodeOfPart_[i] = nodeOfPart_[static_cast<size_t>(parts_[i]->owner)];
+    // WP-52b: every servo body is a node of its own (after the part nodes; partOfNode_ holds its part, servoOfNode_ the servo). The servo
+    // joint is no element: its impulse is an external force on both of its nodes (ComputeLoads), so each side balances by itself.
+    servoOfNode_.assign(partOfNode_.size(), -1);
+    nodeOfServo_.assign(servos_.size(), -1);
+    for (size_t s = 0; s < servos_.size(); ++s) {
+        const ServoRec& sr = servos_[s];
+        if (clusters_[static_cast<size_t>(sr.cluster)].body == kInvalidBody) continue;
+        nodeOfServo_[s] = static_cast<int>(partOfNode_.size());
+        clusterNodes_[static_cast<size_t>(sr.cluster)].push_back(static_cast<int>(partOfNode_.size()));
+        partOfNode_.push_back(sr.part);
+        servoOfNode_.push_back(static_cast<int>(s));
+        nodeCom0_.push_back(sr.com0 - O);
+        nodeCluster_.push_back(sr.cluster);
+        nodeMass.push_back(static_cast<double>(sr.mass));
+    }
     const size_t nn = partOfNode_.size();
     const size_t J = joints_.size();
     centroid0_.assign(J, Vector3d());
@@ -129,7 +155,10 @@ void VesselPhysics::BuildLoadModel(const std::vector<int>& supports) {
         if (cut_[j] || subAlive_[j] == 0) continue;
         const int ia = index_.Find(js.targetBody), ib = index_.Find(js.hostBody), ic = index_.Find(js.child);
         if (ia < 0 || ib < 0 || ic < 0) continue;
-        const int a = nodeOfPart_[static_cast<size_t>(ia)], b = nodeOfPart_[static_cast<size_t>(ib)];
+        int a = nodeOfPart_[static_cast<size_t>(ia)], b = nodeOfPart_[static_cast<size_t>(ib)];
+        bool atHost = false;  // WP-52b: the end that is a servo body is that body's node (the PartJoint's Rigidbody is servoRb)
+        const int sv = JointEndServo(js, atHost);
+        if (sv >= 0) (atHost ? b : a) = nodeOfServo_[static_cast<size_t>(sv)];
         if (a < 0 || b < 0 || a == b) continue;
         jointHostCluster_[j] = nodeCluster_[static_cast<size_t>(b)];
         // PartJoint.SetJointLimits (PartJoint.cs:359): the angular drives are locked (+inf) when rigid || forceRigid
@@ -246,6 +275,29 @@ void VesselPhysics::ComputeLoads() {
     kin_.resize(C);
     nodeF_.resize(partOfNode_.size());
     nodeM_.resize(partOfNode_.size());
+    // WP-52b: the servo joints' impulses as external forces on their two nodes (the servo body's and the part's), physics frame, the moment
+    // about each node's centre of mass; they enter F / M below, so neither cluster's residual holds them
+    servoExtF_.assign(partOfNode_.size(), Vector3d());
+    servoExtM_.assign(partOfNode_.size(), Vector3d());
+    servoLoads_.assign(servos_.size(), ServoLoad{});
+    for (size_t sv = 0; sv < servos_.size(); ++sv) {
+        const ServoRec& s = servos_[sv];
+        const int nb = nodeOfServo_[sv], na = nodeOfPart_[static_cast<size_t>(s.part)];
+        if (s.joint == kInvalidConstraint || nb < 0 || na < 0) continue;
+        Vector3d lin, ang;
+        world_->GetConstraintImpulse(s.joint, lin, ang);
+        const Vector3d f = lin * inv, t = ang * inv;
+        const ClusterRec& B = clusters_[static_cast<size_t>(s.cluster)];
+        const Vector3d p = B.origin + B.q * s.anchorBodyB;
+        servoExtF_[static_cast<size_t>(nb)] += f;
+        servoExtM_[static_cast<size_t>(nb)] += Cross(p - s.comNow, f) + t;
+        servoExtF_[static_cast<size_t>(na)] -= f;
+        servoExtM_[static_cast<size_t>(na)] -= Cross(p - parts_[static_cast<size_t>(s.part)]->comNow, f) + t;
+        ServoLoad& L = servoLoads_[sv];  // what the servo body's side puts on the part: the reaction of the impulse on b
+        L.valid = true;
+        L.force = f * -1.0;
+        L.moment = t * -1.0;
+    }
     for (size_t c = 0; c < C; ++c) {
         const ClusterRec& cl = clusters_[c];
         ClusterKin& k = kin_[c];
@@ -257,14 +309,23 @@ void VesselPhysics::ComputeLoads() {
         k.g = k.qi * stepAccel_;
         Vector3d F = k.g * cl.mass, M;
         for (int node : clusterNodes_[c]) {
-            const size_t i = static_cast<size_t>(partOfNode_[static_cast<size_t>(node)]);
-            const PartRec& r = *parts_[i];
-            const Vector3d fb = stepForce_[i].IsZero() ? Vector3d() : k.qi * stepForce_[i];
-            const Vector3d mb = stepMoment_[i].IsZero() ? Vector3d() : k.qi * stepMoment_[i];
-            nodeF_[static_cast<size_t>(node)] = fb;
-            nodeM_[static_cast<size_t>(node)] = mb;
+            const size_t un = static_cast<size_t>(node);
+            const int sv = servoOfNode_[un];
+            // a part node: its RigidBodyPart's forces of the step; a servo node (WP-52b): the servo body's angular drag. Both: the servo joints.
+            Vector3d f = servoExtF_[un], m = servoExtM_[un];
+            if (sv < 0) {
+                const size_t i = static_cast<size_t>(partOfNode_[un]);
+                f += stepForce_[i];
+                m += stepMoment_[i];
+            } else {
+                m += servos_[static_cast<size_t>(sv)].stepMoment;
+            }
+            const Vector3d fb = f.IsZero() ? Vector3d() : k.qi * f;
+            const Vector3d mb = m.IsZero() ? Vector3d() : k.qi * m;
+            nodeF_[un] = fb;
+            nodeM_[un] = mb;
             F += fb;
-            M += Cross(r.localCom - cl.comBody, fb) + mb;
+            M += Cross(NodeLocalCom(node) - cl.comBody, fb) + mb;
         }
         k.resF = k.a * cl.mass - F;
         k.resM = cl.inertia * k.alpha + Cross(k.w, cl.inertia * k.w) - M;
@@ -300,8 +361,10 @@ void VesselPhysics::ComputeLoads() {
         const ClusterKin& k = kin_[c];
         int touching = 0;
         for (int node : members) {
-            const PartRec& r = *parts_[static_cast<size_t>(partOfNode_[static_cast<size_t>(node)])];
-            demand_[static_cast<size_t>(node)] = RigidPartDemand(static_cast<double>(r.rbMass), r.localCom, r.ownBody.m, cl.comBody, k.a, k.alpha, k.w, k.g,
+            const int sv = servoOfNode_[static_cast<size_t>(node)];
+            const double mass = NodeMass(node);
+            const Mat3& own = sv < 0 ? parts_[static_cast<size_t>(partOfNode_[static_cast<size_t>(node)])]->ownBody : servos_[static_cast<size_t>(sv)].ownBody;
+            demand_[static_cast<size_t>(node)] = RigidPartDemand(mass, NodeLocalCom(node), own.m, cl.comBody, k.a, k.alpha, k.w, k.g,
                                                                  nodeF_[static_cast<size_t>(node)], nodeM_[static_cast<size_t>(node)]);
             touching += nodeSupport_[static_cast<size_t>(node)];
         }
@@ -310,11 +373,10 @@ void VesselPhysics::ComputeLoads() {
         Vector3d mf;
         for (int node : members) {
             if (touching > 0 && !nodeSupport_[static_cast<size_t>(node)]) continue;
-            const PartRec& r = *parts_[static_cast<size_t>(partOfNode_[static_cast<size_t>(node)])];
-            const double w = touching > 0 ? 1.0 / static_cast<double>(shares) : static_cast<double>(r.rbMass) / cl.mass;
+            const double w = touching > 0 ? 1.0 / static_cast<double>(shares) : NodeMass(node) / cl.mass;
             const Vector3d cf = k.resF * w;
             demand_[static_cast<size_t>(node)].force -= cf;
-            mf += Cross(r.localCom - cl.comBody, cf);
+            mf += Cross(NodeLocalCom(node) - cl.comBody, cf);
         }
         const Vector3d couple = (k.resM - mf) * (1.0 / static_cast<double>(shares));
         for (int node : members)

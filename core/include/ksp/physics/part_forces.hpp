@@ -18,22 +18,40 @@
 //   ModuleLiftingSurface / ModuleControlSurface / ModuleAeroSurface  FixedUpdate (ModuleLiftingSurface.cs:170 / ModuleControlSurface.cs:366)
 //                     with baseTransform = the part transform (no model transforms) -> part.AddForceAtPosition lift, then drag.
 //   ModuleReactionWheel  FixedUpdate (ModuleReactionWheel.cs:158) -> part.AddTorque(lastTorque).
+//   WP-20f, the control modules of the measured order (run1-L_calltrace.csv seq 23-28: ModuleCommand, ModuleReactionWheel, ModuleSAS,
+//   then per engine part ModuleEngines before ModuleGimbal):
+//   ModuleCommand     FixedUpdate (ModuleCommand.cs:461) -> UpdateControlState (Part.isControlSource, the command's resource draw).
+//   ModuleSAS         FixedUpdate (ModuleSAS.cs:113): SASServiceLevel, the standalone state.
+//   ModuleGimbal      FixedUpdate (ModuleGimbal.cs:161) on the gimbal transforms of the model hierarchy (`Hooks::modelTransformChains`):
+//                     every gimbal transform first at its neutral local rotation (`t.localRotation = initRots[i]`), the actuation
+//                     maths of WP-23, then the new local rotation kept on the module (newLocalRotations). The thrust transforms below a
+//                     gimbal transform follow its CURRENT local rotation the next time they are posed, i.e. the next tick's engine
+//                     FixedUpdate (ModuleEngines runs before ModuleGimbal on the same part, so KSP's thrust also lags one tick).
+//                     PoseGimbalTransforms puts every gimbal transform on its part's current pose (Unity's hierarchy does that
+//                     implicitly): the bubble calls it before the input feed for every vessel whose VesselSAS is connected to
+//                     OnAutopilotUpdate, the only reader between two ticks (its GetPotentialTorque).
 // Not run here: Part.FixedUpdate itself (temperature / g / pressure limits, crew, ModulesOnFixedUpdate of ACTIVE parts) and every
-// module without a force record (they belong to their packages); ModuleGimbal actuation (the thrust transforms stay at their
-// neutral pose); exhaust damage raycasts.
+// module without a force record or control role (they belong to their packages: ModuleAlternator, FX modules ...); exhaust damage
+// raycasts; gimbal transforms that are not on the chain of a model transform the host reports (no actuation without a chain).
 #pragma once
 
 #include <cstddef>
 #include <functional>
+#include <map>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "ksp/math/vector3d.hpp"
 #include "ksp/physics/vessel_physics.hpp"
+#include "ksp/unity/quaternion.hpp"
+#include "ksp/unity/vector.hpp"
 
 namespace ksp {
 class Part;
 class Vessel;
 class ModuleEngines;
+class ModuleGimbal;
 class ModuleRCS;
 struct PartTransform;
 struct RCSThruster;
@@ -69,6 +87,40 @@ private:
 // partTransform.TransformPoint(local.position), rotation = partTransform.rotation * local.rotation (native quaternion product).
 PartTransform ChildTransform(const PartTransform& part, const PartTransform& local);
 
+// ---- WP-20f: the part model's transform hierarchy (PartLoader.CompileModel: the part's "model" child and the .mu nodes below it) -----
+// One Unity Transform of the model with its local pose.
+struct ModelTransformNode {
+    std::string name;
+    Vector3f localPosition{};
+    Quaternionf localRotation = Quaternionf::identity();
+    Vector3f localScale{1.0f, 1.0f, 1.0f};
+};
+// The chain from the part's "model" child (first) down to one transform (last).
+using ModelTransformChain = std::vector<ModelTransformNode>;
+inline constexpr size_t kNoChainOverride = static_cast<size_t>(-1);
+// Transform.rotation relative to the part: the leaf's local rotation, then rot = parent.localRotation * rot upward (native product; the
+// convention of WP-17b's EngineThrustTransforms::ChainRotation that the thrust transforms use). Node `overrideIndex` takes
+// `overrideRotation` as its local rotation (a gimbal transform's current one).
+Quaternionf ChainPartSpaceRotation(const ModelTransformChain& chain, size_t overrideIndex = kNoChainOverride,
+                                   const Quaternionf& overrideRotation = Quaternionf::identity());
+// Transform.position relative to the part: p = parent position + parent rotation * (parent lossy scale * local position), root first
+// (the composition of tools/wp17/mu_transforms.py part_space_position), with the same override.
+Vector3f ChainPartSpacePosition(const ModelTransformChain& chain, size_t overrideIndex = kNoChainOverride,
+                                const Quaternionf& overrideRotation = Quaternionf::identity());
+// `ancestor` is `chain` or one of its parents (a prefix: the same names and local poses, bit for bit)
+bool ChainIsAncestorOrSelf(const ModelTransformChain& ancestor, const ModelTransformChain& chain);
+// The part-space pose of a model transform whose chain has node `index` at `localRotation` instead of its neutral one: `neutral` is the
+// transform's neutral part-space pose (the host's data); the rotation is recomposed, the position moves by the chain's displacement.
+// Bit for bit `neutral` when `localRotation` equals the node's own local rotation (component by component, +0 == -0).
+PartTransform ChainPoseWithLocalRotation(const PartTransform& neutral, const ModelTransformChain& chain, size_t index,
+                                         const Quaternionf& localRotation);
+// Part.FindModelTransforms(name) of every model transform called `name` (chain order = FindModelTransforms order)
+using ModelTransformChains = std::function<std::vector<ModelTransformChain>(Part&, const std::string& name)>;
+// For ModuleGimbal::findModelTransforms: each gimbal transform placed on the part (neutral) with its local rotation (initRots)
+std::function<std::vector<std::pair<PartTransform, Quaternionf>>(Part&, const std::string&)> GimbalFindModelTransformsHook(ModelTransformChains chains);
+// For ModuleGimbal::isThrustTransformInChildren (CreateEngineList): the gimbal chain is an ancestor of (or is) the thrust chain
+std::function<bool(Part&, const ModuleGimbal&, size_t, const ModuleEngines&, size_t)> ThrustBelowGimbalHook(ModelTransformChains chains);
+
 class PartModuleForces {
 public:
     struct Hooks {
@@ -79,9 +131,21 @@ public:
         std::function<std::vector<RCSThruster>(Part&, const ModuleRCS&)> rcsThrusters;
         // FlightInputHandler.fetch.precisionMode (ModuleRCS)
         bool precisionMode = false;
+        // WP-20f: the model hierarchy (Part.FindModelTransforms with each transform's chain). Unset: gimbals do not actuate (their
+        // transforms, if any, stay where ModuleGimbal.OnStart found them) and thrust transforms stay at their neutral pose. The answers
+        // are cached per AvailablePart and name (the hierarchy is the prefab's): ClearModelChainCache() after replacing the hook.
+        ModelTransformChains modelTransformChains;
     };
     Hooks hooks;
     bool engines = true, rcs = true, liftingSurfaces = true, reactionWheels = true;
+    bool command = true, sas = true, gimbals = true;  // WP-20f
+
+    // WP-20f: every gimbal transform of the loaded vessels (or of one vessel) on its part's current pose at its current local rotation
+    // (see above). Between two ticks only VesselSAS reads them in kspcore (ModuleGimbal.GetPotentialTorque); a host that reads them
+    // elsewhere calls this first.
+    void PoseGimbalTransforms();
+    void PoseGimbalTransforms(Vessel& v);
+    void ClearModelChainCache() { chainCache_.clear(); }
 
     // seq 22-276: every loaded vessel of the registry (FlightGlobals.Vessels order), its parts in vessel order, each part's modules in
     // module order. `host` gives the vessels' bindings (a vessel without one runs its modules' packed / no-Rigidbody branches).
@@ -92,10 +156,17 @@ public:
 
     // what the last FixedUpdate handed to the part buffers (counts)
     size_t engineForces = 0, rcsForces = 0, surfaceForces = 0, wheelTorques = 0;
+    // WP-20f: ModuleGimbal.FixedUpdates that moved transforms; thrust transforms posed off their neutral pose (last FixedUpdate)
+    size_t gimbalUpdates = 0, gimbaledThrustTransforms = 0;
 
 private:
     void EngineFixedUpdate(Part& part, ModuleEngines& e, Vessel& v, VesselPhysics* vp);
     void RcsFixedUpdate(Part& part, ModuleRCS& r, Vessel& v, VesselPhysics* vp);
+    void GimbalFixedUpdate(Part& part, ModuleGimbal& g, Vessel& v);
+    // the gimbal's transforms on the part at their current (`neutral` false) or neutral local rotation; false without chains
+    bool PoseGimbal(Part& part, ModuleGimbal& g, bool neutral);
+    const std::vector<ModelTransformChain>& Chains(Part& part, const std::string& name);
+    std::map<std::pair<const void*, std::string>, std::vector<ModelTransformChain>> chainCache_;
 };
 
 }  // namespace ksp::physics

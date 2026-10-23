@@ -53,6 +53,7 @@ class PartThermalData;  // WP-22 ksp/thermal/thermal_types.hpp
 class PartSet;
 class ShipConstruct;
 class DockedVesselInfo;
+class FlightCtrlState;  // WP-14 ksp/vessel/flight_ctrl_state.hpp (WP-20f: propagateControlUpdate)
 
 // Unity Transform stand-in for the Part's own transform (position, rotation, localScale): only what the engine-agnostic Part
 // maths reads (AttachNode.ReverseSrfNodeDirection / ChangeSrfNodePosition, UpdateOrgPosAndRot, SetMirror's model scale).
@@ -288,6 +289,10 @@ public:
     bool PartCanBeDetached();                      // :8960
     bool PartCanBeOffset();                        // :8978
     bool PartCanBeRotated();                       // :9001
+    // WP-20f: Vessel.FeedInputFeed's walk (Part.cs:3996): onCtrlUpd on this part, then on every child in child order. onCtrlUpd is the
+    // empty `protected virtual` of Part.cs:4626; no class of Assembly-CSharp overrides it, so the walk changes nothing (kept for the order)
+    void propagateControlUpdate(FlightCtrlState& st);   // :3996
+    void onCtrlUpd(FlightCtrlState& s) { (void)s; }      // :4626
 
     // ---- modules (:5515-6006) ----------------------------------------------------------------------------------------------
     // Part.AddModule(string): class lookup, Cargo / Inventory exclusivity, AddComponent (constructor chain), optional Awake.

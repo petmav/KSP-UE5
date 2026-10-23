@@ -554,6 +554,12 @@ void Part::deactivate() {
     ModulesOnDeactivate();
 }
 
+// Part.cs:3996
+void Part::propagateControlUpdate(FlightCtrlState& st) {
+    onCtrlUpd(st);
+    for (size_t i = 0, count = children.size(); i < count; i++) children[i]->propagateControlUpdate(st);
+}
+
 // Part.cs:2888
 void Part::FindNonPhysicslessChildren(std::vector<Part*>& parts) {
     for (size_t i = 0; i < children.size(); i++) {

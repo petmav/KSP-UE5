@@ -272,9 +272,12 @@ public:
     std::string displaylandedAt = "";
     std::string landedAtLast = "";
     Delegate<void()> OnJustAboutToBeDestroyed = Delegate<void()>::Static(&Vessel::NoCallback);
-    // Vessel.cs:370 OnAutopilotUpdate (FlightInputCallback(FlightCtrlState), WP-24: VesselSAS connects ControlUpdate / UpdateVesselTorque). The host
-    // invokes it from FeedInputFeed (Vessel.cs:2035) between OnPreAutopilotUpdate and OnPostAutopilotUpdate.
+    // Vessel.cs:366-378, the four FlightInputCallback(FlightCtrlState) fields, each `delegate { }`; FeedInputFeed (Vessel.cs:2035, WP-20f)
+    // invokes them in this order. OnAutopilotUpdate: WP-24's VesselSAS connects ControlUpdate / UpdateVesselTorque.
+    Delegate<void(FlightCtrlState&)> OnPreAutopilotUpdate = Delegate<void(FlightCtrlState&)>::Static(&Vessel::NoFlightCallback);
     Delegate<void(FlightCtrlState&)> OnAutopilotUpdate = Delegate<void(FlightCtrlState&)>::Static(&Vessel::NoFlightCallback);
+    Delegate<void(FlightCtrlState&)> OnPostAutopilotUpdate = Delegate<void(FlightCtrlState&)>::Static(&Vessel::NoFlightCallback);
+    Delegate<void(FlightCtrlState&)> OnFlyByWire = Delegate<void(FlightCtrlState&)>::Static(&Vessel::NoFlightCallback);
     Situations situation = static_cast<Situations>(0);
     double missionTime = 0.0;
     double launchTime = 0.0;
@@ -473,6 +476,7 @@ public:
     void SetGroupOverride(int newGroup);                           // :1994
     void SetControlState(const FlightCtrlState& st);               // :2017
     void GetControlState(FlightCtrlState& st);                     // :2030
+    void FeedInputFeed();                                          // :2035 (WP-20f)
     bool ActionControlBlocked(KSPActionGroup actionGroup) const;   // :4045
     bool AxisControlBlocked(KSPAxisGroup axisGroup) const;         // :4054
     void CopyOverrides(const Vessel& v);                           // :4063

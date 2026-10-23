@@ -1,6 +1,7 @@
 // WP-52: BaseServo.cs (see include/ksp/serenity/base_servo.hpp). Every function cites BaseServo.cs:<line> of
 // decompiled/KSP-Decompiled/Assembly-CSharp/Expansions/Serenity/.
 #include "ksp/serenity/base_servo.hpp"
+#include "ksp/serenity/servo_backend.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -1015,8 +1016,11 @@ Vector2f BaseServo::GetSoftLimits(const std::string& fieldName) {
 
 // PartJoint.SetupJoint (PartJoint.cs:213-258) as the reduced model sees it: the joint between a robotic part and its neighbour is an articulation
 // point when the node it uses belongs to the servo's moving side (AttachServoRigidBody / NodeRigidBody return the servo body).
-bool ServoArticulation(const physics::PartJointSpec& j) {
-    if (j.kind != physics::JointKind::Attach || j.child == nullptr || j.parent == nullptr) return false;
+bool ServoArticulation(const physics::PartJointSpec& j) { return ServoBodyEnd(j) != nullptr; }
+
+// WP-52b: the same test, answering which end's servo body the joint uses (the child servo first, as above)
+const Part* ServoBodyEnd(const physics::PartJointSpec& j) {
+    if (j.kind != physics::JointKind::Attach || j.child == nullptr || j.parent == nullptr) return nullptr;
     Part* child = j.child;
     Part* parent = j.parent;
     auto nodeOn = [](Part& on, Part* other) -> AttachNode* {  // Part.AttachedPartNode: the node of `on` attached to `other`
@@ -1032,13 +1036,13 @@ bool ServoArticulation(const physics::PartJointSpec& j) {
     AttachNode* nodeFromParent = nodeOn(*parent, child);
     if (auto* s2 = dynamic_cast<BaseServo*>(child->FindModuleOfClass("BaseServo"))) {
         AttachNode* n = nodeToParent != nullptr ? nodeToParent : nodeFromParent;
-        if (n != nullptr && s2->AttachServoRigidBody(*n) == BaseServo::BodyOwner::Servo) return true;
+        if (n != nullptr && s2->AttachServoRigidBody(*n) == BaseServo::BodyOwner::Servo) return child;
     }
     if (auto* s = dynamic_cast<BaseServo*>(parent->FindModuleOfClass("BaseServo"))) {
         AttachNode* n = nodeFromParent != nullptr ? nodeFromParent : nodeToParent;
-        if (n != nullptr && s->AttachServoRigidBody(*n) == BaseServo::BodyOwner::Servo) return true;
+        if (n != nullptr && s->AttachServoRigidBody(*n) == BaseServo::BodyOwner::Servo) return parent;
     }
-    return false;
+    return nullptr;
 }
 
 }  // namespace ksp::Expansions::Serenity

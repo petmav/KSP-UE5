@@ -71,9 +71,11 @@ un_tests.ps1`
 | 57. WP-52 Breaking Ground robotics (branch `wp52`, from main `cd5e4df4`) | done for the engine-agnostic part, gated by an independent Python reference at 0 ULP (every existing gate unchanged): `BaseServo` (motor / lock / brake state, the 20-reading rate-of-motion average, power draw, drive target stepping, axis field limits, mass and cost, attach node bookkeeping), `ModuleRoboticServoHinge` / `ModuleRoboticRotationServo` / `ModuleRoboticServoPiston` / `ModuleRoboticServoRotor` (targets, soft / hard limits, traverse-velocity ramp, joint drive configuration, power-loss lock, mirrored / symmetric hinges, rotor spool / brake / ratchet, drag cubes), `ModuleRoboticController` (sequencer: Once / Repeat / PingPong / OnceRestart, direction, action windows, controlled axes / actions with symmetry transfer, persistence), `ControlledAxis` (time -> value curve, presets, helpers), `ControlledAction`, `RoboticControllerManager` (priority-averaged update queue), `ConfigurableJointExtensions.SetTargetRotationLocal`. Joint drive: WP-20b has no articulated bodies, so the servos write a `ConfigurableJointData` (the seam contract), `HeadlessServoPlant` is a documented reference plant (not PhysX), `ServoArticulation` is the `isArticulation` hook (PhysProf-S: 2 clusters, 1 constraint) and `BaseServo` is an `IJointLockState` for `Part.HasFreePivot`. Gate: 92 servo runs x 120 ticks (404,308 comparisons), 60 controller runs (47,854), 80 preset curves (1,799 keys bit for bit, 213 native-evaluated keys at a stated tolerance), 72 joint-rotation cases, 40 drive sets, 27 labelled derived cases; `tests/test_robotics*.cpp` 34 cases / 18,687 assertions. The GameData mirror has no SquadExpansion/Serenity: every servo MODULE value is a labelled synthetic fixture; UI / PAW / audio / FX / `ModuleRobotArmScanner` deferred; see the section below |
 | 58. WP-20e contact, landing and water (branch `wp20e`, from origin/main `cd5e4df4`, main `0d9fd73c` merged) | done for the engine-agnostic part, gated by an independent Python reference at 0 ULP / exact and scenarios against analytic values and KSP's own rules (no golden or capture covers contacts; every existing gate unchanged): `PhysicsWorld` contact events per collider pair (Enter / Stay / Exit, pre-solve kinematics, Unity's 0.01 m contact offset) and a fixed-to-world weld; Part.OnCollisionEnter / Stay / Exit, LandedCollisionChecks, HandleCollision's crash tolerance, checkLanded / checkSplashed, landedAt, explode (Part.cs:3355-3745, :4373); Vessel.AddRBAnchor (the landed anchor) and CheckGroundCollision / getLowestPoint (every WP-mucol collider kind); PartBuoyancy and CollisionEnhancer (whole); `ContactHost` in the bubble (static collider registry, dispatch, buoyancy / enhancer slots, anchors, ground probes, WP-12b terrain colliders hosted per body in the bubble's frame, rebuilt on frame changes). Gate: 20 cases: reference replays HandleCollision 1,200 collisions, 300 message sequences / 3,045 messages, PartBuoyancy 110 parts / 6,300 ticks, CollisionEnhancer 400 parts / 1,404 ticks, AddRBAnchor 90 timelines / 10,200 frames: 0 mismatches; **pad: S / M2-AS / L2-AS anchor after 1.5 s and then rest at exactly zero speed (L2-AS rocked 0.091 m/s without it, WP-20b R2)**, anchor force = weight; ignition releases it, PRELAUNCH -> FLYING; a part at 0.9x / 1.1x crashTolerance survives (LANDED) / explodes; splashdown in Kerbin's ocean floats at KSP's buoyancy equilibrium (draft -0.001 %), SPLASHED, at 20 m/s it crashes; 80 m/s into the terrain is caught by CollisionEnhancer; vessel on vessel (landed with the other's landedAt / both explode); CheckGroundCollision at spawn; Kerbin's PQS colliders hosted per body; determinism 1 / 4 threads; the contact messages of every WP-29c physics-warp substep reach the parts. **SAS / FeedInputFeed not wired**: labelled seam `PhysicsBubble::inputFeed`. See the WP-20e section |
 | 59. WP-12c KSC / launch-site scenery colliders and ground PhysicMaterials from the game's assets (branch `wp12c`, from main `51530d89`, main `e43c8576` merged) | done for the engine-agnostic part, gated by a second independent extraction (0 mismatches over 59 cities / 4,463 objects / 2,585 colliders / 712 meshes) and an independent numpy float32 reference (2,506 colliders placed bit for bit): the colliders of every stock PQSCity / PQSCity2 (the KSC with all facility levels and destruction states, island airfield, four stock launch sites + set dressings, KSC2, monuments) with layer / tag / CrashObjectName, the PSystemSetup launch-site table, PhysicMaterials (terrain Ground 0.9 Max / Min on 6 bodies; `Physics.defaultMaterial` = Metal 0.25 for every part and scenery collider) from `KSP_x64_Data`; `SceneryCityHost` registers them through `ContactHost::RegisterStatic` at WP-42's PQSCity pose; PhysX-style material combine in `PhysicsWorld` (opt-in, analytic sliding gate to 6 digits); wheels see tagged scenery. A craft set down on the real pad: `landedAt == "LaunchPad"`; a rover on runway 09: `landedAt == "Runway"`. 49 / 49 ctest, unit 1,033 cases / 1,612,984 assertions | see "WP-12c" below: DLC sites, facility level / destruction state machine at run time, `physxMaterials` off by default (changes every contact friction), no capture |
+| 60. WP-52b the joint drive backend of the servos (branch `wp52b`, from main `51530d89`, main `e43c8576` merged) | done for the engine-agnostic part: the servo body (Part.servoRb) is a mass element of the moving side's cluster (rb / servoRb halves, FlightIntegrator.cs:476-480), the servo joint a Jolt hinge / slider with a PositionAndVelocity drive motor reading ConfigurableJointData every step (`UseServoBackend`, `serenity/servo_backend.hpp`), FlightIntegrator's partHasServoRb, the WP-20c loads across the servo. Gated by an independent Python drive-law reference (1.6e-5 / 4.9e-5 relative over 50 runs) and closed loops on a real craft (hinge 4.6e-4 rad and piston 4.3 mm from the reference plant of the same inertia, rotor at rpmLimit under its torque limit, locked servo offset tau / k, loads = the applied load, orbit bubble with the FlightIntegrator, 1 / 4 threads bit-identical). Sign conventions and limit / spring behaviour UNVERIFIED (no capture); servo MODULE values SYNTHETIC. See "WP-52b" below |
+| 61. WP-20f SAS / Vessel.FeedInputFeed in the physics tick, gimbal actuation, the C10 ascent to 36.7 km (branch `wp20f`, from main `51530d89`) | done for the engine-agnostic part, gated against KSP's own C10 ascent with WP-20d's tolerances (M2 to 20 km and its 90 s state at 36.7 km to 0.1 %, L2-AS to its apex, S to Mach 1), C10's live drag-cube weights (0 ULP on 631 parts), an independent double recomposition of the gimbal chains and KSP's own sign conventions (every existing gate unchanged): Vessel.FeedInputFeed, FlightInputHandler.FixedUpdate at seq 18 of the bubble (`PhysicsBubble::SetFlightInputHandler`), VesselSAS / reaction wheels / KillAngularVelocity on the rigid bodies, Part.Update's PartValues refresh, ModuleCommand / ModuleSAS / ModuleGimbal in the module slot with gimbal actuation over the model transform chains (thrust one tick behind the gimbal, bit for bit neutral without a command); Windows NativeSinf / Cosf / Powf no longer call getenv per call (AngleAxis 330x faster). See "WP-20f" |
 | 62. WP-29d real wheel / gear / leg geometry, landing legs and gear, steering circle, runway roll, brake anchor (branch `wp29d`, from main `51530d89`) | done for the engine-agnostic part (see the WP-29d section): the `.mu` reader keeps the WheelCollider and Animation chunks, `PartModelRig` (CompileModel hierarchy, FindModelTransform, part-space poses, Hermite-sampled clips), the 13 stock wheel / gear / leg models (reduced, origin + sha256) gated bit for bit against an independent python parse (6 cases / 15,030 assertions, 0 mismatches); the wheel host runs on the models (collider transform, deployTgt, animations, hub colliders, stand-in sphere, schloompa weld), `Vessel.getLowestPoint` wheel branch. Scenarios on KSP's stock craft: rovers on the real geometry (rest compression 0.508 / 0.531 vs proxy 0.5085 / 0.5312, drive within 0.03 % of the proxy), LT-2 lander 3 m/s touchdown (compression 0.546, rebound 1.46 m/s, settles 1.98 s), leg / gear retract and deploy, steering circle within 0.5 %, a 730 m runway roll. Open: no stock aircraft loads (ModuleControlSurface), the VTOL craft spawn attitude jump, capture C11 |
 
-## Test results (main 703e3d6d: all 50 ctest tests pass, measured 2026-10-14; the list below was written at 36 tests, since then added: unit shards, unit.random_order, robotics, wheels.*; all 36 ctest tests pass (35 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience, WP-19a capture.vessel_rails)
+## Test results (wp52b merged with origin/main incl. WP-12c, measured 2026-10-20: 49 / 49 ctest tests pass in a worktree, `kspcore_tests` 1,043 cases / 1,642,430 assertions; earlier: main 703e3d6d: all 50 ctest tests pass, measured 2026-10-14; the list below was written at 36 tests, since then added: unit shards, unit.random_order, robotics, wheels.*; all 36 ctest tests pass (35 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience, WP-19a capture.vessel_rails)
 
 Every numeric column of every gate: **max ULP 0, max abs 0** (bit-exact, and the same decimal text). Tolerance files:
 harness goldens use `harness/compare/tolerances.json` unchanged; in-game capture gates use `tests/tolerances_capture.json`
@@ -6355,7 +6357,7 @@ Windows MSVC RelWithDebInfo, from-scratch build (`core/build` deleted, `CMAKE_BU
 
 ## WP-52: Breaking Ground robotics (branch `wp52`, from main `cd5e4df4`)
 
-State: done for the engine-agnostic part; the joint drive is a documented seam (decision below). Scope = `Assembly-CSharp/Expansions/Serenity/` BaseServo.cs,
+State: done for the engine-agnostic part; the joint drive is a documented seam (decision below; WP-52b built its Jolt backend, see "WP-52b"). Scope = `Assembly-CSharp/Expansions/Serenity/` BaseServo.cs,
 ModuleRoboticServoHinge.cs, ModuleRoboticServoPiston.cs, ModuleRoboticServoRotor.cs, ModuleRoboticRotationServo.cs, ModuleRoboticController.cs,
 ControlledAxis.cs, ControlledAction.cs, RoboticControllerManager.cs (7,390 C# lines with ControlledBase / RoboticCollisions / IRoboticServo, which WP-53 had
 ported), plus `ConfigurableJointExtensions.cs`. **No golden or capture covers a servo** (the SquadExpansion servo parts are not installed in the GameData
@@ -6761,3 +6763,277 @@ Whole suite (Windows MSVC RelWithDebInfo, `core/build` fresh in the worktree the
 - `PhysicsWorldConfig::physxMaterials` is off by default; turning it on for the flight bubble changes the friction of every contact (part vs terrain 0.6 -> 0.9, part vs part 0.6 -> 0.25) and is the host's decision (the WP-20b/e/29c numbers would have to be re-measured). Static vs dynamic friction and PhysX's bounce threshold not modelled.
 - No in-game capture of a pad settle / landing exists; the scenarios are analytic / reference-gated, not capture gates.
 - The extraction needs the game; re-run: `harness/tools-cache/venv/Scripts/python.exe -I core/tools/mucollider/extract_scenery_colliders.py <KSP_x64_Data> harness/lib core/data/terrain/pqs_prefab.json core/data/scenery`, then `verify_scenery_extraction.py ... --report core/tests/data/wp12c_extraction_digest.json`, then `python -I core/tools/wp12c/scenery_reference.py core/data/scenery core/tests/data/wp12c_reference.json`. Finding on the way: the UnityPy type-tree generator types a `string[]` field as one string (PSystemSetup.LaunchSite.additionalprefabPaths); the extractor patches such nodes to vectors.
+
+## WP-52b: the joint drive backend of the servos on the reduced Jolt model (branch `wp52b`, from main `51530d89`; main `e43c8576` merged)
+
+State: done for the engine-agnostic part. Scope = NEXT-STEPS.md "WP-52 robotics", follow-up 1: the servos wrote `ConfigurableJointData` (WP-52) and
+the reduced rigid-body model had only fixed constraints. Now a servo has its own servo body (Part.servoRb), the servo's moving side is a cluster of its
+own, and a Jolt hinge / slider with a drive motor reads the joint data every physics step and moves the moving transform after it:
+`HeadlessServoPlant` is no longer in the loop (it stays as the reference plant of the gate). **Gates**: an independent Python reference of the drive
+law (`tools/wp52b/drive_reference.py`, no kspcore code), closed loops of the four servo kinds on a real two-part craft against the reference plant with
+the same effective inertia and against closed forms, the structural loads across the servo, a physics-bubble scenario with the FlightIntegrator, and
+determinism at 1 / 4 threads. **No capture of a servo exists** (the SquadExpansion parts are not installed): the sign conventions (servo_joint.cpp's
+derivation), the PhysX drive law and its limit / limit-spring behaviour stay **UNVERIFIED**; every servo MODULE value in the tests is a labelled
+SYNTHETIC fixture (no part data was invented). Every existing gate is unchanged (`harness/compare/tolerances.json`, `tests/tolerances_capture.json`
+untouched); a vessel without servo hooks runs exactly the code it ran before (the servo loops are empty).
+
+### What KSP does (the spec)
+
+- BaseServo.CreateServoRigidbody (Expansions/Serenity/BaseServo.cs:1196): a second Rigidbody on the moving transform, `part.servoRb`; each servo's
+  OnJointInit (ModuleRoboticServoHinge.cs:337 and the other three) adds a ConfigurableJoint to the moving GameObject (one axis free / limited, five
+  locked), PostStartInitJoint connects it to `part.Rigidbody` (BaseServo.cs:1158). The parts on the servo's moving nodes are jointed to the servo
+  body (AttachServoRigidBody / NodeRigidBody, BaseServo.cs:1602 / :1627, through PartJoint.SetupJoint).
+- FlightIntegrator.UpdateMassStats (FlightIntegrator.cs:476-480): with a servoRb, `rb.mass = servoRb.mass = num2 / 2f`; Part.ValidateInertiaTensor
+  (Part.cs:4263-4271): both get `inertiaTensor * Max(1, mass)`; FlightIntegrator.Integrate (:728-731): `servoRb.AddForce(integrationAccel,
+  Acceleration)`; UpdateAerodynamics (:2268-2281, :2366-2369): `servoRb.angularDrag = rb.angularDrag`; PartBuoyancy (:550-555, :571-586) the same in water.
+- The drive: positionSpring k, positionDamper c, maximumForce F and the targets (targetRotation / targetPosition / targetAngularVelocity), written by
+  ModuleRoboticServoHinge.cs:442-469, ModuleRoboticRotationServo.cs:445-480, ModuleRoboticServoPiston.cs:396-431, ModuleRoboticServoRotor.cs:465-481 /
+  :637-648; PhysX integrates F = k (xt - x) + c (vt - v), |F| <= F, implicitly (native: UNVERIFIED).
+
+### What is in
+
+| piece | files | what |
+|---|---|---|
+| articulated constraints | `physics/physics_world.hpp`, `src/physics/physics_world.cpp` | `CreateArticulatedConstraint(a, b, desc)`: a Jolt HingeConstraint / SliderConstraint whose zero is the caller's coordinate zero (the bodies read `coordinate0` at creation); `SetArticulatedDrive`: the motor in `PositionAndVelocity` mode with a `StiffnessAndDamping` spring (k, c), the torque / force limit, limits and limit springs (soft when spring > 0); `ArticulatedCoordinate` / `ArticulatedRate`; `GetConstraintImpulse` returns the world impulse on b (the hinge's two-row rotation lambdas rebuilt in the basis HingeRotationConstraintPart derived from the set-up rotations, which Step records); per-joint solver iterations (`velocitySteps`, Jolt's per-constraint override) |
+| servo bodies | `physics/vessel_physics.hpp`, `src/physics/vessel_physics.cpp`, `vessel_physics_internal.hpp` | `VesselPhysicsOptions::servoBody / servoBodyEnd / servoDrive / servoMoved / servoVelocitySteps`, `ServoBodySpec`; the servo body is a mass element (`ServoRec`) of the cluster of what is attached to it (union-find over parts + servo bodies; a servo with nothing attached is a body of its own with a 1 cm sphere); the rb / servoRb mass halves (also in UpdateMassProperties), servoRb's inertia and angular drag (mirrors `SetAngularDrag`); the joint built with the bodies at the servo's current coordinate and kept across autostrut changes; per step the drive before the world step, the coordinate (a hinge's unwrapped) and `servoMoved` after it; ResumeVelocity / Rebuild / Cut / SplitOff / Merge / Rebind carry the servo body's own velocity (`PartPhysicsState::servo*`); the servo joint is not a support (ClusterSupportForce); queries `PartHasServoBody`, `ServoCluster`, `ServoJoint`, `ServoCoordinate`, `ServoRate`, `ServoBodyMass`, `ServoAngularDrag`, `ServoBodyCenterOfMass`, `ServoJointLoad`; `ConstraintCount` counts the servo joints |
+| loads across the servo (WP-20c) | `src/physics/vessel_physics_loads.cpp` | the servo body is a node of the load model; a PartJoint whose end is a servo body uses that node (the PartJoint's Rigidbody is servoRb), so the capacity rule applies to the moving-side parts' joints as to any PartJoint; the servo joint's impulse is an external force / moment on its two nodes (each side balances by itself, also when the two clusters have turned against each other); its load is reported per servo (`ServoJointLoad`; unbreakable, as the C# never sets its breakForce) |
+| the backend | `serenity/servo_backend.hpp`, `src/serenity/servo_backend.cpp` | `ServoDriveLaw`: the one mapping ConfigurableJointData -> 1-DOF drive (rad / m), shared with HeadlessServoPlant; `WriteServoCoordinate` (the moving transform); `ServoBodySpecOf` (part space: servoParentTransform, the moving transform, servoRb.centerOfMass, the coordinate read back with the plant's convention); `ServoBodyEnd` (ServoArticulation's test, refactored in base_servo.cpp to answer which end); `ServoJointDrive`, `ServoJointMoved`, `UseServoBackend(options)` (all hooks + `isArticulation = ServoArticulation`) |
+| the plant | `src/serenity/servo_plant.cpp` | refactored onto ServoDriveLaw / WriteServoCoordinate, arithmetic unchanged (every WP-52 gate passes unchanged) |
+| FlightIntegrator | `src/physics/flight_integrator.cpp` | `AeroRigidbody::partHasServoRb = binding->PartHasServoBody(part)` (FlightIntegrator.cs:2268, flag2) |
+
+A host (the physics bubble included) gets the backend with `UseServoBackend(bubbleOptions.vessel)`: no change to the bubble tick. The servo modules'
+FixedUpdate / Update stay explicit calls (WP-52's host-wiring item); the tests call them at the module slot.
+
+### Gate, the drive law (`tests/test_servo_backend.cpp`, 3 cases; `tools/wp52b/drive_reference.py` -> `tests/data/wp52b_reference.json`, seed 5252)
+
+| case | what | result |
+|---|---|---|
+| coordinate and locks | a hinge / slider reads its creation coordinate (0, 0.7, -2.5); a +axis spin reads as a positive rate; pushes across the axis are held | to 1e-6; locked rates < 1e-3 rad/s, pivot drift < 1 mm |
+| **drive law** | the 28 reference cases (12 position drives, 6 MoveTowards ramps, 6 torque-limited velocity drives = the rotor, 4 holds against a load) as hinge and as slider on a body with the axis through its centre of mass (50 runs of 200-400 steps) against the Python implicit D6 law v1 = (v0 + dt/I (k (xt - x0) + c vt + L)) / (1 + dt/I (c + dt k)) with the force clamp | worst relative \|dx\| **1.6e-5**, \|dv\| **4.9e-5** (Jolt's float velocities; gate 2e-4); the analytic markers: ramp lag c / k * rate (5 %), torque-limited spool time I vt / F (3 %), hold offset L / k (0.1 %) |
+| solver characterisation | a velocity drive on a body hinged 2.4 m from its centre of mass | the steady rate falls short by 0.0028 rad/s of 3.14 (predicted m r^2 w (1 - cos w dt) / (c dt) = 0.0032; gate 20 %); 0 without the arm (Findings) |
+
+Jolt's PositionAndVelocity motor solves J v + s lambda + b = 0 with s = 1 / (dt (c + dt k)), b = -vt + dt k s C: the implicit law above with the target
+extrapolated by vt dt, i.e. the same law for the hinge / rotation servo / piston (vt = 0) and different by k dt vt for the rotor (k = 1e-10: nil).
+
+### Gate, closed loops (`tests/test_servo_scenarios.cpp`, 7 cases)
+
+The craft: the first two parts of PhysProf-S, a probeStackLarge root carrying the SYNTHETIC servo module with its "bottom" node on the moving side, a
+full Rockomax32 (18.25 t with the servo body) on it; the root's cluster welded to the world unless noted.
+
+| case | what | result |
+|---|---|---|
+| servo split | clusters, joints, masses | 2 clusters, 1 articulated joint, the tank on the servo body's cluster; rb.mass = servoRb.mass = num2 / 2f exactly; the cluster masses sum to the rb masses (1e-12); with `isArticulation` only (WP-52) still the welded split |
+| **hinge to a target** | targetAngle 40 deg at traverseVelocity 10 deg/s (k 1e4, c 2e3, F 100 kN m from the hinge's formulas); I_eff = 107.2 t m^2 (the moving side about the axis through the anchor) vs HeadlessServoPlant with that inertia | worst \|Jolt - plant\| **4.6e-4 rad** at the production iterations (50), **3.0e-5 rad** at 200; settles on 40 deg (0.1 %); ramp lag 0.03493 rad vs c / k * rate = 0.03491; the module's Transform angle = the joint coordinate (1e-3 deg) |
+| **piston extension** | targetExtension 1.5 m at 0.5 m/s, M = 18.25 t vs the plant | worst \|Jolt - plant\| **4.3 mm** at 50 iterations (the axis passes 2.4 m from the tank's centre of mass), **0.5 mm** at 200; extension 1.5 m (0.1 %); the tank moved 1.500 m along the axis, < 1 mm across it |
+| **rotor at rpm** | rpmLimit 30, maxTorque 40 x 2.5 = 100 kN m, damper 1e4 (SYNTHETIC: the torque limit binds), mainAxis Y (through the tank's centre of mass), I_eff 19.9 t m^2 | torque-limited spool-up: the rate at 0.2 s = tau / I * 0.2 (0.5 %); worst \|Jolt - plant\| 3.5e-3 rad/s (0.11 % of 3.14, at the corner where the limit lets go; gate 0.2 %); steady **3.14159 rad/s = rpmLimit** (1e-4), the module measures 30 rpm, IsMoving; with Unity's angularDrag 0.05 on rb and servoRb: steady 3.14128 = vt c / (c + d I_own) (2e-5); free floating: the base counter-rotates, total angular momentum **4.9e-7 of I w = 62.5** |
+| **locked servo** | after EngageServoLock, a constant 24.39 kN load on the tank's centre of mass across the axis (50 kN m about it), 1,500 ticks, Tree solve | offset **0.004993 rad = tau / k (0.005)**; the tank's attach joint (to the servo body) carries **24.3902 kN** = the load, the servo joint 24.3902 kN along the load; the tank joint's capacity ratio is computed (WP-20c's rule) |
+| physics bubble | the craft in a 120 km Kerbin orbit in the WP-19b bubble with WP-20d's FlightIntegrator and `UseServoBackend(options.vessel)` | servoRb.angularDrag = rb.angularDrag after the FlightIntegrator (not the default 0.05); the servo body falls with the rest (integrationAccel on servoRb): the servo joint force stays 0 (gate < 1 % of servoRb.mass g = 1.70 kN), the hinge at its angle; the load solve ran every tick |
+| determinism | the hinge closed loop at 1 and 4 Jolt threads | identical `StateHash` and coordinate |
+
+### Measurements (MSVC RelWithDebInfo, one thread, Flush + Step + AfterStep, no FlightIntegrator; a temporary bench, removed)
+
+| craft | parts | whole | welded split (WP-52) | servo joint, world iterations (10) | servo joint, 50 (default) |
+|---|---|---|---|---|---|
+| PhysProf-S head | 2 | 0.0052 ms | 0.0068 ms | 0.0088 ms | 0.0085 ms |
+| PhysProf-L2-AS (the servo on the root) | 457 | 0.100 ms | 0.121 ms | 0.134 ms | 0.129 ms |
+
+A servo joint costs ~0.01 ms per tick over a weld; the 50 iterations of a servo's island are within the noise (a vessel is a handful of bodies).
+
+### Exact / approximate / changed
+
+| choice | class | notes |
+|---|---|---|
+| rb / servoRb masses, inertia tensors, servoRb angular drag, integrationAccel on servoRb | exact | FlightIntegrator.cs:476-480, Part.cs:4263-4271, FlightIntegrator.cs:728-731 / :2268-2281 / :2366-2369 |
+| which attach joints ride on the servo body | exact | ServoArticulation's test (AttachServoRigidBody / NodeRigidBody), unchanged |
+| the drive law | approximate | Jolt's soft constraint = the implicit D6 law (2e-4 relative, float); its Gauss-Seidel coupling with the locked axes converges with the iterations (50 per servo island: 4.6e-4 rad / 4.3 mm on the 18 t arm; 200: 3e-5 rad / 0.5 mm) |
+| the hinge's target clamped to its limits | changed | Jolt's HingeConstraint::SetTargetAngle clamps; PhysX's drive pushes into the limit: the same rest pose, a different load at the stop |
+| a hinge range that excludes 0 | changed | Jolt's hinge limits must hold 0 (SetLimits): the range is widened to 0 (only a quirk configuration has it) |
+| limit springs | approximate | soft when the spring > 0 (PhysX's SoftJointLimitSpring) in the backend, hard in the plant; a vanishing spring (0 < spring <= 1e-8: the rotation servo's full rotation, the rotor) is no limit in both (ServoDriveLaw) |
+| connectedMassScale | not modelled | BaseServo.cs:1159 (default 1: exact at the default) |
+| a servo body with nothing attached | approximate | a body of its own with a 1 cm sphere at its centre of mass: the moving mesh's colliders (ServoTransformCollider) stay the part's proxies on the part's cluster |
+| PartBuoyancy's servoRb.drag (linear) | not wired | PartBuoyancy.cs:555 / :592 / :611 / :623: the port has no servoRb branch; servoRb.angularDrag follows rb's |
+| the servo joint in the load model | reduced model | an external force on both of its nodes, not an element: no capacity (the C# never sets its breakForce), each side balanced by itself |
+
+### Findings (a later implementer must know)
+
+- **A velocity-level solver dissipates rotation about an off-centre pivot**: the first-order step moves the centre of mass along the old tangent and
+  the point constraint removes the radial part, so the tangential speed loses (1 - cos(w dt)) per step. A rotor turning an 18 t tank 2.4 m off its
+  axis at 3 rad/s loses ~30 kN m (characterised in `test_servo_backend.cpp`); PhysX in KSP solves at the same level, so KSP's servos see the same kind
+  of loss (magnitude UNVERIFIED). The rotor scenario therefore spins the tank about its own axis.
+- **A light body welded to the world between a heavy arm and the anchor converges badly** (mass ratio 72:1: the halved probe core under the 18 t
+  tank): the plant comparisons hold because the arm is slow; a fast rotor on such a base overshot its rate by 0.16 % at any iteration count. Real
+  craft put servos between comparable masses; the RB anchor of a landed vessel (WP-20e) is such a weld.
+- A servo test fixture must install the resource host BEFORE the servo module is added (`AddServo` / OnStart raise a NullReference otherwise).
+
+### UNVERIFIED (no capture)
+
+The sign convention between targetRotation / targetPosition / targetAngularVelocity and the physical coordinate (servo_joint.cpp's derivation, now
+also the orientation of the backend's hinge / slider: + coordinate = the servo body turned about / moved along +GetMainAxis() in the joint parent's
+frame), PhysX's D6 drive law and its limit / limit-spring behaviour, the Unity ConfigurableJoint defaults. A capture of one hinge, one piston and one
+rotor (target steps, the ConfigurableJoint drive values, the Transform angle / position per fixed tick, servoRb.velocity) closes them.
+
+### Deferred
+
+- The servo modules' FixedUpdate / Update in the bubble's module slot (WP-52's host-wiring item; the tests call them; the module-slot work of the
+  FeedInputFeed / gimbal package is the natural place).
+- PartBuoyancy's servoRb.drag; the moving mesh's own colliders (needs the servo part models: SquadExpansion); `connectedMassScale` != 1.
+- Real servo part data (SquadExpansion not installed): every MODULE value stays a SYNTHETIC fixture.
+
+### Unit tests
+
+`tests/test_servo_backend.cpp` (3 cases) + `tests/test_servo_scenarios.cpp` (7 cases) = 10 cases (the `robotics` ctest runs them with WP-52's,
+`-tc=WP-52*`).
+
+### Verification
+
+Windows MSVC RelWithDebInfo, `core/build` deleted and `run_tests.ps1 -Fresh` (`CMAKE_BUILD_PARALLEL_LEVEL=4`, four agents building at once, so the
+build time is slow), after merging main `e43c8576` (docs / CI only): configure 5.4 s, build 731.9 s, ctest 244.2 s, **49 / 49 pass** (incl. `robotics`,
+`unit.random_order.{11,27,42}`, the shards). `kspcore_tests` whole suite, default order and `--order-by=rand -rs=11` / `-rs=27`: **1,033 / 1,033 cases,
+1,599,617 assertions each, all green** (the WP-52b cases 10, WP-52 34 unchanged, WP-20b/c/d/e, WP-19b, WP-29c unchanged). `check_cites.py` exact over the
+touched sources, headers and tests: 105 cites, 0 mismatches. g++ 13.3 (WSL) `-std=c++20 -Wall -Wextra -fsyntax-only` over servo_backend, servo_plant,
+base_servo, vessel_physics, vessel_physics_loads, flight_integrator, physics_world (with the Jolt AVX2 / double defines) and the two new test files:
+no error; the only warning is the pre-existing `Part::DrainFuel` unused parameter. The reference JSON regenerates byte-identically
+(`python -I core/tools/wp52b/drive_reference.py`, sha256 prefix f65346bd8da35550). Not run: the ASan / UBSan run on Linux (CI covers clang / gcc).
+After the second merge with origin/main (WP-12c, gatekeeper retired, CI `review` job; STATUS row 60): incremental build (configure 1.5 s, build 121.4 s,
+`CMAKE_BUILD_PARALLEL_LEVEL=4`), ctest 296.2 s, **49 / 49 pass**; `kspcore_tests` **1,043 / 1,043 cases, 1,642,430 assertions** (WP-52 cases 44 / 44, 48,133
+assertions). `python -I core/tools/ci/pr_review.py --base origin/main`: 0 failing checks. It first flagged five std:: maths lines on added code
+(`vessel_physics.cpp:478`, `servo_backend.cpp:82` / `:117`, `physics_world.cpp:1126` / `:1204`); all five are the Jolt / PhysX side (the hinge zero turned by
+coordinate0, the motor target wrap, the hinge angle wrap, the moving transform's angle write-back and read-back, not ported managed statements), so they
+carry `// std-math-ok: <reason>` and stay std:: (the write-back is the plant's own `fmod` moved unchanged). No number moved: the code is identical, only
+comments changed.
+
+### Commits (branch `wp52b`, from main `51530d89`)
+
+`47cea203` the backend (articulated constraints, servo bodies, loads, serenity backend, FlightIntegrator flag, the Python drive-law reference, the
+scenario gates); `445d842f` merge of main `e43c8576`; then the documentation commit (STATUS section and row 60, README rows,
+`analysis/tiering/progress.csv` WP-52 0.75 -> 0.85, `core/PROGRESS-wp52b.md`).
+
+## WP-20f: SAS / Vessel.FeedInputFeed in the physics tick, gimbal actuation, the C10 ascent to 36.7 km (branch `wp20f`, from main `51530d89`)
+
+State: done for the engine-agnostic part. Scope = NEXT-STEPS Session 5 "Next" item 1 / WP-20e "Next" item 1: Vessel.FeedInputFeed and
+FlightInputHandler.FixedUpdate in the bubble's tick in the measured order, WP-24's VesselSAS / ModuleSAS / reaction wheels on the control state of
+every tick, ModuleGimbal actuation in WP-20d's module slot on the engines' real transform chains, and WP-20d's ascent gate extended from Mach 1 / 5 km to
+C10's 20 km and 36.7 km states. The physics model is the adopted reduced rigid-body model (not revisited). **Gates**: KSP's own C10 ascent states
+(harness/captures/out2/aero_forces_vessel.json) with WP-20d's tolerances (not loosened), C10's live drag-cube weights (0 ULP), an independent
+double-precision recomposition of the gimbal chains, KSP's own sign conventions (the gimbal's torque against the reaction wheel's for the same
+command), and scenarios (SAS damping in orbit, the slot order). Every existing gate unchanged (`harness/compare/tolerances.json`,
+`tests/tolerances_capture.json` untouched); WP-20d's ascent numbers are bit for bit unchanged (no command: every thrust transform at its neutral pose).
+
+### What is in
+
+| piece | files | KSP source |
+|---|---|---|
+| Vessel.FeedInputFeed | `vessel/vessel.hpp`, `src/vessel/vessel.cpp` | Vessel.cs:366-378 the four FlightInputCallback fields (OnPreAutopilotUpdate, OnAutopilotUpdate, OnPostAutopilotUpdate, OnFlyByWire), :2035 FeedInputFeed (the four in order on `ctrlState`, then `rootPart.propagateControlUpdate` when loaded, unpacked, not held, controllable) |
+| Part.propagateControlUpdate | `parts/part.hpp`, `src/parts/part.cpp` | Part.cs:3996 (onCtrlUpd, then the children); :4626 onCtrlUpd is the empty `protected virtual` and no Assembly-CSharp class overrides it |
+| FlightInputHandler's feed | `input/flight_input_handler.hpp/.cpp` | FlightInputHandler.cs:686: `vessel.FeedInputFeed()` is now the default (`host.feedInputFeed` still replaces it); `AutopilotPitchInput / RollInput / YawInput`: VesselAutopilot.cs:288 / :259 / :230 CheckPitch / Roll / YawInput after the ActiveVessel test (axis deadzone rule, SpaceNavigator, the keys, through GameSettings / ExtendedInput) |
+| the input slot | `physics/physics_bubble.hpp/.cpp` | `SetFlightInputHandler`: FlightInputHandler.FixedUpdate (FlightInputHandler.cs:377) at seq 18 of run1-L_calltrace.csv (the old comment said 11), `inputFeed` still replaces the slot; while a handler is set: `ReactionWheelEnvironment::activeVesselPYR` = FlightInputHandler.state.GetPYR() (ModuleReactionWheel.cs:165), the SAS input checks, `AutopilotEnvironment::precisionMode` and the slot's RCS precisionMode (FlightInputHandler.fetch.precisionMode); always: `AutopilotEnvironment::killAngularVelocity` (VesselAutopilot.cs:672, robotic rotor rule of Part.cs:1373 / :1441); `PartValuesUpdate`: Part.cs:4307 Update's PartValues refresh (:4328-4331) before Vessel.Update |
+| Part.Start's skill update flag | `src/physics/flight_integrator.cpp` (StartPartsInFlight) | Part.cs:1915-1923 overrideSkillUpdate for a part with one of overrideSkillUpdateModules ("ModuleSAS, ModuleWheelSteering") |
+| control modules in the slot | `physics/part_forces.hpp`, `src/physics/part_forces.cpp` | ModuleCommand.cs:461 FixedUpdate (UpdateControlState), ModuleSAS.cs:113 FixedUpdate, ModuleGimbal.cs:161 FixedUpdate, in module order (seq 23-28: ModuleEngines before ModuleGimbal on an engine part) |
+| gimbal actuation | `physics/part_forces.hpp`, `src/physics/part_forces.cpp`, `modules/module_gimbal.hpp/.cpp` | `ModelTransformNode` / `ModelTransformChain` (the part model's Unity hierarchy from "model" down), `ChainPartSpaceRotation` (leaf first, `parent * rot` upward: WP-17b's ChainRotation convention), `ChainPartSpacePosition` (root first, the WP-17b tool's composition), `ChainPoseWithLocalRotation`; GimbalFixedUpdate: `t.localRotation = initRots[i]` (the transforms posed neutral), WP-23's actuation maths, the new local rotations kept (`newLocalRotations`) and the transforms re-posed; a thrust transform below a gimbal transform follows the gimbal's current local rotation the next time EngineFixedUpdate poses it (one tick later, as in KSP); `GimbalFindModelTransformsHook` / `ThrustBelowGimbalHook` (ModuleGimbal.OnStart's FindModelTransforms, CreateEngineList's FindTransformInChildrenExplicit, new identity hook `ModuleGimbal::isThrustTransformInChildren`) |
+| rb.angularVelocity of one part | `physics/vessel_physics.hpp/.cpp` | `SetPartAngularVelocity` (the part's cluster; centre-of-mass velocity kept, Unity's setter) |
+| tests | `tests/test_flight_input_feed.cpp`, `tests/flight_integrator_fixture.hpp`, `tools/support/engine_thrust_transforms.hpp` | `wp20d::StartModules` (Part.cs:1727 ModulesOnStart, :5674 ModulesOnStartFinished, the first ModuleJettison.LateUpdate, ModuleJettison.cs:474), the fixture's chains from core/data (WP-17b data now loads the chain's names, positions and scales), ModuleGimbal.OnActive in IgniteFirstStage (Part.activate -> ModulesOnActivate) |
+
+### Gate (`tests/test_flight_input_feed.cpp`: 8 cases)
+
+| case | what | result |
+|---|---|---|
+| FeedInputFeed | the four callbacks on a vessel; FlightInputHandler.FixedUpdate without a host hook | order pre, autopilot, post, fly-by-wire, each sees the previous one's writes; SetControlState's copy first, OnFlyByWire's throttle wins |
+| slot order | PhysProf-S on the pad, one tick | VesselPrecalculate, the feed (OnPre, OnFlyByWire), the reaction wheel (part modules), FlightIntegrator; the pilot's pitch trim reaches the vessel through SetControlState; no feed without a handler |
+| gimbal chains | the 19 staged engines' thrust chains (core/data, WP-17b), every node as the gimbal | neutral local rotation: position and rotation **bit for bit** the neutral pose; 184 actuated poses vs an independent double recomposition (Hamilton products): position 1.1e-6 m, direction 1.9e-5 deg |
+| actuation | PhysProf-S at full thrust on the pad, pitch / yaw commands through OnFlyByWire (SAS off) | the command tick's thrust is the neutral one (engines' torque change 1.9e-4 / 3.1e-4 kN m), one tick later 125.8 kN m; cos(gimbal torque, wheel torque) **1.000 / 0.999** (the same sense, KSP's conventions); full pitch: Mainsail 2.000 deg (gimbalRange 2), LV-T45 3.000 deg (3); gimbal lock: neutral one tick later |
+| SAS in orbit | PhysProf-S's core (probe, X200-32, Mainsail) at 120 km tumbling at 0.05 rad/s, 20 s | SAS off: 0.05 rad/s, the axis turns 57.3 deg; SAS on (the SAS action group -> VesselAutopilot.Update): **0.0008 rad/s**, the axis 0.03 deg from the lock, the wheel drew 1.47 more ElectricCharge |
+| module lifecycle | WeightedArea of every part after `StartModules` vs C10's live values | **S 21 / 21, M2 153 / 153, L2-AS 457 / 457 bit for bit** (without the lifecycle, WP-20d's PadScene: 17 / 21, 129 / 153, 385 / 457: Rockomax32.BW's variant cube, the Mainsail's variant cube through ModuleJettison, the LV-T45s' Clean cube) |
+| **ascent vs KSP (C10), SAS on** | M2, L2-AS, S launched as C10 did (HarnessCapture2Flight.cs:759-764: FlightInputHandler.state.mainThrottle = 1, the FullThrottle OnFlyByWire callback, the SAS action group, the first stage), through the whole tick with the FlightInputHandler | see the table below: every state within WP-20d's tolerances (speed at an altitude 1 %, altitude at a Mach number / apex / final 1.5 %, frames between states 2.5 %); AoA < 3 deg and no joint break up to every state compared |
+| cost | L2-AS, 300 flight ticks in three configurations | measured, not gated (below) |
+
+Ascent against C10 (ours - KSP, relative):
+
+| craft | state | speed at the altitude | altitude at the Mach number | frames since the previous state |
+|---|---|---|---|---|
+| M2 | alt_1000 / mach_0.5 / alt_2500 / mach_1 / alt_5000 | +0.33 / - / +0.15 / - / +0.08 % | - / -0.27 / - / +0.009 / - % | -1.1 / +0.4 / -0.3 % |
+| M2 | mach_1.5 / alt_10000 / alt_20000 | - / +0.07 / +0.10 % | -0.03 / - / - % | -0.25 / 0 / -0.11 % |
+| M2 | final (90 s, KSP 36,672.5 m, 600.5 m/s) | 36,687.9 m (**+0.042 %**), 601.0 m/s (**+0.084 %**) | | |
+| L2-AS | alt_1000 / alt_2500 / mach_0.5 / alt_5000 / alt_10000 | +0.44 / +0.19 / - / +0.07 / -0.57 % | - / - / -0.10 / - / - % | -0.35 / -0.17 / +0.35 % |
+| L2-AS | apex (KSP 11,475.6 m) | 11,457.3 m (**-0.16 %**), 1,064 frames after alt_10000 (KSP 1,070) | | |
+| S | mach_0.5 / alt_1000 / mach_1 | - / +0.10 / - % | +0.72 / - / +1.40 % | -1.7 % |
+
+How far it holds and why it diverges: M2 holds to the end of C10's flight (90 s, 36.7 km) at 0.1 %; L2-AS holds to its apex (fuel out, 11.5 km).
+PhysProf-S is aerodynamically unstable from Mach ~0.9 (WP-20d finding): KSP's own S tumbled with SAS on (AoA 0.6 deg at Mach 1,
+172.7 deg at 2.5 km) and ours does too (57.7 deg at 2.5 km): the tumble is a divergence of a small attitude error, so its course is not
+reproducible and S is gated to Mach 1 (+1.40 % altitude there, the closest state to the 1.5 % tolerance; the transonic drag rise makes the altitude
+at Mach 1 the most sensitive quantity of the three crafts). With a partial lifecycle (ModulesOnStart without the jettison's first LateUpdate,
+which leaves the Mainsail's cube weights at zero) the same ascents differed by up to 1.4 % (M2 at 20 km) and 4.8 % (L2-AS at 10 km), and the
+frame intervals by up to 3.2 %: the cube weights, not SAS, were the largest remaining error of the ascent.
+
+### Measurements (MSVC RelWithDebInfo, this laptop with three other agents building: absolute times are noisy, the per-call numbers are not)
+
+| what | before | after |
+|---|---|---|
+| `UnityNative::AngleAxis` (two NativeSinf / NativeCosf) | 2.30 us (`UsePortable()` called getenv on every NativeSinf / NativeCosf / NativePowf on Windows) | **0.007 us** (the switch read once per process) |
+| ModuleGimbal.FixedUpdate (one transform) | 5.25 us | **0.67 us** |
+| L2-AS, per tick: VesselSAS UpdateVesselTorque (GetTotalVesselTorque over 457 parts) | - | 0.155 ms |
+| L2-AS, per tick: FlightInputHandler.FixedUpdate incl. FeedInputFeed | - | 0.161 ms |
+| L2-AS, per tick: re-posing the 49 gimbal transforms before the feed | - | 0.080 ms (only for vessels whose VesselSAS is connected) |
+| L2-AS whole tick (cost case, one run): WP-20d slot / + gimbals, ModuleCommand, ModuleSAS / + FlightInputHandler, SAS | | 3.51 / 3.77 / 4.25 ms (load-dependent: other runs 5.5-7.6 ms for the first) |
+
+### Exact / approximate / changed
+
+| choice | class | notes |
+|---|---|---|
+| FeedInputFeed, FlightInputHandler hand-off, slot order (seq 18, 23-28) | exact | statement order of the C#, the measured script order |
+| ModuleCommand / ModuleSAS / ModuleGimbal FixedUpdate | exact (WP-24 / WP-23 ports) | run in module order where Unity runs them |
+| thrust one tick behind the gimbal | exact | ModuleEngines.FixedUpdate before ModuleGimbal.FixedUpdate on the part (seq 27 / 28) |
+| neutral gimbal pose | exact (bit for bit) | a zero actuation leaves every thrust transform at its neutral part-space pose (value comparison, +0 == -0) |
+| actuated transform composition | approximate | Unity composes the hierarchy natively (not captured); here WP-17b's convention for the rotation and the WP-17b tool's root-first composition for the displacement, both float per operation |
+| gimbal transforms re-posed before the feed only for SAS-connected vessels | exact for every kspcore reader (optimisation) | the only reader between ticks is VesselSAS's GetPotentialTorque; a host reading them elsewhere calls `PoseGimbalTransforms()` |
+| model chains cached per AvailablePart and name | exact while the hierarchy is the prefab's | ModulePartVariants switching GameObjects does not change FindModelTransforms here; `ClearModelChainCache()` after replacing the hook |
+| `UsePortable()` read once | exact (optimisation) | the switch is a process-start setting (CMakeLists.txt:80, ctest ENVIRONMENT) |
+| KillAngularVelocity | reduced model | every part's rb.angularVelocity = 0 becomes every cluster's; the centre-of-mass velocity is kept per cluster (KSP keeps each part's) |
+| Part.Update | partial | only its PartValues refresh (:4328-4331); editor, mouse over, temperature renderer, onPartUpdate, ModulesOnUpdate are not this package's |
+| module lifecycle (ModulesOnStart, OnStartFinished, first module LateUpdate) | host's | WP-20d R2; the tests run it through `wp20d::StartModules`; WP-20d's PadScene does not (its gates are unchanged on purpose) |
+| ModuleAlternator | not in the slot | the gated flights never run out of ElectricCharge (lowest 22.2 of 30 for M2) |
+| gimbals not on a thrust chain of core/data | not actuated | the WP-17b data has the chains of thrust transforms only (every gimbal of the gated crafts is on one); a .mu reader path (`mu::Node` tree) is the follow-up |
+
+### Findings (a later implementer must know)
+
+- **The module lifecycle sets the drag-cube weights KSP flies with.** ModulePartVariants.OnStart (RefreshVariant -> SetCubes) and the first
+  ModuleJettison.LateUpdate (SetupJettisonState -> SetFairingDragCube) choose a part's cube; without them the default weights stay (24 of M2's 153
+  parts, 72 of L2-AS's 457). WP-20d's ascent matched C10 to ~1 % with the wrong weights only up to 5 km; with the right ones M2 matches at 0.1 % to
+  36.7 km. A host must run the module lifecycle before the first flight tick.
+- **A probe's SAS needs Part.Start + Part.Update**: ModuleSAS.OnStart registers its service level with the part's PartValues, Part.Start sets
+  overrideSkillUpdate (:1915), and Part.Update refreshes the PartValues (:4328) that VesselValues.AutopilotSASSkill folds; without them
+  CanEngageSAS is false ("no operational SAS Modules") and the SAS action group switches itself off.
+- **Windows: `ksp::dotnet::NativeSinf / NativeCosf / NativePowf` called getenv on every call** (the KSPCORE_LIBM_PORTABLE switch): 1.1 us per call,
+  half of ModuleGimbal.FixedUpdate. Read once now; every caller of the Unity native float trig benefits (AngleAxis 330x faster).
+- `ModuleGimbal.GetPotentialTorque` (WP-23) reads the gimbal transform's CURRENT (actuated) pose and the vessel's CoM: the transform must be on its
+  part's post-step pose when VesselSAS sums the torque in FeedInputFeed.
+- The LV-T45 v1 (liquidEngine2) gimbals its thrustTransform itself (gimbalTransformName = thrustTransform); the Mainsail gimbals `gimbal`, the
+  thrust transform's parent (its thrust point moves 0.57 m x sin(angle) laterally with the gimbal).
+
+### Risks
+
+- R1: the actuated transform composition is not verified against Unity's native hierarchy (a capture of a gimbaled thrust transform's world pose
+  would close it; the neutral pose is bit for bit WP-17b's).
+- R2: VesselSAS is gated against KSP only through the C10 trajectory (no per-tick SAS capture, WP-24's "Needed in-game captures" 2).
+- R3: the timings were taken while other agents built on the same laptop.
+
+### Verification
+
+- After the merge with main (`eb1fe876`: progress feed, CLAUDE.md; no core change), Windows MSVC RelWithDebInfo, fresh (`core/build` deleted,
+  `run_tests.ps1 -Fresh`, `CMAKE_BUILD_PARALLEL_LEVEL=4`): configure 6.1 s, build 433.5 s, ctest 162.2 s, **49 / 49 pass** (the worktree has no
+  `corpus.saves`: decompiled/KSP-dev is absent).
+- Whole unit binary `kspcore_tests`: **1,031 cases / 1,571,829 assertions, all pass** with `--order-by=rand -rs=11` and `-rs=27` on the fresh
+  binary, and in default order and both seeds on the pre-merge build (the same core sources). The WP-20f cases alone: 8 / 8.
+- WP-20d / WP-20e / WP-19b / WP-50 / WP-24 / WP-23 / WP-29c cases (114) green; WP-20d's ascent messages are bit for bit the main numbers
+  (M2 +0.23 / -0.07 %, L2-AS +0.38 / -0.15 / -0.53 %, S 0.0034 % speed at the altitudes).
+- WSL Ubuntu 24.04 g++ 13.3 `-std=c++20 -fsyntax-only -Wall -Wextra` over every changed .cpp (vessel, part, flight_input_handler, part_forces,
+  physics_bubble, vessel_physics, flight_integrator, module_gimbal, math, tests/test_flight_input_feed.cpp): clean, no warning in the changed files.
+- `check_cites.py` (exact): the WP-20f physics / module sources 38 cites, 0 mismatches (aliases GimbalFixedUpdate -> FixedUpdate,
+  PartValuesUpdate -> Update); over every touched source 242 cites, 15 mismatches, all pre-existing in unchanged lines of vessel.cpp / part.cpp.
+- `harness/compare/tolerances.json` and `tests/tolerances_capture.json` untouched; no game data hand-authored (the chains are core/data's WP-17b
+  extraction of the .mu files, the cube weights and ascent states C10's).
+
+### Commits (branch `wp20f`, from main `51530d89`)
+
+`76299059` FeedInputFeed, the input slot, the control modules and gimbal actuation in the module slot, PartValues refresh, the libm switch read
+once, the WP-20f tests; `5062bc87` merge main (`eb1fe876`); `9dcab02d` STATUS / README / progress.csv; then this verification note.

@@ -315,8 +315,13 @@ struct Crt {
 #ifdef KSP_LIBM_PORTABLE
     return true;
 #else
-    const char* e = std::getenv("KSPCORE_LIBM_PORTABLE");
-    return e && *e && *e != '0';
+    // read once per process (WP-20f: NativeSinf / NativeCosf / NativePowf ask on every call; getenv cost ~1 us per call on Windows,
+    // half of a ModuleGimbal.FixedUpdate). The switch is a process-start setting (ctest ENVIRONMENT, CMakeLists.txt:80).
+    static const bool portable = [] {
+        const char* e = std::getenv("KSPCORE_LIBM_PORTABLE");
+        return e && *e && *e != '0';
+    }();
+    return portable;
 #endif
 }
 

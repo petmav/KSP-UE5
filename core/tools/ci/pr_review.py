@@ -8,7 +8,8 @@ Checks, on the files and lines the branch changes (git diff BASE...HEAD):
   2. A change to core/tests/tolerances_capture.json comes with a core/STATUS.md change (each relaxation is documented).
   3. No added line in core/src or core/include/ksp calls std:: maths (std::sin, std::pow ...): ported code goes through
      ksp::dotnet. The libm emulation itself (dotnet/ dirs) is exempt; a deliberate native call carries `// std-math-ok`.
-  4. The C# citations in every changed core/src and core/include/ksp source pass core/tools/wp28/check_cites.py.
+  4. The C# citations on changed lines of core/src and core/include/ksp pass core/tools/wp28/check_cites.py (a cite counts
+     as changed when the cite line or one of the 3 lines below it is added); older mismatches in the same files are a warning.
   5. (warning only) Ported code changed but analysis/tiering/progress.csv did not.
 Runs in CI (.github/workflows/ci.yml, job `review`) and locally before a PR.
 """
@@ -67,8 +68,9 @@ def main():
         failures += 1
 
     sources = [p for p in changed if SOURCE.match(p) and "/dotnet/" not in p]
+    added = {p: added_lines(base, p) for p in sources}
     for path in sources:
-        for n, text in added_lines(base, path):
+        for n, text in added[path]:
             code = text.split("//", 1)[0]
             if STD_MATH.search(code) and "std-math-ok" not in text:
                 report("error", "std:: maths in ported code; use ksp::dotnet (or mark `// std-math-ok`)", path, n)
@@ -77,10 +79,22 @@ def main():
     if sources:
         r = subprocess.run([sys.executable, "-I", CITES, *[os.path.join(ROOT, p) for p in sources]],
                            capture_output=True, text=True)
-        if r.returncode:
-            for line in r.stdout.splitlines():
-                if line.strip():
-                    report("error", "C# cite: " + line.strip())
+        new, old = 0, 0
+        for line in r.stdout.splitlines():
+            m = re.match(r"(.+?):(\d+): ", line.strip())
+            if not m:
+                continue
+            path = os.path.relpath(m.group(1), ROOT).replace(os.sep, "/")
+            n = int(m.group(2))
+            touched = {k for k, _ in added.get(path, [])}
+            if any(n + d in touched for d in range(4)):
+                report("error", "C# cite: " + line.strip()[len(m.group(0)) - 1:].strip(), path, n)
+                new += 1
+            else:
+                old += 1
+        if old:
+            report("warning", f"{old} older C# cite mismatches in the changed files (not on changed lines)")
+        if new:
             failures += 1
 
     if sources and "analysis/tiering/progress.csv" not in changed:

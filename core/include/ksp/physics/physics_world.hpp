@@ -316,6 +316,48 @@ public:
     // Vessel's RB anchor (Vessel.cs:1162 `base.gameObject.AddComponent<FixedJoint>()`, connectedBody null). GetConstraintImpulse returns
     // the impulse the constraint applied to `body` in the last step; RemoveConstraint / RemoveBody remove it.
     ConstraintId CreateFixedToWorldConstraint(BodyId body, const Vector3d& point);
+
+    // ---- WP-52b: articulated joints (the robotic servos' ConfigurableJoint on the reduced model) ------------------------------
+    // A one-degree-of-freedom joint between two bodies: a Jolt HingeConstraint (rotation about `axis` through `point`) or SliderConstraint
+    // (translation along `axis`, rotation locked). It stands for the PhysX D6 ConfigurableJoint BaseServo.OnJointInit adds between the
+    // servo body and the part (Expansions/Serenity/ModuleRoboticServoHinge.cs:357 and the other servos: one free / limited axis, the other
+    // five locked). The joint COORDINATE is measured from a zero the caller chooses: at creation the bodies read `coordinate0` (hinge: rad,
+    // positive = body b turned about +axis relative to body a; slider: m, positive = body b moved along +axis). `normal` (unit, perpendicular
+    // to `axis`, physics frame) is body a's zero direction of a hinge. Body a = the part's body, body b = the servo body (connectedBody =
+    // part.Rigidbody, BaseServo.cs:1158): GetConstraintImpulse returns the impulse on b: `linear` the total linear impulse (point / position
+    // parts, the limit, the drive), `angular` the total pure angular impulse (rotation parts, the limit, the drive), both physics frame,
+    // the linear part acting at body b's anchor (the hinge pivot; the slider's point on b). RemoveConstraint / RemoveBody remove it.
+    struct ArticulatedJointDesc {
+        enum class Kind : uint8_t { Hinge, Slider };
+        Kind kind = Kind::Hinge;
+        Vector3d point;             // physics frame: the anchor on both bodies at creation (the servo body's anchor)
+        Vector3d axis{1, 0, 0};     // physics frame, unit
+        Vector3d normal{0, 1, 0};   // physics frame, unit, perpendicular to axis
+        double coordinate0 = 0.0;   // the coordinate the bodies read at creation (hinge: |coordinate0| <= pi)
+        // solver iterations of the island the joint is in (Jolt's per-constraint override, the island takes the largest; 0: the world's
+        // PhysicsWorldConfig). The drive is a soft constraint solved by Gauss-Seidel with the joint's locked axes: with a lever arm between
+        // the anchor and the centres of mass it converges to the implicit drive law only with enough iterations (STATUS.md WP-52b).
+        int velocitySteps = 0, positionSteps = 0;
+    };
+    // The drive and limits of the next steps (the PhysX D6 drive law: F = spring (target - x) + damper (targetVelocity - v), |F| <= maxForce,
+    // solved implicitly; a Jolt motor in PositionAndVelocity mode with a StiffnessAndDamping spring). spring = damper = 0: no drive (free).
+    // Limits: [limitLo, limitHi] in the coordinate (a hinge's are clamped to [-pi, pi] and must contain 0, Jolt's HingeConstraint rule; the
+    // drive target is clamped to them as Jolt does); limitSpring > 0 makes them soft (SoftJointLimitSpring), 0 hard.
+    struct ArticulatedDrive {
+        double spring = 0.0, damper = 0.0;
+        double maxForce = 3.4028234663852886e38;  // N (slider) / N m (hinge) in the world's units (kN, kN m for KSP's tonnes)
+        double target = 0.0, targetVelocity = 0.0;
+        bool limited = false;
+        double limitLo = 0.0, limitHi = 0.0;
+        double limitSpring = 0.0, limitDamper = 0.0;
+    };
+    ConstraintId CreateArticulatedConstraint(BodyId a, BodyId b, const ArticulatedJointDesc& desc);  // kInvalidConstraint on failure
+    void SetArticulatedDrive(ConstraintId id, const ArticulatedDrive& drive);                         // unknown / other kinds ignored
+    // The coordinate now (hinge: Jolt's angle in (-pi, pi]; slider: m) and its rate (rad/s, m/s: the relative velocity along the axis).
+    double ArticulatedCoordinate(ConstraintId id) const;
+    double ArticulatedRate(ConstraintId id) const;
+    bool IsArticulated(ConstraintId id) const;
+
     // ---- WP-19b: frames of the physics bubble -----------------------------------------------------------------------------
     bool IsStatic(BodyId id) const;  // false for unknown ids
     // Moves every body of the chosen kinds by `delta` (double, in creation order; SetPosition, no activation): the fold of

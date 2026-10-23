@@ -4,7 +4,7 @@
 // Time.deltaTime is ksp::Time::deltaTime.
 //
 // Seams (FlightInputHandler::host): ScreenMessages.PostScreenMessage, StageManager.ActivateNextStage (default: the ported
-// StageManager), Vessel.FeedInputFeed (not in the vessel model), the ActionGroupsApp UI instance.
+// StageManager), Vessel.FeedInputFeed (default: the real Vessel::FeedInputFeed, WP-20f), the ActionGroupsApp UI instance.
 #pragma once
 
 #include <functional>
@@ -28,7 +28,7 @@ using FlightInputCallback = Delegate<void(FlightCtrlState&)>;
 struct FlightInputHost {
     std::function<void(const std::string& text, float duration)> postScreenMessage;  // ScreenMessages.PostScreenMessage(.., LOWER_CENTER)
     std::function<void()> activateNextStage;           // unset: StageManager.ActivateNextStage()
-    std::function<void(Vessel*)> feedInputFeed;        // Vessel.FeedInputFeed()
+    std::function<void(Vessel*)> feedInputFeed;        // Vessel.FeedInputFeed() (unset: Vessel::FeedInputFeed, WP-20f)
     bool actionGroupsAppPresent = false;               // ActionGroupsApp.Instance != null
     std::function<void()> actionGroupsSelectNext;      // ActionGroupsApp.Instance.SelectNext()
     std::function<void()> actionGroupsSelectPrev;      // ActionGroupsApp.Instance.SelectPrev()
@@ -86,6 +86,14 @@ public:
     bool refocusThrottle = false;                         // :69
 
 };
+
+// WP-20f: VesselSAS.CheckPitchInput / CheckRollInput / CheckYawInput (VesselAutopilot.cs:288 / :259 / :230) after their
+// `FlightGlobals.ActiveVessel != vessel` test: the axis (deadzone rule), the SpaceNavigator and the two keys of each direction, read through
+// GameSettings / ExtendedInput like FlightInputHandler. These are what AutopilotEnvironment::pitchInput / rollInput / yawInput mean;
+// PhysicsBubble wires them while it drives a FlightInputHandler.
+bool AutopilotPitchInput(float controlDetectionThreshold);
+bool AutopilotRollInput(float controlDetectionThreshold);
+bool AutopilotYawInput(float controlDetectionThreshold);
 
 // AxisGroupsInputHandler.cs:4
 class AxisGroupsInputHandler {

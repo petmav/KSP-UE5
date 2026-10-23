@@ -117,8 +117,32 @@ struct VesselPhysics::PartRec {
     PartTransform vesselFrame;
 };
 
+// WP-52b: a servo body (Part.servoRb) as a mass element of the cluster of the servo's moving side
+struct VesselPhysics::ServoRec {
+    int part = -1;                // the servo part's index
+    ServoBodySpec spec;           // the geometry at the last build (part space)
+    float mass = 0.0f;            // servoRb.mass (FlightIntegrator.cs:479: num2 / 2f)
+    Vector3f inertia;             // servoRb.inertiaTensor = part.inertiaTensor * Max(1, servoRb.mass) (Part.cs:4269-4271)
+    float angularDrag = 0.05f;    // servoRb.angularDrag (FlightIntegrator.cs:2368: = rb.angularDrag)
+    float drag = 0.0f;            // servoRb.drag
+    int cluster = -1;
+    Vector3d com0;                // physics frame at the cluster's creation
+    QuaternionD rot0 = QuaternionD::identity();
+    Vector3d localCom;            // com0 relative to the body origin, body space
+    detail::Mat3 ownBody;         // rot0 diag(inertia) rot0^T
+    Vector3d comNow;
+    QuaternionD rotNow = QuaternionD::identity();
+    // the joint (base = the part's cluster, b = this cluster)
+    ConstraintId joint = kInvalidConstraint;
+    Vector3d anchorBodyB;         // the anchor in cluster b's body frame (relative to its origin at creation): the impulse's point
+    Vector3d anchor0;             // the anchor at creation (physics frame)
+    double coordinate = 0.0, rate = 0.0, lastRaw = 0.0;
+    Vector3d stepMoment;          // WP-20c: its angular-drag moment of the step (the load solve's external moment on the servo node)
+};
+
 struct VesselPhysics::ClusterRec {
     BodyId body = kInvalidBody;
+    std::vector<int> servos;  // WP-52b: the servo bodies in this cluster
     std::vector<int> parts;  // vessel part order
     Vector3d origin0;        // body origin at creation (physics frame)
     double mass = 0.0;

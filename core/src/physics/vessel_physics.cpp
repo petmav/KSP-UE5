@@ -237,6 +237,27 @@ void VesselPhysics::IndexParts() {
         if (!r.sameVesselCollision) sameVesselCollisionAll_ = false;
         r.vesselFrame = VesselFrameTransform(p);
     }
+    // WP-52b: the servo bodies. FlightIntegrator.cs:476-480 (UpdateMassStats, unpacked): with a servoRb, rb.mass = servoRb.mass = num2 / 2f;
+    // Part.cs:4263 ValidateInertiaTensor gives both inertiaTensor * Max(1, mass) (:4265 / :4269).
+    servos_.clear();
+    servoOfPart_.assign(n, -1);
+    if (options_.servoBody)
+        for (size_t i = 0; i < n; ++i) {
+            PartRec& r = *parts_[i];
+            ServoBodySpec spec;
+            if (!r.rb || !options_.servoBody(*r.part, spec)) continue;
+            ServoRec s;
+            s.part = static_cast<int>(i);
+            s.spec = spec;
+            const float half = PartRigidbodyMass(*r.part) / 2.0f;
+            r.rbMass = half;
+            r.inertia = PartInertiaTensor(r.inertiaPerUnit, half, options_.inertiaFloor);
+            s.mass = half;
+            s.inertia = PartInertiaTensor(r.inertiaPerUnit, half, options_.inertiaFloor);
+            s.angularDrag = options_.defaultAngularDrag;
+            servoOfPart_[i] = static_cast<int>(servos_.size());
+            servos_.push_back(s);
+        }
     partForce_.assign(n, Vector3d());
     partMoment_.assign(n, Vector3d());
     stepForce_.assign(n, Vector3d());
@@ -249,9 +270,11 @@ bool IsDecouplerPart(Part& p) { return p.isDecoupler() || p.isAnchoredDecoupler(
 
 void VesselPhysics::BuildClusters(const std::vector<PartPhysicsState>& states) {
     const size_t n = parts_.size();
+    const size_t S = servos_.size();
     // ---- welded components: physicsless parts ride on their RigidBodyPart, attach joints weld their two bodies unless cut or an
-    // articulation point (a decoupler in the split policy, the host's isArticulation)
-    std::vector<int> uf(n);
+    // articulation point (a decoupler in the split policy, the host's isArticulation). WP-52b: node n + s is servo s's body; an attach
+    // joint whose end is a servo body welds the other end to that body (the servo's moving side), not to the servo part.
+    std::vector<int> uf(n + S);
     std::iota(uf.begin(), uf.end(), 0);
     auto find = [&uf](int x) {
         while (uf[static_cast<size_t>(x)] != x) x = uf[static_cast<size_t>(x)] = uf[static_cast<size_t>(uf[static_cast<size_t>(x)])];
@@ -263,29 +286,48 @@ void VesselPhysics::BuildClusters(const std::vector<PartPhysicsState>& states) {
     for (size_t j = 0; j < joints_.size(); ++j) {
         const PartJointSpec& js = joints_[j];
         if (cut_[j] || js.kind != JointKind::Attach) continue;
+        const int a = index_.Find(js.hostBody), b = index_.Find(js.targetBody);
+        bool atHost = false;
+        const int sv = JointEndServo(js, atHost);
+        if (sv >= 0) {
+            const int other = atHost ? b : a;
+            if (other >= 0) unite(other, static_cast<int>(n) + sv);
+            continue;
+        }
         bool art = options_.policy == ClusterPolicy::SplitAtDecouplers && IsDecouplerPart(*js.child);
         if (!art && options_.isArticulation) art = options_.isArticulation(js);
         if (art) continue;
-        const int a = index_.Find(js.hostBody), b = index_.Find(js.targetBody);
         if (a >= 0 && b >= 0) unite(a, b);
     }
-    // ---- clusters in order of their first part
+    // ---- clusters in order of their first part (then the clusters made of a servo body alone)
     clusters_.clear();
-    std::vector<int> rootToCluster(n, -1);
-    for (size_t i = 0; i < n; ++i) {
+    std::vector<int> rootToCluster(n + S, -1);
+    for (size_t i = 0; i < n + S; ++i) {
         const int r = find(static_cast<int>(i));
         if (rootToCluster[static_cast<size_t>(r)] < 0) {
             rootToCluster[static_cast<size_t>(r)] = static_cast<int>(clusters_.size());
             clusters_.emplace_back();
         }
-        parts_[i]->cluster = rootToCluster[static_cast<size_t>(r)];
-        clusters_[static_cast<size_t>(parts_[i]->cluster)].parts.push_back(static_cast<int>(i));
+        const int c = rootToCluster[static_cast<size_t>(r)];
+        if (i < n) {
+            parts_[i]->cluster = c;
+            clusters_[static_cast<size_t>(c)].parts.push_back(static_cast<int>(i));
+        } else {
+            servos_[i - n].cluster = c;
+            clusters_[static_cast<size_t>(c)].servos.push_back(static_cast<int>(i - n));
+        }
     }
     for (size_t i = 0; i < n; ++i) {  // the reference pose of every part (also those of a piece without a Rigidbody)
         PartRec& r = *parts_[i];
         r.pos0 = states[i].position;
         r.rot0 = states[i].rotation;
         r.com0 = states[i].centerOfMass;
+    }
+    for (ServoRec& s : servos_) {  // the servo body's pose: the part's pose and the moving transform's (part space) now
+        PartRec& r = *parts_[static_cast<size_t>(s.part)];
+        if (options_.servoBody) options_.servoBody(*r.part, s.spec);
+        s.com0 = r.pos0 + r.rot0 * s.spec.centerOfMass;
+        s.rot0 = r.rot0 * s.spec.rotation;
     }
     const float maxAngular = PhysicsGlobals::Instance() != nullptr ? PhysicsGlobals::MaxAngularVelocity() : 50.0f;
     for (ClusterRec& c : clusters_) {
@@ -298,6 +340,11 @@ void VesselPhysics::BuildClusters(const std::vector<PartPhysicsState>& states) {
             if (!r.rb) continue;
             sum += states[static_cast<size_t>(*it)].centerOfMass * static_cast<double>(r.rbMass);
             mass += static_cast<double>(r.rbMass);
+        }
+        for (int sv : c.servos) {  // WP-52b: the servo bodies after the parts
+            const ServoRec& s = servos_[static_cast<size_t>(sv)];
+            sum += s.com0 * static_cast<double>(s.mass);
+            mass += static_cast<double>(s.mass);
         }
         c.mass = mass;
         if (!(mass > 0.0)) continue;  // no Rigidbody in this piece: no body (its parts keep their pose)
@@ -315,6 +362,13 @@ void VesselPhysics::BuildClusters(const std::vector<PartPhysicsState>& states) {
             I += r.ownBody;
             I += Mat3::ParallelAxis(static_cast<double>(r.rbMass), r.localCom);
         }
+        for (int sv : c.servos) {
+            ServoRec& s = servos_[static_cast<size_t>(sv)];
+            s.localCom = s.com0 - c.origin0;
+            s.ownBody = Mat3::RotatedDiagonal(Mat3::Rotation(s.rot0), Vector3d(s.inertia));
+            I += s.ownBody;
+            I += Mat3::ParallelAxis(static_cast<double>(s.mass), s.localCom);
+        }
         c.inertia = I;
         // velocities: the linear and angular momentum of the parts (each part moves with its own state)
         Vector3d P, L;
@@ -325,6 +379,15 @@ void VesselPhysics::BuildClusters(const std::vector<PartPhysicsState>& states) {
             const double m = static_cast<double>(r.rbMass);
             P += s.velocity * m;
             L += r.ownBody * s.angularVelocity + Cross(r.localCom, s.velocity * m);
+        }
+        for (int sv : c.servos) {  // the servo body's own state when the source had one, else it moves with its part
+            const ServoRec& s = servos_[static_cast<size_t>(sv)];
+            const PartPhysicsState& ps = states[static_cast<size_t>(s.part)];
+            const Vector3d v = ps.servo ? ps.servoVelocity : ps.velocity + Cross(ps.angularVelocity, s.com0 - ps.centerOfMass);
+            const Vector3d w = ps.servo ? ps.servoAngularVelocity : ps.angularVelocity;
+            const double m = static_cast<double>(s.mass);
+            P += v * m;
+            L += s.ownBody * w + Cross(s.localCom, v * m);
         }
         c.v = P * (1.0 / mass);
         c.w = I.Solve(L);
@@ -349,6 +412,17 @@ void VesselPhysics::BuildClusters(const std::vector<PartPhysicsState>& states) {
                 d.children.push_back(ch);
             }
         }
+        if (d.children.empty() && !c.servos.empty()) {
+            // WP-52b: a servo body with nothing attached to it. Its colliders (BaseServo.ServoTransformCollider) stay the part's proxies on
+            // the part's cluster; Jolt needs a shape: a 1 cm sphere at its centre of mass (no game data: the moving mesh's colliders are the
+            // model reader's), sub-shape user data = the servo part
+            const ServoRec& s = servos_[static_cast<size_t>(c.servos.front())];
+            CompoundChild ch;
+            ch.shape = ShapeDesc::Sphere(0.01f);
+            ch.position = s.localCom.ToVector3f();
+            ch.userData = static_cast<uint32_t>(s.part);
+            d.children.push_back(ch);
+        }
         d.position = c.origin0;
         d.rotation = QuaternionD::identity();
         d.linearVelocity = c.v;
@@ -361,7 +435,7 @@ void VesselPhysics::BuildClusters(const std::vector<PartPhysicsState>& states) {
         d.maxAngularVelocity = maxAngular;  // rb.maxAngularVelocity = PhysicsGlobals.MaxAngularVelocity (Part.cs:1880)
         d.vesselGroup = group_;
         d.sameVesselCollision = sameVesselCollisionAll_;
-        d.userData = static_cast<uint64_t>(c.parts.front());
+        d.userData = static_cast<uint64_t>(c.parts.empty() ? servos_[static_cast<size_t>(c.servos.front())].part : c.parts.front());
         c.body = world_->CreateCompoundBody(d);
         c.origin = c.origin0;
         c.com = c.origin0;
@@ -377,6 +451,102 @@ void VesselPhysics::BuildClusters(const std::vector<PartPhysicsState>& states) {
     welds_.clear();
     constraints_.clear();
     RebuildWelds();
+    BuildServoJoints();
+}
+
+// WP-52b: the servo joints (BaseServo.OnJointInit / PostStartInitJoint: the ConfigurableJoint between the servo body and part.Rigidbody,
+// connected at BaseServo.cs:1158) as articulated constraints between the part's cluster (a) and the servo body's cluster (b), created with
+// the bodies and kept while they live (autostrut changes rebuild only the welds), at the anchor and coordinate of the servo body now.
+void VesselPhysics::BuildServoJoints() {
+    constexpr double kPi = 3.14159265358979323846;
+    for (ServoRec& s : servos_) {
+        s.joint = kInvalidConstraint;
+        s.coordinate = s.spec.coordinate;
+        s.rate = 0.0;
+        const PartRec& r = *parts_[static_cast<size_t>(s.part)];
+        const ClusterRec& A = clusters_[static_cast<size_t>(r.cluster)];
+        const ClusterRec& B = clusters_[static_cast<size_t>(s.cluster)];
+        if (r.cluster == s.cluster || A.body == kInvalidBody || B.body == kInvalidBody) continue;
+        PhysicsWorld::ArticulatedJointDesc d;
+        d.kind = s.spec.prismatic ? PhysicsWorld::ArticulatedJointDesc::Kind::Slider : PhysicsWorld::ArticulatedJointDesc::Kind::Hinge;
+        d.point = r.posNow + r.rotNow * s.spec.anchor;
+        d.axis = (r.rotNow * s.spec.axis).normalized();
+        const Vector3d t = std::fabs(d.axis.x) < 0.9 ? Vector3d(1, 0, 0) : Vector3d(0, 1, 0);
+        d.normal = (t - d.axis * Vector3d::Dot(t, d.axis)).normalized();
+        double c0 = s.spec.coordinate;
+        if (!s.spec.prismatic) {  // Jolt's hinge angle lives in (-pi, pi]
+            c0 = std::fmod(c0, 2.0 * kPi);  // std-math-ok: engine glue: wraps the Jolt hinge angle, not a managed KSP statement
+            if (c0 > kPi) c0 -= 2.0 * kPi;
+            if (c0 <= -kPi) c0 += 2.0 * kPi;
+        }
+        d.coordinate0 = c0;
+        d.velocitySteps = options_.servoVelocitySteps;
+        s.joint = world_->CreateArticulatedConstraint(A.body, B.body, d);
+        if (s.joint == kInvalidConstraint) continue;
+        s.anchor0 = d.point;
+        s.anchorBodyB = QuaternionD::Inverse(B.q) * (d.point - B.origin);
+        s.lastRaw = world_->ArticulatedCoordinate(s.joint);
+    }
+}
+
+int VesselPhysics::JointEndServo(const PartJointSpec& js, bool& atHost) const {
+    atHost = false;
+    if (servos_.empty() || !options_.servoBodyEnd || js.kind != JointKind::Attach) return -1;
+    const Part* e = options_.servoBodyEnd(js);
+    if (e == nullptr) return -1;
+    const int i = index_.Find(e);
+    if (i < 0 || servoOfPart_[static_cast<size_t>(i)] < 0) return -1;
+    if (js.hostBody == e) atHost = true;
+    else if (js.targetBody != e) return -1;
+    return servoOfPart_[static_cast<size_t>(i)];
+}
+
+int VesselPhysics::ServoIndex(const Part& part) const {
+    const int i = PartIndex(part);
+    return i < 0 || static_cast<size_t>(i) >= servoOfPart_.size() ? -1 : servoOfPart_[static_cast<size_t>(i)];
+}
+
+size_t VesselPhysics::ConstraintCount() const {
+    size_t n = constraints_.size();
+    for (const ServoRec& s : servos_)
+        if (s.joint != kInvalidConstraint) ++n;
+    return n;
+}
+
+bool VesselPhysics::PartHasServoBody(const Part& part) const { return ServoIndex(part) >= 0; }
+size_t VesselPhysics::ServoCount() const { return servos_.size(); }
+Part* VesselPhysics::ServoPart(size_t servo) const { return servo < servos_.size() ? parts_[static_cast<size_t>(servos_[servo].part)]->part : nullptr; }
+int VesselPhysics::ServoCluster(const Part& part) const {
+    const int s = ServoIndex(part);
+    return s < 0 ? -1 : servos_[static_cast<size_t>(s)].cluster;
+}
+ConstraintId VesselPhysics::ServoJoint(const Part& part) const {
+    const int s = ServoIndex(part);
+    return s < 0 ? kInvalidConstraint : servos_[static_cast<size_t>(s)].joint;
+}
+double VesselPhysics::ServoCoordinate(const Part& part) const {
+    const int s = ServoIndex(part);
+    return s < 0 ? 0.0 : servos_[static_cast<size_t>(s)].coordinate;
+}
+double VesselPhysics::ServoRate(const Part& part) const {
+    const int s = ServoIndex(part);
+    return s < 0 ? 0.0 : servos_[static_cast<size_t>(s)].rate;
+}
+float VesselPhysics::ServoBodyMass(const Part& part) const {
+    const int s = ServoIndex(part);
+    return s < 0 ? 0.0f : servos_[static_cast<size_t>(s)].mass;
+}
+float VesselPhysics::ServoAngularDrag(const Part& part) const {
+    const int s = ServoIndex(part);
+    return s < 0 ? 0.0f : servos_[static_cast<size_t>(s)].angularDrag;
+}
+Vector3d VesselPhysics::ServoBodyCenterOfMass(const Part& part) const {
+    const int s = ServoIndex(part);
+    return s < 0 ? Vector3d() : servos_[static_cast<size_t>(s)].comNow;
+}
+VesselPhysics::ServoLoad VesselPhysics::ServoJointLoad(const Part& part) const {
+    const int s = ServoIndex(part);
+    return s < 0 || static_cast<size_t>(s) >= servoLoads_.size() ? ServoLoad{} : servoLoads_[static_cast<size_t>(s)];
 }
 
 // The inter-cluster welds: one fixed constraint per pair of clusters joined by a live joint (articulation points, and struts / autostruts
@@ -391,7 +561,10 @@ void VesselPhysics::RebuildWelds() {
         if (cut_[j] || subAlive_[j] == 0) continue;
         const int a = index_.Find(js.hostBody), b = index_.Find(js.targetBody), ch = index_.Find(js.child);
         if (a < 0 || b < 0 || ch < 0) continue;
-        const int ca = parts_[static_cast<size_t>(a)]->cluster, cb = parts_[static_cast<size_t>(b)]->cluster;
+        int ca = parts_[static_cast<size_t>(a)]->cluster, cb = parts_[static_cast<size_t>(b)]->cluster;
+        bool atHost = false;  // WP-52b: an end that is a servo body is that body's cluster
+        const int sv = JointEndServo(js, atHost);
+        if (sv >= 0) (atHost ? ca : cb) = servos_[static_cast<size_t>(sv)].cluster;
         if (ca == cb) continue;
         if (clusters_[static_cast<size_t>(ca)].body == kInvalidBody || clusters_[static_cast<size_t>(cb)].body == kInvalidBody) continue;
         const std::pair<int, int> key(std::min(ca, cb), std::max(ca, cb));
@@ -419,6 +592,10 @@ void VesselPhysics::DestroyBodies() {
     for (ConstraintId id : constraints_) world_->RemoveConstraint(id);
     constraints_.clear();
     welds_.clear();
+    for (ServoRec& s : servos_) {
+        if (s.joint != kInvalidConstraint) world_->RemoveConstraint(s.joint);
+        s.joint = kInvalidConstraint;
+    }
     for (ClusterRec& c : clusters_)
         if (c.body != kInvalidBody) {
             world_->RemoveBody(c.body);
@@ -466,6 +643,16 @@ void VesselPhysics::RefreshPartPoses() {
         r.posNow = r.pos0 + shift + (c.q * r.localPos - r.localPos);
         r.comNow = r.com0 + shift + (c.q * r.localCom - r.localCom);
         r.rotNow = c.q * r.rot0;
+    }
+    for (ServoRec& s : servos_) {  // WP-52b
+        const ClusterRec& c = clusters_[static_cast<size_t>(s.cluster)];
+        if (c.body == kInvalidBody) {
+            s.comNow = s.com0;
+            s.rotNow = s.rot0;
+            continue;
+        }
+        s.comNow = s.com0 + (c.origin - c.origin0) + (c.q * s.localCom - s.localCom);
+        s.rotNow = c.q * s.rot0;
     }
 }
 
@@ -530,6 +717,14 @@ PartPhysicsState VesselPhysics::StateAt(int i) const {
     s.velocity = c.body == kInvalidBody ? Vector3d() : c.v + Cross(c.w, s.centerOfMass - c.com);
     s.angularVelocity = c.body == kInvalidBody ? Vector3d() : c.w;
     s.cluster = r.cluster;
+    const int sv = static_cast<size_t>(i) < servoOfPart_.size() ? servoOfPart_[static_cast<size_t>(i)] : -1;
+    if (sv >= 0) {  // WP-52b: servoRb.velocity / angularVelocity
+        const ServoRec& sr = servos_[static_cast<size_t>(sv)];
+        const ClusterRec& b = clusters_[static_cast<size_t>(sr.cluster)];
+        s.servo = b.body != kInvalidBody;
+        s.servoVelocity = s.servo ? b.v + Cross(b.w, sr.comNow - b.com) : Vector3d();
+        s.servoAngularVelocity = s.servo ? b.w : Vector3d();
+    }
     return s;
 }
 
@@ -689,7 +884,10 @@ void VesselPhysics::StopMotion() {
 void VesselPhysics::ResumePartVelocity(Part& part) {
     const int i = PartIndex(part);
     if (i < 0) return;
-    ClusterRec& c = clusters_[static_cast<size_t>(parts_[static_cast<size_t>(i)]->cluster)];
+    ResumeClusterVelocity(clusters_[static_cast<size_t>(parts_[static_cast<size_t>(i)]->cluster)]);
+}
+
+void VesselPhysics::ResumeClusterVelocity(ClusterRec& c) {
     if (c.body == kInvalidBody) return;
     Vector3d vel;
     if (!vessel_->LandedOrSplashed()) {
@@ -704,7 +902,7 @@ void VesselPhysics::ResumePartVelocity(Part& part) {
 
 void VesselPhysics::ResumeVelocity() {
     for (ClusterRec& c : clusters_)
-        if (c.body != kInvalidBody) ResumePartVelocity(*parts_[static_cast<size_t>(c.parts.front())]->part);
+        if (c.body != kInvalidBody) ResumeClusterVelocity(c);  // (a servo body's cluster may hold no part)
 }
 
 // ===================================================================================== forces
@@ -778,6 +976,10 @@ void VesselPhysics::AddRigidbodyForceAtPosition(Part& part, const Vector3d& forc
 void VesselPhysics::SetAngularDrag(Part& part, float angularDrag) {
     const int i = PartIndex(part);
     if (i >= 0 && parts_[static_cast<size_t>(i)]->rb) parts_[static_cast<size_t>(i)]->angularDrag = angularDrag;
+    // WP-52b: servoRb.angularDrag follows rb.angularDrag wherever the C# sets the latter (FlightIntegrator.cs:2276-2281 / :2366-2369;
+    // PartBuoyancy.cs:550-555 / :571-586)
+    const int s = i >= 0 ? servoOfPart_[static_cast<size_t>(i)] : -1;
+    if (s >= 0) servos_[static_cast<size_t>(s)].angularDrag = angularDrag;
 }
 
 void VesselPhysics::AddUniformAcceleration(const Vector3d& acceleration) { uniformAccel_ += acceleration; }
@@ -812,6 +1014,16 @@ void VesselPhysics::SetPartVelocity(Part& part, const Vector3d& v) {
     if (c.body == kInvalidBody) return;
     world_->SetLinearVelocity(c.body, v - Cross(c.w, PartComNow(o) - c.com));
     c.v = world_->GetLinearVelocity(c.body);
+}
+
+// WP-20f: rb.angularVelocity = w on the part's Rigidbody (VesselAutopilot.cs:682), the part's cluster on the reduced model
+void VesselPhysics::SetPartAngularVelocity(Part& part, const Vector3d& w) {
+    const int o = OwnerIndex(part);
+    if (o < 0) return;
+    ClusterRec& c = clusters_[static_cast<size_t>(parts_[static_cast<size_t>(o)]->cluster)];
+    if (c.body == kInvalidBody) return;
+    world_->SetAngularVelocity(c.body, w);
+    c.w = world_->GetAngularVelocity(c.body);
 }
 
 // FlightIntegrator.cs:715 Integrate(part) (to :745), the force half (UpdateAerodynamics is WP-20d's), recursion from the root over the
@@ -855,11 +1067,23 @@ size_t VesselPhysics::UpdateMassProperties() {
         for (int i : c.parts) {
             PartRec& r = *parts_[static_cast<size_t>(i)];
             if (!r.rb) continue;
-            const float m = PartRigidbodyMass(*r.part);
+            float m = PartRigidbodyMass(*r.part);
+            if (servoOfPart_[static_cast<size_t>(i)] >= 0) m = m / 2.0f;  // WP-52b: FlightIntegrator.cs:478 rb.mass = num2 / 2f
             if (m != r.rbMass) {
                 r.rbMass = m;
                 r.inertia = PartInertiaTensor(r.inertiaPerUnit, m, options_.inertiaFloor);
                 r.ownBody = Mat3::RotatedDiagonal(Mat3::Rotation(r.rot0), Vector3d(r.inertia));
+                dirty = true;
+            }
+        }
+        for (int sv : c.servos) {  // FlightIntegrator.cs:479 servoRb.mass = num2 / 2f
+            ServoRec& s = servos_[static_cast<size_t>(sv)];
+            const PartRec& r = *parts_[static_cast<size_t>(s.part)];
+            const float m = PartRigidbodyMass(*r.part) / 2.0f;
+            if (m != s.mass) {
+                s.mass = m;
+                s.inertia = PartInertiaTensor(r.inertiaPerUnit, m, options_.inertiaFloor);
+                s.ownBody = Mat3::RotatedDiagonal(Mat3::Rotation(s.rot0), Vector3d(s.inertia));
                 dirty = true;
             }
         }
@@ -873,6 +1097,11 @@ size_t VesselPhysics::UpdateMassProperties() {
             sum += r.localCom * static_cast<double>(r.rbMass);
             mass += static_cast<double>(r.rbMass);
         }
+        for (int sv : c.servos) {
+            const ServoRec& s = servos_[static_cast<size_t>(sv)];
+            sum += s.localCom * static_cast<double>(s.mass);
+            mass += static_cast<double>(s.mass);
+        }
         if (!(mass > 0.0)) continue;
         const Vector3d comBody = sum * (1.0 / mass);
         Mat3 I;
@@ -881,6 +1110,11 @@ size_t VesselPhysics::UpdateMassProperties() {
             if (!r.rb) continue;
             I += r.ownBody;
             I += Mat3::ParallelAxis(static_cast<double>(r.rbMass), r.localCom - comBody);
+        }
+        for (int sv : c.servos) {
+            const ServoRec& s = servos_[static_cast<size_t>(sv)];
+            I += s.ownBody;
+            I += Mat3::ParallelAxis(static_cast<double>(s.mass), s.localCom - comBody);
         }
         double inertia[3][3];
         for (int a = 0; a < 3; ++a)
@@ -918,6 +1152,7 @@ void VesselPhysics::Flush(float dt) {
     flushV_.assign(nc, Vector3d());
     flushW_.assign(nc, Vector3d());
     flushDt_ = dt;
+    for (ServoRec& s : servos_) s.stepMoment = Vector3d();
     for (size_t ci = 0; ci < clusters_.size(); ++ci) {
         ClusterRec& c = clusters_[ci];
         if (c.body == kInvalidBody) {
@@ -948,6 +1183,7 @@ void VesselPhysics::Flush(float dt) {
                 const PartRec& r = *parts_[static_cast<size_t>(i)];
                 if (r.rb) drag += static_cast<double>(r.angularDrag) * static_cast<double>(r.rbMass);
             }
+            for (int sv : c.servos) drag += static_cast<double>(servos_[static_cast<size_t>(sv)].angularDrag) * static_cast<double>(servos_[static_cast<size_t>(sv)].mass);
             world_->SetAngularDamping(c.body, static_cast<float>(drag / c.mass));
         } else if (h > 0.0 && !c.w.IsZero()) {
             const Mat3 R = Mat3::Rotation(c.q);
@@ -961,6 +1197,14 @@ void VesselPhysics::Flush(float dt) {
                 tb += ti;
                 if (loads) stepMoment_[static_cast<size_t>(i)] += R * ti;  // the drag acts on each part's own body
             }
+            for (int sv : c.servos) {  // WP-52b: servoRb's own angular drag (PhysX damps that body too)
+                ServoRec& s = servos_[static_cast<size_t>(sv)];
+                if (!(s.angularDrag > 0.0f)) continue;
+                const double f = std::max(0.0, 1.0 - h * static_cast<double>(s.angularDrag));
+                const Vector3d ti = (s.ownBody * wb) * (-(1.0 - f) / h);
+                tb += ti;
+                if (loads) s.stepMoment = R * ti;
+            }
             torque += R * tb;
         }
         if (!force.IsZero()) world_->AddForce(c.body, force);
@@ -971,6 +1215,13 @@ void VesselPhysics::Flush(float dt) {
         flushW_[ci] = world_->GetAngularVelocity(c.body);
         c.force = c.moment = Vector3d();
     }
+    // WP-52b: the servo joints' drives of this step (what the servo modules wrote into their ConfigurableJoint this tick)
+    if (options_.servoDrive)
+        for (ServoRec& s : servos_) {
+            if (s.joint == kInvalidConstraint) continue;
+            PhysicsWorld::ArticulatedDrive drive;
+            if (options_.servoDrive(*parts_[static_cast<size_t>(s.part)]->part, drive)) world_->SetArticulatedDrive(s.joint, drive);
+        }
     if (loads) {
         stepAccel_ = uniformAccel_;
         stepDt_ = dt;
@@ -998,6 +1249,34 @@ void VesselPhysics::AfterStep() {
             const Mat3 Iw = c.inertia.Rotated(Mat3::Rotation(c.q));
             supportT_[ci] = Iw * ((c.w - flushW_[ci]) * (1.0 / h)) - appliedT_[ci];
         }
+        // WP-52b: a servo joint is not a support: its impulse leaves both of its clusters' support
+        for (const ServoRec& s : servos_) {
+            if (s.joint == kInvalidConstraint) continue;
+            Vector3d lin, ang;
+            world_->GetConstraintImpulse(s.joint, lin, ang);
+            const size_t a = static_cast<size_t>(parts_[static_cast<size_t>(s.part)]->cluster), b = static_cast<size_t>(s.cluster);
+            const Vector3d f = lin * (1.0 / h), t = ang * (1.0 / h);
+            const Vector3d p = clusters_[b].origin + clusters_[b].q * s.anchorBodyB;
+            supportF_[b] -= f;
+            supportT_[b] -= Cross(p - clusters_[b].com, f) + t;
+            supportF_[a] += f;
+            supportT_[a] += Cross(p - clusters_[a].com, f) + t;
+        }
+    }
+    // WP-52b: the servo coordinates after the step (a hinge's Jolt angle unwrapped across steps), handed to the moving transforms
+    for (ServoRec& s : servos_) {
+        if (s.joint == kInvalidConstraint) continue;
+        constexpr double kPi = 3.14159265358979323846;
+        const double raw = world_->ArticulatedCoordinate(s.joint);
+        double d = raw - s.lastRaw;
+        if (!s.spec.prismatic) {
+            while (d > kPi) d -= 2.0 * kPi;
+            while (d <= -kPi) d += 2.0 * kPi;
+        }
+        s.coordinate += d;
+        s.lastRaw = raw;
+        s.rate = world_->ArticulatedRate(s.joint);
+        if (options_.servoMoved) options_.servoMoved(*parts_[static_cast<size_t>(s.part)]->part, s.coordinate, s.rate);
     }
     flushDt_ = 0.0f;
     breaks_.clear();

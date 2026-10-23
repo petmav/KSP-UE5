@@ -9,12 +9,19 @@
 #include "ksp/celestial/planetarium.hpp"
 #include "ksp/core/unity_time.hpp"
 #include "ksp/events/game_events.hpp"
+#include "ksp/input/flight_input_handler.hpp"
+#include "ksp/modules/module_reaction_wheel.hpp"
 #include "ksp/orbit/orbit_driver.hpp"
 #include "ksp/orbit/time_warp.hpp"
+#include "ksp/parts/part.hpp"
 #include "ksp/physics/physical_object.hpp"
 #include "ksp/physics/reference_frame.hpp"
+#include "ksp/resources/resource_flow_host.hpp"
+#include "ksp/save/save_environment.hpp"
+#include "ksp/space_center/scene_drivers.hpp"
 #include "ksp/vessel/flight_logger.hpp"
 #include "ksp/vessel/vessel.hpp"
+#include "ksp/vessel/vessel_autopilot.hpp"
 
 namespace ksp::physics {
 
@@ -56,9 +63,10 @@ void PhysicsBubble::Install() {
     // WP-20d: the part-module FixedUpdates before FlightIntegrator (seq 22-276), the frame's ModuleRCS.Update / FlightIntegrator.Update
     // before Vessel.Update
     savedBeforeFlightIntegrator_ = FlightScene::hooks.beforeFlightIntegrator;
-    // seq 11 (FlightInputHandler.FixedUpdate -> Vessel.FeedInputFeed: the seam `inputFeed`), seq 13 (the part modules, then PartBuoyancy)
+    // seq 18 (FlightInputHandler.FixedUpdate -> Vessel.FeedInputFeed: the seam `inputFeed` or the host's FlightInputHandler, WP-20f),
+    // seq 22-276 (the part modules), then PartBuoyancy
     FlightScene::hooks.beforeFlightIntegrator = [this] {
-        if (inputFeed) inputFeed();
+        InputFeed();
         moduleForces_.FixedUpdate(host_);
         if (options_.contactHost) contacts_.BuoyancyFixedUpdate();
     };
@@ -68,8 +76,56 @@ void PhysicsBubble::Install() {
         if (options_.contactHost) contacts_.CollisionEnhancerFixedUpdate();
     };
     if (options_.contactHost) contacts_.Install();
+    // WP-20f: the scene state VesselSAS and ModuleReactionWheel read (see SetFlightInputHandler); the saved hook answers while no
+    // FlightInputHandler is set
+    savedKillAngularVelocity_ = AutopilotEnvironment::killAngularVelocity;
+    // VesselAutopilot.cs:672 KillAngularVelocity: rb.angularVelocity = Vector3.zero on every part (count-- order) except a robotic rotor
+    // and a control surface below one (Part.isRoboticRotor / isChildOfRoboticRotor, Part.cs:1373 / :1441: false without Serenity)
+    AutopilotEnvironment::killAngularVelocity = [this](Vessel& v) {
+        VesselPhysics* vp = host_.Find(v);
+        if (vp == nullptr) return;
+        const bool serenity = SaveEnvironment::Current().IsExpansionInstalled("Serenity");
+        size_t count = v.parts.size();
+        while (count-- > 0) {
+            Part* part = v.parts[count];
+            if (serenity) {
+                if (part->FindModuleOfClass("ModuleRoboticServoRotor") != nullptr) continue;
+                bool childOfRotor = false;
+                for (Part* p = part->parent; p != nullptr && !childOfRotor; p = p->parent)
+                    childOfRotor = p->FindModuleOfClass("ModuleRoboticServoRotor") != nullptr;
+                if (childOfRotor && part->isControlSurface()) continue;
+            }
+            vp->SetPartAngularVelocity(*part, Vector3d());
+        }
+    };
+    savedActiveVesselPYR_ = ReactionWheelEnvironment::activeVesselPYR;
+    ReactionWheelEnvironment::activeVesselPYR = [this]() -> Vector3f {
+        if (flightInputHandler_ != nullptr) return FlightInputHandler::state.GetPYR();  // ModuleReactionWheel.cs:165
+        return savedActiveVesselPYR_ ? savedActiveVesselPYR_() : Vector3f::zero();
+    };
+    savedPitchInput_ = AutopilotEnvironment::pitchInput;
+    savedRollInput_ = AutopilotEnvironment::rollInput;
+    savedYawInput_ = AutopilotEnvironment::yawInput;
+    AutopilotEnvironment::pitchInput = [this](float threshold) {
+        if (flightInputHandler_ != nullptr) return AutopilotPitchInput(threshold);
+        return savedPitchInput_ ? savedPitchInput_(threshold) : false;
+    };
+    AutopilotEnvironment::rollInput = [this](float threshold) {
+        if (flightInputHandler_ != nullptr) return AutopilotRollInput(threshold);
+        return savedRollInput_ ? savedRollInput_(threshold) : false;
+    };
+    AutopilotEnvironment::yawInput = [this](float threshold) {
+        if (flightInputHandler_ != nullptr) return AutopilotYawInput(threshold);
+        return savedYawInput_ ? savedYawInput_(threshold) : false;
+    };
+    savedPrecisionMode_ = AutopilotEnvironment::precisionMode;
+    AutopilotEnvironment::precisionMode = [this]() {
+        if (flightInputHandler_ != nullptr) return flightInputHandler_->precisionMode;  // ModuleRCS.GetPotentialTorque reads it
+        return savedPrecisionMode_ ? savedPrecisionMode_() : true;
+    };
     savedBeforeVesselUpdate_ = FlightScene::hooks.beforeVesselUpdate;
     FlightScene::hooks.beforeVesselUpdate = [this] {
+        PartValuesUpdate();  // WP-20f
         moduleForces_.Update();
         fiHost_.Update();
     };
@@ -131,6 +187,12 @@ void PhysicsBubble::Uninstall() {
     floatingOrigin_.OnDestroy();
     krakensbane_.OnDestroy();
     contacts_.Uninstall();
+    AutopilotEnvironment::killAngularVelocity = savedKillAngularVelocity_;
+    ReactionWheelEnvironment::activeVesselPYR = savedActiveVesselPYR_;
+    AutopilotEnvironment::pitchInput = savedPitchInput_;
+    AutopilotEnvironment::rollInput = savedRollInput_;
+    AutopilotEnvironment::yawInput = savedYawInput_;
+    AutopilotEnvironment::precisionMode = savedPrecisionMode_;
     FlightScene::hooks.afterPrecalc = savedAfterPrecalc_;
     FlightScene::hooks.afterFlightIntegrator = savedAfterFlightIntegrator_;
     FlightScene::hooks.beforeFlightIntegrator = savedBeforeFlightIntegrator_;
@@ -141,6 +203,38 @@ void PhysicsBubble::Uninstall() {
     Vessel::env.setWorldVelocity = savedSetWorldVelocity_;
     host_.Uninstall();
     installed_ = false;
+}
+
+// WP-20f: seq 18. The gimbal transforms first follow their parts (the physics step moved them; Unity's hierarchy keeps a child on its
+// parent) where VesselSAS will read them (UpdateVesselTorque -> ModuleGimbal.GetPotentialTorque in FeedInputFeed; ModuleGimbal.FixedUpdate
+// poses its own), then the pilot input and FeedInputFeed
+void PhysicsBubble::InputFeed() {
+    for (Vessel* v : FlightGlobals::VesselsLoaded)
+        if (v != nullptr && !v->packed && v->Autopilot().SAS().FBWconnected()) moduleForces_.PoseGimbalTransforms(*v);
+    if (inputFeed) {
+        inputFeed();
+        return;
+    }
+    if (flightInputHandler_ == nullptr) return;
+    flightInputHandler_->FixedUpdate();  // FlightInputHandler.cs:377
+    // FlightInputHandler.fetch.precisionMode, read by ModuleRCS.FixedUpdate (seq 22-276)
+    moduleForces_.hooks.precisionMode = flightInputHandler_->precisionMode;
+}
+
+// Part.cs:4307 Update, its PartValues refresh (:4328-4331) for the parts of every loaded vessel: the skills VesselValues folds over the
+// parts (a probe's ModuleSAS service level for VesselAutopilot) are the values of the last refresh. The rest of Part.Update (editor,
+// mouse over, temperature renderer, onPartUpdate, ModulesOnUpdate) is not this package's.
+void PhysicsBubble::PartValuesUpdate() {
+    if (FlightDriver::Pause()) return;
+    if (!ResourceFlowEnvironment::LoadedSceneIsFlight() || !FlightGlobals::ready) return;
+    for (Vessel* v : FlightGlobals::Vessels) {
+        if (v == nullptr || !v->loaded) continue;
+        for (Part* p : v->parts) {
+            const PartStates st = p->State();
+            if (st == PartStates::DEAD || st == PartStates::PLACEMENT || st == PartStates::CARGO || !p->fields.started) continue;
+            if (p->fields.overrideSkillUpdate || p->fields.CrewCapacity > 0) p->partValues.Update();
+        }
+    }
 }
 
 // A binding leaves with its vessel's parts (Vessel.Unload destroys them before GoOnRails, Vessel.cs:1882-1961) or with the vessel
