@@ -66,6 +66,11 @@ struct PartColliderShape {
 // Triggers are INCLUDED (flagged): the caller decides (the rigid body ignores them).
 std::vector<PartColliderShape> BuildPartColliders(float rescaleFactor, const std::vector<ModelInstance>& instances);
 
+// The shapes of ONE node's collider chunks, given the node's part-space transform (position, rotation, the scale accumulated down the
+// chain). Pushes them in chunk order; wheel chunks are skipped. BuildPartColliders' walk and PartModelRig::Colliders (the animated pose) use it.
+void AppendNodeColliderShapes(const Node& node, const std::string& path, const Vector3f& pos, const Quaternionf& rot, const Vector3f& scl,
+                              std::vector<PartColliderShape>& out);
+
 // Unity-style Quaternion * Vector3 and the lossy-scale composition used above, float per operation (exposed for the tests).
 Vector3f RotateNative(const Quaternionf& q, const Vector3f& v);
 

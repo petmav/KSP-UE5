@@ -15,7 +15,12 @@
 //   :314 SphereCollider2 isTrigger, radius, center
 //   :322 CapsuleCollider2 isTrigger, radius, height, int direction, center
 //   :332 BoxCollider2    isTrigger, size, center
-//   :340 WheelCollider   parsed and kept as a marker only (enabled = false in the prefab: it never collides)
+//   :340 WheelCollider   mass, radius, suspensionDistance, center, spring / damper / targetPosition, forward + sideways friction curves
+//                        (WP-29d keeps the values; enabled = false in the prefab: it never collides)
+//   :802 Animation       (WP-29d keeps the clips: per curve the transform path, the property, the wrap modes and the keyframes)
+// WP-29d: the wheel collider chunk (WheelCollider, PartReader.cs:340-370) and the Animation chunk (ReadAnimation :802) are kept.  The
+// values of a wheel collider chunk are mostly overwritten by ModuleWheelBase.wheelSetup (mass, radius, centre, suspension) and by
+// VPWheelCollider.SetupWheelCollider (the friction curves); the TRANSFORM that carries the chunk is what places the wheel.
 // Unity defaults that the chunks do not set: isTrigger false; CapsuleCollider.height 2 (legacy chunk); everything a chunk sets is
 // overwritten.  A malformed file throws std::runtime_error (PartReader.Read catches the exception, logs it and returns the partial
 // GameObject: the game would load a truncated model, which no shipped file is).
@@ -50,6 +55,41 @@ struct MeshData {
     std::vector<std::vector<int32_t>> triangleLists;  // one list per MeshTriangles entry (a submesh each)
 };
 
+// WheelCollider chunk (PartReader.cs:340): the values the prefab component is given before `enabled = false`
+struct WheelColliderChunk {
+    float mass = 0.0f, radius = 0.0f, suspensionDistance = 0.0f;
+    Vector3f center;
+    float spring = 0.0f, damper = 0.0f, targetPosition = 0.0f;       // JointSpring
+    float forwardFriction[5] = {0, 0, 0, 0, 0};                      // extremumSlip, extremumValue, asymptoteSlip, asymptoteValue, stiffness
+    float sidewaysFriction[5] = {0, 0, 0, 0, 0};
+};
+
+// Animation chunk (PartReader.cs:802 ReadAnimation): legacy clips of Transform / Material / Light / AudioSource curves
+struct AnimKey {
+    float time = 0.0f, value = 0.0f, inTangent = 0.0f, outTangent = 0.0f;
+    int32_t unused = 0;  // the int32 after each keyframe, read and dropped by PartReader (:861)
+};
+enum class AnimationType : int32_t { Transform = 0, Material = 1, Light = 2, AudioSource = 3 };  // PartToolsLib AnimationType order
+struct AnimCurve {
+    std::string path;      // relative to the transform that owns the Animation component ("" = the owner itself)
+    std::string property;  // e.g. "m_LocalRotation.w", "m_LocalPosition.x", "m_LocalScale.y"
+    int32_t type = 0;      // AnimationType
+    int32_t preWrapMode = 0, postWrapMode = 0;  // UnityEngine.WrapMode values (8 = ClampForever)
+    std::vector<AnimKey> keys;
+};
+struct AnimClip {
+    std::string name;
+    float bounds[6] = {0, 0, 0, 0, 0, 0};  // localBounds centre + size
+    int32_t wrapMode = 0;
+    std::vector<AnimCurve> curves;
+    float Length() const;  // AnimationClip.length: the latest key time of any curve
+};
+struct AnimationChunk {
+    std::vector<AnimClip> clips;
+    std::string defaultClip;
+    bool playAutomatically = false;
+};
+
 // One collider component as the chunk stores it (before any transform is applied).
 struct ColliderChunk {
     EntryType entry = EntryType::BoxCollider;
@@ -63,6 +103,7 @@ struct ColliderChunk {
     Vector3f center;                 // Sphere, Capsule, Box
     Vector3f size{1.0f, 1.0f, 1.0f}; // Box
     MeshData mesh;                   // Mesh (collider meshes only)
+    WheelColliderChunk wheel;        // Wheel (WP-29d)
 };
 
 struct Node {
@@ -74,6 +115,7 @@ struct Node {
     std::string tag = "Untagged";    // Unity default tag
     int32_t layer = 0;
     std::vector<ColliderChunk> colliders;
+    std::vector<AnimationChunk> animations;  // Animation components on this transform (WP-29d)
     std::vector<Node> children;
 };
 

@@ -99,7 +99,7 @@ public:
                     node.children.push_back(ReadChild());
                     break;
                 case EntryType::Animation:  // :219 (both fileVersion branches call ReadAnimation)
-                    ReadAnimation();
+                    node.animations.push_back(ReadAnimation());
                     break;
                 case EntryType::MeshCollider: {  // :229
                     ColliderChunk c = Chunk(EntryType::MeshCollider, ColliderKind::Mesh);
@@ -193,10 +193,21 @@ public:
                     node.colliders.push_back(std::move(c));
                     break;
                 }
-                case EntryType::WheelCollider:  // :340: mass, radius, suspensionDistance, center, spring (3), two friction curves (5 each)
-                    r_.skipFloats(1 + 1 + 1 + 3 + 3 + 5 + 5);
-                    node.colliders.push_back(Chunk(EntryType::WheelCollider, ColliderKind::Wheel));
+                case EntryType::WheelCollider: {  // :340: mass, radius, suspensionDistance, center, spring (3), two friction curves (5 each)
+                    ColliderChunk c = Chunk(EntryType::WheelCollider, ColliderKind::Wheel);
+                    WheelColliderChunk& w = c.wheel;
+                    w.mass = r_.f32();
+                    w.radius = r_.f32();
+                    w.suspensionDistance = r_.f32();
+                    w.center = r_.vec3();
+                    w.spring = r_.f32();
+                    w.damper = r_.f32();
+                    w.targetPosition = r_.f32();
+                    for (float& f : w.forwardFriction) f = r_.f32();
+                    for (float& f : w.sidewaysFriction) f = r_.f32();
+                    node.colliders.push_back(std::move(c));
                     break;
+                }
                 case EntryType::Camera:  // :372
                     ReadCamera();
                     break;
@@ -351,28 +362,39 @@ private:
         }
     }
 
-    void ReadAnimation() {  // :802
+    AnimationChunk ReadAnimation() {  // :802 (all clips are kept; the legacy Animation component is rebuilt by the host)
+        AnimationChunk a;
         const int32_t clips = r_.i32();
         for (int32_t i = 0; i < clips; ++i) {
-            r_.str();
-            r_.skipFloats(6);  // localBounds
-            r_.i32();          // wrapMode
+            AnimClip clip;
+            clip.name = r_.str();
+            for (int b = 0; b < 6; ++b) clip.bounds[b] = r_.f32();  // localBounds centre, size
+            clip.wrapMode = r_.i32();
             const int32_t curves = r_.i32();
             for (int32_t j = 0; j < curves; ++j) {
-                r_.str();
-                r_.str();
-                r_.i32();  // AnimationType
-                r_.i32();  // preWrapMode
-                r_.i32();  // postWrapMode
+                AnimCurve c;
+                c.path = r_.str();
+                c.property = r_.str();
+                c.type = r_.i32();  // AnimationType (PartToolsLib: Transform, Material, Light, AudioSource, ParticleEmitter)
+                c.preWrapMode = r_.i32();
+                c.postWrapMode = r_.i32();
                 const int32_t keys = r_.i32();
                 for (int32_t k = 0; k < keys; ++k) {
-                    r_.skipFloats(4);
-                    r_.i32();
+                    AnimKey key;
+                    key.time = r_.f32();
+                    key.value = r_.f32();
+                    key.inTangent = r_.f32();
+                    key.outTangent = r_.f32();
+                    key.unused = r_.i32();
+                    c.keys.push_back(key);
                 }
+                clip.curves.push_back(std::move(c));
             }
+            a.clips.push_back(std::move(clip));
         }
-        r_.str();
-        r_.boolean();
+        a.defaultClip = r_.str();
+        a.playAutomatically = r_.boolean();
+        return a;
     }
 
     void ReadLight() {  // :950
@@ -449,6 +471,15 @@ Model ReadModelFile(const std::string& path) {
     if (!f) throw std::runtime_error("mu: cannot open " + path);
     std::vector<uint8_t> buf((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
     return ReadModel(buf.data(), buf.size());
+}
+
+// AnimationClip.length: the end time of the clip, the latest key time of any curve
+float AnimClip::Length() const {
+    float len = 0.0f;
+    for (const AnimCurve& c : curves)
+        for (const AnimKey& k : c.keys)
+            if (k.time > len) len = k.time;
+    return len;
 }
 
 }  // namespace ksp::mu

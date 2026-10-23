@@ -37,6 +37,7 @@ add_library(kspcore STATIC
     physics/reference_frame.cpp
     physics/vessel_physics.cpp
     physics/mu_part_colliders.cpp
+    physics/wheel_models.cpp
     physics/vessel_physics_forces.cpp
     physics/vessel_physics_substeps.cpp
     physics/vessel_physics_host.cpp
@@ -207,6 +208,7 @@ add_library(kspcore STATIC
     parts/part_loader.cpp
     parts/mu_model.cpp
     parts/part_colliders.cpp
+    parts/part_model_rig.cpp
     parts/part.cpp
     parts/part_modules.cpp
     parts/part_resource_flow.cpp

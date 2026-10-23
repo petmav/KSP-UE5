@@ -1,0 +1,268 @@
+{
+ "note": "reduced copies (transform tree, tag/layer, collider + wheel collider chunks, animation chunk; no meshes/renderers/materials/textures) of the original game files named in 'origin' (decompiled/KSP-dev), made by core/tools/wp29d/reduce_mu.py",
+ "parts": {
+  "GearFixed": {
+   "cfg": "GameData/Squad/Parts/Wheel/LandingGear/GearFixed.cfg",
+   "models": [
+    {
+     "file": "GearFixed__GearFixed.mu",
+     "from": "GearFixed.mu",
+     "origin": "GameData/Squad/Parts/Wheel/LandingGear/GearFixed.mu",
+     "originalSha256": "a7fe8039fb798546d3ef6b6d904c54961994178bf6a3e13366464bb4b390e04c",
+     "sha256": "d7efa434ad56a1403c5b7b35d37967f00c03e0aa38764722d914f0dc12632046",
+     "bytes": 575
+    }
+   ],
+   "instances": [
+    {
+     "file": "GearFixed__GearFixed.mu",
+     "fromModelNode": true,
+     "parent": "",
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ]
+    }
+   ]
+  },
+  "GearFree": {
+   "cfg": "GameData/Squad/Parts/Wheel/LandingGear/GearFree.cfg",
+   "models": [
+    {
+     "file": "GearFree__GearFree.mu",
+     "from": "GearFree.mu",
+     "origin": "GameData/Squad/Parts/Wheel/LandingGear/GearFree.mu",
+     "originalSha256": "c6c29e99d03a7bd6cebb7089ba95095204e97dcfb95e0f66bff564bb8d1e6892",
+     "sha256": "e988a7b5edb822aa72f286f01607ee6190e48092ea0b562fe7b8fb3521041f69",
+     "bytes": 790
+    }
+   ],
+   "instances": [
+    {
+     "file": "GearFree__GearFree.mu",
+     "fromModelNode": true,
+     "parent": "",
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ]
+    }
+   ]
+  },
+  "GearLarge": {
+   "cfg": "GameData/Squad/Parts/Wheel/LandingGear/GearExtraLarge.cfg",
+   "models": [
+    {
+     "file": "GearLarge__GearExtraLarge.mu",
+     "from": "GearExtraLarge.mu",
+     "origin": "GameData/Squad/Parts/Wheel/LandingGear/GearExtraLarge.mu",
+     "originalSha256": "7c48b66ca5f70a2de67f30ecddb582c37fee3a4ac02b00dc031b4fa36938ce26",
+     "sha256": "0491c8fb1e889dd70803e3599342e2eb6b7f38db086e505bf4ecc7ce7522a2cb",
+     "bytes": 182452
+    }
+   ],
+   "instances": [
+    {
+     "file": "GearLarge__GearExtraLarge.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "GearMedium": {
+   "cfg": "GameData/Squad/Parts/Wheel/LandingGear/GearLarge.cfg",
+   "models": [
+    {
+     "file": "GearMedium__GearLarge.mu",
+     "from": "GearLarge.mu",
+     "origin": "GameData/Squad/Parts/Wheel/LandingGear/GearLarge.mu",
+     "originalSha256": "127ee4e00e9b480adb704cda942656b851022510aa6fc167b66cdcef2c940872",
+     "sha256": "cb34a01100ebcf9769e96a3e7314f5a91e4f36e214a43057ea34caa08bcd90fe",
+     "bytes": 30956
+    }
+   ],
+   "instances": [
+    {
+     "file": "GearMedium__GearLarge.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "GearSmall": {
+   "cfg": "GameData/Squad/Parts/Wheel/LandingGear/GearMedium.cfg",
+   "models": [
+    {
+     "file": "GearSmall__GearMedium.mu",
+     "from": "GearMedium.mu",
+     "origin": "GameData/Squad/Parts/Wheel/LandingGear/GearMedium.mu",
+     "originalSha256": "aa3c72c3da423324290b2b658679d6643c9c880072d8a03ccce6600f5de84931",
+     "sha256": "4acd64d7469d967489300eb6e9f4bac0d25b0071b6fd914df5dcaa5833707d8d",
+     "bytes": 5849
+    }
+   ],
+   "instances": [
+    {
+     "file": "GearSmall__GearMedium.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "SmallGearBay": {
+   "cfg": "GameData/Squad/Parts/Wheel/LandingGear/GearSmall.cfg",
+   "models": [
+    {
+     "file": "SmallGearBay__GearSmall.mu",
+     "from": "GearSmall.mu",
+     "origin": "GameData/Squad/Parts/Wheel/LandingGear/GearSmall.mu",
+     "originalSha256": "9099875a16da37aa7468be5365a2f5bb4ef257a6cc360e65b1786aed673938a5",
+     "sha256": "74d3aaf02c771718e2f5c76e30da1df80dbef9f3cc2d690c23947255ddcc8b4b",
+     "bytes": 4583
+    }
+   ],
+   "instances": [
+    {
+     "file": "SmallGearBay__GearSmall.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "landingLeg1": {
+   "cfg": "GameData/Squad/Parts/Utility/landingLegLT-1/landingLegLT-1.cfg",
+   "models": [
+    {
+     "file": "landingLeg1__model.mu",
+     "from": "model.mu",
+     "origin": "GameData/Squad/Parts/Utility/landingLegLT-1/model.mu",
+     "originalSha256": "08beb260fd1c274f54c689965385a79546e3063a13e50d865bfdb9d608e70480",
+     "sha256": "29e126162177035c107483288db9a1f82ab7a92588b5ca8cbe5f8007a28e6e8c",
+     "bytes": 9102
+    }
+   ],
+   "instances": [
+    {
+     "file": "landingLeg1__model.mu",
+     "fromModelNode": false
+    }
+   ]
+  },
+  "landingLeg1-2": {
+   "cfg": "GameData/Squad/Parts/Utility/landingLegLT-2/landingLegLT-2.cfg",
+   "models": [
+    {
+     "file": "landingLeg1-2__model.mu",
+     "from": "model.mu",
+     "origin": "GameData/Squad/Parts/Utility/landingLegLT-2/model.mu",
+     "originalSha256": "1abe3b84781ad956553368ea5961e10a744d9ea9b70ccda2ead286c953e8f8fc",
+     "sha256": "53021f5673cdd2c481bafd9c50cb83ad51ff557e5d0e38ba5da514a55fc143ae",
+     "bytes": 6686
+    }
+   ],
+   "instances": [
+    {
+     "file": "landingLeg1-2__model.mu",
+     "fromModelNode": false
+    }
+   ]
+  },
+  "miniLandingLeg": {
+   "cfg": "GameData/Squad/Parts/Utility/landingLegLT-5/landingLegLT-5.cfg",
+   "models": [
+    {
+     "file": "miniLandingLeg__model.mu",
+     "from": "model.mu",
+     "origin": "GameData/Squad/Parts/Utility/landingLegLT-5/model.mu",
+     "originalSha256": "2361d581c52253cd450fa28b0142ea6ccd5f8a02fb18e5fa070b30dc4270ae0e",
+     "sha256": "3d40bbc7290161b229afe640db868ebd92b10d58d551d7b0fbc1e8ebc0aa92d3",
+     "bytes": 16857
+    }
+   ],
+   "instances": [
+    {
+     "file": "miniLandingLeg__model.mu",
+     "fromModelNode": false
+    }
+   ]
+  },
+  "roverWheel1": {
+   "cfg": "GameData/Squad/Parts/Wheel/roverWheelM1/roverWheelM1.cfg",
+   "models": [
+    {
+     "file": "roverWheel1__model.mu",
+     "from": "model.mu",
+     "origin": "GameData/Squad/Parts/Wheel/roverWheelM1/model.mu",
+     "originalSha256": "97cf7fcfb86a777308637772570b6815e467c6e0fa1f1205d0eede25f598a622",
+     "sha256": "5c7965e673e90b10ee737426d7b3410dca94621095c99215c940ad59ec884060",
+     "bytes": 1958
+    }
+   ],
+   "instances": [
+    {
+     "file": "roverWheel1__model.mu",
+     "fromModelNode": false
+    }
+   ]
+  },
+  "roverWheel2": {
+   "cfg": "GameData/Squad/Parts/Wheel/roverWheelS2/roverWheelS2.cfg",
+   "models": [
+    {
+     "file": "roverWheel2__model.mu",
+     "from": "model.mu",
+     "origin": "GameData/Squad/Parts/Wheel/roverWheelS2/model.mu",
+     "originalSha256": "ee46111e9a17cedad21dcc6df22de15185b6f4dba92e781b675ebea2d91eef64",
+     "sha256": "98083fc93b99aed5d710bd4e83197f3c2688992d469104ecc7790f08f3401956",
+     "bytes": 20121
+    }
+   ],
+   "instances": [
+    {
+     "file": "roverWheel2__model.mu",
+     "fromModelNode": false
+    }
+   ]
+  },
+  "roverWheel3": {
+   "cfg": "GameData/Squad/Parts/Wheel/roverWheelXL3/roverWheelXL3.cfg",
+   "models": [
+    {
+     "file": "roverWheel3__model.mu",
+     "from": "model.mu",
+     "origin": "GameData/Squad/Parts/Wheel/roverWheelXL3/model.mu",
+     "originalSha256": "a530c075ed956f44814dd093d80523b42e2a33767466c98055e3ad6f4df5151c",
+     "sha256": "9bc8283dc995df5a87f26206b96f76b0f3f3453348c4b517d1364846a6e2f994",
+     "bytes": 56866
+    }
+   ],
+   "instances": [
+    {
+     "file": "roverWheel3__model.mu",
+     "fromModelNode": false
+    }
+   ]
+  },
+  "wheelMed": {
+   "cfg": "GameData/Squad/Parts/Wheel/roverWheelTR-2L/roverWheelTR-2L.cfg",
+   "models": [
+    {
+     "file": "wheelMed__model.mu",
+     "from": "model.mu",
+     "origin": "GameData/Squad/Parts/Wheel/roverWheelTR-2L/model.mu",
+     "originalSha256": "62d49c9402e93d9778f307fe20f2bc5ac2574fe9f8c2fba29cafa58af144f83a",
+     "sha256": "62f7c51b0ba75db47e8e0cd5026090c3829e3e03bbca300a84f4edb2bb3dc85f",
+     "bytes": 3225
+    }
+   ],
+   "instances": [
+    {
+     "file": "wheelMed__model.mu",
+     "fromModelNode": false
+    }
+   ]
+  }
+ }
+}
