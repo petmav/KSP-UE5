@@ -398,7 +398,7 @@ Vector3f ModuleControlSurface::GetPotentialLift(bool positiveDeflection, const L
     return GetLiftVector(rhs, f, num2, Qlift, static_cast<float>(p->fields.machNumber)) * ctrlSurfaceArea - vector;
 }
 
-// ModuleControlSurface.cs:476
+// ModuleControlSurface.cs:479
 void ModuleControlSurface::GetPotentialTorque(Vector3f& pos, Vector3f& neg, const Vector3d& rigidbodyCoM, const Vector3f& currentCoM,
                                               const PartTransform& referenceTransform, const LiftingSurfaceFrame& frame) {
     pos = neg = Vector3f::zero();

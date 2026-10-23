@@ -159,7 +159,7 @@ public:
     void PoseGimbalTransforms();
     void PoseGimbalTransforms(Vessel& v);
     void ClearModelChainCache() { chainCache_.clear(); }
-    // WP-21b: ModuleControlSurface.GetPotentialTorque (ModuleControlSurface.cs:476) for VesselSAS's torque sum (AutopilotEnvironment::
+    // WP-21b: ModuleControlSurface.GetPotentialTorque (ModuleControlSurface.cs:479) for VesselSAS's torque sum (AutopilotEnvironment::
     // torqueProviderHook): true when `m` is a control surface (pos / neg filled), false for any other module
     static bool ControlSurfaceTorque(Vessel& v, PartModule& m, VesselPhysics* vp, Vector3f& pos, Vector3f& neg);
 

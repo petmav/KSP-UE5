@@ -303,7 +303,7 @@ void PartModuleForces::IntakeFixedUpdate(Part& part, ModuleResourceIntake& in, V
     in.FixedUpdate(fi);
 }
 
-// ModuleControlSurface.cs:476 GetPotentialTorque as VesselAutopilot.VesselSAS.GetTotalVesselTorque (VesselAutopilot.cs:474) calls it
+// ModuleControlSurface.cs:479 GetPotentialTorque as VesselAutopilot.VesselSAS.GetTotalVesselTorque (VesselAutopilot.cs:474) calls it
 // through AutopilotEnvironment::torqueProviderHook: Part.Rigidbody.worldCenterOfMass of the part's rigid body (transform frame)
 bool PartModuleForces::ControlSurfaceTorque(Vessel& v, PartModule& m, VesselPhysics* vp, Vector3f& pos, Vector3f& neg) {
     auto* cs = dynamic_cast<ModuleControlSurface*>(&m);

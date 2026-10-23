@@ -168,7 +168,7 @@ public:
     void FixedCtrlSurfaceUpdate(const ControlSurfaceFrame& frame);
     // :469 GetPotentialLift: the lift change of a full deflection (positive / negative authority) at the last tick's Qlift / nVel
     Vector3f GetPotentialLift(bool positiveDeflection, const LiftingSurfaceFrame& frame);
-    // :476 GetPotentialTorque (ITorqueProvider, VesselSAS's torque sum). `rigidbodyCoM` = part.Rigidbody.worldCenterOfMass (transform frame),
+    // :479 GetPotentialTorque (ITorqueProvider, VesselSAS's torque sum). `rigidbodyCoM` = part.Rigidbody.worldCenterOfMass (transform frame),
     // `currentCoM` = vessel.CurrentCoM, `referenceTransform` = vessel.ReferenceTransform. The displaceVelocity (rotor blade) branch is the
     // robotics package's: it leaves pos / neg zero here.
     void GetPotentialTorque(Vector3f& pos, Vector3f& neg, const Vector3d& rigidbodyCoM, const Vector3f& currentCoM,
