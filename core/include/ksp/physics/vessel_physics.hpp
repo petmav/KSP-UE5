@@ -257,6 +257,16 @@ enum class LoadSolve : uint8_t {
     Auto,   // Graph when a live strut / autostrut joins two rigid bodies or two or more parts touch static geometry, else Tree (default)
 };
 
+// WP-52b: the servo body of a part and its joint, in PART space (the part transform's frame) at the joint coordinate now.
+struct ServoBodySpec {
+    bool prismatic = false;     // a piston (slider); else a hinge
+    Vector3d anchor;            // the joint anchor: the moving transform's origin (ConfigurableJoint.anchor = 0 on the moving GameObject)
+    Vector3d axis{1, 0, 0};     // unit: the joint's main axis; a positive coordinate turns / moves the servo body about / along it
+    double coordinate = 0.0;    // the joint coordinate now (rad / m)
+    Vector3d centerOfMass;      // servoRb.worldCenterOfMass (servoRb.centerOfMass = servoCoMOffset in the moving transform)
+    QuaternionD rotation = QuaternionD::identity();  // the moving transform's rotation (servoRb's axes; inertiaTensorRotation identity)
+};
+
 struct VesselPhysicsOptions {
     ClusterPolicy policy = ClusterPolicy::Whole;
     // extra articulation points (robotics, "flexible" joints): the attach joint of `child` is a fixed constraint between clusters
@@ -284,6 +294,22 @@ struct VesselPhysicsOptions {
     // Part.CycleAutoStrut releases the autostruts at once and SecureAutoStruts re-creates them after `yield return new WaitForFixedUpdate()`
     // (Part.cs:8043-8067): the steps a new or modified binding runs without autostruts. 0: secured at once (no GetMassivePart cache).
     int autoStrutDelaySteps = 1;
+    // ---- WP-52b: servo bodies (the robotic servos' second Rigidbody and their ConfigurableJoint; ksp/serenity/servo_backend.hpp sets these) ----
+    // `servoBody`: a part with a Rigidbody that has a servo body (Part.servoRb, BaseServo.CreateServoRigidbody, BaseServo.cs:1196) fills
+    // its geometry and returns true. The servo body is a mass element of its own: in the cluster of what is attached to it (the servo's moving
+    // side), welded to nothing else, and joined to the part's cluster by an articulated constraint (PhysicsWorld::CreateArticulatedConstraint)
+    // instead of a weld. FlightIntegrator.UpdateMassStats (FlightIntegrator.cs:476-480) gives rb and servoRb half of the part's rb mass each.
+    std::function<bool(const Part&, ServoBodySpec&)> servoBody;
+    // `servoBodyEnd`: the end of an attach joint that is a servo body (the part whose servo body the joint's Rigidbody is: PartJoint.SetupJoint
+    // with AttachServoRigidBody / NodeRigidBody, PartJoint.cs:213-258); nullptr: neither end. Unset: no joint attaches to a servo body.
+    std::function<const Part*(const PartJointSpec&)> servoBodyEnd;
+    // before each step (Flush): the drive of the servo joint of `part` (false: leave the last one)
+    std::function<bool(Part&, PhysicsWorld::ArticulatedDrive&)> servoDrive;
+    // after each step (AfterStep): the joint coordinate (rad / m, continuous within the binding) and its rate, for the moving transform
+    std::function<void(Part&, double coordinate, double rate)> servoMoved;
+    // the solver iterations of an island with a servo joint (PhysicsWorld::ArticulatedJointDesc::velocitySteps; 0: the world's). 50: the
+    // drive follows its law to ~0.1 % on a heavy arm (WP-52b gate); PhysX in KSP ran 50 position iterations ([runtime], PHYSICS-SPIKE.md).
+    int servoVelocitySteps = 50;
 };
 
 // The pose and motion of one part as the reduced model sees it (physics frame).
@@ -294,6 +320,9 @@ struct PartPhysicsState {
     Vector3d velocity;          // velocity of `centerOfMass` (rb.velocity for a part with a Rigidbody)
     Vector3d angularVelocity;   // the cluster's
     int cluster = -1;
+    // WP-52b: the servo body of the part (servoRb), when it has one in the binding the state comes from
+    bool servo = false;
+    Vector3d servoVelocity, servoAngularVelocity;  // servoRb.velocity at its centre of mass, servoRb.angularVelocity
 };
 
 // The vessel pose a VesselPhysics is built at: the vessel transform (= root part transform) in the physics frame.
@@ -390,7 +419,25 @@ public:
     // joints still welded / constrained (not cut), in Joints() order
     bool JointCut(size_t joint) const { return cut_[joint]; }
     size_t ClusterCount() const;
-    size_t ConstraintCount() const { return constraints_.size(); }  // inter-cluster fixed constraints
+    size_t ConstraintCount() const;  // inter-cluster constraints: the fixed welds and (WP-52b) the servo joints
+    // ---- WP-52b: servo bodies --------------------------------------------------------------------------------------------------
+    bool PartHasServoBody(const Part& part) const;  // part.servoRb != null in this binding (FlightIntegrator's flag2, FlightIntegrator.cs:2268)
+    size_t ServoCount() const;
+    Part* ServoPart(size_t servo) const;
+    int ServoCluster(const Part& part) const;       // the cluster of the part's servo body (-1: none)
+    ConstraintId ServoJoint(const Part& part) const;  // its articulated constraint (kInvalidConstraint while both sides share a body)
+    double ServoCoordinate(const Part& part) const;   // rad / m after the last step (continuous: a hinge is unwrapped)
+    double ServoRate(const Part& part) const;
+    float ServoBodyMass(const Part& part) const;      // servoRb.mass
+    float ServoAngularDrag(const Part& part) const;   // servoRb.angularDrag
+    Vector3d ServoBodyCenterOfMass(const Part& part) const;  // physics frame, now
+    // the servo joint's load in the last load solve: the force / moment the servo body's side puts on the part (physics frame, moment about
+    // the anchor); valid = solved
+    struct ServoLoad {
+        bool valid = false;
+        Vector3d force, moment;
+    };
+    ServoLoad ServoJointLoad(const Part& part) const;
     int ClusterOf(const Part& part) const;
     BodyId ClusterBody(size_t cluster) const;
     const std::vector<int>& ClusterParts(size_t cluster) const;  // vessel part indices (vessel order at build)
@@ -572,6 +619,11 @@ public:
 private:
     struct PartRec;
     struct ClusterRec;
+    struct ServoRec;  // WP-52b
+    void BuildServoJoints();
+    void ResumeClusterVelocity(ClusterRec& c);
+    int ServoIndex(const Part& part) const;
+    int JointEndServo(const PartJointSpec& js, bool& atHost) const;  // the servo whose body is an end of the joint (-1: none)
     void Init(const std::vector<PartPhysicsState>& states, uint32_t group);
     void IndexParts();
     void BuildClusters(const std::vector<PartPhysicsState>& states);
@@ -612,6 +664,16 @@ private:
         Vector3d pointBodyA;             // the weld point in cluster a's body frame (relative to its origin at creation)
     };
     std::vector<Weld> welds_;
+    // WP-52b: the servo bodies (vessel part order of their parts) and part index -> servo index (-1)
+    std::vector<ServoRec> servos_;
+    std::vector<int> servoOfPart_;
+    std::vector<int> servoOfNode_;       // load-model node -> servo (-1: a part node)
+    std::vector<int> nodeOfServo_;       // servo -> its load-model node (-1)
+    std::vector<int> servoElement_;      // servo -> its element of the graph solve (-1)
+    std::vector<ServoLoad> servoLoads_;
+    std::vector<Vector3d> servoExtF_, servoExtM_;  // per load-model node: the servo joints' forces / moments of the step (physics frame)
+    double NodeMass(int node) const;               // rb.mass of a part node, servoRb.mass of a servo node
+    Vector3d NodeLocalCom(int node) const;         // its centre of mass in its cluster's body space
     std::vector<ConstraintId> constraints_;
     // WP-20e: per cluster, the applied force / torque and the velocities of the last Flush, the support of the step after it
     std::vector<Vector3d> appliedF_, appliedT_, flushV_, flushW_, supportF_, supportT_;

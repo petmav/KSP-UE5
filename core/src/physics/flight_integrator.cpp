@@ -437,7 +437,7 @@ AeroRigidbody FlightIntegrator::RigidbodyOf(Part& part) const {
     rb.present = owner != nullptr && vp_ != nullptr && vp_->PartIndex(*owner) >= 0;
     rb.isPartRb = part.hasRigidbody;
     rb.partHasRb = part.hasRigidbody;
-    rb.partHasServoRb = false;
+    rb.partHasServoRb = vp_ != nullptr && vp_->PartHasServoBody(part);  // WP-52b: part.servoRb != null (FlightIntegrator.cs:2268)
     rb.krakensbaneFrameVelocity = Krakensbane::GetFrameVelocity();
     if (rb.present) {
         const PartRigidbodyState s = vp_->RigidbodyState(*owner);
