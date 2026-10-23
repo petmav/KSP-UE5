@@ -42,14 +42,19 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <set>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include "ksp/core/coroutine.hpp"
+#include "ksp/parts/part_model_rig.hpp"
+#include "ksp/unity/animation.hpp"
 #include "ksp/math/vector3d.hpp"
 #include "ksp/physics/contact_host.hpp"
 #include "ksp/physics/physics_world.hpp"
 #include "ksp/physics/vessel_physics.hpp"
+#include "ksp/physics/wheel_models.hpp"
 #include "ksp/wheels/native_wheel_collider.hpp"
 #include "ksp/wheels/wheel_modules.hpp"
 
@@ -83,7 +88,12 @@ struct WheelPhysicsOptions {
     float limitBaumgarte = 0.2f;   // fraction of the over-compression corrected per step (PhysX corrects it in its position iterations)
     bool reactOnOtherVessels = true;
     bool startModules = true;      // run OnStart of the wheel modules (Part.ModulesOnStart's subset) when a vessel's parts have started
-    // the geometry of a wheel part (true: answered); unset or false: the drag-cube proxy below
+    // WP-29d: the model data of the wheel parts (transforms by name, animations, hub colliders): the stock library (core/data/wheel_models)
+    // or any source of PartModelRigs (the real GameData's .mu files). With neither, the WP-29c drag-cube proxy below.
+    std::shared_ptr<const WheelModelLibrary> models;
+    std::function<std::shared_ptr<mu::PartModelRig>(const Part&)> modelRig;
+    bool modelColliders = true;    // the hub colliders from the models weld into the cluster (else the wheel parts stay mass-only)
+    // the geometry of a wheel part (true: answered); unset or false: the model rig, then the drag-cube proxy below
     std::function<bool(const Part&, const ModuleWheelBase&, WheelPartGeometry&)> geometry;
     // the proxy's up and forward in the VESSEL frame (the root part's frame: orgPos / orgRot). Unset: up = the local vertical (vessel.upAxis)
     // in the vessel frame when the wheel is set up (the vessel stands on its wheels), +Y without one; forward = the root part's up projected
@@ -103,6 +113,19 @@ struct WheelPart {
     std::map<std::string, std::unique_ptr<VehiclePhysics::NativeTransform>> named;  // the other names (same pose as colliderHost)
     WheelPartGeometry geometry;                          // part space
     bool geometryFromProxy = false;
+    // WP-29d: the model rig (null: proxy geometry) and the Unity objects built on it
+    std::shared_ptr<mu::PartModelRig> rig;
+    int colliderNode = -1;                                // rig node of wheelColliderTransformName
+    std::map<int, std::unique_ptr<VehiclePhysics::NativeTransform>> rigTransforms;  // FindModelTransform results by rig node
+    struct AnimBinding {
+        int rigAnimation = -1;
+        std::unique_ptr<Animation> anim;
+    };
+    std::vector<AnimBinding> animations;
+    VehiclePhysics::NativeTransform colliderSet;          // the pose the host last gave the collider host (a module write is a difference)
+    bool standInBuilt = false;                            // the cluster compound holds the part stand-in sphere
+    Vector3f standInCenter;                               // ... at this part-space point
+    bool geometryLocked = false;                          // ModuleWheelBase.wheelSetup re-parented the collider transform to the part
     bool started = false;                                // the wheel modules' OnStart ran
     bool nativeOn = false;                               // the PhysX wheel exists (collider enabled)
     VehiclePhysics::NativeWheelStep last;                // the last native step (diagnostics)
@@ -168,6 +191,9 @@ public:
     VesselWheels* Find(const Vessel& v) const;
     const std::vector<std::unique_ptr<VesselWheels>>& Vessels() const { return vessels_; }
     CoroutineScheduler& Scheduler() { return scheduler_; }
+    // WP-29d: the wheel parts whose Rigidbody is frozen (ModuleWheelBase.toggleRbConstraints, FreezeAll) and the welds that hold them
+    size_t FrozenPartCount() const { return frozen_.size(); }
+    size_t FreezeWeldCount() const { return freezes_.size(); }
     // the collider the terrain / static geometry hits report (layer 15 "Local Scenery", tag "Untagged", no rigidbody)
     VehiclePhysics::Collider& TerrainCollider() { return terrain_; }
 
@@ -197,6 +223,20 @@ private:
     void NativeStepVessel(VesselWheels& vw, VesselPhysics& vp, float h);
     void ManagedSubstep(float h);
     WheelPartGeometry GeometryOf(const Part& part, const ModuleWheelBase& base) const;
+    std::shared_ptr<mu::PartModelRig> RigFor(const Part& part) const;      // WP-29d: a fresh rig of the part, null without model data
+    void SampleAnimations(WheelPart& w);                                    // Animation.Sample of every enabled state onto the rig
+    void TickAnimations(float h);                                           // the animatePhysics update of the wheel parts' animations
+    void WriteBackGeometry(WheelPart& w);                                   // a module moved the collider transform (SetWheelTransform): keep it
+    Animation* FindAnimator(Part& p, const std::string& trf, const std::string& state);
+    void SampleAnimation(Animation& a);
+    std::vector<ColliderProxy> HubColliders(const Part& part);
+    std::optional<ColliderProxy> StandInProxy(const Part& part) const;      // the retracted gear sphere (ModuleWheelDeployment.standInCollider)
+    void UpdateStandIns();
+    void ApplyFreezes();   // the brake "schloompa": a frozen wheel part holds its cluster (a weld to the world) for the freeze time
+                                                  // rebuild the cluster shapes when a stand-in appears, goes or moves
+    std::shared_ptr<mu::PartModelRig> SampledRig(const Part& part) const;   // the rig posed at the part ModuleWheelDeployment state
+    // getLowestPoint collider scan for a wheel part (Vessel.cs:2589-2637, VesselEnvironment::colliderClosestPoints)
+    std::vector<VesselEnvironment::ColliderPoint> PlacementPoints(Part& part, const Vector3f& measure);
     OtherPart* OtherPartFor(VesselPhysics& owner, uint32_t partIndex);
     bool AnyWheelSetUp() const;
     VehiclePhysics::NativeTransform* FindModelTransform(Part& p, const std::string& name);
@@ -206,6 +246,12 @@ private:
     std::vector<std::unique_ptr<WheelPart>> dormant_;  // records of wheel parts in no loaded vessel (kept while the Part lives)
     std::map<const Part*, std::unique_ptr<OtherPart>> others_;
     std::vector<PendingForce> pending_;
+    std::set<const Part*> frozen_;
+    struct Freeze {
+        ConstraintId id = kInvalidConstraint;
+        BodyId body = kInvalidBody;
+    };
+    std::map<VesselPhysics*, Freeze> freezes_;
     VehiclePhysics::Collider terrain_;
     // WP-12c: the static colliders a wheel ray can hit with a tag / layer of their own (KSC runway, launch pad ...; ContactHost::RegisterStatic):
     // one native Collider per distinct GameObject description, so that describeCollider can answer layer / tag / CrashObjectName for them

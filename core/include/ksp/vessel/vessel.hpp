@@ -150,6 +150,16 @@ struct VesselEnvironment {
     // WP-20e: getLowestPoint's collider scan (Vessel.cs:2589-2621): the z of collider.ClosestPoint(point) for every collider of the part (the
     // non-trigger, enabled colliders on the layers getLowestPoint keeps), in the vessel's current pose. Unset: none (getLowestPoint = +inf)
     std::function<std::vector<float>(Part&, const Vector3f& point)> colliderClosestPointsZ;
+    // WP-29d: the same scan with the collider's role, for getLowestPoint's wheel branch (Vessel.cs:2616-2637): a collider whose GameObject
+    // name contains "WheelCollider" (the WheelCollider component: its bounds.min.z is its centre, `radius` is subtracted afterwards) or
+    // "collisionEnhancer". When set it REPLACES colliderClosestPointsZ in getLowestPoint (the host that sets it includes the plain colliders).
+    enum class ColliderRole : uint8_t { Plain, WheelCollider, CollisionEnhancer };
+    struct ColliderPoint {
+        float z = 0.0f;
+        ColliderRole role = ColliderRole::Plain;
+        float radius = 0.0f;  // WheelCollider.radius / VPWheelCollider.radius
+    };
+    std::function<std::vector<ColliderPoint>(Part&, const Vector3f& point)> colliderClosestPoints;
     // WP-20e: the RB anchor (Vessel.AddRBAnchor's FixedJoint on the vessel's GameObject = the root part's Rigidbody, Vessel.cs:1162):
     // create (false: no Rigidbody to fix), destroy, joint.currentForce (world, the force the joint applies to the vessel), joint.breakForce.
     // Unset: no joint is ever made (AddRBAnchor only counts its time).
@@ -262,9 +272,12 @@ public:
     std::string displaylandedAt = "";
     std::string landedAtLast = "";
     Delegate<void()> OnJustAboutToBeDestroyed = Delegate<void()>::Static(&Vessel::NoCallback);
-    // Vessel.cs:370 OnAutopilotUpdate (FlightInputCallback(FlightCtrlState), WP-24: VesselSAS connects ControlUpdate / UpdateVesselTorque). The host
-    // invokes it from FeedInputFeed (Vessel.cs:2035) between OnPreAutopilotUpdate and OnPostAutopilotUpdate.
+    // Vessel.cs:366-378, the four FlightInputCallback(FlightCtrlState) fields, each `delegate { }`; FeedInputFeed (Vessel.cs:2035, WP-20f)
+    // invokes them in this order. OnAutopilotUpdate: WP-24's VesselSAS connects ControlUpdate / UpdateVesselTorque.
+    Delegate<void(FlightCtrlState&)> OnPreAutopilotUpdate = Delegate<void(FlightCtrlState&)>::Static(&Vessel::NoFlightCallback);
     Delegate<void(FlightCtrlState&)> OnAutopilotUpdate = Delegate<void(FlightCtrlState&)>::Static(&Vessel::NoFlightCallback);
+    Delegate<void(FlightCtrlState&)> OnPostAutopilotUpdate = Delegate<void(FlightCtrlState&)>::Static(&Vessel::NoFlightCallback);
+    Delegate<void(FlightCtrlState&)> OnFlyByWire = Delegate<void(FlightCtrlState&)>::Static(&Vessel::NoFlightCallback);
     Situations situation = static_cast<Situations>(0);
     double missionTime = 0.0;
     double launchTime = 0.0;
@@ -463,6 +476,7 @@ public:
     void SetGroupOverride(int newGroup);                           // :1994
     void SetControlState(const FlightCtrlState& st);               // :2017
     void GetControlState(FlightCtrlState& st);                     // :2030
+    void FeedInputFeed();                                          // :2035 (WP-20f)
     bool ActionControlBlocked(KSPActionGroup actionGroup) const;   // :4045
     bool AxisControlBlocked(KSPAxisGroup axisGroup) const;         // :4054
     void CopyOverrides(const Vessel& v);                           // :4063

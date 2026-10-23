@@ -3,6 +3,12 @@
 Private, local-only. Thin UE 5.8 C++ shell over the engine-agnostic simulation core (`..\core`, built separately with CMake).
 No Blueprints: everything is C++ so agents can read and change it.
 
+| Document | What |
+|---|---|
+| `DESIGN.md` | UE5 shell design: core vs shell split, the C ABI bridge contract, scene flow, rendering, UI (Slate), input / cameras / audio / localization, the first playable slice (WP-UE-01..18), open decisions |
+| `STATUS.md` | what works today, build and iteration timings |
+| `spike/RESULTS.md` | phase-0 scale spike (LWC, rebasing, frame times) |
+
 ```
 KspUe5.uproject
 Source/KspUe5/            game module: spike code (Spike/), automation tests (Tests/)

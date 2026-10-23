@@ -331,11 +331,11 @@ TEST_CASE("WP-29c rover drive at full throttle vs the C# motor model without sli
     }
 }
 
-TEST_CASE("WP-29c rover brakes from 8 m/s: stops within 25 % of the C# brake model capped by the locked-tyre curve, no flip") {
+void BrakeCase(const WheelPhysicsOptions& opts, const char* tag) {
     if (!wp20b::GameAvailable()) return;
     for (const char* craft : {"Prospector Rover", "Bug-E Buggy"}) {
         INFO(craft);
-        Run run(craft);
+        Run run(craft, opts);
         run.Ticks(100);
         run.V().ctrlState.wheelThrottle = 1.0f;
         for (int k = 0; k < 3000 && run.ForwardSpeed() < 8.0; ++k) {
@@ -371,18 +371,20 @@ TEST_CASE("WP-29c rover brakes from 8 m/s: stops within 25 % of the C# brake mod
             xa += std::max(0.0, va) * 0.02;
             ta = (j + 1) * 0.02;
         }
-        MESSAGE(std::string(craft) << ": from " << v0 << " m/s: " << dist << " m in " << t << " s (reference " << xa << " m in " << ta << " s), max tilt " << tilt << " deg");
+        MESSAGE(std::string(tag) << " " << craft << ": from " << v0 << " m/s: " << dist << " m in " << t << " s (reference " << xa << " m in " << ta << " s), max tilt " << tilt << " deg");
         CHECK(dist > 0.0);
         CHECK(dist == doctest::Approx(xa).epsilon(0.25));
         CHECK(tilt < 30.0);
     }
 }
 
-TEST_CASE("WP-29c rover steers: wheelSteer +1 (KSP's left key) turns left at the kinematic rate of the steered wheels (Prospector), Bug-E turns left") {
+TEST_CASE("WP-29c rover brakes from 8 m/s: stops within 25 % of the C# brake model capped by the locked-tyre curve, no flip") { BrakeCase({}, "proxy"); }
+
+void SteerCase(const WheelPhysicsOptions& opts, const char* tag) {
     if (!wp20b::GameAvailable()) return;
     for (const char* craft : {"Prospector Rover", "Bug-E Buggy"}) {
         INFO(craft);
-        Run run(craft);
+        Run run(craft, opts);
         run.Ticks(100);
         // to 2.5 m/s, then coast: the kinematic model holds while the lateral acceleration stays low (the tyres in their adherent range)
         run.V().ctrlState.wheelThrottle = 0.4f;
@@ -426,14 +428,16 @@ TEST_CASE("WP-29c rover steers: wheelSteer +1 (KSP's left key) turns left at the
             REQUIRE(nr > 0);
             const double delta = sumDelta / nf * kRad, L = front / nf - rear / nr;
             const double kinematic = -v * std::tan(std::fabs(delta)) / L;  // a left turn: negative about the Unity up axis
-            MESSAGE(std::string(craft) << ": " << heading << " deg in 3 s at " << v << " m/s, yaw rate " << yawRate << " rad/s vs kinematic " << kinematic
+            MESSAGE(std::string(tag) << " " << craft << ": " << heading << " deg in 3 s at " << v << " m/s, yaw rate " << yawRate << " rad/s vs kinematic " << kinematic
                           << " (steer " << delta / kRad << " deg, wheelbase " << L << " m), tilt " << tilt << " deg");
             CHECK(yawRate == doctest::Approx(kinematic).epsilon(0.15));
         } else {
-            MESSAGE(std::string(craft) << ": " << heading << " deg in 2 s at " << v << " m/s, yaw rate " << yawRate << " rad/s (all-wheel steering), tilt " << tilt << " deg");
+            MESSAGE(std::string(tag) << " " << craft << ": " << heading << " deg in 2 s at " << v << " m/s, yaw rate " << yawRate << " rad/s (all-wheel steering), tilt " << tilt << " deg");
         }
     }
 }
+
+TEST_CASE("WP-29c rover steers: wheelSteer +1 (KSP's left key) turns left at the kinematic rate of the steered wheels (Prospector), Bug-E turns left") { SteerCase({}, "proxy"); }
 
 TEST_CASE("WP-29c physics-warp substeps: the policy (a tick longer than 0.02 s with a set-up wheel in the bubble runs ceil(dt / 0.02) substeps)") {
     if (!wp20b::GameAvailable()) return;
@@ -550,4 +554,143 @@ TEST_CASE("WP-29c the wheel parts in the cluster: welded with their rb.mass, spr
         CHECK(wc.forwardFriction.stiffness == 0.0f);
         CHECK(w->Controller()->wheelCollider->springSlerpRate == w->base->Get<float>("springSlerpRate"));
     }
+}
+
+// =================================================================================================================================================
+// WP-29d: the same rovers with the wheel collider transforms, hub colliders and animations of the parts' real .mu models
+// (core/data/wheel_models; WheelPhysicsOptions::models) instead of the spike's drag-cube proxy.
+TEST_CASE("WP-29d rover rest with the real wheel models (numbers vs the proxy geometry)") {
+    if (!wp20b::GameAvailable()) return;
+    for (const char* craft : {"Prospector Rover", "Bug-E Buggy"}) {
+        INFO(craft);
+        const RestResult proxy = Rest(craft, 20.0, 1.0f);
+        const RestResult real = Rest(craft, 20.0, 1.0f, RealGeometry());
+        MESSAGE(std::string(craft) << " REAL: drift " << real.horizDrift * 1e3 << " mm (vertical " << real.vertDrift * 1e3 << " mm), rms vz " << real.rmsVz * 1e3 << " mm/s, max w "
+                      << real.maxW << ", compression " << real.meanCompression << " (proxy " << proxy.meanCompression << "), wheel forces " << real.forceSum << " kN vs weight "
+                      << real.weight << ", tyre-bottom error " << real.maxBottomError * 1e3 << " mm, body clearance " << real.minBodyClearance << " m (proxy " << proxy.minBodyClearance
+                      << "), grounded " << real.grounded << "/" << real.wheels << ", bottomed " << real.bottomedTicks << ", joint error " << real.maxJointForceError << ", healthy " << real.healthy);
+    }
+}
+
+TEST_CASE("WP-29d rover drive with the real wheel models") {
+    if (!wp20b::GameAvailable()) return;
+    for (const char* craft : {"Prospector Rover", "Bug-E Buggy"}) {
+        const DriveResult proxy = Drive(craft);
+        const DriveResult r = Drive(craft, 1.0f, RealGeometry());
+        MESSAGE(std::string(craft) << " REAL: v(10 s) " << r.vAt[0] << " (ref " << r.vRef[0] << ", proxy " << proxy.vAt[0] << "), v(20 s) " << r.vAt[1] << " (ref " << r.vRef[1] << ", proxy "
+                      << proxy.vAt[1] << "), tilt " << r.maxTilt << " (proxy " << proxy.maxTilt << ")");
+    }
+}
+
+TEST_CASE("WP-29d rover brake and steer with the real wheel models") {
+    if (!wp20b::GameAvailable()) return;
+    BrakeCase(RealGeometry(), "REAL");
+    SteerCase(RealGeometry(), "REAL");
+}
+
+TEST_CASE("WP-29d the brake schloompa: a frozen wheel part holds its cluster with a weld to the world for the freeze time (ModuleWheelBase.toggleRbConstraints)") {
+    if (!wp20b::GameAvailable()) return;
+    Run run("Prospector Rover", RealGeometry());
+    run.Ticks(300);  // 6 s: set up and settled
+    CHECK(run.Host().FrozenPartCount() == 0);
+    // 1. the natural trigger (LSchloomphaVPPProcessing: brakes >= 1, landed, srfSpeed < 1e-5 m/s) is reported, not gated: whether a settled rover
+    //    creeps below 1e-5 m/s depends on the order the tests ran in (the rover ride height does too, see the WP-29c notes)
+    SetBrakes(run.V(), true);
+    int naturalFreeze = -1;
+    for (int k = 0; k < 250 && naturalFreeze < 0; ++k) {
+        run.Tick();
+        if (run.Host().FrozenPartCount() > 0) naturalFreeze = k;
+    }
+    MESSAGE("schloompa natural trigger: " << (naturalFreeze >= 0 ? "frozen " + std::to_string(naturalFreeze * 0.02) + " s after the brakes" : std::string("not reached (srfSpeed stayed above 1e-5 m/s)")));
+    // 2. the mechanism: toggle every wheel part (the module's own function), hold the cluster against a push, release
+    for (auto& w : run.Wheels().Wheels()) w->base->ToggleRbConstraints(false);  // end any natural freeze first
+    run.Ticks(5);
+    CHECK(run.Host().FrozenPartCount() == 0);
+    CHECK(run.Host().FreezeWeldCount() == 0);
+    for (auto& w : run.Wheels().Wheels()) w->base->ToggleRbConstraints(true);
+    run.Tick();
+    CHECK(run.Host().FrozenPartCount() == 4);   // every wheel part has its own freeze
+    CHECK(run.Host().FreezeWeldCount() == 1);   // one weld per vessel binding
+    const Vector3d x0 = run.Com();
+    run.Vp()->ChangeWorldVelocity(Vector3d(run.Forward()) * 0.5);  // a push of 0.5 m/s
+    double drift = 0.0;
+    for (int k = 0; k < 50; ++k) {
+        run.Tick();
+        drift = std::max(drift, (run.Com() - x0).magnitude());
+    }
+    MESSAGE("schloompa weld: drift after a 0.5 m/s push " << drift * 1e3 << " mm in 1 s");
+    CHECK(drift < 0.002);                       // held (unfrozen the push would roll the rover 0.5 m)
+    for (auto& w : run.Wheels().Wheels()) w->base->ToggleRbConstraints(false);
+    run.Tick();
+    CHECK(run.Host().FrozenPartCount() == 0);
+    CHECK(run.Host().FreezeWeldCount() == 0);   // released
+}
+
+// ---- WP-29d: the runway roll and the steering circle ----------------------------------------------------------------------------------------
+// (the runway roll runs on the real KSC runway collider: tests/test_scenery_scenarios.cpp)
+// The steering circle: the Prospector with the front axle steered (wheelSteer 0.25: about 5 degrees) rolls a circle of radius L / tan(delta) at the
+// rear axle (the kinematic bicycle); the CoM path is a circle of nearly the same radius. The radius is fitted through the CoM path (three points)
+// and compared with v / yaw rate (the same circle) and with the analytic one from the steered wheels collider angles and the wheelbase.
+TEST_CASE("WP-29d steering circle: the CoM path of the steered Prospector is a circle of the radius L / tan(steer angle) (within 5 %)") {
+    if (!wp20b::GameAvailable()) return;
+    Run run("Prospector Rover", RealGeometry());
+    run.Ticks(100);
+    run.V().ctrlState.wheelThrottle = 0.4f;
+    for (int k = 0; k < 1000 && run.ForwardSpeed() < 2.5; ++k) {
+        FillElectricCharge(run.V());
+        run.Tick();
+    }
+    run.V().ctrlState.wheelThrottle = 0.0f;
+    run.V().ctrlState.wheelSteer = 0.25f;
+    run.Ticks(60, [&] { FillElectricCharge(run.V()); });  // the steering ramp and the transient
+    std::vector<Vector3d> path;
+    double sumDelta = 0, front = 0, rear = 0, speed = 0, yaw = 0;
+    int nf = 0, nr = 0, n = 0;
+    for (int k = 0; k < 150; ++k) {  // 3 s of the steady turn
+        FillElectricCharge(run.V());
+        run.Tick();
+        REQUIRE(Healthy(run));
+        path.push_back(run.Com());
+        speed += run.ForwardSpeed();
+        yaw += std::fabs(Vector3d::Dot(run.Vp()->ClusterAngularVelocity(0), run.Up()));
+        ++n;
+    }
+    const Vector3d f = run.Forward(), com = Vector3d(run.V().CoM);
+    for (auto& w : run.Wheels().Wheels()) {
+        const float steer = w->Controller()->wheelCollider->steerAngle();
+        const double along = Vector3d::Dot(Vector3d(w->colliderHost.position) - com, f);
+        if (steer != 0.0f) {
+            sumDelta += std::fabs(steer);
+            front += along;
+            ++nf;
+        } else {
+            rear += along;
+            ++nr;
+        }
+    }
+    REQUIRE(nf > 0);
+    REQUIRE(nr > 0);
+    const double delta = sumDelta / nf * kRad, L = front / nf - rear / nr, lr = std::fabs(rear / nr);
+    // the circle through the first, middle and last CoM positions projected on the ground plane (2-D)
+    const Vector3d up = run.Up();
+    const Vector3d e1 = Vector3d::Cross(up, (path[path.size() / 2] - path[0]).normalized()).normalized();
+    const Vector3d e0 = Vector3d::Cross(e1, up).normalized();
+    auto proj = [&](const Vector3d& p) {
+        const Vector3d d = p - path[0];
+        return std::pair<double, double>(Vector3d::Dot(d, e0), Vector3d::Dot(d, e1));
+    };
+    const auto a = proj(path.front()), b = proj(path[path.size() / 2]), c = proj(path.back());
+    const double d2 = 2.0 * (a.first * (b.second - c.second) + b.first * (c.second - a.second) + c.first * (a.second - b.second));
+    const double ux = ((a.first * a.first + a.second * a.second) * (b.second - c.second) + (b.first * b.first + b.second * b.second) * (c.second - a.second) +
+                       (c.first * c.first + c.second * c.second) * (a.second - b.second)) / d2;
+    const double uy = ((a.first * a.first + a.second * a.second) * (c.first - b.first) + (b.first * b.first + b.second * b.second) * (a.first - c.first) +
+                       (c.first * c.first + c.second * c.second) * (b.first - a.first)) / d2;
+    const double rFit = std::hypot(a.first - ux, a.second - uy);
+    const double rYaw = (speed / n) / (yaw / n);
+    const double rRear = L / std::tan(delta);
+    const double rCom = std::sqrt(rRear * rRear + lr * lr);  // the CoM is lr ahead of the rear axle
+    MESSAGE("steering circle: steer " << delta / kRad << " deg, wheelbase " << L << " m, fitted radius " << rFit << " m, v/yaw " << rYaw << " m, kinematic rear-axle radius " << rRear
+                                       << " m, CoM radius " << rCom << " m");
+    CHECK(rFit == doctest::Approx(rCom).epsilon(0.05));
+    CHECK(rYaw == doctest::Approx(rCom).epsilon(0.05));
 }

@@ -182,6 +182,7 @@ WP-38 slices 2 and 3 (wp38b, wp38c) were already merged in session 4.
 4. Joint drive backend for robotics (a Jolt hinge / slider / motor constraint reading `ConfigurableJointData`).
 5. Leftovers: WP-53 / 54 / 55 / 38 seams (scene-bound MissionSystem, ship spawning, CometManager), WP-23 exhaust FX / KSC colliders.
 6. The UE5 shell (~289k lines of tier C: UI, rendering, cameras, audio, map view): write the design doc first (scene flow, Blueprint vs C++ split, first playable slice), then rebuild the Unreal bridge against the Jolt-linked kspcore.
+   Design doc written: `ue5/DESIGN.md` (2026-10-24; PR "UE5 shell design doc"). Next: WP-UE-01 (bridge rebuild, local) and WP-UE-02 (game host + C ABI v2, cloud-capable); the slice is WP-UE-01..18, open decisions O1-O11 in its section 8.
 
 ## Session 4 (2026-10-11/12, PC; Sonnet orchestrating, Opus for the Jolt spike and WP-12a)
 

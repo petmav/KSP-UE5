@@ -67,7 +67,10 @@ def main():
     args = ap.parse_args()
     gd = os.path.join(args.game, "GameData")
     rows, failures, notes = {}, [], []
-    for dirpath, _, files in os.walk(gd):
+    # Deprecated duplicates (Squad/zDeprecated/**) reuse the names of live parts (solidBooster_sm, ServiceBay_125 ...): walk them last
+    # so that the live cfg wins the name, as in the game where the deprecated copies are hidden and not the part the editor lists.
+    walk = sorted(os.walk(gd), key=lambda e: ("zDeprecated" in e[0], e[0]))
+    for dirpath, _, files in walk:
         for fn in sorted(files):
             if not fn.lower().endswith(".cfg"):
                 continue

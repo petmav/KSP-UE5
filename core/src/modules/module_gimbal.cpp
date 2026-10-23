@@ -173,8 +173,9 @@ void ModuleGimbal::CreateEngineList() {
             size_t count3 = moduleEngines->thrustTransforms.size();
             while (count3-- > 0) {
                 const PartTransform& find = moduleEngines->thrustTransforms[count3];
-                const bool inChildren = isTransformInChildren ? isTransformInChildren(parent, find)
-                                                              : (parent.position == find.position && parent.rotation == find.rotation);
+                const bool inChildren = isThrustTransformInChildren ? isThrustTransformInChildren(*p, *this, i, *moduleEngines, count3)
+                                        : isTransformInChildren       ? isTransformInChildren(parent, find)
+                                                                      : (parent.position == find.position && parent.rotation == find.rotation);
                 if (inChildren) item.second = S(E(item.second) + E(moduleEngines->thrustTransformMultipliers[count3]));
             }
             list.push_back(item);

@@ -165,9 +165,33 @@ float Vessel::getLowestPoint() {
     SetRotation(rotation2);
     Vector3f measure = vesselTransform.position;  // gameObject.transform.position, then += -Vector3.forward * 1000f
     measure = measure + (-Vector3f::forward()) * 1000.0f;
-    if (env.colliderClosestPointsZ)
-        for (Part* p : parts)
+    // WP-29d: Vessel.cs:2599-2637: the lowest collider decides the wheel branch (a WheelCollider: minus its radius and 0.15, a collisionEnhancer:
+    // minus 0.15). Without the role-aware scan every collider is Plain.
+    bool haveCollider = false;
+    VesselEnvironment::ColliderRole role = VesselEnvironment::ColliderRole::Plain;
+    float roleRadius = 0.0f;
+    for (Part* p : parts) {
+        if (env.colliderClosestPoints) {
+            for (const VesselEnvironment::ColliderPoint& cp : env.colliderClosestPoints(*p, measure)) {
+                if (cp.z < num) {
+                    haveCollider = true;
+                    role = cp.role;
+                    roleRadius = cp.radius;
+                }
+                num = Mathf::Min(num, cp.z);
+            }
+        } else if (env.colliderClosestPointsZ) {
             for (float z : env.colliderClosestPointsZ(*p, measure)) num = Mathf::Min(num, z);
+        }
+    }
+    if (haveCollider) {
+        if (role == VesselEnvironment::ColliderRole::WheelCollider) {
+            num = f32store(fx(num) - fx(roleRadius));
+            num = f32store(fx(num) - fx(0.15f));
+        } else if (role == VesselEnvironment::ColliderRole::CollisionEnhancer) {
+            num = f32store(fx(num) - fx(0.15f));
+        }
+    }
     const float result = f32store(fx(vesselTransform.position.z) - fx(num));
     SetRotation(rotation);
     return result;

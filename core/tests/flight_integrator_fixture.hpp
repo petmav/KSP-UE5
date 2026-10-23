@@ -19,6 +19,8 @@
 #include "ksp/math/mathfx.hpp"
 #include "ksp/modules/module_command.hpp"
 #include "ksp/modules/module_engines.hpp"
+#include "ksp/modules/module_gimbal.hpp"
+#include "ksp/modules/module_structural.hpp"
 #include "ksp/physics/flight_integrator.hpp"
 #include "ksp/physics/part_forces.hpp"
 #include "ksp/resources/resource_flow_host.hpp"
@@ -56,7 +58,35 @@ struct EngineModels {
         }
         return out;
     }
-    // ModuleEngines.findModelTransforms (OnLoad / OnStart) and the tick's re-posing hook
+    // WP-20f: the model hierarchy as far as the WP-17b data has it: every transform on a thrust transform's chain (model first). For the
+    // thrust transform name, the chains of those transforms; for another name (a gimbal transform: `gimbal` of the Mainsail is the
+    // thrustTransform's parent; the LV-T45's gimbalTransformName is thrustTransform itself) the distinct chain prefixes ending at a node
+    // of that name, in thrust-transform order. Transforms that are on no thrust chain are not in the data (none of the gated crafts'
+    // gimbals is).
+    std::vector<ModelTransformChain> Chains(const Part& part, const std::string& name) const {
+        std::vector<ModelTransformChain> out;
+        if (part.partInfo == nullptr) return out;
+        const auto it = data.Parts().find(part.partInfo->name);
+        if (it == data.Parts().end()) return out;
+        for (const auto& t : it->second.transforms) {
+            ModelTransformChain c;
+            for (size_t i = 0; i < t.chainNames.size(); ++i) {
+                ModelTransformNode n;
+                n.name = t.chainNames[i];
+                n.localPosition = t.chainPositions[i];
+                n.localRotation = t.chainRotations[i];
+                n.localScale = t.chainScales[i];
+                c.push_back(n);
+                if (n.name != name) continue;
+                bool seen = false;
+                for (const ModelTransformChain& o : out) seen = seen || (o.size() == c.size() && ChainIsAncestorOrSelf(o, c));
+                if (!seen) out.push_back(c);
+            }
+        }
+        return out;
+    }
+    // ModuleEngines.findModelTransforms (OnLoad / OnStart), the tick's re-posing hook; WP-20f: ModuleGimbal's transforms and their
+    // hierarchy (ModuleGimbal.OnStart / CreateEngineList) and the module slot's chains (gimbal actuation)
     void Install(PartModuleForces& forces) {
         ModuleEngines::findModelTransforms = [this](Part& p, const std::string& name) {
             std::vector<PartTransform> w;
@@ -66,8 +96,16 @@ struct EngineModels {
         forces.hooks.engineThrustTransforms = [this](Part& p, const ModuleEngines& e) {
             return Local(p, e.Get<std::string>("thrustVectorTransformName"));
         };
+        const ModelTransformChains chains = [this](Part& p, const std::string& name) { return Chains(p, name); };
+        forces.hooks.modelTransformChains = chains;
+        ModuleGimbal::findModelTransforms = GimbalFindModelTransformsHook(chains);
+        ModuleGimbal::isThrustTransformInChildren = ThrustBelowGimbalHook(chains);
     }
-    ~EngineModels() { ModuleEngines::findModelTransforms = nullptr; }
+    ~EngineModels() {
+        ModuleEngines::findModelTransforms = nullptr;
+        ModuleGimbal::findModelTransforms = nullptr;
+        ModuleGimbal::isThrustTransformInChildren = nullptr;
+    }
 };
 
 // Vessel.resourcePartSet / crossfeedSets (Vessel.cs:3913 UpdateResourceSets) for every flight vessel: the WP-15 seam a host fills
@@ -123,11 +161,28 @@ inline size_t IgniteFirstStage(Vessel& v, int stage = 1) {
                 if (stage >= 0 && p->fields.inverseStage != stage) continue;
                 e->Activate();
                 ++n;
+                // WP-20f: the part's activation reaches every module (Part.activate -> ModulesOnActivate -> PartModule.OnActive):
+                // ModuleGimbal.OnActive (ModuleGimbal.cs:331) sets gimbalActive
+                for (size_t k = 0; k < p->Modules().Count(); ++k)
+                    if (auto* g = dynamic_cast<ModuleGimbal*>(p->Modules().GetModule(k))) g->OnActive();
             }
     }
     v.CheckControllable();
     v.ctrlState.mainThrottle = 1.0f;
     return n;
+}
+
+// WP-20f: Part.Start's module lifecycle (Part.cs:1727 ModulesOnStart, :5674 ModulesOnStartFinished) and the first frame's
+// ModuleJettison.LateUpdate (ModuleJettison.cs:474: SetupJettisonState -> SetFairingDragCube): what KSP runs between loading a craft and
+// its first flight tick. It sets the drag-cube weights KSP flies with (ModulePartVariants.RefreshVariant, the shrouds' Fairing / Clean /
+// variant cubes) and registers ModuleSAS's service level with the part's PartValues (ModuleSAS.cs:46). The module lifecycle is the host's
+// (WP-20d R2); PadScene does not run it, so the WP-20d cases fly the default cube weights (4 of PhysProf-S's 21 parts differ, STATUS WP-20f).
+inline void StartModules(Vessel& v, StartState state) {
+    for (Part* p : v.parts) p->ModulesOnStart(state);
+    for (Part* p : v.parts) p->ModulesOnStartFinished(state);
+    for (Part* p : v.parts)
+        for (size_t i = 0; i < p->Modules().Count(); ++i)
+            if (auto* j = dynamic_cast<ModuleJettison*>(p->Modules().GetModule(i))) j->LateUpdate();
 }
 
 // A craft on the LaunchPad in the bubble: Kerbin in its rotating frame (below 100 km, as in KSP), the terrain patch of the spike (30 x 30
