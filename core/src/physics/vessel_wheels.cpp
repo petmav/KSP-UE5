@@ -365,8 +365,9 @@ void WheelPhysicsHost::Refresh() {
         }
         vw->lastParts_ = wheelParts;
         // Part.Pack / Part.Unpack (Part.cs:3747 / :3784) of the wheel parts: `packed` and their OnPartPack / OnPartUnpack handlers (the
-        // onPartPack / onPartUnpack events). kspcore's Vessel.GoOnRails / GoOffRails seams (packPart / unpackPart) build and drop the bodies
-        // but leave Part.packed alone, and ModuleWheelBase's set-up waits for an unpacked part (ModuleWheelBase.cs:226).
+        // onPartPack / onPartUnpack events). Since WP-20g Vessel.GoOnRails / GoOffRails run Part.Pack / Unpack for every part, so this
+        // mirror finds the flags equal and does nothing; it stays for a vessel a host made unpacked without Vessel.GoOffRails (the loader
+        // leaves Part.packed set and ModuleWheelBase's set-up waits for an unpacked part, ModuleWheelBase.cs:226).
         for (auto& w : vw->wheels_) {
             if (w->part->fields.packed == v->packed) continue;
             w->part->fields.packed = v->packed;

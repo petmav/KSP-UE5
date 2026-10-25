@@ -20,6 +20,7 @@
 #include "ksp/parts/part.hpp"
 #include "ksp/physics/krakensbane.hpp"
 #include "ksp/resources/resource_flow_host.hpp"
+#include "ksp/serenity/base_servo.hpp"
 #include "ksp/save/save_enums.hpp"
 #include "ksp/unity/quaternion_native.hpp"
 #include "ksp/vessel/vessel.hpp"
@@ -176,6 +177,7 @@ bool HighWarp() { return TimeWarp::CurrentRate() > 1.0f && TimeWarp::WarpMode() 
 void PartModuleForces::FixedUpdate(VesselPhysicsHost& host) {
     engineForces = rcsForces = surfaceForces = wheelTorques = 0;
     gimbalUpdates = gimbaledThrustTransforms = 0;
+    servoFixedUpdates = 0;  // WP-20g
     const std::vector<Vessel*> vessels = FlightGlobals::Vessels;
     for (Vessel* v : vessels) {
         // (a vessel destroyed by an earlier one's modules in this pass gets no further callbacks, as in FlightScene)
@@ -257,6 +259,11 @@ void PartModuleForces::FixedUpdateVessel(Vessel& v, VesselPhysics* vp) {
                     PartAddTorque(*part, Vector3d(w->lastTorque));
                     ++wheelTorques;
                 }
+            } else if (auto* servo = dynamic_cast<Expansions::Serenity::BaseServo*>(m)) {
+                // WP-20g: BaseServo.cs:873 FixedUpdate (the drive it writes is read by the backend in the physics step)
+                if (!servos) continue;
+                servo->FixedUpdate();
+                ++servoFixedUpdates;
             }
         }
     }
@@ -375,14 +382,23 @@ void PartModuleForces::RcsFixedUpdate(Part& part, ModuleRCS& r, Vessel& v, Vesse
 
 // ModuleRCS.cs:211 Update (frame rate): the control input of every loaded vessel's RCS modules
 void PartModuleForces::Update() {
-    if (!rcs) return;
+    servoUpdates = 0;
     const std::vector<Vessel*> vessels = FlightGlobals::Vessels;
     for (Vessel* v : vessels) {
-        if (v == nullptr || !v->loaded || v->packed) continue;
-        for (Part* part : v->parts)
-            for (size_t i = 0; i < part->Modules().Count(); ++i)
-                if (auto* r = dynamic_cast<ModuleRCS*>(part->Modules().GetModule(i)))
-                    r->Update(v->ctrlState, v->ReferenceTransform().rotation, hooks.precisionMode);
+        if (v == nullptr || !v->loaded) continue;
+        const std::vector<Part*> parts = v->parts;
+        for (Part* part : parts)
+            for (size_t i = 0; i < part->Modules().Count(); ++i) {
+                PartModule* m = part->Modules().GetModule(i);
+                if (auto* r = dynamic_cast<ModuleRCS*>(m)) {
+                    if (rcs && !v->packed) r->Update(v->ctrlState, v->ReferenceTransform().rotation, hooks.precisionMode);
+                } else if (auto* servo = dynamic_cast<Expansions::Serenity::BaseServo*>(m)) {
+                    // WP-20g: BaseServo.cs:911 Update (Unity's Update of an enabled MonoBehaviour: packed or not)
+                    if (!servos) continue;
+                    servo->Update();
+                    ++servoUpdates;
+                }
+            }
     }
 }
 

@@ -18,6 +18,7 @@
 #include "ksp/physics/collision_enhancer.hpp"
 #include "ksp/physics/flight_integrator.hpp"
 #include "ksp/events/event_data.hpp"
+#include "ksp/input/game_settings.hpp"
 #include "ksp/input/input_lock_manager.hpp"
 #include "ksp/inventory/construction.hpp"
 #include "ksp/fineprint/compatibility.hpp"
@@ -79,6 +80,18 @@ void Restore(const std::string& test) {
         ++i;
     }
     SaveEnvironment::Reset();
+    // WP-20g: GameSettings at KSP's defaults in every case. KSP runs GameSettings.Awake (SetDefaultValues, GameSettings.cs:1529) once
+    // when the game starts, so no code of the game sees the C# field initialisers (0 / false / null for most of the 447 fields); a host
+    // does the same (GameSettings::Awake). Before this, the statics were 0 until a case ran SetDefaultValues (WP-50's InputFixture) and kept
+    // whatever a case left: the WP-29c rover rode at 0.493 or 0.508 depending on the order, the anchor statics were 0 in the WP-20b / 19b /
+    // 20d scenes. The input objects SetDefaultValues does not make (INPUT_DEVICES: GameSettings.Awake; the axis speed-multiplier list) and
+    // the parsed keyboard layouts are reset to "not made yet", as WP-50's InputFixture does.
+    GameSettings::SetDefaultValues();
+    GameSettings::AXIS_INCREMENTAL_SPEED_MULTIPLIER_VALUES.reset();
+    GameSettings::INPUT_DEVICES.reset();
+    GameSettings::layoutConfigNodes.Clear();
+    GameSettings::overrideSettings = false;
+    GameSettings::saveOnGameSave = false;
     // EVAConstructionModeController::hooks is static and test lambdas capture their stack locals: a hook left behind is a
     // use-after-return in the next case that opens the construction panel (found as a g++ SIGSEGV in test_construction_flow.cpp)
     ksp::EVAConstructionModeController::hooks = ksp::EVAConstructionModeController::Hooks{};

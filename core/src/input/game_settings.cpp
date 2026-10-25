@@ -3,7 +3,10 @@
 #include "ksp/input/game_settings.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
+#include <filesystem>
+#include <system_error>
 
 #include "binding_util.hpp"
 #include "ksp/core/log.hpp"
@@ -193,6 +196,52 @@ void GameSettings::ResetSettings() {
 
 // GameSettings.cs:1482
 void GameSettings::LoadGameSettingsOnly() { ParseCfgFile(); }
+
+namespace {
+struct GameSaveListener {
+    void OnGameSave(Game*) { GameSettings::OnGameSave(); }
+};
+GameSaveListener& SaveListener() {
+    static GameSaveListener l;
+    return l;
+}
+}  // namespace
+
+// GameSettings.cs:1506 (WP-20g: the host's start-up; see the header)
+void GameSettings::Awake(const AwakeOptions& options) {
+    namespace fs = std::filesystem;
+    SetDefaultValues();                                                  // :1529
+    if (!INPUT_DEVICES) INPUT_DEVICES = std::make_shared<InputDevices>();  // :1534-1537
+    const fs::path root(options.gameRoot);
+    configFilePath = (root / "settings.cfg").string();                   // :1538
+    controlsLayoutPath = (root / options.controlsLayoutPath).string();  // :1540
+    std::error_code ec;
+    if (fs::is_directory(controlsLayoutPath, ec)) {                      // :1541-1544
+        std::vector<std::string> files;
+        for (fs::recursive_directory_iterator it(controlsLayoutPath, ec), end; !ec && it != end; it.increment(ec)) {
+            if (!it->is_regular_file(ec)) continue;
+            std::string ext = it->path().extension().string();
+            std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+            if (ext == ".cfg") files.push_back(it->path().string());
+        }
+        std::sort(files.begin(), files.end());
+        ParseLayoutsCfg(files);
+    }
+    if (fs::exists(configFilePath, ec) && !overrideSettings) {          // :1545-1549
+        ParseCfgFile();
+        if (options.writeSettingsCfg) WriteCfg();
+    } else {                                                             // :1550-1555
+        LoadLayoutKeyBindings(DetectKeyboardLayout(), true);
+        InitializeDefaultValues();
+        if (options.writeSettingsCfg) WriteCfg();
+    }
+    saveOnGameSave = false;                                              // :1564
+    events::GameEvents::onGameStateSaved.Remove(&SaveListener(), &GameSaveListener::OnGameSave);
+    events::GameEvents::onGameStateSaved.Add(&SaveListener(), &GameSaveListener::OnGameSave);  // :1565
+}
+
+// GameSettings.cs:1573
+void GameSettings::OnDestroy() { events::GameEvents::onGameStateSaved.Remove(&SaveListener(), &GameSaveListener::OnGameSave); }
 
 // GameSettings.cs:1487
 void GameSettings::SaveGameSettingsOnly() { WriteCfg(); }

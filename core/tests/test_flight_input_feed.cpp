@@ -235,7 +235,7 @@ TEST_CASE("WP-20f bubble: FlightInputHandler.FixedUpdate and FeedInputFeed at se
     v->OnPreAutopilotUpdate += Delegate<void(FlightCtrlState&)>::Bind(&rec, &Rec::Pre);
     v->OnFlyByWire += Delegate<void(FlightCtrlState&)>::Bind(&rec, &Rec::Fbw);
     pad.Place(*v);
-    wp20d::StartModules(*v, StartState::PreLaunch);
+    // (WP-20g: Place ran the module lifecycle, StartVesselInFlight)
     pad.s.Start(*v);
     for (int k = 0; k < 3; ++k) pad.s.Tick();
     REQUIRE_FALSE(v->packed);
@@ -310,7 +310,7 @@ TEST_CASE("WP-20f ModuleGimbal actuation in the tick: deflection = gimbalRange, 
     InputScene in(pad.s.bubble);
     auto v = w.Craft("PhysProf-S");
     pad.Place(*v);
-    wp20d::StartModules(*v, StartState::PreLaunch);
+    // (WP-20g: Place ran the module lifecycle, StartVesselInFlight)
     pad.s.Start(*v);
     for (int k = 0; k < 100; ++k) pad.s.Tick();
     REQUIRE_FALSE(v->packed);
@@ -411,8 +411,7 @@ namespace {
 struct OrbitScene {
     wp20b::World& w;
     wp19b::BubbleScene s;
-    wp20d::EngineModels engines;
-    wp20d::ResourceSets resources;
+    wp20d::EngineModels engines;  // WP-20g: the resource sets are the bubble's
     explicit OrbitScene(wp20b::World& w_) : w(w_), s(w_) {
         wp20d::StartPhysicsGlobals(w);
         SaveEnvironment::Current().loadedScene = GameScenes::FLIGHT;
@@ -521,8 +520,8 @@ TEST_CASE("WP-20f module lifecycle on the pad: every part's drag-cube weights eq
             wp20b::World w(true);
             wp20d::PadScene pad(w);
             auto v = w.Craft(craft);
+            pad.startModules = variant == 1;  // WP-20g: PadScene::Place runs the module lifecycle (StartVesselInFlight) unless told not to
             pad.Place(*v);
-            if (variant == 1) wp20d::StartModules(*v, StartState::PreLaunch);
             pad.s.Start(*v);
             for (int k = 0; k < 3; ++k) pad.s.Tick();
             REQUIRE(cap.size() == v->parts.size());
@@ -596,7 +595,7 @@ Ascent Fly(const std::string& craft, bool sas, int frames, int settle = 100) {
     InputScene in(pad.s.bubble);
     auto v = w.Craft(craft);
     pad.Place(*v);
-    wp20d::StartModules(*v, StartState::PreLaunch);
+    // (WP-20g: Place ran the module lifecycle, StartVesselInFlight)
     pad.s.Start(*v);
     int nBreaks = 0;
     Part* mainsail = FindPartNamed(*v, "liquidEngineMainsail.v2");
@@ -775,7 +774,7 @@ TEST_CASE("WP-20f cost of the control slot: L2-AS from the pad, ms per tick with
         if (config == 2) in = std::make_unique<InputScene>(pad.s.bubble);
         auto v = w.Craft("PhysProf-L2-AS");
         pad.Place(*v);
-        wp20d::StartModules(*v, StartState::PreLaunch);
+        // (WP-20g: Place ran the module lifecycle, StartVesselInFlight)
         pad.s.Start(*v);
         double t = 0.0, slot = 0.0, upd = 0.0;
         const std::function<void()> before = FlightScene::hooks.beforeFlightIntegrator, bvu = FlightScene::hooks.beforeVesselUpdate;

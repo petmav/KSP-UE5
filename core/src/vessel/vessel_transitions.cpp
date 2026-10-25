@@ -258,13 +258,21 @@ void Vessel::GoOnRails() {
     GE::onVesselGoOnRails.Fire(this);
     ctrlState.Neutralize();
     if (loaded) {
-        if (env.packPart)
-            for (Part* p : parts) env.packPart(*p);
+        // WP-20g: Part.Pack of every part (Part.cs:3747: the host's rigid-body work, the crew, OnPartPack, onPartPack)
+        for (Part* p : parts) {
+            const bool alreadyPacked = p->fields.packed;
+            p->Pack();
+            // kspcore: a part the loader left packed (ProtoPartSnapshot.Load / ShipConstruct set Part.packed) on a vessel that was made
+            // unpacked without Vessel.GoOffRails gets no Part.Pack (it returns at once, as the C#), but its vessel's bodies still go
+            if (alreadyPacked && env.packPart) env.packPart(*p);
+        }
         if (Landed) GetHeightFromTerrain();
     }
     packed = true;
     if (LandedOrSplashed()) orbitDriver->SetOrbitMode(OrbitDriver::UpdateMode::IDLE);
     else orbitDriver->SetOrbitMode(OrbitDriver::UpdateMode::UPDATE);
+    // Vessel.cs:2392 SendMessage("OnVesselPack"): the Vessel component sits on the root part's GameObject
+    if (rootPart != nullptr && loaded) rootPart->SendPartMessage("OnVesselPack");
 }
 
 // Vessel.cs:2395
@@ -299,7 +307,7 @@ void Vessel::GoOffRails() {
     }
     packed = false;
     for (Part* p : parts) {
-        if (env.unpackPart) env.unpackPart(*p);
+        p->Unpack();  // WP-20g: Part.Unpack (Part.cs:3784: the host's rigid-body work, the crew, OnPartUnpack, onPartUnpack)
         p->InitializeModules();
         if (p->fields.PermanentGroundContact) Landed = true;
     }
@@ -316,6 +324,7 @@ void Vessel::GoOffRails() {
         if (situation == Situations::PRELAUNCH) FlightInputHandler::SetLaunchCtrlState();
         else FlightInputHandler::ResumeVesselCtrlState(this);
     }
+    if (rootPart != nullptr) rootPart->SendPartMessage("OnVesselUnpack");  // Vessel.cs:2489 SendMessage("OnVesselUnpack")
     GE::onVesselGoOffRails.Fire(this);
 }
 

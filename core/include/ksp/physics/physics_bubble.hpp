@@ -67,6 +67,7 @@
 #include "ksp/physics/part_forces.hpp"
 #include "ksp/physics/physics_world.hpp"
 #include "ksp/physics/vessel_physics.hpp"
+#include "ksp/resources/vessel_resource_host.hpp"
 #include "ksp/vessel/flight_scene.hpp"
 
 namespace ksp {
@@ -89,6 +90,9 @@ struct PhysicsBubbleOptions {
     // WP-20e: contact, landing and water (ksp/physics/contact_host.hpp): on by default (KSP's behaviour); `contacts` selects the pieces
     bool contactHost = true;
     ContactHostOptions contacts;
+    // WP-20g: the flight scene's resource-flow host (ksp/resources/vessel_resource_host.hpp): every Vessel's PartSets behind
+    // ResourceFlowEnvironment::vesselHost and Vessel::env.updateResourceSets, as KSP's Vessel holds them (Vessel.cs:451-464, :3913)
+    bool resourceHost = true;
 };
 
 class PhysicsBubble {
@@ -120,6 +124,8 @@ public:
     PartModuleForces& ModuleForces() { return moduleForces_; }
     // WP-20e: contacts -> Part.OnCollision*, landed / splashed, PartBuoyancy, CollisionEnhancer, the RB anchor, ground probes, terrain per body
     ContactHost& Contacts() { return contacts_; }
+    // WP-20g: the resource-flow host (installed with the bubble when PhysicsBubbleOptions::resourceHost)
+    VesselResourceHost& Resources() { return resources_; }
     // WP-20e seam: the slot of FlightInputHandler.FixedUpdate in the measured order (run1-L_calltrace.csv seq 18: after FlightGlobals
     // (15), before TimeWarp (19) and the part modules (22-276)). When set it replaces the slot; unset: the FlightInputHandler below.
     std::function<void()> inputFeed;
@@ -198,6 +204,7 @@ private:
     FlightIntegratorHost fiHost_;
     PartModuleForces moduleForces_;
     ContactHost contacts_;
+    VesselResourceHost resources_;  // WP-20g
     Krakensbane krakensbane_;
     FloatingOrigin floatingOrigin_;
     Vector3d frameOriginWorld_;

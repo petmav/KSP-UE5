@@ -30,6 +30,10 @@
 //                     PoseGimbalTransforms puts every gimbal transform on its part's current pose (Unity's hierarchy does that
 //                     implicitly): the bubble calls it before the input feed for every vessel whose VesselSAS is connected to
 //                     OnAutopilotUpdate, the only reader between two ticks (its GetPotentialTorque).
+//   WP-20g, the Breaking Ground servos (Expansions/Serenity/BaseServo.cs:873 FixedUpdate, :911 Update): in module order on their part
+//   like every other PartModule (Unity runs a part's MonoBehaviours in component order after Part.FixedUpdate; run1-L_calltrace.csv has
+//   no servo, the craft had none), FixedUpdate in this slot for every loaded vessel, Update in the frame half (Update()). The joint drive
+//   they write (ConfigurableJointData) is WP-52b's backend (UseServoBackend).
 // Not run here: Part.FixedUpdate itself (temperature / g / pressure limits, crew, ModulesOnFixedUpdate of ACTIVE parts) and every
 // module without a force record or control role (they belong to their packages: ModuleAlternator, FX modules ...); exhaust damage
 // raycasts; gimbal transforms that are not on the chain of a model transform the host reports (no actuation without a chain).
@@ -139,6 +143,7 @@ public:
     Hooks hooks;
     bool engines = true, rcs = true, liftingSurfaces = true, reactionWheels = true;
     bool command = true, sas = true, gimbals = true;  // WP-20f
+    bool servos = true;                               // WP-20g
 
     // WP-20f: every gimbal transform of the loaded vessels (or of one vessel) on its part's current pose at its current local rotation
     // (see above). Between two ticks only VesselSAS reads them in kspcore (ModuleGimbal.GetPotentialTorque); a host that reads them
@@ -158,6 +163,8 @@ public:
     size_t engineForces = 0, rcsForces = 0, surfaceForces = 0, wheelTorques = 0;
     // WP-20f: ModuleGimbal.FixedUpdates that moved transforms; thrust transforms posed off their neutral pose (last FixedUpdate)
     size_t gimbalUpdates = 0, gimbaledThrustTransforms = 0;
+    // WP-20g: servo FixedUpdates of the last FixedUpdate, servo Updates of the last Update
+    size_t servoFixedUpdates = 0, servoUpdates = 0;
 
 private:
     void EngineFixedUpdate(Part& part, ModuleEngines& e, Vessel& v, VesselPhysics* vp);

@@ -72,6 +72,16 @@ enum class AeroKernel : uint8_t { Exact, SoA, Both };
 // the Rigidbodies (WP-20b StartPartRigidbodies, :1868-1885). FlightIntegrator.Setup waits for the root part's `started` (:255).
 void StartPartsInFlight(Vessel& vessel);
 
+// WP-20g: Part.Start in the flight scene WITH the module lifecycle, for every part of a vessel entering the scene (what Unity runs between
+// instantiating a craft or a loaded vessel and its first FixedUpdate): Part.ModulesOnStart (Part.cs:1727 -> :5615, the start state of
+// GetModuleStartState :5569: PRELAUNCH = PreLaunch | Landed ...), the flight block above (StartPartsInFlight), Part.ModulesOnStartFinished
+// (:1945 -> :5674), then the first frame's ModuleJettison.LateUpdate (ModuleJettison.cs:474: SetupJettisonState once) of every part. The
+// module start-up sets the drag-cube weights KSP flies with (ModulePartVariants.RefreshVariant, ModuleJettison's SetFairingDragCube: STATUS
+// WP-20f) and registers ModuleSAS's service level with the part's PartValues. A part already `started` is not started again (Unity starts a
+// MonoBehaviour once). The physics bubble runs it on onVesselLoaded; a host that instantiates a vessel itself calls it before the first
+// flight tick.
+void StartVesselInFlight(Vessel& vessel);
+
 // The SoA-vs-exact comparison of AeroKernel::Both, and the kernel's coverage.
 struct AeroKernelStats {
     uint64_t ticks = 0;          // Integrate passes

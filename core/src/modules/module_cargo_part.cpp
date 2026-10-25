@@ -27,7 +27,10 @@ Vessel* ModuleCargoPart::VesselPtr() const {
 
 ModuleCargoPart::~ModuleCargoPart() {
     RemoveEventHandlers();
-    if (ScienceEnvironment::scheduler != nullptr) ScienceEnvironment::scheduler->StopAllCoroutines(CoroutineOwner());
+    // a destroyed MonoBehaviour's coroutines stop (Unity); StartCoroutine used Scheduler(), the process fallback when no scheduler is set
+    // (WP-20g: since Part.Unpack runs OnPartUnpack, a single landed cargo part starts MakePartSettle there, and the fallback scheduler
+    // otherwise kept a coroutine of a freed module)
+    ScienceEnvironment::Scheduler().StopAllCoroutines(CoroutineOwner());
 }
 
 std::shared_ptr<Coroutine> ModuleCargoPart::StartCoroutine(Enumerator e) {
@@ -35,7 +38,7 @@ std::shared_ptr<Coroutine> ModuleCargoPart::StartCoroutine(Enumerator e) {
 }
 
 void ModuleCargoPart::StopCoroutineRef(std::shared_ptr<Coroutine>& c) {
-    if (c && ScienceEnvironment::scheduler != nullptr) ScienceEnvironment::scheduler->StopCoroutine(c);
+    if (c) ScienceEnvironment::Scheduler().StopCoroutine(c);
     c.reset();
 }
 

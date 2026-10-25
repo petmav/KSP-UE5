@@ -509,10 +509,11 @@ TEST_CASE("WP-52b in the physics bubble: FlightIntegrator sees servoRb (angular 
     double worstCoord = 0.0, worstLoad = 0.0;
     int validLoads = 0;
     physics::VesselPhysics* vp = nullptr;
+    size_t slotFixed = 0, slotUpdates = 0;
     for (int t = 0; t < 150; ++t) {
-        h->FixedUpdate();  // the servo's FixedUpdate in the module slot (the host's wiring)
-        s.Tick();
-        h->Update();
+        s.Tick();  // WP-20g: the servo's FixedUpdate runs in the bubble's module slot, its Update in the frame half
+        slotFixed += s.bubble.ModuleForces().servoFixedUpdates;
+        slotUpdates += s.bubble.ModuleForces().servoUpdates;
         vp = s.bubble.Host().Find(*v);
         if (vp == nullptr || t < 20) continue;
         worstCoord = std::max(worstCoord, std::fabs(vp->ServoCoordinate(*root)));
@@ -535,6 +536,8 @@ TEST_CASE("WP-52b in the physics bubble: FlightIntegrator sees servoRb (angular 
     MESSAGE("orbit: worst servo coordinate " << worstCoord << " rad, worst servo joint force " << worstLoad << " kN (servoRb.mass g = "
                                               << vp->ServoBodyMass(*root) * g << " kN)");
     CHECK(validLoads > 100);  // the load solve ran every tick
+    CHECK(slotFixed == 150);   // one BaseServo.FixedUpdate per tick from the module slot (WP-20g), none by hand
+    CHECK(slotUpdates == 150);
     CHECK(worstCoord < 1e-5);
     CHECK(worstLoad < 0.01 * vp->ServoBodyMass(*root) * g);
     h->OnDestroy();

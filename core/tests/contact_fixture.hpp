@@ -59,8 +59,7 @@ struct AnchorSettings {
 // TerrainColliders-per-body test
 struct KerbinScene {
     World& w;
-    wp19b::BubbleScene s;
-    wp20d::ResourceSets resources;
+    wp19b::BubbleScene s;  // WP-20g: the resource sets are the bubble's
     explicit KerbinScene(World& w_, const PhysicsBubbleOptions& o = {}, const PhysicsWorldConfig& cfg = {}) : w(w_), s(w_, o, cfg) {
         wp20d::StartPhysicsGlobals(w);
         SaveEnvironment::Current().loadedScene = GameScenes::FLIGHT;

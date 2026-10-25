@@ -193,10 +193,14 @@ struct PadScene {
     World& w;
     BubbleScene s;
     EngineModels engines;
-    ResourceSets resources;
+    // WP-20g: the resource sets are the bubble's (PhysicsBubbleOptions::resourceHost), no longer wired here
     Vector3d padUp, padEast, padNorth;  // world axes at the pad
     Vector3d padWorld;                  // the pad surface point (world)
     double padRadius = 0.0;
+    // WP-20g: Place runs Part.Start with the module lifecycle (StartVesselInFlight: ModulesOnStart, the flight block, ModulesOnStartFinished,
+    // the first ModuleJettison.LateUpdate), as KSP does between spawning the craft and its first flight tick. false: the WP-20d behaviour
+    // (StartPartsInFlight only: the parts fly the default drag-cube weights), kept for the WP-20f comparison case.
+    bool startModules = true;
     explicit PadScene(World& w_, const PhysicsBubbleOptions& o = {}, const PhysicsWorldConfig& cfg = {}) : w(w_), s(w_, o, cfg) {
         StartPhysicsGlobals(w);
         SaveEnvironment::Current().loadedScene = GameScenes::FLIGHT;  // HighLogic.LoadedSceneIsFlight (module FixedUpdates check it)
@@ -304,7 +308,8 @@ struct PadScene {
         v.orbitDriver->updateMode = OrbitDriver::UpdateMode::IDLE;
         if (std::find(FlightGlobals::Vessels.begin(), FlightGlobals::Vessels.end(), &v) == FlightGlobals::Vessels.end()) FlightGlobals::AddVessel(&v);
         FlightGlobals::SortVessel(&v, true);
-        StartPartsInFlight(v);
+        if (startModules) StartVesselInFlight(v);
+        else StartPartsInFlight(v);
         v.UpdateResourceSets();
         // OrbitDriver.Start in IDLE: TrackRigidbody from CoMD, the packed vessel's CalculatePhysicsStats value (VesselPrecalculate.cs:469-480:
         // worldSurfacePos + worldSurfaceRot * localCoM)
