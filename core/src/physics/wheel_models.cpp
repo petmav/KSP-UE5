@@ -6,6 +6,7 @@
 
 #include "ksp/parts/available_part.hpp"
 #include "ksp/parts/part.hpp"
+#include "ksp/physics/mu_part_colliders.hpp"
 #include "nlohmann/json.hpp"
 
 namespace ksp::physics {
@@ -92,6 +93,38 @@ std::shared_ptr<mu::PartModelRig> WheelModelLibrary::BuildRig(const std::string&
     if (!Has(partName)) return nullptr;
     auto rig = std::make_shared<mu::PartModelRig>(mu::PartModelRig::Build(rescaleFactor, Instances(partName)));
     return rig->Valid() ? rig : nullptr;
+}
+
+std::function<bool(Part&, const std::string&, PartTransform&)> WheelModelLibrary::ModelTransformLookup() const {
+    auto rigs = std::make_shared<std::map<std::pair<std::string, float>, std::shared_ptr<mu::PartModelRig>>>();
+    return [this, rigs](Part& part, const std::string& name, PartTransform& local) {
+        local = PartTransform{};
+        const std::string partName = NameOf(part);
+        if (!Has(partName)) return true;
+        const float rescale = static_cast<float>(part.fields.rescaleFactor);
+        auto key = std::make_pair(partName, rescale);
+        auto it = rigs->find(key);
+        if (it == rigs->end()) it = rigs->emplace(key, BuildRig(partName, rescale)).first;
+        if (!it->second) return true;
+        const int node = it->second->Find(name);
+        if (node < 0) return false;
+        const mu::RigPose pose = it->second->PartSpace(node);
+        local.position = pose.position;
+        local.rotation = pose.rotation;
+        return true;
+    };
+}
+
+std::function<std::vector<ColliderProxy>(const Part&)> WheelModelLibrary::ColliderHook() const {
+    return [this](const Part& part) {
+        const std::string name = NameOf(part);
+        if (Has(name)) {
+            std::vector<ColliderProxy> out =
+                ProxiesFromShapes(mu::BuildPartColliders(static_cast<float>(part.fields.rescaleFactor), Instances(name)));
+            if (!out.empty()) return out;
+        }
+        return DragCubeColliderProxy(part);
+    };
 }
 
 std::string WheelModelLibrary::NameOf(const Part& part) { return part.partInfo != nullptr ? part.partInfo->name : std::string(); }

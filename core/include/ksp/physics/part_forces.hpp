@@ -18,6 +18,8 @@
 //   ModuleLiftingSurface / ModuleControlSurface / ModuleAeroSurface  FixedUpdate (ModuleLiftingSurface.cs:170 / ModuleControlSurface.cs:366)
 //                     with baseTransform = the part transform (no model transforms) -> part.AddForceAtPosition lift, then drag.
 //   ModuleReactionWheel  FixedUpdate (ModuleReactionWheel.cs:158) -> part.AddTorque(lastTorque).
+//   WP-21b: ModuleResourceIntake FixedUpdate (ModuleResourceIntake.cs:201: the vessel's atmosphere values, the intake transform's forward from
+//                     `Hooks::modelTransform`) -> the part's IntakeAir; ModuleControlSurface.GetPotentialTorque for VesselSAS (ControlSurfaceTorque).
 //   WP-20f, the control modules of the measured order (run1-L_calltrace.csv seq 23-28: ModuleCommand, ModuleReactionWheel, ModuleSAS,
 //   then per engine part ModuleEngines before ModuleGimbal):
 //   ModuleCommand     FixedUpdate (ModuleCommand.cs:461) -> UpdateControlState (Part.isControlSource, the command's resource draw).
@@ -53,6 +55,9 @@ class Vessel;
 class ModuleEngines;
 class ModuleGimbal;
 class ModuleRCS;
+class ModuleLiftingSurface;
+class ModuleResourceIntake;
+class PartModule;
 struct PartTransform;
 struct RCSThruster;
 }  // namespace ksp
@@ -135,10 +140,18 @@ public:
         // transforms, if any, stay where ModuleGimbal.OnStart found them) and thrust transforms stay at their neutral pose. The answers
         // are cached per AvailablePart and name (the hierarchy is the prefab's): ClearModelChainCache() after replacing the hook.
         ModelTransformChains modelTransformChains;
+        // WP-21b: Part.FindModelTransform(name) placed in PART space (position / rotation relative to the part transform, neutral pose);
+        // false when the part's model has no such transform. Used for a control surface's ctrlSurface and an intake's transform. Unset:
+        // the control surface is present and the intake's transform is the part's own.
+        std::function<bool(Part&, const std::string& name, PartTransform& local)> modelTransform;
+        // WP-21b: called after every ModuleLiftingSurface / ModuleControlSurface / ModuleAeroSurface FixedUpdate of the slot, with the part's
+        // forces already in the buffers (a trace for the reference gates: nothing in kspcore reads it)
+        std::function<void(Part&, ModuleLiftingSurface&, Vessel&, VesselPhysics*)> afterSurface;
     };
     Hooks hooks;
     bool engines = true, rcs = true, liftingSurfaces = true, reactionWheels = true;
     bool command = true, sas = true, gimbals = true;  // WP-20f
+    bool intakes = true;                              // WP-21b: ModuleResourceIntake.FixedUpdate
 
     // WP-20f: every gimbal transform of the loaded vessels (or of one vessel) on its part's current pose at its current local rotation
     // (see above). Between two ticks only VesselSAS reads them in kspcore (ModuleGimbal.GetPotentialTorque); a host that reads them
@@ -146,6 +159,9 @@ public:
     void PoseGimbalTransforms();
     void PoseGimbalTransforms(Vessel& v);
     void ClearModelChainCache() { chainCache_.clear(); }
+    // WP-21b: ModuleControlSurface.GetPotentialTorque (ModuleControlSurface.cs:479) for VesselSAS's torque sum (AutopilotEnvironment::
+    // torqueProviderHook): true when `m` is a control surface (pos / neg filled), false for any other module
+    static bool ControlSurfaceTorque(Vessel& v, PartModule& m, VesselPhysics* vp, Vector3f& pos, Vector3f& neg);
 
     // seq 22-276: every loaded vessel of the registry (FlightGlobals.Vessels order), its parts in vessel order, each part's modules in
     // module order. `host` gives the vessels' bindings (a vessel without one runs its modules' packed / no-Rigidbody branches).
@@ -163,6 +179,7 @@ private:
     void EngineFixedUpdate(Part& part, ModuleEngines& e, Vessel& v, VesselPhysics* vp);
     void RcsFixedUpdate(Part& part, ModuleRCS& r, Vessel& v, VesselPhysics* vp);
     void GimbalFixedUpdate(Part& part, ModuleGimbal& g, Vessel& v);
+    void IntakeFixedUpdate(Part& part, ModuleResourceIntake& in, Vessel& v);  // WP-21b
     // the gimbal's transforms on the part at their current (`neutral` false) or neutral local rotation; false without chains
     bool PoseGimbal(Part& part, ModuleGimbal& g, bool neutral);
     const std::vector<ModelTransformChain>& Chains(Part& part, const std::string& name);

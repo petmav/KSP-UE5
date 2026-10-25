@@ -18,6 +18,7 @@
 
 namespace ksp {
 class Part;
+struct PartTransform;
 }
 
 namespace ksp::physics {
@@ -38,6 +39,16 @@ public:
     std::vector<mu::ModelInstance> Instances(const std::string& partName) const;
     // a new rig with its own mutable local transforms (nullptr when the part is not in the library). The library must outlive the rig.
     std::shared_ptr<mu::PartModelRig> BuildRig(const std::string& partName, float rescaleFactor) const;
+
+    // WP-21b: PartModuleForces::Hooks::modelTransform over this library: Part.FindModelTransform(name) (pre-order, first match) at the prefab
+    // pose, in part space. A part the library does not hold answers true with the part's own transform (identity: not modelled, the
+    // part transform stands in); a part it holds without such a transform answers false. The library must outlive the hook.
+    std::function<bool(Part&, const std::string& name, PartTransform& local)> ModelTransformLookup() const;
+
+    // WP-21b: VesselPhysicsOptions::colliders over this library: the part's real .mu colliders (physics/mu_part_colliders.hpp ProxiesFromShapes of
+    // mu::BuildPartColliders over the part's instances), the drag-cube fixture box for a part the library does not hold or one without a
+    // non-trigger collider (MuPartColliders::Proxies' rule). The library must outlive the hook.
+    std::function<std::vector<ColliderProxy>(const Part&)> ColliderHook() const;
 
     // partName of a Part (AvailablePart.name); empty without partInfo
     static std::string NameOf(const Part& part);

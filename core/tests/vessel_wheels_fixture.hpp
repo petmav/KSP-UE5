@@ -143,7 +143,10 @@ struct RoverScene {
         b.contacts.buoyancy = false;
         return b;
     }
-    explicit RoverScene(World& w_, const WheelPhysicsOptions& o = {}) : w(w_), pad(w_, BubbleOptions()), wheels(pad.s.bubble, o) {
+    // `colliders` (WP-21b): VesselPhysicsOptions::colliders of the bubble's host (the wheel host chains it for the parts that are not wheels)
+    explicit RoverScene(World& w_, const WheelPhysicsOptions& o = {}, std::function<std::vector<ColliderProxy>(const Part&)> colliders = nullptr)
+        : w(w_), pad(w_, BubbleOptions()), wheels(pad.s.bubble, o) {
+        if (colliders) pad.s.bubble.Host().options.colliders = std::move(colliders);
         PhysicsGlobals::SetApplyDrag(false);  // the references below have no aero (the spike's); drag is FlightIntegrator's, gated in WP-20d
         PartContactEnvironment::noCrashDamage = true;
         wheels.Install();

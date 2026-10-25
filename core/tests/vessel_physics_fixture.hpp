@@ -93,6 +93,22 @@ struct World {
         SaveEnvironment& env = SaveEnvironment::Current();
         env.getPartInfoByName = [this](std::string_view n) { return data.parts.getPartInfoByName(n); };
         env.partExists = [this](std::string_view n) { return data.parts.getPartInfoByName(n) != nullptr; };
+        // WP-21b: the v1.8.0 upgrade scripts (v180_ModuleControlSurface.cs:52 GetBaseModule) read the prefab's ctrlSurfaceRange through
+        // SaveEnvironment::prefabModuleFloat (PartLoader's prefab: the LAST module of the class in partPrefab.Modules). A host that leaves it
+        // unset cannot load a craft with a control surface (the NullReferenceException of the upgrade script, "no prefab ModuleControlSurface").
+        env.prefabModuleFloat = [this](std::string_view part, std::string_view moduleClass, std::string_view field) -> std::optional<float> {
+            const AvailablePart* ap = data.parts.getPartInfoByName(part);
+            if (ap == nullptr || !ap->partPrefab) return std::nullopt;
+            PartModuleList& mods = ap->partPrefab->Modules();
+            for (size_t i = mods.Count(); i-- > 0;) {
+                PartModule* m = mods.GetModule(i);
+                if (m->ClassName() != moduleClass) continue;
+                const ModuleValue v = m->Fields().GetValue(field);
+                if (const float* f = std::get_if<float>(&v)) return *f;
+                return std::nullopt;
+            }
+            return std::nullopt;
+        };
         env.newGuidHashCode = [] {
             static uint32_t s = 4242u;
             s = s * 1664525u + 1013904223u;

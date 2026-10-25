@@ -123,6 +123,13 @@ void PhysicsBubble::Install() {
         if (flightInputHandler_ != nullptr) return flightInputHandler_->precisionMode;  // ModuleRCS.GetPotentialTorque reads it
         return savedPrecisionMode_ ? savedPrecisionMode_() : true;
     };
+    // WP-21b: ModuleControlSurface.GetPotentialTorque (ModuleControlSurface.cs:476) in VesselSAS's torque sum (VesselAutopilot.cs:474): it reads
+    // the part's Rigidbody, which the engine-agnostic WP-24 code does not have
+    savedTorqueProviderHook_ = AutopilotEnvironment::torqueProviderHook;
+    AutopilotEnvironment::torqueProviderHook = [this](Vessel& v, PartModule& m, Vector3f& pos, Vector3f& neg) {
+        if (PartModuleForces::ControlSurfaceTorque(v, m, host_.Find(v), pos, neg)) return true;
+        return savedTorqueProviderHook_ ? savedTorqueProviderHook_(v, m, pos, neg) : false;
+    };
     savedBeforeVesselUpdate_ = FlightScene::hooks.beforeVesselUpdate;
     FlightScene::hooks.beforeVesselUpdate = [this] {
         PartValuesUpdate();  // WP-20f
@@ -193,6 +200,7 @@ void PhysicsBubble::Uninstall() {
     AutopilotEnvironment::rollInput = savedRollInput_;
     AutopilotEnvironment::yawInput = savedYawInput_;
     AutopilotEnvironment::precisionMode = savedPrecisionMode_;
+    AutopilotEnvironment::torqueProviderHook = savedTorqueProviderHook_;
     FlightScene::hooks.afterPrecalc = savedAfterPrecalc_;
     FlightScene::hooks.afterFlightIntegrator = savedAfterFlightIntegrator_;
     FlightScene::hooks.beforeFlightIntegrator = savedBeforeFlightIntegrator_;

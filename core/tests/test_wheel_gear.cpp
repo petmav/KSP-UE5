@@ -271,3 +271,58 @@ TEST_CASE("WP-29d landed placement: the lander is put on the ground by its foot 
     CHECK(run.Wheels().GroundedCount() == 4);
 }
 
+
+// WP-21b: WP-29d reported an "attitude jump" of the Rocket-power VTOL (its wheel colliders rotating ~25 degrees in the first ticks while the cluster
+// barely rotates). Measured: the VESSEL does not rotate (the root part's rotation moves by < 0.01 degrees over the first 40 ticks, airborne and on
+// the ground); the wheel colliders' part-space pose changes ONCE, between tick 0 and tick 1, by the gear-bay deployment pose: the LY-01 model's
+// collider node is posed by the Animation sample ModuleWheelDeployment.OnStart applies (the deployed state; the prefab pose is the stowed one), 5.0
+// degrees and 0.1 m for all four bays. The pose is then constant, in the part frame and in the world.
+TEST_CASE("WP-21b Rocket-power VTOL spawn: the vessel keeps its attitude, the wheel colliders take the deployed gear pose once (tick 0 -> 1)") {
+    if (!wp20b::GameAvailable()) return;
+    for (const bool airborne : {true, false}) {
+        GearRun run("Rocket-power VTOL", airborne ? 3000.0 : 0.0, 0.0, RealGeometry(), 0.0, airborne);
+        Vessel& v = run.V();
+        const Quaternionf rot0 = v.vesselTransform.rotation;
+        const auto angleDeg = [](const Quaternionf& a, const Quaternionf& b) {  // the angle of a^-1 b: 2 atan2(|vector part|, |w|) (exact for tiny angles)
+            const double aw = a.w, ax = -static_cast<double>(a.x), ay = -static_cast<double>(a.y), az = -static_cast<double>(a.z);
+            const double w = aw * b.w - ax * b.x - ay * b.y - az * b.z;
+            const double x = aw * b.x + ax * b.w + ay * b.z - az * b.y;
+            const double y = aw * b.y - ax * b.z + ay * b.w + az * b.x;
+            const double z = aw * b.z + ax * b.y - ay * b.x + az * b.w;
+            return 2.0 * std::atan2(std::sqrt(x * x + y * y + z * z), std::fabs(w)) * 180.0 / 3.14159265358979323846;
+        };
+        std::vector<Vector3d> up0;
+        double maxVessel = 0.0, changeAt1 = 0.0, changeAfter1 = 0.0, shiftAt1 = 0.0;
+        std::vector<Vector3d> pos0;
+        for (int k = 0; k < 40; ++k) {
+            run.Tick();
+            maxVessel = std::max(maxVessel, angleDeg(rot0, v.vesselTransform.rotation));
+            size_t i = 0;
+            for (auto& w : run.Wheels().Wheels()) {
+                const Vector3d u(w->geometry.rotation * Vector3f(0, 1, 0));
+                const Vector3d p(w->geometry.position);
+                if (k == 0) {
+                    up0.push_back(u);
+                    pos0.push_back(p);
+                } else {
+                    const double d = std::acos(std::clamp(Vector3d::Dot(u, up0[i]), -1.0, 1.0)) * 180.0 / 3.14159265358979323846;
+                    if (k == 1) {
+                        changeAt1 = std::max(changeAt1, d);
+                        shiftAt1 = std::max(shiftAt1, (p - pos0[i]).magnitude());
+                        up0[i] = u;  // the reference for the later ticks is the deployed pose
+                    } else {
+                        changeAfter1 = std::max(changeAfter1, d);
+                    }
+                }
+                ++i;
+            }
+        }
+        MESSAGE(std::string(airborne ? "airborne" : "on the ground") << ": vessel rotation over 40 ticks " << maxVessel << " deg; wheel collider pose tick 0 -> 1: " << changeAt1 << " deg, " << shiftAt1 << " m; ticks 2-39: "
+                                                      << changeAfter1 << " deg");
+        CHECK(maxVessel < 0.05);
+        CHECK(changeAt1 > 4.9);
+        CHECK(changeAt1 < 5.1);
+        CHECK(shiftAt1 > 0.05);
+        CHECK(changeAfter1 < 0.05);
+    }
+}

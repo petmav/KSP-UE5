@@ -218,6 +218,8 @@ private:
     std::function<Vector3f()> savedActiveVesselPYR_;
     std::function<bool(float)> savedPitchInput_, savedRollInput_, savedYawInput_;
     std::function<bool()> savedPrecisionMode_;
+    // WP-21b
+    std::function<bool(Vessel&, PartModule&, Vector3f&, Vector3f&)> savedTorqueProviderHook_;
 };
 
 }  // namespace ksp::physics

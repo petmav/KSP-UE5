@@ -45,6 +45,7 @@ add_executable(kspcore_tests
     test_mu_colliders.cpp
     test_wheel_models.cpp
     test_wheel_gear.cpp
+    test_aircraft.cpp
     test_scenery_colliders.cpp
     test_scenery_scenarios.cpp
     test_structure.cpp
@@ -211,6 +212,16 @@ add_test(NAME capi.ue_like COMMAND capi_ue_like ${KSP_HARNESS_DIR}/inputs/Physic
 #   use must say why next to the gate and in STATUS.md (another package's code, objects that are not the experiment's
 #   inputs); never to hide a mismatch. rowspec = t:col=v1|v2+col2^prefix/t2:... (conditions OR'd per table).
 find_package(Python3 3.10 REQUIRED COMPONENTS Interpreter)
+
+# WP-21b: stock aircraft: the SPH crafts load, control surfaces / intakes in the module slot, the Aeris 3A on the real KSC runway. The roll test
+# dumps the kinematics the lifting surfaces read and their outputs (KSPCORE_AIRCRAFT_DUMP); aircraft.reference recomputes them with the
+# independent float64 reference (tools/wp21b/lift_reference.py) and gates the lift-off speed and the climb rate against the law.
+add_test(NAME aircraft COMMAND kspcore_tests "-tc=WP-21b*")
+set_tests_properties(aircraft PROPERTIES LABELS unit TIMEOUT 1800 FIXTURES_SETUP aircraft_states
+                     ENVIRONMENT "KSPCORE_AIRCRAFT_DUMP=${CMAKE_CURRENT_BINARY_DIR}/aircraft_states.json")
+add_test(NAME aircraft.reference COMMAND ${Python3_EXECUTABLE} -I ${PROJECT_SOURCE_DIR}/tools/wp21b/lift_reference.py
+         --states ${CMAKE_CURRENT_BINARY_DIR}/aircraft_states.json)
+set_tests_properties(aircraft.reference PROPERTIES LABELS unit TIMEOUT 300 FIXTURES_REQUIRED aircraft_states)
 set(KSP_CANDIDATE_DIR "${CMAKE_BINARY_DIR}/candidate")
 set(KSP_CAPTURES_DIR "${KSP_HARNESS_DIR}/captures/out")
 set(KSP_CAPTURES2_DIR "${KSP_HARNESS_DIR}/captures/out2")  # batch 2 (C4, C5, C6, C8, C9, C10, terrain)
