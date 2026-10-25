@@ -52,6 +52,10 @@ struct SentinelEnvironment {
         int untrackedObjectIDsCount = 0;                     // untrackedObjectIDs.Count
     };
     static inline std::optional<DiscoverableObjects> discoverableObjects;
+    // WP-38d: ScenarioDiscoverableObjects is ported (space_objects.hpp); SpaceObjects::InstallSentinelSeams answers the Instance through this provider, which
+    // takes precedence over the fixed value above (the Sentinel tests keep filling `discoverableObjects`).
+    static inline std::function<std::optional<DiscoverableObjects>()> discoverableObjectsProvider;
+    static std::optional<DiscoverableObjects> GetDiscoverableObjects() { return discoverableObjectsProvider ? discoverableObjectsProvider() : discoverableObjects; }
     // FlightGlobals.CountSpaceObjects(). Unset: 0.
     static inline std::function<int()> countSpaceObjects;
     // DiscoverableObjectsUtil.GenerateAsteroidName / SpawnAsteroid(name, orbit, seed, class, lifetime, lifetimeMax). Unset: nothing is spawned.
