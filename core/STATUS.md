@@ -7232,10 +7232,22 @@ Unchanged: every 0 ULP / bit-for-bit gate, WP-20f's SAS ascents (they already ra
 
 ### Verification
 
-VERIFICATION_PLACEHOLDER
+- After the merge with main `f0e01bd9` (WP-38d), Windows MSVC RelWithDebInfo, fresh (`core/build` deleted, `run_tests.ps1 -Fresh`,
+  `CMAKE_BUILD_PARALLEL_LEVEL=4`): configure 2.7 s, build 305.3 s, ctest 175.9 s, **50 / 50 pass**. Before that merge (at `c70167b7` + docs): configure
+  2.7 s, build 283.6 s, ctest 163.1 s, 50 / 50.
+- Whole unit binary `kspcore_tests` on the fresh merged build: **1,089 cases / 1,690,013 assertions, all pass** with `--order-by=rand -rs=11` and
+  `-rs=27` (before the merge: 1,074 / 1,671,155, both seeds). The WP-20g cases: 6 / 12,376 assertions; with the WP-52b bubble servo case 7 / 12,388.
+  The VAB launch on the merged binary: root 79.2776 m vs C6 79.2884 m (-0.0107628 m).
+- Re-baseline attribution: the wp29d baseline binary's MESSAGE lines vs this branch's (default order); a build with `PadScene::startModules = false`
+  ran the WP-20d / WP-20e cases (31 cases / 28,108 assertions) with every baseline number reproduced.
+- Neighbouring suites after the GameSettings singleton change: WP-12c, WP-20e, WP-18, WP-50, WP-42, WP-mucol, WP-20g: 115 cases / 381,231 assertions.
+- WSL Ubuntu 24.04 g++ 13.3 `-std=c++20 -fsyntax-only -Wall -Wextra` over the 11 changed sources and 6 changed test files: no error; one warning,
+  pre-existing (`part.hpp:410` unused parameter, 2026-10-09).
+- `python -I core/tools/ci/pr_review.py --base main`: 0 failing checks. `harness/compare/tolerances.json` and `tests/tolerances_capture.json`
+  untouched; no data file added (the launch reads data/scenery, tests/data/mucollider and the C6 capture already in the repo).
 
 ### Commits (branch `wp20g`, from local `wp29d` `a46df8d8`)
 
 `606186f6` items 1-5 (Part.Pack / Unpack, GameSettings.Awake, StartVesselInFlight, VesselResourceHost, servos in the slot, hygiene defaults);
 `f2eac17d` merge origin/main `dd87d6e8`; `c073ac55` items 1-4 tests, GameSettings singleton; `ebb6ac67` item 6 (VAB launch vs C6, scenery
-lookups, CheckGroundCollision log format); `c70167b7` cite wording, progress log; then the documentation and verification commit.
+lookups, CheckGroundCollision log format); `c70167b7` cite wording, progress log; `94bd5186` STATUS / README / progress.csv; `d66a0794` merge origin/main `f0e01bd9`; then this verification note.

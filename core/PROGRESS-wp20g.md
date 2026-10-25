@@ -26,4 +26,5 @@ Branch `wp20g` from local `wp29d` `a46df8d8` (contains `wp20f` and main `aef2f54
 - step 3: tests/test_host_wiring.cpp (items 1-4) + GameSettings singleton (fetch guard, instance layoutConfigNodes) `c073ac55`.
 - step 4: item 6 tests/test_vab_launch.cpp + SceneryObjectPoses / SceneryFindObject + CheckGroundCollision log format `ebb6ac67`:
   root 79.2776 m vs C6 79.2884 m (-1.08 cm); "putting ship to ground: -6.869718" = KSP.log; CheckGroundCollision moved 0.119 m (KSP 0.101).
-- next: STATUS section + host contract table (item 7), README, progress.csv, fresh suite, random orders, WSL syntax, pr_review, PR.
+- step 5: docs `94bd5186`; merge main f0e01bd9 `d66a0794`; fresh 50 / 50 (build 305.3 s, ctest 175.9 s), rand 11 / 27 1,089 cases green,
+  WSL syntax clean, pr_review 0 failing. Next: push, PR, CI.
