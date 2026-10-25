@@ -4450,7 +4450,7 @@ Scope found on reading STATUS: items 1, 2 and 4 of the task brief (the other Fin
 
 ### Verification
 
-See the WP-38d row of the summary table (the numbers there are from the fresh run).
+Windows MSVC RelWithDebInfo, `core/build` deleted, `run_tests.ps1 -Fresh` (CMAKE_BUILD_PARALLEL_LEVEL=4), main `dd87d6e8` merged: ALL TESTS PASSED; configure 5.0 s, build 353.1 s, ctest 189.1 s; ctest 50 / 50 (the `unit` label alone 963.8 s*proc over 16 tests). The `unit` binary (`kspcore_tests.exe`) at `--order-by=rand -rs=11` and `-rs=27`: 1083 doctest cases, 1,677,635 assertions, 0 failures in both orders. `g++ -fsyntax-only` in WSL over the changed .cpp files: clean (recorded in `PROGRESS-wp38d.md`). `python -I core/tools/ci/pr_review.py --base main`: 22 changed files, 12 sources checked, 0 failing checks (24 older cite mismatches on unchanged lines only).
 
 ## WP-42: scene flow, KSC, facilities, launch sites (branch `wp42`, from main `85b0085f`, main `13750b33` merged)
 

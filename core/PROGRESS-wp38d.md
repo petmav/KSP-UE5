@@ -15,4 +15,4 @@ D: has ~2.7 GB free (parallel agents): a link failed once with LNK1116 (error 11
 - [x] part 2 (ScenarioDiscoverableObjects spawners / behaviour, default AddVessel, Sentinel seams, CometManager events / fragments): 15 cases / 18,858 assertions green
 - [x] ConstructShip / SpawnPreBuiltShip (prebuilt_spawn.*), CraftProfileInfo fields; Game::GetCometNumberedName dangling reference fixed
 - [x] cites snapped, STATUS section + row 65, README rows, progress.csv, main dd87d6e8 merged, g++ -fsyntax-only clean, pr_review 0 failing
-- [ ] fresh verification (delete core/build), random order 11 / 27, commit, push, PR
+- [x] fresh verification (core/build deleted; ctest 50/50, 353 s build; unit 1083 cases / 1,677,635 assertions at -rs=11 and -rs=27), commit, push, PR
