@@ -19,9 +19,9 @@ using GE = events::GameEvents;
 // GameObject.SendMessage(message, SendMessageOptions.DontRequireReceiver): the Part component has none of these methods; its modules
 // follow in component order (Part.AddModule's AddComponent order = the module list). Unity calls private methods too, so every
 // receiver of Assembly-CSharp counts whatever its access: ModuleCargoPart.cs:80 / :84 (virtual; ModuleGroundPart.cs:144 / :156
-// override it), ModuleDockingNode.cs:681 / :689, BaseServo.cs:1177 / :1182, ModuleParachute.cs:811, LaunchClamp.cs:324 / :332,
-// FlagSite.cs:362 / :374. PartJoint.cs:419 / :423 (a component of the part's GameObject) are empty; ModuleJointMotor.cs:170 is not
-// ported (no stock part uses it).
+// override it), ModuleDockingNode.cs:681 / :689, BaseServo.cs:1177 / :1182, ModuleParachute.cs:811, LaunchClamp.cs:324 / :332 and
+// the flag's FlagSite.cs:362 / :374. The empty PartJoint.cs:419 / :423 (a component of the part's GameObject) change nothing; the
+// receiver of ModuleJointMotor.cs:170 is not ported (no stock part uses that module).
 size_t Part::SendPartMessage(std::string_view message) {
     const bool pack = message == "OnPartPack", unpack = message == "OnPartUnpack";
     const bool vpack = message == "OnVesselPack", vunpack = message == "OnVesselUnpack";
