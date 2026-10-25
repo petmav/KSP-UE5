@@ -15,6 +15,7 @@
 #include "ksp/modules/module_engines.hpp"
 #include "ksp/modules/module_gimbal.hpp"
 #include "ksp/modules/module_rcs.hpp"
+#include "ksp/modules/module_resource_intake.hpp"
 #include "ksp/modules/module_reaction_wheel.hpp"
 #include "ksp/orbit/time_warp.hpp"
 #include "ksp/parts/part.hpp"
@@ -169,6 +170,27 @@ Vector3f PointVelocity(const VesselPhysics& vp, const Part& owner, const Vector3
     return (s.velocity + Vector3d::Cross(s.angularVelocity, p - s.centerOfMass)).ToVector3f();
 }
 
+// The Unity state of ModuleLiftingSurface.FixedUpdate (:170-176): baseTransform = the part transform (ModuleLiftingSurface.OnStart :133-149
+// falls back to it without a transformName; ModuleControlSurface declares its own `new string transformName` :11, so the base class's stays
+// empty and its baseTransform is the part transform too), part.Rigidbody, Rigidbody.GetPointVelocity + the frame velocity
+LiftingSurfaceFrame LiftingFrameOf(Part& part, ModuleLiftingSurface& ls, VesselPhysics* vp, Vessel& v) {
+    const PartTransform& bt = part.partTransform;
+    Part* owner = RigidBodyPart(&part);
+    LiftingSurfaceFrame fr;
+    fr.hasRigidbody = owner != nullptr && vp != nullptr && !v.packed;
+    fr.baseRotation = bt.rotation;
+    fr.baseForward = bt.forward();
+    fr.baseUp = bt.up();
+    fr.baseRight = bt.rotation * Vector3f::right();
+    fr.colWorld = bt.TransformPoint(part.fields.CoLOffset);
+    fr.copWorld = bt.TransformPoint(part.fields.CoPOffset);
+    if (fr.hasRigidbody) {
+        const Vector3f point = ls.Get<bool>("displaceVelocity") ? bt.TransformPoint(ls.Get<Vector3f>("velocityOffset")) : bt.position;
+        fr.pointVelocity = PointVelocity(*vp, *owner, point) + Krakensbane::GetFrameVelocityV3f();
+    }
+    return fr;
+}
+
 // TimeWarp.CurrentRate > 1f && TimeWarp.WarpMode == HIGH (ModuleEngines.cs:1532, ModuleRCS.cs:283)
 bool HighWarp() { return TimeWarp::CurrentRate() > 1.0f && TimeWarp::WarpMode() == TimeWarp::Modes::HIGH; }
 
@@ -199,28 +221,17 @@ void PartModuleForces::FixedUpdateVessel(Vessel& v, VesselPhysics* vp) {
                 if (rcs) RcsFixedUpdate(*part, *r, v, vp);
             } else if (auto* ls = dynamic_cast<ModuleLiftingSurface*>(m)) {
                 if (!liftingSurfaces) continue;
-                // the Unity state of ModuleLiftingSurface.FixedUpdate (:170-176): baseTransform = the part transform (OnStart :133-149
-                // falls back to it without a model transform), part.Rigidbody, Rigidbody.GetPointVelocity + the frame velocity
+                // the Unity state of ModuleLiftingSurface.FixedUpdate (:170-176): see LiftingFrameOf
                 const PartTransform& bt = part->partTransform;
-                Part* owner = RigidBodyPart(part);
-                LiftingSurfaceFrame fr;
-                fr.hasRigidbody = owner != nullptr && vp != nullptr && !v.packed;
-                fr.baseRotation = bt.rotation;
-                fr.baseForward = bt.forward();
-                fr.baseUp = bt.up();
-                fr.baseRight = bt.rotation * Vector3f::right();
-                fr.colWorld = bt.TransformPoint(part->fields.CoLOffset);
-                fr.copWorld = bt.TransformPoint(part->fields.CoPOffset);
-                if (fr.hasRigidbody) {
-                    const Vector3f point = ls->Get<bool>("displaceVelocity") ? bt.TransformPoint(ls->Get<Vector3f>("velocityOffset")) : bt.position;
-                    fr.pointVelocity = PointVelocity(*vp, *owner, point) + Krakensbane::GetFrameVelocityV3f();
-                }
+                LiftingSurfaceFrame fr = LiftingFrameOf(*part, *ls, vp, v);
                 SurfaceForces f;
                 if (auto* cs = dynamic_cast<ModuleControlSurface*>(ls)) {
                     // ModuleControlSurface.FixedUpdate (:366) reads the vessel's control state, CurrentCoM and ReferenceTransform
                     ControlSurfaceFrame cf;
                     cf.surface = fr;
-                    cf.hasCtrlSurface = true;
+                    // ctrlSurface = FindModelTransform(transformName) (ModuleControlSurface.cs:294): without a model hook it is assumed present
+                    PartTransform ctrlLocal;
+                    cf.hasCtrlSurface = !hooks.modelTransform || hooks.modelTransform(*part, cs->Get<std::string>("transformName"), ctrlLocal);
                     cf.ctrlSurfaceAtNeutral = cs->ctrlSurfaceLocalRotation == cs->neutral;
                     cf.currentCoM = v.CurrentCoM();
                     cf.localCoM = bt.InverseTransformPoint(v.CurrentCoM());
@@ -244,6 +255,9 @@ void PartModuleForces::FixedUpdateVessel(Vessel& v, VesselPhysics* vp) {
                         ++surfaceForces;
                     }
                 }
+                if (hooks.afterSurface) hooks.afterSurface(*part, *ls, v, vp);
+            } else if (auto* in = dynamic_cast<ModuleResourceIntake*>(m)) {
+                if (intakes) IntakeFixedUpdate(*part, *in, v);
             } else if (auto* c = dynamic_cast<ModuleCommand*>(m)) {
                 if (command) c->FixedUpdate();  // ModuleCommand.cs:461 -> UpdateControlState (:466)
             } else if (auto* sm = dynamic_cast<ModuleSAS*>(m)) {
@@ -267,6 +281,48 @@ void PartModuleForces::FixedUpdateVessel(Vessel& v, VesselPhysics* vp) {
             }
         }
     }
+}
+
+// ModuleResourceIntake.cs:201 FixedUpdate: the vessel's atmosphere values and the intake transform's forward (FindModelTransform
+// (intakeTransformName), placed on the part: `Hooks::modelTransform`; without the hook the intake transform is taken as present and pointing
+// along the part's forward)
+void PartModuleForces::IntakeFixedUpdate(Part& part, ModuleResourceIntake& in, Vessel& v) {
+    IntakeFlightInput fi;
+    CelestialBody* body = v.mainBody();
+    fi.hasVessel = true;
+    fi.atmosphereContainsOxygen = body != nullptr && body->atmosphereContainsOxygen;
+    fi.oceanBody = body != nullptr && body->ocean;
+    fi.oceanDensity = body != nullptr ? body->oceanDensity : 0.0;
+    fi.staticPressurekPa = v.staticPressurekPa;
+    fi.srf_vel_direction = v.srf_vel_direction.ToVector3f();
+    fi.srfSpeed = v.srfSpeed;
+    fi.mach = v.mach;
+    fi.atmDensity = v.atmDensity;
+    fi.hasIntakeTransform = in.hasIntakeTransform;
+    PartTransform world = part.partTransform;
+    if (hooks.modelTransform) {
+        PartTransform local;
+        if (hooks.modelTransform(part, in.Get<std::string>("intakeTransformName"), local)) world = ChildTransform(part.partTransform, local);
+    }
+    fi.intakeAltitude = body != nullptr ? FlightGlobals::getAltitudeAtPos(Vector3d(world.position), body) : 1.0;
+    fi.intakeForward = world.forward();
+    fi.fixedDeltaTime = TimeWarp::fixedDeltaTime();
+    in.FixedUpdate(fi);
+}
+
+// ModuleControlSurface.cs:479 GetPotentialTorque as VesselAutopilot.VesselSAS.GetTotalVesselTorque (VesselAutopilot.cs:474) calls it
+// through AutopilotEnvironment::torqueProviderHook: Part.Rigidbody.worldCenterOfMass of the part's rigid body (transform frame)
+bool PartModuleForces::ControlSurfaceTorque(Vessel& v, PartModule& m, VesselPhysics* vp, Vector3f& pos, Vector3f& neg) {
+    auto* cs = dynamic_cast<ModuleControlSurface*>(&m);
+    if (cs == nullptr) return false;
+    pos = neg = Vector3f::zero();
+    Part* part = dynamic_cast<Part*>(m.part);
+    Part* owner = part != nullptr ? RigidBodyPart(part) : nullptr;
+    if (part == nullptr || owner == nullptr || vp == nullptr || v.packed) return true;  // no Rigidbody: nothing to read (the C# would throw)
+    const LiftingSurfaceFrame fr = LiftingFrameOf(*part, *cs, vp, v);
+    const Vector3d rbCoM = Vector3d(vp->TransformFromPhysics(vp->PartState(*owner).centerOfMass));
+    cs->GetPotentialTorque(pos, neg, rbCoM, v.CurrentCoM(), v.ReferenceTransform(), fr);
+    return true;
 }
 
 // ModuleEngines.cs:1587 FixedUpdate (Unity's FixedUpdate: runs whatever the PartModule.isEnabled flag says)

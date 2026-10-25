@@ -1,0 +1,935 @@
+{
+ "note": "reduced copies (transform tree, tag/layer, collider + wheel collider chunks, animation chunk; no meshes/renderers/materials/textures) of the original game files named in 'origin' (decompiled/KSP-dev), made by core/tools/wp21b/stage_aero_models.py with core/tools/wp29d/reduce_mu.py for the parts of: Aeris 3A, Aeris 4A, Ravenspear Mk1, Stearwing A300",
+ "parts": {
+  "GearMedium": {
+   "cfg": "GameData/Squad/Parts/Wheel/LandingGear/GearLarge.cfg",
+   "models": [
+    {
+     "file": "GearMedium__GearLarge.mu",
+     "from": "GearLarge.mu",
+     "origin": "GameData/Squad/Parts/Wheel/LandingGear/GearLarge.mu",
+     "originalSha256": "127ee4e00e9b480adb704cda942656b851022510aa6fc167b66cdcef2c940872",
+     "sha256": "cb34a01100ebcf9769e96a3e7314f5a91e4f36e214a43057ea34caa08bcd90fe",
+     "bytes": 30956
+    }
+   ],
+   "instances": [
+    {
+     "file": "GearMedium__GearLarge.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "GearSmall": {
+   "cfg": "GameData/Squad/Parts/Wheel/LandingGear/GearMedium.cfg",
+   "models": [
+    {
+     "file": "GearSmall__GearMedium.mu",
+     "from": "GearMedium.mu",
+     "origin": "GameData/Squad/Parts/Wheel/LandingGear/GearMedium.mu",
+     "originalSha256": "aa3c72c3da423324290b2b658679d6643c9c880072d8a03ccce6600f5de84931",
+     "sha256": "4acd64d7469d967489300eb6e9f4bac0d25b0071b6fd914df5dcaa5833707d8d",
+     "bytes": 5849
+    }
+   ],
+   "instances": [
+    {
+     "file": "GearSmall__GearMedium.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "JetEngine": {
+   "cfg": "GameData/Squad/Parts/Engine/jetEngines/jetEngineBasic.cfg",
+   "models": [
+    {
+     "file": "JetEngine__turboFanSize1.mu",
+     "from": "turboFanSize1.mu",
+     "origin": "GameData/Squad/Parts/Engine/jetEngines/turboFanSize1.mu",
+     "originalSha256": "a7ac60a2c5e67d92f177d128c0ebbf1d7eb725273fb7ac331e13be2d7ab482d5",
+     "sha256": "a13ab5ab5eee8daf4d54844cf3ada8d510febce5e4efe1793ff6638e86a6cf93",
+     "bytes": 15315
+    }
+   ],
+   "instances": [
+    {
+     "file": "JetEngine__turboFanSize1.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "MK1Fuselage": {
+   "cfg": "GameData/Squad/Parts/Structural/mk1Parts/mk1Fuselage.cfg",
+   "models": [
+    {
+     "file": "MK1Fuselage__Fuselage.mu",
+     "from": "Fuselage.mu",
+     "origin": "GameData/Squad/Parts/Structural/mk1Parts/Fuselage.mu",
+     "originalSha256": "8d156af64562e05aa79c8aed92fcf0e50ddc9c4e6bc086e84c6639966f2b6bb1",
+     "sha256": "95ad1925de323dbc3652835bdeac1c60633ae8a2a037b64128ef8292d3ab9aaf",
+     "bytes": 3255
+    }
+   ],
+   "instances": [
+    {
+     "file": "MK1Fuselage__Fuselage.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "MK1IntakeFuselage": {
+   "cfg": "GameData/Squad/Parts/Structural/mk1Parts/mk1FuselageIntake.cfg",
+   "models": [
+    {
+     "file": "MK1IntakeFuselage__IntakeFuselage.mu",
+     "from": "IntakeFuselage.mu",
+     "origin": "GameData/Squad/Parts/Structural/mk1Parts/IntakeFuselage.mu",
+     "originalSha256": "067e4ddc1688766c168863f1f2f8a8a0f63398457b67462038410a6e96e5fa0b",
+     "sha256": "e0a82b61255ce65479fe62631e7231d99147690e47267fd517b54cad6392cac5",
+     "bytes": 4897
+    }
+   ],
+   "instances": [
+    {
+     "file": "MK1IntakeFuselage__IntakeFuselage.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "Mark1Cockpit": {
+   "cfg": "GameData/Squad/Parts/Command/mk1Cockpits/mk1Cockpit.cfg",
+   "models": [
+    {
+     "file": "Mark1Cockpit__CockpitStandard.mu",
+     "from": "CockpitStandard.mu",
+     "origin": "GameData/Squad/Parts/Command/mk1Cockpits/CockpitStandard.mu",
+     "originalSha256": "39918029624a288e83580b7a3a196be9d8db30bea355e033c5200437b051e1d4",
+     "sha256": "d0ed186aa3edbd52ec3ebc40849bc327b6cc31516dcd0fd8d8f1a9b92617e661",
+     "bytes": 17511
+    }
+   ],
+   "instances": [
+    {
+     "file": "Mark1Cockpit__CockpitStandard.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "R8winglet": {
+   "cfg": "GameData/Squad/Parts/Aero/wingletAV-R8/wingletAV-R8.cfg",
+   "models": [
+    {
+     "file": "R8winglet__model.mu",
+     "from": "model.mu",
+     "origin": "GameData/Squad/Parts/Aero/wingletAV-R8/model.mu",
+     "originalSha256": "12da8cbb1ac1fcc2530f78f5632eff076d04ea7111de6e8767ecbee1d6bf6e76",
+     "sha256": "2686c710311ba0992455998bb4edab08386ce6b8339a0e134ccf97922c1cee6f",
+     "bytes": 1444
+    }
+   ],
+   "instances": [
+    {
+     "file": "R8winglet__model.mu",
+     "fromModelNode": false
+    }
+   ]
+  },
+  "SmallGearBay": {
+   "cfg": "GameData/Squad/Parts/Wheel/LandingGear/GearSmall.cfg",
+   "models": [
+    {
+     "file": "SmallGearBay__GearSmall.mu",
+     "from": "GearSmall.mu",
+     "origin": "GameData/Squad/Parts/Wheel/LandingGear/GearSmall.mu",
+     "originalSha256": "9099875a16da37aa7468be5365a2f5bb4ef257a6cc360e65b1786aed673938a5",
+     "sha256": "74d3aaf02c771718e2f5c76e30da1df80dbef9f3cc2d690c23947255ddcc8b4b",
+     "bytes": 4583
+    }
+   ],
+   "instances": [
+    {
+     "file": "SmallGearBay__GearSmall.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "StandardCtrlSrf": {
+   "cfg": "GameData/Squad/Parts/Aero/wings/elevon1.cfg",
+   "models": [
+    {
+     "file": "StandardCtrlSrf__elevon1.mu",
+     "from": "elevon1.mu",
+     "origin": "GameData/Squad/Parts/Aero/wings/elevon1.mu",
+     "originalSha256": "7270e9ab75e30c2449e54efd418e3d6fd148371a4e359aa2cf59d1eb6c4c072b",
+     "sha256": "35c8f2d8a87842b7aec45b1f56bfb29ca8bd77041b00a01cca78ea68a1e9ba0e",
+     "bytes": 1912
+    }
+   ],
+   "instances": [
+    {
+     "file": "StandardCtrlSrf__elevon1.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "SurfAntenna": {
+   "cfg": "GameData/Squad/Parts/Utility/DirectAntennas/C16S.cfg",
+   "models": [
+    {
+     "file": "SurfAntenna__SurfAntenna.mu",
+     "from": "SurfAntenna.mu",
+     "origin": "GameData/Squad/Parts/Utility/DirectAntennas/SurfAntenna.mu",
+     "originalSha256": "cfc9baa53194a180c88e373ce514b7a286b6f78e9e93ec65b191ca5b27bb155e",
+     "sha256": "cb50a504807363e1d80233f457e9acc2fff676f291e027bead078d7dee442583",
+     "bytes": 202
+    }
+   ],
+   "instances": [
+    {
+     "file": "SurfAntenna__SurfAntenna.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "advSasModule": {
+   "cfg": "GameData/Squad/Parts/Command/inlineAdvancedStabilizer/inlineAdvancedStabilizer.cfg",
+   "models": [
+    {
+     "file": "advSasModule__model.mu",
+     "from": "model.mu",
+     "origin": "GameData/Squad/Parts/Command/inlineAdvancedStabilizer/model.mu",
+     "originalSha256": "72f83a0e90898c5705cb24ce43f38a1f94795c87b529ba2c968f0511a123ef21",
+     "sha256": "211e26b5eec83ac6a34792bb93dc44a3431c7957c74d05db2a4392effa76f2e9",
+     "bytes": 3617
+    }
+   ],
+   "instances": [
+    {
+     "file": "advSasModule__model.mu",
+     "fromModelNode": false
+    }
+   ]
+  },
+  "airlinerCtrlSrf": {
+   "cfg": "GameData/Squad/Parts/Aero/airlinerWings/ControlSurface.cfg",
+   "models": [
+    {
+     "file": "airlinerCtrlSrf__ControlSurface.mu",
+     "from": "ControlSurface.mu",
+     "origin": "GameData/Squad/Parts/Aero/airlinerWings/ControlSurface.mu",
+     "originalSha256": "3319c4d4fc2a5a646c07ebe05fafd1ab8f3ff4b0afa0854b2c7544f77cfd1b12",
+     "sha256": "5493242b369c22c650f9e0b2f9d4e431126f5a03f7c6296c994842ccc0b4f816",
+     "bytes": 1254
+    }
+   ],
+   "instances": [
+    {
+     "file": "airlinerCtrlSrf__ControlSurface.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "airlinerMainWing": {
+   "cfg": "GameData/Squad/Parts/Aero/airlinerWings/MainWing.cfg",
+   "models": [
+    {
+     "file": "airlinerMainWing__MainWing.mu",
+     "from": "MainWing.mu",
+     "origin": "GameData/Squad/Parts/Aero/airlinerWings/MainWing.mu",
+     "originalSha256": "ee38597e84eb5720950701439ec7fc75ee88244e3f5fcde4097d893c60d9c060",
+     "sha256": "aee72b97849f60ca73a0a9b0c2b79a9088afb9679c747ff8e607c10331f49f92",
+     "bytes": 6445
+    }
+   ],
+   "instances": [
+    {
+     "file": "airlinerMainWing__MainWing.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "airlinerTailFin": {
+   "cfg": "GameData/Squad/Parts/Aero/airlinerWings/TailFin.cfg",
+   "models": [
+    {
+     "file": "airlinerTailFin__TailFin.mu",
+     "from": "TailFin.mu",
+     "origin": "GameData/Squad/Parts/Aero/airlinerWings/TailFin.mu",
+     "originalSha256": "7e22655f7ef705aa69ea49f3817037ccfd04a18db0a2ac341429aab1dccbdbd7",
+     "sha256": "40de4c81b2a3c1eda1c530dae3e57f59006feccd189692388084ac5ef6dae550",
+     "bytes": 5489
+    }
+   ],
+   "instances": [
+    {
+     "file": "airlinerTailFin__TailFin.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "batteryBank": {
+   "cfg": "GameData/Squad/Parts/Electrical/z-1kBattery/z-1kBattery.cfg",
+   "models": [
+    {
+     "file": "batteryBank__model.mu",
+     "from": "model.mu",
+     "origin": "GameData/Squad/Parts/Electrical/z-1kBattery/model.mu",
+     "originalSha256": "2035dca7d3fe5da75c4f1d891732cd5b6085d2743a5170243cf1b6f949be3ec5",
+     "sha256": "f73cc17084a594cc77f8d9b3398517999b863be5c1100c4bef128d33c59a8e74",
+     "bytes": 3615
+    }
+   ],
+   "instances": [
+    {
+     "file": "batteryBank__model.mu",
+     "fromModelNode": false
+    }
+   ]
+  },
+  "delta.small": {
+   "cfg": "GameData/Squad/Parts/Aero/wings/delta_small.cfg",
+   "models": [
+    {
+     "file": "delta.small__delta_small.mu",
+     "from": "delta_small.mu",
+     "origin": "GameData/Squad/Parts/Aero/wings/delta_small.mu",
+     "originalSha256": "8624a7b13f0931d38dd539ccc3d56f18232771b15676a8278b359a8730c7a7ef",
+     "sha256": "87bd116baec193c5d7949088705941c159e183a20abd4d94f2251c7a2aee1e47",
+     "bytes": 600
+    }
+   ],
+   "instances": [
+    {
+     "file": "delta.small__delta_small.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "deltaWing": {
+   "cfg": "GameData/Squad/Parts/Aero/wings/delta.cfg",
+   "models": [
+    {
+     "file": "deltaWing__delta.mu",
+     "from": "delta.mu",
+     "origin": "GameData/Squad/Parts/Aero/wings/delta.mu",
+     "originalSha256": "562781b2e3c3f46a0511968afcaa24fbce6d7415b5f2a57ca7b840eb89b1888d",
+     "sha256": "9eb64d474a946e0520773562f7e92c7c1a82aa1c130eb1204d62ae4ae6639649",
+     "bytes": 1307
+    }
+   ],
+   "instances": [
+    {
+     "file": "deltaWing__delta.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "dockingPortLateral": {
+   "cfg": "GameData/Squad/Parts/Utility/dockingPortInline/dockingPortInline.cfg",
+   "models": [
+    {
+     "file": "dockingPortLateral__dockingPortInline.mu",
+     "from": "dockingPortInline.mu",
+     "origin": "GameData/Squad/Parts/Utility/dockingPortInline/dockingPortInline.mu",
+     "originalSha256": "4d4bd1ca1e995fd2f2108cc1ae95a8bfc6de53a9d7afb4b3eb1673484e6a5cdf",
+     "sha256": "f47bd5c0b03a62b0224be92652c6b3db8b1944d9127eb94033be44121be685c8",
+     "bytes": 22759
+    }
+   ],
+   "instances": [
+    {
+     "file": "dockingPortLateral__dockingPortInline.mu",
+     "fromModelNode": false
+    }
+   ]
+  },
+  "elevon2": {
+   "cfg": "GameData/Squad/Parts/Aero/wings/elevon2.cfg",
+   "models": [
+    {
+     "file": "elevon2__elevon2.mu",
+     "from": "elevon2.mu",
+     "origin": "GameData/Squad/Parts/Aero/wings/elevon2.mu",
+     "originalSha256": "60a5f842d20a6e63fd4d67a500b5fee125af320291977d90400d9fafe9c6b02b",
+     "sha256": "b82c1f885cd1c4e31ad892d5725337377d11a170069e675bf32ade03c78eb3e0",
+     "bytes": 2056
+    }
+   ],
+   "instances": [
+    {
+     "file": "elevon2__elevon2.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "elevon3": {
+   "cfg": "GameData/Squad/Parts/Aero/wings/elevon3.cfg",
+   "models": [
+    {
+     "file": "elevon3__elevon3.mu",
+     "from": "elevon3.mu",
+     "origin": "GameData/Squad/Parts/Aero/wings/elevon3.mu",
+     "originalSha256": "ddbfa16fd71c1f9db5ab97e08cb64207391f02363fe5b0ca6cfbab420fd05e14",
+     "sha256": "240624c49fb15019c7458cae9a1bae77d638e29af6ff894098e5ae9a4e7cdab4",
+     "bytes": 2152
+    }
+   ],
+   "instances": [
+    {
+     "file": "elevon3__elevon3.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "elevon5": {
+   "cfg": "GameData/Squad/Parts/Aero/wings/elevon5.cfg",
+   "models": [
+    {
+     "file": "elevon5__elevon5.mu",
+     "from": "elevon5.mu",
+     "origin": "GameData/Squad/Parts/Aero/wings/elevon5.mu",
+     "originalSha256": "5e8e68c6bb2d5e0e7ba7b0fe6807089582298873f9485dd48e5f892542d3bc1b",
+     "sha256": "5cab8b8692310c11e314e3b456eee64818ae7a7b083c6c0494891f640c80dc61",
+     "bytes": 1360
+    }
+   ],
+   "instances": [
+    {
+     "file": "elevon5__elevon5.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "fuelTank": {
+   "cfg": "GameData/Squad/Parts/FuelTank/Size1_Tanks/fuelTankT400.cfg",
+   "models": [
+    {
+     "file": "fuelTank__Size1Tank_03.mu",
+     "from": "Size1Tank_03.mu",
+     "origin": "GameData/Squad/Parts/FuelTank/Size1_Tanks/Size1Tank_03.mu",
+     "originalSha256": "04e3743d6da38de17d42801a88f33e3ad33aac1e6abd46b6a878c4794e4d09cf",
+     "sha256": "937f67b9c5db5bca363705bb9b29a5f83a1b03cac16aa71fd888d26f435223e1",
+     "bytes": 3679
+    }
+   ],
+   "instances": [
+    {
+     "file": "fuelTank__Size1Tank_03.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "fuelTank.long": {
+   "cfg": "GameData/Squad/Parts/FuelTank/Size1_Tanks/fuelTankT800.cfg",
+   "models": [
+    {
+     "file": "fuelTank.long__Size1Tank_04.mu",
+     "from": "Size1Tank_04.mu",
+     "origin": "GameData/Squad/Parts/FuelTank/Size1_Tanks/Size1Tank_04.mu",
+     "originalSha256": "ddb1e77fbc1c65cdf5149881f4899dc7925f4902e3eb272c075556fe982e5190",
+     "sha256": "fd03b45ba697e6264d083563e33b277638c584d73d4dc3ac0fbfe526af181af6",
+     "bytes": 3679
+    }
+   ],
+   "instances": [
+    {
+     "file": "fuelTank.long__Size1Tank_04.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "linearRcs": {
+   "cfg": "GameData/Squad/Parts/Utility/linearVernorRCS/linearRCS.cfg",
+   "models": [
+    {
+     "file": "linearRcs__linearRCS.mu",
+     "from": "linearRCS.mu",
+     "origin": "GameData/Squad/Parts/Utility/linearVernorRCS/Assets/linearRCS.mu",
+     "originalSha256": "eb82e52805ce1cc39e958181b73895002cff18123bd3146fc8a38e5264bd5183",
+     "sha256": "7a707ec98a465bf71a49690a085a37dfabefb17a254d447bbb9fb87878407060",
+     "bytes": 1124
+    }
+   ],
+   "instances": [
+    {
+     "file": "linearRcs__linearRCS.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "mk2Fuselage": {
+   "cfg": "GameData/Squad/Parts/FuelTank/mk2FuselageLong/L_long.cfg",
+   "models": [
+    {
+     "file": "mk2Fuselage__FuselageLongLiquid.mu",
+     "from": "FuselageLongLiquid.mu",
+     "origin": "GameData/Squad/Parts/FuelTank/mk2FuselageLong/FuselageLongLiquid.mu",
+     "originalSha256": "0d43f788a8ada9e95f95d3f376b740667c066c0754656b8ff28e788c231b02e7",
+     "sha256": "4c2960d6323fd083e74fea8aa00c17d899dd168481e4a65e3214dd831684ff4f",
+     "bytes": 3933
+    }
+   ],
+   "instances": [
+    {
+     "file": "mk2Fuselage__FuselageLongLiquid.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "mk2SpacePlaneAdapter": {
+   "cfg": "GameData/Squad/Parts/FuelTank/mk2Adapters/standard.cfg",
+   "models": [
+    {
+     "file": "mk2SpacePlaneAdapter__standard.mu",
+     "from": "standard.mu",
+     "origin": "GameData/Squad/Parts/FuelTank/mk2Adapters/standard.mu",
+     "originalSha256": "e6a7d8756b587861cd061df111e749574650e33e3e9c6af08e86c5292fb9f9b1",
+     "sha256": "7949b1e8b25381926883e478537be9a26779db487406c56a485ec75a27b27263",
+     "bytes": 7256
+    }
+   ],
+   "instances": [
+    {
+     "file": "mk2SpacePlaneAdapter__standard.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "mk3CargoBayM": {
+   "cfg": "GameData/Squad/Parts/Utility/mk3CargoBay/medium.cfg",
+   "models": [
+    {
+     "file": "mk3CargoBayM__medium.mu",
+     "from": "medium.mu",
+     "origin": "GameData/Squad/Parts/Utility/mk3CargoBay/medium.mu",
+     "originalSha256": "585c427c75a4de9132a5a093fcffcd845f9ca8498c510e359778a26c1ac2b072",
+     "sha256": "9117507ef9e2acf3b16c779a15799fca78df21758c48320a13d13045ad693780",
+     "bytes": 6321
+    }
+   ],
+   "instances": [
+    {
+     "file": "mk3CargoBayM__medium.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "mk3CargoBayS": {
+   "cfg": "GameData/Squad/Parts/Utility/mk3CargoBay/short.cfg",
+   "models": [
+    {
+     "file": "mk3CargoBayS__short.mu",
+     "from": "short.mu",
+     "origin": "GameData/Squad/Parts/Utility/mk3CargoBay/short.mu",
+     "originalSha256": "0464e14eb1e8912e1c86eaafa5935f8c45da2e6df19449d8441bb62d49b8b80c",
+     "sha256": "22a51e5ed094a1ba54b598d1bc0ce2b6c2839913575468e6c74bf220c4257d19",
+     "bytes": 6319
+    }
+   ],
+   "instances": [
+    {
+     "file": "mk3CargoBayS__short.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "mk3CargoRamp": {
+   "cfg": "GameData/Squad/Parts/Utility/mk3CargoBay/ramp.cfg",
+   "models": [
+    {
+     "file": "mk3CargoRamp__ramp.mu",
+     "from": "ramp.mu",
+     "origin": "GameData/Squad/Parts/Utility/mk3CargoBay/ramp.mu",
+     "originalSha256": "d62ab4ef30d227627467fbe904b9236dd41013c64b3b71bbacc3e69840b3afd3",
+     "sha256": "dbe325c29fd6ae0e8b62799891bb05be331c0544460f7c8e0f968ed1eaaa8b5c",
+     "bytes": 37206
+    }
+   ],
+   "instances": [
+    {
+     "file": "mk3CargoRamp__ramp.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "mk3Cockpit.Shuttle": {
+   "cfg": "GameData/Squad/Parts/Command/mk3CockpitShuttle/mk3CockpitShuttle.cfg",
+   "models": [
+    {
+     "file": "mk3Cockpit.Shuttle__model.mu",
+     "from": "model.mu",
+     "origin": "GameData/Squad/Parts/Command/mk3CockpitShuttle/model.mu",
+     "originalSha256": "2ec716598ac784568b66fa7a44c24d63ac450ab80cbcc810e4a8ce1254738f22",
+     "sha256": "2ad627c84ff28682f0b76c7dd83e2cb6e41c96da979f2839a36405d8156af666",
+     "bytes": 5680
+    }
+   ],
+   "instances": [
+    {
+     "file": "mk3Cockpit.Shuttle__model.mu",
+     "fromModelNode": false
+    }
+   ]
+  },
+  "mk3CrewCabin": {
+   "cfg": "GameData/Squad/Parts/FuelTank/mk3Fuselage/CREW.cfg",
+   "models": [
+    {
+     "file": "mk3CrewCabin__CREW.mu",
+     "from": "CREW.mu",
+     "origin": "GameData/Squad/Parts/FuelTank/mk3Fuselage/CREW.mu",
+     "originalSha256": "7e9a3542cf88771c38da2de3d2932cf36420f572c27a1ee4ac0a2bc070391b57",
+     "sha256": "2285c895f49f3d10ef64435afa9af5c04cf9ad2b023bda3557f489f574ca19d3",
+     "bytes": 4392
+    }
+   ],
+   "instances": [
+    {
+     "file": "mk3CrewCabin__CREW.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "noseCone": {
+   "cfg": "GameData/Squad/Parts/Aero/aerodynamicNoseCone/aerodynamicNoseCone.cfg",
+   "models": [
+    {
+     "file": "noseCone__aerodynamicNoseCone.mu",
+     "from": "aerodynamicNoseCone.mu",
+     "origin": "GameData/Squad/Parts/Aero/aerodynamicNoseCone/aerodynamicNoseCone.mu",
+     "originalSha256": "a42cbcef8bfcf81e52771f41bce63b72237257bb65a3395762d14d1b1df03b2d",
+     "sha256": "f4488674798951f6d29af5a68a1147ac857fe12e8d47b064b868f4f72feb5251",
+     "bytes": 3490
+    }
+   ],
+   "instances": [
+    {
+     "file": "noseCone__aerodynamicNoseCone.mu",
+     "fromModelNode": false
+    }
+   ]
+  },
+  "radialEngineBody": {
+   "cfg": "GameData/Squad/Parts/Structural/mk1Parts/engineBodyRadial.cfg",
+   "models": [
+    {
+     "file": "radialEngineBody__Nacelle2.mu",
+     "from": "Nacelle2.mu",
+     "origin": "GameData/Squad/Parts/Structural/mk1Parts/Nacelle2.mu",
+     "originalSha256": "b9a720f5abc67b9a8247e2ce8f8092e21e77112af4786f4e896338ee3327ad73",
+     "sha256": "1440977701dad0b1f0c32c4d6f470da3101c09bbfe844fe51b409176a9c9288a",
+     "bytes": 3550
+    }
+   ],
+   "instances": [
+    {
+     "file": "radialEngineBody__Nacelle2.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "ramAirIntake": {
+   "cfg": "GameData/Squad/Parts/Aero/ramAirIntake/ramAirIntake.cfg",
+   "models": [
+    {
+     "file": "ramAirIntake__RampIntake.mu",
+     "from": "RampIntake.mu",
+     "origin": "GameData/Squad/Parts/Aero/ramAirIntake/RampIntake.mu",
+     "originalSha256": "ed8cc19d75fb8a5d447a7e85a2545d07d3aa1dddbe83cfaf32a72d32aeb64fe3",
+     "sha256": "6c114cc13d77e39c9a3ee209dcf33ee2a609fe1ba75401d7cdd850f91466b33c",
+     "bytes": 4014
+    }
+   ],
+   "instances": [
+    {
+     "file": "ramAirIntake__RampIntake.mu",
+     "fromModelNode": false
+    }
+   ]
+  },
+  "shockConeIntake": {
+   "cfg": "GameData/Squad/Parts/Aero/circularIntake/intakeShockCone.cfg",
+   "models": [
+    {
+     "file": "shockConeIntake__ConeIntake.mu",
+     "from": "ConeIntake.mu",
+     "origin": "GameData/Squad/Parts/Aero/circularIntake/ConeIntake.mu",
+     "originalSha256": "a9ea251fe3ee5661da3b707324508ada74262d49afe901242d99abb72656714a",
+     "sha256": "3af2f25bc526852cf1ee557004dbee706849dd5335bddc371f4ac11bd0a3106b",
+     "bytes": 5907
+    }
+   ],
+   "instances": [
+    {
+     "file": "shockConeIntake__ConeIntake.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "smallCtrlSrf": {
+   "cfg": "GameData/Squad/Parts/Aero/wings/elevon4.cfg",
+   "models": [
+    {
+     "file": "smallCtrlSrf__elevon4.mu",
+     "from": "elevon4.mu",
+     "origin": "GameData/Squad/Parts/Aero/wings/elevon4.mu",
+     "originalSha256": "dcb417697d7963d66c67707fedc448815fac2d28d38cd67cccecb01d1e9cd1d8",
+     "sha256": "10ad879a35a4fbfe6cf2127ac311b52592b96c64f7203c2143759d0baf9a3cbc",
+     "bytes": 1960
+    }
+   ],
+   "instances": [
+    {
+     "file": "smallCtrlSrf__elevon4.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "structuralWing": {
+   "cfg": "GameData/Squad/Parts/Aero/wings/structural1.cfg",
+   "models": [
+    {
+     "file": "structuralWing__structural1.mu",
+     "from": "structural1.mu",
+     "origin": "GameData/Squad/Parts/Aero/wings/structural1.mu",
+     "originalSha256": "b0ac296723659c4f8a0c192efde0e76d8e891de78f02ae7028afd586e3a724c8",
+     "sha256": "fb50b703e2c9d6d1715f24245c7228b9274b0a270950155669c7290eb34588ae",
+     "bytes": 1247
+    }
+   ],
+   "instances": [
+    {
+     "file": "structuralWing__structural1.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "telescopicLadder": {
+   "cfg": "GameData/Squad/Parts/Utility/ladderTelescopic/ladderTelescopic.cfg",
+   "models": [
+    {
+     "file": "telescopicLadder__model.mu",
+     "from": "model.mu",
+     "origin": "GameData/Squad/Parts/Utility/ladderTelescopic/model.mu",
+     "originalSha256": "d551b93368b56c5b767d7d29d1fb763999b78a129d73f1de94e695478c68db73",
+     "sha256": "4663c43d08aa6e4262c511da70b8609b9dec46b6f0f3b6010191d4fa2f118ab3",
+     "bytes": 23321
+    }
+   ],
+   "instances": [
+    {
+     "file": "telescopicLadder__model.mu",
+     "fromModelNode": false
+    }
+   ]
+  },
+  "telescopicLadderBay": {
+   "cfg": "GameData/Squad/Parts/Utility/ladderTelescopicBay/ladderTelescopicBay.cfg",
+   "models": [
+    {
+     "file": "telescopicLadderBay__model.mu",
+     "from": "model.mu",
+     "origin": "GameData/Squad/Parts/Utility/ladderTelescopicBay/model.mu",
+     "originalSha256": "f1d94e0ee11e3c50c2db18277f7544a27387ad0d2d5bd32f56dffaeea58d6862",
+     "sha256": "e7fe454923f71aeb2b60bbddb7e4ecb2a286a29a59cbaca796f8640d9e00dc3e",
+     "bytes": 35391
+    }
+   ],
+   "instances": [
+    {
+     "file": "telescopicLadderBay__model.mu",
+     "fromModelNode": false
+    }
+   ]
+  },
+  "toroidalAerospike": {
+   "cfg": "GameData/Squad/Parts/Engine/liquidEngineAerospike/liquidEngineAerospike.cfg",
+   "models": [
+    {
+     "file": "toroidalAerospike__AeroSpike.mu",
+     "from": "AeroSpike.mu",
+     "origin": "GameData/Squad/Parts/Engine/liquidEngineAerospike/AeroSpike.mu",
+     "originalSha256": "54dc358e5c13ef9a79d828234869e2a0502be734f566906314ffd34a10beca8a",
+     "sha256": "81013fd73072258392d3fb3339da3a5d24f61844610e91c9297c576f6b4277c9",
+     "bytes": 3312
+    }
+   ],
+   "instances": [
+    {
+     "file": "toroidalAerospike__AeroSpike.mu",
+     "fromModelNode": false
+    }
+   ]
+  },
+  "turboFanEngine": {
+   "cfg": "GameData/Squad/Parts/Engine/jetEngines/jetEngineTurbo.cfg",
+   "models": [
+    {
+     "file": "turboFanEngine__turboRamJet.mu",
+     "from": "turboRamJet.mu",
+     "origin": "GameData/Squad/Parts/Engine/jetEngines/turboRamJet.mu",
+     "originalSha256": "d8610092ba54313a325310a1e26033a374eb3bcaf959c20b72c715f9b978b379",
+     "sha256": "02d9e4daef62836cb1c3baf3e355fa0e0ed056cd3088a7d350a390e259be5c43",
+     "bytes": 7990
+    }
+   ],
+   "instances": [
+    {
+     "file": "turboFanEngine__turboRamJet.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "turboFanSize2": {
+   "cfg": "GameData/Squad/Parts/Engine/jetEngines/jetEngineBig.cfg",
+   "models": [
+    {
+     "file": "turboFanSize2__turboFanSize2.mu",
+     "from": "turboFanSize2.mu",
+     "origin": "GameData/Squad/Parts/Engine/jetEngines/turboFanSize2.mu",
+     "originalSha256": "b4e668440002cabf10f65bd0a73e6acc3d9187af310972d0bf0a12939a6d8e10",
+     "sha256": "ccd60b4b879acaf4e2d32517399f55b389e4937c099e968aec4790a12d264316",
+     "bytes": 28200
+    }
+   ],
+   "instances": [
+    {
+     "file": "turboFanSize2__turboFanSize2.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "turboJet": {
+   "cfg": "GameData/Squad/Parts/Engine/jetEngines/jetEngineAfterburning.cfg",
+   "models": [
+    {
+     "file": "turboJet__turboJet.mu",
+     "from": "turboJet.mu",
+     "origin": "GameData/Squad/Parts/Engine/jetEngines/turboJet.mu",
+     "originalSha256": "de80535089ae21ee91517c7af230b6e621c98a04f82274dbb1b0ec8379b8f6e7",
+     "sha256": "d96c73d71d12d3e0c55f070f98bf8fd4d56fdb37c684df86e2f04ccabd1f36f7",
+     "bytes": 15433
+    }
+   ],
+   "instances": [
+    {
+     "file": "turboJet__turboJet.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "wingConnector2": {
+   "cfg": "GameData/Squad/Parts/Aero/wings/connector2.cfg",
+   "models": [
+    {
+     "file": "wingConnector2__connector2.mu",
+     "from": "connector2.mu",
+     "origin": "GameData/Squad/Parts/Aero/wings/connector2.mu",
+     "originalSha256": "1d661a289791b43161edae58e2ce59bdcab48f3bf283d0afe4d33291fbe92201",
+     "sha256": "0999a9917fc3ab23012cef0cd6278185e56302ef65c3ca9d9bf7d099cce8b776",
+     "bytes": 267
+    }
+   ],
+   "instances": [
+    {
+     "file": "wingConnector2__connector2.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "wingShuttleDelta": {
+   "cfg": "GameData/Squad/Parts/Aero/shuttleWings/delta.cfg",
+   "models": [
+    {
+     "file": "wingShuttleDelta__ShuttleDeltaWing.mu",
+     "from": "ShuttleDeltaWing.mu",
+     "origin": "GameData/Squad/Parts/Aero/shuttleWings/ShuttleDeltaWing.mu",
+     "originalSha256": "d264f891a1b2b0bb065f11d11452443f1328105f7bf226ce5375068f3219977f",
+     "sha256": "61153a62cf37fbb309b57dfd65b71389e988a1099968644015bb54ffd5fccc4e",
+     "bytes": 2126
+    }
+   ],
+   "instances": [
+    {
+     "file": "wingShuttleDelta__ShuttleDeltaWing.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "wingShuttleRudder": {
+   "cfg": "GameData/Squad/Parts/Aero/shuttleWings/rudder.cfg",
+   "models": [
+    {
+     "file": "wingShuttleRudder__ShuttleRudder.mu",
+     "from": "ShuttleRudder.mu",
+     "origin": "GameData/Squad/Parts/Aero/shuttleWings/ShuttleRudder.mu",
+     "originalSha256": "0eddfa10d35c28cede72cf7c772a3162b538ba552671a4116f8fa826931e6d24",
+     "sha256": "af46dc9682638eb90fce57b4d7f771a5150baa8cd376870ba1449a51e769ef08",
+     "bytes": 3207
+    }
+   ],
+   "instances": [
+    {
+     "file": "wingShuttleRudder__ShuttleRudder.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  },
+  "wingStrake": {
+   "cfg": "GameData/Squad/Parts/Aero/wings/strake.cfg",
+   "models": [
+    {
+     "file": "wingStrake__strake.mu",
+     "from": "strake.mu",
+     "origin": "GameData/Squad/Parts/Aero/wings/strake.mu",
+     "originalSha256": "b47ade5ae540b065db27539d9718500e6174ab8008421dda262ff10aa0354ab6",
+     "sha256": "8e63c90d0e837125cac38621462fc26eaffbbab3356b97d993dc927a1b449137",
+     "bytes": 1232
+    }
+   ],
+   "instances": [
+    {
+     "file": "wingStrake__strake.mu",
+     "fromModelNode": true,
+     "parent": ""
+    }
+   ]
+  }
+ }
+}
