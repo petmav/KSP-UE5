@@ -76,6 +76,7 @@ add_executable(kspcore_tests
     test_fineprint.cpp
     test_fineprint2.cpp
     test_fineprint3.cpp
+    test_space_objects.cpp
     test_space_center.cpp
     test_missions.cpp
     test_missions_runtime.cpp

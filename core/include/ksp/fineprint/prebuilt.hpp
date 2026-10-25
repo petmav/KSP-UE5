@@ -15,6 +15,9 @@
 
 #include "ksp/config/config_node.hpp"
 #include "ksp/orbit/orbit.hpp"
+#include "ksp/save/save_enums.hpp"
+#include "ksp/unity/vector.hpp"
+#include "ksp/unity/quaternion.hpp"
 #include "ksp/util/ksp_util.hpp"
 
 namespace ksp {
@@ -28,7 +31,19 @@ namespace ksp::Contracts::Lite {
 class CraftProfileInfo {
 public:
     std::string shipName;                                                  // ShipTemplate.shipName = root.GetValue("ship")
+    std::string description;                                               // :15
     std::string version;
+    std::string saveMD5;                                                   // :21
+    int64_t lastWriteTime = 0;                                             // :23
+    int partCount = 0;                                                     // :25 (ShipTemplate.LoadShip: the node count, 0 when a PART node has no `part`)
+    int stageCount = 0;                                                    // :27
+    float totalCost = 0.0f;                                                // :29
+    float totalMass = 0.0f;                                                // :31
+    Vector3f shipSize{};                                                   // :33
+    EditorFacility shipFacility = EditorFacility::None;                    // :35 (the C# field default is the enum's 0 = None)
+    uint64_t steamPublishedFileId = 0;                                     // :37
+    bool shipPartsExperimental = false;                                    // :43
+    bool duplicatedParts = false;                                          // :49
     VersionCompareResult compatibility = VersionCompareResult::INVALID;    // :17
     std::vector<std::string> partNames;
     std::vector<std::string> partModules;
@@ -39,6 +54,11 @@ public:
     CraftProfileInfo& LoadDetailsFromCraftFile(const ConfigNode& root, const std::string& filePath, bool brokenParts, bool bypassTechCheck);
     bool CraftHasErrors() const;                                           // :393
     std::string GetErrorMessage() const;                                   // :375
+    bool shipPartsUnlocked() const { return UnavailableShipParts.empty() && !duplicatedParts; }  // :57
+    bool shipPartModulesAvailable() const { return UnavailableShipPartModules.empty(); }          // :69
+    void Load(const ConfigNode& node);                                     // :172
+    void Save(ConfigNode& node) const;                                     // :223
+    // (LoadFromMetaFile / SaveToMetaFile / LoadMetaPath / the craft browser's cached load, CraftProfileInfo.cs:236-373, are file-cache UI code: not ported)
 };
 
 // PreBuiltCraftPosition.cs:3
@@ -116,6 +136,9 @@ struct PreBuiltVesselSituation {
     bool hasOrbit = false;                                  // orbitSnapShot = new MissionOrbit(orbit)
     Orbit orbit;                                            //   (the generated orbit; for a landed craft the body itself)
     StartSituation situation = StartSituation::LANDED;      // VesselLocation.situation
+    bool splashed = false;                                  // VesselGroundLocation.splashed (the C# default of a new VesselGroundLocation)
+    bool brakesOn = true;                                   // VesselLocation.brakesOn (VesselLocation() sets true)
+    Quaternionf rotation = Quaternionf::identity();         // VesselGroundLocation.rotation.quaternion (new MissionQuaternion: Euler(0, 0, 0))
     bool playerCreated = false;                             // :playerCreated
     std::string craftFile;                                  // :craftFile
     bool focusOnSpawn = false;                              // :focusonSpawn

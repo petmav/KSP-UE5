@@ -221,7 +221,7 @@ Enumerator SentinelScenario::ProcessSentinelScan(Vessel* v) {
     while (Planetarium::GetUniversalTime() < processTime) co_yield YieldInstruction::Null();
     const int num = static_cast<int>(deployedSentinels.size()) * SentinelUtilities::perSentinelObjectLimit;
     const int spaceObjects = SentinelEnvironment::countSpaceObjects ? SentinelEnvironment::countSpaceObjects() : 0;
-    const int untracked = SentinelEnvironment::discoverableObjects.has_value() ? SentinelEnvironment::discoverableObjects->untrackedObjectIDsCount : 0;
+    const int untracked = SentinelEnvironment::GetDiscoverableObjects().has_value() ? SentinelEnvironment::GetDiscoverableObjects()->untrackedObjectIDsCount : 0;
     if (spaceObjects - untracked >= num) co_yield YieldInstruction::Null();
     if (SentinelEnvironment::shouldSpawnComet && SentinelEnvironment::shouldSpawnComet()) {
         SpawnComet(v);
@@ -278,7 +278,7 @@ void SentinelScenario::SpawnComet(Vessel* sentinel, ICometOrbitType& cometType) 
     UnityRandom& rnd = UnityRandom::Global();
     const int seed = rnd.Range(0, 2147483647);
     rnd.InitState(seed);
-    const SentinelEnvironment::DiscoverableObjects dobj = SentinelEnvironment::discoverableObjects.value_or(SentinelEnvironment::DiscoverableObjects{});
+    const SentinelEnvironment::DiscoverableObjects dobj = SentinelEnvironment::GetDiscoverableObjects().value_or(SentinelEnvironment::DiscoverableObjects{});
     const double lifeTime = static_cast<double>(rnd.Range(dobj.minUntrackedLifetime, dobj.maxUntrackedLifetime)) * 24.0 * 60.0 * 60.0;
     const double lifeTimeMax = static_cast<double>(dobj.maxUntrackedLifetime) * 24.0 * 60.0 * 60.0;
     const UntrackedObjectClass randomObjClass = cometType.GetRandomObjClass();
