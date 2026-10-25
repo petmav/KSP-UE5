@@ -5,12 +5,17 @@
 #include <filesystem>
 #include <stdexcept>
 
+#include "ksp/core/exceptions.hpp"
 #include "ksp/core/log.hpp"
+#include "ksp/dotnet/enum.hpp"
 #include "ksp/localization/localizer.hpp"
 #include "ksp/parts/available_part.hpp"
 #include "ksp/parts/part_module_data.hpp"
 #include "ksp/save/save_environment.hpp"
+#include "../save/save_util.hpp"
 #include "ksp/save/ship_construct.hpp"
+#include "ksp/ship/ship_construction.hpp"
+#include "ksp/ship/ship_template.hpp"
 #include "ksp/science/science.hpp"
 
 namespace ksp::Contracts::Lite {
@@ -40,11 +45,25 @@ std::vector<std::string> SplitComma(const std::string& s) {
 }  // namespace
 
 // CraftProfileInfo.cs:76
-CraftProfileInfo& CraftProfileInfo::LoadDetailsFromCraftFile(const ConfigNode& root, const std::string& /*filePath*/, bool brokenParts, bool bypassTechCheck) {
+CraftProfileInfo& CraftProfileInfo::LoadDetailsFromCraftFile(const ConfigNode& root, const std::string& filePath, bool brokenParts, bool bypassTechCheck) {
     if (root.TryGetValue("version", version))
         compatibility = KSPUtil::CheckVersion(version, ShipConstruct::lastCompatibleMajor, ShipConstruct::lastCompatibleMinor, ShipConstruct::lastCompatibleRev);
-    // ShipTemplate.LoadShip(root): shipName = root.GetValue("ship") (null when absent); the counts, mass, cost and size are not ported
-    shipName = root.GetValue("ship").value_or("");
+    if (root.HasValue("description")) description = root.GetValue("description").value_or("");
+    save_detail::TryGetEnum(root, "type", shipFacility, EditorFacility::VAB);
+    root.TryGetValue("steamPublishedFileId", steamPublishedFileId);
+    if (steamPublishedFileId == 0)
+        steamPublishedFileId = ShipConstruction::env.steamIdFromSteamFolder ? ShipConstruction::env.steamIdFromSteamFolder(filePath) : 0;
+    // ShipTemplate.LoadShip(root) (the C# loads the node itself: the template keeps the reference)
+    ShipTemplate shipTemplate;
+    shipTemplate.LoadShip(root.CreateCopy());
+    shipName = shipTemplate.shipName;
+    partCount = shipTemplate.partCount;
+    stageCount = shipTemplate.stageCount;
+    totalCost = shipTemplate.totalCost;
+    totalMass = shipTemplate.totalMass;
+    shipSize = shipTemplate.GetShipSize();
+    shipPartsExperimental = shipTemplate.shipPartsExperimental;
+    duplicatedParts = shipTemplate.duplicatedParts;
     partNames.clear();
     partModules.clear();
     std::vector<ConfigNode*> nodes = root.GetNodes("PART");
@@ -81,6 +100,69 @@ CraftProfileInfo& CraftProfileInfo::LoadDetailsFromCraftFile(const ConfigNode& r
         }
     }
     return *this;
+}
+
+// CraftProfileInfo.cs:172 (the part and module names are checked against the part database and the module classes like the validation half)
+void CraftProfileInfo::Load(const ConfigNode& node) {
+    node.TryGetValue("shipName", shipName);
+    {
+        // description = node.GetValue("description").Replace(U+00A8, LF): a missing value is a NullReferenceException
+        const std::optional<std::string> d = node.GetValue("description");
+        if (!d.has_value()) throw NullReferenceException("description");
+        std::string t = *d;
+        size_t pos;
+        while ((pos = t.find("\xC2\xA8")) != std::string::npos) t.replace(pos, 2, "\n");  // U+00A8 in UTF-8
+        description = t;
+    }
+    node.TryGetValue("version", version);
+    compatibility = KSPUtil::CheckVersion(version, ShipConstruct::lastCompatibleMajor, ShipConstruct::lastCompatibleMinor, ShipConstruct::lastCompatibleRev);
+    node.TryGetValue("partCount", partCount);
+    node.TryGetValue("stageCount", stageCount);
+    node.TryGetValue("totalCost", totalCost);
+    node.TryGetValue("totalMass", totalMass);
+    node.TryGetValue("shipSize", shipSize);
+    node.TryGetValue("steamPublishedFileId", steamPublishedFileId);
+    save_detail::TryGetEnum(node, "type", shipFacility, EditorFacility::VAB);
+    node.TryGetValue("duplicatedParts", duplicatedParts);
+    if (node.HasValue("partNames")) partNames = node.GetValuesList("partNames");
+    if (shipPartsUnlocked()) {
+        for (size_t num = 0; shipPartsUnlocked() && num < partNames.size(); ++num) {
+            const AvailablePart* p = PartInfoByName(partNames[num]);
+            if (p == nullptr || !TechAvailable(p)) AddUnique(UnavailableShipParts, partNames[num]);  // excludedParts is empty
+        }
+    }
+    if (node.HasValue("partModules")) partModules = node.GetValuesList("partModules");
+    if (shipPartsUnlocked()) {
+        for (size_t num2 = 0; shipPartsUnlocked() && num2 < partModules.size(); ++num2)
+            if (GetPartModuleClass(partModules[num2]) == nullptr) AddUnique(UnavailableShipPartModules, partModules[num2]);
+    }
+    node.TryGetValue("saveMD5", saveMD5);
+    node.TryGetValue("lastWriteTime", lastWriteTime);
+}
+
+// CraftProfileInfo.cs:223
+void CraftProfileInfo::Save(ConfigNode& node) const {
+    node.AddValue("shipName", shipName);
+    std::string d = description;
+    size_t pos = 0;
+    while ((pos = d.find('\n', pos)) != std::string::npos) {
+        d.replace(pos, 1, "\xC2\xA8");
+        pos += 2;
+    }
+    node.AddValue("description", d);
+    node.AddValue("version", version);
+    node.AddValue("partCount", static_cast<int32_t>(partCount));
+    node.AddValue("stageCount", static_cast<int32_t>(stageCount));
+    node.AddValue("totalCost", totalCost);
+    node.AddValue("totalMass", totalMass);
+    node.AddValue("shipSize", shipSize);
+    node.AddValue("type", dotnet::EnumToString(shipFacility));
+    node.AddValue("duplicatedParts", duplicatedParts);
+    node.AddValue("steamPublishedFileId", steamPublishedFileId);
+    for (size_t i = 0; i < partNames.size(); ++i) node.AddValue("partNames", partNames[i]);
+    for (size_t j = 0; j < partModules.size(); ++j) node.AddValue("partModules", partModules[j]);
+    node.AddValue("saveMD5", saveMD5);
+    node.AddValue("lastWriteTime", lastWriteTime);
 }
 
 // CraftProfileInfo.cs:375

@@ -26,6 +26,7 @@ namespace L = ksp::Contracts::Lite;
 
 void SentinelEnvironment::Reset() {
     discoverableObjects.reset();
+    discoverableObjectsProvider = nullptr;
     countSpaceObjects = nullptr;
     generateAsteroidName = nullptr;
     spawnAsteroid = nullptr;
@@ -251,9 +252,9 @@ UntrackedObjectClass SentinelUtilities::WeightedAsteroidClass(KSPRandom* generat
     }
     int num = 0;
     int num2 = 9 - 1;  // Enum.GetNames(typeof(UntrackedObjectClass)).Length - 1
-    if (SentinelEnvironment::discoverableObjects.has_value()) {
-        num = static_cast<int>(SentinelEnvironment::discoverableObjects->minAsteroidClass);
-        num2 = static_cast<int>(SentinelEnvironment::discoverableObjects->maxAsteroidClass);
+    if (SentinelEnvironment::GetDiscoverableObjects().has_value()) {
+        num = static_cast<int>(SentinelEnvironment::GetDiscoverableObjects()->minAsteroidClass);
+        num2 = static_cast<int>(SentinelEnvironment::GetDiscoverableObjects()->maxAsteroidClass);
     }
     int num3 = num2 - num;
     while (num3 > 0 && kSPRandom->Next(100) > 50) num3--;
