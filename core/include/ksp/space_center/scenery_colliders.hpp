@@ -156,6 +156,7 @@ struct SceneryLaunchSite {
 
 struct SceneryFacility {
     std::string name, pqsName, facilityTransformName, facilityName;
+    int editorFacility = 0;  // PSystemSetup.SpaceCenterFacility.editorFacility (EditorFacility: 0 None, 1 VAB, 2 SPH)
     std::vector<std::pair<std::string, std::string>> spawnPoints;
 };
 
@@ -200,6 +201,20 @@ std::vector<bool> SceneryPresence(const SceneryCity& city, const SceneryLevels& 
 std::vector<size_t> SceneryActiveSubtree(const SceneryCity& city, size_t root, const std::vector<bool>& present);
 // Objects active-in-hierarchy from the start of the scene and not switched by any callback of `switched` roots
 std::vector<size_t> SceneryAlwaysActive(const SceneryCity& city, const std::vector<bool>& present, const std::vector<size_t>& switchedRoots);
+
+// The city-frame pose of every object (index = object index; object 0, the root, is the city frame): Unity's Transform hierarchy composed
+// in float as BuildCityObjects places the colliders (position = parent.position + parent.rotation * (parent.lossyScale * localPosition),
+// rotation = parent.rotation * localRotation, lossyScale componentwise; no shear).
+struct SceneryObjectPose {
+    Vector3f position{};
+    Quaternionf rotation = Quaternionf::identity();
+    Vector3f scale{1.0f, 1.0f, 1.0f};
+};
+std::vector<SceneryObjectPose> SceneryObjectPoses(const SceneryCity& city);
+// WP-20g: Transform.Find by hierarchy path among the objects of the scene: the index of the present object whose path is `path`
+// ("KSC/SpaceCenter/LaunchPad/Facility/LaunchPad_spawn"; the facility levels not shown are not present), -1 = none. The PSystemSetup
+// spawn-point lookup (PSystemSetup.cs:40 facilityTransform.Find(spawnTransformURL)) of a flight host goes through it.
+int SceneryFindObject(const SceneryCity& city, const std::string& path, const std::vector<bool>& present);
 
 // The CityObjects of a city (index = object index; object 0, the root, has the colliders of the root GameObject itself).
 // Trigger colliders and disabled colliders are dropped (a trigger has no contact response; a disabled collider none at all).
