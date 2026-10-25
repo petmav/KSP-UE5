@@ -205,11 +205,18 @@ GameSaveListener& SaveListener() {
     static GameSaveListener l;
     return l;
 }
+bool g_fetch = false;  // GameSettings.fetch != null (:947)
 }  // namespace
+
+// GameSettings.cs:953
+bool GameSettings::Ready() { return g_fetch; }
 
 // GameSettings.cs:1506 (WP-20g: the host's start-up; see the header)
 void GameSettings::Awake(const AwakeOptions& options) {
     namespace fs = std::filesystem;
+    if (g_fetch) return;                                                 // :1508-1512 another instance: Destroy(this)
+    g_fetch = true;                                                      // :1513
+    layoutConfigNodes.Clear();                                           // :33 the new instance's field initialiser
     SetDefaultValues();                                                  // :1529
     if (!INPUT_DEVICES) INPUT_DEVICES = std::make_shared<InputDevices>();  // :1534-1537
     const fs::path root(options.gameRoot);
@@ -241,7 +248,10 @@ void GameSettings::Awake(const AwakeOptions& options) {
 }
 
 // GameSettings.cs:1573
-void GameSettings::OnDestroy() { events::GameEvents::onGameStateSaved.Remove(&SaveListener(), &GameSaveListener::OnGameSave); }
+void GameSettings::OnDestroy() {
+    g_fetch = false;  // :1575-1578
+    events::GameEvents::onGameStateSaved.Remove(&SaveListener(), &GameSaveListener::OnGameSave);
+}
 
 // GameSettings.cs:1487
 void GameSettings::SaveGameSettingsOnly() { WriteCfg(); }

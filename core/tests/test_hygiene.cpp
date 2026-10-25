@@ -86,6 +86,7 @@ void Restore(const std::string& test) {
     // whatever a case left: the WP-29c rover rode at 0.493 or 0.508 depending on the order, the anchor statics were 0 in the WP-20b / 19b /
     // 20d scenes. The input objects SetDefaultValues does not make (INPUT_DEVICES: GameSettings.Awake; the axis speed-multiplier list) and
     // the parsed keyboard layouts are reset to "not made yet", as WP-50's InputFixture does.
+    GameSettings::OnDestroy();  // a case that ran GameSettings::Awake: its instance goes (fetch, the onGameStateSaved listener)
     GameSettings::SetDefaultValues();
     GameSettings::AXIS_INCREMENTAL_SPEED_MULTIPLIER_VALUES.reset();
     GameSettings::INPUT_DEVICES.reset();

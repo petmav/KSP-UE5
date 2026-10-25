@@ -163,14 +163,17 @@ void SaveSettings();                             // :1467
 // when it exists and !overrideSettings (ParseCfg, WriteCfg), else the detected keyboard layout (LoadLayoutKeyBindings(DetectKeyboardLayout(),
 // true)), InitializeDefaultValues and WriteCfg; saveOnGameSave = false and the onGameStateSaved listener. Not ported: the graphics-device
 // test, DontDestroyOnLoad, the launcher file (ParseLauncherCfg; dontShowLauncher). A headless host usually does not write settings.cfg:
-// `writeSettingsCfg` (default false) gates both WriteCfg calls.
+// `writeSettingsCfg` (default false) gates both WriteCfg calls. The singleton rule (:1508-1513, `fetch`): a second Awake while one instance
+// lives does nothing (Destroy(this)); OnDestroy releases it (:1575-1578), and the next Awake is a new instance, whose `layoutConfigNodes`
+// (an instance field, :33) starts empty.
 struct AwakeOptions {
     std::string gameRoot;                                    // the directory holding GameData/ (and settings.cfg)
     std::string controlsLayoutPath = "GameData/Squad/Controls";  // the prefab's controlsLayoutPath, relative to the game root
     bool writeSettingsCfg = false;
 };
 void Awake(const AwakeOptions& options);         // :1506
-void OnDestroy();                                // :1573 (the onGameStateSaved listener)
+void OnDestroy();                                // :1573 (fetch released, the onGameStateSaved listener)
+bool Ready();                                    // :953 (fetch != null: an instance has run Awake)
 
 }  // namespace GameSettings
 
