@@ -74,6 +74,7 @@ un_tests.ps1`
 | 60. WP-52b the joint drive backend of the servos (branch `wp52b`, from main `51530d89`, main `e43c8576` merged) | done for the engine-agnostic part: the servo body (Part.servoRb) is a mass element of the moving side's cluster (rb / servoRb halves, FlightIntegrator.cs:476-480), the servo joint a Jolt hinge / slider with a PositionAndVelocity drive motor reading ConfigurableJointData every step (`UseServoBackend`, `serenity/servo_backend.hpp`), FlightIntegrator's partHasServoRb, the WP-20c loads across the servo. Gated by an independent Python drive-law reference (1.6e-5 / 4.9e-5 relative over 50 runs) and closed loops on a real craft (hinge 4.6e-4 rad and piston 4.3 mm from the reference plant of the same inertia, rotor at rpmLimit under its torque limit, locked servo offset tau / k, loads = the applied load, orbit bubble with the FlightIntegrator, 1 / 4 threads bit-identical). Sign conventions and limit / spring behaviour UNVERIFIED (no capture); servo MODULE values SYNTHETIC. See "WP-52b" below |
 | 61. WP-20f SAS / Vessel.FeedInputFeed in the physics tick, gimbal actuation, the C10 ascent to 36.7 km (branch `wp20f`, from main `51530d89`) | done for the engine-agnostic part, gated against KSP's own C10 ascent with WP-20d's tolerances (M2 to 20 km and its 90 s state at 36.7 km to 0.1 %, L2-AS to its apex, S to Mach 1), C10's live drag-cube weights (0 ULP on 631 parts), an independent double recomposition of the gimbal chains and KSP's own sign conventions (every existing gate unchanged): Vessel.FeedInputFeed, FlightInputHandler.FixedUpdate at seq 18 of the bubble (`PhysicsBubble::SetFlightInputHandler`), VesselSAS / reaction wheels / KillAngularVelocity on the rigid bodies, Part.Update's PartValues refresh, ModuleCommand / ModuleSAS / ModuleGimbal in the module slot with gimbal actuation over the model transform chains (thrust one tick behind the gimbal, bit for bit neutral without a command); Windows NativeSinf / Cosf / Powf no longer call getenv per call (AngleAxis 330x faster). See "WP-20f" |
 | 62. WP-29d real wheel / gear / leg geometry, landing legs and gear, steering circle, runway roll, brake anchor (branch `wp29d`, from main `51530d89`) | done for the engine-agnostic part (see the WP-29d section): the `.mu` reader keeps the WheelCollider and Animation chunks, `PartModelRig` (CompileModel hierarchy, FindModelTransform, part-space poses, Hermite-sampled clips), the 13 stock wheel / gear / leg models (reduced, origin + sha256) gated bit for bit against an independent python parse (6 cases / 15,030 assertions, 0 mismatches); the wheel host runs on the models (collider transform, deployTgt, animations, hub colliders, stand-in sphere, schloompa weld), `Vessel.getLowestPoint` wheel branch. Scenarios on KSP's stock craft: rovers on the real geometry (rest compression 0.508 / 0.531 vs proxy 0.5085 / 0.5312, drive within 0.03 % of the proxy), LT-2 lander 3 m/s touchdown (compression 0.546, rebound 1.46 m/s, settles 1.98 s), leg / gear retract and deploy, steering circle within 0.5 %, a 730 m runway roll. Open: no stock aircraft loads (ModuleControlSurface), the VTOL craft spawn attitude jump, capture C11 |
+| 67. WP-20g host wiring for a flyable headless core (branch `wp20g`, from local `wp29d` `a46df8d8`, main `dd87d6e8` merged; rows 63-66 are other branches' (wp21b, wp38d ...)) | done for the engine-agnostic part, all 7 plan items (see the WP-20g section): Part.Pack / Part.Unpack of every part on GoOnRails / GoOffRails with the SendMessage receivers in module order and Vessel.SendMessage on the root part; GameSettings.Awake (singleton, layouts, settings.cfg) and KSP's defaults in every test case; StartVesselInFlight (ModulesOnStart, flight block, ModulesOnStartFinished, first ModuleJettison.LateUpdate) in the bubble and WP-20d's PadScene; VesselResourceHost (the Vessel's PartSets behind the WP-15 seams) in the bubble; BaseServo FixedUpdate / Update in the module slot; the VAB launch onto the real KSC pad (FlightDriver.setStartupNewVessel, PSystemSetup's LaunchPad spawn point, PutShipToGround, AssembleForLaunch, CheckGroundCollision): **root altitude 79.2776 m vs C6 79.2884 m (-1.08 cm)**, "putting ship to ground: -6.869718" identical to KSP.log; the host contract table. Re-baselined: WP-20d's ascent / flight numbers and two WP-20e pad numbers (the module start-up's drag-cube weights; every tolerance unchanged) |
 
 ## Test results (wp52b merged with origin/main incl. WP-12c, measured 2026-10-20: 49 / 49 ctest tests pass in a worktree, `kspcore_tests` 1,043 cases / 1,642,430 assertions; earlier: main 703e3d6d: all 50 ctest tests pass, measured 2026-10-14; the list below was written at 36 tests, since then added: unit shards, unit.random_order, robotics, wheels.*; all 36 ctest tests pass (35 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience, WP-19a capture.vessel_rails)
 
@@ -5966,6 +5967,9 @@ FlightIntegrator in the bubble.
 | FixedUpdate mechanics | Setup waits for the root's `started`; tick 0 packed (thermal ran, buffers cleared, no Integrate, the OrbitDriver's lastMode IDLE); then physics easing (gravityMultiplier 1 / 16), the vessel mirrors, the per-part static pressure at each part's position, ActiveVesselFI, the vessel / part events (onVesselWasModified fired, the handlers), the FlightIntegrator's angular drag on the pad | as the C# |
 | module slot | the stock Aeris 3A (delta wings, elevons, winglets, Mk1 cockpit) at 150 m/s with an angle of attack and pitch input | 10 surfaces -> 20 buffered forces bit-identical to their records (235 kN), the cockpit's reaction-wheel torque in the buffer |
 
+Since WP-20g PadScene::Place runs the module start-up (StartVesselInFlight): the ascent and flight numbers above were re-measured there (section
+"WP-20g", table "Re-baselined numbers"; every tolerance unchanged).
+
 `check_cites.py` (exact mode, `--cs-root` Assembly-CSharp) over `src/physics/flight_integrator.cpp`, `aero_soa.cpp`, `part_forces.cpp`,
 `physics_bubble.cpp`: 31 citations, 0 mismatches (helpers cited at the C# member they are part of, aliased in the tool); the WP-20b / WP-19b
 physics files 71 / 0.
@@ -7037,3 +7041,125 @@ frame intervals by up to 3.2 %: the cube weights, not SAS, were the largest rema
 
 `76299059` FeedInputFeed, the input slot, the control modules and gimbal actuation in the module slot, PartValues refresh, the libm switch read
 once, the WP-20f tests; `5062bc87` merge main (`eb1fe876`); `9dcab02d` STATUS / README / progress.csv; then this verification note.
+
+## WP-20g: host wiring for a flyable headless core (branch `wp20g`, from local `wp29d` `a46df8d8`; main `dd87d6e8` merged)
+
+State: done for the engine-agnostic part, all seven plan items (none deferred). Scope = the host-side pieces the WP-20b-20f tick still left to a
+test fixture or to nobody: Part.Pack / Part.Unpack for every part on Vessel.GoOnRails / GoOffRails with the SendMessage receivers, GameSettings at
+KSP's defaults from start-up, the module start-up of a vessel entering the flight scene, the flight scene's resource-flow host, the Breaking Ground
+servos in the module slot, and KSP's VAB launch onto the real KSC launch pad; plus the host contract (what a flight host calls, in order). **Gates**:
+KSP's own numbers where they exist (C6's root altitude on the pad, the capture run's KSP.log, C10's drag-cube weights), the C# statement order and
+receiver set otherwise (scenarios on stock crafts). Every existing gate unchanged (`harness/compare/tolerances.json`, `tests/tolerances_capture.json`
+untouched); the WP-20d / WP-20e numbers that moved are re-baselined below with their cause.
+
+### What is in
+
+| item | piece | files | KSP source |
+|---|---|---|---|
+| 1 | Part.Pack / Part.Unpack | `parts/part.hpp`, `src/parts/part_pack.cpp`, `src/vessel/vessel_transitions.cpp` | Part.cs:3747 Pack (return when packed or DEAD; the Rigidbody / PartBuoyancy / terrainCollider / servoRb statements = the host's `Vessel::env.packPart`; crew OnPartPack, onPack, SendMessage("OnPartPack"), onPartPack, packed), :3784 Unpack (`unpackPart` when not DEAD, onUnpack, crew OnPartUnpack, packed = false, SendMessage("OnPartUnpack"), onPartUnpack); Vessel.cs:2356 GoOnRails (Part.Pack of every loaded part, SendMessage("OnVesselPack")), :2395 GoOffRails (Part.Unpack + InitializeModules per part, SendMessage("OnVesselUnpack") before onVesselGoOffRails) |
+| 1 | SendMessage dispatcher | `Part::SendPartMessage` | GameObject.SendMessage(DontRequireReceiver) over the part's components in component order: ModuleCargoPart.cs:80 / :84 (ModuleGroundPart.cs:144 / :156), ModuleDockingNode.cs:681 / :689, BaseServo.cs:1177 / :1182, ModuleParachute.cs:811, LaunchClamp.cs:324 / :332, FlagSite.cs:362 / :374 (Vessel.SendMessage reaches the root part's GameObject only) |
+| 2 | GameSettings.Awake | `input/game_settings.hpp`, `src/input/game_settings.cpp` | GameSettings.cs:1506 (the fetch singleton :1508-1513, SetDefaultValues, INPUT_DEVICES, the paths from the game root, ParseLayoutsCfg over Controls/*.cfg, settings.cfg -> ParseCfg / WriteCfg or the detected layout + InitializeDefaultValues, saveOnGameSave, the onGameStateSaved listener), :1573 OnDestroy, :953 Ready; `AwakeOptions::writeSettingsCfg` gates WriteCfg |
+| 2 | defaults in every test case | `tests/test_hygiene.cpp` | the hygiene listener runs GameSettings::OnDestroy + SetDefaultValues before and after every case (KSP never runs with the C# field initialisers) |
+| 3 | module start-up | `physics/flight_integrator.hpp`, `src/physics/flight_integrator.cpp` (`StartVesselInFlight`), `src/physics/physics_bubble.cpp` | Part.cs:1663 Start: ModulesOnStart (:1727), the flight block (WP-20d `StartPartsInFlight`), ModulesOnStartFinished (:1945), the first ModuleJettison.LateUpdate (ModuleJettison.cs:474); once per part (`started`); the bubble runs it on onVesselLoaded, WP-20d's PadScene::Place runs it |
+| 4 | resource-flow host | `resources/vessel_resource_host.hpp`, `src/resources/vessel_resource_host.cpp`, `PhysicsBubbleOptions::resourceHost` | Vessel.cs:451-464 (resourcePartSet, simulationResourcePartSet, crossfeedSets) per Vessel behind `ResourceFlowEnvironment::vesselHost` (:3980 RequestResource, :3994 / :4022 GetConnectedResourceTotals) and `Vessel::env.updateResourceSets` (:3913); dropped on onFlightGlobalsRemoveVessel; the seams a host had before are restored on Uninstall |
+| 5 | servos in the module slot | `physics/part_forces.hpp`, `src/physics/part_forces.cpp` | BaseServo.cs:873 FixedUpdate in module order in the FixedUpdate slot, :911 Update in the frame half (packed or not, as Unity's Update) |
+| 6 | the VAB launch onto the pad | `tests/test_vab_launch.cpp`; `space_center/scenery_colliders.hpp` (`SceneryObjectPoses`, `SceneryFindObject`, `SceneryFacility::editorFacility`); `src/vessel/vessel_ground.cpp` (log format) | FlightDriver.cs:272 setStartupNewVessel (PSystemSetup.GetSpaceCenterFacility("LaunchPad"), SpawnPoint.GetSpawnPointTransform PSystemSetup.cs:40, FloatingOrigin.SetOffset :295), ShipConstruction.cs:521 PutShipToGround, :296 AssembleForLaunch, then Part.Start, Vessel.GoOffRails -> CheckGroundCollision (Vessel.cs:2493; its log lines now format `num3.ToString("0.000")`, :2519 / :2564) |
+| 7 | host contract | this section | below |
+
+### Gate (`tests/test_host_wiring.cpp` 5 cases, `tests/test_vab_launch.cpp` 1 case; the servo slot in `tests/test_servo_scenarios.cpp`)
+
+| case | what | result |
+|---|---|---|
+| **VAB launch vs C6** | PhysProf-S through FlightDriver.setStartupNewVessel with PSystemSetup's facility table and the KSC hierarchy of data/scenery (every facility at its top level: C6 ran in a sandbox game), the spawn transform `KSC/SpaceCenter/LaunchPad/Facility/LaunchPad_spawn` at the origin of Unity's world (FloatingOrigin.SetOffset), PutShipToGround with the real Mainsail / LV-T45 colliders (WP-mucol reduced .mu files; drag-cube boxes elsewhere), AssembleForLaunch, Part.Start, GoOffRails / CheckGroundCollision, 600 ticks with the game's PhysicMaterials | **root altitude 79.2776 m vs C6 79.2884 m (-1.08 cm**, gate 5 cm: Unity's float32 KSC hierarchy ~600 km from the floating origin, half an ulp = 0.031 m, plus Jolt's resting penetration <= 0.02 m); the 500 C6 pad frames are one constant value; **"putting ship to ground: -6.869718" identical to KSP.log** (`core/testdata/logs/ksp-capture-capture2-final2-KSP.log:4271`: the lowest collider bound in the editor pose, float.ToString()); CheckGroundCollision moved the vessel down 0.119 m (KSP.log:4333: 0.101 m); first contact tag LaunchPad, landedAt LaunchPad, PRELAUNCH, at rest (0 m/s), no explosion, 21 / 21 parts |
+| Pack / Unpack in the bubble | PhysProf-S on the pad: GoOffRails, GoOnRails, GoOffRails | 21 Part.Unpack then 21 Part.Pack then 21 Part.Unpack, each in vessel order with its onPartUnpack / onPartPack; Part.packed follows; the host builds / drops / rebuilds the bodies; a packed vessel / part does not pack again |
+| SendMessage receivers | every part of the 33 harness stock crafts that ShipConstruct.LoadShip accepts (53 of 86 are refused: renamed parts, KSP refuses them too), Part.Unpack / Pack of each | `SendPartMessage` reaches exactly the C# receiver classes (counted by class name): OnPartUnpack 1,865, OnPartPack 1,857 (8 parachutes, whose timeUnpacked = UT); Vessel.SendMessage reaches the root part only (0 receivers for a pod root); a launch clamp's own OnVesselUnpack / OnVesselPack set / unset its joint once (7 clamps); a DEAD part does not pack |
+| GameSettings.Awake | the defaults at the start of the case; Awake on the 9 shipped layouts in a scratch game root | C# defaults (VESSEL_ANCHOR_* 0.05 / 1.5 / 100, PHYSICS_FRAME_DT_LIMIT 0.04, CONIC_PATCH_LIMIT 3, PHYSICS_EASE, WHEEL_DAMAGE_IMPACTCOLLIDER_ENABLED); no settings.cfg: Qwerty.cfg, 9 layouts, settings.cfg written; a second Awake while the instance lives does nothing; after OnDestroy the next Awake reads settings.cfg (2.25 / 5 from the file), no duplicate layouts, one listener; overrideSettings ignores the file |
+| module start-up | PadScene::Place | every part `started`; a second StartVesselInFlight changes no drag-cube weight; WP-20f's C10 comparison now runs through it: WeightedArea of **21 / 21, 153 / 153, 457 / 457** parts bit for bit KSP's |
+| resource host | PhysProf-S on the pad | one entry, the vessel-wide totals of LiquidFuel / Oxidizer / ElectricCharge through the seam = the parts' amounts; the engines draw through it (LiquidFuel 1,980 -> 1,923.26 in 50 ticks); the registry removal drops the entry and the parts' crossfeed sets; a seam set before the bubble is back after it |
+| servo slot | WP-52b's orbit scenario with the bubble's slot instead of the test's hand calls | 150 BaseServo.FixedUpdate and 150 Update in 150 ticks; the WP-52b results unchanged (worst coordinate 0 rad, joint force 0 kN) |
+
+### Re-baselined numbers (item 3: WP-20d's PadScene now runs the module start-up)
+
+Measured against the wp29d baseline binary (`a46df8d8`). A build of this branch with `PadScene::startModules = false` reproduces every baseline
+number below (timings aside), so all of them moved because of the module start-up, none because of the GameSettings defaults (item 2) or the
+Pack / Unpack wiring. Cause: ModulePartVariants.OnStart (RefreshVariant -> SetCubes) and the first ModuleJettison.LateUpdate (SetupJettisonState ->
+SetFairingDragCube, ModuleJettison.cs:474) set the drag-cube weights KSP flies with (WP-20f finding; 4 / 24 / 72 parts of S / M2 / L2-AS had the
+default weights before). Every tolerance unchanged; every case passes.
+
+| gate (WP-20d ascent without SAS vs C10, ours - KSP) | before | after |
+|---|---|---|
+| M2 speed at alt_1000 / alt_2500 | +0.262 / -0.042 % | +0.332 / +0.118 % |
+| M2 altitude at mach_0.5 / mach_1 | -0.101 / +0.802 % | -0.276 / +0.513 % |
+| M2 frames between states | -0.57 / 0 / +1.61 % | -1.14 / +0.42 / +0.80 % |
+| L2-AS speed at alt_1000 / alt_2500 / alt_5000 | +0.378 / +0.021 / -0.125 % | +0.444 / +0.191 / +0.029 % |
+| L2-AS altitude at mach_0.5 | +0.092 % | -0.098 % |
+| S altitude at mach_0.5, speed at alt_1000 | +0.708 / +0.048 % | +0.715 / +0.085 % |
+| frame offset of our ignition vs C10 frame 0 (M2, L2-AS) | 28.75 | 27.75 |
+| SoA == exact flights, altitude after 30 s (S / M2-AS / L2-AS) | 3,827.1 / 4,776.5 / 2,469.9 m | 4,173.8 / 4,783.4 / 2,471.9 m (S tumbles, WP-20d finding); 0 mismatches over 1,008,969 part-ticks before and after |
+| largest flight sub-joint load / capacity (S / M2-AS / L2-AS) | 0.148 / 0.0435 / 0.0438 | 0.159 / 0.0441 / 0.0438 |
+| WP-20e L2-AS without the anchor (ticks 200-300) | 0.0907 m/s, 0.0351 m | 0.0978 m/s, 0.0384 m |
+| WP-20e liftoff altitude 2 ticks after ignition | 801.756 m | 801.869 m |
+
+Unchanged: every 0 ULP / bit-for-bit gate, WP-20f's SAS ascents (they already ran the lifecycle through `wp20d::StartModules`), the pad loads
+(0.0297 / 0.0409 / 0.371), the anchors (tick 75, force = weight), the burn and coast cases (bit for bit), WP-29 / WP-52 / WP-12c scenarios.
+
+### Host contract (item 7: what a flight host calls, in order; each line is a kspcore call and the KSP code it stands for)
+
+| when | the host calls | KSP | notes |
+|---|---|---|---|
+| process start | `GameSettings::Awake({gameRoot})` once (`OnDestroy` at exit) | GameSettings.cs:1506 | the defaults KSP never runs without (anchors, wheel damage, input); `writeSettingsCfg` to persist |
+| process start | `PhysicsGlobals::Awake` + `LoadDatabase` (Physics.cfg), PhysicsGlobals.Start's curves (`wp20d::StartPhysicsGlobals`: BodyLift) | PhysicsGlobals.cs | WP-09 / WP-20d |
+| process start | `GameData::Load`, `SaveEnvironment` lookups (part infos), `VesselModuleManager::CompileModules`, `Planetarium::Awake`, `CelestialSystem::Spawn` | PartLoader, VesselModuleManager, PSystemManager | the World fixture's constructor |
+| flight scene start | `SaveEnvironment::Current().loadedScene = FLIGHT`; the PQS (`terrain::LoadStockPQS`) | HighLogic.LoadedScene | module FixedUpdates check the scene |
+| flight scene start | `PhysicsBubble` with `PhysicsBubbleOptions{contactHost, resourceHost, vessel.colliders = MuPartColliders::Hook()}` and a `PhysicsWorldConfig` from `SceneryColliders::ApplyTo` (game PhysicMaterials); `Install` | FlightIntegrator, Krakensbane, FloatingOrigin, PartBuoyancy, CollisionEnhancer, the Vessel resource fields | installs the Vessel::env pack / unpack / physics seams, the FlightIntegratorHost, PartModuleForces, ContactHost, VesselResourceHost (each restores what it replaced) |
+| flight scene start | `PartModuleForces::hooks` (model transforms: thrust transforms, gimbal chains), `PhysicsBubble::SetFlightInputHandler` | the part model hierarchy, FlightInputHandler | WP-20d / WP-20f; data: core/data/engine_thrust_transforms.json |
+| flight scene start | `SceneryCityHost` per PQSCity (the KSC at the career / sandbox facility levels, `PQSCity::Orientate` pose), `ContactHost::HostTerrain` | PQSCity, PQS colliders | WP-12c / WP-12b; optional `WheelPhysicsHost`, `UseServoBackend` (WP-29c / WP-52b) |
+| flight scene start | `PSystemSetup` with the facility table (`SceneryColliders::facilities`) and `space_center::SceneGraph::FindInPQS / FindChild` over `SceneryFindObject` + `SceneryObjectPoses`; `SetupFacilities` | PSystemSetup.cs:378 | the spawn transforms of the launch sites |
+| launch | `FlightDriver` statics (StartWithNewLaunch: craft path, flag, manifest, launch site), `host.placeAtSpawn = FloatingOrigin::SetOffset`, `host.beginNewVessel` = the parts' `colliderBounds` (model reader) + `ShipConstruction::PutShipToGround(ship, spawn pose)` + `AssembleForLaunch`, then `setStartupNewVessel` | FlightDriver.cs:272-371 | StageManager.BeginFlight, the crew roster and the scene switch stay the host's |
+| a vessel enters the scene | `StartPartRigidbodies`, `UpdateMassStats`, the orbit (`OrbitDriver::Start` in IDLE for a landed vessel), `FlightGlobals::AddVessel` / `SortVessel`, `StartVesselInFlight`, `UpdateResourceSets`, `MakeActive` | Unity's Start of the instantiated parts / vessel before the first FixedUpdate | a Vessel.Load inside the bubble runs StartVesselInFlight itself (onVesselLoaded) |
+| every frame | `PhysicsBubble::Tick` (the FixedUpdate(s) and the Update half), `Vessel::env.timeSinceLevelLoad` | TimingManager order (WP-00) | packing / unpacking happens inside (OrbitPhysicsManager -> GoOnRails / GoOffRails -> Part.Pack / Unpack) |
+| scene end | destroy the vessels, then the scenery / wheel / servo hosts, then the bubble (`Uninstall`); `FlightDriver::ResetStatics`, `SceneGraph::Reset` | | |
+
+### Exact / approximate / changed
+
+| choice | class | notes |
+|---|---|---|
+| Part.Pack / Unpack statement order, the events, Part.packed | exact | the WP-20d "partRef.packed changed" row is closed: Part.packed now follows Part.Pack / Unpack |
+| the Rigidbody statements of Pack / Unpack (isKinematic, PartBuoyancy enabled, terrainCollider, servoRb) | reduced model | the host drops / builds the whole vessel's bodies on its first part (WP-20b); attachJoint.SetUnbreakable and ResetJoints / CycleAutoStrut: the joints and autostruts are made with the bodies, breakable; ScheduleSetCollisionIgnores: the vessel's collision filter |
+| SendMessage | exact for Assembly-CSharp's receivers | a dynamic_cast chain over the receiver classes (ModuleJointMotor.cs:170 has no port: no stock part uses the module); Vessel.SendMessage reaches the root part's modules only, as Unity |
+| GameSettings.Awake | exact for the ported statements | not ported: the graphics-device test, DontDestroyOnLoad, the launcher file (dontShowLauncher); layout files sorted ordinally (Directory.GetFiles on NTFS returns them so) |
+| StartVesselInFlight | exact order for parts instantiated in one frame | every part's ModulesOnStart before any part's flight block and ModulesOnStartFinished (Part.Start's coroutine yields), then the first LateUpdate |
+| VesselResourceHost | exact (the Vessel's own fields) | kspcore holds them per Vessel in the host; an entry is made at the first UpdateResourceSets or request |
+| the KSC / spawn transform world pose | approximate | composed in double here; Unity composes the hierarchy in float32 ~600 km from the floating origin (the likely share of the 1.08 cm, UNVERIFIED) |
+| PutShipToGround's collider bounds | exact for the engines, fixture elsewhere | the real colliders of the 19 reduced engine models, drag-cube boxes for the other parts (the lowest point of PhysProf-S is the Mainsail's: KSP's own number) |
+| CheckGroundCollision log text | changed (fix) | `std::to_string` (6 decimals) -> `num3.ToString("0.000")` as the C# |
+
+### Findings (a later implementer must know)
+
+- **The module start-up alone moved WP-20d's numbers** (the startModules = false build reproduces the baseline): a host that skips it flies the
+  default drag-cube weights. The GameSettings defaults in every case moved no gated number (the WP-20e cases already set the anchor values).
+- **KSP's launch puts the lowest collider bound on the spawn transform and then CheckGroundCollision moves the vessel by about a decimetre**
+  (the top-level spawn transform is ~0.1 m above the pad surface under the Mainsail bell): KSP 0.101 m, ours 0.119 m; the 1.8 cm is not explained
+  by the pad triangles (WP-12c: 1.2e-4 m) and is consistent with the float32 hierarchy above. The settled root is 1.08 cm below KSP's.
+- PutShipToGround's lowest point with the real Mainsail hull reproduces KSP's log text exactly (`-6.869718`), so ShipConstruction's float path, the
+  craft's editor pose and the WP-mucol collider data agree with the game.
+- GameSettings is a singleton with an instance-field layout dictionary: a second Awake is a no-op (`Destroy(this)`); the port now keeps that rule.
+- World::Craft (the WP-14 route without KSPUpgradePipeline) accepts 33 of the 86 harness stock crafts; WP-18's route with the pipeline loads 57.
+- `kspcore_tests -s` aborts in "WP-24 ModuleReactionWheel vs tools/wp24/sas_reference.py" (doctest's success reporter; the baseline binary too):
+  run without `-s`.
+
+### Risks
+
+- R1: C6's pad case is a single value (the vessel is anchored for all 500 frames); a capture of the GoOffRails placement (vesselTransform before and
+  after CheckGroundCollision) would pin the remaining 1.08 cm.
+- R2: the stock crafts of the receiver case are those LoadShip accepts without the upgrade pipeline; renamed-part crafts are not covered.
+
+### Verification
+
+VERIFICATION_PLACEHOLDER
+
+### Commits (branch `wp20g`, from local `wp29d` `a46df8d8`)
+
+`606186f6` items 1-5 (Part.Pack / Unpack, GameSettings.Awake, StartVesselInFlight, VesselResourceHost, servos in the slot, hygiene defaults);
+`f2eac17d` merge origin/main `dd87d6e8`; `c073ac55` items 1-4 tests, GameSettings singleton; `ebb6ac67` item 6 (VAB launch vs C6, scenery
+lookups, CheckGroundCollision log format); `c70167b7` cite wording, progress log; then the documentation and verification commit.
