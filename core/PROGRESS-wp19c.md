@@ -70,3 +70,9 @@ ProtoVessel(Vessel) / BackupVessel, VesselRanges constructors, VesselPrecalculat
   documented, 201 crafts, 0 unexplained, PASS; over testdata/saves (physprofile): R1 byte-identical. = the 61 .sfs of WP-04, unchanged.
 - pr_review: 0 failing checks (cite aliases for Awake / OnDestroy constructors and the dialog delegates added to tools/wp28/check_cites.py);
   check_cites exact over the 6 new .cpp: 50 cites, 0 mismatches.
+
+## Step 7: verification (head ed53b588)
+
+Fresh: configure 2.5 s, build 306.9 s, ctest 155.7 s, 52 / 52. Random orders -rs=11 / -rs=27: 1,108 cases / 1,704,390 assertions, all pass
+(the quicksave gate was order-dependent through the shared vessel-module registry: the fixture now compiles it, CometVessel off). WSL g++
+-fsyntax-only clean on the 20 changed files; pr_review 0 failing. origin/main still 839f2f5f: no merge needed.

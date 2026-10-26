@@ -7368,7 +7368,7 @@ that replaces the flight state no longer frees the snapshot of an unloaded vesse
 
 | gate | what | result |
 |---|---|---|
-| quicksave round trip (`tests/test_wp19c_quicksave.cpp`) | the physprofile save: the Space Center's game current, FlightDriver.Start (RESUME_SAVED_FILE) -> Game.Load -> FlightState.Load (2 Vessels) -> SetActiveVessel loads the L2-AS -> the module start-up (host contract) and 3 flight-scene frames -> F5 (quickSave -> doSave) -> F9 (quickLoad -> KSPUpgradePipeline -> LoadGameCfg -> StartAndFocusVessel) -> a new flight scene (RESUME_SAVED_CACHE) -> F5 | **the second quicksave equals the first byte for byte**; one Backup file; first quicksave vs the original file: exactly the 12 expected value lines and nothing else: `scene` 5 -> 7 (doSave), the stand-in camera's cPch / cHdg / cMod (Vessel.cs:3617), ModuleReactionWheel's stateString and CommNetVessel's controlState / canComm (they come from the physics tick and the CommNet network, which this gate does not run) |
+| quicksave round trip (`tests/test_wp19c_quicksave.cpp`) | the physprofile save: the Space Center's game current, FlightDriver.Start (RESUME_SAVED_FILE) -> Game.Load -> FlightState.Load (2 Vessels) -> SetActiveVessel loads the L2-AS -> the module start-up (host contract) and 3 flight-scene frames -> F5 (quickSave -> doSave) -> F9 (quickLoad -> KSPUpgradePipeline -> LoadGameCfg -> StartAndFocusVessel) -> a new flight scene (RESUME_SAVED_CACHE) -> F5 | **the second quicksave equals the first byte for byte**; one Backup file; first quicksave vs the original file: exactly the 12 expected value lines and nothing else: `scene` 5 -> 7 (doSave), the stand-in camera's cPch / cHdg / cMod (Vessel.cs:3617), ModuleReactionWheel's stateString (the physics tick of the bubble, not run here), the asteroid's CommNetVessel controlState / canComm (written by kspcore's CommNetVessel save, WP-39; the CommNet network decides them in the game). CometVessel is kept off in the fixture: its OnStart removes it from comet-less vessels (CometVessel.cs:126-183), which kspcore's reflected CometVessel lacks (WP-38) |
 | FlightState() capture | 400 scenes vs the Python reference (DEAD, DECLUTTER_KSC at KSC / stock launch sites, the first auto-clean reason kept, MAX_VESSELS_BUDGET from the end, order, activeVesselIdx ready / not ready) | identical: 1,368 vessels captured (pointer identity of the shared snapshots), 80 auto-cleaned, 209 cut by the budget |
 | ProtoVessel.Clean | 300 scenes vs the reference (mode, home world or not, each currency scenario present or not, funds double / science and reputation float32, the listener's amounts incl. ties at .5) | identical log texts (162 refunds, ties to even), 236 onVesselRecovered(pv, true), removed from the flight state and the registry |
 | GetSituationString | 300 scenes vs the reference (the game's en-us dictionary) and the minibiome branch | identical |
@@ -7377,7 +7377,7 @@ that replaces the flight state no longer frees the snapshot of an unloaded vesse
 | flows (`tests/test_wp19c_flows.cpp`) | VesselRetrieval on physprofile (request -> persistent with 2 vessels -> Space Center -> 8 frames -> the asteroid recovered with quick = false -> persistent with 1 vessel; a duplicate request kept once; no recovery outside the Space Center); the FlightState round trip (live -> Save -> FlightState(node) -> Save equal, Load -> live capture equal, the Serenity map-filter bit); switching to the unloaded asteroid (refused unforced: not Owned; forced: persistent, StartAndFocusVessel(current game, 0), the new scene focuses and loads it); the save-as dialog (naming, escaping, overwrite, invalid name, Escape, Return with blockedSubmitOnStart); quickLoad branches (no file, a Space Center save, 0.20.0 Cancel / LoadAnyway, 0.23.5, hold-to-load timing, the load dialog, a mission quicksave); Game.Start; the debug setters (SetShipOrbit elements and the SOI event, rendezvous at rel 0 and +100 m prograde, SetVesselPosition clamps / DEBUG_MAX_SETPOSITION_ALTITUDE / the state vector: every element bit for bit vs UpdateFromStateVectors of the expected vector / unpause) | pass |
 | `corpus.saves` (WP-04) | save_corpus over decompiled/KSP-dev (main checkout) and over testdata/saves | 60 KSP-1.12.5 .sfs byte-identical once the mod-owned elements are dropped and physprofile R1 byte-identical (the 61 of WP-04), 44 older .sfs and 201 crafts documented, 0 unexplained, R2 idempotent: unchanged |
 
-WP-19c cases: 14 cases / 10,105 assertions. Reference: `python -I core/tools/wp19c/registry_reference.py` (fixed seed; reads the game's
+WP-19c cases: 14 cases / 10,108 assertions. Reference: `python -I core/tools/wp19c/registry_reference.py` (fixed seed; reads the game's
 `testdata/GameData-mirror/GameData/Squad/Localization/dictionary.cfg`) regenerates `tests/data/wp19c_reference.json` byte-identically, sha256
 `2dbdc19efbfa6d0824b5660fdf00cd58667ac3ff67bab2e6600d0d9220fdaf3b`. Circularity: the reference has no kspcore input; the quicksave gate compares a
 save with the save of its own load (the camera stand-in's values are unlike the file's); the SetVesselPosition orbit is compared with a fit of a
@@ -7410,15 +7410,28 @@ state vector the test computes from the body, not with the vessel's own output.
 
 ### Deferred / needs
 
-- The active vessel's live module state in a quicksave (ModuleReactionWheel stateString, CommNetVessel control state) needs the physics bubble
+- The live module state in a quicksave (ModuleReactionWheel stateString, an unconnected vessel's CommNetVessel fields) needs the physics bubble
   and the CommNet network running in the gate (WP-20 / WP-39 hosts); an in-game capture of a quicksave right after a quickload would pin them.
+- CometVessel.OnStart (its removal from comet-less vessels) is not ported (WP-38: kspcore's CometVessel is a reflected field table).
 - An in-game capture of Quaternion.LookRotation / Euler / eulerAngles (quaternion_native.hpp) would make the navball block exact.
 
 ### Verification
 
-VERIFICATION_PLACEHOLDER
+- Windows MSVC RelWithDebInfo, fresh (`core/build` deleted, `run_tests.ps1 -Fresh`, `CMAKE_BUILD_PARALLEL_LEVEL=4`, head `ed53b588`): configure
+  2.5 s, build 306.9 s, ctest 155.7 s, **52 / 52 pass** (`corpus.saves` is not registered in a worktree: run by hand, below). Baseline before the
+  package (main `839f2f5f`, fresh in this worktree): 52 / 52, `kspcore_tests` 1,094 cases / 1,694,282 assertions.
+- `kspcore_tests --order-by=rand -rs=11` and `-rs=27`: **1,108 cases / 1,704,390 assertions, all pass** (WP-19c: 14 cases / 10,108). The quicksave
+  gate is independent of the case order: its fixture compiles the vessel-module registry (a shared static) itself.
+- `save_corpus` (the `corpus.saves` command) over the main checkout's decompiled/KSP-dev: PASS, 104 .sfs (60 written by KSP 1.12.5, byte-identical
+  once the mod-owned elements are dropped; 44 older, documented) and 201 crafts, 0 unexplained, R2 idempotent; over testdata/saves (physprofile):
+  R1 byte-identical. Identical to WP-04's 61 / 44 / crafts result.
+- WSL Ubuntu 24.04 g++ 13.3 `-std=c++20 -fsyntax-only -Wall -Wextra` over the 17 changed sources and 3 test files: no error; one warning in each,
+  pre-existing (`part.hpp:410` unused parameter).
+- `python -I core/tools/ci/pr_review.py --base main`: 0 failing checks; `tools/wp28/check_cites.py` exact over the 6 new .cpp: 50 cites, 0
+  mismatches. The reference regenerates byte-identically (sha256 above).
 
 ### Commits (branch `wp19c`, from main `839f2f5f`)
 
 `2d733569` audit and plan; `0d10d5b9` the ports; `87b28824` the quicksave gate, the Python reference, the FlightCamera seam; `554f347a` the
-flow gates; `bebc8f1b` cite fixes, check_cites aliases, progress log; then STATUS / README / progress.csv and the verification note.
+flow gates; `bebc8f1b` cite fixes, check_cites aliases, progress log; `d5fa36b3` STATUS / README / progress.csv; `ed53b588` deterministic
+quicksave gate (module registry in the fixture), the deferred GoOffRails asserted; then this verification note.
