@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include "ksp/dotnet/math.hpp"
+#include "ksp/space_center/pqs_city.hpp"
 
 namespace ksp {
 
@@ -22,11 +23,24 @@ size_t CityColliderSet::Add(CityObject object) {
 
 void CityColliderSet::Place(size_t index) {
     Slot& s = objects_[index];
+    // WP-12d: the animated transforms of the object and its ancestors (outermost first)
+    Vector3d ep;
+    QuaternionD er = QuaternionD::identity();
+    if (hierarchy_) {
+        std::vector<size_t> chain;
+        for (int k = static_cast<int>(index); k >= 0; k = parents_[static_cast<size_t>(k)]) chain.push_back(static_cast<size_t>(k));
+        for (size_t n = chain.size(); n-- > 0;) {
+            const Extra& e = extra_[chain[n]];
+            if (!e.has) continue;
+            ep = e.position + e.rotation * ep;
+            er = e.rotation * er;
+        }
+    }
     for (size_t c = 0; c < s.object.colliders.size(); ++c) {
         const CityCollider& col = s.object.colliders[c];
         const uint64_t key = KeyOf(index, c);
-        const Vector3d pos = position_ + rotation_ * col.localPosition;
-        const QuaternionD rot = rotation_ * col.localRotation;
+        const Vector3d pos = position_ + rotation_ * (ep + er * col.localPosition);
+        const QuaternionD rot = rotation_ * (er * col.localRotation);
         if (col.kind == CityCollider::Kind::Mesh) {
             // static meshes are placed with an identity rotation: rotate the vertices into the physics frame
             std::vector<Vector3f> v;
@@ -61,13 +75,89 @@ void CityColliderSet::SetPose(const Vector3d& position, const QuaternionD& rotat
 }
 
 void CityColliderSet::SetObjectActive(size_t index, bool active) {
+    if (hierarchy_) {   // GameObject.SetActive: activeSelf, then activeInHierarchy of the subtree
+        if (static_cast<bool>(activeSelf_[index]) == active) return;
+        activeSelf_[index] = active;
+        Evaluate(index);
+        return;
+    }
+    SetPlaced(index, active);
+}
+
+void CityColliderSet::SetPlaced(size_t index, bool placed) {
     Slot& s = objects_[index];
-    if (s.active == active) return;
-    s.active = active;
-    if (active) {
+    if (s.active == placed) return;
+    s.active = placed;
+    if (placed) {
         Place(index);
     } else {
         Remove(index);
+    }
+}
+
+void CityColliderSet::EnableHierarchy(std::vector<int> parents, std::vector<bool> activeSelf, std::vector<bool> present) {
+    hierarchy_ = true;
+    parents_ = std::move(parents);
+    children_.assign(objects_.size(), {});
+    for (size_t i = 0; i < parents_.size(); ++i)
+        if (parents_[i] >= 0) children_[static_cast<size_t>(parents_[i])].push_back(i);
+    activeSelf_.assign(activeSelf.begin(), activeSelf.end());
+    present_.assign(present.begin(), present.end());
+    extra_.assign(objects_.size(), Extra());
+    for (size_t i = 0; i < objects_.size(); ++i)
+        if (parents_[i] < 0) Evaluate(i);
+}
+
+bool CityColliderSet::ActiveInHierarchy(size_t index) const {
+    for (int k = static_cast<int>(index); k >= 0; k = parents_[static_cast<size_t>(k)])
+        if (!activeSelf_[static_cast<size_t>(k)]) return false;
+    return true;
+}
+
+void CityColliderSet::Evaluate(size_t index) {
+    std::vector<size_t> stack{index};
+    while (!stack.empty()) {
+        const size_t i = stack.back();
+        stack.pop_back();
+        SetPlaced(i, live_ && present_[i] && ActiveInHierarchy(i));
+        for (size_t c : children_[i]) stack.push_back(c);
+    }
+}
+
+void CityColliderSet::SetLive(bool live) {
+    live_ = live;
+    if (!hierarchy_) return;
+    for (size_t i = 0; i < objects_.size(); ++i)
+        if (parents_[i] < 0) Evaluate(i);
+}
+
+void CityColliderSet::SetPresent(size_t index, bool present) {
+    if (!hierarchy_ || static_cast<bool>(present_[index]) == present) return;
+    present_[index] = present;
+    Evaluate(index);
+}
+
+void CityColliderSet::SetObjectTransform(size_t index, const Vector3d& position, const QuaternionD& rotation) {
+    if (!hierarchy_) return;
+    extra_[index] = Extra{true, position, rotation};
+    std::vector<size_t> stack{index};   // re-place the placed objects of the subtree
+    while (!stack.empty()) {
+        const size_t i = stack.back();
+        stack.pop_back();
+        if (objects_[i].active) Place(i);
+        for (size_t c : children_[i]) stack.push_back(c);
+    }
+}
+
+void CityColliderSet::ClearObjectTransform(size_t index) {
+    if (!hierarchy_ || !extra_[index].has) return;
+    extra_[index] = Extra();
+    std::vector<size_t> stack{index};
+    while (!stack.empty()) {
+        const size_t i = stack.back();
+        stack.pop_back();
+        if (objects_[i].active) Place(i);
+        for (size_t c : children_[i]) stack.push_back(c);
     }
 }
 
@@ -138,7 +228,7 @@ void PQSCityColliders::OnSphereInactive() {
     while (num-- > 0) SetActive(lod[num], false);
 }
 
-// PQSCity.cs:234 (the load / POI range events are WP-42's)
+// PQSCity.cs:234 (WP-12d: the load / POI range events of a linked city at their place)
 void PQSCityColliders::OnUpdateFinished(bool hasTarget, const Vector3d& targetPosition) {
     if (!hasTarget) {
         size_t n = lod.size();
@@ -151,6 +241,7 @@ void PQSCityColliders::OnUpdateFinished(bool hasTarget, const Vector3d& targetPo
     }
     const Vector3d d = targetPosition - set.position();
     const float num2 = static_cast<float>(dotnet::Math::Sqrt(d.x * d.x + d.y * d.y + d.z * d.z));  // Vector3.Distance (float)
+    if (city != nullptr) city->OnUpdateFinished(num2);
     size_t num3 = lod.size();
     while (num3-- > 0) SetActive(lod[num3], num2 < lod[num3].visibleRange);
 }
@@ -184,11 +275,24 @@ void PQSCity2Colliders::SetInactive() {
     while (num-- > 0) SetActive(objects[num], false);
 }
 
-// PQSCity2.cs:407
+void PQSCity2Colliders::Link(PQSCity2& c) {
+    city = &c;
+    c.setVisibility = [this] {
+        if (hasLastTarget_) setVisibility(lastTarget_);
+    };
+}
+
+bool& PQSCity2Colliders::InVisibleRange() { return city != nullptr ? city->inVisibleRange : inVisibleRange; }
+
+// PQSCity2.cs:407 (WP-12d: the positioning reset of a linked city)
 void PQSCity2Colliders::OnSetup() {
     size_t num = objects.size();
     while (num-- > 0) Setup(objects[num]);
     SetInactive();
+    if (city != nullptr && city->raycastSurface && city->positioningCompleted && !city->positionedWhenVisible) {
+        city->Reset();
+        if (city->positionMobileLaunchPad && city->positionMobileLaunchPad->OnScenerySettingChanged) city->positionMobileLaunchPad->OnScenerySettingChanged();
+    }
 }
 
 // PQSCity2.cs:425
@@ -206,13 +310,22 @@ void PQSCity2Colliders::OnSphereActive(bool hasTarget, const Vector3d& targetPos
 // PQSCity2.cs:453
 void PQSCity2Colliders::OnSphereInactive() { SetInactive(); }
 
-// PQSCity2.cs:458 (positioning / raycast / POI range work is WP-42's)
+// PQSCity2.cs:458 (WP-12d: a linked city's re-orientation and POI range events follow setVisibility)
 void PQSCity2Colliders::OnUpdateFinished(bool hasTarget, const Vector3d& targetPosition) {
     if (!hasTarget) {
+        hasLastTarget_ = false;
         SetInactive();
         return;
     }
+    hasLastTarget_ = true;
+    lastTarget_ = targetPosition;
     setVisibility(targetPosition);
+    if (city != nullptr) {
+        city->OnUpdateFinished([this, &targetPosition] {
+            const Vector3d d = targetPosition - set.position();
+            return static_cast<float>(dotnet::Math::Sqrt(d.x * d.x + d.y * d.y + d.z * d.z));   // Vector3.Distance (float)
+        });
+    }
 }
 
 // PQSCity2.cs:491
@@ -223,7 +336,7 @@ void PQSCity2Colliders::setVisibility(const Vector3d& targetPosition) {
     while (num2-- > 0) {
         if (objects[num2].visibleRangeSqr == 0.0f) SetRange(objects[num2]);
         SetActive(objects[num2], num < objects[num2].visibleRangeSqr);
-        inVisibleRange = inVisibleRange || num < objects[num2].visibleRangeSqr;
+        InVisibleRange() = InVisibleRange() || num < objects[num2].visibleRangeSqr;
     }
 }
 

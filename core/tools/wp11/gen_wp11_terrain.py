@@ -245,7 +245,6 @@ IGNORED = {
     "PQSMod_VoronoiCraters": {"craterColourRamp": "Gradient (colour output, OnVertexBuild)"},
     "PQSMod_VoronoiCraters2": {"craterColourRamp": "Gradient (colour output, OnVertexBuild)"},
     "PQSMod_FlattenArea": {"body": "CelestialBody reference (unused by the height path)"},
-    "PQSLandControl": {"scatters": "LandClassScatter objects (scatter, materials, meshes)"},
     "PQSMod_CelestialBodyTransform": {"body": "CelestialBody reference (the host link, PQSMod_CelestialBodyTransform::host)"},
 }
 BASE_FIELDS = ("requirements", "modEnabled", "order", "modExpansionDisabled")
@@ -261,6 +260,9 @@ LANDCONTROL_SCALARS = [("useHeightMap", "b"), ("heightMap", "map"), ("vHeightMax
                        ("createScatter", "b")] + [
     (p + s, k) for p in ("altitude", "latitude", "longitude")
     for s, k in (("Blend", "f"), ("Seed", "i"), ("Octaves", "i"), ("Persistance", "f"), ("Frequency", "f"))]
+SCATTER_SCALARS = [("scatterName", "s"), ("seed", "i"), ("maxCache", "i"), ("maxCacheDelta", "i"), ("maxScatter", "i"),
+                   ("densityFactor", "d"), ("maxLevelOffset", "i"), ("verticalOffset", "f"), ("minScale", "f"), ("maxScale", "f"),
+                   ("castShadows", "b"), ("recieveShadows", "b"), ("maxSpeed", "d")]
 PLANET_SCALARS = [("seed", "i"), ("deformity", "d"), ("colorDeformity", "d"), ("oceanLevel", "d"), ("oceanStep", "d"),
                   ("oceanDepth", "d"), ("oceanSnap", "b"), ("terrainSmoothing", "d"), ("terrainShapeStart", "d"),
                   ("terrainShapeEnd", "d"), ("terrainRidgesMin", "d"), ("terrainRidgesMax", "d"),
@@ -387,7 +389,21 @@ class Gen:
                 raise SystemExit("PQSLandControl landClasses[%d]: unknown fields %s" % (i, sorted(unknown)))
             out.append("%s    m->landClasses.push_back(std::move(lc));" % ind)
             out.append("%s}" % ind)
-        known = {"landClasses"}
+        known = {"landClasses", "scatters"}
+        # WP-12d: the LandClassScatter definitions (the material / baseMesh object references by name; the mesh data is not extracted)
+        for i, sc in enumerate(f["scatters"]):
+            out.append("%s{" % ind)
+            out.append("%s    PQSLandControl::LandClassScatter sc;" % ind)
+            for jf, kind in SCATTER_SCALARS:
+                self.assign(out, "sc." + jf, kind, sc[jf], ind + "    ")
+            self.assign(out, "sc.materialName", "objname", sc["material"], ind + "    ")
+            self.assign(out, "sc.baseMeshName", "objname", sc["baseMesh"], ind + "    ")
+            out.append("%s    sc.hasBaseMesh = %s;" % (ind, lit_bool(sc["baseMesh"] is not None)))
+            unknown = set(sc) - {k for k, _ in SCATTER_SCALARS} - {"material", "baseMesh"}
+            if unknown:
+                raise SystemExit("PQSLandControl scatters[%d]: unknown fields %s" % (i, sorted(unknown)))
+            out.append("%s    m->scatters.push_back(std::move(sc));" % ind)
+            out.append("%s}" % ind)
         for jf, kind in LANDCONTROL_SCALARS:
             self.assign(out, "m->" + jf, kind, f[jf], ind)
             known.add(jf)

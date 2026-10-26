@@ -690,6 +690,106 @@ std::unique_ptr<PQS> MakeKerbin(MapLibrary& maps, const StockPQSOptions& options
             lc.scatter.push_back({"Pine00", -2.0});
             m->landClasses.push_back(std::move(lc));
         }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "Tree00";
+            sc.seed = 65465;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 64;
+            sc.maxScatter = 80;
+            sc.densityFactor = 0.5;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = -1.0f;
+            sc.minScale = 0.5f;
+            sc.maxScale = 2.0f;
+            sc.castShadows = true;
+            sc.recieveShadows = false;
+            sc.maxSpeed = 500.0;
+            sc.materialName = "mapletree";
+            sc.baseMeshName = "mapletree";
+            sc.hasBaseMesh = true;
+            m->scatters.push_back(std::move(sc));
+        }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "Grass00";
+            sc.seed = 44444;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 64;
+            sc.maxScatter = 200;
+            sc.densityFactor = 0.25;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = -0.25f;
+            sc.minScale = 1.0f;
+            sc.maxScale = 2.0f;
+            sc.castShadows = false;
+            sc.recieveShadows = false;
+            sc.maxSpeed = 200.0;
+            sc.materialName = "scatter_grass_00";
+            sc.baseMeshName = "";
+            sc.hasBaseMesh = false;
+            m->scatters.push_back(std::move(sc));
+        }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "boulder";
+            sc.seed = 123887;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 64;
+            sc.maxScatter = 10;
+            sc.densityFactor = 0.25;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = -0.25f;
+            sc.minScale = 0.15f;
+            sc.maxScale = 1.5f;
+            sc.castShadows = true;
+            sc.recieveShadows = true;
+            sc.maxSpeed = 200.0;
+            sc.materialName = "scatter_rock_kerbin";
+            sc.baseMeshName = "boulder";
+            sc.hasBaseMesh = true;
+            m->scatters.push_back(std::move(sc));
+        }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "Pine00";
+            sc.seed = 5767645;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 64;
+            sc.maxScatter = 50;
+            sc.densityFactor = 0.5;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = -0.1f;
+            sc.minScale = 2.0f;
+            sc.maxScale = 4.0f;
+            sc.castShadows = true;
+            sc.recieveShadows = false;
+            sc.maxSpeed = 200.0;
+            sc.materialName = "pinetree";
+            sc.baseMeshName = "pine";
+            sc.hasBaseMesh = true;
+            m->scatters.push_back(std::move(sc));
+        }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "cactus";
+            sc.seed = 5767645;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 64;
+            sc.maxScatter = 50;
+            sc.densityFactor = 0.05000000074505806;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = -0.1f;
+            sc.minScale = 0.5f;
+            sc.maxScale = 1.5f;
+            sc.castShadows = true;
+            sc.recieveShadows = true;
+            sc.maxSpeed = 200.0;
+            sc.materialName = "cactus";
+            sc.baseMeshName = "cactus";
+            sc.hasBaseMesh = true;
+            m->scatters.push_back(std::move(sc));
+        }
         m->useHeightMap = false;
         m->heightMap = maps.Get("kerbin_height_new.19929");
         m->vHeightMax = 3500.0f;
@@ -1103,6 +1203,26 @@ std::unique_ptr<PQS> MakeMun(MapLibrary& maps, const StockPQSOptions& options) {
             lc.delta = 1.0;
             lc.scatter.push_back({"Rock00", 1.0});
             m->landClasses.push_back(std::move(lc));
+        }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "Rock00";
+            sc.seed = 231123;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 32;
+            sc.maxScatter = 20;
+            sc.densityFactor = 1.0;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = 0.0f;
+            sc.minScale = 0.15f;
+            sc.maxScale = 2.5f;
+            sc.castShadows = false;
+            sc.recieveShadows = false;
+            sc.maxSpeed = 1000.0;
+            sc.materialName = "terrain_rock00";
+            sc.baseMeshName = "boulder";
+            sc.hasBaseMesh = true;
+            m->scatters.push_back(std::move(sc));
         }
         m->useHeightMap = false;
         m->heightMap = nullptr;
@@ -1554,6 +1674,46 @@ std::unique_ptr<PQS> MakeMinmus(MapLibrary& maps, const StockPQSOptions& options
             lc.scatter.push_back({"SnowBoulder", 1.0});
             m->landClasses.push_back(std::move(lc));
         }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "IceBoulder";
+            sc.seed = 231122;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 32;
+            sc.maxScatter = 20;
+            sc.densityFactor = 1.0;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = 0.0f;
+            sc.minScale = 0.5f;
+            sc.maxScale = 3.0f;
+            sc.castShadows = false;
+            sc.recieveShadows = false;
+            sc.maxSpeed = 1000.0;
+            sc.materialName = "scatter_rock_minmusIce";
+            sc.baseMeshName = "boulder";
+            sc.hasBaseMesh = true;
+            m->scatters.push_back(std::move(sc));
+        }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "SnowBoulder";
+            sc.seed = 231123;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 32;
+            sc.maxScatter = 20;
+            sc.densityFactor = 1.0;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = 0.0f;
+            sc.minScale = 0.5f;
+            sc.maxScale = 3.0f;
+            sc.castShadows = false;
+            sc.recieveShadows = false;
+            sc.maxSpeed = 1000.0;
+            sc.materialName = "scatter_rock_minmusSnow";
+            sc.baseMeshName = "boulder";
+            sc.hasBaseMesh = true;
+            m->scatters.push_back(std::move(sc));
+        }
         m->useHeightMap = false;
         m->heightMap = nullptr;
         m->vHeightMax = 10000.0f;
@@ -1979,6 +2139,26 @@ std::unique_ptr<PQS> MakeEve(MapLibrary& maps, const StockPQSOptions& options) {
             lc.delta = 0.4145548308533096;
             lc.scatter.push_back({"boulder", 1.0});
             m->landClasses.push_back(std::move(lc));
+        }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "boulder";
+            sc.seed = 66564;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 32;
+            sc.maxScatter = 20;
+            sc.densityFactor = 0.25;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = 0.2f;
+            sc.minScale = 0.1f;
+            sc.maxScale = 4.0f;
+            sc.castShadows = true;
+            sc.recieveShadows = true;
+            sc.maxSpeed = 1000.0;
+            sc.materialName = "eve_scatter_rock";
+            sc.baseMeshName = "boulder";
+            sc.hasBaseMesh = true;
+            m->scatters.push_back(std::move(sc));
         }
         m->useHeightMap = false;
         m->heightMap = maps.Get("eve_height_new.19923");
@@ -2415,6 +2595,46 @@ std::unique_ptr<PQS> MakeDuna(MapLibrary& maps, const StockPQSOptions& options) 
             lc.delta = 0.0;
             m->landClasses.push_back(std::move(lc));
         }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "boulder";
+            sc.seed = 4565677;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 32;
+            sc.maxScatter = 20;
+            sc.densityFactor = 0.25;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = 0.2f;
+            sc.minScale = 0.1f;
+            sc.maxScale = 4.0f;
+            sc.castShadows = true;
+            sc.recieveShadows = true;
+            sc.maxSpeed = 1000.0;
+            sc.materialName = "red_cliff";
+            sc.baseMeshName = "boulder";
+            sc.hasBaseMesh = true;
+            m->scatters.push_back(std::move(sc));
+        }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "iceboulder";
+            sc.seed = 324234645;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 32;
+            sc.maxScatter = 20;
+            sc.densityFactor = 0.25;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = 0.2f;
+            sc.minScale = 0.1f;
+            sc.maxScale = 4.0f;
+            sc.castShadows = true;
+            sc.recieveShadows = true;
+            sc.maxSpeed = 1000.0;
+            sc.materialName = "snowboulder";
+            sc.baseMeshName = "boulder";
+            sc.hasBaseMesh = true;
+            m->scatters.push_back(std::move(sc));
+        }
         m->useHeightMap = false;
         m->heightMap = maps.Get("desertplanet_height.19917");
         m->vHeightMax = 3500.0f;
@@ -2686,6 +2906,26 @@ std::unique_ptr<PQS> MakeIke(MapLibrary& maps, const StockPQSOptions& options) {
             lc.delta = 1.0;
             lc.scatter.push_back({"boulder", 0.20000000298023224});
             m->landClasses.push_back(std::move(lc));
+        }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "boulder";
+            sc.seed = 231123;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 32;
+            sc.maxScatter = 20;
+            sc.densityFactor = 1.0;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = 0.0f;
+            sc.minScale = 0.1f;
+            sc.maxScale = 2.0f;
+            sc.castShadows = true;
+            sc.recieveShadows = false;
+            sc.maxSpeed = 1000.0;
+            sc.materialName = "ikeScatter";
+            sc.baseMeshName = "boulder";
+            sc.hasBaseMesh = true;
+            m->scatters.push_back(std::move(sc));
         }
         m->useHeightMap = false;
         m->heightMap = nullptr;
@@ -3058,6 +3298,26 @@ std::unique_ptr<PQS> MakeLaythe(MapLibrary& maps, const StockPQSOptions& options
             lc.scatter.push_back({"BrownRock", -1.0});
             m->landClasses.push_back(std::move(lc));
         }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "BrownRock";
+            sc.seed = 345234534;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 32;
+            sc.maxScatter = 30;
+            sc.densityFactor = 1.0;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = -0.0f;
+            sc.minScale = 0.25f;
+            sc.maxScale = 1.5f;
+            sc.castShadows = false;
+            sc.recieveShadows = false;
+            sc.maxSpeed = 1000.0;
+            sc.materialName = "scatter_rock_laythe";
+            sc.baseMeshName = "boulder";
+            sc.hasBaseMesh = true;
+            m->scatters.push_back(std::move(sc));
+        }
         m->useHeightMap = false;
         m->heightMap = maps.Get("oceanmoon_height.19931");
         m->vHeightMax = 6000.0f;
@@ -3387,6 +3647,26 @@ std::unique_ptr<PQS> MakeVall(MapLibrary& maps, const StockPQSOptions& options) 
             lc.scatter.push_back({"boulder", 0.20000000298023224});
             m->landClasses.push_back(std::move(lc));
         }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "boulder";
+            sc.seed = 231123;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 32;
+            sc.maxScatter = 20;
+            sc.densityFactor = 1.0;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = 0.0f;
+            sc.minScale = 0.1f;
+            sc.maxScale = 2.0f;
+            sc.castShadows = true;
+            sc.recieveShadows = false;
+            sc.maxSpeed = 1000.0;
+            sc.materialName = "vallScatter";
+            sc.baseMeshName = "vallScatter";
+            sc.hasBaseMesh = true;
+            m->scatters.push_back(std::move(sc));
+        }
         m->useHeightMap = false;
         m->heightMap = maps.Get("icemoon_mountains.19988");
         m->vHeightMax = 10000.0f;
@@ -3640,6 +3920,26 @@ std::unique_ptr<PQS> MakeBop(MapLibrary& maps, const StockPQSOptions& options) {
             lc.scatter.push_back({"boulder", 1.0});
             m->landClasses.push_back(std::move(lc));
         }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "boulder";
+            sc.seed = 231123;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 32;
+            sc.maxScatter = 20;
+            sc.densityFactor = 1.0;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = 0.0f;
+            sc.minScale = 0.5f;
+            sc.maxScale = 3.0f;
+            sc.castShadows = false;
+            sc.recieveShadows = false;
+            sc.maxSpeed = 1000.0;
+            sc.materialName = "brown_cliff";
+            sc.baseMeshName = "boulder";
+            sc.hasBaseMesh = true;
+            m->scatters.push_back(std::move(sc));
+        }
         m->useHeightMap = false;
         m->heightMap = nullptr;
         m->vHeightMax = 10000.0f;
@@ -3859,6 +4159,26 @@ std::unique_ptr<PQS> MakeTylo(MapLibrary& maps, const StockPQSOptions& options) 
             lc.scatter.push_back({"boulder", 0.5});
             m->landClasses.push_back(std::move(lc));
         }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "boulder";
+            sc.seed = 231123;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 32;
+            sc.maxScatter = 20;
+            sc.densityFactor = 1.0;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = 0.0f;
+            sc.minScale = 0.5f;
+            sc.maxScale = 3.0f;
+            sc.castShadows = false;
+            sc.recieveShadows = false;
+            sc.maxSpeed = 1000.0;
+            sc.materialName = "terrain_rock00";
+            sc.baseMeshName = "boulder";
+            sc.hasBaseMesh = true;
+            m->scatters.push_back(std::move(sc));
+        }
         m->useHeightMap = false;
         m->heightMap = nullptr;
         m->vHeightMax = 10000.0f;
@@ -4056,6 +4376,26 @@ std::unique_ptr<PQS> MakeGilly(MapLibrary& maps, const StockPQSOptions& options)
             lc.delta = 1.0;
             lc.scatter.push_back({"boulder", 1.0});
             m->landClasses.push_back(std::move(lc));
+        }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "boulder";
+            sc.seed = 231123;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 32;
+            sc.maxScatter = 20;
+            sc.densityFactor = 1.0;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = 0.0f;
+            sc.minScale = 0.5f;
+            sc.maxScale = 3.0f;
+            sc.castShadows = false;
+            sc.recieveShadows = false;
+            sc.maxSpeed = 1000.0;
+            sc.materialName = "gilly_scatter";
+            sc.baseMeshName = "boulder";
+            sc.hasBaseMesh = true;
+            m->scatters.push_back(std::move(sc));
         }
         m->useHeightMap = false;
         m->heightMap = nullptr;
@@ -4258,6 +4598,46 @@ std::unique_ptr<PQS> MakePol(MapLibrary& maps, const StockPQSOptions& options) {
             lc.scatter.push_back({"boulder", 0.25});
             lc.scatter.push_back({"stalactite", 0.75});
             m->landClasses.push_back(std::move(lc));
+        }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "boulder";
+            sc.seed = 231123;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 32;
+            sc.maxScatter = 20;
+            sc.densityFactor = 1.0;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = -0.15f;
+            sc.minScale = 0.25f;
+            sc.maxScale = 2.0f;
+            sc.castShadows = true;
+            sc.recieveShadows = false;
+            sc.maxSpeed = 1000.0;
+            sc.materialName = "brownrock";
+            sc.baseMeshName = "boulder";
+            sc.hasBaseMesh = true;
+            m->scatters.push_back(std::move(sc));
+        }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "stalactite";
+            sc.seed = 23453;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 32;
+            sc.maxScatter = 20;
+            sc.densityFactor = 1.0;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = 0.0f;
+            sc.minScale = 0.5f;
+            sc.maxScale = 4.0f;
+            sc.castShadows = true;
+            sc.recieveShadows = false;
+            sc.maxSpeed = 1000.0;
+            sc.materialName = "brownrock";
+            sc.baseMeshName = "Cube";
+            sc.hasBaseMesh = true;
+            m->scatters.push_back(std::move(sc));
         }
         m->useHeightMap = false;
         m->heightMap = nullptr;
@@ -4627,6 +5007,26 @@ std::unique_ptr<PQS> MakeEeloo(MapLibrary& maps, const StockPQSOptions& options)
             lc.delta = 0.0;
             lc.scatter.push_back({"boulder", 0.019999999552965164});
             m->landClasses.push_back(std::move(lc));
+        }
+        {
+            PQSLandControl::LandClassScatter sc;
+            sc.scatterName = "boulder";
+            sc.seed = 4565677;
+            sc.maxCache = 512;
+            sc.maxCacheDelta = 32;
+            sc.maxScatter = 20;
+            sc.densityFactor = 0.019999999552965164;
+            sc.maxLevelOffset = 0;
+            sc.verticalOffset = 0.2f;
+            sc.minScale = 0.1f;
+            sc.maxScale = 4.0f;
+            sc.castShadows = true;
+            sc.recieveShadows = true;
+            sc.maxSpeed = 1000.0;
+            sc.materialName = "snowboulder";
+            sc.baseMeshName = "boulder";
+            sc.hasBaseMesh = true;
+            m->scatters.push_back(std::move(sc));
         }
         m->useHeightMap = false;
         m->heightMap = maps.Get("snowydwarfplanet_height.19921");

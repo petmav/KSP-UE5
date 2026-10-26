@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 
+#include "ksp/core/delegate.hpp"
 #include "ksp/math/quaterniond.hpp"
 #include "ksp/math/vector3d.hpp"
 #include "ksp/terrain/pqs.hpp"
@@ -46,7 +47,8 @@ struct PQMesh {
 class PQ {
 public:
     using QuadChild = PQS::QuadChild;
-    using QuadDelegate = std::function<void(PQ&)>;
+    // PQ.QuadDelegate (PQ.cs): a C# multicast delegate (Delegate.Combine / Remove: PQSMod_LandClassScatterQuad.Setup / Destroy, WP-12d)
+    using QuadDelegate = Delegate<void(PQ&)>;
 
     PQ();  // Awake (PQ.cs:169) state
 

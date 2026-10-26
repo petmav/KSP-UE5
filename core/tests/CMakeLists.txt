@@ -21,6 +21,9 @@ add_executable(kspcore_tests
     test_terrain.cpp
     test_pqs_quadtree.cpp
     test_terrain_colliders.cpp
+    test_pqs_surface.cpp
+    test_pqs_surface_scenes.cpp
+    test_ksc_facilities.cpp
     test_partloader.cpp
     test_modules.cpp
     test_part.cpp
@@ -118,7 +121,7 @@ add_executable(kspcore_tests
 )
 target_link_libraries(kspcore_tests PRIVATE kspcore)
 ksp_set_build_flags(kspcore_tests)
-target_include_directories(kspcore_tests PRIVATE ${PROJECT_SOURCE_DIR}/third_party ${PROJECT_SOURCE_DIR}/tools/golden_runner
+target_include_directories(kspcore_tests PRIVATE ${PROJECT_SOURCE_DIR}/third_party ${PROJECT_SOURCE_DIR}/tools/golden_runner ${PROJECT_SOURCE_DIR}/tools/wp12d
                            ${PROJECT_SOURCE_DIR}/tools/support)
 target_compile_definitions(kspcore_tests PRIVATE KSPCORE_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
                            KSPCORE_HARNESS_DIR="${KSP_HARNESS_DIR}" KSPCORE_PROJECT_ROOT="${KSP_PROJECT_ROOT}"
@@ -155,6 +158,12 @@ target_link_libraries(wp12_height_oracle PRIVATE kspcore)
 ksp_set_build_flags(wp12_height_oracle)
 target_include_directories(wp12_height_oracle PRIVATE ${PROJECT_SOURCE_DIR}/third_party)
 target_compile_definitions(wp12_height_oracle PRIVATE KSPCORE_DATA_DIR="${PROJECT_SOURCE_DIR}/data")
+# WP-12d: the inputs of tools/wp12d/scatter_reference.py (wp12d_scatter_inputs <out.json>)
+add_executable(wp12d_scatter_inputs ${PROJECT_SOURCE_DIR}/tools/wp12d/scatter_inputs.cpp)
+target_link_libraries(wp12d_scatter_inputs PRIVATE kspcore)
+ksp_set_build_flags(wp12d_scatter_inputs)
+target_include_directories(wp12d_scatter_inputs PRIVATE ${PROJECT_SOURCE_DIR}/third_party ${PROJECT_SOURCE_DIR}/tools/wp12d)
+target_compile_definitions(wp12d_scatter_inputs PRIVATE KSPCORE_DATA_DIR="${PROJECT_SOURCE_DIR}/data")
 # WP-12a: quad build / tree update benchmark (not a test): wp12_bench [repeats]
 add_executable(wp12_bench ${PROJECT_SOURCE_DIR}/tools/wp12/bench.cpp)
 target_link_libraries(wp12_bench PRIVATE kspcore)

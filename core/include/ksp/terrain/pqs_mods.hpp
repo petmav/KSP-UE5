@@ -48,8 +48,21 @@ using Texture2DGrayscaleSampler = std::function<double(float u, float v)>;
 enum class PQSNoiseType : int { Perlin = 0, RidgedMultifractal = 1, Billow = 2 };  // PQSMod_VertexHeightNoise*.NoiseType
 
 // ---- PQSLandControl.cs ---------------------------------------------------------------------------------------------
+// WP-11 ported the height half (land-class blending, minimumRealHeight / alterRealHeight). WP-12d adds the scatter half: the scatter
+// matching of OnSetup, OnQuadPreBuild, the scatter branch of OnVertexBuild (the per-scatter density of the quad), OnQuadBuilt, the
+// LandClassScatter cache bookkeeping and CreateScatterMesh (the placement of the scatter instances: UnityEngine.Random draws, positions,
+// rotations, scales, the transformed vertices of the base mesh), PQSMod_LandClassScatterQuad's scheduling. Excluded (rendering): the vertex
+// colour branch of OnVertexBuild (createColors: Color.Lerp of the land-class colours and the alterApparentHeight alpha, the channel only the
+// terrain shader reads), materials, MeshRenderers and shadow modes (castShadows / recieveShadows are kept as data). The base meshes of the
+// stock tree / rock scatters are not extracted (`baseMesh*` vectors empty): their instance transforms are still computed, their vertices are
+// the host's to transform (LandClassScatterQuad::instances).
 class PQSLandControl : public PQSMod {
 public:
+    PQSLandControl();
+    ~PQSLandControl() override;
+    PQSLandControl(const PQSLandControl&) = delete;
+    PQSLandControl& operator=(const PQSLandControl&) = delete;
+
     // PQSLandControl.cs:10
     struct LerpRange {
         double startStart = 0.0, startEnd = 0.0, endStart = 0.0, endEnd = 0.0;
@@ -57,10 +70,13 @@ public:
         void Setup();                      // :26
         double Lerp(double point) const;   // :32
     };
-    // PQSLandControl.cs:122 (scatter amounts: names/densities only; scatter objects are not ported)
+    class LandClassScatter;
+    // PQSLandControl.cs:122
     struct LandClassScatterAmount {
         std::string scatterName;
         double density = 0.0;
+        LandClassScatter* scatter = nullptr;   // the scatters[] entry OnSetup matched by name
+        int scatterIndex = 0;
     };
     // PQSLandControl.cs:55
     struct LandClass {
@@ -83,7 +99,101 @@ public:
         std::vector<LandClassScatterAmount> scatter;
     };
 
+    // PQSMod_LandClassScatterQuad.cs:4 (WP-48, tier C: the Mesh / MeshFilter / MeshRenderer are the engine's). The scheduling that decides
+    // when CreateScatterMesh runs and the mesh data it produces.
+    class LandClassScatterQuad {
+    public:
+        // what CreateScatterMesh placed: per instance (scatterLoop < count) and the whole vertex buffer (mesh.vertices / normals)
+        struct Instance {
+            Vector3f position;      // scatterPos (quad-local, after the vertical offset)
+            Vector3f up;            // scatterUp
+            float angle = 0.0f;     // scatterAngle (degrees)
+            Quaternionf rotation;   // scatterRot
+            float scale = 0.0f;     // scatterScale
+            int vertex = 0, vertexOther = 0;   // the two PQS.vi indices of the Lerp
+        };
+        std::string name = "Unass";          // gameObject.name
+        int layer = 15;                       // gameObject.layer
+        bool objActive = false;               // obj.SetActive
+        bool isVisible = false;               // :14
+        bool isBuilt = false;                 // :16
+        int seed = 0;                         // :18
+        PQ* quad = nullptr;                   // :20
+        int count = 0;                        // :22
+        LandClassScatter* scatter = nullptr;  // :24
+        Vector3d localPosition;               // transform.localPosition (quad.positionPlanet with surfaceRelativeQuads)
+        PQMesh mesh;                          // the Mesh of BuildCache (vertices / normals / uv; triangleSet unused) and its bounds
+        std::vector<int> triangles;           // mesh.triangles (the tris of BuildCacheMesh)
+        std::vector<Instance> instances;
+        bool destroyed = false;               // Object.Destroy (SphereInactive)
+        double density = 0.0;                 // kspcore: the density AddScatterMeshController was given (tests, the reference gate)
+        void Setup(PQ& quad, int seed, LandClassScatter* scatter, int count);   // :26
+        void Destroy();                       // :79
+        void OnQuadVisible(PQ& quad);         // :104
+        void OnQuadInvisible(PQ& quad);       // :116
+        void OnQuadDestroy(PQ& quad);         // :128
+        void OnQuadUpdate(PQ& quad);          // :133
+    };
+
+    // PQSLandControl.cs:142
+    class LandClassScatter {
+    public:
+        std::string scatterName;              // :144
+        int seed = 0;                         // :146
+        int maxCache = 0;                     // :148
+        int maxCacheDelta = 0;                // :150
+        int maxScatter = 0;                   // :152
+        double densityFactor = 0.0;           // :154
+        std::string materialName;             // :156 material (the asset's name)
+        bool hasBaseMesh = false;             // :158 baseMesh != null
+        std::string baseMeshName;
+        // baseMesh.vertices / uv / normals / triangles (not extracted for the stock scatters; a host can fill them before Setup)
+        std::vector<Vector3f> baseMeshVertices, baseMeshNormals;
+        std::vector<Vector2f> baseMeshUV;
+        std::vector<int> baseMeshTriangles;
+        int maxLevelOffset = 0;               // :160
+        float verticalOffset = 0.0f;          // :162
+        float minScale = 0.0f;                // :164
+        float maxScale = 0.0f;                // :166
+        bool castShadows = false;             // :168
+        bool recieveShadows = false;          // :170
+        double maxSpeed = 200.0;              // :242
+        int minLevel() const { return minLevel_; }   // :244
+
+        void Setup(PQS* sphere);              // :246
+        void SphereActive();                  // :269
+        void SphereInactive();                // :277
+        void AddScatterMeshController(PQ& quad, double density);   // :292
+        void DestroyQuad(LandClassScatterQuad& q);   // :432
+        void CreateScatterMesh(LandClassScatterQuad& q);   // :442
+        static Vector3f RandomRange(const Vector3f& min, const Vector3f& max);   // :499
+        void ClearAll();                      // :504
+
+        // the cache state (private in C#)
+        int vertStride = 0, triStride = 0;    // :172 :174
+        bool scatterParentCreated = false;    // :176 scatterParent != null
+        std::vector<Vector3f> vertsUntrans, normUntrans, vertsEmpty, normalsEmpty, vertsTransformed, normalsTransformed;
+        std::vector<Vector2f> uvUntrans, uvs;
+        std::vector<int> trisUntrans, tris;
+        std::vector<LandClassScatterQuad*> cacheUnassigned;   // :208 (a Stack: the back is the top)
+        std::vector<LandClassScatterQuad*> cacheAssigned;     // :210
+        int cacheUnassignedCount = 0, cacheAssignedCount = 0, cacheTotalCount = 0;   // :212-216
+        bool cacheCreated = false;            // :238
+        int scatterN = 0;                     // :236
+        // every GameObject BuildCache made (owned here; the C# leaves them to the scene)
+        std::vector<std::unique_ptr<LandClassScatterQuad>> objects;
+
+    private:
+        void BuildCacheMesh(const std::vector<Vector3f>& vertBase, const std::vector<Vector2f>& uvBase, const std::vector<Vector3f>& normBase,
+                            const std::vector<int>& triBase);   // :313
+        void BuildCacheQuad();                // :345
+        void BuildCache(int countToAdd);      // :385
+        PQS* sphere = nullptr;                // :218
+        int minLevel_ = 0;
+    };
+
     std::vector<LandClass> landClasses;
+    std::vector<LandClassScatter> scatters;   // :528
     bool useHeightMap = false;
     MapSORef heightMap;
     float vHeightMax = 0.0f;
@@ -99,16 +209,43 @@ public:
     float longitudePersistance = 0.0f, longitudeFrequency = 0.0f;
     std::shared_ptr<Simplex> altitudeSimplex, latitudeSimplex, longitudeSimplex;
 
-    void OnSetup() override;
+    void Start();                                           // :617 (GameEvents.OnGameSettingsApplied)
+    void OnDestroy();                                       // :622
+    void ApplyCastShadowsSetting();                         // :627
+    void ClearAll();                                        // :653
+    void OnSetup() override;                                // :662
+    void OnQuadPreBuild(PQ& quad) override;                 // :726
     void OnVertexBuildHeight(PQSVertexBuildData& data) override;
+    void OnVertexBuild(PQSVertexBuildData& data) override;  // :809 (the scatter branch)
+    void OnQuadBuilt(PQ& quad) override;                    // :850
+    void OnSphereStarted() override;                        // :867
+    void OnSphereReset() override;                          // :876
     bool AffectsHeight() const override { return true; }
     void VisitSerialized(const SerializedFieldVisitor& v) const override;
-    static double Lerp(double v1, double v2, double dt);  // :885
+    static double Lerp(double v1, double v2, double dt);    // :885
+    double CubicHermite(double start, double end, double startTangent, double endTangent, double t);   // :890
+    static double Clamp(double v, double low, double high); // :897
+    static double DoubleLerp(double startStart, double startEnd, double endStart, double endEnd, double point);   // :910
 
     // evaluation state (C# private fields)
     double vHeight = 0.0, vLat = 0.0, vLon = 0.0, totalDelta = 0.0;
     std::vector<LandClass*> lcList;
     int lcListCount = 0;
+    std::vector<double> lcScatterList;   // :595 (null until OnSetup with Global_AllowScatter: empty)
+    bool scatterActive = false;          // :601
+    int scatterMinSubdiv = 0;            // :603
+    int scatterCount = 0;                // :605
+    int scatterInstCount = 0;            // :607 (sic: never reset)
+    double ct2 = 0.0, ct3 = 0.0;         // :589 :591
+
+    // WP-12a PQSHeightWorkers: the height pass of a prefetched quad ran on a worker sphere; what OnVertexBuild reads from it is carried per
+    // vertex (the land-class list and the normalised deltas) and restored here before OnVertexBuild (bit-identical to the inline build)
+    using BuildState = std::vector<std::pair<int, double>>;   // (land-class index, delta) of lcList in order
+    void CaptureBuildState(BuildState& out) const;
+    void RestoreBuildState(const BuildState& in);
+
+private:
+    bool listening_ = false;
 };
 
 // ---- flatten -------------------------------------------------------------------------------------------------------

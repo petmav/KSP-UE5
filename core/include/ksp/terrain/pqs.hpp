@@ -34,8 +34,10 @@
 #include <string>
 #include <vector>
 
+#include "ksp/core/delegate.hpp"
 #include "ksp/math/quaterniond.hpp"
 #include "ksp/math/vector3d.hpp"
+#include "ksp/terrain/pqs_surface_object.hpp"
 #include "ksp/unity/animation_curve.hpp"
 #include "ksp/unity/color.hpp"
 #include "ksp/unity/vector.hpp"
@@ -150,20 +152,33 @@ struct PQSTarget {
     Vector3d position;
 };
 
-// PQS_GameBindings.cs: the game-side settings hooks (C# events with these defaults)
+// PQS_GameBindings.cs: the game-side settings hooks. C# events with default handlers: `+=` appends to the invocation list and an
+// invocation returns the LAST handler's result (System.MulticastDelegate), so a binder's handler overrides the default while it is
+// subscribed (PQS_KSPBinder.cs). The fields are ksp::Delegate with the C# default handler as the first entry.
 struct PQS_GameBindings {
-    std::function<bool()> GetSettingsReady = [] { return true; };
-    std::function<bool()> GetPlanetForceShaderModel20 = [] { return false; };
-    std::function<bool()> GetUsePlanetScatter = [] { return true; };
-    std::function<float()> GetPlanetScatterFactor = [] { return 1.0f; };
-    std::function<bool()> GetLoadedSceneIsGame = [] { return false; };
-    std::function<bool(const std::string&)> GetPresetListCompatible;  // default: KSPUtil.CheckVersion vs 1.4.3 (pqs_cache.cpp)
-    bool SettingsReady() const { return GetSettingsReady(); }
-    bool PLANET_FORCE_SHADER_MODEL_2_0() const { return GetPlanetForceShaderModel20(); }
-    bool PLANET_SCATTER() const { return GetUsePlanetScatter(); }
-    float PLANET_SCATTER_FACTOR() const { return GetPlanetScatterFactor(); }
-    bool LoadedSceneIsGame() const { return GetLoadedSceneIsGame(); }
+    PQS_GameBindings();
+    Delegate<bool()> GetSettingsReady;                                  // :15 (() => true)
+    Delegate<bool()> GetPlanetForceShaderModel20;                       // :17 (() => false)
+    Delegate<bool()> GetUsePlanetScatter;                               // :19 (() => true)
+    Delegate<float()> GetPlanetScatterFactor;                           // :21 (() => 1f)
+    Delegate<bool()> GetLoadedSceneIsGame;                              // :23 (() => false)
+    Delegate<bool(const std::string&)> GetPresetListCompatible;         // :25 (KSPUtil.CheckVersion vs PQSCache.lastCompatible*)
+    Delegate<void(PQSSurfaceObject*)> OnPQSCityLoaded;                  // :27 (delegate { })
+    Delegate<void(PQSSurfaceObject*)> OnPQSCityUnloaded;                // :31
+    Delegate<double(PQSSurfaceObject*)> OnGetPQSCityLoadRange;          // :35 ((c) => double.MaxValue)
+    Delegate<double(PQSSurfaceObject*)> OnGetPOIRange;                  // :37
+    bool SettingsReady() const { return GetSettingsReady(); }           // :5
+    bool PLANET_FORCE_SHADER_MODEL_2_0() const { return GetPlanetForceShaderModel20(); }   // :7
+    bool PLANET_SCATTER() const { return GetUsePlanetScatter(); }       // :9
+    float PLANET_SCATTER_FACTOR() const { return GetPlanetScatterFactor(); }   // :11
+    bool LoadedSceneIsGame() const { return GetLoadedSceneIsGame(); }   // :13
     bool TerrainPresetListIsCompatible(const std::string& versionString) const;  // PQS_GameBindings.cs:39
+    void DispatchOnPQSCityLoaded(PQSSurfaceObject* pCity) { OnPQSCityLoaded(pCity); }       // :44
+    void DispatchOnPQSCityUnloaded(PQSSurfaceObject* pCity) { OnPQSCityUnloaded(pCity); }   // :49
+    double GetPQSCityLoadRange(PQSSurfaceObject* city) { return OnGetPQSCityLoadRange(city); }   // :54
+    double GetPOIRange(PQSSurfaceObject* surfaceObject) { return OnGetPOIRange(surfaceObject); }  // :59
+    // back to the C# initial state (tests; the static lives for the whole process like PQS.GameBindings)
+    void Reset();
 };
 
 class PQS {

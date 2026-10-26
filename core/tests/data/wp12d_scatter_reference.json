@@ -1,0 +1,601 @@
+{
+"provenance": {
+"checked": {
+"angle_axis_rows": 84,
+"unity_random_rows": 7424
+},
+"inputs": "core/tools/wp12d/scatter_inputs.json (sha256 92b6745abf94aaa22829ad8312d4918f9a363d41fcb95b4dd8b21e30393290b7)",
+"spec": "PQSLandControl.cs:292-497, StringExtensions.cs:3",
+"tool": "core/tools/wp12d/scatter_reference.py"
+},
+"quads": [
+{
+"count": 200,
+"firstInstances": [
+{
+"angle": "4348c48e",
+"position": [
+"c38d722a",
+"41a790f4",
+"c2971e80"
+],
+"rotation": [
+"3e993dd9",
+"3f3137aa",
+"bf24ebe3",
+"be023d96"
+],
+"scale": "3f93a09a",
+"up": [
+"3e807af2",
+"bc1a4801",
+"bf77cc0e"
+],
+"vi": [
+114,
+98
+]
+},
+{
+"angle": "43aa0ad6",
+"position": [
+"441c5ec2",
+"4483200e",
+"42aeed3c"
+],
+"rotation": [
+"3f354dc2",
+"3df9ab30",
+"3d6a8d9c",
+"bf316a3d"
+],
+"scale": "3f83b398",
+"up": [
+"3e813de7",
+"bbfc6880",
+"bf77b3b2"
+],
+"vi": [
+18,
+3
+]
+},
+{
+"angle": "43560a13",
+"position": [
+"c41f51d6",
+"bfdcd543",
+"c330aca9"
+],
+"rotation": [
+"3ebe211b",
+"3f2c455e",
+"bf1afc2e",
+"be53b331"
+],
+"scale": "3f9195f8",
+"up": [
+"3e802d0c",
+"bc1ae5d4",
+"bf77d61d"
+],
+"vi": [
+117,
+116
+]
+},
+{
+"angle": "439530ba",
+"position": [
+"c43c890d",
+"43acd770",
+"c359a7fa"
+],
+"rotation": [
+"3f2e7a82",
+"3eb8a91c",
+"be4b76d4",
+"bf1adba7"
+],
+"scale": "3ffd9355",
+"up": [
+"3e801321",
+"bc11699a",
+"bf77d9d3"
+],
+"vi": [
+87,
+72
+]
+},
+{
+"angle": "43058d8b",
+"position": [
+"44464b01",
+"43a2a675",
+"42f9aeca"
+],
+"rotation": [
+"bdd999a4",
+"3f25a792",
+"bf33a7e0",
+"3e8e8715"
+],
+"scale": "3fc3cc2c",
+"up": [
+"3e8161d9",
+"bc11f472",
+"bf77ae54"
+],
+"vi": [
+77,
+76
+]
+}
+],
+"instances": "f95a48cc519473908a1f7368979f53351c87997c82364f6dea52308d6bd9accf",
+"normals": "66af8f0fb884c9ff33eb285712f87cb3dbf92887a2e0eb8535eb618b71244d76",
+"quad": "Kerbin Zn123222212",
+"scatter": 1,
+"scatterName": "Grass00",
+"scene": 0,
+"seed": 910216522,
+"vertexCount": 1600,
+"vertices": "2c6d1bc81f5874275d85164adbd2147cda8c6d2ccb009b0119a53caef581c3b1",
+"viPairs": "314ccf5be1f8977a06602d02154f97cf54a11279c20f5cb782f8702f5d08b89b"
+},
+{
+"count": 37,
+"firstInstances": [
+{
+"angle": "4224c9b4",
+"position": [
+"c4840c6a",
+"c350f0c2",
+"c39360d8"
+],
+"rotation": [
+"3f2caa0d",
+"3e5be779",
+"3ed4182d",
+"3f127962"
+],
+"scale": "3fb6766c",
+"up": [
+"be3dd48e",
+"be824774",
+"3f72fb96"
+],
+"vi": [
+104,
+89
+]
+},
+{
+"angle": "436344a8",
+"position": [
+"43ee36ec",
+"c38dd691",
+"40a362c0"
+],
+"rotation": [
+"bee5e675",
+"3f0f2278",
+"3f26ffa6",
+"be7b4828"
+],
+"scale": "3fd6f020",
+"up": [
+"be3b35cc",
+"be825692",
+"3f731a13"
+],
+"vi": [
+94,
+79
+]
+},
+{
+"angle": "4386d6f9",
+"position": [
+"c3e37348",
+"43e9a226",
+"4217f7d6"
+],
+"rotation": [
+"bf27b14b",
+"3eddf22b",
+"3ee3c74c",
+"bedc447d"
+],
+"scale": "3ff1cd53",
+"up": [
+"be3ccb5c",
+"be81b20e",
+"3f731c78"
+],
+"vi": [
+160,
+159
+]
+},
+{
+"angle": "42f25fa5",
+"position": [
+"c42ef084",
+"c4317936",
+"c3c3e9b0"
+],
+"rotation": [
+"3e7ffcd0",
+"3f07f9a7",
+"3f406aa3",
+"3e99f96a"
+],
+"scale": "3fbfae46",
+"up": [
+"be3d3b59",
+"be82b67a",
+"3f72f425"
+],
+"vi": [
+42,
+26
+]
+},
+{
+"angle": "430dc4d3",
+"position": [
+"c3c76f2b",
+"c47585f5",
+"c3ca3baf"
+],
+"rotation": [
+"3de53afc",
+"3f1363b6",
+"3f48e297",
+"3e4d62e0"
+],
+"scale": "3fb75c67",
+"up": [
+"be3cb7d9",
+"be82f1c6",
+"3f72f28e"
+],
+"vi": [
+25,
+10
+]
+}
+],
+"instances": "7a920ce44c1c50c9d9fcf171c7a3417da97eac976d918a81ac0450fca9a460fe",
+"normals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"quad": "Kerbin Zp213001310",
+"scatter": 0,
+"scatterName": "Tree00",
+"scene": 1,
+"seed": 1202778855,
+"vertexCount": 0,
+"vertices": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"viPairs": "fe6f4d3d3ce25c48e848722b956c62fbc8e818d3b17dd8244075a4830c157a66"
+},
+{
+"count": 37,
+"instances": "d7e1f587fee252981863a12c98bdaa1c56f6bdba8681ccdac65e9d8d39b90f6e",
+"normals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"quad": "Kerbin Zp213001311",
+"scatter": 0,
+"scatterName": "Tree00",
+"scene": 1,
+"seed": 1202778856,
+"vertexCount": 0,
+"vertices": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"viPairs": "a3640fd2835f6f6d2402274f65b2a38c4204c9761546d61879c9a24885a742de"
+},
+{
+"count": 37,
+"instances": "d4eb56395309bc5734472042e9240369764bd299021393fe2121e4580fec7663",
+"normals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"quad": "Kerbin Zp213001312",
+"scatter": 0,
+"scatterName": "Tree00",
+"scene": 1,
+"seed": 1202778857,
+"vertexCount": 0,
+"vertices": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"viPairs": "db327526d2c4cc5aae8aef166318791114a974a9c3b2be1fa4c3c828c16e2af1"
+},
+{
+"count": 37,
+"instances": "eb6285f243d3f25baf385ba608f62dcc212efc169d792f46456a97defdabdc71",
+"normals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"quad": "Kerbin Zp213001313",
+"scatter": 0,
+"scatterName": "Tree00",
+"scene": 1,
+"seed": 1202778858,
+"vertexCount": 0,
+"vertices": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"viPairs": "0044283acdc681df719f8fc7027a8222d0485fe689a8d957c888fcff5b3881ac"
+},
+{
+"count": 37,
+"instances": "467f41da2e2ed979b3296d62f54c0f5adb863d714ade4607218c124475dec753",
+"normals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"quad": "Kerbin Zp213001330",
+"scatter": 0,
+"scatterName": "Tree00",
+"scene": 1,
+"seed": 1202778917,
+"vertexCount": 0,
+"vertices": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"viPairs": "c2702acac6292fa9aa8f0a00c1fc82c7f26b378f28c598af0076ade8321e0e57"
+},
+{
+"count": 37,
+"instances": "c9d9c1dde2b734e901f6faadf3e28c5151b582143dfdb16da51f34184e240b7e",
+"normals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"quad": "Kerbin Zp213001331",
+"scatter": 0,
+"scatterName": "Tree00",
+"scene": 1,
+"seed": 1202778918,
+"vertexCount": 0,
+"vertices": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"viPairs": "2a2f9f57ccec2b98e2a1c741597e697ef759ca0c46509ff42026a49174560ab1"
+},
+{
+"count": 37,
+"instances": "384c937c1ea03c0f36c5407a6646a013e8a16178b6d186ff56f1d0ab8f0949fe",
+"normals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"quad": "Kerbin Zp213001332",
+"scatter": 0,
+"scatterName": "Tree00",
+"scene": 1,
+"seed": 1202778919,
+"vertexCount": 0,
+"vertices": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"viPairs": "ca696bf3d90acde77e99ccb5bfa5d6b4bd1062a4bb1effbd4153c2024251e660"
+},
+{
+"count": 37,
+"instances": "da0d4cec3ee9be0d27b556f4b62673615fd13eb2e957af1fdc6cfba3f7151355",
+"normals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"quad": "Kerbin Zp213001333",
+"scatter": 0,
+"scatterName": "Tree00",
+"scene": 1,
+"seed": 1202778920,
+"vertexCount": 0,
+"vertices": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"viPairs": "b9fdf5c26fe2633e3a93508814a6d3c4bfb9d9ab5687f3daf5c39bd5d9272175"
+},
+{
+"count": 200,
+"firstInstances": [
+{
+"angle": "435342fc",
+"position": [
+"43e3a543",
+"442c4ea3",
+"438c2005"
+],
+"rotation": [
+"beb50f7d",
+"3f16ca25",
+"3f3525ea",
+"be292539"
+],
+"scale": "3fad5e42",
+"up": [
+"be3b3d8f",
+"be81813d",
+"3f733633"
+],
+"vi": [
+184,
+168
+]
+},
+{
+"angle": "42343463",
+"position": [
+"c3e8fd2f",
+"41da2fb1",
+"c2cbec4e"
+],
+"rotation": [
+"3f290e6f",
+"3e6f9576",
+"3edf91b4",
+"3f10793e"
+],
+"scale": "3fbe4cf6",
+"up": [
+"be3cd1be",
+"be821323",
+"3f730f31"
+],
+"vi": [
+116,
+115
+]
+},
+{
+"angle": "42fdb6ac",
+"position": [
+"4439717a",
+"c159f99c",
+"4312f71f"
+],
+"rotation": [
+"3e5b20f5",
+"3f0bd284",
+"3f43422d",
+"3e8b68da"
+],
+"scale": "3fa86e88",
+"up": [
+"be3ac095",
+"be821aa9",
+"3f7327bb"
+],
+"vi": [
+123,
+107
+]
+},
+{
+"angle": "42e7d664",
+"position": [
+"c47f59d3",
+"44781c27",
+"427b46b0"
+],
+"rotation": [
+"3e919776",
+"3f04d13a",
+"3f3cdd70",
+"3ea6730d"
+],
+"scale": "3fb612dc",
+"up": [
+"be3dc2fa",
+"be813fb2",
+"3f731fa6"
+],
+"vi": [
+224,
+208
+]
+},
+{
+"angle": "43a68680",
+"position": [
+"c43a7aae",
+"447a5831",
+"430872ba"
+],
+"rotation": [
+"bf4a8c88",
+"3e120b2a",
+"3d0e1be1",
+"bf17faf0"
+],
+"scale": "3ff6d403",
+"up": [
+"be3d4964",
+"be813cd3",
+"3f7325f4"
+],
+"vi": [
+222,
+206
+]
+}
+],
+"instances": "686c883208b9842ae7a16bdf8b6b9e2a0c23285640e785c00c16079920404f03",
+"normals": "b1923f2b71b4f00f1c1b3ead4ff0e2a4b793886461fa9f5aced4ee9b1229aece",
+"quad": "Kerbin Zp213001310",
+"scatter": 1,
+"scatterName": "Grass00",
+"scene": 1,
+"seed": 1202757834,
+"vertexCount": 1600,
+"vertices": "e50575186f0079bc71856b10efbf8dc2ce1c3d1426115e7cf4c0691819143aaa",
+"viPairs": "173d1a797831da9ad342e3d8a0850e9488ac1b323b0a35816f328393b3926357"
+},
+{
+"count": 200,
+"instances": "5a62704df8c250eacb50d642c9b413e6f2c1d4789bea3e5c356a6fca0117ce8c",
+"normals": "d5bc875f31e8227cd9d4733be2e53e25bf2b19a7f28c08744747d71f2c96a080",
+"quad": "Kerbin Zp213001311",
+"scatter": 1,
+"scatterName": "Grass00",
+"scene": 1,
+"seed": 1202757835,
+"vertexCount": 1600,
+"vertices": "4ca7507e92562a9be1611a82b5ecc03ac20c7c958b8db23020180be43312ea5f",
+"viPairs": "e16280237d2c2f2e9720f85d584dfa024e6c83c121ec1593277fc07803f83148"
+},
+{
+"count": 200,
+"instances": "1ff1a9d7bea3be5cd7ac1936c94f0fff2fed6e9b3c4321c7539c534649e4a16f",
+"normals": "39c353872299972df4d52fe81a44a1c5f889d274ab14816e93fe37b40d4f198d",
+"quad": "Kerbin Zp213001312",
+"scatter": 1,
+"scatterName": "Grass00",
+"scene": 1,
+"seed": 1202757836,
+"vertexCount": 1600,
+"vertices": "c18265cf1698672655c8586c786aacaf7c5e726f57622385396ca8cad4d53201",
+"viPairs": "270539b33413579883a945a6cd9e69fde63ec1c02f07e342612662b36aa76683"
+},
+{
+"count": 200,
+"instances": "987d089b5622675b269fe7f8791284bf185009800992a6c31eb244e4cefbbaea",
+"normals": "ab916a94a82c7792025a16f01758457ec957f67467b6f3f2ba7bf7c68735f4b4",
+"quad": "Kerbin Zp213001313",
+"scatter": 1,
+"scatterName": "Grass00",
+"scene": 1,
+"seed": 1202757837,
+"vertexCount": 1600,
+"vertices": "34f2f072d88c80fc6bff40e441bfa156fa69a1e75508bcde6519cf4f8ba511b4",
+"viPairs": "0c44e10ddf63e0cce5412c49c1065f8a1c14722b4b07bedf4741188bef6a85c8"
+},
+{
+"count": 200,
+"instances": "a297825300ea4c4eb84cb894440c80c09e6862438f5bac765d0c81811b0cf979",
+"normals": "85c036deccdf8959f8006e7d4e14506d1a82ff89fd0ddc3453eeb323a462489f",
+"quad": "Kerbin Zp213001330",
+"scatter": 1,
+"scatterName": "Grass00",
+"scene": 1,
+"seed": 1202757896,
+"vertexCount": 1600,
+"vertices": "d374600a2bb3e5a403f079d3375fff99761aa51cd7ec2a3a360dd34e8db18049",
+"viPairs": "8112ffe1336378340358e1e1a990f69201780bf4568fe4e2a1e58bc4171df04b"
+},
+{
+"count": 200,
+"instances": "f90b4cddae23ae90da1d6d6fe3eecf6c52a5b5e3c069c781400269de7b616969",
+"normals": "26e7d70ff3fe39fb626680614f3c59d945e3b7ecccd861081b55afb15c752a53",
+"quad": "Kerbin Zp213001331",
+"scatter": 1,
+"scatterName": "Grass00",
+"scene": 1,
+"seed": 1202757897,
+"vertexCount": 1600,
+"vertices": "695a25bb63a64fea58da93775e83eeec0e16be491f771f9724967d8576c2d83c",
+"viPairs": "60d38c94d968fe1b54dab288ab934debc00b95f3d8acfcd6c2d5355d68b81fa2"
+},
+{
+"count": 200,
+"instances": "4d263aa82edc86134e9b92d4fc54cc450880d75279d489bfb14250ee69624f52",
+"normals": "b2bcd4d4219fd67bd652173c7ebec0bc400ac67f0be4da5d992053f3f0545127",
+"quad": "Kerbin Zp213001332",
+"scatter": 1,
+"scatterName": "Grass00",
+"scene": 1,
+"seed": 1202757898,
+"vertexCount": 1600,
+"vertices": "93e2592092c3060d6333eeac7a9beb9994f2002db96687351248e1b28eed9d32",
+"viPairs": "e00edad9952fb698aa380141fe48e41864cb9965e1a97ee1e1c7533dac976c6f"
+},
+{
+"count": 200,
+"instances": "2d6fc5dfa8ef6c2331fa0729dde3d4945230c6b0c75f89a49781632a6ec4e24b",
+"normals": "a6a6bcc77b18532401540705698526112f05e0c482e8bc482b7518c4a9403b2c",
+"quad": "Kerbin Zp213001333",
+"scatter": 1,
+"scatterName": "Grass00",
+"scene": 1,
+"seed": 1202757899,
+"vertexCount": 1600,
+"vertices": "8e604548ba736984b1df02614643bcaf7e60fcff363c1313675fc101310313d1",
+"viPairs": "e0f06d9dba4f3af18474b5b386290c56ea6e7cfb4bd9aa01715e43a382803e17"
+}
+],
+"schema": "kspcore-wp12d-scatter/1"
+}
