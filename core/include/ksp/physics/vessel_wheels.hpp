@@ -32,9 +32,17 @@
 // `WheelPhysicsOptions::geometry` supplies them; unset, the spike's proxy: the tyre bottom at full extension is the bottom face of the part's
 // drag cube ("Deployed" cube when the part has one), the suspension along the vessel's up, the wheel rolling along the vessel's forward.
 //
-// Not here (deferred): the "schloompa" rigid-body freeze (ModuleWheelBase.ToggleRbConstraints: a 2 s anchor of a braked vessel at rest, traced
-// by WP-29b), the leg stand-in spheres and piston colliders of ModuleWheelDeployment, the visual suspension / wheel transforms, the impact
-// collider of ModuleWheelDamage, KSC scenery tags of landedAt (terrain reports layer 15, "Untagged").
+// COLLIDERS (WP-29d / WP-29e): with model data the wheel part's .mu colliders are shapes of the cluster compound and FOLLOW the model every physics step
+// (UpdateColliders): the animation of the gear clip, the suspension / caliper / wheel transforms VPWheelCollider.UpdateVisualWheel moves each frame
+// (its Transform writes go through VPWheelCollider::visual = MakeRigVisualHost, ksp/physics/wheel_visual.hpp), and the stand-in sphere of a retracted gear
+// (ModuleWheelDeployment.CreateStandInCollider) on deployTgt. A part with such colliders gets a mutable compound (VesselPhysicsOptions::mutableColliders;
+// PhysicsWorld::SetCompoundChildPoses); a collider that appears or goes (the stand-in, the hidden wheel, a damaged wheel) rebuilds the cluster. The
+// colliders that follow a suspension are shapes but not part of the part's inertia estimate (ColliderProxy::noInertia).
+//
+// The "schloompa" rigid-body freeze (ModuleWheelBase.ToggleRbConstraints) is a weld of the whole cluster to the world: a wheel part is a member of its rigid
+// cluster, freezing the member is freezing the cluster (WP-29e).
+//
+// Not here (deferred): the impact collider of ModuleWheelDamage, capture C11.
 #pragma once
 
 #include <cstddef>
