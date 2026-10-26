@@ -1215,7 +1215,6 @@ void WheelPhysicsHost::PhysicsStep(float dt) {
     lastSubsteps_ = n;
     const float h = dt / static_cast<float>(n);
     std::vector<std::pair<VesselPhysics*, VesselPhysics::BufferedForces>> held;
-    UpdateColliders();
     ApplyFreezes();
     const size_t rebinds0 = host.RebindCount();
     if (n > 1)
@@ -1230,6 +1229,7 @@ void WheelPhysicsHost::PhysicsStep(float dt) {
             ManagedSubstep(h);
         }
         TickAnimations(h);  // animatePhysics (ModuleWheelDeployment.cs:239): the clips advance in the physics step
+        UpdateColliders();  // WP-29e: the colliders follow the model this step has posed (PhysX syncs the transforms before it simulates)
         ApplyPendingForces();
         NativeStep(h);
         host.Step(h);

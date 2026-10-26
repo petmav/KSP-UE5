@@ -941,10 +941,12 @@ TEST_CASE("WP-29e Aeris 3A gear up on the runway, then deployed: the stand-in go
     std::vector<double> posAtFlip(3, -1.0), posBefore(3, -1.0);
     std::vector<float> prevPos(3, 0.0f);
     bool standInWithWheelOn = false;  // the C# gives the stand-in to the retracted / deploying wheel only: both never at once past TsubSys
+    double maxModelError = 0.0;  // the cluster compound against the live model while the gear moves (the retract box rides the animation clip)
     for (int k = 0; k < 700; ++k) {
         a.Tick();
         for (size_t i = 0; i < 3; ++i) {
             auto& wh = a.Wheels().Wheels()[i];
+            if (k % 20 == 0) maxModelError = std::max(maxModelError, wp29c::MaxColliderModelError(*a.Vp(), a.scene->pad.s.world, *wh));
             const bool active = deps[i]->StandInColliderActive();
             if (!active && flipTick[i] < 0) {
                 flipTick[i] = k;
@@ -972,6 +974,8 @@ TEST_CASE("WP-29e Aeris 3A gear up on the runway, then deployed: the stand-in go
         CHECK(!deps[i]->StandInColliderActive());
         CHECK(deps[i]->Get<std::string>("stateString") == "Deployed");
     }
+    MESSAGE("deploy on the ground: the compound's colliders stay within " << maxModelError << " m of the animated model");
+    CHECK(maxModelError < 1e-4);
     CHECK(!standInWithWheelOn);
     CHECK(a.Wheels().GroundedCount() == 3);
     CHECK(std::fabs(rest - deployedRest) < 0.02);
