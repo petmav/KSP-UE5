@@ -6,6 +6,7 @@
 #include <string>
 
 #include "contact_fixture.hpp"
+#include "scatter_scene.hpp"
 #include "ksp/physics/scenery_host.hpp"
 #include "ksp/space_center/pqs_city.hpp"
 #include "ksp/space_center/scenery_colliders.hpp"
@@ -57,7 +58,7 @@ struct SphereAt {
 
 }  // namespace
 
-TEST_CASE("WP-12d PQSCity2.OrientateRayCast over the terrain colliders at the four stock launch sites (the height correction KSP applies, sign as in the C#)") {
+TEST_CASE_FIXTURE(wp12d::StateGuard, "WP-12d PQSCity2.OrientateRayCast over the terrain colliders at the four stock launch sites (the height correction KSP applies, sign as in the C#)") {
     if (!wp20b::GameAvailable()) return;
     for (const char* site : {"Kerbin/Crater_Launch_Site", "Kerbin/MahiMahi_Launch_Site", "Kerbin/Cove_Launch_Site", "Kerbin/GlacierLake_Launch_Site"}) {
         World w(true);

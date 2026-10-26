@@ -21,6 +21,7 @@
 #include "ksp/terrain/pqs_surface_colliders.hpp"
 #include "ksp/unity/quaternion_native.hpp"
 #include "nlohmann/json.hpp"
+#include "scatter_scene.hpp"
 
 using namespace ksp;
 using nlohmann::json;
@@ -95,7 +96,7 @@ json Box(const PQSBoxCollider& b) {
 
 }  // namespace
 
-TEST_CASE("WP-12d PQS_Collider / PQS_ColliderAdvanced / PQS_PartCollider vs tools/wp12d/surface_colliders_reference.py (bit for bit)") {
+TEST_CASE_FIXTURE(wp12d::StateGuard, "WP-12d PQS_Collider / PQS_ColliderAdvanced / PQS_PartCollider vs tools/wp12d/surface_colliders_reference.py (bit for bit)") {
     const json ref = json::parse(std::ifstream(kTestData + "/wp12d_colliders_reference.json"));
     REQUIRE(ref.at("schema") == "kspcore-wp12d-colliders/1");
     size_t rows = 0, mismatches = 0, boxes = 0, calls = 0;
@@ -238,7 +239,7 @@ TEST_CASE("WP-12d PQS_Collider / PQS_ColliderAdvanced / PQS_PartCollider vs tool
     PhysicsIgnoreCollisions().Clear();
 }
 
-TEST_CASE("WP-12d surface colliders: C# rules the reference scenarios do not reach") {
+TEST_CASE_FIXTURE(wp12d::StateGuard, "WP-12d surface colliders: C# rules the reference scenarios do not reach") {
     auto sphere = terrain::LoadStockPQS("Kerbin", Maps());
     PQS_ColliderAdvanced::ClearStatics();
     PQS_PartCollider::ClearStatics();
@@ -373,7 +374,7 @@ const PQSCityPrefab& StockCity(const std::string& gameObject) {
 }
 }  // namespace
 
-TEST_CASE("WP-12d PQS_GameBindings: C# multicast defaults; PQS_KSPBinder binds GameSettings / HighLogic / VesselRanges and leaves OnGetPOIRange bound") {
+TEST_CASE_FIXTURE(wp12d::StateGuard, "WP-12d PQS_GameBindings: C# multicast defaults; PQS_KSPBinder binds GameSettings / HighLogic / VesselRanges and leaves OnGetPOIRange bound") {
     PQS_GameBindings& gb = PQS::GameBindings();
     gb.Reset();
     PQSCity city(StockCity("Kerbin/KSC"), nullptr, nullptr);
@@ -454,7 +455,7 @@ TEST_CASE("WP-12d PQS_GameBindings: C# multicast defaults; PQS_KSPBinder binds G
     gb.Reset();
 }
 
-TEST_CASE("WP-12d PQSCity / PQSCity2 range events in OnUpdateFinished (PQSCity.cs:252-275, PQSCity2.cs:476-487) through the linked collider structures") {
+TEST_CASE_FIXTURE(wp12d::StateGuard, "WP-12d PQSCity / PQSCity2 range events in OnUpdateFinished (PQSCity.cs:252-275, PQSCity2.cs:476-487) through the linked collider structures") {
     PQS_GameBindings& gb = PQS::GameBindings();
     gb.Reset();
     CelestialBody kerbin;
@@ -552,7 +553,7 @@ struct Bodies12d {
 };
 }  // namespace
 
-TEST_CASE("WP-12d SurfaceObject: Start after initDelay frames grabs lat / lon / alt and pops to the scene root; the update mode pins the transform to the body") {
+TEST_CASE_FIXTURE(wp12d::StateGuard, "WP-12d SurfaceObject: Start after initDelay frames grabs lat / lon / alt and pops to the scene root; the update mode pins the transform to the body") {
     Bodies12d b;
     CelestialBody& kerbin = b.Kerbin();
     using UnityEngine::Transform;
@@ -617,7 +618,7 @@ TEST_CASE("WP-12d SurfaceObject: Start after initDelay frames grabs lat / lon / 
     CHECK(t2.position.Equals((kerbin.position + kerbin.GetSurfaceNVector(10.0, 20.0) * (kerbin.Radius + 30.0)).ToVector3f()));
 }
 
-TEST_CASE("WP-12d SpaceCenterSurfaceObject: set up on the first SPACECENTER / FLIGHT load, returned to its parent on a scene change, popped again 5 frames after the next load") {
+TEST_CASE_FIXTURE(wp12d::StateGuard, "WP-12d SpaceCenterSurfaceObject: set up on the first SPACECENTER / FLIGHT load, returned to its parent on a scene change, popped again 5 frames after the next load") {
     Bodies12d b;
     CelestialBody& kerbin = b.Kerbin();
     using UnityEngine::Transform;
@@ -658,7 +659,7 @@ TEST_CASE("WP-12d SpaceCenterSurfaceObject: set up on the first SPACECENTER / FL
     CHECK(ksc.parent() == &pqs);
 }
 
-TEST_CASE("WP-12d PQSMod_SurfaceObjectQuads: a SurfaceObject per built quad at maxLevel - |maxLevelOffset|, terminated with the quad") {
+TEST_CASE_FIXTURE(wp12d::StateGuard, "WP-12d PQSMod_SurfaceObjectQuads: a SurfaceObject per built quad at maxLevel - |maxLevelOffset|, terminated with the quad") {
     Bodies12d b;
     CelestialBody& kerbin = b.Kerbin();
     PQS sphere;
@@ -694,4 +695,232 @@ TEST_CASE("WP-12d PQSMod_SurfaceObjectQuads: a SurfaceObject per built quad at m
     mod.OnQuadDestroy(high);
     CHECK(mod.Count() == 0);
     mod.OnQuadDestroy(low);   // no SurfaceObject: nothing
+}
+
+// ---- PQSLandControl scatter (WP-12d item 2d) -----------------------------------------------------------------------------------------
+
+#include "datasets.hpp"  // Sha256Hex (tools/golden_runner/sha256.cpp)
+
+namespace {
+std::string FloatsDigest(const std::vector<float>& v) {
+    std::string bytes(v.size() * 4, '\0');
+    std::memcpy(bytes.data(), v.data(), bytes.size());
+    return Sha256Hex(bytes);
+}
+std::string HexD12(double d) {
+    uint64_t u;
+    std::memcpy(&u, &d, 8);
+    char b[24];
+    std::snprintf(b, sizeof b, "%016llx", static_cast<unsigned long long>(u));
+    return b;
+}
+// the scatter outputs of a scene in the reference's row format, by (scatter index, quad name)
+json ScatterRow(const PQSLandControl::LandClassScatterQuad& q, int maxScatter, int vertStride) {
+    std::vector<float> inst, verts, norms;
+    std::string pairs = "[";
+    for (size_t i = 0; i < q.instances.size(); ++i) {
+        const auto& in = q.instances[i];
+        inst.insert(inst.end(), {in.position.x, in.position.y, in.position.z, in.up.x, in.up.y, in.up.z, in.angle, in.rotation.x, in.rotation.y,
+                                 in.rotation.z, in.rotation.w, in.scale});
+        pairs += (i ? ", [" : "[") + std::to_string(in.vertex) + ", " + std::to_string(in.vertexOther) + "]";
+    }
+    pairs += "]";
+    for (const Vector3f& v : q.mesh.vertices) verts.insert(verts.end(), {v.x, v.y, v.z});
+    for (size_t i = 0; i < static_cast<size_t>(q.count * vertStride) && i < q.mesh.normals.size(); ++i)
+        norms.insert(norms.end(), {q.mesh.normals[i].x, q.mesh.normals[i].y, q.mesh.normals[i].z});
+    json row = {{"count", q.count}, {"seed", q.seed}, {"vertexCount", static_cast<int>(q.mesh.vertices.size())},
+                {"instances", FloatsDigest(inst)}, {"viPairs", Sha256Hex(pairs)}, {"vertices", FloatsDigest(verts)}, {"normals", FloatsDigest(norms)}};
+    (void)maxScatter;
+    return row;
+}
+}  // namespace
+
+TEST_CASE_FIXTURE(wp12d::StateGuard, "WP-12d PQSLandControl scatter vs tools/wp12d/scatter_reference.py: counts, seeds, placement and the quad meshes of 17 scatter quads (bit for bit)") {
+    const json ref = json::parse(std::ifstream(kTestData + "/wp12d_scatter_reference.json"));
+    const json inputs = json::parse(std::ifstream(std::string(KSPCORE_PROJECT_ROOT) + "/core/tools/wp12d/scatter_inputs.json"));
+    REQUIRE(ref.at("schema") == "kspcore-wp12d-scatter/1");
+    const UnityRandom::State saved = UnityRandom::Global().state();
+    size_t compared = 0, mismatches = 0, inputMismatches = 0, instances = 0;
+    for (size_t si = 0; si < inputs.at("scenes").size(); ++si) {
+        const json& scene = inputs.at("scenes").at(si);
+        wp12d::ScatterScene sc(Maps(), 3, 0, D(scene.at("lat")), D(scene.at("lon")));
+        PQSLandControl* lc = sc.LandControl();
+        REQUIRE(lc != nullptr);
+        for (const json& js : scene.at("scatters")) {
+            const PQSLandControl::LandClassScatter& scat = lc->scatters.at(js.at("index").get<size_t>());
+            for (const json& jq : js.at("quads")) {
+                const PQSLandControl::LandClassScatterQuad* found = nullptr;
+                for (const auto* q : scat.cacheAssigned)
+                    if (q->quad != nullptr && q->quad->name == jq.at("name").get<std::string>()) found = q;
+                REQUIRE_MESSAGE(found != nullptr, jq.at("name").get<std::string>());
+                // the inputs the reference was given are still what this build produces (upstream drift would show here)
+                bool sameInputs = HexD12(found->density) == jq.at("density").get<std::string>() &&
+                                  HexD12(found->quad->quadArea) == jq.at("quadArea").get<std::string>() && found->quad->verts.size() == jq.at("verts").size();
+                for (size_t k = 0; sameInputs && k < found->quad->verts.size(); ++k)
+                    sameInputs = JV(found->quad->verts[k]) == jq.at("verts")[k];
+                if (!sameInputs) ++inputMismatches;
+                json want;
+                for (const json& r : ref.at("quads"))
+                    if (r.at("scene").get<size_t>() == si && r.at("scatter").get<size_t>() == js.at("index").get<size_t>() &&
+                        r.at("quad").get<std::string>() == jq.at("name").get<std::string>())
+                        want = r;
+                REQUIRE(!want.is_null());
+                json got = ScatterRow(*found, scat.maxScatter, scat.vertStride);
+                json cmp = want;
+                for (const char* k : {"scene", "scatter", "scatterName", "quad", "firstInstances"}) cmp.erase(k);
+                if (got != cmp) {
+                    MESSAGE(jq.at("name").get<std::string>() << ":\n got  " << got.dump() << "\n want " << cmp.dump());
+                    ++mismatches;
+                }
+                if (want.contains("firstInstances")) {
+                    for (size_t k = 0; k < want.at("firstInstances").size(); ++k) {
+                        const auto& in = found->instances.at(k);
+                        const json& w = want.at("firstInstances")[k];
+                        const json g = {{"position", JV(in.position)}, {"up", JV(in.up)}, {"angle", HF(in.angle)}, {"rotation", JQ(in.rotation)},
+                                        {"scale", HF(in.scale)}, {"vi", json::array({in.vertex, in.vertexOther})}};
+                        if (g != w) ++mismatches;
+                    }
+                }
+                instances += found->instances.size();
+                ++compared;
+            }
+        }
+    }
+    UnityRandom::Global().SetState(saved);
+    MESSAGE("WP-12d scatter: " << compared << " scatter quads, " << instances << " instances; " << mismatches << " mismatches, " << inputMismatches
+                               << " input mismatches");
+    CHECK(compared == 17);
+    CHECK(mismatches == 0);
+    CHECK(inputMismatches == 0);
+}
+
+TEST_CASE_FIXTURE(wp12d::StateGuard, "WP-12d PQSLandControl scatter with PQSHeightWorkers: the land-class state of the worker's height pass reaches OnVertexBuild (identical to inline)") {
+    const UnityRandom::State saved = UnityRandom::Global().state();
+    auto Collect = [](const wp12d::ScatterScene& sc) {
+        json all = json::array();
+        const PQSLandControl* lc = sc.LandControl();
+        for (const auto& s : lc->scatters)
+            for (const auto* q : s.cacheAssigned)
+                all.push_back({q->quad != nullptr ? q->quad->name : std::string(), HexD12(q->density), ScatterRow(*q, s.maxScatter, s.vertStride)});
+        return all;
+    };
+    json inlineRows, workerRows;
+    int64_t used = 0;
+    {
+        wp12d::ScatterScene sc(Maps(), 3, 0, -15.0, 100.0);
+        inlineRows = Collect(sc);
+    }
+    {
+        wp12d::ScatterScene sc(Maps(), 3, 4, -15.0, 100.0);
+        workerRows = Collect(sc);
+        used = sc.workers->used;
+    }
+    UnityRandom::Global().SetState(saved);
+    MESSAGE("scatter quads inline " << inlineRows.size() << ", with 4 height workers " << workerRows.size() << " (" << used << " prefetched builds used)");
+    CHECK(used > 0);
+    CHECK(inlineRows.size() == 136);
+    CHECK(inlineRows == workerRows);
+}
+
+TEST_CASE_FIXTURE(wp12d::StateGuard, "WP-12d PQSLandControl scatter rules: density accumulation, count, OnSphereReset, the scatter-quad delegates") {
+    const UnityRandom::State saved = UnityRandom::Global().state();
+    SUBCASE("one land class covering everything: lcScatterList = density x delta x 225 x cacheVertCountReciprocal x Global_ScatterFactor") {
+        PQSCache cache;
+        PQS sphere;
+        sphere.radius = 600000.0;
+        sphere.maxLevel = 9;
+        sphere.cache = &cache;
+        PQSLandControl m;
+        m.sphere = &sphere;
+        m.createScatter = true;
+        m.vHeightMax = 1.0f;
+        m.altitudeOctaves = m.latitudeOctaves = m.longitudeOctaves = 1;
+        m.altitudeFrequency = m.latitudeFrequency = m.longitudeFrequency = 1.0f;
+        m.altitudePersistance = m.latitudePersistance = m.longitudePersistance = 0.5f;
+        PQSLandControl::LandClass lc;
+        lc.landClassName = "all";
+        for (PQSLandControl::LerpRange* r : {&lc.altitudeRange, &lc.latitudeRange, &lc.longitudeRange}) {
+            r->startStart = -10.0;
+            r->startEnd = -9.0;
+            r->endStart = 9.0;
+            r->endEnd = 10.0;
+        }
+        lc.coverageOctaves = lc.noiseOctaves = 1;
+        lc.coverageFrequency = lc.noiseFrequency = 1.0f;
+        lc.coveragePersistance = lc.noisePersistance = 0.5f;
+        lc.scatter.push_back({"Grass", 0.5});
+        m.landClasses.push_back(lc);
+        PQSLandControl::LandClassScatter s;
+        s.scatterName = "Grass";
+        s.maxScatter = 100;
+        s.maxCacheDelta = 4;
+        s.densityFactor = 1.0;
+        m.scatters.push_back(std::move(s));
+        m.OnSetup();
+        CHECK(m.scatterMinSubdiv == 9);
+        CHECK(m.landClasses[0].scatter[0].scatter == &m.scatters[0]);
+        CHECK(m.scatters[0].vertStride == 8);   // BuildCacheQuad
+        CHECK(m.scatters[0].cacheUnassignedCount == 0);
+        m.OnSphereStarted();                    // SphereActive: BuildCache(maxCacheDelta)
+        CHECK(m.scatters[0].cacheUnassignedCount == 4);
+        PQ quad;
+        quad.subdivision = 9;
+        quad.name = "q";
+        quad.quadArea = 600000.0 * 1000.0 * 0.2;   // area / radius / 1000 = 0.2
+        PQSVertexBuildData vb;
+        vb.buildQuad = &quad;
+        vb.allowScatter = true;
+        m.OnQuadPreBuild(quad);
+        CHECK(m.scatterActive);
+        for (int v = 0; v < 225; ++v) {
+            vb.vertHeight = sphere.radius;
+            vb.directionFromCenter = Vector3d(0.0, 1.0, 0.0);
+            m.OnVertexBuildHeight(vb);
+            m.OnVertexBuild(vb);
+        }
+        // delta = 1 * 1 * 1 * Lerp(1, coverage noise, coverageBlend 0) = 1, normalised by totalDelta = 1
+        double want = 0.0;
+        for (int v = 0; v < 225; ++v) want += 0.5 * 1.0 * cache.meshCache.cacheVertCountReciprocal * PQS::Global_ScatterFactor;
+        CHECK(m.lcScatterList[0] == want);
+        CHECK(m.scatterInstCount == 225);
+        // OnQuadBuilt: count = (int)(density * densityFactor * 0.2 * maxScatter) = (int)(0.5 * 0.2 * 100) = 10 (Kerbin's sphere radius)
+        quad.verts.assign(225, Vector3f(0.0f, 600000.0f, 0.0f));
+        quad.sphereRoot = &sphere;
+        m.OnQuadBuilt(quad);
+        CHECK(m.lcScatterList[0] == 0.0);
+        CHECK_FALSE(m.scatterActive);
+        REQUIRE(m.scatters[0].cacheAssignedCount == 1);
+        PQSLandControl::LandClassScatterQuad& q = *m.scatters[0].cacheAssigned[0];
+        CHECK(q.count == static_cast<int>(want * 1.0 * 0.2 * 100.0));
+        CHECK(q.name == "_q");
+        CHECK(q.isVisible);
+        CHECK_FALSE(q.isBuilt);
+        CHECK(quad.onUpdate.GetInvocationList().size() == 1);
+        CHECK(quad.onDestroy.GetInvocationList().size() == 1);
+        // the quad becomes invisible / visible: the scatter object follows only once built
+        quad.onInvisible(quad);
+        CHECK_FALSE(q.isVisible);
+        quad.onVisible(quad);
+        CHECK(q.isVisible);
+        // OnQuadDestroy hands it back to the cache and removes the four handlers
+        quad.onDestroy(quad);
+        CHECK(m.scatters[0].cacheAssignedCount == 0);
+        CHECK(m.scatters[0].cacheUnassignedCount == 4);
+        CHECK(q.name == "Unass");
+        CHECK(quad.onUpdate.IsNull());
+        CHECK(quad.onDestroy.IsNull());
+        m.OnSphereReset();   // SphereInactive: the unassigned objects are destroyed
+        CHECK(m.scatters[0].cacheUnassignedCount == 0);
+        CHECK(q.destroyed);
+    }
+    SUBCASE("statics: DoubleLerp / Clamp / CubicHermite") {
+        CHECK(PQSLandControl::DoubleLerp(0.0, 1.0, 2.0, 3.0, 0.5) == 0.5);
+        CHECK(PQSLandControl::DoubleLerp(0.0, 1.0, 2.0, 3.0, 1.5) == 1.0);
+        CHECK(PQSLandControl::DoubleLerp(0.0, 1.0, 2.0, 3.0, 2.5) == 0.5);   // sic: rises again (no 1 -)
+        CHECK(PQSLandControl::DoubleLerp(0.0, 1.0, 2.0, 3.0, 3.0) == 0.0);
+        CHECK(PQSLandControl::Clamp(5.0, 0.0, 1.0) == 1.0);
+        PQSLandControl m;
+        CHECK(m.CubicHermite(0.0, 1.0, 0.0, 0.0, 0.5) == 0.5);
+    }
+    UnityRandom::Global().SetState(saved);
 }

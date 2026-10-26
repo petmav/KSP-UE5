@@ -87,6 +87,7 @@ add_library(kspcore STATIC
     terrain/pqs.cpp
     terrain/pqs_mods.cpp
     terrain/pqs_mods_land.cpp
+    terrain/pqs_land_scatter.cpp
     terrain/pqs_prefab.cpp
     terrain/pqs_prefab_data.cpp
     terrain/pq.cpp

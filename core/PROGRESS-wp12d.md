@@ -65,3 +65,11 @@ Findings of the audit:
   coroutine one frame after Create as Unity's Start, PopToSceneRoot / ReturnToParent over the Transform shim, the three update modes,
   Terminate), SpaceCenterSurfaceObject (scene events, DelayedCallback(5) re-pop), PQSMod_SurfaceObjectQuads (per-quad Transforms owned
   by the mod). 3 test cases; check_cites 19 cites, 0 mismatches.
+- 2d done: PQSLandControl scatter half (`src/terrain/pqs_land_scatter.cpp`; header in `pqs_mods.hpp`), the generator emits the `scatters`
+  table (pqs_prefab_data.cpp regenerated: additions only; the WP-11 prefab test now also compares the scatter fields), PQ quad delegates
+  as multicast `ksp::Delegate` (invoked through a snapshot), the land-class state carried through PQSHeightWorkers. Gate:
+  `tools/wp12d/scatter_inputs.cpp` (inputs) -> `tools/wp12d/scatter_reference.py` (Random checked against 7,424 rows of the C2 capture,
+  AngleAxis against the 84 C3 rows) -> `tests/data/wp12d_scatter_reference.json`: 17 scatter quads, 2,096 instances, 0 mismatches; inline
+  vs 4 height workers: 136 scatter quads identical. Mutations: Range(-1, 2) in the vertex pick, no RestoreBuildState: both detected.
+  Finding: the WP-12d cases that build stock spheres must restore Simplex / SimplexNoise permutations and UnityEngine.Random
+  (`wp12d::StateGuard`), else WP-03's Simplex cases fail later in the run. Full unit binary: 1,105 cases / 1,694,932 assertions pass.
