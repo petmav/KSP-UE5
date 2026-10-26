@@ -24,3 +24,9 @@
       stock crafts, 246 collider points, max |z| 6.2e-7 m, roles exact), Vessel.getLowestPoint statement-chain test (+0.150 / +0.450 / +0.150 vs
       probes), lander identity (getLowestPoint 3.64092 vs origin height 3.64087), set-up path test. Bounds-as-point stays UNVERIFIED (evidence in code).
       Not covered by a loadable stock craft: roverWheel3, GearFixed, GearLarge, miniLandingLeg (in the Python JSON, not run in C++).
+- [x] Item 5: brake freeze: evaluated, kept as the cluster weld (a wheel part is a member of its rigid cluster; PartState of a member is the cluster's rigid
+      motion). Tests: all 19 parts of the frozen Prospector hold (0 mm, 0 mm/s after a 0.5 m/s push); in Jolt a kinematic member rigidly tied to the cluster
+      holds it as the world weld does (0.058 mm vs 0 mm in 2 s). No change to the model.
+- [x] Item 6: animation rotation renormalisation: stored quaternions of the 13 clips (46 targets, 2,733 quaternions): max |1 - norm| 8.44e-8 (< 2^-23),
+      UNVERIFIED tag dropped for the key-time claim; between keys the independent-component interpolation is off by up to 9.8e-4 and the renormalisation
+      removes it. tools/wp29e/anim_norms.py -> tests/data/wp29e_anim_norms.json; the C++ recomputes the stored part from the .mu reader's keys (identical).

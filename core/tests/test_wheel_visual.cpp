@@ -15,6 +15,7 @@
 
 #include "doctest/doctest.h"
 #include "ksp/physics/physics_world.hpp"
+#include "ksp/parts/mu_model.hpp"
 #include "ksp/physics/wheel_models.hpp"
 #include "ksp/physics/wheel_visual.hpp"
 #include "nlohmann/json.hpp"
@@ -218,4 +219,60 @@ TEST_CASE("WP-29e mutable compound: moving a child moves the contact (a sphere u
     Vector3f p2;
     Quaternionf q2;
     CHECK(!w2.GetCompoundChildPose(sid, 1, p2, q2));
+}
+
+// PartModelRig::SampleClip renormalises the rotation it samples (Unity's rotation blend). Measured on the 13 stock models (tools/wp29e/anim_norms.py ->
+// tests/data/wp29e_anim_norms.json): the STORED quaternions (the four rotation keys of a node at one key time) are unit to float32 precision, the
+// interpolation of the four components on its own (before the renormalisation) is off by up to 1e-3 between keys. The C++ recomputes the stored part
+// from the model data it holds (the .mu reader's keys) and must agree with the Python measurement.
+TEST_CASE("WP-29e animation rotations: the stored quaternions of the 13 stock models' clips are unit to float32 precision (measured max |1 - norm|)") {
+    std::ifstream f(std::string(KSPCORE_TEST_DATA_DIR) + "/wp29e_anim_norms.json", std::ios::binary);
+    REQUIRE(f.good());
+    const json ref = json::parse(f);
+    double maxKeyDev = 0.0;
+    size_t groups = 0, keys = 0, misaligned = 0;
+    std::map<std::string, bool> models;
+    for (const auto& kv : ref["models"].items()) {
+        const std::vector<mu::ModelInstance> insts = Lib().Instances(kv.key());
+        REQUIRE(!insts.empty());
+        std::function<void(const mu::Node&)> walk = [&](const mu::Node& n) {
+            for (const mu::AnimationChunk& a : n.animations)
+                for (const mu::AnimClip& cl : a.clips) {
+                    std::map<std::string, std::map<char, const mu::AnimCurve*>> byTarget;
+                    for (const mu::AnimCurve& c : cl.curves)
+                        if (c.type == 0 && c.property.rfind("m_LocalRotation.", 0) == 0) byTarget[c.path][c.property.back()] = &c;
+                    for (const auto& t : byTarget) {
+                        REQUIRE(t.second.size() == 4);
+                        const size_t nk = t.second.at('x')->keys.size();
+                        bool aligned = true;
+                        for (char ch : std::string("yzw")) aligned = aligned && t.second.at(ch)->keys.size() == nk;
+                        for (size_t i = 0; aligned && i < nk; ++i)
+                            for (char ch : std::string("yzw")) aligned = aligned && t.second.at(ch)->keys[i].time == t.second.at('x')->keys[i].time;
+                        if (!aligned) {
+                            ++misaligned;
+                            continue;
+                        }
+                        ++groups;
+                        for (size_t i = 0; i < nk; ++i) {
+                            double q2 = 0.0;
+                            for (char ch : std::string("xyzw")) q2 += static_cast<double>(t.second.at(ch)->keys[i].value) * t.second.at(ch)->keys[i].value;
+                            maxKeyDev = std::max(maxKeyDev, std::fabs(1.0 - std::sqrt(q2)));
+                            ++keys;
+                        }
+                    }
+                }
+            for (const mu::Node& c : n.children) walk(c);
+        };
+        for (const mu::ModelInstance& mi : insts) walk(mi.model->root);
+        models[kv.key()] = true;
+    }
+    const double pyStored = ref["totals"]["storedMax"].get<double>();
+    MESSAGE("stored rotation keys of " << groups << " rotation targets (" << keys << " quaternions, " << misaligned << " targets with unaligned component times): max |1 - norm| " << maxKeyDev
+                                       << " (python over the key times " << pyStored << "); the independent-component interpolation between keys is off by up to "
+                                       << ref["totals"]["interpMax"].get<double>());
+    CHECK(misaligned == 0);
+    CHECK(groups == ref["totals"]["rotationTargets"].get<size_t>());
+    CHECK(maxKeyDev < 1.2e-7);                                       // 2^-23: one float32 ulp above 1
+    CHECK(maxKeyDev == doctest::Approx(pyStored).epsilon(1e-6));    // the same measurement from the C++ reader's data
+    CHECK(ref["totals"]["interpMax"].get<double>() < 1.0e-3 + 1e-4);
 }

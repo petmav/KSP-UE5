@@ -16,7 +16,10 @@
 // Animation: a legacy `Animation` component samples its enabled states onto the transforms the curves address ("path" relative to the
 // owner, properties m_LocalPosition.x/y/z, m_LocalRotation.x/y/z/w, m_LocalScale.x/y/z). `SampleClip` writes the curve values of one clip at
 // a time into the local TRS of the addressed nodes (a clip is the only enabled state with weight 1 for gear and legs); the
-// rotation is renormalised (UNVERIFIED: Unity's rotation blending normalises; at a key time the stored value is already unit length).
+// rotation is renormalised after the four components are in. WP-29e measured the 13 stock clips (tools/wp29e/anim_norms.py, tests/test_wheel_visual.cpp):
+// every STORED quaternion (46 rotation targets, 2,733 key quaternions) is unit to float32 precision, max |1 - norm| 8.4e-8, so at a key time the
+// renormalisation is the identity; between keys the four components interpolated on their own are off the unit sphere by up to 9.8e-4, which the
+// renormalisation removes (that Unity normalises there is its documented quaternion blend; only the legacy Animation's use of it is not captured).
 // ClampForever on both ends (every shipped wheel clip): the curve clamps outside its key range (ksp::AnimationCurve::Evaluate).
 #pragma once
 
