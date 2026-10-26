@@ -11,6 +11,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "doctest/doctest.h"
@@ -367,10 +368,10 @@ struct CityEvents {
     void Entered(CelestialBody* b, std::string n) { log.push_back("entered " + N(b) + " " + n); }
     void Exited(CelestialBody* b, std::string n) { log.push_back("exited " + N(b) + " " + n); }
 };
-const PQSCityPrefab& StockCity(const std::string& gameObject) {
+const PQSCityPrefab& StockCity(std::string_view gameObject) {
     for (const PQSCityPrefab& p : StockPQSCities())
         if (gameObject == p.gameObject) return p;
-    throw std::runtime_error("no stock city " + gameObject);
+    throw std::runtime_error("no stock city " + std::string(gameObject));
 }
 }  // namespace
 

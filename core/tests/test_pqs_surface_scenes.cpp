@@ -4,6 +4,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 
 #include "contact_fixture.hpp"
 #include "scatter_scene.hpp"
@@ -18,10 +19,10 @@ using namespace wp20e;
 
 namespace {
 
-const PQSCityPrefab& StockCity2(const std::string& gameObject) {
+const PQSCityPrefab& StockCity2(std::string_view gameObject) {
     for (const PQSCityPrefab& p : StockPQSCities())
         if (gameObject == p.gameObject) return p;
-    throw std::runtime_error("no stock city " + gameObject);
+    throw std::runtime_error("no stock city " + std::string(gameObject));
 }
 
 // Kerbin's stock PQS built around a surface point as the flight scene does (the WP-20e KerbinSphere with another target)
