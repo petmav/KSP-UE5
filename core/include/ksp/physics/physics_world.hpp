@@ -136,6 +136,16 @@ struct CompoundBodyDesc {
     // Jolt's manifold reduction (merging the contact manifolds of different sub-shapes of a body pair that share a normal; on by default).
     // StaticContacts() reports every touching sub-shape either way.
     bool useManifoldReduction = true;
+    // WP-29e: the compound is a Jolt MutableCompoundShape (SetCompoundChildPoses can move its children) instead of a StaticCompoundShape. The
+    // collision results are the same shapes; only the broad-phase tree of the children differs.
+    bool mutableChildren = false;
+};
+
+// WP-29e: the new body-space pose of compound child `index` (the order of CompoundBodyDesc::children)
+struct CompoundChildPose {
+    uint32_t index = 0;
+    Vector3f position;
+    Quaternionf rotation = Quaternionf::identity();
 };
 
 // Jolt constraint id (index into the world's constraint table); kInvalidConstraint when absent.
@@ -252,6 +262,12 @@ public:
     BodyId CreateCompoundBody(const CompoundBodyDesc& desc);
     // Physics-frame centre of mass (Jolt keeps it in double: Body::GetCenterOfMassPosition).
     Vector3d GetCenterOfMassPosition(BodyId id) const;
+    // WP-29e: moves children of a compound created with CompoundBodyDesc::mutableChildren (MutableCompoundShape::ModifyShape, then
+    // BodyInterface::NotifyShapeChanged: the broad phase and the cached bounds follow). The centre of mass, mass and inertia the caller set are
+    // left alone (the child shapes' own mass is not used). False when the body is unknown or its compound is not mutable.
+    bool SetCompoundChildPoses(BodyId id, const std::vector<CompoundChildPose>& poses);
+    // The body-space pose of compound child `index` as the shape holds it now (tests); false when unknown / not mutable
+    bool GetCompoundChildPose(BodyId id, uint32_t index, Vector3f& position, Quaternionf& rotation) const;
     // New mass properties of a compound body: mass, inertia about the centre of mass (body axes) and the centre of mass in body
     // space. The body origin keeps its place (Jolt moves its centre of mass, Body::SetShapeInternal); the velocities are left as
     // they are (the caller adds omega x shift when the centre of mass moves).

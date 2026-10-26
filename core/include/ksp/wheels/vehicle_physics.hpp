@@ -14,8 +14,9 @@
 // VPTireEffects, VPGroundMarksRenderer, VPGroundParticleEmitter, VPGroundMaterialManager, EdyCommonTools TextureCanvas / GColor / MiniJSON /
 // UdpConnection / CsvFile / Spline / CircularBuffer ... (~20k lines); inside the ported files: VehicleBase.GetSolverState / GetSolverBlockTypes
 // (diagnostics), Disable/EnableCollidersRaycast (Rigidbody interpolation only), the Debug.DrawLine gizmos, VPWheelCollider.AdjustToWheelMesh /
-// GetScaledBounds / OnValidate / OnDrawGizmosSelected (editor), the Transform writes of UpdateVisualWheel (suspension / caliper / wheel mesh
-// placement: the renderer's business), Solver.GetViscousLockingDt (clutches / differentials only).
+// GetScaledBounds / OnValidate / OnDrawGizmosSelected (editor), Solver.GetViscousLockingDt (clutches / differentials only). The Transform writes
+// of UpdateVisualWheel (suspension / caliper / wheel placement) go through VPWheelCollider::visual (WP-29e: the colliders under those
+// transforms follow the suspension).
 #pragma once
 
 #include <array>
@@ -447,6 +448,36 @@ public:
     float springSlerpRate = 0.02f;  // internal in C#, set by ModuleWheelBase
     bool hidden = false;
 
+    // WP-29e: the model transforms UpdateVisualWheel moves (VPWheelCollider.cs:28-32; the suspension, caliper and wheel meshes) and the host's
+    // Transform operations on them (the Transform hierarchy is the host's: a NativeTransform is a pose, not a node). Unset hooks: the writes are
+    // skipped (the WP-29a gate runs without them).
+    NativeTransform* suspensionTransform = nullptr;
+    NativeTransform* caliperTransform = nullptr;
+    NativeTransform* wheelTransform = nullptr;
+    struct VisualTransformHost {
+        std::function<void(NativeTransform*, const Vector3f&)> setPosition;          // Transform.position = value
+        std::function<void(NativeTransform*, const Quaternionf&)> setLocalRotation;  // Transform.localRotation = value
+        std::function<bool(NativeTransform* child, NativeTransform* ancestor)> isChildOf;  // Transform.IsChildOf
+        std::function<float(NativeTransform*)> localEulerAnglesX;                    // Transform.localEulerAngles.x
+        std::function<bool(NativeTransform*)> activeInHierarchy;                     // GameObject.activeInHierarchy
+        std::function<void(NativeTransform*, bool)> setActive;                       // GameObject.SetActive
+        float frameRatio = 1.0f;                                                     // InterpolatedFloat.GetFrameRatio(): 1 = the latest fixed step
+    };
+    VisualTransformHost visual;
+    // The state the Transform writes of UpdateVisualWheel read (VPWheelCollider.cs:275-300) and the writes themselves: public so that the gate
+    // (tests/test_wheel_visual.cpp) drives them with its own states
+    struct VisualWriteState {
+        NativeTransform* suspensionTransform = nullptr;
+        NativeTransform* caliperTransform = nullptr;
+        NativeTransform* wheelTransform = nullptr;
+        bool updateSuspension = false, updateCaliper = false, updateWheel = false;
+        bool caliperChildOfSuspension = false, wheelChildOfSuspension = false, wheelChildOfCaliper = false;
+        Vector3f suspensionPosition = Vector3f::zero();   // m_suspensionPosition
+        float visualSteerAngle = 0.0f;                    // m_visualSteerAngle.GetInterpolated()
+        float angularPosition = 0.0f;                     // m_angularPosition (radians; the C# multiplies it by 57.29578 for localRotation)
+    };
+    static void WriteVisualTransforms(const VisualWriteState& st, const VisualTransformHost& host);
+
     // the host-owned objects of this component
     NativeTransform* cachedTransform = nullptr;       // the wheel collider's own transform (m_transform)
     NativeTransform* rigidbodyTransform = nullptr;    // the rigidbody's transform (m_rigidbodyTransform)
@@ -500,6 +531,7 @@ private:
     Vector3f m_suspensionPosition = Vector3f::zero();
     InterpolatedFloat m_visualSteerAngle;
     bool m_visualGrounded = false;
+    bool m_isCaliperChildOfSuspension = false, m_isWheelChildOfSuspension = false, m_isWheelChildOfCaliper = false;  // WP-29e
     float m_2PI = f32store(fx(3.14159274f) * 2.0);  // (float)Math.PI * 2f
     float m_lastRuntimeSpringRate = 0.0f, m_lastRuntimeDamperRate = 0.0f, m_lastRuntimeSuspensionTravel = 0.0f;
 };

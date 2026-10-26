@@ -80,6 +80,12 @@ public:
     // overwrite one node's local transform (a module moving a transform, or the animation)
     void SetLocal(int node, const Vector3f& position, const Quaternionf& rotation);
     void SetLocalPosition(int node, const Vector3f& position);
+    // Transform.position = p for a node, p in part space (WP-29e): the local position under the node's CURRENT parent that puts it there,
+    // parent.InverseTransformPoint(p) = (rotate back by the parent's part-space rotation, divide by its accumulated scale). The root has no
+    // parent: its local position is p.
+    void SetPartSpacePosition(int node, const Vector3f& p);
+    // Transform.IsChildOf: true for the node itself and for every node below `ancestor`
+    bool IsChildOf(int node, int ancestor) const;
     // back to the prefab transforms
     void ResetLocal();
 

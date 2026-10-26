@@ -131,6 +131,7 @@ void ModuleWheelBase::WheelSetup() {
     wheelHost_ = partRigidbodyTransform;
     const Vector3f velocity = partRigidbody->velocity;
     wheel = KSPWheelController::Create(partRigidbody, wheelHost_, wheelColliderHost);
+    if (WheelModuleEnvironment::wheelColliderCreated && wheel->wheelCollider != nullptr) WheelModuleEnvironment::wheelColliderCreated(*p, *wheel->wheelCollider);
     wheel->gravity.Value(v->gravityForPos.ToVector3f());
     wheel->minimumdownForce = Get<float>("minimumDownforce");
     if (wheel->wheelCollider != nullptr) wheel->wheelCollider->springSlerpRate = Get<float>("springSlerpRate");
@@ -169,6 +170,7 @@ void ModuleWheelBase::WheelSetup() {
     if (wheelTransform != nullptr) {
         WheelOrgPosR = p->partTransform.InverseTransformPoint(wheelTransform->position);
         WheelOrgRotR = UnityNative::Inverse(p->partTransform.rotation) * wheelTransform->rotation;
+        if (wheel->wheelCollider != nullptr) wheel->wheelCollider->wheelTransform = wheelTransform;  // ModuleWheelBase.cs:343
     } else {
         WheelOrgPosR = p->partTransform.InverseTransformPoint(wheelColliderHost->position);
         WheelOrgRotR = UnityNative::Inverse(p->partTransform.rotation) * wheelColliderHost->rotation;

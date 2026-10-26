@@ -490,6 +490,7 @@ void ModuleWheelSuspension::OnVesselPartCountChanged(Vessel* changedVessel) {
 void ModuleWheelSuspension::OnWheelSetup() {
     Part* p = PartPtr();
     const float rescale = p->fields.rescaleFactor;
+    if (suspensionTransform_ != nullptr) wheel->wheelCollider->suspensionTransform = suspensionTransform_;  // ModuleWheelSuspension.cs:291
     wheel->wheelCollider->updateSuspension = !wheelBase->InopSystems()->HasType(WheelSubsystem::Suspension);
     wheel->wheelCollider->suspensionDistance = f32store(fx(Get<float>("suspensionDistance")) * fx(rescale));
     wheel->wheelCollider->suspensionAnchor = Get<float>("targetPosition");
@@ -663,6 +664,7 @@ void ModuleWheelSteering::OnStart(StartState) {
     const std::string caliper = Get<std::string>("caliperTransformName");
     if (!caliper.empty()) {
         VehiclePhysics::NativeTransform* t = WheelModuleEnvironment::findModelTransform ? WheelModuleEnvironment::findModelTransform(*p, caliper) : nullptr;
+        caliperTransform_ = t;
         if (t == nullptr) {
             log::Error("[ModuleWheelBase]: No transform called " + caliper + " found in " + p->gameObjectName + " hierarchy");
             return;
@@ -694,6 +696,7 @@ void ModuleWheelSteering::OnDestroy() {
 // ModuleWheelSteering.cs:220
 void ModuleWheelSteering::OnWheelSetup() {
     Part* p = PartPtr();
+    if (caliperTransform_ != nullptr) wheel->wheelCollider->caliperTransform = caliperTransform_;  // ModuleWheelSteering.cs:222
     if (Get<float>("angleTweakable") < 0.0f) Set<float>("angleTweakable", Get<float>("steeringResponse"));
     wheel->maxSteerAngle = Get<float>("angleTweakable");
     if (Get<float>("responseTweakable") < 0.0f) Set<float>("responseTweakable", Get<float>("steeringRange"));

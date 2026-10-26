@@ -154,6 +154,9 @@ struct WheelModuleEnvironment {
     static inline std::function<void(Part&)> suspensionColliderEnable;
     // WP-29d: part.Rigidbody.constraints = FreezeAll / None of ModuleWheelBase.toggleRbConstraints (the brake "schloompa", ModuleWheelBase.cs:785)
     static inline std::function<void(Part&, bool freeze)> setRigidbodyFrozen;
+    // WP-29e: right after KSPWheelController.Create (ModuleWheelBase.wheelSetup, ModuleWheelBase.cs:282): the host gives the new VPWheelCollider its Transform
+    // operations (VPWheelCollider::visual) and ray before the controller is enabled and its fields are assigned
+    static inline std::function<void(Part&, VehiclePhysics::VPWheelCollider&)> wheelColliderCreated;
     // CheatOptions.NoCrashDamage
     static inline bool noCrashDamage = false;
     // FlightGlobals.ActiveVessel == vessel (CheckSubsteps)
@@ -470,6 +473,7 @@ private:
     Vector3f FindTurnCenter(float steerAngle, float length, const Vector3f& CoM);   // :366
     void SetCaliperUpdate(bool update);                      // :426
     void ResetCaliper(bool resetTransform);                  // :436
+    VehiclePhysics::NativeTransform* caliperTransform_ = nullptr;  // ModuleWheelSteering.caliperTransform (WP-29e: handed to the VPWheelCollider)
     bool caliperUpdating_ = false;
     Vector3f upAxis_{}, fwdAxis_{}, leftAxis_{}, CoM_{}, wCenter_{}, wLeft0_{}, wLeft_{}, wRight_{}, sAxis_{};
     float CoMfwdLength_ = 0.0f;

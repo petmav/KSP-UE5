@@ -694,3 +694,90 @@ TEST_CASE("WP-29d steering circle: the CoM path of the steered Prospector is a c
     CHECK(rFit == doctest::Approx(rCom).epsilon(0.05));
     CHECK(rYaw == doctest::Approx(rCom).epsilon(0.05));
 }
+
+// ---- WP-29e: the colliders under the suspension follow it -------------------------------------------------------------------------------------
+// VPWheelCollider.UpdateVisualWheel moves the suspension transform to m_suspensionPosition every frame (VPWheelCollider.cs:275: suspensionTransform.position
+// = m_suspensionPosition); the caliper and wheel are children of it and keep their local offsets (OnEnableVehicle's IsChildOf flags, cs:198-200, are
+// computed when the controller is enabled, after wheelSetup assigned the transforms); the colliders below them (the Prospector's RoveMax M1: bracketCollider
+// under suspensionPivot, the wheel's collisionEnhancer sphere) move with them. In the cluster compound that is a mutable-compound child pose update per tick
+// (WheelPhysicsHost::UpdateColliders). Reference, independent of the host's rig code: every collider below the suspension pivot is displaced from its
+// prefab pose by exactly (m_suspensionPosition - the prefab pivot position) -- the C# statement -- and every child the compound holds is where the live
+// model puts its collider.
+TEST_CASE("WP-29e rover at rest: the colliders under the suspension, caliper and wheel transforms follow the suspension in the cluster compound (RoveMax M1, Prospector)") {
+    if (!wp20b::GameAvailable()) return;
+    static const auto lib = std::make_shared<const WheelModelLibrary>(std::string(KSPCORE_DATA_DIR) + "/wheel_models");
+    Run run("Prospector Rover", RealGeometry());
+    run.Ticks(kWheelsUp);
+    SetBrakes(run.V(), true);
+    run.Ticks(250);
+    VesselPhysics& vp = *run.Vp();
+    PhysicsWorld& world = run.scene->pad.s.world;
+    size_t wheelsChecked = 0, followed = 0, fixed = 0;
+    double maxLiveError = 0.0, maxFollowError = 0.0, minFollow = 1e9, maxFollow = 0.0;
+    for (auto& w : run.Wheels().Wheels()) {
+        const Part& part = *w->part;
+        const int cl = vp.ClusterOf(part);
+        const BodyId body = vp.ClusterBody(static_cast<size_t>(cl));
+        const Vector3d origin = world.GetPosition(body);
+        const QuaternionD rot = world.GetRotation(body);
+        auto prefab = lib->BuildRig(WheelModelLibrary::NameOf(part), static_cast<float>(part.fields.rescaleFactor));
+        REQUIRE(prefab != nullptr);
+        const auto live = w->rig->Colliders();
+        const auto pref = prefab->Colliders();
+        REQUIRE(live.size() == pref.size());
+        VehiclePhysics::NativeTransform pt;
+        pt.position = part.partTransform.position;
+        pt.rotation = part.partTransform.rotation;
+        auto physOf = [&](const Vector3f& partSpace) { return vp.PhysicsFromTransform(Vector3d(pt.TransformPoint(partSpace))); };
+        const int suspNode = w->rig->Find(w->part->FindModuleOfClass("ModuleWheelSuspension")->Get<std::string>("suspensionTransformName"));
+        REQUIRE(suspNode >= 0);
+        const std::string suspPath = [&] {
+            std::string path;
+            for (int i = suspNode; i >= 0; i = w->rig->At(i).parent) path = path.empty() ? w->rig->At(i).name : w->rig->At(i).name + "/" + path;
+            return path;
+        }();
+        const VehiclePhysics::VPWheelCollider& vc = *w->Controller()->wheelCollider;
+        // C#: suspensionTransform.position = m_suspensionPosition: the pivot's displacement from its prefab position
+        const Vector3d pivotShift = vp.PhysicsFromTransform(Vector3d(vc.suspensionPosition())) - physOf(prefab->PartSpace(suspNode).position);
+        Vector3f cp;
+        Quaternionf cr;
+        size_t children = 0;
+        for (size_t k = 0; vp.PartColliderPose(part, k, cp, cr); ++k) {
+            const Vector3d cw = origin + rot * Vector3d(cp);
+            size_t best = 0;
+            double dLive = 1e9;
+            for (size_t i = 0; i < live.size(); ++i) {
+                const double d = (cw - physOf(live[i].center)).magnitude();
+                if (d < dLive) {
+                    dLive = d;
+                    best = i;
+                }
+            }
+            ++children;
+            maxLiveError = std::max(maxLiveError, dLive);
+            const bool below = live[best].path == suspPath || live[best].path.compare(0, suspPath.size() + 1, suspPath + "/") == 0;
+            const Vector3d shift = physOf(live[best].center) - physOf(pref[best].center);
+            if (below) {
+                ++followed;
+                maxFollowError = std::max(maxFollowError, (shift - pivotShift).magnitude());
+                minFollow = std::min(minFollow, shift.magnitude());
+                maxFollow = std::max(maxFollow, shift.magnitude());
+            } else {
+                ++fixed;
+                CHECK(shift.magnitude() < 1e-5);
+            }
+        }
+        CHECK(children == 3);   // base box, bracketCollider, collisionEnhancer (wheelDamaged's is inactive)
+        ++wheelsChecked;
+    }
+    MESSAGE("followed " << followed << " colliders under the suspension pivot of " << wheelsChecked << " wheel parts (displacement " << minFollow << " .. " << maxFollow << " m from the prefab pose): "
+                        << "max |displacement - (m_suspensionPosition - prefab pivot)| " << maxFollowError << " m; " << fixed << " static ones unmoved; every child within " << maxLiveError
+                        << " m of the live model; collider rebuilds " << run.Host().ColliderRebuilds());
+    CHECK(wheelsChecked == 4);
+    CHECK(followed == 8);
+    CHECK(fixed == 4);
+    CHECK(maxLiveError < 1e-4);
+    CHECK(maxFollowError < 1e-4);
+    CHECK(maxFollow > 0.03);                 // the front wheels' visual suspension is 4 cm off the prefab pose: the test would see a frozen compound
+    CHECK(run.Host().ColliderRebuilds() == 0);   // poses only: the cluster never needed a rebuild at rest
+}

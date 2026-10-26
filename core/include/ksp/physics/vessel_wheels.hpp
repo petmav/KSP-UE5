@@ -125,6 +125,8 @@ struct WheelPart {
     VehiclePhysics::NativeTransform colliderSet;          // the pose the host last gave the collider host (a module write is a difference)
     bool standInBuilt = false;                            // the cluster compound holds the part stand-in sphere
     Vector3f standInCenter;                               // ... at this part-space point
+    bool wheelHidden = false;                             // WP-29e: wheelTransform.gameObject.SetActive(false) (VPWheelCollider.UpdateVisualWheel, cs:245-253)
+    bool visualInstalled = false;                         // WP-29e: the controller's VPWheelCollider::visual and visualRaycast are the host's
     bool geometryLocked = false;                          // ModuleWheelBase.wheelSetup re-parented the collider transform to the part
     bool started = false;                                // the wheel modules' OnStart ran
     bool nativeOn = false;                               // the PhysX wheel exists (collider enabled)
@@ -187,6 +189,7 @@ public:
     // the substeps of a tick of `dt` (1: none): options.substeps, dt > substepDt and a loaded unpacked vessel with a set-up wheel
     int SubstepCount(float dt) const;
     int LastSubsteps() const { return lastSubsteps_; }
+    size_t ColliderRebuilds() const { return colliderRebuilds_; }           // WP-29e: rebuilds UpdateColliders asked for (diagnostics)
 
     VesselWheels* Find(const Vessel& v) const;
     const std::vector<std::unique_ptr<VesselWheels>>& Vessels() const { return vessels_; }
@@ -231,7 +234,14 @@ private:
     void SampleAnimation(Animation& a);
     std::vector<ColliderProxy> HubColliders(const Part& part);
     std::optional<ColliderProxy> StandInProxy(const Part& part) const;      // the retracted gear sphere (ModuleWheelDeployment.standInCollider)
-    void UpdateStandIns();
+    // WP-29e: the hub colliders of every wheel part as they are now (the animation, the suspension / caliper / wheel transforms the visual wheel
+    // moved, the stand-in sphere) into the cluster compounds: moved in place (VesselPhysics::SetPartColliderPoses), a rebuild when a collider
+    // appeared or went (the stand-in, the hidden wheel, a damaged wheel)
+    void UpdateColliders();
+    bool HasMovingColliders(const Part& part) const;                        // the part's cluster needs a mutable compound
+    WheelPart* RecordOf(const Part& part) const;
+    void InstallVisual(WheelPart& w, VehiclePhysics::VPWheelCollider& vc);                                       // VPWheelCollider::visual (the Transform writes of UpdateVisualWheel) onto the rig
+    int RigNodeOf(WheelPart& w, const VehiclePhysics::NativeTransform* t) const;
     void ApplyFreezes();   // the brake "schloompa": a frozen wheel part holds its cluster (a weld to the world) for the freeze time
                                                   // rebuild the cluster shapes when a stand-in appears, goes or moves
     std::shared_ptr<mu::PartModelRig> SampledRig(const Part& part) const;   // the rig posed at the part ModuleWheelDeployment state
@@ -263,6 +273,7 @@ private:
     VehiclePhysics::Collider* StaticColliderFor(const StaticColliderInfo& info);
     CoroutineScheduler scheduler_;
     bool installed_ = false;
+    size_t colliderRebuilds_ = 0;
     int lastSubsteps_ = 1;
     float timeSinceLevelLoad_ = 0.0f;
     struct Saved;
