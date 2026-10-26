@@ -978,6 +978,12 @@ void Vessel::CheckAirstreamShields() {
 
 // Vessel.cs:3615
 void Vessel::OnSaveFlightState(KSPParseableDictionary& dataPool) {
+    // WP-19c (Vessel.cs:3617-3622): the active vessel takes the flight camera's angles and mode first (FlightCamera.CamHdg / CamPitch / CamMode)
+    if (FlightGlobals::ActiveVessel == this && env.flightCamera) {
+        int mode = static_cast<int>(camMode);
+        env.flightCamera(camhdg, campth, mode);
+        camMode = static_cast<float>(mode);
+    }
     dataPool.Add("cPch", KSPParseable::FromFloat(campth));
     dataPool.Add("cHdg", KSPParseable::FromFloat(camhdg));
     dataPool.Add("cMod", KSPParseable::FromInt(static_cast<int32_t>(camMode)));

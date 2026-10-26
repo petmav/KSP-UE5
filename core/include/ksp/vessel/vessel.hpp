@@ -173,6 +173,9 @@ struct VesselEnvironment {
     std::function<void(Vessel&)> precalcGoOnRails, precalcGoOffRails;
     // CommNetScenario.CommNetEnabled and connection.GetControlLevel() (WP-39): unset = CommNet is off
     std::function<std::optional<ControlLevel>(Vessel&)> commNetControlLevel;
+    // WP-19c: FlightCamera.CamHdg / CamPitch / CamMode (the flight camera is the host's), read by OnSaveFlightState for the active vessel
+    // (Vessel.cs:3617); unset = no camera (the vessel's own fields are saved)
+    std::function<void(float& camHdg, float& camPitch, int& camMode)> flightCamera;
     // a host override of Vessel.Clean; unset = ProtoVessel.Clean (WP-19c: recovery, funds, removal from the flight state)
     std::function<void(Vessel&, const std::string&)> cleanVessel;
     // PartSet rebuild after the part list changed (WP-15): UpdateResourceSets
