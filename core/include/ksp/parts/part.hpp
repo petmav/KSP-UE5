@@ -293,6 +293,21 @@ public:
     // empty `protected virtual` of Part.cs:4626; no class of Assembly-CSharp overrides it, so the walk changes nothing (kept for the order)
     void propagateControlUpdate(FlightCtrlState& st);   // :3996
     void onCtrlUpd(FlightCtrlState& s) { (void)s; }      // :4626
+    // WP-20g: Part.Pack / Part.Unpack (Vessel.GoOnRails / GoOffRails, Part.WaitForStart) in the C#'s statement order: the Rigidbody
+    // work is the host's (Vessel::env.packPart / unpackPart: the bubble drops / builds the vessel's bodies), then the crew's
+    // OnPartPack / OnPartUnpack, onPack / onUnpack (empty `protected virtual`, Part.cs:4593 / :4597, no override in Assembly-CSharp),
+    // SendMessage("OnPartPack" / "OnPartUnpack") over the part's components (its modules in module order: SendPartMessage below),
+    // GameEvents.onPartPack / onPartUnpack, Part.packed. src/parts/part_pack.cpp.
+    void Pack();                                         // :3747
+    void Unpack();                                       // :3784
+    void onPack() {}                                     // :4593
+    void onUnpack() {}                                   // :4597
+    // GameObject.SendMessage(name, DontRequireReceiver) on the part's GameObject: every component with a method of that name, in
+    // component order (Part, then its modules in the order AddModule added them). Receivers in Assembly-CSharp: "OnPartPack" /
+    // "OnPartUnpack" (ModuleCargoPart and ModuleGroundPart, ModuleDockingNode, BaseServo, ModuleParachute, PartJoint's empty ones),
+    // "OnVesselPack" / "OnVesselUnpack" (LaunchClamp, FlagSite: Vessel.SendMessage reaches the root part's GameObject). Returns the
+    // number of receivers called.
+    size_t SendPartMessage(std::string_view message);
 
     // ---- modules (:5515-6006) ----------------------------------------------------------------------------------------------
     // Part.AddModule(string): class lookup, Cargo / Inventory exclusivity, AddComponent (constructor chain), optional Awake.

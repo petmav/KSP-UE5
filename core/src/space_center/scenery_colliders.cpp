@@ -188,6 +188,7 @@ SceneryColliders ParseSceneryColliders(std::string_view text, std::string_view m
             f.pqsName = jf.value("pqsName", std::string());
             f.facilityTransformName = jf.value("facilityTransformName", std::string());
             f.facilityName = jf.value("facilityName", std::string());
+            f.editorFacility = jf.value("editorFacility", 0);
             f.spawnPoints = ParseSpawnPoints(jf);
             out.facilities.push_back(std::move(f));
         }
@@ -379,30 +380,44 @@ std::vector<size_t> SceneryAlwaysActive(const SceneryCity& city, const std::vect
 
 // ---- CityObjects --------------------------------------------------------------------------------------------------------------------
 
+std::vector<SceneryObjectPose> SceneryObjectPoses(const SceneryCity& city) {
+    std::vector<SceneryObjectPose> world(city.objects.size());
+    for (size_t i = 0; i < city.objects.size(); ++i) {
+        const SceneryObjectSpec& o = city.objects[i];
+        SceneryObjectPose w;  // the root (object 0) is the city frame itself
+        if (i != 0 && o.parent >= 0) {
+            const SceneryObjectPose& p = world[static_cast<size_t>(o.parent)];
+            const Vector3f scaled(p.scale.x * o.position.x, p.scale.y * o.position.y, p.scale.z * o.position.z);
+            const Vector3f r = mu::RotateNative(p.rotation, scaled);
+            w.position = Vector3f(p.position.x + r.x, p.position.y + r.y, p.position.z + r.z);
+            w.rotation = UnityNative::Multiply(p.rotation, o.rotation);
+            w.scale = Vector3f(p.scale.x * o.scale.x, p.scale.y * o.scale.y, p.scale.z * o.scale.z);
+        } else if (i != 0) {  // a parentless object hangs from the city root
+            w.position = o.position;
+            w.rotation = o.rotation;
+            w.scale = o.scale;
+        }
+        world[i] = w;
+    }
+    return world;
+}
+
+int SceneryFindObject(const SceneryCity& city, const std::string& path, const std::vector<bool>& present) {
+    for (size_t i = 0; i < city.objects.size(); ++i)
+        if ((i >= present.size() || present[i]) && city.objects[i].path == path) return static_cast<int>(i);
+    return -1;
+}
+
 std::vector<CityObject> BuildCityObjects(const SceneryCity& city) {
-    struct W {
-        Vector3f pos;
-        Quaternionf rot = Quaternionf::identity();
-        Vector3f scl{1.0f, 1.0f, 1.0f};
-    };
-    std::vector<W> world(city.objects.size());
+    const std::vector<SceneryObjectPose> world = SceneryObjectPoses(city);
     std::vector<CityObject> out(city.objects.size());
     for (size_t i = 0; i < city.objects.size(); ++i) {
         const SceneryObjectSpec& o = city.objects[i];
-        W w;  // the root (object 0) is the city frame itself
-        if (i != 0 && o.parent >= 0) {
-            const W& p = world[static_cast<size_t>(o.parent)];
-            const Vector3f scaled(p.scl.x * o.position.x, p.scl.y * o.position.y, p.scl.z * o.position.z);
-            const Vector3f r = mu::RotateNative(p.rot, scaled);
-            w.pos = Vector3f(p.pos.x + r.x, p.pos.y + r.y, p.pos.z + r.z);
-            w.rot = UnityNative::Multiply(p.rot, o.rotation);
-            w.scl = Vector3f(p.scl.x * o.scale.x, p.scl.y * o.scale.y, p.scl.z * o.scale.z);
-        } else if (i != 0) {  // a parentless object hangs from the city root
-            w.pos = o.position;
-            w.rot = o.rotation;
-            w.scl = o.scale;
-        }
-        world[i] = w;
+        struct {
+            Vector3f pos;
+            Quaternionf rot;
+            Vector3f scl;
+        } const w{world[i].position, world[i].rotation, world[i].scale};
         auto place = [&](const Vector3f& v) {
             const Vector3f r = mu::RotateNative(w.rot, Vector3f(w.scl.x * v.x, w.scl.y * v.y, w.scl.z * v.z));
             return Vector3f(w.pos.x + r.x, w.pos.y + r.y, w.pos.z + r.z);

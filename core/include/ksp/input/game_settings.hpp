@@ -157,6 +157,24 @@ void LoadGameSettingsOnly();                     // :1482
 void SaveGameSettingsOnly();                     // :1487
 void SaveSettings();                             // :1467
 
+// ---- WP-20g: GameSettings.Awake (GameSettings.cs:1506), the host's start-up of the settings: what KSP runs once when the game starts,
+// before any scene. SetDefaultValues; INPUT_DEVICES when null; the paths from the game root (Application.dataPath + "/.." in the C#);
+// ParseLayoutsCfg over every *.cfg below controlsLayoutPath (Directory.GetFiles, AllDirectories; sorted ordinally here); then settings.cfg
+// when it exists and !overrideSettings (ParseCfg, WriteCfg), else the detected keyboard layout (LoadLayoutKeyBindings(DetectKeyboardLayout(),
+// true)), InitializeDefaultValues and WriteCfg; saveOnGameSave = false and the onGameStateSaved listener. Not ported: the graphics-device
+// test, DontDestroyOnLoad, the launcher file (ParseLauncherCfg; dontShowLauncher). A headless host usually does not write settings.cfg:
+// `writeSettingsCfg` (default false) gates both WriteCfg calls. The singleton rule (:1508-1513, `fetch`): a second Awake while one instance
+// lives does nothing (Destroy(this)); OnDestroy releases it (:1575-1578), and the next Awake is a new instance, whose `layoutConfigNodes`
+// (an instance field, :33) starts empty.
+struct AwakeOptions {
+    std::string gameRoot;                                    // the directory holding GameData/ (and settings.cfg)
+    std::string controlsLayoutPath = "GameData/Squad/Controls";  // the prefab's controlsLayoutPath, relative to the game root
+    bool writeSettingsCfg = false;
+};
+void Awake(const AwakeOptions& options);         // :1506
+void OnDestroy();                                // :1573 (fetch released, the onGameStateSaved listener)
+bool Ready();                                    // :953 (fetch != null: an instance has run Awake)
+
 }  // namespace GameSettings
 
 }  // namespace ksp

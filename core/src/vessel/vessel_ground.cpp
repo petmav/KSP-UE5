@@ -8,6 +8,7 @@
 #include "ksp/celestial/celestial_body.hpp"
 #include "ksp/core/log.hpp"
 #include "ksp/dotnet/mono_float.hpp"
+#include "ksp/dotnet/number.hpp"
 #include "ksp/input/game_settings.hpp"
 #include "ksp/physics/collision_enhancer.hpp"
 #include "ksp/physics/physics_globals.hpp"
@@ -110,7 +111,8 @@ bool Vessel::CheckGroundCollision() {
         double num3;
         if (groundCollisionHit_.isPart) {
             num3 = HeightFromPartOffsetGlobal + heightFromPartOffsetLocal;
-            log::Info("[" + GetDisplayName() + "]: ground contact from a Part! Moving upwards " + std::to_string(num3) + "m");
+            // num3.ToString("0.000") (Vessel.cs:2519; WP-20g: was std::to_string, six decimals): F3 rounding, the log line of KSP.log
+            log::Info("[" + GetDisplayName() + "]: ground contact from a Part! Moving upwards " + dotnet::FormatDoubleF(num3, 3) + "m");
         } else {
             if (heightFromTerrain < 0.0f) heightFromTerrain = 0.0f;
             num3 = static_cast<double>(heightFromTerrain) - (static_cast<double>(groundCollisionHit_.distance) - static_cast<double>(num2));
@@ -145,7 +147,8 @@ bool Vessel::CheckGroundCollision() {
         if (std::fabs(num3) < 0.10000000149011612 && !groundPart) {
             SetPosition(vector3d);
         } else {
-            log::Info("[" + GetDisplayName() + "]: ground contact! - error. Moving Vessel " + (num3 < 0.0 ? " down " : " up ") + std::to_string(num3) + "m");
+            log::Info("[" + GetDisplayName() + "]: ground contact! - error. Moving Vessel " + (num3 < 0.0 ? " down " : " up ") + dotnet::FormatDoubleF(num3, 3) +
+                      "m");  // Vessel.cs:2564 num3.ToString("0.000")
             SetPosition(vector3d + vector3d2 * num3);
         }
         physicsHoldLock_ = false;  // RemovePhysicsHoldLock

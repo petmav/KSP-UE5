@@ -14,6 +14,7 @@
 #include "ksp/celestial/planetarium.hpp"
 #include "ksp/config/parse_extensions.hpp"
 #include "ksp/dotnet/text.hpp"
+#include "ksp/modules/module_structural.hpp"
 #include "ksp/orbit/time_warp.hpp"
 #include "ksp/parts/available_part.hpp"
 #include "ksp/parts/part.hpp"
@@ -71,6 +72,24 @@ void StartPartsInFlight(Vessel& vessel) {
         while (num4-- > 0)
             if (p->Modules().Contains(array[num4])) p->fields.overrideSkillUpdate = true;
     }
+}
+
+// WP-20g: Part.cs:1663 Start with its module lifecycle (see the header). Unity starts the parts in instantiation order and each Part.Start
+// runs ModulesOnStart (:1727) in its first segment and ModulesOnStartFinished (:1945) after the flight block's two yields: every part's
+// OnStart comes before any part's flight block and OnStartFinished, as here. ModuleJettison.LateUpdate (ModuleJettison.cs:474) runs in the
+// frame the parts were made, before the first FixedUpdate that integrates them.
+void StartVesselInFlight(Vessel& vessel) {
+    const std::vector<Part*> parts = vessel.parts;
+    std::vector<Part*> fresh;
+    for (Part* p : parts)
+        if (p != nullptr && !p->fields.started) fresh.push_back(p);
+    const std::optional<VesselSituations> situation(vessel.situation);
+    for (Part* p : fresh) p->ModulesOnStart(p->GetModuleStartState(false, true, situation));  // Part.cs:1727
+    StartPartsInFlight(vessel);
+    for (Part* p : fresh) p->ModulesOnStartFinished(p->GetModuleStartState(false, true, situation));  // Part.cs:1945
+    for (Part* p : fresh)
+        for (size_t i = 0; i < p->Modules().Count(); ++i)
+            if (auto* j = dynamic_cast<ModuleJettison*>(p->Modules().GetModule(i))) j->LateUpdate();
 }
 
 FlightIntegrator::FlightIntegrator(Vessel& v) {

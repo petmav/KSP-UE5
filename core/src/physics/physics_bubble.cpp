@@ -76,6 +76,7 @@ void PhysicsBubble::Install() {
         if (options_.contactHost) contacts_.CollisionEnhancerFixedUpdate();
     };
     if (options_.contactHost) contacts_.Install();
+    if (options_.resourceHost) resources_.Install();  // WP-20g
     // WP-20f: the scene state VesselSAS and ModuleReactionWheel read (see SetFlightInputHandler); the saved hook answers while no
     // FlightInputHandler is set
     savedKillAngularVelocity_ = AutopilotEnvironment::killAngularVelocity;
@@ -194,6 +195,7 @@ void PhysicsBubble::Uninstall() {
     floatingOrigin_.OnDestroy();
     krakensbane_.OnDestroy();
     contacts_.Uninstall();
+    resources_.Uninstall();  // WP-20g
     AutopilotEnvironment::killAngularVelocity = savedKillAngularVelocity_;
     ReactionWheelEnvironment::activeVesselPYR = savedActiveVesselPYR_;
     AutopilotEnvironment::pitchInput = savedPitchInput_;
@@ -253,9 +255,10 @@ void PhysicsBubble::OnVesselUnloaded(Vessel* v) {
     fiHost_.OnVesselUnloaded(*v);  // FlightIntegrator.OnUnloadVessel (FlightIntegrator.cs:390): Setup again on the next load
 }
 
-// Vessel.Load (Vessel.cs:1813) instantiated the parts: Unity runs their Part.Start before the next FixedUpdate (WP-20d)
+// Vessel.Load (Vessel.cs:1813) instantiated the parts: Unity runs their Part.Start before the next FixedUpdate (WP-20d), the module
+// lifecycle included (WP-20g: ModulesOnStart, the flight block, ModulesOnStartFinished, the first ModuleJettison.LateUpdate)
 void PhysicsBubble::OnVesselLoaded(Vessel* v) {
-    if (v != nullptr) StartPartsInFlight(*v);
+    if (v != nullptr) StartVesselInFlight(*v);
 }
 
 void PhysicsBubble::OnRemoveVessel(Vessel* v) {

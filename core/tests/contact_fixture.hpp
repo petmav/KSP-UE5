@@ -27,8 +27,9 @@ using namespace ksp::physics;
 using wp20b::World;
 using wp20d::PadScene;
 
-// GameSettings.SetDefaultValues' VESSEL_ANCHOR_* (GameSettings.cs:1121-1126) for the duration of a test (the statics are 0 until a settings
-// load; other tests run with them so: restored on exit)
+// GameSettings.SetDefaultValues' VESSEL_ANCHOR_* (GameSettings.cs:1121-1126) for the duration of a test, restored on exit. Since WP-20g the
+// hygiene listener runs SetDefaultValues before every case (what GameSettings.Awake does at game start), so these are the values a case
+// starts with anyway; the struct keeps a case explicit about them (`AnchorSettings(false)` only saves and restores).
 struct AnchorSettings {
     float v = GameSettings::VESSEL_ANCHOR_VELOCITY_THRESHOLD, t = GameSettings::VESSEL_ANCHOR_TIME_THRESHOLD,
           a = GameSettings::VESSEL_ANCHOR_ANGLE_CHANGE_THRESHOLD, at = GameSettings::VESSEL_ANCHOR_ANGLE_TIME_THRESHOLD,
@@ -59,8 +60,7 @@ struct AnchorSettings {
 // TerrainColliders-per-body test
 struct KerbinScene {
     World& w;
-    wp19b::BubbleScene s;
-    wp20d::ResourceSets resources;
+    wp19b::BubbleScene s;  // WP-20g: the resource sets are the bubble's
     explicit KerbinScene(World& w_, const PhysicsBubbleOptions& o = {}, const PhysicsWorldConfig& cfg = {}) : w(w_), s(w_, o, cfg) {
         wp20d::StartPhysicsGlobals(w);
         SaveEnvironment::Current().loadedScene = GameScenes::FLIGHT;

@@ -104,6 +104,7 @@ add_library(kspcore STATIC
     resources/flow_graph.cpp
     resources/part_set.cpp
     resources/resource_flow_host.cpp
+    resources/vessel_resource_host.cpp
     resources/resource_broker.cpp
     resources/planetary_resources.cpp
     career/currency.cpp
@@ -360,6 +361,7 @@ add_library(kspcore STATIC
     parts/part_decouple.cpp
     parts/part_contact.cpp
     parts/part_shield.cpp
+    parts/part_pack.cpp
     parts/compound_part.cpp
     vessel/vessel_staging.cpp
     vessel/delta_v_part_info.cpp

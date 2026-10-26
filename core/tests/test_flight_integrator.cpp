@@ -695,8 +695,7 @@ namespace {
 struct OrbitScene {
     wp20b::World& w;
     wp19b::BubbleScene s;
-    wp20d::EngineModels engines;
-    wp20d::ResourceSets resources;
+    wp20d::EngineModels engines;  // WP-20g: the resource sets are the bubble's
     explicit OrbitScene(wp20b::World& w_) : w(w_), s(w_) {
         wp20d::StartPhysicsGlobals(w);
         SaveEnvironment::Current().loadedScene = GameScenes::FLIGHT;
