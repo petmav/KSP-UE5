@@ -228,7 +228,7 @@ void VPWheelCollider::UpdateVisualWheel(float deltaTime) {
     WriteVisualTransforms(st, visual);
 }
 
-// VehiclePhysics/VPWheelCollider.cs:275. `host.setPosition` / `setLocalRotation` unset: nothing is written (a host without a model)
+// UpdateVisualWheel's Transform writes (VehiclePhysics/VPWheelCollider.cs lines 275 to 300). `host.setPosition` / `setLocalRotation` unset: nothing is written (a host without a model)
 void VPWheelCollider::WriteVisualTransforms(const VisualWriteState& st, const VisualTransformHost& host) {
     if (!host.setPosition || !host.setLocalRotation) return;
     if (st.suspensionTransform != nullptr && st.updateSuspension) {
