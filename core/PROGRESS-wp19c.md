@@ -37,6 +37,36 @@ FlightGlobals.setActiveVessel call them).
 6. Gates: corpus.saves (61 .sfs byte-identical, run against the main checkout's decompiled/KSP-dev), quicksave -> quickload -> save byte-identical over the harness saves, FlightState round trip (live capture -> Save -> Load -> live capture), vessel switching / retrieval / Clean on the physprofile save's vessels against the C# rules, an independent Python reference (tools/wp19c) for the numeric parts (debug setters, navball / FoR, GetSituationString table).
 7. STATUS / README / progress.csv, fresh suite, seeds 11 / 27, WSL g++, pr_review, PR.
 
-## Step 0: baseline
+## Step 0: baseline (main 839f2f5f, fresh, this worktree)
 
-(filled below)
+`run_tests.ps1 -Fresh` (CMAKE_BUILD_PARALLEL_LEVEL=4): configure 3.1 s, build 417.5 s, ctest 175.1 s, 52 / 52 pass; `kspcore_tests` 1,094 cases /
+1,694,282 assertions.
+
+## Step 2-5: ports (commit 0d10d5b9)
+
+FlightState() live capture + Load (src/vessel/flight_state_live.cpp), FlightState.protoVessels shared (ProtoVessel / Game
+enable_shared_from_this; Vessel.StartFromBackup shares the snapshot; ShipConstruction's TakeOut follows), Game.Load / Start
+(src/save/game_live.cpp), FlightDriver.Start loads its cache and defaults its seams to FlightGlobals, GamePersistence.SaveGame(name, folder,
+mode[, scene]), HighLogic::currentGameOwner, QuickSaveLoad (src/save/quick_save_load.cpp), VesselRetrieval, ProtoVessel.Clean /
+GetSituationString / Current*, Vessel.Clean -> ProtoVessel.Clean, FlightGlobals debug setters + OnGameUnpaused + the unloaded-switch defaults
++ navball block + disableOverride Invoke list (CollisionEnhancer.bypass now cleared as in the C#), Vessel.KillPermanentGroundContact /
+ResetGroundContact / LandedInStockLaunchSite, ProtoPartSnapshot EVA part lookup / partPrefab / FindAttachNode, the flight plan of
+ProtoVessel(Vessel) / BackupVessel, VesselRanges constructors, VesselPrecalculate easing text. Whole unit binary after the ports: 1,094 /
+1,694,282, all pass (no existing number moved).
+
+## Step 6: gates (commits 87b28824, 554f347a)
+
+- tests/test_wp19c_quicksave.cpp: physprofile through FlightDriver.Start (RESUME_SAVED_FILE) -> F5 -> F9 -> new flight scene -> F5: Q2 == Q1
+  byte for byte; original vs Q1: exactly 12 documented lines (scene 5 -> 7, the stand-in FlightCamera's cPch / cHdg / cMod, ModuleReactionWheel
+  stateString and CommNetVessel controlState / canComm that only the physics tick / CommNet produce); one Backup file.
+- tests/test_wp19c_registry.cpp vs tools/wp19c/registry_reference.py (tests/data/wp19c_reference.json, sha256 see STATUS): FlightState capture
+  400 scenes (1,368 vessels, 80 DECLUTTER cleans, 209 budget cuts), Clean 300 (236 recoveries, 162 refund texts), situation strings 300,
+  EVA table 32, QuickSaveClearToSave 16, QuickSaveLoad.Update 400 frames.
+- tests/test_wp19c_flows.cpp: VesselRetrieval on physprofile, FlightState round trip (+ Serenity map-filter bit), unloaded switch -> new scene,
+  save-as dialog, quickLoad branches (no file / KSC save / 0.20 incompatible / 0.23.5 / hold-to-load / load dialog / mission), Game.Start,
+  debug setters.
+- WP-19c cases: 14 / 10,105 assertions, all pass.
+- corpus: save_corpus over decompiled/KSP-dev (main checkout): 60 KSP-1.12.5 .sfs byte-identical once mod-owned elements are dropped, 44 older
+  documented, 201 crafts, 0 unexplained, PASS; over testdata/saves (physprofile): R1 byte-identical. = the 61 .sfs of WP-04, unchanged.
+- pr_review: 0 failing checks (cite aliases for Awake / OnDestroy constructors and the dialog delegates added to tools/wp28/check_cites.py);
+  check_cites exact over the 6 new .cpp: 50 cites, 0 mismatches.

@@ -274,7 +274,7 @@ void QuickSaveLoad::SpawnSaveAsDialog(bool pauseGame, FinishedSaveLoadDialogCall
     if (env.spawnSaveDialog) env.spawnSaveDialog(quicksaveFilename);
 }
 
-// QuickSaveLoad.cs:352 (the text field's callback: quicksaveFilename = EscapeString(n))
+// QuickSaveLoad.cs:336 (SpawnSaveAsDialog's text-field delegate, :352: quicksaveFilename = EscapeString(n))
 std::string QuickSaveLoad::OnSaveAsTextInput(const std::string& n) {
     quicksaveFilename = GamePersistence::EscapeString(n);
     return quicksaveFilename;
@@ -296,21 +296,21 @@ void QuickSaveLoad::ConfirmDialog(bool pauseGame, FinishedSaveLoadDialogCallback
     }
 }
 
-// QuickSaveLoad.cs:379-382 (OverwriteSave, "#autoLOC_174798")
+// QuickSaveLoad.cs:374 (ConfirmDialog's OverwriteSave delegate "#autoLOC_174798", :379-382)
 void QuickSaveLoad::ConfirmOverwrite() {
     OnSaveAsClose(quicksaveFilename, overwritePause_, overwriteReturn_);
     if (env.dismissConfirmDialog) env.dismissConfirmDialog();
     confirmDialog_ = false;
 }
 
-// QuickSaveLoad.cs:383-392 (OverwriteSave "#autoLOC_174804" and OnDismiss)
+// QuickSaveLoad.cs:374 (ConfirmDialog's OverwriteSave "#autoLOC_174804" delegate and OnDismiss, :383-392)
 void QuickSaveLoad::CancelOverwrite() {
     if (env.dismissConfirmDialog) env.dismissConfirmDialog();
     confirmDialog_ = false;
     if (env.setSaveDialogActive) env.setSaveDialogActive(true);
 }
 
-// QuickSaveLoad.cs:396-405 (InvalidSaveName "#autoLOC_174814" and OnDismiss)
+// QuickSaveLoad.cs:374 (ConfirmDialog's InvalidSaveName "#autoLOC_174814" delegate and OnDismiss, :396-405)
 void QuickSaveLoad::InvalidNameOk() { CancelOverwrite(); }
 
 // QuickSaveLoad.cs:413 (doSave(quicksaveFilename), not saveName -- the two are equal from every caller)

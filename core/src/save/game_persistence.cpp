@@ -126,7 +126,7 @@ std::string GamePersistence::BackupFileName(const std::string& saveFileName, con
            "_" + Pad(now.tm_hour, 2) + "_" + Pad(now.tm_min, 2) + "_" + Pad(now.tm_sec, 2) + ").sfs";
 }
 
-// GamePersistence.cs:9
+// GamePersistence.cs:10
 std::string GamePersistence::SaveGame(const std::string& saveFileName, const std::string& saveFolder, SaveMode saveMode, GameScenes startScene) {
     if (HighLogic::CurrentGame() == nullptr) {
         auto created = std::make_shared<Game>();

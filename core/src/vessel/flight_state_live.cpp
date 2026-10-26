@@ -96,7 +96,7 @@ void FlightState::Load() {
         if (created != nullptr) Vessel::SpawnedVessels().push_back(std::move(created));
     }
     Planetarium::SetUniversalTime(universalTime);
-    // MapViewFiltering.cs:138 LoadFilterState: the Serenity bit (0x4000) is dropped without Breaking Ground
+    // LoadFilterState (MapViewFiltering.cs:138): the Serenity bit (0x4000) is dropped without Breaking Ground
     SaveEnvironment& env = SaveEnvironment::Current();
     if ((static_cast<uint32_t>(mapViewFilterState) & 0x4000u) != 0 && !env.IsExpansionInstalled("Serenity"))
         env.mapViewFilteringVesselTypeFilter = mapViewFilterState ^ 0x4000;

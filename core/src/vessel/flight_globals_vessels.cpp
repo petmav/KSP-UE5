@@ -539,7 +539,7 @@ void FlightGlobals::UpdateInformation(bool fixedUpdate) {
         camera_altitude = Vector3d::Distance(camera_position, currentMainBody->position) - currentMainBody->Radius;
         ship_temp = av.externalTemperature;
         ship_dns = av.atmDensity;
-        // :100 rotationOffset = Quaternion.Euler(90f, 0f, 0f) (a static initialiser)
+        // rotationOffset = Quaternion.Euler(90f, 0f, 0f) (FlightGlobals.cs:100, a static initialiser)
         static const Quaternionf rotationOffset = UnityNative::Euler(Vector3f(90.0f, 0.0f, 0.0f));
         ship_orientation_offset = rotationOffset * UnityNative::Inverse(av.ReferenceTransform().rotation);
         const Vector3d vesselPos(av.vesselTransform.position);
