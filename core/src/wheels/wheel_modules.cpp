@@ -39,6 +39,7 @@ void WheelModuleEnvironment::Reset() {
     noCrashDamage = false;
     suspensionColliderEnable = nullptr;
     setRigidbodyFrozen = nullptr;
+    wheelColliderCreated = nullptr;
     isActiveVessel = nullptr;
     shieldedFromAirstream = nullptr;
 }

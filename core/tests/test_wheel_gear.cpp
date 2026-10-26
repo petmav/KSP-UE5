@@ -326,3 +326,168 @@ TEST_CASE("WP-21b Rocket-power VTOL spawn: the vessel keeps its attitude, the wh
         CHECK(changeAfter1 < 0.05);
     }
 }
+
+// ---- WP-29e: getLowestPoint's wheel scan (Vessel.cs:2589-2637) ----------------------------------------------------------------------------------
+// The wheel parts' share of the scan against the independent float64 reference tools/wp29e/lowest_point_reference.py (tests/data/wp29e_lowest_point_reference.json):
+// per stock wheel / gear / leg model, a random world pose, the gear state (ModuleWheelDeployment's stateString / position), the damaged wheel and the hidden
+// wheel; the reference lists every collider getLowestPoint reads (z = bounds.min.z for the layers 26 / 27 / 30, the role from the node name, the WheelCollider
+// chunk's radius). The parts are those of KSP's own stock crafts (the model of each type comes from the craft that carries it).
+#include <fstream>
+#include <map>
+
+#include "nlohmann/json.hpp"
+
+namespace {
+const nlohmann::json& LowestRef() {
+    static const nlohmann::json ref = [] {
+        std::ifstream f(std::string(KSPCORE_TEST_DATA_DIR) + "/wp29e_lowest_point_reference.json", std::ios::binary);
+        REQUIRE(f.good());
+        return nlohmann::json::parse(f);
+    }();
+    return ref;
+}
+}  // namespace
+
+TEST_CASE("WP-29e getLowestPoint's wheel scan: the collider z, roles and radii of every stock wheel / gear / leg model vs the independent float64 reference") {
+    if (!wp20b::GameAvailable()) return;
+    using nlohmann::json;
+    const json& ref = LowestRef();
+    // the craft that carries each part type (one World alive at a time: the scene keeps global state)
+    const std::vector<std::pair<std::string, std::vector<std::string>>> crafts = {
+        {"Prospector Rover", {"roverWheel1"}}, {"Bug-E Buggy", {"roverWheel2"}},    {"Crater Crawler", {"wheelMed"}}, {"Two-Stage Lander", {"landingLeg1-2"}},
+        {"PT Series Munsplorer", {"landingLeg1"}}, {"Aeris 3A", {"SmallGearBay"}}, {"Mallard", {"GearMedium"}},      {"Albatross 3", {"GearSmall", "GearFree"}}};
+    std::map<std::string, int> compared;
+    double maxZ = 0.0, maxRadius = 0.0;
+    size_t points = 0, wheelRole = 0, enhancerRole = 0;
+    struct P {
+        double z;
+        int role;
+        double radius;
+    };
+    for (const auto& cr : crafts) {
+        GearRun run(cr.first, 3000.0, 0.0, RealGeometry(), 0.0, true);
+        run.Tick();  // the wheel records exist, the wheels are not set up yet (the placement's situation: ModuleWheelBase.wheelSetup waits for an unpacked part)
+        for (const json& c : ref["cases"]) {
+            const std::string type = c["part"].get<std::string>();
+            if (std::find(cr.second.begin(), cr.second.end(), type) == cr.second.end()) continue;
+            Part* part = nullptr;
+            for (Part* p : run.V().parts)
+                if (p->partInfo != nullptr && p->partInfo->name == type) {
+                    part = p;
+                    break;
+                }
+            REQUIRE(part != nullptr);
+            INFO(type);
+            CHECK(part->fields.rescaleFactor == doctest::Approx(c["rescale"].get<double>()));
+            // the case's world pose, gear state, damage and hidden wheel
+            const json& pp = c["partPose"];
+            part->partTransform.position = Vector3f(pp[0].get<float>(), pp[1].get<float>(), pp[2].get<float>());
+            part->partTransform.rotation = Quaternionf(pp[3].get<float>(), pp[4].get<float>(), pp[5].get<float>(), pp[6].get<float>());
+            if (PartModule* m = part->FindModuleOfClass("ModuleWheelDeployment")) {
+                m->Set<std::string>("stateString", c["stateString"].get<std::string>());
+                static_cast<ModuleWheels::ModuleWheelDeployment*>(m)->position = c["position"].get<float>();
+            }
+            if (PartModule* m = part->FindModuleOfClass("ModuleWheelDamage")) m->Set<bool>("isDamaged", c["damaged"].get<bool>());
+            WheelPart* rec = run.Wheels().Find(*part);
+            REQUIRE(rec != nullptr);
+            CHECK(!rec->base->IsWheelSetUp());
+            rec->wheelHidden = c["hidden"].get<bool>();
+            const std::vector<VesselEnvironment::ColliderPoint> got = run.scene->wheels.PlacementPoints(*part, Vector3f());
+            const auto& exp = c["expect"];
+            REQUIRE(got.size() == exp.size());
+            // order-free: sort both by (z, role, radius); VesselEnvironment::ColliderRole: Plain 0, WheelCollider 1, CollisionEnhancer 2
+            auto roleId = [](const std::string& s) { return s == "wheel" ? 1 : (s == "enhancer" ? 2 : 0); };
+            std::vector<P> a, b;
+            for (const auto& g : got) a.push_back({g.z, static_cast<int>(g.role), g.radius});
+            for (const auto& e : exp) b.push_back({e["z"].get<double>(), roleId(e["role"].get<std::string>()), e["radius"].get<double>()});
+            auto cmp = [](const P& x, const P& y) { return x.z != y.z ? x.z < y.z : (x.role != y.role ? x.role < y.role : x.radius < y.radius); };
+            std::sort(a.begin(), a.end(), cmp);
+            std::sort(b.begin(), b.end(), cmp);
+            for (size_t i = 0; i < a.size(); ++i) {
+                CHECK(a[i].role == b[i].role);
+                maxZ = std::max(maxZ, std::fabs(a[i].z - b[i].z));
+                maxRadius = std::max(maxRadius, std::fabs(a[i].radius - b[i].radius));
+                ++points;
+                wheelRole += a[i].role == 1;
+                enhancerRole += a[i].role == 2;
+            }
+            compared[type]++;
+        }
+    }
+    MESSAGE("compared " << points << " collider points (" << wheelRole << " WheelCollider role, " << enhancerRole << " collisionEnhancer role) of " << compared.size() << " part types; max |z| " << maxZ
+                        << " m, max |radius| " << maxRadius << " m");
+    CHECK(compared.size() == 9);
+    CHECK(points > 200);
+    CHECK(wheelRole > 40);
+    CHECK(enhancerRole > 20);
+    CHECK(maxZ < 2.0e-5);       // float32 corner / endpoint maths vs the float64 extremes, poses of up to 8 m
+    CHECK(maxRadius < 1.0e-6);
+}
+
+// Vessel.getLowestPoint's correction of the lowest collider (Vessel.cs:2616-2637), the statements on their own: a collider on a node whose name contains
+// "WheelCollider" has its radius and then 0.15 subtracted from `bounds.min.z`, one named "collisionEnhancer" 0.15, any other nothing. A probe collider far
+// below the Two-Stage Lander (z = -1000 in the frame the vessel was rotated into) is lowest in all three runs, so the result differs by exactly the correction.
+TEST_CASE("WP-29e Vessel.getLowestPoint: the wheel collider branch subtracts radius + 0.15, the collisionEnhancer branch 0.15, a plain collider nothing") {
+    if (!wp20b::GameAvailable()) return;
+    GearRun run("Two-Stage Lander");
+    run.Tick();   // unpacked and placed: CheckGroundCollision has set the ground normal getLowestPoint rotates the vessel into
+    REQUIRE(run.Vp() != nullptr);
+    const auto base = Vessel::env.colliderClosestPoints;
+    REQUIRE(static_cast<bool>(base));
+    auto lowest = [&](VesselEnvironment::ColliderRole role, float radius) {
+        Part* root = run.V().rootPart;
+        Vessel::env.colliderClosestPoints = [&, role, radius](Part& p, const Vector3f& point) {
+            std::vector<VesselEnvironment::ColliderPoint> v = base(p, point);
+            if (&p == root) v.push_back({-1000.0f, role, radius});
+            return v;
+        };
+        const float r = run.V().getLowestPoint();
+        Vessel::env.colliderClosestPoints = base;
+        return r;
+    };
+    const float plain = lowest(VesselEnvironment::ColliderRole::Plain, 0.0f);
+    const float enhancer = lowest(VesselEnvironment::ColliderRole::CollisionEnhancer, 0.0f);
+    const float wheel = lowest(VesselEnvironment::ColliderRole::WheelCollider, 0.3f);
+    const float wheelNoRadius = lowest(VesselEnvironment::ColliderRole::WheelCollider, 0.0f);   // a "...WheelCollider..." node without a WheelCollider component
+    MESSAGE("getLowestPoint with a probe 1000 m below: plain " << plain << ", collisionEnhancer " << enhancer << " (+" << enhancer - plain << "), WheelCollider r 0.3 " << wheel << " (+" << wheel - plain
+                                                                << "), WheelCollider-named without a component " << wheelNoRadius << " (+" << wheelNoRadius - plain << ")");
+    CHECK(plain > 900.0f);
+    CHECK(enhancer - plain == doctest::Approx(0.15).epsilon(0.002));
+    CHECK(wheel - plain == doctest::Approx(0.45).epsilon(0.002));
+    CHECK(wheelNoRadius - plain == doctest::Approx(0.15).epsilon(0.002));
+    // and the placement of the lander itself: its legs are not WheelColliders (the LT-2 has no chunk), the lowest collider is a foot piston: the origin
+    // is as high above the ground as getLowestPoint says
+    const Vector3d org = Vector3d(run.V().vesselTransform.position);
+    const PhysicsWorld::RayHit h = run.scene->pad.s.world.RayCast(run.scene->pad.s.bubble.StaticPhysicsFromWorld(org + run.Up() * 50.0), run.Up() * -1.0, 200.0, PhysicsWorld::kLayerStatic);
+    REQUIRE(h.hit);
+    const float gl = run.V().getLowestPoint();
+    MESSAGE("lander: getLowestPoint " << gl << " m, the origin is " << h.distance - 50.0 << " m above the ground");
+    CHECK(std::fabs(gl - (h.distance - 50.0)) < 0.002);
+}
+
+// After the set-up (ModuleWheelBase.wheelSetup) `GetComponent<VPWheelCollider>()` exists: getLowestPoint subtracts ITS radius (the cfg radius x rescaleFactor)
+// and the WheelCollider's bounds centre is the native collider's center under the wheel collider transform.
+TEST_CASE("WP-29e getLowestPoint after the wheel set-up: the VPWheelCollider's radius and centre") {
+    if (!wp20b::GameAvailable()) return;
+    GearRun run("Prospector Rover", 3000.0, 0.0, RealGeometry(), 0.0, true);
+    for (int k = 0; k < 8; ++k) run.Tick();
+    REQUIRE(run.Wheels().SetUpCount() == 4);
+    size_t checked = 0;
+    for (auto& w : run.Wheels().Wheels()) {
+        const std::vector<VesselEnvironment::ColliderPoint> pts = run.scene->wheels.PlacementPoints(*w->part, Vector3f());
+        const VehiclePhysics::VPWheelCollider& vc = *w->Controller()->wheelCollider;
+        const float expectRadius = w->base->Get<float>("radius") * static_cast<float>(w->part->fields.rescaleFactor);
+        const float expectZ = w->colliderHost.TransformPoint(vc.wheelColliderData.center).z;
+        int found = 0;
+        for (const auto& p : pts)
+            if (p.role == VesselEnvironment::ColliderRole::WheelCollider) {
+                ++found;
+                CHECK(p.radius == doctest::Approx(expectRadius).epsilon(1e-6));
+                CHECK(p.z == doctest::Approx(expectZ).epsilon(1e-6));
+                CHECK(p.radius == vc.radius);
+            }
+        CHECK(found == 1);
+        ++checked;
+    }
+    CHECK(checked == 4);
+}

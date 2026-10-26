@@ -28,6 +28,7 @@
 #include <Jolt/Physics/Collision/Shape/OffsetCenterOfMassShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/MutableCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/ContactListener.h>
 #include <Jolt/Physics/Collision/CollideShape.h>
@@ -917,7 +918,19 @@ BodyId PhysicsWorld::CreateCompoundBody(const CompoundBodyDesc& d) {
     if (m.order.size() >= m.cfg.maxBodies || d.children.empty()) return kInvalidBody;
     // the inner shape: one child as a RotatedTranslatedShape (Jolt's compounds need two or more), else a StaticCompoundShape
     JPH::Ref<JPH::Shape> inner;
-    if (d.children.size() == 1) {
+    if (d.mutableChildren) {  // WP-29e: children that can be moved later (the colliders under a wheel's suspension)
+        JPH::MutableCompoundShapeSettings sc;
+        for (const CompoundChild& c : d.children)
+            sc.AddShape(JPH::Vec3(c.position.x, c.position.y, c.position.z),
+                        JPH::Quat(c.rotation.x, c.rotation.y, c.rotation.z, c.rotation.w).Normalized(), MakeChildShape(c.shape, c.userData, m.MaterialFor(c.shape.material)),
+                        c.userData);
+        JPH::ShapeSettings::ShapeResult r = sc.Create();
+        if (r.HasError()) {
+            log::Warning(std::string("PhysicsWorld::CreateCompoundBody: ") + r.GetError().c_str());
+            return kInvalidBody;
+        }
+        inner = r.Get();
+    } else if (d.children.size() == 1) {
         const CompoundChild& c = d.children.front();
         JPH::RotatedTranslatedShapeSettings rts(JPH::Vec3(c.position.x, c.position.y, c.position.z),
                                                 JPH::Quat(c.rotation.x, c.rotation.y, c.rotation.z, c.rotation.w).Normalized(),
@@ -985,6 +998,42 @@ BodyId PhysicsWorld::CreateCompoundBody(const CompoundBodyDesc& d) {
 
 Vector3d PhysicsWorld::GetCenterOfMassPosition(BodyId id) const {
     return FromRVec3(impl_->Bi().GetCenterOfMassPosition(JPH::BodyID(id)));
+}
+
+// WP-29e. The sub-shape positions of a Jolt compound are stored relative to the compound's own centre of mass (mCenterOfMass of the inner
+// shape, `innerCom` here); ModifyShape takes positions in the shape's origin frame, the frame CompoundChild::position is given in.
+bool PhysicsWorld::SetCompoundChildPoses(BodyId id, const std::vector<CompoundChildPose>& poses) {
+    Impl& m = *impl_;
+    auto it = m.compounds.find(id);
+    if (it == m.compounds.end() || it->second.inner->GetSubType() != JPH::EShapeSubType::MutableCompound) return false;
+    if (poses.empty()) return true;
+    auto* inner = static_cast<JPH::MutableCompoundShape*>(const_cast<JPH::Shape*>(it->second.inner.GetPtr()));
+    JPH::BodyLockWrite lock(m.system.GetBodyLockInterfaceNoLock(), JPH::BodyID(id));
+    if (!lock.Succeeded()) return false;
+    for (const CompoundChildPose& p : poses) {
+        if (p.index >= inner->GetNumSubShapes()) return false;
+        inner->ModifyShape(p.index, JPH::Vec3(p.position.x, p.position.y, p.position.z), JPH::Quat(p.rotation.x, p.rotation.y, p.rotation.z, p.rotation.w).Normalized());
+    }
+    // the outer shape's centre of mass is the caller's, unchanged: the previous and the new one are the same
+    const JPH::Vec3 com = lock.GetBody().GetShape()->GetCenterOfMass();
+    lock.ReleaseLock();
+    m.Bi().NotifyShapeChanged(JPH::BodyID(id), com, false, JPH::EActivation::DontActivate);
+    return true;
+}
+
+bool PhysicsWorld::GetCompoundChildPose(BodyId id, uint32_t index, Vector3f& position, Quaternionf& rotation) const {
+    const Impl& m = *impl_;
+    auto it = m.compounds.find(id);
+    if (it == m.compounds.end() || it->second.inner->GetSubType() != JPH::EShapeSubType::MutableCompound) return false;
+    const auto* inner = static_cast<const JPH::MutableCompoundShape*>(it->second.inner.GetPtr());
+    if (index >= inner->GetNumSubShapes()) return false;
+    const JPH::CompoundShape::SubShape& sub = inner->GetSubShape(index);
+    const JPH::Quat rot = sub.GetRotation();
+    // SubShape::SetTransform stored positionCOM = position - compoundCOM + rotation * childCOM: back to the origin frame
+    const JPH::Vec3 pos = sub.GetPositionCOM() + inner->GetCenterOfMass() - rot * sub.mShape->GetCenterOfMass();
+    position = Vector3f(pos.GetX(), pos.GetY(), pos.GetZ());
+    rotation = Quaternionf(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
+    return true;
 }
 
 void PhysicsWorld::SetMassProperties(BodyId id, double mass, const double inertia[3][3], const Vector3f& centerOfMass) {

@@ -121,6 +121,9 @@ struct ColliderProxy {
         double inertia[3][3] = {};  // about the centroid, collider axes, per unit mass
     };
     std::shared_ptr<const MassProps> mass;
+    // WP-29e: a collider that follows a suspension (the colliders under a wheel's suspension / caliper / wheel transforms) is a shape of the compound
+    // but not part of ProxyInertiaPerUnitMass's estimate (the WP-29d calibration of the wheel parts' tensors is the static hull)
+    bool noInertia = false;
 };
 // The spike's proxy (core/spikes/jolt/src/craft_model.cpp): the box of the part's first drag cube (DragCube center / size), half
 // extents at least 0.05 m; a part without drag cubes gets a 0.5 m cube at its origin.
@@ -277,6 +280,10 @@ struct VesselPhysicsOptions {
     // WP-29c: parts whose colliders give the inertia tensor but no collision shape (a wheel / leg part: its tyre is the WheelCollider's
     // suspension ray, not a collider, until the model reader supplies the hub colliders). A cluster of such parts only keeps their shapes.
     std::function<bool(const Part&)> massOnly;
+    // WP-29e: parts whose colliders move relative to the part (the colliders under a wheel's suspension / caliper / wheel transforms follow the
+    // suspension, VPWheelCollider.UpdateVisualWheel): the cluster holding such a part gets a mutable compound, and SetPartColliderPoses moves
+    // them. Unset: no part (the cluster compound is static, as before).
+    std::function<bool(const Part&)> mutableColliders;
     JointGlobals jointGlobals;
     bool inertiaFloor = true;     // Part.ValidateInertiaTensor's Max(1, rb.mass)
     float friction = 0.6f;        // Unity's default PhysicMaterial (dynamic / static friction 0.6, bounciness 0)
@@ -452,6 +459,15 @@ public:
     float PartMass(const Part& part) const;
     Vector3f PartInertia(const Part& part) const;
     int PartIndex(const Part& part) const;  // index in vessel.parts at build time (-1 when not a part of this vessel)
+    // WP-29e: the colliders of `part` as the options hook gives them now (part space) against the ones its cluster's compound was built from.
+    //   Unchanged  the same shapes at the same poses (or the part has no shape in a compound)
+    //   Moved      the poses differ and were applied in place (the part's cluster has a mutable compound, VesselPhysicsOptions::mutableColliders)
+    //   Mismatch   the count or a shape's kind / size differs, or the poses differ in a static compound: nothing was changed, the caller rebuilds
+    //              (VesselPhysics::Rebuild). A convex hull is compared by its point count and kept.
+    enum class ColliderUpdate : uint8_t { Unchanged, Moved, Mismatch };
+    ColliderUpdate SetPartColliderPoses(const Part& part, const std::vector<ColliderProxy>& colliders);
+    // The body-space pose of collider `k` of `part` in its cluster's compound as Jolt holds it (tests); false when not a mutable compound
+    bool PartColliderPose(const Part& part, size_t k, Vector3f& position, Quaternionf& rotation) const;
     size_t PartCount() const { return parts_.size(); }
     bool PartHasRigidbody(size_t index) const;  // part.rb != null as the binding was built
     // WP-20e: the part of an index (the sub-shape user data of the cluster bodies), the cluster of a body (-1: not this binding's)
