@@ -97,3 +97,72 @@ TEST_CASE_FIXTURE(wp12d::StateGuard, "WP-12d PQSCity2.OrientateRayCast over the 
         ch.DropTerrain(kerbin);
     }
 }
+
+TEST_CASE_FIXTURE(wp12d::StateGuard, "WP-12d KSC pad: WP-11's terrain under the launch-pad spawn point (the MapDecalTangent ground) vs the pad collider (WP-12c) and the terrain collider (WP-12b)") {
+    if (!wp20b::GameAvailable()) return;
+    const SceneryColliders doc = LoadSceneryColliders(std::string(KSPCORE_DATA_DIR) + "/scenery/scenery_colliders.json");
+    const SceneryCity& ksc = *doc.Find("Kerbin/KSC");
+    for (int level : {0, -1}) {
+        World w(true);
+        CelestialBody& kerbin = w.Kerbin();
+        PQS flat;   // KscPose: repositionToSphere needs only the radius (PQSCity.cs:315)
+        flat.radius = kerbin.Radius;
+        PQSCity city(StockCity2("Kerbin/KSC"), &kerbin, &flat);
+        city.Orientate();
+        SceneryLevels lv;
+        lv.fallback = level;
+        const std::vector<bool> present = SceneryPresence(ksc, lv);
+        const int spawn = SceneryFindObject(ksc, "KSC/SpaceCenter/LaunchPad/Facility/LaunchPad_spawn", present);
+        REQUIRE(spawn >= 0);
+        const std::vector<SceneryObjectPose> poses = SceneryObjectPoses(ksc);
+        const Vector3d spawnLocal = Vector3d(city.localPosition) + QuaternionD(city.localRotation) * Vector3d(poses[static_cast<size_t>(spawn)].position);
+        const Vector3d n = spawnLocal.normalized();
+        double lat = 0.0, lon = 0.0;
+        {
+            const Vector3d r = n.xzy();
+            lat = dotnet::Math::Asin(r.z) * (180.0 / 3.141592653589793);
+            lon = dotnet::Math::Atan2(r.y, r.x) * (180.0 / 3.141592653589793);
+        }
+        const double hPublic = w.pqs->GetSurfaceHeight(n) - kerbin.Radius;
+        const double hOverride = w.pqs->GetSurfaceHeight(n, true) - kerbin.Radius;
+        // the terrain collider (PQ meshes around the pad, WP-12b) and then the KSC colliders, each on the radial line through the spawn point
+        SphereAt sa(w, lat, lon);
+        KerbinScene sc(w);
+        ContactHost& ch = sc.s.bubble.Contacts();
+        REQUIRE(ch.HostTerrain(kerbin, *sa.sphere) != nullptr);
+        const Vector3d centre = ch.TerrainOrigin(kerbin);
+        const Vector3d up = ch.TerrainRotation(kerbin) * n;
+        const double top = spawnLocal.magnitude() + 100.0;
+        const PhysicsWorld::RayHit pq = sc.s.world.RayCast(centre + up * top, up * -1.0, 400.0, PhysicsWorld::kLayerStatic);
+        REQUIRE(pq.hit);
+        const double terrainCollider = (pq.point - centre).magnitude() - kerbin.Radius;
+        SceneryCityHost host(sc.s.bubble, ksc, 0x5343000000000000ull, lv);
+        host.PlaceOnBody(kerbin, Vector3d(city.localPosition), QuaternionD(city.localRotation));
+        host.ActivateAll();
+        const PhysicsWorld::RayHit pad = sc.s.world.RayCast(centre + up * top, up * -1.0, 400.0, PhysicsWorld::kLayerStatic);
+        REQUIRE(pad.hit);
+        const StaticColliderInfo& info = ch.StaticInfo(pad.userData);
+        const double padSurface = (pad.point - centre).magnitude() - kerbin.Radius;
+        MESSAGE("KSC level " << (level < 0 ? std::string("highest") : std::to_string(level)) << ": spawn point lat " << lat << " lon " << lon << ", "
+                             << spawnLocal.magnitude() - kerbin.Radius << " m; KSC origin " << Vector3d(city.localPosition).magnitude() - kerbin.Radius
+                             << " m (radius + repositionRadiusOffset 42.7); WP-11 terrain " << hPublic << " m (override " << hOverride
+                             << "); terrain collider " << terrainCollider << " m; pad collider \"" << info.name << "\" tag " << info.tag << " at "
+                             << padSurface << " m: pad - terrain " << padSurface - hOverride << " m, pad - terrain collider " << padSurface - terrainCollider << " m");
+        // the in-game capture's terrain under the active vessel on the pad (harness/captures/out2/terrain_height.json, set active_vessel:
+        // lat -0.09720779031430374, lon -74.55767983607595, h_override 0x4122500191C4E80B = 600064.7847054017): WP-11 bit for bit
+        {
+            const double capLat = -0.09720779031430374, capLon = -74.55767983607595;
+            const double h = w.pqs->GetSurfaceHeight(terrain::GetRelSurfaceNVector(capLat, capLon), true);
+            CHECK(h == 600064.7847054017);
+            MESSAGE("the capture's active vessel stood " << (lat - capLat) * 600000.0 * 3.141592653589793 / 180.0 << " m north, "
+                    << (lon - capLon) * 600000.0 * 3.141592653589793 / 180.0 << " m east of the spawn point's radial line");
+            CHECK(std::fabs(lat - capLat) < 1e-4);   // the same place (~10 m), not a gate
+            CHECK(std::fabs(lon - capLon) < 1e-4);
+        }
+        CHECK(info.tag == "LaunchPad");
+        CHECK(!info.isPQ);
+        CHECK(padSurface > hOverride);   // the pad stands on the flattened ground
+        CHECK(std::fabs(terrainCollider - hOverride) < 1.6);   // WP-12b's collider-vs-WP-11 bound within 200 m of the pad
+        ch.DropTerrain(kerbin);
+    }
+}

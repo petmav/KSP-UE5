@@ -90,3 +90,7 @@ Findings of the audit:
   comes back on Repair at the original place (< 1e-6 m). WP-12c / 20g / 21b / 29d / 20e scenarios unchanged (CoM 0.174 / 0.190 m).
   Deferred (needs the game copy, not readable from this session): UpgradeableSlave.neighbourIDs (FIXTURE from the group names) and the
   DestructibleBuilding prefab values.
+- 4 done: the KSC has no FlattenArea; its ground is PQSMod_MapDecalTangent (absolute, heightMapDeformity 70, radius 7.5 km). At the
+  LaunchPad_spawn radial (lat -0.0972078, lon -74.5577): WP-11 terrain 64.7847 m (= the capture's active_vessel h_override bit for bit);
+  WP-12b terrain collider 64.4682 m (-0.32 m: sub-cell relief); KSC origin 42.66 m (radius + repositionRadiusOffset 42.7, float);
+  pad collider level 0 "collider" at 67.5261 m (+2.74 m over the terrain), highest level "Launch Pad" at 72.4079 m (+7.62 m).
