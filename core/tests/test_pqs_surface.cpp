@@ -924,3 +924,50 @@ TEST_CASE_FIXTURE(wp12d::StateGuard, "WP-12d PQSLandControl scatter rules: densi
     }
     UnityRandom::Global().SetState(saved);
 }
+
+TEST_CASE_FIXTURE(wp12d::StateGuard, "WP-12d PQSCache: Awake singleton, the coroutine cache creation (256 quads per frame), onCacheReady, OnDestroy, ResetCache") {
+    HighLogic::ResetStatics();
+    {
+        PQSCache a;
+        a.Reset();
+        CHECK(a.cachePQInitialCount == 9216);
+        CHECK(a.cachePQCoroutine);
+        a.cachePQInitialCount = 600;
+        int ready = 0;
+        a.onCacheReady = [&] { ++ready; };
+        a.Awake();
+        CHECK(PQSCache::Instance == &a);
+        CHECK(a.cacheBeingCreated);
+        CHECK(a.cachePQTotalCount == 256);   // the first IncreasePQCache runs before the first yield
+        CHECK_FALSE(a.cacheReady);
+        Frame12d();
+        CHECK(a.cachePQTotalCount == 512);
+        Frame12d();
+        CHECK(a.cachePQTotalCount == 768);   // 768 >= 600: the loop ends on the next resume
+        CHECK_FALSE(a.cacheReady);
+        Frame12d();
+        CHECK(a.cacheReady);
+        CHECK_FALSE(a.cacheBeingCreated);
+        CHECK(ready == 1);
+        CHECK_FALSE(a.onCacheReady);
+        PQSCache b;
+        b.Awake();   // a second instance removes itself
+        CHECK(b.Destroyed());
+        CHECK(PQSCache::Instance == &a);
+        // the synchronous variant
+        PQSCache c;
+        c.cachePQInitialCount = 10;
+        int readyC = 0;
+        c.onCacheReady = [&] { ++readyC; };
+        c.CreateCache();
+        CHECK(c.cacheReady);
+        CHECK(c.cachePQTotalCount == 10);
+        CHECK(readyC == 1);
+        // ResetCache: every listed sphere is reset (not started: nothing to do, no throw)
+        PQS s1, s2;
+        a.ResetCache({&s1, &s2});
+        CHECK_FALSE(s1.isStarted);
+    }
+    CHECK(PQSCache::Instance == nullptr);   // OnDestroy of the instance
+    HighLogic::ResetStatics();
+}

@@ -73,3 +73,6 @@ Findings of the audit:
   vs 4 height workers: 136 scatter quads identical. Mutations: Range(-1, 2) in the vertex pick, no RestoreBuildState: both detected.
   Finding: the WP-12d cases that build stock spheres must restore Simplex / SimplexNoise permutations and UnityEngine.Random
   (`wp12d::StateGuard`), else WP-03's Simplex cases fail later in the run. Full unit binary: 1,105 cases / 1,694,932 assertions pass.
+- 2e done: PQSCache Reset / Awake (singleton) / OnDestroy / ResetCache / CoroutineCreatePQCache + onCacheReady (cachePQCoroutine,
+  default false = the C# field default). PQSMod_CelestialBodyTransform: nothing engine-agnostic left (AltitudeFade.Setup is renderer
+  discovery). 1 test case.

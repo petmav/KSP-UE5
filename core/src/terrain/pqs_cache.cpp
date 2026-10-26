@@ -6,9 +6,11 @@
 #include <stdexcept>
 
 #include "ksp/config/config_node.hpp"
+#include "ksp/core/log.hpp"
 #include "ksp/dotnet/mono_float.hpp"
 #include "ksp/dotnet/number.hpp"
 #include "ksp/save/save_environment.hpp"
+#include "ksp/space_center/high_logic.hpp"
 #include "ksp/unity/matrix_native.hpp"
 #include "ksp/util/ksp_util.hpp"
 
@@ -406,7 +408,7 @@ bool PQS_GameBindings::TerrainPresetListIsCompatible(const std::string& versionS
 // ---- PQSCache.cs: pool -----------------------------------------------------------------------------------------------
 
 PQSCache::PQSCache() = default;
-PQSCache::~PQSCache() = default;
+PQSCache::~PQSCache() { OnDestroy(); }
 
 // PQSCache.cs:378 CreateCache (cachePQCoroutine: the C# spreads IncreasePQCache over frames; synchronous here)
 void PQSCache::CreateCache() {
@@ -415,8 +417,56 @@ void PQSCache::CreateCache() {
     fresh_ = 0;
     cachePQUnassignedCount = 0;  // new Stack<PQ> (the C# drops the old stack's quads)
     cachePQAssignedCount = 0;
+    if (cachePQCoroutine) {
+        HighLogic::Scheduler().StartCoroutine(CoroutineCreatePQCache(), owner);
+        return;
+    }
     IncreasePQCache(cachePQInitialCount);
     cacheReady = true;
+    if (onCacheReady) onCacheReady();
+    onCacheReady = nullptr;
+}
+
+// PQSCache.cs:479
+Enumerator PQSCache::CoroutineCreatePQCache() {
+    cacheBeingCreated = true;
+    while (cachePQUnassignedCount < cachePQInitialCount) {
+        IncreasePQCache(cachePQIncreasePerFrame);
+        co_yield YieldInstruction::Null();
+    }
+    cacheBeingCreated = false;
+    cacheReady = true;
+    if (onCacheReady) onCacheReady();
+    onCacheReady = nullptr;
+}
+
+// PQSCache.cs:343
+void PQSCache::Reset() {
+    cachePQInitialCount = 9216;
+    cachePQCoroutine = true;
+    cachePQIncreasePerFrame = 256;
+    cacheReady = false;
+}
+
+// PQSCache.cs:351 (DontDestroyOnLoad of a root object: engine side)
+void PQSCache::Awake() {
+    if (Instance != nullptr && Instance != this) {
+        log::Warning("PQSCache already exists. Removing");
+        destroyed_ = true;   // Object.Destroy(gameObject)
+        return;
+    }
+    Instance = this;
+    if (!cacheReady && !cacheBeingCreated) CreateCache();
+}
+
+// PQSCache.cs:370
+void PQSCache::OnDestroy() {
+    if (Instance != nullptr && Instance == this) Instance = nullptr;
+}
+
+// PQSCache.cs:470
+void PQSCache::ResetCache(const std::vector<PQS*>& spheres) {
+    for (PQS* s : spheres) s->ResetSphere();
 }
 
 // PQSCache.cs:400 IncreasePQCache: fresh quads, materialised on first GetQuad from this snapshot of the statics
