@@ -7528,6 +7528,9 @@ state vector the test computes from the body, not with the vessel's own output.
 
 ### Verification
 
+- **After the merge with main `3eac9e97` (WP-29e)** (`ac5f2fbd`): incremental `run_tests.ps1` (build 59.4 s, ctest 162.7 s) **53 / 53 pass**;
+  `kspcore_tests --order-by=rand -rs=11` and `-rs=27`: **1,120 cases / 1,705,572 assertions, all pass**. CI on the pre-merge head `6dd42da0`
+  (PR #52): review, linux-gcc-rel, linux-rel pass.
 - Windows MSVC RelWithDebInfo, fresh (`core/build` deleted, `run_tests.ps1 -Fresh`, `CMAKE_BUILD_PARALLEL_LEVEL=4`, head `ed53b588`): configure
   2.5 s, build 306.9 s, ctest 155.7 s, **52 / 52 pass** (`corpus.saves` is not registered in a worktree: run by hand, below). Baseline before the
   package (main `839f2f5f`, fresh in this worktree): 52 / 52, `kspcore_tests` 1,094 cases / 1,694,282 assertions.
