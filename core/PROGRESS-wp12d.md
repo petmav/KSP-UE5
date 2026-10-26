@@ -61,3 +61,7 @@ Findings of the audit:
   the city generator emits OrientateOnStart / OrientateOnPostSetup. Tests: binder / multicast, range events, the four stock launch sites'
   raycast correction (Crater: collider 3.98 m below the analytic height, placed 18.49 m above the collider; KSP's correction adds
   (city point - collider) instead of subtracting it, and snapHeightOffset twice). check_cites 124 cites, 0 mismatches.
+- 2c done: `include/ksp/terrain/surface_object.hpp`, `src/terrain/surface_object.cpp`: SurfaceObject (3 Create overloads, the Start
+  coroutine one frame after Create as Unity's Start, PopToSceneRoot / ReturnToParent over the Transform shim, the three update modes,
+  Terminate), SpaceCenterSurfaceObject (scene events, DelayedCallback(5) re-pop), PQSMod_SurfaceObjectQuads (per-quad Transforms owned
+  by the mod). 3 test cases; check_cites 19 cites, 0 mismatches.

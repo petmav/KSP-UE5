@@ -517,3 +517,181 @@ TEST_CASE("WP-12d PQSCity / PQSCity2 range events in OnUpdateFinished (PQSCity.c
     CHECK(ev.log == std::vector<std::string>{"entered Kerbin Crater_Launch_Site", "exited Kerbin Crater_Launch_Site"});
     gb.Reset();
 }
+
+// ---- SurfaceObject / SpaceCenterSurfaceObject / PQSMod_SurfaceObjectQuads (WP-12d item 2c) --------------------------------------------
+
+#include "ksp/celestial/celestial_system.hpp"
+#include "ksp/celestial/planetarium.hpp"
+#include "ksp/core/coroutine.hpp"
+#include "ksp/save/save_environment.hpp"
+#include "ksp/terrain/surface_object.hpp"
+
+namespace {
+void Frame12d() {
+    CoroutineScheduler& s = HighLogic::Scheduler();
+    s.AdvanceFrame(0.02f);
+    s.RunDelayedFixedFrameRate();
+    s.RunDelayedDynamicFrameRate();
+    s.RunEndOfFrame();
+}
+struct Bodies12d {
+    Planetarium planetarium;
+    std::unique_ptr<CelestialSystem> sys;
+    Bodies12d() {
+        HighLogic::ResetStatics();
+        planetarium.Awake();
+        sys = CelestialSystem::Spawn(KerbolSystemPrefab(), planetarium);
+    }
+    ~Bodies12d() {
+        sys.reset();
+        Planetarium::Zup = Planetarium::AwakeZup(0.0);
+        HighLogic::ResetStatics();
+        SaveEnvironment::Current().loadedScene = GameScenes::MAINMENU;
+    }
+    CelestialBody& Kerbin() { return *sys->GetBodyByName("Kerbin"); }
+};
+}  // namespace
+
+TEST_CASE("WP-12d SurfaceObject: Start after initDelay frames grabs lat / lon / alt and pops to the scene root; the update mode pins the transform to the body") {
+    Bodies12d b;
+    CelestialBody& kerbin = b.Kerbin();
+    using UnityEngine::Transform;
+    Transform root, host, child1, child2, grand;
+    host.SetParent(&root);
+    child1.SetParent(&host);
+    child2.SetParent(&host);
+    grand.SetParent(&child2);
+    child1.localPosition = Vector3f(1.0f, 2.0f, 3.0f);
+    grand.localScale = Vector3f(2.0f, 2.0f, 2.0f);
+    host.position = kerbin.GetWorldSurfacePosition(-0.0972, -74.5577, 70.0).ToVector3f();
+    CHECK(TransformsInChildren(&host) == std::vector<Transform*>{&host, &child1, &child2, &grand});
+
+    std::unique_ptr<SurfaceObject> so = SurfaceObject::Create(&host, &kerbin, 2, KFSMUpdateMode::FIXEDUPDATE);
+    CHECK(so->GrabCoordsAtStart);
+    CHECK(so->PopToSceneRootAtStart);
+    // Unity: Start in the next frame, then `initDelay` frames of `yield return null`
+    Frame12d();
+    Frame12d();
+    CHECK_FALSE(so->Started());
+    double lat = 0.0, lon = 0.0, alt = 0.0;
+    kerbin.GetLatLonAlt(Vector3d(host.position), lat, lon, alt);
+    Frame12d();
+    REQUIRE(so->Started());
+    CHECK(so->latitude == lat);
+    CHECK(so->longitude == lon);
+    CHECK(so->altitude == alt);
+    CHECK(std::fabs(so->latitude - -0.0972) < 1e-6);
+    CHECK(so->IsPopped());
+    CHECK(host.parent() == nullptr);
+    CHECK(root.childCount() == 0);
+    CHECK(child1.localPosition.Equals(Vector3f(1.0f, 2.0f, 3.0f)));
+    CHECK(grand.localScale.Equals(Vector3f(2.0f, 2.0f, 2.0f)));
+    // FIXEDUPDATE: FixedUpdate pins it, Update / LateUpdate do nothing
+    kerbin.position = kerbin.position + Vector3d(1000.0, 0.0, 0.0);
+    const Vector3f before = host.position;
+    so->Update();
+    so->LateUpdate();
+    CHECK(host.position.Equals(before));
+    so->FixedUpdate();
+    const Vector3f want = (kerbin.position + kerbin.GetSurfaceNVector(lat, lon) * (kerbin.Radius + alt)).ToVector3f();
+    CHECK(host.position.Equals(want));
+    // ReturnToParent / Terminate
+    so->ReturnToParent();
+    CHECK(host.parent() == &root);
+    CHECK_FALSE(so->IsPopped());
+    so->ReturnToParent();   // not popped: nothing
+    CHECK(host.parent() == &root);
+    so->Terminate();
+    CHECK(so->Destroyed());
+    so->FixedUpdate();
+    CHECK(host.position.Equals(want));
+    // the coordinate overload does not grab
+    Transform t2;
+    t2.position = Vector3f(1.0f, 2.0f, 3.0f);
+    auto so2 = SurfaceObject::Create(&t2, &kerbin, 10.0, 20.0, 30.0, 0, KFSMUpdateMode::LATEUPDATE);
+    Frame12d();
+    REQUIRE(so2->Started());
+    CHECK(so2->latitude == 10.0);
+    CHECK(so2->IsPopped());
+    so2->LateUpdate();
+    CHECK(t2.position.Equals((kerbin.position + kerbin.GetSurfaceNVector(10.0, 20.0) * (kerbin.Radius + 30.0)).ToVector3f()));
+}
+
+TEST_CASE("WP-12d SpaceCenterSurfaceObject: set up on the first SPACECENTER / FLIGHT load, returned to its parent on a scene change, popped again 5 frames after the next load") {
+    Bodies12d b;
+    CelestialBody& kerbin = b.Kerbin();
+    using UnityEngine::Transform;
+    Transform pqs, ksc;
+    ksc.SetParent(&pqs);
+    ksc.position = kerbin.GetWorldSurfacePosition(-0.0972, -74.5577, 65.0).ToVector3f();
+    {
+        SpaceCenterSurfaceObject scso(&ksc);
+        scso.findBody = [&] { return &kerbin; };
+        scso.Awake();
+        events::GameEvents::onLevelWasLoaded.Fire(GameScenes::EDITOR);
+        CHECK_FALSE(scso.IsSetup());
+        events::GameEvents::onLevelWasLoaded.Fire(GameScenes::SPACECENTER);
+        REQUIRE(scso.IsSetup());
+        CHECK(scso.SrfObj()->updateMode == KFSMUpdateMode::FIXEDUPDATE);
+        CHECK(scso.SrfObj()->initDelay == 5);
+        for (int i = 0; i < 5; ++i) Frame12d();   // Start in the next frame, then 5 frames of yield return null
+        CHECK_FALSE(scso.SrfObj()->Started());
+        Frame12d();
+        REQUIRE(scso.SrfObj()->Started());
+        CHECK(ksc.parent() == nullptr);
+        // leaving the space center: back under the PQS
+        SaveEnvironment::Current().loadedScene = GameScenes::SPACECENTER;
+        events::GameEvents::onGameSceneLoadRequested.Fire(GameScenes::FLIGHT);
+        CHECK(ksc.parent() == &pqs);
+        // the flight scene loads: PopToSceneRoot after 5 frames (CallbackUtil.DelayedCallback(5, ...))
+        events::GameEvents::onLevelWasLoaded.Fire(GameScenes::FLIGHT);
+        for (int i = 0; i < 4; ++i) Frame12d();
+        CHECK(ksc.parent() == &pqs);
+        Frame12d();
+        CHECK(ksc.parent() == nullptr);
+        // from a scene other than SPACECENTER / FLIGHT the request leaves it popped
+        SaveEnvironment::Current().loadedScene = GameScenes::EDITOR;
+        events::GameEvents::onGameSceneLoadRequested.Fire(GameScenes::SPACECENTER);
+        CHECK(ksc.parent() == nullptr);
+    }
+    // OnDestroy returns a popped object to its parent
+    CHECK(ksc.parent() == &pqs);
+}
+
+TEST_CASE("WP-12d PQSMod_SurfaceObjectQuads: a SurfaceObject per built quad at maxLevel - |maxLevelOffset|, terminated with the quad") {
+    Bodies12d b;
+    CelestialBody& kerbin = b.Kerbin();
+    PQS sphere;
+    sphere.radius = kerbin.Radius;
+    sphere.maxLevel = 10;
+    PQSMod_SurfaceObjectQuads mod;
+    mod.sphere = &sphere;
+    mod.maxLevelOffset = -2;
+    mod.findBody = [&] { return &kerbin; };
+    mod.OnSetup();
+    CHECK(mod.MinLevel() == 8);
+    PQ low, high;
+    low.subdivision = 7;
+    high.subdivision = 8;
+    high.name = "Kerbin ZP 8 12 34";
+    high.meshOrigin = kerbin.GetRelSurfacePosition(-0.0972, -74.5577, 70.0);
+    mod.quadWorldPosition = [&](const PQ& q) { return kerbin.position + q.meshOrigin; };
+    mod.OnQuadBuilt(low);
+    mod.OnQuadBuilt(high);
+    mod.OnQuadBuilt(high);   // GetComponent<SurfaceObject>(): only one
+    CHECK(mod.Count() == 1);
+    REQUIRE(mod.SurfaceObjectOf(high) != nullptr);
+    CHECK(mod.SurfaceObjectOf(low) == nullptr);
+    SurfaceObject* so = mod.SurfaceObjectOf(high);
+    CHECK(so->initDelay == 1);
+    CHECK(so->updateMode == KFSMUpdateMode::LATEUPDATE);
+    Frame12d();
+    Frame12d();
+    REQUIRE(so->Started());
+    CHECK(so->IsPopped());
+    CHECK(std::fabs(so->altitude - 70.0) < 0.1);   // the float transform position read back
+    mod.LateUpdate();
+    mod.OnQuadDestroy(high);
+    CHECK(mod.Count() == 0);
+    mod.OnQuadDestroy(low);   // no SurfaceObject: nothing
+}
