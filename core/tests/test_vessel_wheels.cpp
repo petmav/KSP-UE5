@@ -781,3 +781,81 @@ TEST_CASE("WP-29e rover at rest: the colliders under the suspension, caliper and
     CHECK(maxFollow > 0.03);                 // the front wheels' visual suspension is 4 cm off the prefab pose: the test would see a frozen compound
     CHECK(run.Host().ColliderRebuilds() == 0);   // poses only: the cluster never needed a rebuild at rest
 }
+
+// ---- WP-29e: the brake freeze, member or cluster ------------------------------------------------------------------------------------------------
+// KSP freezes the wheel part's own Rigidbody (ModuleWheelBase.toggleRbConstraints, cs:785: RigidbodyConstraints.FreezeAll) and the PartJoints hold the rest of
+// the vessel to it. The reduced model has one Jolt body per RIGID cluster (WP-20b): a wheel part is welded into its cluster, it has no state of its own
+// (VesselPhysics::PartState of a member is the cluster's rigid motion at the part), so freezing the member IS freezing the cluster -- the host's weld of the
+// cluster to the world (WheelPhysicsHost::ApplyFreezes). The alternative, the wheel part as a body of its own held kinematic and tied to the cluster by a rigid
+// constraint, gives the same stillness (below, in Jolt); what it would add is the PartJoint's compliance, which the model does not have for rigid joints.
+TEST_CASE("WP-29e the brake freeze: the wheel parts share one rigid body with the rest of the vessel, so the frozen wheel part holds every part (a cluster weld)") {
+    if (!wp20b::GameAvailable()) return;
+    Run run("Prospector Rover", RealGeometry());
+    run.Ticks(300);
+    VesselPhysics& vp = *run.Vp();
+    const int cluster = vp.ClusterOf(*run.V().rootPart);
+    int sharing = 0;
+    for (auto& w : run.Wheels().Wheels()) sharing += vp.ClusterOf(*w->part) == cluster ? 1 : 0;
+    CHECK(sharing == 4);                                   // all four wheel parts are members of the root's cluster
+    for (auto& w : run.Wheels().Wheels()) w->base->ToggleRbConstraints(true);
+    run.Tick();
+    CHECK(run.Host().FreezeWeldCount() == 1);
+    std::vector<Vector3d> p0;
+    for (Part* p : run.V().parts) p0.push_back(vp.PartState(*p).position);
+    vp.ChangeWorldVelocity(Vector3d(run.Forward()) * 0.5);   // a push of 0.5 m/s on the whole vessel
+    double maxDrift = 0.0, maxSpeed = 0.0;
+    for (int k = 0; k < 50; ++k) {
+        run.Tick();
+        for (size_t i = 0; i < run.V().parts.size(); ++i) {
+            const PartPhysicsState st = vp.PartState(*run.V().parts[i]);
+            maxDrift = std::max(maxDrift, (st.position - p0[i]).magnitude());
+            maxSpeed = std::max(maxSpeed, st.velocity.magnitude());
+        }
+    }
+    MESSAGE("frozen wheel parts: every part of the vessel (" << run.V().parts.size() << ") stays within " << maxDrift * 1e3 << " mm of its place for 1 s after a 0.5 m/s push, peak speed " << maxSpeed * 1e3 << " mm/s");
+    CHECK(maxDrift < 0.002);
+    CHECK(maxSpeed < 0.02);   // the push itself is removed by the weld within a step
+    for (auto& w : run.Wheels().Wheels()) w->base->ToggleRbConstraints(false);
+    run.Tick();
+    CHECK(run.Host().FrozenPartCount() == 0);
+}
+
+TEST_CASE("WP-29e the brake freeze in Jolt: a kinematic member rigidly tied to the cluster holds it as the weld of the cluster to the world does") {
+    using namespace ksp::physics;
+    constexpr double kG = 9.80665;
+    auto body = [](PhysicsWorld& w, MotionType m, const Vector3d& p, const Vector3d& v) {
+        CompoundBodyDesc d;
+        CompoundChild c;
+        c.shape = ShapeDesc::Box(Vector3f(0.5f, 0.2f, 0.5f));
+        d.children = {c};
+        d.motion = m;
+        d.position = p;
+        d.linearVelocity = v;
+        d.mass = 1.2;
+        d.inertia[0][0] = d.inertia[1][1] = d.inertia[2][2] = 0.2;
+        d.allowSleeping = false;
+        return w.CreateCompoundBody(d);
+    };
+    auto run = [&](bool member) {
+        PhysicsWorld w;
+        const Vector3d origin(1.0e5, 50.0, -2.0e5);
+        const BodyId cluster = body(w, MotionType::Dynamic, origin, Vector3d(0.5, 0.0, 0.0));   // pushed at 0.5 m/s
+        if (member) {
+            const BodyId wheel = body(w, MotionType::Kinematic, origin + Vector3d(0.0, -1.0, 0.0), Vector3d());   // the frozen Rigidbody of a wheel part
+            REQUIRE(w.CreateFixedConstraint(wheel, cluster, origin + Vector3d(0.0, -0.5, 0.0)) != kInvalidConstraint);
+        } else {
+            REQUIRE(w.CreateFixedToWorldConstraint(cluster, origin) != kInvalidConstraint);
+        }
+        double drift = 0.0;
+        for (int i = 0; i < 100; ++i) {
+            w.AddForce(cluster, Vector3d(0.0, -kG * w.GetMass(cluster), 0.0));   // the vessel's weight
+            w.Step(0.02f);
+            drift = std::max(drift, (w.GetPosition(cluster) - origin).magnitude());
+        }
+        return drift;
+    };
+    const double weld = run(false), member = run(true);
+    MESSAGE("2 s after a 0.5 m/s push under its weight: cluster welded to the world " << weld * 1e3 << " mm, kinematic member rigidly constrained " << member * 1e3 << " mm");
+    CHECK(weld < 0.002);
+    CHECK(member < 0.002);
+}
