@@ -12,6 +12,7 @@
 #include "game_root.hpp"
 #include "ksp/database/game_data.hpp"
 #include "ksp/modules/scenario_runner.hpp"
+#include "ksp/modules/vessel_module.hpp"
 #include "ksp/physics/flight_integrator.hpp"
 #include "ksp/save/game.hpp"
 #include "ksp/save/game_parameters.hpp"
@@ -66,6 +67,12 @@ struct World : flighttest::FlightEnv {
         HighLogic::SaveFolder("wp19c");
         GameParameters::GetDefaultParameters(Game_Modes::SANDBOX, GameParameters::Preset::Normal);  // MainMenu.Start's first instance
         KSPUpgradePipeline::Reset();
+        // the host contract's process start (STATUS WP-20g): the vessel-module registry (a static the tests share; compiled here so the order of
+        // the test cases does not matter). CometVessel stays off: its OnStart removes it from every vessel without a comet part
+        // (CometVessel.cs:126-183), and kspcore's CometVessel is a reflected field table without that OnStart (WP-38's), so on these comet-less
+        // vessels it would be saved where the game drops it
+        VesselModuleManager::CompileModules();
+        VesselModuleManager::SetWrapperActive("CometVessel", false);
         FlightDriver::ResetStatics();
         QuickSaveLoad::ResetStatics();
     }

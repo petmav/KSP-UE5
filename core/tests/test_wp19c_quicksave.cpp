@@ -106,14 +106,17 @@ TEST_CASE("WP-19c quicksave -> quickload -> quicksave of the physprofile save th
         // Vessel.OnSaveFlightState of the active vessel takes FlightCamera's angles and mode (Vessel.cs:3617): the stand-in camera's values
         "- /GAME[0]/FLIGHTSTATE[0]/VESSEL[1]/cPch = 0.2", "- /GAME[0]/FLIGHTSTATE[0]/VESSEL[1]/cHdg = 0.3", "- /GAME[0]/FLIGHTSTATE[0]/VESSEL[1]/cMod = 0",
         "+ /GAME[0]/FLIGHTSTATE[0]/VESSEL[1]/cPch = -0.25", "+ /GAME[0]/FLIGHTSTATE[0]/VESSEL[1]/cHdg = 0.75", "+ /GAME[0]/FLIGHTSTATE[0]/VESSEL[1]/cMod = 1",
-        // live state that the physics tick of the bubble (not run here: no rigid bodies) and the CommNet network produce: ModuleReactionWheel's
-        // FixedUpdate status text, CommNetVessel's control state of a connected probe
+        // live state that the physics tick of the bubble (not run here: no rigid bodies) produces: ModuleReactionWheel's FixedUpdate status text
         "- /GAME[0]/FLIGHTSTATE[0]/VESSEL[1]/PART[0]/MODULE[2]/stateString = Idle", "+ /GAME[0]/FLIGHTSTATE[0]/VESSEL[1]/PART[0]/MODULE[2]/stateString = Active",
-        "- /GAME[0]/FLIGHTSTATE[0]/VESSEL[1]/VESSELMODULES[0]/CommNetVessel[0]/controlState = ProbeFull",
-        "- /GAME[0]/FLIGHTSTATE[0]/VESSEL[1]/VESSELMODULES[0]/CommNetVessel[0]/canComm = True"};
+        // the asteroid's CommNetVessel (a SpaceObject: no connection) writes its two persistent fields in kspcore's CommNetVessel save (WP-39);
+        // the file has none (the CommNet network decides them in the game)
+        "+ /GAME[0]/FLIGHTSTATE[0]/VESSEL[0]/VESSELMODULES[0]/CommNetVessel[0]/controlState = None",
+        "+ /GAME[0]/FLIGHTSTATE[0]/VESSEL[0]/VESSELMODULES[0]/CommNetVessel[0]/canComm = True"};
     const std::vector<std::string> d = DiffLines(original, q1);
     for (const std::string& x : d)
         if (expected.count(x) == 0) MESSAGE("unexplained: " << x);
+    for (const std::string& x : expected)
+        if (std::find(d.begin(), d.end(), x) == d.end()) MESSAGE("expected but absent: " << x);
     CHECK(std::set<std::string>(d.begin(), d.end()) == expected);
     CHECK(d.size() == expected.size());
 

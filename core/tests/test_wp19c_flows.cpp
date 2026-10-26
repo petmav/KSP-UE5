@@ -496,7 +496,7 @@ TEST_CASE("WP-19c FlightGlobals debug setters: SetShipOrbit, SetShipOrbitRendezv
             ++*n;
             last = a;
         }
-    } l{&soi};
+    } l{&soi, {}};
     GE::onVesselSOIChanged.Add(&l, &L::On);
     // SetShipOrbit (FlightGlobals.cs:1090): sma capped at 0.99 SOI, SetOrbit at the current UT, every unpacked vessel on rails
     const int munIndex = FlightGlobals::GetBodyIndex(mun);
@@ -570,6 +570,21 @@ TEST_CASE("WP-19c FlightGlobals debug setters: SetShipOrbit, SetShipOrbitRendezv
     FlightDriver::pause = false;
     GE::onGameUnpause.Fire();
     CHECK_FALSE(FlightGlobals::setPositionInProgress);
+    // the two ActiveVesselGoOffRails coroutines resume one frame later and call the active vessel's GoOffRails
+    int offRails = 0;
+    struct G {
+        int* n;
+        void On(Vessel*) { ++*n; }
+    } g{&offRails};
+    GE::onVesselGoOffRails.Add(&g, &G::On);
+    Vessel::env.frameCount = 1000;  // past the physics hold of a fresh vessel (Vessel.PhysicsHoldExpired, 25 frames)
+    CHECK(v->packed);
+    CoroutineScheduler& sched = HighLogic::Scheduler();
+    sched.AdvanceFrame(0.02f);
+    sched.RunDelayedDynamicFrameRate();
+    GE::onVesselGoOffRails.Remove(&g, &G::On);
+    CHECK(offRails == 1);  // the first unpacks the vessel, the second returns at once (not packed)
+    CHECK_FALSE(v->packed);
     GE::onVesselSOIChanged.Remove(&l, &L::On);
     FlightGlobals::Clear();
     hl.OnDestroy();
