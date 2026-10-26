@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include "ksp/dotnet/math.hpp"
+#include "ksp/space_center/pqs_city.hpp"
 
 namespace ksp {
 
@@ -138,7 +139,7 @@ void PQSCityColliders::OnSphereInactive() {
     while (num-- > 0) SetActive(lod[num], false);
 }
 
-// PQSCity.cs:234 (the load / POI range events are WP-42's)
+// PQSCity.cs:234 (WP-12d: the load / POI range events of a linked city at their place)
 void PQSCityColliders::OnUpdateFinished(bool hasTarget, const Vector3d& targetPosition) {
     if (!hasTarget) {
         size_t n = lod.size();
@@ -151,6 +152,7 @@ void PQSCityColliders::OnUpdateFinished(bool hasTarget, const Vector3d& targetPo
     }
     const Vector3d d = targetPosition - set.position();
     const float num2 = static_cast<float>(dotnet::Math::Sqrt(d.x * d.x + d.y * d.y + d.z * d.z));  // Vector3.Distance (float)
+    if (city != nullptr) city->OnUpdateFinished(num2);
     size_t num3 = lod.size();
     while (num3-- > 0) SetActive(lod[num3], num2 < lod[num3].visibleRange);
 }
@@ -184,11 +186,24 @@ void PQSCity2Colliders::SetInactive() {
     while (num-- > 0) SetActive(objects[num], false);
 }
 
-// PQSCity2.cs:407
+void PQSCity2Colliders::Link(PQSCity2& c) {
+    city = &c;
+    c.setVisibility = [this] {
+        if (hasLastTarget_) setVisibility(lastTarget_);
+    };
+}
+
+bool& PQSCity2Colliders::InVisibleRange() { return city != nullptr ? city->inVisibleRange : inVisibleRange; }
+
+// PQSCity2.cs:407 (WP-12d: the positioning reset of a linked city)
 void PQSCity2Colliders::OnSetup() {
     size_t num = objects.size();
     while (num-- > 0) Setup(objects[num]);
     SetInactive();
+    if (city != nullptr && city->raycastSurface && city->positioningCompleted && !city->positionedWhenVisible) {
+        city->Reset();
+        if (city->positionMobileLaunchPad && city->positionMobileLaunchPad->OnScenerySettingChanged) city->positionMobileLaunchPad->OnScenerySettingChanged();
+    }
 }
 
 // PQSCity2.cs:425
@@ -206,13 +221,22 @@ void PQSCity2Colliders::OnSphereActive(bool hasTarget, const Vector3d& targetPos
 // PQSCity2.cs:453
 void PQSCity2Colliders::OnSphereInactive() { SetInactive(); }
 
-// PQSCity2.cs:458 (positioning / raycast / POI range work is WP-42's)
+// PQSCity2.cs:458 (WP-12d: a linked city's re-orientation and POI range events follow setVisibility)
 void PQSCity2Colliders::OnUpdateFinished(bool hasTarget, const Vector3d& targetPosition) {
     if (!hasTarget) {
+        hasLastTarget_ = false;
         SetInactive();
         return;
     }
+    hasLastTarget_ = true;
+    lastTarget_ = targetPosition;
     setVisibility(targetPosition);
+    if (city != nullptr) {
+        city->OnUpdateFinished([this, &targetPosition] {
+            const Vector3d d = targetPosition - set.position();
+            return static_cast<float>(dotnet::Math::Sqrt(d.x * d.x + d.y * d.y + d.z * d.z));   // Vector3.Distance (float)
+        });
+    }
 }
 
 // PQSCity2.cs:491
@@ -223,7 +247,7 @@ void PQSCity2Colliders::setVisibility(const Vector3d& targetPosition) {
     while (num2-- > 0) {
         if (objects[num2].visibleRangeSqr == 0.0f) SetRange(objects[num2]);
         SetActive(objects[num2], num < objects[num2].visibleRangeSqr);
-        inVisibleRange = inVisibleRange || num < objects[num2].visibleRangeSqr;
+        InVisibleRange() = InVisibleRange() || num < objects[num2].visibleRangeSqr;
     }
 }
 

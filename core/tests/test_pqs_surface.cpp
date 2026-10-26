@@ -330,3 +330,190 @@ TEST_CASE("WP-12d surface colliders: C# rules the reference scenarios do not rea
     PQS_PartCollider::ClearStatics();
     PhysicsIgnoreCollisions().Clear();
 }
+
+// ---- PQS_GameBindings / PQS_KSPBinder / PQSSurfaceObject / the PQSCity range events (WP-12d item 2b) ----------------------------------
+
+#include <limits>
+#include <stdexcept>
+
+#include "ksp/celestial/celestial_body.hpp"
+#include "ksp/events/game_events.hpp"
+#include "ksp/input/game_settings.hpp"
+#include "ksp/physics/physics_globals.hpp"
+#include "ksp/space_center/city_colliders.hpp"
+#include "ksp/space_center/high_logic.hpp"
+#include "ksp/space_center/pqs_city.hpp"
+#include "ksp/terrain/pqs_ksp_binder.hpp"
+
+namespace {
+struct CityEvents {
+    std::vector<std::string> log;
+    CityEvents() {
+        events::GameEvents::OnPQSCityLoaded.Add(this, &CityEvents::Loaded);
+        events::GameEvents::OnPQSCityUnloaded.Add(this, &CityEvents::Unloaded);
+        events::GameEvents::OnPOIRangeEntered.Add(this, &CityEvents::Entered);
+        events::GameEvents::OnPOIRangeExited.Add(this, &CityEvents::Exited);
+    }
+    ~CityEvents() {
+        events::GameEvents::OnPQSCityLoaded.Remove(this, &CityEvents::Loaded);
+        events::GameEvents::OnPQSCityUnloaded.Remove(this, &CityEvents::Unloaded);
+        events::GameEvents::OnPOIRangeEntered.Remove(this, &CityEvents::Entered);
+        events::GameEvents::OnPOIRangeExited.Remove(this, &CityEvents::Exited);
+    }
+    static std::string N(CelestialBody* b) { return b != nullptr ? b->bodyName : std::string("null"); }
+    void Loaded(CelestialBody* b, std::string n) { log.push_back("loaded " + N(b) + " " + n); }
+    void Unloaded(CelestialBody* b, std::string n) { log.push_back("unloaded " + N(b) + " " + n); }
+    void Entered(CelestialBody* b, std::string n) { log.push_back("entered " + N(b) + " " + n); }
+    void Exited(CelestialBody* b, std::string n) { log.push_back("exited " + N(b) + " " + n); }
+};
+const PQSCityPrefab& StockCity(const std::string& gameObject) {
+    for (const PQSCityPrefab& p : StockPQSCities())
+        if (gameObject == p.gameObject) return p;
+    throw std::runtime_error("no stock city " + gameObject);
+}
+}  // namespace
+
+TEST_CASE("WP-12d PQS_GameBindings: C# multicast defaults; PQS_KSPBinder binds GameSettings / HighLogic / VesselRanges and leaves OnGetPOIRange bound") {
+    PQS_GameBindings& gb = PQS::GameBindings();
+    gb.Reset();
+    PQSCity city(StockCity("Kerbin/KSC"), nullptr, nullptr);
+    // the C# defaults (PQS_GameBindings.cs:15-37)
+    CHECK(gb.SettingsReady());
+    CHECK_FALSE(gb.PLANET_FORCE_SHADER_MODEL_2_0());
+    CHECK(gb.PLANET_SCATTER());
+    CHECK(gb.PLANET_SCATTER_FACTOR() == 1.0f);
+    CHECK_FALSE(gb.LoadedSceneIsGame());
+    CHECK(gb.TerrainPresetListIsCompatible("1.12.5"));
+    CHECK_FALSE(gb.TerrainPresetListIsCompatible("1.0.0"));
+    CHECK(gb.GetPQSCityLoadRange(&city) == std::numeric_limits<double>::max());
+    CHECK(gb.GetPOIRange(&city) == std::numeric_limits<double>::max());
+
+    // two bodies with a sphere each: one with an atmosphere (VesselRanges.flying.load), one without (subOrbital.load)
+    CelestialBody kerbin, mun;
+    kerbin.bodyName = "Kerbin";
+    kerbin.atmosphere = true;
+    mun.bodyName = "Mun";
+    PQS kerbinSphere, munSphere;
+    kerbin.pqsController = &kerbinSphere;
+    mun.pqsController = &munSphere;
+    PhysicsGlobals pg;
+    PhysicsGlobals* previous = PhysicsGlobals::Instance();
+    pg.VesselRangesDefault.flying.load = 3333.0f;     // distinct from subOrbital.load so the branch shows
+    pg.VesselRangesDefault.subOrbital.load = 2222.0f;
+    PhysicsGlobals::SetInstance(&pg);
+    const bool scatter = GameSettings::PLANET_SCATTER;
+    const float factor = GameSettings::PLANET_SCATTER_FACTOR;
+    const bool legacy = GameSettings::UNSUPPORTED_LEGACY_SHADER_TERRAIN;
+    GameSettings::PLANET_SCATTER = false;
+    GameSettings::PLANET_SCATTER_FACTOR = 0.25f;
+    GameSettings::UNSUPPORTED_LEGACY_SHADER_TERRAIN = true;
+    {
+        PQS_KSPBinder binder;
+        binder.getCBForPQS = [&](PQS* p) -> CelestialBody* { return p == &kerbinSphere ? &kerbin : (p == &munSphere ? &mun : nullptr); };
+        binder.Awake();
+        CHECK(gb.GetSettingsReady.GetInvocationList().size() == 2);   // the default, then the binder: the binder's answer is returned
+        CHECK(gb.SettingsReady() == GameSettings::Ready());
+        CHECK(gb.PLANET_FORCE_SHADER_MODEL_2_0());
+        CHECK_FALSE(gb.PLANET_SCATTER());
+        CHECK(gb.PLANET_SCATTER_FACTOR() == 0.25f);
+        CHECK(gb.LoadedSceneIsGame() == HighLogic::LoadedSceneIsGame());
+        city.sphere = &kerbinSphere;
+        CHECK(gb.GetPQSCityLoadRange(&city) == 3333.0);
+        CHECK(gb.GetPOIRange(&city) == 3333.0);
+        city.sphere = &munSphere;
+        CHECK(gb.GetPQSCityLoadRange(&city) == 2222.0);
+        city.sphere = nullptr;   // no body: subOrbital
+        CHECK(gb.GetPQSCityLoadRange(&city) == 2222.0);
+        // OnPQSCityLoaded / Unloaded dispatch through GameEvents with the sphere's body (none: no event)
+        CityEvents ev;
+        city.sphere = &kerbinSphere;
+        gb.DispatchOnPQSCityLoaded(&city);
+        gb.DispatchOnPQSCityUnloaded(&city);
+        city.sphere = nullptr;
+        gb.DispatchOnPQSCityLoaded(&city);
+        CHECK(ev.log == std::vector<std::string>{"loaded Kerbin KSC", "unloaded Kerbin KSC"});
+        // CheckLocals (PQSCity.cs:372) reads both ranges
+        city.sphere = &munSphere;
+        city.CheckLocals();
+        CHECK(city.loadRange == 2222.0);
+        CHECK(city.poiRange == 2222.0);
+        CHECK(city.POIRange() == 2222.0);
+    }
+    // OnDestroy: nine handlers gone, OnGetPOIRange (sic) still answers with the binder's rule
+    CHECK(gb.GetSettingsReady.GetInvocationList().size() == 1);
+    CHECK(gb.PLANET_SCATTER());
+    CHECK(gb.PLANET_SCATTER_FACTOR() == 1.0f);
+    city.sphere = &munSphere;
+    CHECK(gb.GetPQSCityLoadRange(&city) == std::numeric_limits<double>::max());
+    CHECK(gb.OnGetPOIRange.GetInvocationList().size() == 2);
+    CHECK(gb.GetPOIRange(&city) == 2222.0);
+    GameSettings::PLANET_SCATTER = scatter;
+    GameSettings::PLANET_SCATTER_FACTOR = factor;
+    GameSettings::UNSUPPORTED_LEGACY_SHADER_TERRAIN = legacy;
+    PhysicsGlobals::SetInstance(previous);
+    gb.Reset();
+}
+
+TEST_CASE("WP-12d PQSCity / PQSCity2 range events in OnUpdateFinished (PQSCity.cs:252-275, PQSCity2.cs:476-487) through the linked collider structures") {
+    PQS_GameBindings& gb = PQS::GameBindings();
+    gb.Reset();
+    CelestialBody kerbin;
+    kerbin.bodyName = "Kerbin";
+    PQS sphere;
+    sphere.radius = 600000.0;
+    physics::PhysicsWorld world;
+    PQSCity city(StockCity("Kerbin/KSC"), &kerbin, &sphere);
+    city.loadRange = 2250.0;
+    city.poiRange = 1000.0;
+    PQSCityColliders cc(world, 1000);
+    cc.city = &city;
+    cc.set.SetPose(Vector3d(0.0, 600000.0, 0.0), QuaternionD::identity());
+    cc.OnSetup();
+    CityEvents ev;
+    auto at = [&](double d) { cc.OnUpdateFinished(true, Vector3d(d, 600000.0, 0.0)); };
+    at(5000.0);   // out of both ranges
+    at(2000.0);   // < loadRange: loaded
+    at(900.0);    // < POI range: entered
+    at(900.0);    // no repeat
+    at(1500.0);   // > POI range: exited
+    at(2250.0);   // == loadRange: neither < nor > (no change)
+    at(2300.0);   // unloaded
+    cc.OnUpdateFinished(false, Vector3d());   // no target: the events are not reached
+    CHECK(ev.log == std::vector<std::string>{"loaded Kerbin KSC", "entered Kerbin KSC", "exited Kerbin KSC", "unloaded Kerbin KSC"});
+    CHECK_FALSE(city.isLoaded);
+    // individualPOIRange
+    city.useIndividualPOIRange = true;
+    city.individualPOIRange = 50.0f;
+    ev.log.clear();
+    at(60.0);
+    at(40.0);
+    CHECK(ev.log == std::vector<std::string>{"loaded Kerbin KSC", "entered Kerbin KSC"});
+
+    // PQSCity2: POI range from OnPostSetup (the bindings), the events after setVisibility; SurfaceObjectName = objectName
+    PQSCity2 c2(StockCity("Kerbin/Crater_Launch_Site"), &kerbin, &sphere);
+    CHECK(c2.SurfaceObjectName() == c2.objectName);
+    CHECK(c2.name == "Crater_Launch_Site");
+    CHECK_FALSE(c2.OrientateOnStart);   // the stock launch sites orientate when visible (prefab: OrientateOnStart / OnPostSetup 0)
+    CHECK_FALSE(c2.OrientateOnPostSetup);
+    c2.OnPostSetup();
+    CHECK(c2.poiRange == std::numeric_limits<double>::max());
+    CHECK(c2.POIRange() == 1000.0);   // the prefab's individualPOIRange (useIndividualPOIRange = 1)
+    PQSCity2Colliders c2c(world, 2000);
+    c2c.Link(c2);
+    c2c.set.SetPose(Vector3d(0.0, 600000.0, 0.0), QuaternionD::identity());
+    PQSCity2Colliders::LodObject lod;
+    lod.visibleRange = 3000.0f;
+    c2c.objects.push_back(lod);
+    c2c.OnSetup();
+    c2.positioningCompleted = true;   // already placed: the re-orientation branch needs !positioningCompleted or !positionedWhenVisible
+    c2.positionedWhenVisible = true;
+    ev.log.clear();
+    c2c.OnUpdateFinished(true, Vector3d(5000.0, 600000.0, 0.0));
+    CHECK_FALSE(c2.inVisibleRange);   // the linked city's flag is the one setVisibility writes
+    c2c.OnUpdateFinished(true, Vector3d(700.0, 600000.0, 0.0));
+    CHECK(c2.inVisibleRange);
+    CHECK_FALSE(c2c.inVisibleRange);
+    c2c.OnUpdateFinished(true, Vector3d(1100.0, 600000.0, 0.0));
+    CHECK(ev.log == std::vector<std::string>{"entered Kerbin Crater_Launch_Site", "exited Kerbin Crater_Launch_Site"});
+    gb.Reset();
+}

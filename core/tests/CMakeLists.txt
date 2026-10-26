@@ -22,6 +22,7 @@ add_executable(kspcore_tests
     test_pqs_quadtree.cpp
     test_terrain_colliders.cpp
     test_pqs_surface.cpp
+    test_pqs_surface_scenes.cpp
     test_partloader.cpp
     test_modules.cpp
     test_part.cpp

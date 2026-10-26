@@ -51,3 +51,13 @@ Findings of the audit:
   `tests/data/wp12d_colliders_reference.json` (984,352 bytes, sha256 431a344b..., identical on a second run). Gate: 4 scenarios, 420 steps,
   3,060 box records, 86 IgnoreCollision calls: 0 mismatches. Mutation (cliff depth without the (float) cast + `<=` -> `<` in the part probe):
   107 mismatches.
+- 2b done: `PQS_GameBindings` as C# multicast (`ksp::Delegate`, default handler first) with its four PQSSurfaceObject events;
+  `include/ksp/terrain/pqs_surface_object.hpp` (PQSSurfaceObject base of PQSCity / PQSCity2); `pqs_ksp_binder.hpp/.cpp` (PQS_KSPBinder,
+  OnGetPOIRange left bound after OnDestroy as in the C#); PQSCity Start / OnPostSetup / PostSetup / CheckLocals / the load and POI range
+  events; PQSCity2 Start / OnDestroy / OnScenerySettingChanged / OnPostSetup / DisplaySurfaceObjectName / the complete Orientate
+  (setVisibility, 7 km rule, double snapHeightOffset on the raycast branch, positionMobileLaunchPad), OrientateOnWater (PQS-local frame),
+  OnUpdateFinished re-orientation + POI events; GetSurfaceHeight(.., overrideQuadBuildCheck: true) as the C# (was the public variant);
+  PQSCityColliders / PQSCity2Colliders link (`city`, `Link`); `SceneryCityHost::LinkCity`; `physics::MakeOrientateRayCast`;
+  the city generator emits OrientateOnStart / OrientateOnPostSetup. Tests: binder / multicast, range events, the four stock launch sites'
+  raycast correction (Crater: collider 3.98 m below the analytic height, placed 18.49 m above the collider; KSP's correction adds
+  (city point - collider) instead of subtracting it, and snapHeightOffset twice). check_cites 124 cites, 0 mismatches.

@@ -2,6 +2,7 @@
 // See include/ksp/terrain/pqs_cache.hpp.
 #include "ksp/terrain/pqs_cache.hpp"
 
+#include <limits>
 #include <stdexcept>
 
 #include "ksp/config/config_node.hpp"
@@ -371,12 +372,36 @@ void PQSCache::CreateDefaultPresetList() {
     PresetList->presetIndex = 1;
 }
 
-// PQS_GameBindings.cs:39 (default GetPresetListCompatible: KSPUtil.CheckVersion(v, 1, 4, 3) == COMPATIBLE)
-bool PQS_GameBindings::TerrainPresetListIsCompatible(const std::string& versionString) const {
-    if (GetPresetListCompatible) return GetPresetListCompatible(versionString);
-    return KSPUtil::CheckVersion(versionString, PQSCache::lastCompatibleMajor, PQSCache::lastCompatibleMinor,
-                                 PQSCache::lastCompatibleRev) == VersionCompareResult::COMPATIBLE;
+namespace {
+bool DefaultPresetListCompatible(const std::string& v) {
+    return KSPUtil::CheckVersion(v, PQSCache::lastCompatibleMajor, PQSCache::lastCompatibleMinor, PQSCache::lastCompatibleRev) ==
+           VersionCompareResult::COMPATIBLE;
 }
+bool DefaultTrue() { return true; }
+bool DefaultFalse() { return false; }
+float DefaultOne() { return 1.0f; }
+void DefaultCity(PQSSurfaceObject*) {}
+double DefaultRange(PQSSurfaceObject*) { return std::numeric_limits<double>::max(); }
+}  // namespace
+
+PQS_GameBindings::PQS_GameBindings() { Reset(); }
+
+// the C# field initialisers (PQS_GameBindings.cs:15-37)
+void PQS_GameBindings::Reset() {
+    GetSettingsReady = Delegate<bool()>::Static(&DefaultTrue);
+    GetPlanetForceShaderModel20 = Delegate<bool()>::Static(&DefaultFalse);
+    GetUsePlanetScatter = Delegate<bool()>::Static(&DefaultTrue);
+    GetPlanetScatterFactor = Delegate<float()>::Static(&DefaultOne);
+    GetLoadedSceneIsGame = Delegate<bool()>::Static(&DefaultFalse);
+    GetPresetListCompatible = Delegate<bool(const std::string&)>::Static(&DefaultPresetListCompatible);
+    OnPQSCityLoaded = Delegate<void(PQSSurfaceObject*)>::Static(&DefaultCity);
+    OnPQSCityUnloaded = Delegate<void(PQSSurfaceObject*)>::Static(&DefaultCity);
+    OnGetPQSCityLoadRange = Delegate<double(PQSSurfaceObject*)>::Static(&DefaultRange);
+    OnGetPOIRange = Delegate<double(PQSSurfaceObject*)>::Static(&DefaultRange);
+}
+
+// PQS_GameBindings.cs:39
+bool PQS_GameBindings::TerrainPresetListIsCompatible(const std::string& versionString) const { return GetPresetListCompatible(versionString); }
 
 // ---- PQSCache.cs: pool -----------------------------------------------------------------------------------------------
 

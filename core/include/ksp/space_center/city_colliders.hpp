@@ -19,7 +19,8 @@
 //
 // Changed vs KSP: distances are measured in doubles in the physics frame and narrowed to float for the comparison (KSP: float
 // world-space positions under the floating origin); the two agree except within a float ulp of a visibleRange boundary.
-// The Unity events the callbacks also fire (OnPQSCityLoaded / POI range) are WP-42's (pqs_city.hpp), not repeated here.
+// WP-12d: a structure linked to the WP-42 PQSCity / PQSCity2 (`city`) runs the rest of the same callbacks at their place in the C#
+// statement order: PQSCity's load / POI range events, PQSCity2's setVisibility state, re-orientation and POI range events.
 #pragma once
 
 #include <cstddef>
@@ -34,6 +35,9 @@
 #include "ksp/physics/physics_world.hpp"
 
 namespace ksp {
+
+class PQSCity;
+class PQSCity2;
 
 // One collider component of a scenery object, in the object's local frame (the city transform: Unity local space).
 struct CityCollider {
@@ -119,6 +123,7 @@ public:
     std::vector<size_t> children;   // objects that are direct children of the city transform
     std::vector<LODRange> lod;
     bool transformsActive = true;   // PQSCity.cs:103
+    PQSCity* city = nullptr;        // WP-12d: the placement / range half (PQSCity::OnUpdateFinished(float))
 
     void Setup(LODRange& r);                       // PQSCity.cs:22 (LODRange.Setup)
     void SetActive(LODRange& r, bool active);      // PQSCity.cs:41 (LODRange.SetActive)
@@ -149,7 +154,12 @@ public:
 
     CityColliderSet set;
     std::vector<LodObject> objects;
-    bool inVisibleRange = false;
+    bool inVisibleRange = false;    // used when no city is linked (else the city's)
+    PQSCity2* city = nullptr;       // WP-12d: see Link
+    // links the WP-42 PQSCity2: its inVisibleRange is the one setVisibility writes, its setVisibility hook runs this structure's
+    // setVisibility at the last target OnUpdateFinished saw (none yet: no-op, as `sphere.target == null`), and the callbacks run its
+    // positioning and POI range statements
+    void Link(PQSCity2& c);
 
     void SetRange(LodObject& o);                   // PQSCity2.cs:35
     void Setup(LodObject& o);                      // :24
@@ -164,6 +174,9 @@ public:
 private:
     void SetInactive();                            // :367
     void setVisibility(const Vector3d& targetPosition);   // :491
+    bool& InVisibleRange();
+    bool hasLastTarget_ = false;
+    Vector3d lastTarget_;
 };
 
 }  // namespace ksp

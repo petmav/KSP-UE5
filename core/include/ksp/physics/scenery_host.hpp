@@ -30,6 +30,8 @@
 
 namespace ksp {
 class CelestialBody;
+class PQSCity;
+class PQSCity2;
 }
 
 namespace ksp::physics {
@@ -62,6 +64,13 @@ public:
     // subtrees off and the replacement subtrees on (st) or back. Immediate; PQS callbacks that switch the same objects later win.
     void SetBuildingDestroyed(size_t index, bool destroyed);
 
+    // WP-12d: link the WP-42 city object of this scenery. PQSCity: its load / POI range events run inside Update (PQSCity.cs:234).
+    // PQSCity2: also its setVisibility hook (this host's LOD objects), its re-orientation re-places this host (onOrientated ->
+    // PlaceOnBody with the new local pose, when placed on a body), and its 7 km rule measures the city's distance from the physics
+    // origin (where the core keeps what the floating origin does in KSP)
+    void LinkCity(PQSCity& city);
+    void LinkCity(PQSCity2& city);
+
     const SceneryCity& city() const { return city_; }
     CityColliderSet& set() { return pqsCity_ ? pqsCity_->set : pqsCity2_->set; }
     const CityColliderSet& set() const { return pqsCity_ ? pqsCity_->set : pqsCity2_->set; }
@@ -93,5 +102,15 @@ private:
     bool started_ = false;
     std::vector<size_t> initiallyActive_;
 };
+
+// PQSCity2.cs:342 OrientateRayCast over the bubble's static colliders, for PQSCity2::orientateRayCast: the city transform at
+// surfPosNorm * surfaceHeight (float local position) in `body`'s terrain frame, a ray from 500 m above it straight down to
+// maxDistance = (float)|start - sphere centre| - 500, closest hit on Unity layer 15 (mask 32768: the PQ quads and the scenery; hits of
+// other layers are passed through), while the city's own colliders (`self`, if given) are moved 5 km up as transform.Translate does;
+// returns surfaceHeight + (hit.distance - 500) and sets raycastCompleted on a hit. sic: a collider surface d below the analytic height
+// raises the city by d (the correction has the wrong sign; STATUS.md WP-12d).
+// Changed: the C# composes the ray in float world space under the floating origin; here the physics frame is double.
+std::function<double(const Vector3d& surfPosNorm, double surfaceHeight, bool& raycastCompleted)> MakeOrientateRayCast(
+    PhysicsBubble& bubble, const CelestialBody& body, SceneryCityHost* self = nullptr);
 
 }  // namespace ksp::physics

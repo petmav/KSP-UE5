@@ -15,12 +15,15 @@
 
 #include <array>
 #include <functional>
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "ksp/core/coroutine.hpp"
 #include "ksp/dotnet/random.hpp"
 #include "ksp/math/util_math.hpp"
 #include "ksp/math/vector3d.hpp"
+#include "ksp/terrain/pqs_surface_object.hpp"
 #include "ksp/unity/quaternion.hpp"
 #include "ksp/unity/vector.hpp"
 
@@ -63,6 +66,7 @@ struct PQSCityPrefab {
     bool snapToSurface, raycastSurface, setOnWaterSurface;
     double snapHeightOffset;
     bool baseRotFacesNorthPole;
+    bool OrientateOnStart, OrientateOnPostSetup;
 };
 const std::vector<PQSCityPrefab>& StockPQSCities();
 
@@ -77,12 +81,14 @@ struct SpaceCenterFacilityLink {
     }
 };
 
-// PQSCity.cs:11 (the placement part: Orientate, Randomize, seeds). transform.localPosition / localRotation are float32.
-class PQSCity {
+// PQSCity.cs:11 (the placement part: Orientate, Randomize, seeds; WP-12d: the load / POI range state and events). transform.localPosition /
+// localRotation are float32. `name` (gameObject.name), `sphere` and `localPosition` are the PQSSurfaceObject base's.
+class PQSCity : public PQSSurfaceObject {
 public:
     PQSCity(const PQSCityPrefab& prefab, CelestialBody* body, PQS* sphere);
 
-    std::string name;                         // gameObject.name (:131 SurfaceObjectName)
+    std::string SurfaceObjectName() const override { return name; }          // :127
+    Vector3d PlanetRelativePosition() const override { return PQSSurfaceObject::PlanetRelativePosition(); }   // :125
     bool randomizeOnSphere = false;           // :73
     bool repositionToSphere = true;           // :75
     bool repositionToSphereSurface = false;   // :77
@@ -98,9 +104,7 @@ public:
     LaunchSite* launchSite = nullptr;         // :99
     SpaceCenterFacilityLink spaceCenterFacility;   // PQSCity.spaceCenterFacility
     CelestialBody* body = nullptr;            // :129 (celestialBody)
-    PQS* sphere = nullptr;
-    Vector3d planetRelativePosition;          // PQSSurfaceObject.planetRelativePosition
-    Vector3f localPosition;                   // transform.localPosition
+    Vector3d planetRelativePosition;          // :64
     Quaternionf localRotation = Quaternionf::identity();   // transform.localRotation
 
     // seams ----------------------------------------------------------------------------------------------------------------
@@ -117,17 +121,36 @@ public:
     static int GetPQSCitySeed(const PQSCity& city);              // :378
     static int GetPQSCitySeed(const std::string& name, const std::string& body);   // :387
     static int GetStableHashCode(const std::string& str, bool Bit32 = false);      // :395
-    // PQSCity.POIRange (PQSCity.cs:101: poiRange unless the individual range is used)
-    double poiRange = 0.0;
+    // PQSCity.POIRange (PQSCity.cs:133: poiRange unless the individual range is used)
+    double poiRange = 0.0;                    // :111
     double POIRange() const { return useIndividualPOIRange ? static_cast<double>(individualPOIRange) : poiRange; }
+    // WP-12d: the range state of OnUpdateFinished (private in C#)
+    bool isLoaded = false;                    // :105
+    double loadRange = 0.0;                   // :107
+    bool inPOIRange = false;                  // :109
+    bool InPOIRange() const { return inPOIRange; }   // :131
+    void CheckLocals();                       // :372 (loadRange / poiRange from PQS.GameBindings)
+    void Start();                             // :156 (OnPQSCityStarting, Orientate(allowReposition: false))
+    void OnPostSetup();                       // :192 (StartCoroutine(PostSetup()) on HighLogic's scheduler, owner `owner`)
+    Enumerator PostSetup();                   // :197
+    int owner = 0;                            // the MonoBehaviour's coroutine owner id
+    // PQSCity.cs:234 OnUpdateFinished, the half the collider structure (PQSCityColliders, WP-12b) does not hold: the
+    // OnPQSCityLoaded / Unloaded and OnPOIRangeEntered / Exited events at the float target distance `num2` (:252-275); a
+    // PQSCityColliders linked to the city calls it at that point of its OnUpdateFinished
+    void OnUpdateFinished(float num2);
 };
 
 // PQSCity2.cs:6 (placement data; Orientate is the surface-snap branch, the raycast / water branches are hooks)
-class PQSCity2 {
+class PQSCity2 : public PQSSurfaceObject {
 public:
     PQSCity2(const PQSCityPrefab& prefab, CelestialBody* body, PQS* sphere);
+    ~PQSCity2() override;
+    PQSCity2(const PQSCity2&) = delete;
+    PQSCity2& operator=(const PQSCity2&) = delete;
 
-    std::string name;                  // gameObject.name
+    std::string SurfaceObjectName() const override { return objectName; }            // :127
+    std::string DisplaySurfaceObjectName() const override;                            // :129 (Localizer.Format)
+    Vector3d PlanetRelativePosition() const override { return PQSSurfaceObject::PlanetRelativePosition(); }   // :125
     std::string objectName;            // :18
     std::string displayobjectName;     // :20
     double lat = 0.0, lon = 0.0, alt = 0.0;   // :22-26
@@ -144,24 +167,51 @@ public:
     LaunchSite* launchSite = nullptr;  // :46
     SpaceCenterFacilityLink spaceCenterFacility;   // PQSCity2.spaceCenterFacility
     CelestialBody* body = nullptr;     // :123
-    PQS* sphere = nullptr;
-    Vector3d planetRelativePosition;
-    Vector3f localPosition;
+    Vector3d planetRelativePosition;   // :58
     Quaternionf localRotation = Quaternionf::identity();
-    bool raycastCompleted = false, positioningCompleted = false, positionedWhenVisible = false, inVisibleRange = false;
+    bool raycastCompleted = false, positioningCompleted = false, positionedWhenVisible = false, inVisibleRange = false;   // :108-117
+    bool OrientateOnStart = true;      // :119
+    bool OrientateOnPostSetup = true;  // :121
+    bool inPOIRange = false;           // :97
+    bool InPOIRange() const { return inPOIRange; }   // :131
 
     std::function<double(const Vector3d&)> sphereSurfaceHeight;      // PQS.GetSurfaceHeight(.., true)
-    std::function<Vector3d(const PQSCity2&)> worldPositionOf;        // transform.position
-    // OrientateRayCast (:365): the physics raycast onto the mobile launch pad collision layer; returns the corrected surface height
-    // (the hook sets raycastCompleted when the ray hit; unset: it hits nothing, the height is unchanged and raycastCompleted stays false)
+    // transform.position (the engine's float world position); unset = identity body frame, i.e. the PQS-local position. Also the distance
+    // of Orientate's 7 km rule (Vector3.Distance(transform.position, Vector3.zero)); unset: 0 (the city at the floating origin)
+    std::function<Vector3d(const PQSCity2&)> worldPositionOf;
+    // OrientateRayCast (:342): the physics raycast onto layer 15 (32768: terrain quads and scenery); returns the corrected surface height
+    // and sets raycastCompleted when the ray hit. Unset: it hits nothing (the height is unchanged, raycastCompleted stays false).
+    // physics::MakeOrientateRayCast (ksp/physics/scenery_host.hpp) is the implementation over the bubble's static colliders.
     std::function<double(const Vector3d& surfPosNorm, double surfaceHeight, bool& raycastCompleted)> orientateRayCast;
-    // PositionMobileLaunchPad.CompleteOrientation / ResetPositioning etc. are scenery work (WP-47)
-    std::function<void()> onPositioned;
+    // setVisibility() (:491): the LodObject range test; a PQSCity2Colliders linked to the city installs it (unset: inVisibleRange unchanged)
+    std::function<void()> setVisibility;
+    // Vector3.Distance(transform.position, Vector3.zero) of the 7 km rule (unset: |worldPositionOf| if set, else 0)
+    std::function<float()> distanceFromOrigin;
+    // the transform moved (end of Orientate / OrientateOnWater): a scenery host re-places its colliders
+    std::function<void()> onOrientated;
+    // positionMobileLaunchPad (:93, PositionMobileLaunchPad.cs, WP-54): null when unset
+    struct MobileLaunchPad {
+        std::function<void(CelestialBody*, const std::string& objectName, bool overrideVisible)> CompleteOrientation;
+        std::function<void()> OnScenerySettingChanged;
+        float waterModelClearance = 0.0f;
+    };
+    std::shared_ptr<MobileLaunchPad> positionMobileLaunchPad;
 
     double POIRange() const { return useIndividualPOIRange ? static_cast<double>(individualPOIRange) : poiRange; }   // :133
-    void Reset();                                                // :390
+    void Reset();                                                // :377
+    void Start();                                                // :386 (OnScenerySettingChanged is a public handler)
+    void OnScenerySettingChanged();                              // :401
+    void OnPostSetup();                                          // :434
     void Orientate();                                            // :186
+    // PQSCity2.cs:458 OnUpdateFinished after setVisibility (the collider half, PQSCity2Colliders): the re-orientation in visible range and
+    // the POI range events at the float target distance `num` (:466-487); a linked PQSCity2Colliders calls it
+    void OnUpdateFinished(const std::function<float()>& targetDistance);
     void LatLonAlt(double& latitude, double& longitude, double& altitude) const;
+
+private:
+    bool OrientateOnWater(const Vector3d& surfPosNorm);          // :272
+    float DistanceFromOrigin() const;
+    bool started_ = false;
 };
 
 // CelestialBody.cs:799 GetRandomLatitudeAndLongitude (the KSPRandom draw loop; SpaceCenter.Instance and the PQS terrain height are
