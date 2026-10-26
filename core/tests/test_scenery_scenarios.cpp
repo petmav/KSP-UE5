@@ -457,8 +457,14 @@ struct AircraftRun {
     Pilot pilot;
     Vector3d up, east, north, hit, hitPhys;  // hitPhys: the runway point in the physics frame (the world frame shifts with the floating origin)
     double runwayRadius = 0.0;  // |runway point - Kerbin centre|: the world frame shifts with the floating origin, a radius does not
-    explicit AircraftRun(const std::string& craft, double clearance = 0.0, bool airborne = false, double headingDeg = 90.0) {
-        r = wp29c::LoadRover(w, craft);
+    // WP-29e: `gearRetracted` loads the craft with its gear up (LoadRover); `standIn` false clears useStandInCollider on every gear deployment
+    // module (the ablation of the stand-in sphere test)
+    explicit AircraftRun(const std::string& craft, double clearance = 0.0, bool airborne = false, double headingDeg = 90.0, bool gearRetracted = false, bool standIn = true) {
+        r = wp29c::LoadRover(w, craft, gearRetracted);
+        if (!standIn)
+            for (Part* p : r.vessel->parts)
+                for (size_t i = 0; i < p->Modules().Count(); ++i)
+                    if (p->Modules().GetModule(i)->ClassName() == "ModuleWheelDeployment") p->Modules().GetModule(i)->Set<bool>("useStandInCollider", false);
         // the nose direction in the vessel frame: from the engine to the root cockpit, on the ground plane
         {
             Vessel& v = *r.vessel;
@@ -753,6 +759,223 @@ TEST_CASE("WP-21b Aeris 3A on the real runway: rests on its three LY-01 gear bay
     CHECK(speed < 0.01);
     CHECK(std::fabs(fsum / weight - 1.0) < 0.02);
     CHECK(std::fabs(nose) < 5.0);
+}
+
+// ---- WP-29e: the retracted gear's stand-in sphere on the ground ----------------------------------------------------------------------
+// C# rules (decompiled/KSP-Decompiled/Assembly-CSharp/ModuleWheels/ModuleWheelDeployment.cs):
+//   * the stand-in exists while the wheel is retracted or deploying (SetInopSubsystems(Position < TsubSys), :348-372, :375-390) in the flight scene
+//     with useStandInCollider (:369), a SphereCollider of radius wheel.wheelCollider.radius (:394-405) at deployTgt.position (:350), kept on
+//     deployTgt in every state callback (:420, :462, :489, :532); destroyed when the wheel is deployed (:385-389) and in OnStart (:256-259);
+//   * the PhysX wheel (WheelCollider) is off while retracted (InopWheelCollider), the part's own hub colliders (BaseCollider, WheelRetractCollider)
+//     stay and ride the animation clip.
+// The Aeris 3A as a save with its gear up (LoadRover gearRetracted: stateString Retracted, position 0), set down 2 cm above the real KSC runway
+// (WP-12c collider): it comes to rest on its belly. References: the geometry of the module (deployTgt, the wheel radius), not the simulated
+// shapes. The nose bay's sphere reaches below the other colliders, so (a) with the stand-in the sphere bottom sits on the runway and that part's
+// nearest contact point is the sphere bottom; (b) without it (useStandInCollider cleared) the same sphere would be 2.6 cm inside the runway, the
+// contact is the bay's hull 14 cm from it, and the nose sits lower by the pitch the 2.6 cm make over the wheelbase.
+struct GearUpRest {
+    double comHeight = 0.0, speed = 0.0, noseDeg = 0.0, tsubSys = 0.0;
+    int deployments = 0, standIns = 0, standInsBuilt = 0, wheelsOn = 0, grounded = 0, retracted = 0;
+    std::vector<double> sphereBottom;   // per gear bay: the stand-in sphere's lowest point above the runway
+    std::vector<double> sphereRadius;
+    std::vector<uint32_t> bayParts;
+    std::vector<double> contactDistToSphereBottom;  // per bay: the nearest contact point of that bay's part to its sphere bottom (or 1e9)
+    std::vector<std::pair<uint32_t, Vector3d>> contacts;  // (part index, world point) of every contact with the runway in the last step
+    std::vector<std::string> states;
+    Vector3d fwd, up;
+    size_t parts = 0;
+    bool healthy = true;
+};
+
+GearUpRest GearUpDrop(bool standIn, double clearance, int ticks = 800) {
+    GearUpRest g;
+    AircraftRun a("Aeris 3A", clearance, true, 90.0, true, standIn);
+    Vessel& v = a.V();
+    PhysicsWorld& world = a.scene->pad.s.world;
+    for (int k = 0; k < ticks; ++k) {
+        a.Tick();
+        if (a.Vp() == nullptr) {
+            g.healthy = false;
+            return g;
+        }
+    }
+    VesselPhysics* vp = a.Vp();
+    g.parts = v.parts.size();
+    g.comHeight = a.Height(a.scene->pad.s.bubble.FrameOriginWorld() + wp29c::VesselCoM(*vp));
+    g.speed = wp29c::VesselVelocity(*vp).magnitude();
+    g.fwd = a.Fwd();
+    g.up = a.up;
+    g.noseDeg = std::asin(std::clamp(Vector3d::Dot(g.fwd, g.up), -1.0, 1.0)) * 180.0 / kPi;
+    g.grounded = a.Wheels().GroundedCount();
+    for (auto& wh : a.Wheels().Wheels()) {
+        auto* d = dynamic_cast<ModuleWheels::ModuleWheelDeployment*>(wh->part->FindModuleOfClass("ModuleWheelDeployment"));
+        if (d == nullptr) continue;
+        ++g.deployments;
+        g.standIns += d->StandInColliderActive() ? 1 : 0;
+        g.standInsBuilt += wh->standInBuilt ? 1 : 0;
+        g.wheelsOn += wh->nativeOn ? 1 : 0;
+        g.retracted += d->Position() < 0.05f ? 1 : 0;
+        g.states.push_back(d->Get<std::string>("stateString"));
+        g.tsubSys = d->Get<float>("TsubSys");
+        const float r = wh->Controller()->wheelCollider->radius;  // VPWheelCollider.radius (cfg radius x rescale), what CreateStandInCollider reads
+        g.sphereRadius.push_back(r);
+        g.sphereBottom.push_back(a.Height(Vector3d(d->DeployTarget()->position) - a.up * static_cast<double>(r)));
+        g.bayParts.push_back(static_cast<uint32_t>(vp->PartIndex(*wh->part)));
+    }
+    g.contactDistToSphereBottom.assign(g.bayParts.size(), 1e9);
+    for (const PhysicsWorld::ContactEvent& e : world.ContactEvents()) {
+        if (!e.otherStatic || e.kind == PhysicsWorld::ContactEvent::Kind::Exit) continue;
+        const Vector3d p = a.scene->pad.s.bubble.FrameOriginWorld() + e.point;
+        g.contacts.emplace_back(e.sub1, p);
+        for (size_t i = 0; i < g.bayParts.size(); ++i)
+            if (e.sub1 == g.bayParts[i]) {
+                auto* d = dynamic_cast<ModuleWheels::ModuleWheelDeployment*>(a.Wheels().Wheels()[i]->part->FindModuleOfClass("ModuleWheelDeployment"));
+                const Vector3d sb = Vector3d(d->DeployTarget()->position) - a.up * static_cast<double>(g.sphereRadius[i]);
+                g.contactDistToSphereBottom[i] = std::min(g.contactDistToSphereBottom[i], (p - sb).magnitude());
+            }
+    }
+    return g;
+}
+
+TEST_CASE("WP-29e Aeris 3A gear up: belly landing on the real runway, the retracted gear rests on its stand-in sphere (ModuleWheelDeployment.cs:348-405)") {
+    if (!wp20b::GameAvailable()) return;
+    const GearUpRest with = GearUpDrop(true, 0.02);
+    const GearUpRest without = GearUpDrop(false, 0.02);
+    auto dump = [](const char* tag, const GearUpRest& g) {
+        std::ostringstream o;
+        o << tag << ": parts " << g.parts << " CoM height " << g.comHeight << " speed " << g.speed << " nose " << g.noseDeg << " deg, deployments " << g.deployments << " standIns " << g.standIns << " built "
+          << g.standInsBuilt << " wheelsOn " << g.wheelsOn << " grounded " << g.grounded << " retracted " << g.retracted << " contacts " << g.contacts.size() << " bays:";
+        for (size_t i = 0; i < g.sphereBottom.size(); ++i)
+            o << " (part " << g.bayParts[i] << " r " << g.sphereRadius[i] << " sphere bottom " << g.sphereBottom[i] << " nearest contact to it " << g.contactDistToSphereBottom[i] << ")";
+        MESSAGE(o.str());
+    };
+    dump("with stand-in", with);
+    dump("without stand-in", without);
+    REQUIRE(with.healthy);
+    REQUIRE(without.healthy);
+    CHECK(with.parts == 18);       // set down gently: nothing broke off
+    CHECK(without.parts == 18);
+    // the C# state rules, all three bays: retracted (Position < TsubSys), the stand-in created at the wheel set-up, the PhysX wheel off
+    CHECK(with.deployments == 3);
+    CHECK(with.retracted == 3);
+    CHECK(with.standIns == 3);
+    CHECK(with.standInsBuilt == 3);
+    CHECK(with.wheelsOn == 0);
+    CHECK(with.grounded == 0);
+    for (const std::string& s : with.states) CHECK(s == "Retracted");
+    CHECK(without.standIns == 0);  // useStandInCollider cleared: ModuleWheelDeployment.cs:369 creates nothing
+    CHECK(without.standInsBuilt == 0);
+    CHECK(without.wheelsOn == 0);
+    CHECK(with.speed < 1e-3);
+    CHECK(without.speed < 1e-3);
+    REQUIRE(with.bayParts.size() == 3);
+    // find the bay whose sphere reaches below the runway when the stand-in is absent
+    size_t nose = 0;
+    for (size_t i = 1; i < 3; ++i)
+        if (without.sphereBottom[i] < without.sphereBottom[nose]) nose = i;
+    CHECK(without.sphereBottom[nose] < -0.015);      // it would be 1.5+ cm inside the runway: the hull alone holds the aircraft
+    for (size_t i = 0; i < 3; ++i)
+        if (i != nose) {
+            CHECK(with.sphereBottom[i] > 0.05);       // the other bays' spheres hang clear of the runway
+            CHECK(with.contactDistToSphereBottom[i] > 1.0e8);
+        }
+    // (a) with the stand-in the sphere bottom sits on the runway (within the contact offset) and that part's contact is the sphere bottom
+    CHECK(with.sphereBottom[nose] > -0.01);
+    CHECK(with.sphereBottom[nose] < 0.01);
+    CHECK(with.contactDistToSphereBottom[nose] < 0.01);
+    // (b) without it the nose bay is held by its hull, away from where the sphere would be
+    CHECK(without.contactDistToSphereBottom[nose] > 0.10);
+    // the sphere lifts the nose: pitch change about the rear support, predicted from the geometry of the module (the sphere's depth below the
+    // runway when absent, the distance from the sphere bottom to the mean of the other contact points along the aircraft's axis)
+    double rear = 0.0;
+    int nRear = 0;
+    for (const auto& c : without.contacts)
+        if (c.first != without.bayParts[nose]) {
+            rear += Vector3d::Dot(c.second, without.fwd);
+            ++nRear;
+        }
+    REQUIRE(nRear > 0);
+    rear /= nRear;
+    double sphereFwd = 0.0;
+    int nSph = 0;
+    for (const auto& c : with.contacts)
+        if (c.first == with.bayParts[nose]) {
+            sphereFwd += Vector3d::Dot(c.second, with.fwd);
+            ++nSph;
+        }
+    REQUIRE(nSph > 0);
+    sphereFwd /= nSph;
+    const double wheelbase = sphereFwd - rear;
+    const double predicted = std::atan2(-without.sphereBottom[nose] + with.sphereBottom[nose], wheelbase) * 180.0 / kPi;
+    const double observed = with.noseDeg - without.noseDeg;
+    MESSAGE("nose lift: pitch change " << observed << " deg observed, " << predicted << " deg predicted (sphere " << -without.sphereBottom[nose] * 100.0 << " cm below the runway when absent, lever " << wheelbase << " m)");
+    CHECK(observed > 0.0);
+    CHECK(std::fabs(observed - predicted) < 0.05 * predicted);
+}
+
+/// The Gear action group on the ground (Deploy from the belly landing above): the stand-in goes at Position >= TsubSys, the PhysX wheels come on, the
+// aircraft is lifted onto them and ends where an aircraft that was deployed all along rests.
+TEST_CASE("WP-29e Aeris 3A gear up on the runway, then deployed: the stand-in goes at TsubSys, the wheels take the weight (ModuleWheelDeployment.cs:348-390)") {
+    if (!wp20b::GameAvailable()) return;
+    wp29c::WheelSettingsScope settings;
+    double deployedRest = 0.0;
+    {
+        AircraftRun b("Aeris 3A", 0.02, true, 90.0, false, true);
+        for (int k = 0; k < 800; ++k) b.Tick();
+        REQUIRE(b.Vp() != nullptr);
+        deployedRest = b.Height(b.scene->pad.s.bubble.FrameOriginWorld() + wp29c::VesselCoM(*b.Vp()));
+    }
+    AircraftRun a("Aeris 3A", 0.02, true, 90.0, true, true);
+    for (int k = 0; k < 400; ++k) a.Tick();
+    REQUIRE(a.Vp() != nullptr);
+    std::vector<ModuleWheels::ModuleWheelDeployment*> deps;
+    for (auto& wh : a.Wheels().Wheels())
+        if (auto* d = dynamic_cast<ModuleWheels::ModuleWheelDeployment*>(wh->part->FindModuleOfClass("ModuleWheelDeployment"))) deps.push_back(d);
+    REQUIRE(deps.size() == 3);
+    const double tsub = deps[0]->Get<float>("TsubSys");
+    for (auto* d : deps) {
+        CHECK(d->StandInColliderActive());
+        d->ActionToggle(KSPActionType::Activate);
+    }
+    std::vector<int> flipTick(3, -1), wheelTick(3, -1);
+    std::vector<double> posAtFlip(3, -1.0), posBefore(3, -1.0);
+    std::vector<float> prevPos(3, 0.0f);
+    bool standInWithWheelOn = false;  // the C# gives the stand-in to the retracted / deploying wheel only: both never at once past TsubSys
+    for (int k = 0; k < 700; ++k) {
+        a.Tick();
+        for (size_t i = 0; i < 3; ++i) {
+            auto& wh = a.Wheels().Wheels()[i];
+            const bool active = deps[i]->StandInColliderActive();
+            if (!active && flipTick[i] < 0) {
+                flipTick[i] = k;
+                posAtFlip[i] = deps[i]->Position();
+                posBefore[i] = prevPos[i];
+            }
+            if (wh->nativeOn && wheelTick[i] < 0) wheelTick[i] = k;
+            if (wh->nativeOn && active) standInWithWheelOn = true;
+            prevPos[i] = deps[i]->Position();
+        }
+    }
+    double rest = a.Height(a.scene->pad.s.bubble.FrameOriginWorld() + wp29c::VesselCoM(*a.Vp()));
+    std::ostringstream o;
+    o << "deploy on the ground: TsubSys " << tsub;
+    for (size_t i = 0; i < 3; ++i)
+        o << " | bay " << i << ": stand-in gone at tick " << flipTick[i] << " (Position " << posBefore[i] << " -> " << posAtFlip[i] << "), wheel on at tick " << wheelTick[i];
+    o << " | rest CoM height " << rest << " vs deployed all along " << deployedRest << ", grounded " << a.Wheels().GroundedCount() << ", speed " << wp29c::VesselVelocity(*a.Vp()).magnitude();
+    MESSAGE(o.str());
+    for (size_t i = 0; i < 3; ++i) {
+        CHECK(flipTick[i] > 0);
+        CHECK(posBefore[i] < tsub);      // the stand-in lives while Position < TsubSys ...
+        CHECK(posAtFlip[i] >= tsub);     // ... and is destroyed in the update that reaches TsubSys
+        CHECK(wheelTick[i] >= 0);
+        CHECK(!a.Wheels().Wheels()[i]->standInBuilt);
+        CHECK(!deps[i]->StandInColliderActive());
+        CHECK(deps[i]->Get<std::string>("stateString") == "Deployed");
+    }
+    CHECK(!standInWithWheelOn);
+    CHECK(a.Wheels().GroundedCount() == 3);
+    CHECK(std::fabs(rest - deployedRest) < 0.02);
+    CHECK(wp29c::VesselVelocity(*a.Vp()).magnitude() < 0.1);
 }
 
 // The roll, the rotation and the lift-off: no capture covers an aircraft flight, so the values are analytic / reference-gated (labelled): the

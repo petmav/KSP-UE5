@@ -50,7 +50,10 @@ struct LoadedRover {
 };
 
 // KSPUpgradePipeline.Process + ShipConstruct.LoadShip + AssembleVesselFromCraft (World::Assemble); the editor up = inverse(root file rot) * Y
-inline LoadedRover LoadRover(World& w, const std::string& name) {
+// `gearRetracted` (WP-29e): the craft as a save with its gear up, i.e. every ModuleWheelDeployment persisted as stateString = Retracted,
+// position = 0 (ModuleWheelDeployment.OnStart then runs FSMSetup("Retracted"): the animation at its retracted end, TsubSys not reached, the
+// stand-in collider created at the wheel set-up)
+inline LoadedRover LoadRover(World& w, const std::string& name, bool gearRetracted = false) {
     LoadedRover out;
     const std::string path = StockCraftPath(name);
     ConfigNode::NodePtr root = ConfigNode::Load(path);
@@ -60,6 +63,14 @@ inline LoadedRover LoadRover(World& w, const std::string& name) {
     KSPUpgradePipeline::Process(root, sn ? *sn : std::string(), SaveUpgradePipeline::LoadContext::Craft, [&](const ConfigNode::NodePtr& n) { up = n; },
                                 [&](KSPUpgradePipeline::UpgradeFailOption, const ConfigNode::NodePtr&) {});
     REQUIRE(up != nullptr);
+    if (gearRetracted)
+        for (ConfigNode* part : up->nodes().GetNodes("PART"))
+            for (ConfigNode* mod : part->nodes().GetNodes("MODULE")) {
+                const std::string* mn = mod->GetValuePtr("name");
+                if (mn == nullptr || *mn != "ModuleWheelDeployment") continue;
+                mod->values().SetValue("stateString", "Retracted", std::nullopt, 0, true);
+                mod->values().SetValue("position", "0", std::nullopt, 0, true);
+            }
     QuaternionD rootRot = QuaternionD::identity();
     if (ConfigNode* part = up->nodes().GetNode("PART"))
         if (const std::string* rs = part->GetValuePtr("rot")) {
