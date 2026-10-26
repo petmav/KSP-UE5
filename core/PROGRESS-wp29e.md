@@ -16,7 +16,7 @@
 - [ ] Item 4: getLowestPoint wheel-radius corrections and the bounds centre from the model data.
 - [ ] Item 5: brake freeze: cluster member vs cluster weld (evaluate, document).
 - [ ] Item 6: animation rotation renormalisation: measure the stored quaternions of the 13 stock clips.
-- [ ] STATUS WP-29e, README, progress.csv, final verification, PR.
+- [x] STATUS WP-29e, README, progress.csv (0.97), fresh verification (53/53, rand 11 / 27 1,106 cases), WSL syntax, pr_review: done. PR next.
 - [x] Item 4: getLowestPoint wheel branch. PlacementPoints rewritten: inactive GameObject subtrees are not enumerated (damaged/undamaged transform, hidden
       wheel: GetComponentsInChildren<Collider>() skips inactive), roles by the NODE name (ordinal, case-sensitive: the LT-5 "wheelCollider" does not match),
       radius = VPWheelCollider.radius after the set-up else the chunk's, centre = chunk centre under the node pose / native center under the collider host
