@@ -856,11 +856,25 @@ void WheelPhysicsHost::UpdateColliders() {
     }
 }
 
-// Vessel.getLowestPoint scan of a wheel part (Vessel.cs:2589-2637): every non-trigger collider of the part on a layer other than 21 / 16 / 20,
-// the ones on the wheel layers 26 / 27 / 30 enabled for the measure (so the colliders ModuleWheelSuspension disabled count), at the pose the
-// vessel has now. ClosestPoint of a far point below is the support point in -z; for the layer 26 / 27 / 30 ones Unity reads bounds.min.z, the
-// same for a convex shape. A WheelCollider component bounds is taken as its centre (UNVERIFIED: the C# subtracts the radius afterwards, which
-// is only right for a point), its radius the prefab chunk radius.
+// Vessel.getLowestPoint's scan of a wheel part (Vessel.cs:2589-2637): `parts[i].GetComponentsInChildren<Collider>()` -- the colliders of the ACTIVE
+// GameObjects below the part (an inactive subtree is not enumerated: the damaged / undamaged wheel transform ModuleWheelDamage has switched off, the wheel
+// while VPWheelCollider hides it) -- every non-trigger one on a layer other than 21 / 16 / 20, the ones on the wheel layers 26 / 27 / 30 enabled for the
+// measure (so the collider ModuleWheelSuspension disabled counts), at the pose the vessel has now. For layers 26 / 27 / 30 the value is
+// `collider.bounds.min.z` (the lowest corner of the world AABB: the support point of a convex shape), else `ClosestPoint(measure).z`, the support point
+// in -z (WP-20e). The WheelCollider component (layer 27) is a Collider too: its `bounds` is taken as the POINT TransformPoint(center) (UNVERIFIED, see
+// below), which is why the C# subtracts `radius` afterwards (:2625-2634).
+//   * the role: `collider.gameObject.name.Contains("WheelCollider")` (ordinal, case-sensitive: the LT-5 leg's node is "wheelCollider" and does not match)
+//     is the WheelCollider branch (radius, then 0.15), `Contains("collisionEnhancer")` the other (0.15). The role is that of the node name, not of the
+//     component: any collider on a node with such a name has it.
+//   * the radius: `GetComponent<VPWheelCollider>().radius` once ModuleWheelBase.wheelSetup made the controller (the cfg radius x rescaleFactor), else the
+//     prefab WheelCollider component's (the .mu chunk's radius).
+//   * the centre of the component: before the set-up the chunk's `center` (0 in all 11 stock chunks, so the node position) under the node's pose; after
+//     it the native collider's center (VPWheelCollider.UpdateWheelCollider: center + up D (1 - anchor)) under the wheel collider transform.
+// UNVERIFIED: that Unity's WheelCollider.bounds is a point at TransformPoint(center). The evidence: (1) KSP subtracts `radius` after taking min.z, which
+// is the tyre bottom only when min.z is the centre; (2) with the chunk centre zero in every stock model that point is the node position, so the three
+// readings that differ only by `center` (the transform position, TransformPoint(center), the AABB centre) coincide; (3) a bounds of the wheel's sphere
+// would subtract the radius twice and put the vessel 2 r + 0.15 above the ground. The readings left open are a zero-size bounds at the world origin
+// (placement would be nonsense) or an AABB of the wheel's sphere (the double subtraction); capture C11 settles it.
 std::vector<VesselEnvironment::ColliderPoint> WheelPhysicsHost::PlacementPoints(Part& part, const Vector3f& measure) {
     (void)measure;
     std::vector<VesselEnvironment::ColliderPoint> out;
@@ -870,8 +884,29 @@ std::vector<VesselEnvironment::ColliderPoint> WheelPhysicsHost::PlacementPoints(
     pt.position = part.partTransform.position;
     pt.rotation = part.partTransform.rotation;
     auto worldZ = [&](const Vector3f& partSpace) { return pt.TransformPoint(partSpace).z; };
+    // the GameObjects that are not active in the hierarchy
+    const WheelPart* rec = RecordOf(part);
+    std::vector<std::string> inactive;
+    auto deactivate = [&](const std::string& n) {
+        if (n.empty()) return;
+        const int i = rig->Find(n);
+        if (i >= 0) inactive.push_back(RigPath(*rig, i));
+    };
+    if (PartModule* dmg = part.FindModuleOfClass("ModuleWheelDamage"))
+        deactivate(ModuleField(part, "ModuleWheelDamage", dmg->Get<bool>("isDamaged") ? "undamagedTransformName" : "damagedTransformName"));
+    if (rec != nullptr && rec->wheelHidden) deactivate(ModuleField(part, "ModuleWheelBase", "wheelTransformName"));
+    auto isInactive = [&](const std::string& path) {
+        for (const std::string& sk : inactive)
+            if (UnderPath(path, sk)) return true;
+        return false;
+    };
+    auto roleOf = [](const std::string& leaf) {
+        if (leaf.find("WheelCollider") != std::string::npos) return VesselEnvironment::ColliderRole::WheelCollider;
+        if (leaf.find("collisionEnhancer") != std::string::npos) return VesselEnvironment::ColliderRole::CollisionEnhancer;
+        return VesselEnvironment::ColliderRole::Plain;
+    };
     for (const mu::PartColliderShape& s : rig->Colliders()) {
-        if (s.trigger || s.layer == 21 || s.layer == 16 || s.layer == 20) continue;
+        if (s.trigger || s.layer == 21 || s.layer == 16 || s.layer == 20 || isInactive(s.path)) continue;
         float z = std::numeric_limits<float>::infinity();
         switch (s.kind) {
             case mu::ColliderKind::Box:
@@ -898,22 +933,28 @@ std::vector<VesselEnvironment::ColliderPoint> WheelPhysicsHost::PlacementPoints(
         VesselEnvironment::ColliderPoint cp;
         cp.z = z;
         const size_t slash = s.path.rfind('/');
-        const std::string leaf = slash == std::string::npos ? s.path : s.path.substr(slash + 1);
-        if (leaf.find("collisionEnhancer") != std::string::npos) cp.role = VesselEnvironment::ColliderRole::CollisionEnhancer;
-        out.push_back(cp);
+        cp.role = roleOf(slash == std::string::npos ? s.path : s.path.substr(slash + 1));
+        out.push_back(cp);  // a non-WheelCollider component on a "...WheelCollider..." node: radius 0, then 0.15 (the C# null checks fall through)
     }
-    // the WheelCollider components (layer 27, enabled for the measure): the prefab chunk centre and radius
+    // the WheelCollider components (layer 27, enabled for the measure)
+    KSPWheelController* ctl = rec != nullptr ? rec->Controller() : nullptr;
+    const bool setUp = rec != nullptr && rec->base != nullptr && rec->base->IsWheelSetUp() && ctl != nullptr && ctl->wheelCollider != nullptr;
     std::function<void(int)> walk = [&](int i) {
         const mu::RigNode& n = rig->At(i);
-        if (n.src != nullptr)
+        if (n.src != nullptr && !isInactive(RigPath(*rig, i)))
             for (const mu::ColliderChunk& c : n.src->colliders) {
                 if (c.kind != mu::ColliderKind::Wheel) continue;
-                const mu::RigPose ps = rig->PartSpace(i);
-                const Vector3f local(c.wheel.center.x * ps.scale.x, c.wheel.center.y * ps.scale.y, c.wheel.center.z * ps.scale.z);
                 VesselEnvironment::ColliderPoint cp;
-                cp.z = worldZ(ps.position + mu::RotateNative(ps.rotation, local));
-                cp.role = VesselEnvironment::ColliderRole::WheelCollider;
-                cp.radius = c.wheel.radius;
+                cp.role = roleOf(n.name);
+                if (setUp && i == rec->colliderNode) {  // VPWheelCollider.radius; the native collider's centre under the wheel collider transform
+                    cp.radius = ctl->wheelCollider->radius;
+                    cp.z = rec->colliderHost.TransformPoint(ctl->wheelCollider->wheelColliderData.center).z;
+                } else {
+                    const mu::RigPose ps = rig->PartSpace(i);
+                    const Vector3f local(c.wheel.center.x * ps.scale.x, c.wheel.center.y * ps.scale.y, c.wheel.center.z * ps.scale.z);
+                    cp.z = worldZ(ps.position + mu::RotateNative(ps.rotation, local));
+                    cp.radius = c.wheel.radius;
+                }
                 out.push_back(cp);
             }
         for (int ch : n.children) walk(ch);

@@ -17,3 +17,10 @@
 - [ ] Item 5: brake freeze: cluster member vs cluster weld (evaluate, document).
 - [ ] Item 6: animation rotation renormalisation: measure the stored quaternions of the 13 stock clips.
 - [ ] STATUS WP-29e, README, progress.csv, final verification, PR.
+- [x] Item 4: getLowestPoint wheel branch. PlacementPoints rewritten: inactive GameObject subtrees are not enumerated (damaged/undamaged transform, hidden
+      wheel: GetComponentsInChildren<Collider>() skips inactive), roles by the NODE name (ordinal, case-sensitive: the LT-5 "wheelCollider" does not match),
+      radius = VPWheelCollider.radius after the set-up else the chunk's, centre = chunk centre under the node pose / native center under the collider host
+      after the set-up. Gates: tools/wp29e/lowest_point_reference.py -> tests/data/wp29e_lowest_point_reference.json (float64, 9 stock part types in 8
+      stock crafts, 246 collider points, max |z| 6.2e-7 m, roles exact), Vessel.getLowestPoint statement-chain test (+0.150 / +0.450 / +0.150 vs
+      probes), lander identity (getLowestPoint 3.64092 vs origin height 3.64087), set-up path test. Bounds-as-point stays UNVERIFIED (evidence in code).
+      Not covered by a loadable stock craft: roverWheel3, GearFixed, GearLarge, miniLandingLeg (in the Python JSON, not run in C++).

@@ -200,6 +200,11 @@ public:
     // the collider the terrain / static geometry hits report (layer 15 "Local Scenery", tag "Untagged", no rigidbody)
     VehiclePhysics::Collider& TerrainCollider() { return terrain_; }
 
+    // getLowestPoint's collider scan of a wheel part (Vessel.cs:2589-2637, VesselEnvironment::colliderClosestPoints; WP-29e: public for the gate):
+    // the z (in the frame the vessel was rotated into: the part's world z) of every non-trigger collider of the active model on a layer other than
+    // 21 / 16 / 20 (the layer 26 / 27 / 30 ones enabled for the measure), with the role and radius getLowestPoint's correction reads
+    std::vector<VesselEnvironment::ColliderPoint> PlacementPoints(Part& part, const Vector3f& measure);
+
     // the drag-cube proxy of WheelPhysicsOptions::geometry (public: tests and the bench place vessels with it)
     static WheelPartGeometry ProxyGeometry(const Part& part, const ModuleWheelBase& base, const Vector3f& upVessel, const Vector3f& forwardVessel);
 
@@ -245,8 +250,6 @@ private:
     void ApplyFreezes();   // the brake "schloompa": a frozen wheel part holds its cluster (a weld to the world) for the freeze time
                                                   // rebuild the cluster shapes when a stand-in appears, goes or moves
     std::shared_ptr<mu::PartModelRig> SampledRig(const Part& part) const;   // the rig posed at the part ModuleWheelDeployment state
-    // getLowestPoint collider scan for a wheel part (Vessel.cs:2589-2637, VesselEnvironment::colliderClosestPoints)
-    std::vector<VesselEnvironment::ColliderPoint> PlacementPoints(Part& part, const Vector3f& measure);
     OtherPart* OtherPartFor(VesselPhysics& owner, uint32_t partIndex);
     bool AnyWheelSetUp() const;
     VehiclePhysics::NativeTransform* FindModelTransform(Part& p, const std::string& name);
