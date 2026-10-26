@@ -96,6 +96,7 @@ add_library(kspcore STATIC
     terrain/pqs_quadtree.cpp
     terrain/pqs_parallel.cpp
     terrain/terrain_colliders.cpp
+    terrain/pqs_surface_colliders.cpp
     io/url_dir.cpp
     database/game_database.cpp
     resources/part_resource_library.cpp

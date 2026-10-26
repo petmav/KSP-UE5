@@ -45,3 +45,9 @@ Findings of the audit:
 ## Log
 
 - 2026-10-26: worktree created, fresh build (configure 2.9 s, build 410.8 s, `CMAKE_BUILD_PARALLEL_LEVEL=4`), audit written.
+- 2a done: `include/ksp/terrain/pqs_surface_colliders.hpp`, `src/terrain/pqs_surface_colliders.cpp` (PQS_Collider, PQS_ColliderAdvanced,
+  PQS_PartCollider, PQSMod_CreateSphereCollider; 48 cites, check_cites 0 mismatches). Reference `tools/wp12d/surface_colliders_reference.py`
+  (oracle cache `tools/wp12d/height_oracle.json`, pruned to the answers used, 633,534 bytes sha256 cc2bd737...) ->
+  `tests/data/wp12d_colliders_reference.json` (984,352 bytes, sha256 431a344b..., identical on a second run). Gate: 4 scenarios, 420 steps,
+  3,060 box records, 86 IgnoreCollision calls: 0 mismatches. Mutation (cliff depth without the (float) cast + `<=` -> `<` in the part probe):
+  107 mismatches.
