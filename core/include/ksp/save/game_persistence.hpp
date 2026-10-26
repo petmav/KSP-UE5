@@ -62,6 +62,11 @@ public:
     // Path.GetInvalidFileNameChars() (Windows set: '"', '<', '>', '|', '\0', 1..31, ':', '*', '?', '\\', '/') -> '_'
     static std::string ReplaceInvalidFileNameChars(std::string saveFileName);
 
+    // GamePersistence.cs:9 / :20 (WP-19c): SaveGame(HighLogic.CurrentGame.Updated(startScene), ...); without a current game a new
+    // Game().Updated(startScene) becomes HighLogic.CurrentGame (kept alive by HighLogic::currentGameOwner). The two-argument form passes
+    // GameScenes.LOADING (Game.Updated then keeps the start scene unless the game is a mission)
+    static std::string SaveGame(const std::string& saveFileName, const std::string& saveFolder, SaveMode saveMode, GameScenes startScene);
+    static std::string SaveGame(const std::string& saveFileName, const std::string& saveFolder, SaveMode saveMode);
     // GamePersistence.cs:24 (returns the file name used, "" when skipped / aborted)
     static std::string SaveGame(Game& game, std::string saveFileName, const std::string& saveFolder, SaveMode saveMode);
     // GamePersistence.cs:132

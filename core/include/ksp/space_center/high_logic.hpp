@@ -9,6 +9,7 @@
 
 #include <array>
 #include <functional>
+#include <memory>
 #include <string>
 
 #include "ksp/core/coroutine.hpp"
@@ -56,6 +57,8 @@ public:
     static void SaveFolder(const std::string& value);         // :84 (the property setter)
     static Game* CurrentGame();                               // :93 (null without fetch)
     static void CurrentGame(Game* game);                      // :103 (the property setter)
+    // WP-19c: the C# reference of fetch.currentGame keeps the game alive; Game.Load of a shared-owned game (a loaded save) stores it here
+    static inline std::shared_ptr<Game> currentGameOwner;
 
     // seams ------------------------------------------------------------------------------------------------------------------
     // SceneManager.LoadScene(buildIndex) (buffered = false) / the loadingBuffer + LoadSceneAsync routine (buffered = true)

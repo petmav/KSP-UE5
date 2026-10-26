@@ -173,7 +173,10 @@ struct VesselEnvironment {
     std::function<void(Vessel&)> precalcGoOnRails, precalcGoOffRails;
     // CommNetScenario.CommNetEnabled and connection.GetControlLevel() (WP-39): unset = CommNet is off
     std::function<std::optional<ControlLevel>(Vessel&)> commNetControlLevel;
-    // ProtoVessel.Clean (recovery, funds, removal from the flight state): unset = nothing happens
+    // WP-19c: FlightCamera.CamHdg / CamPitch / CamMode (the flight camera is the host's), read by OnSaveFlightState for the active vessel
+    // (Vessel.cs:3617); unset = no camera (the vessel's own fields are saved)
+    std::function<void(float& camHdg, float& camPitch, int& camMode)> flightCamera;
+    // a host override of Vessel.Clean; unset = ProtoVessel.Clean (WP-19c: recovery, funds, removal from the flight state)
     std::function<void(Vessel&, const std::string&)> cleanVessel;
     // PartSet rebuild after the part list changed (WP-15): UpdateResourceSets
     std::function<void(Vessel&)> updateResourceSets;
@@ -383,6 +386,7 @@ public:
     float GroundLevelAngle() const { return groundLevelAngle_; }      // Vessel.cs:588
     bool LandedOrSplashed() const { return Landed || Splashed; }      // Vessel.cs:590
     bool LandedInKSC() const;                 // Vessel.cs:604
+    bool LandedInStockLaunchSite() const;     // Vessel.cs:617 (WP-19c, src/vessel/flight_state_live.cpp)
     bool HoldPhysics() const { return physicsHoldLock_; }  // Vessel.cs:640
     bool isCommandable() const { return static_cast<int>(vesselType) > static_cast<int>(VesselType::Debris); }  // Vessel.cs:642
     bool isPersistent();                      // Vessel.cs:644
@@ -441,6 +445,8 @@ public:
     // ---- WP-20e: the landed RB anchor (Vessel.cs:1105-1183; src/vessel/vessel_ground.cpp) ----------------------------------------
     void AddRBAnchor();                                            // :1105 (private in C#; LateUpdate calls it)
     void ResetRBAnchor();                                          // :1169
+    void KillPermanentGroundContact();                             // :3391 (WP-19c)
+    void ResetGroundContact();                                     // :3408 (WP-19c)
     void OnJointBreak(float breakForce);                           // :1180 (the anchor joint broke: PhysX's OnJointBreak message)
     bool HasRBAnchor() const { return rbAnchor_; }                 // joint != null
     float AnchorTimeCounter() const { return anchorTimeCounter_; }

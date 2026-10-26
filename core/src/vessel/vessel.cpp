@@ -914,7 +914,9 @@ void Vessel::SetAutoClean(const std::string& reason) {
 
 // Vessel.cs:4421
 void Vessel::Clean(const std::string& reason) {
-    if (protoVessel != nullptr && env.cleanVessel) env.cleanVessel(*this, reason);
+    if (protoVessel == nullptr) return;
+    if (env.cleanVessel) env.cleanVessel(*this, reason);  // host override (WP-14 seam)
+    else protoVessel->Clean(reason);                      // WP-19c: ProtoVessel.Clean (ProtoVessel.cs:1163)
 }
 
 // Vessel.cs:3908
@@ -976,6 +978,12 @@ void Vessel::CheckAirstreamShields() {
 
 // Vessel.cs:3615
 void Vessel::OnSaveFlightState(KSPParseableDictionary& dataPool) {
+    // WP-19c (Vessel.cs:3617-3622): the active vessel takes the flight camera's angles and mode first (FlightCamera.CamHdg / CamPitch / CamMode)
+    if (FlightGlobals::ActiveVessel == this && env.flightCamera) {
+        int mode = static_cast<int>(camMode);
+        env.flightCamera(camhdg, campth, mode);
+        camMode = static_cast<float>(mode);
+    }
     dataPool.Add("cPch", KSPParseable::FromFloat(campth));
     dataPool.Add("cHdg", KSPParseable::FromFloat(camhdg));
     dataPool.Add("cMod", KSPParseable::FromInt(static_cast<int32_t>(camMode)));

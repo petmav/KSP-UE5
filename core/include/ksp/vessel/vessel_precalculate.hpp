@@ -27,6 +27,8 @@
 //   * `RunFirst`, `Awake` (GameEvents.onDockingComplete subscription) are `RunFirst()` and the constructor / `Subscribe()`.
 #pragma once
 
+#include <string>
+
 #include <functional>
 
 #include "ksp/events/game_events.hpp"
@@ -120,6 +122,7 @@ public:
     // The control lock / screen message the C# sets when easing starts on the active vessel (InputLockManager / ScreenMessages are the
     // host's): the request is recorded so the host can show it.
     bool easingLockOn = false;
+    std::string easingMessage;  // WP-19c: its text, cacheAutoLOC_6003101 (VesselPrecalculate.cs:80 / :521: Localizer #autoLOC_6003101)
     float easingMessageSeconds = 0.0f;  // (float)(1.0 / easingFrameIncrease * 0.02 + 0.5) of the last StartEasing on the active vessel
 
     explicit VesselPrecalculate(Vessel* v = nullptr);

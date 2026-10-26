@@ -277,6 +277,10 @@ add_library(kspcore STATIC
     vessel/vessel_switching.cpp
     vessel/vessel_precalculate.cpp
     vessel/flight_globals_vessels.cpp
+    vessel/flight_globals_debug.cpp
+    vessel/flight_state_live.cpp
+    vessel/vessel_retrieval.cpp
+    vessel/proto_vessel_clean.cpp
     vessel/vessel_transitions.cpp
     vessel/vessel_values.cpp
     save/upgrade_pipeline.cpp
@@ -291,6 +295,8 @@ add_library(kspcore STATIC
     editor/editor_markers.cpp
     editor/editor_gizmos.cpp
     save/game_persistence.cpp
+    save/game_live.cpp
+    save/quick_save_load.cpp
     aero/drag_cube_list.cpp
     aero/flight_integrator_aero.cpp
     aero/lifting_surface.cpp

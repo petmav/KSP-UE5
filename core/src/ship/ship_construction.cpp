@@ -70,14 +70,14 @@ std::string NameOf(const std::string& fullName) {  // DirectoryInfo.Name
 }
 
 // Retains ProtoVessels removed from a FlightState: in C# the vessel's `protoVessel` reference keeps the object alive
-std::vector<std::unique_ptr<ProtoVessel>>& RemovedProtoVessels() {
-    static std::vector<std::unique_ptr<ProtoVessel>> removed;
+std::vector<std::shared_ptr<ProtoVessel>>& RemovedProtoVessels() {
+    static std::vector<std::shared_ptr<ProtoVessel>> removed;
     return removed;
 }
-std::unique_ptr<ProtoVessel> TakeOut(FlightState& state, ProtoVessel* pv) {
+std::shared_ptr<ProtoVessel> TakeOut(FlightState& state, ProtoVessel* pv) {
     for (auto it = state.protoVessels.begin(); it != state.protoVessels.end(); ++it) {
         if (it->get() == pv) {
-            std::unique_ptr<ProtoVessel> out = std::move(*it);
+            std::shared_ptr<ProtoVessel> out = std::move(*it);
             state.protoVessels.erase(it);
             return out;
         }

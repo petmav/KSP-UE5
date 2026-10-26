@@ -2,6 +2,7 @@
 // getLowestPoint (Vessel.cs:2493-2650). C# paths are relative to decompiled/KSP-Decompiled/Assembly-CSharp/. The engine parts (the
 // FixedJoint, Physics.Raycast, Collider.ClosestPoint) are the VesselEnvironment hooks the contact host (ksp/physics/contact_host.hpp)
 // fills; float statements follow the Mono rule (ksp/dotnet/mono_float.hpp).
+#include <algorithm>
 #include <cmath>
 #include <limits>
 
@@ -69,6 +70,29 @@ void Vessel::AddRBAnchor() {
         // joint = AddComponent<FixedJoint>(); breakForce; breakTorque; enablePreprocessing = false
         if (env.rbAnchorCreate) rbAnchor_ = env.rbAnchorCreate(*this, breakForce, GameSettings::VESSEL_ANCHOR_BREAK_TORQUE);
     }
+}
+
+
+// Vessel.cs:3391 (WP-19c; FlightGlobals.PrepForOrbitSet)
+void Vessel::KillPermanentGroundContact() {
+    int num = static_cast<int>(parts.size());
+    for (num = num - 1; num >= 0; num--) {
+        Part* part = parts[static_cast<size_t>(num)];
+        if (part->fields.PermanentGroundContact) part->Die();
+    }
+    log::Info("Killed all parts in permanent ground contact on vessel " + GetDisplayName() + ".");
+}
+
+// Vessel.cs:3408 (WP-19c)
+void Vessel::ResetGroundContact() {
+    for (int num = static_cast<int>(parts.size()) - 1; num >= 0; num--) {
+        Part* p = parts[static_cast<size_t>(num)];
+        p->fields.GroundContact = false;
+        const auto it = std::find(GroundContacts.begin(), GroundContacts.end(), p);  // List.Remove: the first occurrence
+        if (it != GroundContacts.end()) GroundContacts.erase(it);
+        p->currentCollisions.clear();
+    }
+    ResetRBAnchor();
 }
 
 // Vessel.cs:1169 (Object.Destroy(joint) acts at the end of the frame in Unity; the anchor is gone at once here)
