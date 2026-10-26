@@ -568,7 +568,8 @@ TEST_CASE("WP-29d rover rest with the real wheel models (numbers vs the proxy ge
         MESSAGE(std::string(craft) << " REAL: drift " << real.horizDrift * 1e3 << " mm (vertical " << real.vertDrift * 1e3 << " mm), rms vz " << real.rmsVz * 1e3 << " mm/s, max w "
                       << real.maxW << ", compression " << real.meanCompression << " (proxy " << proxy.meanCompression << "), wheel forces " << real.forceSum << " kN vs weight "
                       << real.weight << ", tyre-bottom error " << real.maxBottomError * 1e3 << " mm, body clearance " << real.minBodyClearance << " m (proxy " << proxy.minBodyClearance
-                      << "), grounded " << real.grounded << "/" << real.wheels << ", bottomed " << real.bottomedTicks << ", joint error " << real.maxJointForceError << ", healthy " << real.healthy);
+                      << "), grounded " << real.grounded << "/" << real.wheels << ", bottomed " << real.bottomedTicks << ", joint error " << real.maxJointForceError << ", healthy " << real.healthy
+                      << ", " << real.msPerTick << " ms/tick (proxy " << proxy.msPerTick << ")");
     }
 }
 

@@ -741,8 +741,24 @@ std::vector<ColliderProxy> WheelPhysicsHost::HubColliders(const Part& part) {
         if (node >= 0) moving.push_back(RigPath(*rig, node));
     }
     std::vector<ColliderProxy> out;
+    WheelPart* mrec = RecordOf(part);   // the hull cache lives in the record (a rebuild of a convex hull and its mass properties per tick would cost 3x the tick)
     for (const mu::PartColliderShape& s : shapes) {  // one proxy per shape (ProxiesFromShapes skips triggers and degenerate meshes)
-        std::vector<ColliderProxy> one = ProxiesFromShapes({s});
+        std::vector<ColliderProxy> one;
+        if (s.kind == mu::ColliderKind::Mesh && mrec != nullptr && s.vertices.size() >= 4) {
+            WheelPart::HullCache& hc = mrec->hulls[s.path];
+            if (hc.count != s.vertices.size() || hc.first.x != s.vertices.front().x || hc.first.y != s.vertices.front().y || hc.first.z != s.vertices.front().z ||
+                hc.last.x != s.vertices.back().x || hc.last.y != s.vertices.back().y || hc.last.z != s.vertices.back().z) {
+                std::vector<ColliderProxy> fresh = ProxiesFromShapes({s});
+                hc.count = s.vertices.size();
+                hc.first = s.vertices.front();
+                hc.last = s.vertices.back();
+                hc.proxy = fresh.empty() ? ColliderProxy() : fresh.front();
+                if (fresh.empty()) hc.count = 0;
+            }
+            if (hc.count != 0) one.push_back(hc.proxy);
+        } else {
+            one = ProxiesFromShapes({s});
+        }
         bool follows = false;
         for (const std::string& m : moving) follows = follows || UnderPath(s.path, m);
         for (ColliderProxy& p : one) {

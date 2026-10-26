@@ -133,6 +133,13 @@ struct WheelPart {
     VehiclePhysics::NativeTransform colliderSet;          // the pose the host last gave the collider host (a module write is a difference)
     bool standInBuilt = false;                            // the cluster compound holds the part stand-in sphere
     Vector3f standInCenter;                               // ... at this part-space point
+    // WP-29e: the convex-hull proxies of the model's mesh colliders (Jolt hull + mass properties) by node path; a hull is rebuilt only when its vertices change
+    struct HullCache {
+        size_t count = 0;
+        Vector3f first, last;
+        ColliderProxy proxy;
+    };
+    std::map<std::string, HullCache> hulls;
     bool wheelHidden = false;                             // WP-29e: wheelTransform.gameObject.SetActive(false) (VPWheelCollider.UpdateVisualWheel, cs:245-253)
     bool visualInstalled = false;                         // WP-29e: the controller's VPWheelCollider::visual and visualRaycast are the host's
     bool geometryLocked = false;                          // ModuleWheelBase.wheelSetup re-parented the collider transform to the part
