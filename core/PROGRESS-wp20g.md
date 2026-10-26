@@ -28,3 +28,5 @@ Branch `wp20g` from local `wp29d` `a46df8d8` (contains `wp20f` and main `aef2f54
   root 79.2776 m vs C6 79.2884 m (-1.08 cm); "putting ship to ground: -6.869718" = KSP.log; CheckGroundCollision moved 0.119 m (KSP 0.101).
 - step 5: docs `94bd5186`; merge main f0e01bd9 `d66a0794`; fresh 50 / 50 (build 305.3 s, ctest 175.9 s), rand 11 / 27 1,089 cases green,
   WSL syntax clean, pr_review 0 failing. Next: push, PR, CI.
+- step 6: PR #50 CI green on cc26670c; merged main d9f970e2 (WP-21b) `442535d1` (part_forces.hpp: both switches); fresh 52 / 52, rand 11 / 27
+  1,094 cases green, WSL clean, pr_review 0 failing; pushed for CI.

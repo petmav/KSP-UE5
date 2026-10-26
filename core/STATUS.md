@@ -7296,6 +7296,11 @@ Unchanged: every 0 ULP / bit-for-bit gate, WP-20f's SAS ascents (they already ra
 
 ### Verification
 
+- **Final, after the merge with main `d9f970e2` (WP-21b)**: Windows MSVC RelWithDebInfo, fresh (`core/build` deleted, `run_tests.ps1 -Fresh`,
+  `CMAKE_BUILD_PARALLEL_LEVEL=4`): configure 2.4 s, build 286.5 s, ctest 155.3 s, **52 / 52 pass**; `kspcore_tests --order-by=rand -rs=11` and
+  `-rs=27`: **1,094 cases / 1,694,282 assertions, all pass**; the WP-20g cases 6 / 6 (VAB launch root 79.2776 m vs C6 79.2884 m, unchanged), the
+  WP-21b cases 5 / 4,269 (both slot switches kept: `servos`, `intakes`); WSL g++ `-fsyntax-only` clean on the changed files; pr_review 0 failing.
+  CI on the pre-merge head `cc26670c` (PR #50): review, linux-gcc-rel, linux-rel, windows all pass.
 - After the merge with main `f0e01bd9` (WP-38d), Windows MSVC RelWithDebInfo, fresh (`core/build` deleted, `run_tests.ps1 -Fresh`,
   `CMAKE_BUILD_PARALLEL_LEVEL=4`): configure 2.7 s, build 305.3 s, ctest 175.9 s, **50 / 50 pass**. Before that merge (at `c70167b7` + docs): configure
   2.7 s, build 283.6 s, ctest 163.1 s, 50 / 50.
@@ -7314,4 +7319,4 @@ Unchanged: every 0 ULP / bit-for-bit gate, WP-20f's SAS ascents (they already ra
 
 `606186f6` items 1-5 (Part.Pack / Unpack, GameSettings.Awake, StartVesselInFlight, VesselResourceHost, servos in the slot, hygiene defaults);
 `f2eac17d` merge origin/main `dd87d6e8`; `c073ac55` items 1-4 tests, GameSettings singleton; `ebb6ac67` item 6 (VAB launch vs C6, scenery
-lookups, CheckGroundCollision log format); `c70167b7` cite wording, progress log; `94bd5186` STATUS / README / progress.csv; `d66a0794` merge origin/main `f0e01bd9`; then this verification note.
+lookups, CheckGroundCollision log format); `c70167b7` cite wording, progress log; `94bd5186` STATUS / README / progress.csv; `d66a0794` merge origin/main `f0e01bd9`; `cc26670c` verification note; `442535d1` merge origin/main `d9f970e2`; then the final verification note.
