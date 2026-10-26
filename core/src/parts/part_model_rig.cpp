@@ -207,6 +207,24 @@ void PartModelRig::SetLocal(int node, const Vector3f& position, const Quaternion
 
 void PartModelRig::SetLocalPosition(int node, const Vector3f& position) { nodes_[static_cast<size_t>(node)].lp = position; }
 
+// Transform.position setter (WP-29e): UnityNative::Inverse / RotateNative are the native maths of PartSpace's chain, one rounding per operation
+void PartModelRig::SetPartSpacePosition(int node, const Vector3f& p) {
+    RigNode& n = nodes_[static_cast<size_t>(node)];
+    if (n.parent < 0) {
+        n.lp = p;
+        return;
+    }
+    const RigPose pp = PartSpace(n.parent);
+    const Vector3f d = RotateNative(UnityNative::Inverse(pp.rotation), Vector3f(p.x - pp.position.x, p.y - pp.position.y, p.z - pp.position.z));
+    n.lp = Vector3f(d.x / pp.scale.x, d.y / pp.scale.y, d.z / pp.scale.z);
+}
+
+bool PartModelRig::IsChildOf(int node, int ancestor) const {
+    for (int i = node; i >= 0; i = nodes_[static_cast<size_t>(i)].parent)
+        if (i == ancestor) return true;
+    return false;
+}
+
 void PartModelRig::ResetLocal() {
     for (size_t i = 0; i < nodes_.size(); ++i) {
         nodes_[i].lp = prefab_[i].lp;

@@ -53,6 +53,7 @@ add_library(kspcore STATIC
     physics/collision_enhancer.cpp
     physics/contact_host.cpp
     physics/vessel_wheels.cpp
+    physics/wheel_visual.cpp
     celestial/celestial_body.cpp
     celestial/planetarium.cpp
     celestial/celestial_system.cpp

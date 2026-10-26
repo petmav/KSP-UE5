@@ -1,0 +1,148 @@
+{
+ "format": "kspcore-wp29e-anim-norms/1",
+ "models": {
+  "GearFixed": {
+   "clips": [],
+   "file": "GearFixed__GearFixed.mu",
+   "sha256": "d7efa434ad56a1403c5b7b35d37967f00c03e0aa38764722d914f0dc12632046"
+  },
+  "GearFree": {
+   "clips": [],
+   "file": "GearFree__GearFree.mu",
+   "sha256": "e988a7b5edb822aa72f286f01607ee6190e48092ea0b562fe7b8fb3521041f69"
+  },
+  "GearLarge": {
+   "clips": [
+    {
+     "clip": "LandingGearExtraLargeDeploy2",
+     "interpMax": 4.368670216692294e-07,
+     "interpSamples": 139860,
+     "keySamples": 2226,
+     "owner": "extraLargeLG/extraLarge",
+     "rotationTargets": 6,
+     "storedMax": 6.627626136790354e-08
+    }
+   ],
+   "file": "GearLarge__GearExtraLarge.mu",
+   "sha256": "0491c8fb1e889dd70803e3599342e2eb6b7f38db086e505bf4ecc7ce7522a2cb"
+  },
+  "GearMedium": {
+   "clips": [
+    {
+     "clip": "LandingGearLargeDeploy",
+     "interpMax": 0.0009674842301408138,
+     "interpSamples": 20853,
+     "keySamples": 337,
+     "owner": "Large/Large",
+     "rotationTargets": 6,
+     "storedMax": 3.575930973553909e-08
+    }
+   ],
+   "file": "GearMedium__GearLarge.mu",
+   "sha256": "cb34a01100ebcf9769e96a3e7314f5a91e4f36e214a43057ea34caa08bcd90fe"
+  },
+  "GearSmall": {
+   "clips": [
+    {
+     "clip": "LandingGearMediumDeploy",
+     "interpMax": 0.000977038480990844,
+     "interpSamples": 1575,
+     "keySamples": 30,
+     "owner": "Medium/Medium",
+     "rotationTargets": 5,
+     "storedMax": 3.1796571486886194e-08
+    }
+   ],
+   "file": "GearSmall__GearMedium.mu",
+   "sha256": "4acd64d7469d967489300eb6e9f4bac0d25b0071b6fd914df5dcaa5833707d8d"
+  },
+  "SmallGearBay": {
+   "clips": [
+    {
+     "clip": "LandingGearSmallDeploy",
+     "interpMax": 0.0009811042350917898,
+     "interpSamples": 882,
+     "keySamples": 18,
+     "owner": "Small/Small",
+     "rotationTargets": 4,
+     "storedMax": 5.07861204201987e-08
+    }
+   ],
+   "file": "SmallGearBay__GearSmall.mu",
+   "sha256": "74d3aaf02c771718e2f5c76e30da1df80dbef9f3cc2d690c23947255ddcc8b4b"
+  },
+  "landingLeg1": {
+   "clips": [
+    {
+     "clip": "Deploy",
+     "interpMax": 0.0009811781334609915,
+     "interpSamples": 1323,
+     "keySamples": 28,
+     "owner": "LandingLegLT1/landingLegSmall",
+     "rotationTargets": 7,
+     "storedMax": 7.046491856677051e-08
+    }
+   ],
+   "file": "landingLeg1__model.mu",
+   "sha256": "29e126162177035c107483288db9a1f82ab7a92588b5ca8cbe5f8007a28e6e8c"
+  },
+  "landingLeg1-2": {
+   "clips": [
+    {
+     "clip": "newlandingleg",
+     "interpMax": 0.0009649154294965046,
+     "interpSamples": 1764,
+     "keySamples": 33,
+     "owner": "LandingLegLT2/leg",
+     "rotationTargets": 5,
+     "storedMax": 8.43636591696395e-08
+    }
+   ],
+   "file": "landingLeg1-2__model.mu",
+   "sha256": "53021f5673cdd2c481bafd9c50cb83ad51ff557e5d0e38ba5da514a55fc143ae"
+  },
+  "miniLandingLeg": {
+   "clips": [
+    {
+     "clip": "probeleg",
+     "interpMax": 0.0009404513624483579,
+     "interpSamples": 3024,
+     "keySamples": 61,
+     "owner": "LandingLegLT05/miniLeg",
+     "rotationTargets": 13,
+     "storedMax": 8.294919129347988e-08
+    }
+   ],
+   "file": "miniLandingLeg__model.mu",
+   "sha256": "3d40bbc7290161b229afe640db868ebd92b10d58d551d7b0fbc1e8ebc0aa92d3"
+  },
+  "roverWheel1": {
+   "clips": [],
+   "file": "roverWheel1__model.mu",
+   "sha256": "5c7965e673e90b10ee737426d7b3410dca94621095c99215c940ad59ec884060"
+  },
+  "roverWheel2": {
+   "clips": [],
+   "file": "roverWheel2__model.mu",
+   "sha256": "98083fc93b99aed5d710bd4e83197f3c2688992d469104ecc7790f08f3401956"
+  },
+  "roverWheel3": {
+   "clips": [],
+   "file": "roverWheel3__model.mu",
+   "sha256": "9bc8283dc995df5a87f26206b96f76b0f3f3453348c4b517d1364846a6e2f994"
+  },
+  "wheelMed": {
+   "clips": [],
+   "file": "wheelMed__model.mu",
+   "sha256": "62f7c51b0ba75db47e8e0cd5026090c3829e3e03bbca300a84f4edb2bb3dc85f"
+  }
+ },
+ "note": "tools/wp29e/anim_norms.py over core/data/wheel_models",
+ "totals": {
+  "interpMax": 0.0009811781334609915,
+  "interpSamples": 169281,
+  "rotationTargets": 46,
+  "storedKeySamples": 2733,
+  "storedMax": 8.43636591696395e-08
+ }
+}

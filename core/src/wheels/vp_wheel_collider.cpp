@@ -151,7 +151,12 @@ void VPWheelCollider::OnEnableVehicle() {
     m_wheelCollider->enabled = true;
     m_rigidbody = m_wheelCollider->attachedRigidbody;
     m_wheelCollider->ConfigureVehicleSubsteps(1000.0f, 1, 1);
+    // WP-29e (VPWheelCollider.cs:198-204): the transform fields are whatever the wheel set-up had assigned when the component was enabled
+    m_isCaliperChildOfSuspension = caliperTransform != nullptr && suspensionTransform != nullptr && visual.isChildOf && visual.isChildOf(caliperTransform, suspensionTransform);
+    m_isWheelChildOfSuspension = wheelTransform != nullptr && suspensionTransform != nullptr && visual.isChildOf && visual.isChildOf(wheelTransform, suspensionTransform);
+    m_isWheelChildOfCaliper = wheelTransform != nullptr && caliperTransform != nullptr && visual.isChildOf && visual.isChildOf(wheelTransform, caliperTransform);
     m_suspensionPosition = cachedTransform->position;
+    if (wheelTransform != nullptr && visual.localEulerAnglesX) m_angularPosition = visual.localEulerAnglesX(wheelTransform);
     m_visualSteerAngle.Reset(m_steerAngle);
     runtimeSpringRate = springRate;
     runtimeDamperRate = damperRate;
@@ -183,7 +188,13 @@ void VPWheelCollider::FixedUpdateVehicle() {
 
 // VehiclePhysics/VPWheelCollider.cs:241
 void VPWheelCollider::UpdateVisualWheel(float deltaTime) {
-    if (!isActiveAndEnabled()) return;
+    if (!isActiveAndEnabled()) {
+        if (hideWheelOnDisable && wheelTransform != nullptr && visual.activeInHierarchy && visual.setActive && visual.activeInHierarchy(wheelTransform))
+            visual.setActive(wheelTransform, false);
+        return;
+    }
+    if (hideWheelOnDisable && wheelTransform != nullptr && visual.activeInHierarchy && visual.setActive && !visual.activeInHierarchy(wheelTransform))
+        visual.setActive(wheelTransform, true);
     const Vector3f origin = cachedTransform->TransformPoint(m_wheelCollider->center) + cachedTransform->up() * radius;
     const Vector3f vector = -cachedTransform->up();
     const float hitDistance = visualRaycast ? visualRaycast(origin, vector, f32store(fx(m_lastRuntimeSuspensionTravel) + fx(radius) * 2.0)) : -1.0f;
@@ -199,6 +210,46 @@ void VPWheelCollider::UpdateVisualWheel(float deltaTime) {
                                vector * f32store(fx(m_contactDistance) + fx(groundPenetration) - fx(suspensionDistance) * (1.0 - fx(suspensionAnchor)) + fx(suspensionOffset));
     } else {
         m_suspensionPosition = cachedTransform->position;
+    }
+    // WP-29e: the Transform writes (VPWheelCollider.cs:275-300), through the host
+    VisualWriteState st;
+    st.suspensionTransform = suspensionTransform;
+    st.caliperTransform = caliperTransform;
+    st.wheelTransform = wheelTransform;
+    st.updateSuspension = updateSuspension;
+    st.updateCaliper = updateCaliper;
+    st.updateWheel = updateWheel;
+    st.caliperChildOfSuspension = m_isCaliperChildOfSuspension;
+    st.wheelChildOfSuspension = m_isWheelChildOfSuspension;
+    st.wheelChildOfCaliper = m_isWheelChildOfCaliper;
+    st.suspensionPosition = m_suspensionPosition;
+    st.visualSteerAngle = m_visualSteerAngle.GetInterpolated(visual.frameRatio);
+    st.angularPosition = m_angularPosition;
+    WriteVisualTransforms(st, visual);
+}
+
+// UpdateVisualWheel's Transform writes (VehiclePhysics/VPWheelCollider.cs lines 275 to 300). `host.setPosition` / `setLocalRotation` unset: nothing is written (a host without a model)
+void VPWheelCollider::WriteVisualTransforms(const VisualWriteState& st, const VisualTransformHost& host) {
+    if (!host.setPosition || !host.setLocalRotation) return;
+    if (st.suspensionTransform != nullptr && st.updateSuspension) {
+        host.setPosition(st.suspensionTransform, st.suspensionPosition);
+    }
+    if (st.caliperTransform != nullptr && st.updateCaliper) {
+        if (st.suspensionTransform == nullptr || !st.caliperChildOfSuspension) {
+            host.setPosition(st.caliperTransform, st.suspensionPosition);
+        }
+        host.setLocalRotation(st.caliperTransform, UnityNative::Euler(Vector3f(0.0f, st.visualSteerAngle, 0.0f)));
+    }
+    if (st.wheelTransform != nullptr && st.updateWheel) {
+        if ((st.suspensionTransform == nullptr && st.caliperTransform == nullptr) || (!st.wheelChildOfSuspension && !st.wheelChildOfCaliper)) {
+            host.setPosition(st.wheelTransform, st.suspensionPosition);
+        }
+        const float spin = f32store(fx(st.angularPosition) * fx(57.29578f));
+        if (st.caliperTransform != nullptr && st.wheelChildOfCaliper) {
+            host.setLocalRotation(st.wheelTransform, UnityNative::Euler(Vector3f(spin, 0.0f, 0.0f)));
+        } else {
+            host.setLocalRotation(st.wheelTransform, UnityNative::Euler(Vector3f(spin, st.visualSteerAngle, 0.0f)));
+        }
     }
 }
 

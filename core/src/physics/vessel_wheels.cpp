@@ -17,6 +17,8 @@
 #include "ksp/parts/part.hpp"
 #include "ksp/physics/mu_part_colliders.hpp"
 #include "ksp/physics/physics_bubble.hpp"
+#include "ksp/physics/wheel_visual.hpp"
+#include "ksp/unity/quaternion_native.hpp"
 #include "ksp/vessel/flight_scene.hpp"
 #include "ksp/vessel/vessel.hpp"
 
@@ -155,9 +157,11 @@ struct WheelPhysicsHost::Saved {
     std::function<void(float)> physicsStep;
     std::function<bool(const Part&)> massOnly;
     std::function<std::vector<ColliderProxy>(const Part&)> colliders;
+    std::function<bool(const Part&)> mutableColliders;
     std::function<Animation*(Part&, const std::string&, const std::string&)> findModelAnimator;
     std::function<void(Animation&)> sampleAnimation;
     std::function<void(Part&, bool)> setRigidbodyFrozen;
+    std::function<void(Part&, VPWheelCollider&)> wheelColliderCreated;
     std::function<std::vector<VesselEnvironment::ColliderPoint>(Part&, const Vector3f&)> colliderClosestPoints;
 };
 
@@ -196,6 +200,11 @@ void WheelPhysicsHost::Install() {
     s.sampleAnimation = WheelModuleEnvironment::sampleAnimation;
     s.colliderClosestPoints = Vessel::env.colliderClosestPoints;
     s.setRigidbodyFrozen = WheelModuleEnvironment::setRigidbodyFrozen;
+    s.wheelColliderCreated = WheelModuleEnvironment::wheelColliderCreated;
+    WheelModuleEnvironment::wheelColliderCreated = [this](Part& p, VPWheelCollider& vc) {
+        WheelPart* rec = RecordOf(p);
+        if (rec != nullptr) InstallVisual(*rec, vc);
+    };
     WheelModuleEnvironment::scheduler = &scheduler_;
     WheelModuleEnvironment::setRigidbodyFrozen = [this](Part& p, bool freeze) {
         if (freeze) frozen_.insert(&p);
@@ -252,10 +261,15 @@ void WheelPhysicsHost::Install() {
     VesselPhysicsHost& host = bubble_->Host();
     s.massOnly = host.options.massOnly;
     s.colliders = host.options.colliders;
+    s.mutableColliders = host.options.mutableColliders;
     // WP-29d: with model data the wheel part's hub colliders (the .mu colliders at the part's animation state) weld into the cluster as
     // shapes; without, the part is mass-only
     host.options.massOnly = [this, prev = s.massOnly](const Part& p) {
         if (IsWheelPart(p) && !(options.modelColliders && !HubColliders(p).empty())) return true;
+        return prev && prev(p);
+    };
+    host.options.mutableColliders = [this, prev = s.mutableColliders](const Part& p) {
+        if (IsWheelPart(p) && HasMovingColliders(p)) return true;
         return prev && prev(p);
     };
     host.options.colliders = [this, prev = s.colliders](const Part& p) {
@@ -295,11 +309,13 @@ void WheelPhysicsHost::Uninstall() {
     WheelModuleEnvironment::sampleAnimation = s.sampleAnimation;
     Vessel::env.colliderClosestPoints = s.colliderClosestPoints;
     WheelModuleEnvironment::setRigidbodyFrozen = s.setRigidbodyFrozen;
+    WheelModuleEnvironment::wheelColliderCreated = s.wheelColliderCreated;
     for (auto& kv : freezes_) bubble_->World().RemoveConstraint(kv.second.id);
     freezes_.clear();
     frozen_.clear();
     bubble_->Host().options.massOnly = s.massOnly;
     bubble_->Host().options.colliders = s.colliders;
+    bubble_->Host().options.mutableColliders = s.mutableColliders;
     FlightScene::hooks.beforeFlightIntegrator = s.beforeFlightIntegrator;
     FlightScene::hooks.beforeVesselUpdate = s.beforeVesselUpdate;
     bubble_->physicsStep = s.physicsStep;
@@ -658,47 +674,122 @@ std::shared_ptr<mu::PartModelRig> WheelPhysicsHost::SampledRig(const Part& part)
     return rig;
 }
 
-// The hub colliders of a wheel part at its current animation state.
-std::vector<ColliderProxy> WheelPhysicsHost::HubColliders(const Part& part) {
-    std::shared_ptr<mu::PartModelRig> rig = SampledRig(part);
-    if (!rig) return {};
-    // The compound of a cluster is static, the suspension is not: VPWheelCollider.UpdateVisualWheel moves the suspension, caliper and wheel
-    // transforms to the current suspension position every frame (VPWheelCollider.cs:268-300), and everything below them goes with them.
-    // Those colliders (the tyre meshes, the foot pistons) are left out rather than frozen at a wrong pose; ModuleWheelSuspension.OnStart disables
-    // the collider named suspensionColliderName (ModuleWheelSuspension.cs:215). What remains is the static hull of the part.
-    std::vector<std::string> skipped;  // node paths whose subtree is left out
-    auto field = [&](const char* module, const char* name) {
-        std::string v;
-        if (PartModule* m = const_cast<Part&>(part).FindModuleOfClass(module)) {
-            try {
-                v = m->Get<std::string>(name);
-            } catch (const std::exception&) {
-            }
+WheelPart* WheelPhysicsHost::RecordOf(const Part& part) const {
+    for (const auto& vw : vessels_)
+        for (const auto& w : vw->wheels_)
+            if (w->part == &part) return w.get();
+    for (const auto& w : dormant_)
+        if (w && w->part == &part) return w.get();
+    return nullptr;
+}
+
+namespace {
+// The node paths of a model whose colliders are not in the compound: a disabled or inactive GameObject takes its whole subtree with it
+std::string RigPath(const mu::PartModelRig& rig, int node) {
+    std::string path;
+    for (int i = node; i >= 0; i = rig.At(i).parent) path = path.empty() ? rig.At(i).name : rig.At(i).name + "/" + path;
+    return path;
+}
+bool UnderPath(const std::string& path, const std::string& root) { return path == root || path.compare(0, root.size() + 1, root + "/") == 0; }
+std::string ModuleField(const Part& part, const char* module, const char* name) {
+    std::string v;
+    if (PartModule* m = const_cast<Part&>(part).FindModuleOfClass(module)) {
+        try {
+            v = m->Get<std::string>(name);
+        } catch (const std::exception&) {
         }
-        return v;
-    };
-    auto pathOf = [&](int node) {
-        std::string path;
-        for (int i = node; i >= 0; i = rig->At(i).parent) path = path.empty() ? rig->At(i).name : rig->At(i).name + "/" + path;
-        return path;
-    };
-    for (const std::string& n : {field("ModuleWheelSuspension", "suspensionTransformName"), field("ModuleWheelSteering", "caliperTransformName"),
-                                 field("ModuleWheelBase", "wheelTransformName"), field("ModuleWheelSuspension", "suspensionColliderName")}) {
-        if (n.empty()) continue;
-        const int i = rig->Find(n);
-        if (i >= 0) skipped.push_back(pathOf(i));
     }
+    return v;
+}
+}  // namespace
+
+// The hub colliders of a wheel part: the model's colliders at the pose the model has now. The compound of a cluster follows them (WP-29e,
+// UpdateColliders): the animation (ModuleWheelDeployment's clip moves the retract box), and the transforms VPWheelCollider.UpdateVisualWheel
+// moves every frame (the suspension, the caliper / steering pivot, the wheel: VPWheelCollider.cs:275-300), with everything below them.
+// Not colliders of the compound: the one ModuleWheelSuspension.OnStart disables (suspensionColliderName, ModuleWheelSuspension.cs:215), the
+// subtree of the damaged / undamaged wheel transform that ModuleWheelDamage.SetDamaged has inactive (cs:370-402), and the wheel transform's
+// subtree while VPWheelCollider hides the wheel (the wheel is off: hideWheelOnDisable, cs:245-253). Once the part's modules have started the
+// live rig is used (the host's animation and visual writes); before, the rig posed at the part's ModuleWheelDeployment state.
+std::vector<ColliderProxy> WheelPhysicsHost::HubColliders(const Part& part) {
+    const WheelPart* rec = RecordOf(part);
+    std::shared_ptr<mu::PartModelRig> rig = (rec != nullptr && rec->started && rec->rig) ? rec->rig : SampledRig(part);
+    if (!rig) return {};
+    std::vector<std::string> skipped;  // node paths whose subtree is left out
+    auto skip = [&](const std::string& n) {
+        if (n.empty()) return;
+        const int i = rig->Find(n);
+        if (i >= 0) skipped.push_back(RigPath(*rig, i));
+    };
+    skip(ModuleField(part, "ModuleWheelSuspension", "suspensionColliderName"));
+    if (PartModule* dmg = const_cast<Part&>(part).FindModuleOfClass("ModuleWheelDamage")) {
+        const bool damaged = dmg->Get<bool>("isDamaged");
+        skip(ModuleField(part, "ModuleWheelDamage", damaged ? "undamagedTransformName" : "damagedTransformName"));
+    }
+    if (rec != nullptr && rec->wheelHidden) skip(ModuleField(part, "ModuleWheelBase", "wheelTransformName"));
     std::vector<mu::PartColliderShape> shapes = rig->Colliders();
     shapes.erase(std::remove_if(shapes.begin(), shapes.end(),
                                 [&](const mu::PartColliderShape& s) {
                                     for (const std::string& sk : skipped)
-                                        if (s.path == sk || s.path.compare(0, sk.size() + 1, sk + "/") == 0) return true;
+                                        if (UnderPath(s.path, sk)) return true;
                                     return false;
                                 }),
                  shapes.end());
-    std::vector<ColliderProxy> out = ProxiesFromShapes(shapes);
+    std::vector<std::string> moving;  // the subtrees VPWheelCollider.UpdateVisualWheel moves
+    for (const char* f : {"suspensionTransformName", "caliperTransformName", "wheelTransformName"}) {
+        const std::string name = ModuleField(part, f[0] == 's' ? "ModuleWheelSuspension" : (f[0] == 'c' ? "ModuleWheelSteering" : "ModuleWheelBase"), f);
+        const int node = name.empty() ? -1 : rig->Find(name);
+        if (node >= 0) moving.push_back(RigPath(*rig, node));
+    }
+    std::vector<ColliderProxy> out;
+    WheelPart* mrec = RecordOf(part);   // the hull cache lives in the record (a rebuild of a convex hull and its mass properties per tick would cost 3x the tick)
+    for (const mu::PartColliderShape& s : shapes) {  // one proxy per shape (ProxiesFromShapes skips triggers and degenerate meshes)
+        std::vector<ColliderProxy> one;
+        if (s.kind == mu::ColliderKind::Mesh && mrec != nullptr && s.vertices.size() >= 4) {
+            WheelPart::HullCache& hc = mrec->hulls[s.path];
+            if (hc.count != s.vertices.size() || hc.first.x != s.vertices.front().x || hc.first.y != s.vertices.front().y || hc.first.z != s.vertices.front().z ||
+                hc.last.x != s.vertices.back().x || hc.last.y != s.vertices.back().y || hc.last.z != s.vertices.back().z) {
+                std::vector<ColliderProxy> fresh = ProxiesFromShapes({s});
+                hc.count = s.vertices.size();
+                hc.first = s.vertices.front();
+                hc.last = s.vertices.back();
+                hc.proxy = fresh.empty() ? ColliderProxy() : fresh.front();
+                if (fresh.empty()) hc.count = 0;
+            }
+            if (hc.count != 0) one.push_back(hc.proxy);
+        } else {
+            one = ProxiesFromShapes({s});
+        }
+        bool follows = false;
+        for (const std::string& m : moving) follows = follows || UnderPath(s.path, m);
+        for (ColliderProxy& p : one) {
+            p.noInertia = follows;
+            out.push_back(std::move(p));
+        }
+    }
     if (const std::optional<ColliderProxy> si = StandInProxy(part)) out.push_back(*si);
     return out;
+}
+
+// Does the cluster holding this wheel part need a mutable compound: colliders under a transform that animates (the part has an Animation) or
+// that VPWheelCollider.UpdateVisualWheel moves (suspension / caliper / wheel transform)
+bool WheelPhysicsHost::HasMovingColliders(const Part& part) const {
+    if (!options.modelColliders) return false;
+    std::shared_ptr<mu::PartModelRig> rig = RigFor(part);
+    if (!rig) return false;
+    const std::vector<mu::PartColliderShape> shapes = rig->Colliders();
+    if (shapes.empty()) return false;
+    if (!rig->Animations().empty()) return true;
+    for (const char* f : {"suspensionTransformName", "caliperTransformName", "wheelTransformName"}) {
+        const char* module = f[0] == 's' ? "ModuleWheelSuspension" : (f[0] == 'c' ? "ModuleWheelSteering" : "ModuleWheelBase");
+        const std::string name = ModuleField(part, module, f);
+        if (name.empty()) continue;
+        const int node = rig->Find(name);
+        if (node < 0) continue;
+        const std::string root = RigPath(*rig, node);
+        for (const mu::PartColliderShape& s : shapes)
+            if (UnderPath(s.path, root)) return true;
+    }
+    return false;
 }
 
 // ModuleWheelBase.toggleRbConstraints (ModuleWheelBase.cs:785): the wheel part Rigidbody is FreezeAll for schloompaTime. The reduced model
@@ -755,33 +846,51 @@ std::optional<ColliderProxy> WheelPhysicsHost::StandInProxy(const Part& part) co
     return c;
 }
 
-// The stand-in of a part changed (created, destroyed, or moved with the deploy target): rebuild the cluster shapes from the part states
-// (VesselPhysics::Rebuild keeps the momentum); a moving stand-in is followed in steps of kStandInStep
-void WheelPhysicsHost::UpdateStandIns() {
-    constexpr double kStandInStep = 0.05;
+// WP-29e. The colliders of the wheel parts follow their models (the animation, the visual suspension / caliper / wheel, the stand-in sphere on
+// deployTgt) in the cluster compounds: in place when only poses changed, a rebuild (VesselPhysics::Rebuild keeps the momentum) when a collider
+// appeared or went (the stand-in is created / destroyed with the wheel's state, the wheel hidden, a wheel damaged).
+void WheelPhysicsHost::UpdateColliders() {
+    if (!options.modelColliders) return;
     for (auto& vw : vessels_) {
         if (vw->vessel_->packed) continue;
         VesselPhysics* vp = bubble_->Host().Find(*vw->vessel_);
         if (vp == nullptr) continue;
         bool rebuild = false;
         for (auto& w : vw->wheels_) {
+            if (!w->rig) continue;
             const std::optional<ColliderProxy> si = StandInProxy(*w->part);
-            const bool had = w->standInBuilt;
-            if (si.has_value() != had || (si && (Vector3d(si->center) - Vector3d(w->standInCenter)).magnitude() > kStandInStep)) {
-                w->standInBuilt = si.has_value();
-                if (si) w->standInCenter = si->center;
-                rebuild = true;
-            }
+            const std::vector<ColliderProxy> hub = HubColliders(*w->part);
+            if (hub.empty()) continue;
+            if (vp->SetPartColliderPoses(*w->part, hub) == VesselPhysics::ColliderUpdate::Mismatch) rebuild = true;
+            w->standInBuilt = si.has_value();
+            if (si) w->standInCenter = si->center;
         }
-        if (rebuild && options.modelColliders) vp->Rebuild();
+        if (rebuild) {
+            ++colliderRebuilds_;
+            vp->Rebuild();
+        }
     }
 }
 
-// Vessel.getLowestPoint scan of a wheel part (Vessel.cs:2589-2637): every non-trigger collider of the part on a layer other than 21 / 16 / 20,
-// the ones on the wheel layers 26 / 27 / 30 enabled for the measure (so the colliders ModuleWheelSuspension disabled count), at the pose the
-// vessel has now. ClosestPoint of a far point below is the support point in -z; for the layer 26 / 27 / 30 ones Unity reads bounds.min.z, the
-// same for a convex shape. A WheelCollider component bounds is taken as its centre (UNVERIFIED: the C# subtracts the radius afterwards, which
-// is only right for a point), its radius the prefab chunk radius.
+// Vessel.getLowestPoint's scan of a wheel part (Vessel.cs:2589-2637): `parts[i].GetComponentsInChildren<Collider>()` -- the colliders of the ACTIVE
+// GameObjects below the part (an inactive subtree is not enumerated: the damaged / undamaged wheel transform ModuleWheelDamage has switched off, the wheel
+// while VPWheelCollider hides it) -- every non-trigger one on a layer other than 21 / 16 / 20, the ones on the wheel layers 26 / 27 / 30 enabled for the
+// measure (so the collider ModuleWheelSuspension disabled counts), at the pose the vessel has now. For layers 26 / 27 / 30 the value is
+// `collider.bounds.min.z` (the lowest corner of the world AABB: the support point of a convex shape), else `ClosestPoint(measure).z`, the support point
+// in -z (WP-20e). The WheelCollider component (layer 27) is a Collider too: its `bounds` is taken as the POINT TransformPoint(center) (UNVERIFIED, see
+// below), which is why the C# subtracts `radius` afterwards (:2625-2634).
+//   * the role: `collider.gameObject.name.Contains("WheelCollider")` (ordinal, case-sensitive: the LT-5 leg's node is "wheelCollider" and does not match)
+//     is the WheelCollider branch (radius, then 0.15), `Contains("collisionEnhancer")` the other (0.15). The role is that of the node name, not of the
+//     component: any collider on a node with such a name has it.
+//   * the radius: `GetComponent<VPWheelCollider>().radius` once ModuleWheelBase.wheelSetup made the controller (the cfg radius x rescaleFactor), else the
+//     prefab WheelCollider component's (the .mu chunk's radius).
+//   * the centre of the component: before the set-up the chunk's `center` (0 in all 11 stock chunks, so the node position) under the node's pose; after
+//     it the native collider's center (VPWheelCollider.UpdateWheelCollider: center + up D (1 - anchor)) under the wheel collider transform.
+// UNVERIFIED: that Unity's WheelCollider.bounds is a point at TransformPoint(center). The evidence: (1) KSP subtracts `radius` after taking min.z, which
+// is the tyre bottom only when min.z is the centre; (2) with the chunk centre zero in every stock model that point is the node position, so the three
+// readings that differ only by `center` (the transform position, TransformPoint(center), the AABB centre) coincide; (3) a bounds of the wheel's sphere
+// would subtract the radius twice and put the vessel 2 r + 0.15 above the ground. The readings left open are a zero-size bounds at the world origin
+// (placement would be nonsense) or an AABB of the wheel's sphere (the double subtraction); capture C11 settles it.
 std::vector<VesselEnvironment::ColliderPoint> WheelPhysicsHost::PlacementPoints(Part& part, const Vector3f& measure) {
     (void)measure;
     std::vector<VesselEnvironment::ColliderPoint> out;
@@ -791,8 +900,29 @@ std::vector<VesselEnvironment::ColliderPoint> WheelPhysicsHost::PlacementPoints(
     pt.position = part.partTransform.position;
     pt.rotation = part.partTransform.rotation;
     auto worldZ = [&](const Vector3f& partSpace) { return pt.TransformPoint(partSpace).z; };
+    // the GameObjects that are not active in the hierarchy
+    const WheelPart* rec = RecordOf(part);
+    std::vector<std::string> inactive;
+    auto deactivate = [&](const std::string& n) {
+        if (n.empty()) return;
+        const int i = rig->Find(n);
+        if (i >= 0) inactive.push_back(RigPath(*rig, i));
+    };
+    if (PartModule* dmg = part.FindModuleOfClass("ModuleWheelDamage"))
+        deactivate(ModuleField(part, "ModuleWheelDamage", dmg->Get<bool>("isDamaged") ? "undamagedTransformName" : "damagedTransformName"));
+    if (rec != nullptr && rec->wheelHidden) deactivate(ModuleField(part, "ModuleWheelBase", "wheelTransformName"));
+    auto isInactive = [&](const std::string& path) {
+        for (const std::string& sk : inactive)
+            if (UnderPath(path, sk)) return true;
+        return false;
+    };
+    auto roleOf = [](const std::string& leaf) {
+        if (leaf.find("WheelCollider") != std::string::npos) return VesselEnvironment::ColliderRole::WheelCollider;
+        if (leaf.find("collisionEnhancer") != std::string::npos) return VesselEnvironment::ColliderRole::CollisionEnhancer;
+        return VesselEnvironment::ColliderRole::Plain;
+    };
     for (const mu::PartColliderShape& s : rig->Colliders()) {
-        if (s.trigger || s.layer == 21 || s.layer == 16 || s.layer == 20) continue;
+        if (s.trigger || s.layer == 21 || s.layer == 16 || s.layer == 20 || isInactive(s.path)) continue;
         float z = std::numeric_limits<float>::infinity();
         switch (s.kind) {
             case mu::ColliderKind::Box:
@@ -819,22 +949,28 @@ std::vector<VesselEnvironment::ColliderPoint> WheelPhysicsHost::PlacementPoints(
         VesselEnvironment::ColliderPoint cp;
         cp.z = z;
         const size_t slash = s.path.rfind('/');
-        const std::string leaf = slash == std::string::npos ? s.path : s.path.substr(slash + 1);
-        if (leaf.find("collisionEnhancer") != std::string::npos) cp.role = VesselEnvironment::ColliderRole::CollisionEnhancer;
-        out.push_back(cp);
+        cp.role = roleOf(slash == std::string::npos ? s.path : s.path.substr(slash + 1));
+        out.push_back(cp);  // a non-WheelCollider component on a "...WheelCollider..." node: radius 0, then 0.15 (the C# null checks fall through)
     }
-    // the WheelCollider components (layer 27, enabled for the measure): the prefab chunk centre and radius
+    // the WheelCollider components (layer 27, enabled for the measure)
+    KSPWheelController* ctl = rec != nullptr ? rec->Controller() : nullptr;
+    const bool setUp = rec != nullptr && rec->base != nullptr && rec->base->IsWheelSetUp() && ctl != nullptr && ctl->wheelCollider != nullptr;
     std::function<void(int)> walk = [&](int i) {
         const mu::RigNode& n = rig->At(i);
-        if (n.src != nullptr)
+        if (n.src != nullptr && !isInactive(RigPath(*rig, i)))
             for (const mu::ColliderChunk& c : n.src->colliders) {
                 if (c.kind != mu::ColliderKind::Wheel) continue;
-                const mu::RigPose ps = rig->PartSpace(i);
-                const Vector3f local(c.wheel.center.x * ps.scale.x, c.wheel.center.y * ps.scale.y, c.wheel.center.z * ps.scale.z);
                 VesselEnvironment::ColliderPoint cp;
-                cp.z = worldZ(ps.position + mu::RotateNative(ps.rotation, local));
-                cp.role = VesselEnvironment::ColliderRole::WheelCollider;
-                cp.radius = c.wheel.radius;
+                cp.role = roleOf(n.name);
+                if (setUp && i == rec->colliderNode) {  // VPWheelCollider.radius; the native collider's centre under the wheel collider transform
+                    cp.radius = ctl->wheelCollider->radius;
+                    cp.z = rec->colliderHost.TransformPoint(ctl->wheelCollider->wheelColliderData.center).z;
+                } else {
+                    const mu::RigPose ps = rig->PartSpace(i);
+                    const Vector3f local(c.wheel.center.x * ps.scale.x, c.wheel.center.y * ps.scale.y, c.wheel.center.z * ps.scale.z);
+                    cp.z = worldZ(ps.position + mu::RotateNative(ps.rotation, local));
+                    cp.radius = c.wheel.radius;
+                }
                 out.push_back(cp);
             }
         for (int ch : n.children) walk(ch);
@@ -1136,7 +1272,6 @@ void WheelPhysicsHost::PhysicsStep(float dt) {
     lastSubsteps_ = n;
     const float h = dt / static_cast<float>(n);
     std::vector<std::pair<VesselPhysics*, VesselPhysics::BufferedForces>> held;
-    UpdateStandIns();
     ApplyFreezes();
     const size_t rebinds0 = host.RebindCount();
     if (n > 1)
@@ -1151,10 +1286,45 @@ void WheelPhysicsHost::PhysicsStep(float dt) {
             ManagedSubstep(h);
         }
         TickAnimations(h);  // animatePhysics (ModuleWheelDeployment.cs:239): the clips advance in the physics step
+        UpdateColliders();  // WP-29e: the colliders follow the model this step has posed (PhysX syncs the transforms before it simulates)
         ApplyPendingForces();
         NativeStep(h);
         host.Step(h);
     }
+}
+
+int WheelPhysicsHost::RigNodeOf(WheelPart& w, const NativeTransform* t) const {
+    if (t == nullptr || !w.rig) return -1;
+    if (t == &w.colliderHost) return w.colliderNode;
+    for (const auto& kv : w.rigTransforms)
+        if (kv.second.get() == t) return kv.first;
+    return -1;
+}
+
+// VPWheelCollider.UpdateVisualWheel's Transform writes (VPWheelCollider.cs:275-300) and its Physics.Raycast (:261) on the part's model rig. The
+// rig is the Transform hierarchy: Transform.position = p stores parent.InverseTransformPoint(p) as the local position (Unity's TRS inverse:
+// rotate back, divide by the accumulated scale), Transform.localRotation = q stores q; GameObject.SetActive(false) on the wheel transform
+// hides the wheel (HubColliders leaves its colliders out). The ray is the wheel's layerMask Physics.Raycast (terrain and scenery, no parts) against
+// the static world, in the physics frame.
+void WheelPhysicsHost::InstallVisual(WheelPart& w, VPWheelCollider& vc) {
+    if (!w.rig || w.visualInstalled) return;
+    WheelPart* wp = &w;
+    vc.visual = MakeRigVisualHost(
+        *w.rig,
+        [wp] {
+            NativeTransform pt;
+            pt.position = wp->part->partTransform.position;
+            pt.rotation = wp->part->partTransform.rotation;
+            return pt;
+        },
+        [this, wp](const NativeTransform* t) { return RigNodeOf(*wp, t); }, &w.wheelHidden);
+    vc.visualRaycast = [this, wp](const Vector3f& origin, const Vector3f& direction, float maxDistance) -> float {
+        VesselPhysics* vp = bubble_->Host().Find(*wp->part->vessel);
+        if (vp == nullptr || !bubble_->World().StaticCollisions()) return -1.0f;
+        const PhysicsWorld::RayHit h = bubble_->World().RayCast(vp->PhysicsFromTransform(Vector3d(origin)), Vector3d(direction), static_cast<double>(maxDistance), PhysicsWorld::kLayerStatic);
+        return h.hit ? static_cast<float>(h.distance) : -1.0f;
+    };
+    w.visualInstalled = true;
 }
 
 void WheelPhysicsHost::Update() {

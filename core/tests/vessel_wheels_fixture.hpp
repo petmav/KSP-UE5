@@ -50,7 +50,10 @@ struct LoadedRover {
 };
 
 // KSPUpgradePipeline.Process + ShipConstruct.LoadShip + AssembleVesselFromCraft (World::Assemble); the editor up = inverse(root file rot) * Y
-inline LoadedRover LoadRover(World& w, const std::string& name) {
+// `gearRetracted` (WP-29e): the craft as a save with its gear up, i.e. every ModuleWheelDeployment persisted as stateString = Retracted,
+// position = 0 (ModuleWheelDeployment.OnStart then runs FSMSetup("Retracted"): the animation at its retracted end, TsubSys not reached, the
+// stand-in collider created at the wheel set-up)
+inline LoadedRover LoadRover(World& w, const std::string& name, bool gearRetracted = false) {
     LoadedRover out;
     const std::string path = StockCraftPath(name);
     ConfigNode::NodePtr root = ConfigNode::Load(path);
@@ -60,6 +63,14 @@ inline LoadedRover LoadRover(World& w, const std::string& name) {
     KSPUpgradePipeline::Process(root, sn ? *sn : std::string(), SaveUpgradePipeline::LoadContext::Craft, [&](const ConfigNode::NodePtr& n) { up = n; },
                                 [&](KSPUpgradePipeline::UpgradeFailOption, const ConfigNode::NodePtr&) {});
     REQUIRE(up != nullptr);
+    if (gearRetracted)
+        for (ConfigNode* part : up->nodes().GetNodes("PART"))
+            for (ConfigNode* mod : part->nodes().GetNodes("MODULE")) {
+                const std::string* mn = mod->GetValuePtr("name");
+                if (mn == nullptr || *mn != "ModuleWheelDeployment") continue;
+                mod->values().SetValue("stateString", "Retracted", std::nullopt, 0, true);
+                mod->values().SetValue("position", "0", std::nullopt, 0, true);
+            }
     QuaternionD rootRot = QuaternionD::identity();
     if (ConfigNode* part = up->nodes().GetNode("PART"))
         if (const std::string* rs = part->GetValuePtr("rot")) {
@@ -233,6 +244,33 @@ inline Vector3d VesselVelocity(VesselPhysics& vp) {
     }
     return s * (1.0 / m);
 }
+// WP-29e: the largest distance between a collider centre the cluster compound holds for a wheel part (Jolt's child pose composed with the body pose) and the
+// nearest collider of the part's live model rig. Zero when the compound follows the model (the hull colliders of a gear leg ride the animation clip, the colliders
+// under a rover's suspension ride the suspension; the stand-in sphere counts at its recorded centre). Hull children (a mesh collider: centre at the frame origin) are skipped.
+inline double MaxColliderModelError(VesselPhysics& vp, PhysicsWorld& world, WheelPart& w) {
+    const Part& part = *w.part;
+    const int cl = vp.ClusterOf(part);
+    if (cl < 0 || !w.rig) return 1e9;
+    const BodyId body = vp.ClusterBody(static_cast<size_t>(cl));
+    const Vector3d origin = world.GetPosition(body);
+    const QuaternionD rot = world.GetRotation(body);
+    VehiclePhysics::NativeTransform pt;
+    pt.position = part.partTransform.position;
+    pt.rotation = part.partTransform.rotation;
+    const auto live = w.rig->Colliders();
+    double worst = 0.0;
+    Vector3f cp;
+    Quaternionf cr;
+    for (size_t k = 0; vp.PartColliderPose(part, k, cp, cr); ++k) {
+        const Vector3d cw = origin + rot * Vector3d(cp);
+        double best = 1e9;
+        for (const auto& s : live) best = std::min(best, (cw - vp.PhysicsFromTransform(Vector3d(pt.TransformPoint(s.center)))).magnitude());
+        if (w.standInBuilt) best = std::min(best, (cw - vp.PhysicsFromTransform(Vector3d(pt.TransformPoint(w.standInCenter)))).magnitude());  // the stand-in sphere is not in the model
+        if (Vector3d(cp).magnitude() > 0.0) worst = std::max(worst, best);
+    }
+    return worst;
+}
+
 // the brakes action group: ModuleWheelBrakes.BrakeAction(Activate / Deactivate) on every brake module (ModuleWheelBrakes.cs:66)
 inline void SetBrakes(Vessel& v, bool on) {
     for (Part* p : v.parts)

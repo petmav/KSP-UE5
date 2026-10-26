@@ -183,8 +183,10 @@ bool Vessel::CheckGroundCollision() {
     return false;
 }
 
-// Vessel.cs:2578. The colliders are the hook's (proxy boxes: the wheel-collider and collisionEnhancer radius corrections of :2622-2645
-// need model colliders the proxies do not have; ModuleWheelBase.onPartUnpack, :2591-2595, is WP-29's)
+// Vessel.cs:2578. The colliders are the hook's: Vessel::env.colliderClosestPoints with the role of each collider (the wheel host's scan of the wheel parts'
+// real model colliders, WheelPhysicsHost::PlacementPoints: the radius and 0.15 of a WheelCollider, the 0.15 of a collisionEnhancer, :2622-2645), else
+// colliderClosestPointsZ (plain proxies). ModuleWheelBase.onPartUnpack (:2591-2595, InopSystems.RemoveSubsystem(inopOnRails)) is what Part.Unpack does
+// next anyway (the wheel host mirrors it), so it has no effect of its own here.
 float Vessel::getLowestPoint() {
     float num = std::numeric_limits<float>::infinity();
     const Quaternionf rotation = vesselTransform.rotation;
