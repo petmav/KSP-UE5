@@ -94,3 +94,7 @@ Findings of the audit:
   LaunchPad_spawn radial (lat -0.0972078, lon -74.5577): WP-11 terrain 64.7847 m (= the capture's active_vessel h_override bit for bit);
   WP-12b terrain collider 64.4682 m (-0.32 m: sub-cell relief); KSC origin 42.66 m (radius + repositionRadiusOffset 42.7, float);
   pad collider level 0 "collider" at 67.5261 m (+2.74 m over the terrain), highest level "Launch Pad" at 72.4079 m (+7.62 m).
+- physxMaterials measured (forced on in a throw-away build, whole unit binary): 1 assertion flips (WP-12c's legacy-rule check), every
+  other gate within its tolerance; the moved numbers are in STATUS WP-12d. Left off.
+- Merged origin/main 3eac9e97 (WP-29e). Fresh: 53 / 53 ctest; random orders 11 / 27: 1,121 cases / 1,696,411 assertions. STATUS
+  section, row 68, README, progress WP-12 1.0 written.
