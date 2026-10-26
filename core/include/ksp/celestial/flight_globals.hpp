@@ -90,6 +90,7 @@ struct FlightGlobals {
     static inline Vector3d camera_position;
     static inline Vector3d ship_tgtVelocity;
     static inline double ship_tgtSpeed = 0.0;
+    static inline Vector3d lastVel;  // :76 (ship_obtVelocity of the last UpdateInformation; zeroed by Start / OnLevelLoaded)
     static inline FoRModes FoRMode = FoRModes::SRF_NORTH;  // :108
     static inline float TargetSwitchSqrThresh = 3.6E+09f;  // :126
     static inline std::vector<physicalObject*> physicalObjects;  // :98 (ksp/physics/physical_object.hpp; WP-19b's bubble owns the bodies)
@@ -108,14 +109,16 @@ struct FlightGlobals {
         std::function<void(float)> ignoreGeeForces;
         // ScreenMessages.PostScreenMessage(localised text): the vessel-switch refusals and the target message; unset = dropped
         std::function<void(const std::string& message)> postScreenMessage;
-        // FlightDriver.StartAndFocusVessel(game, index) after saving "persistent" (switching to an UNLOADED vessel): unset = nothing
+        // FlightDriver.StartAndFocusVessel(game, index) after saving "persistent" (switching to an UNLOADED vessel): unset = the C# calls (WP-19c:
+        // FlightDriver.StartAndFocusVessel(HighLogic.CurrentGame.Updated(), index))
         std::function<void(int vesselIndex)> startAndFocusVessel;
         // OrbitPhysicsManager.CheckReferenceFrame() / HoldVesselUnpack(): WP-19b / OrbitPhysicsManager (ksp/physics/orbit_physics_manager.hpp)
         std::function<void()> checkReferenceFrame;
         std::function<void(int releaseAfter)> holdVesselUnpack;
         // FlightCamera.SetTarget(vessel): unset = nothing
         std::function<void(Vessel*)> flightCameraSetTarget;
-        // HighLogic.CurrentGame.Updated() persistence of "persistent" before switching to an unloaded vessel: unset = nothing
+        // the "persistent" save before switching to an unloaded vessel: unset = GamePersistence.SaveGame("persistent", HighLogic.SaveFolder,
+        // OVERWRITE, FLIGHT) (WP-19c)
         std::function<void()> savePersistent;
     };
     static inline Environment env;
@@ -186,7 +189,22 @@ struct FlightGlobals {
     static void ClearDeadVessels();                                      // :1052
     static void SetVesselTarget(ITargetable* tgt, bool overrideInputLock = false);  // :668
     static void ToggleVesselEaseIn(Vessel* vessel, bool enableEaseIn, double easeInMultiplier = 1.0);  // :1266
-    static void ClearInverseRotation();                                  // :1300
+    static void ClearInverseRotation();                                  // :1300 (fetch.clearInverseRotation, :1292)
+
+    // ---- the debug-menu orbit / position setters (FlightGlobals.cs:1090-1256, WP-19c, src/vessel/flight_globals_debug.cpp) ------------------
+    // fetch.SetShipOrbit: the active vessel on the given orbit of bodies[selBodyIndex] (sma capped at 0.99 SOI) at the current UT
+    static void SetShipOrbit(int selBodyIndex, double ecc, double sma, double inc, double LAN, double mna, double argPe, double ObT);  // :1090
+    // fetch.SetShipOrbitRendezvous: the active vessel at target's orbit state + relPosition / relVelocity in its (prograde x normal) basis
+    static void SetShipOrbitRendezvous(Vessel* target, const Vector3d& relPosition, const Vector3d& relVelocity);  // :1104
+    // fetch.SetVesselPosition: the active vessel at lat / lon / altitude above the terrain (asl: above sea level when the terrain is lower),
+    // co-rotating, oriented by rotation (x = inclination, z = heading, degrees); GoOffRails one frame later (on unpause when paused)
+    static void SetVesselPosition(int selBodyIndex, double latitude, double longitude, double altitude, double inclination, double heading, bool asl,
+                                  bool easeToSurface = false, double gravityMultiplier = 0.1);  // :1161
+    static void SetVesselPosition(int selBodyIndex, double latitude, double longitude, double altitude, const Vector3f& rotation, bool asl,
+                                  bool easeToSurface = false, double easeInMultiplier = 0.1);   // :1166
+    static void OnGameUnpaused();  // :1240 (GameEvents.onGameUnpause, subscribed by Start)
+    static inline bool setPositionInProgress = false;            // :50
+    static inline uint32_t setPositionInProgressVesselID = 0;    // :52
 
     // ---- queries (FlightGlobals.cs:1311-1495) --------------------------------------------------------------------------------------
     static CelestialBody* getMainBody(const Vector3d& refPos);  // :1311
@@ -241,6 +259,9 @@ private:
     static CelestialBody* inSOI(const Vector3d& pos, CelestialBody* body);  // :1316
     static void RefreshViews();
     static bool setActiveVessel(Vessel* v, bool force, bool clearDeadVessels);  // :967
+    static void PrepForOrbitSet();               // :1124
+    static void PostOrbitSet(CelestialBody* oldBody);  // :1146
+    static void StartActiveVesselGoOffRails();   // StartCoroutine(ActiveVesselGoOffRails()) (:1252: one frame, then GoOffRails)
 
     static inline SpeedDisplayModes speedMode = SpeedDisplayModes::Surface;          // :130
     static inline SpeedDisplayModes commandedSpeedMode = SpeedDisplayModes::Surface;  // :128
@@ -249,8 +270,8 @@ private:
     static inline int homeBodyIndex = 0;                                              // :120
     static inline CelestialBody* cometPerturber = nullptr;                            // :122
     static inline int cometPerturberIndex = 0;                                        // :124
-    static inline bool disableOverridePending_ = false;
-    static inline float disableOverrideAt_ = 0.0f;
+    // the pending Invoke("disableOverride", t) calls (Start / OnLevelLoaded 1 s, PrepForOrbitSet 2 s): Unity runs each one, none cancels another
+    static inline std::vector<float> disableOverrideAt_;
 };
 
 }  // namespace ksp

@@ -32,8 +32,10 @@ public:
         float unpack = 0.0f;
 
         Situation() = default;
-        Situation(float load_, float unload_, float pack_, float unpack_)
+        Situation(float load_, float unload_, float pack_, float unpack_)  // VesselRanges.cs:17
             : load(load_), unload(unload_), pack(pack_), unpack(unpack_) {}
+        Situation(const Situation& copyFrom) = default;  // VesselRanges.cs:25 (the four fields)
+        Situation& operator=(const Situation&) = default;
         void Load(const ConfigNode& node);  // VesselRanges.cs:33 (values scanned last to first; float.Parse throws)
         void Save(ConfigNode& node) const;  // VesselRanges.cs:57
     };
@@ -46,6 +48,11 @@ public:
     Situation subOrbital{2250.0f, 15000.0f, 10000.0f, 200.0f};
     Situation orbit{2250.0f, 2500.0f, 350.0f, 200.0f};
     Situation escaping{2250.0f, 2500.0f, 350.0f, 200.0f};
+
+    VesselRanges() = default;  // VesselRanges.cs:80
+    // VesselRanges.cs:84 VesselRanges(copyFrom): a new Situation per field (the C# copies by value into new objects; the C++ members are values)
+    VesselRanges(const VesselRanges& copyFrom) = default;
+    VesselRanges& operator=(const VesselRanges&) = default;
 
     // VesselRanges.cs:95 GetSituationRanges (ORBITING, DOCKED and any other value -> orbit)
     Situation& GetSituationRanges(VesselSituations situation);

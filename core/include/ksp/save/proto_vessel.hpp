@@ -240,9 +240,15 @@ public:
     std::unique_ptr<Part> CreatePart();         // :761 (Instantiate the prefab, then ConfigurePart; nullptr without partInfo)
     void ConfigurePart(Vessel* vesselRef, Part& partToConfigure, const AvailablePart& PartInfo, bool setPosition);  // :651
     // :795 Load(Vessel, loadAsRootPart): Instantiate the part's prefab, link it under vesselParts[parentIdx] (not for the root) and
-    // ConfigurePart it. The merge of the root part into the Vessel component and the EVA suit lookup are Unity's / WP-14's; the
-    // vessel transform is the identity. The caller owns the returned part.
+    // ConfigurePart it; an EVA vessel's part comes from LoadEVAInfoBySuitGender (WP-19c). The merge of the root part into the Vessel
+    // component is Unity's; the vessel transform is the identity. The caller owns the returned part.
     std::unique_ptr<Part> Load(Vessel* vesselRef, const std::vector<Part*>& vesselParts, bool loadAsRootPart);
+    // :964 LoadEVAInfoBySuitGender (WP-19c; the isEVA branch of Load uses it)
+    static const AvailablePart* LoadEVAInfoBySuitGender(ProtoCrewMember& protoCrew);
+    // :1091 FindAttachNode (private in the C#, never called there)
+    static AttachNode* FindAttachNode(const std::string& name, std::vector<AttachNode>& nodes);
+    // :132 partPrefab (partInfo == null: null)
+    const Part* partPrefab() const;
     // :1065 Init(Vessel): symmetry counterparts, srfAttachNode and attachNodes links from vesselParts
     void Init(const std::vector<Part*>& vesselParts);
     bool HasCrew(const std::string& name) const;   // :1131
@@ -256,8 +262,9 @@ public:
     void ProtoPartRepair();                        // :1300 (WP-54c)
 };
 
-// ProtoVessel.cs (data side)
-class ProtoVessel {
+// ProtoVessel.cs (data side). enable_shared_from_this (WP-19c): the C# shares one ProtoVessel between Vessel.protoVessel and
+// FlightState.protoVessels; FlightState() and Vessel.StartFromBackup take a shared reference through it.
+class ProtoVessel : public std::enable_shared_from_this<ProtoVessel> {
 public:
     using PCM = std::shared_ptr<ProtoCrewMember>;
 
@@ -350,10 +357,23 @@ public:
     std::vector<ProtoPartSnapshot*> GetAllProtoPartsIncludingCargo();  // :1061 (cargo snapshots owned by this vessel)
     std::vector<ProtoPartSnapshot*> GetAllProtoPartsFromCrew();         // :1121
 
+    // ---- WP-19c (src/vessel/proto_vessel_clean.cpp) -----------------------------------------------------------------------------------------
+    // ProtoVessel.cs:994 GetSituationString: "<situation> <body>" text of a proto vessel (bodies = FlightGlobals.Bodies; nullptr = null). The
+    // C# reads the strings CacheLocalStrings cached at start-up; kspcore formats the same tags at the call (the same text once the Localizer is up)
+    static std::string GetSituationString(const ProtoVessel& pv, const std::vector<CelestialBody*>* bodies);
+    // ProtoVessel.cs:1163 Clean: a loaded non-active vessel is unloaded and its new proto vessel cleaned; otherwise, on the home world the vessel is
+    // recovered (onVesselRecovered(this, quick = true) with the funds / science / reputation deltas of Funding / R&D / Reputation, Mathf.Round),
+    // the snapshot leaves HighLogic.CurrentGame.flightState, the Vessel is destroyed (Vessel::DestroyImmediate) and the warning text is logged
+    void Clean(const std::string& reason = "");
+    static void CacheLocalStrings();  // :1242 (see GetSituationString)
+
     // ProtoVessel.cs:968 CreateOrbitNode (REF = FlightGlobals.Bodies.IndexOf(orbit.referenceBody))
     static ConfigNode::NodePtr CreateOrbitNode(const Orbit& orbit, const std::vector<CelestialBody*>& bodies);
 
 private:
+    float CurrentFunds() const;       // ProtoVessel.cs:1215
+    float CurrentScience() const;     // :1224
+    float CurrentReputation() const;  // :1233
     void verifyCrew();  // ProtoVessel.cs:453
     std::vector<PCM> crew_;
     std::vector<std::unique_ptr<ProtoPartSnapshot>> cargoSnapshots_;  // keeps GetAllProtoParts* results alive

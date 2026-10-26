@@ -14,10 +14,16 @@
 #include "ksp/input/input_lock_manager.hpp"
 #include "ksp/localization/localizer.hpp"
 #include "ksp/orbit/time_warp.hpp"
+#include "ksp/physics/collision_enhancer.hpp"
 #include "ksp/physics/orbit_physics_manager.hpp"
+#include "ksp/save/game.hpp"
+#include "ksp/save/game_persistence.hpp"
 #include "ksp/save/proto_vessel.hpp"
+#include "ksp/space_center/high_logic.hpp"
+#include "ksp/space_center/scene_drivers.hpp"
 #include "ksp/save/save_environment.hpp"
 #include "ksp/unity/mathf.hpp"
+#include "ksp/unity/quaternion_native.hpp"
 #include "ksp/vessel/vessel.hpp"
 #include "ksp/vessel/vessel_autopilot.hpp"
 
@@ -65,6 +71,8 @@ struct FlightGlobalsHooks {
     }
     // FlightGlobals.cs:747 OnSceneChange
     void OnSceneChange(GameScenes) { FlightGlobals::OnSceneChange(); }
+    // FlightGlobals.cs:1240
+    void OnGameUnpaused() { FlightGlobals::OnGameUnpaused(); }
 };
 FlightGlobalsHooks g_hooksObj;
 bool g_hooked = false;
@@ -294,10 +302,13 @@ void FlightGlobals::Clear() {
     homeBody = nullptr;
     cometPerturber = nullptr;
     physicalObjects.clear();
-    disableOverridePending_ = false;
+    disableOverrideAt_.clear();
+    setPositionInProgress = false;
     GE::onVesselSituationChange.Remove(&g_hooksObj, &FlightGlobalsHooks::SurfaceVesselEaseIn);  // OnDestroy (FlightGlobals.cs:773)
     if (g_hooked) {
         GE::onGameSceneLoadRequested.Remove(&g_hooksObj, &FlightGlobalsHooks::OnSceneChange);
+        GE::onGameUnpause.Remove(&g_hooksObj, &FlightGlobalsHooks::OnGameUnpaused);  // WP-19c (FlightGlobals.cs:784)
+        // UnhookVesselEvents (FlightGlobals.cs:889)
         GE::onPartAttach.Remove(&g_hooksObj, &FlightGlobalsHooks::OnPartEventTargetAction);
         GE::onPartRemove.Remove(&g_hooksObj, &FlightGlobalsHooks::OnPartEventTargetAction);
         GE::onPartCouple.Remove(&g_hooksObj, &FlightGlobalsHooks::OnPartEventFromToAction);
@@ -445,10 +456,12 @@ void FlightGlobals::Awake() {
 void FlightGlobals::Start() {
     if (env.ignoreGeeForces) env.ignoreGeeForces(3.0f);
     overrideOrbit = true;
-    disableOverridePending_ = true;  // Invoke("disableOverride", 1f)
-    disableOverrideAt_ = Time::time + 1.0f;
+    lastVel = Vector3d::zero();
+    disableOverrideAt_.push_back(Time::time + 1.0f);  // Invoke("disableOverride", 1f)
     if (!g_hooked) {
         GE::onGameSceneLoadRequested.Add(&g_hooksObj, &FlightGlobalsHooks::OnSceneChange);
+        GE::onGameUnpause.Add(&g_hooksObj, &FlightGlobalsHooks::OnGameUnpaused);  // WP-19c (FlightGlobals.cs:742)
+        // HookVesselEvents (FlightGlobals.cs:878)
         GE::onPartAttach.Add(&g_hooksObj, &FlightGlobalsHooks::OnPartEventTargetAction);
         GE::onPartRemove.Add(&g_hooksObj, &FlightGlobalsHooks::OnPartEventTargetAction);
         GE::onPartCouple.Add(&g_hooksObj, &FlightGlobalsHooks::OnPartEventFromToAction);
@@ -470,20 +483,29 @@ void FlightGlobals::OnSceneChange() {
 // FlightGlobals.cs:761
 void FlightGlobals::OnLevelLoaded() {
     if (env.ignoreGeeForces) env.ignoreGeeForces(3.0f);
+    lastVel.Zero();
     overrideOrbit = true;
-    disableOverridePending_ = true;
-    disableOverrideAt_ = Time::time + 1.0f;
+    disableOverrideAt_.push_back(Time::time + 1.0f);  // Invoke("disableOverride", 1f)
 }
 
-// FlightGlobals.cs:1305 (CollisionEnhancer.bypass is the physics world's)
+// FlightGlobals.cs:1305
 void FlightGlobals::disableOverride() {
+    physics::CollisionEnhancer::bypass = false;
     overrideOrbit = false;
-    disableOverridePending_ = false;
 }
 
-// Unity's delayed-call pass for Invoke("disableOverride", ...)
+// Unity's delayed-call pass for Invoke("disableOverride", ...): every pending call whose time has come, in the order they were made
 void FlightGlobals::RunDelayedCalls(float time) {
-    if (disableOverridePending_ && time >= disableOverrideAt_) disableOverride();
+    std::vector<float> due;
+    for (auto it = disableOverrideAt_.begin(); it != disableOverrideAt_.end();) {
+        if (time >= *it) {
+            due.push_back(*it);
+            it = disableOverrideAt_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    for (size_t i = 0; i < due.size(); i++) disableOverride();
 }
 
 // FlightGlobals.cs:789
@@ -505,16 +527,29 @@ void FlightGlobals::Update() {
     }
 }
 
-// FlightGlobals.cs:811 (try / catch: an exception is logged and swallowed). The navball orientation block (ship_orientation_offset,
-// ship_orientation, ship_heading: native Quaternion.LookRotation / eulerAngles) is not computed.
+// FlightGlobals.cs:811 (try / catch: an exception is logged and swallowed). WP-19c: lastVel and the navball orientation block (ship_orientation_offset,
+// ship_orientation, ship_heading) through the Unity-native Quaternion.LookRotation / Euler / eulerAngles of ksp/unity/quaternion_native.hpp
+// (UNVERIFIED against the game, see there: approximate).
 void FlightGlobals::UpdateInformation(bool fixedUpdate) {
     try {
         Vessel& av = *ActiveVessel;
         currentMainBody = av.orbitDriver->referenceBody();
+        lastVel = ship_obtVelocity();
         camera_position = env.cameraPosition ? env.cameraPosition() : Vector3d(av.vesselTransform.position);
         camera_altitude = Vector3d::Distance(camera_position, currentMainBody->position) - currentMainBody->Radius;
         ship_temp = av.externalTemperature;
         ship_dns = av.atmDensity;
+        // :100 rotationOffset = Quaternion.Euler(90f, 0f, 0f) (a static initialiser)
+        static const Quaternionf rotationOffset = UnityNative::Euler(Vector3f(90.0f, 0.0f, 0.0f));
+        ship_orientation_offset = rotationOffset * UnityNative::Inverse(av.ReferenceTransform().rotation);
+        const Vector3d vesselPos(av.vesselTransform.position);
+        const Vector3f normalized =
+            Vector3f::ProjectOnPlane((currentMainBody->position + currentMainBody->transformUp * currentMainBody->Radius - vesselPos).ToVector3f(),
+                                     (vesselPos - currentMainBody->position).normalized().ToVector3f())
+                .normalized();
+        const Vector3f upwards = (vesselPos - currentMainBody->position).normalized().ToVector3f();
+        ship_orientation = ship_orientation_offset * UnityNative::LookRotation(normalized, upwards);
+        ship_heading = UnityNative::EulerAngles(UnityNative::Inverse(ship_orientation)).y;
         vesselTargetDelta = Vector3f();
         vesselTargetDirection = Vector3f();
         ship_tgtVelocity = Vector3d();
@@ -608,10 +643,22 @@ bool FlightGlobals::setActiveVessel(Vessel* v, bool force, bool clearDeadVessels
         ActiveVessel->ClearStaging();
         if (!v->loaded) {
             GE::onVesselSwitchingToUnloaded.Fire(data, v);
-            if (env.savePersistent) env.savePersistent();  // GamePersistence.SaveGame("persistent", ..., SaveMode.OVERWRITE, GameScenes.FLIGHT)
+            // WP-19c: unset seams = the C# calls (the switch beyond the bubble is a new flight scene: FlightDriver.Start loads the saved game)
+            if (env.savePersistent) env.savePersistent();
+            else GamePersistence::SaveGame("persistent", HighLogic::SaveFolder(), SaveMode::OVERWRITE, GameScenes::FLIGHT);
+            const auto it = std::find(Vessels.begin(), Vessels.end(), v);
+            const int index = it == Vessels.end() ? -1 : static_cast<int>(it - Vessels.begin());  // vessels.IndexOf(v)
             if (env.startAndFocusVessel) {
-                const auto it = std::find(Vessels.begin(), Vessels.end(), v);
-                env.startAndFocusVessel(it == Vessels.end() ? -1 : static_cast<int>(it - Vessels.begin()));
+                env.startAndFocusVessel(index);
+            } else {
+                Game* current = HighLogic::CurrentGame();
+                if (current == nullptr) throw NullReferenceException("HighLogic.CurrentGame is null");
+                Game& updated = current->Updated();
+                // FlightDriver.StartAndFocusVessel(HighLogic.CurrentGame.Updated(), ...): the cache is the current game itself (shared when it is
+                // shared-owned, else referenced: the C# GC keeps it either way)
+                std::shared_ptr<Game> cache = updated.weak_from_this().lock();
+                if (!cache) cache = std::shared_ptr<Game>(&updated, [](Game*) {});
+                FlightDriver::StartAndFocusVessel(cache, index);
             }
             return true;
         }

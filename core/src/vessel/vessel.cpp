@@ -914,7 +914,9 @@ void Vessel::SetAutoClean(const std::string& reason) {
 
 // Vessel.cs:4421
 void Vessel::Clean(const std::string& reason) {
-    if (protoVessel != nullptr && env.cleanVessel) env.cleanVessel(*this, reason);
+    if (protoVessel == nullptr) return;
+    if (env.cleanVessel) env.cleanVessel(*this, reason);  // host override (WP-14 seam)
+    else protoVessel->Clean(reason);                      // WP-19c: ProtoVessel.Clean (ProtoVessel.cs:1163)
 }
 
 // Vessel.cs:3908

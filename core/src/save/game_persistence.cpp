@@ -7,6 +7,8 @@
 #include <system_error>
 
 #include "ksp/celestial/planetarium.hpp"
+#include "ksp/core/exceptions.hpp"
+#include "ksp/space_center/high_logic.hpp"
 #include "ksp/core/log.hpp"
 #include "ksp/dotnet/collections.hpp"
 #include "ksp/dotnet/text.hpp"
@@ -122,6 +124,25 @@ std::string GamePersistence::ReplaceInvalidFileNameChars(std::string saveFileNam
 std::string GamePersistence::BackupFileName(const std::string& saveFileName, const std::tm& now) {
     return saveFileName + " (" + Pad(now.tm_year + 1900, 4) + "_" + Pad(now.tm_mon + 1, 2) + "_" + Pad(now.tm_mday, 2) +
            "_" + Pad(now.tm_hour, 2) + "_" + Pad(now.tm_min, 2) + "_" + Pad(now.tm_sec, 2) + ").sfs";
+}
+
+// GamePersistence.cs:9
+std::string GamePersistence::SaveGame(const std::string& saveFileName, const std::string& saveFolder, SaveMode saveMode, GameScenes startScene) {
+    if (HighLogic::CurrentGame() == nullptr) {
+        auto created = std::make_shared<Game>();
+        HighLogic::CurrentGame(&created->Updated(startScene));
+        if (HighLogic::fetch != nullptr) HighLogic::currentGameOwner = created;
+        // HighLogic.CurrentGame is null again without a HighLogic instance (the setter does nothing): SaveGame(null, ...) throws
+        Game* current = HighLogic::CurrentGame();
+        if (current == nullptr) throw NullReferenceException("HighLogic.CurrentGame is null");
+        return SaveGame(*current, saveFileName, saveFolder, saveMode);
+    }
+    return SaveGame(HighLogic::CurrentGame()->Updated(startScene), saveFileName, saveFolder, saveMode);
+}
+
+// GamePersistence.cs:20
+std::string GamePersistence::SaveGame(const std::string& saveFileName, const std::string& saveFolder, SaveMode saveMode) {
+    return SaveGame(saveFileName, saveFolder, saveMode, GameScenes::LOADING);
 }
 
 // GamePersistence.cs:24

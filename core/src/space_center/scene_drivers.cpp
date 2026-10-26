@@ -2,6 +2,11 @@
 #include "ksp/space_center/scene_drivers.hpp"
 
 #include "ksp/career/progress.hpp"
+#include "ksp/celestial/celestial_body.hpp"
+#include "ksp/celestial/flight_globals.hpp"
+#include "ksp/celestial/planetarium.hpp"
+#include "ksp/physics/floating_origin.hpp"
+#include "ksp/vessel/vessel.hpp"
 #include "ksp/core/log.hpp"
 #include "ksp/events/game_events.hpp"
 #include "ksp/localization/localizer.hpp"
@@ -82,7 +87,13 @@ void FlightDriver::Start() {
             const int count = static_cast<int>(list.size());
             for (int i = 0; i < count; i++) ShipConstruction::RecoverVesselFromFlight(*list[static_cast<size_t>(i)], *FlightStateCache->flightState);
         }
-        // Planetarium.SetUniversalTime(FlightStateCache.UniversalTime) / UpdateCBs: the host's clock; Game.Load() is the host's world rebuild
+        // FlightDriver.cs:169-174 (WP-19c): the clock, then Game.Load (HighLogic.CurrentGame = the cache, the scenario modules, the roster,
+        // FlightState.Load: every proto vessel becomes an unloaded Vessel in FlightGlobals)
+        if (Planetarium::fetch != nullptr) {
+            Planetarium::SetUniversalTime(FlightStateCache->UniversalTime());
+            Planetarium::fetch->UpdateCBs();
+        }
+        FlightStateCache->Load();
     }
     bool started = false;
     switch (StartupBehaviour) {
@@ -94,7 +105,8 @@ void FlightDriver::Start() {
             break;
         case StartupBehaviours::RESUME_SAVED_FILE:
         case StartupBehaviours::RESUME_SAVED_CACHE: {
-            const int vesselCount = host.vesselCount ? host.vesselCount() : 0;
+            // unset seams: FlightGlobals' own registry (WP-19c), which FlightStateCache.Load filled
+            const int vesselCount = host.vesselCount ? host.vesselCount() : static_cast<int>(FlightGlobals::Vessels.size());
             // Mathf.Clamp(FocusVesselAfterLoad, 0, Vessels.Count - 1) (Mathf.Clamp(int): min > max returns min... the C# clamp is min-then-max)
             int focus = FocusVesselAfterLoad;
             if (focus < 0) focus = 0;
@@ -106,7 +118,9 @@ void FlightDriver::Start() {
                 return;
             }
             log::Info("Target vessel index: " + std::to_string(FocusVesselAfterLoad) + "  vessel count: " + std::to_string(vesselCount));
-            CanRevertToPostInit = host.vesselIsPrelaunch && host.vesselIsPrelaunch(FocusVesselAfterLoad);
+            CanRevertToPostInit = host.vesselIsPrelaunch ? host.vesselIsPrelaunch(FocusVesselAfterLoad)
+                                                         : FlightGlobals::Vessels[static_cast<size_t>(FocusVesselAfterLoad)]->situation ==
+                                                               Vessel::Situations::PRELAUNCH;
             if (CanRevertToPostInit && PostInitState != nullptr &&
                 FlightStateCache->flightState->protoVessels[static_cast<size_t>(FocusVesselAfterLoad)]->vesselID == PostInitState->ActiveVesselID &&
                 ShipConstruction::ShipConfig != nullptr && PreLaunchState != nullptr) {
@@ -115,8 +129,28 @@ void FlightDriver::Start() {
                 CanRevertToPrelaunch = false;
                 if (ShipConstruction::ShipConfig != nullptr) ShipConstruction::ShipConfig = nullptr;
             }
-            if (host.positionAllVessels) host.positionAllVessels();
-            if (host.focusVessel) host.focusVessel(FocusVesselAfterLoad);
+            if (host.positionAllVessels) {
+                host.positionAllVessels();
+            } else {
+                // FlightDriver.cs:209-219
+                for (size_t j = 0; j < FlightGlobals::Vessels.size(); j++) {
+                    Vessel* vessel2 = FlightGlobals::Vessels[j];
+                    if (vessel2->LandedOrSplashed()) {
+                        vessel2->SetPosition(vessel2->mainBody()->GetWorldSurfacePosition(vessel2->latitude, vessel2->longitude, vessel2->altitude));
+                        continue;
+                    }
+                    vessel2->orbitDriver->orbit->Init();
+                    vessel2->orbitDriver->updateFromParameters(true);
+                }
+            }
+            if (host.focusVessel) {
+                host.focusVessel(FocusVesselAfterLoad);
+            } else {
+                // FlightDriver.cs:220-221 (the flight camera / PQS targeting of :222-230 are the host's)
+                Vessel* vessel = FlightGlobals::Vessels[static_cast<size_t>(FocusVesselAfterLoad)];
+                FloatingOrigin::SetOffset(Vector3d(vessel->vesselTransform.position));
+                FlightGlobals::SetActiveVessel(vessel);
+            }
             if (StartupBehaviour == StartupBehaviours::RESUME_SAVED_CACHE) resumeCacheUsed = true;
             started = true;
             break;

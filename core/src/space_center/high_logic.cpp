@@ -31,6 +31,7 @@ void HighLogic::ResetStatics() {
     removeMissionToStartObject = nullptr;
     timeNow = nullptr;
     scheduler = nullptr;
+    currentGameOwner = nullptr;
 }
 
 GameScenes HighLogic::LoadedScene() { return SaveEnvironment::Current().loadedScene; }

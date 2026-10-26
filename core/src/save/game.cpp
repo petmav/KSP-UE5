@@ -124,22 +124,7 @@ void ProtoScenarioModule::Save(ConfigNode& node) const { moduleValues_->CopyTo(n
 
 // =================================================== FlightState ===================================================
 
-// FlightState.cs:33 (no live vessels in kspcore; see the header)
-FlightState::FlightState() {
-    const SaveEnvironment& env = SaveEnvironment::Current();
-    file_version_major = Versioning::version_major;
-    file_version_minor = Versioning::version_minor;
-    file_version_revision = Versioning::Revision;
-    compatible = true;
-    try {
-        universalTime = SaveUniversalTime();
-    } catch (const NullReferenceException&) {
-        universalTime = 0.0;
-    }
-    mapViewFilterState = env.mapViewFilteringVesselTypeFilter;
-    activeVesselIdx = 0;
-    log::Info("Flight State Captured");
-}
+// FlightState.cs:33 FlightState() and :164 Load: the live half, src/vessel/flight_state_live.cpp (WP-19c)
 
 // FinePrint/Utilities/CompatibilityUtilities.cs:588
 void CompatibilityUtilities_CleanUpUnsanitaryEVAKerbals(ConfigNode& flightState) {

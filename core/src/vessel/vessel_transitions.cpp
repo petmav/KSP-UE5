@@ -10,6 +10,7 @@
 #include "ksp/core/log.hpp"
 #include "ksp/dotnet/enum.hpp"
 #include "ksp/orbit/orbit_snapshot.hpp"
+#include "ksp/orbit/patched_conic_solver.hpp"
 #include "ksp/save/game.hpp"
 #include "ksp/save/save_environment.hpp"
 #include "ksp/vessel/vessel.hpp"
@@ -139,7 +140,9 @@ void Vessel::StartFromBackup(ProtoVessel* pv) { StartFromBackup(pv, nullptr); }
 void Vessel::StartFromBackup(ProtoVessel* pv, FlightState* /*st*/) {
     parts.clear();
     protoVessel = pv;
-    protoVesselOwner_.reset();
+    // WP-19c: the C# reference keeps the object alive (a FlightState replaced by Game.Updated must not free the protoVessel of an unloaded
+    // vessel): a shared-owned ProtoVessel is shared, one owned elsewhere (a caller's object) is only referenced
+    protoVesselOwner_ = pv != nullptr ? pv->weak_from_this().lock() : nullptr;
 }
 
 // ============================================================ Load / Unload / Backup
@@ -223,7 +226,10 @@ ProtoVessel* Vessel::BackupVessel() {
         protoVessel->orbitSnapShot = OrbitSnapshot(orbit(), FlightRegistry::Bodies());
         protoVessel->discoveryInfo = std::make_shared<ConfigNode>("DISCOVERY");
         discoveryInfo_->Save(*protoVessel->discoveryInfo);
-        if (PatchedConicsAttached()) protoVessel->flightPlan = std::make_shared<ConfigNode>("FLIGHTPLAN");  // patchedConicSolver.Save: WP-08 solver
+        if (PatchedConicsAttached()) {  // Vessel.cs:1982-1986 (WP-19c: the solver's Save)
+            protoVessel->flightPlan = std::make_shared<ConfigNode>("FLIGHTPLAN");
+            if (patchedConicSolver != nullptr) patchedConicSolver->Save(*protoVessel->flightPlan);
+        }
         protoVessel->lastUT = lastUT;
     }
     isBackingUp = false;
@@ -411,7 +417,11 @@ ProtoVessel::ProtoVessel(Vessel& VesselRef, bool /*preCreate*/) {
     discoveryInfo = std::make_shared<ConfigNode>();
     VesselRef.GetDiscoveryInfo().Save(*discoveryInfo);
     flightPlan = std::make_shared<ConfigNode>();
-    VesselRef.flightPlanNode.CopyTo(*flightPlan);  // an attached patched-conic solver first rewrites flightPlanNode (WP-08 solver)
+    if (VesselRef.PatchedConicsAttached() && VesselRef.patchedConicSolver != nullptr) {  // WP-19c (ProtoVessel.cs:223-227)
+        VesselRef.flightPlanNode.ClearData();
+        VesselRef.patchedConicSolver->Save(VesselRef.flightPlanNode);
+    }
+    VesselRef.flightPlanNode.CopyTo(*flightPlan);
     targetInfo = ProtoTargetInfo(VesselRef.targetObject);
     waypointInfo = ProtoWaypointInfo();  // vesselRef.navigationWaypoint is null in kspcore
     ctrlState = std::make_shared<ConfigNode>();
