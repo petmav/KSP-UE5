@@ -76,3 +76,17 @@ Findings of the audit:
 - 2e done: PQSCache Reset / Awake (singleton) / OnDestroy / ResetCache / CoroutineCreatePQCache + onCacheReady (cachePQCoroutine,
   default false = the C# field default). PQSMod_CelestialBodyTransform: nothing engine-agnostic left (AltitudeFade.Setup is renderer
   discovery). 1 test case.
+- 3 done: `CityColliderSet` hierarchy mode (activeSelf / activeInHierarchy / presence / per-object rigid transforms); `SceneryCityHost`
+  on /2 documents uses it with the switched GameObjects as roots, plus SetFacilityLevel / SetObjectActiveSelf / SetObjectLocalPose;
+  `include/ksp/physics/ksc_facilities.hpp` (UpgradeableSlave port, KSCFacilityHost: UpgradeableFacility / UpgradeableSlave per level group
+  driven by ScenarioUpgradeableFacilities, DestructibleBuildings of the shown levels with ScenarioDestructibles, Sync). Findings:
+  UpgradeLevel.Spawn destroys the GameObject facilityTransform points at (the replaced level's Spawned turns false through Unity's null
+  check; the WP-36 port's flag did not, so a re-upgrade to the Awake level was a no-op until the host clears it); DestructibleBuilding.Start
+  always ends in SetDestroyed(!intact) (Load, or Reset when RegisterInstance returns false, which it does on the first registration):
+  collapse objects inactive in the prefab (5 records: flare lights of the LaunchPad / SPH / VAB top levels, RnD level 1) become active.
+  Gate: `tools/wp12d/facility_reference.py` -> `tests/data/wp12d_facility_reference.json` (sha256 3df56c1a...): 4 scenarios x 2,795 KSC
+  objects: 0 mismatches; run time upgrade LaunchPad 0 -> 2 (42 -> 139 pad objects, 206 -> 270 static bodies); a collapse (TrackingStation
+  dish, FIXTURE timings: 2 s): the collider sinks 1.875 m after 1 s, is gone at the end, stays gone through Deactivate / ActivateAll,
+  comes back on Repair at the original place (< 1e-6 m). WP-12c / 20g / 21b / 29d / 20e scenarios unchanged (CoM 0.174 / 0.190 m).
+  Deferred (needs the game copy, not readable from this session): UpgradeableSlave.neighbourIDs (FIXTURE from the group names) and the
+  DestructibleBuilding prefab values.

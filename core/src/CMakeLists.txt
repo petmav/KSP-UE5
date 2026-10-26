@@ -190,6 +190,7 @@ add_library(kspcore STATIC
     space_center/city_colliders.cpp
     space_center/scenery_colliders.cpp
     physics/scenery_host.cpp
+    physics/ksc_facilities.cpp
     space_center/pqs_city_data.cpp
     space_center/space_center.cpp
     space_center/launch_site.cpp

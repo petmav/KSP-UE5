@@ -10,19 +10,54 @@
 namespace ksp::physics {
 
 SceneryCityHost::SceneryCityHost(PhysicsBubble& bubble, const SceneryCity& city, uint64_t keyBase, const SceneryLevels& levels)
-    : host_(bubble.Contacts()), city_(city), keyBase_(keyBase), levels_(levels) {
+    : host_(bubble.Contacts()), city_(city), keyBase_(keyBase), levels_(levels), hierarchical_(city.hierarchical) {
+    CityColliderSet* set = nullptr;
     if (city.className == "PQSCity2") {
         pqsCity2_ = std::make_unique<PQSCity2Colliders>(bubble.World(), keyBase);
-        ApplySceneryLod(*pqsCity2_, city, levels);
-        pqsCity2_->set.onPlaced = [this](uint64_t key, const CityObject& o) { Register(key, o); };
-        pqsCity2_->set.onRemoved = [this](uint64_t key) { host_.UnregisterStatic(key); };
+        set = &pqsCity2_->set;
+        if (hierarchical_) {   // WP-12d: the LOD lists name the switched GameObjects themselves (Unity's SetActive semantics)
+            AddSceneryToSet(*set, city);
+            for (const SceneryLod& l : city.lod) {
+                PQSCity2Colliders::LodObject o;
+                o.visibleRange = l.visibleRange;
+                o.KeepActive = l.keepActive;
+                o.objects = l.objects;
+                pqsCity2_->objects.push_back(std::move(o));
+            }
+        } else {
+            ApplySceneryLod(*pqsCity2_, city, levels);
+        }
     } else {
         pqsCity_ = std::make_unique<PQSCityColliders>(bubble.World(), keyBase);
-        ApplySceneryLod(*pqsCity_, city, levels);
-        pqsCity_->set.onPlaced = [this](uint64_t key, const CityObject& o) { Register(key, o); };
-        pqsCity_->set.onRemoved = [this](uint64_t key) { host_.UnregisterStatic(key); };
+        set = &pqsCity_->set;
+        if (hierarchical_) {
+            AddSceneryToSet(*set, city);
+            pqsCity_->children = city.children;
+            for (const SceneryLod& l : city.lod) {
+                PQSCityColliders::LODRange r;
+                r.visibleRange = l.visibleRange;
+                r.objects = l.objects;
+                pqsCity_->lod.push_back(std::move(r));
+            }
+        } else {
+            ApplySceneryLod(*pqsCity_, city, levels);
+        }
     }
-    initiallyActive_ = SceneryInitiallyActive(city, levels);
+    set->onPlaced = [this](uint64_t key, const CityObject& o) { Register(key, o); };
+    set->onRemoved = [this](uint64_t key) { host_.UnregisterStatic(key); };
+    if (hierarchical_) {
+        std::vector<int> parents;
+        std::vector<bool> activeSelf;
+        for (const SceneryObjectSpec& o : city.objects) {
+            parents.push_back(o.parent);
+            activeSelf.push_back(o.active);
+        }
+        set->SetLive(false);   // nothing in the world before the city starts (EnsureStarted)
+        set->EnableHierarchy(std::move(parents), std::move(activeSelf), SceneryPresence(city, levels));
+        poses_ = SceneryObjectPoses(city);
+    } else {
+        initiallyActive_ = SceneryInitiallyActive(city, levels);
+    }
     hook_ = host_.AddRefreshHook([this] { Refresh(); });
 }
 
@@ -74,6 +109,7 @@ void SceneryCityHost::EnsureStarted() {
         pqsCity2_->OnSetup();               // PQSCity2.cs:407
     }
     for (size_t i : initiallyActive_) set().SetObjectActive(i, true);
+    if (hierarchical_) set().SetLive(true);
 }
 
 void SceneryCityHost::Update(const Vector3d& target, bool hasTarget) {
@@ -93,12 +129,44 @@ void SceneryCityHost::Deactivate() {
 // CollapsibleObject.SetDestroyed (DestructibleBuilding.cs, declaration at line 163) applied to a whole building
 void SceneryCityHost::SetBuildingDestroyed(size_t index, bool destroyed) {
     const SceneryDestructible& d = city_.destructibles.at(index);
+    if (hierarchical_) {   // collapseObject.SetActive(!st), replacementObject.SetActive(st)
+        for (const SceneryCollapsible& c : d.collapsibles) {
+            set().SetObjectActive(c.collapse, !destroyed);
+            if (c.replacement >= 0) set().SetObjectActive(static_cast<size_t>(c.replacement), destroyed);
+        }
+        return;
+    }
     const std::vector<bool> present = SceneryPresence(city_, levels_);
     for (const SceneryCollapsible& c : d.collapsibles) {
         for (size_t i : SceneryActiveSubtree(city_, c.collapse, present)) set().SetObjectActive(i, !destroyed);
         if (c.replacement >= 0)
             for (size_t i : SceneryActiveSubtree(city_, static_cast<size_t>(c.replacement), present)) set().SetObjectActive(i, destroyed);
     }
+}
+
+void SceneryCityHost::SetFacilityLevel(const std::string& group, int level) {
+    levels_.level[group] = level;
+    if (!hierarchical_) return;
+    const std::vector<bool> present = SceneryPresence(city_, levels_);
+    for (size_t i = 0; i < present.size(); ++i) set().SetPresent(i, present[i]);
+}
+
+void SceneryCityHost::SetObjectActiveSelf(size_t object, bool active) { set().SetObjectActive(object, active); }
+
+// the object's city-frame pose with the new local TRS (parent pose composed as SceneryObjectPoses does) as a rigid transform of its
+// subtree: T = new * original^-1
+void SceneryCityHost::SetObjectLocalPose(size_t object, const Vector3f& localPosition, const Quaternionf& localRotation) {
+    if (!hierarchical_) return;
+    const SceneryObjectPose& o = poses_.at(object);
+    const int parent = city_.objects.at(object).parent;
+    const SceneryObjectPose root;
+    const SceneryObjectPose& p = parent >= 0 ? poses_.at(static_cast<size_t>(parent)) : root;
+    const Vector3d scaled(static_cast<double>(p.scale.x) * localPosition.x, static_cast<double>(p.scale.y) * localPosition.y,
+                          static_cast<double>(p.scale.z) * localPosition.z);
+    const Vector3d newPos = Vector3d(p.position) + QuaternionD(p.rotation) * scaled;
+    const QuaternionD newRot = QuaternionD(p.rotation) * QuaternionD(localRotation);
+    const QuaternionD rot = newRot * QuaternionD::Inverse(QuaternionD(o.rotation));
+    set().SetObjectTransform(object, newPos - rot * Vector3d(o.position), rot);
 }
 
 void SceneryCityHost::LinkCity(PQSCity& c) {

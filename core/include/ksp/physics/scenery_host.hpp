@@ -64,6 +64,18 @@ public:
     // subtrees off and the replacement subtrees on (st) or back. Immediate; PQS callbacks that switch the same objects later win.
     void SetBuildingDestroyed(size_t index, bool destroyed);
 
+    // WP-12d (documents with a GameObject hierarchy, /2): the set follows Unity's activation (activeSelf / activeInHierarchy, see
+    // CityColliderSet::EnableHierarchy), so a building made inactive stays down when a PQS callback re-activates its ancestors, and:
+    //   SetFacilityLevel: the UpgradeableObject level of a group (UpgradeLevel.Spawn / Despawn): the objects of the other levels leave
+    //   the scene, those of `level` enter it (active as the hierarchy above them is);
+    //   SetObjectActiveSelf: GameObject.SetActive of one object (CollapsibleObject's collapse / replacement objects);
+    //   SetObjectLocalPose: the object's transform.localPosition / localRotation (the collapse animation): its subtree's colliders follow.
+    void SetFacilityLevel(const std::string& group, int level);
+    void SetObjectActiveSelf(size_t object, bool active);
+    void SetObjectLocalPose(size_t object, const Vector3f& localPosition, const Quaternionf& localRotation);
+    const SceneryLevels& levels() const { return levels_; }
+    bool Hierarchical() const { return hierarchical_; }
+
     // WP-12d: link the WP-42 city object of this scenery. PQSCity: its load / POI range events run inside Update (PQSCity.cs:234).
     // PQSCity2: also its setVisibility hook (this host's LOD objects), its re-orientation re-places this host (onOrientated ->
     // PlaceOnBody with the new local pose, when placed on a body), and its 7 km rule measures the city's distance from the physics
@@ -101,6 +113,8 @@ private:
     uint64_t hook_ = 0;
     bool started_ = false;
     std::vector<size_t> initiallyActive_;
+    bool hierarchical_ = false;
+    std::vector<SceneryObjectPose> poses_;
 };
 
 // PQSCity2.cs:342 OrientateRayCast over the bubble's static colliders, for PQSCity2::orientateRayCast: the city transform at

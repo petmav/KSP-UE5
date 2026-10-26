@@ -89,6 +89,21 @@ public:
         return keyBase_ + (static_cast<uint64_t>(objectIndex) << 16) + static_cast<uint64_t>(colliderIndex);
     }
     const CityObject& Object(size_t index) const { return objects_[index].object; }
+
+    // WP-12d: Unity's GameObject activation. With a hierarchy, SetObjectActive(i, a) is GameObject.SetActive on object i (its activeSelf),
+    // and an object's colliders are in the world iff the set is live, the object is present (a facility level not shown is not) and it is
+    // active in hierarchy (itself and every ancestor activeSelf). IsObjectActive then answers that. Without a hierarchy (the WP-12b / fixture
+    // use) SetObjectActive switches the object's own colliders and nothing else.
+    void EnableHierarchy(std::vector<int> parents, std::vector<bool> activeSelf, std::vector<bool> present);
+    bool HasHierarchy() const { return hierarchy_; }
+    void SetLive(bool live);
+    bool ActiveSelf(size_t index) const { return hierarchy_ ? static_cast<bool>(activeSelf_[index]) : objects_[index].active; }
+    bool Present(size_t index) const { return !hierarchy_ || present_[index]; }
+    void SetPresent(size_t index, bool present);
+    // an extra rigid transform of the object's subtree in the city frame (an animated transform: a DestructibleBuilding collapsing):
+    // a collider below it is placed at city * transform * collider
+    void SetObjectTransform(size_t index, const Vector3d& position, const QuaternionD& rotation);
+    void ClearObjectTransform(size_t index);
     // WP-12c: called after a collider's static body is created / before it is removed (the ContactHost registration of layer and tag)
     std::function<void(uint64_t key, const CityObject& object)> onPlaced;
     std::function<void(uint64_t key)> onRemoved;
@@ -100,6 +115,19 @@ private:
     };
     void Place(size_t index);
     void Remove(size_t index);
+    void SetPlaced(size_t index, bool placed);
+    void Evaluate(size_t index);              // the subtree of `index` (hierarchy mode)
+    bool ActiveInHierarchy(size_t index) const;
+    struct Extra {
+        bool has = false;
+        Vector3d position;
+        QuaternionD rotation = QuaternionD::identity();
+    };
+    bool hierarchy_ = false, live_ = true;
+    std::vector<int> parents_;
+    std::vector<std::vector<size_t>> children_;
+    std::vector<char> activeSelf_, present_;
+    std::vector<Extra> extra_;
     physics::PhysicsWorld& world_;
     uint64_t keyBase_;
     Vector3d position_;

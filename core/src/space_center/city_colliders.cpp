@@ -23,11 +23,24 @@ size_t CityColliderSet::Add(CityObject object) {
 
 void CityColliderSet::Place(size_t index) {
     Slot& s = objects_[index];
+    // WP-12d: the animated transforms of the object and its ancestors (outermost first)
+    Vector3d ep;
+    QuaternionD er = QuaternionD::identity();
+    if (hierarchy_) {
+        std::vector<size_t> chain;
+        for (int k = static_cast<int>(index); k >= 0; k = parents_[static_cast<size_t>(k)]) chain.push_back(static_cast<size_t>(k));
+        for (size_t n = chain.size(); n-- > 0;) {
+            const Extra& e = extra_[chain[n]];
+            if (!e.has) continue;
+            ep = e.position + e.rotation * ep;
+            er = e.rotation * er;
+        }
+    }
     for (size_t c = 0; c < s.object.colliders.size(); ++c) {
         const CityCollider& col = s.object.colliders[c];
         const uint64_t key = KeyOf(index, c);
-        const Vector3d pos = position_ + rotation_ * col.localPosition;
-        const QuaternionD rot = rotation_ * col.localRotation;
+        const Vector3d pos = position_ + rotation_ * (ep + er * col.localPosition);
+        const QuaternionD rot = rotation_ * (er * col.localRotation);
         if (col.kind == CityCollider::Kind::Mesh) {
             // static meshes are placed with an identity rotation: rotate the vertices into the physics frame
             std::vector<Vector3f> v;
@@ -62,13 +75,89 @@ void CityColliderSet::SetPose(const Vector3d& position, const QuaternionD& rotat
 }
 
 void CityColliderSet::SetObjectActive(size_t index, bool active) {
+    if (hierarchy_) {   // GameObject.SetActive: activeSelf, then activeInHierarchy of the subtree
+        if (static_cast<bool>(activeSelf_[index]) == active) return;
+        activeSelf_[index] = active;
+        Evaluate(index);
+        return;
+    }
+    SetPlaced(index, active);
+}
+
+void CityColliderSet::SetPlaced(size_t index, bool placed) {
     Slot& s = objects_[index];
-    if (s.active == active) return;
-    s.active = active;
-    if (active) {
+    if (s.active == placed) return;
+    s.active = placed;
+    if (placed) {
         Place(index);
     } else {
         Remove(index);
+    }
+}
+
+void CityColliderSet::EnableHierarchy(std::vector<int> parents, std::vector<bool> activeSelf, std::vector<bool> present) {
+    hierarchy_ = true;
+    parents_ = std::move(parents);
+    children_.assign(objects_.size(), {});
+    for (size_t i = 0; i < parents_.size(); ++i)
+        if (parents_[i] >= 0) children_[static_cast<size_t>(parents_[i])].push_back(i);
+    activeSelf_.assign(activeSelf.begin(), activeSelf.end());
+    present_.assign(present.begin(), present.end());
+    extra_.assign(objects_.size(), Extra());
+    for (size_t i = 0; i < objects_.size(); ++i)
+        if (parents_[i] < 0) Evaluate(i);
+}
+
+bool CityColliderSet::ActiveInHierarchy(size_t index) const {
+    for (int k = static_cast<int>(index); k >= 0; k = parents_[static_cast<size_t>(k)])
+        if (!activeSelf_[static_cast<size_t>(k)]) return false;
+    return true;
+}
+
+void CityColliderSet::Evaluate(size_t index) {
+    std::vector<size_t> stack{index};
+    while (!stack.empty()) {
+        const size_t i = stack.back();
+        stack.pop_back();
+        SetPlaced(i, live_ && present_[i] && ActiveInHierarchy(i));
+        for (size_t c : children_[i]) stack.push_back(c);
+    }
+}
+
+void CityColliderSet::SetLive(bool live) {
+    live_ = live;
+    if (!hierarchy_) return;
+    for (size_t i = 0; i < objects_.size(); ++i)
+        if (parents_[i] < 0) Evaluate(i);
+}
+
+void CityColliderSet::SetPresent(size_t index, bool present) {
+    if (!hierarchy_ || static_cast<bool>(present_[index]) == present) return;
+    present_[index] = present;
+    Evaluate(index);
+}
+
+void CityColliderSet::SetObjectTransform(size_t index, const Vector3d& position, const QuaternionD& rotation) {
+    if (!hierarchy_) return;
+    extra_[index] = Extra{true, position, rotation};
+    std::vector<size_t> stack{index};   // re-place the placed objects of the subtree
+    while (!stack.empty()) {
+        const size_t i = stack.back();
+        stack.pop_back();
+        if (objects_[i].active) Place(i);
+        for (size_t c : children_[i]) stack.push_back(c);
+    }
+}
+
+void CityColliderSet::ClearObjectTransform(size_t index) {
+    if (!hierarchy_ || !extra_[index].has) return;
+    extra_[index] = Extra();
+    std::vector<size_t> stack{index};
+    while (!stack.empty()) {
+        const size_t i = stack.back();
+        stack.pop_back();
+        if (objects_[i].active) Place(i);
+        for (size_t c : children_[i]) stack.push_back(c);
     }
 }
 
