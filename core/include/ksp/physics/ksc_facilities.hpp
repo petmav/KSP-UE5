@@ -103,6 +103,8 @@ private:
     };
     void Spawned(const std::string& group, int level);
     void Despawned(const std::string& group, int level);
+    static int NextOwner();
+    static void Retire(DestructibleBuilding& b);
     SceneryCityHost& city_;
     Options options_;
     std::vector<Group_> groups_;

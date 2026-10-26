@@ -7,6 +7,7 @@
 #include "ksp/core/coroutine_host.hpp"
 #include "ksp/dotnet/mono_float.hpp"
 #include "ksp/events/game_events.hpp"
+#include "ksp/space_center/high_logic.hpp"
 #include "ksp/unity/mathf.hpp"
 
 namespace ksp::Upgradeables {
@@ -130,6 +131,7 @@ KSCFacilityHost::KSCFacilityHost(SceneryCityHost& city, Options options) : city_
 }
 
 KSCFacilityHost::~KSCFacilityHost() {
+    for (Live& l : live_) Retire(*l.building);
     live_.clear();
     for (Group_& g : groups_) {
         for (Upgradeables::UpgradeLevel& lv : g.object->UpgradeLevels()) lv.onSpawn = lv.onDespawn = nullptr;
@@ -163,6 +165,7 @@ void KSCFacilityHost::Spawned(const std::string& group, int level) {
         b.compiledId = d.id;
         b.preCompiledId = true;
         b.tag = c.objects[d.object].tag;
+        b.owner = NextOwner();   // its coroutines stop with it (Unity stops a destroyed MonoBehaviour's coroutines)
         for (const SceneryCollapsible& sc : d.collapsibles) {
             DestructibleBuilding::CollapsibleObject co;
             co.hasCollapseObject = true;
@@ -203,9 +206,20 @@ void KSCFacilityHost::Despawned(const std::string& group, int level) {
             city_.SetObjectLocalPose(sc.collapse, c.objects[sc.collapse].position, c.objects[sc.collapse].rotation);
             if (sc.replacement >= 0) city_.SetObjectActiveSelf(static_cast<size_t>(sc.replacement), c.objects[static_cast<size_t>(sc.replacement)].active);
         }
-        live_[i].building->OnDestroy();
+        Retire(*live_[i].building);
         live_.erase(live_.begin() + static_cast<std::ptrdiff_t>(i));
     }
+}
+
+int KSCFacilityHost::NextOwner() {
+    static int next = 0x12D00000;
+    return ++next;
+}
+
+// Object.Destroy of a DestructibleBuilding: OnDestroy, and its coroutines (LoadOnSceneStart, the collapse / repair) stop
+void KSCFacilityHost::Retire(DestructibleBuilding& b) {
+    HighLogic::Scheduler().StopAllCoroutines(b.owner);
+    b.OnDestroy();
 }
 
 void KSCFacilityHost::Sync() {

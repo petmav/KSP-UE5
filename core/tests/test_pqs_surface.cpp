@@ -705,7 +705,7 @@ TEST_CASE_FIXTURE(wp12d::StateGuard, "WP-12d PQSMod_SurfaceObjectQuads: a Surfac
 namespace {
 std::string FloatsDigest(const std::vector<float>& v) {
     std::string bytes(v.size() * 4, '\0');
-    std::memcpy(bytes.data(), v.data(), bytes.size());
+    if (!v.empty()) std::memcpy(bytes.data(), v.data(), bytes.size());
     return Sha256Hex(bytes);
 }
 std::string HexD12(double d) {

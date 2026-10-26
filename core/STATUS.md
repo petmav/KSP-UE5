@@ -7528,6 +7528,10 @@ So turning the materials on for the flight bubble moves no gated number out of i
 - UpgradeableSlave neighbour levels are the registered facilities' GetNormLevel (quantised: 0.6 -> level 1 -> 0.5).
 - PQSLandControl.scatterInstCount is never reset (sic); the scatter is sparse at the default preset (the KSC pad area: one Grass quad of 200; lat -15 lon 100: 68 tree + 68 grass quads).
 - The WP-12d test cases that build stock spheres restore the Simplex / SimplexNoise permutation tables and UnityEngine.Random (`wp12d::StateGuard`); without it WP-03's Simplex cases failed later in a full run.
+- A DestructibleBuilding removed with its level must take its coroutines with it (Unity stops a destroyed MonoBehaviour's coroutines): its
+  LoadOnSceneStart was still queued in the same end-of-frame pass in which the facility's Load swapped the level; KSCFacilityHost gives
+  every building its own coroutine owner and stops them on despawn (the first CI run crashed in that test case on Linux; ASan + UBSan
+  on g++ / WSL clean afterwards).
 
 ### Needs data / deferred
 
