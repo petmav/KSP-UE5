@@ -63,6 +63,7 @@ add_executable(kspcore_tests
     test_flight3.cpp
     test_wp19c_quicksave.cpp
     test_wp19c_registry.cpp
+    test_wp19c_flows.cpp
     test_command.cpp
     test_science.cpp
     test_commnet.cpp
