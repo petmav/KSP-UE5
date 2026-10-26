@@ -15,6 +15,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -112,7 +113,9 @@ public:
     static constexpr int lastCompatibleRev = 0;
 
     bool compatible = false;
-    std::vector<std::unique_ptr<ProtoVessel>> protoVessels;
+    // WP-19c: shared, as the C# references are: a Vessel's protoVessel IS the entry of the flight state it was loaded from (Vessel.StartFromBackup
+    // keeps a reference), and FlightState() captures the vessels' own ProtoVessel objects (Vessel.BackupVessel)
+    std::vector<std::shared_ptr<ProtoVessel>> protoVessels;
     KSPParseableDictionary sceneStateValues;
     int file_version_major = 0;
     int file_version_minor = 0;
@@ -121,8 +124,10 @@ public:
     int activeVesselIdx = 0;
     int mapViewFilterState = 0;
 
-    // FlightState.cs:33: the state of the running game. Live vessels (FlightGlobals.Vessels -> BackupVessel) are
-    // WP-14; kspcore captures none, UT = Planetarium.GetUniversalTime() (0 without a Planetarium / current game).
+    // FlightState.cs:33: the state of the running game (WP-19c, src/vessel/flight_state_live.cpp): every live vessel of FlightGlobals.Vessels
+    // (last to first) that is not DEAD, the DECLUTTER_KSC auto-clean of landed debris, the MAX_VESSELS_BUDGET cut, then BackupVessel of each in
+    // registry order; activeVesselIdx = IndexOf(ActiveVessel.protoVessel) once FlightGlobals.ready. UT = Planetarium.GetUniversalTime() (0 without
+    // a Planetarium / current game).
     FlightState();
     // FlightState.cs:92 (rootNode is modified: CleanUpUnsanitaryEVAKerbals)
     FlightState(ConfigNode& rootNode, Game* game);
@@ -130,6 +135,9 @@ public:
     FlightState& operator=(const FlightState&) = delete;
     // FlightState.cs:153
     void Save(ConfigNode& rootNode);
+    // FlightState.cs:164 (WP-19c): ProtoVessel.Load of every vessel (the new unloaded Vessels are kept by Vessel::SpawnedVessels(), the
+    // scene's GameObjects), Planetarium.SetUniversalTime, MapViewFiltering.LoadFilterState
+    void Load();
     // FlightState.cs:182
     bool ContainsFlightID(uint32_t id) const;
 };
@@ -138,8 +146,8 @@ public:
 // the index fix-up compares the wrong way round -- sic)
 void CompatibilityUtilities_CleanUpUnsanitaryEVAKerbals(ConfigNode& flightState);
 
-// Game.cs
-class Game {
+// Game.cs (enable_shared_from_this: Game.Load sets HighLogic.CurrentGame = this, which must keep a shared-owned game alive, as the C# GC does)
+class Game : public std::enable_shared_from_this<Game> {
 public:
     using Modes = Game_Modes;
     using GameStatus = Game_GameStatus;
@@ -197,6 +205,14 @@ public:
     Game& Updated(GameScenes startSceneOverride);
     // Game.cs:419
     void Save(ConfigNode& rootNode);
+    // Game.cs:500 (WP-19c, src/save/game_live.cpp): Status = ONGOING, ShipConstruction.ShipConfig = null, CrewRoster.Init, then the scene of
+    // startScene (FLIGHT: FlightDriver.StartAndFocusVessel(this, activeVesselIdx); EDITOR: EditorDriver.StartEditor; else HighLogic.LoadScene)
+    void Start();
+    // Game.cs:539 (WP-19c): HighLogic.CurrentGame = this, ScenarioRunner.SetProtoModules(scenarios), CrewRoster.Init, flightState.Load() when
+    // the loaded scene has a Planetarium, onGameStateLoad(config). Mission modes without Making History: ExpansionsLoader's signature check of
+    // the mission is `missionSignatureVerified` (unset: not verified, so the call returns as the game does without the DLC)
+    void Load();
+    static inline std::function<bool(const Game&)> missionSignatureVerified;
     // Game.cs:572
     bool IsResumable() const;
     // Game.cs:600 (Save into a fresh root, construct from it)

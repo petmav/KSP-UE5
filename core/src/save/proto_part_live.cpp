@@ -13,6 +13,7 @@
 #include "ksp/resources/part_resource_library.hpp"
 #include "ksp/save/proto_vessel.hpp"
 #include "ksp/save/save_environment.hpp"
+#include "ksp/vessel/vessel.hpp"
 
 namespace ksp {
 
@@ -279,10 +280,56 @@ std::unique_ptr<Part> ProtoPartSnapshot::CreatePart() {
     return created;
 }
 
+// ProtoPartSnapshot.cs:964 LoadEVAInfoBySuitGender (WP-19c): the kerbalEVA* part of the crew member's suit and gender
+// (PartLoader.getPartInfoByName = SaveEnvironment::getPartInfoByName; unset: no part)
+const AvailablePart* ProtoPartSnapshot::LoadEVAInfoBySuitGender(ProtoCrewMember& protoCrew) {
+    const SaveEnvironment& env = SaveEnvironment::Current();
+    auto get = [&env](const char* name) -> const AvailablePart* { return env.getPartInfoByName ? env.getPartInfoByName(name) : nullptr; };
+    using Suit = ProtoCrewMember::KerbalSuit;
+    using G = ProtoCrewMember::Gender;
+    auto byGender = [&](const char* female, const char* male) -> const AvailablePart* {
+        switch (protoCrew.gender()) {
+            case G::Female: return get(female);
+            case G::Male: return get(male);
+            default: return nullptr;
+        }
+    };
+    if (env.IsExpansionAnyKerbalSuitInstalled()) {
+        switch (protoCrew.suit()) {
+            default: return nullptr;
+            case Suit::Default: return byGender("kerbalEVAfemale", "kerbalEVA");
+            case Suit::Vintage:
+                if (env.IsExpansionKerbalSuitInstalled(Suit::Vintage)) return byGender("kerbalEVAfemaleVintage", "kerbalEVAVintage");
+                return byGender("kerbalEVAfemale", "kerbalEVA");
+            case Suit::Future:
+                if (env.IsExpansionKerbalSuitInstalled(Suit::Future)) return byGender("kerbalEVAfemaleFuture", "kerbalEVAFuture");
+                return byGender("kerbalEVAfemale", "kerbalEVA");
+            case Suit::Slim: return byGender("kerbalEVASlimSuitFemale", "kerbalEVASlimSuit");
+        }
+    }
+    switch (protoCrew.suit()) {
+        default: return nullptr;
+        case Suit::Slim: return byGender("kerbalEVASlimSuit", "kerbalEVASlimSuit");  // both genders: the male part (sic)
+        case Suit::Default: return byGender("kerbalEVAfemale", "kerbalEVA");
+    }
+}
+
+// ProtoPartSnapshot.cs:132
+const Part* ProtoPartSnapshot::partPrefab() const { return partInfo == nullptr ? nullptr : partInfo->partPrefab.get(); }
+
+// ProtoPartSnapshot.cs:1091 FindAttachNode (private; no caller in the C#)
+AttachNode* ProtoPartSnapshot::FindAttachNode(const std::string& name, std::vector<AttachNode>& nodes) {
+    for (AttachNode& n : nodes)
+        if (n.id == name) return &n;
+    return nullptr;
+}
+
 // ProtoPartSnapshot.cs:795
 std::unique_ptr<Part> ProtoPartSnapshot::Load(Vessel* vesselRef, const std::vector<Part*>& vesselParts, bool loadAsRootPart) {
     GE::onProtoPartSnapshotLoad.Fire(GE::FromToAction<ProtoPartSnapshot*, ConfigNode*>(this, nullptr));
     const AvailablePart* availablePart = partInfo;
+    // WP-19c: an EVA vessel's part is the kerbal of protoModuleCrew[0]'s suit and gender (ArgumentOutOfRange without crew)
+    if (vesselRef != nullptr && vesselRef->isEVA()) availablePart = LoadEVAInfoBySuitGender(*protoModuleCrew.at(0));
     if (availablePart == nullptr || !availablePart->partPrefab) return nullptr;
     std::unique_ptr<Part> created = Part::Instantiate(*availablePart->partPrefab);
     partRef = created.get();

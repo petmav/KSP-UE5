@@ -72,6 +72,10 @@ NAME_ALIAS = {
               "GimbalFixedUpdate": "FixedUpdate", "PartValuesUpdate": "Update",
               # WP-21b: the module slot runs ModuleResourceIntake.FixedUpdate as IntakeFixedUpdate and calls ModuleControlSurface.GetPotentialTorque from the SAS hook
               "IntakeFixedUpdate": "FixedUpdate", "ControlSurfaceTorque": "GetPotentialTorque",
+              # WP-19c: MonoBehaviour Awake / OnDestroy as constructor / destructor, QuickSaveLoad's dialog delegates as named members
+              "QuickSaveLoad": "Awake", "~QuickSaveLoad": "OnDestroy", "VesselRetrieval": "Awake", "~VesselRetrieval": "OnDestroy",
+              "OnSaveAsTextInput": "SpawnSaveAsDialog", "ConfirmOverwrite": "ConfirmDialog", "CancelOverwrite": "ConfirmDialog",
+              "InvalidNameOk": "ConfirmDialog", "StartActiveVesselGoOffRails": "ActiveVesselGoOffRails",
               # WP-14 helpers factored out of a C# function (cited at that function)
               "UpdateSurfaceSpeeds": "UpdatePosVel", "ApplyFlightIntegratorAtmosphere": "FixedUpdate"}
 CITE = re.compile(r"^(\s*)// (?:([A-Za-z0-9_/]+)\.cs)?:(\d+)\b")

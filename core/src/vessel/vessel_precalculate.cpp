@@ -2,6 +2,8 @@
 // C# paths are relative to decompiled/KSP-Decompiled/Assembly-CSharp/.
 #include "ksp/vessel/vessel_precalculate.hpp"
 
+#include "ksp/localization/localizer.hpp"
+
 #include "ksp/celestial/celestial_body.hpp"
 #include "ksp/celestial/flight_globals.hpp"
 #include "ksp/celestial/planetarium.hpp"
@@ -224,6 +226,7 @@ void VesselPrecalculate::StartEasing() {
         easingLockOn = true;
         InputLockManager::SetControlLock(ControlTypes::ALL_SHIP_CONTROLS, "PhysicsEase");
         // ScreenMessages.PostScreenMessage(#autoLOC_6003101, (float)(1.0 / easingFrameIncrease * 0.02 + 0.5), UPPER_RIGHT): the host shows it
+        easingMessage = KSP::Localization::Localizer::Format("#autoLOC_6003101");  // cacheAutoLOC_6003101 (CacheLocalStrings, :521)
         easingMessageSeconds = static_cast<float>(1.0 / easingFrameIncrease * 0.02 + 0.5);
     }
 }

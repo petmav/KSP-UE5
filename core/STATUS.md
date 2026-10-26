@@ -77,6 +77,7 @@ un_tests.ps1`
 | 65. WP-38d the comet / asteroid package and the ship-spawning seams of WP-38 (branch `wp38d`, from main `aef2f54f`, main `dd87d6e8` merged) | done for the engine-agnostic part (see the WP-38d section; the other FinePrint items of the brief were already done by WP-38b / WP-38c): `CometManager` (all but the VFX setters), `CometOrbitType`, `CometDefinition`, `DiscoverableObjectsUtil`, `ScenarioDiscoverableObjects` (Sentinel seams answered by `SpaceObjects::InstallSentinelSeams`), `ContractSystem.SpawnPreBuiltShip / ConstructShip` (LANDED / splashed / ORBITING) and the `CraftProfileInfo` template fields; gated against an independent Python reference (`tools/wp38d/space_objects_reference.py` -> `tests/data/wp38d_reference.json`, 0 ULP on the draws, node values and Unity Random state, 1e-9 on the orbit anomalies; one fault found by it: `Game::GetCometNumberedName` dangled on the key list); `unit` +15 cases / 18,858 assertions. Deferred: CometVessel / ModuleComet / FXMonger (scene), the PRELAUNCH branches and the terrain raycast of ConstructShip, the `.loadmeta` cache |
 | 66. WP-21b stock aircraft in the flight bubble: the Aeris 3A on the real KSC runway (branch `wp21b`, from wp29d `a46df8d8`, main `dd87d6e8` merged; number 66 because 63-65 are taken on other branches, the order may be fixed on merge) | done for the engine-agnostic part (see the WP-21b section): the 24 stock SPH crafts that need no other mod's parts load through the craft path (the test `World` gives the v1.8.0 upgrade script the prefab `ctrlSurfaceRange`; the 3 others name parts of other mods); control surfaces, lifting surfaces and `ModuleResourceIntake` run in the module slot on the parts' real model transforms (47 reduced aircraft part models, origin + sha256); `ModuleControlSurface.GetPotentialTorque` feeds VesselSAS's torque sum. The Aeris 3A (3 x LY-01, turbojet, 8 control surfaces) on the WP-12c runway collider: rests (3 of 3 wheels, forces 53.29 vs weight 53.57 kN), rolls straight (0.0014 deg, 1.8 mm), rotates with the elevons, lifts off at 10.68 s / 77.4 m/s, climbs 24.2 m/s, brakes from 40 m/s to a stop in 104 m and is held by the brake anchor. Gated by an independent float64 reference of the surfaces' law on the recorded kinematics (`aircraft.reference`: lift 2.4e-5, drag 5.6e-7, deflection 2.0e-7 relative; lift-off speed within 2.8 %, climb within 1.2 %). WP-29d's "VTOL attitude jump" is explained (the gear bays' deployment pose, 5 deg once at tick 1; the vessel does not rotate). No capture covers an aircraft (analytic / reference-gated), capture C11 still open |
 | 67. WP-20g host wiring for a flyable headless core (branch `wp20g`, from local `wp29d` `a46df8d8`, main `dd87d6e8`, `f0e01bd9` (WP-38d) and `d9f970e2` (WP-21b) merged) | done for the engine-agnostic part, all 7 plan items (see the WP-20g section): Part.Pack / Part.Unpack of every part on GoOnRails / GoOffRails with the SendMessage receivers in module order and Vessel.SendMessage on the root part; GameSettings.Awake (singleton, layouts, settings.cfg) and KSP's defaults in every test case; StartVesselInFlight (ModulesOnStart, flight block, ModulesOnStartFinished, first ModuleJettison.LateUpdate) in the bubble and WP-20d's PadScene; VesselResourceHost (the Vessel's PartSets behind the WP-15 seams) in the bubble; BaseServo FixedUpdate / Update in the module slot; the VAB launch onto the real KSC pad (FlightDriver.setStartupNewVessel, PSystemSetup's LaunchPad spawn point, PutShipToGround, AssembleForLaunch, CheckGroundCollision): **root altitude 79.2776 m vs C6 79.2884 m (-1.08 cm)**, "putting ship to ground: -6.869718" identical to KSP.log; the host contract table. Re-baselined: WP-20d's ascent / flight numbers and two WP-20e pad numbers (the module start-up's drag-cube weights; every tolerance unchanged) |
+| 69. WP-19c flight registry close-out (branch `wp19c`, from main `839f2f5f`; number 69 because 68 (wp12d) and 70 (wp29e) are taken on other branches, the order may be fixed on merge) | done for the engine-agnostic part (see the WP-19c section; WP-19 at 1.0): QuickSaveLoad (save / load orchestration, keys, hold-to-load, the dialogs as seams), VesselRetrieval, FlightState() live capture and FlightState.Load, Game.Load / Start, FlightDriver.Start loading its cache, ProtoVessel.Clean / GetSituationString, the EVA part lookup, FlightGlobals' debug orbit setters, the navball block and the switch to an unloaded vessel (a new flight scene); FlightState / ProtoVessel shared as in the C#. Gated: physprofile quicksave -> quickload -> quicksave **byte-identical** through the flight scene, an independent Python reference of the rules (400 + 300 + 300 + 32 + 16 + 400 cases, all identical), flow scenarios, the WP-04 corpus unchanged. Excluded: the dialog objects, GameObject caches, the camera frame of reference, an editor context menu, the comet VFX |
 | 70. WP-29e wheel package leftovers: the stand-in sphere on the ground, colliders that follow the suspension, getLowestPoint wheel scan, the brake freeze, the animation rotations (branch `wp29e`, from main `839f2f5f`; number 70 because 68 (WP-12d) and 69 (WP-19c) are taken on other branches, the order may be fixed on merge) | done for the testable leftovers (see the WP-29e section; capture C11 stays blocked, WP-29 0.97): the Aeris 3A gear-up rests on its stand-in sphere on the real runway (sphere bottom -2.4 mm, pitch change 0.3571 deg vs 0.3585 predicted; the stand-in ends at Position >= TsubSys); the Transform writes of `VPWheelCollider.UpdateVisualWheel` are ported and the colliders under the suspension / caliper / wheel follow it in a Jolt mutable compound (130 cases / 2,040 poses vs an independent numpy reference, 0 mismatches; the LY bays have no such colliders); `PlacementPoints` follows the C# enumeration (inactive subtrees, roles by node name, VPWheelCollider radius), 246 points vs a float64 reference at 6.2e-7 m (Bug-E placement 11.2 cm lower, its rest numbers return to the WP-29d section, all gates unchanged); the brake freeze stays a cluster weld (evaluated); the 2,733 stored animation rotations are unit to 8.4e-8 (tag dropped); no tolerance touched |
 
 ## Test results (wp52b merged with origin/main incl. WP-12c, measured 2026-10-20: 49 / 49 ctest tests pass in a worktree, `kspcore_tests` 1,043 cases / 1,642,430 assertions; earlier: main 703e3d6d: all 50 ctest tests pass, measured 2026-10-14; the list below was written at 36 tests, since then added: unit shards, unit.random_order, robotics, wheels.*; all 36 ctest tests pass (35 in a worktree: `corpus.saves` registers only where decompiled/KSP-dev exists; WP-27 adds no ctest test, only 16 `unit` cases): Linux Clang/GCC and Windows MSVC in CI; WP-00L added libm.portable_vs_dll, WP-14 capture.vessel_state, WP-15 capture.resource_mass, WP-16 capture.staging_sequence, WP-18 capture.ship_construct, WP-21 golden.aero_forces, capture.aero_forces_mono, capture.aero_forces_vessel, WP-22 capture.atmosphere_thermal_offsets, capture.thermal_step, WP-23 golden.engine_thrust, capture.engine_deltav, WP-17 capture.deltav_stages, WP-31 data.roster_experience, WP-19a capture.vessel_rails)
@@ -5283,7 +5284,7 @@ because the C# cache is per scene) and unhooks the event handlers.
 
 - WP-19b: `setRotatingFrame` / `setDominantBody` effects, `ChangeWorldVelocity`, rebase on vessel switch, multiple loaded vessels (`two_vessels`), `physicalObjects`.
 - WP-20b: everything behind `readPhysicsState`, `offsetVelocity`, `rootRigidbody`, `packPart` ... (the VesselPhysics object per loaded unpacked vessel).
-- `QuickSaveLoad` / `VesselRetrieval` (UI and file orchestration); the debug orbit setters; the navball orientation of `UpdateInformation`.
+- `QuickSaveLoad` / `VesselRetrieval` (UI and file orchestration); the debug orbit setters; the navball orientation of `UpdateInformation`. (All closed by WP-19c.)
 - A new in-game capture of `VesselPrecalculate` in / out per tick (pad, ascent, orbit: gAccel, integrationAccel, coriolis, centrifugal, pre / post offsets) would turn the
   loaded-vessel formulas into a capture gate; today they are gated against the independent Python reference, and `world_rel` needs the game's absolute body positions.
 
@@ -5890,7 +5891,7 @@ rotating frame of their body (in the inertial regime the body turns under them: 
 | `PhysicsBubble::flightIntegrator` (the whole FlightIntegrator.FixedUpdate per vessel) | WP-20d |
 | static meshes at `StaticPhysicsFromWorld`, rebuilt on onRotatingFrameTransition / when the dominant body changes; `preciseUpdateQuadPositions` | WP-12b |
 | ground contact / landed anchor in the bubble (the gate is off only while Krakensbane is engaged) | WP-20e |
-| vessel switching beyond the bubble (FlightDriver.StartAndFocusVessel: a scene reload, i.e. a new bubble); QuickSaveLoad | host / later |
+| vessel switching beyond the bubble (FlightDriver.StartAndFocusVessel: a scene reload, i.e. a new bubble); QuickSaveLoad | host / later (closed by WP-19c: the C# calls are the defaults; a new flight scene loads the saved game) |
 | structural events (Cut / OnVesselSplit / OnVesselMerge through GameEvents) | WP-20c |
 
 ### Risks
@@ -7432,3 +7433,119 @@ Windows MSVC RelWithDebInfo on HEAD `809d43dc` (main `839f2f5f`, which had not m
 ### Commits (branch `wp29e`, from main `839f2f5f`)
 
 `38106e36` item 2; `24946e3b`, `f83ab4b8` item 3; `4dfb40b5` item 4; `c4d5dda2` item 5; `b3248fa6` item 6; `05ab2889` README; `b0dfa2f4` cites, progress.csv; `809d43dc` hull proxy cache; then the STATUS commit.
+
+## WP-19c: flight registry close-out: quicksave / quickload, vessel retrieval, FlightGlobals and proto-vessel remainder (branch `wp19c`, from main `839f2f5f`)
+
+State: done for the engine-agnostic part (WP-19 at 1.0 in `analysis/tiering/progress.csv`). Scope = the remainder of the ten WP-19 spec
+files (analysis/tiering/work_packages.csv), found by matching every member of each C# file against the `File.cs:line` cites in core/src and
+core/include and reading the uncited ones (core/PROGRESS-wp19c.md, Step 1). WP-19a deferred QuickSaveLoad / VesselRetrieval, the debug orbit
+setters and the navball block; WP-19b left the switch beyond the bubble (a new flight scene) and QuickSaveLoad to the host. **Gates**: the
+physprofile save through the real flight scene (save -> load -> save byte-identical), an independent Python reference of the rules
+(`tools/wp19c/registry_reference.py` -> `tests/data/wp19c_reference.json`), flow scenarios against the C# statements, and the WP-04 save corpus
+unchanged. `harness/compare/tolerances.json` and `tests/tolerances_capture.json` untouched; no existing number moved.
+
+### What is in (by C# file)
+
+| C# file | ported now (C++) | already ported (package) | excluded (reason) |
+|---|---|---|---|
+| QuickSaveLoad.cs (494) | whole class, `save/quick_save_load.hpp`, `src/save/quick_save_load.cpp`: Awake / OnDestroy (fetch), Update (QUICKSAVE / QUICKLOAD / MODIFIER keys through GameSettings' KeyBindings, the input locks, CanQuickLoad, hold-to-load `Invoke("onHoldComplete")` / CancelInvoke, Escape / Return on the save dialog), QuickSave / quickSave / QuickSaveClearToSave, doSave (onGameAboutToQuicksave, `Updated()`, startScene FLIGHT, SaveGame BACKUP, "persistent" when AutoSaveOnQuickSave and clear), quickLoad (ROC cache, LoadSFSFile, the mission branch, NodeUtil.GetCfgVersion, KSPUpgradePipeline), onQuickloadPipelineFailed / Finished (the Space Center for a non-flight save from 0.24 on, else FlightDriver.StartAndFocusVessel), the save-as / overwrite / invalid-name / load dialog decisions, CacheLocalStrings | the quicksave naming, EscapeString, CheckFilename (WP-04) | the dialog objects (PopupDialog, MultiOptionDialog, LoadGameDialog, MenuNavigation, TMP input, skins): seams `QuickSaveLoad::env` (spawn / dismiss / set active), answered by the public handlers the C# delegates are |
+| VesselRetrieval.cs (93) | whole class, `vessel/vessel_retrieval.hpp`: OnVesselRecoveryRequested -> id set, SaveGame("persistent", OVERWRITE), LoadScene(SPACECENTER); OnSceneLoaded -> the OnLevelLoaded coroutine (SPACECENTER with ids: KSCFrameDelay = 8 `yield return null`), recoverVessels, getVesselsToRecover, recoverVessel (onVesselRecovered(pv, false), DestroyImmediate), SaveGame again | the funds / science / reputation of a recovery are onVesselRecovered's listeners (WP-36 VesselRecovery, Funding, Reputation, R&D) | SceneManager.sceneLoaded is the host's call of `OnSceneLoaded(buildIndex)` |
+| FlightState.cs (192) | `FlightState()` the live capture (`src/vessel/flight_state_live.cpp`: FlightGlobals.Vessels last to first, DEAD skipped with its warning, DECLUTTER_KSC auto-clean of landed debris at KSC / a stock launch site, MAX_VESSELS_BUDGET, BackupVessel in registry order, activeVesselIdx = IndexOf(ActiveVessel.protoVessel) once ready), `Load()` (ProtoVessel.Load of each, Planetarium.SetUniversalTime, MapViewFiltering.LoadFilterState with the Serenity bit) | FlightState(ConfigNode), Save, ContainsFlightID (WP-04) | none |
+| ProtoVessel.cs (1,262) | Clean (`src/vessel/proto_vessel_clean.cpp`: unload-and-clean a loaded non-active vessel; on the home world onVesselRecovered(this, true) with the Funding / R&D / Reputation deltas through Mathf.Round, the CAREER / SCIENCE_SANDBOX refund text through StringUtilities.FormattedCurrencies / ThisThisAndThat, removal from HighLogic.CurrentGame.flightState, DestroyImmediate), CurrentFunds / Science / Reputation, GetSituationString (every branch, the game's texts), CacheLocalStrings; ProtoVessel(Vessel) and Vessel.BackupVessel: patchedConicSolver.Save into the flight plan | every other member (WP-04 / WP-13 / WP-14) | the CometVFXController of ProtoVessel.Load (an AssetBase prefab under the map object: rendering) |
+| ProtoPartSnapshot.cs (1,312) | LoadEVAInfoBySuitGender and the `vesselRef.isEVA` branch of Load (the kerbal part of the crew member's suit and gender, the DLC suit rules through ProtoCrewMember.suit), `partPrefab`, FindAttachNode | everything else (WP-04 / WP-13); AddProtoPartModuleAdjusters (WP-55, `missions/mission_actions3.cpp`) | RemoveProtoPartModuleAdjusters: no caller anywhere in Assembly-CSharp |
+| FlightGlobals.cs (2,003) | SetShipOrbit, SetShipOrbitRendezvous, PrepForOrbitSet, PostOrbitSet, SetVesselPosition (both overloads), OnGameUnpaused (and its onGameUnpause subscription), ActiveVesselGoOffRails (a coroutine on HighLogic's scheduler), lastVel, the navball block of UpdateInformation (ship_orientation_offset / ship_orientation / ship_heading), the unloaded-vessel branch of setActiveVessel without seams (GamePersistence.SaveGame("persistent", .., FLIGHT), FlightDriver.StartAndFocusVessel(CurrentGame.Updated(), index)); every `Invoke("disableOverride")` kept (a list; disableOverride clears CollisionEnhancer.bypass) | the registry, queries, active vessel, ClearToSave, HookVesselEvents (WP-19a) | GetPartUpwardsCached / GetPartPointerUpwardsCached / Reset*UpwardsCache (a GameObject -> Part component cache: the host's collider -> part map replaces it); getFoR / GetFoR (the frame of reference of FlightCamera, InternalNavBall, InternalCompass, SpaceCenterCamera2: camera framing smoothed with Time.deltaTime and the native Vector3.Slerp, rendering only) |
+| VesselSwitching.cs (130) | nothing left in the class; its switch to an unloaded vessel is the FlightGlobals branch above | whole class (WP-19a) | |
+| VesselRanges.cs (159) | the constructors (cited; value copies) | the rest (WP-09 / WP-19a) | |
+| VesselPrecalculate.cs (525) | CacheLocalStrings (the easing message text, `easingMessage`) | the rest (WP-19a) | |
+| OrbitPhysicsManager.cs (353) | | everything else (WP-19a / WP-19b) | ToggleRotatingFrame (`[ContextMenu]`: the Unity editor's debug menu) |
+
+Also ported because the quickload chain reaches them: `Game.Load` / `Game.Start` (Game.cs:539 / :500, `src/save/game_live.cpp`; the Making
+History signature check of a mission game without the DLC is the seam `Game::missionSignatureVerified`, unset = not verified, as without the
+DLC), FlightDriver.Start's `Planetarium.SetUniversalTime` / `UpdateCBs` / `FlightStateCache.Load()` (FlightDriver.cs:169-174, a comment until
+now) and its registry loop / focus when `FlightDriver::host` leaves them unset (FlightDriver.cs:209-221), `GamePersistence.SaveGame(name, folder,
+mode[, scene])` (GamePersistence.cs:10 / :20), Vessel.KillPermanentGroundContact / ResetGroundContact (Vessel.cs:3391 / :3408),
+Vessel.LandedInStockLaunchSite (:617), and `Vessel::env.flightCamera` (FlightCamera.CamHdg / CamPitch / CamMode, read by OnSaveFlightState for
+the active vessel, Vessel.cs:3617).
+
+### Ownership (changed: shared like the C# references)
+
+`FlightState::protoVessels` holds `shared_ptr<ProtoVessel>`; ProtoVessel and Game derive from `enable_shared_from_this`. Vessel.StartFromBackup
+keeps a shared reference to the snapshot it was loaded from and FlightState() shares the vessels' own snapshots (BackupVessel), so a Game.Updated()
+that replaces the flight state no longer frees the snapshot of an unloaded vessel. The Vessels FlightState.Load creates are the scene's objects
+(`Vessel::SpawnedVessels()`, freed by Vessel::DestroyImmediate). Game.Load and GamePersistence.SaveGame keep a shared-owned current game alive in
+`HighLogic::currentGameOwner`. A ProtoVessel that is not shared-owned (a caller's own object) is copied through its VESSEL node when captured.
+
+### Gates (Windows MSVC RelWithDebInfo; the WP-19c cases also run in the CI Linux builds)
+
+| gate | what | result |
+|---|---|---|
+| quicksave round trip (`tests/test_wp19c_quicksave.cpp`) | the physprofile save: the Space Center's game current, FlightDriver.Start (RESUME_SAVED_FILE) -> Game.Load -> FlightState.Load (2 Vessels) -> SetActiveVessel loads the L2-AS -> the module start-up (host contract) and 3 flight-scene frames -> F5 (quickSave -> doSave) -> F9 (quickLoad -> KSPUpgradePipeline -> LoadGameCfg -> StartAndFocusVessel) -> a new flight scene (RESUME_SAVED_CACHE) -> F5 | **the second quicksave equals the first byte for byte**; one Backup file; first quicksave vs the original file: exactly the 12 expected value lines and nothing else: `scene` 5 -> 7 (doSave), the stand-in camera's cPch / cHdg / cMod (Vessel.cs:3617), ModuleReactionWheel's stateString (the physics tick of the bubble, not run here), the asteroid's CommNetVessel controlState / canComm (written by kspcore's CommNetVessel save, WP-39; the CommNet network decides them in the game). CometVessel is kept off in the fixture: its OnStart removes it from comet-less vessels (CometVessel.cs:126-183), which kspcore's reflected CometVessel lacks (WP-38) |
+| FlightState() capture | 400 scenes vs the Python reference (DEAD, DECLUTTER_KSC at KSC / stock launch sites, the first auto-clean reason kept, MAX_VESSELS_BUDGET from the end, order, activeVesselIdx ready / not ready) | identical: 1,368 vessels captured (pointer identity of the shared snapshots), 80 auto-cleaned, 209 cut by the budget |
+| ProtoVessel.Clean | 300 scenes vs the reference (mode, home world or not, each currency scenario present or not, funds double / science and reputation float32, the listener's amounts incl. ties at .5) | identical log texts (162 refunds, ties to even), 236 onVesselRecovered(pv, true), removed from the flight state and the registry |
+| GetSituationString | 300 scenes vs the reference (the game's en-us dictionary) and the minibiome branch | identical |
+| LoadEVAInfoBySuitGender | 4 suits x 2 genders x Making History x Breaking Ground vs the reference (ProtoCrewMember.suit's DLC reset included) | 32 / 32 |
+| QuickSaveLoad | the QuickSaveClearToSave table, quickSave's three refusals, Update over 400 frames vs the reference (the save-as dialog's all-controls lock stops the F9 branches of the same frame) | identical |
+| flows (`tests/test_wp19c_flows.cpp`) | VesselRetrieval on physprofile (request -> persistent with 2 vessels -> Space Center -> 8 frames -> the asteroid recovered with quick = false -> persistent with 1 vessel; a duplicate request kept once; no recovery outside the Space Center); the FlightState round trip (live -> Save -> FlightState(node) -> Save equal, Load -> live capture equal, the Serenity map-filter bit); switching to the unloaded asteroid (refused unforced: not Owned; forced: persistent, StartAndFocusVessel(current game, 0), the new scene focuses and loads it); the save-as dialog (naming, escaping, overwrite, invalid name, Escape, Return with blockedSubmitOnStart); quickLoad branches (no file, a Space Center save, 0.20.0 Cancel / LoadAnyway, 0.23.5, hold-to-load timing, the load dialog, a mission quicksave); Game.Start; the debug setters (SetShipOrbit elements and the SOI event, rendezvous at rel 0 and +100 m prograde, SetVesselPosition clamps / DEBUG_MAX_SETPOSITION_ALTITUDE / the state vector: every element bit for bit vs UpdateFromStateVectors of the expected vector / unpause) | pass |
+| `corpus.saves` (WP-04) | save_corpus over decompiled/KSP-dev (main checkout) and over testdata/saves | 60 KSP-1.12.5 .sfs byte-identical once the mod-owned elements are dropped and physprofile R1 byte-identical (the 61 of WP-04), 44 older .sfs and 201 crafts documented, 0 unexplained, R2 idempotent: unchanged |
+
+WP-19c cases: 14 cases / 10,108 assertions. Reference: `python -I core/tools/wp19c/registry_reference.py` (fixed seed; reads the game's
+`testdata/GameData-mirror/GameData/Squad/Localization/dictionary.cfg`) regenerates `tests/data/wp19c_reference.json` byte-identically, sha256
+`2dbdc19efbfa6d0824b5660fdf00cd58667ac3ff67bab2e6600d0d9220fdaf3b`. Circularity: the reference has no kspcore input; the quicksave gate compares a
+save with the save of its own load (the camera stand-in's values are unlike the file's); the SetVesselPosition orbit is compared with a fit of a
+state vector the test computes from the body, not with the vessel's own output.
+
+### Exact / approximate / changed
+
+| item | class | notes |
+|---|---|---|
+| QuickSaveLoad, VesselRetrieval, FlightState, Game.Load / Start, ProtoVessel.Clean / GetSituationString, the EVA part lookup, the debug setters' state vectors | exact | the C# statement order, files, modes, events, texts |
+| the navball block (ship_orientation, ship_heading) and SetVesselPosition's rotation | approximate | the Unity-native Quaternion.LookRotation / Euler / eulerAngles / AngleAxis of `unity/quaternion_native.hpp` (AngleAxis captured; the other three UNVERIFIED, see there) |
+| localised strings the C# caches in CacheLocalStrings | changed (equivalent) | formatted at the call: the same text once the Localizer is up (the C# fills the caches at start-up and on a language switch) |
+| Vessel::LandedInStockLaunchSite without a PSystemSetup | changed | false; the C# throws NullReferenceException (the game always has the instance in a flight scene) |
+| FlightGlobals.disableOverride | changed (fix) | now clears CollisionEnhancer.bypass as the C# (`physics::CollisionEnhancer::bypass`); every Invoke runs (a list), none cancels another |
+| a ProtoVessel captured by FlightState() that is not shared-owned | changed | a copy through its VESSEL node (the same text; the C# shares the object) |
+
+### Findings (a later implementer must know)
+
+- KSPParseable(string) of a saved vessel value without a type suffix is UNKNOWN, so `value_float` is 0: Vessel.OnLoadFlightState loads cPch /
+  cHdg as 0 from every save (sic); the saved angles of the active vessel are the flight camera's (OnSaveFlightState), hence the seam.
+- `GamePersistence.SaveGame(name, folder, mode, FLIGHT)` writes `scene = 5` for a normal game: Game.Updated(override) only uses the override for
+  mission games; CanLeaveToSpaceCenter sets SPACECENTER.
+- SpawnSaveAsDialog's `SetControlLock("SaveAsDialog")` locks every control type at once, so a modifier+F5 frame skips the F9 branches.
+- A FlightState read from a node while its vessels are in the scene regenerates every persistentId (CheckVesselpersistentId: in use); the
+  game's loads clear the dictionaries first (GamePersistence.LoadGameCfg).
+- Game.Load throws without a ScenarioRunner (the static SetProtoModules), and Game.Load / Start read HighLogic.CurrentGame.Mode first: a host
+  resumes a flight with a current game (the Space Center's).
+- The scenario modules' own Save is their packages' (AlarmClockScenario, ResourceScenario, ScenarioDestructibles, ScenarioDiscoverableObjects
+  save fewer values than the file holds in kspcore): the quicksave gate hands the loaded snapshots back (getUpdatedProtoModules).
+
+### Deferred / needs
+
+- The live module state in a quicksave (ModuleReactionWheel stateString, an unconnected vessel's CommNetVessel fields) needs the physics bubble
+  and the CommNet network running in the gate (WP-20 / WP-39 hosts); an in-game capture of a quicksave right after a quickload would pin them.
+- CometVessel.OnStart (its removal from comet-less vessels) is not ported (WP-38: kspcore's CometVessel is a reflected field table).
+- An in-game capture of Quaternion.LookRotation / Euler / eulerAngles (quaternion_native.hpp) would make the navball block exact.
+
+### Verification
+
+- **After the merge with main `3eac9e97` (WP-29e)** (`ac5f2fbd`): incremental `run_tests.ps1` (build 59.4 s, ctest 162.7 s) **53 / 53 pass**;
+  `kspcore_tests --order-by=rand -rs=11` and `-rs=27`: **1,120 cases / 1,705,572 assertions, all pass**. CI on the pre-merge head `6dd42da0`
+  (PR #52): review, linux-gcc-rel, linux-rel pass.
+- Windows MSVC RelWithDebInfo, fresh (`core/build` deleted, `run_tests.ps1 -Fresh`, `CMAKE_BUILD_PARALLEL_LEVEL=4`, head `ed53b588`): configure
+  2.5 s, build 306.9 s, ctest 155.7 s, **52 / 52 pass** (`corpus.saves` is not registered in a worktree: run by hand, below). Baseline before the
+  package (main `839f2f5f`, fresh in this worktree): 52 / 52, `kspcore_tests` 1,094 cases / 1,694,282 assertions.
+- `kspcore_tests --order-by=rand -rs=11` and `-rs=27`: **1,108 cases / 1,704,390 assertions, all pass** (WP-19c: 14 cases / 10,108). The quicksave
+  gate is independent of the case order: its fixture compiles the vessel-module registry (a shared static) itself.
+- `save_corpus` (the `corpus.saves` command) over the main checkout's decompiled/KSP-dev: PASS, 104 .sfs (60 written by KSP 1.12.5, byte-identical
+  once the mod-owned elements are dropped; 44 older, documented) and 201 crafts, 0 unexplained, R2 idempotent; over testdata/saves (physprofile):
+  R1 byte-identical. Identical to WP-04's 61 / 44 / crafts result.
+- WSL Ubuntu 24.04 g++ 13.3 `-std=c++20 -fsyntax-only -Wall -Wextra` over the 17 changed sources and 3 test files: no error; one warning in each,
+  pre-existing (`part.hpp:410` unused parameter).
+- `python -I core/tools/ci/pr_review.py --base main`: 0 failing checks; `tools/wp28/check_cites.py` exact over the 6 new .cpp: 50 cites, 0
+  mismatches. The reference regenerates byte-identically (sha256 above).
+
+### Commits (branch `wp19c`, from main `839f2f5f`)
+
+`2d733569` audit and plan; `0d10d5b9` the ports; `87b28824` the quicksave gate, the Python reference, the FlightCamera seam; `554f347a` the
+flow gates; `bebc8f1b` cite fixes, check_cites aliases, progress log; `d5fa36b3` STATUS / README / progress.csv; `ed53b588` deterministic
+quicksave gate (module registry in the fixture), the deferred GoOffRails asserted; then this verification note.
