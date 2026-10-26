@@ -568,7 +568,8 @@ TEST_CASE("WP-29d rover rest with the real wheel models (numbers vs the proxy ge
         MESSAGE(std::string(craft) << " REAL: drift " << real.horizDrift * 1e3 << " mm (vertical " << real.vertDrift * 1e3 << " mm), rms vz " << real.rmsVz * 1e3 << " mm/s, max w "
                       << real.maxW << ", compression " << real.meanCompression << " (proxy " << proxy.meanCompression << "), wheel forces " << real.forceSum << " kN vs weight "
                       << real.weight << ", tyre-bottom error " << real.maxBottomError * 1e3 << " mm, body clearance " << real.minBodyClearance << " m (proxy " << proxy.minBodyClearance
-                      << "), grounded " << real.grounded << "/" << real.wheels << ", bottomed " << real.bottomedTicks << ", joint error " << real.maxJointForceError << ", healthy " << real.healthy);
+                      << "), grounded " << real.grounded << "/" << real.wheels << ", bottomed " << real.bottomedTicks << ", joint error " << real.maxJointForceError << ", healthy " << real.healthy
+                      << ", " << real.msPerTick << " ms/tick (proxy " << proxy.msPerTick << ")");
     }
 }
 
@@ -693,4 +694,169 @@ TEST_CASE("WP-29d steering circle: the CoM path of the steered Prospector is a c
                                        << " m, CoM radius " << rCom << " m");
     CHECK(rFit == doctest::Approx(rCom).epsilon(0.05));
     CHECK(rYaw == doctest::Approx(rCom).epsilon(0.05));
+}
+
+// ---- WP-29e: the colliders under the suspension follow it -------------------------------------------------------------------------------------
+// VPWheelCollider.UpdateVisualWheel moves the suspension transform to m_suspensionPosition every frame (VPWheelCollider.cs:275: suspensionTransform.position
+// = m_suspensionPosition); the caliper and wheel are children of it and keep their local offsets (OnEnableVehicle's IsChildOf flags, cs:198-200, are
+// computed when the controller is enabled, after wheelSetup assigned the transforms); the colliders below them (the Prospector's RoveMax M1: bracketCollider
+// under suspensionPivot, the wheel's collisionEnhancer sphere) move with them. In the cluster compound that is a mutable-compound child pose update per tick
+// (WheelPhysicsHost::UpdateColliders). Reference, independent of the host's rig code: every collider below the suspension pivot is displaced from its
+// prefab pose by exactly (m_suspensionPosition - the prefab pivot position) -- the C# statement -- and every child the compound holds is where the live
+// model puts its collider.
+TEST_CASE("WP-29e rover at rest: the colliders under the suspension, caliper and wheel transforms follow the suspension in the cluster compound (RoveMax M1, Prospector)") {
+    if (!wp20b::GameAvailable()) return;
+    static const auto lib = std::make_shared<const WheelModelLibrary>(std::string(KSPCORE_DATA_DIR) + "/wheel_models");
+    Run run("Prospector Rover", RealGeometry());
+    run.Ticks(kWheelsUp);
+    SetBrakes(run.V(), true);
+    run.Ticks(250);
+    VesselPhysics& vp = *run.Vp();
+    PhysicsWorld& world = run.scene->pad.s.world;
+    size_t wheelsChecked = 0, followed = 0, fixed = 0;
+    double maxLiveError = 0.0, maxFollowError = 0.0, minFollow = 1e9, maxFollow = 0.0;
+    for (auto& w : run.Wheels().Wheels()) {
+        const Part& part = *w->part;
+        const int cl = vp.ClusterOf(part);
+        const BodyId body = vp.ClusterBody(static_cast<size_t>(cl));
+        const Vector3d origin = world.GetPosition(body);
+        const QuaternionD rot = world.GetRotation(body);
+        auto prefab = lib->BuildRig(WheelModelLibrary::NameOf(part), static_cast<float>(part.fields.rescaleFactor));
+        REQUIRE(prefab != nullptr);
+        const auto live = w->rig->Colliders();
+        const auto pref = prefab->Colliders();
+        REQUIRE(live.size() == pref.size());
+        VehiclePhysics::NativeTransform pt;
+        pt.position = part.partTransform.position;
+        pt.rotation = part.partTransform.rotation;
+        auto physOf = [&](const Vector3f& partSpace) { return vp.PhysicsFromTransform(Vector3d(pt.TransformPoint(partSpace))); };
+        const int suspNode = w->rig->Find(w->part->FindModuleOfClass("ModuleWheelSuspension")->Get<std::string>("suspensionTransformName"));
+        REQUIRE(suspNode >= 0);
+        const std::string suspPath = [&] {
+            std::string path;
+            for (int i = suspNode; i >= 0; i = w->rig->At(i).parent) path = path.empty() ? w->rig->At(i).name : w->rig->At(i).name + "/" + path;
+            return path;
+        }();
+        const VehiclePhysics::VPWheelCollider& vc = *w->Controller()->wheelCollider;
+        // C#: suspensionTransform.position = m_suspensionPosition: the pivot's displacement from its prefab position
+        const Vector3d pivotShift = vp.PhysicsFromTransform(Vector3d(vc.suspensionPosition())) - physOf(prefab->PartSpace(suspNode).position);
+        Vector3f cp;
+        Quaternionf cr;
+        size_t children = 0;
+        for (size_t k = 0; vp.PartColliderPose(part, k, cp, cr); ++k) {
+            const Vector3d cw = origin + rot * Vector3d(cp);
+            size_t best = 0;
+            double dLive = 1e9;
+            for (size_t i = 0; i < live.size(); ++i) {
+                const double d = (cw - physOf(live[i].center)).magnitude();
+                if (d < dLive) {
+                    dLive = d;
+                    best = i;
+                }
+            }
+            ++children;
+            maxLiveError = std::max(maxLiveError, dLive);
+            const bool below = live[best].path == suspPath || live[best].path.compare(0, suspPath.size() + 1, suspPath + "/") == 0;
+            const Vector3d shift = physOf(live[best].center) - physOf(pref[best].center);
+            if (below) {
+                ++followed;
+                maxFollowError = std::max(maxFollowError, (shift - pivotShift).magnitude());
+                minFollow = std::min(minFollow, shift.magnitude());
+                maxFollow = std::max(maxFollow, shift.magnitude());
+            } else {
+                ++fixed;
+                CHECK(shift.magnitude() < 1e-5);
+            }
+        }
+        CHECK(children == 3);   // base box, bracketCollider, collisionEnhancer (wheelDamaged's is inactive)
+        ++wheelsChecked;
+    }
+    MESSAGE("followed " << followed << " colliders under the suspension pivot of " << wheelsChecked << " wheel parts (displacement " << minFollow << " .. " << maxFollow << " m from the prefab pose): "
+                        << "max |displacement - (m_suspensionPosition - prefab pivot)| " << maxFollowError << " m; " << fixed << " static ones unmoved; every child within " << maxLiveError
+                        << " m of the live model; collider rebuilds " << run.Host().ColliderRebuilds());
+    CHECK(wheelsChecked == 4);
+    CHECK(followed == 8);
+    CHECK(fixed == 4);
+    CHECK(maxLiveError < 1e-4);
+    CHECK(maxFollowError < 1e-4);
+    CHECK(maxFollow > 0.03);                 // the front wheels' visual suspension is 4 cm off the prefab pose: the test would see a frozen compound
+    CHECK(run.Host().ColliderRebuilds() == 0);   // poses only: the cluster never needed a rebuild at rest
+}
+
+// ---- WP-29e: the brake freeze, member or cluster ------------------------------------------------------------------------------------------------
+// KSP freezes the wheel part's own Rigidbody (ModuleWheelBase.toggleRbConstraints, cs:785: RigidbodyConstraints.FreezeAll) and the PartJoints hold the rest of
+// the vessel to it. The reduced model has one Jolt body per RIGID cluster (WP-20b): a wheel part is welded into its cluster, it has no state of its own
+// (VesselPhysics::PartState of a member is the cluster's rigid motion at the part), so freezing the member IS freezing the cluster -- the host's weld of the
+// cluster to the world (WheelPhysicsHost::ApplyFreezes). The alternative, the wheel part as a body of its own held kinematic and tied to the cluster by a rigid
+// constraint, gives the same stillness (below, in Jolt); what it would add is the PartJoint's compliance, which the model does not have for rigid joints.
+TEST_CASE("WP-29e the brake freeze: the wheel parts share one rigid body with the rest of the vessel, so the frozen wheel part holds every part (a cluster weld)") {
+    if (!wp20b::GameAvailable()) return;
+    Run run("Prospector Rover", RealGeometry());
+    run.Ticks(300);
+    VesselPhysics& vp = *run.Vp();
+    const int cluster = vp.ClusterOf(*run.V().rootPart);
+    int sharing = 0;
+    for (auto& w : run.Wheels().Wheels()) sharing += vp.ClusterOf(*w->part) == cluster ? 1 : 0;
+    CHECK(sharing == 4);                                   // all four wheel parts are members of the root's cluster
+    for (auto& w : run.Wheels().Wheels()) w->base->ToggleRbConstraints(true);
+    run.Tick();
+    CHECK(run.Host().FreezeWeldCount() == 1);
+    std::vector<Vector3d> p0;
+    for (Part* p : run.V().parts) p0.push_back(vp.PartState(*p).position);
+    vp.ChangeWorldVelocity(Vector3d(run.Forward()) * 0.5);   // a push of 0.5 m/s on the whole vessel
+    double maxDrift = 0.0, maxSpeed = 0.0;
+    for (int k = 0; k < 50; ++k) {
+        run.Tick();
+        for (size_t i = 0; i < run.V().parts.size(); ++i) {
+            const PartPhysicsState st = vp.PartState(*run.V().parts[i]);
+            maxDrift = std::max(maxDrift, (st.position - p0[i]).magnitude());
+            maxSpeed = std::max(maxSpeed, st.velocity.magnitude());
+        }
+    }
+    MESSAGE("frozen wheel parts: every part of the vessel (" << run.V().parts.size() << ") stays within " << maxDrift * 1e3 << " mm of its place for 1 s after a 0.5 m/s push, peak speed " << maxSpeed * 1e3 << " mm/s");
+    CHECK(maxDrift < 0.002);
+    CHECK(maxSpeed < 0.02);   // the push itself is removed by the weld within a step
+    for (auto& w : run.Wheels().Wheels()) w->base->ToggleRbConstraints(false);
+    run.Tick();
+    CHECK(run.Host().FrozenPartCount() == 0);
+}
+
+TEST_CASE("WP-29e the brake freeze in Jolt: a kinematic member rigidly tied to the cluster holds it as the weld of the cluster to the world does") {
+    using namespace ksp::physics;
+    constexpr double kG = 9.80665;
+    auto body = [](PhysicsWorld& w, MotionType m, const Vector3d& p, const Vector3d& v) {
+        CompoundBodyDesc d;
+        CompoundChild c;
+        c.shape = ShapeDesc::Box(Vector3f(0.5f, 0.2f, 0.5f));
+        d.children = {c};
+        d.motion = m;
+        d.position = p;
+        d.linearVelocity = v;
+        d.mass = 1.2;
+        d.inertia[0][0] = d.inertia[1][1] = d.inertia[2][2] = 0.2;
+        d.allowSleeping = false;
+        return w.CreateCompoundBody(d);
+    };
+    auto run = [&](bool member) {
+        PhysicsWorld w;
+        const Vector3d origin(1.0e5, 50.0, -2.0e5);
+        const BodyId cluster = body(w, MotionType::Dynamic, origin, Vector3d(0.5, 0.0, 0.0));   // pushed at 0.5 m/s
+        if (member) {
+            const BodyId wheel = body(w, MotionType::Kinematic, origin + Vector3d(0.0, -1.0, 0.0), Vector3d());   // the frozen Rigidbody of a wheel part
+            REQUIRE(w.CreateFixedConstraint(wheel, cluster, origin + Vector3d(0.0, -0.5, 0.0)) != kInvalidConstraint);
+        } else {
+            REQUIRE(w.CreateFixedToWorldConstraint(cluster, origin) != kInvalidConstraint);
+        }
+        double drift = 0.0;
+        for (int i = 0; i < 100; ++i) {
+            w.AddForce(cluster, Vector3d(0.0, -kG * w.GetMass(cluster), 0.0));   // the vessel's weight
+            w.Step(0.02f);
+            drift = std::max(drift, (w.GetPosition(cluster) - origin).magnitude());
+        }
+        return drift;
+    };
+    const double weld = run(false), member = run(true);
+    MESSAGE("2 s after a 0.5 m/s push under its weight: cluster welded to the world " << weld * 1e3 << " mm, kinematic member rigidly constrained " << member * 1e3 << " mm");
+    CHECK(weld < 0.002);
+    CHECK(member < 0.002);
 }

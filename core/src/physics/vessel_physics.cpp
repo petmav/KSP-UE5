@@ -95,7 +95,17 @@ bool AllBoxes(const std::vector<ColliderProxy>& cs) {
 
 }  // namespace
 
-Vector3f ProxyInertiaPerUnitMass(const std::vector<ColliderProxy>& colliders) {
+Vector3f ProxyInertiaPerUnitMass(const std::vector<ColliderProxy>& all) {
+    std::vector<ColliderProxy> kept;  // WP-29e: the colliders that follow a suspension do not enter the estimate
+    const std::vector<ColliderProxy>* use = &all;
+    for (const ColliderProxy& c : all)
+        if (c.noInertia) {
+            for (const ColliderProxy& d : all)
+                if (!d.noInertia) kept.push_back(d);
+            use = &kept;
+            break;
+        }
+    const std::vector<ColliderProxy>& colliders = *use;
     if (colliders.empty()) return Vector3f(1.0f, 1.0f, 1.0f);
     if (!AllBoxes(colliders)) {
         double vol = 0.0;
@@ -393,11 +403,19 @@ void VesselPhysics::BuildClusters(const std::vector<PartPhysicsState>& states) {
         c.w = I.Solve(L);
         // the compound of every part's colliders (physicsless parts included: their colliders belong to the parent's Rigidbody)
         CompoundBodyDesc d;
+        c.mutableShape = false;
+        if (options_.mutableColliders)
+            for (int i : c.parts) c.mutableShape = c.mutableShape || options_.mutableColliders(*parts_[static_cast<size_t>(i)]->part);
+        d.mutableChildren = c.mutableShape;
         // WP-29c: mass-only parts (options_.massOnly: wheels) give no shape, unless the cluster would have none (second pass)
         for (int pass = 0; pass < 2 && d.children.empty(); ++pass)
         for (int i : c.parts) {
-            const PartRec& r = *parts_[static_cast<size_t>(i)];
+            PartRec& r = *parts_[static_cast<size_t>(i)];
+            r.childFirst = -1;
+            r.childCount = 0;
             if (pass == 0 && options_.massOnly && options_.massOnly(*r.part)) continue;
+            r.childFirst = static_cast<int>(d.children.size());
+            r.childCount = static_cast<int>(r.colliders.size());
             for (const ColliderProxy& box : r.colliders) {
                 CompoundChild ch;
                 switch (box.kind) {  // WP-mucol: the .mu collider kinds
@@ -1323,6 +1341,64 @@ size_t VesselPhysics::Cut(const std::vector<Part*>& children) {
     BuildClusters(states);
     SyncPartTransforms();
     return clusters_.size();
+}
+
+// WP-29e. The child pose is the one BuildClusters gives it: the part's reference pose in the cluster (localPos, rot0) composed with the
+// collider's part-space pose.
+namespace {
+void ChildPoseOf(const ColliderProxy& box, const Vector3d& localPos, const QuaternionD& rot0, Vector3f& position, Quaternionf& rotation) {
+    position = (localPos + rot0 * Vector3d(box.center)).ToVector3f();
+    rotation = (rot0 * QuaternionD(box.rotation)).ToQuaternionf();
+}
+bool SameShape(const ColliderProxy& a, const ColliderProxy& b) {
+    if (a.kind != b.kind) return false;
+    switch (a.kind) {
+        case ShapeKind::Sphere: return a.radius == b.radius;
+        case ShapeKind::Capsule: return a.radius == b.radius && a.halfHeight == b.halfHeight;
+        case ShapeKind::ConvexHull: return (a.hull ? a.hull->size() : 0) == (b.hull ? b.hull->size() : 0);
+        default: return a.halfExtents.x == b.halfExtents.x && a.halfExtents.y == b.halfExtents.y && a.halfExtents.z == b.halfExtents.z;
+    }
+}
+}  // namespace
+
+VesselPhysics::ColliderUpdate VesselPhysics::SetPartColliderPoses(const Part& part, const std::vector<ColliderProxy>& colliders) {
+    const int i = PartIndex(part);
+    if (i < 0) return ColliderUpdate::Unchanged;
+    PartRec& r = *parts_[static_cast<size_t>(i)];
+    if (r.cluster < 0 || r.childFirst < 0) return ColliderUpdate::Unchanged;  // mass-only part: no shape in the compound
+    ClusterRec& c = clusters_[static_cast<size_t>(r.cluster)];
+    if (c.body == kInvalidBody) return ColliderUpdate::Unchanged;
+    if (colliders.size() != r.colliders.size() || static_cast<int>(colliders.size()) != r.childCount) return ColliderUpdate::Mismatch;
+    for (size_t k = 0; k < colliders.size(); ++k)
+        if (!SameShape(colliders[k], r.colliders[k])) return ColliderUpdate::Mismatch;
+    std::vector<CompoundChildPose> poses;
+    for (size_t k = 0; k < colliders.size(); ++k) {
+        const ColliderProxy& a = colliders[k];
+        const ColliderProxy& b = r.colliders[k];
+        if (a.center.x == b.center.x && a.center.y == b.center.y && a.center.z == b.center.z && a.rotation.x == b.rotation.x && a.rotation.y == b.rotation.y &&
+            a.rotation.z == b.rotation.z && a.rotation.w == b.rotation.w)
+            continue;
+        CompoundChildPose p;
+        p.index = static_cast<uint32_t>(r.childFirst) + static_cast<uint32_t>(k);
+        ChildPoseOf(a, r.localPos, r.rot0, p.position, p.rotation);
+        poses.push_back(p);
+    }
+    if (poses.empty()) return ColliderUpdate::Unchanged;
+    if (!c.mutableShape || !world_->SetCompoundChildPoses(c.body, poses)) return ColliderUpdate::Mismatch;
+    for (size_t k = 0; k < colliders.size(); ++k) {  // keep the sizes / hulls the shapes were built with, take the poses
+        r.colliders[k].center = colliders[k].center;
+        r.colliders[k].rotation = colliders[k].rotation;
+    }
+    return ColliderUpdate::Moved;
+}
+
+bool VesselPhysics::PartColliderPose(const Part& part, size_t k, Vector3f& position, Quaternionf& rotation) const {
+    const int i = PartIndex(part);
+    if (i < 0) return false;
+    const PartRec& r = *parts_[static_cast<size_t>(i)];
+    if (r.cluster < 0 || r.childFirst < 0 || static_cast<int>(k) >= r.childCount) return false;
+    const ClusterRec& c = clusters_[static_cast<size_t>(r.cluster)];
+    return c.body != kInvalidBody && world_->GetCompoundChildPose(c.body, static_cast<uint32_t>(r.childFirst) + static_cast<uint32_t>(k), position, rotation);
 }
 
 void VesselPhysics::Rebuild() {

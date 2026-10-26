@@ -104,6 +104,7 @@ struct VesselPhysics::PartRec {
     float drag = 0.0f;            // rb.drag (WP-20e: PartBuoyancy's water drag; Part.Start sets 0, Part.cs:1877)
     bool sameVesselCollision = false;
     std::vector<ColliderProxy> colliders;
+    int childFirst = -1, childCount = 0;  // WP-29e: its shapes are children [childFirst, childFirst + childCount) of the cluster compound
     int cluster = -1;
     // reference pose at the cluster's creation (physics frame; the body axes are the physics axes then)
     Vector3d pos0, com0;
@@ -142,6 +143,7 @@ struct VesselPhysics::ServoRec {
 
 struct VesselPhysics::ClusterRec {
     BodyId body = kInvalidBody;
+    bool mutableShape = false;  // WP-29e: the compound is mutable (VesselPhysicsOptions::mutableColliders)
     std::vector<int> servos;  // WP-52b: the servo bodies in this cluster
     std::vector<int> parts;  // vessel part order
     Vector3d origin0;        // body origin at creation (physics frame)
