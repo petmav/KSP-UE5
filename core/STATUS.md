@@ -7542,7 +7542,10 @@ So turning the materials on for the flight bubble moves no gated number out of i
 
 ### Verification
 
-- Final, on the tree merged with main `3eac9e97` (WP-29e): Windows MSVC RelWithDebInfo, `core/build` deleted, `run_tests.ps1 -Fresh`,
+- After the merge with main `c145a672` (WP-19c; STATUS rows / sections of both kept): incremental Windows MSVC build, **53 / 53 ctest**
+  (build 277.3 s, ctest 159.5 s); `kspcore_tests --order-by=rand -rs=11` and `-rs=27`: **1,135 cases / 1,706,519 assertions, all pass**.
+  CI on `5f390a21` (before this merge): review, windows, linux-rel, linux-gcc-rel pass.
+- On the tree merged with main `3eac9e97` (WP-29e): Windows MSVC RelWithDebInfo, `core/build` deleted, `run_tests.ps1 -Fresh`,
   `CMAKE_BUILD_PARALLEL_LEVEL=4`: configure 2.3 s, build 296.1 s, ctest 155.6 s, **53 / 53 pass**. `kspcore_tests --order-by=rand -rs=11`
   and `-rs=27`: **1,121 cases / 1,696,411 assertions, all pass**; the WP-12d cases 15 / 15.
 - Before the merge (main `839f2f5f` + WP-12d items 1-2d): the whole unit binary 1,105 cases / 1,694,932 assertions pass (after adding
