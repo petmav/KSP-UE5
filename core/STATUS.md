@@ -7683,3 +7683,80 @@ state vector the test computes from the body, not with the vessel's own output.
 `2d733569` audit and plan; `0d10d5b9` the ports; `87b28824` the quicksave gate, the Python reference, the FlightCamera seam; `554f347a` the
 flow gates; `bebc8f1b` cite fixes, check_cites aliases, progress log; `d5fa36b3` STATUS / README / progress.csv; `ed53b588` deterministic
 quicksave gate (module registry in the fixture), the deferred GoOffRails asserted; then this verification note.
+
+## WP-UE-05: .mu render reader, texture headers, `kspcore_model.h` (branch `wpue05`, from main `da6db948`)
+
+State: done. The one `.mu` reader (`include/ksp/parts/mu_model.hpp`, `src/parts/mu_model.cpp`) now keeps the render chunks as well as the colliders / wheel / animation chunks; the texture header decode and the C ABI of the model domain are new; the gate (an independent Python parse over synthetic coverage models) is 0 mismatches bit for bit; the local sweep over the game's own files ran (551 `.mu`, 1,354 textures, 0 parse errors, the Python and C++ parses agree on every digest). Every collider / wheel gate is unchanged (the reader change keeps `ColliderChunk` and its mesh data as they were).
+
+### What is in
+
+| piece | files | KSP source |
+|---|---|---|
+| `.mu` render reader (extends the WP-mucol reader; no fork) | `include/ksp/parts/mu_model.hpp`, `src/parts/mu_model.cpp` | `PartReader.cs:205` ReadChild; `:495` ReadMesh (vertices, normals, tangents, uv, uv2, Color32 colours, one triangle list per MeshTriangles chunk, bone weights `:595`, bind poses `:613`, the MeshStart header ints `:504-505`); `:441` ReadMeshRenderer (shadow booleans when version >= 1, material ids); `:468` ReadSkinnedMeshRenderer (ids, bounds, quality, offscreen flag, bone names, mesh; bone names resolved to node ids as `:1068` FindChildByName: first node of a preorder walk from the root); `:646` ReadMaterial (version < 4: the fixed ShaderType table, translated into the same property list as version >= 4) and `:758` ReadMaterial4 (name, shader name, properties Color / Vector / Float / Range / TexEnv); `:790` ReadMaterialTexture (id, scale, offset); `:385` ReadTextures (file, name without extension, TextureType); `:950` ReadLight; `:970` ReadCamera; `:985` ReadParticles (count and material slot only); `:802` ReadAnimation (adds the `:851-865` drop rule: a curve with AnimationType.ParticleEmitter (4) makes KSP skip its clip, every later clip and the default clip) |
+| texture header decode | `include/ksp/parts/texture_header.hpp`, `src/parts/texture_header.cpp` | `DatabaseLoaderTexture_DDS.cs:29` + `DDSHeaders/*`, `DatabaseLoaderTexture_MBM.cs` + `MBMReader.cs:25`, `DatabaseLoaderTexture_PNG.cs:9`, `_JPEG.cs:9`, `_TGA.cs:8` + `TGAHeader.cs` + `TGAImage.cs:212`, `_TRUECOLOR.cs:8`, `GameDatabase.cs:616` |
+| C ABI | `include/kspcore/kspcore_model.h` (pure C), `src/capi/kspcore_model.cpp` | own thread-local error slot `kspcore_model_last_error` (`kspcore_c.cpp` is wpue02's; no inline maths, no STL across the boundary, struct_size protocol on every info struct) |
+| gate, tools | `tools/wpue05/mu_render_reference.py` -> `tests/data/wpue05/*.mu` (7 synthetic models) + `tests/data/wpue05_reference.json` (432 KB); `tests/test_mu_render.cpp`, `tests/mu_dump.hpp` (the row dump through the C ABI), `tests/capi/model_c_test.c` (C consumer), `tests/capi/mu_sweep.cpp`, `tools/wpue05/sweep_stock.py` -> `data/wpue05_stock_sweep.json` (454 KB) | |
+
+C ABI surface (`kspcore_model.h`, `KSPCORE_ABI_MODEL 1`): `kspcore_model_load_file / load_memory / release`, `get_info`, node tree (`get_node`, `node_child`; preorder ids, root 0), flat component tables with node ids (`get_mesh` + `mesh_submesh`, `get_renderer` + `renderer_bone_name`, `get_material` + `get_property`, `get_texture` (with the GameDatabase url `<parent_url>/<name>`), `get_light`, `get_camera`, `get_animation` / `get_clip` / `get_curve`, `particle_emitter_material`), warnings and ignored-entry lists, and `kspcore_texture_decode_header` (DDS / MBM / PNG / JPEG / TGA / TRUECOLOR by the extension of the name, the NRM suffix and the Icons / Tutorials / SimpleIcons / Flags directory rules of the PNG loader). Colliders are counted, not exposed (core uses them through `ksp::mu`). The umbrella `kspcore_c.h` is untouched (wpue02 owns it); a consumer includes `kspcore_model.h` directly.
+
+### Gate (`tests/test_mu_render.cpp`, ctest `model.reader`; `capi.model_c` is the pure-C consumer)
+
+The Python reference parses the files with its own code written from `PartReader.cs` (no code shared with C++, nor with the WP-17b / WP-mucol python). Floats are raw bit patterns on both sides; the row grammar is documented in `mu_render_reference.py` (`rows()`) and `tests/mu_dump.hpp`.
+
+| check | compared | result |
+|---|---|---|
+| 7 SYNTHETIC coverage models (labelled test fixtures for format coverage, not game assets; `tests/data/wpue05/*.mu`): v5 generic materials with every property kind, a mesh with all arrays and 3 submeshes, 4-deep chain with duplicate names, light / camera / particle emitter / animation with every curve type, an empty mesh, a skinned renderer (weights, 4 bind poses, a bone that is missing, bones that share a name), entry values PartReader has no case for (node level and inside a mesh), a repeated mesh chunk; v3 with all 17 ShaderTypes + Custom + an unknown value; v0 (no shadow fields, no spot angle); v1 (shadow fields, still no spot angle); v2 animation drop rule; v4 anomalies (Materials chunk longer than the referenced slots, texture id -2, unknown ShaderPropertyType, a 200 byte name) | 2,550 full rows (every array element) + 2,104 compact rows (arrays as count + FNV-1a 64 of the raw bytes) + the digest of each, also through `load_file` | 0 mismatches |
+| every prefix of a small model (588 prefixes: 9 are valid files, 579 truncated mid-chunk) | accepted / refused, and the digest of each accepted prefix | 0 differences |
+| 6 malformed inputs (wrong file type, TextureError, Mesh Error, negative vertex count, negative material id, a vertex array past the end) | refused + message | all refused |
+| 55 synthetic texture headers (DDS DXT1 / DXT5 / DXT2 / DXT3 / DXT4 / DX10 / RGBA / truncated, MBM 24 / 32 bit / normal map / bad depth / 200 byte magic, PNG every colour type + tRNS + the directory and NRM rules, JPEG, TGA 24 / 32 / RLE / bad, TRUECOLOR PNG / JPEG, unknown extension) | 32 fields each (1,760 comparisons) | 0 mismatches |
+| the GameData mirror's header-only stubs (`core/testdata/GameData-mirror`: 895 DDS of 128 bytes, 2 MBM headers; sha256 per file in `wpue05_reference.json`) | 32 fields each (28,704 comparisons) | 0 mismatches; 185 DXT1, 710 DXT5, 0 not loadable, 861 with a mip chain, 6 flagged normal maps |
+| facts read from the spec, not from the reference (node counts, parents, bone resolution, shader names of the v3 table, version branches, drop rule, texture names / urls, struct_size protocol, index checks) | exact | pass |
+| mutation checks (not kept): spot angle read for version >= 1; texture scale / offset swapped; bone lookup takes the last match; default clip applied despite the drop flag | | 7, 26, 5 and 5 failed assertions |
+
+### Local sweep over the game files (`python -I core/tools/wpue05/sweep_stock.py --game C:/Projects/KSP-UE5/decompiled/KSP-dev --out core/data/wpue05_stock_sweep.json`)
+
+Ran the C++ tool `mu_sweep` and the Python reference over the same files and cross-checked them (parse status, the per-model digest, 19 chunk counts, the shader histogram, every field of every texture header): **0 problems**. The JSON holds the origin path (relative to `decompiled/KSP-dev`) and sha256 of every file, the digest and the chunk counts per part; no game bytes.
+
+| item | result |
+|---|---|
+| `.mu` files | 551, parse errors 0 (both parsers); versions 0: 6, 1: 64, 2: 31, 3: 159, 4: 140, 5: 151 |
+| chunks (totals) | 4,690 nodes, 1,253 colliders, 2,870 mesh filters (in 532 models), 2,243 mesh renderers, 27 skinned renderers (11 models), 70 lights (38 models), 74 cameras (14), 22 particle emitters (20), 147 Animation components (138) with 169 clips, 10,476 curves, 68,984 keys, 811 materials, 1,024 texture references, 777,765 vertices, 691,956 triangles in 2,898 submeshes, 91 bind poses |
+| shader names (28 distinct, by use) | KSP/Diffuse 186, KSP/Specular 143, KSP/Bumped Specular 117, KSP/Emissive/Bumped Specular 54, KSP/Emissive/Specular 49, KSP/Bumped 47, KSP/Alpha/Unlit Transparent 30, DepthMask 22, KSP/Alpha/Cutoff 19, KSP/Alpha/Translucent 18, KSP/Particles/Additive 18, KSP/Emissive/Bumped Specular (Mapped) 17, KSP/UnlitColor 14, KSP/Emissive/Diffuse 14, KSP/Bumped Specular (Mapped) 12, KSP/Lightwrapped/Specular 10, KSP/Alpha/Translucent Specular 7, KSP/Alpha/CutoffBackground 5, KSP/InternalSpace 5, KSP/Unlit 5, KSP/Alpha/Translucent Additive 4, KSP/Particles/Alpha Blended 4, Standard 4, KSP/Specular (Transparent) 3, KSP/Alpha/Cutoff Bumped 1, KSP/Bumped Specular (Transparent) 1, Legacy Shaders/Diffuse 1, Unlit/Transparent 1. **The shell's master-material table (DESIGN 3.4) needs all 28, not only the ones DESIGN lists** (the fallback count "0 unknown shaders" of the slice depends on it) |
+| unknown chunk types | none inside meshes. At node level 683 values were consumed as unknown entries: see Findings |
+| warnings (PartReader would have thrown) | 0 |
+| textures | 1,354 headers decoded: 895 DDS (185 DXT1, 710 DXT5, all loadable, 861 with a mip chain, 6 flagged normal maps), 2 MBM (1024 x 1024 RGBA32 -> DXT5), 430 PNG (389 -> DXT5, 27 -> DXT1, 7 RGBA32 and 6 RGB24 left uncompressed because a side is not a multiple of 4, 1 ARGB32 icon), 27 TRUECOLOR (RGBA32). The Unity payload size (every mip level's blocks for DDS, w * h * bpp for MBM) equals the file size minus the header for **897 / 897** DDS and MBM files |
+
+### Findings
+
+- **Every `.mu` of version 0 to 2 (101 files) carries one extra 4-byte value after every node header** (683 nodes: 101 roots and 582 children; the value is a float such as 1.0). `PartReader.ReadChild` has no case for it and consumes it as an unknown entry id (4 bytes), so it is harmless there and in this reader (rotation unit norm and scale sane for all 683 nodes: the header layout is read correctly). It would break a reader that fails on unknown entry values; the dump records them (`Model::ignoredEntries`, `ignored_entry_count`).
+- DESIGN 3.4 says BC5 DDS: **the game's DDS loader accepts only DXT1 and DXT5** (`DatabaseLoaderTexture_DDS.cs:45-72`: DXT2 / DXT3 / DXT4 / DX10 give no texture); all 895 stock DDS are DXT1 (185) or DXT5 (710), normal maps included. Only 6 DDS carry the normal-map pixel-format flags (0x80000 / 0x80000000: `isNormalMap`); 29 files are named `...NRM` (26 DDS, 3 PNG): the 3 PNG go through `BitmapToUnityNormalMap` (RGBA32, mips, channels (g, g, g, r): the shell does that swizzle), the 26 DDS are taken as stored.
+- PartReader assigns `renderer.sharedMaterial = material` once per Materials entry (`:282`), i.e. the first material slot of each renderer, in ascending id order; a renderer that lists several ids ends with the last one in slot 0 (Unity behaviour of the setter, UNVERIFIED). The reader keeps the raw ids and the whole slot-indexed material table.
+- A Materials chunk with more entries than referenced slots and a texture id below -1 would make PartReader throw (`:277`, `:113`): this reader accepts both and records a warning (none in the stock files).
+- Skinned meshes are rare (27 renderers in 11 models, 91 bind poses) and the TextureError check (`:388`: the Textures chunk count must equal the highest texture id + 1) holds in all 551 files.
+
+### Parsed and skipped (not kept)
+
+- ParticleEmitter chunk (`:985`): ~70 values per emitter, only the material slot is kept (22 emitters in the stock models; the shell maps cfg particle effects).
+- `Mesh.RecalculateBounds` (derived from the vertices); the second int of MeshStart is kept raw (`headerInt`); the int after each animation keyframe is kept raw (`AnimKey::unused`).
+- Collider chunks are kept by `ksp::mu` (WP-mucol) but not exposed through `kspcore_model.h` (counts only).
+- Textures themselves: only references; pixel decode / GPU upload is shell code. PNG / JPEG / TRUECOLOR header fields that live inside Unity's decoder (RGB24 vs RGBA32, whether the texture has a mip chain) are INFERRED from the loader code and marked in `texture_header.hpp`: PNG alpha = colour type 4 / 6 or a tRNS chunk, `mip_chain` 1 except for the Icons / Tutorials / SimpleIcons directories (explicitly no mips) and TRUECOLOR (0); `Texture2D.Compress` assumed to produce DXT1 for RGB24 and DXT5 for alpha formats on multiples of 4. DDS, MBM and TGA fields are exact from the loader code.
+
+### Exact / approximate / changed
+
+| item | class | notes |
+|---|---|---|
+| chunk layouts, version branches, defaults, bit patterns of every value | exact | bit-compared with the independent parse (synthetic) and by digest on all 551 stock files |
+| MBM / DDS / TGA header fields, DDS payload size | exact | 897 / 897 stock files match the Unity payload size |
+| PNG / JPEG / TRUECOLOR format and mip fields | inferred (UNVERIFIED) | see above |
+| materials: renderers' effective material | raw ids kept | see Findings |
+| unknown entry handling | as PartReader | counted, not an error |
+
+### Deferred / left for others
+
+1. Shell: the master-material table for the 28 shader names, the NRM / DXT5nm swizzle, the UStaticMesh / USkeletalMesh builds (WP-UE-06 and later).
+2. An exposure of the collider chunks through the C ABI if the shell ever needs them (it does not today).
+3. Unity-side verification of the PNG / JPEG decode formats (needs a capture).
+
+### Verification
+
+Windows MSVC RelWithDebInfo, fresh build (`core/build` deleted, `CMAKE_BUILD_PARALLEL_LEVEL=4`, two other agents building at the same time): `run_tests.ps1` ctest 53 / 55 passed; the two failures are `unit.random_order.11` and `unit.random_order.42` hitting their 600 s TIMEOUT on the loaded machine (not assertion failures). The whole unit binary run directly: default order and `--order-by=rand -rs=11` / `-rs=27`: **1,143 cases / 1,709,820 assertions pass** in both random orders. `model.reader` (`-tc="WP-UE-05*"`, 8 cases, 3,301 assertions) and `capi.model_c` pass; `wheels.native` (WP-29d / WP-mucol consumers of the reader) passes, `test_mu_colliders` unchanged. `g++ -fsyntax-only -Wall -Wextra` (WSL, gcc) over `mu_model.cpp`, `texture_header.cpp`, `kspcore_model.cpp`, `test_mu_render.cpp`, `mu_sweep.cpp`, `gcc -x c -std=c99 -pedantic` over `kspcore_model.h` and `model_c_test.c`: clean. `python -I core/tools/ci/pr_review.py --base main`: 0 failing checks. Progress notes in `core/PROGRESS-wpue05.md`.
