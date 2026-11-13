@@ -10,3 +10,5 @@
 - [WP-37 contracts lessons](wp37-contracts-lessons.md) — KSP quirks ported (AddKeywords first-only, SetState order), World37 fixture, stale-exe + heredoc pitfalls
 - [WP-38 FinePrint lessons](wp38-fineprint-lessons.md) — output elision workaround, prefab-vs-runtime body values, node ids, fixture defaults, wp37 reference reuse
 - [WP-42 KSC lessons](wp42-ksc-lessons.md) — float32 PQSCity position, x87 Cos vs Python at poles, duplicate enum, fixture traps, data gaps
+- [WP-29d wheel geometry lessons](wp29d-wheel-geometry-lessons.md) — read KSP-dev via python -I, output elision workaround, wheel .mu facts, mirror lacks part .mu
+- [WP-12c scenery lessons](wp12c-scenery-lessons.md) — spawner/level replay, UnityPy string[] fix, Metal/Ground materials, test frame traps, build times

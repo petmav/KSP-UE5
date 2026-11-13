@@ -1,0 +1,2 @@
+- [Shell quirks (WP-20f)](feedback_shell_quirks.md) — heredocs with apostrophes fail; output hook elides lines; no git stash during builds; noisy timings
+- [Flight fixture lifecycle](project_flight_fixture_lifecycle.md) — PadScene lacks the module lifecycle; wp20d::StartModules gives KSP's cube weights and SAS
