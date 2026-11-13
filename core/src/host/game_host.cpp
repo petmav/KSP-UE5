@@ -53,6 +53,7 @@
 #include "ksp/save/game_persistence.hpp"
 #include "ksp/save/quick_save_load.hpp"
 #include "ksp/save/save_environment.hpp"
+#include "ksp/save/upgrade_pipeline.hpp"
 #include "ksp/ship/ship_construction.hpp"
 #include "ksp/space_center/high_logic.hpp"
 #include "ksp/space_center/pqs_city.hpp"
@@ -383,7 +384,7 @@ struct GameHost::Impl {
     struct Tap;
     std::unique_ptr<Flight> flight;
     std::unique_ptr<Tap> tap;
-    VesselCrewManifest launchManifest;  // an unmanned launch: the crew assignment dialog is a UI feature (not in this package)
+    std::shared_ptr<VesselCrewManifest> launchManifest = std::make_shared<VesselCrewManifest>();  // the launch dialog's crew assignment (LaunchCraft fills the seats)
 
     Impl();
     ~Impl();
@@ -869,7 +870,7 @@ void GameHost::Impl::Flight::Awake() {
         lp.rootPosition = root->partTransform.position;
         lp.rootRotation = root->partTransform.rotation;
         Game* game = HighLogic::CurrentGame();
-        owned.push_back(ShipConstruction::AssembleForLaunch(ship, FlightDriver::LaunchSiteName, "Launch Pad", FlightDriver::newShipFlagURL, *game, &im.launchManifest, lp));
+        owned.push_back(ShipConstruction::AssembleForLaunch(ship, FlightDriver::LaunchSiteName, "Launch Pad", FlightDriver::newShipFlagURL, *game, im.launchManifest.get(), lp));
     };
     ShipConstruction::env.CurrentGame = HighLogic::CurrentGame();
     levelFrame0 = Time::frameCount;
@@ -1374,8 +1375,34 @@ bool GameHost::LaunchCraft(const std::string& craftPath, const std::string& laun
         if (HighLogic::CurrentGame() == nullptr) throw std::runtime_error("no current game (kspcore_game_new / kspcore_game_load first)");
         std::error_code ec;
         if (!fs::exists(fs::path(craftPath), ec)) throw std::runtime_error("no such craft file: " + craftPath);
+        // The launch dialog's crew assignment (CrewAssignmentDialog's default fill; host glue, the dialog itself is UI): every crewable seat
+        // of the craft gets the next available Kerbal of the roster (KerbalRoster.GetNextOrNewKerbal, KerbalRoster.cs:281)
+        std::string launchPath = craftPath;
+        {
+            ConfigNode::NodePtr craft = ConfigNode::Load(craftPath);
+            if (!craft) throw std::runtime_error("cannot read the craft file: " + craftPath);
+            // The craft browser runs KSPUpgradePipeline over a craft before it enters the editor (EditorLogic.LoadShip: KSPUpgradePipeline.cs:35):
+            // renamed parts and module data of older crafts (the stock Kerbal X has liquidEngine1-2). The upgraded craft is what the VAB would
+            // hold; it is kept in the save's Ships/VAB (GamePersistence.CreateNewGame makes the folder) and launched from there.
+            ConfigNode::NodePtr upgraded;
+            KSPUpgradePipeline::Process(craft, fs::path(craftPath).stem().string(), SaveUpgradePipeline::LoadContext::Craft,
+                                        [&](const ConfigNode::NodePtr& n) { upgraded = n; }, [&](KSPUpgradePipeline::UpgradeFailOption, const ConfigNode::NodePtr&) {});
+            if (!upgraded) throw std::runtime_error("the craft failed the upgrade pipeline: " + craftPath);
+            const fs::path vab = fs::path(SaveDir(impl_->saveFolder)) / "Ships" / "VAB";
+            fs::create_directories(vab, ec);
+            const fs::path out = vab / (fs::path(craftPath).stem().string() + ".craft");
+            if (!upgraded->Save(out.generic_string())) throw std::runtime_error("cannot write " + out.generic_string());
+            launchPath = out.generic_string();
+            craft = upgraded;
+            impl_->launchManifest = VesselCrewManifest::FromConfigNode(*craft);
+            Game* game = HighLogic::CurrentGame();
+            if (game != nullptr && game->CrewRoster)
+                for (const std::shared_ptr<PartCrewManifest>& pcm : impl_->launchManifest->GetCrewableParts())
+                    for (size_t seat = 0; seat < pcm->partCrew.size(); ++seat)
+                        if (pcm->partCrew[seat].empty()) pcm->AddCrewToSeat(game->CrewRoster->GetNextOrNewKerbal(), static_cast<int>(seat));
+        }
         // FlightDriver.StartWithNewLaunch (FlightDriver.cs:461): saves the game as "persistent", then HighLogic.LoadScene(FLIGHT)
-        FlightDriver::StartWithNewLaunch(craftPath, "Squad/Flags/default", launchSite, &impl_->launchManifest);
+        FlightDriver::StartWithNewLaunch(launchPath, "Squad/Flags/default", launchSite, impl_->launchManifest.get());
         return true;
     } catch (const std::exception& e) {
         error_ = std::string("kspcore_game_launch_craft: ") + e.what();

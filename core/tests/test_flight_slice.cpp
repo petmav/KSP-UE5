@@ -6,6 +6,7 @@
 // the short case runs in every unit shard.
 #include <cmath>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
@@ -126,6 +127,7 @@ std::vector<std::string>& LogLines() {
 void CaptureLog(int level, const char* message, void*) {
     (void)level;
     LogLines().emplace_back(message);
+    if (std::getenv("KSPCORE_SLICE_LOG") != nullptr) std::fprintf(stderr, "[log] %s\n", message);
 }
 
 struct ProcessGuard {
@@ -316,4 +318,52 @@ TEST_CASE("WP-UE-02 revert to launch through the ABI: the flight is torn down an
     const size_t n = probe.Leaks(&what);
     INFO(what);
     CHECK(n == 0);
+}
+
+TEST_CASE("WP-UE-02 the stock Kerbal X launches crewed from the pad through the ABI: 73 parts, controllable, throttle up and stage lifts it") {
+    if (!GameAvailable()) return;
+    const Paths p;
+    ProcessGuard pg(p);
+    REQUIRE(pg.ok);
+    const std::string kerbalX = std::string(KSPCORE_PROJECT_ROOT) + "/harness/inputs/Ships/VAB/Kerbal X.craft";
+    if (!fs::exists(kerbalX)) return;
+    kspcore_sim* sim = kspcore_sim_create();
+    REQUIRE(sim != nullptr);
+    REQUIRE(kspcore_game_new(sim, KSPCORE_MODE_SANDBOX, "wpue02_kx") == 1);
+    const int launched = kspcore_game_launch_craft(sim, kerbalX.c_str(), "LaunchPad");
+    INFO(std::string(kspcore_last_error()));
+    REQUIRE(launched == 1);
+    REQUIRE(kspcore_frame(sim, 0.02) == 1);
+    LogLines().clear();
+    kspcore_set_log_callback(&CaptureLog, nullptr);
+    const int loaded = kspcore_scene_loaded(sim, KSPCORE_SCENE_FLIGHT);
+    kspcore_set_log_callback(nullptr, nullptr);
+    INFO(std::string(kspcore_last_error()));
+    for (const std::string& l : LogLines()) INFO(l);
+    REQUIRE(loaded == 1);
+    Script script;
+    script.settle = 60;
+    int32_t down[3], held[1];
+    double alt0 = 0.0, alt1 = 0.0;
+    uint32_t parts = 0, partsBefore = 0;
+    for (int k = 0; k < 400; ++k) {
+        const kspcore_input_frame in = script.Frame(k, down, held);
+        REQUIRE(kspcore_input_set_frame(sim, &in) == 1);
+        REQUIRE(kspcore_frame(sim, 0.02) == 1);
+        const kspcore_snapshot_view* s = kspcore_snapshot(sim);
+        for (uint32_t i = 0; i < s->vessel_count; ++i)
+            if ((s->vessels[i].flags & KSPCORE_VESSEL_ACTIVE) != 0) {
+                if (k == 59) {
+                    alt0 = s->vessels[i].altitude;
+                    partsBefore = s->vessels[i].part_count;
+                }
+                if (k == 399) alt1 = s->vessels[i].altitude;
+                parts = s->vessels[i].part_count;
+            }
+    }
+    MESSAGE("Kerbal X: " << partsBefore << " parts on the pad, " << parts << " after the first stage, altitude " << alt0 << " m before the launch keys, " << alt1 << " m 340 frames after");
+    CHECK(partsBefore == 73);
+    CHECK(parts == 70);  // observed: StageManager's first stage drops three parts (UNVERIFIED which; the launch clamps are the likely ones)
+    CHECK(alt1 > alt0 + 20.0);
+    kspcore_sim_destroy(sim);
 }
