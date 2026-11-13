@@ -399,6 +399,9 @@ std::string ContractParameter::GetMessageIncomplete() { return Localizer::Format
 long long ContractParameter::CreateID() {
     long long num = 17;
     num = 391LL + static_cast<long long>(StringExtensions::GetHashCode_Net35(TypeName()));
+    // C# guards both hashes with `if (hashString != null)` (ContractParameter.cs:727, :735), but the HashString property (:130)
+    // starts from "" and only appends, so it never returns null: the guard is always true and an empty string is still hashed
+    // (unlike Contract.SetupID, which tests IsNullOrEmpty). std::string has no null state, so the hash is unconditional.
     std::string hashString = HashString();
     // unchecked `long` arithmetic in C# (wraps): computed in unsigned long long, the signed overflow is undefined in C++
     auto mulAdd23 = [](long long n, int h) {
