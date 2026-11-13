@@ -7944,3 +7944,4 @@ The pad is the real KSC LaunchPad (colliders and spawn transform), not WP-20f's 
 ### Commits (branch `wpue02`, from main `da6db948`)
 
 `643355d8` header freeze; `64f31f36` PROGRESS note; `96bbeb2b` host, ABI implementation, gates; `9bd1df54` quicksave / quickload / revert, hygiene probe, FlightDriver statics, TimeWarp start; `8ec084a9` upgrade pipeline and crew fill in the launch path; `3e0244b3` settings round trip, progress row; the merge of origin/main; then this note.
+- After the second merge with main `9bef14d2` (WP-40b, WP-UE-05), incremental `run_tests.ps1` (build 150.6 s, ctest 787 s under heavy machine load; `unit.random_order.11 / 27 / 42` 410 / 448 / 526 s, under their 600 s timeout): **58 / 58 pass**.
