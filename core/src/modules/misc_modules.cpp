@@ -12,6 +12,7 @@
 #include "ksp/dotnet/mono_float.hpp"
 #include "ksp/dotnet/number.hpp"
 #include "ksp/events/game_events.hpp"
+#include "ksp/input/input_lock_manager.hpp"
 #include "ksp/localization/localizer.hpp"
 #include "ksp/modules/base_event.hpp"
 #include "ksp/modules/resource_processing.hpp"
@@ -58,7 +59,7 @@ void FlagSiteEnvironment::Reset() {
     dismissSiteRenameDialog = nullptr;
     spawnPlaqueDialog = nullptr;
     terminatePlaqueDialog = nullptr;
-    controlLocks.clear();
+    for (const char* id : {"Flag_NoInterruptWhileDeploying", "siteRenameDialog", "FlagPlaqueDialog"}) InputLockManager::RemoveControlLock(id);
 }
 void FireworkEnvironment::Reset() {
     shellPrefabExists = nullptr;
@@ -253,12 +254,13 @@ void FlagSite::SetupFSM() {
         Part* p = PartOf();
         if (p == nullptr) throw NullReferenceException();
         if (!p->fields.packed) SetJoint();
-        FE::controlLocks["Flag_NoInterruptWhileDeploying"] = "PAUSE|TIMEWARP|QUICKSAVE|QUICKLOAD|VESSEL_SWITCHING";
+        InputLockManager::SetControlLock(ControlTypes::PAUSE | ControlTypes::TIMEWARP | ControlTypes::QUICKSAVE | ControlTypes::QUICKLOAD | ControlTypes::VESSEL_SWITCHING,
+                                         "Flag_NoInterruptWhileDeploying");  // FlagSite.cs:155
     });
     st_placing->OnLeave = KFSMStateChange::Lambda(this, [this](KFSMState*) {
         MakeVisible();
         if (fsm->LastEvent() != onPlaceComplete) UnsetJoint();
-        FE::controlLocks.erase("Flag_NoInterruptWhileDeploying");
+        InputLockManager::RemoveControlLock("Flag_NoInterruptWhileDeploying");  // FlagSite.cs:164
     });
     fsm->AddState(st_placing);
     st_placed = newState("Placed");
@@ -395,7 +397,7 @@ void FlagSite::RenameSite() { RenameSite(nullptr); }
 
 // FlagSite.cs:462
 void FlagSite::RenameSite(std::function<void()> afterDialog) {
-    FlagSiteEnvironment::controlLocks["siteRenameDialog"] = "All";  // InputLockManager.SetControlLock(lockID) = ControlTypes.All
+    InputLockManager::SetControlLock("siteRenameDialog");  // FlagSite.cs:464 (ControlTypes.All)
     siteName = "";
     newPlaqueText = PlaqueText();
     siteRenameDialogOpen = true;  // SiteRenameDialog = PopupDialog.SpawnPopupDialog(...)
@@ -445,12 +447,12 @@ void FlagSite::DismissSiteRename() {
     if (!siteRenameDialogOpen) throw NullReferenceException();  // SiteRenameDialog.Dismiss() on a null dialog
     if (FlagSiteEnvironment::dismissSiteRenameDialog) FlagSiteEnvironment::dismissSiteRenameDialog(*this);
     siteRenameDialogOpen = false;
-    FlagSiteEnvironment::controlLocks.erase("siteRenameDialog");
+    InputLockManager::RemoveControlLock("siteRenameDialog");  // FlagSite.cs:514
 }
 
 // FlagSite.cs:518
 void FlagSite::ReadPlaque() {
-    FlagSiteEnvironment::controlLocks["FlagPlaqueDialog"] = "~(UI|CAMERACONTROLS)";
+    InputLockManager::SetControlLock(~(ControlTypes::UI | ControlTypes::CAMERACONTROLS), "FlagPlaqueDialog");  // FlagSite.cs:520
     Part* p = PartOf();
     if (p == nullptr || p->vessel == nullptr) throw NullReferenceException();
     flagPlaqueDialogOpen = true;
@@ -460,7 +462,7 @@ void FlagSite::ReadPlaque() {
 // FlagSite.cs:524
 void FlagSite::onFlagPlaqueDialogDismiss() {
     flagPlaqueDialogOpen = false;
-    FlagSiteEnvironment::controlLocks.erase("FlagPlaqueDialog");
+    InputLockManager::RemoveControlLock("FlagPlaqueDialog");  // FlagSite.cs:527
 }
 
 // ================================================================ ModulePartFirework

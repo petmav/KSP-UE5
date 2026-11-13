@@ -4,3 +4,7 @@
 3a. CraftProfileInfo .loadmeta cache: done (GetSFSMD5 + GenerateExcludedParts left: MD5 unused by GetSaveData; mission part filter) - git log
 3b. SerenityContractDefs duplicate defaults: done (typed ContractDefs statics are the one copy; Lite node override kept) - git log
 3c. CometVessel.OnStart: done (new class comet_vessel.{hpp,cpp}: OnAwake vessel.Comet, OnStart removal/type/SMA/ranges; ProtoVessel branch of the C# ported but untested (no cheap ProtoVessel fixture); events/VFX coroutine not ported) - git log
+4a. PartBuoyancy servoRb.drag: done (PartBuoyancy Env hasServoRb/servoRbMass/servoRbDrag/setServoRbDrag, VesselPhysics::SetServoDrag + servo linear damping in Flush; tests: reference loop mirror 6096 ticks + momentum test) - git log
+4b. ApplyUpgradeNode in CommPowerUnloaded: SKIPPED - needs PartUpgradeManager.Handler (PartUpgradeHandler.cs, 468 lines: PARTUPGRADE load, IsUnlocked with game mode / parameters), not ported
+4c. connectedMassScale: SKIPPED - not modelled by the Jolt servo joint; not a few lines
+5. WP-33 negative zero format: SKIPPED - no number-format capture in harness/captures (math/physics only) and mscorlib's Mono NumberFormatter is not in the decompile; needs a Mono capture of (-0f).ToString("0.0"/"F")

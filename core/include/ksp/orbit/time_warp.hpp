@@ -58,7 +58,7 @@ struct TimeWarpEnvironment {
 
     // ---- outputs ----
     std::vector<std::string> screenMessages;          // ScreenMessages.PostScreenMessage texts, in order
-    std::map<std::string, std::string> controlLocks;  // InputLockManager: lockID -> ControlTypes name
+    // (InputLockManager locks go to the real InputLockManager: "TimeWarpLock", "TimeWarpTo")
     int physWarpWarningShown = 0;                     // ShowPWarpWarning calls
     bool paused = false;                              // FlightDriver.SetPause
     float ignoreGeeForcesSeconds = 0.0f;              // last FlightLogger.IgnoreGeeForces(seconds)

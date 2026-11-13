@@ -18,6 +18,7 @@
 #include "ksp/dotnet/mono_float.hpp"
 #include "ksp/dotnet/number.hpp"
 #include "ksp/events/game_events.hpp"
+#include "ksp/input/input_lock_manager.hpp"
 #include "ksp/localization/localizer.hpp"
 #include "ksp/orbit/orbit.hpp"
 #include "ksp/save/save_enums.hpp"
@@ -83,8 +84,8 @@ bool TimeWarp::Awake() {
 
 // TimeWarp.cs:699 OnDestroy
 TimeWarp::~TimeWarp() {
-    Env().controlLocks.erase("TimeWarpLock");  // InputLockManager.RemoveControlLock
-    Env().controlLocks.erase("TimeWarpTo");
+    InputLockManager::RemoveControlLock("TimeWarpLock");  // InputLockManager.RemoveControlLock
+    InputLockManager::RemoveControlLock("TimeWarpTo");
     if (fetch != nullptr && fetch == this) fetch = nullptr;
 }
 
@@ -323,7 +324,7 @@ void TimeWarp::updateRate(float r, bool postScreenMessage) {
     Time::fixedDeltaTime = f32store(fx(0.02f) * fx(Time::timeScale));
     if (postScreenMessage) PostScreenMessage(Loc("#autoLOC_7003002", {(curr_rate >= 1.0f) ? F0(r) : F1(r)}));
     if (r <= MaxPhysicsRate() && controlsLocked) {
-        Env().controlLocks.erase("TimeWarpLock");  // InputLockManager.RemoveControlLock
+        InputLockManager::RemoveControlLock("TimeWarpLock");  // InputLockManager.RemoveControlLock
         controlsLocked = false;
     }
 }
@@ -373,7 +374,7 @@ bool TimeWarp::setRate(int rateIdx, bool instantChange, bool instantIfLower, boo
             }
         }
         if (num > maxPhysicsRate_index) {
-            Env().controlLocks["TimeWarpLock"] = "ALL_SHIP_CONTROLS_ALLOW_UIMODE";  // InputLockManager.SetControlLock
+            InputLockManager::SetControlLock(ControlTypes::ALL_SHIP_CONTROLS_ALLOW_UIMODE, "TimeWarpLock");  // TimeWarp.cs:489
             controlsLocked = true;
         }
     }
@@ -572,7 +573,7 @@ bool TimeWarp::CancelAutoWarp(int rateIdx, bool delay_unlock) {
         if (delay_unlock) {
             delayedUnlockFrames_ = 1;  // StartCoroutine(CallbackUtil.DelayedCallback(1, ...)): parked at its yield
         } else {
-            Env().controlLocks.erase("TimeWarpTo");
+            InputLockManager::RemoveControlLock("TimeWarpTo");
         }
         autoWarpEngaged = false;
         if (rateIdx >= 0) setRate(rateIdx, false);
@@ -589,7 +590,7 @@ bool TimeWarp::autoWarpMoveNext() {
     switch (autoWarpState_) {
         case 0: {
             autoWarpEngaged = true;
-            env.controlLocks["TimeWarpTo"] = "WARPTO_LOCK";  // InputLockManager.SetControlLock(WARPTO_LOCK, "TimeWarpTo")
+            InputLockManager::SetControlLock(ControlTypes::WARPTO_LOCK, "TimeWarpTo");  // TimeWarp.cs:752
             log::Info("Warping to UT:" + D1(autoWarpTgtUT_) + ". Max Rate Allowed: " + F1(tgt_rate_) + "x.");
             PostWarpMessage(Loc("#autoLOC_6001933", {PrintTimeText(Planetarium::GetUniversalTime() - autoWarpTgtUT_), "/"}));
             autoWarpState_ = 1;
@@ -664,7 +665,7 @@ bool TimeWarp::autoWarpMoveNext() {
             return autoWarpMoveNext();
         }
         case 3: {
-            env.controlLocks.erase("TimeWarpTo");
+            InputLockManager::RemoveControlLock("TimeWarpTo");  // TimeWarp.cs:813
             autoWarpEngaged = false;
             autoWarpState_ = 0;
             return false;
@@ -678,7 +679,7 @@ void TimeWarp::ResumeAfterUpdate() {
     if (autoWarpState_ == 3) autoWarpMoveNext();
     if (delayedUnlockFrames_ == 1) {
         delayedUnlockFrames_ = -1;
-        Env().controlLocks.erase("TimeWarpTo");  // CallbackUtil.DelayedCallback(1, RemoveControlLock("TimeWarpTo"))
+        InputLockManager::RemoveControlLock("TimeWarpTo");  // CallbackUtil.DelayedCallback(1, RemoveControlLock("TimeWarpTo"))
     }
 }
 

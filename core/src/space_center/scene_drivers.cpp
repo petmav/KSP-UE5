@@ -1,5 +1,6 @@
 // WP-42: FlightDriver.cs, EditorDriver.cs.
 #include "ksp/space_center/scene_drivers.hpp"
+#include "ksp/input/input_lock_manager.hpp"
 
 #include "ksp/career/progress.hpp"
 #include "ksp/celestial/celestial_body.hpp"
@@ -381,15 +382,20 @@ uint64_t EditorDriver::SetInputLockFromGameParameters() {
     if (game->Mode == Game_Modes::MISSION_BUILDER) {
         controlTypes |= EDITOR_LAUNCH;
         controlTypes |= EDITOR_CREW;
+        InputLockManager::SetControlLock(static_cast<ControlTypes>(controlTypes), "EditorDriver_GameParameters");  // :206
         return controlTypes;
     }
-    if (game->Mode == Game_Modes::MISSION) return controlTypes;
+    if (game->Mode == Game_Modes::MISSION) {
+        InputLockManager::SetControlLock(static_cast<ControlTypes>(controlTypes), "EditorDriver_GameParameters");  // :211
+        return controlTypes;
+    }
     const auto& ed = game->Parameters->Editor;
     if (!ed.CanLaunch) controlTypes |= EDITOR_LAUNCH;
     if (!ed.CanLoad) controlTypes |= EDITOR_LOAD;
     if (!ed.CanStartNew) controlTypes |= EDITOR_NEW;
     if (!ed.CanSave) controlTypes |= EDITOR_SAVE;
     if (!ed.CanLeaveToMainMenu && !ed.CanLeaveToSpaceCenter) controlTypes |= EDITOR_EXIT;
+    InputLockManager::SetControlLock(static_cast<ControlTypes>(controlTypes), "EditorDriver_GameParameters");  // EditorDriver.cs:234
     return controlTypes;
 }
 

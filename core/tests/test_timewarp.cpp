@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "doctest/doctest.h"
+#include "ksp/input/input_lock_manager.hpp"
 #include "ksp/celestial/celestial_body_orbit.hpp"
 #include "ksp/celestial/celestial_system.hpp"
 #include "ksp/celestial/flight_globals.hpp"
@@ -85,6 +86,7 @@ struct Env {
         Reset();
     }
     static void Reset() {
+        InputLockManager::Reset();  // TimeWarp's locks (TimeWarpLock, TimeWarpTo) are the real InputLockManager's
         Time::timeScale = 1.0f;
         Time::fixedDeltaTime = 0.02f;
         Time::time = 0.0f;
@@ -398,7 +400,7 @@ TEST_CASE("TimeWarp.SetRate: landed vessel passes every rate, locks controls abo
         CHECK(TimeWarp::fixedDeltaTime() == f32store(fx(0.02f) * fx(rate[i])));
         // controls are locked above warpRates[maxPhysicsRate_index]; updateRate releases at <= MaxPhysicsRate
         CHECK(w.tw.controlsLocked == (idx[i] > 0));
-        CHECK(env.twEnv.controlLocks.count("TimeWarpLock") == (idx[i] > 0 ? 1u : 0u));
+        CHECK((InputLockManager::GetControlLock("TimeWarpLock") != ControlTypes::None ? 1u : 0u) == (idx[i] > 0 ? 1u : 0u));
     }
     CHECK(rateEvents == 5);
     // an out-of-range index is clamped to the last rate (TimeWarp.SetRate: Clamp(idx, 0, Length), setRate: Length - 1)
@@ -546,7 +548,8 @@ TEST_CASE("TimeWarp.getMaxOnRailsRateIdx: altitude look-ahead on a 100 km circul
         CHECK_FALSE(w.tw.setRate(7, false));  // returns num == rateIdx
         CHECK(w.tw.current_rate_index == 3);
         CHECK(w.tw.tgt_rate() == 50.0f);
-        CHECK(env.twEnv.controlLocks.count("TimeWarpLock") == 1u);
+        CHECK((InputLockManager::GetControlLock("TimeWarpLock") != ControlTypes::None ? 1u : 0u) == 1u);
+        CHECK(InputLockManager::GetControlLock("TimeWarpLock") == ControlTypes::ALL_SHIP_CONTROLS_ALLOW_UIMODE);  // TimeWarp.cs:489
         bool found = false;
         for (const auto& m : env.twEnv.screenMessages) found = found || m.rfind("#autoLOC_8003368", 0) == 0;
         CHECK(found);
@@ -615,7 +618,7 @@ TEST_CASE("TimeWarp.FixedUpdate: entering the atmosphere under rails warp drops 
     CHECK(rateEvents == 1);
     CHECK(env.twEnv.ignoreGeeForcesSeconds == 1.0f);
     CHECK_FALSE(w.tw.controlsLocked);
-    CHECK(env.twEnv.controlLocks.count("TimeWarpLock") == 0u);
+    CHECK((InputLockManager::GetControlLock("TimeWarpLock") != ControlTypes::None ? 1u : 0u) == 0u);
     // already at the limit: forceSwitch = false does not reassume the same index
     w.tw.FixedUpdate();
     CHECK(rateEvents == 1);
@@ -794,7 +797,8 @@ TEST_CASE("TimeWarp.WarpTo: autoWarpTo plans, warps and warps down to the target
     CHECK_FALSE(w.tw.setAutoWarp);
     CHECK(w.tw.autoWarpEngaged);
     CHECK(w.tw.AutoWarpRunning());
-    CHECK(e.controlLocks.count("TimeWarpTo") == 1u);
+    CHECK((InputLockManager::GetControlLock("TimeWarpTo") != ControlTypes::None ? 1u : 0u) == 1u);
+    CHECK(InputLockManager::GetControlLock("TimeWarpTo") == ControlTypes::WARPTO_LOCK);  // TimeWarp.cs:752
     CHECK(w.tw.current_rate_index == 1);  // setRate(Min(current + 1, rateIdx))
     w.tw.WarpTo(target);                   // engaged: refuses (message, no new request)
     CHECK_FALSE(w.tw.setAutoWarp);
@@ -820,7 +824,7 @@ TEST_CASE("TimeWarp.WarpTo: autoWarpTo plans, warps and warps down to the target
     CHECK(maxIndex == 6);  // the planned maximum, never exceeded
     CHECK(decelerated);
     CHECK_FALSE(w.tw.autoWarpEngaged);
-    CHECK(e.controlLocks.count("TimeWarpTo") == 0u);
+    CHECK((InputLockManager::GetControlLock("TimeWarpTo") != ControlTypes::None ? 1u : 0u) == 0u);
     CHECK(w.tw.current_rate_index == 0);
     CHECK(TimeWarp::CurrentRate() == 1.0f);
     // The game logs "TgtUT Error"; the warp-down ramp is discretised by the 0.02 s tick at up to 10000x, so the error is
@@ -859,9 +863,9 @@ TEST_CASE("TimeWarp.CancelAutoWarp: stop key and delayed lock release") {
     CHECK_FALSE(w.tw.autoWarpEngaged);
     CHECK_FALSE(w.tw.AutoWarpRunning());
     CHECK(w.tw.current_rate_index == 0);
-    CHECK(e.controlLocks.count("TimeWarpTo") == 1u);  // still locked until the delayed callback runs
+    CHECK((InputLockManager::GetControlLock("TimeWarpTo") != ControlTypes::None ? 1u : 0u) == 1u);  // still locked until the delayed callback runs
     w.tw.ResumeAfterUpdate();
-    CHECK(e.controlLocks.count("TimeWarpTo") == 0u);
+    CHECK((InputLockManager::GetControlLock("TimeWarpTo") != ControlTypes::None ? 1u : 0u) == 0u);
 }
 
 TEST_CASE("WarpTransitionCalculator: UT needed to warp down between rate indices (stock rates)") {

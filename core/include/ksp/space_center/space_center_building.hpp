@@ -7,6 +7,7 @@
 // the Unity hierarchy (`destructibles` = buildingTransform.GetComponentsInChildren<DestructibleBuilding>, the facility's tags).
 #pragma once
 
+#include "ksp/input/input_lock_manager.hpp"
 #include <functional>
 #include <memory>
 #include <string>
@@ -34,7 +35,8 @@ class UpgradeableFacility;
 
 // the GUI / input seams the buildings call (all unset = dropped)
 struct SpaceCenterUI {
-    // InputLockManager.SetControlLock(ControlTypes mask, id) / RemoveControlLock(id): `set` true = lock
+    // Notification of the facility locks (the locks themselves go to the real InputLockManager: SetLock / RemoveLock below); `set` true = lock.
+    // Unset: nothing.
     static inline std::function<void(const std::string& lockId, bool set)> controlLock;
     // PopupDialog.SpawnPopupDialog(MultiOptionDialog(id, message, title, ...))
     static inline std::function<void(const std::string& dialogId, const std::string& title, const std::string& message)> popup;
@@ -42,9 +44,19 @@ struct SpaceCenterUI {
     static inline std::function<void(const std::string& text)> screenMessage;
     // GamePersistence.SaveGame("persistent", HighLogic.SaveFolder, SaveMode.OVERWRITE)
     static inline std::function<void()> saveGame;
-    static void SetLock(const std::string& id) { if (controlLock) controlLock(id, true); }
-    static void RemoveLock(const std::string& id) { if (controlLock) controlLock(id, false); }
+    // InputLockManager.SetControlLock(ControlTypes.KSC_ALL, id) of every facility (VehicleAssemblyBuilding.cs:42, SpacePlaneHangarBuilding.cs:43,
+    // TrackingStationBuilding.cs:22, AstronautComplexFacility.cs:22 / :28 / :35, AdministrationFacility.cs:16, MissionControlBuilding.cs:16,
+    // RnDBuilding.cs:15, FlagPoleFacility.cs:17 / :31, LaunchSiteFacility.cs:123 ... :397, SpaceCenterBuilding.cs:589 repairs)
+    static void SetLock(const std::string& id) {
+        InputLockManager::SetControlLock(ControlTypes::KSC_ALL, id);
+        if (controlLock) controlLock(id, true);
+    }
+    static void RemoveLock(const std::string& id) {
+        InputLockManager::RemoveControlLock(id);
+        if (controlLock) controlLock(id, false);
+    }
     static void Reset() {
+        InputLockManager::ClearControlLocks();
         controlLock = nullptr;
         popup = nullptr;
         screenMessage = nullptr;
