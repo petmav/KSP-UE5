@@ -17,6 +17,7 @@
 #include "ksp/dotnet/mono_float.hpp"
 #include "ksp/dotnet/random.hpp"
 #include "ksp/events/game_events.hpp"
+#include "ksp/fineprint/contract_defs.hpp"
 #include "ksp/localization/localizer.hpp"
 #include "ksp/modules/science_modules.hpp"
 #include "ksp/parts/available_part.hpp"
@@ -98,7 +99,14 @@ void SerenityContractEnvironment::Reset() {
 
 // ContractDefs.cs:817 / :2663
 SerenityContractDefs::DeployedScienceDefs SerenityContractDefs::DeployedScience() {
+    using CD = ::ksp::FinePrint::ContractDefs::DeployedScience;
     DeployedScienceDefs d;
+    d.expire = {CD::Expire::MinimumExpireDays, CD::Expire::MaximumExpireDays, CD::Expire::DeadlineDays};
+    d.FundsBaseAdvance = CD::Funds::BaseAdvance, d.FundsBaseReward = CD::Funds::BaseReward, d.FundsBaseFailure = CD::Funds::BaseFailure;
+    d.ScienceBaseReward = CD::Science::BaseReward;
+    d.ReputationBaseReward = CD::Reputation::BaseReward, d.ReputationBaseFailure = CD::Reputation::BaseFailure;
+    d.MaximumExistent = CD::MaximumExistent;
+    d.SciencePercentage = CD::SciencePercentage;
     d.MaximumExistent = I("DeployedScience", "", "MaximumExistent", d.MaximumExistent);
     d.SciencePercentage = F("DeployedScience", "", "SciencePercentage", d.SciencePercentage);
     d.expire.MinimumExpireDays = I("DeployedScience", "Expiration", "MinimumExpireDays", d.expire.MinimumExpireDays);
@@ -115,7 +123,19 @@ SerenityContractDefs::DeployedScienceDefs SerenityContractDefs::DeployedScience(
 
 // ContractDefs.cs:854 / :2674
 SerenityContractDefs::ROCScienceArmDefs SerenityContractDefs::ROCScienceArm() {
+    using CD = ::ksp::FinePrint::ContractDefs::ROCScienceArm;
     ROCScienceArmDefs d;
+    d.expire = {CD::Expire::MinimumExpireDays, CD::Expire::MaximumExpireDays, CD::Expire::DeadlineDays};
+    d.SimpleArmAdvance = CD::Funds::SimpleArmAdvance, d.SimpleArmReward = CD::Funds::SimpleArmReward, d.SimpleArmFailure = CD::Funds::SimpleArmFailure;
+    d.ComplexArmAdvance = CD::Funds::ComplexArmAdvance, d.ComplexArmReward = CD::Funds::ComplexArmReward, d.ComplexArmFailure = CD::Funds::ComplexArmFailure;
+    d.AdvancedArmAdvance = CD::Funds::AdvancedArmAdvance, d.AdvancedArmReward = CD::Funds::AdvancedArmReward, d.AdvancedArmFailure = CD::Funds::AdvancedArmFailure;
+    d.ScienceSimpleArmReward = CD::Science::SimpleArmReward, d.ScienceComplexArmReward = CD::Science::ComplexArmReward;
+    d.ScienceAdvancedArmReward = CD::Science::AdvancedArmReward;
+    d.ReputationSimpleArmReward = CD::Reputation::SimpleArmReward, d.ReputationSimpleArmFailure = CD::Reputation::SimpleArmFailure;
+    d.ReputationComplexArmReward = CD::Reputation::ComplexArmReward, d.ReputationComplexArmFailure = CD::Reputation::ComplexArmFailure;
+    d.ReputationAdvancedArmReward = CD::Reputation::AdvancedArmReward, d.ReputationAdvancedArmFailure = CD::Reputation::AdvancedArmFailure;
+    d.MaximumExistent = CD::MaximumExistent;
+    d.SimpleArmPercentage = CD::SimpleArmPercentage, d.ComplexArmPercentage = CD::ComplexArmPercentage;
     const char* s = "ROCScienceArm";
     d.MaximumExistent = I(s, "", "MaximumExistent", d.MaximumExistent);
     d.SimpleArmPercentage = F(s, "", "SimpleArmPercentage", d.SimpleArmPercentage);
@@ -146,7 +166,13 @@ SerenityContractDefs::ROCScienceArmDefs SerenityContractDefs::ROCScienceArm() {
 
 // ContractDefs.cs:917 / :2697
 SerenityContractDefs::ROCScienceRetrievalDefs SerenityContractDefs::ROCScienceRetrieval() {
+    using CD = ::ksp::FinePrint::ContractDefs::ROCScienceRetrieval;
     ROCScienceRetrievalDefs d;
+    d.expire = {CD::Expire::MinimumExpireDays, CD::Expire::MaximumExpireDays, CD::Expire::DeadlineDays};
+    d.FundsAdvance = CD::Funds::Advance, d.FundsReward = CD::Funds::Reward, d.FundsFailure = CD::Funds::Failure;
+    d.ScienceReward = CD::Science::Reward;
+    d.ReputationReward = CD::Reputation::Reward, d.ReputationFailure = CD::Reputation::Failure;
+    d.MaximumExistent = CD::MaximumExistent;
     const char* s = "ROCScienceRetrieval";
     d.MaximumExistent = I(s, "", "MaximumExistent", d.MaximumExistent);
     d.expire.MinimumExpireDays = I(s, "Expiration", "MinimumExpireDays", d.expire.MinimumExpireDays);

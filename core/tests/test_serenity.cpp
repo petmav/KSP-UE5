@@ -2948,3 +2948,37 @@ TEST_CASE("WP-53 scenario registration: DeployedScience and ROCScenario are crea
     a.reset();
     RT::DeployedScience::Instance = nullptr;
 }
+
+#include "ksp/fineprint/contract_defs.hpp"
+
+// wpfix9: SerenityContractDefs has no copy of the C# initialisers any more: the values are the typed FinePrint::ContractDefs statics
+// (ContractDefs.cs:817 / :854 / :917), so what ContractDefs::LoadConfig loaded is what the contracts see (the ContractDefsLite node still
+// overrides on top).
+TEST_CASE("wpfix9 SerenityContractDefs reads the typed ContractDefs statics") {
+    Clean53 clean;
+    SaveEnvironment::Reset();
+    namespace CDef = ksp::FinePrint;
+    CDef::ContractDefs::ResetToDefaults();
+    CHECK(SC::SerenityContractDefs::DeployedScience().MaximumExistent == 5);
+    CHECK(SC::SerenityContractDefs::ROCScienceArm().SimpleArmReward == 17000.0f);
+    CHECK(SC::SerenityContractDefs::ROCScienceRetrieval().FundsReward == 35000.0f);
+    // a value the typed statics hold reaches every field of the three structs
+    CDef::ContractDefs::DeployedScience::MaximumExistent = 11;
+    CDef::ContractDefs::DeployedScience::Funds::BaseAdvance = 111.0f;
+    CDef::ContractDefs::DeployedScience::Expire::DeadlineDays = 77;
+    CDef::ContractDefs::ROCScienceArm::Reputation::AdvancedArmFailure = 9.5f;
+    CDef::ContractDefs::ROCScienceArm::ComplexArmPercentage = 12.0f;
+    CDef::ContractDefs::ROCScienceRetrieval::Science::Reward = 3.25f;
+    CDef::ContractDefs::ROCScienceRetrieval::Expire::MinimumExpireDays = 4;
+    const auto d = SC::SerenityContractDefs::DeployedScience();
+    CHECK(d.MaximumExistent == 11);
+    CHECK(d.FundsBaseAdvance == 111.0f);
+    CHECK(d.FundsBaseReward == 21000.0f);  // untouched: the C# initialiser
+    CHECK(d.expire.DeadlineDays == 77);
+    CHECK(SC::SerenityContractDefs::ROCScienceArm().ReputationAdvancedArmFailure == 9.5f);
+    CHECK(SC::SerenityContractDefs::ROCScienceArm().ComplexArmPercentage == 12.0f);
+    CHECK(SC::SerenityContractDefs::ROCScienceRetrieval().ScienceReward == 3.25f);
+    CHECK(SC::SerenityContractDefs::ROCScienceRetrieval().expire.MinimumExpireDays == 4);
+    CDef::ContractDefs::ResetToDefaults();
+    CHECK(SC::SerenityContractDefs::DeployedScience().MaximumExistent == 5);
+}
