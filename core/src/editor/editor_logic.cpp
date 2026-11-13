@@ -181,6 +181,7 @@ void EditorLogicBase::AssignAttachIcon(Part* part, AttachNode& node, bool stackN
 EditorLogic::EditorLogic() { fetch = this; }
 
 EditorLogic::~EditorLogic() {
+    OnDestroy();   // the GameEvents listeners Awake registered (a no-op for an editor that was never awakened)
     if (fetch == this) fetch = nullptr;
 }
 

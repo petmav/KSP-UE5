@@ -3,10 +3,15 @@
 // (checkAttach / CheckSymPartsAttach), the offset / rotate gizmo callbacks, the undo / redo stack (ShipConstruction.backups) and the ship
 // queries (sortedShipList, AreAllPartsConnected, CountAllSceneParts) and the stock pre-flight check list.
 //
-// Not ported (the engine shell / UI): the KFSM state machine of the mouse-driven placement loop (EditorLogic.cs:1236-2366) and every
-// callback that only drives widgets, audio, cameras, screen messages, Steam export, crew dialogs and the save / load / exit dialogs. The
-// functions the loop calls are ported; the loop's composite steps that are pure data (what `on_partAttached`, `on_partPicked`, the
-// st_place update and OnLeave do to the part tree) are exposed as DropSelectedPart / PickPart / UpdatePlacement.
+// WP-40b: the KFSM placement loop (EditorLogic.cs:1236-2366 SetupFSM: the nine states st_podSelect .. st_root_select and the 28 on_* events) is ported in
+// src/editor/editor_fsm.cpp onto the KerbalFSM, with the drivers (Update / LateUpdate / FixedUpdate), pickPart / dragOverPlane, the key handlers
+// (symmetry, angle snap, undo / redo, delete, offset / rotate reset), StartEditor / NewShip / load and the part of EditorToolsUI that reacts to part
+// events and the 1-4 keys. Scene services the C# gets from Unity are EditorEnvironment seams (camera, Physics.Raycast hits, node icon bounds,
+// FindPartSurface, UI hover, audio clips, tweak hooks); keys and the mouse come from the WP-50 input device, Mouse, GameSettings and InputLockManager.
+// Not ported (the engine shell): every callback that only drives widgets, the part list and categorizer, crew dialogs, Steam export, the
+// save / load / exit dialogs, the flag browser, highlighting and layers, the compound part tweak mode, the inventory (cargo) UI.
+// The composite steps below (UpdatePlacement, LeavePlace, DropSelectedPart, PickPart) predate the loop and stay for hosts that drive the part tree
+// without a FSM.
 //
 // Unity transform model: a Part's transform is `PartTransform` (world position / rotation, parentless); the local position / rotation Unity
 // derives from the transform parent (the logical `Part.parent`) are computed by LocalPosition / LocalRotation below (the native matrix
