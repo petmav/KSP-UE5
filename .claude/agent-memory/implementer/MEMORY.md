@@ -16,3 +16,5 @@
 
 - [WP-UE-05 .mu render lessons](wpue05-mu-render-lessons.md) — C-ABI row-dump gate vs python rows, stock sweep via python -I, v0-2 extra value per node, build dir paths, mutation loop
 - [WP-40b editor loop lessons](wp40b-editor-loop-lessons.md) — session-replay gate with logged seams, output elision workaround, C# quirks the gate found
+- [WP-UE-16a effects lessons](wpue16-effects-lessons.md) — digest-per-step gate with hash fixtures, zDeprecated parts not loaded, 20 min header rebuilds, python heredoc traps, C# quirks kept
+- [wpfix9 leftovers lessons](wpfix9-leftovers-lessons.md) — verify the C# premise, bare Vessel needs loaded=true, Localizer.Format with args needs an instance, DelayedCallback(int)=frames, cite checker quirks, python text-mode CRLF

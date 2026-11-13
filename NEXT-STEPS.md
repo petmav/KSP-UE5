@@ -4,28 +4,48 @@ Updated 2026-11-13 (session 6; see "Session 6" below for the current state; the 
 
 ## Session 6 (2026-11-13, Fable orchestrating) - CURRENT STATE
 
-Main `da6db948`. PRs #40-#53 are merged (after Session 5's list: #40 progress feed, #42 gatekeeper retired, #43 wp52b joint drive backend, #45 wp20f SAS / FeedInputFeed / C10 ascent, #46 wp29d, #47 `ue5/DESIGN.md`, #48 wp38d, #49 wp21b, #50 wp20g host wiring, #51 wp29e, #52 wp19c quicksave / load, #53 wp12d PQS close-out). No PR was open at the start of the wave below. `analysis/tiering/progress.csv` is the per-package state; it now has rows `WP-UE-01..18` for the UE5 slice (`ue5/DESIGN.md` 6.3).
+Main `fd914366`. No PR is open, no agent is running, and the only worktree is the main checkout. The user stopped the session after wave UE-1 ("once these come back, stop"), so nothing below "Next" has been started.
 
-### In flight (wave UE-1; worktrees `.worktrees/wpueNN`, branches `wpueNN`, one Sonnet implementer each)
-| package | scope | owns |
+### Merged this session (all four CI jobs green on each)
+| PR | package | result |
 |---|---|---|
-| WP-UE-02 | game host + C ABI v2, ctest `capi.flight_slice` | `kspcore_c.h/.cpp`, `kspcore_game.h`, `kspcore_frame.h` (first commit = the frozen headers) |
-| WP-UE-01 | bridge rebuilt on the Jolt-linked core, link manifest, MXCSR guard, `KspUe5.Bridge.JoltStep` | `ue5/Plugins/KspCoreBridge`, `kspcore_test.h`, `src/capi/kspcore_test.cpp` |
-| WP-UE-05 | `.mu` render reader + texture headers | the model reader, `kspcore_model.h`, `src/capi/kspcore_model.cpp` |
-| WP-UE-06 | `ue5/Tools/extract_game_assets.py` (output `ue5/GameAssets/`, gitignored) | `ue5/Tools/` |
+| #53 | WP-12d | PQS close-out. WP-12 = 1.0. |
+| #54 | WP-UE-06 | `ue5/Tools/extract_game_assets.py` and `verify_game_assets.py`. Output `ue5/GameAssets/` is gitignored: 1.2 GB, 2,911 files, 45 s, two runs identical, verifier 0 mismatches. Not extracted: the `OceanReflection` cubemap, the ultra PQS texture arrays, built-in Arial, 3 KSC renderers with a null mesh. UE import of BC7 DDS is untested. |
+| #55 | WP-UE-01 | Bridge on the Jolt-linked core. Link manifest `core/build/RelWithDebInfo/kspcore_link.txt` (`KSPCORE_LINK_MANIFEST` overrides), `FKspFpGuard` (MXCSR 0x1F80), `kspcore_test.h`, ctest `capi.jolt_step`, UE tests `KspUe5.Bridge.LinksCore / FpGuard / JoltStep` (hash `0x0be3de1d6affe387` on both sides). AVX2 is required. One unexplained 6-minute stall on the first headless run did not recur. |
+| #56 | WP-UE-05 | `.mu` render reader and texture headers (`ksp/parts/mu_model.hpp`, `texture_header.hpp`, `kspcore_model.h`). 551 stock `.mu` with 0 parse errors, 0 mismatches against an independent Python reader. Findings: 28 distinct shader names (DESIGN lists fewer), DESIGN 3.4 says BC5 but the loader takes only DXT1 / DXT5, PartReader's multi-material `sharedMaterial` behaviour is unverified. |
+| #57 | WP-40b | `EditorLogic` KFSM (`EditorLogic.cs:1236-2365`) in `core/src/editor/editor_fsm.cpp`: 9 states, 28 events, 48 sessions at 0 ULP. WP-40 = 0.9. Left: offset-gizmo clamp (`TestPartBoundsSeparate`), CompoundPart tweak mode, inventory branches, the editor collision world (a seam). |
+| #58 | WP-UE-02 | Game host (`ksp/host/game_host.hpp`, `core/src/host/`) and C ABI v2 (`kspcore_game.h`, `kspcore_frame.h`, `KSPCORE_ABI_VERSION` 2, headers frozen at `643355d8`). ctests `capi.flight_slice` (pure C, stock Kerbal X on the real KSC pad, within the WP-20f tolerances) and `capi.flight_slice_twin` (hash `2c4ae66445a41c81`). Quicksave, quickload, revert. 1.35 ms per frame. WP-UE-02 = 0.85. |
+| #59 | WP-UE-16a | EFFECTS evaluation in core (`ksp/fx/`, `core/src/fx/`): EffectList, all 15 EffectDefinition classes, FXCurve, FXGroup, the FXModule family, engine / RCS / decoupler wiring. Gate: independent Python reference (`core/tools/wpue16/effects_reference.py`) over every stock EFFECTS node, 25,651 steps at 0 ULP. No in-game FX capture exists. WP-UE-16 = 0.4. |
+| #60 | wpfix9 | Small leftovers: `compare.py` now fails on unexplained extra rows (`ALLOWED_EXTRA_ROWS`, ctest `compare.extra_rows`), `CraftProfileInfo` `.loadmeta` cache, `SerenityContractDefs` reads `ContractDefs`, `CometVessel.OnAwake / OnStart`, `PartBuoyancy` servo drag, real `InputLockManager` in TimeWarp / FlagSite / SpaceCenterUI / EditorDriver, tests for FlightEVA / CrewTransfer / Kerbal. Fixed a port bug: `FlightEVA.onGoForEVA` used the wrong airlock (`FlightEVA.cs:220`). `ContractParameter::CreateID` needed no change (the C# `HashString` is never null). WP-38 = 0.97, WP-50 = 0.65, WP-52 = 0.86. |
 
-Next in the slice order (DESIGN 6.4): UE-03 cameras and UE-04 view-models after UE-02 (one package at a time in `src/capi/`), UE-07 sim subsystem once UE-01 is merged and UE-02's headers are frozen, core half of UE-16.
+Two orchestrator fixes went into those branches: `#include <stdexcept>` in three WP-UE-02 files (MSVC C2039), and `ShipConstruction::ShipConfig = nullptr` before the VAB clean-start check in `tests/test_space_center.cpp` (a test-order leak that the Linux shuffle exposed once new cases were added). A stray `core/testdata/GameData-mirror/settings.cfg` was removed from wpfix9 before merge.
 
-### Core leftovers (survey of `core/STATUS.md` on `a4dabf8e`; everything else in the partial packages is shell, capture, local data or DLC data)
-- Portable now: WP-40 KFSM placement loop (`EditorLogic.cs:1236-2366`, ~1,130 lines; DESIGN 6.5 wants it before the VAB); WP-38 `ContractSystem.ConstructShip` PRELAUNCH branches (`:1213-1330`), `CraftProfileInfo` .loadmeta cache (`:236-373`), `CometVessel.OnStart`; WP-54 `ActionCreateVessel` scene branch / the non-scene part of `MissionSystem`; WP-32 tests for FlightEVA / CrewTransfer / RetractableLadder / Kerbal; small items in WP-29 (stand-in sphere layer and ignore list, `ModuleWheelDamage` collider, suspensionPos local), WP-52 / 53 (PartBuoyancy servoRb drag, `ApplyUpgradeNode` in CommPowerUnloaded, SerenityContractDefs defaults), WP-50 (re-point the InputLockManager / GameSettings stand-ins).
+### Open points from the wave
+- WP-UE-02, remaining 0.15: the host sets `Difficulty.EnableCommNet = false` for new games because no ground station is modelled (KSP's sandbox default is on; a probe core otherwise has control level 0). The fix is CommNet home nodes in the host. Commands `SAS_MODE`, `SET_ACTIVE_VESSEL`, `MAP_VIEW`, `PART_EVENT` and events `STRUCTURE_CHANGED`, `SOUND_CUE` are not implemented. Snapshot slots for camera, gimbal node pose, FX, thermal glow and sun colour are reserved and zero. Non-FLIGHT scenes start nothing, only Kerbin gets a PQS, the FRAME_CHANGE rotation is an identity placeholder, crew boarding is unverified, the thread options are untested.
+- WP-UE-16: nothing in the host calls `Part::InitializeEffects`, `BeginFXGroups`, `UpdateFX` or `EffectList::OnGamePause / OnGameUnpause` yet, and the snapshot does not carry FX. Emitter base values (`.mu` KSPParticleEmitter, `squadcorefx.ksp`) are seams: the WP-UE-05 reader drops them. `ModulePartFirework`, `ModuleRobotArmScanner`, `ModuleEffectTest` are not in core. ParticleConfigFX colour animation and material persistence are not ported.
+- `tests/test_input_flight.cpp` writes `settings.cfg` into `core/testdata/GameData-mirror` during a whole-binary run. It is untracked noise today and was once committed by accident. The test should write to a temporary directory.
+- Test independence: static state still leaks between test cases (`ShipConstruction::ShipConfig` was one). Each new test case reshuffles `unit.random_order.*` on Linux, so a branch that only adds tests can fail there. Fix the leaking case's precondition, do not reorder.
+- wpfix9 skipped, with reasons: `ApplyUpgradeNode` in CommPowerUnloaded (needs `PartUpgradeHandler`, 468 lines), `connectedMassScale` (the Jolt servo joint does not model it), negative-zero float format (no capture, Mono `NumberFormatter` is not in the decompile), `CrewHatchController` and `RetractableLadder` tests (each needs its own engine-seam fixture), the 11 `GameSettings` shim names in `ksp_util.hpp` (include cycle), `GetSFSMD5`, the Making History part filter.
+- With three or four core builds running at once on this machine the `unit.random_order.*` ctest entries hit the 600 s timeout. They pass when run alone, and CI is authoritative.
+
+### Next (not started; DESIGN 6.3 / 6.4 order)
+1. WP-UE-07 sim subsystem (local only; needs UE-01 and UE-02, both merged). Gate: `KspUe5.Slice.HeadlessParity` against the `capi.flight_slice` hash.
+2. WP-UE-03 cameras, then WP-UE-04 view-models. One package at a time in `src/capi/`.
+3. WP-UE-16 second half: host calls, ABI exposure, then the shell side.
+4. The rest of WP-UE-02 (list above), then UE-08..15, 17, 18.
+5. Before any shell rendering package: regenerate `ue5/GameAssets/` in the main checkout with `ue5/Tools/extract_game_assets.py --game decompiled/KSP-dev` (needs `harness/lib`). The copy made by WP-UE-06 was in its worktree and is gone.
+
+### Core leftovers (survey of `core/STATUS.md`; everything else in the partial packages is shell, capture, local data or DLC data)
+- Portable now: WP-38 `ContractSystem.ConstructShip` PRELAUNCH branches (`:1213-1330`); WP-54 `ActionCreateVessel` scene branch and the non-scene part of `MissionSystem`; the WP-40 items listed under #57; wheel small items (stand-in sphere layer and ignore list `ModuleWheelDeployment.cs:394-405`, the `ModuleWheelDamage` collider, suspensionPos local).
 - Physics judgement (optimizer): joint compliance in the load model (WP-20 / WP-29), `ignoreCollisionsFrames` grace at touchdown (`Vessel.cs:2543`).
-- Still open across packages: `harness/compare/compare.py` counts extra candidate rows but does not fail on them; `ContractParameter::CreateID` lacks the C# null check; run-alone independence of the WP-40 symmetry test and `PartLoader on the GameData mirror`.
 - Needs the game copy (local extraction): KSC level-scene data (facility fields, launch sites, upgrade costs, DestructibleBuilding prefab values: STATUS "WP-12d" and `core/PROGRESS-wp12d.md` disagree on whether these were extracted, check first), CrewGenerator name tables, `SiteGeneratorInfo`, kerbalEVA prefab mass, MEAwards prefab, a career save.
-- Needs captures (profiling build): C11 wheels, servo drive law, Quaternion Euler / LookRotation / Lerp natives, drop / splashdown / pad settle, settings.cfg as written by the game.
+- Needs captures (profiling build): C11 wheels, servo drive law, Quaternion Euler / LookRotation / Lerp natives, drop / splashdown / pad settle, settings.cfg as written by the game, an FX capture for WP-UE-16.
 
 ### Environment notes
 - This machine has UE 5.8, `decompiled/KSP-dev`, the `profiling` worktree and archive, `harness/lib`, and WSL with clang / g++ / cmake / ninja.
-- The `implementer` and `optimizer` agent types did not load in this session (only `classifier` did; the files in `.claude/agents/` are unchanged). The wave runs on general-purpose agents pinned to Sonnet that read `.claude/agents/implementer.md` as their role.
+- The `implementer` and `optimizer` agent types did not load in this session (only `classifier` did; the files in `.claude/agents/` are unchanged, cause unknown). The wave ran on general-purpose agents pinned to Sonnet that read `.claude/agents/implementer.md` as their role and used `.claude/agent-memory/implementer/`.
+- Four concurrent Sonnet agents reached the 5-hour usage limit once and two stopped mid-work; they resumed after the reset with their context intact.
+- A push to a PR branch takes about half a minute to register its CI run: `gh pr checks --watch` started sooner exits with "no checks reported".
 
 ## Done
 
