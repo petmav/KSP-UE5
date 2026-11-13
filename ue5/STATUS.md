@@ -52,6 +52,26 @@ local DDC.
 
 The FEASIBILITY phase-0 gate asked for an incremental loop under about 2 minutes: **met with a wide margin (27 s)**.
 
+## Game asset extraction (WP-UE-06, `Tools/`)
+
+`Tools/extract_game_assets.py` extracts the slice's Unity-serialized assets from `decompiled/KSP-dev` into `ue5/GameAssets/`
+(gitignored), `Tools/verify_game_assets.py` re-checks them by a second route. Layout, conventions and the list of what is not
+extracted: `Tools/README.md`. Measured on this laptop (extraction 45 s, verification 115 s, 1.2 GB):
+
+| category | found | files | MB | verification mismatches |
+|---|---|---|---|---|
+| scaled space (17 bodies: meshes, materials, textures) | 17 bodies | 109 | 487.2 | 0 |
+| GalaxyCube skybox | 6 faces | 25 | 134.2 | 0 |
+| Kerbin PQS materials + textures (incl. ocean) | 25 roles | 39 | 21.5 | 0 |
+| KSC render meshes (`Kerbin/KSC`) | 2,795 objects, 1,527 renderers | 2,396 | 472.0 | 0 |
+| fonts | 16 Font objects (Arial has no data) | 15 | 10.7 | 0 |
+| flight HUD UI (sprites, NavBall / gizmo meshes, materials) | 455 sprites | 329 | 3.1 | 0 |
+| all (files shared between categories counted once) | | 2,910 | 1,127.1 | 0 |
+
+Two extractions from scratch gave the identical `manifest.json` (it lists the sha256 of every output). Not extracted and listed in
+`manifest.json` `missing` (7): the built-in Arial font, three KSC renderers whose mesh PPtr is null in the game, the `OceanReflection`
+cubemap and the two `Texture2DArray`s of the ultra-quality PQS atlas (not decoded). The shell keys its caches on (path, sha256).
+
 ## Spike verdict (details in `spike/RESULTS.md`)
 
 - **Jitter-free at Kerbin scale: YES**, with LWC alone and no rebasing, provided every primitive stores vertices relative to a
