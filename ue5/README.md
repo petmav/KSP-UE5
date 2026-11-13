@@ -64,9 +64,15 @@ Notes:
 
 ## Tests
 
-`Source/KspUe5/Tests/KspUe5Tests.cpp`, all under the `KspUe5.` prefix:
+`Source/KspUe5/Tests/` (`KspBridgeTests.cpp`, `KspUe5Tests.cpp`), all under the `KspUe5.` prefix:
 
-- `KspUe5.Bridge.LinksCore`: calls `kspcore_build_info()` through the bridge, checks /MD CRT, `_ITERATOR_DEBUG_LEVEL=0`, ABI v1.
+- `KspUe5.Bridge.LinksCore`: calls `kspcore_build_info()` through the bridge, checks /MD CRT, `_ITERATOR_DEBUG_LEVEL=0`, C++20, ABI v1 (compiled
+  and reported), real core not the stub, manifest lists both libraries, manifest `JPH_*` definitions equal the Jolt configuration of the
+  linked library.
+- `KspUe5.Bridge.FpGuard`: MXCSR control bits inside core are 0x1F80 whatever the caller's state (FTZ / DAZ set), restored after; nested guards.
+- `KspUe5.Bridge.JoltStep`: a core Jolt scenario stepped through the test ABI (`kspcore_test.h`) gives the same state hash as its ctest twin
+  `capi.jolt_step` (which writes `core\build\RelWithDebInfo\kspcore_jolt_step.txt`; `Scripts\test.ps1` runs the twin first), run to run, at 4
+  threads, and under a hostile caller MXCSR.
 - `KspUe5.Precision.Float32VsLwc`: float32 world-space vs UE5 LWC vertex pipeline emulation at Kerbin radius.
 - `KspUe5.Spike.CubeSpherePatch`: cubesphere patch geometry, float-local precision and winding.
 
@@ -77,17 +83,18 @@ Results: `Saved/Logs/automation.log` and the JSON report in `Saved/Automation/`.
 `Plugins/KspCoreBridge/Source/KspCoreBridge/KspCoreBridge.Build.cs`:
 
 ```csharp
-private static readonly bool bUseRealCore = false;   // -> true
+private static readonly bool bUseRealCore = true;   // false = the placeholder in Stub/
 ```
 
-With `true` the bridge uses `<KSPCORE_ROOT or C:\Projects\KSP-UE5\core>\include` and
-`<root>\build\RelWithDebInfo\kspcore.lib` (override the lib path with env `KSPCORE_LIB`). Then rebuild the editor target.
-The build fails fast with a clear message if the lib is missing.
+With `true` the bridge reads the **link manifest** the core build writes: `<KSPCORE_ROOT or <repo>\core>\build\RelWithDebInfo\kspcore_link.txt`
+(override with env `KSPCORE_LINK_MANIFEST`). It lists `kspcore.lib` and `Jolt.lib` in link order, the include directory and the
+definitions that must match (`JPH_*`, Jolt's configuration). Build the core first: `powershell core\run_tests.ps1 -BuildOnly`.
+The build fails fast with a clear message if the manifest or a listed file is missing. The bridge module compiles with
+`FPSemantics = Precise`, and every call into core goes through `FKspFpGuard` (MXCSR 0x1F80).
 
 What the core must provide:
-- `include/kspcore/kspcore_c.h` with `#define KSPCORE_ABI_VERSION 1` and `extern "C" const char* kspcore_build_info(void);`
-  (copy `Stub/include/kspcore/kspcore_c.h`). Only C types cross this boundary.
-- `kspcore.lib`, a static library built so that it links into UE 5.8:
+- `include/kspcore/kspcore_c.h` (`KSPCORE_ABI_VERSION`, `kspcore_build_info`) and the test-only `kspcore_test.h`. Only C types cross this boundary.
+- `kspcore.lib` (+ `Jolt.lib`), static libraries built so that they link into UE 5.8:
 
 | Setting | Required value | Why |
 |---|---|---|
@@ -104,6 +111,17 @@ UE floating-point note: the Editor target compiles with `/fp:precise`, but the G
 (UBT `VCToolChain.cs`, BuildSettingsVersion V7). The core's own objects keep the core's flags, so keep numerically sensitive
 code out of headers that UE translation units compile, or set `FPSemantics = FPSemanticsMode.Precise` in the module that
 includes them.
+
+## Game assets (WP-UE-06)
+
+The Unity-serialized assets (scaled-space bodies, Kerbin PQS materials, GalaxyCube, KSC render meshes, fonts, flight HUD sprites) are
+extracted once per machine into `GameAssets/` (gitignored) by `Tools/extract_game_assets.py`; `Tools/verify_game_assets.py` checks the
+result by an independent route. Output layout, manifest and conventions: `Tools/README.md`.
+
+```
+harness\tools-cache\venv\Scripts\python.exe -I ue5\Tools\extract_game_assets.py --game decompiled\KSP-dev --out ue5\GameAssets   # 45 s
+harness\tools-cache\venv\Scripts\python.exe -I ue5\Tools\verify_game_assets.py --game decompiled\KSP-dev --assets ue5\GameAssets  # 115 s
+```
 
 ## Spike
 
