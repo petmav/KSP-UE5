@@ -2,6 +2,7 @@
 // Every function cites File.cs:line of decompiled/KSP-Decompiled/Assembly-CSharp/.
 #include "ksp/modules/module_decouplers.hpp"
 #include "ksp/modules/module_structural.hpp"
+#include "ksp/fx/fx_group.hpp"
 
 #include <algorithm>
 
@@ -242,7 +243,10 @@ void ModuleDecouple::OnActive() {
 // ModuleDecouple.cs:63
 void ModuleDecouple::OnDecouple() {
     ModuleDecouplerBase::OnDecouple();
-    // fx.Burst(): FX
+    if (Part* fp = PartOf()) {  // if (fx != null) fx.Burst()
+        if (fxFound)
+            if (FXGroup* g = fp->FindFXGroup(Get<std::string>("fxGroupName"))) g->Burst();
+    }
     Part* p = PartOf();
     if (p == nullptr || p->vessel == nullptr) throw Nre();
     Part* parent = p->parent;
@@ -346,7 +350,8 @@ void ModuleAnchoredDecoupler::OnDecouple() {
     ModuleDecouplerBase::OnDecouple();
     Part* p = PartOf();
     if (explosiveNode != nullptr && explosiveNode->attachedPart != nullptr) {
-        // fx.Burst(); anchor.parent = otherPart.transform: FX / model
+        if (fxFound)  // if (fx != null) fx.Burst(); (anchor.parent = otherPart.transform: model)
+            if (FXGroup* g = p->FindFXGroup(Get<std::string>("fxGroupName"))) g->Burst();
         otherPart = explosiveNode->attachedPart;
         if (otherPart == p->parent) p->decouple();
         else otherPart->decouple();

@@ -391,8 +391,7 @@ void PartModuleForces::EngineFixedUpdate(Part& part, ModuleEngines& e, Vessel& v
     e.flightInput = in;
     e.warping = HighWarp() || v.packed;  // ModuleEngines.cs:1530 TimeWarping (part.packed: the vessel's)
     e.FixedUpdate();
-    if (!e.warping)
-        if (auto* fx = dynamic_cast<ModuleEnginesFX*>(&e)) fx->FXUpdate(in.fixedDeltaTime);  // ModuleEnginesFX.cs:59 (the spool)
+    // FXUpdate (ModuleEngines.cs:1601) runs at the end of ModuleEngines::FixedUpdate
     // ModuleEngines.cs:1551-1566: part.AddForceAtPosition per thrust transform, then part.AddThermalFlux
     for (const EngineForce& f : e.lastThrust.forces) {
         PartAddForceAtPosition(part, Vector3d(f.force), Vector3d(f.position));

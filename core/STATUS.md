@@ -7968,3 +7968,73 @@ The pad is the real KSC LaunchPad (colliders and spawn transform), not WP-20f's 
 
 `643355d8` header freeze; `64f31f36` PROGRESS note; `96bbeb2b` host, ABI implementation, gates; `9bd1df54` quicksave / quickload / revert, hygiene probe, FlightDriver statics, TimeWarp start; `8ec084a9` upgrade pipeline and crew fill in the launch path; `3e0244b3` settings round trip, progress row; the merge of origin/main; then this note.
 - After the second merge with main `9bef14d2` (WP-40b, WP-UE-05), incremental `run_tests.ps1` (build 150.6 s, ctest 787 s under heavy machine load; `unit.random_order.11 / 27 / 42` 410 / 448 / 526 s, under their 600 s timeout): **58 / 58 pass**.
+
+## WP-UE-16a: EFFECTS evaluation in core (branch `wpue16`, from main `82ef52e4`, merged with `origin/main` incl. WP-UE-05, WP-UE-02, WP-40b)
+
+State: the core half is done and unit-gated; the C ABI / snapshot exposure (package `wpue02` owns `include/kspcore/`, `src/capi/`) and the shell half (WP-UE-16b: Unreal plumes, audio components, listening check) are not started. `analysis/tiering/progress.csv` WP-UE-16 = 0.4.
+
+There is NO in-game FX capture (no capture of an engine plume, an AudioSource or a particle system exists in `harness/captures/`): the gate is a unit gate against an independent Python reference written from the decompiled C#. Nothing here is compared with a running game.
+
+### What is in
+
+| piece | files | KSP source |
+|---|---|---|
+| FXCurve (cfg forms, `Value(time)`, Save; Unity `AnimationCurve` of WP-01, ClampForever) | `include/ksp/fx/fx_curve.hpp`, `src/fx/fx_curve.cpp` | `FXCurve.cs:6-152` |
+| EffectList (OnLoad / LoadEffect, GetEffect naming rules, Event(name[, power][, idx]), Initialize, OnSave, EffectsStartingWith, PlayRandomEffect, Instantiate copy, registry of the 15 `EffectDefinition` classes), EffectBehaviour, the published `EffectInstanceState` / `EffectEvent` / `AudioSourceState` / `EmitterState` | `include/ksp/fx/effects.hpp`, `src/fx/effect_list.cpp` | `EffectList.cs`, `EffectBehaviour.cs:123-152` |
+| AUDIO, AUDIO_LOOP, AUDIO_SINGLE, AUDIO_MULTI, AUDIO_MULTI_POOL (static Smooth pool, 64 sources) | `include/ksp/fx/effect_classes.hpp`, `src/fx/effect_audio.cpp` | `AudioFX.cs`, `AudioLoopFX.cs`, `AudioSingleFX.cs`, `AudioMultiFX.cs`, `AudioMultiPooledFX.cs`, `Smooth/Pools/Pool.cs` |
+| MODEL_PARTICLE, MODEL_MULTI_PARTICLE, PREFAB_PARTICLE, PREFAB_MULTI_PARTICLE (emission / energy / speed curves evaluated; final emission, energy, velocity when the emitter base values are provided) | `src/fx/effect_particle.cpp` | `ModelParticleFX.cs`, `ModelMultiParticleFX.cs`, `PrefabParticleFX.cs`, `PrefabMultiParticleFX.cs` |
+| ANIMATION, MODEL_ANIMATION, PREFAB_ANIMATION, PREFAB_SPAWN, PARTICLE_CONFIG, ROCSAUDIO | `src/fx/effect_anim.cpp` | `AnimationFX.cs`, `ModelAnimationFX.cs`, `PrefabAnimationFX.cs`, `PrefabSpawnFX.cs`, `ParticleConfigFX.cs`, `ROCsSFX.cs` |
+| FXGroup (the legacy group state: setActive, setActiveWithAudioFade with the VolumeFade steps, Burst, SetPower, SetPowerLatch, latch, visual min / max, audio fields) | `include/ksp/fx/fx_group.hpp`, `src/fx/fx_group.cpp` | `FXGroup.cs` |
+| Part side: `Effects()`, `InitializeEffects`, `LoadEffects`, `SaveEffects`, `Effect(...)` (+ `Part::effectCallHook`), `FindFXGroup`, `AddFXGroup`, `BeginFXGroups`, `UpdateFX` | `src/fx/part_fx.cpp`, `include/ksp/parts/part.hpp` | `Part.cs:1103`, `:1525`, `:6162-6200` |
+| FXModuleAnimateThrottle, FXModuleAnimateRCS, FXModuleThrottleEffects (+ PartModuleFXSetter), FXModuleLookAtConstraint, FXModuleConstrainPosition, `FindEngineNearby` | `include/ksp/fx/fx_modules.hpp`, `src/fx/fx_modules.cpp` | the files of the same names, `PartModuleList.cs:147` |
+| callers | `ModuleEngines` legacy FX path (SetupFXGroups, HijackFX, Play*FX, FXUpdate ...) and `ModuleEnginesFX` effect calls (OnAwake, PlayEngage / Shutdown / FlameoutFX, FXUpdate, Deactivate*FX, InitializeFX); `ModuleRCS` / `ModuleRCSFX` (SetupFX, UpdatePowerFX, DeactivateFX, OnAwake); `ModuleDecouple` / `ModuleAnchoredDecoupler` (`fx.Burst`); `CompoundPart.DisconnectCompoundPart`; `ModuleAnimationGroup`; `ModuleWheelDeployment` | `ModuleEngines.cs:890-1300`, `ModuleEnginesFX.cs`, `ModuleRCS.cs:838-892`, `ModuleRCSFX.cs`, `ModuleDecouple.cs:63`, `ModuleAnchoredDecoupler.cs:41`, `CompoundPart.cs:91`, `ModuleAnimationGroup.cs`, `ModuleWheelDeployment.cs` |
+
+Published data shape: `Part::Effects().Snapshot()` is the ordered list "effect instance -> current parameters" (effect name, instance name, class, named floats, named strings, the audio sources the instance owns with volume / pitch / loop / play state / clip name, the emitters with emit / playing / burst flags, the evaluated emission / energy / speed powers and the final emission, energy, velocity values); `TakeEvents()` is the ordered one-shot list of a frame (`emit`, `play`, `audioPlay`, `audioStop`, `animPlay`, `animSample`, `spawn`, `fxGroupBurst`). `Part::effectCallHook` observes every module -> effect call. Legacy groups: `Part::FindFXGroup(name)->Snapshot()`. The Unity-facing calls are seams of `EffectEnvironment` / `FXGroupEnvironment` / `FXModuleEnvironment` (clip existence and length, transform counts and activity, model and prefab lookups with the emitter base values, animations, EVA); unset = the C# answer for a part without a model.
+
+### Gate (`tests/test_effects.cpp`, 6 cases; `tools/wpue16/effects_reference.py` -> `tests/data/wpue16_reference.json`, 1.1 MB)
+
+The reference is independent Python written from the C# (own cfg parser, own AnimationCurve float32 evaluation, Mono float rule); it parses every part cfg of `core/testdata/GameData-mirror` and replays scripted steps. The compared quantity is a FNV-1a 64 digest over the canonical text rows of every step (each float as its IEEE bit pattern), plus a 32-bit digest per step, so 0 ULP on every published parameter and the C++ failure text names the first differing step.
+
+| item | measured by the reference run |
+|---|---|
+| parts scanned | 112 parts with EFFECTS or fx_* / sound_* lines; 52 stock parts with EFFECTS (5 of them are not loaded by the loader (zDeprecated): their lists are read from the cfg, their module / group scripts are skipped in C++; 47 also through `Part.effects`) + 1 fixture |
+| effect names | 158 |
+| behaviours per class (stock + fixture) | AUDIO 151, PREFAB_PARTICLE 37, MODEL_MULTI_PARTICLE 28, AUDIO_LOOP 14, AUDIO_MULTI_POOL 4, AUDIO_SINGLE 2, PARTICLE_CONFIG 2, MODEL_PARTICLE 1, AUDIO_MULTI 1, ANIMATION 1, MODEL_ANIMATION 1, PREFAB_ANIMATION 1, PREFAB_MULTI_PARTICLE 1, PREFAB_SPAWN 1, ROCSAUDIO 1 (stock uses 6 classes; the other 9 are covered only by the fixture) |
+| unknown effect classes | none in the stock parts (the fixture adds `UNKNOWN_CLASS`, logged and skipped as in C#); unnamed same-class nodes collapsed: 0 stock |
+| scenarios | per EFFECTS part: sweep (9 powers x every effect, 5 transform-index events, one-shot events, pause / unpause), early (events before OnInitialize, a second Initialize), eva, loading (no pause subscription), save (OnSave text); per engine part 2 engine sequences (response-time spool on / off); per RCSFX part 1; per part with fx_* / sound_* lines 1 legacy-group script |
+| steps / rows | 25,651 list / engine / RCS / group steps and 1,388,886 hashed rows in total (reference run, FXModule scripts included) |
+| FXModule scripts | 70 AnimateThrottle (35 parts x flight / editor), 10 AnimateRCS (5 parts x affectTime on / off), 10 LookAtConstraint, 3 ConstrainPosition |
+| mismatches | 0: 53 parts, 212 list scenarios + 53 OnSave texts, 25,960 legacy group snapshots (53 parts; 13 not loaded), 42 ModuleEnginesFX and 8 ModuleRCSFX sequences (2,648 steps), 60 AnimateThrottle + 10 AnimateRCS + 10 LookAt + 3 ConstrainPosition scripts (`kspcore_tests -tc="WP-UE-16a*"`: 6 cases, 5,444 assertions, also with `--order-by=rand -rs=11` and `-rs=27`) |
+
+Mutation check: swapping `minEnergy` for `maxEnergy` in the MODEL_MULTI_PARTICLE evaluation fails the sweep gate at step 4 of the first part carrying the class (restored, not committed).
+
+### Fixtures (labelled inputs, identical hash functions in the Python and the C++)
+
+The mirror's `.mu`, prefab and audio files are stubs and `decompiled/KSP-dev` is out of reach of the tests, so the values the game's assets would give are hash functions of the names: transform counts and activity, clip existence and length, KSPParticleEmitter / ParticleSystem base values, prefab and animation lookups, the `GameSettings` volumes. They exercise every branch (missing transform, missing model, bursts vs rate, inactive transform ...) but are not the game's numbers. The effect definitions, module field values and legacy `fx_*` / `sound_*` lines are the real cfgs. One EFFECTS node (inside the reference JSON, not a part) covers the nine classes and the unknown class that no stock part uses.
+
+### C# quirks kept (each is in the gate)
+
+`FXCurve(string, float)` ignores the name; a one-line curve with two tokens returns the first token (the time); two unnamed nodes of one class under one effect share one behaviour (a null `instanceName` matches any); an effect name whose class nodes were all unknown has no entry in an instance; PREFAB_PARTICLE's speed curve changes nothing (the `MinMaxCurve` copies are never assigned back) while PREFAB_MULTI_PARTICLE's does; with bursts the prefab base emission is `new Burst[n][0]` = 0; PARTICLE_CONFIG's `OnEvent(power)` clamps the parameter, `sizeGrow` / `lengthScale` are never loaded; the animation effects' `OnSave` copies the node onto itself (values twice) and their `OnEvent` has no null guard (NullReferenceException); `AudioFX` with `polyphony <= 0` throws; `Pool.Size` is the high-water mark of the free stack; `HijackFX` leaves the fields on the original group; the power block of `SetupFXGroups` indexes `flameoutGroup.lights` with the power group's count; `ModuleRCSFX.DeactivateFX` does not reset `thrustForces` and the high-warp branch of `ModuleRCS.FixedUpdate` only calls `DeactivatePowerFX`.
+
+### Changes to existing behaviour
+
+`ModuleEngines::FixedUpdate` now ends with `FXUpdate(fixedDeltaTime)` (C# `:1601`); `physics/part_forces.cpp` no longer calls it separately (`ModuleEnginesFX::FXUpdate` had been called there for the spool value only); it also calls `DeactivateLoopingFX()` while warping. `Part::LoadEffects` builds a real EffectList instead of keeping the nodes; `Part::effectNodes_` is gone. `ModuleRCS::DeactivateFX` is virtual. The existing gates (`golden.engine_thrust`, `capture.engine_deltav`, `capture.part_database`, every unit case) are unchanged and green: see Verification.
+
+### Not done / follow-ups
+
+- C ABI / snapshot exposure of the published data (package `wpue02` owns `include/kspcore/`, `src/capi/`), the shell (WP-UE-16b), a host that calls `Part::InitializeEffects()`, `BeginFXGroups()`, `UpdateFX(dt)`, `EffectList::OnGamePause()` / `OnGameUnpause()` per frame (no flight-start flow in core calls them yet; the engine's flight `OnStart` calls `InitializeFX`).
+- Callers not wired because the module is not in core: `ModulePartFirework` (`Thump`, `Explosion*`), `ModuleRobotArmScanner`, `ModuleEffectTest`; `KerbalEVA` golf / banana sounds go through the EVA engine seam (`Engine().Effect`); `ModuleInventoryPart` still counts `effectPlays` (the prefab EffectList of a stored part is not reachable there).
+- Emitter base values (KSPParticleEmitter in the effect `.mu`, ParticleSystem in `squadcorefx.ksp`) are provided through `EffectEnvironment::modelEmitter` / `prefabParticle`; without them only the powers are published. The WP-UE-05 reader drops the ParticleEmitter values: extracting them is the shell's follow-up.
+- `AudioSource.isPlaying` of a one-shot ends after `audioClipLength` seconds of `Update(dt)` (unset length: at the next Update); `AudioSource.Pause` making `isPlaying` false is inferred, not read. Legacy `FXGroup` construction applies `fx_*` before `sound_*` lines (the part keeps the two lists apart). The `Random.Range` of `audio.time` goes through `FXGroupEnvironment::randomRange`.
+- ModuleEngines `OnInventoryModeDisable`, `AutoPlaceFXGroup`, `EngineExhaustDamage` unchanged (placement is the shell's).
+- The FXModule gate excludes the two MultiModeEngine parts (name resolution of `MultiModeEngine.engineName`) and parts whose engine is found only through the parent / children.
+
+### Verification (this branch)
+
+Measured on this branch after merging `origin/main` (WP-UE-02, WP-40b) on Windows MSVC (all numbers from my own runs):
+
+- `core/build` deleted, `run_tests.ps1 -Fresh` (CMAKE_BUILD_PARALLEL_LEVEL=4, 705 build steps): 58 / 58 ctest tests pass in 341 s of test time, including `unit.shard.*`, `unit.random_order.11` / `.27` / `.42` (222 s / 215 s / 306 s, no timeout), `capture.part_database`, `golden.engine_thrust` and `capture.engine_deltav` (unchanged gates, unchanged tolerances).
+- Whole unit binary before the merge: 1,149 cases, 1,715,264 assertions, 0 failed (one earlier run of the same binary failed 2 of my own cases before the zDeprecated / group fixes; no other case ever failed).
+- `g++ -std=c++20 -fsyntax-only` in WSL (GCC 13.3) over every changed `.cpp` and `tests/test_effects.cpp`: clean.
+- `python -I core/tools/ci/pr_review.py --base main`: 0 failing checks (19 older cite mismatches in neighbouring lines of files this branch touches are not on changed lines); `python -I core/tools/wp28/check_cites.py` on `src/fx/*.cpp` and `include/ksp/fx/*.hpp`: 147 cites, 0 mismatches (`NAME_ALIAS` gained `OnEventPower`, `PoweredEvent`, `~AudioMultiPooledFX`, `StartFade`, `FindFXGroup`, `OnUpdate`).
+- Not run: Linux build, the in-game FX comparison (no capture exists), Unreal.

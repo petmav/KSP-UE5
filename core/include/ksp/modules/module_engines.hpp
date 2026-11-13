@@ -34,6 +34,7 @@
 
 #include "ksp/aero/float_eval.hpp"
 #include "ksp/engines/engine_interfaces.hpp"
+#include "ksp/fx/effects.hpp"
 #include "ksp/modules/part_module.hpp"
 #include "ksp/parts/part.hpp"
 #include "ksp/parts/part_module_data.hpp"
@@ -98,6 +99,36 @@ public:
 
     // The model reader's hook: Part.FindModelTransforms(name) for a part (unset: the part has no such transforms).
     static inline std::function<std::vector<PartTransform>(Part&, const std::string&)> findModelTransforms;
+
+    // ---- FX (ModuleEngines.cs:318-334, :890-1300): the legacy FXGroup path; ModuleEnginesFX replaces it with part.Effect calls ----
+    FXGroup* flameoutGroup = nullptr;             // :318
+    FXGroup* runningGroup = nullptr;              // :320
+    FXGroup* powerGroup = nullptr;                // :322
+    FXGroup* engageGroup = nullptr;               // :324
+    FXGroup* disengageGroup = nullptr;            // :326
+    std::vector<FXGroup*> runningGroups;          // :328
+    std::vector<FXGroup*> flameoutGroups;         // :330
+    std::vector<FXGroup*> powerGroups;            // :332
+    std::unique_ptr<AudioSourceState> powerSfx;   // :334 (the AudioSource InitializeFX adds)
+    void BurstFlameoutGroups();                   // :890
+    void SetRunningGroupsActive(bool active);     // :899
+    void SetPowerGroupsActive(bool active);       // :908
+    void HijackFX(FXGroup* group, const std::string& groupName);  // :917
+    void SetupFXGroups();                         // :942 (AutoPlaceFXGroup, the parenting under the thrust transforms, is the shell's)
+    void ActivateRunningFX();                     // :1169
+    void ActivatePowerFX();                       // :1178
+    virtual void InitializeFX();                  // :1129
+    virtual void DeactivateLoopingFX();           // :1145
+    virtual void DeactivateRunningFX();           // :1151
+    virtual void DeactivatePowerFX();             // :1160
+    virtual void PlayEngageFX();                  // :1187
+    virtual void PlayShutdownFX();                // :1197
+    virtual void PlayFlameoutFX(bool flamingOut); // :1217
+    virtual void FXReset();                       // :1234
+    virtual void FXUpdate(float fixedDeltaTime);  // :1248 (C# reads TimeWarp.fixedDeltaTime)
+    virtual void SetListener() { listenersSet = true; }  // :1717 (the GameEvents subscription is the host's: OnPause / OnUnpause)
+    void OnPause();                               // :719
+    void OnUnpause();                             // :731
 
     // ---- lifecycle ----
     void OnAwake() override;                          // :1609
@@ -212,8 +243,17 @@ public:
     float engineSpool = 0.0f;                  // :34
     void OnAwake() override;                   // :162
     bool CanStart();                           // :132
-    // ModuleEnginesFX.cs:59 FXUpdate: the engine spool value (the effects themselves are FX)
-    void FXUpdate(float fixedDeltaTime);       // :59
+    // ModuleEnginesFX.cs:38 .. :125: the part.Effect calls (WP-UE-16a) and the engine spool value
+    void PlayEngageFX() override;              // :38
+    void PlayShutdownFX() override;            // :43
+    void PlayFlameoutFX(bool flamingOut) override;  // :50
+    void FXReset() override {}                 // :55
+    void FXUpdate(float fixedDeltaTime) override;   // :59
+    void DeactivatePowerFX() override;         // :106
+    void DeactivateRunningFX() override;       // :111
+    void InitializeFX() override;              // :116
+    void SetListener() override {}             // :121
+    void DeactivateLoopingFX() override;       // :125
 };
 
 // MultiModeEngine.cs

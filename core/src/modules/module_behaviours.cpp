@@ -49,6 +49,7 @@
 
 namespace ksp {
 namespace detail {
+void RegisterFxModules();  // fx/fx_modules.cpp (WP-UE-16a)
 void RegisterEvaModules();  // eva/kerbal_eva_interact.cpp (WP-32)
 void RegisterRetractableLadder();  // eva/retractable_ladder.cpp (WP-32)
 }
@@ -224,6 +225,7 @@ void RegisterBuiltinModules() {
     detail::RegisterThermalModules();  // ModuleCoreHeat, ModuleActiveRadiator, ModuleAblator, ModuleConductionMultiplier (WP-22)
     detail::RegisterEngineModules();  // WP-23: ModuleEngines, ModuleEnginesFX, MultiModeEngine (module_engines.cpp)
     detail::RegisterRcsModules();     // WP-23: ModuleRCS, ModuleRCSFX
+    detail::RegisterFxModules();      // WP-UE-16a: FXModuleAnimateThrottle / AnimateRCS / ThrottleEffects / LookAtConstraint / ConstrainPosition
     detail::RegisterControlModules(); // WP-24: ModuleCommand, ModuleSAS, ModuleRemoteController, ModuleReactionWheel
     detail::RegisterGimbalModule();   // WP-23: ModuleGimbal
     detail::RegisterIntakeModule();   // WP-23: ModuleResourceIntake

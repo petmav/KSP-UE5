@@ -47,6 +47,7 @@ add_executable(kspcore_tests
     test_vessel_physics.cpp
     test_mu_colliders.cpp
     test_mu_render.cpp
+    test_effects.cpp
     test_wheel_models.cpp
     test_wheel_gear.cpp
     test_wheel_visual.cpp

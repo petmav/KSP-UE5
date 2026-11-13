@@ -35,6 +35,7 @@
 #include "ksp/save/game.hpp"
 #include "ksp/save/game_parameters.hpp"
 #include "ksp/save/save_environment.hpp"
+#include "ksp/ship/ship_construction.hpp"
 #include "ksp/space_center/destructible_building.hpp"
 #include "ksp/space_center/high_logic.hpp"
 #include "ksp/space_center/launch_site.hpp"
@@ -885,6 +886,9 @@ TEST_CASE("WP-42 SpaceCenterBuilding damage, repair and facility entry rules") {
     // entering: the VAB needs CanGoInVAB (otherwise the locked dialog); NON_RESUMABLE scenarios have the building closed
     CHECK(vab.IsOpen());
     EditorDriver::ResetStatics();
+    // VehicleAssemblyBuilding.cs:12 picks LOAD_FROM_CACHE when a cached VAB ship exists; this case asserts the clean start,
+    // so drop a ShipConfig left behind by an earlier test case (random-order runs).
+    ShipConstruction::ShipConfig = nullptr;
     HighLogic::sceneLoader = [](int, bool) {};
     vab.EnterBuilding();
     CHECK(HighLogic::LoadedScene() == GameScenes::EDITOR);
