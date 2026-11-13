@@ -2,6 +2,8 @@
 // crosses the boundary.
 #include "kspcore/kspcore_c.h"
 
+#include "capi_internal.hpp"
+
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -21,10 +23,6 @@
 #include "ksp/terrain/pqs_mods_quad.hpp"
 #include "ksp/terrain/pqs_parallel.hpp"
 #include "ksp/terrain/pqs_prefab.hpp"
-
-struct kspcore_sim {
-    int reserved = 0;  // will own the game state as work packages land
-};
 
 struct kspcore_confignode {
     std::shared_ptr<ksp::ConfigNode> node;
@@ -51,24 +49,8 @@ namespace {
 
 constexpr const char* kVersion = "0.1.0";
 
-thread_local std::string t_lastError;
-
-void SetError(const char* where, const char* what) {
-    t_lastError = std::string(where) + ": " + (what ? what : "unknown error");
-}
-
-// Runs `f`, converting any exception into `fallback` + kspcore_last_error.
-template <class F, class R>
-R Guard(const char* where, R fallback, F&& f) noexcept {
-    try {
-        return f();
-    } catch (const std::exception& e) {
-        SetError(where, e.what());
-    } catch (...) {
-        SetError(where, "non-standard exception");
-    }
-    return fallback;
-}
+using kspcore_capi::Guard;
+using kspcore_capi::SetError;
 
 kspcore_confignode* Wrap(std::shared_ptr<ksp::ConfigNode> n) {
     if (!n) return nullptr;
@@ -124,7 +106,7 @@ const char* kspcore_build_info(void) {
 
 const char* kspcore_version(void) { return kVersion; }
 int kspcore_abi_version(void) { return KSPCORE_ABI_VERSION; }
-const char* kspcore_last_error(void) { return t_lastError.c_str(); }
+const char* kspcore_last_error(void) { return kspcore_capi::LastError().c_str(); }
 
 kspcore_sim* kspcore_sim_create(void) {
     return Guard("kspcore_sim_create", static_cast<kspcore_sim*>(nullptr), [] { return new kspcore_sim(); });
@@ -154,7 +136,7 @@ kspcore_confignode* kspcore_confignode_load(const char* utf8_path) {
     return Guard("kspcore_confignode_load", static_cast<kspcore_confignode*>(nullptr), [&] {
         if (!utf8_path) throw std::invalid_argument("path is NULL");
         auto n = ksp::ConfigNode::Load(utf8_path);
-        if (!n) t_lastError = std::string("kspcore_confignode_load: no data in '") + utf8_path + "'";
+        if (!n) kspcore_capi::LastError() = std::string("kspcore_confignode_load: no data in '") + utf8_path + "'";
         return Wrap(std::move(n));
     });
 }
