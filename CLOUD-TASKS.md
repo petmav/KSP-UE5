@@ -118,8 +118,8 @@ Final message: gate results table, commits, anything not achieved.
 
 ## (f) Known follow-ups
 
-- `harness/compare/compare.py` passes silently when the candidate has rows the golden lacks (641 such rows in `part_database`, all
-  explained). Add an extra-rows check with an explicit allow-list before more capture gates land.
+- (done by wpfix9) `harness/compare/compare.py` fails on candidate rows the golden lacks unless the table is in its `ALLOWED_EXTRA_ROWS` list
+  with exactly that count and a reason (`part_database`, `thermal_step/vessel`, `orbit_rails_ingame/samples`); ctest `compare.extra_rows`.
 - WP-03 float32 helpers (Heading/Bearing, WrapAround, Color.Lerp) need a Mono capture; today only the .NET golden covers them (local capture).
 - Terrain goldens exist for Kerbin and Mun only (`captures/out2/terrain_height.json`); the other 13 bodies need a capture (local).
 - Jolt physics spike (levers 1 and 2 from `analysis/physics/PROFILE.md`; then the reduced rigid-body model) is a local task and the
