@@ -217,6 +217,7 @@ add_library(kspcore STATIC
     parts/part_module_data.cpp
     parts/part_loader.cpp
     parts/mu_model.cpp
+    parts/texture_header.cpp
     parts/part_colliders.cpp
     parts/part_model_rig.cpp
     parts/part.cpp
@@ -382,6 +383,7 @@ add_library(kspcore STATIC
     vessel/delta_v_stage_info.cpp
     vessel/vessel_delta_v.cpp
     capi/kspcore_c.cpp
+    capi/kspcore_model.cpp
     capi/kspcore_test.cpp  # test C ABI (include/kspcore/kspcore_test.h): Jolt scenario hash, MXCSR probe
 )
 add_library(ksp::core ALIAS kspcore)
