@@ -112,6 +112,17 @@ UE floating-point note: the Editor target compiles with `/fp:precise`, but the G
 code out of headers that UE translation units compile, or set `FPSemantics = FPSemanticsMode.Precise` in the module that
 includes them.
 
+## Game assets (WP-UE-06)
+
+The Unity-serialized assets (scaled-space bodies, Kerbin PQS materials, GalaxyCube, KSC render meshes, fonts, flight HUD sprites) are
+extracted once per machine into `GameAssets/` (gitignored) by `Tools/extract_game_assets.py`; `Tools/verify_game_assets.py` checks the
+result by an independent route. Output layout, manifest and conventions: `Tools/README.md`.
+
+```
+harness\tools-cache\venv\Scripts\python.exe -I ue5\Tools\extract_game_assets.py --game decompiled\KSP-dev --out ue5\GameAssets   # 45 s
+harness\tools-cache\venv\Scripts\python.exe -I ue5\Tools\verify_game_assets.py --game decompiled\KSP-dev --assets ue5\GameAssets  # 115 s
+```
+
 ## Spike
 
 See `spike/RESULTS.md`. Options for `spike.ps1` / the game command line: `-SpikeVariants=None,UE100k,UE10k,MW100k,MW10k`,

@@ -1,6 +1,31 @@
 # KSP-UE5: state and next steps
 
-Updated 2026-10-14 (session 5, PC; see "Session 5" below for the current state; the older sections are history).
+Updated 2026-11-13 (session 6; see "Session 6" below for the current state; the older sections are history).
+
+## Session 6 (2026-11-13, Fable orchestrating) - CURRENT STATE
+
+Main `da6db948`. PRs #40-#53 are merged (after Session 5's list: #40 progress feed, #42 gatekeeper retired, #43 wp52b joint drive backend, #45 wp20f SAS / FeedInputFeed / C10 ascent, #46 wp29d, #47 `ue5/DESIGN.md`, #48 wp38d, #49 wp21b, #50 wp20g host wiring, #51 wp29e, #52 wp19c quicksave / load, #53 wp12d PQS close-out). No PR was open at the start of the wave below. `analysis/tiering/progress.csv` is the per-package state; it now has rows `WP-UE-01..18` for the UE5 slice (`ue5/DESIGN.md` 6.3).
+
+### In flight (wave UE-1; worktrees `.worktrees/wpueNN`, branches `wpueNN`, one Sonnet implementer each)
+| package | scope | owns |
+|---|---|---|
+| WP-UE-02 | game host + C ABI v2, ctest `capi.flight_slice` | `kspcore_c.h/.cpp`, `kspcore_game.h`, `kspcore_frame.h` (first commit = the frozen headers) |
+| WP-UE-01 | bridge rebuilt on the Jolt-linked core, link manifest, MXCSR guard, `KspUe5.Bridge.JoltStep` | `ue5/Plugins/KspCoreBridge`, `kspcore_test.h`, `src/capi/kspcore_test.cpp` |
+| WP-UE-05 | `.mu` render reader + texture headers | the model reader, `kspcore_model.h`, `src/capi/kspcore_model.cpp` |
+| WP-UE-06 | `ue5/Tools/extract_game_assets.py` (output `ue5/GameAssets/`, gitignored) | `ue5/Tools/` |
+
+Next in the slice order (DESIGN 6.4): UE-03 cameras and UE-04 view-models after UE-02 (one package at a time in `src/capi/`), UE-07 sim subsystem once UE-01 is merged and UE-02's headers are frozen, core half of UE-16.
+
+### Core leftovers (survey of `core/STATUS.md` on `a4dabf8e`; everything else in the partial packages is shell, capture, local data or DLC data)
+- Portable now: WP-40 KFSM placement loop (`EditorLogic.cs:1236-2366`, ~1,130 lines; DESIGN 6.5 wants it before the VAB); WP-38 `ContractSystem.ConstructShip` PRELAUNCH branches (`:1213-1330`), `CraftProfileInfo` .loadmeta cache (`:236-373`), `CometVessel.OnStart`; WP-54 `ActionCreateVessel` scene branch / the non-scene part of `MissionSystem`; WP-32 tests for FlightEVA / CrewTransfer / RetractableLadder / Kerbal; small items in WP-29 (stand-in sphere layer and ignore list, `ModuleWheelDamage` collider, suspensionPos local), WP-52 / 53 (PartBuoyancy servoRb drag, `ApplyUpgradeNode` in CommPowerUnloaded, SerenityContractDefs defaults), WP-50 (re-point the InputLockManager / GameSettings stand-ins).
+- Physics judgement (optimizer): joint compliance in the load model (WP-20 / WP-29), `ignoreCollisionsFrames` grace at touchdown (`Vessel.cs:2543`).
+- Still open across packages: `harness/compare/compare.py` counts extra candidate rows but does not fail on them; `ContractParameter::CreateID` lacks the C# null check; run-alone independence of the WP-40 symmetry test and `PartLoader on the GameData mirror`.
+- Needs the game copy (local extraction): KSC level-scene data (facility fields, launch sites, upgrade costs, DestructibleBuilding prefab values: STATUS "WP-12d" and `core/PROGRESS-wp12d.md` disagree on whether these were extracted, check first), CrewGenerator name tables, `SiteGeneratorInfo`, kerbalEVA prefab mass, MEAwards prefab, a career save.
+- Needs captures (profiling build): C11 wheels, servo drive law, Quaternion Euler / LookRotation / Lerp natives, drop / splashdown / pad settle, settings.cfg as written by the game.
+
+### Environment notes
+- This machine has UE 5.8, `decompiled/KSP-dev`, the `profiling` worktree and archive, `harness/lib`, and WSL with clang / g++ / cmake / ninja.
+- The `implementer` and `optimizer` agent types did not load in this session (only `classifier` did; the files in `.claude/agents/` are unchanged). The wave runs on general-purpose agents pinned to Sonnet that read `.claude/agents/implementer.md` as their role.
 
 ## Done
 

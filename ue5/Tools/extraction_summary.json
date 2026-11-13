@@ -1,0 +1,80 @@
+{
+ "bytes": 1127126799,
+ "categories": {
+  "fonts": {
+   "bytes": 10745268,
+   "files": 15
+  },
+  "ksc": {
+   "bytes": 472043887,
+   "files": 2396
+  },
+  "pqs_kerbin": {
+   "bytes": 21547006,
+   "files": 39
+  },
+  "scaled_space": {
+   "bytes": 487243088,
+   "files": 109
+  },
+  "skybox": {
+   "bytes": 134235827,
+   "files": 25
+  },
+  "ui": {
+   "bytes": 3065427,
+   "files": 329
+  }
+ },
+ "files": 2910,
+ "manifestSha256": "f9369b5711e0d8cc9818506c1150ed3c793a0b80bea983636de7a7143678f849",
+ "missing": 7,
+ "perCategoryDetail": {
+  "fonts": {
+   "fonts": 15
+  },
+  "ksc": {
+   "objects": 2795,
+   "renderers": 1527,
+   "skinned": 12,
+   "withRenderer": 1527
+  },
+  "scaled_space": {
+   "bodies": 17
+  },
+  "ui": {
+   "materials": 31,
+   "meshes": 19,
+   "sprites": 455,
+   "textures": 2
+  }
+ },
+ "schema": "ksp-ue5-gameassets-summary/1",
+ "sourceFileCount": 16,
+ "verification": {
+  "counts": {
+   "bytesChecked": 1127126799,
+   "ddsVerified": 330,
+   "filesChecked": 2910,
+   "fontsVerified": 15,
+   "kscObjectsVerified": 2795,
+   "kscRenderersVerified": 1524,
+   "materialsVerified": 370,
+   "meshFloatsCompared": 15639635,
+   "meshesVerified": 963,
+   "pngVerified": 248,
+   "pqsRolesVerified": 25,
+   "scaledBodiesVerified": 17,
+   "spritesVerified": 455,
+   "texturesCrunchedNotIndependent": 34,
+   "treeNodesVerified": 31
+  },
+  "mismatches": 0,
+  "notIndependent": [
+   "Crunched textures (texture2ddecoder is the only codec)",
+   "HUD sprite selection rule and MonoBehaviour field dumps (need the type-tree generator)"
+  ],
+  "tool": "ue5/Tools/verify_game_assets.py"
+ },
+ "warnings": 0
+}

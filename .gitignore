@@ -46,3 +46,7 @@ core/data/mu_staging/
 # vendored Jolt ships a Build/ directory (CMake entry point); the **/build/ rule above is case-insensitive on Windows
 !core/third_party/jolt/Build/
 core/data/mu_staging_wheels/
+
+# WP-UE-06: extracted game assets (never committed)
+ue5/GameAssets/
+ue5/Tools/_scratch/
