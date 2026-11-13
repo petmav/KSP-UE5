@@ -3,10 +3,15 @@
 // (checkAttach / CheckSymPartsAttach), the offset / rotate gizmo callbacks, the undo / redo stack (ShipConstruction.backups) and the ship
 // queries (sortedShipList, AreAllPartsConnected, CountAllSceneParts) and the stock pre-flight check list.
 //
-// Not ported (the engine shell / UI): the KFSM state machine of the mouse-driven placement loop (EditorLogic.cs:1236-2366) and every
-// callback that only drives widgets, audio, cameras, screen messages, Steam export, crew dialogs and the save / load / exit dialogs. The
-// functions the loop calls are ported; the loop's composite steps that are pure data (what `on_partAttached`, `on_partPicked`, the
-// st_place update and OnLeave do to the part tree) are exposed as DropSelectedPart / PickPart / UpdatePlacement.
+// WP-40b: the KFSM placement loop (EditorLogic.cs:1236-2366 SetupFSM: the nine states st_podSelect .. st_root_select and the 28 on_* events) is ported in
+// src/editor/editor_fsm.cpp onto the KerbalFSM, with the drivers (Update / LateUpdate / FixedUpdate), pickPart / dragOverPlane, the key handlers
+// (symmetry, angle snap, undo / redo, delete, offset / rotate reset), StartEditor / NewShip / load and the part of EditorToolsUI that reacts to part
+// events and the 1-4 keys. Scene services the C# gets from Unity are EditorEnvironment seams (camera, Physics.Raycast hits, node icon bounds,
+// FindPartSurface, UI hover, audio clips, tweak hooks); keys and the mouse come from the WP-50 input device, Mouse, GameSettings and InputLockManager.
+// Not ported (the engine shell): every callback that only drives widgets, the part list and categorizer, crew dialogs, Steam export, the
+// save / load / exit dialogs, the flag browser, highlighting and layers, the compound part tweak mode, the inventory (cargo) UI.
+// The composite steps below (UpdatePlacement, LeavePlace, DropSelectedPart, PickPart) predate the loop and stay for hosts that drive the part tree
+// without a FSM.
 //
 // Unity transform model: a Part's transform is `PartTransform` (world position / rotation, parentless); the local position / rotation Unity
 // derives from the transform parent (the logical `Part.parent`) are computed by LocalPosition / LocalRotation below (the native matrix
@@ -21,7 +26,10 @@
 #include <unordered_set>
 #include <vector>
 
+#include "ksp/editor/editor_gizmos.hpp"
 #include "ksp/editor/editor_types.hpp"
+#include "ksp/fsm/kerbal_fsm.hpp"
+#include "ksp/input/control_types.hpp"
 #include "ksp/parts/available_part.hpp"
 #include "ksp/parts/compound_part.hpp"
 #include "ksp/parts/part.hpp"
@@ -63,6 +71,13 @@ protected:
 
 public:
     bool IsCurrentPartFlag() const { return isCurrentPartFlag; }   // :73
+    // EditorLogicBase.cs:10 / :33 / :35 (the placement loop's state machine, the lock switch and the screen the editor shows)
+    KerbalFSM fsm;
+    bool checkInputLocks = true;
+    EditorScreen editorScreen = EditorScreen::Parts;
+    // :75 partRotationInputUpdate() as the FSM states call it: the keys come from GameSettings.Editor_* through the input device (WP-50),
+    // the lock / screen guard, the keyboard rotation, partRotationResetUpdate (virtual) and the PartRotated event (WP-40b)
+    void partRotationInputUpdate();
     // :57 partRotationInputUpdate: the keyboard rotation of the selected part. `key` is the pressed command (GameSettings.Editor_yawLeft ...)
     enum class RotationKey { None, YawLeft, YawRight, RollLeft, RollRight, PitchUp, PitchDown };
     // `inRotateTweakState`: fsm.currentStateName == "st_rotate_tweak" (the keys are ignored there, only the reset runs)
@@ -199,6 +214,8 @@ public:
     bool DropSelectedPart();
     // on_partPicked.OnEvent (:1770-1800) for a part of the ship: detachPart, deleteSymmetryParts, backup
     void PickPart(Part* part);
+    // on_partPicked.OnEvent (EditorLogic.cs:1776) on the already selected part (the FSM event body)
+    void OnPartPickedEvent();
 
     // ---- gizmo callbacks (:2445-2600) --------------------------------------------------------------------------------------------
     void onRotateGizmoUpdate(const Quaternionf& dRot);      // :2445
@@ -207,7 +224,6 @@ public:
     static Vector3f getPivotOffset(const Vector3f& pivot0, const Vector3f& pivot) { return pivot0 - pivot; }   // :2514
     void onOffsetGizmoUpdate(const Vector3f& dPos);         // :2519
     void onOffsetGizmoUpdated(const Vector3f& dPos);        // :2563
-    void partOffsetInputUpdate(bool resetKeyPressed);       // :2576
     void OnNewRootSelect(Part* newRoot);                    // :2602
 
     // ---- undo / redo (:2675-2830) -----------------------------------------------------------------------------------------------------
@@ -226,6 +242,93 @@ public:
     bool ShipIsValid(const ShipConstruct* s) const;         // :5429
     Vector3f initialPodPosition() const;                    // :376
     Bounds editorBounds() const;                            // :402 (EditorBounds.Instance)
+
+    // ======================================================================================================================================
+    // WP-40b: the KFSM placement loop (EditorLogic.cs:1236-2366) and what drives it. The scene services are EditorEnvironment seams; the
+    // input comes from the WP-50 input device (InputEnvironment::Input(), Mouse, GameSettings.Editor_* bindings, InputLockManager).
+    // ======================================================================================================================================
+
+    // EditorDriver.StartupBehaviours: what StartEditor loads
+    enum class StartupBehaviour : int { START_CLEAN, LOAD_FROM_CACHE, LOAD_FROM_FILE };
+    StartupBehaviour startupBehaviour = StartupBehaviour::START_CLEAN;   // EditorDriver.StartupBehaviour
+    std::string filePathToLoad;                                           // EditorDriver.filePathToLoad
+    bool restartingEditor = false;                                        // EditorDriver.fetch.restartingEditor
+
+    // EditorLogic.cs:97-160 (the states and events; public so a host or test can read the state and run the MANUAL_TRIGGER events)
+    KFSMState st_podSelect{"st_podSelect"}, st_idle{"st_idle"}, st_place{"st_place"}, st_offset_select{"st_offset_select"},
+        st_offset_tweak{"st_offset_tweak"}, st_rotate_select{"st_rotate_select"}, st_rotate_tweak{"st_rotate_tweak"},
+        st_root_unselected{"st_root_unselected"}, st_root_select{"st_root_select"};
+    KFSMEvent on_podSelect{"on_podSelect"}, on_podDeleted{"on_podDeleted"}, on_partCreated{"on_partCreated"}, on_partPicked{"on_partPicked"},
+        on_partCopied{"on_partCopied"}, on_partReveal{"on_partReveal"}, on_partDropped{"on_partDropped"}, on_partAttached{"on_partAttached"},
+        on_partDeleted{"on_partDeleted"}, on_partLost{"on_partLost"}, on_partOverInventoryPAW{"on_partOverInventoryPAW"},
+        on_goToModeOffset{"on_goToModeOffset"}, on_offsetSelect{"on_offsetSelect"}, on_offsetDeselect{"on_offsetDeselect"},
+        on_offsetReset{"on_offsetReset"}, on_goToModeRotate{"on_goToModeRotate"}, on_rotateSelect{"on_rotateSelect"},
+        on_rotateDeselect{"on_rotateDeselect"}, on_rotateReset{"on_rotateReset"}, on_goToModeRoot{"on_goToModeRoot"},
+        on_rootPickSet{"on_rootPickSet"}, on_rootDeselect{"on_rootDeselect"}, on_rootSelect{"on_rootSelect"},
+        on_rootSelectFail{"on_rootSelectFail"}, on_goToModePlace{"on_goToModePlace"}, on_undoRedo{"on_undoRedo"}, on_newShip{"on_newShip"},
+        on_shipLoaded{"on_shipLoaded"};
+    float dragSharpness = 0.3f;                             // :47
+    bool skipPartAttach = false;                            // :234
+    std::vector<Part*> rootCandidates;                      // :129 (the PartSelector targets; the selector widgets belong to the shell)
+    int undoIndexAtLastSave = 0;                            // :97
+    std::string vesselNameAtLastSave;                       // :99
+    ConstructionMode toolsConstructionMode = ConstructionMode::Place;   // EditorToolsUI.cs:25 (constructionMode of the tools panel)
+
+    // lifetime (EditorLogic.cs:466 Awake, :519 OnDestroy, :540 Start)
+    void Awake();                                           // :466 (the GameEvents listeners that drive the loop)
+    void OnDestroy();                                       // :519
+    void Start();                                           // :545: SetupFSM, StartEditor(false), fsm.StartFSM(rootPart ? st_idle : st_podSelect)
+    void SetupFSM();                                        // :1236
+    void Update();                                          // :2375 (fsm.UpdateFSM; the host calls Mouse::Update() first, like the Mouse behaviour)
+    void LateUpdate();                                      // :2407
+    void FixedUpdate();                                     // :2367
+    // the coroutines EditorLogic starts (CallbackUtil.DelayedCallback(1, ...) in RestoreState): the host calls this once per frame after
+    // Update, like Mouse::ResumeCoroutines (a coroutine started inside Update first resumes in the next frame pass)
+    void RunCoroutines();
+    void StartEditor(bool isRestart);                       // :606
+    void NewShip();                                         // :4023 (the unsaved-changes dialog is EditorEnvironment::newShipDialog)
+    void OnNewShipConfirm();                                // :4046
+    void ShipToLoadSelected(const std::string& path, KSP::UI::Screens::CraftBrowserDialog_LoadType loadType);   // :4768
+    void ShipToLoadSelected(const ConfigNode::NodePtr& node, KSP::UI::Screens::CraftBrowserDialog_LoadType loadType);   // :4804
+    static void LoadShipFromFile(const std::string& path); // :4760
+
+    // the part list (EditorLogic.cs:2834-2864): OnPartListIconTap spawns, or drops the held part when one is held
+    void OnPartListIconTap(const AvailablePart& p);         // :2834
+    void OnPartListBackgroundTap();                         // :2858
+    void ReleasePartToIcon();                               // :2977
+
+    // EditorToolsUI.cs (the construction-mode panel: key shortcuts, SetMode, the part-event reactions); the buttons belong to the shell
+    void toolsSetMode(ConstructionMode mode, bool updateUI = true);   // EditorToolsUI.cs:126
+    void toolsUpdate();                                     // EditorToolsUI.cs:103 (Editor_mode* keys)
+    void toolsOnEditorPartEvent(ConstructionEventType evt, Part* part);   // EditorToolsUI.cs:217
+    void onConstructionModeChanged(ConstructionMode mode);  // :2420
+
+    // input helpers of the states (EditorLogic.cs:1133 symInputUpdate, :1189 snapInputUpdate, :2708 UndoRedoInputUpdate, :3131 deleteInputUpdate,
+    // :5365 partSearchUpdate)
+    void snapButton();                                      // :1125
+    void symInputUpdate();
+    void snapInputUpdate();
+    void UndoRedoInputUpdate();
+    void deleteInputUpdate();
+    void partSearchUpdate() {}                              // PartCategorizer search field: the shell
+    void partOffsetInputUpdate();                           // :2576 (reads Editor_resetRotation itself)
+    // the drag plane and the picking ray (:2621-2673)
+    Part* pickPart(int layerMask, bool pickRoot, bool pickRootIfFrozen);
+    void CenterDragPlane(const Vector3f& pos);
+    bool dragOverPlane(Vector3f& position);
+    bool HeldPartIsStacked();                               // :5439
+    // Part.frozen / freeze() / unfreeze() (Part.cs:199, :2407, :2422; the Part class has no such field: the editor owns the flag)
+    bool IsFrozen(const Part* p) const { return frozenParts_.count(p) != 0; }
+    void freeze(Part* p);
+    void unfreeze(Part* p);
+    // the live gizmos (GizmoOffset.Attach / GizmoRotate.Attach): null while no tweak state is active; the shell drives the handles through them
+    EditorGizmos::GizmoOffset* OffsetGizmo() { return gizmoOffsetObj_.get(); }
+    EditorGizmos::GizmoRotate* RotateGizmo() { return gizmoRotateObj_.get(); }
+    int FramesInCurrentState() const { return fsm.FramesInCurrentState(); }
+    // every Part the editor created or loaded (Instantiate / ShipConstruct), in creation order, destroyed ones included
+    std::vector<Part*> SceneParts() const;
+    // layerMask = 67109122 + LayerUtil.DefaultEquivalent (:498)
+    int layerMask = 67109122 + 8519681;
 
     // ---- launch checks (:4993) ----------------------------------------------------------------------------------------------------------
     // GetStockPreFlightCheck(siteName): the stock list of tests the Launch button runs
@@ -254,7 +357,24 @@ private:
     std::unique_ptr<ShipConstruct> shipOwned_;
     std::vector<std::unique_ptr<Part>> editorParts_;        // the Parts the editor created (Instantiate)
     std::vector<std::unique_ptr<ShipConstruct>> oldShips_;  // ships replaced by RestoreState (DestroyImmediate; kept alive)
-    CompoundPart* selectedCompoundPart = nullptr;           // EditorLogicBase.cs:27
+    CompoundPart* selectedCompoundPart = nullptr;
+    std::unordered_set<const Part*> frozenParts_;
+    std::unique_ptr<EditorGizmos::GizmoOffset> gizmoOffsetObj_;
+    std::unique_ptr<EditorGizmos::GizmoRotate> gizmoRotateObj_;
+    struct PendingCallback {
+        int framesLeft;
+        std::function<void()> fn;
+    };
+    std::vector<PendingCallback> coroutines_;
+    bool awakened_ = false;
+    bool attachmentSet_ = false;                            // EditorLogic.attachment != null (the C# field is a class reference)
+    std::vector<std::unique_ptr<ShipConstruct>> mergedConstructs_;   // constructs read by the Merge load (SpawnConstruct)
+    void SyncReRootContext();
+    bool attachmentPossibleOrThrow();
+    void AttachOffsetGizmo(Part& part);
+    void AttachRotateGizmo(Part& part);
+    void GizmoStateFromObject(bool rotate);
+    void GizmoStateToObject(bool rotate);           // EditorLogicBase.cs:27
     std::unordered_set<const Part*> destroyed_;
 
     Part* InstantiateCopy(Part* p);                         // recursive Object.Instantiate of the part and its child hierarchy

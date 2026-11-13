@@ -12,3 +12,7 @@
 - [WP-42 KSC lessons](wp42-ksc-lessons.md) — float32 PQSCity position, x87 Cos vs Python at poles, duplicate enum, fixture traps, data gaps
 - [WP-29d wheel geometry lessons](wp29d-wheel-geometry-lessons.md) — read KSP-dev via python -I, output elision workaround, wheel .mu facts, mirror lacks part .mu
 - [WP-12c scenery lessons](wp12c-scenery-lessons.md) — spawner/level replay, UnityPy string[] fix, Metal/Ground materials, test frame traps, build times
+- [WP-UE-06 asset extraction lessons](wpue06-asset-extraction-lessons.md) — MonoBehaviour typetree needs own assembly, crunch mip0 only, texture row order, no numpy
+
+- [WP-UE-05 .mu render lessons](wpue05-mu-render-lessons.md) — C-ABI row-dump gate vs python rows, stock sweep via python -I, v0-2 extra value per node, build dir paths, mutation loop
+- [WP-40b editor loop lessons](wp40b-editor-loop-lessons.md) — session-replay gate with logged seams, output elision workaround, C# quirks the gate found

@@ -6,18 +6,14 @@
 // (see STATUS.md: tools/golden_runner/ds_deltav_stages.cpp installs one transform along the part's -Y per engine).
 #pragma once
 
+#include "ksp/editor/editor_types.hpp"
+
 #include "ksp/parts/part.hpp"
 #include "ksp/unity/vector.hpp"
 
 namespace ksp {
 
-// UnityEngine.Ray: Ray(origin, direction) stores direction.normalized
-struct EditorRay {
-    Vector3f origin{};
-    Vector3f direction{};
-    EditorRay() = default;
-    EditorRay(const Vector3f& o, const Vector3f& d) : origin(o), direction(d.normalized()) {}
-};
+// EditorRay (UnityEngine.Ray) is declared in editor_types.hpp
 
 // EditorMarker_CoM.cs:3
 class EditorMarker_CoM {
