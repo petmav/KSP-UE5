@@ -17,10 +17,12 @@
 #pragma once
 
 #include <array>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "ksp/core/coroutine.hpp"
 #include "ksp/math/vector3d.hpp"
 #include "ksp/terrain/pq.hpp"
 #include "ksp/unity/color.hpp"
@@ -139,7 +141,20 @@ public:
 
     PQSMeshCache meshCache;
 
-    void CreateCache();                  // :378 (synchronously: the C# coroutine variant only spreads it over frames)
+    // WP-12d: the MonoBehaviour lifecycle and the coroutine variant
+    static inline PQSCache* Instance = nullptr;   // :207
+    bool cachePQCoroutine = false;       // :221 (the field default; Reset, an editor callback, sets true)
+    bool cacheBeingCreated = false;      // :223
+    std::function<void()> onCacheReady; // :235 (OnEvent)
+    int owner = 0;                       // the coroutine owner (StartCoroutine)
+    void Reset();                        // :343
+    void Awake();                        // :351 (a second instance is "destroyed": Awake returns false)
+    bool Destroyed() const { return destroyed_; }
+    void OnDestroy();                    // :370
+    // :470 ResetCache: ResetSphere on every PQS (FindObjectsOfType: the spheres the host lists)
+    void ResetCache(const std::vector<PQS*>& spheres);
+    void CreateCache();                  // :378 (cachePQCoroutine: CoroutineCreatePQCache on HighLogic's scheduler)
+    Enumerator CoroutineCreatePQCache(); // :479
     void IncreasePQCache(int addCount);  // :400
     PQ* GetQuad();                       // :436
     void DestroyQuad(PQ& quad);          // :448
@@ -155,6 +170,7 @@ private:
     std::vector<PQ*> reused_;               // returned quads, top = back
     int fresh_ = 0;                         // fresh quads below them
     std::shared_ptr<FreshTemplate> freshTemplate_;
+    bool destroyed_ = false;
 };
 
 }  // namespace ksp

@@ -9,6 +9,7 @@
 #include "ksp/terrain/pq.hpp"
 #include "ksp/terrain/pqs.hpp"
 #include "ksp/terrain/pqs_cache.hpp"
+#include "ksp/terrain/pqs_mods.hpp"
 #include "ksp/terrain/pqs_parallel.hpp"
 #include "ksp/unity/matrix_native.hpp"
 
@@ -172,6 +173,8 @@ bool PQS::BuildQuad(PQ& quad) {
             if (w & 4) vbData_.vertColor.b = pre->vertColor[k].b;
             if (w & 8) vbData_.vertColor.a = pre->vertColor[k].a;
             vbData_.allowScatter = pre->allowScatter[k] != 0;
+            if (landControl != nullptr && !pre->landControlDeltas.empty())
+                static_cast<PQSLandControl*>(landControl)->RestoreBuildState(pre->landControlDeltas[k]);
         }
         Mod_OnVertexBuild(vbData_);
         vbData_.vertHeight -= radius;

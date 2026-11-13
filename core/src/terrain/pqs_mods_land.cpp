@@ -1,8 +1,11 @@
-// WP-11: PQSLandControl (Assembly-CSharp/PQSLandControl.cs, height path only: land-class blending and the
-// minimumRealHeight / alterRealHeight adjustment) and PQSMod_VertexPlanet (PQSMod_VertexPlanet.cs).
+// WP-11: PQSLandControl (Assembly-CSharp/PQSLandControl.cs, height path: land-class blending and the
+// minimumRealHeight / alterRealHeight adjustment; the scatter half is WP-12d's, pqs_land_scatter.cpp) and PQSMod_VertexPlanet
+// (PQSMod_VertexPlanet.cs).
+#include <limits>
 #include <string>
 
 #include "ksp/dotnet/math.hpp"
+#include "ksp/input/game_settings.hpp"
 #include "ksp/terrain/pqs_mods.hpp"
 
 namespace ksp {
@@ -41,7 +44,7 @@ double PQSLandControl::LerpRange::Lerp(double point) const {
 // PQSLandControl.cs:885
 double PQSLandControl::Lerp(double v1, double v2, double dt) { return v2 * dt + v1 * (1.0 - dt); }
 
-// PQSLandControl.cs:662 (scatter matching / LandClassScatter.Setup are scatter-only and not ported)
+// PQSLandControl.cs:662 (WP-12d: with the scatter matching and LandClassScatter.Setup)
 void PQSLandControl::OnSetup() {
     requirements = PQS::VertexMapCoords | PQS::MeshColorChannel;
     lcList.clear();
@@ -59,6 +62,26 @@ void PQSLandControl::OnSetup() {
                                                               landClass.coveragePersistance, landClass.coverageFrequency);
         landClass.noiseSimplex = std::make_shared<Simplex>(landClass.noiseSeed, landClass.noiseOctaves, landClass.noisePersistance,
                                                            landClass.noiseFrequency);
+        for (LandClassScatterAmount& landClassScatterAmount : landClass.scatter) {
+            for (size_t k = 0; k < scatters.size(); k++) {
+                if (landClassScatterAmount.scatterName == scatters[k].scatterName) {
+                    landClassScatterAmount.scatter = &scatters[k];
+                    landClassScatterAmount.scatter->castShadows = GameSettings::CELESTIAL_BODIES_CAST_SHADOWS;
+                    landClassScatterAmount.scatter->recieveShadows = GameSettings::CELESTIAL_BODIES_CAST_SHADOWS;
+                    landClassScatterAmount.scatterIndex = static_cast<int>(k);
+                    break;
+                }
+            }
+        }
+    }
+    if (PQS::Global_AllowScatter) {
+        scatterCount = static_cast<int>(scatters.size());
+        lcScatterList.assign(scatters.size(), 0.0);
+        scatterMinSubdiv = std::numeric_limits<int>::max();
+        for (LandClassScatter& landClassScatter : scatters) {
+            landClassScatter.Setup(sphere);
+            if (landClassScatter.minLevel() < scatterMinSubdiv) scatterMinSubdiv = landClassScatter.minLevel();
+        }
     }
     altitudeSimplex = std::make_shared<Simplex>(altitudeSeed, altitudeOctaves, altitudePersistance, altitudeFrequency);
     latitudeSimplex = std::make_shared<Simplex>(latitudeSeed, latitudeOctaves, latitudePersistance, latitudeFrequency);
@@ -151,6 +174,21 @@ void PQSLandControl::VisitSerialized(const SerializedFieldVisitor& v) const {
             v(q + "density", V::Of(lc.scatter[j].density));
         }
     }
+    for (size_t i = 0; i < scatters.size(); ++i) {
+        const LandClassScatter& sc = scatters[i];
+        const std::string p = "scatters[" + std::to_string(i) + "].";
+        v(p + "scatterName", V::Of(sc.scatterName));
+        v(p + "seed", V::Of(sc.seed));
+        v(p + "maxCache", V::Of(sc.maxCache));
+        v(p + "maxCacheDelta", V::Of(sc.maxCacheDelta));
+        v(p + "maxScatter", V::Of(sc.maxScatter));
+        v(p + "densityFactor", V::Of(sc.densityFactor));
+        v(p + "maxLevelOffset", V::Of(sc.maxLevelOffset));
+        v(p + "verticalOffset", V::Of(sc.verticalOffset));
+        v(p + "minScale", V::Of(sc.minScale));
+        v(p + "maxScale", V::Of(sc.maxScale));
+        v(p + "maxSpeed", V::Of(sc.maxSpeed));
+    }
     v("useHeightMap", V::Of(useHeightMap));
     v("heightMap", V::Of(heightMap));
     v("vHeightMax", V::Of(vHeightMax));
@@ -174,7 +212,7 @@ void PQSLandControl::VisitSerialized(const SerializedFieldVisitor& v) const {
 }
 
 // ---- PQSMod_VertexPlanet ---------------------------------------------------------------------------------------------
-// PQSMod_VertexPlanet.cs:33
+// PQSMod_VertexPlanet.cs:37
 void PQSMod_VertexPlanet::SimplexWrapper::Setup(int seed) {
     simplex = std::make_shared<Simplex>(seed, octaves, persistance, frequency);
 }

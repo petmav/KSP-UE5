@@ -16,6 +16,15 @@
 namespace ksp {
 
 namespace {
+// C# invokes a delegate's snapshot: a handler that removes itself (PQSMod_LandClassScatterQuad.OnQuadUpdate) must not destroy the
+// invocation list being run
+void Invoke(const PQ::QuadDelegate& d, PQ& q) {
+    const PQ::QuadDelegate snapshot = d;
+    snapshot(q);
+}
+}  // namespace
+
+namespace {
 // C# member access through a null reference
 template <class T>
 T& Deref(T* p) {
@@ -136,7 +145,7 @@ void PQ::UpdateSubdivision() {
     } else {
         Subdivide();
     }
-    if (onUpdate) onUpdate(*this);
+    if (onUpdate) Invoke(onUpdate, *this);
 }
 
 // PQ.cs:353 UpdateSubdivisionInit
@@ -156,7 +165,7 @@ void PQ::UpdateSubdivisionInit() {
                subdivision < s.maxLevel) {
         Subdivide();
     } else if (onUpdate) {
-        onUpdate(*this);
+        Invoke(onUpdate, *this);
     }
 }
 
@@ -373,7 +382,7 @@ void PQ::ClearAndDestroy() {
     if (south != nullptr && south->subdivision == subdivision) south->SetNeighbour(this, parent);
     if (west != nullptr && west->subdivision == subdivision) west->SetNeighbour(this, parent);
     if (Contains(s.normalUpdateList, this)) UnqueueForNormalUpdate();
-    if (onDestroy) onDestroy(*this);
+    if (onDestroy) Invoke(onDestroy, *this);
     s.DestroyQuad(*this);
 }
 
@@ -389,7 +398,7 @@ void PQ::Destroy() {
         }
     }
     if (Contains(s.normalUpdateList, this)) UnqueueForNormalUpdate();
-    if (onDestroy) onDestroy(*this);
+    if (onDestroy) Invoke(onDestroy, *this);
     s.DestroyQuad(*this);
 }
 
@@ -413,7 +422,7 @@ void PQ::SetVisible() {
         isVisible = true;
         if (!isBuilt) Build();
         rendererEnabled = !isForcedInvisible;
-        if (onVisible) onVisible(*this);
+        if (onVisible) Invoke(onVisible, *this);
     }
 }
 
@@ -422,7 +431,7 @@ void PQ::SetInvisible() {
     if (isVisible) {
         isVisible = false;
         rendererEnabled = false;
-        if (onInvisible) onInvisible(*this);
+        if (onInvisible) Invoke(onInvisible, *this);
     }
 }
 

@@ -88,6 +88,7 @@ add_library(kspcore STATIC
     terrain/pqs.cpp
     terrain/pqs_mods.cpp
     terrain/pqs_mods_land.cpp
+    terrain/pqs_land_scatter.cpp
     terrain/pqs_prefab.cpp
     terrain/pqs_prefab_data.cpp
     terrain/pq.cpp
@@ -97,6 +98,9 @@ add_library(kspcore STATIC
     terrain/pqs_quadtree.cpp
     terrain/pqs_parallel.cpp
     terrain/terrain_colliders.cpp
+    terrain/pqs_surface_colliders.cpp
+    terrain/pqs_ksp_binder.cpp
+    terrain/surface_object.cpp
     io/url_dir.cpp
     database/game_database.cpp
     resources/part_resource_library.cpp
@@ -187,6 +191,7 @@ add_library(kspcore STATIC
     space_center/city_colliders.cpp
     space_center/scenery_colliders.cpp
     physics/scenery_host.cpp
+    physics/ksc_facilities.cpp
     space_center/pqs_city_data.cpp
     space_center/space_center.cpp
     space_center/launch_site.cpp

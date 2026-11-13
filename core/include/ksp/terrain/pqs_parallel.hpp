@@ -29,6 +29,7 @@
 #include <mutex>
 #include <thread>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "ksp/terrain/pq.hpp"
@@ -43,6 +44,8 @@ struct PQSBuildHeights {
     std::vector<Color> vertColor;
     std::vector<uint8_t> colorWritten;  // bit k: component k (r, g, b, a) was written by the height mods
     std::vector<uint8_t> allowScatter;
+    // WP-12d: per vertex, the land-class list PQSLandControl's OnVertexBuild reads (index, normalised delta); empty without a land control
+    std::vector<std::vector<std::pair<int, double>>> landControlDeltas;
     // the geometry the heights belong to
     Matrix4x4f quadMatrix;
     Vector3d positionPlanetRelative;

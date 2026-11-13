@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include "ksp/terrain/pqs_cache.hpp"
+#include "ksp/terrain/pqs_mods.hpp"
 #include "ksp/unity/matrix_native.hpp"
 #include "ksp/unity/random.hpp"
 #include "ksp/util/simplex.hpp"
@@ -47,6 +48,8 @@ void PQS::EvaluateBuildHeights(const PQ& quad, const Matrix4x4f& m, const PQSMes
     out.vertColor.resize(n);
     out.colorWritten.resize(n);
     out.allowScatter.resize(n);
+    auto* landControlMod = dynamic_cast<PQSLandControl*>(landControl);
+    out.landControlDeltas.assign(landControlMod != nullptr ? n : 0, {});
     Mod_OnQuadPreBuild(probe);
     vbData_.buildQuad = &probe;
     vbData_.allowScatter = true;
@@ -66,6 +69,7 @@ void PQS::EvaluateBuildHeights(const PQ& quad, const Matrix4x4f& m, const PQSMes
         out.colorWritten[k] = static_cast<uint8_t>((IsSentinel(vbData_.vertColor.r) ? 0 : 1) | (IsSentinel(vbData_.vertColor.g) ? 0 : 2) |
                                                    (IsSentinel(vbData_.vertColor.b) ? 0 : 4) | (IsSentinel(vbData_.vertColor.a) ? 0 : 8));
         out.allowScatter[k] = vbData_.allowScatter ? 1 : 0;
+        if (landControlMod != nullptr) landControlMod->CaptureBuildState(out.landControlDeltas[k]);
     }
     vertexIndex = cache.cacheVertCount;
     Mod_OnQuadBuilt(probe);

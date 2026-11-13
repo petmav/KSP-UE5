@@ -7,9 +7,12 @@
 #include "ksp/celestial/planetarium.hpp"
 #include "ksp/core/log.hpp"
 #include "ksp/dotnet/math.hpp"
+#include "ksp/dotnet/mono_float.hpp"
 #include "ksp/events/game_events.hpp"
+#include "ksp/localization/localizer.hpp"
 #include "ksp/save/game.hpp"
 #include "ksp/save/save_environment.hpp"
+#include "ksp/space_center/high_logic.hpp"
 #include "ksp/space_center/launch_site.hpp"
 #include "ksp/space_center/space_center.hpp"
 #include "ksp/terrain/pqs.hpp"
@@ -55,7 +58,9 @@ Vector3d LatLonGetSurfaceNVector(const CelestialFrame& cf, double lat, double lo
 
 // ---- PQSCity ----------------------------------------------------------------------------------------------------------------
 
-PQSCity::PQSCity(const PQSCityPrefab& p, CelestialBody* b, PQS* s) : name(p.name), body(b), sphere(s) {
+PQSCity::PQSCity(const PQSCityPrefab& p, CelestialBody* b, PQS* s) : body(b) {
+    name = p.name;
+    sphere = s;
     randomizeOnSphere = p.randomizeOnSphere;
     repositionToSphere = p.repositionToSphere;
     repositionToSphereSurface = p.repositionToSphereSurface;
@@ -85,7 +90,7 @@ void PQSCity::Orientate(bool allowReposition) {
         localPosition = NarrowToFloat(planetRelativePosition);
     }
     if (repositionToSphereSurface && allowReposition) {
-        double num = sphereSurfaceHeight ? sphereSurfaceHeight(vector3d) : sphere->GetSurfaceHeight(vector3d);
+        double num = sphereSurfaceHeight ? sphereSurfaceHeight(vector3d) : sphere->GetSurfaceHeight(vector3d, true);
         if (repositionToSphereSurfaceAddHeight) num += repositionRadiusOffset;
         planetRelativePosition = vector3d * num;
         localPosition = NarrowToFloat(planetRelativePosition);
@@ -102,6 +107,49 @@ void PQSCity::Orientate(bool allowReposition) {
         spaceCenterFacility.OrientateSetSpawnPoints();   // :343 (facilityTransform != null)
     }
     GE::OnPQSCityOrientated.Fire(body, name);
+}
+
+// PQSCity.cs:156 (body = GetComponentInParent<CelestialBody>(): the host assigns `body`)
+void PQSCity::Start() {
+    GE::OnPQSCityStarting.Fire(this);
+    Orientate(false);
+}
+
+// PQSCity.cs:192
+void PQSCity::OnPostSetup() { HighLogic::Scheduler().StartCoroutine(PostSetup(), owner); }
+
+// PQSCity.cs:197
+Enumerator PQSCity::PostSetup() {
+    if (randomizeOnSphere) {
+        co_yield YieldInstruction::Null();
+        Randomize();
+    }
+    Orientate();
+    CheckLocals();
+}
+
+// PQSCity.cs:372
+void PQSCity::CheckLocals() {
+    loadRange = PQS::GameBindings().GetPQSCityLoadRange(this);
+    poiRange = PQS::GameBindings().GetPOIRange(this);
+}
+
+// PQSCity.cs:234 (the range half: :252-275; `base.gameObject != null` is always true for a live city)
+void PQSCity::OnUpdateFinished(float num2) {
+    if (!isLoaded && static_cast<double>(num2) < loadRange) {
+        isLoaded = true;
+        GE::OnPQSCityLoaded.Fire(body, name);
+    } else if (isLoaded && static_cast<double>(num2) > loadRange) {
+        isLoaded = false;
+        GE::OnPQSCityUnloaded.Fire(body, name);
+    }
+    if (!inPOIRange && static_cast<double>(num2) < POIRange()) {
+        inPOIRange = true;
+        GE::OnPOIRangeEntered.Fire(body, name);
+    } else if (inPOIRange && static_cast<double>(num2) > POIRange()) {
+        inPOIRange = false;
+        GE::OnPOIRangeExited.Fire(body, name);
+    }
 }
 
 // PQSCity.cs:287
@@ -158,7 +206,11 @@ int PQSCity::GetStableHashCode(const std::string& str, bool Bit32) {
 
 // ---- PQSCity2 ---------------------------------------------------------------------------------------------------------------
 
-PQSCity2::PQSCity2(const PQSCityPrefab& p, CelestialBody* b, PQS* s) : name(p.name), objectName(p.objectName), displayobjectName(p.displayobjectName), body(b), sphere(s) {
+PQSCity2::PQSCity2(const PQSCityPrefab& p, CelestialBody* b, PQS* s) : objectName(p.objectName), displayobjectName(p.displayobjectName), body(b) {
+    name = p.name;
+    sphere = s;
+    OrientateOnStart = p.OrientateOnStart;
+    OrientateOnPostSetup = p.OrientateOnPostSetup;
     lat = p.lat;
     lon = p.lon;
     alt = p.alt;
@@ -189,10 +241,47 @@ void PQSCity2::Reset() {
     inVisibleRange = false;
 }
 
-// PQSCity2.cs:186 (the setOnWaterSurface branch needs engine world transforms: deferred; baseRotFacesNorthPole uses Quaternion.LookRotation /
-// Euler, UNVERIFIED natives of UnityNative)
+// PQSCity2.cs:386 (body = GetComponentInParent<CelestialBody>(): the host assigns `body`)
+void PQSCity2::Start() {
+    if (!started_) {
+        GE::OnScenerySettingChanged.Add(this, &PQSCity2::OnScenerySettingChanged);
+        started_ = true;
+    }
+    if (OrientateOnStart) Orientate();
+}
+
+// PQSCity2.cs:396 OnDestroy
+PQSCity2::~PQSCity2() {
+    if (started_) GE::OnScenerySettingChanged.Remove(this, &PQSCity2::OnScenerySettingChanged);
+}
+
+// PQSCity2.cs:401
+void PQSCity2::OnScenerySettingChanged() {
+    Reset();
+    positionedWhenVisible = false;
+}
+
+// PQSCity2.cs:434
+void PQSCity2::OnPostSetup() {
+    if (OrientateOnPostSetup) Orientate();
+    poiRange = PQS::GameBindings().GetPOIRange(this);
+}
+
+// PQSCity2.cs:129
+std::string PQSCity2::DisplaySurfaceObjectName() const { return KSP::Localization::Localizer::Format(displayobjectName); }
+
+float PQSCity2::DistanceFromOrigin() const {
+    if (distanceFromOrigin) return distanceFromOrigin();
+    if (!worldPositionOf) return 0.0f;
+    return Vector3f::Distance(NarrowToFloat(worldPositionOf(*this)), Vector3f::zero());
+}
+
+// PQSCity2.cs:186. Engine-side and not modelled: FloatingOrigin.SetOffset around the snap in the non-flight scenes (no floating origin in
+// the core) and the world rotation of baseRotFacesNorthPole (no stock city sets it; a QuaternionD chain on transform.rotation). sic: the
+// raycast branch adds snapHeightOffset a second time.
 void PQSCity2::Orientate() {
     if (positioningCompleted && (!positioningCompleted || positionedWhenVisible)) return;
+    if (setVisibility) setVisibility();
     if (positioningCompleted && !inVisibleRange) return;
     CelestialFrame cf;
     CelestialFrame::SetFrame(0.0, 0.0, 0.0, cf);
@@ -200,12 +289,14 @@ void PQSCity2::Orientate() {
     Vector3d vector3d = surfaceNVector * (sphere->radius + alt);
     planetRelativePosition = vector3d;
     localPosition = NarrowToFloat(planetRelativePosition);
+    if (setOnWaterSurface && OrientateOnWater(surfaceNVector)) return;
     double num = 0.0;
     if (snapToSurface) {
-        num = sphereSurfaceHeight ? sphereSurfaceHeight(surfaceNVector) : sphere->GetSurfaceHeight(surfaceNVector);
+        const float num2 = DistanceFromOrigin();
+        num = sphereSurfaceHeight ? sphereSurfaceHeight(surfaceNVector) : sphere->GetSurfaceHeight(surfaceNVector, true);
         num += snapHeightOffset;
-        if (raycastSurface && !raycastCompleted && orientateRayCast) {
-            num = orientateRayCast(surfaceNVector, num, raycastCompleted);
+        if (raycastSurface && !raycastCompleted && fx(num2) < 7000.0) {
+            if (orientateRayCast) num = orientateRayCast(surfaceNVector, num, raycastCompleted);
             num += snapHeightOffset;
         }
         alt = num - sphere->radius;
@@ -225,8 +316,65 @@ void PQSCity2::Orientate() {
         spaceCenterFacility.OrientateSetSpawnPoints();   // :253 (facilityTransform != null)
     }
     positioningCompleted = true;
-    // setVisibility() (PQSCity2.cs:257 / :258-260) needs the PQS target and is not modelled: inVisibleRange is left as it was
-    if (onPositioned) onPositioned();
+    if (setVisibility) setVisibility();
+    if (inVisibleRange) positionedWhenVisible = true;
+    if (positionMobileLaunchPad && (!snapToSurface || !raycastSurface || (raycastSurface && raycastCompleted)) && positionedWhenVisible &&
+        positionMobileLaunchPad->CompleteOrientation)
+        positionMobileLaunchPad->CompleteOrientation(body, objectName, true);
+    if (onOrientated) onOrientated();
+}
+
+// PQSCity2.cs:272 in the PQS-local frame of this port (transform.position = the local position of an identity body frame:
+// celestialBody.GetWorldSurfacePosition(lat, lon, 0) is the surface direction times the body radius; the up vector is the direction from
+// the sphere centre). FloatingOrigin.SetOffset and the north-pole world rotation are engine-side as in Orientate.
+bool PQSCity2::OrientateOnWater(const Vector3d& surfPosNorm) {
+    const double h = sphereSurfaceHeight ? sphereSurfaceHeight(surfPosNorm) : sphere->GetSurfaceHeight(surfPosNorm, true);
+    if (h - sphere->radius < 0.0) {
+        float num2 = 0.0f;
+        if (positionMobileLaunchPad) num2 = positionMobileLaunchPad->waterModelClearance;
+        CelestialFrame cf;
+        CelestialFrame::SetFrame(0.0, 0.0, 0.0, cf);
+        const Vector3f vector = NarrowToFloat(LatLonGetSurfaceNVector(cf, lat, lon) * (body != nullptr ? body->Radius : sphere->radius));
+        const Vector3d normalized = Vector3d(vector).normalized();
+        localPosition = vector;
+        if (num2 != 0.0f) localPosition = NarrowToFloat(Vector3d(localPosition) + normalized * static_cast<double>(num2));
+        if (baseRotFacesNorthPole) {
+            // engine-side, as in Orientate
+        } else {
+            localRotation = UnityNative::FromToRotation(up, NarrowToFloat(surfPosNorm)) * UnityNative::AngleAxis(static_cast<float>(rotation), Vector3f::up());
+        }
+        positioningCompleted = true;
+        raycastSurface = false;
+        if (positionMobileLaunchPad && positionMobileLaunchPad->CompleteOrientation) positionMobileLaunchPad->CompleteOrientation(body, objectName, true);
+        if (body != nullptr) LatLonAlt(lat, lon, alt);
+        if (launchSite != nullptr) launchSite->SetSpawnPointsLatLonAlt();
+        spaceCenterFacility.OrientateSetSpawnPoints();
+        if (setVisibility) setVisibility();
+        if (inVisibleRange) positionedWhenVisible = true;
+        GE::OnPQSCityOrientated.Fire(body, objectName);
+        if (onOrientated) onOrientated();
+        return true;
+    }
+    setOnWaterSurface = false;
+    return false;
+}
+
+// PQSCity2.cs:458 (after setVisibility; `base.gameObject != null` is always true for a live city). The target distance is taken after
+// a re-orientation (the C# measures it there).
+void PQSCity2::OnUpdateFinished(const std::function<float()>& targetDistance) {
+    if (inVisibleRange && (!positioningCompleted || !positionedWhenVisible || (raycastSurface && !raycastCompleted))) {
+        Reset();
+        if (positionMobileLaunchPad && positionMobileLaunchPad->OnScenerySettingChanged) positionMobileLaunchPad->OnScenerySettingChanged();
+        Orientate();
+    }
+    const float num = targetDistance();
+    if (!inPOIRange && static_cast<double>(num) < POIRange()) {
+        inPOIRange = true;
+        GE::OnPOIRangeEntered.Fire(body, name);
+    } else if (inPOIRange && static_cast<double>(num) > POIRange()) {
+        inPOIRange = false;
+        GE::OnPOIRangeExited.Fire(body, name);
+    }
 }
 
 // ---- CelestialBody.GetRandomLatitudeAndLongitude -------------------------------------------------------------------------------

@@ -24,6 +24,8 @@ CLASS_FILE = {
     "ModuleSpaceObjectAnalysisBase": "ModuleAsteroidAnalysis",
 }
 NAME_ALIAS = {
+              # WP-12d: destructors that run OnDestroy
+              "~PQSCity2": "OnDestroy",
               # WP-32: C# properties / destructors / split SetupFSM
               "~Kerbal": "OnDestroy", "~CrewHatchController": "OnDestroy", "SeatCamBobEuler": "kerbalSeatCamUpdate", "set_flagItems": "flagItems", "set_currentLadderPart": "currentLadderPart", "OnALadder_": "OnALadder", "SetupFSMStates": "SetupFSM", "SetupFSMEvents": "SetupFSM", "SetupFSMEvents2": "SetupFSM", "GetCurrentColor_": "GetCurrentColor",
               "~Mission": "OnDestroy", "~TestModule": "OnDestroy", "~ActionModule": "OnDestroy", "SetTitle": "title", "SetTitleNoGui": "title",
