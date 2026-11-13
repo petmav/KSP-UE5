@@ -107,6 +107,10 @@ cubemap and the two `Texture2DArray`s of the ultra-quality PQS atlas (not decode
   place: everything goes through `Build.bat`, which uses the engine-bundled dotnet. Not a blocker.
 - Observed once, not reproduced: the very first full automation run in the fresh worktree stalled (the game-thread frame counter stopped
   advancing, no test started) and was stopped after about 6 minutes; five later runs (3 single tests, 2 full) were fine. Cause unknown.
+- Fresh core suite (`core/build` deleted, `run_tests.ps1`, 4 jobs, two other agents building): build 1,206 s, ctest 52 / 54 in 897.7 s. The two
+  failures were `unit.random_order.27` and `unit.random_order.42` hitting the 600 s ctest timeout under that load; `ctest -R unit.random_order`
+  alone passed 3 / 3 (221.7 s total). `capi.c`, `capi.ue_like`, `capi.jolt_step` pass. After merging origin/main (WP-UE-06, Python tools only)
+  the editor / game builds (17.7 s / 28.8 s incremental) and two automation runs (5 / 5) were repeated and pass.
 - A core rebuild that changes `kspcore_link.txt` (new library or definition) rebuilds the bridge on the next UBT run; the ctest twin must be
   re-run (`Scripts/test.ps1` does it) when `kspcore.lib` changes, or `JoltStep` compares against a stale hash.
 - Cooking needs engine assets that are loaded by path to be listed in `DirectoriesToAlwaysCook` (`Config/DefaultGame.ini`); the

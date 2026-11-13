@@ -40,3 +40,7 @@
 2026-11-13 16:18:26  headless automation tests after clean build (run 1)      50.5 s  rc=0
 2026-11-13 16:18:50  headless automation tests after clean build (run 2)      23.4 s  rc=0
 2026-11-13 16:19:35  incremental editor build after touching one .cpp (wpue01)      38.9 s  rc=0
+2026-11-13 16:59:21  editor build after merge with main + fresh core lib (wpue01)      17.7 s  rc=0
+2026-11-13 16:59:55  game build after merge with main + fresh core lib (wpue01)      28.8 s  rc=0
+2026-11-13 17:00:45  headless automation tests after merge (run 1)      49.9 s  rc=0
+2026-11-13 17:01:06  headless automation tests after merge (run 2)      20.1 s  rc=0

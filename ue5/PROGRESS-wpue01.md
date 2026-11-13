@@ -27,3 +27,4 @@ Worktree `C:\Projects\KSP-UE5\.worktrees\wpue01`, branch `wpue01` from main da6d
 - Next: clean builds of both targets for the checklist, docs, core suite, WSL syntax, pr_review, progress.csv, merge main, push, PR.
 - Clean builds: editor 158.6 s, game 144.1 s, 0 'warning' lines. Automation after clean builds, 2 runs, 5/5 pass each. docs README/DESIGN done.
 - Todo: STATUS.md, core/STATUS.md short section, progress.csv, core fresh suite, WSL syntax, pr_review, merge main, push, PR.
+- DONE: merged origin/main (WP-UE-06), rebuilt, 5/5 x2. Fresh core suite 52/54 (2 random_order timeouts under load, pass alone). Remaining: push + PR.
