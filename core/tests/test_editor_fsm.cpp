@@ -550,7 +550,26 @@ std::string CanonTree(const ConfigNode& saved, int* partCount) {
     return std::string();
 }
 
+struct Rig;
+// the scene of the rebuild host as an IEditorScene (analytic fixtures over the live ship)
+struct RigScene : IEditorScene {
+    Rig* rig;
+    explicit RigScene(Rig* r) : rig(r) {}
+    Vector3f CameraPosition() override;
+    EditorRay ScreenPointToRay(const Vector3f& sp) override;
+    Vector3f WorldToScreenPoint(const Vector3f& p) override { return Vector3f(p.x * 100.0f, p.y * 100.0f, p.z); }
+    std::optional<EditorSurfaceHit> Raycast(const EditorRay&, float, int mask) override;
+    bool NodeIconUnderCursor(Part& p, AttachNode& n, const Vector3f& wp) override {
+        return (wp - p.partTransform.TransformPoint(n.position)).magnitude() <= 0.35f;
+    }
+    float FindPartSurface(Part&, const Vector3f&, const Vector3f&, const Vector3f&, const EditorSurfaceHit&, Vector3f& n) override {
+        n = Vector3f::up();
+        return 1.0f;
+    }
+};
+
 struct Rig {
+    RigScene scene{this};
     Game15& g;
     wp50test::InputFixture input;
     EditorWorld world;
@@ -565,23 +584,7 @@ struct Rig {
         ClearIds();
         EditorEnvironment& env = EditorEnvironment::Current();
         editor = std::make_unique<EditorLogic>();
-        env.cameraPosition = [this] { return camera; };
-        env.screenPointToRay = [this](const Vector3f& sp) {
-            EditorRay r;
-            r.origin = camera;
-            auto it = tokens.find(sp.x);
-            const Vector3f tgt = it != tokens.end() ? it->second : Vector3f(0.0f, 0.0f, 0.0f);
-            r.direction = (tgt - camera).normalized();
-            return r;
-        };
-        env.worldToScreenPoint = [](const Vector3f& p) { return Vector3f(p.x * 100.0f, p.y * 100.0f, p.z); };
-        env.raycast = [this](const EditorRay&, float, int mask) -> std::optional<EditorSurfaceHit> {
-            if (mask == 8519681) return srfHit;
-            return std::nullopt;
-        };
-        env.nodeIconUnderCursor = [](Part& p, AttachNode& n, const Vector3f& wp) {
-            return (wp - p.partTransform.TransformPoint(n.position)).magnitude() <= 0.35f;
-        };
+        InstallEditorScene(env, scene);
         editor->Awake();
         editor->Start();
     }
@@ -630,6 +633,20 @@ struct Rig {
     void PressKey(const char* k) { Frame(false, false, {k}); }
     void ReleaseKey(const char* k) { Frame(false, false, {}, {k}); }
 };
+
+Vector3f RigScene::CameraPosition() { return rig->camera; }
+EditorRay RigScene::ScreenPointToRay(const Vector3f& sp) {
+    EditorRay r;
+    r.origin = rig->camera;
+    auto it = rig->tokens.find(sp.x);
+    const Vector3f tgt = it != rig->tokens.end() ? it->second : Vector3f(0.0f, 0.0f, 0.0f);
+    r.direction = (tgt - rig->camera).normalized();
+    return r;
+}
+std::optional<EditorSurfaceHit> RigScene::Raycast(const EditorRay&, float, int mask) {
+    if (mask == 8519681) return rig->srfHit;
+    return std::nullopt;
+}
 
 }  // namespace
 

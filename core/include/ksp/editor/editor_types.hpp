@@ -165,6 +165,41 @@ struct EditorEnvironment {
     }
 };
 
+// The scene services of the placement loop as one interface: the shell (the future editor collision world, camera and UI of the Unreal side) implements it
+// and `InstallEditorScene` wires it to the `EditorEnvironment` seams above (each virtual is the Unity call it names). A test may keep filling the
+// std::function members directly.
+class IEditorScene {
+public:
+    virtual ~IEditorScene() = default;
+    virtual Vector3f CameraPosition() = 0;                                                    // editorCamera.transform.position
+    virtual EditorRay ScreenPointToRay(const Vector3f& screenPoint) = 0;                      // editorCamera.ScreenPointToRay
+    virtual Vector3f WorldToScreenPoint(const Vector3f& worldPoint) = 0;                      // editorCamera.WorldToScreenPoint
+    virtual std::optional<EditorSurfaceHit> Raycast(const EditorRay& ray, float maxDistance, int layerMask) = 0;   // Physics.Raycast + GetPartUpwardsCached
+    virtual bool NodeIconUnderCursor(Part& part, AttachNode& node, const Vector3f& worldPointOfSelectedNode) = 0;  // attachNode.icon renderer bounds test
+    virtual float FindPartSurface(Part& p, const Vector3f& origin, const Vector3f& direction, const Vector3f& fromParent, const EditorSurfaceHit& hit,
+                                  Vector3f& srfNormal) = 0;                                   // EditorLogicBase.FindPartSurface (Collider.Raycast on the part colliders)
+    virtual bool PointerOverUI() { return false; }                                            // EventSystem.current.IsPointerOverGameObject()
+    virtual bool MouseOverModalArea() { return false; }                                       // EditorLogic.mouseOverModalArea
+    virtual void PlayOneShot(EditorClip) {}                                                   // audioSource.PlayOneShot
+};
+
+
+// Wires an IEditorScene to the EditorEnvironment seams (the scene must outlive the environment's use).
+inline void InstallEditorScene(EditorEnvironment& env, IEditorScene& scene) {
+    IEditorScene* sc = &scene;
+    env.cameraPosition = [sc] { return sc->CameraPosition(); };
+    env.screenPointToRay = [sc](const Vector3f& p) { return sc->ScreenPointToRay(p); };
+    env.worldToScreenPoint = [sc](const Vector3f& p) { return sc->WorldToScreenPoint(p); };
+    env.raycast = [sc](const EditorRay& r, float d, int m) { return sc->Raycast(r, d, m); };
+    env.nodeIconUnderCursor = [sc](Part& p, AttachNode& n, const Vector3f& w) { return sc->NodeIconUnderCursor(p, n, w); };
+    env.findPartSurface = [sc](Part& p, const Vector3f& o, const Vector3f& d, const Vector3f& f, const EditorSurfaceHit& h, Vector3f& n) {
+        return sc->FindPartSurface(p, o, d, f, h, n);
+    };
+    env.pointerOverUI = [sc] { return sc->PointerOverUI(); };
+    env.mouseOverModalArea = [sc] { return sc->MouseOverModalArea(); };
+    env.playOneShot = [sc](EditorClip c) { sc->PlayOneShot(c); };
+}
+
 namespace KSP::UI::Screens {
 // CraftBrowserDialog.cs:32 LoadType (completes the opaque declaration of events/game_event_types.hpp)
 enum class CraftBrowserDialog_LoadType : int { Normal, Merge };
