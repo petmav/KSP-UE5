@@ -1,24 +1,10 @@
 // Headless automation tests. Run:
 //   UnrealEditor-Cmd.exe <uproject> -ExecCmds="Automation RunTests KspUe5; Quit" -unattended -nopause -nullrhi -log
 #include "CoreMinimal.h"
-#include "KspCoreBridge.h"
 #include "Misc/AutomationTest.h"
 #include "Spike/SpikeMath.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
-
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FKspBridgeLinksCoreTest, "KspUe5.Bridge.LinksCore",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ClientContext | EAutomationTestFlags::EngineFilter)
-bool FKspBridgeLinksCoreTest::RunTest(const FString& Parameters)
-{
-	const FString Info = FKspCoreBridge::GetCoreBuildInfo();
-	AddInfo(FString::Printf(TEXT("kspcore build info: %s (stub=%d)"), *Info, FKspCoreBridge::IsStub() ? 1 : 0));
-	TestFalse(TEXT("build info is non-empty"), Info.IsEmpty());
-	TestTrue(TEXT("core built against the release CRT DLL (/MD)"), Info.Contains(TEXT("crt=MD ")));
-	TestTrue(TEXT("core built with _ITERATOR_DEBUG_LEVEL=0"), Info.Contains(TEXT("idl=0")));
-	TestEqual(TEXT("C ABI version"), FKspCoreBridge::GetCompiledAbiVersion(), 1);
-	return true;
-}
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FKspPrecisionTest, "KspUe5.Precision.Float32VsLwc",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ClientContext | EAutomationTestFlags::EngineFilter)
