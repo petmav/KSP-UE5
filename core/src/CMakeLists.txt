@@ -384,12 +384,17 @@ add_library(kspcore STATIC
     vessel/delta_v_stage_info.cpp
     vessel/vessel_delta_v.cpp
     capi/kspcore_c.cpp
+    capi/kspcore_game.cpp
+    capi/kspcore_frame.cpp
+    host/game_process.cpp
+    host/game_host.cpp
+    host/settings.cpp
     capi/kspcore_model.cpp
     capi/kspcore_test.cpp  # test C ABI (include/kspcore/kspcore_test.h): Jolt scenario hash, MXCSR probe
 )
 add_library(ksp::core ALIAS kspcore)
 target_include_directories(kspcore PUBLIC ${PROJECT_SOURCE_DIR}/include)
-target_include_directories(kspcore PRIVATE ${PROJECT_SOURCE_DIR}/third_party)  # nlohmann/json for the scenery collider loader (WP-mucol)
+target_include_directories(kspcore PRIVATE ${PROJECT_SOURCE_DIR}/third_party ${PROJECT_SOURCE_DIR}/tools/support ${PROJECT_SOURCE_DIR}/src/host ${PROJECT_SOURCE_DIR}/src/capi)  # nlohmann/json for the scenery collider loader (WP-mucol)
 target_compile_features(kspcore PUBLIC cxx_std_20)
 ksp_set_build_flags(kspcore)
 if(KSPCORE_PCH)
