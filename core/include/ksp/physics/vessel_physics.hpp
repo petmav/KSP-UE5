@@ -437,6 +437,8 @@ public:
     double ServoRate(const Part& part) const;
     float ServoBodyMass(const Part& part) const;      // servoRb.mass
     float ServoAngularDrag(const Part& part) const;   // servoRb.angularDrag
+    float ServoDrag(const Part& part) const;          // servoRb.drag (PartBuoyancy's water drag; PhysX linear damping of the servo body)
+    void SetServoDrag(Part& part, float drag);        // servoRb.drag = (no-op without a servo body)
     Vector3d ServoBodyCenterOfMass(const Part& part) const;  // physics frame, now
     // the servo joint's load in the last load solve: the force / moment the servo body's side puts on the part (physics frame, moment about
     // the anchor); valid = solved

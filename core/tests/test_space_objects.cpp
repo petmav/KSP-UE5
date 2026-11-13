@@ -1446,6 +1446,11 @@ TEST_CASE("wpfix9 CometVessel.OnStart: kept on a vessel with its comet part, rem
     s.mgr->vesselRangeOrbitUnloadOverride = 22.0f;
     s.mgr->vesselRangeOrbitPackOverride = 33.0f;
     s.mgr->vesselRangeOrbitUnpackOverride = 44.0f;
+    // the Vessel constructor adds the VesselModules the VesselModuleManager knows (other tests register them): look for this module only
+    auto Has = [](const Vessel& v, const std::shared_ptr<CometVessel>& m) {
+        return std::find_if(v.vesselModules.begin(), v.vesselModules.end(), [&](const std::shared_ptr<VesselModule>& x) { return x.get() == m.get(); }) !=
+               v.vesselModules.end();
+    };
     auto makeModule = [](Vessel& v) {
         auto m = std::static_pointer_cast<CometVessel>(VesselModuleFactory::Create(*GetVesselModuleClass("CometVessel")));
         m->vessel = &v;
@@ -1470,7 +1475,7 @@ TEST_CASE("wpfix9 CometVessel.OnStart: kept on a vessel with its comet part, rem
         m->OnStart();
         CHECK_FALSE(m->destroyed());
         CHECK(m->Get<uint32_t>("cometPartId") == 4321u);
-        CHECK(v.vesselModules.size() == 1);
+        CHECK(Has(v, m));
         CHECK(v.comet == m.get());
         CHECK(m->isCometTypeReady());
         CHECK(m->CometType() == CometManager::GetCometOrbitType(typeName));
@@ -1484,7 +1489,6 @@ TEST_CASE("wpfix9 CometVessel.OnStart: kept on a vessel with its comet part, rem
             CHECK(sit->unpack == 44.0f);
         }
         v.comet = nullptr;
-        v.vesselModules.clear();
     }
     // (2) cometPartId already names the comet part: kept
     {
@@ -1494,9 +1498,8 @@ TEST_CASE("wpfix9 CometVessel.OnStart: kept on a vessel with its comet part, rem
         m->Set<uint32_t>("cometPartId", 4321u);
         m->OnStart();
         CHECK_FALSE(m->destroyed());
-        CHECK(v.vesselModules.size() == 1);
+        CHECK(Has(v, m));
         v.comet = nullptr;
-        v.vesselModules.clear();
     }
     // (3) cometPartId names another part (the comet was decoupled off this vessel): removed
     {
@@ -1506,7 +1509,7 @@ TEST_CASE("wpfix9 CometVessel.OnStart: kept on a vessel with its comet part, rem
         m->Set<uint32_t>("cometPartId", 777u);
         m->OnStart();
         CHECK(m->destroyed());
-        CHECK(v.vesselModules.empty());
+        CHECK_FALSE(Has(v, m));
         CHECK(v.comet == nullptr);
     }
     // (4) no comet part: id 0 with a typeName but no PotatoComet part (the vessel of a decoupled stage): removed; the other parts untouched
@@ -1517,7 +1520,7 @@ TEST_CASE("wpfix9 CometVessel.OnStart: kept on a vessel with its comet part, rem
         m->Set<std::string>("typeName", typeName);
         m->OnStart();
         CHECK(m->destroyed());
-        CHECK(v.vesselModules.empty());
+        CHECK_FALSE(Has(v, m));
         CHECK(v.comet == nullptr);
         CHECK(v.parts.size() == 1);
     }
@@ -1527,7 +1530,7 @@ TEST_CASE("wpfix9 CometVessel.OnStart: kept on a vessel with its comet part, rem
         auto m = makeModule(v);
         m->OnStart();
         CHECK(m->destroyed());
-        CHECK(v.vesselModules.empty());
+        CHECK_FALSE(Has(v, m));
     }
     // (6) the comet part is there but the type name is unknown: the module stays, the type is not ready, the ranges are not touched
     {
@@ -1542,6 +1545,5 @@ TEST_CASE("wpfix9 CometVessel.OnStart: kept on a vessel with its comet part, rem
         CHECK(m->CometType() == nullptr);
         CHECK(v.vesselRanges.orbit.load != 11.0f);
         v.comet = nullptr;
-        v.vesselModules.clear();
     }
 }

@@ -418,7 +418,7 @@ TEST_CASE("WP-20e reference: PartBuoyancy.Start / FixedUpdate (depths, submersio
     tw.warpRates = {1.0f, 5.0f, 10.0f, 50.0f, 100.0f, 1000.0f, 10000.0f, 100000.0f};
     tw.physicsWarpRates = {1.0f, 2.0f, 3.0f, 4.0f};
     const float savedDt = Time::fixedDeltaTime;
-    size_t cases = 0, ticks = 0, mismatches = 0, forces = 0, crashes = 0, fx = 0, libmCases = 0, libmTicks = 0;
+    size_t cases = 0, ticks = 0, mismatches = 0, forces = 0, crashes = 0, fx = 0, libmCases = 0, libmTicks = 0, servoTicks = 0, servoNonZero = 0;
     std::string first;
     for (const json& c : Ref().at("buoyancy")) {
         auto v = w.CraftHead("PhysProf-S", 1);
@@ -483,6 +483,15 @@ TEST_CASE("WP-20e reference: PartBuoyancy.Start / FixedUpdate (depths, submersio
             angularSet = true;
             rbAngular = d;
         };
+        // wpfix9: the part also carries a servoRb of the same mass (PartBuoyancy.cs:552-556 / :590-593 / :609-612 / :621-624). The part is not a
+        // Kerbal, so every statement that writes rb.drag writes servoRb.drag the same way, except the reset of the splashed exit (:362, rb only):
+        // until the part leaves the water the two stay bit-identical (the reference models rb.drag only)
+        float servoDrag = 0.0f;
+        bool servoSplashExit = false, prevSplashed = false;
+        env.hasServoRb = [](Part&) { return true; };
+        env.servoRbMass = [&](Part&) { return Fl(c.at("mass")); };
+        env.servoRbDrag = [&](Part&) { return servoDrag; };
+        env.setServoRbDrag = [&](Part&, float d) { servoDrag = d; };
         env.localToWorld = [](Part& x) { return PoseMatrix(x.partTransform.position, x.partTransform.rotation); };
         env.frameVelocity = [&] { return V3(c.at("frameVel")); };
         env.cameraPosition = [&] { return V3(c.at("camera")); };
@@ -557,6 +566,13 @@ TEST_CASE("WP-20e reference: PartBuoyancy.Start / FixedUpdate (depths, submersio
             if (what.empty() && HexF(b.maxDimension) != o.at("maxDimension").get<std::string>()) what = "maxDimension";
             // rb.angularDrag keeps its last value: the reference reports the last one set
             everSet = everSet || angularSet;
+            if (prevSplashed && !b.splashed) servoSplashExit = true;
+            prevSplashed = b.splashed;
+            if (!servoSplashExit) {
+                ++servoTicks;
+                servoNonZero += servoDrag != 0.0f;
+                if (what.empty() && HexF(servoDrag) != HexF(rbDrag)) what = "servoRb.drag " + HexF(servoDrag) + " vs rb.drag " + HexF(rbDrag);
+            }
             if (what.empty() && o.at("rbAngular").is_null() == everSet) what = "rbAngular set";
             if (what.empty() && everSet && HexF(rbAngular) != o.at("rbAngular").get<std::string>()) what = "rbAngular";
             if (o.contains("buoyantGeeForce")) chkDsin("buoyantGeeForce", b.buoyantGeeForce);
@@ -591,6 +607,9 @@ TEST_CASE("WP-20e reference: PartBuoyancy.Start / FixedUpdate (depths, submersio
                   << libmTicks << " ticks of " << libmCases << " parts (their portion-dependent values to 1e-12 / 4 ulps)");
     CHECK(cases == 110);
     CHECK(mismatches == 0);
+    MESSAGE("servoRb.drag mirrors rb.drag in " << servoTicks << " ticks before a splashed exit, " << servoNonZero << " of them non-zero");
+    CHECK(servoTicks > 1000);
+    CHECK(servoNonZero > 100);  // the check is not vacuous: water drag was applied
 }
 
 // ===================================================================================================================== CollisionEnhancer

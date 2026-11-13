@@ -492,6 +492,21 @@ PartBuoyancy::Env ContactHost::BuoyancyEnv() {
     env.setRbAngularDrag = [vpOf](Part& p, float d) {
         if (VesselPhysics* vp = vpOf(p)) vp->SetAngularDrag(p, d);
     };
+    env.hasServoRb = [vpOf](Part& p) {
+        VesselPhysics* vp = vpOf(p);
+        return vp != nullptr && vp->PartHasServoBody(p);
+    };
+    env.servoRbMass = [vpOf](Part& p) {
+        VesselPhysics* vp = vpOf(p);
+        return vp != nullptr ? vp->ServoBodyMass(p) : 0.0f;
+    };
+    env.servoRbDrag = [vpOf](Part& p) {
+        VesselPhysics* vp = vpOf(p);
+        return vp != nullptr ? vp->ServoDrag(p) : 0.0f;
+    };
+    env.setServoRbDrag = [vpOf](Part& p, float d) {
+        if (VesselPhysics* vp = vpOf(p)) vp->SetServoDrag(p, d);
+    };
     env.localToWorld = [](Part& p) { return UnityNative::TRS(p.partTransform.position, p.partTransform.rotation, p.partTransform.localScale); };
     env.frameVelocity = [] { return Krakensbane::GetFrameVelocity(); };
     env.cameraPosition = [] { return FlightGlobals::camera_position; };

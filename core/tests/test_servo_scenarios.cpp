@@ -543,3 +543,46 @@ TEST_CASE("WP-52b in the physics bubble: FlightIntegrator sees servoRb (angular 
     h->OnDestroy();
     host.Remove(v.get());
 }
+
+// PartBuoyancy.cs:555 / :592 / :611 / :623: servoRb.drag is PhysX linear damping of the servo body, v' = v * max(0, 1 - dt d) per step. A free craft
+// is given the same velocity everywhere by a uniform acceleration (one tick); in the next tick only the servo body's drag acts from outside
+// (the hinge joint is internal), so the total momentum of the craft drops by (1 - max(0, 1 - dt d)) m_servo v exactly: the difference of
+// the momentum of the dragged run and of the undragged run is compared with that value (independent of the code under test).
+TEST_CASE("wpfix9 servoRb.drag: linear damping of the servo body removes (1 - (1 - dt d)) m_servo v of the craft's momentum") {
+    if (!wp20b::GameAvailable()) return;
+    const double h = 0.02;
+    const double a = 2.0;  // m/s^2 along the world X axis (physics frame): v = a h after one tick
+    double momentum[2];
+    double mServo = 0.0, vServo = 0.0;
+    for (int run = 0; run < 2; ++run) {
+        Scene s;
+        Craft c;
+        c.Make<ModuleRoboticServoHinge>(s, "ModuleRoboticServoHinge", [](ModuleRoboticServoHinge& x) {
+            x.Set<Vector2f>("softMinMaxAngles", Vector2f(-90.0f, 90.0f));
+        });
+        c.Bind(false, 1, physics::LoadSolve::None);
+        REQUIRE(c.vp->PartHasServoBody(*c.root));
+        mServo = static_cast<double>(c.vp->ServoBodyMass(*c.root));
+        CHECK(c.vp->ServoDrag(*c.root) == 0.0f);
+        c.vp->AddUniformAcceleration(Vector3d(a, 0.0, 0.0));
+        c.Tick();
+        vServo = c.vp->ClusterVelocity(static_cast<size_t>(c.vp->ServoCluster(*c.root))).x;
+        if (run == 1) {
+            c.vp->SetServoDrag(*c.root, 5.0f);
+            CHECK(c.vp->ServoDrag(*c.root) == 5.0f);
+            c.vp->SetServoDrag(*c.tank, 7.0f);  // the tank has no servo body: no effect
+            CHECK(c.vp->ServoDrag(*c.tank) == 0.0f);
+        }
+        c.Tick();
+        double P = 0.0;
+        for (size_t k = 0; k < c.vp->ClusterCount(); ++k) P += static_cast<double>(c.vp->ClusterMass(k)) * c.vp->ClusterVelocity(k).x;
+        momentum[run] = P;
+        c.Done();
+    }
+    const double f = std::max(0.0, 1.0 - h * 5.0);
+    const double want = -(1.0 - f) * mServo * vServo;
+    MESSAGE("servo mass " << mServo << " t, v " << vServo << " m/s: momentum change " << momentum[1] - momentum[0] << " vs " << want);
+    CHECK(std::fabs(vServo - a * h) < 1e-6 * a * h);
+    CHECK(std::fabs((momentum[1] - momentum[0]) - want) < 1e-3 * std::fabs(want));  // relative to the drag impulse itself (Approx would scale to 1)
+    CHECK(momentum[1] < momentum[0]);
+}
