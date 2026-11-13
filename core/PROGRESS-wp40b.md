@@ -32,3 +32,6 @@ Branch wp40b, worktree .worktrees/wp40b, from main d74ae28c.
 - Rebuild test: PhysProf-S/M/L, Jumping Flea, Ion probe saved trees equal; 7 others attempted, driver refusals listed in the message.
 - Python bugs found by the gate (fixed): PartDeleted/PartCreated listeners, gizmo static spaces across sessions, default srf node owner, OnNewRootSelect mask.
 - TODO: STATUS/README/progress.csv, cites check (tools/wp28/check_cites.py), WSL g++ syntax, pr_review.py, fresh build + random order, merge main, commit, push, PR.
+
+## Final (session 2)
+- IEditorScene + InstallEditorScene added; fresh run (core/build deleted, merged main 82ef52e4): 54/54 ctest passed. STATUS section added after WP-40. progress.csv WP-40 0.9. Only push + PR left.
