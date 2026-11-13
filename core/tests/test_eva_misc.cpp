@@ -4,7 +4,10 @@
 #include "eva_fixture.hpp"
 
 #include "ksp/celestial/flight_globals.hpp"
+#include "ksp/career/game_variables.hpp"
 #include "ksp/events/game_events.hpp"
+#include "ksp/unity/random.hpp"
+#include "ksp/util/misc_util.hpp"
 #include "ksp/localization/localizer.hpp"
 
 using namespace ksp;
@@ -730,4 +733,214 @@ TEST_CASE("wpfix9 FlightEVA.spawnEVA: the new kerbal's placement, velocity at th
     GameEvents::onCrewOnEva.Remove(&listen, &Listen::E);
     GameEvents::onCrewTransferred.Remove(&listen, &Listen::T);
     FlightEVA::Spawn = nullptr;  // the next FlightEVA installs the default again
+}
+
+// ===================================================================================================================================================
+// wpfix9: CrewTransfer.cs flows (:24-:115) and Kerbal.cs start / die / situation change (:143-:329), from the C#. Parts and vessel are bare objects;
+// the engine-side calls (Vessel.DespawnCrew / SpawnCrew, the portrait gallery) are the seams.
+namespace {
+
+// one frame of dt seconds with the dynamic delayed-call pass (WaitForSeconds wakes in it)
+void Frame(CoroutineScheduler& s, float dt) {
+    s.AdvanceFrame(dt);
+    s.RunDelayedDynamicFrameRate();
+}
+
+struct TransferWorld {
+    Vessel vessel;
+    AvailablePart info;
+    Part src, dest, full, none;
+    std::shared_ptr<ProtoCrewMember> crew = std::make_shared<ProtoCrewMember>(ProtoCrewMember::KerbalType::Crew, "Transfer Kerman");
+    std::shared_ptr<ProtoCrewMember> other = std::make_shared<ProtoCrewMember>(ProtoCrewMember::KerbalType::Crew, "Other Kerman");
+    CoroutineScheduler sched;
+    std::vector<std::string> log;
+    TransferWorld() {
+        vessel.loaded = true;  // RebuildCrewList reads the parts of a loaded vessel
+        info.title = "Test Pod";
+        for (Part* p : {&src, &dest, &full, &none}) {
+            p->partInfo = &info;
+            p->vessel = &vessel;
+            p->fields.crewTransferAvailable = true;
+            vessel.parts.push_back(p);
+        }
+        src.fields.CrewCapacity = 1;
+        dest.fields.CrewCapacity = 2;
+        full.fields.CrewCapacity = 1;
+        none.fields.CrewCapacity = 0;
+        src.protoModuleCrew.push_back(crew);
+        full.protoModuleCrew.push_back(other);
+        FlightRegistry::ActiveVessel = &vessel;
+        ScienceEnvironment::scheduler = &sched;
+        CrewTransfer::despawnCrew = [this](Vessel& v) { log.push_back(&v == &vessel ? "despawn" : "despawn?"); };
+        CrewTransfer::spawnCrew = [this](Vessel& v) { log.push_back(&v == &vessel ? "spawn" : "spawn?"); };
+    }
+    ~TransferWorld() {
+        PartItemTransfer::DismissActive();
+        CrewTransfer::despawnCrew = nullptr;
+        CrewTransfer::spawnCrew = nullptr;
+        ScienceEnvironment::scheduler = nullptr;
+        FlightRegistry::ActiveVessel = nullptr;
+        for (Part* p : {&src, &dest, &full, &none}) p->vessel = nullptr;
+        vessel.parts.clear();
+    }
+};
+
+}  // namespace
+
+TEST_CASE("wpfix9 CrewTransfer: part lists, selection veto, MoveCrewTo, the delayed completion and the interruptions (CrewTransfer.cs:24-115)") {
+    if (!GameAvailable()) return;
+    EvaWorld world;  // the environment a Vessel needs
+    inv33::LoadLocalizer();  // PartItemTransfer.Setup formats a message with arguments
+    struct LocalizerGuard {
+        ~LocalizerGuard() { KSP::Localization::Localizer::Shutdown(); }  // other test files assume no Localizer instance
+    } localizerGuard;
+    TransferWorld t;
+    std::vector<std::pair<PartItemTransfer::DismissAction, Part*>> dismissed;
+    auto onDismiss = [&](PartItemTransfer::DismissAction a, Part* p) { dismissed.emplace_back(a, p); };
+    struct Listen {
+        int created = 0, selected = 0, transferred = 0;
+        bool allow = true;
+        Part* destSeen = nullptr;
+        std::vector<Part*>* valid = nullptr;
+        std::vector<Part*>* semi = nullptr;
+        void Created(const events::GameEvents::HostedFromToAction<Part*, std::vector<Part*>*>& a) { ++created; valid = a.from; semi = a.to; }
+        void Selected(CrewTransfer::CrewTransferData* d) { ++selected; destSeen = d->destPart; d->canTransfer = allow; }
+        void Transferred(const events::GameEvents::HostedFromToAction<ProtoCrewMember*, Part*>&) { ++transferred; }
+    } l;
+    events::GameEvents::onCrewTransferPartListCreated.Add(&l, &Listen::Created);
+    events::GameEvents::onCrewTransferSelected.Add(&l, &Listen::Selected);
+    events::GameEvents::onCrewTransferred.Add(&l, &Listen::Transferred);
+
+    std::unique_ptr<CrewTransfer> ct = CrewTransfer::Create(t.src, t.crew, onDismiss);
+    // the lists: a part with free seats is valid, a full one is semi-valid, one without seats is neither; the source itself is skipped
+    REQUIRE(l.created == 1);
+    CHECK(l.valid->size() == 1);
+    CHECK((*l.valid)[0] == &t.dest);
+    CHECK(l.semi->size() == 1);
+    CHECK((*l.semi)[0] == &t.full);
+    // a part without seats is in neither list
+    CT probe;  // IsValidPart / IsSemiValidPart are protected
+    CHECK_FALSE(probe.V(t.none));
+    CHECK_FALSE(probe.S(t.none));
+    // the selection event can veto the transfer
+    l.allow = false;
+    ct->OnPartSelect(&t.dest);
+    CHECK(l.selected == 1);
+    CHECK(l.destSeen == &t.dest);
+    CHECK(t.src.protoModuleCrew.size() == 1);
+    CHECK(t.dest.protoModuleCrew.empty());
+    CHECK(l.transferred == 0);
+    CHECK(t.log.empty());
+    // allowed: the crew member moves, the message names the kerbal and the destination part, the event fires, the crew is despawned
+    l.allow = true;
+    ct->OnPartSelect(&t.dest);
+    CHECK(l.selected == 2);
+    CHECK(t.src.protoModuleCrew.empty());
+    REQUIRE(t.dest.protoModuleCrew.size() == 1);
+    CHECK(t.dest.protoModuleCrew[0] == t.crew);
+    CHECK(l.transferred == 1);
+    CHECK(ct->tgtPart == &t.dest);
+    CHECK(t.log == std::vector<std::string>{"despawn"});
+    REQUIRE_FALSE(ct->screenMessages.empty());
+    CHECK(ct->screenMessages.back() == KSP::Localization::Localizer::Format("#autoLOC_111636", std::vector<std::string>{"Transfer Kerman", "Test Pod"}));
+    // the completion is CallbackUtil.DelayedCallback(1, ...): ONE FRAME (the int overload counts frames), not one second. Nothing happens before it
+    CHECK(dismissed.empty());
+    CHECK(t.log.size() == 1);
+    Frame(t.sched, 0.02f);
+    CHECK(t.log == std::vector<std::string>{"despawn", "spawn"});
+    REQUIRE(dismissed.size() == 1);
+    CHECK(dismissed[0].first == PartItemTransfer::DismissAction::ItemMoved);
+    CHECK(dismissed[0].second == &t.dest);
+    CHECK(PartItemTransfer::Instance == nullptr);  // dismissed: the singleton is free again
+    events::GameEvents::onCrewTransferPartListCreated.Remove(&l, &Listen::Created);
+    events::GameEvents::onCrewTransferSelected.Remove(&l, &Listen::Selected);
+    events::GameEvents::onCrewTransferred.Remove(&l, &Listen::Transferred);
+
+    // interruptions: the kerbal going inactive, but not another kerbal and not the kerbal coming back
+    dismissed.clear();
+    ct = CrewTransfer::Create(t.dest, t.crew, onDismiss);
+    REQUIRE(PartItemTransfer::Instance == ct.get());
+    ct->onChangeInactive(t.other.get(), false, true);
+    ct->onChangeInactive(t.crew.get(), true, false);
+    CHECK(dismissed.empty());
+    ct->onChangeInactive(t.crew.get(), false, true);
+    REQUIRE(dismissed.size() == 1);
+    CHECK(dismissed[0].first == PartItemTransfer::DismissAction::Interrupted);
+    CHECK(dismissed[0].second == nullptr);
+    // a crew transfer of the same kerbal to a part that is not a KerbalEVA does not interrupt (CrewTransfer.cs:82-88)
+    dismissed.clear();
+    ct = CrewTransfer::Create(t.dest, t.crew, onDismiss);
+    ct->onGoForEva(events::GameEvents::HostedFromToAction<ProtoCrewMember*, Part*>(t.crew.get(), &t.dest, &t.full));
+    CHECK(dismissed.empty());
+}
+
+TEST_CASE("wpfix9 Kerbal.Start / die / onVesselSitChange (Kerbal.cs:143-183, :306-323)") {
+    CoroutineScheduler sched;
+    ScienceEnvironment::scheduler = &sched;
+    KerbalEnvironment::Reset();
+    int registered = 0, unregistered = 0, deaths = 0;
+    KerbalEnvironment::portraitGallery = [&](Kerbal&, bool reg) { (reg ? registered : unregistered)++; };
+    KerbalEnvironment::portraitCrewDie = [&](Kerbal&) { ++deaths; };
+    auto pcm = std::make_shared<ProtoCrewMember>(ProtoCrewMember::KerbalType::Crew, "Start Kerman");
+    {
+        Kerbal k;
+        k.crewMemberName = "Start Kerman";
+        k.protoCrewMember = pcm;
+        k.textureTargets = 3;
+        pcm->veteran = true;
+        k.Start();
+        CHECK(k.running);
+        CHECK(k.state == KerbalStates::NO_SIGNAL);  // until the static overlay time has passed
+        CHECK(registered == 1);
+        CHECK(k.portraitRegistered);
+        // SetupKerbalModel: every texture target takes the veteran texture of a veteran
+        REQUIRE(k.textureTargetUsesVeteran.size() == 3);
+        for (bool v : k.textureTargetUsesVeteran) CHECK(v);
+        CHECK(k.capturedInitial);
+        // randomizeOnStartup: InitState(name.GetHashCode_Net35()), then Range(0.1f, 0.15f) and Range(0, 20) in that order
+        UnityRandom::Global().InitState(StringExtensions::GetHashCode_Net35("Start Kerman"));
+        const float wantInterval = UnityRandom::Global().Range(0.1f, 0.15f);
+        const float wantSeed = static_cast<float>(UnityRandom::Global().Range(0, 20));
+        CHECK(k.updateInterval == wantInterval);
+        CHECK(k.noiseSeed == wantSeed);
+        CHECK(k.updateInterval >= 0.1f);
+        CHECK(k.updateInterval <= 0.15f);
+        // staticOverlayDuration (3 s): then ALIVE
+        Frame(sched, 1.0f);
+        CHECK(k.state == KerbalStates::NO_SIGNAL);
+        for (int i = 0; i < 4; ++i) Frame(sched, 1.0f);
+        CHECK(k.state == KerbalStates::ALIVE);
+        // die(): the portrait is told, the kerbal and its roster entry are dead
+        k.die();
+        CHECK(deaths == 1);
+        CHECK(k.state == KerbalStates::DEAD);
+        CHECK(k.rosterStatus == ProtoCrewMember::RosterStatus::Dead);
+        // onVesselSitChange: only the active vessel's situation changes matter; with GameVariables missing the C# throws on the active one
+        Vessel other, active;
+        FlightRegistry::ActiveVessel = &active;
+        GameVariables* savedGv = GameVariables::Instance;
+        GameVariables::Instance = nullptr;
+        CHECK_NOTHROW(k.onVesselSitChange(events::GameEvents::HostedFromToAction<Vessel*, Vessel_Situations>(&other, Vessel_Situations::LANDED, Vessel_Situations::FLYING)));
+        CHECK_THROWS_AS(k.onVesselSitChange(events::GameEvents::HostedFromToAction<Vessel*, Vessel_Situations>(&active, Vessel_Situations::LANDED, Vessel_Situations::FLYING)),
+                        NullReferenceException);
+        GameVariables::Instance = savedGv;
+        FlightRegistry::ActiveVessel = nullptr;
+    }
+    CHECK(unregistered == 1);  // OnDestroy: KerbalPortraitGallery.UnregisterActiveCrew
+    // a kerbal that is already dead when it starts stays DEAD until the overlay timer, which (as in the C#) then sets ALIVE if it still runs
+    {
+        Kerbal k;
+        k.crewMemberName = "Dead Kerman";
+        k.protoCrewMember = pcm;
+        k.rosterStatus = ProtoCrewMember::RosterStatus::Dead;
+        k.randomizeOnStartup = false;
+        k.noiseSeed = 5.0f;
+        k.Start();
+        CHECK(k.state == KerbalStates::DEAD);
+        CHECK(k.noiseSeed == 5.0f);  // randomizeOnStartup off: the seed is kept
+        for (int i = 0; i < 4; ++i) Frame(sched, 1.0f);
+        CHECK(k.state == KerbalStates::ALIVE);
+    }
+    KerbalEnvironment::Reset();
+    ScienceEnvironment::scheduler = nullptr;
 }
