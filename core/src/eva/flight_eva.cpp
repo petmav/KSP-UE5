@@ -161,8 +161,8 @@ KerbalEVA* FlightEVA::onGoForEVA() {
     if (vessel->evaController == nullptr) vessel->evaController = kerbalEVA;  // Vessel.cs:1662 evaController = GetComponent<KerbalEVA>()
     vessel->id = FlightEvaEnvironment::newGuid ? FlightEvaEnvironment::newGuid() : Guid::Empty();
     if (fromAirlock_ != nullptr) {
-        // FlightEVA.cs:220: the point is `fromPart.airlock.position`, the part's own airlock, not the hatch that was chosen (tryAllHatches
-        // can pick another one); without the partAirlock seam the chosen hatch stands in for it
+        // (FlightEVA.cs line 220) the point is `fromPart.airlock.position`, the part's own airlock, not the hatch that was chosen (tryAllHatches
+        // can pick another one); without the airlock seam the chosen hatch stands in for it
         const PartTransform* partAirlock = FlightEvaEnvironment::partAirlock ? FlightEvaEnvironment::partAirlock(*fromPart) : fromAirlock_;
         if (partAirlock == nullptr) throw Nre();  // fromPart.airlock is null
         const Vector3f pv = FlightEvaEnvironment::pointVelocity ? FlightEvaEnvironment::pointVelocity(*fromPart, partAirlock->position) : Vector3f::zero();

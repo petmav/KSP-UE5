@@ -82,6 +82,7 @@ NAME_ALIAS = {
               "UpdateSurfaceSpeeds": "UpdatePosVel", "ApplyFlightIntegratorAtmosphere": "FixedUpdate"}
 # WP-40b: EditorToolsUI members ported into EditorLogic under tools* names
 NAME_ALIAS.update({"toolsSetMode": "SetMode", "toolsUpdate": "Update", "toolsOnEditorPartEvent": "onEditorPartEvent"})
+NAME_ALIAS.update({"~TimeWarp": "OnDestroy"})  # wpfix9: the C++ destructor is the MonoBehaviour OnDestroy (TimeWarp.cs:699)
 CITE = re.compile(r"^(\s*)// (?:([A-Za-z0-9_/]+)\.cs)?:(\d+)\b")
 FUNC = re.compile(r"(\w+)::(~?\w+)\s*\(")
 

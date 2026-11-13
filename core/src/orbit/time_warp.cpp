@@ -82,7 +82,7 @@ bool TimeWarp::Awake() {
     return true;
 }
 
-// TimeWarp.cs:699 OnDestroy
+// TimeWarp.cs:699 (OnDestroy)
 TimeWarp::~TimeWarp() {
     InputLockManager::RemoveControlLock("TimeWarpLock");  // InputLockManager.RemoveControlLock
     InputLockManager::RemoveControlLock("TimeWarpTo");
