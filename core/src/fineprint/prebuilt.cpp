@@ -2,12 +2,15 @@
 #include "ksp/fineprint/prebuilt.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <filesystem>
 #include <stdexcept>
+#include <system_error>
 
 #include "ksp/core/exceptions.hpp"
 #include "ksp/core/log.hpp"
 #include "ksp/dotnet/enum.hpp"
+#include "ksp/dotnet/text.hpp"
 #include "ksp/localization/localizer.hpp"
 #include "ksp/parts/available_part.hpp"
 #include "ksp/parts/part_module_data.hpp"
@@ -163,6 +166,82 @@ void CraftProfileInfo::Save(ConfigNode& node) const {
     for (size_t j = 0; j < partModules.size(); ++j) node.AddValue("partModules", partModules[j]);
     node.AddValue("saveMD5", saveMD5);
     node.AddValue("lastWriteTime", lastWriteTime);
+}
+
+// CraftProfileInfo.cs:248
+void CraftProfileInfo::LoadFromMetaFile(const std::string& loadmetaPath) {
+    std::error_code ec;
+    if (!std::filesystem::exists(dotnet::PathFromUtf8(loadmetaPath), ec)) {
+        log::Info("No meta file found for path: " + loadmetaPath);
+    } else {
+        // Load(ConfigNode.Load(path)): ConfigNode.Load returns null for an empty / unparsable file and Load(null) throws
+        ConfigNode::NodePtr node = ConfigNode::Load(loadmetaPath);
+        if (!node) throw NullReferenceException("loadmeta node");
+        Load(*node);
+    }
+}
+
+// CraftProfileInfo.cs:260
+void CraftProfileInfo::SaveToMetaFile(const std::string& loadmetaPath) const {
+    ConfigNode configNode;
+    Save(configNode);
+    // Path.GetDirectoryName: null for an empty path, "" for a bare file name (both take the warning branch); a root separator is kept
+    const size_t sep = loadmetaPath.find_last_of("/\\");
+    const std::string directoryName = sep == std::string::npos ? std::string() : loadmetaPath.substr(0, sep == 0 ? 1 : sep);
+    if (!directoryName.empty()) {
+        std::error_code ec;
+        const std::filesystem::path dir = dotnet::PathFromUtf8(directoryName);
+        if (!std::filesystem::exists(dir, ec)) std::filesystem::create_directories(dir, ec);
+        configNode.Save(loadmetaPath);
+    } else {
+        log::Warning("[CraftProfileInfo] Path.GetDirectoryName(loadmetaPath) returned an invalid path!");
+    }
+}
+
+// CraftProfileInfo.cs:288 (File.GetLastWriteTimeUtc(fullPath).Ticks; the same clock conversion as io/url_dir.cpp LastWriteTime)
+int64_t CraftProfileInfo::GetLastWriteTime(const std::string& fullPath) {
+    constexpr int64_t kUnixEpochTicks = 621355968000000000LL;      // DateTime(1970,1,1).Ticks
+    constexpr int64_t kFileTimeEpochTicks = 504911232000000000LL;  // DateTime(1601,1,1).Ticks
+    const std::filesystem::path p = dotnet::PathFromUtf8(fullPath);
+    std::error_code ec;
+    if (!std::filesystem::exists(p, ec)) return -1;
+    const auto ft = std::filesystem::last_write_time(p, ec);
+    if (ec) return -1;
+#ifdef _MSC_VER
+    return static_cast<int64_t>(ft.time_since_epoch().count()) + kFileTimeEpochTicks;
+#else
+    const auto sys = std::chrono::clock_cast<std::chrono::system_clock>(ft);
+    return std::chrono::duration_cast<std::chrono::duration<int64_t, std::ratio<1, 10000000>>>(sys.time_since_epoch()).count() + kUnixEpochTicks;
+#endif
+}
+
+// CraftProfileInfo.cs:330 (the `.loadmeta` cache of the craft browser: the cached info is used when its lastWriteTime equals the craft
+// file's, otherwise the craft is loaded in full and the cache rewritten)
+CraftProfileInfo CraftProfileInfo::GetSaveData(const std::string& fullPath, const std::string& loadMetaPath) {
+    bool flag = false;
+    CraftProfileInfo craftProfileInfo;
+    int64_t num = -1;
+    num = GetLastWriteTime(fullPath);  // the C# try / catch around it only logs
+    if (num != -1) {
+        try {
+            craftProfileInfo.LoadFromMetaFile(loadMetaPath);
+            if (craftProfileInfo.lastWriteTime == num) flag = true;
+        } catch (const std::exception& ex2) {
+            log::Warning("[CraftProfileInfo]: Errored when loading .loadmeta file, will fully load craft file-" + fullPath + "\n" + ex2.what());
+        }
+    }
+    if (!flag) {
+        try {
+            ConfigNode::NodePtr root = ConfigNode::Load(fullPath);
+            // LoadDetailsFromCraftFile(root, fullPath) (:71): brokenParts false, bypassTechCheck false; a null root changes nothing
+            if (root) craftProfileInfo.LoadDetailsFromCraftFile(*root, fullPath, false, false);
+            craftProfileInfo.lastWriteTime = num;
+            craftProfileInfo.SaveToMetaFile(loadMetaPath);
+        } catch (const std::exception& ex3) {
+            log::Info("[CraftProfileInfo]: Failed to save .loadmeta data for craft-" + fullPath + "\n" + ex3.what());
+        }
+    }
+    return craftProfileInfo;
 }
 
 // CraftProfileInfo.cs:375

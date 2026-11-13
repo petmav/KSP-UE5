@@ -3,7 +3,7 @@
 // KSP.UI.Screens.CraftProfileInfo.LoadDetailsFromCraftFile.
 //
 // Engine-agnostic subset: the craft files are read as ConfigNodes and validated against the part and module classes of the process (PartLoader /
-// AssemblyLoader.GetClassByName); ShipTemplate.LoadShip (part counts, mass, cost, size, stage count) and the .loadmeta cache of CraftProfileInfo are not ported.
+// AssemblyLoader.GetClassByName); ShipTemplate.LoadShip (part counts, mass, cost, size, stage count) is ported; the .loadmeta cache is wpfix9.
 // Spawning the vessel (ContractSystem.SpawnPreBuiltShip -> ShipConstruction.LoadShip + ProtoVessel) is ContractsEnvironment::spawnPreBuiltShip.
 #pragma once
 
@@ -58,7 +58,13 @@ public:
     bool shipPartModulesAvailable() const { return UnavailableShipPartModules.empty(); }          // :69
     void Load(const ConfigNode& node);                                     // :172
     void Save(ConfigNode& node) const;                                     // :223
-    // (LoadFromMetaFile / SaveToMetaFile / LoadMetaPath / the craft browser's cached load, CraftProfileInfo.cs:236-373, are file-cache UI code: not ported)
+    // the .loadmeta cache (wpfix9): LoadFromMetaFile / SaveToMetaFile / GetLastWriteTime / GetSaveData. Not ported: GetSFSMD5 (needs
+    // Versioning.FileMD5String; not used by GetSaveData) and GenerateExcludedParts / PrepareCraftMetaFileLoad (the Making History mission part
+    // filter; `excludedParts` stays empty, see LoadDetailsFromCraftFile)
+    void LoadFromMetaFile(const std::string& loadmetaPath);                // :248
+    void SaveToMetaFile(const std::string& loadmetaPath) const;            // :260
+    static int64_t GetLastWriteTime(const std::string& fullPath);          // :288 File.GetLastWriteTimeUtc(...).Ticks, -1 when the file is missing
+    static CraftProfileInfo GetSaveData(const std::string& fullPath, const std::string& loadMetaPath);  // :330
 };
 
 // PreBuiltCraftPosition.cs:3
