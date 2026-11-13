@@ -290,6 +290,7 @@ add_library(kspcore STATIC
     ship/ship_template.cpp
     # WP-40 editor core: EditorLogic data side, geometry / re-root / enum helpers, pre-flight tests, markers, gizmos
     editor/editor_logic.cpp
+    editor/editor_fsm.cpp
     editor/editor_geometry.cpp
     editor/preflight_tests.cpp
     editor/editor_markers.cpp

@@ -9,6 +9,10 @@
 #include "ksp/editor/editor_reroot.hpp"
 #include "ksp/editor/preflight_tests.hpp"
 #include "ksp/events/game_events.hpp"
+#include "ksp/input/game_settings.hpp"
+#include "ksp/input/input_device.hpp"
+#include "ksp/input/input_lock_manager.hpp"
+#include "ksp/input/mouse.hpp"
 #include "ksp/math/mathfx.hpp"
 #include "ksp/save/save_environment.hpp"
 #include "ksp/staging/stage_manager.hpp"
@@ -98,7 +102,7 @@ void EditorLogicBase::partRotationInputUpdate(RotationKey key, bool inRotateTwea
     partTweaked = false;
     EditorEnvironment& env = EditorEnvironment::Current();
     PartFields& f = selectedPart->fields;
-    const float step = env.fineTweak ? 5.0f : 90.0f;
+    const float step = env.FineTweak() ? 5.0f : 90.0f;
     auto axisOf = [&](const Vector3f& dir) { return Inverse(f.initRotation) * dir; };
     if (!inRotateTweakStateNow) {
         switch (key) {
@@ -646,8 +650,15 @@ Attachment EditorLogic::checkAttach(Part* selPart) {
             }
         }
     }
-    if ((selRules.srfAttach && allowSrfAttachment && !env.modifierKey) || (env.modifierKey && isCurrentPartFlag)) {
-        std::optional<EditorSurfaceHit> hitOpt = env.surfaceRaycast ? env.surfaceRaycast() : std::nullopt;
+    if ((selRules.srfAttach && allowSrfAttachment && !env.ModifierKey()) || (env.ModifierKey() && isCurrentPartFlag)) {
+        // EditorLogic.cs:3607 this.ray = editorCamera.ScreenPointToRay(Input.mousePosition - srfAttachCursorOffset); Physics.Raycast(ray, out hit, 1000, DefaultEquivalent)
+        std::optional<EditorSurfaceHit> hitOpt;
+        if (env.screenPointToRay && env.raycast) {
+            const EditorRay ray = env.screenPointToRay(InputEnvironment::Input().mousePosition() - srfAttachCursorOffset);
+            hitOpt = env.raycast(ray, 1000.0f, 8519681);
+        } else if (env.surfaceRaycast) {
+            hitOpt = env.surfaceRaycast();
+        }
         if (hitOpt) {
             EditorSurfaceHit hit = *hitOpt;
             Part* part2 = hit.part;
@@ -668,7 +679,7 @@ Attachment EditorLogic::checkAttach(Part* selPart) {
                     attachment.rotation = UnityNative::LookRotation(hit.normal, part2->partTransform.rotation * Vector3f::up()) *
                                           UnityNative::LookRotation(selPart->srfAttachNode->orientation, Vector3f::up());
                     attachment.position = hit.point - attachment.rotation * selPart->fields.attRotation * selPart->srfAttachNode->position;
-                    if (env.useAngleSnap) {
+                    if (env.UseAngleSnap()) {
                         Vector3f vector = hit.point - part2->partTransform.position;
                         const Vector3f rayOrigin = part2->partTransform.position;
                         const Vector3f rayDirection = part2->partTransform.up();   // new Ray(origin, direction): the direction is normalised
@@ -677,7 +688,7 @@ Attachment EditorLogic::checkAttach(Part* selPart) {
                         const Vector3f forward = part2->partTransform.forward();
                         const float num2 = Vector3f::Dot(vector, rayDir);
                         const float num3 = KSPUtil::BearingDegrees(forward, vector2.normalized(), rayDir);
-                        const float num4 = env.fineTweak ? srfAttachAngleSnapFine : srfAttachAngleSnap;
+                        const float num4 = env.FineTweak() ? srfAttachAngleSnapFine : srfAttachAngleSnap;
                         const float q = f32store(static_cast<double>(num3) / static_cast<double>(num4));
                         float angle;
                         if (!(static_cast<double>(q) - static_cast<double>(Mathf::Floor(q)) > 0.5))
@@ -908,6 +919,7 @@ Part* EditorLogic::InstantiateCopy(Part* p) {
         c->fields.craftID = o->fields.craftID;
         c->partActionsNode = o->partActionsNode;
         map[o] = c.get();
+        if (IsFrozen(o)) frozenParts_.insert(c.get());   // Part.frozen is a public field: Object.Instantiate copies it
         clones.push_back(c.get());
         RegisterEditorPart(std::move(c));
     }
@@ -955,6 +967,7 @@ Part* EditorLogic::OnPodSpawn(const AvailablePart& pod) {
     // variants.SetVariant, ModuleInventoryPart.SetInventoryDefaults and PartStatsUpgradeModule are module-side editor steps (WP-35 / WP-36)
     RegisterEditorPart(std::move(up));
     GameEvents::onEditorPartEvent.Fire(ConstructionEventType::PartCreated, rootPart);
+    if (fsm.Started()) fsm.RunEvent(&on_podSelect);   // C#: unconditional (the editor FSM is always started); the data-only tests run without one
     return rootPart;
 }
 
@@ -968,13 +981,15 @@ Part* EditorLogic::SpawnPart(const AvailablePart& partInfo) {
     part->InitializeModules();
     RegisterEditorPart(std::move(up));
     selectedPart = part;
-    SetRotation(*selectedPart, rootPart != nullptr ? rootPart->partTransform.rotation : selectedPart->fields.initRotation);
-    // dragOverPlane(out position) -> selectedPart.transform.position = position: the cursor (UpdatePlacement)
+    SetRotation(*selectedPart, !IsDestroyed(rootPart) ? rootPart->partTransform.rotation : selectedPart->fields.initRotation);
+    Vector3f position = Vector3f::zero();
+    if (dragOverPlane(position)) selectedPart->partTransform.position = position;
     selPartGrabOffset = Vector3f::zero();
     selectedPart->fields.attRotation = Quaternionf::identity();
     selectedPart->fields.attRotation0 = LocalRotation(*selectedPart);
     selectedPart->fields.attPos0 = LocalPosition(*selectedPart);
     selectedPart->partInfo = &partInfo;
+    if (fsm.Started()) fsm.RunEvent(&on_partCreated);
     return part;
 }
 
@@ -988,6 +1003,8 @@ void EditorLogic::SetIconAsPart(Part* part) {
     selectedPart->fields.attRotation = Quaternionf::identity();
     selectedPart->fields.attRotation0 = LocalRotation(*selectedPart);
     selectedPart->fields.attPos0 = LocalPosition(*selectedPart);
+    // part.highlighter.ReinitMaterials / SetHighlight: the shell
+    if (fsm.Started()) fsm.RunEvent(&on_partPicked);
 }
 
 // EditorLogic.cs:2996
@@ -995,16 +1012,20 @@ void EditorLogic::SpawnConstruct(ShipConstruct* construct) {
     if (construct == nullptr) throw ArgumentNullException("construct");
     if (ship->liveParts.empty()) {
         rootPart = construct->liveParts[0]->localRoot();
+        if (fsm.Started()) fsm.RunEvent(&on_podSelect);
         return;
     }
     ShipConstruction::SanitizeCraftIDs(construct->liveParts, false);
     selectedPart = construct->liveParts[0]->localRoot();
-    SetRotation(*selectedPart, rootPart != nullptr ? rootPart->partTransform.rotation : selectedPart->fields.initRotation);
+    SetRotation(*selectedPart, !IsDestroyed(rootPart) ? rootPart->partTransform.rotation : selectedPart->fields.initRotation);
+    Vector3f position = Vector3f::zero();
+    if (dragOverPlane(position)) selectedPart->partTransform.position = position;
     selPartGrabOffset = Vector3f::zero();
     selectedPart->fields.attRotation = Quaternionf::identity();
     selectedPart->fields.attRotation0 = LocalRotation(*selectedPart);
     selectedPart->fields.attPos0 = LocalPosition(*selectedPart);
     GameEvents::onEditorPartEvent.Fire(ConstructionEventType::PartCreated, selectedPart);
+    if (fsm.Started()) fsm.RunEvent(&on_partCreated);
 }
 
 // Object.Destroy(part.gameObject): the Part stays allocated (Unity's fake null) and is marked destroyed
@@ -1035,7 +1056,7 @@ void EditorLogic::deletePart(Part* part, bool symmetry, bool printConfirmation) 
 
 // EditorLogic.cs:3101
 void EditorLogic::DestroySelectedPart() {
-    if (selectedPart != nullptr) {
+    if (!IsDestroyed(selectedPart)) {
         if (ship->Contains(selectedPart) && selectedPart != rootPart) {
             detachPart(selectedPart);
             SetBackup();
@@ -1043,8 +1064,13 @@ void EditorLogic::DestroySelectedPart() {
         GameEvents::onEditorPartEvent.Fire(ConstructionEventType::PartDeleted, selectedPart);
         displayAttachNodeIcons(ship->liveParts, selectedPart, false, false, false);
         deletePartAndSymmetryParts(selectedPart);
+        // RefreshCrewAssignment(ShipConstruction.ShipConfig, GetPartExistsFilter()): the crew dialog is the shell's
         selectedPart = nullptr;
         isCurrentPartFlag = false;
+        if (fsm.Started()) {
+            if (ship->liveParts.empty()) fsm.RunEvent(&on_podDeleted);
+            else fsm.RunEvent(&on_partDeleted);
+        }
     }
 }
 
@@ -1057,6 +1083,7 @@ void EditorLogic::UpdatePlacement() {
     if (selectedPart == nullptr) return;
     SetRotation(*selectedPart, vesselRotation * selectedPart->fields.initRotation * selectedPart->fields.attRotation);
     attachment = checkAttach(selectedPart);
+    attachmentSet_ = true;
     selectedPart->fields.attRotation0 = attachment.rotation;
     selectedPart->fields.attPos0 = attachment.position;
     if (attachment.possible) SetRotation(*selectedPart, attachment.rotation * selectedPart->fields.attRotation);
@@ -1112,9 +1139,8 @@ bool EditorLogic::DropSelectedPart() {
     return true;
 }
 
-// on_partPicked.OnEvent (EditorLogic.cs:1770, the event delegate) for a part that is not the root
-void EditorLogic::PickPart(Part* part) {
-    selectedPart = part;
+// on_partPicked.OnEvent (EditorLogic.cs:1776): the part is already selectedPart (the condition assigned it)
+void EditorLogic::OnPartPickedEvent() {
     if (selectedPart != selectedPart->localRoot()) {
         const bool num5 = ship->Contains(selectedPart);
         detachPart(selectedPart);
@@ -1122,12 +1148,23 @@ void EditorLogic::PickPart(Part* part) {
         if (num5) {
             GameEvents::onEditorPartPicked.Fire(selectedPart);
             SetBackup();
+            // if (selectedPart.CrewCapacity > 0) RefreshCrewAssignment(...): the crew dialog is the shell's
             GameEvents::onEditorPartEvent.Fire(ConstructionEventType::PartDetached, selectedPart);
             return;
         }
     } else {
         SetBackup();
     }
+    if (IsFrozen(selectedPart)) unfreeze(selectedPart);
+    isCurrentPartFlag = !IsDestroyed(selectedPart) && EditorEnvironment::Current().hasFlagDecalBackground && EditorEnvironment::Current().hasFlagDecalBackground(*selectedPart);
+    // UIPartActionControllerInventory.Instance.CurrentCargoPart = selectedPart (cargo parts): the inventory UI is the shell's
+    GameEvents::onEditorPartEvent.Fire(ConstructionEventType::PartPicked, selectedPart);
+}
+
+// the composite step for hosts without the FSM: select `part` and run the on_partPicked body
+void EditorLogic::PickPart(Part* part) {
+    selectedPart = part;
+    OnPartPickedEvent();
 }
 
 // ==================================================================================================================================
@@ -1136,6 +1173,7 @@ void EditorLogic::PickPart(Part* part) {
 
 // EditorLogic.cs:2445
 void EditorLogic::onRotateGizmoUpdate(const Quaternionf& dRot) {
+    GizmoStateFromObject(true);
     PartTransform& referenceTransform = ReferenceTransform(*selectedPart);
     switch (gizmoRotate.coordSpace) {
     case UnityEngine::Space::Self:
@@ -1151,6 +1189,7 @@ void EditorLogic::onRotateGizmoUpdate(const Quaternionf& dRot) {
         referenceTransform.position += getPivotOffset(gizmoPivot, referenceTransform.TransformPoint(symUpdateAttachNode->position));
         gizmoRotate.transform.position = gizmoPivot;
     }
+    GizmoStateToObject(true);
     if (symUpdateMode != 0) UpdateSymmetry(selectedPart, symUpdateMode, symUpdateParent, symUpdateAttachNode);
     GameEvents::onEditorPartEvent.Fire(ConstructionEventType::PartRotating, selectedPart);
 }
@@ -1164,8 +1203,13 @@ void EditorLogic::onRotateGizmoUpdated(const Quaternionf& dRot) {
 
 // EditorLogic.cs:2480
 void EditorLogic::partRotationResetUpdate() {
+    if (!(GameSettings::Editor_resetRotation && GameSettings::Editor_resetRotation->GetKeyDown()) ||
+        !(&selectedPart->partTransform == &ReferenceTransform(*selectedPart)))
+        return;
     srfAttachCursorOffset = Vector3f::zero();
-    if (inRotateTweakState) {
+    const bool inRotateTweak = fsm.CurrentState() == &st_rotate_tweak;
+    if (inRotateTweak) {
+        GizmoStateFromObject(true);
         selectedPart->fields.attRotation = gizmoAttRotate;
         SetLocalRotation(*selectedPart, gizmoAttRotate0);
         selectedPart->fields.attRotation0 = gizmoAttRotate0;
@@ -1173,22 +1217,25 @@ void EditorLogic::partRotationResetUpdate() {
             selectedPart->partTransform.position += getPivotOffset(gizmoPivot, selectedPart->partTransform.TransformPoint(symUpdateAttachNode->position));
             gizmoRotate.transform.position = selectedPart->partTransform.position;
         }
+        GizmoStateToObject(true);
     } else {
         selectedPart->fields.attRotation = Quaternionf::identity();
         SetLocalRotation(*selectedPart, selectedPart->fields.attRotation0);
     }
     if (symUpdateMode != 0) UpdateSymmetry(selectedPart, symUpdateMode, symUpdateParent, symUpdateAttachNode);
+    if (fsm.CurrentState() == &st_rotate_tweak) fsm.RunEvent(&on_rotateReset);
     partTweaked = true;
 }
 
 // EditorLogic.cs:2519
 void EditorLogic::onOffsetGizmoUpdate(const Vector3f& dPos) {
     (void)dPos;
+    GizmoStateFromObject(false);
     EditorEnvironment& env = EditorEnvironment::Current();
     PartTransform& referenceTransform = ReferenceTransform(*selectedPart);
     referenceTransform.position = gizmoOffset.transform.position;
     if (selectedPart != rootPart) {
-        const float threshold = env.fineTweak ? env.fineOffsetThreshold : 0.1f;
+        const float threshold = env.FineTweak() ? env.fineOffsetThreshold : 0.1f;
         if (env.setSurfaceAttachActive) env.setSurfaceAttachActive(*selectedPart, true);
         Part* referenceParent = env.referenceParent ? env.referenceParent(*selectedPart) : selectedPart->parent;
         Vector3f offsetGap{};
@@ -1214,6 +1261,7 @@ void EditorLogic::onOffsetGizmoUpdate(const Vector3f& dPos) {
     const Vector3f localPos = &referenceTransform == &selectedPart->partTransform ? LocalPosition(*selectedPart)
                                                                                    : selectedPart->partTransform.InverseTransformPoint(referenceTransform.position);
     selectedPart->fields.attPos = localPos - selectedPart->fields.attPos0;
+    GizmoStateToObject(false);
     if (symUpdateMode != 0) UpdateSymmetry(selectedPart, symUpdateMode, symUpdateParent, symUpdateAttachNode);
     GameEvents::onEditorPartEvent.Fire(ConstructionEventType::PartOffsetting, selectedPart);
 }
@@ -1226,12 +1274,14 @@ void EditorLogic::onOffsetGizmoUpdated(const Vector3f& dPos) {
 }
 
 // EditorLogic.cs:2576
-void EditorLogic::partOffsetInputUpdate(bool resetKeyPressed) {
-    if (resetKeyPressed && &ReferenceTransform(*selectedPart) == &selectedPart->partTransform) {
+void EditorLogic::partOffsetInputUpdate() {
+    if (InputLockManager::IsUnlocked(ControlTypes::EDITOR_GIZMO_TOOLS) && GameSettings::Editor_resetRotation && GameSettings::Editor_resetRotation->GetKeyDown() &&
+        &selectedPart->partTransform == &ReferenceTransform(*selectedPart)) {
         selectedPart->fields.attPos = Vector3f::zero();
         SetLocalPosition(*selectedPart, selectedPart->fields.attPos0);
         srfAttachCursorOffset = Vector3f::zero();
         if (symUpdateMode != 0) UpdateSymmetry(selectedPart, symUpdateMode, symUpdateParent, symUpdateAttachNode);
+        if (fsm.CurrentState() == &st_offset_tweak) fsm.RunEvent(&on_offsetReset);
         GameEvents::onEditorPartEvent.Fire(ConstructionEventType::PartOffset, selectedPart);
     }
     for (size_t i = 0, count = selectedPart->symmetryCounterparts.size(); i < count; i++) {
@@ -1240,11 +1290,17 @@ void EditorLogic::partOffsetInputUpdate(bool resetKeyPressed) {
     }
 }
 
-// EditorLogic.cs:2602 (the root candidate check and the hierarchy flip; audio and the pick are the shell's)
+// EditorLogic.cs:2602
 void EditorLogic::OnNewRootSelect(Part* newRoot) {
+    SyncReRootContext();
     if (EditorReRootUtil::MakeRoot(newRoot, selectedPart)) {
+        if (EditorEnvironment::Current().playOneShot) EditorEnvironment::Current().playOneShot(EditorClip::PartGrab);
         selectedPart = newRoot;
         if (ship->Contains(newRoot)) rootPart = newRoot;
+        pickPart(8519681 | 4 | 0x200000, true, true);
+        if (fsm.Started()) fsm.RunEvent(&on_rootSelect);
+    } else {
+        if (EditorEnvironment::Current().playOneShot) EditorEnvironment::Current().playOneShot(EditorClip::CannotPlace);
     }
 }
 
@@ -1285,14 +1341,15 @@ ShipConstruct* EditorLogic::AdoptShip(std::unique_ptr<ShipConstruct> s) {
     return ship;
 }
 
-// EditorLogic.cs:2771
+// EditorLogic.cs:2771 (`inPodSelect` stands for fsm.CurrentState == st_podSelect when the FSM is not started)
 void EditorLogic::RestoreState(int offset, bool inPodSelect) {
+    if (fsm.Started()) inPodSelect = fsm.CurrentState() == &st_podSelect;
     if (offset == 0 || ShipConstruction::backups.empty() ||
         (offset == -1 && ship->liveParts.size() == 1 && ShipConstruction::backups[static_cast<size_t>(undoLevel - 1)]->GetNodes("PART").empty()))
         return;
     const int num = std::clamp(undoLevel + offset, 1, static_cast<int>(ShipConstruction::backups.size()));
     if (num == undoLevel && !inPodSelect) return;
-    if (selectedPart != nullptr) displayAttachNodeIcons(ship->liveParts, selectedPart, false, false, false);
+    if (!IsDestroyed(selectedPart)) displayAttachNodeIcons(ship->liveParts, selectedPart, false, false, false);
     if (!ship->liveParts.empty())
         for (Part* p : EditorLogicBase::FindPartsInChildren(rootPart)) Destroy(p);   // DestroyImmediate(rootPart.gameObject)
     undoLevel = num;
@@ -1301,12 +1358,22 @@ void EditorLogic::RestoreState(int offset, bool inPodSelect) {
     ShipConstruction::SanitizeCraftIDs(ship->liveParts, false);
     ShipConstruction::ShipConfig = ship->SaveShip();
     GameEvents::onEditorRestoreState.Fire();
+    // RefreshCrewAssignment(ShipConstruction.ShipConfig, GetPartExistsFilter()): the crew dialog is the shell's
     GameEvents::onEditorShipModified.Fire(ship);
     GameEvents::onEditorUndo.Fire(ship);
-    if (selectedPart != nullptr) {
+    if (fsm.Started()) fsm.RunEvent(&on_undoRedo);
+    if (!IsDestroyed(selectedPart)) {
         SaveEnvironment& env = SaveEnvironment::Current();
         selectedPart->fields.persistentId = env.persistentIds.CheckPartpersistentId(selectedPart->fields.persistentId, selectedPart, true, true);
-        for (Part* c : selectedPart->children) c->fields.persistentId = env.persistentIds.CheckPartpersistentId(c->fields.persistentId, c, true, true);
+        for (size_t i = 0; i < selectedPart->children.size(); i++) {
+            Part* c = selectedPart->children[i];
+            c->fields.persistentId = env.persistentIds.CheckPartpersistentId(c->fields.persistentId, c, true, true);
+        }
+    }
+    if (fsm.Started() && fsm.CurrentState() == &st_podSelect) fsm.RunEvent(&on_podSelect);
+    if (fsm.Started() && !IsDestroyed(selectedPart)) {
+        skipPartAttach = true;
+        coroutines_.push_back({1, [this] { skipPartAttach = false; }});   // StartCoroutine(CallbackUtil.DelayedCallback(1, ...))
     }
 }
 

@@ -28,7 +28,7 @@ void GizmoHost::set_localPosition(const Vector3f& v) const { transform->position
 // ---- GizmoOffset --------------------------------------------------------------------------------------------------------------------------
 
 // GizmoOffset.cs:51
-float GizmoOffset::SnapInterval() const { return EditorEnvironment::Current().fineTweak ? gridSnapIntervalFine : gridSnapInterval; }
+float GizmoOffset::SnapInterval() const { return EditorEnvironment::Current().FineTweak() ? gridSnapIntervalFine : gridSnapInterval; }
 
 // GizmoOffset.cs:67
 GizmoOffset GizmoOffset::Attach(const GizmoHost& host, const Quaternionf& rotOffset, std::function<void(const Vector3f&)> onMove,
@@ -43,7 +43,7 @@ GizmoOffset GizmoOffset::Attach(const GizmoHost& host, const Quaternionf& rotOff
     component.rotOffset = rotOffset;
     component.onGizmoMove = std::move(onMove);
     component.onGizmoMoved = std::move(onMoved);
-    component.useGrid = EditorEnvironment::Current().useAngleSnap;
+    component.useGrid = EditorEnvironment::Current().UseAngleSnap();
     return component;
 }
 
@@ -101,7 +101,7 @@ void GizmoOffset::SnapToGrid() {
 // ---- GizmoRotate --------------------------------------------------------------------------------------------------------------------------
 
 // GizmoRotate.cs:46
-float GizmoRotate::SnapDegrees() const { return EditorEnvironment::Current().fineTweak ? gridSnapIntervalFine : gridSnapInterval; }
+float GizmoRotate::SnapDegrees() const { return EditorEnvironment::Current().FineTweak() ? gridSnapIntervalFine : gridSnapInterval; }
 
 // GizmoRotate.cs:66
 GizmoRotate GizmoRotate::Attach(const GizmoHost& host, const Vector3f& pivotPoint, const Quaternionf& rotOffset,
@@ -111,7 +111,7 @@ GizmoRotate GizmoRotate::Attach(const GizmoHost& host, const Vector3f& pivotPoin
     component.host = host;
     component.onGizmoRotate = std::move(onRotate);
     component.onGizmoRotated = std::move(onRotated);
-    component.useAngleSnap = EditorEnvironment::Current().useAngleSnap;
+    component.useAngleSnap = EditorEnvironment::Current().UseAngleSnap();
     component.hostRot0 = host.transform->rotation;
     component.rotOffset = rotOffset;
     switch (coordSpace) {
