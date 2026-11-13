@@ -3923,6 +3923,89 @@ copies (`ModuleCommand::DefaultQuaternionEuler`, `AutopilotEnvironment::DefaultE
 - `./build/RelWithDebInfo/tests/kspcore_tests | grep -E "test cases|assertions"`: 464 test cases, 826,521 assertions, 0 failed; `-tc="WP-40*"`: 11 cases, 95,023 assertions.
 - WSL (Ubuntu 24.04) from the worktree, after the gatekeeper fixes (`EditorReRootContext` moved to namespace scope: clang and gcc rejected the nested struct with default member initializers; `std::sqrt` replaced by `dotnet::Math::Sqrt`): `./run_tests.sh -f` (clang, linux-rel) EXIT 0, 34 of 34 ctest tests; `./run_tests.sh -p linux-gcc-rel -f` EXIT 0, 34 of 34. Windows unit after the fixes: 464 cases, 826,522 assertions (WP-40 CHECK(restoredLinks <= 14) added), WP-40 and WP-24 reference tests 0 ULP. Linux clang unit binary (measured by the gatekeeper): 464 cases, 826,506 assertions, 0 failed (Windows: 826,522; the 16-assertion difference is the NaN-sign fallback of the WP-03 reference test, see "Small fixes 2026-10-11" item 1).
 
+## WP-40b: editor placement loop, EditorLogic KFSM (branch `wp40b`, from main `d74ae28c`, merged main `82ef52e4`)
+
+Spec: `EditorLogic.cs:1236-2366` (SetupFSM: 9 states, 28 events), `:466-604` Awake / Start, `:606-830` StartEditor, `:2367-2443` Update / LateUpdate / FixedUpdate /
+onConstructionModeChanged, `:2621-2673` pickPart / CenterDragPlane / dragOverPlane, `:2708-2830` UndoRedoInputUpdate / RestoreState, `:2834-2864` the part-list taps,
+`:3131` deleteInputUpdate, `:4023-4062` NewShip, `:4760-4830` ShipToLoadSelected, `:5365` partSearchUpdate, `:5439` HeldPartIsStacked, `EditorLogicBase.cs:75`
+partRotationInputUpdate, `EditorToolsUI.cs` (SetMode, Update, onEditorPartEvent), `KerbalFSM.cs`, `Mouse.cs`. New files: `src/editor/editor_fsm.cpp`, `tests/test_editor_fsm.cpp`,
+`tests/data/wp40b_reference.json`, `tools/wp40/session_ref_lib.py`, `tools/wp40/session_reference.py`. Edited (own lines only): `include/ksp/editor/editor_types.hpp` (seams),
+`editor_logic.hpp` / `src/editor/editor_logic.cpp` (FSM members; spawn / delete / RestoreState / gizmo callbacks completed to the C# bodies), `editor_markers.hpp` (`EditorRay` moved to
+editor_types.hpp), `include/ksp/inventory/construction.hpp` (`EditorScreen` moved to editor_types.hpp), `src/editor/editor_gizmos.cpp` (reads keys through the new accessors),
+`tools/wp28/check_cites.py` (3 alias entries). `python -I tools/wp28/check_cites.py src/editor/editor_fsm.cpp src/editor/editor_logic.cpp`: 93 cites, 0 mismatches.
+**There is no in-game editor capture** (`harness/captures/out*/` and `harness/golden/MANIFEST.json` have none): the gate is unit-level against an independent Python simulator.
+
+### What is ported (all in `EditorLogic`)
+
+| C# | port |
+|---|---|
+| `SetupFSM` `:1236-2365` | `EditorLogic::SetupFSM`: the 9 states (OnEnter / OnUpdate chains in the C# order, `st_root_unselected.OnUpdate` overwritten with an empty delegate as in the source, `st_podSelect` locks `EditorLogic_rootPartMode`) and the 28 events with their conditions, bodies and `AddEvent` / `AddEventExcluding` registrations in the C# order (the order of an event list decides which event fires first in a frame) |
+| `Awake` / `Start` / `Update` / `LateUpdate` / `FixedUpdate` | `Awake` (listeners `onEditorConstructionModeChange`, `onEditorSymmetryMethodChange`; the EditorToolsUI part-event listener is wired here too), `Start` (`SetupFSM`, `StartEditor(false)`, `StartFSM(rootPart ? st_idle : st_podSelect)`), `Update` (`fsm.UpdateFSM`, the PAUSE key for a compound part being placed, then `EditorToolsUI.Update`), `RunCoroutines` (the 1-frame `DelayedCallback` of RestoreState), `LateUpdate`, `FixedUpdate` |
+| `StartEditor` `:606`, `NewShip`, `OnNewShipConfirm`, `ShipToLoadSelected` (path, node, Normal / Merge), `LoadShipFromFile` | `StartEditor(isRestart)` (START_CLEAN / LOAD_FROM_CACHE / LOAD_FROM_FILE, backups, `on_shipLoaded` / `on_newShip`), `NewShip` (unsaved-changes dialog = `EditorEnvironment::newShipDialog`, default Discard), the loads |
+| `pickPart`, `CenterDragPlane`, `dragOverPlane`, `HeldPartIsStacked` | same names; `pickPart` keeps the side effects of the C# (grab offset and drag plane are set even when the caller discards the part) |
+| `symInputUpdate`, `snapInputUpdate`, `snapButton`, `UndoRedoInputUpdate`, `deleteInputUpdate`, `partOffsetInputUpdate`, `partRotationInputUpdate()` (EditorLogicBase), `partRotationResetUpdate` | keys through `GameSettings::Editor_*` / `InputEnvironment::Input()` / `InputLockManager` (WP-50); the player build on Windows / Linux (not the Unity editor, not OSX) for undo / redo |
+| `OnPartListIconTap`, `OnPartListBackgroundTap`, `ReleasePartToIcon`, `OnPodSpawn` / `SpawnPart` / `SpawnConstruct` / `SetIconAsPart` tails (drag position, `RunEvent`), `DestroySelectedPart` tail (`on_podDeleted` / `on_partDeleted`), `OnNewRootSelect` (full body), `RestoreState` (`on_undoRedo`, `on_podSelect`, `skipPartAttach`) | completed from the WP-40 data-only versions |
+| `EditorToolsUI` `SetMode`, `Update` (keys 1-4), `onEditorPartEvent` | `toolsSetMode`, `toolsUpdate`, `toolsOnEditorPartEvent`: a part event calls `SetMode(Place)`, which fires `onEditorConstructionModeChange`, whose listener runs `on_goToModePlace` INSIDE the event that triggered it (reproduced; session `s27`) |
+| `Part.frozen` / `freeze` / `unfreeze` | kept in `EditorLogic` (the C++ `Part` has no such field; `Object.Instantiate` copies it, `InstantiateCopy` does too) |
+| gizmos | `st_offset_tweak` / `st_rotate_tweak` create real `EditorGizmos::GizmoOffset` / `GizmoRotate` objects (`OffsetGizmo()` / `RotateGizmo()` for the shell to drive the handles); the `gizmoOffset` / `gizmoRotate` state the WP-40 callbacks read is synchronised around every callback |
+| scene objects | `SceneParts()` = every Part the editor created or loaded, in creation order, destroyed ones included (a Unity `x != null` on a destroyed part is `IsDestroyed`) |
+
+### Seams (`EditorEnvironment`, `include/ksp/editor/editor_types.hpp`; unset = an empty scene)
+
+`cameraPosition() -> Vector3f`; `screenPointToRay(screenPoint) -> EditorRay`; `worldToScreenPoint(world) -> Vector3f`;
+`raycast(ray, maxDistance, layerMask) -> optional<EditorSurfaceHit>` (`Physics.Raycast` + `GetPartUpwardsCached`; the checkAttach ray uses `Input.mousePosition - srfAttachCursorOffset` and
+mask `DefaultEquivalent`, pickPart the `layerMask | ...` masks); `nodeIconUnderCursor(part, node, worldPoint) -> bool`; `findPartSurface(...)`; `pointerOverUI()`; `mouseOverModalArea()`;
+`mouseOverGizmo(offset)`; `heldPartIsStacked()`; `playOneShot(EditorClip)`; `onEditorStartTweak / onEditorEndTweak(Part&)` (CompoundPart overrides); `onHighlightSelected`; `newShipDialog()`;
+`revealPart(AvailablePart&)`; `hasFlagDecalBackground(Part&)`; `fineTweakKey / modifierKeyHeld / useAngleSnapSetting` (`Awake` wires them to GameSettings; unset, the plain fields apply). Keys,
+buttons and the mouse position come from the WP-50 `IInputDevice`, `Mouse` and `InputLockManager`. The old `surfaceRaycast()` seam still works when `screenPointToRay` / `raycast` are unset.
+
+### Gate
+
+| gate | result |
+|---|---|
+| independent reference | `tools/wp40/session_ref_lib.py` + `session_reference.py`: a Python simulator of the whole loop written from the C# (KerbalFSM, the 9 states / 28 events, checkAttach, createSymmetry, CheckSymPartsAttach, UpdateSymmetry, attach / detach, backups and RestoreState through saved world poses, re-root `isRootCandidate / MakeRoot / SetHierarchyRoot`, Mouse.cs, EditorToolsUI, gizmo handles) on the numeric primitives of `tools/wp40/editor_reference.py` and `tools/wp12/pqs_ref_math.py` (FromToRotation); it shares no code with kspcore |
+| `unit` `tests/test_editor_fsm.cpp` | 2 cases: the session replay and the stock-craft rebuild |
+| sessions | **48 sessions, 1,535 frames, 5,610 trace rows, 83,769 part values compared bit for bit, 3,427 scene-seam calls checked, 0 mismatches**; trace and a hash of the full part snapshot compared on every frame |
+| coverage | all 9 states and all 28 events (fire counts: on_partAttached 89, on_partCreated 81, on_podSelect 49, on_partPicked 30, on_partDropped 10, on_goToModePlace 9, on_goToModeOffset 8, on_goToModeRotate 7, on_offsetSelect 7, on_partDeleted 5, on_goToModeRoot 4, on_newShip 4, on_shipLoaded 4, on_podDeleted 3, on_rotateSelect 3, on_rootPickSet 2, on_undoRedo 2, and once each on_partCopied, on_partReveal, on_partLost, on_partOverInventoryPAW, on_offsetSelect-deselect pair, on_offsetReset, on_rotateDeselect, on_rotateReset, on_rootDeselect, on_rootSelect, on_rootSelectFail); entered states: idle 168, place 114, offset_select 9, offset_tweak 9, podSelect 7, rotate_tweak 7, rotate_select 6, root_select 4, root_unselected 4 |
+| what a frame compares | the ordered trace: `ev:` FSM events (`OnEventCalled`), `st:` state changes (`OnStateChange`), `ge:` 20 GameEvents of the editor with their arguments, `clip:` audio clips, `hl:` highlight calls, `tw:` tweak hooks, `cmd:` host commands; and an FNV-1a 64 hash of the canonical snapshot: fsm state, selected / root part, undo level, backup count, symmetry mode / method / space, ship order, and per part: id (creation order), name, parent, position, rotation, attPos, attPos0, attRotation, attRotation0 (bit patterns), attach mode, symMethod, children, symmetry counterparts, attach node links, surface node link and mesh name, frozen flag, ship membership; destroyed parts by name |
+| scene seams | the simulator answers the camera ray, `Physics.Raycast`, node icon bounds and FindPartSurface with ANALYTIC TEST FIXTURES (a sphere around each part, a 0.35 sphere around each node, a ray table) and records every call with its answer; the C++ test replays the answers and fails on a different question, input or call order. These fixtures are not part data and are not claimed to equal the game colliders |
+| parts / crafts | stock part prefabs from `core/testdata/GameData-mirror` (`mk1pod.v2`, `fuelTankSmallFlat`, `liquidEngine2`, `radialDecoupler`, `batteryPack`, `stackBiCoupler.v2`, ...) with attach nodes / rules from `harness/captures/out2/part_database.json`; loaded crafts `Jumping Flea` and `Ion-Powered Space Probe` (`harness/inputs/Ships/VAB`) |
+| UNVERIFIED | `Quaternion.LookRotation` and `Quaternion.Euler` (native, no capture; the reference uses the same formulation as the port: a consistency check), `Transform.localPosition / localRotation` derived from the parent matrix (attPos0 / attRot0 after attach), `Bounds.Contains` in dragOverPlane (no EditorBounds instance: everything inside). The JSON lists per session which of them it reached (`unverified`): 29 sessions reach all three, 14 Euler + local pose, 2 LookRotation + Euler, 1 LookRotation + local pose, 2 none (`s19`, `s45`: load-only and idle-key sessions) |
+
+Stock crafts rebuilt part by part (`TEST_CASE "WP-40b EditorLogic: stock crafts rebuilt ..."`): the host spawns each part, aims the cursor, presses the symmetry keys and clicks; the saved craft
+(`ship->SaveShip()`) part tree is compared with the original's as a canonical string. Compared: part name, attach mode, symmetry set size and method, linked attach nodes by node id and partner part
+name, surface link partner name, children as a sorted multiset, part count. Excluded: craft ids / persistent ids (re-issued), pos / rot / attPos0 / attRot0 (the largest deviation of a part position from the original relative to the root is
+printed: the editor places by node alignment, the originals carry the player's cursor path), mir, stage numbers, module data. Result: **`PhysProf-S` (21 parts), `PhysProf-M` (150), `PhysProf-L` (446), `Jumping Flea` (8, radial symmetry), `Ion-Powered Space Probe` (10)
+save an equal tree (pinned)**(PhysProf-S exists twice, in `harness/inputs/Ships/VAB` and `analysis/physics/craft`: 6 equal rebuilds in 13 attempts); 7 other crafts are attempted and the driver reports why it stopped (AeroEquus, Ariane 5, Orbiter One, PT Series Munsplorer, Science Jr, Space Station Core, Super-Heavy Lander: a drop refused by the host driver, usually a
+part that needs a rotated placement, a stack-symmetry count or a node pair the host did not identify; these are limits of the host driver, not claims about the editor).
+
+### Findings (rules the gate pinned down)
+
+- `st_root_unselected.OnUpdate` is assigned an empty delegate AFTER three handlers were combined into it: undo / snap keys do nothing in that state (sic).
+- `on_partPicked.OnCheckCondition` assigns `selectedPart` (and sets the grab offset and drag plane) even when it returns false; the pick of an attached part returns from `OnEvent` before `PartPicked` is fired.
+- `Mouse.Update` updates the buttons BEFORE `screenPos`: `dragDelta` lags a frame, and `WasDragging` at a button-up reads the delta of the last frame the button was held (stale across clicks).
+- `EditorToolsUI.onEditorPartEvent(PartDeleted)` runs `SetMode(Place)`, which runs `on_goToModePlace` from inside `DestroySelectedPart`; the outer `on_partDeleted` then continues from the state the nested event reached.
+- `SetHierarchyRoot` on a surface-attached part reverses the surface node only when both nodes have an owner: a part without `node_attach` has the default-constructed `srfAttachNode` (no owner), so re-rooting leaves its link alone (found by the gate: the simulator assumed an owner).
+- `OnNewRootSelect` picks with `LayerUtil.DefaultEquivalent | 4 | 0x200000`, not the `layerMask` field; the pick is ignored but still moves the drag plane.
+- A surface-attachable part dragged near a ship part is attached by SURFACE even when its nodes are in range (the surface branch of checkAttach overrides the stack branch whenever the cursor ray hits a ship part); the sessions turn `allowSrfAttachment` off for node attaches.
+- The gate also found: the WP-40 data-only `OnNewRootSelect` omitted the pick, the clips and `on_rootSelect`; the simulator mistakes it caught in itself (listener reactions of `PartCreated` / `PartDeleted`, static gizmo coordinate spaces leaking between sessions, a layer mask).
+
+### Not ported / deferred (C# line ranges)
+
+- Shell: widgets, part list / categorizer / search (`:1251-1256`, `:1306-1307`, `:5365`), `EditorPartList` filters, camera `ResetCamera` (`:1256`), screen messages, highlighting / layers / `SetLayerRecursive`, flag browser (`FlagSetup :812-870`; `FlagURL` stays as loaded), crew assignment (`ResetCrewAssignment` / `RefreshCrewAssignment` at `:1289-1298`, `:1787-1790`, `:1971-1974`, `:3113`), `VesselDeltaV` (`:1278-1282`, `:1736-1738`), text-field focus guards in the key handlers, mission-builder `editorSwitchInput` (`:2392-2395`), analytics.
+- Inventory / cargo UI branches (`UIPartActionControllerInventory`, `ModuleCargoPart`): `:1336-1342`, `:1463-1466`, `:1804-1807`, `:1921-1925`, `:1975-1984`, `:2042-2052`; `Mouse.HoveredPart` over an inventory is wired (ModuleInventoryPart.TotalEmptySlots) but not gated.
+- CompoundPart tweak mode (`CompoundPart.cs:290-320`): `onEditorStartTweak / EndTweak` are seams only.
+- `EditorToolsUI.OnEditorLoad / OnEditorRestart` (panel visibility; the `SetMode(Place)` on load into a hidden panel): the sessions load while the panel is in Place mode.
+- `st_rotate_tweak.OnLeave` towards `st_place` with a surface-attached part that is not in the ship (`:1623-1625`) is ported but no session reaches it; `TestPartBoundsSeparate` (offset gizmo clamp) is ported in WP-40 but needs part bounds that the part model does not have: the sessions' offset drags run without a clamp.
+- The editor collision world (`Part.editorCollision` from physics callbacks) is a seam (`EditorEnvironment::editorCollision`), not an implementation (ue5 / `DESIGN.md` 6.5).
+
+### Verification
+
+- `core/build` deleted, `powershell -NoProfile -File core/run_tests.ps1 -Fresh` (CMAKE_BUILD_PARALLEL_LEVEL=4): ALL TESTS PASSED, 54 of 54 ctest entries (configure 3.5 s, build 620.9 s, test 280.6 s; `unit.shard.0-7`, `unit.random_order.11 / 27 / 42` all passed, none hit the 600 s timeout, `capi.jolt_step` passed); after merging main `48563cf2` (WP-UE-05) an incremental `run_tests.ps1`: 56 of 56 ctest entries passed (build 58.2 s, test 322.4 s); the `unit` binary lists 1,137 test cases; `-tc="WP-40*"`: 13 cases, 95,109 assertions, 0 failed (the WP-40 11 + the 2 new ones)
+- `./build/RelWithDebInfo/tests/kspcore_tests.exe --order-by=rand -rs=11` and `-rs=27`: the ctest entries `unit.random_order.11`, `.27` and `.42` passed in the fresh run (a separate manual run of the whole binary under the same seeds was abandoned for machine load and is not claimed); the WP-40 symmetry-mode case also passes alone (`-tc="*symmetry mode cycling*"`): the order dependence recorded in the README no longer reproduces (hygiene listener), nothing was changed for it.
+- `g++ 13.3 -std=c++20 -fsyntax-only -Wall -Wextra` (WSL) over `editor_fsm.cpp`, `editor_logic.cpp`, `editor_gizmos.cpp`, `editor_markers.cpp`, `test_editor_fsm.cpp`: no new diagnostics (only the existing `part.hpp:410` unused-parameter warning).
+- `python -I core/tools/ci/pr_review.py --base main`: 0 failing checks (the progress.csv warning is answered: WP-40 0.75 -> 0.9).
+
 ## WP-36: funds, reputation, strategies, facilities, recovery, progress tracking (branch `wp36`, from main `ad208205`)
 
 State: done for the engine-agnostic part (data, maths, save formats, event wiring), unit-gated. 61 csv files; the GUI part of them is
@@ -7768,3 +7851,97 @@ Main write-up: `ue5/STATUS.md`. Core side only:
 - Test-only C ABI `include/kspcore/kspcore_test.h` / `src/capi/kspcore_test.cpp` (in `kspcore.lib`, outside `KSPCORE_ABI_VERSION`): `kspcore_test_physics_scenario` (the WP-20a pile scenario, same as `tests/test_physics_world.cpp` `RunPile`, returns `PhysicsWorld::StateHash`), `kspcore_test_mxcsr`, `kspcore_test_jolt_config`.
 - ctest `capi.jolt_step` (`tests/capi/capi_jolt_step.c`, pure C): hash non-zero, identical run to run and at 1 / 2 / 4 threads, MXCSR control bits 0x1F80 (the low six bits are sticky exception flags: 0x1FA0 was observed), Jolt double precision; writes `build/RelWithDebInfo/kspcore_jolt_step.txt` for the Unreal test `KspUe5.Bridge.JoltStep`. Pile hash at 200 steps in this build: `0x0be3de1d6affe387` (per binary, not a golden).
 Fresh full run on the merge candidate: 52 / 54 ctest pass; `unit.random_order.27` / `.42` timed out at 600 s while two other builds ran, and passed (3 / 3 of `unit.random_order`, 221.7 s) when re-run alone. The new `capi.jolt_step` passes.
+
+
+## WP-UE-02: game host and C ABI v2 (branch `wpue02`, from main `da6db948`)
+
+State: done for the kspcore side of the slice's bridge, with the exceptions under "Not done". Scope = `ue5/DESIGN.md` 1.3 / 6.2 / 6.3: the product-side
+composition of the flight scene behind `kspcore_frame`, the two ABI headers (`kspcore_game.h`, `kspcore_frame.h`), the module lifecycle and the other
+host items of WP-20g's "Host contract", quicksave / quickload / revert through the ABI, and the gates `capi.flight_slice` (pure C) and its C++ twin.
+**Header freeze: commit `643355d8`** (the two headers alone); every later header change is additive and listed in `core/PROGRESS-wpue02.md`.
+
+### What is in
+
+| piece | files | KSP source |
+|---|---|---|
+| ABI v2 headers: process init, database load with progress, new game / load / save / list saves / quicksave / quickload / launch / revert / scene flow, settings; input frame, commands, `kspcore_frame`, snapshot, hash | `include/kspcore/kspcore_game.h`, `kspcore_frame.h`, `kspcore_c.h` (ABI_VERSION 2, includes the domain headers) | `ue5/DESIGN.md` 1.3 |
+| C entry points (every one catches all C++ exceptions, `kspcore_last_error`) | `src/capi/kspcore_game.cpp`, `kspcore_frame.cpp`, `capi_internal.hpp`, `kspcore_c.cpp` (shared error / `kspcore_sim`) | |
+| `GameProcess`: once per process (KSP's start-up scene): game root, GameDatabase, PartLoader data side, Physics.cfg, terrain maps, model ids | `include/ksp/host/game_host.hpp`, `src/host/game_process.cpp` | GameDatabase / PartLoader / PhysicsGlobals loading, `KSPUtil.ApplicationRootPath` (KSPUtil.cs:795) |
+| `GameHost` (one per `kspcore_sim`): the celestial system, GameSettings.Awake (GameSettings.cs:1506), HighLogic (HighLogic.cs:112), the scheduler and PlayerLoop, the frame input device (`IInputDevice` over the input frame), commands, events, snapshot | `src/host/game_host.cpp` | |
+| The flight scene composition, in WP-20g's host-contract order: TimeWarp (Awake / Start, `TimeWarp.cs:213`), PhysicsWorld with the game's PhysicMaterials (WP-12c), MuPartColliders, PhysicsBubble (`Install`), the rotating frame, engines' thrust transforms (WP-17b data), FlightInputHandler (Awake / Start / Update / FixedUpdate), Kerbin's PQS sphere with terrain colliders (`ContactHost::HostTerrain`), the KSC colliders (`SceneryCityHost`, every facility at its top level), `PSystemSetup`'s launch sites, FlightDriver (Awake / Start: `NEW_FROM_FILE` and `RESUME_SAVED_CACHE`), the vessel's entry into the scene (Part.Start with the module lifecycle, rigid bodies, `OrbitDriver.Start`), `OrbitPhysicsManager.Start`, StageManager (`BeginFlight`), QuickSaveLoad | `src/host/game_host.cpp` `Flight` | FlightDriver.cs:108-376, TimeWarp.cs, StageManager.cs:1209, QuickSaveLoad.cs; the test fixtures `PadScene` / `BubbleScene` / `KerbinScene` / `InputScene` / `test_vab_launch.cpp` promoted to product code |
+| Frame: `PlayerLoop::Frame(dt)` (fixed steps by Unity's rule, `Time.*` plumbing), the script "KspHost.Flight" at the `Normal` slot: FixedUpdate = Planetarium.FixedUpdate, TimeWarp.FixedUpdate, the bubble's tick; Update = commands, TimeWarp.Update, FlightInputHandler.Update, QuickSaveLoad.Update, the bubble's Update, PQS update; LateUpdate = the bubble's LateUpdate | `src/host/game_host.cpp` | `core/timing_manager.hpp` measured order |
+| Launch: `kspcore_game_launch_craft` runs the craft through KSPUpgradePipeline (`KSPUpgradePipeline.cs:35`: the stock Kerbal X has the renamed `liquidEngine1-2`), keeps the upgraded craft in the save's `Ships/VAB`, fills every crewable seat from the roster (`KerbalRoster.GetNextOrNewKerbal`, KerbalRoster.cs:281: stands for the launch dialog's default fill), then `FlightDriver.StartWithNewLaunch` (FlightDriver.cs:461) | `src/host/game_host.cpp` `GameHost::LaunchCraft` | |
+| Scene flow: `HighLogic.LoadScene` -> `sceneLoader` seam -> event `SCENE_LOAD_REQUESTED`; the old scene goes at the next frame (Unity destroys it at the level switch); `kspcore_scene_loaded` composes the new one | `src/host/game_host.cpp` | HighLogic.cs:211, :310 |
+| Settings by field name over `GameSettings::Fields()`, load / save through `ParseCfg` / `BuildCfg` | `src/host/settings.cpp` | GameSettings.cs:1619, :1691 |
+| `HygieneProbe` (read-only version of the hygiene listener's checks) and `HygieneLeaks` | `tests/test_hygiene.cpp/.hpp` | |
+| C10 states extracted bit for bit from the capture (origin path and sha256 in the file) | `tests/data/c10_states.csv`, `tools/wpue02/extract_c10_states.py` | `harness/captures/out2/aero_forces_vessel.json` |
+
+### Gates
+
+| test | what | result |
+|---|---|---|
+| `capi.flight_slice` (pure C, `tests/capi/capi_flight_slice.c`) | process init, load with progress, new game, launch PhysProf-M2 from the KSC LaunchPad, scene load, 100 settle frames, then KSP's own keys in the input frame (Z full throttle, T SAS, Space stage) as C10 did; 4,560 frames at dt 0.02 compared with KSP's C10 states (`c10_states.csv`) at WP-20f's tolerances; settings round trip; quicksave and the save list; destroy and re-create a sim | **pass**, 44.7 s (4,660 frames: 1.35 ms per frame CPU on average through the whole ABI incl. snapshot, MSVC RelWithDebInfo, laptop shared with other builds) |
+| `capi.flight_slice_twin` (unit case "WP-UE-02 flight slice twin") | the same scripted run through the `GameHost` class directly and through the extern "C" entry points from C++, and the hash the pure-C program wrote: **bit for bit the same** snapshot hash; 0 hygiene leaks after each run | **pass**, hash `2c4ae66445a41c81` (all three) |
+| unit "WP-UE-02 sim destroy / re-create" | two sims in one process: 0 hygiene leaks after each `kspcore_sim_destroy`, identical hash of the same scripted run | pass |
+| unit "WP-UE-02 quicksave / quickload" | quicksave on the pad (KSP refuses it under thrust), fly, quickload: the scene load is requested (event), the old scene is gone at the next frame, `kspcore_scene_loaded` rebuilds it from the file: altitude 101.598 m = the saved one, 153 parts, UT = saved + the five frames run | pass |
+| unit "WP-UE-02 revert to launch" | `FlightDriver.RevertToLaunch` through the ABI: back on the pad, PRELAUNCH, 153 parts | pass |
+| unit "WP-UE-02 the stock Kerbal X" | the stock craft (73 parts) launches through the upgrade pipeline; throttle and stage keys lift it (92.8 m -> 304.2 m in 340 frames); the first stage leaves 70 parts | pass |
+
+Ascent against C10 through the ABI (ours - KSP, relative; the same quantities and tolerances as WP-20f's C++ path, which are copied here for comparison):
+
+| state | speed at the altitude | altitude at the Mach number | frames since the previous state |
+|---|---|---|---|
+| alt_1000 / mach_0.5 / alt_2500 / mach_1 / alt_5000 | -0.122 / - / -0.051 / - / -0.086 % | - / +0.252 / - / +0.048 / - % | +0.571 / -0.424 / 0.000 % |
+| mach_1.5 / alt_10000 / alt_20000 | - / +0.036 / +0.054 % | +0.058 / - / - % | +0.251 / 0.000 / -0.107 % |
+| final (KSP frame 4500: 36,672.5 m, 600.5 m/s) | 36,683.1 m (**+0.029 %**), 600.7 m/s (**+0.043 %**) | | |
+| tolerances used (WP-20d / WP-20f, not loosened) | 1 % (max seen 0.122) | 1.5 % (max seen 0.252) | 2.5 % (max seen 0.571) |
+
+(WP-20f's C++ fixture path: final +0.042 % / +0.084 %.) Our frames run about 26 ticks behind KSP's (the capture's frame 0 is not our ignition tick; WP-20f finding).
+The pad is the real KSC LaunchPad (colliders and spawn transform), not WP-20f's 30 x 30 terrain patch.
+
+### Deviations from `ue5/DESIGN.md` 1.3 (each with its reason)
+
+- Functions that DESIGN lists without a handle (`kspcore_game_new / load / save / quicksave`) take the `kspcore_sim*` first: it names the owner (one sim per process), and a quickload needs the sim's scene.
+- The snapshot type is `kspcore_snapshot_view`; `kspcore_snapshot(sim)` returns it (a C type and a function cannot share the name `kspcore_snapshot`).
+- `kspcore_snapshot_hash`: the ids of vessels and parts are not hashed (process-wide GUID / instance counters differ between two sims of one process); `kspcore_vessel_state` got appended flight values (`altitude`, `surface_speed`, `mach`, `vertical_speed`) because no HUD view-model exists before WP-UE-04 and the C10 gate needs them.
+- Part ids are `Part.flightID` (the port has no `Part.persistentId`); vessel ids `Vessel.persistentId`.
+- Camera, animated node poses (gimbals), FX parameters, highlight / thermal glow, sun colour: present in the structs, zero, as DESIGN specifies for the packages that own them (`kspcore_camera_state.valid = 0`, `node_count = fx_count = 0`).
+- Commands implemented: STAGE, THROTTLE, SAS_ENABLE, ACTION_GROUP, TIME_WARP_INDEX, PAUSE, QUICKSAVE, QUICKLOAD, REVERT_TO_LAUNCH, LOAD_SCENE. Accepted and ignored (documented in the header as later packages' work): SAS_MODE, SET_ACTIVE_VESSEL, MAP_VIEW, PART_EVENT.
+- Events implemented: SCENE_LOAD_REQUESTED, SCENE_LOADED, VESSEL_CREATED / DESTROYED / SWITCHED, PART_DIED, PART_EXPLODED (no position), FLOATING_ORIGIN_REBASE, FRAME_CHANGE (the old-to-new rotation is the identity: UNVERIFIED what the shell needs), SCREEN_MESSAGE (FlightInputHandler's and QuickSaveLoad's). Not produced: STRUCTURE_CHANGED, SOUND_CUE.
+- CommNet is off in the host's new games (`Difficulty.EnableCommNet = false`; KSP's sandbox default is on): with it on a probe core's control level comes from its CommNet connection (Vessel.cs GetControlLevel) and the KSC ground station / link graph is not part of this host (`CommNetScenario.Instance` is null then). M2 and Kerbal X need control to fly.
+
+### Findings (a later implementer must know)
+
+- **TimeWarp must be Awake'd and Start'ed**: a TimeWarp with `curr_rate` 0 makes `TimeWarp.fixedDeltaTime()` 0, so every engine's `requestedMassFlow * fixedDeltaTime` is 0, `RequestPropellant` returns 0 and the engines are "ignited" with zero thrust (found by bisecting why M2 sat on the pad with throttle 1 and 17 ignited engines).
+- **KSP's sandbox new game has CommNet enabled**: see above; the probe core showed "Partial Control", control level 0, with `CommNetScenario.Instance` alive.
+- **FlightDriver's statics are the NEXT scene's parameters** (`StartupBehaviour`, `StateFileToLoad`, `FlightStateCache`...): they are set by `StartWithNewLaunch` / `StartAndFocusVessel` before `HighLogic.LoadScene`, so tearing a scene down must not `ResetStatics()` them (the quickload started a NEW_FROM_FILE launch until this was fixed).
+- **A craft from the harness may need the upgrade pipeline** (the stock Kerbal X: `liquidEngine1-2`): the VAB's craft browser runs it; `ShipConstruction.LoadShip(path)` does not.
+- **KSP refuses a quicksave under thrust** (`FlightGlobals.ClearToSave`, QuickSaveClearToSave): the ABI returns 0 with the message; the gates quicksave on the pad.
+- **A flight to orbit leaves process state behind** (`FlightGlobals` navball speed mode = Orbit, found by the hygiene probe after the 4,660-frame run): `GameHost` resets it; a scene that changed more would show the same way in `HygieneProbe::Leaks`.
+- `GameData::Load` registers GameEvents listeners of the prefab part modules (36 on `onVesselSituationChange`...): they are the process level's, so the probe is taken after `kspcore_game_load_database`.
+- Two sims of one process end the same scripted run in the same hash only because the GUID hash source is per sim (it was a function-local static).
+- The stock Kerbal X lifts off with the throttle and stage keys through the whole ABI path; its crew seats are filled by the host (UNVERIFIED that the Kerbals board: no snapshot field shows crew).
+
+### Not done
+
+- Camera pose (WP-UE-03) and view-models (WP-UE-04): reserved slots only. Gimbal / animation node poses, FX parameters, thermal glow, sun colour: reserved.
+- Commands SAS_MODE, SET_ACTIVE_VESSEL, MAP_VIEW, PART_EVENT; events STRUCTURE_CHANGED, SOUND_CUE.
+- CommNet network (KSC ground station): off.
+- The save dialog's UI side (QuickSaveLoad's dialogs) beyond `kspcore_game_save`, `kspcore_game_list_saves` and quicksave / quickload.
+- `pqs_height_threads > 0` and `physics_threads > 0` are passed through (results are documented bit-identical, WP-12a / WP-20b) but no gate here runs with them.
+- Non-FLIGHT scenes start nothing (MAINMENU / SPACECENTER / EDITOR: the scheduler and the HighLogic events run, no objects).
+- Vessels that come into range later (a docked or decoupled vessel's physics) run through the bubble as in the fixtures; no gate here covers a second vessel.
+- Kerbin only: the dominant body's PQS sphere is Kerbin's (the PQS of another body is not built when the SOI changes).
+
+### Verification
+
+- After the merge with main `82ef52e4` (WP-UE-01, WP-UE-06), Windows MSVC RelWithDebInfo, fresh (`core/build` deleted, `run_tests.ps1 -Fresh`, `CMAKE_BUILD_PARALLEL_LEVEL=4`): configure 4.5 s, build 616 s, ctest 296 s, **58 / 58 pass** (`capi.flight_slice` 44.7 s, `capi.flight_slice_twin` 53.1 s, `capi.jolt_step`, `capi.model_c`, `unit.random_order.11 / 27 / 42` 223 / 188 / 189 s; none near its timeout). Before the merge, the same fresh run: 55 / 55.
+- Whole unit binary `kspcore_tests --order-by=rand -rs=11` and `-rs=27` (run together): **1,148 cases / 1,712,322 assertions, all pass**; before the merge `-rs=11`: 1,140 cases / 1,709,021 assertions, all pass.
+- WSL Ubuntu 24.04 g++ `-std=c++20 -fsyntax-only -Wall -Wextra` over the changed sources (`src/host/*.cpp`, `src/capi/kspcore_{c,game,frame}.cpp`, `tests/test_flight_slice.cpp`, `tests/test_hygiene.cpp`): no warning in the changed files; `kspcore_c.h`, `kspcore_game.h`, `kspcore_frame.h` and `capi_flight_slice.c` compile as C11 `-pedantic` and as C++20.
+- `python -I core/tools/ci/pr_review.py --base main`: 0 failing checks (two cite lines of `game_host.cpp` were fixed: FlightDriver.cs:299 / :223); `tools/wp28/check_cites.py` over the new sources: 2 cites recognised, 0 mismatches.
+- Pre-existing hazard, not this package's: `tests/test_input_flight.cpp` writes `core/testdata/GameData-mirror/settings.cfg` (LANGUAGE = de-de) into the game root when the whole unit binary runs; `GameSettings::Awake` of the next sim would read it. Deleted by hand after each whole-binary run here.
+
+### Commits (branch `wpue02`, from main `da6db948`)
+
+`643355d8` header freeze; `64f31f36` PROGRESS note; `96bbeb2b` host, ABI implementation, gates; `9bd1df54` quicksave / quickload / revert, hygiene probe, FlightDriver statics, TimeWarp start; `8ec084a9` upgrade pipeline and crew fill in the launch path; `3e0244b3` settings round trip, progress row; the merge of origin/main; then this note.
+- After the second merge with main `9bef14d2` (WP-40b, WP-UE-05), incremental `run_tests.ps1` (build 150.6 s, ctest 787 s under heavy machine load; `unit.random_order.11 / 27 / 42` 410 / 448 / 526 s, under their 600 s timeout): **58 / 58 pass**.

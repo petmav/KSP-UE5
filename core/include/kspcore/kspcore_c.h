@@ -16,12 +16,15 @@
  * keeps the whole tree it belongs to alive.
  *
  * ABI history: 1 = build info, sim context, ConfigNode (load/parse/save/query), FloatCurve (WP-01/02).
+ *              2 = the game host (WP-UE-02): kspcore_game.h (process init, game data, game / save / scene flow, settings) and
+ *                  kspcore_frame.h (input frame, commands, kspcore_frame, snapshot), included at the end of this header.
+ *                  Everything of version 1 is unchanged.
  */
 #pragma once
 
 #include <stddef.h>
 
-#define KSPCORE_ABI_VERSION 1
+#define KSPCORE_ABI_VERSION 2
 
 #ifdef __cplusplus
 extern "C" {
@@ -162,4 +165,20 @@ float kspcore_pqs_planet_fade(const kspcore_pqs* pqs);
 
 #ifdef __cplusplus
 }
+#endif
+
+/* ABI v2 domain headers (they include this header first; include guards make the order irrelevant). */
+#include "kspcore_game.h"
+#include "kspcore_frame.h"
+#if defined(__has_include)
+/* later domain headers, included when the package that adds them is present: camera (WP-UE-03), view-models (WP-UE-04), model reader (WP-UE-05) */
+#if __has_include("kspcore_camera.h")
+#include "kspcore_camera.h"
+#endif
+#if __has_include("kspcore_view.h")
+#include "kspcore_view.h"
+#endif
+#if __has_include("kspcore_model.h")
+#include "kspcore_model.h"
+#endif
 #endif

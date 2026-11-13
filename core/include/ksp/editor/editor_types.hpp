@@ -19,6 +19,7 @@
 namespace ksp {
 
 class Part;
+struct AvailablePart;
 struct PartTransform;
 class ShipConstruct;
 struct AttachNode;
@@ -38,6 +39,9 @@ enum class ConstructionEventType : int {
 // ConstructionMode.cs:1
 enum class ConstructionMode : int { Place, Move, Rotate, Root };
 
+// EditorScreen.cs:1 (completes the opaque declaration of events/game_event_types.hpp; moved here from inventory/construction.hpp in WP-40b)
+enum class EditorScreen : int { Parts, Actions, Crew, Cargo };
+
 // EditorFacilities.cs:4 ([Flags])
 enum class EditorFacilities : int { NONE = 0, ALL = -1, VAB = 1, SPH = 2 };
 
@@ -55,6 +59,17 @@ struct EditorSurfaceHit {
     bool noAttachTag = false;           // hit.collider.CompareTag("NoAttach")
     bool fairingPanelCollider = false;  // the collider belongs to a ModuleProceduralFairing panel (the attachment is refused)
 };
+
+// UnityEngine.Ray as the editor reads it (Camera.ScreenPointToRay); the constructor normalises the direction like Ray(origin, direction)
+struct EditorRay {
+    Vector3f origin{};
+    Vector3f direction{};
+    EditorRay() = default;
+    EditorRay(const Vector3f& o, const Vector3f& d) : origin(o), direction(d.normalized()) {}
+};
+
+// The audio clips EditorLogic plays through its AudioSource (EditorLogic.cs:60-84); the clip assets are the shell's
+enum class EditorClip : int { PartGrab, PartRelease, Attach, CannotPlace, TweakGrab, TweakRelease, DeletePart, ReRoot };
 
 // GameVariables limits as the editor needs them (GameVariables.GetPartCountLimit / GetCraftSizeLimit / GetCraftMassLimit,
 // ScenarioUpgradeableFacilities.GetFacilityLevel; WP-36 implements GameVariables). Unset = no limit (int max / infinity).
@@ -82,6 +97,16 @@ struct EditorEnvironment {
     int undoRedoLimit = 32;                        // EDITOR_UNDO_REDO_LIMIT
     bool fineTweak = false;                        // GameSettings.Editor_fineTweak.GetKey()
     bool modifierKey = false;                      // GameSettings.MODIFIER_KEY.GetKey()
+    // the key / setting reads the placement loop makes live (WP-40b): when set they replace the plain fields above (Awake wires them to the
+    // WP-50 input device and GameSettings); unset, the fields are the answer (the data-only editor tests)
+    std::function<bool()> fineTweakKey, modifierKeyHeld, useAngleSnapSetting;
+    bool FineTweak() const { return fineTweakKey ? fineTweakKey() : fineTweak; }
+    bool ModifierKey() const { return modifierKeyHeld ? modifierKeyHeld() : modifierKey; }
+    bool UseAngleSnap() const { return useAngleSnapSetting ? useAngleSnapSetting() : useAngleSnap; }
+    // Part.GetComponent<FlagDecalBackground>() != null (the flag part; components are not modelled): unset = false
+    std::function<bool(Part&)> hasFlagDecalBackground;
+    // EditorPartList.Instance.RevealPart(partInfo): observer
+    std::function<void(const AvailablePart&)> revealPart;
     // Part.GetReferenceTransform(): the model transform a part names as its reference (models are the .mu reader's; unset: the part's own
     // transform, which is the reference of every part that does not call SetReferenceTransform)
     std::function<PartTransform*(Part&)> referenceTransform;
@@ -105,10 +130,79 @@ struct EditorEnvironment {
     // GameEvents / audio / screen messages are fired or skipped by the EditorLogic port itself; these only observe
     std::function<void(Part& p, bool attach, bool reset)> onHighlightSelected;   // EditorLogic.highlightSelected (Highlighter)
 
+    // ---- scene seams of the placement loop (WP-40b). The shell (or a test) implements them; the port never invents an answer for a scene
+    // query: where the C# asks Unity, the port asks one of these. Unset seams behave as an empty scene (no hit, pointer not over any UI).
+    // editorCamera.transform.position
+    std::function<Vector3f()> cameraPosition;
+    // editorCamera.ScreenPointToRay(screenPoint)
+    std::function<EditorRay(const Vector3f& screenPoint)> screenPointToRay;
+    // editorCamera.WorldToScreenPoint(worldPoint)
+    std::function<Vector3f(const Vector3f& worldPoint)> worldToScreenPoint;
+    // Physics.Raycast(ray, out hit, maxDistance, layerMask) followed by FlightGlobals.GetPartUpwardsCached(hit.collider.gameObject): nullopt = no hit;
+    // a hit whose collider belongs to no part has part == nullptr
+    std::function<std::optional<EditorSurfaceHit>(const EditorRay& ray, float maxDistance, int layerMask)> raycast;
+    // EventSystem.current.IsPointerOverGameObject()
+    std::function<bool()> pointerOverUI;
+    // EditorLogic.mouseOverModalArea(modalAreas)
+    std::function<bool()> mouseOverModalArea;
+    // GizmoOffset / GizmoRotate.GetMouseOverGizmo (the gizmo handles are the shell's objects)
+    std::function<bool(bool offsetGizmo)> mouseOverGizmo;
+    // audioSource.PlayOneShot(clip)
+    std::function<void(EditorClip clip)> playOneShot;
+    // EditorLogic.HeldPartIsStacked(): UIPartActionControllerInventory.Instance != null && CurrentCargoPart != null && (heldPartIsStack || stackSize > 1); unset: false
+    std::function<bool()> heldPartIsStacked;
+    // Part.onEditorStartTweak / onEditorEndTweak (virtual; only CompoundPart overrides them: the compound tweak mode is the shell's)
+    std::function<void(Part&)> onEditorStartTweak;
+    std::function<void(Part&)> onEditorEndTweak;
+    // EditorLogic.NewShip: the unsaved-changes dialog (EditorLogic.cs:4031); true = the Discard button (OnNewShipConfirm), false = Cancel; unset: Discard
+    std::function<bool()> newShipDialog;
+    // EditorLogic.partSearchUpdate / PartCategorizer, ScreenMessages.PostScreenMessage: observers only
+    std::function<void(const std::string&)> postScreenMessage;
+
     static inline EditorEnvironment& Current() {
         static EditorEnvironment v;
         return v;
     }
 };
+
+// The scene services of the placement loop as one interface: the shell (the future editor collision world, camera and UI of the Unreal side) implements it
+// and `InstallEditorScene` wires it to the `EditorEnvironment` seams above (each virtual is the Unity call it names). A test may keep filling the
+// std::function members directly.
+class IEditorScene {
+public:
+    virtual ~IEditorScene() = default;
+    virtual Vector3f CameraPosition() = 0;                                                    // editorCamera.transform.position
+    virtual EditorRay ScreenPointToRay(const Vector3f& screenPoint) = 0;                      // editorCamera.ScreenPointToRay
+    virtual Vector3f WorldToScreenPoint(const Vector3f& worldPoint) = 0;                      // editorCamera.WorldToScreenPoint
+    virtual std::optional<EditorSurfaceHit> Raycast(const EditorRay& ray, float maxDistance, int layerMask) = 0;   // Physics.Raycast + GetPartUpwardsCached
+    virtual bool NodeIconUnderCursor(Part& part, AttachNode& node, const Vector3f& worldPointOfSelectedNode) = 0;  // attachNode.icon renderer bounds test
+    virtual float FindPartSurface(Part& p, const Vector3f& origin, const Vector3f& direction, const Vector3f& fromParent, const EditorSurfaceHit& hit,
+                                  Vector3f& srfNormal) = 0;                                   // EditorLogicBase.FindPartSurface (Collider.Raycast on the part colliders)
+    virtual bool PointerOverUI() { return false; }                                            // EventSystem.current.IsPointerOverGameObject()
+    virtual bool MouseOverModalArea() { return false; }                                       // EditorLogic.mouseOverModalArea
+    virtual void PlayOneShot(EditorClip) {}                                                   // audioSource.PlayOneShot
+};
+
+
+// Wires an IEditorScene to the EditorEnvironment seams (the scene must outlive the environment's use).
+inline void InstallEditorScene(EditorEnvironment& env, IEditorScene& scene) {
+    IEditorScene* sc = &scene;
+    env.cameraPosition = [sc] { return sc->CameraPosition(); };
+    env.screenPointToRay = [sc](const Vector3f& p) { return sc->ScreenPointToRay(p); };
+    env.worldToScreenPoint = [sc](const Vector3f& p) { return sc->WorldToScreenPoint(p); };
+    env.raycast = [sc](const EditorRay& r, float d, int m) { return sc->Raycast(r, d, m); };
+    env.nodeIconUnderCursor = [sc](Part& p, AttachNode& n, const Vector3f& w) { return sc->NodeIconUnderCursor(p, n, w); };
+    env.findPartSurface = [sc](Part& p, const Vector3f& o, const Vector3f& d, const Vector3f& f, const EditorSurfaceHit& h, Vector3f& n) {
+        return sc->FindPartSurface(p, o, d, f, h, n);
+    };
+    env.pointerOverUI = [sc] { return sc->PointerOverUI(); };
+    env.mouseOverModalArea = [sc] { return sc->MouseOverModalArea(); };
+    env.playOneShot = [sc](EditorClip c) { sc->PlayOneShot(c); };
+}
+
+namespace KSP::UI::Screens {
+// CraftBrowserDialog.cs:32 LoadType (completes the opaque declaration of events/game_event_types.hpp)
+enum class CraftBrowserDialog_LoadType : int { Normal, Merge };
+}  // namespace KSP::UI::Screens
 
 }  // namespace ksp

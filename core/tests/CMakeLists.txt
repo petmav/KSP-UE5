@@ -64,6 +64,7 @@ add_executable(kspcore_tests
     test_flight_input_feed.cpp
     test_host_wiring.cpp
     test_vab_launch.cpp
+    test_flight_slice.cpp
     test_flight.cpp
     test_flight2.cpp
     test_flight3.cpp
@@ -74,6 +75,7 @@ add_executable(kspcore_tests
     test_science.cpp
     test_commnet.cpp
     test_editor.cpp
+    test_editor_fsm.cpp
     test_progress.cpp
     test_contracts.cpp
     test_serenity.cpp
@@ -239,6 +241,24 @@ target_link_libraries(mu_sweep PRIVATE kspcore)
 # WP-UE-05: the .mu render reader, the C ABI of kspcore_model.h and the texture headers against the independent Python reference
 add_test(NAME model.reader COMMAND kspcore_tests "-tc=WP-UE-05*")
 set_tests_properties(model.reader PROPERTIES LABELS unit TIMEOUT 600)
+
+# WP-UE-02: the game host through the C ABI v2, pure C: PhysProf-M2 launched from the KSC LaunchPad as capture C10 flew it (keys Z, T, Space in
+# the input frame), its ascent compared with KSP's own C10 states (tests/data/c10_states.csv, extracted bit for bit from
+# harness/captures/out2/aero_forces_vessel.json by tools/wpue02/extract_c10_states.py) at WP-20f's tolerances; writes the final snapshot hash.
+add_executable(capi_flight_slice capi/capi_flight_slice.c)
+target_include_directories(capi_flight_slice PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(capi_flight_slice PRIVATE kspcore)
+set(_slice_work ${CMAKE_CURRENT_BINARY_DIR}/capi_flight_slice_work)
+add_test(NAME capi.flight_slice
+         COMMAND capi_flight_slice ${KSP_GAMEDATA_ROOT} ${PROJECT_SOURCE_DIR}/data ${CMAKE_CURRENT_SOURCE_DIR}/data ${_slice_work}/ksp/saves
+                 ${KSP_PROJECT_ROOT}/analysis/physics/craft/PhysProf-M2.craft ${CMAKE_CURRENT_SOURCE_DIR}/data/c10_states.csv ${_slice_work}/final.hash)
+set_tests_properties(capi.flight_slice PROPERTIES LABELS capi TIMEOUT 1800 FIXTURES_SETUP slice_hash
+                     ENVIRONMENT "KSP_GAMEDATA_ROOT=${KSP_GAMEDATA_ROOT}")
+# the C++ twin: the host class driven directly and through the C entry points from C++, same scripted run: the same snapshot hash, and the
+# hash file the pure-C test wrote; kspcore_sim_destroy leaves 0 hygiene leaks
+add_test(NAME capi.flight_slice_twin COMMAND kspcore_tests "-tc=WP-UE-02 flight slice twin*")
+set_tests_properties(capi.flight_slice_twin PROPERTIES LABELS capi TIMEOUT 1800 FIXTURES_REQUIRED slice_hash
+                     ENVIRONMENT "KSPCORE_SLICE_TWIN=1;KSPCORE_SLICE_HASH_FILE=${_slice_work}/final.hash")
 
 # ---- golden gates: golden_runner writes candidates, harness/compare/compare.py judges them -----------------------------
 # ksp_golden_gate(<test name> <runner dataset> [GOLDEN <file>] [TOL <file>] [TABLES <t1,t2>] [KEYS <t:c1,c2/...>]
