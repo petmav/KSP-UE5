@@ -41,7 +41,8 @@ IEngineStatus* FindEngineInterface(const PartModuleList& modules, const std::str
     } else {
         int idx = 0;
         for (size_t k = 0; k < count; k++) {
-            if (auto* e = dynamic_cast<IEngineStatus*>(modules.GetModule(k))) {
+            PartModule* m = modules.GetModule(k);
+            if (auto* e = dynamic_cast<IEngineStatus*>(m); e != nullptr && dynamic_cast<MultiModeEngine*>(m) == nullptr) {
                 if (idx == engineIndex) return e;
                 idx++;
             }
@@ -50,7 +51,7 @@ IEngineStatus* FindEngineInterface(const PartModuleList& modules, const std::str
     return nullptr;
 }
 
-std::string StrField(PartModule& m, const char* name) { return m.Get<std::string>(name); }
+std::string StrField(PartModule& m, const char* name) { return m.IsNull(name) ? std::string() : m.Get<std::string>(name); }  // a string [KSPField] without an initialiser is null
 
 FXTrackMode ParseTrackMode(const std::string& s) {  // Enum.Parse(typeof(TrackMode), value)
     const std::string t = dotnet::Trim(s);
@@ -63,7 +64,7 @@ FXTrackMode ParseTrackMode(const std::string& s) {  // Enum.Parse(typeof(TrackMo
 }
 }  // namespace
 
-// PartModuleList.cs:147 (`part.parent.Modules`: a part without a parent is a NullReferenceException)
+// PartModuleList.cs:147 FindEngineNearby (`part.parent.Modules`: a part without a parent is a NullReferenceException)
 IEngineStatus* FindEngineNearby(Part& part, const std::string& engineName, int engineIndex, bool preferMultiMode) {
     if (IEngineStatus* e = FindEngineInterface(part.Modules(), engineName, engineIndex, preferMultiMode)) return e;
     if (part.parent == nullptr) throw NullReferenceException();

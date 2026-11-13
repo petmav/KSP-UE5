@@ -143,7 +143,7 @@ FXGroup* Part::AddFXGroup(std::unique_ptr<FXGroup> group) {
     return fxGroupObjects_.back().get();
 }
 
-// Part.cs:1783
+// Part.Start (Part.cs line 1783): the fxGroups[i].begin(audioSource) loop, last to first
 void Part::BeginFXGroups() {
     SyncFXGroups();
     size_t count = fxGroupObjects_.size();

@@ -9,11 +9,11 @@
 namespace ksp {
 
 namespace {
-// FXCurve.cs:34 `delimiters` = { ' ', ',', ';', '\t' }; Split(delimiters, StringSplitOptions.RemoveEmptyEntries)
+// FXCurve.cs:105 `delimiters` = { ' ', ',', ';', '\t' }; Split(delimiters, StringSplitOptions.RemoveEmptyEntries)
 std::vector<std::string> SplitTokens(const std::string& s) { return dotnet::Split(s, " ,;\t", true); }
 }  // namespace
 
-// FXCurve.cs:36 (valueName is ignored by the C# constructor)
+// FXCurve.cs:40 (valueName is ignored by the C# constructor)
 FXCurve::FXCurve(const std::string& /*valueName*/, float value) {
     fCurve.reset();
     lastValue = value;
@@ -21,10 +21,10 @@ FXCurve::FXCurve(const std::string& /*valueName*/, float value) {
     evalSingle = true;
 }
 
-// FXCurve.cs:44
+// FXCurve.cs:48
 void FXCurve::AddKeyframe(float time, float value) { keyFrames.emplace_back(time, value); }
 
-// FXCurve.cs:47
+// FXCurve.cs:54
 void FXCurve::CompileCurve() const {
     AnimationCurve c;
     c.SetPostWrapMode(WrapMode::ClampForever);
@@ -34,21 +34,21 @@ void FXCurve::CompileCurve() const {
     fCurveCompiled = true;
 }
 
-// FXCurve.cs:61
+// FXCurve.cs:67
 float FXCurve::Value() const {
     if (evalSingle) return singleValue;
     if (!fCurveCompiled) CompileCurve();
     return fCurve->Evaluate(0.0f);
 }
 
-// FXCurve.cs:75
+// FXCurve.cs:80
 float FXCurve::Value(float time) const {
     if (evalSingle) return singleValue;
     if (!fCurveCompiled) CompileCurve();
     return fCurve->Evaluate(time);
 }
 
-// FXCurve.cs:89
+// FXCurve.cs:93
 void FXCurve::Load(const std::string& name, const ConfigNode& node) {
     valueName = name;
     const std::vector<std::string> values = node.GetValues(name);
@@ -83,7 +83,7 @@ void FXCurve::Load(const std::string& name, const ConfigNode& node) {
     CompileCurve();
 }
 
-// FXCurve.cs:132 (float.ToString() = "G")
+// FXCurve.cs:134 (float.ToString() = "G")
 void FXCurve::Save(ConfigNode& node) const {
     if (evalSingle) {
         node.AddValue(valueName, dotnet::FormatSingleG(singleValue));

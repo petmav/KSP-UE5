@@ -31,6 +31,9 @@
 #include "ksp/fx/effect_classes.hpp"
 #include "ksp/fx/effects.hpp"
 #include "ksp/fx/fx_group.hpp"
+#include "ksp/fx/fx_modules.hpp"
+#include "ksp/core/unity_time.hpp"
+#include "ksp/vessel/vessel.hpp"
 #include "ksp/input/game_settings.hpp"
 #include "ksp/modules/module_engines.hpp"
 #include "ksp/modules/module_rcs.hpp"
@@ -420,6 +423,8 @@ TEST_CASE("WP-UE-16a effects of every stock part and the fixture EFFECTS node ma
     CHECK(listScenarios == partsChecked * 4);
     CHECK(saveScenarios == partsChecked);
     CHECK(loaderChecked > 40);
+    MESSAGE("effects: " << partsChecked << " parts (" << loaderChecked << " also through the loader's Part.effects), " << listScenarios << " list scenarios + " << saveScenarios
+                          << " OnSave texts, " << totals.at("effects").get<int>() << " effect names, " << totals.at("rows").get<long long>() << " rows hashed in the reference run");
     for (const auto& b : totals.at("behaviours").items()) CHECK(behaviours[b.key()] == b.value().get<int>());
     // every stock EFFECTS class node loads: the only unknown class is the fixture's
     CHECK(totals.at("unknown_classes").size() == 1);
@@ -497,6 +502,7 @@ TEST_CASE("WP-UE-16a legacy FXGroups of every stock part with fx_* / sound_* lin
         CheckScenario(g_part, "groups", hs, sj);
         parts++;
     }
+    MESSAGE("legacy FXGroups: " << parts << " parts, " << groupsChecked << " group snapshots compared, " << skipped << " zDeprecated parts not loaded by the loader");
     CHECK(parts + skipped == ref.at("totals").at("parts_with_groups").get<int>());
     CHECK(skipped > 0);  // only the zDeprecated parts the loader does not load
     CHECK(groupsChecked > 0);
@@ -587,9 +593,179 @@ TEST_CASE("WP-UE-16a ModuleEnginesFX and ModuleRCSFX drive the part's effects: t
             else engines++;
         }
     }
+    MESSAGE("modules: " << engines << " ModuleEnginesFX sequences, " << rcs << " ModuleRCSFX sequences, " << engineSteps << " steps, " << skippedModules << " zDeprecated parts not loaded");
     CHECK(engines > 0);
     CHECK(rcs > 0);
     CHECK(skippedModules >= 0);
     CHECK(engineSteps > 0);
     EffectEnvironment::Reset();
+}
+
+TEST_CASE("WP-UE-16a FXModuleAnimateThrottle / AnimateRCS / LookAtConstraint / ConstrainPosition on the stock parts match the reference") {
+    if (!GameAvailable()) return;
+    const json& ref = Reference();
+    Game15 g;
+    Time::fixedDeltaTime = 0.02f;
+    std::map<std::string, int> done;
+    for (const json& e : ref.at("fx_modules")) {
+        const std::string rel = e.at("part").get<std::string>();
+        const std::string kind = e.at("kind").get<std::string>();
+        const std::string variant = e.at("variant").get<std::string>();
+        g_part = rel;
+        if (g.data.parts.getPartInfoByName(e.at("name").get<std::string>()) == nullptr) {  // zDeprecated parts are not loaded
+            CHECK(rel.find("zDeprecated") != std::string::npos);
+            done["skipped"]++;
+            continue;
+        }
+        auto part = g.New(e.at("name").get<std::string>().c_str());
+        std::vector<Part*> parts{part.get()};
+        support::TestVessel vessel;
+        vessel.Adopt(parts);
+        Vessel* v = part->vessel;
+        REQUIRE(v != nullptr);
+        Hasher hs;
+        const std::string cfgFile = rel.substr(0, rel.find('#'));
+        const int which = rel.find('#') == std::string::npos ? 0 : std::stoi(rel.substr(rel.find('#') + 1));
+        auto cfgRoot = ConfigNode::Load(std::string(KSPCORE_TESTDATA_DIR) + "/GameData-mirror/GameData/" + cfgFile);
+        REQUIRE(cfgRoot != nullptr);
+        ConfigNode* partNode = nullptr;
+        int seen = 0;
+        for (int i = 0; i < cfgRoot->nodes().Count(); i++)
+            if (cfgRoot->nodes()[i]->name == "PART" && seen++ == which) partNode = cfgRoot->nodes()[i];
+        REQUIRE(partNode != nullptr);
+        auto moduleNode = [&](const char* cls) -> ConfigNode* {
+            for (int i = 0; i < partNode->nodes().Count(); i++)
+                if (partNode->nodes()[i]->name == "MODULE" && partNode->nodes()[i]->GetValue("name") == std::optional<std::string>(cls)) return partNode->nodes()[i];
+            return nullptr;
+        };
+        if (kind == "animthrottle") {
+            FXModuleAnimateThrottle* m = nullptr;
+            ModuleEngines* eng = nullptr;
+            for (PartModule* pm : part->Modules().GetModules([](PartModule&) { return true; })) {
+                if (!m) m = dynamic_cast<FXModuleAnimateThrottle*>(pm);
+                if (!eng) eng = dynamic_cast<ModuleEngines*>(pm);
+            }
+            REQUIRE(m != nullptr);
+            REQUIRE(eng != nullptr);
+            FXModuleEnvironment::findAnimations = [](Part&, const std::string&) { return std::vector<bool>{true}; };
+            m->OnStart(StartState::Flying);
+            for (const json& stj : e.at("steps")) {
+                const std::string step = stj.get<std::string>();
+                const std::vector<std::string> t = Split(step, ' ');
+                HighLogic::LoadedSceneIsEditor = t[1] == "E";
+                HighLogic::LoadedSceneIsFlight = t[1] == "F";
+                v->ctrlState.mainThrottle = FromHex(t[3]);
+                eng->Set<bool>("EngineIgnited", t[4] == "1");
+                eng->Set<bool>("flameout", t[5] == "1");
+                eng->Set<float>("currentThrottle", FromHex(t[6]));
+                eng->Set<float>("finalThrust", FromHex(t[7]));
+                if (t[2] == "0") part->vessel = nullptr;
+                m->FixedUpdate();
+                part->vessel = v;
+                std::ostringstream o;
+                o << "am " << (m->behaviourEnabled ? 1 : 0) << "|" << (m->Get<bool>("dependOnEngineState") ? 1 : 0) << "|" << Hex8(m->animation.weight) << "|"
+                  << Hex8(m->animation.speed) << "|" << Hex8(m->animation.normalizedTime) << "|" << m->animation.layer << "|" << static_cast<int>(m->animation.wrapMode) << "|"
+                  << (m->animation.playing ? 1 : 0) << "|" << Hex8(m->Get<float>("animState"));
+                hs.Step({"step " + step, o.str()});
+            }
+            HighLogic::LoadedSceneIsEditor = false;
+            HighLogic::LoadedSceneIsFlight = false;
+            FXModuleEnvironment::findAnimations = nullptr;
+        } else if (kind == "animrcs") {
+            FXModuleAnimateRCS* m = nullptr;
+            ModuleRCS* rcs = nullptr;
+            for (PartModule* pm : part->Modules().GetModules([](PartModule&) { return true; })) {
+                if (!m) m = dynamic_cast<FXModuleAnimateRCS*>(pm);
+                if (!rcs) rcs = dynamic_cast<ModuleRCS*>(pm);
+            }
+            REQUIRE(m != nullptr);
+            REQUIRE(rcs != nullptr);
+            const uint64_t h = FnvStr(rel);
+            FXModuleEnvironment::findAnimations = [h](Part&, const std::string&) { return std::vector<bool>(static_cast<size_t>(2 + h % 2), true); };
+            FXModuleEnvironment::findModelTransformCount = [h](Part&, const std::string&) { return static_cast<int>(2 + h % 2 + (h % 5 == 0 ? 1 : 0)); };
+            m->Set<bool>("affectTime", variant == "affectTime");
+            m->OnStart(StartState::Flying);
+            const size_t n = static_cast<size_t>(e.at("n").get<int>());
+            for (const json& stj : e.at("steps")) {
+                const std::string step = stj.get<std::string>();
+                const std::vector<std::string> t = Split(step, ' ');
+                HighLogic::LoadedSceneIsEditor = t[1] == "E";
+                HighLogic::LoadedSceneIsFlight = t[1] == "F";
+                rcs->thrustForces.assign(n, 0.0f);
+                for (size_t i = 0; i < n; i++) rcs->thrustForces[i] = FromHex(t[2 + i]);
+                m->FixedUpdate();
+                std::vector<std::string> rows{"step " + step, std::string("ar ") + (m->behaviourEnabled ? "1" : "0")};
+                for (size_t i = 0; i < m->anims.size(); i++) {
+                    const AnimationStateData& a = *m->anims[i];
+                    rows.push_back(" a " + Hex8(m->animState.at(i)) + "|" + Hex8(a.normalizedTime) + "|" + Hex8(a.speed) + "|" + (a.playing ? "1" : "0"));
+                }
+                hs.Step(rows);
+            }
+            ConfigNode saved("MODULE");
+            m->OnSave(saved);
+            hs.h = Fnv("save " + saved.GetValue("animStates").value_or("") + "\n", hs.h);  // the reference folds its `save` row into the digest last
+            HighLogic::LoadedSceneIsEditor = false;
+            HighLogic::LoadedSceneIsFlight = false;
+            FXModuleEnvironment::findAnimations = nullptr;
+            FXModuleEnvironment::findModelTransformCount = nullptr;
+        } else {
+            FXModuleEnvironment::findModelTransformCount = [](Part&, const std::string& name) { return static_cast<int>(FnvStr(g_part + "|" + name) % 4); };
+            const char* cls = kind == "lookat" ? "FXModuleLookAtConstraint" : "FXModuleConstrainPosition";
+            FXModuleLookAtConstraint* look = nullptr;
+            FXModuleConstrainPosition* con = nullptr;
+            for (PartModule* pm : part->Modules().GetModules([](PartModule&) { return true; })) {
+                if (!look) look = dynamic_cast<FXModuleLookAtConstraint*>(pm);
+                if (!con) con = dynamic_cast<FXModuleConstrainPosition*>(pm);
+            }
+            ConfigNode* mn = moduleNode(cls);
+            REQUIRE(mn != nullptr);
+            const std::string nodeName = kind == "lookat" ? "CONSTRAINLOOKFX" : "CONSTRAINFX";
+            if (kind == "lookat") {
+                REQUIRE(look != nullptr);
+                look->ObjectsList.clear();
+                look->OnLoad(*mn);
+                look->OnStart(StartState::Flying);
+            } else {
+                REQUIRE(con != nullptr);
+                con->ObjectsList.clear();
+                con->OnLoad(*mn);
+            }
+            for (const json& stj : e.at("steps")) {
+                const std::string step = stj.get<std::string>();
+                const char c = step.back();
+                std::vector<ConstraintDescription> tracked;
+                int mode = 0;
+                size_t nobj = 0;
+                if (kind == "lookat") {
+                    if (c == 'u') look->OnUpdate();
+                    else if (c == 'f') look->OnFixedUpdate();
+                    else look->LateUpdate();
+                    tracked = look->TakeTracked();
+                    mode = static_cast<int>(look->trackingMode);
+                    nobj = look->ObjectsList.size();
+                } else {
+                    if (c == 'u') con->OnUpdate();
+                    else if (c == 'f') con->OnFixedUpdate();
+                    else con->LateUpdate();
+                    tracked = con->TakeTracked();
+                    mode = static_cast<int>(con->trackingMode);
+                    nobj = con->ObjectsList.size();
+                }
+                std::vector<std::string> rows{"step " + step, "mode " + std::to_string(mode) + "|" + std::to_string(nobj) + "|" + (mn->HasNode(nodeName) ? "1" : "0")};
+                for (const ConstraintDescription& d : tracked)
+                    rows.push_back("track " + d.kind + "|" + d.targetName + "|" + d.moverName + "|" + std::to_string(d.moverIndex) + "|" + (d.upIsPartUp ? "1" : "0") + "|" +
+                                   (d.matchPosition ? "1" : "0") + "|" + (d.matchRotation ? "1" : "0"));
+                hs.Step(rows);
+            }
+            FXModuleEnvironment::findModelTransformCount = nullptr;
+        }
+        CheckScenario(rel, kind + "/" + variant, hs, e);
+        done[kind]++;
+    }
+    MESSAGE("FXModules: " << done["animthrottle"] << " AnimateThrottle, " << done["animrcs"] << " AnimateRCS, " << done["lookat"] << " LookAt, " << done["constrain"] << " ConstrainPosition scripts, " << done["skipped"] << " zDeprecated parts not loaded");
+    CHECK(done["animthrottle"] > 40);
+    CHECK(done["animrcs"] > 0);
+    CHECK(done["lookat"] > 0);
+    CHECK(done["constrain"] > 0);
+    for (const auto& kv : ref.at("totals").at("fx_modules").items()) CHECK(done[kv.key()] <= kv.value().get<int>());
 }

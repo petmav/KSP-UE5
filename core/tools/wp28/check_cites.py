@@ -24,6 +24,9 @@ CLASS_FILE = {
     "ModuleSpaceObjectAnalysisBase": "ModuleAsteroidAnalysis",
 }
 NAME_ALIAS = {
+              # WP-UE-16a: the effect classes' overloaded OnEvent(power) / OnEvent(power, idx), OnDestroy, the Unity Update of the FX modules, FXGroup's VolumeFade coroutine
+              "OnEventPower": "OnEvent", "PoweredEvent": "OnEvent", "~AudioMultiPooledFX": "OnDestroy", "StartFade": "VolumeFade", "FindFXGroup": "findFxGroup",
+              "OnUpdate": "Update",
               # WP-12d: destructors that run OnDestroy
               "~PQSCity2": "OnDestroy",
               # WP-32: C# properties / destructors / split SetupFSM

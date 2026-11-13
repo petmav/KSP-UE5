@@ -28,6 +28,9 @@ import sys
 # float helpers
 
 
+ROWS = [0]  # rows hashed (the count STATUS reports)
+
+
 def f32(x):
     return ctypes.c_float(x).value
 
@@ -1884,6 +1887,7 @@ def run_steps(part, env, lst, steps):
         rows += lst.event_rows()
         for r in rows:
             h = fnv64(r.encode('utf-8') + b'\n', h)
+            ROWS[0] += 1
         digests.append(h & 0xFFFFFFFF)
         out.append(rows)
     return h, digests, out
@@ -2229,6 +2233,7 @@ def run_engine(env, lst, mode_resp, steps, mod):
         rows += lst.event_rows()
         for r in rows:
             h = fnv64(r.encode('utf-8') + b'\n', h)
+            ROWS[0] += 1
         digests.append(h & 0xFFFFFFFF)
     return h, digests
 
@@ -2268,6 +2273,7 @@ def run_rcs(env, lst, steps, mod):
         rows += lst.event_rows()
         for r in rows:
             h = fnv64(r.encode('utf-8') + b'\n', h)
+            ROWS[0] += 1
         digests.append(h & 0xFFFFFFFF)
     return h, digests
 
@@ -2497,11 +2503,254 @@ def run_groups(part_audio, groups, order, steps):
             rows += groups[n].row()
         for r in rows:
             h = fnv64(r.encode('utf-8') + b'\n', h)
+            ROWS[0] += 1
         digests.append(h & 0xFFFFFFFF)
     return h, digests
 
 
 # ------------------------------------------------------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------------------------------------------------------
+# FXModule* models (FXModuleAnimateThrottle.cs, FXModuleAnimateRCS.cs, FXModuleLookAtConstraint.cs, FXModuleConstrainPosition.cs)
+
+
+def clamp01(x):
+    return 0.0 if x < 0.0 else (1.0 if x > 1.0 else x)
+
+
+class AnimThrottle:
+    def __init__(self, mod, eng):
+        self.mod = mod
+        self.eng = eng  # engine module node
+        self.rs = p_float(mod, 'responseSpeed', f32(0.5))
+        self.dep_state = p_bool(mod, 'dependOnEngineState', False)
+        self.dep_output = p_bool(mod, 'dependOnOutput', False)
+        self.dep_throttle = p_bool(mod, 'dependOnThrottle', False)
+        self.weight_op = p_bool(mod, 'weightOnOperational', False)
+        self.base_speed = p_float(mod, 'baseAnimSpeed', 0.0)
+        self.wrap = p_int(mod, 'animWrapMode', 8)
+        self.affect_time = p_bool(mod, 'affectTime', True)
+        self.speed_mult = p_float(mod, 'baseAnimSpeedMult', f32(1.0))
+        self.play_editor = p_bool(mod, 'playInEditor', False)
+        self.layer = p_int(mod, 'layer', 1)
+        self.anim_state = p_float(mod, 'animState', 0.0)
+        self.enabled = True
+        self.weight = 0.0
+        self.speed = 1.0
+        self.ntime = 0.0
+        self.playing = False
+        self.max_thrust = p_float(eng, 'maxThrust', f32(215.0))
+
+    def start(self):
+        self.weight = 1.0
+        self.speed = self.base_speed
+        self.ntime = 0.0
+
+    def step(self, scene, vessel, throttle, ign, flame, cur, fin):
+        editor = scene == 'E'
+        flight = scene == 'F'
+        if (not editor and not flight) or not vessel:
+            return
+        if not self.playing:
+            self.playing = True
+        dt = f32(0.02)
+        operational = (not flame) and ign
+        norm_out = f32(fin / self.max_thrust)
+        num = 0.0
+        if not self.dep_state:
+            num = (1.0 if self.play_editor else 0.0) if editor else clamp01(throttle)
+        else:
+            if self.weight_op:
+                num = (1.0 if operational else 0.0) if (not editor or not self.play_editor) else 1.0
+                num2 = fx_lerp(self.weight, num, f32(self.rs * 3.0 * 25.0 * dt))
+                if num2 > f32(0.999) and self.weight < num:
+                    num2 = 1.0
+                elif num2 < f32(0.001) and num < self.weight:
+                    num2 = 0.0
+                self.weight = num2
+            if operational and not editor:
+                num = clamp01(norm_out) if self.dep_output else (clamp01(throttle) if not self.dep_throttle else clamp01(cur))
+            else:
+                num = 0.0 if (not editor or not self.play_editor) else 1.0
+        if self.affect_time:
+            num2 = fx_lerp(self.anim_state, num, f32(self.rs * 25.0 * dt))
+            if num2 > f32(0.99995) and self.anim_state < num:
+                num2 = 1.0
+            if num2 < f32(5e-05) and num < self.anim_state:
+                num2 = 0.0
+            self.ntime = num2
+        else:
+            num3 = 0.0
+            if num > 0.0 or (self.dep_state and operational):
+                num3 = self.base_speed
+            num2 = fx_lerp(self.anim_state, f32(num3 + num * self.speed_mult), f32(self.rs * dt))
+            if num2 > f32(0.99995):
+                num2 = 1.0
+            if num2 < f32(5e-05):
+                num2 = 0.0
+            self.speed = num2
+        if not editor:
+            self.anim_state = num2
+
+    def row(self):
+        return 'am %d|%d|%08x|%08x|%08x|%d|%d|%d|%08x' % (1 if self.enabled else 0, 1 if self.dep_state else 0, bits(self.weight), bits(self.speed), bits(self.ntime),
+                                                    self.layer, self.wrap, 1 if self.playing else 0, bits(self.anim_state))
+
+
+class AnimRCS:
+    def __init__(self, mod, part):
+        self.rs = p_float(mod, 'responseSpeed', f32(0.5))
+        self.base_speed = p_float(mod, 'baseAnimSpeed', 0.0)
+        self.affect_time = p_bool(mod, 'affectTime', True)
+        self.speed_mult = p_float(mod, 'baseAnimSpeedMult', f32(1.0))
+        self.force_mult = p_float(mod, 'thrustForceMult', f32(1.0))
+        h = fnv_str(part)
+        self.n = 2 + h % 2
+        self.transforms = self.n + (1 if h % 5 == 0 else 0)
+        self.enabled = self.n == self.transforms
+        self.state = [0.0] * self.n
+        self.ntime = [0.0] * self.n
+        self.speed = [self.base_speed] * self.n
+        self.playing = [False] * self.n
+
+    def step(self, scene, forces):
+        editor = scene == 'E'
+        if not self.enabled:
+            return
+        if not editor and scene != 'F':
+            return
+        dt = f32(0.02)
+        for i in range(self.n):
+            self.playing[i] = True
+            num = clamp01(f32(forces[i] * self.force_mult))
+            if self.affect_time:
+                num2 = fx_lerp(self.state[i], num, f32(self.rs * 25.0 * dt))
+                if num2 > f32(0.99995) and self.state[i] < num:
+                    num2 = 1.0
+                if num2 < f32(5e-05) and num < self.state[i]:
+                    num2 = 0.0
+                self.ntime[i] = num2
+            else:
+                num3 = 0.0
+                if num > 0.0:
+                    num3 = self.base_speed
+                num2 = fx_lerp(self.state[i], f32(num3 + num * self.speed_mult), f32(self.rs * dt))
+                if num2 > f32(0.99995):
+                    num2 = 1.0
+                if num2 < f32(5e-05):
+                    num2 = 0.0
+                self.speed[i] = num2
+            if not editor:
+                self.state[i] = num2
+
+    def rows(self):
+        r = ['ar %d' % (1 if self.enabled else 0)]
+        for i in range(self.n):
+            r.append(' a %08x|%08x|%08x|%d' % (bits(self.state[i]), bits(self.ntime[i]), bits(self.speed[i]), 1 if self.playing[i] else 0))
+        return r
+
+    def save(self):
+        return ','.join(g7(x) for x in self.state)
+
+
+def hash_rows(rows, h):
+    for rr in rows:
+        h = fnv64(rr.encode('utf-8') + b'\n', h)
+        ROWS[0] += 1
+    return h
+
+
+def fx_modules(rel, pnode):
+    out = []
+    mods = [(n.get('name'), n) for n in pnode.nodes if n.name == 'MODULE']
+    names = [m[0] for m in mods]
+    pname = (pnode.get('name') or '').replace('_', '.')
+    engines = [m[1] for m in mods if m[0] in ('ModuleEngines', 'ModuleEnginesFX')]
+    if 'FXModuleAnimateThrottle' in names and 'MultiModeEngine' not in names and len(engines) == 1:
+        mod = [m[1] for m in mods if m[0] == 'FXModuleAnimateThrottle'][0]
+        eng = engines[0]
+        ename = mod.get('engineName')
+        if ename in (None, '') or p_str(eng, 'engineID', 'Engine') == ename:
+            for sc in ('flight', 'editor'):
+                m = AnimThrottle(mod, eng)
+                m.start()
+                seq = []
+                for k in range(0, 61):
+                    th = f32((k % 21) / 20.0 if (k // 21) % 2 == 0 else 1.0 - (k % 21) / 20.0)
+                    ign = 1 if k % 17 not in (0, 1, 2) else 0
+                    flame = 1 if k % 23 == 5 else 0
+                    cur = f32(th * 0.9)
+                    fin = f32(th * 100.0)
+                    scene = 'F' if sc == 'flight' else 'E'
+                    if k == 50:
+                        scene = 'N'
+                    vessel = 0 if k == 55 else 1
+                    seq.append('s %s %d %s %d %d %s %s' % (scene, vessel, hx(th), ign, flame, hx(cur), hx(fin)))
+                h = 0xcbf29ce484222325
+                digs = []
+                for st in seq:
+                    t = st.split(' ')
+                    m.step(t[1], t[2] == '1', hexbits_to_float(t[3]), t[4] == '1', t[5] == '1', hexbits_to_float(t[6]), hexbits_to_float(t[7]))
+                    h = hash_rows(['step ' + st, m.row()], h)
+                    digs.append(h & 0xFFFFFFFF)
+                out.append({'part': rel, 'name': pname, 'kind': 'animthrottle', 'variant': sc, 'steps': seq, 'digest': '%016x' % h, 'steps_digest': dig_hex(digs)})
+    if 'FXModuleAnimateRCS' in names:
+        mod = [m[1] for m in mods if m[0] == 'FXModuleAnimateRCS'][0]
+        for aff in (True, False):
+            m = AnimRCS(mod, rel)
+            m.affect_time = aff
+            seq = []
+            for k in range(0, 40):
+                f = [f32(((k * 3 + i * 7) % 11) / 10.0) for i in range(m.n)]
+                scene = 'F' if k != 30 else 'E'
+                seq.append('r %s %s' % (scene, ' '.join(hx(x) for x in f)))
+            h = 0xcbf29ce484222325
+            digs = []
+            for st in seq:
+                t = st.split(' ')
+                m.step(t[1], [hexbits_to_float(x) for x in t[2:]])
+                h = hash_rows(['step ' + st] + m.rows(), h)
+                digs.append(h & 0xFFFFFFFF)
+            h = hash_rows(['save ' + m.save()], h)
+            out.append({'part': rel, 'name': pname, 'kind': 'animrcs', 'variant': 'affectTime' if aff else 'speed', 'steps': seq, 'digest': '%016x' % h,
+                        'steps_digest': dig_hex(digs), 'n': m.n})
+    for cls, node_name, movers_key in (('FXModuleLookAtConstraint', 'CONSTRAINLOOKFX', 'rotatorsName'), ('FXModuleConstrainPosition', 'CONSTRAINFX', 'moversName')):
+        if cls not in names:
+            continue
+        mod = [m[1] for m in mods if m[0] == cls][0]
+        mode = p_str(mod, 'trackingModeString', 'LateUpdate')
+        mode_i = {'FixedUpdate': 0, 'Update': 1, 'LateUpdate': 2}[mode]
+        objs = []
+        for cn in mod.nodes:
+            if cn.name == node_name:
+                tn = cn.get('targetName') or ''
+                mv = cn.get(movers_key) or ''
+                tcount = FIX_count(rel, tn)
+                mcount = FIX_count(rel, mv)
+                if tcount > 0 and mcount >= 1:
+                    objs.append((tn, mv, mcount))
+        have_node = any(cn.name == node_name for cn in mod.nodes)
+        match_pos = p_bool(mod, 'matchPosition', True)
+        match_rot = p_bool(mod, 'matchRotation', True)
+        seq = ['t %s' % 'ufl'[k % 3] for k in range(9)]
+        h = 0xcbf29ce484222325
+        digs = []
+        for st in seq:
+            call_mode = {'f': 0, 'u': 1, 'l': 2}[st.split(' ')[1]]
+            rows = ['step ' + st, 'mode %d|%d|%d' % (mode_i, len(objs), 1 if have_node else 0)]
+            if call_mode == mode_i:
+                for tn, mv, mc in objs:
+                    for j in range(mc):
+                        if cls == 'FXModuleLookAtConstraint':
+                            rows.append('track lookAt|%s|%s|%d|1|0|0' % (tn, mv, j))
+                        else:
+                            rows.append('track constrain|%s|%s|%d|0|%d|%d' % (tn, mv, j, 1 if match_pos else 0, 1 if match_rot else 0))
+            h = hash_rows(rows, h)
+            digs.append(h & 0xFFFFFFFF)
+        out.append({'part': rel, 'name': pname, 'kind': 'lookat' if cls == 'FXModuleLookAtConstraint' else 'constrain', 'variant': mode, 'steps': seq,
+                    'digest': '%016x' % h, 'steps_digest': dig_hex(digs), 'objects': len(objs)})
+    return out
 
 
 def dig_hex(digests):
@@ -2514,6 +2763,7 @@ def make_env(rel, eva=False, loading=False):
 
 def process(parts, dump=None):
     out_parts = []
+    fxm = []
     totals = {'parts': 0, 'parts_with_effects': 0, 'effects': 0, 'behaviours': {}, 'unknown_classes': {}, 'steps': 0, 'groups': 0, 'parts_with_groups': 0,
               'collapsed_unnamed': 0}
     for rel, pnode, effs in parts:
@@ -2559,6 +2809,7 @@ def process(parts, dump=None):
             h = 0xcbf29ce484222325
             for r in sv:
                 h = fnv64(r.encode('utf-8') + b'\n', h)
+                ROWS[0] += 1
             scen['save'] = {'digest': '%016x' % h, 'rows': len(sv)}
             if dump and dump[0] == rel and dump[1] == 'save':
                 print('\n'.join(sv))
@@ -2597,9 +2848,14 @@ def process(parts, dump=None):
             totals['groups'] += len(order)
             totals['parts_with_groups'] += 1
             totals['steps'] += len(steps)
+        if not fixture:
+            fxm += fx_modules(rel, pnode)
         if entry['scenarios']:
             out_parts.append(entry)
-    return out_parts, totals
+    totals['fx_modules'] = {}
+    for e in fxm:
+        totals['fx_modules'][e['kind']] = totals['fx_modules'].get(e['kind'], 0) + 1
+    return out_parts, totals, fxm
 
 
 def main(argv):
@@ -2618,10 +2874,11 @@ def main(argv):
     if mirror is None:
         raise SystemExit('--mirror <dir> required')
     parts = collect_parts(mirror) + fixture_parts()
-    out_parts, totals = process(parts, dump)
+    out_parts, totals, fxm = process(parts, dump)
     if dump:
         return
-    doc = {'schema': 'wpue16-effects/1', 'totals': totals, 'parts': out_parts}
+    totals['rows'] = ROWS[0]
+    doc = {'schema': 'wpue16-effects/1', 'totals': totals, 'parts': out_parts, 'fx_modules': fxm}
     json.dump(doc, sys.stdout, indent=0, sort_keys=True, separators=(',', ':'))
     sys.stdout.write('\n')
 
