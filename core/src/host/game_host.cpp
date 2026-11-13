@@ -336,14 +336,6 @@ std::u16string Utf8ToUtf16(const char* s) {
 // the flight scene
 // =================================================================================================================================
 
-struct GameHost::Impl;
-
-namespace {
-
-struct SceneEvents;
-
-}  // namespace
-
 struct GameHost::Impl {
     // ---- the Unity objects that outlive a scene: the sim's "process of the game" -------------------------------------------------
     StaticStateGuard guard;  // first member: restored last
@@ -353,7 +345,6 @@ struct GameHost::Impl {
     std::unique_ptr<CelestialSystem> sys;
     HighLogic hl;
     FrameInputDevice device;
-    kspcore_input_frame lastInputMeta{};
     bool hasFocus = true;
     std::deque<kspcore_command> commands;
     std::deque<std::string> commandText;
@@ -428,7 +419,6 @@ struct GameHost::Impl::Flight {
     std::vector<SceneryObjectPose> poses;
     int levelFrame0 = 0;
     uint64_t sphereFrames = 0;
-    bool sasWanted = false;
 
     Flight(Impl& i, const GameConfig& c) : im(i), cfg(c) {}
     ~Flight();
@@ -853,7 +843,7 @@ void GameHost::Impl::Flight::Awake() {
         return fs::exists(fs::path(path), ec);
     };
     FlightDriver::host.frameCount = [] { return Time::frameCount; };
-    // FlightDriver.cs:295 FloatingOrigin.SetOffset(spawn position): the spawn transform at the origin of Unity's world
+    // FlightDriver.cs:299 FloatingOrigin.SetOffset(spawn position): the spawn transform at the origin of Unity's world
     FlightDriver::host.placeAtSpawn = [](const Vector3d& spawn) { FloatingOrigin::SetOffset(spawn); };
     // FlightDriver.cs:366-369: PutShipToGround on the spawn transform (its Unity world pose after the offset), AssembleForLaunch
     FlightDriver::host.beginNewVessel = [this](ShipConstruct& ship) {
@@ -891,7 +881,7 @@ void GameHost::Impl::Flight::Awake() {
     Vessel* active = !owned.empty() ? owned.front().get() : (FlightGlobals::ActiveVessel != nullptr ? FlightGlobals::ActiveVessel : nullptr);
     if (active == nullptr && !FlightGlobals::Vessels.empty()) active = FlightGlobals::Vessels.front();
     if (active == nullptr) throw std::runtime_error("the flight scene has no vessel");
-    // FlightDriver.cs:212-224 (BubbleScene::Start): the world origin moves to the active vessel, FlightGlobals.ready, OrbitPhysicsManager.Start
+    // FlightDriver.cs:223 (BubbleScene::Start): the world origin moves to the active vessel, FlightGlobals.ready, OrbitPhysicsManager.Start
     FloatingOrigin::SetOffset(Vector3d(active->vesselTransform.position));
     FlightGlobals::ActiveVessel = active;
     FlightGlobals::currentMainBody = active->mainBody();

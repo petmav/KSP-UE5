@@ -321,6 +321,16 @@ int main(int argc, char** argv) {
         CHECK(kspcore_settings_set("FLT_CAMERA_ORBIT_SENS", "0.5") == 1);
         v0 = kspcore_settings_get("FLT_CAMERA_ORBIT_SENS");
         CHECK(v0 != NULL && atof(v0) == 0.5);
+        {
+            /* settings.cfg round trip: save, change, load */
+            char cfg_path[1024];
+            snprintf(cfg_path, sizeof cfg_path, "%s/../settings_roundtrip.cfg", argv[4]);
+            CHECK(kspcore_settings_save(cfg_path) == 1);
+            CHECK(kspcore_settings_set("FLT_CAMERA_ORBIT_SENS", "0.25") == 1);
+            CHECK(kspcore_settings_load(cfg_path) == 1);
+            v0 = kspcore_settings_get("FLT_CAMERA_ORBIT_SENS");
+            CHECK(v0 != NULL && atof(v0) == 0.5);
+        }
         CHECK(kspcore_settings_get("NO_SUCH_SETTING") == NULL);
         CHECK(kspcore_settings_set("NO_SUCH_SETTING", "1") == 0);
     }

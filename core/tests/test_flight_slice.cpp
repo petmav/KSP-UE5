@@ -320,7 +320,7 @@ TEST_CASE("WP-UE-02 revert to launch through the ABI: the flight is torn down an
     CHECK(n == 0);
 }
 
-TEST_CASE("WP-UE-02 the stock Kerbal X launches crewed from the pad through the ABI: 73 parts, controllable, throttle up and stage lifts it") {
+TEST_CASE("WP-UE-02 the stock Kerbal X launches from the pad through the ABI: 73 parts, the throttle key and the stage key lift it") {
     if (!GameAvailable()) return;
     const Paths p;
     ProcessGuard pg(p);
