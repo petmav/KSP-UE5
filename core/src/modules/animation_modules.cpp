@@ -539,13 +539,16 @@ void ModuleAnimationGroup::OnAwake() {
 // ModuleAnimationGroup.cs:89
 void ModuleAnimationGroup::DeployModule() {
     AnimationModulesEnvironment::partEffects.emplace_back(Str("deployEffectName"), 1.0f);
+    if (Part* effectPart = PartOf(*this)) effectPart->Effect(Str("deployEffectName"), 1.0f);
     SetDeployedState(1, true);
 }
 
 // ModuleAnimationGroup.cs:96
 void ModuleAnimationGroup::RetractModule() {
     AnimationModulesEnvironment::partEffects.emplace_back(Str("activeEffectName"), 0.0f);
+    if (Part* effectPart = PartOf(*this)) effectPart->Effect(Str("activeEffectName"), 0.0f);
     AnimationModulesEnvironment::partEffects.emplace_back(Str("retractEffectName"), 1.0f);
+    if (Part* effectPart = PartOf(*this)) effectPart->Effect(Str("retractEffectName"), 1.0f);
     SetRetractedState(-1, true);
 }
 
@@ -768,6 +771,7 @@ void ModuleAnimationGroup::ToggleActiveState(int speed, bool state) {
         const std::string active = Str("activeAnimationName"), deactivate = Str("deactivateAnimationName");
         if (active != "" && !ActiveAnimation->isPlaying() && state) {
             AnimationModulesEnvironment::partEffects.emplace_back(Str("activeEffectName"), 1.0f);
+            if (Part* effectPart = PartOf(*this)) effectPart->Effect(Str("activeEffectName"), 1.0f);
             savedAnimationSpeed = static_cast<float>(speed);
             animationStartTime = AnimationModulesEnvironment::unscaledTime;
             savedAnimationName = active;
@@ -790,6 +794,7 @@ void ModuleAnimationGroup::ToggleActiveState(int speed, bool state) {
         }
         if (active != "" && Get<bool>("stopActiveAnimIfDisabled") && ActiveAnimation->isPlaying() && !state) {
             AnimationModulesEnvironment::partEffects.emplace_back(Str("activeEffectName"), 0.0f);
+            if (Part* effectPart = PartOf(*this)) effectPart->Effect(Str("activeEffectName"), 0.0f);
             ActiveAnimation->Stop();
         }
     } catch (const std::exception&) {

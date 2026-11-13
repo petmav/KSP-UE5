@@ -81,6 +81,9 @@ struct PartModelRenderer {
     Bounds bounds{};
 };
 
+class EffectList;
+class FXGroup;
+
 class Part : public PartPrefab {
 public:
     Part();
@@ -358,8 +361,22 @@ public:
     std::vector<PartModelRenderer> FindModelRenderersCached() const;               // :5403 (every renderer)
 
     // ---- effects, events (:6162-6300) --------------------------------------------------------------------------------------
-    void LoadEffects(const ConfigNode& node);      // :6175 (EFFECTS nodes are kept: EffectList is Unity FX)
+    // WP-UE-16a: the EffectList (fx/effects.hpp). Built on first use from the cfg's EFFECTS nodes (`effects`: what PartLoader passed to
+    // partPrefab.LoadEffects), like the components Instantiate clones from the prefab.
+    EffectList& Effects();                         // :1103
+    bool HasEffects() const { return effectList_ != nullptr || !effects.empty(); }
+    void InitializeEffects();                      // :6170
+    void LoadEffects(const ConfigNode& node);      // :6175
     void SaveEffects(ConfigNode& node) const;      // :6180
+    // every Part.Effect call, in call order (the shell / tests observe the module -> effect traffic; unset: no observer)
+    static inline std::function<void(Part&, const std::string& effectName, bool hasPower, float power, int transformIdx)> effectCallHook;
+    void Effect(const std::string& effectName, int transformIdx = -1);                      // :6185
+    void Effect(const std::string& effectName, float effectPower, int transformIdx = -1);   // :6190
+    // The legacy FXGroup objects behind fxGroupNames (fx/fx_group.hpp): created from the names and the part's fx_* / sound_* definitions on first use
+    FXGroup* FindFXGroup(const std::string& groupID);   // :1525
+    FXGroup* AddFXGroup(std::unique_ptr<FXGroup> group);  // fxGroups.Add(group)
+    void BeginFXGroups();                               // Part.Start :1783 (fxGroups[i].begin(audioSource), last to first)
+    void UpdateFX(float deltaTime);                     // the per-frame MonoBehaviour side: EffectList.Update and the fade coroutines
     // Part.SendEvent: the events of the part's modules, then parent / children / fuelLookupTargets / attached parts
     void SendEvent(std::string_view eventName, BaseEventDetails* data = nullptr, int maxDepth = INT32_MAX);  // :6207
     bool AlreadyProcessedRequest(int requestID);   // :6297
@@ -528,7 +545,12 @@ private:
     bool stageIconCreated_ = false;  // stackIcon.StageIcon != null when no stagingHooks.hasIcon is installed (the icon itself is UI)
     void Decoupling(float breakForce);  // :2840 private
     void CreateEventListRecursive(int eventID, int requestID, std::vector<BaseEvent*>& eventList, int depth, int maxDepth);  // :6234
-    std::vector<ConfigNode::NodePtr> effectNodes_;
+    std::unique_ptr<EffectList> effectList_;
+    bool effectsBuilt_ = false;
+    std::vector<std::unique_ptr<FXGroup>> fxGroupObjects_;
+    size_t fxGroupNamesSynced_ = 0;
+    bool fxDefinitionsApplied_ = false;
+    void SyncFXGroups();
     static inline uint32_t nextInstanceID_ = 1;
 
     friend class PartLoader;

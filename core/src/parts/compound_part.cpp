@@ -170,7 +170,7 @@ void CompoundPart::OnStartComplete() {
 void CompoundPart::DisconnectEvent() { DisconnectCompoundPart(); }
 void CompoundPart::DisconnectAction(KSPActionParam&) { DisconnectCompoundPart(); }
 void CompoundPart::DisconnectCompoundPart() {
-    // Effect(disconnectedEffectName, 1f) when attachState != Detached: the part effect system is the FX package's
+    if (attachState() != AttachState::Detached) Effect(compoundFields.disconnectedEffectName.value_or(""), 1.0f);  // null name: NullReferenceException in C#, no effect here
     DumpTarget();
     set_attachState(AttachState::Detached);
     for (size_t count = symmetryCounterparts.size(); count-- > 0;) {

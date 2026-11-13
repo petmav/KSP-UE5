@@ -3,6 +3,8 @@
 // file named in its comment. Float32 paths follow the Mono rule (ksp/dotnet/mono_float.hpp).
 #include "ksp/parts/part.hpp"
 #include "ksp/orbit/time_warp.hpp"
+#include "ksp/fx/effects.hpp"
+#include "ksp/fx/fx_group.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -1134,15 +1136,6 @@ void Part::CreateStageIcon(bool alertStagingSequencer) {
 void Part::RemoveStageIcon(bool alertStagingSequencer) {
     if (stagingHooks.removeIcon) stagingHooks.removeIcon(*this, alertStagingSequencer);
     else stageIconCreated_ = false;
-}
-
-// ---- effects ----------------------------------------------------------------------------------------------------------------------
-// Part.cs:6175 (EffectList.Load: the EFFECTS nodes are kept; the FX objects are Unity's)
-void Part::LoadEffects(const ConfigNode& node) { effectNodes_.push_back(const_cast<ConfigNode&>(node).CreateCopy()); }
-
-// Part.cs:6180
-void Part::SaveEffects(ConfigNode& node) const {
-    for (const auto& e : effectNodes_) e->CopyTo(node);
 }
 
 }  // namespace ksp

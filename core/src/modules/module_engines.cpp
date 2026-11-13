@@ -10,6 +10,10 @@
 #include "ksp/core/log.hpp"
 #include "ksp/curves/float_curve.hpp"
 #include "ksp/events/game_events.hpp"
+#include "ksp/fx/effect_classes.hpp"
+#include "ksp/fx/fx_group.hpp"
+#include "ksp/input/game_settings.hpp"
+#include "ksp/space_center/high_logic.hpp"
 #include "ksp/localization/localizer.hpp"
 #include "ksp/math/util_math.hpp"
 #include "ksp/modules/module_gimbal.hpp"
@@ -244,11 +248,11 @@ void ModuleEngines::UpdatePropellantStatus(bool /*doGauge*/) {
 }
 
 // ModuleEngines.cs:497
-void ModuleEngines::Flameout(const std::string& message, bool statusOnly, bool /*showFX*/) {
+void ModuleEngines::Flameout(const std::string& message, bool statusOnly, bool showFX) {
     if (BaseField* f = Fields()["statusL2"]) f->guiActive = true;
     Set<std::string>("statusL2", message);
     if (!statusOnly) {
-        // if (!flameout && showFX) PlayFlameoutFX(flamingOut: true): FX
+        if (!flameout() && showFX) PlayFlameoutFX(true);
         Set<bool>("flameout", true);
         if (!Get<bool>("allowRestart")) Shutdown();
         Set<std::string>("status", Loc("#autoLOC_219016"));
@@ -257,12 +261,12 @@ void ModuleEngines::Flameout(const std::string& message, bool statusOnly, bool /
 }
 
 // ModuleEngines.cs:517
-void ModuleEngines::UnFlameout(bool /*showFX*/) {
-    // if (flameout && showFX) PlayFlameoutFX(flamingOut: false): FX
+void ModuleEngines::UnFlameout(bool showFX) {
+    if (flameout() && showFX) PlayFlameoutFX(false);
     Set<bool>("flameout", false);
     Set<std::string>("status", Loc("#autoLOC_219034"));
     if (BaseField* f = Fields()["statusL2"]) f->guiActive = false;
-    // ActivateRunningFX(): FX
+    ActivateRunningFX();
 }
 
 // ModuleEngines.cs:529
@@ -330,7 +334,7 @@ void ModuleEngines::OnStart(StartState state) {
     if (p == nullptr) throw NullReferenceException();
     if (p->fields.stagingIcon && p->fields.stagingIcon->empty() && Get<bool>("overrideStagingIconIfBlank"))
         p->fields.stagingIcon = std::string("LIQUID_ENGINE");
-    // HighLogic.LoadedSceneIsFlight -> InitializeFX(): FX
+    if (HighLogic::LoadedSceneIsFlight) InitializeFX();
     BaseEvent* shutdownEvent = Events()["Shutdown"];
     BaseEvent* activateEvent = Events()["Activate"];
     BaseField* propellantReqMetField = Fields()["propellantReqMet"];
@@ -379,7 +383,7 @@ void ModuleEngines::Activate() {
         log::Info("[" + (p->partInfo ? p->partInfo->title : std::string()) + "]: " + Loc("#autoLOC_219636"));
         return;
     }
-    // if (!EngineIgnited) PlayEngageFX(): FX
+    if (!EngineIgnited()) PlayEngageFX();
     Set<bool>("EngineIgnited", true);
     Events()["Shutdown"]->active = Get<bool>("allowShutdown");
     Events()["Activate"]->active = false;
@@ -396,7 +400,7 @@ void ModuleEngines::Activate() {
             }
         }
     }
-    // FXReset(): FX
+    FXReset();
     GameEvents::onEngineActiveChange.Fire(this);
 }
 
@@ -413,7 +417,7 @@ void ModuleEngines::Shutdown() {
     }
     Fields()["propellantReqMet"]->guiActive = false;
     Set<bool>("EngineIgnited", false);
-    // PlayShutdownFX(), part.stackIcon.RemoveInfo(PropellantGauges[key]): FX / UI
+    PlayShutdownFX();  // (part.stackIcon.RemoveInfo(PropellantGauges[key]): UI)
     GameEvents::onEngineActiveChange.Fire(this);
 }
 
@@ -738,7 +742,8 @@ EngineThrustResult ModuleEngines::ThrustUpdate(const EngineFlightInput& in) {
 // ModuleEngines.cs:1587
 void ModuleEngines::FixedUpdate() {
     lastThrust = EngineThrustResult{};
-    if (warping) {  // TimeWarping() (DeactivateLoopingFX is FX)
+    if (warping) {  // TimeWarping()
+        DeactivateLoopingFX();
         Set<float>("finalThrust", 0.0f);
         return;
     }
@@ -746,7 +751,7 @@ void ModuleEngines::FixedUpdate() {
     Set<float>("currentThrottle", ApplyThrottleAdjustments(currentThrottle()));
     if (EngineIgnited()) UpdatePropellantStatus();
     lastThrust = ThrustUpdate(flightInput);
-    // FXUpdate(): FX (ModuleEnginesFX::FXUpdate keeps the engineSpool value)
+    FXUpdate(flightInput.fixedDeltaTime);
 }
 
 // ModuleEngines.cs:2103
@@ -788,9 +793,18 @@ template float ModuleEngines::MaxThrustOutputVacT<NetFloat>(bool) const;
 // ModuleEnginesFX
 // ============================================================================================================================
 
-// ModuleEnginesFX.cs:162 (the base.part.Effect(..., 0f) calls are FX)
+// ModuleEnginesFX.cs:162
 void ModuleEnginesFX::OnAwake() {
     ModuleEngines::OnAwake();
+    if (Part* p = PartPtr()) {
+        p->Effect(Get<std::string>("flameoutEffectName"), 0.0f);
+        p->Effect(Get<std::string>("runningEffectName"), 0.0f);
+        p->Effect(Get<std::string>("powerEffectName"), 0.0f);
+        p->Effect(Get<std::string>("engageEffectName"), 0.0f);
+        p->Effect(Get<std::string>("disengageEffectName"), 0.0f);
+        p->Effect(Get<std::string>("directThrottleEffectName"), 0.0f);
+        p->Effect(Get<std::string>("spoolEffectName"), 0.0f);
+    }
     consumedResources.clear();
     for (size_t i = 0; i < propellants.size(); i++) consumedResources.push_back(LookupDefinition(propellants[i].name));
 }
@@ -814,21 +828,263 @@ bool ModuleEnginesFX::CanStart() {
     return false;
 }
 
-// ModuleEnginesFX.cs:59 FXUpdate: the engineSpool value (the part.Effect calls are FX)
+// ModuleEnginesFX.cs:38
+void ModuleEnginesFX::PlayEngageFX() {
+    if (Part* p = PartPtr()) p->Effect(Get<std::string>("engageEffectName"));
+}
+// ModuleEnginesFX.cs:43
+void ModuleEnginesFX::PlayShutdownFX() {
+    if (Part* p = PartPtr()) p->Effect(Get<std::string>("disengageEffectName"));
+    DeactivatePowerFX();
+    DeactivateRunningFX();
+}
+// ModuleEnginesFX.cs:50
+void ModuleEnginesFX::PlayFlameoutFX(bool /*flamingOut*/) {
+    if (Part* p = PartPtr()) p->Effect(Get<std::string>("flameoutEffectName"));
+}
+
+// ModuleEnginesFX.cs:59 FXUpdate: the part.Effect calls and the engine spool value
 void ModuleEnginesFX::FXUpdate(float fixedDeltaTime) {
     using E = FE<MonoFloat>;
+    Part* p = PartPtr();
+    auto effect = [&](const char* field, float power) {
+        if (p != nullptr) p->Effect(Get<std::string>(field), power);
+    };
+    effect("directThrottleEffectName", EngineIgnited() ? requestedThrottle : 0.0f);
     if (EngineIgnited() && !flameout()) {
         if (Get<bool>("useEngineResponseTime"))
             engineSpool = Mathf::Lerp(engineSpool, Mathf::Max(Get<float>("engineSpoolIdle"), currentThrottle()),
                                       S(E(Get<float>("engineSpoolTime")) * E(fixedDeltaTime)));
         else
             engineSpool = currentThrottle();
+        effect("spoolEffectName", engineSpool);
+        effect("runningEffectName", currentThrottle());
+        if (finalThrust() == 0.0f) effect("powerEffectName", 0.0f);
+        else effect("powerEffectName", S(E(finalThrust()) / E(maxThrust)));
     } else {
         if (Get<bool>("useEngineResponseTime"))
             engineSpool = Mathf::Lerp(engineSpool, flameout() ? 0.0f : currentThrottle(), S(E(Get<float>("engineSpoolTime")) * E(fixedDeltaTime)));
         else
             engineSpool = 0.0f;
+        effect("spoolEffectName", engineSpool);
+        effect("runningEffectName", 0.0f);
+        effect("powerEffectName", 0.0f);
     }
+}
+
+// ModuleEnginesFX.cs:106 / :111 / :116 / :125
+void ModuleEnginesFX::DeactivatePowerFX() {
+    if (Part* p = PartPtr()) p->Effect(Get<std::string>("powerEffectName"), 0.0f);
+}
+void ModuleEnginesFX::DeactivateRunningFX() {
+    if (Part* p = PartPtr()) p->Effect(Get<std::string>("runningEffectName"), 0.0f);
+}
+void ModuleEnginesFX::InitializeFX() { DeactivateLoopingFX(); }
+void ModuleEnginesFX::DeactivateLoopingFX() {
+    DeactivatePowerFX();
+    DeactivateRunningFX();
+    if (Part* p = PartPtr()) p->Effect(Get<std::string>("spoolEffectName"), 0.0f);
+}
+
+// ============================================================================================================================
+// ModuleEngines: the legacy FXGroup path (ModuleEngines.cs:890-1300). The Unity objects are the FXGroup's state structs; placing the
+// duplicated groups under the thrust transforms (AutoPlaceFXGroup :1085) is the shell's.
+// ============================================================================================================================
+
+// ModuleEngines.cs:890
+void ModuleEngines::BurstFlameoutGroups() {
+    for (FXGroup* g : flameoutGroups) g->Burst();
+}
+// ModuleEngines.cs:899
+void ModuleEngines::SetRunningGroupsActive(bool active) {
+    for (FXGroup* g : runningGroups) g->setActive(active);
+}
+// ModuleEngines.cs:908
+void ModuleEngines::SetPowerGroupsActive(bool active) {
+    for (FXGroup* g : powerGroups) g->setActive(active);
+}
+
+// ModuleEngines.cs:917 (the C# parameter is a copy of the reference: the caller's field keeps the ORIGINAL group)
+void ModuleEngines::HijackFX(FXGroup* group, const std::string& groupName) {
+    Part* p = PartPtr();
+    if (group == nullptr || p == nullptr) return;
+    auto g = std::make_unique<FXGroup>(Get<std::string>("fxGroupPrefix") + groupName);
+    g->lights = group->lights;
+    g->fxEmittersNewSystem = group->fxEmittersNewSystem;
+    g->sfx = group->sfx;
+    g->audio = group->audio;
+    FXGroup* added = p->AddFXGroup(std::move(g));
+    added->setActive(false);
+}
+
+// ModuleEngines.cs:942
+void ModuleEngines::SetupFXGroups() {
+    Part* p = PartPtr();
+    if (p == nullptr) throw NullReferenceException();
+    flameoutGroup = p->FindFXGroup("flameout");
+    engageGroup = p->FindFXGroup("engage");
+    disengageGroup = p->FindFXGroup("disengage");
+    runningGroup = p->FindFXGroup("running");
+    powerGroup = p->FindFXGroup("power");
+    if (flameoutGroup != nullptr) HijackFX(flameoutGroup, "flameout");
+    if (engageGroup != nullptr) HijackFX(engageGroup, "engage");
+    if (disengageGroup != nullptr) HijackFX(disengageGroup, "disengage");
+    if (runningGroup != nullptr) HijackFX(runningGroup, "running");
+    if (powerGroup != nullptr) HijackFX(powerGroup, "power");
+    flameoutGroups.clear();
+    powerGroups.clear();
+    runningGroups.clear();
+    const std::string prefix = Get<std::string>("fxGroupPrefix");
+    int num = 0;
+    for (size_t i = 0; i < thrustTransforms.size(); i++) {
+        auto copyOf = [&](FXGroup* src, const std::string& name, std::vector<FXGroup*>& list) {
+            auto g = std::make_unique<FXGroup>(prefix + name + std::to_string(num));
+            g->lights = src->lights;
+            g->fxEmittersNewSystem = src->fxEmittersNewSystem;
+            list.push_back(p->AddFXGroup(std::move(g)));
+        };
+        if (flameoutGroup != nullptr) copyOf(flameoutGroup, "Flameout", flameoutGroups);
+        if (runningGroup != nullptr) copyOf(runningGroup, "Running", runningGroups);
+        if (powerGroup != nullptr) copyOf(powerGroup, "Power", powerGroups);
+        num++;
+    }
+    if (flameoutGroup != nullptr) {
+        flameoutGroup->lights.clear();
+        flameoutGroup->fxEmittersNewSystem.clear();
+    }
+    if (powerGroup != nullptr) {
+        // :1050 the C# indexes flameoutGroup.lights with powerGroup's light count (flameoutGroup was just cleared / may be null)
+        for (size_t n = 0; n < powerGroup->lights.size(); n++) {
+            if (flameoutGroup == nullptr) throw NullReferenceException();
+            (void)flameoutGroup->lights.at(n);
+        }
+        powerGroup->lights.clear();
+        powerGroup->fxEmittersNewSystem.clear();
+        SetPowerGroupsActive(false);
+    }
+    if (runningGroup != nullptr) {
+        runningGroup->lights.clear();
+        runningGroup->fxEmittersNewSystem.clear();
+        SetRunningGroupsActive(false);
+    }
+}
+
+// ModuleEngines.cs:1129
+void ModuleEngines::InitializeFX() {
+    SetupFXGroups();
+    if (powerGroup != nullptr) {
+        powerSfx = std::make_unique<AudioSourceState>();
+        powerSfx->id = EffectEnvironment::nextSourceId++;
+        powerSfx->loop = true;
+        powerSfx->volume = GameSettings::SHIP_VOLUME;
+        powerSfx->spatialBlend = 1.0f;
+        powerGroup->begin(powerSfx.get());
+    }
+}
+// ModuleEngines.cs:1145
+void ModuleEngines::DeactivateLoopingFX() {
+    DeactivateRunningFX();
+    DeactivatePowerFX();
+}
+// ModuleEngines.cs:1151
+void ModuleEngines::DeactivateRunningFX() {
+    if (runningGroup != nullptr && runningGroup->Active()) {
+        runningGroup->setActiveWithAudioFade(false, 0.1f);
+        SetRunningGroupsActive(false);
+    }
+}
+// ModuleEngines.cs:1160
+void ModuleEngines::DeactivatePowerFX() {
+    if (powerGroup != nullptr && powerGroup->Active()) {
+        powerGroup->setActive(false);
+        SetPowerGroupsActive(false);
+    }
+}
+// ModuleEngines.cs:1169
+void ModuleEngines::ActivateRunningFX() {
+    if (runningGroup != nullptr && !runningGroup->Active()) {
+        runningGroup->setActiveWithAudioFade(true, 0.1f);
+        SetRunningGroupsActive(true);
+    }
+}
+// ModuleEngines.cs:1178
+void ModuleEngines::ActivatePowerFX() {
+    if (powerGroup != nullptr && !powerGroup->Active()) {
+        powerGroup->setActive(true);
+        SetPowerGroupsActive(true);
+    }
+}
+// ModuleEngines.cs:1187
+void ModuleEngines::PlayEngageFX() {
+    DeactivateRunningFX();
+    if (engageGroup != nullptr) engageGroup->Burst();
+    DeactivateRunningFX();
+}
+// ModuleEngines.cs:1197
+void ModuleEngines::PlayShutdownFX() {
+    if (!flameout()) {
+        if (runningGroup != nullptr && runningGroup->Active()) {
+            runningGroup->setActive(false);
+            SetRunningGroupsActive(false);
+        }
+        if (disengageGroup != nullptr) disengageGroup->Burst();
+    }
+    if (powerSfx && powerSfx->playing) fx_detail::StopSource(*powerSfx);
+}
+// ModuleEngines.cs:1217
+void ModuleEngines::PlayFlameoutFX(bool flamingOut) {
+    if (flameoutGroup != nullptr) {
+        flameoutGroup->Burst();
+        BurstFlameoutGroups();
+    }
+    if (flamingOut) DeactivateRunningFX();
+    else ActivateRunningFX();
+}
+// ModuleEngines.cs:1234
+void ModuleEngines::FXReset() {
+    if (powerGroup != nullptr) {
+        powerGroup->setActive(false);
+        SetPowerGroupsActive(false);
+    }
+    if (runningGroup != nullptr) {
+        runningGroup->setActive(false);
+        SetRunningGroupsActive(false);
+    }
+}
+// ModuleEngines.cs:1248
+void ModuleEngines::FXUpdate(float /*fixedDeltaTime*/) {
+    using E = FE<MonoFloat>;
+    if (powerGroup != nullptr) {
+        if (EngineIgnited()) {
+            if (currentThrottle() > 1E-05f) {
+                if (!flameout()) ActivatePowerFX();
+                else DeactivatePowerFX();
+            } else {
+                DeactivatePowerFX();
+            }
+            powerGroup->Power(Mathf::Lerp(0.45f, 1.2f, currentThrottle()));
+            for (FXGroup* g : powerGroups) g->Power(Mathf::Lerp(0.45f, 1.2f, currentThrottle()));
+        } else {
+            DeactivatePowerFX();
+        }
+    }
+    if (runningGroup == nullptr) return;
+    if (finalThrust() != 0.0f && EngineIgnited() && !flameout()) {
+        ActivateRunningFX();
+        const float power = Mathf::Max(Mathf::Min(S(E(finalThrust()) / (E(maxThrust) * E(0.5f))), 1.75f), 0.5f);
+        runningGroup->Power(power);
+        for (FXGroup* g : runningGroups) g->Power(power);
+    } else {
+        DeactivateRunningFX();
+    }
+}
+// ModuleEngines.cs:719 / :731
+void ModuleEngines::OnPause() {
+    if (powerSfx) powerSfx->volume = 0.0f;
+    if (runningGroup != nullptr) DeactivateRunningFX();
+}
+void ModuleEngines::OnUnpause() {
+    if (powerSfx) powerSfx->volume = GameSettings::SHIP_VOLUME;
 }
 
 // ============================================================================================================================
