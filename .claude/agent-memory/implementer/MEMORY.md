@@ -15,3 +15,4 @@
 - [WP-UE-06 asset extraction lessons](wpue06-asset-extraction-lessons.md) — MonoBehaviour typetree needs own assembly, crunch mip0 only, texture row order, no numpy
 
 - [WP-UE-05 .mu render lessons](wpue05-mu-render-lessons.md) — C-ABI row-dump gate vs python rows, stock sweep via python -I, v0-2 extra value per node, build dir paths, mutation loop
+- [WP-40b editor loop lessons](wp40b-editor-loop-lessons.md) — session-replay gate with logged seams, output elision workaround, C# quirks the gate found
