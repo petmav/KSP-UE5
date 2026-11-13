@@ -1,5 +1,6 @@
 // C ABI v2, "frame" domain (include/kspcore/kspcore_frame.h). Every entry point catches all C++ exceptions.
 #include <cstring>
+#include <stdexcept>
 #include <string>
 
 #include "capi_internal.hpp"

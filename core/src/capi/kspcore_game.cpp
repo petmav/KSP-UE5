@@ -1,5 +1,6 @@
 // C ABI v2, "game" domain (include/kspcore/kspcore_game.h). Every entry point catches all C++ exceptions.
 #include <cstring>
+#include <stdexcept>
 #include <string>
 
 #include "capi_internal.hpp"
