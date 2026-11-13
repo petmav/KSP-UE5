@@ -172,6 +172,13 @@ typedef struct kspcore_vessel_state {
     float root_rotation[4];
     uint32_t first_part; /* index into parts[] of the vessel's first part */
     uint32_t part_count; /* parts[first_part .. first_part + part_count) belong to this vessel (loaded vessels only) */
+    /* Appended after the header freeze (additive, WP-UE-02): the flight quantities the C10 parity gate and the HUD read; 0 for a vessel
+     * without a FlightIntegrator (not loaded). */
+    double altitude;       /* the root part's altitude above sea level: |root_position| - radius of the dominant body */
+    float surface_speed;   /* FlightIntegrator atm.spd (m/s, relative to the rotating atmosphere) */
+    float mach;            /* FlightIntegrator atm.mach */
+    float vertical_speed;  /* Vessel.verticalSpeed (m/s) */
+    float reserved1;
 } kspcore_vessel_state;
 
 typedef struct kspcore_part_state {

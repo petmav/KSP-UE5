@@ -5,6 +5,9 @@
 // write shared state keep their own RAII guards; the listener is the net for the ones that forgot.
 #pragma once
 
+#include <cstddef>
+#include <string>
+
 namespace kspcore_tests {
 
 // Restores the process-wide state that the shared read-only fixtures hand out and that tests are known to write:
@@ -14,6 +17,11 @@ namespace kspcore_tests {
 //  - Planetarium::Zup (static frame, see planetarium.hpp).
 // It never touches singletons that a live object owns (those must be destroyed by the owning test).
 void ResetSharedTestState();
+
+// WP-UE-02: the same checks, counted: runs the listener's Restore (which also puts everything back) and returns the number of leaks it
+// found (a body moved, FlightGlobals / InputLockManager state, GameEvents listeners above the process baseline, ...). 0 = clean. A kspcore_sim
+// destroyed through the C ABI must leave 0 (ue5/DESIGN.md 1.3 "Lifetime", R1).
+size_t HygieneLeaks(const std::string& who);
 
 }  // namespace kspcore_tests
 

@@ -5,7 +5,8 @@ First commit (the two ABI headers alone): **643355d8** `core/include/kspcore/ksp
 Compiles as C11 (gcc -pedantic) and C++20. Later header changes are additive only and are listed here.
 
 ### Header changes after the freeze
-(none yet)
+- `kspcore_vessel_state`: appended `altitude`, `surface_speed`, `mach`, `vertical_speed`, `reserved1` (the quantities the C10 gate reads; no HUD view-model exists before WP-UE-04). struct_size leading, earlier fields unmoved.
+- `kspcore_c.h`: KSPCORE_ABI_VERSION 1 -> 2, includes kspcore_game.h / kspcore_frame.h at the end (and kspcore_camera.h / kspcore_view.h / kspcore_model.h when present).
 
 ## Plan
 1. headers (done)

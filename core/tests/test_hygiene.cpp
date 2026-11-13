@@ -62,7 +62,10 @@ bool Trace() {
     return on;
 }
 
+size_t g_leaks = 0;  // WP-UE-02: the differences Restore() found (HygieneLeaks)
+
 void Report(const char* what, const std::string& test) {
+    ++g_leaks;
     if (Trace()) std::fprintf(stderr, "[hygiene] %s left by: %s\n", what, test.c_str());
 }
 
@@ -130,6 +133,7 @@ void Restore(const std::string& test) {
     // enters KerbalEVA states that set ControlPanelLock_<id> without their OnLeave) blocks VESSEL_SWITCHING and the ship controls in every
     // later case (WP-19a's VesselSwitching.Update returned nothing after it under --order-by=rand -rs=27)
     if (InputLockManager::lockMask != 0 || InputLockManager::lockStack.Count() != 0) {
+        ++g_leaks;
         if (Trace()) std::fprintf(stderr, "[hygiene] InputLockManager locks %s left by: %s\n", InputLockManager::PrintLockStack().c_str(), test.c_str());
         InputLockManager::Reset();
     }
@@ -139,6 +143,7 @@ void Restore(const std::string& test) {
         const auto it = EventBaseline().find(e.EventName());
         const size_t keep = it == EventBaseline().end() ? 0 : it->second;
         if (e.ListenerCount() <= keep) return;
+        ++g_leaks;
         if (Trace()) std::fprintf(stderr, "[hygiene] event %s: %zu listener(s) left by: %s\n", e.EventName().c_str(), e.ListenerCount() - keep, test.c_str());
         e.TruncateListenersForTests(keep);
     });
@@ -174,6 +179,12 @@ struct HygieneListener : doctest::IReporter {
 }  // namespace
 
 void ResetSharedTestState() { Restore("(explicit)"); }
+
+size_t HygieneLeaks(const std::string& who) {
+    const size_t before = g_leaks;
+    Restore(who);
+    return g_leaks - before;
+}
 
 void LoadStockLocalizer() {
     KSP::Localization::Localizer::Shutdown();
