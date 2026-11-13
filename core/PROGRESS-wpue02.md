@@ -6,6 +6,7 @@ Compiles as C11 (gcc -pedantic) and C++20. Later header changes are additive onl
 
 ### Header changes after the freeze
 - `kspcore_vessel_state`: appended `altitude`, `surface_speed`, `mach`, `vertical_speed`, `reserved1` (the quantities the C10 gate reads; no HUD view-model exists before WP-UE-04). struct_size leading, earlier fields unmoved.
+- `kspcore_snapshot_hash` doc: vessel / part ids are NOT hashed (process-wide counters differ between sims in one process); the hashed fields are listed in the comment. Behaviour is documented as implemented (no consumer existed at the freeze).
 - `kspcore_c.h`: KSPCORE_ABI_VERSION 1 -> 2, includes kspcore_game.h / kspcore_frame.h at the end (and kspcore_camera.h / kspcore_view.h / kspcore_model.h when present).
 
 ## Plan

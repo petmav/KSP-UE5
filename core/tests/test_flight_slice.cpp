@@ -4,6 +4,7 @@
 //   * kspcore_sim_destroy leaves nothing behind the unit-test hygiene checks (tests/test_hygiene.*) would flag, and a new sim can be made.
 // The heavy case (the whole scripted ascent, three runs) runs only when KSPCORE_SLICE_TWIN is set (ctest capi.flight_slice_twin);
 // the short case runs in every unit shard.
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -118,6 +119,15 @@ uint64_t RunCpp(const char* save, int frames) {
     return ksp::host::SnapshotHash(host.Snapshot());
 }
 
+std::vector<std::string>& LogLines() {
+    static std::vector<std::string> v;
+    return v;
+}
+void CaptureLog(int level, const char* message, void*) {
+    (void)level;
+    LogLines().emplace_back(message);
+}
+
 struct ProcessGuard {
     bool ok;
     explicit ProcessGuard(const Paths& p) : ok(InitProcess(p)) {}
@@ -131,13 +141,14 @@ TEST_CASE("WP-UE-02 sim destroy / re-create: the C ABI flight scene leaves nothi
     const Paths p;
     ProcessGuard pg(p);
     REQUIRE(pg.ok);
-    kspcore_tests::HygieneLeaks("(before)");
     uint32_t parts1 = 0, parts2 = 0;
     double alt1 = 0.0, alt2 = 0.0;
+    const kspcore_tests::HygieneProbe probe;  // after kspcore_game_init / load_database: the process-level GameData's own listeners are the baseline
     const uint64_t h1 = RunAbi(p, "wpue02_a", 160, &parts1, &alt1);
-    const size_t leaks1 = kspcore_tests::HygieneLeaks("after kspcore_sim_destroy #1");
+    std::string what1, what2;
+    const size_t leaks1 = probe.Leaks(&what1);
     const uint64_t h2 = RunAbi(p, "wpue02_b", 160, &parts2, &alt2);
-    const size_t leaks2 = kspcore_tests::HygieneLeaks("after kspcore_sim_destroy #2");
+    const size_t leaks2 = probe.Leaks(&what2);
     MESSAGE("sim #1: hash " << std::hex << h1 << std::dec << ", " << parts1 << " parts, altitude " << alt1 << " m, leaks " << leaks1 << "; sim #2: hash " << std::hex
                             << h2 << std::dec << ", " << parts2 << " parts, altitude " << alt2 << " m, leaks " << leaks2);
     CHECK(leaks1 == 0);
@@ -154,11 +165,22 @@ TEST_CASE("WP-UE-02 flight slice twin: the C++ path and the C ABI path end the s
     const Paths p;
     ProcessGuard pg(p);
     REQUIRE(pg.ok);
+    const kspcore_tests::HygieneProbe probe;
     const int frames = 100 + 4560;  // the C test's settle + C10 window
     const uint64_t viaAbi = RunAbi(p, "wpue02_twin_abi", frames);
-    CHECK(kspcore_tests::HygieneLeaks("after the ABI run") == 0);
+    {
+        std::string what;
+        const size_t n = probe.Leaks(&what);
+        INFO("after the ABI run: " << what);
+        CHECK(n == 0);
+    }
     const uint64_t viaCpp = RunCpp("wpue02_twin_cpp", frames);
-    CHECK(kspcore_tests::HygieneLeaks("after the C++ run") == 0);
+    {
+        std::string what;
+        const size_t n = probe.Leaks(&what);
+        INFO("after the C++ run: " << what);
+        CHECK(n == 0);
+    }
     MESSAGE("state hash after " << frames << " frames: ABI " << std::hex << viaAbi << ", C++ " << viaCpp << std::dec);
     CHECK(viaAbi == viaCpp);
     if (const char* f = std::getenv("KSPCORE_SLICE_HASH_FILE")) {
@@ -169,4 +191,129 @@ TEST_CASE("WP-UE-02 flight slice twin: the C++ path and the C ABI path end the s
         MESSAGE("the pure-C ctest wrote " << line);
         CHECK(viaC == viaCpp);
     }
+}
+
+TEST_CASE("WP-UE-02 quicksave / quickload through the ABI: F5 state saved, the flight scene torn down and rebuilt from the file, the vessel back where it was") {
+    if (!GameAvailable()) return;
+    const Paths p;
+    ProcessGuard pg(p);
+    REQUIRE(pg.ok);
+    const kspcore_tests::HygieneProbe probe;
+    kspcore_sim* sim = kspcore_sim_create();
+    REQUIRE(sim != nullptr);
+    std::error_code ec;
+    fs::remove_all(fs::path(p.saves) / "wpue02_qs", ec);  // a clean save folder: no quicksave from an earlier run
+    REQUIRE(kspcore_game_new(sim, KSPCORE_MODE_SANDBOX, "wpue02_qs") == 1);
+    CHECK(kspcore_game_has_quicksave(sim) == 0);
+    REQUIRE(kspcore_game_launch_craft(sim, p.craft.c_str(), "LaunchPad") == 1);
+    REQUIRE(kspcore_frame(sim, 0.02) == 1);
+    REQUIRE(kspcore_scene_loaded(sim, KSPCORE_SCENE_FLIGHT) == 1);
+    Script script;
+    script.settle = 130;
+    int32_t down[3], held[1];
+    auto activeOf = [](const kspcore_snapshot_view* s) -> const kspcore_vessel_state* {
+        for (uint32_t i = 0; i < s->vessel_count; ++i)
+            if ((s->vessels[i].flags & KSPCORE_VESSEL_ACTIVE) != 0) return &s->vessels[i];
+        return nullptr;
+    };
+    // on the pad at rest (KSP refuses a quicksave under thrust, FlightGlobals.ClearToSave)
+    for (int k = 0; k < 120; ++k) {
+        const kspcore_input_frame in = script.Frame(k, down, held);
+        REQUIRE(kspcore_input_set_frame(sim, &in) == 1);
+        REQUIRE(kspcore_frame(sim, 0.02) == 1);
+    }
+    const kspcore_snapshot_view* s = kspcore_snapshot(sim);
+    const kspcore_vessel_state* v = activeOf(s);
+    REQUIRE(v != nullptr);
+    const double altSaved = v->altitude;
+    const double utSaved = s->frame.ut;
+    CHECK(v->situation == 4);  // PRELAUNCH
+    REQUIRE(kspcore_game_quicksave(sim) == 1);
+    CHECK(kspcore_game_has_quicksave(sim) == 1);
+    for (int k = 120; k < 320; ++k) {
+        const kspcore_input_frame in = script.Frame(k, down, held);
+        REQUIRE(kspcore_input_set_frame(sim, &in) == 1);
+        REQUIRE(kspcore_frame(sim, 0.02) == 1);
+    }
+    v = activeOf(kspcore_snapshot(sim));
+    REQUIRE(v != nullptr);
+    CHECK(v->altitude > altSaved + 20.0);  // lifted off after the quicksave
+    // quickload: the scene load is requested (event), the old scene goes at the next frame, the shell answers kspcore_scene_loaded
+    LogLines().clear();
+    kspcore_set_log_callback(&CaptureLog, nullptr);
+    REQUIRE(kspcore_game_quickload(sim) == 1);
+    REQUIRE(kspcore_frame(sim, 0.02) == 1);
+    s = kspcore_snapshot(sim);
+    bool requested = false;
+    for (uint32_t i = 0; i < s->event_count; ++i) requested = requested || (s->events[i].kind == KSPCORE_EVENT_SCENE_LOAD_REQUESTED && s->events[i].a == KSPCORE_SCENE_FLIGHT);
+    CHECK(requested);
+    CHECK(s->vessel_count == 0);
+    const int loaded = kspcore_scene_loaded(sim, KSPCORE_SCENE_FLIGHT);
+    kspcore_set_log_callback(nullptr, nullptr);
+    INFO(std::string(kspcore_last_error()));
+    for (const std::string& l : LogLines()) INFO(l);
+    REQUIRE(loaded == 1);
+    for (int k = 0; k < 5; ++k) REQUIRE(kspcore_frame(sim, 0.02) == 1);
+    s = kspcore_snapshot(sim);
+    v = activeOf(s);
+    REQUIRE(v != nullptr);
+    MESSAGE("quicksaved on the pad at altitude " << altSaved << " m, UT " << utSaved << "; reloaded: altitude " << v->altitude << " m, UT " << s->frame.ut << ", " << v->part_count
+                                      << " parts, " << s->vessel_count << " vessel(s)");
+    CHECK(v->part_count == 153);
+    CHECK(std::fabs(s->frame.ut - (utSaved + 5 * 0.02)) < 1e-3);  // the saved UT plus the five frames run since the reload
+    CHECK(std::fabs(v->altitude - altSaved) < 1.0);  // back on the pad
+    kspcore_sim_destroy(sim);
+    std::string what;
+    const size_t n = probe.Leaks(&what);
+    INFO(what);
+    CHECK(n == 0);
+}
+
+TEST_CASE("WP-UE-02 revert to launch through the ABI: the flight is torn down and the vessel is on the pad again") {
+    if (!GameAvailable()) return;
+    const Paths p;
+    ProcessGuard pg(p);
+    REQUIRE(pg.ok);
+    const kspcore_tests::HygieneProbe probe;
+    kspcore_sim* sim = kspcore_sim_create();
+    REQUIRE(sim != nullptr);
+    REQUIRE(kspcore_game_new(sim, KSPCORE_MODE_SANDBOX, "wpue02_rv") == 1);
+    REQUIRE(kspcore_game_launch_craft(sim, p.craft.c_str(), "LaunchPad") == 1);
+    REQUIRE(kspcore_frame(sim, 0.02) == 1);
+    REQUIRE(kspcore_scene_loaded(sim, KSPCORE_SCENE_FLIGHT) == 1);
+    Script script;
+    script.settle = 40;  // FlightDriver.PostInit saves the revert state after 15 frames (FlightDriver.cs:376)
+    int32_t down[3], held[1];
+    for (int k = 0; k < 160; ++k) {
+        const kspcore_input_frame in = script.Frame(k, down, held);
+        REQUIRE(kspcore_input_set_frame(sim, &in) == 1);
+        REQUIRE(kspcore_frame(sim, 0.02) == 1);
+    }
+    const kspcore_snapshot_view* s = kspcore_snapshot(sim);
+    const kspcore_vessel_state* v = nullptr;
+    for (uint32_t i = 0; i < s->vessel_count; ++i)
+        if ((s->vessels[i].flags & KSPCORE_VESSEL_ACTIVE) != 0) v = &s->vessels[i];
+    REQUIRE(v != nullptr);
+    CHECK(v->altitude > 110.0);  // in the air
+    REQUIRE(kspcore_game_revert_to_launch(sim) == 1);
+    REQUIRE(kspcore_frame(sim, 0.02) == 1);
+    CHECK(kspcore_snapshot(sim)->vessel_count == 0);
+    const int loaded = kspcore_scene_loaded(sim, KSPCORE_SCENE_FLIGHT);
+    INFO(std::string(kspcore_last_error()));
+    REQUIRE(loaded == 1);
+    for (int k = 0; k < 30; ++k) REQUIRE(kspcore_frame(sim, 0.02) == 1);
+    s = kspcore_snapshot(sim);
+    v = nullptr;
+    for (uint32_t i = 0; i < s->vessel_count; ++i)
+        if ((s->vessels[i].flags & KSPCORE_VESSEL_ACTIVE) != 0) v = &s->vessels[i];
+    REQUIRE(v != nullptr);
+    MESSAGE("after the revert: altitude " << v->altitude << " m, situation " << v->situation << ", " << v->part_count << " parts, UT " << s->frame.ut);
+    CHECK(v->part_count == 153);
+    CHECK(v->altitude < 103.0);
+    CHECK(v->situation == 4);  // PRELAUNCH
+    kspcore_sim_destroy(sim);
+    std::string what;
+    const size_t n = probe.Leaks(&what);
+    INFO(what);
+    CHECK(n == 0);
 }

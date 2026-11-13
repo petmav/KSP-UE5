@@ -180,6 +180,39 @@ struct HygieneListener : doctest::IReporter {
 
 void ResetSharedTestState() { Restore("(explicit)"); }
 
+HygieneProbe::HygieneProbe() {
+    TakeBaseline();
+    ksp::events::BaseGameEvent::ForEachRegistered([&](ksp::events::BaseGameEvent& e) { listeners_[e.EventName()] = e.ListenerCount(); });
+}
+
+// The checks of Restore() that report, without putting anything back (a sim that was made and destroyed after this probe was taken)
+size_t HygieneProbe::Leaks(std::string* what) const {
+    size_t n = 0;
+    auto note = [&](const std::string& s) {
+        ++n;
+        if (what != nullptr) *what += s + "; ";
+    };
+    const PrefabBaseline& b = Baseline();
+    size_t i = 0;
+    for (const CelestialBodyPrefab& p : KerbolSystemPrefab().bodies) {
+        if (i < b.positions.size() && !(p.body.position == b.positions[i])) note("KerbolSystemPrefab body position " + std::to_string(i));
+        ++i;
+    }
+    if (FlightGlobals::ready || FlightGlobals::ActiveVessel != nullptr || !FlightGlobals::VesselsLoaded.empty() || FlightGlobals::currentMainBody != nullptr ||
+        FlightGlobals::overrideOrbit)
+        note("FlightGlobals state");
+    if (FlightGlobals::speedDisplayMode() != FlightGlobals_SpeedDisplayModes::Surface) note("FlightGlobals speed mode");
+    if (ksp::physics::FlightIntegrator::ActiveVesselFI != nullptr) note("FlightIntegrator::ActiveVesselFI");
+    if (InputLockManager::lockMask != 0 || InputLockManager::lockStack.Count() != 0) note("InputLockManager locks");
+    if (GameSettings::Ready()) note("GameSettings instance");
+    ksp::events::BaseGameEvent::ForEachRegistered([&](ksp::events::BaseGameEvent& e) {
+        const auto it = listeners_.find(e.EventName());
+        const size_t keep = it == listeners_.end() ? 0 : it->second;
+        if (e.ListenerCount() > keep) note("event " + e.EventName() + ": " + std::to_string(e.ListenerCount() - keep) + " listener(s)");
+    });
+    return n;
+}
+
 size_t HygieneLeaks(const std::string& who) {
     const size_t before = g_leaks;
     Restore(who);

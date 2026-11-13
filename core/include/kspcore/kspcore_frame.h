@@ -291,8 +291,10 @@ typedef struct kspcore_snapshot_view {
 const kspcore_snapshot_view* kspcore_snapshot(kspcore_sim* sim);
 
 /* State hash for the parity gates (DESIGN 1.5): FNV-1a 64 over the bytes of the snapshot's frame (ut, frame_count, fixed_steps),
- * then every body (id, position, rotation), vessel (id, flags, situation, com, root pose) and part (id, vessel_id, position, rotation)
- * in list order. Pointers, names and quad / event data are not hashed. The shell and the headless ctest compute it the same way. */
+ * then every body (id, position, rotation), vessel (flags, situation, com, root pose) and part (model_id, position, rotation) in list
+ * order. Vessel and part ids, pointers, names and quad / event data are not hashed (ids come from process-wide counters that differ
+ * between two sims of one process). The shell and the headless ctest compute it the same way. [doc corrected after the freeze: the first
+ * text listed the ids; see core/PROGRESS-wpue02.md] */
 uint64_t kspcore_snapshot_hash(const kspcore_snapshot_view* snapshot);
 
 #ifdef __cplusplus

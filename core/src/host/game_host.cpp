@@ -357,6 +357,7 @@ struct GameHost::Impl {
     std::deque<kspcore_command> commands;
     std::deque<std::string> commandText;
     std::string saveFolder;
+    uint32_t guidSeed = 4242u;    // Guid.NewGuid()'s hash source: per sim, so a second sim in the process repeats the first
     int scene = -1;               // the scene core is in (HighLogic.LoadedScene), -1 while a load is pending
     int requestedScene = -1;      // HighLogic.LoadScene recorded this: the old scene goes at the next frame
     bool sceneRunning = false;
@@ -558,10 +559,9 @@ GameHost::Impl::Impl() {
         return std::nullopt;
     };
     // host glue: Guid.NewGuid()'s hash source (deterministic, seeded as the fixtures do)
-    env.newGuidHashCode = [] {
-        static uint32_t s = 4242u;
-        s = s * 1664525u + 1013904223u;
-        return static_cast<int32_t>(s);
+    env.newGuidHashCode = [this] {
+        guidSeed = guidSeed * 1664525u + 1013904223u;
+        return static_cast<int32_t>(guidSeed);
     };
     if (data.physics) PhysicsGlobals::SetInstance(data.physics.get());
     planetarium.Awake();
@@ -643,6 +643,9 @@ GameHost::Impl::Flight::~Flight() {
     quickSave.reset();
     opm.reset();
     FlightGlobals::Clear();
+    // the navball speed modes (FlightGlobals.cs:128-130) follow the active vessel's altitude in every FlightGlobals.Update: a flight that
+    // reached orbit leaves Orbit; the next scene starts at the Surface default (what the Unity scene's new FlightGlobals object has)
+    FlightGlobals::ResetSpeedModesForTests();
     owned.clear();
     Vessel::SpawnedVessels().clear();
     kscHost.reset();
@@ -650,7 +653,9 @@ GameHost::Impl::Flight::~Flight() {
     sphere.reset();
     setup.reset();
     space_center::SceneGraph::Reset();
-    FlightDriver::ResetStatics();
+    // (FlightDriver's statics are not reset here: they hold what the NEXT flight scene starts from, set by StartWithNewLaunch /
+    // StartAndFocusVessel before HighLogic.LoadScene; the sim's destructor resets them)
+    FlightDriver::host = FlightDriver::Host{};
     driver.reset();
     FlightInputHandler::host = FlightInputHost{};
     if (bubble) bubble->SetFlightInputHandler(nullptr);
@@ -1238,7 +1243,6 @@ uint64_t SnapshotHash(const kspcore_snapshot_view& s) {
     }
     for (uint32_t i = 0; i < s.vessel_count; ++i) {
         const kspcore_vessel_state& v = s.vessels[i];
-        Hash1(h, &v.id, sizeof(v.id));
         Hash1(h, &v.flags, sizeof(v.flags));
         Hash1(h, &v.situation, sizeof(v.situation));
         Hash1(h, v.com, sizeof(v.com));
@@ -1247,8 +1251,7 @@ uint64_t SnapshotHash(const kspcore_snapshot_view& s) {
     }
     for (uint32_t i = 0; i < s.part_count; ++i) {
         const kspcore_part_state& p = s.parts[i];
-        Hash1(h, &p.id, sizeof(p.id));
-        Hash1(h, &p.vessel_id, sizeof(p.vessel_id));
+        Hash1(h, &p.model_id, sizeof(p.model_id));
         Hash1(h, p.position, sizeof(p.position));
         Hash1(h, p.rotation, sizeof(p.rotation));
     }
