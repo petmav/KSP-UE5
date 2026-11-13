@@ -87,7 +87,7 @@ genproj.ps1, build.ps1 [-Target -Module -Label], build_stub.ps1, create_map.ps1,
 All append wall-clock timings to ue5/timings.log.
 
 ## Next steps (for a future session)
-- Switch KspCoreBridge to the real core once core/ ships include/kspcore/kspcore_c.h + build/RelWithDebInfo/kspcore.lib (/MD).
+- (done, WP-UE-01) KspCoreBridge links the real core + Jolt through core's link manifest; see STATUS.md.
 - Terrain: replace per-patch ProceduralMeshComponents (dynamic path, render-thread bound at ~1,800 patches) with a static or
   instanced patch path or RealtimeMesh; keep patch-centred primitive origins.
 - Untested at scale: shadows/TSR, Niagara, planet rotation (rotating frame < 100 km), Chaos joints far from origin.
