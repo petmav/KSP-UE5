@@ -16,3 +16,8 @@ Compiles as C11 (gcc -pedantic) and C++20. Later header changes are additive onl
 4. STATUS / README / progress.csv, verification, PR
 
 ## Log
+- header freeze 643355d8; host + ABI implementation 96bbeb2b: C test first reached ignition after fixing TimeWarp Awake/Start (curr_rate 0 -> no propellant) and CommNet (EnableCommNet off).
+- hash: ids not hashed, GUID seed per sim; FlightGlobals speed modes reset at scene end; FlightDriver statics kept across the teardown (quickload).
+- quicksave (on the pad: KSP refuses it under thrust), quickload, revert to launch, Kerbal X (upgrade pipeline + crew fill) all through the ABI.
+- fresh Windows suite (core/build deleted): 55 / 55 pass; capi.flight_slice 44.8 s, capi.flight_slice_twin 54.8 s.
+- remaining: random-order runs of the whole unit binary (-rs=11, -rs=27), STATUS section (draft core/_status_wpue02.md), merge origin/main, push, PR.
