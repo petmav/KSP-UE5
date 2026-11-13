@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "kspcore/kspcore_c.h"
 
@@ -141,6 +142,7 @@ int main(int argc, char** argv) {
     int n_ksp, frames_total, settle = 100, window = 4560, k, i, j;
     double *alt, *spd, *mach;
     int ok_flight = 1;
+    clock_t t_loop;
 
     if (argc < 8) {
         printf("usage: capi_flight_slice game_root data_dir reduced_model_dir saves_dir craft c10_states.csv hash_out\n");
@@ -185,6 +187,7 @@ int main(int argc, char** argv) {
     printf("M2 on the pad: %u parts, altitude %.3f m, situation %d, %u terrain quads\n", v->part_count, v->altitude, v->situation, snap->quads_added_count);
 
     frames_total = settle + window;
+    t_loop = clock();
     alt = (double*)calloc((size_t)window, sizeof(double));
     spd = (double*)calloc((size_t)window, sizeof(double));
     mach = (double*)calloc((size_t)window, sizeof(double));
@@ -239,6 +242,8 @@ int main(int argc, char** argv) {
         }
     }
 
+    printf("%d frames (kspcore_input_set_frame + kspcore_frame + kspcore_snapshot): %.3f ms per frame on average (CPU time)\n", frames_total,
+           1000.0 * (double)(clock() - t_loop) / (double)CLOCKS_PER_SEC / (double)frames_total);
     if (ok_flight) {
         const double tol_spd = 0.01, tol_alt = 0.015, tol_frames = 0.025;
         int prev_ksp = -1, prev_ours = -1, n = 0;
