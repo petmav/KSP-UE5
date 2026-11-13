@@ -1,5 +1,7 @@
 // WP-23: ModuleRCS.cs, ModuleRCSFX.cs (see ksp/modules/module_rcs.hpp for scope).
 #include "ksp/modules/module_rcs.hpp"
+#include "ksp/fx/effects.hpp"
+#include "ksp/fx/fx_group.hpp"
 
 #include <algorithm>
 #include <limits>
@@ -111,6 +113,7 @@ void ModuleRCS::OnStart(StartState) {
         if (thrustForces.size() != 0) thrustForces.assign(0, 0.0f);
         log::Info("RCS module unable to find any transforms in part named " + Get<std::string>("thrusterTransformName"));
     }
+    SetupFX();
     const bool flag = Get<bool>("showToggles") && Get<bool>("currentShowToggles") && isEnabled;  // UpdateToggles :535
     for (const char* n : {"enableYaw", "enablePitch", "enableRoll", "enableX", "enableY", "enableZ", "useThrottle", "fullThrust"}) {
         BaseField* f = Fields()[n];
@@ -208,7 +211,7 @@ void ModuleRCS::FixedUpdate(const RCSFlightInput& in) {
     lastForces.clear();
     if (!in.flightScene) return;
     if (in.highWarp) {
-        DeactivateFX();  // DeactivatePowerFX(): FX
+        DeactivatePowerFX();
         return;
     }
     const int tC = static_cast<int>(thrusterTransforms.size());
@@ -221,7 +224,6 @@ void ModuleRCS::FixedUpdate(const RCSFlightInput& in) {
     Set<float>("realISP", realISP);
     exhaustVel_ = static_cast<double>(realISP) * G * ispMult;
     const float thrustForceRecip = S(E(1.0f) / E(Get<float>("thrusterPower")));
-    (void)thrustForceRecip;  // only UpdatePowerFX reads it (FX)
     if (isEnabled && in.hasVessel && Get<bool>("rcsEnabled") && (!in.shieldedFromAirstream || Get<bool>("shieldedCanThrust"))) {
         const bool flag = in.rcsActionGroup;
         if (flag != rcs_active) rcs_active = flag;
@@ -249,7 +251,7 @@ void ModuleRCS::FixedUpdate(const RCSFlightInput& in) {
                 thrustForces[static_cast<size_t>(i)] = currentThrustForce_;
                 const bool flag2 = currentThrustForce_ > 0.0f && success;
                 isOperating |= flag2;
-                // UpdatePowerFX(flag2, i, Mathf.Clamp(currentThrustForce * thrustForceRecip, 0.1f, 1f)): FX
+                UpdatePowerFX(flag2, i, Mathf::Clamp(S(E(currentThrustForce_) * E(thrustForceRecip)), 0.1f, 1.0f));
                 if (flag2 && !Get<bool>("isJustForShow")) {
                     totalThrustForce_ = S(E(totalThrustForce_) + E(currentThrustForce_));
                     RCSForce f;
@@ -266,10 +268,67 @@ void ModuleRCS::FixedUpdate(const RCSFlightInput& in) {
     }
 }
 
+// ModuleRCS.cs:838 (the prefab Resources.Load("Effects/" + fxPrefabName) is a seam: FXGroupEnvironment::fxPrefabParticleSystems)
+void ModuleRCS::SetupFX() {
+    Part* p = PartPtr();
+    if (p == nullptr) throw NullReferenceException();
+    int num = 0;
+    for (size_t i = 0; i < thrusterTransforms.size(); i++) {
+        auto item = std::make_unique<FXGroup>(Get<std::string>("fxPrefix") + std::to_string(num));
+        if (FXGroupEnvironment::fxPrefabParticleSystems) {
+            for (const auto& ps : FXGroupEnvironment::fxPrefabParticleSystems(Get<std::string>("fxPrefabName"))) item->fxEmittersNewSystem.push_back(ps);
+        } else {
+            item->fxEmittersNewSystem.push_back(FXParticleSystem{});
+        }
+        thrusterFX.push_back(p->AddFXGroup(std::move(item)));
+        num++;
+    }
+}
+// ModuleRCS.cs:860
+void ModuleRCS::UpdatePowerFX(bool running, int idx, float power) {
+    FXGroup* g = thrusterFX.at(static_cast<size_t>(idx));
+    if (running) {
+        g->Power(power);
+        g->setActive(true);
+    } else {
+        g->setActive(false);
+    }
+}
 // ModuleRCS.cs:874
 void ModuleRCS::DeactivateFX() {
+    DeactivatePowerFX();
     size_t count = thrusterTransforms.size();
     while (count-- > 0) thrustForces[count] = 0.0f;
+}
+// ModuleRCS.cs:884
+void ModuleRCS::DeactivatePowerFX() {
+    size_t count = thrusterFX.size();
+    while (count-- > 0) {
+        thrusterFX[count]->setActive(false);
+        thrusterFX[count]->Power(0.0f);
+    }
+}
+
+// ModuleRCSFX.cs:30
+void ModuleRCSFX::OnAwake() {
+    ModuleRCS::OnAwake();
+    if (Part* p = PartPtr()) p->Effect(Get<std::string>("runningEffectName"), 0.0f);
+}
+// ModuleRCSFX.cs:10
+void ModuleRCSFX::SetupFX() {
+    if (Part* p = PartPtr()) p->Effect(Get<std::string>("runningEffectName"), 0.0f);
+}
+// ModuleRCSFX.cs:15
+void ModuleRCSFX::UpdatePowerFX(bool running, int idx, float power) {
+    if (Part* p = PartPtr()) p->Effect(Get<std::string>("runningEffectName"), running ? power : 0.0f, idx);
+}
+// ModuleRCSFX.cs:20
+void ModuleRCSFX::DeactivatePowerFX() {
+    if (Part* p = PartPtr()) p->Effect(Get<std::string>("runningEffectName"), 0.0f);
+}
+// ModuleRCSFX.cs:25
+void ModuleRCSFX::DeactivateFX() {
+    if (Part* p = PartPtr()) p->Effect(Get<std::string>("runningEffectName"), 0.0f);
 }
 
 // ModuleRCS.cs:566

@@ -23,6 +23,14 @@ add_library(kspcore STATIC
     math/matrix4x4d.cpp
     math/mathfx.cpp
     curves/float_curve.cpp
+    fx/fx_curve.cpp
+    fx/effect_list.cpp
+    fx/effect_audio.cpp
+    fx/effect_particle.cpp
+    fx/effect_anim.cpp
+    fx/fx_group.cpp
+    fx/part_fx.cpp
+    fx/fx_modules.cpp
     curves/double_curve.cpp
     curves/serialized_float_curve.cpp
     config/config_node.cpp

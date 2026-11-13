@@ -1231,6 +1231,10 @@ void ModuleWheelDeployment::FSMSetup(const std::string& startStateName) {
     auto effect = [this](const char* field, bool hasValue, float value) {
         const std::string name = Get<std::string>(field);
         if (!name.empty()) WheelModuleEnvironment::Trace("fx:" + name + (hasValue ? ":" + std::to_string(value) : std::string()));
+        if (Part* ep = PartPtr()) {  // part.Effect(fx...) (ModuleWheelDeployment.cs:569-652)
+            if (hasValue) ep->Effect(name, value);
+            else ep->Effect(name);
+        }
     };
     auto cubes = [this, p](float retracted, float deployed) {
         WheelModuleEnvironment::Trace("cubes:Retracted=" + std::to_string(retracted) + ",Deployed=" + std::to_string(deployed));

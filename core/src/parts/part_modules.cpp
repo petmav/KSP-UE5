@@ -330,8 +330,7 @@ std::unique_ptr<Part> Part::Instantiate(const Part& original) {
     p->soundDefinitions = original.soundDefinitions;
     p->models = original.models;
     p->materialOverrides = original.materialOverrides;
-    p->effectNodes_.clear();
-    for (const auto& e : original.effectNodes_) p->effectNodes_.push_back(e->CreateCopy());
+    // the instance's EffectList is rebuilt from `effects` on first use (Part::Effects)
     p->partTransform = original.partTransform;
     p->state_ = original.state_;
     p->canFail_ = original.canFail_;

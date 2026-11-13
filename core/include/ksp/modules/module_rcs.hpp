@@ -28,6 +28,8 @@
 
 namespace ksp {
 
+class FXGroup;
+
 class Part;
 struct PartTransform;
 class FlightCtrlState;
@@ -110,7 +112,12 @@ public:
     double getMaxFuelFlow(float Isp);                                               // :510
     double getMaxFuelFlow(const Propellant& p, float Isp);                          // :520
     void GetPotentialTorque(Vector3f& pos, Vector3f& neg, const Vector3f& currentCoM, bool precisionMode);  // :773
-    void DeactivateFX();                                                            // :874 (thrustForces only)
+    // FX (ModuleRCS.cs:12, :838-:892; ModuleRCSFX overrides them with part.Effect calls): the legacy FXGroup per thruster
+    std::vector<FXGroup*> thrusterFX;                                               // :12
+    virtual void SetupFX();                                                         // :838 (parenting under the thruster transforms is the shell's)
+    virtual void UpdatePowerFX(bool running, int idx, float power);                 // :860
+    virtual void DeactivateFX();                                                    // :874 (also zeroes thrustForces)
+    virtual void DeactivatePowerFX();                                               // :884
     bool CanBeDetached() const { return !isOperating; }                             // :953
     bool CanBeOffset() const { return !isOperating; }                               // :958
     bool CanBeRotated() const { return !isOperating; }                              // :963
@@ -132,6 +139,11 @@ protected:
 class ModuleRCSFX : public ModuleRCS {
 public:
     explicit ModuleRCSFX(const ModuleClassInfo& cls) : ModuleRCS(cls) {}
+    void OnAwake() override;                                    // :30
+    void SetupFX() override;                                    // :10
+    void UpdatePowerFX(bool running, int idx, float power) override;  // :15
+    void DeactivatePowerFX() override;                          // :20
+    void DeactivateFX() override;                               // :25 (no thrustForces reset: the C# override only sends the effect)
 };
 
 namespace detail {
