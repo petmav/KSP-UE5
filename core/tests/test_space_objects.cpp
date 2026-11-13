@@ -1431,3 +1431,117 @@ TEST_CASE("wpfix9 CraftProfileInfo .loadmeta cache: GetSaveData uses, rewrites a
     std::error_code ec;
     fs::remove_all(dir, ec);
 }
+
+#include "ksp/modules/comet_vessel.hpp"
+#include "ksp/parts/part.hpp"
+
+// CometVessel.cs:112 / :126: OnAwake (vessel.Comet), OnStart (the module stays on a vessel with its comet part, is removed from one without,
+// the comet type, the vessel ranges override). The comet part is a Part named PotatoComet over a Vessel; the comet type is a real entry of
+// the shipped CometDefs.cfg.
+TEST_CASE("wpfix9 CometVessel.OnStart: kept on a vessel with its comet part, removed from a vessel without") {
+    Space38d s;
+    REQUIRE_FALSE(s.mgr->cometDefinitions.empty());
+    const std::string typeName = s.mgr->cometDefinitions[0]->name;
+    s.mgr->vesselRangeOrbitLoadOverride = 11.0f;
+    s.mgr->vesselRangeOrbitUnloadOverride = 22.0f;
+    s.mgr->vesselRangeOrbitPackOverride = 33.0f;
+    s.mgr->vesselRangeOrbitUnpackOverride = 44.0f;
+    auto makeModule = [](Vessel& v) {
+        auto m = std::static_pointer_cast<CometVessel>(VesselModuleFactory::Create(*GetVesselModuleClass("CometVessel")));
+        m->vessel = &v;
+        m->Awake();
+        v.vesselModules.push_back(m);
+        return m;
+    };
+    Part comet, rock;
+    comet.gameObjectName = "PotatoComet.v2";  // Contains("PotatoComet")
+    comet.fields.persistentId = 4321u;
+    rock.gameObjectName = "mk1pod";
+    rock.fields.persistentId = 99u;
+
+    // (1) the typeName is set and cometPartId is 0: the id is taken from the comet part, the module stays and finishes its start-up
+    {
+        Vessel v;
+        v.parts.push_back(&rock);
+        v.parts.push_back(&comet);
+        auto m = makeModule(v);
+        CHECK(v.comet == m.get());  // OnAwake: vessel.Comet = this
+        m->Set<std::string>("typeName", typeName);
+        m->OnStart();
+        CHECK_FALSE(m->destroyed());
+        CHECK(m->Get<uint32_t>("cometPartId") == 4321u);
+        CHECK(v.vesselModules.size() == 1);
+        CHECK(v.comet == m.get());
+        CHECK(m->isCometTypeReady());
+        CHECK(m->CometType() == CometManager::GetCometOrbitType(typeName));
+        CHECK(m->homeBodySMA() == 13599840256.0);  // Kerbin's semiMajorAxis (the home body)
+        CHECK(m->lastUpdateUT() == Planetarium::GetUniversalTime());
+        for (const VesselRanges::Situation* sit : {&v.vesselRanges.orbit, &v.vesselRanges.subOrbital, &v.vesselRanges.escaping, &v.vesselRanges.flying,
+                                                   &v.vesselRanges.splashed, &v.vesselRanges.landed, &v.vesselRanges.prelaunch}) {
+            CHECK(sit->load == 11.0f);
+            CHECK(sit->unload == 22.0f);
+            CHECK(sit->pack == 33.0f);
+            CHECK(sit->unpack == 44.0f);
+        }
+        v.comet = nullptr;
+        v.vesselModules.clear();
+    }
+    // (2) cometPartId already names the comet part: kept
+    {
+        Vessel v;
+        v.parts.push_back(&comet);
+        auto m = makeModule(v);
+        m->Set<uint32_t>("cometPartId", 4321u);
+        m->OnStart();
+        CHECK_FALSE(m->destroyed());
+        CHECK(v.vesselModules.size() == 1);
+        v.comet = nullptr;
+        v.vesselModules.clear();
+    }
+    // (3) cometPartId names another part (the comet was decoupled off this vessel): removed
+    {
+        Vessel v;
+        v.parts.push_back(&comet);
+        auto m = makeModule(v);
+        m->Set<uint32_t>("cometPartId", 777u);
+        m->OnStart();
+        CHECK(m->destroyed());
+        CHECK(v.vesselModules.empty());
+        CHECK(v.comet == nullptr);
+    }
+    // (4) no comet part: id 0 with a typeName but no PotatoComet part (the vessel of a decoupled stage): removed; the other parts untouched
+    {
+        Vessel v;
+        v.parts.push_back(&rock);
+        auto m = makeModule(v);
+        m->Set<std::string>("typeName", typeName);
+        m->OnStart();
+        CHECK(m->destroyed());
+        CHECK(v.vesselModules.empty());
+        CHECK(v.comet == nullptr);
+        CHECK(v.parts.size() == 1);
+    }
+    // (5) a vessel without parts and without a ProtoVessel: removed
+    {
+        Vessel v;
+        auto m = makeModule(v);
+        m->OnStart();
+        CHECK(m->destroyed());
+        CHECK(v.vesselModules.empty());
+    }
+    // (6) the comet part is there but the type name is unknown: the module stays, the type is not ready, the ranges are not touched
+    {
+        Vessel v;
+        v.parts.push_back(&comet);
+        auto m = makeModule(v);
+        m->Set<uint32_t>("cometPartId", 4321u);
+        m->Set<std::string>("typeName", "NoSuchCometType");
+        m->OnStart();
+        CHECK_FALSE(m->destroyed());
+        CHECK_FALSE(m->isCometTypeReady());
+        CHECK(m->CometType() == nullptr);
+        CHECK(v.vesselRanges.orbit.load != 11.0f);
+        v.comet = nullptr;
+        v.vesselModules.clear();
+    }
+}

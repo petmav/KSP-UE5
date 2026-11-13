@@ -331,6 +331,7 @@ add_library(kspcore STATIC
     commnet/comm_network.cpp
     commnet/commnet_scene.cpp
     commnet/comm_net_vessel.cpp
+    modules/comet_vessel.cpp
     modules/module_reaction_wheel.cpp
     wheels/wheel_native.cpp
     wheels/native_wheel_collider.cpp

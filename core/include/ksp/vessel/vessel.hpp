@@ -57,6 +57,7 @@ namespace ksp {
 namespace CommNet {
 class CommNetVessel;
 }  // namespace CommNet
+class CometVessel;
 
 // GameSettings values Vessel.cs reads (GameSettings.cs:978, 1008; the shim namespace is shared with ksp_util.hpp)
 namespace GameSettings {
@@ -336,6 +337,7 @@ public:
     ITargetable* targetObject = nullptr;
     std::vector<std::shared_ptr<VesselModule>> vesselModules;
     CommNet::CommNetVessel* connection = nullptr;  // Vessel.cs:346 (WP-39: set by CommNetVessel.OnAwake / OnStart)
+    CometVessel* comet = nullptr;                   // Vessel.cs:348 / :771 `Comet` (wpfix9: set by CometVessel.OnAwake, cleared when OnStart removes the module)
     ProtoTargetInfo pTI;
     VesselRanges vesselRanges;
     double heightFromPartOffsetLocal = 0.0;
