@@ -17,6 +17,7 @@
 
 #include "doctest/doctest.h"
 #include "game_root.hpp"
+#include "ksp/input/input_lock_manager.hpp"
 #include "ksp/career/career.hpp"
 #include "ksp/career/career_environment.hpp"
 #include "ksp/celestial/celestial_body.hpp"
@@ -612,6 +613,13 @@ TEST_CASE("WP-42 FlightDriver / EditorDriver startup state and launch-site valid
     w.game.Parameters->Editor.CanSave = false;
     w.game.Parameters->Editor.CanLaunch = false;
     CHECK(EditorDriver::SetInputLockFromGameParameters() == (EditorDriver::EDITOR_SAVE | EditorDriver::EDITOR_LAUNCH));
+    // the lock is on the real InputLockManager (EditorDriver.cs:234), with the bits of ControlTypes.cs
+    CHECK(InputLockManager::GetControlLock("EditorDriver_GameParameters") == (ControlTypes::EDITOR_SAVE | ControlTypes::EDITOR_LAUNCH));
+    CHECK(EditorDriver::EDITOR_SAVE == static_cast<uint64_t>(ControlTypes::EDITOR_SAVE));
+    CHECK(EditorDriver::EDITOR_LAUNCH == static_cast<uint64_t>(ControlTypes::EDITOR_LAUNCH));
+    CHECK(InputLockManager::IsLocked(ControlTypes::EDITOR_SAVE));
+    CHECK(InputLockManager::IsUnlocked(ControlTypes::EDITOR_LOAD));
+    InputLockManager::RemoveControlLock("EditorDriver_GameParameters");
     setup.OnDestroy();
     hl.OnDestroy();
 }
@@ -893,6 +901,8 @@ TEST_CASE("WP-42 SpaceCenterBuilding damage, repair and facility entry rules") {
     vab.EnterBuilding();
     CHECK(popups == std::vector<std::string>{"FacilityLocked"});
     CHECK(locks.back() == "+VABFacility");
+    CHECK(InputLockManager::GetControlLock("VABFacility") == ControlTypes::KSC_ALL);  // VehicleAssemblyBuilding.cs:42 on the real InputLockManager
+    CHECK(InputLockManager::IsLocked(ControlTypes::KSC_FACILITIES));
     w.game.Mode = Game_Modes::SCENARIO_NON_RESUMABLE;
     CHECK_FALSE(vab.IsOpen());
     TrackingStationBuilding ts;

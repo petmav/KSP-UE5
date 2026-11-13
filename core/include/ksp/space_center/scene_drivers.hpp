@@ -134,12 +134,12 @@ public:
     static bool SetDefaultSaveFolder(const std::string& path); // :578
     static void ResetStatics();
 
-    // ControlTypes.cs:40-44, :71 (the bits EditorDriver.SetInputLockFromGameParameters ORs together; InputLockManager itself is a WP-47 seam)
+    // ControlTypes.cs:40-44, :71 (the bits EditorDriver.SetInputLockFromGameParameters ORs together)
     enum : uint64_t {
         EDITOR_SAVE = 0x100000000ull, EDITOR_LOAD = 0x200000000ull, EDITOR_EXIT = 0x400000000ull, EDITOR_NEW = 0x800000000ull,
         EDITOR_LAUNCH = 0x1000000000ull, EDITOR_CREW = 9223372036854775808ull
     };
-    static uint64_t SetInputLockFromGameParameters();             // :195 (the ControlTypes mask passed to SetControlLock("EditorDriver_GameParameters"))
+    static uint64_t SetInputLockFromGameParameters();             // :195 (sets the "EditorDriver_GameParameters" lock on the real InputLockManager and returns its ControlTypes mask)
 
 private:
     static std::string& selectedlaunchSiteName_();

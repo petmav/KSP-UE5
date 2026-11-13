@@ -1347,3 +1347,203 @@ TEST_CASE("WP-38d ContractSystem.ConstructShip: orbiting, splashed, focus, failu
 }
 
 
+
+#include <chrono>
+#include <filesystem>
+#include <fstream>
+#include <random>
+
+// CraftProfileInfo.cs:248-373: the .loadmeta cache (LoadFromMetaFile / SaveToMetaFile / GetLastWriteTime / GetSaveData). The craft is a real
+// stock craft (harness/inputs/Ships/VAB/PhysProf-S.craft) copied to a temp directory so that its write time can be set to a known instant.
+TEST_CASE("wpfix9 CraftProfileInfo .loadmeta cache: GetSaveData uses, rewrites and ignores the cache like the C#") {
+    namespace fs = std::filesystem;
+    Space38d s(false);
+    const fs::path dir = fs::temp_directory_path() / ("kspcore_wpfix9_loadmeta_" + std::to_string(std::random_device{}()));
+    fs::create_directories(dir);
+    const std::string craft = (dir / "PhysProf-S.craft").string();
+    const std::string meta = (dir / "sub" / "PhysProf-S.loadmeta").string();  // SaveToMetaFile creates the directory
+    fs::copy_file(ShipPath("VAB", "PhysProf-S"), craft);
+    // File.GetLastWriteTimeUtc(...).Ticks of 2020-01-01T00:00:00Z: DateTime(1970,1,1).Ticks + 1577836800 s (independent of the code)
+    using namespace std::chrono;
+    auto setTime = [&](long long unixSeconds) {
+        fs::last_write_time(craft, clock_cast<fs::file_time_type::clock>(sys_seconds{seconds{unixSeconds}}));
+    };
+    setTime(1577836800LL);
+    constexpr int64_t kTicks2020 = 621355968000000000LL + 1577836800LL * 10000000LL;
+    CHECK(LT::CraftProfileInfo::GetLastWriteTime(craft) == kTicks2020);
+    CHECK(LT::CraftProfileInfo::GetLastWriteTime((dir / "missing.craft").string()) == -1);
+
+    // no cache: the craft is loaded in full (LoadDetailsFromCraftFile), the cache is written with the craft's write time
+    ConfigNode::NodePtr root = ConfigNode::Load(craft);
+    REQUIRE(root);
+    LT::CraftProfileInfo full;
+    full.LoadDetailsFromCraftFile(*root, craft, false, false);
+    const LT::CraftProfileInfo a = LT::CraftProfileInfo::GetSaveData(craft, meta);
+    CHECK(fs::exists(meta));
+    CHECK(a.shipName == full.shipName);
+    CHECK(a.partCount == full.partCount);
+    CHECK(a.partCount > 5);
+    CHECK(a.partNames == full.partNames);
+    CHECK(a.lastWriteTime == kTicks2020);
+    ConfigNode::NodePtr cache = ConfigNode::Load(meta);
+    REQUIRE(cache);
+    CHECK(cache->GetValue("shipName") == full.shipName);
+    CHECK(cache->GetValue("lastWriteTime") == std::to_string(kTicks2020));
+
+    // a cache whose lastWriteTime matches is used as it is (edited here so the hit is visible)
+    cache->SetValue("shipName", "FromCache");
+    REQUIRE(cache->Save(meta));
+    const LT::CraftProfileInfo b = LT::CraftProfileInfo::GetSaveData(craft, meta);
+    CHECK(b.shipName == "FromCache");
+    CHECK(b.partCount == full.partCount);
+
+    // the craft file changed (another write time): the cache is stale, the craft is loaded in full and the cache rewritten
+    setTime(1577836800LL + 3600LL);
+    const LT::CraftProfileInfo c = LT::CraftProfileInfo::GetSaveData(craft, meta);
+    CHECK(c.shipName == full.shipName);
+    CHECK(c.lastWriteTime == kTicks2020 + 3600LL * 10000000LL);
+    CHECK(ConfigNode::Load(meta)->GetValue("shipName") == full.shipName);
+
+    // an unreadable cache (empty file: ConfigNode.Load returns null, Load(null) throws) is caught: full load
+    { std::ofstream(meta, std::ios::binary | std::ios::trunc); }
+    const LT::CraftProfileInfo d = LT::CraftProfileInfo::GetSaveData(craft, meta);
+    CHECK(d.shipName == full.shipName);
+    CHECK(d.lastWriteTime == kTicks2020 + 3600LL * 10000000LL);
+    CHECK(ConfigNode::Load(meta)->GetValue("shipName") == full.shipName);
+
+    // a missing craft file: write time -1, no cache read, nothing loaded; the cache of the empty info is still written
+    const std::string meta2 = (dir / "other.loadmeta").string();
+    const LT::CraftProfileInfo e = LT::CraftProfileInfo::GetSaveData((dir / "missing.craft").string(), meta2);
+    CHECK(e.lastWriteTime == -1);
+    CHECK(e.shipName.empty());
+    CHECK(fs::exists(meta2));
+
+    // SaveToMetaFile with a bare file name has no directory: the C# logs a warning and writes nothing
+    const fs::path cwd = fs::current_path();
+    fs::current_path(dir);
+    full.SaveToMetaFile("bare.loadmeta");
+    CHECK_FALSE(fs::exists(dir / "bare.loadmeta"));
+    fs::current_path(cwd);
+    // LoadFromMetaFile of a file that does not exist leaves the info untouched
+    LT::CraftProfileInfo untouched;
+    untouched.LoadFromMetaFile((dir / "nothing.loadmeta").string());
+    CHECK(untouched.shipName.empty());
+    std::error_code ec;
+    fs::remove_all(dir, ec);
+}
+
+#include "ksp/modules/comet_vessel.hpp"
+#include "ksp/parts/part.hpp"
+
+// CometVessel.cs:112 / :126: OnAwake (vessel.Comet), OnStart (the module stays on a vessel with its comet part, is removed from one without,
+// the comet type, the vessel ranges override). The comet part is a Part named PotatoComet over a Vessel; the comet type is a real entry of
+// the shipped CometDefs.cfg.
+TEST_CASE("wpfix9 CometVessel.OnStart: kept on a vessel with its comet part, removed from a vessel without") {
+    Space38d s;
+    REQUIRE_FALSE(s.mgr->cometDefinitions.empty());
+    const std::string typeName = s.mgr->cometDefinitions[0]->name;
+    s.mgr->vesselRangeOrbitLoadOverride = 11.0f;
+    s.mgr->vesselRangeOrbitUnloadOverride = 22.0f;
+    s.mgr->vesselRangeOrbitPackOverride = 33.0f;
+    s.mgr->vesselRangeOrbitUnpackOverride = 44.0f;
+    // the Vessel constructor adds the VesselModules the VesselModuleManager knows (other tests register them): look for this module only
+    auto Has = [](const Vessel& v, const std::shared_ptr<CometVessel>& m) {
+        return std::find_if(v.vesselModules.begin(), v.vesselModules.end(), [&](const std::shared_ptr<VesselModule>& x) { return x.get() == m.get(); }) !=
+               v.vesselModules.end();
+    };
+    auto makeModule = [](Vessel& v) {
+        auto m = std::static_pointer_cast<CometVessel>(VesselModuleFactory::Create(*GetVesselModuleClass("CometVessel")));
+        m->vessel = &v;
+        m->Awake();
+        v.vesselModules.push_back(m);
+        return m;
+    };
+    Part comet, rock;
+    comet.gameObjectName = "PotatoComet.v2";  // Contains("PotatoComet")
+    comet.fields.persistentId = 4321u;
+    rock.gameObjectName = "mk1pod";
+    rock.fields.persistentId = 99u;
+
+    // (1) the typeName is set and cometPartId is 0: the id is taken from the comet part, the module stays and finishes its start-up
+    {
+        Vessel v;
+        v.parts.push_back(&rock);
+        v.parts.push_back(&comet);
+        auto m = makeModule(v);
+        CHECK(v.comet == m.get());  // OnAwake: vessel.Comet = this
+        m->Set<std::string>("typeName", typeName);
+        m->OnStart();
+        CHECK_FALSE(m->destroyed());
+        CHECK(m->Get<uint32_t>("cometPartId") == 4321u);
+        CHECK(Has(v, m));
+        CHECK(v.comet == m.get());
+        CHECK(m->isCometTypeReady());
+        CHECK(m->CometType() == CometManager::GetCometOrbitType(typeName));
+        CHECK(m->homeBodySMA() == 13599840256.0);  // Kerbin's semiMajorAxis (the home body)
+        CHECK(m->lastUpdateUT() == Planetarium::GetUniversalTime());
+        for (const VesselRanges::Situation* sit : {&v.vesselRanges.orbit, &v.vesselRanges.subOrbital, &v.vesselRanges.escaping, &v.vesselRanges.flying,
+                                                   &v.vesselRanges.splashed, &v.vesselRanges.landed, &v.vesselRanges.prelaunch}) {
+            CHECK(sit->load == 11.0f);
+            CHECK(sit->unload == 22.0f);
+            CHECK(sit->pack == 33.0f);
+            CHECK(sit->unpack == 44.0f);
+        }
+        v.comet = nullptr;
+    }
+    // (2) cometPartId already names the comet part: kept
+    {
+        Vessel v;
+        v.parts.push_back(&comet);
+        auto m = makeModule(v);
+        m->Set<uint32_t>("cometPartId", 4321u);
+        m->OnStart();
+        CHECK_FALSE(m->destroyed());
+        CHECK(Has(v, m));
+        v.comet = nullptr;
+    }
+    // (3) cometPartId names another part (the comet was decoupled off this vessel): removed
+    {
+        Vessel v;
+        v.parts.push_back(&comet);
+        auto m = makeModule(v);
+        m->Set<uint32_t>("cometPartId", 777u);
+        m->OnStart();
+        CHECK(m->destroyed());
+        CHECK_FALSE(Has(v, m));
+        CHECK(v.comet == nullptr);
+    }
+    // (4) no comet part: id 0 with a typeName but no PotatoComet part (the vessel of a decoupled stage): removed; the other parts untouched
+    {
+        Vessel v;
+        v.parts.push_back(&rock);
+        auto m = makeModule(v);
+        m->Set<std::string>("typeName", typeName);
+        m->OnStart();
+        CHECK(m->destroyed());
+        CHECK_FALSE(Has(v, m));
+        CHECK(v.comet == nullptr);
+        CHECK(v.parts.size() == 1);
+    }
+    // (5) a vessel without parts and without a ProtoVessel: removed
+    {
+        Vessel v;
+        auto m = makeModule(v);
+        m->OnStart();
+        CHECK(m->destroyed());
+        CHECK_FALSE(Has(v, m));
+    }
+    // (6) the comet part is there but the type name is unknown: the module stays, the type is not ready, the ranges are not touched
+    {
+        Vessel v;
+        v.parts.push_back(&comet);
+        auto m = makeModule(v);
+        m->Set<uint32_t>("cometPartId", 4321u);
+        m->Set<std::string>("typeName", "NoSuchCometType");
+        m->OnStart();
+        CHECK_FALSE(m->destroyed());
+        CHECK_FALSE(m->isCometTypeReady());
+        CHECK(m->CometType() == nullptr);
+        CHECK(v.vesselRanges.orbit.load != 11.0f);
+        v.comet = nullptr;
+    }
+}

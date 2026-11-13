@@ -1433,3 +1433,24 @@ TEST_CASE("WP-37 GrandTour template: tour selection, parameter wiring, reward su
     CHECK(generated >= 1);
     Templates::TemplateEnvironment::Reset();
 }
+
+// ContractParameter.cs:722 CreateID. The C# guards `hashString != null` twice, but HashString (:130) never returns null, so
+// every branch hashes (an empty string too). Expected values come from an independent Python model of the same formula
+// (h = h * 31 + c over UTF-16 units in 32-bit wrap, num = num * 23 + h in 64-bit wrap), not from this code.
+TEST_CASE("wpfix9 ContractParameter.CreateID hashes the root and every child, an empty HashString included") {
+    // bare ContractParameter: type "ContractParameter", HashString "" (non-null): (391 + h(type)) * 23 + h("")
+    {
+        ContractParameter p;
+        CHECK(p.HashString().empty());
+        CHECK(p.CreateID() == 19217066674LL);
+    }
+    // OR(EnterOrbit(Mun), EnterOrbit(Minmus)): root "OR" + "ORMunMinmus", then "EnterOrbit" + body per child
+    {
+        Life37 L;
+        Parameters::OR orp;
+        orp.AddParameter(std::make_unique<Parameters::EnterOrbit>(&L.w.Body("Mun")));
+        orp.AddParameter(std::make_unique<Parameters::EnterOrbit>(&L.w.Body("Minmus")));
+        CHECK(orp.HashString() == "ORMunMinmus");
+        CHECK(orp.CreateID() == -1081823185959LL);
+    }
+}

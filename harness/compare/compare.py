@@ -10,7 +10,10 @@ Per numeric column the tool reports n, max |a-b|, max relative error |a-b|/max(|
 (float32 ULPs for f32 columns, float64 ULPs for f64 columns) and the number of values outside tolerance, with the key
 of the worst row. A value passes if ANY of its rule's limits is met (abs <= abs, rel <= rel, ulp <= ulp). NaN equals NaN,
 +-Infinity must match exactly. Non-numeric columns (str/bool/i64) must match exactly.
-Exit code: 0 all within tolerance, 1 tolerance failures or missing rows/tables/columns, 2 usage error.
+A candidate row whose key is not in the golden ("extra row") is a failure, except in a table listed in ALLOWED_EXTRA_ROWS below,
+where exactly the listed number of extra rows is accepted (more or fewer fails: the entry must be kept true). Extra tables and
+columns in the candidate are ignored.
+Exit code: 0 all within tolerance, 1 tolerance failures, missing rows/tables/columns or unexplained extra rows, 2 usage error.
 """
 import fnmatch
 import json
@@ -18,6 +21,26 @@ import math
 import os
 import struct
 import sys
+
+# Extra candidate rows that are accepted, per "<dataset>/<table>" of the golden file: the exact number and the reason. Every entry
+# is rows the candidate writes on purpose and the gate removed from its (filtered) golden copy, see core/tests/CMakeLists.txt.
+ALLOWED_EXTRA_ROWS = {
+    # capture.part_database: the gate drops the 5 prefab parts whose modules are not ported (kerbalEVA, kerbalEVAfemale,
+    # kerbalEVASlimSuit, kerbalEVASlimSuitFemale, flag) from the golden (KEEP_ROWS / DROP_ROWS filter), while the runner still
+    # writes them; STATUS.md WP-05 / WP-06 and CLOUD-TASKS.md (f).
+    "part_database/parts": {"count": 5, "reason": "the 5 dropped prefab parts"},
+    "part_database/modules": {"count": 66, "reason": "modules of the 5 dropped prefab parts (16 + 16 + 16 + 16 + 2)"},
+    # 1907 = 465 x 4 EVA kerbals + 29 flag fields of the 5 dropped parts (1889) + the 18 rows listed one by one, with reasons, in
+    # core/tests/data/part_database_exclusions.json (DROP_KEYS_FILE)
+    "part_database/module_fields": {"count": 1907, "reason": "fields of the 5 dropped prefab parts + the 18 individually excluded rows"},
+    "part_database/assets": {"count": 5, "reason": "the asset rows of the 5 dropped prefab parts"},
+    # capture.thermal_step: the 6 (case, frame) rows of core/tests/data/thermal_step_exclusions.json (DROP_KEYS_FILE), each with its
+    # reason there (altitude not recoverable at the top of the atmosphere; first frame without a previous density)
+    "thermal_step/vessel": {"count": 6, "reason": "the 6 rows excluded one by one in thermal_step_exclusions.json"},
+    # capture.vessel_rails: the 2 body rows (id "body:Mun" / "body:Minmus", 450 frames each) dropped by DROP_ROWS "samples:id^body:",
+    # gated by capture.orbit_rails (a body has no Vessel state)
+    "orbit_rails_ingame/samples": {"count": 900, "reason": "the 2 body rows x 450 frames, gated by capture.orbit_rails"},
+}
 
 SPECIAL = {"NaN": math.nan, "Infinity": math.inf, "-Infinity": -math.inf}
 
@@ -143,6 +166,13 @@ def compare_files(gpath, cpath, rules, out, label):
                             st["worst"] = [list(k), gv, cv]
         extra = len(crows)
         res = {"dataset": ds, "table": tname, "rows": len(gt["rows"]), "missing_rows": missing, "extra_rows": extra, "columns": {}}
+        allowed = ALLOWED_EXTRA_ROWS.get(f"{ds}/{tname}")
+        if extra and (allowed is None or allowed["count"] != extra):
+            res["extra_rows_error"] = ("not in the allow-list" if allowed is None else f"allow-list expects exactly {allowed['count']}")
+            res["extra_keys_sample"] = [[json.loads(s) for s in k] for k in list(crows)[:5]]
+            ok = False
+        elif extra:
+            res["extra_rows_allowed"] = allowed["reason"]
         for cname, st in stats.items():
             st.pop("worst_score", None)
             res["columns"][cname] = st
@@ -206,6 +236,10 @@ def main(argv):
                 print(f"ERROR {r.get('dataset', r.get('file'))}/{r.get('table', '')}: {r['error']}")
                 continue
             print(f"{r['dataset']}/{r['table']}: rows={r['rows']} missing={r['missing_rows']} extra={r['extra_rows']}")
+            if "extra_rows_error" in r:
+                print(f"   FAIL extra rows ({r['extra_rows_error']}); first keys (json) {r['extra_keys_sample']}")
+            elif "extra_rows_allowed" in r:
+                print(f"   ok   extra rows allowed: {r['extra_rows_allowed']}")
             for cname, st in r["columns"].items():
                 if "error" in st:
                     print(f"   {cname:34s} ERROR {st['error']}")

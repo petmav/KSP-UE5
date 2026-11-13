@@ -281,6 +281,10 @@ set_tests_properties(aircraft PROPERTIES LABELS unit TIMEOUT 1800 FIXTURES_SETUP
 add_test(NAME aircraft.reference COMMAND ${Python3_EXECUTABLE} -I ${PROJECT_SOURCE_DIR}/tools/wp21b/lift_reference.py
          --states ${CMAKE_CURRENT_BINARY_DIR}/aircraft_states.json)
 set_tests_properties(aircraft.reference PROPERTIES LABELS unit TIMEOUT 300 FIXTURES_REQUIRED aircraft_states)
+# wpfix9: harness/compare/compare.py fails on candidate rows the golden lacks unless the table is in its ALLOWED_EXTRA_ROWS allow-list
+# with exactly that count (synthetic files: a bogus extra row must fail, the listed counts must pass).
+add_test(NAME compare.extra_rows COMMAND ${Python3_EXECUTABLE} -I ${PROJECT_SOURCE_DIR}/tools/ci/test_compare_extra_rows.py)
+set_tests_properties(compare.extra_rows PROPERTIES LABELS golden TIMEOUT 120)
 set(KSP_CANDIDATE_DIR "${CMAKE_BINARY_DIR}/candidate")
 set(KSP_CAPTURES_DIR "${KSP_HARNESS_DIR}/captures/out")
 set(KSP_CAPTURES2_DIR "${KSP_HARNESS_DIR}/captures/out2")  # batch 2 (C4, C5, C6, C8, C9, C10, terrain)

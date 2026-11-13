@@ -90,8 +90,7 @@ struct FlagSiteEnvironment {
     static inline std::function<void(FlagSite&)> dismissSiteRenameDialog;  // SiteRenameDialog.Dismiss()
     static inline std::function<void(FlagSite&, const std::string& vesselName, const std::string& plaque)> spawnPlaqueDialog;
     static inline std::function<void(FlagSite&)> terminatePlaqueDialog;    // FlagPlaqueDialog.Terminate()
-    // ---- InputLockManager (lockID -> ControlTypes description) ----
-    static inline std::map<std::string, std::string> controlLocks;
+    // (the FlagSite locks go to the real InputLockManager: "Flag_NoInterruptWhileDeploying", "siteRenameDialog", "FlagPlaqueDialog")
     static void Reset();
 };
 

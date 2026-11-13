@@ -40,6 +40,12 @@ public:
         std::function<float(Part&)> rbDrag;                      // part.rb.drag (get)
         std::function<void(Part&, float)> setRbDrag;             // part.rb.drag = (PhysX linear damping)
         std::function<void(Part&, float)> setRbAngularDrag;      // part.rb.angularDrag =
+        // part.servoRb (Part.cs, set by BaseServo.CreateServoRigidbody): unset hasServoRb = no servo body. servoRb.angularDrag is not an Env
+        // entry: the binding mirrors rb.angularDrag onto servoRb in setRbAngularDrag (PartBuoyancy.cs:554 / :576 / :585 write the same values).
+        std::function<bool(Part&)> hasServoRb;                   // part.servoRb != null
+        std::function<float(Part&)> servoRbMass;                 // part.servoRb.mass
+        std::function<float(Part&)> servoRbDrag;                 // part.servoRb.drag (get)
+        std::function<void(Part&, float)> setServoRbDrag;        // part.servoRb.drag =
         std::function<Matrix4x4f(Part&)> localToWorld;           // part.partTransform.localToWorldMatrix (native)
         std::function<Vector3d()> frameVelocity;                 // Krakensbane.GetFrameVelocity()
         std::function<Vector3d()> cameraPosition;                // FlightGlobals.camera_position (the splash FX distance test)

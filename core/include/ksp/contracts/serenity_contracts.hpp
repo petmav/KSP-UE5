@@ -25,39 +25,42 @@ class MissionRecoveryDialog;
 
 namespace ksp::Expansions::Serenity::Contracts {
 
-// ContractDefs.DeployedScience / ROCScienceArm / ROCScienceRetrieval
+// ContractDefs.DeployedScience / ROCScienceArm / ROCScienceRetrieval (ContractDefs.cs:817, :854, :917)
+// The values start from the typed `ksp::FinePrint::ContractDefs` statics (the one copy of the C# initialisers, overridden there by
+// ContractDefs::LoadConfig when Serenity is installed) and a loaded ContractDefsLite node of the same name still overrides them (the WP-37
+// contracts read their defaults through ContractDefsLite). The structs carry no defaults of their own.
 struct SerenityContractDefs {
-    struct Expire { int MinimumExpireDays = 1, MaximumExpireDays = 7, DeadlineDays = 2130; };
+    struct Expire { int MinimumExpireDays = 0, MaximumExpireDays = 0, DeadlineDays = 0; };
     // ContractDefs.cs:817
     struct DeployedScienceDefs {
         Expire expire;
-        float FundsBaseAdvance = 10000.0f, FundsBaseReward = 21000.0f, FundsBaseFailure = 12000.0f;
+        float FundsBaseAdvance = 0.0f, FundsBaseReward = 0.0f, FundsBaseFailure = 0.0f;
         float ScienceBaseReward = 0.0f;
-        float ReputationBaseReward = 6.0f, ReputationBaseFailure = 3.0f;
-        int MaximumExistent = 5;
-        float SciencePercentage = 50.0f;
+        float ReputationBaseReward = 0.0f, ReputationBaseFailure = 0.0f;
+        int MaximumExistent = 0;
+        float SciencePercentage = 0.0f;
     };
     // ContractDefs.cs:854
     struct ROCScienceArmDefs {
         Expire expire;
-        float SimpleArmAdvance = 8000.0f, SimpleArmReward = 17000.0f, SimpleArmFailure = 10000.0f;
-        float ComplexArmAdvance = 10000.0f, ComplexArmReward = 21000.0f, ComplexArmFailure = 12000.0f;
-        float AdvancedArmAdvance = 12000.0f, AdvancedArmReward = 25000.0f, AdvancedArmFailure = 17000.0f;
+        float SimpleArmAdvance = 0.0f, SimpleArmReward = 0.0f, SimpleArmFailure = 0.0f;
+        float ComplexArmAdvance = 0.0f, ComplexArmReward = 0.0f, ComplexArmFailure = 0.0f;
+        float AdvancedArmAdvance = 0.0f, AdvancedArmReward = 0.0f, AdvancedArmFailure = 0.0f;
         float ScienceSimpleArmReward = 0.0f, ScienceComplexArmReward = 0.0f, ScienceAdvancedArmReward = 0.0f;
-        float ReputationSimpleArmReward = 2.0f, ReputationSimpleArmFailure = 2.0f, ReputationComplexArmReward = 2.0f, ReputationComplexArmFailure = 2.0f,
-              ReputationAdvancedArmReward = 2.0f, ReputationAdvancedArmFailure = 2.0f;
-        int MaximumExistent = 3;
-        float SimpleArmPercentage = 40.0f, ComplexArmPercentage = 70.0f;
+        float ReputationSimpleArmReward = 0.0f, ReputationSimpleArmFailure = 0.0f, ReputationComplexArmReward = 0.0f, ReputationComplexArmFailure = 0.0f,
+              ReputationAdvancedArmReward = 0.0f, ReputationAdvancedArmFailure = 0.0f;
+        int MaximumExistent = 0;
+        float SimpleArmPercentage = 0.0f, ComplexArmPercentage = 0.0f;
     };
     // ContractDefs.cs:917
     struct ROCScienceRetrievalDefs {
         Expire expire;
-        float FundsAdvance = 22000.0f, FundsReward = 35000.0f, FundsFailure = 27000.0f;
+        float FundsAdvance = 0.0f, FundsReward = 0.0f, FundsFailure = 0.0f;
         float ScienceReward = 0.0f;
-        float ReputationReward = 2.0f, ReputationFailure = 2.0f;
-        int MaximumExistent = 2;
+        float ReputationReward = 0.0f, ReputationFailure = 0.0f;
+        int MaximumExistent = 0;
     };
-    // The values (C# initialisers, overridden by the loaded Contracts.cfg nodes when Serenity is installed). Reloaded on every call.
+    // The values (typed ContractDefs statics, then the ContractDefsLite node when Serenity is installed). Reloaded on every call.
     static DeployedScienceDefs DeployedScience();
     static ROCScienceArmDefs ROCScienceArm();
     static ROCScienceRetrievalDefs ROCScienceRetrieval();

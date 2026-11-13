@@ -13,6 +13,7 @@
 #include "nlohmann/json.hpp"
 #include "resource_fixture.hpp"
 
+#include "ksp/input/input_lock_manager.hpp"
 #include "ksp/core/exceptions.hpp"
 #include "ksp/core/unity_time.hpp"
 #include "ksp/dotnet/number.hpp"
@@ -52,6 +53,7 @@ struct Reset30 {
     static void Clear() {
         ModuleGPSEnvironment::Reset();
         FlagSiteEnvironment::Reset();
+        InputLockManager::Reset();
         FireworkEnvironment::Reset();
         ResourceProcessingEnvironment::Reset();
         ResourceFlowEnvironment::InfinitePropellant = false;
@@ -413,7 +415,9 @@ TEST_CASE("WP-30 FlagSite: the KerbalFSM, joint, locks, plaque dialog bookkeepin
     REQUIRE(f->pendingInvokes.size() == 1);
     CHECK(f->pendingInvokes[0].first == "MakeVisible");
     CHECK(f->pendingInvokes[0].second == 1.0f);
-    CHECK(FlagSiteEnvironment::controlLocks.count("Flag_NoInterruptWhileDeploying") == 1);
+    CHECK((InputLockManager::GetControlLock("Flag_NoInterruptWhileDeploying") != ControlTypes::None ? 1 : 0) == 1);
+    CHECK(InputLockManager::GetControlLock("Flag_NoInterruptWhileDeploying") ==
+          (ControlTypes::PAUSE | ControlTypes::TIMEWARP | ControlTypes::QUICKSAVE | ControlTypes::QUICKLOAD | ControlTypes::VESSEL_SWITCHING));  // FlagSite.cs:155
     CHECK_FALSE(f->Events()["TakeDown"]->active);
     CHECK(f->jointBreakPending);
     f->ApplyJointBreakForce();  // the DelayedCallback after unbreakablePeriodLength
@@ -427,7 +431,7 @@ TEST_CASE("WP-30 FlagSite: the KerbalFSM, joint, locks, plaque dialog bookkeepin
     CHECK(f->Fsm()->currentStateName == "Placed");
     CHECK(visible == 1);    // OnLeave of Placing: MakeVisible
     CHECK(destroyed == 0);  // the last event was onPlaceComplete: the joint stays
-    CHECK(FlagSiteEnvironment::controlLocks.count("Flag_NoInterruptWhileDeploying") == 0);
+    CHECK((InputLockManager::GetControlLock("Flag_NoInterruptWhileDeploying") != ControlTypes::None ? 1 : 0) == 0);
     CHECK(f->Events()["TakeDown"]->active);
     CHECK(p->fields.PermanentGroundContact);
     // OnSave stores the state name; a joint break topples the flag
@@ -495,25 +499,25 @@ TEST_CASE("WP-30 FlagSite: the KerbalFSM, joint, locks, plaque dialog bookkeepin
     CHECK(f4->siteRenameDialogOpen);
     CHECK(f4->siteName.empty());
     CHECK(f4->newPlaqueText == "Hello");
-    CHECK(FlagSiteEnvironment::controlLocks.count("siteRenameDialog") == 1);
+    CHECK((InputLockManager::GetControlLock("siteRenameDialog") != ControlTypes::None ? 1 : 0) == 1);
     CHECK_FALSE(f4->SiteRenameAcceptEnabled());  // an empty name is not a valid vessel name
     f4->SiteRenameDismissPressed();
     CHECK(after == 1);
     CHECK(dismissed == 1);
     CHECK_FALSE(f4->siteRenameDialogOpen);
-    CHECK(FlagSiteEnvironment::controlLocks.count("siteRenameDialog") == 0);
+    CHECK((InputLockManager::GetControlLock("siteRenameDialog") != ControlTypes::None ? 1 : 0) == 0);
     CHECK_THROWS_AS(f4->DismissSiteRename(), NullReferenceException);  // SiteRenameDialog is null now
     // onGameSceneLoadRequested closes both dialogs
     f4->RenameSite(nullptr);
     f4->flagPlaqueDialogOpen = true;
-    FlagSiteEnvironment::controlLocks["FlagPlaqueDialog"] = "x";
+    InputLockManager::SetControlLock(ControlTypes::UI, "FlagPlaqueDialog");
     int terminated = 0;
     FlagSiteEnvironment::terminatePlaqueDialog = [&](FlagSite&) { ++terminated; };
     f4->onGameSceneLoadRequested(GameScenes::MAINMENU);
     CHECK_FALSE(f4->siteRenameDialogOpen);
     CHECK_FALSE(f4->flagPlaqueDialogOpen);
     CHECK(terminated == 1);
-    CHECK(FlagSiteEnvironment::controlLocks.empty());
+    CHECK(InputLockManager::LockMask() == 0);  // both dialog locks released
     // ReadPlaque needs the vessel's name: without a vessel it is a NullReferenceException
     CHECK_THROWS_AS(f4->ReadPlaque(), NullReferenceException);
 }

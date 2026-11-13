@@ -558,6 +558,14 @@ float VesselPhysics::ServoAngularDrag(const Part& part) const {
     const int s = ServoIndex(part);
     return s < 0 ? 0.0f : servos_[static_cast<size_t>(s)].angularDrag;
 }
+float VesselPhysics::ServoDrag(const Part& part) const {
+    const int s = ServoIndex(part);
+    return s < 0 ? 0.0f : servos_[static_cast<size_t>(s)].drag;
+}
+void VesselPhysics::SetServoDrag(Part& part, float drag) {
+    const int s = ServoIndex(part);
+    if (s >= 0) servos_[static_cast<size_t>(s)].drag = drag;
+}
 Vector3d VesselPhysics::ServoBodyCenterOfMass(const Part& part) const {
     const int s = ServoIndex(part);
     return s < 0 ? Vector3d() : servos_[static_cast<size_t>(s)].comNow;
@@ -1194,6 +1202,18 @@ void VesselPhysics::Flush(float dt) {
                 force += fd;
                 torque += Cross(arm, fd);
                 if (loads) stepForce_[static_cast<size_t>(i)] += fd;
+            }
+        // WP-52b: servoRb.drag (PartBuoyancy.cs:555 ...), PhysX linear damping of the servo body: the same law as a part body, at the servo body's
+        // centre of mass with its own mass (the load solve does not see this force)
+        if (h > 0.0)
+            for (int sv : c.servos) {
+                const ServoRec& s = servos_[static_cast<size_t>(sv)];
+                if (!(s.drag > 0.0f)) continue;
+                const double f = std::max(0.0, 1.0 - h * static_cast<double>(s.drag));
+                const Vector3d arm = s.comNow - c.com;
+                const Vector3d fd = (c.v + Cross(c.w, arm)) * (-(1.0 - f) / h * static_cast<double>(s.mass));
+                force += fd;
+                torque += Cross(arm, fd);
             }
         if (options_.angularDragModel == AngularDragModel::ClusterMassAverage) {
             double drag = 0.0;

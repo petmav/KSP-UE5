@@ -127,6 +127,8 @@ void PartBuoyancy::FixedUpdate(const Env& env) {
         !env.hasRigidbody(*part))
         return;
     Vessel& vessel = *part->vessel;
+    // part.servoRb != null (PartBuoyancy.cs:552 / :574 / :583 / :590 / :609 / :621): the Env entries for it are all set or none is used
+    const auto HasServoRb = [&env](Part& x) { return env.hasServoRb && env.servoRbDrag && env.setServoRbDrag && env.hasServoRb(x); };
     const bool shieldedFromAirstream = part->ShieldedFromAirstream();
     const double num = vessel.waterOffset + waterLevel;
     const float fixedDeltaTime = TimeWarp::fixedDeltaTime();
@@ -302,6 +304,10 @@ void PartBuoyancy::FixedUpdate(const Env& env) {
                                      fx(PG::DragMultiplier());
                 const float mass = env.rbMass(*part);
                 env.setRbDrag(*part, static_cast<float>(num12 / fx(mass != 0.0f ? mass : 0.1f)));
+                if (HasServoRb(*part)) {  // PartBuoyancy.cs:552-556 (servoRb.angularDrag = 0 is mirrored by setRbAngularDrag)
+                    const float servoMass = env.servoRbMass ? env.servoRbMass(*part) : 0.0f;
+                    env.setServoRbDrag(*part, static_cast<float>(num12 / fx(servoMass != 0.0f ? servoMass : 0.1f)));
+                }
             } else {
                 env.setRbDrag(*part, PG::BuoyancyWaterDragSlow());
             }
@@ -319,6 +325,7 @@ void PartBuoyancy::FixedUpdate(const Env& env) {
                 }
             }
             env.setRbDrag(*part, PG::BuoyancyWaterDragSlow());
+            if (HasServoRb(*part)) env.setServoRbDrag(*part, PG::BuoyancyWaterDragSlow());  // PartBuoyancy.cs:590-593
         }
         physWarp = TimeWarp::CurrentRate() > 1.0f && TimeWarp::WarpMode() == TimeWarp::Modes::LOW;
         if (isKerbal && physWarp) {
@@ -330,10 +337,15 @@ void PartBuoyancy::FixedUpdate(const Env& env) {
             if (physWarp && !isKerbal) {
                 env.setRbDrag(*part, f32store(fx(env.rbDrag(*part)) +
                                               fx(static_cast<float>((dragScalar - PG::BuoyancyWaterDragScalarEnd()) * fx(fixedDeltaTime) * 50.0))));
+                if (HasServoRb(*part))  // PartBuoyancy.cs:609-612
+                    env.setServoRbDrag(*part, f32store(fx(env.servoRbDrag(*part)) +
+                                                       fx(static_cast<float>((dragScalar - PG::BuoyancyWaterDragScalarEnd()) * fx(fixedDeltaTime) * 50.0))));
                 if (TimeWarp::CurrentRate() > 2.0f)
                     effectiveForce = Vector3f::Lerp(lastBuoyantForce, effectiveForce, f32store(1.25 - fx(TimeWarp::CurrentRate()) * 0.25));
             } else if (num3 > PG::BuoyancyWaterDragExtraRBDragAboveDot()) {
                 env.setRbDrag(*part, f32store(fx(env.rbDrag(*part)) + fx(static_cast<float>(num3 - PG::BuoyancyWaterDragExtraRBDragAboveDot()))));
+                if (HasServoRb(*part))  // PartBuoyancy.cs:621-624
+                    env.setServoRbDrag(*part, f32store(fx(env.servoRbDrag(*part)) + fx(static_cast<float>(num3 - PG::BuoyancyWaterDragExtraRBDragAboveDot()))));
             }
         }
         if (VectorExtensions::IsInvalid(effectiveForce)) effectiveForce = Vector3f();

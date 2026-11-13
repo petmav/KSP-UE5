@@ -18,6 +18,7 @@
 #include "ksp/dotnet/mono_float.hpp"
 #include "ksp/dotnet/number.hpp"
 #include "ksp/localization/localizer.hpp"
+#include "ksp/modules/comet_vessel.hpp"
 #include "ksp/modules/module_commnet_parts.hpp"
 #include "ksp/modules/module_part_variants.hpp"
 #include "ksp/modules/part_structural_modules.hpp"
@@ -219,6 +220,7 @@ void RegisterBuiltinModules() {
     detail::RegisterResourceProcessingModules();  // WP-28: BaseConverter family, generators, scanners
     detail::RegisterScienceModules();  // WP-35: ModuleScienceExperiment / Container / Lab / Converter, ModuleEnviroSensor, ModuleSampleContainer (science_modules.cpp)
     detail::RegisterContractModules();  // WP-37: ModuleTestSubject (contracts/module_test_subject.cpp)
+    detail::RegisterCometVessel();  // wpfix9: CometVessel (VesselModule start-up, comet_vessel.cpp)
     detail::RegisterCommNetModules();  // WP-39: ModuleDataTransmitter, ModuleKerbNetAccess, ModuleRelayEnabler, ModuleProbeControlPoint, CommNetVessel, CommNetScenario
     detail::RegisterThermalModules();  // ModuleCoreHeat, ModuleActiveRadiator, ModuleAblator, ModuleConductionMultiplier (WP-22)
     detail::RegisterEngineModules();  // WP-23: ModuleEngines, ModuleEnginesFX, MultiModeEngine (module_engines.cpp)
