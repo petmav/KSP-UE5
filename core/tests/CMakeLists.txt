@@ -46,6 +46,7 @@ add_executable(kspcore_tests
     test_physics_world.cpp
     test_vessel_physics.cpp
     test_mu_colliders.cpp
+    test_mu_render.cpp
     test_wheel_models.cpp
     test_wheel_gear.cpp
     test_wheel_visual.cpp
@@ -219,6 +220,18 @@ if(MSVC)
 endif()
 add_test(NAME capi.c COMMAND capi_c ${KSP_HARNESS_DIR}/inputs/Physics.cfg ${PROJECT_SOURCE_DIR}/data/terrain)
 add_test(NAME capi.ue_like COMMAND capi_ue_like ${KSP_HARNESS_DIR}/inputs/Physics.cfg ${PROJECT_SOURCE_DIR}/data/terrain)
+
+# WP-UE-05: kspcore_model.h compiled as C (plain C program over the model ABI), and the local stock sweep tool (tools/wpue05/sweep_stock.py runs it)
+add_executable(capi_model_c capi/model_c_test.c)
+target_include_directories(capi_model_c PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(capi_model_c PRIVATE kspcore)
+add_test(NAME capi.model_c COMMAND capi_model_c ${CMAKE_CURRENT_SOURCE_DIR}/data/wpue05/syn_v5_full.mu 8)
+add_executable(mu_sweep capi/mu_sweep.cpp)
+target_include_directories(mu_sweep PRIVATE ${PROJECT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(mu_sweep PRIVATE kspcore)
+# WP-UE-05: the .mu render reader, the C ABI of kspcore_model.h and the texture headers against the independent Python reference
+add_test(NAME model.reader COMMAND kspcore_tests "-tc=WP-UE-05*")
+set_tests_properties(model.reader PROPERTIES LABELS unit TIMEOUT 600)
 
 # ---- golden gates: golden_runner writes candidates, harness/compare/compare.py judges them -----------------------------
 # ksp_golden_gate(<test name> <runner dataset> [GOLDEN <file>] [TOL <file>] [TABLES <t1,t2>] [KEYS <t:c1,c2/...>]
