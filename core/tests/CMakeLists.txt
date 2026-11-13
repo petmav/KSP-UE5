@@ -73,6 +73,7 @@ add_executable(kspcore_tests
     test_science.cpp
     test_commnet.cpp
     test_editor.cpp
+    test_editor_fsm.cpp
     test_progress.cpp
     test_contracts.cpp
     test_serenity.cpp

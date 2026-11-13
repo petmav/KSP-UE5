@@ -80,6 +80,8 @@ NAME_ALIAS = {
               "InvalidNameOk": "ConfirmDialog", "StartActiveVesselGoOffRails": "ActiveVesselGoOffRails",
               # WP-14 helpers factored out of a C# function (cited at that function)
               "UpdateSurfaceSpeeds": "UpdatePosVel", "ApplyFlightIntegratorAtmosphere": "FixedUpdate"}
+# WP-40b: EditorToolsUI members ported into EditorLogic under tools* names
+NAME_ALIAS.update({"toolsSetMode": "SetMode", "toolsUpdate": "Update", "toolsOnEditorPartEvent": "onEditorPartEvent"})
 CITE = re.compile(r"^(\s*)// (?:([A-Za-z0-9_/]+)\.cs)?:(\d+)\b")
 FUNC = re.compile(r"(\w+)::(~?\w+)\s*\(")
 

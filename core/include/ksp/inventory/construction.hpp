@@ -32,8 +32,7 @@
 
 namespace ksp {
 
-// EditorScreen.cs:1 (completes the opaque declaration of events/game_event_types.hpp)
-enum class EditorScreen : int { Parts, Actions, Crew, Cargo };
+// EditorScreen.cs:1 is declared in editor/editor_types.hpp (WP-40b: the editor placement loop needs it before this header)
 
 class Vessel;
 class KerbalEVA;
