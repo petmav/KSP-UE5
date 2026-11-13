@@ -220,6 +220,12 @@ if(MSVC)
 endif()
 add_test(NAME capi.c COMMAND capi_c ${KSP_HARNESS_DIR}/inputs/Physics.cfg ${PROJECT_SOURCE_DIR}/data/terrain)
 add_test(NAME capi.ue_like COMMAND capi_ue_like ${KSP_HARNESS_DIR}/inputs/Physics.cfg ${PROJECT_SOURCE_DIR}/data/terrain)
+# WP-UE-01: the ctest twin of the Unreal automation test KspUe5.Bridge.JoltStep. The same test-ABI entry (kspcore_test.h) steps a
+# Jolt scenario; the hash goes to <build>/kspcore_jolt_step.txt, which the Unreal test reads and compares with its own.
+add_executable(capi_jolt_step capi/capi_jolt_step.c)
+target_include_directories(capi_jolt_step PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(capi_jolt_step PRIVATE kspcore)
+add_test(NAME capi.jolt_step COMMAND capi_jolt_step ${CMAKE_BINARY_DIR}/kspcore_jolt_step.txt 200)
 
 # WP-UE-05: kspcore_model.h compiled as C (plain C program over the model ABI), and the local stock sweep tool (tools/wpue05/sweep_stock.py runs it)
 add_executable(capi_model_c capi/model_c_test.c)

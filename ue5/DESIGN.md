@@ -209,12 +209,15 @@ The UE Game target compiles with `/fp:fast` (UBT `VCToolChain.cs`, BuildSettings
 ### 1.6 Linking
 
 - `kspcore.lib` does not contain Jolt: `core/src/CMakeLists.txt` links Jolt `LINK_ONLY` so Jolt's `/arch:AVX2` stays out of
-  kspcore's own objects. The bridge must link `Jolt.lib` too. Core will emit a small link manifest (`build/<cfg>/kspcore_link.txt`:
-  the libraries and their order) that `KspCoreBridge.Build.cs` reads, so a new dependency never needs a Build.cs edit.
+  kspcore's own objects. The bridge links `Jolt.lib` too. The core build writes a link manifest (`build/RelWithDebInfo/kspcore_link.txt`,
+  `file(GENERATE)` in `core/src/CMakeLists.txt`): `key=value` lines `manifest_version`, `config`, `include`, `lib` (kspcore.lib, then
+  Jolt.lib: link order) and `define` (Jolt's public `JPH_*` configuration). `KspCoreBridge.Build.cs` reads it, so a new dependency
+  never needs a Build.cs edit (WP-UE-01, done). The test ABI `kspcore_test.h` lets the bridge check that the definitions describe the
+  Jolt actually linked (`double_precision`).
 - Jolt is built with AVX2: the shell needs an AVX2 CPU (both machines have one).
 - Toolset and CRT as in `ue5/README.md` "Linking the real core": MSVC 14.4x, `/MD`, IDL 0, C++20, no `/GL`, `/Z7`.
-- `bUseRealCore` is already `true` in `KspCoreBridge.Build.cs`, but the bridge has not been rebuilt since Jolt was vendored
-  (NEXT-STEPS Session 5 open items): WP-UE-01.
+- `bUseRealCore` is `true`; the bridge was rebuilt against the Jolt-linked core by WP-UE-01 (Editor and Game, 0 warnings;
+  `KspUe5.Bridge.LinksCore` / `FpGuard` / `JoltStep`, see STATUS.md).
 
 ---
 

@@ -27,3 +27,20 @@
 2026-10-09 01:45:02  bridge relink after kspcore.lib changed (-Module=KspCoreBridge)       1.6 s  rc=0
 2026-10-09 01:50:38  cook + stage + pak (BuildCookRun, Development Win64)     322.9 s  rc=0
 2026-10-09 01:54:31  spike run cooked (staged Development exe)        217.1 s  exit=0
+2026-11-13 15:52:52  generate project files                            23.9 s  rc=0
+2026-11-13 15:55:44  build KspUe5Editor Development                   171.1 s  rc=0
+2026-11-13 15:58:15  build KspUe5 Development                         137.5 s  rc=0
+2026-11-13 16:09:11  tests LinksCore                                   52.3 s  rc=0
+2026-11-13 16:09:52  tests FpGuard                                     36.2 s  rc=0
+2026-11-13 16:10:33  tests JoltStep                                    35.8 s  rc=0
+2026-11-13 16:11:28  headless automation tests                         47.9 s  rc=0
+2026-11-13 16:12:12  headless automation tests (run 2)                 37.9 s  rc=0
+2026-11-13 16:14:59  CLEAN build KspUe5Editor Development (wpue01)     158.6 s  rc=0
+2026-11-13 16:17:23  CLEAN build KspUe5 game Development (wpue01)     144.1 s  rc=0
+2026-11-13 16:18:26  headless automation tests after clean build (run 1)      50.5 s  rc=0
+2026-11-13 16:18:50  headless automation tests after clean build (run 2)      23.4 s  rc=0
+2026-11-13 16:19:35  incremental editor build after touching one .cpp (wpue01)      38.9 s  rc=0
+2026-11-13 16:59:21  editor build after merge with main + fresh core lib (wpue01)      17.7 s  rc=0
+2026-11-13 16:59:55  game build after merge with main + fresh core lib (wpue01)      28.8 s  rc=0
+2026-11-13 17:00:45  headless automation tests after merge (run 1)      49.9 s  rc=0
+2026-11-13 17:01:06  headless automation tests after merge (run 2)      20.1 s  rc=0
