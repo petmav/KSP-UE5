@@ -93,6 +93,8 @@ public:
 	static bool Shutdown();
 	static bool IsInitialised();
 	static const FKspGameConfig& GetConfig();
+	/** Parts of the game database; their model ids are 1 .. PartCount. */
+	static int32 PartCount();
 	/** The AvailablePart name of a snapshot part's model id, empty when unknown. */
 	static FString ModelName(uint32 ModelId);
 };
@@ -222,6 +224,8 @@ public:
 	TConstArrayView<FKspVesselState> Vessels() const { return VesselView; }
 	TConstArrayView<FKspPartState> Parts() const { return PartView; }
 	TConstArrayView<FKspEvent> Events() const { return EventView; }
+	/** Unit vector from the centre of the dominant body to the sun, UE axes. */
+	const FVector& SunDirection() const { return SunView; }
 	/** The active vessel of the snapshot, null when there is none. */
 	const FKspVesselState* ActiveVessel() const;
 
@@ -238,6 +242,7 @@ private:
 
 	kspcore_sim* Handle = nullptr;
 	FKspFrameState FrameView;
+	FVector SunView = FVector::ForwardVector;
 	TArray<FKspVesselState> VesselView;
 	TArray<FKspPartState> PartView;
 	TArray<FKspEvent> EventView;

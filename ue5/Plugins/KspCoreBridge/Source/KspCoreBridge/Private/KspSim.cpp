@@ -152,6 +152,12 @@ const FKspGameConfig& FKspGame::GetConfig()
 	return GKspConfig;
 }
 
+int32 FKspGame::PartCount()
+{
+	FKspFpGuard Guard;
+	return kspcore_game_part_count();
+}
+
 FString FKspGame::ModelName(uint32 ModelId)
 {
 	FKspFpGuard Guard;
@@ -287,6 +293,7 @@ void FKspSim::RefreshViews()
 	FrameView.DominantBodyId = F.dominant_body_id;
 	FrameView.FrameChangeSerial = F.frame_change_serial;
 	FrameView.ActiveVesselId = F.active_vessel_id;
+	SunView = FKspAxis::DirectionToUe(FVector(Snap->sun.direction[0], Snap->sun.direction[1], Snap->sun.direction[2]));
 
 	VesselView.Reserve(Snap->vessel_count);
 	for (uint32 I = 0; I < Snap->vessel_count; ++I)
