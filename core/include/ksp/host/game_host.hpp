@@ -17,6 +17,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "kspcore/kspcore_frame.h"
@@ -52,6 +53,30 @@ public:
     // model ids of snapshot parts (stable for the process)
     static uint32_t ModelId(const std::string& partName);
     static const char* ModelName(uint32_t id);
+
+    // ---- part models (kspcore_game.h "part models", WP-UE-10): PartLoader.CompileModel's hierarchy of a part prefab ----
+    struct PartRigFile {
+        std::string path;       // the .mu file
+        std::string parentUrl;  // GameDatabase url of its directory
+        std::vector<std::pair<std::string, std::string>> textureReplacements;  // original texture name, new texture url
+    };
+    struct PartRigNode {
+        std::string name;
+        int parent = -1;
+        float position[3] = {0.0f, 0.0f, 0.0f};
+        float rotation[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+        float scale[3] = {1.0f, 1.0f, 1.0f};
+        int file = -1;      // index into PartRig::files, -1 for the synthetic "model" object
+        int fileNode = -1;  // preorder node id inside that .mu
+    };
+    struct PartRig {
+        std::vector<PartRigFile> files;
+        std::vector<PartRigNode> nodes;
+    };
+    // The rig of the part with that model id, built at the first call and kept; empty (no nodes) when the part has no readable model.
+    static const PartRig& Rig(uint32_t modelId);
+    // The file of GameDatabase.GetTexture(url), nullptr when the database has no such texture (the string lives as long as the process)
+    static const char* TextureFile(const std::string& url);
 };
 
 class GameHost {

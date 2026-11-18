@@ -9,6 +9,8 @@
 #include "KspSimSubsystem.generated.h"
 
 class ACameraActor;
+class ADirectionalLight;
+class UKspPartAssets;
 class UKspSimSubsystem;
 
 /** The sim's tick: TG_PrePhysics, before cameras and rendering (ue5/DESIGN.md 1.3 "Per-frame sequence"). */
@@ -26,14 +28,16 @@ struct FKspSimTickFunction : public FTickFunction
  *
  *   input -> kspcore_frame -> snapshot -> events (scene loads) -> render anchor -> placement
  *
- * Placement today: every loaded part's collider proxies as debug lines (the stand-in until part rendering, WP-UE-10) and, for a
- * session started from the command line, a fixed chase camera (the stand-in until the camera packages, WP-UE-03 / 09).
+ * Placement today: one actor per loaded part with the part's own meshes and textures (UKspPartAssets, WP-UE-10), a directional light
+ * from core's sun direction, and, for a session started from the command line, a fixed chase camera (the stand-in until the camera
+ * packages, WP-UE-03 / 09). Collider proxies are a debug overlay (cvar ksp.DrawColliderProxies) and what a part without a readable
+ * model is drawn with.
  *
  * Command line of a game session (UnrealEditor.exe <uproject> <map> -game):
  *   -KspLaunch=<craft file>     start a sandbox game and launch the craft (absolute, or relative to the repository root)
  *   -KspSite=<LaunchPad|Runway> launch site, default LaunchPad
  *   -KspGameRoot=<dir>          game root, default <repository>/decompiled/KSP-dev
- *   -KspShot=<png file>         take a screenshot at sim frame -KspShotFrame=<n> (default 300), then quit
+ *   -KspShot=<png file>         take a screenshot at sim frame -KspShotFrame=<n> (default 300; later while shaders compile), then quit
  */
 UCLASS()
 class KSPSHELL_API UKspSimSubsystem : public UWorldSubsystem
@@ -65,6 +69,8 @@ public:
 	double GetCoreSeconds() const { return CoreSeconds; }
 	/** Seconds spent placing on the frames in which the anchor moved. */
 	double GetReanchorSeconds() const { return ReanchorSeconds; }
+	/** The part models built so far; null before the first part is drawn. */
+	const UKspPartAssets* GetPartAssets() const { return PartAssets; }
 
 	/** Parity gates and benchmarks: every frame passes exactly this delta to core instead of the world's delta time. */
 	TOptional<double> FixedFrameDt;
@@ -81,6 +87,10 @@ private:
 	bool DefaultInput(FKspInputFrame& Input) const;
 	void Place();
 	void DrawColliderProxies();
+	void UpdatePartActors();
+	AActor* SpawnPartActor(const FKspPartState& Part);
+	void DestroyPartActors();
+	void UpdateSun();
 	void UpdateDebugCamera(const FKspVesselState& Active);
 
 	FKspSimTickFunction TickFunction;
@@ -98,7 +108,21 @@ private:
 	bool bDebugView = false;
 	FString ShotFile;
 	int64 ShotFrame = 300;
+	int64 ShotTakenFrame = -1;
 
 	UPROPERTY(Transient)
 	TObjectPtr<ACameraActor> DebugCamera;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UKspPartAssets> PartAssets;
+
+	/** Part id -> the actor that draws it. */
+	UPROPERTY(Transient)
+	TMap<uint32, TObjectPtr<AActor>> PartActors;
+
+	/** Parts whose model draws nothing: shown as their collider proxies. */
+	TSet<uint32> PartsWithoutModel;
+
+	UPROPERTY(Transient)
+	TObjectPtr<ADirectionalLight> SunLight;
 };

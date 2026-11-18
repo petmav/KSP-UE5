@@ -75,7 +75,6 @@
 #include "ksp/vessel/vessel_autopilot.hpp"
 #include "ksp/vessel/vessel.hpp"
 #include "ksp/vessel/vessel_assembly.hpp"
-#include "nlohmann/json.hpp"
 
 namespace ksp::host {
 
@@ -220,24 +219,14 @@ struct EngineModels {
 // The reduced .mu files of the stock engines behind MuPartColliders (WP-mucol): used for a part whose .mu in the game root is a
 // zero-byte stub (the repository's GameData mirror). A real game root reads the .mu itself. Origin: reduced_model_dir/
 // mucollider_reference.json (the sha256 of every original is in that file).
-std::shared_ptr<const mu::Model> LoadPartModel(const std::string& path, const std::string& reducedDir, const nlohmann::json* ref) {
-    std::error_code ec;
-    if (fs::exists(path, ec) && fs::file_size(path, ec) > 0) {
-        try {
-            return std::make_shared<const mu::Model>(mu::ReadModelFile(path));
-        } catch (const std::exception&) {
-            return nullptr;
-        }
+std::shared_ptr<const mu::Model> LoadPartModel(const std::string& path) {
+    const std::string file = ProcessModelFile(path);
+    if (file.empty()) return nullptr;
+    try {
+        return std::make_shared<const mu::Model>(mu::ReadModelFile(file));
+    } catch (const std::exception&) {
+        return nullptr;
     }
-    if (ref == nullptr) return nullptr;
-    std::string p = path;
-    std::replace(p.begin(), p.end(), '\\', '/');
-    for (auto it = ref->at("parts").begin(); it != ref->at("parts").end(); ++it) {
-        const std::string origin = it.value().at("mu").at("origin").get<std::string>();
-        if (p.size() >= origin.size() && p.compare(p.size() - origin.size(), origin.size(), origin) == 0)
-            return std::make_shared<const mu::Model>(mu::ReadModelFile(reducedDir + "/" + it.value().at("reduced").at("file").get<std::string>()));
-    }
-    return nullptr;
 }
 
 // ---- the PQS sphere of the dominant body (WP-12a; the logic of kspcore_pqs_* in src/capi/kspcore_c.cpp) ----------------------------------
@@ -395,8 +384,6 @@ struct GameHost::Impl::Flight {
     TimeWarp tw;
     TimeWarpEnvironment twEnv;
     SceneryColliders scenery;
-    nlohmann::json colliderRef;
-    bool haveColliderRef = false;
     std::unique_ptr<MuPartColliders> colliders;
     std::map<uint32_t, std::vector<ColliderProxy>> proxyView;  // what kspcore_part_collider_proxies last returned per part (keeps the hull points alive)
     PhysicsWorldConfig worldCfg;
@@ -671,15 +658,8 @@ GameHost::Impl::Flight::~Flight() {
 void GameHost::Impl::Flight::Compose() {
     CelestialBody& kerbin = im.Kerbin();
     SaveEnvironment::Current().loadedScene = GameScenes::FLIGHT;  // HighLogic.LoadedSceneIsFlight (module FixedUpdates check it)
-    // data: kspcore's derived scenery colliders (WP-12c), the reduced model fallback
+    // data: kspcore's derived scenery colliders (WP-12c)
     scenery = LoadSceneryColliders(cfg.dataDir + "/scenery/scenery_colliders.json");
-    if (!cfg.reducedModelDir.empty()) {
-        std::ifstream f(cfg.reducedModelDir + "/mucollider_reference.json", std::ios::binary);
-        if (f.good()) {
-            colliderRef = nlohmann::json::parse(f);
-            haveColliderRef = true;
-        }
-    }
     // PhysicsGlobals.Start (PhysicsGlobals.cs:2752): bodyLiftCurve = GetLiftingSurfaceCurve("BodyLift")
     PhysicsGlobals::Instance()->bodyLiftCurve = PhysicsGlobals::GetLiftingSurfaceCurve("BodyLift");
     PhysicsGlobals::Instance()->CalculateValues(im.sys->Bodies(), im.planetarium.Sun);
@@ -704,9 +684,7 @@ void GameHost::Impl::Flight::Compose() {
     world = std::make_unique<PhysicsWorld>(worldCfg);
     // real colliders from the parts' .mu files, drag-cube boxes where there is no readable model (WP-mucol, the FIXTURE of MuPartColliders)
     const std::string root = cfg.gameRoot;
-    const std::string reduced = cfg.reducedModelDir;
-    const nlohmann::json* ref = haveColliderRef ? &colliderRef : nullptr;
-    colliders = std::make_unique<MuPartColliders>([reduced, ref](const std::string& path) { return LoadPartModel(path, reduced, ref); });
+    colliders = std::make_unique<MuPartColliders>([](const std::string& path) { return LoadPartModel(path); });
     bubbleOptions.vessel.colliders = colliders->Hook();
     bubble = std::make_unique<PhysicsBubble>(*world, bubbleOptions);
     bubble->Install();

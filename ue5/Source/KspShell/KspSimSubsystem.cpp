@@ -1,22 +1,26 @@
 #include "KspSimSubsystem.h"
 
 #include "Camera/CameraActor.h"
+#include "Components/DirectionalLightComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Engine/DirectionalLight.h"
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "HAL/IConsoleManager.h"
-#include "HAL/PlatformFileManager.h"
+#include "KspPartAssets.h"
 #include "KspShell.h"
 #include "Misc/App.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "Misc/Paths.h"
+#include "ShaderCompiler.h"
 #include "UnrealClient.h"
 
-static TAutoConsoleVariable<int32> CVarKspDrawColliderProxies(TEXT("ksp.DrawColliderProxies"), 1,
-	TEXT("Draw the collider proxies of every loaded part (the stand-in for part rendering until WP-UE-10, a debug overlay afterwards)."));
+static TAutoConsoleVariable<int32> CVarKspDrawColliderProxies(TEXT("ksp.DrawColliderProxies"), 0,
+	TEXT("Draw the collider proxies of every loaded part as a debug overlay (a part without a readable model always shows them)."));
 
 void FKspSimTickFunction::ExecuteTick(float DeltaTime, ELevelTick TickType, ENamedThreads::Type CurrentThread, const FGraphEventRef& MyCompletionGraphEvent)
 {
@@ -119,6 +123,11 @@ void UKspSimSubsystem::StopSim()
 		return;
 	}
 	TickFunction.UnRegisterTickFunction();
+	DestroyPartActors();
+	if (PartAssets)
+	{
+		UE_LOG(LogKspShell, Log, TEXT("part assets: %s"), *PartAssets->DescribeStats());
+	}
 	Sim.Reset();
 	UE_LOG(LogKspShell, Log, TEXT("sim stopped: %lld frames, core %.3f ms per frame, render anchor moved %d time(s), %.3f ms in the frames it moved"), FrameCount,
 		FrameCount > 0 ? 1000.0 * CoreSeconds / double(FrameCount) : 0.0, Anchor.MoveCount, 1000.0 * ReanchorSeconds);
@@ -172,6 +181,7 @@ void UKspSimSubsystem::RunFrame(double DtReal)
 	{
 		Anchor.Reset();
 		ColliderCache.Reset();
+		DestroyPartActors();
 		if (!Sim->SceneLoaded(RequestedScene))
 		{
 			UE_LOG(LogKspShell, Error, TEXT("kspcore_scene_loaded(%d) failed: %s"), RequestedScene, *FKspSim::LastError());
@@ -183,11 +193,13 @@ void UKspSimSubsystem::RunFrame(double DtReal)
 
 	if (!ShotFile.IsEmpty())
 	{
-		if (FrameCount == ShotFrame)
+		// the shot waits for the shader compiler: a material draws as the engine's grey default until its shaders exist
+		if (ShotTakenFrame < 0 && FrameCount >= ShotFrame && !(GShaderCompilingManager && GShaderCompilingManager->IsCompiling()))
 		{
 			FScreenshotRequest::RequestScreenshot(ShotFile, false, false);
+			ShotTakenFrame = FrameCount;
 		}
-		else if (FrameCount == ShotFrame + 30)
+		else if (ShotTakenFrame >= 0 && FrameCount == ShotTakenFrame + 30)
 		{
 			FPlatformMisc::RequestExit(false, TEXT("KspShot"));
 		}
@@ -204,7 +216,12 @@ void UKspSimSubsystem::Place()
 	const double T0 = FPlatformTime::Seconds();
 	// the focus is the camera once core has one (WP-UE-03); until then the active vessel
 	const bool bMoved = Anchor.Update(Active->Com, Sim->FrameState().FrameChangeSerial);
-	DrawColliderProxies();
+	if (FApp::CanEverRender())
+	{
+		UpdatePartActors();
+		UpdateSun();
+		DrawColliderProxies();
+	}
 	UpdateDebugCamera(*Active);
 	if (bMoved)
 	{
@@ -218,7 +235,8 @@ void UKspSimSubsystem::Place()
 void UKspSimSubsystem::DrawColliderProxies()
 {
 #if ENABLE_DRAW_DEBUG
-	if (!FApp::CanEverRender() || CVarKspDrawColliderProxies.GetValueOnGameThread() == 0)
+	const bool bAll = CVarKspDrawColliderProxies.GetValueOnGameThread() != 0;
+	if (!bAll && PartsWithoutModel.IsEmpty())
 	{
 		return;
 	}
@@ -226,6 +244,10 @@ void UKspSimSubsystem::DrawColliderProxies()
 	const FColor Color(90, 220, 255);
 	for (const FKspPartState& Part : Sim->Parts())
 	{
+		if (!bAll && !PartsWithoutModel.Contains(Part.Id))
+		{
+			continue;
+		}
 		TArray<FKspColliderProxy>* Proxies = ColliderCache.Find(Part.Id);
 		if (!Proxies)
 		{
@@ -286,4 +308,123 @@ void UKspSimSubsystem::UpdateDebugCamera(const FKspVesselState& Active)
 	const FVector Target = Anchor.ToWorld(Active.Com);
 	const FVector Eye = Target + Side * 2500.0 + Up * 400.0;
 	DebugCamera->SetActorLocationAndRotation(Eye, FRotationMatrix::MakeFromXZ(Target - Eye, Up).ToQuat());
+}
+
+// ---- parts ----------------------------------------------------------------------------------------------------------------
+
+void UKspSimSubsystem::UpdatePartActors()
+{
+	if (!PartAssets)
+	{
+		PartAssets = NewObject<UKspPartAssets>(this);
+	}
+	TSet<uint32> Seen;
+	Seen.Reserve(Sim->Parts().Num());
+	for (const FKspPartState& Part : Sim->Parts())
+	{
+		Seen.Add(Part.Id);
+		TObjectPtr<AActor>& Actor = PartActors.FindOrAdd(Part.Id);
+		if (!Actor)
+		{
+			Actor = SpawnPartActor(Part);
+		}
+		// every transform is recomputed from the snapshot each frame (DESIGN D6): no sweep, no physics
+		Actor->SetActorLocationAndRotation(Anchor.ToWorld(Part.Position), Part.Rotation, false, nullptr, ETeleportType::TeleportPhysics);
+		Actor->SetActorHiddenInGame((Part.Flags & 1u) != 0);   // bit 0: the part is dead
+	}
+	for (auto It = PartActors.CreateIterator(); It; ++It)
+	{
+		if (!Seen.Contains(It.Key()))
+		{
+			if (It.Value())
+			{
+				It.Value()->Destroy();
+			}
+			PartsWithoutModel.Remove(It.Key());
+			It.RemoveCurrent();
+		}
+	}
+}
+
+AActor* UKspSimSubsystem::SpawnPartActor(const FKspPartState& Part)
+{
+	const FKspPartTemplate& Template = PartAssets->GetTemplate(Part.ModelId);
+	FActorSpawnParameters Params;
+	Params.ObjectFlags = RF_Transient;
+	AActor* Actor = GetWorld()->SpawnActor<AActor>(Params);
+	USceneComponent* Root = NewObject<USceneComponent>(Actor, TEXT("Part"));
+	Root->SetMobility(EComponentMobility::Movable);
+	Actor->SetRootComponent(Root);
+	Root->RegisterComponent();
+	Actor->SetActorEnableCollision(false);
+
+	// the model's nodes that draw something, as a component tree with the nodes' local transforms (parents come first)
+	bool bDraws = false;
+	TArray<USceneComponent*> Components;
+	Components.SetNumZeroed(Template.Nodes.Num());
+	for (int32 N = 0; N < Template.Nodes.Num(); ++N)
+	{
+		const FKspPartNodeTemplate& Node = Template.Nodes[N];
+		if (!Node.bKeep)
+		{
+			continue;
+		}
+		USceneComponent* Component = nullptr;
+		if (Node.Mesh)
+		{
+			UStaticMeshComponent* MeshComponent = NewObject<UStaticMeshComponent>(Actor);
+			MeshComponent->SetStaticMesh(Node.Mesh);
+			for (int32 M = 0; M < Node.Materials.Num(); ++M)
+			{
+				MeshComponent->SetMaterial(M, Node.Materials[M]);
+			}
+			MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);   // DESIGN D13: nothing in the shell creates a physics body
+			MeshComponent->SetGenerateOverlapEvents(false);
+			MeshComponent->SetCastShadow(Node.bCastShadows);
+			Component = MeshComponent;
+			bDraws = true;
+		}
+		else
+		{
+			Component = NewObject<USceneComponent>(Actor);
+		}
+		Component->SetMobility(EComponentMobility::Movable);
+		Component->SetupAttachment(Components.IsValidIndex(Node.Parent) && Components[Node.Parent] ? Components[Node.Parent] : Root);
+		Component->SetRelativeTransform(Node.Local);
+		Component->RegisterComponent();
+		Components[N] = Component;
+	}
+	if (!bDraws)
+	{
+		PartsWithoutModel.Add(Part.Id);
+	}
+	return Actor;
+}
+
+void UKspSimSubsystem::DestroyPartActors()
+{
+	for (const TPair<uint32, TObjectPtr<AActor>>& Pair : PartActors)
+	{
+		if (Pair.Value)
+		{
+			Pair.Value->Destroy();
+		}
+	}
+	PartActors.Reset();
+	PartsWithoutModel.Reset();
+}
+
+void UKspSimSubsystem::UpdateSun()
+{
+	if (!SunLight)
+	{
+		// the scene's sun until WP-UE-12 (sky, atmosphere, light colour): white, 10 lux as in the scale spike
+		FActorSpawnParameters Params;
+		Params.ObjectFlags = RF_Transient;
+		SunLight = GetWorld()->SpawnActor<ADirectionalLight>(Params);
+		SunLight->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+		SunLight->GetLightComponent()->SetIntensity(10.0f);
+	}
+	// light travels from the sun towards the dominant body
+	SunLight->SetActorRotation((-Sim->SunDirection()).Rotation());
 }

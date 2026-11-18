@@ -230,6 +230,16 @@ target_include_directories(capi_jolt_step PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(capi_jolt_step PRIVATE kspcore)
 add_test(NAME capi.jolt_step COMMAND capi_jolt_step ${CMAKE_BINARY_DIR}/kspcore_jolt_step.txt 200)
 
+# WP-UE-10: the "part models" calls of kspcore_game.h from a pure C program: every part's rig (PartLoader.CompileModel's hierarchy) against
+# the .mu files it names, loaded through kspcore_model.h (name, parent and local transform of every node). On the mirror the parts with a
+# reduced model (tests/data/mucollider) have a rig.
+add_executable(capi_part_rig capi/capi_part_rig.c)
+target_include_directories(capi_part_rig PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(capi_part_rig PRIVATE kspcore)
+add_test(NAME capi.part_rig
+         COMMAND capi_part_rig ${KSP_GAMEDATA_ROOT} ${PROJECT_SOURCE_DIR}/data ${CMAKE_CURRENT_SOURCE_DIR}/data ${CMAKE_CURRENT_BINARY_DIR}/capi_part_rig_work/ksp/saves)
+set_tests_properties(capi.part_rig PROPERTIES LABELS capi TIMEOUT 600)
+
 # WP-UE-05: kspcore_model.h compiled as C (plain C program over the model ABI), and the local stock sweep tool (tools/wpue05/sweep_stock.py runs it)
 add_executable(capi_model_c capi/model_c_test.c)
 target_include_directories(capi_model_c PRIVATE ${PROJECT_SOURCE_DIR}/include)
