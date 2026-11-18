@@ -216,7 +216,7 @@ The UE Game target compiles with `/fp:fast` (UBT `VCToolChain.cs`, BuildSettings
   Jolt actually linked (`double_precision`).
 - Jolt is built with AVX2: the shell needs an AVX2 CPU (both machines have one).
 - Toolset and CRT as in `ue5/README.md` "Linking the real core": MSVC 14.4x, `/MD`, IDL 0, C++20, no `/GL`, `/Z7`.
-- `bUseRealCore` is `true`; the bridge was rebuilt against the Jolt-linked core by WP-UE-01 (Editor and Game, 0 warnings;
+- The bridge always links the real core (the `ue5/Stub` placeholder and its `bUseRealCore` switch are gone since WP-UE-07); it was rebuilt against the Jolt-linked core by WP-UE-01 (Editor and Game, 0 warnings;
   `KspUe5.Bridge.LinksCore` / `FpGuard` / `JoltStep`, see STATUS.md).
 
 ---

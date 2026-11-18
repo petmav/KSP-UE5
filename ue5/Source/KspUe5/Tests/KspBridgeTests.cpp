@@ -2,7 +2,7 @@
 //   Scripts\test.ps1 -Filter KspUe5.Bridge      (runs the ctest twin first so kspcore_jolt_step.txt is fresh)
 #include "CoreMinimal.h"
 #include "KspCoreBridge.h"
-#include "HAL/PlatformMisc.h"
+#include "KspTestPaths.h"
 #include "Misc/AutomationTest.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -11,17 +11,7 @@
 
 namespace
 {
-	// <KSPCORE_ROOT or <project>/../core>/build/RelWithDebInfo, where the core build puts kspcore_link.txt and where the ctest
-	// twin capi.jolt_step writes its hash.
-	FString CoreBuildDir()
-	{
-		FString Root = FPlatformMisc::GetEnvironmentVariable(TEXT("KSPCORE_ROOT"));
-		if (Root.IsEmpty())
-		{
-			Root = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), TEXT(".."), TEXT("core")));
-		}
-		return FPaths::Combine(Root, TEXT("build"), TEXT("RelWithDebInfo"));
-	}
+	using KspTestPaths::CoreBuildDir;
 
 	/** Restores MXCSR on scope exit, so a failing test cannot leave FTZ / DAZ set on the editor's thread. */
 	struct FMxcsrRestore
@@ -36,19 +26,16 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FKspBridgeLinksCoreTest, "KspUe5.Bridge.LinksCo
 bool FKspBridgeLinksCoreTest::RunTest(const FString& Parameters)
 {
 	const FString Info = FKspCoreBridge::GetCoreBuildInfo();
-	AddInfo(FString::Printf(TEXT("kspcore build info: %s (stub=%d, manifest libraries=%d)"), *Info, FKspCoreBridge::IsStub() ? 1 : 0,
-		FKspCoreBridge::GetManifestLibraryCount()));
+	AddInfo(FString::Printf(TEXT("kspcore build info: %s (manifest libraries=%d)"), *Info, FKspCoreBridge::GetManifestLibraryCount()));
 	TestFalse(TEXT("build info is non-empty"), Info.IsEmpty());
 	TestTrue(TEXT("core built against the release CRT DLL (/MD)"), Info.Contains(TEXT("crt=MD ")));
 	TestTrue(TEXT("core built with _ITERATOR_DEBUG_LEVEL=0"), Info.Contains(TEXT("idl=0")));
 	TestTrue(TEXT("core built as C++20"), Info.Contains(TEXT("lang=202002")));
-	TestEqual(TEXT("C ABI version the bridge compiled against"), FKspCoreBridge::GetCompiledAbiVersion(), 1);
+	TestEqual(TEXT("C ABI version the bridge compiled against"), FKspCoreBridge::GetCompiledAbiVersion(), 2);
 	TestTrue(TEXT("build info carries the ABI version the bridge compiled against"),
 		Info.Contains(FString::Printf(TEXT("abi=%d "), FKspCoreBridge::GetCompiledAbiVersion())));
 
-	// The real core, not the stub, and the manifest listed kspcore.lib and Jolt.lib.
-	TestFalse(TEXT("linked the real core (not ue5/Stub)"), FKspCoreBridge::IsStub());
-	if (!FKspCoreBridge::IsStub())
+	// The manifest listed kspcore.lib and Jolt.lib.
 	{
 		TestEqual(TEXT("C ABI version the library reports"), FKspCoreBridge::GetCoreAbiVersion(), FKspCoreBridge::GetCompiledAbiVersion());
 		TestTrue(TEXT("link manifest lists kspcore.lib and Jolt.lib"), FKspCoreBridge::GetManifestLibraryCount() >= 2);
@@ -65,9 +52,9 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FKspBridgeFpGuardTest, "KspUe5.Bridge.FpGuard",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ClientContext | EAutomationTestFlags::EngineFilter)
 bool FKspBridgeFpGuardTest::RunTest(const FString& Parameters)
 {
-	if (FKspCoreBridge::IsStub() || FKspFpGuard::ReadMxcsr() == 0)
+	if (FKspFpGuard::ReadMxcsr() == 0)
 	{
-		AddInfo(TEXT("stub core or no MXCSR on this CPU: nothing to check"));
+		AddInfo(TEXT("no MXCSR on this CPU: nothing to check"));
 		return true;
 	}
 	FMxcsrRestore Restore;
@@ -103,12 +90,6 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FKspBridgeJoltStepTest, "KspUe5.Bridge.JoltStep
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ClientContext | EAutomationTestFlags::EngineFilter)
 bool FKspBridgeJoltStepTest::RunTest(const FString& Parameters)
 {
-	if (FKspCoreBridge::IsStub())
-	{
-		AddError(TEXT("the stub core has no Jolt scenario: build with bUseRealCore"));
-		return false;
-	}
-
 	// The ctest twin (core/tests/capi/capi_jolt_step.c, ctest capi.jolt_step) stepped the same scenario through the same test ABI
 	// entry and wrote its hash; both processes run the same kspcore.lib + Jolt.lib objects.
 	const FString TwinFile = FPaths::Combine(CoreBuildDir(), TEXT("kspcore_jolt_step.txt"));

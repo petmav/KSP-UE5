@@ -11,6 +11,11 @@
 			"AdditionalDependencies": [ "Engine", "CoreUObject" ]
 		},
 		{
+			"Name": "KspShell",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
 			"Name": "KspUe5Editor",
 			"Type": "Editor",
 			"LoadingPhase": "Default"

@@ -6,8 +6,9 @@ using UnrealBuildTool;
 // Links kspcore.lib (engine-agnostic C++20 simulation core) and Jolt.lib (the physics library kspcore.lib depends on) into
 // Unreal through a C ABI header.
 //
-// Real-core mode reads the LINK MANIFEST that the core build writes next to kspcore.lib
-// (core/src/CMakeLists.txt, <core>/build/RelWithDebInfo/kspcore_link.txt): the libraries in link order, the include directory and
+// It reads the LINK MANIFEST that the core build writes next to kspcore.lib (core/src/CMakeLists.txt,
+// <KSPCORE_ROOT or <repo>/core>/build/RelWithDebInfo/kspcore_link.txt; env KSPCORE_LINK_MANIFEST overrides with a full file path):
+// the libraries in link order, the include directory and
 // the preprocessor definitions that must match (Jolt's JPH_* configuration). A new core dependency therefore never needs an edit
 // here. Format: "key=value" lines (manifest_version, config, include, lib, define), '#' comments.
 //
@@ -19,14 +20,6 @@ using UnrealBuildTool;
 // objects keep their flags; nothing from Jolt's headers is compiled by UE.
 public class KspCoreBridge : ModuleRules
 {
-	// ------------------------------------------------------------------------------------------------
-	// ONE-LINE SWITCH. false = link the placeholder ue5/Stub/lib/kspcore.lib (one function).
-	//                  true  = link the real core through its link manifest:
-	//                          <KSPCORE_ROOT or C:\Projects\KSP-UE5\core>\build\RelWithDebInfo\kspcore_link.txt
-	//                          Override the manifest with env KSPCORE_LINK_MANIFEST (a full file path).
-	private static readonly bool bUseRealCore = true;
-	// ------------------------------------------------------------------------------------------------
-
 	private const int SupportedManifestVersion = 1;
 
 	public KspCoreBridge(ReadOnlyTargetRules Target) : base(Target)
@@ -40,28 +33,12 @@ public class KspCoreBridge : ModuleRules
 		string UeProjectRoot = Path.GetFullPath(Path.Combine(PluginDirectory, "..", ".."));   // ...\ue5
 		string RepoRoot = Path.GetFullPath(Path.Combine(UeProjectRoot, ".."));                  // ...\KSP-UE5 (or the worktree)
 
-		if (bUseRealCore)
-		{
-			string EnvRoot = Environment.GetEnvironmentVariable("KSPCORE_ROOT");
-			string CoreRoot = string.IsNullOrEmpty(EnvRoot) ? Path.Combine(RepoRoot, "core") : EnvRoot;
-			string EnvManifest = Environment.GetEnvironmentVariable("KSPCORE_LINK_MANIFEST");
-			string ManifestFile = string.IsNullOrEmpty(EnvManifest)
-				? Path.Combine(CoreRoot, "build", "RelWithDebInfo", "kspcore_link.txt") : EnvManifest;
-			ApplyManifest(ManifestFile);
-			PublicDefinitions.Add("KSPCORE_STUB=0");
-		}
-		else
-		{
-			string StubRoot = Path.Combine(UeProjectRoot, "Stub");
-			string LibFile = Path.Combine(StubRoot, "lib", "kspcore.lib");
-			if (!File.Exists(LibFile))
-			{
-				throw new BuildException("KspCoreBridge: stub kspcore.lib not found at '" + LibFile + "'. Run ue5/Scripts/build_stub.ps1.");
-			}
-			PublicSystemIncludePaths.Add(Path.Combine(StubRoot, "include"));
-			PublicAdditionalLibraries.Add(LibFile);
-			PublicDefinitions.Add("KSPCORE_STUB=1");
-		}
+		string EnvRoot = Environment.GetEnvironmentVariable("KSPCORE_ROOT");
+		string CoreRoot = string.IsNullOrEmpty(EnvRoot) ? Path.Combine(RepoRoot, "core") : EnvRoot;
+		string EnvManifest = Environment.GetEnvironmentVariable("KSPCORE_LINK_MANIFEST");
+		string ManifestFile = string.IsNullOrEmpty(EnvManifest)
+			? Path.Combine(CoreRoot, "build", "RelWithDebInfo", "kspcore_link.txt") : EnvManifest;
+		ApplyManifest(ManifestFile);
 	}
 
 	private void ApplyManifest(string ManifestFile)

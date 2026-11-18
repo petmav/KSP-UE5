@@ -7,7 +7,7 @@ public class KspUe5 : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
-		PrivateDependencyModuleNames.AddRange(new string[] { "ProceduralMeshComponent", "RenderCore", "RHI", "KspCoreBridge" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "ProceduralMeshComponent", "RenderCore", "RHI", "KspCoreBridge", "KspShell" });
 
 		// Headers are included as "Spike/SpikeMath.h" etc., also from the KspUe5Editor module.
 		PublicIncludePaths.Add(ModuleDirectory);

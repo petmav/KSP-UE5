@@ -1,17 +1,16 @@
 #include "KspCoreBridge.h"
 
+#include "KspSim.h"
 #include "Modules/ModuleManager.h"
 
 #include "kspcore/kspcore_c.h"
-#if !KSPCORE_STUB
 #include "kspcore/kspcore_test.h"
-#endif
 
 #if PLATFORM_CPU_X86_FAMILY
 #include <xmmintrin.h>
 #endif
 
-static_assert(KSPCORE_ABI_VERSION == 1, "KspCoreBridge was written against kspcore C ABI v1");
+static_assert(KSPCORE_ABI_VERSION == 2, "KspCoreBridge was written against kspcore C ABI v2");
 
 DEFINE_LOG_CATEGORY_STATIC(LogKspCoreBridge, Log, All);
 
@@ -20,7 +19,13 @@ class FKspCoreBridgeModule : public IModuleInterface
 public:
 	virtual void StartupModule() override
 	{
-		UE_LOG(LogKspCoreBridge, Log, TEXT("KspCoreBridge loaded: %s (stub=%d)"), *FKspCoreBridge::GetCoreBuildInfo(), KSPCORE_STUB);
+		UE_LOG(LogKspCoreBridge, Log, TEXT("KspCoreBridge loaded: %s"), *FKspCoreBridge::GetCoreBuildInfo());
+	}
+
+	virtual void ShutdownModule() override
+	{
+		// core's process-wide objects go in a defined order, not at static destruction
+		FKspGame::Shutdown();
 	}
 };
 
@@ -73,17 +78,8 @@ int32 FKspCoreBridge::GetCompiledAbiVersion()
 
 int32 FKspCoreBridge::GetCoreAbiVersion()
 {
-#if !KSPCORE_STUB
 	FKspFpGuard Guard;
 	return kspcore_abi_version();
-#else
-	return 0;
-#endif
-}
-
-bool FKspCoreBridge::IsStub()
-{
-	return KSPCORE_STUB != 0;
 }
 
 int32 FKspCoreBridge::GetManifestLibraryCount()
@@ -107,27 +103,18 @@ FString FKspCoreBridge::GetManifestJoltConfig()
 
 FString FKspCoreBridge::GetCoreJoltConfig()
 {
-#if !KSPCORE_STUB
 	FKspFpGuard Guard;
 	return FString(UTF8_TO_TCHAR(kspcore_test_jolt_config()));
-#else
-	return FString();
-#endif
 }
 
 uint32 FKspCoreBridge::ReadCoreMxcsr()
 {
-#if !KSPCORE_STUB
 	FKspFpGuard Guard;
 	return kspcore_test_mxcsr();
-#else
-	return 0;
-#endif
 }
 
 bool FKspCoreBridge::RunJoltPileScenario(int32 Threads, int32 Steps, uint64& OutHash)
 {
-#if !KSPCORE_STUB
 	FKspFpGuard Guard;
 	uint64_t Hash = 0;
 	if (kspcore_test_physics_scenario(KSPCORE_TEST_SCENARIO_PILE, Threads, Steps, &Hash) != 1)
@@ -136,7 +123,4 @@ bool FKspCoreBridge::RunJoltPileScenario(int32 Threads, int32 Steps, uint64& Out
 	}
 	OutHash = Hash;
 	return true;
-#else
-	return false;
-#endif
 }

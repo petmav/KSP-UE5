@@ -9,12 +9,22 @@ $report = Join-Path $ProjRoot 'Saved\Automation'
 $coreBuild = Join-Path (Split-Path -Parent $ProjRoot) 'core\build\RelWithDebInfo'
 $twin = Join-Path $coreBuild 'tests\capi_jolt_step.exe'
 if (Test-Path $twin) { & $twin (Join-Path $coreBuild 'kspcore_jolt_step.txt') 200 | Select-Object -Last 1 }
+# The ctest twin of KspUe5.Slice.HeadlessParity (ctest capi.flight_slice, same arguments as core\tests\CMakeLists.txt): flies PhysProf-M2
+# through the C ABI and writes the final state hash to tests\capi_flight_slice_work\final.hash (about 15 s).
+$slice = Join-Path $coreBuild 'tests\capi_flight_slice.exe'
+if ((Test-Path $slice) -and ('KspUe5.Slice.HeadlessParity' -like "$Filter*")) {
+    $repo = Split-Path -Parent $ProjRoot
+    $work = Join-Path $coreBuild 'tests\capi_flight_slice_work'
+    New-Item -ItemType Directory -Force -Path $work | Out-Null
+    & $slice "$repo\core\testdata\GameData-mirror" "$repo\core\data" "$repo\core\tests\data" "$work\ksp\saves" `
+        "$repo\analysis\physics\craft\PhysProf-M2.craft" "$repo\core\tests\data\c10_states.csv" "$work\final.hash" | Select-Object -Last 1
+}
 $sw = [Diagnostics.Stopwatch]::StartNew()
 & $EditorCmd $Uproject "-ExecCmds=Automation RunTests $Filter; Quit" -unattended -nopause -nullrhi -NoSound -NoSplash `
     "-ReportExportPath=$report" "-abslog=$log" -log | Out-Null
 $rc = $LASTEXITCODE
 $secs = $sw.Elapsed.TotalSeconds
-Select-String -Path $log -Pattern 'Test Completed|Result=|Error:|kspcore build info|max per-frame jitter|level \d+: edge|TEST COMPLETE|Tests? (Passed|Failed)' |
+Select-String -Path $log -Pattern 'Test Completed|Result=|Error:|kspcore build info|max per-frame jitter|level \d+: edge|state hash|world tick|TEST COMPLETE|Tests? (Passed|Failed)' |
     ForEach-Object { $_.Line } | Select-Object -Last 40
 Write-Timing $Label $secs "rc=$rc"
 exit $rc

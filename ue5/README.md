@@ -12,9 +12,10 @@ No Blueprints: everything is C++ so agents can read and change it.
 ```
 KspUe5.uproject
 Source/KspUe5/            game module: spike code (Spike/), automation tests (Tests/)
+Source/KspShell/          the shell (DESIGN 1.2): UKspSimSubsystem (owns the sim, runs core's frame per rendered frame), render anchor
 Source/KspUe5Editor/      editor-only module: KspCreateSpikeMap commandlet (generates Content/Maps/ScaleSpike.umap)
-Plugins/KspCoreBridge/    links kspcore.lib through a C ABI (kspcore/kspcore_c.h)
-Stub/                     placeholder kspcore.lib (CMake, /MD) + header, until core/ ships the real lib
+Plugins/KspCoreBridge/    links kspcore.lib through a C ABI (kspcore/kspcore_c.h); the facade: FKspFpGuard, FKspAxis (axes and units),
+                          FKspGame / FKspSim (game, frame, snapshot views). The only code that includes kspcore headers.
 Scripts/                  one-liner wrappers; every run appends wall-clock time to timings.log
 spike/                    phase-0 scale spike: RESULTS.md, data/*.csv, shots/*.png, logs/
 ```
@@ -26,14 +27,14 @@ run from anywhere (scripts resolve paths themselves). Do not run more than one e
 
 | What | Command | Typical time on this laptop |
 |---|---|---|
-| Build the stub core lib (only if `Stub/` changed) | `.\Scripts\build_stub.ps1` | 6 s |
 | Generate VS solution (`UnrealBuildTool -projectfiles` via Build.bat) | `.\Scripts\genproj.ps1` | 14 s |
 | Build editor (Development Editor Win64) | `.\Scripts\build.ps1` | 64 s clean, 10 s after one .cpp, 1 s no-op |
 | Build game (Development Win64) | `.\Scripts\build.ps1 -Target KspUe5` | 52 s first build |
 | Cook + stage + pak the game (after building it) | `.\Scripts\cook.ps1` | 323 s |
 | Rebuild only the bridge plugin module | `.\Scripts\build.ps1 -Module KspCoreBridge` | 2.5 s |
 | (Re)generate the ScaleSpike map | `.\Scripts\create_map.ps1` | 29 s |
-| Run automation tests headless | `.\Scripts\test.ps1` | 16 s warm (42 s first ever) |
+| Run automation tests headless | `.\Scripts\test.ps1` | 57 s with the two ctest twins (8 tests) |
+| Fly: sandbox flight in `-game` mode, debug view (collider proxies, chase camera) | `.\Scripts\fly.ps1` (`-Craft`, `-Site`, `-Shot <png> -ShotFrame <n>`) | 13 to 22 s for a 330-frame screenshot run |
 | Run the full scale spike | `.\Scripts\spike.ps1 -Tag full2` | 3.5 min |
 | Quick spike smoke run | `.\Scripts\spike.ps1 -Tag smoke -Quick -Variants None,UE10k -Stress 0` | 46 s |
 | Spike CSVs to Markdown tables | `python -I spike\analyze.py full2` | 1 s |
@@ -64,29 +65,28 @@ Notes:
 
 ## Tests
 
-`Source/KspUe5/Tests/` (`KspBridgeTests.cpp`, `KspUe5Tests.cpp`), all under the `KspUe5.` prefix:
+`Source/KspUe5/Tests/` (`KspBridgeTests.cpp`, `KspSimTests.cpp`, `KspUe5Tests.cpp`), all under the `KspUe5.` prefix:
 
-- `KspUe5.Bridge.LinksCore`: calls `kspcore_build_info()` through the bridge, checks /MD CRT, `_ITERATOR_DEBUG_LEVEL=0`, C++20, ABI v1 (compiled
-  and reported), real core not the stub, manifest lists both libraries, manifest `JPH_*` definitions equal the Jolt configuration of the
-  linked library.
+- `KspUe5.Bridge.LinksCore`: calls `kspcore_build_info()` through the bridge, checks /MD CRT, `_ITERATOR_DEBUG_LEVEL=0`, C++20, ABI v2 (compiled
+  and reported), manifest lists both libraries, manifest `JPH_*` definitions equal the Jolt configuration of the linked library.
 - `KspUe5.Bridge.FpGuard`: MXCSR control bits inside core are 0x1F80 whatever the caller's state (FTZ / DAZ set), restored after; nested guards.
 - `KspUe5.Bridge.JoltStep`: a core Jolt scenario stepped through the test ABI (`kspcore_test.h`) gives the same state hash as its ctest twin
   `capi.jolt_step` (which writes `core\build\RelWithDebInfo\kspcore_jolt_step.txt`; `Scripts\test.ps1` runs the twin first), run to run, at 4
   threads, and under a hostile caller MXCSR.
+- `KspUe5.Sim.AxisConversion`: `FKspAxis` (Unity Y-up metres <-> UE Z-up centimetres): basis vectors, determinant +1, Unity's
+  `AngleAxis(90, up)` is Unreal's +90 degree yaw, exact round trips, conversion commutes with rotating and composing (1,000 samples).
+- `KspUe5.Sim.RenderAnchor`: `FKspRenderAnchor` stays within 100 km of the focus, moves beyond it and at a frame change of core.
+- `KspUe5.Slice.HeadlessParity`: PhysProf-M2 flown from the LaunchPad through the Unreal world tick and `UKspSimSubsystem` (4,661 frames of
+  0.02 s, keys Z / T / Space at flight frame 100) ends in the same snapshot hash as its ctest twin `capi.flight_slice` (which writes
+  `core\build\RelWithDebInfo\tests\capi_flight_slice_work\final.hash`; `Scripts\test.ps1` runs the twin first). DESIGN 1.5 point 5.
 - `KspUe5.Precision.Float32VsLwc`: float32 world-space vs UE5 LWC vertex pipeline emulation at Kerbin radius.
 - `KspUe5.Spike.CubeSpherePatch`: cubesphere patch geometry, float-local precision and winding.
 
 Results: `Saved/Logs/automation.log` and the JSON report in `Saved/Automation/`.
 
-## Linking the real core (the one-line switch)
+## Linking the real core
 
-`Plugins/KspCoreBridge/Source/KspCoreBridge/KspCoreBridge.Build.cs`:
-
-```csharp
-private static readonly bool bUseRealCore = true;   // false = the placeholder in Stub/
-```
-
-With `true` the bridge reads the **link manifest** the core build writes: `<KSPCORE_ROOT or <repo>\core>\build\RelWithDebInfo\kspcore_link.txt`
+`Plugins/KspCoreBridge/Source/KspCoreBridge/KspCoreBridge.Build.cs` reads the **link manifest** the core build writes: `<KSPCORE_ROOT or <repo>\core>\build\RelWithDebInfo\kspcore_link.txt`
 (override with env `KSPCORE_LINK_MANIFEST`). It lists `kspcore.lib` and `Jolt.lib` in link order, the include directory and the
 definitions that must match (`JPH_*`, Jolt's configuration). Build the core first: `powershell core\run_tests.ps1 -BuildOnly`.
 The build fails fast with a clear message if the manifest or a listed file is missing. The bridge module compiles with
