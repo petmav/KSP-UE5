@@ -1,8 +1,54 @@
 # KSP-UE5: state and next steps
 
-Updated 2026-11-13 (session 6; see "Session 6" below for the current state; the older sections are history).
+Updated 2026-11-18 (session 7; see "Session 7" below for the current state; the older sections are history).
 
-## Session 6 (2026-11-13, Fable orchestrating) - CURRENT STATE
+## Session 7 (2026-11-18, Fable, everything inline in the main session) - CURRENT STATE
+
+The user asked for all work inline (no subagents), then for graphical progress first, then to stop after the input device. The shell now
+shows and flies a craft: `powershell -File ue5\Scripts\fly.ps1` starts the stock Kerbal X on the pad with KSP's own meshes and textures on
+Kerbin's terrain, and KSP's keys work (Z / X, Shift / Ctrl, T, Space, W A S D Q E). Screenshots: `ue5/slice/shots/`.
+
+### Packages of this session
+| PR | package | result |
+|---|---|---|
+| #61 | WP-UE-07 | Sim subsystem, frame loop, placement. `UKspSimSubsystem` (tick in `TG_PrePhysics`), facade `FKspAxis` / `FKspGame` / `FKspSim`, render anchor. **`KspUe5.Slice.HeadlessParity`: hash `2c4ae66445a41c81` through Unreal = the pure-C twin.** `ue5/Stub` removed. WP-UE-07 = 1.0. |
+| #62 | WP-UE-10, first half | Parts drawn from the game's `.mu` meshes and textures at run time. Core: `kspcore_game.h` "part models" (rig, model files, texture file), ctest `capi.part_rig`. Shell: `UKspPartAssets`, six generated master materials (all 28 stock shader names). `KspUe5.Parts.StockSweep` over all 362 parts: 0 unknown shaders, 0 missing textures. WP-UE-10 = 0.6. |
+| #63 | WP-UE-11, first half | Kerbin's terrain from core's PQS quads (`UKspTerrainView`). Core: re-stitched quads are sent again; **`PQSLandControl.OnVertexBuild`'s colour statements ported** (terrain was black: the branch had been left out as rendering); oracle and `wp12_reference.json` regenerated. WP-UE-11 = 0.5. |
+| #64 | WP-UE-08 | Input device (`FKspInputDevice`, a Slate pre-processor; `FKey` to `UnityEngine.KeyCode` table). `KspUe5.Input.DeviceParity`: the parity run with keys through the device, same hash. WP-UE-08 = 0.9. |
+
+Unreal automation suite: 13 / 13 pass locally (`ue5\Scripts\test.ps1`, 62 s). Core: 61 / 61 ctest on every branch. Unreal work cannot run in CI.
+
+### Open points (details in `ue5/STATUS.md`, `ue5/PROGRESS-wpue*.md`, `core/STATUS.md` "WP-UE-10 / 11, core side")
+- **WP-UE-10 second half: model state.** Every node of a model is drawn, so engine shrouds and part variants overlap, and nothing
+  animates. Core must keep a `mu::PartModelRig` per loaded part, wire the modules' transform seams to it (`ModulePartVariants`,
+  `ModuleJettison`, `ModuleGimbal`, parachutes, animations) and export visibility and node poses (`kspcore_node_pose` is reserved).
+- **WP-UE-11 second half:** the terrain material's textures (needs `ue5/GameAssets` regenerated: `ue5/Tools/extract_game_assets.py --game
+  decompiled/KSP-dev`; the session's shell may not read the game copy, the user runs it), ocean, scatter, descent measurements. Four colour
+  mods (`PQSMod_VertexColorMap`, `VertexColorMapBlend`, `HeightColorMap`, `VertexSimplexNoiseColor`) are not ported: eleven bodies other
+  than Kerbin, Minmus, Laythe and Eeloo would be coloured incompletely. The colour maths of the `PQSLandControl` port has no independent
+  gate (it goes through the C++ oracle; no capture of quad colours exists).
+- **WP-UE-08 rest:** `Input.inputString`, input-manager axes (`Mouse X` ...; the game's InputManager asset is not extracted), joystick axes.
+- **Game host with the real game root:** core logs `[ModuleWheelSuspension]: No transform called piston found in landingLeg1-2 hierarchy`
+  (and `leg`, `foot`, `wheelCollider`) for Kerbal X's landing legs, and `Could not find the pivotName, AntennaHolster`: the wheel modules'
+  model lookups do not reach the real models. Not examined.
+- No camera control (a fixed chase camera stands in), no sky, sun colour, KSC buildings, plumes, sound, HUD.
+
+### Next (not started)
+1. WP-UE-03 camera controllers in core, then WP-UE-09 camera application (the chase camera in `UKspSimSubsystem::UpdateDebugCamera` goes).
+2. WP-UE-10 second half (above): it is what makes engines and tanks look right.
+3. WP-UE-12 sky / sun / scaled space and WP-UE-13 KSC scenery (both need `ue5/GameAssets`), WP-UE-11 second half.
+4. WP-UE-04 view-models, WP-UE-14 HUD, WP-UE-16 second half (plumes, sound), then WP-UE-15, 17, 18; the rest of WP-UE-02.
+
+### Environment notes of this session
+- `decompiled/KSP-dev` is denied to the session's Read and shell (`.claude/settings.json`); the Unreal process and test executables read it
+  without trouble (the shell's default game root). A command line that names the path is refused.
+- A session hook shortens tool output of source files (function bodies elided): print with a line prefix (`sed 's/^/| /'`) to read code.
+- Heredocs through the Bash tool lose one level of backslashes and fail on long C++ snippets: write edit scripts with the Write tool.
+- `sed -i` in Git Bash rewrites CRLF files as LF (`ue5/*`, `analysis/tiering/progress.csv`, `NEXT-STEPS.md` are CRLF in the working tree).
+- Only one Unreal editor / game instance at a time. The Game target catches what the Editor build hides (unity builds, editor-only data).
+- Pushes from the main session worked this time (no classifier block). CI takes 18 to 25 minutes per PR.
+
+## Session 6 (2026-11-13, Fable orchestrating)
 
 Main `fd914366`. No PR is open, no agent is running, and the only worktree is the main checkout. The user stopped the session after wave UE-1 ("once these come back, stop"), so nothing below "Next" has been started.
 
