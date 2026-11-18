@@ -13,8 +13,8 @@ static_assert(int32(FKspTextureHeader::EContainer::Dds) == KSPCORE_TEX_DDS && in
 
 namespace
 {
-	FVector3f DirectionToUe(const float* V) { return FVector3f(V[2], V[0], V[1]); }
-	FVector3f PositionToUe(const float* V) { return DirectionToUe(V) * float(FKspAxis::CmPerMetre); }
+	FVector3f MeshDirectionToUe(const float* V) { return FVector3f(V[2], V[0], V[1]); }
+	FVector3f MeshPositionToUe(const float* V) { return MeshDirectionToUe(V) * float(FKspAxis::CmPerMetre); }
 
 	/** Sets struct_size and zeroes the rest: the protocol of every kspcore info struct. */
 	template <class T>
@@ -179,14 +179,14 @@ bool FKspModels::LoadModel(const FString& Path, const FString& ParentUrl, FKspMo
 		OutMesh.Positions.SetNumUninitialized(Count);
 		for (int32 V = 0; V < Count; ++V)
 		{
-			OutMesh.Positions[V] = PositionToUe(Mesh.vertices + 3 * V);
+			OutMesh.Positions[V] = MeshPositionToUe(Mesh.vertices + 3 * V);
 		}
 		if (Mesh.normals)
 		{
 			OutMesh.Normals.SetNumUninitialized(Count);
 			for (int32 V = 0; V < Count; ++V)
 			{
-				OutMesh.Normals[V] = DirectionToUe(Mesh.normals + 3 * V);
+				OutMesh.Normals[V] = MeshDirectionToUe(Mesh.normals + 3 * V);
 			}
 		}
 		if (Mesh.tangents)
@@ -195,7 +195,7 @@ bool FKspModels::LoadModel(const FString& Path, const FString& ParentUrl, FKspMo
 			for (int32 V = 0; V < Count; ++V)
 			{
 				const float* T = Mesh.tangents + 4 * V;
-				OutMesh.Tangents[V] = FVector4f(DirectionToUe(T), T[3]);
+				OutMesh.Tangents[V] = FVector4f(MeshDirectionToUe(T), T[3]);
 			}
 		}
 		if (Mesh.uv)

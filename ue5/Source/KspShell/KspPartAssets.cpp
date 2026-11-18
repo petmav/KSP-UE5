@@ -290,7 +290,7 @@ UStaticMesh* UKspPartAssets::BuildStaticMesh(const FKspMeshData& In)
 		const FName SlotName(*FString::Printf(TEXT("Section%d"), S));
 		const FPolygonGroupID Group = Description.CreatePolygonGroup();
 		SlotNames[Group] = SlotName;
-		Mesh->GetStaticMaterials().Add(FStaticMaterial(nullptr, SlotName, SlotName));
+		Mesh->GetStaticMaterials().Add(FStaticMaterial(nullptr, SlotName));
 		const TArray<uint32>& Indices = In.Sections[S].Indices;
 		for (int32 I = 0; I + 2 < Indices.Num(); I += 3)
 		{
