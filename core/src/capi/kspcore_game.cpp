@@ -47,6 +47,18 @@ std::string& SettingsText() {
 
 }  // namespace
 
+namespace {
+
+// struct_size rule: fill what fits in the caller's struct
+template <class T>
+void CopyOut(const T& value, T* out) {
+    const uint32_t size = out->struct_size < sizeof(T) ? out->struct_size : static_cast<uint32_t>(sizeof(T));
+    std::memcpy(out, &value, size);
+    out->struct_size = size;
+}
+
+}  // namespace
+
 extern "C" {
 
 int kspcore_game_init(const kspcore_game_config* config) {
@@ -95,6 +107,68 @@ int kspcore_game_load_database(kspcore_progress_fn progress, void* user) {
 int kspcore_game_part_count(void) { return ksp::host::GameProcess::PartCount(); }
 int kspcore_game_resource_count(void) { return ksp::host::GameProcess::ResourceCount(); }
 const char* kspcore_game_model_name(uint32_t model_id) { return ksp::host::GameProcess::ModelName(model_id); }
+
+// ---- part models (WP-UE-10) ----
+
+int kspcore_game_part_rig_node_count(uint32_t model_id) {
+    return Guard("kspcore_game_part_rig_node_count", 0, [&]() -> int { return static_cast<int>(ksp::host::GameProcess::Rig(model_id).nodes.size()); });
+}
+
+int kspcore_game_part_rig_node(uint32_t model_id, int node, kspcore_part_rig_node* out) {
+    return Guard("kspcore_game_part_rig_node", 0, [&]() -> int {
+        const ksp::host::GameProcess::PartRig& rig = ksp::host::GameProcess::Rig(model_id);
+        if (out == nullptr || node < 0 || static_cast<size_t>(node) >= rig.nodes.size()) throw std::invalid_argument("node out of range or out is NULL");
+        const ksp::host::GameProcess::PartRigNode& n = rig.nodes[static_cast<size_t>(node)];
+        kspcore_part_rig_node v{};
+        v.struct_size = sizeof(v);
+        v.name = n.name.c_str();
+        v.parent = n.parent;
+        std::memcpy(v.position, n.position, sizeof(v.position));
+        std::memcpy(v.rotation, n.rotation, sizeof(v.rotation));
+        std::memcpy(v.scale, n.scale, sizeof(v.scale));
+        v.file = n.file;
+        v.file_node = n.fileNode;
+        CopyOut(v, out);
+        return 1;
+    });
+}
+
+int kspcore_game_part_model_file_count(uint32_t model_id) {
+    return Guard("kspcore_game_part_model_file_count", 0, [&]() -> int { return static_cast<int>(ksp::host::GameProcess::Rig(model_id).files.size()); });
+}
+
+int kspcore_game_part_model_file(uint32_t model_id, int file, kspcore_part_model_file* out) {
+    return Guard("kspcore_game_part_model_file", 0, [&]() -> int {
+        const ksp::host::GameProcess::PartRig& rig = ksp::host::GameProcess::Rig(model_id);
+        if (out == nullptr || file < 0 || static_cast<size_t>(file) >= rig.files.size()) throw std::invalid_argument("file out of range or out is NULL");
+        const ksp::host::GameProcess::PartRigFile& f = rig.files[static_cast<size_t>(file)];
+        kspcore_part_model_file v{};
+        v.struct_size = sizeof(v);
+        v.path = f.path.c_str();
+        v.parent_url = f.parentUrl.c_str();
+        v.texture_replacement_count = static_cast<int32_t>(f.textureReplacements.size());
+        CopyOut(v, out);
+        return 1;
+    });
+}
+
+int kspcore_game_part_texture_replacement(uint32_t model_id, int file, int index, const char** original, const char** url) {
+    return Guard("kspcore_game_part_texture_replacement", 0, [&]() -> int {
+        const ksp::host::GameProcess::PartRig& rig = ksp::host::GameProcess::Rig(model_id);
+        if (file < 0 || static_cast<size_t>(file) >= rig.files.size()) throw std::invalid_argument("file out of range");
+        const auto& list = rig.files[static_cast<size_t>(file)].textureReplacements;
+        if (index < 0 || static_cast<size_t>(index) >= list.size() || original == nullptr || url == nullptr) throw std::invalid_argument("index out of range or NULL output");
+        *original = list[static_cast<size_t>(index)].first.c_str();
+        *url = list[static_cast<size_t>(index)].second.c_str();
+        return 1;
+    });
+}
+
+const char* kspcore_game_texture_file(const char* url) {
+    return Guard("kspcore_game_texture_file", static_cast<const char*>(nullptr), [&]() -> const char* {
+        return url != nullptr ? ksp::host::GameProcess::TextureFile(url) : nullptr;
+    });
+}
 
 int kspcore_game_new(kspcore_sim* sim, int mode, const char* save_name) {
     return HostCall(sim, "kspcore_game_new", [&](ksp::host::GameHost& h) { return h.NewGame(mode, save_name != nullptr ? save_name : ""); });

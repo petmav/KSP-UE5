@@ -75,6 +75,45 @@ int kspcore_game_resource_count(void);
 /* Part name of a model id (a snapshot part's `model_id`), "" when unknown. Valid for the process lifetime. */
 const char* kspcore_game_model_name(uint32_t model_id);
 
+/* ---- part models (appended, WP-UE-10) -------------------------------------------------------------------------------- */
+
+/* The model hierarchy PartLoader.CompileModel builds below a part's transform (PartLoader.cs:1765): the "model" object scaled by
+ * rescaleFactor, below it the root of every MODEL node's .mu (or the part directory's .mu, which then IS "model") and their transform
+ * trees. The shell mirrors it with one scene component per node and draws the renderers of the .mu nodes (kspcore_model.h).
+ *
+ * `model_id` is a snapshot part's model id. The rig is built at the first call and kept for the process. Units and axes are Unity's
+ * (kspcore_model.h). A part whose .mu files are missing or unreadable (the repository's GameData mirror keeps zero-byte stubs) has no
+ * rig: the counts are 0. */
+typedef struct kspcore_part_model_file {
+    uint32_t struct_size;
+    const char* path;       /* the .mu file (absolute path): kspcore_model_load_file(path, parent_url) */
+    const char* parent_url; /* GameDatabase url of its directory */
+    int32_t texture_replacement_count; /* MODEL texture = <original> , <url> entries the loader accepted (PartLoader.cs:1932 ReplaceTextures) */
+} kspcore_part_model_file;
+
+typedef struct kspcore_part_rig_node {
+    uint32_t struct_size;
+    const char* name;
+    int32_t parent;      /* rig node index, -1 for node 0 ("model"), whose parent is the part transform */
+    float position[3];   /* local */
+    float rotation[4];   /* local, x y z w */
+    float scale[3];      /* local */
+    int32_t file;        /* index of the part's model file this node comes from, -1 for the synthetic "model" object */
+    int32_t file_node;   /* the node's id inside that .mu (kspcore_model_get_node), -1 for the synthetic "model" object */
+} kspcore_part_rig_node;
+
+/* Number of rig nodes (node 0 is "model"), 0 when the part has no readable model. */
+int kspcore_game_part_rig_node_count(uint32_t model_id);
+int kspcore_game_part_rig_node(uint32_t model_id, int node, kspcore_part_rig_node* out);
+/* The model instances of the part in instantiation order (the same .mu may appear more than once). */
+int kspcore_game_part_model_file_count(uint32_t model_id);
+int kspcore_game_part_model_file(uint32_t model_id, int file, kspcore_part_model_file* out);
+/* Replacement `index` of a model file: the texture name it replaces (without directory) and the url of the new texture. 1 on success. */
+int kspcore_game_part_texture_replacement(uint32_t model_id, int file, int index, const char** original, const char** url);
+/* The file GameDatabase.GetTexture(url) reads (absolute path; a url has no extension), NULL when the database has no such texture.
+ * Valid for the process lifetime. */
+const char* kspcore_game_texture_file(const char* url);
+
 /* ---- game ------------------------------------------------------------------------------------------------------------ */
 
 /* Game_Modes */
