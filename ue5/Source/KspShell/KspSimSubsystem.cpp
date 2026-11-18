@@ -9,7 +9,9 @@
 #include "Engine/GameViewportClient.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
+#include "Framework/Application/SlateApplication.h"
 #include "HAL/IConsoleManager.h"
+#include "KspInputDevice.h"
 #include "KspPartAssets.h"
 #include "KspShell.h"
 #include "KspTerrainView.h"
@@ -19,6 +21,7 @@
 #include "Misc/Paths.h"
 #include "ShaderCompiler.h"
 #include "UnrealClient.h"
+#include "Widgets/SViewport.h"
 
 static TAutoConsoleVariable<int32> CVarKspDrawColliderProxies(TEXT("ksp.DrawColliderProxies"), 0,
 	TEXT("Draw the collider proxies of every loaded part as a debug overlay (a part without a readable model always shows them)."));
@@ -77,6 +80,25 @@ void UKspSimSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 	}
 	bDebugView = true;
 	FParse::Value(FCommandLine::Get(), TEXT("KspShot="), ShotFile);
+	FString Keys;
+	if (FParse::Value(FCommandLine::Get(), TEXT("KspKeys="), Keys, false))
+	{
+		TArray<FString> Entries;
+		Keys.ParseIntoArray(Entries, TEXT(","));
+		for (const FString& Entry : Entries)
+		{
+			FString Frame, Name;
+			const FKey Key = Entry.Split(TEXT(":"), &Frame, &Name) ? FKey(*Name) : FKey();
+			if (Key.IsValid())
+			{
+				ScriptedKeys.Emplace(FCString::Atoi64(*Frame), Key);
+			}
+			else
+			{
+				UE_LOG(LogKspShell, Error, TEXT("-KspKeys: '%s' is not <frame>:<Unreal key name>"), *Entry);
+			}
+		}
+	}
 	FParse::Value(FCommandLine::Get(), TEXT("KspShotFrame="), ShotFrame);
 }
 
@@ -108,6 +130,14 @@ bool UKspSimSubsystem::StartSandboxFlight(const FKspGameConfig& Config, const FS
 	Anchor.Reset();
 	ColliderCache.Reset();
 
+	// the input device sees keys and mouse before any widget, while this process has a window
+	InputDevice = MakeShared<FKspInputDevice>();
+	bHadFocus = true;
+	if (FApp::CanEverRender() && FSlateApplication::IsInitialized())
+	{
+		FSlateApplication::Get().RegisterInputPreProcessor(InputDevice);
+	}
+
 	TickFunction.Target = this;
 	TickFunction.TickGroup = TG_PrePhysics;
 	TickFunction.bCanEverTick = true;
@@ -124,6 +154,16 @@ void UKspSimSubsystem::StopSim()
 		return;
 	}
 	TickFunction.UnRegisterTickFunction();
+	if (const FKspVesselState* Active = Sim->ActiveVessel())
+	{
+		UE_LOG(LogKspShell, Log, TEXT("active vessel at the end: altitude %.1f m, surface speed %.1f m/s, vertical speed %.1f m/s, %u parts, situation %d, UT %.2f"),
+			Active->Altitude, Active->SurfaceSpeed, Active->VerticalSpeed, Active->PartCount, Active->Situation, Sim->FrameState().Ut);
+	}
+	if (InputDevice && FSlateApplication::IsInitialized())
+	{
+		FSlateApplication::Get().UnregisterInputPreProcessor(InputDevice);
+	}
+	InputDevice.Reset();
 	DestroyPartActors();
 	if (PartAssets)
 	{
@@ -139,16 +179,29 @@ void UKspSimSubsystem::StopSim()
 		FrameCount > 0 ? 1000.0 * CoreSeconds / double(FrameCount) : 0.0, Anchor.MoveCount, 1000.0 * ReanchorSeconds);
 }
 
-bool UKspSimSubsystem::DefaultInput(FKspInputFrame& Input) const
+bool UKspSimSubsystem::DefaultInput(FKspInputFrame& Input)
 {
 	FIntPoint Size(1280, 720);
+	FVector2D Mouse(0.0, 720.0);
+	bool bFocus = true, bUiHover = false;
 	if (GEngine && GEngine->GameViewport && GEngine->GameViewport->Viewport)
 	{
 		Size = GEngine->GameViewport->Viewport->GetSizeXY();
+		GEngine->GameViewport->GetMousePosition(Mouse);
+		if (FSlateApplication::IsInitialized())
+		{
+			bFocus = FSlateApplication::Get().IsActive();
+			// the pointer is over shell UI when it is over something that is not the game viewport itself
+			const TSharedPtr<SViewport> ViewportWidget = FSlateApplication::Get().GetGameViewport();
+			bUiHover = ViewportWidget.IsValid() && !ViewportWidget->IsDirectlyHovered();
+		}
 	}
-	Input.ScreenWidth = Size.X;
-	Input.ScreenHeight = Size.Y;
-	Input.RealTimeSinceStartup = float(FPlatformTime::Seconds() - StartSeconds);
+	if (bHadFocus && !bFocus)
+	{
+		InputDevice->ReleaseAll();   // no key-up reaches a window without focus
+	}
+	bHadFocus = bFocus;
+	InputDevice->TakeFrame(Input, Size, Mouse, bFocus, bUiHover, float(FPlatformTime::Seconds() - StartSeconds));
 	return true;
 }
 
@@ -157,6 +210,22 @@ void UKspSimSubsystem::RunFrame(double DtReal)
 	if (!Sim)
 	{
 		return;
+	}
+	// scripted keys of the command-line session go the way real ones do: through Slate to the input device
+	if (!ScriptedKeys.IsEmpty() && FSlateApplication::IsInitialized())
+	{
+		for (const TPair<int64, FKey>& Scripted : ScriptedKeys)
+		{
+			const FKeyEvent Event(Scripted.Value, FModifierKeysState(), 0, false, 0, 0);
+			if (Scripted.Key == FrameCount)
+			{
+				FSlateApplication::Get().ProcessKeyDownEvent(Event);
+			}
+			else if (Scripted.Key + 5 == FrameCount)
+			{
+				FSlateApplication::Get().ProcessKeyUpEvent(Event);
+			}
+		}
 	}
 	const double T0 = FPlatformTime::Seconds();
 	FKspInputFrame Input;
