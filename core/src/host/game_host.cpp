@@ -398,6 +398,7 @@ struct GameHost::Impl::Flight {
     nlohmann::json colliderRef;
     bool haveColliderRef = false;
     std::unique_ptr<MuPartColliders> colliders;
+    std::map<uint32_t, std::vector<ColliderProxy>> proxyView;  // what kspcore_part_collider_proxies last returned per part (keeps the hull points alive)
     PhysicsWorldConfig worldCfg;
     std::unique_ptr<PhysicsWorld> world;
     PhysicsBubbleOptions bubbleOptions;
@@ -1484,5 +1485,42 @@ bool GameHost::Frame(double dtReal) {
 }
 
 const kspcore_snapshot_view& GameHost::Snapshot() { return impl_->snapshot; }
+
+size_t GameHost::PartColliderProxies(uint32_t partId, kspcore_collider_proxy* out, size_t capacity) {
+    static_assert(sizeof(Vector3f) == 3 * sizeof(float), "hull points are handed out as 3 floats per point");
+    Impl::Flight* flight = impl_->flight.get();
+    if (flight == nullptr || !flight->bubbleOptions.vessel.colliders) return 0;
+    for (Vessel* v : FlightGlobals::Vessels) {
+        if (v == nullptr || !v->loaded) continue;
+        for (Part* p : v->parts) {
+            if (p == nullptr || p->fields.flightID != partId) continue;
+            std::vector<ColliderProxy>& proxies = flight->proxyView[partId];
+            proxies = flight->bubbleOptions.vessel.colliders(*p);
+            for (size_t i = 0; i < proxies.size() && i < capacity; ++i) {
+                const ColliderProxy& c = proxies[i];
+                kspcore_collider_proxy o{};
+                o.struct_size = sizeof(kspcore_collider_proxy);
+                switch (c.kind) {
+                    case ShapeKind::Box: o.kind = KSPCORE_COLLIDER_BOX; break;
+                    case ShapeKind::Sphere: o.kind = KSPCORE_COLLIDER_SPHERE; break;
+                    case ShapeKind::Capsule: o.kind = KSPCORE_COLLIDER_CAPSULE; break;
+                    case ShapeKind::ConvexHull: o.kind = KSPCORE_COLLIDER_CONVEX_HULL; break;
+                }
+                o.center[0] = c.center.x, o.center[1] = c.center.y, o.center[2] = c.center.z;
+                o.rotation[0] = c.rotation.x, o.rotation[1] = c.rotation.y, o.rotation[2] = c.rotation.z, o.rotation[3] = c.rotation.w;
+                o.half_extents[0] = c.halfExtents.x, o.half_extents[1] = c.halfExtents.y, o.half_extents[2] = c.halfExtents.z;
+                o.radius = c.radius;
+                o.half_height = c.halfHeight;
+                if (c.kind == ShapeKind::ConvexHull && c.hull != nullptr && !c.hull->empty()) {
+                    o.hull_point_count = static_cast<uint32_t>(c.hull->size());
+                    o.hull_points = &c.hull->front().x;
+                }
+                out[i] = o;
+            }
+            return proxies.size();
+        }
+    }
+    return 0;
+}
 
 }  // namespace ksp::host

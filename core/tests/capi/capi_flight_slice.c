@@ -186,6 +186,36 @@ int main(int argc, char** argv) {
     CHECK(v->flags & KSPCORE_VESSEL_LOADED);
     printf("M2 on the pad: %u parts, altitude %.3f m, situation %d, %u terrain quads\n", v->part_count, v->altitude, v->situation, snap->quads_added_count);
 
+    /* WP-UE-07 debug view: every part has collider proxies, well formed. The C++ twin never reads them and must still get the same final
+     * hash: reading them does not change the state. */
+    {
+        uint32_t pi, total = 0, hulls = 0;
+        for (pi = 0; pi < v->part_count; ++pi) {
+            kspcore_collider_proxy px[64];
+            const uint32_t id = snap->parts[v->first_part + pi].id;
+            const size_t n = kspcore_part_collider_proxies(sim, id, px, 64);
+            size_t c;
+            CHECK(n >= 1);
+            CHECK(kspcore_part_collider_proxies(sim, id, NULL, 0) == n);
+            for (c = 0; c < n && c < 64; ++c) {
+                const float* q = px[c].rotation;
+                const double norm = (double)q[0] * q[0] + (double)q[1] * q[1] + (double)q[2] * q[2] + (double)q[3] * q[3];
+                CHECK(px[c].struct_size == sizeof(kspcore_collider_proxy));
+                CHECK(px[c].kind >= KSPCORE_COLLIDER_BOX && px[c].kind <= KSPCORE_COLLIDER_CONVEX_HULL);
+                CHECK(fabs(norm - 1.0) < 1e-4);
+                if (px[c].kind == KSPCORE_COLLIDER_CONVEX_HULL) {
+                    CHECK(px[c].hull_point_count >= 4 && px[c].hull_points != NULL);
+                    ++hulls;
+                } else {
+                    CHECK(px[c].hull_point_count == 0 && px[c].hull_points == NULL);
+                }
+                ++total;
+            }
+        }
+        CHECK(kspcore_part_collider_proxies(sim, 0xFFFFFFFFu, NULL, 0) == 0);
+        printf("collider proxies: %u over %u parts (%u convex hulls)\n", total, v->part_count, hulls);
+    }
+
     frames_total = settle + window;
     t_loop = clock();
     alt = (double*)calloc((size_t)window, sizeof(double));

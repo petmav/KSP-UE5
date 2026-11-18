@@ -8038,3 +8038,12 @@ Measured on this branch after merging `origin/main` (WP-UE-02, WP-40b) on Window
 - `g++ -std=c++20 -fsyntax-only` in WSL (GCC 13.3) over every changed `.cpp` and `tests/test_effects.cpp`: clean.
 - `python -I core/tools/ci/pr_review.py --base main`: 0 failing checks (19 older cite mismatches in neighbouring lines of files this branch touches are not on changed lines); `python -I core/tools/wp28/check_cites.py` on `src/fx/*.cpp` and `include/ksp/fx/*.hpp`: 147 cites, 0 mismatches (`NAME_ALIAS` gained `OnEventPower`, `PoweredEvent`, `~AudioMultiPooledFX`, `StartFade`, `FindFXGroup`, `OnUpdate`).
 - Not run: Linux build, the in-game FX comparison (no capture exists), Unreal.
+
+## WP-UE-07, core side: collider proxies in the C ABI (branch `wpue07`, from main `bd2364c3`)
+
+The Unreal package WP-UE-07 (sim subsystem, frame loop, placement; `ue5/STATUS.md`) draws vessels as their collider proxies until part rendering exists. One additive call in `include/kspcore/kspcore_frame.h` gives the shell that data; nothing else in core changed.
+
+- `kspcore_part_collider_proxies(sim, part_id, out, capacity)` and `kspcore_collider_proxy` (`KSPCORE_COLLIDER_BOX / SPHERE / CAPSULE / CONVEX_HULL`): the proxies the physics bubble builds for a loaded part (`VesselPhysicsOptions::colliders`, here `MuPartColliders::Hook()`: the part's own `.mu` colliders, else the drag-cube box), in part space. Implementation `GameHost::PartColliderProxies` (`src/host/game_host.cpp`), entry point in `src/capi/kspcore_frame.cpp`. Hull points stay valid until the next call for the same part or the end of the scene. `KSPCORE_ABI_VERSION` stays 2 and `KSPCORE_FRAME_ABI` stays 1: appended function and struct, no existing layout changed.
+- No ported C# in this change (host plumbing only), so no cites.
+
+Gate: `capi.flight_slice` (pure C) reads the proxies of all 153 parts of PhysProf-M2 on the pad before the flight: 154 proxies, 18 of them convex hulls, every struct well formed (size, kind, unit rotation, hull pointer exactly for hulls), the sizing call (capacity 0) agrees, an unknown part id gives 0. The C++ twin `capi.flight_slice_twin` never reads them and still ends in the same snapshot hash `2c4ae66445a41c81`: reading the proxies does not change the simulation state. That hash is the one main had before this change.

@@ -297,6 +297,32 @@ const kspcore_snapshot_view* kspcore_snapshot(kspcore_sim* sim);
  * text listed the ids; see core/PROGRESS-wpue02.md] */
 uint64_t kspcore_snapshot_hash(const kspcore_snapshot_view* snapshot);
 
+/* ---- debug view (appended, WP-UE-07) -------------------------------------------------------------------------------------- */
+
+/* The collider proxies of a loaded part as the physics bubble builds them (the part's own .mu colliders, or the box of its first drag
+ * cube where no model is readable), in PART space: the snapshot part's position / rotation place them. The shell draws them until part
+ * rendering exists and as a debug overlay afterwards. Reading them does not change the simulation state. */
+#define KSPCORE_COLLIDER_BOX 0
+#define KSPCORE_COLLIDER_SPHERE 1
+#define KSPCORE_COLLIDER_CAPSULE 2     /* the cylinder runs along the collider frame's Y axis */
+#define KSPCORE_COLLIDER_CONVEX_HULL 3
+
+typedef struct kspcore_collider_proxy {
+    uint32_t struct_size;
+    int32_t kind;              /* KSPCORE_COLLIDER_* */
+    float center[3];           /* origin of the collider frame in part space */
+    float rotation[4];         /* rotation of the collider frame in part space (x, y, z, w) */
+    float half_extents[3];     /* box */
+    float radius;              /* sphere, capsule */
+    float half_height;         /* capsule: half length of the cylinder part */
+    uint32_t hull_point_count; /* convex hull */
+    const float* hull_points;  /* 3 floats per point, collider frame; valid until the next call for the same part or the end of the scene */
+} kspcore_collider_proxy;
+
+/* Writes at most `capacity` proxies of the part with the snapshot id `part_id` and returns how many the part has (capacity 0 sizes the
+ * buffer). 0 for an unknown or unloaded part and outside a flight scene. */
+size_t kspcore_part_collider_proxies(kspcore_sim* sim, uint32_t part_id, kspcore_collider_proxy* out, size_t capacity);
+
 #ifdef __cplusplus
 }
 #endif

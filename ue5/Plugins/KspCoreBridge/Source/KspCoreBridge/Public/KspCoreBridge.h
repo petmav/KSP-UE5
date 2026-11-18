@@ -34,25 +34,22 @@ private:
 class KSPCOREBRIDGE_API FKspCoreBridge
 {
 public:
-	/** Build-info string reported by the linked kspcore library (stub or real). */
+	/** Build-info string reported by the linked kspcore library. */
 	static FString GetCoreBuildInfo();
 
 	/** ABI version the bridge was compiled against (KSPCORE_ABI_VERSION from kspcore_c.h). */
 	static int32 GetCompiledAbiVersion();
 
-	/** ABI version the linked library reports at run time (kspcore_abi_version). 0 for the stub. */
+	/** ABI version the linked library reports at run time (kspcore_abi_version). */
 	static int32 GetCoreAbiVersion();
 
-	/** True when linked against ue5/Stub instead of the real core. */
-	static bool IsStub();
-
-	/** Number of libraries the link manifest listed (kspcore.lib, Jolt.lib ...). 0 for the stub. */
+	/** Number of libraries the link manifest listed (kspcore.lib, Jolt.lib ...). */
 	static int32 GetManifestLibraryCount();
 
 	/** Jolt configuration the bridge's definitions (from the link manifest) describe, "key=value\n" lines as GetCoreJoltConfig. */
 	static FString GetManifestJoltConfig();
 
-	// ---- test ABI (kspcore_test.h): only for automation tests; not available on the stub (the calls return false / empty) ----
+	// ---- test ABI (kspcore_test.h): only for automation tests ----
 
 	/** Jolt configuration of the linked library as observed by behaviour, e.g. "double_precision=1\n". */
 	static FString GetCoreJoltConfig();

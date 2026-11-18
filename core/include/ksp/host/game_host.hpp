@@ -80,6 +80,8 @@ public:
     size_t Submit(const kspcore_command* commands, size_t count);
     bool Frame(double dtReal);
     const kspcore_snapshot_view& Snapshot();
+    // the bubble's collider proxies of a loaded part (kspcore_part_collider_proxies)
+    size_t PartColliderProxies(uint32_t partId, kspcore_collider_proxy* out, size_t capacity);
 
     const std::string& Error() const { return error_; }
 

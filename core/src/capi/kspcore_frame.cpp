@@ -75,4 +75,13 @@ uint64_t kspcore_snapshot_hash(const kspcore_snapshot_view* snapshot) {
     });
 }
 
+size_t kspcore_part_collider_proxies(kspcore_sim* sim, uint32_t part_id, kspcore_collider_proxy* out, size_t capacity) {
+    return Guard("kspcore_part_collider_proxies", static_cast<size_t>(0), [&]() -> size_t {
+        ksp::host::GameHost* h = Host(sim, "kspcore_part_collider_proxies");
+        if (h == nullptr) return 0;
+        if (out == nullptr && capacity != 0) throw std::invalid_argument("out is NULL");
+        return h->PartColliderProxies(part_id, out, capacity);
+    });
+}
+
 }  // extern "C"

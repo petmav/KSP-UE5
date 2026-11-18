@@ -1,4 +1,4 @@
-# ue5/ STATUS (2026-10-09; WP-UE-01 bridge rebuild 2026-11-13)
+# ue5/ STATUS (2026-10-09; WP-UE-01 bridge rebuild 2026-11-13; WP-UE-07 sim subsystem 2026-11-18)
 
 ## What works
 
@@ -9,7 +9,7 @@
   through the **link manifest** the core build writes (`core/build/RelWithDebInfo/kspcore_link.txt`, `file(GENERATE)` in
   `core/src/CMakeLists.txt`; `key=value` lines: `manifest_version`, `config`, `include`, `lib` in link order, `define` for Jolt's
   `JPH_*` configuration). `KspCoreBridge.Build.cs` reads it (env `KSPCORE_LINK_MANIFEST` overrides), so a new core dependency never needs
-  a Build.cs edit; the `ue5/Stub` placeholder stays behind `bUseRealCore = false`. Both targets (Development Editor, Development Game)
+  a Build.cs edit (the `ue5/Stub` placeholder and its `bUseRealCore` switch were removed by WP-UE-07: the facade needs ABI v2). Both targets (Development Editor, Development Game)
   build from clean with 0 warnings (lines containing "warning" in the UBT logs: 0). The module compiles with `FPSemantics = Precise`
   (property verified in `ModuleRules.cs:784` of the engine's UBT sources); every call into core goes through `FKspFpGuard`, which sets
   MXCSR to 0x1F80 (round to nearest, exceptions masked, FTZ / DAZ off) and restores the caller's value. The core's test-only C ABI
@@ -26,12 +26,58 @@
 - **Phase-0 scale spike**: runs unattended and deterministically in about 3.5 minutes. It writes CSVs, PNGs and a log, then quits.
   Results are in `spike/RESULTS.md`.
 
+## Sim subsystem, frame loop, placement (WP-UE-07, 2026-11-18)
+
+Core now runs inside Unreal, once per rendered frame, and ends bit for bit where the headless C program ends.
+
+- **Facade** (`Plugins/KspCoreBridge`, `KspSim.h`): `FKspAxis` (Unity Y-up metres <-> UE Z-up centimetres, UE (X, Y, Z) = Unity (Z, X, Y) x 100),
+  `FKspGame` (process init + game database, one per process, shut down with the module), `FKspSim` (RAII `kspcore_sim`: new sandbox game,
+  launch, scene loaded, input frame, `kspcore_frame`, snapshot hash, and per-frame copies of the frame state, vessels, parts and events
+  with positions already in UE axes and centimetres relative to the dominant body). Every call runs under `FKspFpGuard`. The bridge is
+  written against ABI v2 (`static_assert`); it is still the only code that includes kspcore headers. Not wrapped yet: commands, bodies, sun,
+  terrain quads, camera, node poses, FX (each lands with the package that uses it).
+- **`UKspSimSubsystem`** (`Source/KspShell`, a `UWorldSubsystem` of game worlds): owns the sim; an `FTickFunction` in `TG_PrePhysics` runs
+  input -> `kspcore_frame` -> snapshot -> events -> render anchor -> placement. A scene load core requests is answered at once
+  (`kspcore_scene_loaded`): there are no scene actor sets to build before WP-UE-17. `FixedFrameDt` passes an exact delta to core (gates);
+  `InputSource` is the seam the input device of WP-UE-08 binds (unbound: an idle device with focus, the viewport size and real time).
+- **Render anchor** (`FKspRenderAnchor`, DESIGN D6): actors go at (position - anchor); the anchor moves to the focus beyond 100 km and at
+  every frame change of core. The focus is the active vessel's centre of mass until core has a camera (WP-UE-03). Count and cost are logged.
+- **Debug view**: every loaded part's collider proxies (boxes, spheres, capsules as lines; convex hulls as their points) through the new core
+  call `kspcore_part_collider_proxies`, cvar `ksp.DrawColliderProxies` (default 1). `Scripts\fly.ps1` starts a sandbox flight in `-game`
+  mode from `decompiled\KSP-dev` (`-KspLaunch=<craft>`, default the stock Kerbal X on the LaunchPad) with a fixed chase camera 25 m from
+  the vessel; `-Shot <png>` takes a screenshot at a sim frame and quits (`slice/shots/wpue07_pad.png`: Kerbal X on the pad, 73 parts).
+  The chase camera and the proxies are stand-ins until WP-UE-09 and WP-UE-10.
+
+Gates (all runs mine, this laptop, Development Editor, `-nullrhi`; `Scripts\test.ps1`, 8 / 8 tests pass, 56.7 s):
+
+| test | what | result |
+|---|---|---|
+| `KspUe5.Slice.HeadlessParity` | ctest `capi.flight_slice`'s run (PhysProf-M2, 153 parts, the repository's GameData mirror, 1 + 4,660 frames of 0.02 s = 93.2 s of flight, keys Z / T / Space at flight frame 100) through `UWorld::Tick` and the subsystem's tick function | final snapshot hash `2c4ae66445a41c81` = the hash the pure-C twin wrote in the same test run; 4,661 frames ticked, 4,660 input frames, core counts 4,660 flight frames, vessel above 30 km |
+| `KspUe5.Sim.AxisConversion` | basis vectors, determinant +1, Unity `AngleAxis(90, up)` = Unreal yaw +90 degrees, 1,000 random samples | direction and rotation round trips exact; position round trip within one rounding (2.5e-16 relative); conversion commutes with rotating a vector and composing rotations (1e-15) |
+| `KspUe5.Sim.RenderAnchor` | first placement, 99 km and exactly 100 km (stays), 100.001 km (moves), frame-change serial (moves), reset | pass |
+
+Measured in the parity run: world tick 1.678 ms per frame, of which core (input + `kspcore_frame` + snapshot copy) 1.448 ms; the pure-C twin
+needs 1.105 ms per frame (CPU time) for the same frames. The render anchor moved once (the first placement, 0.006 ms): the ascent stays
+within 100 km of the pad. In the `-game` run of Kerbal X on the pad (330 frames, real game data): core 0.59 to 0.70 ms per frame; the frame of
+the first placement took 4.5 to 4.8 ms (it fetches the proxies of all 73 parts); process init + game database 7.62 s in the first run and
+0.21 s in the second (cause not examined; the file cache is the likely one).
+
+Builds: Development Editor 39.8 s incremental with the new module, Development Game 29.6 s, both 0 warnings and 0 errors.
+
+Not done / notes:
+- No camera, input device, part meshes, terrain or UI: WP-UE-08 and later. Keys reach core only through `InputSource` (tests).
+- Collider proxies are cached per part id for the scene; a part whose colliders change while it lives (none known) would show stale lines.
+- The parity hash is only compared between processes that run the same `kspcore.lib`; `Scripts\test.ps1` runs the twin before the editor.
+- `FKspTestWorld` (tests) creates a game world without game instance or game mode, because the project's default game mode is still the
+  scale spike's; `fly.ps1` passes `?game=/Script/Engine.GameModeBase` for the same reason. The persistent level and game mode of DESIGN
+  section 2 come with WP-UE-17.
+
 ## Build and iteration timings (wall clock, this laptop; raw log in `timings.log`)
 
 | What | Time |
 |---|---|
 | Generate project files (`Build.bat -projectfiles`, i.e. UBT `-projectfiles`) | 14.1 s |
-| Stub `kspcore.lib` (CMake configure + build, RelWithDebInfo) | 5.5 s |
+| Stub `kspcore.lib` (CMake configure + build, RelWithDebInfo; the stub was removed by WP-UE-07) | 5.5 s |
 | **First full build, Development Editor** (clean `Binaries` + `Intermediate/Build`, incl. shared PCHs) | **64.4 s** |
 | No-op editor build | 1.2 s |
 | **Incremental editor build after touching one .cpp** | **10.1 s** (10.1 to 11.6 s over 3 runs) |

@@ -44,3 +44,10 @@
 2026-11-13 16:59:55  game build after merge with main + fresh core lib (wpue01)      28.8 s  rc=0
 2026-11-13 17:00:45  headless automation tests after merge (run 1)      49.9 s  rc=0
 2026-11-13 17:01:06  headless automation tests after merge (run 2)      20.1 s  rc=0
+2026-11-18 17:39:56  build KspUe5Editor Development                   106.0 s  rc=6
+2026-11-18 17:41:30  build KspUe5Editor Development                    40.3 s  rc=0
+2026-11-18 17:42:43  headless automation tests                         56.7 s  rc=0
+2026-11-18 17:43:31  fly Kerbal X.craft                                21.8 s  exit=0
+2026-11-18 17:44:12  build KspUe5Editor Development                     6.4 s  rc=0
+2026-11-18 17:44:25  fly Kerbal X.craft                                13.0 s  exit=0
+2026-11-18 17:45:21  build KspUe5 Development                          30.1 s  rc=0
