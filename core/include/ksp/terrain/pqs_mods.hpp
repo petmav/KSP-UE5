@@ -51,9 +51,9 @@ enum class PQSNoiseType : int { Perlin = 0, RidgedMultifractal = 1, Billow = 2 }
 // WP-11 ported the height half (land-class blending, minimumRealHeight / alterRealHeight). WP-12d adds the scatter half: the scatter
 // matching of OnSetup, OnQuadPreBuild, the scatter branch of OnVertexBuild (the per-scatter density of the quad), OnQuadBuilt, the
 // LandClassScatter cache bookkeeping and CreateScatterMesh (the placement of the scatter instances: UnityEngine.Random draws, positions,
-// rotations, scales, the transformed vertices of the base mesh), PQSMod_LandClassScatterQuad's scheduling. Excluded (rendering): the vertex
-// colour branch of OnVertexBuild (createColors: Color.Lerp of the land-class colours and the alterApparentHeight alpha, the channel only the
-// terrain shader reads), materials, MeshRenderers and shadow modes (castShadows / recieveShadows are kept as data). The base meshes of the
+// rotations, scales, the transformed vertices of the base mesh), PQSMod_LandClassScatterQuad's scheduling. WP-UE-11 adds the vertex colour
+// branch of OnVertexBuild (createColors: Color.Lerp of the land-class colours and the alterApparentHeight alpha): the terrain the shell draws
+// is coloured by it. Excluded (rendering): materials, MeshRenderers and shadow modes (castShadows / recieveShadows are kept as data). The base meshes of the
 // stock tree / rock scatters are not extracted (`baseMesh*` vectors empty): their instance transforms are still computed, their vertices are
 // the host's to transform (LandClassScatterQuad::instances).
 class PQSLandControl : public PQSMod {
@@ -229,6 +229,7 @@ public:
 
     // evaluation state (C# private fields)
     double vHeight = 0.0, vLat = 0.0, vLon = 0.0, totalDelta = 0.0;
+    double vHeightAltered = 0.0;         // :615
     std::vector<LandClass*> lcList;
     int lcListCount = 0;
     std::vector<double> lcScatterList;   // :595 (null until OnSetup with Global_AllowScatter: empty)
@@ -240,7 +241,11 @@ public:
 
     // WP-12a PQSHeightWorkers: the height pass of a prefetched quad ran on a worker sphere; what OnVertexBuild reads from it is carried per
     // vertex (the land-class list and the normalised deltas) and restored here before OnVertexBuild (bit-identical to the inline build)
-    using BuildState = std::vector<std::pair<int, double>>;   // (land-class index, delta) of lcList in order
+    // What OnVertexBuildHeight leaves for OnVertexBuild: lcList in order as (land-class index, delta), and vHeight
+    struct BuildState {
+        std::vector<std::pair<int, double>> deltas;
+        double vHeight = 0.0;
+    };
     void CaptureBuildState(BuildState& out) const;
     void RestoreBuildState(const BuildState& in);
 

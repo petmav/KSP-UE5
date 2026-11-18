@@ -328,11 +328,18 @@ void PQSLandControl::OnQuadPreBuild(PQ& quad) {
     scatterActive = quad.subdivision >= scatterMinSubdiv && createScatter && PQS::Global_AllowScatter;
 }
 
-// PQSLandControl.cs:809 (the scatter statements; the createColors statements are rendering and not ported)
+// PQSLandControl.cs:809
 void PQSLandControl::OnVertexBuild(PQSVertexBuildData& data) {
+    vHeightAltered = vHeight;
     for (int itr = 0; itr < lcListCount; itr++) {
         LandClass& lc = *lcList[Z(itr)];
         if (lc.delta > 0.0) {
+            if (createColors) {
+                data.vertColor = data.vertColor +
+                                 Color::Lerp(lc.color, lc.noiseColor, f32store(fx(lc.noiseBlend) * lc.noiseSimplex->noiseNormalized(data.directionFromCenter))) *
+                                     f32store(lc.delta);
+                vHeightAltered += lc.delta * fx(lc.alterApparentHeight);
+            }
             if (data.allowScatter && scatterActive && lc.delta > 0.05) {
                 for (const LandClassScatterAmount& amount : lc.scatter) {
                     if (data.buildQuad->subdivision >= scatterMinSubdiv) {
@@ -343,6 +350,14 @@ void PQSLandControl::OnVertexBuild(PQSVertexBuildData& data) {
                 }
             }
         }
+    }
+    if (createColors) {
+        if (vHeightAltered > 1.0) {
+            vHeightAltered = 1.0;
+        } else if (vHeightAltered < 0.0) {
+            vHeightAltered = 0.0;
+        }
+        data.vertColor.a = f32store(vHeightAltered);
     }
 }
 
@@ -394,16 +409,18 @@ double PQSLandControl::DoubleLerp(double startStart, double startEnd, double end
 }
 
 void PQSLandControl::CaptureBuildState(BuildState& out) const {
-    out.clear();
+    out.deltas.clear();
     for (int i = 0; i < lcListCount; i++) {
         const LandClass* lc = lcList[Z(i)];
-        out.emplace_back(static_cast<int>(lc - landClasses.data()), lc->delta);
+        out.deltas.emplace_back(static_cast<int>(lc - landClasses.data()), lc->delta);
     }
+    out.vHeight = vHeight;
 }
 
 void PQSLandControl::RestoreBuildState(const BuildState& in) {
+    vHeight = in.vHeight;
     lcList.clear();
-    for (const auto& [index, delta] : in) {
+    for (const auto& [index, delta] : in.deltas) {
         LandClass& lc = landClasses[Z(index)];
         lc.delta = delta;
         lcList.push_back(&lc);

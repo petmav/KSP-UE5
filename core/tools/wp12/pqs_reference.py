@@ -41,7 +41,7 @@ sys.path.insert(0, HERE)
 
 from pqs_ref_math import (CORE, ROOT, check_natives, check_x87, dbits, dnormalized, f32, fbits, from_dhex,  # noqa: E402
                           from_fhex)
-from pqs_ref_sphere import (REQ, AltitudeAlpha, AltitudeFade, AltitudeUV, CelestialBodyTransform, FlattenArea,  # noqa: E402
+from pqs_ref_sphere import (REQ, AltitudeAlpha, AltitudeFade, AltitudeUV, CelestialBodyTransform, FlattenArea, LandControlColors,  # noqa: E402
                             PassiveReq, QuadEnhanceCoast, QuadMeshColliders, Sphere, SynthHeight, Target,
                             UVPlanetRelativePosition)
 from pqs_ref_tree import MeshCache, Pool  # noqa: E402
@@ -185,9 +185,10 @@ class Oracle:
 
     def want_build(self, body, name, centre, sub, gvs):
         b = self.body(body)
-        if name in b["build"]:
+        if name in b["build"] and "lc" in b["build"][name]:  # an entry from before WP-UE-11 has no land-control colours: asked again
             e = b["build"][name]
-            return [(from_dhex(h), tuple(from_fhex(c) for c in col)) for h, col in zip(e["h"], e["c"])]
+            return [(from_dhex(h), tuple(from_fhex(c) for c in col), tuple(from_fhex(c) for c in lc))
+                    for h, col, lc in zip(e["h"], e["c"], e["lc"])]
         self.pending.setdefault(body, {"public": {}, "build": {}})["build"][name] = {
             "centre": dvec(centre), "sub": sub, "gv": [dvec(g) for g in gvs]}
         return None
@@ -212,7 +213,7 @@ class Oracle:
             for (vec, state), h in zip(q["bodies"][bname]["public"], r["public"]):
                 b["public"][",".join(vec) + "|" + state] = h
             for e, rr in zip(q["bodies"][bname]["build"], r["build"]):
-                b["build"][e["name"]] = {"centre": e["centre"], "sub": e["sub"], "h": rr["h"], "c": rr["c"]}
+                b["build"][e["name"]] = {"centre": e["centre"], "sub": e["sub"], "h": rr["h"], "c": rr["c"], "lc": rr["lc"]}
         if "provenance" in res:
             self.data["provenance"] = res["provenance"]
         self.pending = {}
@@ -442,6 +443,8 @@ def make_real_stack(body, host):
             mods.append(AltitudeAlpha(f["order"], f["atmosphereDepth"], bool(f["invert"])))
         elif c == "PQSMod_QuadMeshColliders":
             mods.append(QuadMeshColliders(f["order"], f["maxLevelOffset"]))
+        elif c == "PQSLandControl" and f["createColors"]:
+            mods.append(LandControlColors(f["order"]))
         elif c == "PQSMod_CelestialBodyTransform":
             pf = f["planetFade"]
             cbt = CelestialBodyTransform(f["order"], f["deactivateAltitude"], f["highQualityShaderDeactivateAltitude"],
@@ -451,7 +454,8 @@ def make_real_stack(body, host):
                                                        s["highQualityShaderFadeStart"], s["highQualityShaderFadeEnd"])
                                           for s in f["secondaryFades"]], host)
             mods.append(cbt)
-    # order ties do not matter here: these mods' effects are independent of each other
+    # order ties do not matter here: these mods' effects are independent of each other, except PQSLandControl's alpha, which must
+    # come after PQSMod_AltitudeAlpha's; its order (9999991 in the stock prefabs) is above every other mod's
     for i, m in enumerate(mods):
         m.order = (m.order, i)
     return mods, cbt, b["pqs"], rmin, rmax

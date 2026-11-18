@@ -23,6 +23,7 @@ class VBData:  # PQS.VertexBuildData (PQS.cs:77)
         self.vertColor = (0.0, 0.0, 0.0, 0.0)
         self.u = self.v = self.u2 = self.v2 = self.u3 = self.v3 = self.u4 = self.v4 = 0.0
         self.allowScatter = False
+        self.landControlColor = None  # the oracle's PQSLandControl colour of this vertex (stock spheres, see LandControlColors)
         self.gnomonicPlane = 0
         self.latitude = 0.0
         self.longitude = 0.0
@@ -249,6 +250,23 @@ class AltitudeAlpha(Mod):  # PQSMod_AltitudeAlpha.cs
         h = (d.vertHeight - self.sphere.radius) / self.atmosphereDepth
         a = f32(1.0 - h) if self.invert else f32(h)
         d.vertColor = (d.vertColor[0], d.vertColor[1], d.vertColor[2], a)
+
+
+class LandControlColors(Mod):  # PQSLandControl.cs:809 OnVertexBuild, the createColors statements (WP-UE-11)
+    """The vertex colour PQSLandControl adds. The colour maths (Color.Lerp of each land class's colour and noise colour, the simplex
+    noise blend, the land-class deltas of the height pass, the alterApparentHeight alpha) comes through the oracle, as the heights do:
+    it needs the whole land-class evaluation of the height pass. What this side keeps independent is what the build does with it:
+    the mod's place in the order (it runs last, so its alpha replaces the one PQSMod_AltitudeAlpha wrote) and the mesh's colour channel.
+    The oracle applied the mod to the colour the height pass left; that equals the game's result as long as no mod before this one
+    changed r, g, b in OnVertexBuild, which is checked here."""
+
+    def OnVertexBuild(self, d):
+        if d.landControlColor is None:  # a quad built without oracle data: its mesh is not compared
+            return
+        base, after = d.landControlColor
+        if tuple(d.vertColor[:3]) != tuple(base[:3]):
+            raise SystemExit("LandControlColors: a mod before PQSLandControl changed the vertex colour %r -> %r" % (base, d.vertColor))
+        d.vertColor = after
 
 
 class QuadMeshColliders(Mod):  # PQSMod_QuadMeshColliders.cs
@@ -818,9 +836,11 @@ class Sphere:
                 if self.reqVertexMapCoods:
                     self.BuildVertexMapCoords(d)
                 if provided is not None:
-                    d.vertHeight, d.vertColor = provided[i]
+                    d.vertHeight, d.vertColor, after = provided[i]
+                    d.landControlColor = (d.vertColor, after)
                 else:
                     d.vertColor = (0.0, 0.0, 0.0, 1.0)
+                    d.landControlColor = None
             self.Mod_OnVertexBuild(d)
             d.vertHeight -= self.radius
             if d.vertHeight > q.meshVertMax:

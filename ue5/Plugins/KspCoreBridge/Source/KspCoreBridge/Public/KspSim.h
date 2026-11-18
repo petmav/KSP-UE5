@@ -64,6 +64,14 @@ namespace KspVesselFlag
 	inline constexpr uint32 Splashed = 16;
 }
 
+/** Body flag bits (KSPCORE_BODY_*). */
+namespace KspBodyFlag
+{
+	inline constexpr uint32 PqsActive = 1;
+	inline constexpr uint32 ScaledVisible = 2;
+	inline constexpr uint32 Dominant = 4;
+}
+
 /** Process initialisation of core (kspcore_game_config). Paths are absolute. */
 struct FKspGameConfig
 {
@@ -167,6 +175,44 @@ struct FKspPartState
 	FQuat Rotation = FQuat::Identity;
 };
 
+/** A celestial body: its centre relative to the dominant body's centre and the rotation of its fixed frame, UE axes and centimetres. */
+struct FKspBodyState
+{
+	int32 Id = INDEX_NONE;
+	uint32 Flags = 0;
+	/** 1 = the scaled-space version is fully faded in. */
+	float PlanetFade = 1.0f;
+	FVector Position = FVector::ZeroVector;
+	FQuat Rotation = FQuat::Identity;
+	/** Metres. */
+	double Radius = 0.0;
+};
+
+/**
+ * One terrain quad of the frame's terrain stream (kspcore_terrain_quad), new or re-stitched (the same id again). Converted: UE axes
+ * and centimetres, triangle order flipped. Positions are relative to Origin; Origin is in the body's fixed frame. The colours are the
+ * PQS vertex colours as stored (gamma values).
+ */
+struct FKspTerrainQuad
+{
+	int32 BodyId = INDEX_NONE;
+	int32 Id = INDEX_NONE;
+	int32 Subdivision = 0;
+	uint32 BuildSerial = 0;
+	FVector Origin = FVector::ZeroVector;
+	TArray<FVector> Positions;
+	TArray<FVector> Normals;
+	TArray<FVector2D> UV0;
+	TArray<FColor> Colors;
+	TArray<int32> Indices;
+};
+
+struct FKspTerrainRemoved
+{
+	int32 BodyId = INDEX_NONE;
+	int32 Id = INDEX_NONE;
+};
+
 /** Payload as core sent it (kspcore_event): D is in core's axes and metres. */
 struct FKspEvent
 {
@@ -224,6 +270,10 @@ public:
 	TConstArrayView<FKspVesselState> Vessels() const { return VesselView; }
 	TConstArrayView<FKspPartState> Parts() const { return PartView; }
 	TConstArrayView<FKspEvent> Events() const { return EventView; }
+	TConstArrayView<FKspBodyState> Bodies() const { return BodyView; }
+	/** The terrain stream of the last Frame() / SceneLoaded(): each entry is delivered once. */
+	TConstArrayView<FKspTerrainQuad> QuadsAdded() const { return QuadAddedView; }
+	TConstArrayView<FKspTerrainRemoved> QuadsRemoved() const { return QuadRemovedView; }
 	/** Unit vector from the centre of the dominant body to the sun, UE axes. */
 	const FVector& SunDirection() const { return SunView; }
 	/** The active vessel of the snapshot, null when there is none. */
@@ -246,4 +296,7 @@ private:
 	TArray<FKspVesselState> VesselView;
 	TArray<FKspPartState> PartView;
 	TArray<FKspEvent> EventView;
+	TArray<FKspBodyState> BodyView;
+	TArray<FKspTerrainQuad> QuadAddedView;
+	TArray<FKspTerrainRemoved> QuadRemovedView;
 };

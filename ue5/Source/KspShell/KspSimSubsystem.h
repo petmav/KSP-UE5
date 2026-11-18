@@ -11,6 +11,7 @@
 class ACameraActor;
 class ADirectionalLight;
 class UKspPartAssets;
+class UKspTerrainView;
 class UKspSimSubsystem;
 
 /** The sim's tick: TG_PrePhysics, before cameras and rendering (ue5/DESIGN.md 1.3 "Per-frame sequence"). */
@@ -29,7 +30,7 @@ struct FKspSimTickFunction : public FTickFunction
  *   input -> kspcore_frame -> snapshot -> events (scene loads) -> render anchor -> placement
  *
  * Placement today: one actor per loaded part with the part's own meshes and textures (UKspPartAssets, WP-UE-10), a directional light
- * from core's sun direction, and, for a session started from the command line, a fixed chase camera (the stand-in until the camera
+ * from core's sun direction, the dominant body's terrain quads (UKspTerrainView, WP-UE-11) and, for a session started from the command line, a fixed chase camera (the stand-in until the camera
  * packages, WP-UE-03 / 09). Collider proxies are a debug overlay (cvar ksp.DrawColliderProxies) and what a part without a readable
  * model is drawn with.
  *
@@ -71,6 +72,14 @@ public:
 	double GetReanchorSeconds() const { return ReanchorSeconds; }
 	/** The part models built so far; null before the first part is drawn. */
 	const UKspPartAssets* GetPartAssets() const { return PartAssets; }
+	/** The terrain of the dominant body; null before the first quad arrives. */
+	const UKspTerrainView* GetTerrain() const { return Terrain; }
+
+	/**
+	 * Whether the scene is presented (part actors, terrain, light). Unset: when the process can render. Tests of the presentation set
+	 * it to true to build the scene in a headless run.
+	 */
+	TOptional<bool> PresentOverride;
 
 	/** Parity gates and benchmarks: every frame passes exactly this delta to core instead of the world's delta time. */
 	TOptional<double> FixedFrameDt;
@@ -125,4 +134,7 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<ADirectionalLight> SunLight;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UKspTerrainView> Terrain;
 };

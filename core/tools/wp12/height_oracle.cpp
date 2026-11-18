@@ -85,20 +85,29 @@ int Run(int argc, char** argv) {
             PQS& p = e[1].get<std::string>() == "built" ? *built : *initial;
             res["public"].push_back(H(p.GetSurfaceHeight(V(e[0]))));
         }
+        PQSMod* landControl = nullptr;
+        for (PQSMod* m : builder->mods)
+            if (m != nullptr && m->modEnabled && m->className == "PQSLandControl") landControl = m;
         res["build"] = json::array();
         for (const auto& e : bq.at("build")) {
             PQ quad;
             quad.positionPlanetRelative = V(e.at("centre"));
             quad.subdivision = e.at("sub").get<int>();
             builder->Mod_OnQuadPreBuild(quad);
-            json hs = json::array(), cs = json::array();
+            json hs = json::array(), cs = json::array(), ls = json::array();
             for (const auto& g : e.at("gv")) {
                 hs.push_back(H(builder->GetSurfaceHeight(V(g))));
                 const Color c = builder->vbData().vertColor;
                 cs.push_back({HF(c.r), HF(c.g), HF(c.b), HF(c.a)});
+                // WP-UE-11: the colour PQSLandControl.OnVertexBuild (PQSLandControl.cs:809, the createColors statements) makes of the
+                // height pass's colour and land-class state. On a copy without scatter, so nothing else of the builder changes.
+                PQSVertexBuildData lcData = builder->vbData();
+                lcData.allowScatter = false;
+                if (landControl != nullptr) landControl->OnVertexBuild(lcData);
+                ls.push_back({HF(lcData.vertColor.r), HF(lcData.vertColor.g), HF(lcData.vertColor.b), HF(lcData.vertColor.a)});
             }
             builder->Mod_OnQuadBuilt(quad);
-            res["build"].push_back({{"h", hs}, {"c", cs}});
+            res["build"].push_back({{"h", hs}, {"c", cs}, {"lc", ls}});
         }
         out["bodies"][body] = res;
         std::cerr << body << ": " << bq.at("public").size() << " public, " << bq.at("build").size() << " build queries\n";
