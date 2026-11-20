@@ -12,7 +12,7 @@ if (Test-Path $twin) { & $twin (Join-Path $coreBuild 'kspcore_jolt_step.txt') 20
 # The ctest twin of KspUe5.Slice.HeadlessParity (ctest capi.flight_slice, same arguments as core\tests\CMakeLists.txt): flies PhysProf-M2
 # through the C ABI and writes the final state hash to tests\capi_flight_slice_work\final.hash (about 15 s).
 $slice = Join-Path $coreBuild 'tests\capi_flight_slice.exe'
-if ((Test-Path $slice) -and ('KspUe5.Slice.HeadlessParity' -like "$Filter*")) {
+if ((Test-Path $slice) -and (('KspUe5.Slice.HeadlessParity' -like "$Filter*") -or ('KspUe5.Input.DeviceParity' -like "$Filter*"))) {
     $repo = Split-Path -Parent $ProjRoot
     $work = Join-Path $coreBuild 'tests\capi_flight_slice_work'
     New-Item -ItemType Directory -Force -Path $work | Out-Null

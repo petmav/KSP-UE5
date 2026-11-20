@@ -6,7 +6,7 @@ public class KspShell : ModuleRules
 	public KspShell(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "KspCoreBridge" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "Slate", "SlateCore", "KspCoreBridge" });
 		// part meshes and textures are built at run time from the game's own files (KspPartAssets)
 		PrivateDependencyModuleNames.AddRange(new string[] { "MeshDescription", "StaticMeshDescription", "ImageCore", "ImageWrapper", "RenderCore", "RHI",
 			"ProceduralMeshComponent" });   // terrain quads (KspTerrainView)

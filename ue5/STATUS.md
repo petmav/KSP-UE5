@@ -161,6 +161,39 @@ Not done (the second half; `progress.csv` 0.5): the terrain material's textures 
 the ocean sphere, terrain scatter, the descent from 100 km with frame-time limits and the screenshots at six altitudes, the planet fade
 to scaled space (WP-UE-12), shadows from terrain. Only the dominant body has a PQS in the host, and only Kerbin's is built.
 
+## Input device (WP-UE-08, 2026-11-18)
+
+Keys and mouse reach core, and KSP's own bindings there decide what they do (DESIGN D12). With `Scripts\fly.ps1` the craft can be
+flown from the keyboard: Z / X and Shift / Ctrl throttle, T SAS, Space stage, W A S D Q E. Screenshot: `slice/shots/wpue08_liftoff.png`
+(Kerbal X off the pad after the scripted keys Z, T, Space; the launch clamps stay behind).
+
+- **`FKspInputDevice`** (`Source/KspShell`): a Slate input pre-processor (before any widget, never consuming) that turns Unreal's key and
+  mouse events into one frame of `UnityEngine.Input`-shaped state: keys that went down and up in event order, keys held, mouse buttons as
+  KeyCodes and bits, cursor with Unity's origin (bottom left), delta, wheel. A key repeat is not a press; a tap within a frame is down
+  and up and never held; losing the window's focus releases everything.
+- **Key table**: Unreal `FKey` to `UnityEngine.KeyCode`. 126 KeyCode values are produced by Unreal keys; the other 198 are listed with the
+  reason (shifted characters of a US keyboard, keys Unreal does not have, Mac keys, joystick buttons beyond one XInput pad).
+- **`UKspSimSubsystem`** owns the device, registers it with Slate when the process has a window and takes its frame every sim frame
+  (viewport size, cursor, focus, UI hover = the pointer is not directly over the game viewport). `InputSource` stays as the test seam.
+- `-KspKeys=<frame>:<key>,...` on the command line presses keys at sim frames as real Slate key events (`fly.ps1 -Keys`), so a scripted run
+  goes through the same path as a keyboard. The session's log ends with the active vessel's altitude and speed.
+
+Gates (headless, my runs; 13 / 13 tests of the suite pass in 62.4 s):
+
+| test | result |
+|---|---|
+| `KspUe5.Input.KeyCodeTable` | against the decompiled `KeyCode.cs`: 326 names, 324 values; 126 mapped + 198 listed as unmapped = 324, none in both, none missing, nothing in the table that is not a KeyCode; KSP's default flight keys resolve to the Unity names |
+| `KspUe5.Input.DeviceFrames` | press order, repeat, tap within a frame, release of a key never pressed, mouse buttons as bits, delta and cursor turned to Unity's y, wheel sum, focus loss, a gamepad button as two KeyCodes |
+| `KspUe5.Input.DeviceParity` | the parity run of `KspUe5.Slice.HeadlessParity` with Z, T, Space as key events through the device (T and Space tapped, Z released a frame later): final snapshot hash `2c4ae66445a41c81` = the pure-C twin's |
+
+End to end in a `-game` run (real Slate events, `fly.ps1 -Keys '100:Z,100:T,110:SpaceBar'`, 450 frames): Kerbal X ends FLYING at 100.5 m
+(pad 91 m), 13.1 m/s up, 70 parts (the three launch clamps stayed).
+
+Not done (`progress.csv` 0.9): `Input.inputString` (typed characters go to Slate text widgets, not to a pre-processor), Unity's
+input-manager axes (`Mouse X`, `Mouse Y`, `Mouse ScrollWheel`, joystick axes: their sensitivities are in the game's InputManager asset,
+not extracted) and joystick axes generally; the UI hover lock is computed but has no test, there being no UI yet. Engine plumes and
+sound do not exist yet, so a launch is silent and flameless.
+
 ## Build and iteration timings (wall clock, this laptop; raw log in `timings.log`)
 
 | What | Time |

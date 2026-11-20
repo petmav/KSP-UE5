@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/EngineBaseTypes.h"
+#include "InputCoreTypes.h"
 #include "KspRenderAnchor.h"
 #include "KspSim.h"
 #include "Subsystems/WorldSubsystem.h"
@@ -10,6 +11,7 @@
 
 class ACameraActor;
 class ADirectionalLight;
+class FKspInputDevice;
 class UKspPartAssets;
 class UKspTerrainView;
 class UKspSimSubsystem;
@@ -38,6 +40,8 @@ struct FKspSimTickFunction : public FTickFunction
  *   -KspLaunch=<craft file>     start a sandbox game and launch the craft (absolute, or relative to the repository root)
  *   -KspSite=<LaunchPad|Runway> launch site, default LaunchPad
  *   -KspGameRoot=<dir>          game root, default <repository>/decompiled/KSP-dev
+ *   -KspKeys=<frame>:<key>,...   press a key at a sim frame and release it five frames later, as Slate key events (Unreal key names:
+ *                               "-KspKeys=100:Z,100:T,110:SpaceBar" is full throttle, SAS, stage)
  *   -KspShot=<png file>         take a screenshot at sim frame -KspShotFrame=<n> (default 300; later while shaders compile), then quit
  */
 UCLASS()
@@ -84,16 +88,18 @@ public:
 	/** Parity gates and benchmarks: every frame passes exactly this delta to core instead of the world's delta time. */
 	TOptional<double> FixedFrameDt;
 	/**
-	 * Fills the input of the next frame; false = no input is set for that frame. Unbound: an idle device (focus, screen size, real time).
-	 * The input device of WP-UE-08 binds it; until then only tests do.
+	 * Fills the input of the next frame; false = no input is set for that frame. Unbound (the normal case): the input device's frame
+	 * with the viewport's size, the cursor and the window's focus. Tests bind it to script the input.
 	 */
 	TFunction<bool(FKspInputFrame&)> InputSource;
+	/** The input device of the running sim (keys and mouse as Slate delivers them); null without a sim. */
+	FKspInputDevice* GetInputDevice() const { return InputDevice.Get(); }
 
 	/** One frame of the sequence above. The tick function calls it; public for callers that own the frame loop. */
 	void RunFrame(double DtReal);
 
 private:
-	bool DefaultInput(FKspInputFrame& Input) const;
+	bool DefaultInput(FKspInputFrame& Input);
 	void Place();
 	void DrawColliderProxies();
 	void UpdatePartActors();
@@ -104,6 +110,8 @@ private:
 
 	FKspSimTickFunction TickFunction;
 	TUniquePtr<FKspSim> Sim;
+	TSharedPtr<FKspInputDevice> InputDevice;
+	bool bHadFocus = true;
 	FKspRenderAnchor Anchor;
 	/** Collider proxies per part id (they do not change while a part lives). */
 	TMap<uint32, TArray<FKspColliderProxy>> ColliderCache;
@@ -116,6 +124,8 @@ private:
 	// the command-line session
 	bool bDebugView = false;
 	FString ShotFile;
+	/** Scripted key presses of the command-line session: sim frame and key. */
+	TArray<TPair<int64, FKey>> ScriptedKeys;
 	int64 ShotFrame = 300;
 	int64 ShotTakenFrame = -1;
 
