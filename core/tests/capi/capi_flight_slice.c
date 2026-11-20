@@ -114,6 +114,48 @@ static int has_event(const kspcore_snapshot_view* s, int kind, int a) {
     return 0;
 }
 
+/* WP-UE-11: the terrain stream as the shell consumes it. The set of quads it draws = added - removed; a quad that comes again while it is
+ * drawn is the same quad with re-stitched edges (a new build_serial); a removed quad must be one that is drawn. */
+static int* live_quads = NULL;
+static int live_count = 0, live_cap = 0, quads_added_total = 0, quads_restitched = 0, quads_removed_total = 0, quads_live_max = 0;
+static uint32_t last_serial = 0;
+
+static int find_live(int id) {
+    int i;
+    for (i = 0; i < live_count; ++i)
+        if (live_quads[i] == id) return i;
+    return -1;
+}
+
+static void track_terrain(const kspcore_snapshot_view* s) {
+    uint32_t i;
+    for (i = 0; i < s->quads_removed_count; ++i) {
+        const int at = find_live(s->quads_removed[i].quad_id);
+        CHECK(at >= 0);
+        if (at >= 0) live_quads[at] = live_quads[--live_count];
+        ++quads_removed_total;
+    }
+    for (i = 0; i < s->quads_added_count; ++i) {
+        const kspcore_terrain_quad* q = &s->quads_added[i];
+        CHECK(q->build_serial > last_serial); /* serials only grow */
+        last_serial = q->build_serial;
+        CHECK(q->body_id == s->frame.dominant_body_id);
+        CHECK(q->quad.vertex_count == 225 && q->quad.index_count > 0 && q->quad.index_count % 3 == 0);
+        CHECK(q->quad.positions != NULL && q->quad.normals != NULL && q->quad.indices != NULL);
+        if (find_live(q->quad.id) >= 0) {
+            ++quads_restitched;
+        } else {
+            if (live_count == live_cap) {
+                live_cap = live_cap ? 2 * live_cap : 1024;
+                live_quads = (int*)realloc(live_quads, (size_t)live_cap * sizeof(int));
+            }
+            live_quads[live_count++] = q->quad.id;
+        }
+        ++quads_added_total;
+    }
+    if (live_count > quads_live_max) quads_live_max = live_count;
+}
+
 static kspcore_sim* start_flight(const char* craft, const char* save_name) {
     kspcore_sim* sim = kspcore_sim_create();
     const kspcore_snapshot_view* s;
@@ -176,6 +218,8 @@ int main(int argc, char** argv) {
     sim = start_flight(argv[5], "flight_slice");
     if (!sim) return 1;
     snap = kspcore_snapshot(sim);
+    track_terrain(snap);
+    CHECK(live_count > 0); /* Kerbin's surface around the pad */
     CHECK(snap->body_count >= 17);
     CHECK(snap->frame.dominant_body_id >= 0);
     CHECK(snap->frame.frame_kind == KSPCORE_FRAME_ROTATING);
@@ -250,6 +294,7 @@ int main(int argc, char** argv) {
             break;
         }
         snap = kspcore_snapshot(sim);
+        track_terrain(snap);
         v = active_vessel(snap);
         if (!v) {
             printf("no active vessel at frame %d\n", k);
@@ -332,6 +377,13 @@ int main(int argc, char** argv) {
         printf("max |speed at altitude| %.3f %% (tol 1), max |altitude at Mach| %.3f %% (tol 1.5), max |frames| %.3f %% (tol 2.5)\n", max_spd_err * 100.0,
                max_alt_err * 100.0, max_frame_err * 100.0);
     }
+
+    printf("terrain stream: %d quads sent (%d of them re-stitched ones), %d removed, %d drawn at the end, at most %d at once\n", quads_added_total,
+           quads_restitched, quads_removed_total, live_count, quads_live_max);
+    CHECK(quads_added_total - quads_restitched - quads_removed_total == live_count);
+    free(live_quads);
+    live_quads = NULL;
+    live_count = live_cap = 0;
 
     /* the final state hash for the C++ twin */
     snap = kspcore_snapshot(sim);

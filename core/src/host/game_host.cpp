@@ -237,7 +237,7 @@ struct TerrainSphere {
     std::unique_ptr<PQS> sphere;
     PQSMod_CelestialBodyTransform* cbt = nullptr;
     bool started = false;
-    std::set<int> known;  // quad ids reported to the shell
+    std::map<int, int> known;  // quads reported to the shell: id -> the edge index set (PQMesh::triangleSet) they were reported with
     std::map<int, uint32_t> serial;
     uint32_t nextSerial = 1;
     std::vector<PQ*> drawable;
@@ -1151,10 +1151,12 @@ void GameHost::Impl::BuildSnapshot() {
     // terrain: the quads added or rebuilt and removed since the last frame
     if (flight && flight->sphere && dominant != nullptr) {
         TerrainSphere& t = *flight->sphere;
-        std::set<int> now;
+        std::map<int, int> now;
         for (PQ* q : t.drawable) {
-            now.insert(q->id);
-            if (t.known.count(q->id) != 0) continue;
+            now[q->id] = q->mesh.triangleSet;
+            // new, or its edges were re-stitched to a neighbour of another level (the same id comes again with a new build_serial)
+            const auto was = t.known.find(q->id);
+            if (was != t.known.end() && was->second == q->mesh.triangleSet) continue;
             kspcore_terrain_quad tq{};
             kspcore_pqs_quad& out = tq.quad;
             const PQMesh& m = q->mesh;
@@ -1181,7 +1183,7 @@ void GameHost::Impl::BuildSnapshot() {
             tq.body_id = dominant->flightGlobalsIndex;
             quadsAdded.push_back(tq);
         }
-        for (int id : t.known)
+        for (const auto& [id, set] : t.known)
             if (now.count(id) == 0) quadsRemoved.push_back(kspcore_terrain_removed{dominant->flightGlobalsIndex, id});
         t.known = std::move(now);
     }

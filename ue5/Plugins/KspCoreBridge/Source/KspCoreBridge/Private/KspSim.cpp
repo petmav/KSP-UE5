@@ -19,6 +19,8 @@ static_assert(KspEvent::SceneLoadRequested == KSPCORE_EVENT_SCENE_LOAD_REQUESTED
 static_assert(KspVesselFlag::Loaded == KSPCORE_VESSEL_LOADED && KspVesselFlag::Packed == KSPCORE_VESSEL_PACKED &&
 	KspVesselFlag::Active == KSPCORE_VESSEL_ACTIVE && KspVesselFlag::Landed == KSPCORE_VESSEL_LANDED &&
 	KspVesselFlag::Splashed == KSPCORE_VESSEL_SPLASHED, "KspVesselFlag mirrors KSPCORE_VESSEL_*");
+static_assert(KspBodyFlag::PqsActive == KSPCORE_BODY_PQS_ACTIVE && KspBodyFlag::ScaledVisible == KSPCORE_BODY_SCALED_VISIBLE &&
+	KspBodyFlag::Dominant == KSPCORE_BODY_DOMINANT, "KspBodyFlag mirrors KSPCORE_BODY_*");
 static_assert(int32(FKspColliderProxy::EKind::Box) == KSPCORE_COLLIDER_BOX && int32(FKspColliderProxy::EKind::Sphere) == KSPCORE_COLLIDER_SPHERE &&
 	int32(FKspColliderProxy::EKind::Capsule) == KSPCORE_COLLIDER_CAPSULE && int32(FKspColliderProxy::EKind::ConvexHull) == KSPCORE_COLLIDER_CONVEX_HULL,
 	"FKspColliderProxy::EKind mirrors KSPCORE_COLLIDER_*");
@@ -273,6 +275,9 @@ void FKspSim::RefreshViews()
 	VesselView.Reset();
 	PartView.Reset();
 	EventView.Reset();
+	BodyView.Reset();
+	QuadAddedView.Reset();
+	QuadRemovedView.Reset();
 	const kspcore_snapshot_view* Snap = kspcore_snapshot(Handle);
 	if (!Snap)
 	{
@@ -324,6 +329,79 @@ void FKspSim::RefreshViews()
 		Out.Flags = P.flags;
 		Out.Position = PositionToUe(P.position);
 		Out.Rotation = RotationToUe(P.rotation);
+	}
+	BodyView.Reserve(Snap->body_count);
+	for (uint32 I = 0; I < Snap->body_count; ++I)
+	{
+		const kspcore_body_state& B = Snap->bodies[I];
+		FKspBodyState& Out = BodyView.AddDefaulted_GetRef();
+		Out.Id = B.id;
+		Out.Flags = B.flags;
+		Out.PlanetFade = B.planet_fade;
+		Out.Position = PositionToUe(B.position);
+		Out.Rotation = FKspAxis::RotationToUe(FQuat(B.rotation[0], B.rotation[1], B.rotation[2], B.rotation[3])).GetNormalized();
+		Out.Radius = B.radius;
+	}
+	QuadRemovedView.Reserve(Snap->quads_removed_count);
+	for (uint32 I = 0; I < Snap->quads_removed_count; ++I)
+	{
+		QuadRemovedView.Add({ Snap->quads_removed[I].body_id, Snap->quads_removed[I].quad_id });
+	}
+	QuadAddedView.Reserve(Snap->quads_added_count);
+	for (uint32 I = 0; I < Snap->quads_added_count; ++I)
+	{
+		const kspcore_terrain_quad& T = Snap->quads_added[I];
+		const kspcore_pqs_quad& Q = T.quad;
+		FKspTerrainQuad& Out = QuadAddedView.AddDefaulted_GetRef();
+		Out.BodyId = T.body_id;
+		Out.Id = Q.id;
+		Out.Subdivision = Q.subdivision;
+		Out.BuildSerial = T.build_serial;
+		Out.Origin = PositionToUe(Q.origin);
+		const int32 Count = Q.positions ? Q.vertex_count : 0;
+		Out.Positions.SetNumUninitialized(Count);
+		for (int32 V = 0; V < Count; ++V)
+		{
+			Out.Positions[V] = PositionToUe(Q.positions + 3 * V);
+		}
+		if (Q.normals)
+		{
+			Out.Normals.SetNumUninitialized(Count);
+			for (int32 V = 0; V < Count; ++V)
+			{
+				const float* N = Q.normals + 3 * V;
+				Out.Normals[V] = FKspAxis::DirectionToUe(FVector(N[0], N[1], N[2]));
+			}
+		}
+		if (Q.uv)
+		{
+			Out.UV0.SetNumUninitialized(Count);
+			for (int32 V = 0; V < Count; ++V)
+			{
+				Out.UV0[V] = FVector2D(Q.uv[2 * V], Q.uv[2 * V + 1]);
+			}
+		}
+		if (Q.colors)
+		{
+			Out.Colors.SetNumUninitialized(Count);
+			for (int32 V = 0; V < Count; ++V)
+			{
+				const float* C = Q.colors + 4 * V;
+				Out.Colors[V] = FLinearColor(C[0], C[1], C[2], C[3]).ToFColor(false);   // stored values, no gamma conversion
+			}
+		}
+		// Unity front faces are clockwise: flip the order; drop triangles that point outside the vertices
+		Out.Indices.Reserve(Q.index_count);
+		for (int32 K = 0; K + 2 < Q.index_count; K += 3)
+		{
+			const int32 A = Q.indices[K], B2 = Q.indices[K + 1], C2 = Q.indices[K + 2];
+			if (uint32(A) < uint32(Count) && uint32(B2) < uint32(Count) && uint32(C2) < uint32(Count))
+			{
+				Out.Indices.Add(A);
+				Out.Indices.Add(C2);
+				Out.Indices.Add(B2);
+			}
+		}
 	}
 	EventView.Reserve(Snap->event_count);
 	for (uint32 I = 0; I < Snap->event_count; ++I)

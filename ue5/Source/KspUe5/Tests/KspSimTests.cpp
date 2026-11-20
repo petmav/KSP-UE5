@@ -2,12 +2,11 @@
 //   Scripts\test.ps1 -Filter KspUe5.Sim
 //   Scripts\test.ps1 -Filter KspUe5.Slice     (runs the ctest twin capi_flight_slice first so its hash file is fresh)
 #include "CoreMinimal.h"
-#include "Engine/Engine.h"
-#include "Engine/World.h"
 #include "KspRenderAnchor.h"
 #include "KspSim.h"
 #include "KspSimSubsystem.h"
 #include "KspTestPaths.h"
+#include "KspTestWorld.h"
 #include "Math/RandomStream.h"
 #include "Misc/AutomationTest.h"
 #include "Misc/FileHelper.h"
@@ -17,41 +16,6 @@
 
 namespace
 {
-	/**
-	 * A game world ticked by the test, without game instance or game mode (the project's default game mode is the scale spike's).
-	 * Each Tick advances GFrameCounter as the engine loop would: a tick function runs once per engine frame.
-	 */
-	struct FKspTestWorld
-	{
-		UWorld* World = nullptr;
-		const uint64 SavedFrameCounter = GFrameCounter;
-
-		FKspTestWorld()
-		{
-			World = UWorld::CreateWorld(EWorldType::Game, false, TEXT("KspTestWorld"));
-			World->AddToRoot();
-			World->SetShouldTick(false);
-			GEngine->CreateNewWorldContext(EWorldType::Game).SetCurrentWorld(World);
-			World->InitializeActorsForPlay(FURL());
-			World->BeginPlay();
-		}
-
-		~FKspTestWorld()
-		{
-			World->BeginTearingDown();
-			World->RemoveFromRoot();
-			GEngine->DestroyWorldContext(World);
-			World->DestroyWorld(false);
-			GFrameCounter = SavedFrameCounter;
-		}
-
-		void Tick(float DeltaSeconds)
-		{
-			World->Tick(LEVELTICK_All, DeltaSeconds);
-			++GFrameCounter;
-		}
-	};
-
 	bool Near(const FVector& A, const FVector& B, double Tolerance) { return (A - B).GetAbsMax() <= Tolerance; }
 }
 
@@ -162,11 +126,7 @@ bool FKspSliceHeadlessParityTest::RunTest(const FString& Parameters)
 	Expected.TrimStartAndEndInline();
 
 	// the arguments of the ctest (core/tests/CMakeLists.txt, capi.flight_slice)
-	FKspGameConfig Config;
-	Config.GameRoot = FPaths::Combine(Repo, TEXT("core"), TEXT("testdata"), TEXT("GameData-mirror"));
-	Config.DataDir = FPaths::Combine(Repo, TEXT("core"), TEXT("data"));
-	Config.ReducedModelDir = FPaths::Combine(Repo, TEXT("core"), TEXT("tests"), TEXT("data"));
-	Config.SavesDir = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("ksp"), TEXT("parity"), TEXT("saves")));
+	const FKspGameConfig Config = KspTestPaths::MirrorGameConfig(TEXT("parity"));
 	const FString Craft = FPaths::Combine(Repo, TEXT("analysis"), TEXT("physics"), TEXT("craft"), TEXT("PhysProf-M2.craft"));
 
 	if (FKspGame::IsInitialised() && !(FKspGame::GetConfig() == Config) && !FKspGame::Shutdown())

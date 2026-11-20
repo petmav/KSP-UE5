@@ -12,6 +12,7 @@
 #include "Materials/MaterialExpressionLinearInterpolate.h"
 #include "Materials/MaterialExpressionMultiply.h"
 #include "Materials/MaterialExpressionOneMinus.h"
+#include "Materials/MaterialExpressionPower.h"
 #include "Materials/MaterialExpressionSaturate.h"
 #include "Materials/MaterialExpressionScalarParameter.h"
 #include "Materials/MaterialExpressionSquareRoot.h"
@@ -19,6 +20,7 @@
 #include "Materials/MaterialExpressionTextureCoordinate.h"
 #include "Materials/MaterialExpressionTextureSampleParameter2D.h"
 #include "Materials/MaterialExpressionVectorParameter.h"
+#include "Materials/MaterialExpressionVertexColor.h"
 #include "Materials/MaterialParameterCollection.h"
 #include "Misc/PackageName.h"
 #include "UObject/Package.h"
@@ -251,6 +253,37 @@ namespace
 	}
 }
 
+namespace
+{
+	/**
+	 * The terrain master: the PQS vertex colour (the colour maps of the stock mod stack, gamma values) as the surface colour, fully
+	 * rough, plus the scene's ambient light. The surface textures of the game's terrain material come later (WP-UE-11 second half).
+	 */
+	UMaterial* MakeTerrainMaster(UMaterialParameterCollection* Collection)
+	{
+		UMaterial* Material = NewAsset<UMaterial>(TEXT("M_KspTerrain"));
+		FGraph G{ Material };
+		UMaterialEditorOnlyData* Out = Material->GetEditorOnlyData();
+		UMaterialExpressionPower* Linear = G.Add<UMaterialExpressionPower>();
+		Linear->Base.Connect(PinRgb, G.Add<UMaterialExpressionVertexColor>());
+		Linear->Exponent.Connect(0, G.Constant(2.2f));
+		Out->BaseColor.Connect(0, Linear);
+		Out->Roughness.Connect(0, G.Constant(1.0f));
+		Out->Specular.Connect(0, G.Constant(0.0f));
+		UMaterialExpressionCollectionParameter* Ambient = G.Add<UMaterialExpressionCollectionParameter>();
+		Ambient->Collection = Collection;
+		Ambient->ParameterName = TEXT("Ambient");
+		Ambient->ParameterId = Collection->GetParameterId(TEXT("Ambient"));
+		UMaterialExpressionComponentMask* AmbientRgb = G.Add<UMaterialExpressionComponentMask>();
+		AmbientRgb->Input.Connect(0, Ambient);
+		AmbientRgb->R = AmbientRgb->G = AmbientRgb->B = true;
+		AmbientRgb->A = false;
+		Out->EmissiveColor.Connect(0, G.Mul(Linear, 0, AmbientRgb, 0));
+		Material->PostEditChange();
+		return Material;
+	}
+}
+
 UKspCreateMaterialsCommandlet::UKspCreateMaterialsCommandlet()
 {
 	IsClient = false;
@@ -291,5 +324,6 @@ int32 UKspCreateMaterialsCommandlet::Main(const FString& Params)
 	{
 		bOk &= SaveAsset(MakeMaster(Master.Key, Master.Value, White, Black, FlatNormal, Collection));
 	}
+	bOk &= SaveAsset(MakeTerrainMaster(Collection));
 	return bOk ? 0 : 1;
 }

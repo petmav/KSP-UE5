@@ -17,6 +17,21 @@ struct Color {
     static constexpr Color black() { return {0.0f, 0.0f, 0.0f, 1.0f}; }
     static constexpr Color clear() { return {0.0f, 0.0f, 0.0f, 0.0f}; }
     bool Equals(const Color& o) const { return r == o.r && g == o.g && b == o.b && a == o.a; }
+
+    // Color.cs:171 (managed: evaluated in double, rounded where the constructor stores the fields)
+    static Color Lerp(const Color& a, const Color& b, float t) {
+        t = Mathf::Clamp01(t);
+        return {f32store(fx(a.r) + (fx(b.r) - fx(a.r)) * fx(t)), f32store(fx(a.g) + (fx(b.g) - fx(a.g)) * fx(t)),
+                f32store(fx(a.b) + (fx(b.b) - fx(a.b)) * fx(t)), f32store(fx(a.a) + (fx(b.a) - fx(a.a)) * fx(t))};
+    }
+    // Color.cs:131
+    friend Color operator+(const Color& a, const Color& b) {
+        return {f32store(fx(a.r) + fx(b.r)), f32store(fx(a.g) + fx(b.g)), f32store(fx(a.b) + fx(b.b)), f32store(fx(a.a) + fx(b.a))};
+    }
+    // Color.cs:146
+    friend Color operator*(const Color& a, float b) {
+        return {f32store(fx(a.r) * fx(b)), f32store(fx(a.g) * fx(b)), f32store(fx(a.b) * fx(b)), f32store(fx(a.a) * fx(b))};
+    }
 };
 
 struct Color32 {

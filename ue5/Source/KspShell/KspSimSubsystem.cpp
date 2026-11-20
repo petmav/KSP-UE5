@@ -12,6 +12,7 @@
 #include "HAL/IConsoleManager.h"
 #include "KspPartAssets.h"
 #include "KspShell.h"
+#include "KspTerrainView.h"
 #include "Misc/App.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
@@ -128,6 +129,11 @@ void UKspSimSubsystem::StopSim()
 	{
 		UE_LOG(LogKspShell, Log, TEXT("part assets: %s"), *PartAssets->DescribeStats());
 	}
+	if (Terrain)
+	{
+		UE_LOG(LogKspShell, Log, TEXT("terrain: %s"), *Terrain->DescribeStats());
+		Terrain->Clear();
+	}
 	Sim.Reset();
 	UE_LOG(LogKspShell, Log, TEXT("sim stopped: %lld frames, core %.3f ms per frame, render anchor moved %d time(s), %.3f ms in the frames it moved"), FrameCount,
 		FrameCount > 0 ? 1000.0 * CoreSeconds / double(FrameCount) : 0.0, Anchor.MoveCount, 1000.0 * ReanchorSeconds);
@@ -182,6 +188,10 @@ void UKspSimSubsystem::RunFrame(double DtReal)
 		Anchor.Reset();
 		ColliderCache.Reset();
 		DestroyPartActors();
+		if (Terrain)
+		{
+			Terrain->Clear();
+		}
 		if (!Sim->SceneLoaded(RequestedScene))
 		{
 			UE_LOG(LogKspShell, Error, TEXT("kspcore_scene_loaded(%d) failed: %s"), RequestedScene, *FKspSim::LastError());
@@ -208,6 +218,16 @@ void UKspSimSubsystem::RunFrame(double DtReal)
 
 void UKspSimSubsystem::Place()
 {
+	const bool bPresent = PresentOverride.Get(FApp::CanEverRender());
+	if (bPresent)
+	{
+		// the terrain stream is delivered once: taken every frame, whether or not there is a vessel to look at
+		if (!Terrain)
+		{
+			Terrain = NewObject<UKspTerrainView>(this);
+		}
+		Terrain->Apply(GetWorld(), Sim->QuadsAdded(), Sim->QuadsRemoved());
+	}
 	const FKspVesselState* Active = Sim->ActiveVessel();
 	if (!Active)
 	{
@@ -216,8 +236,9 @@ void UKspSimSubsystem::Place()
 	const double T0 = FPlatformTime::Seconds();
 	// the focus is the camera once core has one (WP-UE-03); until then the active vessel
 	const bool bMoved = Anchor.Update(Active->Com, Sim->FrameState().FrameChangeSerial);
-	if (FApp::CanEverRender())
+	if (bPresent)
 	{
+		Terrain->Place(Anchor, Sim->Bodies());
 		UpdatePartActors();
 		UpdateSun();
 		DrawColliderProxies();

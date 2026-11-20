@@ -127,6 +127,40 @@ Not done (the second half of WP-UE-10; `analysis/tiering/progress.csv` 0.6):
   hierarchy` (and the same for `leg`, `foot`, `wheelCollider`) for Kerbal X's landing legs, and `Could not find the pivotName,
   AntennaHolster`: the wheel modules' model lookups do not reach the parts' real models in the host. Not examined here.
 
+## Terrain, first half (WP-UE-11, 2026-11-18)
+
+Kerbin's surface is drawn from the quads core's PQS builds. Screenshot: `slice/shots/wpue11_terrain_pad.png` (Kerbal X on the pad, the
+KSC flats, the hills and the mountains west of the space centre).
+
+- **Core** (`core/STATUS.md` "WP-UE-11, core side"): the snapshot's terrain stream now sends a quad again when its edges are re-stitched
+  to a neighbour of another level; `PQSLandControl.OnVertexBuild`'s colour statements are ported (they were left out as rendering), so the
+  quads carry the game's land-class vertex colours instead of black.
+- **Facade**: `FKspSim::Bodies()` (centre and fixed-frame rotation of every body, UE axes and centimetres) and the terrain stream
+  `QuadsAdded()` / `QuadsRemoved()` (positions relative to the quad's own origin, the origin in the body's fixed frame, winding flipped,
+  colours as stored).
+- **`UKspTerrainView`** (`Source/KspShell`): one `UProceduralMeshComponent` per quad, pooled, all below one actor that stands for the
+  body's fixed frame; a frame costs one transform when the body or the render anchor moves. No collision (DESIGN D13), no shadow casting.
+- **`M_KspTerrain`** (generated): the vertex colour (gamma values, converted) as the surface colour, fully rough, plus the scene's ambient.
+  The surface textures of the game's terrain material are not applied yet: this is the colour-map look only.
+- `UKspSimSubsystem::PresentOverride` lets a headless test build the presented scene (part actors, terrain, light).
+
+Gate `KspUe5.Terrain.PadQuads` (headless, the repository's mirror and `core/data/terrain`; PhysProf-M2 on the pad, 5 frames; my run):
+
+| quantity | result |
+|---|---|
+| terrain stream | 490 quads sent (8 re-stitched), 2 removed, 480 drawn = sent - re-stitched - removed; 480 components; mesh builds 14.6 to 24.1 ms in total, at most 13.9 to 23.4 ms in one frame (the first) |
+| every vertex (108,000) against Kerbin's centre | -1,342.9 m to +5,492.4 m around the radius (ocean floor to the mountains) |
+| the vessel against the terrain | the nearest terrain vertex is 62.61 m from the root part and 37.29 m below it (root altitude 101.60 m: the ground is at 64.3 m); its normal . up = 1.0000 |
+| winding | 392 of 392 triangles of the quad under the vessel face up |
+| vertex colours (0..255) | mean r 42.1 g 59.3 b 68.9; range 28..247, 36..252, 30..255 (before the port: all 0) |
+
+The vessel reaches Unreal through the vessel path of the snapshot and the terrain through the terrain stream and the body's rotation:
+the two only meet if the axis map, the body frame, the quad origins and the render anchor are right.
+
+Not done (the second half; `progress.csv` 0.5): the terrain material's textures (needs `ue5/GameAssets`, WP-UE-06's extraction, regenerated),
+the ocean sphere, terrain scatter, the descent from 100 km with frame-time limits and the screenshots at six altitudes, the planet fade
+to scaled space (WP-UE-12), shadows from terrain. Only the dominant body has a PQS in the host, and only Kerbin's is built.
+
 ## Build and iteration timings (wall clock, this laptop; raw log in `timings.log`)
 
 | What | Time |
